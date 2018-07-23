@@ -1,12 +1,12 @@
 /**
- * Thingsboard OÜ ("COMPANY") CONFIDENTIAL
+ * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2018 Thingsboard OÜ. All Rights Reserved.
+ * Copyright © 2016-2018 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
- * the property of Thingsboard OÜ and its suppliers,
+ * the property of ThingsBoard, Inc. and its suppliers,
  * if any.  The intellectual and technical concepts contained
- * herein are proprietary to Thingsboard OÜ
+ * herein are proprietary to ThingsBoard, Inc.
  * and its suppliers and may be covered by U.S. and Foreign Patents,
  * patents in process, and are protected by trade secret or copyright law.
  *
@@ -32,6 +32,7 @@ package org.thingsboard.server.transport.mqtt.session;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
 import io.netty.channel.ChannelHandlerContext;
@@ -105,6 +106,7 @@ public class GatewaySessionCtx {
                 device.setTenantId(gateway.getTenantId());
                 device.setName(deviceName);
                 device.setType(deviceType);
+                device.setCustomerId(gateway.getCustomerId());
                 device = deviceService.saveDevice(device);
                 relationService.saveRelationAsync(new EntityRelation(gateway.getId(), device.getId(), "Created"));
                 processor.onDeviceAdded(device);
@@ -254,7 +256,7 @@ public class GatewaySessionCtx {
 
     private String getDeviceType(JsonElement json) throws AdaptorException {
         JsonElement type = json.getAsJsonObject().get("type");
-        return type == null ? DEFAULT_DEVICE_TYPE : type.getAsString();
+        return type == null || type instanceof JsonNull ? DEFAULT_DEVICE_TYPE : type.getAsString();
     }
 
     private JsonElement getJson(MqttPublishMessage mqttMsg) throws AdaptorException {

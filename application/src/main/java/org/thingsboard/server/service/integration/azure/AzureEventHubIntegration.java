@@ -1,12 +1,12 @@
 /**
- * Thingsboard OÜ ("COMPANY") CONFIDENTIAL
+ * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2018 Thingsboard OÜ. All Rights Reserved.
+ * Copyright © 2016-2018 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
- * the property of Thingsboard OÜ and its suppliers,
+ * the property of ThingsBoard, Inc. and its suppliers,
  * if any.  The intellectual and technical concepts contained
- * herein are proprietary to Thingsboard OÜ
+ * herein are proprietary to ThingsBoard, Inc.
  * and its suppliers and may be covered by U.S. and Foreign Patents,
  * patents in process, and are protected by trade secret or copyright law.
  *
@@ -66,7 +66,7 @@ public class AzureEventHubIntegration extends AbstractIntegration<AzureEventHubI
     private EventHubClient ehClient;
     private ServiceClient serviceClient;
     private List<PartitionReceiver> receivers;
-    private transient boolean started = false;
+    private volatile boolean started = false;
     private ExecutorService executorService;
     private List<Future> receiverFutures;
 
@@ -288,16 +288,6 @@ public class AzureEventHubIntegration extends AbstractIntegration<AzureEventHubI
                     clientConfiguration.getIotHubName()));
         }
         return serviceClient;
-    }
-
-    private <T> void logDownlink(IntegrationContext context, String updateType, T msg) {
-        if (configuration.isDebugMode()) {
-            try {
-                persistDebug(context, updateType, "JSON", mapper.writeValueAsString(msg), downlinkConverter != null ? "OK" : "FAILURE", null);
-            } catch (Exception e) {
-                log.warn("Failed to persist debug message", e);
-            }
-        }
     }
 
     private void logEventHubDownlink(IntegrationContext context, Message message, String deviceId, String contentType) {

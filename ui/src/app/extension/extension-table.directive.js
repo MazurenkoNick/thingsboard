@@ -1,12 +1,12 @@
 /*
- * Thingsboard OÜ ("COMPANY") CONFIDENTIAL
+ * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2018 Thingsboard OÜ. All Rights Reserved.
+ * Copyright © 2016-2018 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
- * the property of Thingsboard OÜ and its suppliers,
+ * the property of ThingsBoard, Inc. and its suppliers,
  * if any.  The intellectual and technical concepts contained
- * herein are proprietary to Thingsboard OÜ
+ * herein are proprietary to ThingsBoard, Inc.
  * and its suppliers and may be covered by U.S. and Foreign Patents,
  * patents in process, and are protected by trade secret or copyright law.
  *
@@ -60,7 +60,7 @@ export default function ExtensionTableDirective() {
 }
 
 /*@ngInject*/
-function ExtensionTableController($scope, $filter, $document, $translate, types, $mdDialog, attributeService, telemetryWebsocketService, importExport) {
+function ExtensionTableController($scope, $filter, $document, $translate, $timeout, $mdDialog, types, attributeService, telemetryWebsocketService, importExport) {
 
     let vm = this;
 
@@ -156,11 +156,17 @@ function ExtensionTableController($scope, $filter, $document, $translate, types,
         }
     });
 
-    function enterFilterMode() {
+    function enterFilterMode(event) {
+        let $button = angular.element(event.currentTarget);
+        let $toolbarsContainer = $button.closest('.toolbarsContainer');
+
         vm.query.search = '';
         if(vm.inWidget) {
             vm.ctx.hideTitlePanel = true;
         }
+        $timeout(()=>{
+            $toolbarsContainer.find('.searchInput').focus();
+        })
     }
 
     function exitFilterMode() {

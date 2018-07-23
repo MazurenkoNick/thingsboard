@@ -1,12 +1,12 @@
 /**
- * Thingsboard OÜ ("COMPANY") CONFIDENTIAL
+ * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2018 Thingsboard OÜ. All Rights Reserved.
+ * Copyright © 2016-2018 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
- * the property of Thingsboard OÜ and its suppliers,
+ * the property of ThingsBoard, Inc. and its suppliers,
  * if any.  The intellectual and technical concepts contained
- * herein are proprietary to Thingsboard OÜ
+ * herein are proprietary to ThingsBoard, Inc.
  * and its suppliers and may be covered by U.S. and Foreign Patents,
  * patents in process, and are protected by trade secret or copyright law.
  *
@@ -42,6 +42,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.thingsboard.server.common.data.EntityType;
+import org.thingsboard.server.common.data.Event;
 import org.thingsboard.server.common.data.audit.ActionType;
 import org.thingsboard.server.common.data.converter.Converter;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
@@ -49,8 +50,10 @@ import org.thingsboard.server.common.data.id.ConverterId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.page.TextPageData;
 import org.thingsboard.server.common.data.page.TextPageLink;
+import org.thingsboard.server.common.data.DataConstants;
 import org.thingsboard.server.common.msg.TbMsg;
 import org.thingsboard.server.common.msg.TbMsgMetaData;
+import org.thingsboard.server.dao.event.EventService;
 import org.thingsboard.server.service.converter.AbstractDownlinkDataConverter;
 import org.thingsboard.server.service.converter.DataConverterService;
 import org.thingsboard.server.service.converter.IntegrationMetaData;
@@ -60,6 +63,7 @@ import org.thingsboard.server.service.converter.js.JSUplinkEvaluator;
 import org.thingsboard.server.service.script.JsSandboxService;
 
 import java.util.Base64;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -69,6 +73,9 @@ public class ConverterController extends BaseController {
 
     @Autowired
     private DataConverterService dataConverterService;
+
+    @Autowired
+    private EventService eventService;
 
     @Autowired
     private JsSandboxService jsSandboxService;
@@ -159,6 +166,63 @@ public class ConverterController extends BaseController {
         }
     }
 
+    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN')")
+    @RequestMapping(value = "/converter/{converterId}/debugIn", method = RequestMethod.GET)
+    @ResponseBody
+    public JsonNode getLatestConverterDebugInput(@PathVariable(CONVERTER_ID) String strConverterId) throws ThingsboardException {
+        checkParameter(CONVERTER_ID, strConverterId);
+        try {
+            ConverterId converterId = new ConverterId(toUUID(strConverterId));
+            TenantId tenantId = getCurrentUser().getTenantId();
+            List<Event> events = eventService.findLatestEvents(tenantId, converterId, DataConstants.DEBUG_CONVERTER, 1);
+            JsonNode result = null;
+            if (events != null && !events.isEmpty()) {
+                Event event = events.get(0);
+                JsonNode body = event.getBody();
+                if (body.has("type")) {
+                    String type = body.get("type").asText();
+                    if (type.equals("Uplink") || type.equals("Downlink")) {
+                        ObjectNode debugIn = objectMapper.createObjectNode();
+                        String inContentType = body.get("inMessageType").asText();
+                        debugIn.put("inContentType", inContentType);
+                        if (type.equals("Uplink")) {
+                            String inContent = body.get("in").asText();
+                            debugIn.put("inContent", inContent);
+                            String inMetadata = body.get("metadata").asText();
+                            debugIn.put("inMetadata", inMetadata);
+                        } else { //Downlink
+                            String inContent = "";
+                            String inMsgType = "";
+                            String inMetadata = "";
+                            String in = body.get("in").asText();
+                            JsonNode inJson = objectMapper.readTree(in);
+                            if (inJson.isArray() && inJson.size() > 0) {
+                                JsonNode msgJson = inJson.get(inJson.size()-1);
+                                JsonNode msg = msgJson.get("msg");
+                                if (msg.isTextual()) {
+                                    inContent = "";
+                                } else if (msg.isObject()) {
+                                    inContent = objectMapper.writeValueAsString(msg);
+                                }
+                                inMsgType = msgJson.get("msgType").asText();
+                                inMetadata = objectMapper.writeValueAsString(msgJson.get("metadata"));
+                            }
+                            debugIn.put("inContent", inContent);
+                            debugIn.put("inMsgType", inMsgType);
+                            debugIn.put("inMetadata", inMetadata);
+                            String inIntegrationMetadata = body.get("metadata").asText();
+                            debugIn.put("inIntegrationMetadata", inIntegrationMetadata);
+                        }
+                        result = debugIn;
+                    }
+                }
+            }
+            return result;
+        } catch (Exception e) {
+            throw handleException(e);
+        }
+    }
+
     @PreAuthorize("hasAuthority('TENANT_ADMIN')")
     @RequestMapping(value = "/converter/testUpLink", method = RequestMethod.POST)
     @ResponseBody
@@ -216,7 +280,7 @@ public class ConverterController extends BaseController {
             String errorText = "";
             JSDownlinkEvaluator jsDownlinkEvaluator = null;
             try {
-                TbMsg inMsg = new TbMsg(UUIDs.timeBased(), msgType, null, new TbMsgMetaData(metadataMap), data, null, null, 0L);
+                TbMsg inMsg = TbMsg.createNewMsg(UUIDs.timeBased(), msgType, null, new TbMsgMetaData(metadataMap), data);
                 jsDownlinkEvaluator = new JSDownlinkEvaluator(jsSandboxService, encoder);
                 output = jsDownlinkEvaluator.execute(inMsg, integrationMetaData);
                 validateDownLinkOutput(output);

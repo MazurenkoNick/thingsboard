@@ -1,12 +1,12 @@
 /**
- * Thingsboard OÜ ("COMPANY") CONFIDENTIAL
+ * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2018 Thingsboard OÜ. All Rights Reserved.
+ * Copyright © 2016-2018 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
- * the property of Thingsboard OÜ and its suppliers,
+ * the property of ThingsBoard, Inc. and its suppliers,
  * if any.  The intellectual and technical concepts contained
- * herein are proprietary to Thingsboard OÜ
+ * herein are proprietary to ThingsBoard, Inc.
  * and its suppliers and may be covered by U.S. and Foreign Patents,
  * patents in process, and are protected by trade secret or copyright law.
  *
@@ -75,7 +75,6 @@ import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -83,6 +82,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
@@ -135,8 +135,8 @@ public class DefaultTelemetrySubscriptionService implements TelemetrySubscriptio
         }
     }
 
-    private final Map<EntityId, Set<Subscription>> subscriptionsByEntityId = new HashMap<>();
-    private final Map<String, Map<Integer, Subscription>> subscriptionsByWsSessionId = new HashMap<>();
+    private final Map<EntityId, Set<Subscription>> subscriptionsByEntityId = new ConcurrentHashMap<>();
+    private final Map<String, Map<Integer, Subscription>> subscriptionsByWsSessionId = new ConcurrentHashMap<>();
 
     @Override
     public void addLocalWsSubscription(String sessionId, EntityId entityId, SubscriptionState sub) {
@@ -447,7 +447,7 @@ public class DefaultTelemetrySubscriptionService implements TelemetrySubscriptio
             deviceSubscriptions.stream().filter(filter).forEach(s -> {
                 String sessionId = s.getWsSessionId();
                 List<TsKvEntry> subscriptionUpdate = f.apply(s);
-                if (subscriptionUpdate == null || !subscriptionUpdate.isEmpty()) {
+                if (subscriptionUpdate != null && !subscriptionUpdate.isEmpty()) {
                     SubscriptionUpdate update = new SubscriptionUpdate(s.getSubscriptionId(), subscriptionUpdate);
                     if (s.isLocal()) {
                         updateSubscriptionState(sessionId, s, update);
@@ -468,9 +468,9 @@ public class DefaultTelemetrySubscriptionService implements TelemetrySubscriptio
     }
 
     private void registerSubscription(String sessionId, EntityId entityId, Subscription subscription) {
-        Set<Subscription> deviceSubscriptions = subscriptionsByEntityId.computeIfAbsent(entityId, k -> new HashSet<>());
+        Set<Subscription> deviceSubscriptions = subscriptionsByEntityId.computeIfAbsent(entityId, k -> ConcurrentHashMap.newKeySet());
         deviceSubscriptions.add(subscription);
-        Map<Integer, Subscription> sessionSubscriptions = subscriptionsByWsSessionId.computeIfAbsent(sessionId, k -> new HashMap<>());
+        Map<Integer, Subscription> sessionSubscriptions = subscriptionsByWsSessionId.computeIfAbsent(sessionId, k -> new ConcurrentHashMap<>());
         sessionSubscriptions.put(subscription.getSubscriptionId(), subscription);
     }
 

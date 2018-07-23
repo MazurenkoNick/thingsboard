@@ -1,12 +1,12 @@
 /*
- * Thingsboard OÜ ("COMPANY") CONFIDENTIAL
+ * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2018 Thingsboard OÜ. All Rights Reserved.
+ * Copyright © 2016-2018 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
- * the property of Thingsboard OÜ and its suppliers,
+ * the property of ThingsBoard, Inc. and its suppliers,
  * if any.  The intellectual and technical concepts contained
- * herein are proprietary to Thingsboard OÜ
+ * herein are proprietary to ThingsBoard, Inc.
  * and its suppliers and may be covered by U.S. and Foreign Patents,
  * patents in process, and are protected by trade secret or copyright law.
  *
@@ -47,6 +47,7 @@ function RuleChainService($http, $q, $filter, $ocLazyLoad, $translate, types, co
         getRuleNodeComponents: getRuleNodeComponents,
         getRuleNodeComponentByClazz: getRuleNodeComponentByClazz,
         getRuleNodeSupportedLinks: getRuleNodeSupportedLinks,
+        ruleNodeAllowCustomLinks: ruleNodeAllowCustomLinks,
         resolveTargetRuleChains: resolveTargetRuleChains,
         testScript: testScript,
         getLatestRuleNodeDebugInput: getLatestRuleNodeDebugInput
@@ -142,19 +143,19 @@ function RuleChainService($http, $q, $filter, $ocLazyLoad, $translate, types, co
 
     function getRuleNodeSupportedLinks(component) {
         var relationTypes = component.configurationDescriptor.nodeDefinition.relationTypes;
-        var customRelations = component.configurationDescriptor.nodeDefinition.customRelations;
-        var linkLabels = [];
+        var linkLabels = {};
         for (var i=0;i<relationTypes.length;i++) {
-            linkLabels.push({
-                name: relationTypes[i], custom: false
-            });
-        }
-        if (customRelations) {
-            linkLabels.push(
-                { name: 'Custom', custom: true }
-            );
+            var label = relationTypes[i];
+            linkLabels[label] = {
+                name: label,
+                value: label
+            };
         }
         return linkLabels;
+    }
+
+    function ruleNodeAllowCustomLinks(component) {
+        return component.configurationDescriptor.nodeDefinition.customRelations;
     }
 
     function getRuleNodeComponents() {
@@ -241,7 +242,10 @@ function RuleChainService($http, $q, $filter, $ocLazyLoad, $translate, types, co
         if (res && res.length) {
             return res[0];
         }
-        return null;
+        var unknownComponent = angular.copy(types.unknownNodeComponent);
+        unknownComponent.clazz = clazz;
+        unknownComponent.configurationDescriptor.nodeDefinition.details = "Unknown Rule Node class: " + clazz;
+        return unknownComponent;
     }
 
     function resolveTargetRuleChains(ruleChainConnections) {

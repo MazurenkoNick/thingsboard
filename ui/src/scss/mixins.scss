@@ -1,12 +1,12 @@
 /**
- * Thingsboard OÜ ("COMPANY") CONFIDENTIAL
+ * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2018 Thingsboard OÜ. All Rights Reserved.
+ * Copyright © 2016-2018 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
- * the property of Thingsboard OÜ and its suppliers,
+ * the property of ThingsBoard, Inc. and its suppliers,
  * if any.  The intellectual and technical concepts contained
- * herein are proprietary to Thingsboard OÜ
+ * herein are proprietary to ThingsBoard, Inc.
  * and its suppliers and may be covered by U.S. and Foreign Patents,
  * patents in process, and are protected by trade secret or copyright law.
  *
@@ -45,5 +45,30 @@
   }
   &:-ms-input-placeholder {
     @content;
+  }
+}
+
+@mixin line-clamp($numLines: 1, $lineHeight: 1.412) {
+  overflow: hidden;
+  position: relative;
+  line-height: $lineHeight;
+  text-align: justify;
+  margin-right: -1em;
+  padding-right: 2em;
+  max-height: ($numLines*$lineHeight)+em;
+  &:before {
+    content: '...';
+    position: absolute;
+    right: 1em;
+    bottom: 0;
+  }
+  &:after {
+    content: '';
+    position: absolute;
+    right: 1em;
+    width: 1em;
+    height: 1em;
+    margin-top: 0.2em;
+    background: white;
   }
 }

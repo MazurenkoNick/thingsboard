@@ -1,12 +1,12 @@
 /*
- * Thingsboard OÜ ("COMPANY") CONFIDENTIAL
+ * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2018 Thingsboard OÜ. All Rights Reserved.
+ * Copyright © 2016-2018 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
- * the property of Thingsboard OÜ and its suppliers,
+ * the property of ThingsBoard, Inc. and its suppliers,
  * if any.  The intellectual and technical concepts contained
- * herein are proprietary to Thingsboard OÜ
+ * herein are proprietary to ThingsBoard, Inc.
  * and its suppliers and may be covered by U.S. and Foreign Patents,
  * patents in process, and are protected by trade secret or copyright law.
  *
@@ -56,7 +56,7 @@ export default function RelationTable() {
 }
 
 /*@ngInject*/
-function RelationTableController($scope, $q, $mdDialog, $document, $translate, $filter, utils, types, entityRelationService) {
+function RelationTableController($scope, $q, $mdDialog, $document, $translate, $filter, $timeout, utils, types, entityRelationService) {
 
     let vm = this;
 
@@ -105,8 +105,15 @@ function RelationTableController($scope, $q, $mdDialog, $document, $translate, $
         }
     });
 
-    function enterFilterMode () {
+    function enterFilterMode (event) {
+        let $button = angular.element(event.currentTarget);
+        let $toolbarsContainer = $button.closest('.toolbarsContainer');
+
         vm.query.search = '';
+
+        $timeout(()=>{
+            $toolbarsContainer.find('.searchInput').focus();
+        })
     }
 
     function exitFilterMode () {
