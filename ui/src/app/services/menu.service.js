@@ -146,7 +146,7 @@ function Menu(userService, $state, $rootScope, $q, types, entityGroupService) {
                             name: 'admin.system-settings',
                             type: 'toggle',
                             state: 'home.settings',
-                            height: '160px',
+                            height: '200px',
                             icon: 'settings',
                             pages: [
                                 {
@@ -172,6 +172,12 @@ function Menu(userService, $state, $rootScope, $q, types, entityGroupService) {
                                     type: 'link',
                                     state: 'home.settings.loginWhiteLabel',
                                     icon: 'format_paint'
+                                },
+                                {
+                                    name: 'custom-translation.custom-translation',
+                                    type: 'link',
+                                    state: 'home.settings.customTranslation',
+                                    icon: 'language'
                                 }
                             ]
                         }];
@@ -225,6 +231,16 @@ function Menu(userService, $state, $rootScope, $q, types, entityGroupService) {
                                         state: 'home.settings.loginWhiteLabel'
                                     }
                                 ]
+                            },
+                            {
+                                name: 'custom-translation.custom-translation',
+                                places: [
+                                    {
+                                        name: 'custom-translation.custom-translation',
+                                        icon: 'language',
+                                        state: 'home.settings.customTranslation'
+                                    }
+                                ]
                             }];
                 } else if (authority === 'TENANT_ADMIN') {
                     sections = [
@@ -256,6 +272,12 @@ function Menu(userService, $state, $rootScope, $q, types, entityGroupService) {
                         assetGroups,
                         deviceGroups,
                         {
+                            name: 'entity-view.entity-views',
+                            type: 'link',
+                            state: 'home.entityViews',
+                            icon: 'view_quilt'
+                        },
+                        {
                             name: 'widget.widget-library',
                             type: 'link',
                             state: 'home.widgets-bundles',
@@ -277,7 +299,7 @@ function Menu(userService, $state, $rootScope, $q, types, entityGroupService) {
                             name: 'admin.system-settings',
                             type: 'toggle',
                             state: 'home.settings',
-                            height: '120px',
+                            height: '200px',
                             icon: 'settings',
                             pages: [
                                 {
@@ -297,6 +319,18 @@ function Menu(userService, $state, $rootScope, $q, types, entityGroupService) {
                                     type: 'link',
                                     state: 'home.settings.whiteLabel',
                                     icon: 'format_paint'
+                                },
+                                {
+                                    name: 'white-labeling.login-white-labeling',
+                                    type: 'link',
+                                    state: 'home.settings.loginWhiteLabel',
+                                    icon: 'format_paint'
+                                },
+                                {
+                                    name: 'custom-translation.custom-translation',
+                                    type: 'link',
+                                    state: 'home.settings.customTranslation',
+                                    icon: 'language'
                                 }
                             ]
                         },
@@ -372,6 +406,16 @@ function Menu(userService, $state, $rootScope, $q, types, entityGroupService) {
                                 ]
                             },
                             {
+                                name: 'entity-view.management',
+                                places: [
+                                    {
+                                        name: 'entity-view.entity-views',
+                                        icon: 'view_quilt',
+                                        state: 'home.entityViews'
+                                    }
+                                ]
+                            },
+                            {
                                 name: 'dashboard.management',
                                 places: [
                                     {
@@ -413,6 +457,11 @@ function Menu(userService, $state, $rootScope, $q, types, entityGroupService) {
                                         name: 'white-labeling.white-labeling',
                                         icon: 'format_paint',
                                         state: 'home.settings.whiteLabel'
+                                    },
+                                    {
+                                        name: 'white-labeling.login-white-labeling',
+                                        icon: 'format_paint',
+                                        state: 'home.settings.loginWhiteLabel'
                                     }
                                 ]
                             },
@@ -423,6 +472,16 @@ function Menu(userService, $state, $rootScope, $q, types, entityGroupService) {
                                         name: 'audit-log.audit-logs',
                                         icon: 'track_changes',
                                         state: 'home.auditLogs'
+                                    }
+                                ]
+                            },
+                            {
+                                name: 'custom-translation.custom-translation',
+                                places: [
+                                    {
+                                        name: 'custom-translation.custom-translation',
+                                        icon: 'language',
+                                        state: 'home.settings.customTranslation'
                                     }
                                 ]
                             }];
@@ -447,6 +506,12 @@ function Menu(userService, $state, $rootScope, $q, types, entityGroupService) {
                             icon: 'devices_other'
                         },
                         {
+                            name: 'entity-view.entity-views',
+                            type: 'link',
+                            state: 'home.entityViews',
+                            icon: 'view_quilt'
+                        },
+                        {
                             name: 'dashboard.dashboards',
                             type: 'link',
                             state: 'home.dashboards',
@@ -462,7 +527,7 @@ function Menu(userService, $state, $rootScope, $q, types, entityGroupService) {
                             name: 'admin.system-settings',
                             type: 'toggle',
                             state: 'home.settings',
-                            height: '40px',
+                            height: '120px',
                             icon: 'settings',
                             pages: [
                                 {
@@ -470,6 +535,18 @@ function Menu(userService, $state, $rootScope, $q, types, entityGroupService) {
                                     type: 'link',
                                     state: 'home.settings.whiteLabel',
                                     icon: 'format_paint'
+                                },
+                                {
+                                    name: 'white-labeling.login-white-labeling',
+                                    type: 'link',
+                                    state: 'home.settings.loginWhiteLabel',
+                                    icon: 'format_paint'
+                                },
+                                {
+                                    name: 'custom-translation.custom-translation',
+                                    type: 'link',
+                                    state: 'home.settings.customTranslation',
+                                    icon: 'language'
                                 }
                             ]
                         }];
@@ -495,36 +572,61 @@ function Menu(userService, $state, $rootScope, $q, types, entityGroupService) {
                                 }
                             ]
                         },
-                            {
-                                name: 'dashboard.view-dashboards',
-                                places: [
-                                    {
-                                        name: 'dashboard.dashboards',
-                                        icon: 'dashboard',
-                                        state: 'home.dashboards'
-                                    }
-                                ]
-                            },
-                            {
-                                name: 'scheduler.management',
-                                places: [
-                                    {
-                                        name: 'scheduler.scheduler',
-                                        icon: 'schedule',
-                                        state: 'home.scheduler'
-                                    }
-                                ]
-                            },
-                            {
-                                name: 'admin.system-settings',
-                                places: [
-                                    {
-                                        name: 'white-labeling.white-labeling',
-                                        icon: 'format_paint',
-                                        state: 'home.settings.whiteLabel'
-                                    }
-                                ]
-                            }];
+                        {
+                            name: 'entity-view.management',
+                            places: [
+                                {
+                                    name: 'entity-view.entity-views',
+                                    icon: 'view_quilt',
+                                    state: 'home.entityViews'
+                                }
+                            ]
+                        },
+                        {
+                            name: 'dashboard.view-dashboards',
+                            places: [
+                                {
+                                    name: 'dashboard.dashboards',
+                                    icon: 'dashboard',
+                                    state: 'home.dashboards'
+                                }
+                            ]
+                        },
+                        {
+                            name: 'scheduler.management',
+                            places: [
+                                {
+                                    name: 'scheduler.scheduler',
+                                    icon: 'schedule',
+                                    state: 'home.scheduler'
+                                }
+                            ]
+                        },
+                        {
+                            name: 'admin.system-settings',
+                            places: [
+                                {
+                                    name: 'white-labeling.white-labeling',
+                                    icon: 'format_paint',
+                                    state: 'home.settings.whiteLabel'
+                                },
+                                {
+                                    name: 'white-labeling.login-white-labeling',
+                                    icon: 'format_paint',
+                                    state: 'home.settings.loginWhiteLabel'
+                                }
+                            ]
+                        },
+                        {
+                            name: 'custom-translation.custom-translation',
+                            places: [
+                                {
+                                    name: 'custom-translation.custom-translation',
+                                    icon: 'language',
+                                    state: 'home.settings.customTranslation'
+                                }
+                            ]
+                        }];
                 }
             }
             if (authority === 'TENANT_ADMIN') {

@@ -57,6 +57,7 @@ import org.thingsboard.server.dao.device.DeviceService;
 import org.thingsboard.server.dao.event.EventService;
 import org.thingsboard.server.dao.group.EntityGroupService;
 import org.thingsboard.server.dao.integration.IntegrationService;
+import org.thingsboard.server.dao.entityview.EntityViewService;
 import org.thingsboard.server.dao.relation.RelationService;
 import org.thingsboard.server.dao.rule.RuleChainService;
 import org.thingsboard.server.dao.tenant.TenantService;
@@ -137,7 +138,7 @@ class DefaultTbContext implements TbContext, TbPeContext {
 
     @Override
     public ScriptEngine createAttributesJsScriptEngine(String script) {
-        return new RuleNodeJsScriptEngine(mainCtx.getJsSandbox(), JsScriptType.ATTRIBUTES_SCRIPT, script);
+        return new RuleNodeJsScriptEngine(mainCtx.getJsSandbox(), nodeCtx.getSelf().getId(), JsScriptType.ATTRIBUTES_SCRIPT, script);
     }
 
     @Override
@@ -195,7 +196,7 @@ class DefaultTbContext implements TbContext, TbPeContext {
 
     @Override
     public ScriptEngine createJsScriptEngine(String script, String... argNames) {
-        return new RuleNodeJsScriptEngine(mainCtx.getJsSandbox(), script, argNames);
+        return new RuleNodeJsScriptEngine(mainCtx.getJsSandbox(), nodeCtx.getSelf().getId(), script, argNames);
     }
 
     @Override
@@ -259,12 +260,13 @@ class DefaultTbContext implements TbContext, TbPeContext {
     }
 
     @Override
+    public EntityViewService getEntityViewService() {
+        return mainCtx.getEntityViewService();
+    }
+
+    @Override
     public MailService getMailService() {
-        if (mainCtx.isAllowSystemMailService()) {
-            return mainCtx.getMailService();
-        } else {
-            throw new RuntimeException("Access to System Mail Service is forbidden!");
-        }
+        return mainCtx.getMailService();
     }
 
     @Override
