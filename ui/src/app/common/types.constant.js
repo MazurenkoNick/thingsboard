@@ -38,7 +38,9 @@ export default angular.module('thingsboard.types', [])
                 permissionDenied: 20,
                 invalidArguments: 30,
                 badRequestParams: 31,
-                itemNotFound: 32
+                itemNotFound: 32,
+                tooManyRequests: 33,
+                tooManyUpdates: 34
             },
             entryPoints: {
                 login: "/api/auth/login",
@@ -420,11 +422,6 @@ export default angular.module('thingsboard.types', [])
                 "OPC_UA": {
                     name: "integration.type-opc-ua",
                     value: "OPC_UA"
-                },
-                "FFB": {
-                    name: "integration.type-ffb",
-                    value: "FFB",
-                    http: true
                 }
             },
             componentType: {

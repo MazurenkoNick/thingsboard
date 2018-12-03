@@ -45,8 +45,4 @@ public interface DiscoveryService {
 
     List<ServerInstance> getOtherServers();
 
-    boolean addListener(DiscoveryServiceListener listener);
-
-    boolean removeListener(DiscoveryServiceListener listener);
-
 }

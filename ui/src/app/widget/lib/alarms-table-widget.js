@@ -67,6 +67,8 @@ function AlarmsTableWidget() {
 function AlarmsTableWidgetController($element, $scope, $filter, $mdMedia, $mdDialog, $mdPanel, $document, $translate, $q, $timeout, alarmService, utils, types) {
     var vm = this;
 
+    vm.utils = utils;
+
     vm.stylesInfo = {};
     vm.contentsInfo = {};
     vm.columnWidth = {};
@@ -419,7 +421,7 @@ function AlarmsTableWidgetController($element, $scope, $filter, $mdMedia, $mdDia
                 parent: angular.element($document[0].body),
                 targetEvent: $event,
                 fullscreen: true,
-                skipHide: true,
+                multiple: true,
                 onShowing: function(scope, element) {
                     onShowingCallback.onShowing(scope, element);
                 }
@@ -598,6 +600,7 @@ function AlarmsTableWidgetController($element, $scope, $filter, $mdMedia, $mdDia
         if (alarm && key) {
             var contentInfo = vm.contentsInfo[key.label];
             var value = getAlarmValue(alarm, key);
+            value = utils.customTranslation(value, value);
             if (contentInfo.useCellContentFunction && contentInfo.cellContentFunction) {
                 if (angular.isDefined(value)) {
                     strContent = '' + value;

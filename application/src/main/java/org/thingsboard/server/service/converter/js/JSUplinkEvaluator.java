@@ -30,22 +30,38 @@
  */
 package org.thingsboard.server.service.converter.js;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.util.Base64Utils;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.service.converter.UplinkMetaData;
-import org.thingsboard.server.service.script.JsSandboxService;
+import org.thingsboard.server.service.script.JsInvokeService;
 import org.thingsboard.server.service.script.JsScriptType;
 
 @Slf4j
 public class JSUplinkEvaluator extends AbstractJSEvaluator {
 
-    public JSUplinkEvaluator(JsSandboxService sandboxService, EntityId entityId, String script) {
+    private static final ObjectMapper mapper = new ObjectMapper();
+
+    public JSUplinkEvaluator(JsInvokeService sandboxService, EntityId entityId, String script) {
         super(sandboxService, entityId, JsScriptType.UPLINK_CONVERTER_SCRIPT, script);
     }
 
     public String execute(byte[] data, UplinkMetaData metadata) throws Exception {
         validateSuccessfulScriptLazyInit();
-        return sandboxService.invokeFunction(this.scriptId, this.entityId, data, metadata.getKvMap()).get().toString();
+        String[] inArgs = prepareArgs(data, metadata);
+        return sandboxService.invokeFunction(this.scriptId, inArgs[0], inArgs[1]).get().toString();
+    }
+
+    private static String[] prepareArgs(byte[] data, UplinkMetaData metadata) {
+        try {
+            String[] args = new String[2];
+            args[0] = Base64Utils.encodeToString(data);
+            args[1] = mapper.writeValueAsString(metadata.getKvMap());
+            return args;
+        } catch (Throwable th) {
+            throw new IllegalArgumentException("Cannot bind js args", th);
+        }
     }
 
 }

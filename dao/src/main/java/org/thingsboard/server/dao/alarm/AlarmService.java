@@ -43,6 +43,9 @@ import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.page.TimePageData;
 
+import java.util.List;
+import java.util.function.Predicate;
+
 /**
  * Created by ashvayka on 11.05.17.
  */
@@ -50,17 +53,19 @@ public interface AlarmService {
 
     Alarm createOrUpdateAlarm(Alarm alarm);
 
-    ListenableFuture<Boolean> ackAlarm(AlarmId alarmId, long ackTs);
+    ListenableFuture<Boolean> ackAlarm(TenantId tenantId, AlarmId alarmId, long ackTs);
 
-    ListenableFuture<Boolean> clearAlarm(AlarmId alarmId, JsonNode details, long ackTs);
+    ListenableFuture<Boolean> clearAlarm(TenantId tenantId, AlarmId alarmId, JsonNode details, long ackTs);
 
-    ListenableFuture<Alarm> findAlarmByIdAsync(AlarmId alarmId);
+    ListenableFuture<Alarm> findAlarmByIdAsync(TenantId tenantId, AlarmId alarmId);
 
-    ListenableFuture<AlarmInfo> findAlarmInfoByIdAsync(AlarmId alarmId);
+    ListenableFuture<AlarmInfo> findAlarmInfoByIdAsync(TenantId tenantId, AlarmId alarmId);
 
-    ListenableFuture<TimePageData<AlarmInfo>> findAlarms(AlarmQuery query);
+    ListenableFuture<TimePageData<AlarmInfo>> findAlarms(TenantId tenantId, AlarmQuery query);
 
-    AlarmSeverity findHighestAlarmSeverity(EntityId entityId, AlarmSearchStatus alarmSearchStatus,
+    List<Long> findAlarmCounts(TenantId tenantId, AlarmQuery query, List<Predicate<AlarmInfo>> filters);
+
+    AlarmSeverity findHighestAlarmSeverity(TenantId tenantId, EntityId entityId, AlarmSearchStatus alarmSearchStatus,
                                            AlarmStatus alarmStatus);
 
     ListenableFuture<Alarm> findLatestByOriginatorAndType(TenantId tenantId, EntityId originator, String type);

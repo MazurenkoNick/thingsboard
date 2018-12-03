@@ -110,6 +110,12 @@
                         <label translate>white-labeling.logo-height</label>
                         <input type="number" step="1" min="1" ng-model="vm.whiteLabelingParams.logoImageHeight">
                     </md-input-container>
+                    <md-checkbox ng-if="!vm.isLoginWl && vm.isSysAdmin" ng-disabled="$root.loading"
+                                 aria-label="{{ 'white-labeling.enable-help-links' | translate }}" ng-model="vm.whiteLabelingParams.enableHelpLinks">{{ 'white-labeling.enable-help-links' | translate }}</md-checkbox>
+                    <md-input-container flex class="md-block" ng-if="!vm.isLoginWl && vm.isSysAdmin && vm.whiteLabelingParams.enableHelpLinks">
+                        <label translate>white-labeling.help-link-base-url</label>
+                        <input ng-model="vm.whiteLabelingParams.helpLinkBaseUrl">
+                    </md-input-container>
                     <div layout="row">
                         <md-input-container flex class="md-block">
                             <label translate>white-labeling.primary-palette</label>
@@ -154,16 +160,26 @@
                     </div>
                     <md-checkbox ng-if="vm.isLoginWl" ng-disabled="$root.loading"
                                  aria-label="{{ 'white-labeling.dark-foreground' | translate }}" ng-model="vm.whiteLabelingParams.darkForeground">{{ 'white-labeling.dark-foreground' | translate }}</md-checkbox>
-                    <div ng-if="vm.isLoginWl" flex md-color-picker
-                         ng-required="false"
-                         ng-model="vm.whiteLabelingParams.pageBackgroundColor"
-                         label="{{ 'white-labeling.page-background-color' | translate }}"
-                         icon="format_color_fill"
-                         default="#999"
-                         md-color-clear-button="true"
-                         open-on-input="true"
-                         md-color-generic-palette="false"
-                         md-color-history="false">
+                    <div layout="row" ng-if="vm.isLoginWl" >
+                        <div flex md-color-picker
+                             ng-required="false"
+                             ng-model="vm.whiteLabelingParams.pageBackgroundColor"
+                             label="{{ 'white-labeling.page-background-color' | translate }}"
+                             icon="format_color_fill"
+                             md-color-clear-button="false"
+                             open-on-input="true"
+                             md-color-generic-palette="false"
+                             md-color-history="false">
+                        </div>
+                        <md-button class="md-icon-button" ng-disabled="$root.loading" aria-label="{{ 'action.delete' | translate }}"
+                                   ng-click="vm.whiteLabelingParams.pageBackgroundColor = ''; vm.whiteLabelForm.$setDirty();">
+                            <md-tooltip md-direction="top">
+                                {{ 'action.delete' | translate }}
+                            </md-tooltip>
+                            <md-icon aria-label="{{ 'action.delete' | translate }}" class="material-icons">
+                                close
+                            </md-icon>
+                        </md-button>
                     </div>
                     <div layout="row" layout-align="end center" width="100%" layout-wrap>
                         <md-button ng-if="!vm.isLoginWl" ng-disabled="$root.loading || vm.whiteLabelForm.$invalid" ng-click="vm.preview()" class="md-raised">{{'white-labeling.preview' | translate}}</md-button>

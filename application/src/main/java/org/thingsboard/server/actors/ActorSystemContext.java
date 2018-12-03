@@ -46,6 +46,7 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 import org.thingsboard.rule.engine.api.MailService;
 import org.thingsboard.rule.engine.api.ReportService;
@@ -65,6 +66,7 @@ import org.thingsboard.server.dao.audit.AuditLogService;
 import org.thingsboard.server.dao.blob.BlobEntityService;
 import org.thingsboard.server.dao.converter.ConverterService;
 import org.thingsboard.server.dao.customer.CustomerService;
+import org.thingsboard.server.dao.dashboard.DashboardService;
 import org.thingsboard.server.dao.device.DeviceService;
 import org.thingsboard.server.dao.entityview.EntityViewService;
 import org.thingsboard.server.dao.event.EventService;
@@ -75,23 +77,27 @@ import org.thingsboard.server.dao.rule.RuleChainService;
 import org.thingsboard.server.dao.tenant.TenantService;
 import org.thingsboard.server.dao.timeseries.TimeseriesService;
 import org.thingsboard.server.dao.user.UserService;
+import org.thingsboard.server.kafka.TbNodeIdProvider;
 import org.thingsboard.server.service.cluster.discovery.DiscoveryService;
 import org.thingsboard.server.service.cluster.routing.ClusterRoutingService;
 import org.thingsboard.server.service.cluster.rpc.ClusterRpcService;
 import org.thingsboard.server.service.component.ComponentDiscoveryService;
+import org.thingsboard.server.service.converter.DataConverterService;
 import org.thingsboard.server.service.encoding.DataDecodingEncodingService;
+import org.thingsboard.server.service.executors.ClusterRpcCallbackExecutorService;
 import org.thingsboard.server.service.executors.DbCallbackExecutorService;
 import org.thingsboard.server.service.executors.ExternalCallExecutorService;
 import org.thingsboard.server.service.integration.PlatformIntegrationService;
 import org.thingsboard.server.service.mail.MailExecutorService;
-import org.thingsboard.server.service.queue.MsgQueueService;
 import org.thingsboard.server.service.rpc.DeviceRpcService;
 import org.thingsboard.server.service.ruleengine.RuleEngineCallService;
 import org.thingsboard.server.service.scheduler.SchedulerService;
 import org.thingsboard.server.service.script.JsExecutorService;
-import org.thingsboard.server.service.script.JsSandboxService;
+import org.thingsboard.server.service.script.JsInvokeService;
+import org.thingsboard.server.service.session.DeviceSessionCacheService;
 import org.thingsboard.server.service.state.DeviceStateService;
 import org.thingsboard.server.service.telemetry.TelemetrySubscriptionService;
+import org.thingsboard.server.service.transport.RuleEngineTransportService;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
@@ -142,6 +148,10 @@ public class ActorSystemContext {
     @Autowired
     @Getter
     private AssetService assetService;
+
+    @Autowired
+    @Getter
+    private DashboardService dashboardService;
 
     @Autowired
     @Getter
@@ -197,7 +207,7 @@ public class ActorSystemContext {
 
     @Autowired
     @Getter
-    private JsSandboxService jsSandbox;
+    private JsInvokeService jsSandbox;
 
     @Autowired
     @Getter
@@ -224,6 +234,10 @@ public class ActorSystemContext {
 
     @Autowired
     @Getter
+    private ClusterRpcCallbackExecutorService clusterRpcCallbackExecutor;
+
+    @Autowired
+    @Getter
     private DbCallbackExecutorService dbCallbackExecutor;
 
     @Autowired
@@ -236,11 +250,16 @@ public class ActorSystemContext {
 
     @Autowired
     @Getter
-    private MsgQueueService msgQueueService;
+    private DeviceStateService deviceStateService;
 
     @Autowired
     @Getter
-    private DeviceStateService deviceStateService;
+    private DeviceSessionCacheService deviceSessionCacheService;
+
+    @Lazy
+    @Autowired
+    @Getter
+    private RuleEngineTransportService ruleEngineTransportService;
 
     @Autowired
     @Getter
@@ -256,6 +275,9 @@ public class ActorSystemContext {
 
     @Autowired
     @Getter private PlatformIntegrationService platformIntegrationService;
+
+    @Autowired
+    @Getter private DataConverterService dataConverterService;
 
     @Value("${actors.session.max_concurrent_sessions_per_device:1}")
     @Getter
@@ -301,17 +323,25 @@ public class ActorSystemContext {
     @Getter
     private boolean allowSystemMailService;
 
+    @Value("${transport.sessions.inactivity_timeout}")
+    @Getter
+    private long sessionInactivityTimeout;
+
+    @Value("${transport.sessions.report_timeout}")
+    @Getter
+    private long sessionReportTimeout;
+
     @Getter
     @Setter
     private ActorSystem actorSystem;
 
+    @Autowired
     @Getter
-    @Setter
-    private ActorRef appActor;
+    private TbNodeIdProvider nodeIdProvider;
 
     @Getter
     @Setter
-    private ActorRef sessionManagerActor;
+    private ActorRef appActor;
 
     @Getter
     @Setter

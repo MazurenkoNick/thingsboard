@@ -484,7 +484,8 @@
         "group-name-starts-with": "Customer groups whose names start with '{{prefix}}'",
         "select-default-customer": "Select default customer",
         "default-customer": "Default customer",
-        "default-customer-required": "Default customer is required in order to debug dashboard on Tenant level"
+        "default-customer-required": "Default customer is required in order to debug dashboard on Tenant level",
+        "allow-white-labeling": "Allow White Labeling"
     },
     "custom-translation": {
         "custom-translation": "Custom Translation",
@@ -670,7 +671,12 @@
         "alarm-fields-required": "Alarm fields are required.",
         "function-types": "Function types",
         "function-types-required": "Function types are required.",
-        "maximum-function-types": "Maximum { count, plural, 1 {1 function type is allowed.} other {# function types are allowed} }"
+        "maximum-function-types": "Maximum { count, plural, 1 {1 function type is allowed.} other {# function types are allowed} }",
+        "time-description": "timestamp of the current value;",
+        "value-description": "the current value;",
+        "prev-value-description": "result of the previous function call;",
+        "time-prev-description": "timestamp of the previous value;",
+        "prev-orig-value-description": "original previous value;"
     },
     "datasource": {
         "type": "Datasource type",
@@ -1014,6 +1020,7 @@
     },
     "entity-view": {
         "entity-view": "Entity View",
+        "entity-view-required": "Entity view is required.",
         "entity-views": "Entity Views",
         "management": "Entity View management",
         "view-entity-views": "View Entity Views",
@@ -1456,7 +1463,6 @@
         "type-ttn": "TheThingsNetwork",
         "type-azure-event-hub": "Azure Event Hub",
         "type-opc-ua": "OPC-UA",
-        "type-ffb": "FFB",
         "opc-ua-application-name": "Application name",
         "opc-ua-application-uri": "Application uri",
         "opc-ua-scan-period-in-seconds": "Scan period in seconds",
@@ -1716,7 +1722,7 @@
         "created-time": "Created time",
         "name": "Name",
         "type": "Type",
-        "assigned_customer": "Assigned customer",
+        "created_customer": "Created by Customer",
         "edit-scheduler-event": "Edit scheduler event",
         "delete-scheduler-event": "Delete scheduler event",
         "no-scheduler-events": "No scheduler events found",
@@ -1834,7 +1840,7 @@
         "created-time": "Created time",
         "name": "Name",
         "type": "Type",
-        "assigned_customer": "Assigned customer",
+        "created_customer": "Created by Customer",
         "download-blob-entity": "Download file",
         "delete-blob-entity": "Delete file",
         "delete-blob-entity-title": "Are you sure you want to delete file '{{blobEntityName}}'?",
@@ -1873,7 +1879,9 @@
         "no-tenants-matching": "No tenants matching '{{entity}}' were found.",
         "tenant-required": "Tenant is required",
         "selected-tenants": "{ count, plural, 1 {1 tenant} other {# tenants} } selected",
-        "search": "Search tenants"
+        "search": "Search tenants",
+        "allow-white-labeling": "Allow White Labeling",
+        "allow-customer-white-labeling": "Allow Customer White Labeling"
     },
     "timeinterval": {
         "seconds-interval": "{ seconds, plural, 1 {1 second} other {# seconds} }",
@@ -2141,7 +2149,9 @@
         "hue3": "HUE 3",
         "page-background-color": "Page background color",
         "dark-foreground": "Dark foreground",
-        "domain-name": "Domain name"
+        "domain-name": "Domain name",
+        "help-link-base-url": "Help links base url",
+        "enable-help-links": "Enable help links"
     },
     "icon": {
         "icon": "Icon",
@@ -2167,7 +2177,8 @@
             "ko_KR": "Korean",
             "ru_RU": "Russian",
             "es_ES": "Spanish",
-            "ja_JA": "Japanese"
+            "ja_JA": "Japanese",
+            "tr_TR": "Turkish"
         }
     }
 }

@@ -51,6 +51,7 @@ import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.page.TextPageData;
 import org.thingsboard.server.common.data.page.TextPageLink;
 import org.thingsboard.server.common.data.DataConstants;
+import org.thingsboard.server.common.data.plugin.ComponentLifecycleEvent;
 import org.thingsboard.server.common.msg.TbMsg;
 import org.thingsboard.server.common.msg.TbMsgMetaData;
 import org.thingsboard.server.dao.event.EventService;
@@ -60,7 +61,7 @@ import org.thingsboard.server.service.converter.IntegrationMetaData;
 import org.thingsboard.server.service.converter.UplinkMetaData;
 import org.thingsboard.server.service.converter.js.JSDownlinkEvaluator;
 import org.thingsboard.server.service.converter.js.JSUplinkEvaluator;
-import org.thingsboard.server.service.script.JsSandboxService;
+import org.thingsboard.server.service.script.JsInvokeService;
 
 import java.util.Base64;
 import java.util.List;
@@ -70,15 +71,12 @@ import java.util.Map;
 @RequestMapping("/api")
 @Slf4j
 public class ConverterController extends BaseController {
-
-    @Autowired
-    private DataConverterService dataConverterService;
-
+    
     @Autowired
     private EventService eventService;
 
     @Autowired
-    private JsSandboxService jsSandboxService;
+    private JsInvokeService jsSandboxService;
 
     public static final String CONVERTER_ID = "converterId";
 
@@ -103,13 +101,10 @@ public class ConverterController extends BaseController {
     public Converter saveConverter(@RequestBody Converter converter) throws ThingsboardException {
         try {
             converter.setTenantId(getCurrentUser().getTenantId());
-            boolean create = converter.getId() == null;
+            boolean created = converter.getId() == null;
             Converter result = checkNotNull(converterService.saveConverter(converter));
-            if (create) {
-                dataConverterService.createConverter(result);
-            } else {
-                dataConverterService.updateConverter(result);
-            }
+            actorService.onEntityStateChange(result.getTenantId(), result.getId(),
+                    created ? ComponentLifecycleEvent.CREATED : ComponentLifecycleEvent.UPDATED);
 
             logEntityAction(result.getId(), result,
                     null,
@@ -148,8 +143,8 @@ public class ConverterController extends BaseController {
         try {
             ConverterId converterId = new ConverterId(toUUID(strConverterId));
             Converter converter = checkConverterId(converterId);
-            converterService.deleteConverter(converterId);
-            dataConverterService.deleteConverter(converterId);
+            converterService.deleteConverter(getTenantId(), converterId);
+            actorService.onEntityStateChange(getTenantId(), converterId, ComponentLifecycleEvent.DELETED);
 
             logEntityAction(converterId, converter,
                     null,

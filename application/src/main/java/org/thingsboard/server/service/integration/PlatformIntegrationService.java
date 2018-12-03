@@ -31,9 +31,14 @@
 package org.thingsboard.server.service.integration;
 
 import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.ListenableFuture;
 import org.thingsboard.server.common.data.id.IntegrationId;
+import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.integration.Integration;
 import org.thingsboard.server.common.msg.cluster.ServerAddress;
+import org.thingsboard.server.common.transport.TransportServiceCallback;
+import org.thingsboard.server.gen.transport.TransportProtos;
+import org.thingsboard.server.service.cluster.discovery.DiscoveryServiceListener;
 import org.thingsboard.server.service.integration.msg.IntegrationDownlinkMsg;
 
 import java.util.Optional;
@@ -41,19 +46,24 @@ import java.util.Optional;
 /**
  * Created by ashvayka on 02.12.17.
  */
-public interface PlatformIntegrationService {
+public interface PlatformIntegrationService extends DiscoveryServiceListener {
 
-    ThingsboardPlatformIntegration createIntegration(Integration integration) throws Exception;
+    ListenableFuture<ThingsboardPlatformIntegration> createIntegration(Integration integration);
 
-    ThingsboardPlatformIntegration updateIntegration(Integration integration) throws Exception;
+    ListenableFuture<ThingsboardPlatformIntegration> updateIntegration(Integration integration);
 
-    void deleteIntegration(IntegrationId integration);
+    ListenableFuture<Void> deleteIntegration(IntegrationId integration);
 
-    Optional<ThingsboardPlatformIntegration> getIntegrationById(IntegrationId id);
-
-    Optional<ThingsboardPlatformIntegration> getIntegrationByRoutingKey(String key);
+    ListenableFuture<ThingsboardPlatformIntegration> getIntegrationByRoutingKey(String key);
 
     void onDownlinkMsg(IntegrationDownlinkMsg msg, FutureCallback<Void> callback);
 
     void onRemoteDownlinkMsg(ServerAddress serverAddress, byte[] bytes);
+
+    void process(TransportProtos.SessionInfoProto sessionInfo, TransportProtos.PostTelemetryMsg msg, TransportServiceCallback<Void> callback);
+
+    void process(TransportProtos.SessionInfoProto sessionInfo, TransportProtos.PostAttributeMsg msg, TransportServiceCallback<Void> callback);
+
+    void process(TransportProtos.SessionInfoProto sessionInfo, TransportProtos.GetAttributeRequestMsg msg, TransportServiceCallback<Void> callback);
+
 }

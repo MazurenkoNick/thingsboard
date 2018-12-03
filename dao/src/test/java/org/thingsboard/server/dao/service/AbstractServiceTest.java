@@ -72,6 +72,7 @@ import org.thingsboard.server.dao.timeseries.TimeseriesService;
 import org.thingsboard.server.dao.user.UserService;
 import org.thingsboard.server.dao.widget.WidgetTypeService;
 import org.thingsboard.server.dao.widget.WidgetsBundleService;
+import org.thingsboard.server.dao.wl.WhiteLabelingService;
 
 import java.io.IOException;
 import java.util.Comparator;
@@ -87,6 +88,8 @@ import java.util.Map;
 public abstract class AbstractServiceTest {
 
     protected ObjectMapper mapper = new ObjectMapper();
+
+    public static final TenantId SYSTEM_TENANT_ID = new TenantId(EntityId.NULL_UUID);
 
     @Autowired
     protected UserService userService;
@@ -143,6 +146,9 @@ public abstract class AbstractServiceTest {
     protected RuleChainService ruleChainService;
 
     @Autowired
+    protected WhiteLabelingService whiteLabelingService;
+
+    @Autowired
     private ComponentDescriptorService componentDescriptorService;
 
     class IdComparator<D extends BaseData<? extends UUIDBased>> implements Comparator<D> {
@@ -165,25 +171,25 @@ public abstract class AbstractServiceTest {
         event.setBody(readFromResource("TestJsonData.json"));
         return event;
     }
-
-    private ComponentDescriptor getOrCreateDescriptor(ComponentScope scope, ComponentType type, String clazz, String configurationDescriptorResource) throws IOException {
-        return getOrCreateDescriptor(scope, type, clazz, configurationDescriptorResource, null);
-    }
-
-    private ComponentDescriptor getOrCreateDescriptor(ComponentScope scope, ComponentType type, String clazz, String configurationDescriptorResource, String actions) throws IOException {
-        ComponentDescriptor descriptor = componentDescriptorService.findByClazz(clazz);
-        if (descriptor == null) {
-            descriptor = new ComponentDescriptor();
-            descriptor.setName("test");
-            descriptor.setClazz(clazz);
-            descriptor.setScope(scope);
-            descriptor.setType(type);
-            descriptor.setActions(actions);
-            descriptor.setConfigurationDescriptor(readFromResource(configurationDescriptorResource));
-            componentDescriptorService.saveComponent(descriptor);
-        }
-        return descriptor;
-    }
+//
+//    private ComponentDescriptor getOrCreateDescriptor(ComponentScope scope, ComponentType type, String clazz, String configurationDescriptorResource) throws IOException {
+//        return getOrCreateDescriptor(scope, type, clazz, configurationDescriptorResource, null);
+//    }
+//
+//    private ComponentDescriptor getOrCreateDescriptor(ComponentScope scope, ComponentType type, String clazz, String configurationDescriptorResource, String actions) throws IOException {
+//        ComponentDescriptor descriptor = componentDescriptorService.findByClazz(clazz);
+//        if (descriptor == null) {
+//            descriptor = new ComponentDescriptor();
+//            descriptor.setName("test");
+//            descriptor.setClazz(clazz);
+//            descriptor.setScope(scope);
+//            descriptor.setType(type);
+//            descriptor.setActions(actions);
+//            descriptor.setConfigurationDescriptor(readFromResource(configurationDescriptorResource));
+//            componentDescriptorService.saveComponent(descriptor);
+//        }
+//        return descriptor;
+//    }
 
     public JsonNode readFromResource(String resourceName) throws IOException {
         return mapper.readTree(this.getClass().getClassLoader().getResourceAsStream(resourceName));
