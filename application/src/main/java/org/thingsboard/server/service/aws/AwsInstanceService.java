@@ -36,6 +36,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.thingsboard.server.common.data.User;
+import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.security.UserCredentials;
 import org.thingsboard.server.dao.user.UserService;
 
@@ -63,11 +64,11 @@ public class AwsInstanceService {
             if (!firstLaunchPath.toFile().exists()) {
                 String awsInstanceId = getAwsInstanceId();
                 log.info("Updating SysAdmin password with AWS instanceId [{}].", awsInstanceId);
-                User sysadminUser = userService.findUserByEmail("sysadmin@thingsboard.org");
-                UserCredentials credentials = userService.findUserCredentialsByUserId(sysadminUser.getId());
+                User sysadminUser = userService.findUserByEmail(TenantId.SYS_TENANT_ID,"sysadmin@thingsboard.org");
+                UserCredentials credentials = userService.findUserCredentialsByUserId(TenantId.SYS_TENANT_ID, sysadminUser.getId());
                 if (!passwordEncoder.matches(awsInstanceId, credentials.getPassword())) {
                     credentials.setPassword(passwordEncoder.encode(awsInstanceId));
-                    userService.saveUserCredentials(credentials);
+                    userService.saveUserCredentials(TenantId.SYS_TENANT_ID, credentials);
                     log.info("SysAdmin password successfully updated.");
                 } else {
                     log.info("SysAdmin password already set to AWS instanceId.");
