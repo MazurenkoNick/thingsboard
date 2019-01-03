@@ -30,6 +30,7 @@
  */
 package org.thingsboard.server.exception;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,6 +44,9 @@ import org.springframework.stereotype.Component;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.exception.ThingsboardErrorCode;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
+import org.thingsboard.server.common.data.subscription.SubscriptionEntry;
+import org.thingsboard.server.common.data.subscription.SubscriptionErrorCode;
+import org.thingsboard.server.common.data.subscription.SubscriptionException;
 import org.thingsboard.server.common.msg.tools.TbRateLimitsException;
 import org.thingsboard.server.service.security.exception.AuthMethodNotSupportedException;
 import org.thingsboard.server.service.security.exception.JwtExpiredTokenException;
@@ -79,7 +83,13 @@ public class ThingsboardErrorResponseHandler implements AccessDeniedHandler {
                 response.setContentType(MediaType.APPLICATION_JSON_VALUE);
 
                 if (exception instanceof ThingsboardException) {
-                    handleThingsboardException((ThingsboardException) exception, response);
+                    ThingsboardException thingsboardException = (ThingsboardException) exception;
+                    if (thingsboardException.getErrorCode() == ThingsboardErrorCode.SUBSCRIPTION_VIOLATION) {
+                        SubscriptionException subscriptionException = (SubscriptionException)thingsboardException.getCause();
+                        handleSubscriptionException(subscriptionException, response);
+                    } else {
+                        handleThingsboardException((ThingsboardException) exception, response);
+                    }
                 } else if (exception instanceof TbRateLimitsException) {
                     handleRateLimitException(response, (TbRateLimitsException) exception);
                 } else if (exception instanceof AccessDeniedException) {
@@ -139,6 +149,15 @@ public class ThingsboardErrorResponseHandler implements AccessDeniedHandler {
                         ThingsboardErrorCode.TOO_MANY_REQUESTS, HttpStatus.TOO_MANY_REQUESTS));
     }
 
+    private void handleSubscriptionException(SubscriptionException subscriptionException, HttpServletResponse response) throws IOException {
+        SubscriptionErrorCode errorCode = subscriptionException.getErrorCode();
+        SubscriptionEntry entry = subscriptionException.getEntry();
+        JsonNode value = subscriptionException.getValue();
+        HttpStatus status = HttpStatus.FORBIDDEN;
+        response.setStatus(status.value());
+        mapper.writeValue(response.getWriter(),
+                ThingsboardErrorResponse.ofSubscriptionViolation(subscriptionException.getMessage(), errorCode, entry, value, status));
+    }
 
     private void handleAccessDeniedException(HttpServletResponse response) throws IOException {
         response.setStatus(HttpStatus.FORBIDDEN.value());

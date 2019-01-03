@@ -40,7 +40,8 @@ export default angular.module('thingsboard.types', [])
                 badRequestParams: 31,
                 itemNotFound: 32,
                 tooManyRequests: 33,
-                tooManyUpdates: 34
+                tooManyUpdates: 34,
+                subscriptionViolation: 40
             },
             entryPoints: {
                 login: "/api/auth/login",
@@ -1322,6 +1323,28 @@ export default angular.module('thingsboard.types', [])
             translate: {
                 customTranslationsPrefix: "custom.",
                 i18nPrefix: "i18n"
+            },
+            subscriptionError: {
+                "LIMIT_REACHED": {
+                    "DEVICE_COUNT": "subscription-error.limit-reached.device-count",
+                    "ASSET_COUNT": "subscription-error.limit-reached.asset-count"
+                },
+                "FEATURE_DISABLED": {
+                    "WHITE_LABELING": "subscription-error.feature-disabled.white-labeling"
+                }
+            },
+            subscriptionErrorCode: {
+                LIMIT_REACHED: "LIMIT_REACHED",
+                FEATURE_DISABLED: "FEATURE_DISABLED"
+            },
+            subscriptionEntry: {
+                WHITE_LABELING: "WHITE_LABELING"
+            },
+            subscriptionEntity: {
+                DEVICE_COUNT: {
+                    icon: "devices_other",
+                    text: "subscription.device-count"
+                }
             }
         }
     ).name;
