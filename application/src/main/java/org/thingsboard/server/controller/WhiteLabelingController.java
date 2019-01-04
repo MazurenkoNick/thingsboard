@@ -69,6 +69,8 @@ public class WhiteLabelingController extends BaseController {
             boolean wlEnabled = subscriptionService.whiteLabelingEnabled(getCurrentUser().getTenantId());
             if (!wlEnabled) {
                 whiteLabelingParams = new WhiteLabelingParams();
+                whiteLabelingParams.setHelpLinkBaseUrl("https://thingsboard.io");
+                whiteLabelingParams.setEnableHelpLinks(true);
             } else {
                 if (authority == Authority.SYS_ADMIN) {
                     whiteLabelingParams = whiteLabelingService.getMergedSystemWhiteLabelingParams(TenantId.SYS_TENANT_ID, logoImageChecksum, faviconChecksum);
@@ -112,7 +114,10 @@ public class WhiteLabelingController extends BaseController {
         try {
             boolean wlEnabled = subscriptionService.whiteLabelingEnabled(getCurrentUser().getTenantId());
             if (!wlEnabled) {
-                return new WhiteLabelingParams();
+                WhiteLabelingParams whiteLabelingParams = new WhiteLabelingParams();
+                whiteLabelingParams.setHelpLinkBaseUrl("https://thingsboard.io");
+                whiteLabelingParams.setEnableHelpLinks(true);
+                return whiteLabelingParams;
             }
             Authority authority = getCurrentUser().getAuthority();
             checkWhiteLabelingPermissions(authority);
