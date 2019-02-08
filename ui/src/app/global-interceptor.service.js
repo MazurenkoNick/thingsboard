@@ -35,6 +35,7 @@ export default function GlobalInterceptor($rootScope, $q, $injector) {
     var translate;
     var userService;
     var types;
+    var tbSubscriptionDialogs;
     var http;
 
     var internalUrlPrefixes = [
@@ -77,6 +78,13 @@ export default function GlobalInterceptor($rootScope, $q, $injector) {
             types = $injector.get("types");
         }
         return types;
+    }
+
+    function getTbSubscriptionDialogs() {
+        if (!tbSubscriptionDialogs) {
+            tbSubscriptionDialogs = $injector.get("tbSubscriptionDialogs");
+        }
+        return tbSubscriptionDialogs;
     }
 
     function getHttp() {
@@ -164,13 +172,28 @@ export default function GlobalInterceptor($rootScope, $q, $injector) {
             updateLoadingState(rejection.config, false);
         }
         var unhandled = false;
+        var errorCode = rejectionErrorCode(rejection);
         var ignoreErrors = rejection.config.ignoreErrors;
         if (rejection.refreshTokenPending || rejection.status === 401) {
-            var errorCode = rejectionErrorCode(rejection);
             if (rejection.refreshTokenPending || (errorCode && errorCode === getTypes().serverErrorCode.jwtTokenExpired)) {
                 return refreshTokenAndRetry(rejection);
             } else {
                 unhandled = true;
+            }
+        } else if (errorCode && errorCode === getTypes().serverErrorCode.subscriptionViolation) {
+            if (!ignoreErrors) {
+                return getTbSubscriptionDialogs().subscriptionViolation(null, rejection).then(
+                    (data) => {
+                        if (data && data.proceed) {
+                            return $q.resolve();
+                        } else {
+                            return $q.reject(request);
+                        }
+                    },
+                    () => {
+                        return $q.reject(request);
+                    }
+                );
             }
         } else if (rejection.status === 403) {
             if (!ignoreErrors) {

@@ -71,6 +71,7 @@ import org.thingsboard.server.dao.entityview.EntityViewService;
 import org.thingsboard.server.dao.exception.DataValidationException;
 import org.thingsboard.server.dao.service.DataValidator;
 import org.thingsboard.server.dao.service.PaginatedRemover;
+import org.thingsboard.server.dao.subscription.SubscriptionService;
 import org.thingsboard.server.dao.tenant.TenantDao;
 
 import javax.annotation.Nullable;
@@ -121,6 +122,9 @@ public class DeviceServiceImpl extends AbstractEntityService implements DeviceSe
     @Autowired
     private CacheManager cacheManager;
 
+    @Autowired
+    private SubscriptionService subscriptionService;
+
     @Override
     public Device findDeviceById(TenantId tenantId, DeviceId deviceId) {
         log.trace("Executing findDeviceById [{}]", deviceId);
@@ -149,6 +153,9 @@ public class DeviceServiceImpl extends AbstractEntityService implements DeviceSe
     public Device saveDevice(Device device) {
         log.trace("Executing saveDevice [{}]", device);
         deviceValidator.validate(device, Device::getTenantId);
+        if (device.getId() == null) {
+            subscriptionService.createDeviceAllowed(device.getTenantId());
+        }
         Device savedDevice = deviceDao.save(device.getTenantId(), device);
         if (device.getId() == null) {
             DeviceCredentials deviceCredentials = new DeviceCredentials();

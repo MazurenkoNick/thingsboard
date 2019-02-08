@@ -28,17 +28,42 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-import SelectEntityGroupController from './select-entity-group.controller';
-import EntityLimitDialogController from './entity-limit.dialog.controller';
-import WhiteLabelingFeatureDialogController from './white-labeling-feature.dialog.controller';
+import './white-labeling-feature.dialog.scss';
 
-import Dialogs from './dialogs.service';
-import SubscriptionDialogs from './subscription-dialogs.service';
+/* eslint-disable import/no-unresolved, import/default */
 
-export default angular.module('thingsboard.dialogs', [])
-    .controller('SelectEntityGroupController', SelectEntityGroupController)
-    .controller('EntityLimitDialogController', EntityLimitDialogController)
-    .controller('WhiteLabelingFeatureDialogController', WhiteLabelingFeatureDialogController)
-    .factory('tbDialogs', Dialogs)
-    .factory('tbSubscriptionDialogs', SubscriptionDialogs)
-    .name;
+import whiteLabelingSvg from './white-labeling.svg';
+
+/* eslint-enable import/no-unresolved, import/default */
+
+
+/*@ngInject*/
+export default function WhiteLabelingFeatureDialogController($rootScope, $scope, $mdDialog, $state, $translate,
+                                                             $window, types, subscriptionErrorCode, subscriptionEntry, value) {
+
+    var vm = this;
+
+    vm.whiteLabelingSvg = whiteLabelingSvg;
+
+    var subscriptionErrorText = types.subscriptionError[subscriptionErrorCode][subscriptionEntry];
+
+    vm.errorContent = $translate.instant(subscriptionErrorText, {value: value});
+
+    vm.close = close;
+    vm.gotoWhiteLabelingDoc = gotoWhiteLabelingDoc;
+    vm.upgrade = upgrade;
+
+    function close() {
+        $mdDialog.hide();
+    }
+
+    function gotoWhiteLabelingDoc() {
+        $window.open("https://thingsboard.io/docs/user-guide/white-labeling/", '_blank');
+    }
+
+    function upgrade() {
+        $mdDialog.hide();
+        $rootScope.ignoreConfirmOnExit = true;
+        $window.open("https://thingsboard.io/products/thingsboard-pe/aws/", '_blank');
+    }
+}

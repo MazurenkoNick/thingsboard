@@ -47,6 +47,7 @@ public class WhiteLabelingParams {
     protected PaletteSettings paletteSettings;
     protected String helpLinkBaseUrl;
     protected Boolean enableHelpLinks;
+    protected boolean whiteLabelingEnabled = true;
 
     public WhiteLabelingParams merge(WhiteLabelingParams otherWlParams) {
         if (StringUtils.isEmpty(this.logoImageUrl)) {

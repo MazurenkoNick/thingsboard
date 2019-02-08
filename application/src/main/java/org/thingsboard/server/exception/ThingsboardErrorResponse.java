@@ -30,8 +30,11 @@
  */
 package org.thingsboard.server.exception;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.http.HttpStatus;
 import org.thingsboard.server.common.data.exception.ThingsboardErrorCode;
+import org.thingsboard.server.common.data.subscription.SubscriptionEntry;
+import org.thingsboard.server.common.data.subscription.SubscriptionErrorCode;
 
 import java.util.Date;
 
@@ -47,15 +50,38 @@ public class ThingsboardErrorResponse {
 
     private final Date timestamp;
 
+    private SubscriptionErrorCode subscriptionErrorCode;
+
+    private SubscriptionEntry subscriptionEntry;
+
+    private JsonNode subscriptionValue;
+
     protected ThingsboardErrorResponse(final String message, final ThingsboardErrorCode errorCode, HttpStatus status) {
+        this(message, errorCode, null, null, null, status);
+    }
+
+    protected ThingsboardErrorResponse(final String message, final ThingsboardErrorCode errorCode, SubscriptionErrorCode subscriptionErrorCode,
+                                       SubscriptionEntry subscriptionEntry, JsonNode subscriptionValue, HttpStatus status) {
         this.message = message;
         this.errorCode = errorCode;
+        this.subscriptionErrorCode = subscriptionErrorCode;
+        this.subscriptionEntry = subscriptionEntry;
+        this.subscriptionValue = subscriptionValue;
         this.status = status;
         this.timestamp = new java.util.Date();
     }
 
     public static ThingsboardErrorResponse of(final String message, final ThingsboardErrorCode errorCode, HttpStatus status) {
         return new ThingsboardErrorResponse(message, errorCode, status);
+    }
+
+    public static ThingsboardErrorResponse ofSubscriptionViolation(final String message,
+                                                                   SubscriptionErrorCode subscriptionErrorCode,
+                                                                   SubscriptionEntry subscriptionEntry,
+                                                                   JsonNode subscriptionValue,
+                                                                   HttpStatus status) {
+        return new ThingsboardErrorResponse(message, ThingsboardErrorCode.SUBSCRIPTION_VIOLATION,
+                subscriptionErrorCode, subscriptionEntry, subscriptionValue, status);
     }
 
     public Integer getStatus() {
@@ -73,4 +99,17 @@ public class ThingsboardErrorResponse {
     public Date getTimestamp() {
         return timestamp;
     }
+
+    public SubscriptionErrorCode getSubscriptionErrorCode() {
+        return subscriptionErrorCode;
+    }
+
+    public SubscriptionEntry getSubscriptionEntry() {
+        return subscriptionEntry;
+    }
+
+    public JsonNode getSubscriptionValue() {
+        return subscriptionValue;
+    }
+
 }

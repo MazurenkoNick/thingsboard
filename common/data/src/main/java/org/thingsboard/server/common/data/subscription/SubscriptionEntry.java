@@ -1,4 +1,4 @@
-/*
+/**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
  * Copyright © 2016-2019 ThingsBoard, Inc. All Rights Reserved.
@@ -28,17 +28,17 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-import SelectEntityGroupController from './select-entity-group.controller';
-import EntityLimitDialogController from './entity-limit.dialog.controller';
-import WhiteLabelingFeatureDialogController from './white-labeling-feature.dialog.controller';
+package org.thingsboard.server.common.data.subscription;
 
-import Dialogs from './dialogs.service';
-import SubscriptionDialogs from './subscription-dialogs.service';
+public enum SubscriptionEntry {
 
-export default angular.module('thingsboard.dialogs', [])
-    .controller('SelectEntityGroupController', SelectEntityGroupController)
-    .controller('EntityLimitDialogController', EntityLimitDialogController)
-    .controller('WhiteLabelingFeatureDialogController', WhiteLabelingFeatureDialogController)
-    .factory('tbDialogs', Dialogs)
-    .factory('tbSubscriptionDialogs', SubscriptionDialogs)
-    .name;
+    DEVICE_COUNT(1),
+    ASSET_COUNT(2),
+    WHITE_LABELING(9);
+
+    private int entryCode;
+
+    SubscriptionEntry(int entryCode) {
+        this.entryCode = entryCode;
+    }
+}

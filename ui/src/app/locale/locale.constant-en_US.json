@@ -2388,6 +2388,26 @@
         "material-icons": "Material icons",
         "show-all": "Show all icons"
     },
+    "subscription": {
+        "entity-limit-text": "However you can upgrade your instance type in order to increase your limits.",
+        "upgrade-your-plan": "Upgrade your instance",
+        "white-labeling-feature": "White labeling feature",
+        "white-labeling-text-full": "Rebrand ThingsBoard platform web interface with your company or product logo and color scheme in 2 minutes.<br/><br/>Remove “Powered By” on the dashboards footer.<br/>No coding or service restart required. Allow your customers to white-label their interface as well.",
+        "enable-white-labeling": "Enable white-labeling feature now by upgrading your instance type!",
+        "read-more": "Read more",
+        "white-labeling-video-text": "See video tutorial below to see how this feature works!"
+    },
+    "subscription-error": {
+        "title": "Subscription violation",
+        "warning-title": "Subscription warning",
+        "limit-reached": {
+            "device-count": "You have reached maximum devices ({{value}}) allowed by your instance type!",
+            "asset-count": "You have reached maximum assets ({{value}}) allowed by your instance type!"
+        },
+        "feature-disabled": {
+            "white-labeling": "White Labeling feature is not allowed by your instance type!"
+        }
+    },
     "custom": {
         "widget-action": {
             "action-cell-button": "Action cell button",

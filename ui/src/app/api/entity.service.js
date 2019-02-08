@@ -120,7 +120,7 @@ function EntityService($http, $q, $filter, $translate, $log, userService, device
         return promise;
     }
 
-    function saveEntityPromise(entity, config) {
+    function saveEntityPromise(entity) {
         var promise;
         var entityType = entity.id.entityType;
         if (!entity.id.id) {
@@ -131,7 +131,7 @@ function EntityService($http, $q, $filter, $translate, $log, userService, device
                 promise = deviceService.saveDevice(entity);
                 break;
             case types.entityType.asset:
-                promise = assetService.saveAsset(entity, true, config);
+                promise = assetService.saveAsset(entity);
                 break;
             case types.entityType.entityView:
                 promise = entityViewService.saveEntityView(entity);

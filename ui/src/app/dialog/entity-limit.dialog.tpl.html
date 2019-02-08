@@ -30,30 +30,32 @@
     OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <modelVersion>4.0.0</modelVersion>
-    <parent>
-        <groupId>org.thingsboard</groupId>
-        <version>2.3.0PEMK</version>
-        <artifactId>common</artifactId>
-    </parent>
-    <groupId>org.thingsboard.common</groupId>
-    <artifactId>transport</artifactId>
-    <packaging>pom</packaging>
-
-    <name>Thingsboard PE Server Commons</name>
-    <url>https://thingsboard.io</url>
-
-    <properties>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <main.dir>${basedir}/../..</main.dir>
-    </properties>
-    <modules>
-        <module>transport-api</module>
-        <module>mqtt</module>
-        <module>http</module>
-        <module>coap</module>
-    </modules>
-
-</project>
+<md-dialog aria-label="{{ 'subscription-error.title' | translate }}" class="tb-entity-limit-dialog" style="width: 800px;">
+    <md-toolbar>
+        <div class="md-toolbar-tools">
+            <h2 translate>subscription-error.title</h2>
+            <span flex></span>
+            <md-button class="md-icon-button" ng-click="vm.close()">
+                <ng-md-icon icon="close" aria-label="{{ 'dialog.close' | translate }}"></ng-md-icon>
+            </md-button>
+        </div>
+    </md-toolbar>
+    <md-progress-linear class="md-warn" md-mode="indeterminate" ng-disabled="!$root.loading" ng-show="$root.loading"></md-progress-linear>
+    <span style="min-height: 5px;" flex="" ng-show="!$root.loading"></span>
+    <md-dialog-content>
+        <div style="text-align: center; padding-top: 20px;">
+            <img ng-src="{{vm.limitReachedSvg}}" aria-label="limit-reached" ng-style="{height: '180px'}"/>
+        </div>
+        <p class="tb-entity-limit-content">{{vm.errorContent}}<br/>{{'subscription.entity-limit-text' | translate}}</p>
+        <div layout="row" layout-align="center center">
+            <md-button ng-disabled="$root.loading" class="md-raised md-primary md-warn"
+                       ng-click="vm.upgrade()">
+                <md-icon class="material-icons">trending_up</md-icon>
+                <span>{{ 'subscription.upgrade-your-plan' | translate }}</span>
+            </md-button>
+        </div>
+    </md-dialog-content>
+    <md-dialog-actions layout="row">
+        <md-button ng-disabled="$root.loading" ng-click="vm.close()" style="margin-right:20px;">{{ 'action.close' | translate }}</md-button>
+    </md-dialog-actions>
+</md-dialog>

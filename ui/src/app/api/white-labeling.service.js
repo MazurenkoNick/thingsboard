@@ -84,6 +84,8 @@ function WhiteLabelingService($rootScope, $q, $http, store, themeProvider, $mdTh
 
     var isUserWlMode = false;
 
+    var whiteLabelingEnabled = false;
+
     var primaryPaletteName;
     var accentPaletteName;
 
@@ -106,7 +108,8 @@ function WhiteLabelingService($rootScope, $q, $http, store, themeProvider, $mdTh
         saveWhiteLabelParams: saveWhiteLabelParams,
         saveLoginWhiteLabelParams: saveLoginWhiteLabelParams,
         isWhiteLabelingAllowed: isWhiteLabelingAllowed,
-        isCustomerWhiteLabelingAllowed: isCustomerWhiteLabelingAllowed
+        isCustomerWhiteLabelingAllowed: isCustomerWhiteLabelingAllowed,
+        isWhiteLabelingEnabled: isWhiteLabelingEnabled
     };
 
     return service;
@@ -214,6 +217,7 @@ function WhiteLabelingService($rootScope, $q, $http, store, themeProvider, $mdTh
         $http.get(url, null).then(
             (response) => {
                 isUserWlMode = true;
+                whiteLabelingEnabled = response.data.whiteLabelingEnabled;
                 userWlParams = mergeDefaults(response.data);
                 updateImages(userWlParams, 'user');
                 if (setWlParams(userWlParams)) {
@@ -366,6 +370,10 @@ function WhiteLabelingService($rootScope, $q, $http, store, themeProvider, $mdTh
             deferred.reject();
         });
         return deferred.promise;
+    }
+
+    function isWhiteLabelingEnabled() {
+        return whiteLabelingEnabled;
     }
 
     function checkWlParams(whiteLabelParams) {

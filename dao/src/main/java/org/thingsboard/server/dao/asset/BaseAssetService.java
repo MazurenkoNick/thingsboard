@@ -69,6 +69,7 @@ import org.thingsboard.server.dao.entityview.EntityViewService;
 import org.thingsboard.server.dao.exception.DataValidationException;
 import org.thingsboard.server.dao.service.DataValidator;
 import org.thingsboard.server.dao.service.PaginatedRemover;
+import org.thingsboard.server.dao.subscription.SubscriptionService;
 import org.thingsboard.server.dao.tenant.TenantDao;
 
 import java.util.ArrayList;
@@ -109,6 +110,9 @@ public class BaseAssetService extends AbstractEntityService implements AssetServ
     private EntityService entityService;
 
     @Autowired
+    private SubscriptionService subscriptionService;
+
+    @Autowired
     private EntityViewService entityViewService;
 
     @Autowired
@@ -142,6 +146,9 @@ public class BaseAssetService extends AbstractEntityService implements AssetServ
     public Asset saveAsset(Asset asset) {
         log.trace("Executing saveAsset [{}]", asset);
         assetValidator.validate(asset, Asset::getTenantId);
+        if (asset.getId() == null) {
+            subscriptionService.createAssetAllowed(asset.getTenantId());
+        }
         Asset savedAsset = assetDao.save(asset.getTenantId(), asset);
         if (asset.getId() == null) {
             entityGroupService.addEntityToEntityGroupAll(savedAsset.getTenantId(), savedAsset.getOwnerId(), savedAsset.getId());

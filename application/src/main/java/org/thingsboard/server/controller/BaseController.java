@@ -72,6 +72,8 @@ import org.thingsboard.server.common.data.rule.RuleChain;
 import org.thingsboard.server.common.data.rule.RuleNode;
 import org.thingsboard.server.common.data.scheduler.SchedulerEvent;
 import org.thingsboard.server.common.data.scheduler.SchedulerEventInfo;
+import org.thingsboard.server.common.data.security.Authority;
+import org.thingsboard.server.common.data.subscription.SubscriptionException;
 import org.thingsboard.server.common.data.widget.WidgetType;
 import org.thingsboard.server.common.data.widget.WidgetsBundle;
 import org.thingsboard.server.common.msg.TbMsg;
@@ -100,6 +102,7 @@ import org.thingsboard.server.dao.relation.RelationService;
 import org.thingsboard.server.dao.role.RoleService;
 import org.thingsboard.server.dao.rule.RuleChainService;
 import org.thingsboard.server.dao.scheduler.SchedulerEventService;
+import org.thingsboard.server.dao.subscription.SubscriptionService;
 import org.thingsboard.server.dao.tenant.TenantService;
 import org.thingsboard.server.dao.user.UserService;
 import org.thingsboard.server.dao.widget.WidgetTypeService;
@@ -122,6 +125,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import java.util.concurrent.ExecutionException;
 
 import static org.thingsboard.server.dao.service.Validator.validateId;
 
@@ -210,6 +214,9 @@ public abstract class BaseController {
     protected SchedulerService schedulerService;
 
     @Autowired
+    protected SubscriptionService subscriptionService;
+
+    @Autowired
     protected EntityViewService entityViewService;
 
     @Autowired
@@ -241,9 +248,16 @@ public abstract class BaseController {
         return handleException(exception, true);
     }
 
-    private ThingsboardException handleException(Exception exception, boolean logException) {
+    private ThingsboardException handleException(Throwable exception, boolean logException) {
+        if (exception instanceof ExecutionException) {
+            exception = exception.getCause();
+        }
         if (logException && logControllerErrorStackTrace) {
-            log.error("Error [{}]", exception.getMessage(), exception);
+            if (exception instanceof SubscriptionException) {
+                log.error("Error [{}]", exception.getMessage());
+            } else {
+                log.error("Error [{}]", exception.getMessage(), exception);
+            }
         }
 
         String cause = "";
@@ -258,6 +272,8 @@ public abstract class BaseController {
             return new ThingsboardException(exception.getMessage(), ThingsboardErrorCode.BAD_REQUEST_PARAMS);
         } else if (exception instanceof MessagingException) {
             return new ThingsboardException("Unable to send mail: " + exception.getMessage(), ThingsboardErrorCode.GENERAL);
+        } else if (exception instanceof SubscriptionException) {
+            return new ThingsboardException(exception, ThingsboardErrorCode.SUBSCRIPTION_VIOLATION);
         } else {
             return new ThingsboardException(exception.getMessage(), ThingsboardErrorCode.GENERAL);
         }

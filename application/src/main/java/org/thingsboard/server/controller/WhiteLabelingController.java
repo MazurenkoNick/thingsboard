@@ -62,15 +62,23 @@ public class WhiteLabelingController extends BaseController {
         try {
             Authority authority = getCurrentUser().getAuthority();
             WhiteLabelingParams whiteLabelingParams = null;
-            if (authority == Authority.SYS_ADMIN) {
-                whiteLabelingParams = whiteLabelingService.getMergedSystemWhiteLabelingParams(TenantId.SYS_TENANT_ID, logoImageChecksum, faviconChecksum);
-            } else if (authority == Authority.TENANT_ADMIN) {
-                whiteLabelingParams = whiteLabelingService.getMergedTenantWhiteLabelingParams(getCurrentUser().getTenantId(),
-                        logoImageChecksum, faviconChecksum);
-            } else if (authority == Authority.CUSTOMER_USER) {
-                whiteLabelingParams = whiteLabelingService.getMergedCustomerWhiteLabelingParams(getCurrentUser().getTenantId(),
-                        getCurrentUser().getCustomerId(), logoImageChecksum, faviconChecksum);
+            boolean wlEnabled = subscriptionService.whiteLabelingEnabled(getCurrentUser().getTenantId());
+            if (!wlEnabled) {
+                whiteLabelingParams = new WhiteLabelingParams();
+                whiteLabelingParams.setHelpLinkBaseUrl("https://thingsboard.io");
+                whiteLabelingParams.setEnableHelpLinks(true);
+            } else {
+                if (authority == Authority.SYS_ADMIN) {
+                    whiteLabelingParams = whiteLabelingService.getMergedSystemWhiteLabelingParams(TenantId.SYS_TENANT_ID, logoImageChecksum, faviconChecksum);
+                } else if (authority == Authority.TENANT_ADMIN) {
+                    whiteLabelingParams = whiteLabelingService.getMergedTenantWhiteLabelingParams(getCurrentUser().getTenantId(),
+                            logoImageChecksum, faviconChecksum);
+                } else if (authority == Authority.CUSTOMER_USER) {
+                    whiteLabelingParams = whiteLabelingService.getMergedCustomerWhiteLabelingParams(getCurrentUser().getTenantId(),
+                            getCurrentUser().getCustomerId(), logoImageChecksum, faviconChecksum);
+                }
             }
+            whiteLabelingParams.setWhiteLabelingEnabled(wlEnabled);
             return whiteLabelingParams;
         } catch (Exception e) {
             throw handleException(e);
@@ -84,7 +92,12 @@ public class WhiteLabelingController extends BaseController {
             @RequestParam(required = false) String faviconChecksum,
             HttpServletRequest request) throws ThingsboardException {
         try {
-            return whiteLabelingService.getMergedLoginWhiteLabelingParams(TenantId.SYS_TENANT_ID, request.getServerName(), logoImageChecksum, faviconChecksum);
+            boolean wlEnabled = subscriptionService.whiteLabelingEnabled(TenantId.SYS_TENANT_ID);
+            if (!wlEnabled) {
+                return new LoginWhiteLabelingParams();
+            } else {
+                return whiteLabelingService.getMergedLoginWhiteLabelingParams(TenantId.SYS_TENANT_ID, request.getServerName(), logoImageChecksum, faviconChecksum);
+            }
         } catch (Exception e) {
             throw handleException(e);
         }
@@ -95,6 +108,13 @@ public class WhiteLabelingController extends BaseController {
     @ResponseBody
     public WhiteLabelingParams getCurrentWhiteLabelParams() throws ThingsboardException {
         try {
+            boolean wlEnabled = subscriptionService.whiteLabelingEnabled(getCurrentUser().getTenantId());
+            if (!wlEnabled) {
+                WhiteLabelingParams whiteLabelingParams = new WhiteLabelingParams();
+                whiteLabelingParams.setHelpLinkBaseUrl("https://thingsboard.io");
+                whiteLabelingParams.setEnableHelpLinks(true);
+                return whiteLabelingParams;
+            }
             Authority authority = getCurrentUser().getAuthority();
             checkWhiteLabelingPermissions(Operation.READ);
             WhiteLabelingParams whiteLabelingParams = null;
@@ -116,6 +136,10 @@ public class WhiteLabelingController extends BaseController {
     @ResponseBody
     public LoginWhiteLabelingParams getCurrentLoginWhiteLabelParams() throws ThingsboardException {
         try {
+            boolean wlEnabled = subscriptionService.whiteLabelingEnabled(getCurrentUser().getTenantId());
+            if (!wlEnabled) {
+                return new LoginWhiteLabelingParams();
+            }
             Authority authority = getCurrentUser().getAuthority();
             checkWhiteLabelingPermissions(Operation.READ);
             LoginWhiteLabelingParams loginWhiteLabelingParams = null;
@@ -137,6 +161,7 @@ public class WhiteLabelingController extends BaseController {
     @ResponseStatus(value = HttpStatus.OK)
     public WhiteLabelingParams saveWhiteLabelParams(@RequestBody WhiteLabelingParams whiteLabelingParams) throws ThingsboardException {
         try {
+            subscriptionService.whiteLabelingAllowed(getCurrentUser().getTenantId());
             Authority authority = getCurrentUser().getAuthority();
             checkWhiteLabelingPermissions(Operation.WRITE);
             WhiteLabelingParams savedWhiteLabelingParams = null;
@@ -158,6 +183,7 @@ public class WhiteLabelingController extends BaseController {
     @ResponseStatus(value = HttpStatus.OK)
     public LoginWhiteLabelingParams saveLoginWhiteLabelParams(@RequestBody LoginWhiteLabelingParams loginWhiteLabelingParams) throws ThingsboardException {
         try {
+            subscriptionService.whiteLabelingAllowed(getCurrentUser().getTenantId());
             Authority authority = getCurrentUser().getAuthority();
             checkWhiteLabelingPermissions(Operation.WRITE);
             LoginWhiteLabelingParams savedLoginWhiteLabelingParams = null;
