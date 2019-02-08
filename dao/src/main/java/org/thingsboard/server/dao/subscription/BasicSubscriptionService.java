@@ -50,9 +50,9 @@ import org.thingsboard.server.dao.tenant.TenantService;
 @Slf4j
 public class BasicSubscriptionService implements SubscriptionService {
 
-    private static final long MAX_DEVICES = 10;
-    private static final long MAX_ASSETS = 10;
-    private static final boolean WHITE_LABELING_ENABLED = false;
+    private static final long MAX_DEVICES = 100;
+    private static final long MAX_ASSETS = 100;
+    private static final boolean WHITE_LABELING_ENABLED = true;
 
     @Autowired
     protected TenantService tenantService;
