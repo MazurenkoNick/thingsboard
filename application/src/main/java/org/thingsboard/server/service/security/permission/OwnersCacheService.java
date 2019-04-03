@@ -30,13 +30,19 @@
  */
 package org.thingsboard.server.service.security.permission;
 
+import org.thingsboard.server.common.data.Customer;
+import org.thingsboard.server.common.data.Dashboard;
+import org.thingsboard.server.common.data.Device;
+import org.thingsboard.server.common.data.EntityType;
+import org.thingsboard.server.common.data.EntityView;
 import org.thingsboard.server.common.data.HasOwnerId;
-import org.thingsboard.server.common.data.group.EntityGroup;
+import org.thingsboard.server.common.data.User;
+import org.thingsboard.server.common.data.asset.Asset;
+import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.id.EntityGroupId;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.TenantId;
 
-import java.util.List;
 import java.util.Set;
 
 
@@ -48,8 +54,23 @@ public interface OwnersCacheService {
 
     Set<EntityId> getOwners(TenantId tenantId, EntityGroupId entityGroupId);
 
-    void clearOwners(EntityGroupId entityGroupId);
+    EntityId getOwner(TenantId tenantId, EntityId entityId);
+
+    void clearOwners(EntityId entityId);
 
     Set<EntityId> getChildOwners(TenantId tenantId, EntityId parentOwnerId);
 
+    void changeDashboardOwner(TenantId tenantId, EntityId targetOwnerId, Dashboard dashboard) throws ThingsboardException;
+
+    void changeUserOwner(TenantId tenantId, EntityId targetOwnerId, User user) throws ThingsboardException;
+
+    void changeCustomerOwner(TenantId tenantId, EntityId targetOwnerId, Customer customer) throws ThingsboardException;
+
+    void changeEntityViewOwner(TenantId tenantId, EntityId targetOwnerId, EntityView entityView) throws ThingsboardException;
+
+    void changeAssetOwner(TenantId tenantId, EntityId targetOwnerId, Asset asset) throws ThingsboardException;
+
+    void changeDeviceOwner(TenantId tenantId, EntityId targetOwnerId, Device device) throws ThingsboardException;
+
+    void changeEntityOwner(TenantId tenantId, EntityId targetOwnerId, EntityId entityId, EntityType entityType) throws ThingsboardException;
 }

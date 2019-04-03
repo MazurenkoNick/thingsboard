@@ -35,7 +35,7 @@ export default angular.module('thingsboard.menu', [thingsboardApiUser])
     .name;
 
 /*@ngInject*/
-function Menu(userService, $state, $rootScope, $q, types, securityTypes, userPermissionsService, entityGroupService) {
+function Menu(userService, $state, $rootScope, $q, types, securityTypes, userPermissionsService, entityGroupService, customMenuService) {
 
     var authority = '';
     var sections = [];
@@ -44,6 +44,9 @@ function Menu(userService, $state, $rootScope, $q, types, securityTypes, userPer
     var menuReadyTasks = [];
 
     var entityGroupSections = [];
+
+    var currentCustomSection = null;
+    var currentCustomChildSection = null;
 
     var customerGroups = {
         name: 'entity-group.customer-groups',
@@ -121,15 +124,33 @@ function Menu(userService, $state, $rootScope, $q, types, securityTypes, userPer
         getHomeSections: getHomeSections,
         getSections: getSections,
         sectionHeight: sectionHeight,
-        sectionActive: sectionActive
+        sectionActive: sectionActive,
+        getCurrentCustomSection: getCurrentCustomSection,
+        getCurrentCustomChildSection: getCurrentCustomChildSection,
+        getRedirectState: getRedirectState
     };
 
     if (userService.isUserLoaded() === true) {
         buildMenu();
+    } else {
+        service['userLoadedHandle'] = $rootScope.$on('userLoaded', function () {
+            buildMenu();
+            service['userLoadedHandle']();
+        });
     }
 
     service.authenticatedHandle = $rootScope.$on('authenticated', function () {
         buildMenu();
+    });
+
+    if (!service['customMenuChangeHandle']) {
+        service['customMenuChangeHandle'] = $rootScope.$on('customMenuChanged', function () {
+            buildMenu();
+        });
+    }
+
+    service.stateChangeStartHandle = $rootScope.$on('$stateChangeStart', function (evt, to, params) {
+        updateCurrentCustomSection(params);
     });
 
     return service;
@@ -162,80 +183,110 @@ function Menu(userService, $state, $rootScope, $q, types, securityTypes, userPer
         return deferred.promise;
     }
 
+    // menu item names:
+    //
+    // "home", "tenants", "widget_library", "mail_server",
+    // "mail_templates", "white_labeling", "login_white_labeling", "custom_translation", "custom_menu"
+    // "rule_chains", "converters", "integrations", "roles", "customers_hierarchy", "user_groups",
+    // "customer_groups", "asset_groups", "device_groups", "entity_view_groups", "dashboard_groups", "scheduler",
+    // "audit_log"
+
     function buildMenu() {
         isMenuReady = false;
         var user = userService.getCurrentUser();
         if (user) {
-            sections = [];
-            entityGroupSections = [];
+            sections.length = 0;
+            entityGroupSections.length = 0;
+            homeSections.length = 0;
             authority = user.authority;
+            var customMenu = customMenuService.getCustomMenu();
+            var disabledItems = [];
+            if (customMenu && angular.isArray(customMenu.disabledMenuItems)) {
+                disabledItems = customMenu.disabledMenuItems;
+            }
             if (authority === 'SYS_ADMIN') {
-                sections = [
+                [].push.apply(sections, [
                     {
                         name: 'home.home',
                         type: 'link',
                         state: 'home.links',
-                        icon: 'home'
+                        icon: 'home',
+                        disabled: disabledItems.indexOf('home') > -1
                     },
                     {
                         name: 'tenant.tenants',
                         type: 'link',
                         state: 'home.tenants',
-                        icon: 'supervisor_account'
+                        icon: 'supervisor_account',
+                        disabled: disabledItems.indexOf('tenants') > -1
                     },
                     {
                         name: 'widget.widget-library',
                         type: 'link',
                         state: 'home.widgets-bundles',
-                        icon: 'now_widgets'
+                        icon: 'now_widgets',
+                        disabled: disabledItems.indexOf('widget_library') > -1
                     },
                     {
                         name: 'admin.system-settings',
                         type: 'toggle',
                         state: 'home.settings',
-                        height: '200px',
+                        height: '240px',
                         icon: 'settings',
                         pages: [
                             {
                                 name: 'admin.outgoing-mail',
                                 type: 'link',
                                 state: 'home.settings.outgoing-mail',
-                                icon: 'mail'
+                                icon: 'mail',
+                                disabled: disabledItems.indexOf('mail_server') > -1
                             },
                             {
                                 name: 'admin.mail-templates',
                                 type: 'link',
                                 state: 'home.settings.mail-template',
-                                icon: 'format_shapes'
+                                icon: 'format_shapes',
+                                disabled: disabledItems.indexOf('mail_templates') > -1
                             },
                             {
                                 name: 'white-labeling.white-labeling',
                                 type: 'link',
                                 state: 'home.settings.whiteLabel',
-                                icon: 'format_paint'
+                                icon: 'format_paint',
+                                disabled: disabledItems.indexOf('white_labeling') > -1
                             },
                             {
                                 name: 'white-labeling.login-white-labeling',
                                 type: 'link',
                                 state: 'home.settings.loginWhiteLabel',
-                                icon: 'format_paint'
+                                icon: 'format_paint',
+                                disabled: disabledItems.indexOf('login_white_labeling') > -1
                             },
                             {
                                 name: 'custom-translation.custom-translation',
                                 type: 'link',
                                 state: 'home.settings.customTranslation',
-                                icon: 'language'
+                                icon: 'language',
+                                disabled: disabledItems.indexOf('custom_translation') > -1
+                            },
+                            {
+                                name: 'custom-menu.custom-menu',
+                                type: 'link',
+                                state: 'home.settings.customMenu',
+                                icon: 'list',
+                                disabled: disabledItems.indexOf('custom_menu') > -1
                             }
                         ]
-                    }];
-                homeSections =
+                    }]);
+                [].push.apply(homeSections,
                     [{
                         name: 'tenant.management',
                         places: [
                             {
                                 name: 'tenant.tenants',
                                 icon: 'supervisor_account',
-                                state: 'home.tenants'
+                                state: 'home.tenants',
+                                disabled: disabledItems.indexOf('tenants') > -1
                             }
                         ]
                     },
@@ -245,7 +296,8 @@ function Menu(userService, $state, $rootScope, $q, types, securityTypes, userPer
                                 {
                                     name: 'widget.widget-library',
                                     icon: 'now_widgets',
-                                    state: 'home.widgets-bundles'
+                                    state: 'home.widgets-bundles',
+                                    disabled: disabledItems.indexOf('widget_library') > -1
                                 }
                             ]
                         },
@@ -255,12 +307,14 @@ function Menu(userService, $state, $rootScope, $q, types, securityTypes, userPer
                                 {
                                     name: 'admin.outgoing-mail',
                                     icon: 'mail',
-                                    state: 'home.settings.outgoing-mail'
+                                    state: 'home.settings.outgoing-mail',
+                                    disabled: disabledItems.indexOf('mail_server') > -1
                                 },
                                 {
                                     name: 'admin.mail-templates',
                                     icon: 'format_shapes',
-                                    state: 'home.settings.mail-template'
+                                    state: 'home.settings.mail-template',
+                                    disabled: disabledItems.indexOf('mail_templates') > -1
                                 }
                             ]
                         },
@@ -270,12 +324,14 @@ function Menu(userService, $state, $rootScope, $q, types, securityTypes, userPer
                                 {
                                     name: 'white-labeling.white-labeling',
                                     icon: 'format_paint',
-                                    state: 'home.settings.whiteLabel'
+                                    state: 'home.settings.whiteLabel',
+                                    disabled: disabledItems.indexOf('white_labeling') > -1
                                 },
                                 {
                                     name: 'white-labeling.login-white-labeling',
                                     icon: 'format_paint',
-                                    state: 'home.settings.loginWhiteLabel'
+                                    state: 'home.settings.loginWhiteLabel',
+                                    disabled: disabledItems.indexOf('login_white_labeling') > -1
                                 }
                             ]
                         },
@@ -285,18 +341,30 @@ function Menu(userService, $state, $rootScope, $q, types, securityTypes, userPer
                                 {
                                     name: 'custom-translation.custom-translation',
                                     icon: 'language',
-                                    state: 'home.settings.customTranslation'
+                                    state: 'home.settings.customTranslation',
+                                    disabled: disabledItems.indexOf('custom_translation') > -1
                                 }
                             ]
-                        }];
+                        },
+                        {
+                            name: 'custom-menu.custom-menu',
+                            places: [
+                                {
+                                    name: 'custom-menu.custom-menu',
+                                    icon: 'list',
+                                    state: 'home.settings.customMenu',
+                                    disabled: disabledItems.indexOf('custom_menu') > -1
+                                }
+                            ]
+                        }]);
             } else if (authority === 'TENANT_ADMIN') {
-                sections = [];
                 sections.push(
                     {
                         name: 'home.home',
                         type: 'link',
                         state: 'home.links',
-                        icon: 'home'
+                        icon: 'home',
+                        disabled: disabledItems.indexOf('home') > -1
                     }
                 );
                 if (userPermissionsService.hasReadGenericPermission(securityTypes.resource.ruleChain)) {
@@ -305,7 +373,8 @@ function Menu(userService, $state, $rootScope, $q, types, securityTypes, userPer
                             name: 'rulechain.rulechains',
                             type: 'link',
                             state: 'home.ruleChains',
-                            icon: 'settings_ethernet'
+                            icon: 'settings_ethernet',
+                            disabled: disabledItems.indexOf('rule_chains') > -1
                         }
                     );
                 }
@@ -315,7 +384,8 @@ function Menu(userService, $state, $rootScope, $q, types, securityTypes, userPer
                             name: 'converter.converters',
                             type: 'link',
                             state: 'home.converters',
-                            icon: 'transform'
+                            icon: 'transform',
+                            disabled: disabledItems.indexOf('converters') > -1
                         }
                     );
                 }
@@ -325,7 +395,8 @@ function Menu(userService, $state, $rootScope, $q, types, securityTypes, userPer
                             name: 'integration.integrations',
                             type: 'link',
                             state: 'home.integrations',
-                            icon: 'input'
+                            icon: 'input',
+                            disabled: disabledItems.indexOf('integrations') > -1
                         }
                     );
                 }
@@ -335,7 +406,8 @@ function Menu(userService, $state, $rootScope, $q, types, securityTypes, userPer
                             name: 'role.roles',
                             type: 'link',
                             state: 'home.roles',
-                            icon: 'security'
+                            icon: 'security',
+                            disabled: disabledItems.indexOf('roles') > -1
                         }
                     );
                 }
@@ -345,27 +417,28 @@ function Menu(userService, $state, $rootScope, $q, types, securityTypes, userPer
                             name: 'customers-hierarchy.customers-hierarchy',
                             type: 'link',
                             state: 'home.customers-hierarchy',
-                            icon: 'sort'
+                            icon: 'sort',
+                            disabled: disabledItems.indexOf('customers_hierarchy') > -1
                         }
                     );
                 }
-                if (userPermissionsService.hasReadGroupsPermission(types.entityType.user)) {
+                if (userPermissionsService.hasReadGroupsPermission(types.entityType.user) && disabledItems.indexOf('user_groups') === -1) {
                     sections.push(userGroups);
                     entityGroupSections.push(userGroups);
                 }
-                if (userPermissionsService.hasReadGroupsPermission(types.entityType.customer)) {
+                if (userPermissionsService.hasReadGroupsPermission(types.entityType.customer) && disabledItems.indexOf('customer_groups') === -1) {
                     sections.push(customerGroups);
                     entityGroupSections.push(customerGroups);
                 }
-                if (userPermissionsService.hasReadGroupsPermission(types.entityType.asset)) {
+                if (userPermissionsService.hasReadGroupsPermission(types.entityType.asset) && disabledItems.indexOf('asset_groups') === -1) {
                     sections.push(assetGroups);
                     entityGroupSections.push(assetGroups);
                 }
-                if (userPermissionsService.hasReadGroupsPermission(types.entityType.device)) {
+                if (userPermissionsService.hasReadGroupsPermission(types.entityType.device) && disabledItems.indexOf('device_groups') === -1) {
                     sections.push(deviceGroups);
                     entityGroupSections.push(deviceGroups);
                 }
-                if (userPermissionsService.hasReadGroupsPermission(types.entityType.entityView)) {
+                if (userPermissionsService.hasReadGroupsPermission(types.entityType.entityView) && disabledItems.indexOf('entity_view_groups') === -1) {
                     sections.push(entityViewGroups);
                     entityGroupSections.push(entityViewGroups);
                 }
@@ -375,11 +448,12 @@ function Menu(userService, $state, $rootScope, $q, types, securityTypes, userPer
                             name: 'widget.widget-library',
                             type: 'link',
                             state: 'home.widgets-bundles',
-                            icon: 'now_widgets'
+                            icon: 'now_widgets',
+                            disabled: disabledItems.indexOf('widget_library') > -1
                         }
                     );
                 }
-                if (userPermissionsService.hasReadGroupsPermission(types.entityType.dashboard)) {
+                if (userPermissionsService.hasReadGroupsPermission(types.entityType.dashboard) && disabledItems.indexOf('dashboard_groups') === -1) {
                     sections.push(dashboardGroups);
                     entityGroupSections.push(dashboardGroups);
                 }
@@ -389,7 +463,8 @@ function Menu(userService, $state, $rootScope, $q, types, securityTypes, userPer
                             name: 'scheduler.scheduler',
                             type: 'link',
                             state: 'home.scheduler',
-                            icon: 'schedule'
+                            icon: 'schedule',
+                            disabled: disabledItems.indexOf('scheduler') > -1
                         }
                     );
                 }
@@ -399,38 +474,50 @@ function Menu(userService, $state, $rootScope, $q, types, securityTypes, userPer
                             name: 'white-labeling.white-labeling',
                             type: 'toggle',
                             state: 'home.settings',
-                            height: '200px',
+                            height: '240px',
                             icon: 'format_paint',
                             pages: [
                                 {
                                     name: 'admin.outgoing-mail',
                                     type: 'link',
                                     state: 'home.settings.outgoing-mail',
-                                    icon: 'mail'
+                                    icon: 'mail',
+                                    disabled: disabledItems.indexOf('mail_server') > -1
                                 },
                                 {
                                     name: 'admin.mail-templates',
                                     type: 'link',
                                     state: 'home.settings.mail-template',
-                                    icon: 'format_shapes'
+                                    icon: 'format_shapes',
+                                    disabled: disabledItems.indexOf('mail_templates') > -1
                                 },
                                 {
                                     name: 'custom-translation.custom-translation',
                                     type: 'link',
                                     state: 'home.settings.customTranslation',
-                                    icon: 'language'
+                                    icon: 'language',
+                                    disabled: disabledItems.indexOf('custom_translation') > -1
+                                },
+                                {
+                                    name: 'custom-menu.custom-menu',
+                                    type: 'link',
+                                    state: 'home.settings.customMenu',
+                                    icon: 'list',
+                                    disabled: disabledItems.indexOf('custom_menu') > -1
                                 },
                                 {
                                     name: 'white-labeling.white-labeling',
                                     type: 'link',
                                     state: 'home.settings.whiteLabel',
-                                    icon: 'format_paint'
+                                    icon: 'format_paint',
+                                    disabled: disabledItems.indexOf('white_labeling') > -1
                                 },
                                 {
                                     name: 'white-labeling.login-white-labeling',
                                     type: 'link',
                                     state: 'home.settings.loginWhiteLabel',
-                                    icon: 'format_paint'
+                                    icon: 'format_paint',
+                                    disabled: disabledItems.indexOf('login_white_labeling') > -1
                                 }
                             ]
                         }
@@ -443,12 +530,12 @@ function Menu(userService, $state, $rootScope, $q, types, securityTypes, userPer
                             name: 'audit-log.audit-logs',
                             type: 'link',
                             state: 'home.auditLogs',
-                            icon: 'track_changes'
+                            icon: 'track_changes',
+                            disabled: disabledItems.indexOf('audit_log') > -1
                         }
                     );
                 }
 
-                homeSections = [];
                 if (userPermissionsService.hasReadGenericPermission(securityTypes.resource.ruleChain)) {
                     homeSections.push(
                         {
@@ -457,7 +544,8 @@ function Menu(userService, $state, $rootScope, $q, types, securityTypes, userPer
                                 {
                                     name: 'rulechain.rulechains',
                                     icon: 'settings_ethernet',
-                                    state: 'home.ruleChains'
+                                    state: 'home.ruleChains',
+                                    disabled: disabledItems.indexOf('rule_chains') > -1
                                 }
                             ]
                         }
@@ -471,7 +559,8 @@ function Menu(userService, $state, $rootScope, $q, types, securityTypes, userPer
                                 {
                                     name: 'converter.converters',
                                     icon: 'transform',
-                                    state: 'home.converters'
+                                    state: 'home.converters',
+                                    disabled: disabledItems.indexOf('converters') > -1
                                 }
                             ]
                         }
@@ -485,7 +574,8 @@ function Menu(userService, $state, $rootScope, $q, types, securityTypes, userPer
                                 {
                                     name: 'integration.integrations',
                                     icon: 'input',
-                                    state: 'home.integrations'
+                                    state: 'home.integrations',
+                                    disabled: disabledItems.indexOf('integrations') > -1
                                 }
                             ]
                         }
@@ -499,7 +589,8 @@ function Menu(userService, $state, $rootScope, $q, types, securityTypes, userPer
                                 {
                                     name: 'role.roles',
                                     icon: 'security',
-                                    state: 'home.roles'
+                                    state: 'home.roles',
+                                    disabled: disabledItems.indexOf('roles') > -1
                                 }
                             ]
                         }
@@ -514,7 +605,8 @@ function Menu(userService, $state, $rootScope, $q, types, securityTypes, userPer
                                     name: 'user.users',
                                     icon: 'account_circle',
                                     //state: 'home.customers',
-                                    state: 'home.userGroups'
+                                    state: 'home.userGroups',
+                                    disabled: disabledItems.indexOf('user_groups') > -1
                                 }
                             ]
                         }
@@ -529,12 +621,14 @@ function Menu(userService, $state, $rootScope, $q, types, securityTypes, userPer
                                     name: 'customer.customers',
                                     icon: 'supervisor_account',
                                     //state: 'home.customers',
-                                    state: 'home.customerGroups'
+                                    state: 'home.customerGroups',
+                                    disabled: disabledItems.indexOf('customer_groups') > -1
                                 },
                                 {
                                     name: 'customers-hierarchy.customers-hierarchy',
                                     icon: 'sort',
                                     state: 'home.customers-hierarchy',
+                                    disabled: disabledItems.indexOf('customers_hierarchy') > -1
                                 }
                             ]
                         }
@@ -549,7 +643,8 @@ function Menu(userService, $state, $rootScope, $q, types, securityTypes, userPer
                                     name: 'asset.assets',
                                     icon: 'domain',
                                     //state: 'home.assets'
-                                    state: 'home.assetGroups'
+                                    state: 'home.assetGroups',
+                                    disabled: disabledItems.indexOf('asset_groups') > -1
                                 }
                             ]
                         }
@@ -564,7 +659,8 @@ function Menu(userService, $state, $rootScope, $q, types, securityTypes, userPer
                                     name: 'device.devices',
                                     icon: 'devices_other',
                                     //state: 'home.devices',
-                                    state: 'home.deviceGroups'
+                                    state: 'home.deviceGroups',
+                                    disabled: disabledItems.indexOf('device_groups') > -1
                                 }
                             ]
                         }
@@ -579,7 +675,8 @@ function Menu(userService, $state, $rootScope, $q, types, securityTypes, userPer
                                     name: 'entity-view.entity-views',
                                     icon: 'view_quilt',
                                     //state: 'home.entityViews',
-                                    state: 'home.entityViewGroups'
+                                    state: 'home.entityViewGroups',
+                                    disabled: disabledItems.indexOf('entity_view_groups') > -1
                                 }
                             ]
                         }
@@ -601,7 +698,8 @@ function Menu(userService, $state, $rootScope, $q, types, securityTypes, userPer
                             {
                                 name: 'widget.widget-library',
                                 icon: 'now_widgets',
-                                state: 'home.widgets-bundles'
+                                state: 'home.widgets-bundles',
+                                disabled: disabledItems.indexOf('widget_library') > -1
                             }
                         );
                     }
@@ -611,7 +709,8 @@ function Menu(userService, $state, $rootScope, $q, types, securityTypes, userPer
                                 name: 'dashboard.dashboards',
                                 icon: 'dashboard',
                                 //state: 'home.dashboards',
-                                state: 'home.dashboardGroups'
+                                state: 'home.dashboardGroups',
+                                disabled: disabledItems.indexOf('dashboard_groups') > -1
                             }
                         );
                     }
@@ -624,7 +723,8 @@ function Menu(userService, $state, $rootScope, $q, types, securityTypes, userPer
                                 {
                                     name: 'scheduler.scheduler',
                                     icon: 'schedule',
-                                    state: 'home.scheduler'
+                                    state: 'home.scheduler',
+                                    disabled: disabledItems.indexOf('scheduler') > -1
                                 }
                             ]
                         }
@@ -639,22 +739,26 @@ function Menu(userService, $state, $rootScope, $q, types, securityTypes, userPer
                                 {
                                     name: 'admin.outgoing-mail',
                                     icon: 'mail',
-                                    state: 'home.settings.outgoing-mail'
+                                    state: 'home.settings.outgoing-mail',
+                                    disabled: disabledItems.indexOf('mail_server') > -1
                                 },
                                 {
                                     name: 'admin.mail-templates',
                                     icon: 'format_shapes',
-                                    state: 'home.settings.mail-template'
+                                    state: 'home.settings.mail-template',
+                                    disabled: disabledItems.indexOf('mail_templates') > -1
                                 },
                                 {
                                     name: 'white-labeling.white-labeling',
                                     icon: 'format_paint',
-                                    state: 'home.settings.whiteLabel'
+                                    state: 'home.settings.whiteLabel',
+                                    disabled: disabledItems.indexOf('white_labeling') > -1
                                 },
                                 {
                                     name: 'white-labeling.login-white-labeling',
                                     icon: 'format_paint',
-                                    state: 'home.settings.loginWhiteLabel'
+                                    state: 'home.settings.loginWhiteLabel',
+                                    disabled: disabledItems.indexOf('login_white_labeling') > -1
                                 }
                             ]
                         }
@@ -667,7 +771,22 @@ function Menu(userService, $state, $rootScope, $q, types, securityTypes, userPer
                                 {
                                     name: 'custom-translation.custom-translation',
                                     icon: 'language',
-                                    state: 'home.settings.customTranslation'
+                                    state: 'home.settings.customTranslation',
+                                    disabled: disabledItems.indexOf('custom_translation') > -1
+                                }
+                            ]
+                        }
+                    );
+
+                    homeSections.push(
+                        {
+                            name: 'custom-menu.custom-menu',
+                            places: [
+                                {
+                                    name: 'custom-menu.custom-menu',
+                                    icon: 'list',
+                                    state: 'home.settings.customMenu',
+                                    disabled: disabledItems.indexOf('custom_menu') > -1
                                 }
                             ]
                         }
@@ -682,7 +801,8 @@ function Menu(userService, $state, $rootScope, $q, types, securityTypes, userPer
                                 {
                                     name: 'audit-log.audit-logs',
                                     icon: 'track_changes',
-                                    state: 'home.auditLogs'
+                                    state: 'home.auditLogs',
+                                    disabled: disabledItems.indexOf('audit_log') > -1
                                 }
                             ]
                         }
@@ -690,13 +810,13 @@ function Menu(userService, $state, $rootScope, $q, types, securityTypes, userPer
                 }
 
             } else if (authority === 'CUSTOMER_USER') {
-                sections = [];
                 sections.push(
                     {
                         name: 'home.home',
                         type: 'link',
                         state: 'home.links',
-                        icon: 'home'
+                        icon: 'home',
+                        disabled: disabledItems.indexOf('home') > -1
                     }
                 );
                 if (userPermissionsService.hasReadGenericPermission(securityTypes.resource.role)) {
@@ -705,7 +825,8 @@ function Menu(userService, $state, $rootScope, $q, types, securityTypes, userPer
                             name: 'role.roles',
                             type: 'link',
                             state: 'home.roles',
-                            icon: 'security'
+                            icon: 'security',
+                            disabled: disabledItems.indexOf('roles') > -1
                         }
                     );
                 }
@@ -715,31 +836,32 @@ function Menu(userService, $state, $rootScope, $q, types, securityTypes, userPer
                             name: 'customers-hierarchy.customers-hierarchy',
                             type: 'link',
                             state: 'home.customers-hierarchy',
-                            icon: 'sort'
+                            icon: 'sort',
+                            disabled: disabledItems.indexOf('customers_hierarchy') > -1
                         }
                     );
                 }
-                if (userPermissionsService.hasReadGroupsPermission(types.entityType.user)) {
+                if (userPermissionsService.hasReadGroupsPermission(types.entityType.user) && disabledItems.indexOf('user_groups') === -1) {
                     sections.push(userGroups);
                     entityGroupSections.push(userGroups);
                 }
-                if (userPermissionsService.hasReadGroupsPermission(types.entityType.customer)) {
+                if (userPermissionsService.hasReadGroupsPermission(types.entityType.customer) && disabledItems.indexOf('customer_groups') === -1) {
                     sections.push(customerGroups);
                     entityGroupSections.push(customerGroups);
                 }
-                if (userPermissionsService.hasReadGroupsPermission(types.entityType.asset)) {
+                if (userPermissionsService.hasReadGroupsPermission(types.entityType.asset) && disabledItems.indexOf('asset_groups') === -1) {
                     sections.push(assetGroups);
                     entityGroupSections.push(assetGroups);
                 }
-                if (userPermissionsService.hasReadGroupsPermission(types.entityType.device)) {
+                if (userPermissionsService.hasReadGroupsPermission(types.entityType.device) && disabledItems.indexOf('device_groups') === -1) {
                     sections.push(deviceGroups);
                     entityGroupSections.push(deviceGroups);
                 }
-                if (userPermissionsService.hasReadGroupsPermission(types.entityType.entityView)) {
+                if (userPermissionsService.hasReadGroupsPermission(types.entityType.entityView) && disabledItems.indexOf('entity_view_groups') === -1) {
                     sections.push(entityViewGroups);
                     entityGroupSections.push(entityViewGroups);
                 }
-                if (userPermissionsService.hasReadGroupsPermission(types.entityType.dashboard)) {
+                if (userPermissionsService.hasReadGroupsPermission(types.entityType.dashboard) && disabledItems.indexOf('dashboard_groups') === -1) {
                     sections.push(dashboardGroups);
                     entityGroupSections.push(dashboardGroups);
                 }
@@ -749,7 +871,8 @@ function Menu(userService, $state, $rootScope, $q, types, securityTypes, userPer
                             name: 'scheduler.scheduler',
                             type: 'link',
                             state: 'home.scheduler',
-                            icon: 'schedule'
+                            icon: 'schedule',
+                            disabled: disabledItems.indexOf('scheduler') > -1
                         }
                     );
                 }
@@ -759,26 +882,36 @@ function Menu(userService, $state, $rootScope, $q, types, securityTypes, userPer
                             name: 'white-labeling.white-labeling',
                             type: 'toggle',
                             state: 'home.settings',
-                            height: '120px',
+                            height: '160px',
                             icon: 'format_paint',
                             pages: [
                                 {
                                     name: 'custom-translation.custom-translation',
                                     type: 'link',
                                     state: 'home.settings.customTranslation',
-                                    icon: 'language'
+                                    icon: 'language',
+                                    disabled: disabledItems.indexOf('custom_translation') > -1
+                                },
+                                {
+                                    name: 'custom-menu.custom-menu',
+                                    type: 'link',
+                                    state: 'home.settings.customMenu',
+                                    icon: 'list',
+                                    disabled: disabledItems.indexOf('custom_menu') > -1
                                 },
                                 {
                                     name: 'white-labeling.white-labeling',
                                     type: 'link',
                                     state: 'home.settings.whiteLabel',
-                                    icon: 'format_paint'
+                                    icon: 'format_paint',
+                                    disabled: disabledItems.indexOf('white_labeling') > -1
                                 },
                                 {
                                     name: 'white-labeling.login-white-labeling',
                                     type: 'link',
                                     state: 'home.settings.loginWhiteLabel',
-                                    icon: 'format_paint'
+                                    icon: 'format_paint',
+                                    disabled: disabledItems.indexOf('login_white_labeling') > -1
                                 }
                             ]
                         }
@@ -791,12 +924,11 @@ function Menu(userService, $state, $rootScope, $q, types, securityTypes, userPer
                             name: 'audit-log.audit-logs',
                             type: 'link',
                             state: 'home.auditLogs',
-                            icon: 'track_changes'
+                            icon: 'track_changes',
+                            disabled: disabledItems.indexOf('audit_log') > -1
                         }
                     );
                 }
-
-                homeSections = [];
 
                 if (userPermissionsService.hasReadGenericPermission(securityTypes.resource.role)) {
                     homeSections.push(
@@ -806,7 +938,8 @@ function Menu(userService, $state, $rootScope, $q, types, securityTypes, userPer
                                 {
                                     name: 'role.roles',
                                     icon: 'security',
-                                    state: 'home.roles'
+                                    state: 'home.roles',
+                                    disabled: disabledItems.indexOf('roles') > -1
                                 }
                             ]
                         }
@@ -821,7 +954,8 @@ function Menu(userService, $state, $rootScope, $q, types, securityTypes, userPer
                                     name: 'user.users',
                                     icon: 'account_circle',
                                     //state: 'home.customers',
-                                    state: 'home.userGroups'
+                                    state: 'home.userGroups',
+                                    disabled: disabledItems.indexOf('user_groups') > -1
                                 }
                             ]
                         }
@@ -836,12 +970,14 @@ function Menu(userService, $state, $rootScope, $q, types, securityTypes, userPer
                                     name: 'customer.customers',
                                     icon: 'supervisor_account',
                                     //state: 'home.customers',
-                                    state: 'home.customerGroups'
+                                    state: 'home.customerGroups',
+                                    disabled: disabledItems.indexOf('customer_groups') > -1
                                 },
                                 {
                                     name: 'customers-hierarchy.customers-hierarchy',
                                     icon: 'sort',
                                     state: 'home.customers-hierarchy',
+                                    disabled: disabledItems.indexOf('customers_hierarchy') > -1
                                 }
                             ]
                         }
@@ -856,7 +992,8 @@ function Menu(userService, $state, $rootScope, $q, types, securityTypes, userPer
                                     name: 'asset.assets',
                                     icon: 'domain',
                                     //state: 'home.assets'
-                                    state: 'home.assetGroups'
+                                    state: 'home.assetGroups',
+                                    disabled: disabledItems.indexOf('asset_groups') > -1
                                 }
                             ]
                         }
@@ -871,7 +1008,8 @@ function Menu(userService, $state, $rootScope, $q, types, securityTypes, userPer
                                     name: 'device.devices',
                                     icon: 'devices_other',
                                     //state: 'home.devices',
-                                    state: 'home.deviceGroups'
+                                    state: 'home.deviceGroups',
+                                    disabled: disabledItems.indexOf('device_groups') > -1
                                 }
                             ]
                         }
@@ -886,7 +1024,8 @@ function Menu(userService, $state, $rootScope, $q, types, securityTypes, userPer
                                     name: 'entity-view.entity-views',
                                     icon: 'view_quilt',
                                     //state: 'home.entityViews',
-                                    state: 'home.entityViewGroups'
+                                    state: 'home.entityViewGroups',
+                                    disabled: disabledItems.indexOf('entity_view_groups') > -1
                                 }
                             ]
                         }
@@ -901,7 +1040,8 @@ function Menu(userService, $state, $rootScope, $q, types, securityTypes, userPer
                                     name: 'dashboard.dashboards',
                                     icon: 'dashboard',
                                     //state: 'home.dashboards',
-                                    state: 'home.dashboardGroups'
+                                    state: 'home.dashboardGroups',
+                                    disabled: disabledItems.indexOf('dashboard_groups') > -1
                                 }
                             ]
                         }
@@ -915,7 +1055,8 @@ function Menu(userService, $state, $rootScope, $q, types, securityTypes, userPer
                                 {
                                     name: 'scheduler.scheduler',
                                     icon: 'schedule',
-                                    state: 'home.scheduler'
+                                    state: 'home.scheduler',
+                                    disabled: disabledItems.indexOf('scheduler') > -1
                                 }
                             ]
                         }
@@ -930,12 +1071,14 @@ function Menu(userService, $state, $rootScope, $q, types, securityTypes, userPer
                                 {
                                     name: 'white-labeling.white-labeling',
                                     icon: 'format_paint',
-                                    state: 'home.settings.whiteLabel'
+                                    state: 'home.settings.whiteLabel',
+                                    disabled: disabledItems.indexOf('white_labeling') > -1
                                 },
                                 {
                                     name: 'white-labeling.login-white-labeling',
                                     icon: 'format_paint',
-                                    state: 'home.settings.loginWhiteLabel'
+                                    state: 'home.settings.loginWhiteLabel',
+                                    disabled: disabledItems.indexOf('login_white_labeling') > -1
                                 }
                             ]
                         }
@@ -947,7 +1090,21 @@ function Menu(userService, $state, $rootScope, $q, types, securityTypes, userPer
                                 {
                                     name: 'custom-translation.custom-translation',
                                     icon: 'language',
-                                    state: 'home.settings.customTranslation'
+                                    state: 'home.settings.customTranslation',
+                                    disabled: disabledItems.indexOf('custom_translation') > -1
+                                }
+                            ]
+                        }
+                    );
+                    homeSections.push(
+                        {
+                            name: 'custom-menu.custom-menu',
+                            places: [
+                                {
+                                    name: 'custom-menu.custom-menu',
+                                    icon: 'list',
+                                    state: 'home.settings.customMenu',
+                                    disabled: disabledItems.indexOf('custom_menu') > -1
                                 }
                             ]
                         }
@@ -962,7 +1119,8 @@ function Menu(userService, $state, $rootScope, $q, types, securityTypes, userPer
                                 {
                                     name: 'audit-log.audit-logs',
                                     icon: 'track_changes',
-                                    state: 'home.auditLogs'
+                                    state: 'home.auditLogs',
+                                    disabled: disabledItems.indexOf('audit_log') > -1
                                 }
                             ]
                         }
@@ -974,9 +1132,26 @@ function Menu(userService, $state, $rootScope, $q, types, securityTypes, userPer
             if (authority === 'TENANT_ADMIN' || authority === 'CUSTOMER_USER') {
                 initGroups();
             }
+            var customMenuItems = [];
+            if (customMenu && angular.isArray(customMenu.menuItems)) {
+                customMenuItems = customMenu.menuItems;
+            }
+            buildCustomMenu(customMenuItems);
+            updateSectionsHeight();
             onMenuReady();
         }
     }
+
+    function updateSectionsHeight() {
+        for (var i=0;i<sections.length;i++) {
+            var section = sections[i];
+            if (section.type === 'toggle') {
+                var height = section.pages.filter((page) => !page.disabled).length * 40;
+                section.height = height + 'px';
+            }
+        }
+    }
+
 
     function onMenuReady() {
         isMenuReady = true;
@@ -1010,6 +1185,62 @@ function Menu(userService, $state, $rootScope, $q, types, securityTypes, userPer
                 updateGroups();
             });
         }
+    }
+
+    function buildCustomMenu(menuItems) {
+        var stateIds = {};
+        for (var i=0;i<menuItems.length;i++) {
+            var customMenuItem = menuItems[i];
+            var stateId = getCustomMenuStateId(customMenuItem.name, stateIds);
+            var customMenuSection = {
+                isCustom: true,
+                stateId: stateId,
+                name: customMenuItem.name,
+                state: 'home.iframeView({stateId: \''+stateId+'\', iframeUrl: \''+customMenuItem.iframeUrl + '\', setAccessToken: '+customMenuItem.setAccessToken+'})',
+                icon: customMenuItem.materialIcon,
+                iconUrl: customMenuItem.iconUrl
+            };
+            if (customMenuItem.childMenuItems && customMenuItem.childMenuItems.length) {
+                customMenuSection.type = 'toggle';
+                var pages = [];
+                var childStateIds = {};
+                for (var c=0;c<customMenuItem.childMenuItems.length;c++) {
+                    var customMenuChildItem = customMenuItem.childMenuItems[c];
+                    var childStateId = getCustomMenuStateId(customMenuChildItem.name, stateIds);
+                    var customMenuChildSection = {
+                        isCustom: true,
+                        stateId: childStateId,
+                        name: customMenuChildItem.name,
+                        type: 'link',
+                        state: 'home.iframeView.child({stateId: \''+stateId+'\', iframeUrl: \''+customMenuItem.iframeUrl + '\', setAccessToken: '+customMenuItem.setAccessToken+', ' +
+                               'childStateId: \''+childStateId+'\', childIframeUrl: \''+customMenuChildItem.iframeUrl + '\', childSetAccessToken: '+customMenuChildItem.setAccessToken+'})',
+                        icon: customMenuChildItem.materialIcon,
+                        iconUrl: customMenuChildItem.iconUrl
+                    };
+                    pages.push(customMenuChildSection);
+                    childStateIds[childStateId] = true;
+                }
+                customMenuSection.pages = pages;
+                customMenuSection.childStateIds = childStateIds;
+                customMenuSection.height = (40 * customMenuItem.childMenuItems.length) + 'px';
+            } else {
+                customMenuSection.type = 'link';
+            }
+            sections.push(customMenuSection);
+        }
+        updateCurrentCustomSection($state.params);
+    }
+
+    function getCustomMenuStateId(name, stateIds) {
+        var origName = (' ' + name).slice(1);
+        var stateId = origName;
+        var inc = 1;
+        while (stateIds[stateId]) {
+            stateId = origName + inc;
+            inc++;
+        }
+        stateIds[stateId] = true;
+        return stateId;
     }
 
     function updateGroups() {
@@ -1061,7 +1292,7 @@ function Menu(userService, $state, $rootScope, $q, types, securityTypes, userPer
     }
 
     function sectionHeight(section) {
-        if ($state.includes(section.state)) {
+        if (stateIncludes(section)) {
             return section.height;
         } else {
             return '0px';
@@ -1069,7 +1300,89 @@ function Menu(userService, $state, $rootScope, $q, types, securityTypes, userPer
     }
 
     function sectionActive(section) {
-        return $state.includes(section.state);
+        return stateIncludes(section);
+    }
+
+    function stateIncludes(section) {
+        if (section.isCustom) {
+            if ($state.params) {
+                if ($state.params.childStateId) {
+                    return section.stateId === $state.params.childStateId || (section.childStateIds && section.childStateIds[$state.params.childStateId]);
+                } else if ($state.params.stateId) {
+                    return section.stateId === $state.params.stateId;
+                } else {
+                    return false;
+                }
+            } else {
+                return false;
+            }
+        } else {
+            return $state.includes(section.state);
+        }
+    }
+
+    function getCurrentCustomSection() {
+        return currentCustomSection;
+    }
+
+    function getCurrentCustomChildSection() {
+        return currentCustomChildSection;
+    }
+
+    function getRedirectState(parentState, redirectState) {
+        var filtered = sections.filter((section) => section.state === parentState);
+        if (filtered && filtered.length) {
+            var parentSection = filtered[0];
+            if (parentSection.pages) {
+                var filteredPages = parentSection.pages.filter((page) => !page.disabled);
+                if (filteredPages && filteredPages.length) {
+                    var redirectPage = filteredPages.filter((page) => page.state === redirectState);
+                    if (!redirectPage || !redirectPage.length) {
+                        return filteredPages[0].state;
+                    }
+                }
+            }
+        }
+        return redirectState;
+    }
+
+    function updateCurrentCustomSection(params) {
+        currentCustomSection = detectCurrentCustomSection(params);
+        currentCustomChildSection = detectCurrentCustomChildSection(params);
+    }
+
+    function detectCurrentCustomSection(params) {
+        if (params && params.stateId) {
+            var stateId = params.stateId;
+            for (var i=0;i<sections.length;i++) {
+                var section = sections[i];
+                if (section.isCustom) {
+                    if (section.stateId === stateId) {
+                        return section;
+                    }
+                }
+            }
+        }
+    }
+
+    function detectCurrentCustomChildSection(params) {
+        if (params && params.childStateId) {
+            var stateId = params.childStateId;
+            for (var i=0;i<sections.length;i++) {
+                var section = sections[i];
+                if (section.isCustom) {
+                    if (section.pages && section.pages.length) {
+                        for (var c=0;c<section.pages.length;c++) {
+                            var childSection = section.pages[c];
+                            if (childSection.stateId === stateId) {
+                                return childSection;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return null;
     }
 
 }

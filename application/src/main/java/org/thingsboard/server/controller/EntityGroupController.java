@@ -32,6 +32,7 @@ package org.thingsboard.server.controller;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.NullNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.util.concurrent.ListenableFuture;
 import io.swagger.annotations.ApiParam;
@@ -149,7 +150,8 @@ public class EntityGroupController extends BaseController {
                         "Removal of entity group 'All' is forbidden!", ThingsboardErrorCode.PERMISSION_DENIED);
             }
 
-            List<GroupPermissionInfo> groupPermissions = groupPermissionService.findGroupPermissionInfoListByTenantIdAndEntityGroupIdAsync(getTenantId(), entityGroupId).get();
+            List<GroupPermissionInfo> groupPermissions = new ArrayList<>();
+            groupPermissions.addAll(groupPermissionService.findGroupPermissionInfoListByTenantIdAndEntityGroupIdAsync(getTenantId(), entityGroupId).get());
             if (entityGroup.getType() == EntityType.USER) {
                 groupPermissions.addAll(groupPermissionService.findGroupPermissionInfoListByTenantIdAndUserGroupIdAsync(getTenantId(), entityGroupId).get());
             }
@@ -225,6 +227,32 @@ public class EntityGroupController extends BaseController {
                 return toEntityGroupsInfo(entityGroupService.findEntityGroupsByType(getTenantId(), ownerId, groupType).get());
             } else {
                 throw permissionDenied();
+            }
+        } catch (Exception e) {
+            throw handleException(e);
+        }
+    }
+
+    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
+    @RequestMapping(value = "/entityGroup/all/{ownerType}/{ownerId}/{groupType}", method = RequestMethod.GET)
+    @ResponseBody
+    public EntityGroupInfo getEntityGroupAllByOwnerAndType(
+            @PathVariable("ownerType") String strOwnerType,
+            @PathVariable("ownerId") String strOwnerId,
+            @ApiParam(value = "EntityGroup type", required = true, allowableValues = "CUSTOMER,ASSET,DEVICE,USER,ENTITY_VIEW,DASHBOARD") @PathVariable("groupType") String strGroupType) throws ThingsboardException {
+        checkParameter("ownerId", strOwnerId);
+        checkParameter("ownerType", strOwnerType);
+        try {
+            EntityId ownerId = EntityIdFactory.getByTypeAndId(strOwnerType, strOwnerId);
+            EntityType groupType = checkStrEntityGroupType("groupType", strGroupType);
+            checkEntityId(ownerId, Operation.READ);
+            Optional<EntityGroup> entityGroup = entityGroupService.findEntityGroupByTypeAndName(getTenantId(), ownerId,
+                    groupType, EntityGroup.GROUP_ALL_NAME).get();
+            if (entityGroup.isPresent()) {
+                accessControlService.checkEntityGroupPermission(getCurrentUser(), Operation.READ, entityGroup.get());
+                return toEntityGroupInfo(entityGroup.get());
+            } else {
+                throw new ThingsboardException("Requested item wasn't found!", ThingsboardErrorCode.ITEM_NOT_FOUND);
             }
         } catch (Exception e) {
             throw handleException(e);
@@ -466,22 +494,25 @@ public class EntityGroupController extends BaseController {
             TextPageLink pageLink = createPageLink(limit, textSearch, idOffset, textOffset);
             List<ContactBased<?>> owners = new ArrayList<>();
             if (getCurrentUser().getAuthority() == Authority.TENANT_ADMIN) {
-                accessControlService.checkPermission(getCurrentUser(), Resource.TENANT, Operation.READ);
-                owners.add(tenantService.findTenantById(getCurrentUser().getTenantId()));
-            }
-            accessControlService.checkPermission(getCurrentUser(), Resource.CUSTOMER, Operation.READ);
-            Set<EntityId> ownerIds = ownersCacheService.getChildOwners(getTenantId(), getCurrentUser().getOwnerId());
-            if (!ownerIds.isEmpty()) {
-                List<CustomerId> customerIds = new ArrayList<>();
-                for (EntityId ownerId : ownerIds) {
-                    customerIds.add(new CustomerId(ownerId.getId()));
+                if (accessControlService.hasPermission(getCurrentUser(), Resource.TENANT, Operation.READ)) {
+                    owners.add(tenantService.findTenantById(getCurrentUser().getTenantId()));
                 }
-                owners.addAll(customerService.findCustomersByTenantIdAndIdsAsync(getTenantId(), customerIds).get());
             }
-            owners = owners.stream().sorted(entityComparator).filter(new EntityPageLinkFilter(pageLink)).collect(Collectors.toList());
-            if (pageLink.getLimit() > 0 && owners.size() > pageLink.getLimit()) {
-                int toRemove = owners.size() - pageLink.getLimit();
-                owners.subList(owners.size() - toRemove, owners.size()).clear();
+            if (accessControlService.hasPermission(getCurrentUser(), Resource.CUSTOMER, Operation.READ)) {
+                Set<EntityId> ownerIds = ownersCacheService.getChildOwners(getTenantId(), getCurrentUser().getOwnerId());
+                if (!ownerIds.isEmpty()) {
+                    List<CustomerId> customerIds = new ArrayList<>();
+                    for (EntityId ownerId : ownerIds) {
+                        customerIds.add(new CustomerId(ownerId.getId()));
+                    }
+                    owners.addAll(customerService.findCustomersByTenantIdAndIdsAsync(getTenantId(), customerIds).get()
+                            .stream().filter(customer -> !customer.isPublic()).collect(Collectors.toList()));
+                }
+                owners = owners.stream().sorted(entityComparator).filter(new EntityPageLinkFilter(pageLink)).collect(Collectors.toList());
+                if (pageLink.getLimit() > 0 && owners.size() > pageLink.getLimit()) {
+                    int toRemove = owners.size() - pageLink.getLimit();
+                    owners.subList(owners.size() - toRemove, owners.size()).clear();
+                }
             }
             return new TextPageData<>(owners, pageLink);
         } catch (Exception e) {
@@ -522,7 +553,7 @@ public class EntityGroupController extends BaseController {
             groupPermission.setEntityGroupType(entityGroup.getType());
 
             JsonNode additionalInfo = entityGroup.getAdditionalInfo();
-            if (additionalInfo == null) {
+            if (additionalInfo == null || additionalInfo instanceof NullNode) {
                 additionalInfo = mapper.createObjectNode();
             }
             ((ObjectNode)additionalInfo).put("isPublic", true);

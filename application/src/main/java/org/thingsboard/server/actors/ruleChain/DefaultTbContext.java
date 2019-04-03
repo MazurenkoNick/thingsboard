@@ -35,6 +35,7 @@ import com.datastax.driver.core.utils.UUIDs;
 import com.google.common.util.concurrent.FutureCallback;
 import org.springframework.util.StringUtils;
 import org.thingsboard.rule.engine.api.*;
+import io.netty.channel.EventLoopGroup;
 import org.springframework.util.StringUtils;
 import org.thingsboard.rule.engine.api.ListeningExecutor;
 import org.thingsboard.rule.engine.api.MailService;
@@ -47,7 +48,15 @@ import org.thingsboard.rule.engine.api.ScriptEngine;
 import org.thingsboard.rule.engine.api.TbContext;
 import org.thingsboard.rule.engine.api.TbRelationTypes;
 import org.thingsboard.server.actors.ActorSystemContext;
+import org.thingsboard.server.common.data.Customer;
+import org.thingsboard.server.common.data.Dashboard;
 import org.thingsboard.server.common.data.DataConstants;
+import org.thingsboard.server.common.data.Device;
+import org.thingsboard.server.common.data.EntityType;
+import org.thingsboard.server.common.data.EntityView;
+import org.thingsboard.server.common.data.User;
+import org.thingsboard.server.common.data.asset.Asset;
+import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.id.DeviceId;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.IntegrationId;
@@ -64,6 +73,7 @@ import org.thingsboard.server.dao.alarm.AlarmService;
 import org.thingsboard.server.dao.asset.AssetService;
 import org.thingsboard.server.dao.attributes.AttributesService;
 import org.thingsboard.server.dao.blob.BlobEntityService;
+import org.thingsboard.server.dao.cassandra.CassandraCluster;
 import org.thingsboard.server.dao.customer.CustomerService;
 import org.thingsboard.server.dao.dashboard.DashboardService;
 import org.thingsboard.server.dao.device.DeviceService;
@@ -71,6 +81,7 @@ import org.thingsboard.server.dao.event.EventService;
 import org.thingsboard.server.dao.group.EntityGroupService;
 import org.thingsboard.server.dao.integration.IntegrationService;
 import org.thingsboard.server.dao.entityview.EntityViewService;
+import org.thingsboard.server.dao.nosql.CassandraBufferedRateExecutor;
 import org.thingsboard.server.dao.relation.RelationService;
 import org.thingsboard.server.dao.rule.RuleChainService;
 import org.thingsboard.server.dao.tenant.TenantService;
@@ -293,6 +304,11 @@ class DefaultTbContext implements TbContext, TbPeContext {
     }
 
     @Override
+    public EventLoopGroup getSharedEventLoop() {
+        return mainCtx.getSharedEventLoopGroupService().getSharedEventLoopGroup();
+    }
+
+    @Override
     public MailService getMailService() {
         return mainCtx.getMailService();
     }
@@ -361,6 +377,56 @@ class DefaultTbContext implements TbContext, TbPeContext {
     }
 
     @Override
+    public EntityId getOwner(TenantId tenantId, EntityId entityId) {
+        return mainCtx.getOwnersCacheService().getOwner(tenantId, entityId);
+    }
+
+    @Override
+    public void clearOwners(EntityId entityId) {
+        mainCtx.getOwnersCacheService().clearOwners(entityId);
+    }
+
+    @Override
+    public Set<EntityId> getChildOwners(TenantId tenantId, EntityId parentOwnerId) {
+        return mainCtx.getOwnersCacheService().getChildOwners(tenantId, parentOwnerId);
+    }
+
+    @Override
+    public void changeDashboardOwner(TenantId tenantId, EntityId targetOwnerId, Dashboard entity) throws ThingsboardException {
+        mainCtx.getOwnersCacheService().changeDashboardOwner(tenantId, targetOwnerId, entity);
+    }
+
+    @Override
+    public void changeUserOwner(TenantId tenantId, EntityId targetOwnerId, User entity) throws ThingsboardException {
+        mainCtx.getOwnersCacheService().changeUserOwner(tenantId, targetOwnerId, entity);
+    }
+
+    @Override
+    public void changeCustomerOwner(TenantId tenantId, EntityId targetOwnerId, Customer entity) throws ThingsboardException {
+        mainCtx.getOwnersCacheService().changeCustomerOwner(tenantId, targetOwnerId, entity);
+    }
+
+    @Override
+    public void changeEntityViewOwner(TenantId tenantId, EntityId targetOwnerId, EntityView entity) throws ThingsboardException {
+        mainCtx.getOwnersCacheService().changeEntityViewOwner(tenantId, targetOwnerId, entity);
+    }
+
+    @Override
+    public void changeAssetOwner(TenantId tenantId, EntityId targetOwnerId, Asset entity) throws ThingsboardException {
+        mainCtx.getOwnersCacheService().changeAssetOwner(tenantId, targetOwnerId, entity);
+    }
+
+    @Override
+    public void changeDeviceOwner(TenantId tenantId, EntityId targetOwnerId, Device entity) throws ThingsboardException {
+        mainCtx.getOwnersCacheService().changeDeviceOwner(tenantId, targetOwnerId, entity);
+    }
+
+    @Override
+    public void changeEntityOwner(TenantId tenantId, EntityId targetOwnerId, EntityId entityId, EntityType entityType) throws ThingsboardException {
+        mainCtx.getOwnersCacheService().changeEntityOwner(tenantId, targetOwnerId, entityId, entityType);
+    }
+
+    @Override
     public void pushToIntegration(IntegrationId integrationId, TbMsg msg, FutureCallback<Void> callback) {
         boolean restApiCall = msg.getType().equals(DataConstants.RPC_CALL_FROM_SERVER_TO_DEVICE);
         UUID requestUUID;
@@ -380,7 +446,7 @@ class DefaultTbContext implements TbContext, TbPeContext {
             @Override
             public void onSuccess(@Nullable Void aVoid) {
                 if (restApiCall) {
-                    FromDeviceRpcResponse response = new FromDeviceRpcResponse(requestUUID,null, null);
+                    FromDeviceRpcResponse response = new FromDeviceRpcResponse(requestUUID, null, null);
                     mainCtx.getDeviceRpcService().processResponseToServerSideRPCRequestFromRuleEngine(mainCtx.getRoutingService().getCurrentServer(), response);
                 }
                 callback.onSuccess(aVoid);
@@ -395,6 +461,16 @@ class DefaultTbContext implements TbContext, TbPeContext {
                 callback.onFailure(throwable);
             }
         });
+    }
+
+    @Override
+    public CassandraCluster getCassandraCluster() {
+        return mainCtx.getCassandraCluster();
+    }
+
+    @Override
+    public CassandraBufferedRateExecutor getCassandraBufferedRateExecutor() {
+        return mainCtx.getCassandraBufferedRateExecutor();
     }
 
 }
