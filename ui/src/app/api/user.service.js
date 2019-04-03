@@ -37,8 +37,8 @@ export default angular.module('thingsboard.api.user', [thingsboardApiLogin,
     .name;
 
 /*@ngInject*/
-function UserService($http, $q, $rootScope, adminService, dashboardService, timeService, loginService, whiteLabelingService,
-                     userPermissionsService, toast, store, reportStore, jwtHelper, $translate, $state, $location) {
+function UserService($http, $q, $rootScope, adminService, dashboardService, timeService, loginService, whiteLabelingService, customMenuService,
+                     customTranslationService, userPermissionsService, toast, store, reportService, jwtHelper, $translate, $state, $location) {
     var currentUser = null,
         currentUserDetails = null,
         lastPublicDashboardId = null,
@@ -181,11 +181,7 @@ function UserService($http, $q, $rootScope, adminService, dashboardService, time
     }
 
     function _storeGet(key) {
-        if ($rootScope.reportView) {
-            return reportStore.get(key);
-        } else {
-            return store.get(key);
-        }
+        return store.get(key);
     }
 
     function validateJwtToken(doRefresh) {
@@ -343,20 +339,19 @@ function UserService($http, $q, $rootScope, adminService, dashboardService, time
                 } else if (currentUser) {
                     currentUser.authority = "ANONYMOUS";
                 }
-                var sysParamsPromise = loadSystemParams();
                 if (currentUser.isPublic) {
                     $rootScope.forceFullscreen = true;
-                    sysParamsPromise.then(
+                    loadSystemParams().then(
                         () => { fetchAllowedDashboardIds(); },
                         () => { deferred.reject(); }
                     );
                 } else if (currentUser.userId) {
                     getUser(currentUser.userId, true).then(
                         function success(user) {
-                            sysParamsPromise.then(
+                            currentUserDetails = user;
+                            updateUserLang();
+                            loadSystemParams().then(
                                 () => {
-                                    currentUserDetails = user;
-                                    updateUserLang();
                                     $rootScope.forceFullscreen = false;
                                     if (userForceFullscreen()) {
                                         $rootScope.forceFullscreen = true;
@@ -389,6 +384,9 @@ function UserService($http, $q, $rootScope, adminService, dashboardService, time
 
         if (!currentUser) {
             var locationSearch = $location.search();
+            if (locationSearch.reportView) {
+                reportService.loadReportParams(locationSearch);
+            }
             if (locationSearch.publicId) {
                 loginService.publicLogin(locationSearch.publicId).then(function success(response) {
                     var token = response.data.token;
@@ -400,6 +398,25 @@ function UserService($http, $q, $rootScope, adminService, dashboardService, time
                     $location.search('publicId', null);
                     deferred.reject();
                 });
+            } else if (locationSearch.accessToken) {
+                var token = locationSearch.accessToken;
+                var refreshToken = locationSearch.refreshToken;
+                $location.search('accessToken', null);
+                if (refreshToken) {
+                    $location.search('refreshToken', null);
+                }
+                try {
+                    updateAndValidateToken(token, 'jwt_token', false);
+                    if (refreshToken) {
+                        updateAndValidateToken(refreshToken, 'refresh_token', false);
+                    } else {
+                        store.remove('refresh_token');
+                        store.remove('refresh_token_expiration');
+                    }
+                } catch (e) {
+                    deferred.reject();
+                }
+                procceedJwtTokenValidate();
             } else {
                 procceedJwtTokenValidate();
             }
@@ -454,11 +471,13 @@ function UserService($http, $q, $rootScope, adminService, dashboardService, time
         var promises = [];
         promises.push(loadIsUserTokenAccessEnabled());
         promises.push(whiteLabelingService.loadUserWhiteLabelingParams());
+        promises.push(customMenuService.loadCustomMenu());
         promises.push(timeService.loadMaxDatapointsLimit());
         if (currentUser && (currentUser.authority === 'TENANT_ADMIN' || currentUser.authority === 'CUSTOMER_USER')) {
             promises.push(checkIsWhiteLabelingAllowed());
         }
         promises.push(userPermissionsService.loadPermissionsInfo());
+        promises.push(customTranslationService.updateCustomTranslations());
         return $q.all(promises);
     }
 

@@ -137,8 +137,8 @@ public class DefaultDataUpdateService implements DataUpdateService {
                 log.info("Updating data from version 1.4.0 to 2.0.0 ...");
                 tenantsDefaultRuleChainUpdater.updateEntities(null);
                 break;
-            case "2.2.0":
-                log.info("Updating data from version 2.2.0 to 2.3.0PE ...");
+            case "2.3.1":
+                log.info("Updating data from version 2.3.1 to 2.3.1PE ...");
                 tenantsCustomersGroupAllUpdater.updateEntities(null);
                 tenantEntitiesGroupAllUpdater.updateEntities(null);
 
@@ -245,13 +245,13 @@ public class DefaultDataUpdateService implements DataUpdateService {
                                     }
                                     break;
                                 case ASSET:
-                                    new AssetsGroupAllUpdater(assetService, entityGroupService, entityGroup, fetchAllTenantEntities).updateEntities(tenant.getId());
+                                    new AssetsGroupAllUpdater(assetService, customerService, entityGroupService, entityGroup, fetchAllTenantEntities).updateEntities(tenant.getId());
                                     break;
                                 case DEVICE:
-                                    new DevicesGroupAllUpdater(deviceService, entityGroupService, entityGroup, fetchAllTenantEntities).updateEntities(tenant.getId());
+                                    new DevicesGroupAllUpdater(deviceService, customerService, entityGroupService, entityGroup, fetchAllTenantEntities).updateEntities(tenant.getId());
                                     break;
                                 case ENTITY_VIEW:
-                                    new EntityViewGroupAllUpdater(entityViewService, entityGroupService, entityGroup, fetchAllTenantEntities).updateEntities(tenant.getId());
+                                    new EntityViewGroupAllUpdater(entityViewService, customerService, entityGroupService, entityGroup, fetchAllTenantEntities).updateEntities(tenant.getId());
                                     break;
                                 case DASHBOARD:
                                     new DashboardsGroupAllUpdater(entityGroup, fetchAllTenantEntities).updateEntities(tenant.getId());
@@ -355,6 +355,11 @@ public class DefaultDataUpdateService implements DataUpdateService {
 
         @Override
         protected void updateGroupEntity(Customer customer, EntityGroup groupAll) {
+            if (customer.getId() == null || customer.getId().isNullUid()) {
+                log.warn("Customer has invalid id [{}]", customer.getId());
+                log.warn("[{}]", customer);
+                return;
+            }
             if (customer.isSubCustomer()) {
                 return;
             }
@@ -578,22 +583,22 @@ public class DefaultDataUpdateService implements DataUpdateService {
                 }
                 whiteLabelingParams.setPaletteSettings(paletteSettings);
             }
-            if (isSystem) {
-                String helpLinkBaseUrl = "https://thingsboard.io";
-                if (storedWl.has("helpLinkBaseUrl")) {
-                    JsonNode helpLinkBaseUrlJson = storedWl.get("helpLinkBaseUrl");
-                    if (helpLinkBaseUrlJson.isTextual()) {
-                        if (!StringUtils.isEmpty(helpLinkBaseUrlJson.asText())) {
-                            helpLinkBaseUrl = helpLinkBaseUrlJson.asText();
-                        }
+        }
+        if (isSystem) {
+            String helpLinkBaseUrl = "https://thingsboard.io";
+            if (storedWl != null && storedWl.has("helpLinkBaseUrl")) {
+                JsonNode helpLinkBaseUrlJson = storedWl.get("helpLinkBaseUrl");
+                if (helpLinkBaseUrlJson.isTextual()) {
+                    if (!StringUtils.isEmpty(helpLinkBaseUrlJson.asText())) {
+                        helpLinkBaseUrl = helpLinkBaseUrlJson.asText();
                     }
                 }
-                whiteLabelingParams.setHelpLinkBaseUrl(helpLinkBaseUrl);
-                if (!storedWl.has("enableHelpLinks")) {
-                    whiteLabelingParams.setEnableHelpLinks(true);
-                } else {
-                    whiteLabelingParams.setEnableHelpLinks(storedWl.get("enableHelpLinks").asBoolean());
-                }
+            }
+            whiteLabelingParams.setHelpLinkBaseUrl(helpLinkBaseUrl);
+            if (storedWl != null && storedWl.has("enableHelpLinks")) {
+                whiteLabelingParams.setEnableHelpLinks(storedWl.get("enableHelpLinks").asBoolean());
+            } else {
+                whiteLabelingParams.setEnableHelpLinks(true);
             }
         }
         return whiteLabelingParams;

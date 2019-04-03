@@ -46,6 +46,7 @@ import org.thingsboard.rule.engine.api.util.TbNodeUtils;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.group.EntityGroup;
 import org.thingsboard.server.common.data.id.EntityGroupId;
+import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.msg.TbMsg;
 import org.thingsboard.server.dao.group.EntityGroupService;
 
@@ -84,12 +85,8 @@ public abstract class TbAbstractGroupActionNode<C extends TbAbstractGroupActionC
     }
 
     private ListenableFuture<Void> processEntityGroupAction(TbContext ctx, TbMsg msg) {
-        EntityType originatorType = msg.getOriginator().getEntityType();
-        if (originatorType != EntityType.CUSTOMER && originatorType != EntityType.ASSET && originatorType != EntityType.DEVICE) {
-            new RuntimeException("Unsupported originator type '" + originatorType +
-                    "'! Only 'CUSTOMER', 'ASSET' or 'DEVICE' types are allowed.");
-        }
-        ListenableFuture<EntityGroupId> entityGroupIdFeature = getEntityGroup(ctx, msg);
+        EntityId ownerId = ctx.getPeContext().getOwner(ctx.getTenantId(), msg.getOriginator());
+        ListenableFuture<EntityGroupId> entityGroupIdFeature = getEntityGroup(ctx, msg, ownerId);
         return Futures.transform(entityGroupIdFeature, entityGroupId -> {
                     doProcessEntityGroupAction(ctx, msg, entityGroupId);
                     return null;
@@ -99,9 +96,9 @@ public abstract class TbAbstractGroupActionNode<C extends TbAbstractGroupActionC
 
     protected abstract void doProcessEntityGroupAction(TbContext ctx, TbMsg msg, EntityGroupId entityGroupId);
 
-    protected ListenableFuture<EntityGroupId> getEntityGroup(TbContext ctx, TbMsg msg) {
+    private ListenableFuture<EntityGroupId> getEntityGroup(TbContext ctx, TbMsg msg, EntityId ownerId) {
         String groupName = TbNodeUtils.processPattern(this.config.getGroupNamePattern(), msg.getMetaData());
-        GroupKey key = new GroupKey(msg.getOriginator().getEntityType(), groupName);
+        GroupKey key = new GroupKey(msg.getOriginator().getEntityType(), groupName, ownerId);
         return ctx.getDbCallbackExecutor().executeAsync(() -> {
             Optional<EntityGroupId> groupId = groupIdCache.get(key);
             if (!groupId.isPresent()) {
@@ -120,6 +117,7 @@ public abstract class TbAbstractGroupActionNode<C extends TbAbstractGroupActionC
     private static class GroupKey {
         private EntityType groupType;
         private String groupName;
+        private EntityId ownerId;
     }
 
     private static class EntityGroupCacheLoader extends CacheLoader<GroupKey, Optional<EntityGroupId>> {
@@ -136,14 +134,14 @@ public abstract class TbAbstractGroupActionNode<C extends TbAbstractGroupActionC
         public Optional<EntityGroupId> load(GroupKey key) throws Exception {
             EntityGroupService service = ctx.getPeContext().getEntityGroupService();
             Optional<EntityGroup> entityGroup =
-                    service.findEntityGroupByTypeAndName(ctx.getTenantId(), ctx.getTenantId(), key.getGroupType(), key.getGroupName()).get();
+                    service.findEntityGroupByTypeAndName(ctx.getTenantId(), key.getOwnerId(), key.getGroupType(), key.getGroupName()).get();
             if (entityGroup.isPresent()) {
                 return Optional.of(entityGroup.get().getId());
             } else if (createIfNotExists) {
                 EntityGroup newGroup = new EntityGroup();
                 newGroup.setName(key.getGroupName());
                 newGroup.setType(key.getGroupType());
-                return Optional.of(service.saveEntityGroup(ctx.getTenantId(), ctx.getTenantId(), newGroup).getId());
+                return Optional.of(service.saveEntityGroup(ctx.getTenantId(), key.getOwnerId(), newGroup).getId());
             }
             return Optional.empty();
         }

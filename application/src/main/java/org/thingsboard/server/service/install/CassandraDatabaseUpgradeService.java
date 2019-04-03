@@ -35,6 +35,7 @@ import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.exceptions.InvalidQueryException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 import org.thingsboard.server.dao.cassandra.CassandraCluster;
@@ -88,6 +89,7 @@ public class CassandraDatabaseUpgradeService implements DatabaseUpgradeService {
     private CassandraCluster cluster;
 
     @Autowired
+    @Qualifier("CassandraInstallCluster")
     private CassandraInstallCluster installCluster;
 
     @Autowired
@@ -276,9 +278,11 @@ public class CassandraDatabaseUpgradeService implements DatabaseUpgradeService {
                 break;
             case "2.1.3":
                 break;
-            case "2.2.0":
+            case "2.3.0":
+                break;
+            case "2.3.1":
                 log.info("Updating schema ...");
-                schemaUpdateFile = Paths.get(installScripts.getDataDir(), "upgrade", "2.3.0pe", SCHEMA_UPDATE_CQL);
+                schemaUpdateFile = Paths.get(installScripts.getDataDir(), "upgrade", "2.3.1pe", SCHEMA_UPDATE_CQL);
                 loadCql(schemaUpdateFile);
 
                 String updateIntegrationTableStmt = "alter table "+INTEGRATION+" add downlink_converter_id timeuuid";
