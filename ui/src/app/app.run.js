@@ -33,7 +33,7 @@ import UrlHandler from './url.handler';
 
 /*@ngInject*/
 export default function AppRun($rootScope, $mdTheming, $window, $injector, $location, $log, $state, $mdDialog, $filter,
-                               whiteLabelingService, loginService, userService, customTranslationService, $translate) {
+                               whiteLabelingService, loginService, userService, menu, customTranslationService, $translate) {
 
     $window.Flow = Flow;
     var frame = null;
@@ -159,6 +159,7 @@ export default function AppRun($rootScope, $mdTheming, $window, $injector, $loca
                             } else {
                                 redirect = to.redirectTo;
                             }
+                            redirect = menu.getRedirectState(to.name, redirect);
                             $state.go(redirect, params);
                         } else if (to.name === 'home.dashboard' && $rootScope.forceFullscreen) {
                             evt.preventDefault();
@@ -205,11 +206,15 @@ export default function AppRun($rootScope, $mdTheming, $window, $injector, $loca
         });
 
         $rootScope.globalTranslateOnReadyListener = $rootScope.$on('$translateReady', function () {
-            customTranslationService.updateCustomTranslations();
+            if (userService.isUserLoaded() === true && userService.isAuthenticated()) {
+                customTranslationService.updateCustomTranslations();
+            }
         });
 
         $rootScope.globalTranslateOnChangeListener = $rootScope.$on('$translateChangeEnd', function () {
-            customTranslationService.updateCustomTranslations();
+            if (userService.isUserLoaded() === true && userService.isAuthenticated()) {
+                customTranslationService.updateCustomTranslations();
+            }
         });
     }
 

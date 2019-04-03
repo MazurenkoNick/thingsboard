@@ -28,11 +28,21 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.dao.service.nosql;
+package org.thingsboard.rule.engine.metadata;
 
-import org.thingsboard.server.dao.service.BaseDeviceCredentialsCacheTest;
-import org.thingsboard.server.dao.service.DaoNoSqlTest;
+import lombok.Data;
+import org.thingsboard.rule.engine.api.NodeConfiguration;
 
-@DaoNoSqlTest
-public class DeviceCredentialCacheNoSqlTest extends BaseDeviceCredentialsCacheTest {
+import java.util.Collections;
+
+@Data
+public class TbGetTenantDetailsNodeConfiguration extends TbAbstractGetEntityDetailsNodeConfiguration implements NodeConfiguration<TbGetTenantDetailsNodeConfiguration> {
+
+
+    @Override
+    public TbGetTenantDetailsNodeConfiguration defaultConfiguration() {
+        TbGetTenantDetailsNodeConfiguration configuration = new TbGetTenantDetailsNodeConfiguration();
+        configuration.setDetailsList(Collections.emptyList());
+        return configuration;
+    }
 }

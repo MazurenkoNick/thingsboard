@@ -30,6 +30,7 @@
  */
 package org.thingsboard.rule.engine.api;
 
+import io.netty.channel.EventLoopGroup;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.RuleNodeId;
 import org.thingsboard.server.common.data.id.TenantId;
@@ -39,11 +40,13 @@ import org.thingsboard.server.common.msg.TbMsgMetaData;
 import org.thingsboard.server.dao.alarm.AlarmService;
 import org.thingsboard.server.dao.asset.AssetService;
 import org.thingsboard.server.dao.attributes.AttributesService;
+import org.thingsboard.server.dao.cassandra.CassandraCluster;
 import org.thingsboard.server.dao.customer.CustomerService;
 import org.thingsboard.server.dao.dashboard.DashboardService;
 import org.thingsboard.server.dao.device.DeviceService;
 import org.thingsboard.server.dao.event.EventService;
 import org.thingsboard.server.dao.entityview.EntityViewService;
+import org.thingsboard.server.dao.nosql.CassandraBufferedRateExecutor;
 import org.thingsboard.server.dao.relation.RelationService;
 import org.thingsboard.server.dao.rule.RuleChainService;
 import org.thingsboard.server.dao.tenant.TenantService;
@@ -64,6 +67,8 @@ public interface TbContext {
     void tellNext(TbMsg msg, Set<String> relationTypes);
 
     void tellSelf(TbMsg msg, long delayMs);
+
+    boolean isLocalEntity(EntityId entityId);
 
     void tellFailure(TbMsg msg, Throwable th);
 
@@ -126,4 +131,12 @@ public interface TbContext {
     String getNodeId();
 
     RuleChainTransactionService getRuleChainTransactionService();
+
+    EventLoopGroup getSharedEventLoop();
+
+    CassandraCluster getCassandraCluster();
+
+    CassandraBufferedRateExecutor getCassandraBufferedRateExecutor();
+
+
 }

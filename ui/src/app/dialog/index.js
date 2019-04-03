@@ -31,7 +31,7 @@
 import SelectEntityGroupController from './select-entity-group.controller';
 import EntityLimitDialogController from './entity-limit.dialog.controller';
 import WhiteLabelingFeatureDialogController from './white-labeling-feature.dialog.controller';
-
+import SelectOwnerController from './select-owner.controller';
 import Dialogs from './dialogs.service';
 import SubscriptionDialogs from './subscription-dialogs.service';
 
@@ -39,6 +39,7 @@ export default angular.module('thingsboard.dialogs', [])
     .controller('SelectEntityGroupController', SelectEntityGroupController)
     .controller('EntityLimitDialogController', EntityLimitDialogController)
     .controller('WhiteLabelingFeatureDialogController', WhiteLabelingFeatureDialogController)
+    .controller('SelectOwnerController', SelectOwnerController)
     .factory('tbDialogs', Dialogs)
     .factory('tbSubscriptionDialogs', SubscriptionDialogs)
     .name;
