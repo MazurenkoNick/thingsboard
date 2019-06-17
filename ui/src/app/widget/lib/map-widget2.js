@@ -93,18 +93,29 @@ export default class TbMapWidgetV2 {
 			tbMap.tooltipActionsMap[descriptor.name] = descriptor;
 		});
 
+		let openStreetMapProvider = {};
 		if (mapProvider === 'google-map') {
-			this.map = new TbGoogleMap($element, this.utils, initCallback, this.defaultZoomLevel, this.dontFitMapBounds, minZoomLevel, settings.gmApiKey, settings.gmDefaultMapType);
+			this.map = new TbGoogleMap($element, this.utils, initCallback, this.defaultZoomLevel, this.dontFitMapBounds, settings.disableScrollZooming, minZoomLevel, settings.gmApiKey, settings.gmDefaultMapType);
 		} else if (mapProvider === 'openstreet-map') {
-			this.map = new TbOpenStreetMap($element, this.utils, initCallback, this.defaultZoomLevel, this.dontFitMapBounds, minZoomLevel, settings.mapProvider);
+			if (settings.useCustomProvider && settings.customProviderTileUrl) {
+                openStreetMapProvider.name = settings.customProviderTileUrl;
+                openStreetMapProvider.isCustom = true;
+			} else {
+                openStreetMapProvider.name = settings.mapProvider;
+			}
+			this.map = new TbOpenStreetMap($element, this.utils, initCallback, this.defaultZoomLevel, this.dontFitMapBounds, settings.disableScrollZooming, minZoomLevel, openStreetMapProvider);
+		} else if (mapProvider === 'here') {
+			openStreetMapProvider.name = settings.mapProvider;
+			this.map = new TbOpenStreetMap($element, this.utils, initCallback, this.defaultZoomLevel, this.dontFitMapBounds, settings.disableScrollZooming, minZoomLevel, openStreetMapProvider, settings.credentials);
 		} else if (mapProvider === 'image-map') {
 			this.map = new TbImageMap(this.ctx, $element, this.utils, initCallback,
 				settings.mapImageUrl,
+				settings.disableScrollZooming,
 				settings.posFunction,
 				settings.imageEntityAlias,
 				settings.imageUrlAttribute);
 		} else if (mapProvider === 'tencent-map') {
-			this.map = new TbTencentMap($element, this.utils, initCallback, this.defaultZoomLevel, this.dontFitMapBounds, minZoomLevel, settings.tmApiKey, settings.tmDefaultMapType);
+			this.map = new TbTencentMap($element, this.utils, initCallback, this.defaultZoomLevel, this.dontFitMapBounds, settings.disableScrollZooming, minZoomLevel, settings.tmApiKey, settings.tmDefaultMapType);
 		}
 
 
@@ -160,8 +171,9 @@ export default class TbMapWidgetV2 {
 
 		this.locationSettings.showLabel = this.ctx.settings.showLabel !== false;
 		this.locationSettings.displayTooltip = this.ctx.settings.showTooltip !== false;
+		this.locationSettings.displayTooltipAction = this.ctx.settings.showTooltipAction && this.ctx.settings.showTooltipAction.length ? this.ctx.settings.showTooltipAction : "click";
 		this.locationSettings.autocloseTooltip = this.ctx.settings.autocloseTooltip !== false;
-		this.locationSettings.showPolygon = this.ctx.settings.showPolygon !== false;
+		this.locationSettings.showPolygon = this.ctx.settings.showPolygon === true;
 		this.locationSettings.labelColor = this.ctx.widgetConfig.color || '#000000';
 		this.locationSettings.label = this.ctx.settings.label || "${entityName}";
 		this.locationSettings.color = this.ctx.settings.color ? tinycolor(this.ctx.settings.color).toHexString() : "#FE7569";
@@ -678,6 +690,8 @@ export default class TbMapWidgetV2 {
 			return imageMapSettingsSchema;
 		} else if (mapProvider === 'tencent-map') {
 			schema = angular.copy(tencentMapSettingsSchema);
+		} else if (mapProvider === 'here') {
+			schema = angular.copy(hereMapSettingsSchema);
 		}
 		angular.merge(schema.schema.properties, commonMapSettingsSchema.schema.properties);
 		schema.schema.required = schema.schema.required.concat(commonMapSettingsSchema.schema.required);
@@ -805,6 +819,62 @@ const tencentMapSettingsSchema =
 		]
 	};
 
+const hereMapSettingsSchema =
+	{
+		"schema": {
+			"title": "HERE Map Configuration",
+			"type": "object",
+			"properties": {
+				"mapProvider": {
+					"title": "Map layer",
+					"type": "string",
+					"default": "HERE.normalDay"
+				},
+				"credentials":{
+					"type": "object",
+					"properties": {
+						"app_id": {
+							"title": "HERE app id",
+							"type": "string"
+						},
+						"app_code": {
+							"title": "HERE app code",
+							"type": "string"
+						}
+					},
+					"required": ["app_id", "app_code"]
+				}
+			},
+			"required": []
+		},
+		"form": [
+			{
+				"key": "mapProvider",
+				"type": "rc-select",
+				"multiple": false,
+				"items": [
+					{
+						"value": "HERE.normalDay",
+						"label": "HERE.normalDay (Default)"
+					},
+					{
+						"value": "HERE.normalNight",
+						"label": "HERE.normalNight"
+					},
+					{
+						"value": "HERE.hybridDay",
+						"label": "HERE.hybridDay"
+					},
+					{
+						"value": "HERE.terrainDay",
+						"label": "HERE.terrainDay"
+					}
+				]
+			},
+			"credentials"
+		]
+	};
+
 const openstreetMapSettingsSchema =
 	{
 		"schema": {
@@ -815,7 +885,17 @@ const openstreetMapSettingsSchema =
 					"title": "Map provider",
 					"type": "string",
 					"default": "OpenStreetMap.Mapnik"
-				}
+				},
+                "useCustomProvider": {
+                    "title": "Use custom provider",
+                    "type": "boolean",
+                    "default": false
+                },
+                "customProviderTileUrl": {
+                    "title": "Custom provider tile URL",
+                    "type": "string",
+                    "default": "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                }
 			},
 			"required": []
 		},
@@ -854,7 +934,9 @@ const openstreetMapSettingsSchema =
 						"label": "CartoDB.DarkMatter"
 					}
 				]
-			}
+			},
+            "useCustomProvider",
+            "customProviderTileUrl"
 		]
 	};
 
@@ -872,6 +954,11 @@ const commonMapSettingsSchema =
 					"title": "Fit map bounds to cover all markers",
 					"type": "boolean",
 					"default": true
+				},
+				"disableScrollZooming": {
+					"title": "Disable scroll zooming",
+					"type": "boolean",
+					"default": false
 				},
 				"latKeyName": {
 					"title": "Latitude key name",
@@ -906,6 +993,11 @@ const commonMapSettingsSchema =
 					"title": "Show tooltip",
 					"type": "boolean",
 					"default": true
+				},
+				"showTooltipAction": {
+					"title": "Action for displaying the tooltip",
+					"type": "string",
+					"default": "click"
 				},
 				"autocloseTooltip": {
 					"title": "Auto-close tooltips",
@@ -1013,6 +1105,7 @@ const commonMapSettingsSchema =
 		"form": [
 			"defaultZoomLevel",
 			"fitMapBounds",
+			"disableScrollZooming",
 			"latKeyName",
 			"lngKeyName",
 			"showLabel",
@@ -1023,6 +1116,21 @@ const commonMapSettingsSchema =
 				"type": "javascript"
 			},
 			"showTooltip",
+			{
+				"key": "showTooltipAction",
+				"type": "rc-select",
+				"multiple": false,
+				"items": [
+					{
+						"value": "click",
+						"label": "Show tooltip on click (Default)"
+					},
+					{
+						"value": "hover",
+						"label": "Show tooltip on hover"
+					}
+				]
+			},
 			"autocloseTooltip",
 			{
 				"key": "tooltipPattern",
@@ -1124,6 +1232,11 @@ const imageMapSettingsSchema =
 					"type": "string",
 					"default": ""
 				},
+				"disableScrollZooming": {
+					"title": "Disable scroll zooming",
+					"type": "boolean",
+					"default": false
+				},
 				"xPosKeyName": {
 					"title": "X position key name",
 					"type": "string",
@@ -1157,6 +1270,11 @@ const imageMapSettingsSchema =
 					"title": "Show tooltip",
 					"type": "boolean",
 					"default": true
+				},
+				"showTooltipAction": {
+					"title": "Action for displaying the tooltip",
+					"type": "string",
+					"default": "click"
 				},
 				"autocloseTooltip": {
 					"title": "Auto-close tooltips",
@@ -1241,6 +1359,7 @@ const imageMapSettingsSchema =
 			},
 			"imageEntityAlias",
 			"imageUrlAttribute",
+			"disableScrollZooming",
 			"xPosKeyName",
 			"yPosKeyName",
 			"showLabel",
@@ -1251,6 +1370,21 @@ const imageMapSettingsSchema =
 				"type": "javascript"
 			},
 			"showTooltip",
+			{
+				"key": "showTooltipAction",
+				"type": "rc-select",
+				"multiple": false,
+				"items": [
+					{
+						"value": "click",
+						"label": "Show tooltip on click (Default)"
+					},
+					{
+						"value": "hover",
+						"label": "Show tooltip on hover"
+					}
+				]
+			},
 			"autocloseTooltip",
 			{
 				"key": "tooltipPattern",

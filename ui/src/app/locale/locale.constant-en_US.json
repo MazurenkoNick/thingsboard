@@ -832,6 +832,10 @@
     "dialog": {
         "close": "Close dialog"
     },
+    "direction": {
+        "column": "Column",
+        "row": "Row"
+    },
     "error": {
         "unable-to-connect": "Unable to connect to the server! Please check your internet connection.",
         "unhandled-error-code": "Unhandled error code: {{errorCode}}",
@@ -1086,7 +1090,9 @@
         "make-public-entity-group-title": "Are you sure you want to make the entity group '{{entityGroupName}}' public?",
         "make-public-entity-group-text": "After the confirmation the entity group and all its entities will be made public and accessible by others.",
         "make-private-entity-group-title": "Are you sure you want to make the entity group '{{entityGroupName}}' private?",
-        "make-private-entity-group-text": "After the confirmation the entity group and all its entities will be made private and won't be accessible by others."
+        "make-private-entity-group-text": "After the confirmation the entity group and all its entities will be made private and won't be accessible by others.",
+        "copyId": "Copy entity group Id",
+        "idCopiedMessage": "Entity group Id has been copied to clipboard"
     },
     "entity-view": {
         "entity-view": "Entity View",
@@ -1577,6 +1583,7 @@
         "opc-ua-mapping-type-required":"Mapping type is required",
         "opc-ua-device-node-pattern":"Device Node Pattern",
         "opc-ua-device-node-pattern-required":"Device Node Pattern is required",
+        "opc-ua-namespace":"Namespace",
         "opc-ua-add-map": "Add mapping element",
         "subscription-tags": "Subscription tags",
         "remove-subscription-tag": "Remove subscription tag",
@@ -1611,6 +1618,7 @@
         "select": "Select target layout"
     },
     "legend": {
+        "direction": "Legend direction",
         "position": "Legend position",
         "show-max": "Show max value",
         "show-min": "Show min value",

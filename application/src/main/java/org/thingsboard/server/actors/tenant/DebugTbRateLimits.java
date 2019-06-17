@@ -28,36 +28,17 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.rule.engine.metadata;
+package org.thingsboard.server.actors.tenant;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
-import org.thingsboard.rule.engine.api.NodeConfiguration;
+import org.thingsboard.server.common.msg.tools.TbRateLimits;
 
-import java.util.Collections;
-import java.util.List;
-
-/**
- * Created by ashvayka on 19.01.18.
- */
 @Data
-public class TbGetAttributesNodeConfiguration implements NodeConfiguration<TbGetAttributesNodeConfiguration> {
+@AllArgsConstructor
+public class DebugTbRateLimits {
 
-    private List<String> clientAttributeNames;
-    private List<String> sharedAttributeNames;
-    private List<String> serverAttributeNames;
+    private TbRateLimits tbRateLimits;
+    private boolean ruleChainEventSaved;
 
-    private List<String> latestTsKeyNames;
-
-    private boolean tellFailureIfAbsent;
-
-    @Override
-    public TbGetAttributesNodeConfiguration defaultConfiguration() {
-        TbGetAttributesNodeConfiguration configuration = new TbGetAttributesNodeConfiguration();
-        configuration.setClientAttributeNames(Collections.emptyList());
-        configuration.setSharedAttributeNames(Collections.emptyList());
-        configuration.setServerAttributeNames(Collections.emptyList());
-        configuration.setLatestTsKeyNames(Collections.emptyList());
-        configuration.setTellFailureIfAbsent(true);
-        return configuration;
-    }
 }
