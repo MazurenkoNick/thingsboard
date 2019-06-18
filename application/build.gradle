@@ -31,18 +31,16 @@
 import org.apache.tools.ant.filters.ReplaceTokens
 
 buildscript {
-    ext {
-        osPackageVersion = "3.8.0"
-    }
     repositories {
         jcenter()
+        mavenLocal()
     }
     dependencies {
-        classpath("com.netflix.nebula:gradle-ospackage-plugin:${osPackageVersion}")
+        classpath("org.thingsboard:packaging:${projectVersion}")
     }
 }
 
-apply plugin: "nebula.ospackage"
+apply plugin: "thingsboard.package"
 
 buildDir = projectBuildDir
 version = projectVersion
@@ -145,12 +143,19 @@ buildRpm {
     link("/etc/${pkgName}/conf", "${pkgInstallFolder}/conf")
 }
 
+task prepareDeb(type: Copy) {
+    from "${buildDir}/control/deb/config", "${buildDir}/control/deb/templates"
+    into "${buildDir}/debian"
+}
+
 // Same as the buildRpm task
 buildDeb {
 
     arch = "all"
 
     archiveName = "${pkgName}.deb"
+
+    preDepends("debconf", "0.5", GREATER | EQUAL).or("debconf-2.0")
 
     requires("openjdk-8-jre").or("java8-runtime").or("oracle-java8-installer").or("openjdk-8-jre-headless")
 
@@ -171,6 +176,9 @@ buildDeb {
     postInstall file("${buildDir}/control/deb/postinst")
     preUninstall file("${buildDir}/control/deb/prerm")
     postUninstall file("${buildDir}/control/deb/postrm")
+
+    configFile file("${buildDir}/control/deb/config")
+    templatesFile file("${buildDir}/control/deb/templates")
 
     user pkgName
     permissionGroup pkgName

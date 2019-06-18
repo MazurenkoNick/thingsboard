@@ -120,6 +120,7 @@
         <module>transport</module>
         <module>ui</module>
         <module>tools</module>
+        <module>packaging</module>
         <module>application</module>
         <module>msa</module>
     </modules>
@@ -311,6 +312,7 @@
                             <exclude>**/nightwatch</exclude>
                             <exclude>**/README</exclude>
                             <exclude>**/LICENSE</exclude>
+                            <exclude>**/EULA*.txt</exclude>
                             <exclude>**/banner.txt</exclude>
                             <exclude>node_modules/**</exclude>
                             <exclude>**/*.properties</exclude>

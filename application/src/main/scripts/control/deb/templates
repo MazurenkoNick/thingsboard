@@ -1,0 +1,8 @@
+Template: thingsboard-pe/view
+Type: note
+Description: In order to install ThingsBoard Professional Edition you are required to accept the end user license agreement, please press return to view the license.
+
+Template: thingsboard-pe/license
+Type: boolean
+Description: Do you accept the license agreement?
+${debPkgEula}

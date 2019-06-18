@@ -331,6 +331,28 @@
                 </configuration>
             </plugin>
             <plugin>
+                <groupId>org.codehaus.gmaven</groupId>
+                <artifactId>gmaven-plugin</artifactId>
+                <version>1.4</version>
+                <executions>
+                    <execution>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>execute</goal>
+                        </goals>
+                        <configuration>
+                            <properties>
+                                <eulaDebFile>${basedir}/src/main/scripts/EULA_DEB.txt</eulaDebFile>
+                            </properties>
+                            <source>
+                                def file = new File(project.properties.eulaDebFile)
+                                project.properties.debPkgEula = file.getText()
+                            </source>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-resources-plugin</artifactId>
                 <executions>

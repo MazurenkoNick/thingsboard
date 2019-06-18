@@ -1,0 +1,31 @@
+#!/bin/sh
+
+set -e
+
+abort_install() {
+	echo "${1}"
+	exit 1
+}
+
+. /usr/share/debconf/confmodule
+
+# Clean flags to ensure the questions will be shown.
+db_fset thingsboard-pe/view seen false
+db_fset thingsboard-pe/license seen false
+
+# Stack questions.
+db_input critical thingsboard-pe/view || true
+db_input critical thingsboard-pe/license || true
+
+# Show questions.
+db_go
+
+# Retrieve answers.
+db_get thingsboard-pe/view
+db_get thingsboard-pe/license
+if [ "${RET}" != "true" ]
+then
+	abort_install "The installation have been aborted because you do not agree the licensing of this software."
+fi
+
+exit 0

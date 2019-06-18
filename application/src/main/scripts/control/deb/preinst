@@ -1,5 +1,9 @@
 #!/bin/sh
 
+set -e
+
+. /usr/share/debconf/confmodule
+
 if ! getent group ${pkg.name} >/dev/null; then
     addgroup --system ${pkg.name}
 fi
@@ -16,3 +20,5 @@ if ! getent passwd ${pkg.name} >/dev/null; then
             -gecos "Thingsboard application" \
             ${pkg.name}
 fi
+
+exit 0

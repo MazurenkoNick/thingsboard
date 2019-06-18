@@ -1,3 +1,12 @@
 #!/bin/sh
 
+set -e
+
 update-rc.d -f ${pkg.name} remove
+
+if [ "$1" = purge ] && [ -e /usr/share/debconf/confmodule ]; then
+    . /usr/share/debconf/confmodule
+    db_purge
+fi
+
+exit 0
