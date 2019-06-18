@@ -114,6 +114,7 @@ buildRpm {
     archiveName = "${pkgName}.rpm"
 
     requires("java-1.8.0")
+    requires("newt")
 
     from("target/conf") {
         include "${pkgName}.conf"

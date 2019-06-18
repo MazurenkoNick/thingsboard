@@ -343,10 +343,13 @@
                         <configuration>
                             <properties>
                                 <eulaDebFile>${basedir}/src/main/scripts/EULA_DEB.txt</eulaDebFile>
+                                <eulaFile>${basedir}/src/main/scripts/EULA.txt</eulaFile>
                             </properties>
                             <source>
                                 def file = new File(project.properties.eulaDebFile)
                                 project.properties.debPkgEula = file.getText()
+                                file = new File(project.properties.eulaFile)
+                                project.properties.pkgEula = file.getText()
                             </source>
                         </configuration>
                     </execution>
