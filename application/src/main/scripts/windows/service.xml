@@ -24,7 +24,6 @@
     <startargument>-XX:+UseTLAB</startargument>
     <startargument>-XX:+ResizeTLAB</startargument>
     <startargument>-XX:+PerfDisableSharedMem</startargument>
-    <startargument>-XX:+UseCondCardMark</startargument>
     <startargument>-XX:CMSWaitDuration=10000</startargument>
     <startargument>-XX:+UseParNewGC</startargument>
     <startargument>-XX:+UseConcMarkSweepGC</startargument>
