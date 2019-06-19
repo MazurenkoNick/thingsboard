@@ -32,7 +32,18 @@ package org.thingsboard.server.dao.subscription;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.context.annotation.Profile;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
+import org.thingsboard.license.client.TbLicenseClient;
+import org.thingsboard.license.client.TbLicenseClientListener;
+import org.thingsboard.license.shared.exception.LicenseException;
 import org.thingsboard.server.common.data.Device;
 import org.thingsboard.server.common.data.Tenant;
 import org.thingsboard.server.common.data.asset.Asset;
@@ -46,13 +57,23 @@ import org.thingsboard.server.dao.asset.AssetService;
 import org.thingsboard.server.dao.device.DeviceService;
 import org.thingsboard.server.dao.tenant.TenantService;
 
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
+import java.text.SimpleDateFormat;
+
 @Service
 @Slf4j
-public class BasicSubscriptionService implements SubscriptionService {
+@Profile("!install")
+public class BasicSubscriptionService implements SubscriptionService, TbLicenseClientListener {
 
-    private static final long MAX_DEVICES = 10;
-    private static final long MAX_ASSETS = 10;
-    private static final boolean WHITE_LABELING_ENABLED = false;
+    private static final String RELEASE_DATE = "10/06/2019";
+
+    private static final String MAX_DEVICES_KEY = "maxdevices";
+    private static final String MAX_ASSETS_KEY = "maxassets";
+    private static final String WHITELABELING_KEY = "whitelabeling";
+
+    @Value("${license.secret}")
+    private String licenseSecret;
 
     @Autowired
     protected TenantService tenantService;
@@ -63,29 +84,97 @@ public class BasicSubscriptionService implements SubscriptionService {
     @Autowired
     protected AssetService assetService;
 
+    @Autowired
+    private ConfigurableApplicationContext context;
+
+    private boolean isAppReady = false;
+
+    private TbLicenseClient tbLicenseClient;
+
+    @PostConstruct
+    public void init() {
+        if (StringUtils.isEmpty(this.licenseSecret)) {
+            log.error("License secret is not provided!");
+            log.error("Please provide license.secret property value in thingsboard.yml or set TB_LICENSE_SECRET environment variable!");
+            doExit(-1);
+        } else {
+            try {
+                tbLicenseClient = TbLicenseClient.builder()
+                        .listener(this)
+                        .licenseSecret(this.licenseSecret)
+                        .releaseDate(new SimpleDateFormat("dd/mm/yyyy").parse(RELEASE_DATE).getTime())
+                        .build();
+                tbLicenseClient.init();
+            } catch (Exception e) {
+                log.error("Failed to init license client", e);
+                doExit(-1);
+            }
+        }
+    }
+
+    @PreDestroy
+    public void stop() {
+        if (this.tbLicenseClient != null) {
+            this.tbLicenseClient.stop();
+        }
+    }
+
+    @EventListener(ApplicationReadyEvent.class)
+    public void onApplicationEvent(ApplicationReadyEvent applicationReadyEvent) {
+        this.isAppReady = true;
+    }
+
+    @Override
+    public void onError(TbLicenseClient tbLicenseClient, LicenseException e) {
+        try {
+            log.error("License Error occurred: {}", e.getMessage());
+            log.error("Cause:", e);
+        } finally {
+            doExit(-1);
+        }
+    }
+
+    private void doExit(int exitCode) {
+        log.info("Terminating with exit code [{}]...", exitCode);
+        if (isAppReady) {
+            SpringApplication.exit(context, () -> exitCode);
+        } else {
+            System.exit(exitCode);
+        }
+    }
+
+    private boolean limitReached(long actual, String key) {
+        long limit = this.tbLicenseClient.getPlanLongValue(key);
+        if (limit > 0) {
+            return actual >= limit;
+        } else {
+            return false;
+        }
+    }
+
     @Override
     public void createDeviceAllowed(TenantId tenantId) throws SubscriptionException {
         long actualCount = countDevices();
-        if (actualCount >= MAX_DEVICES) {
+        if (limitReached(actualCount, MAX_DEVICES_KEY)) {
             log.error("Maximum allowed devices limit reached!");
             throw new SubscriptionException("Maximum allowed devices limit reached!",
-                    SubscriptionErrorCode.LIMIT_REACHED, SubscriptionEntry.DEVICE_COUNT, MAX_DEVICES);
+                    SubscriptionErrorCode.LIMIT_REACHED, SubscriptionEntry.DEVICE_COUNT, this.tbLicenseClient.getPlanLongValue(MAX_DEVICES_KEY));
         }
     }
 
     @Override
     public void createAssetAllowed(TenantId tenantId) throws SubscriptionException {
         long actualCount = countAssets();
-        if (actualCount >= MAX_ASSETS) {
+        if (limitReached(actualCount, MAX_ASSETS_KEY)) {
             log.error("Maximum allowed assets limit reached!");
             throw new SubscriptionException("Maximum allowed assets limit reached!",
-                    SubscriptionErrorCode.LIMIT_REACHED, SubscriptionEntry.ASSET_COUNT, MAX_ASSETS);
+                    SubscriptionErrorCode.LIMIT_REACHED, SubscriptionEntry.ASSET_COUNT, this.tbLicenseClient.getPlanLongValue(MAX_ASSETS_KEY));
         }
     }
 
     @Override
     public void whiteLabelingAllowed(TenantId tenantId) throws SubscriptionException {
-        if (!WHITE_LABELING_ENABLED) {
+        if (!this.tbLicenseClient.getPlanBooleanValue(WHITELABELING_KEY)) {
             throw new SubscriptionException("White Labeling feature is disabled!",
                     SubscriptionErrorCode.FEATURE_DISABLED, SubscriptionEntry.WHITE_LABELING, 0);
         }
@@ -93,7 +182,7 @@ public class BasicSubscriptionService implements SubscriptionService {
 
     @Override
     public boolean whiteLabelingEnabled(TenantId tenantId) throws SubscriptionException {
-        return WHITE_LABELING_ENABLED;
+        return this.tbLicenseClient.getPlanBooleanValue(WHITELABELING_KEY);
     }
 
     private long countDevices() {
@@ -147,4 +236,5 @@ public class BasicSubscriptionService implements SubscriptionService {
         } while (pageData.hasNext());
         return count;
     }
+
 }
