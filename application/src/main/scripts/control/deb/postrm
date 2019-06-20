@@ -2,7 +2,7 @@
 
 set -e
 
-update-rc.d -f ${pkg.name} remove
+systemctl --no-reload disable --now ${pkg.name}.service > /dev/null 2>&1 || :
 
 if [ "$1" = purge ] && [ -e /usr/share/debconf/confmodule ]; then
     . /usr/share/debconf/confmodule
