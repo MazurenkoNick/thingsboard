@@ -64,6 +64,28 @@
         </encoder>
     </appender>
 
+    <appender name="licenseOutputLogAppender" class="ch.qos.logback.core.ConsoleAppender">
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>INFO</level>
+            <onMatch>ACCEPT</onMatch>
+            <onMismatch>DENY</onMismatch>
+        </filter>
+        <encoder>
+            <pattern>%msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="licenseErrorLogAppender" class="ch.qos.logback.core.ConsoleAppender">
+        <target>System.err</target>
+        <withJansi>true</withJansi>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>WARN</level>
+        </filter>
+        <encoder>
+            <pattern>%highlight([%-5level] %msg%n)</pattern>
+        </encoder>
+    </appender>
+
     <logger name="org.thingsboard.server" level="INFO" />
     <logger name="akka" level="INFO" />
 
@@ -73,10 +95,14 @@
 
     <logger name="org.thingsboard.license.client" level="INFO">
         <appender-ref ref="licenseLogAppender" />
+        <appender-ref ref="licenseOutputLogAppender" />
+        <appender-ref ref="licenseErrorLogAppender" />
     </logger>
 
     <logger name="org.thingsboard.server.dao.subscription" level="INFO">
         <appender-ref ref="licenseLogAppender" />
+        <appender-ref ref="licenseOutputLogAppender" />
+        <appender-ref ref="licenseErrorLogAppender" />
     </logger>
 
 </configuration>

@@ -307,6 +307,11 @@
             <groupId>io.springfox.ui</groupId>
             <artifactId>springfox-swagger-ui-rfc6570</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.fusesource.jansi</groupId>
+            <artifactId>jansi</artifactId>
+            <version>1.8</version>
+        </dependency>
     </dependencies>
 
     <build>
