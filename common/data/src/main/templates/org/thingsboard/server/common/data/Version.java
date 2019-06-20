@@ -1,4 +1,4 @@
-/*
+/**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
  * Copyright © 2016-2019 ThingsBoard, Inc. All Rights Reserved.
@@ -28,36 +28,11 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-import './entity-limit.dialog.scss';
+package org.thingsboard.server.common.data;
 
-/* eslint-disable import/no-unresolved, import/default */
+public final class Version {
 
-import limitReachedSvg from './limit-reached.svg';
+    public final static String PROJECT_VERSION = "${project.version}";
+    public final static String PROJECT_BUILD_DATE = "${project.build.date}";
 
-/* eslint-enable import/no-unresolved, import/default */
-
-
-/*@ngInject*/
-export default function EntityLimitDialogController($rootScope, $scope, $mdDialog, $state, $translate, $window,
-                                                    types, subscriptionErrorCode, subscriptionEntry, value) {
-
-    var vm = this;
-
-    vm.limitReachedSvg = limitReachedSvg;
-
-    var subscriptionErrorText = types.subscriptionError[subscriptionErrorCode][subscriptionEntry];
-
-    vm.errorContent = $translate.instant(subscriptionErrorText, {value: value.value});
-
-    vm.close = close;
-    vm.upgrade = upgrade;
-
-    function close() {
-        $mdDialog.hide();
-    }
-
-    function upgrade() {
-        $mdDialog.hide();
-        $window.open("https://thingsboard.io/products/thingsboard-pe/pricing/", '_blank');
-    }
 }

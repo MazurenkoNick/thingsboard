@@ -34,11 +34,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
-import org.springframework.boot.context.event.ApplicationReadyEvent;
-import org.springframework.context.ApplicationContext;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Profile;
-import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.thingsboard.license.client.TbLicenseClient;
@@ -46,6 +43,7 @@ import org.thingsboard.license.client.TbLicenseClientListener;
 import org.thingsboard.license.shared.exception.LicenseException;
 import org.thingsboard.server.common.data.Device;
 import org.thingsboard.server.common.data.Tenant;
+import org.thingsboard.server.common.data.Version;
 import org.thingsboard.server.common.data.asset.Asset;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.page.TextPageData;
@@ -66,8 +64,6 @@ import java.text.SimpleDateFormat;
 @Profile("!install")
 public class BasicSubscriptionService implements SubscriptionService, TbLicenseClientListener {
 
-    private static final String RELEASE_DATE = "10/06/2019";
-
     private static final String MAX_DEVICES_KEY = "maxdevices";
     private static final String MAX_ASSETS_KEY = "maxassets";
     private static final String WHITELABELING_KEY = "whitelabeling";
@@ -87,8 +83,6 @@ public class BasicSubscriptionService implements SubscriptionService, TbLicenseC
     @Autowired
     private ConfigurableApplicationContext context;
 
-    private boolean isAppReady = false;
-
     private TbLicenseClient tbLicenseClient;
 
     @PostConstruct
@@ -96,18 +90,18 @@ public class BasicSubscriptionService implements SubscriptionService, TbLicenseC
         if (StringUtils.isEmpty(this.licenseSecret)) {
             log.error("License secret is not provided!");
             log.error("Please provide license.secret property value in thingsboard.yml or set TB_LICENSE_SECRET environment variable!");
-            doExit(-1);
+            doExit();
         } else {
             try {
                 tbLicenseClient = TbLicenseClient.builder()
                         .listener(this)
                         .licenseSecret(this.licenseSecret)
-                        .releaseDate(new SimpleDateFormat("dd/mm/yyyy").parse(RELEASE_DATE).getTime())
+                        .releaseDate(new SimpleDateFormat("yyyy-MM-dd").parse(Version.PROJECT_BUILD_DATE).getTime())
                         .build();
                 tbLicenseClient.init();
             } catch (Exception e) {
                 log.error("Failed to init license client", e);
-                doExit(-1);
+                doExit();
             }
         }
     }
@@ -119,28 +113,24 @@ public class BasicSubscriptionService implements SubscriptionService, TbLicenseC
         }
     }
 
-    @EventListener(ApplicationReadyEvent.class)
-    public void onApplicationEvent(ApplicationReadyEvent applicationReadyEvent) {
-        this.isAppReady = true;
-    }
-
     @Override
     public void onError(TbLicenseClient tbLicenseClient, LicenseException e) {
-        try {
-            log.error("License Error occurred: {}", e.getMessage());
-            log.error("Cause:", e);
-        } finally {
-            doExit(-1);
-        }
+        log.error("License Error occurred: {}({}) - {}", e.getErrorCode(),
+                e.getErrorCode().getErrorCode(), e.getMessage());
+        doExit();
     }
 
-    private void doExit(int exitCode) {
-        log.info("Terminating with exit code [{}]...", exitCode);
-        if (isAppReady) {
-            SpringApplication.exit(context, () -> exitCode);
-        } else {
-            System.exit(exitCode);
-        }
+    private void doExit() {
+        new Thread(() -> {
+            int exitCode = -1;
+            log.info("Terminating with exit code [{}]...", exitCode);
+            int appExitCode = exitCode;
+            try {
+                appExitCode = SpringApplication.exit(context, () -> exitCode);
+            } finally {
+                System.exit(appExitCode);
+            }
+        }, "Shutdown Thread").start();
     }
 
     private boolean limitReached(long actual, String key) {
