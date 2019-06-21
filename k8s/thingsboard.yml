@@ -287,6 +287,8 @@ spec:
           value: "false"
         - name: REPORTS_SERVER_ENDPOINT_URL
           value: "http://tb-web-report:8383"
+        - name: TB_LICENSE_SECRET
+          value: ""
         envFrom:
         - configMapRef:
             name: tb-node-db-config
