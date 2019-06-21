@@ -36,8 +36,10 @@ COPY start-tb-node.sh ${pkg.name}.deb /tmp/
 RUN chmod a+x /tmp/*.sh \
     && mv /tmp/start-tb-node.sh /usr/bin
 
-RUN dpkg -i /tmp/${pkg.name}.deb
+RUN echo "thingsboard thingsboard-pe/license boolean true" | debconf-set-selections
 
-RUN update-rc.d ${pkg.name} disable
+RUN DEBIAN_FRONTEND=noninteractive dpkg -i /tmp/${pkg.name}.deb
+
+RUN systemctl --no-reload disable --now ${pkg.name}.service > /dev/null 2>&1 || :
 
 CMD ["start-tb-node.sh"]

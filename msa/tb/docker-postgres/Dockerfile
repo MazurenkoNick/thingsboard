@@ -47,9 +47,11 @@ RUN chmod a+x /tmp/*.sh \
     && mv /tmp/start-db.sh /usr/bin \
     && mv /tmp/stop-db.sh /usr/bin
 
-RUN dpkg -i /tmp/${pkg.name}.deb
+RUN echo "thingsboard thingsboard-pe/license boolean true" | debconf-set-selections
 
-RUN update-rc.d ${pkg.name} disable
+RUN DEBIAN_FRONTEND=noninteractive dpkg -i /tmp/${pkg.name}.deb
+
+RUN systemctl --no-reload disable --now ${pkg.name}.service > /dev/null 2>&1 || :
 
 RUN mv /tmp/logback.xml ${pkg.installFolder}/conf \
     && mv /tmp/${pkg.name}.conf ${pkg.installFolder}/conf

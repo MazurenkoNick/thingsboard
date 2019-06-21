@@ -49,6 +49,21 @@
         </encoder>
     </appender>
 
+    <appender name="licenseLogAppender"
+              class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>/var/log/thingsboard/tb-license.log</file>
+        <rollingPolicy
+                class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>/var/log/thingsboard/tb-license.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <maxFileSize>100MB</maxFileSize>
+            <maxHistory>30</maxHistory>
+            <totalSizeCap>3GB</totalSizeCap>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%d{ISO8601} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
             <pattern>%d{ISO8601} [%thread] %-5level %logger{36} - %msg%n</pattern>
@@ -62,5 +77,13 @@
         <appender-ref ref="fileLogAppender"/>
         <appender-ref ref="STDOUT"/>
     </root>
+
+    <logger name="org.thingsboard.license.client" level="INFO">
+        <appender-ref ref="licenseLogAppender" />
+    </logger>
+
+    <logger name="org.thingsboard.server.dao.subscription" level="INFO">
+        <appender-ref ref="licenseLogAppender" />
+    </logger>
 
 </configuration>
