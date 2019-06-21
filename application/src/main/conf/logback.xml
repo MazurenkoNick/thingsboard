@@ -71,7 +71,7 @@
             <onMismatch>DENY</onMismatch>
         </filter>
         <encoder>
-            <pattern>%msg%n</pattern>
+            <pattern>%msg %nopex %n</pattern>
         </encoder>
     </appender>
 
@@ -82,7 +82,7 @@
             <level>WARN</level>
         </filter>
         <encoder>
-            <pattern>%highlight([%-5level] %msg%n)</pattern>
+            <pattern>%highlight([%-5level] %msg %n) %nopex</pattern>
         </encoder>
     </appender>
 

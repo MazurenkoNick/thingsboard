@@ -40,6 +40,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.thingsboard.license.client.TbLicenseClient;
 import org.thingsboard.license.client.TbLicenseClientListener;
+import org.thingsboard.license.shared.exception.LicenseErrorCode;
 import org.thingsboard.license.shared.exception.LicenseException;
 import org.thingsboard.server.common.data.Device;
 import org.thingsboard.server.common.data.Tenant;
@@ -90,7 +91,7 @@ public class BasicSubscriptionService implements SubscriptionService, TbLicenseC
         if (StringUtils.isEmpty(this.licenseSecret)) {
             log.error("License secret is not provided!");
             log.error("Please provide license.secret property value in thingsboard.yml or set TB_LICENSE_SECRET environment variable!");
-            doExit();
+            doExit(-1, LicenseErrorCode.GENERAL_ERROR, false);
         } else {
             try {
                 tbLicenseClient = TbLicenseClient.builder()
@@ -101,7 +102,9 @@ public class BasicSubscriptionService implements SubscriptionService, TbLicenseC
                 tbLicenseClient.init();
             } catch (Exception e) {
                 log.error("Failed to init license client", e);
-                doExit();
+                LicenseErrorCode licenseErrorCode = e instanceof LicenseException ?
+                        ((LicenseException)e).getErrorCode() : LicenseErrorCode.GENERAL_ERROR;
+                doExit(-1, licenseErrorCode,false);
             }
         }
     }
@@ -117,16 +120,20 @@ public class BasicSubscriptionService implements SubscriptionService, TbLicenseC
     public void onError(TbLicenseClient tbLicenseClient, LicenseException e) {
         log.error("License Error occurred: {}({}) - {}", e.getErrorCode(),
                 e.getErrorCode().getErrorCode(), e.getMessage());
-        doExit();
+        if (e.isCritical()) {
+            doExit(-1, e.getErrorCode(),true);
+        }
     }
 
-    private void doExit() {
+    private void doExit(int exitCode, LicenseErrorCode licenseErrorCode, boolean gracefullShutdown) {
         new Thread(() -> {
-            int exitCode = -1;
-            log.info("Terminating with exit code [{}]...", exitCode);
+            log.info("Terminating application due to critical License Error {}({}), exit code [{}]...",
+                    licenseErrorCode, licenseErrorCode.getErrorCode(), exitCode);
             int appExitCode = exitCode;
             try {
-                appExitCode = SpringApplication.exit(context, () -> exitCode);
+                if (gracefullShutdown) {
+                    appExitCode = SpringApplication.exit(context, () -> exitCode);
+                }
             } finally {
                 System.exit(appExitCode);
             }
