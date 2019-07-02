@@ -52,7 +52,8 @@
         "export": "Export",
         "share-via": "Share via {{provider}}",
         "move": "Move",
-        "select": "Select"
+        "select": "Select",
+        "continue": "Continue"
     },
     "aggregation": {
         "aggregation": "Aggregation",
@@ -98,7 +99,9 @@
             "activation": "Account activation message",
             "account-activated": "Account activated message",
             "reset-password": "Reset password message",
-            "password-was-reset": "Password was reset message"
+            "password-was-reset": "Password was reset message",
+            "user-activated": "User activated message",
+            "user-registered": "User registered message"
         },
         "mail-subject": "Mail Subject",
         "mail-body": "Mail body"
@@ -278,7 +281,9 @@
         "remove-assets-from-group": "Are you sure you want to remove { count, plural, 1 {1 asset} other {# assets} } from group '{entityGroup}'?",
         "group": "Group of assets",
         "list-of-groups": "{ count, plural, 1 {One asset group} other {List of # asset groups} }",
-        "group-name-starts-with": "Asset groups whose names start with '{{prefix}}'"
+        "group-name-starts-with": "Asset groups whose names start with '{{prefix}}'",
+        "import": "Import assets",
+        "asset-file": "Asset file"
     },
     "attribute": {
         "attributes": "Attributes",
@@ -807,6 +812,7 @@
         "name": "Name",
         "name-required": "Name is required.",
         "description": "Description",
+        "label": "Label",
         "events": "Events",
         "details": "Details",
         "copyId": "Copy device Id",
@@ -827,7 +833,9 @@
         "remove-devices-from-group": "Are you sure you want to remove { count, plural, 1 {1 device} other {# devices} } from group '{entityGroup}'?",
         "group": "Group of devices",
         "list-of-groups": "{ count, plural, 1 {One device group} other {List of # device groups} }",
-        "group-name-starts-with": "Device groups whose names start with '{{prefix}}'"
+        "group-name-starts-with": "Device groups whose names start with '{{prefix}}'",
+        "import": "Import device",
+        "device-file": "Device file"
     },
     "dialog": {
         "close": "Close dialog"
@@ -1428,7 +1436,40 @@
     "import": {
         "no-file": "No file selected",
         "drop-file": "Drop a JSON file or click to select a file to upload.",
-        "drop-csv-file": "Drop a CSV file or click to select a file to upload."
+        "drop-csv-file": "Drop a CSV file or click to select a file to upload.",
+        "drop-file-csv": "Drop a CSV file or click to select a file to upload.",
+        "column-value": "Value",
+        "column-title": "Title",
+        "column-example": "Example value data",
+        "column-key": "Attribute/telemetry key",
+        "csv-delimiter": "CSV delimiter",
+        "csv-first-line-header": "First line contains column names",
+        "csv-update-data": "Update attributes/telemetry",
+        "import-csv-number-columns-error": "A file should contain at least two columns",
+        "import-csv-invalid-format-error": "Invalid file format. Line: '{{line}}'",
+        "column-type": {
+            "name": "Name",
+            "type": "Type",
+            "column-type": "Column type",
+            "client-attribute": "Client attribute",
+            "shared-attribute": "Shared attribute",
+            "server-attribute": "Server attribute",
+            "timeseries": "Timeseries",
+            "entity-field": "Entity field",
+            "access-token": "Access token"
+        },
+        "stepper-text":{
+            "select-file": "Select a file",
+            "configuration": "Import configuration",
+            "column-type": "Select columns type",
+            "creat-entities": "Creating new entities",
+            "done": "Done"
+        },
+        "message": {
+            "create-entities": "{{count}} new entities were successfully created.",
+            "update-entities": "{{count}} entities were successfully updated.",
+            "error-entities": "There was an error creating {{count}} entities."
+        }
     },
     "integration": {
         "integration": "Integration",
@@ -1645,7 +1686,34 @@
         "new-password": "New password",
         "new-password-again": "New password again",
         "password-link-sent-message": "Password reset link was successfully sent!",
-        "email": "Email"
+        "email": "Email",
+        "no-account": "Do not have an account?",
+        "create-account": "Create an account"
+    },
+    "signup": {
+        "firstname": "First name",
+        "lastname": "Last name",
+        "email": "Email",
+        "signup": "Sign up",
+        "create-password": "Create a password",
+        "repeat-password": "Repeat your password",
+        "have-account": "Already have an account?",
+        "signin": "Sign in",
+        "no-captcha-message": "You must confirm that you are not a robot",
+        "password-length-message": "Your password must be at least 6 characters long",
+        "email-verification": "Email verification",
+        "email-verification-message": "An email with verification details was sent to the specified email address.</br>Please follow instructions provided in the email in order to complete your sign up procedure.</br>Note: if you haven't seen the email for a while, please check your 'spam' folder or try to resend email by clicking 'Resend' button.",
+        "account-activation-title": "Account activation",
+        "account-activated": "Account successfully activated!",
+        "account-activated-text": "Congratulations!</br>Your account has been activated.</br>Now you can login to your ThingsBoard space.",
+        "resend": "Resend",
+        "inactive-user-exists-title": "Inactive user already exists",
+        "inactive-user-exists-text": "There is already registered user with unverified email address.</br>Click 'Resend' button if you wish to resend verification email.",
+        "activating-account": "Activating account...",
+        "activating-account-text": "Your account is currently activating. Please wait...",
+        "accept-privacy-policy": "Accept Privacy Policy",
+        "accept": "Accept",
+        "privacy-policy": "Privacy Policy"
     },
     "position": {
         "top": "Top",
@@ -1932,6 +2000,7 @@
                 "WRITE_ATTRIBUTES": "Write Attributes",
                 "READ_TELEMETRY": "Read Telemetry",
                 "WRITE_TELEMETRY": "Write Telemetry",
+                "CLAIM_DEVICES": "Claim devices",
                 "IMPERSONATE": "Impersonate",
                 "CHANGE_OWNER": "Change owner",
                 "ADD_TO_GROUP": "Add to Group",
@@ -2333,6 +2402,7 @@
         "decimals": "Number of digits after floating point",
         "timewindow": "Timewindow",
         "use-dashboard-timewindow": "Use dashboard timewindow",
+        "display-timewindow": "Display timewindow",
         "display-legend": "Display legend",
         "datasources": "Datasources",
         "maximum-datasources": "Maximum { count, plural, 1 {1 datasource is allowed.} other {# datasources are allowed} }",
@@ -2367,6 +2437,16 @@
         "widget-type-file": "Widget type file",
         "invalid-widget-type-file-error": "Unable to import widget type: Invalid widget type data structure."
     },
+    "self-registration": {
+        "self-registration": "Self Registration",
+        "self-registration-url": "Self Registration URL",
+        "captcha-site-key": "reCAPTCHA site key",
+        "captcha-secret-key": "reCAPTCHA secret key",
+        "notification-email": "Notification email",
+        "privacy-policy-text": "Privacy policy text",
+        "text-message-page": "Text Message for signup page"
+
+    },
     "white-labeling": {
         "white-labeling": "White Labeling",
         "login-white-labeling": "Login White Labeling",
@@ -2399,7 +2479,17 @@
         "dark-foreground": "Dark foreground",
         "domain-name": "Domain name",
         "help-link-base-url": "Help links base url",
-        "enable-help-links": "Enable help links"
+        "enable-help-links": "Enable help links",
+        "error-verification-url": "A domain name shouldn't contain symbols '/' and ':'. Example: thingsboard.io",
+        "show-platform-name-version": "Show platform name and version",
+        "platform-name": "Platform Name",
+        "platform-version": "Platform version",
+        "version-mask": "{{name}} v.{{verion}}",
+        "position":{
+            "label": "Platform name and version position",
+            "under-logo": "Under the logo",
+            "bottom": "Bottom of the login form"
+        }
     },
     "widgets": {
         "date-range-navigator": {
@@ -2493,7 +2583,8 @@
             "polygon-click": "On polygon click",
             "marker-click": "On marker click",
             "tooltip-tag-action": "Tooltip tag action",
-            "node-selected": "On node selected"
+            "node-selected": "On node selected",
+            "element-click": "On HTML element click"
         }
     },
     "language": {
@@ -2510,7 +2601,8 @@
             "ja_JA": "Japanese",
             "tr_TR": "Turkish",
             "fa_IR": "Persian",
-            "uk_UA": "Ukrainian"
+            "uk_UA": "Ukrainian",
+            "cs_CZ": "Czech"            
         }
     }
 }

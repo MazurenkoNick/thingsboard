@@ -69,7 +69,10 @@ function WhiteLabelingService($rootScope, $q, $http, store, themeProvider, $mdTh
             }
         },
         helpLinkBaseUrl: "https://thingsboard.io",
-        enableHelpLinks: true
+        enableHelpLinks: true,
+        showNameVersion: false,
+        platformName: "ThingsBoard",
+        platformVersion: THINGSBOARD_VERSION //eslint-disable-line
     };
 
     const defaultLoginWlParams = angular.copy(defaultWLParams);
@@ -101,6 +104,9 @@ function WhiteLabelingService($rootScope, $q, $http, store, themeProvider, $mdTh
         getAccentPalette: getAccentPalette,
         getHelpLinkBaseUrl: getHelpLinkBaseUrl,
         isEnableHelpLinks: isEnableHelpLinks,
+        isShowVersion: isShowVersion,
+        getPlatformName: getPlatformName,
+        getPlatformVersion: getPlatformVersion,
         whiteLabelPreview: whiteLabelPreview,
         cancelWhiteLabelPreview: cancelWhiteLabelPreview,
         getCurrentWhiteLabelParams: getCurrentWhiteLabelParams,
@@ -152,6 +158,18 @@ function WhiteLabelingService($rootScope, $q, $http, store, themeProvider, $mdTh
 
     function isEnableHelpLinks() {
         return getCurrentWlParams() ? getCurrentWlParams().enableHelpLinks : true;
+    }
+
+    function isShowVersion() {
+        return getCurrentWlParams() ? getCurrentWlParams().showNameVersion : false;
+    }
+
+    function getPlatformName() {
+        return getCurrentWlParams() ? getCurrentWlParams().platformName : '';
+    }
+
+    function getPlatformVersion() {
+        return getCurrentWlParams() ? getCurrentWlParams().platformVersion : '';
     }
 
     function loadLoginWhiteLabelingParams() {
@@ -297,6 +315,15 @@ function WhiteLabelingService($rootScope, $q, $http, store, themeProvider, $mdTh
         }
         if (angular.isUndefined(wlParams.enableHelpLinks) && angular.isDefined(targetDefaultWlParams.enableHelpLinks)) {
             wlParams.enableHelpLinks = targetDefaultWlParams.enableHelpLinks;
+        }
+        if (angular.isUndefined(wlParams.showNameVersion)) {
+            wlParams.showNameVersion = targetDefaultWlParams.showNameVersion;
+        }
+        if (wlParams.platformName === null) {
+            wlParams.platformName = targetDefaultWlParams.platformName;
+        }
+        if (wlParams.platformVersion === null) {
+            wlParams.platformVersion = targetDefaultWlParams.platformVersion;
         }
         return wlParams;
     }
@@ -464,6 +491,10 @@ function WhiteLabelingService($rootScope, $q, $http, store, themeProvider, $mdTh
         $rootScope.loginLogo = wlParams.logoImageUrl;
         $rootScope.loginLogoHeight = wlParams.logoImageHeight;
         $rootScope.loginPageBackgroundColor = wlParams.pageBackgroundColor;
+        $rootScope.loginShowNameVersion = wlParams.showNameVersion;
+        $rootScope.showNameBottom = wlParams.showNameBottom;
+        $rootScope.platformName = !wlParams.platformName ? "ThingsBoard" : wlParams.platformName;
+        $rootScope.platformVersion = !wlParams.platformVersion ? THINGSBOARD_VERSION : wlParams.platformVersion; //eslint-disable-line
     }
 
     function applyLoginThemePalettes(paletteSettings, darkForeground) {
