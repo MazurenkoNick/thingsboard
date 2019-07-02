@@ -58,6 +58,6 @@ export default function EntityLimitDialogController($rootScope, $scope, $mdDialo
 
     function upgrade() {
         $mdDialog.hide();
-        $window.open("https://thingsboard.io/products/thingsboard-pe/pricing/", '_blank');
+        $window.open("https://thingsboard.io/pricing/", '_blank');
     }
 }

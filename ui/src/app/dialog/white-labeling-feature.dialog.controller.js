@@ -64,6 +64,6 @@ export default function WhiteLabelingFeatureDialogController($rootScope, $scope,
     function upgrade() {
         $mdDialog.hide();
         $rootScope.ignoreConfirmOnExit = true;
-        $window.open("https://thingsboard.io/products/thingsboard-pe/pricing/", '_blank');
+        $window.open("https://thingsboard.io/pricing/", '_blank');
     }
 }
