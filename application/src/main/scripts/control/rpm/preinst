@@ -9,10 +9,10 @@ abort_install() {
 
 eula='${pkgEula}'
 
-whiptail --scrolltext --title "ThingsBoard Professional Edition End User License Agreement" --msgbox "${eula}" 20 78
+whiptail --scrolltext --title "ThingsBoard Professional Edition License Agreement" --msgbox "${eula}" 20 78
 
-if ! (whiptail --title "ThingsBoard Professional Edition End User License Agreement" --yesno "Do you accept the license agreement?" 8 78); then
-    abort_install "The installation have been aborted because you do not agree the licensing of this software."
+if ! (whiptail --title "ThingsBoard Professional Edition License Agreement" --yesno "Do you accept the license agreement?" 8 78); then
+    abort_install "The installation have been aborted because you do not agree with the license terms of this software."
 fi
 
 getent group ${pkg.name} >/dev/null || groupadd -r ${pkg.name}

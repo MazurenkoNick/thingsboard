@@ -25,7 +25,7 @@ db_get thingsboard-pe/view
 db_get thingsboard-pe/license
 if [ "${RET}" != "true" ]
 then
-	abort_install "The installation have been aborted because you do not agree the licensing of this software."
+	abort_install "The installation have been aborted because you do not agree with the license terms of this software."
 fi
 
 exit 0
