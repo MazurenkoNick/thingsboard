@@ -193,7 +193,7 @@ export default function GlobalInterceptor($rootScope, $q, $injector) {
         if (rejection.refreshTokenPending || rejection.status === 401) {
             if (rejection.refreshTokenPending || (errorCode && errorCode === getTypes().serverErrorCode.jwtTokenExpired)) {
                 return refreshTokenAndRetry(rejection);
-            } else {
+            } else if (errorCode !== getTypes().serverErrorCode.credentialsExpired) {
                 unhandled = true;
             }
         } else if (errorCode && errorCode === getTypes().serverErrorCode.subscriptionViolation) {
