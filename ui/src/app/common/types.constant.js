@@ -446,7 +446,12 @@ export default angular.module('thingsboard.types', [])
                 "OPC_UA": {
                     name: "integration.type-opc-ua",
                     value: "OPC_UA"
-                }
+                },
+                "CUSTOM": {
+                    name: "integration.type-custom",
+                    value: "CUSTOM",
+                    remote: true
+                },
             },
             componentType: {
                 enrichment: "ENRICHMENT",
@@ -869,6 +874,10 @@ export default angular.module('thingsboard.types', [])
                 stats: {
                     value: "STATS",
                     name: "event.type-stats"
+                },
+                rawData: {
+                    value: "RAW_DATA",
+                    name: "event.type-rw-event"
                 }
             },
             debugEventType: {

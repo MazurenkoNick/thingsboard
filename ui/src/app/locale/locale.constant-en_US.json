@@ -1229,6 +1229,7 @@
         "event-type": "Event type",
         "type-error": "Error",
         "type-lc-event": "Lifecycle event",
+        "type-rw-event": "Raw data",
         "type-stats": "Statistics",
         "type-debug-converter": "Debug",
         "type-debug-integration": "Debug",
@@ -1257,7 +1258,8 @@
         "success": "Success",
         "failed": "Failed",
         "messages-processed": "Messages processed",
-        "errors-occurred": "Errors occurred"
+        "errors-occurred": "Errors occurred",
+        "uuid": "UUID"
     },
     "extension": {
         "extensions": "Extensions",
@@ -1595,6 +1597,9 @@
         "sas-key": "SAS Key",
         "sas-key-required": "SAS Key is required.",
         "iot-hub-name": "IoT Hub Name (required for downlink)",
+        "integration-clazz": "Integration class",
+        "integration-clazz-required": "Integration class is required",
+        "integration-configuration": "Integration JSON configuration",
         "metadata": "Metadata",
         "type": "Type",
         "type-required": "Type is required.",
@@ -1612,6 +1617,7 @@
         "type-ttn": "TheThingsNetwork",
         "type-azure-event-hub": "Azure Event Hub",
         "type-opc-ua": "OPC-UA",
+        "type-custom": "Custom",
         "opc-ua-application-name": "Application name",
         "opc-ua-application-uri": "Application uri",
         "opc-ua-scan-period-in-seconds": "Scan period in seconds",
@@ -1649,7 +1655,14 @@
         "add-subscription-tag-prompt": "Please add subscription tag",
         "key": "Key",
         "path": "Path",
-        "required": "Required"
+        "required": "Required",
+        "integration-key": "Integration key",
+        "copy-integration-key": "Copy integration key",
+        "integration-key-copied-message": "Integration key has been copied to clipboard",
+        "integration-secret": "Integration secret",
+        "copy-integration-secret": "Copy integration secret",
+        "integration-secret-copied-message": "Integration secret has been copied to clipboard",
+        "execute-remotely": "Execute remotely"
     },
     "item": {
         "selected": "Selected"
