@@ -48,7 +48,7 @@ public class WhiteLabelingParams {
     protected String helpLinkBaseUrl;
     protected Boolean enableHelpLinks;
     protected boolean whiteLabelingEnabled = true;
-    protected boolean showNameVersion;
+    protected Boolean showNameVersion;
     protected String platformName;
     protected String platformVersion;
 
