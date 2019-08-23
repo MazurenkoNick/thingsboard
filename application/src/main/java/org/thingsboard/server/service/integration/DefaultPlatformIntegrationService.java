@@ -50,6 +50,7 @@ import org.springframework.context.event.EventListener;
 import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+import org.thingsboard.common.util.DonAsynchron;
 import org.thingsboard.integration.api.IntegrationCallback;
 import org.thingsboard.integration.api.IntegrationContext;
 import org.thingsboard.integration.api.IntegrationStatistics;
@@ -69,7 +70,6 @@ import org.thingsboard.integration.mqtt.basic.BasicMqttIntegration;
 import org.thingsboard.integration.mqtt.ibm.IbmWatsonIotIntegration;
 import org.thingsboard.integration.mqtt.ttn.TtnIntegration;
 import org.thingsboard.integration.opcua.OpcUaIntegration;
-import org.thingsboard.common.util.DonAsynchron;
 import org.thingsboard.server.actors.ActorSystemContext;
 import org.thingsboard.server.common.data.DataConstants;
 import org.thingsboard.server.common.data.EntityType;
@@ -80,7 +80,6 @@ import org.thingsboard.server.common.data.id.DeviceId;
 import org.thingsboard.server.common.data.id.IntegrationId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.integration.Integration;
-import org.thingsboard.server.common.data.integration.IntegrationType;
 import org.thingsboard.server.common.data.kv.BasicTsKvEntry;
 import org.thingsboard.server.common.data.kv.LongDataEntry;
 import org.thingsboard.server.common.data.kv.StringDataEntry;
@@ -107,7 +106,7 @@ import org.thingsboard.server.service.cluster.routing.ClusterRoutingService;
 import org.thingsboard.server.service.cluster.rpc.ClusterRpcService;
 import org.thingsboard.server.service.converter.DataConverterService;
 import org.thingsboard.server.service.encoding.DataDecodingEncodingService;
-import org.thingsboard.server.service.integration.msg.DefaultIntegrationDownlinkMsg;
+import org.thingsboard.integration.api.data.DefaultIntegrationDownlinkMsg;
 import org.thingsboard.server.service.integration.rpc.IntegrationRpcService;
 import org.thingsboard.server.service.telemetry.TelemetrySubscriptionService;
 import org.thingsboard.server.service.transport.msg.TransportToDeviceActorMsgWrapper;
@@ -204,6 +203,9 @@ public class DefaultPlatformIntegrationService implements PlatformIntegrationSer
     @Value("${integrations.allow_Local_network_hosts:true}")
     private boolean allowLocalNetworkHosts;
 
+    @Value("${integrations.allow_resource_intensive:true}")
+    private boolean allowResourceIntensive;
+
     private ScheduledExecutorService statisticsExecutorService;
     private ScheduledExecutorService reinitExecutorService;
     private ListeningExecutorService refreshExecutorService;
@@ -251,7 +253,7 @@ public class DefaultPlatformIntegrationService implements PlatformIntegrationSer
         if (StringUtils.isEmpty(integration.getRoutingKey())) {
             throw new DataValidationException("Integration routing key should be specified!");
         }
-        if (integration.getType() != IntegrationType.CUSTOM) {
+        if (!integration.getType().isRemoteOnly()) {
             ThingsboardPlatformIntegration platformIntegration = createThingsboardPlatformIntegration(integration);
             platformIntegration.validateConfiguration(integration, allowLocalNetworkHosts);
         }
@@ -281,29 +283,30 @@ public class DefaultPlatformIntegrationService implements PlatformIntegrationSer
         if (configuration.isRemote()) {
             integrationRpcService.updateIntegration(configuration);
             return Futures.immediateFuture(null);
-        }
-        return refreshExecutorService.submit(() -> {
-            Pair<ThingsboardPlatformIntegration, IntegrationContext> integration = integrationsByIdMap.get(configuration.getId());
-            if (integration != null) {
-                synchronized (integration) {
-                    try {
-                        IntegrationContext newCtx = new LocalIntegrationContext(contextComponent, configuration);
-                        integrationsByIdMap.put(configuration.getId(), Pair.of(integration.getFirst(), newCtx));
-                        integration.getFirst().update(new TbIntegrationInitParams(newCtx,
-                                configuration, getUplinkDataConverter(configuration), getDownlinkDataConverter(configuration)));
-                        actorContext.persistLifecycleEvent(configuration.getTenantId(), configuration.getId(), ComponentLifecycleEvent.UPDATED, null);
-                        integrationEvents.put(configuration.getId(), ComponentLifecycleEvent.UPDATED);
-                        return integration.getFirst();
-                    } catch (Exception e) {
-                        integrationEvents.put(configuration.getId(), ComponentLifecycleEvent.FAILED);
-                        actorContext.persistLifecycleEvent(configuration.getTenantId(), configuration.getId(), ComponentLifecycleEvent.UPDATED, e);
-                        throw e;
+        } else {
+            return refreshExecutorService.submit(() -> {
+                Pair<ThingsboardPlatformIntegration, IntegrationContext> integration = integrationsByIdMap.get(configuration.getId());
+                if (integration != null) {
+                    synchronized (integration) {
+                        try {
+                            IntegrationContext newCtx = new LocalIntegrationContext(contextComponent, configuration);
+                            integrationsByIdMap.put(configuration.getId(), Pair.of(integration.getFirst(), newCtx));
+                            integration.getFirst().update(new TbIntegrationInitParams(newCtx,
+                                    configuration, getUplinkDataConverter(configuration), getDownlinkDataConverter(configuration)));
+                            actorContext.persistLifecycleEvent(configuration.getTenantId(), configuration.getId(), ComponentLifecycleEvent.UPDATED, null);
+                            integrationEvents.put(configuration.getId(), ComponentLifecycleEvent.UPDATED);
+                            return integration.getFirst();
+                        } catch (Exception e) {
+                            integrationEvents.put(configuration.getId(), ComponentLifecycleEvent.FAILED);
+                            actorContext.persistLifecycleEvent(configuration.getTenantId(), configuration.getId(), ComponentLifecycleEvent.FAILED, e);
+                            throw e;
+                        }
                     }
+                } else {
+                    return getOrCreateThingsboardPlatformIntegration(configuration, false);
                 }
-            } else {
-                return getOrCreateThingsboardPlatformIntegration(configuration, false);
-            }
-        });
+            });
+        }
     }
 
     @Override
@@ -353,22 +356,25 @@ public class DefaultPlatformIntegrationService implements PlatformIntegrationSer
             IntegrationId integrationId = msg.getIntegrationId();
             Pair<ThingsboardPlatformIntegration, IntegrationContext> integration = integrationsByIdMap.get(integrationId);
             if (integration == null) {
-                Optional<ServerAddress> server = clusterRoutingService.resolveById(integrationId);
-                if (server.isPresent()) {
-                    clusterRpcService.tell(server.get(), msg);
-                } else {
-                    Integration configuration = integrationService.findIntegrationById(TenantId.SYS_TENANT_ID, integrationId);
-                    DonAsynchron.withCallback(createIntegration(configuration), i -> {
-                        onMsg(i, msg);
-                        if (callback != null) {
-                            callback.onSuccess(null);
-                        }
-                    }, e -> {
-                        if (callback != null) {
-                            callback.onFailure(e);
-                        }
-                    }, refreshExecutorService);
-                    return;
+                boolean remoteIntegrationDownlink = integrationRpcService.handleRemoteDownlink(msg);
+                if (!remoteIntegrationDownlink) {
+                    Optional<ServerAddress> server = clusterRoutingService.resolveById(integrationId);
+                    if (server.isPresent()) {
+                        clusterRpcService.tell(server.get(), msg);
+                    } else {
+                        Integration configuration = integrationService.findIntegrationById(TenantId.SYS_TENANT_ID, integrationId);
+                        DonAsynchron.withCallback(createIntegration(configuration), i -> {
+                            onMsg(i, msg);
+                            if (callback != null) {
+                                callback.onSuccess(null);
+                            }
+                        }, e -> {
+                            if (callback != null) {
+                                callback.onFailure(e);
+                            }
+                        }, refreshExecutorService);
+                        return;
+                    }
                 }
             } else {
                 onMsg(integration.getFirst(), msg);
@@ -621,7 +627,7 @@ public class DefaultPlatformIntegrationService implements PlatformIntegrationSer
                     integrationEvents.put(configuration.getId(), ComponentLifecycleEvent.STARTED);
                 } catch (Exception e) {
                     integrationEvents.put(configuration.getId(), ComponentLifecycleEvent.FAILED);
-                    actorContext.persistLifecycleEvent(configuration.getTenantId(), configuration.getId(), ComponentLifecycleEvent.STARTED, e);
+                    actorContext.persistLifecycleEvent(configuration.getTenantId(), configuration.getId(), ComponentLifecycleEvent.FAILED, e);
                     throw handleException(e);
                 }
             }
@@ -660,6 +666,8 @@ public class DefaultPlatformIntegrationService implements PlatformIntegrationSer
             case OPC_UA:
                 return new OpcUaIntegration();
             case CUSTOM:
+            case TCP:
+            case UDP:
                 throw new RuntimeException("Custom Integrations should be executed remotely!");
             default:
                 throw new RuntimeException("Not Implemented!");

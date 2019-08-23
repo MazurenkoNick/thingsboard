@@ -34,11 +34,13 @@ import com.datastax.driver.core.utils.UUIDs;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.util.concurrent.FutureCallback;
 import com.google.protobuf.ByteString;
 import io.grpc.stub.StreamObserver;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.StringUtils;
+import org.thingsboard.integration.api.data.IntegrationDownlinkMsg;
 import org.thingsboard.server.common.data.Customer;
 import org.thingsboard.server.common.data.DataConstants;
 import org.thingsboard.server.common.data.Device;
@@ -47,8 +49,15 @@ import org.thingsboard.server.common.data.Event;
 import org.thingsboard.server.common.data.converter.Converter;
 import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.EntityId;
+import org.thingsboard.server.common.data.id.IntegrationId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.integration.Integration;
+import org.thingsboard.server.common.data.kv.BasicTsKvEntry;
+import org.thingsboard.server.common.data.kv.BooleanDataEntry;
+import org.thingsboard.server.common.data.kv.DoubleDataEntry;
+import org.thingsboard.server.common.data.kv.LongDataEntry;
+import org.thingsboard.server.common.data.kv.StringDataEntry;
+import org.thingsboard.server.common.data.kv.TsKvEntry;
 import org.thingsboard.server.common.data.objects.TelemetryEntityView;
 import org.thingsboard.server.common.data.relation.EntityRelation;
 import org.thingsboard.server.common.data.relation.RelationTypeGroup;
@@ -61,9 +70,12 @@ import org.thingsboard.server.gen.integration.ConnectResponseCode;
 import org.thingsboard.server.gen.integration.ConnectResponseMsg;
 import org.thingsboard.server.gen.integration.ConverterConfigurationProto;
 import org.thingsboard.server.gen.integration.ConverterUpdateMsg;
+import org.thingsboard.server.gen.integration.DeviceDownlinkDataProto;
 import org.thingsboard.server.gen.integration.DeviceUplinkDataProto;
+import org.thingsboard.server.gen.integration.DownlinkMsg;
 import org.thingsboard.server.gen.integration.EntityViewDataProto;
 import org.thingsboard.server.gen.integration.IntegrationConfigurationProto;
+import org.thingsboard.server.gen.integration.IntegrationStatisticsProto;
 import org.thingsboard.server.gen.integration.IntegrationUpdateMsg;
 import org.thingsboard.server.gen.integration.MessageType;
 import org.thingsboard.server.gen.integration.RequestMsg;
@@ -71,14 +83,21 @@ import org.thingsboard.server.gen.integration.ResponseMsg;
 import org.thingsboard.server.gen.integration.TbEventProto;
 import org.thingsboard.server.gen.integration.UplinkMsg;
 import org.thingsboard.server.gen.integration.UplinkResponseMsg;
+import org.thingsboard.server.gen.transport.KeyValueProto;
+import org.thingsboard.server.gen.transport.KeyValueType;
 import org.thingsboard.server.gen.transport.SessionInfoProto;
+import org.thingsboard.server.gen.transport.TsKvListProto;
 import org.thingsboard.server.service.integration.IntegrationContextComponent;
 
+import javax.annotation.Nullable;
 import java.io.Closeable;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 @Data
@@ -89,7 +108,8 @@ public final class IntegrationGrpcSession implements Closeable {
     public static final ObjectMapper mapper = new ObjectMapper();
 
     private final UUID sessionId;
-    private final Consumer<StreamObserver<ResponseMsg>> sessionCloseListener;
+    private final BiConsumer<IntegrationId, IntegrationGrpcSession> sessionOpenListener;
+    private final Consumer<IntegrationId> sessionCloseListener;
 
     private IntegrationContextComponent ctx;
     private Integration configuration;
@@ -97,10 +117,13 @@ public final class IntegrationGrpcSession implements Closeable {
     private StreamObserver<ResponseMsg> outputStream;
     private boolean connected;
 
-    public IntegrationGrpcSession(IntegrationContextComponent ctx, StreamObserver<ResponseMsg> outputStream, Consumer<StreamObserver<ResponseMsg>> sessionCloseListener) {
+    IntegrationGrpcSession(IntegrationContextComponent ctx, StreamObserver<ResponseMsg> outputStream
+            , BiConsumer<IntegrationId, IntegrationGrpcSession> sessionOpenListener
+            , Consumer<IntegrationId> sessionCloseListener) {
         this.sessionId = UUID.randomUUID();
         this.ctx = ctx;
         this.outputStream = outputStream;
+        this.sessionOpenListener = sessionOpenListener;
         this.sessionCloseListener = sessionCloseListener;
         initInputStream();
     }
@@ -134,7 +157,7 @@ public final class IntegrationGrpcSession implements Closeable {
 
             @Override
             public void onCompleted() {
-                sessionCloseListener.accept(outputStream);
+                sessionCloseListener.accept(configuration.getId());
                 outputStream.onCompleted();
             }
         };
@@ -157,6 +180,7 @@ public final class IntegrationGrpcSession implements Closeable {
                         downLinkConverterProto = constructConverterConfigProto(downlinkConverter);
                     }
                     connected = true;
+                    sessionOpenListener.accept(configuration.getId(), this);
                     return ConnectResponseMsg.newBuilder()
                             .setResponseCode(ConnectResponseCode.ACCEPTED)
                             .setErrorMsg("")
@@ -208,6 +232,12 @@ public final class IntegrationGrpcSession implements Closeable {
         if (msg.getEntityViewDataCount() > 0) {
             for (EntityViewDataProto data : msg.getEntityViewDataList()) {
                 createEntityViewForDeviceIfAbsent(getOrCreateDevice(data.getDeviceName(), data.getDeviceType(), null), data);
+            }
+        }
+
+        if (msg.getIntegrationStatisticsCount() > 0) {
+            for (IntegrationStatisticsProto data : msg.getIntegrationStatisticsList()) {
+                processIntegrationStatistics(data);
             }
         }
 
@@ -451,5 +481,47 @@ public final class IntegrationGrpcSession implements Closeable {
         } catch (JsonProcessingException e) {
             log.error("Failed to construct proto objects!", e);
         }
+    }
+
+    void onDownlink(Device device, IntegrationDownlinkMsg msg) {
+        outputStream.onNext(ResponseMsg.newBuilder()
+                .setDownlinkMsg(DownlinkMsg.newBuilder()
+                        .setDeviceData(
+                                DeviceDownlinkDataProto.newBuilder()
+                                        .setDeviceName(device.getName())
+                                        .setDeviceType(device.getType())
+                                        .setTbMsg(ByteString.copyFrom(TbMsg.toBytes(msg.getTbMsg())))
+                                        .build()
+                        )
+                        .build())
+                .build());
+    }
+
+    private void processIntegrationStatistics(IntegrationStatisticsProto data) {
+        List<TsKvEntry> statsTs = new ArrayList<>();
+        for (TsKvListProto tsKvListProto : data.getPostTelemetryMsg().getTsKvListList()) {
+            for (KeyValueProto keyValueProto : tsKvListProto.getKvList()) {
+                if (keyValueProto.getType().equals(KeyValueType.LONG_V)) {
+                    statsTs.add(new BasicTsKvEntry(tsKvListProto.getTs(), new LongDataEntry(keyValueProto.getKey(), keyValueProto.getLongV())));
+                } else if (keyValueProto.getType().equals(KeyValueType.DOUBLE_V)) {
+                    statsTs.add(new BasicTsKvEntry(tsKvListProto.getTs(), new DoubleDataEntry(keyValueProto.getKey(), keyValueProto.getDoubleV())));
+                } else if (keyValueProto.getType().equals(KeyValueType.BOOLEAN_V)) {
+                    statsTs.add(new BasicTsKvEntry(tsKvListProto.getTs(), new BooleanDataEntry(keyValueProto.getKey(), keyValueProto.getBoolV())));
+                } else {
+                    statsTs.add(new BasicTsKvEntry(tsKvListProto.getTs(), new StringDataEntry(keyValueProto.getKey(), keyValueProto.getStringV())));
+                }
+            }
+        }
+        ctx.getTelemetrySubscriptionService().saveAndNotify(configuration.getTenantId(), configuration.getId(), statsTs, new FutureCallback<Void>() {
+            @Override
+            public void onSuccess(@Nullable Void result) {
+                log.trace("[{}] Persisted statistics telemetry!", configuration.getId());
+            }
+
+            @Override
+            public void onFailure(Throwable t) {
+                log.warn("[{}] Failed to persist statistics telemetry!", configuration.getId(), t);
+            }
+        });
     }
 }

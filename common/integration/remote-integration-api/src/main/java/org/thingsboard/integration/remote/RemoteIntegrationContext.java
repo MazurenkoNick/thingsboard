@@ -66,16 +66,14 @@ public class RemoteIntegrationContext implements IntegrationContext {
     private static final String REMOTE_INTEGRATION_CACHE = "remoteIntegration";
 
     protected final EventStorage eventStorage;
-    protected final CacheManager cacheManager;
     protected final Integration configuration;
     protected final String clientId;
     protected final int port;
     protected final ConverterContext uplinkConverterContext;
     protected final ConverterContext downlinkConverterContext;
 
-    public RemoteIntegrationContext(EventStorage eventStorage, CacheManager cacheManager, Integration configuration, String clientId, int port) {
+    public RemoteIntegrationContext(EventStorage eventStorage, Integration configuration, String clientId, int port) {
         this.eventStorage = eventStorage;
-        this.cacheManager = cacheManager;
         this.configuration = configuration;
         this.clientId = clientId;
         this.port = port;
@@ -94,7 +92,7 @@ public class RemoteIntegrationContext implements IntegrationContext {
     }
 
     @Override
-    public void processEntityViewCreation(EntityViewDataProto msg, IntegrationCallback<Void> callback) {
+    public void createEntityView(EntityViewDataProto msg, IntegrationCallback<Void> callback) {
         eventStorage.write(UplinkMsg.newBuilder().addEntityViewData(msg).build(), callback);
     }
 
@@ -111,62 +109,6 @@ public class RemoteIntegrationContext implements IntegrationContext {
     @Override
     public void saveRawDataEvent(String deviceName, String type, String uid, JsonNode body, IntegrationCallback<Void> callback) {
         saveEvent(TbEventSource.DEVICE, deviceName, type, uid, body, callback);
-    }
-
-    @Override
-    public long findDeviceAttributeValue(String deviceName, String scope, String key) {
-        Cache cache = cacheManager.getCache(REMOTE_INTEGRATION_CACHE);
-
-        List<Object> cacheKey = new ArrayList<>();
-        cacheKey.add("attr_");
-        cacheKey.add(deviceName);
-        cacheKey.add(scope);
-        cacheKey.add(key);
-
-        Long value = cache.get(cacheKey, Long.class);
-        if (value != null) {
-            return value;
-        }
-        return 0L;
-    }
-
-    @Override
-    public void saveDeviceAttributeValueInCache(String deviceName, String scope, String key, long value) {
-        Cache cache = cacheManager.getCache(REMOTE_INTEGRATION_CACHE);
-
-        List<Object> cacheKey = new ArrayList<>();
-        cacheKey.add("attr_");
-        cacheKey.add(deviceName);
-        cacheKey.add(scope);
-        cacheKey.add(key);
-
-        cache.put(cacheKey, value);
-    }
-
-    @Override
-    public String findEventUid(String deviceName, String type, String uid) {
-        Cache cache = cacheManager.getCache(REMOTE_INTEGRATION_CACHE);
-
-        List<Object> cacheKey = new ArrayList<>();
-        cacheKey.add("event_");
-        cacheKey.add(deviceName);
-        cacheKey.add(type);
-        cacheKey.add(uid);
-
-        return cache.get(cacheKey, String.class);
-    }
-
-    @Override
-    public void saveEventUidInCache(String deviceName, String type, String uid) {
-        Cache cache = cacheManager.getCache(REMOTE_INTEGRATION_CACHE);
-
-        List<Object> cacheKey = new ArrayList<>();
-        cacheKey.add("event_");
-        cacheKey.add(deviceName);
-        cacheKey.add(type);
-        cacheKey.add(uid);
-
-        cache.put(cacheKey, "");
     }
 
     @Override

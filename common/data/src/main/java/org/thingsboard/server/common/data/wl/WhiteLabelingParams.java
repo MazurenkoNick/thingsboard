@@ -78,6 +78,11 @@ public class WhiteLabelingParams {
         if (otherWlParams.enableHelpLinks != null) {
             this.enableHelpLinks = otherWlParams.enableHelpLinks;
         }
+        if (this.showNameVersion == null) {
+            this.showNameVersion = otherWlParams.showNameVersion;
+            this.platformName = otherWlParams.platformName;
+            this.platformVersion = otherWlParams.platformVersion;
+        }
         return this;
     }
 
