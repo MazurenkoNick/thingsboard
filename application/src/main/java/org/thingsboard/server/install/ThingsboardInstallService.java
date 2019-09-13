@@ -134,7 +134,7 @@ public class ThingsboardInstallService {
                     case "2.4.0":
 
                     case "2.4.1": // to 2.4.1PE
-                        log.info("Upgrading ThingsBoard from version 2.4.1 to 2.4.1PE ...");
+                        log.info("Upgrading ThingsBoard from version 2.4.0 to 2.4.1PE ...");
 
                         databaseUpgradeService.upgradeDatabase("2.4.1");
 
@@ -158,7 +158,6 @@ public class ThingsboardInstallService {
                         systemDataLoaderService.deleteSystemWidgetBundle("date");
 
                         systemDataLoaderService.loadSystemWidgets();
-
                         break;
                     default:
                         throw new RuntimeException("Unable to upgrade ThingsBoard, unsupported fromVersion: " + upgradeFromVersion);
