@@ -250,6 +250,9 @@ export default angular.module('thingsboard.types', [])
                 },
                 "LOGOUT": {
                     name: "audit-log.type-logout"
+                },
+                "LOCKOUT": {
+                    name: "audit-log.type-lockout"
                 }
             },
             auditLogActionStatus: {
@@ -427,6 +430,11 @@ export default angular.module('thingsboard.types', [])
                 "AWS_IOT": {
                     name: "integration.type-aws-iot",
                     value: "AWS_IOT",
+                    mqtt: true
+                },
+                "AWS_SQS": {
+                    name: "integration.type-aws-sqs",
+                    value: "AWS_SQS",
                     mqtt: true
                 },
                 "IBM_WATSON_IOT": {
@@ -1250,6 +1258,10 @@ export default angular.module('thingsboard.types', [])
                 accountActivated: {
                     value: "accountActivated",
                     name: "admin.mail-template.account-activated"
+                },
+                accountLockout: {
+                    value: "accountLockout",
+                    name: "admin.mail-template.account-lockout"
                 },
                 resetPassword: {
                     value: "resetPassword",

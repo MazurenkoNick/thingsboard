@@ -63,6 +63,7 @@ public class ModelConstants {
     public static final String ENTITY_TYPE_PROPERTY = "entity_type";
 
     public static final String ENTITY_TYPE_COLUMN = ENTITY_TYPE_PROPERTY;
+    public static final String TENANT_ID_COLUMN = "tenant_id";
     public static final String ENTITY_ID_COLUMN = "entity_id";
     public static final String ATTRIBUTE_TYPE_COLUMN = "attribute_type";
     public static final String ATTRIBUTE_KEY_COLUMN = "attribute_key";
@@ -249,6 +250,7 @@ public class ModelConstants {
     public static final String INTEGRATION_ROUTING_KEY_PROPERTY = "routing_key";
     public static final String INTEGRATION_TYPE_PROPERTY = "type";
     public static final String INTEGRATION_DEBUG_MODE_PROPERTY = "debug_mode";
+    public static final String INTEGRATION_ENABLED_PROPERTY = "enabled";
     public static final String INTEGRATION_IS_REMOTE_PROPERTY = "is_remote";
     public static final String INTEGRATION_CONFIGURATION_PROPERTY = CONFIGURATION_PROPERTY;
     public static final String INTEGRATION_ADDITIONAL_INFO_PROPERTY = ADDITIONAL_INFO_PROPERTY;

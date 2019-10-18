@@ -1,4 +1,4 @@
-/**
+/*
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
  * Copyright © 2016-2019 ThingsBoard, Inc. All Rights Reserved.
@@ -28,25 +28,46 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.dao.model.sql;
+import integrationAwsSqsTemplate from './integration-aws-sqs.tpl.html';
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import org.thingsboard.server.common.data.EntityType;
+/*@ngInject*/
+export default function IntegrationAwsSqsDirective($compile, $templateCache, types) {
+    var linker = function (scope, element, attrs, ngModelCtrl) {
+        var template = $templateCache.get(integrationAwsSqsTemplate);
+        element.html(template);
 
-import javax.persistence.Transient;
-import java.io.Serializable;
+        scope.types = types;
 
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-public class TsKvLatestCompositeKey implements Serializable{
+        scope.$watch('configuration', function (newConfiguration, oldConfiguration) {
+            if (!angular.equals(newConfiguration, oldConfiguration)) {
+                ngModelCtrl.$setViewValue(scope.configuration);
+            }
+        });
 
-    @Transient
-    private static final long serialVersionUID = -4089175869616037523L;
+        ngModelCtrl.$render = function () {
+            scope.configuration = ngModelCtrl.$viewValue;
+            setupAwsSqsConfiguration();
+            //scope.updateValidity();
+        };
 
-    private EntityType entityType;
-    private String entityId;
-    private String key;
+        function setupAwsSqsConfiguration() {
+            if (!scope.configuration.sqsConfiguration) {
+                scope.configuration.sqsConfiguration = {
+                    region: "us-west-2",
+                    pollingPeriodSeconds: 5,
+                }
+            }
+        }
+
+        $compile(element.contents())(scope);
+    };
+
+    return {
+        restrict: "E",
+        require: "^ngModel",
+        scope: {
+            isEdit: '='
+        },
+        link: linker
+    };
 }
