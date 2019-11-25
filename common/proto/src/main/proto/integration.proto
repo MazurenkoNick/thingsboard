@@ -96,8 +96,18 @@ message DeviceUplinkDataProto {
   string deviceName = 1;
   string deviceType = 2;
   string customerName = 3;
-  transport.PostTelemetryMsg postTelemetryMsg = 4;
-  transport.PostAttributeMsg postAttributesMsg = 5;
+  string groupName = 4;
+  transport.PostTelemetryMsg postTelemetryMsg = 5;
+  transport.PostAttributeMsg postAttributesMsg = 6;
+}
+
+message AssetUplinkDataProto {
+  string assetName = 1;
+  string assetType = 2;
+  string customerName = 3;
+  string groupName = 4;
+  transport.PostTelemetryMsg postTelemetryMsg = 5;
+  transport.PostAttributeMsg postAttributesMsg = 6;
 }
 
 message EntityViewDataProto {
@@ -144,6 +154,7 @@ message IntegrationConfigurationProto {
   bool debugMode = 8;
   string configuration = 9;
   string additionalInfo = 10;
+  bool enabled = 11;
 }
 
 message UplinkProcessingResultProto {
@@ -174,6 +185,7 @@ message UplinkMsg {
   repeated IntegrationStatisticsProto integrationStatistics = 4;
   repeated TbEventProto eventsData = 5;
   repeated bytes tbMsg = 6;
+  repeated AssetUplinkDataProto assetData = 7;
 }
 
 message UplinkResponseMsg {

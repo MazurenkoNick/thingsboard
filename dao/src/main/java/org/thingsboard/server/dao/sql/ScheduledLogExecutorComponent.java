@@ -28,15 +28,34 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.rule.engine.api;
+package org.thingsboard.server.dao.sql;
 
-import com.google.common.util.concurrent.ListenableFuture;
+import org.springframework.stereotype.Component;
 
-import java.util.concurrent.Callable;
-import java.util.concurrent.Executor;
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
-public interface ListeningExecutor extends Executor {
+@Component
+public class ScheduledLogExecutorComponent {
 
-    <T> ListenableFuture<T> executeAsync(Callable<T> task);
+    private ScheduledExecutorService schedulerLogExecutor;
 
+    @PostConstruct
+    public void init() {
+        schedulerLogExecutor = Executors.newSingleThreadScheduledExecutor();
+    }
+
+    @PreDestroy
+    public void stop() {
+        if (schedulerLogExecutor != null) {
+            schedulerLogExecutor.shutdownNow();
+        }
+    }
+
+    public void scheduleAtFixedRate(Runnable command, long initialDelay, long period, TimeUnit unit) {
+        schedulerLogExecutor.scheduleAtFixedRate(command, initialDelay, period, unit);
+    }
 }

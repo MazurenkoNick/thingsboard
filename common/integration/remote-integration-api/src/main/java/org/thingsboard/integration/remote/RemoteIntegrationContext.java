@@ -37,8 +37,6 @@ import com.google.protobuf.ByteString;
 import io.netty.channel.EventLoopGroup;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.Cache;
-import org.springframework.cache.CacheManager;
 import org.thingsboard.integration.api.IntegrationCallback;
 import org.thingsboard.integration.api.IntegrationContext;
 import org.thingsboard.integration.api.converter.ConverterContext;
@@ -49,14 +47,13 @@ import org.thingsboard.server.common.data.integration.Integration;
 import org.thingsboard.server.common.msg.TbMsg;
 import org.thingsboard.server.common.msg.cluster.ServerAddress;
 import org.thingsboard.server.common.msg.cluster.ServerType;
+import org.thingsboard.server.gen.integration.AssetUplinkDataProto;
 import org.thingsboard.server.gen.integration.DeviceUplinkDataProto;
 import org.thingsboard.server.gen.integration.EntityViewDataProto;
 import org.thingsboard.server.gen.integration.TbEventProto;
 import org.thingsboard.server.gen.integration.TbEventSource;
 import org.thingsboard.server.gen.integration.UplinkMsg;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
 
 @Data
@@ -92,6 +89,11 @@ public class RemoteIntegrationContext implements IntegrationContext {
     @Override
     public void processUplinkData(DeviceUplinkDataProto msg, IntegrationCallback<Void> callback) {
         eventStorage.write(UplinkMsg.newBuilder().addDeviceData(msg).build(), callback);
+    }
+
+    @Override
+    public void processUplinkData(AssetUplinkDataProto msg, IntegrationCallback<Void> callback) {
+        eventStorage.write(UplinkMsg.newBuilder().addAssetData(msg).build(), callback);
     }
 
     @Override

@@ -39,12 +39,14 @@ import org.springframework.context.event.ContextClosedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import org.thingsboard.server.actors.service.ActorService;
+import org.thingsboard.server.dao.asset.AssetService;
 import org.thingsboard.server.dao.attributes.AttributesService;
 import org.thingsboard.server.dao.converter.ConverterService;
 import org.thingsboard.server.dao.customer.CustomerService;
 import org.thingsboard.server.dao.device.DeviceService;
 import org.thingsboard.server.dao.entityview.EntityViewService;
 import org.thingsboard.server.dao.event.EventService;
+import org.thingsboard.server.dao.group.EntityGroupService;
 import org.thingsboard.server.dao.integration.IntegrationService;
 import org.thingsboard.server.dao.relation.RelationService;
 import org.thingsboard.server.service.cluster.discovery.DiscoveryService;
@@ -123,6 +125,14 @@ public class IntegrationContextComponent {
     @Lazy
     @Autowired
     private CustomerService customerService;
+
+    @Lazy
+    @Autowired
+    private AssetService assetService;
+
+    @Lazy
+    @Autowired
+    private EntityGroupService entityGroupService;
 
     private EventLoopGroup eventLoopGroup;
     private ScheduledExecutorService scheduledExecutorService;

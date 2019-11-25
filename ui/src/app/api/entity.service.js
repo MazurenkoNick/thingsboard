@@ -802,6 +802,29 @@ function EntityService($http, $q, $filter, $translate, $log, userService, device
                     deferred.resolve(result);
                 }
                 break;
+            case types.aliasFilterType.stateEntityOwner.value:
+                result.stateEntity = true;
+                if (stateEntityId) {
+                    getEntity(stateEntityId.entityType, stateEntityId.id, {ignoreLoading: true, ignoreErrors: true}).then(
+                        function success(entity) {
+                            getEntity(entity.ownerId.entityType, entity.ownerId.id, {ignoreLoading: true, ignoreErrors: true}).then(
+                                function success(entity) {
+                                    result.entities = entitiesToEntitiesInfo([entity]);
+                                    deferred.resolve(result);
+                                },
+                                function fail() {
+                                    deferred.resolve(result);
+                                }
+                            );
+                        },
+                        function fail() {
+                            deferred.resolve(result);
+                        }
+                    );
+                } else {
+                    deferred.resolve(result);
+                }
+                break;
             case types.aliasFilterType.assetType.value:
                 getEntitiesByNameFilter(types.entityType.asset, filter.assetNameFilter, maxItems, {ignoreLoading: true, ignoreErrors: true}, filter.assetType).then(
                     function success(entities) {
@@ -972,6 +995,7 @@ function EntityService($http, $q, $filter, $translate, $log, userService, device
                 case types.aliasFilterType.entityGroupName.value:
                     return entityTypes.indexOf(types.entityType.entityGroup) > -1 ? true : false;
                 case types.aliasFilterType.stateEntity.value:
+                case types.aliasFilterType.stateOwner.value:
                     return true;
                 case types.aliasFilterType.assetType.value:
                     return entityTypes.indexOf(types.entityType.asset)  > -1 ? true : false;
@@ -1026,6 +1050,7 @@ function EntityService($http, $q, $filter, $translate, $log, userService, device
             case types.aliasFilterType.entityGroupName.value:
                 return entityType === types.entityType.entityGroup;
             case types.aliasFilterType.stateEntity.value:
+            case types.aliasFilterType.stateOwner.value:
                 return true;
             case types.aliasFilterType.assetType.value:
                 return entityType === types.entityType.asset;
@@ -1436,19 +1461,12 @@ function EntityService($http, $q, $filter, $translate, $log, userService, device
         let newEntity = {
             name: entityParameters.name,
             type: entityParameters.type,
+            label: entityParameters.label,
             customerId: customerId
         };
-        let promise;
-        switch (entityType) {
-            case types.entityType.device:
-                promise = deviceService.saveDevice(newEntity, entityGroupId, config);
-                break;
-            case types.entityType.asset:
-                promise = assetService.saveAsset(newEntity, true, config, entityGroupId);
-                break;
-        }
+        let saveEntityPromise = getEntitySavePromise(entityType, entityGroupId, newEntity, config);
 
-        promise.then(function success(response) {
+        saveEntityPromise.then(function success(response) {
             saveEntityRelation(entityType, response.id, entityParameters, config).then(function success() {
                 statisticalInfo.create = {
                     entity: 1
@@ -1472,7 +1490,15 @@ function EntityService($http, $q, $filter, $translate, $log, userService, device
                         break;
                 }
                 findIdEntity.then(function success(response) {
-                    saveEntityRelation(entityType, response.id, entityParameters, config).then(function success() {
+                    let promises = [];
+                    if(response.label !== entityParameters.label || response.type !== entityParameters.type){
+                        response.label = entityParameters.label;
+                        response.type = entityParameters.type;
+                        promises.push(getEntitySavePromise(entityType, entityGroupId, response, config));
+                    }
+                    promises.push(saveEntityRelation(entityType, response.id, entityParameters, config));
+
+                    $q.all(promises).then(function success() {
                         statisticalInfo.update = {
                             entity: 1
                         };
@@ -1497,6 +1523,19 @@ function EntityService($http, $q, $filter, $translate, $log, userService, device
             }
         });
         return deferred.promise;
+    }
+
+    function getEntitySavePromise(entityType, entityGroupId, newEntity, config) {
+        let promise;
+        switch (entityType) {
+            case types.entityType.device:
+                promise = deviceService.saveDevice(newEntity, entityGroupId, config);
+                break;
+            case types.entityType.asset:
+                promise = assetService.saveAsset(newEntity, true, config, entityGroupId);
+                break;
+        }
+        return promise;
     }
 
     function getRelatedEntity(entityId, keys, typeTranslatePrefix) {

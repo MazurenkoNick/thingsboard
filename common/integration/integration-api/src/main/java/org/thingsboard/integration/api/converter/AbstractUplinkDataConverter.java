@@ -53,6 +53,8 @@ import java.util.List;
 @Slf4j
 public abstract class AbstractUplinkDataConverter extends AbstractDataConverter implements TBUplinkDataConverter {
 
+    private static final String DEFAULT_DEVICE_TYPE = "default";
+
     @Override
     public void init(Converter configuration) {
         this.configuration = configuration;
@@ -86,16 +88,27 @@ public abstract class AbstractUplinkDataConverter extends AbstractDataConverter 
     protected abstract String doConvertUplink(byte[] data, UplinkMetaData metadata) throws Exception;
 
     protected UplinkData parseUplinkData(JsonObject src) {
-        if (!src.has("deviceName")) {
-            throw new JsonParseException("Device name is not set!");
-        } else if (!src.has("deviceType")) {
-            throw new JsonParseException("Device type is not set!");
-        }
+        boolean isAsset = getIsAssetAndVerify(src);
+
         UplinkData.UplinkDataBuilder builder = UplinkData.builder();
-        builder.deviceName(src.get("deviceName").getAsString());
-        builder.deviceType(src.get("deviceType").getAsString());
+        builder.isAsset(isAsset);
+        if (isAsset) {
+            builder.assetName(src.get("assetName").getAsString());
+            builder.assetType(src.get("assetType").getAsString());
+        } else {
+            builder.deviceName(src.get("deviceName").getAsString());
+            if (src.has("deviceType")) {
+                builder.deviceType(src.get("deviceType").getAsString());
+            } else {
+                builder.deviceType(DEFAULT_DEVICE_TYPE);
+            }
+        }
+
         if (src.has("customerName")) {
             builder.customerName(src.get("customerName").getAsString());
+        }
+        if (src.has("groupName")) {
+            builder.groupName(src.get("groupName").getAsString());
         }
         if (src.has("telemetry")) {
             builder.telemetry(parseTelemetry(src.get("telemetry")));
@@ -106,6 +119,30 @@ public abstract class AbstractUplinkDataConverter extends AbstractDataConverter 
 
         //TODO: add support of attribute requests and client-side RPC.
         return builder.build();
+    }
+
+    private boolean getIsAssetAndVerify(JsonObject src) {
+        boolean isAsset;
+        boolean isDeviceNamePresent = src.has("deviceName");
+        boolean isAssetNamePresent = src.has("assetName");
+        boolean isAssetTypePresent = src.has("assetType");
+
+        if (!isDeviceNamePresent && !isAssetNamePresent) {
+            throw new JsonParseException("Either 'deviceName' or 'assetName' should be present in the converter output!");
+        }
+        if (isDeviceNamePresent && isAssetNamePresent) {
+            throw new JsonParseException("Both 'deviceName' and 'assetName' can't be present in the converter output!");
+        }
+
+        if (isDeviceNamePresent) {
+            isAsset = false;
+        } else {
+            if (!isAssetTypePresent) {
+                throw new JsonParseException("Asset type is not set!");
+            }
+            isAsset = true;
+        }
+        return isAsset;
     }
 
     private PostTelemetryMsg parseTelemetry(JsonElement src) {
