@@ -300,6 +300,10 @@ export default angular.module('thingsboard.types', [])
                     value: 'stateEntity',
                     name: 'alias.filter-type-state-entity'
                 },
+                stateEntityOwner: {
+                    value: 'stateEntityOwner',
+                    name: 'alias.filter-type-state-entity-owner'
+                },
                 assetType: {
                     value: 'assetType',
                     name: 'alias.filter-type-asset-type'
@@ -437,6 +441,10 @@ export default angular.module('thingsboard.types', [])
                     value: "AWS_SQS",
                     mqtt: true
                 },
+                "AWS_KINESIS": {
+                    name: "integration.type-aws-kinesis",
+                    value: "AWS_KINESIS"
+                },
                 "IBM_WATSON_IOT": {
                     name: "integration.type-ibm-watson-iot",
                     value: "IBM_WATSON_IOT",
@@ -464,6 +472,10 @@ export default angular.module('thingsboard.types', [])
                     name: "integration.type-tcp",
                     value: "TCP",
                     remote: true
+                },
+                "KAFKA": {
+                    name: "integration.type-kafka",
+                    value: "KAFKA"
                 },
                 "CUSTOM": {
                     name: "integration.type-custom",
@@ -668,6 +680,10 @@ export default angular.module('thingsboard.types', [])
                 type: {
                     name: 'import.column-type.type',
                     value: 'type'
+                },
+                label: {
+                    name: 'import.column-type.label',
+                    value: 'label'
                 },
                 clientAttribute: {
                     name: 'import.column-type.client-attribute',
@@ -979,18 +995,39 @@ export default angular.module('thingsboard.types', [])
                     value: "TEXT",
                     name: "extension.text"
                 },
-                hex: {
-                    value: "HEX",
-                    name: "extension.hex"
-                },
                 binary: {
                     value: "BINARY",
                     name: "extension.binary"
+                },
+                json: {
+                    value: "JSON",
+                    name: "extension.json"
+                }
+            },
+            tcpBinaryByteOrder: {
+                littleEndian: {
+                    value: "LITTLE_ENDIAN"
+                },
+                bigEndian: {
+                    value: "BIG_ENDIAN"
+                }
+            },
+            tcpTextMessageSeparator: {
+                systemLineSeparator: {
+                    value: "SYSTEM_LINE_SEPARATOR"
+                },
+                nulDelimiter: {
+                    value: "NUL_DELIMITER"
                 }
             },
             identityType: {
                 anonymous: "extension.anonymous",
                 username: "extension.username"
+            },
+            initialPositionInStream: {
+                latest: "LATEST",
+                trim_horizon: "TRIM_HORIZON",
+                at_timestamp: "AT_TIMESTAMP"
             },
             extensionKeystoreType: {
                 PKCS12: "PKCS12",
@@ -1330,6 +1367,10 @@ export default angular.module('thingsboard.types', [])
                 xls: {
                     name: 'widget.export-to-excel',
                     value: 'xls'
+                },
+                xlsx: {
+                    name: 'widget.export-to-excel-xlsx',
+                    value: 'xlsx'
                 }
             },
             widgetActionSources: {

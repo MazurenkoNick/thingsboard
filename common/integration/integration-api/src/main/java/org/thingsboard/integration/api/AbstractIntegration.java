@@ -46,6 +46,7 @@ import org.thingsboard.integration.api.data.UplinkMetaData;
 import org.thingsboard.server.common.data.DataConstants;
 import org.thingsboard.server.common.data.integration.Integration;
 import org.thingsboard.server.common.msg.TbMsg;
+import org.thingsboard.server.gen.integration.AssetUplinkDataProto;
 import org.thingsboard.server.gen.integration.DeviceUplinkDataProto;
 import org.thingsboard.server.gen.integration.EntityViewDataProto;
 
@@ -110,7 +111,9 @@ public abstract class AbstractIntegration<T> implements ThingsboardPlatformInteg
         if (configuration == null || configuration.getConfiguration() == null) {
             throw new IllegalArgumentException("Integration configuration is empty!");
         }
-        doValidateConfiguration(configuration.getConfiguration(), allowLocalNetworkHosts);
+        if (!configuration.isRemote()) {
+            doValidateConfiguration(configuration.getConfiguration(), allowLocalNetworkHosts);
+        }
     }
 
     @Override
@@ -135,8 +138,40 @@ public abstract class AbstractIntegration<T> implements ThingsboardPlatformInteg
     }
 
     protected void processUplinkData(IntegrationContext context, UplinkData data) {
+        if (data.isAsset()) {
+            processAssetUplinkData(context, data);
+        } else {
+            processDeviceUplinkData(context, data);
+        }
+    }
+
+    private void processDeviceUplinkData(IntegrationContext context, UplinkData data) {
         DeviceUplinkDataProto.Builder builder = DeviceUplinkDataProto.newBuilder()
                 .setDeviceName(data.getDeviceName()).setDeviceType(data.getDeviceType());
+        if (data.getCustomerName() != null) {
+            builder.setCustomerName(data.getCustomerName());
+        }
+        if (data.getGroupName() != null) {
+            builder.setGroupName(data.getGroupName());
+        }
+        if (data.getTelemetry() != null) {
+            builder.setPostTelemetryMsg(data.getTelemetry());
+        }
+        if (data.getAttributesUpdate() != null) {
+            builder.setPostAttributesMsg(data.getAttributesUpdate());
+        }
+        context.processUplinkData(builder.build(), null);
+    }
+
+    private void processAssetUplinkData(IntegrationContext context, UplinkData data) {
+        AssetUplinkDataProto.Builder builder = AssetUplinkDataProto.newBuilder()
+                .setAssetName(data.getAssetName()).setAssetType(data.getAssetType());
+        if (data.getCustomerName() != null) {
+            builder.setCustomerName(data.getCustomerName());
+        }
+        if (data.getGroupName() != null) {
+            builder.setGroupName(data.getGroupName());
+        }
         if (data.getTelemetry() != null) {
             builder.setPostTelemetryMsg(data.getTelemetry());
         }

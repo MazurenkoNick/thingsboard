@@ -30,7 +30,10 @@
  */
 package org.thingsboard.rule.engine.api;
 
+import com.datastax.driver.core.ResultSetFuture;
 import io.netty.channel.EventLoopGroup;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.thingsboard.common.util.ListeningExecutor;
 import org.thingsboard.server.common.data.Customer;
 import org.thingsboard.server.common.data.Device;
 import org.thingsboard.server.common.data.alarm.Alarm;
@@ -56,8 +59,6 @@ import org.thingsboard.server.dao.rule.RuleChainService;
 import org.thingsboard.server.dao.tenant.TenantService;
 import org.thingsboard.server.dao.timeseries.TimeseriesService;
 import org.thingsboard.server.dao.user.UserService;
-
-import com.datastax.driver.core.ResultSetFuture;
 
 import java.util.Set;
 
@@ -144,6 +145,12 @@ public interface TbContext {
      */
     TbPeContext getPeContext();
 
+    void logJsEvalRequest();
+
+    void logJsEvalResponse();
+
+    void logJsEvalFailure();
+
     String getNodeId();
 
     RuleChainTransactionService getRuleChainTransactionService();
@@ -154,4 +161,7 @@ public interface TbContext {
 
     ResultSetFuture submitCassandraTask(CassandraStatementTask task);
 
+    RedisTemplate<String, Object> getRedisTemplate();
+
+    String getServerAddress();
 }

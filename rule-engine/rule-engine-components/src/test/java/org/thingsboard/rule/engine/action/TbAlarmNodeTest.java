@@ -43,6 +43,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.mockito.stubbing.Answer;
+import org.thingsboard.common.util.ListeningExecutor;
 import org.thingsboard.rule.engine.api.*;
 import org.thingsboard.server.common.data.alarm.Alarm;
 import org.thingsboard.server.common.data.id.DeviceId;
@@ -171,6 +172,7 @@ public class TbAlarmNodeTest {
         verify(ctx, times(1)).getJsExecutor();
         verify(ctx).getAlarmService();
         verify(ctx, times(3)).getDbCallbackExecutor();
+        verify(ctx).logJsEvalRequest();
         verify(ctx).getTenantId();
         verify(alarmService).findLatestByOriginatorAndType(tenantId, originator, "SomeType");
 
@@ -285,6 +287,7 @@ public class TbAlarmNodeTest {
 //        when(detailsJs.executeJson(msg)).thenReturn(null);
         when(alarmService.findLatestByOriginatorAndType(tenantId, originator, "SomeType")).thenReturn(Futures.immediateFuture(activeAlarm));
         when(alarmService.clearAlarm(eq(activeAlarm.getTenantId()), eq(activeAlarm.getId()), org.mockito.Mockito.any(JsonNode.class), anyLong())).thenReturn(Futures.immediateFuture(true));
+        when(alarmService.findAlarmByIdAsync(eq(activeAlarm.getTenantId()), eq(activeAlarm.getId()))).thenReturn(Futures.immediateFuture(activeAlarm));
 //        doAnswer((Answer<Alarm>) invocationOnMock -> (Alarm) (invocationOnMock.getArguments())[0]).when(alarmService).createOrUpdateAlarm(activeAlarm);
 
         node.onMsg(ctx, msg);

@@ -38,9 +38,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.util.concurrent.FutureCallback;
 import io.netty.channel.EventLoopGroup;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.util.StringUtils;
 import org.thingsboard.js.api.JsScriptType;
-import org.thingsboard.rule.engine.api.ListeningExecutor;
+import org.thingsboard.common.util.ListeningExecutor;
 import org.thingsboard.rule.engine.api.MailService;
 import org.thingsboard.rule.engine.api.ReportService;
 import org.thingsboard.rule.engine.api.RpcError;
@@ -280,6 +281,27 @@ class DefaultTbContext implements TbContext, TbPeContext {
     @Override
     public EventService getEventService() {
         return mainCtx.getEventService();
+    }
+
+    @Override
+    public void logJsEvalRequest() {
+        if (mainCtx.isStatisticsEnabled()) {
+            mainCtx.getJsInvokeRequestsCount().incrementAndGet();
+        }
+    }
+
+    @Override
+    public void logJsEvalResponse() {
+        if (mainCtx.isStatisticsEnabled()) {
+            mainCtx.getJsInvokeResponsesCount().incrementAndGet();
+        }
+    }
+
+    @Override
+    public void logJsEvalFailure() {
+        if (mainCtx.isStatisticsEnabled()) {
+            mainCtx.getJsInvokeFailuresCount().incrementAndGet();
+        }
     }
 
     @Override
@@ -535,6 +557,16 @@ class DefaultTbContext implements TbContext, TbPeContext {
     @Override
     public ResultSetFuture submitCassandraTask(CassandraStatementTask task) {
         return mainCtx.getCassandraBufferedRateExecutor().submit(task);
+    }
+
+    @Override
+    public RedisTemplate<String, Object> getRedisTemplate() {
+        return mainCtx.getRedisTemplate();
+    }
+
+    @Override
+    public String getServerAddress() {
+        return mainCtx.getServerAddress();
     }
 
     private TbMsgMetaData getActionMetaData(RuleNodeId ruleNodeId) {

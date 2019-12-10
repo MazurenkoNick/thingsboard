@@ -111,7 +111,7 @@ public class RemoteIntegrationManagerService {
     @Value("${integration.secret}")
     private String routingSecret;
 
-    @Value("${integrations.allow_local_network_hosts:true}")
+    @Value("${integration.allow_local_network_hosts:true}")
     private boolean allowLocalNetworkHosts;
 
     @Value("${executors.reconnect_timeout}")
@@ -204,10 +204,11 @@ public class RemoteIntegrationManagerService {
             integration = createPlatformIntegration(integrationConfigurationProto.getType(), configuration.getConfiguration());
             integration.validateConfiguration(configuration, allowLocalNetworkHosts);
 
-            if (uplinkDataConverter == null) {
+            if (uplinkDataConverter == null || !uplinkDataConverter.getName().equals(integrationConfigurationProto.getUplinkConverter().getName())) {
                 uplinkDataConverter = createUplinkConverter(integrationConfigurationProto.getUplinkConverter());
             }
-            if (downlinkDataConverter == null) {
+
+            if (downlinkDataConverter == null || !downlinkDataConverter.getName().equals(integrationConfigurationProto.getDownlinkConverter().getName())) {
                 downlinkDataConverter = createDownlinkConverter(integrationConfigurationProto.getDownlinkConverter());
             }
 
@@ -309,6 +310,13 @@ public class RemoteIntegrationManagerService {
         integration.setConfiguration(mapper.readTree(integrationConfigurationProto.getConfiguration()));
         integration.setAdditionalInfo(mapper.readTree(integrationConfigurationProto.getAdditionalInfo()));
 
+        if (!integrationConfigurationProto.hasField(integrationConfigurationProto.getDescriptorForType().findFieldByName("enabled"))) {
+            integration.setEnabled(true);
+        } else {
+            integration.setEnabled(integrationConfigurationProto.getEnabled());
+        }
+
+        log.info("Received Integration update: {}!", integration);
         return integration;
     }
 
@@ -352,6 +360,10 @@ public class RemoteIntegrationManagerService {
                 return newInstance("org.thingsboard.integration.tcpip.udp.BasicUdpIntegration");
             case AWS_SQS:
                 return newInstance("org.thingsboard.integration.aws.sqs.AwsSqsIntegration");
+            case AWS_KINESIS:
+                return newInstance("org.thingsboard.integration.kinesis.AwsKinesisIntegration");
+            case KAFKA:
+                return newInstance("org.thingsboard.integration.kafka.basic.BasicKafkaIntegration");
             case CUSTOM:
                 return newInstance(configuration.get("clazz").asText());
             default:

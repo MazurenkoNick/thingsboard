@@ -301,7 +301,8 @@
         "list-of-groups": "{ count, plural, 1 {One asset group} other {List of # asset groups} }",
         "group-name-starts-with": "Grupos de activos cuyos nombres comienzan con '{{prefix}}'",
         "import": "Importar activos",
-        "asset-file": "Archivo del activo"
+        "asset-file": "Archivo del activo",
+        "label": "Etiqueta"
     },
     "attribute": {
         "attributes": "Atributos",
@@ -2084,7 +2085,8 @@
         "export": "Exportar widget",
         "export-data": "Exportar datos del widget",
         "export-to-csv": "Exportar datos a CSV...",
-        "export-to-excel": "Exportar datos a XLS..."
+        "export-to-excel": "Exportar datos a XLS...",
+        "export-to-excel-xlsx": "Exportar datos a XLSX..."
     },
     "widget-action": {
         "custom-pretty": "",
@@ -2338,7 +2340,8 @@
             "tr_TR": "Turco",
             "fa_IR": "Persa",
             "uk_UA": "Ucraniano",
-            "cs_CZ": "Checo"
+            "cs_CZ": "Checo",
+            "el_GR": "Griego"
         }
     }
 }

@@ -33,9 +33,10 @@ package org.thingsboard.server.dao.model.sqlts.timescale;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.springframework.util.StringUtils;
+import org.thingsboard.server.common.data.kv.BasicTsKvEntry;
 import org.thingsboard.server.common.data.kv.TsKvEntry;
 import org.thingsboard.server.dao.model.ToData;
-import org.thingsboard.server.dao.model.sql.AbsractTsKvEntity;
+import org.thingsboard.server.dao.model.sql.AbstractTsKvEntity;
 
 import javax.persistence.Column;
 import javax.persistence.ColumnResult;
@@ -50,6 +51,7 @@ import javax.persistence.SqlResultSetMappings;
 import javax.persistence.Table;
 
 import static org.thingsboard.server.dao.model.ModelConstants.TENANT_ID_COLUMN;
+import static org.thingsboard.server.dao.model.ModelConstants.TS_COLUMN;
 import static org.thingsboard.server.dao.sqlts.timescale.AggregationRepository.FIND_AVG;
 import static org.thingsboard.server.dao.sqlts.timescale.AggregationRepository.FIND_AVG_QUERY;
 import static org.thingsboard.server.dao.sqlts.timescale.AggregationRepository.FIND_COUNT;
@@ -128,11 +130,15 @@ import static org.thingsboard.server.dao.sqlts.timescale.AggregationRepository.F
                 resultSetMapping = "timescaleCountMapping"
         )
 })
-public final class TimescaleTsKvEntity extends AbsractTsKvEntity implements ToData<TsKvEntry> {
+public final class TimescaleTsKvEntity extends AbstractTsKvEntity implements ToData<TsKvEntry> {
 
     @Id
     @Column(name = TENANT_ID_COLUMN)
     private String tenantId;
+
+    @Id
+    @Column(name = TS_COLUMN)
+    protected Long ts;
 
     public TimescaleTsKvEntity() { }
 
@@ -195,5 +201,10 @@ public final class TimescaleTsKvEntity extends AbsractTsKvEntity implements ToDa
     @Override
     public boolean isNotEmpty() {
         return ts != null && (strValue != null || longValue != null || doubleValue != null || booleanValue != null);
+    }
+
+    @Override
+    public TsKvEntry toData() {
+        return new BasicTsKvEntry(ts, getKvEntry());
     }
 }

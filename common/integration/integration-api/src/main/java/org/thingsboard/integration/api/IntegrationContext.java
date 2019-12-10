@@ -37,6 +37,7 @@ import org.thingsboard.integration.api.data.DownLinkMsg;
 import org.thingsboard.integration.api.data.IntegrationDownlinkMsg;
 import org.thingsboard.server.common.msg.TbMsg;
 import org.thingsboard.server.common.msg.cluster.ServerAddress;
+import org.thingsboard.server.gen.integration.AssetUplinkDataProto;
 import org.thingsboard.server.gen.integration.DeviceUplinkDataProto;
 import org.thingsboard.server.gen.integration.EntityViewDataProto;
 
@@ -76,6 +77,8 @@ public interface IntegrationContext {
      */
     void processUplinkData(DeviceUplinkDataProto uplinkData, IntegrationCallback<Void> callback);
 
+    void processUplinkData(AssetUplinkDataProto uplinkData, IntegrationCallback<Void> callback);
+
     void createEntityView(EntityViewDataProto entityViewDataProto, IntegrationCallback<Void> callback);
 
     /**
@@ -103,6 +106,7 @@ public interface IntegrationContext {
     /**
      * Provides access to ScheduledExecutorService to schedule periodic tasks.
      * Allows using N threads per M integrations instead of using N threads per integration.
+     *
      * @return scheduled executor
      */
     ScheduledExecutorService getScheduledExecutorService();

@@ -65,13 +65,12 @@ import org.thingsboard.server.common.data.permission.Operation;
 import org.thingsboard.server.common.data.permission.Resource;
 import org.thingsboard.server.common.data.security.Authority;
 import org.thingsboard.server.common.data.security.DeviceCredentials;
-import org.thingsboard.server.controller.claim.data.ClaimRequest;
+import org.thingsboard.server.common.data.ClaimRequest;
 import org.thingsboard.server.dao.device.claim.ClaimResponse;
 import org.thingsboard.server.dao.device.claim.ClaimResult;
 import org.thingsboard.server.service.security.model.SecurityUser;
 
 import javax.annotation.Nullable;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -466,7 +465,7 @@ public class DeviceController extends BaseController {
         }
     }
 
-    private String getSecretKey(ClaimRequest claimRequest) throws IOException {
+    private String getSecretKey(ClaimRequest claimRequest) {
         String secretKey = claimRequest.getSecretKey();
         if (secretKey != null) {
             return secretKey;
