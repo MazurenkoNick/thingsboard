@@ -71,6 +71,8 @@ public class BasicSubscriptionService implements SubscriptionService, TbLicenseC
 
     @Value("${license.secret}")
     private String licenseSecret;
+    @Value("${license.instance_data_file:instance-license.data}")
+    private String instanceDataFilePath;
 
     @Autowired
     protected TenantService tenantService;
@@ -97,14 +99,15 @@ public class BasicSubscriptionService implements SubscriptionService, TbLicenseC
                 tbLicenseClient = TbLicenseClient.builder()
                         .listener(this)
                         .licenseSecret(this.licenseSecret)
+                        .licenseDataFilePath(this.instanceDataFilePath)
                         .releaseDate(new SimpleDateFormat("yyyy-MM-dd").parse(Version.PROJECT_BUILD_DATE).getTime())
                         .build();
                 tbLicenseClient.init();
             } catch (Exception e) {
                 log.error("Failed to init license client", e);
                 LicenseErrorCode licenseErrorCode = e instanceof LicenseException ?
-                        ((LicenseException)e).getErrorCode() : LicenseErrorCode.GENERAL_ERROR;
-                doExit(-1, licenseErrorCode,false);
+                        ((LicenseException) e).getErrorCode() : LicenseErrorCode.GENERAL_ERROR;
+                doExit(-1, licenseErrorCode, false);
             }
         }
     }
@@ -121,7 +124,7 @@ public class BasicSubscriptionService implements SubscriptionService, TbLicenseC
         log.error("License Error occurred: {}({}) - {}", e.getErrorCode(),
                 e.getErrorCode().getErrorCode(), e.getMessage());
         if (e.isCritical()) {
-            doExit(-1, e.getErrorCode(),true);
+            doExit(-1, e.getErrorCode(), true);
         }
     }
 

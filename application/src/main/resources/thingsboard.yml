@@ -623,6 +623,10 @@ transport:
 
 license:
     secret: "${TB_LICENSE_SECRET:}" # license secret obtained from ThingsBoard License Portal (https://license.thingsboard.io)
+    # Instance data is auto-generated and is used to identify particular ThingsBoard Instance.
+    # Instance data is periodically updated and stored into the specified file which can be set to absolute or relative path.
+    # Please make sure that thingsboard process has access to the instance data file, in case you use absolute path.
+    instance_data_file: "${TB_LICENSE_INSTANCE_DATA_FILE:/root/instance-license.data}"
 
 swagger:
   api_path_regex: "${SWAGGER_API_PATH_REGEX:/api.*}"
