@@ -152,8 +152,15 @@ public class BasicSubscriptionService implements SubscriptionService, TbLicenseC
         }
     }
 
+    private boolean isUnlimited(String key) {
+        return this.tbLicenseClient.getPlanLongValue(key) == 0;
+    }
+
     @Override
     public void createDeviceAllowed(TenantId tenantId) throws SubscriptionException {
+        if (isUnlimited(MAX_DEVICES_KEY)) {
+            return;
+        }
         long actualCount = countDevices();
         if (limitReached(actualCount, MAX_DEVICES_KEY)) {
             log.error("Maximum allowed devices limit reached!");
@@ -164,6 +171,9 @@ public class BasicSubscriptionService implements SubscriptionService, TbLicenseC
 
     @Override
     public void createAssetAllowed(TenantId tenantId) throws SubscriptionException {
+        if (isUnlimited(MAX_ASSETS_KEY)) {
+            return;
+        }
         long actualCount = countAssets();
         if (limitReached(actualCount, MAX_ASSETS_KEY)) {
             log.error("Maximum allowed assets limit reached!");
