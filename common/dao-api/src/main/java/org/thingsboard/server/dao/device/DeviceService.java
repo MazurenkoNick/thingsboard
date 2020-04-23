@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2019 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2020 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -57,6 +57,8 @@ public interface DeviceService {
 
     Device saveDevice(Device device);
 
+    Device saveDeviceWithAccessToken(Device device, String accessToken);
+
     void deleteDevice(TenantId tenantId, DeviceId deviceId);
 
     TextPageData<Device> findDevicesByTenantId(TenantId tenantId, TextPageLink pageLink);
@@ -82,5 +84,7 @@ public interface DeviceService {
     ShortEntityView findGroupDevice(TenantId tenantId,EntityGroupId entityGroupId, EntityId entityId);
 
     ListenableFuture<TimePageData<ShortEntityView>> findDevicesByEntityGroupId(TenantId tenantId, EntityGroupId entityGroupId, TimePageLink pageLink);
+
+    ListenableFuture<TimePageData<Device>> findDeviceEntitiesByEntityGroupId(TenantId tenantId, EntityGroupId entityGroupId, TimePageLink pageLink);
 
 }

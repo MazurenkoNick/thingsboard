@@ -1,7 +1,7 @@
 /*
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2019 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2020 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -37,13 +37,14 @@ import entitySelectTemplate from './entity-select.tpl.html';
 /* eslint-enable import/no-unresolved, import/default */
 
 /*@ngInject*/
-export default function EntitySelect($compile, $templateCache, entityService) {
+export default function EntitySelect($compile, $templateCache, entityService, types) {
 
     var linker = function (scope, element, attrs, ngModelCtrl) {
         var template = $templateCache.get(entitySelectTemplate);
         element.html(template);
 
         scope.tbRequired = angular.isDefined(scope.tbRequired) ? scope.tbRequired : false;
+        scope.entityTypeCurrentTenant = types.aliasEntityType.current_tenant;
 
         var entityTypes = entityService.prepareAllowedEntityTypesList(scope.allowedEntityTypes, scope.useAliasEntityTypes, scope.operation);
 
@@ -63,7 +64,8 @@ export default function EntitySelect($compile, $templateCache, entityService) {
         scope.updateView = function () {
             if (!scope.disabled) {
                 var value = ngModelCtrl.$viewValue;
-                if (scope.model && scope.model.entityType && scope.model.entityId) {
+                if (scope.model && scope.model.entityType &&
+                    (scope.model.entityId || scope.model.entityType === scope.entityTypeCurrentTenant)) {
                     if (!value) {
                         value = {};
                     }

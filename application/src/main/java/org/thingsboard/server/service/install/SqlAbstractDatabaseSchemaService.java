@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2019 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2020 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -47,13 +47,13 @@ public abstract class SqlAbstractDatabaseSchemaService implements DatabaseSchema
     private static final String SQL_DIR = "sql";
 
     @Value("${spring.datasource.url}")
-    private String dbUrl;
+    protected String dbUrl;
 
     @Value("${spring.datasource.username}")
-    private String dbUserName;
+    protected String dbUserName;
 
     @Value("${spring.datasource.password}")
-    private String dbPassword;
+    protected String dbPassword;
 
     @Autowired
     private InstallScripts installScripts;

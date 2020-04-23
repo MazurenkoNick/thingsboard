@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2019 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2020 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -33,6 +33,7 @@ package org.thingsboard.server.dao.device;
 import com.google.common.base.Function;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.MoreExecutors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.hibernate.exception.ConstraintViolationException;
@@ -151,7 +152,17 @@ public class DeviceServiceImpl extends AbstractEntityService implements DeviceSe
 
     @CacheEvict(cacheNames = DEVICE_CACHE, key = "{#device.tenantId, #device.name}")
     @Override
+    public Device saveDeviceWithAccessToken(Device device, String accessToken) {
+        return doSaveDevice(device, accessToken);
+    }
+
+    @CacheEvict(cacheNames = DEVICE_CACHE, key = "{#device.tenantId, #device.name}")
+    @Override
     public Device saveDevice(Device device) {
+        return doSaveDevice(device, null);
+    }
+
+    private Device doSaveDevice(Device device, String accessToken) {
         log.trace("Executing saveDevice [{}]", device);
         deviceValidator.validate(device, Device::getTenantId);
         if (device.getId() == null) {
@@ -176,7 +187,7 @@ public class DeviceServiceImpl extends AbstractEntityService implements DeviceSe
             DeviceCredentials deviceCredentials = new DeviceCredentials();
             deviceCredentials.setDeviceId(new DeviceId(savedDevice.getUuidId()));
             deviceCredentials.setCredentialsType(DeviceCredentialsType.ACCESS_TOKEN);
-            deviceCredentials.setCredentialsId(RandomStringUtils.randomAlphanumeric(20));
+            deviceCredentials.setCredentialsId(!StringUtils.isEmpty(accessToken) ? accessToken : RandomStringUtils.randomAlphanumeric(20));
             deviceCredentialsService.createDeviceCredentials(device.getTenantId(), deviceCredentials);
             entityGroupService.addEntityToEntityGroupAll(savedDevice.getTenantId(), savedDevice.getOwnerId(), savedDevice.getId());
         }
@@ -301,7 +312,7 @@ public class DeviceServiceImpl extends AbstractEntityService implements DeviceSe
                 }
             }
             return Futures.successfulAsList(futures);
-        });
+        }, MoreExecutors.directExecutor());
 
         devices = Futures.transform(devices, new Function<List<Device>, List<Device>>() {
             @Nullable
@@ -309,7 +320,7 @@ public class DeviceServiceImpl extends AbstractEntityService implements DeviceSe
             public List<Device> apply(@Nullable List<Device> deviceList) {
                 return deviceList == null ? Collections.emptyList() : deviceList.stream().filter(device -> query.getDeviceTypes().contains(device.getType())).collect(Collectors.toList());
             }
-        });
+        }, MoreExecutors.directExecutor());
 
         return devices;
     }
@@ -323,7 +334,7 @@ public class DeviceServiceImpl extends AbstractEntityService implements DeviceSe
                 deviceTypes -> {
                     deviceTypes.sort(Comparator.comparing(EntitySubtype::getType));
                     return deviceTypes;
-                });
+                }, MoreExecutors.directExecutor());
     }
 
     @Override
@@ -346,6 +357,16 @@ public class DeviceServiceImpl extends AbstractEntityService implements DeviceSe
                 (entityId) -> new DeviceId(entityId.getId()),
                 (entityIds) -> findDevicesByTenantIdAndIdsAsync(tenantId, entityIds),
                 new DeviceViewFunction());
+    }
+
+    @Override
+    public ListenableFuture<TimePageData<Device>> findDeviceEntitiesByEntityGroupId(TenantId tenantId, EntityGroupId entityGroupId, TimePageLink pageLink) {
+        log.trace("Executing findDeviceEntitiesByEntityGroupId, entityGroupId [{}], pageLink [{}]", entityGroupId, pageLink);
+        validateId(entityGroupId, "Incorrect entityGroupId " + entityGroupId);
+        validatePageLink(pageLink, "Incorrect page link " + pageLink);
+        return entityGroupService.findEntities(tenantId, entityGroupId, pageLink,
+                (entityId) -> new DeviceId(entityId.getId()),
+                (entityIds) -> findDevicesByTenantIdAndIdsAsync(tenantId, entityIds));
     }
 
     class DeviceViewFunction implements BiFunction<Device, List<EntityField>, ShortEntityView> {

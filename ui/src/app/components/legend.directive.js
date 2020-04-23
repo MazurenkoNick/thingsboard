@@ -1,7 +1,7 @@
 /*
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2019 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2020 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -61,7 +61,9 @@ function Legend($compile, $templateCache, types, utils) {
         scope.isRowDirection = scope.legendConfig.direction === types.direction.row.value;
 
         scope.toggleHideData = function(index) {
-            scope.legendData.keys[index].dataKey.hidden = !scope.legendData.keys[index].dataKey.hidden;
+            if (!scope.legendData.keys[index].dataKey.settings.disableDataHiding) {
+                scope.legendData.keys[index].dataKey.hidden = !scope.legendData.keys[index].dataKey.hidden;
+            }
         }
 
         scope.getDataKeyLabel = function(text) {

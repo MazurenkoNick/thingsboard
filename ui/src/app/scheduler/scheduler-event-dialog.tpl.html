@@ -2,7 +2,7 @@
 
     ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
 
-    Copyright © 2016-2019 ThingsBoard, Inc. All Rights Reserved.
+    Copyright © 2016-2020 ThingsBoard, Inc. All Rights Reserved.
 
     NOTICE: All information contained herein is, and remains
     the property of ThingsBoard, Inc. and its suppliers,
@@ -84,7 +84,7 @@
                                     <section layout="column" layout-gt-sm="row" layout-align-gt-sm="start start">
                                         <mdp-date-picker ng-required="true" ng-model="vm.startDate" mdp-placeholder="{{'scheduler.date' | translate}}">
                                         </mdp-date-picker>
-                                        <mdp-time-picker ng-required="true" ng-model="vm.startDateTime" mdp-placeholder="{{'scheduler.time' | translate}}"
+                                        <mdp-time-picker ng-required="true" ng-model="vm.startDate" mdp-placeholder="{{'scheduler.time' | translate}}"
                                                          mdp-auto-switch="true"></mdp-time-picker>
                                     </section>
                                     <md-checkbox ng-disabled="vm.readonly || $root.loading" aria-label="{{'scheduler.repeat' | translate}}" ng-change="vm.repeatsChange()"

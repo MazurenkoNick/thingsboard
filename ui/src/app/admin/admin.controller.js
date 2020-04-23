@@ -1,7 +1,7 @@
 /*
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2019 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2020 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -50,6 +50,7 @@ export default function AdminController(adminService, userService, toast, $scope
     });
 
     vm.mailTemplate = types.mailTemplate.test.value;
+    vm.tlsVersions = ['TLSv1', 'TLSv1.1', 'TLSv1.2', 'TLSv1.3'];
 
     $translate('admin.test-mail-sent').then(function (translation) {
         vm.testMailSent = translation;

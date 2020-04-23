@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2019 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2020 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -39,6 +39,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import lombok.Getter;
@@ -361,7 +362,7 @@ public class ActorSystemContext {
     @Getter
     private final AtomicInteger jsInvokeFailuresCount = new AtomicInteger(0);
 
-    @Scheduled(fixedDelayString = "${js.remote.stats.print_interval_ms}")
+    @Scheduled(fixedDelayString = "${actors.statistics.js_print_interval_ms}")
     public void printStats() {
         if (statisticsEnabled) {
             if (jsInvokeRequestsCount.get() > 0 || jsInvokeResponsesCount.get() > 0 || jsInvokeFailuresCount.get() > 0) {
@@ -535,7 +536,7 @@ public class ActorSystemContext {
                     public void onFailure(Throwable th) {
                         log.error("Could not save debug Event for Node", th);
                     }
-                });
+                }, MoreExecutors.directExecutor());
             } catch (IOException ex) {
                 log.warn("Failed to persist rule node debug message", ex);
             }
@@ -588,7 +589,7 @@ public class ActorSystemContext {
             public void onFailure(Throwable th) {
                 log.error("Could not save debug Event for Rule Chain", th);
             }
-        });
+        }, MoreExecutors.directExecutor());
     }
 
     public static Exception toException(Throwable error) {

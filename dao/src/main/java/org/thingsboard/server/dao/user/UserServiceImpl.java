@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2019 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2020 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -307,6 +307,16 @@ public class UserServiceImpl extends AbstractEntityService implements UserServic
                 (entityId) -> new UserId(entityId.getId()),
                 (entityIds) -> findUsersByTenantIdAndIdsAsync(tenantId, entityIds),
                 new UserViewFunction());
+    }
+
+    @Override
+    public ListenableFuture<TimePageData<User>> findUserEntitiesByEntityGroupId(TenantId tenantId, EntityGroupId entityGroupId, TimePageLink pageLink) {
+        log.trace("Executing findUserEntitiesByEntityGroupId, entityGroupId [{}], pageLink [{}]", entityGroupId, pageLink);
+        validateId(entityGroupId, "Incorrect entityGroupId " + entityGroupId);
+        validatePageLink(pageLink, "Incorrect page link " + pageLink);
+        return entityGroupService.findEntities(tenantId, entityGroupId, pageLink,
+                (entityId) -> new UserId(entityId.getId()),
+                (entityIds) -> findUsersByTenantIdAndIdsAsync(tenantId, entityIds));
     }
 
     class UserViewFunction implements BiFunction<User, List<EntityField>, ShortEntityView> {

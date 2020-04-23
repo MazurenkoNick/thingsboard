@@ -1,7 +1,7 @@
 /*
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2019 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2020 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -296,6 +296,10 @@ export default angular.module('thingsboard.types', [])
                     value: 'entityGroupName',
                     name: 'alias.filter-type-entity-group-name'
                 },
+                entitiesByGroupName: {
+                    value: 'entitiesByGroupName',
+                    name: 'alias.filter-type-entities-by-group-name'
+                },
                 stateEntity: {
                     value: 'stateEntity',
                     name: 'alias.filter-type-state-entity'
@@ -369,7 +373,8 @@ export default angular.module('thingsboard.types', [])
                 timeseries: "timeseries",
                 attribute: "attribute",
                 function: "function",
-                alarm: "alarm"
+                alarm: "alarm",
+                entityField: "entityField"
             },
             converterType: {
                 "UPLINK": {
@@ -419,6 +424,11 @@ export default angular.module('thingsboard.types', [])
                 "THINGPARK": {
                     name: "integration.type-thingpark",
                     value: "THINGPARK",
+                    http: true
+                },
+                "TPE": {
+                    name: "integration.type-thingpark-enterprise",
+                    value: "TPE",
                     http: true
                 },
                 "TMOBILE_IOT_CDP": {
@@ -708,10 +718,19 @@ export default angular.module('thingsboard.types', [])
                 accessToken: {
                     name: 'import.column-type.access-token',
                     value: 'ACCESS_TOKEN'
+                },
+                isGateway: {
+                    name: 'import.column-type.isgateway',
+                    value: 'gateway'
+                },
+                description: {
+                    name: 'import.column-type.description',
+                    value: 'description'
                 }
             },
             aliasEntityType: {
-                current_customer: "CURRENT_CUSTOMER"
+                current_customer: "CURRENT_CUSTOMER",
+                current_tenant: "CURRENT_TENANT"
             },
             entityTypeTranslations: {
                 "DEVICE": {
@@ -870,6 +889,10 @@ export default angular.module('thingsboard.types', [])
                     type: 'entity.type-current-customer',
                     list: 'entity.type-current-customer'
                 },
+                "CURRENT_TENANT": {
+                    type: 'entity.type-current-tenant',
+                    list: 'entity.type-current-tenant'
+                },
                 "SCHEDULER_EVENT": {
                     type: 'entity.type-scheduler-event',
                     typePlural: 'entity.type-scheduler-events',
@@ -890,6 +913,84 @@ export default angular.module('thingsboard.types', [])
                 },
                 "GROUP_PERMISSION": {
                     type: 'entity.type-group-permission'
+                }
+            },
+            entityField: {
+                createdTime: {
+                    keyName: 'createdTime',
+                    name: 'entity-field.created-time',
+                    value: 'createdTime',
+                    time: true
+                },
+                name: {
+                    keyName: 'name',
+                    name: 'entity-field.name',
+                    value: 'name'
+                },
+                type: {
+                    keyName: 'type',
+                    name: 'entity-field.type',
+                    value: 'type'
+                },
+                firstName: {
+                    keyName: 'firstName',
+                    name: 'entity-field.first-name',
+                    value: 'firstName'
+                },
+                lastName: {
+                    keyName: 'lastName',
+                    name: 'entity-field.last-name',
+                    value: 'lastName'
+                },
+                email: {
+                    keyName: 'email',
+                    name: 'entity-field.email',
+                    value: 'email'
+                },
+                title: {
+                    keyName: 'title',
+                    name: 'entity-field.title',
+                    value: 'title'
+                },
+                country: {
+                    keyName: 'country',
+                    name: 'entity-field.country',
+                    value: 'country'
+                },
+                state: {
+                    keyName: 'state',
+                    name: 'entity-field.state',
+                    value: 'state'
+                },
+                city: {
+                    keyName: 'city',
+                    name: 'entity-field.city',
+                    value: 'city'
+                },
+                address: {
+                    keyName: 'address',
+                    name: 'entity-field.address',
+                    value: 'address'
+                },
+                address2: {
+                    keyName: 'address2',
+                    name: 'entity-field.address2',
+                    value: 'address2'
+                },
+                zip: {
+                    keyName: 'zip',
+                    name: 'entity-field.zip',
+                    value: 'zip'
+                },
+                phone: {
+                    keyName: 'phone',
+                    name: 'entity-field.phone',
+                    value: 'phone'
+                },
+                label: {
+                    keyName: 'label',
+                    name: 'entity-field.label',
+                    value: 'label'
                 }
             },
             entitySearchDirection: {
@@ -941,6 +1042,48 @@ export default angular.module('thingsboard.types', [])
                 mqtt: "MQTT",
                 opc: "OPC UA",
                 modbus: "MODBUS"
+            },
+            gatewayConfigType: {
+                mqtt:  {
+                    value: "mqtt",
+                    name: "MQTT"
+                },
+                modbus:  {
+                    value: "modbus",
+                    name: "Modbus"
+                },
+                opcua:  {
+                    value: "opcua",
+                    name: "OPC-UA"
+                },
+                ble:  {
+                    value: "ble",
+                    name: "BLE"
+                },
+                request:  {
+                    value: "request",
+                    name: "Request"
+                },
+                can:  {
+                    value: "can",
+                    name: "CAN"
+                },
+                bacnet: {
+                    value: "bacnet",
+                    name: "BACnet"
+                },
+                custom:  {
+                    value: "custom",
+                    name: "Custom"
+                }
+            },
+            gatewayLogLevel: {
+                none: "NONE",
+                critical: "CRITICAL",
+                error: "ERROR",
+                warning: "WARNING",
+                info: "INFO",
+                debug: "DEBUG"
             },
             extensionValueType: {
                 string: 'value.string',
@@ -1002,6 +1145,10 @@ export default angular.module('thingsboard.types', [])
                 json: {
                     value: "JSON",
                     name: "extension.json"
+                },
+                hex: {
+                    value: "HEX",
+                    name: "extension.hex"
                 }
             },
             tcpBinaryByteOrder: {
@@ -1281,6 +1428,11 @@ export default angular.module('thingsboard.types', [])
                     value: "boolean",
                     name: "value.boolean",
                     icon: "mdi:checkbox-marked-outline"
+                },
+                json: {
+                    value: "json",
+                    name: "value.json",
+                    icon: "mdi:json"
                 }
             },
             mailTemplate: {
@@ -1420,6 +1572,16 @@ export default angular.module('thingsboard.types', [])
                 weekly: {
                     value: 'WEEKLY',
                     name: 'scheduler.weekly'
+                },
+                monthly: {
+                    value: 'MONTHLY',
+                    type:'month',
+                    name: 'scheduler.monthly'
+                },
+                yearly: {
+                    value: 'YEARLY',
+                    type:'year',
+                    name: 'scheduler.yearly'
                 },
                 timer: {
                     value: 'TIMER',

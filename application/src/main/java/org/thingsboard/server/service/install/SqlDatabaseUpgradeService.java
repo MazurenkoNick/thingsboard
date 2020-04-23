@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2019 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2020 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -45,6 +45,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.SQLSyntaxErrorException;
 
 import static org.thingsboard.server.service.install.DatabaseHelper.ADDITIONAL_INFO;
 import static org.thingsboard.server.service.install.DatabaseHelper.ASSIGNED_CUSTOMERS;
@@ -69,7 +70,7 @@ import static org.thingsboard.server.service.install.DatabaseHelper.TYPE;
 @Profile("install")
 @Slf4j
 @SqlDao
-public class SqlDatabaseUpgradeService implements DatabaseUpgradeService {
+public class SqlDatabaseUpgradeService implements DatabaseEntitiesUpgradeService {
 
     private static final String SCHEMA_UPDATE_SQL = "schema_update.sql";
 
@@ -187,7 +188,8 @@ public class SqlDatabaseUpgradeService implements DatabaseUpgradeService {
                     loadSql(schemaUpdateFile, conn);
                     try {
                         conn.createStatement().execute("ALTER TABLE device ADD COLUMN label varchar(255)"); //NOSONAR, ignoring because method used to execute thingsboard database upgrade script
-                    } catch (Exception e) {}
+                    } catch (Exception e) {
+                    }
                     log.info("Schema updated.");
                 }
                 break;
@@ -212,8 +214,34 @@ public class SqlDatabaseUpgradeService implements DatabaseUpgradeService {
                 }
                 break;
             case "2.4.2":
+                try (Connection conn = DriverManager.getConnection(dbUrl, dbUserName, dbPassword)) {
+                    log.info("Updating schema ...");
+                    try {
+                        conn.createStatement().execute("ALTER TABLE alarm ADD COLUMN propagate_relation_types varchar"); //NOSONAR, ignoring because method used to execute thingsboard database upgrade script
+                    } catch (Exception e) {
+                    }
+                    log.info("Schema updated.");
+                }
+                break;
+            case "2.4.3":
+                try (Connection conn = DriverManager.getConnection(dbUrl, dbUserName, dbPassword)) {
+                    log.info("Updating schema ...");
+                    try {
+                        conn.createStatement().execute("ALTER TABLE attribute_kv ADD COLUMN json_v json;");
+                    } catch (Exception e) {
+                        if (e instanceof SQLSyntaxErrorException) {
+                            try {
+                                conn.createStatement().execute("ALTER TABLE attribute_kv ADD COLUMN json_v varchar(10000000);");
+                            } catch (Exception e1) {
+                            }
+                        }
+                    }
+                    log.info("Schema updated.");
+                }
+                break;
+            case "2.5.0":
                 log.info("Updating schema ...");
-                schemaUpdateFile = Paths.get(installScripts.getDataDir(), "upgrade", "2.4.2pe", SCHEMA_UPDATE_SQL);
+                schemaUpdateFile = Paths.get(installScripts.getDataDir(), "upgrade", "2.5.0pe", SCHEMA_UPDATE_SQL);
                 try (Connection conn = DriverManager.getConnection(dbUrl, dbUserName, dbPassword)) {
                     loadSql(schemaUpdateFile, conn);
                     try {

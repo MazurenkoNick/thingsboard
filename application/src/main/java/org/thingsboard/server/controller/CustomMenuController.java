@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2019 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2020 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -67,6 +67,9 @@ public class CustomMenuController extends BaseController {
                 customMenu = customMenuService.getMergedTenantCustomMenu(getCurrentUser().getTenantId());
             } else if (authority == Authority.CUSTOMER_USER) {
                 customMenu = customMenuService.getMergedCustomerCustomMenu(getCurrentUser().getTenantId(), getCurrentUser().getCustomerId());
+            }
+            if (customMenu == null) {
+                customMenu = new CustomMenu();
             }
             return customMenu;
         } catch (Exception e) {

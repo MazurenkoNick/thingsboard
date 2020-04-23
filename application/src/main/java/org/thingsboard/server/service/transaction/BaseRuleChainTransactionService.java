@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2019 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2020 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -34,6 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.thingsboard.common.util.ThingsBoardThreadFactory;
 import org.thingsboard.rule.engine.api.RuleChainTransactionService;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.msg.TbMsg;
@@ -86,7 +87,7 @@ public class BaseRuleChainTransactionService implements RuleChainTransactionServ
 
     @PostConstruct
     public void init() {
-        timeoutExecutor = Executors.newSingleThreadExecutor();
+        timeoutExecutor = Executors.newSingleThreadExecutor(ThingsBoardThreadFactory.forName("rule-chain-transaction"));
         executeOnTimeout();
     }
 
@@ -107,6 +108,7 @@ public class BaseRuleChainTransactionService implements RuleChainTransactionServ
             TbTransactionTask transactionTask = new TbTransactionTask(msg, onStart, onEnd, onFailure, System.currentTimeMillis() + duration);
             int queueSize = queue.size();
             if (queueSize >= finalQueueSize) {
+                log.trace("Queue has no space: {}", transactionTask);
                 executeOnFailure(transactionTask.getOnFailure(), "Queue has no space!");
             } else {
                 addMsgToQueues(queue, transactionTask);

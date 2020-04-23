@@ -1,7 +1,7 @@
 /*
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2019 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2020 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -78,6 +78,12 @@ export default function IntegrationUdpDirective($compile, $templateCache, $trans
             defaultHandlerConfigurations[types.handlerConfigurationTypes.json.value] = {
                 handlerType: types.handlerConfigurationTypes.json.value
             };
+
+            defaultHandlerConfigurations[types.handlerConfigurationTypes.hex.value] = {
+                handlerType: types.handlerConfigurationTypes.hex.value,
+                maxFrameLength: 128
+            };
+
         }
 
         scope.handlerConfigurationTypeChanged = () => {

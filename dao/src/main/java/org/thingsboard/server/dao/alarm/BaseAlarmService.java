@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2019 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2020 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -35,11 +35,13 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.base.Function;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.MoreExecutors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
-import org.thingsboard.server.common.data.EntityType;
+import org.thingsboard.common.util.ThingsBoardThreadFactory;
 import org.thingsboard.server.common.data.Tenant;
 import org.thingsboard.server.common.data.alarm.Alarm;
 import org.thingsboard.server.common.data.alarm.AlarmId;
@@ -76,6 +78,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static org.thingsboard.server.dao.service.Validator.validateId;
 
@@ -98,7 +101,7 @@ public class BaseAlarmService extends AbstractEntityService implements AlarmServ
 
     @PostConstruct
     public void startExecutor() {
-        readResultsProcessingExecutor = Executors.newCachedThreadPool();
+        readResultsProcessingExecutor = Executors.newCachedThreadPool(ThingsBoardThreadFactory.forName("alarm-service"));
     }
 
     @PreDestroy
@@ -174,9 +177,15 @@ public class BaseAlarmService extends AbstractEntityService implements AlarmServ
         commonQuery.setParameters(new RelationsSearchParameters(alarm.getOriginator(), EntitySearchDirection.TO, Integer.MAX_VALUE, RelationTypeGroup.COMMON, false));
         EntityRelationsQuery groupQuery = new EntityRelationsQuery();
         groupQuery.setParameters(new RelationsSearchParameters(alarm.getOriginator(), EntitySearchDirection.TO, Integer.MAX_VALUE, RelationTypeGroup.FROM_ENTITY_GROUP, false));
+        List<String> propagateRelationTypes = alarm.getPropagateRelationTypes();
+        Stream<EntityRelation> commonRelations = relationService.findByQuery(alarm.getTenantId(), commonQuery).get().stream();
+        Stream<EntityRelation> groupRelations = relationService.findByQuery(alarm.getTenantId(), groupQuery).get().stream();
+        if (!CollectionUtils.isEmpty(propagateRelationTypes)) {
+            commonRelations = commonRelations.filter(entityRelation -> propagateRelationTypes.contains(entityRelation.getType()));
+        }
         Set<EntityId> parentEntities = new HashSet<>();
-        parentEntities.addAll(relationService.findByQuery(alarm.getTenantId(), commonQuery).get().stream().map(EntityRelation::getFrom).collect(Collectors.toList()));
-        parentEntities.addAll(relationService.findByQuery(alarm.getTenantId(), groupQuery).get().stream().map(EntityRelation::getFrom).collect(Collectors.toList()));
+        parentEntities.addAll(commonRelations.map(EntityRelation::getFrom).collect(Collectors.toList()));
+        parentEntities.addAll(groupRelations.map(EntityRelation::getFrom).collect(Collectors.toList()));
         return parentEntities;
     }
 
@@ -277,9 +286,8 @@ public class BaseAlarmService extends AbstractEntityService implements AlarmServ
                             entityService.fetchEntityNameAsync(tenantId, alarmInfo.getOriginator()), originatorName -> {
                                 alarmInfo.setOriginatorName(originatorName);
                                 return alarmInfo;
-                            }
-                    );
-                });
+                            }, MoreExecutors.directExecutor());
+                }, MoreExecutors.directExecutor());
     }
 
     @Override
@@ -296,11 +304,11 @@ public class BaseAlarmService extends AbstractEntityService implements AlarmServ
                                 }
                                 alarmInfo.setOriginatorName(originatorName);
                                 return alarmInfo;
-                            }
+                            }, MoreExecutors.directExecutor()
                     ));
                 }
                 return Futures.successfulAsList(alarmFutures);
-            });
+            }, MoreExecutors.directExecutor());
         }
         return Futures.transform(alarms, new Function<List<AlarmInfo>, TimePageData<AlarmInfo>>() {
             @Nullable
@@ -308,7 +316,7 @@ public class BaseAlarmService extends AbstractEntityService implements AlarmServ
             public TimePageData<AlarmInfo> apply(@Nullable List<AlarmInfo> alarms) {
                 return new TimePageData<>(alarms, query.getPageLink());
             }
-        });
+        }, MoreExecutors.directExecutor());
     }
 
     @Override
@@ -409,6 +417,17 @@ public class BaseAlarmService extends AbstractEntityService implements AlarmServ
         existing.setSeverity(alarm.getSeverity());
         existing.setDetails(alarm.getDetails());
         existing.setPropagate(existing.isPropagate() || alarm.isPropagate());
+        List<String> existingPropagateRelationTypes = existing.getPropagateRelationTypes();
+        List<String> newRelationTypes = alarm.getPropagateRelationTypes();
+        if (!CollectionUtils.isEmpty(newRelationTypes)) {
+            if (!CollectionUtils.isEmpty(existingPropagateRelationTypes)) {
+                existing.setPropagateRelationTypes(Stream.concat(existingPropagateRelationTypes.stream(), newRelationTypes.stream())
+                        .distinct()
+                        .collect(Collectors.toList()));
+            } else {
+                existing.setPropagateRelationTypes(newRelationTypes);
+            }
+        }
         return existing;
     }
 

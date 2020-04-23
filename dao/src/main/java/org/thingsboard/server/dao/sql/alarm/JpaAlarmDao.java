@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2019 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2020 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -32,6 +32,7 @@ package org.thingsboard.server.dao.sql.alarm;
 
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.MoreExecutors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
@@ -123,9 +124,9 @@ public class JpaAlarmDao extends JpaAbstractDao<AlarmEntity, Alarm> implements A
             for (EntityRelation relation : input) {
                 alarmFutures.add(Futures.transform(
                         findAlarmByIdAsync(tenantId, relation.getTo().getId()),
-                        AlarmInfo::new));
+                        AlarmInfo::new, MoreExecutors.directExecutor()));
             }
             return Futures.successfulAsList(alarmFutures);
-        });
+        }, MoreExecutors.directExecutor());
     }
 }

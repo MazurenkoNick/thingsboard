@@ -1,7 +1,7 @@
 /*
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2019 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2020 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -88,6 +88,11 @@ export default function EntityFilterViewDirective($compile, $templateCache, $q, 
                         entityType = scope.filter.groupType;
                         prefix = scope.filter.entityGroupNameFilter;
                         scope.filterDisplayValue = $translate.instant(types.entityTypeTranslations[entityType].groupNameStartsWith, {prefix: prefix});
+                        break;
+                    case types.aliasFilterType.entitiesByGroupName.value:
+                        entityType = scope.filter.groupType;
+                        prefix = scope.filter.entityGroupNameFilter;
+                        scope.filterDisplayValue = $translate.instant(types.entityTypeTranslations[entityType].group) + ": " + prefix;
                         break;
                     case types.aliasFilterType.stateEntity.value:
                         scope.filterDisplayValue = $translate.instant('alias.filter-type-state-entity-description');

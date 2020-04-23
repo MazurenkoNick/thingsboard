@@ -1,7 +1,7 @@
 /*
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2019 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2020 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -63,6 +63,14 @@ function JsonObjectEdit($compile, $templateCache, $document, toast, utils) {
 
         scope.onFullscreenChanged = function () {
             updateEditorSize();
+        };
+
+        scope.beautifyJSON = function () {
+            scope.contentBody = angular.toJson(scope.object, 4);
+        };
+
+        scope.minifyJSON = function () {
+            scope.contentBody = angular.toJson(scope.object);
         };
 
         function updateEditorSize() {
@@ -184,7 +192,7 @@ function JsonObjectEdit($compile, $templateCache, $document, toast, utils) {
         });
 
         $compile(element.contents())(scope);
-    }
+    };
 
     return {
         restrict: "E",

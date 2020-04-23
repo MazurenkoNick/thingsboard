@@ -1,7 +1,7 @@
 /*
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2019 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2020 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -102,9 +102,12 @@ function LoginService($http, $q) {
         return deferred.promise;
     }
 
-    function activate(activateToken, password) {
+    function activate(activateToken, password, sendActivationMail) {
         var deferred = $q.defer();
         var url = '/api/noauth/activate';
+        if(sendActivationMail === true || sendActivationMail === false) {
+            url += '?sendActivationMail=' + sendActivationMail;
+        }
         $http.post(url, {activateToken: activateToken, password: password}).then(function success(response) {
             deferred.resolve(response);
         }, function fail() {

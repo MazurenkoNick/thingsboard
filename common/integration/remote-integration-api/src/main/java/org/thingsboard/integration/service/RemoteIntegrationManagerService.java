@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2019 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2020 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -340,6 +340,8 @@ public class RemoteIntegrationManagerService {
                 return newInstance("org.thingsboard.integration.http.oc.OceanConnectIntegration");
             case THINGPARK:
                 return newInstance("org.thingsboard.integration.http.thingpark.ThingParkIntegration");
+            case TPE:
+                return newInstance("org.thingsboard.integration.http.thingpark.ThingParkIntegrationEnterprise");
             case TMOBILE_IOT_CDP:
                 return newInstance("org.thingsboard.integration.http.tmobile.TMobileIotCdpIntegration");
             case MQTT:

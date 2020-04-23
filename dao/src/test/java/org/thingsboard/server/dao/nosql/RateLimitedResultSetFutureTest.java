@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2019 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2020 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -134,7 +134,7 @@ public class RateLimitedResultSetFutureTest {
 
         resultSetFuture = new RateLimitedResultSetFuture(session, rateLimiter, statement);
 
-        ListenableFuture<Row> transform = Futures.transform(resultSetFuture, ResultSet::one);
+        ListenableFuture<Row> transform = Futures.transform(resultSetFuture, ResultSet::one, MoreExecutors.directExecutor());
         Row actualRow = transform.get();
 
         assertSame(row, actualRow);
@@ -147,7 +147,7 @@ public class RateLimitedResultSetFutureTest {
         when(rateLimiter.acquireAsync()).thenReturn(Futures.immediateFuture(null));
         when(session.executeAsync(statement)).thenThrow(new UnsupportedFeatureException(ProtocolVersion.V3, "hjg"));
         resultSetFuture = new RateLimitedResultSetFuture(session, rateLimiter, statement);
-        ListenableFuture<Row> transform = Futures.transform(resultSetFuture, ResultSet::one);
+        ListenableFuture<Row> transform = Futures.transform(resultSetFuture, ResultSet::one, MoreExecutors.directExecutor());
         try {
             transform.get();
             fail();
@@ -171,7 +171,7 @@ public class RateLimitedResultSetFutureTest {
 
         when(realFuture.get()).thenThrow(new ExecutionException("Fail", new TimeoutException("timeout")));
         resultSetFuture = new RateLimitedResultSetFuture(session, rateLimiter, statement);
-        ListenableFuture<Row> transform = Futures.transform(resultSetFuture, ResultSet::one);
+        ListenableFuture<Row> transform = Futures.transform(resultSetFuture, ResultSet::one, MoreExecutors.directExecutor());
         try {
             transform.get();
             fail();
@@ -192,7 +192,7 @@ public class RateLimitedResultSetFutureTest {
         when(rateLimiter.acquireAsync()).thenReturn(future);
         resultSetFuture = new RateLimitedResultSetFuture(session, rateLimiter, statement);
 
-        ListenableFuture<Row> transform = Futures.transform(resultSetFuture, ResultSet::one);
+        ListenableFuture<Row> transform = Futures.transform(resultSetFuture, ResultSet::one, MoreExecutors.directExecutor());
 //        TimeUnit.MILLISECONDS.sleep(200);
         future.cancel(false);
         latch.countDown();

@@ -1,7 +1,7 @@
 --
 -- ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
 --
--- Copyright © 2016-2019 ThingsBoard, Inc. All Rights Reserved.
+-- Copyright © 2016-2020 ThingsBoard, Inc. All Rights Reserved.
 --
 -- NOTICE: All information contained herein is, and remains
 -- the property of ThingsBoard, Inc. and its suppliers,
@@ -53,7 +53,8 @@ VALUES ( '1e746126eaaefa6a91992ebcb67fe33', 'mail', '{
 	"smtpHost": "localhost",
 	"smtpPort": "25",
 	"timeout": "10000",
-	"enableTls": "false",
+	"enableTls": false,
+	"tlsVersion": "TLSv1.2",
 	"username": "",
 	"password": ""
 }' );

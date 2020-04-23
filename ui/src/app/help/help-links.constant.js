@@ -1,7 +1,7 @@
 /*
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2019 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2020 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -79,6 +79,7 @@ var integrationTypeHelpLinkMap = {
     'OCEANCONNECT': 'integrationOceanConnect',
     'SIGFOX': 'integrationSigFox',
     'THINGPARK': 'integrationThingPark',
+    'TPE': 'integrationThingParkEnterprise',
     'MQTT': 'integrationMqtt',
     'AWS_IOT': 'integrationAwsIoT',
     'AWS_KINESIS': 'integrationAwsKinesis',
@@ -165,6 +166,7 @@ export default angular.module('thingsboard.help', [])
                 integrationOceanConnect: helpBaseUrl +  "/docs/user-guide/integrations/ocean-connect",
                 integrationSigFox: helpBaseUrl +  "/docs/user-guide/integrations/sigfox",
                 integrationThingPark: helpBaseUrl +  "/docs/user-guide/integrations/thingpark",
+                integrationThingParkEnterprise: helpBaseUrl +  "/docs/samples/abeeway/tracker",
                 integrationMqtt: helpBaseUrl +  "/docs/user-guide/integrations/mqtt",
                 integrationAwsIoT: helpBaseUrl +  "/docs/user-guide/integrations/aws-iot",
                 integrationAwsKinesis:  helpBaseUrl +  "/docs/user-guide/integrations/aws-kinesis",

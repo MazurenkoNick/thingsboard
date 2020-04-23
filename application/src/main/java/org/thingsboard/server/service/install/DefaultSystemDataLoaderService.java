@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2019 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2020 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -128,9 +128,10 @@ public class DefaultSystemDataLoaderService implements SystemDataLoaderService {
         node.put("smtpHost", "localhost");
         node.put("smtpPort", "25");
         node.put("timeout", "10000");
-        node.put("enableTls", "false");
+        node.put("enableTls", false);
         node.put("username", "");
-        node.put("password", ""); //NOSONAR, key used to identify password field (not password value itself)
+        node.put("password", "");
+        node.put("tlsVersion", "TLSv1.2");//NOSONAR, key used to identify password field (not password value itself)
         mailSettings.setJsonValue(node);
         adminSettingsService.saveAdminSettings(TenantId.SYS_TENANT_ID, mailSettings);
 

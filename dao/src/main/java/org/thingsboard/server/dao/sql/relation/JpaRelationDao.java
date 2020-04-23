@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2019 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2020 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -71,6 +71,9 @@ public class JpaRelationDao extends JpaAbstractDaoListeningExecutorService imple
     @Autowired
     private RelationRepository relationRepository;
 
+    @Autowired
+    private RelationInsertRepository relationInsertRepository;
+
     @Override
     public ListenableFuture<List<EntityRelation>> findAllByFrom(TenantId tenantId, EntityId from, RelationTypeGroup typeGroup) {
         return service.submit(() -> DaoUtil.convertDataList(
@@ -132,12 +135,12 @@ public class JpaRelationDao extends JpaAbstractDaoListeningExecutorService imple
 
     @Override
     public boolean saveRelation(TenantId tenantId, EntityRelation relation) {
-        return relationRepository.save(new RelationEntity(relation)) != null;
+        return relationInsertRepository.saveOrUpdate(new RelationEntity(relation)) != null;
     }
 
     @Override
     public ListenableFuture<Boolean> saveRelationAsync(TenantId tenantId, EntityRelation relation) {
-        return service.submit(() -> relationRepository.save(new RelationEntity(relation)) != null);
+        return service.submit(() -> relationInsertRepository.saveOrUpdate(new RelationEntity(relation)) != null);
     }
 
     @Override

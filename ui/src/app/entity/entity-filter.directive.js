@@ -1,7 +1,7 @@
 /*
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2019 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2020 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -99,6 +99,12 @@ export default function EntityFilterDirective($compile, $templateCache, $q, $doc
                     filter.groupType = null;
                     filter.entityGroupNameFilter = '';
                     break;
+                case types.aliasFilterType.entitiesByGroupName.value:
+                    filter.groupStateEntity = false;
+                    filter.stateEntityParamName = null;
+                    filter.groupType = null;
+                    filter.entityGroupNameFilter = '';
+                    break;
                 case types.aliasFilterType.stateEntity.value:
                 case types.aliasFilterType.stateEntityOwner.value:
                     filter.stateEntityParamName = null;
@@ -127,6 +133,7 @@ export default function EntityFilterDirective($compile, $templateCache, $q, $doc
                     filter.rootEntity = null;
                     filter.direction = types.entitySearchDirection.from;
                     filter.maxLevel = 1;
+                    filter.fetchLastLevelOnly = false;
                     if (filter.type === types.aliasFilterType.relationsQuery.value) {
                         filter.filters = [];
                     } else if (filter.type === types.aliasFilterType.assetSearchQuery.value) {

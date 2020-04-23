@@ -1,7 +1,7 @@
 #
 # ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
 #
-# Copyright © 2016-2019 ThingsBoard, Inc. All Rights Reserved.
+# Copyright © 2016-2020 ThingsBoard, Inc. All Rights Reserved.
 #
 # NOTICE: All information contained herein is, and remains
 # the property of ThingsBoard, Inc. and its suppliers,
@@ -186,7 +186,7 @@ cassandra:
     read_consistency_level: "${CASSANDRA_READ_CONSISTENCY_LEVEL:ONE}"
     write_consistency_level: "${CASSANDRA_WRITE_CONSISTENCY_LEVEL:ONE}"
     default_fetch_size: "${CASSANDRA_DEFAULT_FETCH_SIZE:2000}"
-    # Specify partitioning size for timestamp key-value storage. Example MINUTES, HOURS, DAYS, MONTHS,INDEFINITE
+    # Specify partitioning size for timestamp key-value storage. Example: MINUTES, HOURS, DAYS, MONTHS,INDEFINITE
     ts_key_value_partitioning: "${TS_KV_PARTITIONING:MONTHS}"
     ts_key_value_ttl: "${TS_KV_TTL:0}"
     events_ttl: "${TS_EVENTS_TTL:0}"
@@ -210,10 +210,6 @@ cassandra:
 
 # SQL configuration parameters
 sql:
-    # Specify executor service type used to perform timeseries insert tasks: SINGLE or FIXED
-    ts_inserts_executor_type: "${SQL_TS_INSERTS_EXECUTOR_TYPE:fixed}"
-    # Specify thread pool size for FIXED executor service type
-    ts_inserts_fixed_thread_pool_size: "${SQL_TS_INSERTS_FIXED_THREAD_POOL_SIZE:200}"
     # Specify batch size for persisting attribute updates
     attributes:
       batch_size: "${SQL_ATTRIBUTES_BATCH_SIZE:10000}"
@@ -227,12 +223,18 @@ sql:
       batch_size: "${SQL_TS_LATEST_BATCH_SIZE:10000}"
       batch_max_delay: "${SQL_TS_LATEST_BATCH_MAX_DELAY_MS:100}"
       stats_print_interval_ms: "${SQL_TS_LATEST_BATCH_STATS_PRINT_MS:10000}"
-    ts_timescale:
-      batch_size: "${SQL_TS_TIMESCALE_BATCH_SIZE:10000}"
-      batch_max_delay: "${SQL_TS_TIMESCALE_BATCH_MAX_DELAY_MS:100}"
-      stats_print_interval_ms: "${SQL_TS_TIMESCALE_BATCH_STATS_PRINT_MS:10000}"
     # Specify whether to remove null characters from strValue of attributes and timeseries before insert
     remove_null_chars: "${SQL_REMOVE_NULL_CHARS:true}"
+    postgres:
+      # Specify partitioning size for timestamp key-value storage. Example: DAYS, MONTHS, YEARS, INDEFINITE.
+      ts_key_value_partitioning: "${SQL_POSTGRES_TS_KV_PARTITIONING:MONTHS}"
+    timescale:
+      # Specify Interval size for new data chunks storage.
+      chunk_time_interval: "${SQL_TIMESCALE_CHUNK_TIME_INTERVAL:604800000}"
+    ttl:
+      enabled: "${SQL_TTL_ENABLED:true}"
+      execution_interval_ms: "${SQL_TTL_EXECUTION_INTERVAL:86400000}" # Number of miliseconds
+      ts_key_value_ttl: "${SQL_TTL_TS_KEY_VALUE_TTL:0}" # Number of seconds
 
 # Actor system parameters
 actors:
@@ -267,9 +269,9 @@ actors:
       error_persist_frequency: "${ACTORS_RULE_NODE_ERROR_FREQUENCY:3000}"
     transaction:
       # Size of queues which store messages for transaction rule nodes
-      queue_size: "${ACTORS_RULE_TRANSACTION_QUEUE_SIZE:20}"
+      queue_size: "${ACTORS_RULE_TRANSACTION_QUEUE_SIZE:15000}"
       # Time in milliseconds for transaction to complete
-      duration: "${ACTORS_RULE_TRANSACTION_DURATION:15000}"
+      duration: "${ACTORS_RULE_TRANSACTION_DURATION:60000}"
   statistics:
     # Enable/disable actor statistics
     enabled: "${ACTORS_STATISTICS_ENABLED:true}"
@@ -357,7 +359,7 @@ caffeine:
 redis:
   # standalone or cluster
   connection:
-    type: standalone
+    type: "${REDIS_CONNECTION_TYPE:standalone}"
   standalone:
     host: "${REDIS_HOST:localhost}"
     port: "${REDIS_PORT:6379}"
@@ -529,6 +531,11 @@ js:
     max_cpu_time: "${LOCAL_JS_SANDBOX_MAX_CPU_TIME:3000}"
     # Maximum allowed JavaScript execution errors before JavaScript will be blacklisted
     max_errors: "${LOCAL_JS_SANDBOX_MAX_ERRORS:3}"
+    # JS Eval max request timeout. 0 - no timeout
+    max_requests_timeout: "${LOCAL_JS_MAX_REQUEST_TIMEOUT:0}"
+    stats:
+      enabled: "${TB_JS_LOCAL_STATS_ENABLED:false}"
+      print_interval_ms: "${TB_JS_LOCAL_STATS_PRINT_INTERVAL_MS:10000}"
   # Remote JavaScript environment properties
   remote:
     # JS Eval request topic

@@ -1,7 +1,7 @@
 /*
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2019 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2020 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -28,10 +28,18 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
+/* eslint-disable import/no-unresolved, import/default */
+
+import attributeDialogEditJsonTemplate from './attribute-dialog-edit-json.tpl.html';
+
+/* eslint-enable import/no-unresolved, import/default */
+
+import AttributeDialogEditJsonController from './attribute-dialog-edit-json.controller';
+
 /*@ngInject*/
 export default function AddAttributeDialogController($scope, $mdDialog, types, attributeService, entityType, entityId, attributeScope) {
 
-    var vm = this;
+    let vm = this;
 
     vm.attribute = {};
 
@@ -55,11 +63,37 @@ export default function AddAttributeDialogController($scope, $mdDialog, types, a
         );
     }
 
-    $scope.$watch('vm.valueType', function() {
+    $scope.$watch('vm.valueType', function () {
         if (vm.valueType === types.valueType.boolean) {
             vm.attribute.value = false;
+        } else if (vm.valueType === types.valueType.json) {
+            vm.attribute.value = {};
         } else {
             vm.attribute.value = null;
         }
     });
+
+    vm.addJSON = ($event) => {
+        showJsonDialog($event, vm.attribute.value, false).then((response) => {
+            vm.attribute.value = response;
+        })
+    };
+
+    function showJsonDialog($event, jsonValue, readOnly) {
+        if ($event) {
+            $event.stopPropagation();
+        }
+        return $mdDialog.show({
+            controller: AttributeDialogEditJsonController,
+            controllerAs: 'vm',
+            templateUrl: attributeDialogEditJsonTemplate,
+            locals: {
+                jsonValue: jsonValue,
+                readOnly: readOnly
+            },
+            targetEvent: $event,
+            fullscreen: true,
+            multiple: true,
+        });
+    }
 }

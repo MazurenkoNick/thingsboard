@@ -1,7 +1,7 @@
 --
 -- ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
 --
--- Copyright © 2016-2019 ThingsBoard, Inc. All Rights Reserved.
+-- Copyright © 2016-2020 ThingsBoard, Inc. All Rights Reserved.
 --
 -- NOTICE: All information contained herein is, and remains
 -- the property of ThingsBoard, Inc. and its suppliers,
@@ -393,6 +393,7 @@ CREATE TABLE IF NOT EXISTS thingsboard.alarm (
 	clear_ts bigint,
 	details text,
 	propagate boolean,
+    propagate_relation_types text,
 	PRIMARY KEY ((tenant_id, originator_id, originator_type), type, id)
 ) WITH CLUSTERING ORDER BY ( type ASC, id DESC);
 
@@ -508,6 +509,7 @@ CREATE TABLE IF NOT EXISTS thingsboard.attributes_kv_cf (
     str_v text,
     long_v bigint,
     dbl_v double,
+    json_v text,
     last_update_ts bigint,
     PRIMARY KEY ((entity_type, entity_id, attribute_type), attribute_key)
 ) WITH compaction = { 'class' :  'LeveledCompactionStrategy'  };

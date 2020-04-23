@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2019 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2020 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -35,9 +35,9 @@ import com.datastax.driver.core.utils.UUIDs;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
@@ -123,7 +123,6 @@ class DeviceActorMessageProcessor extends AbstractContextAwareMsgProcessor {
     private final Map<Integer, ToServerRpcRequestMetadata> toServerRpcPendingMap;
 
     private final Gson gson = new Gson();
-    private final JsonParser jsonParser = new JsonParser();
 
     private int rpcSeq = 0;
     private String deviceName;
@@ -313,7 +312,7 @@ class DeviceActorMessageProcessor extends AbstractContextAwareMsgProcessor {
                         .build();
                 sendToTransport(responseMsg, sessionInfo);
             }
-        });
+        }, MoreExecutors.directExecutor());
     }
 
     private ListenableFuture<List<List<AttributeKvEntry>>> getAttributesKvEntries(GetAttributeRequestMsg request) {
@@ -368,7 +367,7 @@ class DeviceActorMessageProcessor extends AbstractContextAwareMsgProcessor {
         UUID sessionId = getSessionId(sessionInfo);
         JsonObject json = new JsonObject();
         json.addProperty("method", request.getMethodName());
-        json.add("params", jsonParser.parse(request.getParams()));
+        json.add("params", JsonUtils.parse(request.getParams()));
 
         TbMsgMetaData requestMetaData = defaultMetaData.copy();
         requestMetaData.putValue("requestId", Integer.toString(request.getRequestId()));
@@ -642,6 +641,10 @@ class DeviceActorMessageProcessor extends AbstractContextAwareMsgProcessor {
             case STRING:
                 builder.setType(KeyValueType.STRING_V);
                 builder.setStringV(kvEntry.getStrValue().get());
+                break;
+            case JSON:
+                builder.setType(KeyValueType.JSON_V);
+                builder.setJsonV(kvEntry.getJsonValue().get());
                 break;
         }
         return builder.build();

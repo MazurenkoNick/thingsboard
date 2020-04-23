@@ -1,7 +1,7 @@
 /*
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2019 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2020 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -205,9 +205,10 @@ function TimeseriesTableWidgetController($element, $scope, $filter, $timeout, ty
         }
         var descriptors = vm.ctx.actionsApi.getActionDescriptors('rowClick');
         if (descriptors.length) {
-						var entityId = vm.ctx.activeEntityInfo.entityId;
+            var entityId = vm.ctx.activeEntityInfo.entityId;
             var entityName = vm.ctx.activeEntityInfo.entityName;
-            vm.ctx.actionsApi.handleWidgetAction($event, descriptors[0], entityId, entityName, row);
+            var entityLabel = vm.ctx.activeEntityInfo.entityLabel;
+            vm.ctx.actionsApi.handleWidgetAction($event, descriptors[0], entityId, entityName, row, entityLabel);
         }
     }
 
@@ -215,9 +216,10 @@ function TimeseriesTableWidgetController($element, $scope, $filter, $timeout, ty
         if ($event) {
             $event.stopPropagation();
         }
-				var entityId = vm.ctx.activeEntityInfo.entityId;
+        var entityId = vm.ctx.activeEntityInfo.entityId;
         var entityName = vm.ctx.activeEntityInfo.entityName;
-        vm.ctx.actionsApi.handleWidgetAction($event, actionDescriptor, entityId, entityName, row);
+        var entityLabel = vm.ctx.activeEntityInfo.entityLabel;
+        vm.ctx.actionsApi.handleWidgetAction($event, actionDescriptor, entityId, entityName, row, entityLabel);
     }
 
 

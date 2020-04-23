@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2019 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2020 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -39,8 +39,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
-import org.thingsboard.rule.engine.api.msg.DeviceAttributesEventNotificationMsg;
 import org.thingsboard.common.util.DonAsynchron;
+import org.thingsboard.common.util.ThingsBoardThreadFactory;
+import org.thingsboard.rule.engine.api.msg.DeviceAttributesEventNotificationMsg;
 import org.thingsboard.server.actors.service.ActorService;
 import org.thingsboard.server.common.data.DataConstants;
 import org.thingsboard.server.common.data.EntityType;
@@ -58,6 +59,7 @@ import org.thingsboard.server.common.data.kv.BasicTsKvEntry;
 import org.thingsboard.server.common.data.kv.BooleanDataEntry;
 import org.thingsboard.server.common.data.kv.DataType;
 import org.thingsboard.server.common.data.kv.DoubleDataEntry;
+import org.thingsboard.server.common.data.kv.JsonDataEntry;
 import org.thingsboard.server.common.data.kv.KvEntry;
 import org.thingsboard.server.common.data.kv.LongDataEntry;
 import org.thingsboard.server.common.data.kv.ReadTsKvQuery;
@@ -131,14 +133,14 @@ public class DefaultTelemetrySubscriptionService implements TelemetrySubscriptio
     @Autowired
     @Lazy
     private ActorService actorService;
-
+    
     private ExecutorService tsCallBackExecutor;
     private ExecutorService wsCallBackExecutor;
 
     @PostConstruct
     public void initExecutor() {
-        tsCallBackExecutor = Executors.newSingleThreadExecutor();
-        wsCallBackExecutor = Executors.newSingleThreadExecutor();
+        tsCallBackExecutor = Executors.newSingleThreadExecutor(ThingsBoardThreadFactory.forName("ts-sub-callback"));
+        wsCallBackExecutor = Executors.newSingleThreadExecutor(ThingsBoardThreadFactory.forName("ws-sub-callback"));
     }
 
     @PreDestroy
@@ -718,6 +720,10 @@ public class DefaultTelemetrySubscriptionService implements TelemetrySubscriptio
                 Optional<Double> doubleValue = attr.getDoubleValue();
                 doubleValue.ifPresent(dataBuilder::setDoubleValue);
                 break;
+            case JSON:
+                Optional<String> jsonValue = attr.getJsonValue();
+                jsonValue.ifPresent(dataBuilder::setJsonValue);
+                break;
             case STRING:
                 Optional<String> stringValue = attr.getStrValue();
                 stringValue.ifPresent(dataBuilder::setStrValue);
@@ -749,6 +755,9 @@ public class DefaultTelemetrySubscriptionService implements TelemetrySubscriptio
                 break;
             case STRING:
                 entry = new StringDataEntry(proto.getKey(), proto.getStrValue());
+                break;
+            case JSON:
+                entry = new JsonDataEntry(proto.getKey(), proto.getJsonValue());
                 break;
         }
         return entry;

@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2019 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2020 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -42,6 +42,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.MoreExecutors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.thingsboard.integration.api.AbstractIntegration;
@@ -388,7 +389,7 @@ public class AwsKinesisIntegration extends AbstractIntegration<KinesisIntegratio
                 logKinesisDownlink(context, producerKey, data);
                 ByteBuffer dataPayload = ByteBuffer.wrap(data.getData());
                 ListenableFuture<UserRecordResult> f = kinesisProducer.addUserRecord(producerKey.getStreamName(), producerKey.getPartitionKey(), dataPayload);
-                Futures.addCallback(f, producerCallback);
+                Futures.addCallback(f, producerCallback, MoreExecutors.directExecutor());
             }
         }
         return !producerKeyToDataMap.isEmpty();

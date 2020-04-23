@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2019 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2020 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -33,6 +33,7 @@ package org.thingsboard.rule.engine.analytics.latest;
 import com.datastax.driver.core.utils.UUIDs;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import lombok.extern.slf4j.Slf4j;
@@ -107,7 +108,7 @@ public abstract class TbAbstractLatestNode<C extends TbAbstractLatestNodeConfigu
                                 "", null, null, 0L);
                         ctx.tellFailure(msg, e);
                         return Optional.empty();
-                    });
+                    }, MoreExecutors.directExecutor());
                     ListenableFuture<TbMsg> msgFuture = Futures.transform(aggregateFutureWithFallback, element -> {
                         if (element.isPresent()) {
                             TbMsgMetaData metaData = new TbMsgMetaData();
@@ -121,7 +122,7 @@ public abstract class TbAbstractLatestNode<C extends TbAbstractLatestNodeConfigu
                         } else {
                             return null;
                         }
-                    });
+                    }, MoreExecutors.directExecutor());
                     msgFutures.add(msgFuture);
                 }));
             });

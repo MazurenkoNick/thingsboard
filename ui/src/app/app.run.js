@@ -1,7 +1,7 @@
 /*
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2019 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2020 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -263,14 +263,12 @@ export default function AppRun($rootScope, $mdTheming, $window, $injector, $loca
         if (forbiddenDialog === null) {
             $translate(['access.access-forbidden',
                 'access.access-forbidden-text',
-                'access.access-forbidden',
                 'action.cancel',
                 'action.sign-in']).then(function (translations) {
                 if (forbiddenDialog === null) {
                     forbiddenDialog = $mdDialog.confirm()
                         .title(translations['access.access-forbidden'])
                         .htmlContent(translations['access.access-forbidden-text'])
-                        .ariaLabel(translations['access.access-forbidden'])
                         .cancel(translations['action.cancel'])
                         .ok(translations['action.sign-in']);
                     $mdDialog.show(forbiddenDialog).then(function () {
@@ -288,13 +286,11 @@ export default function AppRun($rootScope, $mdTheming, $window, $injector, $loca
         if (permissionDeniedDialog === null) {
             $translate(['access.permission-denied',
                 'access.permission-denied-text',
-                'access.permission-denied',
                 'action.close']).then(function (translations) {
                 if (permissionDeniedDialog === null) {
                     permissionDeniedDialog = $mdDialog.alert()
                         .title(translations['access.permission-denied'])
                         .htmlContent(translations['access.permission-denied-text'])
-                        .ariaLabel(translations['access.permission-denied'])
                         .ok(translations['action.close']);
                     $mdDialog.show(permissionDeniedDialog).then(function () {
                         permissionDeniedDialog = null;

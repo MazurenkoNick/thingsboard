@@ -1,7 +1,7 @@
 /*
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2019 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2020 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -343,6 +343,9 @@ function KnobController($element, $scope, $document) {
         var textWidth = measureTextWidth(text, fontSize);
         while (textWidth > maxWidth) {
             fontSize--;
+            if (fontSize < 0) {
+                break;
+            }
             textWidth = measureTextWidth(text, fontSize);
         }
         element.css({'fontSize': fontSize+'px', 'lineHeight': fontSize+'px'});
@@ -350,7 +353,7 @@ function KnobController($element, $scope, $document) {
 
     function measureTextWidth(text, fontSize) {
         textMeasure.css({'fontSize': fontSize+'px', 'lineHeight': fontSize+'px'});
-        textMeasure.text(text);
+        textMeasure.html(text);
         return textMeasure.width();
     }
 

@@ -1,7 +1,7 @@
 /*
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2019 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2020 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -29,7 +29,7 @@
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
 /*@ngInject*/
-export default function LoginController($state, $scope, toast, loginService, userService, types/*, $rootScope, $log, $translate*/) {
+export default function LoginController($state, $scope, toast, loginService, userService, types, $stateParams/*, $rootScope, $log, $translate*/) {
     var vm = this;
 
     vm.user = {
@@ -39,6 +39,12 @@ export default function LoginController($state, $scope, toast, loginService, use
 
     vm.signUp = signUp;
     vm.login = login;
+
+    if ($stateParams.username && $stateParams.password) {
+        vm.user.name = $stateParams.username;
+        vm.user.password = $stateParams.password;
+        doLogin();
+    }
 
     function doLogin() {
         loginService.login(vm.user).then(function success(response) {

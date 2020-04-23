@@ -1,7 +1,7 @@
 /*
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2019 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2020 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -111,7 +111,8 @@ export default angular.module('thingsboard.securityTypes', [])
                 claimDevices: "CLAIM_DEVICES",
                 changeOwner: "CHANGE_OWNER",
                 addToGroup: "ADD_TO_GROUP",
-                removeFromGroup: "REMOVE_FROM_GROUP"
+                removeFromGroup: "REMOVE_FROM_GROUP",
+                shareEntityGroup: "SHARE_GROUP"
             },
             publicGroupTypes: {
                 "ASSET": "ASSET",

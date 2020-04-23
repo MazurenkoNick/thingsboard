@@ -1,7 +1,7 @@
 /*
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2019 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2020 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -49,17 +49,14 @@ function ReportService($rootScope, $http, $q, $document, $window, $translate, tb
             if (locationSearch.reportTimewindow) {
                 $rootScope.reportTimewindow = angular.fromJson(locationSearch.reportTimewindow);
             }
-            if (angular.isDefined(locationSearch.tzOffset)) {
-                Date.setTimezoneOffset(Number(locationSearch.tzOffset));
-            }
         }
     }
 
-    function downloadDashboardReport($event, dashboardId, reportType, state, timewindow, tzOffset) {
+    function downloadDashboardReport($event, dashboardId, reportType, state, timewindow) {
         var url = '/api/report/' + dashboardId +  '/download';
         var reportParams = {
             type: reportType,
-            tzOffset: tzOffset
+            timezone: moment.tz.guess() //eslint-disable-line
         };
         if (state) {
             reportParams.state = state;

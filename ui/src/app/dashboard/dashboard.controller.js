@@ -1,7 +1,7 @@
 /*
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2019 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2020 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -616,7 +616,7 @@ export default function DashboardController(types, securityTypes, utils, dashboa
     function generateDashboardReport($event, reportType) {
         var locationSearch = $location.search();
         reportService.downloadDashboardReport($event, vm.currentDashboardId, reportType,
-            locationSearch.state, vm.dashboardCtx.dashboardTimewindow, Date.getTimezoneOffset());
+            locationSearch.state, vm.dashboardCtx.dashboardTimewindow);
     }
 
     function exportWidget($event, layoutCtx, widget) {

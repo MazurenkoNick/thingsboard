@@ -1,7 +1,7 @@
 --
 -- ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
 --
--- Copyright © 2016-2019 ThingsBoard, Inc. All Rights Reserved.
+-- Copyright © 2016-2020 ThingsBoard, Inc. All Rights Reserved.
 --
 -- NOTICE: All information contained herein is, and remains
 -- the property of ThingsBoard, Inc. and its suppliers,
@@ -49,6 +49,7 @@ CREATE TABLE IF NOT EXISTS alarm (
     start_ts bigint,
     status varchar(255),
     tenant_id varchar(31),
+    propagate_relation_types varchar,
     type varchar(255)
 );
 
@@ -116,6 +117,7 @@ CREATE TABLE IF NOT EXISTS attribute_kv (
   str_v varchar(10000000),
   long_v bigint,
   dbl_v double precision,
+  json_v json,
   last_update_ts bigint,
   CONSTRAINT attribute_kv_pkey PRIMARY KEY (entity_type, entity_id, attribute_type, attribute_key)
 );

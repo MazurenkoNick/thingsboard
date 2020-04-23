@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2019 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2020 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -162,6 +162,22 @@ public class BasicUdpIntegration extends AbstractIpIntegration {
                                     .addLast("datagramToByteDecoder", new AbstractUdpMsgDecoder<DatagramPacket, byte[]>(msg -> toByteArray(msg.content())) {
                                     })
                                     .addLast("udpByteHandler", new AbstractChannelHandler<byte[]>(byteArray -> byteArray, BasicUdpIntegration.this::isEmptyByteArray) {
+                                    });
+                        } catch (Exception e) {
+                            log.error("Init Channel Exception: {}", e.getMessage(), e);
+                            throw new RuntimeException(e);
+                        }
+                    }
+                };
+            case HEX_PAYLOAD:
+                return new ChannelInitializer<NioDatagramChannel>() {
+                    @Override
+                    protected void initChannel(final NioDatagramChannel channel) throws Exception {
+                        try {
+                            channel.pipeline()
+                                    .addLast("datagramToHexStringDecoder", new AbstractUdpMsgDecoder<DatagramPacket, ObjectNode>(msg -> getJsonHexReport(toByteArray(msg.content()))) {
+                                    })
+                                    .addLast("udpHexStringHandler", new AbstractChannelHandler<ObjectNode>(objectNode -> objectNode.toString().getBytes(), BasicUdpIntegration.this::isEmptyObjectNode) {
                                     });
                         } catch (Exception e) {
                             log.error("Init Channel Exception: {}", e.getMessage(), e);

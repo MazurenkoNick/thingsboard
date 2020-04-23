@@ -1,7 +1,7 @@
 /*
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2019 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2020 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -380,7 +380,7 @@ export default class TbTencentMap {
 			map: this.map,
 			path: latLangs,
 			strokeColor: settings.polygonStrokeColor,
-			fillColor: settings.polygonColor,
+			fillColor: qq.maps.Color.fromHex(settings.polygonColor, settings.polygonOpacity),
 			strokeWeight: settings.polygonStrokeWeight
 		});
 		//initialize-tooltip
@@ -425,7 +425,7 @@ export default class TbTencentMap {
 			path: polygon.getPath(),
 			map: this.map,
 			strokeColor: color,
-			fillColor: color,
+			fillColor: qq.maps.Color.fromHex(color, settings.polygonOpacity),
 			strokeWeight: settings.polygonStrokeWeight
 		}
 		polygon.setOptions(options);

@@ -1,7 +1,7 @@
 /*
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2019 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2020 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -39,8 +39,15 @@ export default function IntegrationTcpDirective($compile, $templateCache, $trans
 
         scope.types = types;
         scope.$mdExpansionPanel = $mdExpansionPanel;
+        scope.handlerTypes = {};
 
         var defaultHandlerConfigurations = {};
+
+        for (let handlerType in types.handlerConfigurationTypes) {
+            if (handlerType !== types.handlerConfigurationTypes.hex.value.toLowerCase()) {
+                scope.handlerTypes[handlerType] = types.handlerConfigurationTypes[handlerType];
+            }
+        }
 
         scope.$watch('configuration', function (newConfiguration, oldConfiguration) {
             if (!angular.equals(newConfiguration, oldConfiguration)) {

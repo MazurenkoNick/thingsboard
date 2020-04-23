@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2019 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2020 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -227,6 +227,7 @@ public class AuthController extends BaseController {
     @ResponseBody
     public JsonNode activateUser(
             @RequestBody JsonNode activateRequest,
+            @RequestParam(required = false, defaultValue = "true") boolean sendActivationMail,
             HttpServletRequest request) throws ThingsboardException {
         try {
             String activateToken = activateRequest.get("activateToken").asText();
@@ -241,10 +242,12 @@ public class AuthController extends BaseController {
             String loginUrl = String.format("%s/login", baseUrl);
             String email = user.getEmail();
 
-            try {
-                mailService.sendAccountActivatedEmail(user.getTenantId(), loginUrl, email);
-            } catch (Exception e) {
-                log.info("Unable to send account activation email [{}]", e.getMessage());
+            if (sendActivationMail) {
+                try {
+                    mailService.sendAccountActivatedEmail(user.getTenantId(), loginUrl, email);
+                } catch (Exception e) {
+                    log.info("Unable to send account activation email [{}]", e.getMessage());
+                }
             }
 
             JwtToken accessToken = tokenFactory.createAccessJwtToken(securityUser);

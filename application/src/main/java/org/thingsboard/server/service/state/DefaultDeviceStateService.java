@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2019 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2020 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -46,6 +46,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+import org.thingsboard.common.util.ThingsBoardThreadFactory;
 import org.thingsboard.server.actors.service.ActorService;
 import org.thingsboard.server.common.data.DataConstants;
 import org.thingsboard.server.common.data.Device;
@@ -78,7 +79,15 @@ import org.thingsboard.server.service.telemetry.TelemetrySubscriptionService;
 import javax.annotation.Nullable;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Random;
+import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
@@ -89,6 +98,7 @@ import static org.thingsboard.server.common.data.DataConstants.ACTIVITY_EVENT;
 import static org.thingsboard.server.common.data.DataConstants.CONNECT_EVENT;
 import static org.thingsboard.server.common.data.DataConstants.DISCONNECT_EVENT;
 import static org.thingsboard.server.common.data.DataConstants.INACTIVITY_EVENT;
+import static org.thingsboard.server.common.data.DataConstants.SERVER_SCOPE;
 
 /**
  * Created by ashvayka on 01.05.18.
@@ -155,11 +165,13 @@ public class DefaultDeviceStateService implements DeviceStateService {
     private ListeningScheduledExecutorService queueExecutor;
     private ConcurrentMap<TenantId, Set<DeviceId>> tenantDevices = new ConcurrentHashMap<>();
     private ConcurrentMap<DeviceId, DeviceStateData> deviceStates = new ConcurrentHashMap<>();
+    private ConcurrentMap<DeviceId, Long> deviceLastReportedActivity = new ConcurrentHashMap<>();
+    private ConcurrentMap<DeviceId, Long> deviceLastSavedActivity = new ConcurrentHashMap<>();
 
     @PostConstruct
     public void init() {
         // Should be always single threaded due to absence of locks.
-        queueExecutor = MoreExecutors.listeningDecorator(Executors.newSingleThreadScheduledExecutor());
+        queueExecutor = MoreExecutors.listeningDecorator(Executors.newSingleThreadScheduledExecutor(ThingsBoardThreadFactory.forName("device-state")));
         queueExecutor.submit(this::initStateFromDB);
         queueExecutor.scheduleAtFixedRate(this::updateState, new Random().nextInt(defaultStateCheckIntervalInSec), defaultStateCheckIntervalInSec, TimeUnit.SECONDS);
         //TODO: schedule persistence in v2.1;
@@ -189,6 +201,7 @@ public class DefaultDeviceStateService implements DeviceStateService {
 
     @Override
     public void onDeviceActivity(DeviceId deviceId) {
+        deviceLastReportedActivity.put(deviceId, System.currentTimeMillis());
         queueExecutor.submit(() -> onDeviceActivitySync(deviceId));
     }
 
@@ -259,6 +272,8 @@ public class DefaultDeviceStateService implements DeviceStateService {
                             tenantDeviceSet.remove(device.getId());
                         }
                         deviceStates.remove(device.getId());
+                        deviceLastReportedActivity.remove(device.getId());
+                        deviceLastSavedActivity.remove(device.getId());
                     }
                 }
                 try {
@@ -304,7 +319,7 @@ public class DefaultDeviceStateService implements DeviceStateService {
     private void updateState() {
         long ts = System.currentTimeMillis();
         Set<DeviceId> deviceIds = new HashSet<>(deviceStates.keySet());
-        log.info("Calculating state updates for {} devices", deviceStates.size());
+        log.debug("Calculating state updates for {} devices", deviceStates.size());
         for (DeviceId deviceId : deviceIds) {
             DeviceStateData stateData = getOrFetchDeviceStateData(deviceId);
             if (stateData != null) {
@@ -319,6 +334,8 @@ public class DefaultDeviceStateService implements DeviceStateService {
             } else {
                 log.debug("[{}] Device that belongs to other server is detected and removed.", deviceId);
                 deviceStates.remove(deviceId);
+                deviceLastReportedActivity.remove(deviceId);
+                deviceLastSavedActivity.remove(deviceId);
             }
         }
     }
@@ -344,17 +361,21 @@ public class DefaultDeviceStateService implements DeviceStateService {
     }
 
     private void onDeviceActivitySync(DeviceId deviceId) {
-        DeviceStateData stateData = getOrFetchDeviceStateData(deviceId);
-        if (stateData != null) {
-            DeviceState state = stateData.getState();
-            long ts = System.currentTimeMillis();
-            stateData.getState().setLastActivityTime(ts);
-            pushRuleEngineMessage(stateData, ACTIVITY_EVENT);
-            save(deviceId, LAST_ACTIVITY_TIME, ts);
-
-            if (!state.isActive()) {
-                state.setActive(true);
-                save(deviceId, ACTIVITY_STATE, state.isActive());
+        long lastReportedActivity = deviceLastReportedActivity.getOrDefault(deviceId, 0L);
+        long lastSavedActivity = deviceLastSavedActivity.getOrDefault(deviceId, 0L);
+        if (lastReportedActivity > 0 && lastReportedActivity > lastSavedActivity) {
+            DeviceStateData stateData = getOrFetchDeviceStateData(deviceId);
+            if (stateData != null) {
+                DeviceState state = stateData.getState();
+                stateData.getState().setLastActivityTime(lastReportedActivity);
+                stateData.getMetaData().putValue("scope", SERVER_SCOPE);
+                pushRuleEngineMessage(stateData, ACTIVITY_EVENT);
+                save(deviceId, LAST_ACTIVITY_TIME, lastReportedActivity);
+                deviceLastSavedActivity.put(deviceId, lastReportedActivity);
+                if (!state.isActive()) {
+                    state.setActive(true);
+                    save(deviceId, ACTIVITY_STATE, state.isActive());
+                }
             }
         }
     }
@@ -407,7 +428,7 @@ public class DefaultDeviceStateService implements DeviceStateService {
                 public void onFailure(Throwable t) {
                     log.warn("Failed to register device to the state service", t);
                 }
-            });
+            }, MoreExecutors.directExecutor());
         } else {
             sendDeviceEvent(device.getTenantId(), device.getId(), address.get(), true, false, false);
         }
@@ -445,6 +466,8 @@ public class DefaultDeviceStateService implements DeviceStateService {
         Optional<ServerAddress> address = routingService.resolveById(deviceId);
         if (!address.isPresent()) {
             deviceStates.remove(deviceId);
+            deviceLastReportedActivity.remove(deviceId);
+            deviceLastSavedActivity.remove(deviceId);
             Set<DeviceId> deviceIds = tenantDevices.get(tenantId);
             if (deviceIds != null) {
                 deviceIds.remove(deviceId);
@@ -460,10 +483,10 @@ public class DefaultDeviceStateService implements DeviceStateService {
     private ListenableFuture<DeviceStateData> fetchDeviceState(Device device) {
         if (persistToTelemetry) {
             ListenableFuture<List<TsKvEntry>> tsData = tsService.findLatest(TenantId.SYS_TENANT_ID, device.getId(), PERSISTENT_ATTRIBUTES);
-            return Futures.transform(tsData, extractDeviceStateData(device));
+            return Futures.transform(tsData, extractDeviceStateData(device), MoreExecutors.directExecutor());
         } else {
             ListenableFuture<List<AttributeKvEntry>> attrData = attributesService.find(TenantId.SYS_TENANT_ID, device.getId(), DataConstants.SERVER_SCOPE, PERSISTENT_ATTRIBUTES);
-            return Futures.transform(attrData, extractDeviceStateData(device));
+            return Futures.transform(attrData, extractDeviceStateData(device), MoreExecutors.directExecutor());
         }
     }
 
