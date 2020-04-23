@@ -35,7 +35,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.thingsboard</groupId>
     <artifactId>thingsboard</artifactId>
-    <version>2.5.0PE-SNAPSHOT</version>
+    <version>3.0.0PE-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>ThingsBoard PE</name>
@@ -117,6 +117,7 @@
         <amazonaws.sqs.version>1.11.562</amazonaws.sqs.version>
         <passay.version>1.5.0</passay.version>
         <ua-parser.version>1.4.3</ua-parser.version>
+        <jsass.version>5.10.3</jsass.version>
         <amazon-kinesis-producer>0.13.1</amazon-kinesis-producer>
         <amazon-kinesis-client>2.2.4-TB</amazon-kinesis-client>
     </properties>
@@ -129,7 +130,7 @@
         <module>dao</module>
         <module>transport</module>
         <module>integration</module>
-        <module>ui</module>
+        <module>ui-ngx</module>
         <module>tools</module>
         <module>packaging</module>
         <module>application</module>
@@ -354,12 +355,16 @@
                             <exclude>**/*.proto.js</exclude>
                             <exclude>docker/haproxy/**</exclude>
                             <exclude>docker/tb-node/**</exclude>
+                            <exclude>ui/**</exclude>
+                            <exclude>src/browserslist</exclude>
+                            <exclude>**/*.raw</exclude>
                         </excludes>
                         <mapping>
                             <proto>JAVADOC_STYLE</proto>
                             <cql>DOUBLEDASHES_STYLE</cql>
                             <scss>JAVADOC_STYLE</scss>
                             <jsx>SLASHSTAR_STYLE</jsx>
+                            <tsx>SLASHSTAR_STYLE</tsx>
                             <conf>SCRIPT_STYLE</conf>
                             <gradle>JAVADOC_STYLE</gradle>
                         </mapping>
@@ -1022,6 +1027,11 @@
                 <groupId>com.github.ua-parser</groupId>
                 <artifactId>uap-java</artifactId>
                 <version>${ua-parser.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.bit3</groupId>
+                <artifactId>jsass</artifactId>
+                <version>${jsass.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.amazonaws</groupId>
