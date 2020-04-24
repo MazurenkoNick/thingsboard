@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2019 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2020 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -42,13 +42,8 @@ import org.thingsboard.license.client.TbLicenseClient;
 import org.thingsboard.license.client.TbLicenseClientListener;
 import org.thingsboard.license.shared.exception.LicenseErrorCode;
 import org.thingsboard.license.shared.exception.LicenseException;
-import org.thingsboard.server.common.data.Device;
-import org.thingsboard.server.common.data.Tenant;
 import org.thingsboard.server.common.data.Version;
-import org.thingsboard.server.common.data.asset.Asset;
 import org.thingsboard.server.common.data.id.TenantId;
-import org.thingsboard.server.common.data.page.TextPageData;
-import org.thingsboard.server.common.data.page.TextPageLink;
 import org.thingsboard.server.common.data.subscription.SubscriptionEntry;
 import org.thingsboard.server.common.data.subscription.SubscriptionErrorCode;
 import org.thingsboard.server.common.data.subscription.SubscriptionException;
@@ -196,55 +191,11 @@ public class BasicSubscriptionService implements SubscriptionService, TbLicenseC
     }
 
     private long countDevices() {
-        long count = 0L;
-        TextPageLink pageLink = new TextPageLink(1000);
-        TextPageData<Tenant> pageData;
-        do {
-            pageData = tenantService.findTenants(pageLink);
-            for (Tenant tenant : pageData.getData()) {
-                count += countDevicesByTenant(tenant.getId());
-            }
-            pageLink = pageData.getNextPageLink();
-        } while (pageData.hasNext());
-        return count;
-    }
-
-    private long countDevicesByTenant(TenantId tenantId) {
-        long count = 0L;
-        TextPageLink pageLink = new TextPageLink(1000);
-        TextPageData<Device> pageData;
-        do {
-            pageData = deviceService.findDevicesByTenantId(tenantId, pageLink);
-            count += pageData.getData().size();
-            pageLink = pageData.getNextPageLink();
-        } while (pageData.hasNext());
-        return count;
+        return deviceService.countDevices();
     }
 
     private long countAssets() {
-        long count = 0L;
-        TextPageLink pageLink = new TextPageLink(1000);
-        TextPageData<Tenant> pageData;
-        do {
-            pageData = tenantService.findTenants(pageLink);
-            for (Tenant tenant : pageData.getData()) {
-                count += countAssetsByTenant(tenant.getId());
-            }
-            pageLink = pageData.getNextPageLink();
-        } while (pageData.hasNext());
-        return count;
-    }
-
-    private long countAssetsByTenant(TenantId tenantId) {
-        long count = 0L;
-        TextPageLink pageLink = new TextPageLink(1000);
-        TextPageData<Asset> pageData;
-        do {
-            pageData = assetService.findAssetsByTenantId(tenantId, pageLink);
-            count += pageData.getData().size();
-            pageLink = pageData.getNextPageLink();
-        } while (pageData.hasNext());
-        return count;
+        return assetService.countAssets();
     }
 
 }

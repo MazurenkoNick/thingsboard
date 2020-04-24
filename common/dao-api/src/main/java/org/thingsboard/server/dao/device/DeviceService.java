@@ -62,6 +62,8 @@ public interface DeviceService {
 
     PageData<Device> findDevicesByTenantId(TenantId tenantId, PageLink pageLink);
 
+    Long countDevices();
+
     PageData<Device> findDevicesByTenantIdAndType(TenantId tenantId, String type, PageLink pageLink);
 
     ListenableFuture<List<Device>> findDevicesByTenantIdAndIdsAsync(TenantId tenantId, List<DeviceId> deviceIds);

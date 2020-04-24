@@ -89,6 +89,11 @@ public class JpaAssetDao extends JpaAbstractSearchTextDao<AssetEntity, Asset> im
     }
 
     @Override
+    public Long countAssets() {
+        return assetRepository.count();
+    }
+
+    @Override
     public ListenableFuture<List<Asset>> findAssetsByTenantIdAndIdsAsync(UUID tenantId, List<UUID> assetIds) {
         return service.submit(() ->
                 DaoUtil.convertDataList(assetRepository.findByTenantIdAndIdIn(fromTimeUUID(tenantId), fromTimeUUIDs(assetIds))));
