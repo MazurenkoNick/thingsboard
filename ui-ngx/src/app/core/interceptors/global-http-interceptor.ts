@@ -148,6 +148,12 @@ export class GlobalHttpInterceptor implements HttpInterceptor {
       } else if (errorCode !== Constants.serverErrorCode.credentialsExpired) {
         unhandled = true;
       }
+    } else if (errorCode && errorCode === Constants.serverErrorCode.subscriptionViolation) {
+      if (!ignoreErrors) {
+        return this.dialogService.subscriptionViolation(errorResponse.error).pipe(
+          mergeMap(() => throwError(errorResponse))
+        );
+      }
     } else if (errorResponse.status === 429) {
       if (resendRequest) {
         return this.retryRequest(req, next);

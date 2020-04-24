@@ -46,6 +46,17 @@ import { ConfirmDialogComponent } from '@shared/components/dialog/confirm-dialog
 import { AlertDialogComponent } from '@shared/components/dialog/alert-dialog.component';
 import { TodoDialogComponent } from '@shared/components/dialog/todo-dialog.component';
 import { ProgressDialogComponent, ProgressDialogData } from '@shared/components/dialog/progress-dialog.component';
+import { WhiteLabelingFeatureDialogComponent } from '@shared/components/dialog/white-labeling-feature-dialog.component';
+import {
+  SubscriptionEntry,
+  SubscriptionErrorCode,
+  SubscriptionErrorData,
+  subscriptionErrorsMap
+} from '@shared/models/subscription.models';
+import {
+  EntityLimitDialogComponent,
+  EntityLimitDialogData
+} from '@shared/components/dialog/entity-limit-dialog.component';
 
 @Injectable(
   {
@@ -114,6 +125,63 @@ export class DialogService {
           icon
         }
       }).afterClosed();
+  }
+
+  subscriptionViolation(error: SubscriptionErrorData): Observable<any> {
+    const subscriptionErrorCode = error.subscriptionErrorCode;
+    const subscriptionEntry = error.subscriptionEntry;
+    if (subscriptionErrorCode === SubscriptionErrorCode.LIMIT_REACHED) {
+      return this.entityLimit(error);
+    } else if (subscriptionErrorCode === SubscriptionErrorCode.FEATURE_DISABLED &&
+      subscriptionEntry === SubscriptionEntry.WHITE_LABELING) {
+      return this.whiteLabelingFeature();
+    } else {
+      return this.subscriptionAlert(error);
+    }
+  }
+
+  entityLimit(error: SubscriptionErrorData): Observable<any> {
+    const subscriptionErrorCode = error.subscriptionErrorCode;
+    const subscriptionEntry = error.subscriptionEntry;
+    const value = error.subscriptionValue;
+    return this.dialog.open<EntityLimitDialogComponent, EntityLimitDialogData>(EntityLimitDialogComponent,
+      {
+        disableClose: true,
+        panelClass: ['tb-dialog', 'tb-fullscreen-dialog'],
+        data: {
+          subscriptionErrorCode,
+          subscriptionEntry,
+          value
+        }
+      }).afterClosed();
+  }
+
+  whiteLabelingFeature(): Observable<any> {
+    return this.dialog.open<WhiteLabelingFeatureDialogComponent>(WhiteLabelingFeatureDialogComponent,
+      {
+        disableClose: true,
+        panelClass: ['tb-dialog', 'tb-fullscreen-dialog', 'tb-fullscreen-dialog-gt-sm'],
+      }).afterClosed();
+  }
+
+  subscriptionAlert(error: SubscriptionErrorData): Observable<any> {
+    const subscriptionErrorCode = error.subscriptionErrorCode;
+    const subscriptionEntry = error.subscriptionEntry;
+    const value = error.subscriptionValue;
+    let content: string;
+    if (subscriptionEntry && value && subscriptionErrorsMap.has(subscriptionErrorCode) &&
+        subscriptionErrorsMap.get(subscriptionErrorCode).has(subscriptionEntry)) {
+      const subscriptionErrorText = subscriptionErrorsMap.get(subscriptionErrorCode).get(subscriptionEntry);
+      content = this.translate.instant(subscriptionErrorText, {value: value.value});
+    } else {
+      content = error.message;
+    }
+    return this.alert(
+      this.translate.instant('subscription-error.title'),
+      content,
+      this.translate.instant('action.ok'),
+      true
+    );
   }
 
   permissionDenied() {

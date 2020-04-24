@@ -65,6 +65,7 @@ export interface WhiteLabelingParams {
   platformName?: string;
   platformVersion?: string;
   customCss?: string;
+  whiteLabelingEnabled?: boolean;
 }
 
 export interface LoginWhiteLabelingParams extends WhiteLabelingParams {

@@ -160,6 +160,8 @@ import { OriginatorSelectComponent } from '@shared/components/originator-select.
 import { ProgressDialogComponent } from '@shared/components/dialog/progress-dialog.component';
 import { FullCalendarModule } from '@fullcalendar/angular';
 import { DndModule } from 'ngx-drag-drop';
+import { WhiteLabelingFeatureDialogComponent } from '@shared/components/dialog/white-labeling-feature-dialog.component';
+import { EntityLimitDialogComponent } from '@shared/components/dialog/entity-limit-dialog.component';
 
 @NgModule({
   providers: [
@@ -238,6 +240,8 @@ import { DndModule } from 'ngx-drag-drop';
     TodoDialogComponent,
     ColorPickerDialogComponent,
     MaterialIconsDialogComponent,
+    WhiteLabelingFeatureDialogComponent,
+    EntityLimitDialogComponent,
     ColorInputComponent,
     MaterialIconSelectComponent,
     NodeScriptTestDialogComponent,
@@ -416,6 +420,8 @@ import { DndModule } from 'ngx-drag-drop';
     TodoDialogComponent,
     ColorPickerDialogComponent,
     MaterialIconsDialogComponent,
+    WhiteLabelingFeatureDialogComponent,
+    EntityLimitDialogComponent,
     ColorInputComponent,
     MaterialIconSelectComponent,
     NodeScriptTestDialogComponent,

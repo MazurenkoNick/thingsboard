@@ -106,6 +106,8 @@ import { EntityGroupInfo } from '@shared/models/entity-group.models';
 import { UserPermissionsService } from '@core/http/user-permissions.service';
 import { Operation } from '@shared/models/security.models';
 import { ReportType } from '@shared/models/report.models';
+import { WhiteLabelingService } from '@core/http/white-labeling.service';
+import { map } from 'rxjs/operators';
 
 // @dynamic
 @Component({
@@ -158,6 +160,9 @@ export class DashboardPageComponent extends PageComponent implements IDashboardC
   editingLayoutCtx: DashboardPageLayoutContext = null;
 
   thingsboardVersion: string = env.tbVersion;
+  displayPoweredBy$ = this.whiteLabelingService.whiteLabelingEnabled$.pipe(
+    map((enabled) => !enabled)
+  );
 
   currentDashboardId: string;
 
@@ -252,6 +257,7 @@ export class DashboardPageComponent extends PageComponent implements IDashboardC
               private widgetComponentService: WidgetComponentService,
               private dashboardService: DashboardService,
               private userPermissionsService: UserPermissionsService,
+              private whiteLabelingService: WhiteLabelingService,
               private itembuffer: ItemBufferService,
               private importExport: ImportExportService,
               private fb: FormBuilder,

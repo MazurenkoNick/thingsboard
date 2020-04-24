@@ -72,6 +72,7 @@ export class WhiteLabelingService {
   private showNameBottom: boolean;
   private platformName: string;
   private platformVersion: string;
+  private whiteLabelingEnabled = false;
 
   public loginLogo$ = this.asWhiteLabelingObservable(() => this.loginLogo);
   public loginLogoSafeUrl$ = this.asWhiteLabelingObservable(() => this.loginLogoSafeUrl);
@@ -81,6 +82,7 @@ export class WhiteLabelingService {
   public showNameBottom$ = this.asWhiteLabelingObservable(() => this.showNameBottom);
   public platformName$ = this.asWhiteLabelingObservable(() => this.platformName);
   public platformVersion$ = this.asWhiteLabelingObservable(() => this.platformVersion);
+  public whiteLabelingEnabled$ = this.asWhiteLabelingObservable(() => this.whiteLabelingEnabled);
 
   private currentWLParams: WhiteLabelingParams;
   private currentLoginWLParams: LoginWhiteLabelingParams;
@@ -270,6 +272,7 @@ export class WhiteLabelingService {
     }
     return this.http.get<WhiteLabelingParams>(url).pipe(
       mergeMap((userWlParams) => {
+        this.whiteLabelingEnabled = userWlParams.whiteLabelingEnabled;
         this.userWlParams = mergeDefaults(userWlParams);
         this.updateImages(this.userWlParams, 'user');
         return this.onUserWlParamsLoaded().pipe(map(() => this.userWlParams));
