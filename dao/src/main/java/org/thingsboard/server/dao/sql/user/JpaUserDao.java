@@ -89,7 +89,16 @@ public class JpaUserDao extends JpaAbstractSearchTextDao<UserEntity, User> imple
                                 pageLink.getIdOffset() == null ? NULL_UUID_STR : fromTimeUUID(pageLink.getIdOffset()),
                                 Objects.toString(pageLink.getTextSearch(), ""),
                                 Authority.TENANT_ADMIN,
-                                new PageRequest(0, pageLink.getLimit())));
+                                PageRequest.of(0, pageLink.getLimit())));
+    }
+
+    @Override
+    public List<User> findUsersByTenantId(UUID tenantId, TextPageLink pageLink) {
+        return DaoUtil.convertDataList(
+                userRepository
+                        .findUsersByTenantId(
+                                fromTimeUUID(tenantId),
+                                PageRequest.of(0, pageLink.getLimit())));
     }
 
     @Override
@@ -102,7 +111,7 @@ public class JpaUserDao extends JpaAbstractSearchTextDao<UserEntity, User> imple
                                 pageLink.getIdOffset() == null ? NULL_UUID_STR : fromTimeUUID(pageLink.getIdOffset()),
                                 Objects.toString(pageLink.getTextSearch(), ""),
                                 Authority.CUSTOMER_USER,
-                                new PageRequest(0, pageLink.getLimit())));
+                                PageRequest.of(0, pageLink.getLimit())));
 
     }
 
@@ -115,7 +124,7 @@ public class JpaUserDao extends JpaAbstractSearchTextDao<UserEntity, User> imple
                                 pageLink.getIdOffset() == null ? NULL_UUID_STR : fromTimeUUID(pageLink.getIdOffset()),
                                 Objects.toString(pageLink.getTextSearch(), ""),
                                 Authority.CUSTOMER_USER,
-                                new PageRequest(0, pageLink.getLimit())));
+                                PageRequest.of(0, pageLink.getLimit())));
     }
 
     @Override

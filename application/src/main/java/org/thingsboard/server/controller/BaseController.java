@@ -43,7 +43,6 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.thingsboard.server.actors.service.ActorService;
 import org.thingsboard.server.common.data.Customer;
 import org.thingsboard.server.common.data.Dashboard;
 import org.thingsboard.server.common.data.DashboardInfo;
@@ -53,10 +52,11 @@ import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.EntityView;
 import org.thingsboard.server.common.data.HasName;
 import org.thingsboard.server.common.data.SearchTextBased;
+import org.thingsboard.server.common.data.HasTenantId;
 import org.thingsboard.server.common.data.Tenant;
 import org.thingsboard.server.common.data.User;
 import org.thingsboard.server.common.data.alarm.Alarm;
-import org.thingsboard.server.common.data.alarm.AlarmId;
+import org.thingsboard.server.common.data.id.AlarmId;
 import org.thingsboard.server.common.data.alarm.AlarmInfo;
 import org.thingsboard.server.common.data.asset.Asset;
 import org.thingsboard.server.common.data.audit.ActionType;
@@ -113,8 +113,6 @@ import org.thingsboard.server.common.data.widget.WidgetsBundle;
 import org.thingsboard.server.common.msg.TbMsg;
 import org.thingsboard.server.common.msg.TbMsgDataType;
 import org.thingsboard.server.common.msg.TbMsgMetaData;
-import org.thingsboard.server.common.msg.cluster.SendToClusterMsg;
-import org.thingsboard.server.common.msg.system.ServiceToRuleEngineMsg;
 import org.thingsboard.server.dao.alarm.AlarmService;
 import org.thingsboard.server.dao.asset.AssetService;
 import org.thingsboard.server.dao.attributes.AttributesService;
@@ -143,8 +141,13 @@ import org.thingsboard.server.dao.user.UserService;
 import org.thingsboard.server.dao.widget.WidgetTypeService;
 import org.thingsboard.server.dao.widget.WidgetsBundleService;
 import org.thingsboard.server.exception.ThingsboardErrorResponseHandler;
+import org.thingsboard.server.queue.discovery.PartitionService;
+import org.thingsboard.server.queue.discovery.TbServiceInfoProvider;
+import org.thingsboard.server.queue.provider.TbQueueProducerProvider;
+import org.thingsboard.server.queue.util.TbCoreComponent;
 import org.thingsboard.server.service.component.ComponentDiscoveryService;
 import org.thingsboard.server.service.scheduler.SchedulerService;
+import org.thingsboard.server.service.queue.TbClusterService;
 import org.thingsboard.server.service.security.model.SecurityUser;
 import org.thingsboard.server.service.security.permission.AccessControlService;
 import org.thingsboard.server.service.security.permission.OwnersCacheService;
@@ -172,6 +175,7 @@ import java.util.concurrent.ExecutionException;
 import static org.thingsboard.server.dao.service.Validator.validateId;
 
 @Slf4j
+@TbCoreComponent
 public abstract class BaseController {
 
     public static final String INCORRECT_TENANT_ID = "Incorrect tenantId ";
@@ -229,7 +233,7 @@ public abstract class BaseController {
     protected RuleChainService ruleChainService;
 
     @Autowired
-    protected ActorService actorService;
+    protected TbClusterService tbClusterService;
 
     @Autowired
     protected RelationService relationService;
@@ -278,6 +282,15 @@ public abstract class BaseController {
 
     @Autowired
     protected ClaimDevicesService claimDevicesService;
+
+    @Autowired
+    protected PartitionService partitionService;
+
+    @Autowired
+    protected TbServiceInfoProvider serviceInfoProvider;
+
+    @Autowired
+    protected TbQueueProducerProvider producerProvider;
 
     @Value("${server.log_controller_error_stack_trace}")
     @Getter
@@ -955,10 +968,14 @@ public abstract class BaseController {
                         }
                     }
                 }
-                TbMsg tbMsg = new TbMsg(UUIDs.timeBased(), msgType, entityId, metaData, TbMsgDataType.JSON
-                        , json.writeValueAsString(entityNode)
-                        , null, null, 0L);
-                actorService.onMsg(new SendToClusterMsg(entityId, new ServiceToRuleEngineMsg(user.getTenantId(), tbMsg)));
+                TbMsg tbMsg = TbMsg.newMsg(msgType, entityId, metaData, TbMsgDataType.JSON, json.writeValueAsString(entityNode));
+                TenantId tenantId = user.getTenantId();
+                if (tenantId.isNullUid()) {
+                    if (entity instanceof HasTenantId) {
+                        tenantId = ((HasTenantId) entity).getTenantId();
+                    }
+                }
+                tbClusterService.pushMsgToRuleEngine(tenantId, entityId, tbMsg, null);
             } catch (Exception e) {
                 log.warn("[{}] Failed to push entity action to rule engine: {}", entityId, actionType, e);
             }
@@ -1006,11 +1023,31 @@ public abstract class BaseController {
         getGroupEntitiesByPageLink(SecurityUser securityUser, EntityType entityType, Operation operation,
                                    Function<EntityId, I> toIdFunction, Function<List<I>, List<E>> toEntitiesFunction,
                                    List<Predicate<E>> entityFilters, List<I> additionalEntityIds, TextPageLink pageLink) throws Exception {
+        Resource resource = Resource.resourceFromEntityType(entityType);
+        if (getCurrentUser().getAuthority() == Authority.TENANT_ADMIN &&
+                securityUser.getUserPermissions().hasGenericPermission(resource, operation)) {
+            switch (entityType) {
+                case DEVICE:
+                    return (TextPageData<E>) deviceService.findDevicesByTenantId(getTenantId(), pageLink);
+                case ASSET:
+                    return (TextPageData<E>) assetService.findAssetsByTenantId(getTenantId(), pageLink);
+                case CUSTOMER:
+                    return (TextPageData<E>) customerService.findCustomersByTenantId(getTenantId(), pageLink);
+                case USER:
+                    return (TextPageData<E>) userService.findUsersByTenantId(getTenantId(), pageLink);
+                case DASHBOARD:
+                    return (TextPageData<E>) dashboardService.findDashboardsByTenantId(getTenantId(), pageLink);
+                case ENTITY_VIEW:
+                    return (TextPageData<E>) entityViewService.findEntityViewByTenantId(getTenantId(), pageLink);
+                default:
+                    throw new RuntimeException("EntityType does not supported: " + entityType);
+            }
+        } else {
+            List<I> entityIds = getEntityIdsFromAllowedGroups(securityUser, entityType, operation, toIdFunction);
+            entityIds.addAll(additionalEntityIds);
 
-        List<I> entityIds = getEntityIdsFromAllowedGroups(securityUser, entityType, operation, toIdFunction);
-        entityIds.addAll(additionalEntityIds);
-
-        return loadAndFilterEntities(entityIds, toEntitiesFunction, entityFilters, pageLink);
+            return loadAndFilterEntities(entityIds, toEntitiesFunction, entityFilters, pageLink);
+        }
     }
 
     protected <E extends SearchTextBased<? extends UUIDBased>, I extends EntityId> TextPageData<E>

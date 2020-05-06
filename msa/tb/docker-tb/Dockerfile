@@ -79,7 +79,7 @@ RUN dpkg -i /tmp/tb-web-report.deb
 
 RUN echo "thingsboard thingsboard-pe/license boolean true" | debconf-set-selections
 
-RUN DEBIAN_FRONTEND=noninteractive dpkg -i /tmp/${pkg.name}.deb
+RUN yes | DEBIAN_FRONTEND=noninteractive dpkg -i /tmp/${pkg.name}.deb
 
 RUN systemctl --no-reload disable --now ${pkg.name}.service > /dev/null 2>&1 || :
 
