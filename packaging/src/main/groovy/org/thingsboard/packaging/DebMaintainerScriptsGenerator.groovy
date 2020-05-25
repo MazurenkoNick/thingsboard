@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2019 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2020 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -30,17 +30,19 @@
  */
 package org.thingsboard.packaging
 
+import com.netflix.gradle.plugins.deb.Deb
 import com.netflix.gradle.plugins.deb.TemplateHelper
 import com.netflix.gradle.plugins.utils.FileSystemActions
 import groovy.transform.Canonical
+import groovy.transform.CompileDynamic
 
 class DebMaintainerScriptsGenerator {
-    private final DebPackaging task
+    private final Deb task
     private final TemplateHelper templateHelper
     private final File destination
     private final FileSystemActions fileSystem
 
-    DebMaintainerScriptsGenerator(DebPackaging task, TemplateHelper templateHelper, File destination, FileSystemActions fileSystem) {
+    DebMaintainerScriptsGenerator(Deb task, TemplateHelper templateHelper, File destination, FileSystemActions fileSystem) {
         this.destination = destination
         this.task = task
         this.templateHelper = templateHelper
@@ -55,9 +57,9 @@ class DebMaintainerScriptsGenerator {
             templateHelper.generateFile("conffiles", [files: configurationFiles] )
         }
 
-        def scripts = [
+        List<MaintainerScript> scripts = [
                 new MaintainerScript("preinst", task.preInstallFile, task.allPreInstallCommands),
-                new MaintainerScript("postinst", task.postInstallFile, task.allPostInstallCommands),
+                new PostInstScript(task.postInstallFile, task.allPostInstallCommands, context),
                 new MaintainerScript("prerm", task.preUninstallFile, task.allPreUninstallCommands),
                 new MaintainerScript("postrm", task.postUninstallFile, task.allPostUninstallCommands)
         ]
@@ -72,8 +74,9 @@ class DebMaintainerScriptsGenerator {
         for (script in scripts) {
             if(script.file) {
                 fileSystem.copy(script.file, new File(destination, script.name))
-            } else {
-                templateHelper.generateFile(script.name, context + [commands: installUtils + script.commands.collect { stripShebang(it) }])
+            } else if (script.needsTemplateGeneration()) {
+                Map<String, Object> commands = [commands: installUtils + script.commands.collect { stripShebang(it) }] as Map<String, Object>
+                templateHelper.generateFile(script.name, context + commands)
             }
         }
     }
@@ -84,8 +87,9 @@ class DebMaintainerScriptsGenerator {
      * @param script
      * @return
      */
+    @CompileDynamic
     private static String stripShebang(Object script) {
-        StringBuilder result = new StringBuilder();
+        StringBuilder result = new StringBuilder()
         script?.eachLine { line ->
             if (!line.matches('^#!.*$')) {
                 result.append line
@@ -93,7 +97,6 @@ class DebMaintainerScriptsGenerator {
             }
         }
         result.toString()
-
     }
 
     @Canonical
@@ -101,6 +104,24 @@ class DebMaintainerScriptsGenerator {
         String name
         File file
         List<Object> commands
+
+        boolean needsTemplateGeneration() {
+            return commands
+        }
+    }
+
+    private static class PostInstScript extends MaintainerScript {
+        Map<String, Object> context
+
+        PostInstScript(File file, List<Object> commands, Map<String, Object> context) {
+            super("postinst", file, commands)
+            this.context = context
+        }
+
+        @Override
+        boolean needsTemplateGeneration() {
+            return super.needsTemplateGeneration() || context['dirs']
+        }
     }
 }
 

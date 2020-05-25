@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2019 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2020 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -32,13 +32,16 @@ package org.thingsboard.packaging
 
 import com.netflix.gradle.plugins.deb.control.MultiArch
 import com.netflix.gradle.plugins.deb.validation.DebTaskPropertiesValidator
-import com.netflix.gradle.plugins.deb.TemplateHelper
-import com.netflix.gradle.plugins.deb.DebFileVisitorStrategy
 import com.netflix.gradle.plugins.packaging.AbstractPackagingCopyAction
 import com.netflix.gradle.plugins.packaging.Dependency
 import com.netflix.gradle.plugins.packaging.Directory
 import com.netflix.gradle.plugins.packaging.Link
 import com.netflix.gradle.plugins.utils.ApacheCommonsFileSystemActions
+import com.netflix.gradle.plugins.utils.DeprecationLoggerUtils
+import com.netflix.gradle.plugins.deb.InstallLineGenerator
+import com.netflix.gradle.plugins.deb.Deb
+import com.netflix.gradle.plugins.deb.DebFileVisitorStrategy
+import com.netflix.gradle.plugins.deb.TemplateHelper
 import groovy.transform.Canonical
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.lang3.time.DateFormatUtils
@@ -55,12 +58,13 @@ import org.vafer.jdeb.mapping.Mapper
 import org.vafer.jdeb.mapping.PermMapper
 import org.vafer.jdeb.producers.DataProducerLink
 import org.vafer.jdeb.producers.DataProducerPathTemplate
+import org.redline_rpm.payload.Directive
 
 import static com.netflix.gradle.plugins.utils.GradleUtils.lookup
 /**
  * Forked and modified from org.jamel.pkg4j.gradle.tasks.BuildDebTask
  */
-class DebPackagingCopyAction extends AbstractPackagingCopyAction<DebPackaging> {
+class DebPackagingCopyAction extends AbstractPackagingCopyAction<Deb> {
     static final Logger logger = LoggerFactory.getLogger(DebPackagingCopyAction.class)
 
     File debianDir
@@ -78,8 +82,9 @@ class DebPackagingCopyAction extends AbstractPackagingCopyAction<DebPackaging> {
     private final DebTaskPropertiesValidator debTaskPropertiesValidator = new DebTaskPropertiesValidator()
     private DebFileVisitorStrategy debFileVisitorStrategy
     private final DebMaintainerScriptsGenerator maintainerScriptsGenerator
+    private final InstallLineGenerator installLineGenerator
 
-    DebPackagingCopyAction(DebPackaging debTask) {
+    DebPackagingCopyAction(Deb debTask) {
         super(debTask)
         debTaskPropertiesValidator.validate(debTask)
         dependencies = []
@@ -96,6 +101,7 @@ class DebPackagingCopyAction extends AbstractPackagingCopyAction<DebPackaging> {
         debianDir = new File(task.project.buildDir, "debian")
         debFileVisitorStrategy = new DebFileVisitorStrategy(dataProducers, installDirs)
         maintainerScriptsGenerator = new DebMaintainerScriptsGenerator(debTask, new TemplateHelper(debianDir, '/deb'), debianDir, new ApacheCommonsFileSystemActions())
+        installLineGenerator = new InstallLineGenerator()
     }
 
     @Canonical
@@ -119,6 +125,12 @@ class DebPackagingCopyAction extends AbstractPackagingCopyAction<DebPackaging> {
         logger.debug "adding file {}", fileDetails.relativePath.pathString
 
         def inputFile = extractFile(fileDetails)
+
+        Directive fileType = lookup(specToLookAt, 'fileType')
+        if (fileType == 'CONFIG') {
+            logger.debug "mark {} as configuration file", fileDetails.relativePath.pathString
+            task.configurationFile(fileDetails.relativePath.pathString)
+        }
 
         String user = lookup(specToLookAt, 'user') ?: task.user
         Integer uid = (Integer) lookup(specToLookAt, 'uid') ?: task.uid ?: 0
@@ -165,7 +177,11 @@ class DebPackagingCopyAction extends AbstractPackagingCopyAction<DebPackaging> {
 
     @Override
     protected void addProvides(Dependency dep) {
-        provides << dep.packageName
+        String providesString = dep.packageName
+        if (dep.version) {
+            providesString += " (= ${dep.version})"
+        }
+        provides << providesString
     }
 
     @Override
@@ -199,9 +215,11 @@ class DebPackagingCopyAction extends AbstractPackagingCopyAction<DebPackaging> {
 
     @Override
     protected void addDirectory(Directory directory) {
+        def user = directory.user ? directory.user : task.user
+        def permissionGroup = directory.permissionGroup ? directory.permissionGroup : task.permissionGroup
         dataProducers << new DataProducerPathTemplate(
                 [directory.path] as String[], null, null,
-                [ new PermMapper(-1, -1, task.user, task.permissionGroup,
+                [ new PermMapper(-1, -1, user, permissionGroup,
                         directory.permissions, -1, 0, null) ] as Mapper[])
     }
 
@@ -219,7 +237,7 @@ class DebPackagingCopyAction extends AbstractPackagingCopyAction<DebPackaging> {
         task.getAllCustomFields().collectEntries { String key, String val ->
             // in the deb control file, header XB-Foo becomes Foo in the binary package
             ['XB-' + key.capitalize(), val]
-        }
+        } as Map<String, String>
     }
 
     @Override
@@ -257,12 +275,12 @@ class DebPackagingCopyAction extends AbstractPackagingCopyAction<DebPackaging> {
         maintainerScriptsGenerator.generate(toContext())
 
         task.allSupplementaryControlFiles.each { supControl ->
-            File supControlFile = supControl instanceof File ? supControl : task.project.file(supControl)
+            File supControlFile = supControl instanceof File ? supControl as File : task.project.file(supControl)
             new File(debianDir, supControlFile.name).bytes = supControlFile.bytes
         }
 
         DebMaker maker = new DebMaker(new GradleLoggerConsole(), dataProducers, null)
-        File debFile = task.getArchivePath()
+        File debFile = task.getArchiveFile().get().asFile
         maker.setControl(debianDir)
         maker.setDeb(debFile)
         if (StringUtils.isNotBlank(task.getSigningKeyId())
@@ -274,8 +292,6 @@ class DebPackagingCopyAction extends AbstractPackagingCopyAction<DebPackaging> {
             maker.setSignPackage(true)
         }
 
-        logger.info("Creating debian package: ${debFile}")
-
         try {
             logger.info("Creating debian package: ${debFile}")
             maker.setCompression(Compression.GZIP.toString())
@@ -283,10 +299,6 @@ class DebPackagingCopyAction extends AbstractPackagingCopyAction<DebPackaging> {
         } catch (Exception e) {
             throw new GradleException("Can't build debian package ${debFile}", e)
         }
-
-        // TODO Put changes file into a separate task
-        //def changesFile = new File("${packagePath}_all.changes")
-        //createChanges(pkg, changesFile, descriptor, processor)
 
         logger.info 'Created deb {}', debFile
     }
@@ -312,60 +324,59 @@ class DebPackagingCopyAction extends AbstractPackagingCopyAction<DebPackaging> {
      * Map to be consumed by generateFile when transforming template
      */
     def Map toContext() {
-        [
-                name: task.getPackageName(),
-                version: task.getVersion(),
-                release: task.getRelease(),
-                maintainer: task.getMaintainer(),
-                uploaders: task.getUploaders(),
-                priority: task.getPriority(),
-                epoch: task.getEpoch(),
-                description: task.getPackageDescription() ?: '',
-                distribution: task.getDistribution(),
-                summary: task.getSummary(),
-                section: task.getPackageGroup(),
-                time: DateFormatUtils.SMTP_DATETIME_FORMAT.format(new Date()),
-                provides: StringUtils.join(provides, ", "),
-                depends: StringUtils.join(dependencies, ", "),
-                url: task.getUrl(),
-                arch: task.getArchString(),
-                multiArch: getMultiArch(),
-                conflicts: StringUtils.join(conflicts, ", "),
-                recommends: StringUtils.join(recommends, ", "),
-                suggests: StringUtils.join(suggests, ", "),
-                enhances: StringUtils.join(enhances, ", " ),
-                preDepends: StringUtils.join(preDepends, ", "),
-                breaks: StringUtils.join(breaks, ", "),
-                replaces: StringUtils.join(replaces, ", "),
-                fullVersion: buildFullVersion(),
-                customFields: getCustomFields(),
+        Map context = [:]
+        DeprecationLoggerUtils.whileDisabled {
+            context = [
+                    name: task.getPackageName(),
+                    version: task.getVersion(),
+                    release: task.getRelease(),
+                    maintainer: task.getMaintainer(),
+                    uploaders: task.getUploaders(),
+                    priority: task.getPriority(),
+                    epoch: task.getEpoch(),
+                    description: task.getPackageDescription() ?: '',
+                    distribution: task.getDistribution(),
+                    summary: task.getSummary(),
+                    section: task.getPackageGroup(),
+                    time: DateFormatUtils.SMTP_DATETIME_FORMAT.format(new Date()),
+                    provides: StringUtils.join(provides, ", "),
+                    depends: StringUtils.join(dependencies, ", "),
+                    url: task.getUrl(),
+                    arch: task.getArchString(),
+                    multiArch: getMultiArch(),
+                    conflicts: StringUtils.join(conflicts, ", "),
+                    recommends: StringUtils.join(recommends, ", "),
+                    suggests: StringUtils.join(suggests, ", "),
+                    enhances: StringUtils.join(enhances, ", " ),
+                    preDepends: StringUtils.join(preDepends, ", "),
+                    breaks: StringUtils.join(breaks, ", "),
+                    replaces: StringUtils.join(replaces, ", "),
+                    fullVersion: buildFullVersion(),
+                    customFields: getCustomFields(),
 
-                // Uses install command for directory
-                dirs: installDirs.collect { InstallDir dir ->
-                    def map = [name: dir.name]
-                    if(dir.user) {
-                        if (dir.group) {
-                            map['owner'] = "${dir.user}:${dir.group}"
-                        } else {
-                            map['owner'] = dir.user
-                        }
-                    }
-                    return map
-                }
-        ]
+                    // Uses install command for directory
+                    dirs: installDirs.collect { InstallDir dir -> [install: installLineGenerator.generate(dir)] }
+            ]
+        }
+        return context
     }
 
     private String buildFullVersion() {
         StringBuilder fullVersion = new StringBuilder()
-        if (task.getEpoch() != 0) {
-            fullVersion <<= task.getEpoch()
-            fullVersion <<= ':'
-        }
-        fullVersion <<= task.getVersion()
 
-        if(task.getRelease()) {
-            fullVersion <<= '-'
-            fullVersion <<= task.getRelease()
+        DeprecationLoggerUtils.whileDisabled {
+            if (task.getEpoch() != 0) {
+                fullVersion <<= task.getEpoch()
+                fullVersion <<= ':'
+            }
+
+            fullVersion <<= task.getVersion()
+
+            if(task.getRelease()) {
+                fullVersion <<= '-'
+                fullVersion <<= task.getRelease()
+            }
+
         }
 
         fullVersion.toString()
