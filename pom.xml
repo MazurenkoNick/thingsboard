@@ -47,11 +47,13 @@
         <pkg.disabled>true</pkg.disabled>
         <pkg.process-resources.phase>none</pkg.process-resources.phase>
         <pkg.package.phase>none</pkg.package.phase>
+        <pkg.eula.phase>none</pkg.eula.phase>
         <pkg.user>thingsboard</pkg.user>
         <pkg.implementationTitle>${project.name}</pkg.implementationTitle>
         <pkg.unixLogFolder>/var/log/${pkg.name}</pkg.unixLogFolder>
         <pkg.installFolder>/usr/share/${pkg.name}</pkg.installFolder>
         <pkg.copyLicenseResources>false</pkg.copyLicenseResources>
+        <pkg.controlScriptsFolder>control</pkg.controlScriptsFolder>
         <spring-boot.version>2.2.6.RELEASE</spring-boot.version>
         <spring-oauth2.version>2.1.2.RELEASE</spring-oauth2.version>
         <spring.version>5.2.6.RELEASE</spring.version>
@@ -140,11 +142,11 @@
         <module>rule-engine</module>
         <module>rule-engine-pe</module>
         <module>dao</module>
+        <module>packaging</module>
         <module>transport</module>
         <module>integration</module>
         <module>ui</module>
         <module>tools</module>
-        <module>packaging</module>
         <module>application</module>
         <module>msa</module>
         <module>rest-client</module>
@@ -295,6 +297,16 @@
                                         <resources>
                                             <resource>
                                                 <directory>${main.dir}/packaging/${pkg.type}/scripts/control</directory>
+                                                <includes>
+                                                    <include>template.service</include>
+                                                </includes>
+                                                <filtering>true</filtering>
+                                            </resource>
+                                            <resource>
+                                                <directory>${main.dir}/packaging/${pkg.type}/scripts/${pkg.controlScriptsFolder}</directory>
+                                                <excludes>
+                                                    <exclude>template.service</exclude>
+                                                </excludes>
                                                 <filtering>true</filtering>
                                             </resource>
                                         </resources>
@@ -548,6 +560,31 @@
                                     <goals>
                                         <goal>install-file</goal>
                                     </goals>
+                                </execution>
+                            </executions>
+                        </plugin>
+                        <plugin>
+                            <groupId>org.codehaus.gmaven</groupId>
+                            <artifactId>gmaven-plugin</artifactId>
+                            <version>1.4</version>
+                            <executions>
+                                <execution>
+                                    <phase>${pkg.eula.phase}</phase>
+                                    <goals>
+                                        <goal>execute</goal>
+                                    </goals>
+                                    <configuration>
+                                        <properties>
+                                            <eulaDebFile>${main.dir}/packaging/java/scripts/EULA_DEB.txt</eulaDebFile>
+                                            <eulaFile>${main.dir}/packaging/java/scripts/EULA.txt</eulaFile>
+                                        </properties>
+                                        <source>
+                                            def file = new File(project.properties.eulaDebFile)
+                                            project.properties.debPkgEula = file.getText()
+                                            file = new File(project.properties.eulaFile)
+                                            project.properties.pkgEula = file.getText()
+                                        </source>
+                                    </configuration>
                                 </execution>
                             </executions>
                         </plugin>

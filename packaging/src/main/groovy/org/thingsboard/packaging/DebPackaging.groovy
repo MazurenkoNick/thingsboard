@@ -33,7 +33,7 @@ package org.thingsboard.packaging
 import com.netflix.gradle.plugins.deb.Deb
 import com.netflix.gradle.plugins.deb.DebCopyAction
 import com.netflix.gradle.plugins.packaging.AbstractPackagingCopyAction
-import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.Optional
 
 class DebPackaging extends Deb {
@@ -42,11 +42,11 @@ class DebPackaging extends Deb {
         super()
     }
 
-    @Input
+    @InputFile
     @Optional
     File configFile
 
-    @Input
+    @InputFile
     @Optional
     File templatesFile
 

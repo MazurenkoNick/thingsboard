@@ -53,12 +53,14 @@
         <pkg.disabled>false</pkg.disabled>
         <pkg.process-resources.phase>process-resources</pkg.process-resources.phase>
         <pkg.package.phase>package</pkg.package.phase>
+        <pkg.eula.phase>generate-resources</pkg.eula.phase>
         <pkg.name>thingsboard</pkg.name>
         <pkg.win.dist>${project.build.directory}/windows</pkg.win.dist>
         <pkg.copyInstallScripts>true</pkg.copyInstallScripts>
         <pkg.copyLicenseResources>true</pkg.copyLicenseResources>
         <pkg.implementationTitle>ThingsBoard Professional Edition</pkg.implementationTitle>
         <pkg.mainClass>org.thingsboard.server.ThingsboardServerApplication</pkg.mainClass>
+        <pkg.controlScriptsFolder>control-license</pkg.controlScriptsFolder>
     </properties>
 
     <dependencies>
@@ -393,27 +395,6 @@
             <plugin>
                 <groupId>org.codehaus.gmaven</groupId>
                 <artifactId>gmaven-plugin</artifactId>
-                <version>1.4</version>
-                <executions>
-                    <execution>
-                        <phase>generate-resources</phase>
-                        <goals>
-                            <goal>execute</goal>
-                        </goals>
-                        <configuration>
-                            <properties>
-                                <eulaDebFile>${basedir}/src/main/scripts/EULA_DEB.txt</eulaDebFile>
-                                <eulaFile>${basedir}/src/main/scripts/EULA.txt</eulaFile>
-                            </properties>
-                            <source>
-                                def file = new File(project.properties.eulaDebFile)
-                                project.properties.debPkgEula = file.getText()
-                                file = new File(project.properties.eulaFile)
-                                project.properties.pkgEula = file.getText()
-                            </source>
-                        </configuration>
-                    </execution>
-                </executions>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
