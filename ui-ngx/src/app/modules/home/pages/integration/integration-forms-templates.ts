@@ -29,9 +29,9 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { Validators } from '@angular/forms';
-import { IntegrationType } from '@shared/models/integration.models';
+import { IntegrationType, IntegrationTypeInfo } from '@shared/models/integration.models';
 import { baseUrl, generateId } from '@app/core/utils';
+import { AbstractControl, FormGroup, ValidatorFn, Validators } from '@angular/forms';
 
 export const handlerConfigurationTypes = {
   text: {
@@ -70,39 +70,135 @@ export const tcpTextMessageSeparator = {
   }
 }
 
+export const opcSecurityTypes = {
+  Basic128Rsa15: 'Basic128Rsa15',
+  Basic256: 'Basic256',
+  Basic256Sha256: 'Basic256Sha256',
+  None: 'None'
+}
+
+export type mqttCredentialType = 'anonymous' | 'basic' | 'cert.PEM';
+
+export const mqttCredentialTypes = {
+  anonymous: {
+    value: 'anonymous',
+    name: 'extension.anonymous'
+  },
+  basic: {
+    value: 'basic',
+    name: 'extension.basic'
+  },
+  'cert.PEM': {
+    value: 'cert.PEM',
+    name: 'extension.pem'
+  }
+}
+
+export function updateIntegrationFormState(type: IntegrationType, info: IntegrationTypeInfo,
+                                           integrationForm: FormGroup, disabled: boolean) {
+  if (disabled) {
+    integrationForm.disable({emitEvent: false});
+  } else {
+    integrationForm.enable({emitEvent: false});
+    if (info.http) {
+      integrationForm.get('httpEndpoint').disable({emitEvent: false});
+    } else if (type === IntegrationType.TTN) {
+      integrationForm.get('topicFilters').disable({emitEvent: false});
+    }
+  }
+}
+
+export function updateIntegrationFormDefaultFields(type: IntegrationType, integrationForm: FormGroup) {
+  if (type === IntegrationType.KAFKA) {
+    if (!integrationForm.get('clientConfiguration').get('groupId').value)
+      integrationForm.get('clientConfiguration').get('groupId').patchValue('group_id_' + generateId(10));
+    if (!integrationForm.get('clientConfiguration').get('clientId').value)
+      integrationForm.get('clientConfiguration').get('clientId').patchValue('client_id_' + generateId(10));
+  } else if (type === IntegrationType.CUSTOM) {
+    if (!integrationForm.get('configuration').value)
+      integrationForm.get('configuration').patchValue('{}');
+  }
+}
+
+export function updateIntegrationFormValidators(integrationForm: FormGroup,
+                                                fieldValidators: {[key: string]: ValidatorFn | ValidatorFn[]} = {}) {
+  for (const field of Object.keys(fieldValidators)) {
+    const validators = fieldValidators[field];
+    const path = field.split('.');
+    let control: AbstractControl = integrationForm;
+    for (const part of path) {
+      control = control.get(part);
+    }
+    control.setValidators(validators);
+    control.updateValueAndValidity();
+  }
+}
+
 export const templates = {
   http: {
     baseUrl: baseUrl(),
     replaceNoContentToOk: '',
-    enableSecurity: '',
+    enableSecurity: false,
     downlinkUrl: 'https://api.thingpark.com/thingpark/lrc/rest/downlink',
-    enableSecurityNew: '',
+    enableSecurityNew: false,
     asId: '',
     asIdNew: '',
     asKey: '',
     clientIdNew: '',
     clientSecret: '',
-    maxTimeDiffInSeconds: '',
+    maxTimeDiffInSeconds: 60,
     httpEndpoint: '',
-    headersFilter: ''
+    headersFilter: {},
+    ignoreNonPrimitiveFields: ['headersFilter'],
+    fieldValidators: {
+      baseUrl: [Validators.required],
+      headersFilter: [Validators.required],
+      asId: [Validators.required],
+      asIdNew: [Validators.required],
+      asKey: [Validators.required],
+      clientIdNew: [Validators.required],
+      clientSecret: [Validators.required],
+      maxTimeDiffInSeconds: [Validators.required, Validators.min(0)]
+    }
   },
   [IntegrationType.MQTT]: {
     clientConfiguration: {
       host: 'localhost',
       port: 11883,
-      cleanSession: '',
-      ssl: '',
+      cleanSession: true,
+      ssl: false,
       connectTimeoutSec: 10,
       clientId: '',
       credentials: {
-        type: 'annonymus',
-        username: ' ',
-        password: ' '
+        type: mqttCredentialTypes.anonymous.value,
+        username: '',
+        password: '',
+        caCertFileName: '',
+        caCert: '',
+        certFileName: '',
+        cert: '',
+        privateKeyFileName: '',
+        privateKey: '',
+        privateKeyPassword: ''
       },
-      privateKeypassword: ' '
     },
     downlinkTopicPattern: '${topic}',
-    topicFilters: []
+    topicFilters: [],
+    fieldValidators: {
+      'clientConfiguration.host': [Validators.required],
+      'clientConfiguration.port': [Validators.min(1), Validators.max(65535)],
+      'clientConfiguration.connectTimeoutSec': [Validators.required, Validators.min(1), Validators.max(200)],
+      'clientConfiguration.credentials.username': [Validators.required],
+      'clientConfiguration.credentials.password': [Validators.required],
+      'clientConfiguration.credentials.caCertFileName': [Validators.required],
+      'clientConfiguration.credentials.caCert': [Validators.required],
+      'clientConfiguration.credentials.certFileName': [Validators.required],
+      'clientConfiguration.credentials.cert': [Validators.required],
+      'clientConfiguration.credentials.privateKeyFileName': [Validators.required],
+      'clientConfiguration.credentials.privateKey': [Validators.required],
+      downlinkTopicPattern: [Validators.required],
+      topicFilters: [Validators.required]
+    }
   },
   [IntegrationType.AWS_IOT]: {
     clientConfiguration: {
@@ -119,11 +215,23 @@ export const templates = {
         cert: '',
         privateKeyFileName: '',
         privateKey: '',
-        password: ' '
+        password: ''
       }
     },
     downlinkTopicPattern: '${topic}',
-    topicFilters: []
+    topicFilters: [],
+    fieldValidators: {
+      'clientConfiguration.host': [Validators.required],
+      'clientConfiguration.connectTimeoutSec': [Validators.required, Validators.min(1), Validators.max(200)],
+      'clientConfiguration.credentials.caCertFileName': [Validators.required],
+      'clientConfiguration.credentials.caCert': [Validators.required],
+      'clientConfiguration.credentials.certFileName': [Validators.required],
+      'clientConfiguration.credentials.cert': [Validators.required],
+      'clientConfiguration.credentials.privateKeyFileName': [Validators.required],
+      'clientConfiguration.credentials.privateKey': [Validators.required],
+      downlinkTopicPattern: [Validators.required],
+      topicFilters: [Validators.required]
+    }
   },
   [IntegrationType.AWS_SQS]: {
     sqsConfiguration: {
@@ -132,17 +240,37 @@ export const templates = {
       region: 'us-west-2',
       accessKeyId: '',
       secretAccessKey: ''
+    },
+    fieldValidators: {
+      'sqsConfiguration.queueUrl': [Validators.required],
+      'sqsConfiguration.pollingPeriodSeconds': [Validators.required, Validators.min(1)],
+      'sqsConfiguration.region': [Validators.required],
+      'sqsConfiguration.accessKeyId': [Validators.required],
+      'sqsConfiguration.secretAccessKey': [Validators.required]
     }
   },
   [IntegrationType.AWS_KINESIS]: {
-    streamName: '',
-    region: '',
-    accessKeyId: '',
-    secretAccessKey: '',
-    useCredentialsFromInstanceMetadata: '',
-    applicationName: '',
-    initialPositionInStream: '',
-    useConsumersWithEnhancedFanOut: ''
+    clientConfiguration: {
+      streamName: '',
+      region: '',
+      accessKeyId: '',
+      secretAccessKey: '',
+      useCredentialsFromInstanceMetadata: false,
+      applicationName: '',
+      initialPositionInStream: '',
+      useConsumersWithEnhancedFanOut: false,
+      maxRecords: 10000,
+      requestTimeout: 30
+    },
+    fieldValidators: {
+      'clientConfiguration.streamName': [Validators.required],
+      'clientConfiguration.region': [Validators.required],
+      'clientConfiguration.accessKeyId': [Validators.required],
+      'clientConfiguration.secretAccessKey': [Validators.required],
+      'clientConfiguration.initialPositionInStream': [Validators.required],
+      'clientConfiguration.maxRecords': [Validators.required, Validators.min(1), Validators.max(10000)],
+      'clientConfiguration.requestTimeout': [Validators.required]
+    }
   },
   [IntegrationType.IBM_WATSON_IOT]: {
     clientConfiguration: {
@@ -153,47 +281,66 @@ export const templates = {
       cleanSession: true,
       credentials: {
         type: 'basic',
-        username: ' ',
-        password: ' ',
+        username: '',
+        password: '',
       }
     },
     topicFilters: [{
       filter: 'iot-2/type/+/id/+/evt/+/fmt/+',
       qos: 0
     }],
-    downlinkTopicPattern: 'iot-2/type/${device_type}/id/${device_id}/cmd/${command_id}/fmt/${format}'
-
+    downlinkTopicPattern: 'iot-2/type/${device_type}/id/${device_id}/cmd/${command_id}/fmt/${format}',
+    fieldValidators: {
+      'clientConfiguration.connectTimeoutSec': [Validators.required, Validators.min(1), Validators.max(200)],
+      'clientConfiguration.credentials.username': [Validators.required],
+      'clientConfiguration.credentials.password': [Validators.required],
+      downlinkTopicPattern: [Validators.required],
+      topicFilters: [Validators.required]
+    }
   },
   [IntegrationType.TTN]: {
     clientConfiguration: {
-      currentHostType: '',
       host: '',
+      customHost: false,
       port: 8883,
       ssl: true,
-      $parent: {
-        hostRegion: '',
-        hostCustom: ''
-      },
       connectTimeoutSec: 10,
       credentials: {
         type: 'basic',
-        username: ' ',
-        password: ' '
+        username: '',
+        password: ''
       },
-      topicFilters: [{
-        filter: '+/devices/+/up',
-        qos: 0
-      }],
-      downlinkTopicPattern: ''
+    },
+    topicFilters: [{
+      filter: '+/devices/+/up',
+      qos: 0
+    }],
+    downlinkTopicPattern: '',
+    fieldValidators: {
+      'clientConfiguration.host': [Validators.required],
+      'clientConfiguration.connectTimeoutSec': [Validators.required, Validators.min(1), Validators.max(200)],
+      'clientConfiguration.credentials.username': [Validators.required],
+      'clientConfiguration.credentials.password': [Validators.required],
+      downlinkTopicPattern: [Validators.required],
+      topicFilters: [Validators.required]
     }
   },
   [IntegrationType.AZURE_EVENT_HUB]: {
-    connectTimeoutSec: 10,
-    namespaceName: '',
-    eventHubName: '',
-    sasKeyName: '',
-    sasKey: '',
-    iotHubName: '',
+    clientConfiguration: {
+      connectTimeoutSec: 10,
+      namespaceName: '',
+      eventHubName: '',
+      sasKeyName: '',
+      sasKey: '',
+      iotHubName: ''
+    },
+    fieldValidators: {
+      'clientConfiguration.connectTimeoutSec': [Validators.required, Validators.min(1), Validators.max(200)],
+      'clientConfiguration.namespaceName': [Validators.required],
+      'clientConfiguration.eventHubName': [Validators.required],
+      'clientConfiguration.sasKeyName': [Validators.required],
+      'clientConfiguration.sasKey': [Validators.required]
+    }
   },
   [IntegrationType.OPC_UA]: {
     clientConfiguration: {
@@ -203,10 +350,10 @@ export const templates = {
       port: 49320,
       scanPeriodInSeconds: 10,
       timeoutInMillis: 5000,
-      security: '',
+      security: opcSecurityTypes.Basic128Rsa15,
       identity: {
-        password: ' ',
-        username: ' ',
+        password: '',
+        username: '',
         type: 'anonymous'
       },
       mapping: [],
@@ -218,6 +365,23 @@ export const templates = {
         alias: 'opc-ua-extension',
         keyPassword: 'secret',
       }
+    },
+    fieldValidators: {
+      'clientConfiguration.host': [Validators.required],
+      'clientConfiguration.port': [Validators.required, Validators.min(1), Validators.max(65535)],
+      'clientConfiguration.scanPeriodInSeconds': [Validators.required],
+      'clientConfiguration.timeoutInMillis': [Validators.required],
+      'clientConfiguration.security': [Validators.required],
+      'clientConfiguration.identity.type': [Validators.required],
+      'clientConfiguration.identity.username': [Validators.required],
+      'clientConfiguration.identity.password': [Validators.required],
+      'clientConfiguration.mapping': [Validators.required],
+      'clientConfiguration.keystore.type': [Validators.required],
+      'clientConfiguration.keystore.location': [Validators.required],
+      'clientConfiguration.keystore.fileContent': [Validators.required],
+      'clientConfiguration.keystore.password': [Validators.required],
+      'clientConfiguration.keystore.alias': [Validators.required],
+      'clientConfiguration.keystore.keyPassword': [Validators.required]
     }
   },
   [IntegrationType.UDP]: {
@@ -226,8 +390,17 @@ export const templates = {
       soBroadcast: true,
       soRcvBuf: 64,
       handlerConfiguration: {
-        handlerType: handlerConfigurationTypes.binary.value
+        handlerType: handlerConfigurationTypes.binary.value,
+        charsetName: 'UTF-8',
+        maxFrameLength: 128
       }
+    },
+    fieldValidators: {
+      'clientConfiguration.port': [Validators.required, Validators.min(1), Validators.max(65535)],
+      'clientConfiguration.soRcvBuf': [Validators.required, Validators.min(1), Validators.max(65535)],
+      'clientConfiguration.handlerConfiguration.handlerType': [Validators.required],
+      'clientConfiguration.handlerConfiguration.charsetName': [Validators.required],
+      'clientConfiguration.handlerConfiguration.maxFrameLength': [Validators.required, Validators.min(1), Validators.max(65535)]
     }
   },
   [IntegrationType.TCP]: {
@@ -250,36 +423,45 @@ export const templates = {
         stripDelimiter: true,
         messageSeparator: tcpTextMessageSeparator.systemLineSeparator.value
       }
+    },
+    fieldValidators: {
+      'clientConfiguration.port': [Validators.required, Validators.min(1), Validators.max(65535)],
+      'clientConfiguration.soBacklogOption': [Validators.required, Validators.min(1), Validators.max(65535)],
+      'clientConfiguration.soRcvBuf': [Validators.required, Validators.min(1), Validators.max(65535)],
+      'clientConfiguration.soSndBuf': [Validators.required, Validators.min(1), Validators.max(65535)],
+      'clientConfiguration.handlerConfiguration.handlerType': [Validators.required],
+      'clientConfiguration.handlerConfiguration.maxFrameLength': [Validators.required, Validators.min(1), Validators.max(65535)],
+      'clientConfiguration.handlerConfiguration.lengthFieldOffset': [Validators.required, Validators.min(0), Validators.max(8)],
+      'clientConfiguration.handlerConfiguration.lengthFieldLength': [Validators.required, Validators.min(0), Validators.max(8)],
+      'clientConfiguration.handlerConfiguration.lengthAdjustment': [Validators.required, Validators.min(0), Validators.max(8)],
+      'clientConfiguration.handlerConfiguration.initialBytesToStrip': [Validators.required, Validators.min(0), Validators.max(8)]
     }
   },
   [IntegrationType.KAFKA]: {
     clientConfiguration: {
-      groupId: '' ,
-      clientId: '' ,
+      groupId: '',
+      clientId: '',
       topics: 'my-topic-output',
       bootstrapServers: 'localhost:9092',
       pollInterval: 5000,
       autoCreateTopics: false,
+      otherProperties: ''
+    },
+    ignoreNonPrimitiveFields: ['otherProperties'],
+    fieldValidators: {
+      'clientConfiguration.groupId': [Validators.required],
+      'clientConfiguration.clientId': [Validators.required],
+      'clientConfiguration.topics': [Validators.required],
+      'clientConfiguration.bootstrapServers': [Validators.required],
+      'clientConfiguration.pollInterval': [Validators.required]
     }
   },
   [IntegrationType.CUSTOM]: {
     clazz: '',
-    configuration: ''
-  }
-}
-
-export const mqttCredentialTypes = {
-  anonymous: {
-    value: 'anonymous',
-    name: 'extension.anonymous'
-  },
-  basic: {
-    value: 'basic',
-    name: 'extension.basic'
-  },
-  'cert.PEM': {
-    value: 'cert.PEM',
-    name: 'extension.pem'
+    configuration: '',
+    fieldValidators: {
+      clazz: [Validators.required]
+    }
   }
 }
 
@@ -293,20 +475,10 @@ export const extensionKeystoreType = {
   JKS: 'JKS'
 }
 
-export const initialPositionInStream = {
-  latest: 'LATEST',
-  trim_horizon: 'TRIM_HORIZON',
-  at_timestamp: 'AT_TIMESTAMP'
-}
-
-export const topicFilters = {
-
-}
-export const opcSecurityTypes = {
-  Basic128Rsa15: 'Basic128Rsa15',
-  Basic256: 'Basic256',
-  Basic256Sha256: 'Basic256Sha256',
-  None: 'None'
+export enum InitialPositionInStream {
+  LATEST = 'LATEST',
+  TRIM_HORIZON = 'TRIM_HORIZON',
+  AT_TIMESTAMP = 'AT_TIMESTAMP'
 }
 
 export const identityType = {

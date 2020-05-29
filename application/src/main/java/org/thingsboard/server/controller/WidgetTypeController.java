@@ -48,10 +48,12 @@ import org.thingsboard.server.common.data.permission.Resource;
 import org.thingsboard.server.common.data.security.Authority;
 import org.thingsboard.server.common.data.widget.WidgetType;
 import org.thingsboard.server.dao.model.ModelConstants;
+import org.thingsboard.server.queue.util.TbCoreComponent;
 
 import java.util.List;
 
 @RestController
+@TbCoreComponent
 @RequestMapping("/api")
 public class WidgetTypeController extends BaseController {
 
@@ -73,16 +75,13 @@ public class WidgetTypeController extends BaseController {
     @ResponseBody
     public WidgetType saveWidgetType(@RequestBody WidgetType widgetType) throws ThingsboardException {
         try {
-            if (getCurrentUser().getAuthority() == Authority.SYS_ADMIN) {
+            if (Authority.SYS_ADMIN.equals(getCurrentUser().getAuthority())) {
                 widgetType.setTenantId(TenantId.SYS_TENANT_ID);
             } else {
                 widgetType.setTenantId(getCurrentUser().getTenantId());
             }
 
-            Operation operation = widgetType.getId() == null ? Operation.CREATE : Operation.WRITE;
-
-            accessControlService.checkPermission(getCurrentUser(), Resource.WIDGET_TYPE, operation,
-                    widgetType.getId(), widgetType);
+            checkEntity(widgetType.getId(), widgetType, Resource.WIDGET_TYPE, null);
 
             return checkNotNull(widgetTypeService.saveWidgetType(widgetType));
         } catch (Exception e) {

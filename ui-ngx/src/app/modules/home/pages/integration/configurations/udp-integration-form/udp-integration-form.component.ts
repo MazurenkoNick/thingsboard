@@ -29,20 +29,18 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { Component, Input, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { handlerConfigurationTypes } from '../../integration-forms-templates';
-
+import { disableFields, enableFields } from '../../integration-utils';
+import { IntegrationFormComponent } from '@home/pages/integration/configurations/integration-form.component';
 
 @Component({
   selector: 'tb-udp-integration-form',
   templateUrl: './udp-integration-form.component.html',
   styleUrls: ['./udp-integration-form.component.scss']
 })
-export class UdpIntegrationFormComponent implements OnInit {
-
-
-  @Input() form: FormGroup;
+export class UdpIntegrationFormComponent extends IntegrationFormComponent {
 
   handlerConfigurationTypes = handlerConfigurationTypes;
 
@@ -63,14 +61,29 @@ export class UdpIntegrationFormComponent implements OnInit {
     },
   }
 
-
-  constructor() { }
-
-  ngOnInit(): void {
+  constructor() {
+    super();
   }
 
-  handlerConfigurationTypeChanged(type) {
-    this.form.get('handlerConfiguration').patchValue(this.defaultHandlerConfigurations[type.value])
+  onIntegrationFormSet() {
+    if (this.form.enabled) {
+      this.form.get('handlerConfiguration').get('handlerType').valueChanges.subscribe(() => {
+        this.handlerConfigurationTypeChanged();
+      });
+      this.handlerConfigurationTypeChanged();
+    }
+  }
+
+  handlerConfigurationTypeChanged() {
+    const type: string = this.form.get('handlerConfiguration').get('handlerType').value;
+    disableFields(this.form.get('handlerConfiguration') as FormGroup, ['charsetName', 'maxFrameLength']);
+    if (type === handlerConfigurationTypes.hex.value) {
+      enableFields(this.form.get('handlerConfiguration') as FormGroup, ['maxFrameLength']);
+    }
+    if (type === handlerConfigurationTypes.text.value) {
+      enableFields(this.form.get('handlerConfiguration') as FormGroup, ['charsetName']);
+    }
+    this.form.get('handlerConfiguration').patchValue(this.defaultHandlerConfigurations[type], {emitEvent: false});
   };
 
 }

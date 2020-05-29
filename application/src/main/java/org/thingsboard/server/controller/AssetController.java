@@ -61,6 +61,9 @@ import org.thingsboard.server.common.data.permission.Resource;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.security.Authority;
+import org.thingsboard.server.dao.exception.IncorrectParameterException;
+import org.thingsboard.server.dao.model.ModelConstants;
+import org.thingsboard.server.queue.util.TbCoreComponent;
 import org.thingsboard.server.service.security.model.SecurityUser;
 
 import java.util.ArrayList;
@@ -71,6 +74,7 @@ import java.util.stream.Collectors;
 import static org.thingsboard.server.controller.EntityGroupController.ENTITY_GROUP_ID;
 
 @RestController
+@TbCoreComponent
 @RequestMapping("/api")
 public class AssetController extends BaseController {
 
@@ -94,41 +98,7 @@ public class AssetController extends BaseController {
     @ResponseBody
     public Asset saveAsset(@RequestBody Asset asset,
                            @RequestParam(name = "entityGroupId", required = false) String strEntityGroupId) throws ThingsboardException {
-        try {
-            asset.setTenantId(getCurrentUser().getTenantId());
-
-            Operation operation = asset.getId() == null ? Operation.CREATE : Operation.WRITE;
-
-            if (operation == Operation.CREATE
-                    && getCurrentUser().getAuthority() == Authority.CUSTOMER_USER &&
-                    (asset.getCustomerId() == null || asset.getCustomerId().isNullUid())) {
-                asset.setCustomerId(getCurrentUser().getCustomerId());
-            }
-
-            EntityGroupId entityGroupId = null;
-            if (!StringUtils.isEmpty(strEntityGroupId)) {
-                entityGroupId = new EntityGroupId(toUUID(strEntityGroupId));
-            }
-
-            accessControlService.checkPermission(getCurrentUser(), Resource.ASSET, operation,
-                    asset.getId(), asset, entityGroupId);
-
-            Asset savedAsset  = checkNotNull(assetService.saveAsset(asset));
-
-            if (entityGroupId != null && operation == Operation.CREATE) {
-                entityGroupService.addEntityToEntityGroup(getTenantId(), entityGroupId, savedAsset.getId());
-            }
-
-            logEntityAction(savedAsset.getId(), savedAsset,
-                    savedAsset.getCustomerId(),
-                    asset.getId() == null ? ActionType.ADDED : ActionType.UPDATED, null);
-
-            return  savedAsset;
-        } catch (Exception e) {
-            logEntityAction(emptyId(EntityType.ASSET), asset,
-                    null, asset.getId() == null ? ActionType.ADDED : ActionType.UPDATED, e);
-            throw handleException(e);
-        }
+        return saveGroupEntity(asset, strEntityGroupId, assetService::saveAsset);
     }
 
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
@@ -232,7 +202,7 @@ public class AssetController extends BaseController {
             @RequestParam(required = false) String sortOrder) throws ThingsboardException {
         try {
             PageLink pageLink = createPageLink(pageSize, page, textSearch, sortProperty, sortOrder);
-            return getGroupEntities(getCurrentUser(), EntityType.ASSET, Operation.READ,
+            return ownersCacheService.getGroupEntities(getTenantId(), getCurrentUser(), EntityType.ASSET, Operation.READ, pageLink,
                     (groupIds) -> {
                         if (type != null && type.trim().length() > 0) {
                             return assetService.findAssetsByEntityGroupIdsAndType(groupIds, type, pageLink);

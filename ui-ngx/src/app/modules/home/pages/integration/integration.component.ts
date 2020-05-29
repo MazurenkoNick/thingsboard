@@ -29,11 +29,11 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { Component, Inject, OnInit } from '@angular/core';
+import { Component, Inject, OnInit, ViewChild } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { AppState } from '@core/core.state';
 import { EntityComponent } from '../../components/entity/entity.component';
-import { FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormArray, FormBuilder, FormGroup, ValidatorFn, Validators } from '@angular/forms';
 import { ActionNotificationShow } from '@core/notification/notification.actions';
 import { TranslateService } from '@ngx-translate/core';
 import { EntityTableConfig } from '@home/models/entity/entities-table-config.models';
@@ -45,8 +45,14 @@ import {
 } from '@shared/models/integration.models';
 import { guid, isDefined, isUndefined, removeEmptyObjects } from '@core/utils';
 import { ConverterType } from '@shared/models/converter.models';
-import { templates } from './integration-forms-templates';
+import {
+  templates,
+  updateIntegrationFormDefaultFields,
+  updateIntegrationFormValidators,
+  updateIntegrationFormState
+} from './integration-forms-templates';
 import _ from 'lodash';
+import { IntegrationFormComponent } from '@home/pages/integration/configurations/integration-form.component';
 
 @Component({
   selector: 'tb-integration',
@@ -54,6 +60,8 @@ import _ from 'lodash';
   styleUrls: ['./integration.component.scss']
 })
 export class IntegrationComponent extends EntityComponent<Integration> implements OnInit {
+
+  @ViewChild('integrationFormComponent', {static: false}) integrationFormComponent: IntegrationFormComponent;
 
   integrationType: IntegrationType;
 
@@ -110,23 +118,34 @@ export class IntegrationComponent extends EntityComponent<Integration> implement
         )
       }
     );
+    this.integrationType = entity ? entity.type : null;
     form.get('type').valueChanges.subscribe((type: IntegrationType) => {
       this.integrationType = type;
-      this.setConfigurationForm(type);
+      this.setConfigurationForm();
       this.integrationTypeChanged(form);
     });
     this.checkIsNewIntegration(entity, form);
     return form;
   }
 
-  setConfigurationForm(type, entity = {}) {
-    this.integrationInfo = this.integrationTypeInfos.get(type);
-    const formTemplate = _.cloneDeep(this.integrationInfo.http ? templates.http : templates[type]);
-    this.integrationForm = this.getIntegrationForm(_.merge(formTemplate, entity));
-    const configuration = this.entityForm.get('configuration') as FormArray;
-    configuration.controls = [];
-    configuration.push(this.integrationForm);
-    if (!this.isEditValue) this.integrationForm.disable();
+  setConfigurationForm(configuration = {}) {
+    const configurationForm = this.entityForm.get('configuration') as FormArray;
+    configurationForm.controls = [];
+    if (this.integrationType) {
+      this.integrationInfo = this.integrationTypeInfos.get(this.integrationType);
+      const formTemplate = _.cloneDeep(this.integrationInfo.http ? templates.http : templates[this.integrationType]);
+      const ignoreNonPrimitiveFields: string[] = formTemplate.ignoreNonPrimitiveFields || [];
+      const fieldValidators: {[key: string]: ValidatorFn | ValidatorFn[]} = formTemplate.fieldValidators || {};
+      delete formTemplate.ignoreNonPrimitiveFields;
+      delete formTemplate.fieldValidators;
+      this.integrationForm = this.getIntegrationForm(_.merge(formTemplate, configuration), ignoreNonPrimitiveFields);
+      updateIntegrationFormDefaultFields(this.integrationType, this.integrationForm);
+      updateIntegrationFormValidators(this.integrationForm, fieldValidators);
+      updateIntegrationFormState(this.integrationType, this.integrationInfo, this.integrationForm, !this.isEditValue);
+      configurationForm.push(this.integrationForm);
+    } else {
+      this.integrationForm = null;
+    }
   }
 
   updateFormState() {
@@ -135,10 +154,13 @@ export class IntegrationComponent extends EntityComponent<Integration> implement
       this.checkIsRemote(this.entityForm);
       this.entityForm.get('routingKey').disable({ emitEvent: false });
       this.entityForm.get('secret').disable({ emitEvent: false });
-      if (this.integrationForm)
-        this.integrationForm.enable();
     }
-    else if (this.integrationForm) this.integrationForm.disable();
+    if (this.integrationForm) {
+      updateIntegrationFormState(this.integrationType, this.integrationInfo, this.integrationForm, !this.isEditValue);
+      if (this.integrationFormComponent) {
+        this.integrationFormComponent.updateFormState(!this.isEditValue);
+      }
+    }
   }
 
   private checkIsNewIntegration(entity: Integration, form: FormGroup) {
@@ -149,7 +171,7 @@ export class IntegrationComponent extends EntityComponent<Integration> implement
   }
 
   private integrationTypeChanged(form: FormGroup) {
-    form.get('configuration').patchValue({}, { emitEvent: false });
+   // form.get('configuration').patchValue({}, { emitEvent: false });
     form.get('metadata').patchValue({}, { emitEvent: false });
     this.checkIsRemote(form);
   }
@@ -179,17 +201,17 @@ export class IntegrationComponent extends EntityComponent<Integration> implement
     this.entityForm.patchValue({ additionalInfo: { description: entity.additionalInfo ? entity.additionalInfo.description : '' } });
     this.checkIsNewIntegration(entity, this.entityForm);
     this.integrationType = entity.type;
-    this.setConfigurationForm(entity.type, entity.configuration);
+    this.setConfigurationForm(entity.configuration);
   }
 
-  getIntegrationForm(form: object): FormGroup {
+  getIntegrationForm(form: object, ignoreNonPrimitiveFields: string[] = []): FormGroup {
     const template = {};
     for (const key of Object.keys(form)) {
-      if (Array.isArray(form[key])) {
-        template[key] = this.fb.array(form[key].map(el => this.getIntegrationForm(el)));
+      if (Array.isArray(form[key]) && !ignoreNonPrimitiveFields.includes(key)) {
+        template[key] = this.fb.array(form[key].map(el => this.getIntegrationForm(el, ignoreNonPrimitiveFields)));
       }
-      else if (typeof (form[key]) === 'object') {
-        template[key] = this.getIntegrationForm(form[key]);
+      else if (typeof (form[key]) === 'object' && !ignoreNonPrimitiveFields.includes(key)) {
+        template[key] = this.getIntegrationForm(form[key], ignoreNonPrimitiveFields);
       }
       else {
         template[key] = this.fb.control(form[key]);
@@ -222,7 +244,7 @@ export class IntegrationComponent extends EntityComponent<Integration> implement
     return str.concat(this.generateSecret(length - str.length));
   }
 
-  onIntegrationIdCopied($event) {
+  onIntegrationIdCopied() {
     this.store.dispatch(new ActionNotificationShow(
       {
         message: this.translate.instant('integration.idCopiedMessage'),

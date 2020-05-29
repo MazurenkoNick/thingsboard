@@ -35,12 +35,10 @@ import { AppState } from '@core/core.state';
 import { PageComponent } from '@shared/components/page.component';
 import { Router } from '@angular/router';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { SecuritySettings, smtpPortPattern } from '@shared/models/settings.models';
-import { AdminService } from '@core/http/admin.service';
 import { HasConfirmForm } from '@core/guards/confirm-on-exit.guard';
 import { SelfRegistrationService } from '@core/http/self-register.service';
 import { SelfRegistrationParams } from '@shared/models/self-register.models';
-import { deepClone, isDefined } from '@core/utils';
+import { deepClone } from '@core/utils';
 import { ActionNotificationShow } from '@core/notification/notification.actions';
 import { TranslateService } from '@ngx-translate/core';
 import { EntityType } from '@shared/models/entity-type.models';
@@ -59,7 +57,7 @@ export class SelfRegistrationComponent extends PageComponent implements OnInit, 
   entityTypes = EntityType;
 
   tinyMceOptions: Record<string, any> = {
-    base_url: '/tinymce',
+    base_url: '/assets/tinymce',
     suffix: '.min',
     plugins: ['link table image imagetools code fullscreen'],
     menubar: 'edit insert tools view format table',
@@ -68,7 +66,8 @@ export class SelfRegistrationComponent extends PageComponent implements OnInit, 
       '| numlist bullist outdent indent  | removeformat | code | fullscreen',
     height: 380,
     autofocus: false,
-    branding: false
+    branding: false,
+    resize: true
   };
 
   constructor(protected store: Store<AppState>,

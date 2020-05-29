@@ -29,56 +29,94 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { Component, OnInit, Input, AfterViewInit } from '@angular/core';
-import { FormControl, FormGroup } from '@angular/forms';
-import { Observable } from 'rxjs';
-import { Integration, IntegrationType } from '@shared/models/integration.models';
+import { Component, Input, SimpleChanges } from '@angular/core';
+import { IntegrationType } from '@shared/models/integration.models';
 import { ActionNotificationShow } from '@app/core/notification/notification.actions';
 import { Store } from '@ngrx/store';
 import { AppState } from '@app/core/core.state';
 import { TranslateService } from '@ngx-translate/core';
+import { disableFields, enableFields } from '../../integration-utils';
+import { IntegrationFormComponent } from '@home/pages/integration/configurations/integration-form.component';
 
 @Component({
   selector: 'tb-http-integration-form',
   templateUrl: './http-integration-form.component.html',
   styleUrls: ['./http-integration-form.component.scss']
 })
-export class HttpIntegrationFormComponent implements AfterViewInit {
+export class HttpIntegrationFormComponent extends IntegrationFormComponent {
 
-
-  @Input() form: FormGroup;
   @Input() integrationType: IntegrationType;
   @Input() routingKey;
 
   integrationTypes = IntegrationType;
 
-  constructor(protected store: Store<AppState>, private translate: TranslateService) { }
+  constructor(protected store: Store<AppState>, private translate: TranslateService) {
+    super();
+  }
 
-  ngAfterViewInit(): void {
-    this.integrationBaseUrlChanged();
-    this.form.get('httpEndpoint').disable();
+  ngOnChanges(changes: SimpleChanges): void {
+    super.ngOnChanges(changes);
+    for (const propName of Object.keys(changes)) {
+      if (['routingKey', 'integrationType'].includes(propName)) {
+        this.integrationBaseUrlChanged();
+      }
+    }
+  }
+
+  onIntegrationFormSet() {
+    this.form.get('baseUrl').valueChanges.subscribe(() => {
+      this.integrationBaseUrlChanged();
+    });
+    this.form.get('enableSecurity').valueChanges.subscribe(() => {
+      if (this.integrationType === IntegrationType.HTTP || this.integrationType === IntegrationType.SIGFOX) {
+        this.httpEnableSecurityChanged();
+      } else if (this.integrationType === IntegrationType.THINGPARK || this.integrationType === IntegrationType.TPE) {
+        this.thingparkEnableSecurityChanged();
+      }
+    });
+    this.form.get('enableSecurityNew').valueChanges.subscribe(() => {
+      this.thingparkEnableSecurityNewChanged();
+    });
+    this.resetFields();
+  }
+
+  resetFields() {
+    this.httpEnableSecurityChanged();
+    this.thingparkEnableSecurityChanged();
+    this.thingparkEnableSecurityNewChanged();
   }
 
   httpEnableSecurityChanged = () => {
-    if (this.form.get('enableSecurity').value &&
-      !this.form.get('headersFilter').value) {
-      this.form.get('headersFilter').patchValue({});
-    } else if (!this.form.get('enableSecurity').value) {
-      this.form.get('headersFilter').patchValue(null)
+    const headersFilter = this.form.get('headersFilter');
+    if (this.form.get('enableSecurity').value) {
+      if (!headersFilter.value) {
+        headersFilter.patchValue({});
+      }
+    } else {
+      headersFilter.patchValue({});
     }
   };
 
   thingparkEnableSecurityChanged = () => {
-    if (this.form.get('enableSecurity').value &&
-      !this.form.get('maxTimeDiffInSeconds').value) {
-      this.form.get('maxTimeDiffInSeconds').patchValue(60);
-    }
-    else {
+    const fields = ['asId', 'asKey', 'maxTimeDiffInSeconds'];
+    if (!this.form.get('enableSecurity').value) {
       this.form.get('enableSecurityNew').patchValue(false);
-      this.form.get('clientIdNew').patchValue(null);
-      this.form.get('clientSecret').patchValue(null);
-      this.form.get('asIdNew').patchValue(null);
-      this.form.get('asKey').patchValue(null);
+      disableFields(this.form, fields, false);
+    } else {
+      enableFields(this.form, fields);
+    }
+  };
+
+  thingparkEnableSecurityNewChanged = () => {
+    const fields = [ 'clientIdNew', 'asIdNew', 'clientSecret'];
+    if (!this.form.get('enableSecurityNew').value) {
+      disableFields(this.form, fields, false);
+      if (this.form.get('enableSecurity').value) {
+        enableFields(this.form, ['asId']);
+      }
+    } else {
+      enableFields(this.form, fields);
+      disableFields(this.form, ['asId'], false);
     }
   };
 

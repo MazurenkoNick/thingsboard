@@ -28,7 +28,7 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-:host {
+:host ::ng-deep {
   .remote-config-panel {
     padding: 16px;
     margin: 8px 8px 16px;
@@ -36,13 +36,12 @@
   mat-expansion-panel {
     margin-bottom: 16px;
   }
-}
-
-.tb-dialog {
-  :host {
-    mat-expansion-panel {
-      margin-left: 6px;
-      margin-right: 6px;
-    }
+  mat-checkbox  {
+    margin-bottom: 16px;
+    display: block;
+  }
+  fieldset{
+    min-width: 0;
+    width: 100%;
   }
 }

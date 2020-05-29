@@ -30,7 +30,6 @@
  */
 package org.thingsboard.server.controller;
 
-import com.google.common.util.concurrent.ListenableFuture;
 import io.swagger.annotations.ApiParam;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -54,15 +53,13 @@ import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.group.EntityGroup;
 import org.thingsboard.server.common.data.id.DashboardId;
 import org.thingsboard.server.common.data.id.EntityGroupId;
-import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.id.UserId;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
-import org.thingsboard.server.common.data.page.TimePageLink;
 import org.thingsboard.server.common.data.permission.Operation;
 import org.thingsboard.server.common.data.permission.Resource;
-import org.thingsboard.server.common.data.security.Authority;
+import org.thingsboard.server.queue.util.TbCoreComponent;
 import org.thingsboard.server.service.security.model.SecurityUser;
 import org.thingsboard.server.service.security.model.UserPrincipal;
 
@@ -72,7 +69,9 @@ import java.util.stream.Collectors;
 
 import static org.thingsboard.server.controller.EntityGroupController.ENTITY_GROUP_ID;
 
+
 @RestController
+@TbCoreComponent
 @RequestMapping("/api")
 public class DashboardController extends BaseController {
 
@@ -124,45 +123,10 @@ public class DashboardController extends BaseController {
 
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
     @RequestMapping(value = "/dashboard", method = RequestMethod.POST)
-    @ResponseBody 
+    @ResponseBody
     public Dashboard saveDashboard(@RequestBody Dashboard dashboard,
                                    @RequestParam(name = "entityGroupId", required = false) String strEntityGroupId) throws ThingsboardException {
-        try {
-            dashboard.setTenantId(getCurrentUser().getTenantId());
-
-            Operation operation = dashboard.getId() == null ? Operation.CREATE : Operation.WRITE;
-
-            if (operation == Operation.CREATE
-                    && getCurrentUser().getAuthority() == Authority.CUSTOMER_USER &&
-                    (dashboard.getCustomerId() == null || dashboard.getCustomerId().isNullUid())) {
-                dashboard.setCustomerId(getCurrentUser().getCustomerId());
-            }
-
-            EntityGroupId entityGroupId = null;
-            if (!StringUtils.isEmpty(strEntityGroupId)) {
-                entityGroupId = new EntityGroupId(toUUID(strEntityGroupId));
-            }
-
-            accessControlService.checkPermission(getCurrentUser(), Resource.DASHBOARD, operation,
-                    dashboard.getId(), dashboard, entityGroupId);
-
-            Dashboard savedDashboard = checkNotNull(dashboardService.saveDashboard(dashboard));
-
-            if (entityGroupId != null && operation == Operation.CREATE) {
-                entityGroupService.addEntityToEntityGroup(getTenantId(), entityGroupId, savedDashboard.getId());
-            }
-
-            logEntityAction(savedDashboard.getId(), savedDashboard,
-                    null,
-                    dashboard.getId() == null ? ActionType.ADDED : ActionType.UPDATED, null);
-
-            return savedDashboard;
-        } catch (Exception e) {
-            logEntityAction(emptyId(EntityType.DASHBOARD), dashboard,
-                    null, dashboard.getId() == null ? ActionType.ADDED : ActionType.UPDATED, e);
-
-            throw handleException(e);
-        }
+        return saveGroupEntity(dashboard, strEntityGroupId, dashboardService::saveDashboard);
     }
 
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
@@ -256,7 +220,7 @@ public class DashboardController extends BaseController {
                 }
             }
             PageLink pageLink = createPageLink(pageSize, page, textSearch, sortProperty, sortOrder);
-            return getGroupEntities(securityUser, EntityType.DASHBOARD, operationType,
+            return ownersCacheService.getGroupEntities(getTenantId(), securityUser, EntityType.DASHBOARD, operationType, pageLink,
                     (groupIds) -> dashboardService.findDashboardsByEntityGroupIds(groupIds, pageLink)
             );
         } catch (Exception e) {

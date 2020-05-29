@@ -38,11 +38,13 @@ RUN chmod a+x /tmp/*.sh \
 
 RUN echo "thingsboard thingsboard-pe/license boolean true" | debconf-set-selections
 
-RUN DEBIAN_FRONTEND=noninteractive dpkg -i /tmp/${pkg.name}.deb
+RUN yes | DEBIAN_FRONTEND=noninteractive dpkg -i /tmp/${pkg.name}.deb
 
 RUN systemctl --no-reload disable --now ${pkg.name}.service > /dev/null 2>&1 || :
 
 RUN chown -R ${pkg.user}:${pkg.user} /tmp
+
+RUN chmod 555 ${pkg.installFolder}/bin/${pkg.name}.jar
 
 USER ${pkg.user}
 

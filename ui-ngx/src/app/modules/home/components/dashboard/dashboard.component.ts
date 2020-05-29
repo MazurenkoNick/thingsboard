@@ -32,7 +32,8 @@
 import {
   AfterViewInit,
   Component,
-  DoCheck, HostBinding,
+  DoCheck,
+  HostBinding,
   Input,
   IterableDiffers,
   KeyValueDiffers,
@@ -149,7 +150,7 @@ export class DashboardComponent extends PageComponent implements IDashboardCompo
   dashboardClass: string;
 
   @Input()
-  ignoreLoading: boolean;
+  ignoreLoading = true;
 
   @Input()
   dashboardTimewindow: Timewindow;
@@ -188,8 +189,6 @@ export class DashboardComponent extends PageComponent implements IDashboardCompo
   widgetMenuPosition = { x: '0px', y: '0px' };
 
   widgetContextMenuEvent: MouseEvent;
-
-  dashboardLoading = true;
 
   dashboardWidgets = new DashboardWidgets(this,
     this.differs.find([]).create<Widget>((index, item) => {
@@ -235,7 +234,7 @@ export class DashboardComponent extends PageComponent implements IDashboardCompo
       maxItemRows: 1000,
       maxItemArea: 1000000,
       outerMargin: true,
-      margin: this.margin ? this.margin : 10,
+      margin: isDefined(this.margin) ? this.margin : 10,
       minItemCols: 1,
       minItemRows: 1,
       defaultItemCols: 8,
@@ -319,7 +318,6 @@ export class DashboardComponent extends PageComponent implements IDashboardCompo
   private updateWidgets() {
     this.dashboardWidgets.setWidgets(this.widgets, this.widgetLayouts);
     this.dashboardWidgets.doCheck();
-    this.dashboardLoading = false;
   }
 
   private updateWidgetLayouts() {
@@ -535,7 +533,7 @@ export class DashboardComponent extends PageComponent implements IDashboardCompo
 
   private updateLayoutOpts() {
     this.gridsterOpts.minCols = this.columns ? this.columns : 24;
-    this.gridsterOpts.margin = this.margin ? this.margin : 10;
+    this.gridsterOpts.margin = isDefined(this.margin) ? this.margin : 10;
   }
 
   private updateEditingOpts() {

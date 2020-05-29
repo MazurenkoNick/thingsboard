@@ -33,6 +33,9 @@ package org.thingsboard.server.service.install.update;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.MoreExecutors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,6 +47,7 @@ import org.thingsboard.server.common.data.Dashboard;
 import org.thingsboard.server.common.data.DashboardInfo;
 import org.thingsboard.server.common.data.DataConstants;
 import org.thingsboard.server.common.data.EntityType;
+import org.thingsboard.server.common.data.SearchTextBased;
 import org.thingsboard.server.common.data.ShortCustomerInfo;
 import org.thingsboard.server.common.data.Tenant;
 import org.thingsboard.server.common.data.User;
@@ -53,9 +57,12 @@ import org.thingsboard.server.common.data.id.DashboardId;
 import org.thingsboard.server.common.data.id.EntityGroupId;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.TenantId;
+import org.thingsboard.server.common.data.id.UUIDBased;
 import org.thingsboard.server.common.data.id.UserId;
 import org.thingsboard.server.common.data.integration.Integration;
 import org.thingsboard.server.common.data.kv.AttributeKvEntry;
+import org.thingsboard.server.common.data.kv.BaseAttributeKvEntry;
+import org.thingsboard.server.common.data.kv.StringDataEntry;
 import org.thingsboard.server.common.data.page.TimePageLink;
 import org.thingsboard.server.common.data.relation.EntityRelation;
 import org.thingsboard.server.common.data.relation.RelationTypeGroup;
@@ -73,6 +80,7 @@ import org.thingsboard.server.dao.customer.CustomerService;
 import org.thingsboard.server.dao.dashboard.DashboardService;
 import org.thingsboard.server.dao.device.DeviceService;
 import org.thingsboard.server.dao.entityview.EntityViewService;
+import org.thingsboard.server.dao.exception.IncorrectParameterException;
 import org.thingsboard.server.dao.group.EntityGroupService;
 import org.thingsboard.server.dao.integration.IntegrationService;
 import org.thingsboard.server.dao.relation.RelationService;
@@ -86,6 +94,7 @@ import org.thingsboard.server.service.install.SystemDataLoaderService;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -105,6 +114,7 @@ public class DefaultDataUpdateService implements DataUpdateService {
     private static final String WHITE_LABEL_PARAMS = "whiteLabelParams";
     private static final String LOGO_IMAGE = "logoImage";
     private static final String LOGO_IMAGE_CHECKSUM = "logoImageChecksum";
+    private static final String MAIL_TEMPLATES = "mailTemplates";
     private static final int DEFAULT_LIMIT = 100;
 
     @Autowired
@@ -163,8 +173,8 @@ public class DefaultDataUpdateService implements DataUpdateService {
                 log.info("Updating data from version 1.4.0 to 2.0.0 ...");
                 tenantsDefaultRuleChainUpdater.updateEntities(null);
                 break;
-            case "2.5.0":
-                log.info("Updating data from version 2.5.0 to 2.5.0PE ...");
+            case "3.0.0":
+                log.info("Updating data from version 3.0.0 to 3.0.0PE ...");
                 tenantsCustomersGroupAllUpdater.updateEntities(null);
                 tenantEntitiesGroupAllUpdater.updateEntities(null);
                 tenantIntegrationUpdater.updateEntities(null);
@@ -178,7 +188,10 @@ public class DefaultDataUpdateService implements DataUpdateService {
 
                 //White Labeling updates
                 updateSystemWhiteLabelingParameters();
-                tenantsWhiteLabelingUpdater.updateEntities(null);
+                List<ListenableFuture<WhiteLabelingParams>> futures = tenantsWhiteLabelingUpdater.updateEntities(null);
+                for (ListenableFuture<WhiteLabelingParams> future : futures) {
+                    future.get();
+                }
                 break;
             default:
                 throw new RuntimeException("Unable to update data, unsupported fromVersion: " + fromVersion);
@@ -341,7 +354,7 @@ public class DefaultDataUpdateService implements DataUpdateService {
 
         @Override
         protected void updateEntity(User entity) {
-            if (entity.getAuthority() == Authority.CUSTOMER_USER) {
+            if (Authority.CUSTOMER_USER.equals(entity.getAuthority())) {
                 entityGroupService.removeEntityFromEntityGroup(TenantId.SYS_TENANT_ID, groupAll.getId(), entity.getId());
             }
         }
@@ -491,28 +504,33 @@ public class DefaultDataUpdateService implements DataUpdateService {
         }
     }
 
-    private PaginatedUpdater<String, Tenant> tenantsWhiteLabelingUpdater = new PaginatedUpdater<String, Tenant>() {
+    private WhiteLabelingPaginatedUpdater<String, Tenant> tenantsWhiteLabelingUpdater = new WhiteLabelingPaginatedUpdater<String, Tenant>() {
         @Override
         protected PageData<Tenant> findEntities(String id, PageLink pageLink) {
             return tenantService.findTenants(pageLink);
         }
 
         @Override
-        protected void updateEntity(Tenant tenant) {
-            updateEntityWhiteLabelingParameters(tenant.getId());
-            customersWhiteLabelingUpdater.updateEntities(tenant.getId());
+        protected ListenableFuture<WhiteLabelingParams> updateEntity(Tenant tenant) throws Exception {
+            List<ListenableFuture<WhiteLabelingParams>> futures = customersWhiteLabelingUpdater.updateEntities(tenant.getId());
+            for (ListenableFuture<WhiteLabelingParams> future : futures) {
+                future.get();
+            }
+            ListenableFuture<List<Void>> future = updateTenantMailTemplates(tenant.getId());
+            return Futures.transformAsync(future, l -> updateEntityWhiteLabelingParameters(tenant.getId()),
+                    MoreExecutors.directExecutor());
         }
     };
 
-    private PaginatedUpdater<TenantId, Customer> customersWhiteLabelingUpdater = new PaginatedUpdater<TenantId, Customer>() {
+    private WhiteLabelingPaginatedUpdater<TenantId, Customer> customersWhiteLabelingUpdater = new WhiteLabelingPaginatedUpdater<TenantId, Customer>() {
         @Override
         protected PageData<Customer> findEntities(TenantId id, PageLink pageLink) {
             return customerService.findCustomersByTenantId(id, pageLink);
         }
 
         @Override
-        protected void updateEntity(Customer customer) {
-            updateEntityWhiteLabelingParameters(customer.getId());
+        protected ListenableFuture<WhiteLabelingParams> updateEntity(Customer customer) {
+            return updateEntityWhiteLabelingParameters(customer.getId());
         }
     };
 
@@ -552,18 +570,31 @@ public class DefaultDataUpdateService implements DataUpdateService {
         adminSettingsService.deleteAdminSettingsByKey(TenantId.SYS_TENANT_ID, LOGO_IMAGE_CHECKSUM);
     }
 
-    private void updateEntityWhiteLabelingParameters(EntityId entityId) {
+    private ListenableFuture<WhiteLabelingParams> updateEntityWhiteLabelingParameters(EntityId entityId) {
         JsonNode storedWl = getEntityWhiteLabelParams(entityId);
         String logoImageUrl = getEntityAttributeValue(entityId, LOGO_IMAGE);
         WhiteLabelingParams preparedWhiteLabelingParams = createWhiteLabelingParams(storedWl, logoImageUrl, false);
+        ListenableFuture<WhiteLabelingParams> result = Futures.immediateFuture(null);
         if (entityId.getEntityType() == EntityType.TENANT) {
-            whiteLabelingService.saveTenantWhiteLabelingParams(new TenantId(entityId.getId()), preparedWhiteLabelingParams);
+            result = whiteLabelingService.saveTenantWhiteLabelingParams(new TenantId(entityId.getId()), preparedWhiteLabelingParams);
         }
         if (entityId.getEntityType() == EntityType.CUSTOMER) {
-            whiteLabelingService.saveCustomerWhiteLabelingParams(TenantId.SYS_TENANT_ID, new CustomerId(entityId.getId()), preparedWhiteLabelingParams);
+            result = whiteLabelingService.saveCustomerWhiteLabelingParams(TenantId.SYS_TENANT_ID, new CustomerId(entityId.getId()), preparedWhiteLabelingParams);
         }
         deleteEntityAttribute(entityId, LOGO_IMAGE);
         deleteEntityAttribute(entityId, LOGO_IMAGE_CHECKSUM);
+        return result;
+    }
+
+    private ListenableFuture<List<Void>> updateTenantMailTemplates(TenantId tenantId) {
+        String mailTemplatesJsonString = getEntityAttributeValue(tenantId, MAIL_TEMPLATES);
+        if (!StringUtils.isEmpty(mailTemplatesJsonString)) {
+            Optional<String> updated = this.installScripts.updateMailTemplatesFromVelocityToFreeMarker(mailTemplatesJsonString);
+            if (updated.isPresent()) {
+                return this.saveEntityAttribute(tenantId, MAIL_TEMPLATES, updated.get());
+            }
+        }
+        return Futures.immediateFuture(Collections.emptyList());
     }
 
     private void updateTenantIntegrations(TenantId tenantId) {
@@ -707,12 +738,51 @@ public class DefaultDataUpdateService implements DataUpdateService {
         }
     }
 
+    private ListenableFuture<List<Void>> saveEntityAttribute(EntityId entityId, String key, String value) {
+        List<AttributeKvEntry> attributes = new ArrayList<>();
+        long ts = System.currentTimeMillis();
+        attributes.add(new BaseAttributeKvEntry(new StringDataEntry(key, value), ts));
+        try {
+            return attributesService.save(TenantId.SYS_TENANT_ID, entityId, DataConstants.SERVER_SCOPE, attributes);
+        } catch (Exception e) {
+            log.error("Unable to save White Labeling Params to attributes!", e);
+            throw new IncorrectParameterException("Unable to save White Labeling Params to attributes!");
+        }
+    }
+
     private void deleteEntityAttribute(EntityId entityId, String key) {
         try {
             attributesService.removeAll(TenantId.SYS_TENANT_ID, entityId, DataConstants.SERVER_SCOPE, Arrays.asList(key)).get();
         } catch (Exception e) {
             log.error("Unable to delete attribute for " + key + "!", e);
         }
+    }
+
+    private abstract static class WhiteLabelingPaginatedUpdater<I, D extends SearchTextBased<? extends UUIDBased>> {
+
+        private static final int DEFAULT_LIMIT = 100;
+
+        public List<ListenableFuture<WhiteLabelingParams>> updateEntities(I id) throws Exception {
+            PageLink pageLink = new PageLink(DEFAULT_LIMIT);
+            boolean hasNext = true;
+            List<ListenableFuture<WhiteLabelingParams>> result = new ArrayList<>();
+            while (hasNext) {
+                PageData<D> entities = findEntities(id, pageLink);
+                for (D entity : entities.getData()) {
+                    result.add(updateEntity(entity));
+                }
+                hasNext = entities.hasNext();
+                if (hasNext) {
+                    pageLink = pageLink.nextPageLink();
+                }
+            }
+            return result;
+        }
+
+        protected abstract PageData<D> findEntities(I id, PageLink pageLink);
+
+        protected abstract ListenableFuture<WhiteLabelingParams> updateEntity(D entity) throws Exception;
+
     }
 
 }

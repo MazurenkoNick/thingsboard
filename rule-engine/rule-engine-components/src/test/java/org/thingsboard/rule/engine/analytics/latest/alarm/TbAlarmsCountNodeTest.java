@@ -30,7 +30,7 @@
  */
 package org.thingsboard.rule.engine.analytics.latest.alarm;
 
-import com.datastax.driver.core.utils.UUIDs;
+import com.datastax.oss.driver.api.core.uuid.Uuids;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.util.concurrent.Futures;
 import com.google.gson.Gson;
@@ -99,8 +99,8 @@ public class TbAlarmsCountNodeTest {
     private TbAlarmsCountNode node;
     private TbNodeConfiguration nodeConfiguration;
 
-    private RuleChainId ruleChainId = new RuleChainId(UUIDs.timeBased());
-    private RuleNodeId ruleNodeId = new RuleNodeId(UUIDs.timeBased());
+    private RuleChainId ruleChainId = new RuleChainId(Uuids.timeBased());
+    private RuleNodeId ruleNodeId = new RuleNodeId(Uuids.timeBased());
 
     private RelationsQuery relationsQuery;
     private EntityId rootEntityId;
@@ -122,8 +122,7 @@ public class TbAlarmsCountNodeTest {
             EntityId originator = (EntityId) (invocationOnMock.getArguments())[1];
             TbMsgMetaData metaData = (TbMsgMetaData) (invocationOnMock.getArguments())[2];
             String data = (String) (invocationOnMock.getArguments())[3];
-            return new TbMsg(UUIDs.timeBased(), type, originator, metaData.copy(), data,
-                    ruleChainId, ruleNodeId, 0);
+            return TbMsg.newMsg(type, originator, metaData.copy(), data);
         }).when(ctx).newMsg(Matchers.any(String.class), Matchers.any(EntityId.class),
                 Matchers.any(TbMsgMetaData.class), Matchers.any(String.class));
 
@@ -179,7 +178,7 @@ public class TbAlarmsCountNodeTest {
         EntityTypeFilter entityTypeFilter = new EntityTypeFilter(EntityRelation.CONTAINS_TYPE, Collections.emptyList());
         relationsQuery.setFilters(Collections.singletonList(entityTypeFilter));
 
-        rootEntityId = new TenantId(UUIDs.timeBased());
+        rootEntityId = new TenantId(Uuids.timeBased());
 
         ParentEntitiesRelationsQuery parentEntitiesRelationsQuery = new ParentEntitiesRelationsQuery();
         parentEntitiesRelationsQuery.setRootEntityId(rootEntityId);
@@ -240,7 +239,7 @@ public class TbAlarmsCountNodeTest {
         int failureCount = 0;
 
         for (int i=0;i<parentCount;i++) {
-            EntityId parentEntityId = new AssetId(UUIDs.timeBased());
+            EntityId parentEntityId = new AssetId(Uuids.timeBased());
             parentEntityRelations.add(createEntityRelation(rootEntityId, parentEntityId));
 
             boolean shouldFail = genFailures && Math.random() > 0.6;
@@ -258,7 +257,7 @@ public class TbAlarmsCountNodeTest {
                 totalChildCount += childCount;
 
                 for (int c = 0; c < childCount; c++) {
-                    EntityId childEntityId = new DeviceId(UUIDs.timeBased());
+                    EntityId childEntityId = new DeviceId(Uuids.timeBased());
                     childRelations.add(createEntityRelation(parentEntityId, childEntityId));
                     List<AlarmInfo> alarms = generateAlarms(childEntityId, Collections.emptyList());
                     expectedAllAlarmsCountMap.put(childEntityId, alarms.size());
@@ -280,7 +279,7 @@ public class TbAlarmsCountNodeTest {
         int totalEntities = parentCount + totalChildCount;
 
         ArgumentCaptor<TbMsg> captor = ArgumentCaptor.forClass(TbMsg.class);
-        verify(ctx, new Times(totalEntities)).tellNext(captor.capture(), eq(SUCCESS));
+        verify(ctx, new Times(totalEntities)).enqueueForTellNext(captor.capture(), eq(SUCCESS));
 
         List<TbMsg> messages = captor.getAllValues();
         for (TbMsg msg : messages) {
@@ -289,18 +288,17 @@ public class TbAlarmsCountNodeTest {
 
         if (failureCount > 0) {
             ArgumentCaptor<TbMsg> failureMsgCaptor = ArgumentCaptor.forClass(TbMsg.class);
-            ArgumentCaptor<Throwable> throwableCaptor = ArgumentCaptor.forClass(Throwable.class);
+            ArgumentCaptor<String> throwableCaptor = ArgumentCaptor.forClass(String.class);
 
-            verify(ctx, new Times(failureCount)).tellFailure(failureMsgCaptor.capture(), throwableCaptor.capture());
+            verify(ctx, new Times(failureCount)).enqueueForTellFailure(failureMsgCaptor.capture(), throwableCaptor.capture());
 
             List<TbMsg> failedMessages = failureMsgCaptor.getAllValues();
-            List<Throwable> throwables = throwableCaptor.getAllValues();
+            List<String> throwables = throwableCaptor.getAllValues();
             for (int i=0;i<failedMessages.size();i++) {
                 TbMsg failedMsg = failedMessages.get(i);
-                Throwable t = throwables.get(i);
-                Assert.assertTrue(t instanceof RuntimeException);
-                Assert.assertTrue(t.getMessage().startsWith("Failed to fetch child entities for parent entity"));
-                Assert.assertTrue(t.getMessage().contains(failedMsg.getOriginator().toString()));
+                String t = throwables.get(i);
+                Assert.assertTrue(t.startsWith("Failed to fetch child entities for parent entity"));
+                Assert.assertTrue(t.contains(failedMsg.getOriginator().toString()));
             }
         }
     }
@@ -334,7 +332,7 @@ public class TbAlarmsCountNodeTest {
 
             alarmCreatedTimes.add(createdTime);
 
-            alarm.setId(new AlarmId(UUIDs.startOf(createdTime)));
+            alarm.setId(new AlarmId(Uuids.startOf(createdTime)));
             int alarmStatusOrdinal = (int)Math.floor(Math.random() * AlarmStatus.values().length);
             alarm.setStatus(AlarmStatus.values()[alarmStatusOrdinal]);
             alarm.setStartTs(createdTime);

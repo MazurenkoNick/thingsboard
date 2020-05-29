@@ -31,12 +31,12 @@
 
 import { Component, Inject, InjectionToken } from '@angular/core';
 import { AliasInfo, IAliasController } from '@core/api/widget-api.models';
-import { deepClone } from '@core/utils';
 
 export const ALIASES_ENTITY_SELECT_PANEL_DATA = new InjectionToken<any>('AliasesEntitySelectPanelData');
 
 export interface AliasesEntitySelectPanelData {
   aliasController: IAliasController;
+  entityAliasesInfo: {[aliasId: string]: AliasInfo};
 }
 
 @Component({
@@ -46,18 +46,10 @@ export interface AliasesEntitySelectPanelData {
 })
 export class AliasesEntitySelectPanelComponent {
 
-  entityAliasesInfo: {[aliasId: string]: AliasInfo} = {};
+  entityAliasesInfo: {[aliasId: string]: AliasInfo};
 
   constructor(@Inject(ALIASES_ENTITY_SELECT_PANEL_DATA) public data: AliasesEntitySelectPanelData) {
-    const allEntityAliases = this.data.aliasController.getEntityAliases();
-    for (const aliasId of Object.keys(allEntityAliases)) {
-      const aliasInfo = this.data.aliasController.getInstantAliasInfo(aliasId);
-      if (aliasInfo && !aliasInfo.resolveMultiple && aliasInfo.currentEntity
-        && aliasInfo.resolvedEntities.length > 1) {
-        this.entityAliasesInfo[aliasId] = deepClone(aliasInfo);
-        this.entityAliasesInfo[aliasId].selectedId = aliasInfo.currentEntity.id;
-      }
-    }
+    this.entityAliasesInfo = this.data.entityAliasesInfo;
   }
 
   public currentAliasEntityChanged(aliasId: string, selectedId: string) {

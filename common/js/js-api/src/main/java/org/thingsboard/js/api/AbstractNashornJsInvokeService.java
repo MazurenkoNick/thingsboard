@@ -63,15 +63,14 @@ public abstract class AbstractNashornJsInvokeService extends AbstractJsInvokeSer
     private ScriptEngine engine;
     private ExecutorService monitorExecutorService;
     private ListeningExecutorService jsExecutor;
-    private ScheduledExecutorService timeoutExecutorService;
 
     private final AtomicInteger jsPushedMsgs = new AtomicInteger(0);
     private final AtomicInteger jsInvokeMsgs = new AtomicInteger(0);
     private final AtomicInteger jsEvalMsgs = new AtomicInteger(0);
     private final AtomicInteger jsFailedMsgs = new AtomicInteger(0);
     private final AtomicInteger jsTimeoutMsgs = new AtomicInteger(0);
-    private final FutureCallback<UUID> evalCallback = new JsStatCallback<UUID>(jsEvalMsgs, jsTimeoutMsgs, jsFailedMsgs);
-    private final FutureCallback<Object> invokeCallback = new JsStatCallback<Object>(jsInvokeMsgs, jsTimeoutMsgs, jsFailedMsgs);
+    private final FutureCallback<UUID> evalCallback = new JsStatCallback<>(jsEvalMsgs, jsTimeoutMsgs, jsFailedMsgs);
+    private final FutureCallback<Object> invokeCallback = new JsStatCallback<>(jsInvokeMsgs, jsTimeoutMsgs, jsFailedMsgs);
 
     @Value("${js.local.max_requests_timeout:0}")
     private long maxRequestsTimeout;
@@ -99,10 +98,8 @@ public abstract class AbstractNashornJsInvokeService extends AbstractJsInvokeSer
 
     @PostConstruct
     public void init() {
+        super.init(maxRequestsTimeout);
         jsExecutor = MoreExecutors.listeningDecorator(Executors.newWorkStealingPool(jsExecutorThreadPoolSize));
-        if (maxRequestsTimeout > 0) {
-            timeoutExecutorService = Executors.newSingleThreadScheduledExecutor(ThingsBoardThreadFactory.forName("nashorn-js-timeout"));
-        }
         if (useJsSandbox()) {
             sandbox = NashornSandboxes.create();
             monitorExecutorService = Executors.newWorkStealingPool(getMonitorThreadPoolSize());
@@ -119,11 +116,9 @@ public abstract class AbstractNashornJsInvokeService extends AbstractJsInvokeSer
 
     @PreDestroy
     public void stop() {
+        super.stop();
         if (monitorExecutorService != null) {
             monitorExecutorService.shutdownNow();
-        }
-        if (timeoutExecutorService != null) {
-            timeoutExecutorService.shutdownNow();
         }
     }
 

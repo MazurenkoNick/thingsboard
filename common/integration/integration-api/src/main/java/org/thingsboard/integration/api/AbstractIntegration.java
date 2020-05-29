@@ -30,7 +30,7 @@
  */
 package org.thingsboard.integration.api;
 
-import com.datastax.driver.core.utils.UUIDs;
+import com.datastax.oss.driver.api.core.uuid.Uuids;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -202,7 +202,7 @@ public abstract class AbstractIntegration<T> implements ThingsboardPlatformInteg
 
     protected void persistDebug(IntegrationContext context, String type, String messageType, String message, String status, Exception exception) {
         ObjectNode node = mapper.createObjectNode()
-                .put("server", context.getServerAddress().toString())
+                .put("server", context.getServiceId())
                 .put("type", type)
                 .put("messageType", messageType)
                 .put("message", message)
@@ -212,7 +212,7 @@ public abstract class AbstractIntegration<T> implements ThingsboardPlatformInteg
             node = node.put("error", toString(exception));
         }
 
-        context.saveEvent(DataConstants.DEBUG_INTEGRATION, UUIDs.timeBased().toString(), node, new DebugEventCallback());
+        context.saveEvent(DataConstants.DEBUG_INTEGRATION, Uuids.timeBased().toString(), node, new DebugEventCallback());
     }
 
     private String toString(Exception e) {

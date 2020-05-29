@@ -38,7 +38,8 @@ CREATE TABLE IF NOT EXISTS ts_kv
     str_v     varchar(10000000),
     long_v    bigint,
     dbl_v     double precision,
-    json_v    json
+    json_v    json,
+    CONSTRAINT ts_kv_pkey PRIMARY KEY (entity_id, key, ts)
 ) PARTITION BY RANGE (ts);
 
 CREATE TABLE IF NOT EXISTS ts_kv_latest
@@ -67,7 +68,7 @@ CREATE TABLE IF NOT EXISTS tb_schema_settings
     CONSTRAINT tb_schema_settings_pkey PRIMARY KEY (schema_version)
 );
 
-INSERT INTO tb_schema_settings (schema_version) VALUES (2005000);
+INSERT INTO tb_schema_settings (schema_version) VALUES (2005001) ON CONFLICT (schema_version) DO UPDATE SET schema_version = 2005001;
 
 CREATE OR REPLACE PROCEDURE drop_partitions_by_max_ttl(IN partition_type varchar, IN system_ttl bigint, INOUT deleted bigint)
     LANGUAGE plpgsql AS

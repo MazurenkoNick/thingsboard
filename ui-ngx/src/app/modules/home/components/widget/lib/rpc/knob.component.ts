@@ -38,8 +38,8 @@ import { AppState } from '@core/core.state';
 import { isDefined, isNumber } from '@core/utils';
 import { CanvasDigitalGauge, CanvasDigitalGaugeOptions } from '@home/components/widget/lib/canvas-digital-gauge';
 import * as tinycolor_ from 'tinycolor2';
-import GenericOptions = CanvasGauges.GenericOptions;
 import { ResizeObserver } from '@juggle/resize-observer';
+import GenericOptions = CanvasGauges.GenericOptions;
 
 const tinycolor = tinycolor_;
 
@@ -137,7 +137,7 @@ export class KnobComponent extends PageComponent implements OnInit, OnDestroy {
     this.knobErrorContainer = $(this.knobErrorContainerRef.nativeElement);
     this.knobError = $(this.knobErrorRef.nativeElement);
     this.knobMinmaxContainer = $(this.knobMinmaxContainerRef.nativeElement);
-    this.minmaxLabel = this.knobMinmaxContainer.find('.minmax-label');
+    this.minmaxLabel = this.knobMinmaxContainer.find<HTMLElement>('.minmax-label');
     this.textMeasure = $(this.textMeasureRef.nativeElement);
     this.canvasBarElement = this.canvasBarElementRef.nativeElement;
 

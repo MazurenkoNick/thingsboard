@@ -30,7 +30,7 @@
  */
 package org.thingsboard.server.dao.model.sql;
 
-import com.datastax.driver.core.utils.UUIDs;
+import com.datastax.oss.driver.api.core.uuid.Uuids;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Data;
@@ -96,7 +96,7 @@ public class RoleEntity extends BaseSqlEntity<Role> implements SearchTextEntity<
 
     public RoleEntity(Role role) {
         if (role.getId() != null) {
-            this.setId(role.getId().getId());
+            this.setUuid(role.getId().getId());
         }
         if (role.getTenantId() != null) {
             this.tenantId = toString(role.getTenantId().getId());
@@ -123,8 +123,8 @@ public class RoleEntity extends BaseSqlEntity<Role> implements SearchTextEntity<
 
     @Override
     public Role toData() {
-        Role role = new Role(new RoleId(getId()));
-        role.setCreatedTime(UUIDs.unixTimestamp(getId()));
+        Role role = new Role(new RoleId(getUuid()));
+        role.setCreatedTime(Uuids.unixTimestamp(getUuid()));
 
         if (tenantId != null) {
             role.setTenantId(new TenantId(toUUID(tenantId)));

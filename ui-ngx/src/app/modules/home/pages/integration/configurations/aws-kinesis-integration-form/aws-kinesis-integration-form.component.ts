@@ -29,27 +29,53 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { Component, Input, OnInit } from '@angular/core';
-import { FormGroup } from '@angular/forms';
-
-import { initialPositionInStream } from '../../integration-forms-templates';
+import { Component } from '@angular/core';
+import { InitialPositionInStream } from '../../integration-forms-templates';
+import { IntegrationFormComponent } from '@home/pages/integration/configurations/integration-form.component';
+import { disableFields, enableFields } from '@home/pages/integration/integration-utils';
 
 @Component({
   selector: 'tb-aws-kinesis-integration-form',
   templateUrl: './aws-kinesis-integration-form.component.html',
   styleUrls: ['./aws-kinesis-integration-form.component.scss']
 })
-export class AwsKinesisIntegrationFormComponent implements OnInit {
+export class AwsKinesisIntegrationFormComponent extends IntegrationFormComponent {
 
-  @Input() form: FormGroup;
+  initialPositionInStreams = Object.keys(InitialPositionInStream);
 
-
-  initialPositionInStream  = initialPositionInStream;
-
-  constructor() { }
-
-  ngOnInit(): void {
+  constructor() {
+    super();
   }
 
+  protected onIntegrationFormSet() {
+    this.form.get('useCredentialsFromInstanceMetadata').valueChanges.subscribe(() => {
+      this.onUseCredentialsFromInstanceMetadataChange();
+    });
+    this.form.get('useConsumersWithEnhancedFanOut').valueChanges.subscribe(() => {
+      this.onUseConsumersWithEnhancedFanOut();
+    });
+    this.onUseCredentialsFromInstanceMetadataChange();
+    this.onUseConsumersWithEnhancedFanOut();
+  }
+
+  onUseCredentialsFromInstanceMetadataChange() {
+    const fields = ['accessKeyId', 'secretAccessKey'];
+    const useCredentialsFromInstanceMetadata: boolean = this.form.get('useCredentialsFromInstanceMetadata').value;
+    if (useCredentialsFromInstanceMetadata) {
+      disableFields(this.form, fields);
+    } else {
+      enableFields(this.form, fields);
+    }
+  }
+
+  onUseConsumersWithEnhancedFanOut() {
+    const fields = ['maxRecords', 'requestTimeout'];
+    const useConsumersWithEnhancedFanOut: boolean = this.form.get('useConsumersWithEnhancedFanOut').value;
+    if (useConsumersWithEnhancedFanOut) {
+      disableFields(this.form, fields);
+    } else {
+      enableFields(this.form, fields);
+    }
+  }
 
 }

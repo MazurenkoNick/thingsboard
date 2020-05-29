@@ -30,7 +30,6 @@
  */
 package org.thingsboard.rule.engine.analytics.incoming;
 
-import com.datastax.driver.core.utils.UUIDs;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
@@ -54,7 +53,7 @@ import org.thingsboard.server.common.data.plugin.ComponentType;
 import org.thingsboard.server.common.msg.TbMsg;
 import org.thingsboard.server.common.msg.TbMsgDataType;
 import org.thingsboard.server.common.msg.TbMsgMetaData;
-import org.thingsboard.server.common.msg.cluster.ClusterEventMsg;
+import org.thingsboard.server.common.msg.queue.PartitionChangeMsg;
 import org.thingsboard.server.common.msg.session.SessionMsgType;
 
 import java.util.List;
@@ -149,7 +148,7 @@ public class TbSimpleAggMsgNode implements TbNode {
     }
 
     @Override
-    public void onClusterEventMsg(TbContext ctx, ClusterEventMsg msg) {
+    public void onPartitionChangeMsg(TbContext ctx, PartitionChangeMsg msg) {
         log.trace("Cluster change msg received: {}", msg);
         intervals.cleanupEntities(ctx);
     }
@@ -162,7 +161,6 @@ public class TbSimpleAggMsgNode implements TbNode {
         state.update(value);
 
         log.trace("Data Msg received: {}", msg);
-
         if (state.hasChangesToPersist() && statePersistPolicy == StatePersistPolicy.ON_EACH_CHANGE) {
             log.trace("Persisting state: {}", state);
             DonAsynchron.withCallback(intervals.saveIntervalState(entityId, ts, state),
@@ -188,9 +186,8 @@ public class TbSimpleAggMsgNode implements TbNode {
             log.trace("Reporting interval: [{}][{}]", ts, interval);
             TbMsgMetaData metaData = new TbMsgMetaData();
             metaData.putValue("ts", Long.toString(ts));
-            ctx.tellNext(new TbMsg(UUIDs.timeBased(), SessionMsgType.POST_TELEMETRY_REQUEST.name(), entityId, metaData, TbMsgDataType.JSON,
-                    interval.toValueJson(gson, config.getOutputValueKey()),
-                    null, null, 0L), TbRelationTypes.SUCCESS);
+            ctx.enqueueForTellNext(TbMsg.newMsg(SessionMsgType.POST_TELEMETRY_REQUEST.name(), entityId, metaData,
+                    interval.toValueJson(gson, config.getOutputValueKey())), TbRelationTypes.SUCCESS);
         }));
 
         intervals.cleanupStatesUsingTTL();
@@ -268,7 +265,7 @@ public class TbSimpleAggMsgNode implements TbNode {
         if (!StringUtils.isEmpty(ts)) {
             return Long.parseLong(ts);
         } else {
-            return (msg.getId().timestamp() / 10000) + START_EPOCH;
+            return msg.getTs();
         }
     }
 

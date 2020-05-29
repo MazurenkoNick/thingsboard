@@ -30,7 +30,7 @@
  */
 package org.thingsboard.server.service.converter.js;
 
-import com.datastax.driver.core.utils.UUIDs;
+import com.datastax.oss.driver.api.core.uuid.Uuids;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.After;
@@ -66,7 +66,7 @@ public class JsConverterEvaluatorTest {
     final ObjectMapper mapper = new ObjectMapper();
 
     private TestNashornJsInvokeService jsSandboxService;
-    private ConverterId converterId = new ConverterId(UUIDs.timeBased());
+    private ConverterId converterId = new ConverterId(Uuids.timeBased());
 
     @Before
     public void beforeTest() throws Exception {
@@ -94,7 +94,7 @@ public class JsConverterEvaluatorTest {
 
         TbMsgMetaData metaData = new TbMsgMetaData();
         IntegrationMetaData integrationMetaData = new IntegrationMetaData(Collections.singletonMap("topicPrefix", "sensor"));
-        TbMsg msg = new TbMsg(UUIDs.timeBased(), "USER", null, metaData, rawJson, null, null, 0L);
+        TbMsg msg = TbMsg.newMsg("USER", null, metaData, rawJson);
 
         JsonNode result = eval.execute(msg, integrationMetaData);
         Assert.assertTrue(result.isObject());

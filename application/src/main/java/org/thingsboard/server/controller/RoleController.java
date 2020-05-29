@@ -56,6 +56,7 @@ import org.thingsboard.server.common.data.permission.Resource;
 import org.thingsboard.server.common.data.role.Role;
 import org.thingsboard.server.common.data.role.RoleType;
 import org.thingsboard.server.common.data.security.Authority;
+import org.thingsboard.server.queue.util.TbCoreComponent;
 import org.thingsboard.server.service.security.model.SecurityUser;
 
 import java.util.ArrayList;
@@ -64,6 +65,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @RestController
+@TbCoreComponent
 @RequestMapping("/api")
 @Slf4j
 public class RoleController extends BaseController {
@@ -88,17 +90,10 @@ public class RoleController extends BaseController {
     public Role saveRole(@RequestBody Role role) throws ThingsboardException {
         try {
             role.setTenantId(getCurrentUser().getTenantId());
-            if (getCurrentUser().getAuthority() == Authority.CUSTOMER_USER) {
+            if (Authority.CUSTOMER_USER.equals(getCurrentUser().getAuthority())) {
                 role.setCustomerId(getCurrentUser().getCustomerId());
             }
-            Operation operation = role.getId() == null ? Operation.CREATE : Operation.WRITE;
-
-            if (operation == Operation.CREATE && getCurrentUser().getAuthority() == Authority.CUSTOMER_USER) {
-                role.setCustomerId(getCurrentUser().getCustomerId());
-            }
-
-            accessControlService.checkPermission(getCurrentUser(), Resource.ROLE, operation,
-                    role.getId(), role);
+            checkEntity(role.getId(), role, Resource.ROLE, null);
 
             Role savedRole = checkNotNull(roleService.saveRole(getTenantId(), role));
 
@@ -155,13 +150,13 @@ public class RoleController extends BaseController {
             PageLink pageLink = createPageLink(pageSize, page, textSearch, sortProperty, sortOrder);
 
             if (type != null && type.trim().length() > 0) {
-                if (getCurrentUser().getAuthority() == Authority.TENANT_ADMIN) {
+                if (Authority.TENANT_ADMIN.equals(getCurrentUser().getAuthority())) {
                     return checkNotNull(roleService.findRolesByTenantIdAndType(tenantId, pageLink, RoleType.valueOf(type)));
                 } else {
                     return checkNotNull(roleService.findRolesByTenantIdAndCustomerIdAndType(tenantId, getCurrentUser().getCustomerId(), checkStrRoleType("type", type), pageLink));
                 }
             } else {
-                if (getCurrentUser().getAuthority() == Authority.TENANT_ADMIN) {
+                if (Authority.TENANT_ADMIN.equals(getCurrentUser().getAuthority())) {
                     return checkNotNull(roleService.findRolesByTenantId(tenantId, pageLink));
                 } else {
                     return checkNotNull(roleService.findRolesByTenantIdAndCustomerId(tenantId, getCurrentUser().getCustomerId(), pageLink));

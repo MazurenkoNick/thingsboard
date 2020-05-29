@@ -29,42 +29,106 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { Component, OnInit, Input } from '@angular/core';
-import { FormGroup, FormArray, FormControl } from '@angular/forms';
-import { Observable } from 'rxjs';
+import { Component, Input } from '@angular/core';
+import { FormBuilder, FormControl, FormGroup } from '@angular/forms';
+import { IntegrationFormComponent } from '@home/pages/integration/configurations/integration-form.component';
 
+const hostRegionSuffix = '.thethings.network';
 
 @Component({
   selector: 'tb-ttn-integration-form',
   templateUrl: './ttn-integration-form.component.html',
   styleUrls: ['./ttn-integration-form.component.scss']
 })
-export class TtnIntegrationFormComponent implements OnInit {
+export class TtnIntegrationFormComponent extends IntegrationFormComponent {
 
-
-  @Input() form: FormGroup;
   @Input() topicFilters: FormGroup;
   @Input() downlinkTopicPattern: FormControl;
 
-  hostTypes = {
-    region: 'Region',
-    custom: 'Custom'
+  hostTypes = ['Region', 'Custom'];
+  hostRegion: FormControl;
+  hostCustom: FormControl;
+  currentHostType: FormControl;
+
+  constructor(private fb: FormBuilder) {
+    super();
+    this.hostRegion = this.fb.control('');
+    this.hostCustom = this.fb.control('');
+    this.currentHostType = this.fb.control('');
+    this.hostRegion.valueChanges.subscribe(() => {
+      this.buildHostName();
+      this.form.markAsDirty();
+    });
+    this.hostCustom.valueChanges.subscribe(() => {
+      this.buildHostName();
+      this.form.markAsDirty();
+    });
+    this.currentHostType.valueChanges.subscribe((type: string) => {
+      this.updateHostParams(type);
+      this.form.markAsDirty();
+    });
   }
 
-  constructor() { }
-
-  ngOnInit(): void {
+  onIntegrationFormSet() {
+    const hostType: string = this.form.get('customHost').value ? 'Custom' : 'Region';
+    this.currentHostType.patchValue(hostType, {emitEvent: false});
+    const host: string = this.form.get('host').value;
+    if (hostType === 'Custom') {
+      this.hostCustom.patchValue(host, {emitEvent: false});
+      this.hostRegion.patchValue('', {emitEvent: false});
+    } else if (hostType === 'Region') {
+      if (host && host.endsWith(hostRegionSuffix)) {
+        this.hostRegion.patchValue(host.slice(0, -hostRegionSuffix.length), {emitEvent: false});
+      } else {
+        this.hostRegion.patchValue(host, {emitEvent: false});
+      }
+      this.hostCustom.patchValue('', {emitEvent: false});
+    }
+    this.updateHostParams(hostType);
+    this.downlinkTopicPattern.patchValue(this.form.get('credentials').get('username').value + '/devices/${devId}/down');
     this.form.get('credentials').get('username').valueChanges.subscribe(name => {
       this.downlinkTopicPattern.patchValue(name + '/devices/${devId}/down');
-    })
+    });
+    this.updateControlsState();
+  }
+
+  updateFormState(disabled: boolean) {
+    this.updateControlsState();
+  }
+
+  updateControlsState() {
+    if (this.form.disabled) {
+      this.hostRegion.disable({emitEvent: false});
+      this.hostCustom.disable({emitEvent: false});
+      this.currentHostType.disable({emitEvent: false});
+    } else {
+      this.hostRegion.enable({emitEvent: false});
+      this.hostCustom.enable({emitEvent: false});
+      this.currentHostType.enable({emitEvent: false});
+    }
+  }
+
+  updateHostParams(hostType: string) {
+    if (hostType === 'Region') {
+      this.hostCustom.patchValue('', {emitEvent: false});
+    } else {
+      this.hostRegion.patchValue('', {emitEvent: false});
+    }
+    this.buildHostName();
   }
 
   buildHostName() {
-    const hostRegionSuffix = '.thethings.network';
-    const formValue = this.form.getRawValue();
-    this.form.get('host').patchValue((this.form.get('currentHostType').value === this.hostTypes.region)
-      ? (formValue.host + hostRegionSuffix) : formValue.host);
-    this.form.get('customHost').patchValue(formValue.currentHostType === this.hostTypes.custom);
+    let host = '';
+    if (this.currentHostType.value === 'Region') {
+      if (this.hostRegion.value) {
+        host = this.hostRegion.value + hostRegionSuffix;
+      }
+      this.form.get('customHost').patchValue(false);
+    } else {
+      host = this.hostCustom.value;
+      this.form.get('customHost').patchValue(true);
+    }
+    this.form.get('host').patchValue(host);
   }
 
 }

@@ -49,10 +49,12 @@ import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.security.Authority;
 import org.thingsboard.server.common.data.widget.WidgetsBundle;
+import org.thingsboard.server.queue.util.TbCoreComponent;
 
 import java.util.List;
 
 @RestController
+@TbCoreComponent
 @RequestMapping("/api")
 public class WidgetsBundleController extends BaseController {
 
@@ -74,17 +76,13 @@ public class WidgetsBundleController extends BaseController {
     @ResponseBody
     public WidgetsBundle saveWidgetsBundle(@RequestBody WidgetsBundle widgetsBundle) throws ThingsboardException {
         try {
-            if (getCurrentUser().getAuthority() == Authority.SYS_ADMIN) {
+            if (Authority.SYS_ADMIN.equals(getCurrentUser().getAuthority())) {
                 widgetsBundle.setTenantId(TenantId.SYS_TENANT_ID);
             } else {
                 widgetsBundle.setTenantId(getCurrentUser().getTenantId());
             }
 
-            Operation operation = widgetsBundle.getId() == null ? Operation.CREATE : Operation.WRITE;
-
-            accessControlService.checkPermission(getCurrentUser(), Resource.WIDGETS_BUNDLE, operation,
-                    widgetsBundle.getId(), widgetsBundle);
-
+            checkEntity(widgetsBundle.getId(), widgetsBundle, Resource.WIDGETS_BUNDLE, null);
             return checkNotNull(widgetsBundleService.saveWidgetsBundle(widgetsBundle));
         } catch (Exception e) {
             throw handleException(e);
@@ -117,7 +115,7 @@ public class WidgetsBundleController extends BaseController {
         try {
             accessControlService.checkPermission(getCurrentUser(), Resource.WIDGETS_BUNDLE, Operation.READ);
             PageLink pageLink = createPageLink(pageSize, page, textSearch, sortProperty, sortOrder);
-            if (getCurrentUser().getAuthority() == Authority.SYS_ADMIN) {
+            if (Authority.SYS_ADMIN.equals(getCurrentUser().getAuthority())) {
                 return checkNotNull(widgetsBundleService.findSystemWidgetsBundlesByPageLink(getTenantId(), pageLink));
             } else {
                 TenantId tenantId = getCurrentUser().getTenantId();
@@ -134,7 +132,7 @@ public class WidgetsBundleController extends BaseController {
     public List<WidgetsBundle> getWidgetsBundles() throws ThingsboardException {
         try {
             accessControlService.checkPermission(getCurrentUser(), Resource.WIDGETS_BUNDLE, Operation.READ);
-            if (getCurrentUser().getAuthority() == Authority.SYS_ADMIN) {
+            if (Authority.SYS_ADMIN.equals(getCurrentUser().getAuthority())) {
                 return checkNotNull(widgetsBundleService.findSystemWidgetsBundles(getTenantId()));
             } else {
                 TenantId tenantId = getCurrentUser().getTenantId();

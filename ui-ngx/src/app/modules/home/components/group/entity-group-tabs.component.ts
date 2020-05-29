@@ -33,11 +33,7 @@ import { Component } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { AppState } from '@core/core.state';
 import { EntityTabsComponent } from '@home/components/entity/entity-tabs.component';
-import {
-  entityGroupActionSources,
-  entityGroupActionTypes,
-  EntityGroupInfo
-} from '@shared/models/entity-group.models';
+import { entityGroupActionSources, entityGroupActionTypes, EntityGroupInfo } from '@shared/models/entity-group.models';
 import { WidgetActionsData } from '@home/components/widget/action/manage-widget-actions.component.models';
 
 @Component({
@@ -61,7 +57,7 @@ export class EntityGroupTabsComponent extends EntityTabsComponent<EntityGroupInf
 
   validateAndMark() {
     this.validate();
-    this.detailsForm.control.markAsDirty()
+    this.detailsForm.markAsDirty()
   }
 
   private validate() {
@@ -75,9 +71,9 @@ export class EntityGroupTabsComponent extends EntityTabsComponent<EntityGroupInf
       if (!settingsValid) {
         errors.settings = true;
       }
-      this.detailsForm.control.setErrors(errors);
+      this.detailsForm.setErrors(errors);
     } else {
-      this.detailsForm.control.setErrors(null);
+      this.detailsForm.setErrors(null);
     }
   }
 

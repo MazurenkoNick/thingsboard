@@ -29,25 +29,32 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { Component, OnInit, Input } from '@angular/core';
-import { FormGroup } from '@angular/forms';
-import { Observable } from 'rxjs';
-
+import { Component, ViewChild } from '@angular/core';
+import { IntegrationFormComponent } from '@home/pages/integration/configurations/integration-form.component';
+import { ContentType } from '@shared/models/constants';
+import { JsonContentComponent } from '@shared/components/json-content.component';
 
 @Component({
   selector: 'tb-custom-integration-form',
   templateUrl: './custom-integration-form.component.html',
   styleUrls: ['./custom-integration-form.component.scss']
 })
-export class CustomIntegrationFormComponent implements OnInit {
+export class CustomIntegrationFormComponent extends IntegrationFormComponent {
 
+  @ViewChild('jsonContentComponent', {static: true}) jsonContentComponent: JsonContentComponent;
 
-  @Input() form: FormGroup;
+  contentType = ContentType;
 
+  constructor() {
+    super();
+  }
 
-  constructor() { }
-
-  ngOnInit(): void {
+  protected onIntegrationFormSet() {
+    /* if (this.form.enabled) {
+      this.form.get('configuration').valueChanges.subscribe(() => {
+        this.jsonContentComponent.validateOnSubmit();
+      });
+    }*/
   }
 
 }

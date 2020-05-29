@@ -39,10 +39,10 @@ import { UtilsService } from '@core/services/utils.service';
 import { TranslateService } from '@ngx-translate/core';
 import { DataKey, Datasource, DatasourceData, DatasourceType, WidgetConfig } from '@shared/models/widget.models';
 import { IWidgetSubscription } from '@core/api/widget-api.models';
-import { isDefined, isEqual, isUndefined } from '@core/utils';
+import { isDefined, isEqual, isUndefined, createLabelFromDatasource } from '@core/utils';
 import { EntityType } from '@shared/models/entity-type.models';
 import * as _moment from 'moment';
-import { FormBuilder, FormGroup, NgForm, ValidatorFn, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, ValidatorFn, Validators } from '@angular/forms';
 import { RequestConfig } from '@core/http/http-utils';
 import { AttributeService } from '@core/http/attribute.service';
 import { AttributeData, AttributeScope, LatestTelemetry } from '@shared/models/telemetry/telemetry.models';
@@ -105,7 +105,6 @@ interface MultipleInputWidgetSource {
 export class MultipleInputWidgetComponent extends PageComponent implements OnInit, OnDestroy {
 
   @ViewChild('formContainer', {static: true}) formContainerRef: ElementRef<HTMLElement>;
-  @ViewChild('multipleInputForm', {static: true}) multipleInputForm: NgForm;
 
   @Input()
   ctx: WidgetContext;
@@ -347,7 +346,7 @@ export class MultipleInputWidgetComponent extends PageComponent implements OnIni
   }
 
   public getGroupTitle(datasource: Datasource): string {
-    return this.utils.createLabelFromDatasource(datasource, this.settings.groupTitle);
+    return createLabelFromDatasource(datasource, this.settings.groupTitle);
   }
 
   public visibleKeys(source: MultipleInputWidgetSource): MultipleInputWidgetDataKey[] {
@@ -468,7 +467,7 @@ export class MultipleInputWidgetComponent extends PageComponent implements OnIni
     if (tasks.length) {
       forkJoin(tasks).subscribe(
         () => {
-          this.multipleInputForm.resetForm();
+          this.multipleInputFormGroup.reset(undefined, {emitEvent: false});
           this.multipleInputFormGroup.markAsPristine();
           if (this.settings.showResultMessage) {
             this.ctx.showSuccessToast(this.translate.instant('widgets.input-widgets.update-successful'),
@@ -482,13 +481,13 @@ export class MultipleInputWidgetComponent extends PageComponent implements OnIni
           }
         });
     } else {
-      this.multipleInputForm.resetForm();
+      this.multipleInputFormGroup.reset(undefined, {emitEvent: false});
       this.multipleInputFormGroup.markAsPristine();
     }
   }
 
   public discardAll() {
-    this.multipleInputForm.resetForm();
+    this.multipleInputFormGroup.reset(undefined, {emitEvent: false});
     this.sources.forEach((source) => {
       for (const key of this.visibleKeys(source)) {
         this.multipleInputFormGroup.get(key.formId).patchValue(key.value, {emitEvent: false});

@@ -32,7 +32,10 @@
 import { IDashboardComponent } from '@home/models/dashboard-component.models';
 import {
   DataSet,
-  Datasource, DatasourceData,
+  Datasource,
+  DatasourceData,
+  JsonSettingsSchema,
+  Widget,
   WidgetActionDescriptor,
   WidgetActionSource,
   WidgetConfig,
@@ -41,7 +44,7 @@ import {
   widgetType,
   WidgetTypeDescriptor,
   WidgetTypeParameters,
-  Widget, JsonSettingsSchema, WidgetExportType
+  WidgetExportType
 } from '@shared/models/widget.models';
 import { Timewindow, WidgetTimewindow } from '@shared/models/time/time.models';
 import {
@@ -49,24 +52,20 @@ import {
   IStateController,
   IWidgetSubscription,
   IWidgetUtils,
-  RpcApi, SubscriptionEntityInfo, SubscriptionInfo,
+  RpcApi,
+  SubscriptionEntityInfo,
   TimewindowFunctions,
   WidgetActionsApi,
-  WidgetSubscriptionApi, WidgetSubscriptionContext, WidgetSubscriptionOptions
+  WidgetSubscriptionApi
 } from '@core/api/widget-api.models';
 import { ChangeDetectorRef, ComponentFactory, Injector, NgZone, Type } from '@angular/core';
-import { HttpErrorResponse } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { RafService } from '@core/services/raf.service';
 import { WidgetTypeId } from '@shared/models/id/widget-type-id';
 import { TenantId } from '@shared/models/id/tenant-id';
 import { WidgetLayout } from '@shared/models/dashboard.models';
-import { DeviceService } from '@core/http/device.service';
-import { AssetService } from '@app/core/http/asset.service';
-import { DialogService } from '@core/services/dialog.service';
-import { CustomDialogService } from '@home/components/widget/dialog/custom-dialog.service';
-import { isDefined, formatValue } from '@core/utils';
-import { forkJoin, Observable, of, ReplaySubject } from 'rxjs';
-import { WidgetSubscription } from '@core/api/widget-subscription';
+import { formatValue, isDefined } from '@core/utils';
+import { forkJoin, of } from 'rxjs';
 import { Store } from '@ngrx/store';
 import { AppState } from '@core/core.state';
 import {
@@ -75,6 +74,22 @@ import {
   NotificationVerticalPosition
 } from '@core/notification/notification.models';
 import { ActionNotificationShow } from '@core/notification/notification.actions';
+import { AuthUser } from '@shared/models/user.model';
+import { getCurrentAuthUser } from '@core/auth/auth.selectors';
+import { DeviceService } from '@core/http/device.service';
+import { AssetService } from '@core/http/asset.service';
+import { EntityViewService } from '@core/http/entity-view.service';
+import { CustomerService } from '@core/http/customer.service';
+import { DashboardService } from '@core/http/dashboard.service';
+import { UserService } from '@core/http/user.service';
+import { AttributeService } from '@core/http/attribute.service';
+import { EntityRelationService } from '@core/http/entity-relation.service';
+import { EntityService } from '@core/http/entity.service';
+import { DialogService } from '@core/services/dialog.service';
+import { CustomDialogService } from '@home/components/widget/dialog/custom-dialog.service';
+import { DatePipe } from '@angular/common';
+import { TranslateService } from '@ngx-translate/core';
+import { EntityGroupService } from '@core/http/entity-group.service';
 
 export interface IWidgetAction {
   name: string;
@@ -132,6 +147,30 @@ export class WidgetContext {
   set changeDetector(cd: ChangeDetectorRef) {
     this.changeDetectorValue = cd;
   }
+
+  get currentUser(): AuthUser {
+    if (this.store) {
+      return getCurrentAuthUser(this.store);
+    } else {
+      return null;
+    }
+  }
+
+  deviceService: DeviceService;
+  assetService: AssetService;
+  entityViewService: EntityViewService;
+  customerService: CustomerService;
+  dashboardService: DashboardService;
+  userService: UserService;
+  attributeService: AttributeService;
+  entityRelationService: EntityRelationService;
+  entityService: EntityService;
+  entityGroupService: EntityGroupService;
+  dialogs: DialogService;
+  customDialog: CustomDialogService;
+  date: DatePipe;
+  translate: TranslateService;
+  http: HttpClient;
 
   private changeDetectorValue: ChangeDetectorRef;
 

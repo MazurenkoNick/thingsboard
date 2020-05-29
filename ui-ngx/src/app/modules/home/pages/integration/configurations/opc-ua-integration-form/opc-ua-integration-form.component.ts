@@ -29,49 +29,71 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { Component, Input, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
-
 import {
   extensionKeystoreType,
   identityType,
   opcSecurityTypes,
   opcUaMappingType
 } from '../../integration-forms-templates';
+import { disableFields, enableFields } from '../../integration-utils';
+import { IntegrationFormComponent } from '@home/pages/integration/configurations/integration-form.component';
 
 @Component({
   selector: 'tb-opc-ua-integration-form',
   templateUrl: './opc-ua-integration-form.component.html',
   styleUrls: ['./opc-ua-integration-form.component.scss']
 })
-export class OpcUaIntegrationFormComponent implements OnInit {
-
-
-  @Input() form: FormGroup;
+export class OpcUaIntegrationFormComponent extends IntegrationFormComponent {
 
   identityType = identityType;
   opcUaMappingType = opcUaMappingType;
   extensionKeystoreType = extensionKeystoreType;
   opcSecurityTypes = opcSecurityTypes;
+  showIdentityForm: boolean;
 
-  constructor(private fb: FormBuilder) { }
-
-  ngOnInit(): void {
+  constructor(private fb: FormBuilder) {
+    super();
   }
 
-  opcUaSecurityTypeChanged() { }
+  onIntegrationFormSet() {
+    this.form.get('security').valueChanges.subscribe(() => {
+      this.securityChanged();
+    });
+    this.form.get('identity').get('type').valueChanges.subscribe(() => {
+      this.identityTypeChanged();
+    });
+    this.securityChanged();
+    this.identityTypeChanged();
+  }
+
+  identityTypeChanged() {
+    const type: string = this.form.get('identity').get('type').value;
+    if (type === 'username') {
+      this.showIdentityForm = true;
+      enableFields(this.form.get('identity') as FormGroup, ['username', 'password']);
+    } else {
+      this.showIdentityForm = false;
+      disableFields(this.form.get('identity') as FormGroup, ['username', 'password']);
+    }
+  }
+
+  securityChanged() {
+    if (this.form.get('security').value === 'None')
+      this.form.get('keystore').disable();
+    else
+      this.form.get('keystore').enable();
+  }
 
   addMap() {
     (this.form.get('mapping') as FormArray).push(
       this.fb.group({
         deviceNodePattern: ['Channel1\\.Device\\d+$'],
         mappingType: ['FQN', Validators.required],
-        subscriptionTags: this.fb.array([]),
+        subscriptionTags: this.fb.array([], [Validators.required]),
         namespace: [Validators.min(0)]
       })
     );
   }
-
-
-
 }

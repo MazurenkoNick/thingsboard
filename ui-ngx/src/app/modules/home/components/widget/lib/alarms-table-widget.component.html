@@ -99,7 +99,7 @@
                     [ngStyle]="cellStyle(alarm, column)">
           </mat-cell>
         </ng-container>
-        <ng-container matColumnDef="actions" stickyEnd>
+        <ng-container matColumnDef="actions" [stickyEnd]="enableStickyAction">
           <mat-header-cell *matHeaderCellDef [ngStyle.gt-md]="{ minWidth: (actionCellDescriptors.length * 40) + 'px',
                                                                 maxWidth: (actionCellDescriptors.length * 40) + 'px',
                                                                 width: (actionCellDescriptors.length * 40) + 'px' }">
@@ -116,7 +116,7 @@
                 <mat-icon>{{actionDescriptor.icon}}</mat-icon>
               </button>
             </div>
-            <div fxHide fxShow.lt-lg>
+            <div fxHide fxShow.lt-lg *ngIf="actionCellDescriptors.length">
               <button mat-button mat-icon-button
                       (click)="$event.stopPropagation(); ctx.detectChanges();"
                       [matMenuTriggerFor]="cellActionsMenu">

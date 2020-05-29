@@ -53,11 +53,13 @@ import org.thingsboard.server.common.data.permission.Operation;
 import org.thingsboard.server.common.data.permission.Resource;
 import org.thingsboard.server.common.data.role.Role;
 import org.thingsboard.server.common.data.role.RoleType;
+import org.thingsboard.server.queue.util.TbCoreComponent;
 
 import java.util.List;
 import java.util.UUID;
 
 @RestController
+@TbCoreComponent
 @RequestMapping("/api")
 @Slf4j
 public class GroupPermissionController extends BaseController {
@@ -97,10 +99,7 @@ public class GroupPermissionController extends BaseController {
         try {
             groupPermission.setTenantId(getCurrentUser().getTenantId());
 
-            Operation operation = groupPermission.getId() == null ? Operation.CREATE : Operation.WRITE;
-
-            accessControlService.checkPermission(getCurrentUser(), Resource.GROUP_PERMISSION, operation,
-                    groupPermission.getId(), groupPermission);
+            checkEntity(groupPermission.getId(), groupPermission, Resource.GROUP_PERMISSION, null);
 
             if (groupPermission.isPublic()) {
                 throw permissionDenied();

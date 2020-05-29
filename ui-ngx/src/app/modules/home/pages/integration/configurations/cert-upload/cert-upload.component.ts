@@ -29,7 +29,7 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { Component, OnInit, Input } from '@angular/core';
+import { Component, Input } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 
 @Component({
@@ -37,13 +37,10 @@ import { FormGroup } from '@angular/forms';
   templateUrl: './cert-upload.component.html',
   styleUrls: ['./cert-upload.component.scss']
 })
-export class CertUploadComponent implements OnInit {
+export class CertUploadComponent {
 
   @Input() form: FormGroup;
 
   constructor() { }
-
-  ngOnInit(): void {
-  }
 
 }

@@ -1777,7 +1777,9 @@
         "password-link-sent-message": "Ссылка для сброса пароля была успешно отправлена!",
         "email": "Эл. адрес",
         "no-account": "У Вас еще нет учетной записи?",
-        "create-account": "Создать учетную запись"
+        "create-account": "Создать учетную запись",
+        "login-with": "Войти через {{name}}",
+        "or": "или"
     },
     "signup": {
         "firstname": "Имя",
@@ -2253,6 +2255,11 @@
         "no-timezones-matching": "Не найдены часовые пояса соответствующие '{{timezone}}'.",
         "timezone-required": "Необходимо указать часовой пояс."
     },
+    "queue": {
+      "select_name": "Выберите имя для Queue",
+      "name": "Имя для Queue",
+      "name_required": "Поле 'Имя для Queue' обязательно к заполнению!"
+    },
     "tenant": {
         "tenant": "Владелец",
         "tenants": "Владельцы",
@@ -2441,7 +2448,7 @@
     },
     "widget-action": {
         "header-button": "Кнопка заголовка виджета",
-        "open-dashboard-state": "Перейти к новомум состоянию дашборда",
+        "open-dashboard-state": "Перейти к новому состоянию дашборда",
         "update-dashboard-state": "Обновить текущее состояние дашборда",
         "open-dashboard": "Перейти к другому дашборду",
         "custom": "Пользовательское действие",

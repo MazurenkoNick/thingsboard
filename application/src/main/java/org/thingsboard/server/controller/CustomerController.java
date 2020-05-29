@@ -58,6 +58,7 @@ import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.permission.Operation;
 import org.thingsboard.server.common.data.permission.Resource;
 import org.thingsboard.server.common.data.security.Authority;
+import org.thingsboard.server.queue.util.TbCoreComponent;
 import org.thingsboard.server.service.security.model.SecurityUser;
 
 import java.util.ArrayList;
@@ -67,6 +68,7 @@ import java.util.stream.Collectors;
 import static org.thingsboard.server.controller.EntityGroupController.ENTITY_GROUP_ID;
 
 @RestController
+@TbCoreComponent
 @RequestMapping("/api")
 public class CustomerController extends BaseController {
 
@@ -123,46 +125,7 @@ public class CustomerController extends BaseController {
     @ResponseBody
     public Customer saveCustomer(@RequestBody Customer customer,
                                  @RequestParam(name = "entityGroupId", required = false) String strEntityGroupId) throws ThingsboardException {
-        try {
-            customer.setTenantId(getCurrentUser().getTenantId());
-
-            Operation operation = customer.getId() == null ? Operation.CREATE : Operation.WRITE;
-
-            if (operation == Operation.CREATE && getCurrentUser().getAuthority() == Authority.CUSTOMER_USER) {
-                customer.setParentCustomerId(getCurrentUser().getCustomerId());
-            }
-
-            if (operation == Operation.CREATE
-                    && getCurrentUser().getAuthority() == Authority.CUSTOMER_USER &&
-                    (customer.getParentCustomerId() == null || customer.getParentCustomerId().isNullUid())) {
-                customer.setParentCustomerId(getCurrentUser().getCustomerId());
-            }
-
-            EntityGroupId entityGroupId = null;
-            if (!StringUtils.isEmpty(strEntityGroupId)) {
-                entityGroupId = new EntityGroupId(toUUID(strEntityGroupId));
-            }
-
-            accessControlService.checkPermission(getCurrentUser(), Resource.CUSTOMER, operation, customer.getId(), customer, entityGroupId);
-
-            Customer savedCustomer = checkNotNull(customerService.saveCustomer(customer));
-
-            if (entityGroupId != null && operation == Operation.CREATE) {
-                entityGroupService.addEntityToEntityGroup(getTenantId(), entityGroupId, savedCustomer.getId());
-            }
-
-            logEntityAction(savedCustomer.getId(), savedCustomer,
-                    savedCustomer.getId(),
-                    customer.getId() == null ? ActionType.ADDED : ActionType.UPDATED, null);
-
-            return savedCustomer;
-        } catch (Exception e) {
-
-            logEntityAction(emptyId(EntityType.CUSTOMER), customer,
-                    null, customer.getId() == null ? ActionType.ADDED : ActionType.UPDATED, e);
-
-            throw handleException(e);
-        }
+        return saveGroupEntity(customer, strEntityGroupId, customerService::saveCustomer);
     }
 
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
@@ -234,11 +197,11 @@ public class CustomerController extends BaseController {
         try {
             PageLink pageLink = createPageLink(pageSize, page, textSearch, sortProperty, sortOrder);
             List<CustomerId> additionalCustomerIds = new ArrayList<>();
-            if (getCurrentUser().getAuthority() == Authority.CUSTOMER_USER &&
+            if (Authority.CUSTOMER_USER.equals(getCurrentUser().getAuthority()) &&
                     accessControlService.hasPermission(getCurrentUser(), Resource.CUSTOMER, Operation.READ)) {
                 additionalCustomerIds.add(getCurrentUser().getCustomerId());
             }
-            return getGroupEntities(getCurrentUser(), EntityType.CUSTOMER, Operation.READ,
+            return ownersCacheService.getGroupEntities(getTenantId(), getCurrentUser(), EntityType.CUSTOMER, Operation.READ, pageLink,
                     (groupIds) -> customerService.findCustomersByEntityGroupIds(groupIds, additionalCustomerIds, pageLink)
             );
         } catch (Exception e) {

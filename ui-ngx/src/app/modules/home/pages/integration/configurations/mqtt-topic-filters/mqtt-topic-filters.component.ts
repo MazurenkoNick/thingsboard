@@ -29,32 +29,27 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input } from '@angular/core';
 import { mqttQoSTypes } from '../../integration-forms-templates';
-import { FormArray, FormBuilder } from '@angular/forms';
+import { FormArray, FormBuilder, Validators } from '@angular/forms';
 
 @Component({
   selector: 'tb-mqtt-topic-filters',
   templateUrl: './mqtt-topic-filters.component.html',
   styleUrls: ['./mqtt-topic-filters.component.scss']
 })
-export class MqttTopicFiltersComponent implements OnInit {
+export class MqttTopicFiltersComponent {
 
   @Input() topicFilters: FormArray;
-  @Input() disableMqttTopics: boolean;
-
 
   mqttQoSTypes = mqttQoSTypes;
 
   constructor(private fb: FormBuilder) { }
 
-  ngOnInit(): void {
-  }
-
   addTopicFilter() {
     this.topicFilters.push(this.fb.group({
-      filter: [''],
-      qos: [0]
+      filter: ['', [Validators.required]],
+      qos: [0, [Validators.required]]
     }));
   }
 

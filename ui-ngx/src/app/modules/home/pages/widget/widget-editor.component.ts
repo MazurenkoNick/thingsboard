@@ -60,8 +60,9 @@ import {
   SaveWidgetTypeAsDialogResult
 } from '@home/pages/widget/save-widget-type-as-dialog.component';
 import { Subscription } from 'rxjs';
-import Timeout = NodeJS.Timeout;
 import { ResizeObserver } from '@juggle/resize-observer';
+import Timeout = NodeJS.Timeout;
+import { widgetEditorCompleter } from '@home/pages/widget/widget-editor.models';
 
 // @dynamic
 @Component({
@@ -334,6 +335,7 @@ export class WidgetEditorComponent extends PageComponent implements OnInit, OnDe
     this.jsEditor.on('change', () => {
       this.cleanupJsErrors();
     });
+    this.jsEditor.completers = [widgetEditorCompleter, ...(this.jsEditor.completers || [])];
     this.setAceEditorValues();
   }
 

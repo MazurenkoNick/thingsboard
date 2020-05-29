@@ -48,7 +48,7 @@ import { Datasource, WidgetActionDescriptor, WidgetConfig } from '@shared/models
 import { IWidgetSubscription } from '@core/api/widget-api.models';
 import { UtilsService } from '@core/services/utils.service';
 import { TranslateService } from '@ngx-translate/core';
-import { deepClone, isDefined, isNumber } from '@core/utils';
+import { deepClone, isDefined, isNumber, createLabelFromDatasource, hashCode } from '@core/utils';
 import cssjs from '@core/css/css';
 import { PageLink } from '@shared/models/page/page-link';
 import { Direction, SortOrder, sortOrderFromString } from '@shared/models/page/sort-order';
@@ -104,6 +104,7 @@ interface AlarmsTableWidgetSettings extends TableWidgetSettings {
   alarmsTitle: string;
   enableSelection: boolean;
   enableStatusFilter: boolean;
+  enableStickyAction: boolean;
   displayDetails: boolean;
   allowAcknowledgment: boolean;
   allowClear: boolean;
@@ -132,6 +133,7 @@ export class AlarmsTableWidgetComponent extends PageComponent implements OnInit,
   public readonly = !this.userPermissionsService.hasGenericPermission(Resource.ALARM, Operation.WRITE);
   public enableSelection = true;
   public displayPagination = true;
+  public enableStickyAction = false;
   public pageSizeOptions;
   public pageLink: PageLink;
   public sortOrderProperty: string;
@@ -295,7 +297,7 @@ export class AlarmsTableWidgetComponent extends PageComponent implements OnInit,
       alarmsTitle = this.translate.instant('alarm.alarms');
     }
 
-    this.ctx.widgetTitle = this.utils.createLabelFromDatasource(this.alarmSource, alarmsTitle);
+    this.ctx.widgetTitle = createLabelFromDatasource(this.alarmSource, alarmsTitle);
 
     this.enableSelection = isDefined(this.settings.enableSelection) ? this.settings.enableSelection : true;
     if (this.readonly || (!this.allowAcknowledgment && !this.allowClear)) {
@@ -303,6 +305,7 @@ export class AlarmsTableWidgetComponent extends PageComponent implements OnInit,
     }
     this.searchAction.show = isDefined(this.settings.enableSearch) ? this.settings.enableSearch : true;
     this.displayPagination = isDefined(this.settings.displayPagination) ? this.settings.displayPagination : true;
+    this.enableStickyAction = isDefined(this.settings.enableStickyAction) ? this.settings.enableStickyAction : false;
     this.columnDisplayAction.show = isDefined(this.settings.enableSelectColumnDisplay) ? this.settings.enableSelectColumnDisplay : true;
     this.statusFilterAction.show = isDefined(this.settings.enableStatusFilter) ? this.settings.enableStatusFilter : true;
 
@@ -316,7 +319,7 @@ export class AlarmsTableWidgetComponent extends PageComponent implements OnInit,
     const cssString = constructTableCssString(this.widgetConfig);
     const cssParser = new cssjs();
     cssParser.testMode = false;
-    const namespace = 'alarms-table-' + this.utils.hashCode(cssString);
+    const namespace = 'alarms-table-' + hashCode(cssString);
     cssParser.cssPreviewNamespace = namespace;
     cssParser.createStyleElement(namespace, cssString);
     $(this.elementRef.nativeElement).addClass(namespace);

@@ -29,27 +29,26 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { Component, Input, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import {
   handlerConfigurationTypes,
   tcpBinaryByteOrder,
   tcpTextMessageSeparator
 } from '../../integration-forms-templates';
-
+import _ from 'lodash';
+import { disableFields, enableFields } from '../../integration-utils';
+import { IntegrationFormComponent } from '@home/pages/integration/configurations/integration-form.component';
 
 @Component({
   selector: 'tb-tcp-integration-form',
   templateUrl: './tcp-integration-form.component.html',
   styleUrls: ['./tcp-integration-form.component.scss']
 })
-export class TcpIntegrationFormComponent implements OnInit {
-
-
-  @Input() form: FormGroup;
+export class TcpIntegrationFormComponent extends IntegrationFormComponent {
 
   handlerConfigurationTypes = handlerConfigurationTypes;
-  handlerTypes = handlerConfigurationTypes;
+  handlerTypes = _.cloneDeep(handlerConfigurationTypes);
   tcpBinaryByteOrder = tcpBinaryByteOrder;
   tcpTextMessageSeparator = tcpTextMessageSeparator;
 
@@ -74,14 +73,43 @@ export class TcpIntegrationFormComponent implements OnInit {
     }
   }
 
-  constructor() { }
-
-  ngOnInit(): void {
+  constructor() {
+    super();
     delete this.handlerTypes.hex;
   }
 
-  handlerConfigurationTypeChanged(type){
-    this.form.get('handlerConfiguration').patchValue(this.defaultHandlerConfigurations[type.value]);
+  onIntegrationFormSet() {
+    if (this.form.enabled) {
+      this.form.get('handlerConfiguration').get('handlerType').valueChanges.subscribe(() => {
+        this.handlerConfigurationTypeChanged();
+      });
+      this.handlerConfigurationTypeChanged();
+    }
+  }
+
+  handlerConfigurationTypeChanged() {
+    const type: string = this.form.get('handlerConfiguration').get('handlerType').value;
+    const handlerConf = this.defaultHandlerConfigurations[type];
+    const controls = this.form.get('handlerConfiguration') as FormGroup;
+    const fieldsSet = {
+      BINARY: [
+        'byteOrder',
+        'maxFrameLength',
+        'lengthFieldOffset',
+        'lengthFieldLength',
+        'lengthAdjustment',
+        'initialBytesToStrip'
+      ],
+      TEXT: [
+        'maxFrameLength',
+        'stripDelimiter',
+        'messageSeparator'
+      ],
+      JSON: []
+    };
+    disableFields(controls, [...fieldsSet.BINARY, ...fieldsSet.TEXT]);
+    enableFields(controls, fieldsSet[type]);
+    this.form.get('handlerConfiguration').patchValue(handlerConf, {emitEvent: false});
   };
 
 }

@@ -28,6 +28,25 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-.mat-subhead {
-    font-size: 1.1rem;
+
+:host {
+  .mat-subhead {
+    font-size: 1rem;
+  }
+
+  .radio-box {
+    padding-bottom: 20px;
+  }
+
+  .checkbox {
+    padding-bottom: 8px;
+  }
+}
+
+:host ::ng-deep {
+  .mat-checkbox{
+    .mat-checkbox-layout{
+      white-space: normal;
+    }
+  }
 }

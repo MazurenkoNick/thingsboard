@@ -29,7 +29,7 @@
               { "glob": "worker-css.js", "input": "./node_modules/ace-builds/src-min/", "output": "/" },
               { "glob": "worker-json.js", "input": "./node_modules/ace-builds/src-min/", "output": "/" },
               { "glob": "worker-javascript.js", "input": "./node_modules/ace-builds/src-min/", "output": "/" },
-              { "glob": "**/*", "input": "node_modules/tinymce", "output": "/tinymce/" }
+              { "glob": "**/*", "input": "node_modules/tinymce", "output": "/assets/tinymce/" }
             ],
             "styles": [
               {
@@ -52,7 +52,9 @@
               "node_modules/@fullcalendar/daygrid/main.css",
               "node_modules/@fullcalendar/list/main.css",
               "node_modules/@fullcalendar/timegrid/main.css",
-              "src/app/modules/home/components/widget/lib/maps/markers.scss"
+              "src/app/modules/home/components/widget/lib/maps/markers.scss",
+              "node_modules/leaflet.markercluster/dist/MarkerCluster.css",
+              "node_modules/leaflet.markercluster/dist/MarkerCluster.Default.css"
             ],
             "stylePreprocessorOptions": {
               "includePaths": [

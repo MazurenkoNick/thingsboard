@@ -36,7 +36,7 @@ import { IDashboardWidget, WidgetAction, WidgetContext, WidgetHeaderAction } fro
 import { Timewindow } from '@shared/models/time/time.models';
 import { Observable, of, Subject } from 'rxjs';
 import { guid, isDefined, isEqual, isUndefined } from '@app/core/utils';
-import { IterableDiffer, KeyValueDiffer, NgZone } from '@angular/core';
+import { IterableDiffer, KeyValueDiffer } from '@angular/core';
 import { IAliasController, IStateController } from '@app/core/api/widget-api.models';
 import { UtilsService } from '@core/services/utils.service';
 

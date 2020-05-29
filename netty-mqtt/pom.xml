@@ -37,7 +37,6 @@
         <version>3.0.0PE-SNAPSHOT</version>
         <artifactId>thingsboard</artifactId>
     </parent>
-    <groupId>org.thingsboard</groupId>
     <artifactId>netty-mqtt</artifactId>
     <version>3.0.0PE-SNAPSHOT</version>
     <packaging>jar</packaging>

@@ -186,7 +186,7 @@ export class DashboardPageComponent extends PageComponent implements IDashboardC
         widgets: null,
         widgetLayouts: {},
         gridSettings: {},
-        ignoreLoading: false,
+        ignoreLoading: true,
         ctrl: null,
         dashboardCtrl: this
       }
@@ -198,7 +198,7 @@ export class DashboardPageComponent extends PageComponent implements IDashboardC
         widgets: null,
         widgetLayouts: {},
         gridSettings: {},
-        ignoreLoading: false,
+        ignoreLoading: true,
         ctrl: null,
         dashboardCtrl: this
       }

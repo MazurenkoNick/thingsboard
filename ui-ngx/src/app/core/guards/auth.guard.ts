@@ -30,12 +30,7 @@
 ///
 
 import { Injectable, NgZone } from '@angular/core';
-import {
-  ActivatedRouteSnapshot,
-  CanActivate,
-  CanActivateChild, Router,
-  RouterStateSnapshot
-} from '@angular/router';
+import { ActivatedRouteSnapshot, CanActivate, CanActivateChild, Router, RouterStateSnapshot } from '@angular/router';
 import { AuthService } from '../auth/auth.service';
 import { select, Store } from '@ngrx/store';
 import { AppState } from '../core.state';
@@ -83,26 +78,26 @@ export class AuthGuard implements CanActivate, CanActivateChild {
   canActivate(next: ActivatedRouteSnapshot,
               state: RouterStateSnapshot) {
 
-    const url: string = state.url;
-    let lastChild = state.root;
-    const urlSegments: string[] = [];
-    if (lastChild.url) {
-      urlSegments.push(...lastChild.url.map(segment => segment.path));
-    }
-    while (lastChild.children.length) {
-      lastChild = lastChild.children[0];
-      if (lastChild.url) {
-        urlSegments.push(...lastChild.url.map(segment => segment.path));
-      }
-    }
-    const path = urlSegments.join('.');
-    const publicId = this.utils.getQueryParam('publicId');
-    const data = lastChild.routeConfig ? lastChild.routeConfig.data || {} : {};
-    const params = lastChild.params || {};
-    const isPublic = data.module === 'public';
-
     return this.getAuthState().pipe(
       mergeMap((authState) => {
+        const url: string = state.url;
+
+        let lastChild = state.root;
+        const urlSegments: string[] = [];
+        if (lastChild.url) {
+          urlSegments.push(...lastChild.url.map(segment => segment.path));
+        }
+        while (lastChild.children.length) {
+          lastChild = lastChild.children[0];
+          if (lastChild.url) {
+            urlSegments.push(...lastChild.url.map(segment => segment.path));
+          }
+        }
+        const path = urlSegments.join('.');
+        const publicId = this.utils.getQueryParam('publicId');
+        const data = lastChild.data || {};
+        const params = lastChild.params || {};
+        const isPublic = data.module === 'public';
         if (!authState.isAuthenticated || isPublic) {
           if (publicId && publicId.length > 0) {
             this.authService.setUserFromJwtToken(null, null, false);
@@ -117,6 +112,9 @@ export class AuthGuard implements CanActivate, CanActivateChild {
             tasks.push(this.whiteLabelingService.loadLoginWhiteLabelingParams());
             if (path === 'login' || path === 'signup') {
               tasks.push(this.selfRegistrationService.loadSelfRegistrationParams());
+              if (path === 'login') {
+                tasks.push(this.authService.loadOAuth2Clients());
+              }
             }
             return forkJoin(tasks).pipe(
               map(() => {
