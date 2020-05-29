@@ -31,7 +31,9 @@
 package org.thingsboard.server.service.security.auth.oauth2;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.NullNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -44,19 +46,25 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.util.StringUtils;
-import org.thingsboard.server.common.data.*;
+import org.thingsboard.server.common.data.Customer;
+import org.thingsboard.server.common.data.DashboardInfo;
+import org.thingsboard.server.common.data.EntityType;
+import org.thingsboard.server.common.data.Tenant;
+import org.thingsboard.server.common.data.User;
 import org.thingsboard.server.common.data.group.EntityGroup;
 import org.thingsboard.server.common.data.id.CustomerId;
-import org.thingsboard.server.common.data.id.EntityGroupId;
 import org.thingsboard.server.common.data.id.DashboardId;
+import org.thingsboard.server.common.data.id.EntityGroupId;
 import org.thingsboard.server.common.data.id.IdBased;
 import org.thingsboard.server.common.data.id.TenantId;
-import org.thingsboard.server.common.data.page.TextPageLink;
+import org.thingsboard.server.common.data.page.PageData;
+import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.permission.MergedUserPermissions;
 import org.thingsboard.server.common.data.permission.Operation;
 import org.thingsboard.server.common.data.security.Authority;
 import org.thingsboard.server.common.data.security.UserCredentials;
 import org.thingsboard.server.dao.customer.CustomerService;
+import org.thingsboard.server.dao.dashboard.DashboardService;
 import org.thingsboard.server.dao.group.EntityGroupService;
 import org.thingsboard.server.dao.dashboard.DashboardService;
 import org.thingsboard.server.dao.oauth2.OAuth2User;
@@ -206,18 +214,13 @@ public abstract class AbstractOAuth2ClientMapper {
     }
 
     private Optional<DashboardId> findDefaultDashboard(OAuth2User oauth2User, SecurityUser securityUser, TenantId tenantId) throws Exception {
-        return ownersCacheService.getGroupEntitiesByPageLink(tenantId, securityUser,
+        PageLink pageLink = new PageLink(1, 0, oauth2User.getDefaultDashboardName());
+        return ownersCacheService.getGroupEntities(tenantId, securityUser,
                 EntityType.DASHBOARD, Operation.READ,
-                entityId -> new DashboardId(entityId.getId()),
-                (entityIds) -> {
-                    try {
-                        return dashboardService.findDashboardInfoByIdsAsync(tenantId, entityIds).get();
-                    } catch (Exception e) {
-                        throw new RuntimeException(e);
-                    }
-                },
-                Collections.emptyList(), Collections.emptyList(), new TextPageLink(1, oauth2User.getDefaultDashboardName()))
-                .getData().stream()
+                pageLink,
+                (groupIds) -> dashboardService.findDashboardsByEntityGroupIds(groupIds, pageLink))
+                .getData()
+                .stream()
                 .findAny()
                 .map(IdBased::getId);
     }
@@ -264,7 +267,7 @@ public abstract class AbstractOAuth2ClientMapper {
     }
 
     private TenantId getTenantId(String tenantName) throws IOException {
-        List<Tenant> tenants = tenantService.findTenants(new TextPageLink(1, tenantName)).getData();
+        List<Tenant> tenants = tenantService.findTenants(new PageLink(1, 0, tenantName)).getData();
         Tenant tenant;
         if (tenants == null || tenants.isEmpty()) {
             tenant = new Tenant();

@@ -35,6 +35,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.MoreExecutors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -60,11 +61,14 @@ import org.thingsboard.server.common.data.id.UUIDBased;
 import org.thingsboard.server.common.data.id.UserId;
 import org.thingsboard.server.common.data.integration.Integration;
 import org.thingsboard.server.common.data.kv.AttributeKvEntry;
-import org.thingsboard.server.common.data.page.TextPageData;
-import org.thingsboard.server.common.data.page.TextPageLink;
+import org.thingsboard.server.common.data.kv.BaseAttributeKvEntry;
+import org.thingsboard.server.common.data.kv.StringDataEntry;
 import org.thingsboard.server.common.data.page.TimePageLink;
 import org.thingsboard.server.common.data.relation.EntityRelation;
 import org.thingsboard.server.common.data.relation.RelationTypeGroup;
+import org.thingsboard.server.common.data.id.UUIDBased;
+import org.thingsboard.server.common.data.page.PageData;
+import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.rule.RuleChain;
 import org.thingsboard.server.common.data.security.Authority;
 import org.thingsboard.server.common.data.wl.Favicon;
@@ -76,6 +80,7 @@ import org.thingsboard.server.dao.customer.CustomerService;
 import org.thingsboard.server.dao.dashboard.DashboardService;
 import org.thingsboard.server.dao.device.DeviceService;
 import org.thingsboard.server.dao.entityview.EntityViewService;
+import org.thingsboard.server.dao.exception.IncorrectParameterException;
 import org.thingsboard.server.dao.group.EntityGroupService;
 import org.thingsboard.server.dao.integration.IntegrationService;
 import org.thingsboard.server.dao.relation.RelationService;
@@ -109,6 +114,7 @@ public class DefaultDataUpdateService implements DataUpdateService {
     private static final String WHITE_LABEL_PARAMS = "whiteLabelParams";
     private static final String LOGO_IMAGE = "logoImage";
     private static final String LOGO_IMAGE_CHECKSUM = "logoImageChecksum";
+    private static final String MAIL_TEMPLATES = "mailTemplates";
     private static final int DEFAULT_LIMIT = 100;
 
     @Autowired
@@ -167,8 +173,8 @@ public class DefaultDataUpdateService implements DataUpdateService {
                 log.info("Updating data from version 1.4.0 to 2.0.0 ...");
                 tenantsDefaultRuleChainUpdater.updateEntities(null);
                 break;
-            case "2.5.1":
-                log.info("Updating data from version 2.5.1 to 2.5.1PE ...");
+            case "3.0.0":
+                log.info("Updating data from version 3.0.0 to 3.0.0PE ...");
                 tenantsCustomersGroupAllUpdater.updateEntities(null);
                 tenantEntitiesGroupAllUpdater.updateEntities(null);
                 tenantIntegrationUpdater.updateEntities(null);
@@ -196,7 +202,7 @@ public class DefaultDataUpdateService implements DataUpdateService {
             new PaginatedUpdater<String, Tenant>() {
 
                 @Override
-                protected TextPageData<Tenant> findEntities(String region, TextPageLink pageLink) {
+                protected PageData<Tenant> findEntities(String region, PageLink pageLink) {
                     return tenantService.findTenants(pageLink);
                 }
 
@@ -217,7 +223,7 @@ public class DefaultDataUpdateService implements DataUpdateService {
             new PaginatedUpdater<String, Tenant>() {
 
                 @Override
-                protected TextPageData<Tenant> findEntities(String region, TextPageLink pageLink) {
+                protected PageData<Tenant> findEntities(String region, PageLink pageLink) {
                     return tenantService.findTenants(pageLink);
                 }
 
@@ -248,7 +254,7 @@ public class DefaultDataUpdateService implements DataUpdateService {
             new PaginatedUpdater<String, Tenant>() {
 
                 @Override
-                protected TextPageData<Tenant> findEntities(String region, TextPageLink pageLink) {
+                protected PageData<Tenant> findEntities(String region, PageLink pageLink) {
                     return tenantService.findTenants(pageLink);
                 }
 
@@ -309,7 +315,7 @@ public class DefaultDataUpdateService implements DataUpdateService {
         }
 
         @Override
-        protected TextPageData<User> findEntities(TenantId id, TextPageLink pageLink) {
+        protected PageData<User> findEntities(TenantId id, PageLink pageLink) {
             return userService.findTenantAdmins(id, pageLink);
         }
 
@@ -329,7 +335,7 @@ public class DefaultDataUpdateService implements DataUpdateService {
         }
 
         @Override
-        protected TextPageData<User> findEntities(TenantId id, TextPageLink pageLink) {
+        protected PageData<User> findEntities(TenantId id, PageLink pageLink) {
             try {
                 List<EntityId> entityIds = entityGroupService.findAllEntityIds(TenantId.SYS_TENANT_ID, groupAll.getId(), new TimePageLink(Integer.MAX_VALUE)).get();
                 List<UserId> userIds = entityIds.stream().map(entityId -> new UserId(entityId.getId())).collect(Collectors.toList());
@@ -339,7 +345,7 @@ public class DefaultDataUpdateService implements DataUpdateService {
                 } else {
                     users = Collections.emptyList();
                 }
-                return new TextPageData<>(users, new TextPageLink(Integer.MAX_VALUE));
+                return new PageData<>(users, 1, users.size(), false);
             } catch (Exception e) {
                 log.error("Failed to get users from group all!", e);
                 throw new RuntimeException("Failed to get users from group all!", e);
@@ -348,7 +354,7 @@ public class DefaultDataUpdateService implements DataUpdateService {
 
         @Override
         protected void updateEntity(User entity) {
-            if (entity.getAuthority() == Authority.CUSTOMER_USER) {
+            if (Authority.CUSTOMER_USER.equals(entity.getAuthority())) {
                 entityGroupService.removeEntityFromEntityGroup(TenantId.SYS_TENANT_ID, groupAll.getId(), entity.getId());
             }
         }
@@ -366,7 +372,7 @@ public class DefaultDataUpdateService implements DataUpdateService {
         }
 
         @Override
-        protected TextPageData<User> findEntities(CustomerId id, TextPageLink pageLink) {
+        protected PageData<User> findEntities(CustomerId id, PageLink pageLink) {
             return userService.findCustomerUsers(this.tenantId, id, pageLink);
         }
 
@@ -384,7 +390,7 @@ public class DefaultDataUpdateService implements DataUpdateService {
         }
 
         @Override
-        protected TextPageData<Customer> findEntities(TenantId id, TextPageLink pageLink) {
+        protected PageData<Customer> findEntities(TenantId id, PageLink pageLink) {
             return customerService.findCustomersByTenantId(id, pageLink);
         }
 
@@ -448,7 +454,7 @@ public class DefaultDataUpdateService implements DataUpdateService {
         }
 
         @Override
-        protected TextPageData<DashboardInfo> findEntities(TenantId id, TextPageLink pageLink) {
+        protected PageData<DashboardInfo> findEntities(TenantId id, PageLink pageLink) {
             if (fetchAllTenantEntities) {
                 return dashboardService.findDashboardsByTenantId(id, pageLink);
             } else {
@@ -461,7 +467,7 @@ public class DefaultDataUpdateService implements DataUpdateService {
                     } else {
                         dashboards = Collections.emptyList();
                     }
-                    return new TextPageData<>(dashboards, new TextPageLink(Integer.MAX_VALUE));
+                    return new PageData<>(dashboards, 1, dashboards.size(), false);
                 } catch (Exception e) {
                     log.error("Failed to get dashboards from group all!", e);
                     throw new RuntimeException("Failed to get dashboards from group all!", e);
@@ -500,7 +506,7 @@ public class DefaultDataUpdateService implements DataUpdateService {
 
     private WhiteLabelingPaginatedUpdater<String, Tenant> tenantsWhiteLabelingUpdater = new WhiteLabelingPaginatedUpdater<String, Tenant>() {
         @Override
-        protected TextPageData<Tenant> findEntities(String id, TextPageLink pageLink) {
+        protected PageData<Tenant> findEntities(String id, PageLink pageLink) {
             return tenantService.findTenants(pageLink);
         }
 
@@ -510,13 +516,15 @@ public class DefaultDataUpdateService implements DataUpdateService {
             for (ListenableFuture<WhiteLabelingParams> future : futures) {
                 future.get();
             }
-            return updateEntityWhiteLabelingParameters(tenant.getId());
+            ListenableFuture<List<Void>> future = updateTenantMailTemplates(tenant.getId());
+            return Futures.transformAsync(future, l -> updateEntityWhiteLabelingParameters(tenant.getId()),
+                    MoreExecutors.directExecutor());
         }
     };
 
     private WhiteLabelingPaginatedUpdater<TenantId, Customer> customersWhiteLabelingUpdater = new WhiteLabelingPaginatedUpdater<TenantId, Customer>() {
         @Override
-        protected TextPageData<Customer> findEntities(TenantId id, TextPageLink pageLink) {
+        protected PageData<Customer> findEntities(TenantId id, PageLink pageLink) {
             return customerService.findCustomersByTenantId(id, pageLink);
         }
 
@@ -528,7 +536,7 @@ public class DefaultDataUpdateService implements DataUpdateService {
 
     private PaginatedUpdater<String, Tenant> tenantIntegrationUpdater = new PaginatedUpdater<String, Tenant>() {
         @Override
-        protected TextPageData<Tenant> findEntities(String id, TextPageLink pageLink) {
+        protected PageData<Tenant> findEntities(String id, PageLink pageLink) {
             return tenantService.findTenants(pageLink);
         }
 
@@ -578,8 +586,20 @@ public class DefaultDataUpdateService implements DataUpdateService {
         return result;
     }
 
+    private ListenableFuture<List<Void>> updateTenantMailTemplates(TenantId tenantId) {
+        String mailTemplatesJsonString = getEntityAttributeValue(tenantId, MAIL_TEMPLATES);
+        if (!StringUtils.isEmpty(mailTemplatesJsonString)) {
+            Optional<String> updated = this.installScripts.updateMailTemplatesFromVelocityToFreeMarker(mailTemplatesJsonString);
+            if (updated.isPresent()) {
+                return this.saveEntityAttribute(tenantId, MAIL_TEMPLATES, updated.get());
+            }
+        }
+        return Futures.immediateFuture(Collections.emptyList());
+    }
+
     private void updateTenantIntegrations(TenantId tenantId) {
-        TextPageData<Integration> pageData = integrationService.findTenantIntegrations(tenantId, new TextPageLink(DEFAULT_LIMIT));
+        PageLink pageLink = new PageLink(DEFAULT_LIMIT);
+        PageData<Integration> pageData = integrationService.findTenantIntegrations(tenantId, pageLink);
         boolean hasNext = true;
         while (hasNext) {
             for (Integration integration : pageData.getData()) {
@@ -596,7 +616,8 @@ public class DefaultDataUpdateService implements DataUpdateService {
                 }
             }
             if (pageData.hasNext()) {
-                pageData = integrationService.findTenantIntegrations(tenantId, pageData.getNextPageLink());
+                pageLink = pageLink.nextPageLink();
+                pageData = integrationService.findTenantIntegrations(tenantId, pageLink);
             } else {
                 hasNext = false;
             }
@@ -661,6 +682,12 @@ public class DefaultDataUpdateService implements DataUpdateService {
                 }
                 whiteLabelingParams.setPaletteSettings(paletteSettings);
             }
+            if (storedWl.has("customCss")) {
+                String customCss = storedWl.get("customCss").asText();
+                if (!StringUtils.isEmpty(customCss) && !"null".equals(customCss)) {
+                    whiteLabelingParams.setCustomCss(customCss);
+                }
+            }
         }
         if (isSystem) {
             String helpLinkBaseUrl = "https://thingsboard.io";
@@ -711,6 +738,18 @@ public class DefaultDataUpdateService implements DataUpdateService {
         }
     }
 
+    private ListenableFuture<List<Void>> saveEntityAttribute(EntityId entityId, String key, String value) {
+        List<AttributeKvEntry> attributes = new ArrayList<>();
+        long ts = System.currentTimeMillis();
+        attributes.add(new BaseAttributeKvEntry(new StringDataEntry(key, value), ts));
+        try {
+            return attributesService.save(TenantId.SYS_TENANT_ID, entityId, DataConstants.SERVER_SCOPE, attributes);
+        } catch (Exception e) {
+            log.error("Unable to save White Labeling Params to attributes!", e);
+            throw new IncorrectParameterException("Unable to save White Labeling Params to attributes!");
+        }
+    }
+
     private void deleteEntityAttribute(EntityId entityId, String key) {
         try {
             attributesService.removeAll(TenantId.SYS_TENANT_ID, entityId, DataConstants.SERVER_SCOPE, Arrays.asList(key)).get();
@@ -724,23 +763,23 @@ public class DefaultDataUpdateService implements DataUpdateService {
         private static final int DEFAULT_LIMIT = 100;
 
         public List<ListenableFuture<WhiteLabelingParams>> updateEntities(I id) throws Exception {
-            TextPageLink pageLink = new TextPageLink(DEFAULT_LIMIT);
+            PageLink pageLink = new PageLink(DEFAULT_LIMIT);
             boolean hasNext = true;
             List<ListenableFuture<WhiteLabelingParams>> result = new ArrayList<>();
             while (hasNext) {
-                TextPageData<D> entities = findEntities(id, pageLink);
+                PageData<D> entities = findEntities(id, pageLink);
                 for (D entity : entities.getData()) {
                     result.add(updateEntity(entity));
                 }
                 hasNext = entities.hasNext();
                 if (hasNext) {
-                    pageLink = entities.getNextPageLink();
+                    pageLink = pageLink.nextPageLink();
                 }
             }
             return result;
         }
 
-        protected abstract TextPageData<D> findEntities(I id, TextPageLink pageLink);
+        protected abstract PageData<D> findEntities(I id, PageLink pageLink);
 
         protected abstract ListenableFuture<WhiteLabelingParams> updateEntity(D entity) throws Exception;
 

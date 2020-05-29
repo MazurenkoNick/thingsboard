@@ -42,7 +42,6 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.thingsboard.server.common.data.BaseData;
 import org.thingsboard.server.common.data.Customer;
 import org.thingsboard.server.common.data.Dashboard;
 import org.thingsboard.server.common.data.DashboardInfo;
@@ -65,7 +64,7 @@ import org.thingsboard.server.common.data.alarm.AlarmInfo;
 import org.thingsboard.server.common.data.asset.Asset;
 import org.thingsboard.server.common.data.audit.ActionType;
 import org.thingsboard.server.common.data.blob.BlobEntity;
-import org.thingsboard.server.common.data.blob.BlobEntityInfo;
+import org.thingsboard.server.common.data.blob.BlobEntityWithCustomerInfo;
 import org.thingsboard.server.common.data.converter.Converter;
 import org.thingsboard.server.common.data.exception.ThingsboardErrorCode;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
@@ -95,10 +94,13 @@ import org.thingsboard.server.common.data.id.WidgetsBundleId;
 import org.thingsboard.server.common.data.integration.Integration;
 import org.thingsboard.server.common.data.kv.AttributeKvEntry;
 import org.thingsboard.server.common.data.kv.DataType;
-import org.thingsboard.server.common.data.page.TextPageData;
-import org.thingsboard.server.common.data.page.TextPageLink;
+import org.thingsboard.server.common.data.page.PageData;
+import org.thingsboard.server.common.data.page.PageLink;
+import org.thingsboard.server.common.data.page.SortOrder;
 import org.thingsboard.server.common.data.page.TimePageLink;
 import org.thingsboard.server.common.data.permission.GroupPermission;
+import org.thingsboard.server.common.data.permission.GroupPermissionInfo;
+import org.thingsboard.server.common.data.permission.MergedGroupTypePermissionInfo;
 import org.thingsboard.server.common.data.permission.MergedUserPermissions;
 import org.thingsboard.server.common.data.permission.Operation;
 import org.thingsboard.server.common.data.permission.Resource;
@@ -109,9 +111,9 @@ import org.thingsboard.server.common.data.role.RoleType;
 import org.thingsboard.server.common.data.rule.RuleChain;
 import org.thingsboard.server.common.data.rule.RuleNode;
 import org.thingsboard.server.common.data.scheduler.SchedulerEvent;
-import org.thingsboard.server.common.data.scheduler.SchedulerEventInfo;
 import org.thingsboard.server.common.data.security.Authority;
 import org.thingsboard.server.common.data.subscription.SubscriptionException;
+import org.thingsboard.server.common.data.scheduler.SchedulerEventWithCustomerInfo;
 import org.thingsboard.server.common.data.widget.WidgetType;
 import org.thingsboard.server.common.data.widget.WidgetsBundle;
 import org.thingsboard.server.common.msg.TbMsg;
@@ -161,7 +163,9 @@ import org.thingsboard.server.service.telemetry.TelemetrySubscriptionService;
 
 import javax.mail.MessagingException;
 import javax.servlet.http.HttpServletResponse;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -415,21 +419,27 @@ public abstract class BaseController {
         return UUID.fromString(id);
     }
 
-    TimePageLink createPageLink(int limit, Long startTime, Long endTime, boolean ascOrder, String idOffset) {
-        UUID idOffsetUuid = null;
-        if (StringUtils.isNotEmpty(idOffset)) {
-            idOffsetUuid = toUUID(idOffset);
+    PageLink createPageLink(int pageSize, int page, String textSearch, String sortProperty, String sortOrder) throws ThingsboardException {
+        if (!StringUtils.isEmpty(sortProperty)) {
+            SortOrder.Direction direction = SortOrder.Direction.ASC;
+            if (!StringUtils.isEmpty(sortOrder)) {
+                try {
+                    direction = SortOrder.Direction.valueOf(sortOrder.toUpperCase());
+                } catch (IllegalArgumentException e) {
+                    throw new ThingsboardException("Unsupported sort order '" + sortOrder + "'! Only 'ASC' or 'DESC' types are allowed.", ThingsboardErrorCode.BAD_REQUEST_PARAMS);
+                }
+            }
+            SortOrder sort = new SortOrder(sortProperty, direction);
+            return new PageLink(pageSize, page, textSearch, sort);
+        } else {
+            return new PageLink(pageSize, page, textSearch);
         }
-        return new TimePageLink(limit, startTime, endTime, ascOrder, idOffsetUuid);
     }
 
-
-    TextPageLink createPageLink(int limit, String textSearch, String idOffset, String textOffset) {
-        UUID idOffsetUuid = null;
-        if (StringUtils.isNotEmpty(idOffset)) {
-            idOffsetUuid = toUUID(idOffset);
-        }
-        return new TextPageLink(limit, textSearch, idOffsetUuid, textOffset);
+    TimePageLink createTimePageLink(int pageSize, int page, String textSearch,
+                                    String sortProperty, String sortOrder, Long startTime, Long endTime) throws ThingsboardException {
+        PageLink pageLink = this.createPageLink(pageSize, page, textSearch, sortProperty, sortOrder);
+        return new TimePageLink(pageLink, startTime, endTime);
     }
 
     protected SecurityUser getCurrentUser() throws ThingsboardException {
@@ -658,6 +668,18 @@ public abstract class BaseController {
         }
     }
 
+    GroupPermissionInfo checkGroupPermissionInfoId(GroupPermissionId groupPermissionId, Operation operation, boolean isUserGroup) throws ThingsboardException {
+        try {
+            validateId(groupPermissionId, "Incorrect groupPermissionId " + groupPermissionId);
+            GroupPermissionInfo groupPermission = groupPermissionService.findGroupPermissionInfoByIdAsync(getTenantId(), groupPermissionId, isUserGroup).get();
+            checkNotNull(groupPermission);
+            accessControlService.checkPermission(getCurrentUser(), Resource.GROUP_PERMISSION, operation, groupPermissionId, groupPermission);
+            return groupPermission;
+        } catch (Exception e) {
+            throw handleException(e, false);
+        }
+    }
+
     Asset checkAssetId(AssetId assetId, Operation operation) throws ThingsboardException {
         try {
             validateId(assetId, "Incorrect assetId " + assetId);
@@ -825,10 +847,10 @@ public abstract class BaseController {
         }
     }
 
-    SchedulerEventInfo checkSchedulerEventInfoId(SchedulerEventId schedulerEventId, Operation operation) throws ThingsboardException {
+    SchedulerEventWithCustomerInfo checkSchedulerEventInfoId(SchedulerEventId schedulerEventId, Operation operation) throws ThingsboardException {
         try {
             validateId(schedulerEventId, "Incorrect schedulerEventId " + schedulerEventId);
-            SchedulerEventInfo schedulerEventInfo = schedulerEventService.findSchedulerEventInfoById(getTenantId(), schedulerEventId);
+            SchedulerEventWithCustomerInfo schedulerEventInfo = schedulerEventService.findSchedulerEventWithCustomerInfoById(getTenantId(), schedulerEventId);
             checkNotNull(schedulerEventInfo);
             accessControlService.checkPermission(getCurrentUser(), Resource.SCHEDULER_EVENT, operation, schedulerEventId, schedulerEventInfo);
             return schedulerEventInfo;
@@ -849,10 +871,10 @@ public abstract class BaseController {
         }
     }
 
-    BlobEntityInfo checkBlobEntityInfoId(BlobEntityId blobEntityId, Operation operation) throws ThingsboardException {
+    BlobEntityWithCustomerInfo checkBlobEntityInfoId(BlobEntityId blobEntityId, Operation operation) throws ThingsboardException {
         try {
             validateId(blobEntityId, "Incorrect blobEntityId " + blobEntityId);
-            BlobEntityInfo blobEntityInfo = blobEntityService.findBlobEntityInfoById(getTenantId(), blobEntityId);
+            BlobEntityWithCustomerInfo blobEntityInfo = blobEntityService.findBlobEntityWithCustomerInfoById(getTenantId(), blobEntityId);
             checkNotNull(blobEntityInfo);
             accessControlService.checkPermission(getCurrentUser(), Resource.BLOB_ENTITY, operation, blobEntityId, blobEntityInfo);
             return blobEntityInfo;
@@ -1036,26 +1058,53 @@ public abstract class BaseController {
         }
     }
 
-    protected <E extends SearchTextBased<? extends UUIDBased>, I extends EntityId> TextPageData<E>
-    getGroupEntitiesByPageLink(SecurityUser securityUser, EntityType entityType, Operation operation,
-                               Function<EntityId, I> toIdFunction, Function<List<I>, List<E>> toEntitiesFunction,
-                               TextPageLink pageLink) throws Exception {
-
-        return ownersCacheService.getGroupEntitiesByPageLink(getTenantId(), securityUser, entityType, operation, toIdFunction, toEntitiesFunction,
-                Collections.emptyList(), Collections.emptyList(), pageLink);
+    protected <E> PageData<E> toPageData(List<E> entities, PageLink pageLink) {
+        int totalElements = entities.size();
+        int totalPages = pageLink.getPageSize() > 0 ? (int)Math.ceil((float)totalElements / pageLink.getPageSize()) : 1;
+        boolean hasNext = false;
+        if (pageLink.getPageSize() > 0) {
+            int startIndex = pageLink.getPageSize() * pageLink.getPage();
+            int endIndex = startIndex + pageLink.getPageSize();
+            if (entities.size() <= startIndex) {
+                entities = Collections.emptyList();
+            } else {
+                if (endIndex > entities.size()) {
+                    endIndex = entities.size();
+                }
+                entities = new ArrayList<>(entities.subList(startIndex, endIndex));
+            }
+            hasNext = totalElements > startIndex + entities.size();
+        }
+        return new PageData<>(entities, totalPages, totalElements, hasNext);
     }
 
-    protected <E extends SearchTextBased<? extends UUIDBased>, I extends EntityId> TextPageData<E>
-    getGroupEntitiesByPageLink(SecurityUser securityUser, EntityType entityType, Operation operation,
-                               Function<EntityId, I> toIdFunction, Function<List<I>, List<E>> toEntitiesFunction,
-                               List<Predicate<E>> entityFilters, TextPageLink pageLink) throws Exception {
+    protected Comparator<SearchTextBased<? extends UUIDBased>> entityComparator = (e1, e2) -> {
+        int result = e1.getSearchText().compareToIgnoreCase(e2.getSearchText());
+        if (result == 0) {
+            result = (int)(e2.getCreatedTime() - e1.getCreatedTime());
+        }
+        return result;
+    };
 
-        return ownersCacheService.getGroupEntitiesByPageLink(getTenantId(), securityUser, entityType, operation, toIdFunction, toEntitiesFunction,
-                entityFilters, Collections.emptyList(), pageLink);
-    }
+    protected class EntityPageLinkFilter implements Predicate<SearchTextBased<? extends UUIDBased>> {
 
-    protected <E extends SearchTextBased<? extends UUIDBased>, I extends EntityId> TextPageData<E>
-        loadAndFilterEntities(List<I> entityIds, Function<List<I>, List<E>> toEntitiesFunction, TextPageLink pageLink) {
-            return ownersCacheService.loadAndFilterEntities(entityIds, toEntitiesFunction, Collections.emptyList(), pageLink);
+        private final String textSearch;
+
+        EntityPageLinkFilter(PageLink pageLink) {
+            if (!StringUtils.isEmpty(pageLink.getTextSearch())) {
+                this.textSearch = pageLink.getTextSearch().toLowerCase();
+            } else {
+                this.textSearch = "";
+            }
+        }
+
+        @Override
+        public boolean test(SearchTextBased<? extends UUIDBased> searchTextBased) {
+            if (textSearch.length() > 0) {
+                return searchTextBased.getSearchText().toLowerCase().startsWith(textSearch);
+            } else {
+                return true;
+            }
+        }
     }
 }
