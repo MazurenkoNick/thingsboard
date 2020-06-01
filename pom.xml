@@ -589,6 +589,10 @@
                                     </configuration>
                                 </execution>
                             </executions>
+                            <configuration>
+                                <providerSelection>2.0</providerSelection>
+                                <source>2.0</source>
+                            </configuration>
                         </plugin>
                     </plugins>
                 </pluginManagement>
