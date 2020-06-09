@@ -165,6 +165,7 @@ import { FullCalendarModule } from '@fullcalendar/angular';
 import { DndModule } from 'ngx-drag-drop';
 import { QueueTypeListComponent } from '@shared/components/queue/queue-type-list.component';
 import { WhiteLabelingFeatureDialogComponent } from '@shared/components/dialog/white-labeling-feature-dialog.component';
+import { ContactComponent } from '@shared/components/contact.component';
 import { EntityLimitDialogComponent } from '@shared/components/dialog/entity-limit-dialog.component';
 
 @NgModule({
@@ -270,7 +271,8 @@ import { EntityLimitDialogComponent } from '@shared/components/dialog/entity-lim
     TbJsonToStringDirective,
     JsonObjectEditDialogComponent,
     HistorySelectorComponent,
-    EntityGatewaySelectComponent
+    EntityGatewaySelectComponent,
+    ContactComponent
   ],
   imports: [
     CommonModule,
@@ -450,7 +452,8 @@ import { EntityLimitDialogComponent } from '@shared/components/dialog/entity-lim
     TranslateModule,
     JsonObjectEditDialogComponent,
     HistorySelectorComponent,
-    EntityGatewaySelectComponent
+    EntityGatewaySelectComponent,
+    ContactComponent
   ]
 })
 export class SharedModule { }
