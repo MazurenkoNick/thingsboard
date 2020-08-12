@@ -36,28 +36,23 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Component;
 import org.thingsboard.server.common.data.DashboardInfo;
-import org.thingsboard.server.common.data.UUIDConverter;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.dao.DaoUtil;
 import org.thingsboard.server.dao.dashboard.DashboardInfoDao;
 import org.thingsboard.server.dao.model.sql.DashboardInfoEntity;
 import org.thingsboard.server.dao.sql.JpaAbstractSearchTextDao;
-import org.thingsboard.server.dao.util.SqlDao;
 
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
-import static org.thingsboard.server.common.data.UUIDConverter.fromTimeUUID;
-import static org.thingsboard.server.common.data.UUIDConverter.fromTimeUUIDs;
 
 /**
  * Created by Valerii Sosliuk on 5/6/2017.
  */
 @Slf4j
 @Component
-@SqlDao
 public class JpaDashboardInfoDao extends JpaAbstractSearchTextDao<DashboardInfoEntity, DashboardInfo> implements DashboardInfoDao {
 
     @Autowired
@@ -77,21 +72,21 @@ public class JpaDashboardInfoDao extends JpaAbstractSearchTextDao<DashboardInfoE
     public PageData<DashboardInfo> findDashboardsByTenantId(UUID tenantId, PageLink pageLink) {
         return DaoUtil.toPageData(dashboardInfoRepository
                 .findByTenantId(
-                        UUIDConverter.fromTimeUUID(tenantId),
+                        tenantId,
                         Objects.toString(pageLink.getTextSearch(), ""),
                         DaoUtil.toPageable(pageLink, DashboardInfoEntity.dashboardColumnMap)));
     }
 
     @Override
     public ListenableFuture<List<DashboardInfo>> findDashboardsByIdsAsync(UUID tenantId, List<UUID> dashboardIds) {
-        return service.submit(() -> DaoUtil.convertDataList(dashboardInfoRepository.findByIdIn(fromTimeUUIDs(dashboardIds))));
+        return service.submit(() -> DaoUtil.convertDataList(dashboardInfoRepository.findByIdIn(dashboardIds)));
     }
 
     @Override
     public PageData<DashboardInfo> findDashboardsByEntityGroupId(UUID groupId, PageLink pageLink) {
         return DaoUtil.toPageData(dashboardInfoRepository
                 .findByEntityGroupId(
-                        fromTimeUUID(groupId),
+                        groupId,
                         Objects.toString(pageLink.getTextSearch(), ""),
                         DaoUtil.toPageable(pageLink, DashboardInfoEntity.dashboardColumnMap)));
     }
@@ -100,7 +95,7 @@ public class JpaDashboardInfoDao extends JpaAbstractSearchTextDao<DashboardInfoE
     public PageData<DashboardInfo> findDashboardsByEntityGroupIds(List<UUID> groupIds, PageLink pageLink) {
         return DaoUtil.toPageData(dashboardInfoRepository
                 .findByEntityGroupIds(
-                        fromTimeUUIDs(groupIds),
+                        groupIds,
                         Objects.toString(pageLink.getTextSearch(), ""),
                         DaoUtil.toPageable(pageLink, DashboardInfoEntity.dashboardColumnMap)));
     }

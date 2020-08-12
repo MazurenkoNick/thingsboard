@@ -71,6 +71,7 @@ import org.thingsboard.integration.http.thingpark.ThingParkIntegrationEnterprise
 import org.thingsboard.integration.http.tmobile.TMobileIotCdpIntegration;
 import org.thingsboard.integration.kafka.basic.BasicKafkaIntegration;
 import org.thingsboard.integration.mqtt.aws.AwsIotIntegration;
+import org.thingsboard.integration.mqtt.azure.AzureIotHubIntegration;
 import org.thingsboard.integration.mqtt.basic.BasicMqttIntegration;
 import org.thingsboard.integration.mqtt.ibm.IbmWatsonIotIntegration;
 import org.thingsboard.integration.mqtt.ttn.TtnIntegration;
@@ -318,6 +319,12 @@ public class DefaultPlatformIntegrationService implements PlatformIntegrationSer
             ThingsboardPlatformIntegration platformIntegration = createThingsboardPlatformIntegration(integration);
             platformIntegration.validateConfiguration(integration, allowLocalNetworkHosts);
         }
+    }
+
+    @Override
+    public void checkIntegrationConnection(Integration integration) throws Exception {
+        ThingsboardPlatformIntegration platformIntegration = createThingsboardPlatformIntegration(integration);
+        platformIntegration.checkConnection(integration, new LocalIntegrationContext(contextComponent, integration));
     }
 
     @Override
@@ -969,9 +976,12 @@ public class DefaultPlatformIntegrationService implements PlatformIntegrationSer
             case IBM_WATSON_IOT:
                 return new IbmWatsonIotIntegration();
             case TTN:
+            case TTI:
                 return new TtnIntegration();
             case AZURE_EVENT_HUB:
                 return new AzureEventHubIntegration();
+            case AZURE_IOT_HUB:
+                return new AzureIotHubIntegration();
             case OPC_UA:
                 return new OpcUaIntegration();
             case AWS_KINESIS:
@@ -1024,14 +1034,16 @@ public class DefaultPlatformIntegrationService implements PlatformIntegrationSer
 
         @Override
         public void onSuccess(TbQueueMsgMetadata metadata) {
-            if (msgCount.decrementAndGet() <= 0) {
+            if (msgCount.decrementAndGet() <= 0 && callback != null) {
                 DefaultPlatformIntegrationService.this.callbackExecutor.submit(() -> callback.onSuccess(null));
             }
         }
 
         @Override
         public void onFailure(Throwable t) {
-            callback.onError(t);
+            if (callback != null) {
+                callback.onError(t);
+            }
         }
     }
 

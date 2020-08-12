@@ -30,6 +30,7 @@
  */
 package org.thingsboard.server.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -50,16 +51,13 @@ import org.thingsboard.server.common.data.Device;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.EntityView;
 import org.thingsboard.server.common.data.GroupEntity;
-import org.thingsboard.server.common.data.HasCustomerId;
 import org.thingsboard.server.common.data.HasName;
-import org.thingsboard.server.common.data.HasOwnerId;
 import org.thingsboard.server.common.data.SearchTextBased;
 import org.thingsboard.server.common.data.HasTenantId;
 import org.thingsboard.server.common.data.Tenant;
 import org.thingsboard.server.common.data.TenantEntity;
 import org.thingsboard.server.common.data.User;
 import org.thingsboard.server.common.data.alarm.Alarm;
-import org.thingsboard.server.common.data.id.AlarmId;
 import org.thingsboard.server.common.data.alarm.AlarmInfo;
 import org.thingsboard.server.common.data.asset.Asset;
 import org.thingsboard.server.common.data.audit.ActionType;
@@ -69,6 +67,7 @@ import org.thingsboard.server.common.data.converter.Converter;
 import org.thingsboard.server.common.data.exception.ThingsboardErrorCode;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.group.EntityGroup;
+import org.thingsboard.server.common.data.id.AlarmId;
 import org.thingsboard.server.common.data.id.AssetId;
 import org.thingsboard.server.common.data.id.BlobEntityId;
 import org.thingsboard.server.common.data.id.ConverterId;
@@ -119,7 +118,6 @@ import org.thingsboard.server.common.data.widget.WidgetsBundle;
 import org.thingsboard.server.common.msg.TbMsg;
 import org.thingsboard.server.common.msg.TbMsgDataType;
 import org.thingsboard.server.common.msg.TbMsgMetaData;
-import org.thingsboard.server.dao.alarm.AlarmService;
 import org.thingsboard.server.dao.asset.AssetService;
 import org.thingsboard.server.dao.attributes.AttributesService;
 import org.thingsboard.server.dao.audit.AuditLogService;
@@ -130,6 +128,7 @@ import org.thingsboard.server.dao.dashboard.DashboardService;
 import org.thingsboard.server.dao.device.ClaimDevicesService;
 import org.thingsboard.server.dao.device.DeviceCredentialsService;
 import org.thingsboard.server.dao.device.DeviceService;
+import org.thingsboard.server.dao.entity.EntityService;
 import org.thingsboard.server.dao.entityview.EntityViewService;
 import org.thingsboard.server.dao.exception.DataValidationException;
 import org.thingsboard.server.dao.exception.IncorrectParameterException;
@@ -152,6 +151,7 @@ import org.thingsboard.server.queue.discovery.TbServiceInfoProvider;
 import org.thingsboard.server.queue.provider.TbQueueProducerProvider;
 import org.thingsboard.server.queue.util.TbCoreComponent;
 import org.thingsboard.server.service.component.ComponentDiscoveryService;
+import org.thingsboard.server.service.query.EntityQueryService;
 import org.thingsboard.server.service.scheduler.SchedulerService;
 import org.thingsboard.server.service.queue.TbClusterService;
 import org.thingsboard.server.service.security.model.SecurityUser;
@@ -159,6 +159,7 @@ import org.thingsboard.server.service.security.permission.AccessControlService;
 import org.thingsboard.server.service.security.permission.OwnersCacheService;
 import org.thingsboard.server.service.security.permission.UserPermissionsService;
 import org.thingsboard.server.service.state.DeviceStateService;
+import org.thingsboard.server.service.telemetry.AlarmSubscriptionService;
 import org.thingsboard.server.service.telemetry.TelemetrySubscriptionService;
 
 import javax.mail.MessagingException;
@@ -214,7 +215,7 @@ public abstract class BaseController {
     protected ConverterService converterService;
 
     @Autowired
-    protected AlarmService alarmService;
+    protected AlarmSubscriptionService alarmService;
 
     @Autowired
     protected DeviceCredentialsService deviceCredentialsService;
@@ -293,6 +294,12 @@ public abstract class BaseController {
 
     @Autowired
     protected TbQueueProducerProvider producerProvider;
+
+    @Autowired
+    protected EntityQueryService entityQueryService;
+
+    @Autowired
+    protected EntityService entityService;
 
     @Value("${server.log_controller_error_stack_trace}")
     @Getter
@@ -958,6 +965,12 @@ public abstract class BaseController {
             case ALARM_CLEAR:
                 msgType = DataConstants.ALARM_CLEAR;
                 break;
+            case ASSIGNED_FROM_TENANT:
+                msgType = DataConstants.ENTITY_ASSIGNED_FROM_TENANT;
+                break;
+            case ASSIGNED_TO_TENANT:
+                msgType = DataConstants.ENTITY_ASSIGNED_TO_TENANT;
+                break;
         }
         if (!StringUtils.isEmpty(msgType)) {
             try {
@@ -987,6 +1000,16 @@ public abstract class BaseController {
                     String strEntityGroupName = extractParameter(String.class, 2, additionalInfo);
                     metaData.putValue("removedFromEntityGroupId", strEntityGroupId);
                     metaData.putValue("removedFromEntityGroupName", strEntityGroupName);
+                } else if (actionType == ActionType.ASSIGNED_FROM_TENANT) {
+                    String strTenantId = extractParameter(String.class, 0, additionalInfo);
+                    String strTenantName = extractParameter(String.class, 1, additionalInfo);
+                    metaData.putValue("assignedFromTenantId", strTenantId);
+                    metaData.putValue("assignedFromTenantName", strTenantName);
+                } else if (actionType == ActionType.ASSIGNED_TO_TENANT) {
+                    String strTenantId = extractParameter(String.class, 0, additionalInfo);
+                    String strTenantName = extractParameter(String.class, 1, additionalInfo);
+                    metaData.putValue("assignedToTenantId", strTenantId);
+                    metaData.putValue("assignedToTenantName", strTenantName);
                 }
                 ObjectNode entityNode;
                 if (entity != null) {
@@ -1107,4 +1130,14 @@ public abstract class BaseController {
             }
         }
     }
+
+    protected <E extends HasName> String entityToStr(E entity) {
+        try {
+            return json.writeValueAsString(json.valueToTree(entity));
+        } catch (JsonProcessingException e) {
+            log.warn("[{}] Failed to convert entity to string!", entity, e);
+        }
+        return null;
+    }
+
 }

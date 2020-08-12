@@ -56,6 +56,7 @@ import org.thingsboard.server.common.data.DataConstants;
 import org.thingsboard.server.common.data.Device;
 import org.thingsboard.server.common.data.EntitySubtype;
 import org.thingsboard.server.common.data.EntityType;
+import org.thingsboard.server.common.data.Tenant;
 import org.thingsboard.server.common.data.audit.ActionType;
 import org.thingsboard.server.common.data.device.DeviceSearchQuery;
 import org.thingsboard.server.common.data.exception.ThingsboardErrorCode;
@@ -67,10 +68,20 @@ import org.thingsboard.server.common.data.id.EntityGroupId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
+import org.thingsboard.server.common.data.permission.MergedGroupTypePermissionInfo;
+import org.thingsboard.server.common.data.permission.MergedUserPermissions;
 import org.thingsboard.server.common.data.permission.Operation;
 import org.thingsboard.server.common.data.permission.Resource;
+import org.thingsboard.server.common.data.query.EntityDataQuery;
+import org.thingsboard.server.common.data.query.EntityFilter;
+import org.thingsboard.server.common.data.query.EntityKey;
+import org.thingsboard.server.common.data.query.EntityKeyType;
+import org.thingsboard.server.common.data.query.EntityNameFilter;
 import org.thingsboard.server.common.data.security.Authority;
 import org.thingsboard.server.common.data.security.DeviceCredentials;
+import org.thingsboard.server.common.msg.TbMsg;
+import org.thingsboard.server.common.msg.TbMsgDataType;
+import org.thingsboard.server.common.msg.TbMsgMetaData;
 import org.thingsboard.server.dao.device.claim.ClaimResponse;
 import org.thingsboard.server.dao.device.claim.ClaimResult;
 import org.thingsboard.server.queue.util.TbCoreComponent;
@@ -78,6 +89,7 @@ import org.thingsboard.server.service.security.model.SecurityUser;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -91,6 +103,7 @@ public class DeviceController extends BaseController {
 
     private static final String DEVICE_ID = "deviceId";
     private static final String DEVICE_NAME = "deviceName";
+    private static final String TENANT_ID = "tenantId";
 
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
     @RequestMapping(value = "/device/{deviceId}", method = RequestMethod.GET)
@@ -275,15 +288,10 @@ public class DeviceController extends BaseController {
             @RequestParam(required = false) String sortOrder) throws ThingsboardException {
         try {
             PageLink pageLink = createPageLink(pageSize, page, textSearch, sortProperty, sortOrder);
-            return ownersCacheService.getGroupEntities(getTenantId(), getCurrentUser(), EntityType.DEVICE, Operation.READ, pageLink,
-                    (groupIds) -> {
-                        if (type != null && type.trim().length() > 0) {
-                            return deviceService.findDevicesByEntityGroupIdsAndType(groupIds, type, pageLink);
-                        } else {
-                            return deviceService.findDevicesByEntityGroupIds(groupIds, pageLink);
-                        }
-                    }
-            );
+            SecurityUser currentUser = getCurrentUser();
+            MergedUserPermissions mergedUserPermissions = currentUser.getUserPermissions();
+            return entityService.findUserEntities(currentUser.getTenantId(), currentUser.getCustomerId(), mergedUserPermissions, EntityType.DEVICE,
+                    Operation.READ, type, pageLink);
         } catch (Exception e) {
             throw handleException(e);
         }
@@ -473,5 +481,55 @@ public class DeviceController extends BaseController {
             return secretKey;
         }
         return DataConstants.DEFAULT_SECRET_KEY;
+    }
+
+    @PreAuthorize("hasAuthority('TENANT_ADMIN')")
+    @RequestMapping(value = "/tenant/{tenantId}/device/{deviceId}", method = RequestMethod.POST)
+    @ResponseBody
+    public Device assignDeviceToTenant(@PathVariable(TENANT_ID) String strTenantId,
+                                       @PathVariable(DEVICE_ID) String strDeviceId) throws ThingsboardException {
+        checkParameter(TENANT_ID, strTenantId);
+        checkParameter(DEVICE_ID, strDeviceId);
+        try {
+            DeviceId deviceId = new DeviceId(toUUID(strDeviceId));
+            Device device = checkDeviceId(deviceId, Operation.ASSIGN_TO_TENANT);
+
+            TenantId newTenantId = new TenantId(toUUID(strTenantId));
+            Tenant newTenant = tenantService.findTenantById(newTenantId);
+            if (newTenant == null) {
+                throw new ThingsboardException("Could not find the specified Tenant!", ThingsboardErrorCode.BAD_REQUEST_PARAMS);
+            }
+
+            Device assignedDevice = deviceService.assignDeviceToTenant(newTenantId, device);
+
+            logEntityAction(getCurrentUser(), deviceId, assignedDevice,
+                    assignedDevice.getCustomerId(),
+                    ActionType.ASSIGNED_TO_TENANT, null, strTenantId, newTenant.getName());
+
+            Tenant currentTenant = tenantService.findTenantById(getTenantId());
+            pushAssignedFromNotification(currentTenant, newTenantId, assignedDevice);
+
+            return assignedDevice;
+        } catch (Exception e) {
+            logEntityAction(getCurrentUser(), emptyId(EntityType.DEVICE), null,
+                    null,
+                    ActionType.ASSIGNED_TO_TENANT, e, strTenantId);
+            throw handleException(e);
+        }
+    }
+
+    private void pushAssignedFromNotification(Tenant currentTenant, TenantId newTenantId, Device assignedDevice) {
+        String data = entityToStr(assignedDevice);
+        if (data != null) {
+            TbMsg tbMsg = TbMsg.newMsg(DataConstants.ENTITY_ASSIGNED_FROM_TENANT, assignedDevice.getId(), getMetaDataForAssignedFrom(currentTenant), TbMsgDataType.JSON, data);
+            tbClusterService.pushMsgToRuleEngine(newTenantId, assignedDevice.getId(), tbMsg, null);
+        }
+    }
+
+    private TbMsgMetaData getMetaDataForAssignedFrom(Tenant tenant) {
+        TbMsgMetaData metaData = new TbMsgMetaData();
+        metaData.putValue("assignedFromTenantId", tenant.getId().getId().toString());
+        metaData.putValue("assignedFromTenantName", tenant.getName());
+        return metaData;
     }
 }

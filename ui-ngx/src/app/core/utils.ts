@@ -105,6 +105,10 @@ export function isDefinedAndNotNull(value: any): boolean {
   return typeof value !== 'undefined' && value !== null;
 }
 
+export function isEmptyStr(value: any): boolean {
+  return value === '';
+}
+
 export function isFunction(value: any): boolean {
   return typeof value === 'function';
 }
@@ -139,8 +143,7 @@ export function isEmpty(obj: any): boolean {
 }
 
 export function formatValue(value: any, dec?: number, units?: string, showZeroDecimals?: boolean): string | undefined {
-  if (isDefined(value) &&
-    value !== null && isNumeric(value)) {
+  if (isDefinedAndNotNull(value) && isNumeric(value) && (isDefined(dec) || isDefined(units) || Number(value).toString() === value)) {
     let formatted: string | number = Number(value);
     if (isDefined(dec)) {
       formatted = formatted.toFixed(dec);
@@ -500,7 +503,7 @@ export function insertVariable(pattern: string, name: string, value: any): strin
     const variable = match[0];
     const variableName = match[1];
     if (variableName === name) {
-      result = result.split(variable).join(value);
+      result = result.replace(variable, value);
     }
     match = varsRegex.exec(pattern);
   }
@@ -517,17 +520,17 @@ export function createLabelFromDatasource(datasource: Datasource, pattern: strin
     const variable = match[0];
     const variableName = match[1];
     if (variableName === 'dsName') {
-      label = label.split(variable).join(datasource.name);
+      label = label.replace(variable, datasource.name);
     } else if (variableName === 'entityName') {
-      label = label.split(variable).join(datasource.entityName);
+      label = label.replace(variable, datasource.entityName);
     } else if (variableName === 'deviceName') {
-      label = label.split(variable).join(datasource.entityName);
+      label = label.replace(variable, datasource.entityName);
     } else if (variableName === 'entityLabel') {
-      label = label.split(variable).join(datasource.entityLabel || datasource.entityName);
+      label = label.replace(variable, datasource.entityLabel || datasource.entityName);
     } else if (variableName === 'aliasName') {
-      label = label.split(variable).join(datasource.aliasName);
+      label = label.replace(variable, datasource.aliasName);
     } else if (variableName === 'entityDescription') {
-      label = label.split(variable).join(datasource.entityDescription);
+      label = label.replace(variable, datasource.entityDescription);
     }
     match = varsRegex.exec(pattern);
   }
@@ -578,11 +581,18 @@ export function baseUrl(): string {
 
 export function generateId(length: number): string {
   if (!length || isNaN(length)) {
-      length = 1;
+    length = 1;
   }
   const str = Math.random().toString(36).substr(2, length > 10 ? 10 : length);
   if (str.length >= length) {
-      return str;
+    return str;
   }
   return str.concat(generateId(length - str.length));
+}
+
+export function sortObjectKeys<T>(obj: T): T {
+  return Object.keys(obj).sort().reduce((acc, key) => {
+    acc[key] = obj[key];
+    return acc;
+  }, {} as T);
 }

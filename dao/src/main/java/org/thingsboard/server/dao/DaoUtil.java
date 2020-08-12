@@ -30,21 +30,32 @@
  */
 package org.thingsboard.server.dao;
 
-import com.datastax.oss.driver.api.core.uuid.Uuids;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.thingsboard.server.common.data.UUIDConverter;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
+import org.springframework.util.CollectionUtils;
 import org.thingsboard.server.common.data.id.UUIDBased;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.page.SortOrder;
 import org.thingsboard.server.dao.model.ToData;
+import org.thingsboard.server.dao.sql.JpaExecutorService;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public abstract class DaoUtil {
+    private static final int MAX_IN_VALUE = Short.MAX_VALUE / 2;
 
     private DaoUtil() {
     }
@@ -62,24 +73,6 @@ public abstract class DaoUtil {
         return PageRequest.of(pageLink.getPage(), pageLink.getPageSize(), toSort(pageLink.getSortOrder(), columnMap));
     }
 
-    public static String startTimeToId(Long startTime) {
-        if (startTime != null) {
-            UUID startOf = Uuids.startOf(startTime);
-            return UUIDConverter.fromTimeUUID(startOf);
-        } else {
-            return null;
-        }
-    }
-
-    public static String endTimeToId(Long endTime) {
-        if (endTime != null) {
-            UUID endOf = Uuids.endOf(endTime);
-            return UUIDConverter.fromTimeUUID(endOf);
-        } else {
-            return null;
-        }
-    }
-
     public static Sort toSort(SortOrder sortOrder) {
         return toSort(sortOrder, Collections.emptyMap());
     }
@@ -91,9 +84,6 @@ public abstract class DaoUtil {
             String property = sortOrder.getProperty();
             if (columnMap.containsKey(property)) {
                 property = columnMap.get(property);
-            }
-            if (property.equals("createdTime")) {
-                property = "id";
             }
             return Sort.by(Sort.Direction.fromString(sortOrder.getDirection().name()), property);
         }
@@ -144,4 +134,31 @@ public abstract class DaoUtil {
         return ids;
     }
 
+    public static <T> ListenableFuture<List<T>> getEntitiesByTenantIdAndIdIn(List<UUID> entityIds,
+                                                                             Function<List<UUID>, Collection<? extends ToData<T>>> daoConsumer,
+                                                                             JpaExecutorService service) {
+        int size = entityIds.size();
+        List<ListenableFuture<List<T>>> resultList = new ArrayList<>();
+        if (size > MAX_IN_VALUE) {
+            int startIndex = 0;
+            int currentSize = 0;
+            while (startIndex + currentSize < size) {
+                startIndex += currentSize;
+                currentSize = Math.min(size - startIndex, MAX_IN_VALUE);
+
+                List<UUID> currentEntityIds = entityIds.subList(startIndex, startIndex + currentSize);
+                resultList.add(service.submit(() -> convertDataList(daoConsumer.apply(currentEntityIds))));
+            }
+            return Futures.transform(Futures.allAsList(resultList), list -> {
+                if (!CollectionUtils.isEmpty(list)) {
+                    return list.stream().flatMap(List::stream).collect(Collectors.toList());
+                }
+
+                return Collections.emptyList();
+            }, service);
+
+        } else {
+            return service.submit(() -> convertDataList(daoConsumer.apply(entityIds)));
+        }
+    }
 }

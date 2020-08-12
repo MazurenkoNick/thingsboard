@@ -94,6 +94,18 @@ export const mqttCredentialTypes = {
   }
 }
 
+export type azureIotHubCredentialsType = 'sas' | 'cert.PEM';
+export const azureIotHubCredentialsTypes = {
+  sas: {
+    value: 'sas',
+    name: 'extension.sas'
+  },
+  'cert.PEM': {
+    value: 'cert.PEM',
+    name: 'extension.pem'
+  }
+}
+
 export function updateIntegrationFormState(type: IntegrationType, info: IntegrationTypeInfo,
                                            integrationForm: FormGroup, disabled: boolean) {
   if (disabled) {
@@ -152,7 +164,6 @@ export const templates = {
     ignoreNonPrimitiveFields: ['headersFilter'],
     fieldValidators: {
       baseUrl: [Validators.required],
-      headersFilter: [Validators.required],
       asId: [Validators.required],
       asIdNew: [Validators.required],
       asKey: [Validators.required],
@@ -200,6 +211,40 @@ export const templates = {
       topicFilters: [Validators.required]
     }
   },
+
+  [IntegrationType.AZURE_IOT_HUB]: {
+    clientConfiguration: {
+      host: '\<name\>.azure-devices.net',
+      port: 8883,
+      cleanSession: true,
+      ssl: true,
+      connectTimeoutSec: 10,
+      clientId: 'device_id',
+      credentials: {
+        type: azureIotHubCredentialsTypes.sas.value,
+        sasKey: '',
+        caCertFileName: '',
+        caCert: '',
+        certFileName: '',
+        cert: '',
+        privateKeyFileName: '',
+        privateKey: '',
+        privateKeyPassword: ''
+      },
+    },
+    topicFilters: [{filter: "devices/\<device_id\>/messages/devicebound/#", qos: 0}],
+    fieldValidators: {
+      'clientConfiguration.host': [Validators.required],
+      'clientConfiguration.clientId': [Validators.required],
+      'clientConfiguration.credentials.sasKey': [Validators.required],
+      'clientConfiguration.credentials.certFileName': [Validators.required],
+      'clientConfiguration.credentials.cert': [Validators.required],
+      'clientConfiguration.credentials.privateKeyFileName': [Validators.required],
+      'clientConfiguration.credentials.privateKey': [Validators.required],
+      topicFilters: [Validators.required]
+    }
+  },
+
   [IntegrationType.AWS_IOT]: {
     clientConfiguration: {
       host: '',
@@ -325,6 +370,33 @@ export const templates = {
       topicFilters: [Validators.required]
     }
   },
+    [IntegrationType.TTI]: {
+  clientConfiguration: {
+    host: '',
+      customHost: false,
+      port: 8883,
+      ssl: true,
+      connectTimeoutSec: 10,
+      credentials: {
+      type: 'basic',
+        username: '',
+        password: ''
+    },
+  },
+  topicFilters: [{
+    filter: 'v3/+/devices/+/up',
+    qos: 0
+  }],
+    downlinkTopicPattern: '',
+    fieldValidators: {
+    'clientConfiguration.host': [Validators.required],
+      'clientConfiguration.connectTimeoutSec': [Validators.required, Validators.min(1), Validators.max(200)],
+      'clientConfiguration.credentials.username': [Validators.required],
+      'clientConfiguration.credentials.password': [Validators.required],
+      downlinkTopicPattern: [Validators.required],
+      topicFilters: [Validators.required]
+  }
+},
   [IntegrationType.AZURE_EVENT_HUB]: {
     clientConfiguration: {
       connectTimeoutSec: 10,

@@ -39,6 +39,7 @@ import { WidgetContext } from '@home/models/widget-component.models';
 import { DataSet, DatasourceType, widgetType } from '@shared/models/widget.models';
 import { DataKeyType } from '@shared/models/telemetry/telemetry.models';
 import { WidgetSubscriptionOptions } from '@core/api/widget-api.models';
+import { isDefinedAndNotNull, isEmptyStr } from '@core/utils';
 
 const maxZoom = 4;// ?
 
@@ -61,8 +62,8 @@ export class ImageMap extends LeafletMap {
             this.onResize(true);
           } else {
             this.onResize();
-            super.setMap(this.map);
             super.initSettings(options);
+            super.setMap(this.map);
           }
         });
     }
@@ -199,6 +200,7 @@ export class ImageMap extends LeafletMap {
                     this.updateBounds(updateImage, lastCenterPos);
                     this.map.invalidateSize(true);
                     this.updateMarkers(this.markersData);
+                    this.updatePolygons(this.polygonsData);
                 }
             }
         }
@@ -209,25 +211,44 @@ export class ImageMap extends LeafletMap {
     initMap(updateImage?: boolean) {
         if (!this.map && this.aspect > 0) {
             const center = this.pointToLatLng(this.width / 2, this.height / 2);
-            this.map = L.map(this.$container, {
+          this.map = L.map(this.$container, {
                 minZoom: 1,
                 maxZoom,
                 scrollWheelZoom: !this.options.disableScrollZooming,
                 center,
                 zoom: 1,
                 crs: L.CRS.Simple,
-                attributionControl: false
+                attributionControl: false,
+                editable: !!this.options.editablePolygon
             });
             this.updateBounds(updateImage);
         }
     }
 
     convertPosition(expression): L.LatLng {
-        if (isNaN(expression[this.options.xPosKeyName]) || isNaN(expression[this.options.yPosKeyName])) return null;
-        Object.assign(expression, this.posFunction(expression[this.options.xPosKeyName], expression[this.options.yPosKeyName]));
-        return this.pointToLatLng(
-            expression.x * this.width,
-            expression.y * this.height);
+      const xPos = expression[this.options.xPosKeyName];
+      const yPos = expression[this.options.yPosKeyName];
+      if (!isDefinedAndNotNull(xPos) || isEmptyStr(xPos) || isNaN(xPos) || !isDefinedAndNotNull(yPos) || isEmptyStr(yPos) || isNaN(yPos)) {
+        return null;
+      }
+      Object.assign(expression, this.posFunction(xPos, yPos));
+      return this.pointToLatLng(
+        expression.x * this.width,
+        expression.y * this.height);
+    }
+
+    convertPositionPolygon(expression: (LatLngTuple | LatLngTuple[] | LatLngTuple[][])[]){
+      return (expression).map((el) => {
+        if (!Array.isArray(el[0]) && !Array.isArray(el[1]) && el.length === 2) {
+          return this.pointToLatLng(
+            el[0] * this.width,
+            el[1] * this.height)
+        } else if (Array.isArray(el) && el.length) {
+          return this.convertPositionPolygon(el as LatLngTuple[] | LatLngTuple[][]);
+        } else {
+          return null;
+        }
+      }).filter(el => !!el)
     }
 
     pointToLatLng(x, y): L.LatLng {
@@ -244,5 +265,26 @@ export class ImageMap extends LeafletMap {
             [this.options.xPosKeyName]: calculateNewPointCoordinate(point.x, this.width),
             [this.options.yPosKeyName]: calculateNewPointCoordinate(point.y, this.height)
         }
+    }
+
+    convertToPolygonFormat(points: Array<any>): Array<any> {
+      if (points.length) {
+        return points.map(point=> {
+          if (point.length) {
+            return this.convertToPolygonFormat(point);
+          } else {
+            const pos = this.latLngToPoint(point);
+            return [calculateNewPointCoordinate(pos.x, this.width), calculateNewPointCoordinate(pos.y, this.height)];
+          }
+        })
+      } else {
+        return []
+      }
+    }
+
+    convertPolygonToCustomFormat(expression: any[][]): object {
+      return {
+        [this.options.polygonKeyName] : this.convertToPolygonFormat(expression)
+      }
     }
 }

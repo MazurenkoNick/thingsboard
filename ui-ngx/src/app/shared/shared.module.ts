@@ -166,6 +166,8 @@ import { DndModule } from 'ngx-drag-drop';
 import { QueueTypeListComponent } from '@shared/components/queue/queue-type-list.component';
 import { WhiteLabelingFeatureDialogComponent } from '@shared/components/dialog/white-labeling-feature-dialog.component';
 import { ContactComponent } from '@shared/components/contact.component';
+import { GroupPermissionsComponent } from '@shared/components/role/group-permissions.component';
+import { GroupPermissionDialogComponent } from '@shared/components/role/group-permission-dialog.component';
 import { EntityLimitDialogComponent } from '@shared/components/dialog/entity-limit-dialog.component';
 
 @NgModule({
@@ -272,7 +274,9 @@ import { EntityLimitDialogComponent } from '@shared/components/dialog/entity-lim
     JsonObjectEditDialogComponent,
     HistorySelectorComponent,
     EntityGatewaySelectComponent,
-    ContactComponent
+    ContactComponent,
+    GroupPermissionsComponent,
+    GroupPermissionDialogComponent,
   ],
   imports: [
     CommonModule,
@@ -453,7 +457,9 @@ import { EntityLimitDialogComponent } from '@shared/components/dialog/entity-lim
     JsonObjectEditDialogComponent,
     HistorySelectorComponent,
     EntityGatewaySelectComponent,
-    ContactComponent
+    ContactComponent,
+    GroupPermissionsComponent,
+    GroupPermissionDialogComponent,
   ]
 })
 export class SharedModule { }

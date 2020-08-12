@@ -31,6 +31,7 @@
 package org.thingsboard.server.dao.util.mapping;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -43,9 +44,27 @@ public class JacksonUtil {
 
     public static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
+    public static <T> T convertValue(Object fromValue, Class<T> toValueType) {
+        try {
+            return OBJECT_MAPPER.convertValue(fromValue, toValueType);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("The given object value: "
+                    + fromValue + " cannot be converted to " + toValueType);
+        }
+    }
+
     public static <T> T fromString(String string, Class<T> clazz) {
         try {
             return OBJECT_MAPPER.readValue(string, clazz);
+        } catch (IOException e) {
+            throw new IllegalArgumentException("The given string value: "
+                    + string + " cannot be transformed to Json object");
+        }
+    }
+
+    public static <T> T fromString(String string, JavaType valueType) {
+        try {
+            return OBJECT_MAPPER.readValue(string, valueType);
         } catch (IOException e) {
             throw new IllegalArgumentException("The given string value: "
                     + string + " cannot be transformed to Json object");

@@ -37,7 +37,6 @@ import org.springframework.stereotype.Repository;
 import org.thingsboard.server.common.data.DataConstants;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.ShortEntityView;
-import org.thingsboard.server.common.data.UUIDConverter;
 import org.thingsboard.server.common.data.group.ColumnConfiguration;
 import org.thingsboard.server.common.data.group.ColumnType;
 import org.thingsboard.server.common.data.group.EntityField;
@@ -47,12 +46,12 @@ import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.page.SortOrder;
 import org.thingsboard.server.common.data.relation.RelationTypeGroup;
-import org.thingsboard.server.dao.util.SqlDao;
 
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import java.math.BigInteger;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -62,7 +61,6 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-@SqlDao
 @Repository
 @Slf4j
 public class DefaultGroupEntitiesRepository implements GroupEntitiesRepository {
@@ -213,7 +211,7 @@ public class DefaultGroupEntitiesRepository implements GroupEntitiesRepository {
                 entityType.name(),
                 RelationTypeGroup.FROM_ENTITY_GROUP.name(),
                 EntityType.ENTITY_GROUP.name(),
-                UUIDConverter.fromTimeUUID(groupId));
+                groupId);
     }
 
     private String buildSingleEntityGroupRelationQuery(EntityId entityId, UUID groupId) {
@@ -224,11 +222,11 @@ public class DefaultGroupEntitiesRepository implements GroupEntitiesRepository {
                         " and relation1_.relation_type='Contains'" +
                         " and relation1_.from_type='%s'" +
                         " and relation1_.from_id='%s'",
-                UUIDConverter.fromTimeUUID(entityId.getId()),
+                entityId.getId(),
                 entityId.getEntityType().name(),
                 RelationTypeGroup.FROM_ENTITY_GROUP.name(),
                 EntityType.ENTITY_GROUP.name(),
-                UUIDConverter.fromTimeUUID(groupId));
+                groupId);
     }
 
     private String buildSearchQuery(List<ColumnMapping> mappings, EntityType entityType, String searchText) {
@@ -298,8 +296,9 @@ public class DefaultGroupEntitiesRepository implements GroupEntitiesRepository {
     }
 
     private ShortEntityView toShortEntityView(Object obj, EntityType entityType, List<ColumnMapping> columns) {
-        String id = obj instanceof String ? (String)obj : (String)((Object[]) obj)[0];
-        EntityId entityId = EntityIdFactory.getByTypeAndUuid(entityType, UUIDConverter.fromString(id));
+        byte[] idBytes = obj instanceof byte[] ? (byte[])obj : (byte[])((Object[]) obj)[0];
+        ByteBuffer idBytesBuf = ByteBuffer.wrap(idBytes);
+        EntityId entityId = EntityIdFactory.getByTypeAndUuid(entityType, new UUID(idBytesBuf.getLong(), idBytesBuf.getLong()));
         ShortEntityView entity = new ShortEntityView(entityId);
         for (ColumnMapping column : columns) {
             if (column.column.getType() == ColumnType.ENTITY_FIELD && column.entityField == EntityField.CREATED_TIME) {

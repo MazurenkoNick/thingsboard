@@ -35,7 +35,6 @@ import LeafletMap from '../leaflet-map';
 import { UnitedMapSettings } from '../map-models';
 import 'leaflet.gridlayer.googlemutant';
 import { ResourcesService } from '@core/services/resources.service';
-import { Injector } from '@angular/core';
 import { WidgetContext } from '@home/models/widget-component.models';
 
 const gmGlobals: GmGlobal = {};
@@ -50,14 +49,17 @@ export class GoogleMap extends LeafletMap {
   constructor(ctx: WidgetContext, $container, options: UnitedMapSettings) {
     super(ctx, $container, options);
     this.resource = ctx.$injector.get(ResourcesService);
+    super.initSettings(options);
     this.loadGoogle(() => {
-      const map = L.map($container, {attributionControl: false}).setView(options?.defaultCenterPosition, options?.defaultZoomLevel);
+      const map = L.map($container, {
+        attributionControl: false,
+        editable: !!options.editablePolygon
+      }).setView(options?.defaultCenterPosition, options?.defaultZoomLevel);
       (L.gridLayer as any).googleMutant({
         type: options?.gmDefaultMapType || 'roadmap'
       }).addTo(map);
       super.setMap(map);
     }, options.gmApiKey);
-    super.initSettings(options);
   }
 
   private loadGoogle(callback, apiKey = 'AIzaSyDoEx2kaGz3PxwbI9T7ccTSg5xjdw8Nw8Q') {

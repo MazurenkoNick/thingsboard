@@ -44,21 +44,17 @@ import org.thingsboard.server.dao.DaoUtil;
 import org.thingsboard.server.dao.model.sql.UserEntity;
 import org.thingsboard.server.dao.sql.JpaAbstractSearchTextDao;
 import org.thingsboard.server.dao.user.UserDao;
-import org.thingsboard.server.dao.util.SqlDao;
 
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
-import static org.thingsboard.server.common.data.UUIDConverter.fromTimeUUID;
-import static org.thingsboard.server.common.data.UUIDConverter.fromTimeUUIDs;
-import static org.thingsboard.server.dao.model.ModelConstants.NULL_UUID_STR;
+import static org.thingsboard.server.dao.model.ModelConstants.NULL_UUID;
 
 /**
  * @author Valerii Sosliuk
  */
 @Component
-@SqlDao
 public class JpaUserDao extends JpaAbstractSearchTextDao<UserEntity, User> implements UserDao {
 
     @Autowired
@@ -70,7 +66,7 @@ public class JpaUserDao extends JpaAbstractSearchTextDao<UserEntity, User> imple
     }
 
     @Override
-    protected CrudRepository<UserEntity, String> getCrudRepository() {
+    protected CrudRepository<UserEntity, UUID> getCrudRepository() {
         return userRepository;
     }
 
@@ -80,33 +76,35 @@ public class JpaUserDao extends JpaAbstractSearchTextDao<UserEntity, User> imple
     }
 
     @Override
+    public PageData<User> findByTenantId(UUID tenantId, PageLink pageLink) {
+        return DaoUtil.toPageData(
+                userRepository
+                        .findByTenantId(
+                                tenantId,
+                                Objects.toString(pageLink.getTextSearch(), ""),
+                                DaoUtil.toPageable(pageLink, UserEntity.userColumnMap)));
+    }
+
+    @Override
     public PageData<User> findTenantAdmins(UUID tenantId, PageLink pageLink) {
         return DaoUtil.toPageData(
                 userRepository
                         .findUsersByAuthority(
-                                fromTimeUUID(tenantId),
-                                NULL_UUID_STR,
+                                tenantId,
+                                NULL_UUID,
                                 Objects.toString(pageLink.getTextSearch(), ""),
                                 Authority.TENANT_ADMIN,
                                 DaoUtil.toPageable(pageLink, UserEntity.userColumnMap)));
     }
 
-    @Override
-    public PageData<User> findUsersByTenantId(UUID tenantId, PageLink pageLink) {
-        return DaoUtil.toPageData(
-                userRepository
-                    .findUsersByTenantId(
-                            fromTimeUUID(tenantId),
-                            DaoUtil.toPageable(pageLink, UserEntity.userColumnMap)));
-    }
 
     @Override
     public PageData<User> findCustomerUsers(UUID tenantId, UUID customerId, PageLink pageLink) {
         return DaoUtil.toPageData(
             userRepository
                     .findUsersByAuthority(
-                            fromTimeUUID(tenantId),
-                            fromTimeUUID(customerId),
+                            tenantId,
+                            customerId,
                             Objects.toString(pageLink.getTextSearch(), ""),
                             Authority.CUSTOMER_USER,
                             DaoUtil.toPageable(pageLink, UserEntity.userColumnMap)));
@@ -118,7 +116,7 @@ public class JpaUserDao extends JpaAbstractSearchTextDao<UserEntity, User> imple
         return DaoUtil.toPageData(
                 userRepository
                         .findAllTenantUsersByAuthority(
-                                fromTimeUUID(tenantId),
+                                tenantId,
                                 Objects.toString(pageLink.getTextSearch(), ""),
                                 Authority.CUSTOMER_USER,
                                 DaoUtil.toPageable(pageLink, UserEntity.userColumnMap)));
@@ -126,14 +124,14 @@ public class JpaUserDao extends JpaAbstractSearchTextDao<UserEntity, User> imple
 
     @Override
     public ListenableFuture<List<User>> findUsersByTenantIdAndIdsAsync(UUID tenantId, List<UUID> userIds) {
-        return service.submit(() -> DaoUtil.convertDataList(userRepository.findUsersByTenantIdAndIdIn(UUIDConverter.fromTimeUUID(tenantId), fromTimeUUIDs(userIds))));
+        return service.submit(() -> DaoUtil.convertDataList(userRepository.findUsersByTenantIdAndIdIn(tenantId, userIds)));
     }
 
     @Override
     public PageData<User> findUsersByEntityGroupId(UUID groupId, PageLink pageLink) {
         return DaoUtil.toPageData(userRepository
                 .findByEntityGroupId(
-                        fromTimeUUID(groupId),
+                        groupId,
                         Objects.toString(pageLink.getTextSearch(), ""),
                         DaoUtil.toPageable(pageLink, UserEntity.userColumnMap)));
     }
@@ -142,7 +140,7 @@ public class JpaUserDao extends JpaAbstractSearchTextDao<UserEntity, User> imple
     public PageData<User> findUsersByEntityGroupIds(List<UUID> groupIds, PageLink pageLink) {
         return DaoUtil.toPageData(userRepository
                 .findByEntityGroupIds(
-                        fromTimeUUIDs(groupIds),
+                        groupIds,
                         Objects.toString(pageLink.getTextSearch(), ""),
                         DaoUtil.toPageable(pageLink, UserEntity.userColumnMap)));
     }

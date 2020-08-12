@@ -47,7 +47,9 @@ export enum IntegrationType {
   AWS_KINESIS = 'AWS_KINESIS',
   IBM_WATSON_IOT = 'IBM_WATSON_IOT',
   TTN = 'TTN',
+  TTI = 'TTI',
   AZURE_EVENT_HUB = 'AZURE_EVENT_HUB',
+  AZURE_IOT_HUB = 'AZURE_IOT_HUB',
   OPC_UA = 'OPC_UA',
   UDP = 'UDP',
   TCP = 'TCP',
@@ -113,8 +115,16 @@ export const integrationTypeInfoMap = new Map<IntegrationType, IntegrationTypeIn
       { name: 'integration.type-ttn', mqtt: true }
     ],
     [
+      IntegrationType.TTI,
+      { name: 'integration.type-tti', mqtt: true }
+    ],
+    [
       IntegrationType.AZURE_EVENT_HUB,
       { name: 'integration.type-azure-event-hub' }
+    ],
+    [
+      IntegrationType.AZURE_IOT_HUB,
+      { name: 'integration.type-azure-iot-hub' }
     ],
     [
       IntegrationType.OPC_UA,
@@ -151,6 +161,7 @@ const integrationHelpLinkMap = new Map<IntegrationType, string>(
     [IntegrationType.AWS_KINESIS, 'integrationAwsKinesis'],
     [IntegrationType.IBM_WATSON_IOT, 'integrationIbmWatsonIoT'],
     [IntegrationType.TTN, 'integrationTheThingsNetwork'],
+    [IntegrationType.TTI, 'integrationTheThingsIndustries'],
     [IntegrationType.AZURE_EVENT_HUB, 'integrationAzureEventHub'],
     [IntegrationType.OPC_UA, 'integrationOpcUa']
   ]

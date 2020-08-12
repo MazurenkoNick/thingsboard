@@ -39,16 +39,13 @@ import org.thingsboard.server.common.data.permission.GroupPermission;
 import org.thingsboard.server.dao.DaoUtil;
 import org.thingsboard.server.dao.grouppermission.GroupPermissionDao;
 import org.thingsboard.server.dao.model.sql.GroupPermissionEntity;
-import org.thingsboard.server.dao.sql.JpaAbstractSearchTimeDao;
-import org.thingsboard.server.dao.util.SqlDao;
+import org.thingsboard.server.dao.sql.JpaAbstractDao;
 
 import java.util.UUID;
 
-import static org.thingsboard.server.common.data.UUIDConverter.fromTimeUUID;
 
 @Component
-@SqlDao
-public class JpaGroupPermissionDao extends JpaAbstractSearchTimeDao<GroupPermissionEntity, GroupPermission> implements GroupPermissionDao {
+public class JpaGroupPermissionDao extends JpaAbstractDao<GroupPermissionEntity, GroupPermission> implements GroupPermissionDao {
 
     @Autowired
     private GroupPermissionRepository groupPermissionRepository;
@@ -59,7 +56,7 @@ public class JpaGroupPermissionDao extends JpaAbstractSearchTimeDao<GroupPermiss
     }
 
     @Override
-    protected CrudRepository<GroupPermissionEntity, String> getCrudRepository() {
+    protected CrudRepository<GroupPermissionEntity, UUID> getCrudRepository() {
         return groupPermissionRepository;
     }
 
@@ -67,7 +64,7 @@ public class JpaGroupPermissionDao extends JpaAbstractSearchTimeDao<GroupPermiss
     public PageData<GroupPermission> findGroupPermissionsByTenantId(UUID tenantId, PageLink pageLink) {
         return DaoUtil.toPageData(
                 groupPermissionRepository.findByTenantId(
-                        fromTimeUUID(tenantId),
+                        tenantId,
                         DaoUtil.toPageable(pageLink)));
     }
 
@@ -75,8 +72,8 @@ public class JpaGroupPermissionDao extends JpaAbstractSearchTimeDao<GroupPermiss
     public PageData<GroupPermission> findGroupPermissionsByTenantIdAndUserGroupId(UUID tenantId, UUID userGroupId, PageLink pageLink) {
         return DaoUtil.toPageData(
                 groupPermissionRepository.findByTenantIdAndUserGroupId(
-                        fromTimeUUID(tenantId),
-                        fromTimeUUID(userGroupId),
+                        tenantId,
+                        userGroupId,
                         DaoUtil.toPageable(pageLink)));
     }
 
@@ -84,9 +81,9 @@ public class JpaGroupPermissionDao extends JpaAbstractSearchTimeDao<GroupPermiss
     public PageData<GroupPermission> findGroupPermissionsByTenantIdAndUserGroupIdAndRoleId(UUID tenantId, UUID userGroupId, UUID roleId, PageLink pageLink) {
         return DaoUtil.toPageData(
                 groupPermissionRepository.findByTenantIdAndUserGroupIdAndRoleId(
-                        fromTimeUUID(tenantId),
-                        fromTimeUUID(userGroupId),
-                        fromTimeUUID(roleId),
+                        tenantId,
+                        userGroupId,
+                        roleId,
                         DaoUtil.toPageable(pageLink)));
     }
 
@@ -94,10 +91,10 @@ public class JpaGroupPermissionDao extends JpaAbstractSearchTimeDao<GroupPermiss
     public PageData<GroupPermission> findGroupPermissionsByTenantIdAndEntityGroupIdAndUserGroupIdAndRoleId(UUID tenantId, UUID entityGroupId, UUID userGroupId, UUID roleId, PageLink pageLink) {
         return DaoUtil.toPageData(
                 groupPermissionRepository.findByTenantIdAndEntityGroupIdAndUserGroupIdAndRoleId(
-                        fromTimeUUID(tenantId),
-                        fromTimeUUID(entityGroupId),
-                        fromTimeUUID(userGroupId),
-                        fromTimeUUID(roleId),
+                        tenantId,
+                        entityGroupId,
+                        userGroupId,
+                        roleId,
                         DaoUtil.toPageable(pageLink)));
     }
 
@@ -105,8 +102,8 @@ public class JpaGroupPermissionDao extends JpaAbstractSearchTimeDao<GroupPermiss
     public PageData<GroupPermission> findGroupPermissionsByTenantIdAndEntityGroupId(UUID tenantId, UUID entityGroupId, PageLink pageLink) {
         return DaoUtil.toPageData(
                 groupPermissionRepository.findByTenantIdAndEntityGroupId(
-                        fromTimeUUID(tenantId),
-                        fromTimeUUID(entityGroupId),
+                        tenantId,
+                        entityGroupId,
                         DaoUtil.toPageable(pageLink)));
     }
 
@@ -114,8 +111,8 @@ public class JpaGroupPermissionDao extends JpaAbstractSearchTimeDao<GroupPermiss
     public PageData<GroupPermission> findGroupPermissionsByTenantIdAndRoleId(UUID tenantId, UUID roleId, PageLink pageLink) {
         return DaoUtil.toPageData(
                 groupPermissionRepository.findByTenantIdAndRoleId(
-                        fromTimeUUID(tenantId),
-                        fromTimeUUID(roleId),
+                        tenantId,
+                        roleId,
                         DaoUtil.toPageable(pageLink)));
     }
 }

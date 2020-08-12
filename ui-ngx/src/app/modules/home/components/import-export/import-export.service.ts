@@ -36,7 +36,7 @@ import { Store } from '@ngrx/store';
 import { AppState } from '@core/core.state';
 import { ActionNotificationShow } from '@core/notification/notification.actions';
 import { Dashboard, DashboardLayoutId } from '@shared/models/dashboard.models';
-import { deepClone, isDefined, isNumber, isObject, isUndefined } from '@core/utils';
+import { deepClone, isDefined, isNumber, isObject, isString, isUndefined } from '@core/utils';
 import { WINDOW } from '@core/services/window.service';
 import { DOCUMENT } from '@angular/common';
 import {
@@ -82,6 +82,7 @@ import { RuleChainService } from '@core/http/rule-chain.service';
 import { CustomerId } from '@shared/models/id/customer-id';
 import { ConverterService } from '@core/http/converter.service';
 import { Converter, ConverterType } from '@shared/models/converter.models';
+import { FiltersInfo } from '@shared/models/query/query.models';
 import * as JSZip from 'jszip';
 import * as Excel from 'exceljs/dist/exceljs.min.js';
 import * as ExcelProper from 'exceljs';
@@ -177,7 +178,8 @@ export class ImportExportService {
 
   public importWidget(dashboard: Dashboard, targetState: string,
                       targetLayoutFunction: () => Observable<DashboardLayoutId>,
-                      onAliasesUpdateFunction: () => void): Observable<ImportWidgetResult> {
+                      onAliasesUpdateFunction: () => void,
+                      onFiltersUpdateFunction: () => void): Observable<ImportWidgetResult> {
     return this.openImportDialog('dashboard.import-widget', 'dashboard.widget-file').pipe(
       mergeMap((widgetItem: WidgetItem) => {
         if (!this.validateImportedWidget(widgetItem)) {
@@ -189,6 +191,9 @@ export class ImportExportService {
           let widget = widgetItem.widget;
           widget = this.dashboardUtils.validateAndUpdateWidget(widget);
           const aliasesInfo = this.prepareAliasesInfo(widgetItem.aliasesInfo);
+          const filtersInfo: FiltersInfo = widgetItem.filtersInfo || {
+            datasourceFilters: {}
+          };
           const originalColumns = widgetItem.originalColumns;
           const originalSize = widgetItem.originalSize;
 
@@ -237,23 +242,23 @@ export class ImportExportService {
                             }
                           }
                           return this.addImportedWidget(dashboard, targetState, targetLayoutFunction, widget,
-                            aliasesInfo, onAliasesUpdateFunction, originalColumns, originalSize);
+                            aliasesInfo, filtersInfo, onAliasesUpdateFunction, onFiltersUpdateFunction, originalColumns, originalSize);
                         }
                       ));
                     } else {
                       return this.addImportedWidget(dashboard, targetState, targetLayoutFunction, widget,
-                        aliasesInfo, onAliasesUpdateFunction, originalColumns, originalSize);
+                        aliasesInfo, filtersInfo, onAliasesUpdateFunction, onFiltersUpdateFunction, originalColumns, originalSize);
                     }
                   }
                 )
               );
             } else {
               return this.addImportedWidget(dashboard, targetState, targetLayoutFunction, widget,
-                aliasesInfo, onAliasesUpdateFunction, originalColumns, originalSize);
+                aliasesInfo, filtersInfo, onAliasesUpdateFunction, onFiltersUpdateFunction, originalColumns, originalSize);
             }
           } else {
             return this.addImportedWidget(dashboard, targetState, targetLayoutFunction, widget,
-              aliasesInfo, onAliasesUpdateFunction, originalColumns, originalSize);
+              aliasesInfo, filtersInfo, onAliasesUpdateFunction, onFiltersUpdateFunction, originalColumns, originalSize);
           }
         }
       }),
@@ -483,8 +488,8 @@ export class ImportExportService {
     );
   }
 
-  private processCSVCell(cellData: string | null): string {
-    if (cellData) {
+  private processCSVCell(cellData: any): any {
+    if (isString(cellData)) {
       let result = cellData.replace(/"/g, '""');
       if (result.search(/([",\n])/g) >= 0)
         result = `"${result}"`;
@@ -735,12 +740,16 @@ export class ImportExportService {
 
   private addImportedWidget(dashboard: Dashboard, targetState: string,
                             targetLayoutFunction: () => Observable<DashboardLayoutId>,
-                            widget: Widget, aliasesInfo: AliasesInfo, onAliasesUpdateFunction: () => void,
+                            widget: Widget, aliasesInfo: AliasesInfo,
+                            filtersInfo: FiltersInfo,
+                            onAliasesUpdateFunction: () => void,
+                            onFiltersUpdateFunction: () => void,
                             originalColumns: number, originalSize: WidgetSize): Observable<ImportWidgetResult> {
     return targetLayoutFunction().pipe(
       mergeMap((targetLayout) => {
         return this.itembuffer.addWidgetToDashboard(dashboard, targetState, targetLayout,
-          widget, aliasesInfo, onAliasesUpdateFunction, originalColumns, originalSize, -1, -1).pipe(
+          widget, aliasesInfo, filtersInfo, onAliasesUpdateFunction, onFiltersUpdateFunction,
+          originalColumns, originalSize, -1, -1).pipe(
           map(() => ({widget, layoutId: targetLayout} as ImportWidgetResult))
         );
       }
