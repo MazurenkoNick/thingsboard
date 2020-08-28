@@ -41,6 +41,8 @@ import { DashboardService } from '@core/http/dashboard.service';
 import { DashboardUtilsService } from '@core/services/dashboard-utils.service';
 import { map } from 'rxjs/operators';
 import { Operation, Resource } from '@shared/models/security.models';
+import { UserPermissionsService } from '@core/http/user-permissions.service';
+import { EntityType } from '@shared/models/entity-type.models';
 
 @Injectable()
 export class DashboardResolver implements Resolve<Dashboard> {
@@ -57,8 +59,10 @@ export class DashboardResolver implements Resolve<Dashboard> {
   }
 }
 
-export const dashboardBreadcumbLabelFunction: BreadCrumbLabelFunction<DashboardPageComponent>
-  = ((route, translate, component) => component.dashboard.title);
+export const dashboardBreadcumbLabelFunction: BreadCrumbLabelFunction<DashboardPageComponent> =
+  ((route, translate, component, data, utils) =>
+      utils ? utils.customTranslation(component.dashboard.title, component.dashboard.title) : component.dashboard.title
+  );
 
 const routes: Routes = [
   {
@@ -70,9 +74,9 @@ const routes: Routes = [
         icon: 'dashboard'
       } as BreadCrumbConfig<DashboardPageComponent>,
       auth: [Authority.TENANT_ADMIN, Authority.CUSTOMER_USER],
-      permissions: {
-        resources: [Resource.DASHBOARD, Resource.WIDGETS_BUNDLE, Resource.WIDGET_TYPE],
-        operations: [Operation.READ]
+      canActivate: (userPermissionsService: UserPermissionsService): boolean => {
+        return userPermissionsService.hasReadGroupsPermission(EntityType.DASHBOARD) &&
+          userPermissionsService.hasResourcesGenericPermission([Resource.WIDGETS_BUNDLE, Resource.WIDGET_TYPE], Operation.READ);
       },
       title: 'dashboard.dashboard',
       widgetEditMode: false

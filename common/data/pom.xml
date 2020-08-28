@@ -35,7 +35,7 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>org.thingsboard</groupId>
-        <version>3.1.0PE-SNAPSHOT</version>
+        <version>3.1.1PE-SNAPSHOT</version>
         <artifactId>common</artifactId>
     </parent>
     <groupId>org.thingsboard.common</groupId>
@@ -98,6 +98,14 @@
         </dependency>
     </dependencies>
 
+    <distributionManagement>
+        <repository>
+            <id>thingsboard-repo-deploy</id>
+            <name>ThingsBoard Repo Deployment</name>
+            <url>https://repo.thingsboard.io/artifactory/libs-release-public</url>
+        </repository>
+    </distributionManagement>
+
     <build>
         <resources>
             <resource>
@@ -109,7 +117,6 @@
                 <targetPath>${project.build.directory}/generated-sources/java</targetPath>
             </resource>
         </resources>
-
         <plugins>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
@@ -129,15 +136,26 @@
                     </execution>
                 </executions>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-deploy-plugin</artifactId>
+                <configuration>
+                    <skip>false</skip>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
-
-    <distributionManagement>
-        <repository>
-            <id>thingsboard-repo-deploy</id>
-            <name>ThingsBoard Repo Deployment</name>
-            <url>https://repo.thingsboard.io/artifactory/libs-release-public</url>
-        </repository>
-    </distributionManagement>
 
 </project>

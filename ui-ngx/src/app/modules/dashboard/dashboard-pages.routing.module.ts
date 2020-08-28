@@ -41,6 +41,10 @@ import { DashboardResolver } from '@app/modules/home/pages/dashboard/dashboard-r
 import { UtilsService } from '@core/services/utils.service';
 import { Widget } from '@app/shared/models/widget.models';
 import { Operation, Resource } from '@shared/models/security.models';
+import { MODULES_MAP } from '../../shared/models/constants';
+import { modulesMap } from '../common/modules-map';
+import { UserPermissionsService } from '@core/http/user-permissions.service';
+import { EntityType } from '@shared/models/entity-type.models';
 
 @Injectable()
 export class WidgetEditorDashboardResolver implements Resolve<Dashboard> {
@@ -78,9 +82,9 @@ const routes: Routes = [
         skip: true
       },
       auth: [Authority.TENANT_ADMIN, Authority.CUSTOMER_USER],
-      permissions: {
-        resources: [Resource.DASHBOARD, Resource.WIDGETS_BUNDLE, Resource.WIDGET_TYPE],
-        operations: [Operation.READ]
+      canActivate: (userPermissionsService: UserPermissionsService): boolean => {
+        return userPermissionsService.hasReadGroupsPermission(EntityType.DASHBOARD) &&
+          userPermissionsService.hasResourcesGenericPermission([Resource.WIDGETS_BUNDLE, Resource.WIDGET_TYPE], Operation.READ);
       },
       title: 'dashboard.dashboard',
       widgetEditMode: false,
@@ -119,6 +123,10 @@ const routes: Routes = [
     {
       provide: 'entityGroupResolver',
       useValue: (route: ActivatedRouteSnapshot) => null
+    },
+    {
+      provide: MODULES_MAP,
+      useValue: modulesMap
     }
   ]
 })

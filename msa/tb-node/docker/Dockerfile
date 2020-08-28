@@ -40,6 +40,8 @@ RUN echo "thingsboard thingsboard-pe/license boolean true" | debconf-set-selecti
 
 RUN yes | DEBIAN_FRONTEND=noninteractive dpkg -i /tmp/${pkg.name}.deb
 
+RUN rm /tmp/${pkg.name}.deb
+
 RUN systemctl --no-reload disable --now ${pkg.name}.service > /dev/null 2>&1 || :
 
 RUN chown -R ${pkg.user}:${pkg.user} /tmp
