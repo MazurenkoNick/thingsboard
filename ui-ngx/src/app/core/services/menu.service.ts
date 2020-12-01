@@ -44,9 +44,10 @@ import { EntityType } from '@shared/models/entity-type.models';
 import { BroadcastService } from '@core/services/broadcast.service';
 import { ActivationEnd, Params, Router } from '@angular/router';
 import { UserPermissionsService } from '@core/http/user-permissions.service';
-import { Resource } from '@shared/models/security.models';
+import { Operation, Resource } from '@shared/models/security.models';
 import { AuthState } from '@core/auth/auth.models';
 import { CustomMenuItem } from '@shared/models/custom-menu.models';
+import { guid } from '@core/utils';
 
 @Injectable({
   providedIn: 'root'
@@ -137,6 +138,7 @@ export class MenuService {
     const sections: Array<MenuSection> = [];
     sections.push(
       {
+        id: guid(),
         name: 'home.home',
         type: 'link',
         path: '/home',
@@ -144,6 +146,7 @@ export class MenuService {
         disabled: disabledItems.indexOf('home') > -1
       },
       {
+        id: guid(),
         name: 'tenant.tenants',
         type: 'link',
         path: '/tenants',
@@ -151,6 +154,16 @@ export class MenuService {
         disabled: disabledItems.indexOf('tenants') > -1
       },
       {
+        id: guid(),
+        name: 'tenant-profile.tenant-profiles',
+        type: 'link',
+        path: '/tenantProfiles',
+        icon: 'mdi:alpha-t-box',
+        isMdiIcon: true,
+        disabled: disabledItems.indexOf('tenant_profiles') > -1
+      },
+      {
+        id: guid(),
         name: 'widget.widget-library',
         type: 'link',
         path: '/widgets-bundles',
@@ -161,6 +174,15 @@ export class MenuService {
 
     const pages: Array<MenuSection> = [
       {
+        id: guid(),
+        name: 'admin.general',
+        type: 'link',
+        path: '/settings/general',
+        icon: 'settings_applications',
+        disabled: disabledItems.indexOf('general') > -1
+      },
+      {
+        id: guid(),
         name: 'admin.outgoing-mail',
         type: 'link',
         path: '/settings/outgoing-mail',
@@ -168,6 +190,7 @@ export class MenuService {
         disabled: disabledItems.indexOf('mail_server') > -1
       },
       {
+        id: guid(),
         name: 'admin.mail-templates',
         type: 'link',
         path: '/settings/mail-template',
@@ -175,6 +198,15 @@ export class MenuService {
         disabled: disabledItems.indexOf('mail_templates') > -1
       },
       {
+        id: guid(),
+        name: 'admin.sms-provider',
+        type: 'link',
+        path: '/settings/sms-provider',
+        icon: 'sms',
+        disabled: disabledItems.indexOf('sms_provider') > -1
+      },
+      {
+        id: guid(),
         name: 'white-labeling.white-labeling',
         type: 'link',
         path: '/settings/whiteLabel',
@@ -182,6 +214,7 @@ export class MenuService {
         disabled: disabledItems.indexOf('white_labeling') > -1
       },
       {
+        id: guid(),
         name: 'white-labeling.login-white-labeling',
         type: 'link',
         path: '/settings/loginWhiteLabel',
@@ -189,6 +222,7 @@ export class MenuService {
         disabled: disabledItems.indexOf('login_white_labeling') > -1
       },
       {
+        id: guid(),
         name: 'custom-translation.custom-translation',
         type: 'link',
         path: '/settings/customTranslation',
@@ -196,6 +230,7 @@ export class MenuService {
         disabled: disabledItems.indexOf('custom_translation') > -1
       },
       {
+        id: guid(),
         name: 'custom-menu.custom-menu',
         type: 'link',
         path: '/settings/customMenu',
@@ -203,15 +238,25 @@ export class MenuService {
         disabled: disabledItems.indexOf('custom_menu') > -1
       },
       {
+        id: guid(),
         name: 'admin.security-settings',
         type: 'link',
         path: '/settings/security-settings',
         icon: 'security',
         disabled: disabledItems.indexOf('security_settings') > -1
+      },
+      {
+        id: guid(),
+        name: 'admin.oauth2.oauth2',
+        type: 'link',
+        path: '/settings/oauth2',
+        icon: 'security',
+        disabled: disabledItems.indexOf('oauth2') > -1
       }
     ];
 
     const section: MenuSection = {
+      id: guid(),
       name: 'admin.system-settings',
       type: 'toggle',
       path: '/settings',
@@ -235,6 +280,13 @@ export class MenuService {
             icon: 'supervisor_account',
             path: '/tenants',
             disabled: disabledItems.indexOf('tenants') > -1
+          },
+          {
+            name: 'tenant-profile.tenant-profiles',
+            icon: 'mdi:alpha-t-box',
+            isMdiIcon: true,
+            path: '/tenantProfiles',
+            disabled: disabledItems.indexOf('tenant_profiles') > -1
           }
         ]
       },
@@ -253,6 +305,12 @@ export class MenuService {
         name: 'admin.system-settings',
         places: [
           {
+            name: 'admin.general',
+            icon: 'settings_applications',
+            path: '/settings/general',
+            disabled: disabledItems.indexOf('general') > -1
+          },
+          {
             name: 'admin.outgoing-mail',
             icon: 'mail',
             path: '/settings/outgoing-mail',
@@ -265,10 +323,22 @@ export class MenuService {
             disabled: disabledItems.indexOf('mail_templates') > -1
           },
           {
+            name: 'admin.sms-provider',
+            icon: 'sms',
+            path: '/settings/sms-provider',
+            disabled: disabledItems.indexOf('sms_provider') > -1
+          },
+          {
             name: 'admin.security-settings',
             icon: 'security',
             path: '/settings/security-settings',
             disabled: disabledItems.indexOf('security_settings') > -1
+          },
+          {
+            name: 'admin.oauth2.oauth2',
+            icon: 'security',
+            path: '/settings/oauth2',
+            disabled: disabledItems.indexOf('oauth2') > -1
           }
         ]
       },
@@ -319,6 +389,7 @@ export class MenuService {
     const sections: Array<MenuSection> = [];
     sections.push(
       {
+        id: guid(),
         name: 'home.home',
         type: 'link',
         path: '/home',
@@ -329,6 +400,7 @@ export class MenuService {
     if (this.userPermissionsService.hasReadGenericPermission(Resource.RULE_CHAIN)) {
       sections.push(
         {
+          id: guid(),
           name: 'rulechain.rulechains',
           type: 'link',
           path: '/ruleChains',
@@ -340,6 +412,7 @@ export class MenuService {
     if (this.userPermissionsService.hasReadGenericPermission(Resource.CONVERTER)) {
       sections.push(
         {
+          id: guid(),
           name: 'converter.converters',
           type: 'link',
           path: '/converters',
@@ -351,6 +424,7 @@ export class MenuService {
     if (this.userPermissionsService.hasReadGenericPermission(Resource.INTEGRATION)) {
       sections.push(
         {
+          id: guid(),
           name: 'integration.integrations',
           type: 'link',
           path: '/integrations',
@@ -362,6 +436,7 @@ export class MenuService {
     if (this.userPermissionsService.hasReadGenericPermission(Resource.ROLE)) {
       sections.push(
         {
+          id: guid(),
           name: 'role.roles',
           type: 'link',
           path: '/roles',
@@ -373,6 +448,7 @@ export class MenuService {
     if (this.userPermissionsService.hasReadGroupsPermission(EntityType.CUSTOMER)) {
       sections.push(
         {
+          id: guid(),
           name: 'customers-hierarchy.customers-hierarchy',
           type: 'link',
           path: '/customersHierarchy',
@@ -393,12 +469,26 @@ export class MenuService {
     if (this.userPermissionsService.hasReadGroupsPermission(EntityType.DEVICE) && disabledItems.indexOf('device_groups') === -1) {
       sections.push(this.createEntityGroupSection(EntityType.DEVICE));
     }
+    if (this.userPermissionsService.hasReadGenericPermission(Resource.DEVICE_PROFILE)) {
+      sections.push(
+        {
+          id: guid(),
+          name: 'device-profile.device-profiles',
+          type: 'link',
+          path: '/deviceProfiles',
+          icon: 'mdi:alpha-d-box',
+          isMdiIcon: true,
+          disabled: disabledItems.indexOf('device_profiles') > -1
+        }
+      );
+    }
     if (this.userPermissionsService.hasReadGroupsPermission(EntityType.ENTITY_VIEW) && disabledItems.indexOf('entity_view_groups') === -1) {
       sections.push(this.createEntityGroupSection(EntityType.ENTITY_VIEW));
     }
     if (this.userPermissionsService.hasReadGenericPermission(Resource.WIDGETS_BUNDLE)) {
       sections.push(
         {
+          id: guid(),
           name: 'widget.widget-library',
           type: 'link',
           path: '/widgets-bundles',
@@ -413,6 +503,7 @@ export class MenuService {
     if (this.userPermissionsService.hasReadGenericPermission(Resource.SCHEDULER_EVENT)) {
       sections.push(
         {
+          id: guid(),
           name: 'scheduler.scheduler',
           type: 'link',
           path: '/scheduler',
@@ -424,6 +515,7 @@ export class MenuService {
     if (authState.whiteLabelingAllowed && this.userPermissionsService.hasReadGenericPermission(Resource.WHITE_LABELING)) {
       const pages: Array<MenuSection> = [
         {
+          id: guid(),
           name: 'admin.outgoing-mail',
           type: 'link',
           path: '/settings/outgoing-mail',
@@ -431,6 +523,7 @@ export class MenuService {
           disabled: disabledItems.indexOf('mail_server') > -1
         },
         {
+          id: guid(),
           name: 'admin.mail-templates',
           type: 'link',
           path: '/settings/mail-template',
@@ -438,6 +531,15 @@ export class MenuService {
           disabled: disabledItems.indexOf('mail_templates') > -1
         },
         {
+          id: guid(),
+          name: 'admin.sms-provider',
+          type: 'link',
+          path: '/settings/sms-provider',
+          icon: 'sms',
+          disabled: disabledItems.indexOf('sms_provider') > -1
+        },
+        {
+          id: guid(),
           name: 'custom-translation.custom-translation',
           type: 'link',
           path: '/settings/customTranslation',
@@ -445,6 +547,7 @@ export class MenuService {
           disabled: disabledItems.indexOf('custom_translation') > -1
         },
         {
+          id: guid(),
           name: 'custom-menu.custom-menu',
           type: 'link',
           path: '/settings/customMenu',
@@ -452,6 +555,7 @@ export class MenuService {
           disabled: disabledItems.indexOf('custom_menu') > -1
         },
         {
+          id: guid(),
           name: 'white-labeling.white-labeling',
           type: 'link',
           path: '/settings/whiteLabel',
@@ -459,6 +563,7 @@ export class MenuService {
           disabled: disabledItems.indexOf('white_labeling') > -1
         },
         {
+          id: guid(),
           name: 'white-labeling.login-white-labeling',
           type: 'link',
           path: '/settings/loginWhiteLabel',
@@ -466,6 +571,7 @@ export class MenuService {
           disabled: disabledItems.indexOf('login_white_labeling') > -1
         },
         {
+          id: guid(),
           name: 'self-registration.self-registration',
           type: 'link',
           path: '/settings/selfRegistration',
@@ -475,6 +581,7 @@ export class MenuService {
       ];
       sections.push(
         {
+          id: guid(),
           name: 'white-labeling.white-labeling',
           type: 'toggle',
           path: '/settings',
@@ -487,11 +594,26 @@ export class MenuService {
     if (this.userPermissionsService.hasReadGenericPermission(Resource.AUDIT_LOG)) {
       sections.push(
         {
+          id: guid(),
           name: 'audit-log.audit-logs',
           type: 'link',
           path: '/auditLogs',
           icon: 'track_changes',
           disabled: disabledItems.indexOf('audit_log') > -1
+        }
+      );
+    }
+    if (this.userPermissionsService.hasReadGenericPermission(Resource.API_USAGE_STATE) &&
+        this.userPermissionsService.hasGenericPermission(Resource.API_USAGE_STATE, Operation.READ_TELEMETRY)) {
+      sections.push(
+        {
+          id: guid(),
+          name: 'api-usage.api-usage',
+          type: 'link',
+          path: '/usage',
+          icon: 'insert_chart',
+          notExact: true,
+          disabled: disabledItems.indexOf('api_usage') > -1
         }
       );
     }
@@ -611,20 +733,34 @@ export class MenuService {
         }
       );
     }
-    if (this.userPermissionsService.hasReadGroupsPermission(EntityType.DEVICE)) {
-      homeSections.push(
-        {
-          name: 'device.management',
-          places: [
-            {
-              name: 'device.devices',
-              icon: 'devices_other',
-              path: '/deviceGroups',
-              disabled: disabledItems.indexOf('device_groups') > -1
-            }
-          ]
-        }
-      );
+    if (this.userPermissionsService.hasReadGroupsPermission(EntityType.DEVICE) ||
+      this.userPermissionsService.hasReadGenericPermission(Resource.DEVICE_PROFILE)) {
+      const deviceManagementSection: HomeSection = {
+        name: 'device.management',
+        places: []
+      };
+      homeSections.push(deviceManagementSection);
+      if (this.userPermissionsService.hasReadGroupsPermission(EntityType.DEVICE)) {
+        deviceManagementSection.places.push(
+          {
+            name: 'device.devices',
+            icon: 'devices_other',
+            path: '/deviceGroups',
+            disabled: disabledItems.indexOf('device_groups') > -1
+          }
+        );
+      }
+      if (this.userPermissionsService.hasReadGenericPermission(Resource.DEVICE_PROFILE)) {
+        deviceManagementSection.places.push(
+          {
+            name: 'device-profile.device-profiles',
+            icon: 'mdi:alpha-d-box',
+            isMdiIcon: true,
+            path: '/deviceProfiles',
+            disabled: disabledItems.indexOf('device_profiles') > -1
+          }
+        );
+      }
     }
     if (this.userPermissionsService.hasReadGroupsPermission(EntityType.ENTITY_VIEW)) {
       homeSections.push(
@@ -704,6 +840,12 @@ export class MenuService {
               disabled: disabledItems.indexOf('mail_templates') > -1
             },
             {
+              name: 'admin.sms-provider',
+              icon: 'sms',
+              path: '/settings/sms-provider',
+              disabled: disabledItems.indexOf('sms_provider') > -1
+            },
+            {
               name: 'white-labeling.white-labeling',
               icon: 'format_paint',
               path: '/settings/whiteLabel',
@@ -745,20 +887,38 @@ export class MenuService {
         }
       );
     }
-    if (this.userPermissionsService.hasReadGenericPermission(Resource.AUDIT_LOG)) {
+    if (this.userPermissionsService.hasReadGenericPermission(Resource.AUDIT_LOG) ||
+      (this.userPermissionsService.hasReadGenericPermission(Resource.API_USAGE_STATE) &&
+      this.userPermissionsService.hasGenericPermission(Resource.API_USAGE_STATE, Operation.READ_TELEMETRY))) {
+
+      const audit: HomeSection = {
+        name: 'audit-log.audit',
+        places: []
+      };
       homeSections.push(
-        {
-          name: 'audit-log.audit',
-          places: [
-            {
-              name: 'audit-log.audit-logs',
-              icon: 'track_changes',
-              path: '/auditLogs',
-              disabled: disabledItems.indexOf('audit_log') > -1
-            }
-          ]
-        }
+        audit
       );
+      if (this.userPermissionsService.hasReadGenericPermission(Resource.AUDIT_LOG)) {
+        audit.places.push(
+          {
+            name: 'audit-log.audit-logs',
+            icon: 'track_changes',
+            path: '/auditLogs',
+            disabled: disabledItems.indexOf('audit_log') > -1
+          }
+        );
+      }
+      if (this.userPermissionsService.hasReadGenericPermission(Resource.API_USAGE_STATE) &&
+        this.userPermissionsService.hasGenericPermission(Resource.API_USAGE_STATE, Operation.READ_TELEMETRY)) {
+        audit.places.push(
+          {
+            name: 'api-usage.api-usage',
+            icon: 'insert_chart',
+            path: '/usage',
+            disabled: disabledItems.indexOf('api_usage') > -1
+          }
+        );
+      }
     }
     return homeSections;
   }
@@ -767,6 +927,7 @@ export class MenuService {
     const sections: Array<MenuSection> = [];
     sections.push(
       {
+        id: guid(),
         name: 'home.home',
         type: 'link',
         path: '/home',
@@ -777,6 +938,7 @@ export class MenuService {
     if (this.userPermissionsService.hasReadGenericPermission(Resource.ROLE)) {
       sections.push(
         {
+          id: guid(),
           name: 'role.roles',
           type: 'link',
           path: '/roles',
@@ -788,6 +950,7 @@ export class MenuService {
     if (this.userPermissionsService.hasReadGroupsPermission(EntityType.CUSTOMER)) {
       sections.push(
         {
+          id: guid(),
           name: 'customers-hierarchy.customers-hierarchy',
           type: 'link',
           path: '/customersHierarchy',
@@ -817,6 +980,7 @@ export class MenuService {
     if (this.userPermissionsService.hasReadGenericPermission(Resource.SCHEDULER_EVENT)) {
       sections.push(
         {
+          id: guid(),
           name: 'scheduler.scheduler',
           type: 'link',
           path: '/scheduler',
@@ -828,6 +992,7 @@ export class MenuService {
     if (authState.whiteLabelingAllowed && this.userPermissionsService.hasReadGenericPermission(Resource.WHITE_LABELING)) {
       const pages: Array<MenuSection> = [
         {
+          id: guid(),
           name: 'custom-translation.custom-translation',
           type: 'link',
           path: '/settings/customTranslation',
@@ -835,6 +1000,7 @@ export class MenuService {
           disabled: disabledItems.indexOf('custom_translation') > -1
         },
         {
+          id: guid(),
           name: 'custom-menu.custom-menu',
           type: 'link',
           path: '/settings/customMenu',
@@ -842,6 +1008,7 @@ export class MenuService {
           disabled: disabledItems.indexOf('custom_menu') > -1
         },
         {
+          id: guid(),
           name: 'white-labeling.white-labeling',
           type: 'link',
           path: '/settings/whiteLabel',
@@ -849,6 +1016,7 @@ export class MenuService {
           disabled: disabledItems.indexOf('white_labeling') > -1
         },
         {
+          id: guid(),
           name: 'white-labeling.login-white-labeling',
           type: 'link',
           path: '/settings/loginWhiteLabel',
@@ -858,6 +1026,7 @@ export class MenuService {
       ];
       sections.push(
         {
+          id: guid(),
           name: 'white-labeling.white-labeling',
           type: 'toggle',
           path: '/settings',
@@ -870,6 +1039,7 @@ export class MenuService {
     if (this.userPermissionsService.hasReadGenericPermission(Resource.AUDIT_LOG)) {
       sections.push(
         {
+          id: guid(),
           name: 'audit-log.audit-logs',
           type: 'link',
           path: '/auditLogs',
@@ -1096,6 +1266,7 @@ export class MenuService {
         for (const customMenuChildItem of customMenuItem.childMenuItems) {
           const childStateId = this.getCustomMenuStateId(customMenuChildItem.name, stateIds);
           const customMenuChildSection: MenuSection = {
+            id: guid(),
             isCustom: true,
             stateId: childStateId,
             name: customMenuChildItem.name,
@@ -1332,6 +1503,7 @@ class EntityGroupSection {
         break;
     }
     this.section = {
+      id: guid(),
       name,
       type: 'toggle',
       path,
@@ -1350,6 +1522,7 @@ class EntityGroupSection {
           groups.forEach((entityGroup) => {
             pages.push(
               {
+                id: entityGroup.id.id,
                 name: entityGroup.name,
                 path: `${this.section.path}/${entityGroup.id.id}`,
                 type: 'link',

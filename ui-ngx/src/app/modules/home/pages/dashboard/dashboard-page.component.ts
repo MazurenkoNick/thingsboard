@@ -29,7 +29,17 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { ChangeDetectorRef, Component, Inject, NgZone, OnDestroy, ViewChild, ViewEncapsulation } from '@angular/core';
+import {
+  ChangeDetectorRef,
+  Component,
+  Inject,
+  Input,
+  NgZone,
+  OnDestroy,
+  OnInit,
+  ViewChild,
+  ViewEncapsulation
+} from '@angular/core';
 import { PageComponent } from '@shared/components/page.component';
 import { Store } from '@ngrx/store';
 import { AppState } from '@core/core.state';
@@ -119,7 +129,7 @@ import { Filters } from '@shared/models/query/query.models';
   encapsulation: ViewEncapsulation.None,
   // changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class DashboardPageComponent extends PageComponent implements IDashboardController, OnDestroy {
+export class DashboardPageComponent extends PageComponent implements IDashboardController, OnInit, OnDestroy {
 
   authState: AuthState = getCurrentAuthState(this.store);
 
@@ -127,6 +137,11 @@ export class DashboardPageComponent extends PageComponent implements IDashboardC
 
   entityGroup: EntityGroupInfo;
   entityGroupId: string;
+
+  @Input()
+  embedded = false;
+
+  @Input()
   dashboard: Dashboard;
   dashboardConfiguration: DashboardConfiguration;
 
@@ -269,19 +284,27 @@ export class DashboardPageComponent extends PageComponent implements IDashboardC
               private cd: ChangeDetectorRef) {
     super(store);
 
+  }
+
+  ngOnInit() {
     this.rxSubscriptions.push(this.route.data.subscribe(
       (data) => {
+        if (this.embedded) {
+          data.dashboard = this.dashboard;
+          data.widgetEditMode = false;
+          data.singlePageMode = false;
+          data.entityGroup = null;
+        }
         this.init(data);
         this.runChangeDetection();
       }
     ));
-
     this.rxSubscriptions.push(this.breakpointObserver
       .observe(MediaBreakpoints['gt-sm'])
       .subscribe((state: BreakpointState) => {
-        this.isMobile = !state.matches;
+          this.isMobile = !state.matches;
         }
-      ));
+    ));
   }
 
   private init(data: any) {
@@ -306,7 +329,7 @@ export class DashboardPageComponent extends PageComponent implements IDashboardC
       this.readonly = !this.userPermissionsService.hasGroupEntityPermission(Operation.WRITE, this.entityGroup);
       this.entityGroupId = this.entityGroup.id.id;
     } else {
-      if (!this.widgetEditMode && !this.route.snapshot.queryParamMap.get('edit')) {
+      if (this.embedded || (!this.widgetEditMode && !this.route.snapshot.queryParamMap.get('edit'))) {
         this.readonly = true;
       }
     }

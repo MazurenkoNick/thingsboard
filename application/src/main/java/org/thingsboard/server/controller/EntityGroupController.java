@@ -74,6 +74,7 @@ import org.thingsboard.server.common.data.permission.MergedGroupTypePermissionIn
 import org.thingsboard.server.common.data.permission.MergedUserPermissions;
 import org.thingsboard.server.common.data.permission.Operation;
 import org.thingsboard.server.common.data.permission.Resource;
+import org.thingsboard.server.common.data.permission.ShareGroupRequest;
 import org.thingsboard.server.common.data.role.Role;
 import org.thingsboard.server.common.data.security.Authority;
 import org.thingsboard.server.queue.util.TbCoreComponent;
@@ -121,7 +122,7 @@ public class EntityGroupController extends BaseController {
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
     @RequestMapping(value = "/entityGroup/{ownerType}/{ownerId}/{groupType}/{groupName}", method = RequestMethod.GET)
     @ResponseBody
-    public EntityGroupInfo getEnitityGroupByOwnerAndNameAndType(@PathVariable("ownerType") String strOwnerType,
+    public EntityGroupInfo getEntityGroupByOwnerAndNameAndType(@PathVariable("ownerType") String strOwnerType,
                                                                 @PathVariable("ownerId") String strOwnerId,
                                                                 @ApiParam(value = "EntityGroup type", required = true, allowableValues = "CUSTOMER,ASSET,DEVICE,USER,ENTITY_VIEW,DASHBOARD") @PathVariable("groupType") String strGroupType,
                                                                 @PathVariable("groupName") String groupName) throws ThingsboardException {
@@ -429,7 +430,9 @@ public class EntityGroupController extends BaseController {
             checkEntityGroupType(entityType);
             EntityId entityId = EntityIdFactory.getByTypeAndId(entityType, strEntityId);
             checkEntityId(entityId, Operation.READ);
-            ShortEntityView result = entityGroupService.findGroupEntity(getTenantId(), entityGroupId, entityId);
+            SecurityUser currentUser = getCurrentUser();
+            MergedUserPermissions mergedUserPermissions = currentUser.getUserPermissions();
+            ShortEntityView result = entityGroupService.findGroupEntity(getTenantId(), currentUser.getCustomerId(), mergedUserPermissions, entityGroupId, entityId);
             return checkNotNull(result);
         } catch (Exception e) {
             throw handleException(e);
@@ -454,7 +457,9 @@ public class EntityGroupController extends BaseController {
         checkEntityGroupType(entityType);
         try {
             PageLink pageLink = createPageLink(pageSize, page, textSearch, sortProperty, sortOrder);
-            return checkNotNull(entityGroupService.findGroupEntities(getTenantId(), entityGroupId, pageLink));
+            SecurityUser currentUser = getCurrentUser();
+            MergedUserPermissions mergedUserPermissions = currentUser.getUserPermissions();
+            return checkNotNull(entityGroupService.findGroupEntities(getTenantId(), currentUser.getCustomerId(), mergedUserPermissions, entityGroupId, pageLink));
         } catch (Exception e) {
             throw handleException(e);
         }
@@ -642,6 +647,67 @@ public class EntityGroupController extends BaseController {
                         null,
                         ActionType.MADE_PRIVATE, e, strEntityGroupId, entityGroup.getName());
             }
+            throw handleException(e);
+        }
+    }
+
+    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
+    @RequestMapping(value = "/entityGroup/{entityGroupId}/share", method = RequestMethod.POST)
+    @ResponseStatus(value = HttpStatus.OK)
+    public void shareEntityGroup(@PathVariable(ENTITY_GROUP_ID) String strEntityGroupId,
+                                 @RequestBody ShareGroupRequest shareGroupRequest) throws ThingsboardException {
+        checkParameter(ENTITY_GROUP_ID, strEntityGroupId);
+        EntityGroup entityGroup;
+        try {
+            accessControlService.checkPermission(getCurrentUser(), Resource.GROUP_PERMISSION, Operation.CREATE);
+            EntityGroupId entityGroupId = new EntityGroupId(toUUID(strEntityGroupId));
+            entityGroup = checkEntityGroupId(entityGroupId, Operation.WRITE);
+            checkSharableEntityGroupType(entityGroup.getType());
+
+            EntityGroup userGroup;
+            if (shareGroupRequest.isAllUserGroup()) {
+                Optional<EntityGroup> userGroupOptional = entityGroupService.findEntityGroupByTypeAndName(getTenantId(), shareGroupRequest.getOwnerId(),
+                        EntityType.USER, EntityGroup.GROUP_ALL_NAME).get();
+                if (userGroupOptional.isPresent()) {
+                    userGroup = userGroupOptional.get();
+                } else {
+                    throw new ThingsboardException("Requested item wasn't found!", ThingsboardErrorCode.ITEM_NOT_FOUND);
+                }
+            } else {
+                userGroup = entityGroupService.findEntityGroupById(getTenantId(), shareGroupRequest.getUserGroupId());
+            }
+            accessControlService.checkEntityGroupPermission(getCurrentUser(), Operation.WRITE, userGroup);
+
+            List<RoleId> roleIds;
+            if (shareGroupRequest.getRoleIds() != null && !shareGroupRequest.getRoleIds().isEmpty()) {
+                roleIds = shareGroupRequest.getRoleIds();
+            } else {
+                Role role;
+                if (shareGroupRequest.isReadElseWrite()) {
+                    role = roleService.findOrCreateReadOnlyEntityGroupRole(getTenantId(), getCurrentUser().getCustomerId());
+                } else {
+                    role = roleService.findOrCreateWriteEntityGroupRole(getTenantId(), getCurrentUser().getCustomerId());
+                }
+                roleIds = Collections.singletonList(role.getId());
+            }
+
+            for (RoleId roleId : roleIds) {
+                GroupPermission groupPermission = new GroupPermission();
+                groupPermission.setTenantId(getTenantId());
+                groupPermission.setEntityGroupId(entityGroup.getId());
+                groupPermission.setEntityGroupType(entityGroup.getType());
+                groupPermission.setRoleId(roleId);
+                groupPermission.setUserGroupId(userGroup.getId());
+
+                GroupPermission savedGroupPermission = checkNotNull(groupPermissionService.saveGroupPermission(getTenantId(), groupPermission));
+                userPermissionsService.onGroupPermissionUpdated(savedGroupPermission);
+                logEntityAction(savedGroupPermission.getId(), savedGroupPermission, null,
+                        ActionType.ADDED, null);
+            }
+
+        } catch (Exception e) {
+            logEntityAction(emptyId(EntityType.GROUP_PERMISSION), null, null,
+                    ActionType.ADDED, e);
             throw handleException(e);
         }
     }

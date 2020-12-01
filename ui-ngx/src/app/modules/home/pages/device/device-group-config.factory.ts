@@ -30,7 +30,7 @@
 ///
 
 import { Device, DeviceCredentials } from '@shared/models/device.models';
-import { Observable, of } from 'rxjs';
+import { Observable, of, Subject } from 'rxjs';
 import { TranslateService } from '@ngx-translate/core';
 import { UtilsService } from '@core/services/utils.service';
 import {
@@ -56,6 +56,9 @@ import { Operation } from '@shared/models/security.models';
 import { HomeDialogsService } from '@home/dialogs/home-dialogs.service';
 import { CustomerId } from '@shared/models/id/customer-id';
 import { GroupConfigTableConfigService } from '@home/components/group/group-config-table-config.service';
+import { DeviceWizardDialogComponent } from '@home/components/wizard/device-wizard-dialog.component';
+import { AddGroupEntityDialogData } from '@home/models/group/group-entity-component.models';
+import { isDefinedAndNotNull } from '@core/utils';
 
 @Injectable()
 export class DeviceGroupConfigFactory implements EntityGroupStateConfigFactory<Device> {
@@ -75,6 +78,10 @@ export class DeviceGroupConfigFactory implements EntityGroupStateConfigFactory<D
 
     config.entityComponent = DeviceComponent;
 
+    config.componentsData = {
+      deviceCredentials$: new Subject<DeviceCredentials>()
+    };
+
     config.entityTitle = (device) => device ?
       this.utils.customTranslation(device.name, device.name) : '';
 
@@ -92,7 +99,8 @@ export class DeviceGroupConfigFactory implements EntityGroupStateConfigFactory<D
     };
     config.deleteEntity = id => this.deviceService.deleteDevice(id.id);
 
-    config.onEntityAction = action => this.onDeviceAction(action);
+    config.onEntityAction = action => this.onDeviceAction(action, config);
+    config.addEntity = () => this.deviceWizard(config);
 
     if (config.settings.enableCredentialsManagement) {
       if (this.userPermissionsService.hasGroupEntityPermission(Operation.READ_CREDENTIALS, config.entityGroup) &&
@@ -102,7 +110,7 @@ export class DeviceGroupConfigFactory implements EntityGroupStateConfigFactory<D
             name: this.translate.instant('device.view-credentials'),
             icon: 'security',
             isEnabled: config.manageCredentialsEnabled,
-            onAction: ($event, entity) => this.manageCredentials($event, entity, true)
+            onAction: ($event, entity) => this.manageCredentials($event, entity, true, config)
           }
         );
       }
@@ -113,7 +121,7 @@ export class DeviceGroupConfigFactory implements EntityGroupStateConfigFactory<D
             name: this.translate.instant('device.manage-credentials'),
             icon: 'security',
             isEnabled: config.manageCredentialsEnabled,
-            onAction: ($event, entity) => this.manageCredentials($event, entity, false)
+            onAction: ($event, entity) => this.manageCredentials($event, entity, false, config)
           }
         );
       }
@@ -132,6 +140,17 @@ export class DeviceGroupConfigFactory implements EntityGroupStateConfigFactory<D
     return of(this.groupConfigTableConfigService.prepareConfiguration(params, config));
   }
 
+  deviceWizard(config: GroupEntityTableConfig<Device>): Observable<Device> {
+    return this.dialog.open<DeviceWizardDialogComponent, AddGroupEntityDialogData<Device>,
+      Device>(DeviceWizardDialogComponent, {
+      disableClose: true,
+      panelClass: ['tb-dialog', 'tb-fullscreen-dialog'],
+      data: {
+        entitiesTableConfig: config
+      }
+    }).afterClosed();
+  }
+
   importDevices($event: Event, config: GroupEntityTableConfig<Device>) {
     const entityGroup = config.entityGroup;
     const entityGroupId = !entityGroup.groupAll ? entityGroup.id.id : null;
@@ -147,7 +166,7 @@ export class DeviceGroupConfigFactory implements EntityGroupStateConfigFactory<D
     });
   }
 
-  manageCredentials($event: Event, device: Device | ShortEntityView, isReadOnly: boolean) {
+  manageCredentials($event: Event, device: Device | ShortEntityView, isReadOnly: boolean, config: GroupEntityTableConfig<Device>) {
     if ($event) {
       $event.stopPropagation();
     }
@@ -159,16 +178,20 @@ export class DeviceGroupConfigFactory implements EntityGroupStateConfigFactory<D
         deviceId: device.id.id,
         isReadOnly
       }
+    }).afterClosed().subscribe(deviceCredentials => {
+      if (isDefinedAndNotNull(deviceCredentials)) {
+        config.componentsData.deviceCredentials$.next(deviceCredentials);
+      }
     });
   }
 
-  onDeviceAction(action: EntityAction<Device>): boolean {
+  onDeviceAction(action: EntityAction<Device>, config: GroupEntityTableConfig<Device>): boolean {
     switch (action.action) {
       case 'manageCredentials':
-        this.manageCredentials(action.event, action.entity, false);
+        this.manageCredentials(action.event, action.entity, false, config);
         return true;
       case 'viewCredentials':
-        this.manageCredentials(action.event, action.entity, true);
+        this.manageCredentials(action.event, action.entity, true, config);
         return true;
     }
     return false;

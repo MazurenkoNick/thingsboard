@@ -192,7 +192,8 @@
             </mat-cell>
           </ng-container>
           <mat-header-row [ngClass]="{'mat-row-select': true}" *matHeaderRowDef="displayedColumns; sticky: true"></mat-header-row>
-          <mat-row [ngClass]="{'mat-row-select': true,
+          <mat-row [fxShow]="!dataSource.dataLoading"
+                   [ngClass]="{'mat-row-select': true,
                                'mat-selected': dataSource.selection.isSelected(schedulerEvent)}"
                    *matRowDef="let schedulerEvent; columns: displayedColumns;" (click)="dataSource.selection.toggle(schedulerEvent)"></mat-row>
         </table>
@@ -290,6 +291,6 @@
     </div>
   </div>
   <span [fxShow]="!showData" fxLayoutAlign="center center"
-        style="text-transform: uppercase; display: flex;"
+        style="display: flex;"
         class="tb-absolute-fill" translate>entity.no-data</span>
 </div>

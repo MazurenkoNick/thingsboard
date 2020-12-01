@@ -51,6 +51,8 @@ import org.thingsboard.server.common.data.kv.LongDataEntry;
 import org.thingsboard.server.common.data.kv.StringDataEntry;
 import org.thingsboard.server.gen.transport.TransportProtos.AttributeUpdateNotificationMsg;
 import org.thingsboard.server.gen.transport.TransportProtos.ClaimDeviceMsg;
+import org.thingsboard.server.gen.transport.TransportProtos.CredentialsType;
+import org.thingsboard.server.gen.transport.TransportProtos.CredentialsDataProto;
 import org.thingsboard.server.gen.transport.TransportProtos.GetAttributeResponseMsg;
 import org.thingsboard.server.gen.transport.TransportProtos.KeyValueProto;
 import org.thingsboard.server.gen.transport.TransportProtos.KeyValueType;
@@ -59,8 +61,15 @@ import org.thingsboard.server.gen.transport.TransportProtos.PostTelemetryMsg;
 import org.thingsboard.server.gen.transport.TransportProtos.ToDeviceRpcRequestMsg;
 import org.thingsboard.server.gen.transport.TransportProtos.ToServerRpcRequestMsg;
 import org.thingsboard.server.gen.transport.TransportProtos.ToServerRpcResponseMsg;
+import org.thingsboard.server.gen.transport.TransportProtos.ProvisionDeviceResponseMsg;
+import org.thingsboard.server.gen.transport.TransportProtos.ProvisionDeviceRequestMsg;
+import org.thingsboard.server.gen.transport.TransportProtos.ProvisionDeviceCredentialsMsg;
+import org.thingsboard.server.gen.transport.TransportProtos.ProvisionResponseStatus;
 import org.thingsboard.server.gen.transport.TransportProtos.TsKvListProto;
 import org.thingsboard.server.gen.transport.TransportProtos.TsKvProto;
+import org.thingsboard.server.gen.transport.TransportProtos.ValidateBasicMqttCredRequestMsg;
+import org.thingsboard.server.gen.transport.TransportProtos.ValidateDeviceTokenRequestMsg;
+import org.thingsboard.server.gen.transport.TransportProtos.ValidateDeviceX509CertRequestMsg;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -69,6 +78,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.TreeMap;
+import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -222,13 +233,7 @@ public class JsonConverter {
                     throw new JsonSyntaxException(CAN_T_PARSE_VALUE + value);
                 }
             } else if (element.isJsonObject() || element.isJsonArray()) {
-                result.add(KeyValueProto
-                        .newBuilder()
-                        .setKey(valueEntry
-                                .getKey())
-                        .setType(KeyValueType.JSON_V)
-                        .setJsonV(element.toString())
-                        .build());
+                result.add(KeyValueProto.newBuilder().setKey(valueEntry.getKey()).setType(KeyValueType.JSON_V).setJsonV(element.toString()).build());
             } else if (!element.isJsonNull()) {
                 throw new JsonSyntaxException(CAN_T_PARSE_VALUE + element);
             }
@@ -413,6 +418,41 @@ public class JsonConverter {
         }
     }
 
+    public static JsonObject toJson(ProvisionDeviceResponseMsg payload) {
+        return toJson(payload, false, 0);
+    }
+
+    public static JsonObject toJson(ProvisionDeviceResponseMsg payload, int requestId) {
+        return toJson(payload, true, requestId);
+    }
+
+    private static JsonObject toJson(ProvisionDeviceResponseMsg payload, boolean toGateway, int requestId) {
+        JsonObject result = new JsonObject();
+        if (payload.getStatus() == ProvisionResponseStatus.NOT_FOUND) {
+            result.addProperty("errorMsg", "Provision data was not found!");
+            result.addProperty("status", ProvisionResponseStatus.NOT_FOUND.name());
+        } else if (payload.getStatus() == ProvisionResponseStatus.FAILURE) {
+            result.addProperty("errorMsg", "Failed to provision device!");
+            result.addProperty("status", ProvisionResponseStatus.FAILURE.name());
+        } else {
+            if (toGateway) {
+                result.addProperty("id", requestId);
+            }
+            switch (payload.getCredentialsType()) {
+                case ACCESS_TOKEN:
+                case X509_CERTIFICATE:
+                    result.addProperty("credentialsValue", payload.getCredentialsValue());
+                    break;
+                case MQTT_BASIC:
+                    result.add("credentialsValue", JSON_PARSER.parse(payload.getCredentialsValue()).getAsJsonObject());
+                    break;
+            }
+            result.addProperty("credentialsType", payload.getCredentialsType().name());
+            result.addProperty("status", ProvisionResponseStatus.SUCCESS.name());
+        }
+        return result;
+    }
+
     public static JsonElement toErrorJson(String errorMsg) {
         JsonObject error = new JsonObject();
         error.addProperty("error", errorMsg);
@@ -423,6 +463,13 @@ public class JsonConverter {
         JsonObject result = new JsonObject();
         result.addProperty(DEVICE_PROPERTY, deviceName);
         result.add("data", JsonConverter.toJson(rpcRequest, true));
+        return result;
+    }
+
+    public static JsonElement toGatewayJson(String deviceName, ProvisionDeviceResponseMsg responseRequest) {
+        JsonObject result = new JsonObject();
+        result.addProperty(DEVICE_PROPERTY, deviceName);
+        result.add("data", JsonConverter.toJson(responseRequest));
         return result;
     }
 
@@ -470,10 +517,19 @@ public class JsonConverter {
     }
 
     public static Map<Long, List<KvEntry>> convertToTelemetry(JsonElement jsonElement, long systemTs) throws JsonSyntaxException {
-        Map<Long, List<KvEntry>> result = new HashMap<>();
+        return convertToTelemetry(jsonElement, systemTs, false);
+    }
+
+    public static Map<Long, List<KvEntry>> convertToSortedTelemetry(JsonElement jsonElement, long systemTs) throws JsonSyntaxException {
+        return convertToTelemetry(jsonElement, systemTs, true);
+    }
+
+    public static Map<Long, List<KvEntry>> convertToTelemetry(JsonElement jsonElement, long systemTs, boolean sorted) throws JsonSyntaxException {
+        Map<Long, List<KvEntry>> result = sorted ? new TreeMap<>() : new HashMap<>();
         convertToTelemetry(jsonElement, systemTs, result, null);
         return result;
     }
+
 
     private static void parseObject(Map<Long, List<KvEntry>> result, long systemTs, JsonObject jo) {
         if (jo.has("ts") && jo.has("values")) {
@@ -505,4 +561,55 @@ public class JsonConverter {
         maxStringValueLength = length;
     }
 
+    public static ProvisionDeviceRequestMsg convertToProvisionRequestMsg(String json) {
+        JsonElement jsonElement = new JsonParser().parse(json);
+        if (jsonElement.isJsonObject()) {
+            return buildProvisionRequestMsg(jsonElement.getAsJsonObject());
+        } else {
+            throw new JsonSyntaxException(CAN_T_PARSE_VALUE + jsonElement);
+        }
+    }
+
+    public static ProvisionDeviceRequestMsg convertToProvisionRequestMsg(JsonObject jo) {
+        return buildProvisionRequestMsg(jo);
+    }
+
+    private static ProvisionDeviceRequestMsg buildProvisionRequestMsg(JsonObject jo) {
+        return ProvisionDeviceRequestMsg.newBuilder()
+                .setDeviceName(getStrValue(jo, DataConstants.DEVICE_NAME, false))
+                .setCredentialsType(jo.get(DataConstants.CREDENTIALS_TYPE) != null ? CredentialsType.valueOf(getStrValue(jo, DataConstants.CREDENTIALS_TYPE, false)) : CredentialsType.ACCESS_TOKEN)
+                .setCredentialsDataProto(CredentialsDataProto.newBuilder()
+                        .setValidateDeviceTokenRequestMsg(ValidateDeviceTokenRequestMsg.newBuilder().setToken(getStrValue(jo, DataConstants.TOKEN, false)).build())
+                        .setValidateBasicMqttCredRequestMsg(ValidateBasicMqttCredRequestMsg.newBuilder()
+                                .setClientId(getStrValue(jo, DataConstants.CLIENT_ID, false))
+                                .setUserName(getStrValue(jo, DataConstants.USERNAME, false))
+                                .setPassword(getStrValue(jo, DataConstants.PASSWORD, false))
+                                .build())
+                        .setValidateDeviceX509CertRequestMsg(ValidateDeviceX509CertRequestMsg.newBuilder()
+                                .setHash(getStrValue(jo, DataConstants.HASH, false)).build())
+                        .build())
+                .setProvisionDeviceCredentialsMsg(buildProvisionDeviceCredentialsMsg(
+                        getStrValue(jo, DataConstants.PROVISION_KEY, true),
+                        getStrValue(jo, DataConstants.PROVISION_SECRET, true)))
+                .build();
+    }
+
+    private static ProvisionDeviceCredentialsMsg buildProvisionDeviceCredentialsMsg(String provisionKey, String provisionSecret) {
+        return ProvisionDeviceCredentialsMsg.newBuilder()
+                .setProvisionDeviceKey(provisionKey)
+                .setProvisionDeviceSecret(provisionSecret)
+                .build();
+    }
+
+
+    private static String getStrValue(JsonObject jo, String field, boolean requiredField) {
+        if (jo.has(field)) {
+            return jo.get(field).getAsString();
+        } else {
+            if (requiredField) {
+                throw new RuntimeException("Failed to find the field " + field + " in JSON body " + jo + "!");
+            }
+            return "";
+        }
+    }
 }

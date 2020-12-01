@@ -63,7 +63,7 @@ import { forkJoin, Observable, of, ReplaySubject, Subject, throwError } from 'rx
 import { CancelAnimationFrame } from '@core/services/raf.service';
 import { EntityType } from '@shared/models/entity-type.models';
 import { alarmFields } from '@shared/models/alarm.models';
-import { createLabelFromDatasource, deepClone, getDescendantProp, isDefined, isEqual } from '@core/utils';
+import { createLabelFromDatasource, deepClone, getDescendantProp, isDefined, isDefinedAndNotNull, isEqual } from '@core/utils';
 import { EntityId } from '@app/shared/models/id/entity-id';
 import * as moment_ from 'moment';
 import { emptyPageData, PageData } from '@shared/models/page/page-data';
@@ -420,7 +420,7 @@ export class WidgetSubscription implements IWidgetSubscription {
         configDatasource: datasource,
         configDatasourceIndex: index,
         dataLoaded: (pageData, data1, datasourceIndex, pageLink) => {
-          this.dataLoaded(pageData, data1, datasourceIndex, pageLink, true)
+          this.dataLoaded(pageData, data1, datasourceIndex, pageLink, true);
         },
         initialPageDataChanged: this.initialPageDataChanged.bind(this),
         dataUpdated: this.dataUpdated.bind(this),
@@ -592,7 +592,7 @@ export class WidgetSubscription implements IWidgetSubscription {
 
   updateDataVisibility(index: number): void {
     if (this.displayLegend) {
-      const hidden = this.legendData.keys[index].dataKey.hidden;
+      const hidden = this.legendData.keys.find(key => key.dataIndex === index).dataKey.hidden;
       if (hidden) {
         this.hiddenData[index].data = this.data[index].data;
         this.data[index].data = [];
@@ -821,7 +821,7 @@ export class WidgetSubscription implements IWidgetSubscription {
         configDatasourceIndex: datasourceIndex,
         subscriptionTimewindow: this.subscriptionTimewindow,
         dataLoaded: (pageData, data1, datasourceIndex1, pageLink1) => {
-          this.dataLoaded(pageData, data1, datasourceIndex1, pageLink1, true)
+          this.dataLoaded(pageData, data1, datasourceIndex1, pageLink1, true);
         },
         dataUpdated: this.dataUpdated.bind(this),
         updateRealtimeSubscription: () => {
@@ -977,8 +977,8 @@ export class WidgetSubscription implements IWidgetSubscription {
 
   private updateAlarmDataSubscription() {
     if (this.alarmDataListener) {
-      const pageLink = this.alarmDataListener.subscription.alarmDataSubscriptionOptions.pageLink;
-      const keyFilters = this.alarmDataListener.subscription.alarmDataSubscriptionOptions.additionalKeyFilters;
+      const pageLink = this.alarmDataListener.alarmDataSubscriptionOptions.pageLink;
+      const keyFilters = this.alarmDataListener.alarmDataSubscriptionOptions.additionalKeyFilters;
       this.subscribeForAlarms(pageLink, keyFilters);
     }
   }
@@ -1272,7 +1272,7 @@ export class WidgetSubscription implements IWidgetSubscription {
         this.onSubscriptionMessage({
           severity: 'warn',
           message
-        })
+        });
       }
     }
     if (isUpdate) {
@@ -1349,9 +1349,6 @@ export class WidgetSubscription implements IWidgetSubscription {
         });
       });
     }
-    if (this.displayLegend) {
-      this.legendData.keys = this.legendData.keys.sort((key1, key2) => key1.dataKey.label.localeCompare(key2.dataKey.label));
-    }
     if (this.caulculateLegendData) {
       this.data.forEach((dataSetHolder, keyIndex) => {
         this.updateLegend(keyIndex, dataSetHolder.data, false);
@@ -1364,6 +1361,7 @@ export class WidgetSubscription implements IWidgetSubscription {
     return datasource.dataKeys.map((dataKey, keyIndex) => {
       dataKey.hidden = !!dataKey.settings.hideDataByDefault;
       dataKey.inLegend = !dataKey.settings.removeFromLegend;
+      dataKey.label = this.ctx.utils.customTranslation(dataKey.label, dataKey.label);
       if (this.comparisonEnabled && dataKey.isAdditional && dataKey.settings.comparisonSettings.comparisonValuesLabel) {
          dataKey.label = createLabelFromDatasource(datasource, dataKey.settings.comparisonSettings.comparisonValuesLabel);
       } else {
@@ -1397,10 +1395,10 @@ export class WidgetSubscription implements IWidgetSubscription {
     const configuredDatasource = this.configuredDatasources[datasourceIndex];
     const startIndex = configuredDatasource.dataKeyStartIndex;
     const dataKeysCount = configuredDatasource.dataKeys.length;
-    const index = startIndex + dataIndex*dataKeysCount + dataKeyIndex;
+    const index = startIndex + dataIndex * dataKeysCount + dataKeyIndex;
     let update = true;
     let currentData: DataSetHolder;
-    if (this.displayLegend && this.legendData.keys[index].dataKey.hidden) {
+    if (this.displayLegend && this.legendData.keys.find(key => key.dataIndex === index).dataKey.hidden) {
       currentData = this.hiddenData[index];
     } else {
       currentData = this.data[index];
@@ -1454,8 +1452,8 @@ export class WidgetSubscription implements IWidgetSubscription {
   }
 
   private updateLegend(dataIndex: number, data: DataSet, detectChanges: boolean) {
-    const dataKey = this.legendData.keys[dataIndex].dataKey;
-    const decimals = isDefined(dataKey.decimals) ? dataKey.decimals : this.decimals;
+    const dataKey = this.legendData.keys.find(key => key.dataIndex === dataIndex).dataKey;
+    const decimals = isDefinedAndNotNull(dataKey.decimals) ? dataKey.decimals : this.decimals;
     const units = dataKey.units && dataKey.units.length ? dataKey.units : this.units;
     const legendKeyData = this.legendData.data[dataIndex];
     if (this.legendConfig.showMin) {

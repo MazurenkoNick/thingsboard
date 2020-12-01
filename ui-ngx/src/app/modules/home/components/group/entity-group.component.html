@@ -45,6 +45,12 @@
   </button>
   <button mat-raised-button color="primary"
           [disabled]="(isLoading$ | async)"
+          (click)="onEntityAction($event, 'share')"
+          [fxShow]="!isEdit && shareEnabled">
+    {{'entity-group.share' | translate }}
+  </button>
+  <button mat-raised-button color="primary"
+          [disabled]="(isLoading$ | async)"
           (click)="onEntityAction($event, 'makePublic')"
           [fxShow]="!isEdit && makePublicEnabled">
     {{'entity-group.make-public' | translate }}
@@ -75,7 +81,7 @@
     <fieldset [disabled]="(isLoading$ | async) || !isEdit">
       <mat-form-field class="mat-block">
         <mat-label translate>entity-group.name</mat-label>
-        <input matInput formControlName="name" required>
+        <input matInput formControlName="name" required [readonly]="isGroupAll">
         <mat-error *ngIf="entityForm.get('name').hasError('required')">
           {{ 'entity-group.name-required' | translate }}
         </mat-error>

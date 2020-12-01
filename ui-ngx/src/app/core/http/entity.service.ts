@@ -29,60 +29,60 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { Injectable } from '@angular/core';
-import { EMPTY, forkJoin, Observable, of, throwError } from 'rxjs';
-import { HttpClient } from '@angular/common/http';
-import { PageLink, TimePageLink } from '@shared/models/page/page-link';
-import { AliasEntityType, EntityType } from '@shared/models/entity-type.models';
-import { BaseData } from '@shared/models/base-data';
-import { EntityId } from '@shared/models/id/entity-id';
-import { DeviceService } from '@core/http/device.service';
-import { TenantService } from '@core/http/tenant.service';
-import { CustomerService } from '@core/http/customer.service';
-import { UserService } from './user.service';
-import { DashboardService } from '@core/http/dashboard.service';
-import { Direction } from '@shared/models/page/sort-order';
-import { PageData } from '@shared/models/page/page-data';
-import { getCurrentAuthUser } from '@core/auth/auth.selectors';
-import { Store } from '@ngrx/store';
-import { AppState } from '@core/core.state';
-import { Authority } from '@shared/models/authority.enum';
-import { Tenant } from '@shared/models/tenant.model';
-import { catchError, concatMap, expand, map, mergeMap, toArray } from 'rxjs/operators';
-import { Customer } from '@app/shared/models/customer.model';
-import { AssetService } from '@core/http/asset.service';
-import { EntityViewService } from '@core/http/entity-view.service';
-import { AttributeScope, DataKeyType } from '@shared/models/telemetry/telemetry.models';
-import { defaultHttpOptionsFromConfig, RequestConfig } from '@core/http/http-utils';
-import { RuleChainService } from '@core/http/rule-chain.service';
-import { AliasInfo, StateParams, SubscriptionInfo } from '@core/api/widget-api.models';
-import { Datasource, DatasourceType, KeyInfo } from '@app/shared/models/widget.models';
-import { UtilsService } from '@core/services/utils.service';
-import { AliasFilterType, EntityAlias, EntityAliasFilter, EntityAliasFilterResult } from '@shared/models/alias.models';
-import { entityFields, EntityInfo, ImportEntitiesResultInfo, ImportEntityData } from '@shared/models/entity.models';
-import { EntityRelationService } from '@core/http/entity-relation.service';
-import { deepClone, isDefined, isDefinedAndNotNull } from '@core/utils';
-import { Asset } from '@shared/models/asset.models';
-import { Device, DeviceCredentialsType } from '@shared/models/device.models';
-import { EntityView } from '@shared/models/entity-view.models';
-import { AttributeService } from '@core/http/attribute.service';
-import { ConverterService } from '@core/http/converter.service';
-import { IntegrationService } from '@core/http/integration.service';
-import { SchedulerEventService } from '@core/http/scheduler-event.service';
-import { BlobEntityService } from '@core/http/blob-entity.service';
-import { RoleService } from '@core/http/role.service';
-import { EntityGroupService } from '@core/http/entity-group.service';
-import { Dashboard } from '@shared/models/dashboard.models';
-import { User } from '@shared/models/user.model';
-import { RuleChain } from '@shared/models/rule-chain.models';
-import { Converter } from '@shared/models/converter.models';
-import { Integration } from '@shared/models/integration.models';
-import { SchedulerEvent } from '@shared/models/scheduler-event.models';
-import { Role } from '@shared/models/role.models';
-import { UserPermissionsService } from '@core/http/user-permissions.service';
-import { Operation, resourceByEntityType, RoleType } from '@shared/models/security.models';
-import { EntityGroup } from '@shared/models/entity-group.models';
-import { CustomerId } from '@shared/models/id/customer-id';
+import {Injectable} from '@angular/core';
+import {EMPTY, forkJoin, Observable, of, throwError} from 'rxjs';
+import {HttpClient} from '@angular/common/http';
+import {PageLink, TimePageLink} from '@shared/models/page/page-link';
+import {AliasEntityType, EntityType} from '@shared/models/entity-type.models';
+import {BaseData} from '@shared/models/base-data';
+import {EntityId} from '@shared/models/id/entity-id';
+import {DeviceService} from '@core/http/device.service';
+import {TenantService} from '@core/http/tenant.service';
+import {CustomerService} from '@core/http/customer.service';
+import {UserService} from './user.service';
+import {DashboardService} from '@core/http/dashboard.service';
+import {Direction} from '@shared/models/page/sort-order';
+import {PageData} from '@shared/models/page/page-data';
+import {getCurrentAuthUser} from '@core/auth/auth.selectors';
+import {Store} from '@ngrx/store';
+import {AppState} from '@core/core.state';
+import {Authority} from '@shared/models/authority.enum';
+import {Tenant} from '@shared/models/tenant.model';
+import {catchError, concatMap, expand, map, mergeMap, toArray} from 'rxjs/operators';
+import {Customer} from '@app/shared/models/customer.model';
+import {AssetService} from '@core/http/asset.service';
+import {EntityViewService} from '@core/http/entity-view.service';
+import {AttributeScope, DataKeyType} from '@shared/models/telemetry/telemetry.models';
+import {defaultHttpOptionsFromConfig, RequestConfig} from '@core/http/http-utils';
+import {RuleChainService} from '@core/http/rule-chain.service';
+import {AliasInfo, StateParams, SubscriptionInfo} from '@core/api/widget-api.models';
+import {Datasource, DatasourceType, KeyInfo} from '@app/shared/models/widget.models';
+import {UtilsService} from '@core/services/utils.service';
+import {AliasFilterType, EntityAlias, EntityAliasFilter, EntityAliasFilterResult} from '@shared/models/alias.models';
+import {entityFields, EntityInfo, ImportEntitiesResultInfo, ImportEntityData} from '@shared/models/entity.models';
+import {EntityRelationService} from '@core/http/entity-relation.service';
+import {deepClone, isDefined, isDefinedAndNotNull} from '@core/utils';
+import {Asset} from '@shared/models/asset.models';
+import {Device, DeviceCredentialsType} from '@shared/models/device.models';
+import {EntityView} from '@shared/models/entity-view.models';
+import {AttributeService} from '@core/http/attribute.service';
+import {ConverterService} from '@core/http/converter.service';
+import {IntegrationService} from '@core/http/integration.service';
+import {SchedulerEventService} from '@core/http/scheduler-event.service';
+import {BlobEntityService} from '@core/http/blob-entity.service';
+import {RoleService} from '@core/http/role.service';
+import {EntityGroupService} from '@core/http/entity-group.service';
+import {Dashboard} from '@shared/models/dashboard.models';
+import {User} from '@shared/models/user.model';
+import {RuleChain} from '@shared/models/rule-chain.models';
+import {Converter} from '@shared/models/converter.models';
+import {Integration} from '@shared/models/integration.models';
+import {SchedulerEvent} from '@shared/models/scheduler-event.models';
+import {Role} from '@shared/models/role.models';
+import {UserPermissionsService} from '@core/http/user-permissions.service';
+import {Operation, resourceByEntityType, RoleType} from '@shared/models/security.models';
+import {EntityGroup} from '@shared/models/entity-group.models';
+import {CustomerId} from '@shared/models/id/customer-id';
 import {
   AlarmData,
   AlarmDataQuery,
@@ -95,11 +95,12 @@ import {
   entityInfoFields,
   EntityKey,
   EntityKeyType,
+  EntityKeyValueType,
   FilterPredicateType,
   singleEntityDataPageLink,
   StringOperation
 } from '@shared/models/query/query.models';
-import { alarmFields } from '@shared/models/alarm.models';
+import {alarmFields} from '@shared/models/alarm.models';
 
 @Injectable({
   providedIn: 'root'
@@ -127,7 +128,8 @@ export class EntityService {
     private entityGroupService: EntityGroupService,
     private userPermissionsService: UserPermissionsService,
     private utils: UtilsService
-  ) { }
+  ) {
+  }
 
   private getEntityObservable(entityType: EntityType, entityId: string,
                               config?: RequestConfig): Observable<BaseData<EntityId>> {
@@ -170,7 +172,7 @@ export class EntityService {
         break;
       case EntityType.INTEGRATION:
         observable = this.integrationService.getIntegration(entityId, config);
-        break
+        break;
       case EntityType.SCHEDULER_EVENT:
         observable = this.schedulerEventService.getSchedulerEventInfo(entityId, config);
         break;
@@ -552,7 +554,7 @@ export class EntityService {
   }
 
   private getEntityGroupEntitiesByPageLink(entityGroupId: string, pageLink: PageLink, entityGroupType: EntityType,
-                                          config?: RequestConfig): Observable<Array<BaseData<EntityId>>> {
+                                           config?: RequestConfig): Observable<Array<BaseData<EntityId>>> {
     const entitiesObservable: Observable<PageData<BaseData<EntityId>>> =
       this.entityGroupService.getEntityGroupEntities(entityGroupId, pageLink, entityGroupType, config);
     if (entitiesObservable) {
@@ -612,7 +614,7 @@ export class EntityService {
           }
           return this.entityGroupService.getEntityGroupsByOwnerId(entityId.entityType as EntityType, entityId.id, entityType, config);
         }),
-        catchError((err) => {
+        catchError(() => {
           return of(null);
         })
       );
@@ -675,6 +677,7 @@ export class EntityService {
       keyFilters: searchText && searchText.length ? [
         {
           key: nameField,
+          valueType: EntityKeyValueType.STRING,
           predicate: {
             type: FilterPredicateType.STRING,
             operation: StringOperation.STARTS_WITH,
@@ -904,10 +907,10 @@ export class EntityService {
     return entityTypes;
   }
 
-  private getEntityFieldKeys (entityType: EntityType, searchText: string): Array<string> {
+  private getEntityFieldKeys(entityType: EntityType, searchText: string): Array<string> {
     const entityFieldKeys: string[] = [entityFields.createdTime.keyName];
     const query = searchText.toLowerCase();
-    switch(entityType) {
+    switch (entityType) {
       case EntityType.USER:
         entityFieldKeys.push(entityFields.name.keyName);
         entityFieldKeys.push(entityFields.email.keyName);
@@ -951,6 +954,9 @@ export class EntityService {
         entityFieldKeys.push(entityFields.name.keyName);
         entityFieldKeys.push(entityFields.type.keyName);
         break;
+      case EntityType.API_USAGE_STATE:
+        entityFieldKeys.push(entityFields.name.keyName);
+        break;
     }
     return query ? entityFieldKeys.filter((entityField) => entityField.toLowerCase().indexOf(query) === 0) : entityFieldKeys;
   }
@@ -985,9 +991,9 @@ export class EntityService {
             } else {
               return dataKeys;
             }
-           }
+          }
         )
-    );
+      );
   }
 
   public createDatasourcesFromSubscriptionsInfo(subscriptionsInfo: Array<SubscriptionInfo>): Array<Datasource> {
@@ -1085,6 +1091,9 @@ export class EntityService {
       case AliasFilterType.entitiesByGroupName:
         result.stateEntity = filter.groupStateEntity;
         result.entityFilter = deepClone(filter);
+        if (stateEntityId && (stateEntityId.entityType === EntityType.TENANT || stateEntityId.entityType === EntityType.CUSTOMER)) {
+          result.entityFilter.ownerId = stateEntityId;
+        }
         return of(result);
       case AliasFilterType.stateEntity:
         result.stateEntity = true;
@@ -1111,6 +1120,9 @@ export class EntityService {
         result.entityFilter = deepClone(filter);
         return of(result);
       case AliasFilterType.entityViewType:
+        result.entityFilter = deepClone(filter);
+        return of(result);
+      case AliasFilterType.apiUsageState:
         result.entityFilter = deepClone(filter);
         return of(result);
       case AliasFilterType.relationsQuery:
@@ -1207,20 +1219,35 @@ export class EntityService {
       mergeMap((entity) => {
         return this.saveEntityData(entity.id, entityData, config).pipe(
           map(() => {
-            return { create: { entity: 1 } } as ImportEntitiesResultInfo;
+            return {create: {entity: 1}} as ImportEntitiesResultInfo;
           }),
-          catchError(err => of({ error: { entity: 1 } } as ImportEntitiesResultInfo))
+          catchError(err => of({error: {entity: 1}} as ImportEntitiesResultInfo))
         );
       }),
       catchError(err => {
         if (update) {
           let findEntityObservable: Observable<BaseData<EntityId>>;
+          const authUser = getCurrentAuthUser(this.store);
           switch (entityType) {
             case EntityType.DEVICE:
-              findEntityObservable = this.deviceService.findByName(entityData.name, config);
+              if (authUser.authority === Authority.TENANT_ADMIN) {
+                findEntityObservable = this.deviceService.findByName(entityData.name, config);
+              } else {
+                const pageLink = new PageLink(1, null, entityData.name);
+                findEntityObservable = this.deviceService.getUserDevices(pageLink, '', config).pipe(
+                  map(data => data.data[0])
+                );
+              }
               break;
             case EntityType.ASSET:
-              findEntityObservable = this.assetService.findByName(entityData.name, config);
+              if (authUser.authority === Authority.TENANT_ADMIN) {
+                findEntityObservable = this.assetService.findByName(entityData.name, config);
+              } else {
+                const pageLink = new PageLink(1, null, entityData.name);
+                findEntityObservable = this.assetService.getUserAssets(pageLink, '', config).pipe(
+                  map(data => data.data[0])
+                );
+              }
               break;
           }
           return findEntityObservable.pipe(
@@ -1228,10 +1255,10 @@ export class EntityService {
               const tasks: Observable<any>[] = [];
               const result: Device | Asset = entity as (Device | Asset);
               const additionalInfo = result.additionalInfo || {};
-              if(result.label !== entityData.label ||
-                 result.type !== entityData.type ||
-                 additionalInfo.description !== entityData.description ||
-                 (result.id.entityType === EntityType.DEVICE && (additionalInfo.gateway !== entityData.gateway)) ) {
+              if (result.label !== entityData.label ||
+                result.type !== entityData.type ||
+                additionalInfo.description !== entityData.description ||
+                (result.id.entityType === EntityType.DEVICE && (additionalInfo.gateway !== entityData.gateway))) {
                 result.label = entityData.label;
                 result.type = entityData.type;
                 result.additionalInfo = additionalInfo;
@@ -1251,15 +1278,15 @@ export class EntityService {
               tasks.push(this.saveEntityData(entity.id, entityData, config));
               return forkJoin(tasks).pipe(
                 map(() => {
-                  return { update: { entity: 1 } } as ImportEntitiesResultInfo;
+                  return {update: {entity: 1}} as ImportEntitiesResultInfo;
                 }),
-                catchError(updateError => of({ error: { entity: 1 } } as ImportEntitiesResultInfo))
+                catchError(updateError => of({error: {entity: 1}} as ImportEntitiesResultInfo))
               );
             }),
-            catchError(findErr => of({ error: { entity: 1 } } as ImportEntitiesResultInfo))
+            catchError(findErr => of({error: {entity: 1}} as ImportEntitiesResultInfo))
           );
         } else {
-          return of({ error: { entity: 1 } } as ImportEntitiesResultInfo);
+          return of({error: {entity: 1}} as ImportEntitiesResultInfo);
         }
       })
     );
@@ -1321,7 +1348,7 @@ export class EntityService {
     }
   }
 
-  private getStateEntityInfo(filter: EntityAliasFilter, stateParams: StateParams): {entityId: EntityId, entityGroupType: EntityType} {
+  private getStateEntityInfo(filter: EntityAliasFilter, stateParams: StateParams): { entityId: EntityId, entityGroupType: EntityType } {
     let entityId: EntityId = null;
     let entityGroupType: EntityType = null;
     if (stateParams) {
@@ -1363,16 +1390,16 @@ export class EntityService {
       if (authUser.authority === Authority.CUSTOMER_USER) {
         entityId.id = authUser.customerId;
       }
-    } else if (entityType === AliasEntityType.CURRENT_TENANT){
-      const authUser =  getCurrentAuthUser(this.store);
+    } else if (entityType === AliasEntityType.CURRENT_TENANT) {
+      const authUser = getCurrentAuthUser(this.store);
       entityId.entityType = EntityType.TENANT;
       entityId.id = authUser.tenantId;
-    } else if (entityType === AliasEntityType.CURRENT_USER){
-      const authUser =  getCurrentAuthUser(this.store);
+    } else if (entityType === AliasEntityType.CURRENT_USER) {
+      const authUser = getCurrentAuthUser(this.store);
       entityId.entityType = EntityType.USER;
       entityId.id = authUser.userId;
-    } else if (entityType === AliasEntityType.CURRENT_USER_OWNER){
-      const authUser =  getCurrentAuthUser(this.store);
+    } else if (entityType === AliasEntityType.CURRENT_USER_OWNER) {
+      const authUser = getCurrentAuthUser(this.store);
       if (authUser.authority === Authority.TENANT_ADMIN) {
         entityId.entityType = EntityType.TENANT;
         entityId.id = authUser.tenantId;

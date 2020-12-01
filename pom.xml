@@ -54,12 +54,11 @@
         <pkg.installFolder>/usr/share/${pkg.name}</pkg.installFolder>
         <pkg.copyLicenseResources>false</pkg.copyLicenseResources>
         <pkg.controlScriptsFolder>control</pkg.controlScriptsFolder>
-        <spring-boot.version>2.2.6.RELEASE</spring-boot.version>
-        <spring-oauth2.version>2.1.2.RELEASE</spring-oauth2.version>
-        <spring.version>5.2.6.RELEASE</spring.version>
-        <spring-security.version>5.2.3.RELEASE</spring-security.version>
-        <spring-data-redis.version>2.2.4.RELEASE</spring-data-redis.version>
-        <jedis.version>3.1.0</jedis.version>
+        <spring-boot.version>2.3.5.RELEASE</spring-boot.version>
+        <spring.version>5.2.10.RELEASE</spring.version>
+        <spring-security.version>5.4.1</spring-security.version>
+        <spring-data-redis.version>2.4.1</spring-data-redis.version>
+        <jedis.version>3.3.0</jedis.version>
         <jjwt.version>0.7.0</jjwt.version>
         <json-path.version>2.2.0</json-path.version>
         <junit.version>4.12</junit.version>
@@ -70,6 +69,7 @@
         <cassandra.version>4.6.0</cassandra.version>
         <metrics.version>4.0.5</metrics.version>
         <cassandra-unit.version>4.3.1.0</cassandra-unit.version>
+        <cassandra-all.version>3.11.9</cassandra-all.version>
         <takari-cpsuite.version>1.2.7</takari-cpsuite.version>
         <guava.version>28.2-jre</guava.version>
         <caffeine.version>2.6.1</caffeine.version>
@@ -77,10 +77,10 @@
         <commons-io.version>2.5</commons-io.version>
         <commons-csv.version>1.4</commons-csv.version>
         <commons-codec.version>1.11</commons-codec.version>
-        <jackson.version>2.10.2</jackson.version>
-        <jackson-dataformat-cbor.version>2.10.2</jackson-dataformat-cbor.version>
-        <jackson-annotations.version>2.10.2</jackson-annotations.version>
-        <jackson-core.version>2.10.2</jackson-core.version>
+        <jackson.version>2.11.3</jackson.version>
+        <jackson-dataformat-cbor.version>2.11.3</jackson-dataformat-cbor.version>
+        <jackson-annotations.version>2.11.3</jackson-annotations.version>
+        <jackson-core.version>2.11.3</jackson-core.version>
         <json-schema-validator.version>2.2.6</json-schema-validator.version>
         <californium.version>1.0.2</californium.version>
         <milo.client.version>0.2.4</milo.client.version>
@@ -93,7 +93,7 @@
         <grpc.version>1.22.1</grpc.version>
         <lombok.version>1.16.18</lombok.version>
         <paho.client.version>1.2.4</paho.client.version>
-        <netty.version>4.1.49.Final</netty.version>
+        <netty.version>4.1.53.Final</netty.version>
         <os-maven-plugin.version>1.5.0</os-maven-plugin.version>
         <rabbitmq.version>4.8.0</rabbitmq.version>
         <surfire.version>2.19.1</surfire.version>
@@ -120,10 +120,10 @@
         <bucket4j.version>4.1.1</bucket4j.version>
         <fst.version>2.57</fst.version>
         <antlr.version>2.7.7</antlr.version>
-        <snakeyaml.version>1.25</snakeyaml.version>
-        <amazonaws.sqs.version>1.11.747</amazonaws.sqs.version>
+        <snakeyaml.version>1.27</snakeyaml.version>
         <amazon-kinesis-producer>0.13.1</amazon-kinesis-producer>
         <amazon-kinesis-client>2.2.4-TB</amazon-kinesis-client>
+        <aws.sdk.version>1.11.747</aws.sdk.version>
         <pubsub.client.version>1.105.0</pubsub.client.version>
         <azure-servicebus.version>3.2.0</azure-servicebus.version>
         <passay.version>1.5.0</passay.version>
@@ -135,6 +135,9 @@
         <amazon-kinesis-client>2.2.4-TB</amazon-kinesis-client>
         <java-websocket.version>1.5.0</java-websocket.version>
         <micrometer.version>1.5.2</micrometer.version>
+        <protobuf-dynamic.version>1.0.2TB</protobuf-dynamic.version>
+        <wire-schema.version>3.4.0</wire-schema.version>
+        <twilio.version>7.54.2</twilio.version>
     </properties>
 
     <modules>
@@ -808,6 +811,8 @@
                             <exclude>src/browserslist</exclude>
                             <exclude>**/*.raw</exclude>
                             <exclude>docker/**</exclude>
+                            <exclude>**/apache/cassandra/io/**</exclude>
+                            <exclude>.run/**</exclude>
                         </excludes>
                         <mapping>
                             <proto>JAVADOC_STYLE</proto>
@@ -900,6 +905,11 @@
             <dependency>
                 <groupId>org.thingsboard.common.integration</groupId>
                 <artifactId>kafka-integrations</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.thingsboard.common.integration</groupId>
+                <artifactId>rabbitmq-integrations</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -1011,11 +1021,6 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-starter-security</artifactId>
                 <version>${spring-boot.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.springframework.cloud</groupId>
-                <artifactId>spring-cloud-starter-oauth2</artifactId>
-                <version>${spring-oauth2.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.springframework.security</groupId>
@@ -1351,6 +1356,11 @@
                 <scope>test</scope>
             </dependency>
             <dependency>
+                <groupId>org.apache.cassandra</groupId>
+                <artifactId>cassandra-all</artifactId>
+                <version>${cassandra-all.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>junit</groupId>
                 <artifactId>junit</artifactId>
                 <version>${junit.version}</version>
@@ -1486,7 +1496,12 @@
             <dependency>
                 <groupId>com.amazonaws</groupId>
                 <artifactId>aws-java-sdk-sqs</artifactId>
-                <version>${amazonaws.sqs.version}</version>
+                <version>${aws.sdk.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.amazonaws</groupId>
+                <artifactId>aws-java-sdk-sns</artifactId>
+                <version>${aws.sdk.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.google.cloud</groupId>
@@ -1570,6 +1585,35 @@
                 <groupId>io.micrometer</groupId>
                 <artifactId>micrometer-registry-prometheus</artifactId>
                 <version>${micrometer.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.thingsboard</groupId>
+                <artifactId>protobuf-dynamic</artifactId>
+                <version>${protobuf-dynamic.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.squareup.wire</groupId>
+                <artifactId>wire-schema</artifactId>
+                <version>${wire-schema.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.twilio.sdk</groupId>
+                <artifactId>twilio</artifactId>
+                <version>${twilio.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>io.jsonwebtoken</groupId>
+                        <artifactId>jjwt-api</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>io.jsonwebtoken</groupId>
+                        <artifactId>jjwt-jackson</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>io.jsonwebtoken</groupId>
+                        <artifactId>jjwt-impl</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
         </dependencies>
     </dependencyManagement>

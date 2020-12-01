@@ -79,11 +79,13 @@ export enum Resource {
   ADMIN_SETTINGS = 'ADMIN_SETTINGS',
   ALARM = 'ALARM',
   DEVICE = 'DEVICE',
+  DEVICE_PROFILE = 'DEVICE_PROFILE',
   ASSET = 'ASSET',
   CUSTOMER = 'CUSTOMER',
   DASHBOARD = 'DASHBOARD',
   ENTITY_VIEW = 'ENTITY_VIEW',
   TENANT = 'TENANT',
+  TENANT_PROFILE = 'TENANT_PROFILE',
   RULE_CHAIN = 'RULE_CHAIN',
   USER = 'USER',
   WIDGETS_BUNDLE = 'WIDGETS_BUNDLE',
@@ -101,7 +103,8 @@ export enum Resource {
   ROLE = 'ROLE',
   GROUP_PERMISSION = 'GROUP_PERMISSION',
   WHITE_LABELING = 'WHITE_LABELING',
-  AUDIT_LOG = 'AUDIT_LOG'
+  AUDIT_LOG = 'AUDIT_LOG',
+  API_USAGE_STATE = 'API_USAGE_STATE'
 }
 
 const resourceTypeTranslations = new Map<Resource, string>();
@@ -114,11 +117,13 @@ export const resourceByEntityType = new Map<EntityType, Resource>(
   [
     [EntityType.ALARM, Resource.ALARM],
     [EntityType.DEVICE, Resource.DEVICE],
+    [EntityType.DEVICE_PROFILE, Resource.DEVICE_PROFILE],
     [EntityType.ASSET, Resource.ASSET],
     [EntityType.CUSTOMER, Resource.CUSTOMER],
     [EntityType.DASHBOARD, Resource.DASHBOARD],
     [EntityType.ENTITY_VIEW, Resource.ENTITY_VIEW],
     [EntityType.TENANT, Resource.TENANT],
+    [EntityType.TENANT_PROFILE, Resource.TENANT_PROFILE],
     [EntityType.RULE_CHAIN, Resource.RULE_CHAIN],
     [EntityType.USER, Resource.USER],
     [EntityType.WIDGETS_BUNDLE, Resource.WIDGETS_BUNDLE],
@@ -140,6 +145,16 @@ export const groupResourceByGroupType = new Map<EntityType, Resource>(
     [EntityType.USER, Resource.USER_GROUP],
     [EntityType.ENTITY_VIEW, Resource.ENTITY_VIEW_GROUP],
     [EntityType.DASHBOARD, Resource.DASHBOARD_GROUP]
+  ]
+);
+
+export const sharableGroupTypes = new Set<EntityType>(
+  [
+    EntityType.CUSTOMER,
+    EntityType.ASSET,
+    EntityType.DEVICE,
+    EntityType.ENTITY_VIEW,
+    EntityType.DASHBOARD
   ]
 );
 

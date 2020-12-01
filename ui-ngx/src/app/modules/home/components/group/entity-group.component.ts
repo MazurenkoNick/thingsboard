@@ -38,7 +38,7 @@ import { ActionNotificationShow } from '@core/notification/notification.actions'
 import { TranslateService } from '@ngx-translate/core';
 import { EntityTableConfig } from '@home/models/entity/entities-table-config.models';
 import { EntityGroupInfo } from '@shared/models/entity-group.models';
-import { Operation, publicGroupTypes } from '@shared/models/security.models';
+import { Operation, publicGroupTypes, Resource, sharableGroupTypes } from '@shared/models/security.models';
 import { UserPermissionsService } from '@core/http/user-permissions.service';
 
 @Component({
@@ -49,8 +49,10 @@ import { UserPermissionsService } from '@core/http/user-permissions.service';
 export class EntityGroupComponent extends EntityComponent<EntityGroupInfo> {
 
   isPublic = false;
+  shareEnabled = false;
   makePublicEnabled = false;
   makePrivateEnabled = false;
+  isGroupAll = false;
 
   constructor(protected store: Store<AppState>,
               protected translate: TranslateService,
@@ -106,16 +108,22 @@ export class EntityGroupComponent extends EntityComponent<EntityGroupInfo> {
     if (entityGroup) {
       if (entityGroup.id) {
         const isPublicGroupType = publicGroupTypes.has(entityGroup.type);
+        const isSharableGroupType = sharableGroupTypes.has(entityGroup.type);
         const isPublic: boolean = entityGroup.additionalInfo?.isPublic;
         const isOwned = this.userPermissionsService.isDirectlyOwnedGroup(entityGroup);
         const isWriteAllowed = this.userPermissionsService.hasEntityGroupPermission(Operation.WRITE, entityGroup);
+        const isCreatePermissionAllowed = this.userPermissionsService.hasGenericPermission(Resource.GROUP_PERMISSION, Operation.CREATE);
         this.isPublic = isPublic;
+        this.shareEnabled = isSharableGroupType && isCreatePermissionAllowed && isWriteAllowed;
         this.makePublicEnabled = isPublicGroupType && !isPublic && isOwned && isWriteAllowed;
         this.makePrivateEnabled = isPublicGroupType && isPublic && isOwned && isWriteAllowed;
+        this.isGroupAll = entityGroup.groupAll;
       } else {
         this.isPublic = false;
+        this.shareEnabled = false;
         this.makePublicEnabled = false;
         this.makePrivateEnabled = false;
+        this.isGroupAll = false;
       }
     }
   }

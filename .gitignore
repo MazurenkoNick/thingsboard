@@ -34,3 +34,5 @@ pom.xml.versionsBackup
 .instance_id
 instance-license.data
 rebuild-docker.sh
+.run/**
+.run

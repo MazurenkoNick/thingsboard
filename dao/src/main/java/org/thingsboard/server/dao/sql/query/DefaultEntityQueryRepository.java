@@ -307,6 +307,8 @@ public class DefaultEntityQueryRepository implements EntityQueryRepository {
 
     public static final String ATTR_READ_FLAG = "attr_read";
     public static final String TS_READ_FLAG = "ts_read";
+    private static final String SELECT_API_USAGE_STATE = "(select aus.id, aus.created_time, aus.tenant_id, '13814000-1dd2-11b2-8080-808080808080'::uuid as customer_id, " +
+            "(select title from tenant where id = aus.tenant_id) as name from api_usage_state as aus)";
 
     static {
         entityTableMap.put(EntityType.ENTITY_GROUP, "entity_group");
@@ -322,6 +324,7 @@ public class DefaultEntityQueryRepository implements EntityQueryRepository {
         entityTableMap.put(EntityType.SCHEDULER_EVENT, "scheduler_event");
         entityTableMap.put(EntityType.BLOB_ENTITY, "blob_entity");
         entityTableMap.put(EntityType.ROLE, "role");
+        entityTableMap.put(EntityType.API_USAGE_STATE, SELECT_API_USAGE_STATE);
     }
 
     public static EntityType[] RELATION_QUERY_ENTITY_TYPES = new EntityType[]{
@@ -360,9 +363,9 @@ public class DefaultEntityQueryRepository implements EntityQueryRepository {
             " INNER JOIN related_entities re ON" +
             " r.$in_id = re.$out_id and r.$in_type = re.$out_type and" +
             " relation_type_group = 'COMMON' %s)" +
-            " SELECT re.$out_id entity_id, re.$out_type entity_type, re.lvl lvl" +
+            " SELECT re.$out_id entity_id, re.$out_type entity_type, max(re.lvl) lvl" +
             " from related_entities re" +
-            " %s ) entity";
+            " %s GROUP BY entity_id, entity_type) entity";
     private static final String HIERARCHICAL_TO_QUERY_TEMPLATE = HIERARCHICAL_QUERY_TEMPLATE.replace("$in", "to").replace("$out", "from");
     private static final String HIERARCHICAL_FROM_QUERY_TEMPLATE = HIERARCHICAL_QUERY_TEMPLATE.replace("$in", "from").replace("$out", "to");
 
@@ -438,6 +441,10 @@ public class DefaultEntityQueryRepository implements EntityQueryRepository {
             if (hasNoPermissionsForAllRelationQueryResources(ctx.getSecurityCtx().getMergedReadEntityPermissionsMap())) {
                 return new PageData<>();
             }
+        } else if (query.getEntityFilter().getType().equals(EntityFilterType.API_USAGE_STATE)) {
+            if (!ctx.isTenantUser()) {
+                return new PageData<>();
+            }
         } else if (!readPermissions.isHasGenericRead() && readPermissions.getEntityGroupIds().isEmpty()) {
             return new PageData<>();
         }
@@ -470,6 +477,8 @@ public class DefaultEntityQueryRepository implements EntityQueryRepository {
             String entityTypeStr;
             if (query.getEntityFilter().getType().equals(EntityFilterType.RELATIONS_QUERY)) {
                 entityTypeStr = "e.entity_type";
+            } else if (query.getEntityFilter().getType().equals(EntityFilterType.ENTITY_GROUP_NAME)) {
+                entityTypeStr = "'ENTITY_GROUP'";
             } else {
                 entityTypeStr = "'" + ctx.getEntityType().name() + "'";
             }
@@ -712,7 +721,11 @@ public class DefaultEntityQueryRepository implements EntityQueryRepository {
                 if (groupIdsSet) {
                     fromClause.append("(");
                 }
-                fromClause.append(" e.customer_id in ").append(HIERARCHICAL_SUB_CUSTOMERS_QUERY);
+                if (entityType.equals(EntityType.CUSTOMER)) {
+                    fromClause.append(" e.parent_customer_id in ").append(HIERARCHICAL_SUB_CUSTOMERS_QUERY);
+                } else {
+                    fromClause.append(" e.customer_id in ").append(HIERARCHICAL_SUB_CUSTOMERS_QUERY);
+                }
                 if (groupIdsSet) {
                     ctx.addUuidListParameter("group_ids", groupIds.stream().map(EntityGroupId::getId).collect(Collectors.toList()));
                     fromClause.append(" OR e.id in ");
@@ -1293,6 +1306,7 @@ public class DefaultEntityQueryRepository implements EntityQueryRepository {
             case DEVICE_SEARCH_QUERY:
             case ASSET_SEARCH_QUERY:
             case ENTITY_VIEW_SEARCH_QUERY:
+            case API_USAGE_STATE:
                 return "";
             default:
                 throw new RuntimeException("Not implemented!");
@@ -1382,14 +1396,40 @@ public class DefaultEntityQueryRepository implements EntityQueryRepository {
         MergedGroupTypePermissionInfo groupTypePermissionInfo = ctx.getSecurityCtx().getMergedReadGroupPermissionsByEntityType();
         String where;
         if (groupTypePermissionInfo.isHasGenericRead() || !groupTypePermissionInfo.getEntityGroupIds().isEmpty()) {
-
+            EntityId customOwnerId = entityFilter.getOwnerId();
+            if (customOwnerId != null && !customOwnerId.getEntityType().equals(EntityType.TENANT) && !customOwnerId.getEntityType().equals(EntityType.CUSTOMER)) {
+                customOwnerId = null;
+            }
             String allowedGroupIdsSelect = "(";
+            boolean genericPartAdded = false;
             if (groupTypePermissionInfo.isHasGenericRead()) {
-                allowedGroupIdsSelect += "owner_id = :where_group_owner_id";
-                ctx.addUuidParameter("where_group_owner_id", ctx.getOwnerId());
+                if (customOwnerId == null || ctx.getOwnerId().equals(customOwnerId.getId())) {
+                    // No custom owner - just select a list of groups that belong to current owner
+                    allowedGroupIdsSelect += "owner_id = :where_group_owner_id";
+                    ctx.addUuidParameter("where_group_owner_id", ctx.getOwnerId());
+                    genericPartAdded = true;
+                } else if (ctx.isTenantUser()) {
+                    // Tenant user with different custom owner id. We need to check that this is our customer.
+                    allowedGroupIdsSelect += "owner_id in (select id from customer where id = :where_group_owner_id and tenant_id = :where_real_tenant_id)";
+                    ctx.addUuidParameter("where_group_owner_id", customOwnerId.getId());
+                    ctx.addUuidParameter("where_real_tenant_id", ctx.getOwnerId());
+                    genericPartAdded = true;
+                } else if (customOwnerId.getEntityType().equals(EntityType.CUSTOMER)) {
+                    // Customer user with different custom owner id. We need to check the hierarchy now
+                    allowedGroupIdsSelect += "owner_id in (select id from customer where id = :where_group_owner_id and tenant_id = :where_real_tenant_id and id in ";
+                    allowedGroupIdsSelect += "(WITH RECURSIVE customers_ids(id) AS" +
+                            " (SELECT id id FROM customer WHERE tenant_id = :where_real_tenant_id and id = :where_real_owner_id" +
+                            " UNION SELECT c.id id FROM customer c, customers_ids parent WHERE c.tenant_id = :where_real_tenant_id" +
+                            " and c.parent_customer_id = parent.id) SELECT id FROM customers_ids)";
+                    allowedGroupIdsSelect += ")";
+                    ctx.addUuidParameter("where_group_owner_id", customOwnerId.getId());
+                    ctx.addUuidParameter("where_real_tenant_id", ctx.getTenantId().getId());
+                    ctx.addUuidParameter("where_real_owner_id", ctx.getOwnerId());
+                    genericPartAdded = true;
+                }
             }
             if (!groupTypePermissionInfo.getEntityGroupIds().isEmpty()) {
-                if (groupTypePermissionInfo.isHasGenericRead()) {
+                if (genericPartAdded) {
                     allowedGroupIdsSelect += " or ";
                 }
                 allowedGroupIdsSelect += "id in (:where_group_ids)";
@@ -1413,8 +1453,6 @@ public class DefaultEntityQueryRepository implements EntityQueryRepository {
 
     private String entitySearchQuery(QueryContext ctx, EntitySearchQueryFilter entityFilter, EntityType entityType, List<String> types) {
         EntityId rootId = entityFilter.getRootEntity();
-        //TODO: fetch last level only.
-        //TODO: fetch distinct records.
         String lvlFilter = getLvlFilter(entityFilter.getMaxLevel());
         String selectFields = "SELECT tenant_id, customer_id, id, created_time, type, name, additional_info "
                 + (entityType.equals(EntityType.ENTITY_VIEW) ? "" : ", label ")
@@ -1425,8 +1463,21 @@ public class DefaultEntityQueryRepository implements EntityQueryRepository {
             ctx.addStringParameter("where_relation_type", entityFilter.getRelationType());
             whereFilter += " re.relation_type = :where_relation_type AND";
         }
+        String toOrFrom = (entityFilter.getDirection().equals(EntitySearchDirection.FROM) ? "to" : "from");
         whereFilter += " re." + (entityFilter.getDirection().equals(EntitySearchDirection.FROM) ? "to" : "from") + "_type = :where_entity_type";
+        if (entityFilter.isFetchLastLevelOnly()) {
+            String fromOrTo = (entityFilter.getDirection().equals(EntitySearchDirection.FROM) ? "from" : "to");
+            StringBuilder notExistsPart = new StringBuilder();
+            notExistsPart.append(" NOT EXISTS (SELECT 1 from relation nr ")
+                    .append(whereFilter.replaceAll("re\\.", "nr\\."))
+                    .append(" and ")
+                    .append("nr.").append(fromOrTo).append("_id").append(" = re.").append(toOrFrom).append("_id")
+                    .append(" and ")
+                    .append("nr.").append(fromOrTo).append("_type").append(" = re.").append(toOrFrom).append("_type");
 
+            notExistsPart.append(")");
+            whereFilter += " and ( re.lvl = " + entityFilter.getMaxLevel() + " OR " + notExistsPart.toString() + ")";
+        }
         from = String.format(from, lvlFilter, whereFilter);
         String query = "( " + selectFields + from + ")";
         if (types != null && !types.isEmpty()) {
@@ -1457,14 +1508,13 @@ public class DefaultEntityQueryRepository implements EntityQueryRepository {
 
         StringBuilder whereFilter = new StringBuilder();
         boolean noConditions = true;
+        boolean single = entityFilter.getFilters() != null && entityFilter.getFilters().size() == 1;
         if (entityFilter.getFilters() != null && !entityFilter.getFilters().isEmpty()) {
-            boolean single = entityFilter.getFilters().size() == 1;
             int entityTypeFilterIdx = 0;
             for (EntityTypeFilter etf : entityFilter.getFilters()) {
                 String etfCondition = buildEtfCondition(ctx, etf, entityFilter.getDirection(), entityTypeFilterIdx++);
                 if (!etfCondition.isEmpty()) {
                     if (noConditions) {
-                        whereFilter.append(" WHERE ");
                         noConditions = false;
                     } else {
                         whereFilter.append(" OR ");
@@ -1480,12 +1530,33 @@ public class DefaultEntityQueryRepository implements EntityQueryRepository {
             }
         }
         if (noConditions) {
-            whereFilter.append(" WHERE re.")
+            whereFilter.append(" re.")
                     .append(entityFilter.getDirection().equals(EntitySearchDirection.FROM) ? "to" : "from")
                     .append("_type in (:where_entity_types").append(")");
             ctx.addStringListParameter("where_entity_types", Arrays.stream(RELATION_QUERY_ENTITY_TYPES).map(EntityType::name).collect(Collectors.toList()));
         }
-        from = String.format(from, lvlFilter, whereFilter);
+
+        if (!noConditions && !single) {
+            whereFilter = new StringBuilder().append("(").append(whereFilter).append(")");
+        }
+
+        if (entityFilter.isFetchLastLevelOnly()) {
+            String toOrFrom = (entityFilter.getDirection().equals(EntitySearchDirection.FROM) ? "to" : "from");
+            String fromOrTo = (entityFilter.getDirection().equals(EntitySearchDirection.FROM) ? "from" : "to");
+
+            StringBuilder notExistsPart = new StringBuilder();
+            notExistsPart.append(" NOT EXISTS (SELECT 1 from relation nr WHERE ");
+            notExistsPart
+                    .append("nr.").append(fromOrTo).append("_id").append(" = re.").append(toOrFrom).append("_id")
+                    .append(" and ")
+                    .append("nr.").append(fromOrTo).append("_type").append(" = re.").append(toOrFrom).append("_type")
+                    .append(" and ")
+                    .append(whereFilter.toString().replaceAll("re\\.", "nr\\."));
+
+            notExistsPart.append(")");
+            whereFilter.append(" and ( re.lvl = ").append(entityFilter.getMaxLevel()).append(" OR ").append(notExistsPart.toString()).append(")");
+        }
+        from = String.format(from, lvlFilter, " WHERE " + whereFilter);
         return "( " + selectFields + from + ")";
     }
 
@@ -1634,6 +1705,8 @@ public class DefaultEntityQueryRepository implements EntityQueryRepository {
                 return EntityType.ENTITY_VIEW;
             case RELATIONS_QUERY:
                 return ((RelationsQueryFilter) entityFilter).getRootEntity().getEntityType();
+            case API_USAGE_STATE:
+                return EntityType.API_USAGE_STATE;
             default:
                 throw new RuntimeException("Not implemented!");
         }

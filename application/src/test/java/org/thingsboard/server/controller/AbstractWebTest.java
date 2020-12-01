@@ -33,6 +33,7 @@ package org.thingsboard.server.controller;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Header;
 import io.jsonwebtoken.Jwt;
@@ -63,16 +64,28 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.context.WebApplicationContext;
-import org.thingsboard.server.common.data.BaseData;
 import org.thingsboard.server.common.data.Customer;
+import org.thingsboard.server.common.data.DeviceProfile;
+import org.thingsboard.server.common.data.DeviceProfileType;
+import org.thingsboard.server.common.data.DeviceTransportType;
 import org.thingsboard.server.common.data.Tenant;
 import org.thingsboard.server.common.data.User;
+import org.thingsboard.server.common.data.device.profile.DefaultDeviceProfileConfiguration;
+import org.thingsboard.server.common.data.device.profile.DefaultDeviceProfileTransportConfiguration;
+import org.thingsboard.server.common.data.device.profile.DeviceProfileData;
+import org.thingsboard.server.common.data.id.EntityGroupId;
+import org.thingsboard.server.common.data.device.profile.DeviceProfileTransportConfiguration;
+import org.thingsboard.server.common.data.device.profile.MqttDeviceProfileTransportConfiguration;
+import org.thingsboard.server.common.data.device.profile.MqttTopics;
+import org.thingsboard.server.common.data.device.profile.ProtoTransportPayloadConfiguration;
+import org.thingsboard.server.common.data.device.profile.TransportPayloadTypeConfiguration;
+import org.thingsboard.server.common.data.id.HasId;
 import org.thingsboard.server.common.data.id.TenantId;
-import org.thingsboard.server.common.data.id.UUIDBased;
 import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.page.TimePageLink;
 import org.thingsboard.server.common.data.security.Authority;
 import org.thingsboard.server.config.ThingsboardSecurityConfiguration;
+import org.thingsboard.server.dao.util.mapping.JacksonUtil;
 import org.thingsboard.server.service.mail.TestMailService;
 import org.thingsboard.server.service.security.auth.jwt.RefreshTokenRequest;
 import org.thingsboard.server.service.security.auth.rest.LoginRequest;
@@ -223,6 +236,10 @@ public abstract class AbstractWebTest {
         login(CUSTOMER_USER_EMAIL, CUSTOMER_USER_PASSWORD);
     }
 
+    protected void loginUser(String userName, String password) throws Exception {
+        login(userName, password);
+    }
+
     private Tenant savedDifferentTenant;
 
     protected void loginDifferentTenant() throws Exception {
@@ -248,15 +265,35 @@ public abstract class AbstractWebTest {
     protected User createUserAndLogin(User user, String password) throws Exception {
         User savedUser = doPost("/api/user", user, User.class);
         logout();
-        doGet("/api/noauth/activate?activateToken={activateToken}", TestMailService.currentActivateToken)
-                .andExpect(status().isSeeOther())
-                .andExpect(header().string(HttpHeaders.LOCATION, "/login/createPassword?activateToken=" + TestMailService.currentActivateToken));
-        JsonNode activateRequest = new ObjectMapper().createObjectNode()
-                .put("activateToken", TestMailService.currentActivateToken)
-                .put("password", password);
+        JsonNode activateRequest = getActivateRequest(password);
         JsonNode tokenInfo = readResponse(doPost("/api/noauth/activate", activateRequest).andExpect(status().isOk()), JsonNode.class);
         validateAndSetJwtToken(tokenInfo, user.getEmail());
         return savedUser;
+    }
+
+    protected User createUser(User user, String password) throws Exception {
+        return createUser(user, password, null);
+    }
+
+    protected User createUser(User user, String password, EntityGroupId entityGroupId) throws Exception {
+        String url = "/api/user";
+        if (entityGroupId != null) {
+            url += "?entityGroupId="+entityGroupId.toString();
+        }
+        User savedUser = doPost(url, user, User.class);
+        JsonNode activateRequest = getActivateRequest(password);
+        ResultActions resultActions = doPost("/api/noauth/activate", activateRequest);
+        resultActions.andExpect(status().isOk());
+        return savedUser;
+    }
+
+    private JsonNode getActivateRequest(String password) throws Exception {
+        doGet("/api/noauth/activate?activateToken={activateToken}", TestMailService.currentActivateToken)
+                .andExpect(status().isSeeOther())
+                .andExpect(header().string(HttpHeaders.LOCATION, "/login/createPassword?activateToken=" + TestMailService.currentActivateToken));
+        return new ObjectMapper().createObjectNode()
+                .put("activateToken", TestMailService.currentActivateToken)
+                .put("password", password);
     }
 
     protected void login(String username, String password) throws Exception {
@@ -309,6 +346,42 @@ public abstract class AbstractWebTest {
             request.header(ThingsboardSecurityConfiguration.JWT_TOKEN_HEADER_PARAM, "Bearer " + this.token);
         }
     }
+
+    protected DeviceProfile createDeviceProfile(String name, DeviceProfileTransportConfiguration deviceProfileTransportConfiguration) {
+        DeviceProfile deviceProfile = new DeviceProfile();
+        deviceProfile.setName(name);
+        deviceProfile.setType(DeviceProfileType.DEFAULT);
+        deviceProfile.setTransportType(DeviceTransportType.DEFAULT);
+        deviceProfile.setDescription(name + " Test");
+        DeviceProfileData deviceProfileData = new DeviceProfileData();
+        DefaultDeviceProfileConfiguration configuration = new DefaultDeviceProfileConfiguration();
+        deviceProfileData.setConfiguration(configuration);
+        if (deviceProfileTransportConfiguration != null) {
+            deviceProfileData.setTransportConfiguration(deviceProfileTransportConfiguration);
+        } else {
+            deviceProfileData.setTransportConfiguration(new DefaultDeviceProfileTransportConfiguration());
+        }
+        deviceProfile.setProfileData(deviceProfileData);
+        deviceProfile.setDefault(false);
+        deviceProfile.setDefaultRuleChainId(null);
+        return deviceProfile;
+    }
+
+    protected MqttDeviceProfileTransportConfiguration createMqttDeviceProfileTransportConfiguration(TransportPayloadTypeConfiguration transportPayloadTypeConfiguration) {
+        MqttDeviceProfileTransportConfiguration mqttDeviceProfileTransportConfiguration = new MqttDeviceProfileTransportConfiguration();
+        mqttDeviceProfileTransportConfiguration.setDeviceTelemetryTopic(MqttTopics.DEVICE_TELEMETRY_TOPIC);
+        mqttDeviceProfileTransportConfiguration.setDeviceTelemetryTopic(MqttTopics.DEVICE_ATTRIBUTES_TOPIC);
+        mqttDeviceProfileTransportConfiguration.setTransportPayloadTypeConfiguration(transportPayloadTypeConfiguration);
+        return mqttDeviceProfileTransportConfiguration;
+    }
+
+    protected ProtoTransportPayloadConfiguration createProtoTransportPayloadConfiguration(String deviceAttributesProtoSchema, String deviceTelemetryProtoSchema) {
+        ProtoTransportPayloadConfiguration protoTransportPayloadConfiguration = new ProtoTransportPayloadConfiguration();
+        protoTransportPayloadConfiguration.setDeviceAttributesProtoSchema(deviceAttributesProtoSchema);
+        protoTransportPayloadConfiguration.setDeviceTelemetryProtoSchema(deviceTelemetryProtoSchema);
+        return protoTransportPayloadConfiguration;
+    }
+
 
     protected ResultActions doGet(String urlTemplate, Object... urlVariables) throws Exception {
         MockHttpServletRequestBuilder getRequest = get(urlTemplate, urlVariables);
@@ -422,6 +495,10 @@ public abstract class AbstractWebTest {
         return readResponse(doPostAsync(urlTemplate, content, timeout, params).andExpect(resultMatcher), responseClass);
     }
 
+    protected <T> T doPostClaimAsync(String urlTemplate, Object content, Class<T> responseClass, ResultMatcher resultMatcher, String... params) throws Exception {
+        return readResponse(doPostAsync(urlTemplate, content, DEFAULT_TIMEOUT, params).andExpect(resultMatcher), responseClass);
+    }
+
     protected <T> T doDelete(String urlTemplate, Class<T> responseClass, String... params) throws Exception {
         return readResponse(doDelete(urlTemplate, params).andExpect(status().isOk()), responseClass);
     }
@@ -492,7 +569,7 @@ public abstract class AbstractWebTest {
         return mapper.readerFor(type).readValue(content);
     }
 
-    public class IdComparator<D extends BaseData<? extends UUIDBased>> implements Comparator<D> {
+    public class IdComparator<D extends HasId> implements Comparator<D> {
         @Override
         public int compare(D o1, D o2) {
             return o1.getId().getId().compareTo(o2.getId().getId());

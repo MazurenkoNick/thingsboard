@@ -37,6 +37,7 @@ import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.dao.Dao;
+import org.thingsboard.server.dao.TenantEntityDao;
 
 import java.util.List;
 import java.util.Optional;
@@ -46,7 +47,7 @@ import java.util.UUID;
  * The Interface DeviceDao.
  *
  */
-public interface DeviceDao extends Dao<Device> {
+public interface DeviceDao extends Dao<Device>, TenantEntityDao {
 
     /**
      * Save or update device object
@@ -155,4 +156,15 @@ public interface DeviceDao extends Dao<Device> {
      */
     ListenableFuture<Device> findDeviceByTenantIdAndIdAsync(TenantId tenantId, UUID id);
 
+    Long countDevicesByDeviceProfileId(TenantId tenantId, UUID deviceProfileId);
+
+    /**
+     * Find devices by tenantId, profileId and page link.
+     *
+     * @param tenantId the tenantId
+     * @param profileId the profileId
+     * @param pageLink the page link
+     * @return the list of device objects
+     */
+    PageData<Device> findDevicesByTenantIdAndProfileId(UUID tenantId, UUID profileId, PageLink pageLink);
 }

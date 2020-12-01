@@ -168,6 +168,7 @@ import { WhiteLabelingFeatureDialogComponent } from '@shared/components/dialog/w
 import { ContactComponent } from '@shared/components/contact.component';
 import { GroupPermissionsComponent } from '@shared/components/role/group-permissions.component';
 import { GroupPermissionDialogComponent } from '@shared/components/role/group-permission-dialog.component';
+import { ShareEntityGroupComponent } from './components/group/share-entity-group.component';
 import { EntityLimitDialogComponent } from '@shared/components/dialog/entity-limit-dialog.component';
 
 @NgModule({
@@ -277,6 +278,7 @@ import { EntityLimitDialogComponent } from '@shared/components/dialog/entity-lim
     ContactComponent,
     GroupPermissionsComponent,
     GroupPermissionDialogComponent,
+    ShareEntityGroupComponent
   ],
   imports: [
     CommonModule,
@@ -460,6 +462,7 @@ import { EntityLimitDialogComponent } from '@shared/components/dialog/entity-lim
     ContactComponent,
     GroupPermissionsComponent,
     GroupPermissionDialogComponent,
+    ShareEntityGroupComponent
   ]
 })
 export class SharedModule { }

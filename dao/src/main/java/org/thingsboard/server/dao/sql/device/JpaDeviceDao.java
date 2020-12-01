@@ -138,6 +138,16 @@ public class JpaDeviceDao extends JpaAbstractSearchTextDao<DeviceEntity, Device>
     }
 
     @Override
+    public PageData<Device> findDevicesByTenantIdAndProfileId(UUID tenantId, UUID profileId, PageLink pageLink) {
+        return DaoUtil.toPageData(
+                deviceRepository.findByTenantIdAndProfileId(
+                        tenantId,
+                        profileId,
+                        Objects.toString(pageLink.getTextSearch(), ""),
+                        DaoUtil.toPageable(pageLink)));
+    }
+
+    @Override
     public ListenableFuture<List<Device>> findDevicesByTenantIdCustomerIdAndIdsAsync(UUID tenantId, UUID customerId, List<UUID> deviceIds) {
         return DaoUtil.getEntitiesByTenantIdAndIdIn(deviceIds, ids ->
                 deviceRepository.findDevicesByTenantIdAndCustomerIdAndIdIn(tenantId, customerId, ids), service);
@@ -183,6 +193,16 @@ public class JpaDeviceDao extends JpaAbstractSearchTextDao<DeviceEntity, Device>
     @Override
     public ListenableFuture<Device> findDeviceByTenantIdAndIdAsync(TenantId tenantId, UUID id) {
         return service.submit(() -> DaoUtil.getData(deviceRepository.findByTenantIdAndId(tenantId.getId(), id)));
+    }
+
+    @Override
+    public Long countDevicesByDeviceProfileId(TenantId tenantId, UUID deviceProfileId) {
+        return deviceRepository.countByDeviceProfileId(deviceProfileId);
+    }
+
+    @Override
+    public Long countByTenantId(TenantId tenantId) {
+        return deviceRepository.countByTenantId(tenantId.getId());
     }
 
     private List<EntitySubtype> convertTenantDeviceTypesToDto(UUID tenantId, List<String> types) {

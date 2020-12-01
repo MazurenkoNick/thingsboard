@@ -39,6 +39,7 @@ import { isEqual, isUndefinedOrNull } from '@core/utils';
 import { Customer } from '@shared/models/customer.model';
 import { EntityData, EntityDataPageLink, EntityKey, EntityKeyType } from '@shared/models/query/query.models';
 import { PageLink } from '@shared/models/page/page-link';
+import { RoleId } from '@shared/models/id/role-id';
 
 export const entityGroupTypes: EntityType[] = [
   EntityType.CUSTOMER,
@@ -156,6 +157,10 @@ export const entityGroupEntityFields: {[fieldName: string]: EntityGroupEntityFie
     name: 'entity-group.entity-field.type',
     value: 'type'
   },
+  device_profile: {
+    name: 'entity-group.entity-field.device_profile',
+    value: 'device_profile'
+  },
   assigned_customer: {
     name: 'entity-group.entity-field.assigned_customer',
     value: 'assigned_customer'
@@ -218,7 +223,8 @@ export const entityGroupEntityFieldsToKeysMap: {[keyName: string]: string} = {
   created_time: 'createdTime',
   assigned_customer: 'assignedCustomer',
   first_name: 'firstName',
-  last_name: 'lastName'
+  last_name: 'lastName',
+  device_profile: 'type'
 };
 
 export interface EntityGroupColumn {
@@ -252,6 +258,22 @@ export interface EntityGroup extends BaseData<EntityGroupId> {
 
 export interface EntityGroupInfo extends EntityGroup {
   ownerIds: EntityId[];
+}
+
+export function prepareEntityGroupConfiguration(groupType: EntityType,
+                                                configuration: EntityGroupConfiguration): EntityGroupConfiguration {
+  if (configuration) {
+    if (groupType === EntityType.DEVICE) {
+      if (configuration.columns) {
+        configuration.columns.filter(c => c.key === 'type').forEach(
+          typeCol => {
+            typeCol.key = 'device_profile';
+          }
+        );
+      }
+    }
+  }
+  return configuration;
 }
 
 export interface ShortEntityView {
@@ -452,6 +474,14 @@ export interface EntityGroupParams {
   nodeId?: string;
   internalId?: string;
   hierarchyCallbacks?: HierarchyCallbacks;
+}
+
+export interface ShareGroupRequest {
+  ownerId: EntityId;
+  isAllUserGroup: boolean;
+  userGroupId?: EntityGroupId;
+  readElseWrite: boolean;
+  roleIds?: RoleId[];
 }
 
 export function resolveGroupParams(route: ActivatedRouteSnapshot): EntityGroupParams {

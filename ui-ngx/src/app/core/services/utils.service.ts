@@ -36,6 +36,7 @@ import { Inject, Injectable, NgZone } from '@angular/core';
 import { WINDOW } from '@core/services/window.service';
 import { ExceptionData } from '@app/shared/models/error.models';
 import {
+  baseUrl,
   createLabelFromDatasource,
   deepClone,
   deleteNullProperties,
@@ -194,7 +195,7 @@ export class UtilsService {
       const alarmField = alarmFields[key.name];
       if (alarmField) {
         if (alarmField.time) {
-          return this.datePipe.transform(value, 'yyyy-MM-dd HH:mm:ss');
+          return value ? this.datePipe.transform(value, 'yyyy-MM-dd HH:mm:ss') : '';
         } else if (alarmField === alarmFields.severity) {
           return this.translate.instant(alarmSeverityTranslations.get(value));
         } else if (alarmField === alarmFields.status) {
@@ -452,7 +453,7 @@ export class UtilsService {
   }
 
   public updateQueryParam(name: string, value: string | null) {
-    const baseUrl = [this.window.location.protocol, '//', this.window.location.host, this.window.location.pathname].join('');
+    const baseUrlPart = [baseUrl(), this.window.location.pathname].join('');
     const urlQueryString = this.window.location.search;
     let newParam = '';
     let params = '';
@@ -472,16 +473,11 @@ export class UtilsService {
     } else if (newParam) {
       params = '?' + newParam;
     }
-    this.window.history.replaceState({}, '', baseUrl + params);
+    this.window.history.replaceState({}, '', baseUrlPart + params);
   }
 
   public baseUrl(): string {
-    let url = this.window.location.protocol + '//' + this.window.location.hostname;
-    const port = this.window.location.port;
-    if (port !== '80' && port !== '443') {
-      url += ':' + port;
-    }
-    return url;
+    return baseUrl();
   }
 
   public deepClone<T>(target: T, ignoreFields?: string[]): T {
@@ -506,7 +502,7 @@ export class UtilsService {
 
   public translateText(text: string): string {
     if (text.startsWith('${') && text.endsWith('}')) {
-      return this.translate.instant(text.substring(2, text.length - 1))
+      return this.translate.instant(text.substring(2, text.length - 1));
     } else {
       return text;
     }

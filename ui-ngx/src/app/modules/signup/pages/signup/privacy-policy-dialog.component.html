@@ -30,7 +30,7 @@
     OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 
 -->
-<div>
+<div class="tb-dark">
   <mat-toolbar fxLayout="row" color="primary">
     <h2>{{ 'signup.privacy-policy' | translate }}</h2>
     <span fxFlex></span>
@@ -50,18 +50,17 @@
   </div>
   <div mat-dialog-actions fxLayout="row">
     <span fxFlex></span>
-    <button mat-raised-button color="primary"
-            style="margin-right: 20px;"
-            type="button"
-            [disabled]="(isLoading$ | async)"
-            (click)="accept()">
-      {{ 'signup.accept' | translate }}
-    </button>
     <button mat-button
             type="button"
             [disabled]="(isLoading$ | async)"
             (click)="cancel()">
       {{ 'action.cancel' | translate }}
+    </button>
+    <button mat-raised-button color="primary"
+            type="button"
+            [disabled]="(isLoading$ | async)"
+            (click)="accept()">
+      {{ 'signup.accept' | translate }}
     </button>
   </div>
 </div>

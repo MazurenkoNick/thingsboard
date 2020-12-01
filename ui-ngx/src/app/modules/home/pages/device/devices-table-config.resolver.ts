@@ -46,7 +46,7 @@ import { DatePipe } from '@angular/common';
 import { EntityType, entityTypeResources, entityTypeTranslations } from '@shared/models/entity-type.models';
 import { EntityAction } from '@home/models/entity/entity-component.models';
 import { Device, DeviceCredentials } from '@app/shared/models/device.models';
-import { Observable, of } from 'rxjs';
+import { Observable, of, Subject } from 'rxjs';
 import { select, Store } from '@ngrx/store';
 import { selectAuthUser } from '@core/auth/auth.selectors';
 import { map, mergeMap, take, tap } from 'rxjs/operators';
@@ -66,6 +66,7 @@ import { DialogService } from '@core/services/dialog.service';
 import { DeviceTabsComponent } from '@home/pages/device/device-tabs.component';
 import { HomeDialogsService } from '@home/dialogs/home-dialogs.service';
 import { UtilsService } from '@core/services/utils.service';
+import { isDefinedAndNotNull } from '@core/utils';
 
 @Injectable()
 export class DevicesTableConfigResolver implements Resolve<EntityTableConfig<Device>> {
@@ -94,6 +95,7 @@ export class DevicesTableConfigResolver implements Resolve<EntityTableConfig<Dev
 
     this.config.entityTitle = (device) => device ?
       this.utils.customTranslation(device.name, device.name) : '';
+    this.config.addDialogStyle = {width: '600px'};
 
     this.config.deleteEntityTitle = device => this.translate.instant('device.delete-device-title', { deviceName: device.name });
     this.config.deleteEntityContent = () => this.translate.instant('device.delete-device-text');
@@ -118,7 +120,8 @@ export class DevicesTableConfigResolver implements Resolve<EntityTableConfig<Dev
     const routeParams = route.params;
     this.config.componentsData = {
       deviceScope: route.data.devicesType,
-      deviceType: ''
+      deviceProfileId: null,
+      deviceCredentials$: new Subject<DeviceCredentials>()
     };
     this.customerId = routeParams.customerId;
     return this.store.pipe(select(selectAuthUser), take(1)).pipe(
@@ -222,7 +225,7 @@ export class DevicesTableConfigResolver implements Resolve<EntityTableConfig<Dev
         {
           name: this.translate.instant('device.manage-credentials'),
           icon: 'security',
-          isEnabled: (entity) => true,
+          isEnabled: () => true,
           onAction: ($event, entity) => this.manageCredentials($event, entity)
         }
       );
@@ -244,7 +247,7 @@ export class DevicesTableConfigResolver implements Resolve<EntityTableConfig<Dev
           {
             name: this.translate.instant('device.manage-credentials'),
             icon: 'security',
-            isEnabled: (entity) => true,
+            isEnabled: () => true,
             onAction: ($event, entity) => this.manageCredentials($event, entity)
           }
         );
@@ -254,7 +257,7 @@ export class DevicesTableConfigResolver implements Resolve<EntityTableConfig<Dev
         {
           name: this.translate.instant('device.view-credentials'),
           icon: 'security',
-          isEnabled: (entity) => true,
+          isEnabled: () => true,
           onAction: ($event, entity) => this.manageCredentials($event, entity)
         }
       );
@@ -289,23 +292,23 @@ export class DevicesTableConfigResolver implements Resolve<EntityTableConfig<Dev
 
   configureAddActions(deviceScope: string): Array<HeaderActionDescriptor> {
     const actions: Array<HeaderActionDescriptor> = [];
-    if (deviceScope === 'tenant') {
+    /*if (deviceScope === 'tenant') {
       actions.push(
         {
           name: this.translate.instant('device.add-device-text'),
           icon: 'insert_drive_file',
           isEnabled: () => true,
-          onAction: ($event) => this.config.table.addEntity($event)
+          onAction: ($event) => this.deviceWizard($event)
         },
         {
           name: this.translate.instant('device.import'),
           icon: 'file_upload',
           isEnabled: () => true,
           onAction: ($event) => this.importDevices($event)
-        }
+        },
       );
     }
-    /*if (deviceScope === 'customer') {
+    if (deviceScope === 'customer') {
       actions.push(
         {
           name: this.translate.instant('device.assign-new-device'),
@@ -327,7 +330,24 @@ export class DevicesTableConfigResolver implements Resolve<EntityTableConfig<Dev
     });*/
   }
 
-  /*addDevicesToCustomer($event: Event) {
+/*  deviceWizard($event: Event) {
+    this.dialog.open<DeviceWizardDialogComponent, AddEntityDialogData<BaseData<HasId>>,
+      boolean>(DeviceWizardDialogComponent, {
+      disableClose: true,
+      panelClass: ['tb-dialog', 'tb-fullscreen-dialog'],
+      data: {
+        entitiesTableConfig: this.config.table.entitiesTableConfig
+      }
+    }).afterClosed().subscribe(
+      (res) => {
+        if (res) {
+          this.config.table.updateData();
+        }
+      }
+    );
+  }
+
+  addDevicesToCustomer($event: Event) {
     if ($event) {
       $event.stopPropagation();
     }
@@ -461,6 +481,10 @@ export class DevicesTableConfigResolver implements Resolve<EntityTableConfig<Dev
         deviceId: device.id.id,
         isReadOnly: this.config.componentsData.deviceScope === 'customer_user'
       }
+    }).afterClosed().subscribe(deviceCredentials => {
+      if (isDefinedAndNotNull(deviceCredentials)) {
+        this.config.componentsData.deviceCredentials$.next(deviceCredentials);
+      }
     });
   }
 
@@ -481,5 +505,4 @@ export class DevicesTableConfigResolver implements Resolve<EntityTableConfig<Dev
     }
     return false;
   }
-
 }

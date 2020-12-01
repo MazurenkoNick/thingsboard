@@ -37,7 +37,12 @@ import { Observable } from 'rxjs';
 import { PageData } from '@shared/models/page/page-data';
 import { ContactBased } from '@shared/models/contact-based.model';
 import { EntityId } from '@shared/models/id/entity-id';
-import { EntityGroup, EntityGroupInfo, ShortEntityView } from '@shared/models/entity-group.models';
+import {
+  EntityGroup,
+  EntityGroupInfo,
+  prepareEntityGroupConfiguration, ShareGroupRequest,
+  ShortEntityView
+} from '@shared/models/entity-group.models';
 import { EntityType } from '@shared/models/entity-type.models';
 import { EntityGroupId } from '@shared/models/id/entity-group-id';
 import { map } from 'rxjs/operators';
@@ -58,7 +63,13 @@ export class EntityGroupService {
   }
 
   public getEntityGroup(entityGroupId: string, config?: RequestConfig): Observable<EntityGroupInfo> {
-    return this.http.get<EntityGroupInfo>(`/api/entityGroup/${entityGroupId}`, defaultHttpOptionsFromConfig(config));
+    return this.http.get<EntityGroupInfo>(`/api/entityGroup/${entityGroupId}`,
+      defaultHttpOptionsFromConfig(config)).pipe(
+        map(group => {
+          group.configuration = prepareEntityGroupConfiguration(group.type, group.configuration);
+          return group;
+        })
+    );
   }
 
   public saveEntityGroup(entityGroup: EntityGroup, config?: RequestConfig): Observable<EntityGroupInfo> {
@@ -75,6 +86,10 @@ export class EntityGroupService {
 
   public makeEntityGroupPrivate(entityGroupId: string, config?: RequestConfig): Observable<any> {
     return this.http.post(`/api/entityGroup/${entityGroupId}/makePrivate`, null, defaultHttpOptionsFromConfig(config));
+  }
+
+  public shareEntityGroup(entityGroupId: string, shareGroupRequest: ShareGroupRequest, config?: RequestConfig): Observable<any> {
+    return this.http.post(`/api/entityGroup/${entityGroupId}/share`, shareGroupRequest, defaultHttpOptionsFromConfig(config));
   }
 
   public getEntityGroups(groupType: EntityType, config?: RequestConfig): Observable<Array<EntityGroupInfo>> {

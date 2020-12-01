@@ -37,11 +37,15 @@ public interface SystemDataLoaderService {
 
     void createSysAdmin() throws Exception;
 
+    void createDefaultTenantProfiles() throws Exception;
+
     void createAdminSettings() throws Exception;
 
     void loadMailTemplates() throws Exception;
 
     void updateMailTemplates(AdminSettingsId adminSettingsId, JsonNode value) throws Exception;
+
+    void createOAuth2Templates() throws Exception;
 
     void loadSystemWidgets() throws Exception;
 

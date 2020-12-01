@@ -30,16 +30,23 @@
  */
 package org.thingsboard.server.dao.dashboard;
 
+import com.datastax.oss.driver.api.core.uuid.Uuids;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.util.concurrent.ListenableFuture;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 import org.thingsboard.server.common.data.Customer;
 import org.thingsboard.server.common.data.Dashboard;
 import org.thingsboard.server.common.data.DashboardInfo;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.Tenant;
+import org.thingsboard.server.common.data.exception.ThingsboardErrorCode;
+import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.group.EntityGroup;
 import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.DashboardId;
@@ -51,17 +58,24 @@ import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.page.TimePageLink;
 import org.thingsboard.server.common.data.relation.EntityRelation;
 import org.thingsboard.server.common.data.relation.RelationTypeGroup;
+import org.thingsboard.server.common.data.tenant.profile.DefaultTenantProfileConfiguration;
 import org.thingsboard.server.dao.customer.CustomerDao;
 import org.thingsboard.server.dao.entity.AbstractEntityService;
 import org.thingsboard.server.dao.exception.DataValidationException;
 import org.thingsboard.server.dao.service.DataValidator;
 import org.thingsboard.server.dao.service.PaginatedRemover;
 import org.thingsboard.server.dao.service.Validator;
+import org.thingsboard.server.dao.tenant.TbTenantProfileCache;
 import org.thingsboard.server.dao.tenant.TenantDao;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 
 import static org.thingsboard.server.dao.DaoUtil.toUUIDs;
@@ -86,6 +100,10 @@ public class DashboardServiceImpl extends AbstractEntityService implements Dashb
 
     @Autowired
     private CustomerDao customerDao;
+
+    @Autowired
+    @Lazy
+    private TbTenantProfileCache tenantProfileCache;
 
     @Override
     public Dashboard findDashboardById(TenantId tenantId, DashboardId dashboardId) {
@@ -251,6 +269,14 @@ public class DashboardServiceImpl extends AbstractEntityService implements Dashb
     private DataValidator<Dashboard> dashboardValidator =
             new DataValidator<Dashboard>() {
                 @Override
+                protected void validateCreate(TenantId tenantId, Dashboard data) {
+                    DefaultTenantProfileConfiguration profileConfiguration =
+                            (DefaultTenantProfileConfiguration)tenantProfileCache.get(tenantId).getProfileData().getConfiguration();
+                    long maxDashboards = profileConfiguration.getMaxDashboards();
+                    validateNumberOfEntitiesPerTenant(tenantId, dashboardDao, maxDashboards, EntityType.DASHBOARD);
+                }
+
+                @Override
                 protected void validateDataImpl(TenantId tenantId, Dashboard dashboard) {
                     if (StringUtils.isEmpty(dashboard.getTitle())) {
                         throw new DataValidationException("Dashboard title should be specified!");
@@ -280,4 +306,141 @@ public class DashboardServiceImpl extends AbstractEntityService implements Dashb
                 }
     };
 
+    @Override
+    public List<Dashboard> exportDashboards(TenantId tenantId, EntityGroupId entityGroupId, TimePageLink pageLink) throws ThingsboardException {
+        PageData<DashboardInfo> pageData = findDashboardsByEntityGroupId(entityGroupId, pageLink);
+        if (pageData != null && !CollectionUtils.isEmpty(pageData.getData())) {
+            List<DashboardInfo> dashboardViews = pageData.getData();
+            Map<DashboardId, DashboardId> idMapping = new HashMap<>();
+            List<Dashboard> dashboards = new ArrayList<>();
+            for (DashboardInfo dashboardInfo : dashboardViews) {
+                Dashboard dashboard = findDashboardById(tenantId, dashboardInfo.getId());
+                DashboardId oldDashboardId = dashboard.getId();
+                DashboardId newDashboardId = new DashboardId(Uuids.timeBased());
+                idMapping.put(oldDashboardId, newDashboardId);
+                dashboard.setId(newDashboardId);
+                dashboard.setTenantId(null);
+                dashboard.setCustomerId(null);
+                dashboards.add(dashboard);
+            }
+            for (Dashboard dashboard : dashboards) {
+                JsonNode configuration = dashboard.getConfiguration();
+                searchDashboardIdRecursive(idMapping, configuration);
+            }
+            return dashboards;
+        }
+        return Collections.emptyList();
+    }
+
+    private void searchDashboardIdRecursive(Map<DashboardId, DashboardId> idMapping, JsonNode node) throws ThingsboardException {
+        Iterator<String> iter = node.fieldNames();
+        boolean isDashboardId = false;
+        try {
+            while (iter.hasNext()) {
+                String field = iter.next();
+                if ("targetDashboardId".equals(field)) {
+                    isDashboardId = true;
+                    break;
+                }
+            }
+            if (isDashboardId) {
+                ObjectNode objNode = (ObjectNode) node;
+                String oldDashboardIdStr = node.get("targetDashboardId").asText();
+                DashboardId dashboardId = new DashboardId(UUID.fromString(oldDashboardIdStr));
+                DashboardId replacement = idMapping.get(dashboardId);
+                if (replacement != null) {
+                    objNode.put("targetDashboardId", replacement.getId().toString());
+                }
+            } else {
+                Iterator<JsonNode> childIter = node.iterator();
+                while (childIter.hasNext()) {
+                    searchDashboardIdRecursive(idMapping, childIter.next());
+                }
+            }
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
+            throw new ThingsboardException(e.getMessage(), e, ThingsboardErrorCode.GENERAL);
+        }
+    }
+
+    @Override
+    public void importDashboards(TenantId tenantId, EntityGroupId entityGroupId, List<Dashboard> dashboards, boolean overwrite) throws ThingsboardException {
+        EntityGroup dashboardGroup = entityGroupService.findEntityGroupById(tenantId, entityGroupId);
+        resetDashboardOwnerCustomer(tenantId, dashboardGroup.getOwnerId(), dashboards);
+        if (overwrite) {
+            PageData<DashboardInfo> dashboardData = findDashboardsByEntityGroupId(entityGroupId, new PageLink(Integer.MAX_VALUE));
+            try {
+                List<DashboardInfo> dashboardInfos = dashboardData.getData();
+                if (!CollectionUtils.isEmpty(dashboardInfos)) {
+                    replaceOverwriteDashboardIds(dashboards, dashboardInfos);
+                } else {
+                    replaceDashboardIds(dashboards);
+                }
+                dashboards.stream().forEach(d -> saveDashboardToEntityGroup(tenantId, entityGroupId, d));
+            } catch (Exception e) {
+                log.error(e.getMessage(), e);
+                throw new ThingsboardException(e.getMessage(), e, ThingsboardErrorCode.GENERAL);
+            }
+        } else {
+            try {
+                replaceDashboardIds(dashboards);
+                dashboards.stream().forEach(d -> saveDashboardToEntityGroup(tenantId, entityGroupId, d));
+            } catch (Exception e) {
+                log.error(e.getMessage(), e);
+                throw new ThingsboardException(e.getMessage(), e, ThingsboardErrorCode.GENERAL);
+            }
+        }
+    }
+
+    private void saveDashboardToEntityGroup(TenantId tenantId, EntityGroupId entityGroupId, Dashboard dashboard) {
+        Dashboard savedDashboard = saveDashboard(dashboard);
+        entityGroupService.addEntityToEntityGroupAll(savedDashboard.getTenantId(), savedDashboard.getOwnerId(), savedDashboard.getId());
+        entityGroupService.addEntityToEntityGroup(tenantId, entityGroupId, savedDashboard.getId());
+    }
+
+    private void replaceOverwriteDashboardIds(List<Dashboard> dashboards, List<DashboardInfo> persistentDashboards) throws Exception {
+        Map<DashboardId, DashboardId> idMapping = new HashMap();
+        for (Dashboard dashboard : dashboards) {
+            Optional<DashboardInfo> overwriteDashboardInfoOpt = persistentDashboards.stream().filter(d -> d.getTitle().equals(dashboard.getTitle())).findAny();
+            DashboardId importDashboardId = dashboard.getId();
+            DashboardId overwriteDashboardId;
+            if (overwriteDashboardInfoOpt.isPresent()) {
+                overwriteDashboardId = overwriteDashboardInfoOpt.get().getId();
+            } else {
+                overwriteDashboardId = new DashboardId(Uuids.timeBased());
+            }
+            idMapping.put(importDashboardId, overwriteDashboardId);
+            dashboard.setId(overwriteDashboardId);
+        }
+        for (Dashboard dashboard : dashboards) {
+            JsonNode configuration = dashboard.getConfiguration();
+            searchDashboardIdRecursive(idMapping, configuration);
+        }
+    }
+
+    private void resetDashboardOwnerCustomer(TenantId tenantId, EntityId ownerId, List<Dashboard> dashboards) {
+        for (Dashboard dashboard : dashboards) {
+            dashboard.setTenantId(tenantId);
+            dashboard.setOwnerId(ownerId);
+        }
+    }
+
+    List<Dashboard> replaceDashboardIds(List<Dashboard> dashboards) throws Exception {
+        Map<DashboardId, DashboardId> idMapping = new HashMap();
+        for (Dashboard dashboard : dashboards) {
+            if (dashboard.getId() != null) {
+                DashboardId oldId = dashboard.getId();
+                DashboardId newId = new DashboardId(Uuids.timeBased());
+                idMapping.put(oldId, newId);
+                dashboard.setId(newId);
+            } else {
+                DashboardId newId = new DashboardId(Uuids.timeBased());
+                dashboard.setId(newId);
+            }
+        }
+        for (Dashboard dashboard : dashboards) {
+            searchDashboardIdRecursive(idMapping, dashboard.getConfiguration());
+        }
+        return dashboards;
+    }
 }
