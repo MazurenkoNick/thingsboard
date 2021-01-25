@@ -1,7 +1,7 @@
 ///
 /// ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
 ///
-/// Copyright © 2016-2020 ThingsBoard, Inc. All Rights Reserved.
+/// Copyright © 2016-2021 ThingsBoard, Inc. All Rights Reserved.
 ///
 /// NOTICE: All information contained herein is, and remains
 /// the property of ThingsBoard, Inc. and its suppliers,
@@ -142,6 +142,8 @@ export class EntityGroupColumnComponent extends PageComponent implements Control
         entityFieldKeys = ['title', 'email', 'country', 'state', 'city', 'address', 'address2', 'zip', 'phone'];
         break;
       case EntityType.ASSET:
+        entityFieldKeys = ['name', 'type', 'label', 'assigned_customer'];
+        break;
       case EntityType.DEVICE:
         entityFieldKeys = ['name', 'device_profile', 'label', 'assigned_customer'];
         break;

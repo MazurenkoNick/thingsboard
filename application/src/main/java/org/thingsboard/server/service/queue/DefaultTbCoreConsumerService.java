@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2020 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2021 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -329,7 +329,7 @@ public class DefaultTbCoreConsumerService extends AbstractConsumerService<ToCore
                         try {
                             handleUsageStats(msg, callback);
                         } catch (Throwable e) {
-                            log.warn("[{}] Failed to process usge stats: {}", id, msg, e);
+                            log.warn("[{}] Failed to process usage stats: {}", id, msg, e);
                             callback.onFailure(e);
                         }
                     });

@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2020 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2021 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -216,6 +216,7 @@ public class UserServiceImpl extends AbstractEntityService implements UserServic
     public UserCredentials requestPasswordReset(TenantId tenantId, String email) {
         log.trace("Executing requestPasswordReset email [{}]", email);
         validateString(email, "Incorrect email " + email);
+        DataValidator.validateEmail(email);
         User user = userDao.findByEmail(tenantId, email);
         if (user == null) {
             throw new IncorrectParameterException(String.format("Unable to find user by email [%s]", email));

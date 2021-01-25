@@ -2,7 +2,7 @@
 
     ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
 
-    Copyright © 2016-2020 ThingsBoard, Inc. All Rights Reserved.
+    Copyright © 2016-2021 ThingsBoard, Inc. All Rights Reserved.
 
     NOTICE: All information contained herein is, and remains
     the property of ThingsBoard, Inc. and its suppliers,
@@ -35,7 +35,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.thingsboard</groupId>
     <artifactId>thingsboard</artifactId>
-    <version>3.2.0PE-SNAPSHOT</version>
+    <version>3.2.1PE-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>ThingsBoard PE</name>
@@ -116,7 +116,7 @@
         </sonar.exclusions>
         <elasticsearch.version>5.0.2</elasticsearch.version>
         <delight-nashorn-sandbox.version>0.1.14</delight-nashorn-sandbox.version>
-        <kafka.version>2.3.0</kafka.version>
+        <kafka.version>2.6.0</kafka.version>
         <bucket4j.version>4.1.1</bucket4j.version>
         <fst.version>2.57</fst.version>
         <antlr.version>2.7.7</antlr.version>
@@ -809,6 +809,9 @@
                             <exclude>docker/haproxy/**</exclude>
                             <exclude>docker/tb-node/**</exclude>
                             <exclude>src/browserslist</exclude>
+                            <exclude>ui/**</exclude>
+                            <exclude>src/.browserslistrc</exclude>
+                            <exclude>**/yarn.lock</exclude>
                             <exclude>**/*.raw</exclude>
                             <exclude>docker/**</exclude>
                             <exclude>**/apache/cassandra/io/**</exclude>
@@ -920,6 +923,11 @@
             <dependency>
                 <groupId>org.thingsboard.common.integration</groupId>
                 <artifactId>mqtt-integrations</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.thingsboard.common.integration</groupId>
+                <artifactId>gcloud-integrations</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

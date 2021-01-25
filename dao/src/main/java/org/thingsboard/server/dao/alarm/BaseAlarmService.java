@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2020 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2021 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -422,7 +422,9 @@ public class BaseAlarmService extends AbstractEntityService implements AlarmServ
     private Set<EntityId> getPropagationEntityIds(Alarm alarm) {
         if (alarm.isPropagate()) {
             List<EntityRelation> relations = relationService.findByTo(alarm.getTenantId(), alarm.getId(), RelationTypeGroup.ALARM);
-            return relations.stream().map(EntityRelation::getFrom).collect(Collectors.toSet());
+            Set<EntityId> propagationEntityIds = relations.stream().map(EntityRelation::getFrom).collect(Collectors.toSet());
+            propagationEntityIds.add(alarm.getOriginator());
+            return propagationEntityIds;
         } else {
             return Collections.singleton(alarm.getOriginator());
         }
