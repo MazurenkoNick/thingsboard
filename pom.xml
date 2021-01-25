@@ -797,6 +797,8 @@
                             <exclude>packaging/*/scripts/control/**</exclude>
                             <exclude>packaging/*/scripts/windows/**</exclude>
                             <exclude>packaging/*/scripts/init/**</exclude>
+                            <exclude>packaging/java/scripts/EULA.txt</exclude>
+                            <exclude>packaging/java/scripts/EULA_DEB.txt</exclude>
                             <exclude>**/*.log</exclude>
                             <exclude>**/*.current</exclude>
                             <exclude>.instance_id</exclude>
