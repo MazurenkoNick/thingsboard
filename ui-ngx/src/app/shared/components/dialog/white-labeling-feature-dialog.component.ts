@@ -49,7 +49,7 @@ export class WhiteLabelingFeatureDialogComponent extends DialogComponent<WhiteLa
   @HostBinding('style.width') width = '100%';
   @HostBinding('style.height') height = '100%';
 
-  whiteLabelingSvg = require('../../../../assets/white-labeling.svg').default;
+  whiteLabelingSvg = 'assets/white-labeling.svg';
 
   constructor(protected store: Store<AppState>,
               protected router: Router,

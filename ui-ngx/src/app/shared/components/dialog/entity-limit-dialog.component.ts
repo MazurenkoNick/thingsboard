@@ -53,7 +53,7 @@ export interface EntityLimitDialogData {
 })
 export class EntityLimitDialogComponent extends DialogComponent<EntityLimitDialogComponent> {
 
-  limitReachedSvg = require('../../../../assets/limit-reached.svg').default;
+  limitReachedSvg = 'assets/limit-reached.svg';
 
   errorContent: string;
 
