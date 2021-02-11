@@ -41,6 +41,7 @@ import { StateObject, StateParams } from '@app/core/api/widget-api.models';
 import { WindowMessage } from '@shared/models/window-message.model';
 import { UtilsService } from '@core/services/utils.service';
 
+// @dynamic
 @Directive()
 export abstract class StateControllerComponent implements IStateControllerComponent, OnInit, OnDestroy {
 
@@ -105,6 +106,8 @@ export abstract class StateControllerComponent implements IStateControllerCompon
 
   currentState: string;
 
+  syncStateWithQueryParam: boolean;
+
   private rxSubscriptions = new Array<Subscription>();
 
   private inited = false;
@@ -118,18 +121,20 @@ export abstract class StateControllerComponent implements IStateControllerCompon
   }
 
   ngOnInit(): void {
-    this.rxSubscriptions.push(this.route.queryParamMap.subscribe((paramMap) => {
-      const dashboardId = this.route.snapshot.params.dashboardId || '';
-      if (this.dashboardId === dashboardId) {
-        const newState = this.decodeStateParam(paramMap.get('state'));
-        if (this.currentState !== newState) {
-          this.currentState = newState;
-          if (this.inited) {
-            this.onStateChanged();
+    if (this.syncStateWithQueryParam) {
+      this.rxSubscriptions.push(this.route.queryParamMap.subscribe((paramMap) => {
+        const dashboardId = this.route.snapshot.params.dashboardId || '';
+        if (this.dashboardId === dashboardId) {
+          const newState = this.decodeStateParam(paramMap.get('state'));
+          if (this.currentState !== newState) {
+            this.currentState = newState;
+            if (this.inited) {
+              this.onStateChanged();
+            }
           }
         }
-      }
-    }));
+      }));
+    }
     this.init();
     this.inited = true;
   }
@@ -143,16 +148,18 @@ export abstract class StateControllerComponent implements IStateControllerCompon
 
   protected updateStateParam(newState: string) {
     this.currentState = newState;
-    const queryParams: Params = { state: this.currentState };
-    this.ngZone.run(() => {
-      this.router.navigate(
-        [],
-        {
-          relativeTo: this.route,
-          queryParams,
-          queryParamsHandling: 'merge',
-        });
-    });
+    if (this.syncStateWithQueryParam) {
+      const queryParams: Params = {state: this.currentState};
+      this.ngZone.run(() => {
+        this.router.navigate(
+          [],
+          {
+            relativeTo: this.route,
+            queryParams,
+            queryParamsHandling: 'merge',
+          });
+      });
+    }
     if (this.utils.stateSelectView) {
       const message: WindowMessage = {
         type: 'dashboardStateSelected',
