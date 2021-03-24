@@ -166,9 +166,13 @@ import { DndModule } from 'ngx-drag-drop';
 import { QueueTypeListComponent } from '@shared/components/queue/queue-type-list.component';
 import { WhiteLabelingFeatureDialogComponent } from '@shared/components/dialog/white-labeling-feature-dialog.component';
 import { ContactComponent } from '@shared/components/contact.component';
+import { FileSizePipe } from '@shared/pipe/file-size.pipe';
+import { WidgetsBundleSearchComponent } from '@shared/components/widgets-bundle-search.component';
+import { SelectableColumnsPipe } from '@shared/pipe/selectable-columns.pipe';
+import { QuickTimeIntervalComponent } from '@shared/components/time/quick-time-interval.component';
 import { GroupPermissionsComponent } from '@shared/components/role/group-permissions.component';
 import { GroupPermissionDialogComponent } from '@shared/components/role/group-permission-dialog.component';
-import { ShareEntityGroupComponent } from './components/group/share-entity-group.component';
+import { ShareEntityGroupComponent } from '@shared/components/group/share-entity-group.component';
 import { EntityLimitDialogComponent } from '@shared/components/dialog/entity-limit-dialog.component';
 
 @NgModule({
@@ -179,6 +183,7 @@ import { EntityLimitDialogComponent } from '@shared/components/dialog/entity-lim
     HighlightPipe,
     TruncatePipe,
     TbJsonPipe,
+    FileSizePipe,
     HasGenericPermissionPipe,
     HasEntityGroupPermissionPipe,
     HasGroupEntityPermissionPipe,
@@ -211,6 +216,7 @@ import { EntityLimitDialogComponent } from '@shared/components/dialog/entity-lim
     TimewindowComponent,
     TimewindowPanelComponent,
     TimeintervalComponent,
+    QuickTimeIntervalComponent,
     DashboardSelectComponent,
     DashboardSelectPanelComponent,
     DatetimePeriodComponent,
@@ -267,6 +273,8 @@ import { EntityLimitDialogComponent } from '@shared/components/dialog/entity-lim
     HighlightPipe,
     TruncatePipe,
     TbJsonPipe,
+    FileSizePipe,
+    SelectableColumnsPipe,
     KeyboardShortcutPipe,
     HasGenericPermissionPipe,
     HasEntityGroupPermissionPipe,
@@ -276,6 +284,7 @@ import { EntityLimitDialogComponent } from '@shared/components/dialog/entity-lim
     HistorySelectorComponent,
     EntityGatewaySelectComponent,
     ContactComponent,
+    WidgetsBundleSearchComponent,
     GroupPermissionsComponent,
     GroupPermissionDialogComponent,
     ShareEntityGroupComponent
@@ -350,6 +359,7 @@ import { EntityLimitDialogComponent } from '@shared/components/dialog/entity-lim
     TimewindowComponent,
     TimewindowPanelComponent,
     TimeintervalComponent,
+    QuickTimeIntervalComponent,
     DashboardSelectComponent,
     DatetimePeriodComponent,
     DatetimeComponent,
@@ -452,6 +462,8 @@ import { EntityLimitDialogComponent } from '@shared/components/dialog/entity-lim
     TruncatePipe,
     TbJsonPipe,
     KeyboardShortcutPipe,
+    FileSizePipe,
+    SelectableColumnsPipe,
     HasGenericPermissionPipe,
     HasEntityGroupPermissionPipe,
     HasGroupEntityPermissionPipe,
@@ -460,6 +472,7 @@ import { EntityLimitDialogComponent } from '@shared/components/dialog/entity-lim
     HistorySelectorComponent,
     EntityGatewaySelectComponent,
     ContactComponent,
+    WidgetsBundleSearchComponent,
     GroupPermissionsComponent,
     GroupPermissionDialogComponent,
     ShareEntityGroupComponent

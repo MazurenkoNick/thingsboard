@@ -132,6 +132,7 @@ import { DeviceProfileDialogComponent } from '@home/components/profile/device-pr
 import { DeviceProfileAutocompleteComponent } from '@home/components/profile/device-profile-autocomplete.component';
 import { MqttDeviceProfileTransportConfigurationComponent } from '@home/components/profile/device/mqtt-device-profile-transport-configuration.component';
 import { Lwm2mDeviceProfileTransportConfigurationComponent } from '@home/components/profile/device/lwm2m-device-profile-transport-configuration.component';
+import {CoapDeviceProfileTransportConfigurationComponent} from '@home/components/profile/device/coap-device-profile-transport-configuration.component';
 import { DeviceProfileAlarmsComponent } from '@home/components/profile/alarm/device-profile-alarms.component';
 import { DeviceProfileAlarmComponent } from '@home/components/profile/alarm/device-profile-alarm.component';
 import { CreateAlarmRulesComponent } from '@home/components/profile/alarm/create-alarm-rules.component';
@@ -168,6 +169,7 @@ import { ManageDashboardStatesDialogComponent } from '@home/components/dashboard
 import { DashboardStateDialogComponent } from '@home/components/dashboard-page/states/dashboard-state-dialog.component';
 import { EmbedDashboardDialogComponent } from '@home/components/widget/dialog/embed-dashboard-dialog.component';
 import { EMBED_DASHBOARD_DIALOG_TOKEN } from '@home/components/widget/dialog/embed-dashboard-dialog-token';
+import { DisplayWidgetTypesPanelComponent } from '@home/components/dashboard-page/widget-types-panel.component';
 
 @NgModule({
   declarations:
@@ -264,6 +266,7 @@ import { EMBED_DASHBOARD_DIALOG_TOKEN } from '@home/components/widget/dialog/emb
       DefaultDeviceProfileTransportConfigurationComponent,
       MqttDeviceProfileTransportConfigurationComponent,
       Lwm2mDeviceProfileTransportConfigurationComponent,
+      CoapDeviceProfileTransportConfigurationComponent,
       DeviceProfileTransportConfigurationComponent,
       CreateAlarmRulesComponent,
       AlarmRuleComponent,
@@ -297,7 +300,8 @@ import { EMBED_DASHBOARD_DIALOG_TOKEN } from '@home/components/widget/dialog/emb
       DashboardSettingsDialogComponent,
       ManageDashboardStatesDialogComponent,
       DashboardStateDialogComponent,
-      EmbedDashboardDialogComponent
+      EmbedDashboardDialogComponent,
+      DisplayWidgetTypesPanelComponent
     ],
   imports: [
     CommonModule,
@@ -384,6 +388,7 @@ import { EMBED_DASHBOARD_DIALOG_TOKEN } from '@home/components/widget/dialog/emb
     DefaultDeviceProfileTransportConfigurationComponent,
     MqttDeviceProfileTransportConfigurationComponent,
     Lwm2mDeviceProfileTransportConfigurationComponent,
+    CoapDeviceProfileTransportConfigurationComponent,
     DeviceProfileTransportConfigurationComponent,
     CreateAlarmRulesComponent,
     AlarmRuleComponent,
@@ -417,7 +422,8 @@ import { EMBED_DASHBOARD_DIALOG_TOKEN } from '@home/components/widget/dialog/emb
     DashboardSettingsDialogComponent,
     ManageDashboardStatesDialogComponent,
     DashboardStateDialogComponent,
-    EmbedDashboardDialogComponent
+    EmbedDashboardDialogComponent,
+    DisplayWidgetTypesPanelComponent
   ],
   providers: [
     WidgetComponentService,
