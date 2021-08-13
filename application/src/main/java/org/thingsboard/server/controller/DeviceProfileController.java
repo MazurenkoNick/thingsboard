@@ -47,6 +47,7 @@ import org.thingsboard.server.common.data.DeviceProfile;
 import org.thingsboard.server.common.data.DeviceProfileInfo;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.audit.ActionType;
+import org.thingsboard.server.common.data.edge.EdgeEventActionType;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.id.DeviceProfileId;
 import org.thingsboard.server.common.data.page.PageData;
@@ -58,6 +59,7 @@ import org.thingsboard.server.dao.timeseries.TimeseriesService;
 import org.thingsboard.server.queue.util.TbCoreComponent;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 @RestController
@@ -158,16 +160,33 @@ public class DeviceProfileController extends BaseController {
 
             checkEntity(deviceProfile.getId(), deviceProfile, Resource.DEVICE_PROFILE, null);
 
+            boolean isFirmwareChanged = false;
+            boolean isSoftwareChanged = false;
+
+            if (!created) {
+                DeviceProfile oldDeviceProfile = deviceProfileService.findDeviceProfileById(getTenantId(), deviceProfile.getId());
+                if (!Objects.equals(deviceProfile.getFirmwareId(), oldDeviceProfile.getFirmwareId())) {
+                    isFirmwareChanged = true;
+                }
+                if (!Objects.equals(deviceProfile.getSoftwareId(), oldDeviceProfile.getSoftwareId())) {
+                    isSoftwareChanged = true;
+                }
+            }
+
             DeviceProfile savedDeviceProfile = checkNotNull(deviceProfileService.saveDeviceProfile(deviceProfile));
 
             tbClusterService.onDeviceProfileChange(savedDeviceProfile, null);
-            tbClusterService.onEntityStateChange(deviceProfile.getTenantId(), savedDeviceProfile.getId(),
+            tbClusterService.broadcastEntityStateChangeEvent(deviceProfile.getTenantId(), savedDeviceProfile.getId(),
                     created ? ComponentLifecycleEvent.CREATED : ComponentLifecycleEvent.UPDATED);
 
             logEntityAction(savedDeviceProfile.getId(), savedDeviceProfile,
                     null,
                     created ? ActionType.ADDED : ActionType.UPDATED, null);
 
+            otaPackageStateService.update(savedDeviceProfile, isFirmwareChanged, isSoftwareChanged);
+
+            sendEntityNotificationMsg(getTenantId(), savedDeviceProfile.getId(),
+                    deviceProfile.getId() == null ? EdgeEventActionType.ADDED : EdgeEventActionType.UPDATED);
             return savedDeviceProfile;
         } catch (Exception e) {
             logEntityAction(emptyId(EntityType.DEVICE_PROFILE), deviceProfile,
@@ -187,12 +206,13 @@ public class DeviceProfileController extends BaseController {
             deviceProfileService.deleteDeviceProfile(getTenantId(), deviceProfileId);
 
             tbClusterService.onDeviceProfileDelete(deviceProfile, null);
-            tbClusterService.onEntityStateChange(deviceProfile.getTenantId(), deviceProfile.getId(), ComponentLifecycleEvent.DELETED);
+            tbClusterService.broadcastEntityStateChangeEvent(deviceProfile.getTenantId(), deviceProfile.getId(), ComponentLifecycleEvent.DELETED);
 
             logEntityAction(deviceProfileId, deviceProfile,
                     null,
                     ActionType.DELETED, null, strDeviceProfileId);
 
+            sendEntityNotificationMsg(getTenantId(), deviceProfile.getId(), EdgeEventActionType.DELETED);
         } catch (Exception e) {
             logEntityAction(emptyId(EntityType.DEVICE_PROFILE),
                     null,

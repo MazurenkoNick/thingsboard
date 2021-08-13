@@ -72,6 +72,8 @@ public class IntegrationGrpcClient implements IntegrationRpcClient {
     private int rpcPort;
     @Value("${rpc.timeout}")
     private int timeoutSecs;
+    @Value("${rpc.keep_alive_time_sec:300}")
+    private int keepAliveTimeSec;
     @Value("${rpc.ssl.enabled}")
     private boolean sslEnabled;
     @Value("${rpc.ssl.cert}")
@@ -89,7 +91,7 @@ public class IntegrationGrpcClient implements IntegrationRpcClient {
             , Consumer<ConverterConfigurationProto> onConverterUpdate, Consumer<DeviceDownlinkDataProto> onDownlink, Consumer<Exception> onError) {
         NettyChannelBuilder builder = NettyChannelBuilder
                 .forAddress(rpcHost, rpcPort)
-                .usePlaintext();
+                .keepAliveTime(keepAliveTimeSec, TimeUnit.SECONDS);
         if (sslEnabled) {
             try {
                 builder.sslContext(GrpcSslContexts.forClient().trustManager(new File(Resources.getResource(certResource).toURI())).build());
@@ -97,6 +99,8 @@ public class IntegrationGrpcClient implements IntegrationRpcClient {
                 log.error("Failed to initialize channel!", e);
                 throw new RuntimeException(e);
             }
+        } else {
+            builder.usePlaintext();
         }
         channel = builder.build();
         IntegrationTransportGrpc.IntegrationTransportStub stub = IntegrationTransportGrpc.newStub(channel);
@@ -164,9 +168,28 @@ public class IntegrationGrpcClient implements IntegrationRpcClient {
         try {
             inputStream.onCompleted();
         } catch (Exception e) {
+            log.error("Exception during onCompleted", e);
         }
         if (channel != null) {
-            channel.shutdown().awaitTermination(timeoutSecs, TimeUnit.SECONDS);
+            channel.shutdown();
+            int attempt = 0;
+            do {
+                try {
+                    channel.awaitTermination(timeoutSecs, TimeUnit.SECONDS);
+                } catch (Exception e) {
+                    log.error("Channel await termination was interrupted", e);
+                }
+                if (attempt > 5) {
+                    log.warn("We had reached maximum of termination attempts. Force closing channel");
+                    try {
+                        channel.shutdownNow();
+                    } catch (Exception e) {
+                        log.error("Exception during shutdownNow", e);
+                    }
+                    break;
+                }
+                attempt++;
+            } while (!channel.isTerminated());
         }
     }
 

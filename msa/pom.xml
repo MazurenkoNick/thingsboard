@@ -35,7 +35,7 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>org.thingsboard</groupId>
-        <version>3.2.2PE-SNAPSHOT</version>
+        <version>3.3.0PE-SNAPSHOT</version>
         <artifactId>thingsboard</artifactId>
     </parent>
     <artifactId>msa</artifactId>
@@ -48,6 +48,9 @@
         <main.dir>${basedir}/..</main.dir>
         <docker.repo>thingsboard</docker.repo>
         <dockerfile.skip>true</dockerfile.skip>
+        <tb.docker.id>pe</tb.docker.id>
+        <blackBoxTests.skip>true</blackBoxTests.skip>
+        <dockerfile-maven.version>1.4.13</dockerfile-maven.version>
     </properties>
 
     <modules>
@@ -57,17 +60,38 @@
         <module>web-report</module>
         <module>tb-node</module>
         <module>transport</module>
-        <module>black-box-tests</module>
         <module>integration</module>
     </modules>
 
+    <profiles>
+        <profile>
+            <id>black-box-tests</id>
+            <activation>
+                <property>
+                    <name>blackBoxTests.skip</name>
+                    <value>false</value>
+                </property>
+            </activation>
+            <modules>
+                <module>black-box-tests</module>
+            </modules>
+        </profile>
+    </profiles>
+
     <build>
+        <extensions>
+            <extension>
+                <groupId>com.spotify</groupId>
+                <artifactId>dockerfile-maven-extension</artifactId>
+                <version>${dockerfile-maven.version}</version>
+            </extension>
+        </extensions>
         <pluginManagement>
             <plugins>
                 <plugin>
                     <groupId>com.spotify</groupId>
                     <artifactId>dockerfile-maven-plugin</artifactId>
-                    <version>1.4.13</version>
+                    <version>${dockerfile-maven.version}</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>

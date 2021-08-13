@@ -1,0 +1,126 @@
+<!--
+
+    ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
+
+    Copyright © 2016-2021 ThingsBoard, Inc. All Rights Reserved.
+
+    NOTICE: All information contained herein is, and remains
+    the property of ThingsBoard, Inc. and its suppliers,
+    if any.  The intellectual and technical concepts contained
+    herein are proprietary to ThingsBoard, Inc.
+    and its suppliers and may be covered by U.S. and Foreign Patents,
+    patents in process, and are protected by trade secret or copyright law.
+
+    Dissemination of this information or reproduction of this material is strictly forbidden
+    unless prior written permission is obtained from COMPANY.
+
+    Access to the source code contained herein is hereby forbidden to anyone except current COMPANY employees,
+    managers or contractors who have executed Confidentiality and Non-disclosure agreements
+    explicitly covering such access.
+
+    The copyright notice above does not evidence any actual or intended publication
+    or disclosure  of  this source code, which includes
+    information that is confidential and/or proprietary, and is a trade secret, of  COMPANY.
+    ANY REPRODUCTION, MODIFICATION, DISTRIBUTION, PUBLIC  PERFORMANCE,
+    OR PUBLIC DISPLAY OF OR THROUGH USE  OF THIS  SOURCE CODE  WITHOUT
+    THE EXPRESS WRITTEN CONSENT OF COMPANY IS STRICTLY PROHIBITED,
+    AND IN VIOLATION OF APPLICABLE LAWS AND INTERNATIONAL TREATIES.
+    THE RECEIPT OR POSSESSION OF THIS SOURCE CODE AND/OR RELATED INFORMATION
+    DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
+    OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
+
+-->
+<section [formGroup]="serverFormGroup">
+  <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="8px" fxLayoutGap.xs="0px">
+    <mat-form-field fxFlex>
+      <mat-label>{{ 'device-profile.lwm2m.mode' | translate }}</mat-label>
+      <mat-select formControlName="securityMode">
+        <mat-option *ngFor="let securityMode of securityConfigLwM2MTypes"
+                    [value]="securityMode">
+          {{ credentialTypeLwM2MNamesMap.get(securityConfigLwM2MType[securityMode]) }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field fxFlex>
+      <mat-label>{{ 'device-profile.lwm2m.server-host' | translate }}</mat-label>
+      <input matInput type="text" formControlName="host" required>
+      <mat-error *ngIf="serverFormGroup.get('host').hasError('required')">
+        {{ 'device-profile.lwm2m.server-host-required' | translate }}
+      </mat-error>
+    </mat-form-field>
+    <mat-form-field fxFlex>
+      <mat-label>{{ 'device-profile.lwm2m.server-port' | translate }}</mat-label>
+      <input matInput type="number" formControlName="port" required min="0" max="65535">
+      <mat-error *ngIf="serverFormGroup.get('port').hasError('required')">
+        {{ 'device-profile.lwm2m.server-port-required' | translate }}
+      </mat-error>
+      <mat-error *ngIf="serverFormGroup.get('port').hasError('pattern')">
+        {{ 'device-profile.lwm2m.server-port-pattern' | translate }}
+      </mat-error>
+      <mat-error *ngIf="serverFormGroup.get('port').hasError('min') ||
+                         serverFormGroup.get('port').hasError('max')">
+        {{ 'device-profile.lwm2m.server-port-range' | translate }}
+      </mat-error>
+    </mat-form-field>
+  </div>
+  <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="8px" fxLayoutGap.xs="0px">
+    <mat-form-field fxFlex>
+      <mat-label>{{ 'device-profile.lwm2m.short-id' | translate }}</mat-label>
+      <input matInput type="number" min="1" max="65534" formControlName="serverId" required>
+      <mat-error *ngIf="serverFormGroup.get('serverId').hasError('required')">
+        {{ 'device-profile.lwm2m.short-id-required' | translate }}
+      </mat-error>
+      <mat-error *ngIf="serverFormGroup.get('serverId').hasError('pattern')">
+        {{ 'device-profile.lwm2m.short-id-pattern' | translate }}
+      </mat-error>
+      <mat-error *ngIf="serverFormGroup.get('serverId').hasError('min') ||
+                         serverFormGroup.get('serverId').hasError('max')">
+        {{ 'device-profile.lwm2m.short-id-range' | translate }}
+      </mat-error>
+    </mat-form-field>
+    <mat-form-field fxFlex>
+      <mat-label>{{ 'device-profile.lwm2m.client-hold-off-time' | translate }}</mat-label>
+      <input matInput type="number" formControlName="clientHoldOffTime" required min="0"
+             matTooltip="{{'device-profile.lwm2m.client-hold-off-time-tooltip' | translate}}"
+             matTooltipPosition="above">
+      <mat-error *ngIf="serverFormGroup.get('clientHoldOffTime').hasError('required')">
+        {{ 'device-profile.lwm2m.client-hold-off-time-required' | translate }}
+      </mat-error>
+      <mat-error *ngIf="serverFormGroup.get('clientHoldOffTime').hasError('min') ||
+                         serverFormGroup.get('clientHoldOffTime').hasError('pattern')">
+        {{ 'device-profile.lwm2m.client-hold-off-time-pattern' | translate }}
+      </mat-error>
+    </mat-form-field>
+    <mat-form-field fxFlex>
+      <mat-label>{{ 'device-profile.lwm2m.account-after-timeout' | translate }}</mat-label>
+      <input matInput type="number" formControlName="bootstrapServerAccountTimeout" required min="0"
+             matTooltip="{{'device-profile.lwm2m.account-after-timeout-tooltip' | translate}}"
+             matTooltipPosition="above">
+      <mat-error *ngIf="serverFormGroup.get('bootstrapServerAccountTimeout').hasError('required')">
+        {{ 'device-profile.lwm2m.account-after-timeout-required' | translate }}
+      </mat-error>
+      <mat-error *ngIf="serverFormGroup.get('bootstrapServerAccountTimeout').hasError('min') ||
+                         serverFormGroup.get('bootstrapServerAccountTimeout').hasError('pattern')">
+        {{ 'device-profile.lwm2m.account-after-timeout-pattern' | translate }}
+      </mat-error>
+    </mat-form-field>
+  </div>
+  <div *ngIf="serverFormGroup.get('securityMode').value === securityConfigLwM2MType.RPK ||
+    serverFormGroup.get('securityMode').value === securityConfigLwM2MType.X509">
+    <mat-form-field class="mat-block">
+      <mat-label>{{ 'device-profile.lwm2m.server-public-key' | translate }}</mat-label>
+      <textarea matInput
+                cdkTextareaAutosize
+                cdkAutosizeMinRows="1"
+                cols="1" required
+                formControlName="serverPublicKey"
+      ></textarea>
+      <mat-error *ngIf="serverFormGroup.get('serverPublicKey').hasError('required')">
+        {{ 'device-profile.lwm2m.server-public-key-required' | translate }}
+      </mat-error>
+      <mat-error *ngIf="serverFormGroup.get('serverPublicKey').hasError('pattern')">
+        {{ 'device-profile.lwm2m.server-public-key-pattern' | translate }}
+      </mat-error>
+    </mat-form-field>
+  </div>
+</section>

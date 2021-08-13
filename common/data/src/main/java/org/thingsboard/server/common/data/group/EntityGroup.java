@@ -43,6 +43,7 @@ import org.thingsboard.server.common.data.HasName;
 import org.thingsboard.server.common.data.HasOwnerId;
 import org.thingsboard.server.common.data.id.EntityGroupId;
 import org.thingsboard.server.common.data.id.EntityId;
+import org.thingsboard.server.common.data.validation.NoXss;
 
 @Data
 @NoArgsConstructor
@@ -52,12 +53,12 @@ public class EntityGroup extends BaseData<EntityGroupId> implements HasName, Has
 
     public static final EntityType[] groupTypes = new EntityType[]{
             EntityType.USER, EntityType.CUSTOMER, EntityType.DEVICE,
-            EntityType.ASSET, EntityType.ENTITY_VIEW, EntityType.DASHBOARD
+            EntityType.ASSET, EntityType.ENTITY_VIEW, EntityType.EDGE, EntityType.DASHBOARD
     };
 
     public static final EntityType[] sharableGroupTypes = new EntityType[]{
             EntityType.CUSTOMER, EntityType.DEVICE,
-            EntityType.ASSET, EntityType.ENTITY_VIEW, EntityType.DASHBOARD
+            EntityType.ASSET, EntityType.ENTITY_VIEW, EntityType.DASHBOARD, EntityType.EDGE
     };
 
     public static final String GROUP_ALL_NAME = "All";
@@ -67,10 +68,15 @@ public class EntityGroup extends BaseData<EntityGroupId> implements HasName, Has
     public static final String GROUP_CUSTOMER_ADMINS_NAME = "Customer Administrators";
     public static final String GROUP_PUBLIC_USERS_NAME = "Public Users";
 
-    @ApiModelProperty(required = true, allowableValues = "CUSTOMER,ASSET,DEVICE,USER,ENTITY_VIEW,DASHBOARD")
+    private static final String GROUP_EDGE_ALL_STARTS_WITH = "[Edge]";
+    private static final String GROUP_EDGE_ALL_ENDS_WITH = "All";
+    public static final String GROUP_EDGE_ALL_NAME_PATTERN = GROUP_EDGE_ALL_STARTS_WITH + " %s " + GROUP_EDGE_ALL_ENDS_WITH;
+
+    @ApiModelProperty(required = true, allowableValues = "CUSTOMER,ASSET,DEVICE,USER,ENTITY_VIEW,DASHBOARD,EDGE")
     private EntityType type;
 
     @ApiModelProperty(required = true)
+    @NoXss
     private String name;
 
     private EntityId ownerId;
@@ -109,13 +115,15 @@ public class EntityGroup extends BaseData<EntityGroupId> implements HasName, Has
         return GROUP_ALL_NAME.equals(name);
     }
 
+    public boolean isEdgeGroupAll() {
+        return name.startsWith(GROUP_EDGE_ALL_STARTS_WITH) && name.endsWith(GROUP_EDGE_ALL_ENDS_WITH);
+    }
+
     @JsonIgnore
     public boolean isPublic() {
         if (getAdditionalInfo() != null && getAdditionalInfo().has("isPublic")) {
             return getAdditionalInfo().get("isPublic").asBoolean();
         }
-
         return false;
     }
-
 }

@@ -147,6 +147,10 @@ export function isEmpty(obj: any): boolean {
   return true;
 }
 
+export function isLiteralObject(value: any) {
+  return (!!value) && (value.constructor === Object);
+}
+
 export function formatValue(value: any, dec?: number, units?: string, showZeroDecimals?: boolean): string | undefined {
   if (isDefinedAndNotNull(value) && isNumeric(value) &&
     (isDefinedAndNotNull(dec) || isDefinedAndNotNull(units) || Number(value).toString() === value)) {
@@ -218,6 +222,13 @@ export function base64toObj(b64Encoded: string): any {
     return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
   }).join(''));
   return JSON.parse(json);
+}
+
+export function checkNumericStringAndConvert(val: string): number | string {
+  if (val && isNumeric(val) && Number(val).toString() === val) {
+    return Number(val);
+  }
+  return val;
 }
 
 const scrollRegex = /(auto|scroll)/;
@@ -320,7 +331,7 @@ export function deepClone<T>(target: T, ignoreFields?: string[]): T {
     return cp.map((n: any) => deepClone<any>(n)) as any;
   }
   if (typeof target === 'object' && target !== {}) {
-    const cp = { ...(target as { [key: string]: any }) } as { [key: string]: any };
+    const cp = {...(target as { [key: string]: any })} as { [key: string]: any };
     Object.keys(cp).forEach(k => {
       if (!ignoreFields || ignoreFields.indexOf(k) === -1) {
         cp[k] = deepClone<any>(cp[k]);
@@ -465,6 +476,13 @@ export function baseUrl(): string {
   return url;
 }
 
+export function coapBaseUrl(dtlsEnabled: boolean): string {
+  if (dtlsEnabled) {
+    return "coaps:" + '//' + window.location.hostname;
+  }
+  return "coap:" + '//' + window.location.hostname;
+}
+
 export function generateId(length: number): string {
   if (!length || isNaN(length)) {
     length = 1;
@@ -484,7 +502,7 @@ export function sortObjectKeys<T>(obj: T): T {
 }
 
 export function deepTrim<T>(obj: T): T {
-  if (isNumber(obj) || isUndefined(obj) || isString(obj) || obj === null) {
+  if (isNumber(obj) || isUndefined(obj) || isString(obj) || obj === null || obj instanceof File) {
     return obj;
   }
   return Object.keys(obj).reduce((acc, curr) => {
@@ -511,6 +529,21 @@ export function generateSecret(length?: number): string {
   return str.concat(generateSecret(length - str.length));
 }
 
-export function validateEntityId(entityId: EntityId): boolean {
-  return isDefinedAndNotNull(entityId.id) && entityId.id !== NULL_UUID && isDefinedAndNotNull(entityId.entityType);
+export function validateEntityId(entityId: EntityId | null): boolean {
+    return isDefinedAndNotNull(entityId?.id) && entityId.id !== NULL_UUID && isDefinedAndNotNull(entityId?.entityType);
+}
+
+export function isMobileApp(): boolean {
+  return isDefined((window as any).flutter_inappwebview);
+}
+
+const alphanumericCharacters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+const alphanumericCharactersLength = alphanumericCharacters.length;
+
+export function randomAlphanumeric(length: number): string {
+  let result = '';
+  for ( let i = 0; i < length; i++ ) {
+    result += alphanumericCharacters.charAt(Math.floor(Math.random() * alphanumericCharactersLength));
+  }
+  return result;
 }

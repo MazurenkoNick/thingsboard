@@ -869,7 +869,7 @@
     "credentials-type": "Vrsta poverilnic",
     "access-token": "Dostopni žeton",
     "access-token-required": "Zahtevan je žeton za dostop.",
-    "access-token-invalid": "Dolžina žetona za dostop mora biti od 1 do 20 znakov.",
+    "access-token-invalid": "Dolžina žetona za dostop mora biti od 1 do 32 znakov.",
     "rsa-key": "Javni ključ RSA",
     "rsa-key-required": "Potreben je javni ključ RSA.",
     "client-id": "Client ID",
@@ -920,7 +920,7 @@
       "existing-device-profile": "Select existing device profile",
       "specific-configuration": "Specific configuration",
       "customer-to-assign-device": "Customer to assign the device",
-      "add-credential": "Add credential"
+      "add-credentials": "Add credentials"
     }
   },
   "device-profile": {
@@ -1329,7 +1329,6 @@
     "body": "Vsebina",
     "method": "Metoda",
     "type": "Vrsta",
-    "entity": "Entiteta",
     "message-id": "ID sporočila",
     "message-type": "Vrsta sporočila",
     "data-type": "Vrsta podatkov",
@@ -1341,7 +1340,9 @@
     "success": "Uspeh",
     "failed": "Ni uspelo",
     "messages-processed": "Obdelana sporočila",
-    "errors-occurred": "Prišlo je do napak"
+    "errors-occurred": "Prišlo je do napak",
+    "all-events": "Vse",
+    "entity-type": "Vrsta entitete"
   },
   "extension": {
     "extensions": "Razširitve",

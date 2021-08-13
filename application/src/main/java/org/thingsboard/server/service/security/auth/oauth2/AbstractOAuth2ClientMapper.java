@@ -40,6 +40,8 @@ import com.google.common.util.concurrent.MoreExecutors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.BadCredentialsException;
+import lombok.Getter;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -54,8 +56,8 @@ import org.thingsboard.server.common.data.id.DashboardId;
 import org.thingsboard.server.common.data.id.EntityGroupId;
 import org.thingsboard.server.common.data.id.IdBased;
 import org.thingsboard.server.common.data.id.TenantId;
-import org.thingsboard.server.common.data.oauth2.OAuth2ClientRegistrationInfo;
 import org.thingsboard.server.common.data.oauth2.OAuth2MapperConfig;
+import org.thingsboard.server.common.data.oauth2.OAuth2Registration;
 import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.permission.MergedUserPermissions;
 import org.thingsboard.server.common.data.permission.Operation;
@@ -70,7 +72,7 @@ import org.thingsboard.server.dao.tenant.TbTenantProfileCache;
 import org.thingsboard.server.dao.tenant.TenantService;
 import org.thingsboard.server.dao.user.UserService;
 import org.thingsboard.server.service.install.InstallScripts;
-import org.thingsboard.server.service.queue.TbClusterService;
+import org.thingsboard.server.cluster.TbClusterService;
 import org.thingsboard.server.service.security.model.SecurityUser;
 import org.thingsboard.server.service.security.model.UserPrincipal;
 import org.thingsboard.server.service.security.permission.OwnersCacheService;
@@ -122,11 +124,15 @@ public abstract class AbstractOAuth2ClientMapper {
     @Autowired
     protected TbClusterService tbClusterService;
 
+    @Value("${edges.enabled}")
+    @Getter
+    private boolean edgesEnabled;
+
     private final Lock userCreationLock = new ReentrantLock();
 
-    protected SecurityUser getOrCreateSecurityUserFromOAuth2User(OAuth2User oauth2User, OAuth2ClientRegistrationInfo clientRegistration) {
+    protected SecurityUser getOrCreateSecurityUserFromOAuth2User(OAuth2User oauth2User, OAuth2Registration registration) {
 
-        OAuth2MapperConfig config = clientRegistration.getMapperConfig();
+        OAuth2MapperConfig config = registration.getMapperConfig();
 
         UserPrincipal principal = new UserPrincipal(UserPrincipal.Type.USER_NAME, oauth2User.getEmail());
 
@@ -163,9 +169,9 @@ public abstract class AbstractOAuth2ClientMapper {
 
                     ObjectNode additionalInfo = mapper.createObjectNode();
 
-                    if (clientRegistration.getAdditionalInfo() != null &&
-                            clientRegistration.getAdditionalInfo().has("providerName")) {
-                        additionalInfo.put("authProviderName", clientRegistration.getAdditionalInfo().get("providerName").asText());
+                    if (registration.getAdditionalInfo() != null &&
+                            registration.getAdditionalInfo().has("providerName")) {
+                        additionalInfo.put("authProviderName", registration.getAdditionalInfo().get("providerName").asText());
                     }
 
                     user.setAdditionalInfo(additionalInfo);
@@ -183,14 +189,14 @@ public abstract class AbstractOAuth2ClientMapper {
             } finally {
                 userCreationLock.unlock();
             }
-        }
 
-        try {
-            ListenableFuture<Void> future = addUserToUserGroups(oauth2User, user);
-            future.get();
-        } catch (Exception e) {
-            log.error("Error while adding user to entity groups", e);
-            throw new RuntimeException("Error while adding user to entity groups", e);
+            try {
+                ListenableFuture<Void> future = addUserToUserGroups(oauth2User, user);
+                future.get();
+            } catch (Exception e) {
+                log.error("Error while adding user to entity groups", e);
+                throw new RuntimeException("Error while adding user to entity groups", e);
+            }
         }
 
         SecurityUser securityUser;
@@ -291,9 +297,10 @@ public abstract class AbstractOAuth2ClientMapper {
             tenant.setTitle(tenantName);
             tenant = tenantService.saveTenant(tenant);
             installScripts.createDefaultRuleChains(tenant.getId());
+            installScripts.createDefaultEdgeRuleChains(tenant.getId());
             tenantProfileCache.evict(tenant.getId());
             tbClusterService.onTenantChange(tenant, null);
-            tbClusterService.onEntityStateChange(tenant.getId(), tenant.getId(),
+            tbClusterService.broadcastEntityStateChangeEvent(tenant.getId(), tenant.getId(),
                     ComponentLifecycleEvent.CREATED);
         } else {
             tenant = tenants.get(0);

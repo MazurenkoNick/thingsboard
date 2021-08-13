@@ -31,17 +31,18 @@
 package org.thingsboard.rule.engine.api;
 
 import io.netty.channel.EventLoopGroup;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.thingsboard.common.util.ListeningExecutor;
 import org.thingsboard.rule.engine.api.sms.SmsSenderFactory;
-import org.thingsboard.server.common.data.ApiUsageRecordKey;
+import org.thingsboard.server.cluster.TbClusterService;
 import org.thingsboard.server.common.data.Customer;
 import org.thingsboard.server.common.data.Device;
 import org.thingsboard.server.common.data.DeviceProfile;
 import org.thingsboard.server.common.data.TenantProfile;
 import org.thingsboard.server.common.data.alarm.Alarm;
 import org.thingsboard.server.common.data.asset.Asset;
+import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.DeviceId;
+import org.thingsboard.server.common.data.id.EdgeId;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.RuleNodeId;
 import org.thingsboard.server.common.data.id.TenantId;
@@ -57,11 +58,15 @@ import org.thingsboard.server.dao.cassandra.CassandraCluster;
 import org.thingsboard.server.dao.customer.CustomerService;
 import org.thingsboard.server.dao.dashboard.DashboardService;
 import org.thingsboard.server.dao.device.DeviceService;
-import org.thingsboard.server.dao.event.EventService;
+import org.thingsboard.server.dao.edge.EdgeEventService;
+import org.thingsboard.server.dao.edge.EdgeService;
 import org.thingsboard.server.dao.entityview.EntityViewService;
+import org.thingsboard.server.dao.event.EventService;
 import org.thingsboard.server.dao.nosql.CassandraStatementTask;
 import org.thingsboard.server.dao.nosql.TbResultSetFuture;
+import org.thingsboard.server.dao.ota.OtaPackageService;
 import org.thingsboard.server.dao.relation.RelationService;
+import org.thingsboard.server.dao.resource.ResourceService;
 import org.thingsboard.server.dao.rule.RuleChainService;
 import org.thingsboard.server.dao.tenant.TenantService;
 import org.thingsboard.server.dao.timeseries.TimeseriesService;
@@ -157,6 +162,8 @@ public interface TbContext {
 
     TbMsg newMsg(String queueName, String type, EntityId originator, TbMsgMetaData metaData, String data);
 
+    TbMsg newMsg(String queueName, String type, EntityId originator, CustomerId customerId, TbMsgMetaData metaData, String data);
+
     TbMsg transformMsg(TbMsg origMsg, String type, EntityId originator, TbMsgMetaData metaData, String data);
 
     TbMsg customerCreatedMsg(Customer customer, RuleNodeId ruleNodeId);
@@ -167,6 +174,8 @@ public interface TbContext {
 
     // TODO: Does this changes the message?
     TbMsg alarmActionMsg(Alarm alarm, RuleNodeId ruleNodeId, String action);
+
+    void onEdgeEventUpdate(TenantId tenantId, EdgeId edgeId);
 
     /*
      *
@@ -196,6 +205,8 @@ public interface TbContext {
 
     DeviceService getDeviceService();
 
+    TbClusterService getClusterService();
+
     DashboardService getDashboardService();
 
     RuleEngineAlarmService getAlarmService();
@@ -212,8 +223,20 @@ public interface TbContext {
 
     EntityViewService getEntityViewService();
 
+    ResourceService getResourceService();
+
+    OtaPackageService getOtaPackageService();
+
     RuleEngineDeviceProfileCache getDeviceProfileCache();
 
+    EdgeService getEdgeService();
+
+    EdgeEventService getEdgeEventService();
+
+    /**
+     * Js script executors call are completely asynchronous
+     * */
+    @Deprecated
     ListeningExecutor getJsExecutor();
 
     ListeningExecutor getMailExecutor();

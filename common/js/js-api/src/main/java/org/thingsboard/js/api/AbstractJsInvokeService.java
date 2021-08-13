@@ -35,6 +35,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import lombok.extern.slf4j.Slf4j;
 import org.thingsboard.common.util.ThingsBoardThreadFactory;
 import org.thingsboard.server.common.data.ApiUsageRecordKey;
+import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.stats.TbApiUsageReportClient;
 import org.thingsboard.server.common.stats.TbApiUsageStateClient;
@@ -45,6 +46,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -89,18 +91,20 @@ public abstract class AbstractJsInvokeService implements JsInvokeService {
     }
 
     @Override
-    public ListenableFuture<Object> invokeFunction(TenantId tenantId, UUID scriptId, Object... args) {
+    public ListenableFuture<Object> invokeFunction(TenantId tenantId, CustomerId customerId, UUID scriptId, Object... args) {
         if (!apiUsageStateClient.isPresent() || apiUsageStateClient.get().getApiUsageState(tenantId).isJsExecEnabled()) {
             String functionName = scriptIdToNameMap.get(scriptId);
             if (functionName == null) {
                 return Futures.immediateFailedFuture(new RuntimeException("No compiled script found for scriptId: [" + scriptId + "]!"));
             }
             if (!isDisabled(scriptId)) {
-                apiUsageReportClient.ifPresent(client -> client.report(tenantId, ApiUsageRecordKey.JS_EXEC_COUNT, 1));
+                apiUsageReportClient.ifPresent(client -> client.report(tenantId, customerId, ApiUsageRecordKey.JS_EXEC_COUNT, 1));
                 return doInvokeFunction(scriptId, functionName, args);
             } else {
-                return Futures.immediateFailedFuture(
-                        new RuntimeException("Script invocation is blocked due to maximum error count " + getMaxErrors() + "!"));
+                String message = "Script invocation is blocked due to maximum error count "
+                        + getMaxErrors() + ", scriptId " + scriptId + "!";
+                log.warn(message);
+                return Futures.immediateFailedFuture(new RuntimeException(message));
             }
         } else {
             return Futures.immediateFailedFuture(new RuntimeException("JS Execution is disabled due to API limits!"));
@@ -134,8 +138,11 @@ public abstract class AbstractJsInvokeService implements JsInvokeService {
 
     protected abstract long getMaxBlacklistDuration();
 
-    protected void onScriptExecutionError(UUID scriptId) {
-        disabledFunctions.computeIfAbsent(scriptId, key -> new DisableListInfo()).incrementAndGet();
+    protected void onScriptExecutionError(UUID scriptId, Throwable t, String scriptBody) {
+        DisableListInfo disableListInfo = disabledFunctions.computeIfAbsent(scriptId, key -> new DisableListInfo());
+        log.warn("Script has exception and will increment counter {} on disabledFunctions for id {}, exception {}, cause {}, scriptBody {}",
+                disableListInfo.get(), scriptId, t, t.getCause(), scriptBody);
+        disableListInfo.incrementAndGet();
     }
 
     private String generateJsScript(JsScriptType scriptType, String functionName, String scriptBody, String... argNames) {

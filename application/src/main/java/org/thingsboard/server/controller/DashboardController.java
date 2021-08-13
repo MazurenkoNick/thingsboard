@@ -30,9 +30,9 @@
  */
 package org.thingsboard.server.controller;
 
-import io.swagger.annotations.ApiParam;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import io.swagger.annotations.ApiParam;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -46,6 +46,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.server.common.data.Customer;
 import org.thingsboard.server.common.data.Dashboard;
 import org.thingsboard.server.common.data.DashboardInfo;
@@ -58,8 +59,8 @@ import org.thingsboard.server.common.data.audit.ActionType;
 import org.thingsboard.server.common.data.exception.ThingsboardErrorCode;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.group.EntityGroup;
-import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.DashboardId;
+import org.thingsboard.server.common.data.id.EdgeId;
 import org.thingsboard.server.common.data.id.EntityGroupId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.id.UserId;
@@ -70,6 +71,7 @@ import org.thingsboard.server.common.data.permission.MergedUserPermissions;
 import org.thingsboard.server.common.data.permission.Operation;
 import org.thingsboard.server.common.data.permission.Resource;
 import org.thingsboard.server.dao.wl.WhiteLabelingService;
+import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.server.queue.util.TbCoreComponent;
 import org.thingsboard.server.service.security.model.SecurityUser;
 import org.thingsboard.server.service.security.model.UserPrincipal;
@@ -79,7 +81,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static org.thingsboard.server.controller.EntityGroupController.ENTITY_GROUP_ID;
-import org.thingsboard.server.dao.util.mapping.JacksonUtil;
 
 @RestController
 @TbCoreComponent
@@ -151,11 +152,15 @@ public class DashboardController extends BaseController {
         try {
             DashboardId dashboardId = new DashboardId(toUUID(strDashboardId));
             Dashboard dashboard = checkDashboardId(dashboardId, Operation.DELETE);
+
+            List<EdgeId> relatedEdgeIds = findRelatedEdgeIds(getTenantId(), dashboardId);
+
             dashboardService.deleteDashboard(getCurrentUser().getTenantId(), dashboardId);
             logEntityAction(dashboardId, dashboard,
                     null,
                     ActionType.DELETED, null, strDashboardId);
 
+            sendDeleteNotificationMsg(getTenantId(), dashboardId, relatedEdgeIds);
         } catch (Exception e) {
             logEntityAction(emptyId(EntityType.DASHBOARD),
                     null,
@@ -191,6 +196,7 @@ public class DashboardController extends BaseController {
     public PageData<DashboardInfo> getTenantDashboards(
             @RequestParam int pageSize,
             @RequestParam int page,
+            @RequestParam(required = false) Boolean mobile,
             @RequestParam(required = false) String textSearch,
             @RequestParam(required = false) String sortProperty,
             @RequestParam(required = false) String sortOrder) throws ThingsboardException {
@@ -198,7 +204,11 @@ public class DashboardController extends BaseController {
             accessControlService.checkPermission(getCurrentUser(), Resource.DASHBOARD, Operation.READ);
             TenantId tenantId = getCurrentUser().getTenantId();
             PageLink pageLink = createPageLink(pageSize, page, textSearch, sortProperty, sortOrder);
-            return checkNotNull(dashboardService.findDashboardsByTenantId(tenantId, pageLink));
+            if (mobile != null && mobile.booleanValue()) {
+                return checkNotNull(dashboardService.findMobileDashboardsByTenantId(tenantId, pageLink));
+            } else {
+                return checkNotNull(dashboardService.findDashboardsByTenantId(tenantId, pageLink));
+            }
         } catch (Exception e) {
             throw handleException(e);
         }
@@ -210,6 +220,7 @@ public class DashboardController extends BaseController {
     public PageData<DashboardInfo> getUserDashboards(
             @RequestParam int pageSize,
             @RequestParam int page,
+            @RequestParam(required = false) Boolean mobile,
             @RequestParam(required = false) String textSearch,
             @RequestParam(required = false) String sortProperty,
             @RequestParam(required = false) String sortOrder,
@@ -236,7 +247,7 @@ public class DashboardController extends BaseController {
             PageLink pageLink = createPageLink(pageSize, page, textSearch, sortProperty, sortOrder);
             MergedUserPermissions mergedUserPermissions = securityUser.getUserPermissions();
             return entityService.findUserEntities(securityUser.getTenantId(), securityUser.getCustomerId(), mergedUserPermissions, EntityType.DASHBOARD,
-                    operationType, null, pageLink);
+                    operationType, null, pageLink, mobile != null ? mobile : false);
         } catch (Exception e) {
             throw handleException(e);
         }
@@ -393,6 +404,37 @@ public class DashboardController extends BaseController {
         }
     }
 
+    @PreAuthorize("isAuthenticated()")
+    @RequestMapping(value = "/dashboard/home/info", method = RequestMethod.GET)
+    @ResponseBody
+    public HomeDashboardInfo getHomeDashboardInfo() throws ThingsboardException {
+        try {
+            SecurityUser securityUser = getCurrentUser();
+            if (securityUser.isSystemAdmin()) {
+                return null;
+            }
+            User user = userService.findUserById(securityUser.getTenantId(), securityUser.getId());
+            JsonNode additionalInfo = user.getAdditionalInfo();
+            HomeDashboardInfo homeDashboardInfo;
+            homeDashboardInfo = extractHomeDashboardInfoFromAdditionalInfo(additionalInfo);
+            if (homeDashboardInfo == null) {
+                if (securityUser.isCustomerUser()) {
+                    Customer customer = customerService.findCustomerById(securityUser.getTenantId(), securityUser.getCustomerId());
+                    additionalInfo = customer.getAdditionalInfo();
+                    homeDashboardInfo = extractHomeDashboardInfoFromAdditionalInfo(additionalInfo);
+                }
+                if (homeDashboardInfo == null) {
+                    Tenant tenant = tenantService.findTenantById(securityUser.getTenantId());
+                    additionalInfo = tenant.getAdditionalInfo();
+                    homeDashboardInfo = extractHomeDashboardInfoFromAdditionalInfo(additionalInfo);
+                }
+            }
+            return homeDashboardInfo;
+        } catch (Exception e) {
+            throw handleException(e);
+        }
+    }
+
     @PreAuthorize("hasAuthority('TENANT_ADMIN')")
     @RequestMapping(value = "/tenant/dashboard/home/info", method = RequestMethod.GET)
     @ResponseBody
@@ -493,6 +535,22 @@ public class DashboardController extends BaseController {
         } catch (Exception e) {
             throw handleException(e);
         }
+    }
+
+    private HomeDashboardInfo extractHomeDashboardInfoFromAdditionalInfo(JsonNode additionalInfo) {
+        try {
+            if (additionalInfo != null && additionalInfo.has(HOME_DASHBOARD_ID) && !additionalInfo.get(HOME_DASHBOARD_ID).isNull()) {
+                String strDashboardId = additionalInfo.get(HOME_DASHBOARD_ID).asText();
+                DashboardId dashboardId = new DashboardId(toUUID(strDashboardId));
+                checkDashboardId(dashboardId, Operation.READ);
+                boolean hideDashboardToolbar = true;
+                if (additionalInfo.has(HOME_DASHBOARD_HIDE_TOOLBAR)) {
+                    hideDashboardToolbar = additionalInfo.get(HOME_DASHBOARD_HIDE_TOOLBAR).asBoolean();
+                }
+                return new HomeDashboardInfo(dashboardId, hideDashboardToolbar);
+            }
+        } catch (Exception e) {}
+        return null;
     }
 
     private HomeDashboard extractHomeDashboardFromAdditionalInfo(JsonNode additionalInfo) {

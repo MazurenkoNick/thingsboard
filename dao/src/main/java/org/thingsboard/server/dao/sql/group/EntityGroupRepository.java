@@ -99,6 +99,15 @@ public interface EntityGroupRepository extends CrudRepository<EntityGroupEntity,
                                   @Param("groupType") String groupType,
                                   Pageable pageable);
 
+    @Query("SELECT e FROM EntityGroupEntity e, " +
+            "RelationEntity re " +
+            "WHERE e.id = re.toId AND re.toType = 'ENTITY_GROUP' " +
+            "AND re.relationTypeGroup = 'EDGE' " +
+            "AND re.relationType = :relationType " +
+            "AND re.fromId = :edgeId AND re.fromType = 'EDGE'")
+    Page<EntityGroupEntity> findEdgeEntityGroupsByType(@Param("edgeId") UUID edgeId,
+                                                       @Param("relationType") String relationType,
+                                                       Pageable pageable);
 
     @Query("SELECT CASE WHEN (count(re) = 1) " +
             "THEN true " +

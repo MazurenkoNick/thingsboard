@@ -78,6 +78,7 @@ export interface IDashboardComponent {
   dashboardWidgets: DashboardWidgets;
   mobileAutofillHeight: boolean;
   isMobileSize: boolean;
+  isEdit: boolean;
   autofillHeight: boolean;
   dashboardTimewindow: Timewindow;
   dashboardTimewindowChanged: Observable<Timewindow>;
@@ -114,7 +115,14 @@ export class DashboardWidgets implements Iterable<DashboardWidget> {
   widgetLayouts: WidgetLayouts;
 
   [Symbol.iterator](): Iterator<DashboardWidget> {
-    return this.dashboardWidgets[Symbol.iterator]();
+    return this.activeDashboardWidgets[Symbol.iterator]();
+  }
+
+  get activeDashboardWidgets(): Array<DashboardWidget> {
+    if (this.dashboard.isMobileSize && !this.dashboard.isEdit) {
+      return this.dashboardWidgets.filter(w => !w.mobileHide);
+    }
+    return this.dashboardWidgets;
   }
 
   constructor(private dashboard: IDashboardComponent,
@@ -167,6 +175,7 @@ export class DashboardWidgets implements Iterable<DashboardWidget> {
     }
     if (updateRecords.length) {
       updateRecords.forEach((record) => {
+        let index;
         switch (record.operation) {
           case 'add':
             this.dashboardWidgets.push(
@@ -174,7 +183,7 @@ export class DashboardWidgets implements Iterable<DashboardWidget> {
             );
             break;
           case 'remove':
-            let index = this.dashboardWidgets.findIndex((dashboardWidget) => dashboardWidget.widgetId === record.widgetId);
+            index = this.dashboardWidgets.findIndex((dashboardWidget) => dashboardWidget.widgetId === record.widgetId);
             if (index > -1) {
               this.dashboardWidgets.splice(index, 1);
             }
@@ -276,7 +285,7 @@ export class DashboardWidgets implements Iterable<DashboardWidget> {
 
   private updateRowsAndSort() {
     let maxRows = this.dashboard.gridsterOpts.maxRows;
-    this.dashboardWidgets.forEach((dashboardWidget) => {
+    this.activeDashboardWidgets.forEach((dashboardWidget) => {
       const bottom = dashboardWidget.y + dashboardWidget.rows;
       maxRows = Math.max(maxRows, bottom);
     });
@@ -301,8 +310,8 @@ export class DashboardWidgets implements Iterable<DashboardWidget> {
 
 export class DashboardWidget implements GridsterItem, IDashboardWidget {
 
-  highlighted = false;
-  selected = false;
+  private highlightedValue = false;
+  private selectedValue = false;
 
   isFullscreen = false;
 
@@ -344,10 +353,36 @@ export class DashboardWidget implements GridsterItem, IDashboardWidget {
   private gridsterItemComponentSubject = new Subject<GridsterItemComponentInterface>();
   private gridsterItemComponentValue: GridsterItemComponentInterface;
 
+  get mobileHide(): boolean {
+    return this.widgetLayout ? this.widgetLayout.mobileHide === true : false;
+  }
+
   set gridsterItemComponent(item: GridsterItemComponentInterface) {
     this.gridsterItemComponentValue = item;
     this.gridsterItemComponentSubject.next(this.gridsterItemComponentValue);
     this.gridsterItemComponentSubject.complete();
+  }
+
+  get highlighted() {
+    return this.highlightedValue;
+  }
+
+  set highlighted(highlighted: boolean) {
+    if (this.highlightedValue !== highlighted) {
+      this.highlightedValue = highlighted;
+      this.widgetContext.detectContainerChanges();
+    }
+  }
+
+  get selected() {
+    return this.selectedValue;
+  }
+
+  set selected(selected: boolean) {
+    if (this.selectedValue !== selected) {
+      this.selectedValue = selected;
+      this.widgetContext.detectContainerChanges();
+    }
   }
 
   constructor(
@@ -358,7 +393,7 @@ export class DashboardWidget implements GridsterItem, IDashboardWidget {
       widget.id = guid();
     }
     this.widgetId = widget.id;
-    this.updateWidgetParams();
+    this.updateWidgetParams(false);
   }
 
   gridsterItemComponent$(): Observable<GridsterItemComponentInterface> {
@@ -369,7 +404,7 @@ export class DashboardWidget implements GridsterItem, IDashboardWidget {
     }
   }
 
-  updateWidgetParams() {
+  updateWidgetParams(detectChanges = true) {
     this.color = this.widget.config.color || 'rgba(0, 0, 0, 0.87)';
     this.backgroundColor = this.widget.config.backgroundColor || '#fff';
     this.padding = this.widget.config.padding || '8px';
@@ -423,10 +458,13 @@ export class DashboardWidget implements GridsterItem, IDashboardWidget {
     this.showWidgetTitlePanel = this.widgetContext.hideTitlePanel ? false :
       this.showTitle || this.hasTimewindow;
 
-    this.showWidgetActions = this.widgetContext.hideTitlePanel ? false : true;
+    this.showWidgetActions = !this.widgetContext.hideTitlePanel;
 
     this.customHeaderActions = this.widgetContext.customHeaderActions ? this.widgetContext.customHeaderActions : [];
     this.widgetActions = this.widgetContext.widgetActions ? this.widgetContext.widgetActions : [];
+    if (detectChanges) {
+      this.widgetContext.detectContainerChanges();
+    }
   }
 
   exportWidgetData($event: Event, widgetExportType: WidgetExportType) {

@@ -30,10 +30,14 @@
  */
 package org.thingsboard.server.transport.mqtt.session;
 
+import io.netty.channel.ChannelFuture;
 import lombok.extern.slf4j.Slf4j;
 import org.thingsboard.server.common.data.DeviceProfile;
 import org.thingsboard.server.common.transport.SessionMsgListener;
+import org.thingsboard.server.common.transport.TransportService;
+import org.thingsboard.server.common.transport.TransportServiceCallback;
 import org.thingsboard.server.common.transport.auth.TransportDeviceInfo;
+import org.thingsboard.server.gen.transport.TransportProtos.ToDeviceRpcResponseMsg;
 import org.thingsboard.server.gen.transport.TransportProtos.AttributeUpdateNotificationMsg;
 import org.thingsboard.server.gen.transport.TransportProtos.GetAttributeResponseMsg;
 import org.thingsboard.server.gen.transport.TransportProtos.SessionCloseNotificationProto;
@@ -51,9 +55,11 @@ import java.util.concurrent.ConcurrentMap;
 public class GatewayDeviceSessionCtx extends MqttDeviceAwareSessionContext implements SessionMsgListener {
 
     private final GatewaySessionHandler parent;
+    private final TransportService transportService;
 
     public GatewayDeviceSessionCtx(GatewaySessionHandler parent, TransportDeviceInfo deviceInfo,
-                                   DeviceProfile deviceProfile, ConcurrentMap<MqttTopicMatcher, Integer> mqttQoSMap) {
+                                   DeviceProfile deviceProfile, ConcurrentMap<MqttTopicMatcher, Integer> mqttQoSMap,
+                                   TransportService transportService) {
         super(UUID.randomUUID(), mqttQoSMap);
         this.parent = parent;
         setSessionInfo(SessionInfoProto.newBuilder()
@@ -64,6 +70,8 @@ public class GatewayDeviceSessionCtx extends MqttDeviceAwareSessionContext imple
                 .setDeviceIdLSB(deviceInfo.getDeviceId().getId().getLeastSignificantBits())
                 .setTenantIdMSB(deviceInfo.getTenantId().getId().getMostSignificantBits())
                 .setTenantIdLSB(deviceInfo.getTenantId().getId().getLeastSignificantBits())
+                .setCustomerIdMSB(deviceInfo.getCustomerId().getId().getMostSignificantBits())
+                .setCustomerIdLSB(deviceInfo.getCustomerId().getId().getLeastSignificantBits())
                 .setDeviceName(deviceInfo.getDeviceName())
                 .setDeviceType(deviceInfo.getDeviceType())
                 .setGwSessionIdMSB(parent.getSessionId().getMostSignificantBits())
@@ -72,7 +80,9 @@ public class GatewayDeviceSessionCtx extends MqttDeviceAwareSessionContext imple
                 .setDeviceProfileIdLSB(deviceInfo.getDeviceProfileId().getId().getLeastSignificantBits())
                 .build());
         setDeviceInfo(deviceInfo);
+        setConnected(true);
         setDeviceProfile(deviceProfile);
+        this.transportService = transportService;
     }
 
     @Override
@@ -95,7 +105,8 @@ public class GatewayDeviceSessionCtx extends MqttDeviceAwareSessionContext imple
     }
 
     @Override
-    public void onAttributeUpdate(AttributeUpdateNotificationMsg notification) {
+    public void onAttributeUpdate(UUID sessionId, AttributeUpdateNotificationMsg notification) {
+        log.trace("[{}] Received attributes update notification to device", sessionId);
         try {
             parent.getPayloadAdaptor().convertToGatewayPublish(this, getDeviceInfo().getDeviceName(), notification).ifPresent(parent::writeAndFlush);
         } catch (Exception e) {
@@ -104,15 +115,30 @@ public class GatewayDeviceSessionCtx extends MqttDeviceAwareSessionContext imple
     }
 
     @Override
-    public void onRemoteSessionCloseCommand(SessionCloseNotificationProto sessionCloseNotification) {
+    public void onRemoteSessionCloseCommand(UUID sessionId, SessionCloseNotificationProto sessionCloseNotification) {
+        log.trace("[{}] Received the remote command to close the session: {}", sessionId, sessionCloseNotification.getMessage());
         parent.deregisterSession(getDeviceInfo().getDeviceName());
     }
 
-    @Override
-    public void onToDeviceRpcRequest(ToDeviceRpcRequestMsg request) {
+    public void onToDeviceRpcRequest(UUID sessionId, ToDeviceRpcRequestMsg request) {
+        log.trace("[{}] Received RPC command to device", sessionId);
         try {
-            parent.getPayloadAdaptor().convertToGatewayPublish(this, getDeviceInfo().getDeviceName(), request).ifPresent(parent::writeAndFlush);
+            parent.getPayloadAdaptor().convertToGatewayPublish(this, getDeviceInfo().getDeviceName(), request).ifPresent(
+                    payload -> {
+                        ChannelFuture channelFuture = parent.writeAndFlush(payload);
+                        if (request.getPersisted()) {
+                            channelFuture.addListener(future -> {
+                                if (future.cause() == null) {
+                                    transportService.process(getSessionInfo(), request, TransportServiceCallback.EMPTY);
+                                }
+                            });
+                        }
+                    }
+            );
         } catch (Exception e) {
+            transportService.process(getSessionInfo(),
+                    ToDeviceRpcResponseMsg.newBuilder()
+                            .setRequestId(request.getRequestId()).setError("Failed to convert device RPC command to MQTT msg").build(), TransportServiceCallback.EMPTY);
             log.trace("[{}] Failed to convert device attributes response to MQTT msg", sessionId, e);
         }
     }
@@ -121,4 +147,5 @@ public class GatewayDeviceSessionCtx extends MqttDeviceAwareSessionContext imple
     public void onToServerRpcResponse(ToServerRpcResponseMsg toServerResponse) {
         // This feature is not supported in the TB IoT Gateway yet.
     }
+
 }

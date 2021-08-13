@@ -29,10 +29,20 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { AfterViewInit, Component, ElementRef, forwardRef, Input, OnInit, ViewChild } from '@angular/core';
+import {
+  AfterViewInit,
+  Component,
+  ElementRef,
+  EventEmitter,
+  forwardRef,
+  Input,
+  OnInit,
+  Output,
+  ViewChild
+} from '@angular/core';
 import { ControlValueAccessor, FormBuilder, FormGroup, NG_VALUE_ACCESSOR } from '@angular/forms';
-import { Observable } from 'rxjs';
-import { map, mergeMap, share, tap } from 'rxjs/operators';
+import { merge, Observable, of, Subject } from 'rxjs';
+import { catchError, debounceTime, map, share, switchMap, tap } from 'rxjs/operators';
 import { Store } from '@ngrx/store';
 import { AppState } from '@app/core/core.state';
 import { TranslateService } from '@ngx-translate/core';
@@ -43,6 +53,7 @@ import { EntityService } from '@core/http/entity.service';
 import { coerceBooleanProperty } from '@angular/cdk/coercion';
 import { getCurrentAuthUser } from '@core/auth/auth.selectors';
 import { Authority } from '@shared/models/authority.enum';
+import { isEqual } from '@core/utils';
 
 @Component({
   selector: 'tb-entity-autocomplete',
@@ -70,6 +81,7 @@ export class EntityAutocompleteComponent implements ControlValueAccessor, OnInit
       this.entityTypeValue = entityType;
       this.load();
       this.reset();
+      this.refresh$.next([]);
       this.dirty = true;
     }
   }
@@ -82,6 +94,7 @@ export class EntityAutocompleteComponent implements ControlValueAccessor, OnInit
       if (currentEntity) {
         if ((currentEntity as any).type !== this.entitySubtypeValue) {
           this.reset();
+          this.refresh$.next([]);
           this.dirty = true;
         }
       }
@@ -113,6 +126,9 @@ export class EntityAutocompleteComponent implements ControlValueAccessor, OnInit
   @Input()
   disabled: boolean;
 
+  @Output()
+  entityChanged = new EventEmitter<BaseData<EntityId>>();
+
   @ViewChild('entityInput', {static: true}) entityInput: ElementRef;
 
   entityText: string;
@@ -124,6 +140,8 @@ export class EntityAutocompleteComponent implements ControlValueAccessor, OnInit
   searchText = '';
 
   private dirty = false;
+
+  private refresh$ = new Subject<Array<BaseData<EntityId>>>();
 
   private propagateChange = (v: any) => { };
 
@@ -144,25 +162,29 @@ export class EntityAutocompleteComponent implements ControlValueAccessor, OnInit
   }
 
   ngOnInit() {
-    this.filteredEntities = this.selectEntityFormGroup.get('entity').valueChanges
-      .pipe(
-        tap(value => {
-          let modelValue;
-          if (typeof value === 'string' || !value) {
-            modelValue = null;
-          } else {
-            modelValue = this.useFullEntityId ? value.id : value.id.id;
-          }
-          this.updateView(modelValue);
-          if (value === null) {
-            this.clear();
-          }
-        }),
-        // startWith<string | BaseData<EntityId>>(''),
-        map(value => value ? (typeof value === 'string' ? value : value.name) : ''),
-        mergeMap(name => this.fetchEntities(name) ),
-        share()
-      );
+    this.filteredEntities = merge(
+      this.refresh$.asObservable(),
+      this.selectEntityFormGroup.get('entity').valueChanges
+        .pipe(
+          debounceTime(150),
+          tap(value => {
+            let modelValue;
+            if (typeof value === 'string' || !value) {
+              modelValue = null;
+            } else {
+              modelValue = this.useFullEntityId ? value.id : value.id.id;
+            }
+            this.updateView(modelValue, value);
+            if (value === null) {
+              this.clear();
+            }
+          }),
+          // startWith<string | BaseData<EntityId>>(''),
+          map(value => value ? (typeof value === 'string' ? value : value.name) : ''),
+          switchMap(name => this.fetchEntities(name)),
+          share()
+        )
+    );
   }
 
   ngAfterViewInit(): void {}
@@ -184,6 +206,11 @@ export class EntityAutocompleteComponent implements ControlValueAccessor, OnInit
           this.entityText = 'entity-view.entity-view';
           this.noEntitiesMatchingText = 'entity-view.no-entity-views-matching';
           this.entityRequiredText = 'entity-view.entity-view-required';
+          break;
+        case EntityType.EDGE:
+          this.entityText = 'edge.edge';
+          this.noEntitiesMatchingText = 'edge.no-edges-matching';
+          this.entityRequiredText = 'edge.edge-required';
           break;
         case EntityType.RULE_CHAIN:
           this.entityText = 'rulechain.rulechain';
@@ -294,43 +321,27 @@ export class EntityAutocompleteComponent implements ControlValueAccessor, OnInit
     }
   }
 
-  writeValue(value: string | EntityId | null): void {
+  async writeValue(value: string | EntityId | null): Promise<void> {
     this.searchText = '';
-    if (value !== null) {
+    if (value !== null && (typeof value === 'string' || (value.entityType && value.id))) {
+      let targetEntityType: EntityType;
+      let id: string;
       if (typeof value === 'string') {
-        const targetEntityType = this.checkEntityType(this.entityTypeValue);
-        this.entityService.getEntity(targetEntityType, value, {ignoreLoading: true, ignoreErrors: true}).subscribe(
-          (entity) => {
-            this.modelValue = this.useFullEntityId ? entity.id : entity.id.id;
-            this.selectEntityFormGroup.get('entity').patchValue(entity, {emitEvent: false});
-          },
-          () => {
-            this.modelValue = null;
-            this.selectEntityFormGroup.get('entity').patchValue('', {emitEvent: false});
-            if (value !== null) {
-              this.propagateChange(this.modelValue);
-            }
-          }
-        );
-      } else if (value.entityType && value.id) {
-        const targetEntityType = this.checkEntityType(value.entityType);
-        this.entityService.getEntity(targetEntityType, value.id, {ignoreLoading: true, ignoreErrors: true}).subscribe(
-          (entity) => {
-            this.modelValue = this.useFullEntityId ? entity.id : entity.id.id;
-            this.selectEntityFormGroup.get('entity').patchValue(entity, {emitEvent: false});
-          },
-          () => {
-            this.modelValue = null;
-            this.selectEntityFormGroup.get('entity').patchValue('', {emitEvent: false});
-            if (value !== null) {
-              this.propagateChange(this.modelValue);
-            }
-          }
-        );
+        targetEntityType = this.checkEntityType(this.entityTypeValue);
+        id = value;
       } else {
-        this.modelValue = null;
-        this.selectEntityFormGroup.get('entity').patchValue('', {emitEvent: false});
+        targetEntityType = this.checkEntityType(value.entityType);
+        id = value.id;
       }
+      let entity: BaseData<EntityId> = null;
+      try {
+        entity = await this.entityService.getEntity(targetEntityType, id, {ignoreLoading: true, ignoreErrors: true}).toPromise();
+      } catch (e) {
+        this.propagateChange(null);
+      }
+      this.modelValue = entity !== null ? (this.useFullEntityId ? entity.id : entity.id.id) : null;
+      this.selectEntityFormGroup.get('entity').patchValue(entity !== null ? entity : '', {emitEvent: false});
+      this.entityChanged.emit(entity);
     } else {
       this.modelValue = null;
       this.selectEntityFormGroup.get('entity').patchValue('', {emitEvent: false});
@@ -349,10 +360,11 @@ export class EntityAutocompleteComponent implements ControlValueAccessor, OnInit
     this.selectEntityFormGroup.get('entity').patchValue('', {emitEvent: false});
   }
 
-  updateView(value: string | EntityId | null) {
-    if (this.modelValue !== value) {
+  updateView(value: string | EntityId | null, entity: BaseData<EntityId> | null) {
+    if (!isEqual(this.modelValue, value)) {
       this.modelValue = value;
       this.propagateChange(this.modelValue);
+      this.entityChanged.emit(entity);
     }
   }
 
@@ -365,6 +377,7 @@ export class EntityAutocompleteComponent implements ControlValueAccessor, OnInit
     const targetEntityType = this.checkEntityType(this.entityTypeValue);
     return this.entityService.getEntitiesByNameFilter(targetEntityType, searchText,
       50, this.entitySubtypeValue, {ignoreLoading: true}).pipe(
+      catchError(() => of(null)),
       map((data) => {
         if (data) {
           if (this.excludeEntityIds && this.excludeEntityIds.length) {

@@ -50,14 +50,19 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.thingsboard.server.common.data.ContactBased;
+import org.thingsboard.server.common.data.edge.Edge;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.ShortEntityView;
 import org.thingsboard.server.common.data.audit.ActionType;
+import org.thingsboard.server.common.data.edge.EdgeEventActionType;
 import org.thingsboard.server.common.data.exception.ThingsboardErrorCode;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
+import org.thingsboard.server.common.data.ota.DeviceGroupOtaPackage;
 import org.thingsboard.server.common.data.group.EntityGroup;
 import org.thingsboard.server.common.data.group.EntityGroupInfo;
 import org.thingsboard.server.common.data.id.CustomerId;
+import org.thingsboard.server.common.data.id.DeviceId;
+import org.thingsboard.server.common.data.id.EdgeId;
 import org.thingsboard.server.common.data.id.EntityGroupId;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.EntityIdFactory;
@@ -65,6 +70,7 @@ import org.thingsboard.server.common.data.id.RoleId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.id.UUIDBased;
 import org.thingsboard.server.common.data.id.UserId;
+import org.thingsboard.server.common.data.ota.OtaPackageType;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.permission.GroupPermission;
@@ -90,6 +96,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import static org.thingsboard.server.dao.service.Validator.validateEntityId;
@@ -102,6 +109,8 @@ public class EntityGroupController extends BaseController {
     public static final String ENTITY_GROUP_ID = "entityGroupId";
 
     private static final ObjectMapper mapper = new ObjectMapper();
+
+    private static final int DEFAULT_ENTITY_GROUP_LIMIT = 100;
 
     @Autowired
     private OwnersCacheService ownersCacheService;
@@ -123,9 +132,9 @@ public class EntityGroupController extends BaseController {
     @RequestMapping(value = "/entityGroup/{ownerType}/{ownerId}/{groupType}/{groupName}", method = RequestMethod.GET)
     @ResponseBody
     public EntityGroupInfo getEntityGroupByOwnerAndNameAndType(@PathVariable("ownerType") String strOwnerType,
-                                                                @PathVariable("ownerId") String strOwnerId,
-                                                                @ApiParam(value = "EntityGroup type", required = true, allowableValues = "CUSTOMER,ASSET,DEVICE,USER,ENTITY_VIEW,DASHBOARD") @PathVariable("groupType") String strGroupType,
-                                                                @PathVariable("groupName") String groupName) throws ThingsboardException {
+                                                               @PathVariable("ownerId") String strOwnerId,
+                                                               @ApiParam(value = "EntityGroup type", required = true, allowableValues = "CUSTOMER,ASSET,DEVICE,USER,ENTITY_VIEW,DASHBOARD") @PathVariable("groupType") String strGroupType,
+                                                               @PathVariable("groupName") String groupName) throws ThingsboardException {
         checkParameter("ownerId", strOwnerId);
         checkParameter("ownerType", strOwnerType);
         checkParameter("groupName", groupName);
@@ -177,6 +186,11 @@ public class EntityGroupController extends BaseController {
                     null,
                     entityGroup.getId() == null ? ActionType.ADDED : ActionType.UPDATED, null);
 
+            if (entityGroup.getId() != null) {
+                sendEntityNotificationMsg(getTenantId(), savedEntityGroup.getId(),
+                        EdgeEventActionType.UPDATED);
+            }
+
             return toEntityGroupInfo(savedEntityGroup);
         } catch (Exception e) {
             logEntityAction(emptyId(EntityType.ENTITY_GROUP), entityGroup,
@@ -208,12 +222,15 @@ public class EntityGroupController extends BaseController {
                 userPermissionsService.onGroupPermissionDeleted(groupPermission);
             }
 
+            List<EdgeId> relatedEdgeIds = findRelatedEdgeIds(getTenantId(), entityGroupId, entityGroup.getType());
+
             entityGroupService.deleteEntityGroup(getTenantId(), entityGroupId);
 
             logEntityAction(entityGroupId, entityGroup,
                     null,
                     ActionType.DELETED, null, strEntityGroupId);
 
+            sendDeleteNotificationMsg(getTenantId(), entityGroupId, relatedEdgeIds);
         } catch (Exception e) {
 
             logEntityAction(emptyId(EntityType.ENTITY_GROUP),
@@ -348,11 +365,22 @@ public class EntityGroupController extends BaseController {
                 for (EntityId entityId : entityIds) {
                     userPermissionsService.onUserUpdatedOrRemoved(userService.findUserById(getTenantId(), new UserId(entityId.getId())));
                 }
+            } else if (entityGroup.getType() == EntityType.DEVICE) {
+                DeviceGroupOtaPackage fw =
+                        deviceGroupOtaPackageService.findDeviceGroupOtaPackageByGroupIdAndType(entityGroupId, OtaPackageType.FIRMWARE);
+                DeviceGroupOtaPackage sw =
+                        deviceGroupOtaPackageService.findDeviceGroupOtaPackageByGroupIdAndType(entityGroupId, OtaPackageType.SOFTWARE);
+                if (fw != null || sw != null) {
+                    List<DeviceId> deviceIds = entityIds.stream().map(id -> new DeviceId(id.getId())).collect(Collectors.toList());
+                    otaPackageStateService.update(getTenantId(), deviceIds, fw != null, sw != null);
+                }
             }
+
             for (EntityId entityId : entityIds) {
                 logEntityAction((UUIDBased & EntityId) entityId, null,
                         null,
                         ActionType.ADDED_TO_ENTITY_GROUP, null, entityId.toString(), strEntityGroupId, entityGroup.getName());
+                sendGroupEntityNotificationMsg(getTenantId(), entityId, EdgeEventActionType.ADDED_TO_ENTITY_GROUP, entityGroupId);
             }
         } catch (Exception e) {
             if (entityGroup != null) {
@@ -394,11 +422,23 @@ public class EntityGroupController extends BaseController {
                 for (EntityId entityId : entityIds) {
                     userPermissionsService.onUserUpdatedOrRemoved(userService.findUserById(getTenantId(), new UserId(entityId.getId())));
                 }
+            } else if (entityGroup.getType() == EntityType.DEVICE) {
+                DeviceGroupOtaPackage fw =
+                        deviceGroupOtaPackageService.findDeviceGroupOtaPackageByGroupIdAndType(entityGroupId, OtaPackageType.FIRMWARE);
+                DeviceGroupOtaPackage sw =
+                        deviceGroupOtaPackageService.findDeviceGroupOtaPackageByGroupIdAndType(entityGroupId, OtaPackageType.SOFTWARE);
+                if (fw != null || sw != null) {
+                    List<DeviceId> deviceIds = entityIds.stream().map(id -> new DeviceId(id.getId())).collect(Collectors.toList());
+                    otaPackageStateService.update(getTenantId(), deviceIds, fw != null, sw != null);
+                }
             }
+
             for (EntityId entityId : entityIds) {
                 logEntityAction((UUIDBased & EntityId) entityId, null,
                         null,
                         ActionType.REMOVED_FROM_ENTITY_GROUP, null, entityId.toString(), strEntityGroupId, entityGroup.getName());
+                sendGroupEntityNotificationMsg(getTenantId(), entityId,
+                        EdgeEventActionType.REMOVED_FROM_ENTITY_GROUP, entityGroupId);
             }
         } catch (Exception e) {
             if (entityGroup != null) {
@@ -770,6 +810,145 @@ public class EntityGroupController extends BaseController {
         } catch (Exception e) {
             throw handleException(e);
         }
+    }
+
+    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
+    @RequestMapping(value = "/edge/{edgeId}/entityGroup/{entityGroupId}/{groupType}", method = RequestMethod.POST)
+    @ResponseBody
+    public EntityGroup assignEntityGroupToEdge(@PathVariable("edgeId") String strEdgeId,
+                                               @ApiParam(value = "EntityGroup type", required = true, allowableValues = "ASSET,DEVICE,USER,ENTITY_VIEW,DASHBOARD") @PathVariable("groupType") String strGroupType,
+                                               @PathVariable(ENTITY_GROUP_ID) String strEntityGroupId) throws ThingsboardException {
+        checkParameter("edgeId", strEdgeId);
+        checkParameter(ENTITY_GROUP_ID, strEntityGroupId);
+        try {
+            EdgeId edgeId = new EdgeId(toUUID(strEdgeId));
+            Edge edge = checkEdgeId(edgeId, Operation.WRITE);
+
+            EntityGroupId entityGroupId = new EntityGroupId(toUUID(strEntityGroupId));
+            checkEntityGroupId(entityGroupId, Operation.READ);
+            EntityType groupType = checkStrEntityGroupType("groupType", strGroupType);
+
+            EntityGroup savedEntityGroup = checkNotNull(entityGroupService.assignEntityGroupToEdge(getCurrentUser().getTenantId(), entityGroupId, edgeId, groupType));
+
+            logEntityAction(entityGroupId, savedEntityGroup,
+                    null,
+                    ActionType.ASSIGNED_TO_EDGE, null, strEntityGroupId, savedEntityGroup.getName(), strEdgeId, edge.getName());
+
+            sendEntityAssignToEdgeNotificationMsg(getTenantId(), edgeId, savedEntityGroup.getId(), EdgeEventActionType.ASSIGNED_TO_EDGE);
+
+            return savedEntityGroup;
+        } catch (Exception e) {
+
+            logEntityAction(emptyId(EntityType.ENTITY_GROUP), null,
+                    null,
+                    ActionType.ASSIGNED_TO_EDGE, e, strEntityGroupId, strEdgeId);
+
+            throw handleException(e);
+        }
+    }
+
+    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
+    @RequestMapping(value = "/edge/{edgeId}/entityGroup/{entityGroupId}/{groupType}", method = RequestMethod.DELETE)
+    @ResponseBody
+    public EntityGroup unassignEntityGroupFromEdge(@PathVariable("edgeId") String strEdgeId,
+                                                   @ApiParam(value = "EntityGroup type", required = true, allowableValues = "ASSET,DEVICE,USER,ENTITY_VIEW,DASHBOARD") @PathVariable("groupType") String strGroupType,
+                                                   @PathVariable(ENTITY_GROUP_ID) String strEntityGroupId) throws ThingsboardException {
+        checkParameter("edgeId", strEdgeId);
+        checkParameter(ENTITY_GROUP_ID, strEntityGroupId);
+        try {
+            EdgeId edgeId = new EdgeId(toUUID(strEdgeId));
+            Edge edge = checkEdgeId(edgeId, Operation.WRITE);
+            EntityGroupId entityGroupId = new EntityGroupId(toUUID(strEntityGroupId));
+            EntityGroup entityGroup = checkEntityGroupId(entityGroupId, Operation.READ);
+            EntityType groupType = checkStrEntityGroupType("groupType", strGroupType);
+
+            EntityGroup savedEntityGroup = checkNotNull(entityGroupService.unassignEntityGroupFromEdge(getCurrentUser().getTenantId(), entityGroupId, edgeId, groupType));
+
+            logEntityAction(entityGroupId, entityGroup,
+                    null,
+                    ActionType.UNASSIGNED_FROM_EDGE, null, strEntityGroupId, savedEntityGroup.getName(), strEdgeId, edge.getName());
+
+            sendEntityAssignToEdgeNotificationMsg(getTenantId(), edgeId, savedEntityGroup.getId(), EdgeEventActionType.UNASSIGNED_FROM_EDGE);
+
+            return savedEntityGroup;
+        } catch (Exception e) {
+
+            logEntityAction(emptyId(EntityType.ENTITY_GROUP), null,
+                    null,
+                    ActionType.UNASSIGNED_FROM_EDGE, e, strEntityGroupId);
+
+            throw handleException(e);
+        }
+    }
+
+    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
+    @RequestMapping(value = "/allEntityGroups/edge/{edgeId}/{groupType}", method = RequestMethod.GET)
+    @ResponseBody
+    public List<EntityGroupInfo> getAllEdgeEntityGroups(
+            @PathVariable("edgeId") String strEdgeId,
+            @ApiParam(value = "EntityGroup type", required = true, allowableValues = "ASSET,DEVICE,USER,ENTITY_VIEW,DASHBOARD") @PathVariable("groupType") String strGroupType) throws ThingsboardException {
+        checkParameter("edgeId", strEdgeId);
+        try {
+            EdgeId edgeId = new EdgeId(UUID.fromString(strEdgeId));
+            EntityType groupType = checkStrEntityGroupType("groupType", strGroupType);
+            checkEdgeId(edgeId, Operation.READ);
+            MergedGroupTypePermissionInfo groupTypePermissionInfo = getCurrentUser().getUserPermissions().getReadGroupPermissions().get(groupType);
+            if (groupTypePermissionInfo.isHasGenericRead()) {
+                List<EntityGroup> result = new ArrayList<>();
+                PageLink pageLink = new PageLink(DEFAULT_ENTITY_GROUP_LIMIT);
+                PageData<EntityGroup> pageData;
+                do {
+                    pageData = entityGroupService.findEdgeEntityGroupsByType(getTenantId(), edgeId, groupType, pageLink);
+                    if (pageData.getData().size() > 0) {
+                        result.addAll(pageData.getData());
+                        if (pageData.hasNext()) {
+                            pageLink = pageLink.nextPageLink();
+                        }
+                    }
+                } while (pageData.hasNext());
+                return checkNotNull(toEntityGroupsInfo(filterEntityGroupsByReadPermission(result)));
+            } else {
+                throw permissionDenied();
+            }
+        } catch (Exception e) {
+            throw handleException(e);
+        }
+    }
+
+    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
+    @RequestMapping(value = "/entityGroups/edge/{edgeId}/{groupType}", params = {"pageSize", "page"}, method = RequestMethod.GET)
+    @ResponseBody
+    public PageData<EntityGroupInfo> getEdgeEntityGroups(
+            @PathVariable("edgeId") String strEdgeId,
+            @ApiParam(value = "EntityGroup type", required = true, allowableValues = "ASSET,DEVICE,USER,ENTITY_VIEW,DASHBOARD") @PathVariable("groupType") String strGroupType,
+            @RequestParam int pageSize,
+            @RequestParam int page,
+            @RequestParam(required = false) String textSearch,
+            @RequestParam(required = false) String sortProperty,
+            @RequestParam(required = false) String sortOrder) throws ThingsboardException {
+        checkParameter("edgeId", strEdgeId);
+        try {
+            EdgeId edgeId = new EdgeId(UUID.fromString(strEdgeId));
+            EntityType groupType = checkStrEntityGroupType("groupType", strGroupType);
+            checkEdgeId(edgeId, Operation.READ);
+            PageLink pageLink = createPageLink(pageSize, page, textSearch, sortProperty, sortOrder);
+            MergedGroupTypePermissionInfo groupTypePermissionInfo = getCurrentUser().getUserPermissions().getReadGroupPermissions().get(groupType);
+            if (groupTypePermissionInfo.isHasGenericRead()) {
+                return toEntityGroupsInfo(entityGroupService.findEdgeEntityGroupsByType(getTenantId(), edgeId, groupType, pageLink));
+            } else {
+                throw permissionDenied();
+            }
+        } catch (Exception e) {
+            throw handleException(e);
+        }
+    }
+
+    private PageData<EntityGroupInfo> toEntityGroupsInfo(PageData<EntityGroup> data) throws ThingsboardException {
+        List<EntityGroupInfo> entityGroupsInfo = new ArrayList<>(data.getData().size());
+        for (EntityGroup entityGroup : data.getData()) {
+            entityGroupsInfo.add(toEntityGroupInfo(entityGroup));
+        }
+        return new PageData<>(entityGroupsInfo, data.getTotalPages(), data.getTotalElements(), data.hasNext());
     }
 
     private void shareGroup(Role role, EntityGroup userGroup, EntityGroup entityGroup, Set<Operation> mergedOperations) throws ThingsboardException, IOException {

@@ -31,11 +31,10 @@
 
 import { AfterViewInit, Component, ElementRef, forwardRef, Input, OnInit, ViewChild } from '@angular/core';
 import { ControlValueAccessor, FormBuilder, FormGroup, NG_VALUE_ACCESSOR } from '@angular/forms';
-import { Observable } from 'rxjs';
-import { map, mergeMap, share, tap } from 'rxjs/operators';
+import { Observable, of } from 'rxjs';
+import { catchError, debounceTime, distinctUntilChanged, map, share, switchMap, tap } from 'rxjs/operators';
 import { Store } from '@ngrx/store';
 import { AppState } from '@app/core/core.state';
-import { TranslateService } from '@ngx-translate/core';
 import { EntityType } from '@shared/models/entity-type.models';
 import { EntityId } from '@shared/models/id/entity-id';
 import { EntityService } from '@core/http/entity.service';
@@ -96,7 +95,6 @@ export class OwnerAutocompleteComponent implements ControlValueAccessor, OnInit,
   private propagateChange = (v: any) => { };
 
   constructor(private store: Store<AppState>,
-              public translate: TranslateService,
               private entityService: EntityService,
               private entityGroupService: EntityGroupService,
               private fb: FormBuilder) {
@@ -115,6 +113,7 @@ export class OwnerAutocompleteComponent implements ControlValueAccessor, OnInit,
   ngOnInit() {
     this.filteredOwners = this.selectOwnerFormGroup.get('owner').valueChanges
       .pipe(
+        debounceTime(150),
         tap(value => {
           let modelValue;
           if (typeof value === 'string' || !value) {
@@ -129,7 +128,8 @@ export class OwnerAutocompleteComponent implements ControlValueAccessor, OnInit,
         }),
         // startWith<string | BaseData<EntityId>>(''),
         map(value => value ? (typeof value === 'string' ? value : value.name) : ''),
-        mergeMap(name => this.fetchOwners(name) ),
+        distinctUntilChanged(),
+        switchMap(name => this.fetchOwners(name) ),
         share()
       );
   }
@@ -195,6 +195,7 @@ export class OwnerAutocompleteComponent implements ControlValueAccessor, OnInit,
       direction: Direction.ASC
     });
     return this.entityGroupService.getOwners(pageLink, {ignoreLoading: true}).pipe(
+      catchError(() => of(null)),
       map((data) => {
           if (data) {
             if (this.excludeOwnerIds && this.excludeOwnerIds.length) {

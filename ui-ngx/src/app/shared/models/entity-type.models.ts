@@ -32,22 +32,6 @@
 import { TenantId } from './id/tenant-id';
 import { BaseData, HasId } from '@shared/models/base-data';
 
-///
-/// Copyright © 2016-2019 The Thingsboard Authors
-///
-/// Licensed under the Apache License, Version 2.0 (the "License");
-/// you may not use this file except in compliance with the License.
-/// You may obtain a copy of the License at
-///
-///     http://www.apache.org/licenses/LICENSE-2.0
-///
-/// Unless required by applicable law or agreed to in writing, software
-/// distributed under the License is distributed on an "AS IS" BASIS,
-/// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-/// See the License for the specific language governing permissions and
-/// limitations under the License.
-///
-
 export enum EntityType {
   TENANT = 'TENANT',
   TENANT_PROFILE = 'TENANT_PROFILE',
@@ -70,7 +54,11 @@ export enum EntityType {
   WIDGET_TYPE = 'WIDGET_TYPE',
   ROLE = 'ROLE',
   GROUP_PERMISSION = 'GROUP_PERMISSION',
-  API_USAGE_STATE = 'API_USAGE_STATE'
+  API_USAGE_STATE = 'API_USAGE_STATE',
+  TB_RESOURCE = 'TB_RESOURCE',
+  EDGE = 'EDGE',
+  OTA_PACKAGE = 'OTA_PACKAGE',
+  RPC = 'RPC'
 }
 
 export enum AliasEntityType {
@@ -245,6 +233,26 @@ export const entityTypeTranslations = new Map<EntityType | AliasEntityType, Enti
         group: 'entity-view.group',
         groupList: 'entity-view.list-of-groups',
         groupNameStartsWith: 'entity-view.group-name-starts-with'
+      }
+    ],
+    [
+      EntityType.EDGE,
+      {
+        type: 'entity.type-edge',
+        typePlural: 'entity.type-edges',
+        list: 'entity.list-of-edges',
+        nameStartsWith: 'entity.edge-name-starts-with',
+        details: 'edge.edge-details',
+        add: 'edge.add',
+        noEntities: 'edge.no-edges-text',
+        search: 'edge.search',
+        selectedEntities: 'edge.selected-edges',
+        selectGroupToAdd: 'edge.select-group-to-add',
+        selectGroupToMove: 'edge.select-group-to-move',
+        removeFromGroup: 'edge.remove-edges-from-group',
+        group: 'edge.group',
+        groupList: 'edge.list-of-groups',
+        groupNameStartsWith: 'edge.group-name-starts-with'
       }
     ],
     [
@@ -423,6 +431,28 @@ export const entityTypeTranslations = new Map<EntityType | AliasEntityType, Enti
         type: 'entity.type-current-user-owner',
         list: 'entity.type-current-user-owner'
       }
+    ],
+    [
+      EntityType.TB_RESOURCE,
+      {
+        type: 'entity.type-tb-resource',
+        details: 'resource.resource-library-details',
+        add: 'resource.add',
+        noEntities: 'resource.no-resource-text',
+        search: 'resource.search',
+        selectedEntities: 'resource.selected-resources'
+      }
+    ],
+    [
+      EntityType.OTA_PACKAGE,
+      {
+        type: 'entity.type-ota-package',
+        details: 'ota-update.ota-update-details',
+        add: 'ota-update.add',
+        noEntities: 'ota-update.no-packages-text',
+        search: 'ota-update.search',
+        selectedEntities: 'ota-update.selected-package'
+      }
     ]
   ]
 );
@@ -478,6 +508,12 @@ export const entityTypeResources = new Map<EntityType, EntityTypeResource<BaseDa
       }
     ],
     [
+      EntityType.EDGE,
+      {
+        helpLinkId: 'edges'
+      }
+    ],
+    [
       EntityType.RULE_CHAIN,
       {
         helpLinkId: 'rulechains'
@@ -505,6 +541,18 @@ export const entityTypeResources = new Map<EntityType, EntityTypeResource<BaseDa
       EntityType.ENTITY_GROUP,
       {
         helpLinkId: 'entityGroups'
+      }
+    ],
+    [
+      EntityType.TB_RESOURCE,
+      {
+        helpLinkId: 'resources'
+      }
+    ],
+    [
+      EntityType.OTA_PACKAGE,
+      {
+        helpLinkId: 'otaUpdates'
       }
     ]
   ]

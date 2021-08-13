@@ -189,6 +189,9 @@
       <section *ngIf="integrationType === integrationTypes.RABBITMQ">
         <tb-rabbitmq-integration-form #integrationFormComponent [form]="integrationForm.get('clientConfiguration')">
         </tb-rabbitmq-integration-form>
+        <button *ngIf="!isRemoteIntegration" mat-button mat-raised-button color="primary" (click)="onIntegrationCheck()" [disabled]="!isEdit">
+          {{ 'integration.check-connection' | translate }}
+        </button>
       </section>
       <section *ngIf="integrationType === integrationTypes.CHIRPSTACK">
         <tb-chirpstack-integration-form #integrationFormComponent [form]="integrationForm.get('clientConfiguration')"
@@ -207,6 +210,11 @@
       <section *ngIf="integrationType === integrationTypes.CUSTOM">
         <tb-custom-integration-form #integrationFormComponent [form]="integrationForm">
         </tb-custom-integration-form>
+      </section>
+      <section *ngIf="integrationType === integrationTypes.COAP">
+        <tb-coap-integration-form #integrationFormComponent [form]="integrationForm.get('clientConfiguration')" [integrationType]="integrationType"
+          [routingKey]="entityForm.get('routingKey').value">
+        </tb-coap-integration-form>
       </section>
     </fieldset>
     <div formGroupName="additionalInfo" fxLayout="column">

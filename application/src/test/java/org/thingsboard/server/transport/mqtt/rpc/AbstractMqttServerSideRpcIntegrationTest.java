@@ -45,7 +45,7 @@ import org.junit.Assert;
 import org.thingsboard.server.common.data.Device;
 import org.thingsboard.server.common.data.TransportPayloadType;
 import org.thingsboard.server.common.data.device.profile.MqttTopics;
-import org.thingsboard.server.dao.util.mapping.JacksonUtil;
+import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.server.transport.mqtt.AbstractMqttIntegrationTest;
 
 import java.util.Arrays;
@@ -84,7 +84,7 @@ public abstract class AbstractMqttServerSideRpcIntegrationTest extends AbstractM
 
         String setGpioRequest = "{\"method\":\"setGpio\",\"params\":{\"pin\": \"23\",\"value\": 1}}";
         String deviceId = savedDevice.getId().getId().toString();
-        String result = doPostAsync("/api/plugins/rpc/oneway/" + deviceId, setGpioRequest, String.class, status().isOk());
+        String result = doPostAsync("/api/rpc/oneway/" + deviceId, setGpioRequest, String.class, status().isOk());
         Assert.assertTrue(StringUtils.isEmpty(result));
         latch.await(3, TimeUnit.SECONDS);
         assertEquals(MqttQoS.AT_MOST_ONCE.value(), callback.getQoS());
@@ -110,7 +110,7 @@ public abstract class AbstractMqttServerSideRpcIntegrationTest extends AbstractM
         String setGpioRequest = "{\"method\":\"setGpio\",\"params\":{\"pin\": \"26\",\"value\": 1}}";
         String deviceId = savedDevice.getId().getId().toString();
 
-        String result = doPostAsync("/api/plugins/rpc/twoway/" + deviceId, setGpioRequest, String.class, status().isOk());
+        String result = doPostAsync("/api/rpc/twoway/" + deviceId, setGpioRequest, String.class, status().isOk());
         String expected = "{\"value1\":\"A\",\"value2\":\"B\"}";
         latch.await(3, TimeUnit.SECONDS);
         Assert.assertEquals(expected, result);
@@ -145,7 +145,7 @@ public abstract class AbstractMqttServerSideRpcIntegrationTest extends AbstractM
 
         String setGpioRequest = "{\"method\": \"toggle_gpio\", \"params\": {\"pin\":1}}";
         String deviceId = savedDevice.getId().getId().toString();
-        String result = doPostAsync("/api/plugins/rpc/oneway/" + deviceId, setGpioRequest, String.class, status().isOk());
+        String result = doPostAsync("/api/rpc/oneway/" + deviceId, setGpioRequest, String.class, status().isOk());
         Assert.assertTrue(StringUtils.isEmpty(result));
         latch.await(3, TimeUnit.SECONDS);
         assertEquals(MqttQoS.AT_MOST_ONCE.value(), callback.getQoS());
@@ -171,7 +171,7 @@ public abstract class AbstractMqttServerSideRpcIntegrationTest extends AbstractM
 
         String setGpioRequest = "{\"method\": \"toggle_gpio\", \"params\": {\"pin\":1}}";
         String deviceId = savedDevice.getId().getId().toString();
-        String result = doPostAsync("/api/plugins/rpc/twoway/" + deviceId, setGpioRequest, String.class, status().isOk());
+        String result = doPostAsync("/api/rpc/twoway/" + deviceId, setGpioRequest, String.class, status().isOk());
         latch.await(3, TimeUnit.SECONDS);
         String expected = "{\"success\":true}";
         assertEquals(expected, result);
@@ -195,7 +195,7 @@ public abstract class AbstractMqttServerSideRpcIntegrationTest extends AbstractM
         return message;
     }
 
-    private class TestMqttCallback implements MqttCallback {
+    protected class TestMqttCallback implements MqttCallback {
 
         private final MqttAsyncClient client;
         private final CountDownLatch latch;

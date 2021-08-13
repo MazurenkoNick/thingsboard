@@ -39,6 +39,7 @@ import org.springframework.stereotype.Service;
 import org.thingsboard.rule.engine.api.SmsService;
 import org.thingsboard.rule.engine.api.sms.SmsSender;
 import org.thingsboard.rule.engine.api.sms.SmsSenderFactory;
+import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.sms.config.SmsProviderConfiguration;
 import org.thingsboard.server.common.data.sms.config.TestSmsRequest;
 import org.thingsboard.server.common.data.AdminSettings;
@@ -53,7 +54,7 @@ import org.thingsboard.server.common.stats.TbApiUsageReportClient;
 import org.thingsboard.server.dao.attributes.AttributesService;
 import org.thingsboard.server.dao.exception.IncorrectParameterException;
 import org.thingsboard.server.dao.settings.AdminSettingsService;
-import org.thingsboard.server.dao.util.mapping.JacksonUtil;
+import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.server.service.apiusage.TbApiUsageStateService;
 
 import java.util.Arrays;
@@ -82,7 +83,7 @@ public class DefaultSmsService implements SmsService {
     }
 
     @Override
-    public void sendSms(TenantId tenantId, String[] numbersTo, String message) throws ThingsboardException {
+    public void sendSms(TenantId tenantId, CustomerId customerId, String[] numbersTo, String message) throws ThingsboardException {
        ConfigEntry configEntry = getConfig(tenantId, "sms", allowSystemSmsService);
        SmsProviderConfiguration configuration = JacksonUtil.convertValue(configEntry.jsonConfig, SmsProviderConfiguration.class);
        SmsSender smsSender = this.smsSenderFactory.createSmsSender(configuration);
@@ -94,7 +95,7 @@ public class DefaultSmsService implements SmsService {
                 }
             } finally {
                 if (configEntry.isSystem && smsCount > 0) {
-                    apiUsageClient.report(tenantId, ApiUsageRecordKey.SMS_EXEC_COUNT, smsCount);
+                    apiUsageClient.report(tenantId, customerId, ApiUsageRecordKey.SMS_EXEC_COUNT, smsCount);
                 }
             }
         } else {

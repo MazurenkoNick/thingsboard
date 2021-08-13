@@ -43,8 +43,18 @@ import {
   ViewChild
 } from '@angular/core';
 import { ControlValueAccessor, FormBuilder, FormGroup, NG_VALUE_ACCESSOR } from '@angular/forms';
-import { Observable } from 'rxjs';
-import { map, mergeMap, publishReplay, refCount, share, tap } from 'rxjs/operators';
+import { Observable, of } from 'rxjs';
+import {
+  catchError,
+  debounceTime,
+  distinctUntilChanged,
+  map,
+  publishReplay,
+  refCount,
+  share,
+  switchMap,
+  tap
+} from 'rxjs/operators';
 import { Store } from '@ngrx/store';
 import { AppState } from '@app/core/core.state';
 import { TranslateService } from '@ngx-translate/core';
@@ -138,6 +148,7 @@ export class EntityGroupAutocompleteComponent implements ControlValueAccessor, O
   ngOnInit() {
     this.filteredEntityGroups = this.selectEntityGroupFormGroup.get('entityGroup').valueChanges
       .pipe(
+        debounceTime(150),
         tap(value => {
           let modelValue;
           if (typeof value === 'string' || !value) {
@@ -145,13 +156,14 @@ export class EntityGroupAutocompleteComponent implements ControlValueAccessor, O
           } else {
             modelValue = value.id.id;
           }
-          this.updateView(modelValue);
+          this.updateView(modelValue, value);
           if (value === null) {
             this.clear();
           }
         }),
         map(value => value ? (typeof value === 'string' ? value : value.name) : ''),
-        mergeMap(name => this.fetchEntityGroups(name) ),
+        distinctUntilChanged(),
+        switchMap(name => this.fetchEntityGroups(name) ),
         share()
       );
   }
@@ -230,10 +242,11 @@ export class EntityGroupAutocompleteComponent implements ControlValueAccessor, O
     this.selectEntityGroupFormGroup.get('entityGroup').patchValue('', {emitEvent: false});
   }
 
-  updateView(value: string | null) {
+  updateView(value: string | null, entityGroup: EntityGroupInfo) {
     if (this.modelValue !== value) {
       this.modelValue = value;
       this.propagateChange(this.modelValue);
+      this.entityGroupLoaded.next(entityGroup);
     }
   }
 
@@ -260,6 +273,7 @@ export class EntityGroupAutocompleteComponent implements ControlValueAccessor, O
         entityGroupsObservable = this.entityGroupService.getEntityGroups(this.groupType, {ignoreLoading: true});
       }
       this.allEntityGroups = entityGroupsObservable.pipe(
+        catchError(() => of(null)),
         map(data => {
           if (data) {
             if (this.excludeGroupAll) {

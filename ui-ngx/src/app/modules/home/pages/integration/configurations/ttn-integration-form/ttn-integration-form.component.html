@@ -84,6 +84,14 @@
                 integration.connect-timeout-range
             </mat-error>
         </mat-form-field>
+        <mat-form-field class="mat-block">
+            <mat-label translate>integration.max-bytes-in-message</mat-label>
+            <input matInput type="number" formControlName="maxBytesInMessage">
+            <mat-error translate *ngIf="form.get('maxBytesInMessage').hasError('min')">
+                integration.max-bytes-in-message-range</mat-error>
+            <mat-error translate *ngIf="form.get('maxBytesInMessage').hasError('max')">
+                integration.max-bytes-in-message-range</mat-error>
+        </mat-form-field>
       </div>
       <mat-checkbox class="checkbox" [aria-label]="'integration.enable-ssl' | translate" formControlName="ssl">
         {{ 'integration.enable-ssl' | translate }}
@@ -101,6 +109,7 @@
             <mat-form-field class="mat-block">
               <mat-label translate>integration.access-key</mat-label>
               <input matInput type="password" required formControlName="password" autocomplete="new-password">
+              <tb-toggle-password matSuffix></tb-toggle-password>
               <mat-error translate *ngIf="form.get('credentials').get('password').hasError('required')">
                 integration.access-key-required
               </mat-error>
@@ -116,12 +125,16 @@
             <mat-form-field class="mat-block">
               <mat-label translate>integration.password</mat-label>
               <input matInput type="password" required formControlName="password" autocomplete="new-password">
+              <tb-toggle-password matSuffix></tb-toggle-password>
               <mat-error translate *ngIf="form.get('credentials').get('password').hasError('required')">
                 integration.password-required
               </mat-error>
             </mat-form-field>
           </section>
         </div>
+      <mat-slide-toggle *ngIf="integrationType === 'TTN'" [formControl]="apiVersion" style="padding-bottom: 48px;">
+        {{'integration.api-version' | translate}}
+      </mat-slide-toggle>
     </fieldset>
     <tb-mqtt-topic-filters [topicFilters]="topicFilters">
     </tb-mqtt-topic-filters>

@@ -37,7 +37,7 @@ import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
 
 @Slf4j
-public abstract class PaginatedUpdater<I, D extends SearchTextBased<? extends UUIDBased>> {
+public abstract class PaginatedUpdater<I, D> {
 
     private static final int DEFAULT_LIMIT = 100;
     private int updated = 0;
@@ -57,11 +57,15 @@ public abstract class PaginatedUpdater<I, D extends SearchTextBased<? extends UU
                 log.info("{}: {} entities updated so far...", getName(), updated);
                 pageLink = pageLink.nextPageLink();
             } else {
-                if (updated > DEFAULT_LIMIT) {
+                if (updated > DEFAULT_LIMIT || forceReportTotal()) {
                     log.info("{}: {} total entities updated.", getName(), updated);
                 }
             }
         }
+    }
+
+    protected boolean forceReportTotal() {
+        return false;
     }
 
     protected abstract String getName();

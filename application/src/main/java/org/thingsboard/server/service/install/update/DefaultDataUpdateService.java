@@ -35,7 +35,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -44,24 +43,29 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
+import org.thingsboard.common.util.JacksonUtil;
+import org.thingsboard.rule.engine.profile.TbDeviceProfileNode;
+import org.thingsboard.rule.engine.profile.TbDeviceProfileNodeConfiguration;
 import org.thingsboard.server.common.data.AdminSettings;
 import org.thingsboard.server.common.data.Customer;
 import org.thingsboard.server.common.data.Dashboard;
 import org.thingsboard.server.common.data.DashboardInfo;
 import org.thingsboard.server.common.data.DataConstants;
 import org.thingsboard.server.common.data.EntityType;
-import org.thingsboard.rule.engine.profile.TbDeviceProfileNode;
-import org.thingsboard.rule.engine.profile.TbDeviceProfileNodeConfiguration;
 import org.thingsboard.server.common.data.EntityView;
 import org.thingsboard.server.common.data.SearchTextBased;
 import org.thingsboard.server.common.data.ShortCustomerInfo;
 import org.thingsboard.server.common.data.Tenant;
 import org.thingsboard.server.common.data.User;
+import org.thingsboard.server.common.data.alarm.Alarm;
+import org.thingsboard.server.common.data.alarm.AlarmInfo;
+import org.thingsboard.server.common.data.alarm.AlarmQuery;
 import org.thingsboard.server.common.data.group.EntityGroup;
 import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.DashboardId;
 import org.thingsboard.server.common.data.id.EntityGroupId;
 import org.thingsboard.server.common.data.id.EntityId;
+import org.thingsboard.server.common.data.alarm.AlarmSeverity;
 import org.thingsboard.server.common.data.id.EntityViewId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.id.UUIDBased;
@@ -73,34 +77,53 @@ import org.thingsboard.server.common.data.kv.BaseReadTsKvQuery;
 import org.thingsboard.server.common.data.kv.ReadTsKvQuery;
 import org.thingsboard.server.common.data.kv.StringDataEntry;
 import org.thingsboard.server.common.data.kv.TsKvEntry;
+import org.thingsboard.server.common.data.oauth2.OAuth2Info;
+import org.thingsboard.server.common.data.oauth2.deprecated.OAuth2ClientsParams;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
+import org.thingsboard.server.common.data.page.TimePageLink;
 import org.thingsboard.server.common.data.relation.EntityRelation;
 import org.thingsboard.server.common.data.relation.RelationTypeGroup;
 import org.thingsboard.server.common.data.rule.RuleChain;
+import org.thingsboard.server.common.data.rule.RuleChainMetaData;
+import org.thingsboard.server.common.data.rule.RuleNode;
 import org.thingsboard.server.common.data.security.Authority;
 import org.thingsboard.server.common.data.wl.Favicon;
 import org.thingsboard.server.common.data.wl.PaletteSettings;
 import org.thingsboard.server.common.data.wl.WhiteLabelingParams;
+import org.thingsboard.server.common.data.query.DynamicValue;
+import org.thingsboard.server.common.data.query.FilterPredicateValue;
+import org.thingsboard.server.common.data.rule.RuleChain;
+import org.thingsboard.server.common.data.rule.RuleChainMetaData;
+import org.thingsboard.server.common.data.rule.RuleNode;
+import org.thingsboard.server.dao.DaoUtil;
+import org.thingsboard.server.dao.alarm.AlarmDao;
+import org.thingsboard.server.dao.alarm.AlarmService;
 import org.thingsboard.server.dao.asset.AssetService;
 import org.thingsboard.server.dao.attributes.AttributesService;
 import org.thingsboard.server.dao.customer.CustomerService;
 import org.thingsboard.server.dao.dashboard.DashboardService;
 import org.thingsboard.server.dao.device.DeviceService;
-import org.thingsboard.server.common.data.rule.RuleChainMetaData;
-import org.thingsboard.server.common.data.rule.RuleNode;
+import org.thingsboard.server.dao.edge.EdgeService;
+import org.thingsboard.server.dao.entity.EntityService;
 import org.thingsboard.server.dao.entityview.EntityViewService;
 import org.thingsboard.server.dao.exception.IncorrectParameterException;
 import org.thingsboard.server.dao.group.EntityGroupService;
 import org.thingsboard.server.dao.integration.IntegrationService;
 import org.thingsboard.server.dao.relation.RelationService;
+import org.thingsboard.server.dao.oauth2.OAuth2Service;
+import org.thingsboard.server.dao.oauth2.OAuth2Utils;
 import org.thingsboard.server.dao.rule.RuleChainService;
 import org.thingsboard.server.dao.settings.AdminSettingsService;
+import org.thingsboard.server.dao.model.sql.DeviceProfileEntity;
+import org.thingsboard.server.dao.oauth2.OAuth2Service;
+import org.thingsboard.server.dao.oauth2.OAuth2Utils;
+import org.thingsboard.server.dao.rule.RuleChainService;
+import org.thingsboard.server.dao.sql.device.DeviceProfileRepository;
 import org.thingsboard.server.dao.tenant.TenantService;
 import org.thingsboard.server.dao.timeseries.TimeseriesService;
 import org.thingsboard.server.dao.user.UserService;
 import org.thingsboard.server.dao.wl.WhiteLabelingService;
-import org.thingsboard.server.dao.util.mapping.JacksonUtil;
 import org.thingsboard.server.service.install.InstallScripts;
 import org.thingsboard.server.service.install.SystemDataLoaderService;
 
@@ -117,7 +140,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.thingsboard.server.service.install.DatabaseHelper.objectMapper;
 
 @Service
 @Profile("install")
@@ -169,6 +191,9 @@ public class DefaultDataUpdateService implements DataUpdateService {
     private EntityViewService entityViewService;
 
     @Autowired
+    private EdgeService edgeService;
+
+    @Autowired
     private SystemDataLoaderService systemDataLoaderService;
 
     @Autowired
@@ -182,6 +207,21 @@ public class DefaultDataUpdateService implements DataUpdateService {
 
     @Autowired
     private TimeseriesService tsService;
+
+    @Autowired
+    private AlarmService alarmService;
+
+    @Autowired
+    private EntityService entityService;
+
+    @Autowired
+    private AlarmDao alarmDao;
+
+    @Autowired
+    private DeviceProfileRepository deviceProfileRepository;
+
+    @Autowired
+    private OAuth2Service oAuth2Service;
 
     @Override
     public void updateData(String fromVersion) throws Exception {
@@ -200,7 +240,14 @@ public class DefaultDataUpdateService implements DataUpdateService {
                 tenantsRootRuleChainUpdater.updateEntities(null);
                 break;
             case "3.2.2":
-                log.info("Updating data from version 3.2.2 to 3.2.2PE ...");
+                log.info("Updating data from version 3.2.2 to 3.3.0 ...");
+                tenantsDefaultEdgeRuleChainUpdater.updateEntities(null);
+                tenantsAlarmsCustomerUpdater.updateEntities(null);
+                deviceProfileEntityDynamicConditionsUpdater.updateEntities(null);
+                updateOAuth2Params();
+                break;
+            case "3.3.0":
+                log.info("Updating data from version 3.3.0 to 3.3.0PE ...");
                 tenantsCustomersGroupAllUpdater.updateEntities(null);
                 tenantEntitiesGroupAllUpdater.updateEntities(null);
                 tenantIntegrationUpdater.updateEntities(null);
@@ -218,18 +265,63 @@ public class DefaultDataUpdateService implements DataUpdateService {
                 for (ListenableFuture<WhiteLabelingParams> future : futures) {
                     future.get();
                 }
+
                 break;
             default:
                 throw new RuntimeException("Unable to update data, unsupported fromVersion: " + fromVersion);
         }
     }
 
-    private PaginatedUpdater<String, Tenant> tenantsDefaultRuleChainUpdater =
-            new PaginatedUpdater<String, Tenant>() {
+    private final PaginatedUpdater<String, DeviceProfileEntity> deviceProfileEntityDynamicConditionsUpdater =
+            new PaginatedUpdater<>() {
+
+                @Override
+                protected String getName() {
+                    return "Device Profile Entity Dynamic Conditions Updater";
+                }
+
+                @Override
+                protected PageData<DeviceProfileEntity> findEntities(String id, PageLink pageLink) {
+                    return DaoUtil.pageToPageData(deviceProfileRepository.findAll(DaoUtil.toPageable(pageLink)));
+                }
+
+                @Override
+                protected void updateEntity(DeviceProfileEntity deviceProfile) {
+                    if (deviceProfile.getProfileData().has("alarms") &&
+                            !deviceProfile.getProfileData().get("alarms").isNull()) {
+                        boolean isUpdated = false;
+                        JsonNode array = deviceProfile.getProfileData().get("alarms");
+                        for (JsonNode node : array) {
+                            if (node.has("createRules")) {
+                                JsonNode createRules = node.get("createRules");
+                                for (AlarmSeverity severity : AlarmSeverity.values()) {
+                                    if (createRules.has(severity.name())) {
+                                        isUpdated = isUpdated || convertDeviceProfileAlarmRulesForVersion330(createRules.get(severity.name()).get("condition").get("spec"));
+                                    }
+                                }
+                            }
+                            if (node.has("clearRule") && !node.get("clearRule").isNull()) {
+                                isUpdated = isUpdated || convertDeviceProfileAlarmRulesForVersion330(node.get("clearRule").get("condition").get("spec"));
+                            }
+                        }
+                        if (isUpdated) {
+                            deviceProfileRepository.save(deviceProfile);
+                        }
+                    }
+                }
+            };
+
+    private final PaginatedUpdater<String, Tenant> tenantsDefaultRuleChainUpdater =
+            new PaginatedUpdater<>() {
 
                 @Override
                 protected String getName() {
                     return "Tenants default rule chain updater";
+                }
+
+                @Override
+                protected boolean forceReportTotal() {
+                    return true;
                 }
 
                 @Override
@@ -250,12 +342,48 @@ public class DefaultDataUpdateService implements DataUpdateService {
                 }
             };
 
-    private PaginatedUpdater<String, Tenant> tenantsRootRuleChainUpdater =
-            new PaginatedUpdater<String, Tenant>() {
+    private final PaginatedUpdater<String, Tenant> tenantsDefaultEdgeRuleChainUpdater =
+            new PaginatedUpdater<>() {
+
+                @Override
+                protected String getName() {
+                    return "Tenants default edge rule chain updater";
+                }
+
+                @Override
+                protected boolean forceReportTotal() {
+                    return true;
+                }
+
+                @Override
+                protected PageData<Tenant> findEntities(String region, PageLink pageLink) {
+                    return tenantService.findTenants(pageLink);
+                }
+
+                @Override
+                protected void updateEntity(Tenant tenant) {
+                    try {
+                        RuleChain defaultEdgeRuleChain = ruleChainService.getEdgeTemplateRootRuleChain(tenant.getId());
+                        if (defaultEdgeRuleChain == null) {
+                            installScripts.createDefaultEdgeRuleChains(tenant.getId());
+                        }
+                    } catch (Exception e) {
+                        log.error("Unable to update Tenant", e);
+                    }
+                }
+            };
+
+    private final PaginatedUpdater<String, Tenant> tenantsRootRuleChainUpdater =
+            new PaginatedUpdater<>() {
 
                 @Override
                 protected String getName() {
                     return "Tenants root rule chain updater";
+                }
+
+                @Override
+                protected boolean forceReportTotal() {
+                    return true;
                 }
 
                 @Override
@@ -309,12 +437,17 @@ public class DefaultDataUpdateService implements DataUpdateService {
                 }
             };
 
-    private PaginatedUpdater<String, Tenant> tenantsEntityViewsUpdater =
-            new PaginatedUpdater<String, Tenant>() {
+    private final PaginatedUpdater<String, Tenant> tenantsEntityViewsUpdater =
+            new PaginatedUpdater<>() {
 
                 @Override
                 protected String getName() {
                     return "Tenants entity views updater";
+                }
+
+                @Override
+                protected boolean forceReportTotal() {
+                    return true;
                 }
 
                 @Override
@@ -380,7 +513,7 @@ public class DefaultDataUpdateService implements DataUpdateService {
                 @Override
                 protected void updateEntity(Tenant tenant) {
                     try {
-                        EntityType[] entityGroupTypes = new EntityType[]{EntityType.USER, EntityType.ASSET, EntityType.DEVICE, EntityType.DASHBOARD, EntityType.ENTITY_VIEW};
+                        EntityType[] entityGroupTypes = new EntityType[]{EntityType.USER, EntityType.ASSET, EntityType.DEVICE, EntityType.DASHBOARD, EntityType.ENTITY_VIEW, EntityType.EDGE};
                         for (EntityType groupType : entityGroupTypes) {
                             EntityGroup entityGroup;
                             Optional<EntityGroup> entityGroupOptional =
@@ -412,6 +545,9 @@ public class DefaultDataUpdateService implements DataUpdateService {
                                     break;
                                 case ENTITY_VIEW:
                                     new EntityViewGroupAllUpdater(entityViewService, customerService, entityGroupService, entityGroup, fetchAllTenantEntities).updateEntities(tenant.getId());
+                                    break;
+                                case EDGE:
+                                    new EdgesGroupAllUpdater(edgeService, customerService, entityGroupService, entityGroup, fetchAllTenantEntities).updateEntities(tenant.getId());
                                     break;
                                 case DASHBOARD:
                                     new DashboardsGroupAllUpdater(entityGroup, fetchAllTenantEntities).updateEntities(tenant.getId());
@@ -550,7 +686,7 @@ public class DefaultDataUpdateService implements DataUpdateService {
                     entityGroup.setOwnerId(customer.getId());
                     entityGroupService.saveEntityGroup(TenantId.SYS_TENANT_ID, customer.getId(), entityGroup);
                 }
-                EntityType[] entityGroupTypes = new EntityType[]{EntityType.USER, EntityType.CUSTOMER, EntityType.ASSET, EntityType.DEVICE, EntityType.DASHBOARD, EntityType.ENTITY_VIEW};
+                EntityType[] entityGroupTypes = new EntityType[]{EntityType.USER, EntityType.CUSTOMER, EntityType.ASSET, EntityType.DEVICE, EntityType.DASHBOARD, EntityType.ENTITY_VIEW, EntityType.EDGE};
                 for (EntityType groupType : entityGroupTypes) {
                     Optional<EntityGroup> entityGroupOptional =
                             entityGroupService.findEntityGroupByTypeAndName(TenantId.SYS_TENANT_ID, customer.getId(), groupType, EntityGroup.GROUP_ALL_NAME).get();
@@ -840,6 +976,50 @@ public class DefaultDataUpdateService implements DataUpdateService {
         }
     }
 
+    private final PaginatedUpdater<String, Tenant> tenantsAlarmsCustomerUpdater =
+            new PaginatedUpdater<>() {
+
+                @Override
+                protected String getName() {
+                    return "Tenants alarms customer updater";
+                }
+
+                @Override
+                protected boolean forceReportTotal() {
+                    return true;
+                }
+
+                @Override
+                protected PageData<Tenant> findEntities(String region, PageLink pageLink) {
+                    return tenantService.findTenants(pageLink);
+                }
+
+                @Override
+                protected void updateEntity(Tenant tenant) {
+                    updateTenantAlarmsCustomer(tenant.getId());
+                }
+            };
+
+    private void updateTenantAlarmsCustomer(TenantId tenantId) {
+        AlarmQuery alarmQuery = new AlarmQuery(null, new TimePageLink(100), null, null, false);
+        PageData<AlarmInfo> alarms = alarmDao.findAlarms(tenantId, alarmQuery);
+        boolean hasNext = true;
+        while (hasNext) {
+            for (Alarm alarm : alarms.getData()) {
+                if (alarm.getCustomerId() == null && alarm.getOriginator() != null) {
+                    alarm.setCustomerId(entityService.fetchEntityCustomerId(tenantId, alarm.getOriginator()));
+                    alarmDao.save(tenantId, alarm);
+                }
+            }
+            if (alarms.hasNext()) {
+                alarmQuery.setPageLink(alarmQuery.getPageLink().nextPageLink());
+                alarms = alarmDao.findAlarms(tenantId, alarmQuery);
+            } else {
+                hasNext = false;
+            }
+        }
+    }
+
     private WhiteLabelingParams createWhiteLabelingParams(JsonNode storedWl, String logoImageUrl, boolean isSystem) {
         WhiteLabelingParams whiteLabelingParams = new WhiteLabelingParams();
         whiteLabelingParams.setLogoImageUrl(logoImageUrl);
@@ -1008,6 +1188,48 @@ public class DefaultDataUpdateService implements DataUpdateService {
         protected abstract PageData<D> findEntities(I id, PageLink pageLink);
 
         protected abstract ListenableFuture<WhiteLabelingParams> updateEntity(D entity) throws Exception;
-
     }
+
+    private boolean convertDeviceProfileAlarmRulesForVersion330(JsonNode spec) {
+        if (spec != null) {
+            if (spec.has("type") && spec.get("type").asText().equals("DURATION")) {
+                if (spec.has("value")) {
+                    long value = spec.get("value").asLong();
+                    var predicate = new FilterPredicateValue<>(
+                            value, null, new DynamicValue<>(null, null, false)
+                    );
+                    ((ObjectNode) spec).remove("value");
+                    ((ObjectNode) spec).putPOJO("predicate", predicate);
+                    return true;
+                }
+            } else if (spec.has("type") && spec.get("type").asText().equals("REPEATING")) {
+                if (spec.has("count")) {
+                    int count = spec.get("count").asInt();
+                    var predicate = new FilterPredicateValue<>(
+                            count, null, new DynamicValue<>(null, null, false)
+                    );
+                    ((ObjectNode) spec).remove("count");
+                    ((ObjectNode) spec).putPOJO("predicate", predicate);
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private void updateOAuth2Params() {
+        try {
+            OAuth2ClientsParams oauth2ClientsParams = oAuth2Service.findOAuth2Params();
+            if (!oauth2ClientsParams.getDomainsParams().isEmpty()) {
+                log.info("Updating OAuth2 parameters ...");
+                OAuth2Info oAuth2Info = OAuth2Utils.clientParamsToOAuth2Info(oauth2ClientsParams);
+                oAuth2Service.saveOAuth2Info(oAuth2Info);
+                oAuth2Service.saveOAuth2Params(new OAuth2ClientsParams(false, Collections.emptyList()));
+                log.info("Successfully updated OAuth2 parameters!");
+            }
+        } catch (Exception e) {
+            log.error("Failed to update OAuth2 parameters", e);
+        }
+    }
+
 }

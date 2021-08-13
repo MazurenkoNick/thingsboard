@@ -40,6 +40,7 @@ import { AfterViewInit, EventEmitter, Inject, OnInit, Directive } from '@angular
 import { Store } from '@ngrx/store';
 import { AppState } from '@core/core.state';
 import { AbstractControl, FormGroup } from '@angular/forms';
+import { RuleChainType } from '@shared/models/rule-chain.models';
 
 export interface RuleNodeConfiguration {
   [key: string]: any;
@@ -340,6 +341,7 @@ export interface FcRuleNode extends FcRuleNodeType {
   error?: string;
   highlighted?: boolean;
   componentClazz?: string;
+  ruleChainType?: RuleChainType;
 }
 
 export interface FcRuleEdge extends FcEdge {
@@ -381,6 +383,13 @@ export enum MessageType {
   ADDED_TO_ENTITY_GROUP = 'ADDED_TO_ENTITY_GROUP',
   REMOVED_FROM_ENTITY_GROUP = 'REMOVED_FROM_ENTITY_GROUP',
   REST_API_REQUEST = 'REST_API_REQUEST',
+  FIRMWARE_UPDATED = 'FIRMWARE_UPDATED',
+  SOFTWARE_UPDATED = 'SOFTWARE_UPDATED',
+  RPC_QUEUED = 'RPC_QUEUED',
+  RPC_DELIVERED = 'RPC_DELIVERED',
+  RPC_SUCCESSFUL = 'RPC_SUCCESSFUL',
+  RPC_TIMEOUT = 'RPC_TIMEOUT',
+  RPC_FAILED = 'RPC_FAILED',
   generateReport = 'generateReport'
 }
 
@@ -406,6 +415,13 @@ export const messageTypeNames = new Map<MessageType, string>(
     [MessageType.ADDED_TO_ENTITY_GROUP, 'Added to Group'],
     [MessageType.REMOVED_FROM_ENTITY_GROUP, 'Removed from Group'],
     [MessageType.REST_API_REQUEST, 'REST API request'],
+    [MessageType.FIRMWARE_UPDATED, 'Firmware Update'],
+    [MessageType.SOFTWARE_UPDATED, 'Software Update'],
+    [MessageType.RPC_QUEUED, 'RPC Queued'],
+    [MessageType.RPC_DELIVERED, 'RPC Delivered'],
+    [MessageType.RPC_SUCCESSFUL, 'RPC Successful'],
+    [MessageType.RPC_TIMEOUT, 'RPC Timeout'],
+    [MessageType.RPC_FAILED, 'RPC Failed'],
     [MessageType.generateReport, 'Generate Report']
   ]
 );
@@ -457,6 +473,8 @@ const ruleNodeClazzHelpLinkMap = {
   'org.thingsboard.rule.engine.rest.TbRestApiCallNode': 'ruleNodeRestApiCall',
   'org.thingsboard.rule.engine.mail.TbSendEmailNode': 'ruleNodeSendEmail',
   'org.thingsboard.rule.engine.sms.TbSendSmsNode': 'ruleNodeSendSms',
+  'org.thingsboard.rule.engine.edge.TbMsgPushToCloudNode': 'ruleNodePushToCloud',
+  'org.thingsboard.rule.engine.edge.TbMsgPushToEdgeNode': 'ruleNodePushToEdge',
   'org.thingsboard.rule.engine.integration.TbIntegrationDownlinkNode': 'ruleNodeIntegrationDownlink',
   'org.thingsboard.rule.engine.action.TbAddToGroupNode': 'ruleNodeAddToGroup',
   'org.thingsboard.rule.engine.action.TbRemoveFromGroupNode': 'ruleNodeRemoveFromGroup',
@@ -468,7 +486,8 @@ const ruleNodeClazzHelpLinkMap = {
   'org.thingsboard.rule.engine.rest.TbSendRestApiCallReplyNode': 'ruleNodeRestCallReply',
   'org.thingsboard.rule.engine.analytics.latest.telemetry.TbAggLatestTelemetryNode': 'ruleNodeAggregateLatest',
   'org.thingsboard.rule.engine.analytics.incoming.TbSimpleAggMsgNode': 'ruleNodeAggregateStream',
-  'org.thingsboard.rule.engine.analytics.latest.alarm.TbAlarmsCountNode': 'ruleNodeAlarmsCount'
+  'org.thingsboard.rule.engine.analytics.latest.alarm.TbAlarmsCountNodeV2': 'ruleNodeAlarmsCount',
+  'org.thingsboard.rule.engine.analytics.latest.alarm.TbAlarmsCountNode': 'ruleNodeAlarmsCountDeprecated'
 };
 
 export function getRuleNodeHelpLink(component: RuleNodeComponentDescriptor): string {

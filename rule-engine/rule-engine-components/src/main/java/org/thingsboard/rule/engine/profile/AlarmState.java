@@ -36,6 +36,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.common.util.DonAsynchron;
 import org.thingsboard.rule.engine.action.TbAlarmResult;
 import org.thingsboard.rule.engine.api.TbContext;
@@ -46,13 +47,14 @@ import org.thingsboard.server.common.data.alarm.Alarm;
 import org.thingsboard.server.common.data.alarm.AlarmSeverity;
 import org.thingsboard.server.common.data.alarm.AlarmStatus;
 import org.thingsboard.server.common.data.device.profile.AlarmConditionKeyType;
+import org.thingsboard.server.common.data.device.profile.AlarmConditionSpecType;
 import org.thingsboard.server.common.data.device.profile.DeviceProfileAlarm;
+import org.thingsboard.server.common.data.id.DashboardId;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.msg.TbMsg;
 import org.thingsboard.server.common.msg.TbMsgMetaData;
 import org.thingsboard.server.common.msg.queue.ServiceQueue;
 import org.thingsboard.server.dao.alarm.AlarmOperationResult;
-import org.thingsboard.server.dao.util.mapping.JacksonUtil;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -88,15 +90,15 @@ class AlarmState {
         lastMsgMetaData = msg.getMetaData();
         lastMsgQueueName = msg.getQueueName();
         this.dataSnapshot = data;
-        return createOrClearAlarms(ctx, data, update, AlarmRuleState::eval);
+        return createOrClearAlarms(ctx, msg, data, update, AlarmRuleState::eval);
     }
 
     public boolean process(TbContext ctx, long ts) throws ExecutionException, InterruptedException {
         initCurrentAlarm(ctx);
-        return createOrClearAlarms(ctx, ts, null, AlarmRuleState::eval);
+        return createOrClearAlarms(ctx, null, ts, null, (alarmState, tsParam) -> alarmState.eval(tsParam, dataSnapshot));
     }
 
-    public <T> boolean createOrClearAlarms(TbContext ctx, T data, SnapshotUpdate update, BiFunction<AlarmRuleState, T, AlarmEvalResult> evalFunction) {
+    public <T> boolean createOrClearAlarms(TbContext ctx, TbMsg msg, T data, SnapshotUpdate update, BiFunction<AlarmRuleState, T, AlarmEvalResult> evalFunction) {
         boolean stateUpdate = false;
         AlarmRuleState resultState = null;
         log.debug("[{}] processing update: {}", alarmDefinition.getId(), data);
@@ -117,7 +119,7 @@ class AlarmState {
         if (resultState != null) {
             TbAlarmResult result = calculateAlarmResult(ctx, resultState);
             if (result != null) {
-                pushMsg(ctx, result);
+                pushMsg(ctx, msg, result, resultState);
             }
             stateUpdate = clearAlarmState(stateUpdate, clearState);
         } else if (currentAlarm != null && clearState != null) {
@@ -136,7 +138,7 @@ class AlarmState {
                 );
                 DonAsynchron.withCallback(alarmClearOperationResult,
                         result -> {
-                            pushMsg(ctx, new TbAlarmResult(false, false, true, result.getAlarm()));
+                            pushMsg(ctx, msg, new TbAlarmResult(false, false, true, result.getAlarm()), clearState);
                         },
                         throwable -> {
                             throw new RuntimeException(throwable);
@@ -179,7 +181,7 @@ class AlarmState {
         }
     }
 
-    public void pushMsg(TbContext ctx, TbAlarmResult alarmResult) {
+    public void pushMsg(TbContext ctx, TbMsg msg, TbAlarmResult alarmResult, AlarmRuleState ruleState) {
         JsonNode jsonNodes = JacksonUtil.valueToTree(alarmResult.getAlarm());
         String data = jsonNodes.toString();
         TbMsgMetaData metaData = lastMsgMetaData != null ? lastMsgMetaData.copy() : new TbMsgMetaData();
@@ -198,8 +200,19 @@ class AlarmState {
             relationType = "Alarm Cleared";
             metaData.putValue(DataConstants.IS_CLEARED_ALARM, Boolean.TRUE.toString());
         }
-        TbMsg newMsg = ctx.newMsg(lastMsgQueueName != null ? lastMsgQueueName : ServiceQueue.MAIN, "ALARM", originator, metaData, data);
-        ctx.tellNext(newMsg, relationType);
+        setAlarmConditionMetadata(ruleState, metaData);
+        TbMsg newMsg = ctx.newMsg(lastMsgQueueName != null ? lastMsgQueueName : ServiceQueue.MAIN, "ALARM",
+                originator, msg != null ? msg.getCustomerId() : null, metaData, data);
+        ctx.enqueueForTellNext(newMsg, relationType);
+    }
+
+    protected void setAlarmConditionMetadata(AlarmRuleState ruleState, TbMsgMetaData metaData) {
+        if (ruleState.getSpec().getType() == AlarmConditionSpecType.REPEATING) {
+            metaData.putValue(DataConstants.ALARM_CONDITION_REPEATS, String.valueOf(ruleState.getState().getEventCount()));
+        }
+        if (ruleState.getSpec().getType() == AlarmConditionSpecType.DURATION) {
+            metaData.putValue(DataConstants.ALARM_CONDITION_DURATION, String.valueOf(ruleState.getState().getDuration()));
+        }
     }
 
     public void updateState(DeviceProfileAlarm alarm, PersistedAlarmState alarmState) {
@@ -272,16 +285,22 @@ class AlarmState {
     private JsonNode createDetails(AlarmRuleState ruleState) {
         JsonNode alarmDetails;
         String alarmDetailsStr = ruleState.getAlarmRule().getAlarmDetails();
+        DashboardId dashboardId = ruleState.getAlarmRule().getDashboardId();
 
-        if (StringUtils.isNotEmpty(alarmDetailsStr)) {
-            for (var keyFilter : ruleState.getAlarmRule().getCondition().getCondition()) {
-                EntityKeyValue entityKeyValue = dataSnapshot.getValue(keyFilter.getKey());
-                if (entityKeyValue != null) {
-                    alarmDetailsStr = alarmDetailsStr.replaceAll(String.format("\\$\\{%s}", keyFilter.getKey().getKey()), getValueAsString(entityKeyValue));
-                }
-            }
+        if (StringUtils.isNotEmpty(alarmDetailsStr) || dashboardId != null) {
             ObjectNode newDetails = JacksonUtil.newObjectNode();
-            newDetails.put("data", alarmDetailsStr);
+            if (StringUtils.isNotEmpty(alarmDetailsStr)) {
+                for (var keyFilter : ruleState.getAlarmRule().getCondition().getCondition()) {
+                    EntityKeyValue entityKeyValue = dataSnapshot.getValue(keyFilter.getKey());
+                    if (entityKeyValue != null) {
+                        alarmDetailsStr = alarmDetailsStr.replaceAll(String.format("\\$\\{%s}", keyFilter.getKey().getKey()), getValueAsString(entityKeyValue));
+                    }
+                }
+                newDetails.put("data", alarmDetailsStr);
+            }
+            if (dashboardId != null) {
+                newDetails.put("dashboardId", dashboardId.getId().toString());
+            }
             alarmDetails = newDetails;
         } else if (currentAlarm != null) {
             alarmDetails = currentAlarm.getDetails();

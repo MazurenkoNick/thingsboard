@@ -1,0 +1,62 @@
+<!--
+
+    ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
+
+    Copyright © 2016-2021 ThingsBoard, Inc. All Rights Reserved.
+
+    NOTICE: All information contained herein is, and remains
+    the property of ThingsBoard, Inc. and its suppliers,
+    if any.  The intellectual and technical concepts contained
+    herein are proprietary to ThingsBoard, Inc.
+    and its suppliers and may be covered by U.S. and Foreign Patents,
+    patents in process, and are protected by trade secret or copyright law.
+
+    Dissemination of this information or reproduction of this material is strictly forbidden
+    unless prior written permission is obtained from COMPANY.
+
+    Access to the source code contained herein is hereby forbidden to anyone except current COMPANY employees,
+    managers or contractors who have executed Confidentiality and Non-disclosure agreements
+    explicitly covering such access.
+
+    The copyright notice above does not evidence any actual or intended publication
+    or disclosure  of  this source code, which includes
+    information that is confidential and/or proprietary, and is a trade secret, of  COMPANY.
+    ANY REPRODUCTION, MODIFICATION, DISTRIBUTION, PUBLIC  PERFORMANCE,
+    OR PUBLIC DISPLAY OF OR THROUGH USE  OF THIS  SOURCE CODE  WITHOUT
+    THE EXPRESS WRITTEN CONSENT OF COMPANY IS STRICTLY PROHIBITED,
+    AND IN VIOLATION OF APPLICABLE LAWS AND INTERNATIONAL TREATIES.
+    THE RECEIPT OR POSSESSION OF THIS SOURCE CODE AND/OR RELATED INFORMATION
+    DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
+    OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
+
+-->
+<section [formGroup]="modelsFormGroup">
+  <mat-accordion multi="true" formArrayName="models">
+    <mat-expansion-panel
+      *ngFor="let objectLwM2M of modelsFormArray.controls; let $index = index; trackBy: trackByParams"
+      [formGroupName]="$index">
+      <mat-expansion-panel-header >
+        <mat-panel-title fxLayoutAlign="start center" >
+          <span class="tb-panel-title">{{ objectLwM2M.get('name').value}}</span>&nbsp;#{{ objectLwM2M.get('keyId').value}}
+          <span fxFlex></span>
+          <tb-profile-lwm2m-attributes
+            formControlName="attributes"
+            [modelName]="getNameObject(objectLwM2M.value)">
+          </tb-profile-lwm2m-attributes>
+          <button type="button"
+                  *ngIf="!disabled && objectLwM2M.get('multiple').value"
+                  mat-button mat-icon-button (click)="addInstances($event, objectLwM2M)"
+                  matTooltip="{{'device-profile.lwm2m.add-new-instances' | translate}}"
+                  matTooltipPosition="above">
+            <mat-icon class="material-icons">note_add</mat-icon>
+          </button>
+        </mat-panel-title>
+      </mat-expansion-panel-header>
+      <ng-template matExpansionPanelContent>
+        <tb-profile-lwm2m-observe-attr-telemetry-instances
+          formControlName="instances">
+        </tb-profile-lwm2m-observe-attr-telemetry-instances>
+      </ng-template>
+    </mat-expansion-panel>
+  </mat-accordion>
+</section>

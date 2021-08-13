@@ -69,6 +69,14 @@
                   matTooltipPosition="above">
             <mat-icon>add</mat-icon>
           </button>
+          <button *ngIf="assignEnabled"
+                  [disabled]="isLoading$ | async"
+                  mat-icon-button
+                  (click)="assignToEdgeSchedulerEvent($event)"
+                  matTooltip="{{'edge.assign-to-edge' | translate }}"
+                  matTooltipPosition="above">
+            <mat-icon>add</mat-icon>
+          </button>
           <button [disabled]="isLoading$ | async"
                   mat-icon-button
                   (click)="enterFilterMode()"
@@ -112,11 +120,21 @@
                   {{ translate.get('scheduler.selected-scheduler-events', {count: dataSource.selection.selected.length}) | async }}
                 </span>
         <span fxFlex></span>
-        <button mat-icon-button [disabled]="isLoading$ | async"
+        <button *ngIf="deleteEnabled"
+                [disabled]="isLoading$ | async"
+                mat-icon-button
                 matTooltip="{{ 'action.delete' | translate }}"
                 matTooltipPosition="above"
                 (click)="deleteSchedulerEvents($event)">
           <mat-icon>delete</mat-icon>
+        </button>
+        <button *ngIf="assignEnabled"
+                [disabled]="isLoading$ | async"
+                mat-icon-button
+                matTooltip="{{ 'edge.unassign-scheduler-events-from-edge' | translate }}"
+                matTooltipPosition="above"
+                (click)="unassignFromEdgeSchedulerEvents($event)">
+          <mat-icon>assignment_return</mat-icon>
         </button>
       </div>
     </mat-toolbar>
@@ -180,6 +198,13 @@
                         matTooltipPosition="above"
                         (click)="viewSchedulerEvent($event, schedulerEvent)">
                   <mat-icon>more_horiz</mat-icon>
+                </button>
+                <button *ngIf="assignEnabled"
+                        mat-button mat-icon-button [disabled]="isLoading$ | async"
+                        matTooltip="{{ 'edge.unassign-from-edge' | translate }}"
+                        matTooltipPosition="above"
+                        (click)="unassignFromEdge($event, schedulerEvent)">
+                  <mat-icon>assignment_return</mat-icon>
                 </button>
                 <button *ngIf="deleteEnabled"
                         mat-button mat-icon-button [disabled]="isLoading$ | async"

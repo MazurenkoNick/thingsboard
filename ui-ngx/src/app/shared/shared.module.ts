@@ -174,6 +174,11 @@ import { GroupPermissionsComponent } from '@shared/components/role/group-permiss
 import { GroupPermissionDialogComponent } from '@shared/components/role/group-permission-dialog.component';
 import { ShareEntityGroupComponent } from '@shared/components/group/share-entity-group.component';
 import { EntityLimitDialogComponent } from '@shared/components/dialog/entity-limit-dialog.component';
+import { EdgeEntityGroupListComponent } from '@shared/components/group/edge-entity-group-list.component';
+import { OtaPackageAutocompleteComponent } from '@shared/components/ota-package/ota-package-autocomplete.component';
+import { MAT_DATE_LOCALE } from '@angular/material/core';
+import { CopyButtonComponent } from '@shared/components/button/copy-button.component';
+import { TogglePasswordComponent } from '@shared/components/button/toggle-password.component';
 
 @NgModule({
   providers: [
@@ -194,6 +199,10 @@ import { EntityLimitDialogComponent } from '@shared/components/dialog/entity-lim
     {
       provide: TINYMCE_SCRIPT_SRC,
       useValue: 'assets/tinymce/tinymce.min.js'
+    },
+    {
+      provide: MAT_DATE_LOCALE,
+      useValue: 'en-GB'
     }
   ],
   declarations: [
@@ -235,6 +244,7 @@ import { EntityLimitDialogComponent } from '@shared/components/dialog/entity-lim
     OwnerAutocompleteComponent,
     EntityGroupSelectComponent,
     EntityGroupListComponent,
+    EdgeEntityGroupListComponent,
     OriginatorSelectComponent,
     EntityKeysListComponent,
     EntityListSelectComponent,
@@ -287,7 +297,11 @@ import { EntityLimitDialogComponent } from '@shared/components/dialog/entity-lim
     WidgetsBundleSearchComponent,
     GroupPermissionsComponent,
     GroupPermissionDialogComponent,
-    ShareEntityGroupComponent
+    ShareEntityGroupComponent,
+    OtaPackageAutocompleteComponent,
+    WidgetsBundleSearchComponent,
+    CopyButtonComponent,
+    TogglePasswordComponent
   ],
   imports: [
     CommonModule,
@@ -376,6 +390,7 @@ import { EntityLimitDialogComponent } from '@shared/components/dialog/entity-lim
     OwnerAutocompleteComponent,
     EntityGroupSelectComponent,
     EntityGroupListComponent,
+    EdgeEntityGroupListComponent,
     OriginatorSelectComponent,
     EntityKeysListComponent,
     EntityListSelectComponent,
@@ -475,7 +490,11 @@ import { EntityLimitDialogComponent } from '@shared/components/dialog/entity-lim
     WidgetsBundleSearchComponent,
     GroupPermissionsComponent,
     GroupPermissionDialogComponent,
-    ShareEntityGroupComponent
+    ShareEntityGroupComponent,
+    OtaPackageAutocompleteComponent,
+    WidgetsBundleSearchComponent,
+    CopyButtonComponent,
+    TogglePasswordComponent
   ]
 })
 export class SharedModule { }

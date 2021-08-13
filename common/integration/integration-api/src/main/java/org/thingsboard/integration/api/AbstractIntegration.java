@@ -35,8 +35,10 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
+import com.google.common.util.concurrent.ListenableFuture;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.Base64Utils;
+import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.integration.api.converter.TBDownlinkDataConverter;
 import org.thingsboard.integration.api.converter.TBUplinkDataConverter;
 import org.thingsboard.integration.api.data.DownlinkData;
@@ -144,6 +146,19 @@ public abstract class AbstractIntegration<T> implements ThingsboardPlatformInteg
         return statistics;
     }
 
+    protected <T> T getClientConfiguration(Integration configuration, Class<T> clazz) {
+        JsonNode clientConfiguration = configuration.getConfiguration().get("clientConfiguration");
+        return getClientConfiguration(clientConfiguration, clazz);
+    }
+
+    protected <T> T getClientConfiguration(JsonNode clientConfiguration, Class<T> clazz) {
+        if (clientConfiguration == null) {
+            throw new IllegalArgumentException("clientConfiguration field is missing!");
+        } else {
+            return JacksonUtil.convertValue(clientConfiguration, clazz);
+        }
+    }
+
     protected void doValidateConfiguration(JsonNode configuration, boolean allowLocalNetworkHosts) {
 
     }
@@ -236,15 +251,19 @@ public abstract class AbstractIntegration<T> implements ThingsboardPlatformInteg
         return sw.toString();
     }
 
-    protected List<UplinkData> convertToUplinkDataList(IntegrationContext context, byte[] data, UplinkMetaData md) throws Exception {
+    protected ListenableFuture<List<UplinkData>> convertToUplinkDataListAsync(IntegrationContext context, byte[] data, UplinkMetaData md) throws Exception {
         try {
-            return this.uplinkConverter.convertUplink(context.getUplinkConverterContext(), data, md);
+            return this.uplinkConverter.convertUplink(context.getUplinkConverterContext(), data, md, context.getCallBackExecutorService());
         } catch (Exception e) {
             if (log.isDebugEnabled()) {
                 log.debug("[{}][{}] Failed to apply uplink data converter function for data: {} and metadata: {}", configuration.getId(), configuration.getName(), Base64Utils.encodeToString(data), md);
             }
             throw e;
         }
+    }
+
+    protected List<UplinkData> convertToUplinkDataList(IntegrationContext context, byte[] data, UplinkMetaData md) throws Exception {
+        return convertToUplinkDataListAsync(context, data, md).get();
     }
 
     protected void reportDownlinkOk(IntegrationContext context, DownlinkData data) {

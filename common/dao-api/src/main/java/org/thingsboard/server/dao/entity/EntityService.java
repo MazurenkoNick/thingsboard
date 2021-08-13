@@ -48,6 +48,8 @@ public interface EntityService {
 
     ListenableFuture<String> fetchEntityNameAsync(TenantId tenantId, EntityId entityId);
 
+    CustomerId fetchEntityCustomerId(TenantId tenantId, EntityId entityId);
+
     void deleteEntityRelations(TenantId tenantId, EntityId entityId);
 
     long countEntitiesByQuery(TenantId tenantId, CustomerId customerId, MergedUserPermissions userPermissions, EntityCountQuery query);
@@ -56,5 +58,8 @@ public interface EntityService {
 
     <T extends GroupEntity<? extends EntityId>> PageData<T> findUserEntities(TenantId tenantId, CustomerId customerId, MergedUserPermissions userPermissions,
                                                                              EntityType entityType, Operation operation, String type, PageLink pageLink);
+
+    <T extends GroupEntity<? extends EntityId>> PageData<T> findUserEntities(TenantId tenantId, CustomerId customerId, MergedUserPermissions userPermissions,
+                                                                             EntityType entityType, Operation operation, String type, PageLink pageLink, boolean mobile);
 
 }

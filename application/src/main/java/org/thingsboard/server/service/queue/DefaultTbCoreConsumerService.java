@@ -39,8 +39,9 @@ import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.Order;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.common.util.ThingsBoardThreadFactory;
-import org.thingsboard.rule.engine.api.RpcError;
+import org.thingsboard.server.common.data.rpc.RpcError;
 import org.thingsboard.server.actors.ActorSystemContext;
 import org.thingsboard.server.common.data.alarm.Alarm;
 import org.thingsboard.server.common.data.id.TenantId;
@@ -51,8 +52,8 @@ import org.thingsboard.server.common.msg.queue.TbCallback;
 import org.thingsboard.server.common.stats.StatsFactory;
 import org.thingsboard.server.common.transport.util.DataDecodingEncodingService;
 import org.thingsboard.server.dao.tenant.TbTenantProfileCache;
-import org.thingsboard.server.dao.util.mapping.JacksonUtil;
 import org.thingsboard.server.gen.transport.TransportProtos.DeviceStateServiceMsgProto;
+import org.thingsboard.server.gen.transport.TransportProtos.EdgeNotificationMsgProto;
 import org.thingsboard.server.gen.transport.TransportProtos.FromDeviceRPCResponseProto;
 import org.thingsboard.server.gen.transport.TransportProtos.IntegrationDownlinkMsgProto;
 import org.thingsboard.server.gen.transport.TransportProtos.LocalSubscriptionServiceMsgProto;
@@ -67,18 +68,22 @@ import org.thingsboard.server.gen.transport.TransportProtos.TbSubscriptionCloseP
 import org.thingsboard.server.gen.transport.TransportProtos.TbTimeSeriesUpdateProto;
 import org.thingsboard.server.gen.transport.TransportProtos.ToCoreMsg;
 import org.thingsboard.server.gen.transport.TransportProtos.ToCoreNotificationMsg;
+import org.thingsboard.server.gen.transport.TransportProtos.ToOtaPackageStateServiceMsg;
 import org.thingsboard.server.gen.transport.TransportProtos.ToUsageStatsServiceMsg;
 import org.thingsboard.server.gen.transport.TransportProtos.TransportToDeviceActorMsg;
 import org.thingsboard.server.queue.TbQueueConsumer;
 import org.thingsboard.server.queue.common.TbProtoQueueMsg;
-import org.thingsboard.server.queue.discovery.PartitionChangeEvent;
+import org.thingsboard.server.queue.discovery.event.PartitionChangeEvent;
 import org.thingsboard.server.queue.provider.TbCoreQueueFactory;
 import org.thingsboard.server.queue.util.TbCoreComponent;
 import org.thingsboard.server.service.apiusage.TbApiUsageStateService;
+import org.thingsboard.server.service.edge.EdgeNotificationService;
 import org.thingsboard.server.service.integration.PlatformIntegrationService;
+import org.thingsboard.server.service.ota.OtaPackageStateService;
 import org.thingsboard.server.service.profile.TbDeviceProfileCache;
 import org.thingsboard.server.service.queue.processing.AbstractConsumerService;
-import org.thingsboard.server.service.rpc.FromDeviceRpcResponse;
+import org.thingsboard.server.service.queue.processing.IdMsgPair;
+import org.thingsboard.server.common.msg.rpc.FromDeviceRpcResponse;
 import org.thingsboard.server.service.rpc.TbCoreDeviceRpcService;
 import org.thingsboard.server.service.rpc.ToDeviceRpcRequestActorMsg;
 import org.thingsboard.server.service.ruleengine.RuleEngineCallService;
@@ -116,6 +121,11 @@ public class DefaultTbCoreConsumerService extends AbstractConsumerService<ToCore
     @Value("${queue.core.stats.enabled:false}")
     private boolean statsEnabled;
 
+    @Value("${queue.core.ota.pack-interval-ms:60000}")
+    private long firmwarePackInterval;
+    @Value("${queue.core.ota.pack-size:100}")
+    private int firmwarePackSize;
+
     private final TbQueueConsumer<TbProtoQueueMsg<ToCoreMsg>> mainConsumer;
     private final DeviceStateService stateService;
     private final SchedulerService schedulerService;
@@ -124,21 +134,27 @@ public class DefaultTbCoreConsumerService extends AbstractConsumerService<ToCore
     private final TbCoreDeviceRpcService tbCoreDeviceRpcService;
     private final PlatformIntegrationService platformIntegrationService;
     private final RuleEngineCallService ruleEngineCallService;
+    private final EdgeNotificationService edgeNotificationService;
+    private final OtaPackageStateService firmwareStateService;
     private final TbCoreConsumerStats stats;
     protected final TbQueueConsumer<TbProtoQueueMsg<ToUsageStatsServiceMsg>> usageStatsConsumer;
+    private final TbQueueConsumer<TbProtoQueueMsg<ToOtaPackageStateServiceMsg>> firmwareStatesConsumer;
 
     protected volatile ExecutorService usageStatsExecutor;
+    private volatile ExecutorService firmwareStatesExecutor;
 
     public DefaultTbCoreConsumerService(TbCoreQueueFactory tbCoreQueueFactory, ActorSystemContext actorContext,
                                         DeviceStateService stateService, SchedulerService schedulerService, TbLocalSubscriptionService localSubscriptionService,
                                         SubscriptionManagerService subscriptionManagerService, DataDecodingEncodingService encodingService,
                                         TbCoreDeviceRpcService tbCoreDeviceRpcService, PlatformIntegrationService platformIntegrationService,
                                         RuleEngineCallService ruleEngineCallService, StatsFactory statsFactory, TbDeviceProfileCache deviceProfileCache,
-                                        TbTenantProfileCache tenantProfileCache,TbApiUsageStateService statsService) {
+                                        TbTenantProfileCache tenantProfileCache, TbApiUsageStateService statsService,
+                                        EdgeNotificationService edgeNotificationService,
+                                        OtaPackageStateService firmwareStateService) {
         super(actorContext, encodingService, tenantProfileCache, deviceProfileCache, statsService, tbCoreQueueFactory.createToCoreNotificationsMsgConsumer());
-
         this.mainConsumer = tbCoreQueueFactory.createToCoreMsgConsumer();
         this.usageStatsConsumer = tbCoreQueueFactory.createToUsageStatsServiceMsgConsumer();
+        this.firmwareStatesConsumer = tbCoreQueueFactory.createToOtaPackageStateServiceMsgConsumer();
         this.stateService = stateService;
         this.schedulerService = schedulerService;
         this.localSubscriptionService = localSubscriptionService;
@@ -146,13 +162,16 @@ public class DefaultTbCoreConsumerService extends AbstractConsumerService<ToCore
         this.tbCoreDeviceRpcService = tbCoreDeviceRpcService;
         this.platformIntegrationService = platformIntegrationService;
         this.ruleEngineCallService = ruleEngineCallService;
+        this.edgeNotificationService = edgeNotificationService;
         this.stats = new TbCoreConsumerStats(statsFactory);
+        this.firmwareStateService = firmwareStateService;
     }
 
     @PostConstruct
     public void init() {
         super.init("tb-core-consumer", "tb-core-notifications-consumer");
-        this.usageStatsExecutor = Executors.newCachedThreadPool(ThingsBoardThreadFactory.forName("tb-core-usage-stats-consumer"));
+        this.usageStatsExecutor = Executors.newSingleThreadExecutor(ThingsBoardThreadFactory.forName("tb-core-usage-stats-consumer"));
+        this.firmwareStatesExecutor = Executors.newSingleThreadExecutor(ThingsBoardThreadFactory.forName("tb-core-firmware-notifications-consumer"));
     }
 
     @PreDestroy
@@ -161,6 +180,9 @@ public class DefaultTbCoreConsumerService extends AbstractConsumerService<ToCore
         if (usageStatsExecutor != null) {
             usageStatsExecutor.shutdownNow();
         }
+        if (firmwareStatesExecutor != null) {
+            firmwareStatesExecutor.shutdownNow();
+        }
     }
 
     @EventListener(ApplicationReadyEvent.class)
@@ -168,6 +190,7 @@ public class DefaultTbCoreConsumerService extends AbstractConsumerService<ToCore
     public void onApplicationEvent(ApplicationReadyEvent event) {
         super.onApplicationEvent(event);
         launchUsageStatsConsumer();
+        launchOtaPackageUpdateNotificationConsumer();
     }
 
     @Override
@@ -182,6 +205,7 @@ public class DefaultTbCoreConsumerService extends AbstractConsumerService<ToCore
                             .map(tpi -> tpi.newByTopic(usageStatsConsumer.getTopic()))
                             .collect(Collectors.toSet()));
         }
+        this.firmwareStatesConsumer.subscribe();
     }
 
     @Override
@@ -193,14 +217,17 @@ public class DefaultTbCoreConsumerService extends AbstractConsumerService<ToCore
                     if (msgs.isEmpty()) {
                         continue;
                     }
-                    ConcurrentMap<UUID, TbProtoQueueMsg<ToCoreMsg>> pendingMap = msgs.stream().collect(
-                            Collectors.toConcurrentMap(s -> UUID.randomUUID(), Function.identity()));
+                    List<IdMsgPair<ToCoreMsg>> orderedMsgList = msgs.stream().map(msg -> new IdMsgPair<>(UUID.randomUUID(), msg)).collect(Collectors.toList());
+                    ConcurrentMap<UUID, TbProtoQueueMsg<ToCoreMsg>> pendingMap = orderedMsgList.stream().collect(
+                            Collectors.toConcurrentMap(IdMsgPair::getUuid, IdMsgPair::getMsg));
                     CountDownLatch processingTimeoutLatch = new CountDownLatch(1);
                     TbPackProcessingContext<TbProtoQueueMsg<ToCoreMsg>> ctx = new TbPackProcessingContext<>(
                             processingTimeoutLatch, pendingMap, new ConcurrentHashMap<>());
                     PendingMsgHolder pendingMsgHolder = new PendingMsgHolder();
                     Future<?> packSubmitFuture = consumersExecutor.submit(() -> {
-                        pendingMap.forEach((id, msg) -> {
+                        orderedMsgList.forEach((element) -> {
+                            UUID id = element.getUuid();
+                            TbProtoQueueMsg<ToCoreMsg> msg = element.getMsg();
                             log.trace("[{}] Creating main callback for message: {}", id, msg.getValue());
                             TbCallback callback = new TbPackCallback<>(id, ctx);
                             try {
@@ -221,7 +248,10 @@ public class DefaultTbCoreConsumerService extends AbstractConsumerService<ToCore
                                 } else if (toCoreMsg.hasIntegrationDownlinkMsg()) {
                                     log.trace("[{}] Forwarding message to integration service {}", id, toCoreMsg.getIntegrationDownlinkMsg());
                                     forwardToIntegrationService(toCoreMsg.getIntegrationDownlinkMsg(), callback);
-                                } else if (toCoreMsg.getToDeviceActorNotificationMsg() != null && !toCoreMsg.getToDeviceActorNotificationMsg().isEmpty()) {
+                                } else if (toCoreMsg.hasEdgeNotificationMsg()) {
+                                    log.trace("[{}] Forwarding message to edge service {}", id, toCoreMsg.getEdgeNotificationMsg());
+                                    forwardToEdgeNotificationService(toCoreMsg.getEdgeNotificationMsg(), callback);
+                                } else if (!toCoreMsg.getToDeviceActorNotificationMsg().isEmpty()) {
                                     Optional<TbActorMsg> actorMsg = encodingService.decode(toCoreMsg.getToDeviceActorNotificationMsg().toByteArray());
                                     if (actorMsg.isPresent()) {
                                         TbActorMsg tbActorMsg = actorMsg.get();
@@ -233,6 +263,8 @@ public class DefaultTbCoreConsumerService extends AbstractConsumerService<ToCore
                                         }
                                     }
                                     callback.onSuccess();
+                                } else {
+                                    log.warn("[{}] No rule how to forward message from main consumer for message: {}", id, toCoreMsg);
                                 }
                             } catch (Throwable e) {
                                 log.warn("[{}] Failed to process message: {}", id, msg, e);
@@ -304,6 +336,13 @@ public class DefaultTbCoreConsumerService extends AbstractConsumerService<ToCore
         } else if (toCoreNotification.getComponentLifecycleMsg() != null && !toCoreNotification.getComponentLifecycleMsg().isEmpty()) {
             handleComponentLifecycleMsg(id, toCoreNotification.getComponentLifecycleMsg());
             callback.onSuccess();
+        } else if (toCoreNotification.getEdgeEventUpdateMsg() != null && !toCoreNotification.getEdgeEventUpdateMsg().isEmpty()) {
+            Optional<TbActorMsg> actorMsg = encodingService.decode(toCoreNotification.getEdgeEventUpdateMsg().toByteArray());
+            if (actorMsg.isPresent()) {
+                log.trace("[{}] Forwarding message to App Actor {}", id, actorMsg.get());
+                actorContext.tellWithHighPriority(actorMsg.get());
+            }
+            callback.onSuccess();
         }
         if (statsEnabled) {
             stats.logToCoreNotification();
@@ -353,8 +392,57 @@ public class DefaultTbCoreConsumerService extends AbstractConsumerService<ToCore
         });
     }
 
+    private void launchOtaPackageUpdateNotificationConsumer() {
+        long maxProcessingTimeoutPerRecord = firmwarePackInterval / firmwarePackSize;
+        firmwareStatesExecutor.submit(() -> {
+            while (!stopped) {
+                try {
+                    List<TbProtoQueueMsg<ToOtaPackageStateServiceMsg>> msgs = firmwareStatesConsumer.poll(getNotificationPollDuration());
+                    if (msgs.isEmpty()) {
+                        continue;
+                    }
+                    long timeToSleep = maxProcessingTimeoutPerRecord;
+                    for (TbProtoQueueMsg<ToOtaPackageStateServiceMsg> msg : msgs) {
+                        try {
+                            long startTime = System.currentTimeMillis();
+                            boolean isSuccessUpdate = handleOtaPackageUpdates(msg);
+                            long endTime = System.currentTimeMillis();
+                            long spentTime = endTime - startTime;
+                            timeToSleep = timeToSleep - spentTime;
+                            if (isSuccessUpdate) {
+                                if (timeToSleep > 0) {
+                                    log.debug("Spent time per record is: [{}]!", spentTime);
+                                    Thread.sleep(timeToSleep);
+                                    timeToSleep = 0;
+                                }
+                                timeToSleep += maxProcessingTimeoutPerRecord;
+                            }
+                        } catch (Throwable e) {
+                            log.warn("Failed to process firmware update msg: {}", msg, e);
+                        }
+                    }
+                    firmwareStatesConsumer.commit();
+                } catch (Exception e) {
+                    if (!stopped) {
+                        log.warn("Failed to obtain usage stats from queue.", e);
+                        try {
+                            Thread.sleep(getNotificationPollDuration());
+                        } catch (InterruptedException e2) {
+                            log.trace("Failed to wait until the server has capacity to handle new firmware updates", e2);
+                        }
+                    }
+                }
+            }
+            log.info("TB Ota Package States Consumer stopped.");
+        });
+    }
+
     private void handleUsageStats(TbProtoQueueMsg<ToUsageStatsServiceMsg> msg, TbCallback callback) {
         apiUsageStateService.process(msg, callback);
+    }
+
+    private boolean handleOtaPackageUpdates(TbProtoQueueMsg<ToOtaPackageStateServiceMsg> msg) {
+        return firmwareStateService.process(msg.getValue());
     }
 
     private void forwardToCoreRpcService(FromDeviceRPCResponseProto proto, TbCallback callback) {
@@ -459,6 +547,13 @@ public class DefaultTbCoreConsumerService extends AbstractConsumerService<ToCore
         ruleEngineCallService.onQueueMsg(restApiCallResponseMsg, callback);
     }
 
+    private void forwardToEdgeNotificationService(EdgeNotificationMsgProto edgeNotificationMsg, TbCallback callback) {
+        if (statsEnabled) {
+            stats.log(edgeNotificationMsg);
+        }
+        edgeNotificationService.pushNotificationToEdge(edgeNotificationMsg, callback);
+    }
+
     private void forwardToDeviceActor(TransportToDeviceActorMsg toDeviceActorMsg, TbCallback callback) {
         if (statsEnabled) {
             stats.log(toDeviceActorMsg);
@@ -478,6 +573,9 @@ public class DefaultTbCoreConsumerService extends AbstractConsumerService<ToCore
         }
         if (usageStatsConsumer != null) {
             usageStatsConsumer.unsubscribe();
+        }
+        if (firmwareStatesConsumer != null) {
+            firmwareStatesConsumer.unsubscribe();
         }
     }
 

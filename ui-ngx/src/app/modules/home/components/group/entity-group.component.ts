@@ -29,7 +29,7 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { Component, Inject } from '@angular/core';
+import { ChangeDetectorRef, Component, Inject } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { AppState } from '@core/core.state';
 import { EntityComponent } from '@home/components/entity/entity.component';
@@ -40,6 +40,9 @@ import { EntityTableConfig } from '@home/models/entity/entities-table-config.mod
 import { EntityGroupInfo } from '@shared/models/entity-group.models';
 import { Operation, publicGroupTypes, Resource, sharableGroupTypes } from '@shared/models/security.models';
 import { UserPermissionsService } from '@core/http/user-permissions.service';
+import { OtaUpdateType } from '@shared/models/ota-package.models';
+import { EntityType } from '@shared/models/entity-type.models';
+import { EntityGroupsTableConfig } from '@home/components/group/entity-groups-table-config';
 
 @Component({
   selector: 'tb-entity-group',
@@ -53,14 +56,16 @@ export class EntityGroupComponent extends EntityComponent<EntityGroupInfo> {
   makePublicEnabled = false;
   makePrivateEnabled = false;
   isGroupAll = false;
+  packageTypes = OtaUpdateType;
 
   constructor(protected store: Store<AppState>,
               protected translate: TranslateService,
               protected userPermissionsService: UserPermissionsService,
               @Inject('entity') protected entityValue: EntityGroupInfo,
               @Inject('entitiesTableConfig') protected entitiesTableConfigValue: EntityTableConfig<EntityGroupInfo>,
-              protected fb: FormBuilder) {
-    super(store, fb, entityValue, entitiesTableConfigValue);
+              protected fb: FormBuilder,
+              protected cd: ChangeDetectorRef) {
+    super(store, fb, entityValue, entitiesTableConfigValue, cd);
   }
 
   ngOnInit() {
@@ -83,6 +88,14 @@ export class EntityGroupComponent extends EntityComponent<EntityGroupInfo> {
     }
   }
 
+  hideUnassign() {
+    if (this.entitiesTableConfig) {
+      return this.entitiesTableConfig.componentsData.isUnassignEnabled;
+    } else {
+      return false;
+    }
+  }
+
   buildForm(entity: EntityGroupInfo): FormGroup {
     const form = this.fb.group(
       {
@@ -95,12 +108,22 @@ export class EntityGroupComponent extends EntityComponent<EntityGroupInfo> {
       }
     );
     this.updateGroupParams(entity);
+    if ((this.entitiesTableConfig as EntityGroupsTableConfig).groupType === EntityType.DEVICE) {
+      form.addControl('firmwareId', this.fb.control(entity ? entity.firmwareId : ''));
+      form.addControl('softwareId', this.fb.control(entity ? entity.softwareId : ''));
+    }
     return form;
   }
 
   updateForm(entity: EntityGroupInfo) {
     this.entityForm.patchValue({name: entity.name});
     this.entityForm.patchValue({additionalInfo: {description: entity.additionalInfo ? entity.additionalInfo.description : ''}});
+    if (entity.type === EntityType.DEVICE) {
+      this.entityForm.patchValue({
+        firmwareId: entity.firmwareId,
+        softwareId: entity.softwareId
+      }, {emitEvent: false});
+    }
     this.updateGroupParams(entity);
   }
 

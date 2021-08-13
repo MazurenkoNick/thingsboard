@@ -97,11 +97,17 @@ public enum MsgType {
 
     DEVICE_NAME_OR_TYPE_UPDATE_TO_DEVICE_ACTOR_MSG,
 
+    DEVICE_EDGE_UPDATE_TO_DEVICE_ACTOR_MSG,
+
     DEVICE_RPC_REQUEST_TO_DEVICE_ACTOR_MSG,
+
+    DEVICE_RPC_RESPONSE_TO_DEVICE_ACTOR_MSG,
 
     SERVER_RPC_RESPONSE_TO_DEVICE_ACTOR_MSG,
 
     DEVICE_ACTOR_SERVER_SIDE_RPC_TIMEOUT_MSG,
+
+    REMOVE_RPC_TO_DEVICE_ACTOR_MSG,
 
     /**
      * Message that is sent from the Device Actor to Rule Engine. Requires acknowledgement
@@ -116,6 +122,11 @@ public enum MsgType {
     /**
      * Message that is sent by TransportRuleEngineService to Device Actor. Represents messages from the device itself.
      */
-    TRANSPORT_TO_DEVICE_ACTOR_MSG;
+    TRANSPORT_TO_DEVICE_ACTOR_MSG,
+
+    /**
+     * Message that is sent on Edge Event to Edge Session
+     */
+    EDGE_EVENT_UPDATE_TO_EDGE_SESSION_MSG;
 
 }

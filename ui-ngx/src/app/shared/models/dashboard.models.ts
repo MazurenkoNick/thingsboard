@@ -43,12 +43,16 @@ export interface DashboardInfo extends BaseData<DashboardId> {
   tenantId?: TenantId;
   customerId?: CustomerId;
   title?: string;
+  image?: string;
   assignedCustomers?: Array<ShortCustomerInfo>;
+  mobileHide?: boolean;
+  mobileOrder?: number;
 }
 
 export interface WidgetLayout {
   sizeX?: number;
   sizeY?: number;
+  mobileHide?: boolean;
   mobileHeight?: number;
   mobileOrder?: number;
   col?: number;
@@ -61,7 +65,6 @@ export interface WidgetLayouts {
 
 export interface GridSettings {
   backgroundColor?: string;
-  color?: string;
   columns?: number;
   margin?: number;
   backgroundSizeMode?: string;
@@ -103,9 +106,13 @@ export interface DashboardSettings {
   showDashboardsSelect?: boolean;
   showEntitiesSelect?: boolean;
   showFilters?: boolean;
+  showDashboardLogo?: boolean;
+  dashboardLogoUrl?: string;
   showDashboardTimewindow?: boolean;
   showDashboardExport?: boolean;
+  showUpdateDashboardImage?: boolean;
   toolbarAlwaysOpen?: boolean;
+  hideToolbar?: boolean;
   titleColor?: string;
 }
 

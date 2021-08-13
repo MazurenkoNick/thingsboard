@@ -35,22 +35,22 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>org.thingsboard.msa</groupId>
-        <version>3.2.2PE-SNAPSHOT</version>
+        <version>3.3.0PE-SNAPSHOT</version>
         <artifactId>transport</artifactId>
     </parent>
     <groupId>org.thingsboard.msa.transport</groupId>
     <artifactId>coap</artifactId>
     <packaging>pom</packaging>
 
-    <name>ThingsBoard COAP Transport Microservice</name>
+    <name>ThingsBoard CoAP Transport Microservice</name>
     <url>https://thingsboard.io</url>
-    <description>ThingsBoard COAP Transport Microservice</description>
+    <description>ThingsBoard CoAP Transport Microservice</description>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <main.dir>${basedir}/../../..</main.dir>
         <pkg.name>tb-coap-transport</pkg.name>
-        <docker.name>tb-pe-coap-transport</docker.name>
+        <docker.name>tb-${tb.docker.id}-coap-transport</docker.name>
         <pkg.logFolder>/var/log/${pkg.name}</pkg.logFolder>
         <pkg.installFolder>/usr/share/${pkg.name}</pkg.installFolder>
     </properties>

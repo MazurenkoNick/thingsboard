@@ -38,6 +38,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.thingsboard.server.common.data.Event;
+import org.thingsboard.server.common.data.event.EventFilter;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.page.PageData;
@@ -45,7 +46,6 @@ import org.thingsboard.server.common.data.page.TimePageLink;
 import org.thingsboard.server.dao.exception.DataValidationException;
 import org.thingsboard.server.dao.service.DataValidator;
 
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
 
@@ -127,6 +127,11 @@ public class BaseEventService implements EventService {
     }
 
     @Override
+    public PageData<Event> findEventsByFilter(TenantId tenantId, EntityId entityId, EventFilter eventFilter, TimePageLink pageLink) {
+        return eventDao.findEventByFilter(tenantId.getId(), entityId, eventFilter, pageLink);
+    }
+
+    @Override
     public void removeEvents(TenantId tenantId, EntityId entityId) {
         PageData<Event> eventPageData;
         TimePageLink eventPageLink = new TimePageLink(1000);
@@ -139,6 +144,11 @@ public class BaseEventService implements EventService {
                 eventPageLink = eventPageLink.nextPageLink();
             }
         } while (eventPageData.hasNext());
+    }
+
+    @Override
+    public void cleanupEvents(long ttl, long debugTtl) {
+        eventDao.cleanupEvents(ttl, debugTtl);
     }
 
     private DataValidator<Event> eventValidator =

@@ -30,7 +30,6 @@
  */
 package org.thingsboard.server.common.data.device.profile;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.os72.protobuf.dynamic.DynamicSchema;
 import com.github.os72.protobuf.dynamic.EnumDefinition;
 import com.github.os72.protobuf.dynamic.MessageDefinition;
@@ -61,9 +60,14 @@ public class ProtoTransportPayloadConfiguration implements TransportPayloadTypeC
     public static final Location LOCATION = new Location("", "", -1, -1);
     public static final String ATTRIBUTES_PROTO_SCHEMA = "attributes proto schema";
     public static final String TELEMETRY_PROTO_SCHEMA = "telemetry proto schema";
+    public static final String RPC_RESPONSE_PROTO_SCHEMA = "rpc response proto schema";
+    public static final String RPC_REQUEST_PROTO_SCHEMA = "rpc request proto schema";
+    private static final String PROTO_3_SYNTAX = "proto3";
 
     private String deviceTelemetryProtoSchema;
     private String deviceAttributesProtoSchema;
+    private String deviceRpcRequestProtoSchema;
+    private String deviceRpcResponseProtoSchema;
 
     @Override
     public TransportPayloadType getTransportPayloadType() {
@@ -78,13 +82,45 @@ public class ProtoTransportPayloadConfiguration implements TransportPayloadTypeC
         return getDescriptor(deviceAttributesProtoSchema, ATTRIBUTES_PROTO_SCHEMA);
     }
 
+    public Descriptors.Descriptor getRpcResponseDynamicMessageDescriptor(String deviceRpcResponseProtoSchema) {
+        return getDescriptor(deviceRpcResponseProtoSchema, RPC_RESPONSE_PROTO_SCHEMA);
+    }
+
+    public DynamicMessage.Builder getRpcRequestDynamicMessageBuilder(String deviceRpcRequestProtoSchema) {
+        return getDynamicMessageBuilder(deviceRpcRequestProtoSchema, RPC_REQUEST_PROTO_SCHEMA);
+    }
+
+    public String getDeviceRpcResponseProtoSchema() {
+        if (!isEmptyStr(deviceRpcResponseProtoSchema)) {
+            return deviceRpcResponseProtoSchema;
+        } else {
+            return "syntax =\"proto3\";\n" +
+                    "package rpc;\n" +
+                    "\n" +
+                    "message RpcResponseMsg {\n" +
+                    "  optional string payload = 1;\n" +
+                    "}";
+        }
+    }
+
+    public String getDeviceRpcRequestProtoSchema() {
+        if (!isEmptyStr(deviceRpcRequestProtoSchema)) {
+            return deviceRpcRequestProtoSchema;
+        } else {
+            return "syntax =\"proto3\";\n" +
+                    "package rpc;\n" +
+                    "\n" +
+                    "message RpcRequestMsg {\n" +
+                    "  optional string method = 1;\n" +
+                    "  optional int32 requestId = 2;\n" +
+                    "  optional string params = 3;\n" +
+                    "}";
+        }
+    }
+
     private Descriptors.Descriptor getDescriptor(String protoSchema, String schemaName) {
         try {
-            ProtoFileElement protoFileElement = getTransportProtoSchema(protoSchema);
-            DynamicSchema dynamicSchema = getDynamicSchema(protoFileElement, schemaName);
-            String lastMsgName = getMessageTypes(protoFileElement.getTypes()).stream()
-                    .map(MessageElement::getName).reduce((previous, last) -> last).get();
-            DynamicMessage.Builder builder = dynamicSchema.newMessageBuilder(lastMsgName);
+            DynamicMessage.Builder builder = getDynamicMessageBuilder(protoSchema, schemaName);
             return builder.getDescriptorForType();
         } catch (Exception e) {
             log.warn("Failed to get Message Descriptor due to {}", e.getMessage());
@@ -92,9 +128,18 @@ public class ProtoTransportPayloadConfiguration implements TransportPayloadTypeC
         }
     }
 
+    public DynamicMessage.Builder getDynamicMessageBuilder(String protoSchema, String schemaName) {
+        ProtoFileElement protoFileElement = getTransportProtoSchema(protoSchema);
+        DynamicSchema dynamicSchema = getDynamicSchema(protoFileElement, schemaName);
+        String lastMsgName = getMessageTypes(protoFileElement.getTypes()).stream()
+                .map(MessageElement::getName).reduce((previous, last) -> last).get();
+        return dynamicSchema.newMessageBuilder(lastMsgName);
+    }
+
     public DynamicSchema getDynamicSchema(ProtoFileElement protoFileElement, String schemaName) {
         DynamicSchema.Builder schemaBuilder = DynamicSchema.newBuilder();
         schemaBuilder.setName(schemaName);
+        schemaBuilder.setSyntax(PROTO_3_SYNTAX);
         schemaBuilder.setPackage(!isEmptyStr(protoFileElement.getPackageName()) ?
                 protoFileElement.getPackageName() : schemaName.toLowerCase());
         List<TypeElement> types = protoFileElement.getTypes();

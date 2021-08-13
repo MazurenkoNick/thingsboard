@@ -869,7 +869,7 @@
         "credentials-type": "크리덴셜 타입",
         "access-token": "억세스 토큰",
         "access-token-required": "액세스 토큰을 입력하세요.",
-        "access-token-invalid": "액세스 토큰 길이는 1 - 20 자 여야합니다.",
+        "access-token-invalid": "액세스 토큰 길이는 1 - 32 자 여야합니다.",
         "rsa-key": "RSA public key",
         "rsa-key-required": "RSA public key 를 입력하세요.",
         "client-id": "클라이언트 ID",
@@ -920,7 +920,7 @@
             "existing-device-profile": "기존 장치 프로파일 선택",
             "specific-configuration": "특수 설정",
             "customer-to-assign-device": "장치에 할당할 커스터머",
-            "add-credential": "크리덴셜 추가"
+            "add-credentials": "크리덴셜 추가"
         }
     },
     "device-profile": {
@@ -1329,7 +1329,6 @@
         "body": "Body",
         "method": "방법",
         "type": "유형",
-        "entity": "개체",
         "message-id": "메시지 ID",
         "message-type": "메시지 유형",
         "data-type": "데이터 유형",
@@ -1341,7 +1340,9 @@
         "success": "성공",
         "failed": "실패",
         "messages-processed": "처리된 메시지",
-        "errors-occurred": "오류가 발생했습니다"
+        "errors-occurred": "오류가 발생했습니다",
+        "all-events": "모두",
+        "entity-type": "개체 유형"
     },
     "extension": {
         "extensions": "확장",

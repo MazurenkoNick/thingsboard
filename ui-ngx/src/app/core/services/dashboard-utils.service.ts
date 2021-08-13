@@ -250,7 +250,6 @@ export class DashboardUtilsService {
   private createDefaultGridSettings(): GridSettings {
     return {
       backgroundColor: '#eeeeee',
-      color: 'rgba(0,0,0,0.870588)',
       columns: 24,
       margin: 10,
       backgroundSizeMode: '100%'
@@ -422,7 +421,8 @@ export class DashboardUtilsService {
       sizeX: originalSize ? originalSize.sizeX : widget.sizeX,
       sizeY: originalSize ? originalSize.sizeY : widget.sizeY,
       mobileOrder: widget.config.mobileOrder,
-      mobileHeight: widget.config.mobileHeight
+      mobileHeight: widget.config.mobileHeight,
+      mobileHide: widget.config.mobileHide
     };
     if (isUndefined(originalColumns)) {
       originalColumns = 24;

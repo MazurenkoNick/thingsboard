@@ -36,7 +36,7 @@
 
     <parent>
         <groupId>org.thingsboard.msa</groupId>
-        <version>3.2.2PE-SNAPSHOT</version>
+        <version>3.3.0PE-SNAPSHOT</version>
         <artifactId>integration</artifactId>
     </parent>
 
@@ -52,7 +52,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <main.dir>${basedir}/../../..</main.dir>
         <pkg.name>tb-pubsub-integration</pkg.name>
-        <docker.name>tb-pe-pubsub-integration</docker.name>
+        <docker.name>tb-${tb.docker.id}-pubsub-integration</docker.name>
         <pkg.logFolder>/var/log/${pkg.name}</pkg.logFolder>
         <pkg.installFolder>/usr/share/${pkg.name}</pkg.installFolder>
     </properties>
@@ -153,10 +153,10 @@
     </build>
     <profiles>
         <profile>
-            <id>push-docker-image</id>
+            <id>push-integration-docker-image</id>
             <activation>
                 <property>
-                    <name>push-docker-image</name>
+                    <name>push-integration-docker-image</name>
                 </property>
             </activation>
             <build>

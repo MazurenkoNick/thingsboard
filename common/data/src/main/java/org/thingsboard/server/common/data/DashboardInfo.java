@@ -36,16 +36,25 @@ import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.DashboardId;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.TenantId;
+import org.thingsboard.server.common.data.validation.NoXss;
 
+import javax.validation.Valid;
 import java.util.HashSet;
 import java.util.Set;
 
 public class DashboardInfo extends SearchTextBased<DashboardId> implements GroupEntity<DashboardId> {
 
     private TenantId tenantId;
+
     private CustomerId customerId;
+
+    @NoXss
     private String title;
+    private String image;
+    @Valid
     private Set<ShortCustomerInfo> assignedCustomers;
+    private boolean mobileHide;
+    private Integer mobileOrder;
 
     public DashboardInfo() {
         super();
@@ -60,7 +69,10 @@ public class DashboardInfo extends SearchTextBased<DashboardId> implements Group
         this.tenantId = dashboardInfo.getTenantId();
         this.customerId = dashboardInfo.getCustomerId();
         this.title = dashboardInfo.getTitle();
+        this.image = dashboardInfo.getImage();
         this.assignedCustomers = dashboardInfo.getAssignedCustomers();
+        this.mobileHide = dashboardInfo.isMobileHide();
+        this.mobileOrder = dashboardInfo.getMobileOrder();
     }
 
     public TenantId getTenantId() {
@@ -101,6 +113,14 @@ public class DashboardInfo extends SearchTextBased<DashboardId> implements Group
         this.title = title;
     }
 
+    public String getImage() {
+        return image;
+    }
+
+    public void setImage(String image) {
+        this.image = image;
+    }
+
     public Set<ShortCustomerInfo> getAssignedCustomers() {
         return assignedCustomers;
     }
@@ -109,9 +129,26 @@ public class DashboardInfo extends SearchTextBased<DashboardId> implements Group
         this.assignedCustomers = assignedCustomers;
     }
 
+    public boolean isMobileHide() {
+        return mobileHide;
+    }
+
+    public void setMobileHide(boolean mobileHide) {
+        this.mobileHide = mobileHide;
+    }
+
+    public Integer getMobileOrder() {
+        return mobileOrder;
+    }
+
+    public void setMobileOrder(Integer mobileOrder) {
+        this.mobileOrder = mobileOrder;
+    }
+
     public boolean isAssignedToCustomer(CustomerId customerId) {
         return this.assignedCustomers != null && this.assignedCustomers.contains(new ShortCustomerInfo(customerId, null, false));
     }
+
 
     public ShortCustomerInfo getAssignedCustomerInfo(CustomerId customerId) {
         if (this.assignedCustomers != null) {

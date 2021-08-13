@@ -46,7 +46,9 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 /**
@@ -67,11 +69,20 @@ public class TbKafkaSettings {
     @Value("${queue.kafka.retries}")
     private int retries;
 
+    @Value("${queue.kafka.compression.type:none}")
+    private String compressionType;
+
     @Value("${queue.kafka.batch.size}")
     private int batchSize;
 
     @Value("${queue.kafka.linger.ms}")
     private long lingerMs;
+
+    @Value("${queue.kafka.max.request.size:1048576}")
+    private int maxRequestSize;
+
+    @Value("${queue.kafka.max.in.flight.requests.per.connection:5}")
+    private int maxInFlightRequestsPerConnection;
 
     @Value("${queue.kafka.buffer.memory}")
     private long bufferMemory;
@@ -110,6 +121,9 @@ public class TbKafkaSettings {
     @Setter
     private List<TbKafkaProperty> other;
 
+    @Setter
+    private Map<String, List<TbKafkaProperty>> consumerPropertiesPerTopic = Collections.emptyMap();
+
     public Properties toAdminProps() {
         Properties props = toProps();
         props.put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, servers);
@@ -118,7 +132,7 @@ public class TbKafkaSettings {
         return props;
     }
 
-    public Properties toConsumerProps() {
+    public Properties toConsumerProps(String topic) {
         Properties props = toProps();
         props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, servers);
         props.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, maxPollRecords);
@@ -128,6 +142,10 @@ public class TbKafkaSettings {
 
         props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ByteArrayDeserializer.class);
+
+        consumerPropertiesPerTopic
+                .getOrDefault(topic, Collections.emptyList())
+                .forEach(kv -> props.put(kv.getKey(), kv.getValue()));
         return props;
     }
 
@@ -141,6 +159,9 @@ public class TbKafkaSettings {
         props.put(ProducerConfig.BUFFER_MEMORY_CONFIG, bufferMemory);
         props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, ByteArraySerializer.class);
+        props.put(ProducerConfig.COMPRESSION_TYPE_CONFIG, compressionType);
+        props.put(ProducerConfig.MAX_REQUEST_SIZE_CONFIG, maxRequestSize);
+        props.put(ProducerConfig.MAX_IN_FLIGHT_REQUESTS_PER_CONNECTION, maxInFlightRequestsPerConnection);
         return props;
     }
 

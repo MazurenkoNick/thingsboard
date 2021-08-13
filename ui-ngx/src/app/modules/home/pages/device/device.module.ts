@@ -44,8 +44,11 @@ import { DeviceDataComponent } from './data/device-data.component';
 import { DefaultDeviceTransportConfigurationComponent } from './data/default-device-transport-configuration.component';
 import { DeviceTransportConfigurationComponent } from './data/device-transport-configuration.component';
 import { MqttDeviceTransportConfigurationComponent } from './data/mqtt-device-transport-configuration.component';
-import { Lwm2mDeviceTransportConfigurationComponent } from './data/lwm2m-device-transport-configuration.component';
 import { CoapDeviceTransportConfigurationComponent } from './data/coap-device-transport-configuration.component';
+import { Lwm2mDeviceTransportConfigurationComponent } from './data/lwm2m-device-transport-configuration.component';
+import { SnmpDeviceTransportConfigurationComponent } from './data/snmp-device-transport-configuration.component';
+import { DeviceCredentialsModule } from '@home/components/device/device-credentials.module';
+import { DeviceProfileCommonModule } from '@home/components/profile/device/common/device-profile-common.module';
 
 @NgModule({
   declarations: [
@@ -53,18 +56,22 @@ import { CoapDeviceTransportConfigurationComponent } from './data/coap-device-tr
     DeviceConfigurationComponent,
     DefaultDeviceTransportConfigurationComponent,
     MqttDeviceTransportConfigurationComponent,
-    Lwm2mDeviceTransportConfigurationComponent,
     CoapDeviceTransportConfigurationComponent,
+    Lwm2mDeviceTransportConfigurationComponent,
+    SnmpDeviceTransportConfigurationComponent,
     DeviceTransportConfigurationComponent,
     DeviceDataComponent,
     DeviceComponent,
+    DeviceCredentialsDialogComponent,
     DeviceCredentialsDialogComponent
   ],
   imports: [
     CommonModule,
     SharedModule,
     HomeComponentsModule,
-    HomeDialogsModule
+    HomeDialogsModule,
+    DeviceCredentialsModule,
+    DeviceProfileCommonModule,
   ],
   providers: [
     {

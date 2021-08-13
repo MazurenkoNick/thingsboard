@@ -29,7 +29,7 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { ChangeDetectorRef, Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { WidgetsBundle } from '@shared/models/widgets-bundle.model';
 import { IAliasController } from '@core/api/widget-api.models';
 import { NULL_UUID } from '@shared/models/id/has-uuid';
@@ -92,6 +92,10 @@ export class DashboardWidgetSelectComponent implements OnInit {
     this.filterWidgetTypes$.next(widgetTypes);
   }
 
+  get filterWidgetTypes(): Array<widgetType> {
+    return this.filterWidgetTypes$.value;
+  }
+
   @Output()
   widgetSelected: EventEmitter<WidgetInfo> = new EventEmitter<WidgetInfo>();
 
@@ -99,7 +103,8 @@ export class DashboardWidgetSelectComponent implements OnInit {
   widgetsBundleSelected: EventEmitter<WidgetsBundle> = new EventEmitter<WidgetsBundle>();
 
   constructor(private widgetsService: WidgetService,
-              private sanitizer: DomSanitizer) {
+              private sanitizer: DomSanitizer,
+              private cd: ChangeDetectorRef) {
     this.widgetsBundles$ = this.search$.asObservable().pipe(
       distinctUntilChanged(),
       switchMap(search => this.fetchWidgetBundle(search))
@@ -139,6 +144,7 @@ export class DashboardWidgetSelectComponent implements OnInit {
             );
             setTimeout(() => {
               this.widgetTypes = widgetTypes;
+              this.cd.markForCheck();
             });
             return widgetInfos;
           }),

@@ -667,7 +667,7 @@
     "credentials-type": "Kimlik Bilgi Türü",
     "access-token": "Erişim şifresi",
     "access-token-required": "Erişim şifresi gerekli.",
-    "access-token-invalid": "Erişim şifresi uzunluğu 1 ile 20 karakter arasında olmalıdır.",
+    "access-token-invalid": "Erişim şifresi uzunluğu 1 ile 32 karakter arasında olmalıdır.",
     "rsa-key": "RSA açık anahtarı",
     "rsa-key-required": "RSA açık anahtarı gerekli.",
     "secret": "Secret",
@@ -915,7 +915,6 @@
     "body": "İçerik //(Body)",
     "method": "Yöntem",
     "type": "Tür",
-    "entity": "Varlık",
     "message-id": "Mesaj Kimliği",
     "message-type": "Mesaj tipi",
     "data-type": "Veri tipi",
@@ -927,7 +926,9 @@
     "success": "Başarı",
     "failed": "Başarısız oldu",
     "messages-processed": "Mesajlar işlendi",
-    "errors-occurred": "Hatalar oluştu"
+    "errors-occurred": "Hatalar oluştu",
+    "all-events": "Tümü",
+    "entity-type": "Öğe türü"
   },
   "extension": {
     "extensions": "Uzantılar",

@@ -833,7 +833,7 @@
     "credentials-type": "მომხმარებლის ჩანაწერი",
     "access-token": "ტოკენი",
     "access-token-required": "ტოკენი სავალდებულოა",
-    "access-token-invalid": "ტოკენის სიგრძე უნდა იყოს 1 დან 20 სიმბოლომდე",
+    "access-token-invalid": "ტოკენის სიგრძე უნდა იყოს 1 დან 32 სიმბოლომდე",
     "rsa-key": "ღია გასაღები RSA",
     "rsa-key-required": "ღია გასაღები RSA  აუცილებელია",
     "secret": "საიდუმლო",
@@ -1269,7 +1269,6 @@
     "event-type": "ღონისძიების ტიპი",
     "type-error": "შეცდომა",
     "type-lc-event": "საციცოცხლო ციკლის მოვლენა",
-    "type-rw-event": "ტიპის- rw- ღონისძიება",
     "type-stats": "სტატისტიკა",
     "type-debug-converter": "ტიპის debug-გადამყვანი",
     "type-debug-integration": "ტიპის debug- ინტეგრაცია",
@@ -1299,7 +1298,8 @@
     "failed": "ვერ მოხერხდა",
     "messages-processed": "შეტყობინებების დამუშავება",
     "errors-occurred": "შეცდომები მოხდა",
-    "uuid": "uuid"
+    "all-events": "ყველა",
+    "entity-type": "ობიექტის ტიპი"
   },
   "extension": {
     "extensions": "დამატებითი აპი",
@@ -1686,7 +1686,7 @@
     "type-aws-sqs": "AWS SQS",
     "type-aws-kinesis": "AWS Kinesis",
     "type-ibm-watson-iot": "IBM Watson IoT",
-    "type-ttn": "TheThingsNetwork",
+    "type-ttn": "The Things Stack Community",
     "type-azure-event-hub": "ტიპის-აზური-ღონისძიების ცენტრი",
     "type-opc-ua": "OPC-UA",
     "type-custom": "უჩვეულო",

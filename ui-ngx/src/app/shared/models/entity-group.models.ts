@@ -40,6 +40,9 @@ import { Customer } from '@shared/models/customer.model';
 import { EntityData, EntityDataPageLink, EntityKey, EntityKeyType } from '@shared/models/query/query.models';
 import { PageLink } from '@shared/models/page/page-link';
 import { RoleId } from '@shared/models/id/role-id';
+import { Edge } from '@shared/models/edge.models';
+import { OtaPackageId } from '@shared/models/id/ota-package-id';
+import { DeviceGroupOtaPackage } from '@shared/models/ota-package.models';
 
 export const entityGroupTypes: EntityType[] = [
   EntityType.CUSTOMER,
@@ -47,7 +50,8 @@ export const entityGroupTypes: EntityType[] = [
   EntityType.DEVICE,
   EntityType.USER,
   EntityType.ENTITY_VIEW,
-  EntityType.DASHBOARD
+  EntityType.DASHBOARD,
+  EntityType.EDGE
 ];
 
 export const entityGroupActionTypes: WidgetActionType[] = [
@@ -103,6 +107,8 @@ export interface EntityGroupSettings {
   enableDevicesManagement: boolean;
   enableEntityViewsManagement: boolean;
   enableDashboardsManagement: boolean;
+  enableEdgesManagement: boolean;
+  enableSchedulerEventsManagement: boolean;
 }
 
 export enum EntityGroupSortOrder {
@@ -258,6 +264,10 @@ export interface EntityGroup extends BaseData<EntityGroupId> {
 
 export interface EntityGroupInfo extends EntityGroup {
   ownerIds: EntityId[];
+  softwareId?: OtaPackageId;
+  softwareGroup?: DeviceGroupOtaPackage;
+  firmwareId?: OtaPackageId;
+  firmwareGroup?: DeviceGroupOtaPackage;
 }
 
 export function prepareEntityGroupConfiguration(groupType: EntityType,
@@ -428,14 +438,26 @@ export function groupSettingsDefaults(entityType: EntityType, settings: EntityGr
         enableAssetsManagement: true,
         enableDevicesManagement: true,
         enableEntityViewsManagement: true,
-        enableDashboardsManagement: true
+        enableDashboardsManagement: true,
+        enableEdgesManagement: true
+      }, ...settings};
+  }
+
+  if (entityType === EntityType.EDGE) {
+    settings = {...{
+        enableUsersManagement: true,
+        enableAssetsManagement: true,
+        enableDevicesManagement: true,
+        enableEntityViewsManagement: true,
+        enableDashboardsManagement: true,
+        enableSchedulerEventsManagement: true
       }, ...settings};
   }
   return settings;
 }
 
 export function entityGroupsTitle(groupType: EntityType) {
-  switch(groupType) {
+  switch (groupType) {
     case EntityType.ASSET:
       return 'entity-group.asset-groups';
     case EntityType.DEVICE:
@@ -448,6 +470,12 @@ export function entityGroupsTitle(groupType: EntityType) {
       return 'entity-group.entity-view-groups';
     case EntityType.DASHBOARD:
       return 'entity-group.dashboard-groups';
+    case EntityType.EDGE:
+      return 'entity-group.edge-groups';
+    case EntityType.SCHEDULER_EVENT:
+      return 'scheduler.scheduler';
+    case EntityType.RULE_CHAIN:
+      return 'edge.rulechains';
   }
 }
 
@@ -456,16 +484,22 @@ export interface HierarchyCallbacks {
   customerGroupsSelected?: (parentNodeId: string, customerId: string, groupsType: EntityType) => void;
   refreshEntityGroups?: (internalId: string) => void;
   refreshCustomerGroups?: (customerGroupIds: string[]) => void;
+  refreshEdgeGroups?: (edgeGroupIds: string[]) => void;
   groupUpdated?: (entityGroup: EntityGroupInfo) => void;
   groupDeleted?: (groupNodeId: string, entityGroupId: string) => void;
   groupAdded?: (entityGroup: EntityGroupInfo, existingGroupId: string) => void;
   customerAdded?: (parentNodeId: string, customer: Customer) => void;
   customerUpdated?: (customer: Customer) => void;
   customersDeleted?: (customerIds: string[]) => void;
+  edgeGroupsSelected?: (parentNodeId: string, edgeId: string, groupsType: EntityType) => void;
+  edgeAdded?: (parentNodeId: string, edge: Edge) => void;
+  edgeUpdated?: (edge: Edge) => void;
+  edgesDeleted?: (edgeIds: string[]) => void;
 }
 
 export interface EntityGroupParams {
   customerId?: string;
+  customerGroupId?: string;
   entityGroupId?: string;
   childEntityGroupId?: string;
   groupType?: EntityType;
@@ -474,6 +508,10 @@ export interface EntityGroupParams {
   nodeId?: string;
   internalId?: string;
   hierarchyCallbacks?: HierarchyCallbacks;
+  edge?: Edge;
+  edgeId?: string;
+  grandChildGroupType?: EntityType;
+  grandChildGroupId?: string;
 }
 
 export interface ShareGroupRequest {
@@ -493,6 +531,9 @@ export function resolveGroupParams(route: ActivatedRouteSnapshot): EntityGroupPa
         !isEqual(routeParams.entityGroupId, route.params.entityGroupId)) {
       routeParams.childEntityGroupId = routeParams.entityGroupId;
     }
+    if (routeData.grandChildGroupType === routeData.groupType) {
+      routeData.grandChildGroupId = routeParams.childEntityGroupId;
+    }
     if (routeData.groupType && route.data.groupType && !isEqual(routeData.groupType, route.data.groupType)) {
       routeData.childGroupType = routeData.groupType;
     }
@@ -504,6 +545,9 @@ export function resolveGroupParams(route: ActivatedRouteSnapshot): EntityGroupPa
     entityGroupId: routeParams.entityGroupId,
     groupType: routeData.groupType,
     childEntityGroupId: routeParams.childEntityGroupId,
-    childGroupType: routeData.childGroupType
+    childGroupType: routeData.childGroupType,
+    edgeId: routeParams.edgeId,
+    grandChildGroupType: routeData.grandChildGroupType,
+    grandChildGroupId: routeData.grandChildGroupId
   }
 }

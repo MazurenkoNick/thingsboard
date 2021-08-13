@@ -53,10 +53,10 @@ import { getCurrentAuthUser } from '@app/core/auth/auth.selectors';
 import { Authority } from '@shared/models/authority.enum';
 import { DialogService } from '@core/services/dialog.service';
 import { ImportExportService } from '@home/components/import-export/import-export.service';
+import { Direction } from '@shared/models/page/sort-order';
 import { UtilsService } from '@core/services/utils.service';
 import { UserPermissionsService } from '@core/http/user-permissions.service';
 import { Operation, Resource } from '@shared/models/security.models';
-import { Direction } from "@shared/models/page/sort-order";
 
 @Injectable()
 export class WidgetsBundlesTableConfigResolver implements Resolve<EntityTableConfig<WidgetsBundle>> {
@@ -127,7 +127,6 @@ export class WidgetsBundlesTableConfigResolver implements Resolve<EntityTableCon
     this.config.deleteEntitiesTitle = count => this.translate.instant('widgets-bundle.delete-widgets-bundles-title', {count});
     this.config.deleteEntitiesContent = () => this.translate.instant('widgets-bundle.delete-widgets-bundles-text');
 
-    this.config.entitiesFetchFunction = pageLink => this.widgetsService.getWidgetBundles(pageLink);
     this.config.loadEntity = id => this.widgetsService.getWidgetsBundle(id.id);
     this.config.saveEntity = widgetsBundle => this.widgetsService.saveWidgetsBundle(widgetsBundle);
     this.config.deleteEntity = id => this.widgetsService.deleteWidgetsBundle(id.id);
@@ -144,6 +143,7 @@ export class WidgetsBundlesTableConfigResolver implements Resolve<EntityTableCon
       this.isWidgetsBundleEditable(widgetsBundle, authUser.authority) &&
       this.userPermissionsService.hasGenericPermission(Resource.WIDGETS_BUNDLE, Operation.DELETE);
     this.config.detailsReadonly = (widgetsBundle) => !this.isWidgetsBundleEditable(widgetsBundle, authUser.authority);
+    this.config.entitiesFetchFunction = pageLink => this.widgetsService.getWidgetBundles(pageLink);
     defaultEntityTablePermissions(this.userPermissionsService, this.config);
     return this.config;
   }

@@ -29,18 +29,17 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { Component, Inject } from '@angular/core';
+import { ChangeDetectorRef, Component, Inject } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { AppState } from '@core/core.state';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Customer } from '@shared/models/customer.model';
 import { ActionNotificationShow } from '@app/core/notification/notification.actions';
 import { TranslateService } from '@ngx-translate/core';
+import { isDefined, isDefinedAndNotNull } from '@core/utils';
 import { GroupContactBasedComponent } from '@home/components/group/group-contact-based.component';
 import { GroupEntityTableConfig } from '@home/models/group/group-entities-table-config.models';
 import { getCurrentAuthState } from '@core/auth/auth.selectors';
-import { isDefined } from '@core/utils';
-import { isDefinedAndNotNull } from '@core/utils';
 
 @Component({
   selector: 'tb-customer',
@@ -53,13 +52,15 @@ export class CustomerComponent extends GroupContactBasedComponent<Customer> {
 
   allowCustomerWhiteLabeling = getCurrentAuthState(this.store).customerWhiteLabelingAllowed;
   whiteLabelingAllowed = getCurrentAuthState(this.store).whiteLabelingAllowed;
+  edgesSupportEnabled = getCurrentAuthState(this.store).edgesSupportEnabled;
 
   constructor(protected store: Store<AppState>,
               protected translate: TranslateService,
               @Inject('entity') protected entityValue: Customer,
               @Inject('entitiesTableConfig') protected entitiesTableConfigValue: GroupEntityTableConfig<Customer>,
-              protected fb: FormBuilder) {
-    super(store, fb, entityValue, entitiesTableConfigValue);
+              protected fb: FormBuilder,
+              protected cd: ChangeDetectorRef) {
+    super(store, fb, entityValue, entitiesTableConfigValue, cd);
   }
 
   hideDelete() {
@@ -105,6 +106,14 @@ export class CustomerComponent extends GroupContactBasedComponent<Customer> {
   hideManageEntityViews() {
     if (this.entitiesTableConfig) {
       return !this.entitiesTableConfig.manageEntityViewsEnabled(this.entity);
+    } else {
+      return false;
+    }
+  }
+
+  hideManageEdges() {
+    if (this.entitiesTableConfig) {
+      return !this.entitiesTableConfig.manageEdgesEnabled(this.entity);
     } else {
       return false;
     }
@@ -159,5 +168,4 @@ export class CustomerComponent extends GroupContactBasedComponent<Customer> {
         horizontalPosition: 'right'
       }));
   }
-
 }

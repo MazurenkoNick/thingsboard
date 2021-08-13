@@ -64,7 +64,8 @@ import { ReportService } from '@core/http/report.service';
 import { UserPermissionsService } from '@core/http/user-permissions.service';
 import { MatDialog, MatDialogConfig } from '@angular/material/dialog';
 import { AlertDialogComponent } from '@shared/components/dialog/alert-dialog.component';
-import { OAuth2ClientInfo } from '@shared/models/oauth2.models';
+import { OAuth2ClientInfo, PlatformType } from '@shared/models/oauth2.models';
+import { isDefinedAndNotNull, isMobileApp } from '@core/utils';
 
 @Injectable({
     providedIn: 'root'
@@ -174,8 +175,11 @@ export class AuthService {
   }
 
   public changePassword(currentPassword: string, newPassword: string) {
-    return this.http.post('/api/auth/changePassword',
-      {currentPassword, newPassword}, defaultHttpOptions());
+    return this.http.post('/api/auth/changePassword', {currentPassword, newPassword}, defaultHttpOptions()).pipe(
+      tap((loginResponse: LoginResponse) => {
+          this.setUserFromJwtToken(loginResponse.token, loginResponse.refreshToken, false);
+        }
+      ));
   }
 
   public activateByEmailCode(emailCode: string): Observable<LoginResponse> {
@@ -216,15 +220,18 @@ export class AuthService {
   }
 
   public gotoDefaultPlace(isAuthenticated: boolean) {
-    const authState = getCurrentAuthState(this.store);
-    const url = this.defaultUrl(isAuthenticated, authState);
-    this.zone.run(() => {
-      this.router.navigateByUrl(url);
-    });
+    if (!isMobileApp()) {
+      const authState = getCurrentAuthState(this.store);
+      const url = this.defaultUrl(isAuthenticated, authState);
+      this.zone.run(() => {
+        this.router.navigateByUrl(url);
+      });
+    }
   }
 
   public loadOAuth2Clients(): Observable<Array<OAuth2ClientInfo>> {
-    return this.http.post<Array<OAuth2ClientInfo>>(`/api/noauth/oauth2Clients`,
+    const url = '/api/noauth/oauth2Clients?platform=' + PlatformType.WEB;
+    return this.http.post<Array<OAuth2ClientInfo>>(url,
       null, defaultHttpOptions()).pipe(
       catchError(err => of([])),
       tap((OAuth2Clients) => {
@@ -317,10 +324,11 @@ export class AuthService {
           })
         );
       } else if (accessToken) {
-        this.utils.updateQueryParam('accessToken', null);
+        const queryParamsToRemove = ['accessToken'];
         if (refreshToken) {
-          this.utils.updateQueryParam('refreshToken', null);
+          queryParamsToRemove.push('refreshToken');
         }
+        this.utils.removeQueryParams(queryParamsToRemove);
         try {
           this.updateAndValidateToken(accessToken, 'jwt_token', false);
           if (refreshToken) {
@@ -473,9 +481,14 @@ export class AuthService {
     }
   }
 
+  public loadIsEdgesSupportEnabled(): Observable<boolean> {
+    return this.http.get<boolean>('/api/edges/enabled', defaultHttpOptions());
+  }
+
   private loadSystemParams(authPayload: AuthPayload): Observable<SysParamsState> {
     const sources = [this.loadIsUserTokenAccessEnabled(authPayload.authUser),
                      this.fetchAllowedDashboardIds(authPayload),
+                     this.loadIsEdgesSupportEnabled(),
                      this.checkIsWhiteLabelingAllowed(authPayload.authUser),
                      this.whiteLabelingService.loadUserWhiteLabelingParams(),
                      this.customMenuService.loadCustomMenu(),
@@ -486,8 +499,9 @@ export class AuthService {
       .pipe(map((data) => {
         const userTokenAccessEnabled: boolean = data[0] as boolean;
         const allowedDashboardIds: string[] = data[1] as string[];
-        const whiteLabelingAllowedInfo = data[2] as {whiteLabelingAllowed: boolean, customerWhiteLabelingAllowed: boolean};
-        return {userTokenAccessEnabled, allowedDashboardIds, ...whiteLabelingAllowedInfo};
+        const edgesSupportEnabled: boolean = data[2] as boolean;
+        const whiteLabelingAllowedInfo = data[3] as {whiteLabelingAllowed: boolean, customerWhiteLabelingAllowed: boolean};
+        return {userTokenAccessEnabled, allowedDashboardIds, edgesSupportEnabled, ...whiteLabelingAllowedInfo};
       }, catchError((err) => {
         return of({});
       })));
@@ -560,12 +574,15 @@ export class AuthService {
     return this.refreshTokenSubject !== null;
   }
 
-  public setUserFromJwtToken(jwtToken, refreshToken, notify) {
+  public setUserFromJwtToken(jwtToken, refreshToken, notify): Observable<boolean> {
+    const authenticatedSubject = new ReplaySubject<boolean>();
     if (!jwtToken) {
       AuthService.clearTokenData();
       if (notify) {
         this.notifyUnauthenticated();
       }
+      authenticatedSubject.next(false);
+      authenticatedSubject.complete();
     } else {
       this.updateAndValidateTokens(jwtToken, refreshToken, true);
       if (notify) {
@@ -574,16 +591,30 @@ export class AuthService {
           (authPayload) => {
             this.notifyUserLoaded(true);
             this.notifyAuthenticated(authPayload);
+            authenticatedSubject.next(true);
+            authenticatedSubject.complete();
           },
           () => {
             this.notifyUserLoaded(true);
             this.notifyUnauthenticated();
+            authenticatedSubject.next(false);
+            authenticatedSubject.complete();
           }
         );
       } else {
-        this.loadUser(false).subscribe();
+        this.loadUser(false).subscribe(
+          () => {
+            authenticatedSubject.next(true);
+            authenticatedSubject.complete();
+          },
+          () => {
+            authenticatedSubject.next(false);
+            authenticatedSubject.complete();
+          }
+        );
       }
     }
+    return authenticatedSubject;
   }
 
   private updateAndValidateTokens(jwtToken, refreshToken, notify: boolean) {

@@ -64,6 +64,12 @@
           [fxShow]="!hideManageCredentials() && !isEdit">
     {{ 'device.view-credentials' | translate }}
   </button>
+  <!--button mat-raised-button color="primary"
+          [disabled]="(isLoading$ | async)"
+          (click)="onEntityAction($event, 'unassignFromEdge')"
+          [fxShow]="!isEdit && deviceScope === 'edge'">
+    {{ 'edge.unassign-from-edge' | translate }}
+  <button-->
   <button mat-raised-button color="primary" fxFlex.xs
           [disabled]="(isLoading$ | async)"
           (click)="onEntityAction($event, 'delete')"
@@ -121,6 +127,18 @@
         <mat-label translate>device.label</mat-label>
         <input matInput formControlName="label">
       </mat-form-field>
+      <tb-ota-package-autocomplete
+        [useFullEntityId]="true"
+        [type]="otaUpdateType.FIRMWARE"
+        [deviceProfileId]="entityForm.get('deviceProfileId').value?.id"
+        formControlName="firmwareId">
+      </tb-ota-package-autocomplete>
+      <tb-ota-package-autocomplete
+        [useFullEntityId]="true"
+        [type]="otaUpdateType.SOFTWARE"
+        [deviceProfileId]="entityForm.get('deviceProfileId').value?.id"
+        formControlName="softwareId">
+      </tb-ota-package-autocomplete>
       <tb-device-data
         formControlName="deviceData"
         required>

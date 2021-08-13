@@ -124,6 +124,14 @@ public class JpaEntityGroupDao extends JpaAbstractDao<EntityGroupEntity, EntityG
     }
 
     @Override
+    public PageData<EntityGroup> findEdgeEntityGroupsByType(UUID tenantId, UUID edgeId, String relationType, PageLink pageLink) {
+        return DaoUtil.toPageData(entityGroupRepository.findEdgeEntityGroupsByType(
+                edgeId,
+                relationType,
+                DaoUtil.toPageable(pageLink)));
+    }
+
+    @Override
     public boolean isEntityInGroup(EntityId entityId, EntityGroupId entityGroupId) {
         return entityGroupRepository.isEntityInGroup(entityId.getId(), entityGroupId.getId());
     }

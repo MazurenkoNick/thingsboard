@@ -38,9 +38,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.thingsboard.server.common.data.id.TenantProfileId;
 import org.thingsboard.server.common.data.tenant.profile.DefaultTenantProfileConfiguration;
 import org.thingsboard.server.common.data.tenant.profile.TenantProfileData;
+import org.thingsboard.server.common.data.validation.NoXss;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.util.Optional;
 
 import static org.thingsboard.server.common.data.SearchTextBasedWithAdditionalInfo.mapper;
 
@@ -49,7 +51,9 @@ import static org.thingsboard.server.common.data.SearchTextBasedWithAdditionalIn
 @Slf4j
 public class TenantProfile extends SearchTextBased<TenantProfileId> implements HasName {
 
+    @NoXss
     private String name;
+    @NoXss
     private String description;
     private boolean isDefault;
     private boolean isolatedTbCore;
@@ -102,6 +106,13 @@ public class TenantProfile extends SearchTextBased<TenantProfileId> implements H
                 return createDefaultTenantProfileData();
             }
         }
+    }
+
+    @JsonIgnore
+    public Optional<DefaultTenantProfileConfiguration> getProfileConfiguration() {
+        return Optional.ofNullable(getProfileData().getConfiguration())
+                .filter(profileConfiguration -> profileConfiguration instanceof DefaultTenantProfileConfiguration)
+                .map(profileConfiguration -> (DefaultTenantProfileConfiguration) profileConfiguration);
     }
 
     public TenantProfileData createDefaultTenantProfileData() {
