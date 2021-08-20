@@ -33,7 +33,8 @@ package org.thingsboard.server.common.data.subscription;
 public enum SubscriptionErrorCode {
 
     LIMIT_REACHED(1),
-    FEATURE_DISABLED(2);
+    FEATURE_DISABLED(2),
+    UNSUPPORTED_SOLUTION_TEMPLATE_PLAN(7);
 
     private int errorCode;
 

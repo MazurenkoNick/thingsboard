@@ -4362,6 +4362,8 @@
     "subscription-error": {
       "title": "Subscription violation",
       "warning-title": "Subscription warning",
+      "upgrade-subscription-plan": "Please upgrade your subscription plan",
+      "upgrade-subscription-plan-to-install-solution-template": "In order to install <b>{{solutionTemplateName}}</b> solution you must upgrade your subscription at least to the <b>{{planName}}</b> plan!",
       "limit-reached": {
         "device-count": "You have reached maximum devices ({{value}}) allowed by your subscription plan!",
         "asset-count": "You have reached maximum assets ({{value}}) allowed by your subscription plan!"

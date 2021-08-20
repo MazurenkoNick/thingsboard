@@ -87,6 +87,8 @@ import org.thingsboard.server.common.data.rule.RuleChainMetaData;
 import org.thingsboard.server.common.data.rule.RuleChainType;
 import org.thingsboard.server.common.data.security.Authority;
 import org.thingsboard.server.common.data.security.UserCredentials;
+import org.thingsboard.server.common.data.subscription.SubscriptionErrorCode;
+import org.thingsboard.server.common.data.subscription.SubscriptionException;
 import org.thingsboard.server.dao.asset.AssetService;
 import org.thingsboard.server.dao.attributes.AttributesService;
 import org.thingsboard.server.dao.customer.CustomerService;
@@ -99,6 +101,7 @@ import org.thingsboard.server.dao.grouppermission.GroupPermissionService;
 import org.thingsboard.server.dao.relation.RelationService;
 import org.thingsboard.server.dao.role.RoleService;
 import org.thingsboard.server.dao.rule.RuleChainService;
+import org.thingsboard.server.dao.subscription.SubscriptionService;
 import org.thingsboard.server.dao.tenant.TbTenantProfileCache;
 import org.thingsboard.server.dao.tenant.TenantService;
 import org.thingsboard.server.dao.timeseries.TimeseriesService;
@@ -173,6 +176,14 @@ public class DefaultSolutionService implements SolutionService {
         allowedSolutionTemplateLevelsMap.put(SolutionTemplateLevel.STARTUP, Set.of("Startup"));
     }
 
+    private static final Map<SolutionTemplateLevel, Boolean> allowedWhiteLabelingSolutionTemplateLevelsMap = new HashMap<>();
+
+    static {
+        allowedWhiteLabelingSolutionTemplateLevelsMap.put(SolutionTemplateLevel.MAKER, false);
+        allowedWhiteLabelingSolutionTemplateLevelsMap.put(SolutionTemplateLevel.PROTOTYPE, true);
+        allowedWhiteLabelingSolutionTemplateLevelsMap.put(SolutionTemplateLevel.STARTUP, true);
+    }
+
     private List<SolutionTemplateInfo> solutions = new ArrayList<>();
     private Map<String, SolutionTemplateDetails> solutionsMap = new HashMap<>();
 
@@ -196,6 +207,7 @@ public class DefaultSolutionService implements SolutionService {
     private final TbClusterService tbClusterService;
     private final BCryptPasswordEncoder passwordEncoder;
     private final TbTenantProfileCache tenantProfileCache;
+    private final SubscriptionService subscriptionService;
 
     @PostConstruct
     public void init() {
@@ -348,6 +360,20 @@ public class DefaultSolutionService implements SolutionService {
     }
 
     private SolutionInstallResponse validateSolution(TenantId tenantId, String solutionId) {
+
+        SolutionTemplateDetails solutionTemplate = solutionsMap.get(solutionId);
+
+        if (allowedWhiteLabelingSolutionTemplateLevelsMap.get(solutionTemplate.getLevel()).booleanValue()) {
+            if (!subscriptionService.whiteLabelingEnabled(tenantId)) {
+                ObjectNode value = JacksonUtil.newObjectNode();
+                value.put("solutionTemplateName", solutionTemplate.getTitle());
+                value.put("solutionTemplateLevel", solutionTemplate.getLevel().name());
+                throw new SubscriptionException(String.format("Failed to install solution template '%s' - unsupported subscription plan",
+                        solutionTemplate.getTitle()),
+                        SubscriptionErrorCode.UNSUPPORTED_SOLUTION_TEMPLATE_PLAN, value);
+            }
+        }
+
         Map<EntityType, List<HasName>> alreadyExistingEntities = new HashMap<>();
 
         //TODO: check that enough entities in subscription plan.
@@ -437,6 +463,10 @@ public class DefaultSolutionService implements SolutionService {
             attributesService.save(tenantId, tenantId, DataConstants.SERVER_SCOPE, Arrays.asList(createdEntitiesAttribute, statusAttribute, instructionAttribute));
 
             return new SolutionInstallResponse(ctx.getSolutionInstructions(), true);
+        } catch (SubscriptionException se) {
+            log.error("[{}][{}] Failed to provision", tenantId, solutionId, se);
+            rollback(tenantId, solutionId, ctx, se);
+            throw se;
         } catch (Throwable e) {
             log.error("[{}][{}] Failed to provision", tenantId, solutionId, e);
             rollback(tenantId, solutionId, ctx, e);

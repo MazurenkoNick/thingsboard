@@ -182,6 +182,7 @@ import { MAT_DATE_LOCALE } from '@angular/material/core';
 import { CopyButtonComponent } from '@shared/components/button/copy-button.component';
 import { TogglePasswordComponent } from '@shared/components/button/toggle-password.component';
 import { markedOptionsFactory } from '@shared/components/markdown.factory';
+import { UnsupportedSolutionTemplateLevelDialogComponent } from '@shared/components/dialog/unsupported-solution-template-level-dialog.component';
 
 @NgModule({
   providers: [
@@ -305,7 +306,8 @@ import { markedOptionsFactory } from '@shared/components/markdown.factory';
     OtaPackageAutocompleteComponent,
     WidgetsBundleSearchComponent,
     CopyButtonComponent,
-    TogglePasswordComponent
+    TogglePasswordComponent,
+    UnsupportedSolutionTemplateLevelDialogComponent
   ],
   imports: [
     CommonModule,
@@ -508,7 +510,8 @@ import { markedOptionsFactory } from '@shared/components/markdown.factory';
     OtaPackageAutocompleteComponent,
     WidgetsBundleSearchComponent,
     CopyButtonComponent,
-    TogglePasswordComponent
+    TogglePasswordComponent,
+    UnsupportedSolutionTemplateLevelDialogComponent
   ]
 })
 export class SharedModule { }

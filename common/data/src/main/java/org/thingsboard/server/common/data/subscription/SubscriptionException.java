@@ -64,6 +64,14 @@ public class SubscriptionException extends RuntimeException {
         this.value = mapper.valueToTree(entitiesCountsInfo);
     }
 
+    public SubscriptionException(String message,
+                                 SubscriptionErrorCode errorCode,
+                                 JsonNode value) {
+        super(message);
+        this.errorCode = errorCode;
+        this.value = value;
+    }
+
     public SubscriptionException(String message, SubscriptionErrorCode errorCode, SubscriptionEntry entry, long value) {
         super(message);
         setValues(errorCode, entry, value);

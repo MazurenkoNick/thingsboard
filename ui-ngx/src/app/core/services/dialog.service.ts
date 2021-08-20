@@ -57,6 +57,10 @@ import {
   EntityLimitDialogComponent,
   EntityLimitDialogData
 } from '@shared/components/dialog/entity-limit-dialog.component';
+import {
+  UnsupportedSolutionTemplateLevelDialogComponent,
+  UnsupportedSolutionTemplateLevelDialogData
+} from '@shared/components/dialog/unsupported-solution-template-level-dialog.component';
 
 @Injectable(
   {
@@ -135,6 +139,8 @@ export class DialogService {
     } else if (subscriptionErrorCode === SubscriptionErrorCode.FEATURE_DISABLED &&
       subscriptionEntry === SubscriptionEntry.WHITE_LABELING) {
       return this.whiteLabelingFeature();
+    } else if (subscriptionErrorCode === SubscriptionErrorCode.UNSUPPORTED_SOLUTION_TEMPLATE_PLAN) {
+      return this.unsupportedSolutionTemplateLevel(error);
     } else {
       return this.subscriptionAlert(error);
     }
@@ -161,6 +167,20 @@ export class DialogService {
       {
         disableClose: true,
         panelClass: ['tb-dialog', 'tb-fullscreen-dialog', 'tb-fullscreen-dialog-gt-sm'],
+      }).afterClosed();
+  }
+
+  unsupportedSolutionTemplateLevel(error: SubscriptionErrorData): Observable<any> {
+    const value = error.subscriptionValue;
+    return this.dialog.open<UnsupportedSolutionTemplateLevelDialogComponent,
+      UnsupportedSolutionTemplateLevelDialogData>(UnsupportedSolutionTemplateLevelDialogComponent,
+      {
+        disableClose: true,
+        panelClass: ['tb-dialog', 'tb-fullscreen-dialog'],
+        data: {
+          solutionTemplateName: value.solutionTemplateName,
+          solutionTemplateLevel: value.solutionTemplateLevel
+        }
       }).afterClosed();
   }
 
