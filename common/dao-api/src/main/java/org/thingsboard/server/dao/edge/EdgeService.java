@@ -31,9 +31,9 @@
 package org.thingsboard.server.dao.edge;
 
 import com.google.common.util.concurrent.ListenableFuture;
-import org.thingsboard.server.common.data.edge.Edge;
 import org.thingsboard.server.common.data.EntitySubtype;
 import org.thingsboard.server.common.data.EntityType;
+import org.thingsboard.server.common.data.edge.Edge;
 import org.thingsboard.server.common.data.edge.EdgeSearchQuery;
 import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.EdgeId;
@@ -97,10 +97,6 @@ public interface EdgeService {
     PageData<Edge> findEdgesByEntityGroupIdsAndType(List<EntityGroupId> groupIds, String type, PageLink pageLink);
 
     void renameDeviceEdgeAllGroup(TenantId tenantId, Edge edge, String oldEdgeName);
-
-    Object checkInstance(Object request);
-
-    Object activateInstance(String licenseSecret, String releaseDate);
 
     String findMissingToRelatedRuleChains(TenantId tenantId, EdgeId edgeId);
 

@@ -28,36 +28,14 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.common.data.widget;
+package org.thingsboard.server.service.edge;
 
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import lombok.Data;
-import org.thingsboard.server.common.data.id.WidgetTypeId;
-import org.thingsboard.server.common.data.validation.NoXss;
+import com.fasterxml.jackson.databind.JsonNode;
+import org.springframework.http.ResponseEntity;
 
-@Data
-@JsonPropertyOrder({ "alias", "name", "image", "description", "descriptor" })
-public class WidgetTypeDetails extends WidgetType {
+public interface EdgeLicenseService {
 
-    private String image;
-    @NoXss
-    private String description;
+    ResponseEntity<JsonNode> checkInstance(JsonNode request);
 
-    public WidgetTypeDetails() {
-        super();
-    }
-
-    public WidgetTypeDetails(WidgetTypeId id) {
-        super(id);
-    }
-
-    public WidgetTypeDetails(BaseWidgetType baseWidgetType) {
-        super(baseWidgetType);
-    }
-
-    public WidgetTypeDetails(WidgetTypeDetails widgetTypeDetails) {
-        super(widgetTypeDetails);
-        this.image = widgetTypeDetails.getImage();
-        this.description = widgetTypeDetails.getDescription();
-    }
+    ResponseEntity<JsonNode> activateInstance(String licenseSecret, String releaseDate);
 }
