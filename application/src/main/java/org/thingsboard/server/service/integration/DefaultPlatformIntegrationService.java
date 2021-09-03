@@ -332,6 +332,9 @@ public class DefaultPlatformIntegrationService extends TbApplicationEventListene
         if (statisticsEnabled) {
             statisticsExecutorService.shutdown();
         }
+        if (reinitEnabled) {
+            reinitExecutorService.shutdownNow();
+        }
         integrationsByIdMap.values().forEach(v -> v.getFirst().destroy());
         integrationsByIdMap.clear();
         integrationsByRoutingKeyMap.clear();
@@ -376,44 +379,48 @@ public class DefaultPlatformIntegrationService extends TbApplicationEventListene
         if (configuration.isRemote()) {
             return Futures.immediateFailedFuture(new ThingsboardException("The integration is executed remotely!", ThingsboardErrorCode.INVALID_ARGUMENTS));
         }
-        return refreshExecutorService.submit(() -> getOrCreateThingsboardPlatformIntegration(configuration, forceReinit));
+        if (!configuration.isEnabled()) {
+            return Futures.immediateFailedFuture(new ThingsboardException("The integration is disabled!", ThingsboardErrorCode.INVALID_ARGUMENTS));
+        }
+        return refreshExecutorService.submit(() -> getOrCreateThingsBoardPlatformIntegration(configuration, forceReinit));
     }
 
 
     @Override
-    public ListenableFuture<ThingsboardPlatformIntegration> updateIntegration(Integration configuration) {
+    public void updateIntegration(Integration configuration) {
         if (configuration.isRemote()) {
             integrationRpcService.updateIntegration(configuration);
-            return Futures.immediateFuture(null);
         } else {
             if (configuration.getType().isSingleton()) {
                 TopicPartitionInfo tpi = partitionService.resolve(ServiceType.TB_CORE, configuration.getTenantId(), configuration.getId());
                 if (!myPartitions.contains(tpi)) {
-                    return Futures.immediateFailedFuture(new ThingsboardException("Singleton integration already present on another node!", ThingsboardErrorCode.INVALID_ARGUMENTS));
+                    return;
                 }
             }
-            return refreshExecutorService.submit(() -> {
-                Pair<ThingsboardPlatformIntegration<?>, IntegrationContext> integration = integrationsByIdMap.get(configuration.getId());
-                if (integration != null) {
-                    synchronized (integration) {
-                        try {
-                            IntegrationContext newCtx = new LocalIntegrationContext(contextComponent, configuration);
-                            integrationsByIdMap.put(configuration.getId(), Pair.of(integration.getFirst(), newCtx));
-                            integration.getFirst().update(new TbIntegrationInitParams(newCtx,
-                                    configuration, getUplinkDataConverter(configuration), getDownlinkDataConverter(configuration)));
-                            actorContext.persistLifecycleEvent(configuration.getTenantId(), configuration.getId(), ComponentLifecycleEvent.UPDATED, null);
-                            integrationEvents.put(configuration.getId(), ComponentLifecycleEvent.UPDATED);
-                            return integration.getFirst();
-                        } catch (Exception e) {
-                            integrationEvents.put(configuration.getId(), ComponentLifecycleEvent.FAILED);
-                            actorContext.persistLifecycleEvent(configuration.getTenantId(), configuration.getId(), ComponentLifecycleEvent.FAILED, e);
-                            throw e;
+            if (configuration.isEnabled()) {
+                refreshExecutorService.submit(() -> {
+                    Pair<ThingsboardPlatformIntegration<?>, IntegrationContext> integration = integrationsByIdMap.get(configuration.getId());
+                    if (integration != null) {
+                        synchronized (integration) {
+                            try {
+                                IntegrationContext newCtx = new LocalIntegrationContext(contextComponent, configuration);
+                                integrationsByIdMap.put(configuration.getId(), Pair.of(integration.getFirst(), newCtx));
+                                integration.getFirst().update(new TbIntegrationInitParams(newCtx,
+                                        configuration, getUplinkDataConverter(configuration), getDownlinkDataConverter(configuration)));
+                                actorContext.persistLifecycleEvent(configuration.getTenantId(), configuration.getId(), ComponentLifecycleEvent.UPDATED, null);
+                                integrationEvents.put(configuration.getId(), ComponentLifecycleEvent.UPDATED);
+                            } catch (Exception e) {
+                                integrationEvents.put(configuration.getId(), ComponentLifecycleEvent.FAILED);
+                                actorContext.persistLifecycleEvent(configuration.getTenantId(), configuration.getId(), ComponentLifecycleEvent.FAILED, e);
+                            }
                         }
+                    } else {
+                        getOrCreateThingsBoardPlatformIntegration(configuration, false);
                     }
-                } else {
-                    return getOrCreateThingsboardPlatformIntegration(configuration, false);
-                }
-            });
+                });
+            } else {
+                stopIntegration(configuration.getId(), ComponentLifecycleEvent.STOPPED);
+            }
         }
     }
 
@@ -454,6 +461,9 @@ public class DefaultPlatformIntegrationService extends TbApplicationEventListene
                 TopicPartitionInfo tpi = partitionService.resolve(ServiceType.TB_CORE, integration.getTenantId(), integration.getId());
                 if (integration.getType().isSingleton() && !myPartitions.contains(tpi)) {
                     return Futures.immediateFailedFuture(new ThingsboardException("Singleton integration already present on another node!", ThingsboardErrorCode.INVALID_ARGUMENTS));
+                }
+                if (!integration.isEnabled()) {
+                    return Futures.immediateFailedFuture(new ThingsboardException("The integration is disabled!", ThingsboardErrorCode.INVALID_ARGUMENTS));
                 }
                 return Futures.immediateFailedFuture(new ThingsboardException("Integration is not present in routing key map!", ThingsboardErrorCode.GENERAL));
             } else {
@@ -502,7 +512,9 @@ public class DefaultPlatformIntegrationService extends TbApplicationEventListene
     }
 
     private void onMsg(ThingsboardPlatformIntegration<?> integration, IntegrationDownlinkMsg msg) {
-        integration.onDownlinkMsg(msg);
+        if (!integrationEvents.getOrDefault(msg.getIntegrationId(), ComponentLifecycleEvent.FAILED).equals(ComponentLifecycleEvent.FAILED)) {
+            integration.onDownlinkMsg(msg);
+        }
     }
 
     private void persistStatistics() {
@@ -990,7 +1002,7 @@ public class DefaultPlatformIntegrationService extends TbApplicationEventListene
         }
     }
 
-    private ThingsboardPlatformIntegration<?> getOrCreateThingsboardPlatformIntegration(Integration configuration, boolean forceReinit) {
+    private ThingsboardPlatformIntegration<?> getOrCreateThingsBoardPlatformIntegration(Integration configuration, boolean forceReinit) {
         Pair<ThingsboardPlatformIntegration<?>, IntegrationContext> integrationPair;
         boolean newIntegration = false;
         synchronized (integrationsByIdMap) {
