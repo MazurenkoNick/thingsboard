@@ -28,16 +28,19 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-apply plugin: 'groovy'
+plugins {
+    id 'groovy'
+    id 'java-library'
+}
 
 repositories {
     mavenCentral()
 }
 
 dependencies {
-    compile localGroovy()
-    compile gradleApi()
-    compile 'com.netflix.nebula:gradle-ospackage-plugin:8.6.3'
+    implementation localGroovy()
+    implementation gradleApi()
+    implementation 'com.netflix.nebula:gradle-ospackage-plugin:8.6.3'
     implementation 'org.apache.commons:commons-lang3:3.9'
 }
 
@@ -45,7 +48,7 @@ buildDir = projectBuildDir
 version = projectVersion
 
 compileGroovy {
-    destinationDir = file("${buildDir}/classes")
+    destinationDirectory = file("${buildDir}/classes")
 }
 
 description 'ThingsBoard PE packaging plugin for constructing RPM and DEB package files.'

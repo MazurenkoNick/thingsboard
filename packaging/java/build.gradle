@@ -32,8 +32,8 @@ import org.apache.tools.ant.filters.ReplaceTokens
 
 buildscript {
     repositories {
-        jcenter()
         mavenLocal()
+        mavenCentral()
     }
     dependencies {
         classpath("org.thingsboard:packaging:${projectVersion}")
@@ -202,24 +202,4 @@ buildDeb {
 
     link("${pkgInstallFolder}/bin/${pkgName}.yml", "${pkgInstallFolder}/conf/${pkgName}.yml")
     link("/etc/${pkgName}/conf", "${pkgInstallFolder}/conf")
-}
-
-task renameDeb(type: Copy) {
-    from("${buildDir}/") {
-        include '*.deb'
-        destinationDir file("${buildDir}/")
-        rename { String filename ->
-            "${pkgName}.deb"
-        }
-    }
-}
-
-task renameRpm(type: Copy) {
-    from("${buildDir}/") {
-        include '*.rpm'
-        destinationDir file("${buildDir}/")
-        rename { String filename ->
-            "${pkgName}.rpm"
-        }
-    }
 }
