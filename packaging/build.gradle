@@ -37,7 +37,7 @@ repositories {
 dependencies {
     compile localGroovy()
     compile gradleApi()
-    compile 'com.netflix.nebula:gradle-ospackage-plugin:8.3.0'
+    compile 'com.netflix.nebula:gradle-ospackage-plugin:8.6.3'
     implementation 'org.apache.commons:commons-lang3:3.9'
 }
 
