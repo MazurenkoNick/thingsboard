@@ -31,6 +31,8 @@
 package org.thingsboard.server.exception;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 import org.springframework.http.HttpStatus;
 import org.thingsboard.server.common.data.exception.ThingsboardErrorCode;
 import org.thingsboard.server.common.data.subscription.SubscriptionEntry;
@@ -38,6 +40,7 @@ import org.thingsboard.server.common.data.subscription.SubscriptionErrorCode;
 
 import java.util.Date;
 
+@ApiModel
 public class ThingsboardErrorResponse {
     // HTTP Response Status Code
     private final HttpStatus status;
@@ -84,18 +87,35 @@ public class ThingsboardErrorResponse {
                 subscriptionErrorCode, subscriptionEntry, subscriptionValue, status);
     }
 
+    @ApiModelProperty(position = 1, value = "HTTP Response Status Code", example = "401", readOnly = true)
     public Integer getStatus() {
         return status.value();
     }
 
+    @ApiModelProperty(position = 2, value = "Error message", example = "Authentication failed", readOnly = true)
     public String getMessage() {
         return message;
     }
 
+    @ApiModelProperty(position = 3, value = "Platform error code:" +
+            "\n* `2` - General error (HTTP: 500 - Internal Server Error)" +
+            "\n\n* `10` - Authentication failed (HTTP: 401 - Unauthorized)" +
+            "\n\n* `11` - JWT token expired (HTTP: 401 - Unauthorized)" +
+            "\n\n* `15` - Credentials expired (HTTP: 401 - Unauthorized)" +
+            "\n\n* `20` - Permission denied (HTTP: 403 - Forbidden)" +
+            "\n\n* `30` - Invalid arguments (HTTP: 400 - Bad Request)" +
+            "\n\n* `31` - Bad request params (HTTP: 400 - Bad Request)" +
+            "\n\n* `32` - Item not found (HTTP: 404 - Not Found)" +
+            "\n\n* `33` - Too many requests (HTTP: 429 - Too Many Requests)" +
+            "\n\n* `34` - Too many updates (Too many updates over Websocket session)" +
+            "\n\n* `40` - Subscription violation (HTTP: 403 - Forbidden)",
+            example = "10", dataType = "integer",
+            readOnly = true)
     public ThingsboardErrorCode getErrorCode() {
         return errorCode;
     }
 
+    @ApiModelProperty(position = 4, value = "Timestamp", readOnly = true)
     public Date getTimestamp() {
         return timestamp;
     }

@@ -95,7 +95,7 @@ import { EnumToArrayPipe } from '@shared/pipe/enum-to-array.pipe';
 import { ClipboardModule } from 'ngx-clipboard';
 import { ValueInputComponent } from '@shared/components/value-input.component';
 import { MarkdownModule, MarkedOptions } from 'ngx-markdown';
-import { MarkdownComponent } from '@shared/components/markdown.component';
+import { MarkdownEditorComponent } from '@shared/components/markdown-editor.component';
 import { FullscreenDirective } from '@shared/components/fullscreen.directive';
 import { HighlightPipe } from '@shared/pipe/highlight.pipe';
 import { DashboardAutocompleteComponent } from '@shared/components/dashboard-autocomplete.component';
@@ -181,8 +181,21 @@ import { OtaPackageAutocompleteComponent } from '@shared/components/ota-package/
 import { MAT_DATE_LOCALE } from '@angular/material/core';
 import { CopyButtonComponent } from '@shared/components/button/copy-button.component';
 import { TogglePasswordComponent } from '@shared/components/button/toggle-password.component';
-import { markedOptionsFactory } from '@shared/components/markdown.factory';
 import { UnsupportedSolutionTemplateLevelDialogComponent } from '@shared/components/dialog/unsupported-solution-template-level-dialog.component';
+import { HelpPopupComponent } from '@shared/components/help-popup.component';
+import { TbPopoverComponent, TbPopoverDirective } from '@shared/components/popover.component';
+import { TbStringTemplateOutletDirective } from '@shared/components/directives/sring-template-outlet.directive';
+import { TbComponentOutletDirective} from '@shared/components/directives/component-outlet.directive';
+import { HelpMarkdownComponent } from '@shared/components/help-markdown.component';
+import { MarkedOptionsService } from '@shared/components/marked-options.service';
+import { TbPopoverService } from '@shared/components/popover.service';
+import { HELP_MARKDOWN_COMPONENT_TOKEN, SHARED_MODULE_TOKEN } from '@shared/components/tokens';
+import { TbMarkdownComponent } from '@shared/components/markdown.component';
+import { ProtobufContentComponent } from './components/protobuf-content.component';
+
+export function MarkedOptionsFactory(markedOptionsService: MarkedOptionsService) {
+  return markedOptionsService;
+}
 
 @NgModule({
   providers: [
@@ -207,7 +220,10 @@ import { UnsupportedSolutionTemplateLevelDialogComponent } from '@shared/compone
     {
       provide: MAT_DATE_LOCALE,
       useValue: 'en-GB'
-    }
+    },
+    { provide: HELP_MARKDOWN_COMPONENT_TOKEN, useValue: HelpMarkdownComponent },
+    { provide: SHARED_MODULE_TOKEN, useValue: SharedModule },
+    TbPopoverService
   ],
   declarations: [
     FooterComponent,
@@ -219,7 +235,14 @@ import { UnsupportedSolutionTemplateLevelDialogComponent } from '@shared/compone
     MatChipDraggableDirective,
     TbHotkeysDirective,
     TbAnchorComponent,
+    TbPopoverComponent,
+    TbStringTemplateOutletDirective,
+    TbComponentOutletDirective,
+    TbPopoverDirective,
+    TbMarkdownComponent,
     HelpComponent,
+    HelpMarkdownComponent,
+    HelpPopupComponent,
     TbCheckboxComponent,
     TbSnackBarComponent,
     TbErrorComponent,
@@ -281,7 +304,7 @@ import { UnsupportedSolutionTemplateLevelDialogComponent } from '@shared/compone
     KeyValMapComponent,
     NavTreeComponent,
     LedLightComponent,
-    MarkdownComponent,
+    MarkdownEditorComponent,
     NospacePipe,
     MillisecondsToTimeStringPipe,
     EnumToArrayPipe,
@@ -307,6 +330,7 @@ import { UnsupportedSolutionTemplateLevelDialogComponent } from '@shared/compone
     WidgetsBundleSearchComponent,
     CopyButtonComponent,
     TogglePasswordComponent,
+    ProtobufContentComponent,
     UnsupportedSolutionTemplateLevelDialogComponent
   ],
   imports: [
@@ -364,7 +388,8 @@ import { UnsupportedSolutionTemplateLevelDialogComponent } from '@shared/compone
       sanitize: SecurityContext.NONE,
       markedOptions: {
         provide: MarkedOptions,
-        useFactory: markedOptionsFactory
+        useFactory: MarkedOptionsFactory,
+        deps: [MarkedOptionsService]
       }
     })
   ],
@@ -378,7 +403,13 @@ import { UnsupportedSolutionTemplateLevelDialogComponent } from '@shared/compone
     MatChipDraggableDirective,
     TbHotkeysDirective,
     TbAnchorComponent,
+    TbStringTemplateOutletDirective,
+    TbComponentOutletDirective,
+    TbPopoverDirective,
+    TbMarkdownComponent,
     HelpComponent,
+    HelpMarkdownComponent,
+    HelpPopupComponent,
     TbCheckboxComponent,
     TbErrorComponent,
     TbCheatSheetComponent,
@@ -485,7 +516,7 @@ import { UnsupportedSolutionTemplateLevelDialogComponent } from '@shared/compone
     KeyValMapComponent,
     NavTreeComponent,
     LedLightComponent,
-    MarkdownComponent,
+    MarkdownEditorComponent,
     NospacePipe,
     MillisecondsToTimeStringPipe,
     EnumToArrayPipe,
@@ -511,7 +542,7 @@ import { UnsupportedSolutionTemplateLevelDialogComponent } from '@shared/compone
     WidgetsBundleSearchComponent,
     CopyButtonComponent,
     TogglePasswordComponent,
-    UnsupportedSolutionTemplateLevelDialogComponent
+    ProtobufContentComponent
   ]
 })
 export class SharedModule { }

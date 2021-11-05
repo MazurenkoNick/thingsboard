@@ -221,13 +221,13 @@ class DefaultTbContext implements TbContext, TbPeContext {
     @Override
     public void enqueueForTellNext(TbMsg tbMsg, String queueName, String relationType, Runnable onSuccess, Consumer<Throwable> onFailure) {
         TopicPartitionInfo tpi = resolvePartition(tbMsg, queueName);
-        enqueueForTellNext(tpi, tbMsg, Collections.singleton(relationType), null, onSuccess, onFailure);
+        enqueueForTellNext(tpi, queueName, tbMsg, Collections.singleton(relationType), null, onSuccess, onFailure);
     }
 
     @Override
     public void enqueueForTellNext(TbMsg tbMsg, String queueName, Set<String> relationTypes, Runnable onSuccess, Consumer<Throwable> onFailure) {
         TopicPartitionInfo tpi = resolvePartition(tbMsg, queueName);
-        enqueueForTellNext(tpi, tbMsg, relationTypes, null, onSuccess, onFailure);
+        enqueueForTellNext(tpi, queueName, tbMsg, relationTypes, null, onSuccess, onFailure);
     }
 
     private TopicPartitionInfo resolvePartition(TbMsg tbMsg, String queueName) {
@@ -242,9 +242,13 @@ class DefaultTbContext implements TbContext, TbPeContext {
     }
 
     private void enqueueForTellNext(TopicPartitionInfo tpi, TbMsg source, Set<String> relationTypes, String failureMessage, Runnable onSuccess, Consumer<Throwable> onFailure) {
+        enqueueForTellNext(tpi, source.getQueueName(), source, relationTypes, failureMessage, onSuccess, onFailure);
+    }
+
+    private void enqueueForTellNext(TopicPartitionInfo tpi, String queueName, TbMsg source, Set<String> relationTypes, String failureMessage, Runnable onSuccess, Consumer<Throwable> onFailure) {
         RuleChainId ruleChainId = nodeCtx.getSelf().getRuleChainId();
         RuleNodeId ruleNodeId = nodeCtx.getSelf().getId();
-        TbMsg tbMsg = TbMsg.newMsg(source, ruleChainId, ruleNodeId);
+        TbMsg tbMsg = TbMsg.newMsg(source, queueName, ruleChainId, ruleNodeId);
         TransportProtos.ToRuleEngineMsg.Builder msg = TransportProtos.ToRuleEngineMsg.newBuilder()
                 .setTenantIdMSB(getTenantId().getId().getMostSignificantBits())
                 .setTenantIdLSB(getTenantId().getId().getLeastSignificantBits())
@@ -255,7 +259,7 @@ class DefaultTbContext implements TbContext, TbPeContext {
         }
         if (nodeCtx.getSelf().isDebugMode()) {
             relationTypes.forEach(relationType ->
-                    mainCtx.persistDebugOutput(nodeCtx.getTenantId(), nodeCtx.getSelf().getId(), tbMsg, relationType));
+                    mainCtx.persistDebugOutput(nodeCtx.getTenantId(), nodeCtx.getSelf().getId(), tbMsg, relationType, null, failureMessage));
         }
         mainCtx.getClusterService().pushMsgToRuleEngine(tpi, tbMsg.getId(), msg.build(), new SimpleTbQueueCallback(onSuccess, onFailure));
     }
@@ -709,8 +713,13 @@ class DefaultTbContext implements TbContext, TbPeContext {
     }
 
     @Override
-    public TbResultSetFuture submitCassandraTask(CassandraStatementTask task) {
-        return mainCtx.getCassandraBufferedRateExecutor().submit(task);
+    public TbResultSetFuture submitCassandraReadTask(CassandraStatementTask task) {
+        return mainCtx.getCassandraBufferedRateReadExecutor().submit(task);
+    }
+
+    @Override
+    public TbResultSetFuture submitCassandraWriteTask(CassandraStatementTask task) {
+        return mainCtx.getCassandraBufferedRateWriteExecutor().submit(task);
     }
 
     @Override

@@ -70,6 +70,7 @@ import { PageData } from '@shared/models/page/page-data';
 import { TranslateService } from '@ngx-translate/core';
 import { AlarmDataService } from '@core/api/alarm-data.service';
 import { IDashboardController } from '@home/components/dashboard-page/dashboard-page.models';
+import { PopoverPlacement } from '@shared/components/popover.models';
 
 export interface TimewindowFunctions {
   onUpdateTimewindow: (startTimeMs: number, endTimeMs: number, interval?: number) => void;
@@ -105,6 +106,10 @@ export interface WidgetActionsApi {
   getActiveEntityInfo: () => SubscriptionEntityInfo;
   openDashboardStateInSeparateDialog: (targetDashboardStateId: string, params?: StateParams, dialogTitle?: string,
                                        hideDashboardToolbar?: boolean, dialogWidth?: number, dialogHeight?: number) => void;
+  openDashboardStateInPopover: ($event: Event, targetDashboardStateId: string, params?: StateParams,
+                                hideDashboardToolbar?: boolean, preferredPlacement?: PopoverPlacement,
+                                hideOnClickOutside?: boolean, popoverWidth?: string,
+                                popoverHeight?: string, popoverStyle?: { [klass: string]: any }) => void;
 }
 
 export interface AliasInfo {
@@ -248,6 +253,7 @@ export interface WidgetSubscriptionOptions {
   stateData?: boolean;
   alarmSource?: Datasource;
   datasources?: Array<Datasource>;
+  datasourcesOptional?: boolean;
   hasDataPageLink?: boolean;
   singleEntity?: boolean;
   warnOnPageDataOverflow?: boolean;
@@ -295,6 +301,7 @@ export interface IWidgetSubscription {
   hiddenData?: Array<{data: DataSet}>;
   timeWindowConfig?: Timewindow;
   timeWindow?: WidgetTimewindow;
+  widgetTimewindowChanged$: Observable<WidgetTimewindow>;
   comparisonEnabled?: boolean;
   comparisonTimeWindow?: WidgetTimewindow;
 

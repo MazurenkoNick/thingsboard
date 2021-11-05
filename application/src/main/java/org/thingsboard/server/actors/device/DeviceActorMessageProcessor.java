@@ -259,7 +259,7 @@ class DeviceActorMessageProcessor extends AbstractContextAwareMsgProcessor {
         rpc.setExpirationTime(request.getExpirationTime());
         rpc.setRequest(JacksonUtil.valueToTree(request));
         rpc.setStatus(status);
-        rpc.setAdditionalInfo(JacksonUtil.valueToTree(request.getAdditionalInfo()));
+        rpc.setAdditionalInfo(JacksonUtil.toJsonNode(request.getAdditionalInfo()));
         return systemContext.getTbRpcService().save(tenantId, rpc);
     }
 
@@ -596,7 +596,7 @@ class DeviceActorMessageProcessor extends AbstractContextAwareMsgProcessor {
                     systemContext.getTbRpcService().save(tenantId, new RpcId(requestMd.getMsg().getMsg().getId()), status, response);
                 }
             } finally {
-                if (hasError) {
+                if (hasError && !requestMd.isDelivered()) {
                     sendNextPendingRequest(context);
                 }
             }
@@ -734,7 +734,7 @@ class DeviceActorMessageProcessor extends AbstractContextAwareMsgProcessor {
     void processCredentialsUpdate(TbActorMsg msg) {
         if (((DeviceCredentialsUpdateNotificationMsg) msg).getDeviceCredentials().getCredentialsType() == DeviceCredentialsType.LWM2M_CREDENTIALS) {
             sessions.forEach((k, v) -> {
-                notifyTransportAboutProfileUpdate(k, v, ((DeviceCredentialsUpdateNotificationMsg) msg).getDeviceCredentials());
+                notifyTransportAboutDeviceCredentialsUpdate(k, v, ((DeviceCredentialsUpdateNotificationMsg) msg).getDeviceCredentials());
             });
         } else {
             sessions.forEach((sessionId, sessionMd) -> notifyTransportAboutClosedSession(sessionId, sessionMd, "device credentials updated!"));
@@ -746,6 +746,7 @@ class DeviceActorMessageProcessor extends AbstractContextAwareMsgProcessor {
     }
 
     private void notifyTransportAboutClosedSessionMaxSessionsLimit(UUID sessionId, SessionInfoMetaData sessionMd) {
+        log.debug("remove eldest session (max concurrent sessions limit reached per device) sessionId [{}] sessionMd [{}]", sessionId, sessionMd);
         notifyTransportAboutClosedSession(sessionId, sessionMd, "max concurrent sessions limit reached per device!");
     }
 
@@ -761,7 +762,7 @@ class DeviceActorMessageProcessor extends AbstractContextAwareMsgProcessor {
         systemContext.getTbCoreToTransportService().process(sessionMd.getSessionInfo().getNodeId(), msg);
     }
 
-    void notifyTransportAboutProfileUpdate(UUID sessionId, SessionInfoMetaData sessionMd, DeviceCredentials deviceCredentials) {
+    void notifyTransportAboutDeviceCredentialsUpdate(UUID sessionId, SessionInfoMetaData sessionMd, DeviceCredentials deviceCredentials) {
         ToTransportUpdateCredentialsProto.Builder notification = ToTransportUpdateCredentialsProto.newBuilder();
         notification.addCredentialsId(deviceCredentials.getCredentialsId());
         notification.addCredentialsValue(deviceCredentials.getCredentialsValue());

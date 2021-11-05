@@ -243,8 +243,8 @@ public class DefaultDataUpdateService implements DataUpdateService {
                 deviceProfileEntityDynamicConditionsUpdater.updateEntities(null);
                 updateOAuth2Params();
                 break;
-            case "3.3.1":
-                log.info("Updating data from version 3.3.1 to 3.3.1PE ...");
+            case "3.3.2":
+                log.info("Updating data from version 3.3.2 to 3.3.2PE ...");
                 tenantsCustomersGroupAllUpdater.updateEntities(null);
                 tenantEntitiesGroupAllUpdater.updateEntities(null);
                 tenantIntegrationUpdater.updateEntities(null);
@@ -287,18 +287,24 @@ public class DefaultDataUpdateService implements DataUpdateService {
                     if (deviceProfile.getProfileData().has("alarms") &&
                             !deviceProfile.getProfileData().get("alarms").isNull()) {
                         boolean isUpdated = false;
-                        JsonNode array = deviceProfile.getProfileData().get("alarms");
-                        for (JsonNode node : array) {
-                            if (node.has("createRules")) {
-                                JsonNode createRules = node.get("createRules");
+                        JsonNode alarms = deviceProfile.getProfileData().get("alarms");
+                        for (JsonNode alarm : alarms) {
+                            if (alarm.has("createRules")) {
+                                JsonNode createRules = alarm.get("createRules");
                                 for (AlarmSeverity severity : AlarmSeverity.values()) {
                                     if (createRules.has(severity.name())) {
-                                        isUpdated = isUpdated || convertDeviceProfileAlarmRulesForVersion330(createRules.get(severity.name()).get("condition").get("spec"));
+                                        JsonNode spec = createRules.get(severity.name()).get("condition").get("spec");
+                                        if (convertDeviceProfileAlarmRulesForVersion330(spec)) {
+                                            isUpdated = true;
+                                        }
                                     }
                                 }
                             }
-                            if (node.has("clearRule") && !node.get("clearRule").isNull()) {
-                                isUpdated = isUpdated || convertDeviceProfileAlarmRulesForVersion330(node.get("clearRule").get("condition").get("spec"));
+                            if (alarm.has("clearRule") && !alarm.get("clearRule").isNull()) {
+                                JsonNode spec = alarm.get("clearRule").get("condition").get("spec");
+                                if (convertDeviceProfileAlarmRulesForVersion330(spec)) {
+                                    isUpdated = true;
+                                }
                             }
                         }
                         if (isUpdated) {
@@ -1093,6 +1099,16 @@ public class DefaultDataUpdateService implements DataUpdateService {
                 }
             }
             whiteLabelingParams.setHelpLinkBaseUrl(helpLinkBaseUrl);
+            String uiHelpBaseUrl = null;
+            if (storedWl != null && storedWl.has("uiHelpBaseUrl")) {
+                JsonNode uiHelpBaseUrlJson = storedWl.get("uiHelpBaseUrl");
+                if (uiHelpBaseUrlJson.isTextual()) {
+                    if (!StringUtils.isEmpty(uiHelpBaseUrlJson.asText())) {
+                        uiHelpBaseUrl = uiHelpBaseUrlJson.asText();
+                    }
+                }
+            }
+            whiteLabelingParams.setUiHelpBaseUrl(uiHelpBaseUrl);
             if (storedWl != null && storedWl.has("enableHelpLinks")) {
                 whiteLabelingParams.setEnableHelpLinks(storedWl.get("enableHelpLinks").asBoolean());
             } else {
