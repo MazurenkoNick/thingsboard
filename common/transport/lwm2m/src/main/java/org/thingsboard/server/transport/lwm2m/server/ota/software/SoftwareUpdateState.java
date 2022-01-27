@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2021 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2022 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -30,6 +30,8 @@
  */
 package org.thingsboard.server.transport.lwm2m.server.ota.software;
 
+import lombok.Getter;
+
 /**
  * SW Update State R
  * 0: INITIAL Before downloading. (see 5.1.2.1)
@@ -48,8 +50,10 @@ public enum SoftwareUpdateState {
     DELIVERED(3, "Delivered"),
     INSTALLED(4, "Installed");
 
-    public int code;
-    public String type;
+    @Getter
+    private int code;
+    @Getter
+    private String type;
 
     SoftwareUpdateState(int code, String type) {
         this.code = code;

@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2021 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2022 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -32,9 +32,9 @@ package org.thingsboard.server.transport.lwm2m.server.downlink;
 
 public interface DownlinkRequestCallback<R, T> {
 
-    default boolean onSent(R request){
+    default boolean onSent(R request) {
         return true;
-    };
+    }
 
     void onSuccess(R request, T response);
 

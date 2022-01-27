@@ -1,7 +1,7 @@
 ///
 /// ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
 ///
-/// Copyright © 2016-2021 ThingsBoard, Inc. All Rights Reserved.
+/// Copyright © 2016-2022 ThingsBoard, Inc. All Rights Reserved.
 ///
 /// NOTICE: All information contained herein is, and remains
 /// the property of ThingsBoard, Inc. and its suppliers,
@@ -35,8 +35,12 @@ import { SharedModule } from '@app/shared/shared.module';
 import { AlarmDetailsDialogComponent } from '@home/components/alarm/alarm-details-dialog.component';
 import { SchedulerEventModule } from '@home/components/scheduler/scheduler-event.module';
 import { BlobEntitiesComponent } from '@home/components/blob-entity/blob-entities.component';
+import { SHARED_HOME_COMPONENTS_MODULE_TOKEN } from '@home/components/tokens';
 
 @NgModule({
+  providers: [
+    { provide: SHARED_HOME_COMPONENTS_MODULE_TOKEN, useValue: SharedHomeComponentsModule }
+  ],
   declarations:
     [
       AlarmDetailsDialogComponent,

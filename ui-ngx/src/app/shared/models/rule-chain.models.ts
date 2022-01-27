@@ -1,7 +1,7 @@
 ///
 /// ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
 ///
-/// Copyright © 2016-2021 ThingsBoard, Inc. All Rights Reserved.
+/// Copyright © 2016-2022 ThingsBoard, Inc. All Rights Reserved.
 ///
 /// NOTICE: All information contained herein is, and remains
 /// the property of ThingsBoard, Inc. and its suppliers,
@@ -54,29 +54,16 @@ export interface RuleChainMetaData {
   firstNodeIndex?: number;
   nodes: Array<RuleNode>;
   connections: Array<NodeConnectionInfo>;
-  ruleChainConnections: Array<RuleChainConnectionInfo>;
-}
-
-export interface ResolvedRuleChainMetaData extends RuleChainMetaData {
-  targetRuleChainsMap: {[ruleChainId: string]: RuleChain};
 }
 
 export interface RuleChainImport {
   ruleChain: RuleChain;
   metadata: RuleChainMetaData;
-  resolvedMetadata?: ResolvedRuleChainMetaData;
 }
 
 export interface NodeConnectionInfo {
   fromIndex: number;
   toIndex: number;
-  type: string;
-}
-
-export interface RuleChainConnectionInfo {
-  fromIndex: number;
-  targetRuleChainId: RuleChainId;
-  additionalInfo: any;
   type: string;
 }
 
@@ -91,25 +78,9 @@ export const ruleNodeTypeComponentTypes: ComponentType[] =
     ComponentType.TRANSFORMATION,
     ComponentType.ACTION,
     ComponentType.ANALYTICS,
-    ComponentType.EXTERNAL
+    ComponentType.EXTERNAL,
+    ComponentType.FLOW
   ];
-
-export const ruleChainNodeComponent: RuleNodeComponentDescriptor = {
-  type: RuleNodeType.RULE_CHAIN,
-  name: 'rule chain',
-  clazz: 'tb.internal.RuleChain',
-  configurationDescriptor: {
-    nodeDefinition: {
-      description: '',
-      details: 'Forwards incoming messages to specified Rule Chain',
-      inEnabled: true,
-      outEnabled: false,
-      relationTypes: [],
-      customRelations: false,
-      defaultConfiguration: {}
-    }
-  }
-};
 
 export const unknownNodeComponent: RuleNodeComponentDescriptor = {
   type: RuleNodeType.UNKNOWN,

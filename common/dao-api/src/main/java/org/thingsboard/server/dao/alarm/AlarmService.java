@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2021 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2022 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -32,6 +32,7 @@ package org.thingsboard.server.dao.alarm;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.util.concurrent.ListenableFuture;
+import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.alarm.Alarm;
 import org.thingsboard.server.common.data.alarm.AlarmFilter;
 import org.thingsboard.server.common.data.id.AlarmId;
@@ -51,6 +52,7 @@ import org.thingsboard.server.common.data.query.AlarmDataQuery;
 import java.util.Collection;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * Created by ashvayka on 11.05.17.
@@ -82,6 +84,12 @@ public interface AlarmService {
 
     ListenableFuture<Alarm> findLatestByOriginatorAndType(TenantId tenantId, EntityId originator, String type);
 
-    PageData<AlarmData> findAlarmDataByQueryForEntities(TenantId tenantId, CustomerId customerId, MergedUserPermissions mergedUserPermissions,
+    PageData<AlarmData> findAlarmDataByQueryForEntities(TenantId tenantId, MergedUserPermissions mergedUserPermissions,
                                                         AlarmDataQuery query, Collection<EntityId> orderedEntityIds);
+
+    Set<EntityId> getPropagationEntityIds(Alarm alarm);
+
+    Set<EntityId> getPropagationEntityIds(Alarm alarm, List<EntityType> types);
+
+    void deleteEntityAlarmRelations(TenantId tenantId, EntityId entityId);
 }

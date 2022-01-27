@@ -1,7 +1,7 @@
 ///
 /// ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
 ///
-/// Copyright © 2016-2021 ThingsBoard, Inc. All Rights Reserved.
+/// Copyright © 2016-2022 ThingsBoard, Inc. All Rights Reserved.
 ///
 /// NOTICE: All information contained herein is, and remains
 /// the property of ThingsBoard, Inc. and its suppliers,
@@ -35,6 +35,7 @@ export * from './telemetry/telemetry.models';
 export * from './time/time.models';
 export * from './alarm.models';
 export * from './alias.models';
+export * from './asset.models';
 export * from './audit-log.models';
 export * from './authority.enum';
 export * from './base-data';

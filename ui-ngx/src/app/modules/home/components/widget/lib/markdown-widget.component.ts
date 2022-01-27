@@ -1,7 +1,7 @@
 ///
 /// ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
 ///
-/// Copyright © 2016-2021 ThingsBoard, Inc. All Rights Reserved.
+/// Copyright © 2016-2022 ThingsBoard, Inc. All Rights Reserved.
 ///
 /// NOTICE: All information contained herein is, and remains
 /// the property of ThingsBoard, Inc. and its suppliers,
@@ -29,7 +29,7 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { ChangeDetectorRef, Component, HostBinding, Input, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, HostBinding, Inject, Input, OnInit, Type } from '@angular/core';
 import { PageComponent } from '@shared/components/page.component';
 import { WidgetContext } from '@home/models/widget-component.models';
 import { Store } from '@ngrx/store';
@@ -47,6 +47,8 @@ import { FormattedData } from '@home/components/widget/lib/maps/map-models';
 import { hashCode, isNotEmptyStr } from '@core/utils';
 import cssjs from '@core/css/css';
 import { UtilsService } from '@core/services/utils.service';
+import { HOME_COMPONENTS_MODULE_TOKEN } from '@home/components/tokens';
+import { EntityDataPageLink } from '@shared/models/query/query.models';
 
 interface MarkdownWidgetSettings {
   markdownTextPattern: string;
@@ -77,6 +79,7 @@ export class MarkdownWidgetComponent extends PageComponent implements OnInit {
 
   constructor(protected store: Store<AppState>,
               private utils: UtilsService,
+              @Inject(HOME_COMPONENTS_MODULE_TOKEN) public homeComponentsModule: Type<any>,
               private cd: ChangeDetectorRef) {
     super(store);
   }
@@ -93,6 +96,17 @@ export class MarkdownWidgetComponent extends PageComponent implements OnInit {
       this.markdownClass += '-' + hashCode(cssString);
       cssParser.cssPreviewNamespace = this.markdownClass;
       cssParser.createStyleElement(this.markdownClass, cssString);
+    }
+    const pageLink: EntityDataPageLink = {
+      page: 0,
+      pageSize: 16384,
+      textSearch: null,
+      dynamic: true
+    };
+    if (this.ctx.widgetConfig.datasources.length) {
+      this.ctx.defaultSubscription.subscribeAllForPaginatedData(pageLink, null);
+    } else {
+      this.onDataUpdated();
     }
   }
 

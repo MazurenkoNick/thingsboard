@@ -1,7 +1,7 @@
 /*
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2021 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2022 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -136,7 +136,7 @@ async function generateDashboardReport(browser, url, type, timezone) {
 
         const dashboardLoadResponse = await page.goto(url, {waitUntil: 'networkidle2'});
         if (dashboardLoadResponse._status < 400) {
-            await page.waitFor(dashboardLoadWaitTime);
+            await page.waitForTimeout(dashboardLoadWaitTime);
         } else {
             throw new Error("Dashboard page load returned error status: " + dashboardLoadResponse._status);
         }

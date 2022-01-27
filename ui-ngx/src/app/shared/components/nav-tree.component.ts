@@ -1,7 +1,7 @@
 ///
 /// ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
 ///
-/// Copyright © 2016-2021 ThingsBoard, Inc. All Rights Reserved.
+/// Copyright © 2016-2022 ThingsBoard, Inc. All Rights Reserved.
 ///
 /// NOTICE: All information contained herein is, and remains
 /// the property of ThingsBoard, Inc. and its suppliers,
@@ -91,19 +91,19 @@ export class NavTreeComponent implements OnInit {
   }
 
   @Input()
-  private loadNodes: LoadNodesCallback;
+  loadNodes: LoadNodesCallback;
 
   @Input()
-  private searchCallback: NodeSearchCallback;
+  searchCallback: NodeSearchCallback;
 
   @Input()
-  private onNodeSelected: NodeSelectedCallback;
+  onNodeSelected: NodeSelectedCallback;
 
   @Input()
-  private onNodesInserted: NodesInsertedCallback;
+  onNodesInserted: NodesInsertedCallback;
 
   @Input()
-  private editCallbacks: NavTreeEditCallbacks;
+  editCallbacks: NavTreeEditCallbacks;
 
   private treeElement: JSTree;
 

@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2021 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2022 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -36,6 +36,6 @@ import lombok.Setter;
 @Getter
 @Setter
 public class LwM2MDeviceCredentials {
-    private LwM2MClientCredentials client;
-    private LwM2MBootstrapCredentials bootstrap;
+    private LwM2MClientCredential client;
+    private LwM2MBootstrapClientCredentials bootstrap;
 }

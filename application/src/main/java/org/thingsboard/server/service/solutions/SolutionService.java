@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2021 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2022 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -30,6 +30,7 @@
  */
 package org.thingsboard.server.service.solutions;
 
+import org.thingsboard.server.common.data.User;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.service.solutions.data.solution.SolutionInstallResponse;
@@ -48,7 +49,7 @@ public interface SolutionService {
 
     TenantSolutionTemplateInstructions getSolutionInstructions(TenantId tenantId, String solutionTemplateId) throws ThingsboardException;
 
-    SolutionInstallResponse installSolution(TenantId tenantId, String id, HttpServletRequest request) throws ThingsboardException;
+    SolutionInstallResponse installSolution(User user, TenantId tenantId, String id, HttpServletRequest request) throws ThingsboardException;
 
     void deleteSolution(TenantId tenantId, String id) throws ThingsboardException;
 

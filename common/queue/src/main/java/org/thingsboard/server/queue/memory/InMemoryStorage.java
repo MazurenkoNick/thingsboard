@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2021 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2022 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -55,6 +55,10 @@ public final class InMemoryStorage {
                 log.debug("[{}] Queue Size [{}]", topic, queue.size());
             }
         });
+    }
+
+    public int getLagTotal() {
+        return storage.values().stream().map(BlockingQueue::size).reduce(0, Integer::sum);
     }
 
     public static InMemoryStorage getInstance() {

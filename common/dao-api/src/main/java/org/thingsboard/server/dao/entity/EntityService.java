@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2021 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2022 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -49,8 +49,6 @@ public interface EntityService {
     ListenableFuture<String> fetchEntityNameAsync(TenantId tenantId, EntityId entityId);
 
     CustomerId fetchEntityCustomerId(TenantId tenantId, EntityId entityId);
-
-    void deleteEntityRelations(TenantId tenantId, EntityId entityId);
 
     long countEntitiesByQuery(TenantId tenantId, CustomerId customerId, MergedUserPermissions userPermissions, EntityCountQuery query);
 

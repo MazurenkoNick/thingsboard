@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2021 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2022 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -161,7 +161,7 @@ public abstract class AbstractCoapProvisionJsonDeviceTest extends AbstractCoapIn
         Assert.assertEquals(deviceCredentials.getCredentialsType().name(), response.get("credentialsType").getAsString());
         Assert.assertEquals(deviceCredentials.getCredentialsType().name(), "X509_CERTIFICATE");
 
-        String cert = EncryptionUtil.trimNewLines(deviceCredentials.getCredentialsValue());
+        String cert = EncryptionUtil.certTrimNewLines(deviceCredentials.getCredentialsValue());
         String sha3Hash = EncryptionUtil.getSha3Hash(cert);
 
         Assert.assertEquals(deviceCredentials.getCredentialsId(), sha3Hash);

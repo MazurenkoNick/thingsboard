@@ -1,7 +1,7 @@
 /*
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2021 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2022 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -29,7 +29,7 @@
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
 import * as React from 'react';
-import { createMuiTheme, ThemeProvider } from '@material-ui/core/styles';
+import { createTheme, ThemeProvider } from '@material-ui/core/styles';
 import createThingsboardTheme from './styles/thingsboardTheme';
 import ThingsboardSchemaForm from './json-form-schema-form';
 import { JsonFormProps } from './json-form.models';
@@ -45,7 +45,7 @@ class ReactSchemaForm extends React.Component<JsonFormProps, {}> {
   render() {
     if (this.props.form.length > 0) {
       return <ThemeProvider
-        theme={createMuiTheme(createThingsboardTheme(this.props.primaryPalette, this.props.accentPalette))}>
+        theme={createTheme(createThingsboardTheme(this.props.primaryPalette, this.props.accentPalette))}>
         <ThingsboardSchemaForm {...this.props} /></ThemeProvider>;
     } else {
       return <div></div>;

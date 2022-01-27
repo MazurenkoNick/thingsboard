@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2021 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2022 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -75,6 +75,16 @@ public enum MsgType {
      * Message that is sent by RuleChainActor to other RuleChainActor with command to process TbMsg.
      */
     RULE_CHAIN_TO_RULE_CHAIN_MSG,
+
+    /**
+     * Message that is sent by RuleNodeActor as input to other RuleChain with command to process TbMsg.
+     */
+    RULE_CHAIN_INPUT_MSG,
+
+    /**
+     * Message that is sent by RuleNodeActor as output to RuleNode in other RuleChain with command to process TbMsg.
+     */
+    RULE_CHAIN_OUTPUT_MSG,
 
     /**
      * Message that is sent by RuleActor to RuleChainActor with command to process TbMsg by next nodes in chain.

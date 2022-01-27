@@ -1,7 +1,7 @@
 ///
 /// ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
 ///
-/// Copyright © 2016-2021 ThingsBoard, Inc. All Rights Reserved.
+/// Copyright © 2016-2022 ThingsBoard, Inc. All Rights Reserved.
 ///
 /// NOTICE: All information contained herein is, and remains
 /// the property of ThingsBoard, Inc. and its suppliers,
@@ -241,7 +241,9 @@ export enum StringOperation {
   STARTS_WITH = 'STARTS_WITH',
   ENDS_WITH = 'ENDS_WITH',
   CONTAINS = 'CONTAINS',
-  NOT_CONTAINS = 'NOT_CONTAINS'
+  NOT_CONTAINS = 'NOT_CONTAINS',
+  IN = 'IN',
+  NOT_IN = 'NOT_IN'
 }
 
 export const stringOperationTranslationMap = new Map<StringOperation, string>(
@@ -251,7 +253,9 @@ export const stringOperationTranslationMap = new Map<StringOperation, string>(
     [StringOperation.STARTS_WITH, 'filter.operation.starts-with'],
     [StringOperation.ENDS_WITH, 'filter.operation.ends-with'],
     [StringOperation.CONTAINS, 'filter.operation.contains'],
-    [StringOperation.NOT_CONTAINS, 'filter.operation.not-contains']
+    [StringOperation.NOT_CONTAINS, 'filter.operation.not-contains'],
+    [StringOperation.IN, 'filter.operation.in'],
+    [StringOperation.NOT_IN, 'filter.operation.not-in']
   ]
 );
 

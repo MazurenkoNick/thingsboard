@@ -1,7 +1,7 @@
 ///
 /// ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
 ///
-/// Copyright © 2016-2021 ThingsBoard, Inc. All Rights Reserved.
+/// Copyright © 2016-2022 ThingsBoard, Inc. All Rights Reserved.
 ///
 /// NOTICE: All information contained herein is, and remains
 /// the property of ThingsBoard, Inc. and its suppliers,
@@ -34,18 +34,38 @@ export * from './alarm.service';
 export * from './asset.service';
 export * from './attribute.service';
 export * from './audit-log.service';
+export * from './blob-entity.service';
 export * from './component-descriptor.service';
+export * from './converter.service';
+export * from './custom-menu.service';
+export * from './custom-translation.service';
 export * from './customer.service';
 export * from './dashboard.service';
 export * from './device.service';
+export * from './device-profile.service';
+export * from './edge.service';
 export * from './entity.service';
+export * from './entity-group.service';
 export * from './entity-relation.service';
 export * from './entity-view.service';
 export * from './event.service';
 export * from './http-utils';
+export * from './integration.service';
 export * from './oauth2.service';
+export * from './ota-package.service';
 export * from './queue.service';
+export * from './report.service';
+export * from './resource.service';
+export * from './role.service';
 export * from './rule-chain.service';
+export * from './rule-engine.service';
+export * from './scheduler-event.service';
+export * from './self-register.service';
+export * from './signup.service';
 export * from './tenant.service';
+export * from './tenant-profile.service';
+export * from './ui-settings.service';
 export * from './user.service';
+export * from './user-permissions.service';
+export * from './white-labeling.service';
 export * from './widget.service';

@@ -1,7 +1,7 @@
 ///
 /// ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
 ///
-/// Copyright © 2016-2021 ThingsBoard, Inc. All Rights Reserved.
+/// Copyright © 2016-2022 ThingsBoard, Inc. All Rights Reserved.
 ///
 /// NOTICE: All information contained herein is, and remains
 /// the property of ThingsBoard, Inc. and its suppliers,
@@ -53,12 +53,17 @@ export class DeviceProfileTabsComponent extends EntityTabsComponent<DeviceProfil
 
   deviceTransportTypeHints = deviceTransportTypeHintMap;
 
+  isTransportTypeChanged = false;
+
   constructor(protected store: Store<AppState>) {
     super(store);
   }
 
   ngOnInit() {
     super.ngOnInit();
+    this.detailsForm.get('transportType').valueChanges.subscribe(() => {
+      this.isTransportTypeChanged = true;
+    });
   }
 
 }

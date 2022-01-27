@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2021 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2022 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -38,6 +38,7 @@ import org.springframework.stereotype.Service;
 import org.thingsboard.common.util.DonAsynchron;
 import org.thingsboard.rule.engine.api.RuleEngineTelemetryService;
 import org.thingsboard.rule.engine.api.msg.DeviceAttributesEventNotificationMsg;
+import org.thingsboard.server.cluster.TbClusterService;
 import org.thingsboard.server.common.data.DataConstants;
 import org.thingsboard.server.common.data.Device;
 import org.thingsboard.server.common.data.DeviceProfile;
@@ -325,7 +326,7 @@ public class DefaultOtaPackageStateService implements OtaPackageStateService {
         boolean isSuccess = false;
         OtaPackageId targetOtaPackageId = new OtaPackageId(new UUID(msg.getOtaPackageIdMSB(), msg.getOtaPackageIdLSB()));
         DeviceId deviceId = new DeviceId(new UUID(msg.getDeviceIdMSB(), msg.getDeviceIdLSB()));
-        TenantId tenantId = new TenantId(new UUID(msg.getTenantIdMSB(), msg.getTenantIdLSB()));
+        TenantId tenantId = TenantId.fromUUID(new UUID(msg.getTenantIdMSB(), msg.getTenantIdLSB()));
         OtaPackageType firmwareType = OtaPackageType.valueOf(msg.getType());
         long ts = msg.getTs();
 
@@ -442,14 +443,16 @@ public class DefaultOtaPackageStateService implements OtaPackageStateService {
 
     private void updateAttributes(Device device, OtaPackageInfo otaPackage, long ts, TenantId tenantId, DeviceId deviceId, OtaPackageType otaPackageType) {
         List<AttributeKvEntry> attributes = new ArrayList<>();
+        List<String> attrToRemove = new ArrayList<>();
         attributes.add(new BaseAttributeKvEntry(ts, new StringDataEntry(getAttributeKey(otaPackageType, TITLE), otaPackage.getTitle())));
         attributes.add(new BaseAttributeKvEntry(ts, new StringDataEntry(getAttributeKey(otaPackageType, VERSION), otaPackage.getVersion())));
         if (StringUtils.isNotEmpty(otaPackage.getTag())) {
             attributes.add(new BaseAttributeKvEntry(ts, new StringDataEntry(getAttributeKey(otaPackageType, TAG), otaPackage.getTag())));
+        } else {
+            attrToRemove.add(getAttributeKey(otaPackageType, TAG));
         }
         if (otaPackage.hasUrl()) {
             attributes.add(new BaseAttributeKvEntry(ts, new StringDataEntry(getAttributeKey(otaPackageType, URL), otaPackage.getUrl())));
-            List<String> attrToRemove = new ArrayList<>();
 
             if (otaPackage.getDataSize() == null) {
                 attrToRemove.add(getAttributeKey(otaPackageType, SIZE));
@@ -468,14 +471,14 @@ public class DefaultOtaPackageStateService implements OtaPackageStateService {
             } else {
                 attributes.add(new BaseAttributeKvEntry(ts, new StringDataEntry(getAttributeKey(otaPackageType, CHECKSUM), otaPackage.getChecksum())));
             }
-
-            remove(device, otaPackageType, attrToRemove);
         } else {
             attributes.add(new BaseAttributeKvEntry(ts, new LongDataEntry(getAttributeKey(otaPackageType, SIZE), otaPackage.getDataSize())));
             attributes.add(new BaseAttributeKvEntry(ts, new StringDataEntry(getAttributeKey(otaPackageType, CHECKSUM_ALGORITHM), otaPackage.getChecksumAlgorithm().name())));
             attributes.add(new BaseAttributeKvEntry(ts, new StringDataEntry(getAttributeKey(otaPackageType, CHECKSUM), otaPackage.getChecksum())));
-            remove(device, otaPackageType, Collections.singletonList(getAttributeKey(otaPackageType, URL)));
+            attrToRemove.add(getAttributeKey(otaPackageType, URL));
         }
+
+        remove(device, otaPackageType, attrToRemove);
 
         telemetryService.saveAndNotify(tenantId, deviceId, DataConstants.SHARED_SCOPE, attributes, new FutureCallback<>() {
             @Override

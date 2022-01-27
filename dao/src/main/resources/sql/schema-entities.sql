@@ -1,7 +1,7 @@
 --
 -- ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
 --
--- Copyright © 2016-2021 ThingsBoard, Inc. All Rights Reserved.
+-- Copyright © 2016-2022 ThingsBoard, Inc. All Rights Reserved.
 --
 -- NOTICE: All information contained herein is, and remains
 -- the property of ThingsBoard, Inc. and its suppliers,
@@ -70,7 +70,22 @@ CREATE TABLE IF NOT EXISTS alarm (
     tenant_id uuid,
     customer_id uuid,
     propagate_relation_types varchar,
-    type varchar(255)
+    type varchar(255),
+    propagate_to_owner boolean,
+    propagate_to_owner_hierarchy boolean,
+    propagate_to_tenant boolean
+);
+
+CREATE TABLE IF NOT EXISTS entity_alarm (
+    tenant_id uuid NOT NULL,
+    entity_type varchar(32),
+    entity_id uuid NOT NULL,
+    created_time bigint NOT NULL,
+    alarm_type varchar(255) NOT NULL,
+    customer_id uuid,
+    alarm_id uuid,
+    CONSTRAINT entity_alarm_pkey PRIMARY KEY (entity_id, alarm_id),
+    CONSTRAINT fk_entity_alarm_id FOREIGN KEY (alarm_id) REFERENCES alarm(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS asset (
@@ -714,7 +729,6 @@ CREATE TABLE IF NOT EXISTS edge (
     CONSTRAINT edge_routing_key_unq_key UNIQUE (routing_key)
 );
 
--- TODO: voba add entity_group_id to upgrade script
 CREATE TABLE IF NOT EXISTS edge_event (
     id uuid NOT NULL CONSTRAINT edge_event_pkey PRIMARY KEY,
     created_time bigint NOT NULL,

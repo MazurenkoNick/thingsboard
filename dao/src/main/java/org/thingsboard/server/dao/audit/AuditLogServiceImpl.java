@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2021 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2022 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -350,6 +350,11 @@ public class AuditLogServiceImpl implements AuditLogService {
                 actionData.put("entityId", strEntityId);
                 actionData.put("unassignedEdgeId", strEdgeId);
                 actionData.put("unassignedEdgeName", strEdgeName);
+                break;
+            case REST_API_RULE_ENGINE_CALL:
+                actionData.put("entityId", entityId.toString());
+                String msgBody = extractParameter(String.class, 0, additionalInfo);
+                actionData.set("body", JacksonUtil.toJsonNode(msgBody));
                 break;
         }
         return actionData;

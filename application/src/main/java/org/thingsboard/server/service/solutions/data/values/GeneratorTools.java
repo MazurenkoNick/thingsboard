@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2021 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2022 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -63,6 +63,32 @@ public class GeneratorTools {
             multiplier *= nightHoursMultiplier;
         }
         return multiplier;
+    }
+
+    public static boolean isHoliday(long ts){
+        Date date = new Date(ts);
+        Calendar c = Calendar.getInstance();
+        c.setTime(date);
+        int dayOfWeek = c.get(Calendar.DAY_OF_WEEK);
+        return dayOfWeek == 1 || dayOfWeek == 7;
+    }
+
+    public static boolean isWorkHour(long ts){
+        Date date = new Date(ts);
+        Calendar c = Calendar.getInstance();
+        c.setTime(date);
+        int hour = c.get(Calendar.HOUR_OF_DAY);
+
+        return hour > 8 && hour < 18;
+    }
+
+    public static boolean isNightHour(long ts){
+        Date date = new Date(ts);
+        Calendar c = Calendar.getInstance();
+        c.setTime(date);
+        int hour = c.get(Calendar.HOUR_OF_DAY);
+
+        return hour < 6 || hour >= 22;
     }
 
 }

@@ -1,7 +1,7 @@
 ///
 /// ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
 ///
-/// Copyright © 2016-2021 ThingsBoard, Inc. All Rights Reserved.
+/// Copyright © 2016-2022 ThingsBoard, Inc. All Rights Reserved.
 ///
 /// NOTICE: All information contained herein is, and remains
 /// the property of ThingsBoard, Inc. and its suppliers,
@@ -38,11 +38,11 @@ import { HomeComponentsModule } from '@modules/home/components/home-components.m
 import { RuleChainTabsComponent } from '@home/pages/rulechain/rulechain-tabs.component';
 import {
   AddRuleNodeDialogComponent,
-  AddRuleNodeLinkDialogComponent,
+  AddRuleNodeLinkDialogComponent, CreateNestedRuleChainDialogComponent,
   RuleChainPageComponent
 } from './rulechain-page.component';
 import { RuleNodeComponent } from '@home/pages/rulechain/rulenode.component';
-import { FC_NODE_COMPONENT_CONFIG } from 'ngx-flowchart/dist/ngx-flowchart';
+import { FC_NODE_COMPONENT_CONFIG } from 'ngx-flowchart';
 import { RuleNodeDetailsComponent } from './rule-node-details.component';
 import { RuleNodeLinkComponent } from './rule-node-link.component';
 import { LinkLabelsComponent } from '@home/pages/rulechain/link-labels.component';
@@ -59,7 +59,8 @@ import { RuleNodeConfigComponent } from './rule-node-config.component';
     LinkLabelsComponent,
     RuleNodeLinkComponent,
     AddRuleNodeLinkDialogComponent,
-    AddRuleNodeDialogComponent
+    AddRuleNodeDialogComponent,
+    CreateNestedRuleChainDialogComponent
   ],
   providers: [
     {

@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2021 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2022 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -61,13 +61,6 @@ public abstract class BaseTenantProfileControllerTest extends AbstractController
 
     @Autowired
     private TenantProfileService tenantProfileService;
-
-    @After
-    @Override
-    public void teardown() throws Exception {
-        super.teardown();
-        tenantProfileService.deleteTenantProfiles(TenantId.SYS_TENANT_ID);
-    }
 
     @Test
     public void testSaveTenantProfile() throws Exception {

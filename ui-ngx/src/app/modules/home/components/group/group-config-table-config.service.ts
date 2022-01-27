@@ -1,7 +1,7 @@
 ///
 /// ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
 ///
-/// Copyright © 2016-2021 ThingsBoard, Inc. All Rights Reserved.
+/// Copyright © 2016-2022 ThingsBoard, Inc. All Rights Reserved.
 ///
 /// NOTICE: All information contained herein is, and remains
 /// the property of ThingsBoard, Inc. and its suppliers,
@@ -266,8 +266,8 @@ export class GroupConfigTableConfigService<T extends BaseData<HasId>> {
         this.translate.instant('entity-group.confirm-change-owner-text')).pipe(
         mergeMap((res) => {
             if (res) {
-              const isHierarchyCustomerView = (config.entityGroup.type === EntityType.CUSTOMER || config.entityGroup.type === EntityType.EDGE) &&
-                params.hierarchyView;
+              const isHierarchyCustomerView = (config.entityGroup.type === EntityType.CUSTOMER ||
+                  config.entityGroup.type === EntityType.EDGE) && params.hierarchyView;
               const refreshEntityGroupIds: string[] = [];
               let groupIdsObservable: Observable<any>;
               if (isHierarchyCustomerView) {
@@ -357,7 +357,7 @@ export class GroupConfigTableConfigService<T extends BaseData<HasId>> {
       [ownerId.id]).subscribe(
       (targetOwnerId) => {
         if (targetOwnerId) {
-          config.table.updateData();
+          config.updateData();
         }
       }
     );
@@ -402,7 +402,7 @@ export class GroupConfigTableConfigService<T extends BaseData<HasId>> {
       [config.entityGroup.id.id]).subscribe(
       (result) => {
         if (result) {
-          config.table.clearSelection();
+          config.getTable().clearSelection();
         }
       }
     );
@@ -451,7 +451,7 @@ export class GroupConfigTableConfigService<T extends BaseData<HasId>> {
       [config.entityGroup.id.id]).subscribe(
       (result) => {
         if (result) {
-          config.table.updateData();
+          config.updateData();
         }
       }
     );
@@ -469,7 +469,7 @@ export class GroupConfigTableConfigService<T extends BaseData<HasId>> {
           const entityIds = entities.map((entity) => entity.id.id);
           this.entityGroupService.removeEntitiesFromEntityGroup(config.entityGroup.id.id, entityIds).subscribe(
             () => {
-              config.table.updateData();
+              config.updateData();
               if (config.entityGroup.type === EntityType.CUSTOMER) {
                 if (params.hierarchyView) {
                   params.hierarchyCallbacks.refreshCustomerGroups([config.entityGroup.id.id]);

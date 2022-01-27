@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2021 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2022 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -112,6 +112,7 @@ import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.ConcurrentModificationException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -131,6 +132,7 @@ import java.util.stream.Collectors;
 @Slf4j
 class DeviceActorMessageProcessor extends AbstractContextAwareMsgProcessor {
 
+    static final String SESSION_TIMEOUT_MESSAGE = "session timeout!";
     final TenantId tenantId;
     final DeviceId deviceId;
     final LinkedHashMapRemoveEldest<UUID, SessionInfoMetaData> sessions;
@@ -465,6 +467,7 @@ class DeviceActorMessageProcessor extends AbstractContextAwareMsgProcessor {
                             .setRequestId(requestId)
                             .setSharedStateMsg(true)
                             .addAllSharedAttributeList(toTsKvProtos(result))
+                            .setIsMultipleAttributesRequest(request.getSharedAttributeNamesCount() > 1)
                             .build();
                     sendToTransport(responseMsg, sessionInfo);
                 }
@@ -486,6 +489,8 @@ class DeviceActorMessageProcessor extends AbstractContextAwareMsgProcessor {
                             .setRequestId(requestId)
                             .addAllClientAttributeList(toTsKvProtos(result.get(0)))
                             .addAllSharedAttributeList(toTsKvProtos(result.get(1)))
+                            .setIsMultipleAttributesRequest(
+                                    request.getSharedAttributeNamesCount() + request.getClientAttributeNamesCount() > 1)
                             .build();
                     sendToTransport(responseMsg, sessionInfo);
                 }
@@ -611,6 +616,7 @@ class DeviceActorMessageProcessor extends AbstractContextAwareMsgProcessor {
         ToDeviceRpcRequestMetadata md = toDeviceRpcPendingMap.get(responseMsg.getRequestId());
 
         if (md != null) {
+            JsonNode response = null;
             if (status.equals(RpcStatus.DELIVERED)) {
                 if (md.getMsg().getMsg().isOneway()) {
                     toDeviceRpcPendingMap.remove(responseMsg.getRequestId());
@@ -626,13 +632,14 @@ class DeviceActorMessageProcessor extends AbstractContextAwareMsgProcessor {
                 if (maxRpcRetries <= md.getRetries()) {
                     toDeviceRpcPendingMap.remove(responseMsg.getRequestId());
                     status = RpcStatus.FAILED;
+                    response = JacksonUtil.newObjectNode().put("error", "There was a Timeout and all retry attempts have been exhausted. Retry attempts set: " + maxRpcRetries);
                 } else {
                     md.setRetries(md.getRetries() + 1);
                 }
             }
 
             if (md.getMsg().getMsg().isPersisted()) {
-                systemContext.getTbRpcService().save(tenantId, new RpcId(rpcId), status, null);
+                systemContext.getTbRpcService().save(tenantId, new RpcId(rpcId), status, response);
             }
             if (status != RpcStatus.SENT) {
                 sendNextPendingRequest(context);
@@ -886,6 +893,9 @@ class DeviceActorMessageProcessor extends AbstractContextAwareMsgProcessor {
     }
 
     void restoreSessions() {
+        if (systemContext.isLocalCacheType()) {
+            return;
+        }
         log.debug("[{}] Restoring sessions from cache", deviceId);
         DeviceSessionsCacheEntry sessionsDump;
         try {
@@ -920,6 +930,9 @@ class DeviceActorMessageProcessor extends AbstractContextAwareMsgProcessor {
     }
 
     private void dumpSessions() {
+        if (systemContext.isLocalCacheType()) {
+            return;
+        }
         log.debug("[{}] Dumping sessions: {}, rpc subscriptions: {}, attribute subscriptions: {} to cache", deviceId, sessions.size(), rpcSubscriptions.size(), attributeSubscriptions.size());
         List<SessionSubscriptionInfoProto> sessionsList = new ArrayList<>(sessions.size());
         sessions.forEach((uuid, sessionMD) -> {
@@ -946,7 +959,6 @@ class DeviceActorMessageProcessor extends AbstractContextAwareMsgProcessor {
     }
 
     void init(TbActorCtx ctx) {
-        schedulePeriodicMsgWithDelay(ctx, SessionTimeoutCheckMsg.instance(), systemContext.getSessionReportTimeout(), systemContext.getSessionReportTimeout());
         PageLink pageLink = new PageLink(1024, 0, null, new SortOrder("createdTime"));
         PageData<Rpc> pageData;
         do {
@@ -968,19 +980,35 @@ class DeviceActorMessageProcessor extends AbstractContextAwareMsgProcessor {
     }
 
     void checkSessionsTimeout() {
-        log.debug("[{}] checkSessionsTimeout started. Size before check {}", deviceId, sessions.size());
-        long expTime = System.currentTimeMillis() - systemContext.getSessionInactivityTimeout();
-        Map<UUID, SessionInfoMetaData> sessionsToRemove = sessions.entrySet().stream().filter(kv -> kv.getValue().getLastActivityTime() < expTime).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-        sessionsToRemove.forEach((sessionId, sessionMD) -> {
-            sessions.remove(sessionId);
-            rpcSubscriptions.remove(sessionId);
-            attributeSubscriptions.remove(sessionId);
-            notifyTransportAboutClosedSession(sessionId, sessionMD, "session timeout!");
-        });
-        if (!sessionsToRemove.isEmpty()) {
-            dumpSessions();
+        final long expTime = System.currentTimeMillis() - systemContext.getSessionInactivityTimeout();
+        List<UUID> expiredIds = null;
+
+        for (Map.Entry<UUID, SessionInfoMetaData> kv : sessions.entrySet()) { //entry set are cached for stable sessions
+            if (kv.getValue().getLastActivityTime() < expTime) {
+                final UUID id = kv.getKey();
+                if (expiredIds == null) {
+                    expiredIds = new ArrayList<>(1); //most of the expired sessions is a single event
+                }
+                expiredIds.add(id);
+            }
         }
-        log.debug("[{}] checkSessionsTimeout finished. Size after check {}", deviceId, sessions.size());
+
+        if (expiredIds != null) {
+            int removed = 0;
+            for (UUID id : expiredIds) {
+                final SessionInfoMetaData session = sessions.remove(id);
+                rpcSubscriptions.remove(id);
+                attributeSubscriptions.remove(id);
+                if (session != null) {
+                    removed++;
+                    notifyTransportAboutClosedSession(id, session, SESSION_TIMEOUT_MESSAGE);
+                }
+            }
+            if (removed != 0) {
+                dumpSessions();
+            }
+        }
+
     }
 
 }

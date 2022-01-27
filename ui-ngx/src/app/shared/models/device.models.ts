@@ -1,7 +1,7 @@
 ///
 /// ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
 ///
-/// Copyright © 2016-2021 ThingsBoard, Inc. All Rights Reserved.
+/// Copyright © 2016-2022 ThingsBoard, Inc. All Rights Reserved.
 ///
 /// NOTICE: All information contained herein is, and remains
 /// the property of ThingsBoard, Inc. and its suppliers,
@@ -46,9 +46,6 @@ import { OtaPackageId } from '@shared/models/id/ota-package-id';
 import { DashboardId } from '@shared/models/id/dashboard-id';
 import { DataType } from '@shared/models/constants';
 import {
-  getDefaultBootstrapServerSecurityConfig,
-  getDefaultBootstrapServersSecurityConfig,
-  getDefaultLwM2MServerSecurityConfig,
   getDefaultProfileClientLwM2mSettingsConfig,
   getDefaultProfileObserveAttrConfig,
   PowerMode
@@ -399,11 +396,7 @@ export function createDeviceProfileTransportConfiguration(type: DeviceTransportT
       case DeviceTransportType.LWM2M:
         const lwm2mTransportConfiguration: Lwm2mDeviceProfileTransportConfiguration = {
           observeAttr: getDefaultProfileObserveAttrConfig(),
-          bootstrap: {
-            servers: getDefaultBootstrapServersSecurityConfig(),
-            bootstrapServer: getDefaultBootstrapServerSecurityConfig(),
-            lwm2mServer: getDefaultLwM2MServerSecurityConfig()
-          },
+          bootstrap: [],
           clientLwM2mSettings: getDefaultProfileClientLwM2mSettingsConfig()
         };
         transportConfiguration = {...lwm2mTransportConfiguration, type: DeviceTransportType.LWM2M};
@@ -539,6 +532,9 @@ export interface DeviceProfileAlarm {
   createRules: {[severity: string]: AlarmRule};
   clearRule?: AlarmRule;
   propagate?: boolean;
+  propagateToOwner?: boolean;
+  propagateToOwnerHierarchy?: boolean;
+  propagateToTenant?: boolean;
   propagateRelationTypes?: Array<string>;
 }
 

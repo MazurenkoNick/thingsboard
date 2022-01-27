@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2021 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2022 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -30,17 +30,12 @@
  */
 package org.thingsboard.server.transport.lwm2m.server.rpc;
 
-import org.eclipse.leshan.core.Link;
 import org.eclipse.leshan.core.ResponseCode;
-import org.eclipse.leshan.core.response.DiscoverResponse;
 import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.server.common.transport.TransportService;
 import org.thingsboard.server.gen.transport.TransportProtos;
 import org.thingsboard.server.transport.lwm2m.server.client.LwM2mClient;
 import org.thingsboard.server.transport.lwm2m.server.downlink.DownlinkRequestCallback;
-
-import java.util.Optional;
-import java.util.Set;
 
 public class RpcLinkSetCallback<R, T> extends RpcDownlinkRequestCallbackProxy<R, T> {
 

@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2021 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2022 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -46,13 +46,12 @@ import org.thingsboard.server.common.data.TransportPayloadType;
 import org.thingsboard.server.common.msg.session.FeatureType;
 import org.thingsboard.server.transport.coap.AbstractCoapIntegrationTest;
 
-import java.nio.charset.StandardCharsets;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -201,7 +200,7 @@ public abstract class AbstractCoapServerSideRpcIntegrationTest extends AbstractC
     }
 
     private void validateCurrentStateNotification(TestCoapCallback callback) {
-        assertNull(callback.getPayloadBytes());
+        assertArrayEquals(EMPTY_PAYLOAD, callback.getPayloadBytes());
         assertNotNull(callback.getObserve());
         assertEquals(callback.getResponseCode(), CoAP.ResponseCode.VALID);
         assertEquals(0, callback.getObserve().intValue());

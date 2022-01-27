@@ -1,7 +1,7 @@
 ///
 /// ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
 ///
-/// Copyright © 2016-2021 ThingsBoard, Inc. All Rights Reserved.
+/// Copyright © 2016-2022 ThingsBoard, Inc. All Rights Reserved.
 ///
 /// NOTICE: All information contained herein is, and remains
 /// the property of ThingsBoard, Inc. and its suppliers,
@@ -32,9 +32,9 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SharedModule } from '@shared/shared.module';
-import { StatesControllerService } from './states-controller.service';
-import { EntityStateControllerComponent } from './entity-state-controller.component';
-import { StatesComponentDirective } from './states-component.directive';
+import { StatesControllerService } from '@home/components/dashboard-page/states/states-controller.service';
+import { EntityStateControllerComponent } from '@home/components/dashboard-page/states/entity-state-controller.component';
+import { StatesComponentDirective } from '@home/components/dashboard-page/states/states-component.directive';
 import { HomeDialogsModule } from '@app/modules/home/dialogs/home-dialogs.module';
 import { DefaultStateControllerComponent } from '@home/components/dashboard-page/states/default-state-controller.component';
 

@@ -1,7 +1,7 @@
 ///
 /// ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
 ///
-/// Copyright © 2016-2021 ThingsBoard, Inc. All Rights Reserved.
+/// Copyright © 2016-2022 ThingsBoard, Inc. All Rights Reserved.
 ///
 /// NOTICE: All information contained herein is, and remains
 /// the property of ThingsBoard, Inc. and its suppliers,
@@ -270,6 +270,14 @@ export class DeviceWizardDialogComponent extends
   private deviceProfileTransportTypeChanged(deviceTransportType: DeviceTransportType): void {
     this.transportConfigFormGroup.patchValue(
       {transportConfiguration: createDeviceProfileTransportConfiguration(deviceTransportType)});
+    const setCredentialBox = this.credentialsFormGroup.get('setCredential');
+    if (deviceTransportType === DeviceTransportType.LWM2M) {
+      setCredentialBox.patchValue(true);
+      setCredentialBox.disable();
+    } else {
+      setCredentialBox.patchValue(false);
+      setCredentialBox.enable();
+    }
   }
 
   add(): void {

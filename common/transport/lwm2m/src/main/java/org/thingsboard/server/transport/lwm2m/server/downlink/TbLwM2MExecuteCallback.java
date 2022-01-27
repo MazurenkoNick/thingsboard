@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2021 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2022 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -32,9 +32,8 @@ package org.thingsboard.server.transport.lwm2m.server.downlink;
 
 import org.eclipse.leshan.core.request.ExecuteRequest;
 import org.eclipse.leshan.core.response.ExecuteResponse;
-import org.thingsboard.server.transport.lwm2m.server.log.LwM2MTelemetryLogService;
-import org.thingsboard.server.transport.lwm2m.server.uplink.LwM2mUplinkMsgHandler;
 import org.thingsboard.server.transport.lwm2m.server.client.LwM2mClient;
+import org.thingsboard.server.transport.lwm2m.server.log.LwM2MTelemetryLogService;
 
 public class TbLwM2MExecuteCallback extends TbLwM2MTargetedCallback<ExecuteRequest, ExecuteResponse> {
 

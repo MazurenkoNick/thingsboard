@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2021 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2022 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -30,7 +30,7 @@
  */
 package org.thingsboard.server.transport.lwm2m.server.ota;
 
-import org.thingsboard.server.common.data.device.data.lwm2m.OtherConfiguration;
+import org.thingsboard.server.common.data.device.profile.lwm2m.OtherConfiguration;
 import org.thingsboard.server.transport.lwm2m.server.client.LwM2mClient;
 
 import java.util.Optional;
@@ -70,4 +70,6 @@ public interface LwM2MOtaUpdateService {
     void onCurrentSoftwareStateUpdate(LwM2mClient lwM2MClient, Long value);
 
     void onCurrentSoftwareResultUpdate(LwM2mClient client, Long result);
+
+    boolean isOtaDownloading(LwM2mClient client);
 }

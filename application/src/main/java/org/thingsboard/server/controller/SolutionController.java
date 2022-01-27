@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2021 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2022 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -133,7 +133,7 @@ public class SolutionController extends BaseController {
         checkParameter("solutionTemplateId", solutionTemplateId);
         try {
             checkAllPermissions();
-            return checkNotNull(solutionService.installSolution(getTenantId(), solutionTemplateId, request));
+            return checkNotNull(solutionService.installSolution(getCurrentUser(), getTenantId(), solutionTemplateId, request));
         } catch (Exception e) {
             throw handleException(e);
         }

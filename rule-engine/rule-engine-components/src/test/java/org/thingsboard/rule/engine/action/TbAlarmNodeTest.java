@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2021 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2022 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -113,7 +113,7 @@ public class TbAlarmNodeTest {
 
     private EntityId originator = new DeviceId(Uuids.timeBased());
     private EntityId alarmOriginator = new AlarmId(Uuids.timeBased());
-    private TenantId tenantId = new TenantId(Uuids.timeBased());
+    private TenantId tenantId = TenantId.fromUUID(Uuids.timeBased());
     private TbMsgMetaData metaData = new TbMsgMetaData();
     private String rawJson = "{\"name\": \"Vit\", \"passed\": 5}";
 
@@ -145,7 +145,7 @@ public class TbAlarmNodeTest {
         when(detailsJs.executeJsonAsync(msg)).thenReturn(Futures.immediateFuture(null));
         when(alarmService.findLatestByOriginatorAndType(tenantId, originator, "SomeType")).thenReturn(Futures.immediateFuture(null));
         doAnswer((Answer<Alarm>) invocationOnMock -> (Alarm) (invocationOnMock.getArguments())[0]).when(alarmService).createOrUpdateAlarm(any(Alarm.class));
-
+        long ts = msg.getTs();
         node.onMsg(ctx, msg);
 
         verify(ctx).enqueue(any(), successCaptor.capture(), failureCaptor.capture());
@@ -167,6 +167,8 @@ public class TbAlarmNodeTest {
 
         Alarm actualAlarm = new ObjectMapper().readValue(dataCaptor.getValue().getBytes(), Alarm.class);
         Alarm expectedAlarm = Alarm.builder()
+                .startTs(ts)
+                .endTs(ts)
                 .tenantId(tenantId)
                 .originator(originator)
                 .status(ACTIVE_UNACK)
@@ -207,7 +209,7 @@ public class TbAlarmNodeTest {
         initWithCreateAlarmScript();
         metaData.putValue("key", "value");
         TbMsg msg = TbMsg.newMsg("USER", originator, metaData, TbMsgDataType.JSON, rawJson, ruleChainId, ruleNodeId);
-
+        long ts = msg.getTs();
         Alarm clearedAlarm = Alarm.builder().status(CLEARED_ACK).build();
 
         when(detailsJs.executeJsonAsync(msg)).thenReturn(Futures.immediateFuture(null));
@@ -237,6 +239,8 @@ public class TbAlarmNodeTest {
 
         Alarm actualAlarm = new ObjectMapper().readValue(dataCaptor.getValue().getBytes(), Alarm.class);
         Alarm expectedAlarm = Alarm.builder()
+                .startTs(ts)
+                .endTs(ts)
                 .tenantId(tenantId)
                 .originator(originator)
                 .status(ACTIVE_UNACK)
@@ -422,7 +426,7 @@ public class TbAlarmNodeTest {
         String rawJson = "{\"alarmSeverity\": \"WARNING\", \"passed\": 5}";
         metaData.putValue("key", "value");
         TbMsg msg = TbMsg.newMsg("USER", originator, metaData, TbMsgDataType.JSON, rawJson, ruleChainId, ruleNodeId);
-
+        long ts = msg.getTs();
         when(detailsJs.executeJsonAsync(msg)).thenReturn(Futures.immediateFuture(null));
         when(alarmService.findLatestByOriginatorAndType(tenantId, originator, "SomeType")).thenReturn(Futures.immediateFuture(null));
         doAnswer((Answer<Alarm>) invocationOnMock -> (Alarm) (invocationOnMock.getArguments())[0]).when(alarmService).createOrUpdateAlarm(any(Alarm.class));
@@ -448,6 +452,8 @@ public class TbAlarmNodeTest {
 
         Alarm actualAlarm = new ObjectMapper().readValue(dataCaptor.getValue().getBytes(), Alarm.class);
         Alarm expectedAlarm = Alarm.builder()
+                .startTs(ts)
+                .endTs(ts)
                 .tenantId(tenantId)
                 .originator(originator)
                 .status(ACTIVE_UNACK)
@@ -482,6 +488,7 @@ public class TbAlarmNodeTest {
 
         metaData.putValue("alarmSeverity", "WARNING");
         TbMsg msg = TbMsg.newMsg("USER", originator, metaData, TbMsgDataType.JSON, rawJson, ruleChainId, ruleNodeId);
+        long ts = msg.getTs();
 
         when(detailsJs.executeJsonAsync(msg)).thenReturn(Futures.immediateFuture(null));
         when(alarmService.findLatestByOriginatorAndType(tenantId, originator, "SomeType")).thenReturn(Futures.immediateFuture(null));
@@ -507,6 +514,8 @@ public class TbAlarmNodeTest {
 
         Alarm actualAlarm = new ObjectMapper().readValue(dataCaptor.getValue().getBytes(), Alarm.class);
         Alarm expectedAlarm = Alarm.builder()
+                .startTs(ts)
+                .endTs(ts)
                 .tenantId(tenantId)
                 .originator(originator)
                 .status(ACTIVE_UNACK)

@@ -1,7 +1,7 @@
 ///
 /// ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
 ///
-/// Copyright © 2016-2021 ThingsBoard, Inc. All Rights Reserved.
+/// Copyright © 2016-2022 ThingsBoard, Inc. All Rights Reserved.
 ///
 /// NOTICE: All information contained herein is, and remains
 /// the property of ThingsBoard, Inc. and its suppliers,
@@ -29,7 +29,8 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import L, { PolylineDecoratorOptions } from 'leaflet';
+// @ts-ignore
+import L, { PolylineDecorator, PolylineDecoratorOptions, Symbol } from 'leaflet';
 import 'leaflet-polylinedecorator';
 
 import { FormattedData, PolylineSettings } from './map-models';
@@ -38,7 +39,7 @@ import { functionValueCalculator } from '@home/components/widget/lib/maps/common
 export class Polyline {
 
   leafletPoly: L.Polyline;
-  polylineDecorator: L.PolylineDecorator;
+  polylineDecorator: PolylineDecorator;
   dataSources: FormattedData[];
   data: FormattedData;
 
@@ -51,7 +52,7 @@ export class Polyline {
     ).addTo(this.map);
 
     if (settings.usePolylineDecorator) {
-      this.polylineDecorator = L.polylineDecorator(this.leafletPoly, this.getDecoratorSettings(settings)).addTo(this.map);
+      this.polylineDecorator = new PolylineDecorator(this.leafletPoly, this.getDecoratorSettings(settings)).addTo(this.map);
     }
   }
 
@@ -62,7 +63,7 @@ export class Polyline {
           offset: settings.decoratorOffset,
           endOffset: settings.endDecoratorOffset,
           repeat: settings.decoratorRepeat,
-          symbol: L.Symbol[settings.decoratorSymbol]({
+          symbol: Symbol[settings.decoratorSymbol]({
             pixelSize: settings.decoratorSymbolSize,
             polygon: false,
             pathOptions: {
@@ -93,7 +94,8 @@ export class Polyline {
       opacity: functionValueCalculator(settings.useStrokeOpacityFunction, settings.strokeOpacityFunction,
         [this.data, this.dataSources, this.data.dsIndex], settings.strokeOpacity),
       weight: functionValueCalculator(settings.useStrokeWeightFunction, settings.strokeWeightFunction,
-        [this.data, this.dataSources, this.data.dsIndex], settings.strokeWeight)
+        [this.data, this.dataSources, this.data.dsIndex], settings.strokeWeight),
+      pmIgnore: true
     };
   }
 

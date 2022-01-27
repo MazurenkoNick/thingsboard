@@ -1,7 +1,7 @@
 ///
 /// ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
 ///
-/// Copyright © 2016-2021 ThingsBoard, Inc. All Rights Reserved.
+/// Copyright © 2016-2022 ThingsBoard, Inc. All Rights Reserved.
 ///
 /// NOTICE: All information contained herein is, and remains
 /// the property of ThingsBoard, Inc. and its suppliers,
@@ -115,6 +115,12 @@ export const tbPrimaryPalette: ColorPalette = extendDefaultPalette('teal', {
   500: '#00695c'
 });
 export const tbAccentPalette: ColorPalette = extendDefaultPalette('deep-orange', {});
+
+export const tbLoginPrimaryPalette: ColorPalette = extendDefaultPalette('teal', {
+  200: '#00c3b6',
+  500: '#00695c'
+});
+export const tbLoginAccentPalette: ColorPalette = extendDefaultPalette('deep-orange', {});
 
 export function mergeDefaults<T extends WhiteLabelingParams & LoginWhiteLabelingParams>(wlParams: T,
                               targetDefaultWlParams?: T): T {

@@ -1,7 +1,7 @@
 ///
 /// ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
 ///
-/// Copyright © 2016-2021 ThingsBoard, Inc. All Rights Reserved.
+/// Copyright © 2016-2022 ThingsBoard, Inc. All Rights Reserved.
 ///
 /// NOTICE: All information contained herein is, and remains
 /// the property of ThingsBoard, Inc. and its suppliers,
@@ -59,5 +59,12 @@ export class EventService {
     return this.http.post<PageData<Event>>(`/api/events/${entityId.entityType}/${entityId.id}` +
       `${pageLink.toQuery()}&tenantId=${tenantId}`, {...filters, eventType}, defaultHttpOptionsFromConfig(config));
   }
-  
+
+  public clearEvents(entityId: EntityId, eventType: EventType | DebugEventType, filters: FilterEventBody, tenantId: string,
+                     pageLink: TimePageLink, config?: RequestConfig) {
+    return this.http.post(`/api/events/${entityId.entityType}/${entityId.id}/clear?tenantId=${tenantId}` +
+      (pageLink.startTime ? `&startTime=${pageLink.startTime}` : ``) +
+      (pageLink.endTime ? `&endTime=${pageLink.endTime}` : ``), {...filters, eventType},
+      defaultHttpOptionsFromConfig(config));
+  }
 }

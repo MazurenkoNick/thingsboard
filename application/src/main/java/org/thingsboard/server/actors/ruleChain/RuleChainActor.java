@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2021 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2022 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -74,6 +74,12 @@ public class RuleChainActor extends ComponentActor<RuleChainId, RuleChainActorMe
                 break;
             case RULE_CHAIN_TO_RULE_CHAIN_MSG:
                 processor.onRuleChainToRuleChainMsg((RuleChainToRuleChainMsg) msg);
+                break;
+            case RULE_CHAIN_INPUT_MSG:
+                processor.onRuleChainInputMsg((RuleChainInputMsg) msg);
+                break;
+            case RULE_CHAIN_OUTPUT_MSG:
+                processor.onRuleChainOutputMsg((RuleChainOutputMsg) msg);
                 break;
             case PARTITION_CHANGE_MSG:
                 processor.onPartitionChangeMsg((PartitionChangeMsg) msg);

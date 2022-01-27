@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2021 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2022 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -39,7 +39,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.eclipse.californium.core.CoapResponse;
 import org.eclipse.californium.core.coap.CoAP;
 import org.eclipse.californium.core.coap.MediaTypeRegistry;
-import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.thingsboard.server.common.data.CoapDeviceType;
 import org.thingsboard.server.common.data.DeviceProfileProvisionType;
@@ -85,15 +85,15 @@ public abstract class AbstractCoapAttributesRequestProtoIntegrationTest extends 
             "  }\n" +
             "}";
 
-    @After
-    public void afterTest() throws Exception {
-        processAfterTest();
+    @Before
+    @Override
+    public void beforeTest() throws Exception {
+        processBeforeTest("Test Request attribute values from the server proto", CoapDeviceType.DEFAULT,
+                TransportPayloadType.PROTOBUF, null, ATTRIBUTES_SCHEMA_STR, null, null, null, null, DeviceProfileProvisionType.DISABLED);
     }
 
     @Test
     public void testRequestAttributesValuesFromTheServer() throws Exception {
-        super.processBeforeTest("Test Request attribute values from the server proto", CoapDeviceType.DEFAULT,
-                TransportPayloadType.PROTOBUF, null, ATTRIBUTES_SCHEMA_STR, null, null, null, null, DeviceProfileProvisionType.DISABLED);
         processTestRequestAttributesValuesFromTheServer();
     }
 

@@ -1,7 +1,7 @@
 ///
 /// ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
 ///
-/// Copyright © 2016-2021 ThingsBoard, Inc. All Rights Reserved.
+/// Copyright © 2016-2022 ThingsBoard, Inc. All Rights Reserved.
 ///
 /// NOTICE: All information contained herein is, and remains
 /// the property of ThingsBoard, Inc. and its suppliers,
@@ -81,6 +81,8 @@ export class DeviceProfileComponent extends EntityComponent<DeviceProfile> {
   displayProfileConfiguration: boolean;
 
   displayTransportConfiguration: boolean;
+
+  isTransportTypeChanged = false;
 
   serviceType = ServiceType.TB_RULE_ENGINE;
 
@@ -173,6 +175,7 @@ export class DeviceProfileComponent extends EntityComponent<DeviceProfile> {
     const deviceTransportType: DeviceTransportType = form.get('transportType').value;
     this.displayTransportConfiguration = deviceTransportType &&
       deviceTransportTypeConfigurationInfoMap.get(deviceTransportType).hasProfileConfiguration;
+    this.isTransportTypeChanged = true;
     let profileData: DeviceProfileData = form.getRawValue().profileData;
     if (!profileData) {
       profileData = {

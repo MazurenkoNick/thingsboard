@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2021 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2022 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -44,6 +44,7 @@ import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.DeviceId;
 import org.thingsboard.server.common.data.id.EdgeId;
 import org.thingsboard.server.common.data.id.EntityId;
+import org.thingsboard.server.common.data.id.RuleChainId;
 import org.thingsboard.server.common.data.id.RuleNodeId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.page.PageData;
@@ -136,6 +137,24 @@ public interface TbContext {
      * @param msg - message
      */
     void enqueue(TbMsg msg, Runnable onSuccess, Consumer<Throwable> onFailure);
+
+    /**
+     * Sends message to the nested rule chain.
+     * Fails processing of the message if the nested rule chain is not found.
+     *
+     * @param msg - the message
+     * @param ruleChainId - the id of a nested rule chain
+     */
+    void input(TbMsg msg, RuleChainId ruleChainId);
+
+    /**
+     * Sends message to the caller rule chain.
+     * Acknowledge the message if no caller rule chain is present in processing stack
+     *
+     * @param msg - the message
+     * @param relationType - the relation type that will be used to route messages in the caller rule chain
+     */
+    void output(TbMsg msg, String relationType);
 
     /**
      * Puts new message to custom queue for processing

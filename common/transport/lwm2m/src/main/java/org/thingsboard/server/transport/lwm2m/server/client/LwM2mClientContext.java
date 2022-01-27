@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2021 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2022 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -73,8 +73,6 @@ public interface LwM2mClientContext {
     void update(LwM2mClient lwM2MClient);
 
     void sendMsgsAfterSleeping(LwM2mClient lwM2MClient);
-
-    boolean isComposite(LwM2mClient client);
 
     void onUplink(LwM2mClient client);
 

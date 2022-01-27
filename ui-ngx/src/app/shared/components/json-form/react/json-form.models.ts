@@ -1,7 +1,7 @@
 ///
 /// ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
 ///
-/// Copyright © 2016-2021 ThingsBoard, Inc. All Rights Reserved.
+/// Copyright © 2016-2022 ThingsBoard, Inc. All Rights Reserved.
 ///
 /// NOTICE: All information contained herein is, and remains
 /// the property of ThingsBoard, Inc. and its suppliers,
@@ -64,7 +64,7 @@ export type OnColorClickFn = (key: (string | number)[], val: tinycolor.ColorForm
                               colorSelectedFn: (color: tinycolor.ColorFormats.RGBA) => void) => void;
 export type OnIconClickFn = (key: (string | number)[], val: string,
                              iconSelectedFn: (icon: string) => void) => void;
-export type onToggleFullscreenFn = (element: HTMLElement, fullscreenFinishFn?: () => void) => void;
+export type onToggleFullscreenFn = (fullscreenFinishFn?: (el: Element) => void) => void;
 export type onHelpClickFn = (event: MouseEvent, helpId: string, helpVisibleFn: (visible: boolean) => void,
                              helpReadyFn: (ready: boolean) => void) => void;
 

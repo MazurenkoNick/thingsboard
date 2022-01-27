@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2021 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2022 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -54,6 +54,7 @@ import org.thingsboard.server.common.data.relation.EntitySearchDirection;
 import org.thingsboard.server.common.data.relation.RelationEntityTypeFilter;
 import org.thingsboard.server.common.data.relation.RelationTypeGroup;
 import org.thingsboard.server.common.data.relation.RelationsSearchParameters;
+import org.thingsboard.server.common.data.rule.RuleChainType;
 import org.thingsboard.server.dao.entity.EntityService;
 import org.thingsboard.server.dao.exception.DataValidationException;
 import org.thingsboard.server.dao.service.ConstraintValidator;
@@ -69,6 +70,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.function.BiConsumer;
 
 import static org.thingsboard.server.common.data.CacheConstants.RELATIONS_CACHE;
+import static org.thingsboard.server.dao.service.Validator.validateId;
 
 /**
  * Created by ashvayka on 28.04.17.
@@ -209,11 +211,11 @@ public class BaseRelationService implements RelationService {
             outboundRelations.addAll(relationDao.findAllByFrom(tenantId, entityId, typeGroup));
         }
 
-        for (EntityRelation relation : inboundRelations){
+        for (EntityRelation relation : inboundRelations) {
             delete(tenantId, cache, relation, true);
         }
 
-        for (EntityRelation relation : outboundRelations){
+        for (EntityRelation relation : outboundRelations) {
             delete(tenantId, cache, relation, false);
         }
 
@@ -569,6 +571,13 @@ public class BaseRelationService implements RelationService {
             cacheEviction(relation, cache);
             deleteRelation(tenantId, relation);
         }
+    }
+
+    @Override
+    public List<EntityRelation> findRuleNodeToRuleChainRelations(TenantId tenantId, RuleChainType ruleChainType, int limit) {
+        log.trace("Executing findRuleNodeToRuleChainRelations, tenantId [{}], ruleChainType {} and limit {}", tenantId, ruleChainType, limit);
+        validateId(tenantId, "Invalid tenant id: " + tenantId);
+        return relationDao.findRuleNodeToRuleChainRelations(ruleChainType, limit);
     }
 
     protected void validate(EntityRelation relation) {

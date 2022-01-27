@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2021 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2022 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -43,12 +43,13 @@ import java.io.Serializable;
 @Data
 public class TbLwM2MSecurityInfo implements Serializable {
     private ValidateDeviceCredentialsResponse msg;
+    private DeviceProfile deviceProfile;
+    private String endpoint;
     private SecurityInfo securityInfo;
     private SecurityMode securityMode;
 
+
     /** bootstrap */
-    private DeviceProfile deviceProfile;
     private LwM2MBootstrapConfig bootstrapCredentialConfig;
-    private String endpoint;
     private BootstrapConfig bootstrapConfig;
 }

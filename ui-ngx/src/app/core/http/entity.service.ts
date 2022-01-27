@@ -1,7 +1,7 @@
 ///
 /// ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
 ///
-/// Copyright © 2016-2021 ThingsBoard, Inc. All Rights Reserved.
+/// Copyright © 2016-2022 ThingsBoard, Inc. All Rights Reserved.
 ///
 /// NOTICE: All information contained herein is, and remains
 /// the property of ThingsBoard, Inc. and its suppliers,
@@ -1279,28 +1279,12 @@ export class EntityService {
         result.entityFilter = deepClone(filter);
         return of(result);
       case AliasFilterType.relationsQuery:
-        result.stateEntity = filter.rootStateEntity;
-        let rootEntityType;
-        let rootEntityId;
-        if (result.stateEntity && stateEntityId) {
-          rootEntityType = stateEntityId.entityType;
-          rootEntityId = stateEntityId.id;
-        } else if (!result.stateEntity) {
-          rootEntityType = filter.rootEntity.entityType;
-          rootEntityId = filter.rootEntity.id;
-        }
-        if (rootEntityType && rootEntityId) {
-          const relationQueryRootEntityId = this.resolveAliasEntityId(rootEntityType, rootEntityId);
-          result.entityFilter = deepClone(filter);
-          result.entityFilter.rootEntity = relationQueryRootEntityId;
-          return of(result);
-        } else {
-          return of(result);
-        }
       case AliasFilterType.assetSearchQuery:
       case AliasFilterType.deviceSearchQuery:
       case AliasFilterType.edgeSearchQuery:
       case AliasFilterType.entityViewSearchQuery:
+        let rootEntityType;
+        let rootEntityId;
         result.stateEntity = filter.rootStateEntity;
         if (result.stateEntity && stateEntityId) {
           rootEntityType = stateEntityId.entityType;
@@ -1310,9 +1294,9 @@ export class EntityService {
           rootEntityId = filter.rootEntity.id;
         }
         if (rootEntityType && rootEntityId) {
-          const searchQueryRootEntityId = this.resolveAliasEntityId(rootEntityType, rootEntityId);
+          const queryRootEntityId = this.resolveAliasEntityId(rootEntityType, rootEntityId);
           result.entityFilter = deepClone(filter);
-          result.entityFilter.rootEntity = searchQueryRootEntityId;
+          result.entityFilter.rootEntity = queryRootEntityId;
           return of(result);
         } else {
           return of(result);

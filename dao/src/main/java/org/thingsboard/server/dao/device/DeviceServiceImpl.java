@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2021 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2022 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -339,12 +339,14 @@ public class DeviceServiceImpl extends AbstractEntityService implements DeviceSe
         return deviceData;
     }
 
+    @Transactional
     @Override
-    public void deleteDevice(TenantId tenantId, DeviceId deviceId) {
+    public void deleteDevice(final TenantId tenantId, final DeviceId deviceId) {
         log.trace("Executing deleteDevice [{}]", deviceId);
         validateId(deviceId, INCORRECT_DEVICE_ID + deviceId);
 
         Device device = deviceDao.findById(tenantId, deviceId.getId());
+        final String deviceName = device.getName();
         try {
             List<EntityView> entityViews = entityViewService.findEntityViewsByTenantIdAndEntityIdAsync(device.getTenantId(), deviceId).get();
             if (entityViews != null && !entityViews.isEmpty()) {
@@ -361,10 +363,10 @@ public class DeviceServiceImpl extends AbstractEntityService implements DeviceSe
         }
         deleteEntityRelations(tenantId, deviceId);
 
-        removeDeviceFromCacheByName(tenantId, device.getName());
-        removeDeviceFromCacheById(tenantId, device.getId());
-
         deviceDao.removeById(tenantId, deviceId.getId());
+
+        removeDeviceFromCacheByName(tenantId, deviceName);
+        removeDeviceFromCacheById(tenantId, deviceId);
     }
 
     private void removeDeviceFromCacheByName(TenantId tenantId, String name) {

@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2021 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2022 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -34,7 +34,7 @@ import lombok.Builder;
 import lombok.Getter;
 import org.eclipse.leshan.core.request.ContentFormat;
 import org.eclipse.leshan.core.response.WriteResponse;
-import org.thingsboard.server.transport.lwm2m.server.LwM2mOperationType;
+import org.thingsboard.server.transport.lwm2m.server.LwM2MOperationType;
 
 public class TbLwM2MWriteUpdateRequest extends AbstractTbLwM2MTargetedDownlinkRequest<WriteResponse> {
 
@@ -51,8 +51,8 @@ public class TbLwM2MWriteUpdateRequest extends AbstractTbLwM2MTargetedDownlinkRe
     }
 
     @Override
-    public LwM2mOperationType getType() {
-        return LwM2mOperationType.WRITE_UPDATE;
+    public LwM2MOperationType getType() {
+        return LwM2MOperationType.WRITE_UPDATE;
     }
 
 

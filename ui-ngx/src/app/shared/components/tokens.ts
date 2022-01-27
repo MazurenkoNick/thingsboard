@@ -1,7 +1,7 @@
 ///
 /// ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
 ///
-/// Copyright © 2016-2021 ThingsBoard, Inc. All Rights Reserved.
+/// Copyright © 2016-2022 ThingsBoard, Inc. All Rights Reserved.
 ///
 /// NOTICE: All information contained herein is, and remains
 /// the property of ThingsBoard, Inc. and its suppliers,
@@ -36,4 +36,4 @@ export const HELP_MARKDOWN_COMPONENT_TOKEN: InjectionToken<ComponentType<any>> =
   new InjectionToken<ComponentType<any>>('HELP_MARKDOWN_COMPONENT_TOKEN');
 
 export const SHARED_MODULE_TOKEN: InjectionToken<Type<any>> =
-  new InjectionToken<Type<any>>('HELP_MARKDOWN_COMPONENT_TOKEN');
+  new InjectionToken<Type<any>>('SHARED_MODULE_TOKEN');

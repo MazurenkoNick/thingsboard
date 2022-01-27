@@ -1,7 +1,7 @@
 ///
 /// ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
 ///
-/// Copyright © 2016-2021 ThingsBoard, Inc. All Rights Reserved.
+/// Copyright © 2016-2022 ThingsBoard, Inc. All Rights Reserved.
 ///
 /// NOTICE: All information contained herein is, and remains
 /// the property of ThingsBoard, Inc. and its suppliers,
@@ -35,6 +35,7 @@ import { Timewindow } from '@shared/models/time/time.models';
 import { IAliasController, IStateController } from '@core/api/widget-api.models';
 import { ILayoutController } from './layout/layout.models';
 import { DashboardContextMenuItem, WidgetContextMenuItem } from '@home/models/dashboard-component.models';
+import { Observable } from 'rxjs';
 
 export declare type DashboardPageScope = 'tenant' | 'customer';
 
@@ -45,6 +46,7 @@ export interface DashboardContext {
   dashboardTimewindow: Timewindow;
   aliasController: IAliasController;
   stateController: IStateController;
+  stateChanged: Observable<string>;
   runChangeDetection: () => void;
 }
 

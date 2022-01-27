@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2021 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2022 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -30,10 +30,12 @@
  */
 package org.thingsboard.server.service.solutions.data.definition;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.thingsboard.server.service.solutions.data.values.ValueStrategyDefinition;
 
 @Data
+@AllArgsConstructor
 public class TelemetryProfile {
 
     private String key;

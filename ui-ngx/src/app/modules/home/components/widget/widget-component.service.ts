@@ -1,7 +1,7 @@
 ///
 /// ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
 ///
-/// Copyright © 2016-2021 ThingsBoard, Inc. All Rights Reserved.
+/// Copyright © 2016-2022 ThingsBoard, Inc. All Rights Reserved.
 ///
 /// NOTICE: All information contained herein is, and remains
 /// the property of ThingsBoard, Inc. and its suppliers,
@@ -59,6 +59,8 @@ import { SharedModule } from '@shared/shared.module';
 import { MODULES_MAP } from '@shared/public-api';
 import * as tinycolor_ from 'tinycolor2';
 import moment from 'moment';
+import { IModulesMap } from '@modules/common/modules-map.models';
+import { HOME_COMPONENTS_MODULE_TOKEN } from '@home/components/tokens';
 
 const tinycolor = tinycolor_;
 
@@ -79,7 +81,8 @@ export class WidgetComponentService {
   private editingWidgetType: WidgetType;
 
   constructor(@Inject(WINDOW) private window: Window,
-              @Optional() @Inject(MODULES_MAP) private modulesMap: {[key: string]: any},
+              @Optional() @Inject(MODULES_MAP) private modulesMap: IModulesMap,
+              @Inject(HOME_COMPONENTS_MODULE_TOKEN) private homeComponentsModule: Type<any>,
               private dynamicComponentFactoryService: DynamicComponentFactoryService,
               private widgetService: WidgetService,
               private utils: UtilsService,
@@ -191,8 +194,10 @@ export class WidgetComponentService {
       forkJoin(widgetModulesTasks).subscribe(
         () => {
           const loadDefaultWidgetInfoTasks = [
-            this.loadWidgetResources(this.missingWidgetType, 'global-widget-missing-type', [SharedModule, WidgetComponentsModule]),
-            this.loadWidgetResources(this.errorWidgetType, 'global-widget-error-type', [SharedModule, WidgetComponentsModule]),
+            this.loadWidgetResources(this.missingWidgetType, 'global-widget-missing-type',
+              [SharedModule, WidgetComponentsModule, this.homeComponentsModule]),
+            this.loadWidgetResources(this.errorWidgetType, 'global-widget-error-type',
+              [SharedModule, WidgetComponentsModule, this.homeComponentsModule]),
           ];
           forkJoin(loadDefaultWidgetInfoTasks).subscribe(
             () => {
@@ -288,7 +293,7 @@ export class WidgetComponentService {
     }
     if (widgetControllerDescriptor) {
       const widgetNamespace = `widget-type-${(isSystem ? 'sys-' : '')}${bundleAlias}-${widgetInfo.alias}`;
-      this.loadWidgetResources(widgetInfo, widgetNamespace, [SharedModule, WidgetComponentsModule]).subscribe(
+      this.loadWidgetResources(widgetInfo, widgetNamespace, [SharedModule, WidgetComponentsModule, this.homeComponentsModule]).subscribe(
         () => {
           if (widgetControllerDescriptor.settingsSchema) {
             widgetInfo.typeSettingsSchema = widgetControllerDescriptor.settingsSchema;

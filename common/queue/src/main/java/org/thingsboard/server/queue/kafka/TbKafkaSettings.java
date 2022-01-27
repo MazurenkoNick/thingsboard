@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2021 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2022 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -45,6 +45,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
+import org.thingsboard.server.common.data.TbProperty;
 
 import java.util.Collections;
 import java.util.List;
@@ -119,10 +120,10 @@ public class TbKafkaSettings {
     private String securityProtocol;
 
     @Setter
-    private List<TbKafkaProperty> other;
+    private List<TbProperty> other;
 
     @Setter
-    private Map<String, List<TbKafkaProperty>> consumerPropertiesPerTopic = Collections.emptyMap();
+    private Map<String, List<TbProperty>> consumerPropertiesPerTopic = Collections.emptyMap();
 
     public Properties toAdminProps() {
         Properties props = toProps();

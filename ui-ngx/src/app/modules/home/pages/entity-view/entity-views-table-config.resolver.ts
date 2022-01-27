@@ -1,7 +1,7 @@
 ///
 /// ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
 ///
-/// Copyright © 2016-2021 ThingsBoard, Inc. All Rights Reserved.
+/// Copyright © 2016-2022 ThingsBoard, Inc. All Rights Reserved.
 ///
 /// NOTICE: All information contained herein is, and remains
 /// the property of ThingsBoard, Inc. and its suppliers,
@@ -109,7 +109,7 @@ export class EntityViewsTableConfigResolver implements Resolve<EntityTableConfig
           this.broadcast.broadcast('entityViewSaved');
         }));
     };
-    this.config.onEntityAction = action => this.onEntityViewAction(action);
+    this.config.onEntityAction = action => this.onEntityViewAction(action, this.config);
     this.config.detailsReadonly = () => (this.config.componentsData.entityViewScope === 'customer_user' ||
       this.config.componentsData.entityViewScope === 'edge_customer_user');
 
@@ -329,9 +329,17 @@ export class EntityViewsTableConfigResolver implements Resolve<EntityTableConfig
     }).afterClosed()
       .subscribe((res) => {
         if (res) {
-          this.config.table.updateData();
+          this.config.updateData();
         }
       });
+  }
+
+  private openEntityView($event: Event, entityView: EntityView, config: EntityTableConfig<EntityViewInfo>) {
+    if ($event) {
+      $event.stopPropagation();
+    }
+    const url = this.router.createUrlTree([entityView.id.id], {relativeTo: config.getActivatedRoute()});
+    this.router.navigateByUrl(url);
   }
 
   makePublic($event: Event, entityView: EntityView) {
@@ -348,7 +356,7 @@ export class EntityViewsTableConfigResolver implements Resolve<EntityTableConfig
         if (res) {
           this.entityViewService.makeEntityViewPublic(entityView.id.id).subscribe(
             () => {
-              this.config.table.updateData();
+              this.config.updateData();
             }
           );
         }
@@ -371,7 +379,7 @@ export class EntityViewsTableConfigResolver implements Resolve<EntityTableConfig
     }).afterClosed()
       .subscribe((res) => {
         if (res) {
-          this.config.table.updateData();
+          this.config.updateData();
         }
       });
   }
@@ -400,7 +408,7 @@ export class EntityViewsTableConfigResolver implements Resolve<EntityTableConfig
         if (res) {
           this.entityViewService.unassignEntityViewFromCustomer(entityView.id.id).subscribe(
             () => {
-              this.config.table.updateData();
+              this.config.updateData(this.config.componentsData.entityViewScope !== 'tenant');
             }
           );
         }
@@ -428,7 +436,7 @@ export class EntityViewsTableConfigResolver implements Resolve<EntityTableConfig
           );
           forkJoin(tasks).subscribe(
             () => {
-              this.config.table.updateData();
+              this.config.updateData();
             }
           );
         }
@@ -436,9 +444,12 @@ export class EntityViewsTableConfigResolver implements Resolve<EntityTableConfig
     );
   }*/
 
-  onEntityViewAction(action: EntityAction<EntityView>): boolean {
+  onEntityViewAction(action: EntityAction<EntityView>, config: EntityTableConfig<EntityView>): boolean {
     switch (action.action) {
-     /* case 'makePublic':
+      /*case 'open':
+        this.openEntityView(action.event, action.entity, config);
+        return true;
+      case 'makePublic':
         this.makePublic(action.event, action.entity);
         return true;
       case 'assignToCustomer':

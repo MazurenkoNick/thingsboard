@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2021 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2022 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -32,9 +32,11 @@ package org.thingsboard.server.common.data.device.profile;
 
 import lombok.Data;
 import org.thingsboard.server.common.data.DeviceTransportType;
-import org.thingsboard.server.common.data.device.data.lwm2m.BootstrapConfiguration;
-import org.thingsboard.server.common.data.device.data.lwm2m.OtherConfiguration;
-import org.thingsboard.server.common.data.device.data.lwm2m.TelemetryMappingConfiguration;
+import org.thingsboard.server.common.data.device.profile.lwm2m.bootstrap.LwM2MBootstrapServerCredential;
+import org.thingsboard.server.common.data.device.profile.lwm2m.OtherConfiguration;
+import org.thingsboard.server.common.data.device.profile.lwm2m.TelemetryMappingConfiguration;
+
+import java.util.List;
 
 @Data
 public class Lwm2mDeviceProfileTransportConfiguration implements DeviceProfileTransportConfiguration {
@@ -42,7 +44,8 @@ public class Lwm2mDeviceProfileTransportConfiguration implements DeviceProfileTr
     private static final long serialVersionUID = 6257277825459600068L;
 
     private TelemetryMappingConfiguration observeAttr;
-    private BootstrapConfiguration bootstrap;
+    private boolean bootstrapServerUpdateEnable;
+    private List<LwM2MBootstrapServerCredential> bootstrap;
     private OtherConfiguration clientLwM2mSettings;
 
     @Override

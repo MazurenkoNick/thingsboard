@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2021 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2022 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -71,10 +71,12 @@ public enum SoftwareUpdateResult {
     INSTALL_FAILURE(58, "Software installation failure", true),
     UN_INSTALL_FAILURE(59, "Uninstallation Failure during forUpdate(arg=0)", true);
 
-    public int code;
-    public String type;
     @Getter
-    public boolean isAgain;
+    private int code;
+    @Getter
+    private String type;
+    @Getter
+    private boolean isAgain;
 
     SoftwareUpdateResult(int code, String type, boolean isAgain) {
         this.code = code;

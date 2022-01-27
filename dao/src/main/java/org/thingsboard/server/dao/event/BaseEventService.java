@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2021 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2022 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -40,6 +40,7 @@ import org.springframework.stereotype.Service;
 import org.thingsboard.server.common.data.Event;
 import org.thingsboard.server.common.data.event.EventFilter;
 import org.thingsboard.server.common.data.id.EntityId;
+import org.thingsboard.server.common.data.id.IdBased;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.TimePageLink;
@@ -48,6 +49,7 @@ import org.thingsboard.server.dao.service.DataValidator;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -133,17 +135,24 @@ public class BaseEventService implements EventService {
 
     @Override
     public void removeEvents(TenantId tenantId, EntityId entityId) {
-        PageData<Event> eventPageData;
-        TimePageLink eventPageLink = new TimePageLink(1000);
+        removeEvents(tenantId, entityId, null, null, null);
+    }
+
+    @Override
+    public void removeEvents(TenantId tenantId, EntityId entityId, EventFilter eventFilter, Long startTime, Long endTime) {
+        TimePageLink eventsPageLink = new TimePageLink(1000, 0, null, null, startTime, endTime);
+        PageData<Event> eventsPageData;
         do {
-            eventPageData = findEvents(tenantId, entityId, eventPageLink);
-            for (Event event : eventPageData.getData()) {
-                eventDao.removeById(tenantId, event.getUuidId());
+            if (eventFilter == null) {
+                eventsPageData = findEvents(tenantId, entityId, eventsPageLink);
+            } else {
+                eventsPageData = findEventsByFilter(tenantId, entityId, eventFilter, eventsPageLink);
             }
-            if (eventPageData.hasNext()) {
-                eventPageLink = eventPageLink.nextPageLink();
-            }
-        } while (eventPageData.hasNext());
+
+            eventDao.removeAllByIds(eventsPageData.getData().stream()
+                    .map(IdBased::getUuidId)
+                    .collect(Collectors.toList()));
+        } while (eventsPageData.hasNext());
     }
 
     @Override

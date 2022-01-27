@@ -1,7 +1,7 @@
 ///
 /// ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
 ///
-/// Copyright © 2016-2021 ThingsBoard, Inc. All Rights Reserved.
+/// Copyright © 2016-2022 ThingsBoard, Inc. All Rights Reserved.
 ///
 /// NOTICE: All information contained herein is, and remains
 /// the property of ThingsBoard, Inc. and its suppliers,
@@ -78,7 +78,8 @@ export class SecuritySettingsComponent extends PageComponent implements OnInit, 
           minimumDigits: [null, Validators.min(0)],
           minimumSpecialCharacters: [null, Validators.min(0)],
           passwordExpirationPeriodDays: [null, Validators.min(0)],
-          passwordReuseFrequencyDays: [null, Validators.min(0)]
+          passwordReuseFrequencyDays: [null, Validators.min(0)],
+          allowWhitespaces: [true]
         }
       )
     });

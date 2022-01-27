@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2021 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2022 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -79,6 +79,7 @@ import org.thingsboard.server.common.data.rule.RuleNode;
 import org.thingsboard.server.common.data.rule.RuleNodeState;
 import org.thingsboard.server.common.msg.TbMsg;
 import org.thingsboard.server.common.msg.TbMsgMetaData;
+import org.thingsboard.server.common.msg.TbMsgProcessingStackItem;
 import org.thingsboard.server.common.msg.queue.ServiceQueue;
 import org.thingsboard.server.common.msg.queue.ServiceType;
 import org.thingsboard.server.common.msg.queue.TopicPartitionInfo;
@@ -166,6 +167,25 @@ class DefaultTbContext implements TbContext, TbPeContext {
     }
 
     @Override
+    public void input(TbMsg msg, RuleChainId ruleChainId) {
+        msg.pushToStack(nodeCtx.getSelf().getRuleChainId(), nodeCtx.getSelf().getId());
+        nodeCtx.getChainActor().tell(new RuleChainInputMsg(ruleChainId, msg));
+    }
+
+    @Override
+    public void output(TbMsg msg, String relationType) {
+        TbMsgProcessingStackItem item = msg.popFormStack();
+        if (item == null) {
+            ack(msg);
+        } else {
+            if (nodeCtx.getSelf().isDebugMode()) {
+                mainCtx.persistDebugOutput(nodeCtx.getTenantId(), nodeCtx.getSelf().getId(), msg, relationType);
+            }
+            nodeCtx.getChainActor().tell(new RuleChainOutputMsg(item.getRuleChainId(), item.getRuleNodeId(), relationType, msg));
+        }
+    }
+
+    @Override
     public void enqueue(TbMsg tbMsg, Runnable onSuccess, Consumer<Throwable> onFailure) {
         TopicPartitionInfo tpi = mainCtx.resolve(ServiceType.TB_RULE_ENGINE, getTenantId(), tbMsg.getOriginator());
         enqueue(tpi, tbMsg, onFailure, onSuccess);
@@ -178,6 +198,11 @@ class DefaultTbContext implements TbContext, TbPeContext {
     }
 
     private void enqueue(TopicPartitionInfo tpi, TbMsg tbMsg, Consumer<Throwable> onFailure, Runnable onSuccess) {
+        if (!tbMsg.isValid()) {
+            log.trace("[{}] Skip invalid message: {}", getTenantId(), tbMsg);
+            onFailure.accept(new IllegalArgumentException("Source message is no longer valid!"));
+            return;
+        }
         TransportProtos.ToRuleEngineMsg msg = TransportProtos.ToRuleEngineMsg.newBuilder()
                 .setTenantIdMSB(getTenantId().getId().getMostSignificantBits())
                 .setTenantIdLSB(getTenantId().getId().getLeastSignificantBits())
@@ -246,6 +271,11 @@ class DefaultTbContext implements TbContext, TbPeContext {
     }
 
     private void enqueueForTellNext(TopicPartitionInfo tpi, String queueName, TbMsg source, Set<String> relationTypes, String failureMessage, Runnable onSuccess, Consumer<Throwable> onFailure) {
+        if (!source.isValid()) {
+            log.trace("[{}] Skip invalid message: {}", getTenantId(), source);
+            onFailure.accept(new IllegalArgumentException("Source message is no longer valid!"));
+            return;
+        }
         RuleChainId ruleChainId = nodeCtx.getSelf().getRuleChainId();
         RuleNodeId ruleNodeId = nodeCtx.getSelf().getId();
         TbMsg tbMsg = TbMsg.newMsg(source, queueName, ruleChainId, ruleNodeId);
@@ -673,8 +703,15 @@ class DefaultTbContext implements TbContext, TbPeContext {
     public void pushToIntegration(IntegrationId integrationId, TbMsg msg, FutureCallback<Void> callback) {
         boolean restApiCall = msg.getType().equals(DataConstants.RPC_CALL_FROM_SERVER_TO_DEVICE);
         UUID requestUUID;
+        String serviceId;
         if (restApiCall) {
             String tmp = msg.getMetaData().getValue("requestUUID");
+            serviceId = msg.getMetaData().getValue("originServiceId");
+
+            if (serviceId == null) {
+                throw new RuntimeException("Origin Service Id is not present in the message metadata!");
+            }
+
             requestUUID = !StringUtils.isEmpty(tmp) ? UUID.fromString(tmp) : UUID.randomUUID();
             tmp = msg.getMetaData().getValue("oneway");
             boolean oneway = !StringUtils.isEmpty(tmp) && Boolean.parseBoolean(tmp);
@@ -683,6 +720,7 @@ class DefaultTbContext implements TbContext, TbPeContext {
             }
         } else {
             requestUUID = null;
+            serviceId = null;
         }
 
         TransportProtos.IntegrationDownlinkMsgProto downlinkMsgProto = TransportProtos.IntegrationDownlinkMsgProto.newBuilder()
@@ -695,13 +733,13 @@ class DefaultTbContext implements TbContext, TbPeContext {
                 new SimpleTbQueueCallback(() -> {
                     if (restApiCall) {
                         FromDeviceRpcResponse response = new FromDeviceRpcResponse(requestUUID, null, null);
-                        mainCtx.getTbRuleEngineDeviceRpcService().processRpcResponseFromDevice(response);
+                        mainCtx.getClusterService().pushNotificationToCore(serviceId, response, null);
                     }
                     callback.onSuccess(null);
                 }, error -> {
                     if (restApiCall) {
                         FromDeviceRpcResponse response = new FromDeviceRpcResponse(requestUUID, null, RpcError.INTERNAL);
-                        mainCtx.getTbRuleEngineDeviceRpcService().processRpcResponseFromDevice(response);
+                        mainCtx.getClusterService().pushNotificationToCore(serviceId, response, null);
                     }
                     callback.onFailure(error);
                 }));

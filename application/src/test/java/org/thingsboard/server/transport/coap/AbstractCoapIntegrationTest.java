@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2021 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2022 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -66,6 +66,8 @@ import static org.junit.Assert.assertNotNull;
 
 @Slf4j
 public abstract class AbstractCoapIntegrationTest extends AbstractTransportIntegrationTest {
+
+    protected final byte[] EMPTY_PAYLOAD = new byte[0];
 
     protected CoapClient client;
 

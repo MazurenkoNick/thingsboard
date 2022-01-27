@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2021 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2022 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -33,6 +33,7 @@ package org.thingsboard.server.transport.lwm2m.client;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.leshan.client.resource.BaseInstanceEnabler;
 import org.eclipse.leshan.client.servers.ServerIdentity;
+import org.eclipse.leshan.core.Destroyable;
 import org.eclipse.leshan.core.model.ObjectModel;
 import org.eclipse.leshan.core.model.ResourceModel;
 import org.eclipse.leshan.core.node.LwM2mResource;
@@ -40,7 +41,6 @@ import org.eclipse.leshan.core.response.ExecuteResponse;
 import org.eclipse.leshan.core.response.ReadResponse;
 import org.eclipse.leshan.core.response.WriteResponse;
 
-import javax.security.auth.Destroyable;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -55,9 +55,7 @@ public class SimpleLwM2MDevice extends BaseInstanceEnabler implements Destroyabl
 
 
     private static final Random RANDOM = new Random();
-    private static final List<Integer> supportedResources = Arrays.asList(0, 1, 2, 3
-//            , 9, 10, 11, 13, 14, 15, 16, 17, 18, 19, 20, 21
-    );
+    private static final List<Integer> supportedResources = Arrays.asList(0, 1, 2, 3, 9, 10, 11, 13, 14, 15, 16, 17, 18, 19, 20, 21);
 
     @Override
     public ReadResponse read(ServerIdentity identity, int resourceId) {
@@ -120,11 +118,11 @@ public class SimpleLwM2MDevice extends BaseInstanceEnabler implements Destroyabl
                 return WriteResponse.notFound();
             case 14:
                 setUtcOffset((String) value.getValue());
-                fireResourcesChange(resourceId);
+                fireResourceChange(resourceId);
                 return WriteResponse.success();
             case 15:
                 setTimezone((String) value.getValue());
-                fireResourcesChange(resourceId);
+                fireResourceChange(resourceId);
                 return WriteResponse.success();
             default:
                 return super.write(identity, replace, resourceId, value);
@@ -132,7 +130,7 @@ public class SimpleLwM2MDevice extends BaseInstanceEnabler implements Destroyabl
     }
 
     private String getManufacturer() {
-        return "Leshan Demo Device";
+        return "Thingsboard Demo Lwm2mDevice";
     }
 
     private String getModelNumber() {
@@ -140,11 +138,11 @@ public class SimpleLwM2MDevice extends BaseInstanceEnabler implements Destroyabl
     }
 
     private String getSerialNumber() {
-        return "LT-500-000-0001";
+        return "Thingsboard-500-000-0001";
     }
 
     private String getFirmwareVersion() {
-        return "1.0.0";
+        return "1.0.2";
     }
 
     private long getErrorCode() {

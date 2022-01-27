@@ -1,7 +1,7 @@
 ///
 /// ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
 ///
-/// Copyright © 2016-2021 ThingsBoard, Inc. All Rights Reserved.
+/// Copyright © 2016-2022 ThingsBoard, Inc. All Rights Reserved.
 ///
 /// NOTICE: All information contained herein is, and remains
 /// the property of ThingsBoard, Inc. and its suppliers,
@@ -30,12 +30,21 @@
 ///
 
 import { Injectable, NgModule } from '@angular/core';
-import { ActivatedRouteSnapshot, Resolve, Route, RouterModule, Routes } from '@angular/router';
+import {
+  ActivatedRouteSnapshot,
+  CanActivate,
+  Resolve,
+  Route,
+  Router,
+  RouterModule,
+  RouterStateSnapshot,
+  Routes
+} from '@angular/router';
 
 import { EntitiesTableComponent } from '@home/components/entity/entities-table.component';
 import { Authority } from '@shared/models/authority.enum';
 import { EntityType } from '@shared/models/entity-type.models';
-import { Observable } from 'rxjs';
+import { Observable, of } from 'rxjs';
 import { EntityGroupStateInfo } from '@home/models/group/group-entities-table-config.models';
 import { GroupEntitiesTableComponent } from '@home/components/group/group-entities-table.component';
 import { BreadCrumbConfig, BreadCrumbLabelFunction } from '@shared/components/breadcrumb';
@@ -45,24 +54,38 @@ import { Operation, Resource } from '@shared/models/security.models';
 import { Dashboard } from '@shared/models/dashboard.models';
 import { DashboardService } from '@core/http/dashboard.service';
 import { DashboardUtilsService } from '@core/services/dashboard-utils.service';
-import { map } from 'rxjs/operators';
+import { map, switchMap } from 'rxjs/operators';
 import { dashboardBreadcumbLabelFunction } from '@home/pages/dashboard/dashboard-routing.module';
 import { CustomersHierarchyComponent } from '@home/pages/group/customers-hierarchy.component';
 import { EntityGroupsTableConfigResolver } from '@home/components/group/entity-groups-table-config.resolver';
 import { EntityGroupConfigResolver } from '@home/components/group/entity-group-config.resolver';
 import { UserPermissionsService } from '@core/http/user-permissions.service';
-import { SchedulerEventsComponent } from "@home/components/scheduler/scheduler-events.component";
+import { SchedulerEventsComponent } from '@home/components/scheduler/scheduler-events.component';
 import { RuleChainsTableConfigResolver } from '@home/pages/rulechain/rulechains-table-config.resolver';
 import { RuleChainPageComponent } from '@home/pages/rulechain/rulechain-page.component';
 import { ConfirmOnExitGuard } from '@core/guards/confirm-on-exit.guard';
 import {
-  ResolvedRuleChainMetaDataResolver,
   ruleChainBreadcumbLabelFunction,
+  RuleChainMetaDataResolver,
   RuleChainResolver,
   RuleNodeComponentsResolver,
   TooltipsterResolver
 } from '@home/pages/rulechain/rulechain-routing.module';
 import { RuleChainType } from '@shared/models/rule-chain.models';
+import { EntityDetailsPageComponent } from '@home/components/entity/entity-details-page.component';
+import { UsersTableConfigResolver } from '@home/pages/user/users-table-config.resolver';
+import { isDefined } from '@core/utils';
+import { entityDetailsPageBreadcrumbLabelFunction } from '@home/pages/home-pages.models';
+import { EntityGroupService } from '@core/http/entity-group.service';
+import { EntityGroupId } from '@shared/models/id/entity-group-id';
+import { AuthUser } from '@shared/models/user.model';
+import { getCurrentAuthState, getCurrentAuthUser } from '@core/auth/auth.selectors';
+import { Store } from '@ngrx/store';
+import { AppState } from '@core/core.state';
+
+import _ from 'lodash';
+import { EntityService } from '@core/http/entity.service';
+import { entityIdEquals } from '@shared/models/id/entity-id';
 
 @Injectable()
 export class EntityGroupResolver<T> implements Resolve<EntityGroupStateInfo<T>> {
@@ -91,10 +114,123 @@ export class DashboardResolver implements Resolve<Dashboard> {
   }
 }
 
+@Injectable()
+export class RedirectToEntityGroup implements CanActivate {
+  constructor(private router: Router,
+              private entityGroupService: EntityGroupService,
+              private store: Store<AppState>,
+              private entityService: EntityService) {
+  }
+
+  canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot) {
+    const groupType: EntityType = route.data.groupType;
+    const entityId: string = route.params.entityId;
+    if (isDefined(groupType) && isDefined(entityId)) {
+      const authState = getCurrentAuthState(this.store);
+      if (groupType === EntityType.USER && authState.authUser.authority === Authority.SYS_ADMIN) {
+        return true;
+      }
+      const userOwnerId = authState.userDetails.ownerId;
+      return this.entityService.getEntity(groupType, entityId).pipe(
+        switchMap((entity) => {
+          const ownerId = entity.ownerId;
+          return this.entityGroupService.getEntityGroupAllByOwnerId(ownerId.entityType as EntityType, ownerId.id, groupType).pipe(
+            switchMap((groupAll) => {
+              const entityGroupUrl = _.camelCase(groupType) + 'Groups';
+              if (entityIdEquals(ownerId, userOwnerId)) {
+                return of(`${entityGroupUrl}/${groupAll.id.id}/${entityId}`);
+              } else {
+               return this.entityService.getEntity(ownerId.entityType as EntityType, ownerId.id).pipe(
+                  switchMap((ownerEntity) => {
+                    return this.entityGroupService.getEntityGroupAllByOwnerId(ownerEntity.ownerId.entityType as EntityType,
+                      ownerEntity.ownerId.id, EntityType.CUSTOMER).pipe(
+                      map((customersGroupAll) => {
+                        return `customerGroups/${customersGroupAll.id.id}/${ownerId.id}/${entityGroupUrl}/${groupAll.id.id}/${entityId}`;
+                      })
+                    );
+                  })
+                );
+              }
+            })
+          );
+        }),
+        map((url) => {
+          return this.router.parseUrl(url);
+        })
+      );
+    }
+    this.router.navigate(['/']);
+    return false;
+  }
+
+}
+
 const groupEntitiesLabelFunction: BreadCrumbLabelFunction<GroupEntitiesTableComponent> =
   (route, translate, component, data) => {
     return component.entityGroup.name;
   };
+
+const ENTITY_RUTE_ROUTE: Routes = [
+  {
+    path: 'devices/:entityId',
+    pathMatch: 'full',
+    canActivate: [RedirectToEntityGroup],
+    data: {
+      groupType: EntityType.DEVICE
+    }
+  },
+  {
+    path: 'assets/:entityId',
+    pathMatch: 'full',
+    canActivate: [RedirectToEntityGroup],
+    data: {
+      groupType: EntityType.ASSET
+    }
+  },
+  {
+    path: 'entityViews/:entityId',
+    pathMatch: 'full',
+    canActivate: [RedirectToEntityGroup],
+    data: {
+      groupType: EntityType.ENTITY_VIEW
+    }
+  },
+  {
+    path: 'customers/:entityId',
+    pathMatch: 'full',
+    canActivate: [RedirectToEntityGroup],
+    data: {
+      groupType: EntityType.CUSTOMER
+    }
+  },
+  {
+    path: 'edgeInstances/:entityId',
+    pathMatch: 'full',
+    canActivate: [RedirectToEntityGroup],
+    data: {
+      groupType: EntityType.EDGE
+    }
+  },
+  {
+    path: 'users/:entityId',
+    pathMatch: 'full',
+    component: EntityDetailsPageComponent,
+    canActivate: [RedirectToEntityGroup],
+    canDeactivate: [ConfirmOnExitGuard],
+    data: {
+      breadcrumb: {
+        labelFunction: entityDetailsPageBreadcrumbLabelFunction,
+        icon: 'account_circle'
+      } as BreadCrumbConfig<EntityDetailsPageComponent>,
+      auth: [Authority.SYS_ADMIN, Authority.TENANT_ADMIN],
+      title: 'user.user',
+      groupType: EntityType.USER
+    },
+    resolve: {
+      entitiesTableConfig: UsersTableConfigResolver
+    }
+  }
+];
 
 const ASSET_GROUPS_ROUTE: Route =
   {
@@ -122,19 +258,43 @@ const ASSET_GROUPS_ROUTE: Route =
       },
       {
         path: ':entityGroupId',
-        component: GroupEntitiesTableComponent,
         data: {
-          auth: [Authority.TENANT_ADMIN, Authority.CUSTOMER_USER],
-          title: 'entity-group.asset-group',
-          groupType: EntityType.ASSET,
           breadcrumb: {
             icon: 'domain',
             labelFunction: groupEntitiesLabelFunction
           } as BreadCrumbConfig<GroupEntitiesTableComponent>
         },
-        resolve: {
-          entityGroup: EntityGroupResolver
-        }
+        children: [
+          {
+            path: '',
+            component: GroupEntitiesTableComponent,
+            data: {
+              auth: [Authority.TENANT_ADMIN, Authority.CUSTOMER_USER],
+              title: 'entity-group.asset-group',
+              groupType: EntityType.ASSET
+            },
+            resolve: {
+              entityGroup: EntityGroupResolver
+            }
+          },
+          {
+            path: ':entityId',
+            component: EntityDetailsPageComponent,
+            canDeactivate: [ConfirmOnExitGuard],
+            data: {
+              breadcrumb: {
+                labelFunction: entityDetailsPageBreadcrumbLabelFunction,
+                icon: 'domain'
+              } as BreadCrumbConfig<EntityDetailsPageComponent>,
+              auth: [Authority.TENANT_ADMIN, Authority.CUSTOMER_USER],
+              title: 'entity-group.asset-group',
+              groupType: EntityType.ASSET
+            },
+            resolve: {
+              entityGroup: EntityGroupResolver
+            }
+          }
+        ]
       }
     ]
   };
@@ -164,19 +324,43 @@ const DEVICE_GROUPS_ROUTE: Route = {
     },
     {
       path: ':entityGroupId',
-      component: GroupEntitiesTableComponent,
       data: {
-        auth: [Authority.TENANT_ADMIN, Authority.CUSTOMER_USER],
-        title: 'entity-group.device-group',
-        groupType: EntityType.DEVICE,
         breadcrumb: {
           icon: 'devices_other',
           labelFunction: groupEntitiesLabelFunction
         } as BreadCrumbConfig<GroupEntitiesTableComponent>
       },
-      resolve: {
-        entityGroup: EntityGroupResolver
-      }
+      children: [
+        {
+          path: '',
+          component: GroupEntitiesTableComponent,
+          data: {
+            auth: [Authority.TENANT_ADMIN, Authority.CUSTOMER_USER],
+            title: 'entity-group.device-group',
+            groupType: EntityType.DEVICE
+          },
+          resolve: {
+            entityGroup: EntityGroupResolver
+          }
+        },
+        {
+          path: ':entityId',
+          component: EntityDetailsPageComponent,
+          canDeactivate: [ConfirmOnExitGuard],
+          data: {
+            breadcrumb: {
+              labelFunction: entityDetailsPageBreadcrumbLabelFunction,
+              icon: 'devices_other'
+            } as BreadCrumbConfig<EntityDetailsPageComponent>,
+            auth: [Authority.TENANT_ADMIN, Authority.CUSTOMER_USER],
+            title: 'entity-group.device-group',
+            groupType: EntityType.DEVICE
+          },
+          resolve: {
+            entityGroup: EntityGroupResolver
+          }
+        }
+      ]
     }
   ]
 };
@@ -206,19 +390,43 @@ const ENTITY_VIEW_GROUPS_ROUTE: Route = {
     },
     {
       path: ':entityGroupId',
-      component: GroupEntitiesTableComponent,
       data: {
-        auth: [Authority.TENANT_ADMIN, Authority.CUSTOMER_USER],
-        title: 'entity-group.entity-view-group',
-        groupType: EntityType.ENTITY_VIEW,
         breadcrumb: {
           icon: 'view_quilt',
           labelFunction: groupEntitiesLabelFunction
         } as BreadCrumbConfig<GroupEntitiesTableComponent>
       },
-      resolve: {
-        entityGroup: EntityGroupResolver
-      }
+      children: [
+        {
+          path: '',
+          component: GroupEntitiesTableComponent,
+          data: {
+            auth: [Authority.TENANT_ADMIN, Authority.CUSTOMER_USER],
+            title: 'entity-group.entity-view-group',
+            groupType: EntityType.ENTITY_VIEW
+          },
+          resolve: {
+            entityGroup: EntityGroupResolver
+          }
+        },
+        {
+          path: ':entityId',
+          component: EntityDetailsPageComponent,
+          canDeactivate: [ConfirmOnExitGuard],
+          data: {
+            breadcrumb: {
+              labelFunction: entityDetailsPageBreadcrumbLabelFunction,
+              icon: 'view_quilt'
+            } as BreadCrumbConfig<EntityDetailsPageComponent>,
+            auth: [Authority.TENANT_ADMIN, Authority.CUSTOMER_USER],
+            title: 'entity-group.entity-view-group',
+            groupType: EntityType.ENTITY_VIEW
+          },
+          resolve: {
+            entityGroup: EntityGroupResolver
+          }
+        }
+      ]
     }
   ]
 };
@@ -248,19 +456,43 @@ const USER_GROUPS_ROUTE: Route = {
     },
     {
       path: ':entityGroupId',
-      component: GroupEntitiesTableComponent,
       data: {
-        auth: [Authority.TENANT_ADMIN, Authority.CUSTOMER_USER],
-        title: 'entity-group.user-group',
-        groupType: EntityType.USER,
         breadcrumb: {
           icon: 'account_circle',
           labelFunction: groupEntitiesLabelFunction
         } as BreadCrumbConfig<GroupEntitiesTableComponent>
       },
-      resolve: {
-        entityGroup: EntityGroupResolver
-      }
+      children: [
+        {
+          path: '',
+          component: GroupEntitiesTableComponent,
+          data: {
+            auth: [Authority.TENANT_ADMIN, Authority.CUSTOMER_USER],
+            title: 'entity-group.user-group',
+            groupType: EntityType.USER
+          },
+          resolve: {
+            entityGroup: EntityGroupResolver
+          }
+        },
+        {
+          path: ':entityId',
+          component: EntityDetailsPageComponent,
+          canDeactivate: [ConfirmOnExitGuard],
+          data: {
+            breadcrumb: {
+              labelFunction: entityDetailsPageBreadcrumbLabelFunction,
+              icon: 'account_circle'
+            } as BreadCrumbConfig<EntityDetailsPageComponent>,
+            auth: [Authority.TENANT_ADMIN, Authority.CUSTOMER_USER],
+            title: 'entity-group.user-group',
+            groupType: EntityType.USER
+          },
+          resolve: {
+            entityGroup: EntityGroupResolver
+          }
+        }
+      ]
     }
   ]
 };
@@ -393,7 +625,7 @@ const RULE_CHAINS_ROUTE: Route = {
       resolve: {
         entityGroup: EntityGroupResolver,
         ruleChain: RuleChainResolver,
-        ruleChainMetaData: ResolvedRuleChainMetaDataResolver,
+        ruleChainMetaData: RuleChainMetaDataResolver,
         ruleNodeComponents: RuleNodeComponentsResolver,
         tooltipster: TooltipsterResolver
       }
@@ -444,7 +676,24 @@ const routes: Routes = [
             data: {
               auth: [Authority.TENANT_ADMIN, Authority.CUSTOMER_USER],
               title: 'entity-group.customer-group',
-              groupType: EntityType.CUSTOMER,
+              groupType: EntityType.CUSTOMER
+            },
+            resolve: {
+              entityGroup: EntityGroupResolver
+            }
+          },
+          {
+            path: ':entityId',
+            component: EntityDetailsPageComponent,
+            canDeactivate: [ConfirmOnExitGuard],
+            data: {
+              breadcrumb: {
+                labelFunction: entityDetailsPageBreadcrumbLabelFunction,
+                icon: 'supervisor_account'
+              } as BreadCrumbConfig<EntityDetailsPageComponent>,
+              auth: [Authority.TENANT_ADMIN, Authority.CUSTOMER_USER],
+              title: 'entity-group.customer-group',
+              groupType: EntityType.CUSTOMER
             },
             resolve: {
               entityGroup: EntityGroupResolver
@@ -477,19 +726,43 @@ const routes: Routes = [
               },
               {
                 path: ':entityGroupId',
-                component: GroupEntitiesTableComponent,
                 data: {
-                  auth: [Authority.TENANT_ADMIN, Authority.CUSTOMER_USER],
-                  title: 'entity-group.customer-group',
-                  groupType: EntityType.CUSTOMER,
                   breadcrumb: {
                     icon: 'supervisor_account',
                     labelFunction: groupEntitiesLabelFunction
                   } as BreadCrumbConfig<GroupEntitiesTableComponent>
                 },
-                resolve: {
-                  entityGroup: EntityGroupResolver
-                }
+                children: [
+                  {
+                    path: '',
+                    component: GroupEntitiesTableComponent,
+                    data: {
+                      auth: [Authority.TENANT_ADMIN, Authority.CUSTOMER_USER],
+                      title: 'entity-group.customer-group',
+                      groupType: EntityType.CUSTOMER
+                    },
+                    resolve: {
+                      entityGroup: EntityGroupResolver
+                    }
+                  },
+                  {
+                    path: ':entityId',
+                    component: EntityDetailsPageComponent,
+                    canDeactivate: [ConfirmOnExitGuard],
+                    data: {
+                      breadcrumb: {
+                        labelFunction: entityDetailsPageBreadcrumbLabelFunction,
+                        icon: 'supervisor_account'
+                      } as BreadCrumbConfig<EntityDetailsPageComponent>,
+                      auth: [Authority.TENANT_ADMIN, Authority.CUSTOMER_USER],
+                      title: 'entity-group.customer-group',
+                      groupType: EntityType.CUSTOMER
+                    },
+                    resolve: {
+                      entityGroup: EntityGroupResolver
+                    }
+                  }
+                ]
               }
             ]
           },
@@ -599,6 +872,23 @@ const routes: Routes = [
                     },
                     resolve: {
                       entityGroup: EntityGroupResolver,
+                    }
+                  },
+                  {
+                    path: ':entityId',
+                    component: EntityDetailsPageComponent,
+                    canDeactivate: [ConfirmOnExitGuard],
+                    data: {
+                      breadcrumb: {
+                        labelFunction: entityDetailsPageBreadcrumbLabelFunction,
+                        icon: 'router'
+                      } as BreadCrumbConfig<EntityDetailsPageComponent>,
+                      auth: [Authority.TENANT_ADMIN, Authority.CUSTOMER_USER],
+                      title: 'entity-group.edge-group',
+                      groupType: EntityType.EDGE
+                    },
+                    resolve: {
+                      entityGroup: EntityGroupResolver
                     }
                   },
                   {...USER_GROUPS_ROUTE, ...{
@@ -753,6 +1043,23 @@ const routes: Routes = [
             }
           },
           {
+            path: ':entityId',
+            component: EntityDetailsPageComponent,
+            canDeactivate: [ConfirmOnExitGuard],
+            data: {
+              breadcrumb: {
+                labelFunction: entityDetailsPageBreadcrumbLabelFunction,
+                icon: 'router'
+              } as BreadCrumbConfig<EntityDetailsPageComponent>,
+              auth: [Authority.TENANT_ADMIN, Authority.CUSTOMER_USER],
+              title: 'entity-group.edge-group',
+              groupType: EntityType.EDGE
+            },
+            resolve: {
+              entityGroup: EntityGroupResolver
+            }
+          },
+          {
             path: ':edgeId/edgeGroups',
             data: {
               groupType: EntityType.EDGE,
@@ -880,7 +1187,8 @@ const routes: Routes = [
           userPermissionsService.hasResourcesGenericPermission([Resource.WIDGETS_BUNDLE, Resource.WIDGET_TYPE], Operation.READ);
       },
       title: 'dashboard.dashboard',
-      widgetEditMode: false
+      widgetEditMode: false,
+      singlePageMode: true
     },
     resolve: {
       dashboard: DashboardResolver,
@@ -898,7 +1206,8 @@ const routes: Routes = [
       auth: [Authority.TENANT_ADMIN, Authority.CUSTOMER_USER],
       title: 'customers-hierarchy.customers-hierarchy'
     }
-  }
+  },
+  ...ENTITY_RUTE_ROUTE
 ];
 
 @NgModule({
@@ -907,6 +1216,8 @@ const routes: Routes = [
   providers: [
     EntityGroupResolver,
     DashboardResolver,
+    RedirectToEntityGroup,
+    UsersTableConfigResolver,
     {
       provide: 'emptyEntityGroupResolver',
       useValue: (route: ActivatedRouteSnapshot) => null

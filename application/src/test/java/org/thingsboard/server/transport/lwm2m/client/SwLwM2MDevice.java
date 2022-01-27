@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2021 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2022 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -30,7 +30,6 @@
  */
 package org.thingsboard.server.transport.lwm2m.client;
 
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.leshan.client.resource.BaseInstanceEnabler;
 import org.eclipse.leshan.client.servers.ServerIdentity;
@@ -144,16 +143,17 @@ public class SwLwM2MDevice extends BaseInstanceEnabler implements Destroyable {
             try {
                 state.set(1);
                 updateResult.set(1);
-                fireResourcesChange(7, 9);
+                fireResourceChange(7);
+                fireResourceChange(9);
                 Thread.sleep(100);
                 state.set(2);
-                fireResourcesChange(7);
+                fireResourceChange(7);
                 Thread.sleep(100);
                 state.set(3);
-                fireResourcesChange(7);
+                fireResourceChange(7);
                 Thread.sleep(100);
                 updateResult.set(3);
-                fireResourcesChange(9);
+                fireResourceChange(9);
             } catch (Exception e) {
 
             }
@@ -164,7 +164,8 @@ public class SwLwM2MDevice extends BaseInstanceEnabler implements Destroyable {
         scheduler.schedule(() -> {
             state.set(4);
             updateResult.set(2);
-            fireResourcesChange(7, 9);
+            fireResourceChange(7);
+            fireResourceChange(9);
         }, 100, TimeUnit.MILLISECONDS);
     }
 

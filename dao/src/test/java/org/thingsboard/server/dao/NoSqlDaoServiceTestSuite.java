@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2021 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2022 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -40,16 +40,9 @@ import java.util.Arrays;
 
 @RunWith(ClasspathSuite.class)
 @ClassnameFilters({
-        "org.thingsboard.server.dao.service.nosql.*ServiceNoSqlTest"
+        "org.thingsboard.server.dao.service.nosql.*ServiceNoSqlTest",
 })
 public class NoSqlDaoServiceTestSuite {
-
-    @ClassRule
-    public static CustomSqlUnit sqlUnit = new CustomSqlUnit(
-            Arrays.asList("sql/schema-types-hsql.sql", "sql/schema-entities-hsql.sql", "sql/schema-entities-idx.sql", "sql/system-data.sql", "sql/system-test.sql"),
-            "sql/hsql/drop-all-tables.sql",
-            "nosql-test.properties"
-    );
 
     @ClassRule
     public static CustomCassandraCQLUnit cassandraUnit =

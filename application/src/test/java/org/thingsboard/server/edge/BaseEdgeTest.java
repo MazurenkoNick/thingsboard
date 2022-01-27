@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2021 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2022 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -239,6 +239,14 @@ abstract public class BaseEdgeTest extends AbstractControllerTest {
 
         doDelete("/api/tenant/" + savedTenant.getId().getId().toString())
                 .andExpect(status().isOk());
+
+        revertSysAdminWhiteLabelingAndCustomTranslation();
+    }
+
+    private void revertSysAdminWhiteLabelingAndCustomTranslation() throws Exception {
+        doPost("/api/customTranslation/customTranslation", new CustomTranslation(), CustomTranslation.class);
+
+        doPost("/api/whiteLabel/loginWhiteLabelParams", new LoginWhiteLabelingParams(), LoginWhiteLabelingParams.class);
     }
 
     @Test
@@ -872,7 +880,7 @@ abstract public class BaseEdgeTest extends AbstractControllerTest {
         edgeImitator.expectMessageAmount(1);
         doDelete("/api/alarm/" + savedAlarm.getId().getId().toString())
                 .andExpect(status().isOk());
-        Assert.assertTrue(edgeImitator.waitForMessages(1));
+        Assert.assertTrue(edgeImitator.waitForMessages());
         latestMessage = edgeImitator.getLatestMessage();
         Assert.assertTrue(latestMessage instanceof AlarmUpdateMsg);
         alarmUpdateMsg = (AlarmUpdateMsg) latestMessage;
@@ -1195,7 +1203,7 @@ abstract public class BaseEdgeTest extends AbstractControllerTest {
             clusterService.onEdgeEventUpdate(tenantId, edge.getId());
         }
 
-        Assert.assertTrue(edgeImitator.waitForMessages(60));
+        Assert.assertTrue(edgeImitator.waitForMessages(120));
 
         List<EntityDataProto> allTelemetryMsgs = edgeImitator.findAllMessagesByType(EntityDataProto.class);
         Assert.assertEquals(numberOfTimeseriesToSend, allTelemetryMsgs.size());

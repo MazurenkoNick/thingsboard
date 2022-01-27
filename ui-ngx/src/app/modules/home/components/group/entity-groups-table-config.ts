@@ -1,7 +1,7 @@
 ///
 /// ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
 ///
-/// Copyright © 2016-2021 ThingsBoard, Inc. All Rights Reserved.
+/// Copyright © 2016-2022 ThingsBoard, Inc. All Rights Reserved.
 ///
 /// NOTICE: All information contained herein is, and remains
 /// the property of ThingsBoard, Inc. and its suppliers,
@@ -58,10 +58,8 @@ import {
   EntityGroupWizardDialogComponent,
   EntityGroupWizardDialogResult
 } from '@home/components/wizard/entity-group-wizard-dialog.component';
-import {
-  AddEntityGroupsToEdgeDialogComponent,
-  AddEntityGroupsToEdgeDialogData
-} from '@home/dialogs/add-entity-groups-to-edge-dialog.component';
+import { AddEntityGroupsToEdgeDialogComponent } from '@home/dialogs/add-entity-groups-to-edge-dialog.component';
+import { AddEntityGroupsToEdgeDialogData } from '@home/dialogs/add-entity-groups-to-edge-dialog.models';
 
 export class EntityGroupsTableConfig extends EntityTableConfig<EntityGroupInfo> {
 
@@ -83,6 +81,9 @@ export class EntityGroupsTableConfig extends EntityTableConfig<EntityGroupInfo> 
               private params: EntityGroupParams) {
     super();
 
+    if (params.hierarchyView) {
+      this.pageMode = false;
+    }
     this.customerId = params.customerId;
     this.edgeId = params.edgeId;
     if ((this.customerId || this.edgeId) && params.childGroupType) {
@@ -335,10 +336,10 @@ export class EntityGroupsTableConfig extends EntityTableConfig<EntityGroupInfo> 
       (result) => {
           if (result) {
             this.notifyEntityGroupUpdated();
-            this.table.updateData();
+            this.updateData();
           }
         }
-    )
+    );
   }
 
   private share($event: Event, entityGroup: EntityGroupInfo) {
@@ -376,12 +377,12 @@ export class EntityGroupsTableConfig extends EntityTableConfig<EntityGroupInfo> 
       });
   }
 
-  onGroupUpdated() {
+  onGroupUpdated(closeDetails = false) {
     this.notifyEntityGroupUpdated();
     if (this.componentsData.isGroupEntitiesView) {
       this.componentsData.reloadEntityGroup();
     } else {
-      this.table.updateData();
+      this.updateData(closeDetails);
     }
   }
 
@@ -401,7 +402,7 @@ export class EntityGroupsTableConfig extends EntityTableConfig<EntityGroupInfo> 
     if (this.params.hierarchyView) {
       this.params.hierarchyCallbacks.groupSelected(this.params.nodeId, entityGroup.id.id);
     } else {
-      const url = this.router.createUrlTree([entityGroup.id.id], {relativeTo: this.table.route});
+      const url = this.router.createUrlTree([entityGroup.id.id], {relativeTo: this.getActivatedRoute()});
       this.router.navigateByUrl(url);
     }
   }
@@ -413,7 +414,7 @@ export class EntityGroupsTableConfig extends EntityTableConfig<EntityGroupInfo> 
     this.homeDialogs.unassignEntityGroupFromEdge($event, entityGroup, this.edgeId).subscribe(
       (res) => {
         if (res) {
-          this.onGroupUpdated();
+          this.onGroupUpdated(true);
         }
       }
     );

@@ -1,7 +1,7 @@
 ///
 /// ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
 ///
-/// Copyright © 2016-2021 ThingsBoard, Inc. All Rights Reserved.
+/// Copyright © 2016-2022 ThingsBoard, Inc. All Rights Reserved.
 ///
 /// NOTICE: All information contained herein is, and remains
 /// the property of ThingsBoard, Inc. and its suppliers,
@@ -103,7 +103,10 @@ export class AttributeDatasource implements DataSource<AttributeData> {
   fetchAttributes(entityId: EntityId, attributesScope: TelemetryType,
                   pageLink: PageLink): Observable<PageData<AttributeData>> {
     return this.getAllAttributes(entityId, attributesScope).pipe(
-      map((data) => pageLink.filterData(data))
+      map((data) => {
+        const filteredData = data.filter(attrData => attrData.lastUpdateTs !== 0 && attrData.value !== '');
+        return pageLink.filterData(filteredData);
+      })
     );
   }
 

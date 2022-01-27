@@ -1,7 +1,7 @@
 ///
 /// ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
 ///
-/// Copyright © 2016-2021 ThingsBoard, Inc. All Rights Reserved.
+/// Copyright © 2016-2022 ThingsBoard, Inc. All Rights Reserved.
 ///
 /// NOTICE: All information contained herein is, and remains
 /// the property of ThingsBoard, Inc. and its suppliers,
@@ -33,6 +33,7 @@ import { EntityId } from '@shared/models/id/entity-id';
 import { HasUUID } from '@shared/models/id/has-uuid';
 import { TenantId } from '@shared/models/id/tenant-id';
 import { CustomerId } from '@shared/models/id/customer-id';
+import { isDefinedAndNotNull } from '@core/utils';
 
 export declare type HasId = EntityId | HasUUID;
 
@@ -55,4 +56,12 @@ export function sortEntitiesByIds<I extends HasId, T extends BaseData<I>>(entiti
     return index1 - index2;
   });
   return entities;
+}
+
+export function hasIdEquals(id1: HasId, id2: HasId): boolean {
+  if (isDefinedAndNotNull(id1) && isDefinedAndNotNull(id2)) {
+    return id1.id === id2.id;
+  } else {
+    return id1 === id2;
+  }
 }

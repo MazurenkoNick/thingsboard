@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2021 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2022 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -74,6 +74,7 @@ public class SolutionInstallContext {
     private final Map<String, DeviceCredentialsInfo> createdDevices = new LinkedHashMap<>();
     private final Map<String, UserCredentialsInfo> createdUsers = new LinkedHashMap<>();
     private final Map<String, CreatedEntityInfo> createdEntities = new LinkedHashMap<>();
+    private final List<DashboardLinkInfo> dashboardLinks = new ArrayList<>();
 
     public SolutionInstallContext(TenantId tenantId, String solutionId, TenantSolutionTemplateInstructions solutionInstructions) {
         this.tenantId = tenantId;

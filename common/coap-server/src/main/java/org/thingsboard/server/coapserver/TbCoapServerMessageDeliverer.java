@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2021 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2022 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -33,6 +33,7 @@ package org.thingsboard.server.coapserver;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.californium.core.coap.OptionSet;
 import org.eclipse.californium.core.network.Exchange;
+import org.eclipse.californium.core.server.DelivererException;
 import org.eclipse.californium.core.server.ServerMessageDeliverer;
 import org.eclipse.californium.core.server.resources.Resource;
 import org.springframework.util.CollectionUtils;
@@ -47,7 +48,7 @@ public class TbCoapServerMessageDeliverer extends ServerMessageDeliverer {
     }
 
     @Override
-    protected Resource findResource(Exchange exchange) {
+    protected Resource findResource(Exchange exchange) throws DelivererException {
         validateUriPath(exchange);
         return findResource(exchange.getRequest().getOptions().getUriPath());
     }

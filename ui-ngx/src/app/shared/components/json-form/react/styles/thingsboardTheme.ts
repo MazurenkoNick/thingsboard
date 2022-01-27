@@ -1,7 +1,7 @@
 ///
 /// ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
 ///
-/// Copyright © 2016-2021 ThingsBoard, Inc. All Rights Reserved.
+/// Copyright © 2016-2022 ThingsBoard, Inc. All Rights Reserved.
 ///
 /// NOTICE: All information contained herein is, and remains
 /// the property of ThingsBoard, Inc. and its suppliers,
@@ -31,7 +31,7 @@
 
 import indigo from '@material-ui/core/colors/indigo';
 import deeepOrange from '@material-ui/core/colors/deepOrange';
-import { ThemeOptions } from '@material-ui/core/styles/createMuiTheme';
+import { ThemeOptions } from '@material-ui/core/styles';
 import { PaletteOptions, SimplePaletteColorOptions } from '@material-ui/core/styles/createPalette';
 import { mergeDeep } from '@core/utils';
 import { ColorPalette } from '@shared/models/material.models';

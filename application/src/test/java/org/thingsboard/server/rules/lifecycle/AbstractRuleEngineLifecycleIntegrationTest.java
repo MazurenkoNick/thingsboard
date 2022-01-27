@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2021 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2022 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -57,11 +57,14 @@ import org.thingsboard.server.common.msg.queue.QueueToRuleEngineMsg;
 import org.thingsboard.server.common.msg.queue.TbMsgCallback;
 import org.thingsboard.server.controller.AbstractRuleEngineControllerTest;
 import org.thingsboard.server.dao.attributes.AttributesService;
+import org.thingsboard.server.queue.memory.InMemoryStorage;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import static org.awaitility.Awaitility.await;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
@@ -147,14 +150,17 @@ public abstract class AbstractRuleEngineLifecycleIntegrationTest extends Abstrac
         attributesService.save(device.getTenantId(), device.getId(), DataConstants.SERVER_SCOPE,
                 Collections.singletonList(new BaseAttributeKvEntry(new StringDataEntry("serverAttributeKey", "serverAttributeValue"), System.currentTimeMillis())));
 
+        await("total inMemory queue lag is empty").atMost(30, TimeUnit.SECONDS)
+                .until(() -> InMemoryStorage.getInstance().getLagTotal() == 0);
         Thread.sleep(1000);
 
         TbMsgCallback tbMsgCallback = Mockito.mock(TbMsgCallback.class);
+        Mockito.when(tbMsgCallback.isMsgValid()).thenReturn(true);
         TbMsg tbMsg = TbMsg.newMsg("CUSTOM", device.getId(), new TbMsgMetaData(), "{}", tbMsgCallback);
         QueueToRuleEngineMsg qMsg = new QueueToRuleEngineMsg(savedTenant.getId(), tbMsg, null, null);
         // Pushing Message to the system
         actorSystem.tell(qMsg);
-        Mockito.verify(tbMsgCallback, Mockito.timeout(3000)).onSuccess();
+        Mockito.verify(tbMsgCallback, Mockito.timeout(10000)).onSuccess();
 
 
         PageData<Event> eventsPage = getDebugEvents(savedTenant.getId(), ruleChain.getFirstRuleNodeId(), 1000);

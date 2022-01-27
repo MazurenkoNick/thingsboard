@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2021 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2022 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -46,6 +46,7 @@ import org.springframework.web.socket.CloseStatus;
 import org.thingsboard.common.util.ThingsBoardExecutors;
 import org.thingsboard.common.util.ThingsBoardThreadFactory;
 import org.thingsboard.server.common.data.DataConstants;
+import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.EntityIdFactory;
@@ -58,6 +59,7 @@ import org.thingsboard.server.common.data.kv.BasicTsKvEntry;
 import org.thingsboard.server.common.data.kv.ReadTsKvQuery;
 import org.thingsboard.server.common.data.kv.TsKvEntry;
 import org.thingsboard.server.common.data.permission.Operation;
+import org.thingsboard.server.common.data.permission.Resource;
 import org.thingsboard.server.dao.attributes.AttributesService;
 import org.thingsboard.server.dao.timeseries.TimeseriesService;
 import org.thingsboard.server.dao.util.TenantRateLimitException;
@@ -68,6 +70,7 @@ import org.thingsboard.server.service.security.ValidationCallback;
 import org.thingsboard.server.service.security.ValidationResult;
 import org.thingsboard.server.service.security.ValidationResultCode;
 import org.thingsboard.server.service.security.model.UserPrincipal;
+import org.thingsboard.server.service.security.permission.AccessControlService;
 import org.thingsboard.server.service.subscription.TbAttributeSubscription;
 import org.thingsboard.server.service.subscription.TbAttributeSubscriptionScope;
 import org.thingsboard.server.service.subscription.TbEntityDataSubscriptionService;
@@ -119,6 +122,8 @@ import java.util.stream.Collectors;
 @Slf4j
 public class DefaultTelemetryWebSocketService implements TelemetryWebSocketService {
 
+    public static final int NUMBER_OF_PING_ATTEMPTS = 3;
+
     private static final int DEFAULT_LIMIT = 100;
     private static final Aggregation DEFAULT_AGGREGATION = Aggregation.NONE;
     private static final int UNKNOWN_SUBSCRIPTION_ID = 0;
@@ -144,6 +149,9 @@ public class DefaultTelemetryWebSocketService implements TelemetryWebSocketServi
     private AccessValidator accessValidator;
 
     @Autowired
+    private AccessControlService accessControlService;
+
+    @Autowired
     private AttributesService attributesService;
 
     @Autowired
@@ -151,7 +159,6 @@ public class DefaultTelemetryWebSocketService implements TelemetryWebSocketServi
 
     @Autowired
     private TbServiceInfoProvider serviceInfoProvider;
-
 
     @Value("${server.ws.limits.max_subscriptions_per_tenant:0}")
     private int maxSubscriptionsPerTenant;
@@ -161,6 +168,9 @@ public class DefaultTelemetryWebSocketService implements TelemetryWebSocketServi
     private int maxSubscriptionsPerRegularUser;
     @Value("${server.ws.limits.max_subscriptions_per_public_user:0}")
     private int maxSubscriptionsPerPublicUser;
+
+    @Value("${server.ws.ping_timeout:30000}")
+    private long pingTimeout;
 
     private ConcurrentMap<TenantId, Set<String>> tenantSubscriptionsMap = new ConcurrentHashMap<>();
     private ConcurrentMap<CustomerId, Set<String>> customerSubscriptionsMap = new ConcurrentHashMap<>();
@@ -178,7 +188,7 @@ public class DefaultTelemetryWebSocketService implements TelemetryWebSocketServi
         executor = ThingsBoardExecutors.newWorkStealingPool(50, getClass());
 
         pingExecutor = Executors.newSingleThreadScheduledExecutor(ThingsBoardThreadFactory.forName("telemetry-web-socket-ping"));
-        pingExecutor.scheduleWithFixedDelay(this::sendPing, 10000, 10000, TimeUnit.MILLISECONDS);
+        pingExecutor.scheduleWithFixedDelay(this::sendPing, pingTimeout / NUMBER_OF_PING_ATTEMPTS, pingTimeout / NUMBER_OF_PING_ATTEMPTS, TimeUnit.MILLISECONDS);
     }
 
     @PreDestroy
@@ -287,8 +297,16 @@ public class DefaultTelemetryWebSocketService implements TelemetryWebSocketServi
         String sessionId = sessionRef.getSessionId();
         log.debug("[{}] Processing: {}", sessionId, cmd);
 
-        if (validateSessionMetadata(sessionRef, cmd.getCmdId(), sessionId)
-                && validateSubscriptionCmd(sessionRef, cmd)) {
+        try {
+            accessControlService.checkPermission(sessionRef.getSecurityCtx(), Resource.ALARM, Operation.READ);
+        } catch (ThingsboardException e) {
+            TelemetrySubscriptionUpdate update = new TelemetrySubscriptionUpdate(cmd.getCmdId(), SubscriptionErrorCode.ACCESS_DENIED,
+                    "You don't have permission to view alarms");
+            sendWsMsg(sessionRef, update);
+            return;
+        }
+
+        if (validateSessionMetadata(sessionRef, cmd.getCmdId(), sessionId) && validateSubscriptionCmd(sessionRef, cmd)) {
             entityDataSubService.handleCmd(sessionRef, cmd);
         }
     }
@@ -316,6 +334,18 @@ public class DefaultTelemetryWebSocketService implements TelemetryWebSocketServi
         WsSessionMetaData md = wsSessionsMap.get(sessionId);
         if (md != null) {
             sendWsMsg(md.getSessionRef(), cmdId, update);
+        }
+    }
+
+    @Override
+    public void close(String sessionId, CloseStatus status) {
+        WsSessionMetaData md = wsSessionsMap.get(sessionId);
+        if (md != null) {
+            try {
+                msgEndpoint.close(md.getSessionRef(), status);
+            } catch (IOException e) {
+                log.warn("[{}] Failed to send session close: {}", sessionId, e);
+            }
         }
     }
 

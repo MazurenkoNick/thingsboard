@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2021 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2022 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -146,10 +146,10 @@ public class FwLwM2MDevice extends BaseInstanceEnabler implements Destroyable {
         scheduler.schedule(() -> {
             try {
                 state.set(1);
-                fireResourcesChange(3);
+                fireResourceChange(3);
                 Thread.sleep(100);
                 state.set(2);
-                fireResourcesChange(3);
+                fireResourceChange(3);
             } catch (Exception e) {
             }
         }, 100, TimeUnit.MILLISECONDS);
@@ -159,10 +159,10 @@ public class FwLwM2MDevice extends BaseInstanceEnabler implements Destroyable {
         scheduler.schedule(() -> {
             try {
                 state.set(3);
-                fireResourcesChange(3);
+                fireResourceChange(3);
                 Thread.sleep(100);
                 updateResult.set(1);
-                fireResourcesChange(5);
+                fireResourceChange(5);
             } catch (Exception e) {
             }
         }, 100, TimeUnit.MILLISECONDS);

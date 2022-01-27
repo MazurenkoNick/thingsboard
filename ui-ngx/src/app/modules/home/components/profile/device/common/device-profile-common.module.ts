@@ -1,7 +1,7 @@
 ///
 /// ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
 ///
-/// Copyright © 2016-2021 ThingsBoard, Inc. All Rights Reserved.
+/// Copyright © 2016-2022 ThingsBoard, Inc. All Rights Reserved.
 ///
 /// NOTICE: All information contained herein is, and remains
 /// the property of ThingsBoard, Inc. and its suppliers,
@@ -30,10 +30,10 @@
 ///
 
 import { NgModule } from '@angular/core';
-import { PowerModeSettingComponent } from './power-mode-setting.component';
+import { PowerModeSettingComponent } from '@home/components/profile/device/common/power-mode-setting.component';
 import { SharedModule } from '@shared/shared.module';
 import { CommonModule } from '@angular/common';
-import { TimeUnitSelectComponent } from './time-unit-select.component';
+import { TimeUnitSelectComponent } from '@home/components/profile/device/common/time-unit-select.component';
 
 @NgModule({
   declarations: [

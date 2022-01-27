@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2021 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2022 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -44,6 +44,19 @@
   box-shadow: none;
 }
 
-.leaflet-container{
+.tb-polygon-label {
+  border: none;
+  background: none;
+  box-shadow: none;
+  &:before {
+    content: none;
+  }
+}
+
+.leaflet-container {
   background-color: white;
+}
+
+.leaflet-buttons-control-button.pm-disabled {
+  pointer-events: none;
 }

@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2021 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2022 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -47,8 +47,11 @@ import java.util.Properties;
 
 /**
  * Created by Valerii Sosliuk on 6/24/2017.
+ *
+ * Deprecated. Use PostgreSqlInitializer class instead
  */
 @Slf4j
+@Deprecated
 public class CustomSqlUnit extends ExternalResource {
 
     private final List<String> sqlFiles;

@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2021 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2022 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -344,15 +344,18 @@ public class JsonConverter {
         return result;
     }
 
-    public static JsonObject getJsonObjectForGateway(String deviceName, GetAttributeResponseMsg responseMsg) {
+    public static JsonObject getJsonObjectForGateway(
+            String deviceName,
+            GetAttributeResponseMsg responseMsg
+    ) {
         JsonObject result = new JsonObject();
         result.addProperty("id", responseMsg.getRequestId());
         result.addProperty(DEVICE_PROPERTY, deviceName);
         if (responseMsg.getClientAttributeListCount() > 0) {
-            addValues(result, responseMsg.getClientAttributeListList());
+            addValues(result, responseMsg.getClientAttributeListList(), responseMsg.getIsMultipleAttributesRequest());
         }
         if (responseMsg.getSharedAttributeListCount() > 0) {
-            addValues(result, responseMsg.getSharedAttributeListList());
+            addValues(result, responseMsg.getSharedAttributeListList(), responseMsg.getIsMultipleAttributesRequest());
         }
         return result;
     }
@@ -365,8 +368,8 @@ public class JsonConverter {
         return result;
     }
 
-    private static void addValues(JsonObject result, List<TsKvProto> kvList) {
-        if (kvList.size() == 1) {
+    private static void addValues(JsonObject result, List<TsKvProto> kvList, boolean multipleAttrKeysRequested) {
+        if (kvList.size() == 1 && !multipleAttrKeysRequested) {
             addValueToJson(result, "value", kvList.get(0).getKv());
         } else {
             JsonObject values;

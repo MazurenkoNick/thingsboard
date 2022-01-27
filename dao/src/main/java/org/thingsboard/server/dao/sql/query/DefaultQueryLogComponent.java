@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2021 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2022 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -48,7 +48,7 @@ public class DefaultQueryLogComponent implements QueryLogComponent {
     @Override
     public void logQuery(QueryContext ctx, String query, long duration) {
         if (logSqlQueries && duration > logQueriesThreshold) {
-            log.info("QUERY: {} took {}ms", query, duration);
+            log.info("QUERY: {} took {} ms", query, duration);
             Arrays.asList(ctx.getParameterNames()).forEach(param -> log.info("QUERY PARAM: {} -> {}", param, ctx.getValue(param)));
         }
     }
