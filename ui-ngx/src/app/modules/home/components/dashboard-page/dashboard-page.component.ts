@@ -134,7 +134,7 @@ import { EntityGroupInfo } from '@shared/models/entity-group.models';
 import { UserPermissionsService } from '@core/http/user-permissions.service';
 import { Operation } from '@shared/models/security.models';
 import { ReportType } from '@shared/models/report.models';
-import { map } from 'rxjs/operators';
+import { map, share } from 'rxjs/operators';
 import { FiltersDialogComponent, FiltersDialogData } from '@home/components/filter/filters-dialog.component';
 import { Filters } from '@shared/models/query/query.models';
 import { AliasEntityType, EntityType } from '@shared/models/entity-type.models';
@@ -251,7 +251,8 @@ export class DashboardPageComponent extends PageComponent implements IDashboardC
 
   thingsboardVersion: string = env.tbVersion;
   displayPoweredBy$ = this.wl.whiteLabelingEnabled$.pipe(
-    map((enabled) => !enabled)
+    map((enabled) => !enabled && !this.embedded),
+    share()
   );
 
   translatedDashboardTitle: string;
