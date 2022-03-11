@@ -221,7 +221,16 @@ public class MqttTransportHandler extends ChannelInboundHandlerAdapter implement
     }
 
     InetSocketAddress getAddress(ChannelHandlerContext ctx) {
-        return ctx.channel().attr(MqttTransportService.ADDRESS).get();
+        var address = ctx.channel().attr(MqttTransportService.ADDRESS).get();
+        if (address == null) {
+            log.trace("[{}] Received empty address.", ctx.channel().id());
+            InetSocketAddress remoteAddress = (InetSocketAddress) ctx.channel().remoteAddress();
+            log.trace("[{}] Going to use address: {}", ctx.channel().id(), remoteAddress);
+            return remoteAddress;
+        } else {
+            log.trace("[{}] Received address: {}", ctx.channel().id(), address);
+        }
+        return address;
     }
 
     void processMqttMsg(ChannelHandlerContext ctx, MqttMessage msg) {
@@ -266,8 +275,11 @@ public class MqttTransportHandler extends ChannelInboundHandlerAdapter implement
                         log.debug("[{}] Unsupported topic for provisioning requests: {}!", sessionId, topicName);
                         ctx.close();
                     }
-                } catch (RuntimeException | AdaptorException e) {
+                } catch (RuntimeException e) {
                     log.warn("[{}] Failed to process publish msg [{}][{}]", sessionId, topicName, msgId, e);
+                    ctx.close();
+                } catch (AdaptorException e) {
+                    log.debug("[{}] Failed to process publish msg [{}][{}]", sessionId, topicName, msgId, e);
                     ctx.close();
                 }
                 break;
@@ -378,8 +390,11 @@ public class MqttTransportHandler extends ChannelInboundHandlerAdapter implement
                 default:
                     ack(ctx, msgId);
             }
-        } catch (RuntimeException | AdaptorException e) {
+        } catch (RuntimeException e) {
             log.warn("[{}] Failed to process publish msg [{}][{}]", sessionId, topicName, msgId, e);
+            ctx.close();
+        } catch (AdaptorException e) {
+            log.debug("[{}] Failed to process publish msg [{}][{}]", sessionId, topicName, msgId, e);
             ctx.close();
         }
     }
@@ -468,7 +483,7 @@ public class MqttTransportHandler extends ChannelInboundHandlerAdapter implement
                 ack(ctx, msgId);
             }
         } catch (AdaptorException e) {
-            log.warn("[{}] Failed to process publish msg [{}][{}]", sessionId, topicName, msgId, e);
+            log.debug("[{}] Failed to process publish msg [{}][{}]", sessionId, topicName, msgId, e);
             log.info("[{}] Closing current session due to invalid publish msg [{}][{}]", sessionId, topicName, msgId);
             ctx.close();
         }
@@ -773,7 +788,7 @@ public class MqttTransportHandler extends ChannelInboundHandlerAdapter implement
                     }
                 }
             } catch (Exception e) {
-                log.warn("[{}] Failed to process unsubscription [{}] to [{}]", sessionId, mqttMsg.variableHeader().messageId(), topicName);
+                log.debug("[{}] Failed to process unsubscription [{}] to [{}]", sessionId, mqttMsg.variableHeader().messageId(), topicName);
             }
         }
         if (!activityReported) {
@@ -790,7 +805,7 @@ public class MqttTransportHandler extends ChannelInboundHandlerAdapter implement
     }
 
     void processConnect(ChannelHandlerContext ctx, MqttConnectMessage msg) {
-        log.debug("[{}] Processing connect msg for client: {}!", sessionId, msg.payload().clientIdentifier());
+        log.debug("[{}][{}] Processing connect msg for client: {}!", address, sessionId, msg.payload().clientIdentifier());
         String userName = msg.payload().userName();
         String clientId = msg.payload().clientIdentifier();
         if (DataConstants.PROVISION.equals(userName) || DataConstants.PROVISION.equals(clientId)) {
