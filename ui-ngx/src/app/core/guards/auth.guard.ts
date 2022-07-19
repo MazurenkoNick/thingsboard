@@ -49,6 +49,7 @@ import { isDefined, isObject } from '@core/utils';
 import { MenuService } from '@core/services/menu.service';
 import { UserPermissionsService } from '@core/http/user-permissions.service';
 import { MobileService } from '@core/services/mobile.service';
+import { ReportService } from '@core/http/report.service';
 
 @Injectable({
   providedIn: 'root'
@@ -66,6 +67,7 @@ export class AuthGuard implements CanActivate, CanActivateChild {
               private userPermissionsService: UserPermissionsService,
               private menuService: MenuService,
               private mobileService: MobileService,
+              private reportService: ReportService,
               private zone: NgZone) {}
 
   getAuthState(): Observable<AuthState> {
@@ -96,7 +98,7 @@ export class AuthGuard implements CanActivate, CanActivateChild {
           }
         }
         const path = urlSegments.join('.');
-        const publicId = this.utils.getQueryParam('publicId');
+        const publicId = this.utils.getQueryParam('publicId') || (this.reportService.reportView ? this.reportService.publicId : null);
         const data = lastChild.data || {};
         const params = lastChild.params || {};
         const isPublic = data.module === 'public';
@@ -109,6 +111,11 @@ export class AuthGuard implements CanActivate, CanActivateChild {
             this.authService.redirectUrl = url;
             // this.authService.gotoDefaultPlace(false);
             return of(this.authService.defaultUrl(false));
+          } else if (path === 'login.mfa' && authState.authUser?.authority !== Authority.PRE_VERIFICATION_TOKEN) {
+            if (authState.isAuthenticated) {
+              this.authService.logout();
+            }
+            return of(this.authService.defaultUrl(false));
           } else {
             const tasks: Observable<any>[] = [];
             tasks.push(this.whiteLabelingService.loadLoginWhiteLabelingParams());
@@ -118,9 +125,15 @@ export class AuthGuard implements CanActivate, CanActivateChild {
                 tasks.push(this.authService.loadOAuth2Clients());
               }
             }
+            if (path === 'login.mfa') {
+              tasks.push(this.authService.getAvailableTwoFaLoginProviders());
+            }
             return forkJoin(tasks).pipe(
               map(() => {
                 if (path === 'signup' && !this.selfRegistrationService.signUpParams.activate) {
+                  return this.authService.defaultUrl(false);
+                } else if (path === 'login.mfa' && !this.authService.twoFactorAuthProviders) {
+                  this.authService.logout();
                   return this.authService.defaultUrl(false);
                 } else {
                   return true;
@@ -142,6 +155,10 @@ export class AuthGuard implements CanActivate, CanActivateChild {
           }
           if (this.mobileService.isMobileApp() && !path.startsWith('dashboard.')) {
             this.mobileService.handleMobileNavigation(path, params);
+            return of(false);
+          }
+          if (authState.authUser.authority === Authority.PRE_VERIFICATION_TOKEN) {
+            this.authService.logout();
             return of(false);
           }
           const defaultUrl = this.authService.defaultUrl(true, authState, path, params);

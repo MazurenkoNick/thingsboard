@@ -45,6 +45,7 @@ import org.thingsboard.server.common.data.device.profile.DeviceProfileData;
 import org.thingsboard.server.common.data.id.DashboardId;
 import org.thingsboard.server.common.data.id.DeviceProfileId;
 import org.thingsboard.server.common.data.id.OtaPackageId;
+import org.thingsboard.server.common.data.id.QueueId;
 import org.thingsboard.server.common.data.id.RuleChainId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.dao.model.BaseSqlEntity;
@@ -118,6 +119,9 @@ public final class DeviceProfileEntity extends BaseSqlEntity<DeviceProfile> impl
     @Column(name = ModelConstants.DEVICE_PROFILE_SOFTWARE_ID_PROPERTY)
     private UUID softwareId;
 
+    @Column(name = ModelConstants.EXTERNAL_ID_PROPERTY)
+    private UUID externalId;
+
     public DeviceProfileEntity() {
         super();
     }
@@ -152,6 +156,9 @@ public final class DeviceProfileEntity extends BaseSqlEntity<DeviceProfile> impl
         if (deviceProfile.getSoftwareId() != null) {
             this.softwareId = deviceProfile.getSoftwareId().getId();
         }
+        if (deviceProfile.getExternalId() != null) {
+            this.externalId = deviceProfile.getExternalId().getId();
+        }
     }
 
     @Override
@@ -182,6 +189,7 @@ public final class DeviceProfileEntity extends BaseSqlEntity<DeviceProfile> impl
         deviceProfile.setProvisionType(provisionType);
         deviceProfile.setDescription(description);
         deviceProfile.setDefault(isDefault);
+        deviceProfile.setDefaultQueueName(defaultQueueName);
         deviceProfile.setProfileData(JacksonUtil.convertValue(profileData, DeviceProfileData.class));
         if (defaultRuleChainId != null) {
             deviceProfile.setDefaultRuleChainId(new RuleChainId(defaultRuleChainId));
@@ -189,15 +197,16 @@ public final class DeviceProfileEntity extends BaseSqlEntity<DeviceProfile> impl
         if (defaultDashboardId != null) {
             deviceProfile.setDefaultDashboardId(new DashboardId(defaultDashboardId));
         }
-        deviceProfile.setDefaultQueueName(defaultQueueName);
         deviceProfile.setProvisionDeviceKey(provisionDeviceKey);
 
         if (firmwareId != null) {
             deviceProfile.setFirmwareId(new OtaPackageId(firmwareId));
         }
-
         if (softwareId != null) {
             deviceProfile.setSoftwareId(new OtaPackageId(softwareId));
+        }
+        if (externalId != null) {
+            deviceProfile.setExternalId(new DeviceProfileId(externalId));
         }
 
         return deviceProfile;

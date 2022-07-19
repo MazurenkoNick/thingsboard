@@ -54,13 +54,10 @@ import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.rule.engine.api.MailService;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.User;
-import org.thingsboard.server.common.data.audit.ActionType;
-import org.thingsboard.server.common.data.edge.EdgeEventActionType;
 import org.thingsboard.server.common.data.exception.ThingsboardErrorCode;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.group.EntityGroup;
 import org.thingsboard.server.common.data.id.CustomerId;
-import org.thingsboard.server.common.data.id.EdgeId;
 import org.thingsboard.server.common.data.id.EntityGroupId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.id.UserId;
@@ -74,6 +71,7 @@ import org.thingsboard.server.common.data.security.UserCredentials;
 import org.thingsboard.server.common.data.security.event.UserAuthDataChangedEvent;
 import org.thingsboard.server.common.data.security.model.JwtToken;
 import org.thingsboard.server.queue.util.TbCoreComponent;
+import org.thingsboard.server.service.entitiy.user.TbUserService;
 import org.thingsboard.server.service.security.auth.jwt.RefreshTokenRepository;
 import org.thingsboard.server.service.security.model.JwtTokenPair;
 import org.thingsboard.server.service.security.model.SecurityUser;
@@ -87,10 +85,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static org.thingsboard.server.controller.ControllerConstants.ASSET_INFO_DESCRIPTION;
 import static org.thingsboard.server.controller.ControllerConstants.CUSTOMER_ID;
 import static org.thingsboard.server.controller.ControllerConstants.CUSTOMER_ID_PARAM_DESCRIPTION;
 import static org.thingsboard.server.controller.ControllerConstants.DEFAULT_DASHBOARD;
+import static org.thingsboard.server.controller.ControllerConstants.ENTITY_GROUP_ID;
 import static org.thingsboard.server.controller.ControllerConstants.ENTITY_GROUP_ID_PARAM_DESCRIPTION;
 import static org.thingsboard.server.controller.ControllerConstants.HOME_DASHBOARD;
 import static org.thingsboard.server.controller.ControllerConstants.HOME_DASHBOARD_HIDE_TOOLBAR;
@@ -107,14 +105,12 @@ import static org.thingsboard.server.controller.ControllerConstants.SORT_ORDER_D
 import static org.thingsboard.server.controller.ControllerConstants.SORT_PROPERTY_DESCRIPTION;
 import static org.thingsboard.server.controller.ControllerConstants.SYSTEM_AUTHORITY_PARAGRAPH;
 import static org.thingsboard.server.controller.ControllerConstants.SYSTEM_OR_TENANT_AUTHORITY_PARAGRAPH;
-import static org.thingsboard.server.controller.ControllerConstants.TENANT_AUTHORITY_PARAGRAPH;
 import static org.thingsboard.server.controller.ControllerConstants.TENANT_ID;
 import static org.thingsboard.server.controller.ControllerConstants.TENANT_ID_PARAM_DESCRIPTION;
 import static org.thingsboard.server.controller.ControllerConstants.TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH;
 import static org.thingsboard.server.controller.ControllerConstants.USER_ID_PARAM_DESCRIPTION;
 import static org.thingsboard.server.controller.ControllerConstants.USER_SORT_PROPERTY_ALLOWABLE_VALUES;
 import static org.thingsboard.server.controller.ControllerConstants.USER_TEXT_SEARCH_DESCRIPTION;
-import static org.thingsboard.server.controller.ControllerConstants.ENTITY_GROUP_ID;
 import static org.thingsboard.server.controller.ControllerConstants.UUID_WIKI_LINK;
 
 @RequiredArgsConstructor
@@ -137,12 +133,13 @@ public class UserController extends BaseController {
     private final RefreshTokenRepository refreshTokenRepository;
     private final SystemSecurityService systemSecurityService;
     private final ApplicationEventPublisher eventPublisher;
+    private final TbUserService tbUserService;
 
     @ApiOperation(value = "Get User (getUserById)",
             notes = "Fetch the User object based on the provided User Id. " +
-            "If the user has the authority of 'SYS_ADMIN', the server does not perform additional checks. " +
-            "If the user has the authority of 'TENANT_ADMIN', the server checks that the requested user is owned by the same tenant. " +
-            "If the user has the authority of 'CUSTOMER_USER', the server checks that the requested user is owned by the same customer.\n\n"+ RBAC_READ_CHECK)
+                    "If the user has the authority of 'SYS_ADMIN', the server does not perform additional checks. " +
+                    "If the user has the authority of 'TENANT_ADMIN', the server checks that the requested user is owned by the same tenant. " +
+                    "If the user has the authority of 'CUSTOMER_USER', the server checks that the requested user is owned by the same customer.\n\n" + RBAC_READ_CHECK)
     @PreAuthorize("hasAnyAuthority('SYS_ADMIN', 'TENANT_ADMIN', 'CUSTOMER_USER')")
     @RequestMapping(value = "/user/{userId}", method = RequestMethod.GET)
     @ResponseBody
@@ -171,7 +168,7 @@ public class UserController extends BaseController {
     @ApiOperation(value = "Check Token Access Enabled (isUserTokenAccessEnabled)",
             notes = "Checks that the system is configured to allow administrators to impersonate themself as other users. " +
                     "If the user who performs the request has the authority of 'SYS_ADMIN', it is possible to login as any tenant administrator. " +
-                    "If the user who performs the request has the authority of 'TENANT_ADMIN', it is possible to login as any customer user.\n\n"+ RBAC_READ_CHECK)
+                    "If the user who performs the request has the authority of 'TENANT_ADMIN', it is possible to login as any customer user.\n\n" + RBAC_READ_CHECK)
     @PreAuthorize("hasAnyAuthority('SYS_ADMIN', 'TENANT_ADMIN', 'CUSTOMER_USER')")
     @RequestMapping(value = "/user/tokenAccessEnabled", method = RequestMethod.GET)
     @ResponseBody
@@ -215,7 +212,9 @@ public class UserController extends BaseController {
                     "The newly created User Id will be present in the response. " +
                     "Specify existing User Id to update the device. " +
                     "Referencing non-existing User Id will cause 'Not Found' error." +
-                    "\n\nDevice email is unique for entire platform setup.\n\n"+ RBAC_WRITE_CHECK)
+                    "\n\nDevice email is unique for entire platform setup.\n\n" +
+                    "Remove 'id', 'tenantId' and optionally 'customerId' from the request body example (below) to create new User entity." +
+                    RBAC_WRITE_CHECK)
     @PreAuthorize("hasAnyAuthority('SYS_ADMIN', 'TENANT_ADMIN', 'CUSTOMER_USER')")
     @RequestMapping(value = "/user", method = RequestMethod.POST)
     @ResponseBody
@@ -226,112 +225,60 @@ public class UserController extends BaseController {
             @RequestParam(required = false, defaultValue = "true") boolean sendActivationMail,
             @RequestParam(name = "entityGroupId", required = false) String strEntityGroupId,
             HttpServletRequest request) throws ThingsboardException {
-        try {
+        if (!Authority.SYS_ADMIN.equals(getCurrentUser().getAuthority())) {
+            user.setTenantId(getCurrentUser().getTenantId());
+        }
 
-            if (!Authority.SYS_ADMIN.equals(getCurrentUser().getAuthority())) {
-                user.setTenantId(getCurrentUser().getTenantId());
+        EntityGroupId entityGroupId = null;
+        EntityGroup entityGroup = null;
+        if (!StringUtils.isEmpty(strEntityGroupId)) {
+            entityGroupId = new EntityGroupId(toUUID(strEntityGroupId));
+            entityGroup = checkEntityGroupId(entityGroupId, Operation.READ);
+        }
+
+        if (user.getId() == null && getCurrentUser().getAuthority() != Authority.SYS_ADMIN &&
+                (user.getCustomerId() == null || user.getCustomerId().isNullUid())) {
+            if (entityGroup != null && entityGroup.getOwnerId().getEntityType() == EntityType.CUSTOMER) {
+                user.setOwnerId(new CustomerId(entityGroup.getOwnerId().getId()));
+            } else if (getCurrentUser().getAuthority() == Authority.CUSTOMER_USER) {
+                user.setOwnerId(getCurrentUser().getCustomerId());
             }
+        }
 
-            EntityGroupId entityGroupId = null;
-            EntityGroup entityGroup = null;
-            if (!StringUtils.isEmpty(strEntityGroupId)) {
-                entityGroupId = new EntityGroupId(toUUID(strEntityGroupId));
-                entityGroup = checkEntityGroupId(entityGroupId, Operation.READ);
-            }
+        if (getCurrentUser().getId().equals(user.getId())) {
+            accessControlService.checkPermission(getCurrentUser(), Resource.PROFILE, Operation.WRITE);
+        } else {
+            checkEntity(user.getId(), user, Resource.USER, entityGroupId);
+        }
 
-            if (user.getId() == null && getCurrentUser().getAuthority() != Authority.SYS_ADMIN &&
-                    (user.getCustomerId() == null || user.getCustomerId().isNullUid())) {
-                if (entityGroup != null && entityGroup.getOwnerId().getEntityType() == EntityType.CUSTOMER) {
-                    user.setOwnerId(new CustomerId(entityGroup.getOwnerId().getId()));
-                } else if (getCurrentUser().getAuthority() == Authority.CUSTOMER_USER) {
-                    user.setOwnerId(getCurrentUser().getCustomerId());
-                }
-            }
-
-            if (getCurrentUser().getId().equals(user.getId())) {
-                accessControlService.checkPermission(getCurrentUser(), Resource.PROFILE, Operation.WRITE);
-            } else {
-                checkEntity(user.getId(), user, Resource.USER, entityGroupId);
-            }
-
-            if (!accessControlService.hasPermission(getCurrentUser(), Resource.WHITE_LABELING, Operation.WRITE)) {
-                String prevHomeDashboardId = null;
-                boolean prevHideDashboardToolbar = true;
-                if (user.getId() != null) {
-                    User prevUser = userService.findUserById(getTenantId(), user.getId());
-                    JsonNode additionalInfo = prevUser.getAdditionalInfo();
-                    if (additionalInfo != null && additionalInfo.has(HOME_DASHBOARD_ID)) {
-                        prevHomeDashboardId = additionalInfo.get(HOME_DASHBOARD_ID).asText();
-                        if (additionalInfo.has(HOME_DASHBOARD_HIDE_TOOLBAR)) {
-                            prevHideDashboardToolbar = additionalInfo.get(HOME_DASHBOARD_HIDE_TOOLBAR).asBoolean();
-                        }
+        if (!accessControlService.hasPermission(getCurrentUser(), Resource.WHITE_LABELING, Operation.WRITE)) {
+            String prevHomeDashboardId = null;
+            boolean prevHideDashboardToolbar = true;
+            if (user.getId() != null) {
+                User prevUser = userService.findUserById(getTenantId(), user.getId());
+                JsonNode additionalInfo = prevUser.getAdditionalInfo();
+                if (additionalInfo != null && additionalInfo.has(HOME_DASHBOARD_ID)) {
+                    prevHomeDashboardId = additionalInfo.get(HOME_DASHBOARD_ID).asText();
+                    if (additionalInfo.has(HOME_DASHBOARD_HIDE_TOOLBAR)) {
+                        prevHideDashboardToolbar = additionalInfo.get(HOME_DASHBOARD_HIDE_TOOLBAR).asBoolean();
                     }
                 }
-                JsonNode additionalInfo = user.getAdditionalInfo();
-                if (additionalInfo == null) {
-                    additionalInfo = JacksonUtil.newObjectNode();
-                    user.setAdditionalInfo(additionalInfo);
-                }
-                ((ObjectNode) additionalInfo).put(HOME_DASHBOARD_ID, prevHomeDashboardId);
-                ((ObjectNode) additionalInfo).put(HOME_DASHBOARD_HIDE_TOOLBAR, prevHideDashboardToolbar);
             }
-
-            boolean sendEmail = user.getId() == null && sendActivationMail;
-            User savedUser = checkNotNull(userService.saveUser(user));
-
-            // Add Tenant Admins to 'Tenant Administrators' user group if created by Sys Admin
-            if (user.getId() == null && getCurrentUser().getAuthority() == Authority.SYS_ADMIN) {
-                EntityGroup admins = entityGroupService.findOrCreateTenantAdminsGroup(savedUser.getTenantId());
-                entityGroupService.addEntityToEntityGroup(TenantId.SYS_TENANT_ID, admins.getId(), savedUser.getId());
-                logEntityAction(savedUser.getId(), savedUser,
-                        savedUser.getCustomerId(), ActionType.ADDED_TO_ENTITY_GROUP, null,
-                        savedUser.getId().toString(), admins.getId().toString(), admins.getName());
-            } else if (entityGroup != null && user.getId() == null) {
-                entityGroupService.addEntityToEntityGroup(getTenantId(), entityGroupId, savedUser.getId());
-                logEntityAction(savedUser.getId(), savedUser,
-                        savedUser.getCustomerId(), ActionType.ADDED_TO_ENTITY_GROUP, null,
-                        savedUser.getId().toString(), strEntityGroupId, entityGroup.getName());
-
-                sendGroupEntityNotificationMsg(getTenantId(), savedUser.getId(),
-                        EdgeEventActionType.ADDED_TO_ENTITY_GROUP, entityGroupId);
+            JsonNode additionalInfo = user.getAdditionalInfo();
+            if (additionalInfo == null) {
+                additionalInfo = JacksonUtil.newObjectNode();
+                user.setAdditionalInfo(additionalInfo);
             }
-
-            if (sendEmail) {
-                SecurityUser authUser = getCurrentUser();
-                UserCredentials userCredentials = userService.findUserCredentialsByUserId(authUser.getTenantId(), savedUser.getId());
-                String baseUrl = systemSecurityService.getBaseUrl(authUser.getAuthority(), getTenantId(), authUser.getCustomerId(), request);
-                String activateUrl = String.format(ACTIVATE_URL_PATTERN, baseUrl,
-                        userCredentials.getActivateToken());
-                String email = savedUser.getEmail();
-                try {
-                    mailService.sendActivationEmail(getTenantId(), activateUrl, email);
-                } catch (ThingsboardException e) {
-                    userService.deleteUser(authUser.getTenantId(), savedUser.getId());
-                    throw e;
-                }
-            }
-
-            userPermissionsService.onUserUpdatedOrRemoved(savedUser);
-
-            logEntityAction(savedUser.getId(), savedUser,
-                    savedUser.getCustomerId(),
-                    user.getId() == null ? ActionType.ADDED : ActionType.UPDATED, null);
-
-            sendEntityNotificationMsg(getTenantId(), savedUser.getId(),
-                    user.getId() == null ? EdgeEventActionType.ADDED : EdgeEventActionType.UPDATED);
-
-            return savedUser;
-        } catch (Exception e) {
-
-            logEntityAction(emptyId(EntityType.USER), user,
-                    null, user.getId() == null ? ActionType.ADDED : ActionType.UPDATED, e);
-
-            throw handleException(e);
+            ((ObjectNode) additionalInfo).put(HOME_DASHBOARD_ID, prevHomeDashboardId);
+            ((ObjectNode) additionalInfo).put(HOME_DASHBOARD_HIDE_TOOLBAR, prevHideDashboardToolbar);
         }
+
+        return tbUserService.save(getTenantId(), getCurrentUser().getCustomerId(), getCurrentUser().getAuthority(),
+                user, sendActivationMail, request, entityGroupId, entityGroup, getCurrentUser());
     }
 
     @ApiOperation(value = "Send or re-send the activation email",
-            notes = "Force send the activation email to the user. Useful to resend the email if user has accidentally deleted it.\n\n"+ RBAC_DELETE_CHECK)
+            notes = "Force send the activation email to the user. Useful to resend the email if user has accidentally deleted it.\n\n" + RBAC_DELETE_CHECK)
     @PreAuthorize("hasAnyAuthority('SYS_ADMIN', 'TENANT_ADMIN', 'CUSTOMER_USER')")
     @RequestMapping(value = "/user/sendActivationMail", method = RequestMethod.POST)
     @ResponseStatus(value = HttpStatus.OK)
@@ -361,7 +308,7 @@ public class UserController extends BaseController {
 
     @ApiOperation(value = "Get the activation link (getActivationLink)",
             notes = "Get the activation link for the user. " +
-                    "The base url for activation link is configurable in the general settings of system administrator. \n\n"+ RBAC_READ_CHECK)
+                    "The base url for activation link is configurable in the general settings of system administrator. \n\n" + RBAC_READ_CHECK)
     @PreAuthorize("hasAnyAuthority('SYS_ADMIN', 'TENANT_ADMIN', 'CUSTOMER_USER')")
     @RequestMapping(value = "/user/{userId}/activationLink", method = RequestMethod.GET, produces = "text/plain")
     @ResponseBody
@@ -389,7 +336,7 @@ public class UserController extends BaseController {
 
     @ApiOperation(value = "Delete User (deleteUser)",
             notes = "Deletes the User, it's credentials and all the relations (from and to the User). " +
-                    "Referencing non-existing User Id will cause an error. \n\n"+ RBAC_DELETE_CHECK)
+                    "Referencing non-existing User Id will cause an error. \n\n" + RBAC_DELETE_CHECK)
     @PreAuthorize("hasAnyAuthority('SYS_ADMIN', 'TENANT_ADMIN', 'CUSTOMER_USER')")
     @RequestMapping(value = "/user/{userId}", method = RequestMethod.DELETE)
     @ResponseStatus(value = HttpStatus.OK)
@@ -397,33 +344,15 @@ public class UserController extends BaseController {
             @ApiParam(value = USER_ID_PARAM_DESCRIPTION)
             @PathVariable(USER_ID) String strUserId) throws ThingsboardException {
         checkParameter(USER_ID, strUserId);
-        try {
-            UserId userId = new UserId(toUUID(strUserId));
-            User user = checkUserId(userId, Operation.DELETE);
-
-            if (user.getAuthority() == Authority.SYS_ADMIN && getCurrentUser().getId().equals(userId)) {
-                throw new ThingsboardException("Sysadmin is not allowed to delete himself", ThingsboardErrorCode.PERMISSION_DENIED);
-            }
-
-            List<EdgeId> relatedEdgeIds = findRelatedEdgeIds(getTenantId(), userId);
-
-            userService.deleteUser(getCurrentUser().getTenantId(), userId);
-
-            userPermissionsService.onUserUpdatedOrRemoved(user);
-
-            logEntityAction(userId, user,
-                    user.getCustomerId(),
-                    ActionType.DELETED, null, strUserId);
-
-            sendDeleteNotificationMsg(getTenantId(), userId, relatedEdgeIds);
-
-        } catch (Exception e) {
-            logEntityAction(emptyId(EntityType.USER),
-                    null,
-                    null,
-                    ActionType.DELETED, e, strUserId);
-            throw handleException(e);
+        UserId userId = new UserId(toUUID(strUserId));
+        User user = checkUserId(userId, Operation.DELETE);
+        if (user.getAuthority() == Authority.SYS_ADMIN && getCurrentUser().getId().equals(userId)) {
+            throw new ThingsboardException("Sysadmin is not allowed to delete himself", ThingsboardErrorCode.PERMISSION_DENIED);
         }
+
+        userPermissionsService.onUserUpdatedOrRemoved(user);
+
+        tbUserService.delete(getTenantId(), getCurrentUser().getCustomerId(), user, getCurrentUser());
     }
 
     @ApiOperation(value = "Get Tenant Users (getTenantAdmins)",
@@ -575,7 +504,8 @@ public class UserController extends BaseController {
             @ApiParam(value = USER_ID_PARAM_DESCRIPTION)
             @PathVariable(USER_ID) String strUserId,
             @ApiParam(value = "Disable (\"true\") or enable (\"false\") the credentials.", defaultValue = "true")
-            @RequestParam(required = false, defaultValue = "true") boolean userCredentialsEnabled) throws ThingsboardException {
+            @RequestParam(required = false, defaultValue = "true") boolean userCredentialsEnabled) throws
+            ThingsboardException {
         checkParameter(USER_ID, strUserId);
         try {
             UserId userId = new UserId(toUUID(strUserId));

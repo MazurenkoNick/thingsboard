@@ -44,27 +44,30 @@ public interface MailService {
     void sendEmail(TenantId tenantId, String email, String subject, String message) throws ThingsboardException;
 
     void sendTestMail(TenantId tenantId, JsonNode config, String email) throws ThingsboardException;
-    
+
     void sendActivationEmail(TenantId tenantId, String activationLink, String email) throws ThingsboardException;
-    
+
     void sendAccountActivatedEmail(TenantId tenantId, String loginLink, String email) throws ThingsboardException;
-    
+
     void sendResetPasswordEmail(TenantId tenantId, String passwordResetLink, String email) throws ThingsboardException;
 
     void sendResetPasswordEmailAsync(TenantId tenantId, String passwordResetLink, String email);
-    
+
     void sendPasswordWasResetEmail(TenantId tenantId, String loginLink, String email) throws ThingsboardException;
 
     void sendUserActivatedEmail(TenantId tenantId, String userFullName, String userEmail, String email) throws ThingsboardException;
 
     void sendUserRegisteredEmail(TenantId tenantId, String userFullName, String userEmail, String targetEmail) throws ThingsboardException;
 
-    void send(TenantId tenantId, CustomerId customerId, TbEmail tbEmail) throws ThingsboardException;
+    void sendTwoFaVerificationEmail(TenantId tenantId, String email, String verificationCode, int expirationTimeSeconds) throws ThingsboardException;
 
-    void send(TenantId tenantId, CustomerId customerId, TbEmail tbEmail, JavaMailSender javaMailSender) throws ThingsboardException;
+    void send(TenantId tenantId, CustomerId customerId, TbEmail tbEmail) throws ThingsboardException;
+    void send(TenantId tenantId, CustomerId customerId, TbEmail tbEmail, long timeout, JavaMailSender javaMailSender) throws ThingsboardException;
 
     void sendAccountLockoutEmail(TenantId tenantId, String lockoutEmail, String email, Integer maxFailedLoginAttempts) throws ThingsboardException;
 
     void sendApiFeatureStateEmail(TenantId tenantId, ApiFeature apiFeature, ApiUsageStateValue stateValue, String email, ApiUsageStateMailMessage msg) throws ThingsboardException;
+
+    void testConnection(TenantId tenantId) throws Exception;
 
 }

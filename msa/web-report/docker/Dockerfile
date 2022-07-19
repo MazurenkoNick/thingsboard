@@ -29,38 +29,16 @@
 # OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 #
 
-FROM node:16.13.1-bullseye-slim
+FROM thingsboard/node:16.15.1-bullseye-slim
 
 ARG TARGETPLATFORM
-
-RUN apt-get update \
-    && apt-get install -yq wget unzip fonts-roboto chromium
-
-RUN apt-get clean \
-    && rm -r /var/lib/apt/lists/*
-
-RUN mkdir /noto
-
-ADD https://noto-website.storage.googleapis.com/pkgs/NotoSansCJKjp-hinted.zip /noto
-
-WORKDIR /noto
-
-RUN unzip NotoSansCJKjp-hinted.zip && \
-    mkdir -p /usr/share/fonts/noto && \
-    cp *.otf /usr/share/fonts/noto && \
-    chmod 655 -R /usr/share/fonts/noto/ && \
-    fc-cache -fv
-
-RUN rm -rf /noto
-
-COPY start-web-report.sh /tmp/
-
-RUN chmod a+x /tmp/*.sh \
-    && mv /tmp/start-web-report.sh /usr/bin
+ARG DEBIAN_FRONTEND=noninteractive
 
 ENV NODE_ENV production
-ENV PUPPETEER_SKIP_DOWNLOAD true
 ENV DOCKER_MODE true
+ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
+
+COPY start-web-report.sh /tmp/
 
 WORKDIR ${pkg.installFolder}
 
@@ -70,11 +48,29 @@ COPY package/linux/conf ./conf
 COPY package/linux/conf ./config
 COPY ${pkg.name}.conf ./conf
 COPY src/api ./api
+COPY src/config ./config
 COPY src/server.js ./
 
-RUN chown -R node:node ${pkg.installFolder}
-
-RUN yarn install --production && yarn cache clean --all
+RUN apt-get update \
+    && apt-get install -yq --no-install-recommends wget unzip fonts-roboto fonts-noto-color-emoji fonts-unifont libfreetype6 xfonts-cyrillic xfonts-scalable fonts-liberation \
+    fonts-ipafont-gothic fonts-wqy-zenhei fonts-tlwg-loma-otf fonts-freefont-ttf fontconfig libasound2 libatk-bridge2.0-0 libatk1.0-0 libatspi2.0-0 \
+    libcairo2 libcups2 libdbus-1-3 libdrm2 libgbm1 libglib2.0-0 libnspr4 libnss3 libpango-1.0-0 libwayland-client0 libx11-6 libxcb1 libxcomposite1 \
+    libxdamage1 libxext6 libxfixes3 libxkbcommon0 libxrandr2 \
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir -p /noto \
+    && wget --no-verbose --no-check-certificate -O /noto/NotoSansCJKjp-hinted.zip https://noto-website.storage.googleapis.com/pkgs/NotoSansCJKjp-hinted.zip \
+    && unzip /noto/NotoSansCJKjp-hinted.zip -d /noto && \
+    mkdir -p /usr/share/fonts/noto && \
+    cp /noto/*.otf /usr/share/fonts/noto && \
+    chmod 655 -R /usr/share/fonts/noto/ && \
+    fc-cache -fv \
+    && rm -rf /noto \
+    && chmod a+x /tmp/*.sh \
+    && mv /tmp/start-web-report.sh /usr/bin \
+    && chown -R node:node ${pkg.installFolder} \
+    && mkdir /ms-playwright \
+    && yarn install --production && yarn cache clean --all \
+    && chmod -R 777 /ms-playwright
 
 USER node
 

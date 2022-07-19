@@ -72,7 +72,6 @@ public class DefaultTbQueueResponseTemplate<Request extends TbQueueMsg, Response
     @Builder
     public DefaultTbQueueResponseTemplate(TbQueueConsumer<Request> requestTemplate,
                                           TbQueueProducer<Response> responseTemplate,
-                                          TbQueueHandler<Request, Response> handler,
                                           long pollInterval,
                                           long requestTimeout,
                                           int maxPendingRequests,
@@ -112,8 +111,8 @@ public class DefaultTbQueueResponseTemplate<Request extends TbQueueMsg, Response
 
                     requests.forEach(request -> {
                         long currentTime = System.currentTimeMillis();
-                        long requestTime = bytesToLong(request.getHeaders().get(REQUEST_TIME));
-                        if (requestTime + requestTimeout >= currentTime) {
+                        long expireTs = bytesToLong(request.getHeaders().get(EXPIRE_TS_HEADER));
+                        if (expireTs >= currentTime) {
                             byte[] requestIdHeader = request.getHeaders().get(REQUEST_ID_HEADER);
                             if (requestIdHeader == null) {
                                 log.error("[{}] Missing requestId in header", request);

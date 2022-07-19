@@ -33,6 +33,7 @@ package org.thingsboard.server.service.resource;
 import org.thingsboard.server.common.data.ResourceType;
 import org.thingsboard.server.common.data.TbResource;
 import org.thingsboard.server.common.data.TbResourceInfo;
+import org.thingsboard.server.common.data.User;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.id.TbResourceId;
 import org.thingsboard.server.common.data.id.TenantId;
@@ -44,7 +45,11 @@ import java.util.List;
 
 public interface TbResourceService {
 
-    TbResource saveResource(TbResource resource) throws ThingsboardException;
+    TbResource save(TbResource entity) throws ThingsboardException;
+
+    TbResource save(TbResource entity, User user) throws ThingsboardException;
+
+    void delete(TbResource entity, User user);
 
     TbResource getResource(TenantId tenantId, ResourceType resourceType, String resourceKey);
 
@@ -65,8 +70,6 @@ public interface TbResourceService {
                                           String sortProperty,
                                           String sortOrder,
                                           PageLink pageLink);
-
-    void deleteResource(TenantId tenantId, TbResourceId resourceId);
 
     void deleteResourcesByTenantId(TenantId tenantId);
 

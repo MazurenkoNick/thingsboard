@@ -57,6 +57,9 @@ import { DeviceProfileService } from '@core/http/device-profile.service';
 import { OtaPackageService } from '@core/http/ota-package.service';
 import { RuleEngineService } from '@core/http/rule-engine.service';
 import { UserPermissionsService } from '@core/http/user-permissions.service';
+import { AuthService } from '@core/auth/auth.service';
+import { ResourceService } from '@core/http/resource.service';
+import { TwoFactorAuthenticationService } from '@core/http/two-factor-authentication.service';
 
 export const ServicesMap = new Map<string, Type<any>>(
   [
@@ -86,6 +89,9 @@ export const ServicesMap = new Map<string, Type<any>>(
    ['deviceProfileService', DeviceProfileService],
    ['otaPackageService', OtaPackageService],
    ['ruleEngineService', RuleEngineService],
-   ['userPermissionsService', UserPermissionsService]
+   ['userPermissionsService', UserPermissionsService],
+   ['authService', AuthService],
+   ['resourceService', ResourceService],
+   ['twoFactorAuthenticationService', TwoFactorAuthenticationService]
   ]
 );

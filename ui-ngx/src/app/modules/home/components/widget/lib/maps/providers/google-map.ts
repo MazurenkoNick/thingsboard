@@ -32,7 +32,7 @@
 
 import L from 'leaflet';
 import LeafletMap from '../leaflet-map';
-import { DEFAULT_ZOOM_LEVEL, UnitedMapSettings } from '../map-models';
+import { DEFAULT_ZOOM_LEVEL, WidgetUnitedMapSettings } from '../map-models';
 import 'leaflet.gridlayer.googlemutant';
 import { ResourcesService } from '@core/services/resources.service';
 import { WidgetContext } from '@home/models/widget-component.models';
@@ -46,19 +46,30 @@ interface GmGlobal {
 export class GoogleMap extends LeafletMap {
   private resource: ResourcesService;
 
-  constructor(ctx: WidgetContext, $container, options: UnitedMapSettings) {
+  constructor(ctx: WidgetContext, $container, options: WidgetUnitedMapSettings) {
     super(ctx, $container, options);
+    let mapUuid: string;
+    if (this.ctx.reportService.reportView) {
+      mapUuid = this.ctx.reportService.onWaitForMap();
+    }
     this.resource = ctx.$injector.get(ResourcesService);
-    super.initSettings(options);
     this.loadGoogle(() => {
       const map = L.map($container, {
         attributionControl: false,
+        doubleClickZoom: !this.options.disableDoubleClickZooming,
         zoomControl: !this.options.disableZoomControl,
-        tap: L.Browser.safari && L.Browser.mobile
-      }).setView(options?.defaultCenterPosition, options?.defaultZoomLevel || DEFAULT_ZOOM_LEVEL);
-      (L.gridLayer as any).googleMutant({
+        tap: L.Browser.safari && L.Browser.mobile,
+        fadeAnimation: !ctx.reportService.reportView
+      }).setView(options?.parsedDefaultCenterPosition, options?.defaultZoomLevel || DEFAULT_ZOOM_LEVEL);
+      const tileLayer = (L.gridLayer as any).googleMutant({
         type: options?.gmDefaultMapType || 'roadmap'
-      }).addTo(map);
+      });
+      tileLayer.addTo(map);
+      if (this.ctx.reportService.reportView) {
+        tileLayer.once('load', () => {
+          this.ctx.reportService.onMapLoaded(mapUuid);
+        });
+      }
       super.setMap(map);
     }, options.gmApiKey);
   }

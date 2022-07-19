@@ -30,13 +30,27 @@
  */
 package org.thingsboard.server.common.data;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import lombok.extern.slf4j.Slf4j;
+import org.thingsboard.server.common.data.edge.EdgeEvent;
+import org.thingsboard.server.common.data.edge.EdgeEventActionType;
 import org.thingsboard.server.common.data.edge.EdgeEventType;
+import org.thingsboard.server.common.data.id.EdgeId;
+import org.thingsboard.server.common.data.id.EntityId;
+import org.thingsboard.server.common.data.id.TenantId;
 
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Slf4j
 public final class EdgeUtils {
+
+    private static final Pattern ATTRIBUTE_PATTERN = Pattern.compile("(\\$\\{\\{)(.*?)(}})");
+    private static final String ATTRIBUTE_PLACEHOLDER_PATTERN = "${{%s}}";
+    private static final String ATTRIBUTE_REGEXP_PLACEHOLDER_PATTERN = "\\$\\{\\{%s}}";
 
     private EdgeUtils() {
     }
@@ -69,6 +83,10 @@ public final class EdgeUtils {
                 return EdgeEventType.WIDGETS_BUNDLE;
             case WIDGET_TYPE:
                 return EdgeEventType.WIDGET_TYPE;
+            case OTA_PACKAGE:
+                return EdgeEventType.OTA_PACKAGE;
+            case QUEUE:
+                return EdgeEventType.QUEUE;
             case ENTITY_GROUP:
                 return EdgeEventType.ENTITY_GROUP;
             case SCHEDULER_EVENT:
@@ -77,6 +95,10 @@ public final class EdgeUtils {
                 return EdgeEventType.ROLE;
             case GROUP_PERMISSION:
                 return EdgeEventType.GROUP_PERMISSION;
+            case INTEGRATION:
+                return EdgeEventType.INTEGRATION;
+            case CONVERTER:
+                return EdgeEventType.CONVERTER;
             default:
                 log.warn("Unsupported entity type [{}]", entityType);
                 return null;
@@ -85,5 +107,53 @@ public final class EdgeUtils {
 
     public static int nextPositiveInt() {
         return ThreadLocalRandom.current().nextInt(0, Integer.MAX_VALUE);
+    }
+
+    public static EdgeEvent constructEdgeEvent(TenantId tenantId,
+                                               EdgeId edgeId,
+                                               EdgeEventType type,
+                                               EdgeEventActionType action,
+                                               EntityId entityId,
+                                               JsonNode body) {
+        return constructEdgeEvent(tenantId, edgeId, type, action, entityId, body, null);
+    }
+
+    public static EdgeEvent constructEdgeEvent(TenantId tenantId,
+                                               EdgeId edgeId,
+                                               EdgeEventType type,
+                                               EdgeEventActionType action,
+                                               EntityId entityId,
+                                               JsonNode body,
+                                               EntityId entityGroupId) {
+        EdgeEvent edgeEvent = new EdgeEvent();
+        edgeEvent.setTenantId(tenantId);
+        edgeEvent.setEdgeId(edgeId);
+        edgeEvent.setType(type);
+        edgeEvent.setAction(action);
+        if (entityId != null) {
+            edgeEvent.setEntityId(entityId.getId());
+        }
+        if (entityGroupId != null) {
+            edgeEvent.setEntityGroupId(entityGroupId.getId());
+        }
+        edgeEvent.setBody(body);
+        return edgeEvent;
+    }
+
+    public static Set<String> getAttributeKeysFromConfiguration(String integrationConfiguration) {
+        Set<String> result = new HashSet<>();
+        Matcher m = ATTRIBUTE_PATTERN.matcher(integrationConfiguration);
+        while (m.find()) {
+            result.add(m.group(2));
+        }
+        return result;
+    }
+
+    public static String formatAttributeKeyToPlaceholderFormat(String attributeKey) {
+        return String.format(ATTRIBUTE_PLACEHOLDER_PATTERN, attributeKey);
+    }
+
+    public static String formatAttributeKeyToRegexpPlaceholderFormat(String attributeKey) {
+        return String.format(ATTRIBUTE_REGEXP_PLACEHOLDER_PATTERN, attributeKey);
     }
 }

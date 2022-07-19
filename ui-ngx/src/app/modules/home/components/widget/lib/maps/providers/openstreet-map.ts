@@ -31,16 +31,22 @@
 
 import L from 'leaflet';
 import LeafletMap from '../leaflet-map';
-import { DEFAULT_ZOOM_LEVEL, UnitedMapSettings } from '../map-models';
+import { DEFAULT_ZOOM_LEVEL, WidgetUnitedMapSettings } from '../map-models';
 import { WidgetContext } from '@home/models/widget-component.models';
 
 export class OpenStreetMap extends LeafletMap {
-    constructor(ctx: WidgetContext, $container, options: UnitedMapSettings) {
+    constructor(ctx: WidgetContext, $container, options: WidgetUnitedMapSettings) {
         super(ctx, $container, options);
+        let mapUuid: string;
+        if (this.ctx.reportService.reportView) {
+          mapUuid = this.ctx.reportService.onWaitForMap();
+        }
         const map =  L.map($container, {
+          doubleClickZoom: !this.options.disableDoubleClickZooming,
           zoomControl: !this.options.disableZoomControl,
-          tap: L.Browser.safari && L.Browser.mobile
-        }).setView(options?.defaultCenterPosition, options?.defaultZoomLevel || DEFAULT_ZOOM_LEVEL);
+          tap: L.Browser.safari && L.Browser.mobile,
+          fadeAnimation: !ctx.reportService.reportView
+        }).setView(options?.parsedDefaultCenterPosition, options?.defaultZoomLevel || DEFAULT_ZOOM_LEVEL);
         let tileLayer;
         if (options.useCustomProvider) {
           tileLayer = L.tileLayer(options.customProviderTileUrl);
@@ -48,7 +54,11 @@ export class OpenStreetMap extends LeafletMap {
           tileLayer = (L.tileLayer as any).provider(options.mapProvider || 'OpenStreetMap.Mapnik');
         }
         tileLayer.addTo(map);
-        super.initSettings(options);
+        if (this.ctx.reportService.reportView) {
+            tileLayer.once('load', () => {
+              this.ctx.reportService.onMapLoaded(mapUuid);
+            });
+        }
         super.setMap(map);
     }
 }
