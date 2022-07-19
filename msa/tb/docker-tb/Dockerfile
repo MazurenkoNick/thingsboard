@@ -57,7 +57,7 @@ RUN apt-get update \
     && mv /tmp/start-tb.sh /usr/bin \
     && mv /tmp/upgrade-tb.sh /usr/bin \
     && mv /tmp/install-tb.sh /usr/bin \
-    && RUN echo "thingsboard thingsboard-pe/license boolean true" | debconf-set-selections \
+    && echo "thingsboard thingsboard-pe/license boolean true" | debconf-set-selections \
     && (yes | DEBIAN_FRONTEND=noninteractive dpkg -i /tmp/${pkg.name}.deb) \
     && (yes | dpkg -i /tmp/tb-web-report.deb) \
     && dpkg-deb -R /tmp/tb-web-report.deb /usr/tb-web-report \
