@@ -28,14 +28,19 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.common.data.event;
+package org.thingsboard.server.common.transport;
 
-import io.swagger.annotations.ApiModel;
+import lombok.Getter;
+import org.thingsboard.server.common.data.DeviceProfile;
+import org.thingsboard.server.queue.discovery.event.TbApplicationEvent;
 
-@ApiModel
-public class DebugRuleChainEventFilter extends DebugRuleEngineEventFilter {
-    @Override
-    public EventType getEventType() {
-        return EventType.DEBUG_RULE_CHAIN;
+public final class DeviceProfileUpdatedEvent extends TbApplicationEvent {
+
+    @Getter
+    private final DeviceProfile deviceProfile;
+
+    public DeviceProfileUpdatedEvent(DeviceProfile deviceProfile) {
+        super(new Object());
+        this.deviceProfile = deviceProfile;
     }
 }

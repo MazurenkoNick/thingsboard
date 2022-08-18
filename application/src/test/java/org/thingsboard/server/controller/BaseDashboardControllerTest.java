@@ -33,7 +33,6 @@ package org.thingsboard.server.controller;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -43,6 +42,7 @@ import org.thingsboard.server.common.data.Customer;
 import org.thingsboard.server.common.data.Dashboard;
 import org.thingsboard.server.common.data.DashboardInfo;
 import org.thingsboard.server.common.data.EntityType;
+import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.Tenant;
 import org.thingsboard.server.common.data.User;
 import org.thingsboard.server.common.data.audit.ActionType;
@@ -132,7 +132,7 @@ public abstract class BaseDashboardControllerTest extends AbstractControllerTest
     @Test
     public void testSaveDashboardInfoWithViolationOfValidation() throws Exception {
         Dashboard dashboard = new Dashboard();
-        dashboard.setTitle(RandomStringUtils.randomAlphabetic(300));
+        dashboard.setTitle(StringUtils.randomAlphabetic(300));
         String msgError = msgErrorFieldLength("title");
 
         Mockito.reset(tbClusterService, auditLogService);
@@ -233,7 +233,7 @@ public abstract class BaseDashboardControllerTest extends AbstractControllerTest
 
         List<DashboardInfo> loadedDashboards = new ArrayList<>();
         PageLink pageLink = new PageLink(24);
-        PageData<DashboardInfo> pageData = null;
+        PageData<DashboardInfo> pageData;
         do {
             pageData = doGetTypedWithPageLink("/api/tenant/dashboards?",
                     new TypeReference<>() {
@@ -257,7 +257,7 @@ public abstract class BaseDashboardControllerTest extends AbstractControllerTest
         int cntEntity = 134;
         for (int i = 0; i < cntEntity; i++) {
             Dashboard dashboard = new Dashboard();
-            String suffix = RandomStringUtils.randomAlphanumeric((int) (Math.random() * 15));
+            String suffix = StringUtils.randomAlphanumeric((int) (Math.random() * 15));
             String title = title1 + suffix;
             title = i % 2 == 0 ? title.toLowerCase() : title.toUpperCase();
             dashboard.setTitle(title);
@@ -267,7 +267,7 @@ public abstract class BaseDashboardControllerTest extends AbstractControllerTest
         List<DashboardInfo> dashboardsTitle2 = new ArrayList<>();
         for (int i = 0; i < 112; i++) {
             Dashboard dashboard = new Dashboard();
-            String suffix = RandomStringUtils.randomAlphanumeric((int) (Math.random() * 15));
+            String suffix = StringUtils.randomAlphanumeric((int) (Math.random() * 15));
             String title = title2 + suffix;
             title = i % 2 == 0 ? title.toLowerCase() : title.toUpperCase();
             dashboard.setTitle(title);
@@ -276,10 +276,10 @@ public abstract class BaseDashboardControllerTest extends AbstractControllerTest
 
         List<DashboardInfo> loadedDashboardsTitle1 = new ArrayList<>();
         PageLink pageLink = new PageLink(15, 0, title1);
-        PageData<DashboardInfo> pageData = null;
+        PageData<DashboardInfo> pageData;
         do {
             pageData = doGetTypedWithPageLink("/api/tenant/dashboards?",
-                    new TypeReference<PageData<DashboardInfo>>() {
+                    new TypeReference<>() {
                     }, pageLink);
             loadedDashboardsTitle1.addAll(pageData.getData());
             if (pageData.hasNext()) {
@@ -296,7 +296,7 @@ public abstract class BaseDashboardControllerTest extends AbstractControllerTest
         pageLink = new PageLink(4, 0, title2);
         do {
             pageData = doGetTypedWithPageLink("/api/tenant/dashboards?",
-                    new TypeReference<PageData<DashboardInfo>>() {
+                    new TypeReference<>() {
                     }, pageLink);
             loadedDashboardsTitle2.addAll(pageData.getData());
             if (pageData.hasNext()) {
@@ -322,7 +322,7 @@ public abstract class BaseDashboardControllerTest extends AbstractControllerTest
 
         pageLink = new PageLink(4, 0, title1);
         pageData = doGetTypedWithPageLink("/api/tenant/dashboards?",
-                new TypeReference<PageData<DashboardInfo>>() {
+                new TypeReference<>() {
                 }, pageLink);
         Assert.assertFalse(pageData.hasNext());
         Assert.assertEquals(0, pageData.getData().size());
@@ -334,7 +334,7 @@ public abstract class BaseDashboardControllerTest extends AbstractControllerTest
 
         pageLink = new PageLink(4, 0, title2);
         pageData = doGetTypedWithPageLink("/api/tenant/dashboards?",
-                new TypeReference<PageData<DashboardInfo>>() {
+                new TypeReference<>() {
                 }, pageLink);
         Assert.assertFalse(pageData.hasNext());
         Assert.assertEquals(0, pageData.getData().size());
@@ -356,8 +356,10 @@ public abstract class BaseDashboardControllerTest extends AbstractControllerTest
 
         customerUserGroup = doPost("/api/entityGroup", customerUserGroup, EntityGroup.class);
 
-        testNotifyEntityOneTimeMsgToEdgeServiceNever(customerUserGroup, customerUserGroup.getId(), customerUserGroup.getId(), savedTenant.getId(),
-                tenantAdmin.getCustomerId(), tenantAdmin.getId(), tenantAdmin.getEmail(), ActionType.ADDED);
+        testNotifyManyEntityManyTimeMsgToEdgeServiceEntityEqAnyWithGroup(customerUserGroup, customerUserGroup,
+                savedTenant.getId(), tenantAdmin.getCustomerId(), tenantAdmin.getId(), tenantAdmin.getEmail(),
+                ActionType.ADDED, ActionType.ADDED, 2, 0 , 2,
+                customerUserGroup.getType(), customerUserGroup.getId());
 
         EntityGroup tenantDashboardGroup = new EntityGroup();
         tenantDashboardGroup.setType(EntityType.DASHBOARD);
@@ -418,10 +420,10 @@ public abstract class BaseDashboardControllerTest extends AbstractControllerTest
 
         List<DashboardInfo> tenantAdminDashboards = new ArrayList<>();
         PageLink pageLink = new PageLink(100);
-        PageData<DashboardInfo> pageData = null;
+        PageData<DashboardInfo> pageData;
         do {
             pageData = doGetTypedWithPageLink("/api/user/dashboards?",
-                    new TypeReference<PageData<DashboardInfo>>() {
+                    new TypeReference<>() {
                     }, pageLink);
             tenantAdminDashboards.addAll(pageData.getData());
             if (pageData.hasNext()) {
@@ -443,7 +445,7 @@ public abstract class BaseDashboardControllerTest extends AbstractControllerTest
         List<DashboardInfo> customerUserDashboards = new ArrayList<>();
         do {
             pageData = doGetTypedWithPageLink("/api/user/dashboards?userId={userId}&",
-                    new TypeReference<PageData<DashboardInfo>>() {
+                    new TypeReference<>() {
                     }, pageLink, savedUser.getId().getId().toString());
             customerUserDashboards.addAll(pageData.getData());
             if (pageData.hasNext()) {

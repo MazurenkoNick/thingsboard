@@ -28,14 +28,14 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.common.data.event;
+package org.thingsboard.server.service.entitiy.converter;
 
-import io.swagger.annotations.ApiModel;
+import org.thingsboard.server.common.data.User;
+import org.thingsboard.server.common.data.converter.Converter;
 
-@ApiModel
-public class DebugRuleNodeEventFilter extends DebugRuleEngineEventFilter {
-    @Override
-    public EventType getEventType() {
-        return EventType.DEBUG_RULE_NODE;
-    }
+public interface TbConverterService {
+
+    Converter save(Converter entity, User user) throws Exception;
+
+    void delete(Converter entity, User user);
 }
