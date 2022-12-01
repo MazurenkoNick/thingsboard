@@ -32,12 +32,18 @@ package org.thingsboard.server.controller;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.AdditionalAnswers;
 import org.mockito.Mockito;
 import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Primary;
+import org.springframework.test.context.ContextConfiguration;
 import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.server.common.data.Customer;
 import org.thingsboard.server.common.data.Device;
@@ -53,12 +59,14 @@ import org.thingsboard.server.common.data.group.EntityGroupInfo;
 import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.TenantId;
+import org.thingsboard.server.common.data.id.AlarmId;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.permission.GroupPermission;
 import org.thingsboard.server.common.data.permission.ShareGroupRequest;
 import org.thingsboard.server.common.data.role.Role;
 import org.thingsboard.server.common.data.role.RoleType;
 import org.thingsboard.server.common.data.security.Authority;
+import org.thingsboard.server.dao.alarm.AlarmDao;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -66,6 +74,8 @@ import java.util.List;
 import static org.hamcrest.Matchers.containsString;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+@Slf4j
+@ContextConfiguration(classes = {BaseAlarmControllerTest.Config.class})
 public abstract class BaseAlarmControllerTest extends AbstractControllerTest {
 
     public static final String TEST_ALARM_TYPE = "Test";
@@ -84,11 +94,22 @@ public abstract class BaseAlarmControllerTest extends AbstractControllerTest {
 
     protected Device customerDevice;
 
+    @Autowired
+    private AlarmDao alarmDao;
+
     private Role role;
     private EntityGroup entityGroup;
     private GroupPermission groupPermission;
     private final String classNameAlarm = "ALARM";
 
+
+    static class Config {
+        @Bean
+        @Primary
+        public AlarmDao alarmDao(AlarmDao alarmDao) {
+            return Mockito.mock(AlarmDao.class, AdditionalAnswers.delegatesTo(alarmDao));
+        }
+    }
 
     @Before
     public void setup() throws Exception {
@@ -132,6 +153,7 @@ public abstract class BaseAlarmControllerTest extends AbstractControllerTest {
     @After
     public void teardown() throws Exception {
         loginSysAdmin();
+
         deleteDifferentTenant();
         clearCustomerAdminPermissionGroup();
     }
@@ -701,7 +723,7 @@ public abstract class BaseAlarmControllerTest extends AbstractControllerTest {
         alarm = doPost("/api/alarm", alarm, Alarm.class);
         Assert.assertNotNull("Saved alarm is null!", alarm);
 
-        logout();
+        resetTokens();
 
         JsonNode publicLoginRequest = JacksonUtil.toJsonNode("{\"publicId\": \"" + publicId + "\"}");
         JsonNode tokens = doPost("/api/auth/login/public", publicLoginRequest, JsonNode.class);
@@ -740,6 +762,21 @@ public abstract class BaseAlarmControllerTest extends AbstractControllerTest {
         doPost("/api/entityGroup/" + groupInfo.getId() + "/makePublic")
                 .andExpect(status().isOk());
         return doGet("/api/entityGroup/" + groupInfo.getUuidId(), EntityGroupInfo.class);
+    }
+
+
+    @Test
+    public void testDeleteAlarmWithDeleteRelationsOk() throws Exception {
+        loginCustomerAdministrator();
+        AlarmId alarmId = createAlarm("Alarm for Test WithRelationsOk").getId();
+        testEntityDaoWithRelationsOk(customerDevice.getId(), alarmId, "/api/alarm/" + alarmId);
+    }
+
+    @Test
+    public void testDeleteAlarmExceptionWithRelationsTransactional() throws Exception {
+        loginCustomerAdministrator();
+        AlarmId alarmId = createAlarm("Alarm for Test WithRelations Transactional Exception").getId();
+        testEntityDaoWithRelationsTransactionalException(alarmDao, customerDevice.getId(), alarmId, "/api/alarm/" + alarmId);
     }
 
     private Alarm createAlarm(String type) throws Exception {
@@ -841,7 +878,7 @@ public abstract class BaseAlarmControllerTest extends AbstractControllerTest {
 
         user = createUser(user, pass, entityGroup.getId());
         customerAdminUserId = user.getId();
-        logout();
+        resetTokens();
 
         return user;
     }

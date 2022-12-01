@@ -34,7 +34,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.extern.slf4j.Slf4j;
-import org.thingsboard.server.common.data.StringUtils;
 import org.eclipse.milo.opcua.sdk.client.OpcUaClient;
 import org.eclipse.milo.opcua.sdk.client.api.config.OpcUaClientConfig;
 import org.eclipse.milo.opcua.sdk.client.api.config.OpcUaClientConfigBuilder;
@@ -78,6 +77,7 @@ import org.thingsboard.integration.api.data.IntegrationMetaData;
 import org.thingsboard.integration.api.data.UplinkData;
 import org.thingsboard.integration.api.data.UplinkMetaData;
 import org.thingsboard.integration.api.util.ExceptionUtil;
+import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.msg.TbMsg;
 import org.thingsboard.server.common.msg.TbMsgDataType;
 import org.thingsboard.server.common.msg.TbMsgMetaData;
@@ -157,12 +157,6 @@ public class OpcUaIntegration extends AbstractIntegration<OpcUaIntegrationMsg> {
         if (!allowLocalNetworkHosts && isLocalNetworkHost(opcUaServerConfiguration.getHost())) {
             throw new IllegalArgumentException("Usage of local network host for OPC-UA server connection is not allowed!");
         }
-    }
-
-    @Override
-    public void update(TbIntegrationInitParams params) throws Exception {
-        destroy();
-        init(params);
     }
 
     @Override
@@ -421,9 +415,13 @@ public class OpcUaIntegration extends AbstractIntegration<OpcUaIntegrationMsg> {
                 connected = false;
                 if (client != null) {
                     try {
+                        if (subscription != null) {
+                            client.deleteSubscriptions(Collections.singletonList(subscription.getSubscriptionId()));
+                        }
                         client.disconnect().get(10, TimeUnit.SECONDS);
                     } finally {
                         client = null;
+                        subscription = null;
                     }
                     log.info("[{}] OPC-UA client disconnected", this.configuration.getId());
                 }
@@ -462,7 +460,7 @@ public class OpcUaIntegration extends AbstractIntegration<OpcUaIntegrationMsg> {
         boolean requiresReconnect = false;
         try {
             long startTs = System.currentTimeMillis();
-            List<OpcUaIntegrationException> errors = scanForDevices(new OpcUaNode(Identifiers.RootFolder, ""));
+            ScanExceptions exceptions = scanForDevices(new OpcUaNode(Identifiers.RootFolder, ""));
             log.debug("[{}] Device scan cycle completed in {} ms", this.configuration.getId(), (System.currentTimeMillis() - startTs));
             List<OpcUaDevice> deleted = devices.values().stream().filter(opcUaDevice -> opcUaDevice.getScanTs() < startTs).collect(Collectors.toList());
             if (deleted.size() > 0) {
@@ -470,16 +468,15 @@ public class OpcUaIntegration extends AbstractIntegration<OpcUaIntegrationMsg> {
             }
             deleted.stream().map(OpcUaDevice::getNodeId).forEach(devices::remove);
 
-            if (!errors.isEmpty()) {
-                for (OpcUaIntegrationException e : errors) {
-                    UaException uaException = ExceptionUtil.lookupException(e.getCause(), UaException.class);
-                    if (uaException != null) {
-                        e.getNode().ifPresent(node -> log.error(String.format("[%s] Browsing nodeId=%s failed: %s", this.configuration.getName(), node.getNodeId(), uaException.getMessage()), uaException));
-                        sendConnectionFailedMessageToRuleEngine(e);
-                        submit(OpcUaIntegrationTask.DISCONNECT);
-                        submit(CONNECT, MIN_DELAY_BETWEEN_RECONNECTS_IN_SEC);
-                        requiresReconnect = true;
-                    }
+            if (exceptions.getCritical() != null) {
+                var e = exceptions.getCritical();
+                UaException uaException = ExceptionUtil.lookupException(e.getCause(), UaException.class);
+                if (uaException != null) {
+                    e.getNode().ifPresent(node -> log.error(String.format("[%s] Browsing nodeId=%s failed: %s", this.configuration.getName(), node.getNodeId(), uaException.getMessage()), uaException));
+                    sendConnectionFailedMessageToRuleEngine(e);
+                    submit(OpcUaIntegrationTask.DISCONNECT);
+                    submit(CONNECT, MIN_DELAY_BETWEEN_RECONNECTS_IN_SEC);
+                    requiresReconnect = true;
                 }
             }
         } catch (Throwable e) {
@@ -533,13 +530,13 @@ public class OpcUaIntegration extends AbstractIntegration<OpcUaIntegrationMsg> {
         }
     }
 
-    private List<OpcUaIntegrationException> scanForDevices(OpcUaNode node) {
-        List<OpcUaIntegrationException> errors = new ArrayList<>();
+    private ScanExceptions scanForDevices(OpcUaNode node) {
+        var errors = new ScanExceptions();
         scanForDevices(node, errors);
         return errors;
     }
 
-    private void scanForDevices(OpcUaNode node, List<OpcUaIntegrationException> errors) {
+    private void scanForDevices(OpcUaNode node, ScanExceptions errors) {
         log.debug("[{}] Scanning node: {}", getConfigurationId(), node);
         List<DeviceMapping> matchedMappings = new ArrayList<>();
         boolean scanChildren = false;
@@ -552,6 +549,9 @@ public class OpcUaIntegration extends AbstractIntegration<OpcUaIntegrationMsg> {
         }
 
         matchedMappings.forEach(m -> {
+            if (errors.getCritical() != null) {
+                return;
+            }
             try {
                 log.debug("[{}] Matched mapping: [{}]", getConfigurationId(), m);
                 scanDevice(node, m, errors);
@@ -584,7 +584,7 @@ public class OpcUaIntegration extends AbstractIntegration<OpcUaIntegrationMsg> {
         return this.configuration.getName();
     }
 
-    private void scanDevice(OpcUaNode node, DeviceMapping m, List<OpcUaIntegrationException> errors) throws Exception {
+    private void scanDevice(OpcUaNode node, DeviceMapping m, ScanExceptions errors) throws Exception {
         log.debug("[{}] Scanning device node: {}", getConfigurationId(), node);
         Set<String> tags = m.getAllTags();
         log.debug("[{}] Scanning node hierarchy for tags: {}", getConfigurationId(), tags);
@@ -693,8 +693,11 @@ public class OpcUaIntegration extends AbstractIntegration<OpcUaIntegrationMsg> {
         }
     }
 
-    private Map<String, NodeId> lookupTags(NodeId nodeId, String deviceNodeName, Set<String> tags, List<OpcUaIntegrationException> errors) {
+    private Map<String, NodeId> lookupTags(NodeId nodeId, String deviceNodeName, Set<String> tags, ScanExceptions errors) {
         Map<String, NodeId> values = new HashMap<>();
+        if (errors.getCritical() != null) {
+            return values;
+        }
         try {
             BrowseResult browseResult = client.browse(getBrowseDescription(nodeId)).get(5, TimeUnit.SECONDS);
             List<ReferenceDescription> references = ConversionUtil.toList(browseResult.getReferences());

@@ -668,6 +668,7 @@ message TbAttributeDeleteProto {
   int64 tenantIdLSB = 5;
   string scope = 6;
   repeated string keys = 7;
+  bool notifyDevice = 8;
 }
 
 message TbTimeSeriesDeleteProto {
@@ -1021,6 +1022,8 @@ message ToCoreNotificationMsg {
   IntegrationDownlinkMsgProto integrationDownlinkMsg = 8;
   RestApiCallResponseMsgProto restApiCallResponseMsg = 9;
   IntegrationValidationResponseProto integrationValidationResponseMsg = 10;
+  bytes toEdgeSyncRequestMsg = 11;
+  bytes fromEdgeSyncResponseMsg = 12;
 }
 
 /* Messages that are handled by ThingsBoard RuleEngine Service */

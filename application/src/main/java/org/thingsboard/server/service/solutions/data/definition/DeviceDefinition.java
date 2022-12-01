@@ -42,11 +42,11 @@ public class DeviceDefinition extends CustomerEntityDefinition {
 
     private String type;
     private String label;
-    private String profile;
+    private String emulator;
 
     @Override
     public EntityType getEntityType() {
-        return EntityType.ASSET;
+        return EntityType.DEVICE;
     }
 
 }

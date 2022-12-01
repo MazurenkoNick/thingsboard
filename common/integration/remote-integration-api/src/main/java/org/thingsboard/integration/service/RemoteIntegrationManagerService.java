@@ -44,8 +44,8 @@ import org.thingsboard.common.util.ThingsBoardThreadFactory;
 import org.thingsboard.integration.api.IntegrationStatistics;
 import org.thingsboard.integration.api.TbIntegrationInitParams;
 import org.thingsboard.integration.api.ThingsboardPlatformIntegration;
-import org.thingsboard.integration.api.converter.JSDownlinkDataConverter;
-import org.thingsboard.integration.api.converter.JSUplinkDataConverter;
+import org.thingsboard.integration.api.converter.ScriptDownlinkDataConverter;
+import org.thingsboard.integration.api.converter.ScriptUplinkDataConverter;
 import org.thingsboard.integration.api.converter.TBDataConverter;
 import org.thingsboard.integration.api.converter.TBDownlinkDataConverter;
 import org.thingsboard.integration.api.converter.TBUplinkDataConverter;
@@ -55,7 +55,8 @@ import org.thingsboard.integration.api.util.LogSettingsComponent;
 import org.thingsboard.integration.remote.RemoteIntegrationContext;
 import org.thingsboard.integration.rpc.IntegrationRpcClient;
 import org.thingsboard.integration.storage.EventStorage;
-import org.thingsboard.js.api.JsInvokeService;
+import org.thingsboard.script.api.js.JsInvokeService;
+import org.thingsboard.script.api.tbel.TbelInvokeService;
 import org.thingsboard.server.coapserver.CoapServerService;
 import org.thingsboard.server.common.data.FSTUtils;
 import org.thingsboard.server.common.data.StringUtils;
@@ -137,6 +138,9 @@ public class RemoteIntegrationManagerService {
     @Autowired
     private JsInvokeService jsInvokeService;
 
+    @Autowired(required = false)
+    private TbelInvokeService tbelInvokeService;
+
     @Autowired
     private LogSettingsComponent logSettingsComponent;
 
@@ -167,8 +171,24 @@ public class RemoteIntegrationManagerService {
 
     @PostConstruct
     public void init() {
+        if (StringUtils.isBlank(routingKey)) {
+            log.error("The routing key is blank. Please define 'INTEGRATION_ROUTING_KEY' environment variable!");
+            System.exit(-1);
+        }
+        if (StringUtils.isBlank(routingSecret)) {
+            log.error("The routing secret is blank. Please define 'INTEGRATION_SECRET' environment variable!");
+            System.exit(-1);
+        }
+        if ("PUT_YOUR_ROUTING_KEY_HERE".equals(routingKey)) {
+            log.error("The routing key is default. Please define 'INTEGRATION_ROUTING_KEY' environment variable!");
+            System.exit(-1);
+        }
+        if ("PUT_YOUR_SECRET_HERE".equals(routingSecret)) {
+            log.error("The routing secret is default. Please define 'INTEGRATION_SECRET' environment variable!");
+            System.exit(-1);
+        }
         serviceId = "[" + clientId + ":" + port + "]";
-        rpcClient.connect(routingKey, routingSecret, this::onConfigurationUpdate, this::onConverterConfigurationUpdate, this::onDownlink, this::scheduleReconnect);
+        rpcClient.connect(routingKey, routingSecret, serviceId, this::onConfigurationUpdate, this::onConverterConfigurationUpdate, this::onDownlink, this::scheduleReconnect);
         executor = Executors.newSingleThreadExecutor(ThingsBoardThreadFactory.forName("remote-integration-manager-service"));
         reconnectScheduler = Executors.newSingleThreadScheduledExecutor(ThingsBoardThreadFactory.forName("remote-integration-manager-service-reconnect"));
         schedulerService = Executors.newSingleThreadScheduledExecutor(ThingsBoardThreadFactory.forName("remote-integration-manager-service-scheduler"));
@@ -232,29 +252,39 @@ public class RemoteIntegrationManagerService {
         }
         try {
             Integration configuration = createIntegrationConfiguration(integrationConfigurationProto);
-            integration = IntegrationUtil.createPlatformIntegration(IntegrationType.valueOf(integrationConfigurationProto.getType()), configuration.getConfiguration(), true, coapServerService);
-            integration.validateConfiguration(configuration, allowLocalNetworkHosts);
+            if (configuration.isEnabled()) {
+                integration = IntegrationUtil.createPlatformIntegration(IntegrationType.valueOf(integrationConfigurationProto.getType()), configuration.getConfiguration(), true, coapServerService);
+                integration.validateConfiguration(configuration, allowLocalNetworkHosts);
 
-            if (uplinkDataConverter == null || !uplinkDataConverter.getName().equals(integrationConfigurationProto.getUplinkConverter().getName())) {
-                uplinkDataConverter = createUplinkConverter(integrationConfigurationProto.getUplinkConverter());
-            }
+                if (uplinkDataConverter == null || !uplinkDataConverter.getName().equals(integrationConfigurationProto.getUplinkConverter().getName())) {
+                    uplinkDataConverter = createUplinkConverter(integrationConfigurationProto.getUplinkConverter());
+                }
 
-            if (downlinkDataConverter == null || !downlinkDataConverter.getName().equals(integrationConfigurationProto.getDownlinkConverter().getName())) {
-                downlinkDataConverter = createDownlinkConverter(integrationConfigurationProto.getDownlinkConverter());
-            }
+                if (downlinkDataConverter == null || !downlinkDataConverter.getName().equals(integrationConfigurationProto.getDownlinkConverter().getName())) {
+                    downlinkDataConverter = createDownlinkConverter(integrationConfigurationProto.getDownlinkConverter());
+                }
 
-            TbIntegrationInitParams params = new TbIntegrationInitParams(
-                    new RemoteIntegrationContext(eventStorage, schedulerService, generalExecutorService, callBackExecutorService, configuration, clientId, port),
-                    configuration,
-                    uplinkDataConverter,
-                    downlinkDataConverter);
-            integration.init(params);
-            if (updatingIntegration) {
-                integrationEvent = ComponentLifecycleEvent.UPDATED;
-                persistLifecycleEvent(ComponentLifecycleEvent.UPDATED, null);
-            } else {
-                integrationEvent = ComponentLifecycleEvent.STARTED;
-                persistLifecycleEvent(ComponentLifecycleEvent.STARTED, null);
+                TbIntegrationInitParams params = new TbIntegrationInitParams(
+                        new RemoteIntegrationContext(eventStorage, schedulerService, generalExecutorService, callBackExecutorService,
+                                configuration, clientId, port),
+                        configuration,
+                        uplinkDataConverter,
+                        downlinkDataConverter);
+                integration.init(params);
+                if (updatingIntegration) {
+                    integrationEvent = ComponentLifecycleEvent.UPDATED;
+                    persistLifecycleEvent(ComponentLifecycleEvent.UPDATED, null);
+                } else {
+                    integrationEvent = ComponentLifecycleEvent.STARTED;
+                    persistLifecycleEvent(ComponentLifecycleEvent.STARTED, null);
+                }
+            } else if (!ComponentLifecycleEvent.STOPPED.equals(integrationEvent)) {
+                if (statisticsEnabled) {
+                    persistStatistics();
+                }
+                integrationEvent = ComponentLifecycleEvent.STOPPED;
+                persistLifecycleEvent(ComponentLifecycleEvent.STOPPED, null);
+                integration = null;
             }
             initialized = true;
         } catch (Exception e) {
@@ -293,7 +323,7 @@ public class RemoteIntegrationManagerService {
     }
 
     private TBUplinkDataConverter createUplinkConverter(ConverterConfigurationProto uplinkConverter) throws IOException {
-        JSUplinkDataConverter uplinkDataConverter = new JSUplinkDataConverter(jsInvokeService, logSettingsComponent);
+        ScriptUplinkDataConverter uplinkDataConverter = new ScriptUplinkDataConverter(jsInvokeService, tbelInvokeService, logSettingsComponent);
         Converter converter = constructConverter(uplinkConverter, ConverterType.UPLINK);
         uplinkConverterId = converter.getId();
         uplinkDataConverter.init(converter);
@@ -302,7 +332,7 @@ public class RemoteIntegrationManagerService {
 
     private TBDownlinkDataConverter createDownlinkConverter(ConverterConfigurationProto downLinkConverter) throws IOException {
         if (!StringUtils.isEmpty(downLinkConverter.getConfiguration())) {
-            JSDownlinkDataConverter downlinkDataConverter = new JSDownlinkDataConverter(jsInvokeService, logSettingsComponent);
+            ScriptDownlinkDataConverter downlinkDataConverter = new ScriptDownlinkDataConverter(jsInvokeService, tbelInvokeService, logSettingsComponent);
             Converter converter = constructConverter(downLinkConverter, ConverterType.DOWNLINK);
             downlinkConverterId = converter.getId();
             downlinkDataConverter.init(converter);
@@ -366,7 +396,7 @@ public class RemoteIntegrationManagerService {
                 } catch (Exception ex) {
                     log.error("Exception during disconnect: {}", ex.getMessage());
                 }
-                rpcClient.connect(routingKey, routingSecret, this::onConfigurationUpdate, this::onConverterConfigurationUpdate, this::onDownlink, this::scheduleReconnect);
+                rpcClient.connect(routingKey, routingSecret, serviceId, this::onConfigurationUpdate, this::onConverterConfigurationUpdate, this::onDownlink, this::scheduleReconnect);
             }, 0, reconnectTimeoutMs, TimeUnit.MILLISECONDS);
         }
     }

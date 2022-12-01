@@ -31,17 +31,15 @@
 package org.thingsboard.integration.api.converter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.util.Base64Utils;
-import org.thingsboard.common.util.EventUtil;
 import org.thingsboard.integration.api.IntegrationCallback;
 import org.thingsboard.integration.api.util.ExceptionUtil;
-import org.thingsboard.server.common.data.DataConstants;
+import org.thingsboard.script.api.ScriptInvokeService;
+import org.thingsboard.script.api.js.JsInvokeService;
+import org.thingsboard.script.api.tbel.TbelInvokeService;
 import org.thingsboard.server.common.data.converter.Converter;
 import org.thingsboard.server.common.data.event.ConverterDebugEvent;
-
-import java.nio.charset.StandardCharsets;
+import org.thingsboard.server.common.data.script.ScriptLanguage;
 
 import static org.thingsboard.integration.api.util.ConvertUtil.toDebugMessage;
 
@@ -52,7 +50,31 @@ import static org.thingsboard.integration.api.util.ConvertUtil.toDebugMessage;
 public abstract class AbstractDataConverter implements TBDataConverter {
 
     protected final ObjectMapper mapper = new ObjectMapper();
+    private final JsInvokeService jsInvokeService;
+    private final TbelInvokeService tbelInvokeService;
     protected Converter configuration;
+
+    public AbstractDataConverter(JsInvokeService jsInvokeService, TbelInvokeService tbelInvokeService) {
+        this.jsInvokeService = jsInvokeService;
+        this.tbelInvokeService = tbelInvokeService;
+    }
+
+    protected ScriptInvokeService getScriptInvokeService(Converter configuration) {
+        var cfgJson = configuration.getConfiguration();
+        ScriptLanguage scriptLang = cfgJson.has("scriptLang") ? ScriptLanguage.valueOf(cfgJson.get("scriptLang").asText()) : ScriptLanguage.JS;
+        ScriptInvokeService scriptInvokeService;
+        if (ScriptLanguage.JS.equals(scriptLang)) {
+            scriptInvokeService = jsInvokeService;
+        } else {
+            if (tbelInvokeService == null) {
+                throw new RuntimeException("TBEL script engine is disabled!");
+            } else {
+                scriptInvokeService = tbelInvokeService;
+            }
+        }
+        return scriptInvokeService;
+    }
+
 
     @Override
     public void init(Converter configuration) {
