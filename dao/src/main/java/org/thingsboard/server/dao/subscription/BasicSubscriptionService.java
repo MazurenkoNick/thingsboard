@@ -64,6 +64,8 @@ public class BasicSubscriptionService implements SubscriptionService, TbLicenseC
     private static final String MAX_ASSETS_KEY = "maxassets";
     private static final String WHITELABELING_KEY = "whitelabeling";
 
+    private static final String DEVELOPMENT_KEY = "development";
+
     @Value("${license.secret}")
     private String licenseSecret;
     @Value("${license.instance_data_file:instance-license.data}")
@@ -188,6 +190,15 @@ public class BasicSubscriptionService implements SubscriptionService, TbLicenseC
     @Override
     public boolean whiteLabelingEnabled(TenantId tenantId) throws SubscriptionException {
         return this.tbLicenseClient.getPlanBooleanValue(WHITELABELING_KEY);
+    }
+
+    @Override
+    public boolean isDevelopment(TenantId tenantId) throws SubscriptionException {
+        try {
+            return this.tbLicenseClient.getPlanBooleanValue(DEVELOPMENT_KEY);
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     private long countDevices() {

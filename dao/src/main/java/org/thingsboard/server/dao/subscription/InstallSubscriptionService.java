@@ -60,4 +60,9 @@ public class InstallSubscriptionService implements SubscriptionService {
     public boolean whiteLabelingEnabled(TenantId tenantId) throws SubscriptionException {
         return false;
     }
+
+    @Override
+    public boolean isDevelopment(TenantId tenantId) throws SubscriptionException {
+        return false;
+    }
 }

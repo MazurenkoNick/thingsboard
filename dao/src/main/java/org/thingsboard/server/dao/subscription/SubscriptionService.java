@@ -43,4 +43,6 @@ public interface SubscriptionService {
 
     boolean whiteLabelingEnabled(TenantId tenantId) throws SubscriptionException;
 
+    boolean isDevelopment(TenantId tenantId) throws SubscriptionException;
+
 }

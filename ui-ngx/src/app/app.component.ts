@@ -46,6 +46,7 @@ import { selectIsAuthenticated, selectIsUserLoaded } from '@core/auth/auth.selec
 import { distinctUntilChanged, filter, map, skip } from 'rxjs/operators';
 import { AuthService } from '@core/auth/auth.service';
 import { ReportService } from '@core/http/report.service';
+import { DevelopmentService } from '@core/http/development.service';
 
 @Component({
   selector: 'tb-root',
@@ -60,7 +61,8 @@ export class AppComponent implements OnInit {
               private matIconRegistry: MatIconRegistry,
               private domSanitizer: DomSanitizer,
               private authService: AuthService,
-              private reportService: ReportService) {
+              private reportService: ReportService,
+              private developmentService: DevelopmentService) {
 
     if (!env.production) {
       console.log(`ThingsBoard Version: ${env.tbVersion}`);
@@ -116,6 +118,8 @@ export class AppComponent implements OnInit {
     );
 
     this.storageService.testLocalStorage();
+
+    this.developmentService.checkIsDevelopment();
 
     this.setupTranslate();
     this.setupAuth();

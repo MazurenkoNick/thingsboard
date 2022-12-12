@@ -43,6 +43,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
+import org.thingsboard.server.common.data.id.TenantId;
+import org.thingsboard.server.dao.subscription.SubscriptionService;
 import org.thingsboard.server.queue.util.TbCoreComponent;
 import springfox.documentation.annotations.ApiIgnore;
 
@@ -58,6 +60,9 @@ public class SystemInfoController {
     @Autowired(required = false)
     private BuildProperties buildProperties;
 
+    @Autowired
+    private SubscriptionService subscriptionService;
+
     @PostConstruct
     public void init() {
         JsonNode info = buildInfoObject();
@@ -69,6 +74,12 @@ public class SystemInfoController {
     @ResponseBody
     public JsonNode getSystemVersionInfo() {
         return buildInfoObject();
+    }
+
+    @RequestMapping(value = "/noauth/system/development", method = RequestMethod.GET)
+    @ResponseBody
+    public Boolean isDevelopment() {
+        return subscriptionService.isDevelopment(TenantId.SYS_TENANT_ID);
     }
 
     private JsonNode buildInfoObject() {
