@@ -1,7 +1,7 @@
 @REM
 @REM ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
 @REM
-@REM Copyright © 2016-2022 ThingsBoard, Inc. All Rights Reserved.
+@REM Copyright © 2016-2023 ThingsBoard, Inc. All Rights Reserved.
 @REM
 @REM NOTICE: All information contained herein is, and remains
 @REM the property of ThingsBoard, Inc. and its suppliers,
