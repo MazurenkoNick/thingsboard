@@ -419,6 +419,11 @@ public class RestClient implements ClientHttpRequestInterceptor, Closeable {
         }
     }
 
+    public ObjectNode getSubscriptionPlan() {
+        ResponseEntity<ObjectNode> updateMsg = restTemplate.getForEntity(baseURL + "/api/admin/subscriptionPlan", ObjectNode.class);
+        return updateMsg.getBody();
+    }
+
     public Optional<Alarm> getAlarmById(AlarmId alarmId) {
         try {
             ResponseEntity<Alarm> alarm = restTemplate.getForEntity(baseURL + "/api/alarm/{alarmId}", Alarm.class, alarmId.getId());
