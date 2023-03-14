@@ -30,6 +30,7 @@
  */
 package org.thingsboard.server.dao.subscription;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
@@ -64,5 +65,10 @@ public class InstallSubscriptionService implements SubscriptionService {
     @Override
     public boolean isDevelopment(TenantId tenantId) throws SubscriptionException {
         return false;
+    }
+
+    @Override
+    public ObjectNode getSubscriptionPlan() {
+        return null;
     }
 }
