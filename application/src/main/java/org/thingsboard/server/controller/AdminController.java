@@ -75,6 +75,7 @@ import org.thingsboard.server.common.data.sync.vc.AutoCommitSettings;
 import org.thingsboard.server.common.data.sync.vc.RepositorySettings;
 import org.thingsboard.server.common.data.sync.vc.RepositorySettingsInfo;
 import org.thingsboard.server.common.data.security.model.JwtSettings;
+import org.thingsboard.server.dao.subscription.SubscriptionService;
 import org.thingsboard.server.service.security.auth.jwt.settings.JwtSettingsService;
 import org.thingsboard.server.dao.attributes.AttributesService;
 import org.thingsboard.server.dao.settings.AdminSettingsService;
@@ -134,6 +135,9 @@ public class AdminController extends BaseController {
 
     @Autowired
     private UpdateService updateService;
+
+    @Autowired
+    private SubscriptionService subscriptionService;
 
     protected static final String RESOURCE_READ_CHECK = "\n\nSecurity check is performed to verify that " +
             "the user has 'READ' permission for the 'ADMIN_SETTINGS' (for 'SYS_ADMIN' authority) or 'WHITE_LABELING' (for 'TENANT_ADMIN' authority) resource.";
@@ -485,6 +489,15 @@ public class AdminController extends BaseController {
         } catch (Exception e) {
             throw handleException(e);
         }
+    }
+
+    @ApiOperation(value = "Get subscription plan (getSubscriptionPlan)",
+            notes = "Get subscription plan. " + SYSTEM_AUTHORITY_PARAGRAPH)
+    @PreAuthorize("hasAuthority('SYS_ADMIN')")
+    @RequestMapping(value = "/subscriptionPlan", method = RequestMethod.GET)
+    @ResponseBody
+    public ObjectNode getSubscriptionPlan() throws ThingsboardException {
+        return subscriptionService.getSubscriptionPlan();
     }
 
     private AdminSettings getTenantAdminSettings(String key, boolean systemByDefault) throws Exception {

@@ -30,6 +30,7 @@
  */
 package org.thingsboard.server.dao.subscription;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -38,8 +39,10 @@ import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.license.client.TbLicenseClient;
 import org.thingsboard.license.client.TbLicenseClientListener;
+import org.thingsboard.license.shared.PlanItem;
 import org.thingsboard.license.shared.exception.LicenseErrorCode;
 import org.thingsboard.license.shared.exception.LicenseException;
 import org.thingsboard.server.common.data.Version;
@@ -123,6 +126,15 @@ public class BasicSubscriptionService implements SubscriptionService, TbLicenseC
         if (e.isCritical()) {
             doExit(-1, e.getErrorCode(), true);
         }
+    }
+
+    @Override
+    public ObjectNode getSubscriptionPlan() {
+        ObjectNode subPlan = JacksonUtil.newObjectNode();
+        subPlan.put(MAX_DEVICES_KEY, tbLicenseClient.getPlanLongValue(MAX_DEVICES_KEY));
+        subPlan.put(MAX_ASSETS_KEY, tbLicenseClient.getPlanLongValue(MAX_ASSETS_KEY));
+        subPlan.put(WHITELABELING_KEY, tbLicenseClient.getPlanBooleanValue(WHITELABELING_KEY));
+        return subPlan;
     }
 
     private void doExit(int exitCode, LicenseErrorCode licenseErrorCode, boolean gracefullShutdown) {
