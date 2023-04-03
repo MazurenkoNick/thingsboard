@@ -42,6 +42,7 @@ import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.common.util.ListeningExecutor;
 import org.thingsboard.rule.engine.api.MailService;
 import org.thingsboard.rule.engine.api.ReportService;
+import org.thingsboard.rule.engine.api.NotificationCenter;
 import org.thingsboard.rule.engine.api.RuleEngineAlarmService;
 import org.thingsboard.rule.engine.api.RuleEngineApiUsageStateService;
 import org.thingsboard.rule.engine.api.RuleEngineAssetProfileCache;
@@ -53,6 +54,7 @@ import org.thingsboard.rule.engine.api.SmsService;
 import org.thingsboard.rule.engine.api.TbContext;
 import org.thingsboard.rule.engine.api.TbPeContext;
 import org.thingsboard.rule.engine.api.TbRelationTypes;
+import org.thingsboard.rule.engine.api.slack.SlackService;
 import org.thingsboard.rule.engine.api.sms.SmsSenderFactory;
 import org.thingsboard.rule.engine.util.TenantIdLoader;
 import org.thingsboard.script.api.ScriptType;
@@ -97,6 +99,7 @@ import org.thingsboard.server.common.msg.queue.ServiceType;
 import org.thingsboard.server.common.msg.queue.TbCallback;
 import org.thingsboard.server.common.msg.queue.TopicPartitionInfo;
 import org.thingsboard.server.common.msg.rpc.FromDeviceRpcResponse;
+import org.thingsboard.server.dao.alarm.AlarmCommentService;
 import org.thingsboard.server.dao.asset.AssetProfileService;
 import org.thingsboard.server.dao.asset.AssetService;
 import org.thingsboard.server.dao.attributes.AttributesService;
@@ -117,6 +120,10 @@ import org.thingsboard.server.dao.grouppermission.GroupPermissionService;
 import org.thingsboard.server.dao.integration.IntegrationService;
 import org.thingsboard.server.dao.nosql.CassandraStatementTask;
 import org.thingsboard.server.dao.nosql.TbResultSetFuture;
+import org.thingsboard.server.dao.notification.NotificationRequestService;
+import org.thingsboard.server.dao.notification.NotificationRuleService;
+import org.thingsboard.server.dao.notification.NotificationTargetService;
+import org.thingsboard.server.dao.notification.NotificationTemplateService;
 import org.thingsboard.server.dao.ota.OtaPackageService;
 import org.thingsboard.server.dao.queue.QueueService;
 import org.thingsboard.server.dao.relation.RelationService;
@@ -504,6 +511,11 @@ class DefaultTbContext implements TbContext, TbPeContext {
     }
 
     @Override
+    public ListeningExecutor getNotificationExecutor() {
+        return mainCtx.getNotificationExecutor();
+    }
+
+    @Override
     @Deprecated
     public ScriptEngine createJsScriptEngine(String script, String... argNames) {
         return new RuleNodeJsScriptEngine(getTenantId(), mainCtx.getJsInvokeService(), script, argNames);
@@ -643,6 +655,11 @@ class DefaultTbContext implements TbContext, TbPeContext {
     }
 
     @Override
+    public AlarmCommentService getAlarmCommentService() {
+        return mainCtx.getAlarmCommentService();
+    }
+
+    @Override
     public RuleChainService getRuleChainService() {
         return mainCtx.getRuleChainService();
     }
@@ -724,6 +741,36 @@ class DefaultTbContext implements TbContext, TbPeContext {
     @Override
     public SmsSenderFactory getSmsSenderFactory() {
         return mainCtx.getSmsSenderFactory();
+    }
+
+    @Override
+    public NotificationCenter getNotificationCenter() {
+        return mainCtx.getNotificationCenter();
+    }
+
+    @Override
+    public NotificationTargetService getNotificationTargetService() {
+        return mainCtx.getNotificationTargetService();
+    }
+
+    @Override
+    public NotificationTemplateService getNotificationTemplateService() {
+        return mainCtx.getNotificationTemplateService();
+    }
+
+    @Override
+    public NotificationRequestService getNotificationRequestService() {
+        return mainCtx.getNotificationRequestService();
+    }
+
+    @Override
+    public NotificationRuleService getNotificationRuleService() {
+        return mainCtx.getNotificationRuleService();
+    }
+
+    @Override
+    public SlackService getSlackService() {
+        return mainCtx.getSlackService();
     }
 
     @Override

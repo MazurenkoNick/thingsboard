@@ -39,7 +39,6 @@ import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.asset.Asset;
 import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.TenantId;
-import org.thingsboard.server.common.data.tenant.profile.DefaultTenantProfileConfiguration;
 import org.thingsboard.server.dao.asset.AssetDao;
 import org.thingsboard.server.dao.asset.BaseAssetService;
 import org.thingsboard.server.dao.customer.CustomerDao;
@@ -65,20 +64,13 @@ public class AssetDataValidator extends DataValidator<Asset> {
     private CustomerDao customerDao;
 
     @Autowired
-    @Lazy
-    private TbTenantProfileCache tenantProfileCache;
-
-    @Autowired
     private SubscriptionService subscriptionService;
 
     @Override
     protected void validateCreate(TenantId tenantId, Asset asset) {
-        DefaultTenantProfileConfiguration profileConfiguration =
-                (DefaultTenantProfileConfiguration) tenantProfileCache.get(tenantId).getProfileData().getConfiguration();
         if (!BaseAssetService.TB_SERVICE_QUEUE.equals(asset.getType())) {
             subscriptionService.createAssetAllowed(asset.getTenantId());
-            long maxAssets = profileConfiguration.getMaxAssets();
-            validateNumberOfEntitiesPerTenant(tenantId, assetDao, maxAssets, EntityType.ASSET);
+            validateNumberOfEntitiesPerTenant(tenantId, EntityType.ASSET);
         }
     }
 
