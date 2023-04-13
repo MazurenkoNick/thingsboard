@@ -131,8 +131,10 @@ public class BasicSubscriptionService implements SubscriptionService, TbLicenseC
     @Override
     public LicenseInfo getLicenseInfo() {
         LicenseInfo licenseInfo = new LicenseInfo();
-        licenseInfo.setMaxDevices(tbLicenseClient.getPlanLongValue(MAX_DEVICES_KEY));
-        licenseInfo.setMaxAssets(tbLicenseClient.getPlanLongValue(MAX_ASSETS_KEY));
+        long maxDevices = this.isUnlimited(MAX_DEVICES_KEY) ? 0 : tbLicenseClient.getPlanLongValue(MAX_DEVICES_KEY);
+        licenseInfo.setMaxDevices(maxDevices);
+        long maxAssets = this.isUnlimited(MAX_ASSETS_KEY) ? 0 : tbLicenseClient.getPlanLongValue(MAX_ASSETS_KEY);
+        licenseInfo.setMaxAssets(maxAssets);
         licenseInfo.setWhiteLabelingEnabled(tbLicenseClient.getPlanBooleanValue(WHITELABELING_KEY));
         try {
             licenseInfo.setDevelopment(tbLicenseClient.getPlanBooleanValue(DEVELOPMENT_KEY));
@@ -172,7 +174,7 @@ public class BasicSubscriptionService implements SubscriptionService, TbLicenseC
     }
 
     private boolean isUnlimited(String key) {
-        return this.tbLicenseClient.getPlanLongValue(key) == 0;
+        return this.tbLicenseClient.getPlanLongValue(key) <= 0;
     }
 
     @Override
