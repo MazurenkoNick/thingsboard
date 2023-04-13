@@ -154,6 +154,7 @@ import org.thingsboard.server.common.data.security.Authority;
 import org.thingsboard.server.common.data.subscription.SubscriptionException;
 import org.thingsboard.server.common.data.scheduler.SchedulerEventWithCustomerInfo;
 import org.thingsboard.server.common.data.widget.WidgetType;
+import org.thingsboard.server.common.data.settings.UserDashboardAction;
 import org.thingsboard.server.common.data.util.ThrowingBiFunction;
 import org.thingsboard.server.common.data.widget.WidgetTypeDetails;
 import org.thingsboard.server.common.data.widget.WidgetsBundle;
@@ -209,6 +210,7 @@ import org.thingsboard.server.service.edge.EdgeLicenseService;
 import org.thingsboard.server.service.edge.instructions.EdgeInstallService;
 import org.thingsboard.server.service.edge.rpc.EdgeRpcService;
 import org.thingsboard.server.service.entitiy.TbNotificationEntityService;
+import org.thingsboard.server.service.entitiy.user.TbUserSettingsService;
 import org.thingsboard.server.service.ota.OtaPackageStateService;
 import org.thingsboard.server.service.profile.TbAssetProfileCache;
 import org.thingsboard.server.service.profile.TbDeviceProfileCache;
@@ -239,6 +241,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Predicate;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static org.thingsboard.server.controller.ControllerConstants.DEFAULT_PAGE_SIZE;
@@ -274,7 +277,7 @@ public abstract class BaseController {
     protected UserService userService;
 
     @Autowired
-    protected UserSettingsService userSettingsService;
+    protected TbUserSettingsService userSettingsService;
 
     @Autowired
     protected DeviceService deviceService;
@@ -571,6 +574,14 @@ public abstract class BaseController {
             for (String param : params) {
                 checkParameter(name, param);
             }
+        }
+    }
+
+    protected <T> T checkEnumParameter(String name, String param, Function<String, T> valueOf) throws ThingsboardException {
+        try {
+            return valueOf.apply(param.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new ThingsboardException(name + " \"" + param + "\" is not supported!", ThingsboardErrorCode.BAD_REQUEST_PARAMS);
         }
     }
 
