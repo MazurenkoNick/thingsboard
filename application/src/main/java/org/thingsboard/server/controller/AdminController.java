@@ -39,7 +39,6 @@ import com.google.common.util.concurrent.MoreExecutors;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -81,11 +80,9 @@ import org.thingsboard.server.common.data.sms.config.TestSmsRequest;
 import org.thingsboard.server.common.data.sync.vc.AutoCommitSettings;
 import org.thingsboard.server.common.data.sync.vc.RepositorySettings;
 import org.thingsboard.server.common.data.sync.vc.RepositorySettingsInfo;
-import org.thingsboard.server.common.data.security.model.JwtSettings;
-import org.thingsboard.server.dao.subscription.SubscriptionService;
-import org.thingsboard.server.service.security.auth.jwt.settings.JwtSettingsService;
 import org.thingsboard.server.dao.attributes.AttributesService;
 import org.thingsboard.server.dao.settings.AdminSettingsService;
+import org.thingsboard.server.dao.subscription.SubscriptionService;
 import org.thingsboard.server.queue.util.TbCoreComponent;
 import org.thingsboard.server.service.mail.MailTemplates;
 import org.thingsboard.server.service.security.auth.jwt.settings.JwtSettingsService;
@@ -421,30 +418,13 @@ public class AdminController extends BaseController {
     @RequestMapping(value = "/licenseUsageInfo", method = RequestMethod.GET)
     @ResponseBody
     public LicenseUsageInfo getLicenseUsageInfo() throws ThingsboardException {
-        // LicenseInfo licenseInfo = subscriptionService.getLicenseInfo();
-
-        LicenseInfo licenseInfo = new LicenseInfo();
-        licenseInfo.setMaxDevices(0L);
-        licenseInfo.setMaxAssets(0L);
-        licenseInfo.setWhiteLabelingEnabled(true);
-        licenseInfo.setDevelopment(true);
-        licenseInfo.setPlan("Development env");
-        //
+        LicenseInfo licenseInfo = subscriptionService.getLicenseInfo();
         LicenseUsageInfo licenseUsageInfo = new LicenseUsageInfo(licenseInfo);
         licenseUsageInfo.setDevicesCount(deviceService.countDevices());
         licenseUsageInfo.setAssetsCount(assetService.countAssets());
         licenseUsageInfo.setDashboardsCount(dashboardService.countDashboards());
         licenseUsageInfo.setIntegrationsCount(integrationService.countCoreIntegrations());
         return licenseUsageInfo;
-    }
-
-    @ApiOperation(value = "Get subscription plan (getSubscriptionPlan)",
-            notes = "Get subscription plan. " + SYSTEM_AUTHORITY_PARAGRAPH)
-    @PreAuthorize("hasAuthority('SYS_ADMIN')")
-    @RequestMapping(value = "/subscriptionPlan", method = RequestMethod.GET)
-    @ResponseBody
-    public ObjectNode getSubscriptionPlan() throws ThingsboardException {
-        return subscriptionService.getSubscriptionPlan();
     }
 
     @ApiOperation(value = "Get system info (getSystemInfo)",

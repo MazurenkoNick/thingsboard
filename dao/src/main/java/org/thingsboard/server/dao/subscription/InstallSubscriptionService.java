@@ -34,6 +34,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
+import org.thingsboard.server.common.data.LicenseInfo;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.subscription.SubscriptionException;
 
@@ -68,7 +69,7 @@ public class InstallSubscriptionService implements SubscriptionService {
     }
 
     @Override
-    public ObjectNode getSubscriptionPlan() {
+    public LicenseInfo getLicenseInfo() {
         return null;
     }
 }

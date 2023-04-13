@@ -30,7 +30,6 @@
  */
 package org.thingsboard.server.dao.subscription;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -39,12 +38,11 @@ import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
-import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.license.client.TbLicenseClient;
 import org.thingsboard.license.client.TbLicenseClientListener;
-import org.thingsboard.license.shared.PlanItem;
 import org.thingsboard.license.shared.exception.LicenseErrorCode;
 import org.thingsboard.license.shared.exception.LicenseException;
+import org.thingsboard.server.common.data.LicenseInfo;
 import org.thingsboard.server.common.data.Version;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.subscription.SubscriptionEntry;
@@ -68,6 +66,8 @@ public class BasicSubscriptionService implements SubscriptionService, TbLicenseC
     private static final String WHITELABELING_KEY = "whitelabeling";
 
     private static final String DEVELOPMENT_KEY = "development";
+
+    private static final String PLAN_KEY = "plan";
 
     @Value("${license.secret}")
     private String licenseSecret;
@@ -129,12 +129,22 @@ public class BasicSubscriptionService implements SubscriptionService, TbLicenseC
     }
 
     @Override
-    public ObjectNode getSubscriptionPlan() {
-        ObjectNode subPlan = JacksonUtil.newObjectNode();
-        subPlan.put(MAX_DEVICES_KEY, tbLicenseClient.getPlanLongValue(MAX_DEVICES_KEY));
-        subPlan.put(MAX_ASSETS_KEY, tbLicenseClient.getPlanLongValue(MAX_ASSETS_KEY));
-        subPlan.put(WHITELABELING_KEY, tbLicenseClient.getPlanBooleanValue(WHITELABELING_KEY));
-        return subPlan;
+    public LicenseInfo getLicenseInfo() {
+        LicenseInfo licenseInfo = new LicenseInfo();
+        licenseInfo.setMaxDevices(tbLicenseClient.getPlanLongValue(MAX_DEVICES_KEY));
+        licenseInfo.setMaxAssets(tbLicenseClient.getPlanLongValue(MAX_ASSETS_KEY));
+        licenseInfo.setWhiteLabelingEnabled(tbLicenseClient.getPlanBooleanValue(WHITELABELING_KEY));
+        try {
+            licenseInfo.setDevelopment(tbLicenseClient.getPlanBooleanValue(DEVELOPMENT_KEY));
+        } catch (Exception e) {
+            licenseInfo.setDevelopment(false);
+        }
+        try {
+            licenseInfo.setPlan(tbLicenseClient.getPlanStringValue(PLAN_KEY));
+        } catch (Exception e) {
+            licenseInfo.setPlan("Unknown");
+        }
+        return licenseInfo;
     }
 
     private void doExit(int exitCode, LicenseErrorCode licenseErrorCode, boolean gracefullShutdown) {
