@@ -29,7 +29,7 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { Inject, Injectable, Renderer2, RendererFactory2 } from '@angular/core';
+import { Inject, Injectable, Renderer2, RendererFactory2, RendererStyleFlags2 } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { defaultHttpOptions } from '@core/http/http-utils';
@@ -70,21 +70,24 @@ export class DevelopmentService {
     }
     const devComponent: HTMLElement = this.renderer.createElement('div');
     this.renderer.setAttribute(devComponent, 'id', 'dev-mode-component');
-    this.renderer.setStyle(devComponent, 'position', 'fixed');
-    this.renderer.setStyle(devComponent, 'top', '0');
-    this.renderer.setStyle(devComponent, 'bottom', '0');
-    this.renderer.setStyle(devComponent, 'left', '0');
-    this.renderer.setStyle(devComponent, 'right', '0');
-    this.renderer.setStyle(devComponent, 'z-index', '100000');
-    this.renderer.setStyle(devComponent, 'pointer-events', 'none');
-    this.renderer.setStyle(devComponent, 'display', 'flex');
-    this.renderer.setStyle(devComponent, 'text-align', 'center');
-    this.renderer.setStyle(devComponent, 'justify-content', 'center');
-    this.renderer.setStyle(devComponent, 'align-items', 'center');
-    this.renderer.setStyle(devComponent, 'font-size', '12vmin');
-    this.renderer.setStyle(devComponent, 'font-wight', '600');
-    this.renderer.setStyle(devComponent, 'color', 'rgba(200,200,200,0.5)');
-    this.renderer.setStyle(devComponent, 'transform', 'rotate(315deg)');
+    this.renderer.setStyle(devComponent, 'position', 'fixed', RendererStyleFlags2.Important);
+    this.renderer.setStyle(devComponent, 'top', '0', RendererStyleFlags2.Important);
+    this.renderer.setStyle(devComponent, 'bottom', '0', RendererStyleFlags2.Important);
+    this.renderer.setStyle(devComponent, 'left', '0', RendererStyleFlags2.Important);
+    this.renderer.setStyle(devComponent, 'right', '0', RendererStyleFlags2.Important);
+    this.renderer.setStyle(devComponent, 'margin', '0', RendererStyleFlags2.Important);
+    this.renderer.setStyle(devComponent, 'padding', '0', RendererStyleFlags2.Important);
+    this.renderer.setStyle(devComponent, 'visibility', 'visible', RendererStyleFlags2.Important);
+    this.renderer.setStyle(devComponent, 'z-index', '100000', RendererStyleFlags2.Important);
+    this.renderer.setStyle(devComponent, 'pointer-events', 'none', RendererStyleFlags2.Important);
+    this.renderer.setStyle(devComponent, 'display', 'flex', RendererStyleFlags2.Important);
+    this.renderer.setStyle(devComponent, 'text-align', 'center', RendererStyleFlags2.Important);
+    this.renderer.setStyle(devComponent, 'justify-content', 'center', RendererStyleFlags2.Important);
+    this.renderer.setStyle(devComponent, 'align-items', 'center', RendererStyleFlags2.Important);
+    this.renderer.setStyle(devComponent, 'font-size', '12vmin', RendererStyleFlags2.Important);
+    this.renderer.setStyle(devComponent, 'font-wight', '600', RendererStyleFlags2.Important);
+    this.renderer.setStyle(devComponent, 'color', 'rgba(200,200,200,0.5)', RendererStyleFlags2.Important);
+    this.renderer.setStyle(devComponent, 'transform', 'rotate(315deg)', RendererStyleFlags2.Important);
     const devModeText = this.renderer.createText('Development mode');
     this.renderer.appendChild(devComponent, devModeText);
     this.renderer.appendChild(this.ROOT, devComponent);
