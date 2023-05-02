@@ -68,7 +68,7 @@ import { MatStepperModule } from '@angular/material/stepper';
 import { MatTableModule } from '@angular/material/table';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatToolbarModule } from '@angular/material/toolbar';
-import { MatTooltipModule } from '@angular/material/tooltip';
+import { MAT_TOOLTIP_DEFAULT_OPTIONS, MatTooltipModule } from '@angular/material/tooltip';
 import { MatListModule } from '@angular/material/list';
 import { DatetimeAdapter, MatDatetimepickerModule, MatNativeDatetimeModule } from '@mat-datetimepicker/core';
 import { NgxDaterangepickerMd } from 'ngx-daterangepicker-material';
@@ -78,7 +78,7 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { ShareModule as ShareButtonsModule } from 'ngx-sharebuttons';
 import { HotkeyModule } from 'angular2-hotkeys';
-import { ColorPickerModule } from 'ngx-color-picker';
+import { ColorPickerModule } from '@iplab/ngx-color-picker';
 import { NgxHmCarouselModule } from 'ngx-hm-carousel';
 import { EditorModule, TINYMCE_SCRIPT_SRC } from '@tinymce/tinymce-angular';
 import { UserMenuComponent } from '@shared/components/user-menu.component';
@@ -222,7 +222,9 @@ import {
   GtMdLgLayoutGapDirective,
   GtMdLgShowHideDirective
 } from '@shared/layout/layout.directives';
+import { ColorPickerComponent } from '@shared/components/color-picker/color-picker.component';
 import { ThemeColorSelectComponent } from '@shared/components/theme-color-select.component';
+import { ShortNumberPipe } from '@shared/pipe/short-number.pipe';
 
 export function MarkedOptionsFactory(markedOptionsService: MarkedOptionsService) {
   return markedOptionsService;
@@ -239,11 +241,11 @@ export function MarkedOptionsFactory(markedOptionsService: MarkedOptionsService)
     FileSizePipe,
     DateAgoPipe,
     SafePipe,
-    DateAgoPipe,
     HasGenericPermissionPipe,
     HasEntityGroupPermissionPipe,
     HasGroupEntityPermissionPipe,
     HasGroupEntityOrGenericPermissionPipe,
+    ShortNumberPipe,
     {
       provide: FlowInjectionToken,
       useValue: Flow
@@ -272,6 +274,12 @@ export function MarkedOptionsFactory(markedOptionsService: MarkedOptionsService)
       provide: MAT_AUTOCOMPLETE_DEFAULT_OPTIONS,
       useValue: {
         hideSingleSelectionIndicator: true
+      }
+    },
+    {
+      provide: MAT_TOOLTIP_DEFAULT_OPTIONS,
+      useValue: {
+        disableTooltipInteractivity: true
       }
     },
     TbBreakPointsProvider
@@ -370,7 +378,7 @@ export function MarkedOptionsFactory(markedOptionsService: MarkedOptionsService)
     FileSizePipe,
     DateAgoPipe,
     SafePipe,
-    DateAgoPipe,
+    ShortNumberPipe,
     SelectableColumnsPipe,
     KeyboardShortcutPipe,
     HasGenericPermissionPipe,
@@ -399,7 +407,6 @@ export function MarkedOptionsFactory(markedOptionsService: MarkedOptionsService)
     NotificationComponent,
     TemplateAutocompleteComponent,
     SlackConversationAutocompleteComponent,
-    DateAgoPipe,
     MdLgLayoutDirective,
     MdLgLayoutAlignDirective,
     MdLgLayoutGapDirective,
@@ -408,7 +415,8 @@ export function MarkedOptionsFactory(markedOptionsService: MarkedOptionsService)
     GtMdLgLayoutAlignDirective,
     GtMdLgLayoutGapDirective,
     GtMdLgShowHideDirective,
-    ThemeColorSelectComponent
+    ThemeColorSelectComponent,
+    ColorPickerComponent
   ],
   imports: [
     CommonModule,
@@ -532,6 +540,7 @@ export function MarkedOptionsFactory(markedOptionsService: MarkedOptionsService)
     HtmlComponent,
     FabTriggerDirective,
     FabActionsDirective,
+    TbJsonToStringDirective,
     FabToolbarComponent,
     WidgetsBundleSelectComponent,
     ValueInputComponent,
@@ -615,7 +624,7 @@ export function MarkedOptionsFactory(markedOptionsService: MarkedOptionsService)
     FileSizePipe,
     DateAgoPipe,
     SafePipe,
-    DateAgoPipe,
+    ShortNumberPipe,
     SelectableColumnsPipe,
     RouterModule,
     HasGenericPermissionPipe,
@@ -643,7 +652,6 @@ export function MarkedOptionsFactory(markedOptionsService: MarkedOptionsService)
     NotificationComponent,
     TemplateAutocompleteComponent,
     SlackConversationAutocompleteComponent,
-    DateAgoPipe,
     MdLgLayoutDirective,
     MdLgLayoutAlignDirective,
     MdLgLayoutGapDirective,
@@ -652,7 +660,8 @@ export function MarkedOptionsFactory(markedOptionsService: MarkedOptionsService)
     GtMdLgLayoutAlignDirective,
     GtMdLgLayoutGapDirective,
     GtMdLgShowHideDirective,
-    ThemeColorSelectComponent
+    ThemeColorSelectComponent,
+    ColorPickerComponent
   ]
 })
 export class SharedModule { }

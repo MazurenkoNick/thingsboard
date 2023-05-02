@@ -215,7 +215,6 @@ import org.thingsboard.server.common.data.wl.WhiteLabelingParams;
 
 import java.io.Closeable;
 import java.net.URI;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -4018,11 +4017,19 @@ public class RestClient implements Closeable {
     }
 
     public void changeOwnerToTenant(EntityId ownerId, EntityId entityId) {
-        restTemplate.postForEntity(baseURL + "/api/owner/TENANT/{ownerId}/{entityType}/{entityId}", null, Object.class, ownerId.getId(), entityId.getEntityType(), entityId.getId());
+        changeOwnerToTenant(ownerId, entityId, new String[]{});
+    }
+
+    public void changeOwnerToTenant(EntityId ownerId, EntityId entityId, String[] strEntityGroupIds) {
+        restTemplate.postForEntity(baseURL + "/api/owner/TENANT/{ownerId}/{entityType}/{entityId}", strEntityGroupIds, Object.class, ownerId.getId(), entityId.getEntityType(), entityId.getId());
     }
 
     public void changeOwnerToCustomer(EntityId ownerId, EntityId entityId) {
-        restTemplate.postForEntity(baseURL + "/api/owner/CUSTOMER/{ownerId}/{entityType}/{entityId}", null, Object.class, ownerId.getId(), entityId.getEntityType(), entityId.getId());
+        changeOwnerToCustomer(ownerId, entityId, new String[]{});
+    }
+
+    public void changeOwnerToCustomer(EntityId ownerId, EntityId entityId, String[] strEntityGroupIds) {
+        restTemplate.postForEntity(baseURL + "/api/owner/CUSTOMER/{ownerId}/{entityType}/{entityId}", strEntityGroupIds, Object.class, ownerId.getId(), entityId.getEntityType(), entityId.getId());
     }
 
     public JsonNode downloadDashboardReport(DashboardId dashboardId, JsonNode reportParams) {
@@ -4127,6 +4134,19 @@ public class RestClient implements Closeable {
                 },
                 entityId.getEntityType(),
                 entityId.getId(),
+                timeout).getBody();
+    }
+
+    public JsonNode handleRuleEngineRequest(EntityId entityId, String queueName, int timeout, JsonNode requestBody) {
+        return restTemplate.exchange(
+                baseURL + "/api/rule-engine/{entityType}/{entityId}/{queueName}/{timeout}",
+                HttpMethod.POST,
+                new HttpEntity<>(requestBody),
+                new ParameterizedTypeReference<JsonNode>() {
+                },
+                entityId.getEntityType(),
+                entityId.getId(),
+                queueName,
                 timeout).getBody();
     }
 
