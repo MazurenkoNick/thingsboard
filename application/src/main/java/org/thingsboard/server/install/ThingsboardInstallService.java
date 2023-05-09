@@ -50,7 +50,6 @@ import org.thingsboard.server.service.install.migrate.EntitiesMigrateService;
 import org.thingsboard.server.service.install.migrate.TsLatestMigrateService;
 import org.thingsboard.server.service.install.update.CacheCleanupService;
 import org.thingsboard.server.service.install.update.DataUpdateService;
-import org.thingsboard.server.service.install.update.DefaultDataUpdateService;
 
 import static org.thingsboard.server.service.install.update.DefaultDataUpdateService.getEnv;
 
@@ -272,6 +271,7 @@ public class ThingsboardInstallService {
                         case "3.5.0": // to 3.5.0PE
                             log.info("Upgrading ThingsBoard from version 3.5.0 to 3.5.0PE ...");
                             databaseEntitiesUpgradeService.upgradeDatabase("3.5.0");
+                            entityDatabaseSchemaService.createOrUpdateViewsAndFunctions();
                             entityDatabaseSchemaService.createOrUpdateDeviceInfoView(persistToTelemetry);
                             dataUpdateService.updateData("3.5.0");
                             log.info("Updating system data...");
@@ -299,6 +299,7 @@ public class ThingsboardInstallService {
 
                 entityDatabaseSchemaService.createDatabaseSchema();
 
+                entityDatabaseSchemaService.createOrUpdateViewsAndFunctions();
                 entityDatabaseSchemaService.createOrUpdateDeviceInfoView(persistToTelemetry);
 
                 log.info("Installing DataBase schema for timeseries...");

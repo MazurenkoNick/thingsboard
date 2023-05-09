@@ -43,12 +43,13 @@ import io.restassured.response.ValidatableResponse;
 import io.restassured.specification.RequestSpecification;
 import org.thingsboard.rest.client.utils.RestJsonConverter;
 import org.thingsboard.server.common.data.Customer;
+import org.thingsboard.server.common.data.Dashboard;
 import org.thingsboard.server.common.data.DashboardInfo;
 import org.thingsboard.server.common.data.Device;
 import org.thingsboard.server.common.data.DeviceProfile;
 import org.thingsboard.server.common.data.EntityType;
-import org.thingsboard.server.common.data.EventInfo;
 import org.thingsboard.server.common.data.EntityView;
+import org.thingsboard.server.common.data.EventInfo;
 import org.thingsboard.server.common.data.User;
 import org.thingsboard.server.common.data.alarm.Alarm;
 import org.thingsboard.server.common.data.asset.Asset;
@@ -62,17 +63,18 @@ import org.thingsboard.server.common.data.id.AssetId;
 import org.thingsboard.server.common.data.id.AssetProfileId;
 import org.thingsboard.server.common.data.id.ConverterId;
 import org.thingsboard.server.common.data.id.CustomerId;
+import org.thingsboard.server.common.data.id.DashboardId;
 import org.thingsboard.server.common.data.id.DeviceId;
 import org.thingsboard.server.common.data.id.DeviceProfileId;
 import org.thingsboard.server.common.data.id.EntityGroupId;
 import org.thingsboard.server.common.data.id.EntityId;
-import org.thingsboard.server.common.data.id.IntegrationId;
 import org.thingsboard.server.common.data.id.EntityViewId;
+import org.thingsboard.server.common.data.id.IntegrationId;
 import org.thingsboard.server.common.data.id.RuleChainId;
 import org.thingsboard.server.common.data.id.TenantId;
+import org.thingsboard.server.common.data.id.UserId;
 import org.thingsboard.server.common.data.integration.Integration;
 import org.thingsboard.server.common.data.kv.TsKvEntry;
-import org.thingsboard.server.common.data.id.UserId;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.page.TimePageLink;
@@ -690,18 +692,6 @@ public class TestRestClient {
         return refreshToken;
     }
 
-    public List<DashboardInfo> getDashboardsByEntityGroupId(PageLink pageLink, EntityGroupId entityGroupId) {
-        Map<String, String> params = new HashMap<>();
-        addPageLinkToParam(params, pageLink);
-        return given().spec(requestSpec).queryParams(params)
-                .get("/api/entityGroup/{entityGroupId}/dashboards", entityGroupId.getId())
-                .then()
-                .statusCode(HTTP_OK)
-                .extract()
-                .as(new TypeRef<PageData<DashboardInfo>>() {
-                }).getData();
-    }
-
     public void postTemperatureHumidity() {
         given().spec(requestSpec)
                 .post("/api/solutions/templates/temperature_sensors/install")
@@ -850,5 +840,34 @@ public class TestRestClient {
                 .delete("/api/entityView/{entityViewId}", entityViewId.getId())
                 .then()
                 .statusCode(HTTP_OK);
+    }
+
+    public Dashboard postDashboard(Dashboard dashboard) {
+        return given().spec(requestSpec)
+                .body(dashboard)
+                .post("/api/dashboard")
+                .then()
+                .statusCode(HTTP_OK)
+                .extract()
+                .as(Dashboard.class);
+    }
+
+    public void deleteDashboard(DashboardId dashboardId) {
+        given().spec(requestSpec)
+                .delete("/api/dashboard/{dashboardId}", dashboardId.getId())
+                .then()
+                .statusCode(HTTP_OK);
+    }
+
+    public List<DashboardInfo> getDashboardsByEntityGroupId(PageLink pageLink, EntityGroupId entityGroupId) {
+        Map<String, String> params = new HashMap<>();
+        addPageLinkToParam(params, pageLink);
+        return given().spec(requestSpec).queryParams(params)
+                .get("/api/entityGroup/{entityGroupId}/dashboards", entityGroupId.getId())
+                .then()
+                .statusCode(HTTP_OK)
+                .extract()
+                .as(new TypeRef<PageData<DashboardInfo>>() {
+                }).getData();
     }
 }

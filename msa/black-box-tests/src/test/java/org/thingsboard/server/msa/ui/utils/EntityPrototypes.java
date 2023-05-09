@@ -33,6 +33,7 @@ package org.thingsboard.server.msa.ui.utils;
 import org.testcontainers.shaded.org.apache.commons.lang3.RandomStringUtils;
 import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.server.common.data.Customer;
+import org.thingsboard.server.common.data.Dashboard;
 import org.thingsboard.server.common.data.Device;
 import org.thingsboard.server.common.data.DeviceProfile;
 import org.thingsboard.server.common.data.DeviceProfileProvisionType;
@@ -49,8 +50,8 @@ import org.thingsboard.server.common.data.device.profile.DefaultDeviceProfileCon
 import org.thingsboard.server.common.data.device.profile.DefaultDeviceProfileTransportConfiguration;
 import org.thingsboard.server.common.data.device.profile.DeviceProfileData;
 import org.thingsboard.server.common.data.device.profile.DisabledDeviceProfileProvisionConfiguration;
-import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.group.EntityGroup;
+import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.UserId;
 import org.thingsboard.server.common.data.rule.RuleChain;
@@ -238,5 +239,11 @@ public class EntityPrototypes {
         entityView.setType(type + RandomStringUtils.randomAlphanumeric(7));
         entityView.setAdditionalInfo(JacksonUtil.newObjectNode().put("entityType", entityType));
         return entityView;
+    }
+
+    public static Dashboard defaultDashboardPrototype(String title) {
+        Dashboard dashboard = new Dashboard();
+        dashboard.setTitle(title + RandomStringUtils.randomAlphanumeric(7));
+        return dashboard;
     }
 }
