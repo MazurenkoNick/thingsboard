@@ -76,19 +76,15 @@ export class DevelopmentService {
     this.renderer.setStyle(devComponent, 'left', '0', RendererStyleFlags2.Important);
     this.renderer.setStyle(devComponent, 'right', '0', RendererStyleFlags2.Important);
     this.renderer.setStyle(devComponent, 'margin', '0', RendererStyleFlags2.Important);
-    this.renderer.setStyle(devComponent, 'padding', '0', RendererStyleFlags2.Important);
     this.renderer.setStyle(devComponent, 'visibility', 'visible', RendererStyleFlags2.Important);
     this.renderer.setStyle(devComponent, 'z-index', '100000', RendererStyleFlags2.Important);
     this.renderer.setStyle(devComponent, 'pointer-events', 'none', RendererStyleFlags2.Important);
-    this.renderer.setStyle(devComponent, 'display', 'flex', RendererStyleFlags2.Important);
-    this.renderer.setStyle(devComponent, 'text-align', 'center', RendererStyleFlags2.Important);
-    this.renderer.setStyle(devComponent, 'justify-content', 'center', RendererStyleFlags2.Important);
-    this.renderer.setStyle(devComponent, 'align-items', 'center', RendererStyleFlags2.Important);
-    this.renderer.setStyle(devComponent, 'font-size', '12vmin', RendererStyleFlags2.Important);
-    this.renderer.setStyle(devComponent, 'font-wight', '600', RendererStyleFlags2.Important);
-    this.renderer.setStyle(devComponent, 'color', 'rgba(200,200,200,0.5)', RendererStyleFlags2.Important);
-    this.renderer.setStyle(devComponent, 'transform', 'rotate(315deg)', RendererStyleFlags2.Important);
-    const devModeText = this.renderer.createText('Development mode');
+    this.renderer.setStyle(devComponent, 'display', 'block', RendererStyleFlags2.Important);
+    this.renderer.setStyle(devComponent, 'background-repeat', 'repeat', RendererStyleFlags2.Important);
+    this.renderer.setStyle(devComponent, 'background-image',
+      'url("data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' height=\'140px\' width=\'140px\'><text transform=\'translate(20, 130) rotate(-45)\' fill=\'rgba(200,200,200,0.35)\' font-size=\'20\'>Development mode</text></svg>")',
+      RendererStyleFlags2.Important);
+    const devModeText = this.renderer.createText('');
     this.renderer.appendChild(devComponent, devModeText);
     this.renderer.appendChild(this.ROOT, devComponent);
   }
