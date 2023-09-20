@@ -30,7 +30,6 @@
  */
 package org.thingsboard.server.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
@@ -50,6 +49,7 @@ import org.springframework.web.context.request.async.AsyncRequestTimeoutExceptio
 import org.springframework.web.context.request.async.DeferredResult;
 import org.thingsboard.common.util.TbBiFunction;
 import org.thingsboard.server.cluster.TbClusterService;
+import org.thingsboard.server.common.data.ContactBased;
 import org.thingsboard.server.common.data.Customer;
 import org.thingsboard.server.common.data.CustomerInfo;
 import org.thingsboard.server.common.data.Dashboard;
@@ -64,7 +64,6 @@ import org.thingsboard.server.common.data.GroupEntity;
 import org.thingsboard.server.common.data.HasName;
 import org.thingsboard.server.common.data.OtaPackage;
 import org.thingsboard.server.common.data.OtaPackageInfo;
-import org.thingsboard.server.common.data.SearchTextBased;
 import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.TbResource;
 import org.thingsboard.server.common.data.TbResourceInfo;
@@ -85,8 +84,6 @@ import org.thingsboard.server.common.data.blob.BlobEntity;
 import org.thingsboard.server.common.data.blob.BlobEntityWithCustomerInfo;
 import org.thingsboard.server.common.data.converter.Converter;
 import org.thingsboard.server.common.data.edge.Edge;
-import org.thingsboard.server.common.data.edge.EdgeEventActionType;
-import org.thingsboard.server.common.data.edge.EdgeEventType;
 import org.thingsboard.server.common.data.edge.EdgeInfo;
 import org.thingsboard.server.common.data.exception.ThingsboardErrorCode;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
@@ -126,7 +123,6 @@ import org.thingsboard.server.common.data.id.WidgetTypeId;
 import org.thingsboard.server.common.data.id.WidgetsBundleId;
 import org.thingsboard.server.common.data.integration.Integration;
 import org.thingsboard.server.common.data.page.PageData;
-import org.thingsboard.server.common.data.page.PageDataIterableByTenantIdEntityId;
 import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.page.SortOrder;
 import org.thingsboard.server.common.data.page.TimePageLink;
@@ -136,7 +132,6 @@ import org.thingsboard.server.common.data.permission.MergedUserPermissions;
 import org.thingsboard.server.common.data.permission.Operation;
 import org.thingsboard.server.common.data.permission.Resource;
 import org.thingsboard.server.common.data.plugin.ComponentDescriptor;
-import org.thingsboard.server.common.data.plugin.ComponentLifecycleEvent;
 import org.thingsboard.server.common.data.plugin.ComponentType;
 import org.thingsboard.server.common.data.query.EntityDataSortOrder;
 import org.thingsboard.server.common.data.query.EntityKey;
@@ -205,8 +200,6 @@ import org.thingsboard.server.queue.util.TbCoreComponent;
 import org.thingsboard.server.service.action.EntityActionService;
 import org.thingsboard.server.service.component.ComponentDiscoveryService;
 import org.thingsboard.server.service.edge.EdgeLicenseService;
-import org.thingsboard.server.service.edge.instructions.EdgeInstallService;
-import org.thingsboard.server.service.edge.rpc.EdgeRpcService;
 import org.thingsboard.server.service.entitiy.TbNotificationEntityService;
 import org.thingsboard.server.service.entitiy.user.TbUserSettingsService;
 import org.thingsboard.server.service.ota.OtaPackageStateService;
@@ -246,7 +239,6 @@ import java.util.stream.Collectors;
 
 import static org.thingsboard.server.common.data.StringUtils.isNotEmpty;
 import static org.thingsboard.server.common.data.query.EntityKeyType.ENTITY_FIELD;
-import static org.thingsboard.server.controller.ControllerConstants.DEFAULT_PAGE_SIZE;
 import static org.thingsboard.server.controller.UserController.YOU_DON_T_HAVE_PERMISSION_TO_PERFORM_THIS_OPERATION;
 import static org.thingsboard.server.dao.service.Validator.validateId;
 
@@ -255,8 +247,6 @@ import static org.thingsboard.server.dao.service.Validator.validateId;
 public abstract class BaseController {
 
     /*Swagger UI description*/
-
-    private static final ObjectMapper json = new ObjectMapper();
 
     @Autowired
     private ThingsboardErrorResponseHandler errorResponseHandler;
@@ -419,12 +409,6 @@ public abstract class BaseController {
 
     @Autowired(required = false)
     protected EdgeService edgeService;
-
-    @Autowired(required = false)
-    protected EdgeRpcService edgeRpcService;
-
-    @Autowired(required = false)
-    protected EdgeInstallService edgeInstallService;
 
     @Autowired(required = false)
     protected EdgeLicenseService edgeLicenseService;
@@ -794,6 +778,13 @@ public abstract class BaseController {
             }
 
             checkEntityWithGroupIds(entity.getId(), entity, Resource.resourceFromEntityType(entity.getEntityType()), entityGroupIds);
+
+            if (entity.getId() != null) {
+                EntityId oldOwner = ownersCacheService.getOwner(entity.getTenantId(), entity.getId());
+                if (!entity.getOwnerId().equals(oldOwner)) {
+                    throw new DataValidationException("Entity owner can`t be changed. Please use owner api to change owner");
+                }
+            }
 
             return saveEntityFunction.apply(entity, entityGroups);
         } catch (Exception e) {
@@ -1203,15 +1194,15 @@ public abstract class BaseController {
         return new PageData<>(entities, totalPages, totalElements, hasNext);
     }
 
-    protected Comparator<SearchTextBased<? extends UUIDBased>> entityComparator = (e1, e2) -> {
-        int result = e1.getSearchText().compareToIgnoreCase(e2.getSearchText());
+    protected Comparator<ContactBased<? extends UUIDBased>> entityComparator = (e1, e2) -> {
+        int result = e1.getName().compareToIgnoreCase(e2.getName());
         if (result == 0) {
             result = (int) (e2.getCreatedTime() - e1.getCreatedTime());
         }
         return result;
     };
 
-    protected class EntityPageLinkFilter implements Predicate<SearchTextBased<? extends UUIDBased>> {
+    protected class EntityPageLinkFilter implements Predicate<ContactBased<? extends UUIDBased>> {
 
         private final String textSearch;
 
@@ -1224,41 +1215,14 @@ public abstract class BaseController {
         }
 
         @Override
-        public boolean test(SearchTextBased<? extends UUIDBased> searchTextBased) {
+        public boolean test(ContactBased<? extends UUIDBased> searchTextBased) {
             if (textSearch.length() > 0) {
-                return searchTextBased.getSearchText().toLowerCase().startsWith(textSearch);
+                return searchTextBased.getName().toLowerCase().startsWith(textSearch);
             } else {
                 return true;
             }
         }
 
-    }
-
-    protected void sendChangeOwnerNotificationMsg(TenantId tenantId, EntityId entityId, List<EdgeId> edgeIds, EntityId previousOwnerId) {
-        if (EntityType.EDGE.equals(entityId.getEntityType())) {
-            tbClusterService.broadcastEntityStateChangeEvent(tenantId, new EdgeId(entityId.getId()), ComponentLifecycleEvent.UPDATED);
-        }
-        if (edgeIds != null && !edgeIds.isEmpty()) {
-            for (EdgeId edgeId : edgeIds) {
-                String body = null;
-                if (EntityType.EDGE.equals(entityId.getEntityType())) {
-                    try {
-                        body = json.writeValueAsString(previousOwnerId);
-                    } catch (Exception e) {
-                        log.warn("[{}][{}] Failed to push change owner event to core: {} {}", tenantId, entityId, previousOwnerId, e);
-                    }
-                }
-                sendNotificationMsgToEdge(tenantId, edgeId, entityId, body, null, EdgeEventActionType.CHANGE_OWNER);
-            }
-        }
-    }
-
-    protected void sendDeleteNotificationMsg(TenantId tenantId, EntityId entityId, List<EdgeId> edgeIds) {
-        if (edgeIds != null && !edgeIds.isEmpty()) {
-            for (EdgeId edgeId : edgeIds) {
-                sendNotificationMsgToEdge(tenantId, edgeId, entityId, null, null, EdgeEventActionType.DELETED);
-            }
-        }
     }
 
     protected <E extends HasName & HasId<? extends EntityId>> E doSaveAndLog(EntityType entityType, E entity, BiFunction<TenantId, E, E> savingFunction) throws Exception {
@@ -1283,48 +1247,6 @@ public abstract class BaseController {
             logEntityAction(user, entityType, entity, entity, ActionType.DELETED, e);
             throw e;
         }
-    }
-
-    protected void sendEntityNotificationMsg(TenantId tenantId, EntityId entityId, EdgeEventActionType action) {
-        sendNotificationMsgToEdge(tenantId, null, entityId, null, null, action);
-    }
-
-    protected void sendEntityAssignToEdgeNotificationMsg(TenantId tenantId, EdgeId edgeId, EntityId entityId, EdgeEventActionType action) {
-        sendNotificationMsgToEdge(tenantId, edgeId, entityId, null, null, action);
-    }
-
-    protected void sendEntityAssignToEdgeNotificationMsg(TenantId tenantId, EdgeId edgeId, EntityId entityId, EntityType groupType, EdgeEventActionType action) {
-        sendNotificationMsgToEdge(tenantId, edgeId, entityId, null, null, action, groupType, null);
-    }
-
-    protected void sendGroupEntityNotificationMsg(TenantId tenantId, EntityId entityId, EdgeEventActionType action, EntityGroupId entityGroupId) {
-        sendNotificationMsgToEdge(tenantId, null, entityId, null, null, action, entityId.getEntityType(), entityGroupId);
-    }
-
-    private void sendNotificationMsgToEdge(TenantId tenantId, EdgeId edgeId, EntityId entityId, String body,
-                                           EdgeEventType type, EdgeEventActionType action,
-                                           EntityType entityGroupType, EntityGroupId entityGroupId) {
-        tbClusterService.sendNotificationMsgToEdge(tenantId, edgeId, entityId, body, type, action, entityGroupType, entityGroupId);
-    }
-
-    private void sendNotificationMsgToEdge(TenantId tenantId, EdgeId edgeId, EntityId entityId, String body, EdgeEventType type, EdgeEventActionType action) {
-        tbClusterService.sendNotificationMsgToEdge(tenantId, edgeId, entityId, body, type, action);
-    }
-
-    protected List<EdgeId> findRelatedEdgeIds(TenantId tenantId, EntityId entityId) {
-        if (!edgesEnabled) {
-            return null;
-        }
-        if (EntityType.EDGE.equals(entityId.getEntityType())) {
-            return Collections.singletonList(new EdgeId(entityId.getId()));
-        }
-        PageDataIterableByTenantIdEntityId<EdgeId> relatedEdgeIdsIterator =
-                new PageDataIterableByTenantIdEntityId<>(edgeService::findRelatedEdgeIdsByEntityId, tenantId, entityId, DEFAULT_PAGE_SIZE);
-        List<EdgeId> result = new ArrayList<>();
-        for (EdgeId edgeId : relatedEdgeIdsIterator) {
-            result.add(edgeId);
-        }
-        return result;
     }
 
     protected void processDashboardIdFromAdditionalInfo(ObjectNode additionalInfo, String requiredFields) throws ThingsboardException {
