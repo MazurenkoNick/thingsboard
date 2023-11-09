@@ -30,13 +30,13 @@
  */
 package org.thingsboard.server.edge;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.protobuf.AbstractMessage;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.MessageLite;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -131,6 +131,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         "queue.rule-engine.stats.enabled=false",
         "edges.storage.sleep_between_batches=1000"
 })
+@Slf4j
 abstract public class AbstractEdgeTest extends AbstractControllerTest {
 
     protected static final String THERMOSTAT_DEVICE_PROFILE_NAME = "Thermostat";
@@ -162,7 +163,7 @@ abstract public class AbstractEdgeTest extends AbstractControllerTest {
         installation();
 
         edgeImitator = new EdgeImitator("localhost", 7070, edge.getRoutingKey(), edge.getSecret());
-        edgeImitator.expectMessageAmount(25);
+        edgeImitator.expectMessageAmount(22);
         edgeImitator.connect();
 
         requestEdgeRuleChainMetadata();
@@ -195,9 +196,7 @@ abstract public class AbstractEdgeTest extends AbstractControllerTest {
     @After
     public void teardownEdgeTest() {
         try {
-            edgeImitator.expectMessageAmount(2);
             loginTenantAdmin();
-            Assert.assertTrue(edgeImitator.waitForMessages());
 
             doDelete("/api/edge/" + edge.getId().toString())
                     .andExpect(status().isOk());
@@ -255,50 +254,73 @@ abstract public class AbstractEdgeTest extends AbstractControllerTest {
         validateEdgeConfiguration();
 
         // 1 message from queue fetcher
+        validateMsgsCnt(QueueUpdateMsg.class, 1);
         validateQueues();
 
-        // 2 messages  1 from rule chain fetcher and 1 from rule chain controller
+        // 1 from rule chain fetcher
+        validateMsgsCnt(RuleChainUpdateMsg.class, 1);
         UUID ruleChainUUID = validateRuleChains();
 
         // 1 from request message
+        validateMsgsCnt(RuleChainMetadataUpdateMsg.class, 1);
         validateRuleChainMetadataUpdates(ruleChainUUID);
 
-        // 2 messages - 2 messages from fetcher (general', 'mail')
+        // 2 messages from fetcher (general', 'mail')
+        validateMsgsCnt(AdminSettingsUpdateMsg.class, 2);
         validateAdminSettings();
 
         // 3 messages
         // - 1 from default profile fetcher
         // - 2 from device profile fetcher (default and thermostat)
+        validateMsgsCnt(DeviceProfileUpdateMsg.class, 3);
         validateDeviceProfiles();
 
         // 2 messages
         // - 1 from default profile fetcher
         // - 1 message from asset profile fetcher
+        // - 1 message from asset fetcher
+        validateMsgsCnt(AssetProfileUpdateMsg.class, 2);
         validateAssetProfiles();
 
         // 1 message from public customer fetcher
+        validateMsgsCnt(CustomerUpdateMsg.class, 1);
         validatePublicCustomer();
 
         // 5 messages
         // - 2 messages from SysAdminRolesEdgeEventFetcher
         // - 2 messages from TenantRolesEdgeEventFetcher
         // - 1 message from public customer role
+        validateMsgsCnt(RoleProto.class, 5);
         validateRoles();
 
-        // 5 messages
+        // 3 messages
         // - 2 messages from fetcher
         // - 1 message from public customer user group
-        // - 2 messages from edge queue - added during edge creation
+        validateMsgsCnt(EntityGroupUpdateMsg.class, 3);
         validateEntityGroups();
 
         // 1 from tenant fetcher
+        validateMsgsCnt(TenantUpdateMsg.class, 1);
         validateTenant();
 
         // 1 from tenant profile fetcher
+        validateMsgsCnt(TenantProfileUpdateMsg.class, 1);
         validateTenantProfile();
 
         // 1 message sync completed
+        validateMsgsCnt(SyncCompletedMsg.class, 1);
         validateSyncCompleted();
+    }
+
+    private <T extends AbstractMessage> void validateMsgsCnt(Class<T> clazz, int expectedMsgCnt) {
+        List<T> downlinkMsgsByType = edgeImitator.findAllMessagesByType(clazz);
+        if (downlinkMsgsByType.size() != expectedMsgCnt) {
+            List<AbstractMessage> downlinkMsgs = edgeImitator.getDownlinkMsgs();
+            for (AbstractMessage downlinkMsg : downlinkMsgs) {
+                log.error("{}\n{}", downlinkMsg.getClass(), downlinkMsg);
+            }
+            Assert.fail("Unexpected message count for " + clazz + "! Expected: " + expectedMsgCnt + ", but found: " + downlinkMsgsByType.size());
+        }
     }
 
     private void validateEdgeConfiguration() throws Exception {
@@ -334,7 +356,7 @@ abstract public class AbstractEdgeTest extends AbstractControllerTest {
         List<DeviceProfileUpdateMsg> deviceProfileUpdateMsgList = edgeImitator.findAllMessagesByType(DeviceProfileUpdateMsg.class);
         // default msg default device profile from fetcher
         // default msg
-        // thermostat msg from fetcher
+        // thermostat msg from device profile fetcher
         Assert.assertEquals(3, deviceProfileUpdateMsgList.size());
         Optional<DeviceProfileUpdateMsg> thermostatProfileUpdateMsgOpt =
                 deviceProfileUpdateMsgList.stream().filter(dfum -> THERMOSTAT_DEVICE_PROFILE_NAME.equals(dfum.getName())).findAny();
@@ -352,12 +374,10 @@ abstract public class AbstractEdgeTest extends AbstractControllerTest {
     }
 
     private UUID validateRuleChains() throws Exception {
-        List<RuleChainUpdateMsg> ruleChainUpdateMsgs = edgeImitator.findAllMessagesByType(RuleChainUpdateMsg.class);
-        Assert.assertEquals(2, ruleChainUpdateMsgs.size());
-        RuleChainUpdateMsg ruleChainCreateMsg = ruleChainUpdateMsgs.get(0);
-        RuleChainUpdateMsg ruleChainUpdateMsg = ruleChainUpdateMsgs.get(1);
-        validateRuleChain(ruleChainCreateMsg, UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE);
-        validateRuleChain(ruleChainUpdateMsg, UpdateMsgType.ENTITY_UPDATED_RPC_MESSAGE);
+        Optional<RuleChainUpdateMsg> ruleChainUpdateMsgOpt = edgeImitator.findMessageByType(RuleChainUpdateMsg.class);
+        Assert.assertTrue(ruleChainUpdateMsgOpt.isPresent());
+        RuleChainUpdateMsg ruleChainUpdateMsg = ruleChainUpdateMsgOpt.get();
+        validateRuleChain(ruleChainUpdateMsg, UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE);
         return new UUID(ruleChainUpdateMsg.getIdMSB(), ruleChainUpdateMsg.getIdLSB());
     }
 
@@ -381,7 +401,7 @@ abstract public class AbstractEdgeTest extends AbstractControllerTest {
         Assert.assertEquals(expectedRuleChainUUID, ruleChainUUID);
     }
 
-    private void validateAdminSettings() throws JsonProcessingException {
+    private void validateAdminSettings() {
         List<AdminSettingsUpdateMsg> adminSettingsUpdateMsgs = edgeImitator.findAllMessagesByType(AdminSettingsUpdateMsg.class);
         Assert.assertEquals(2, adminSettingsUpdateMsgs.size());
 
@@ -439,7 +459,7 @@ abstract public class AbstractEdgeTest extends AbstractControllerTest {
 
     private void validateEntityGroups() {
         List<EntityGroupUpdateMsg> entityGroupUpdateMsgList = edgeImitator.findAllMessagesByType(EntityGroupUpdateMsg.class);
-        Assert.assertEquals(5, entityGroupUpdateMsgList.size());
+        Assert.assertEquals(3, entityGroupUpdateMsgList.size());
     }
 
     private void validateRoles() {

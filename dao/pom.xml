@@ -242,6 +242,10 @@
             <artifactId>rule-engine-api</artifactId>
         </dependency>
         <dependency>
+            <groupId>io.hypersistence</groupId>
+            <artifactId>hypersistence-utils-hibernate-55</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.thingsboard.license</groupId>
             <artifactId>client</artifactId>
             <version>1.0.6</version>

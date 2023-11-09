@@ -73,7 +73,6 @@ import {
 import {
   AlarmsTableKeySettingsComponent
 } from '@home/components/widget/lib/settings/alarm/alarms-table-key-settings.component';
-import { GaugeHighlightComponent } from '@home/components/widget/lib/settings/gauge/gauge-highlight.component';
 import {
   AnalogueRadialGaugeWidgetSettingsComponent
 } from '@home/components/widget/lib/settings/gauge/analogue-radial-gauge-widget-settings.component';
@@ -312,6 +311,24 @@ import {
 import {
   BatteryLevelWidgetSettingsComponent
 } from '@home/components/widget/lib/settings/indicator/battery-level-widget-settings.component';
+import {
+  WindSpeedDirectionWidgetSettingsComponent
+} from '@home/components/widget/lib/settings/weather/wind-speed-direction-widget-settings.component';
+import {
+  SignalStrengthWidgetSettingsComponent
+} from '@home/components/widget/lib/settings/indicator/signal-strength-widget-settings.component';
+import {
+  ValueChartCardWidgetSettingsComponent
+} from '@home/components/widget/lib/settings/cards/value-chart-card-widget-settings.component';
+import {
+  ProgressBarWidgetSettingsComponent
+} from '@home/components/widget/lib/settings/cards/progress-bar-widget-settings.component';
+import {
+  LiquidLevelCardWidgetSettingsComponent
+} from '@home/components/widget/lib/settings/indicator/liquid-level-card-widget-settings.component';
+import {
+  DoughnutWidgetSettingsComponent
+} from '@home/components/widget/lib/settings/chart/doughnut-widget-settings.component';
 
 @NgModule({
   declarations: [
@@ -330,7 +347,6 @@ import {
     EntitiesTableKeySettingsComponent,
     AlarmsTableWidgetSettingsComponent,
     AlarmsTableKeySettingsComponent,
-    GaugeHighlightComponent,
     AnalogueRadialGaugeWidgetSettingsComponent,
     AnalogueLinearGaugeWidgetSettingsComponent,
     AnalogueCompassWidgetSettingsComponent,
@@ -419,6 +435,12 @@ import {
     AlarmCountWidgetSettingsComponent,
     EntityCountWidgetSettingsComponent,
     BatteryLevelWidgetSettingsComponent,
+    WindSpeedDirectionWidgetSettingsComponent,
+    SignalStrengthWidgetSettingsComponent,
+    ValueChartCardWidgetSettingsComponent,
+    ProgressBarWidgetSettingsComponent,
+    LiquidLevelCardWidgetSettingsComponent,
+    DoughnutWidgetSettingsComponent,
     BlobEntitiesWidgetSettingsComponent,
     CustomSchedulerEventTypeComponent,
     SchedulerEventsWidgetSettingsComponent
@@ -445,7 +467,6 @@ import {
     EntitiesTableKeySettingsComponent,
     AlarmsTableWidgetSettingsComponent,
     AlarmsTableKeySettingsComponent,
-    GaugeHighlightComponent,
     AnalogueRadialGaugeWidgetSettingsComponent,
     AnalogueLinearGaugeWidgetSettingsComponent,
     AnalogueCompassWidgetSettingsComponent,
@@ -534,6 +555,12 @@ import {
     AlarmCountWidgetSettingsComponent,
     EntityCountWidgetSettingsComponent,
     BatteryLevelWidgetSettingsComponent,
+    WindSpeedDirectionWidgetSettingsComponent,
+    SignalStrengthWidgetSettingsComponent,
+    ValueChartCardWidgetSettingsComponent,
+    ProgressBarWidgetSettingsComponent,
+    LiquidLevelCardWidgetSettingsComponent,
+    DoughnutWidgetSettingsComponent,
     BlobEntitiesWidgetSettingsComponent,
     CustomSchedulerEventTypeComponent,
     SchedulerEventsWidgetSettingsComponent
@@ -614,6 +641,12 @@ export const widgetSettingsComponentsMap: {[key: string]: Type<IWidgetSettingsCo
   'tb-alarm-count-widget-settings': AlarmCountWidgetSettingsComponent,
   'tb-entity-count-widget-settings': EntityCountWidgetSettingsComponent,
   'tb-battery-level-widget-settings': BatteryLevelWidgetSettingsComponent,
+  'tb-wind-speed-direction-widget-settings': WindSpeedDirectionWidgetSettingsComponent,
+  'tb-signal-strength-widget-settings': SignalStrengthWidgetSettingsComponent,
+  'tb-value-chart-card-widget-settings': ValueChartCardWidgetSettingsComponent,
+  'tb-progress-bar-widget-settings': ProgressBarWidgetSettingsComponent,
+  'tb-liquid-level-card-widget-settings': LiquidLevelCardWidgetSettingsComponent,
+  'tb-doughnut-widget-settings': DoughnutWidgetSettingsComponent,
   'tb-blob-entities-widget-settings': BlobEntitiesWidgetSettingsComponent,
   'tb-scheduler-events-widget-settings': SchedulerEventsWidgetSettingsComponent
 };
