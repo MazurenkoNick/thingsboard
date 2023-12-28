@@ -63,6 +63,7 @@ import org.thingsboard.server.common.msg.rpc.ToDeviceRpcRequestActorMsg;
 import org.thingsboard.server.common.stats.StatsFactory;
 import org.thingsboard.server.common.util.KvProtoUtil;
 import org.thingsboard.server.common.util.ProtoUtils;
+import org.thingsboard.server.dao.resource.ImageCacheKey;
 import org.thingsboard.server.dao.tenant.TbTenantProfileCache;
 import org.thingsboard.server.gen.integration.ToCoreIntegrationMsg;
 import org.thingsboard.server.gen.transport.TransportProtos;
@@ -81,6 +82,7 @@ import org.thingsboard.server.gen.transport.TransportProtos.TbAlarmDeleteProto;
 import org.thingsboard.server.gen.transport.TransportProtos.TbAlarmUpdateProto;
 import org.thingsboard.server.gen.transport.TransportProtos.TbAttributeDeleteProto;
 import org.thingsboard.server.gen.transport.TransportProtos.TbAttributeUpdateProto;
+import org.thingsboard.server.gen.transport.TransportProtos.TbEntitySubEventProto;
 import org.thingsboard.server.gen.transport.TransportProtos.TbTimeSeriesDeleteProto;
 import org.thingsboard.server.gen.transport.TransportProtos.TbTimeSeriesUpdateProto;
 import org.thingsboard.server.gen.transport.TransportProtos.ToCoreMsg;
@@ -88,7 +90,6 @@ import org.thingsboard.server.gen.transport.TransportProtos.ToCoreNotificationMs
 import org.thingsboard.server.gen.transport.TransportProtos.ToOtaPackageStateServiceMsg;
 import org.thingsboard.server.gen.transport.TransportProtos.ToUsageStatsServiceMsg;
 import org.thingsboard.server.gen.transport.TransportProtos.TransportToDeviceActorMsg;
-import org.thingsboard.server.gen.transport.TransportProtos.TbEntitySubEventProto;
 import org.thingsboard.server.queue.TbQueueConsumer;
 import org.thingsboard.server.queue.common.TbProtoQueueMsg;
 import org.thingsboard.server.queue.discovery.PartitionService;
@@ -110,6 +111,7 @@ import org.thingsboard.server.service.profile.TbAssetProfileCache;
 import org.thingsboard.server.service.profile.TbDeviceProfileCache;
 import org.thingsboard.server.service.queue.processing.AbstractConsumerService;
 import org.thingsboard.server.service.queue.processing.IdMsgPair;
+import org.thingsboard.server.service.resource.TbImageService;
 import org.thingsboard.server.service.rpc.TbCoreDeviceRpcService;
 import org.thingsboard.server.service.ruleengine.RuleEngineCallService;
 import org.thingsboard.server.service.scheduler.SchedulerService;
@@ -174,6 +176,7 @@ public class DefaultTbCoreConsumerService extends AbstractConsumerService<ToCore
     protected final TbQueueConsumer<TbProtoQueueMsg<ToUsageStatsServiceMsg>> usageStatsConsumer;
     private final TbQueueConsumer<TbProtoQueueMsg<ToOtaPackageStateServiceMsg>> firmwareStatesConsumer;
     private final TbQueueConsumer<TbProtoQueueMsg<ToCoreIntegrationMsg>> integrationApiConsumer;
+    private final TbImageService imageService;
 
     protected volatile ExecutorService consumersExecutor;
     protected volatile ExecutorService usageStatsExecutor;
@@ -195,7 +198,8 @@ public class DefaultTbCoreConsumerService extends AbstractConsumerService<ToCore
                                         ApplicationEventPublisher eventPublisher,
                                         Optional<JwtSettingsService> jwtSettingsService,
                                         NotificationSchedulerService notificationSchedulerService,
-                                        NotificationRuleProcessor notificationRuleProcessor) {
+                                        NotificationRuleProcessor notificationRuleProcessor,
+                                        TbImageService imageService) {
         super(actorContext, encodingService, tenantProfileCache, deviceProfileCache, assetProfileCache, statsService, partitionService, eventPublisher, tbCoreQueueFactory.createToCoreNotificationsMsgConsumer(), jwtSettingsService);
         this.mainConsumer = tbCoreQueueFactory.createToCoreMsgConsumer();
         this.usageStatsConsumer = tbCoreQueueFactory.createToUsageStatsServiceMsgConsumer();
@@ -216,6 +220,7 @@ public class DefaultTbCoreConsumerService extends AbstractConsumerService<ToCore
         this.tbCoreIntegrationApiService = tbCoreIntegrationApiService;
         this.notificationSchedulerService = notificationSchedulerService;
         this.notificationRuleProcessor = notificationRuleProcessor;
+        this.imageService = imageService;
     }
 
     @PostConstruct
@@ -467,6 +472,8 @@ public class DefaultTbCoreConsumerService extends AbstractConsumerService<ToCore
                     .getNotificationRuleProcessorMsg().getTrigger().toByteArray());
             notificationRuleTrigger.ifPresent(notificationRuleProcessor::process);
             callback.onSuccess();
+        } else if (toCoreNotification.hasResourceCacheInvalidateMsg()) {
+            forwardToResourceService(toCoreNotification.getResourceCacheInvalidateMsg(), callback);
         }
         if (statsEnabled) {
             stats.log(toCoreNotification);
@@ -639,6 +646,18 @@ public class DefaultTbCoreConsumerService extends AbstractConsumerService<ToCore
     private void forwardCoreStartupMsg(TransportProtos.CoreStartupMsg coreStartupMsg, TbCallback callback) {
         log.info("[{}] Processing core startup with partitions: {}", coreStartupMsg.getServiceId(), coreStartupMsg.getPartitionsList());
         localSubscriptionService.onCoreStartupMsg(coreStartupMsg);
+        callback.onSuccess();
+    }
+
+    private void forwardToResourceService(TransportProtos.ResourceCacheInvalidateMsg msg, TbCallback callback) {
+        var tenantId = new TenantId(new UUID(msg.getTenantIdMSB(), msg.getTenantIdLSB()));
+        msg.getKeysList().stream().map(cacheKeyProto -> {
+            if (cacheKeyProto.hasResourceKey()) {
+                return ImageCacheKey.forImage(tenantId, cacheKeyProto.getResourceKey());
+            } else {
+                return ImageCacheKey.forPublicImage(cacheKeyProto.getPublicResourceKey());
+            }
+        }).forEach(imageService::evictETags);
         callback.onSuccess();
     }
 

@@ -46,7 +46,8 @@ export const Constants = {
     itemNotFound: 32,
     tooManyRequests: 33,
     tooManyUpdates: 34,
-    subscriptionViolation: 40
+    subscriptionViolation: 40,
+    passwordViolation: 45
   },
   entryPoints: {
     login: '/api/auth/login',
@@ -226,6 +227,7 @@ export const HelpLinks = {
     integrationApachePulsar:  helpBaseUrl +  '/docs/user-guide/integrations/apache-pulsar',
     integrationPubsub:  helpBaseUrl +  '/docs/user-guide/integrations/pubsub',
     integrationCoAP:  helpBaseUrl +  '/docs/user-guide/integrations/coap',
+    integrationKpn:  helpBaseUrl +  '/docs/user-guide/integrations/kpn',
     integrationCustom:  helpBaseUrl +  '/docs/user-guide/integrations/custom',
     whiteLabeling: helpBaseUrl +  '/docs/pe/user-guide/white-labeling',
     entityGroups: helpBaseUrl +  '/docs/pe/user-guide/groups',
@@ -242,6 +244,7 @@ export const HelpLinks = {
     recipientNotifications: helpBaseUrl + '/docs/pe/user-guide/notifications/#recipients',
     ruleNotifications: helpBaseUrl + '/docs/pe/user-guide/notifications/#rules',
     jwtSecuritySettings: helpBaseUrl + '/docs/pe/user-guide/ui/jwt-security-settings/',
+    gatewayInstall: helpBaseUrl + '/docs/iot-gateway/install/docker-installation/',
   }
 };
 

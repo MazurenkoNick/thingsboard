@@ -34,7 +34,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
 import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.server.common.data.EdgeUtils;
 import org.thingsboard.server.common.data.alarm.Alarm;
@@ -49,18 +48,17 @@ import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.gen.edge.v1.AlarmUpdateMsg;
 import org.thingsboard.server.gen.edge.v1.DownlinkMsg;
+import org.thingsboard.server.gen.edge.v1.EdgeVersion;
 import org.thingsboard.server.gen.transport.TransportProtos;
-import org.thingsboard.server.queue.util.TbCoreComponent;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-@Component
 @Slf4j
-@TbCoreComponent
-public class AlarmEdgeProcessor extends BaseAlarmProcessor {
+public abstract class AlarmEdgeProcessor extends BaseAlarmProcessor implements AlarmProcessor {
 
+    @Override
     public ListenableFuture<Void> processAlarmMsgFromEdge(TenantId tenantId, EdgeId edgeId, AlarmUpdateMsg alarmUpdateMsg) {
         log.trace("[{}] processAlarmMsgFromEdge [{}]", tenantId, alarmUpdateMsg);
         try {
@@ -71,9 +69,10 @@ public class AlarmEdgeProcessor extends BaseAlarmProcessor {
         }
     }
 
-    public DownlinkMsg convertAlarmEventToDownlink(EdgeEvent edgeEvent) {
-        AlarmUpdateMsg alarmUpdateMsg =
-                convertAlarmEventToAlarmMsg(edgeEvent.getTenantId(), edgeEvent.getEntityId(), edgeEvent.getAction(), edgeEvent.getBody());
+    @Override
+    public DownlinkMsg convertAlarmEventToDownlink(EdgeEvent edgeEvent, EdgeVersion edgeVersion) {
+        AlarmUpdateMsg alarmUpdateMsg = convertAlarmEventToAlarmMsg(edgeEvent.getTenantId(), edgeEvent.getEntityId(),
+                edgeEvent.getAction(), edgeEvent.getBody(), edgeVersion);
         if (alarmUpdateMsg != null) {
             return DownlinkMsg.newBuilder()
                     .setDownlinkMsgId(EdgeUtils.nextPositiveInt())
@@ -137,6 +136,5 @@ public class AlarmEdgeProcessor extends BaseAlarmProcessor {
         } while (pageData != null && pageData.hasNext());
         return futures;
     }
-
 }
 

@@ -102,7 +102,7 @@ import org.thingsboard.server.common.data.converter.ConverterType;
 import org.thingsboard.server.common.data.device.DeviceSearchQuery;
 import org.thingsboard.server.common.data.edge.Edge;
 import org.thingsboard.server.common.data.edge.EdgeEvent;
-import org.thingsboard.server.common.data.edge.EdgeInstallInstructions;
+import org.thingsboard.server.common.data.edge.EdgeInstructions;
 import org.thingsboard.server.common.data.edge.EdgeSearchQuery;
 import org.thingsboard.server.common.data.entityview.EntityViewSearchQuery;
 import org.thingsboard.server.common.data.event.EventType;
@@ -563,7 +563,7 @@ public class RestClient implements Closeable {
                 HttpMethod.GET,
                 HttpEntity.EMPTY,
                 new ParameterizedTypeReference<List<EntitySubtype>>() {
-        }).getBody();
+                }).getBody();
     }
 
     public AlarmComment saveAlarmComment(AlarmId alarmId, AlarmComment alarmComment) {
@@ -682,6 +682,7 @@ public class RestClient implements Closeable {
                 }).getBody();
     }
 
+    @Deprecated(since = "3.6.2")
     public List<EntitySubtype> getAssetTypes() {
         return restTemplate.exchange(URI.create(
                         baseURL + "/api/asset/types"),
@@ -689,6 +690,15 @@ public class RestClient implements Closeable {
                 HttpEntity.EMPTY,
                 new ParameterizedTypeReference<List<EntitySubtype>>() {
                 }).getBody();
+    }
+
+    public List<EntitySubtype> getAssetProfileNames(boolean activeOnly) {
+        return restTemplate.exchange(
+                baseURL + "/api/assetProfile/names?activeOnly={activeOnly}",
+                HttpMethod.GET,
+                HttpEntity.EMPTY,
+                new ParameterizedTypeReference<List<EntitySubtype>>() {
+                }, activeOnly).getBody();
     }
 
     public BulkImportResult<Asset> processAssetsBulkImport(BulkImportRequest request) {
@@ -1187,6 +1197,7 @@ public class RestClient implements Closeable {
                 }).getBody();
     }
 
+    @Deprecated(since = "3.6.2")
     public List<EntitySubtype> getDeviceTypes() {
         return restTemplate.exchange(
                 baseURL + "/api/device/types",
@@ -1194,6 +1205,15 @@ public class RestClient implements Closeable {
                 HttpEntity.EMPTY,
                 new ParameterizedTypeReference<List<EntitySubtype>>() {
                 }).getBody();
+    }
+
+    public List<EntitySubtype> getDeviceProfileNames(boolean activeOnly) {
+        return restTemplate.exchange(
+                baseURL + "/api/deviceProfile/names?activeOnly={activeOnly}",
+                HttpMethod.GET,
+                HttpEntity.EMPTY,
+                new ParameterizedTypeReference<List<EntitySubtype>>() {
+                }, activeOnly).getBody();
     }
 
     public JsonNode claimDevice(String deviceName, ClaimRequest claimRequest) {
@@ -2816,10 +2836,16 @@ public class RestClient implements Closeable {
                 }).getBody();
     }
 
-    public Optional<EdgeInstallInstructions> getEdgeDockerInstallInstructions(EdgeId edgeId) {
-        ResponseEntity<EdgeInstallInstructions> edgeInstallInstructionsResult =
-                restTemplate.getForEntity(baseURL + "/api/edge/instructions/{edgeId}", EdgeInstallInstructions.class, edgeId.getId());
+    public Optional<EdgeInstructions> getEdgeInstallInstructions(EdgeId edgeId, String method) {
+        ResponseEntity<EdgeInstructions> edgeInstallInstructionsResult =
+                restTemplate.getForEntity(baseURL + "/api/edge/instructions/install/{edgeId}/{method}", EdgeInstructions.class, edgeId.getId(), method);
         return Optional.ofNullable(edgeInstallInstructionsResult.getBody());
+    }
+
+    public Optional<EdgeInstructions> getEdgeUpgradeInstructions(String edgeVersion, String method) {
+        ResponseEntity<EdgeInstructions> edgeUpgradeInstructionsResult =
+                restTemplate.getForEntity(baseURL + "/api/edge/instructions/upgrade/{edgeVersion}/{method}", EdgeInstructions.class, edgeVersion, method);
+        return Optional.ofNullable(edgeUpgradeInstructionsResult.getBody());
     }
 
     public UUID saveEntitiesVersion(VersionCreateRequest request) {

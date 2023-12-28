@@ -284,6 +284,8 @@ export enum LegendPosition {
   right = 'right'
 }
 
+export const legendPositions = Object.keys(LegendPosition) as LegendPosition[];
+
 export const legendPositionTranslationMap = new Map<LegendPosition, string>(
   [
     [ LegendPosition.top, 'position.top' ],
@@ -738,7 +740,7 @@ export interface BaseWidgetInfo {
   type: widgetType;
 }
 
-export interface Widget extends BaseWidgetInfo {
+export interface Widget extends BaseWidgetInfo, ExportableEntity<WidgetTypeId> {
   typeId?: WidgetTypeId;
   sizeX: number;
   sizeY: number;
