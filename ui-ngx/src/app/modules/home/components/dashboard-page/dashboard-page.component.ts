@@ -140,7 +140,6 @@ import { EntityGroupInfo, resolveGroupParams } from '@shared/models/entity-group
 import { UserPermissionsService } from '@core/http/user-permissions.service';
 import { Operation, Resource } from '@shared/models/security.models';
 import { ReportType } from '@shared/models/report.models';
-import { map, share } from 'rxjs/operators';
 import { FiltersDialogComponent, FiltersDialogData } from '@home/components/filter/filters-dialog.component';
 import { Filters } from '@shared/models/query/query.models';
 import { ConnectedPosition, Overlay, OverlayConfig, OverlayRef } from '@angular/cdk/overlay';
@@ -172,7 +171,7 @@ import { IAliasController } from '@core/api/widget-api.models';
 import { MatButton } from '@angular/material/button';
 import { VersionControlComponent } from '@home/components/vc/version-control.component';
 import { TbPopoverService } from '@shared/components/popover.service';
-import { map, tap } from 'rxjs/operators';
+import { map, tap, share } from 'rxjs/operators';
 import { LayoutFixedSize, LayoutWidthType } from '@home/components/dashboard-page/layout/layout.models';
 import { TbPopoverComponent } from '@shared/components/popover.component';
 import { ResizeObserver } from '@juggle/resize-observer';
