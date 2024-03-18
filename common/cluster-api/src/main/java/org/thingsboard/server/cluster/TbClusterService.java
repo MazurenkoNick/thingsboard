@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2023 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2024 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -122,9 +122,10 @@ public interface TbClusterService extends TbQueueClusterService {
 
     void pushEdgeSyncResponseToCore(FromEdgeSyncResponse fromEdgeSyncResponse);
 
-    void sendNotificationMsgToEdge(TenantId tenantId, EdgeId edgeId, EntityId entityId, String body, EdgeEventType type, EdgeEventActionType action, EdgeId sourceEdgeId);
+    void sendNotificationMsgToEdge(TenantId tenantId, EdgeId edgeId, EntityId entityId, String body, EdgeEventType type,
+                                   EdgeEventActionType action, EdgeId sourceEdgeId);
 
-    void sendNotificationMsgToEdge(TenantId tenantId, EdgeId edgeId, EntityId entityId, String body, EdgeEventType type, EdgeEventActionType action,
-                                          EntityType entityGroupType, EntityGroupId entityGroupId, EdgeId sourceEdgeId);
+    void sendNotificationMsgToEdge(TenantId tenantId, EdgeId edgeId, EntityId entityId, String body, EdgeEventType type,
+                                   EdgeEventActionType action, EntityType entityGroupType, EntityGroupId entityGroupId, EdgeId sourceEdgeId);
 
 }

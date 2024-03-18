@@ -1,7 +1,7 @@
 ///
 /// ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
 ///
-/// Copyright © 2016-2023 ThingsBoard, Inc. All Rights Reserved.
+/// Copyright © 2016-2024 ThingsBoard, Inc. All Rights Reserved.
 ///
 /// NOTICE: All information contained herein is, and remains
 /// the property of ThingsBoard, Inc. and its suppliers,
@@ -64,6 +64,7 @@ import { Dashboard } from '@shared/models/dashboard.models';
 import { WidgetService } from '@core/http/widget.service';
 import { IAliasController } from '@core/api/widget-api.models';
 import { WidgetConfigComponentData } from '@home/models/widget-component.models';
+import { DataKeysCallbacks } from '@home/components/widget/config/data-keys.component.models';
 
 @Component({
   selector: 'tb-widget-settings',
@@ -93,6 +94,9 @@ export class WidgetSettingsComponent implements ControlValueAccessor, OnInit, On
   aliasController: IAliasController;
 
   @Input()
+  dataKeyCallbacks: DataKeysCallbacks;
+
+  @Input()
   dashboard: Dashboard;
 
   @Input()
@@ -113,7 +117,7 @@ export class WidgetSettingsComponent implements ControlValueAccessor, OnInit, On
   private definedSettingsComponent: IWidgetSettingsComponent;
 
   private widgetSettingsFormData: JsonFormComponentData;
-  private propagateChange = (v: any) => { };
+  private propagateChange = (_v: any) => { };
 
   constructor(private translate: TranslateService,
               private cfr: ComponentFactoryResolver,
@@ -151,6 +155,11 @@ export class WidgetSettingsComponent implements ControlValueAccessor, OnInit, On
         if (propName === 'aliasController') {
           if (this.definedSettingsComponent) {
             this.definedSettingsComponent.aliasController = this.aliasController;
+          }
+        }
+        if (propName === 'dataKeyCallbacks') {
+          if (this.definedSettingsComponent) {
+            this.definedSettingsComponent.dataKeyCallbacks = this.dataKeyCallbacks;
           }
         }
         if (propName === 'widgetConfig') {
@@ -240,6 +249,7 @@ export class WidgetSettingsComponent implements ControlValueAccessor, OnInit, On
         this.definedSettingsComponentRef = this.definedSettingsContainer.createComponent(factory);
         this.definedSettingsComponent = this.definedSettingsComponentRef.instance;
         this.definedSettingsComponent.aliasController = this.aliasController;
+        this.definedSettingsComponent.dataKeyCallbacks = this.dataKeyCallbacks;
         this.definedSettingsComponent.dashboard = this.dashboard;
         this.definedSettingsComponent.widget = this.widget;
         this.definedSettingsComponent.widgetConfig = this.widgetConfig;
@@ -261,7 +271,7 @@ export class WidgetSettingsComponent implements ControlValueAccessor, OnInit, On
         };
       }
     } else if (this.useJsonForm()) {
-      if (!this.widgetSettingsFormGroup.valid) {
+      if (!this.widgetSettingsFormGroup.get('settings').valid) {
         return {
           widgetSettings: {
             valid: false

@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2023 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2024 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -128,15 +128,15 @@ public class CachedAttributesService implements AttributesService {
         validate(entityId, scope);
         Validator.validateString(attributeKey, "Incorrect attribute key " + attributeKey);
 
-        AttributeCacheKey attributeCacheKey = new AttributeCacheKey(scope, entityId, attributeKey);
-        TbCacheValueWrapper<AttributeKvEntry> cachedAttributeValue = cache.get(attributeCacheKey);
-        if (cachedAttributeValue != null) {
-            hitCounter.increment();
-            AttributeKvEntry cachedAttributeKvEntry = cachedAttributeValue.get();
-            return Futures.immediateFuture(Optional.ofNullable(cachedAttributeKvEntry));
-        } else {
-            missCounter.increment();
-            return cacheExecutor.submit(() -> {
+        return cacheExecutor.submit(() -> {
+            AttributeCacheKey attributeCacheKey = new AttributeCacheKey(scope, entityId, attributeKey);
+            TbCacheValueWrapper<AttributeKvEntry> cachedAttributeValue = cache.get(attributeCacheKey);
+            if (cachedAttributeValue != null) {
+                hitCounter.increment();
+                AttributeKvEntry cachedAttributeKvEntry = cachedAttributeValue.get();
+                return Optional.ofNullable(cachedAttributeKvEntry);
+            } else {
+                missCounter.increment();
                 var cacheTransaction = cache.newTransactionForKey(attributeCacheKey);
                 try {
                     Optional<AttributeKvEntry> result = attributesDao.find(tenantId, entityId, scope, attributeKey);
@@ -148,8 +148,8 @@ public class CachedAttributesService implements AttributesService {
                     log.debug("Could not find attribute from cache: [{}] [{}] [{}]", entityId, scope, attributeKey, e);
                     throw e;
                 }
-            });
-        }
+            }
+        });
     }
 
     @Override
@@ -222,7 +222,8 @@ public class CachedAttributesService implements AttributesService {
     @Override
     public ListenableFuture<List<AttributeKvEntry>> findAll(TenantId tenantId, EntityId entityId, String scope) {
         validate(entityId, scope);
-        return Futures.immediateFuture(attributesDao.findAll(tenantId, entityId, scope));
+        // We can`t watch on cache because the keys are unknown.
+        return jpaExecutorService.submit(() -> attributesDao.findAll(tenantId, entityId, scope));
     }
 
     @Override
@@ -233,6 +234,15 @@ public class CachedAttributesService implements AttributesService {
     @Override
     public List<String> findAllKeysByEntityIds(TenantId tenantId, EntityType entityType, List<EntityId> entityIds) {
         return attributesDao.findAllKeysByEntityIds(tenantId, entityType, entityIds);
+    }
+
+    @Override
+    public List<String> findAllKeysByEntityIds(TenantId tenantId, EntityType entityType, List<EntityId> entityIds, String scope) {
+        if (StringUtils.isEmpty(scope)) {
+            return attributesDao.findAllKeysByEntityIds(tenantId, entityType, entityIds);
+        } else {
+            return attributesDao.findAllKeysByEntityIdsAndAttributeType(tenantId, entityType, entityIds, scope);
+        }
     }
 
     @Override

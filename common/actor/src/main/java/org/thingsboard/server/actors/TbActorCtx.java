@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2023 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2024 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -50,6 +50,8 @@ public interface TbActorCtx extends TbActorRef {
     TbActorRef getOrCreateChildActor(TbActorId actorId, Supplier<String> dispatcher, Supplier<TbActorCreator> creator, Supplier<Boolean> createCondition);
 
     void broadcastToChildren(TbActorMsg msg);
+
+    void broadcastToChildren(TbActorMsg msg, boolean highPriority);
 
     void broadcastToChildrenByType(TbActorMsg msg, EntityType entityType);
 

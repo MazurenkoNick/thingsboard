@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2023 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2024 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -83,6 +83,7 @@ public class AssetMsgConstructorV1 extends BaseAssetMsgConstructor {
 
     @Override
     public AssetProfileUpdateMsg constructAssetProfileUpdatedMsg(UpdateMsgType msgType, AssetProfile assetProfile) {
+        assetProfile = JacksonUtil.clone(assetProfile);
         imageService.inlineImageForEdge(assetProfile);
         AssetProfileUpdateMsg.Builder builder = AssetProfileUpdateMsg.newBuilder()
                 .setMsgType(msgType)
@@ -109,4 +110,5 @@ public class AssetMsgConstructorV1 extends BaseAssetMsgConstructor {
         }
         return builder.build();
     }
+
 }

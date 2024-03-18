@@ -1,7 +1,7 @@
 ///
 /// ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
 ///
-/// Copyright © 2016-2023 ThingsBoard, Inc. All Rights Reserved.
+/// Copyright © 2016-2024 ThingsBoard, Inc. All Rights Reserved.
 ///
 /// NOTICE: All information contained herein is, and remains
 /// the property of ThingsBoard, Inc. and its suppliers,
@@ -68,6 +68,7 @@ export interface SignalStrengthWidgetSettings {
   dateFont: Font;
   dateColor: string;
   activeBarsColor: ColorSettings;
+  noSignalRssiValue: number;
   inactiveBarsColor: string;
   showTooltip: boolean;
   showTooltipValue: boolean;
@@ -106,6 +107,7 @@ export const signalStrengthDefaultSettings: SignalStrengthWidgetSettings = {
     ],
     colorFunction: defaultColorFunction
   },
+  noSignalRssiValue: -100,
   inactiveBarsColor: 'rgba(224, 224, 224, 1)',
   showTooltip: true,
   showTooltipValue: true,

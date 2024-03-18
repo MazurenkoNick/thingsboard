@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2023 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2024 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -49,6 +49,7 @@ public class DashboardMsgConstructorV1 extends BaseDashboardMsgConstructor {
 
     @Override
     public DashboardUpdateMsg constructDashboardUpdatedMsg(UpdateMsgType msgType, Dashboard dashboard, EntityGroupId entityGroupId) {
+        dashboard = JacksonUtil.clone(dashboard);
         imageService.inlineImagesForEdge(dashboard);
         DashboardUpdateMsg.Builder builder = DashboardUpdateMsg.newBuilder()
                 .setMsgType(msgType)
@@ -73,4 +74,5 @@ public class DashboardMsgConstructorV1 extends BaseDashboardMsgConstructor {
         }
         return builder.build();
     }
+
 }

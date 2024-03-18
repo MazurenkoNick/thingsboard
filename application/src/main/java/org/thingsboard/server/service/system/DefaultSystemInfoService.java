@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2023 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2024 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -124,7 +124,7 @@ public class DefaultSystemInfoService extends TbApplicationEventListener<Partiti
                 if (myPartition) {
                     if (scheduler == null) {
                         scheduler = Executors.newSingleThreadScheduledExecutor(ThingsBoardThreadFactory.forName("tb-system-info-scheduler"));
-                        scheduler.scheduleWithFixedDelay(this::saveCurrentSystemInfo, systemInfoPersistFrequencySeconds, systemInfoPersistFrequencySeconds, TimeUnit.SECONDS);
+                        scheduler.scheduleWithFixedDelay(this::saveCurrentSystemInfo, 0, systemInfoPersistFrequencySeconds, TimeUnit.SECONDS);
                     }
                 } else {
                     destroy();

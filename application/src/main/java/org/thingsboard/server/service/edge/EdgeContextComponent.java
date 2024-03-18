@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2023 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2024 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -35,7 +35,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 import org.thingsboard.server.actors.service.ActorService;
+import org.thingsboard.server.cache.limits.RateLimitService;
 import org.thingsboard.server.cluster.TbClusterService;
+import org.thingsboard.server.common.msg.notification.NotificationRuleProcessor;
 import org.thingsboard.server.dao.asset.AssetProfileService;
 import org.thingsboard.server.dao.asset.AssetService;
 import org.thingsboard.server.dao.attributes.AttributesService;
@@ -48,6 +50,7 @@ import org.thingsboard.server.dao.edge.EdgeService;
 import org.thingsboard.server.dao.entityview.EntityViewService;
 import org.thingsboard.server.dao.group.EntityGroupService;
 import org.thingsboard.server.dao.integration.IntegrationService;
+import org.thingsboard.server.dao.ota.DeviceGroupOtaPackageService;
 import org.thingsboard.server.dao.ota.OtaPackageService;
 import org.thingsboard.server.dao.queue.QueueService;
 import org.thingsboard.server.dao.resource.ResourceService;
@@ -182,6 +185,12 @@ public class EdgeContextComponent {
     private ResourceService resourceService;
 
     @Autowired
+    private RateLimitService rateLimitService;
+
+    @Autowired
+    private NotificationRuleProcessor notificationRuleProcessor;
+
+    @Autowired
     private AlarmEdgeProcessor alarmProcessor;
 
     @Autowired
@@ -302,6 +311,9 @@ public class EdgeContextComponent {
 
     @Autowired
     protected IntegrationService integrationService;
+
+    @Autowired
+    protected DeviceGroupOtaPackageService deviceGroupOtaPackageService;
 
     @Autowired
     private EntityGroupEdgeProcessor entityGroupProcessor;

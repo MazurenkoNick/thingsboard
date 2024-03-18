@@ -1,7 +1,7 @@
 ///
 /// ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
 ///
-/// Copyright © 2016-2023 ThingsBoard, Inc. All Rights Reserved.
+/// Copyright © 2016-2024 ThingsBoard, Inc. All Rights Reserved.
 ///
 /// NOTICE: All information contained herein is, and remains
 /// the property of ThingsBoard, Inc. and its suppliers,
@@ -75,6 +75,19 @@ export class TbWebReportPage {
         }
         const context = await this.browser.newContext(config);
         this.page = await context.newPage();
+        this.page.on('response', msg => {
+            if (msg.status() > 400) {
+                this.currentBaseUrl = '';
+            }
+            this.logger.debug('Response: URL: %s, Status %s, Headers: %s', msg.url(), msg.status(), JSON.stringify(msg.headers()));
+        });
+        if (this.logger.level === "debug") {
+            this.page.on('console', msg => this.logger.debug('Web page console message: %s', msg.text()));
+            this.page.on('request', msg => {
+                this.logger.debug('Request: URL: %s, Headers: %s, Post Data: %s, Failure: %s',
+                  msg.url(), JSON.stringify(msg.headers()), msg.postData(), msg.failure()?.errorText);
+            });
+        }
         this.session = await context.newCDPSession(this.page);
         this.page.setDefaultNavigationTimeout(defaultPageNavigationTimeout);
         await this.page.emulateMedia({media: 'screen'});

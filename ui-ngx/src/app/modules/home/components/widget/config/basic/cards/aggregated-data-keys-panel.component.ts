@@ -1,7 +1,7 @@
 ///
 /// ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
 ///
-/// Copyright © 2016-2023 ThingsBoard, Inc. All Rights Reserved.
+/// Copyright © 2016-2024 ThingsBoard, Inc. All Rights Reserved.
 ///
 /// NOTICE: All information contained herein is, and remains
 /// the property of ThingsBoard, Inc. and its suppliers,
@@ -167,7 +167,8 @@ export class AggregatedDataKeysPanelComponent implements ControlValueAccessor, O
   }
 
   addKey() {
-    const dataKey = this.callbacks.generateDataKey(this.keyName, this.dataKeyType, null);
+    const dataKey = this.callbacks.generateDataKey(this.keyName, this.dataKeyType, null,
+      true,null);
     dataKey.decimals = 0;
     dataKey.settings = {...aggregatedValueCardDefaultKeySettings};
     const keysArray = this.keysListFormGroup.get('keys') as UntypedFormArray;

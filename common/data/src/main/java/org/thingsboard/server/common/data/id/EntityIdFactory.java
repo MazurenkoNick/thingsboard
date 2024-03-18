@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2023 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2024 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -177,6 +177,7 @@ public class EntityIdFactory {
             case SCHEDULER_EVENT:
                 return new SchedulerEventId(uuid);
             case ENTITY_GROUP:
+            case DEVICE_GROUP_OTA:
                 return new EntityGroupId(uuid);
             case ROLE:
                 return new RoleId(uuid);

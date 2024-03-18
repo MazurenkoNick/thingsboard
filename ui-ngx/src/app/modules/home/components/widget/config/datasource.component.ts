@@ -1,7 +1,7 @@
 ///
 /// ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
 ///
-/// Copyright © 2016-2023 ThingsBoard, Inc. All Rights Reserved.
+/// Copyright © 2016-2024 ThingsBoard, Inc. All Rights Reserved.
 ///
 /// NOTICE: All information contained herein is, and remains
 /// the property of ThingsBoard, Inc. and its suppliers,
@@ -54,7 +54,7 @@ import { WidgetConfigComponent } from '@home/components/widget/widget-config.com
 import { IAliasController } from '@core/api/widget-api.models';
 import { EntityAliasSelectCallbacks } from '@home/components/alias/entity-alias-select.component.models';
 import { FilterSelectCallbacks } from '@home/components/filter/filter-select.component.models';
-import { DataKeysCallbacks } from '@home/components/widget/config/data-keys.component.models';
+import { DataKeysCallbacks, DataKeySettingsFunction } from '@home/components/widget/config/data-keys.component.models';
 import { EntityType } from '@shared/models/entity-type.models';
 import { DatasourcesComponent } from '@home/components/widget/config/datasources.component';
 
@@ -110,6 +110,10 @@ export class DatasourceComponent implements ControlValueAccessor, OnInit, Valida
     return this.widgetConfigComponent.modelValue?.typeParameters?.dataKeysOptional;
   }
 
+  public get datasourcesOptional(): boolean {
+    return this.widgetConfigComponent.modelValue?.typeParameters?.datasourcesOptional;
+  }
+
   public get maxDataKeys(): number {
     return this.widgetConfigComponent.modelValue?.typeParameters?.maxDataKeys;
   }
@@ -128,6 +132,10 @@ export class DatasourceComponent implements ControlValueAccessor, OnInit, Valida
 
   public get latestDataKeySettingsDirective(): string {
     return this.widgetConfigComponent.modelValue?.latestDataKeySettingsDirective;
+  }
+
+  public get dataKeySettingsFunction(): DataKeySettingsFunction {
+    return this.widgetConfigComponent.modelValue?.dataKeySettingsFunction;
   }
 
   public get dashboard(): Dashboard {
@@ -291,18 +299,20 @@ export class DatasourceComponent implements ControlValueAccessor, OnInit, Valida
   }
 
   private updateValidators() {
-    const type: DatasourceType = this.datasourceFormGroup.get('type').value;
-    this.datasourceFormGroup.get('deviceId').setValidators(
-      type === DatasourceType.device ? [Validators.required] : []
-    );
-    this.datasourceFormGroup.get('entityAliasId').setValidators(
-      (type === DatasourceType.entity || type === DatasourceType.entityCount) ? [Validators.required] : []
-    );
-    const newDataKeysRequired = !this.isDataKeysOptional(type);
-    this.datasourceFormGroup.get('dataKeys').setValidators(newDataKeysRequired ? [Validators.required] : []);
-    this.datasourceFormGroup.get('deviceId').updateValueAndValidity({emitEvent: false});
-    this.datasourceFormGroup.get('entityAliasId').updateValueAndValidity({emitEvent: false});
-    this.datasourceFormGroup.get('dataKeys').updateValueAndValidity({emitEvent: false});
+    if (!this.datasourcesOptional) {
+      const type: DatasourceType = this.datasourceFormGroup.get('type').value;
+      this.datasourceFormGroup.get('deviceId').setValidators(
+        type === DatasourceType.device ? [Validators.required] : []
+      );
+      this.datasourceFormGroup.get('entityAliasId').setValidators(
+        (type === DatasourceType.entity || type === DatasourceType.entityCount) ? [Validators.required] : []
+      );
+      const newDataKeysRequired = !this.isDataKeysOptional(type);
+      this.datasourceFormGroup.get('dataKeys').setValidators(newDataKeysRequired ? [Validators.required] : []);
+      this.datasourceFormGroup.get('deviceId').updateValueAndValidity({emitEvent: false});
+      this.datasourceFormGroup.get('entityAliasId').updateValueAndValidity({emitEvent: false});
+      this.datasourceFormGroup.get('dataKeys').updateValueAndValidity({emitEvent: false});
+    }
   }
 
 }

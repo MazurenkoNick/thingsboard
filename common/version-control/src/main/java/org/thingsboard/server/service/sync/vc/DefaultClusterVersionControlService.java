@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2023 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2024 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -175,7 +175,7 @@ public class DefaultClusterVersionControlService extends TbApplicationEventListe
     @Override
     protected void onTbApplicationEvent(PartitionChangeEvent event) {
         for (TenantId tenantId : vcService.getActiveRepositoryTenants()) {
-            if (!partitionService.resolve(ServiceType.TB_VC_EXECUTOR, tenantId, tenantId).isMyPartition()) {
+            if (!partitionService.isMyPartition(ServiceType.TB_VC_EXECUTOR, tenantId, tenantId)) {
                 var lock = getRepoLock(tenantId);
                 lock.lock();
                 try {

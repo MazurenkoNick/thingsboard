@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2023 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2024 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -161,7 +161,7 @@ public class LwM2MClientSerDes {
         if (multiInstances) {
             Map<Integer, Object> instances = new HashMap<>();
             o.get("instances").asObject().forEach(entry -> {
-                instances.put(Integer.valueOf(entry.getName()), parseValue(type, entry.getValue()));
+                instances.put(Integer.valueOf(entry.getName()), parseValue(type, entry.getValue().asObject().get("value")));
             });
             return LwM2mMultipleResource.newResource(id, instances, type);
         } else {

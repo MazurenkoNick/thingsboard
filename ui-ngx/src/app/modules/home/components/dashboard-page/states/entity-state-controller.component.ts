@@ -1,7 +1,7 @@
 ///
 /// ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
 ///
-/// Copyright © 2016-2023 ThingsBoard, Inc. All Rights Reserved.
+/// Copyright © 2016-2024 ThingsBoard, Inc. All Rights Reserved.
 ///
 /// NOTICE: All information contained herein is, and remains
 /// the property of ThingsBoard, Inc. and its suppliers,
@@ -299,7 +299,12 @@ export class EntityStateControllerComponent extends StateControllerComponent imp
   private gotoState(stateId: string, update: boolean, openRightLayout?: boolean) {
     const isStateIdChanged = this.dashboardCtrl.dashboardCtx.state !== stateId;
     this.dashboardCtrl.openDashboardState(stateId, openRightLayout);
-    this.mobileService.handleDashboardStateName(this.getStateName(this.stateObject.length - 1));
+    if (isStateIdChanged) {
+      this.stateIdSubject.next(stateId);
+    }
+    if (this.syncStateWithQueryParam) {
+      this.mobileService.handleDashboardStateName(this.getStateName(this.stateObject.length - 1));
+    }
     if (update) {
       this.updateLocation(isStateIdChanged);
     }

@@ -1,7 +1,7 @@
 ///
 /// ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
 ///
-/// Copyright © 2016-2023 ThingsBoard, Inc. All Rights Reserved.
+/// Copyright © 2016-2024 ThingsBoard, Inc. All Rights Reserved.
 ///
 /// NOTICE: All information contained herein is, and remains
 /// the property of ThingsBoard, Inc. and its suppliers,
@@ -31,7 +31,9 @@
 
 export * from './admin.service';
 export * from './alarm.service';
+export * from './alarm-comment.service';
 export * from './asset.service';
+export * from './asset-profile.service';
 export * from './attribute.service';
 export * from './audit-log.service';
 export * from './blob-entity.service';
@@ -43,6 +45,8 @@ export * from './customer.service';
 export * from './dashboard.service';
 export * from './device.service';
 export * from './device-profile.service';
+export * from './entities-version-control.service';
+export * from './entity.service';
 export * from './edge.service';
 export * from './entity.service';
 export * from './entity-group.service';
@@ -51,6 +55,7 @@ export * from './entity-view.service';
 export * from './event.service';
 export * from './http-utils';
 export * from './integration.service';
+export * from './image.service';
 export * from './notification.service';
 export * from './oauth2.service';
 export * from './ota-package.service';

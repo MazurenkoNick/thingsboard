@@ -1,7 +1,7 @@
 ///
 /// ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
 ///
-/// Copyright © 2016-2023 ThingsBoard, Inc. All Rights Reserved.
+/// Copyright © 2016-2024 ThingsBoard, Inc. All Rights Reserved.
 ///
 /// NOTICE: All information contained herein is, and remains
 /// the property of ThingsBoard, Inc. and its suppliers,
@@ -57,8 +57,9 @@ import { dataKeyRowValidator, dataKeyValid } from '@home/components/widget/confi
 import { CdkDragDrop } from '@angular/cdk/drag-drop';
 import { DataKeyType } from '@shared/models/telemetry/telemetry.models';
 import { UtilsService } from '@core/services/utils.service';
-import { DataKeysCallbacks } from '@home/components/widget/config/data-keys.component.models';
+import { DataKeysCallbacks, DataKeySettingsFunction } from '@home/components/widget/config/data-keys.component.models';
 import { coerceBoolean } from '@shared/decorators/coercion';
+import { TimeSeriesChartYAxisId } from '@home/components/widget/lib/chart/time-series-chart.models';
 
 @Component({
   selector: 'tb-data-keys-panel',
@@ -134,6 +135,17 @@ export class DataKeysPanelComponent implements ControlValueAccessor, OnInit, OnC
   @coerceBoolean()
   hideSourceSelection = false;
 
+  @Input()
+  @coerceBoolean()
+  timeSeriesChart = false;
+
+  @Input()
+  @coerceBoolean()
+  showTimeSeriesType = false;
+
+  @Input()
+  yAxisIds: TimeSeriesChartYAxisId[];
+
   dataKeyType: DataKeyType;
 
   keysListFormGroup: UntypedFormGroup;
@@ -157,6 +169,10 @@ export class DataKeysPanelComponent implements ControlValueAccessor, OnInit, OnC
     return this.widgetConfigComponent.modelValue?.dataKeySettingsSchema;
   }
 
+  get dataKeySettingsFunction(): DataKeySettingsFunction {
+    return this.widgetConfigComponent.modelValue?.dataKeySettingsFunction;
+  }
+
   get dragEnabled(): boolean {
     return this.keysFormArray().controls.length > 1;
   }
@@ -164,7 +180,7 @@ export class DataKeysPanelComponent implements ControlValueAccessor, OnInit, OnC
   get noKeys(): boolean {
     let keys: DataKey[] = this.keysListFormGroup.get('keys').value;
     if (this.hasAdditionalLatestDataKeys) {
-      keys = keys.filter(k => !(k as any).latest);
+      keys = keys.filter(k => !(k as any)?.latest);
     }
     return keys.length === 0;
   }
@@ -271,7 +287,8 @@ export class DataKeysPanelComponent implements ControlValueAccessor, OnInit, OnC
   }
 
   addKey() {
-    const dataKey = this.callbacks.generateDataKey('', null, this.datakeySettingsSchema);
+    const dataKey = this.callbacks.generateDataKey('', null, this.datakeySettingsSchema,
+      false, this.dataKeySettingsFunction);
     dataKey.label = '';
     dataKey.decimals = 0;
     if (this.hasAdditionalLatestDataKeys) {

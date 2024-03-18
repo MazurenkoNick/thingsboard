@@ -1,7 +1,7 @@
 ///
 /// ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
 ///
-/// Copyright © 2016-2023 ThingsBoard, Inc. All Rights Reserved.
+/// Copyright © 2016-2024 ThingsBoard, Inc. All Rights Reserved.
 ///
 /// NOTICE: All information contained herein is, and remains
 /// the property of ThingsBoard, Inc. and its suppliers,
@@ -93,11 +93,11 @@ export class EntityGroupAutocompleteComponent implements ControlValueAccessor, O
   @Input()
   set ownerId(value: EntityId | null) {
     if (!isEqual(this.ownerIdValue, value)) {
+      this.ownerIdValue = value;
       const currentEntityGroup = this.getCurrentEntityGroup();
       const keepEntityGroup = currentEntityGroup === null;
       this.reset(keepEntityGroup);
     }
-    this.ownerIdValue = value;
   }
 
   @Input()
@@ -217,9 +217,11 @@ export class EntityGroupAutocompleteComponent implements ControlValueAccessor, O
         this.selectEntityGroupFormGroup.get('entityGroup').patchValue(entityGroup, {emitEvent: false});
         this.entityGroupLoaded.next(entityGroup);
       } else {
-        this.entityGroupService.getEntityGroupEntityInfo(value as string, {ignoreLoading: true}).subscribe({
-          next: (entityGroup) => {
-            this.modelValue = entityGroup.id.id;
+        this.entityGroupService.getEntityGroup(value as string, {ignoreLoading: true}).subscribe({
+          next: ({ name, id, ownerId }) => {
+            const entityGroup = { name, id };
+            this.modelValue = id.id;
+            this.ownerId = ownerId;
             this.selectEntityGroupFormGroup.get('entityGroup').patchValue(entityGroup, {emitEvent: false});
             this.entityGroupLoaded.next(entityGroup);
           },

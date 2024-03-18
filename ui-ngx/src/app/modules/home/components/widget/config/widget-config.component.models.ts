@@ -1,7 +1,7 @@
 ///
 /// ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
 ///
-/// Copyright © 2016-2023 ThingsBoard, Inc. All Rights Reserved.
+/// Copyright © 2016-2024 ThingsBoard, Inc. All Rights Reserved.
 ///
 /// NOTICE: All information contained herein is, and remains
 /// the property of ThingsBoard, Inc. and its suppliers,
@@ -38,10 +38,10 @@ import { PageComponent } from '@shared/components/page.component';
 import { Store } from '@ngrx/store';
 import { AppState } from '@core/core.state';
 import { AbstractControl, UntypedFormGroup } from '@angular/forms';
-import { DataKey, DatasourceType, KeyInfo, WidgetConfigMode } from '@shared/models/widget.models';
+import { DataKey, DatasourceType, WidgetConfigMode, widgetType } from '@shared/models/widget.models';
 import { WidgetConfigComponent } from '@home/components/widget/widget-config.component';
-import { DataKeyType } from '@shared/models/telemetry/telemetry.models';
 import { isDefinedAndNotNull } from '@core/utils';
+import { IAliasController } from '@core/api/widget-api.models';
 
 export type WidgetConfigCallbacks = DatasourceCallbacks & WidgetActionCallbacks;
 
@@ -71,6 +71,22 @@ export abstract class BasicWidgetConfigComponent extends PageComponent implement
 
   get widgetConfig(): WidgetConfigComponentData {
     return this.widgetConfigValue;
+  }
+
+  get aliasController(): IAliasController {
+    return this.widgetConfigComponent.aliasController;
+  }
+
+  get callbacks(): WidgetConfigCallbacks {
+    return this.widgetConfigComponent.widgetConfigCallbacks;
+  }
+
+  get widgetType(): widgetType {
+    return this.widgetConfigComponent.widgetType;
+  }
+
+  get widgetEditMode(): boolean {
+    return this.widgetConfigComponent.widgetEditMode;
   }
 
   widgetConfigChangedEmitter = new EventEmitter<WidgetConfigComponentData>();
@@ -185,22 +201,23 @@ export abstract class BasicWidgetConfigComponent extends PageComponent implement
     if (keys && keys.length) {
       dataKeys.length = 0;
       keys.forEach(key => {
-        const dataKey = this.constructDataKey(configData, key);
+        const dataKey = this.constructDataKey(configData, key, false);
         dataKeys.push(dataKey);
       });
     }
     if (latestKeys && latestKeys.length) {
       latestDataKeys.length = 0;
       latestKeys.forEach(key => {
-        const dataKey = this.constructDataKey(configData, key);
+        const dataKey = this.constructDataKey(configData, key, true);
         latestDataKeys.push(dataKey);
       });
     }
   }
 
-  protected constructDataKey(configData: WidgetConfigComponentData, key: DataKey): DataKey {
+  protected constructDataKey(configData: WidgetConfigComponentData, key: DataKey, isLatestKey: boolean): DataKey {
     const dataKey =
-      this.widgetConfigComponent.widgetConfigCallbacks.generateDataKey(key.name, key.type, configData.dataKeySettingsSchema);
+      this.widgetConfigComponent.widgetConfigCallbacks.generateDataKey(key.name, key.type,
+        configData.dataKeySettingsSchema, isLatestKey, configData.dataKeySettingsFunction);
     if (key.label) {
       dataKey.label = key.label;
     }

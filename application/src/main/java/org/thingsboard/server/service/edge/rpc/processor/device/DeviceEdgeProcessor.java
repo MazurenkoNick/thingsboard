@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2023 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2024 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -54,6 +54,7 @@ import org.thingsboard.server.common.data.id.EdgeId;
 import org.thingsboard.server.common.data.id.EntityGroupId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.msg.TbMsgType;
+import org.thingsboard.server.common.data.ota.DeviceGroupOtaPackage;
 import org.thingsboard.server.common.data.rpc.RpcError;
 import org.thingsboard.server.common.data.security.DeviceCredentials;
 import org.thingsboard.server.common.msg.TbMsg;
@@ -64,6 +65,7 @@ import org.thingsboard.server.common.msg.rpc.FromDeviceRpcResponseActorMsg;
 import org.thingsboard.server.exception.DataValidationException;
 import org.thingsboard.server.gen.edge.v1.DeviceCredentialsRequestMsg;
 import org.thingsboard.server.gen.edge.v1.DeviceCredentialsUpdateMsg;
+import org.thingsboard.server.gen.edge.v1.DeviceGroupOtaPackageUpdateMsg;
 import org.thingsboard.server.gen.edge.v1.DeviceRpcCallMsg;
 import org.thingsboard.server.gen.edge.v1.DeviceUpdateMsg;
 import org.thingsboard.server.gen.edge.v1.DownlinkMsg;
@@ -155,7 +157,8 @@ public abstract class DeviceEdgeProcessor extends BaseDeviceProcessor implements
 
     private void addDeviceToEdgeAllDeviceGroup(TenantId tenantId, Edge edge, DeviceId deviceId) {
         try {
-            EntityGroup edgeDeviceGroup = entityGroupService.findOrCreateEdgeAllGroupAsync(tenantId, edge, edge.getName(), EntityType.DEVICE).get();
+            Device device = deviceService.findDeviceById(tenantId, deviceId);
+            EntityGroup edgeDeviceGroup = entityGroupService.findOrCreateEdgeAllGroupAsync(tenantId, edge, edge.getName(), device.getOwnerId().getEntityType(), EntityType.DEVICE).get();
             if (edgeDeviceGroup != null) {
                 entityGroupService.addEntityToEntityGroup(tenantId, edgeDeviceGroup.getId(), deviceId);
             }
@@ -169,7 +172,7 @@ public abstract class DeviceEdgeProcessor extends BaseDeviceProcessor implements
         Device deviceToDelete = deviceService.findDeviceById(tenantId, deviceId);
         if (deviceToDelete != null) {
             try {
-                EntityGroup edgeDeviceGroup = entityGroupService.findOrCreateEdgeAllGroupAsync(tenantId, edge, edge.getName(), EntityType.DEVICE).get();
+                EntityGroup edgeDeviceGroup = entityGroupService.findOrCreateEdgeAllGroupAsync(tenantId, edge, edge.getName(), deviceToDelete.getOwnerId().getEntityType(), EntityType.DEVICE).get();
                 if (edgeDeviceGroup != null) {
                     entityGroupService.removeEntityFromEntityGroup(tenantId, edgeDeviceGroup.getId(), deviceToDelete.getId());
                 }
@@ -337,4 +340,27 @@ public abstract class DeviceEdgeProcessor extends BaseDeviceProcessor implements
                 .addDeviceCredentialsRequestMsg(deviceCredentialsRequestMsg);
         return builder.build();
     }
+
+    @Override
+    public DownlinkMsg convertDeviceGroupOtaEventToDownlink(EdgeEvent edgeEvent, EdgeVersion edgeVersion) {
+        DownlinkMsg downlinkMsg = null;
+        try {
+            DeviceGroupOtaPackage deviceGroupOtaPackage = JacksonUtil.convertValue(edgeEvent.getBody(), DeviceGroupOtaPackage.class);
+            if (deviceGroupOtaPackage == null) {
+                return null;
+            }
+            UpdateMsgType msgType = getUpdateMsgType(edgeEvent.getAction());
+            DeviceGroupOtaPackageUpdateMsg deviceGroupOtaUpdateMsg = ((DeviceMsgConstructor)
+                    deviceMsgConstructorFactory.getMsgConstructorByEdgeVersion(edgeVersion))
+                    .constructDeviceGroupOtaUpdateMsg(msgType, deviceGroupOtaPackage);
+            downlinkMsg = DownlinkMsg.newBuilder()
+                    .setDownlinkMsgId(EdgeUtils.nextPositiveInt())
+                    .addDeviceGroupOtaPackageUpdateMsg(deviceGroupOtaUpdateMsg)
+                    .build();
+        } catch (Exception e) {
+            log.error("Can't process device group ota package msg [{}]", edgeEvent, e);
+        }
+        return downlinkMsg;
+    }
+
 }

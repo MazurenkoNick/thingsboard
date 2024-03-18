@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2023 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2024 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -58,6 +58,7 @@ public class WidgetMsgConstructorV1 extends BaseWidgetMsgConstructor {
 
     @Override
     public WidgetsBundleUpdateMsg constructWidgetsBundleUpdateMsg(UpdateMsgType msgType, WidgetsBundle widgetsBundle, List<String> widgets) {
+        widgetsBundle = JacksonUtil.clone(widgetsBundle);
         imageService.inlineImageForEdge(widgetsBundle);
         WidgetsBundleUpdateMsg.Builder builder = WidgetsBundleUpdateMsg.newBuilder()
                 .setMsgType(msgType)
@@ -83,6 +84,7 @@ public class WidgetMsgConstructorV1 extends BaseWidgetMsgConstructor {
 
     @Override
     public WidgetTypeUpdateMsg constructWidgetTypeUpdateMsg(UpdateMsgType msgType, WidgetTypeDetails widgetTypeDetails, EdgeVersion edgeVersion) {
+        widgetTypeDetails = JacksonUtil.clone(widgetTypeDetails);
         imageService.inlineImagesForEdge(widgetTypeDetails);
         WidgetTypeUpdateMsg.Builder builder = WidgetTypeUpdateMsg.newBuilder()
                 .setMsgType(msgType)
@@ -124,4 +126,5 @@ public class WidgetMsgConstructorV1 extends BaseWidgetMsgConstructor {
         }
         return builder.build();
     }
+
 }

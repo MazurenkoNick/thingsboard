@@ -1,7 +1,7 @@
 --
 -- ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
 --
--- Copyright © 2016-2023 ThingsBoard, Inc. All Rights Reserved.
+-- Copyright © 2016-2024 ThingsBoard, Inc. All Rights Reserved.
 --
 -- NOTICE: All information contained herein is, and remains
 -- the property of ThingsBoard, Inc. and its suppliers,
@@ -94,7 +94,8 @@ CREATE TABLE IF NOT EXISTS scheduler_event (
     tenant_id uuid,
     type varchar(255),
     schedule varchar,
-    configuration varchar(10000000)
+    configuration varchar(10000000),
+    enabled boolean
 );
 
 CREATE TABLE IF NOT EXISTS blob_entity (

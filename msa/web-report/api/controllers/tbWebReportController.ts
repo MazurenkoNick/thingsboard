@@ -1,7 +1,7 @@
 ///
 /// ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
 ///
-/// Copyright © 2016-2023 ThingsBoard, Inc. All Rights Reserved.
+/// Copyright © 2016-2024 ThingsBoard, Inc. All Rights Reserved.
 ///
 /// NOTICE: All information contained herein is, and remains
 /// the property of ThingsBoard, Inc. and its suppliers,
@@ -77,7 +77,7 @@ export function genDashboardReport(req: Request, res: Response, queue: TbWebRepo
                 res.statusMessage = 'Generate report timeout!';
                 res.status(503).end();
             } else {
-                res.statusMessage = 'Failed to load dashboard page: ' + e;
+                res.statusMessage = `Failed to load dashboard page: ${e.message || e}`;
                 res.status(500).end();
             }
             activeRequestsCount--;

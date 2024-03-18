@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2023 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2024 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -495,7 +495,7 @@ public class DefaultLwM2mUplinkMsgHandler extends LwM2MExecutorAwareService impl
             CountDownLatch latch = new CountDownLatch(targetIds.size());
             targetIds.forEach(versionedId -> sendReadRequest(lwM2MClient, versionedId,
                     new TbLwM2MLatchCallback<>(latch, new TbLwM2MReadCallback(this, logService, lwM2MClient, versionedId))));
-            latch.await();
+            latch.await(config.getTimeout(), TimeUnit.MILLISECONDS);
         } catch (InterruptedException e) {
             log.error("[{}] Failed to await Read requests!", lwM2MClient.getEndpoint(), e);
         } catch (Exception e) {
@@ -513,7 +513,7 @@ public class DefaultLwM2mUplinkMsgHandler extends LwM2MExecutorAwareService impl
             targetIds.forEach(targetId -> sendObserveRequest(lwM2MClient, targetId,
                     new TbLwM2MLatchCallback<>(latch, new TbLwM2MObserveCallback(this, logService, lwM2MClient, targetId))));
 
-            latch.await();
+            latch.await(config.getTimeout(), TimeUnit.MILLISECONDS);
         } catch (InterruptedException e) {
             log.error("[{}] Failed to await Observe requests!", lwM2MClient.getEndpoint(), e);
         } catch (Exception e) {

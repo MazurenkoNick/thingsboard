@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2023 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2024 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -38,11 +38,13 @@ import org.thingsboard.server.common.data.ota.OtaPackageType;
 import java.util.UUID;
 
 public interface DeviceGroupOtaPackageService {
+
     DeviceGroupOtaPackage findDeviceGroupOtaPackageById(UUID id);
 
     DeviceGroupOtaPackage findDeviceGroupOtaPackageByGroupIdAndType(EntityGroupId groupId, OtaPackageType type);
 
     DeviceGroupOtaPackage saveDeviceGroupOtaPackage(TenantId tenantId, DeviceGroupOtaPackage deviceGroupOtaPackage);
 
-    void deleteDeviceGroupOtaPackage(UUID id);
+    void deleteDeviceGroupOtaPackage(TenantId tenantId, DeviceGroupOtaPackage deviceGroupOtaPackage);
+
 }

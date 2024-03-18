@@ -1,7 +1,7 @@
 ///
 /// ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
 ///
-/// Copyright © 2016-2023 ThingsBoard, Inc. All Rights Reserved.
+/// Copyright © 2016-2024 ThingsBoard, Inc. All Rights Reserved.
 ///
 /// NOTICE: All information contained herein is, and remains
 /// the property of ThingsBoard, Inc. and its suppliers,
@@ -67,13 +67,22 @@ import { MillisecondsToTimeStringPipe } from '@shared/pipe/milliseconds-to-time-
 import { UserSettingsService } from '@core/http/user-settings.service';
 import { ActionNotificationHide, ActionNotificationShow } from '@core/notification/notification.actions';
 import { Store } from '@ngrx/store';
+import { ImageService } from '@core/http/image.service';
+import { AlarmCommentService } from '@core/http/alarm-comment.service';
+import { TenantService } from '@core/http/tenant.service';
+import { TenantProfileService } from '@core/http/tenant-profile.service';
+import { UiSettingsService } from '@core/http/ui-settings.service';
+import { UsageInfoService } from '@core/http/usage-info.service';
+import { BlobEntityService } from '@core/http/blob-entity.service';
 
 export const ServicesMap = new Map<string, Type<any>>(
   [
    ['broadcastService', BroadcastService],
    ['deviceService', DeviceService],
    ['alarmService', AlarmService],
+   ['alarmCommentService', AlarmCommentService],
    ['assetService', AssetService],
+   ['blobEntityService', BlobEntityService],
    ['entityViewService', EntityViewService],
    ['edgeService', EdgeService],
    ['customerService', CustomerService],
@@ -92,6 +101,7 @@ export const ServicesMap = new Map<string, Type<any>>(
    ['translate', TranslateService],
    ['http', HttpClient],
    ['router', Router],
+   ['imageService', ImageService],
    ['importExport', ImportExportService],
    ['schedulerEventService', SchedulerEventService],
    ['deviceProfileService', DeviceProfileService],
@@ -103,7 +113,11 @@ export const ServicesMap = new Map<string, Type<any>>(
    ['resourceService', ResourceService],
    ['twoFactorAuthenticationService', TwoFactorAuthenticationService],
    ['telemetryWsService', TelemetryWebsocketService],
+   ['tenantService', TenantService],
+   ['tenantProfileService', TenantProfileService],
    ['userSettingsService', UserSettingsService],
+   ['uiSettingsService', UiSettingsService],
+   ['usageInfoService', UsageInfoService],
    ['notificationService', NotificationService],
    ['actionNotificationShow', ActionNotificationShow],
    ['actionNotificationHide', ActionNotificationHide],

@@ -1,7 +1,7 @@
 ///
 /// ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
 ///
-/// Copyright © 2016-2023 ThingsBoard, Inc. All Rights Reserved.
+/// Copyright © 2016-2024 ThingsBoard, Inc. All Rights Reserved.
 ///
 /// NOTICE: All information contained herein is, and remains
 /// the property of ThingsBoard, Inc. and its suppliers,
@@ -184,7 +184,7 @@ export class JsInvokeMessageProcessor {
             this.logger.info('[%s] Executing script body: [%s]', scriptId, invokeRequest.scriptBody);
         }
         if (this.executedScriptsCounter % memoryUsageTraceFrequency == 0) {
-            this.logger.info('Current memory usage: [%s]', process.memoryUsage());
+            this.logger.info('Current memory usage: %s', JSON.stringify(process.memoryUsage()));
         }
 
         this.getOrCompileScript(scriptId, invokeRequest.scriptBody).then(

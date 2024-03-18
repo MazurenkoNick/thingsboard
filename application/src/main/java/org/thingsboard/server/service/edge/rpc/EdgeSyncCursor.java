@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2023 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2024 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -41,6 +41,7 @@ import org.thingsboard.server.service.edge.rpc.fetch.AssetProfilesEdgeEventFetch
 import org.thingsboard.server.service.edge.rpc.fetch.CustomerEdgeEventFetcher;
 import org.thingsboard.server.service.edge.rpc.fetch.CustomerRolesEdgeEventFetcher;
 import org.thingsboard.server.service.edge.rpc.fetch.DefaultProfilesEdgeEventFetcher;
+import org.thingsboard.server.service.edge.rpc.fetch.DeviceGroupOtaPackageEdgeEventFetcher;
 import org.thingsboard.server.service.edge.rpc.fetch.DeviceProfilesEdgeEventFetcher;
 import org.thingsboard.server.service.edge.rpc.fetch.EdgeEventFetcher;
 import org.thingsboard.server.service.edge.rpc.fetch.EntityGroupEdgeEventFetcher;
@@ -106,6 +107,7 @@ public class EdgeSyncCursor {
             fetchers.add(new IntegrationEventsEdgeEventFetcher(ctx.getIntegrationService()));
             fetchers.add(new OtaPackagesEdgeEventFetcher(ctx.getOtaPackageService()));
             fetchers.add(new TenantResourcesEdgeEventFetcher(ctx.getResourceService()));
+            fetchers.add(new DeviceGroupOtaPackageEdgeEventFetcher(ctx.getDeviceGroupOtaPackageService(), ctx.getEntityGroupService()));
         }
     }
 

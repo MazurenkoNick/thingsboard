@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2023 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2024 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -67,7 +67,18 @@
     }
     .tb-value-chart-card-chart {
       flex: 1;
+      min-width: 0;
       height: 100%;
+    }
+    &.auto-scale {
+      .tb-value-chart-card-value-container {
+        width: 35%;
+        display: flex;
+        justify-content: flex-start;
+      }
+      .tb-value-chart-card-chart {
+        width: 65%;
+      }
     }
   }
 }

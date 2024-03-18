@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2023 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2024 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -61,6 +61,7 @@ public class WhiteLabelingParamsProtoConstructor {
 
     public WhiteLabelingProto constructWhiteLabeling(WhiteLabeling whiteLabeling, boolean isEdgeOlderThan_3_6_2) {
         if (isEdgeOlderThan_3_6_2) {
+            whiteLabeling = JacksonUtil.clone(whiteLabeling);
             imageService.inlineImagesForEdge(whiteLabeling.getTenantId(), whiteLabeling.getSettings());
             JsonNode jsonNode = JacksonUtil.valueToTree(whiteLabeling);
             if (jsonNode != null) {

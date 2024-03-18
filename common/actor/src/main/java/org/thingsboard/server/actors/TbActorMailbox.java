@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2023 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2024 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -175,7 +175,7 @@ public final class TbActorMailbox implements TbActorCtx {
                     destroy(updateException.getCause());
                 } catch (Throwable t) {
                     log.debug("[{}] Failed to process message: {}", selfId, msg, t);
-                    ProcessFailureStrategy strategy = actor.onProcessFailure(t);
+                    ProcessFailureStrategy strategy = actor.onProcessFailure(msg, t);
                     if (strategy.isStop()) {
                         system.stop(selfId);
                     }
@@ -205,7 +205,12 @@ public final class TbActorMailbox implements TbActorCtx {
 
     @Override
     public void broadcastToChildren(TbActorMsg msg) {
-        system.broadcastToChildren(selfId, msg);
+        broadcastToChildren(msg, false);
+    }
+
+    @Override
+    public void broadcastToChildren(TbActorMsg msg, boolean highPriority) {
+        system.broadcastToChildren(selfId, msg, highPriority);
     }
 
     @Override

@@ -1,7 +1,7 @@
 ///
 /// ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
 ///
-/// Copyright © 2016-2023 ThingsBoard, Inc. All Rights Reserved.
+/// Copyright © 2016-2024 ThingsBoard, Inc. All Rights Reserved.
 ///
 /// NOTICE: All information contained herein is, and remains
 /// the property of ThingsBoard, Inc. and its suppliers,
@@ -144,8 +144,9 @@ export class EntityLinkTableColumn<T extends BaseData<HasId>> extends BaseEntity
               public title: string,
               public width: string = '0px',
               public cellContentFunction: CellContentFunction<T> = (entity, property) => entity[property] ? entity[property] : '',
-              public entityURL: (entity) => string) {
-    super('link', key, title, width, false);
+              public entityURL: (entity) => string,
+              public sortable: boolean = true) {
+    super('link', key, title, width, sortable);
   }
 }
 

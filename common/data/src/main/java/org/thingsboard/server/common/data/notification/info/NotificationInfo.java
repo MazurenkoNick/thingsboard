@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2023 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2024 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -33,6 +33,7 @@ package org.thingsboard.server.common.data.notification.info;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import org.thingsboard.server.common.data.id.DashboardId;
 import org.thingsboard.server.common.data.id.EntityId;
 
 import java.util.Map;
@@ -45,6 +46,10 @@ public interface NotificationInfo {
     Map<String, String> getTemplateData();
 
     default EntityId getStateEntityId() {
+        return null;
+    }
+
+    default DashboardId getDashboardId() {
         return null;
     }
 

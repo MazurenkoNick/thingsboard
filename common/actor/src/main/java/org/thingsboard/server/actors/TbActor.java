@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2023 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2024 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -49,7 +49,7 @@ public interface TbActor {
         return InitFailureStrategy.retryWithDelay(5000L * attempt);
     }
 
-    default ProcessFailureStrategy onProcessFailure(Throwable t) {
+    default ProcessFailureStrategy onProcessFailure(TbActorMsg msg, Throwable t) {
         if (t instanceof Error) {
             return ProcessFailureStrategy.stop();
         } else {

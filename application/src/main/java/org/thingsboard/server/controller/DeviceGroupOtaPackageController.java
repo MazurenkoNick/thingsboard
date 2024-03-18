@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2023 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2024 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -39,6 +39,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.id.EntityGroupId;
+import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.ota.DeviceGroupOtaPackage;
 import org.thingsboard.server.common.data.ota.OtaPackageType;
 import org.thingsboard.server.common.data.permission.Operation;
@@ -81,10 +82,11 @@ public class DeviceGroupOtaPackageController extends BaseController {
     public void deleteDeviceGroupOtaPackage(@PathVariable("id") String strId) throws ThingsboardException {
         checkParameter("deviceGroupOtaPackageId", strId);
         UUID id = toUUID(strId);
+        TenantId tenantId = getTenantId();
         DeviceGroupOtaPackage deviceGroupOtaPackage = deviceGroupOtaPackageService.findDeviceGroupOtaPackageById(id);
         checkEntityGroupId(deviceGroupOtaPackage.getGroupId(), Operation.WRITE);
-        deviceGroupOtaPackageService.deleteDeviceGroupOtaPackage(id);
-        otaPackageStateService.update(getTenantId(), null, deviceGroupOtaPackage);
+        deviceGroupOtaPackageService.deleteDeviceGroupOtaPackage(tenantId, deviceGroupOtaPackage);
+        otaPackageStateService.update(tenantId, null, deviceGroupOtaPackage);
     }
 
 }

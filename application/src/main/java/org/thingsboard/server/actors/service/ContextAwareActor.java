@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2023 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2024 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -62,8 +62,8 @@ public abstract class ContextAwareActor extends AbstractTbActor {
     protected abstract boolean doProcess(TbActorMsg msg);
 
     @Override
-    public ProcessFailureStrategy onProcessFailure(Throwable t) {
-        log.debug("[{}] Processing failure: ", getActorRef().getActorId(), t);
+    public ProcessFailureStrategy onProcessFailure(TbActorMsg msg, Throwable t) {
+        log.debug("[{}] Processing failure for msg {}", getActorRef().getActorId(), msg, t);
         return doProcessFailure(t);
     }
 
