@@ -28,14 +28,11 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.service.install;
+package org.thingsboard.server.dao.sql.instance.registry;
 
-public interface EntityDatabaseSchemaService extends DatabaseSchemaService {
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.thingsboard.server.dao.model.sql.InstanceRegistryEntity;
 
-    void createOrUpdateDeviceInfoView(boolean activityStateInTelemetry);
-
-    void createOrUpdateViewsAndFunctions() throws Exception;
-
-    void createClusterId() throws Exception;
+public interface InstanceRegistryRepository extends JpaRepository<InstanceRegistryEntity, String> {
 
 }

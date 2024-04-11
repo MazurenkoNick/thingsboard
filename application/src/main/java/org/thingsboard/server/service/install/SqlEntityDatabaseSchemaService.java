@@ -33,6 +33,9 @@ package org.thingsboard.server.service.install;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
+import org.thingsboard.license.shared.EncryptionUtil;
+
+import java.util.UUID;
 
 @Service
 @Profile("install")
@@ -66,5 +69,13 @@ public class SqlEntityDatabaseSchemaService extends SqlAbstractDatabaseSchemaSer
     public void createOrUpdateViewsAndFunctions() throws Exception {
         log.info("Installing SQL DataBase schema views and functions: " + SCHEMA_VIEWS_AND_FUNCTIONS_SQL);
         executeQueryFromFile(SCHEMA_VIEWS_AND_FUNCTIONS_SQL);
+    }
+
+    @Override
+    public void createClusterId() throws Exception {
+        var clusterId = UUID.randomUUID();
+        log.info("ClusterId: {}", clusterId);
+        var clusterIdHash = EncryptionUtil.getSha3Hash(clusterId.toString());
+        executeQuery("INSERT INTO tb_cluster (cluster_id) VALUES ('" + clusterIdHash + "');");
     }
 }

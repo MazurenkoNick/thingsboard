@@ -28,14 +28,45 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.service.install;
+package org.thingsboard.server.dao.instance.registry;
 
-public interface EntityDatabaseSchemaService extends DatabaseSchemaService {
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.thingsboard.license.client.InstanceRegistry;
+import org.thingsboard.license.client.InstanceRegistryService;
 
-    void createOrUpdateDeviceInfoView(boolean activityStateInTelemetry);
+import java.util.List;
 
-    void createOrUpdateViewsAndFunctions() throws Exception;
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class BaseInstanceRegistryService implements InstanceRegistryService {
 
-    void createClusterId() throws Exception;
+    private final InstanceRegistryDao instanceRegistryDao;
 
+    @Override
+    public InstanceRegistry save(InstanceRegistry instanceRegistry) {
+        return instanceRegistryDao.save(instanceRegistry);
+    }
+
+    @Override
+    public InstanceRegistry findByServiceId(String serviceId) {
+        return instanceRegistryDao.findByServiceId(serviceId);
+    }
+
+    @Override
+    public List<InstanceRegistry> findAll() {
+        return instanceRegistryDao.findAll();
+    }
+
+    @Override
+    public void deleteByServiceId(String serviceId) {
+        instanceRegistryDao.deleteByServiceId(serviceId);
+    }
+
+    @Override
+    public String getClusterId() {
+        return instanceRegistryDao.getClusterId();
+    }
 }

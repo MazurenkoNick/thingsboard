@@ -28,14 +28,20 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.service.install;
+package org.thingsboard.server.dao.instance.registry;
 
-public interface EntityDatabaseSchemaService extends DatabaseSchemaService {
+import org.thingsboard.license.client.InstanceRegistry;
 
-    void createOrUpdateDeviceInfoView(boolean activityStateInTelemetry);
+import java.util.List;
 
-    void createOrUpdateViewsAndFunctions() throws Exception;
+public interface InstanceRegistryDao {
+    InstanceRegistry save(InstanceRegistry instanceRegistry);
 
-    void createClusterId() throws Exception;
+    InstanceRegistry findByServiceId(String serviceId);
 
+    List<InstanceRegistry> findAll();
+
+    void deleteByServiceId(String serviceId);
+
+    String getClusterId();
 }

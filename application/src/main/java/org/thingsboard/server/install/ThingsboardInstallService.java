@@ -212,6 +212,9 @@ public class ThingsboardInstallService {
                     log.info("Loading demo data...");
                     systemDataLoaderService.loadDemoData();
                 }
+
+                entityDatabaseSchemaService.createClusterId();
+
                 log.info("Installation finished successfully!");
             }
 
