@@ -28,35 +28,47 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.common.data.notification;
+package org.thingsboard.server.dao.sql.rpc;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import org.thingsboard.server.common.data.BaseData;
-import org.thingsboard.server.common.data.id.NotificationId;
-import org.thingsboard.server.common.data.id.NotificationRequestId;
-import org.thingsboard.server.common.data.id.UserId;
-import org.thingsboard.server.common.data.notification.info.NotificationInfo;
+import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.thingsboard.common.util.JacksonUtil;
+import org.thingsboard.server.common.data.id.DeviceId;
+import org.thingsboard.server.common.data.id.TenantId;
+import org.thingsboard.server.common.data.rpc.Rpc;
+import org.thingsboard.server.common.data.rpc.RpcStatus;
+import org.thingsboard.server.dao.AbstractJpaDaoTest;
 
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
-@Builder
-@EqualsAndHashCode(callSuper = true)
-public class Notification extends BaseData<NotificationId> {
+import java.util.UUID;
 
-    private NotificationRequestId requestId;
-    private UserId recipientId;
-    private NotificationType type;
-    private NotificationDeliveryMethod deliveryMethod;
-    private String subject;
-    private String text;
-    private JsonNode additionalConfig;
-    private NotificationInfo info;
-    private NotificationStatus status;
+import static org.assertj.core.api.Assertions.assertThat;
+
+public class JpaRpcDaoTest extends AbstractJpaDaoTest {
+
+    @Autowired
+    JpaRpcDao rpcDao;
+
+    @Test
+    public void deleteOutdated() {
+        Rpc rpc = new Rpc();
+        rpc.setTenantId(TenantId.SYS_TENANT_ID);
+        rpc.setDeviceId(new DeviceId(UUID.randomUUID()));
+        rpc.setStatus(RpcStatus.QUEUED);
+        rpc.setRequest(JacksonUtil.toJsonNode("{}"));
+        rpcDao.saveAndFlush(rpc.getTenantId(), rpc);
+
+        rpc.setId(null);
+        rpcDao.saveAndFlush(rpc.getTenantId(), rpc);
+
+        TenantId tenantId = TenantId.fromUUID(UUID.fromString("3d193a7a-774b-4c05-84d5-f7fdcf7a37cf"));
+        rpc.setId(null);
+        rpc.setTenantId(tenantId);
+        rpc.setDeviceId(new DeviceId(UUID.randomUUID()));
+        rpcDao.saveAndFlush(rpc.getTenantId(), rpc);
+
+        assertThat(rpcDao.deleteOutdatedRpcByTenantId(TenantId.SYS_TENANT_ID, 0L)).isEqualTo(0);
+        assertThat(rpcDao.deleteOutdatedRpcByTenantId(TenantId.SYS_TENANT_ID, Long.MAX_VALUE)).isEqualTo(2);
+        assertThat(rpcDao.deleteOutdatedRpcByTenantId(tenantId, System.currentTimeMillis() + 1)).isEqualTo(1);
+    }
 
 }
