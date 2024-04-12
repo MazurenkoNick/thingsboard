@@ -74,7 +74,8 @@ public class InstanceRegistryCleanUpService extends TbApplicationEventListener<S
         Set<String> toRemove = CollectionsUtil.diffSets(newIds, currentIds );
 
         currentIds = newIds;
-        if (partitionService.isSystemTenantPartitionMine(serviceType)) {
+        if (!toRemove.isEmpty() && partitionService.isSystemTenantPartitionMine(serviceType)) {
+            log.debug("Going to remove outdated instance registries: {}", toRemove);
             toRemove.forEach(instanceRegistryService::deleteByServiceId);
         }
     }

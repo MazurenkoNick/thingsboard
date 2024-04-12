@@ -72,12 +72,12 @@ public class BasicSubscriptionService implements SubscriptionService, TbLicenseC
 
     private static final String PLAN_KEY = "plan";
 
+    private static final String OFFLINE_ENV_KEY = "TB_OFFLINE_LICENSE_DATA";
+
     @Value("${license.secret}")
     private String licenseSecret;
     @Value("${license.instance_data_file:instance-license.data}")
     private String instanceDataFilePath;
-    @Value("${license.offline.license_data:}")
-    private String offlineLicenseData;
     @Value("${zk.enabled:false}")
     private boolean zkEnabled;
 
@@ -96,13 +96,16 @@ public class BasicSubscriptionService implements SubscriptionService, TbLicenseC
     @Autowired
     private TbLicenseCtx licenseCtx;
 
+    private String offlineLicenseData;
     private AbstractTbLicenseClient tbLicenseClient;
 
     @PostConstruct
     public void init() {
+        offlineLicenseData = System.getenv(OFFLINE_ENV_KEY);
+
         if (StringUtils.isNotEmpty(licenseSecret)) {
             createLicenseClient(true);
-        } else if (StringUtils.isEmpty(offlineLicenseData)) {
+        } else if (StringUtils.isNotEmpty(offlineLicenseData)) {
             createLicenseClient(false);
         } else {
             log.error("License secret is not provided!");
