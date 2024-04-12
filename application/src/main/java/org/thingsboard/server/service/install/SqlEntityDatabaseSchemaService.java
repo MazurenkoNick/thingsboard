@@ -74,8 +74,16 @@ public class SqlEntityDatabaseSchemaService extends SqlAbstractDatabaseSchemaSer
     @Override
     public void createClusterId() throws Exception {
         var clusterId = UUID.randomUUID();
-        log.info("ClusterId: {}", clusterId);
         var clusterIdHash = EncryptionUtil.getSha3Hash(clusterId.toString());
-        executeQuery("INSERT INTO tb_cluster (cluster_id) VALUES ('" + clusterIdHash + "');");
+        StringBuilder sb = new StringBuilder("\n");
+        sb.append("-".repeat(Math.max(0, clusterIdHash.length() + 15)));
+        sb.append("\n");
+        sb.append("| ClusterId: ").append(clusterIdHash).append(" |");
+        sb.append("\n");
+        sb.append("-".repeat(Math.max(0, clusterIdHash.length() + 15)));
+
+        log.info(sb.toString());
+
+        executeQuery("INSERT INTO tb_cluster (cluster_id) VALUES ('" + clusterId + "');");
     }
 }
