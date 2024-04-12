@@ -822,7 +822,7 @@ public class ModelConstants {
     public static final String NOTIFICATION_TEMPLATE_NOTIFICATION_TYPE_PROPERTY = "notification_type";
     public static final String NOTIFICATION_TEMPLATE_CONFIGURATION_PROPERTY = "configuration";
 
-    public static final String INSTANCE_REGISTRY_TABLE_NAME = "instance_registry";
+    public static final String INSTANCE_REGISTRY_TABLE_NAME = "tb_instance_registry";
     public static final String INSTANCE_REGISTRY_SERVICE_ID_PROPERTY = "service_id";
     public static final String INSTANCE_REGISTRY_LAST_ACTIVITY_TS_PROPERTY = "last_activity_ts";
 

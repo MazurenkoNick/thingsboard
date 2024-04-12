@@ -29,7 +29,7 @@
 -- OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 --
 
-CREATE TABLE IF NOT EXISTS instance_registry (
+CREATE TABLE IF NOT EXISTS tb_instance_registry (
     service_id varchar(255) NOT NULL CONSTRAINT service_id_pkey PRIMARY KEY,
     created_time bigint NOT NULL,
     last_activity_ts bigint NOT NULL

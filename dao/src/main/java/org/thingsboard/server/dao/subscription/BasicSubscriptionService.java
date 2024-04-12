@@ -100,19 +100,20 @@ public class BasicSubscriptionService implements SubscriptionService, TbLicenseC
 
     @PostConstruct
     public void init() {
-        boolean isLicenseSecretPresent = StringUtils.isNotEmpty(this.licenseSecret);
-        if (!isLicenseSecretPresent && StringUtils.isEmpty(this.offlineLicenseData)) {
+        if (StringUtils.isNotEmpty(licenseSecret)) {
+            createLicenseClient(true);
+        } else if (StringUtils.isEmpty(offlineLicenseData)) {
+            createLicenseClient(false);
+        } else {
             log.error("License secret is not provided!");
             log.error("Please provide license.secret property value in thingsboard.yml or set TB_LICENSE_SECRET environment variable!");
             doExit(-1, LicenseErrorCode.GENERAL_ERROR, false);
-        } else {
-            createLicenseClient(isLicenseSecretPresent);
         }
     }
 
-    private void createLicenseClient(boolean isLicenseSecretPresent) {
+    private void createLicenseClient(boolean isOnlineLicense) {
         try {
-            if (isLicenseSecretPresent) {
+            if (isOnlineLicense) {
                 tbLicenseClient = TbLicenseClient.builder()
                         .listener(this)
                         .licenseSecret(this.licenseSecret)

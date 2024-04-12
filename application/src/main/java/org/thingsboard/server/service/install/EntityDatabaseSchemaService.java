@@ -36,6 +36,6 @@ public interface EntityDatabaseSchemaService extends DatabaseSchemaService {
 
     void createOrUpdateViewsAndFunctions() throws Exception;
 
-    void createClusterId() throws Exception;
+    void generateClusterIdIfNotExist() throws Exception;
 
 }

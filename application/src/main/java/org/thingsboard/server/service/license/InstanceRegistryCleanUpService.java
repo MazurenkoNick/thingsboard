@@ -74,13 +74,9 @@ public class InstanceRegistryCleanUpService extends TbApplicationEventListener<S
         Set<String> toRemove = CollectionsUtil.diffSets(newIds, currentIds );
 
         currentIds = newIds;
-        if (isSystemTenantPartitionMine(serviceType)) {
+        if (partitionService.isSystemTenantPartitionMine(serviceType)) {
             toRemove.forEach(instanceRegistryService::deleteByServiceId);
         }
-    }
-
-    private boolean isSystemTenantPartitionMine(ServiceType serviceType) {
-        return partitionService.resolve(serviceType, TenantId.SYS_TENANT_ID, TenantId.SYS_TENANT_ID).isMyPartition();
     }
 
 }

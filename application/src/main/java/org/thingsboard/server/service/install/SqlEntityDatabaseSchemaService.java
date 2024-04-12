@@ -34,7 +34,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 import org.thingsboard.license.shared.EncryptionUtil;
+import org.thingsboard.server.service.install.update.DefaultDataUpdateService;
 
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.UUID;
 
 @Service
@@ -72,18 +78,32 @@ public class SqlEntityDatabaseSchemaService extends SqlAbstractDatabaseSchemaSer
     }
 
     @Override
-    public void createClusterId() throws Exception {
-        var clusterId = UUID.randomUUID();
-        var clusterIdHash = EncryptionUtil.getSha3Hash(clusterId.toString());
-        StringBuilder sb = new StringBuilder("\n");
-        sb.append("-".repeat(Math.max(0, clusterIdHash.length() + 15)));
-        sb.append("\n");
-        sb.append("| ClusterId: ").append(clusterIdHash).append(" |");
-        sb.append("\n");
-        sb.append("-".repeat(Math.max(0, clusterIdHash.length() + 15)));
+    public void generateClusterIdIfNotExist() throws Exception {
+        try (Connection conn = DriverManager.getConnection(dbUrl, dbUserName, dbPassword)) {
+            Statement statement = conn.createStatement();
+            statement.execute("CREATE TABLE IF NOT EXISTS tb_cluster (cluster_id varchar NOT NULL, CONSTRAINT tb_cluster_pkey PRIMARY KEY (cluster_id));");
+            Thread.sleep(1000);
+            ResultSet resultSet = statement.executeQuery("SELECT cluster_id FROM tb_cluster;");
+            if (!resultSet.next()) {
+                resultSet.close();
 
-        log.info(sb.toString());
+                var clusterId = UUID.randomUUID();
+                var clusterIdHash = EncryptionUtil.getSha3Hash(clusterId.toString());
+                StringBuilder sb = new StringBuilder("\n");
+                sb.append("-".repeat(Math.max(0, clusterIdHash.length() + 15)));
+                sb.append("\n");
+                sb.append("| ClusterId: ").append(clusterIdHash).append(" |");
+                sb.append("\n");
+                sb.append("-".repeat(Math.max(0, clusterIdHash.length() + 15)));
 
-        executeQuery("INSERT INTO tb_cluster (cluster_id) VALUES ('" + clusterId + "');");
+                log.info(sb.toString());
+
+                statement.execute("INSERT INTO tb_cluster (cluster_id) VALUES ('" + clusterId + "');");
+            }
+            statement.close();
+        } catch (InterruptedException | SQLException e) {
+            log.info("Failed to generate Cluster id due to: {}", e.getMessage());
+        }
     }
+
 }

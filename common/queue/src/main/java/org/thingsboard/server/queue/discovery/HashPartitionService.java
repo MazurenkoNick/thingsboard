@@ -250,6 +250,11 @@ public class HashPartitionService implements PartitionService {
     }
 
     @Override
+    public boolean isSystemTenantPartitionMine(ServiceType serviceType) {
+        return resolve(serviceType, TenantId.SYS_TENANT_ID, TenantId.SYS_TENANT_ID).isMyPartition();
+    }
+
+    @Override
     public boolean isManagedByCurrentService(TenantId tenantId) {
         if (serviceInfoProvider.isService(ServiceType.TB_CORE) || !serviceInfoProvider.isService(ServiceType.TB_RULE_ENGINE)) {
             return true;

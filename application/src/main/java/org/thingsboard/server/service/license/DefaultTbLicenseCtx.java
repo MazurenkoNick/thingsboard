@@ -57,7 +57,7 @@ public class DefaultTbLicenseCtx implements TbLicenseCtx {
 
     @Override
     public InstanceRegistry findByServiceId(String serviceId) {
-        return null;
+        return instanceRegistryService.findByServiceId(serviceId);
     }
 
     @Override
