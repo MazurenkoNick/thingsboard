@@ -34,7 +34,7 @@ import org.thingsboard.license.client.InstanceRegistry;
 
 import java.util.List;
 
-public interface InstanceRegistryDao {
+public interface InstanceRegistryService {
     InstanceRegistry save(InstanceRegistry instanceRegistry);
 
     InstanceRegistry findByServiceId(String serviceId);

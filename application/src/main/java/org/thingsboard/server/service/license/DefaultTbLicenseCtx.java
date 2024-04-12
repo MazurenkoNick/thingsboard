@@ -28,43 +28,60 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.dao.sql.instance.registry;
+package org.thingsboard.server.service.license;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 import org.thingsboard.license.client.InstanceRegistry;
-import org.thingsboard.server.dao.DaoUtil;
-import org.thingsboard.server.dao.instance.registry.InstanceRegistryDao;
-import org.thingsboard.server.dao.model.sql.InstanceRegistryEntity;
-import org.thingsboard.server.dao.util.SqlDao;
+import org.thingsboard.license.client.TbLicenseCtx;
+import org.thingsboard.server.dao.instance.registry.InstanceRegistryService;
+import org.thingsboard.server.queue.discovery.DiscoveryService;
+import org.thingsboard.server.queue.discovery.TbServiceInfoProvider;
 
 import java.util.List;
 
 @Component
-@SqlDao
 @RequiredArgsConstructor
-public class JpaInstanceRegistryDao implements InstanceRegistryDao {
+public class DefaultTbLicenseCtx implements TbLicenseCtx {
 
-    private final InstanceRegistryRepository instanceRegistryRepository;
+    private final InstanceRegistryService instanceRegistryService;
+    private final TbServiceInfoProvider serviceInfoProvider;
+    private final DiscoveryService discoveryService;
+    private final JdbcTemplate jdbcTemplate;
 
     @Override
     public InstanceRegistry save(InstanceRegistry instanceRegistry) {
-        return DaoUtil.getData(instanceRegistryRepository.save(new InstanceRegistryEntity(instanceRegistry)));
+        return instanceRegistryService.save(instanceRegistry);
     }
 
     @Override
     public InstanceRegistry findByServiceId(String serviceId) {
-        return DaoUtil.getData(instanceRegistryRepository.findById(serviceId));
+        return null;
     }
 
     @Override
     public List<InstanceRegistry> findAll() {
-        return DaoUtil.convertDataList(instanceRegistryRepository.findAll());
+        return instanceRegistryService.findAll();
     }
 
     @Override
     public void deleteByServiceId(String serviceId) {
-        instanceRegistryRepository.deleteById(serviceId);
+        instanceRegistryService.deleteByServiceId(serviceId);
     }
 
+    @Override
+    public String getServiceId() {
+        return serviceInfoProvider.getServiceId();
+    }
+
+    @Override
+    public String getClusterId() {
+        return jdbcTemplate.queryForObject("SELECT cluster_id from tb_cluster", String.class);
+    }
+
+    @Override
+    public boolean isServiceAvailable(String serviceId) {
+        return discoveryService.getOtherServers().stream().anyMatch(serviceInfo -> serviceInfo.getServiceId().equals(serviceId));
+    }
 }

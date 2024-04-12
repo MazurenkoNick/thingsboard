@@ -70,5 +70,4 @@ public class InstanceRegistryEntity implements ToData<InstanceRegistry> {
         return instanceRegistry;
     }
 
-
 }

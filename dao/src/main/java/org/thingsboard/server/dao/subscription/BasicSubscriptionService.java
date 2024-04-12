@@ -38,10 +38,10 @@ import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 import org.thingsboard.license.client.AbstractTbLicenseClient;
-import org.thingsboard.license.client.InstanceRegistryService;
 import org.thingsboard.license.client.OfflineTbLicenseClient;
 import org.thingsboard.license.client.TbLicenseClient;
 import org.thingsboard.license.client.TbLicenseClientListener;
+import org.thingsboard.license.client.TbLicenseCtx;
 import org.thingsboard.license.shared.exception.LicenseErrorCode;
 import org.thingsboard.license.shared.exception.LicenseException;
 import org.thingsboard.server.common.data.LicenseInfo;
@@ -78,8 +78,6 @@ public class BasicSubscriptionService implements SubscriptionService, TbLicenseC
     private String instanceDataFilePath;
     @Value("${license.offline.license_data:}")
     private String offlineLicenseData;
-    @Value("${service.id:#{null}}")
-    private String serviceId;
     @Value("${zk.enabled:false}")
     private boolean zkEnabled;
 
@@ -96,7 +94,7 @@ public class BasicSubscriptionService implements SubscriptionService, TbLicenseC
     private ConfigurableApplicationContext context;
 
     @Autowired
-    private InstanceRegistryService instanceRegistryService;
+    private TbLicenseCtx licenseCtx;
 
     private AbstractTbLicenseClient tbLicenseClient;
 
@@ -125,8 +123,7 @@ public class BasicSubscriptionService implements SubscriptionService, TbLicenseC
                 tbLicenseClient = OfflineTbLicenseClient.builder()
                         .listener(this)
                         .encodedLicenseData(offlineLicenseData)
-                        .instanceRegistryService(instanceRegistryService)
-                        .serviceId(serviceId)
+                        .tbLicenseCtx(licenseCtx)
                         .checkInstanceRequired(zkEnabled) //No need to check instance registry if zk disabled
                         .build();
             }

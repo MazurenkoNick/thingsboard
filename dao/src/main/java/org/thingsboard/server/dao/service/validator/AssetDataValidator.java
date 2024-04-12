@@ -63,6 +63,7 @@ public class AssetDataValidator extends DataValidator<Asset> {
     private CustomerDao customerDao;
 
     @Autowired
+    @Lazy
     private SubscriptionService subscriptionService;
 
     @Override

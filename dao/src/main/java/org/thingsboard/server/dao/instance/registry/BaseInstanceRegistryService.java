@@ -34,7 +34,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.thingsboard.license.client.InstanceRegistry;
-import org.thingsboard.license.client.InstanceRegistryService;
 
 import java.util.List;
 
@@ -65,8 +64,4 @@ public class BaseInstanceRegistryService implements InstanceRegistryService {
         instanceRegistryDao.deleteByServiceId(serviceId);
     }
 
-    @Override
-    public String getClusterId() {
-        return instanceRegistryDao.getClusterId();
-    }
 }
