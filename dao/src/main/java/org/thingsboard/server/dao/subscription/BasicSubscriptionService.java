@@ -96,34 +96,20 @@ public class BasicSubscriptionService implements SubscriptionService, TbLicenseC
     @Autowired
     private TbLicenseCtx licenseCtx;
 
-    private String offlineLicenseData;
     private AbstractTbLicenseClient tbLicenseClient;
 
     @PostConstruct
     public void init() {
-        offlineLicenseData = System.getenv(OFFLINE_ENV_KEY);
-
-        if (StringUtils.isNotEmpty(licenseSecret)) {
-            createLicenseClient(true);
-        } else if (StringUtils.isNotEmpty(offlineLicenseData)) {
-            createLicenseClient(false);
-        } else {
-            log.error("License secret is not provided!");
-            log.error("Please provide license.secret property value in thingsboard.yml or set TB_LICENSE_SECRET environment variable!");
-            doExit(-1, LicenseErrorCode.GENERAL_ERROR, false);
-        }
-    }
-
-    private void createLicenseClient(boolean isOnlineLicense) {
         try {
-            if (isOnlineLicense) {
+            var offlineLicenseData = System.getenv(OFFLINE_ENV_KEY);
+            if (StringUtils.isNotEmpty(licenseSecret)) {
                 tbLicenseClient = TbLicenseClient.builder()
                         .listener(this)
                         .licenseSecret(this.licenseSecret)
                         .licenseDataFilePath(this.instanceDataFilePath)
                         .releaseDate(new SimpleDateFormat("yyyy-MM-dd").parse(Version.PROJECT_BUILD_DATE).getTime())
                         .build();
-            } else {
+            } else if (StringUtils.isNotEmpty(offlineLicenseData)) {
                 tbLicenseClient = OfflineTbLicenseClient.builder()
                         .listener(this)
                         .encodedLicenseData(offlineLicenseData)
@@ -131,8 +117,13 @@ public class BasicSubscriptionService implements SubscriptionService, TbLicenseC
                         .checkInstanceRequired(zkEnabled) //No need to check instance registry if zk disabled
                         .build();
             }
-
-            tbLicenseClient.init();
+            if (tbLicenseClient != null) {
+                tbLicenseClient.init();
+            } else {
+                log.error("License secret is not provided!");
+                log.error("Please provide license.secret property value in thingsboard.yml or set TB_LICENSE_SECRET environment variable!");
+                doExit(-1, LicenseErrorCode.GENERAL_ERROR, false);
+            }
         } catch (Exception e) {
             log.error("Failed to init license client", e);
             LicenseErrorCode licenseErrorCode = e instanceof LicenseException ?

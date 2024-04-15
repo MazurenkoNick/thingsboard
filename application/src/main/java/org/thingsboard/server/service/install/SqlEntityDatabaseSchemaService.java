@@ -33,8 +33,6 @@ package org.thingsboard.server.service.install;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
-import org.thingsboard.license.shared.EncryptionUtil;
-import org.thingsboard.server.service.install.update.DefaultDataUpdateService;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -81,8 +79,6 @@ public class SqlEntityDatabaseSchemaService extends SqlAbstractDatabaseSchemaSer
     public void generateClusterIdIfNotExist() throws Exception {
         try (Connection conn = DriverManager.getConnection(dbUrl, dbUserName, dbPassword)) {
             Statement statement = conn.createStatement();
-            statement.execute("CREATE TABLE IF NOT EXISTS tb_cluster (cluster_id varchar NOT NULL, CONSTRAINT tb_cluster_pkey PRIMARY KEY (cluster_id));");
-            Thread.sleep(1000);
             ResultSet resultSet = statement.executeQuery("SELECT cluster_id FROM tb_cluster;");
             if (!resultSet.next()) {
                 resultSet.close();
@@ -100,7 +96,7 @@ public class SqlEntityDatabaseSchemaService extends SqlAbstractDatabaseSchemaSer
                 statement.execute("INSERT INTO tb_cluster (cluster_id) VALUES ('" + clusterId + "');");
             }
             statement.close();
-        } catch (InterruptedException | SQLException e) {
+        } catch (SQLException e) {
             log.info("Failed to generate Cluster id due to: {}", e.getMessage());
         }
     }
