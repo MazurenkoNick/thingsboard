@@ -88,13 +88,12 @@ public class SqlEntityDatabaseSchemaService extends SqlAbstractDatabaseSchemaSer
                 resultSet.close();
 
                 var clusterId = UUID.randomUUID();
-                var clusterIdHash = EncryptionUtil.getSha3Hash(clusterId.toString());
                 StringBuilder sb = new StringBuilder("\n");
-                sb.append("-".repeat(Math.max(0, clusterIdHash.length() + 15)));
+                sb.append("-".repeat(Math.max(0, 51)));
                 sb.append("\n");
-                sb.append("| ClusterId: ").append(clusterIdHash).append(" |");
+                sb.append("| ClusterId: ").append(clusterId).append(" |");
                 sb.append("\n");
-                sb.append("-".repeat(Math.max(0, clusterIdHash.length() + 15)));
+                sb.append("-".repeat(Math.max(0, 51)));
 
                 log.info(sb.toString());
 
