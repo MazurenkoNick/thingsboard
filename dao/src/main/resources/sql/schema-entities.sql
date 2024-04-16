@@ -36,7 +36,7 @@ CREATE TABLE IF NOT EXISTS tb_instance_registry (
 );
 
 CREATE TABLE IF NOT EXISTS tb_cluster (
-    cluster_id varchar NOT NULL,
+    cluster_id uuid NOT NULL,
     CONSTRAINT tb_cluster_pkey PRIMARY KEY (cluster_id)
 );
 

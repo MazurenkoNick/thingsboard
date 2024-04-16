@@ -40,6 +40,7 @@ import org.thingsboard.server.queue.discovery.DiscoveryService;
 import org.thingsboard.server.queue.discovery.TbServiceInfoProvider;
 
 import java.util.List;
+import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor
@@ -76,8 +77,8 @@ public class DefaultTbLicenseCtx implements TbLicenseCtx {
     }
 
     @Override
-    public String getClusterId() {
-        return jdbcTemplate.queryForObject("SELECT cluster_id from tb_cluster", String.class);
+    public UUID getClusterId() {
+        return jdbcTemplate.queryForObject("SELECT cluster_id from tb_cluster", UUID.class);
     }
 
     @Override
