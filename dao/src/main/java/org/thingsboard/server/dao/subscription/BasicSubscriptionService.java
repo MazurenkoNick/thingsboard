@@ -101,23 +101,23 @@ public class BasicSubscriptionService implements SubscriptionService, TbLicenseC
     @PostConstruct
     public void init() {
         try {
-            var offlineLicenseData = System.getenv(OFFLINE_ENV_KEY);
             if (StringUtils.isNotEmpty(licenseSecret)) {
-                tbLicenseClient = TbLicenseClient.builder()
-                        .listener(this)
-                        .licenseSecret(this.licenseSecret)
-                        .licenseDataFilePath(this.instanceDataFilePath)
-                        .releaseDate(new SimpleDateFormat("yyyy-MM-dd").parse(Version.PROJECT_BUILD_DATE).getTime())
-                        .build();
-            } else if (StringUtils.isNotEmpty(offlineLicenseData)) {
-                tbLicenseClient = OfflineTbLicenseClient.builder()
-                        .listener(this)
-                        .encodedLicenseData(offlineLicenseData)
-                        .tbLicenseCtx(licenseCtx)
-                        .checkInstanceRequired(zkEnabled) //No need to check instance registry if zk disabled
-                        .build();
-            }
-            if (tbLicenseClient != null) {
+                try {
+                    tbLicenseClient = OfflineTbLicenseClient.builder()
+                            .listener(this)
+                            .encodedLicenseData(licenseSecret)
+                            .tbLicenseCtx(licenseCtx)
+                            .checkInstanceRequired(zkEnabled) //No need to check instance registry if zk disabled
+                            .build();
+                } catch (Exception e) {}
+                if (tbLicenseClient == null) {
+                    tbLicenseClient = TbLicenseClient.builder()
+                            .listener(this)
+                            .licenseSecret(this.licenseSecret)
+                            .licenseDataFilePath(this.instanceDataFilePath)
+                            .releaseDate(new SimpleDateFormat("yyyy-MM-dd").parse(Version.PROJECT_BUILD_DATE).getTime())
+                            .build();
+                }
                 tbLicenseClient.init();
             } else {
                 log.error("License secret is not provided!");
