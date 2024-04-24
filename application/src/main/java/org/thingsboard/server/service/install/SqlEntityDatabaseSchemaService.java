@@ -76,7 +76,7 @@ public class SqlEntityDatabaseSchemaService extends SqlAbstractDatabaseSchemaSer
     }
 
     @Override
-    public void generateClusterIdIfNotExist() throws Exception {
+    public void generateClusterIdIfNotExist() {
         try (Connection conn = DriverManager.getConnection(dbUrl, dbUserName, dbPassword)) {
             Statement statement = conn.createStatement();
             ResultSet resultSet = statement.executeQuery("SELECT cluster_id FROM tb_cluster;");
@@ -88,7 +88,14 @@ public class SqlEntityDatabaseSchemaService extends SqlAbstractDatabaseSchemaSer
                 statement.execute("INSERT INTO tb_cluster (cluster_id) VALUES ('" + clusterId + "');");
 
                 Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-                    log.info("ClusterId: {}", clusterId);
+                    StringBuilder sb = new StringBuilder("\n");
+                    sb.append("=".repeat(Math.max(0, 54)));
+                    sb.append("\n");
+                    sb.append(":: Cluster Id: ").append(clusterId).append(" ::");
+                    sb.append("\n");
+                    sb.append("=".repeat(Math.max(0, 54)));
+                    sb.append("\n");
+                    log.info(sb.toString());
                 }));
             }
             statement.close();
