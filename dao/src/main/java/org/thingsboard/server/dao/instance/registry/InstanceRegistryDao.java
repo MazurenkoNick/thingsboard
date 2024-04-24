@@ -28,22 +28,19 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.service.ttl;
+package org.thingsboard.server.dao.instance.registry;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.thingsboard.server.common.data.id.TenantId;
-import org.thingsboard.server.common.msg.queue.ServiceType;
-import org.thingsboard.server.queue.discovery.PartitionService;
+import org.thingsboard.license.client.InstanceRegistry;
 
+import java.util.List;
 
-@Slf4j
-@RequiredArgsConstructor
-public abstract class AbstractCleanUpService {
+public interface InstanceRegistryDao {
+    InstanceRegistry save(InstanceRegistry instanceRegistry);
 
-    private final PartitionService partitionService;
+    InstanceRegistry findByServiceId(String serviceId);
 
-    protected boolean isSystemTenantPartitionMine() {
-        return partitionService.isSystemTenantPartitionMine(ServiceType.TB_CORE);
-    }
+    List<InstanceRegistry> findAll();
+
+    void deleteByServiceId(String serviceId);
+
 }

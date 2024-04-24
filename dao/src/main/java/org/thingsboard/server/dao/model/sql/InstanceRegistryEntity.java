@@ -28,22 +28,46 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.service.ttl;
+package org.thingsboard.server.dao.model.sql;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.thingsboard.server.common.data.id.TenantId;
-import org.thingsboard.server.common.msg.queue.ServiceType;
-import org.thingsboard.server.queue.discovery.PartitionService;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.thingsboard.license.client.InstanceRegistry;
+import org.thingsboard.server.dao.model.ModelConstants;
+import org.thingsboard.server.dao.model.ToData;
 
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
 
-@Slf4j
-@RequiredArgsConstructor
-public abstract class AbstractCleanUpService {
+@Data
+@Entity
+@Table(name = ModelConstants.INSTANCE_REGISTRY_TABLE_NAME)
+@NoArgsConstructor
+public class InstanceRegistryEntity implements ToData<InstanceRegistry> {
 
-    private final PartitionService partitionService;
+    @Id
+    @Column(name = ModelConstants.INSTANCE_REGISTRY_SERVICE_ID_PROPERTY)
+    private String serviceId;
+    @Column(name = ModelConstants.CREATED_TIME_PROPERTY)
+    private long createdTime;
+    @Column(name = ModelConstants.INSTANCE_REGISTRY_LAST_ACTIVITY_TS_PROPERTY)
+    private long lastActivityTs;
 
-    protected boolean isSystemTenantPartitionMine() {
-        return partitionService.isSystemTenantPartitionMine(ServiceType.TB_CORE);
+    public InstanceRegistryEntity(InstanceRegistry instanceRegistry) {
+        this.serviceId = instanceRegistry.getServiceId();
+        this.createdTime = instanceRegistry.getCreatedTime();
+        this.lastActivityTs = instanceRegistry.getLastActivityTs();
     }
+
+    @Override
+    public InstanceRegistry toData() {
+        InstanceRegistry instanceRegistry = new InstanceRegistry();
+        instanceRegistry.setServiceId(serviceId);
+        instanceRegistry.setCreatedTime(createdTime);
+        instanceRegistry.setLastActivityTs(lastActivityTs);
+        return instanceRegistry;
+    }
+
 }

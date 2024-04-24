@@ -37,12 +37,15 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
+import org.thingsboard.license.client.AbstractTbLicenseClient;
+import org.thingsboard.license.client.OfflineTbLicenseClient;
 import org.thingsboard.license.client.TbLicenseClient;
 import org.thingsboard.license.client.TbLicenseClientListener;
+import org.thingsboard.license.client.TbLicenseCtx;
 import org.thingsboard.license.shared.exception.LicenseErrorCode;
 import org.thingsboard.license.shared.exception.LicenseException;
 import org.thingsboard.server.common.data.LicenseInfo;
+import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.Version;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.subscription.SubscriptionEntry;
@@ -69,10 +72,14 @@ public class BasicSubscriptionService implements SubscriptionService, TbLicenseC
 
     private static final String PLAN_KEY = "plan";
 
+    private static final String OFFLINE_ENV_KEY = "TB_OFFLINE_LICENSE_DATA";
+
     @Value("${license.secret}")
     private String licenseSecret;
     @Value("${license.instance_data_file:instance-license.data}")
     private String instanceDataFilePath;
+    @Value("${zk.enabled:false}")
+    private boolean zkEnabled;
 
     @Autowired
     protected TenantService tenantService;
@@ -86,29 +93,42 @@ public class BasicSubscriptionService implements SubscriptionService, TbLicenseC
     @Autowired
     private ConfigurableApplicationContext context;
 
-    private TbLicenseClient tbLicenseClient;
+    @Autowired
+    private TbLicenseCtx licenseCtx;
+
+    private AbstractTbLicenseClient tbLicenseClient;
 
     @PostConstruct
     public void init() {
-        if (StringUtils.isEmpty(this.licenseSecret)) {
-            log.error("License secret is not provided!");
-            log.error("Please provide license.secret property value in thingsboard.yml or set TB_LICENSE_SECRET environment variable!");
-            doExit(-1, LicenseErrorCode.GENERAL_ERROR, false);
-        } else {
-            try {
-                tbLicenseClient = TbLicenseClient.builder()
-                        .listener(this)
-                        .licenseSecret(this.licenseSecret)
-                        .licenseDataFilePath(this.instanceDataFilePath)
-                        .releaseDate(new SimpleDateFormat("yyyy-MM-dd").parse(Version.PROJECT_BUILD_DATE).getTime())
-                        .build();
+        try {
+            if (StringUtils.isNotEmpty(licenseSecret)) {
+                try {
+                    tbLicenseClient = OfflineTbLicenseClient.builder()
+                            .listener(this)
+                            .encodedLicenseData(licenseSecret)
+                            .tbLicenseCtx(licenseCtx)
+                            .checkInstanceRequired(zkEnabled) //No need to check instance registry if zk disabled
+                            .build();
+                } catch (Exception e) {}
+                if (tbLicenseClient == null) {
+                    tbLicenseClient = TbLicenseClient.builder()
+                            .listener(this)
+                            .licenseSecret(this.licenseSecret)
+                            .licenseDataFilePath(this.instanceDataFilePath)
+                            .releaseDate(new SimpleDateFormat("yyyy-MM-dd").parse(Version.PROJECT_BUILD_DATE).getTime())
+                            .build();
+                }
                 tbLicenseClient.init();
-            } catch (Exception e) {
-                log.error("Failed to init license client", e);
-                LicenseErrorCode licenseErrorCode = e instanceof LicenseException ?
-                        ((LicenseException) e).getErrorCode() : LicenseErrorCode.GENERAL_ERROR;
-                doExit(-1, licenseErrorCode, false);
+            } else {
+                log.error("License secret is not provided!");
+                log.error("Please provide license.secret property value in thingsboard.yml or set TB_LICENSE_SECRET environment variable!");
+                doExit(-1, LicenseErrorCode.GENERAL_ERROR, false);
             }
+        } catch (Exception e) {
+            log.error("Failed to init license client", e);
+            LicenseErrorCode licenseErrorCode = e instanceof LicenseException ?
+                    ((LicenseException) e).getErrorCode() : LicenseErrorCode.GENERAL_ERROR;
+            doExit(-1, licenseErrorCode, false);
         }
     }
 
@@ -120,7 +140,7 @@ public class BasicSubscriptionService implements SubscriptionService, TbLicenseC
     }
 
     @Override
-    public void onError(TbLicenseClient tbLicenseClient, LicenseException e) {
+    public void onError(LicenseException e) {
         log.error("License Error occurred: {}({}) - {}", e.getErrorCode(),
                 e.getErrorCode().getErrorCode(), e.getMessage());
         if (e.isCritical()) {

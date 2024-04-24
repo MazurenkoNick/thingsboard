@@ -28,22 +28,43 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.service.ttl;
+package org.thingsboard.server.dao.sql.instance.registry;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.thingsboard.server.common.data.id.TenantId;
-import org.thingsboard.server.common.msg.queue.ServiceType;
-import org.thingsboard.server.queue.discovery.PartitionService;
+import org.springframework.stereotype.Component;
+import org.thingsboard.license.client.InstanceRegistry;
+import org.thingsboard.server.dao.DaoUtil;
+import org.thingsboard.server.dao.instance.registry.InstanceRegistryDao;
+import org.thingsboard.server.dao.model.sql.InstanceRegistryEntity;
+import org.thingsboard.server.dao.util.SqlDao;
 
+import java.util.List;
 
-@Slf4j
+@Component
+@SqlDao
 @RequiredArgsConstructor
-public abstract class AbstractCleanUpService {
+public class JpaInstanceRegistryDao implements InstanceRegistryDao {
 
-    private final PartitionService partitionService;
+    private final InstanceRegistryRepository instanceRegistryRepository;
 
-    protected boolean isSystemTenantPartitionMine() {
-        return partitionService.isSystemTenantPartitionMine(ServiceType.TB_CORE);
+    @Override
+    public InstanceRegistry save(InstanceRegistry instanceRegistry) {
+        return DaoUtil.getData(instanceRegistryRepository.save(new InstanceRegistryEntity(instanceRegistry)));
     }
+
+    @Override
+    public InstanceRegistry findByServiceId(String serviceId) {
+        return DaoUtil.getData(instanceRegistryRepository.findById(serviceId));
+    }
+
+    @Override
+    public List<InstanceRegistry> findAll() {
+        return DaoUtil.convertDataList(instanceRegistryRepository.findAll());
+    }
+
+    @Override
+    public void deleteByServiceId(String serviceId) {
+        instanceRegistryRepository.deleteById(serviceId);
+    }
+
 }

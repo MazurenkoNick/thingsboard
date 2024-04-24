@@ -88,4 +88,6 @@ public interface PartitionService {
 
     boolean isManagedByCurrentService(TenantId tenantId);
 
+    boolean isSystemTenantPartitionMine(ServiceType serviceType);
+
 }

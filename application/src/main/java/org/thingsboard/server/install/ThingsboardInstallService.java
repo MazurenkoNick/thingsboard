@@ -167,6 +167,7 @@ public class ThingsboardInstallService {
                     if (installScripts.isUpdateImages()) {
                         installScripts.updateImages();
                     }
+                    entityDatabaseSchemaService.generateClusterIdIfNotExist(); //Need for offline build
                 }
                 log.info("Upgrade finished successfully!");
 
@@ -215,6 +216,9 @@ public class ThingsboardInstallService {
                     log.info("Loading demo data...");
                     systemDataLoaderService.loadDemoData();
                 }
+
+                entityDatabaseSchemaService.generateClusterIdIfNotExist(); //Need for offline build
+
                 log.info("Installation finished successfully!");
             }
 

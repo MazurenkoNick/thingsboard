@@ -34,6 +34,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.UUID;
+
 @Service
 @Profile("install")
 @Slf4j
@@ -67,4 +74,27 @@ public class SqlEntityDatabaseSchemaService extends SqlAbstractDatabaseSchemaSer
         log.info("Installing SQL DataBase schema views and functions: " + SCHEMA_VIEWS_AND_FUNCTIONS_SQL);
         executeQueryFromFile(SCHEMA_VIEWS_AND_FUNCTIONS_SQL);
     }
+
+    @Override
+    public void generateClusterIdIfNotExist() throws Exception {
+        try (Connection conn = DriverManager.getConnection(dbUrl, dbUserName, dbPassword)) {
+            Statement statement = conn.createStatement();
+            ResultSet resultSet = statement.executeQuery("SELECT cluster_id FROM tb_cluster;");
+            if (!resultSet.next()) {
+                resultSet.close();
+
+                var clusterId = UUID.randomUUID();
+
+                statement.execute("INSERT INTO tb_cluster (cluster_id) VALUES ('" + clusterId + "');");
+
+                Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+                    log.info("ClusterId: {}", clusterId);
+                }));
+            }
+            statement.close();
+        } catch (SQLException e) {
+            log.info("Failed to generate Cluster id due to: {}", e.getMessage());
+        }
+    }
+
 }

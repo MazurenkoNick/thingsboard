@@ -823,6 +823,10 @@ public class ModelConstants {
     public static final String NOTIFICATION_TEMPLATE_NOTIFICATION_TYPE_PROPERTY = "notification_type";
     public static final String NOTIFICATION_TEMPLATE_CONFIGURATION_PROPERTY = "configuration";
 
+    public static final String INSTANCE_REGISTRY_TABLE_NAME = "tb_instance_registry";
+    public static final String INSTANCE_REGISTRY_SERVICE_ID_PROPERTY = "service_id";
+    public static final String INSTANCE_REGISTRY_LAST_ACTIVITY_TS_PROPERTY = "last_activity_ts";
+
     protected static final String[] NONE_AGGREGATION_COLUMNS = new String[]{LONG_VALUE_COLUMN, DOUBLE_VALUE_COLUMN, BOOLEAN_VALUE_COLUMN, STRING_VALUE_COLUMN, JSON_VALUE_COLUMN, KEY_COLUMN, TS_COLUMN};
 
     protected static final String[] COUNT_AGGREGATION_COLUMNS = new String[]{count(LONG_VALUE_COLUMN), count(DOUBLE_VALUE_COLUMN), count(BOOLEAN_VALUE_COLUMN), count(STRING_VALUE_COLUMN), count(JSON_VALUE_COLUMN), max(TS_COLUMN)};
