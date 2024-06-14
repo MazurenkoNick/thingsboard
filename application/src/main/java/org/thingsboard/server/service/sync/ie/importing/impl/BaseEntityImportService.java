@@ -40,9 +40,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.server.cluster.TbClusterService;
+import org.thingsboard.server.common.data.AttributeScope;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.ExportableEntity;
 import org.thingsboard.server.common.data.HasOwnerId;
+import org.thingsboard.server.common.data.HasDefaultOption;
 import org.thingsboard.server.common.data.User;
 import org.thingsboard.server.common.data.audit.ActionType;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
@@ -66,7 +68,7 @@ import org.thingsboard.server.common.data.sync.ie.EntityImportResult;
 import org.thingsboard.server.dao.relation.RelationDao;
 import org.thingsboard.server.dao.relation.RelationService;
 import org.thingsboard.server.service.action.EntityActionService;
-import org.thingsboard.server.service.entitiy.TbNotificationEntityService;
+import org.thingsboard.server.service.entitiy.TbLogEntityActionService;
 import org.thingsboard.server.service.security.permission.OwnersCacheService;
 import org.thingsboard.server.service.sync.ie.exporting.ExportableEntitiesService;
 import org.thingsboard.server.service.sync.ie.importing.EntityImportService;
@@ -91,7 +93,7 @@ public abstract class BaseEntityImportService<I extends EntityId, E extends Expo
 
     @Autowired
     @Lazy
-    protected ExportableEntitiesService exportableEntitiesService;
+    protected ExportableEntitiesService entitiesService;
     @Autowired
     @Lazy
     protected OwnersCacheService ownersCacheService;
@@ -106,7 +108,7 @@ public abstract class BaseEntityImportService<I extends EntityId, E extends Expo
     @Autowired
     protected TbClusterService clusterService;
     @Autowired
-    protected TbNotificationEntityService entityNotificationService;
+    protected TbLogEntityActionService logEntityActionService;
 
     @Override
     public EntityImportResult<E> importEntity(EntitiesImportCtx ctx, D exportData) throws ThingsboardException {
@@ -145,9 +147,8 @@ public abstract class BaseEntityImportService<I extends EntityId, E extends Expo
             }
             E savedEntity = saveOrUpdate(ctx, prepared, exportData, idProvider);
             if (changeOwner) {
-                importResult.addSendEventsCallback(() -> {
-                    entityNotificationService.logEntityAction(ctx.getTenantId(), savedEntity.getId(), entity, ActionType.CHANGE_OWNER, ctx.getUser(), ((HasOwnerId) savedEntity).getOwnerId());
-                });
+                importResult.addSendEventsCallback(() ->
+                        logEntityActionService.logEntityAction(ctx.getTenantId(), savedEntity.getId(), entity, ActionType.CHANGE_OWNER, ctx.getUser(), ((HasOwnerId) savedEntity).getOwnerId()));
             }
             boolean created = existingEntity == null;
             importResult.setCreated(created);
@@ -245,10 +246,9 @@ public abstract class BaseEntityImportService<I extends EntityId, E extends Expo
                     if (relation == null) {
                         importResult.setUpdatedRelatedEntities(true);
                         relationService.deleteRelation(ctx.getTenantId(), existingRelation.getFrom(), existingRelation.getTo(), existingRelation.getType(), existingRelation.getTypeGroup());
-                        importResult.addSendEventsCallback(() -> {
-                            entityNotificationService.logEntityRelationAction(tenantId, null,
-                                    existingRelation, ctx.getUser(), ActionType.RELATION_DELETED, null, existingRelation);
-                        });
+                        importResult.addSendEventsCallback(() ->
+                                logEntityActionService.logEntityRelationAction(tenantId, null,
+                                existingRelation, ctx.getUser(), ActionType.RELATION_DELETED, null, existingRelation));
                     } else if (Objects.equal(relation.getAdditionalInfo(), existingRelation.getAdditionalInfo())) {
                         relationsMap.remove(relation);
                     }
@@ -286,7 +286,7 @@ public abstract class BaseEntityImportService<I extends EntityId, E extends Expo
                         })
                         .collect(Collectors.toList());
                 // fixme: attributes are saved outside the transaction
-                tsSubService.saveAndNotify(user.getTenantId(), entity.getId(), scope, attributeKvEntries, new FutureCallback<Void>() {
+                tsSubService.saveAndNotify(user.getTenantId(), entity.getId(), AttributeScope.valueOf(scope), attributeKvEntries, new FutureCallback<Void>() {
                     @Override
                     public void onSuccess(@Nullable Void unused) {
                     }
@@ -301,29 +301,37 @@ public abstract class BaseEntityImportService<I extends EntityId, E extends Expo
     }
 
     protected void onEntitySaved(User user, E savedEntity, E oldEntity) throws ThingsboardException {
-        entityNotificationService.logEntityAction(user.getTenantId(), savedEntity.getId(), savedEntity, null,
+        logEntityActionService.logEntityAction(user.getTenantId(), savedEntity.getId(), savedEntity, null,
                 oldEntity == null ? ActionType.ADDED : ActionType.UPDATED, user);
     }
 
 
     @SuppressWarnings("unchecked")
     protected E findExistingEntity(EntitiesImportCtx ctx, E entity, IdProvider idProvider) {
-        return (E) Optional.ofNullable(exportableEntitiesService.findEntityByTenantIdAndExternalId(ctx.getTenantId(), entity.getId()))
-                .or(() -> Optional.ofNullable(exportableEntitiesService.findEntityByTenantIdAndId(ctx.getTenantId(), entity.getId())))
+        return (E) Optional.ofNullable(entitiesService.findEntityByTenantIdAndExternalId(ctx.getTenantId(), entity.getId()))
+                .or(() -> Optional.ofNullable(entitiesService.findEntityByTenantIdAndId(ctx.getTenantId(), entity.getId())))
                 .or(() -> {
                     if (ctx.isFindExistingByName()) {
-                        return Optional.ofNullable(exportableEntitiesService.findEntityByTenantIdAndName(ctx.getTenantId(), getEntityType(), entity.getName()));
+                        return Optional.ofNullable(entitiesService.findEntityByTenantIdAndName(ctx.getTenantId(), getEntityType(), entity.getName()));
                     } else {
                         return Optional.empty();
                     }
+                })
+                .or(() -> {
+                    if (entity instanceof HasDefaultOption hasDefaultOption) {
+                        if (hasDefaultOption.isDefault()) {
+                            return Optional.ofNullable(entitiesService.findDefaultEntityByTenantId(ctx.getTenantId(), getEntityType()));
+                        }
+                    }
+                    return Optional.empty();
                 })
                 .orElse(null);
     }
 
     @SuppressWarnings("unchecked")
     protected <ID extends EntityId> HasId<ID> findInternalEntity(TenantId tenantId, ID externalId) {
-        return (HasId<ID>) Optional.ofNullable(exportableEntitiesService.findEntityByTenantIdAndExternalId(tenantId, externalId))
-                .or(() -> Optional.ofNullable(exportableEntitiesService.findEntityByTenantIdAndId(tenantId, externalId)))
+        return (HasId<ID>) Optional.ofNullable(entitiesService.findEntityByTenantIdAndExternalId(tenantId, externalId))
+                .or(() -> Optional.ofNullable(entitiesService.findEntityByTenantIdAndId(tenantId, externalId)))
                 .orElseThrow(() -> new MissingEntityException(externalId));
     }
 

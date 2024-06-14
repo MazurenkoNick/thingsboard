@@ -30,8 +30,9 @@
  */
 package org.thingsboard.server.controller;
 
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -73,6 +74,7 @@ import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.page.SortOrder;
 import org.thingsboard.server.common.data.permission.Operation;
 import org.thingsboard.server.common.data.permission.Resource;
+import org.thingsboard.server.config.annotations.ApiOperation;
 import org.thingsboard.server.dao.notification.NotificationRequestService;
 import org.thingsboard.server.dao.notification.NotificationService;
 import org.thingsboard.server.dao.notification.NotificationSettingsService;
@@ -82,7 +84,6 @@ import org.thingsboard.server.queue.util.TbCoreComponent;
 import org.thingsboard.server.service.notification.NotificationProcessingContext;
 import org.thingsboard.server.service.security.model.SecurityUser;
 
-import javax.validation.Valid;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -118,8 +119,6 @@ public class NotificationController extends BaseController {
     private final NotificationTargetService notificationTargetService;
     private final NotificationCenter notificationCenter;
     private final NotificationSettingsService notificationSettingsService;
-
-    private static final String DELIVERY_METHOD_ALLOWABLE_VALUES = "WEB,MOBILE_APP";
 
     @ApiOperation(value = "Get notifications (getNotifications)",
             notes = "Returns the page of notifications for current user." + NEW_LINE +
@@ -176,19 +175,19 @@ public class NotificationController extends BaseController {
                     "}\n```")
     @GetMapping("/notifications")
     @PreAuthorize("hasAnyAuthority('SYS_ADMIN', 'TENANT_ADMIN', 'CUSTOMER_USER')")
-    public PageData<Notification> getNotifications(@ApiParam(value = PAGE_SIZE_DESCRIPTION, required = true)
+    public PageData<Notification> getNotifications(@Parameter(description = PAGE_SIZE_DESCRIPTION, required = true)
                                                    @RequestParam int pageSize,
-                                                   @ApiParam(value = PAGE_NUMBER_DESCRIPTION, required = true)
+                                                   @Parameter(description = PAGE_NUMBER_DESCRIPTION, required = true)
                                                    @RequestParam int page,
-                                                   @ApiParam(value = "Case-insensitive 'substring' filter based on notification subject or text")
+                                                   @Parameter(description = "Case-insensitive 'substring' filter based on notification subject or text")
                                                    @RequestParam(required = false) String textSearch,
-                                                   @ApiParam(value = SORT_PROPERTY_DESCRIPTION)
+                                                   @Parameter(description = SORT_PROPERTY_DESCRIPTION)
                                                    @RequestParam(required = false) String sortProperty,
-                                                   @ApiParam(value = SORT_ORDER_DESCRIPTION)
+                                                   @Parameter(description = SORT_ORDER_DESCRIPTION)
                                                    @RequestParam(required = false) String sortOrder,
-                                                   @ApiParam(value = "To search for unread notifications only")
+                                                   @Parameter(description = "To search for unread notifications only")
                                                    @RequestParam(defaultValue = "false") boolean unreadOnly,
-                                                   @ApiParam(value = "Delivery method", allowableValues = DELIVERY_METHOD_ALLOWABLE_VALUES)
+                                                   @Parameter(description = "Delivery method", schema = @Schema(allowableValues = {"WEB", "MOBILE_APP"}))
                                                    @RequestParam(defaultValue = "WEB") NotificationDeliveryMethod deliveryMethod,
                                                    @AuthenticationPrincipal SecurityUser user) throws ThingsboardException {
         // no permissions
@@ -201,7 +200,7 @@ public class NotificationController extends BaseController {
                     AVAILABLE_FOR_ANY_AUTHORIZED_USER)
     @GetMapping("/notifications/unread/count")
     @PreAuthorize("hasAnyAuthority('SYS_ADMIN', 'TENANT_ADMIN', 'CUSTOMER_USER')")
-    public Integer getUnreadNotificationsCount(@ApiParam(value = "Delivery method", allowableValues = DELIVERY_METHOD_ALLOWABLE_VALUES)
+    public Integer getUnreadNotificationsCount(@Parameter(description = "Delivery method", schema = @Schema(allowableValues = {"WEB", "MOBILE_APP"}))
                                                @RequestParam(defaultValue = "MOBILE_APP") NotificationDeliveryMethod deliveryMethod,
                                                @AuthenticationPrincipal SecurityUser user) {
         return notificationService.countUnreadNotificationsByRecipientId(user.getTenantId(), deliveryMethod, user.getId());
@@ -224,7 +223,7 @@ public class NotificationController extends BaseController {
                     AVAILABLE_FOR_ANY_AUTHORIZED_USER)
     @PutMapping("/notifications/read")
     @PreAuthorize("hasAnyAuthority('SYS_ADMIN', 'TENANT_ADMIN', 'CUSTOMER_USER')")
-    public void markAllNotificationsAsRead(@ApiParam(value = "Delivery method", allowableValues = DELIVERY_METHOD_ALLOWABLE_VALUES)
+    public void markAllNotificationsAsRead(@Parameter(description = "Delivery method", schema = @Schema(allowableValues = {"WEB", "MOBILE_APP"}))
                                            @RequestParam(defaultValue = "WEB") NotificationDeliveryMethod deliveryMethod,
                                            @AuthenticationPrincipal SecurityUser user) {
         // no permissions
@@ -299,7 +298,7 @@ public class NotificationController extends BaseController {
     @PostMapping("/notification/request/preview")
     @PreAuthorize("hasAnyAuthority('SYS_ADMIN', 'TENANT_ADMIN')")
     public NotificationRequestPreview getNotificationRequestPreview(@RequestBody @Valid NotificationRequest request,
-                                                                    @ApiParam(value = "Amount of the recipients to show in preview")
+                                                                    @Parameter(description = "Amount of the recipients to show in preview")
                                                                     @RequestParam(defaultValue = "20") int recipientsPreviewSize,
                                                                     @AuthenticationPrincipal SecurityUser user) throws ThingsboardException {
         accessControlService.checkPermission(user, NOTIFICATION, Operation.WRITE);
@@ -407,15 +406,15 @@ public class NotificationController extends BaseController {
                     SYSTEM_OR_TENANT_AUTHORITY_PARAGRAPH)
     @GetMapping("/notification/requests")
     @PreAuthorize("hasAnyAuthority('SYS_ADMIN', 'TENANT_ADMIN')")
-    public PageData<NotificationRequestInfo> getNotificationRequests(@ApiParam(value = PAGE_SIZE_DESCRIPTION, required = true)
+    public PageData<NotificationRequestInfo> getNotificationRequests(@Parameter(description = PAGE_SIZE_DESCRIPTION, required = true)
                                                                      @RequestParam int pageSize,
-                                                                     @ApiParam(value = PAGE_NUMBER_DESCRIPTION, required = true)
+                                                                     @Parameter(description = PAGE_NUMBER_DESCRIPTION, required = true)
                                                                      @RequestParam int page,
-                                                                     @ApiParam(value = "Case-insensitive 'substring' filed based on the used template name")
+                                                                     @Parameter(description = "Case-insensitive 'substring' filed based on the used template name")
                                                                      @RequestParam(required = false) String textSearch,
-                                                                     @ApiParam(value = SORT_PROPERTY_DESCRIPTION)
+                                                                     @Parameter(description = SORT_PROPERTY_DESCRIPTION)
                                                                      @RequestParam(required = false) String sortProperty,
-                                                                     @ApiParam(value = SORT_ORDER_DESCRIPTION)
+                                                                     @Parameter(description = SORT_ORDER_DESCRIPTION)
                                                                      @RequestParam(required = false) String sortOrder,
                                                                      @AuthenticationPrincipal SecurityUser user) throws ThingsboardException {
         accessControlService.checkPermission(user, NOTIFICATION, Operation.READ);

@@ -35,7 +35,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.thingsboard.common.util.JacksonUtil;
-import org.thingsboard.server.cluster.TbClusterService;
 import org.thingsboard.server.common.data.BaseData;
 import org.thingsboard.server.common.data.Customer;
 import org.thingsboard.server.common.data.Dashboard;
@@ -92,9 +91,6 @@ import java.util.function.Function;
 @Slf4j
 @Service
 public class DefaultOwnersCacheService implements OwnersCacheService {
-
-    @Autowired
-    private TbClusterService clusterService;
 
     @Autowired
     private EntityGroupService entityGroupService;
@@ -183,15 +179,17 @@ public class DefaultOwnersCacheService implements OwnersCacheService {
 
     @Override
     public void changeCustomerOwner(TenantId tenantId, EntityId targetOwnerId, Customer customer) throws ThingsboardException {
-        Set<EntityId> ownerIds = getChildOwners(tenantId, customer.getId());
-        if (!ownerIds.contains(targetOwnerId)) {
-            changeEntityOwner(tenantId, targetOwnerId, customer.getId(),
-                    customer,
-                    customerService::saveCustomer);
-        } else {
+        if (customer.isPublic()) {
+            throw new ThingsboardException("Public customer owner can't be changed!", ThingsboardErrorCode.BAD_REQUEST_PARAMS);
+        }
+        var childOwnerIds = getChildOwners(tenantId, customer.getId());
+        if (childOwnerIds.contains(targetOwnerId)) {
             // Making Sub-Customer as a Parent Customer - NOT OK.
             throw new ThingsboardException("Owner of the Customer can't be changed to its Sub-Customer!", ThingsboardErrorCode.BAD_REQUEST_PARAMS);
         }
+        changeEntityOwner(tenantId, targetOwnerId, customer.getId(),
+                customer,
+                customerService::saveCustomer);
     }
 
     @Override
@@ -211,10 +209,7 @@ public class DefaultOwnersCacheService implements OwnersCacheService {
 
     @Override
     public void changeDeviceOwner(TenantId tenantId, EntityId targetOwnerId, Device device) throws ThingsboardException {
-        changeEntityOwner(tenantId, targetOwnerId, device.getId(), device, d -> {
-            Device savedDevice = deviceService.saveDevice(d);
-            clusterService.onDeviceUpdated(savedDevice, device);
-        });
+        changeEntityOwner(tenantId, targetOwnerId, device.getId(), device, d -> deviceService.saveDevice(d));
     }
 
     @Override
@@ -290,7 +285,7 @@ public class DefaultOwnersCacheService implements OwnersCacheService {
     private List<EntityGroupId> getAllowedEntityGroupIds(TenantId tenantId,
                                                          SecurityUser securityUser,
                                                          EntityType entityType,
-                                                         Operation operation) throws Exception {
+                                                         Operation operation) {
         MergedGroupTypePermissionInfo groupTypePermissionInfo = null;
         if (operation == Operation.READ) {
             groupTypePermissionInfo = securityUser.getUserPermissions().getReadGroupPermissions().get(entityType);
@@ -305,9 +300,7 @@ public class DefaultOwnersCacheService implements OwnersCacheService {
                 for (EntityId ownerId : ownerIds) {
                     Optional<EntityGroup> entityGroup = entityGroupService.findEntityGroupByTypeAndName(tenantId, ownerId,
                             entityType, EntityGroup.GROUP_ALL_NAME);
-                    if (entityGroup.isPresent()) {
-                        groupIds.add(entityGroup.get().getId());
-                    }
+                    entityGroup.ifPresent(group -> groupIds.add(group.getId()));
                 }
             }
             if (groupTypePermissionInfo != null && !groupTypePermissionInfo.getEntityGroupIds().isEmpty()) {

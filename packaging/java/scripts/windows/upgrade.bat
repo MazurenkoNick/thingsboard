@@ -65,7 +65,7 @@ java -cp "%jarfile%" -Dloader.main=org.thingsboard.server.ThingsboardInstallAppl
                     -Dinstall.upgrade=true^
                     -Dinstall.upgrade.from_version=%fromVersion%^
                     -Dlogging.config="%BASE%\install\logback.xml"^
-                    org.springframework.boot.loader.PropertiesLauncher
+                    org.springframework.boot.loader.launch.PropertiesLauncher
 
 if errorlevel 1 (
    @echo ThingsBoard upgrade failed!

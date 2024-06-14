@@ -36,7 +36,6 @@ import com.fasterxml.jackson.databind.node.TextNode;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.util.Base64Utils;
 import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.integration.api.converter.TBDownlinkDataConverter;
 import org.thingsboard.integration.api.converter.TBUplinkDataConverter;
@@ -63,6 +62,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -271,6 +271,7 @@ public abstract class AbstractIntegration<T> implements ThingsboardPlatformInteg
         } else if (!context.getRateLimitService().map(s -> s.checkLimit(configuration.getTenantId(), integrationId, false)).orElse(true)) {
             if (context.getRateLimitService().get().alreadyProcessed(integrationId, EntityType.INTEGRATION)) {
                 log.trace("[{}] [{}] [{}] Rate limited debug event already sent.", configuration.getTenantId(), integrationId, EntityType.INTEGRATION);
+                return;
             } else {
                 exception = new TbRateLimitsException(EntityType.INTEGRATION, "Integration debug rate limits reached!");
                 status = "ERROR";
@@ -301,7 +302,7 @@ public abstract class AbstractIntegration<T> implements ThingsboardPlatformInteg
             return this.uplinkConverter.convertUplink(context.getUplinkConverterContext(), data, md, context.getCallBackExecutorService());
         } catch (Throwable t) {
             if (log.isDebugEnabled()) {
-                log.debug("[{}][{}] Failed to apply uplink data converter function for data: {} and metadata: {}", configuration.getId(), configuration.getName(), Base64Utils.encodeToString(data), md);
+                log.debug("[{}][{}] Failed to apply uplink data converter function for data: {} and metadata: {}", configuration.getId(), configuration.getName(), Base64.getEncoder().encodeToString(data), md);
             }
             return Futures.immediateFailedFuture(t);
         }
@@ -355,7 +356,7 @@ public abstract class AbstractIntegration<T> implements ThingsboardPlatformInteg
         } else if ("TEXT".equals(contentType)) {
             return new TextNode(new String(data.getData(), StandardCharsets.UTF_8));
         } else { //BINARY
-            return new TextNode(Base64Utils.encodeToString(data.getData()));
+            return new TextNode(Base64.getEncoder().encodeToString(data.getData()));
         }
     }
 

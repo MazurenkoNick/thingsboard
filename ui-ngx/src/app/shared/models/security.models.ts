@@ -111,8 +111,10 @@ export enum Resource {
   EDGE_GROUP = 'EDGE_GROUP',
   OTA_PACKAGE = 'OTA_PACKAGE',
   QUEUE = 'QUEUE',
+  QUEUE_STATS = 'QUEUE_STATS',
   VERSION_CONTROL = 'VERSION_CONTROL',
-  NOTIFICATION = 'NOTIFICATION'
+  NOTIFICATION = 'NOTIFICATION',
+  MOBILE_APP_SETTINGS = 'MOBILE_APP_SETTINGS'
 }
 
 const resourceTypeTranslations = new Map<Resource, string>();
@@ -146,7 +148,8 @@ export const resourceByEntityType = new Map<EntityType, Resource>(
     [EntityType.TB_RESOURCE, Resource.TB_RESOURCE],
     [EntityType.EDGE, Resource.EDGE],
     [EntityType.OTA_PACKAGE, Resource.OTA_PACKAGE],
-    [EntityType.QUEUE, Resource.QUEUE]
+    [EntityType.QUEUE, Resource.QUEUE],
+    [EntityType.QUEUE_STATS, Resource.QUEUE_STATS]
   ]
 );
 

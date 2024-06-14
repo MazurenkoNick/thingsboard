@@ -44,15 +44,17 @@ import {
 import {
   TimeSeriesChartThreshold,
   timeSeriesChartThresholdDefaultSettings,
-  TimeSeriesChartThresholdType,
   timeSeriesChartThresholdValid,
-  timeSeriesChartThresholdValidator, TimeSeriesChartYAxisId
+  timeSeriesChartThresholdValidator,
+  TimeSeriesChartYAxisId
 } from '@home/components/widget/lib/chart/time-series-chart.models';
 import { mergeDeep } from '@core/utils';
 import { IAliasController } from '@core/api/widget-api.models';
 import { DataKeysCallbacks } from '@home/components/widget/config/data-keys.component.models';
 import { DataKey, Datasource, WidgetConfig } from '@shared/models/widget.models';
 import { DataKeyType } from '@shared/models/telemetry/telemetry.models';
+import { coerceBoolean } from '@shared/decorators/coercion';
+import { ValueSourceType } from '@shared/models/widget-settings.models';
 
 @Component({
   selector: 'tb-time-series-chart-thresholds-panel',
@@ -91,6 +93,10 @@ export class TimeSeriesChartThresholdsPanelComponent implements ControlValueAcce
 
   @Input()
   yAxisIds: TimeSeriesChartYAxisId[];
+
+  @Input()
+  @coerceBoolean()
+  hideYAxis = false;
 
   thresholdsFormGroup: UntypedFormGroup;
 
@@ -179,7 +185,7 @@ export class TimeSeriesChartThresholdsPanelComponent implements ControlValueAcce
     const result: TimeSeriesChartThreshold[] = [];
     const latestKeys = this.datasource?.latestDataKeys || [];
     for (const threshold of thresholds) {
-      if (threshold.type === TimeSeriesChartThresholdType.latestKey) {
+      if (threshold.type === ValueSourceType.latestKey) {
         const found = latestKeys.find(k => this.isThresholdKey(k, threshold));
         if (found) {
           result.push(threshold);
@@ -201,7 +207,7 @@ export class TimeSeriesChartThresholdsPanelComponent implements ControlValueAcce
       const existingThresholdKeys = latestKeys.filter(k => k.settings?.__thresholdKey === true);
       const foundThresholdKeys: DataKey[] = [];
       for (const threshold of thresholds) {
-        if (threshold.type === TimeSeriesChartThresholdType.latestKey) {
+        if (threshold.type === ValueSourceType.latestKey) {
           const found = existingThresholdKeys.find(k => this.isThresholdKey(k, threshold));
           if (!found) {
             const newKey = this.dataKeyCallbacks.generateDataKey(threshold.latestKey, threshold.latestKeyType,

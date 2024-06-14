@@ -31,6 +31,9 @@
 package org.thingsboard.server.service.mail;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.google.common.util.concurrent.Futures;
+import jakarta.activation.DataSource;
+import jakarta.mail.util.ByteArrayDataSource;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,16 +46,19 @@ import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 import org.thingsboard.common.util.JacksonUtil;
+import org.thingsboard.common.util.ThingsBoardThreadFactory;
 import org.thingsboard.rule.engine.api.MailService;
 import org.thingsboard.rule.engine.api.TbEmail;
+import org.thingsboard.server.cache.limits.RateLimitService;
 import org.thingsboard.server.common.data.AdminSettings;
 import org.thingsboard.server.common.data.ApiFeature;
 import org.thingsboard.server.common.data.ApiUsageRecordKey;
 import org.thingsboard.server.common.data.ApiUsageRecordState;
 import org.thingsboard.server.common.data.ApiUsageStateValue;
-import org.thingsboard.server.common.data.DataConstants;
+import org.thingsboard.server.common.data.AttributeScope;
 import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.blob.BlobEntity;
+import org.thingsboard.server.common.data.exception.RateLimitExceededException;
 import org.thingsboard.server.common.data.exception.ThingsboardErrorCode;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.id.BlobEntityId;
@@ -60,6 +66,7 @@ import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.kv.AttributeKvEntry;
+import org.thingsboard.server.common.data.limit.LimitedApi;
 import org.thingsboard.server.common.stats.TbApiUsageReportClient;
 import org.thingsboard.server.dao.attributes.AttributesService;
 import org.thingsboard.server.dao.blob.BlobEntityService;
@@ -68,14 +75,15 @@ import org.thingsboard.server.dao.settings.AdminSettingsService;
 import org.thingsboard.server.dao.wl.WhiteLabelingService;
 import org.thingsboard.server.service.apiusage.TbApiUsageStateService;
 
-import javax.activation.DataSource;
-import javax.mail.internet.MimeMessage;
-import javax.mail.util.ByteArrayDataSource;
+import jakarta.annotation.PreDestroy;
+import jakarta.mail.internet.MimeMessage;
 import java.io.ByteArrayInputStream;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -101,7 +109,7 @@ public class DefaultMailService implements MailService {
     private boolean allowSystemMailService;
 
     @Autowired
-    private MailExecutorService mailExecutorService;
+    private MailSenderInternalExecutorService mailExecutorService;
 
     @Autowired
     private PasswordResetExecutorService passwordResetExecutorService;
@@ -112,11 +120,29 @@ public class DefaultMailService implements MailService {
     @Autowired
     private TbMailContextComponent ctx;
 
+    @Autowired
+    private RateLimitService rateLimitService;
+
+    @Value("${mail.per_tenant_rate_limits:}")
+    private String perTenantRateLimitConfig;
+
+    private final ScheduledExecutorService timeoutScheduler;
+
+    private TbMailSender mailSender;
+
     public DefaultMailService(AdminSettingsService adminSettingsService, AttributesService attributesService, BlobEntityService blobEntityService, TbApiUsageReportClient apiUsageClient) {
         this.adminSettingsService = adminSettingsService;
         this.attributesService = attributesService;
         this.blobEntityService = blobEntityService;
         this.apiUsageClient = apiUsageClient;
+        this.timeoutScheduler = Executors.newScheduledThreadPool(1, ThingsBoardThreadFactory.forName("mail-service-watchdog"));
+    }
+
+    @PreDestroy
+    public void destroy() {
+        if (timeoutScheduler != null) {
+            timeoutScheduler.shutdownNow();
+        }
     }
 
     @Override
@@ -266,6 +292,10 @@ public class DefaultMailService implements MailService {
         ConfigEntry configEntry = getConfig(tenantId, "mail", true);
         JsonNode jsonConfig = configEntry.jsonConfig;
         if (externalMailSender || !configEntry.isSystem || apiUsageStateService.getApiUsageState(tenantId).isEmailSendEnabled()) {
+            if (tenantId != null && !tenantId.isSysTenantId() && StringUtils.isNotEmpty(perTenantRateLimitConfig) &&
+                    !rateLimitService.checkRateLimit(LimitedApi.EMAILS, (Object) tenantId, perTenantRateLimitConfig)) {
+                throw new RateLimitExceededException(LimitedApi.EMAILS);
+            }
             String mailFrom = getStringValue(jsonConfig, "mailFrom");
             try {
                 MimeMessage mailMsg = javaMailSender.createMimeMessage();
@@ -297,7 +327,7 @@ public class DefaultMailService implements MailService {
                     for (String imgId : tbEmail.getImages().keySet()) {
                         String imgValue = tbEmail.getImages().get(imgId);
                         String value = imgValue.replaceFirst("^data:image/[^;]*;base64,?", "");
-                        byte[] bytes = javax.xml.bind.DatatypeConverter.parseBase64Binary(value);
+                        byte[] bytes = jakarta.xml.bind.DatatypeConverter.parseBase64Binary(value);
                         String contentType = helper.getFileTypeMap().getContentType(imgId);
                         InputStreamSource iss = () -> new ByteArrayInputStream(bytes);
                         helper.addInline(imgId, iss, contentType);
@@ -500,7 +530,9 @@ public class DefaultMailService implements MailService {
     }
 
     private void sendMailWithTimeout(JavaMailSender mailSender, MimeMessage msg, long timeout) {
-        var submittedMail = mailExecutorService.submit(() -> mailSender.send(msg));
+        var submittedMail = Futures.withTimeout(
+                mailExecutorService.submit(() -> mailSender.send(msg)),
+                timeout, TimeUnit.MILLISECONDS, timeoutScheduler);
         try {
             submittedMail.get(timeout, TimeUnit.MILLISECONDS);
         } catch (TimeoutException e) {
@@ -573,7 +605,7 @@ public class DefaultMailService implements MailService {
 
     private String getEntityAttributeValue(TenantId tenantId, EntityId entityId, String key) throws Exception {
         List<AttributeKvEntry> attributeKvEntries =
-                attributesService.find(tenantId, entityId, DataConstants.SERVER_SCOPE, Arrays.asList(key)).get();
+                attributesService.find(tenantId, entityId, AttributeScope.SERVER_SCOPE, Arrays.asList(key)).get();
         if (attributeKvEntries != null && !attributeKvEntries.isEmpty()) {
             AttributeKvEntry kvEntry = attributeKvEntries.get(0);
             return kvEntry.getValueAsString();

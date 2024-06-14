@@ -34,7 +34,7 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.server.common.data.AdminSettings;
-import org.thingsboard.server.common.data.DataConstants;
+import org.thingsboard.server.common.data.AttributeScope;
 import org.thingsboard.server.common.data.EdgeUtils;
 import org.thingsboard.server.common.data.edge.Edge;
 import org.thingsboard.server.common.data.edge.EdgeEvent;
@@ -66,7 +66,7 @@ public class AdminSettingsEdgeEventFetcher implements EdgeEventFetcher {
     }
 
     public PageData<EdgeEvent> fetchEdgeEvents(TenantId tenantId, Edge edge, PageLink pageLink) throws Exception {
-        List<EdgeEvent> result = fetchAdminSettingsForKeys(tenantId, edge.getId(), List.of("general", "mail", "connectivity", "jwt", "customTranslation", "customMenu"));
+        List<EdgeEvent> result = fetchAdminSettingsForKeys(tenantId, edge.getId(), List.of("general", "mail", "connectivity", "jwt", "customMenu"));
 
         // return PageData object to be in sync with other fetchers
         return new PageData<>(result, 1, result.size(), false);
@@ -80,7 +80,7 @@ public class AdminSettingsEdgeEventFetcher implements EdgeEventFetcher {
                 result.add(EdgeUtils.constructEdgeEvent(tenantId, edgeId, EdgeEventType.ADMIN_SETTINGS,
                         EdgeEventActionType.UPDATED, null, JacksonUtil.valueToTree(adminSettings)));
             }
-            Optional<AttributeKvEntry> tenantMailSettingsAttr = attributesService.find(tenantId, tenantId, DataConstants.SERVER_SCOPE, key).get();
+            Optional<AttributeKvEntry> tenantMailSettingsAttr = attributesService.find(tenantId, tenantId, AttributeScope.SERVER_SCOPE, key).get();
             if (tenantMailSettingsAttr.isPresent()) {
                 AdminSettings tenantMailSettings = new AdminSettings();
                 tenantMailSettings.setTenantId(tenantId);
@@ -93,4 +93,5 @@ public class AdminSettingsEdgeEventFetcher implements EdgeEventFetcher {
         }
         return result;
     }
+
 }

@@ -79,9 +79,11 @@ public enum Resource {
     TB_RESOURCE(EntityType.TB_RESOURCE),
     OTA_PACKAGE(EntityType.OTA_PACKAGE),
     QUEUE(EntityType.QUEUE),
+    QUEUE_STATS(EntityType.QUEUE_STATS),
     VERSION_CONTROL,
     NOTIFICATION(EntityType.NOTIFICATION_TARGET, EntityType.NOTIFICATION_TEMPLATE,
-            EntityType.NOTIFICATION_REQUEST, EntityType.NOTIFICATION_RULE);
+            EntityType.NOTIFICATION_REQUEST, EntityType.NOTIFICATION_RULE),
+    MOBILE_APP_SETTINGS;
 
     private static final Map<EntityType, Resource> groupResourceByGroupType = new HashMap<>();
     private static final Map<EntityType, Resource> resourceByEntityType = new HashMap<>();
@@ -151,8 +153,10 @@ public enum Resource {
         operationsByResource.put(Resource.WHITE_LABELING, Set.of(Operation.ALL, Operation.READ, Operation.WRITE));
         operationsByResource.put(Resource.AUDIT_LOG, Set.of(Operation.ALL, Operation.READ));
         operationsByResource.put(Resource.QUEUE, Set.of(Operation.ALL, Operation.READ));
+        operationsByResource.put(Resource.QUEUE_STATS, Set.of(Operation.ALL, Operation.READ));
         operationsByResource.put(Resource.VERSION_CONTROL, Set.of(Operation.ALL, Operation.READ, Operation.WRITE, Operation.DELETE));
         operationsByResource.put(Resource.NOTIFICATION, Operation.crudOperations);
+        operationsByResource.put(Resource.MOBILE_APP_SETTINGS, Set.of(Operation.ALL, Operation.READ, Operation.WRITE));
 
         resourcesByAuthority.put(Authority.SYS_ADMIN, Set.of(
                 Resource.ALL,
@@ -171,7 +175,9 @@ public enum Resource {
                 Resource.OAUTH2_CONFIGURATION_TEMPLATE,
                 Resource.TB_RESOURCE,
                 Resource.QUEUE,
-                Resource.NOTIFICATION
+                Resource.QUEUE_STATS,
+                Resource.NOTIFICATION,
+                Resource.MOBILE_APP_SETTINGS
         ));
 
         resourcesByAuthority.put(Authority.TENANT_ADMIN, Set.of(
@@ -210,8 +216,10 @@ public enum Resource {
                 Resource.TB_RESOURCE,
                 Resource.OTA_PACKAGE,
                 Resource.QUEUE,
+                Resource.QUEUE_STATS,
                 Resource.VERSION_CONTROL,
-                Resource.NOTIFICATION
+                Resource.NOTIFICATION,
+                Resource.MOBILE_APP_SETTINGS
         ));
 
         resourcesByAuthority.put(Authority.CUSTOMER_USER, Set.of(
@@ -241,7 +249,8 @@ public enum Resource {
                 Resource.WHITE_LABELING,
                 Resource.AUDIT_LOG,
                 Resource.DEVICE_PROFILE,
-                Resource.ASSET_PROFILE
+                Resource.ASSET_PROFILE,
+                Resource.MOBILE_APP_SETTINGS
         ));
 
     }
