@@ -692,8 +692,8 @@
                         </plugin>
                         <plugin>
                             <groupId>org.codehaus.gmaven</groupId>
-                            <artifactId>gmaven-plugin</artifactId>
-                            <version>1.4</version>
+                            <artifactId>groovy-maven-plugin</artifactId>
+                            <version>2.1.1</version>
                             <executions>
                                 <execution>
                                     <phase>${pkg.eula.phase}</phase>
@@ -706,18 +706,14 @@
                                             <eulaFile>${main.dir}/packaging/java/scripts/EULA.txt</eulaFile>
                                         </properties>
                                         <source>
-                                            def file = new File(project.properties.eulaDebFile)
+                                            def file = new File(properties.eulaDebFile)
                                             project.properties.debPkgEula = file.getText()
-                                            file = new File(project.properties.eulaFile)
+                                            file = new File(properties.eulaFile)
                                             project.properties.pkgEula = file.getText()
                                         </source>
                                     </configuration>
                                 </execution>
                             </executions>
-                            <configuration>
-                                <providerSelection>2.0</providerSelection>
-                                <source>2.0</source>
-                            </configuration>
                         </plugin>
                     </plugins>
                 </pluginManagement>
