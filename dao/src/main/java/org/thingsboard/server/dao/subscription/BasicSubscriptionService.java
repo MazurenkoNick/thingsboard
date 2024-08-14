@@ -102,9 +102,11 @@ public class BasicSubscriptionService implements SubscriptionService, TbLicenseC
     public void init() {
         try {
             if (StringUtils.isNotEmpty(licenseSecret)) {
+                long releaseDate = new SimpleDateFormat("yyyy-MM-dd").parse(Version.PROJECT_BUILD_DATE).getTime();
                 try {
                     tbLicenseClient = OfflineTbLicenseClient.builder()
                             .listener(this)
+                            .releaseDate(releaseDate)
                             .encodedLicenseData(licenseSecret)
                             .tbLicenseCtx(licenseCtx)
                             .checkInstanceRequired(zkEnabled) //No need to check instance registry if zk disabled
@@ -115,7 +117,7 @@ public class BasicSubscriptionService implements SubscriptionService, TbLicenseC
                             .listener(this)
                             .licenseSecret(this.licenseSecret)
                             .licenseDataFilePath(this.instanceDataFilePath)
-                            .releaseDate(new SimpleDateFormat("yyyy-MM-dd").parse(Version.PROJECT_BUILD_DATE).getTime())
+                            .releaseDate(releaseDate)
                             .build();
                 }
                 tbLicenseClient.init();
