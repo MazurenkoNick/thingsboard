@@ -86,13 +86,14 @@
         <div class="tb-form-panel" ngClass.gt-xs="stroked" ngClass.xs="no-padding no-border">
           <div class="tb-form-row no-border no-padding column-xs">
             <div fxFlex fxHide.xs class="tb-form-panel-title"><ng-container *ngTemplateOutlet=uplinkLabel></ng-container></div>
-            <tb-toggle-select fxFlex appearance="fill" formControlName="converterType">
-              <tb-toggle-option [value]="'new'">{{ 'integration.new-converter' | translate }}</tb-toggle-option>
-              <tb-toggle-option [value]="'exist'">{{ 'integration.existing-converter' | translate }}</tb-toggle-option>
+            <tb-toggle-select *ngIf="(integrationInfo$ | async)?.uplink?.existing || (integrationInfo$ | async)?.uplink?.library" fxFlex appearance="fill" formControlName="converterType">
+              <tb-toggle-option [value]="ConverterSourceType.NEW">{{ 'integration.new-converter' | translate }}</tb-toggle-option>
+              <tb-toggle-option *ngIf="(integrationInfo$ | async)?.uplink?.existing" [value]="ConverterSourceType.EXISTING">{{ 'integration.existing-converter' | translate }}</tb-toggle-option>
+              <tb-toggle-option *ngIf="(integrationInfo$ | async)?.uplink?.library" [value]="ConverterSourceType.LIBRARY">{{ 'integration.library' | translate }}</tb-toggle-option>
             </tb-toggle-select>
           </div>
           <tb-converter-autocomplete fxFlex formControlName="uplinkConverterId" required
-                                     *ngIf="uplinkConverterForm.get('converterType').value === 'exist'"
+                                     *ngIf="uplinkConverterForm.get('converterType').value === ConverterSourceType.EXISTING"
                                      labelText="integration.uplink-converter"
                                      requiredText="integration.uplink-converter-required"
                                      [converterType]="converterType.UPLINK"
@@ -100,7 +101,7 @@
                                      [isEdgeTemplate]="isEdgeTemplate">
           </tb-converter-autocomplete>
           <tb-converter #uplinkDataConverter
-                        [fxShow]="uplinkConverterForm.get('converterType').value === 'new'"
+                        [fxShow]="uplinkConverterForm.get('converterType').value === ConverterSourceType.NEW"
                         hideType="true"
                         [integrationType]="integrationWizardForm.get('type').value"
                         [integrationName]="integrationWizardForm.get('name').value"
@@ -108,6 +109,11 @@
                         isEdit="true"
                         [entity]="uplinkConverter"
           ></tb-converter>
+          <tb-converter-library
+            formControlName="libraryUplinkConverter"
+            [fxShow]="uplinkConverterForm.get('converterType').value === ConverterSourceType.LIBRARY"
+            [integrationType]="integrationWizardForm.get('type').value"
+          />
         </div>
       </form>
     </mat-step>
@@ -115,22 +121,24 @@
       <form [formGroup]="downlinkConverterForm">
         <ng-template #downlinkLabel matStepLabel>{{ "integration.downlink-converter" | translate }}</ng-template>
         <div class="tb-form-panel" ngClass.gt-xs="stroked" ngClass.xs="no-padding no-border">
-          <div class="tb-form-row no-border no-padding column-xs">
-            <div fxFlex fxHide.xs class="tb-form-panel-title"><ng-container *ngTemplateOutlet=downlinkLabel></ng-container></div>
-            <tb-toggle-select fxFlex appearance="fill" formControlName="converterType">
-              <tb-toggle-option [value]="'new'">{{ 'integration.new-converter' | translate }}</tb-toggle-option>
-              <tb-toggle-option [value]="'exist'">{{ 'integration.existing-converter' | translate }}</tb-toggle-option>
+          <div class="tb-form-row no-border no-padding column-xs tb-flex space-between">
+            <div fxHide.xs class="tb-form-panel-title"><ng-container *ngTemplateOutlet=downlinkLabel></ng-container></div>
+            <tb-toggle-select *ngIf="integrationWizardForm.get('type').value" appearance="fill" formControlName="converterType">
+              <tb-toggle-option [value]="ConverterSourceType.NEW">{{ 'integration.new-converter' | translate }}</tb-toggle-option>
+              <tb-toggle-option [value]="ConverterSourceType.SKIP">{{ 'integration.skip' | translate }}</tb-toggle-option>
+              <tb-toggle-option *ngIf="(integrationInfo$ | async)?.downlink?.existing" [value]="ConverterSourceType.EXISTING">{{ 'integration.existing-converter' | translate }}</tb-toggle-option>
+              <tb-toggle-option *ngIf="(integrationInfo$ | async)?.downlink?.library" [value]="ConverterSourceType.LIBRARY">{{ 'integration.library' | translate }}</tb-toggle-option>
             </tb-toggle-select>
           </div>
           <tb-converter-autocomplete fxFlex formControlName="downlinkConverterId"
-                                     *ngIf="downlinkConverterForm.get('converterType').value === 'exist'"
+                                     *ngIf="downlinkConverterForm.get('converterType').value === ConverterSourceType.EXISTING"
                                      labelText="integration.downlink-converter"
                                      [converterType]="converterType.DOWNLINK"
                                      [useFullEntityId]="true"
                                      [isEdgeTemplate]="isEdgeTemplate">
           </tb-converter-autocomplete>
           <tb-converter #downlinkDataConverter
-                        [fxShow]="downlinkConverterForm.get('converterType').value === 'new'"
+                        [fxShow]="downlinkConverterForm.get('converterType').value === ConverterSourceType.NEW"
                         [integrationType]="integrationWizardForm.get('type').value"
                         [integrationName]="integrationWizardForm.get('name').value"
                         [convertorName]="createConvertorName(converterType.DOWNLINK)"
@@ -138,6 +146,12 @@
                         isEdit="true"
                         [entity]="downlinkConverter"
           ></tb-converter>
+          <tb-converter-library
+            formControlName="libraryDownlinkConverter"
+            [fxShow]="downlinkConverterForm.get('converterType').value === ConverterSourceType.LIBRARY"
+            [integrationType]="integrationWizardForm.get('type').value"
+            [converterType]="converterType.DOWNLINK"
+          />
         </div>
       </form>
     </mat-step>

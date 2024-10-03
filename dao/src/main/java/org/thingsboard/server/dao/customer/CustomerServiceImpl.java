@@ -47,6 +47,7 @@ import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.edge.Edge;
 import org.thingsboard.server.common.data.group.EntityGroup;
+import org.thingsboard.server.common.data.id.CustomMenuId;
 import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.EdgeId;
 import org.thingsboard.server.common.data.id.EntityGroupId;
@@ -214,8 +215,9 @@ public class CustomerServiceImpl extends AbstractCachedEntityService<CustomerCac
     private Customer saveCustomer(Customer customer, boolean doValidate) {
         log.trace("Executing saveCustomer [{}]", customer);
         String oldCustomerTitle = null;
+        Customer oldCustomer = null;
         if (doValidate) {
-            Customer oldCustomer = customerValidator.validate(customer, Customer::getTenantId);
+            oldCustomer = customerValidator.validate(customer, Customer::getTenantId);
             if (oldCustomer != null) {
                 oldCustomerTitle = oldCustomer.getTitle();
             }
@@ -252,7 +254,7 @@ public class CustomerServiceImpl extends AbstractCachedEntityService<CustomerCac
             }
             publishEvictEvent(evictEvent);
             eventPublisher.publishEvent(SaveEntityEvent.builder().tenantId(savedCustomer.getTenantId())
-                    .entityId(savedCustomer.getId()).created(customer.getId() == null).build());
+                    .entityId(savedCustomer.getId()).entity(savedCustomer).created(customer.getId() == null).oldEntity(oldCustomer).build());
             return savedCustomer;
         } catch (Exception e) {
             handleEvictEvent(evictEvent);
@@ -304,9 +306,9 @@ public class CustomerServiceImpl extends AbstractCachedEntityService<CustomerCac
         roleService.deleteRolesByTenantIdAndCustomerId(customer.getTenantId(), customerId);
         apiUsageStateService.deleteApiUsageStateByEntityId(customerId);
         customerDao.removeById(tenantId, customerId.getId());
+        publishEvictEvent(new CustomerCacheEvictEvent(customer.getTenantId(), customer.getTitle(), null));
         countService.publishCountEntityEvictEvent(tenantId, EntityType.CUSTOMER);
         eventPublisher.publishEvent(DeleteEntityEvent.builder().tenantId(tenantId).entityId(customerId).build());
-        publishEvictEvent(new CustomerCacheEvictEvent(customer.getTenantId(), customer.getTitle(), null));
     }
 
     @Transactional
@@ -463,6 +465,18 @@ public class CustomerServiceImpl extends AbstractCachedEntityService<CustomerCac
         validateId(customerId, id -> INCORRECT_CUSTOMER_ID + id);
         validatePageLink(pageLink);
         return customerInfoDao.findCustomersByTenantIdAndCustomerIdIncludingSubCustomers(tenantId.getId(), customerId.getId(), pageLink);
+    }
+
+    @Override
+    public List<Customer> findCustomersByCustomMenuId(CustomMenuId customMenuId) {
+        log.trace("Executing findCustomersByCustomMenuId, customMenuId [{}]", customMenuId);
+        return customerDao.findCustomersByCustomMenuId(customMenuId);
+    }
+
+    @Override
+    public void updateCustomersCustomMenuId(List<CustomerId> customerIds, CustomMenuId customMenuId) {
+        log.trace("Executing updateCustomersCustomMenuId, customMenuId [{}]", customMenuId);
+        customerDao.updateCustomersCustomMenuId(customerIds, customMenuId);
     }
 
     private final PaginatedRemover<TenantId, Customer> customersByTenantRemover =

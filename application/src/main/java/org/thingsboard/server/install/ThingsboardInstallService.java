@@ -152,6 +152,9 @@ public class ThingsboardInstallService {
                             entityDatabaseSchemaService.createCustomerTitleUniqueConstraintIfNotExists();
                             systemDataLoaderService.updateDefaultNotificationConfigs(false);
                             systemDataLoaderService.updateSecuritySettings();
+                        case "3.7.0":
+                            log.info("Upgrading ThingsBoard from version 3.7.0 to 3.8.0 ...");
+                            databaseEntitiesUpgradeService.upgradeDatabase("3.7.0");
                             break;
                         case "CE":
                             log.info("Upgrading ThingsBoard from version CE to PE ...");
@@ -174,6 +177,7 @@ public class ThingsboardInstallService {
                     if (installScripts.isUpdateImages()) {
                         installScripts.updateImages();
                     }
+                    systemDataLoaderService.createDefaultCustomMenu();
                     entityDatabaseSchemaService.generateClusterIdIfNotExist(); //Need for offline build
                 }
                 log.info("Upgrade finished successfully!");
@@ -213,6 +217,7 @@ public class ThingsboardInstallService {
                 systemDataLoaderService.createOAuth2Templates();
                 systemDataLoaderService.createQueues();
                 systemDataLoaderService.createDefaultNotificationConfigs();
+                systemDataLoaderService.createDefaultCustomMenu();
 
 //                systemDataLoaderService.loadSystemPlugins();
 //                systemDataLoaderService.loadSystemRules();

@@ -113,6 +113,7 @@ export class WidgetComponentService {
             widgetName: this.utils.editWidgetInfo.widgetName,
             fullFqn: 'system.customWidget',
             deprecated: false,
+            scada: false,
             type: this.utils.editWidgetInfo.type,
             sizeX: this.utils.editWidgetInfo.sizeX,
             sizeY: this.utils.editWidgetInfo.sizeY,
@@ -129,7 +130,7 @@ export class WidgetComponentService {
             hasBasicMode: this.utils.editWidgetInfo.hasBasicMode,
             basicModeDirective: this.utils.editWidgetInfo.basicModeDirective,
             defaultConfig: this.utils.editWidgetInfo.defaultConfig
-          }, new WidgetTypeId('1'), new TenantId( NULL_UUID ), undefined
+          }, new WidgetTypeId('1'), new TenantId( NULL_UUID ), undefined, undefined
         );
       }
       const initSubject = new ReplaySubject<void>();
@@ -400,9 +401,8 @@ export class WidgetComponentService {
               widgetInfo.templateHtml,
               resolvedModules.modules
             ).pipe(
-              map((componentData) => {
-                widgetInfo.componentType = componentData.componentType;
-                widgetInfo.componentModuleRef = componentData.componentModuleRef;
+              map((componentType) => {
+                widgetInfo.componentType = componentType;
                 return null;
               }),
               catchError(e => {
@@ -608,6 +608,9 @@ export class WidgetComponentService {
       }
       if (isUndefined(result.typeParameters.displayRpcMessageToast)) {
         result.typeParameters.displayRpcMessageToast = true;
+      }
+      if (isUndefined(result.typeParameters.targetDeviceOptional)) {
+        result.typeParameters.targetDeviceOptional = false;
       }
       if (isFunction(widgetTypeInstance.actionSources)) {
         result.actionSources = widgetTypeInstance.actionSources();

@@ -75,19 +75,19 @@ import org.thingsboard.server.common.data.query.EntityTypeFilter;
 import org.thingsboard.server.common.data.query.FilterPredicateValue;
 import org.thingsboard.server.common.data.query.KeyFilter;
 import org.thingsboard.server.common.data.query.NumericFilterPredicate;
+import org.thingsboard.server.common.data.query.RelationsQueryFilter;
 import org.thingsboard.server.common.data.query.SchedulerEventFilter;
 import org.thingsboard.server.common.data.query.StringFilterPredicate;
-import org.thingsboard.server.common.data.query.RelationsQueryFilter;
 import org.thingsboard.server.common.data.query.TsValue;
 import org.thingsboard.server.common.data.queue.QueueStats;
+import org.thingsboard.server.common.data.relation.EntityRelation;
+import org.thingsboard.server.common.data.relation.EntitySearchDirection;
+import org.thingsboard.server.common.data.relation.RelationEntityTypeFilter;
 import org.thingsboard.server.common.data.role.Role;
 import org.thingsboard.server.common.data.role.RoleType;
 import org.thingsboard.server.common.data.scheduler.MonthlyRepeat;
 import org.thingsboard.server.common.data.scheduler.SchedulerEvent;
 import org.thingsboard.server.common.data.scheduler.SchedulerRepeat;
-import org.thingsboard.server.common.data.relation.EntityRelation;
-import org.thingsboard.server.common.data.relation.EntitySearchDirection;
-import org.thingsboard.server.common.data.relation.RelationEntityTypeFilter;
 import org.thingsboard.server.common.data.security.Authority;
 import org.thingsboard.server.dao.queue.QueueStatsService;
 import org.thingsboard.server.dao.service.DaoSqlTest;
@@ -905,7 +905,7 @@ public class EntityQueryControllerTest extends AbstractControllerTest {
 
         Awaitility.await()
                 .alias("data by query")
-                .atMost(30, TimeUnit.SECONDS)
+                .atMost(TIMEOUT, TimeUnit.SECONDS)
                 .until(() -> {
                     var data = doPostWithTypedResponse("/api/entitiesQuery/find", query, new TypeReference<PageData<EntityData>>() {
                     });
@@ -1224,6 +1224,27 @@ public class EntityQueryControllerTest extends AbstractControllerTest {
         // all devices with owner type = CUSTOMER
         EntityDataQuery customerEntitiesQuery = new EntityDataQuery(filter, pageLink, entityFields, latestValues, List.of(activeAlarmTimeFilter, customerOwnerTypeFilter));
         checkEntitiesByQuery(customerEntitiesQuery, 0, null, null);
+    }
+
+    @Test
+    public void testCountByQueryWithUnsuitableEntityType() {
+        EntityTypeFilter entityTypeFilter = new EntityTypeFilter();
+        EntityCountQuery entityTypeQuery = new EntityCountQuery(entityTypeFilter);
+        long count = doPost("/api/entitiesQuery/count", entityTypeQuery, Long.class);
+        Assert.assertEquals(0, count);
+
+        entityTypeFilter.setEntityType(EntityType.NOTIFICATION);
+        count = doPost("/api/entitiesQuery/count", entityTypeQuery, Long.class);
+        Assert.assertEquals(0, count);
+
+        EntityGroupNameFilter groupNameFilter = new EntityGroupNameFilter();
+        EntityCountQuery groupNameQuery = new EntityCountQuery(groupNameFilter);
+        count = doPost("/api/entitiesQuery/count", groupNameQuery, Long.class);
+        Assert.assertEquals(0, count);
+
+        groupNameFilter.setGroupType(EntityType.ALARM);
+        count = doPost("/api/entitiesQuery/count", groupNameQuery, Long.class);
+        Assert.assertEquals(0, count);
     }
 
     private void clearCustomerAdminPermissionGroup() throws Exception {

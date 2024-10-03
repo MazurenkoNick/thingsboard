@@ -39,6 +39,7 @@ import com.google.common.util.concurrent.MoreExecutors;
 import com.google.gson.Gson;
 import com.google.protobuf.ByteString;
 import io.grpc.stub.StreamObserver;
+import jakarta.annotation.Nullable;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.thingsboard.common.util.JacksonUtil;
@@ -92,7 +93,6 @@ import org.thingsboard.server.gen.integration.UplinkResponseMsg;
 import org.thingsboard.server.gen.transport.TransportProtos;
 import org.thingsboard.server.service.integration.IntegrationContextComponent;
 
-import jakarta.annotation.Nullable;
 import java.io.Closeable;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -232,7 +232,7 @@ public final class IntegrationGrpcSession implements Closeable {
             if (msg.getDeviceDataCount() > 0) {
                 for (DeviceUplinkDataProto data : msg.getDeviceDataList()) {
                     ctx.getRateLimitService().checkLimit(configuration.getTenantId(), data::toString);
-                    ctx.getRateLimitService().checkLimit(configuration.getTenantId(), data.getDeviceName(), data::toString);
+                    ctx.getRateLimitService().checkLimitPerDevice(configuration.getTenantId(), data.getDeviceName(), data::toString);
 
                     final UUID sessionId = this.sessionId;
                     ctx.getPlatformIntegrationService().processUplinkData(configuration, sessionId, data, null);
@@ -242,6 +242,7 @@ public final class IntegrationGrpcSession implements Closeable {
             if (msg.getAssetDataCount() > 0) {
                 for (AssetUplinkDataProto data : msg.getAssetDataList()) {
                     ctx.getRateLimitService().checkLimit(configuration.getTenantId(), data::toString);
+                    ctx.getRateLimitService().checkLimitPerAsset(configuration.getTenantId(), data.getAssetName(), data::toString);
                     ctx.getPlatformIntegrationService().processUplinkData(configuration, data, null);
                 }
             }
@@ -353,17 +354,21 @@ public final class IntegrationGrpcSession implements Closeable {
 
     private void saveEvent(TenantId tenantId, EntityId entityId, TbEventProto proto) {
         try {
-            if (proto.getEvent() != null && !proto.getEvent().isEmpty()) {
+            if (!proto.getEvent().isEmpty()) {
                 Event event = JavaSerDesUtil.decode(proto.getEvent().toByteArray());
-                event.setTenantId(tenantId);
-                event.setEntityId(entityId.getId());
-                saveEvent(tenantId, entityId, event);
+                if (event != null) {
+                    event.setTenantId(tenantId);
+                    event.setEntityId(entityId.getId());
+                    saveEvent(tenantId, entityId, event);
+                } else {
+                    log.warn("[{}][{}] Failed to decode event. Remote integration [{}] version is not compatible with new event api", tenantId, configuration.getId(), configuration.getName());
+                }
             } else {
                 //TODO: support backward compatibility by parsing the incoming data and converting it to the corresponding event.
-                log.warn("[{}][{}] Remote integration [{}] version is not compatible with new event api", configuration.getTenantId(), configuration.getId(), configuration.getName());
+                log.warn("[{}][{}] Remote integration [{}] version is not compatible with new event api", tenantId, configuration.getId(), configuration.getName());
             }
         } catch (Exception e) {
-            log.warn("[{}] Failed to convert event body!", proto.getEvent(), e);
+            log.warn("[{}][{}] Failed to convert event body from remote integration [{}]!", tenantId, configuration.getId(), configuration.getName(), e);
         }
     }
 

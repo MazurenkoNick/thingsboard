@@ -38,12 +38,15 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.ConstraintViolation;
 import lombok.Getter;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.hibernate.exception.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -88,8 +91,10 @@ import org.thingsboard.server.common.data.audit.ActionType;
 import org.thingsboard.server.common.data.blob.BlobEntity;
 import org.thingsboard.server.common.data.blob.BlobEntityWithCustomerInfo;
 import org.thingsboard.server.common.data.converter.Converter;
+import org.thingsboard.server.common.data.domain.Domain;
 import org.thingsboard.server.common.data.edge.Edge;
 import org.thingsboard.server.common.data.edge.EdgeInfo;
+import org.thingsboard.server.common.data.exception.EntityVersionMismatchException;
 import org.thingsboard.server.common.data.exception.ThingsboardErrorCode;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.group.EntityGroup;
@@ -100,10 +105,12 @@ import org.thingsboard.server.common.data.id.AssetId;
 import org.thingsboard.server.common.data.id.AssetProfileId;
 import org.thingsboard.server.common.data.id.BlobEntityId;
 import org.thingsboard.server.common.data.id.ConverterId;
+import org.thingsboard.server.common.data.id.CustomMenuId;
 import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.DashboardId;
 import org.thingsboard.server.common.data.id.DeviceId;
 import org.thingsboard.server.common.data.id.DeviceProfileId;
+import org.thingsboard.server.common.data.id.DomainId;
 import org.thingsboard.server.common.data.id.EdgeId;
 import org.thingsboard.server.common.data.id.EntityGroupId;
 import org.thingsboard.server.common.data.id.EntityId;
@@ -112,6 +119,8 @@ import org.thingsboard.server.common.data.id.EntityViewId;
 import org.thingsboard.server.common.data.id.GroupPermissionId;
 import org.thingsboard.server.common.data.id.HasId;
 import org.thingsboard.server.common.data.id.IntegrationId;
+import org.thingsboard.server.common.data.id.MobileAppId;
+import org.thingsboard.server.common.data.id.OAuth2ClientId;
 import org.thingsboard.server.common.data.id.OtaPackageId;
 import org.thingsboard.server.common.data.id.QueueId;
 import org.thingsboard.server.common.data.id.RoleId;
@@ -127,6 +136,10 @@ import org.thingsboard.server.common.data.id.UserId;
 import org.thingsboard.server.common.data.id.WidgetTypeId;
 import org.thingsboard.server.common.data.id.WidgetsBundleId;
 import org.thingsboard.server.common.data.integration.Integration;
+import org.thingsboard.server.common.data.menu.CustomMenu;
+import org.thingsboard.server.common.data.menu.CustomMenuInfo;
+import org.thingsboard.server.common.data.mobile.MobileApp;
+import org.thingsboard.server.common.data.oauth2.OAuth2Client;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.page.SortOrder;
@@ -169,6 +182,7 @@ import org.thingsboard.server.dao.device.ClaimDevicesService;
 import org.thingsboard.server.dao.device.DeviceCredentialsService;
 import org.thingsboard.server.dao.device.DeviceProfileService;
 import org.thingsboard.server.dao.device.DeviceService;
+import org.thingsboard.server.dao.domain.DomainService;
 import org.thingsboard.server.dao.edge.EdgeService;
 import org.thingsboard.server.dao.entity.EntityService;
 import org.thingsboard.server.dao.entityview.EntityViewService;
@@ -176,9 +190,11 @@ import org.thingsboard.server.dao.exception.IncorrectParameterException;
 import org.thingsboard.server.dao.group.EntityGroupService;
 import org.thingsboard.server.dao.grouppermission.GroupPermissionService;
 import org.thingsboard.server.dao.integration.IntegrationService;
+import org.thingsboard.server.dao.menu.CustomMenuService;
+import org.thingsboard.server.dao.mobile.MobileAppService;
 import org.thingsboard.server.dao.model.ModelConstants;
+import org.thingsboard.server.dao.oauth2.OAuth2ClientService;
 import org.thingsboard.server.dao.oauth2.OAuth2ConfigTemplateService;
-import org.thingsboard.server.dao.oauth2.OAuth2Service;
 import org.thingsboard.server.dao.ota.DeviceGroupOtaPackageService;
 import org.thingsboard.server.dao.ota.OtaPackageService;
 import org.thingsboard.server.dao.queue.QueueService;
@@ -224,6 +240,7 @@ import org.thingsboard.server.service.telemetry.AlarmSubscriptionService;
 import org.thingsboard.server.service.telemetry.TelemetrySubscriptionService;
 
 import java.io.IOException;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -250,7 +267,7 @@ import static org.thingsboard.server.dao.service.Validator.validateId;
 @TbCoreComponent
 public abstract class BaseController {
 
-    private final Logger log = org.slf4j.LoggerFactory.getLogger(getClass());
+    protected final Logger log = org.slf4j.LoggerFactory.getLogger(getClass());
 
     /*Swagger UI description*/
 
@@ -312,7 +329,13 @@ public abstract class BaseController {
     protected DashboardService dashboardService;
 
     @Autowired
-    protected OAuth2Service oAuth2Service;
+    protected OAuth2ClientService oAuth2ClientService;
+
+    @Autowired
+    protected DomainService domainService;
+
+    @Autowired
+    protected MobileAppService mobileAppService;
 
     @Autowired
     protected OAuth2ConfigTemplateService oAuth2ConfigTemplateService;
@@ -434,6 +457,9 @@ public abstract class BaseController {
     @Autowired
     protected ExportableEntitiesService entitiesService;
 
+    @Autowired
+    protected CustomMenuService customMenuService;
+
     @Value("${server.log_controller_error_stack_trace}")
     @Getter
     private boolean logControllerErrorStackTrace;
@@ -482,22 +508,23 @@ public abstract class BaseController {
             exception = exception.getCause();
         }
         if (logException && logControllerErrorStackTrace) {
-            if (exception instanceof SubscriptionException) {
-                log.error("Error [{}]", exception.getMessage());
-            } else {
-                log.error("Error [{}]", exception.getMessage(), exception);
+            try {
+                SecurityUser user = getCurrentUser();
+                if (exception instanceof SubscriptionException) {
+                    log.error("[{}][{}] Error [{}]", user.getTenantId(), user.getId(), exception.getMessage());
+                } else {
+                    log.error("[{}][{}] Error", user.getTenantId(), user.getId(), exception);
+                }
+            } catch (Exception e) {
+                log.error("Error", exception);
             }
         }
 
-        String cause = "";
-        if (exception.getCause() != null) {
-            cause = exception.getCause().getClass().getCanonicalName();
-        }
-
+        Throwable cause = exception.getCause();
         if (exception instanceof ThingsboardException) {
             return (ThingsboardException) exception;
         } else if (exception instanceof IllegalArgumentException || exception instanceof IncorrectParameterException
-                || exception instanceof DataValidationException || cause.contains("IncorrectParameterException")) {
+                || exception instanceof DataValidationException || cause instanceof IncorrectParameterException) {
             return new ThingsboardException(exception.getMessage(), ThingsboardErrorCode.BAD_REQUEST_PARAMS);
         } else if (exception instanceof MessagingException) {
             return new ThingsboardException("Unable to send mail: " + exception.getMessage(), ThingsboardErrorCode.GENERAL);
@@ -506,11 +533,16 @@ public abstract class BaseController {
         } else if (exception instanceof AsyncRequestTimeoutException) {
             return new ThingsboardException("Request timeout", ThingsboardErrorCode.GENERAL);
         } else if (exception instanceof DataAccessException) {
-            String errorType = exception.getClass().getSimpleName();
             if (!logControllerErrorStackTrace) { // not to log the error twice
-                log.warn("Database error: {} - {}", errorType, ExceptionUtils.getRootCauseMessage(exception));
+                log.warn("Database error: {} - {}", exception.getClass().getSimpleName(), ExceptionUtils.getRootCauseMessage(exception));
             }
-            return new ThingsboardException("Database error", ThingsboardErrorCode.GENERAL);
+            if (cause instanceof ConstraintViolationException) {
+                return new ThingsboardException(ExceptionUtils.getRootCause(exception).getMessage(), ThingsboardErrorCode.BAD_REQUEST_PARAMS);
+            } else {
+                return new ThingsboardException("Database error", ThingsboardErrorCode.GENERAL);
+            }
+        } else if (exception instanceof EntityVersionMismatchException) {
+            return new ThingsboardException(exception.getMessage(), exception, ThingsboardErrorCode.VERSION_CONFLICT);
         }
         return new ThingsboardException(exception.getMessage(), exception, ThingsboardErrorCode.GENERAL);
     }
@@ -716,6 +748,22 @@ public abstract class BaseController {
         return checkEntityId(customerId, customerService::findCustomerInfoById, operation);
     }
 
+    CustomMenu checkCustomMenuId(CustomMenuId customMenuId, Operation operation) throws ThingsboardException {
+        SecurityUser currentUser = getCurrentUser();
+        CustomMenu customMenu = customMenuService.findCustomMenuById(currentUser.getTenantId(), customMenuId);
+        checkNotNull(customMenu, "Custom menu not found");
+        accessControlService.checkCustomMenuPermission(currentUser, operation, customMenu);
+        return customMenu;
+    }
+
+    CustomMenuInfo checkCustomMenuInfoId(CustomMenuId customMenuId, Operation operation) throws ThingsboardException {
+        SecurityUser currentUser = getCurrentUser();
+        CustomMenuInfo customMenuInfo = customMenuService.findCustomMenuInfoById(currentUser.getTenantId(), customMenuId);
+        checkNotNull(customMenuInfo, "Custom menu not found");
+        accessControlService.checkCustomMenuPermission(currentUser, operation, customMenuInfo);
+        return customMenuInfo;
+    }
+
     User checkUserId(UserId userId, Operation operation) throws ThingsboardException {
         try {
             validateId(userId, id -> "Incorrect userId " + id);
@@ -917,6 +965,15 @@ public abstract class BaseController {
                     return;
                 case QUEUE:
                     checkQueueId(new QueueId(entityId.getId()), operation);
+                    return;
+                case OAUTH2_CLIENT:
+                    checkOauth2ClientId(new OAuth2ClientId(entityId.getId()), operation);
+                    return;
+                case DOMAIN:
+                    checkDomainId(new DomainId(entityId.getId()), operation);
+                    return;
+                case MOBILE_APP:
+                    checkMobileAppId(new MobileAppId(entityId.getId()), operation);
                     return;
                 default:
                     checkEntityId(entityId, entitiesService::findEntityByTenantIdAndId, operation);
@@ -1157,6 +1214,18 @@ public abstract class BaseController {
         return queue;
     }
 
+    OAuth2Client checkOauth2ClientId(OAuth2ClientId oAuth2ClientId, Operation operation) throws ThingsboardException {
+        return checkEntityId(oAuth2ClientId, oAuth2ClientService::findOAuth2ClientById, operation);
+    }
+
+    Domain checkDomainId(DomainId domainId, Operation operation) throws ThingsboardException {
+        return checkEntityId(domainId, domainService::findDomainById, operation);
+    }
+
+    MobileApp checkMobileAppId(MobileAppId mobileAppId, Operation operation) throws ThingsboardException {
+        return checkEntityId(mobileAppId, mobileAppService::findMobileAppById, operation);
+    }
+
     protected <I extends EntityId> I emptyId(EntityType entityType) {
         return (I) EntityIdFactory.getByTypeAndUuid(entityType, ModelConstants.NULL_UUID);
     }
@@ -1324,6 +1393,36 @@ public abstract class BaseController {
                 outputStream.flush();
             }
         }
+    }
+
+    protected <T> ResponseEntity<T> response(HttpStatus status) {
+        return ResponseEntity.status(status).build();
+    }
+
+    protected <T> ResponseEntity<T> redirectTo(String location) {
+        URI uri;
+        try {
+            uri = URI.create(location);
+        } catch (IllegalArgumentException e) {
+            log.error("Failed to create URI from '{}'", location, e);
+            throw e;
+        }
+        return ResponseEntity.status(HttpStatus.SEE_OTHER)
+                .location(uri)
+                .build();
+    }
+
+    protected List<OAuth2ClientId> getOAuth2ClientIds(UUID[] ids) throws ThingsboardException {
+        if (ids == null) {
+            return Collections.emptyList();
+        }
+        List<OAuth2ClientId> oAuth2ClientIds = new ArrayList<>();
+        for (UUID id : ids) {
+            OAuth2ClientId oauth2ClientId = new OAuth2ClientId(id);
+            checkOauth2ClientId(oauth2ClientId, Operation.READ);
+            oAuth2ClientIds.add(oauth2ClientId);
+        }
+        return oAuth2ClientIds;
     }
 
 }

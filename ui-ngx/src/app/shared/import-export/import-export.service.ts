@@ -35,7 +35,7 @@ import { TranslateService } from '@ngx-translate/core';
 import { select, Store } from '@ngrx/store';
 import { AppState } from '@core/core.state';
 import { ActionNotificationShow } from '@core/notification/notification.actions';
-import { Dashboard, DashboardLayoutId } from '@shared/models/dashboard.models';
+import { BreakpointId, Dashboard, DashboardLayoutId } from '@shared/models/dashboard.models';
 import { deepClone, guid, isDefined, isNotEmptyStr, isNumber, isObject, isString, isUndefined } from '@core/utils';
 import { WINDOW } from '@core/services/window.service';
 import { DOCUMENT } from '@angular/common';
@@ -73,13 +73,13 @@ import { EntityType } from '@shared/models/entity-type.models';
 import { UtilsService } from '@core/services/utils.service';
 import { WidgetService } from '@core/http/widget.service';
 import { WidgetsBundle } from '@shared/models/widgets-bundle.model';
-import { ImportEntitiesResultInfo, ImportEntityData } from '@shared/models/entity.models';
+import { EntityInfoData, ImportEntitiesResultInfo, ImportEntityData } from '@shared/models/entity.models';
 import { RequestConfig } from '@core/http/http-utils';
 import { RuleChain, RuleChainImport, RuleChainMetaData, RuleChainType } from '@shared/models/rule-chain.models';
 import { RuleChainService } from '@core/http/rule-chain.service';
 import { CustomerId } from '@shared/models/id/customer-id';
 import { ConverterService } from '@core/http/converter.service';
-import { Converter, ConverterType } from '@shared/models/converter.models';
+import { Converter, ConverterConfig, ConverterType } from '@shared/models/converter.models';
 import { FiltersInfo } from '@shared/models/query/query.models';
 import { DeviceProfileService } from '@core/http/device-profile.service';
 import { DeviceProfile } from '@shared/models/device.models';
@@ -104,6 +104,7 @@ import { ExportableEntity } from '@shared/models/base-data';
 import { EntityId } from '@shared/models/id/entity-id';
 import { Borders, Column, Workbook } from 'exceljs';
 import * as moment_ from 'moment';
+import { Customer } from '@shared/models/customer.model';
 
 export type editMissingAliasesFunction = (widgets: Array<Widget>, isSingleWidget: boolean,
                                           customTitle: string, missingEntityAliases: EntityAliases) => Observable<EntityAliases>;
@@ -226,8 +227,9 @@ export class ImportExportService {
     );
   }
 
-  public exportWidget(dashboard: Dashboard, sourceState: string, sourceLayout: DashboardLayoutId, widget: Widget, widgetTitle: string) {
-    const widgetItem = this.itembuffer.prepareWidgetItem(dashboard, sourceState, sourceLayout, widget);
+  public exportWidget(dashboard: Dashboard, sourceState: string, sourceLayout: DashboardLayoutId, widget: Widget,
+                      widgetTitle: string, breakpoint: BreakpointId) {
+    const widgetItem = this.itembuffer.prepareWidgetItem(dashboard, sourceState, sourceLayout, widget, breakpoint);
     const widgetDefaultName = this.widgetService.getWidgetInfoFromCache(widget.typeFullFqn).widgetName;
     let fileName = widgetDefaultName + (isNotEmptyStr(widgetTitle) ? `_${widgetTitle}` : '');
     fileName = fileName.toLowerCase().replace(/\W/g, '_');
@@ -379,33 +381,87 @@ export class ImportExportService {
 
     forkJoin(tasks).subscribe({
       next: ({includeBundleWidgetsInExport, widgetsBundle}) => {
-        this.dialog.open<ExportWidgetsBundleDialogComponent, ExportWidgetsBundleDialogData,
-          ExportWidgetsBundleDialogResult>(ExportWidgetsBundleDialogComponent, {
-          disableClose: true,
-          panelClass: ['tb-dialog', 'tb-fullscreen-dialog'],
-          data: {
-            widgetsBundle,
-            includeBundleWidgetsInExport
-          }
-        }).afterClosed().subscribe(
-          (result) => {
-            if (result) {
-              if (includeBundleWidgetsInExport !== result.exportWidgets) {
-                this.store.dispatch(new ActionPreferencesPutUserSettings({includeBundleWidgetsInExport: result.exportWidgets}));
-              }
-              if (result.exportWidgets) {
-                this.exportWidgetsBundleWithWidgetTypes(widgetsBundle);
-              } else {
-                this.exportWidgetsBundleWithWidgetTypeFqns(widgetsBundle);
-              }
-            }
-          }
-        );
+        this.handleExportWidgetsBundle(widgetsBundle, includeBundleWidgetsInExport);
       },
       error: (e) => {
         this.handleExportError(e, 'widgets-bundle.export-failed-error');
       }
     });
+  }
+
+  public exportEntity(entityData: EntityInfoData | RuleChainMetaData): void {
+    const id = (entityData as EntityInfoData).id ?? (entityData as RuleChainMetaData).ruleChainId;
+    let fileName = (entityData as EntityInfoData).name;
+    let preparedData;
+    switch (id.entityType) {
+      case EntityType.DEVICE_PROFILE:
+      case EntityType.ASSET_PROFILE:
+        preparedData = this.prepareProfileExport(entityData as DeviceProfile | AssetProfile);
+        break;
+      case EntityType.RULE_CHAIN:
+        forkJoin([this.ruleChainService.getRuleChainMetadata(id.id), this.ruleChainService.getRuleChain(id.id)])
+          .pipe(
+            take(1),
+            map(([ruleChainMetaData, ruleChain]) => {
+              const ruleChainExport: RuleChainImport = {
+                ruleChain: this.prepareRuleChain(ruleChain),
+                metadata: this.prepareRuleChainMetaData(ruleChainMetaData)
+              };
+              return ruleChainExport;
+            }))
+          .subscribe(this.onRuleChainExported());
+        return;
+      case EntityType.WIDGETS_BUNDLE:
+        this.exportSelectedWidgetsBundle(entityData as WidgetsBundle);
+        return;
+      case EntityType.DASHBOARD:
+        preparedData = this.prepareDashboardExport(entityData as Dashboard);
+        break;
+      case EntityType.CUSTOMER:
+        fileName = (entityData as Customer).title;
+        preparedData = this.prepareExport(entityData);
+        break;
+      default:
+        preparedData = this.prepareExport(entityData);
+    }
+    this.exportToPc(preparedData, fileName);
+  }
+
+  private exportSelectedWidgetsBundle(widgetsBundle: WidgetsBundle): void {
+    this.store.pipe(select(selectUserSettingsProperty( 'includeBundleWidgetsInExport'))).pipe(take(1)).subscribe({
+      next: (includeBundleWidgetsInExport) => {
+        this.handleExportWidgetsBundle(widgetsBundle, includeBundleWidgetsInExport, true);
+      },
+      error: (e) => {
+        this.handleExportError(e, 'widgets-bundle.export-failed-error');
+      }
+    });
+  }
+
+  private handleExportWidgetsBundle(widgetsBundle: WidgetsBundle, includeBundleWidgetsInExport: boolean, ignoreLoading?: boolean): void {
+    this.dialog.open<ExportWidgetsBundleDialogComponent, ExportWidgetsBundleDialogData,
+      ExportWidgetsBundleDialogResult>(ExportWidgetsBundleDialogComponent, {
+      disableClose: true,
+      panelClass: ['tb-dialog', 'tb-fullscreen-dialog'],
+      data: {
+        widgetsBundle,
+        includeBundleWidgetsInExport,
+        ignoreLoading
+      }
+    }).afterClosed().subscribe(
+      (result) => {
+        if (result) {
+          if (includeBundleWidgetsInExport !== result.exportWidgets) {
+            this.store.dispatch(new ActionPreferencesPutUserSettings({includeBundleWidgetsInExport: result.exportWidgets}));
+          }
+          if (result.exportWidgets) {
+            this.exportWidgetsBundleWithWidgetTypes(widgetsBundle);
+          } else {
+            this.exportWidgetsBundleWithWidgetTypeFqns(widgetsBundle);
+          }
+        }
+      }
+    );
   }
 
   private exportWidgetsBundleWithWidgetTypes(widgetsBundle: WidgetsBundle) {
@@ -565,8 +621,12 @@ export class ImportExportService {
           return ruleChainExport;
         })
       ))
-    ).subscribe({
-      next: (ruleChainExport) => {
+    ).subscribe(this.onRuleChainExported());
+  }
+
+  private onRuleChainExported() {
+    return {
+      next: (ruleChainExport: RuleChainImport) => {
         let name = ruleChainExport.ruleChain.name;
         name = name.toLowerCase().replace(/\W/g, '_');
         this.exportToPc(ruleChainExport, name);
@@ -574,7 +634,7 @@ export class ImportExportService {
       error: (e) => {
         this.handleExportError(e, 'rulechain.export-failed-error');
       }
-    });
+    };
   }
 
   public importRuleChain(expectedRuleChainType: RuleChainType): Observable<RuleChainImport> {
@@ -649,7 +709,7 @@ export class ImportExportService {
     this.converterService.getConverter(converterId).subscribe({
       next: (converter) => {
         if (!converter.configuration) {
-          converter.configuration = {};
+          converter.configuration = {} as ConverterConfig;
         }
         let name = converter.name;
         name = name.toLowerCase().replace(/\W/g, '_');
@@ -1212,6 +1272,9 @@ export class ImportExportService {
     }
     if (isDefined(exportedData.externalId)) {
       delete exportedData.externalId;
+    }
+    if (isDefined(exportedData.version)) {
+      delete exportedData.version;
     }
     return exportedData;
   }

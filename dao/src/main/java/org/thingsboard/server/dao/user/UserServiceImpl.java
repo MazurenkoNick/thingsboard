@@ -32,6 +32,9 @@ package org.thingsboard.server.dao.user;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.BooleanNode;
+import com.fasterxml.jackson.databind.node.IntNode;
+import com.fasterxml.jackson.databind.node.LongNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.util.concurrent.ListenableFuture;
 import lombok.RequiredArgsConstructor;
@@ -51,6 +54,7 @@ import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.User;
 import org.thingsboard.server.common.data.UserInfo;
 import org.thingsboard.server.common.data.audit.ActionType;
+import org.thingsboard.server.common.data.id.CustomMenuId;
 import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.EntityGroupId;
 import org.thingsboard.server.common.data.id.EntityId;
@@ -78,6 +82,7 @@ import org.thingsboard.server.dao.eventsourcing.SaveEntityEvent;
 import org.thingsboard.server.dao.exception.IncorrectParameterException;
 import org.thingsboard.server.dao.service.DataValidator;
 import org.thingsboard.server.dao.service.PaginatedRemover;
+import org.thingsboard.server.dao.settings.SecuritySettingsService;
 import org.thingsboard.server.dao.sql.JpaExecutorService;
 import org.thingsboard.server.exception.DataValidationException;
 
@@ -88,6 +93,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 import static org.thingsboard.server.common.data.StringUtils.generateSafeToken;
 import static org.thingsboard.server.dao.DaoUtil.toUUIDs;
@@ -123,6 +129,7 @@ public class UserServiceImpl extends AbstractCachedEntityService<UserCacheKey, U
     private final UserAuthSettingsDao userAuthSettingsDao;
     private final UserSettingsService userSettingsService;
     private final UserSettingsDao userSettingsDao;
+    private final SecuritySettingsService securitySettingsService;
     private final DataValidator<User> userValidator;
     private final DataValidator<UserCredentials> userCredentialsValidator;
     private final ApplicationEventPublisher eventPublisher;
@@ -206,14 +213,23 @@ public class UserServiceImpl extends AbstractCachedEntityService<UserCacheKey, U
         } else {
             throw new DataValidationException("Invalid target owner id. Must be either CUSTOMER or TENANT!");
         }
-        return userDao.save(user.getTenantId(), user);
+        return saveUser(user.getTenantId(), user, false); // not validating because validator forbids authority change
     }
 
     @Override
     @Transactional
     public User saveUser(TenantId tenantId, User user) {
+        return saveUser(tenantId, user, true);
+    }
+
+    private User saveUser(TenantId tenantId, User user, boolean validate) {
         log.trace("Executing saveUser [{}]", user);
-        User oldUser = userValidator.validate(user, User::getTenantId);
+        User oldUser;
+        if (validate) {
+            oldUser = userValidator.validate(user, User::getTenantId);
+        } else {
+            oldUser = findUserById(tenantId, user.getId());
+        }
         if (!userLoginCaseSensitive) {
             user.setEmail(user.getEmail().toLowerCase());
         }
@@ -226,9 +242,9 @@ public class UserServiceImpl extends AbstractCachedEntityService<UserCacheKey, U
                 countService.publishCountEntityEvictEvent(savedUser.getTenantId(), EntityType.USER);
                 UserCredentials userCredentials = new UserCredentials();
                 userCredentials.setEnabled(false);
-                userCredentials.setActivateToken(generateSafeToken(DEFAULT_TOKEN_LENGTH));
                 userCredentials.setUserId(new UserId(savedUser.getUuidId()));
                 userCredentials.setAdditionalInfo(JacksonUtil.newObjectNode());
+                userCredentials = generateUserActivationToken(userCredentials);
                 userCredentialsDao.save(user.getTenantId(), userCredentials);
                 if (!user.getTenantId().isNullUid()) {
                     entityGroupService.addEntityToEntityGroupAll(user.getTenantId(), savedUser.getOwnerId(), savedUser.getId());
@@ -293,8 +309,12 @@ public class UserServiceImpl extends AbstractCachedEntityService<UserCacheKey, U
         if (userCredentials.isEnabled()) {
             throw new IncorrectParameterException("User credentials already activated");
         }
+        if (userCredentials.isActivationTokenExpired()) {
+            throw new IncorrectParameterException("Activation token expired");
+        }
         userCredentials.setEnabled(true);
         userCredentials.setActivateToken(null);
+        userCredentials.setActivateTokenExpTime(null);
         userCredentials.setPassword(password);
         if (userCredentials.getPassword() != null) {
             updatePasswordHistory(userCredentials);
@@ -314,7 +334,7 @@ public class UserServiceImpl extends AbstractCachedEntityService<UserCacheKey, U
         if (!userCredentials.isEnabled()) {
             throw new DisabledException(String.format("User credentials not enabled [%s]", email));
         }
-        userCredentials.setResetToken(generateSafeToken(DEFAULT_TOKEN_LENGTH));
+        userCredentials = generatePasswordResetToken(userCredentials);
         return saveUserCredentials(tenantId, userCredentials);
     }
 
@@ -324,8 +344,24 @@ public class UserServiceImpl extends AbstractCachedEntityService<UserCacheKey, U
         if (!userCredentials.isEnabled()) {
             throw new IncorrectParameterException("Unable to reset password for inactive user");
         }
-        userCredentials.setResetToken(generateSafeToken(DEFAULT_TOKEN_LENGTH));
+        userCredentials = generatePasswordResetToken(userCredentials);
         return saveUserCredentials(tenantId, userCredentials);
+    }
+
+    @Override
+    public UserCredentials generatePasswordResetToken(UserCredentials userCredentials) {
+        userCredentials.setResetToken(generateSafeToken(DEFAULT_TOKEN_LENGTH));
+        int ttlHours = securitySettingsService.getSecuritySettings().getPasswordResetTokenTtl();
+        userCredentials.setResetTokenExpTime(System.currentTimeMillis() + TimeUnit.HOURS.toMillis(ttlHours));
+        return userCredentials;
+    }
+
+    @Override
+    public UserCredentials generateUserActivationToken(UserCredentials userCredentials) {
+        userCredentials.setActivateToken(generateSafeToken(DEFAULT_TOKEN_LENGTH));
+        int ttlHours = securitySettingsService.getSecuritySettings().getUserActivationTokenTtl();
+        userCredentials.setActivateTokenExpTime(System.currentTimeMillis() + TimeUnit.HOURS.toMillis(ttlHours));
+        return userCredentials;
     }
 
     @Override
@@ -521,16 +557,11 @@ public class UserServiceImpl extends AbstractCachedEntityService<UserCacheKey, U
         saveUserCredentials(tenantId, userCredentials);
 
         User user = findUserById(tenantId, userId);
-        JsonNode additionalInfo = user.getAdditionalInfo();
-        if (!(additionalInfo instanceof ObjectNode)) {
-            additionalInfo = JacksonUtil.newObjectNode();
-        }
-        ((ObjectNode) additionalInfo).put(USER_CREDENTIALS_ENABLED, enabled);
-        user.setAdditionalInfo(additionalInfo);
+        user.setAdditionalInfoField(USER_CREDENTIALS_ENABLED, BooleanNode.valueOf(enabled));
         if (enabled) {
             resetFailedLoginAttempts(user);
         }
-        userDao.save(user.getTenantId(), user);
+        saveUser(tenantId, user);
     }
 
 
@@ -543,23 +574,13 @@ public class UserServiceImpl extends AbstractCachedEntityService<UserCacheKey, U
     }
 
     private void resetFailedLoginAttempts(User user) {
-        JsonNode additionalInfo = user.getAdditionalInfo();
-        if (!(additionalInfo instanceof ObjectNode)) {
-            additionalInfo = JacksonUtil.newObjectNode();
-        }
-        ((ObjectNode) additionalInfo).put(FAILED_LOGIN_ATTEMPTS, 0);
-        user.setAdditionalInfo(additionalInfo);
+        user.setAdditionalInfoField(FAILED_LOGIN_ATTEMPTS, IntNode.valueOf(0));
     }
 
     @Override
     public void setLastLoginTs(TenantId tenantId, UserId userId) {
         User user = findUserById(tenantId, userId);
-        JsonNode additionalInfo = user.getAdditionalInfo();
-        if (!(additionalInfo instanceof ObjectNode)) {
-            additionalInfo = JacksonUtil.newObjectNode();
-        }
-        ((ObjectNode) additionalInfo).put(LAST_LOGIN_TS, System.currentTimeMillis());
-        user.setAdditionalInfo(additionalInfo);
+        user.setAdditionalInfoField(LAST_LOGIN_TS, new LongNode(System.currentTimeMillis()));
         saveUser(tenantId, user);
     }
 
@@ -627,6 +648,18 @@ public class UserServiceImpl extends AbstractCachedEntityService<UserCacheKey, U
         }
     }
 
+    @Override
+    public List<User> findUsersByCustomMenuId(CustomMenuId customMenuId) {
+        log.trace("Executing findUsersByCustomMenuId, customMenuId [{}]", customMenuId);
+        return userDao.findUsersByCustomMenuId(customMenuId);
+    }
+
+    @Override
+    public void updateUsersCustomMenuId(List<UserId> userIds, CustomMenuId customMenuId) {
+        log.trace("Executing updateUsersCustomMenuId, customMenuId [{}]", customMenuId);
+        userDao.updateUsersCustomMenuId(userIds, customMenuId);
+    }
+
     private Optional<UserMobileInfo> findMobileInfo(TenantId tenantId, UserId userId) {
         return Optional.ofNullable(userSettingsService.findUserSettings(tenantId, userId, UserSettingsType.MOBILE))
                 .map(UserSettings::getSettings).map(settings -> JacksonUtil.treeToValue(settings, UserMobileInfo.class));
@@ -642,17 +675,9 @@ public class UserServiceImpl extends AbstractCachedEntityService<UserCacheKey, U
     }
 
     private int increaseFailedLoginAttempts(User user) {
-        JsonNode additionalInfo = user.getAdditionalInfo();
-        if (!(additionalInfo instanceof ObjectNode)) {
-            additionalInfo = JacksonUtil.newObjectNode();
-        }
-        int failedLoginAttempts = 0;
-        if (additionalInfo.has(FAILED_LOGIN_ATTEMPTS)) {
-            failedLoginAttempts = additionalInfo.get(FAILED_LOGIN_ATTEMPTS).asInt();
-        }
-        failedLoginAttempts = failedLoginAttempts + 1;
-        ((ObjectNode) additionalInfo).put(FAILED_LOGIN_ATTEMPTS, failedLoginAttempts);
-        user.setAdditionalInfo(additionalInfo);
+        int failedLoginAttempts = user.getAdditionalInfoField(FAILED_LOGIN_ATTEMPTS, JsonNode::asInt, 0);
+        failedLoginAttempts++;
+        user.setAdditionalInfoField(FAILED_LOGIN_ATTEMPTS, new IntNode(failedLoginAttempts));
         return failedLoginAttempts;
     }
 

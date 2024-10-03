@@ -165,14 +165,31 @@ public class SqlDatabaseUpgradeService implements DatabaseEntitiesUpgradeService
             case "3.6.4":
                 updateSchema("3.6.4", 3006004, "3.7.0", 3007000, null);
                 break;
+            case "3.7.0":
+                updateSchema("3.7.0", 3007000, "3.8.0", 3008000, connection -> {
+                    try {
+                        connection.createStatement().execute("UPDATE rule_node SET " +
+                                "configuration = CASE " +
+                                "  WHEN (configuration::jsonb ->> 'persistAlarmRulesState') = 'false'" +
+                                "  THEN (configuration::jsonb || '{\"fetchAlarmRulesStateOnStart\": \"false\"}'::jsonb)::varchar " +
+                                "  ELSE configuration " +
+                                "END, " +
+                                "configuration_version = 1 " +
+                                "WHERE type = 'org.thingsboard.rule.engine.profile.TbDeviceProfileNode' " +
+                                "AND configuration_version < 1;");
+                    } catch (Exception e) {
+                        log.warn("Failed to execute update script for device profile rule nodes due to: ", e);
+                    }
+                });
+                break;
             case "ce":
                 log.info("Updating schema ...");
                 Path schemaUpdateFile = Paths.get(installScripts.getDataDir(), "upgrade", "pe", SCHEMA_UPDATE_SQL);
                 try (Connection conn = DriverManager.getConnection(dbUrl, dbUserName, dbPassword)) {
                     try {
-                        String[] entityNames = new String[]{"device"};
+                        String[] entityNames = new String[]{"device", "converter", "integration", "scheduler_event", "blob_entity", "role"};
                         for (String entityName : entityNames) {
-                            conn.createStatement().execute("ALTER TABLE " + entityName + " DROP COLUMN search_text CASCADE");
+                            conn.createStatement().execute("ALTER TABLE " + entityName + " DROP COLUMN IF EXISTS search_text CASCADE");
                         }
                     } catch (Exception e) {}
                     try {
@@ -221,11 +238,11 @@ public class SqlDatabaseUpgradeService implements DatabaseEntitiesUpgradeService
                     } catch (Exception e) {
                     }
                     try {
-                        conn.createStatement().execute("ALTER TABLE oauth2_registration ADD COLUMN basic_parent_customer_name_pattern varchar(255)"); //NOSONAR, ignoring because method used to execute thingsboard database upgrade script
+                        conn.createStatement().execute("ALTER TABLE oauth2_client ADD COLUMN basic_parent_customer_name_pattern varchar(255)"); //NOSONAR, ignoring because method used to execute thingsboard database upgrade script
                     } catch (Exception e) {
                     }
                     try {
-                        conn.createStatement().execute("ALTER TABLE oauth2_registration ADD COLUMN basic_user_groups_name_pattern varchar(1024)"); //NOSONAR, ignoring because method used to execute thingsboard database upgrade script
+                        conn.createStatement().execute("ALTER TABLE oauth2_client ADD COLUMN basic_user_groups_name_pattern varchar(1024)"); //NOSONAR, ignoring because method used to execute thingsboard database upgrade script
                     } catch (Exception e) {
                     }
                     try {
@@ -250,6 +267,16 @@ public class SqlDatabaseUpgradeService implements DatabaseEntitiesUpgradeService
                     try {
                         conn.createStatement().execute("ALTER TABLE edge ADD COLUMN cloud_endpoint varchar(255) DEFAULT 'PUT_YOUR_CLOUD_ENDPOINT_HERE';"); //NOSONAR, ignoring because method used to execute thingsboard database upgrade script
                     } catch (Exception ignored) {}
+                    try {
+                        conn.createStatement().execute("ALTER TABLE converter ADD CONSTRAINT converter_external_id_unq_key UNIQUE (tenant_id, external_id)");
+                    } catch (Exception ignored) {}
+                    try {
+                        conn.createStatement().execute("ALTER TABLE integration ADD CONSTRAINT integration_external_id_unq_key UNIQUE (tenant_id, external_id)");
+                    } catch (Exception ignored) {}
+                    try {
+                        conn.createStatement().execute("ALTER TABLE role ADD CONSTRAINT role_external_id_unq_key UNIQUE (tenant_id, external_id)");
+                    } catch (Exception ignored) {}
+
                     integrationRepository.findAll().forEach(integration -> {
                         if (integration.getType().equals(IntegrationType.LORIOT)) {
                             ObjectNode credentials = (ObjectNode) integration.getConfiguration().get("credentials");
@@ -364,4 +391,5 @@ public class SqlDatabaseUpgradeService implements DatabaseEntitiesUpgradeService
         }
         return isOldSchema;
     }
+
 }

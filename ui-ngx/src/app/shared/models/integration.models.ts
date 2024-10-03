@@ -74,6 +74,18 @@ export enum CoapSecurityMode {
   MIXED = 'MIXED',
 }
 
+export type IntegrationsConvertersInfo = Record<IntegrationType, IntegrationConvertersInfo>;
+
+export interface IntegrationConvertersInfo {
+  uplink: ConverterInfo,
+  downlink: ConverterInfo,
+}
+
+export interface ConverterInfo {
+  library: boolean;
+  existing: boolean;
+}
+
 export const coapSecurityModeTranslationsMap = new Map<CoapSecurityMode, string>(
   [
     [CoapSecurityMode.NO_SECURE, 'integration.coap-security-mode-no-secure'],
