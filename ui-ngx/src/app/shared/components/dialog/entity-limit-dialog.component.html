@@ -31,9 +31,9 @@
 
 -->
 <div class="tb-entity-limit-dialog" style="width: 800px;">
-  <mat-toolbar fxLayout="row" color="primary">
+  <mat-toolbar class="flex flex-row" color="primary">
     <h2 translate>subscription-error.title</h2>
-    <span fxFlex></span>
+    <span class="flex-1"></span>
     <button mat-icon-button
             (click)="close()"
             type="button">
@@ -48,7 +48,7 @@
       <img [src]="limitReachedSvg" style="height: 180px;"/>
     </div>
     <p class="tb-entity-limit-content">{{ errorContent }}<br>{{'subscription.entity-limit-text' | translate}}</p>
-    <div fxLayout="row" fxLayoutAlign="center center">
+    <div class="flex flex-row items-center justify-center">
       <button mat-raised-button color="warn"
               type="button"
               [disabled]="(isLoading$ | async)" (click)="upgrade()">
@@ -57,8 +57,8 @@
       </button>
     </div>
   </div>
-  <div mat-dialog-actions fxLayout="row">
-    <span fxFlex></span>
+  <div mat-dialog-actions class="flex flex-row">
+    <span class="flex-1"></span>
     <button mat-button
             type="button"
             [disabled]="(isLoading$ | async)"

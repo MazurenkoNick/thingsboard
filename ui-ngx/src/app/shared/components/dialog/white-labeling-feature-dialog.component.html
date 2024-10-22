@@ -31,9 +31,9 @@
 
 -->
 <div class="tb-white-labeling-feature-dialog">
-  <mat-toolbar fxLayout="row" color="primary">
+  <mat-toolbar class="flex flex-row" color="primary">
     <h2 translate>subscription.white-labeling-feature</h2>
-    <span fxFlex></span>
+    <span class="flex-1"></span>
     <button mat-icon-button
             (click)="close()"
             type="button">
@@ -48,7 +48,7 @@
       <img [src]="whiteLabelingSvg" style="height: 120px;"/>
     </div>
     <p class="tb-white-labeling-feature-content enable" style="margin-bottom: 10px;">{{'subscription.enable-white-labeling' | translate}}</p>
-    <div fxLayout="row" fxLayoutAlign="center center" style="margin-bottom: 16px;">
+    <div class="flex flex-row items-center justify-center" style="margin-bottom: 16px;">
       <button mat-raised-button color="warn"
               type="button"
               [disabled]="(isLoading$ | async)" (click)="upgrade()">
@@ -56,10 +56,10 @@
         <span>{{ 'subscription.upgrade-your-plan' | translate }}</span>
       </button>
     </div>
-    <div class="tb-white-labeling-feature-content" fxLayout="row">
-      <div fxFlex fxLayout="column">
+    <div class="tb-white-labeling-feature-content flex flex-row">
+      <div class="flex flex-1 flex-col">
         <div [innerHTML]="'subscription.white-labeling-text-full' | translate" style="margin-bottom: 10px;"></div>
-        <div fxLayout="row" fxLayoutAlign="center center">
+        <div class="flex flex-row items-center justify-center">
           <button mat-raised-button color="primary"
                   type="button"
                   [disabled]="(isLoading$ | async)" (click)="gotoWhiteLabelingDoc()">
@@ -69,7 +69,7 @@
       </div>
     </div>
     <p class="tb-white-labeling-feature-content" [innerHTML]="'subscription.white-labeling-video-text' | translate" style="margin-bottom: 10px;"></p>
-    <div fxLayout="row" fxLayoutAlign="center center" style="padding-bottom: 10px;">
+    <div class="flex flex-row items-center justify-center" style="padding-bottom: 10px;">
       <div class="video">
         <div class="video-wrapper">
           <iframe src="https://www.youtube.com/embed/4dkbVASJ1JU" frameborder="0" allowfullscreen></iframe>
@@ -77,8 +77,8 @@
       </div>
     </div>
   </div>
-  <div mat-dialog-actions fxLayout="row">
-    <span fxFlex></span>
+  <div mat-dialog-actions class="flex flex-row">
+    <span class="flex-1"></span>
     <button mat-button
             type="button"
             [disabled]="(isLoading$ | async)"
