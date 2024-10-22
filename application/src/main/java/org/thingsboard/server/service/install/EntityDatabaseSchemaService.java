@@ -38,6 +38,8 @@ public interface EntityDatabaseSchemaService extends DatabaseSchemaService {
 
     void createCustomerTitleUniqueConstraintIfNotExists();
 
+    void createSchemaVersion();
+
     void generateClusterIdIfNotExist();
 
 }

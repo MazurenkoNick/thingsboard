@@ -29,14 +29,28 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { browser, by, element } from 'protractor';
+import { Observable } from 'rxjs/internal/Observable';
+import { from, of } from 'rxjs';
+import { map, tap } from 'rxjs/operators';
+import { Type } from '@angular/core';
 
-export class AppPage {
-  navigateTo() {
-    return browser.get(browser.baseUrl) as Promise<any>;
-  }
+let flexLayoutModule: any;
 
-  getTitleText() {
-    return element(by.css('tb-root h1')).getText() as Promise<string>;
+export function getFlexLayout(): Observable<any> {
+  if (flexLayoutModule) {
+    return of(flexLayoutModule);
+  } else {
+    return from(import('@angular/flex-layout')).pipe(
+      tap((module) => {
+        module.DEFAULT_CONFIG.addFlexToParent = false;
+        flexLayoutModule = module;
+      })
+    );
   }
+}
+
+export function getFlexLayoutModule(): Observable<Type<any>> {
+  return getFlexLayout().pipe(
+    map(module => module.FlexLayoutModule)
+  );
 }

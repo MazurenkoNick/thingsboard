@@ -35,10 +35,6 @@ import * as AngularAnimations from '@angular/animations';
 import * as AngularCore from '@angular/core';
 import * as AngularCommon from '@angular/common';
 import * as AngularForms from '@angular/forms';
-import * as AngularFlexLayout from '@angular/flex-layout';
-import * as AngularFlexLayoutFlex from '@angular/flex-layout/flex';
-import * as AngularFlexLayoutGrid from '@angular/flex-layout/grid';
-import * as AngularFlexLayoutExtended from '@angular/flex-layout/extended';
 import * as AngularPlatformBrowser from '@angular/platform-browser';
 import * as AngularPlatformBrowserAnimations from '@angular/platform-browser/animations';
 import * as AngularRouter from '@angular/router';
@@ -93,7 +89,7 @@ import * as RxJs from 'rxjs';
 import * as RxJsOperators from 'rxjs/operators';
 import * as TranslateCore from '@ngx-translate/core';
 import * as MatDateTimePicker from '@mat-datetimepicker/core';
-import * as _moment from 'moment';
+import _moment from 'moment';
 import * as tslib from 'tslib';
 
 import * as TbCore from '@core/public-api';
@@ -395,8 +391,8 @@ import { IModulesMap } from '@modules/common/modules-map.models';
 import { TimezoneComponent } from '@shared/components/time/timezone.component';
 import { TimezonePanelComponent } from '@shared/components/time/timezone-panel.component';
 import { DatapointsLimitComponent } from '@shared/components/time/datapoints-limit.component';
-
-declare const System;
+import { Observable, map, of } from 'rxjs';
+import { getFlexLayout } from '@shared/legacy/flex-layout.models';
 
 class ModulesMap implements IModulesMap {
 
@@ -408,10 +404,10 @@ class ModulesMap implements IModulesMap {
     '@angular/common': AngularCommon,
     '@angular/common/http': HttpClientModule,
     '@angular/forms': AngularForms,
-    '@angular/flex-layout': AngularFlexLayout,
-    '@angular/flex-layout/flex': AngularFlexLayoutFlex,
-    '@angular/flex-layout/grid': AngularFlexLayoutGrid,
-    '@angular/flex-layout/extended': AngularFlexLayoutExtended,
+    '@angular/flex-layout': {},
+    '@angular/flex-layout/flex': {},
+    '@angular/flex-layout/grid': {},
+    '@angular/flex-layout/extended': {},
     '@angular/platform-browser': AngularPlatformBrowser,
     '@angular/platform-browser/animations': AngularPlatformBrowserAnimations,
     '@angular/router': AngularRouter,
@@ -770,30 +766,40 @@ class ModulesMap implements IModulesMap {
     '@home/components/queue/queue-form.component': QueueFormComponent
   };
 
-  init() {
+  init(): Observable<any> {
     if (!this.initialized) {
-      System.constructor.prototype.resolve = (id) => {
-        try {
-          if (this.modulesMap[id]) {
-            return 'app:' + id;
-          } else {
-            return id;
+      return getFlexLayout().pipe(
+        map((flexLayout) => {
+          this.modulesMap['@angular/flex-layout'] = flexLayout;
+          this.modulesMap['@angular/flex-layout/flex'] = flexLayout;
+          this.modulesMap['@angular/flex-layout/grid'] = flexLayout;
+          this.modulesMap['@angular/flex-layout/extended'] = flexLayout;
+          System.constructor.prototype.resolve = (id: string) => {
+            try {
+              if (this.modulesMap[id]) {
+                return 'app:' + id;
+              } else {
+                return id;
+              }
+            } catch (err) {
+              return id;
+            }
+          };
+          for (const moduleId of Object.keys(this.modulesMap)) {
+            System.set('app:' + moduleId, this.modulesMap[moduleId]);
           }
-        } catch (err) {
-          return id;
-        }
-      };
-      for (const moduleId of Object.keys(this.modulesMap)) {
-        System.set('app:' + moduleId, this.modulesMap[moduleId]);
-      }
-      System.constructor.prototype.shouldFetch = (url: string) => url.endsWith('/download');
-      System.constructor.prototype.fetch = (url, options: RequestInit & {meta?: any}) => {
-        if (options?.meta?.additionalHeaders) {
-          options.headers = { ...options.headers, ...options.meta.additionalHeaders };
-        }
-        return fetch(url, options);
-      };
-      this.initialized = true;
+          System.constructor.prototype.shouldFetch = (url: string) => url.endsWith('/download');
+          System.constructor.prototype.fetch = (url: string, options: RequestInit & {meta?: any}) => {
+            if (options?.meta?.additionalHeaders) {
+              options.headers = { ...options.headers, ...options.meta.additionalHeaders };
+            }
+            return fetch(url, options);
+          };
+          this.initialized = true;
+        })
+      );
+    } else {
+      return of(null);
     }
   }
 }
