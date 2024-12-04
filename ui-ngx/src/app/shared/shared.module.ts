@@ -188,6 +188,7 @@ import { MAT_DATE_LOCALE } from '@angular/material/core';
 import { CopyButtonComponent } from '@shared/components/button/copy-button.component';
 import { TogglePasswordComponent } from '@shared/components/button/toggle-password.component';
 import { UnsupportedSolutionTemplateLevelDialogComponent } from '@shared/components/dialog/unsupported-solution-template-level-dialog.component';
+import { WidgetButtonToggleComponent } from '@shared/components/button/widget-button-toggle.component';
 import { HelpPopupComponent } from '@shared/components/help-popup.component';
 import { TbPopoverComponent, TbPopoverDirective } from '@shared/components/popover.component';
 import { TbStringTemplateOutletDirective } from '@shared/components/directives/sring-template-outlet.directive';
@@ -230,7 +231,7 @@ import { ImagePipe } from '@shared/pipe/image.pipe';
 import { ImportExportService } from '@shared/import-export/import-export.service';
 import { ImportDialogComponent } from '@shared/import-export/import-dialog.component';
 import { ImportDialogCsvComponent } from '@shared/import-export/import-dialog-csv.component';
-import { ExportWidgetsBundleDialogComponent } from '@shared/import-export/export-widgets-bundle-dialog.component';
+import { ExportResourceDialogComponent } from '@shared/import-export/export-resource-dialog.component';
 import { TableColumnsAssignmentComponent } from '@shared/import-export/table-columns-assignment.component';
 import { ScrollGridComponent } from '@shared/components/grid/scroll-grid.component';
 import { ImageGalleryComponent } from '@shared/components/image/image-gallery.component';
@@ -255,6 +256,12 @@ import { CountryData } from '@shared/models/country.models';
 import { SvgXmlComponent } from '@shared/components/svg-xml.component';
 import { CustomMenuAutocompleteComponent } from '@shared/components/custom-menu-autocomplete.component';
 import { DatapointsLimitComponent } from '@shared/components/time/datapoints-limit.component';
+import { AggregationTypeSelectComponent } from '@shared/components/time/aggregation/aggregation-type-select.component';
+import { AggregationOptionsConfigPanelComponent } from '@shared/components/time/aggregation/aggregation-options-config-panel.component';
+import { IntervalOptionsConfigPanelComponent } from '@shared/components/time/interval-options-config-panel.component';
+import { GroupingIntervalOptionsComponent } from '@shared/components/time/aggregation/grouping-interval-options.component';
+import { JsFuncModulesComponent } from '@shared/components/js-func-modules.component';
+import { JsFuncModuleRowComponent } from '@shared/components/js-func-module-row.component';
 
 export function MarkedOptionsFactory(markedOptionsService: MarkedOptionsService) {
   return markedOptionsService;
@@ -344,10 +351,14 @@ export function MarkedOptionsFactory(markedOptionsService: MarkedOptionsService)
     TimewindowPanelComponent,
     TimewindowConfigDialogComponent,
     TimeintervalComponent,
+    GroupingIntervalOptionsComponent,
     TimezoneComponent,
     TimezonePanelComponent,
     QuickTimeIntervalComponent,
     DatapointsLimitComponent,
+    AggregationTypeSelectComponent,
+    AggregationOptionsConfigPanelComponent,
+    IntervalOptionsConfigPanelComponent,
     DashboardSelectComponent,
     DashboardSelectPanelComponent,
     DatetimePeriodComponent,
@@ -380,6 +391,8 @@ export function MarkedOptionsFactory(markedOptionsService: MarkedOptionsService)
     JsonObjectViewComponent,
     JsonContentComponent,
     JsFuncComponent,
+    JsFuncModulesComponent,
+    JsFuncModuleRowComponent,
     CssComponent,
     HtmlComponent,
     SvgXmlComponent,
@@ -441,6 +454,7 @@ export function MarkedOptionsFactory(markedOptionsService: MarkedOptionsService)
     WidgetsBundleSearchComponent,
     CopyButtonComponent,
     TogglePasswordComponent,
+    WidgetButtonToggleComponent,
     ProtobufContentComponent,
     UnsupportedSolutionTemplateLevelDialogComponent,
     BranchAutocompleteComponent,
@@ -467,7 +481,7 @@ export function MarkedOptionsFactory(markedOptionsService: MarkedOptionsService)
     HintTooltipIconComponent,
     ImportDialogComponent,
     ImportDialogCsvComponent,
-    ExportWidgetsBundleDialogComponent,
+    ExportResourceDialogComponent,
     TableColumnsAssignmentComponent,
     ScrollGridComponent,
     ImageGalleryComponent,
@@ -573,10 +587,14 @@ export function MarkedOptionsFactory(markedOptionsService: MarkedOptionsService)
     TimewindowPanelComponent,
     TimewindowConfigDialogComponent,
     TimeintervalComponent,
+    GroupingIntervalOptionsComponent,
     TimezoneComponent,
     TimezonePanelComponent,
     QuickTimeIntervalComponent,
     DatapointsLimitComponent,
+    AggregationTypeSelectComponent,
+    AggregationOptionsConfigPanelComponent,
+    IntervalOptionsConfigPanelComponent,
     DashboardSelectComponent,
     DatetimePeriodComponent,
     DatetimeComponent,
@@ -607,6 +625,8 @@ export function MarkedOptionsFactory(markedOptionsService: MarkedOptionsService)
     JsonObjectViewComponent,
     JsonContentComponent,
     JsFuncComponent,
+    JsFuncModulesComponent,
+    JsFuncModuleRowComponent,
     CssComponent,
     HtmlComponent,
     SvgXmlComponent,
@@ -721,6 +741,7 @@ export function MarkedOptionsFactory(markedOptionsService: MarkedOptionsService)
     WidgetsBundleSearchComponent,
     CopyButtonComponent,
     TogglePasswordComponent,
+    WidgetButtonToggleComponent,
     ProtobufContentComponent,
     BranchAutocompleteComponent,
     CountryAutocompleteComponent,
@@ -746,7 +767,7 @@ export function MarkedOptionsFactory(markedOptionsService: MarkedOptionsService)
     HintTooltipIconComponent,
     ImportDialogComponent,
     ImportDialogCsvComponent,
-    ExportWidgetsBundleDialogComponent,
+    ExportResourceDialogComponent,
     TableColumnsAssignmentComponent,
     ScrollGridComponent,
     ImageGalleryComponent,
