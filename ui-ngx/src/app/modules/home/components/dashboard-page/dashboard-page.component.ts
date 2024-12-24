@@ -960,7 +960,7 @@ export class DashboardPageComponent extends PageComponent implements IDashboardC
 
   public exportDashboard($event: Event) {
     if ($event) {
-      $event.stopPropagation();
+      $event.preventDefault();
     }
     this.importExport.exportDashboard(this.currentDashboardId);
   }

@@ -30,10 +30,17 @@
     OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 
 -->
-<div class="flex flex-full flex-row items-center justify-end" *ngIf="(resource.NOTIFICATION | hasGenericPermission: operation.WRITE)">
-  <button mat-stroked-button color="primary" (click)="createTarget($event)">
-    <div class="flex flex-row items-center justify-start">
-      <mat-icon>add</mat-icon>{{ 'notification.add-recipients' | translate }}
-    </div>
-  </button>
-</div>
+<button mat-stroked-button
+        class="tb-rounded-btn w-36 flex-1"
+        color="primary"
+        #matButton
+        [class.active]="((isDebugAllActive$ | async) || failuresEnabled) && !disabled"
+        [disabled]="disabled"
+        (click)="openDebugStrategyPanel($event, matButton)">
+  <mat-icon [color]="debugSettingsFormGroup.disabled ? 'inherit' : 'primary'">bug_report</mat-icon>
+  @if (isDebugAllActive$ | async) {
+    {{ (allEnabled$ | async) === false ? (allEnabledUntil | durationLeft) : (maxDebugModeDuration | milliSecondsToTimeString: true : true) }}
+  } @else {
+    {{ (failuresEnabled ? 'debug-settings.failures' : 'common.disabled') | translate }}
+  }
+</button>
