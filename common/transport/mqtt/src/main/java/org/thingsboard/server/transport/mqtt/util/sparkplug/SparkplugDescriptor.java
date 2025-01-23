@@ -28,3 +28,14 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
+package org.thingsboard.server.transport.mqtt.util.sparkplug;
+
+public interface SparkplugDescriptor {
+
+    /**
+     * Returns the String representation of this {@link SparkplugDescriptor}
+     *
+     * @return the String representation of this {@link SparkplugDescriptor}
+     */
+    public String getDescriptorString();
+}
