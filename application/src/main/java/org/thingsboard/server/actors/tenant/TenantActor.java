@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2024 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -41,6 +41,8 @@ import org.thingsboard.server.actors.TbActorNotRegisteredException;
 import org.thingsboard.server.actors.TbActorRef;
 import org.thingsboard.server.actors.TbEntityActorId;
 import org.thingsboard.server.actors.TbEntityTypeActorIdPredicate;
+import org.thingsboard.server.actors.TbStringActorId;
+import org.thingsboard.server.actors.calculatedField.CalculatedFieldManagerActorCreator;
 import org.thingsboard.server.actors.device.DeviceActorCreator;
 import org.thingsboard.server.actors.ruleChain.RuleChainManagerActor;
 import org.thingsboard.server.actors.service.ContextBasedCreator;
@@ -59,6 +61,7 @@ import org.thingsboard.server.common.msg.MsgType;
 import org.thingsboard.server.common.msg.TbActorMsg;
 import org.thingsboard.server.common.msg.TbActorStopReason;
 import org.thingsboard.server.common.msg.TbMsg;
+import org.thingsboard.server.common.msg.ToCalculatedFieldSystemMsg;
 import org.thingsboard.server.common.msg.aware.DeviceAwareMsg;
 import org.thingsboard.server.common.msg.aware.RuleChainAwareMsg;
 import org.thingsboard.server.common.msg.plugin.ComponentLifecycleMsg;
@@ -79,8 +82,8 @@ public class TenantActor extends RuleChainManagerActor {
     private boolean isRuleEngine;
     private boolean isCore;
     private ApiUsageState apiUsageState;
-
     private Set<DeviceId> deletedDevices;
+    private TbActorRef cfActor;
 
     private TenantActor(ActorSystemContext systemContext, TenantId tenantId) {
         super(systemContext, tenantId);
@@ -104,6 +107,15 @@ public class TenantActor extends RuleChainManagerActor {
                 if (isRuleEngine) {
                     if (systemContext.getPartitionService().isManagedByCurrentService(tenantId)) {
                         try {
+                            //TODO: IM - extend API usage to have CF Exec Enabled? Not in 4.0;
+                            cfActor = ctx.getOrCreateChildActor(new TbStringActorId("CFM|" + tenantId),
+                                    () -> DefaultActorService.CF_MANAGER_DISPATCHER_NAME,
+                                    () -> new CalculatedFieldManagerActorCreator(systemContext, tenantId),
+                                    () -> true);
+                        } catch (Exception e) {
+                            log.info("[{}] Failed to init CF Actor.", tenantId, e);
+                        }
+                        try {
                             if (getApiUsageState().isReExecEnabled()) {
                                 log.debug("[{}] Going to init rule chains", tenantId);
                                 initRuleChains();
@@ -115,7 +127,7 @@ public class TenantActor extends RuleChainManagerActor {
                             cantFindTenant = true;
                         }
                     } else {
-                        log.info("Tenant {} is not managed by current service, skipping rule chains init", tenantId);
+                        log.info("Tenant {} is not managed by current service, skipping rule chains and cf actor init", tenantId);
                     }
                 }
                 log.debug("[{}] Tenant actor started.", tenantId);
@@ -176,10 +188,33 @@ public class TenantActor extends RuleChainManagerActor {
             case RULE_CHAIN_TO_RULE_CHAIN_MSG:
                 onRuleChainMsg((RuleChainAwareMsg) msg);
                 break;
+            case CF_INIT_MSG:
+            case CF_LINK_INIT_MSG:
+            case CF_STATE_RESTORE_MSG:
+            case CF_PARTITIONS_CHANGE_MSG:
+            case CF_ENTITY_LIFECYCLE_MSG:
+                onToCalculatedFieldSystemActorMsg((ToCalculatedFieldSystemMsg) msg, true);
+                break;
+            case CF_TELEMETRY_MSG:
+            case CF_LINKED_TELEMETRY_MSG:
+                onToCalculatedFieldSystemActorMsg((ToCalculatedFieldSystemMsg) msg, false);
+                break;
             default:
                 return false;
         }
         return true;
+    }
+
+    private void onToCalculatedFieldSystemActorMsg(ToCalculatedFieldSystemMsg msg, boolean priority) {
+        if (cfActor == null) {
+            log.warn("[{}] CF Actor is not initialized.", tenantId);
+            return;
+        }
+        if (priority) {
+            cfActor.tellWithHighPriority(msg);
+        } else {
+            cfActor.tell(msg);
+        }
     }
 
     private boolean isMyPartition(EntityId entityId) {
@@ -241,11 +276,25 @@ public class TenantActor extends RuleChainManagerActor {
         ServiceType serviceType = msg.getServiceType();
         if (ServiceType.TB_RULE_ENGINE.equals(serviceType)) {
             if (systemContext.getPartitionService().isManagedByCurrentService(tenantId)) {
+                if (cfActor == null) {
+                    try {
+                        //TODO: IM - extend API usage to have CF Exec Enabled? Not in 4.0;
+                        cfActor = ctx.getOrCreateChildActor(new TbStringActorId("CFM|" + tenantId),
+                                () -> DefaultActorService.CF_MANAGER_DISPATCHER_NAME,
+                                () -> new CalculatedFieldManagerActorCreator(systemContext, tenantId),
+                                () -> true);
+                    } catch (Exception e) {
+                        log.info("[{}] Failed to init CF Actor.", tenantId, e);
+                    }
+                }
                 if (!ruleChainsInitialized) {
                     log.info("Tenant {} is now managed by this service, initializing rule chains", tenantId);
                     initRuleChains();
                 }
             } else {
+                if (cfActor != null) {
+                    ctx.stop(cfActor.getActorId());
+                }
                 if (ruleChainsInitialized) {
                     log.info("Tenant {} is no longer managed by this service, stopping rule chains", tenantId);
                     destroyRuleChains();

@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2024 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -64,7 +64,7 @@ public class DeviceActorMessageProcessorTest {
     public void setUp() {
         systemContext = mock(ActorSystemContext.class);
         deviceService = mock(DeviceService.class);
-        willReturn((long)MAX_CONCURRENT_SESSIONS_PER_DEVICE).given(systemContext).getMaxConcurrentSessionsPerDevice();
+        willReturn(MAX_CONCURRENT_SESSIONS_PER_DEVICE).given(systemContext).getMaxConcurrentSessionsPerDevice();
         willReturn(deviceService).given(systemContext).getDeviceService();
         processor = new DeviceActorMessageProcessor(systemContext, tenantId, deviceId);
         willReturn(mock(TbCoreToTransportService.class)).given(systemContext).getTbCoreToTransportService();
@@ -73,7 +73,7 @@ public class DeviceActorMessageProcessorTest {
     @Test
     public void givenSystemContext_whenNewInstance_thenVerifySessionMapMaxSize() {
         assertThat(processor.sessions, instanceOf(LinkedHashMapRemoveEldest.class));
-        assertThat(processor.sessions.getMaxEntries(), is((long)MAX_CONCURRENT_SESSIONS_PER_DEVICE));
+        assertThat(processor.sessions.getMaxEntries(), is(MAX_CONCURRENT_SESSIONS_PER_DEVICE));
         assertThat(processor.sessions.getRemovalConsumer(), notNullValue());
     }
 

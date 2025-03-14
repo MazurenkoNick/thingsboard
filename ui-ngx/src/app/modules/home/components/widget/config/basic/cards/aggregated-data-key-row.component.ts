@@ -1,7 +1,7 @@
 ///
 /// ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
 ///
-/// Copyright © 2016-2024 ThingsBoard, Inc. All Rights Reserved.
+/// Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
 ///
 /// NOTICE: All information contained herein is, and remains
 /// the property of ThingsBoard, Inc. and its suppliers,
@@ -50,7 +50,6 @@ import {
   DataKey,
   DataKeyConfigMode,
   DatasourceType,
-  JsonSettingsSchema,
   Widget,
   widgetType
 } from '@shared/models/widget.models';
@@ -61,7 +60,7 @@ import { TruncatePipe } from '@shared/pipe/truncate.pipe';
 import {
   DataKeyConfigDialogComponent,
   DataKeyConfigDialogData
-} from '@home/components/widget/config/data-key-config-dialog.component';
+} from '@home/components/widget/lib/settings/common/key/data-key-config-dialog.component';
 import { deepClone, formatValue } from '@core/utils';
 import {
   AggregatedValueCardKeyPosition,
@@ -69,12 +68,13 @@ import {
   AggregatedValueCardKeySettings
 } from '@home/components/widget/lib/cards/aggregated-value-card.models';
 import { WidgetConfigCallbacks } from '@home/components/widget/config/widget-config.component.models';
+import { FormProperty } from '@shared/models/dynamic-form.models';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'tb-aggregated-data-key-row',
   templateUrl: './aggregated-data-key-row.component.html',
-  styleUrls: ['./aggregated-data-key-row.component.scss', '../../data-keys.component.scss'],
+  styleUrls: ['./aggregated-data-key-row.component.scss', '../../../lib/settings/common/key/data-keys.component.scss'],
   providers: [
     {
       provide: NG_VALUE_ACCESSOR,
@@ -126,8 +126,8 @@ export class AggregatedDataKeyRowComponent implements ControlValueAccessor, OnIn
     return this.widgetConfigComponent.widget;
   }
 
-  get latestDataKeySettingsSchema(): JsonSettingsSchema {
-    return this.widgetConfigComponent.modelValue?.latestDataKeySettingsSchema;
+  get latestDataKeySettingsForm(): FormProperty[] {
+    return this.widgetConfigComponent.modelValue?.latestDataKeySettingsForm;
   }
 
   get latestDataKeySettingsDirective(): string {
@@ -225,7 +225,7 @@ export class AggregatedDataKeyRowComponent implements ControlValueAccessor, OnIn
         data: {
           dataKey: deepClone(this.modelValue),
           dataKeyConfigMode: DataKeyConfigMode.general,
-          dataKeySettingsSchema: this.latestDataKeySettingsSchema,
+          dataKeySettingsForm: this.latestDataKeySettingsForm,
           dataKeySettingsDirective: this.latestDataKeySettingsDirective,
           dashboard: null,
           aliasController: null,

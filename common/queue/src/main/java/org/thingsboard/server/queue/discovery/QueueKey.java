@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2024 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -37,6 +37,9 @@ import org.thingsboard.server.common.data.DataConstants;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.queue.Queue;
 import org.thingsboard.server.common.msg.queue.ServiceType;
+
+import static org.thingsboard.server.common.data.DataConstants.CF_QUEUE_NAME;
+import static org.thingsboard.server.common.data.DataConstants.CF_STATES_QUEUE_NAME;
 
 @Data
 @AllArgsConstructor
