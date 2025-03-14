@@ -1,7 +1,7 @@
 ///
 /// ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
 ///
-/// Copyright © 2016-2024 ThingsBoard, Inc. All Rights Reserved.
+/// Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
 ///
 /// NOTICE: All information contained herein is, and remains
 /// the property of ThingsBoard, Inc. and its suppliers,
@@ -141,7 +141,6 @@ import { TbJsonPipe } from '@shared/pipe/tbJson.pipe';
 import { ColorPickerDialogComponent } from '@shared/components/dialog/color-picker-dialog.component';
 import { ColorInputComponent } from '@shared/components/color-input.component';
 import { JsFuncComponent } from '@shared/components/js-func.component';
-import { JsonFormComponent } from '@shared/components/json-form/json-form.component';
 import { ConfirmDialogComponent } from '@shared/components/dialog/confirm-dialog.component';
 import { AlertDialogComponent } from '@shared/components/dialog/alert-dialog.component';
 import { ErrorAlertDialogComponent } from '@shared/components/dialog/error-alert-dialog.component';
@@ -226,6 +225,7 @@ import { MaterialIconsComponent } from '@shared/components/material-icons.compon
 import { ColorPickerPanelComponent } from '@shared/components/color-picker/color-picker-panel.component';
 import { TbIconComponent } from '@shared/components/icon.component';
 import { HintTooltipIconComponent } from '@shared/components/hint-tooltip-icon.component';
+import { StringPatternAutocompleteComponent } from '@shared/components/string-pattern-autocomplete.component';
 import { StringAutocompleteComponent } from '@shared/components/string-autocomplete.component';
 import { ImagePipe } from '@shared/pipe/image.pipe';
 import { ImportExportService } from '@shared/import-export/import-export.service';
@@ -238,7 +238,7 @@ import { ImageGalleryComponent } from '@shared/components/image/image-gallery.co
 import { UploadImageDialogComponent } from '@shared/components/image/upload-image-dialog.component';
 import { ImageDialogComponent } from '@shared/components/image/image-dialog.component';
 import { ImageReferencesComponent } from '@shared/components/image/image-references.component';
-import { ImagesInUseDialogComponent } from '@shared/components/image/images-in-use-dialog.component';
+import { ResourcesInUseDialogComponent } from '@shared/components/resource/resources-in-use-dialog.component';
 import { GalleryImageInputComponent } from '@shared/components/image/gallery-image-input.component';
 import { MultipleGalleryImageInputComponent } from '@shared/components/image/multiple-gallery-image-input.component';
 import { EmbedImageDialogComponent } from '@shared/components/image/embed-image-dialog.component';
@@ -262,6 +262,8 @@ import { IntervalOptionsConfigPanelComponent } from '@shared/components/time/int
 import { GroupingIntervalOptionsComponent } from '@shared/components/time/aggregation/grouping-interval-options.component';
 import { JsFuncModulesComponent } from '@shared/components/js-func-modules.component';
 import { JsFuncModuleRowComponent } from '@shared/components/js-func-module-row.component';
+import { EntityKeyAutocompleteComponent } from '@shared/components/entity/entity-key-autocomplete.component';
+import { DurationLeftPipe } from '@shared/pipe/duration-left.pipe';
 
 export function MarkedOptionsFactory(markedOptionsService: MarkedOptionsService) {
   return markedOptionsService;
@@ -285,6 +287,7 @@ export function MarkedOptionsFactory(markedOptionsService: MarkedOptionsService)
     ShortNumberPipe,
     ImagePipe,
     CustomTranslatePipe,
+    DurationLeftPipe,
     {
       provide: FlowInjectionToken,
       useValue: Flow
@@ -412,7 +415,6 @@ export function MarkedOptionsFactory(markedOptionsService: MarkedOptionsService)
     ColorInputComponent,
     MaterialIconSelectComponent,
     NodeScriptTestDialogComponent,
-    JsonFormComponent,
     ImageInputComponent,
     MultipleImageInputComponent,
     FileInputComponent,
@@ -473,6 +475,7 @@ export function MarkedOptionsFactory(markedOptionsService: MarkedOptionsService)
     ToggleOption,
     ToggleSelectComponent,
     UnitInputComponent,
+    StringPatternAutocompleteComponent,
     StringAutocompleteComponent,
     MaterialIconsComponent,
     RuleChainSelectComponent,
@@ -488,7 +491,7 @@ export function MarkedOptionsFactory(markedOptionsService: MarkedOptionsService)
     UploadImageDialogComponent,
     ImageDialogComponent,
     ImageReferencesComponent,
-    ImagesInUseDialogComponent,
+    ResourcesInUseDialogComponent,
     GalleryImageInputComponent,
     MultipleGalleryImageInputComponent,
     EmbedImageDialogComponent,
@@ -496,7 +499,8 @@ export function MarkedOptionsFactory(markedOptionsService: MarkedOptionsService)
     WidgetButtonComponent,
     HexInputComponent,
     ScadaSymbolInputComponent,
-    CustomMenuAutocompleteComponent
+    CustomMenuAutocompleteComponent,
+    EntityKeyAutocompleteComponent
   ],
   imports: [
     CommonModule,
@@ -698,7 +702,6 @@ export function MarkedOptionsFactory(markedOptionsService: MarkedOptionsService)
     ColorInputComponent,
     MaterialIconSelectComponent,
     NodeScriptTestDialogComponent,
-    JsonFormComponent,
     ImageInputComponent,
     MultipleImageInputComponent,
     FileInputComponent,
@@ -759,6 +762,7 @@ export function MarkedOptionsFactory(markedOptionsService: MarkedOptionsService)
     ToggleOption,
     ToggleSelectComponent,
     UnitInputComponent,
+    StringPatternAutocompleteComponent,
     StringAutocompleteComponent,
     MaterialIconsComponent,
     RuleChainSelectComponent,
@@ -774,14 +778,15 @@ export function MarkedOptionsFactory(markedOptionsService: MarkedOptionsService)
     UploadImageDialogComponent,
     ImageDialogComponent,
     ImageReferencesComponent,
-    ImagesInUseDialogComponent,
+    ResourcesInUseDialogComponent,
     GalleryImageInputComponent,
     MultipleGalleryImageInputComponent,
     EmbedImageDialogComponent,
     ImageGalleryDialogComponent,
     WidgetButtonComponent,
     ScadaSymbolInputComponent,
-    CustomMenuAutocompleteComponent
+    CustomMenuAutocompleteComponent,
+    EntityKeyAutocompleteComponent
   ]
 })
 export class SharedModule { }

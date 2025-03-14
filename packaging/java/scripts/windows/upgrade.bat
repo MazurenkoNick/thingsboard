@@ -1,7 +1,7 @@
 @REM
 @REM ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
 @REM
-@REM Copyright © 2016-2024 ThingsBoard, Inc. All Rights Reserved.
+@REM Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
 @REM
 @REM NOTICE: All information contained herein is, and remains
 @REM the property of ThingsBoard, Inc. and its suppliers,
@@ -44,12 +44,6 @@ IF NOT "%1"=="" (
     )
     SHIFT
     GOTO :loop
-)
-
-if not defined fromVersion (
-    echo "--fromVersion parameter is invalid or unspecified!"
-    echo "Usage: upgrade.bat --fromVersion {VERSION}"
-    exit /b 1
 )
 
 SET LOADER_PATH=%BASE%\conf,%BASE%\extensions

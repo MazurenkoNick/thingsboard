@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2024 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -53,10 +53,10 @@ public class QrCodeSettingsDataValidator extends DataValidator<QrCodeSettings> {
     @Override
     protected void validateDataImpl(TenantId tenantId, QrCodeSettings qrCodeSettings) {
         MobileAppBundleId mobileAppBundleId = qrCodeSettings.getMobileAppBundleId();
-        if (!qrCodeSettings.isUseDefaultApp() && (mobileAppBundleId == null)) {
-            throw new DataValidationException("Mobile app bundle is required to use custom application!");
-        }
-        if (!qrCodeSettings.isUseDefaultApp()) {
+        if (!qrCodeSettings.isUseSystemSettings() && !qrCodeSettings.isUseDefaultApp()) {
+            if (mobileAppBundleId == null) {
+                throw new DataValidationException("Mobile app bundle is required to use custom application!");
+            }
             if (qrCodeSettings.isAndroidEnabled()) {
                 MobileApp androidApp = mobileAppDao.findByBundleIdAndPlatformType(tenantId, mobileAppBundleId, PlatformType.ANDROID);
                 if (androidApp != null && androidApp.getStatus() != MobileAppStatus.PUBLISHED) {

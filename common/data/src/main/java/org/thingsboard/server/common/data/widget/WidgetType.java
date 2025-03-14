@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2024 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -65,7 +65,8 @@ public class WidgetType extends BaseWidgetType {
 
     @JsonIgnore
     public JsonNode getDefaultConfig() {
-        return Optional.ofNullable(descriptor.get("defaultConfig"))
+        return Optional.ofNullable(descriptor)
+                .map(descriptor -> descriptor.get("defaultConfig"))
                 .filter(JsonNode::isTextual).map(JsonNode::asText)
                 .map(json -> {
                     try {

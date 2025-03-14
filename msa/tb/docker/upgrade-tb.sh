@@ -33,20 +33,25 @@
 CONF_FOLDER="${pkg.installFolder}/conf"
 jarfile=${pkg.installFolder}/bin/${pkg.name}.jar
 configfile=${pkg.name}.conf
-upgradeversion=${DATA_FOLDER}/.upgradeversion
 
 source "${CONF_FOLDER}/${configfile}"
 
-FROM_VERSION=`cat ${upgradeversion}`
-
 echo "Starting ThingsBoard upgrade ..."
 
-if [[ -z "${FROM_VERSION// }" ]]; then
-    echo "FROM_VERSION variable is invalid or unspecified!"
-    exit 1
-else
-    fromVersion="${FROM_VERSION// }"
-fi
+for i in "$@"
+do
+case $i in
+    --fromVersion=*)
+    FROM_VERSION="${i#*=}"
+    shift
+    ;;
+    *)
+            # unknown option
+    ;;
+esac
+done
+
+fromVersion="${FROM_VERSION// }"
 
 java -cp ${jarfile} $JAVA_OPTS -Dloader.main=org.thingsboard.server.ThingsboardInstallApplication \
                 -Dspring.jpa.hibernate.ddl-auto=none \
@@ -54,5 +59,3 @@ java -cp ${jarfile} $JAVA_OPTS -Dloader.main=org.thingsboard.server.ThingsboardI
                 -Dinstall.upgrade.from_version=${fromVersion} \
                 -Dlogging.config=/usr/share/thingsboard/bin/install/logback.xml \
                 org.springframework.boot.loader.launch.PropertiesLauncher
-
-echo "${pkg.upgradeVersion}" > ${upgradeversion}

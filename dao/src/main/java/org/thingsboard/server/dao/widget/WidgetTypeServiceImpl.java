@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2024 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -103,6 +103,13 @@ public class WidgetTypeServiceImpl implements WidgetTypeService {
     }
 
     @Override
+    public WidgetTypeInfo findWidgetTypeInfoById(TenantId tenantId, WidgetTypeId widgetTypeId) {
+        log.trace("Executing findWidgetTypeInfoById [{}]", widgetTypeId);
+        Validator.validateId(widgetTypeId, id -> "Incorrect widgetTypeId " + id);
+        return widgetTypeDao.findWidgetTypeInfoById(tenantId, widgetTypeId.getId());
+    }
+
+    @Override
     public boolean widgetTypeExistsByTenantIdAndWidgetTypeId(TenantId tenantId, WidgetTypeId widgetTypeId) {
         log.trace("Executing widgetTypeExistsByTenantIdAndWidgetTypeId, tenantId [{}],  widgetTypeId [{}]", tenantId, widgetTypeId);
         Validator.validateId(widgetTypeId, id -> "Incorrect widgetTypeId " + id);
@@ -114,14 +121,15 @@ public class WidgetTypeServiceImpl implements WidgetTypeService {
         log.trace("Executing saveWidgetType [{}]", widgetTypeDetails);
         widgetTypeValidator.validate(widgetTypeDetails, WidgetType::getTenantId);
         try {
+            TenantId tenantId = widgetTypeDetails.getTenantId();
             if (CollectionUtils.isNotEmpty(widgetTypeDetails.getResources())) {
-                resourceService.importResources(widgetTypeDetails.getTenantId(), null, widgetTypeDetails.getResources());
+                resourceService.importResources(tenantId, null, widgetTypeDetails.getResources());
             }
             imageService.updateImagesUsage(widgetTypeDetails);
-            resourceService.updateResourcesUsage(widgetTypeDetails);
+            resourceService.updateResourcesUsage(tenantId, widgetTypeDetails);
 
-            WidgetTypeDetails result = widgetTypeDao.save(widgetTypeDetails.getTenantId(), widgetTypeDetails);
-            eventPublisher.publishEvent(SaveEntityEvent.builder().tenantId(result.getTenantId())
+            WidgetTypeDetails result = widgetTypeDao.save(tenantId, widgetTypeDetails);
+            eventPublisher.publishEvent(SaveEntityEvent.builder().tenantId(tenantId)
                     .entityId(result.getId()).created(widgetTypeDetails.getId() == null).build());
             return result;
         } catch (Exception t) {

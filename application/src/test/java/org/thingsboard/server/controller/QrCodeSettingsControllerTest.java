@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2024 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -168,6 +168,43 @@ public class QrCodeSettingsControllerTest extends AbstractControllerTest {
 
         qrCodeSettings.setMobileAppBundleId(mobileAppBundle.getId());
         doPost("/api/mobile/qr/settings", qrCodeSettings)
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    public void testShouldNotSaveTenantQrCodeSettingsWithoutRequiredConfig() throws Exception {
+        loginSysAdmin();
+        QrCodeSettings qrCodeSettings = doGet("/api/mobile/qr/settings", QrCodeSettings.class);
+        assertThat(qrCodeSettings.isUseSystemSettings()).isFalse();
+        qrCodeSettings.setUseDefaultApp(true);
+        qrCodeSettings.setQrCodeConfig(QRCodeConfig.builder().showOnHomePage(true).build());
+        doPost("/api/mobile/qr/settings", qrCodeSettings);
+
+        loginTenantAdmin();
+        QrCodeSettings tenantQrCodeSettings = doGet("/api/mobile/qr/settings", QrCodeSettings.class);
+        assertThat(tenantQrCodeSettings.isUseSystemSettings()).isTrue();
+
+        tenantQrCodeSettings.setUseSystemSettings(false);
+        tenantQrCodeSettings.setUseDefaultApp(false);
+        doPost("/api/mobile/qr/settings", tenantQrCodeSettings)
+                .andExpect(status().isBadRequest())
+                .andExpect(statusReason(containsString("Mobile app bundle is required to use custom application!")));
+
+        tenantQrCodeSettings.setMobileAppBundleId(mobileAppBundle.getId());
+        doPost("/api/mobile/qr/settings", tenantQrCodeSettings)
+                .andExpect(status().isForbidden());
+
+        MobileAppBundle tenantBundle = new MobileAppBundle();
+        tenantBundle.setTitle("Test bundle");
+        tenantBundle = doPost("/api/mobile/bundle", tenantBundle, MobileAppBundle.class);
+
+        tenantQrCodeSettings.setMobileAppBundleId(tenantBundle.getId());
+        tenantQrCodeSettings = doPost("/api/mobile/qr/settings", tenantQrCodeSettings, QrCodeSettings.class);
+
+        //set system settings
+        tenantQrCodeSettings.setMobileAppBundleId(null);
+        tenantQrCodeSettings.setUseSystemSettings(true);
+        doPost("/api/mobile/qr/settings", tenantQrCodeSettings)
                 .andExpect(status().isOk());
     }
 

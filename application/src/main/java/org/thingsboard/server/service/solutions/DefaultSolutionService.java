@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2024 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -61,6 +61,9 @@ import org.thingsboard.server.common.data.alarm.AlarmQuery;
 import org.thingsboard.server.common.data.asset.Asset;
 import org.thingsboard.server.common.data.asset.AssetProfile;
 import org.thingsboard.server.common.data.audit.ActionType;
+import org.thingsboard.server.common.data.cf.CalculatedField;
+import org.thingsboard.server.common.data.cf.configuration.Argument;
+import org.thingsboard.server.common.data.debug.DebugSettings;
 import org.thingsboard.server.common.data.edge.Edge;
 import org.thingsboard.server.common.data.exception.ThingsboardErrorCode;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
@@ -68,6 +71,7 @@ import org.thingsboard.server.common.data.group.EntityGroup;
 import org.thingsboard.server.common.data.id.AlarmId;
 import org.thingsboard.server.common.data.id.AssetId;
 import org.thingsboard.server.common.data.id.AssetProfileId;
+import org.thingsboard.server.common.data.id.CalculatedFieldId;
 import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.DashboardId;
 import org.thingsboard.server.common.data.id.DeviceId;
@@ -106,6 +110,7 @@ import org.thingsboard.server.dao.alarm.AlarmService;
 import org.thingsboard.server.dao.asset.AssetProfileService;
 import org.thingsboard.server.dao.asset.AssetService;
 import org.thingsboard.server.dao.attributes.AttributesService;
+import org.thingsboard.server.dao.cf.CalculatedFieldService;
 import org.thingsboard.server.dao.customer.CustomerService;
 import org.thingsboard.server.dao.dashboard.DashboardService;
 import org.thingsboard.server.dao.device.DeviceConnectivityService;
@@ -128,6 +133,7 @@ import org.thingsboard.server.queue.provider.TbQueueProducerProvider;
 import org.thingsboard.server.queue.util.TbCoreComponent;
 import org.thingsboard.server.service.action.EntityActionService;
 import org.thingsboard.server.service.entitiy.asset.TbAssetService;
+import org.thingsboard.server.service.entitiy.cf.TbCalculatedFieldService;
 import org.thingsboard.server.service.entitiy.device.TbDeviceService;
 import org.thingsboard.server.service.entitiy.edge.TbEdgeService;
 import org.thingsboard.server.service.entitiy.entity.group.TbEntityGroupService;
@@ -196,6 +202,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -247,6 +254,8 @@ public class DefaultSolutionService implements SolutionService {
     private final TbAssetService tbAssetService;
     private final CustomerService customerService;
     private final UserService userService;
+    private final CalculatedFieldService calculatedFieldService;
+    private final TbCalculatedFieldService tbCalculatedFieldService;
 
     private final TbEdgeService tbEdgeService;
     private final EntityGroupService entityGroupService;
@@ -279,7 +288,6 @@ public class DefaultSolutionService implements SolutionService {
             templateInfo.setTitle(descriptor.getTitle());
             templateInfo.setLevel(descriptor.getLevel());
             templateInfo.setInstallTimeoutMs(descriptor.getInstallTimeoutMs());
-            templateInfo.setShortDescription(readFile(resolve(descriptor.getId(), "short.md")));
             templateInfo.setPreviewImageUrl(descriptor.getPreviewImageUrl());
             templateInfo.setVideoPreviewImageUrl(descriptor.getVideoPreviewImageUrl());
             templateInfo.setPreviewMp4Url(descriptor.getPreviewMp4Url());
@@ -542,6 +550,8 @@ public class DefaultSolutionService implements SolutionService {
 
             provisionEdges(user, ctx, request);
 
+            provisionCalculatedFields(ctx);
+
             launchEmulators(ctx, devices, assets);
 
             ctx.getSolutionInstructions().setDetails(prepareInstructions(ctx, request));
@@ -611,18 +621,8 @@ public class DefaultSolutionService implements SolutionService {
             }
         }
 
-        if (template.contains("${GATEWAYS_DASHBOARD_URL}")) {
-            TenantId tenantId = ctx.getTenantId();
-            String dashboardLink;
-            try {
-                DashboardInfo thingsBoardIoTGateways = dashboardService.findFirstDashboardInfoByTenantIdAndName(tenantId, "ThingsBoard IoT Gateways");
-                EntityGroup dashboardGroup = entityGroupService.findEntityGroupByTypeAndName(tenantId, tenantId, EntityType.DASHBOARD, EntityGroup.GROUP_ALL_NAME)
-                        .orElseThrow(() -> new RuntimeException("Could not find entity group by name 'All'."));
-                dashboardLink = getDashboardLink(solutionInstructions, dashboardGroup.getId(), thingsBoardIoTGateways.getId(), false);
-            } catch (Exception e) {
-                dashboardLink = "/dashboards";
-            }
-            template = template.replace("${GATEWAYS_DASHBOARD_URL}", dashboardLink);
+        if (template.contains("${GATEWAYS_URL}")) {
+            template = template.replace("${GATEWAYS_URL}", "/entities/gateways");
         }
 
         StringBuilder devList = new StringBuilder();
@@ -641,7 +641,7 @@ public class DefaultSolutionService implements SolutionService {
             template = template.replace("${" + credentialsInfo.getName() + "ACCESS_TOKEN}", credentialsInfo.getCredentials().getCredentialsId());
 
             if (credentialsInfo.isGateway()) {
-                template = template.replace("${DOCKER_CONFIG}", prepareDockerComposeFile(ctx.getTenantId(), baseUrl, credentialsInfo.getCredentials().getDeviceId()));
+                template = template.replace("${DOCKER_CONFIG}", prepareDockerComposeFile(ctx.getTenantId(), ctx.getSolutionId(), baseUrl, credentialsInfo.getCredentials().getDeviceId()));
             }
         }
 
@@ -705,10 +705,11 @@ public class DefaultSolutionService implements SolutionService {
         return dashboardLink;
     }
 
-    private String prepareDockerComposeFile(TenantId tenantId, String baseUrl, DeviceId deviceId) {
+    private String prepareDockerComposeFile(TenantId tenantId, String solutionId, String baseUrl, DeviceId deviceId) {
         Device device = new Device(deviceId);
         device.setTenantId(tenantId);
-        DockerComposeParams params = new DockerComposeParams(false, false, true, false, false);
+        String containerName = "tb-gateway-" + solutionId.replace('_', '-');
+        DockerComposeParams params = new DockerComposeParams(false, containerName, false, true, false, false);
         try (InputStream inputStream = deviceConnectivityService.createGatewayDockerComposeFile(baseUrl, device, params).getInputStream();
              BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))
         ) {
@@ -1427,6 +1428,50 @@ public class DefaultSolutionService implements SolutionService {
         }
     }
 
+    protected void provisionCalculatedFields(SolutionInstallContext ctx) {
+        List<CalculatedField> cfs = loadListOfEntitiesIfFileExists(ctx.getSolutionId(), "calculated_fields.json", new TypeReference<>() {
+        });
+        cfs.addAll(loadListOfEntitiesFromDirectory(ctx.getSolutionId(), "calculated_fields", CalculatedField.class));
+
+        cfs.forEach(cf -> {
+            cf.setId(null);
+            cf.setCreatedTime(0L);
+            cf.setTenantId(ctx.getTenantId());
+            cf.setDebugSettings(new DebugSettings(true, System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(15)));
+
+            Map<String, String> realIds = ctx.getRealIds();
+
+            EntityId entityId = cf.getEntityId();
+            if (entityId != null) {
+                String newEntityId = realIds.get(entityId.getId().toString());
+                if (newEntityId != null) {
+                    cf.setEntityId(EntityIdFactory.getByTypeAndUuid(entityId.getEntityType(), newEntityId));
+                } else {
+                    log.error("[{}][{}] Calculated field: {} references non existing entity.", ctx.getTenantId(), ctx.getSolutionId(), cf.getName());
+                    throw new ThingsboardRuntimeException();
+                }
+            }
+
+            Map<String, Argument> arguments = cf.getConfiguration().getArguments();
+            arguments.forEach((key, argument) -> {
+                EntityId refEntityId = argument.getRefEntityId();
+                if (refEntityId != null) {
+                    String newId = realIds.get(refEntityId.getId().toString());
+                    if (newId != null) {
+                        argument.setRefEntityId(EntityIdFactory.getByTypeAndUuid(refEntityId.getEntityType(), newId));
+                    } else {
+                        log.error("[{}][{}] Calculated field: {} references non existing entity.", ctx.getTenantId(), ctx.getSolutionId(), cf.getName());
+                        throw new ThingsboardRuntimeException();
+                    }
+                }
+            });
+
+        });
+
+        cfs = cfs.stream().map(calculatedFieldService::save).collect(Collectors.toList());
+        cfs.forEach(ctx::register);
+    }
+
     private RandomNameData generateRandomName(SolutionInstallContext ctx) {
         int i = 0;
         while (i < 10) {
@@ -1666,6 +1711,9 @@ public class DefaultSolutionService implements SolutionService {
             log.error("[{}] Failed to delete alarms for entity", entityId.getId(), e);
         }
         switch (entityId.getEntityType()) {
+            case CALCULATED_FIELD:
+                tbCalculatedFieldService.delete(new CalculatedFieldId(entityId.getId()), user);
+                break;
             case RULE_CHAIN:
                 var ruleChainId = new RuleChainId(entityId.getId());
                 ruleChainService.deleteRuleChainById(tenantId, ruleChainId);

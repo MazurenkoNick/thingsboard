@@ -1,7 +1,7 @@
 /**
  * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
  *
- * Copyright © 2016-2024 ThingsBoard, Inc. All Rights Reserved.
+ * Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
  *
  * NOTICE: All information contained herein is, and remains
  * the property of ThingsBoard, Inc. and its suppliers,
@@ -34,6 +34,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import com.google.common.hash.Hashing;
 import com.google.common.util.concurrent.ListenableFuture;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
@@ -54,6 +55,7 @@ import org.thingsboard.server.common.data.ResourceExportData;
 import org.thingsboard.server.common.data.ResourceSubType;
 import org.thingsboard.server.common.data.ResourceType;
 import org.thingsboard.server.common.data.TbResource;
+import org.thingsboard.server.common.data.TbResourceDeleteResult;
 import org.thingsboard.server.common.data.TbResourceInfo;
 import org.thingsboard.server.common.data.TbResourceInfoFilter;
 import org.thingsboard.server.common.data.id.CustomerId;
@@ -65,15 +67,19 @@ import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.widget.WidgetTypeDetails;
 import org.thingsboard.server.dao.DaoUtil;
+import org.thingsboard.server.dao.ResourceContainerDao;
+import org.thingsboard.server.dao.dashboard.DashboardInfoDao;
 import org.thingsboard.server.dao.entity.AbstractCachedEntityService;
 import org.thingsboard.server.dao.eventsourcing.DeleteEntityEvent;
 import org.thingsboard.server.dao.eventsourcing.SaveEntityEvent;
 import org.thingsboard.server.dao.service.PaginatedRemover;
 import org.thingsboard.server.dao.service.Validator;
 import org.thingsboard.server.dao.service.validator.ResourceDataValidator;
+import org.thingsboard.server.dao.widget.WidgetTypeDao;
 import org.thingsboard.server.exception.DataValidationException;
 
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Collection;
 import java.util.Collections;
@@ -101,6 +107,17 @@ public class BaseResourceService extends AbstractCachedEntityService<ResourceInf
     protected final TbResourceDao resourceDao;
     protected final TbResourceInfoDao resourceInfoDao;
     protected final ResourceDataValidator resourceValidator;
+    protected final WidgetTypeDao widgetTypeDao;
+    protected final DashboardInfoDao dashboardInfoDao;
+    private final Map<EntityType, ResourceContainerDao<?>> resourceContainerDaoMap = new HashMap<>();
+    protected static final int MAX_ENTITIES_TO_FIND = 10;
+
+    @PostConstruct
+    public void init() {
+        resourceContainerDaoMap.put(EntityType.WIDGET_TYPE, widgetTypeDao);
+        resourceContainerDaoMap.put(EntityType.DASHBOARD, dashboardInfoDao);
+    }
+
     @Autowired @Lazy
     private ImageService imageService;
 
@@ -329,23 +346,45 @@ public class BaseResourceService extends AbstractCachedEntityService<ResourceInf
     }
 
     @Override
-    public void deleteResource(TenantId tenantId, TbResourceId resourceId) {
-        deleteResource(tenantId, resourceId, false);
-    }
-
-    @Override
-    public void deleteResource(TenantId tenantId, TbResourceId resourceId, boolean force) {
+    public TbResourceDeleteResult deleteResource(TenantId tenantId, TbResourceId resourceId, boolean force) {
         log.trace("Executing deleteResource [{}] [{}]", tenantId, resourceId);
         Validator.validateId(resourceId, id -> INCORRECT_RESOURCE_ID + id);
         TbResourceInfo resource = findResourceInfoById(tenantId, resourceId);
+        boolean success = true;
+        var result = TbResourceDeleteResult.builder();
+
         if (resource == null) {
-            return;
+            if (!force) {
+                success = false;
+            }
+            return result.success(success).build();
         }
+
         if (!force) {
-            resourceValidator.validateDelete(tenantId, resource);
+            if (resource.getResourceType() == ResourceType.JS_MODULE) {
+                var link = resource.getLink();
+                Map<String, List<? extends HasId<?>>> affectedEntities = new HashMap<>();
+
+                resourceContainerDaoMap.forEach((entityType, resourceContainerDao) -> {
+                    var entities = tenantId.isSysTenantId() ? resourceContainerDao.findByResourceLink(link, MAX_ENTITIES_TO_FIND) :
+                            resourceContainerDao.findByTenantIdAndResourceLink(tenantId, link, MAX_ENTITIES_TO_FIND);
+                    if (!entities.isEmpty()) {
+                        affectedEntities.put(entityType.name(), entities);
+                    }
+                });
+
+                if (!affectedEntities.isEmpty()) {
+                    success = false;
+                    result.references(affectedEntities);
+                }
+            }
         }
-        resourceDao.removeById(tenantId, resourceId.getId());
-        eventPublisher.publishEvent(DeleteEntityEvent.builder().tenantId(tenantId).entity(resource).entityId(resourceId).build());
+        if (success) {
+            resourceDao.removeById(tenantId, resourceId.getId());
+            eventPublisher.publishEvent(DeleteEntityEvent.builder().tenantId(tenantId).entity(resource).entityId(resourceId).build());
+        }
+
+        return result.success(success).build();
     }
 
     @Override
@@ -419,18 +458,33 @@ public class BaseResourceService extends AbstractCachedEntityService<ResourceInf
     }
 
     @Override
-    public boolean updateResourcesUsage(Dashboard dashboard) {
+    public boolean updateResourcesUsage(TenantId tenantId, Dashboard dashboard) {
+        if (dashboard.getConfiguration() == null) {
+            return false;
+        }
         Map<String, String> links = getResourcesLinks(dashboard.getResources());
-        return updateResourcesUsage(dashboard.getTenantId(), dashboard.getConfiguration(), DASHBOARD_RESOURCES_MAPPING, links);
+        return updateResourcesUsage(tenantId, List.of(dashboard.getConfiguration()), List.of(DASHBOARD_RESOURCES_MAPPING), links);
     }
 
     @Override
-    public boolean updateResourcesUsage(WidgetTypeDetails widgetTypeDetails) {
+    public boolean updateResourcesUsage(TenantId tenantId, WidgetTypeDetails widgetTypeDetails) {
         Map<String, String> links = getResourcesLinks(widgetTypeDetails.getResources());
-        boolean updated = updateResourcesUsage(widgetTypeDetails.getTenantId(), widgetTypeDetails.getDescriptor(), WIDGET_RESOURCES_MAPPING, links);
+        List<JsonNode> jsonNodes = new ArrayList<>(2);
+        List<Map<String, String>> mappings = new ArrayList<>(2);
+
+        if (widgetTypeDetails.getDescriptor() != null) {
+            jsonNodes.add(widgetTypeDetails.getDescriptor());
+            mappings.add(WIDGET_RESOURCES_MAPPING);
+        }
+
         JsonNode defaultConfig = widgetTypeDetails.getDefaultConfig();
         if (defaultConfig != null) {
-            updated |= updateResourcesUsage(widgetTypeDetails.getTenantId(), defaultConfig, WIDGET_DEFAULT_CONFIG_RESOURCES_MAPPING, links);
+            jsonNodes.add(defaultConfig);
+            mappings.add(WIDGET_DEFAULT_CONFIG_RESOURCES_MAPPING);
+        }
+
+        boolean updated = updateResourcesUsage(tenantId, jsonNodes, mappings, links);
+        if (defaultConfig != null) {
             widgetTypeDetails.setDefaultConfig(defaultConfig);
         }
         return updated;
@@ -451,8 +505,9 @@ public class BaseResourceService extends AbstractCachedEntityService<ResourceInf
         return links;
     }
 
-    private boolean updateResourcesUsage(TenantId tenantId, JsonNode jsonNode, Map<String, String> mapping, Map<String, String> links) {
-        return processResources(jsonNode, mapping, value -> {
+    private boolean updateResourcesUsage(TenantId tenantId, List<JsonNode> jsonNodes, List<Map<String, String>> mappings, Map<String, String> links) {
+        log.trace("[{}] updateResourcesUsage (new links: {}) for {}", tenantId, links, jsonNodes);
+        return processResources(jsonNodes, mappings, value -> {
             String link = getResourceLink(value);
             if (link != null) {
                 String newLink = links.get(link);
@@ -480,23 +535,31 @@ public class BaseResourceService extends AbstractCachedEntityService<ResourceInf
     }
 
     @Override
-    public Collection<TbResourceInfo> getUsedResources(Dashboard dashboard) {
-        return getUsedResources(dashboard.getTenantId(), dashboard.getConfiguration(), DASHBOARD_RESOURCES_MAPPING).values();
+    public Collection<TbResourceInfo> getUsedResources(TenantId tenantId, Dashboard dashboard) {
+        return getUsedResources(tenantId, List.of(dashboard.getConfiguration()), List.of(DASHBOARD_RESOURCES_MAPPING)).values();
     }
 
     @Override
-    public Collection<TbResourceInfo> getUsedResources(WidgetTypeDetails widgetTypeDetails) {
-        Map<TbResourceId, TbResourceInfo> resources = getUsedResources(widgetTypeDetails.getTenantId(), widgetTypeDetails.getDescriptor(), WIDGET_RESOURCES_MAPPING);
+    public Collection<TbResourceInfo> getUsedResources(TenantId tenantId, WidgetTypeDetails widgetTypeDetails) {
+        List<JsonNode> jsonNodes = new ArrayList<>(2);
+        List<Map<String, String>> mappings = new ArrayList<>(2);
+
+        jsonNodes.add(widgetTypeDetails.getDescriptor());
+        mappings.add(WIDGET_RESOURCES_MAPPING);
+
         JsonNode defaultConfig = widgetTypeDetails.getDefaultConfig();
         if (defaultConfig != null) {
-            resources.putAll(getUsedResources(widgetTypeDetails.getTenantId(), defaultConfig, WIDGET_DEFAULT_CONFIG_RESOURCES_MAPPING));
+            jsonNodes.add(defaultConfig);
+            mappings.add(WIDGET_DEFAULT_CONFIG_RESOURCES_MAPPING);
         }
-        return resources.values();
+
+        return getUsedResources(tenantId, jsonNodes, mappings).values();
     }
 
-    private Map<TbResourceId, TbResourceInfo> getUsedResources(TenantId tenantId, JsonNode jsonNode, Map<String, String> mapping) {
+    private Map<TbResourceId, TbResourceInfo> getUsedResources(TenantId tenantId, List<JsonNode> jsonNodes, List<Map<String, String>> mappings) {
         Map<TbResourceId, TbResourceInfo> resources = new HashMap<>();
-        processResources(jsonNode, mapping, value -> {
+        log.trace("[{}] getUsedResources for {}", tenantId, jsonNodes);
+        processResources(jsonNodes, mappings, value -> {
             String link = getResourceLink(value);
             if (link == null) {
                 return value;
@@ -535,37 +598,62 @@ public class BaseResourceService extends AbstractCachedEntityService<ResourceInf
         }
     }
 
-    private boolean processResources(JsonNode jsonNode, Map<String, String> mapping, UnaryOperator<String> processor) {
+    private boolean processResources(List<JsonNode> jsonNodes, List<Map<String, String>> mappings, UnaryOperator<String> processor) {
         AtomicBoolean updated = new AtomicBoolean(false);
-        JacksonUtil.replaceByMapping(jsonNode, mapping, Collections.emptyMap(), (name, urlNode) -> {
-            String value = null;
-            if (urlNode.isTextual()) { // link is in the right place
-                value = urlNode.asText();
-            } else {
-                JsonNode id = urlNode.get("id"); // old structure is used
-                if (id != null && id.isTextual()) {
-                    value = id.asText();
+
+        for (int i = 0; i < jsonNodes.size(); i++) {
+            JsonNode jsonNode = jsonNodes.get(i);
+            // processing by mappings first
+            if (i <= mappings.size() - 1) {
+                JacksonUtil.replaceByMapping(jsonNode, mappings.get(i), Collections.emptyMap(), (name, urlNode) -> {
+                    String value = null;
+                    if (urlNode.isTextual()) { // link is in the right place
+                        value = urlNode.asText();
+                    } else {
+                        JsonNode id = urlNode.get("id"); // old structure is used
+                        if (id != null && id.isTextual()) {
+                            value = id.asText();
+                        }
+                    }
+
+                    if (StringUtils.isNotBlank(value)) {
+                        value = processor.apply(value);
+                    } else {
+                        value = "";
+                    }
+
+                    JsonNode newValue = new TextNode(value);
+                    if (!newValue.toString().equals(urlNode.toString())) {
+                        updated.set(true);
+                        log.trace("Replaced by mapping '{}' ({}) with '{}'", value, name, newValue);
+                    }
+                    return newValue;
+                });
+            }
+
+
+            // processing all
+            JacksonUtil.replaceAll(jsonNode, "", (name, value) -> {
+                if (!StringUtils.startsWith(value, DataConstants.TB_RESOURCE_PREFIX + "/api/resource/")) {
+                    return value;
                 }
-            }
 
-            if (StringUtils.isNotBlank(value)) {
-                value = processor.apply(value);
-            } else {
-                value = "";
-            }
+                String newValue = processor.apply(value);
+                if (StringUtils.equals(value, newValue)) {
+                    return value;
+                } else {
+                    updated.set(true);
+                    log.trace("Replaced '{}' ({}) with '{}'", value, name, newValue);
+                    return newValue;
+                }
+            });
+        }
 
-            JsonNode newValue = new TextNode(value);
-            if (!newValue.toString().equals(urlNode.toString())) {
-                updated.set(true);
-                log.trace("Replaced '{}' with '{}'", urlNode, newValue);
-            }
-            return newValue;
-        });
         return updated.get();
     }
 
     @Override
-    public TbResource createOrUpdateSystemResource(ResourceType resourceType, String resourceKey, byte[] data) {
+    public TbResource createOrUpdateSystemResource(ResourceType resourceType, ResourceSubType resourceSubType, String resourceKey, byte[] data) {
         if (resourceType == ResourceType.DASHBOARD) {
             Dashboard dashboard = JacksonUtil.fromBytes(data, Dashboard.class);
             dashboard.setTenantId(TenantId.SYS_TENANT_ID);
@@ -573,7 +661,7 @@ public class BaseResourceService extends AbstractCachedEntityService<ResourceInf
                 importResources(dashboard.getTenantId(), null, dashboard.getResources());
             }
             imageService.updateImagesUsage(dashboard);
-            updateResourcesUsage(dashboard);
+            updateResourcesUsage(dashboard.getTenantId(), dashboard);
 
             data = JacksonUtil.writeValueAsBytes(dashboard);
         }
@@ -583,6 +671,7 @@ public class BaseResourceService extends AbstractCachedEntityService<ResourceInf
             resource = new TbResource();
             resource.setTenantId(TenantId.SYS_TENANT_ID);
             resource.setResourceType(resourceType);
+            resource.setResourceSubType(resourceSubType);
             resource.setResourceKey(resourceKey);
             resource.setFileName(resourceKey);
             resource.setTitle(resourceKey);
@@ -633,7 +722,7 @@ public class BaseResourceService extends AbstractCachedEntityService<ResourceInf
 
         @Override
         protected void removeEntity(TenantId tenantId, TbResourceId resourceId) {
-            deleteResource(tenantId, resourceId);
+            deleteResource(tenantId, resourceId, true);
         }
     };
 
