@@ -40,6 +40,7 @@ import org.thingsboard.server.dao.ExportableEntityDao;
 import org.thingsboard.server.dao.TenantEntityDao;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -114,5 +115,7 @@ public interface IntegrationDao extends Dao<Integration>, TenantEntityDao<Integr
     PageData<Integration> findIntegrationsByTenantIdAndEdgeId(UUID tenantId, UUID edgeId, PageLink pageLink);
 
     Long countCoreIntegrations();
+
+    Map<String, Long> countIntegrationsPerType();
 
 }

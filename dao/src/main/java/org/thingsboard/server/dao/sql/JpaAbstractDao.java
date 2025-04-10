@@ -262,4 +262,9 @@ public abstract class JpaAbstractDao<E extends BaseEntity<D>, D>
 
     protected abstract JpaRepository<E, UUID> getRepository();
 
+    @Override
+    public long count() {
+        return getRepository().count();
+    }
+
 }

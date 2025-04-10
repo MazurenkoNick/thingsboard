@@ -39,6 +39,7 @@ import org.thingsboard.server.common.data.rule.RuleNode;
 import org.thingsboard.server.dao.Dao;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by igor on 3/12/18.
@@ -58,5 +59,7 @@ public interface RuleNodeDao extends Dao<RuleNode> {
     List<RuleNode> findByExternalIds(RuleChainId ruleChainId, List<RuleNodeId> externalIds);
 
     void deleteByIdIn(List<RuleNodeId> ruleNodeIds);
+
+    Map<String, Long> countRuleNodesPerType();
 
 }

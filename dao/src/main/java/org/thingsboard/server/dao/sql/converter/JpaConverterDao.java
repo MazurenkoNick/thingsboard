@@ -44,6 +44,7 @@ import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.integration.IntegrationType;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
+import org.thingsboard.server.common.data.script.ScriptLanguage;
 import org.thingsboard.server.dao.DaoUtil;
 import org.thingsboard.server.dao.converter.ConverterDao;
 import org.thingsboard.server.dao.model.sql.ConverterEntity;
@@ -101,6 +102,26 @@ public class JpaConverterDao extends JpaAbstractDao<ConverterEntity, Converter> 
     @Override
     public boolean existsByTenantIdAndNameAndType(UUID tenantId, String name, ConverterType type, UUID skippedId) {
         return converterRepository.existsByTenantIdAndNameAndTypeAndIdNot(tenantId, name,  type, skippedId);
+    }
+
+    @Override
+    public Long contByJsScriptLang() {
+        return converterRepository.countByScriptLang(ScriptLanguage.JS.name());
+    }
+
+    @Override
+    public Long contByTbelScriptLang() {
+        return converterRepository.countByScriptLang(ScriptLanguage.TBEL.name());
+    }
+
+    @Override
+    public Long countGenericConverters() {
+        return converterRepository.countAllByIntegrationTypeIsNull();
+    }
+
+    @Override
+    public Long countTypedConverters() {
+        return converterRepository.countAllByIntegrationTypeIsNotNull();
     }
 
     @Override

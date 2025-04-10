@@ -1622,6 +1622,9 @@ license:
     # Please make sure that thingsboard process has access to the instance data file, in case you use absolute path.
     instance_data_file: "${TB_LICENSE_INSTANCE_DATA_FILE:instance-license.data}"
 
+anonymous-usage-reporting:
+  enabled: "${TB_ANONYMOUS_USAGE_REPORTING_ENABLED:true}"
+
 # Spring doc common parameters
 springdoc:
   # If false swagger API docs will be unavailable

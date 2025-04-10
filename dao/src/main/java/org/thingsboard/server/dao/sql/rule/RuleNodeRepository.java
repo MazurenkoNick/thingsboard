@@ -38,6 +38,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
+import org.thingsboard.server.common.data.util.TbPair;
 import org.thingsboard.server.dao.model.sql.RuleNodeEntity;
 
 import java.util.List;
@@ -77,5 +78,8 @@ public interface RuleNodeRepository extends JpaRepository<RuleNodeEntity, UUID> 
     @Modifying
     @Query("DELETE FROM RuleNodeEntity e where e.id in :ids")
     void deleteByIdIn(@Param("ids") List<UUID> ids);
+
+    @Query(value = "SELECT new org.thingsboard.server.common.data.util.TbPair(i.type, count(i)) FROM RuleNodeEntity i GROUP BY i.type")
+    List<TbPair<String, Long>> countRuleNodesPerType();
 
 }

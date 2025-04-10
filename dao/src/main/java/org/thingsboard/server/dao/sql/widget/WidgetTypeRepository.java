@@ -37,6 +37,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.thingsboard.server.common.data.edqs.fields.WidgetTypeFields;
+import org.thingsboard.server.common.data.util.TbPair;
 import org.thingsboard.server.dao.ExportableEntityRepository;
 import org.thingsboard.server.dao.model.sql.WidgetTypeDetailsEntity;
 import org.thingsboard.server.dao.model.sql.WidgetTypeEntity;
@@ -98,4 +99,7 @@ public interface WidgetTypeRepository extends JpaRepository<WidgetTypeDetailsEnt
     @Query("SELECT new org.thingsboard.server.common.data.edqs.fields.WidgetTypeFields(w.id, w.createdTime, w.tenantId," +
             "w.name, w.version) FROM WidgetTypeEntity w WHERE w.id > :id ORDER BY w.id")
     List<WidgetTypeFields> findNextBatch(@Param("id") UUID id, Limit limit);
+
+    @Query(value = "SELECT new org.thingsboard.server.common.data.util.TbPair(i.type, count(i)) FROM RuleNodeEntity i GROUP BY i.type")
+    List<TbPair<String, Long>> countRuleNodesPerType();
 }

@@ -43,6 +43,7 @@ import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.integration.Integration;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
+import org.thingsboard.server.common.data.util.TbPair;
 import org.thingsboard.server.dao.DaoUtil;
 import org.thingsboard.server.dao.integration.IntegrationDao;
 import org.thingsboard.server.dao.model.sql.IntegrationEntity;
@@ -50,8 +51,10 @@ import org.thingsboard.server.dao.sql.JpaAbstractDao;
 import org.thingsboard.server.dao.util.SqlDao;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Component
@@ -125,6 +128,11 @@ public class JpaIntegrationDao extends JpaAbstractDao<IntegrationEntity, Integra
     @Override
     public Long countCoreIntegrations() {
         return integrationRepository.countByEdgeTemplateFalse();
+    }
+
+    @Override
+    public Map<String, Long> countIntegrationsPerType() {
+        return integrationRepository.countIntegrationsPerType().stream().collect(Collectors.toMap(TbPair::getFirst, TbPair::getSecond));
     }
 
     @Override
