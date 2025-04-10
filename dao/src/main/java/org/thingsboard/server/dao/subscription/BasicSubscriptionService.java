@@ -42,6 +42,7 @@ import org.thingsboard.license.client.OfflineTbLicenseClient;
 import org.thingsboard.license.client.TbLicenseClient;
 import org.thingsboard.license.client.TbLicenseClientListener;
 import org.thingsboard.license.client.TbLicenseCtx;
+import org.thingsboard.license.client.TbLicenseStatisticsService;
 import org.thingsboard.license.shared.exception.LicenseErrorCode;
 import org.thingsboard.license.shared.exception.LicenseException;
 import org.thingsboard.server.common.data.LicenseInfo;
@@ -58,6 +59,7 @@ import org.thingsboard.server.dao.tenant.TenantService;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.text.SimpleDateFormat;
+import java.util.Optional;
 
 @Service
 @Slf4j
@@ -96,6 +98,9 @@ public class BasicSubscriptionService implements SubscriptionService, TbLicenseC
     @Autowired
     private TbLicenseCtx licenseCtx;
 
+    @Autowired(required = false)
+    private Optional<TbLicenseStatisticsService> licenseStatisticsService;
+
     private AbstractTbLicenseClient tbLicenseClient;
 
     @PostConstruct
@@ -114,6 +119,7 @@ public class BasicSubscriptionService implements SubscriptionService, TbLicenseC
                 } catch (Exception e) {}
                 if (tbLicenseClient == null) {
                     tbLicenseClient = TbLicenseClient.builder()
+                            .licenseStatisticsService(licenseStatisticsService)
                             .listener(this)
                             .licenseSecret(this.licenseSecret)
                             .licenseDataFilePath(this.instanceDataFilePath)
