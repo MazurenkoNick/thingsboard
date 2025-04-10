@@ -35,7 +35,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 import org.thingsboard.license.client.TbLicenseStatisticsService;
-import org.thingsboard.license.shared.TbStatistics;
+import org.thingsboard.license.shared.TbInstanceStatistics;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.dao.converter.ConverterDao;
 import org.thingsboard.server.dao.entity.EntityDaoRegistry;
@@ -47,9 +47,11 @@ import org.thingsboard.server.service.install.ProjectInfo;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 @Service
-@ConditionalOnProperty(prefix = "anonymous-usage-reporting", value = "enabled", havingValue = "true")
+@ConditionalOnProperty(name = "TB_ANONYMOUS_USAGE_REPORTING", havingValue = "true", matchIfMissing = true)
 @RequiredArgsConstructor
 public class DefaultTbLicenseStatisticsService implements TbLicenseStatisticsService {
 
@@ -64,31 +66,61 @@ public class DefaultTbLicenseStatisticsService implements TbLicenseStatisticsSer
     private final ProjectInfo projectInfo;
 
     @Value("#{('${database.ts.type}' == 'cassandra') or ('${database.ts_latest.type}' == 'cassandra')}")
-    private boolean dbHybrid;
+    private boolean cassandra;
+
+    @Value("#{('${database.ts.type}' == 'timescale') or ('${database.ts_latest.type}' == 'timescale')}")
+    private boolean timescale;
 
     @Override
-    public TbStatistics getCurrentStatistics() {
-        TbStatistics statistics = new TbStatistics();
+    public TbInstanceStatistics getCurrentStatistics() {
+        TbInstanceStatistics statistics = new TbInstanceStatistics();
 
         Map<String, Long> entitiesCounts = new HashMap<>();
         for (EntityType entityType : COUNTED_TYPES) {
-            long count = entityDaoRegistry.getDao(entityType).count();
-            entitiesCounts.put(entityType.name(), count);
+            entitiesCounts.put(entityType.name(), getSafely(() -> entityDaoRegistry.getDao(entityType).count()));
         }
         statistics.setEntitiesCounts(entitiesCounts);
 
-        statistics.setRuleNodeTypes(ruleNodeDao.countRuleNodesPerType());
-        statistics.setIntegrationsCountsPerType(integrationDao.countIntegrationsPerType());
+        statistics.setRuleNodeTypes(getSafely(() ->
+                        ruleNodeDao.countRuleNodesPerType().entrySet().stream()
+                                .collect(Collectors.toMap(
+                                        entry -> prepareRuleNodeType(entry.getKey()),
+                                        Map.Entry::getValue
+                                ))
+                , null));
 
-        statistics.setGenericConverters(converterDao.countGenericConverters());
-        statistics.setTypedConverters(converterDao.countTypedConverters());
-        statistics.setJsConvertersCount(converterDao.contByJsScriptLang());
-        statistics.setTbelConvertersCount(converterDao.contByTbelScriptLang());
+        statistics.setIntegrationsCountsPerType(getSafely(integrationDao::countIntegrationsPerType, null));
 
-        statistics.setQrCodeUsage(qrCodeSettingsDao.count());
+        statistics.setGenericConverters(getSafely(converterDao::countGenericConverters));
+        statistics.setTypedConverters(getSafely(converterDao::countTypedConverters));
+        statistics.setDedicatedConverters(getSafely(converterDao::countDedicatedConverters));
+        statistics.setJsConvertersCount(getSafely(converterDao::countByJsScriptLang));
+        statistics.setTbelConvertersCount(getSafely(converterDao::countByTbelScriptLang));
+
+        statistics.setQrCodeUsage(getSafely(qrCodeSettingsDao::count));
 
         statistics.setTbVersion(projectInfo.getProjectVersion());
-        statistics.setDbHybrid(dbHybrid);
+        statistics.setCassandra(cassandra);
+        statistics.setTimescale(timescale);
         return statistics;
+    }
+
+    private Long getSafely(Supplier<Long> task) {
+        return getSafely(task, -1L);
+    }
+
+    private <T> T getSafely(Supplier<T> task, T defaultValue) {
+        try {
+            return task.get();
+        } catch (Exception e) {
+            return defaultValue;
+        }
+    }
+
+    private String prepareRuleNodeType(String type) {
+        if (!type.startsWith("org.thingsboard")) {
+            return "custom." + type.substring(type.lastIndexOf('.') + 1);
+        }
+        return type;
     }
 }

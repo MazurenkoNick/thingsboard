@@ -119,11 +119,13 @@ public interface ConverterDao extends Dao<Converter>, TenantEntityDao<Converter>
 
     boolean existsByTenantIdAndNameAndType(UUID tenantId, String name, ConverterType type, UUID skippedId);
 
-    Long contByJsScriptLang();
+    Long countByJsScriptLang();
 
-    Long contByTbelScriptLang();
+    Long countByTbelScriptLang();
 
     Long countGenericConverters();
 
     Long countTypedConverters();
+
+    Long countDedicatedConverters();
 }

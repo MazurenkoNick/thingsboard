@@ -105,12 +105,12 @@ public class JpaConverterDao extends JpaAbstractDao<ConverterEntity, Converter> 
     }
 
     @Override
-    public Long contByJsScriptLang() {
+    public Long countByJsScriptLang() {
         return converterRepository.countByScriptLang(ScriptLanguage.JS.name());
     }
 
     @Override
-    public Long contByTbelScriptLang() {
+    public Long countByTbelScriptLang() {
         return converterRepository.countByScriptLang(ScriptLanguage.TBEL.name());
     }
 
@@ -122,6 +122,11 @@ public class JpaConverterDao extends JpaAbstractDao<ConverterEntity, Converter> 
     @Override
     public Long countTypedConverters() {
         return converterRepository.countAllByIntegrationTypeIsNotNull();
+    }
+
+    @Override
+    public Long countDedicatedConverters() {
+        return converterRepository.countAllByConverterVersionAndIntegrationTypeIsNotNull(2);
     }
 
     @Override

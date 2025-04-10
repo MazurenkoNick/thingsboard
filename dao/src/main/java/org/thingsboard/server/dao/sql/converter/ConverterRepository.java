@@ -96,4 +96,6 @@ public interface ConverterRepository extends JpaRepository<ConverterEntity, UUID
 
     Long countAllByIntegrationTypeIsNotNull();
 
+    Long countAllByConverterVersionAndIntegrationTypeIsNotNull(Integer converterVersion);
+
 }
