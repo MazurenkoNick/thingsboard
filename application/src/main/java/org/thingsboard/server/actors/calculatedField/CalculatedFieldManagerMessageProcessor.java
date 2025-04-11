@@ -71,7 +71,6 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 import static org.thingsboard.server.utils.CalculatedFieldUtils.fromProto;
 
-
 /**
  * @author Andrew Shvayka
  */
@@ -107,8 +106,17 @@ public class CalculatedFieldManagerMessageProcessor extends AbstractContextAware
         this.ctx = ctx;
     }
 
+    public void stop() {
+        log.info("[{}] Stopping CF manager actor.", tenantId);
+        calculatedFields.values().forEach(CalculatedFieldCtx::stop);
+        calculatedFields.clear();
+        entityIdCalculatedFields.clear();
+        entityIdCalculatedFieldLinks.clear();
+        ctx.stop(ctx.getSelf());
+    }
+
     public void onFieldInitMsg(CalculatedFieldInitMsg msg) throws CalculatedFieldException {
-        log.info("[{}] Processing CF init message.", msg.getCf().getId());
+        log.debug("[{}] Processing CF init message.", msg.getCf().getId());
         var cf = msg.getCf();
         var cfCtx = new CalculatedFieldCtx(cf, systemContext.getTbelInvokeService(), systemContext.getApiLimitService());
         try {
@@ -124,7 +132,7 @@ public class CalculatedFieldManagerMessageProcessor extends AbstractContextAware
     }
 
     public void onLinkInitMsg(CalculatedFieldLinkInitMsg msg) {
-        log.info("[{}] Processing CF link init message for entity [{}].", msg.getLink().getCalculatedFieldId(), msg.getLink().getEntityId());
+        log.debug("[{}] Processing CF link init message for entity [{}].", msg.getLink().getCalculatedFieldId(), msg.getLink().getEntityId());
         var link = msg.getLink();
         // We use copy on write lists to safely pass the reference to another actor for the iteration.
         // Alternative approach would be to use any list but avoid modifications to the list (change the complete map value instead)
@@ -137,7 +145,9 @@ public class CalculatedFieldManagerMessageProcessor extends AbstractContextAware
         var calculatedField = calculatedFields.get(cfId);
 
         if (calculatedField != null) {
-            msg.getState().setRequiredArguments(calculatedField.getArgNames());
+            if (msg.getState() != null) {
+                msg.getState().setRequiredArguments(calculatedField.getArgNames());
+            }
             log.debug("Pushing CF state restore msg to specific actor [{}]", msg.getId().entityId());
             getOrCreateActor(msg.getId().entityId()).tell(msg);
         } else {
@@ -146,7 +156,7 @@ public class CalculatedFieldManagerMessageProcessor extends AbstractContextAware
     }
 
     public void onEntityLifecycleMsg(CalculatedFieldEntityLifecycleMsg msg) throws CalculatedFieldException {
-        log.info("Processing entity lifecycle event: [{}] for entity: [{}]", msg.getData().getEvent(), msg.getData().getEntityId());
+        log.debug("Processing entity lifecycle event: [{}] for entity: [{}]", msg.getData().getEvent(), msg.getData().getEntityId());
         var entityType = msg.getData().getEntityId().getEntityType();
         var event = msg.getData().getEvent();
         switch (entityType) {
@@ -211,7 +221,7 @@ public class CalculatedFieldManagerMessageProcessor extends AbstractContextAware
     }
 
     private void onEntityUpdated(ComponentLifecycleMsg msg, TbCallback callback) {
-        if (msg.getOldProfileId() != null && msg.getOldProfileId() != msg.getProfileId()) {
+        if (msg.getOldProfileId() != null && !msg.getOldProfileId().equals(msg.getProfileId())) {
             cfEntityCache.update(tenantId, msg.getOldProfileId(), msg.getProfileId(), msg.getEntityId());
             if (!isMyPartition(msg.getEntityId(), callback)) {
                 return;
@@ -241,12 +251,12 @@ public class CalculatedFieldManagerMessageProcessor extends AbstractContextAware
     private void onCfCreated(ComponentLifecycleMsg msg, TbCallback callback) throws CalculatedFieldException {
         var cfId = new CalculatedFieldId(msg.getEntityId().getId());
         if (calculatedFields.containsKey(cfId)) {
-            log.warn("[{}] CF was already initialized [{}]", tenantId, cfId);
+            log.debug("[{}] CF was already initialized [{}]", tenantId, cfId);
             callback.onSuccess();
         } else {
             var cf = cfDaoService.findById(msg.getTenantId(), cfId);
             if (cf == null) {
-                log.warn("[{}] Failed to lookup CF by id [{}]", tenantId, cfId);
+                log.debug("[{}] Failed to lookup CF by id [{}]", tenantId, cfId);
                 callback.onSuccess();
             } else {
                 var cfCtx = new CalculatedFieldCtx(cf, systemContext.getTbelInvokeService(), systemContext.getApiLimitService());
@@ -273,7 +283,7 @@ public class CalculatedFieldManagerMessageProcessor extends AbstractContextAware
         } else {
             var newCf = cfDaoService.findById(msg.getTenantId(), cfId);
             if (newCf == null) {
-                log.warn("[{}] Failed to lookup CF by id [{}]", tenantId, cfId);
+                log.debug("[{}] Failed to lookup CF by id [{}]", tenantId, cfId);
                 callback.onSuccess();
             } else {
                 var newCfCtx = new CalculatedFieldCtx(newCf, systemContext.getTbelInvokeService(), systemContext.getApiLimitService());
@@ -318,7 +328,7 @@ public class CalculatedFieldManagerMessageProcessor extends AbstractContextAware
         var cfId = new CalculatedFieldId(msg.getEntityId().getId());
         var cfCtx = calculatedFields.remove(cfId);
         if (cfCtx == null) {
-            log.warn("[{}] CF was already deleted [{}]", tenantId, cfId);
+            log.debug("[{}] CF was already deleted [{}]", tenantId, cfId);
             callback.onSuccess();
         } else {
             entityIdCalculatedFields.get(cfCtx.getEntityId()).remove(cfCtx);
@@ -372,6 +382,10 @@ public class CalculatedFieldManagerMessageProcessor extends AbstractContextAware
         log.debug("Received linked telemetry msg from entity [{}]", sourceEntityId);
         var proto = msg.getProto();
         var linksList = proto.getLinksList();
+        if (linksList.isEmpty()) {
+            log.debug("[{}] No CF links to process new telemetry.", msg.getTenantId());
+            msg.getCallback().onSuccess();
+        }
         for (var linkProto : linksList) {
             var link = fromProto(linkProto);
             var targetEntityId = link.entityId();
@@ -391,9 +405,11 @@ public class CalculatedFieldManagerMessageProcessor extends AbstractContextAware
                     msg.getCallback().onSuccess();
                 }
             } else {
-                log.debug("Pushing linked telemetry msg to specific actor [{}]", targetEntityId);
-                var newMsg = new EntityCalculatedFieldLinkedTelemetryMsg(tenantId, sourceEntityId, proto.getMsg(), cf, msg.getCallback());
-                getOrCreateActor(targetEntityId).tell(newMsg);
+                if (isMyPartition(targetEntityId, msg.getCallback())) {
+                    log.debug("Pushing linked telemetry msg to specific actor [{}]", targetEntityId);
+                    var newMsg = new EntityCalculatedFieldLinkedTelemetryMsg(tenantId, sourceEntityId, proto.getMsg(), cf, msg.getCallback());
+                    getOrCreateActor(targetEntityId).tell(newMsg);
+                }
             }
         }
     }
