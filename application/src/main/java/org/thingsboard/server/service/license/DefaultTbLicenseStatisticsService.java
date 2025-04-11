@@ -55,7 +55,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class DefaultTbLicenseStatisticsService implements TbLicenseStatisticsService {
 
-    private static final List<EntityType> COUNTED_TYPES = List.of(EntityType.TENANT, EntityType.CUSTOMER, EntityType.DEVICE,
+    private static final List<EntityType> COUNTED_TYPES = List.of(EntityType.TENANT, EntityType.CUSTOMER, EntityType.USER, EntityType.DEVICE,
             EntityType.ASSET, EntityType.RULE_CHAIN, EntityType.DASHBOARD);
 
     private final EntityDaoRegistry entityDaoRegistry;
