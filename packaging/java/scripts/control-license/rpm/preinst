@@ -7,7 +7,10 @@ abort_install() {
 	exit 1
 }
 
-eula='${pkgEula}'
+eula="$(cat <<'EOF'
+${pkgEula}
+EOF
+)"
 
 whiptail --scrolltext --title "ThingsBoard Professional Edition License Agreement" --msgbox "${eula}" 20 78
 
