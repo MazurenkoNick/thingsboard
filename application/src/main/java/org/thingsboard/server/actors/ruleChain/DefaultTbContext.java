@@ -41,7 +41,7 @@ import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.common.util.ListeningExecutor;
 import org.thingsboard.rule.engine.api.MailService;
 import org.thingsboard.rule.engine.api.NotificationCenter;
-import org.thingsboard.rule.engine.api.ReportService;
+import org.thingsboard.rule.engine.api.DashboardReportService;
 import org.thingsboard.rule.engine.api.RuleEngineAlarmService;
 import org.thingsboard.rule.engine.api.RuleEngineApiUsageStateService;
 import org.thingsboard.rule.engine.api.RuleEngineAssetProfileCache;
@@ -957,8 +957,8 @@ public class DefaultTbContext implements TbContext, TbPeContext {
     }
 
     @Override
-    public ReportService getReportService() {
-        return mainCtx.getReportService();
+    public DashboardReportService getDashboardReportService() {
+        return mainCtx.getDashboardReportService();
     }
 
     @Override

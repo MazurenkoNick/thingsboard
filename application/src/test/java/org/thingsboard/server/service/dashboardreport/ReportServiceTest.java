@@ -28,7 +28,7 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.service.report;
+package org.thingsboard.server.service.dashboardreport;
 
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
@@ -41,7 +41,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.thingsboard.server.cache.limits.RateLimitService;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.id.TenantId;
-import org.thingsboard.server.common.data.report.ReportConfig;
+import org.thingsboard.server.common.data.dashboardreport.DashboardReportConfig;
 import org.thingsboard.server.dao.customer.CustomerService;
 import org.thingsboard.server.dao.user.UserService;
 import org.thingsboard.server.service.security.model.token.JwtTokenFactory;
@@ -54,7 +54,7 @@ import static org.mockito.ArgumentMatchers.any;
 
 @Slf4j
 @RunWith(SpringRunner.class)
-@ContextConfiguration(classes = DefaultReportService.class)
+@ContextConfiguration(classes = DefaultDashboardReportService.class)
 public class ReportServiceTest {
     @MockBean
     protected UserService userService;
@@ -68,13 +68,13 @@ public class ReportServiceTest {
     protected RateLimitService rateLimitService;
 
     @SpyBean
-    DefaultReportService service;
+    DefaultDashboardReportService service;
 
     @Test
     public void testGenerateReportUsingNonExistingUser() {
         Mockito.when(userService.findUserById(any(), any())).thenReturn(null);
 
-        ReportConfig reportConfig = new ReportConfig();
+        DashboardReportConfig reportConfig = new DashboardReportConfig();
         reportConfig.setUserId(UUID.randomUUID().toString());
         reportConfig.setType("pdf");
         reportConfig.setBaseUrl("/testUrl");

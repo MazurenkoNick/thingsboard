@@ -28,33 +28,33 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.rule.engine.api;
+package org.thingsboard.server.common.data.report;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import org.thingsboard.server.common.data.exception.ThingsboardException;
-import org.thingsboard.server.common.data.id.DashboardId;
-import org.thingsboard.server.common.data.id.TenantId;
-import org.thingsboard.server.common.data.id.UserId;
-import org.thingsboard.server.common.data.report.ReportConfig;
-import org.thingsboard.server.common.data.report.ReportData;
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.Valid;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
-import java.util.function.Consumer;
+@Schema
+@Data
+@ToString(callSuper = true)
+@EqualsAndHashCode(callSuper = true)
+public class ReportTemplateInfo extends BaseReportTemplate {
 
-public interface ReportService {
+    private static final long serialVersionUID = 1729877416392618039L;
 
-    void generateDashboardReport(String baseUrl,
-                                 DashboardId dashboardId,
-                                 TenantId tenantId,
-                                 UserId userId,
-                                 String publicId,
-                                 String reportName,
-                                 JsonNode reportParams,
-                                 Consumer<ReportData> onSuccess,
-                                 Consumer<Throwable> onFailure) throws ThingsboardException;
+    @Valid
+    @Schema(description = "Owner name", accessMode = Schema.AccessMode.READ_ONLY)
+    private String ownerName;
 
-    void generateReport(TenantId tenantId, ReportConfig reportConfig,
-                        String reportsServerEndpointUrl,
-                        Consumer<ReportData> onSuccess,
-                        Consumer<Throwable> onFailure) throws ThingsboardException;
+    public ReportTemplateInfo() {
+        super();
+    }
+
+    public ReportTemplateInfo(BaseReportTemplate reportTemplate, String ownerName) {
+        super(reportTemplate);
+        this.ownerName = ownerName;
+    }
 
 }

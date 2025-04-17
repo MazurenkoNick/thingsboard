@@ -28,7 +28,7 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.service.report;
+package org.thingsboard.server.service.dashboardreport;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -52,7 +52,7 @@ import org.springframework.web.reactive.function.client.ExchangeFilterFunctions;
 import org.springframework.web.reactive.function.client.ExchangeStrategies;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.thingsboard.common.util.JacksonUtil;
-import org.thingsboard.rule.engine.api.ReportService;
+import org.thingsboard.rule.engine.api.DashboardReportService;
 import org.thingsboard.server.cache.limits.RateLimitService;
 import org.thingsboard.server.common.data.Customer;
 import org.thingsboard.server.common.data.StringUtils;
@@ -66,8 +66,8 @@ import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.id.UserId;
 import org.thingsboard.server.common.data.limit.LimitedApi;
 import org.thingsboard.server.common.data.permission.MergedUserPermissions;
-import org.thingsboard.server.common.data.report.ReportConfig;
-import org.thingsboard.server.common.data.report.ReportData;
+import org.thingsboard.server.common.data.dashboardreport.DashboardReportConfig;
+import org.thingsboard.server.common.data.dashboardreport.DashboardReportData;
 import org.thingsboard.server.common.data.security.Authority;
 import org.thingsboard.server.common.data.security.UserCredentials;
 import org.thingsboard.server.dao.customer.CustomerService;
@@ -96,12 +96,12 @@ import java.util.regex.Pattern;
 @Service
 @Slf4j
 @RequiredArgsConstructor
-public class DefaultReportService implements ReportService {
+public class DefaultDashboardReportService implements DashboardReportService {
 
     private static final Pattern reportNameDatePattern = Pattern.compile("%d\\{([^\\}]*)\\}");
 
     @Value("${reports.server.endpointUrl}")
-    private String reportsServerEndpointUrl;
+    private String dashboardReportsServerEndpointUrl;
 
     @Value("${reports.rate_limits.enabled:false}")
     private boolean rateLimitsEnabled;
@@ -144,7 +144,7 @@ public class DefaultReportService implements ReportService {
                             .build())
                     .build();
         } catch (Exception e) {
-            log.error("Can't initialize report service due to {}", e.getMessage(), e);
+            log.error("Can't initialize dashboard report service due to {}", e.getMessage(), e);
             throw new RuntimeException(e);
         }
     }
@@ -167,7 +167,7 @@ public class DefaultReportService implements ReportService {
 
     @Override
     public void generateDashboardReport(String baseUrl, DashboardId dashboardId, TenantId tenantId, UserId userId, String publicId,
-                                        String reportName, JsonNode reportParams, Consumer<ReportData> onSuccess,
+                                        String reportName, JsonNode reportParams, Consumer<DashboardReportData> onSuccess,
                                         Consumer<Throwable> onFailure) throws ThingsboardException {
         checkLimits(tenantId);
         log.trace("Executing generateDashboardReport, baseUrl [{}], dashboardId [{}], userId [{}]", baseUrl, dashboardId, userId);
@@ -195,7 +195,7 @@ public class DefaultReportService implements ReportService {
     }
 
     @Override
-    public void generateReport(TenantId tenantId, ReportConfig reportConfig, String reportsServerEndpointUrl, Consumer<ReportData> onSuccess, Consumer<Throwable> onFailure) throws ThingsboardException {
+    public void generateReport(TenantId tenantId, DashboardReportConfig reportConfig, String reportsServerEndpointUrl, Consumer<DashboardReportData> onSuccess, Consumer<Throwable> onFailure) throws ThingsboardException {
         checkLimits(tenantId);
         log.trace("Executing generateReport, reportConfig [{}]", reportConfig);
 
@@ -203,10 +203,10 @@ public class DefaultReportService implements ReportService {
         requestReport(dashboardReportRequest, reportsServerEndpointUrl, onSuccess, onFailure);
     }
 
-    private void requestReport(JsonNode dashboardReportRequest, String reportsServerEndpointUrl, Consumer<ReportData> onSuccess,
+    private void requestReport(JsonNode dashboardReportRequest, String reportsServerEndpointUrl, Consumer<DashboardReportData> onSuccess,
                                Consumer<Throwable> onFailure) {
         if (StringUtils.isEmpty(reportsServerEndpointUrl)) {
-            reportsServerEndpointUrl = this.reportsServerEndpointUrl;
+            reportsServerEndpointUrl = this.dashboardReportsServerEndpointUrl;
         }
         String endpointUrl = reportsServerEndpointUrl + "/dashboardReport";
 
@@ -237,7 +237,7 @@ public class DefaultReportService implements ReportService {
         }
     }
 
-    private JsonNode createDashboardReportRequest(TenantId tenantId, ReportConfig reportConfig) throws ThingsboardException {
+    private JsonNode createDashboardReportRequest(TenantId tenantId, DashboardReportConfig reportConfig) throws ThingsboardException {
         AccessJwtToken accessToken = calculateUserAccessToken(tenantId, new UserId(UUID.fromString(reportConfig.getUserId())));
         String token = accessToken.getToken();
         long expiration = accessToken.getClaims().getExpiration().getTime();
@@ -253,7 +253,7 @@ public class DefaultReportService implements ReportService {
         return dashboardReportRequest;
     }
 
-    private JsonNode createReportParams(ReportConfig reportConfig) {
+    private JsonNode createReportParams(DashboardReportConfig reportConfig) {
         ObjectNode reportParams = JacksonUtil.newObjectNode();
         reportParams.put("type", reportConfig.getType());
         reportParams.put("state", reportConfig.getState());
@@ -321,8 +321,8 @@ public class DefaultReportService implements ReportService {
         return jwtTokenFactory.createAccessJwtToken(securityUser);
     }
 
-    private ReportData extractResponse(ResponseEntity<byte[]> responseEntity) throws UnsupportedEncodingException {
-        ReportData reportData = new ReportData();
+    private DashboardReportData extractResponse(ResponseEntity<byte[]> responseEntity) throws UnsupportedEncodingException {
+        DashboardReportData reportData = new DashboardReportData();
         reportData.setData(responseEntity.getBody());
         reportData.setContentType(responseEntity.getHeaders().getContentType().toString());
         String disposition = responseEntity.getHeaders().getFirst(HttpHeaders.CONTENT_DISPOSITION);

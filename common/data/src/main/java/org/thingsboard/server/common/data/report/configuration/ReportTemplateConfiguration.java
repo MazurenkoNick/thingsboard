@@ -28,25 +28,13 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.rule.engine.report;
+package org.thingsboard.server.common.data.report.configuration;
 
 import lombok.Data;
-import org.thingsboard.rule.engine.api.NodeConfiguration;
-import org.thingsboard.server.common.data.dashboardreport.DashboardReportConfig;
 
 @Data
-public class TbGenerateReportNodeConfiguration implements NodeConfiguration<TbGenerateReportNodeConfiguration> {
+public class ReportTemplateConfiguration {
 
-    private boolean useSystemReportsServer;
-    private String reportsServerEndpointUrl;
-    private boolean useReportConfigFromMessage;
-    private DashboardReportConfig reportConfig;
+    private String tempField;
 
-    @Override
-    public TbGenerateReportNodeConfiguration defaultConfiguration() {
-        TbGenerateReportNodeConfiguration configuration = new TbGenerateReportNodeConfiguration();
-        configuration.setUseSystemReportsServer(true);
-        configuration.setUseReportConfigFromMessage(true);
-        return configuration;
-    }
 }

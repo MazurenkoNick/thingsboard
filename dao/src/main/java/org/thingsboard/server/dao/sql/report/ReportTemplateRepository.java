@@ -28,25 +28,31 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.rule.engine.report;
+package org.thingsboard.server.dao.sql.report;
 
-import lombok.Data;
-import org.thingsboard.rule.engine.api.NodeConfiguration;
-import org.thingsboard.server.common.data.dashboardreport.DashboardReportConfig;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.thingsboard.server.dao.ExportableEntityRepository;
+import org.thingsboard.server.dao.model.sql.ReportTemplateEntity;
 
-@Data
-public class TbGenerateReportNodeConfiguration implements NodeConfiguration<TbGenerateReportNodeConfiguration> {
+import java.util.UUID;
 
-    private boolean useSystemReportsServer;
-    private String reportsServerEndpointUrl;
-    private boolean useReportConfigFromMessage;
-    private DashboardReportConfig reportConfig;
+public interface ReportTemplateRepository extends JpaRepository<ReportTemplateEntity, UUID>, ExportableEntityRepository<ReportTemplateEntity> {
 
-    @Override
-    public TbGenerateReportNodeConfiguration defaultConfiguration() {
-        TbGenerateReportNodeConfiguration configuration = new TbGenerateReportNodeConfiguration();
-        configuration.setUseSystemReportsServer(true);
-        configuration.setUseReportConfigFromMessage(true);
-        return configuration;
-    }
+    Page<ReportTemplateEntity> findByTenantId(UUID tenantId, Pageable pageable);
+
+    @Query("SELECT r.id FROM ReportTemplateEntity r WHERE r.tenantId = :tenantId AND (r.customerId is null OR r.customerId = org.thingsboard.server.common.data.id.EntityId.NULL_UUID)")
+    Page<UUID> findIdsByTenantIdAndNullCustomerId(@Param("tenantId") UUID tenantId, Pageable pageable);
+
+    @Query("SELECT r.id FROM ReportTemplateEntity r WHERE r.tenantId = :tenantId AND r.customerId = :customerId")
+    Page<UUID> findIdsByTenantIdAndCustomerId(@Param("tenantId") UUID tenantId,
+                                              @Param("customerId") UUID customerId,
+                                              Pageable pageable);
+
+    @Query("SELECT externalId FROM ReportTemplateEntity WHERE id = :id")
+    UUID getExternalIdById(@Param("id") UUID id);
+
 }

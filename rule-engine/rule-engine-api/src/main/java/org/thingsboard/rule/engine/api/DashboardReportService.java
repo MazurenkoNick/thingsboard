@@ -28,25 +28,33 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.rule.engine.report;
+package org.thingsboard.rule.engine.api;
 
-import lombok.Data;
-import org.thingsboard.rule.engine.api.NodeConfiguration;
+import com.fasterxml.jackson.databind.JsonNode;
+import org.thingsboard.server.common.data.exception.ThingsboardException;
+import org.thingsboard.server.common.data.id.DashboardId;
+import org.thingsboard.server.common.data.id.TenantId;
+import org.thingsboard.server.common.data.id.UserId;
 import org.thingsboard.server.common.data.dashboardreport.DashboardReportConfig;
+import org.thingsboard.server.common.data.dashboardreport.DashboardReportData;
 
-@Data
-public class TbGenerateReportNodeConfiguration implements NodeConfiguration<TbGenerateReportNodeConfiguration> {
+import java.util.function.Consumer;
 
-    private boolean useSystemReportsServer;
-    private String reportsServerEndpointUrl;
-    private boolean useReportConfigFromMessage;
-    private DashboardReportConfig reportConfig;
+public interface DashboardReportService {
 
-    @Override
-    public TbGenerateReportNodeConfiguration defaultConfiguration() {
-        TbGenerateReportNodeConfiguration configuration = new TbGenerateReportNodeConfiguration();
-        configuration.setUseSystemReportsServer(true);
-        configuration.setUseReportConfigFromMessage(true);
-        return configuration;
-    }
+    void generateDashboardReport(String baseUrl,
+                                 DashboardId dashboardId,
+                                 TenantId tenantId,
+                                 UserId userId,
+                                 String publicId,
+                                 String reportName,
+                                 JsonNode reportParams,
+                                 Consumer<DashboardReportData> onSuccess,
+                                 Consumer<Throwable> onFailure) throws ThingsboardException;
+
+    void generateReport(TenantId tenantId, DashboardReportConfig reportConfig,
+                        String reportsServerEndpointUrl,
+                        Consumer<DashboardReportData> onSuccess,
+                        Consumer<Throwable> onFailure) throws ThingsboardException;
+
 }

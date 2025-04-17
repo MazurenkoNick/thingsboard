@@ -43,6 +43,13 @@ SELECT created_time, id, tenant_id, name, type, debug_settings, enabled, is_remo
                  LIMIT 1) END) as status
 FROM integration i;
 
+DROP VIEW IF EXISTS report_template_info_view CASCADE;
+CREATE OR REPLACE VIEW report_template_info_view as
+SELECT r.*,
+       c.title as owner_name
+FROM report_template r
+         LEFT JOIN customer c ON c.id = r.customer_id;
+
 DROP VIEW IF EXISTS dashboard_info_view CASCADE;
 CREATE OR REPLACE VIEW dashboard_info_view as
 SELECT d.*, c.title as owner_name,

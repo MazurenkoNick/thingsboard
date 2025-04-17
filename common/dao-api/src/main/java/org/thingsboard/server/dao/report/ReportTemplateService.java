@@ -28,25 +28,37 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.rule.engine.report;
+package org.thingsboard.server.dao.report;
 
-import lombok.Data;
-import org.thingsboard.rule.engine.api.NodeConfiguration;
-import org.thingsboard.server.common.data.dashboardreport.DashboardReportConfig;
+import org.thingsboard.server.common.data.id.CustomerId;
+import org.thingsboard.server.common.data.id.ReportTemplateId;
+import org.thingsboard.server.common.data.id.TenantId;
+import org.thingsboard.server.common.data.page.PageData;
+import org.thingsboard.server.common.data.page.PageLink;
+import org.thingsboard.server.common.data.report.ReportTemplate;
+import org.thingsboard.server.common.data.report.ReportTemplateInfo;
+import org.thingsboard.server.dao.entity.EntityDaoService;
 
-@Data
-public class TbGenerateReportNodeConfiguration implements NodeConfiguration<TbGenerateReportNodeConfiguration> {
+public interface ReportTemplateService extends EntityDaoService {
 
-    private boolean useSystemReportsServer;
-    private String reportsServerEndpointUrl;
-    private boolean useReportConfigFromMessage;
-    private DashboardReportConfig reportConfig;
+    ReportTemplate findReportTemplateById(TenantId tenantId, ReportTemplateId reportTemplateId);
 
-    @Override
-    public TbGenerateReportNodeConfiguration defaultConfiguration() {
-        TbGenerateReportNodeConfiguration configuration = new TbGenerateReportNodeConfiguration();
-        configuration.setUseSystemReportsServer(true);
-        configuration.setUseReportConfigFromMessage(true);
-        return configuration;
-    }
+    ReportTemplateInfo findReportTemplateInfoById(TenantId tenantId, ReportTemplateId reportTemplateId);
+
+    ReportTemplate saveReportTemplate(ReportTemplate reportTemplate);
+
+    void deleteReportTemplate(TenantId tenantId, ReportTemplateId reportTemplateId);
+
+    PageData<ReportTemplateInfo> findReportTemplatesByTenantId(TenantId tenantId, PageLink pageLink);
+
+    PageData<ReportTemplateInfo> findTenantReportTemplatesByTenantId(TenantId tenantId, PageLink pageLink);
+
+    PageData<ReportTemplateInfo> findReportTemplatesByTenantIdAndCustomerId(TenantId tenantId, CustomerId customerId, PageLink pageLink);
+
+    PageData<ReportTemplateInfo> findReportTemplatesByTenantIdAndCustomerIdIncludingSubCustomers(TenantId tenantId, CustomerId customerId, PageLink pageLink);
+
+    void deleteReportTemplatesByTenantId(TenantId tenantId);
+
+    void deleteReportTemplatesByTenantIdAndCustomerId(TenantId tenantId, CustomerId customerId);
+
 }

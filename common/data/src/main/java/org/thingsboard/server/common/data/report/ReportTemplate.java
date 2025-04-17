@@ -30,13 +30,39 @@
  */
 package org.thingsboard.server.common.data.report;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
+import org.thingsboard.server.common.data.id.ReportTemplateId;
+import org.thingsboard.server.common.data.report.configuration.ReportTemplateConfiguration;
 
+@Schema
 @Data
-public class ReportData {
+@ToString(callSuper = true)
+@EqualsAndHashCode(callSuper = true)
+public class ReportTemplate extends BaseReportTemplate {
 
-    private byte[] data;
-    private String name;
-    private String contentType;
+    private static final long serialVersionUID = 1729877416392618039L;
+
+    @Schema(description = "a JSON value with report template configuration", implementation = ReportTemplateConfiguration.class)
+    private ReportTemplateConfiguration configuration;
+
+    public ReportTemplate() {
+        super();
+    }
+
+    public ReportTemplate(ReportTemplateId id) {
+        super(id);
+    }
+
+    public ReportTemplate(BaseReportTemplate report) {
+        super(report.getId());
+    }
+
+    public ReportTemplate(ReportTemplate report) {
+        super(report);
+        this.configuration = report.getConfiguration();
+    }
 
 }

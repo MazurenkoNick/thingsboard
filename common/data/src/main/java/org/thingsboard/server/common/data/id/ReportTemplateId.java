@@ -28,25 +28,31 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.rule.engine.report;
+package org.thingsboard.server.common.data.id;
 
-import lombok.Data;
-import org.thingsboard.rule.engine.api.NodeConfiguration;
-import org.thingsboard.server.common.data.dashboardreport.DashboardReportConfig;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
+import org.thingsboard.server.common.data.EntityType;
 
-@Data
-public class TbGenerateReportNodeConfiguration implements NodeConfiguration<TbGenerateReportNodeConfiguration> {
+import java.util.UUID;
 
-    private boolean useSystemReportsServer;
-    private String reportsServerEndpointUrl;
-    private boolean useReportConfigFromMessage;
-    private DashboardReportConfig reportConfig;
+public class ReportTemplateId extends UUIDBased implements EntityId {
 
+    private static final long serialVersionUID = 1L;
+
+    @JsonCreator
+    public ReportTemplateId(@JsonProperty("id") UUID id) {
+        super(id);
+    }
+
+    public static ReportTemplateId fromString(String reportId) {
+        return new ReportTemplateId(UUID.fromString(reportId));
+    }
+
+    @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "string", example = "REPORT_TEMPLATE", allowableValues = "REPORT_TEMPLATE")
     @Override
-    public TbGenerateReportNodeConfiguration defaultConfiguration() {
-        TbGenerateReportNodeConfiguration configuration = new TbGenerateReportNodeConfiguration();
-        configuration.setUseSystemReportsServer(true);
-        configuration.setUseReportConfigFromMessage(true);
-        return configuration;
+    public EntityType getEntityType() {
+        return EntityType.REPORT_TEMPLATE;
     }
 }

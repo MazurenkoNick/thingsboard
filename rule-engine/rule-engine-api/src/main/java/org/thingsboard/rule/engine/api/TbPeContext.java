@@ -34,7 +34,6 @@ import com.google.common.util.concurrent.FutureCallback;
 import org.thingsboard.server.common.data.Customer;
 import org.thingsboard.server.common.data.Dashboard;
 import org.thingsboard.server.common.data.Device;
-import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.EntityView;
 import org.thingsboard.server.common.data.User;
 import org.thingsboard.server.common.data.asset.Asset;
@@ -63,7 +62,7 @@ public interface TbPeContext {
 
     EntityGroupService getEntityGroupService();
 
-    ReportService getReportService();
+    DashboardReportService getDashboardReportService();
 
     BlobEntityService getBlobEntityService();
 

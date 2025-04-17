@@ -47,13 +47,13 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.context.request.async.DeferredResult;
-import org.thingsboard.rule.engine.api.ReportService;
+import org.thingsboard.rule.engine.api.DashboardReportService;
 import org.thingsboard.server.common.data.DashboardInfo;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.id.DashboardId;
 import org.thingsboard.server.common.data.permission.Operation;
-import org.thingsboard.server.common.data.report.ReportConfig;
-import org.thingsboard.server.common.data.report.ReportData;
+import org.thingsboard.server.common.data.dashboardreport.DashboardReportConfig;
+import org.thingsboard.server.common.data.dashboardreport.DashboardReportData;
 import org.thingsboard.server.config.annotations.ApiOperation;
 import org.thingsboard.server.queue.util.TbCoreComponent;
 import org.thingsboard.server.service.security.model.SecurityUser;
@@ -73,12 +73,12 @@ import static org.thingsboard.server.controller.ControllerConstants.TENANT_OR_CU
 @RestController
 @TbCoreComponent
 @RequestMapping("/api")
-public class ReportController extends BaseController {
+public class DashboardReportController extends BaseController {
 
     private SimpleDateFormat defaultDateFormat = new SimpleDateFormat("yyyy-MM-dd_HH:mm:ss");
 
     @Autowired
-    private ReportService reportService;
+    private DashboardReportService dashboardReportService;
 
     public static final String DASHBOARD_ID = "dashboardId";
 
@@ -109,7 +109,7 @@ public class ReportController extends BaseController {
             if (currentUser.getUserPrincipal().getType() == UserPrincipal.Type.PUBLIC_ID) {
                 publicId = currentUser.getUserPrincipal().getValue();
             }
-            reportService.
+            dashboardReportService.
                     generateDashboardReport(baseUrl, dashboardId, getTenantId(), currentUser.getId(), publicId, name, reportParams,
                             onSuccess(result),
                             result::setErrorResult);
@@ -124,7 +124,7 @@ public class ReportController extends BaseController {
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
     @RequestMapping(value = "/report/test", method = RequestMethod.POST, produces = {"application/pdf", "image/jpeg", "image/png"})
     @ResponseBody
-    public DeferredResult<ResponseEntity<Resource>> downloadTestReport(@RequestBody ReportConfig reportConfig,
+    public DeferredResult<ResponseEntity<Resource>> downloadTestReport(@RequestBody DashboardReportConfig reportConfig,
                                                                        @Parameter(description = "A string value representing the report server endpoint.", example = "http://localhost:8383")
                                                                        @RequestParam(required = false) String reportsServerEndpointUrl) {
         DeferredResult<ResponseEntity<Resource>> result = new DeferredResult<>();
@@ -135,14 +135,14 @@ public class ReportController extends BaseController {
             DashboardId dashboardId = new DashboardId(toUUID(strDashboardId));
             checkDashboardInfoId(dashboardId, Operation.READ);
 
-            reportService.generateReport(getTenantId(), reportConfig, reportsServerEndpointUrl, onSuccess(result), result::setErrorResult);
+            dashboardReportService.generateReport(getTenantId(), reportConfig, reportsServerEndpointUrl, onSuccess(result), result::setErrorResult);
         } catch (Exception e) {
             result.setErrorResult(e);
         }
         return result;
     }
 
-    private Consumer<ReportData> onSuccess(DeferredResult<ResponseEntity<Resource>> result) {
+    private Consumer<DashboardReportData> onSuccess(DeferredResult<ResponseEntity<Resource>> result) {
         return reportData -> {
             ByteArrayResource resource = new ByteArrayResource(reportData.getData());
             ResponseEntity<Resource> response = ResponseEntity.ok().

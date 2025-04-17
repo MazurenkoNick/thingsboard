@@ -676,8 +676,8 @@ CREATE TABLE IF NOT EXISTS blob_entity (
     additional_info varchar
 ) PARTITION BY RANGE (created_time);
 
-CREATE TABLE IF NOT EXISTS report (
-    id uuid NOT NULL CONSTRAINT report_pkey PRIMARY KEY,
+CREATE TABLE IF NOT EXISTS report_template (
+    id uuid NOT NULL CONSTRAINT report_template_pkey PRIMARY KEY,
     created_time bigint NOT NULL,
     tenant_id uuid,
     customer_id uuid,
@@ -687,8 +687,8 @@ CREATE TABLE IF NOT EXISTS report (
     scheduler_event_id uuid UNIQUE,
     external_id uuid,
     version BIGINT DEFAULT 1,
-    CONSTRAINT report_external_id_unq_key UNIQUE (tenant_id, external_id),
-    CONSTRAINT fk_report_scheduler_event FOREIGN KEY (scheduler_event_id) REFERENCES scheduler_event(id) ON DELETE SET NULL
+    CONSTRAINT report_template_external_id_unq_key UNIQUE (tenant_id, external_id),
+    CONSTRAINT fk_report_template_scheduler_event FOREIGN KEY (scheduler_event_id) REFERENCES scheduler_event(id) ON DELETE SET NULL
 );
 
 CREATE TABLE IF NOT EXISTS entity_view (

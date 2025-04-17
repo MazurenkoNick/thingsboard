@@ -589,6 +589,19 @@ public class ModelConstants {
     public static final String BLOB_ENTITY_DATA_PROPERTY = "data";
 
     /**
+     * Report constants.
+     */
+    public static final String REPORT_TEMPLATE_TABLE_NAME = "report_template";
+    public static final String REPORT_TEMPLATE_TENANT_ID_PROPERTY = TENANT_ID_PROPERTY;
+    public static final String REPORT_TEMPLATE_CUSTOMER_ID_PROPERTY = CUSTOMER_ID_PROPERTY;
+    public static final String REPORT_TEMPLATE_NAME_PROPERTY = "name";
+    public static final String REPORT_TEMPLATE_DESCRIPTION_PROPERTY = "description";
+    public static final String REPORT_TEMPLATE_SCHEDULER_EVENT_ID_PROPERTY = "scheduler_event_id";
+    public static final String REPORT_TEMPLATE_CONFIGURATION_PROPERTY = CONFIGURATION_PROPERTY;
+
+    public static final String REPORT_TEMPLATE_INFO_VIEW_TABLE_NAME = "report_template_info_view";
+
+    /**
      * Role constants.
      */
     public static final String ROLE_TABLE_NAME = "role";

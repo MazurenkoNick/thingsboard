@@ -70,6 +70,7 @@ import org.thingsboard.server.dao.entityview.EntityViewService;
 import org.thingsboard.server.dao.eventsourcing.DeleteEntityEvent;
 import org.thingsboard.server.dao.eventsourcing.SaveEntityEvent;
 import org.thingsboard.server.dao.exception.IncorrectParameterException;
+import org.thingsboard.server.dao.report.ReportTemplateService;
 import org.thingsboard.server.dao.role.RoleService;
 import org.thingsboard.server.dao.scheduler.SchedulerEventService;
 import org.thingsboard.server.dao.service.DataValidator;
@@ -133,6 +134,9 @@ public class CustomerServiceImpl extends AbstractCachedEntityService<CustomerCac
 
     @Autowired
     private BlobEntityService blobEntityService;
+
+    @Autowired
+    private ReportTemplateService reportTemplateService;
 
     @Autowired
     private RoleService roleService;
@@ -312,6 +316,7 @@ public class CustomerServiceImpl extends AbstractCachedEntityService<CustomerCac
         userService.deleteCustomerUsers(customer.getTenantId(), customerId);
         schedulerEventService.deleteSchedulerEventsByTenantIdAndCustomerId(customer.getTenantId(), customerId);
         blobEntityService.deleteBlobEntitiesByTenantIdAndCustomerId(customer.getTenantId(), customerId);
+        reportTemplateService.deleteReportTemplatesByTenantIdAndCustomerId(customer.getTenantId(), customerId);
         entityGroupService.deleteAllEntityGroups(tenantId, customerId);
         roleService.deleteRolesByTenantIdAndCustomerId(customer.getTenantId(), customerId);
         apiUsageStateService.deleteApiUsageStateByEntityId(customerId);

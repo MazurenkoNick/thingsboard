@@ -190,7 +190,7 @@ import org.thingsboard.server.common.data.relation.EntityRelation;
 import org.thingsboard.server.common.data.relation.EntityRelationInfo;
 import org.thingsboard.server.common.data.relation.EntityRelationsQuery;
 import org.thingsboard.server.common.data.relation.RelationTypeGroup;
-import org.thingsboard.server.common.data.report.ReportConfig;
+import org.thingsboard.server.common.data.dashboardreport.DashboardReportConfig;
 import org.thingsboard.server.common.data.role.Role;
 import org.thingsboard.server.common.data.role.RoleType;
 import org.thingsboard.server.common.data.rule.DefaultRuleChainCreateRequest;
@@ -4580,7 +4580,7 @@ public class RestClient implements Closeable {
                 dashboardId.getId()).getBody();
     }
 
-    public JsonNode downloadTestReport(ReportConfig reportConfig, String reportsServerEndpointUrl) {
+    public JsonNode downloadTestReport(DashboardReportConfig reportConfig, String reportsServerEndpointUrl) {
         return restTemplate.exchange(
                 baseURL + "/api/report/test?reportsServerEndpointUrl={reportsServerEndpointUrl}",
                 HttpMethod.POST,
