@@ -135,6 +135,7 @@ import org.thingsboard.server.dao.ota.OtaPackageService;
 import org.thingsboard.server.dao.queue.QueueService;
 import org.thingsboard.server.dao.queue.QueueStatsService;
 import org.thingsboard.server.dao.relation.RelationService;
+import org.thingsboard.server.dao.report.ReportTemplateService;
 import org.thingsboard.server.dao.resource.ResourceService;
 import org.thingsboard.server.dao.role.RoleService;
 import org.thingsboard.server.dao.rule.RuleChainService;
@@ -964,6 +965,11 @@ public class DefaultTbContext implements TbContext, TbPeContext {
     @Override
     public BlobEntityService getBlobEntityService() {
         return mainCtx.getBlobEntityService();
+    }
+
+    @Override
+    public ReportTemplateService getReportTemplateService() {
+        return mainCtx.getReportTemplateService();
     }
 
     @Override

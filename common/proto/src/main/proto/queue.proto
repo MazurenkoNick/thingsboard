@@ -54,6 +54,7 @@ enum EntityTypeProto {
   RULE_NODE             = 12;
   SCHEDULER_EVENT       = 103;
   BLOB_ENTITY           = 104;
+  REPORT_TEMPLATE       = 107;
   ENTITY_VIEW           = 15;
   WIDGETS_BUNDLE        = 16;
   WIDGET_TYPE           = 17;
