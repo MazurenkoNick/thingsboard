@@ -67,6 +67,7 @@ public enum Resource {
     INTEGRATION(EntityType.INTEGRATION),
     SCHEDULER_EVENT(EntityType.SCHEDULER_EVENT),
     BLOB_ENTITY(EntityType.BLOB_ENTITY),
+    REPORT_TEMPLATE(EntityType.REPORT_TEMPLATE),
     CUSTOMER_GROUP(EntityType.ENTITY_GROUP),
     DEVICE_GROUP(EntityType.ENTITY_GROUP),
     ASSET_GROUP(EntityType.ENTITY_GROUP),
@@ -150,6 +151,7 @@ public enum Resource {
         operationsByResource.put(Resource.INTEGRATION, Operation.defaultEntityOperations);
         operationsByResource.put(Resource.SCHEDULER_EVENT, Operation.defaultEntityOperations);
         operationsByResource.put(Resource.BLOB_ENTITY, Operation.defaultEntityOperations);
+        operationsByResource.put(Resource.REPORT_TEMPLATE, Operation.defaultEntityOperations);
         operationsByResource.put(Resource.CUSTOMER_GROUP, Operation.defaultEntityGroupOperations);
         operationsByResource.put(Resource.DEVICE_GROUP, Operation.defaultEntityGroupOperations);
         operationsByResource.put(Resource.ASSET_GROUP, Operation.defaultEntityGroupOperations);
@@ -215,6 +217,7 @@ public enum Resource {
                 Resource.INTEGRATION,
                 Resource.SCHEDULER_EVENT,
                 Resource.BLOB_ENTITY,
+                Resource.REPORT_TEMPLATE,
                 Resource.CUSTOMER_GROUP,
                 Resource.USER_GROUP,
                 Resource.DEVICE_GROUP,
@@ -254,6 +257,7 @@ public enum Resource {
                 Resource.ROLE,
                 Resource.SCHEDULER_EVENT,
                 Resource.BLOB_ENTITY,
+                Resource.REPORT_TEMPLATE,
                 Resource.CUSTOMER_GROUP,
                 Resource.USER_GROUP,
                 Resource.DEVICE_GROUP,

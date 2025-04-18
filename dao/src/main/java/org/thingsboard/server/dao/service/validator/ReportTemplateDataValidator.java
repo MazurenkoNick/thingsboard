@@ -63,7 +63,7 @@ public class ReportTemplateDataValidator extends DataValidator<ReportTemplate> {
 
     @Override
     protected void validateDataImpl(TenantId tenantId, ReportTemplate reportTemplate) {
-        validateString("Report name", reportTemplate.getName());
+        validateString("Report template name", reportTemplate.getName());
         if (reportTemplate.getTenantId() == null) {
             throw new DataValidationException("Report template should be assigned to tenant!");
         } else {
