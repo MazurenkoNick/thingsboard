@@ -52,6 +52,10 @@ public class ReportTemplateInfo extends BaseReportTemplate {
         super();
     }
 
+    public ReportTemplateInfo(BaseReportTemplate reportTemplate) {
+        super(reportTemplate);
+    }
+
     public ReportTemplateInfo(BaseReportTemplate reportTemplate, String ownerName) {
         super(reportTemplate);
         this.ownerName = ownerName;

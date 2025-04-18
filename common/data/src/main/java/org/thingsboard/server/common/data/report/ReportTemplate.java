@@ -56,13 +56,13 @@ public class ReportTemplate extends BaseReportTemplate {
         super(id);
     }
 
-    public ReportTemplate(BaseReportTemplate report) {
-        super(report.getId());
+    public ReportTemplate(BaseReportTemplate reportTemplate) {
+        super(reportTemplate);
     }
 
-    public ReportTemplate(ReportTemplate report) {
-        super(report);
-        this.configuration = report.getConfiguration();
+    public ReportTemplate(ReportTemplate reportTemplate) {
+        super(reportTemplate);
+        this.configuration = reportTemplate.getConfiguration();
     }
 
 }
