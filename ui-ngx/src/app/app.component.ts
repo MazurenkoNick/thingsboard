@@ -113,6 +113,12 @@ export class AppComponent implements OnInit {
     }
     // @ts-ignore
     this.translate.changeDefaultLang(env.defaultLang);
+    this.translate.setTranslation(undefined, {
+      "access": {
+        "refresh-token-expired": "Session has expired",
+        "refresh-token-failed": "Unable to refresh session"
+      }
+    }, true);
   }
 
   setupAuth() {
