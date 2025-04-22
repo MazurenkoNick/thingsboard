@@ -56,7 +56,7 @@ import java.util.stream.Collectors;
 public class DefaultTbLicenseStatisticsService implements TbLicenseStatisticsService {
 
     private static final List<EntityType> COUNTED_TYPES = List.of(EntityType.TENANT, EntityType.CUSTOMER, EntityType.USER, EntityType.DEVICE,
-            EntityType.ASSET, EntityType.RULE_CHAIN, EntityType.DASHBOARD);
+            EntityType.ASSET, EntityType.RULE_CHAIN, EntityType.DASHBOARD, EntityType.CALCULATED_FIELD);
 
     private final EntityDaoRegistry entityDaoRegistry;
     private final IntegrationDao integrationDao;
