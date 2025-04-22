@@ -37,6 +37,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.thingsboard.server.common.data.edqs.fields.IntegrationFields;
+import org.thingsboard.server.common.data.integration.IntegrationType;
 import org.thingsboard.server.common.data.util.TbPair;
 import org.thingsboard.server.dao.ExportableEntityRepository;
 import org.thingsboard.server.dao.model.sql.IntegrationEntity;
@@ -93,5 +94,5 @@ public interface IntegrationRepository extends JpaRepository<IntegrationEntity, 
     List<IntegrationFields> findNextBatch(@Param("id") UUID id, Limit limit);
 
     @Query(value = "SELECT new org.thingsboard.server.common.data.util.TbPair(i.type, count(i)) FROM IntegrationEntity i GROUP BY i.type")
-    List<TbPair<String, Long>> countIntegrationsPerType();
+    List<TbPair<IntegrationType, Long>> countIntegrationsPerType();
 }

@@ -132,7 +132,7 @@ public class JpaIntegrationDao extends JpaAbstractDao<IntegrationEntity, Integra
 
     @Override
     public Map<String, Long> countIntegrationsPerType() {
-        return integrationRepository.countIntegrationsPerType().stream().collect(Collectors.toMap(TbPair::getFirst, TbPair::getSecond));
+        return integrationRepository.countIntegrationsPerType().stream().collect(Collectors.toMap(p -> p.getFirst().name(), TbPair::getSecond));
     }
 
     @Override
