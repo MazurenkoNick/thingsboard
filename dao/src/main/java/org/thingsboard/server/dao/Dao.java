@@ -74,4 +74,6 @@ public interface Dao<T> {
         return null;
     }
 
+    long count();
+
 }

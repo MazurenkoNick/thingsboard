@@ -89,4 +89,13 @@ public interface ConverterRepository extends JpaRepository<ConverterEntity, UUID
             "c.name, c.version, c.type, c.additionalInfo) FROM ConverterEntity c WHERE c.id > :id ORDER BY c.id")
     List<ConverterFields> findNextBatch(@Param("id") UUID id, Limit limit);
 
+    @Query(value = "SELECT COUNT(*) FROM converter WHERE configuration::json ->> 'scriptLang' = :scriptLang", nativeQuery = true)
+    Long countByScriptLang(String scriptLang);
+
+    Long countAllByIntegrationTypeIsNull();
+
+    Long countAllByIntegrationTypeIsNotNull();
+
+    Long countAllByConverterVersionAndIntegrationTypeIsNotNull(Integer converterVersion);
+
 }
