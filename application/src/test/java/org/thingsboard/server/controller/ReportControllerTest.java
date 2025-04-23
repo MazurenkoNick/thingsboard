@@ -92,11 +92,10 @@ public class ReportControllerTest extends AbstractControllerTest {
 
     @Test
     public void testCreateReportWithLongTable() throws Exception {
+        ReportTemplateConfiguration configuration = new ReportTemplateConfiguration();
         DeviceTypeFilter filter = new DeviceTypeFilter();
         filter.setDeviceTypes(List.of("default"));
         filter.setDeviceNameFilter("");
-
-        ReportTemplateConfiguration configuration = new ReportTemplateConfiguration();
         configuration.setEntityAliases(List.of(
                 new EntityAlias("784f394c-42b6-435a-983c-b7beff2784f9", "Devices", filter)
         ));
@@ -114,7 +113,7 @@ public class ReportControllerTest extends AbstractControllerTest {
         reportTemplate.setConfiguration(configuration);
         reportTemplate.setName("Device inventory report");
 
-        ReportTemplate savedTemplate = doPost("/api/v2/report/template", reportTemplate, ReportTemplate.class);
+        ReportTemplate savedTemplate = doPost("/api/reportTemplate", reportTemplate, ReportTemplate.class);
 
         List<Device> devices = new ArrayList<>();
         for (int i = 0; i < 97; i++) {

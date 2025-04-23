@@ -336,9 +336,6 @@ public abstract class BaseController {
     protected ConverterService converterService;
 
     @Autowired
-    protected ReportTemplateService reportTemplateService;
-
-    @Autowired
     protected AlarmSubscriptionService alarmService;
 
     @Autowired
@@ -1086,10 +1083,6 @@ public abstract class BaseController {
 
     Converter checkConverterId(ConverterId converterId, Operation operation) throws ThingsboardException {
         return checkEntityId(converterId, converterService::findConverterById, operation);
-    }
-
-    ReportTemplate checkReportTemplateId(ReportTemplateId reportTemplateId, Operation operation) throws ThingsboardException {
-        return checkEntityId(reportTemplateId, reportTemplateService::findReportTemplateById, operation);
     }
 
     AssetProfile checkAssetProfileId(AssetProfileId assetProfileId, Operation operation) throws ThingsboardException {
