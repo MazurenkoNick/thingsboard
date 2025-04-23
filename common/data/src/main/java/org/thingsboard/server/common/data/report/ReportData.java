@@ -28,20 +28,21 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.common.data.report.configuration;
+package org.thingsboard.server.common.data.report;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
-import java.util.List;
 
 @Data
-public class ReportTemplateConfiguration {
+@Builder
+@AllArgsConstructor
+public class ReportData {
 
-    private String fileName;
-    private Boolean subReport;
-    private List<EntityAlias> entityAliases;
-    private List<Filter> filters;
-    private HeaderFooter header;
-    private HeaderFooter footer;
-    private List<ReportComponent> components;
+    private byte[] data;
+    private String name;
+    private String contentType;
 
+    public ReportData() {
+    }
 }

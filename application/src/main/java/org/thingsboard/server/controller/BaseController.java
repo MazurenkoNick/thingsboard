@@ -165,6 +165,7 @@ import org.thingsboard.server.common.data.query.EntityDataSortOrder;
 import org.thingsboard.server.common.data.query.EntityKey;
 import org.thingsboard.server.common.data.queue.Queue;
 import org.thingsboard.server.common.data.report.ReportTemplate;
+import org.thingsboard.server.common.data.report.ReportTemplate;
 import org.thingsboard.server.common.data.report.ReportTemplateInfo;
 import org.thingsboard.server.common.data.role.Role;
 import org.thingsboard.server.common.data.role.RoleType;

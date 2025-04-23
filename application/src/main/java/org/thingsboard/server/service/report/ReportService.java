@@ -28,20 +28,18 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.common.data.report.configuration;
+package org.thingsboard.server.service.report;
 
-import lombok.Data;
-import java.util.List;
+import com.google.common.util.concurrent.ListenableFuture;
+import net.sf.jasperreports.engine.JRException;
+import org.thingsboard.server.common.data.exception.ThingsboardException;
+import org.thingsboard.server.common.data.report.ReportData;
+import org.thingsboard.server.common.data.report.ReportRequest;
+import org.thingsboard.server.service.security.model.SecurityUser;
 
-@Data
-public class ReportTemplateConfiguration {
 
-    private String fileName;
-    private Boolean subReport;
-    private List<EntityAlias> entityAliases;
-    private List<Filter> filters;
-    private HeaderFooter header;
-    private HeaderFooter footer;
-    private List<ReportComponent> components;
+public interface ReportService {
+
+    ListenableFuture<ReportData> generateReport(SecurityUser securityUser, ReportRequest reportRequest) throws ThingsboardException, JRException;
 
 }

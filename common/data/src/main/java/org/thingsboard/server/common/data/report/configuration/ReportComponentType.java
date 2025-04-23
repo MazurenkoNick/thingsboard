@@ -30,18 +30,8 @@
  */
 package org.thingsboard.server.common.data.report.configuration;
 
-import lombok.Data;
-import java.util.List;
+public enum ReportComponentType {
 
-@Data
-public class ReportTemplateConfiguration {
-
-    private String fileName;
-    private Boolean subReport;
-    private List<EntityAlias> entityAliases;
-    private List<Filter> filters;
-    private HeaderFooter header;
-    private HeaderFooter footer;
-    private List<ReportComponent> components;
+    HEADING, RICH_TEXT, ENTITY_TABLE, TIME_SERIES_TABLE, ALARM_TABLE, DASHBOARD, IMAGE, SUB_REPORT;
 
 }

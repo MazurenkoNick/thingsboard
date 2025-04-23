@@ -30,18 +30,22 @@
  */
 package org.thingsboard.server.common.data.report.configuration;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import org.thingsboard.server.common.data.query.KeyFilter;
+
 import java.util.List;
 
+@Schema
 @Data
-public class ReportTemplateConfiguration {
+@EqualsAndHashCode
+@NoArgsConstructor
+public class Filter {
 
-    private String fileName;
-    private Boolean subReport;
-    private List<EntityAlias> entityAliases;
-    private List<Filter> filters;
-    private HeaderFooter header;
-    private HeaderFooter footer;
-    private List<ReportComponent> components;
+    String id;
+    String filter;
+    List<KeyFilter> keyFilters;
 
 }

@@ -30,18 +30,24 @@
  */
 package org.thingsboard.server.common.data.report.configuration;
 
-import lombok.Data;
-import java.util.List;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
-@Data
-public class ReportTemplateConfiguration {
+import java.io.Serializable;
 
-    private String fileName;
-    private Boolean subReport;
-    private List<EntityAlias> entityAliases;
-    private List<Filter> filters;
-    private HeaderFooter header;
-    private HeaderFooter footer;
-    private List<ReportComponent> components;
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonTypeInfo(
+        use = JsonTypeInfo.Id.NAME,
+        include = JsonTypeInfo.As.EXISTING_PROPERTY,
+        property = "type")
+@JsonSubTypes({
+        @JsonSubTypes.Type(value = HeadingComponent.class, name = "HEADING"),
+        @JsonSubTypes.Type(value = EntityTableComponent.class, name = "ENTITY_TABLE"),
+})
+public interface ReportComponent extends Serializable {
+
+    ReportComponentType getType();
 
 }
