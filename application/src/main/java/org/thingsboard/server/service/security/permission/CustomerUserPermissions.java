@@ -94,6 +94,7 @@ public class CustomerUserPermissions extends AbstractPermissions {
         put(Resource.WIDGET_TYPE, widgetsPermissionChecker);
         put(Resource.SCHEDULER_EVENT, customerStandaloneEntityPermissionChecker);
         put(Resource.BLOB_ENTITY, customerStandaloneEntityPermissionChecker);
+        put(Resource.REPORT_TEMPLATE, customerStandaloneEntityPermissionChecker);
         put(Resource.CUSTOMER_GROUP, customerEntityGroupPermissionChecker);
         put(Resource.DEVICE_GROUP, customerEntityGroupPermissionChecker);
         put(Resource.ASSET_GROUP, customerEntityGroupPermissionChecker);

@@ -64,6 +64,7 @@ import org.thingsboard.server.common.data.id.OAuth2ClientId;
 import org.thingsboard.server.common.data.id.OtaPackageId;
 import org.thingsboard.server.common.data.id.QueueId;
 import org.thingsboard.server.common.data.id.QueueStatsId;
+import org.thingsboard.server.common.data.id.ReportTemplateId;
 import org.thingsboard.server.common.data.id.RoleId;
 import org.thingsboard.server.common.data.id.RpcId;
 import org.thingsboard.server.common.data.id.RuleChainId;
@@ -191,6 +192,9 @@ public class TenantIdLoader {
                 break;
             case BLOB_ENTITY:
                 tenantEntity = ctx.getPeContext().getBlobEntityService().findBlobEntityById(ctxTenantId, new BlobEntityId(id));
+                break;
+            case REPORT_TEMPLATE:
+                tenantEntity = ctx.getPeContext().getReportTemplateService().findReportTemplateById(ctxTenantId, new ReportTemplateId(id));
                 break;
             case ROLE:
                 tenantEntity = ctx.getPeContext().getRoleService().findRoleById(ctxTenantId, new RoleId(id));

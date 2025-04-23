@@ -28,41 +28,15 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.common.data.report;
+package org.thingsboard.server.service.entitiy.report;
 
-import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.ToString;
-import org.thingsboard.server.common.data.id.ReportTemplateId;
-import org.thingsboard.server.common.data.report.configuration.ReportTemplateConfiguration;
+import org.thingsboard.server.common.data.User;
+import org.thingsboard.server.common.data.report.ReportTemplate;
 
-@Schema
-@Data
-@ToString(callSuper = true)
-@EqualsAndHashCode(callSuper = true)
-public class ReportTemplate extends BaseReportTemplate {
+public interface TbReportTemplateService {
 
-    private static final long serialVersionUID = 1729877416392618039L;
+    ReportTemplate save(ReportTemplate reportTemplate, User user) throws Exception;
 
-    @Schema(description = "a JSON value with report template configuration", implementation = ReportTemplateConfiguration.class)
-    private ReportTemplateConfiguration configuration;
-
-    public ReportTemplate() {
-        super();
-    }
-
-    public ReportTemplate(ReportTemplateId id) {
-        super(id);
-    }
-
-    public ReportTemplate(BaseReportTemplate reportTemplate) {
-        super(reportTemplate);
-    }
-
-    public ReportTemplate(ReportTemplate reportTemplate) {
-        super(reportTemplate);
-        this.configuration = reportTemplate.getConfiguration();
-    }
+    void delete(ReportTemplate reportTemplate, User user);
 
 }

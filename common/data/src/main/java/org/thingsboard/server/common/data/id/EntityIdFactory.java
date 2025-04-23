@@ -98,6 +98,8 @@ public class EntityIdFactory {
                 return new SchedulerEventId(uuid);
             case BLOB_ENTITY:
                 return new BlobEntityId(uuid);
+            case REPORT_TEMPLATE:
+                return new ReportTemplateId(uuid);
             case ENTITY_VIEW:
                 return new EntityViewId(uuid);
             case ROLE:
