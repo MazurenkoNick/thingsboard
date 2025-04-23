@@ -68,8 +68,11 @@ public class BaseReportTemplate extends BaseData<ReportTemplateId> implements Ha
 
     @NoXss
     @Length(fieldName = "name")
-    @Schema(description = "report name", example = "Weekly Report")
+    @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Report name", example = "Weekly Report")
     private String name;
+
+    @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Report template type", allowableValues = {"REPORT, SUB_REPORT"})
+    private ReportTemplateType type;
 
     @NoXss
     @Length(fieldName = "description", max = 1024)
@@ -96,6 +99,7 @@ public class BaseReportTemplate extends BaseData<ReportTemplateId> implements Ha
         this.tenantId = reportTemplate.getTenantId();
         this.customerId = reportTemplate.getCustomerId();
         this.name = reportTemplate.getName();
+        this.type = reportTemplate.getType();
         this.description = reportTemplate.getDescription();
         this.schedulerEventId = reportTemplate.getSchedulerEventId();
         this.externalId = reportTemplate.getExternalId();

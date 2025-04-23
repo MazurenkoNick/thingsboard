@@ -28,24 +28,9 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.dao.report;
+package org.thingsboard.server.common.data.report;
 
-import org.thingsboard.server.common.data.page.PageData;
-import org.thingsboard.server.common.data.page.PageLink;
-import org.thingsboard.server.common.data.report.ReportTemplateInfo;
-import org.thingsboard.server.common.data.report.ReportTemplateType;
-import org.thingsboard.server.dao.Dao;
-
-import java.util.UUID;
-
-public interface ReportTemplateInfoDao extends Dao<ReportTemplateInfo> {
-
-    PageData<ReportTemplateInfo> findReportTemplatesByTenantId(UUID tenantId, ReportTemplateType type, PageLink pageLink);
-
-    PageData<ReportTemplateInfo> findTenantReportTemplatesByTenantId(UUID tenantId, ReportTemplateType type, PageLink pageLink);
-
-    PageData<ReportTemplateInfo> findReportTemplatesByTenantIdAndCustomerId(UUID tenantId, UUID customerId, ReportTemplateType type, PageLink pageLink);
-
-    PageData<ReportTemplateInfo> findReportTemplatesByTenantIdAndCustomerIdIncludingSubCustomers(UUID tenantId, UUID customerId, ReportTemplateType type, PageLink pageLink);
-
+public enum ReportTemplateType {
+    REPORT,
+    SUB_REPORT
 }

@@ -44,6 +44,7 @@ import org.thingsboard.server.common.data.relation.EntityRelation;
 import org.thingsboard.server.common.data.relation.RelationTypeGroup;
 import org.thingsboard.server.common.data.report.ReportTemplate;
 import org.thingsboard.server.common.data.report.ReportTemplateInfo;
+import org.thingsboard.server.common.data.report.ReportTemplateType;
 import org.thingsboard.server.common.data.report.configuration.ReportTemplateConfiguration;
 import org.thingsboard.server.common.data.scheduler.SchedulerEvent;
 import org.thingsboard.server.dao.relation.RelationService;
@@ -73,6 +74,7 @@ public class ReportTemplateServiceTest extends AbstractServiceTest {
         ReportTemplate reportTemplate = new ReportTemplate();
         reportTemplate.setTenantId(tenantId);
         reportTemplate.setName("My report");
+        reportTemplate.setType(ReportTemplateType.REPORT);
         reportTemplate.setDescription("My report");
         reportTemplate.setConfiguration(new ReportTemplateConfiguration());
         ReportTemplate savedReportTemplate = reportTemplateService.saveReportTemplate(reportTemplate);
@@ -98,6 +100,16 @@ public class ReportTemplateServiceTest extends AbstractServiceTest {
     public void testSaveReportTemplateWithEmptyName() {
         ReportTemplate reportTemplate = new ReportTemplate();
         reportTemplate.setTenantId(tenantId);
+        reportTemplate.setType(ReportTemplateType.REPORT);
+        reportTemplate.setConfiguration(new ReportTemplateConfiguration());
+        Assertions.assertThrows(DataValidationException.class, () -> reportTemplateService.saveReportTemplate(reportTemplate));
+    }
+
+    @Test
+    public void testSaveReportTemplateWithEmptyType() {
+        ReportTemplate reportTemplate = new ReportTemplate();
+        reportTemplate.setTenantId(tenantId);
+        reportTemplate.setName("My report");
         reportTemplate.setConfiguration(new ReportTemplateConfiguration());
         Assertions.assertThrows(DataValidationException.class, () -> reportTemplateService.saveReportTemplate(reportTemplate));
     }
@@ -108,6 +120,7 @@ public class ReportTemplateServiceTest extends AbstractServiceTest {
         reportTemplate.setTenantId(tenantId);
         reportTemplate.setConfiguration(new ReportTemplateConfiguration());
         reportTemplate.setName("F0929906\000\000\000\000\000\000\000\000\000");
+        reportTemplate.setType(ReportTemplateType.REPORT);
         Assertions.assertThrows(DataValidationException.class, () -> reportTemplateService.saveReportTemplate(reportTemplate));
     }
 
@@ -115,6 +128,7 @@ public class ReportTemplateServiceTest extends AbstractServiceTest {
     public void testSaveReportTemplateWithEmptyTenant() {
         ReportTemplate reportTemplate = new ReportTemplate();
         reportTemplate.setName("My report");
+        reportTemplate.setType(ReportTemplateType.REPORT);
         reportTemplate.setConfiguration(new ReportTemplateConfiguration());
         Assertions.assertThrows(DataValidationException.class, () -> reportTemplateService.saveReportTemplate(reportTemplate));
     }
@@ -123,6 +137,7 @@ public class ReportTemplateServiceTest extends AbstractServiceTest {
     public void testSaveReportTemplateWithInvalidTenant() {
         ReportTemplate reportTemplate = new ReportTemplate();
         reportTemplate.setName("My report");
+        reportTemplate.setType(ReportTemplateType.REPORT);
         reportTemplate.setConfiguration(new ReportTemplateConfiguration());
         reportTemplate.setTenantId(TenantId.fromUUID(Uuids.timeBased()));
         Assertions.assertThrows(DataValidationException.class, () -> reportTemplateService.saveReportTemplate(reportTemplate));
@@ -133,6 +148,7 @@ public class ReportTemplateServiceTest extends AbstractServiceTest {
         ReportTemplate reportTemplate = new ReportTemplate();
         reportTemplate.setTenantId(tenantId);
         reportTemplate.setName("My report");
+        reportTemplate.setType(ReportTemplateType.REPORT);
         reportTemplate.setConfiguration(new ReportTemplateConfiguration());
         ReportTemplate savedReportTemplate = reportTemplateService.saveReportTemplate(reportTemplate);
         ReportTemplate foundReportTemplate = reportTemplateService.findReportTemplateById(tenantId, savedReportTemplate.getId());
@@ -146,6 +162,7 @@ public class ReportTemplateServiceTest extends AbstractServiceTest {
         ReportTemplate reportTemplate = new ReportTemplate();
         reportTemplate.setTenantId(tenantId);
         reportTemplate.setName("My report");
+        reportTemplate.setType(ReportTemplateType.REPORT);
         reportTemplate.setConfiguration(new ReportTemplateConfiguration());
         ReportTemplate savedReportTemplate = reportTemplateService.saveReportTemplate(reportTemplate);
         EntityRelation relation = new EntityRelation(tenantId, savedReportTemplate.getId(), EntityRelation.CONTAINS_TYPE);
@@ -166,6 +183,7 @@ public class ReportTemplateServiceTest extends AbstractServiceTest {
             ReportTemplate reportTemplate = new ReportTemplate();
             reportTemplate.setTenantId(tenantId);
             reportTemplate.setName("ReportTemplate" + i);
+            reportTemplate.setType(ReportTemplateType.REPORT);
             reportTemplate.setConfiguration(new ReportTemplateConfiguration());
             reportTemplates.add(new ReportTemplateInfo(reportTemplateService.saveReportTemplate(reportTemplate)));
         }
@@ -174,7 +192,7 @@ public class ReportTemplateServiceTest extends AbstractServiceTest {
         PageLink pageLink = new PageLink(3);
         PageData<ReportTemplateInfo> pageData;
         do {
-            pageData = reportTemplateService.findReportTemplatesByTenantId(tenantId, pageLink);
+            pageData = reportTemplateService.findReportTemplatesByTenantId(tenantId, null, pageLink);
             loadedReportTemplates.addAll(pageData.getData());
             if (pageData.hasNext()) {
                 pageLink = pageLink.nextPageLink();
@@ -189,7 +207,7 @@ public class ReportTemplateServiceTest extends AbstractServiceTest {
         reportTemplateService.deleteReportTemplatesByTenantId(tenantId);
 
         pageLink = new PageLink(4);
-        pageData = reportTemplateService.findReportTemplatesByTenantId(tenantId, pageLink);
+        pageData = reportTemplateService.findReportTemplatesByTenantId(tenantId, null, pageLink);
         Assert.assertFalse(pageData.hasNext());
         Assert.assertTrue(pageData.getData().isEmpty());
     }
@@ -201,6 +219,7 @@ public class ReportTemplateServiceTest extends AbstractServiceTest {
         for (int i = 0; i < 13; i++) {
             ReportTemplate reportTemplate = new ReportTemplate();
             reportTemplate.setTenantId(tenantId);
+            reportTemplate.setType(ReportTemplateType.REPORT);
             String suffix = StringUtils.randomAlphanumeric(15);
             String name = title1 + suffix;
             name = i % 2 == 0 ? name.toLowerCase() : name.toUpperCase();
@@ -213,6 +232,7 @@ public class ReportTemplateServiceTest extends AbstractServiceTest {
         for (int i = 0; i < 17; i++) {
             ReportTemplate reportTemplate = new ReportTemplate();
             reportTemplate.setTenantId(tenantId);
+            reportTemplate.setType(ReportTemplateType.REPORT);
             String suffix = StringUtils.randomAlphanumeric(15);
             String name = title2 + suffix;
             name = i % 2 == 0 ? name.toLowerCase() : name.toUpperCase();
@@ -225,7 +245,7 @@ public class ReportTemplateServiceTest extends AbstractServiceTest {
         PageLink pageLink = new PageLink(3, 0, title1);
         PageData<ReportTemplateInfo> pageData;
         do {
-            pageData = reportTemplateService.findReportTemplatesByTenantId(tenantId, pageLink);
+            pageData = reportTemplateService.findReportTemplatesByTenantId(tenantId, null, pageLink);
             loadedReportTemplatesTitle1.addAll(pageData.getData());
             if (pageData.hasNext()) {
                 pageLink = pageLink.nextPageLink();
@@ -240,7 +260,7 @@ public class ReportTemplateServiceTest extends AbstractServiceTest {
         List<ReportTemplateInfo> loadedReportTemplatesTitle2 = new ArrayList<>();
         pageLink = new PageLink(4, 0, title2);
         do {
-            pageData = reportTemplateService.findReportTemplatesByTenantId(tenantId, pageLink);
+            pageData = reportTemplateService.findReportTemplatesByTenantId(tenantId, null, pageLink);
             loadedReportTemplatesTitle2.addAll(pageData.getData());
             if (pageData.hasNext()) {
                 pageLink = pageLink.nextPageLink();
@@ -257,7 +277,7 @@ public class ReportTemplateServiceTest extends AbstractServiceTest {
         }
 
         pageLink = new PageLink(4, 0, title1);
-        pageData = reportTemplateService.findReportTemplatesByTenantId(tenantId, pageLink);
+        pageData = reportTemplateService.findReportTemplatesByTenantId(tenantId, null, pageLink);
         Assert.assertFalse(pageData.hasNext());
         Assert.assertEquals(0, pageData.getData().size());
 
@@ -266,7 +286,7 @@ public class ReportTemplateServiceTest extends AbstractServiceTest {
         }
 
         pageLink = new PageLink(4, 0, title2);
-        pageData = reportTemplateService.findReportTemplatesByTenantId(tenantId, pageLink);
+        pageData = reportTemplateService.findReportTemplatesByTenantId(tenantId, null, pageLink);
         Assert.assertFalse(pageData.hasNext());
         Assert.assertEquals(0, pageData.getData().size());
     }
@@ -277,6 +297,7 @@ public class ReportTemplateServiceTest extends AbstractServiceTest {
         ReportTemplate reportTemplate = new ReportTemplate();
         reportTemplate.setTenantId(tenantId);
         reportTemplate.setName("My report");
+        reportTemplate.setType(ReportTemplateType.REPORT);
         reportTemplate.setConfiguration(new ReportTemplateConfiguration());
         ReportTemplate savedReportTemplate = reportTemplateService.saveReportTemplate(reportTemplate);
 
@@ -307,6 +328,7 @@ public class ReportTemplateServiceTest extends AbstractServiceTest {
         ReportTemplate reportTemplate = new ReportTemplate();
         reportTemplate.setTenantId(tenantId);
         reportTemplate.setName("My report");
+        reportTemplate.setType(ReportTemplateType.REPORT);
         reportTemplate.setConfiguration(new ReportTemplateConfiguration());
         ReportTemplate savedReportTemplate = reportTemplateService.saveReportTemplate(reportTemplate);
 

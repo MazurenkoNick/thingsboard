@@ -31,6 +31,8 @@
 package org.thingsboard.server.dao.model.sql;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.MappedSuperclass;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -40,6 +42,7 @@ import org.thingsboard.server.common.data.id.ReportTemplateId;
 import org.thingsboard.server.common.data.id.SchedulerEventId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.report.BaseReportTemplate;
+import org.thingsboard.server.common.data.report.ReportTemplateType;
 import org.thingsboard.server.dao.model.BaseVersionedEntity;
 import org.thingsboard.server.dao.model.ModelConstants;
 
@@ -59,6 +62,10 @@ public abstract class AbstractReportTemplateEntity<T extends BaseReportTemplate>
 
     @Column(name = ModelConstants.REPORT_TEMPLATE_NAME_PROPERTY)
     private String name;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = ModelConstants.REPORT_TEMPLATE_TYPE_PROPERTY)
+    private ReportTemplateType type;
 
     @Column(name = ModelConstants.REPORT_TEMPLATE_DESCRIPTION_PROPERTY)
     private String description;
@@ -82,6 +89,7 @@ public abstract class AbstractReportTemplateEntity<T extends BaseReportTemplate>
             this.customerId = reportTemplate.getCustomerId().getId();
         }
         this.name = reportTemplate.getName();
+        this.type = reportTemplate.getType();
         this.description = reportTemplate.getDescription();
         if (reportTemplate.getSchedulerEventId() != null) {
             this.schedulerEventId = reportTemplate.getSchedulerEventId().getId();
@@ -96,6 +104,7 @@ public abstract class AbstractReportTemplateEntity<T extends BaseReportTemplate>
         this.tenantId = reportTemplateEntity.getTenantId();
         this.customerId = reportTemplateEntity.getCustomerId();
         this.name = reportTemplateEntity.getName();
+        this.type = reportTemplateEntity.getType();
         this.description = reportTemplateEntity.getDescription();
         this.schedulerEventId = reportTemplateEntity.getSchedulerEventId();
         this.externalId = reportTemplateEntity.getExternalId();
@@ -111,6 +120,7 @@ public abstract class AbstractReportTemplateEntity<T extends BaseReportTemplate>
             reportTemplate.setCustomerId(new CustomerId(customerId));
         }
         reportTemplate.setName(name);
+        reportTemplate.setType(type);
         reportTemplate.setDescription(description);
         if (schedulerEventId != null) {
             reportTemplate.setSchedulerEventId(new SchedulerEventId(schedulerEventId));

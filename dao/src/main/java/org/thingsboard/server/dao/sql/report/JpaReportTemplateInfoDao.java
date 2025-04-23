@@ -37,6 +37,7 @@ import org.springframework.stereotype.Component;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.report.ReportTemplateInfo;
+import org.thingsboard.server.common.data.report.ReportTemplateType;
 import org.thingsboard.server.dao.DaoUtil;
 import org.thingsboard.server.dao.model.sql.ReportTemplateInfoEntity;
 import org.thingsboard.server.dao.report.ReportTemplateInfoDao;
@@ -55,40 +56,44 @@ public class JpaReportTemplateInfoDao extends JpaAbstractDao<ReportTemplateInfoE
     private final ReportTemplateInfoRepository reportTemplateInfoRepository;
 
     @Override
-    public PageData<ReportTemplateInfo> findReportTemplatesByTenantId(UUID tenantId, PageLink pageLink) {
+    public PageData<ReportTemplateInfo> findReportTemplatesByTenantId(UUID tenantId, ReportTemplateType type, PageLink pageLink) {
         return DaoUtil.toPageData(reportTemplateInfoRepository
                 .findByTenantId(
                         tenantId,
                         Objects.toString(pageLink.getTextSearch(), ""),
+                        type,
                         DaoUtil.toPageable(pageLink)));
     }
 
     @Override
-    public PageData<ReportTemplateInfo> findTenantReportTemplatesByTenantId(UUID tenantId, PageLink pageLink) {
+    public PageData<ReportTemplateInfo> findTenantReportTemplatesByTenantId(UUID tenantId, ReportTemplateType type, PageLink pageLink) {
         return DaoUtil.toPageData(reportTemplateInfoRepository
                 .findTenantReportsByTenantId(
                         tenantId,
                         pageLink.getTextSearch(),
+                        type,
                         DaoUtil.toPageable(pageLink)));
     }
 
     @Override
-    public PageData<ReportTemplateInfo> findReportTemplatesByTenantIdAndCustomerId(UUID tenantId, UUID customerId, PageLink pageLink) {
+    public PageData<ReportTemplateInfo> findReportTemplatesByTenantIdAndCustomerId(UUID tenantId, UUID customerId, ReportTemplateType type, PageLink pageLink) {
         return DaoUtil.toPageData(reportTemplateInfoRepository
                 .findByTenantIdAndCustomerId(
                         tenantId,
                         customerId,
                         pageLink.getTextSearch(),
+                        type,
                         DaoUtil.toPageable(pageLink)));
     }
 
     @Override
-    public PageData<ReportTemplateInfo> findReportTemplatesByTenantIdAndCustomerIdIncludingSubCustomers(UUID tenantId, UUID customerId, PageLink pageLink) {
+    public PageData<ReportTemplateInfo> findReportTemplatesByTenantIdAndCustomerIdIncludingSubCustomers(UUID tenantId, UUID customerId, ReportTemplateType type, PageLink pageLink) {
         return DaoUtil.toPageData(reportTemplateInfoRepository
                 .findByTenantIdAndCustomerIdIncludingSubCustomers(
                         tenantId,
                         customerId,
                         pageLink.getTextSearch(),
+                        type != null ? type.name() : null,
                         DaoUtil.toPageable(pageLink)));
     }
 

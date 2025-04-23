@@ -44,6 +44,7 @@ import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.report.BaseReportTemplate;
 import org.thingsboard.server.common.data.report.ReportTemplate;
 import org.thingsboard.server.common.data.report.ReportTemplateInfo;
+import org.thingsboard.server.common.data.report.ReportTemplateType;
 import org.thingsboard.server.dao.entity.AbstractEntityService;
 import org.thingsboard.server.dao.entity.EntityCountService;
 import org.thingsboard.server.dao.eventsourcing.DeleteEntityEvent;
@@ -137,37 +138,37 @@ public class BaseReportTemplateService extends AbstractEntityService implements 
     }
 
     @Override
-    public PageData<ReportTemplateInfo> findReportTemplatesByTenantId(TenantId tenantId, PageLink pageLink) {
-        log.trace("Executing findReportTemplatesByTenantId, tenantId [{}], pageLink [{}]", tenantId, pageLink);
+    public PageData<ReportTemplateInfo> findReportTemplatesByTenantId(TenantId tenantId, ReportTemplateType type, PageLink pageLink) {
+        log.trace("Executing findReportTemplatesByTenantId, tenantId [{}], type [{}], pageLink [{}]", tenantId, type, pageLink);
         validateId(tenantId, id -> INCORRECT_TENANT_ID + id);
         validatePageLink(pageLink);
-        return reportTemplateInfoDao.findReportTemplatesByTenantId(tenantId.getId(), pageLink);
+        return reportTemplateInfoDao.findReportTemplatesByTenantId(tenantId.getId(), type, pageLink);
     }
 
     @Override
-    public PageData<ReportTemplateInfo> findTenantReportTemplatesByTenantId(TenantId tenantId, PageLink pageLink) {
-        log.trace("Executing findTenantReportTemplatesByTenantId, tenantId [{}], pageLink [{}]", tenantId, pageLink);
+    public PageData<ReportTemplateInfo> findTenantReportTemplatesByTenantId(TenantId tenantId, ReportTemplateType type, PageLink pageLink) {
+        log.trace("Executing findTenantReportTemplatesByTenantId, tenantId [{}], type [{}], pageLink [{}]", tenantId, type, pageLink);
         validateId(tenantId, id -> INCORRECT_TENANT_ID + id);
         validatePageLink(pageLink);
-        return reportTemplateInfoDao.findTenantReportTemplatesByTenantId(tenantId.getId(), pageLink);
+        return reportTemplateInfoDao.findTenantReportTemplatesByTenantId(tenantId.getId(), type, pageLink);
     }
 
     @Override
-    public PageData<ReportTemplateInfo> findReportTemplatesByTenantIdAndCustomerId(TenantId tenantId, CustomerId customerId, PageLink pageLink) {
-        log.trace("Executing findReportTemplatesByTenantIdAndCustomerId, tenantId [{}], customerId [{}], pageLink [{}]", tenantId, customerId, pageLink);
+    public PageData<ReportTemplateInfo> findReportTemplatesByTenantIdAndCustomerId(TenantId tenantId, CustomerId customerId, ReportTemplateType type, PageLink pageLink) {
+        log.trace("Executing findReportTemplatesByTenantIdAndCustomerId, tenantId [{}], customerId [{}], type [{}], pageLink [{}]", tenantId, customerId, type, pageLink);
         validateId(tenantId, id -> INCORRECT_TENANT_ID + id);
         validateId(customerId, id -> INCORRECT_CUSTOMER_ID + id);
         validatePageLink(pageLink);
-        return reportTemplateInfoDao.findReportTemplatesByTenantIdAndCustomerId(tenantId.getId(), customerId.getId(), pageLink);
+        return reportTemplateInfoDao.findReportTemplatesByTenantIdAndCustomerId(tenantId.getId(), customerId.getId(), type, pageLink);
     }
 
     @Override
-    public PageData<ReportTemplateInfo> findReportTemplatesByTenantIdAndCustomerIdIncludingSubCustomers(TenantId tenantId, CustomerId customerId, PageLink pageLink) {
-        log.trace("Executing findReportTemplatesByTenantIdAndCustomerIdIncludingSubCustomers, tenantId [{}], customerId [{}], pageLink [{}]", tenantId, customerId, pageLink);
+    public PageData<ReportTemplateInfo> findReportTemplatesByTenantIdAndCustomerIdIncludingSubCustomers(TenantId tenantId, CustomerId customerId, ReportTemplateType type, PageLink pageLink) {
+        log.trace("Executing findReportTemplatesByTenantIdAndCustomerIdIncludingSubCustomers, tenantId [{}], customerId [{}], type [{}] pageLink [{}]", tenantId, customerId, type, pageLink);
         validateId(tenantId, id -> INCORRECT_TENANT_ID + id);
         validateId(customerId, id -> INCORRECT_CUSTOMER_ID + id);
         validatePageLink(pageLink);
-        return reportTemplateInfoDao.findReportTemplatesByTenantIdAndCustomerIdIncludingSubCustomers(tenantId.getId(), customerId.getId(), pageLink);
+        return reportTemplateInfoDao.findReportTemplatesByTenantIdAndCustomerIdIncludingSubCustomers(tenantId.getId(), customerId.getId(), type, pageLink);
     }
 
     @Override
@@ -194,7 +195,7 @@ public class BaseReportTemplateService extends AbstractEntityService implements 
 
         @Override
         protected PageData<ReportTemplateInfo> findEntities(TenantId tenantId, TenantId id, PageLink pageLink) {
-            return reportTemplateInfoDao.findReportTemplatesByTenantId(id.getId(), pageLink);
+            return reportTemplateInfoDao.findReportTemplatesByTenantId(id.getId(), null, pageLink);
         }
 
         @Override
@@ -207,7 +208,7 @@ public class BaseReportTemplateService extends AbstractEntityService implements 
 
         @Override
         protected PageData<ReportTemplateInfo> findEntities(TenantId tenantId, CustomerId id, PageLink pageLink) {
-            return reportTemplateInfoDao.findReportTemplatesByTenantIdAndCustomerId(tenantId.getId(), id.getId(), pageLink);
+            return reportTemplateInfoDao.findReportTemplatesByTenantIdAndCustomerId(tenantId.getId(), id.getId(), null, pageLink);
         }
 
         @Override

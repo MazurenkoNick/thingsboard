@@ -37,6 +37,7 @@ import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.report.ReportTemplate;
 import org.thingsboard.server.common.data.report.ReportTemplateInfo;
+import org.thingsboard.server.common.data.report.ReportTemplateType;
 import org.thingsboard.server.dao.entity.EntityDaoService;
 
 public interface ReportTemplateService extends EntityDaoService {
@@ -49,13 +50,13 @@ public interface ReportTemplateService extends EntityDaoService {
 
     void deleteReportTemplate(TenantId tenantId, ReportTemplateId reportTemplateId);
 
-    PageData<ReportTemplateInfo> findReportTemplatesByTenantId(TenantId tenantId, PageLink pageLink);
+    PageData<ReportTemplateInfo> findReportTemplatesByTenantId(TenantId tenantId, ReportTemplateType type, PageLink pageLink);
 
-    PageData<ReportTemplateInfo> findTenantReportTemplatesByTenantId(TenantId tenantId, PageLink pageLink);
+    PageData<ReportTemplateInfo> findTenantReportTemplatesByTenantId(TenantId tenantId, ReportTemplateType type, PageLink pageLink);
 
-    PageData<ReportTemplateInfo> findReportTemplatesByTenantIdAndCustomerId(TenantId tenantId, CustomerId customerId, PageLink pageLink);
+    PageData<ReportTemplateInfo> findReportTemplatesByTenantIdAndCustomerId(TenantId tenantId, CustomerId customerId, ReportTemplateType type, PageLink pageLink);
 
-    PageData<ReportTemplateInfo> findReportTemplatesByTenantIdAndCustomerIdIncludingSubCustomers(TenantId tenantId, CustomerId customerId, PageLink pageLink);
+    PageData<ReportTemplateInfo> findReportTemplatesByTenantIdAndCustomerIdIncludingSubCustomers(TenantId tenantId, CustomerId customerId, ReportTemplateType type, PageLink pageLink);
 
     void deleteReportTemplatesByTenantId(TenantId tenantId);
 

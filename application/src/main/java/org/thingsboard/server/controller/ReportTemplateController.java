@@ -54,12 +54,14 @@ import org.thingsboard.server.common.data.permission.Operation;
 import org.thingsboard.server.common.data.permission.Resource;
 import org.thingsboard.server.common.data.report.ReportTemplate;
 import org.thingsboard.server.common.data.report.ReportTemplateInfo;
+import org.thingsboard.server.common.data.report.ReportTemplateType;
 import org.thingsboard.server.common.data.security.Authority;
 import org.thingsboard.server.config.annotations.ApiOperation;
 import org.thingsboard.server.queue.util.TbCoreComponent;
 import org.thingsboard.server.service.entitiy.report.TbReportTemplateService;
 import org.thingsboard.server.service.security.model.SecurityUser;
 
+import static org.thingsboard.server.controller.ControllerConstants.CONVERTER_TYPE_DESCRIPTION;
 import static org.thingsboard.server.controller.ControllerConstants.INCLUDE_CUSTOMERS_OR_SUB_CUSTOMERS;
 import static org.thingsboard.server.controller.ControllerConstants.PAGE_DATA_PARAMETERS;
 import static org.thingsboard.server.controller.ControllerConstants.PAGE_NUMBER_DESCRIPTION;
@@ -69,6 +71,7 @@ import static org.thingsboard.server.controller.ControllerConstants.RBAC_READ_CH
 import static org.thingsboard.server.controller.ControllerConstants.RBAC_WRITE_CHECK;
 import static org.thingsboard.server.controller.ControllerConstants.REPORT_TEMPLATE_ID_PARAM_DESCRIPTION;
 import static org.thingsboard.server.controller.ControllerConstants.REPORT_TEMPLATE_TEXT_SEARCH_DESCRIPTION;
+import static org.thingsboard.server.controller.ControllerConstants.REPORT_TEMPLATE_TYPE_DESCRIPTION;
 import static org.thingsboard.server.controller.ControllerConstants.SORT_ORDER_DESCRIPTION;
 import static org.thingsboard.server.controller.ControllerConstants.SORT_PROPERTY_DESCRIPTION;
 import static org.thingsboard.server.controller.ControllerConstants.TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH;
@@ -173,22 +176,24 @@ public class ReportTemplateController extends BaseController {
             @Parameter(description = SORT_PROPERTY_DESCRIPTION, schema = @Schema(allowableValues = {"createdTime", "name", "ownerName"}))
             @RequestParam(required = false) String sortProperty,
             @Parameter(description = SORT_ORDER_DESCRIPTION, schema = @Schema(allowableValues = {"ASC", "DESC"}))
-            @RequestParam(required = false) String sortOrder) throws ThingsboardException {
+            @RequestParam(required = false) String sortOrder,
+            @Parameter(description = REPORT_TEMPLATE_TYPE_DESCRIPTION)
+            @RequestParam(required = false) ReportTemplateType type) throws ThingsboardException {
         accessControlService.checkPermission(getCurrentUser(), Resource.REPORT_TEMPLATE, Operation.READ);
         TenantId tenantId = getCurrentUser().getTenantId();
         PageLink pageLink = createPageLink(pageSize, page, textSearch, sortProperty, sortOrder);
         if (Authority.TENANT_ADMIN.equals(getCurrentUser().getAuthority())) {
             if (includeCustomers != null && includeCustomers) {
-                return checkNotNull(reportTemplateService.findReportTemplatesByTenantId(tenantId, pageLink));
+                return checkNotNull(reportTemplateService.findReportTemplatesByTenantId(tenantId, type, pageLink));
             } else {
-                return checkNotNull(reportTemplateService.findTenantReportTemplatesByTenantId(tenantId, pageLink));
+                return checkNotNull(reportTemplateService.findTenantReportTemplatesByTenantId(tenantId, type, pageLink));
             }
         } else {
             CustomerId customerId = getCurrentUser().getCustomerId();
             if (includeCustomers != null && includeCustomers) {
-                return checkNotNull(reportTemplateService.findReportTemplatesByTenantIdAndCustomerIdIncludingSubCustomers(tenantId, customerId, pageLink));
+                return checkNotNull(reportTemplateService.findReportTemplatesByTenantIdAndCustomerIdIncludingSubCustomers(tenantId, customerId, type, pageLink));
             } else {
-                return checkNotNull(reportTemplateService.findReportTemplatesByTenantIdAndCustomerId(tenantId, customerId, pageLink));
+                return checkNotNull(reportTemplateService.findReportTemplatesByTenantIdAndCustomerId(tenantId, customerId, type, pageLink));
             }
         }
     }

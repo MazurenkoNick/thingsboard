@@ -682,6 +682,7 @@ CREATE TABLE IF NOT EXISTS report_template (
     tenant_id uuid,
     customer_id uuid,
     name varchar(255),
+    type varchar(255),
     description varchar(1024),
     configuration varchar(10000000),
     scheduler_event_id uuid UNIQUE,
