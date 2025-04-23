@@ -132,7 +132,7 @@ public class DefaultReportService extends AbstractTbEntityService implements Rep
             ReportData report = ReportData.builder()
                     .data(JasperExportManager.exportReportToPdf(print))
                     .contentType(reportRequest.getReportType().getContentType())
-                    .name("testReport" + defaultDateFormat.format(new Date()) + ".pdf")
+                    .name(configuration.getFileName() + defaultDateFormat.format(new Date()) + ".pdf")
                     .build();
             resultFuture.set(report);
         } catch (JRException e) {

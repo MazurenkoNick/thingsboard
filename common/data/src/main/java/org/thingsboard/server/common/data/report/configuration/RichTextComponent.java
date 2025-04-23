@@ -41,13 +41,13 @@ import java.util.List;
 @Data
 @EqualsAndHashCode
 @NoArgsConstructor
-public class HeadingComponent implements ReportComponent {
+public class RichTextComponent implements ReportComponent {
 
     private String value;
     private List<DataSource> dataSources;
 
     @Override
     public ReportComponentType getType() {
-        return ReportComponentType.HEADING;
+        return ReportComponentType.RICH_TEXT;
     }
 }

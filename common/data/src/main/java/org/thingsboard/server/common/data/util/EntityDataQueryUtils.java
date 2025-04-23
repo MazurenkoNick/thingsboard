@@ -34,6 +34,7 @@ import org.thingsboard.server.common.data.query.EntityDataPageLink;
 import org.thingsboard.server.common.data.query.EntityDataQuery;
 import org.thingsboard.server.common.data.query.EntityKey;
 import org.thingsboard.server.common.data.query.EntityKeyType;
+import org.thingsboard.server.common.data.query.KeyFilter;
 import org.thingsboard.server.common.data.report.configuration.DataKey;
 import org.thingsboard.server.common.data.report.configuration.DataSource;
 import org.thingsboard.server.common.data.report.configuration.EntityAlias;
@@ -48,23 +49,30 @@ public class EntityDataQueryUtils {
         EntityAlias entityAlias = entityAliases.stream().filter(alias -> alias.getId().equals(dataSource.getEntityAliasId()))
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("Entity alias not found: " + dataSource.getEntityAliasId()));
-        Filter entityFilter = filters.stream().filter(filter -> filter.getId().equals(dataSource.getFilterId()))
-                .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("Entity alias not found: " + dataSource.getFilterId()));
+        List<KeyFilter> keyFilters = null;
+
+        if (dataSource.getFilterId() != null) {
+            Filter entityFilter = filters.stream().filter(filter -> filter.getId().equals(dataSource.getFilterId()))
+                    .findFirst()
+                    .orElseThrow(() -> new IllegalArgumentException("Entity filter not found: " + dataSource.getFilterId()));
+            keyFilters = entityFilter.getKeyFilters();
+        }
         List<EntityKey> entityFields = new ArrayList<>();
         List<EntityKey> latestValues = new ArrayList<>();
         for (DataKey dataKey : dataSource.getDataKeys()) {
-            if (dataKey.getType().equals("attribute")) {
-                latestValues.add(new EntityKey(EntityKeyType.ATTRIBUTE, dataKey.getType()));
-            } else if (dataKey.getType().equals("timeseries")) {
-                latestValues.add(new EntityKey(EntityKeyType.TIME_SERIES, dataKey.getType()));
-            } else if (dataKey.getType().equals("entityField")) {
-                entityFields.add(new EntityKey(EntityKeyType.ENTITY_FIELD, dataKey.getType()));
+            switch (dataKey.getType()) {
+                case "attribute" -> {
+                    latestValues.add(new EntityKey(EntityKeyType.ATTRIBUTE, dataKey.getName()));
+                }
+                case "timeseries" -> {
+                    latestValues.add(new EntityKey(EntityKeyType.TIME_SERIES, dataKey.getName()));
+                }
+                case "entityField" -> {
+                    entityFields.add(new EntityKey(EntityKeyType.ENTITY_FIELD, dataKey.getName()));
+                }
             }
         }
         EntityDataPageLink pageLink = new EntityDataPageLink(Integer.MAX_VALUE, 0, null, null);
-        return new EntityDataQuery(entityAlias.getFilter(), pageLink, entityFields, latestValues, entityFilter.getKeyFilters());
-
-
+        return new EntityDataQuery(entityAlias.getFilter(), pageLink, entityFields, latestValues, keyFilters);
     }
 }
