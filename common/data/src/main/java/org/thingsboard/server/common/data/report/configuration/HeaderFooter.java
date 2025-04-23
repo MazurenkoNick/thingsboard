@@ -30,18 +30,21 @@
  */
 package org.thingsboard.server.common.data.report.configuration;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
-import java.util.List;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 
+@Schema
 @Data
-public class ReportTemplateConfiguration {
+@EqualsAndHashCode
+@NoArgsConstructor
+public class HeaderFooter {
 
-    private String fileName;
-    private Boolean subReport;
-    private List<EntityAlias> entityAliases;
-    private List<Filter> filters;
-    private HeaderFooter header;
-    private HeaderFooter footer;
-    private List<ReportComponent> components;
+    private Boolean enabled;
+    private String text;
+    private Integer fontSize;
+    private String alignment;
+    private HeaderFooter firstPage;
 
 }

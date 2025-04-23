@@ -28,20 +28,30 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.common.data.report.configuration;
+package org.thingsboard.server.service.report;
 
+import com.google.common.util.concurrent.ListenableFuture;
+import lombok.Builder;
 import lombok.Data;
+import net.sf.jasperreports.engine.design.JasperDesign;
+import org.thingsboard.server.common.data.report.configuration.EntityAlias;
+import org.thingsboard.server.common.data.report.configuration.Filter;
+import org.thingsboard.server.service.security.model.SecurityUser;
+
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+@Builder
 @Data
-public class ReportTemplateConfiguration {
+public class TbReportCtx {
 
-    private String fileName;
-    private Boolean subReport;
-    private List<EntityAlias> entityAliases;
-    private List<Filter> filters;
-    private HeaderFooter header;
-    private HeaderFooter footer;
-    private List<ReportComponent> components;
+    private volatile SecurityUser securityUser;
+    private final JasperDesign jasperDesign;
+    private final Map<String, Object> params = new HashMap<>();
+    private final List<EntityAlias> entityAliases;
+    private final List<Filter> filters;
+    private final List<ListenableFuture<Void>> futures = new ArrayList<>();
 
 }

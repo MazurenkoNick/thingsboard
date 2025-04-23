@@ -150,6 +150,8 @@ public class EntityIdFactory {
                 return new CalculatedFieldId(uuid);
             case CALCULATED_FIELD_LINK:
                 return new CalculatedFieldLinkId(uuid);
+            case REPORT_TEMPLATE:
+                return new ReportTemplateId(uuid);
         }
         throw new IllegalArgumentException("EntityType " + type + " is not supported!");
     }

@@ -127,6 +127,10 @@
             <artifactId>leshan-core</artifactId>
             <scope>compile</scope>
         </dependency>
+        <dependency>
+            <groupId>net.sf.jasperreports</groupId>
+            <artifactId>jasperreports</artifactId>
+        </dependency>
     </dependencies>
 
     <distributionManagement>
