@@ -71,6 +71,7 @@ import { ScadaSymbolModule } from '@home/pages/scada-symbol/scada-symbol.module'
 import { GatewaysModule } from '@home/pages/gateways/gateways.module';
 import { MobileModule } from '@home/pages/mobile/mobile.module';
 import { CustomMenuModule } from '@home/pages/custom-menu/custom-menu.module';
+import { ReportTemplateModule } from '@home/pages/report/report-template.module';
 
 @NgModule({
   exports: [
@@ -115,7 +116,8 @@ import { CustomMenuModule } from '@home/pages/custom-menu/custom-menu.module';
     AccountModule,
     ScadaSymbolModule,
     CustomTranslationModule,
-    CustomMenuModule
+    CustomMenuModule,
+    ReportTemplateModule
   ]
 })
 export class HomePagesModule { }

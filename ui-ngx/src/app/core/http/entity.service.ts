@@ -131,6 +131,8 @@ import { OAuth2Service } from '@core/http/oauth2.service';
 import { MobileAppService } from '@core/http/mobile-app.service';
 import { PlatformType } from '@shared/models/oauth2.models';
 import { DomainService } from '@core/http/domain.service';
+import { ReportTemplateService } from '@core/http/report-template.service';
+import { ReportTemplate, ReportTemplateType } from '@shared/models/report.models';
 
 @Injectable({
   providedIn: 'root'
@@ -160,6 +162,7 @@ export class EntityService {
     private integrationService: IntegrationService,
     private schedulerEventService: SchedulerEventService,
     private blobEntityService: BlobEntityService,
+    private reportTemplateService: ReportTemplateService,
     private roleService: RoleService,
     private entityGroupService: EntityGroupService,
     private userPermissionsService: UserPermissionsService,
@@ -223,6 +226,13 @@ export class EntityService {
         break;
       case EntityType.BLOB_ENTITY:
         observable = this.blobEntityService.getBlobEntityInfo(entityId, config);
+        break;
+      case EntityType.REPORT_TEMPLATE:
+        if (config && config.loadEntityDetails) {
+          observable = this.reportTemplateService.getReportTemplate(entityId, config);
+        } else {
+          observable = this.reportTemplateService.getReportTemplateInfo(entityId, config);
+        }
         break;
       case EntityType.ROLE:
         observable = this.roleService.getRole(entityId, config);
@@ -301,6 +311,9 @@ export class EntityService {
         break;
       case EntityType.SCHEDULER_EVENT:
         observable = this.schedulerEventService.saveSchedulerEvent(entity as SchedulerEvent, config);
+        break;
+      case EntityType.REPORT_TEMPLATE:
+        observable = this.reportTemplateService.saveReportTemplate(entity as ReportTemplate, config);
         break;
       case EntityType.ROLE:
         observable = this.roleService.saveRole(entity as Role, config);
@@ -445,6 +458,9 @@ export class EntityService {
         break;
       case EntityType.BLOB_ENTITY:
         observable = this.blobEntityService.getBlobEntitiesByIds(entityIds, config);
+        break;
+      case EntityType.REPORT_TEMPLATE:
+        observable = this.reportTemplateService.getReportTemplatesByIds(entityIds, config);
         break;
       case EntityType.ROLE:
         observable = this.roleService.getRolesByIds(entityIds, config);
@@ -608,6 +624,10 @@ export class EntityService {
       case EntityType.BLOB_ENTITY:
         pageLink.sortOrder.property = 'name';
         entitiesObservable = this.blobEntityService.getBlobEntities(pageLink as TimePageLink, null, config);
+        break;
+      case EntityType.REPORT_TEMPLATE:
+        pageLink.sortOrder.property = 'name';
+        entitiesObservable = this.reportTemplateService.getAllReportTemplateInfos(false, pageLink, subType as ReportTemplateType, config);
         break;
       case EntityType.ROLE:
         pageLink.sortOrder.property = 'name';
@@ -1018,6 +1038,7 @@ export class EntityService {
         entityTypes.push(EntityType.INTEGRATION);
         entityTypes.push(EntityType.SCHEDULER_EVENT);
         entityTypes.push(EntityType.BLOB_ENTITY);
+        entityTypes.push(EntityType.REPORT_TEMPLATE);
         entityTypes.push(EntityType.ROLE);
         if (authState.edgesSupportEnabled) {
           entityTypes.push(EntityType.EDGE);
@@ -1038,6 +1059,7 @@ export class EntityService {
         entityTypes.push(EntityType.USER);
         entityTypes.push(EntityType.SCHEDULER_EVENT);
         entityTypes.push(EntityType.BLOB_ENTITY);
+        entityTypes.push(EntityType.REPORT_TEMPLATE);
         if (authState.edgesSupportEnabled) {
           entityTypes.push(EntityType.EDGE);
         }
@@ -1120,6 +1142,7 @@ export class EntityService {
       case EntityType.CONVERTER:
       case EntityType.INTEGRATION:
       case EntityType.BLOB_ENTITY:
+      case EntityType.REPORT_TEMPLATE:
       case EntityType.ROLE:
         entityFieldKeys.push(entityFields.name.keyName);
         entityFieldKeys.push(entityFields.type.keyName);

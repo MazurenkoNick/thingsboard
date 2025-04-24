@@ -30,57 +30,28 @@
 ///
 
 import { Component } from '@angular/core';
-import { isDefinedAndNotNull } from '@core/public-api';
-import { UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms';
-import { RuleNodeConfiguration, RuleNodeConfigurationComponent } from '@app/shared/models/rule-node.models';
-import { EntityType } from '@app/shared/models/entity-type.models';
+import { Store } from '@ngrx/store';
+import { AppState } from '@core/core.state';
+import { EntityTabsComponent } from '../../components/entity/entity-tabs.component';
+import { Converter, ConverterDebugInput, ConverterType } from '@shared/models/converter.models';
+import { DebugConverterEventBody } from '@shared/models/event.models';
+import { ConverterComponent } from '@home/components/converter/converter.component';
+import { TranslateService } from '@ngx-translate/core';
+import { ReportTemplate } from '@shared/models/report.models';
 
 @Component({
-  selector: 'tb-filter-node-originator-type-config',
-  templateUrl: './originator-type-config.component.html',
+  selector: 'tb-report-template-tabs',
+  templateUrl: './report-template-tabs.component.html',
   styleUrls: []
 })
-export class OriginatorTypeConfigComponent extends RuleNodeConfigurationComponent {
+export class ReportTemplateTabsComponent extends EntityTabsComponent<ReportTemplate> {
 
-  originatorTypeConfigForm: UntypedFormGroup;
-
-  allowedEntityTypes: EntityType[] = [
-    EntityType.DEVICE,
-    EntityType.ASSET,
-    EntityType.ENTITY_VIEW,
-    EntityType.TENANT,
-    EntityType.CUSTOMER,
-    EntityType.USER,
-    EntityType.DASHBOARD,
-    EntityType.RULE_CHAIN,
-    EntityType.RULE_NODE,
-    EntityType.EDGE,
-    EntityType.ENTITY_GROUP,
-    EntityType.CONVERTER,
-    EntityType.INTEGRATION,
-    EntityType.SCHEDULER_EVENT,
-    EntityType.BLOB_ENTITY,
-    EntityType.REPORT_TEMPLATE
-  ];
-
-  constructor(private fb: UntypedFormBuilder) {
-    super();
+  constructor(protected store: Store<AppState>,
+              private translate: TranslateService) {
+    super(store);
   }
 
-  protected configForm(): UntypedFormGroup {
-    return this.originatorTypeConfigForm;
+  ngOnInit() {
+    super.ngOnInit();
   }
-
-  protected prepareInputConfig(configuration: RuleNodeConfiguration): RuleNodeConfiguration {
-    return {
-      originatorTypes: isDefinedAndNotNull(configuration?.originatorTypes) ? configuration.originatorTypes : null
-    };
-  }
-
-  protected onConfigurationSet(configuration: RuleNodeConfiguration) {
-    this.originatorTypeConfigForm = this.fb.group({
-      originatorTypes: [configuration.originatorTypes, [Validators.required]]
-    });
-  }
-
 }

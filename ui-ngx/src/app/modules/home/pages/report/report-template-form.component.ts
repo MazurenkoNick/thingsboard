@@ -1,0 +1,118 @@
+///
+/// ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
+///
+/// Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
+///
+/// NOTICE: All information contained herein is, and remains
+/// the property of ThingsBoard, Inc. and its suppliers,
+/// if any.  The intellectual and technical concepts contained
+/// herein are proprietary to ThingsBoard, Inc.
+/// and its suppliers and may be covered by U.S. and Foreign Patents,
+/// patents in process, and are protected by trade secret or copyright law.
+///
+/// Dissemination of this information or reproduction of this material is strictly forbidden
+/// unless prior written permission is obtained from COMPANY.
+///
+/// Access to the source code contained herein is hereby forbidden to anyone except current COMPANY employees,
+/// managers or contractors who have executed Confidentiality and Non-disclosure agreements
+/// explicitly covering such access.
+///
+/// The copyright notice above does not evidence any actual or intended publication
+/// or disclosure  of  this source code, which includes
+/// information that is confidential and/or proprietary, and is a trade secret, of  COMPANY.
+/// ANY REPRODUCTION, MODIFICATION, DISTRIBUTION, PUBLIC  PERFORMANCE,
+/// OR PUBLIC DISPLAY OF OR THROUGH USE  OF THIS  SOURCE CODE  WITHOUT
+/// THE EXPRESS WRITTEN CONSENT OF COMPANY IS STRICTLY PROHIBITED,
+/// AND IN VIOLATION OF APPLICABLE LAWS AND INTERNATIONAL TREATIES.
+/// THE RECEIPT OR POSSESSION OF THIS SOURCE CODE AND/OR RELATED INFORMATION
+/// DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
+/// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
+///
+
+import { ChangeDetectorRef, Component, DestroyRef, Inject } from '@angular/core';
+import { Store } from '@ngrx/store';
+import { AppState } from '@core/core.state';
+import { EntityComponent } from '../../components/entity/entity.component';
+import { UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms';
+import { ActionNotificationShow } from '@core/notification/notification.actions';
+import { TranslateService } from '@ngx-translate/core';
+import { EntityTableConfig } from '@home/models/entity/entities-table-config.models';
+import { MatDialog } from '@angular/material/dialog';
+import {
+  ReportTemplate,
+  ReportTemplateType,
+  reportTemplateTypes,
+  reportTemplateTypeTranslationMap
+} from '@shared/models/report.models';
+
+@Component({
+  selector: 'tb-report-template-form',
+  templateUrl: './report-template-form.component.html',
+  styleUrls: []
+})
+export class ReportTemplateFormComponent extends EntityComponent<ReportTemplate> {
+
+  ReportTemplateType = ReportTemplateType;
+
+  reportTemplateTypes = reportTemplateTypes;
+
+  reportTemplateTypeTranslationMap = reportTemplateTypeTranslationMap;
+
+  constructor(protected store: Store<AppState>,
+              protected translate: TranslateService,
+              private dialog: MatDialog,
+              @Inject('entity') protected entityValue: ReportTemplate,
+              @Inject('entitiesTableConfig') protected entitiesTableConfigValue: EntityTableConfig<ReportTemplate>,
+              protected fb: UntypedFormBuilder,
+              protected cd: ChangeDetectorRef,
+              private destroyRef: DestroyRef) {
+    super(store, fb, entityValue, entitiesTableConfigValue, cd);
+  }
+
+  ngOnInit() {
+    super.ngOnInit();
+  }
+
+  hideDelete() {
+    if (this.entitiesTableConfig) {
+      return !this.entitiesTableConfig.deleteEnabled(this.entity);
+    } else {
+      return false;
+    }
+  }
+
+  buildForm(entity: ReportTemplate): UntypedFormGroup {
+    const form = this.fb.group(
+      {
+        name: [entity ? entity.name : '', [Validators.required, Validators.maxLength(255)]],
+        type: [entity ? entity.type : ReportTemplateType.REPORT, [Validators.required]],
+        description: [entity?.description]
+      }
+    );
+    return form;
+  }
+
+  updateForm(entity: ReportTemplate) {
+    this.entityForm.patchValue({name: entity.name});
+    this.entityForm.patchValue({type: entity.type});
+    this.entityForm.patchValue({description: entity.description});
+  }
+
+  override updateFormState(): void {
+    super.updateFormState();
+    if (this.isEdit && this.entityForm && !this.isAdd) {
+      this.entityForm.get('type').disable({ emitEvent: false });
+    }
+  }
+
+  onReportTemplateIdCopied() {
+    this.store.dispatch(new ActionNotificationShow(
+      {
+        message: this.translate.instant('report-template.idCopiedMessage'),
+        type: 'success',
+        duration: 750,
+        verticalPosition: 'bottom',
+        horizontalPosition: 'right'
+      }));
+  }
+}

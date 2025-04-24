@@ -66,7 +66,7 @@ export class GeneratorConfigComponent extends RuleNodeConfigurationComponent {
   allowedEntityTypes = [
     EntityType.DEVICE, EntityType.ASSET, EntityType.ENTITY_VIEW, EntityType.CUSTOMER,
     EntityType.USER, EntityType.DASHBOARD, EntityType.CONVERTER,
-    EntityType.INTEGRATION, EntityType.SCHEDULER_EVENT, EntityType.BLOB_ENTITY, EntityType.ROLE, EntityType.EDGE
+    EntityType.INTEGRATION, EntityType.SCHEDULER_EVENT, EntityType.BLOB_ENTITY, EntityType.REPORT_TEMPLATE, EntityType.ROLE, EntityType.EDGE
   ];
 
   additionEntityTypes = {

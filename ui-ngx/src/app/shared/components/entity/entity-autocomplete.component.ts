@@ -363,6 +363,12 @@ export class EntityAutocompleteComponent implements ControlValueAccessor, OnInit
           this.entityRequiredText = 'blob-entity.blob-entity-required';
           this.notFoundEntities = 'blob-entity.no-blob-entities-prompt';
           break;
+        case EntityType.REPORT_TEMPLATE:
+          this.entityText = 'report-template.report-template';
+          this.noEntitiesMatchingText = 'report-template.no-report-templates-matching';
+          this.entityRequiredText = 'report-template.report-template-required';
+          this.notFoundEntities = 'report-template.no-report-templates-text';
+          break;
         case EntityType.ROLE:
           this.entityText = 'role.role';
           this.noEntitiesMatchingText = 'role.no-roles-matching';

@@ -52,6 +52,7 @@ export const exportableEntityTypes: Array<EntityType> = [
   EntityType.WIDGETS_BUNDLE,
   EntityType.CONVERTER,
   EntityType.INTEGRATION,
+  EntityType.REPORT_TEMPLATE,
   EntityType.ROLE,
   EntityType.TB_RESOURCE,
   EntityType.NOTIFICATION_TEMPLATE,

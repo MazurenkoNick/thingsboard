@@ -189,7 +189,8 @@ export enum MenuId {
   converter_templates = 'converter_templates',
   scheduler = 'scheduler',
   roles = 'roles',
-  self_registration = 'self_registration'
+  self_registration = 'self_registration',
+  reporting = 'reporting'
 }
 
 declare type MenuFilter = (_authState: AuthState, userPermissionsService: UserPermissionsService) => boolean;
@@ -1172,6 +1173,16 @@ export const menuSectionMap = new Map<MenuId, MenuSection>([
       path: '/security-settings/selfRegistration',
       icon: 'group_add'
     }
+  ],
+  [
+    MenuId.reporting,
+    {
+      id: MenuId.reporting,
+      name: 'report.reporting',
+      type: 'link',
+      path: '/reportTemplates',
+      icon: 'mdi:chart-box-multiple'
+    }
   ]
 ]);
 
@@ -1459,6 +1470,10 @@ const menuFilters = new Map<MenuId, MenuFilter>([
   [
     MenuId.audit_log, (_authState, userPermissionsService) =>
             userPermissionsService.hasReadGenericPermission(Resource.AUDIT_LOG)
+  ],
+  [
+    MenuId.reporting, (authState, userPermissionsService) =>
+            userPermissionsService.hasReadGenericPermission(Resource.REPORT_TEMPLATE)
   ]
 ]);
 
@@ -1551,6 +1566,7 @@ export const defaultUserMenuMap = new Map<Authority, MenuReference[]>([
           {id: MenuId.dashboard_shared}
         ]
       },
+      {id: MenuId.reporting},
       {id: MenuId.solution_templates},
       {
         id: MenuId.entities,
@@ -1723,6 +1739,7 @@ export const defaultUserMenuMap = new Map<Authority, MenuReference[]>([
           {id: MenuId.dashboard_shared}
         ]
       },
+      {id: MenuId.reporting},
       {
         id: MenuId.entities,
         pages: [

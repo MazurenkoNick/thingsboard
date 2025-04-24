@@ -36,6 +36,8 @@ import { Observable } from 'rxjs';
 import { ReportTemplate, ReportTemplateInfo, ReportTemplateType } from '@shared/models/report.models';
 import { PageLink } from '@shared/models/page/page-link';
 import { PageData } from '@shared/models/page/page-data';
+import { map } from 'rxjs/operators';
+import { sortEntitiesByIds } from '@shared/models/base-data';
 
 @Injectable({
   providedIn: 'root'
@@ -74,6 +76,13 @@ export class ReportTemplateService {
     }
     return this.http.get<PageData<ReportTemplateInfo>>(url,
       defaultHttpOptionsFromConfig(config));
+  }
+
+  public getReportTemplatesByIds(reportTemplateIds: string[], config?: RequestConfig): Observable<Array<ReportTemplateInfo>> {
+    return this.http.get<Array<ReportTemplateInfo>>(`/api/reportTemplates?reportTemplateIds=${reportTemplateIds.join(',')}`,
+      defaultHttpOptionsFromConfig(config)).pipe(
+      map((reportTemplates) => sortEntitiesByIds(reportTemplates, reportTemplateIds))
+    );
   }
 
 }

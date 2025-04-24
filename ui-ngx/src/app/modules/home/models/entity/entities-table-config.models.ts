@@ -266,6 +266,7 @@ export class EntityTableConfig<T extends BaseData<HasId>, P extends PageLink = P
   entityAdded: EntityVoidFunction<T> = () => {};
   entityUpdated: EntityVoidFunction<T> = () => {};
   entitiesDeleted: EntityIdsVoidFunction<T> = () => {};
+  defaultEntity: () => T = null;
 
   getTable(): IEntitiesTableComponent {
     return this.table;

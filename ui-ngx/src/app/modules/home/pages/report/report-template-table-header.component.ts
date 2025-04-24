@@ -29,58 +29,35 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { Component } from '@angular/core';
-import { isDefinedAndNotNull } from '@core/public-api';
-import { UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms';
-import { RuleNodeConfiguration, RuleNodeConfigurationComponent } from '@app/shared/models/rule-node.models';
-import { EntityType } from '@app/shared/models/entity-type.models';
+import { Component, OnInit } from '@angular/core';
+import { Store } from '@ngrx/store';
+import { AppState } from '@core/core.state';
+import { EntityTableHeaderComponent } from '@home/components/entity/entity-table-header.component';
+import { getCurrentAuthUser } from '@core/auth/auth.selectors';
+import { Authority } from '@shared/models/authority.enum';
+import { ReportTemplateInfo } from '@shared/models/report.models';
 
 @Component({
-  selector: 'tb-filter-node-originator-type-config',
-  templateUrl: './originator-type-config.component.html',
+  selector: 'tb-report-template-table-header',
+  templateUrl: './report-template-table-header.component.html',
   styleUrls: []
 })
-export class OriginatorTypeConfigComponent extends RuleNodeConfigurationComponent {
+export class ReportTemplateTableHeaderComponent extends EntityTableHeaderComponent<ReportTemplateInfo> implements OnInit {
 
-  originatorTypeConfigForm: UntypedFormGroup;
+  includeCustomersLabel: string;
 
-  allowedEntityTypes: EntityType[] = [
-    EntityType.DEVICE,
-    EntityType.ASSET,
-    EntityType.ENTITY_VIEW,
-    EntityType.TENANT,
-    EntityType.CUSTOMER,
-    EntityType.USER,
-    EntityType.DASHBOARD,
-    EntityType.RULE_CHAIN,
-    EntityType.RULE_NODE,
-    EntityType.EDGE,
-    EntityType.ENTITY_GROUP,
-    EntityType.CONVERTER,
-    EntityType.INTEGRATION,
-    EntityType.SCHEDULER_EVENT,
-    EntityType.BLOB_ENTITY,
-    EntityType.REPORT_TEMPLATE
-  ];
-
-  constructor(private fb: UntypedFormBuilder) {
-    super();
+  constructor(protected store: Store<AppState>) {
+    super(store);
   }
 
-  protected configForm(): UntypedFormGroup {
-    return this.originatorTypeConfigForm;
+  ngOnInit() {
+    super.ngOnInit();
+    this.includeCustomersLabel = getCurrentAuthUser(this.store).authority === Authority.CUSTOMER_USER ?
+      'entity.include-sub-customer-entities' : 'entity.include-customer-entities';
   }
 
-  protected prepareInputConfig(configuration: RuleNodeConfiguration): RuleNodeConfiguration {
-    return {
-      originatorTypes: isDefinedAndNotNull(configuration?.originatorTypes) ? configuration.originatorTypes : null
-    };
-  }
-
-  protected onConfigurationSet(configuration: RuleNodeConfiguration) {
-    this.originatorTypeConfigForm = this.fb.group({
-      originatorTypes: [configuration.originatorTypes, [Validators.required]]
-    });
+  includeCustomersChanged(includeCustomers: boolean) {
+    this.entitiesTableConfig.componentsData.includeCustomersChanged(includeCustomers);
   }
 
 }

@@ -44,6 +44,7 @@ import org.thingsboard.server.dao.report.ReportTemplateInfoDao;
 import org.thingsboard.server.dao.sql.JpaAbstractDao;
 import org.thingsboard.server.dao.util.SqlDao;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -95,6 +96,11 @@ public class JpaReportTemplateInfoDao extends JpaAbstractDao<ReportTemplateInfoE
                         pageLink.getTextSearch(),
                         type != null ? type.name() : null,
                         DaoUtil.toPageable(pageLink)));
+    }
+
+    @Override
+    public List<ReportTemplateInfo> findReportTemplatesByIds(UUID tenantId, List<UUID> reportTemplateIds) {
+        return DaoUtil.convertDataList(reportTemplateInfoRepository.findByIdIn(reportTemplateIds));
     }
 
     @Override

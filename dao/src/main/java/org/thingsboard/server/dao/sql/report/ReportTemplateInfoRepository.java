@@ -38,6 +38,7 @@ import org.springframework.data.repository.query.Param;
 import org.thingsboard.server.common.data.report.ReportTemplateType;
 import org.thingsboard.server.dao.model.sql.ReportTemplateInfoEntity;
 
+import java.util.List;
 import java.util.UUID;
 
 import static org.thingsboard.server.dao.model.ModelConstants.SUB_CUSTOMERS_QUERY;
@@ -94,4 +95,6 @@ public interface ReportTemplateInfoRepository extends JpaRepository<ReportTempla
                                                                                     @Param("searchText") String searchText,
                                                                                     @Param("type") String type,
                                                                                     Pageable pageable);
+
+    List<ReportTemplateInfoEntity> findByIdIn(List<UUID> reportTemplateIds);
 }

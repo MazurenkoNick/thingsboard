@@ -54,9 +54,12 @@ import org.thingsboard.server.dao.scheduler.SchedulerEventService;
 import org.thingsboard.server.dao.service.DataValidator;
 import org.thingsboard.server.dao.service.PaginatedRemover;
 
+import java.util.List;
 import java.util.Optional;
 
+import static org.thingsboard.server.dao.DaoUtil.toUUIDs;
 import static org.thingsboard.server.dao.service.Validator.validateId;
+import static org.thingsboard.server.dao.service.Validator.validateIds;
 import static org.thingsboard.server.dao.service.Validator.validatePageLink;
 
 @Service("ReportTemplateDaoService")
@@ -113,6 +116,13 @@ public class BaseReportTemplateService extends AbstractEntityService implements 
         validateId(tenantId, id -> INCORRECT_TENANT_ID + id);
         validateId(reportTemplateId, id -> INCORRECT_REPORT_TEMPLATE_ID + id);
         deleteEntity(tenantId, reportTemplateId, false);
+    }
+
+    @Override
+    public List<ReportTemplateInfo> findReportTemplateInfoByIds(TenantId tenantId, List<ReportTemplateId> reportTemplateIds) {
+        log.trace("Executing findReportTemplateInfoByIds, reportTemplateIds [{}]", reportTemplateIds);
+        validateIds(reportTemplateIds, ids -> "Incorrect reportTemplateIds " + ids);
+        return reportTemplateInfoDao.findReportTemplatesByIds(tenantId.getId(), toUUIDs(reportTemplateIds));
     }
 
     @Override

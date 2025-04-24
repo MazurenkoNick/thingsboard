@@ -31,6 +31,7 @@
 package org.thingsboard.server.controller;
 
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -61,7 +62,11 @@ import org.thingsboard.server.queue.util.TbCoreComponent;
 import org.thingsboard.server.service.entitiy.report.TbReportTemplateService;
 import org.thingsboard.server.service.security.model.SecurityUser;
 
-import static org.thingsboard.server.controller.ControllerConstants.CONVERTER_TYPE_DESCRIPTION;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
+
 import static org.thingsboard.server.controller.ControllerConstants.INCLUDE_CUSTOMERS_OR_SUB_CUSTOMERS;
 import static org.thingsboard.server.controller.ControllerConstants.PAGE_DATA_PARAMETERS;
 import static org.thingsboard.server.controller.ControllerConstants.PAGE_NUMBER_DESCRIPTION;
@@ -196,5 +201,35 @@ public class ReportTemplateController extends BaseController {
                 return checkNotNull(reportTemplateService.findReportTemplatesByTenantIdAndCustomerId(tenantId, customerId, type, pageLink));
             }
         }
+    }
+
+    @ApiOperation(value = "Get report templates by Report Template Ids (getReportTemplatesByIds)",
+            notes = "Returns a list of ReportTemplateInfo objects based on the provided ids. Filters the list based on the user permissions. " +
+                    TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH + RBAC_READ_CHECK)
+    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
+    @RequestMapping(value = "/reportTemplates", params = {"reportTemplateIds"}, method = RequestMethod.GET)
+    @ResponseBody
+    public List<ReportTemplateInfo> getReportTemplatesByIds(
+            @Parameter(description = "A list of report template ids, separated by comma ','", array = @ArraySchema(schema = @Schema(type = "string")), required = true)
+            @RequestParam("reportTemplateIds") String[] strReportTemplateIds) throws ThingsboardException, ExecutionException, InterruptedException {
+        checkArrayParameter("reportTemplateIds", strReportTemplateIds);
+        SecurityUser user = getCurrentUser();
+        TenantId tenantId = user.getTenantId();
+        List<ReportTemplateId> reportTemplateIds = new ArrayList<>();
+        for (String strReportTemplateId : strReportTemplateIds) {
+            reportTemplateIds.add(new ReportTemplateId(toUUID(strReportTemplateId)));
+        }
+        List<ReportTemplateInfo> reportTemplates = checkNotNull(reportTemplateService.findReportTemplateInfoByIds(tenantId, reportTemplateIds));
+        return filterReportTemplatesByReadPermission(reportTemplates);
+    }
+
+    private List<ReportTemplateInfo> filterReportTemplatesByReadPermission(List<ReportTemplateInfo> reportTemplates) {
+        return reportTemplates.stream().filter(reportTemplate -> {
+            try {
+                return accessControlService.hasPermission(getCurrentUser(), Resource.REPORT_TEMPLATE, Operation.READ, reportTemplate.getId(), reportTemplate);
+            } catch (ThingsboardException e) {
+                return false;
+            }
+        }).collect(Collectors.toList());
     }
 }

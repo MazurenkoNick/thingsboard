@@ -45,6 +45,8 @@ export enum ReportTemplateType {
   SUB_REPORT = 'SUB_REPORT'
 }
 
+export const reportTemplateTypes = Object.keys(ReportTemplateType) as ReportTemplateType[];
+
 export const reportTemplateTypeTranslationMap = new Map<ReportTemplateType, string>(
   [
     [ReportTemplateType.REPORT, 'report-template.type-report'],
@@ -84,3 +86,22 @@ export interface ReportTemplateConfiguration {
 export interface ReportTemplate extends BaseReportTemplate {
   configuration: ReportTemplateConfiguration;
 }
+
+export const defaultReportTemplate: ReportTemplate = {
+  name: '',
+  type: ReportTemplateType.REPORT,
+  configuration: {
+    fileName: 'report-%d{yyyy-MM-dd_HH:mm:ss}',
+    header: {
+      enabled: true,
+      components: []
+    },
+    footer: {
+      enabled: true,
+      components: []
+    },
+    entityAliases: [],
+    filters: [],
+    components: []
+  }
+};

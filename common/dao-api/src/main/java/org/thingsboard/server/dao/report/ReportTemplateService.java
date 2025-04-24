@@ -40,6 +40,8 @@ import org.thingsboard.server.common.data.report.ReportTemplateInfo;
 import org.thingsboard.server.common.data.report.ReportTemplateType;
 import org.thingsboard.server.dao.entity.EntityDaoService;
 
+import java.util.List;
+
 public interface ReportTemplateService extends EntityDaoService {
 
     ReportTemplate findReportTemplateById(TenantId tenantId, ReportTemplateId reportTemplateId);
@@ -49,6 +51,8 @@ public interface ReportTemplateService extends EntityDaoService {
     ReportTemplate saveReportTemplate(ReportTemplate reportTemplate);
 
     void deleteReportTemplate(TenantId tenantId, ReportTemplateId reportTemplateId);
+
+    List<ReportTemplateInfo> findReportTemplateInfoByIds(TenantId tenantId, List<ReportTemplateId> reportTemplateIds);
 
     PageData<ReportTemplateInfo> findReportTemplatesByTenantId(TenantId tenantId, ReportTemplateType type, PageLink pageLink);
 
