@@ -51,7 +51,10 @@ import org.springframework.stereotype.Service;
 import org.thingsboard.rule.engine.api.DashboardReportService;
 import org.thingsboard.server.common.data.exception.ThingsboardErrorCode;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
+import org.thingsboard.server.common.data.id.CustomerId;
+import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.page.PageData;
+import org.thingsboard.server.common.data.permission.MergedUserPermissions;
 import org.thingsboard.server.common.data.query.EntityData;
 import org.thingsboard.server.common.data.query.EntityDataQuery;
 import org.thingsboard.server.common.data.query.EntityKeyType;
@@ -60,16 +63,17 @@ import org.thingsboard.server.common.data.report.ReportRequest;
 import org.thingsboard.server.common.data.report.ReportTemplate;
 import org.thingsboard.server.common.data.report.configuration.DataKey;
 import org.thingsboard.server.common.data.report.configuration.DataSource;
+import org.thingsboard.server.common.data.report.configuration.HeadingComponent;
 import org.thingsboard.server.common.data.report.configuration.ReportTemplateConfiguration;
 import org.thingsboard.server.common.data.report.configuration.EntityTableComponent;
 import org.thingsboard.server.common.data.report.configuration.ReportComponent;
 import org.thingsboard.server.common.data.report.configuration.ReportComponentType;
+import org.thingsboard.server.common.data.report.configuration.RichTextComponent;
 import org.thingsboard.server.common.data.util.EntityDataQueryUtils;
 import org.thingsboard.server.common.data.util.JasperReportUtils;
 import org.thingsboard.server.dao.entity.EntityService;
 import org.thingsboard.server.dao.report.ReportTemplateService;
 import org.thingsboard.server.service.entitiy.AbstractTbEntityService;
-import org.thingsboard.server.service.security.model.SecurityUser;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -84,7 +88,11 @@ import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
 import static org.thingsboard.server.common.data.util.JasperReportUtils.addColumnHeader;
-import static org.thingsboard.server.common.data.util.JasperReportUtils.addReportTitle;
+import static org.thingsboard.server.common.data.util.JasperReportUtils.addDesignTitle;
+import static org.thingsboard.server.common.data.util.JasperReportUtils.addHeading;
+import static org.thingsboard.server.common.data.util.JasperReportUtils.addPageFooter;
+import static org.thingsboard.server.common.data.util.JasperReportUtils.addPageHeader;
+import static org.thingsboard.server.common.data.util.JasperReportUtils.addRichText;
 import static org.thingsboard.server.common.data.util.JasperReportUtils.addSubReportBand;
 import static org.thingsboard.server.common.data.util.JasperReportUtils.addTableDetailBand;
 
@@ -103,30 +111,35 @@ public class DefaultReportService extends AbstractTbEntityService implements Rep
     @PostConstruct
     public void init() {
         rendererMap = new EnumMap<>(ReportComponentType.class);
+        rendererMap.put(ReportComponentType.HEADING, newJasperComponentRenderer(this::renderHeading));
+        rendererMap.put(ReportComponentType.RICH_TEXT, newJasperComponentRenderer(this::renderRichText));
         rendererMap.put(ReportComponentType.ENTITY_TABLE, newJasperComponentRenderer(this::renderEntityTable));
     }
 
     @Override
-    public ListenableFuture<ReportData> generateReport(SecurityUser securityUser, ReportRequest reportRequest) throws ThingsboardException {
-        log.trace("[{}] Executing generateReport, reportRequest [{}]", securityUser.getTenantId(), reportRequest);
-        ReportTemplate reportTemplate = checkNotNull(reportTemplateService.findReportTemplateById(securityUser.getTenantId(), reportRequest.getTemplateId()));
+    public ListenableFuture<ReportData> generateReport(TenantId tenantId, CustomerId customerId, ReportRequest reportRequest, MergedUserPermissions userPermissions) throws ThingsboardException {
+        log.trace("[{}] Executing generateReport, reportRequest [{}]", tenantId, reportRequest);
+        ReportTemplate reportTemplate = checkNotNull(reportTemplateService.findReportTemplateById(tenantId, reportRequest.getTemplateId()));
         ReportTemplateConfiguration configuration = reportTemplate.getConfiguration();
 
         SettableFuture<ReportData> resultFuture = SettableFuture.create();
         try {
-            // general settings
-            JasperDesign jasperDesign = JasperReportUtils.initDesign();
-            addReportTitle(jasperDesign, "\"<p align='center'><font size='6'><b>Device Report</b></font></p>\"");
+            TbReportCtx tbReportCtx = new TbReportCtx(tenantId, customerId, userPermissions, configuration);
+            JasperDesign jasperDesign = tbReportCtx.getJasperDesign();
 
-            TbReportCtx tbReportCtx = new TbReportCtx(securityUser, jasperDesign, configuration.getEntityAliases(), configuration.getFilters());
+            // add page header and footer
+            Optional.ofNullable(configuration.getHeader())
+                    .ifPresent(header -> addPageHeader(jasperDesign, configuration.getHeader()));
+            Optional.ofNullable(configuration.getFooter())
+                    .ifPresent(header -> addPageFooter(jasperDesign, configuration.getHeader()));
 
-            // components
+            // render components
             for (ReportComponent component : configuration.getComponents()) {
                 Optional.ofNullable(rendererMap.get(component.getType()))
                         .ifPresent(renderer -> renderer.render(tbReportCtx, component));
             }
 
-            JasperReport mainReport = JasperCompileManager.compileReport(tbReportCtx.getJasperDesign());
+            JasperReport mainReport = JasperCompileManager.compileReport(jasperDesign);
             JasperPrint print = JasperFillManager.fillReport(mainReport, tbReportCtx.getParams(), new JREmptyDataSource());
 
             ReportData report = ReportData.builder()
@@ -140,6 +153,14 @@ public class DefaultReportService extends AbstractTbEntityService implements Rep
             throw new ThingsboardException("Unable to generate report", ExceptionUtils.getRootCause(e), ThingsboardErrorCode.GENERAL);
         }
         return resultFuture;
+    }
+
+    private void renderHeading(TbReportCtx tbReportCtx, HeadingComponent component) {
+        addHeading(tbReportCtx.getJasperDesign(), component.getValue());
+    }
+
+    private void renderRichText(TbReportCtx tbReportCtx, RichTextComponent component) {
+        addRichText(tbReportCtx.getJasperDesign(), component.getValue());
     }
 
     private void renderEntityTable(TbReportCtx tbReportCtx, EntityTableComponent component) {
@@ -165,8 +186,8 @@ public class DefaultReportService extends AbstractTbEntityService implements Rep
 
     private Collection<Map<String, ?>> fetchEntityData(TbReportCtx tbReportCtx, DataSource dataSource) {
         EntityDataQuery entityDataQuery = EntityDataQueryUtils.toEntityDataQuery(dataSource, tbReportCtx.getEntityAliases(), tbReportCtx.getFilters());
-        PageData<EntityData> result = entityService.findEntityDataByQuery(tbReportCtx.getSecurityUser().getTenantId(), tbReportCtx.getSecurityUser().getCustomerId(),
-                tbReportCtx.getSecurityUser().getUserPermissions(), entityDataQuery);
+        PageData<EntityData> result = entityService.findEntityDataByQuery(tbReportCtx.getTenantId(), tbReportCtx.getCustomerId(),
+                tbReportCtx.getUserPermissions(), entityDataQuery);
 
         Collection<Map<String, ?>> entryList = new ArrayList<>(result.getData().size());
         for (EntityData entityData : result.getData()) {
@@ -186,7 +207,6 @@ public class DefaultReportService extends AbstractTbEntityService implements Rep
         List<String> columsHeaders = dataSource.getDataKeys().stream().map(DataKey::getLabel).collect(Collectors.toList());
 
         JasperDesign tableDesign = JasperReportUtils.buildTableDesign();
-        JasperReportUtils.addTableTitle(tableDesign, "Table name");
         addColumnHeader(tableDesign, columsHeaders);
         addTableDetailBand(tableDesign, entityKeys);
         return JasperCompileManager.compileReport(tableDesign);

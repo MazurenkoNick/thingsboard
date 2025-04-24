@@ -133,8 +133,6 @@ public class ReportControllerTest extends AbstractControllerTest {
         reportRequest.setReportType(TbReportType.PDF);
         ResultActions resultActions = doPost("/api/v2/report/test", reportRequest).andExpect(status().isOk());
         MockHttpServletResponse response = resultActions.andReturn().getResponse();
-
     }
-
 
 }

@@ -46,6 +46,8 @@ import net.sf.jasperreports.engine.design.JasperDesign;
 import net.sf.jasperreports.engine.type.HorizontalTextAlignEnum;
 import net.sf.jasperreports.engine.type.ModeEnum;
 import net.sf.jasperreports.engine.type.WhenNoDataTypeEnum;
+import org.thingsboard.server.common.data.report.configuration.HeaderFooter;
+import org.thingsboard.server.common.data.report.configuration.ReportTemplateConfiguration;
 
 import java.awt.*;
 import java.util.List;
@@ -53,7 +55,7 @@ import java.util.List;
 
 public class JasperReportUtils {
 
-    public static JasperDesign initDesign() {
+    public static JasperDesign initDesign(ReportTemplateConfiguration configuration) {
         JasperDesign design = new JasperDesign();
         design.setName("MainReport");
         design.setPageWidth(595);
@@ -80,17 +82,17 @@ public class JasperReportUtils {
         return design;
     }
 
-    public static void addReportTitle(JasperDesign mainDesign, String title) {
+    public static void addHeading(JasperDesign mainDesign, String headingText) {
         JRDesignTextField htmlField = new JRDesignTextField();
         htmlField.setX(0);
         htmlField.setY(0);
         htmlField.setWidth(500);
         htmlField.setHeight(100);
         //htmlField.setHorizontalTextAlign(100);
-        htmlField.setMarkup("html"); // This enables HTML rendering
+        htmlField.setMarkup("html");
 
         JRDesignExpression expression = new JRDesignExpression();
-        expression.setText(title);
+        expression.setText(headingText);
         htmlField.setExpression(expression);
 
         JRDesignBand detailBand = new JRDesignBand();
@@ -101,7 +103,7 @@ public class JasperReportUtils {
         detailSection.addBand(detailBand);
     }
 
-    public static JasperDesign addTableTitle(JasperDesign jasperDesign, String title) {
+    public static JasperDesign addDesignTitle(JasperDesign jasperDesign, String title) {
         JRDesignBand titleBand = new JRDesignBand();
         titleBand.setHeight(40);
         JRDesignStaticText titleText = new JRDesignStaticText();
@@ -115,7 +117,7 @@ public class JasperReportUtils {
         return jasperDesign;
     }
 
-    private static void addPageHeader(JasperDesign jasperDesign) {
+    public static void addPageHeader(JasperDesign jasperDesign, HeaderFooter header) {
         JRDesignBand pageHeader = new JRDesignBand();
         pageHeader.setHeight(20);
         JRDesignStaticText headerText = new JRDesignStaticText();
@@ -123,12 +125,12 @@ public class JasperReportUtils {
         headerText.setY(0);
         headerText.setWidth(515);
         headerText.setHeight(20);
-        headerText.setText("Page Header - Device Subreport");
+        headerText.setText(header.getText());
         pageHeader.addElement(headerText);
         jasperDesign.setPageHeader(pageHeader);
     }
 
-    private static void addPageFooter(JasperDesign jasperDesign) {
+    public static void addPageFooter(JasperDesign jasperDesign, HeaderFooter footer) {
         JRDesignBand pageFooter = new JRDesignBand();
         pageFooter.setHeight(20);
         JRDesignStaticText footerText = new JRDesignStaticText();
@@ -136,7 +138,7 @@ public class JasperReportUtils {
         footerText.setY(0);
         footerText.setWidth(515);
         footerText.setHeight(20);
-        footerText.setText("Page Footer - Confidential");
+        footerText.setText(footer.getText());
         pageFooter.addElement(footerText);
         jasperDesign.setPageFooter(pageFooter);
     }
@@ -172,6 +174,26 @@ public class JasperReportUtils {
         JRDesignSection detailSection = (JRDesignSection) mainDesign.getDetailSection();
         detailSection.addBand(detailBand);
         return "image";
+    }
+
+    public static void addRichText(JasperDesign mainDesign, String richText) {
+        JRDesignTextField htmlField = new JRDesignTextField();
+        htmlField.setX(0);
+        htmlField.setY(0);
+        htmlField.setWidth(500);
+        htmlField.setHeight(100);
+        htmlField.setMarkup("html");
+
+        JRDesignExpression expression = new JRDesignExpression();
+        expression.setText(richText);
+        htmlField.setExpression(expression);
+
+        JRDesignBand detailBand = new JRDesignBand();
+        detailBand.setHeight(100);
+        detailBand.addElement(htmlField);
+
+        JRDesignSection detailSection = (JRDesignSection) mainDesign.getDetailSection();
+        detailSection.addBand(detailBand);
     }
 
     public static JRDesignField createField(String name, Class<?> type) {
