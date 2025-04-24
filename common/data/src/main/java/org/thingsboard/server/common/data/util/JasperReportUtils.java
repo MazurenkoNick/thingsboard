@@ -44,11 +44,12 @@ import net.sf.jasperreports.engine.design.JRDesignSubreport;
 import net.sf.jasperreports.engine.design.JRDesignTextField;
 import net.sf.jasperreports.engine.design.JasperDesign;
 import net.sf.jasperreports.engine.type.ModeEnum;
+import net.sf.jasperreports.engine.type.SplitTypeEnum;
+import net.sf.jasperreports.engine.type.StretchTypeEnum;
 import net.sf.jasperreports.engine.type.VerticalTextAlignEnum;
 import net.sf.jasperreports.engine.type.WhenNoDataTypeEnum;
 import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.report.configuration.HeaderFooter;
-import org.thingsboard.server.common.data.report.configuration.HeadingComponent;
 import org.thingsboard.server.common.data.report.configuration.ReportTemplateConfiguration;
 
 import java.awt.*;
@@ -241,28 +242,30 @@ public class JasperReportUtils {
         return header;
     }
 
-    public static void addBandWithSubReport(JasperDesign jasperDesign, String subReportExpression, String subReportDSExpression) throws JRException {
+    public static void addSubReport(JasperDesign jasperDesign, String subReportExpression, String subReportDSExpression) throws JRException {
         jasperDesign.addParameter(createParameter(subReportExpression, JasperReport.class));
         jasperDesign.addParameter(createParameter(subReportDSExpression, JRDataSource.class));
 
         JRDesignBand detailBand = new JRDesignBand();
         detailBand.setHeight(400);
 
-        JRDesignSubreport subreport = new JRDesignSubreport(jasperDesign);
-        subreport.setX(0);
-        subreport.setY(0);
-        subreport.setWidth(515);
-        subreport.setHeight(380);
+        JRDesignSubreport subReport = new JRDesignSubreport(jasperDesign);
+        subReport.setX(0);
+        subReport.setY(0);
+        subReport.setWidth(515);
+        subReport.setHeight(380);
 
         JRDesignExpression subExpr = new JRDesignExpression();
         subExpr.setText("$P{" + subReportExpression + "}");
-        subreport.setExpression(subExpr);
+        subReport.setExpression(subExpr);
 
         JRDesignExpression dsExpr = new JRDesignExpression();
         dsExpr.setText("$P{" + subReportDSExpression + "}");
-        subreport.setDataSourceExpression(dsExpr);
+        subReport.setDataSourceExpression(dsExpr);
 
-        detailBand.addElement(subreport);
+        detailBand.addElement(subReport);
+        detailBand.setSplitType(SplitTypeEnum.STRETCH);
+
         ((JRDesignSection) jasperDesign.getDetailSection()).addBand(detailBand);
     }
 
