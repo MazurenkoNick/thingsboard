@@ -31,6 +31,7 @@
 package org.thingsboard.server.common.data.report.configuration;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -42,6 +43,7 @@ import lombok.NoArgsConstructor;
 public class HeaderFooter {
 
     private Boolean enabled;
+    @NotNull
     private String text;
     private Integer fontSize;
     private String alignment;

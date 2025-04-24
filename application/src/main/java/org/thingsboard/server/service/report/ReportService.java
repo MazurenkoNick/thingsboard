@@ -33,6 +33,9 @@ package org.thingsboard.server.service.report;
 import com.google.common.util.concurrent.ListenableFuture;
 import net.sf.jasperreports.engine.JRException;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
+import org.thingsboard.server.common.data.id.CustomerId;
+import org.thingsboard.server.common.data.id.TenantId;
+import org.thingsboard.server.common.data.permission.MergedUserPermissions;
 import org.thingsboard.server.common.data.report.ReportData;
 import org.thingsboard.server.common.data.report.ReportRequest;
 import org.thingsboard.server.service.security.model.SecurityUser;
@@ -40,6 +43,6 @@ import org.thingsboard.server.service.security.model.SecurityUser;
 
 public interface ReportService {
 
-    ListenableFuture<ReportData> generateReport(SecurityUser securityUser, ReportRequest reportRequest) throws ThingsboardException, JRException;
+    ListenableFuture<ReportData> generateReport(TenantId tenantId, CustomerId customerId, ReportRequest reportRequest, MergedUserPermissions userPermissions) throws ThingsboardException, JRException;
 
 }

@@ -54,6 +54,7 @@ import org.thingsboard.server.common.data.report.ReportData;
 import org.thingsboard.server.common.data.report.ReportRequest;
 import org.thingsboard.server.config.annotations.ApiOperation;
 import org.thingsboard.server.queue.util.TbCoreComponent;
+import org.thingsboard.server.service.security.model.SecurityUser;
 
 import static org.thingsboard.server.controller.ControllerConstants.TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH;
 
@@ -68,10 +69,12 @@ public class ReportController extends BaseController {
     @ApiOperation(value = "Download test report (downloadTestReport)",
             notes = "Generate and download test report." + TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
-    @PostMapping(value = "/report/test", produces = {"application/pdf", "image/jpeg", "image/png"})
+    @PostMapping(value = "/report/test", produces = {"application/pdf"})
     public DeferredResult<ResponseEntity<Resource>> downloadTestReport(@RequestBody ReportRequest reportRequest) throws ThingsboardException, JRException {
         DeferredResult<ResponseEntity<Resource>> deferredResult = new DeferredResult<>();
-        ListenableFuture<ReportData> reportData = reportService.generateReport(getCurrentUser(), reportRequest);
+        SecurityUser currentUser = getCurrentUser();
+        ListenableFuture<ReportData> reportData = reportService.generateReport(currentUser.getTenantId(), currentUser.getCustomerId(),
+                reportRequest, currentUser.getUserPermissions());
         Futures.addCallback(reportData, new ReportDataCallback(deferredResult), MoreExecutors.directExecutor());
         return deferredResult;
     }
