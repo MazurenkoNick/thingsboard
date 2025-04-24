@@ -75,7 +75,7 @@ import tinycolor from 'tinycolor2';
 import moment from 'moment';
 import { IModulesMap } from '@modules/common/modules-map.models';
 import { HOME_COMPONENTS_MODULE_TOKEN } from '@home/components/tokens';
-import { ReportService } from '@core/http/report.service';
+import { DashboardReportService } from '@core/http/dashboard-report.service';
 import { IBasicWidgetConfigComponent } from '@home/components/widget/config/widget-config.component.models';
 import { compileTbFunction, TbFunction } from '@shared/models/js-function.models';
 import { HttpClient } from '@angular/common/http';
@@ -103,7 +103,7 @@ export class WidgetComponentService {
               private resources: ResourcesService,
               private translate: TranslateService,
               private http: HttpClient,
-              private reportService: ReportService) {
+              private reportService: DashboardReportService) {
 
     this.cssParser.testMode = false;
 

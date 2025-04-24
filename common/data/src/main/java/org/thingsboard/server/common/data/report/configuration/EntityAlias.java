@@ -45,7 +45,7 @@ import org.thingsboard.server.common.data.query.EntityFilter;
 public class EntityAlias {
 
     String id;
-    String name;
+    String alias;
     EntityFilter filter;
 
 }

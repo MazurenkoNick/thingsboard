@@ -33,7 +33,7 @@ import { Type } from '@angular/core';
 import { ControlValueAccessor, Validator } from '@angular/forms';
 import { SendRpcRequestComponent } from '@home/components/scheduler/config/send-rpc-request.component';
 import { UpdateAttributesComponent } from '@home/components/scheduler/config/update-attributes.component';
-import { GenerateReportComponent } from '@home/components/scheduler/config/generate-report.component';
+import { GenerateDashboardReportComponent } from '@home/components/scheduler/config/generate-dashboard-report.component';
 import { OtaUpdateEventConfigComponent } from '@home/components/scheduler/config/ota-update-event-config.component';
 
 export interface SchedulerEventConfigType {
@@ -67,7 +67,7 @@ test = {
 export const defaultSchedulerEventConfigTypes: {[eventType: string]: SchedulerEventConfigType} = {
   generateReport: {
     name: 'Generate Report',
-    componentType: GenerateReportComponent,
+    componentType: GenerateDashboardReportComponent,
     originator: false,
     msgType: false,
     metadata: false

@@ -40,8 +40,8 @@ import { SchedulerEventTemplateConfigComponent } from '@home/components/schedule
 import { SendRpcRequestComponent } from '@home/components/scheduler/config/send-rpc-request.component';
 import { UpdateAttributesComponent } from '@home/components/scheduler/config/update-attributes.component';
 import { AttributeKeyValueTableComponent } from '@home/components/scheduler/config/attribute-key-value-table.component';
-import { GenerateReportComponent } from '@home/components/scheduler/config/generate-report.component';
-import { ReportConfigComponent } from '@home/components/scheduler/config/report-config.component';
+import { GenerateDashboardReportComponent } from '@home/components/scheduler/config/generate-dashboard-report.component';
+import { DashboardReportConfigComponent } from '@home/components/scheduler/config/dashboard-report-config.component';
 import { SelectDashboardStateDialogComponent } from '@home/components/scheduler/config/select-dashboard-state-dialog.component';
 import { EmailConfigComponent } from '@home/components/scheduler/config/email-config.component';
 import { SchedulerEventScheduleComponent } from '@home/components/scheduler/scheduler-event-schedule.component';
@@ -56,8 +56,8 @@ import { SchedulerEventScheduleComponent } from '@home/components/scheduler/sche
       SendRpcRequestComponent,
       UpdateAttributesComponent,
       AttributeKeyValueTableComponent,
-      GenerateReportComponent,
-      ReportConfigComponent,
+      GenerateDashboardReportComponent,
+      DashboardReportConfigComponent,
       EmailConfigComponent,
       SelectDashboardStateDialogComponent,
       SchedulerEventScheduleComponent,
@@ -75,8 +75,8 @@ import { SchedulerEventScheduleComponent } from '@home/components/scheduler/sche
     SendRpcRequestComponent,
     UpdateAttributesComponent,
     AttributeKeyValueTableComponent,
-    GenerateReportComponent,
-    ReportConfigComponent,
+    GenerateDashboardReportComponent,
+    DashboardReportConfigComponent,
     EmailConfigComponent,
     SelectDashboardStateDialogComponent,
     SchedulerEventScheduleComponent,

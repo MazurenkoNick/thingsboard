@@ -43,7 +43,7 @@ import {
 import { Store } from '@ngrx/store';
 import { AppState } from '@app/core/core.state';
 import { DAY, getDefaultTimezone, historyInterval } from '@shared/models/time/time.models';
-import { ReportConfig, reportTypeNamesMap, reportTypes } from '@shared/models/report.models';
+import { DashboardReportConfig, dashboardReportTypeNamesMap, dashboardReportTypes } from '@shared/models/dashboard-report.models';
 import { getCurrentAuthUser } from '@core/auth/auth.selectors';
 import { Authority } from '@shared/models/authority.enum';
 import { UtilsService } from '@core/services/utils.service';
@@ -54,7 +54,7 @@ import {
   SelectDashboardStateDialogData
 } from '@home/components/scheduler/config/select-dashboard-state-dialog.component';
 import { PageComponent } from '@shared/components/page.component';
-import { ReportService } from '@core/http/report.service';
+import { DashboardReportService } from '@core/http/dashboard-report.service';
 import { DialogService } from '@core/services/dialog.service';
 import { TranslateService } from '@ngx-translate/core';
 import { takeUntil } from 'rxjs/operators';
@@ -62,23 +62,23 @@ import { Subject } from 'rxjs';
 import { safeMerge } from '@home/components/scheduler/config/config.models';
 
 @Component({
-  selector: 'tb-report-config',
-  templateUrl: './report-config.component.html',
-  styleUrls: ['./report-config.component.scss'],
+  selector: 'tb-dashboard-report-config',
+  templateUrl: './dashboard-report-config.component.html',
+  styleUrls: ['./dashboard-report-config.component.scss'],
   providers: [{
     provide: NG_VALUE_ACCESSOR,
-    useExisting: forwardRef(() => ReportConfigComponent),
+    useExisting: forwardRef(() => DashboardReportConfigComponent),
     multi: true
   },
   {
     provide: NG_VALIDATORS,
-    useExisting: forwardRef(() => ReportConfigComponent),
+    useExisting: forwardRef(() => DashboardReportConfigComponent),
     multi: true
   }]
 })
-export class ReportConfigComponent extends PageComponent implements ControlValueAccessor, OnInit, AfterViewInit, OnDestroy, Validator {
+export class DashboardReportConfigComponent extends PageComponent implements ControlValueAccessor, OnInit, AfterViewInit, OnDestroy, Validator {
 
-  private modelValue: ReportConfig | null;
+  private modelValue: DashboardReportConfig | null;
 
   reportConfigFormGroup: UntypedFormGroup;
 
@@ -94,9 +94,9 @@ export class ReportConfigComponent extends PageComponent implements ControlValue
 
   entityType = EntityType;
 
-  reportTypesList = reportTypes;
+  reportTypesList = dashboardReportTypes;
 
-  reportTypeNames = reportTypeNamesMap;
+  reportTypeNames = dashboardReportTypeNamesMap;
 
   private destroy$ = new Subject<void>();
 
@@ -104,7 +104,7 @@ export class ReportConfigComponent extends PageComponent implements ControlValue
 
   constructor(protected store: Store<AppState>,
               private utils: UtilsService,
-              private reportService: ReportService,
+              private reportService: DashboardReportService,
               private dialogService: DialogService,
               private translate: TranslateService,
               private dialog: MatDialog,
@@ -225,8 +225,8 @@ export class ReportConfigComponent extends PageComponent implements ControlValue
     this.updateEnabledState();
   }
 
-  writeValue(value: ReportConfig | null): void {
-    this.modelValue = safeMerge<ReportConfig>(this.createDefaultReportConfig(), value);
+  writeValue(value: DashboardReportConfig | null): void {
+    this.modelValue = safeMerge<DashboardReportConfig>(this.createDefaultReportConfig(), value);
     this.reportConfigFormGroup.reset(this.modelValue, {emitEvent: false});
     this.updateEnabledState();
   }
@@ -243,7 +243,7 @@ export class ReportConfigComponent extends PageComponent implements ControlValue
     return null;
   }
 
-  private createDefaultReportConfig(): ReportConfig {
+  private createDefaultReportConfig(): DashboardReportConfig {
     return {
       baseUrl: this.utils.baseUrl(),
       useDashboardTimewindow: true,
@@ -260,7 +260,7 @@ export class ReportConfigComponent extends PageComponent implements ControlValue
 
   private updateModel() {
     if (this.reportConfigFormGroup.valid) {
-      const value = this.reportConfigFormGroup.getRawValue() as ReportConfig;
+      const value = this.reportConfigFormGroup.getRawValue() as DashboardReportConfig;
       this.modelValue = {...this.modelValue, ...value};
       this.propagateChange(this.modelValue);
     } else {

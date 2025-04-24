@@ -32,7 +32,7 @@
 import { Inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { UtilsService } from '@core/services/utils.service';
-import { ReportParams, ReportType } from '@shared/models/report.models';
+import { DashboardReportParams, DashboardReportType } from '@shared/models/dashboard-report.models';
 import { getDefaultTimezone, Timewindow } from '@shared/models/time/time.models';
 import { from, Observable, of, Subject } from 'rxjs';
 import { catchError, map, mergeMap, tap } from 'rxjs/operators';
@@ -48,7 +48,7 @@ import { CmdWrapper } from '@shared/models/websocket/websocket.models';
 @Injectable({
   providedIn: 'root'
 })
-export class ReportService {
+export class DashboardReportService {
 
   reportView = false;
   reportTimewindow: Timewindow = null;
@@ -59,10 +59,9 @@ export class ReportService {
 
   private readonly onWindowMessageListener = this.onWindowMessage.bind(this);
 
-  private currentDashboardId: string;
-  private receiveWsData: Map<number, boolean> = new Map();
+  private receiveWsData: Map<number, boolean> = new Map<number, boolean>();
   private lastWsCommandTimeMs = 0;
-  private waitForWidgets: Set<string> = new Set();
+  private waitForWidgets: Set<string> = new Set<string>();
   private lastWaitWidgetTimeMs = 0;
   private widgetsCount = 0;
   private lastWaitWidgetsTimeMs = 0;
@@ -144,10 +143,10 @@ export class ReportService {
     this.waitForWidgets.delete(uuid);
   }
 
-  public downloadDashboardReport(dashboardId: string, reportType: ReportType, state?: string, timewindow?: Timewindow): Observable<any> {
+  public downloadDashboardReport(dashboardId: string, reportType: DashboardReportType, state?: string, timewindow?: Timewindow): Observable<any> {
     const url = `/api/report/${dashboardId}/download`;
     const defaultTz = getDefaultTimezone();
-    const reportParams: ReportParams = {
+    const reportParams: DashboardReportParams = {
       type: reportType,
       timezone: defaultTz
     };
@@ -160,7 +159,7 @@ export class ReportService {
     return this.downloadReport(url, reportParams);
   }
 
-  public downloadTestReport(reportConfig: ReportParams, reportsServerEndpointUrl?: string): Observable<any> {
+  public downloadTestReport(reportConfig: DashboardReportParams, reportsServerEndpointUrl?: string): Observable<any> {
     const url = '/api/report/test';
     const params: {[param: string]: string} = {};
     if (reportsServerEndpointUrl) {
@@ -174,8 +173,7 @@ export class ReportService {
       let message: WindowMessage;
       try {
         message = JSON.parse(event.data);
-      } catch (e) {
-      }
+      } catch (e) { /* empty */ }
       if (message && message.type) {
         switch (message.type) {
           case 'openReport':
@@ -218,7 +216,6 @@ export class ReportService {
             } else {
               this.reportTimewindow = null;
             }
-            this.currentDashboardId = openReportMessage.dashboardId;
             let url = `/dashboard/${openReportMessage.dashboardId}`;
             const params = [];
             if (openReportMessage.state) {
@@ -380,7 +377,7 @@ export class ReportService {
     }
   }
 
-  private downloadReport(url: string, reportParams: ReportParams, params?: {[param: string]: string}): Observable<any> {
+  private downloadReport(url: string, reportParams: DashboardReportParams, params?: {[param: string]: string}): Observable<any> {
     if (!params) {
       params = {};
     }
@@ -394,23 +391,19 @@ export class ReportService {
         const filename = headers.get('x-filename');
         const contentType = headers.get('content-type');
         const linkElement = this.document.createElement('a');
-        try {
-          const blob = new Blob([response.body], { type: contentType });
-          const href = URL.createObjectURL(blob);
-          linkElement.setAttribute('href', href);
-          linkElement.setAttribute('download', filename);
-          const clickEvent = new MouseEvent('click',
-            {
-              view: this.window,
-              bubbles: true,
-              cancelable: false
-            }
-          );
-          linkElement.dispatchEvent(clickEvent);
-          return null;
-        } catch (e) {
-          throw e;
-        }
+        const blob = new Blob([response.body], { type: contentType });
+        const href = URL.createObjectURL(blob);
+        linkElement.setAttribute('href', href);
+        linkElement.setAttribute('download', filename);
+        const clickEvent = new MouseEvent('click',
+          {
+            view: this.window,
+            bubbles: true,
+            cancelable: false
+          }
+        );
+        linkElement.dispatchEvent(clickEvent);
+        return null;
       })
     );
   }

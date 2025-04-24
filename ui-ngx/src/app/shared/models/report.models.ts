@@ -29,32 +29,58 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { Timewindow } from '@shared/models/time/time.models';
+import { BaseData, ExportableEntity } from '@shared/models/base-data';
+import { ReportTemplateId } from '@shared/models/id/report-template-id';
+import { TenantId } from '@shared/models/id/tenant-id';
+import { CustomerId } from '@shared/models/id/customer-id';
+import { HasTenantId, HasVersion } from '@shared/models/entity.models';
+import { SchedulerEventId } from '@shared/models/id/scheduler-event-id';
+import { EntityId } from '@shared/models/id/entity-id';
+import { EntityAlias } from '@shared/models/alias.models';
+import { Filter } from '@shared/models/query/query.models';
+import { ReportComponentConfig } from '@shared/models/report-component.models';
 
-export type ReportType = 'pdf' | 'jpeg' | 'png';
+export enum ReportTemplateType {
+  REPORT = 'REPORT',
+  SUB_REPORT = 'SUB_REPORT'
+}
 
-export const reportTypes: ReportType[] = ['pdf', 'jpeg', 'png'];
-
-export const reportTypeNamesMap = new Map<ReportType, string>(
+export const reportTemplateTypeTranslationMap = new Map<ReportTemplateType, string>(
   [
-    ['pdf', 'PDF'],
-    ['jpeg', 'JPEG'],
-    ['png', 'PNG'],
+    [ReportTemplateType.REPORT, 'report-template.type-report'],
+    [ReportTemplateType.SUB_REPORT, 'report-template.type-sub-report']
   ]
 );
 
-export interface ReportParams {
-  type: ReportType;
-  timezone: string;
-  state?: string;
-  timewindow?: Timewindow;
+export interface BaseReportTemplate extends BaseData<ReportTemplateId>, HasTenantId, HasVersion, ExportableEntity<ReportTemplateId> {
+  tenantId?: TenantId;
+  customerId?: CustomerId;
+  name: string;
+  type: ReportTemplateType;
+  description?: string;
+  schedulerEventId?: SchedulerEventId;
 }
 
-export interface ReportConfig extends ReportParams {
-  baseUrl: string;
-  dashboardId: string;
-  useDashboardTimewindow: boolean;
-  namePattern: string;
-  useCurrentUserCredentials: boolean;
-  userId: string;
+export interface ReportTemplateInfo extends BaseReportTemplate {
+  ownerId?: EntityId;
+  ownerName?: string;
+}
+
+export interface HeaderFooter {
+  enabled: boolean;
+  components: ReportComponentConfig[];
+  firstPage?: HeaderFooter;
+}
+
+export interface ReportTemplateConfiguration {
+  fileName: string;
+  entityAliases: EntityAlias[];
+  filters: Filter[];
+  header: HeaderFooter;
+  footer: HeaderFooter;
+  components: ReportComponentConfig[];
+}
+
+export interface ReportTemplate extends BaseReportTemplate {
+  configuration: ReportTemplateConfiguration;
 }

@@ -2913,6 +2913,10 @@
         "type-blob-entities": "Blob entities",
         "list-of-blob-entities": "{ count, plural, =1 {One blob entity} other {List of # blob entities} }",
         "blob-entity-name-starts-with": "Blob entities whose names start with '{{prefix}}'",
+        "type-report-template": "Report template",
+        "type-report-templates": "Report templates",
+        "list-of-report-templates": "{ count, plural, =1 {One report template} other {List of # report templates} }",
+        "report-template-name-starts-with": "Report templates whose names start with '{{prefix}}'",
         "type-rulenode": "Rule node",
         "type-rulenodes": "Rule nodes",
         "list-of-rulenodes": "{ count, plural, =1 {One rule node} other {List of # rule nodes} }",
@@ -6722,6 +6726,7 @@
                 "INTEGRATION": "Integration",
                 "SCHEDULER_EVENT": "Scheduler Event",
                 "BLOB_ENTITY": "Blob Entity",
+                "REPORT_TEMPLATE": "Report Template",
                 "CUSTOMER_GROUP": "Customer Group",
                 "DEVICE_GROUP": "Device Group",
                 "ASSET_GROUP": "Asset Group",
@@ -6944,6 +6949,15 @@
         "customer-user": "Customer user",
         "user-credentials-description": "Credentials of specified user will be used to open dashboard UI during report generation.",
         "timezone-description": "Time zone in which target dashboard will be presented in report."
+    },
+    "report-template": {
+        "add": "Add report template",
+        "search": "Search report templates",
+        "no-report-templates-text": "No report templates found",
+        "report-template-details": "Report template details",
+        "selected-report-templates": "{ count, plural, =1 {1 report template} other {# report templates} } selected",
+        "type-report": "Report",
+        "type-sub-report": "Sub-report"
     },
     "blob-entity": {
         "blob-entity": "Blob entity",

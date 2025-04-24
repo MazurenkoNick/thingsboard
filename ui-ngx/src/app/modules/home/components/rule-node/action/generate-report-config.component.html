@@ -44,9 +44,9 @@
   <mat-checkbox class="flex-1" formControlName="useReportConfigFromMessage">
     {{ 'rule-node-config.use-report-config-from-message' | translate }}
   </mat-checkbox>
-  <tb-report-config
+  <tb-dashboard-report-config
     *ngIf="!generateReportConfigForm.get('useReportConfigFromMessage').value"
     formControlName="reportConfig"
     [reportsServerEndpointUrl]="generateReportConfigForm.get('reportsServerEndpointUrl').value">
-  </tb-report-config>
+  </tb-dashboard-report-config>
 </section>

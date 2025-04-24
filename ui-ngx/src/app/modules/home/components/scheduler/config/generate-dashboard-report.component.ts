@@ -47,21 +47,21 @@ import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 
 @Component({
-  selector: 'tb-generate-report-event-config',
-  templateUrl: './generate-report.component.html',
+  selector: 'tb-generate-dashboard-report-event-config',
+  templateUrl: './generate-dashboard-report.component.html',
   styleUrls: [],
   providers: [{
     provide: NG_VALUE_ACCESSOR,
-    useExisting: forwardRef(() => GenerateReportComponent),
+    useExisting: forwardRef(() => GenerateDashboardReportComponent),
     multi: true
   },
   {
     provide: NG_VALIDATORS,
-    useExisting: forwardRef(() => GenerateReportComponent),
+    useExisting: forwardRef(() => GenerateDashboardReportComponent),
     multi: true
   }]
 })
-export class GenerateReportComponent implements ControlValueAccessor, OnInit, AfterViewInit, OnDestroy, Validator {
+export class GenerateDashboardReportComponent implements ControlValueAccessor, OnInit, AfterViewInit, OnDestroy, Validator {
 
   modelValue: SchedulerEventConfiguration | null;
 
