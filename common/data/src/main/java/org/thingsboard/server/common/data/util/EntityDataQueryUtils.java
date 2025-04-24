@@ -30,11 +30,13 @@
  */
 package org.thingsboard.server.common.data.util;
 
+import org.thingsboard.server.common.data.id.DeviceId;
 import org.thingsboard.server.common.data.query.EntityDataPageLink;
 import org.thingsboard.server.common.data.query.EntityDataQuery;
 import org.thingsboard.server.common.data.query.EntityKey;
 import org.thingsboard.server.common.data.query.EntityKeyType;
 import org.thingsboard.server.common.data.query.KeyFilter;
+import org.thingsboard.server.common.data.query.SingleEntityFilter;
 import org.thingsboard.server.common.data.report.configuration.DataKey;
 import org.thingsboard.server.common.data.report.configuration.DataSource;
 import org.thingsboard.server.common.data.report.configuration.EntityAlias;
@@ -42,6 +44,7 @@ import org.thingsboard.server.common.data.report.configuration.Filter;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 public class EntityDataQueryUtils {
 
@@ -74,5 +77,36 @@ public class EntityDataQueryUtils {
         }
         EntityDataPageLink pageLink = new EntityDataPageLink(Integer.MAX_VALUE, 0, null, null);
         return new EntityDataQuery(entityAlias.getFilter(), pageLink, entityFields, latestValues, keyFilters);
+    }
+
+    public static EntityDataQuery toSingleDeviceQuery(DataSource dataSource, List<Filter> filters) {
+        List<KeyFilter> keyFilters = null;
+
+        if (dataSource.getFilterId() != null) {
+            Filter entityFilter = filters.stream().filter(filter -> filter.getId().equals(dataSource.getFilterId()))
+                    .findFirst()
+                    .orElseThrow(() -> new IllegalArgumentException("Entity filter not found: " + dataSource.getFilterId()));
+            keyFilters = entityFilter.getKeyFilters();
+        }
+
+        List<EntityKey> entityFields = new ArrayList<>();
+        List<EntityKey> latestValues = new ArrayList<>();
+        for (DataKey dataKey : dataSource.getDataKeys()) {
+            switch (dataKey.getType()) {
+                case "attribute" -> {
+                    latestValues.add(new EntityKey(EntityKeyType.ATTRIBUTE, dataKey.getName()));
+                }
+                case "timeseries" -> {
+                    latestValues.add(new EntityKey(EntityKeyType.TIME_SERIES, dataKey.getName()));
+                }
+                case "entityField" -> {
+                    entityFields.add(new EntityKey(EntityKeyType.ENTITY_FIELD, dataKey.getName()));
+                }
+            }
+        }
+        SingleEntityFilter singleEntityFilter = new SingleEntityFilter();
+        singleEntityFilter.setSingleEntity(new DeviceId(UUID.fromString(dataSource.getDeviceId())));
+                EntityDataPageLink pageLink = new EntityDataPageLink(Integer.MAX_VALUE, 0, null, null);
+        return new EntityDataQuery(singleEntityFilter, pageLink, entityFields, latestValues, keyFilters);
     }
 }

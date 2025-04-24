@@ -30,18 +30,21 @@
  */
 package org.thingsboard.server.common.data.report.configuration;
 
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import java.util.List;
 
 @Data
 public class ReportTemplateConfiguration {
 
+    @NotNull
     private String fileName;
     private Boolean subReport;
     private List<EntityAlias> entityAliases;
     private List<Filter> filters;
     private HeaderFooter header;
     private HeaderFooter footer;
+    @NotNull
     private List<ReportComponent> components;
 
 }

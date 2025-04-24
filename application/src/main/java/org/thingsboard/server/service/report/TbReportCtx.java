@@ -31,8 +31,6 @@
 package org.thingsboard.server.service.report;
 
 import com.google.common.util.concurrent.ListenableFuture;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import net.sf.jasperreports.engine.design.JasperDesign;
@@ -56,8 +54,6 @@ public class TbReportCtx {
     private final TenantId tenantId;
     private final CustomerId customerId;
     private final MergedUserPermissions userPermissions;
-    private final JasperDesign jasperDesign;
-    private final Map<String, Object> params;
     private final List<EntityAlias> entityAliases;
     private final List<Filter> filters;
     private final List<ListenableFuture<Void>> futures;
@@ -66,9 +62,7 @@ public class TbReportCtx {
         this.tenantId = tenantId;
         this.customerId = customerId;
         this.userPermissions = userPermissions;
-        this.params = new HashMap<>();
         this.futures = new ArrayList<>();
-        this.jasperDesign = JasperReportUtils.initDesign(configuration);
         this.entityAliases = configuration.getEntityAliases();
         this.filters = configuration.getFilters();
     }

@@ -108,7 +108,7 @@ public class ReportControllerTest extends AbstractControllerTest {
         ));
         dataSource.setType("entity");
         dataSource.setEntityAliasId("784f394c-42b6-435a-983c-b7beff2784f9");
-        tableComponent.setDataSource(dataSource);
+        tableComponent.setDataSources(dataSource);
         configuration.setComponents(List.of(tableComponent));
         configuration.setFileName("testReport");
         ReportTemplate reportTemplate = new ReportTemplate();

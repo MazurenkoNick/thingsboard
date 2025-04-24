@@ -35,6 +35,7 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 import java.io.Serializable;
+import java.util.List;
 
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -44,9 +45,12 @@ import java.io.Serializable;
         property = "type")
 @JsonSubTypes({
         @JsonSubTypes.Type(value = HeadingComponent.class, name = "HEADING"),
+        @JsonSubTypes.Type(value = RichTextComponent.class, name = "RICH_TEXT"),
         @JsonSubTypes.Type(value = EntityTableComponent.class, name = "ENTITY_TABLE"),
 })
 public interface ReportComponent extends Serializable {
+
+    List<DataSource> getDataSources();
 
     ReportComponentType getType();
 

@@ -43,6 +43,7 @@ import java.util.List;
 @NoArgsConstructor
 public class DataSource {
     private String type;
+    private String deviceId;
     private String entityAliasId;
     private String filterId;
     private List<DataKey> dataKeys;

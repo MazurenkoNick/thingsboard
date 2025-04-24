@@ -35,13 +35,15 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Schema
 @Data
 @EqualsAndHashCode
 @NoArgsConstructor
 public class EntityTableComponent implements ReportComponent {
 
-    private DataSource dataSource;
+    private List<DataSource> dataSources;
 
     @Override
     public ReportComponentType getType() {
