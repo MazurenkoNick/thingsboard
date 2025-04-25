@@ -38,11 +38,10 @@ import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.permission.MergedUserPermissions;
 import org.thingsboard.server.common.data.report.ReportData;
 import org.thingsboard.server.common.data.report.ReportRequest;
-import org.thingsboard.server.service.security.model.SecurityUser;
 
 
 public interface ReportService {
 
-    ListenableFuture<ReportData> generateReport(TenantId tenantId, CustomerId customerId, ReportRequest reportRequest, MergedUserPermissions userPermissions) throws ThingsboardException, JRException;
+    ListenableFuture<ReportData> generateReport(TenantId tenantId, CustomerId customerId, MergedUserPermissions userPermissions, ReportRequest reportRequest) throws ThingsboardException, JRException;
 
 }

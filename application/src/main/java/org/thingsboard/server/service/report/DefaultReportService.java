@@ -66,6 +66,7 @@ import org.thingsboard.server.common.data.report.configuration.EntityAlias;
 import org.thingsboard.server.common.data.report.configuration.EntityTableComponent;
 import org.thingsboard.server.common.data.report.configuration.Filter;
 import org.thingsboard.server.common.data.report.configuration.HeadingComponent;
+import org.thingsboard.server.common.data.report.configuration.PageBreakComponent;
 import org.thingsboard.server.common.data.report.configuration.ReportComponent;
 import org.thingsboard.server.common.data.report.configuration.ReportComponentType;
 import org.thingsboard.server.common.data.report.configuration.ReportTemplateConfiguration;
@@ -87,13 +88,13 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 
+import static org.thingsboard.server.common.data.util.JasperReportUtils.addHeading;
 import static org.thingsboard.server.common.data.util.ReportQueryUtils.toAlarmCountQuery;
 import static org.thingsboard.server.common.data.util.ReportQueryUtils.toEntityCountQuery;
 import static org.thingsboard.server.common.data.util.ReportQueryUtils.toEntityDataQuery;
 import static org.thingsboard.server.common.data.util.ReportQueryUtils.toSingleDeviceQuery;
 import static org.thingsboard.server.common.data.util.JasperReportUtils.addSubReport;
 import static org.thingsboard.server.common.data.util.JasperReportUtils.addColumnHeader;
-import static org.thingsboard.server.common.data.util.JasperReportUtils.addHeading;
 import static org.thingsboard.server.common.data.util.JasperReportUtils.addPageFooter;
 import static org.thingsboard.server.common.data.util.JasperReportUtils.addPageHeader;
 import static org.thingsboard.server.common.data.util.JasperReportUtils.addRichText;
@@ -118,10 +119,11 @@ public class DefaultReportService extends AbstractTbEntityService implements Rep
         rendererMap.put(ReportComponentType.HEADING, component -> renderHeading((HeadingComponent) component));
         rendererMap.put(ReportComponentType.RICH_TEXT, component -> renderRichText((RichTextComponent) component));
         rendererMap.put(ReportComponentType.ENTITY_TABLE, component -> renderEntityTable((EntityTableComponent) component));
+        rendererMap.put(ReportComponentType.PAGE_BREAK, component -> renderPageBreak((PageBreakComponent) component));
     }
 
     @Override
-    public ListenableFuture<ReportData> generateReport(TenantId tenantId, CustomerId customerId, ReportRequest reportRequest, MergedUserPermissions userPermissions) throws ThingsboardException {
+    public ListenableFuture<ReportData> generateReport(TenantId tenantId, CustomerId customerId, MergedUserPermissions userPermissions, ReportRequest reportRequest) throws ThingsboardException {
         log.trace("[{}] Executing generateReport, reportRequest [{}]", tenantId, reportRequest);
         ReportTemplate reportTemplate = checkNotNull(reportTemplateService.findReportTemplateById(tenantId, reportRequest.getTemplateId()));
         ReportTemplateConfiguration configuration = reportTemplate.getConfiguration();
@@ -202,6 +204,16 @@ public class DefaultReportService extends AbstractTbEntityService implements Rep
             addColumnHeader(tableDesign, columsHeaders);
             addTableDetailBand(tableDesign, entityKeys);
             return JasperCompileManager.compileReport(tableDesign);
+        } catch (JRException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private JasperReport renderPageBreak(PageBreakComponent component) {
+        try {
+            JasperDesign pageBreakDesign = JasperReportUtils.initComponent(component);
+            JasperReportUtils.addPageBreak(pageBreakDesign);
+            return JasperCompileManager.compileReport(pageBreakDesign);
         } catch (JRException e) {
             throw new RuntimeException(e);
         }

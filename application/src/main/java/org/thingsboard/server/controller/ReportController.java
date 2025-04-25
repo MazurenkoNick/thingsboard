@@ -74,7 +74,7 @@ public class ReportController extends BaseController {
         DeferredResult<ResponseEntity<Resource>> deferredResult = new DeferredResult<>();
         SecurityUser currentUser = getCurrentUser();
         ListenableFuture<ReportData> reportData = reportService.generateReport(currentUser.getTenantId(), currentUser.getCustomerId(),
-                reportRequest, currentUser.getUserPermissions());
+                currentUser.getUserPermissions(), reportRequest);
         Futures.addCallback(reportData, new ReportDataCallback(deferredResult), MoreExecutors.directExecutor());
         return deferredResult;
     }

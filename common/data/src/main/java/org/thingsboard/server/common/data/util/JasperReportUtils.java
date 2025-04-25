@@ -34,6 +34,7 @@ import net.sf.jasperreports.engine.JRDataSource;
 import net.sf.jasperreports.engine.JRException;
 import net.sf.jasperreports.engine.JasperReport;
 import net.sf.jasperreports.engine.design.JRDesignBand;
+import net.sf.jasperreports.engine.design.JRDesignBreak;
 import net.sf.jasperreports.engine.design.JRDesignExpression;
 import net.sf.jasperreports.engine.design.JRDesignField;
 import net.sf.jasperreports.engine.design.JRDesignImage;
@@ -43,6 +44,8 @@ import net.sf.jasperreports.engine.design.JRDesignStaticText;
 import net.sf.jasperreports.engine.design.JRDesignSubreport;
 import net.sf.jasperreports.engine.design.JRDesignTextField;
 import net.sf.jasperreports.engine.design.JasperDesign;
+import net.sf.jasperreports.engine.type.BreakTypeEnum;
+import net.sf.jasperreports.engine.type.HorizontalTextAlignEnum;
 import net.sf.jasperreports.engine.type.ModeEnum;
 import net.sf.jasperreports.engine.type.VerticalTextAlignEnum;
 import net.sf.jasperreports.engine.type.WhenNoDataTypeEnum;
@@ -104,7 +107,7 @@ public class JasperReportUtils {
         htmlField.setY(0);
         htmlField.setWidth(500);
         htmlField.setHeight(30);
-        //htmlField.setHorizontalTextAlign(100);
+        //htmlField.setHorizontalTextAlign(HorizontalTextAlignEnum.CENTER);
         htmlField.setVerticalTextAlign(VerticalTextAlignEnum.MIDDLE);
         htmlField.setMarkup("html");
 
@@ -121,29 +124,49 @@ public class JasperReportUtils {
     }
 
     public static void addPageHeader(JasperDesign jasperDesign, HeaderFooter header) {
-        JRDesignBand pageHeader = new JRDesignBand();
-        pageHeader.setHeight(20);
-        JRDesignStaticText headerText = new JRDesignStaticText();
-        headerText.setX(0);
-        headerText.setY(0);
-        headerText.setWidth(515);
-        headerText.setHeight(20);
-        headerText.setText(header.getText());
-        pageHeader.addElement(headerText);
+        JRDesignBand pageHeader = createHeaderFooterBand(header);
         jasperDesign.setPageHeader(pageHeader);
     }
 
     public static void addPageFooter(JasperDesign jasperDesign, HeaderFooter footer) {
-        JRDesignBand pageFooter = new JRDesignBand();
-        pageFooter.setHeight(20);
-        JRDesignStaticText footerText = new JRDesignStaticText();
-        footerText.setX(0);
-        footerText.setY(0);
-        footerText.setWidth(515);
-        footerText.setHeight(20);
-        footerText.setText(footer.getText());
-        pageFooter.addElement(footerText);
-        jasperDesign.setPageFooter(pageFooter);
+        JRDesignBand pageHeader = createHeaderFooterBand(footer);
+        jasperDesign.setPageFooter(pageHeader);
+    }
+
+    public static JRDesignBand createHeaderFooterBand(HeaderFooter header) {
+        JRDesignBand pageHeader = new JRDesignBand();
+
+        pageHeader.setHeight(20);
+        HeaderFooter firstPage = header.getFirstPage();
+        if (firstPage != null) {
+            JRDesignStaticText firstPageHeader = createStaticTextElement(firstPage.getText(),  "$V{PAGE_NUMBER} == 1");
+            pageHeader.addElement(firstPageHeader);
+        }
+        JRDesignStaticText otherPagesHeader = createStaticTextElement(header.getText(),  "$V{PAGE_NUMBER} > 1");
+        pageHeader.addElement(otherPagesHeader);
+        return pageHeader;
+    }
+
+    public static int getUsablePageWidth(JasperDesign mainDesign) {
+        int pageWidth = mainDesign.getPageWidth();
+        int leftMargin = mainDesign.getLeftMargin();
+        int rightMargin = mainDesign.getRightMargin();
+
+        int usableWidth = pageWidth - leftMargin - rightMargin;
+        return usableWidth;
+    }
+
+    public static JRDesignStaticText createStaticTextElement(String text, String conditionExpression) {
+        JRDesignStaticText firstPageText = new JRDesignStaticText();
+        firstPageText.setX(0);
+        firstPageText.setY(0);
+        firstPageText.setWidth(515);
+        firstPageText.setHeight(20);
+        firstPageText.setText(text);
+        firstPageText.setPrintWhenExpression(
+                new JRDesignExpression(conditionExpression)
+        );
+        return firstPageText;
     }
 
     public static String addImageBand(JasperDesign mainDesign) {
@@ -281,16 +304,13 @@ public class JasperReportUtils {
         return param;
     }
 
-    private static void initFields(JasperDesign richTextDesign, List<DataKey> dataKeys) throws JRException {
-        for (DataKey dataKey : dataKeys) {
-            richTextDesign.addField(createField(dataKey.getName(), String.class));
-        }
-    }
+    public static void addPageBreak(JasperDesign jasperDesign) {
+        JRDesignBand detailBand = new JRDesignBand();
+        detailBand.setHeight(1);
 
-    private static List<DataKey> getDataKeys(List<DataSource> dataSources) {
-        return dataSources.stream()
-                .map(DataSource::getDataKeys)
-                .flatMap(Collection::stream)
-                .toList();
+        JRDesignBreak pageBreak = new JRDesignBreak();
+        pageBreak.setType(BreakTypeEnum.PAGE);
+        detailBand.addElement(pageBreak);
+        ((JRDesignSection) jasperDesign.getDetailSection()).addBand(detailBand);
     }
 }

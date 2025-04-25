@@ -30,29 +30,26 @@
  */
 package org.thingsboard.server.common.data.report.configuration;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 
-import java.io.Serializable;
 import java.util.List;
 
+@Schema
+@Data
+@EqualsAndHashCode
+@NoArgsConstructor
+public class PageBreakComponent implements ReportComponent {
 
-@JsonIgnoreProperties(ignoreUnknown = true)
-@JsonTypeInfo(
-        use = JsonTypeInfo.Id.NAME,
-        include = JsonTypeInfo.As.EXISTING_PROPERTY,
-        property = "type")
-@JsonSubTypes({
-        @JsonSubTypes.Type(value = HeadingComponent.class, name = "HEADING"),
-        @JsonSubTypes.Type(value = RichTextComponent.class, name = "RICH_TEXT"),
-        @JsonSubTypes.Type(value = EntityTableComponent.class, name = "ENTITY_TABLE"),
-        @JsonSubTypes.Type(value = PageBreakComponent.class, name = "PAGE_BREAK"),
-})
-public interface ReportComponent extends Serializable {
+    @Override
+    public List<DataSource> getDataSources() {
+        return null;
+    }
 
-    List<DataSource> getDataSources();
-
-    ReportComponentType getType();
-
+    @Override
+    public ReportComponentType getType() {
+        return ReportComponentType.PAGE_BREAK;
+    }
 }
