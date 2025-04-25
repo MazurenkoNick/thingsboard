@@ -216,7 +216,7 @@ public class DefaultReportService extends AbstractTbEntityService implements Rep
 
     private JRMapCollectionDataSource fetchDataSource(TbReportCtx tbReportCtx, List<DataSource> dataSources) {
         if (dataSources == null) {
-            return new JRMapCollectionDataSource(new ArrayList<>());
+            return new JRMapCollectionDataSource(List.of(Map.of()));
         }
         Collection<Map<String, ?>> entryList = new ArrayList<>();
         for (DataSource dataSource : dataSources) {

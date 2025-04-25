@@ -247,13 +247,8 @@ public class JasperReportUtils {
         jasperDesign.addParameter(createParameter(subReportDSExpression, JRDataSource.class));
 
         JRDesignBand detailBand = new JRDesignBand();
-        detailBand.setHeight(400);
 
         JRDesignSubreport subReport = new JRDesignSubreport(jasperDesign);
-        subReport.setX(0);
-        subReport.setY(0);
-        subReport.setWidth(515);
-        subReport.setHeight(380);
 
         JRDesignExpression subExpr = new JRDesignExpression();
         subExpr.setText("$P{" + subReportExpression + "}");
@@ -264,8 +259,6 @@ public class JasperReportUtils {
         subReport.setDataSourceExpression(dsExpr);
 
         detailBand.addElement(subReport);
-        detailBand.setSplitType(SplitTypeEnum.STRETCH);
-
         ((JRDesignSection) jasperDesign.getDetailSection()).addBand(detailBand);
     }
 
