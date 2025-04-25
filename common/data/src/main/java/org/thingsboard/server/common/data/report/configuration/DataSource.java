@@ -47,4 +47,5 @@ public class DataSource {
     private String entityAliasId;
     private String filterId;
     private List<DataKey> dataKeys;
+    private AlarmFilterConfig alarmFilterConfig;
 }

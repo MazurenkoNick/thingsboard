@@ -44,15 +44,17 @@ import net.sf.jasperreports.engine.design.JRDesignSubreport;
 import net.sf.jasperreports.engine.design.JRDesignTextField;
 import net.sf.jasperreports.engine.design.JasperDesign;
 import net.sf.jasperreports.engine.type.ModeEnum;
-import net.sf.jasperreports.engine.type.SplitTypeEnum;
-import net.sf.jasperreports.engine.type.StretchTypeEnum;
 import net.sf.jasperreports.engine.type.VerticalTextAlignEnum;
 import net.sf.jasperreports.engine.type.WhenNoDataTypeEnum;
 import org.thingsboard.server.common.data.StringUtils;
+import org.thingsboard.server.common.data.report.configuration.DataKey;
+import org.thingsboard.server.common.data.report.configuration.DataSource;
 import org.thingsboard.server.common.data.report.configuration.HeaderFooter;
+import org.thingsboard.server.common.data.report.configuration.ReportComponent;
 import org.thingsboard.server.common.data.report.configuration.ReportTemplateConfiguration;
 
 import java.awt.*;
+import java.util.Collection;
 import java.util.List;
 
 
@@ -72,7 +74,7 @@ public class JasperReportUtils {
         return design;
     }
 
-    public static JasperDesign initComponentDesign() {
+    public static JasperDesign initComponent(ReportComponent component) throws JRException {
         JasperDesign design = new JasperDesign();
         design.setName(StringUtils.randomAlphabetic(8));
         design.setPageWidth(595);
@@ -82,6 +84,17 @@ public class JasperReportUtils {
         design.setRightMargin(0);
         design.setTopMargin(0);
         design.setBottomMargin(0);
+
+        List<DataSource> dataSources = component.getDataSources();
+        if (dataSources != null) {
+            List<DataKey> dataKeys = dataSources.stream()
+                    .map(DataSource::getDataKeys)
+                    .flatMap(Collection::stream)
+                    .toList();
+            for (DataKey dataKey : dataKeys) {
+                design.addField(createField(dataKey.getName(), String.class));
+            }
+        }
         return design;
     }
 
@@ -205,13 +218,12 @@ public class JasperReportUtils {
         tableDesign.setColumnHeader(columnHeader);
     }
 
-    public static void addTableDetailBand(JasperDesign tableDesign, List<String> entityKeys) throws JRException {
+    public static void addTableDetailBand(JasperDesign tableDesign, List<String> entityKeys)  {
         JRDesignBand detailBand = new JRDesignBand();
         detailBand.setHeight(20);
         int x = 0;
         int columnWidth = Math.min(tableDesign.getColumnWidth(), tableDesign.getPageWidth()/entityKeys.size());
         for (String entityKey : entityKeys) {
-            tableDesign.addField(createField(entityKey, String.class));
             detailBand.addElement(createTextField("$F{" + entityKey + "}", x, 0));
             x += columnWidth;
         }
@@ -267,5 +279,18 @@ public class JasperReportUtils {
         param.setName(name);
         param.setValueClass(valueClass);
         return param;
+    }
+
+    private static void initFields(JasperDesign richTextDesign, List<DataKey> dataKeys) throws JRException {
+        for (DataKey dataKey : dataKeys) {
+            richTextDesign.addField(createField(dataKey.getName(), String.class));
+        }
+    }
+
+    private static List<DataKey> getDataKeys(List<DataSource> dataSources) {
+        return dataSources.stream()
+                .map(DataSource::getDataKeys)
+                .flatMap(Collection::stream)
+                .toList();
     }
 }

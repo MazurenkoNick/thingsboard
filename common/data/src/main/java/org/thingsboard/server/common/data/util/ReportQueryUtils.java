@@ -31,12 +31,16 @@
 package org.thingsboard.server.common.data.util;
 
 import org.thingsboard.server.common.data.id.DeviceId;
+import org.thingsboard.server.common.data.query.AlarmCountQuery;
+import org.thingsboard.server.common.data.query.EntityCountQuery;
 import org.thingsboard.server.common.data.query.EntityDataPageLink;
 import org.thingsboard.server.common.data.query.EntityDataQuery;
+import org.thingsboard.server.common.data.query.EntityFilter;
 import org.thingsboard.server.common.data.query.EntityKey;
 import org.thingsboard.server.common.data.query.EntityKeyType;
 import org.thingsboard.server.common.data.query.KeyFilter;
 import org.thingsboard.server.common.data.query.SingleEntityFilter;
+import org.thingsboard.server.common.data.report.configuration.AlarmFilterConfig;
 import org.thingsboard.server.common.data.report.configuration.DataKey;
 import org.thingsboard.server.common.data.report.configuration.DataSource;
 import org.thingsboard.server.common.data.report.configuration.EntityAlias;
@@ -46,20 +50,65 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-public class EntityDataQueryUtils {
+public class ReportQueryUtils {
 
     public static EntityDataQuery toEntityDataQuery(DataSource dataSource, List<EntityAlias> entityAliases, List<Filter> filters) {
-        EntityAlias entityAlias = entityAliases.stream().filter(alias -> alias.getId().equals(dataSource.getEntityAliasId()))
-                .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("Entity alias not found: " + dataSource.getEntityAliasId()));
-        List<KeyFilter> keyFilters = null;
+        EntityFilter entityFilter = getEntityFilter(dataSource, entityAliases);
 
-        if (dataSource.getFilterId() != null) {
-            Filter entityFilter = filters.stream().filter(filter -> filter.getId().equals(dataSource.getFilterId()))
-                    .findFirst()
-                    .orElseThrow(() -> new IllegalArgumentException("Entity filter not found: " + dataSource.getFilterId()));
-            keyFilters = entityFilter.getKeyFilters();
+        return buildEntityDataQuery(entityFilter, dataSource, filters);
+    }
+
+    public static EntityDataQuery toSingleDeviceQuery(DataSource dataSource, List<Filter> filters) {
+        SingleEntityFilter singleEntityFilter = new SingleEntityFilter();
+        singleEntityFilter.setSingleEntity(new DeviceId(UUID.fromString(dataSource.getDeviceId())));
+
+        return buildEntityDataQuery(singleEntityFilter, dataSource, filters);
+    }
+
+    public static EntityCountQuery toEntityCountQuery(DataSource dataSource, List<EntityAlias> entityAliases, List<Filter> filters) {
+        EntityFilter entityFilter = getEntityFilter(dataSource, entityAliases);
+        List<KeyFilter> keyFilters = getKeyFilters(dataSource, filters);
+
+        return new EntityCountQuery(entityFilter, keyFilters);
+    }
+
+    public static AlarmCountQuery toAlarmCountQuery(DataSource dataSource, List<EntityAlias> entityAliases, List<Filter> filters) {
+        List<KeyFilter> keyFilters = getKeyFilters(dataSource, filters);
+        AlarmCountQuery alarmCountQuery = new AlarmCountQuery(getEntityFilter(dataSource, entityAliases), keyFilters);
+
+        AlarmFilterConfig alarmFilterConfig = dataSource.getAlarmFilterConfig();
+        if (alarmFilterConfig != null) {
+            alarmCountQuery.setStatusList(alarmFilterConfig.getStatusList());
+            alarmCountQuery.setSeverityList(alarmFilterConfig.getSeverityList());
+            alarmCountQuery.setTypeList(alarmFilterConfig.getTypeList());
+            alarmCountQuery.setAssigneeId(alarmFilterConfig.getAssigneeId());
         }
+        return alarmCountQuery;
+    }
+
+    private static EntityFilter getEntityFilter(DataSource dataSource, List<EntityAlias> entityAliases) {
+        return entityAliases.stream()
+                .filter(alias -> alias.getId().equals(dataSource.getEntityAliasId()))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Entity alias not found: " + dataSource.getEntityAliasId()))
+                .getFilter();
+    }
+
+    private static List<KeyFilter> getKeyFilters(DataSource dataSource, List<Filter> filters) {
+        if (dataSource.getFilterId() == null) {
+            return null;
+        } else {
+            return filters.stream()
+                    .filter(filter -> filter.getId().equals(dataSource.getFilterId()))
+                    .findFirst()
+                    .orElseThrow(() -> new IllegalArgumentException("Entity filter not found: " + dataSource.getFilterId()))
+                    .getKeyFilters();
+        }
+    }
+
+    private static EntityDataQuery buildEntityDataQuery(EntityFilter filter, DataSource dataSource, List<Filter> filters) {
+        List<KeyFilter> keyFilters = getKeyFilters(dataSource, filters);
+
         List<EntityKey> entityFields = new ArrayList<>();
         List<EntityKey> latestValues = new ArrayList<>();
         for (DataKey dataKey : dataSource.getDataKeys()) {
@@ -76,37 +125,7 @@ public class EntityDataQueryUtils {
             }
         }
         EntityDataPageLink pageLink = new EntityDataPageLink(Integer.MAX_VALUE, 0, null, null);
-        return new EntityDataQuery(entityAlias.getFilter(), pageLink, entityFields, latestValues, keyFilters);
+        return new EntityDataQuery(filter, pageLink, entityFields, latestValues, keyFilters);
     }
 
-    public static EntityDataQuery toSingleDeviceQuery(DataSource dataSource, List<Filter> filters) {
-        List<KeyFilter> keyFilters = null;
-
-        if (dataSource.getFilterId() != null) {
-            Filter entityFilter = filters.stream().filter(filter -> filter.getId().equals(dataSource.getFilterId()))
-                    .findFirst()
-                    .orElseThrow(() -> new IllegalArgumentException("Entity filter not found: " + dataSource.getFilterId()));
-            keyFilters = entityFilter.getKeyFilters();
-        }
-
-        List<EntityKey> entityFields = new ArrayList<>();
-        List<EntityKey> latestValues = new ArrayList<>();
-        for (DataKey dataKey : dataSource.getDataKeys()) {
-            switch (dataKey.getType()) {
-                case "attribute" -> {
-                    latestValues.add(new EntityKey(EntityKeyType.ATTRIBUTE, dataKey.getName()));
-                }
-                case "timeseries" -> {
-                    latestValues.add(new EntityKey(EntityKeyType.TIME_SERIES, dataKey.getName()));
-                }
-                case "entityField" -> {
-                    entityFields.add(new EntityKey(EntityKeyType.ENTITY_FIELD, dataKey.getName()));
-                }
-            }
-        }
-        SingleEntityFilter singleEntityFilter = new SingleEntityFilter();
-        singleEntityFilter.setSingleEntity(new DeviceId(UUID.fromString(dataSource.getDeviceId())));
-                EntityDataPageLink pageLink = new EntityDataPageLink(Integer.MAX_VALUE, 0, null, null);
-        return new EntityDataQuery(singleEntityFilter, pageLink, entityFields, latestValues, keyFilters);
-    }
 }
