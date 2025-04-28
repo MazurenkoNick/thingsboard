@@ -28,25 +28,33 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.common.data.report.configuration;
+package org.thingsboard.server.common.data.report.configuration.components;
 
-import jakarta.validation.constraints.NotNull;
-import lombok.Data;
-import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import org.thingsboard.server.common.data.report.configuration.DataSource;
 
+import java.io.Serializable;
 import java.util.List;
 
-@Data
-public class ReportTemplateConfiguration {
 
-    @NotNull
-    private String fileName;
-    private Boolean subReport;
-    private List<EntityAlias> entityAliases;
-    private List<Filter> filters;
-    private HeaderFooter header;
-    private HeaderFooter footer;
-    @NotNull
-    private List<ReportComponent> components;
+@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonTypeInfo(
+        use = JsonTypeInfo.Id.NAME,
+        include = JsonTypeInfo.As.EXISTING_PROPERTY,
+        property = "type")
+@JsonSubTypes({
+        @JsonSubTypes.Type(value = HeadingComponent.class, name = "HEADING"),
+        @JsonSubTypes.Type(value = RichTextComponent.class, name = "RICH_TEXT"),
+        @JsonSubTypes.Type(value = EntityTableComponent.class, name = "ENTITY_TABLE"),
+        @JsonSubTypes.Type(value = PageBreakComponent.class, name = "PAGE_BREAK"),
+        @JsonSubTypes.Type(value = TimeseriesTableComponent.class, name = "TIME_SERIES_TABLE"),
+})
+public interface ReportComponent extends Serializable {
+
+    List<DataSource> getDataSources();
+
+    ReportComponentType getType();
 
 }

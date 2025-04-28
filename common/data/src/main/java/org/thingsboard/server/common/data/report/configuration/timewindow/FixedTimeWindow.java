@@ -28,26 +28,12 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.common.data.report.configuration;
+package org.thingsboard.server.common.data.report.configuration.timewindow;
 
-import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 
-import java.util.List;
-
-@Schema
 @Data
-@EqualsAndHashCode
-@NoArgsConstructor
-public class EntityTableComponent implements ReportComponent {
-
-    private List<DataSource> dataSources;
-
-    @Override
-    public ReportComponentType getType() {
-        return ReportComponentType.ENTITY_TABLE;
-    }
-
+public class FixedTimeWindow {
+    private long startTimeMs;
+    private long endTimeMs;
 }

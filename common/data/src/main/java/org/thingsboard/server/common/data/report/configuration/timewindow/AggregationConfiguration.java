@@ -28,28 +28,13 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.common.data.report.configuration;
+package org.thingsboard.server.common.data.report.configuration.timewindow;
 
-import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
+import org.thingsboard.server.common.data.kv.Aggregation;
 
-import java.util.List;
-
-@Schema
 @Data
-@EqualsAndHashCode
-@NoArgsConstructor
-public class PageBreakComponent implements ReportComponent {
-
-    @Override
-    public List<DataSource> getDataSources() {
-        return null;
-    }
-
-    @Override
-    public ReportComponentType getType() {
-        return ReportComponentType.PAGE_BREAK;
-    }
+public class AggregationConfiguration {
+    private Aggregation type;
+    private int limit;
 }

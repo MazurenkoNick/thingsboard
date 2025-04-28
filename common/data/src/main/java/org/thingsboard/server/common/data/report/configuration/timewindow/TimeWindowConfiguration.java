@@ -28,31 +28,16 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.common.data.report.configuration;
+package org.thingsboard.server.common.data.report.configuration.timewindow;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import lombok.Data;
 
-import java.io.Serializable;
-import java.util.List;
-
-
-@JsonIgnoreProperties(ignoreUnknown = true)
-@JsonTypeInfo(
-        use = JsonTypeInfo.Id.NAME,
-        include = JsonTypeInfo.As.EXISTING_PROPERTY,
-        property = "type")
-@JsonSubTypes({
-        @JsonSubTypes.Type(value = HeadingComponent.class, name = "HEADING"),
-        @JsonSubTypes.Type(value = RichTextComponent.class, name = "RICH_TEXT"),
-        @JsonSubTypes.Type(value = EntityTableComponent.class, name = "ENTITY_TABLE"),
-        @JsonSubTypes.Type(value = PageBreakComponent.class, name = "PAGE_BREAK"),
-})
-public interface ReportComponent extends Serializable {
-
-    List<DataSource> getDataSources();
-
-    ReportComponentType getType();
-
+@Data
+public class TimeWindowConfiguration {
+    private boolean hideAggregation;
+    private boolean hideAggInterval;
+    private boolean hideTimezone;
+    private History history;
+    private AggregationConfiguration aggregation;
+    private String timezone;
 }

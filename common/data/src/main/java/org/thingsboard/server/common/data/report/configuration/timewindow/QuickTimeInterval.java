@@ -28,25 +28,11 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.common.data.report.configuration;
+package org.thingsboard.server.common.data.report.configuration.timewindow;
 
-import jakarta.validation.constraints.NotNull;
-import lombok.Data;
-import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
-
-import java.util.List;
-
-@Data
-public class ReportTemplateConfiguration {
-
-    @NotNull
-    private String fileName;
-    private Boolean subReport;
-    private List<EntityAlias> entityAliases;
-    private List<Filter> filters;
-    private HeaderFooter header;
-    private HeaderFooter footer;
-    @NotNull
-    private List<ReportComponent> components;
-
+public enum QuickTimeInterval {
+    YESTERDAY, DAY_BEFORE_YESTERDAY, THIS_DAY_LAST_WEEK, PREVIOUS_WEEK, PREVIOUS_WEEK_ISO, PREVIOUS_MONTH, PREVIOUS_QUARTER,
+    PREVIOUS_HALF_YEAR, PREVIOUS_YEAR, CURRENT_HOUR, CURRENT_DAY, CURRENT_DAY_SO_FAR, CURRENT_WEEK, CURRENT_WEEK_ISO,
+    CURRENT_WEEK_SO_FAR, CURRENT_WEEK_ISO_SO_FAR, CURRENT_MONTH, CURRENT_MONTH_SO_FAR, CURRENT_QUARTER, CURRENT_QUARTER_SO_FAR,
+    CURRENT_HALF_YEAR, CURRENT_HALF_YEAR_SO_FAR, CURRENT_YEAR, CURRENT_YEAR_SO_FAR;
 }
