@@ -48,4 +48,5 @@ public class AlarmFilterConfig {
     private List<AlarmSearchStatus> statusList;
     private List<AlarmSeverity> severityList;
     private UserId assigneeId;
+    private boolean searchPropagatedAlarms;
 }

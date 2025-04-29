@@ -30,11 +30,17 @@
  */
 package org.thingsboard.server.common.data.util;
 
+import org.jetbrains.annotations.NotNull;
 import org.thingsboard.server.common.data.id.DeviceId;
+import org.thingsboard.server.common.data.kv.BaseReadTsKvQuery;
+import org.thingsboard.server.common.data.kv.ReadTsKvQuery;
 import org.thingsboard.server.common.data.query.AlarmCountQuery;
+import org.thingsboard.server.common.data.query.AlarmDataPageLink;
+import org.thingsboard.server.common.data.query.AlarmDataQuery;
 import org.thingsboard.server.common.data.query.EntityCountQuery;
 import org.thingsboard.server.common.data.query.EntityDataPageLink;
 import org.thingsboard.server.common.data.query.EntityDataQuery;
+import org.thingsboard.server.common.data.query.EntityDataSortOrder;
 import org.thingsboard.server.common.data.query.EntityFilter;
 import org.thingsboard.server.common.data.query.EntityKey;
 import org.thingsboard.server.common.data.query.EntityKeyType;
@@ -45,10 +51,19 @@ import org.thingsboard.server.common.data.report.configuration.DataKey;
 import org.thingsboard.server.common.data.report.configuration.DataSource;
 import org.thingsboard.server.common.data.report.configuration.EntityAlias;
 import org.thingsboard.server.common.data.report.configuration.Filter;
+import org.thingsboard.server.common.data.report.configuration.components.AlarmTableComponent;
+import org.thingsboard.server.common.data.report.configuration.components.TimeseriesTableComponent;
+import org.thingsboard.server.common.data.report.configuration.timewindow.History;
+import org.thingsboard.server.common.data.report.configuration.timewindow.TimeIntervalCalculator;
+import org.thingsboard.server.common.data.report.configuration.timewindow.TimeWindowConfiguration;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
+
+import static org.thingsboard.server.common.data.report.configuration.JasperReportBuilder.getComponentDataSource;
+import static org.thingsboard.server.common.data.report.configuration.timewindow.TimeIntervalCalculator.getTimeRange;
 
 public class ReportQueryUtils {
 
@@ -84,6 +99,43 @@ public class ReportQueryUtils {
             alarmCountQuery.setAssigneeId(alarmFilterConfig.getAssigneeId());
         }
         return alarmCountQuery;
+    }
+
+    public static List<ReadTsKvQuery> toReadTsKvQueries(TimeseriesTableComponent component) {
+        TimeWindowConfiguration timeWindowConf = component.getTimewindow();
+        History historyConf = timeWindowConf.getHistory();
+        TimeIntervalCalculator.TimeRange timeRange = getTimeRange(timeWindowConf);
+
+        return getComponentDataSource(component).getDataKeys()
+                .stream()
+                .map(dataKey -> new BaseReadTsKvQuery(dataKey.getName(), timeRange.startTs, timeRange.endTs, historyConf.getInterval(), timeWindowConf.getAggregation().getLimit(), timeWindowConf.getAggregation().getType()))
+                .collect(Collectors.toList());
+    }
+
+    public static AlarmDataQuery toAlarmDataQuery(AlarmTableComponent component, List<EntityAlias> entityAliases, List<Filter> filters) {
+        DataSource alarmSource = component.getAlarmSource();
+
+        EntityFilter entityFilter = findEntityFilter(alarmSource, entityAliases);
+        List<KeyFilter> keyFilters = findKeyFilters(alarmSource, filters);
+
+        List<EntityKey> alarmFields = new ArrayList<>();
+        for (DataKey dataKey : alarmSource.getDataKeys()) {
+            alarmFields.add(new EntityKey(EntityKeyType.ALARM_FIELD, dataKey.getName()));
+        }
+        AlarmFilterConfig alarmFilterConfig = alarmSource.getAlarmFilterConfig();
+        AlarmDataPageLink pageLink = new AlarmDataPageLink();
+        pageLink.setPage(0);
+        pageLink.setPageSize(Integer.MAX_VALUE);
+        pageLink.setSortOrder(new EntityDataSortOrder(new EntityKey(EntityKeyType.ALARM_FIELD, "createdTime")));
+
+        TimeIntervalCalculator.TimeRange timeRange = getTimeRange(component.getTimewindow());
+        pageLink.setStartTs(timeRange.startTs);
+        pageLink.setEndTs(timeRange.endTs);
+        pageLink.setSearchPropagatedAlarms(alarmFilterConfig.isSearchPropagatedAlarms());
+        pageLink.setSeverityList(alarmFilterConfig.getSeverityList());
+        pageLink.setStatusList(alarmFilterConfig.getStatusList());
+        pageLink.setTypeList(alarmFilterConfig.getTypeList());
+        return new AlarmDataQuery(entityFilter, pageLink, null, null, keyFilters, alarmFields);
     }
 
     private static EntityFilter findEntityFilter(DataSource dataSource, List<EntityAlias> entityAliases) {

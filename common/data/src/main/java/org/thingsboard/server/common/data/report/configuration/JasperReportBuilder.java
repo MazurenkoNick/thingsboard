@@ -33,6 +33,7 @@ package org.thingsboard.server.common.data.report.configuration;
 import lombok.Data;
 import net.sf.jasperreports.engine.JRDataSource;
 import net.sf.jasperreports.engine.JRException;
+import net.sf.jasperreports.engine.JasperCompileManager;
 import net.sf.jasperreports.engine.JasperReport;
 import net.sf.jasperreports.engine.design.JRDesignBand;
 import net.sf.jasperreports.engine.design.JRDesignBreak;
@@ -50,12 +51,18 @@ import net.sf.jasperreports.engine.type.ModeEnum;
 import net.sf.jasperreports.engine.type.VerticalTextAlignEnum;
 import net.sf.jasperreports.engine.type.WhenNoDataTypeEnum;
 import org.thingsboard.server.common.data.StringUtils;
+import org.thingsboard.server.common.data.report.configuration.components.AlarmTableComponent;
+import org.thingsboard.server.common.data.report.configuration.components.EntityTableComponent;
+import org.thingsboard.server.common.data.report.configuration.components.HeadingComponent;
+import org.thingsboard.server.common.data.report.configuration.components.PageBreakComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
-import org.thingsboard.server.common.data.report.configuration.components.ReportComponentType;
+import org.thingsboard.server.common.data.report.configuration.components.RichTextComponent;
+import org.thingsboard.server.common.data.report.configuration.components.TimeseriesTableComponent;
 
 import java.awt.*;
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
 
 
 @Data
@@ -90,18 +97,23 @@ public class JasperReportBuilder {
         this.jasperDesign.setTopMargin(0);
         this.jasperDesign.setBottomMargin(0);
 
-        List<DataSource> dataSources = component.getDataSources();
-        if (dataSources != null) {
-            List<DataKey> dataKeys = dataSources.stream()
-                    .map(DataSource::getDataKeys)
-                    .flatMap(Collection::stream)
-                    .toList();
-            for (DataKey dataKey : dataKeys) {
-                jasperDesign.addField(createField(dataKey.getName(), String.class));
+        // define report fields
+        switch (component.getType()) {
+            case TIME_SERIES_TABLE: {
+                jasperDesign.addField(createField("ts", String.class));
             }
-        }
-        if (component.getType() == ReportComponentType.TIME_SERIES_TABLE) {
-            jasperDesign.addField(createField("ts", String.class));
+            case HEADING, RICH_TEXT, PAGE_BREAK, ENTITY_TABLE, ALARM_TABLE: {
+                List<DataSource> dataSources = component.getDataSources();
+                if (dataSources != null && !dataSources.isEmpty()) {
+                    List<DataKey> dataKeys = dataSources.stream()
+                            .map(DataSource::getDataKeys)
+                            .flatMap(Collection::stream)
+                            .toList();
+                    for (DataKey dataKey : dataKeys) {
+                        jasperDesign.addField(createField(dataKey.getName(), String.class));
+                    }
+                }
+            }
         }
     }
 
@@ -308,5 +320,82 @@ public class JasperReportBuilder {
         pageBreak.setType(BreakTypeEnum.PAGE);
         detailBand.addElement(pageBreak);
         ((JRDesignSection) jasperDesign.getDetailSection()).addBand(detailBand);
+    }
+
+    public JasperReport addComponent(ReportComponent component) throws JRException {
+        return switch (component.getType()) {
+            case HEADING -> addHeading((HeadingComponent) component);
+            case RICH_TEXT -> addRichText((RichTextComponent) component);
+            case PAGE_BREAK -> addPageBreak((PageBreakComponent) component);
+            case ENTITY_TABLE -> addEntityTable((EntityTableComponent) component);
+            case TIME_SERIES_TABLE -> addTimeSeriesTable((TimeseriesTableComponent) component);
+            case ALARM_TABLE -> addAlarmTable((AlarmTableComponent) component);
+            default -> throw new IllegalArgumentException("Unknown report component type: " + component.getType());
+        };
+    }
+
+    public JasperReport addHeading(HeadingComponent component) throws JRException {
+        JasperReportBuilder heading = new JasperReportBuilder(component, getUsablePageWidth());
+        heading.addHeading(component.getValue());
+        return JasperCompileManager.compileReport(heading.getJasperDesign());
+    }
+
+    public JasperReport addRichText(RichTextComponent component) throws JRException {
+        JasperReportBuilder richText = new JasperReportBuilder(component, getUsablePageWidth());
+        richText.addRichText(component.getValue());
+        return JasperCompileManager.compileReport(richText.getJasperDesign());
+    }
+
+    public JasperReport addEntityTable(EntityTableComponent component) throws JRException {
+        JasperReportBuilder table = new JasperReportBuilder(component, getUsablePageWidth());
+
+        List<DataKey> dataKeys = getComponentDataSource(component).getDataKeys();
+        List<String> entityKeys = dataKeys.stream().map(DataKey::getName).toList();
+        List<String> columnsHeaders = dataKeys.stream().map(DataKey::getLabel).toList();
+
+        table.addColumnHeader(columnsHeaders);
+        table.addTableDetailBand(entityKeys);
+        return JasperCompileManager.compileReport(table.getJasperDesign());
+    }
+
+    public JasperReport addTimeSeriesTable(TimeseriesTableComponent component) throws JRException {
+        JasperReportBuilder table = new JasperReportBuilder(component, getUsablePageWidth());
+
+        List<DataKey> dataKeys = getComponentDataSource(component).getDataKeys();
+        List<String> entityKeys = dataKeys.stream().map(DataKey::getName).collect(Collectors.toList());
+        List<String> columnsHeaders = dataKeys.stream().map(DataKey::getLabel).collect(Collectors.toList());
+
+        entityKeys.add(0, "ts");
+        columnsHeaders.add(0, "Timestamp");
+
+        table.addColumnHeader(columnsHeaders);
+        table.addTableDetailBand(entityKeys);
+        return JasperCompileManager.compileReport(table.getJasperDesign());
+    }
+
+    public JasperReport addAlarmTable(AlarmTableComponent component) throws JRException {
+        JasperReportBuilder table = new JasperReportBuilder(component, getUsablePageWidth());
+
+        List<DataKey> dataKeys = component.getAlarmSource().getDataKeys();
+        List<String> entityKeys = dataKeys.stream().map(DataKey::getName).collect(Collectors.toList());
+        List<String> columnsHeaders = dataKeys.stream().map(DataKey::getLabel).collect(Collectors.toList());
+
+        table.addColumnHeader(columnsHeaders);
+        table.addTableDetailBand(entityKeys);
+        return JasperCompileManager.compileReport(table.getJasperDesign());
+    }
+
+    public JasperReport addPageBreak(PageBreakComponent component) throws JRException {
+        JasperReportBuilder pageBreak = new JasperReportBuilder(component, getUsablePageWidth());
+        pageBreak.addPageBreak();
+        return JasperCompileManager.compileReport(pageBreak.getJasperDesign());
+    }
+
+    public static DataSource getComponentDataSource(ReportComponent component) {
+        List<DataSource> dataSources = component.getDataSources();
+        if (dataSources == null || dataSources.isEmpty()) {
+            throw new IllegalArgumentException("Data source is required for component: " + component.getType());
+        }
+        return component.getDataSources().get(0);
     }
 }

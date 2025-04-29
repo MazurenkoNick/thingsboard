@@ -38,7 +38,7 @@ import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAdjusters;
 
-public class QuickTimeIntervalCalculator {
+public class TimeIntervalCalculator {
     public static class TimeRange {
         public final long startTs;
         public final long endTs;
@@ -49,7 +49,23 @@ public class QuickTimeIntervalCalculator {
         }
     }
 
-    public static TimeRange getTimeRange(QuickTimeInterval interval, String timezone) {
+    public static TimeRange getTimeRange(TimeWindowConfiguration timeWindowConf) {
+        History historyConf = timeWindowConf.getHistory();
+        return switch (historyConf.getHistoryType()) {
+            case 0 -> {
+                long currentTimeMillis = System.currentTimeMillis();
+                yield new TimeRange(currentTimeMillis - historyConf.getTimewindowMs(), currentTimeMillis);
+            }
+            case 1 -> {
+                FixedTimeWindow fixedTimeWindow = historyConf.getFixedTimeWindow();
+                yield new TimeRange(fixedTimeWindow.getStartTimeMs(), historyConf.getFixedTimeWindow().getEndTimeMs());
+            }
+            case 2 -> getQuickTimeRange(historyConf.getQuickInterval(), timeWindowConf.getTimezone());
+            default -> throw new IllegalArgumentException("Unknown history type: " + historyConf.getHistoryType());
+        };
+    }
+
+    private static TimeRange getQuickTimeRange(QuickTimeInterval interval, String timezone) {
         ZoneId zoneId = timezone != null ? ZoneId.of(timezone) : ZoneId.systemDefault();
         ZonedDateTime now = ZonedDateTime.now(zoneId);
         ZonedDateTime start;

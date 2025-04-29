@@ -35,7 +35,6 @@ import com.google.common.util.concurrent.SettableFuture;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.sf.jasperreports.engine.JREmptyDataSource;
-import net.sf.jasperreports.engine.JRException;
 import net.sf.jasperreports.engine.JasperCompileManager;
 import net.sf.jasperreports.engine.JasperExportManager;
 import net.sf.jasperreports.engine.JasperFillManager;
@@ -51,36 +50,30 @@ import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.TenantId;
-import org.thingsboard.server.common.data.kv.BaseReadTsKvQuery;
 import org.thingsboard.server.common.data.kv.ReadTsKvQuery;
 import org.thingsboard.server.common.data.kv.TsKvEntry;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.permission.MergedUserPermissions;
+import org.thingsboard.server.common.data.query.AlarmData;
 import org.thingsboard.server.common.data.query.EntityData;
 import org.thingsboard.server.common.data.report.ReportData;
 import org.thingsboard.server.common.data.report.ReportRequest;
 import org.thingsboard.server.common.data.report.ReportTemplate;
-import org.thingsboard.server.common.data.report.configuration.DataKey;
 import org.thingsboard.server.common.data.report.configuration.DataSource;
 import org.thingsboard.server.common.data.report.configuration.EntityAlias;
-import org.thingsboard.server.common.data.report.configuration.components.EntityTableComponent;
 import org.thingsboard.server.common.data.report.configuration.Filter;
-import org.thingsboard.server.common.data.report.configuration.components.HeadingComponent;
-import org.thingsboard.server.common.data.report.configuration.components.PageBreakComponent;
-import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
-import org.thingsboard.server.common.data.report.configuration.ReportTemplateConfiguration;
-import org.thingsboard.server.common.data.report.configuration.components.RichTextComponent;
-import org.thingsboard.server.common.data.report.configuration.components.TimeseriesTableComponent;
-import org.thingsboard.server.common.data.report.configuration.timewindow.History;
-import org.thingsboard.server.common.data.report.configuration.timewindow.QuickTimeIntervalCalculator;
-import org.thingsboard.server.common.data.report.configuration.timewindow.TimeWindowConfiguration;
 import org.thingsboard.server.common.data.report.configuration.JasperReportBuilder;
+import org.thingsboard.server.common.data.report.configuration.ReportTemplateConfiguration;
+import org.thingsboard.server.common.data.report.configuration.components.AlarmTableComponent;
+import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
+import org.thingsboard.server.common.data.report.configuration.components.TimeseriesTableComponent;
 import org.thingsboard.server.dao.alarm.AlarmService;
 import org.thingsboard.server.dao.entity.EntityService;
 import org.thingsboard.server.dao.report.ReportTemplateService;
 import org.thingsboard.server.dao.timeseries.TimeseriesService;
 import org.thingsboard.server.service.entitiy.AbstractTbEntityService;
 
+import java.lang.reflect.Field;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -92,11 +85,13 @@ import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
+import static org.thingsboard.server.common.data.report.configuration.JasperReportBuilder.getComponentDataSource;
 import static org.thingsboard.server.common.data.report.configuration.components.ReportComponentType.TIME_SERIES_TABLE;
-import static org.thingsboard.server.common.data.report.configuration.timewindow.QuickTimeIntervalCalculator.getTimeRange;
 import static org.thingsboard.server.common.data.util.ReportQueryUtils.toAlarmCountQuery;
+import static org.thingsboard.server.common.data.util.ReportQueryUtils.toAlarmDataQuery;
 import static org.thingsboard.server.common.data.util.ReportQueryUtils.toEntityCountQuery;
 import static org.thingsboard.server.common.data.util.ReportQueryUtils.toEntityDataQuery;
+import static org.thingsboard.server.common.data.util.ReportQueryUtils.toReadTsKvQueries;
 import static org.thingsboard.server.common.data.util.ReportQueryUtils.toSingleDeviceQuery;
 
 @Service
@@ -121,14 +116,14 @@ public class DefaultReportService extends AbstractTbEntityService implements Rep
         SettableFuture<ReportData> resultFuture = SettableFuture.create();
         try {
             TbReportCtx ctx = new TbReportCtx(tenantId, customerId, userPermissions, configuration);
-            JasperReportBuilder parentBuilder = new JasperReportBuilder(configuration);
+            JasperReportBuilder reportBuilder = new JasperReportBuilder(configuration);
 
-            Optional.ofNullable(configuration.getHeader()).ifPresent(parentBuilder::addPageHeader);
-            Optional.ofNullable(configuration.getFooter()).ifPresent(parentBuilder::addPageFooter);
+            Optional.ofNullable(configuration.getHeader()).ifPresent(reportBuilder::addPageHeader);
+            Optional.ofNullable(configuration.getFooter()).ifPresent(reportBuilder::addPageFooter);
 
-            renderContent(ctx, parentBuilder, configuration.getComponents());
+            renderContent(ctx, reportBuilder, configuration.getComponents());
 
-            JasperReport mainReport = JasperCompileManager.compileReport(parentBuilder.getJasperDesign());
+            JasperReport mainReport = JasperCompileManager.compileReport(reportBuilder.getJasperDesign());
             JasperPrint print = JasperFillManager.fillReport(mainReport, ctx.getParams(), new JREmptyDataSource());
 
             ReportData report = ReportData.builder()
@@ -149,120 +144,61 @@ public class DefaultReportService extends AbstractTbEntityService implements Rep
             if (component.getType() == TIME_SERIES_TABLE) { // check if component is complex
                 List<EntityData> entityDatas = fetchEntities(ctx, component);
                 for (EntityData entityData : entityDatas) {
-                    JRMapCollectionDataSource tsDataSource = buildTsDataSource(ctx, entityData.getEntityId(), (TimeseriesTableComponent) component);
-                    renderComponentInSubReport(ctx, parentBuilder, component, tsDataSource);
+                    renderComponent(ctx, parentBuilder, component, entityData);
                 }
             } else {
-                JRMapCollectionDataSource dataSource = buildEntityDataSource(ctx, component.getDataSources());
-                renderComponentInSubReport(ctx, parentBuilder, component, dataSource);
+                renderComponent(ctx, parentBuilder, component, null);
             }
         }
     }
 
-    private void renderComponentInSubReport(TbReportCtx ctx, JasperReportBuilder parentBuilder, ReportComponent component, JRMapCollectionDataSource tsDataSource) throws Exception {
-        JasperReport subReport = renderComponent(parentBuilder, component);
+    private void renderComponent(TbReportCtx ctx, JasperReportBuilder parentBuilder, ReportComponent component, EntityData entityData) throws Exception {
+        JRMapCollectionDataSource dataSource = buildDataSource(ctx, component, entityData);
 
         String subReportExpr = "component_" + StringUtils.randomAlphabetic(10);
         String subReportDSExpr = "componentDS_" + StringUtils.randomAlphabetic(10);
         parentBuilder.addSubReport(subReportExpr, subReportDSExpr);
 
+        JasperReport subReport = parentBuilder.addComponent(component);
+
         Map<String, Object> params = ctx.getParams();
         params.put(subReportExpr, subReport);
-        params.put(subReportDSExpr, tsDataSource);
+        params.put(subReportDSExpr, dataSource);
     }
 
-    private JasperReport renderComponent(JasperReportBuilder parentBuilder, ReportComponent component) throws JRException {
-        return switch (component.getType()) {
-            case HEADING -> renderHeading(parentBuilder, (HeadingComponent) component);
-            case RICH_TEXT -> renderRichText(parentBuilder, (RichTextComponent) component);
-            case PAGE_BREAK -> renderPageBreak(parentBuilder, (PageBreakComponent) component);
-            case ENTITY_TABLE -> renderEntityTable(parentBuilder, (EntityTableComponent) component);
-            case TIME_SERIES_TABLE -> renderTimeSeriesTable(parentBuilder, (TimeseriesTableComponent) component);
-            default -> throw new IllegalArgumentException("Unknown report component type: " + component.getType());
-        };
-    }
-
-    private JasperReport renderHeading(JasperReportBuilder parentReport, HeadingComponent component) throws JRException {
-        JasperReportBuilder heading = new JasperReportBuilder(component, parentReport.getUsablePageWidth());
-        heading.addHeading(component.getValue());
-        return JasperCompileManager.compileReport(heading.getJasperDesign());
-    }
-
-    private JasperReport renderRichText(JasperReportBuilder parentReport, RichTextComponent component) throws JRException {
-        JasperReportBuilder richTextDesign = new JasperReportBuilder(component, parentReport.getUsablePageWidth());
-        richTextDesign.addRichText(component.getValue());
-        return JasperCompileManager.compileReport(richTextDesign.getJasperDesign());
-    }
-
-    private JasperReport renderEntityTable(JasperReportBuilder parentReport, EntityTableComponent component) throws JRException {
-        JasperReportBuilder table = new JasperReportBuilder(component, parentReport.getUsablePageWidth());
-
-        List<DataKey> dataKeys = component.getDataSources().get(0).getDataKeys();
-        List<String> entityKeys = dataKeys.stream().map(DataKey::getName).toList();
-        List<String> columsHeaders = dataKeys.stream().map(DataKey::getLabel).toList();
-
-        table.addColumnHeader(columsHeaders);
-        table.addTableDetailBand(entityKeys);
-        return JasperCompileManager.compileReport(table.getJasperDesign());
-    }
-
-    private JasperReport renderTimeSeriesTable(JasperReportBuilder parentReport, TimeseriesTableComponent component) throws JRException {
-        JasperReportBuilder table = new JasperReportBuilder(component, parentReport.getUsablePageWidth());
-
-        List<DataKey> dataKeys = component.getDataSources().get(0).getDataKeys();
-        List<String> entityKeys = dataKeys.stream().map(DataKey::getName).collect(Collectors.toList());
-        List<String> columsHeaders = dataKeys.stream().map(DataKey::getLabel).collect(Collectors.toList());
-
-        entityKeys.add(0, "ts");
-        columsHeaders.add(0, "Timestamp");
-
-        table.addColumnHeader(columsHeaders);
-        table.addTableDetailBand(entityKeys);
-        return JasperCompileManager.compileReport(table.getJasperDesign());
-    }
-
-    private JasperReport renderPageBreak(JasperReportBuilder parentBuilder, PageBreakComponent component) {
-        try {
-            JasperReportBuilder pageBreak = new JasperReportBuilder(component, parentBuilder.getUsablePageWidth());
-            pageBreak.addPageBreak();
-            return JasperCompileManager.compileReport(pageBreak.getJasperDesign());
-        } catch (JRException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private JRMapCollectionDataSource buildTsDataSource(TbReportCtx tbReportCtx, EntityId entityId, TimeseriesTableComponent component) {
-        TimeWindowConfiguration timeWindowConf = component.getTimewindow();
-        History historyConf = timeWindowConf.getHistory();
-
-        long startTs, endTs;
-        switch (historyConf.getHistoryType()) {
-            case 0 -> {
-                endTs = System.currentTimeMillis();
-                startTs = endTs - historyConf.getTimewindowMs();
-            }
-            case 1 -> {
-                startTs = historyConf.getFixedTimeWindow().getStartTimeMs();
-                endTs = historyConf.getFixedTimeWindow().getEndTimeMs();
-            }
-            case 2 -> {
-                QuickTimeIntervalCalculator.TimeRange timeRange = getTimeRange(historyConf.getQuickInterval(), timeWindowConf.getTimezone());
-                startTs = timeRange.startTs;
-                endTs = timeRange.endTs;
-            }
-            default -> throw new IllegalArgumentException("Unknown history type: " + historyConf.getHistoryType());
-        }
-        List<ReadTsKvQuery> queries = component.getDataSources().get(0).getDataKeys()
-                .stream()
-                .map(dataKey -> new BaseReadTsKvQuery(dataKey.getName(), startTs, endTs, historyConf.getInterval(), timeWindowConf.getAggregation().getLimit(), timeWindowConf.getAggregation().getType()))
-                .collect(Collectors.toList());
-
-        ListenableFuture<List<TsKvEntry>> queryResult = tsService.findAll(tbReportCtx.getTenantId(), entityId, queries);
+    private JRMapCollectionDataSource buildTsDataSource(TbReportCtx tbReportCtx, EntityData entityData, TimeseriesTableComponent component) {
+        List<ReadTsKvQuery> queries = toReadTsKvQueries(component);
+        ListenableFuture<List<TsKvEntry>> queryResult = tsService.findAll(tbReportCtx.getTenantId(), entityData.getEntityId(), queries);
         try {
             return new JRMapCollectionDataSource(collectTsData(queryResult.get()));
         } catch (InterruptedException | ExecutionException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private JRMapCollectionDataSource buildDataSource(TbReportCtx ctx, ReportComponent component, EntityData entityData) {
+        return switch (component.getType()) {
+            case TIME_SERIES_TABLE -> buildTsDataSource(ctx, entityData, ((TimeseriesTableComponent) component));
+            case ALARM_TABLE -> buildAlarmDataSource(ctx, ((AlarmTableComponent) component));
+            default -> buildEntityDataSource(ctx, component.getDataSources());
+        };
+    }
+
+    private JRMapCollectionDataSource buildAlarmDataSource(TbReportCtx ctx, AlarmTableComponent component) {
+        List<EntityId> entityIds = entityService.findEntityDataByQuery(ctx.getTenantId(), ctx.getCustomerId(),
+                        ctx.getUserPermissions(), toEntityDataQuery(component.getAlarmSource(), ctx.getEntityAliases(), ctx.getFilters()))
+                .getData()
+                .stream()
+                .map(EntityData::getEntityId).toList();
+        PageData<AlarmData> alarmDatas = alarmService.findAlarmDataByQueryForEntities(ctx.getTenantId(), ctx.getUserPermissions(),
+                toAlarmDataQuery(component, ctx.getEntityAliases(), ctx.getFilters()), entityIds);
+        Collection<Map<String, ?>> alarmList = new ArrayList<>();
+        for (AlarmData alarmData : alarmDatas.getData()) {
+            Map<String, String> mapped = toStringMap(alarmData);
+            mapped.put("status", alarmData.getStatus().name());
+            alarmList.add(mapped);
+        }
+        return new JRMapCollectionDataSource(alarmList);
     }
 
     private JRMapCollectionDataSource buildEntityDataSource(TbReportCtx tbReportCtx, List<DataSource> dataSources) {
@@ -294,7 +230,7 @@ public class DefaultReportService extends AbstractTbEntityService implements Rep
     }
 
     private List<EntityData> fetchEntities(TbReportCtx ctx, ReportComponent component) {
-        DataSource dataSource = Optional.ofNullable(component.getDataSources().get(0)).orElseThrow(() -> new IllegalArgumentException("Data source is required for component: " + component.getType()));
+        DataSource dataSource = getComponentDataSource(component);
         List<EntityAlias> entityAliases = ctx.getEntityAliases();
         List<Filter> filters = ctx.getFilters();
         return switch (dataSource.getType()) {
@@ -337,4 +273,23 @@ public class DefaultReportService extends AbstractTbEntityService implements Rep
         return tsData;
     }
 
+    public static Map<String, String> toStringMap(Object obj) {
+        Map<String, String> map = new HashMap<>();
+        Class<?> current = obj.getClass();
+
+        while (current != null && current != Object.class) {
+            for (Field field : current.getDeclaredFields()) {
+                field.setAccessible(true);
+                try {
+                    Object value = field.get(obj);
+                    map.put(field.getName(), value != null ? value.toString() : null);
+                } catch (IllegalAccessException e) {
+                    throw new RuntimeException("Error accessing field: " + field.getName(), e);
+                }
+            }
+            current = current.getSuperclass();
+        }
+
+        return map;
+    }
 }

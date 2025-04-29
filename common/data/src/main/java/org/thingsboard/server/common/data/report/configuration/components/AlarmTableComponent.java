@@ -30,32 +30,34 @@
  */
 package org.thingsboard.server.common.data.report.configuration.components;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import org.thingsboard.server.common.data.report.configuration.DataSource;
+import org.thingsboard.server.common.data.report.configuration.timewindow.TimeWindowConfiguration;
 
-import java.io.Serializable;
 import java.util.List;
 
+@Schema
+@Data
+@EqualsAndHashCode
+@NoArgsConstructor
+public class AlarmTableComponent implements ReportComponent {
 
-@JsonIgnoreProperties(ignoreUnknown = true)
-@JsonTypeInfo(
-        use = JsonTypeInfo.Id.NAME,
-        include = JsonTypeInfo.As.EXISTING_PROPERTY,
-        property = "type")
-@JsonSubTypes({
-        @JsonSubTypes.Type(value = HeadingComponent.class, name = "HEADING"),
-        @JsonSubTypes.Type(value = RichTextComponent.class, name = "RICH_TEXT"),
-        @JsonSubTypes.Type(value = EntityTableComponent.class, name = "ENTITY_TABLE"),
-        @JsonSubTypes.Type(value = PageBreakComponent.class, name = "PAGE_BREAK"),
-        @JsonSubTypes.Type(value = TimeseriesTableComponent.class, name = "TIME_SERIES_TABLE"),
-        @JsonSubTypes.Type(value = AlarmTableComponent.class, name = "ALARM_TABLE")
-})
-public interface ReportComponent extends Serializable {
+    private DataSource alarmSource;
+    private TimeWindowConfiguration timewindow;
 
-    List<DataSource> getDataSources();
+    @Override
+    @JsonIgnore
+    public List<DataSource> getDataSources() {
+        return List.of(alarmSource);
+    }
 
-    ReportComponentType getType();
+    @Override
+    public ReportComponentType getType() {
+        return ReportComponentType.ALARM_TABLE;
+    }
 
 }
