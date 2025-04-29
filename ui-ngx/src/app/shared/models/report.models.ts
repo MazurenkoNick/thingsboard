@@ -37,7 +37,12 @@ import { HasTenantId, HasVersion } from '@shared/models/entity.models';
 import { SchedulerEventId } from '@shared/models/id/scheduler-event-id';
 import { EntityId } from '@shared/models/id/entity-id';
 import { EntityAlias } from '@shared/models/alias.models';
-import { Filter } from '@shared/models/query/query.models';
+import {
+  Filter,
+  KeyFilter,
+  keyFilterInfosToKeyFilters,
+  keyFiltersToKeyFilterInfos
+} from '@shared/models/query/query.models';
 import { ReportComponentConfig } from '@shared/models/report-component.models';
 
 export enum ReportTemplateType {
@@ -74,10 +79,41 @@ export interface HeaderFooter {
   firstPage?: HeaderFooter;
 }
 
+export interface ReportFilter {
+  id: string;
+  filter: string;
+  keyFilters: Array<KeyFilter>;
+}
+
+export const reportFilterToFilter = (reportFilter: ReportFilter): Filter => {
+  const keyFilterInfos = keyFiltersToKeyFilterInfos(reportFilter.keyFilters);
+  return {
+    id: reportFilter.id,
+    filter: reportFilter.filter,
+    keyFilters: keyFilterInfos,
+    editable: false
+  };
+}
+
+export const filterToReportFilter = (filter: Filter): ReportFilter => {
+  const keyFilters = keyFilterInfosToKeyFilters(filter.keyFilters);
+  return {
+    id: filter.id,
+    filter: filter.filter,
+    keyFilters
+  };
+}
+
+export interface ReportTemplateSettings {
+  name: string;
+  fileName: string;
+  description?: string;
+}
+
 export interface ReportTemplateConfiguration {
   fileName: string;
   entityAliases: EntityAlias[];
-  filters: Filter[];
+  filters: ReportFilter[];
   header: HeaderFooter;
   footer: HeaderFooter;
   components: ReportComponentConfig[];

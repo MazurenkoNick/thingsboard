@@ -6979,7 +6979,10 @@
         "idCopiedMessage": "Report Template Id has been copied to clipboard",
         "open-report-template": "Open report template",
         "delete": "Delete report template",
-        "copyId": "Copy report template Id"
+        "copyId": "Copy report template Id",
+        "settings": "Settings",
+        "file-name-pattern": "File name pattern",
+        "file-name-pattern-required": "Report file name pattern is required!"
     },
     "blob-entity": {
         "blob-entity": "Blob entity",

@@ -42,13 +42,15 @@ import { ReportTemplateRoutingModule } from '@home/pages/report/report-template-
 import { ReportTemplateTableHeaderComponent } from '@home/pages/report/report-template-table-header.component';
 import { ReportTemplateTabsComponent } from '@home/pages/report/report-template-tabs.component';
 import { ReportTemplateFormComponent } from '@home/pages/report/report-template-form.component';
+import { ReportTemplateSettingsDialogComponent } from '@home/pages/report/report-template-settings-dialog.component';
 
 @NgModule({
   declarations: [
     ReportTemplateTableHeaderComponent,
     ReportTemplateTabsComponent,
     ReportTemplateFormComponent,
-    ReportTemplatePageComponent
+    ReportTemplatePageComponent,
+    ReportTemplateSettingsDialogComponent
   ],
   imports: [
     CommonModule,

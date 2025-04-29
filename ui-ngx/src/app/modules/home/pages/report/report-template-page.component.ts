@@ -31,8 +31,8 @@
 
 import {
   AfterViewChecked,
-  AfterViewInit,
-  Component,
+  AfterViewInit, ChangeDetectorRef,
+  Component, EventEmitter,
   HostBinding,
   OnDestroy,
   OnInit,
@@ -41,11 +41,31 @@ import {
 import { PageComponent } from '@shared/components/page.component';
 import { HasDirtyFlag } from '@core/guards/confirm-on-exit.guard';
 import { Operation, Resource } from '@shared/models/security.models';
-import { ReportTemplate } from '@shared/models/report.models';
+import {
+  filterToReportFilter,
+  ReportFilter,
+  reportFilterToFilter,
+  ReportTemplate,
+  ReportTemplateSettings
+} from '@shared/models/report.models';
 import { UserPermissionsService } from '@core/http/user-permissions.service';
 import { takeUntil } from 'rxjs/operators';
 import { ActivatedRoute } from '@angular/router';
 import { Subject } from 'rxjs';
+import { ReportTemplateService } from '@core/http/report-template.service';
+import { FiltersDialogComponent, FiltersDialogData } from '@home/components/filter/filters-dialog.component';
+import { Filters } from '@shared/models/query/query.models';
+import { deepClone } from '@core/utils';
+import { MatDialog } from '@angular/material/dialog';
+import {
+  EntityAliasesDialogComponent,
+  EntityAliasesDialogData
+} from '@home/components/alias/entity-aliases-dialog.component';
+import { EntityAlias, EntityAliases } from '@shared/models/alias.models';
+import {
+  ReportTemplateSettingsDialogComponent,
+  ReportTemplateSettingsDialogData
+} from '@home/pages/report/report-template-settings-dialog.component';
 
 @Component({
   selector: 'tb-report-template-page',
@@ -75,10 +95,15 @@ export class ReportTemplatePageComponent extends PageComponent
 
   reportTemplate: ReportTemplate;
 
+  updateBreadcrumbs = new EventEmitter();
+
   private destroy$ = new Subject<void>();
 
   constructor(private route: ActivatedRoute,
-              private userPermissionsService: UserPermissionsService) {
+              private userPermissionsService: UserPermissionsService,
+              private reportTemplateService: ReportTemplateService,
+              private dialog: MatDialog,
+              private cd: ChangeDetectorRef) {
     super();
     this.route.data.pipe(
       takeUntil(this.destroy$)
@@ -106,6 +131,119 @@ export class ReportTemplatePageComponent extends PageComponent
     super.ngOnDestroy();
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  saveReportTemplate() {
+    this.reportTemplateService.saveReportTemplate(this.reportTemplate).subscribe(
+      (saved) => {
+        this.reportTemplate = saved;
+        this.isDirty = false;
+        this.cd.markForCheck();
+      }
+    );
+  }
+
+  declineReportTemplate() {
+    this.reportTemplateService.getReportTemplate(this.reportTemplate.id.id).subscribe(
+      (saved) => {
+        this.reportTemplate = saved;
+        this.isDirty = false;
+        this.updateBreadcrumbs.emit();
+        this.cd.markForCheck();
+      }
+    );
+  }
+
+  public openFilters($event: Event) {
+    if ($event) {
+      $event.stopPropagation();
+    }
+    const filters: Filters = {};
+    const reportFilters = deepClone(this.reportTemplate.configuration.filters);
+    for (const reportFilter of reportFilters) {
+      filters[reportFilter.id] = reportFilterToFilter(reportFilter);
+    }
+    this.dialog.open<FiltersDialogComponent, FiltersDialogData,
+      Filters>(FiltersDialogComponent, {
+      disableClose: true,
+      panelClass: ['tb-dialog', 'tb-fullscreen-dialog'],
+      data: {
+        filters,
+        disableUserEdit: true,
+        widgets: [],
+        isSingleFilter: false
+      }
+    }).afterClosed().subscribe((filters) => {
+      if (filters) {
+        const reportFilters: ReportFilter[] = [];
+        for (const id of Object.keys(filters)) {
+          reportFilters.push(filterToReportFilter(filters[id]));
+        }
+        this.reportTemplate.configuration.filters = reportFilters;
+        this.isDirty = true;
+        this.cd.markForCheck();
+      }
+    });
+  }
+
+  public openEntityAliases($event: Event) {
+    if ($event) {
+      $event.stopPropagation();
+    }
+    const entityAliases: EntityAliases = {};
+    const entityAliasesList = deepClone(this.reportTemplate.configuration.entityAliases);
+    for (const entityAlias of entityAliasesList) {
+      entityAliases[entityAlias.id] = entityAlias;
+    }
+    this.dialog.open<EntityAliasesDialogComponent, EntityAliasesDialogData,
+      EntityAliases>(EntityAliasesDialogComponent, {
+      disableClose: true,
+      panelClass: ['tb-dialog', 'tb-fullscreen-dialog'],
+      data: {
+        entityAliases,
+        widgets: [],
+        disableResolveMultiple: true,
+        isSingleEntityAlias: false
+      }
+    }).afterClosed().subscribe((entityAliases) => {
+      if (entityAliases) {
+        const entityAliasesList: EntityAlias[] = [];
+        for (const id of Object.keys(entityAliases)) {
+          entityAliasesList.push(entityAliases[id]);
+        }
+        this.reportTemplate.configuration.entityAliases = entityAliasesList;
+        this.isDirty = true;
+        this.cd.markForCheck();
+      }
+    });
+  }
+
+  public openReportTemplateSettings($event: Event) {
+    if ($event) {
+      $event.stopPropagation();
+    }
+    const settings: ReportTemplateSettings = {
+      name: this.reportTemplate.name,
+      fileName: this.reportTemplate.configuration.fileName,
+      description: this.reportTemplate.description
+    };
+    this.dialog.open<ReportTemplateSettingsDialogComponent, ReportTemplateSettingsDialogData,
+      ReportTemplateSettings>(ReportTemplateSettingsDialogComponent, {
+      disableClose: true,
+      panelClass: ['tb-dialog', 'tb-fullscreen-dialog'],
+      data: {
+        settings
+      }
+    }).afterClosed().subscribe((settings) => {
+      if (settings) {
+        this.reportTemplate.name = settings.name;
+        this.reportTemplate.configuration.fileName = settings.fileName;
+        this.reportTemplate.description = settings.description;
+        this.isDirty = true;
+        this.updateBreadcrumbs.emit();
+        this.cd.markForCheck();
+      }
+    });
   }
 
   private init() {

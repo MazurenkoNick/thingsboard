@@ -55,14 +55,15 @@
             {{ 'alias.duplicate-alias' | translate }}
           </mat-error>
         </mat-form-field>
-        <div class="tb-resolve-multiple-switch" tb-hint-tooltip-icon="{{ 'alias.resolve-multiple-hint' | translate }}">
+        <div *ngIf="!disableResolveMultiple" class="tb-resolve-multiple-switch" tb-hint-tooltip-icon="{{ 'alias.resolve-multiple-hint' | translate }}">
           <mat-slide-toggle class="mat-slide" formControlName="resolveMultiple">
             {{ 'alias.resolve-multiple' | translate }}
           </mat-slide-toggle>
         </div>
       </div>
       <tb-entity-filter formControlName="filter"
-                        [resolveMultiple]="entityAliasFormGroup.get('resolveMultiple').value"
+                        [disableResolveMultiple]="disableResolveMultiple"
+                        [resolveMultiple]="!disableResolveMultiple ? entityAliasFormGroup.get('resolveMultiple').value : false"
                         (resolveMultipleChanged)="entityAliasFormGroup.get('resolveMultiple').patchValue($event)"
                         [allowedEntityTypes]="allowedEntityTypes">
       </tb-entity-filter>

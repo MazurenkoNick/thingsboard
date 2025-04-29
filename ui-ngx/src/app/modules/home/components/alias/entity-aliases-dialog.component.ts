@@ -66,6 +66,7 @@ export interface EntityAliasesDialogData {
   disableAdd?: boolean;
   singleEntityAlias?: EntityAlias;
   customTitle?: string;
+  disableResolveMultiple?: boolean;
 }
 
 @Component({
@@ -79,6 +80,7 @@ export class EntityAliasesDialogComponent extends DialogComponent<EntityAliasesD
 
   title: string;
   disableAdd: boolean;
+  disableResolveMultiple: boolean;
   allowedEntityTypes: Array<EntityType | AliasEntityType>;
 
   aliasToWidgetsMap: {[aliasId: string]: Array<string>} = {};
@@ -101,6 +103,7 @@ export class EntityAliasesDialogComponent extends DialogComponent<EntityAliasesD
     super(store, router, dialogRef);
     this.title = data.customTitle ? data.customTitle : 'entity.aliases';
     this.disableAdd = this.data.disableAdd;
+    this.disableResolveMultiple = this.data.disableResolveMultiple;
     this.allowedEntityTypes = this.data.allowedEntityTypes;
 
     if (data.widgets) {
@@ -137,11 +140,9 @@ export class EntityAliasesDialogComponent extends DialogComponent<EntityAliasesD
     for (const aliasId of Object.keys(this.data.entityAliases)) {
       const entityAlias = this.data.entityAliases[aliasId];
       if (!entityAlias.filter) {
-        entityAlias.filter = {
-          resolveMultiple: false
-        };
+        entityAlias.filter = {};
       }
-      if (isUndefined(entityAlias.filter.resolveMultiple)) {
+      if (!this.disableResolveMultiple && isUndefined(entityAlias.filter.resolveMultiple)) {
         entityAlias.filter.resolveMultiple = false;
       }
       entityAliasControls.push(this.createEntityAliasFormControl(aliasId, entityAlias));
@@ -165,14 +166,16 @@ export class EntityAliasesDialogComponent extends DialogComponent<EntityAliasesD
     const aliasFormControl = this.fb.group({
       id: [aliasId],
       alias: [entityAlias ? entityAlias.alias : null, [Validators.required]],
-      filter: [entityAlias ? entityAlias.filter : null],
-      resolveMultiple: [entityAlias ? entityAlias.filter.resolveMultiple : false]
+      filter: [entityAlias ? entityAlias.filter : null]
     });
-    aliasFormControl.get('resolveMultiple').valueChanges.pipe(
-      takeUntilDestroyed(this.destroyRef)
-    ).subscribe((resolveMultiple: boolean) => {
-      (aliasFormControl.get('filter').value as EntityAliasFilter).resolveMultiple = resolveMultiple;
-    });
+    if (!this.disableResolveMultiple) {
+      aliasFormControl.addControl('resolveMultiple', this.fb.control(entityAlias ? entityAlias.filter.resolveMultiple : false));
+      aliasFormControl.get('resolveMultiple').valueChanges.pipe(
+        takeUntilDestroyed(this.destroyRef)
+      ).subscribe((resolveMultiple: boolean) => {
+        (aliasFormControl.get('filter').value as EntityAliasFilter).resolveMultiple = resolveMultiple;
+      });
+    }
     return aliasFormControl;
   }
 
@@ -231,7 +234,8 @@ export class EntityAliasesDialogComponent extends DialogComponent<EntityAliasesD
         isAdd,
         allowedEntityTypes: this.allowedEntityTypes,
         entityAliases: aliasesArray,
-        alias: isAdd ? null : deepClone(alias)
+        alias: isAdd ? null : deepClone(alias),
+        disableResolveMultiple: this.disableResolveMultiple
       }
     }).afterClosed().subscribe((entityAlias) => {
       if (entityAlias) {
@@ -242,7 +246,9 @@ export class EntityAliasesDialogComponent extends DialogComponent<EntityAliasesD
           const aliasFormControl = (this.entityAliasesFormGroup.get('entityAliases') as UntypedFormArray).at(index);
           aliasFormControl.get('alias').patchValue(entityAlias.alias);
           aliasFormControl.get('filter').patchValue(entityAlias.filter);
-          aliasFormControl.get('resolveMultiple').patchValue(entityAlias.filter.resolveMultiple);
+          if (!this.disableResolveMultiple) {
+            aliasFormControl.get('resolveMultiple').patchValue(entityAlias.filter.resolveMultiple);
+          }
         }
         this.entityAliasesFormGroup.markAsDirty();
       }

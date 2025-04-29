@@ -62,6 +62,8 @@ export class EntityFilterComponent implements ControlValueAccessor, OnInit, OnDe
 
   @Output() resolveMultipleChanged: EventEmitter<boolean> = new EventEmitter<boolean>();
 
+  @Input() disableResolveMultiple: boolean;
+
   entityFilterFormGroup: FormGroup;
   filterFormGroup: FormGroup;
 
@@ -136,9 +138,11 @@ export class EntityFilterComponent implements ControlValueAccessor, OnInit, OnDe
   writeValue(filter: EntityAliasFilter): void {
     if (!filter) {
       filter = {
-        type: null,
-        resolveMultiple: this.resolveMultiple
+        type: null
       };
+      if (!this.disableResolveMultiple) {
+        filter.resolveMultiple = this.resolveMultiple;
+      }
     }
     this.entityFilterFormGroup.get('type').patchValue(filter.type, {emitEvent: false});
     if (filter && filter.type) {
@@ -318,13 +322,15 @@ export class EntityFilterComponent implements ControlValueAccessor, OnInit, OnDe
   }
 
   private filterTypeChanged(type: AliasFilterType) {
-    let resolveMultiple = true;
-    if (type === AliasFilterType.singleEntity || type === AliasFilterType.stateEntity || type === AliasFilterType.apiUsageState ||
+    if (!this.disableResolveMultiple) {
+      let resolveMultiple = true;
+      if (type === AliasFilterType.singleEntity || type === AliasFilterType.stateEntity || type === AliasFilterType.apiUsageState ||
         type === AliasFilterType.stateEntityOwner) {
-      resolveMultiple = false;
-    }
-    if (this.resolveMultiple !== resolveMultiple) {
-      this.resolveMultipleChanged.emit(resolveMultiple);
+        resolveMultiple = false;
+      }
+      if (this.resolveMultiple !== resolveMultiple) {
+        this.resolveMultipleChanged.emit(resolveMultiple);
+      }
     }
     this.updateFilterFormGroup(type);
   }
@@ -333,9 +339,11 @@ export class EntityFilterComponent implements ControlValueAccessor, OnInit, OnDe
     let filter = null;
     if (this.entityFilterFormGroup.valid && this.filterFormGroup.valid) {
       filter = {
-        type: this.entityFilterFormGroup.get('type').value,
-        resolveMultiple: this.resolveMultiple
+        type: this.entityFilterFormGroup.get('type').value
       };
+      if (!this.disableResolveMultiple) {
+        filter.resolveMultiple = this.resolveMultiple;
+      }
       filter = {...filter, ...this.filterFormGroup.value};
     }
     this.propagateChange(filter);

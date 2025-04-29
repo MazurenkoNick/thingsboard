@@ -33,4 +33,47 @@
 .tb-report-template {
   width: 100%;
   height: 100%;
+  .tb-report-template-toolbar {
+    height: 50px;
+    min-height: 50px;
+    padding: 0 20px;
+    .tb-report-template-title {
+      overflow: hidden;
+      font-size: 18px;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      outline: none;
+    }
+    .mat-divider-vertical.tb-toolbar-divider {
+      border-right-color: rgba(255,255,255,0.75);
+      height: 30px;
+    }
+  }
+  .mat-drawer-side.tb-report-components-library {
+    z-index: 1;
+    width: 250px;
+    min-width: 250px;
+    border-right-color: var(--mat-sidenav-container-divider-color);
+    border-right-width: 1px;
+    border-right-style: solid;
+  }
+  .mat-drawer-content.tb-report-template-content {
+    overflow: hidden;
+    z-index: 0;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    align-items: center;
+    .tb-report-components-container {
+      width: 640px;
+      min-width: 640px;
+      min-height: 80px;
+    }
+  }
+  .tb-report-component-settings {
+    z-index: 1;
+    width: 500px;
+    min-width: 500px;
+  }
 }

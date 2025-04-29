@@ -31,5 +31,71 @@
 
 -->
 <div class="mat-content tb-report-template flex flex-1 flex-col" tb-fullscreen [fullscreen]="isFullscreen">
-  {{  reportTemplate | json }}
+  <mat-toolbar color="primary" class="tb-report-template-toolbar">
+    <div class="flex flex-1 flex-row items-center gap-1.5">
+      <div class="tb-report-template-title">
+        {{ reportTemplate.name }}
+      </div>
+    </div>
+    <div class="flex flex-1 flex-row-reverse items-center gap-1.5">
+      <button mat-icon-button
+              matTooltip="{{(isFullscreen ? 'fullscreen.exit' : 'fullscreen.expand') | translate}}"
+              matTooltipPosition="below"
+              (click)="isFullscreen = !isFullscreen">
+        <mat-icon>{{ isFullscreen ? 'fullscreen_exit' : 'fullscreen' }}</mat-icon>
+      </button>
+      <button mat-stroked-button [disabled]="(isLoading$ | async)" (click)="saveReportTemplate()">
+        <mat-icon>done</mat-icon>{{ 'action.save' | translate }}</button>
+      <button mat-button [disabled]="(isLoading$ | async)" (click)="declineReportTemplate()">
+        <mat-icon>close</mat-icon>{{ 'action.decline' | translate }}</button>
+      <mat-divider class="tb-toolbar-divider" vertical></mat-divider>
+      <button mat-button
+              matTooltip="{{ 'filter.filters' | translate }}"
+              matTooltipPosition="below"
+              (click)="openFilters($event)">
+        <mat-icon>filter_list</mat-icon>
+        {{ 'filter.filters' | translate }}
+      </button>
+      <button mat-button
+              matTooltip="{{ 'entity.aliases' | translate }}"
+              matTooltipPosition="below"
+              (click)="openEntityAliases($event)">
+        <mat-icon>devices_other</mat-icon>
+        {{ 'entity.aliases-short' | translate }}
+      </button>
+      <button mat-button
+              matTooltip="{{ 'report-template.settings' | translate }}"
+              matTooltipPosition="below"
+              (click)="openReportTemplateSettings($event)">
+        <mat-icon>settings</mat-icon>
+        {{ 'report-template.settings' | translate }}
+      </button>
+    </div>
+  </mat-toolbar>
+  <mat-drawer-container class="size-full">
+    <mat-drawer class="tb-report-components-library"
+                *ngIf="!readonly"
+                disableClose="true"
+                mode="side"
+                opened
+                position="start">
+    </mat-drawer>
+    <mat-drawer class="tb-report-component-settings"
+                disableClose="true"
+                mode="side"
+                opened
+                position="end">
+    </mat-drawer>
+    <mat-drawer-content class="tb-report-template-content">
+      <div class="tb-report-components-container">
+        Header
+      </div>
+      <div class="tb-report-components-container">
+        {{  reportTemplate | json }}
+      </div>
+      <div class="tb-report-components-container">
+        Footer
+      </div>
+    </mat-drawer-content>
+  </mat-drawer-container>
 </div>

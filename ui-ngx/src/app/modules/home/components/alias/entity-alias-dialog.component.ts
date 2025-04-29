@@ -58,6 +58,7 @@ export interface EntityAliasDialogData {
   allowedEntityTypes: Array<EntityType | AliasEntityType>;
   entityAliases: EntityAliases | Array<EntityAlias>;
   alias?: EntityAlias;
+  disableResolveMultiple?: boolean;
 }
 
 @Component({
@@ -70,6 +71,7 @@ export class EntityAliasDialogComponent extends DialogComponent<EntityAliasDialo
   implements OnInit, ErrorStateMatcher {
 
   isAdd: boolean;
+  disableResolveMultiple: boolean;
   allowedEntityTypes: Array<EntityType | AliasEntityType>;
   entityAliases: Array<EntityAlias>;
 
@@ -90,6 +92,7 @@ export class EntityAliasDialogComponent extends DialogComponent<EntityAliasDialo
               private entityService: EntityService) {
     super(store, router, dialogRef);
     this.isAdd = data.isAdd;
+    this.disableResolveMultiple = data.disableResolveMultiple;
     this.allowedEntityTypes = data.allowedEntityTypes;
     if (Array.isArray(data.entityAliases)) {
       this.entityAliases = data.entityAliases;
@@ -103,19 +106,22 @@ export class EntityAliasDialogComponent extends DialogComponent<EntityAliasDialo
       this.alias = {
         id: null,
         alias: '',
-        filter: {
-          resolveMultiple: false
-        }
+        filter: {}
       };
+      if (!this.disableResolveMultiple) {
+        this.alias.filter.resolveMultiple = false;
+      }
     } else {
       this.alias = data.alias;
     }
 
     this.entityAliasFormGroup = this.fb.group({
       alias: [this.alias.alias, [this.validateDuplicateAliasName(), Validators.required]],
-      resolveMultiple: [this.alias.filter.resolveMultiple],
       filter: [this.alias.filter, Validators.required]
     });
+    if (!this.disableResolveMultiple) {
+      this.entityAliasFormGroup.addControl('resolveMultiple', this.fb.control(this.alias.filter.resolveMultiple));
+    }
   }
 
   validateDuplicateAliasName(): ValidatorFn {
@@ -156,7 +162,9 @@ export class EntityAliasDialogComponent extends DialogComponent<EntityAliasDialo
     this.submitted = true;
     this.alias.alias = this.entityAliasFormGroup.get('alias').value.trim();
     this.alias.filter = this.entityAliasFormGroup.get('filter').value;
-    this.alias.filter.resolveMultiple = this.entityAliasFormGroup.get('resolveMultiple').value;
+    if (!this.disableResolveMultiple) {
+      this.alias.filter.resolveMultiple = this.entityAliasFormGroup.get('resolveMultiple').value;
+    }
     if (!isEmpty(this.alias.filter?.filters)) {
       this.alias.filter.filters = this.alias.filter.filters.filter((value, index, self) =>
         self.findIndex(v => v.relationType === value.relationType && isEqual(v.entityTypes, value.entityTypes)) === index &&

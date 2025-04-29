@@ -49,7 +49,7 @@
       <div class="flex max-w-95% flex-full flex-row items-center justify-start">
         <span class="tb-header-label flex-1 gt-sm:min-w-52 gt-sm:max-w-52 gt-sm:basis-52" translate>alias.name</span>
         <span class="tb-header-label flex-1" translate style="padding-left: 10px;">alias.entity-filter</span>
-        <span class="tb-header-label min-w-32 max-w-32 flex-1 basis-32" translate style="padding-left: 10px;">alias.resolve-multiple</span>
+        <span *ngIf="!disableResolveMultiple" class="tb-header-label min-w-32 max-w-32 flex-1 basis-32" translate style="padding-left: 10px;">alias.resolve-multiple</span>
         <span style="min-width: 80px;"></span>
       </div>
     </div>
@@ -68,7 +68,7 @@
           </mat-form-field>
           <tb-entity-filter-view class="flex-1" style="padding-left: 10px;" [formControl]="entityAliasControl.get('filter')">
           </tb-entity-filter-view>
-          <section style="padding-left: 10px;"
+          <section *ngIf="!disableResolveMultiple" style="padding-left: 10px;"
                    class="tb-resolve-multiple-switch flex min-w-32 max-w-32 flex-1 basis-32 flex-col items-center justify-center">
             <mat-slide-toggle class="resolve-multiple-switch"
                    [formControl]="entityAliasControl.get('resolveMultiple')">
