@@ -53,7 +53,7 @@ import java.util.UUID;
 public class ReportQueryUtils {
 
     public static EntityDataQuery toEntityDataQuery(DataSource dataSource, List<EntityAlias> entityAliases, List<Filter> filters) {
-        EntityFilter entityFilter = getEntityFilter(dataSource, entityAliases);
+        EntityFilter entityFilter = findEntityFilter(dataSource, entityAliases);
 
         return buildEntityDataQuery(entityFilter, dataSource, filters);
     }
@@ -66,15 +66,15 @@ public class ReportQueryUtils {
     }
 
     public static EntityCountQuery toEntityCountQuery(DataSource dataSource, List<EntityAlias> entityAliases, List<Filter> filters) {
-        EntityFilter entityFilter = getEntityFilter(dataSource, entityAliases);
-        List<KeyFilter> keyFilters = getKeyFilters(dataSource, filters);
+        EntityFilter entityFilter = findEntityFilter(dataSource, entityAliases);
+        List<KeyFilter> keyFilters = findKeyFilters(dataSource, filters);
 
         return new EntityCountQuery(entityFilter, keyFilters);
     }
 
     public static AlarmCountQuery toAlarmCountQuery(DataSource dataSource, List<EntityAlias> entityAliases, List<Filter> filters) {
-        List<KeyFilter> keyFilters = getKeyFilters(dataSource, filters);
-        AlarmCountQuery alarmCountQuery = new AlarmCountQuery(getEntityFilter(dataSource, entityAliases), keyFilters);
+        List<KeyFilter> keyFilters = findKeyFilters(dataSource, filters);
+        AlarmCountQuery alarmCountQuery = new AlarmCountQuery(findEntityFilter(dataSource, entityAliases), keyFilters);
 
         AlarmFilterConfig alarmFilterConfig = dataSource.getAlarmFilterConfig();
         if (alarmFilterConfig != null) {
@@ -86,7 +86,7 @@ public class ReportQueryUtils {
         return alarmCountQuery;
     }
 
-    private static EntityFilter getEntityFilter(DataSource dataSource, List<EntityAlias> entityAliases) {
+    private static EntityFilter findEntityFilter(DataSource dataSource, List<EntityAlias> entityAliases) {
         return entityAliases.stream()
                 .filter(alias -> alias.getId().equals(dataSource.getEntityAliasId()))
                 .findFirst()
@@ -94,7 +94,7 @@ public class ReportQueryUtils {
                 .getFilter();
     }
 
-    private static List<KeyFilter> getKeyFilters(DataSource dataSource, List<Filter> filters) {
+    private static List<KeyFilter> findKeyFilters(DataSource dataSource, List<Filter> filters) {
         if (dataSource.getFilterId() == null) {
             return null;
         } else {
@@ -107,7 +107,7 @@ public class ReportQueryUtils {
     }
 
     private static EntityDataQuery buildEntityDataQuery(EntityFilter filter, DataSource dataSource, List<Filter> filters) {
-        List<KeyFilter> keyFilters = getKeyFilters(dataSource, filters);
+        List<KeyFilter> keyFilters = findKeyFilters(dataSource, filters);
 
         List<EntityKey> entityFields = new ArrayList<>();
         List<EntityKey> latestValues = new ArrayList<>();
