@@ -47,7 +47,7 @@ import org.thingsboard.server.common.data.report.TbReportType;
 import org.thingsboard.server.common.data.report.configuration.DataKey;
 import org.thingsboard.server.common.data.report.configuration.DataSource;
 import org.thingsboard.server.common.data.report.configuration.EntityAlias;
-import org.thingsboard.server.common.data.report.configuration.EntityTableComponent;
+import org.thingsboard.server.common.data.report.configuration.components.EntityTableComponent;
 import org.thingsboard.server.common.data.report.configuration.ReportTemplateConfiguration;
 import org.thingsboard.server.common.data.security.Authority;
 import org.thingsboard.server.dao.service.DaoSqlTest;
@@ -108,7 +108,7 @@ public class ReportControllerTest extends AbstractControllerTest {
         ));
         dataSource.setType("entity");
         dataSource.setEntityAliasId("784f394c-42b6-435a-983c-b7beff2784f9");
-        tableComponent.setDataSource(dataSource);
+        tableComponent.setDataSources(List.of(dataSource));
         configuration.setComponents(List.of(tableComponent));
         configuration.setFileName("testReport");
         ReportTemplate reportTemplate = new ReportTemplate();

@@ -31,18 +31,14 @@
 package org.thingsboard.server.service.report;
 
 import com.google.common.util.concurrent.ListenableFuture;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
-import net.sf.jasperreports.engine.design.JasperDesign;
 import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.permission.MergedUserPermissions;
 import org.thingsboard.server.common.data.report.configuration.EntityAlias;
 import org.thingsboard.server.common.data.report.configuration.Filter;
 import org.thingsboard.server.common.data.report.configuration.ReportTemplateConfiguration;
-import org.thingsboard.server.common.data.util.JasperReportUtils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -56,20 +52,18 @@ public class TbReportCtx {
     private final TenantId tenantId;
     private final CustomerId customerId;
     private final MergedUserPermissions userPermissions;
-    private final JasperDesign jasperDesign;
-    private final Map<String, Object> params;
     private final List<EntityAlias> entityAliases;
     private final List<Filter> filters;
     private final List<ListenableFuture<Void>> futures;
+    private final Map<String, Object> params;
 
     public TbReportCtx(TenantId tenantId, CustomerId customerId, MergedUserPermissions userPermissions, ReportTemplateConfiguration configuration) {
         this.tenantId = tenantId;
         this.customerId = customerId;
         this.userPermissions = userPermissions;
-        this.params = new HashMap<>();
         this.futures = new ArrayList<>();
-        this.jasperDesign = JasperReportUtils.initDesign(configuration);
         this.entityAliases = configuration.getEntityAliases();
         this.filters = configuration.getFilters();
+        this.params = new HashMap<>();
     }
 }

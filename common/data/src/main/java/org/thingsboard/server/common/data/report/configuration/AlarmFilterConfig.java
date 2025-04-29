@@ -30,23 +30,22 @@
  */
 package org.thingsboard.server.common.data.report.configuration;
 
-import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
 import lombok.Data;
-import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
+import lombok.NoArgsConstructor;
+import org.thingsboard.server.common.data.alarm.AlarmSearchStatus;
+import org.thingsboard.server.common.data.alarm.AlarmSeverity;
+import org.thingsboard.server.common.data.id.UserId;
 
 import java.util.List;
 
 @Data
-public class ReportTemplateConfiguration {
+@NoArgsConstructor
+@AllArgsConstructor
+public class AlarmFilterConfig {
 
-    @NotNull
-    private String fileName;
-    private Boolean subReport;
-    private List<EntityAlias> entityAliases;
-    private List<Filter> filters;
-    private HeaderFooter header;
-    private HeaderFooter footer;
-    @NotNull
-    private List<ReportComponent> components;
-
+    private List<String> typeList;
+    private List<AlarmSearchStatus> statusList;
+    private List<AlarmSeverity> severityList;
+    private UserId assigneeId;
 }

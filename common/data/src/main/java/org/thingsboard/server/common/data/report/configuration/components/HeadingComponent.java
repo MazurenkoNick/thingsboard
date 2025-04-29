@@ -28,25 +28,27 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.common.data.report.configuration;
+package org.thingsboard.server.common.data.report.configuration.components;
 
-import jakarta.validation.constraints.NotNull;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
-import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import org.thingsboard.server.common.data.report.configuration.DataSource;
 
 import java.util.List;
 
+@Schema
 @Data
-public class ReportTemplateConfiguration {
+@EqualsAndHashCode
+@NoArgsConstructor
+public class HeadingComponent implements ReportComponent {
 
-    @NotNull
-    private String fileName;
-    private Boolean subReport;
-    private List<EntityAlias> entityAliases;
-    private List<Filter> filters;
-    private HeaderFooter header;
-    private HeaderFooter footer;
-    @NotNull
-    private List<ReportComponent> components;
+    private String value;
+    private List<DataSource> dataSources;
 
+    @Override
+    public ReportComponentType getType() {
+        return ReportComponentType.HEADING;
+    }
 }

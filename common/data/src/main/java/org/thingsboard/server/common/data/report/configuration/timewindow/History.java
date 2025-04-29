@@ -28,26 +28,18 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.common.data.report.configuration;
+package org.thingsboard.server.common.data.report.configuration.timewindow;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import lombok.Data;
 
-import java.io.Serializable;
-
-
-@JsonIgnoreProperties(ignoreUnknown = true)
-@JsonTypeInfo(
-        use = JsonTypeInfo.Id.NAME,
-        include = JsonTypeInfo.As.EXISTING_PROPERTY,
-        property = "type")
-@JsonSubTypes({
-        @JsonSubTypes.Type(value = HeadingComponent.class, name = "HEADING"),
-        @JsonSubTypes.Type(value = EntityTableComponent.class, name = "ENTITY_TABLE"),
-})
-public interface ReportComponent extends Serializable {
-
-    ReportComponentType getType();
-
+@Data
+public class History {
+    private int historyType;
+    private long interval;
+    private long timewindowMs;
+    private FixedTimeWindow fixedTimeWindow;
+    private QuickTimeInterval quickInterval;
+    private boolean hideInterval;
+    private boolean hideLastInterval;
+    private boolean hideQuickInterval;
 }

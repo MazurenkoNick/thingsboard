@@ -28,10 +28,16 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.common.data.report.configuration;
+package org.thingsboard.server.common.data.report.configuration.timewindow;
 
-public enum ReportComponentType {
+import lombok.Data;
 
-    HEADING, RICH_TEXT, ENTITY_TABLE, TIME_SERIES_TABLE, ALARM_TABLE, DASHBOARD, IMAGE, SUB_REPORT;
-
+@Data
+public class TimeWindowConfiguration {
+    private boolean hideAggregation;
+    private boolean hideAggInterval;
+    private boolean hideTimezone;
+    private History history;
+    private AggregationConfiguration aggregation;
+    private String timezone;
 }

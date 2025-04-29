@@ -28,25 +28,10 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.common.data.report.configuration;
+package org.thingsboard.server.common.data.report.configuration.components;
 
-import jakarta.validation.constraints.NotNull;
-import lombok.Data;
-import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
+public enum ReportComponentType {
 
-import java.util.List;
-
-@Data
-public class ReportTemplateConfiguration {
-
-    @NotNull
-    private String fileName;
-    private Boolean subReport;
-    private List<EntityAlias> entityAliases;
-    private List<Filter> filters;
-    private HeaderFooter header;
-    private HeaderFooter footer;
-    @NotNull
-    private List<ReportComponent> components;
+    HEADING, RICH_TEXT, ENTITY_TABLE, TIME_SERIES_TABLE, ALARM_TABLE, DASHBOARD, IMAGE, SUB_REPORT, PAGE_BREAK;
 
 }
