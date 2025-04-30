@@ -28,20 +28,41 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.service.report;
+package org.thingsboard.server.report;
 
-import com.google.common.util.concurrent.ListenableFuture;
-import net.sf.jasperreports.engine.JRException;
-import org.thingsboard.server.common.data.exception.ThingsboardException;
-import org.thingsboard.server.common.data.id.CustomerId;
-import org.thingsboard.server.common.data.id.TenantId;
-import org.thingsboard.server.common.data.permission.MergedUserPermissions;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestTemplate;
+import org.thingsboard.rest.client.RestClient;
+import org.thingsboard.server.common.data.job.JobType;
+import org.thingsboard.server.common.data.job.ReportTask;
 import org.thingsboard.server.common.data.report.ReportData;
-import org.thingsboard.server.common.data.report.ReportRequest;
+import org.thingsboard.server.queue.task.TaskProcessor;
+import org.thingsboard.server.report.service.ReportService;
 
+@Component
+@RequiredArgsConstructor
+public class ReportTaskProcessor extends TaskProcessor<ReportTask, ReportData> {
 
-public interface ReportService {
+    private final ReportService reportService;
 
-    ListenableFuture<ReportData> generateReport(TenantId tenantId, CustomerId customerId, MergedUserPermissions userPermissions, ReportRequest reportRequest) throws ThingsboardException, JRException;
+    @Value("${service.tb_core.base_url:http://localhost:8080}") // todo: make configurable via yaml
+    private String tbCoreBaseUrl;
+
+    @Override
+    public ReportData process(ReportTask task) throws Exception {
+        ReportData reportData;
+        try (RestClient restClient = new RestClient(new RestTemplate(), tbCoreBaseUrl, task.getAccessToken())) {
+            reportData = reportService.generateReport(task, restClient);
+            // todo: save as blob entity, return to tb-core
+        }
+        return reportData;
+    }
+
+    @Override
+    public JobType getJobType() {
+        return JobType.REPORT;
+    }
 
 }

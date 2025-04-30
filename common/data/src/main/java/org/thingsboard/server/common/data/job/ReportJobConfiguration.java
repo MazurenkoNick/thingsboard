@@ -28,42 +28,29 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.service.report;
+package org.thingsboard.server.common.data.job;
 
-import com.google.common.util.concurrent.ListenableFuture;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
-import lombok.RequiredArgsConstructor;
-import org.thingsboard.server.common.data.id.CustomerId;
-import org.thingsboard.server.common.data.id.TenantId;
-import org.thingsboard.server.common.data.permission.MergedUserPermissions;
-import org.thingsboard.server.common.data.report.configuration.EntityAlias;
-import org.thingsboard.server.common.data.report.configuration.Filter;
-import org.thingsboard.server.common.data.report.configuration.ReportTemplateConfiguration;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import org.thingsboard.server.common.data.id.UserId;
+import org.thingsboard.server.common.data.report.ReportRequest;
 
 @Data
-@RequiredArgsConstructor
-public class TbReportCtx {
+@EqualsAndHashCode(callSuper = true)
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
+public class ReportJobConfiguration extends JobConfiguration {
 
-    private final TenantId tenantId;
-    private final CustomerId customerId;
-    private final MergedUserPermissions userPermissions;
-    private final List<EntityAlias> entityAliases;
-    private final List<Filter> filters;
-    private final List<ListenableFuture<Void>> futures;
-    private final Map<String, Object> params;
+    private ReportRequest request;
+    private UserId userId;
 
-    public TbReportCtx(TenantId tenantId, CustomerId customerId, MergedUserPermissions userPermissions, ReportTemplateConfiguration configuration) {
-        this.tenantId = tenantId;
-        this.customerId = customerId;
-        this.userPermissions = userPermissions;
-        this.futures = new ArrayList<>();
-        this.entityAliases = configuration.getEntityAliases();
-        this.filters = configuration.getFilters();
-        this.params = new HashMap<>();
+    @Override
+    public JobType getType() {
+        return JobType.REPORT;
     }
+
 }

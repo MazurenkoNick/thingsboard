@@ -28,10 +28,8 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.service.report;
+package org.thingsboard.server.report.service;
 
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.SettableFuture;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.sf.jasperreports.engine.JREmptyDataSource;
@@ -42,24 +40,22 @@ import net.sf.jasperreports.engine.JasperPrint;
 import net.sf.jasperreports.engine.JasperReport;
 import net.sf.jasperreports.engine.data.JRMapCollectionDataSource;
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.springframework.stereotype.Service;
-import org.thingsboard.rule.engine.api.DashboardReportService;
+import org.thingsboard.rest.client.RestClient;
 import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.exception.ThingsboardErrorCode;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
-import org.thingsboard.server.common.data.id.CustomerId;
-import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.TenantId;
-import org.thingsboard.server.common.data.kv.ReadTsKvQuery;
+import org.thingsboard.server.common.data.job.ReportTask;
 import org.thingsboard.server.common.data.kv.TsKvEntry;
 import org.thingsboard.server.common.data.page.PageData;
-import org.thingsboard.server.common.data.permission.MergedUserPermissions;
+import org.thingsboard.server.common.data.page.SortOrder;
 import org.thingsboard.server.common.data.query.AlarmData;
 import org.thingsboard.server.common.data.query.EntityData;
 import org.thingsboard.server.common.data.report.ReportData;
 import org.thingsboard.server.common.data.report.ReportRequest;
 import org.thingsboard.server.common.data.report.ReportTemplate;
 import org.thingsboard.server.common.data.report.TbReportType;
+import org.thingsboard.server.common.data.report.configuration.DataKey;
 import org.thingsboard.server.common.data.report.configuration.DataSource;
 import org.thingsboard.server.common.data.report.configuration.EntityAlias;
 import org.thingsboard.server.common.data.report.configuration.Filter;
@@ -67,12 +63,10 @@ import org.thingsboard.server.common.data.report.configuration.ReportTemplateCon
 import org.thingsboard.server.common.data.report.configuration.components.AlarmTableComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
 import org.thingsboard.server.common.data.report.configuration.components.TimeseriesTableComponent;
-import org.thingsboard.server.dao.alarm.AlarmService;
-import org.thingsboard.server.dao.entity.EntityService;
-import org.thingsboard.server.dao.report.ReportTemplateService;
-import org.thingsboard.server.dao.timeseries.TimeseriesService;
+import org.thingsboard.server.common.data.report.configuration.timewindow.History;
+import org.thingsboard.server.common.data.report.configuration.timewindow.TimeIntervalCalculator;
+import org.thingsboard.server.common.data.report.configuration.timewindow.TimeWindowConfiguration;
 import org.thingsboard.server.report.JasperReportBuilder;
-import org.thingsboard.server.service.entitiy.AbstractTbEntityService;
 
 import java.lang.reflect.Field;
 import java.text.SimpleDateFormat;
@@ -83,41 +77,34 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
 import static org.thingsboard.server.common.data.report.configuration.components.ReportComponentType.SUB_REPORT;
 import static org.thingsboard.server.common.data.report.configuration.components.ReportComponentType.TIME_SERIES_TABLE;
+import static org.thingsboard.server.common.data.report.configuration.timewindow.TimeIntervalCalculator.getTimeRange;
 import static org.thingsboard.server.common.data.util.ReportQueryUtils.toAlarmCountQuery;
 import static org.thingsboard.server.common.data.util.ReportQueryUtils.toAlarmDataQuery;
 import static org.thingsboard.server.common.data.util.ReportQueryUtils.toEntityCountQuery;
 import static org.thingsboard.server.common.data.util.ReportQueryUtils.toEntityDataQuery;
-import static org.thingsboard.server.common.data.util.ReportQueryUtils.toReadTsKvQueries;
 import static org.thingsboard.server.common.data.util.ReportQueryUtils.toSingleDeviceQuery;
 import static org.thingsboard.server.report.JasperReportBuilder.getComponentDataSource;
 
-@Service
 @Slf4j
 @RequiredArgsConstructor
-public class DefaultReportService extends AbstractTbEntityService implements ReportService {
+public class ReportService {
 
-    private SimpleDateFormat defaultDateFormat = new SimpleDateFormat("yyyy-MM-dd_HH:mm:ss");
+    private final SimpleDateFormat defaultDateFormat = new SimpleDateFormat("yyyy-MM-dd_HH:mm:ss"); // fixme dasha make configurable (?)
 
-    private final ReportTemplateService reportTemplateService;
-    private final DashboardReportService dashboardReportService;
-    private final EntityService entityService;
-    private final TimeseriesService tsService;
-    private final AlarmService alarmService;
+    public ReportData generateReport(ReportTask task, RestClient restClient) throws ThingsboardException {
+        TenantId tenantId = task.getTenantId();
+        ReportRequest reportRequest = task.getReportRequest();
 
-    @Override
-    public ListenableFuture<ReportData> generateReport(TenantId tenantId, CustomerId customerId, MergedUserPermissions userPermissions, ReportRequest reportRequest) throws ThingsboardException {
         log.trace("[{}] Executing generateReport, reportRequest [{}]", tenantId, reportRequest);
-        ReportTemplate reportTemplate = checkNotNull(reportTemplateService.findReportTemplateById(tenantId, reportRequest.getTemplateId()));
+        ReportTemplate reportTemplate = task.getReportTemplate();
         ReportTemplateConfiguration configuration = reportTemplate.getConfiguration();
 
-        SettableFuture<ReportData> resultFuture = SettableFuture.create();
         try {
-            TbReportCtx ctx = new TbReportCtx(tenantId, customerId, userPermissions, configuration);
+            TbReportCtx ctx = new TbReportCtx(tenantId, reportRequest.getCustomerId(), configuration, restClient);
             JasperReportBuilder reportBuilder = new JasperReportBuilder(configuration);
 
             Optional.ofNullable(configuration.getHeader()).ifPresent(reportBuilder::addPageHeader);
@@ -129,17 +116,15 @@ public class DefaultReportService extends AbstractTbEntityService implements Rep
             JasperPrint print = JasperFillManager.fillReport(mainReport, ctx.getParams(), new JREmptyDataSource());
 
             TbReportType type = reportRequest.getType();
-            ReportData report = ReportData.builder()
+            return ReportData.builder()
                     .data(JasperExportManager.exportReportToPdf(print))
                     .contentType(type.getContentType())
                     .name(configuration.getFileName() + "-" + defaultDateFormat.format(new Date()) + type.getExtension())
                     .build();
-            resultFuture.set(report);
         } catch (Exception e) {
             log.error("Unexpected error during report generation!", e);
             throw new ThingsboardException("Unable to generate report", ExceptionUtils.getRootCause(e), ThingsboardErrorCode.GENERAL);
         }
-        return resultFuture;
     }
 
     private void renderContent(TbReportCtx ctx, JasperReportBuilder parentBuilder, List<ReportComponent> components) throws Exception {
@@ -169,14 +154,19 @@ public class DefaultReportService extends AbstractTbEntityService implements Rep
         params.put(subReportDSExpr, dataSource);
     }
 
-    private JRMapCollectionDataSource buildTsDataSource(TbReportCtx tbReportCtx, TimeseriesTableComponent component, EntityData entityData) {
-        List<ReadTsKvQuery> queries = toReadTsKvQueries(component);
-        ListenableFuture<List<TsKvEntry>> queryResult = tsService.findAll(tbReportCtx.getTenantId(), entityData.getEntityId(), queries);
-        try {
-            return new JRMapCollectionDataSource(collectTsData(queryResult.get()));
-        } catch (InterruptedException | ExecutionException e) {
-            throw new RuntimeException(e);
-        }
+    private JRMapCollectionDataSource buildTsDataSource(TbReportCtx ctx, TimeseriesTableComponent component, EntityData entityData) {
+        TimeWindowConfiguration timeWindowConf = component.getTimewindow();
+        History historyConf = timeWindowConf.getHistory();
+        TimeIntervalCalculator.TimeRange timeRange = getTimeRange(timeWindowConf);
+
+        List<String> keys = getComponentDataSource(component).getDataKeys().stream()
+                .map(DataKey::getName)
+                .toList();
+
+        // todo dasha make sort order configurable (?)
+        List<TsKvEntry> result = ctx.getRestClient().getTimeseries(entityData.getEntityId(), keys, historyConf.getInterval(), timeWindowConf.getAggregation().getType(),
+                SortOrder.Direction.DESC, timeRange.startTs, timeRange.endTs, timeWindowConf.getAggregation().getLimit(), false);
+        return new JRMapCollectionDataSource(collectTsData(result));
     }
 
     private JRMapCollectionDataSource buildDataSource(TbReportCtx ctx, ReportComponent component, EntityData entityData) {
@@ -188,13 +178,11 @@ public class DefaultReportService extends AbstractTbEntityService implements Rep
     }
 
     private JRMapCollectionDataSource buildAlarmDataSource(TbReportCtx ctx, AlarmTableComponent component) {
-        List<EntityId> entityIds = entityService.findEntityDataByQuery(ctx.getTenantId(), ctx.getCustomerId(),
-                        ctx.getUserPermissions(), toEntityDataQuery(component.getAlarmSource(), ctx.getEntityAliases(), ctx.getFilters()))
-                .getData()
-                .stream()
-                .map(EntityData::getEntityId).toList();
-        PageData<AlarmData> alarmDatas = alarmService.findAlarmDataByQueryForEntities(ctx.getTenantId(), ctx.getUserPermissions(),
-                toAlarmDataQuery(component, ctx.getEntityAliases(), ctx.getFilters()), entityIds);
+//        List<EntityId> entityIds = restClient.findEntityDataByQuery(toEntityDataQuery(component.getAlarmSource(), ctx.getEntityAliases(), ctx.getFilters()))
+//                .getData()
+//                .stream()
+//                .map(EntityData::getEntityId).toList();
+        PageData<AlarmData> alarmDatas = ctx.getRestClient().findAlarmDataByQuery(toAlarmDataQuery(component, ctx.getEntityAliases(), ctx.getFilters())); // FIXME Dasha check, why previously used alarmService.findAlarmDataByQueryForEntities(ctx.getTenantId(), ctx.getUserPermissions(), entityIds) ?
         Collection<Map<String, ?>> alarmList = new ArrayList<>();
         for (AlarmData alarmData : alarmDatas.getData()) {
             Map<String, String> mapped = toStringMap(alarmData);
@@ -204,13 +192,13 @@ public class DefaultReportService extends AbstractTbEntityService implements Rep
         return new JRMapCollectionDataSource(alarmList);
     }
 
-    private JRMapCollectionDataSource buildEntityDataSource(TbReportCtx tbReportCtx, List<DataSource> dataSources) {
+    private JRMapCollectionDataSource buildEntityDataSource(TbReportCtx ctx, List<DataSource> dataSources) {
         if (dataSources == null) {
             return new JRMapCollectionDataSource(List.of(Map.of()));
         }
         Collection<Map<String, ?>> entryList = new ArrayList<>();
         for (DataSource dataSource : dataSources) {
-            Collection<Map<String, ?>> dataMap = buildEntityDataSource(tbReportCtx, dataSource);
+            Collection<Map<String, ?>> dataMap = buildEntityDataSource(ctx, dataSource);
             entryList.addAll(dataMap);
         }
         return new JRMapCollectionDataSource(entryList);
@@ -220,14 +208,12 @@ public class DefaultReportService extends AbstractTbEntityService implements Rep
         List<EntityAlias> entityAliases = ctx.getEntityAliases();
         List<Filter> filters = ctx.getFilters();
         return switch (dataSource.getType()) {
-            case "device" ->
-                    collectEntityData(entityService.findEntityDataByQuery(ctx.getTenantId(), ctx.getCustomerId(), ctx.getUserPermissions(), toSingleDeviceQuery(dataSource, filters)));
-            case "entity" ->
-                    collectEntityData(entityService.findEntityDataByQuery(ctx.getTenantId(), ctx.getCustomerId(), ctx.getUserPermissions(), toEntityDataQuery(dataSource, entityAliases, filters)));
+            case "device" -> collectEntityData(ctx.getRestClient().findEntityDataByQuery(toSingleDeviceQuery(dataSource, filters)));
+            case "entity" -> collectEntityData(ctx.getRestClient().findEntityDataByQuery(toEntityDataQuery(dataSource, entityAliases, filters)));
             case "entityCount" ->
-                    List.of(Map.of("count", entityService.countEntitiesByQuery(ctx.getTenantId(), ctx.getCustomerId(), ctx.getUserPermissions(), toEntityCountQuery(dataSource, entityAliases, filters))));
+                    List.of(Map.of("count", ctx.getRestClient().countEntitiesByQuery(toEntityCountQuery(dataSource, entityAliases, filters))));
             case "alarmCount" ->
-                    List.of(Map.of("count", alarmService.countAlarmsByQuery(ctx.getTenantId(), ctx.getCustomerId(), ctx.getUserPermissions(), toAlarmCountQuery(dataSource, entityAliases, filters))));
+                    List.of(Map.of("count", ctx.getRestClient().countAlarmsByQuery(toAlarmCountQuery(dataSource, entityAliases, filters))));
             default -> throw new IllegalArgumentException("Unknown data source type: " + dataSource.getType());
         };
     }
@@ -237,12 +223,8 @@ public class DefaultReportService extends AbstractTbEntityService implements Rep
         List<EntityAlias> entityAliases = ctx.getEntityAliases();
         List<Filter> filters = ctx.getFilters();
         return switch (dataSource.getType()) {
-            case "device" ->
-                    entityService.findEntityDataByQuery(ctx.getTenantId(), ctx.getCustomerId(), ctx.getUserPermissions(), toSingleDeviceQuery(dataSource, filters))
-                            .getData();
-            case "entity" ->
-                    entityService.findEntityDataByQuery(ctx.getTenantId(), ctx.getCustomerId(), ctx.getUserPermissions(), toEntityDataQuery(dataSource, entityAliases, filters))
-                            .getData();
+            case "device" -> ctx.getRestClient().findEntityDataByQuery(toSingleDeviceQuery(dataSource, filters)).getData();
+            case "entity" -> ctx.getRestClient().findEntityDataByQuery(toEntityDataQuery(dataSource, entityAliases, filters)).getData();
             default -> throw new IllegalArgumentException("Unknown data source type: " + dataSource.getType());
         };
     }

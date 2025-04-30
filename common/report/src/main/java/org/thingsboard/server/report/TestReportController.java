@@ -28,36 +28,39 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.service.job.task;
+package org.thingsboard.server.report;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
-import org.thingsboard.server.common.data.job.DummyTask;
-import org.thingsboard.server.common.data.job.JobType;
-import org.thingsboard.server.queue.task.TaskProcessor;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.thingsboard.server.common.data.job.ReportTask;
+import org.thingsboard.server.common.data.report.ReportData;
 
-@Component
+@RestController
 @RequiredArgsConstructor
-public class DummyTaskProcessor extends TaskProcessor<DummyTask, Void> {
+@RequestMapping("/api")
+public class TestReportController {
 
-    @Override
-    public Void process(DummyTask task) throws Exception {
-        if (task.getProcessingTimeMs() > 0) {
-            Thread.sleep(task.getProcessingTimeMs());
-        }
-        if (task.isFailAlways()) {
-            throw new RuntimeException(task.getErrors().get(0));
-        }
-        if (task.getErrors() != null && task.getAttempt() <= task.getErrors().size()) {
-            String error = task.getErrors().get(task.getAttempt() - 1);
-            throw new RuntimeException(error);
-        }
-        return null;
-    }
+    private final ReportTaskProcessor reportTaskProcessor;
 
-    @Override
-    public JobType getJobType() {
-        return JobType.DUMMY;
+    @PostMapping(value = "/report/test", produces = {"application/pdf"})
+    @Deprecated // FIXME: for testing purposes only, should not be used directly, only via submitting a job
+    public ResponseEntity<Resource> downloadTestReport(@RequestBody ReportTask task) throws Exception {
+        ReportData reportData = reportTaskProcessor.process(task);
+        ByteArrayResource resource = new ByteArrayResource(reportData.getData());
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment;filename=" + reportData.getName())
+                .header("x-filename", reportData.getName())
+                .contentLength(resource.contentLength())
+                .contentType(MediaType.parseMediaType(reportData.getContentType()))
+                .body(resource);
     }
 
 }

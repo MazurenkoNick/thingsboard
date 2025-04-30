@@ -45,6 +45,7 @@ import org.thingsboard.server.common.data.id.TenantId;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "jobType")
 @JsonSubTypes({
+        @Type(name = "REPORT", value = ReportTask.class),
         @Type(name = "DUMMY", value = DummyTask.class)
 })
 @SuperBuilder

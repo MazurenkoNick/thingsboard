@@ -28,36 +28,13 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.service.job.task;
+package org.thingsboard.server.common.data.job;
 
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
-import org.thingsboard.server.common.data.job.DummyTask;
-import org.thingsboard.server.common.data.job.JobType;
-import org.thingsboard.server.queue.task.TaskProcessor;
-
-@Component
-@RequiredArgsConstructor
-public class DummyTaskProcessor extends TaskProcessor<DummyTask, Void> {
-
-    @Override
-    public Void process(DummyTask task) throws Exception {
-        if (task.getProcessingTimeMs() > 0) {
-            Thread.sleep(task.getProcessingTimeMs());
-        }
-        if (task.isFailAlways()) {
-            throw new RuntimeException(task.getErrors().get(0));
-        }
-        if (task.getErrors() != null && task.getAttempt() <= task.getErrors().size()) {
-            String error = task.getErrors().get(task.getAttempt() - 1);
-            throw new RuntimeException(error);
-        }
-        return null;
-    }
+public class ReportJobResult extends JobResult {
 
     @Override
     public JobType getJobType() {
-        return JobType.DUMMY;
+        return JobType.REPORT;
     }
 
 }

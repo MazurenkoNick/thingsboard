@@ -69,6 +69,7 @@ public class Job extends BaseData<JobId> implements HasTenantId {
         this.description = description;
         this.configuration = configuration;
         this.result = switch (type) {
+            case REPORT -> new ReportJobResult();
             case DUMMY -> new DummyJobResult();
         };
     }

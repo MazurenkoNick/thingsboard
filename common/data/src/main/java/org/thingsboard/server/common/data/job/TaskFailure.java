@@ -38,6 +38,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.thingsboard.server.common.data.job.DummyTask.DummyTaskFailure;
+import org.thingsboard.server.common.data.job.ReportTask.ReportTaskFailure;
 
 @Data
 @AllArgsConstructor
@@ -45,6 +46,7 @@ import org.thingsboard.server.common.data.job.DummyTask.DummyTaskFailure;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "jobType")
 @JsonSubTypes({
+        @Type(name = "REPORT", value = ReportTaskFailure.class),
         @Type(name = "DUMMY", value = DummyTaskFailure.class)
 })
 public abstract class TaskFailure {

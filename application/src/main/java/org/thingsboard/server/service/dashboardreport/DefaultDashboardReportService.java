@@ -44,8 +44,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.reactive.function.client.ExchangeFilterFunctions;
@@ -54,29 +52,17 @@ import org.springframework.web.reactive.function.client.WebClient;
 import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.rule.engine.api.DashboardReportService;
 import org.thingsboard.server.cache.limits.RateLimitService;
-import org.thingsboard.server.common.data.Customer;
 import org.thingsboard.server.common.data.StringUtils;
-import org.thingsboard.server.common.data.User;
+import org.thingsboard.server.common.data.dashboardreport.DashboardReportConfig;
+import org.thingsboard.server.common.data.dashboardreport.DashboardReportData;
 import org.thingsboard.server.common.data.exception.ThingsboardErrorCode;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
-import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.DashboardId;
-import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.id.UserId;
 import org.thingsboard.server.common.data.limit.LimitedApi;
-import org.thingsboard.server.common.data.permission.MergedUserPermissions;
-import org.thingsboard.server.common.data.dashboardreport.DashboardReportConfig;
-import org.thingsboard.server.common.data.dashboardreport.DashboardReportData;
-import org.thingsboard.server.common.data.security.Authority;
-import org.thingsboard.server.common.data.security.UserCredentials;
-import org.thingsboard.server.dao.customer.CustomerService;
-import org.thingsboard.server.dao.user.UserService;
-import org.thingsboard.server.service.security.model.SecurityUser;
-import org.thingsboard.server.service.security.model.UserPrincipal;
 import org.thingsboard.server.service.security.model.token.AccessJwtToken;
-import org.thingsboard.server.service.security.model.token.JwtTokenFactory;
-import org.thingsboard.server.service.security.permission.UserPermissionsService;
+import org.thingsboard.server.service.security.system.SystemSecurityService;
 import reactor.netty.http.client.HttpClient;
 
 import javax.net.ssl.SSLException;
@@ -85,7 +71,6 @@ import java.net.URLDecoder;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.TimeZone;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -112,10 +97,7 @@ public class DefaultDashboardReportService implements DashboardReportService {
     @Value("${reports.server.maxResponseSize:52428800}")
     private int maxResponseSize;
 
-    private final UserService userService;
-    private final CustomerService customerService;
-    private final JwtTokenFactory jwtTokenFactory;
-    private final UserPermissionsService userPermissionsService;
+    private final SystemSecurityService systemSecurityService;
     private final RateLimitService rateLimitService;
 
     private EventLoopGroup eventLoopGroup;
@@ -174,9 +156,9 @@ public class DefaultDashboardReportService implements DashboardReportService {
 
         AccessJwtToken accessToken;
         if (StringUtils.isEmpty(publicId)) {
-            accessToken = calculateUserAccessToken(tenantId, userId);
+            accessToken = systemSecurityService.createUserAccessToken(tenantId, userId);
         } else {
-            accessToken = calculateUserAccessTokenFromPublicId(tenantId, publicId);
+            accessToken = systemSecurityService.createUserAccessTokenFromPublicId(tenantId, publicId);
             ((ObjectNode) reportParams).put("publicId", publicId);
         }
 
@@ -238,7 +220,7 @@ public class DefaultDashboardReportService implements DashboardReportService {
     }
 
     private JsonNode createDashboardReportRequest(TenantId tenantId, DashboardReportConfig reportConfig) throws ThingsboardException {
-        AccessJwtToken accessToken = calculateUserAccessToken(tenantId, new UserId(UUID.fromString(reportConfig.getUserId())));
+        AccessJwtToken accessToken = systemSecurityService.createUserAccessToken(tenantId, new UserId(UUID.fromString(reportConfig.getUserId())));
         String token = accessToken.getToken();
         long expiration = accessToken.getClaims().getExpiration().getTime();
         TimeZone tz = TimeZone.getTimeZone(reportConfig.getTimezone());
@@ -275,50 +257,6 @@ public class DefaultDashboardReportService implements DashboardReportService {
             name = name.replace(toReplace, replacement);
         }
         return name;
-    }
-
-    private AccessJwtToken calculateUserAccessToken(TenantId tenantId, UserId userId) throws ThingsboardException {
-        User user = userService.findUserById(tenantId, userId);
-        if (user == null) {
-            throw new ThingsboardException("Configured user [id: " + userId + "] was not found in system. Please use other user credentials.", ThingsboardErrorCode.BAD_REQUEST_PARAMS);
-        }
-        UserCredentials credentials = userService.findUserCredentialsByUserId(tenantId, userId);
-        UserPrincipal principal = new UserPrincipal(UserPrincipal.Type.USER_NAME, user.getEmail());
-        MergedUserPermissions mergedUserPermissions;
-        try {
-            mergedUserPermissions = userPermissionsService.getMergedPermissions(user, false);
-        } catch (Exception e) {
-            throw new BadCredentialsException("Failed to get user permissions", e);
-        }
-
-        SecurityUser securityUser = new SecurityUser(user, credentials.isEnabled(), principal, mergedUserPermissions);
-        return jwtTokenFactory.createAccessJwtToken(securityUser);
-    }
-
-    private AccessJwtToken calculateUserAccessTokenFromPublicId(TenantId tenantId, String publicId) {
-        CustomerId customerId;
-        try {
-            customerId = new CustomerId(UUID.fromString(publicId));
-        } catch (Exception e) {
-            throw new BadCredentialsException("Authentication Failed. Public Id is not valid.");
-        }
-        Customer publicCustomer = customerService.findCustomerById(tenantId, customerId);
-        if (publicCustomer == null) {
-            throw new UsernameNotFoundException("Public entity not found: " + publicId);
-        }
-        if (!publicCustomer.isPublic()) {
-            throw new BadCredentialsException("Authentication Failed. Public Id is not valid.");
-        }
-        User user = new User(new UserId(EntityId.NULL_UUID));
-        user.setTenantId(publicCustomer.getTenantId());
-        user.setCustomerId(publicCustomer.getId());
-        user.setEmail(publicId);
-        user.setAuthority(Authority.CUSTOMER_USER);
-        user.setFirstName("Public");
-        user.setLastName("Public");
-
-        SecurityUser securityUser = new SecurityUser(user, true, new UserPrincipal(UserPrincipal.Type.PUBLIC_ID, publicId), new MergedUserPermissions(new HashMap<>(), new HashMap<>()));
-        return jwtTokenFactory.createAccessJwtToken(securityUser);
     }
 
     private DashboardReportData extractResponse(ResponseEntity<byte[]> responseEntity) throws UnsupportedEncodingException {

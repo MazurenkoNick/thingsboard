@@ -30,82 +30,85 @@
  */
 package org.thingsboard.server.controller;
 
-import com.google.common.util.concurrent.FutureCallback;
-import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.MoreExecutors;
+import lombok.RequiredArgsConstructor;
 import net.sf.jasperreports.engine.JRException;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.context.request.async.DeferredResult;
-import org.thingsboard.server.service.report.ReportService;
+import org.springframework.web.client.RestTemplate;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
-import org.thingsboard.server.common.data.report.ReportData;
+import org.thingsboard.server.common.data.job.Job;
+import org.thingsboard.server.common.data.job.JobType;
+import org.thingsboard.server.common.data.job.ReportJobConfiguration;
+import org.thingsboard.server.common.data.job.ReportTask;
 import org.thingsboard.server.common.data.report.ReportRequest;
+import org.thingsboard.server.common.data.report.ReportTemplate;
 import org.thingsboard.server.config.annotations.ApiOperation;
+import org.thingsboard.server.dao.report.ReportTemplateService;
 import org.thingsboard.server.queue.util.TbCoreComponent;
+import org.thingsboard.server.service.job.JobManager;
 import org.thingsboard.server.service.security.model.SecurityUser;
+import org.thingsboard.server.service.security.model.token.AccessJwtToken;
+import org.thingsboard.server.service.security.system.SystemSecurityService;
 
 import static org.thingsboard.server.controller.ControllerConstants.TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH;
 
+@RequiredArgsConstructor
 @RestController
 @TbCoreComponent
 @RequestMapping("/api/v2")
 public class ReportController extends BaseController {
 
-    @Autowired
-    private ReportService reportService;
+    private final JobManager jobManager;
+    private final ReportTemplateService reportTemplateService;
+    private final SystemSecurityService systemSecurityService;
 
     @ApiOperation(value = "Download test report (downloadTestReport)",
             notes = "Generate and download test report." + TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
-    @PostMapping(value = "/report/test", produces = {"application/pdf"})
-    public DeferredResult<ResponseEntity<Resource>> downloadTestReport(@RequestBody ReportRequest reportRequest) throws ThingsboardException, JRException {
-        DeferredResult<ResponseEntity<Resource>> deferredResult = new DeferredResult<>();
+    @PostMapping(value = "/report/deprecated/test", produces = {"application/pdf"})
+    @Deprecated // FIXME: this is temporary API for testing purposes
+    public ResponseEntity<Resource> testReportAndDownload(@RequestBody ReportRequest reportRequest) throws ThingsboardException, JRException {
         SecurityUser currentUser = getCurrentUser();
-        ListenableFuture<ReportData> reportData = reportService.generateReport(currentUser.getTenantId(), currentUser.getCustomerId(),
-                currentUser.getUserPermissions(), reportRequest);
-        Futures.addCallback(reportData, new ReportDataCallback(deferredResult), MoreExecutors.directExecutor());
-        return deferredResult;
+        ReportTemplate reportTemplate = reportTemplateService.findReportTemplateById(currentUser.getTenantId(), reportRequest.getTemplateId());
+        AccessJwtToken accessToken = systemSecurityService.createUserAccessToken(currentUser.getTenantId(), currentUser.getId());
+
+        ReportTask reportTask = ReportTask.builder()
+                .tenantId(currentUser.getTenantId())
+                .reportTemplate(reportTemplate)
+                .reportRequest(reportRequest)
+                .accessToken(accessToken.getToken())
+                .build();
+
+        RestTemplate restTemplate = new RestTemplate();
+        return restTemplate.exchange(
+                "http://localhost:8080/api/report/test", // send request to myself
+                HttpMethod.POST,
+                new HttpEntity<>(reportTask),
+                Resource.class
+        );
     }
 
-    private static class ReportDataCallback implements FutureCallback<ReportData> {
-        private final DeferredResult<ResponseEntity<Resource>> deferredResult;
-
-        public ReportDataCallback(DeferredResult<ResponseEntity<Resource>> deferredResult) {
-            this.deferredResult = deferredResult;
-        }
-
-        @Override
-        public void onSuccess(ReportData report) {
-            ByteArrayResource resource = new ByteArrayResource(report.getData());
-
-            ResponseEntity<Resource> response = ResponseEntity.ok()
-                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment;filename=" + report.getName())
-                    .header("x-filename", report.getName())
-                    .contentLength(resource.contentLength())
-                    .contentType(MediaType.parseMediaType(report.getContentType()))
-                    .body(resource);
-
-            deferredResult.setResult(response);
-        }
-
-        @Override
-        public void onFailure(Throwable t) {
-            deferredResult.setErrorResult(ResponseEntity
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Failed to generate report: " + t.getMessage()));
-        }
+    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
+    @PostMapping(value = "/report/test", produces = {"application/pdf"})
+    public Job testReport(@RequestBody ReportRequest reportRequest) throws ThingsboardException {
+        SecurityUser currentUser = getCurrentUser();
+        return jobManager.submitJob(Job.builder()
+                .tenantId(currentUser.getTenantId())
+                .type(JobType.REPORT)
+                .key(reportRequest.getTemplateId().toString()) // fixme
+                .description("Report generation for request: " + reportRequest) // fixme: tmp
+                .configuration(ReportJobConfiguration.builder()
+                        .request(reportRequest)
+                        .userId(currentUser.getId())
+                        .build())
+                .build());
     }
 
 }
