@@ -59,6 +59,7 @@ import org.thingsboard.server.common.data.query.EntityData;
 import org.thingsboard.server.common.data.report.ReportData;
 import org.thingsboard.server.common.data.report.ReportRequest;
 import org.thingsboard.server.common.data.report.ReportTemplate;
+import org.thingsboard.server.common.data.report.TbReportType;
 import org.thingsboard.server.common.data.report.configuration.DataSource;
 import org.thingsboard.server.common.data.report.configuration.EntityAlias;
 import org.thingsboard.server.common.data.report.configuration.Filter;
@@ -86,6 +87,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
 import static org.thingsboard.server.common.data.report.configuration.JasperReportBuilder.getComponentDataSource;
+import static org.thingsboard.server.common.data.report.configuration.components.ReportComponentType.SUB_REPORT;
 import static org.thingsboard.server.common.data.report.configuration.components.ReportComponentType.TIME_SERIES_TABLE;
 import static org.thingsboard.server.common.data.util.ReportQueryUtils.toAlarmCountQuery;
 import static org.thingsboard.server.common.data.util.ReportQueryUtils.toAlarmDataQuery;
@@ -126,10 +128,11 @@ public class DefaultReportService extends AbstractTbEntityService implements Rep
             JasperReport mainReport = JasperCompileManager.compileReport(reportBuilder.getJasperDesign());
             JasperPrint print = JasperFillManager.fillReport(mainReport, ctx.getParams(), new JREmptyDataSource());
 
+            TbReportType type = reportRequest.getType();
             ReportData report = ReportData.builder()
                     .data(JasperExportManager.exportReportToPdf(print))
-                    .contentType(reportRequest.getReportType().getContentType())
-                    .name(configuration.getFileName() + "-" + defaultDateFormat.format(new Date()) + ".pdf")
+                    .contentType(type.getContentType())
+                    .name(configuration.getFileName() + "-" + defaultDateFormat.format(new Date()) + type.getExtension())
                     .build();
             resultFuture.set(report);
         } catch (Exception e) {
@@ -141,7 +144,7 @@ public class DefaultReportService extends AbstractTbEntityService implements Rep
 
     private void renderContent(TbReportCtx ctx, JasperReportBuilder parentBuilder, List<ReportComponent> components) throws Exception {
         for (ReportComponent component : components) {
-            if (component.getType() == TIME_SERIES_TABLE) { // check if component is complex
+            if (component.getType() == TIME_SERIES_TABLE || component.getType() == SUB_REPORT) { // check if component is complex
                 List<EntityData> entityDatas = fetchEntities(ctx, component);
                 for (EntityData entityData : entityDatas) {
                     renderComponent(ctx, parentBuilder, component, entityData);
@@ -159,14 +162,14 @@ public class DefaultReportService extends AbstractTbEntityService implements Rep
         String subReportDSExpr = "componentDS_" + StringUtils.randomAlphabetic(10);
         parentBuilder.addSubReport(subReportExpr, subReportDSExpr);
 
-        JasperReport subReport = parentBuilder.addComponent(component);
+        JasperReport subReport = parentBuilder.buildComponent(component);
 
         Map<String, Object> params = ctx.getParams();
         params.put(subReportExpr, subReport);
         params.put(subReportDSExpr, dataSource);
     }
 
-    private JRMapCollectionDataSource buildTsDataSource(TbReportCtx tbReportCtx, EntityData entityData, TimeseriesTableComponent component) {
+    private JRMapCollectionDataSource buildTsDataSource(TbReportCtx tbReportCtx, TimeseriesTableComponent component, EntityData entityData) {
         List<ReadTsKvQuery> queries = toReadTsKvQueries(component);
         ListenableFuture<List<TsKvEntry>> queryResult = tsService.findAll(tbReportCtx.getTenantId(), entityData.getEntityId(), queries);
         try {
@@ -178,7 +181,7 @@ public class DefaultReportService extends AbstractTbEntityService implements Rep
 
     private JRMapCollectionDataSource buildDataSource(TbReportCtx ctx, ReportComponent component, EntityData entityData) {
         return switch (component.getType()) {
-            case TIME_SERIES_TABLE -> buildTsDataSource(ctx, entityData, ((TimeseriesTableComponent) component));
+            case TIME_SERIES_TABLE -> buildTsDataSource(ctx, ((TimeseriesTableComponent) component), entityData);
             case ALARM_TABLE -> buildAlarmDataSource(ctx, ((AlarmTableComponent) component));
             default -> buildEntityDataSource(ctx, component.getDataSources());
         };

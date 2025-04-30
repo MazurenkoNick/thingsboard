@@ -41,7 +41,6 @@ public class ReportTemplateConfiguration {
 
     @NotNull
     private String fileName;
-    private Boolean subReport;
     private List<EntityAlias> entityAliases;
     private List<Filter> filters;
     private HeaderFooter header;

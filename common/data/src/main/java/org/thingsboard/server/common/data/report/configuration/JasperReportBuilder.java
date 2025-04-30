@@ -322,31 +322,31 @@ public class JasperReportBuilder {
         ((JRDesignSection) jasperDesign.getDetailSection()).addBand(detailBand);
     }
 
-    public JasperReport addComponent(ReportComponent component) throws JRException {
+    public JasperReport buildComponent(ReportComponent component) throws JRException {
         return switch (component.getType()) {
-            case HEADING -> addHeading((HeadingComponent) component);
-            case RICH_TEXT -> addRichText((RichTextComponent) component);
-            case PAGE_BREAK -> addPageBreak((PageBreakComponent) component);
-            case ENTITY_TABLE -> addEntityTable((EntityTableComponent) component);
-            case TIME_SERIES_TABLE -> addTimeSeriesTable((TimeseriesTableComponent) component);
-            case ALARM_TABLE -> addAlarmTable((AlarmTableComponent) component);
+            case HEADING -> buildHeading((HeadingComponent) component);
+            case RICH_TEXT -> buildRichText((RichTextComponent) component);
+            case PAGE_BREAK -> buildPageBreak((PageBreakComponent) component);
+            case ENTITY_TABLE -> buildEntityTable((EntityTableComponent) component);
+            case TIME_SERIES_TABLE -> buildTimeSeriesTable((TimeseriesTableComponent) component);
+            case ALARM_TABLE -> buildAlarmTable((AlarmTableComponent) component);
             default -> throw new IllegalArgumentException("Unknown report component type: " + component.getType());
         };
     }
 
-    public JasperReport addHeading(HeadingComponent component) throws JRException {
+    public JasperReport buildHeading(HeadingComponent component) throws JRException {
         JasperReportBuilder heading = new JasperReportBuilder(component, getUsablePageWidth());
         heading.addHeading(component.getValue());
         return JasperCompileManager.compileReport(heading.getJasperDesign());
     }
 
-    public JasperReport addRichText(RichTextComponent component) throws JRException {
+    public JasperReport buildRichText(RichTextComponent component) throws JRException {
         JasperReportBuilder richText = new JasperReportBuilder(component, getUsablePageWidth());
         richText.addRichText(component.getValue());
         return JasperCompileManager.compileReport(richText.getJasperDesign());
     }
 
-    public JasperReport addEntityTable(EntityTableComponent component) throws JRException {
+    public JasperReport buildEntityTable(EntityTableComponent component) throws JRException {
         JasperReportBuilder table = new JasperReportBuilder(component, getUsablePageWidth());
 
         List<DataKey> dataKeys = getComponentDataSource(component).getDataKeys();
@@ -358,7 +358,7 @@ public class JasperReportBuilder {
         return JasperCompileManager.compileReport(table.getJasperDesign());
     }
 
-    public JasperReport addTimeSeriesTable(TimeseriesTableComponent component) throws JRException {
+    public JasperReport buildTimeSeriesTable(TimeseriesTableComponent component) throws JRException {
         JasperReportBuilder table = new JasperReportBuilder(component, getUsablePageWidth());
 
         List<DataKey> dataKeys = getComponentDataSource(component).getDataKeys();
@@ -373,7 +373,7 @@ public class JasperReportBuilder {
         return JasperCompileManager.compileReport(table.getJasperDesign());
     }
 
-    public JasperReport addAlarmTable(AlarmTableComponent component) throws JRException {
+    public JasperReport buildAlarmTable(AlarmTableComponent component) throws JRException {
         JasperReportBuilder table = new JasperReportBuilder(component, getUsablePageWidth());
 
         List<DataKey> dataKeys = component.getAlarmSource().getDataKeys();
@@ -385,7 +385,7 @@ public class JasperReportBuilder {
         return JasperCompileManager.compileReport(table.getJasperDesign());
     }
 
-    public JasperReport addPageBreak(PageBreakComponent component) throws JRException {
+    public JasperReport buildPageBreak(PageBreakComponent component) throws JRException {
         JasperReportBuilder pageBreak = new JasperReportBuilder(component, getUsablePageWidth());
         pageBreak.addPageBreak();
         return JasperCompileManager.compileReport(pageBreak.getJasperDesign());
