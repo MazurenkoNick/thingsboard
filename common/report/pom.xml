@@ -36,37 +36,73 @@
     <parent>
         <groupId>org.thingsboard</groupId>
         <version>4.1.0PE-SNAPSHOT</version>
-        <artifactId>thingsboard</artifactId>
+        <artifactId>common</artifactId>
     </parent>
-    <artifactId>common</artifactId>
-    <packaging>pom</packaging>
+    <groupId>org.thingsboard.common</groupId>
+    <artifactId>report</artifactId>
+    <packaging>jar</packaging>
 
-    <name>ThingsBoard PE Server Commons</name>
+    <name>ThingsBoard Report Common</name>
     <url>https://thingsboard.io</url>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <main.dir>${basedir}/..</main.dir>
+        <main.dir>${basedir}/../..</main.dir>
     </properties>
-    <modules>
-        <module>data</module>
-        <module>proto</module>
-        <module>util</module>
-        <module>message</module>
-        <module>actor</module>
-        <module>queue</module>
-        <module>transport</module>
-        <module>integration</module>
-        <module>dao-api</module>
-        <module>cluster-api</module>
-        <module>stats</module>
-        <module>cache</module>
-        <module>coap-server</module>
-        <module>edge-api</module>
-        <module>version-control</module>
-        <module>script</module>
-        <module>edqs</module>
-        <module>report</module>
-    </modules>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.thingsboard.common</groupId>
+            <artifactId>proto</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.thingsboard.common</groupId>
+            <artifactId>data</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.thingsboard.common</groupId>
+            <artifactId>util</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.thingsboard.common</groupId>
+            <artifactId>message</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.thingsboard.common</groupId>
+            <artifactId>stats</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.thingsboard.common</groupId>
+            <artifactId>cluster-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.thingsboard.common</groupId>
+            <artifactId>queue</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.github.ben-manes.caffeine</groupId>
+            <artifactId>caffeine</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-context-support</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-autoconfigure</artifactId>
+        </dependency>
+    </dependencies>
+
+    <distributionManagement>
+        <repository>
+            <id>thingsboard-repo-deploy</id>
+            <name>ThingsBoard Repo Deployment</name>
+            <url>https://repo.thingsboard.io/artifactory/libs-release-public</url>
+        </repository>
+    </distributionManagement>
 
 </project>
