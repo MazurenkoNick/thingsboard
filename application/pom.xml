@@ -462,8 +462,8 @@
             <artifactId>rocksdbjni</artifactId>
         </dependency>
         <dependency>
-            <groupId>net.sf.jasperreports</groupId>
-            <artifactId>jasperreports</artifactId>
+            <groupId>org.thingsboard.common</groupId>
+            <artifactId>report</artifactId>
         </dependency>
     </dependencies>
 

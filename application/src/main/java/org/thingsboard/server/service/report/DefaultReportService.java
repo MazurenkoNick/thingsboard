@@ -63,7 +63,6 @@ import org.thingsboard.server.common.data.report.TbReportType;
 import org.thingsboard.server.common.data.report.configuration.DataSource;
 import org.thingsboard.server.common.data.report.configuration.EntityAlias;
 import org.thingsboard.server.common.data.report.configuration.Filter;
-import org.thingsboard.server.common.data.report.configuration.JasperReportBuilder;
 import org.thingsboard.server.common.data.report.configuration.ReportTemplateConfiguration;
 import org.thingsboard.server.common.data.report.configuration.components.AlarmTableComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
@@ -72,6 +71,7 @@ import org.thingsboard.server.dao.alarm.AlarmService;
 import org.thingsboard.server.dao.entity.EntityService;
 import org.thingsboard.server.dao.report.ReportTemplateService;
 import org.thingsboard.server.dao.timeseries.TimeseriesService;
+import org.thingsboard.server.report.JasperReportBuilder;
 import org.thingsboard.server.service.entitiy.AbstractTbEntityService;
 
 import java.lang.reflect.Field;
@@ -86,7 +86,6 @@ import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
-import static org.thingsboard.server.common.data.report.configuration.JasperReportBuilder.getComponentDataSource;
 import static org.thingsboard.server.common.data.report.configuration.components.ReportComponentType.SUB_REPORT;
 import static org.thingsboard.server.common.data.report.configuration.components.ReportComponentType.TIME_SERIES_TABLE;
 import static org.thingsboard.server.common.data.util.ReportQueryUtils.toAlarmCountQuery;
@@ -95,6 +94,7 @@ import static org.thingsboard.server.common.data.util.ReportQueryUtils.toEntityC
 import static org.thingsboard.server.common.data.util.ReportQueryUtils.toEntityDataQuery;
 import static org.thingsboard.server.common.data.util.ReportQueryUtils.toReadTsKvQueries;
 import static org.thingsboard.server.common.data.util.ReportQueryUtils.toSingleDeviceQuery;
+import static org.thingsboard.server.report.JasperReportBuilder.getComponentDataSource;
 
 @Service
 @Slf4j

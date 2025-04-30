@@ -28,7 +28,7 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.common.data.report.configuration;
+package org.thingsboard.server.report;
 
 import lombok.Data;
 import net.sf.jasperreports.engine.JRDataSource;
@@ -51,6 +51,10 @@ import net.sf.jasperreports.engine.type.ModeEnum;
 import net.sf.jasperreports.engine.type.VerticalTextAlignEnum;
 import net.sf.jasperreports.engine.type.WhenNoDataTypeEnum;
 import org.thingsboard.server.common.data.StringUtils;
+import org.thingsboard.server.common.data.report.configuration.DataKey;
+import org.thingsboard.server.common.data.report.configuration.DataSource;
+import org.thingsboard.server.common.data.report.configuration.HeaderFooter;
+import org.thingsboard.server.common.data.report.configuration.ReportTemplateConfiguration;
 import org.thingsboard.server.common.data.report.configuration.components.AlarmTableComponent;
 import org.thingsboard.server.common.data.report.configuration.components.EntityTableComponent;
 import org.thingsboard.server.common.data.report.configuration.components.HeadingComponent;
