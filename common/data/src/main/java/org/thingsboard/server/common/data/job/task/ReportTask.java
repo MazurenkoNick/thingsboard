@@ -28,39 +28,46 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.report;
+package org.thingsboard.server.common.data.job.task;
 
-import lombok.RequiredArgsConstructor;
-import org.springframework.core.io.ByteArrayResource;
-import org.springframework.core.io.Resource;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import org.thingsboard.server.common.data.job.ReportTask;
-import org.thingsboard.server.common.data.report.ReportData;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
+import lombok.experimental.SuperBuilder;
+import org.thingsboard.server.common.data.job.JobType;
+import org.thingsboard.server.common.data.report.ReportRequest;
+import org.thingsboard.server.common.data.report.ReportTemplate;
 
-@RestController
-@RequiredArgsConstructor
-@RequestMapping("/api")
-public class TestReportController {
+@Data
+@NoArgsConstructor
+@EqualsAndHashCode(callSuper = true)
+@SuperBuilder
+@ToString(callSuper = true)
+public class ReportTask extends Task<ReportTaskResult> {
 
-    private final ReportTaskProcessor reportTaskProcessor;
+    private ReportTemplate reportTemplate;
+    private ReportRequest reportRequest;
+    private String accessToken;
 
-    @PostMapping(value = "/noauth/report/test", produces = {"application/pdf"})
-    @Deprecated // FIXME: for testing purposes only, should not be used directly, only via submitting a job
-    public ResponseEntity<Resource> downloadTestReport(@RequestBody ReportTask task) throws Exception {
-        ReportData reportData = reportTaskProcessor.process(task);
-        ByteArrayResource resource = new ByteArrayResource(reportData.getData());
-        return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment;filename=" + reportData.getName())
-                .header("x-filename", reportData.getName())
-                .contentLength(resource.contentLength())
-                .contentType(MediaType.parseMediaType(reportData.getContentType()))
-                .body(resource);
+    @Override
+    public Object getKey() {
+        return reportRequest.getTemplateId();
+    }
+
+    @Override
+    public ReportTaskResult toFailed(Throwable error) {
+        return ReportTaskResult.failed(this, error);
+    }
+
+    @Override
+    public ReportTaskResult toDiscarded() {
+        return ReportTaskResult.discarded();
+    }
+
+    @Override
+    public JobType getJobType() {
+        return JobType.REPORT;
     }
 
 }

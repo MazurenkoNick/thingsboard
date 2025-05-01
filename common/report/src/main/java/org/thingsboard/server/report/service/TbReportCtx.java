@@ -64,4 +64,5 @@ public class TbReportCtx {
         this.filters = configuration.getFilters();
         this.params = new HashMap<>();
     }
+
 }

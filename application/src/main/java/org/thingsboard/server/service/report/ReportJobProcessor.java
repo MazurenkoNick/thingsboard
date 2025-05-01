@@ -35,7 +35,7 @@ import org.springframework.stereotype.Component;
 import org.thingsboard.server.common.data.job.Job;
 import org.thingsboard.server.common.data.job.JobType;
 import org.thingsboard.server.common.data.job.ReportJobConfiguration;
-import org.thingsboard.server.common.data.job.ReportTask;
+import org.thingsboard.server.common.data.job.task.ReportTask;
 import org.thingsboard.server.common.data.job.Task;
 import org.thingsboard.server.common.data.job.TaskFailure;
 import org.thingsboard.server.common.data.report.ReportRequest;

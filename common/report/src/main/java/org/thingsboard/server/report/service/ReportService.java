@@ -60,7 +60,7 @@ import org.thingsboard.server.common.data.dashboardreport.DashboardReportData;
 import org.thingsboard.server.common.data.exception.ThingsboardErrorCode;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.id.TenantId;
-import org.thingsboard.server.common.data.job.ReportTask;
+import org.thingsboard.server.common.data.job.task.ReportTask;
 import org.thingsboard.server.common.data.kv.TsKvEntry;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.SortOrder;
@@ -330,7 +330,7 @@ public class ReportService {
         ObjectNode dashboardReportRequest = JacksonUtil.newObjectNode();
         dashboardReportRequest.put("baseUrl", reportConfig.getBaseUrl());
         dashboardReportRequest.put("dashboardId", reportConfig.getDashboardId());
-       // dashboardReportRequest.put("token", token);
+        // dashboardReportRequest.put("token", token);
         //dashboardReportRequest.put("expiration", expiration);
         dashboardReportRequest.put("name", reportName);
         dashboardReportRequest.set("reportParams", createReportParams(reportConfig));
@@ -347,6 +347,7 @@ public class ReportService {
         reportParams.put("timezone", reportConfig.getTimezone());
         return reportParams;
     }
+
     private DashboardReportData extractResponse(ResponseEntity<byte[]> responseEntity) throws UnsupportedEncodingException {
         DashboardReportData reportData = new DashboardReportData();
         reportData.setData(responseEntity.getBody());

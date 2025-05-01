@@ -105,6 +105,7 @@ import org.thingsboard.server.common.data.asset.AssetProfileInfo;
 import org.thingsboard.server.common.data.asset.AssetSearchQuery;
 import org.thingsboard.server.common.data.audit.ActionType;
 import org.thingsboard.server.common.data.audit.AuditLog;
+import org.thingsboard.server.common.data.blob.BlobEntity;
 import org.thingsboard.server.common.data.blob.BlobEntityInfo;
 import org.thingsboard.server.common.data.converter.Converter;
 import org.thingsboard.server.common.data.converter.ConverterType;
@@ -3776,6 +3777,10 @@ public class RestClient implements Closeable {
 
     public JsonNode activateUser(JsonNode activateRequest) {
         return restTemplate.postForEntity(baseURL + "/api/noauth/activate/", activateRequest, JsonNode.class).getBody();
+    }
+
+    public BlobEntityInfo createBlobEntity(BlobEntity blobEntity) {
+        return restTemplate.postForEntity(baseURL + "/api/blobEntity", blobEntity, BlobEntityInfo.class).getBody();
     }
 
     public Optional<BlobEntityInfo> getBlobEntityInfoById(BlobEntityId blobEntityId) {

@@ -28,53 +28,46 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.common.data.job;
+package org.thingsboard.server.common.data.job.task;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import lombok.ToString;
 import lombok.experimental.SuperBuilder;
-import org.thingsboard.server.common.data.report.ReportRequest;
-import org.thingsboard.server.common.data.report.ReportTemplate;
+import org.thingsboard.server.common.data.id.BlobEntityId;
+import org.thingsboard.server.common.data.job.JobType;
 
 @Data
-@NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
+@NoArgsConstructor
 @SuperBuilder
-@ToString(callSuper = true)
-public class ReportTask extends Task {
+public class ReportTaskResult extends TaskResult {
 
-    private ReportTemplate reportTemplate;
-    private ReportRequest reportRequest;
-    private String accessToken;
+    private static final ReportTaskResult DISCARDED = ReportTaskResult.builder().discarded(true).build();
 
-    @Override
-    public Object getKey() {
-        return reportRequest.getTemplateId();
+    private BlobEntityId reportBlobId;
+    private String error;
+
+    public static ReportTaskResult success(BlobEntityId reportBlobId) {
+        return ReportTaskResult.builder()
+                .success(true)
+                .reportBlobId(reportBlobId)
+                .build();
     }
 
-    @Override
-    public TaskFailure toFailure(Throwable error) {
-        return new ReportTaskFailure(error.getMessage());
+    public static ReportTaskResult failed(ReportTask task, Throwable error) {
+        return ReportTaskResult.builder()
+                .error(error.getMessage())
+                .build();
+    }
+
+    public static ReportTaskResult discarded() {
+        return DISCARDED;
     }
 
     @Override
     public JobType getJobType() {
         return JobType.REPORT;
-    }
-
-    public static class ReportTaskFailure extends TaskFailure {
-
-        public ReportTaskFailure(String error) {
-            super(error);
-        }
-
-        @Override
-        public JobType getJobType() {
-            return JobType.REPORT;
-        }
-
     }
 
 }
