@@ -30,7 +30,6 @@
  */
 package org.thingsboard.server.common.data.util;
 
-import org.jetbrains.annotations.NotNull;
 import org.thingsboard.server.common.data.id.DeviceId;
 import org.thingsboard.server.common.data.kv.BaseReadTsKvQuery;
 import org.thingsboard.server.common.data.kv.ReadTsKvQuery;
@@ -52,6 +51,7 @@ import org.thingsboard.server.common.data.report.configuration.DataSource;
 import org.thingsboard.server.common.data.report.configuration.EntityAlias;
 import org.thingsboard.server.common.data.report.configuration.Filter;
 import org.thingsboard.server.common.data.report.configuration.components.AlarmTableComponent;
+import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
 import org.thingsboard.server.common.data.report.configuration.components.TimeseriesTableComponent;
 import org.thingsboard.server.common.data.report.configuration.timewindow.History;
 import org.thingsboard.server.common.data.report.configuration.timewindow.TimeIntervalCalculator;
@@ -62,7 +62,6 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import static org.thingsboard.server.common.data.report.configuration.JasperReportBuilder.getComponentDataSource;
 import static org.thingsboard.server.common.data.report.configuration.timewindow.TimeIntervalCalculator.getTimeRange;
 
 public class ReportQueryUtils {
@@ -178,6 +177,14 @@ public class ReportQueryUtils {
         }
         EntityDataPageLink pageLink = new EntityDataPageLink(Integer.MAX_VALUE, 0, null, null);
         return new EntityDataQuery(filter, pageLink, entityFields, latestValues, keyFilters);
+    }
+
+    public static DataSource getComponentDataSource(ReportComponent component) {
+        List<DataSource> dataSources = component.getDataSources();
+        if (dataSources == null || dataSources.isEmpty()) {
+            throw new IllegalArgumentException("Data source is required for component: " + component.getType());
+        }
+        return component.getDataSources().get(0);
     }
 
 }

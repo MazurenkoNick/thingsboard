@@ -28,7 +28,7 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.common.data.report.configuration;
+package org.thingsboard.server.report;
 
 import lombok.Data;
 import net.sf.jasperreports.engine.JRDataSource;
@@ -48,10 +48,16 @@ import net.sf.jasperreports.engine.design.JRDesignTextField;
 import net.sf.jasperreports.engine.design.JasperDesign;
 import net.sf.jasperreports.engine.type.BreakTypeEnum;
 import net.sf.jasperreports.engine.type.ModeEnum;
+import net.sf.jasperreports.engine.type.ScaleImageEnum;
 import net.sf.jasperreports.engine.type.VerticalTextAlignEnum;
 import net.sf.jasperreports.engine.type.WhenNoDataTypeEnum;
 import org.thingsboard.server.common.data.StringUtils;
+import org.thingsboard.server.common.data.report.configuration.DataKey;
+import org.thingsboard.server.common.data.report.configuration.DataSource;
+import org.thingsboard.server.common.data.report.configuration.HeaderFooter;
+import org.thingsboard.server.common.data.report.configuration.ReportTemplateConfiguration;
 import org.thingsboard.server.common.data.report.configuration.components.AlarmTableComponent;
+import org.thingsboard.server.common.data.report.configuration.components.DashboardComponent;
 import org.thingsboard.server.common.data.report.configuration.components.EntityTableComponent;
 import org.thingsboard.server.common.data.report.configuration.components.HeadingComponent;
 import org.thingsboard.server.common.data.report.configuration.components.PageBreakComponent;
@@ -99,6 +105,9 @@ public class JasperReportBuilder {
 
         // define report fields
         switch (component.getType()) {
+            case DASHBOARD:
+                jasperDesign.addField(createByteField("data"));
+                break;
             case TIME_SERIES_TABLE: {
                 jasperDesign.addField(createField("ts", String.class));
             }
@@ -176,37 +185,31 @@ public class JasperReportBuilder {
         return firstPageText;
     }
 
-    public String addImageBand() {
+    private void addImage() {
         JRDesignBand detailBand = new JRDesignBand();
         detailBand.setHeight(500); // Make sure it’s tall enough for the image
-
-        JRDesignParameter imageParam = new JRDesignParameter();
-        imageParam.setName("image");
-        imageParam.setValueClass(java.io.InputStream.class);
-        try {
-            jasperDesign.addParameter(imageParam);
-        } catch (JRException e) {
-            throw new RuntimeException(e);
-        }
 
         JRDesignImage image = new JRDesignImage(jasperDesign);
         image.setX(0);
         image.setY(0);
         image.setWidth(500);
         image.setHeight(500);
-        image.setScaleImage(net.sf.jasperreports.engine.type.ScaleImageEnum.RETAIN_SHAPE);
+        image.setScaleImage(ScaleImageEnum.RETAIN_SHAPE);
 
-        // Set expression to read from parameter
-        JRDesignExpression imgExpr = new JRDesignExpression();
-        imgExpr.setText("$P{image}");
-        image.setExpression(imgExpr);
+        JRDesignExpression expression = new JRDesignExpression();
+        expression.setText("new java.io.ByteArrayInputStream($F{data})");
+        expression.setValueClass(java.io.InputStream.class);
+
+        image.setExpression(expression);
+        //image.setExpression(new JRDesignExpression("net.sf.jasperreports.renderers.SimpleDataRenderer.getInstance($F{data})"));
+        //image.setExpression(new JRDesignExpression("$F{data}"));
+
 
         detailBand.addElement(image);
 
         // Set the detail band into the design
         JRDesignSection detailSection = (JRDesignSection) jasperDesign.getDetailSection();
         detailSection.addBand(detailBand);
-        return "image";
     }
 
     public void addRichText(String richText) {
@@ -234,6 +237,13 @@ public class JasperReportBuilder {
         field.setName(name);
         field.setValueClass(type);
         return field;
+    }
+
+    public JRDesignField createByteField(String name) {
+        JRDesignField imageField = new JRDesignField();
+        imageField.setName(name);
+        imageField.setValueClassName("byte[]");
+        return imageField;
     }
 
     public void addColumnHeader(List<String> titles) {
@@ -285,7 +295,7 @@ public class JasperReportBuilder {
         return header;
     }
 
-    public void addSubReport(String subReportExpression, String subReportDSExpression) throws JRException {
+    public void buildSubReportBand(String subReportExpression, String subReportDSExpression) throws JRException {
         jasperDesign.addParameter(createParameter(subReportExpression, JasperReport.class));
         jasperDesign.addParameter(createParameter(subReportDSExpression, JRDataSource.class));
 
@@ -330,6 +340,7 @@ public class JasperReportBuilder {
             case ENTITY_TABLE -> buildEntityTable((EntityTableComponent) component);
             case TIME_SERIES_TABLE -> buildTimeSeriesTable((TimeseriesTableComponent) component);
             case ALARM_TABLE -> buildAlarmTable((AlarmTableComponent) component);
+            case DASHBOARD -> buildDashboard((DashboardComponent) component);
             default -> throw new IllegalArgumentException("Unknown report component type: " + component.getType());
         };
     }
@@ -383,6 +394,12 @@ public class JasperReportBuilder {
         table.addColumnHeader(columnsHeaders);
         table.addTableDetailBand(entityKeys);
         return JasperCompileManager.compileReport(table.getJasperDesign());
+    }
+
+    private JasperReport buildDashboard(DashboardComponent component) throws JRException {
+        JasperReportBuilder imageDesign = new JasperReportBuilder(component, getUsablePageWidth());
+        imageDesign.addImage();
+        return JasperCompileManager.compileReport(imageDesign.getJasperDesign());
     }
 
     public JasperReport buildPageBreak(PageBreakComponent component) throws JRException {

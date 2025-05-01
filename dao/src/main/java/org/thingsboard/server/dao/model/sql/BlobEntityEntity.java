@@ -80,7 +80,7 @@ public final class BlobEntityEntity extends BaseSqlEntity<BlobEntity> implements
     private String contentType;
 
     @Column(name = BLOB_ENTITY_DATA_PROPERTY)
-    private String data;
+    private String data; // TODO: migrate to Postgres bytea
 
     @Convert(converter = JsonConverter.class)
     @Column(name = BLOB_ENTITY_ADDITIONAL_INFO_PROPERTY)

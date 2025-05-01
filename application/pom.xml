@@ -351,7 +351,7 @@
         <dependency>
             <groupId>org.thingsboard</groupId>
             <artifactId>rest-client</artifactId>
-            <scope>test</scope>
+            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.springframework.security</groupId>
@@ -462,8 +462,8 @@
             <artifactId>rocksdbjni</artifactId>
         </dependency>
         <dependency>
-            <groupId>net.sf.jasperreports</groupId>
-            <artifactId>jasperreports</artifactId>
+            <groupId>org.thingsboard.common</groupId>
+            <artifactId>report</artifactId>
         </dependency>
     </dependencies>
 

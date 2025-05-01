@@ -51,8 +51,9 @@ public class ReportRequest {
     CustomerId customerId;
     @Schema(description = "Json object representing the report entity id.")
     EntityId entityId;
+    @NotNull
     @Schema(description = "Dashboard report file type, can be PDF | CSV.", example = "PDF")
-    TbReportType type;
+    TbReportFormat format;
     @Schema(description = "Base URL of ThingsBoard UI that should be accessible by Web Report Server.", example = "https:thingsboard.cloud")
     String baseUrl;
     @Schema(description = "Timezone in which target dashboard will be presented in dashboard report.", example = "Europe/Kiev")

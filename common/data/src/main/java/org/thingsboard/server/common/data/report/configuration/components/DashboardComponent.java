@@ -28,20 +28,36 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.service.report;
+package org.thingsboard.server.common.data.report.configuration.components;
 
-import com.google.common.util.concurrent.ListenableFuture;
-import net.sf.jasperreports.engine.JRException;
-import org.thingsboard.server.common.data.exception.ThingsboardException;
-import org.thingsboard.server.common.data.id.CustomerId;
-import org.thingsboard.server.common.data.id.TenantId;
-import org.thingsboard.server.common.data.permission.MergedUserPermissions;
-import org.thingsboard.server.common.data.report.ReportData;
-import org.thingsboard.server.common.data.report.ReportRequest;
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotNull;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import org.thingsboard.server.common.data.dashboardreport.DashboardReportConfig;
+import org.thingsboard.server.common.data.report.configuration.DataSource;
 
+import java.util.List;
 
-public interface ReportService {
+@Schema
+@Data
+@EqualsAndHashCode
+@NoArgsConstructor
+public class DashboardComponent implements ReportComponent {
 
-    ListenableFuture<ReportData> generateReport(TenantId tenantId, CustomerId customerId, MergedUserPermissions userPermissions, ReportRequest reportRequest) throws ThingsboardException, JRException;
+    @NotNull
+    @Schema(description = "Dashboard report configuration.")
+    private DashboardReportConfig config;
+
+    @Override
+    public List<DataSource> getDataSources() {
+        return null;
+    }
+
+    @Override
+    public ReportComponentType getType() {
+        return ReportComponentType.DASHBOARD;
+    }
 
 }

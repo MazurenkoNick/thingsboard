@@ -28,42 +28,27 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.service.report;
+package org.thingsboard.server.common.data.job;
 
-import com.google.common.util.concurrent.ListenableFuture;
-import lombok.Data;
-import lombok.RequiredArgsConstructor;
-import org.thingsboard.server.common.data.id.CustomerId;
-import org.thingsboard.server.common.data.id.TenantId;
-import org.thingsboard.server.common.data.permission.MergedUserPermissions;
-import org.thingsboard.server.common.data.report.configuration.EntityAlias;
-import org.thingsboard.server.common.data.report.configuration.Filter;
-import org.thingsboard.server.common.data.report.configuration.ReportTemplateConfiguration;
+public enum JobStatus {
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+    QUEUED,
+    PENDING,
+    RUNNING,
+    COMPLETED,
+    FAILED,
+    CANCELLED;
 
-@Data
-@RequiredArgsConstructor
-public class TbReportCtx {
-
-    private final TenantId tenantId;
-    private final CustomerId customerId;
-    private final MergedUserPermissions userPermissions;
-    private final List<EntityAlias> entityAliases;
-    private final List<Filter> filters;
-    private final List<ListenableFuture<Void>> futures;
-    private final Map<String, Object> params;
-
-    public TbReportCtx(TenantId tenantId, CustomerId customerId, MergedUserPermissions userPermissions, ReportTemplateConfiguration configuration) {
-        this.tenantId = tenantId;
-        this.customerId = customerId;
-        this.userPermissions = userPermissions;
-        this.futures = new ArrayList<>();
-        this.entityAliases = configuration.getEntityAliases();
-        this.filters = configuration.getFilters();
-        this.params = new HashMap<>();
+    public boolean isOneOf(JobStatus... statuses) {
+        if (statuses == null) {
+            return false;
+        }
+        for (JobStatus status : statuses) {
+            if (this == status) {
+                return true;
+            }
+        }
+        return false;
     }
+
 }

@@ -28,33 +28,29 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.rule.engine.api;
+package org.thingsboard.server.common.data.job;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import org.thingsboard.server.common.data.exception.ThingsboardException;
-import org.thingsboard.server.common.data.id.DashboardId;
-import org.thingsboard.server.common.data.id.TenantId;
-import org.thingsboard.server.common.data.id.UserId;
-import org.thingsboard.server.common.data.dashboardreport.DashboardReportConfig;
-import org.thingsboard.server.common.data.dashboardreport.DashboardReportData;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import lombok.Data;
+import org.thingsboard.server.common.data.job.task.TaskResult;
 
-import java.util.function.Consumer;
+import java.io.Serializable;
+import java.util.List;
 
-public interface DashboardReportService {
+@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
+@JsonSubTypes({
+        @Type(name = "REPORT", value = ReportJobConfiguration.class),
+        @Type(name = "DUMMY", value = DummyJobConfiguration.class),
+})
+@Data
+public abstract class JobConfiguration implements Serializable {
 
-    void generateDashboardReport(String baseUrl,
-                                 DashboardId dashboardId,
-                                 TenantId tenantId,
-                                 UserId userId,
-                                 String publicId,
-                                 String reportName,
-                                 JsonNode reportParams,
-                                 Consumer<DashboardReportData> onSuccess,
-                                 Consumer<Throwable> onFailure) throws ThingsboardException;
+    private List<TaskResult> toReprocess;
 
-    void generateReport(TenantId tenantId, DashboardReportConfig reportConfig,
-                        String reportsServerEndpointUrl,
-                        Consumer<DashboardReportData> onSuccess,
-                        Consumer<Throwable> onFailure) throws ThingsboardException;
+    public abstract JobType getType();
 
 }

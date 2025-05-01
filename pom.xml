@@ -217,6 +217,7 @@
         <module>rest-client</module>
         <module>monitoring</module>
         <module>migrator</module>
+        <module>report</module>
     </modules>
 
     <profiles>
@@ -1168,6 +1169,11 @@
             <dependency>
                 <groupId>org.thingsboard.common</groupId>
                 <artifactId>edqs</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.thingsboard.common</groupId>
+                <artifactId>report</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
