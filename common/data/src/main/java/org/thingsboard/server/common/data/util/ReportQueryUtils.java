@@ -31,8 +31,7 @@
 package org.thingsboard.server.common.data.util;
 
 import org.thingsboard.server.common.data.id.DeviceId;
-import org.thingsboard.server.common.data.kv.BaseReadTsKvQuery;
-import org.thingsboard.server.common.data.kv.ReadTsKvQuery;
+import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.query.AlarmCountQuery;
 import org.thingsboard.server.common.data.query.AlarmDataPageLink;
 import org.thingsboard.server.common.data.query.AlarmDataQuery;
@@ -51,36 +50,36 @@ import org.thingsboard.server.common.data.report.configuration.DataSource;
 import org.thingsboard.server.common.data.report.configuration.EntityAlias;
 import org.thingsboard.server.common.data.report.configuration.Filter;
 import org.thingsboard.server.common.data.report.configuration.components.AlarmTableComponent;
-import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
-import org.thingsboard.server.common.data.report.configuration.components.TimeseriesTableComponent;
-import org.thingsboard.server.common.data.report.configuration.timewindow.History;
 import org.thingsboard.server.common.data.report.configuration.timewindow.TimeIntervalCalculator;
-import org.thingsboard.server.common.data.report.configuration.timewindow.TimeWindowConfiguration;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import static org.thingsboard.server.common.data.report.configuration.timewindow.TimeIntervalCalculator.getTimeRange;
 
 public class ReportQueryUtils {
 
-    public static EntityDataQuery toEntityDataQuery(DataSource dataSource, List<EntityAlias> entityAliases, List<Filter> filters) {
-        EntityFilter entityFilter = findEntityFilter(dataSource, entityAliases);
+    private static final EntityDataSortOrder DEFAULT_SORT_ORDER = new EntityDataSortOrder(new EntityKey(EntityKeyType.ENTITY_FIELD, "id"), EntityDataSortOrder.Direction.ASC);
 
-        return buildEntityDataQuery(entityFilter, dataSource, filters);
+    public static EntityDataQuery toSingleEntityQuery(DataSource dataSource, List<Filter> filters, PageLink pageLink) {
+        SingleEntityFilter singleEntityFilter = new SingleEntityFilter();
+        String deviceId = Optional.ofNullable(dataSource.getDeviceId())
+                .orElseThrow(() -> new IllegalArgumentException("Device ID is null"));
+        singleEntityFilter.setSingleEntity(new DeviceId(UUID.fromString(deviceId)));
+
+        return buildEntityDataQuery(singleEntityFilter, dataSource, filters, pageLink);
     }
 
-    public static EntityDataQuery toSingleDeviceQuery(DataSource dataSource, List<Filter> filters) {
-        SingleEntityFilter singleEntityFilter = new SingleEntityFilter();
-        singleEntityFilter.setSingleEntity(new DeviceId(UUID.fromString(dataSource.getDeviceId())));
+    public static EntityDataQuery toEntityDataQuery(DataSource dataSource, List<EntityAlias> entityAliases, List<Filter> filters, PageLink pageLink) {
+        EntityFilter entityFilter = findEntityFilterByAliasId(dataSource, entityAliases);
 
-        return buildEntityDataQuery(singleEntityFilter, dataSource, filters);
+        return buildEntityDataQuery(entityFilter, dataSource, filters, pageLink);
     }
 
     public static EntityCountQuery toEntityCountQuery(DataSource dataSource, List<EntityAlias> entityAliases, List<Filter> filters) {
-        EntityFilter entityFilter = findEntityFilter(dataSource, entityAliases);
+        EntityFilter entityFilter = findEntityFilterByAliasId(dataSource, entityAliases);
         List<KeyFilter> keyFilters = findKeyFilters(dataSource, filters);
 
         return new EntityCountQuery(entityFilter, keyFilters);
@@ -88,7 +87,7 @@ public class ReportQueryUtils {
 
     public static AlarmCountQuery toAlarmCountQuery(DataSource dataSource, List<EntityAlias> entityAliases, List<Filter> filters) {
         List<KeyFilter> keyFilters = findKeyFilters(dataSource, filters);
-        AlarmCountQuery alarmCountQuery = new AlarmCountQuery(findEntityFilter(dataSource, entityAliases), keyFilters);
+        AlarmCountQuery alarmCountQuery = new AlarmCountQuery(findEntityFilterByAliasId(dataSource, entityAliases), keyFilters);
 
         AlarmFilterConfig alarmFilterConfig = dataSource.getAlarmFilterConfig();
         if (alarmFilterConfig != null) {
@@ -100,21 +99,10 @@ public class ReportQueryUtils {
         return alarmCountQuery;
     }
 
-    public static List<ReadTsKvQuery> toReadTsKvQueries(TimeseriesTableComponent component) {
-        TimeWindowConfiguration timeWindowConf = component.getTimewindow();
-        History historyConf = timeWindowConf.getHistory();
-        TimeIntervalCalculator.TimeRange timeRange = getTimeRange(timeWindowConf);
-
-        return getComponentDataSource(component).getDataKeys()
-                .stream()
-                .map(dataKey -> new BaseReadTsKvQuery(dataKey.getName(), timeRange.startTs, timeRange.endTs, historyConf.getInterval(), timeWindowConf.getAggregation().getLimit(), timeWindowConf.getAggregation().getType()))
-                .collect(Collectors.toList());
-    }
-
     public static AlarmDataQuery toAlarmDataQuery(AlarmTableComponent component, List<EntityAlias> entityAliases, List<Filter> filters) {
         DataSource alarmSource = component.getAlarmSource();
 
-        EntityFilter entityFilter = findEntityFilter(alarmSource, entityAliases);
+        EntityFilter entityFilter = findEntityFilterByAliasId(alarmSource, entityAliases);
         List<KeyFilter> keyFilters = findKeyFilters(alarmSource, filters);
 
         List<EntityKey> alarmFields = new ArrayList<>();
@@ -137,7 +125,7 @@ public class ReportQueryUtils {
         return new AlarmDataQuery(entityFilter, pageLink, null, null, keyFilters, alarmFields);
     }
 
-    private static EntityFilter findEntityFilter(DataSource dataSource, List<EntityAlias> entityAliases) {
+    private static EntityFilter findEntityFilterByAliasId(DataSource dataSource, List<EntityAlias> entityAliases) {
         return entityAliases.stream()
                 .filter(alias -> alias.getId().equals(dataSource.getEntityAliasId()))
                 .findFirst()
@@ -157,7 +145,10 @@ public class ReportQueryUtils {
         }
     }
 
-    private static EntityDataQuery buildEntityDataQuery(EntityFilter filter, DataSource dataSource, List<Filter> filters) {
+    private static EntityDataQuery buildEntityDataQuery(EntityFilter filter, DataSource dataSource, List<Filter> filters, PageLink pageLink) {
+        EntityDataSortOrder sortOrder = Optional.ofNullable(dataSource.getSortOrder()).orElse(DEFAULT_SORT_ORDER);
+        EntityDataPageLink entityDataPageLink = new EntityDataPageLink(pageLink.getPageSize(), pageLink.getPage(), pageLink.getTextSearch(), sortOrder);
+
         List<KeyFilter> keyFilters = findKeyFilters(dataSource, filters);
 
         List<EntityKey> entityFields = new ArrayList<>();
@@ -175,16 +166,7 @@ public class ReportQueryUtils {
                 }
             }
         }
-        EntityDataPageLink pageLink = new EntityDataPageLink(Integer.MAX_VALUE, 0, null, null);
-        return new EntityDataQuery(filter, pageLink, entityFields, latestValues, keyFilters);
-    }
-
-    public static DataSource getComponentDataSource(ReportComponent component) {
-        List<DataSource> dataSources = component.getDataSources();
-        if (dataSources == null || dataSources.isEmpty()) {
-            throw new IllegalArgumentException("Data source is required for component: " + component.getType());
-        }
-        return component.getDataSources().get(0);
+        return new EntityDataQuery(filter, entityDataPageLink, entityFields, latestValues, keyFilters);
     }
 
 }

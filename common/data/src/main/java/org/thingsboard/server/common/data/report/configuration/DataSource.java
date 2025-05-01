@@ -34,6 +34,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import org.thingsboard.server.common.data.query.EntityDataSortOrder;
 
 import java.util.List;
 
@@ -48,4 +49,5 @@ public class DataSource {
     private String filterId;
     private List<DataKey> dataKeys;
     private AlarmFilterConfig alarmFilterConfig;
+    private EntityDataSortOrder sortOrder;
 }

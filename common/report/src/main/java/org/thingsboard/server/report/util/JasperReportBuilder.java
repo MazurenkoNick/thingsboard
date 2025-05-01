@@ -359,7 +359,7 @@ public class JasperReportBuilder {
     public JasperReport buildEntityTable(EntityTableComponent component) throws JRException {
         JasperReportBuilder table = new JasperReportBuilder(component, getUsablePageWidth());
 
-        List<DataKey> dataKeys = getComponentDataSource(component).getDataKeys();
+        List<DataKey> dataKeys = getSingleDataSource(component).getDataKeys();
         List<String> entityKeys = dataKeys.stream().map(DataKey::getName).toList();
         List<String> columnsHeaders = dataKeys.stream().map(DataKey::getLabel).toList();
 
@@ -371,7 +371,7 @@ public class JasperReportBuilder {
     public JasperReport buildTimeSeriesTable(TimeseriesTableComponent component) throws JRException {
         JasperReportBuilder table = new JasperReportBuilder(component, getUsablePageWidth());
 
-        List<DataKey> dataKeys = getComponentDataSource(component).getDataKeys();
+        List<DataKey> dataKeys = getSingleDataSource(component).getDataKeys();
         List<String> entityKeys = dataKeys.stream().map(DataKey::getName).collect(Collectors.toList());
         List<String> columnsHeaders = dataKeys.stream().map(DataKey::getLabel).collect(Collectors.toList());
 
@@ -407,7 +407,7 @@ public class JasperReportBuilder {
         return JasperCompileManager.compileReport(pageBreak.getJasperDesign());
     }
 
-    public static DataSource getComponentDataSource(ReportComponent component) {
+    public static DataSource getSingleDataSource(ReportComponent component) {
         List<DataSource> dataSources = component.getDataSources();
         if (dataSources == null || dataSources.isEmpty()) {
             throw new IllegalArgumentException("Data source is required for component: " + component.getType());

@@ -30,8 +30,6 @@
  */
 package org.thingsboard.server.report.service;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.util.concurrent.SettableFuture;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -45,16 +43,11 @@ import net.sf.jasperreports.engine.JasperReport;
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 import net.sf.jasperreports.engine.data.JRMapCollectionDataSource;
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.springframework.core.io.ByteArrayResource;
-import org.springframework.core.io.Resource;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.async.DeferredResult;
 import org.thingsboard.common.util.JacksonUtil;
+import org.thingsboard.rest.client.RestClient;
 import org.thingsboard.server.common.data.StringUtils;
-import org.thingsboard.server.common.data.dashboardreport.DashboardReportConfig;
 import org.thingsboard.server.common.data.dashboardreport.DashboardReportData;
 import org.thingsboard.server.common.data.exception.ThingsboardErrorCode;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
@@ -62,9 +55,12 @@ import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.job.task.ReportTask;
 import org.thingsboard.server.common.data.kv.TsKvEntry;
 import org.thingsboard.server.common.data.page.PageData;
+import org.thingsboard.server.common.data.page.PageDataIterable;
+import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.page.SortOrder;
 import org.thingsboard.server.common.data.query.AlarmData;
 import org.thingsboard.server.common.data.query.EntityData;
+import org.thingsboard.server.common.data.query.EntityDataQuery;
 import org.thingsboard.server.common.data.report.ReportData;
 import org.thingsboard.server.common.data.report.ReportRequest;
 import org.thingsboard.server.common.data.report.ReportTemplate;
@@ -85,26 +81,21 @@ import org.thingsboard.server.queue.util.TbReportComponent;
 import org.thingsboard.server.report.util.JasperReportBuilder;
 import org.thingsboard.server.report.util.WebReportClient;
 
-import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Field;
-import java.net.URLDecoder;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.TimeZone;
 import java.util.concurrent.ExecutionException;
-import java.util.function.Consumer;
-import java.util.regex.Matcher;
+import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
-import static org.springframework.http.MediaType.parseMediaType;
 import static org.thingsboard.server.common.data.report.configuration.components.ReportComponentType.SUB_REPORT;
 import static org.thingsboard.server.common.data.report.configuration.components.ReportComponentType.TIME_SERIES_TABLE;
 import static org.thingsboard.server.common.data.report.configuration.timewindow.TimeIntervalCalculator.getTimeRange;
@@ -112,8 +103,8 @@ import static org.thingsboard.server.common.data.util.ReportQueryUtils.toAlarmCo
 import static org.thingsboard.server.common.data.util.ReportQueryUtils.toAlarmDataQuery;
 import static org.thingsboard.server.common.data.util.ReportQueryUtils.toEntityCountQuery;
 import static org.thingsboard.server.common.data.util.ReportQueryUtils.toEntityDataQuery;
-import static org.thingsboard.server.common.data.util.ReportQueryUtils.toSingleDeviceQuery;
-import static org.thingsboard.server.report.util.JasperReportBuilder.getComponentDataSource;
+import static org.thingsboard.server.common.data.util.ReportQueryUtils.toSingleEntityQuery;
+import static org.thingsboard.server.report.util.JasperReportBuilder.getSingleDataSource;
 
 @TbReportComponent
 @Service
@@ -161,7 +152,7 @@ public class ReportService {
     private void renderContent(TbReportCtx ctx, JasperReportBuilder parentBuilder, List<ReportComponent> components) throws Exception {
         for (ReportComponent component : components) {
             if (component.getType() == TIME_SERIES_TABLE || component.getType() == SUB_REPORT) { // check if component is complex
-                List<EntityData> entityDatas = fetchEntities(ctx, component);
+                List<EntityData> entityDatas = fetchEntities(ctx, getSingleDataSource(component));
                 for (EntityData entityData : entityDatas) {
                     renderComponent(ctx, parentBuilder, component, entityData);
                 }
@@ -190,7 +181,7 @@ public class ReportService {
         History historyConf = timeWindowConf.getHistory();
         TimeIntervalCalculator.TimeRange timeRange = getTimeRange(timeWindowConf);
 
-        List<String> keys = getComponentDataSource(component).getDataKeys().stream()
+        List<String> keys = getSingleDataSource(component).getDataKeys().stream()
                 .map(DataKey::getName)
                 .toList();
 
@@ -205,7 +196,7 @@ public class ReportService {
             case TIME_SERIES_TABLE -> buildTsDataSource(ctx, ((TimeseriesTableComponent) component), entityData);
             case ALARM_TABLE -> buildAlarmDataSource(ctx, ((AlarmTableComponent) component));
             case DASHBOARD -> buildDashboardDataSource(ctx, ((DashboardComponent) component));
-            default -> buildEntityDataSource(ctx, component.getDataSources());
+            default -> buildMultipleDataSource(ctx, component.getDataSources());
         };
     }
 
@@ -239,55 +230,59 @@ public class ReportService {
         return new JRMapCollectionDataSource(alarmList);
     }
 
-    private JRMapCollectionDataSource buildEntityDataSource(TbReportCtx ctx, List<DataSource> dataSources) {
+    private JRMapCollectionDataSource buildMultipleDataSource(TbReportCtx ctx, List<DataSource> dataSources) {
         if (dataSources == null) {
             return new JRMapCollectionDataSource(List.of(Map.of()));
         }
         Collection<Map<String, ?>> entryList = new ArrayList<>();
         for (DataSource dataSource : dataSources) {
-            Collection<Map<String, ?>> dataMap = buildEntityDataSource(ctx, dataSource);
+            Collection<Map<String, ?>> dataMap = buildSingleDataSource(ctx, dataSource);
             entryList.addAll(dataMap);
         }
         return new JRMapCollectionDataSource(entryList);
     }
 
-    private Collection<Map<String, ?>> buildEntityDataSource(TbReportCtx ctx, DataSource dataSource) {
+    private Collection<Map<String, ?>> buildSingleDataSource(TbReportCtx ctx, DataSource dataSource) {
         List<EntityAlias> entityAliases = ctx.getEntityAliases();
         List<Filter> filters = ctx.getFilters();
+        final RestClient restClient = ctx.getRestClient();
         return switch (dataSource.getType()) {
-            case "device" -> collectEntityData(ctx.getRestClient().findEntityDataByQuery(toSingleDeviceQuery(dataSource, filters)));
-            case "entity" -> collectEntityData(ctx.getRestClient().findEntityDataByQuery(toEntityDataQuery(dataSource, entityAliases, filters)));
+            case "device", "entity" -> fetchEntities(ctx, dataSource).stream().map(this::toMap).collect(Collectors.toList());
             case "entityCount" ->
-                    List.of(Map.of("count", ctx.getRestClient().countEntitiesByQuery(toEntityCountQuery(dataSource, entityAliases, filters))));
+                    List.of(Map.of("count", restClient.countEntitiesByQuery(toEntityCountQuery(dataSource, entityAliases, filters))));
             case "alarmCount" ->
-                    List.of(Map.of("count", ctx.getRestClient().countAlarmsByQuery(toAlarmCountQuery(dataSource, entityAliases, filters))));
+                    List.of(Map.of("count", restClient.countAlarmsByQuery(toAlarmCountQuery(dataSource, entityAliases, filters))));
             default -> throw new IllegalArgumentException("Unknown data source type: " + dataSource.getType());
         };
     }
 
-    private List<EntityData> fetchEntities(TbReportCtx ctx, ReportComponent component) {
-        DataSource dataSource = getComponentDataSource(component);
+    private List<EntityData> fetchEntities(TbReportCtx ctx, DataSource dataSource) {
         List<EntityAlias> entityAliases = ctx.getEntityAliases();
         List<Filter> filters = ctx.getFilters();
+
+        final RestClient restClient = ctx.getRestClient();
         return switch (dataSource.getType()) {
-            case "device" -> ctx.getRestClient().findEntityDataByQuery(toSingleDeviceQuery(dataSource, filters)).getData();
-            case "entity" -> ctx.getRestClient().findEntityDataByQuery(toEntityDataQuery(dataSource, entityAliases, filters)).getData();
+            case "device" -> fetchEntityDataByQuery(pageLink -> toSingleEntityQuery(dataSource, filters, pageLink), restClient);
+            case "entity" -> fetchEntityDataByQuery(pageLink -> toEntityDataQuery(dataSource, entityAliases, filters, pageLink), restClient);
             default -> throw new IllegalArgumentException("Unknown data source type: " + dataSource.getType());
         };
     }
 
-    private static Collection<Map<String, ?>> collectEntityData(PageData<EntityData> result) {
-        Collection<Map<String, ?>> entityList = new ArrayList<>();
-        for (EntityData entityData : result.getData()) {
-            HashMap<String, String> latestValues = new HashMap<>();
-            entityList.add(latestValues);
-            entityData.getLatest().forEach((keyType, keyValueMap) -> keyValueMap.forEach((key, tsValue) -> {
-                if (tsValue.getValue() != null) {
-                    latestValues.put(key, tsValue.getValue());
-                }
-            }));
-        }
-        return entityList;
+    private static List<EntityData> fetchEntityDataByQuery(Function<PageLink, EntityDataQuery> querySupplier, RestClient restClient) {
+        return StreamSupport.stream(
+                new PageDataIterable<>(link -> restClient.findEntityDataByQuery(querySupplier.apply(link)), 1024).spliterator(),
+                false
+        ).toList();
+    }
+
+    private Map<String, ?> toMap(EntityData entityData) {
+        HashMap<String, String> latestValues = new HashMap<>();
+        entityData.getLatest().forEach((keyType, keyValueMap) -> keyValueMap.forEach((key, tsValue) -> {
+            if (tsValue.getValue() != null) {
+                latestValues.put(key, tsValue.getValue());
+            }
+        }));
+        return latestValues;
     }
 
     private static Collection<Map<String, ?>> collectTsData(List<TsKvEntry> tsKvEntries) {
@@ -303,77 +298,6 @@ public class ReportService {
             tsData.add(tsValues);
         });
         return tsData;
-    }
-
-    private Consumer<DashboardReportData> onSuccess(DeferredResult<ResponseEntity<Resource>> result) {
-        return reportData -> {
-            ByteArrayResource resource = new ByteArrayResource(reportData.getData());
-            ResponseEntity<Resource> response = ResponseEntity.ok().
-                    header(HttpHeaders.CONTENT_DISPOSITION, "attachment;filename=" + reportData.getName())
-                    .header("x-filename", reportData.getName())
-                    .contentLength(resource.contentLength())
-                    .contentType(parseMediaType(reportData.getContentType()))
-                    .body(resource);
-            result.setResult(response);
-        };
-    }
-
-    private JsonNode createDashboardReportRequest(TenantId tenantId, DashboardReportConfig reportConfig) throws ThingsboardException {
-//        AccessJwtToken accessToken = systemSecurityService.createUserAccessToken(tenantId, new UserId(UUID.fromString(reportConfig.getUserId())));
-//        String token = accessToken.getToken();
-//        long expiration = accessToken.getClaims().getExpiration().getTime();
-        TimeZone tz = TimeZone.getTimeZone(reportConfig.getTimezone());
-        String reportName = prepareReportName(reportConfig.getNamePattern(), new Date(), tz);
-        ObjectNode dashboardReportRequest = JacksonUtil.newObjectNode();
-        dashboardReportRequest.put("baseUrl", reportConfig.getBaseUrl());
-        dashboardReportRequest.put("dashboardId", reportConfig.getDashboardId());
-        // dashboardReportRequest.put("token", token);
-        //dashboardReportRequest.put("expiration", expiration);
-        dashboardReportRequest.put("name", reportName);
-        dashboardReportRequest.set("reportParams", createReportParams(reportConfig));
-        return dashboardReportRequest;
-    }
-
-    private JsonNode createReportParams(DashboardReportConfig reportConfig) {
-        ObjectNode reportParams = JacksonUtil.newObjectNode();
-        reportParams.put("type", reportConfig.getType());
-        reportParams.put("state", reportConfig.getState());
-        if (!reportConfig.isUseDashboardTimewindow()) {
-            reportParams.set("timewindow", reportConfig.getTimewindow());
-        }
-        reportParams.put("timezone", reportConfig.getTimezone());
-        return reportParams;
-    }
-
-    private DashboardReportData extractResponse(ResponseEntity<byte[]> responseEntity) throws UnsupportedEncodingException {
-        DashboardReportData reportData = new DashboardReportData();
-        reportData.setData(responseEntity.getBody());
-        reportData.setContentType(responseEntity.getHeaders().getContentType().toString());
-        String disposition = responseEntity.getHeaders().getFirst(HttpHeaders.CONTENT_DISPOSITION);
-        String fileName = disposition.replaceFirst("(?i)^.*filename=\"?([^\"]+)\"?.*$", "$1");
-        fileName = URLDecoder.decode(fileName, "ISO_8859_1");
-        reportData.setName(fileName);
-        return reportData;
-    }
-
-    private String prepareReportName(String namePattern, Date reportDate, TimeZone tz) {
-        String name = namePattern;
-        Matcher matcher = reportNameDatePattern.matcher(namePattern);
-        while (matcher.find()) {
-            String toReplace = matcher.group(0);
-            SimpleDateFormat dateFormat = new SimpleDateFormat(matcher.group(1));
-            dateFormat.setTimeZone(tz);
-            String replacement = dateFormat.format(reportDate);
-            name = name.replace(toReplace, replacement);
-        }
-        return name;
-    }
-
-    private void prepareHeaders(HttpHeaders headers, byte[] json) {
-        headers.setAccept(Arrays.asList(MediaType.APPLICATION_OCTET_STREAM, MediaType.ALL));
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setContentLength(json.length);
-        headers.setConnection("keep-alive");
     }
 
     public static Map<String, String> toStringMap(Object obj) {
