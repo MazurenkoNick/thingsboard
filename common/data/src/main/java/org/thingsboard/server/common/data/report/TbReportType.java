@@ -32,16 +32,22 @@ package org.thingsboard.server.common.data.report;
 
 public enum TbReportType {
 
-    PDF("application/pdf"), CSV("text/csv");
+    PDF("application/pdf", ".pdf"), CSV("text/csv", ".csv");
 
     private final String contentType;
+    private final String extension;
 
-    TbReportType(String contentType) {
+    TbReportType(String contentType, String extension) {
         this.contentType = contentType;
+        this.extension = extension;
     }
 
     public String getContentType() {
         return contentType;
+    }
+
+    public String getExtension() {
+        return extension;
     }
 
 }

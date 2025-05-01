@@ -130,7 +130,7 @@ public class ReportControllerTest extends AbstractControllerTest {
         //generate report
         ReportRequest reportRequest = new ReportRequest();
         reportRequest.setTemplateId(savedTemplate.getId());
-        reportRequest.setReportType(TbReportType.PDF);
+        reportRequest.setType(TbReportType.PDF);
         ResultActions resultActions = doPost("/api/v2/report/test", reportRequest).andExpect(status().isOk());
         MockHttpServletResponse response = resultActions.andReturn().getResponse();
     }
