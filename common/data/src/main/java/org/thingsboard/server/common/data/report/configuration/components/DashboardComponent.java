@@ -28,39 +28,36 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.report;
+package org.thingsboard.server.common.data.report.configuration.components;
 
-import lombok.RequiredArgsConstructor;
-import org.springframework.core.io.ByteArrayResource;
-import org.springframework.core.io.Resource;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import org.thingsboard.server.common.data.job.ReportTask;
-import org.thingsboard.server.common.data.report.ReportData;
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotNull;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import org.thingsboard.server.common.data.dashboardreport.DashboardReportConfig;
+import org.thingsboard.server.common.data.report.configuration.DataSource;
 
-@RestController
-@RequiredArgsConstructor
-@RequestMapping("/api")
-public class TestReportController {
+import java.util.List;
 
-    private final ReportTaskProcessor reportTaskProcessor;
+@Schema
+@Data
+@EqualsAndHashCode
+@NoArgsConstructor
+public class DashboardComponent implements ReportComponent {
 
-    @PostMapping(value = "/noauth/report/test", produces = {"application/pdf"})
-    @Deprecated // FIXME: for testing purposes only, should not be used directly, only via submitting a job
-    public ResponseEntity<Resource> downloadTestReport(@RequestBody ReportTask task) throws Exception {
-        ReportData reportData = reportTaskProcessor.process(task);
-        ByteArrayResource resource = new ByteArrayResource(reportData.getData());
-        return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment;filename=" + reportData.getName())
-                .header("x-filename", reportData.getName())
-                .contentLength(resource.contentLength())
-                .contentType(MediaType.parseMediaType(reportData.getContentType()))
-                .body(resource);
+    @NotNull
+    @Schema(description = "Dashboard report configuration.")
+    private DashboardReportConfig config;
+
+    @Override
+    public List<DataSource> getDataSources() {
+        return null;
+    }
+
+    @Override
+    public ReportComponentType getType() {
+        return ReportComponentType.DASHBOARD;
     }
 
 }

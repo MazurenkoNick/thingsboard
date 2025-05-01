@@ -88,7 +88,7 @@ public class ReportController extends BaseController {
 
         RestTemplate restTemplate = new RestTemplate();
         return restTemplate.exchange(
-                "http://localhost:8080/api/report/test", // send request to myself
+                "http://localhost:8080/api/noauth/report/test", // send request to myself
                 HttpMethod.POST,
                 new HttpEntity<>(reportTask),
                 Resource.class

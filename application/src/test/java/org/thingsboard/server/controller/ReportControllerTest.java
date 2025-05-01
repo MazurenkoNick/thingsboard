@@ -43,7 +43,7 @@ import org.thingsboard.server.common.data.User;
 import org.thingsboard.server.common.data.query.DeviceTypeFilter;
 import org.thingsboard.server.common.data.report.ReportRequest;
 import org.thingsboard.server.common.data.report.ReportTemplate;
-import org.thingsboard.server.common.data.report.TbReportType;
+import org.thingsboard.server.common.data.report.TbReportFormat;
 import org.thingsboard.server.common.data.report.configuration.DataKey;
 import org.thingsboard.server.common.data.report.configuration.DataSource;
 import org.thingsboard.server.common.data.report.configuration.EntityAlias;
@@ -130,7 +130,7 @@ public class ReportControllerTest extends AbstractControllerTest {
         //generate report
         ReportRequest reportRequest = new ReportRequest();
         reportRequest.setTemplateId(savedTemplate.getId());
-        reportRequest.setType(TbReportType.PDF);
+        reportRequest.setFormat(TbReportFormat.PDF);
         ResultActions resultActions = doPost("/api/v2/report/test", reportRequest).andExpect(status().isOk());
         MockHttpServletResponse response = resultActions.andReturn().getResponse();
     }
