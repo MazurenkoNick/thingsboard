@@ -28,66 +28,36 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-@import "../../../../../scss/constants";
-
-.tb-report-template {
-  width: 100%;
-  height: 100%;
-  .tb-report-template-toolbar {
-    height: 50px;
-    min-height: 50px;
-    padding: 0 20px;
-    .tb-report-template-title {
-      overflow: hidden;
-      font-size: 18px;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      outline: none;
-    }
-    .mat-divider-vertical.tb-toolbar-divider {
-      border-right-color: rgba(255,255,255,0.75);
-      height: 30px;
-    }
-  }
-  .mat-drawer-side.tb-report-components-library {
-    box-sizing: content-box;
-    z-index: 1;
-    width: 250px;
-    min-width: 250px;
-    border-right-color: var(--mat-sidenav-container-divider-color);
-    border-right-width: 1px;
-    border-right-style: solid;
-  }
-  .mat-drawer-content.tb-report-template-content {
+.tb-report-components {
+  position: relative;
+  min-height: 100px;
+  background: #eeeeee;
+  .tb-no-reports-components {
     z-index: 0;
-    padding: 16px 8px;
-    overflow-y: auto;
-    overflow-x: hidden;
-    .tb-report-template-layout {
-      width: 100%;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-      align-items: center;
-      .tb-report-components-container {
-        width: 640px;
-        min-width: 640px;
-        min-height: 120px;
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-        .tb-report-components-container-title {
-          user-select: none;
-          font-size: 18px;
-          font-weight: 500;
-          color: rgba(0,0,0,0.57);
-        }
-      }
+    position: absolute;
+    inset: 0;
+    border: 2px dashed #bdc3c7;
+    border-radius: 10px;
+    padding: 30px;
+    user-select: none;
+  }
+  .cdk-drag-placeholder {
+    &:before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: #eee;
+    }
+    tb-report-component {
+      position: relative;
+      opacity: 0.3 !important;
     }
   }
-  .tb-report-component-settings {
+  .tb-draggable {
+    cursor: move;
+  }
+  .tb-draggable, .tb-report-component-placeholder {
+    position: relative;
     z-index: 1;
-    width: 500px;
-    min-width: 500px;
   }
 }

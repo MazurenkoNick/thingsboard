@@ -28,66 +28,85 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-@import "../../../../../scss/constants";
+.tb-report-component {
+  width: 100%;
+  min-height: 60px;
+  background: #fff;
+  padding: 2px;
+  &.tb-hover {
+    border: solid 2px #bdc3c7;
+    padding: 0;
+  }
+}
 
-.tb-report-template {
+.cdk-drag-preview {
+  .tb-report-component {
+    border: none;
+    padding: 2px;
+  }
+}
+
+.cdk-drag-placeholder {
+  .tb-report-component {
+    border: dotted 3px #999;
+    padding: 0;
+  }
+}
+
+.tb-report-component-placeholder {
   width: 100%;
   height: 100%;
-  .tb-report-template-toolbar {
-    height: 50px;
-    min-height: 50px;
-    padding: 0 20px;
-    .tb-report-template-title {
-      overflow: hidden;
-      font-size: 18px;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      outline: none;
-    }
-    .mat-divider-vertical.tb-toolbar-divider {
-      border-right-color: rgba(255,255,255,0.75);
-      height: 30px;
-    }
-  }
-  .mat-drawer-side.tb-report-components-library {
-    box-sizing: content-box;
-    z-index: 1;
-    width: 250px;
-    min-width: 250px;
-    border-right-color: var(--mat-sidenav-container-divider-color);
-    border-right-width: 1px;
-    border-right-style: solid;
-  }
-  .mat-drawer-content.tb-report-template-content {
-    z-index: 0;
-    padding: 16px 8px;
-    overflow-y: auto;
-    overflow-x: hidden;
-    .tb-report-template-layout {
-      width: 100%;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-      align-items: center;
-      .tb-report-components-container {
-        width: 640px;
-        min-width: 640px;
-        min-height: 120px;
+  min-height: 60px;
+  border: dotted 3px #999;
+  background: #eee;
+}
+
+.tooltipster-sidetip.tb-report-component-edit-tooltip {
+  position: absolute !important;
+  .tooltipster-box {
+    user-select: none;
+    background: #fff;
+    border: 1px solid rgba(0, 0, 0, 0.38);
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.5);
+    .tooltipster-content {
+      padding: 4px 8px;
+      font-size: 12px;
+      line-height: 12px;
+      font-weight: 500;
+      color: rgba(0, 0, 0, 0.76);
+      .tb-report-component-action-container {
         display: flex;
         flex-direction: column;
-        gap: 8px;
-        .tb-report-components-container-title {
-          user-select: none;
-          font-size: 18px;
-          font-weight: 500;
-          color: rgba(0,0,0,0.57);
+        gap: 6px;
+        .tb-report-component-actions-panel {
+          display: flex;
+          flex-direction: row;
+          place-content: center space-between;
+          align-items: center;
+          gap: 8px;
         }
       }
     }
   }
-  .tb-report-component-settings {
-    z-index: 1;
-    width: 500px;
-    min-width: 500px;
+  .tooltipster-arrow {
+    .tooltipster-arrow-uncropped {
+      .tooltipster-arrow-background {
+        border-width: 12px;
+      }
+    }
+  }
+  &.tooltipster-top {
+    .tooltipster-arrow {
+      bottom: -1px;
+      .tooltipster-arrow-uncropped {
+        .tooltipster-arrow-border {
+          border-top-color: rgba(0, 0, 0, 0.38);
+        }
+        .tooltipster-arrow-background {
+          border-top-color: #fff;
+          left: -2px;
+        }
+      }
+    }
   }
 }

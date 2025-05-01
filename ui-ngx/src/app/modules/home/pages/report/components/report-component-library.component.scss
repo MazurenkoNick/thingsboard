@@ -28,66 +28,39 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-@import "../../../../../scss/constants";
-
-.tb-report-template {
+.tb-report-component-library {
   width: 100%;
-  height: 100%;
-  .tb-report-template-toolbar {
-    height: 50px;
-    min-height: 50px;
-    padding: 0 20px;
-    .tb-report-template-title {
-      overflow: hidden;
-      font-size: 18px;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      outline: none;
-    }
-    .mat-divider-vertical.tb-toolbar-divider {
-      border-right-color: rgba(255,255,255,0.75);
-      height: 30px;
-    }
+  overflow-x: hidden;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px 8px;
+  &.tb-drag-active-list {
+    display: none;
   }
-  .mat-drawer-side.tb-report-components-library {
-    box-sizing: content-box;
-    z-index: 1;
-    width: 250px;
-    min-width: 250px;
-    border-right-color: var(--mat-sidenav-container-divider-color);
-    border-right-width: 1px;
-    border-right-style: solid;
+}
+.tb-report-component-library-item {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  .tb-report-component-library-item-title {
+    font-size: 13px;
   }
-  .mat-drawer-content.tb-report-template-content {
-    z-index: 0;
-    padding: 16px 8px;
-    overflow-y: auto;
-    overflow-x: hidden;
-    .tb-report-template-layout {
-      width: 100%;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-      align-items: center;
-      .tb-report-components-container {
-        width: 640px;
-        min-width: 640px;
-        min-height: 120px;
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-        .tb-report-components-container-title {
-          user-select: none;
-          font-size: 18px;
-          font-weight: 500;
-          color: rgba(0,0,0,0.57);
-        }
-      }
-    }
+}
+.tb-report-component-library-drag-item {
+  box-sizing: content-box;
+  width: 234px;
+  border: 1px solid #eaedf1;
+  cursor: move;
+  &:active {
+    cursor: grabbing;
   }
-  .tb-report-component-settings {
-    z-index: 1;
-    width: 500px;
-    min-width: 500px;
+  &:hover {
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.1);
   }
+}
+.tb-report-component-library-item-preview {
+  width: 100%;
 }

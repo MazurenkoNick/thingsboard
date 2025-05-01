@@ -29,69 +29,38 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { Datasource } from '@shared/models/widget.models';
+import { ReportComponentConfig, ReportComponentType } from '@shared/models/report-component.models';
+import { Type } from '@angular/core';
 import { HeadingPreviewComponent } from '@home/pages/report/components/heading-preview.component';
 import { RichTextPreviewComponent } from '@home/pages/report/components/rich-text-preview.component';
-import { deepClone } from '@core/utils';
 
-export enum ReportComponentType {
-  HEADING = 'HEADING',
-  RICH_TEXT = 'RICH_TEXT',
-  ENTITY_TABLE = 'ENTITY_TABLE',
-  TIME_SERIES_TABLE = 'TIME_SERIES_TABLE',
-  ALARM_TABLE = 'ALARM_TABLE',
-  DASHBOARD = 'DASHBOARD',
-  IMAGE = 'IMAGE',
-  SUB_REPORT = 'SUB_REPORT'
+export interface ReportComponentPreview {
+  reportComponent: ReportComponentConfig;
 }
 
-export const reportComponentTypes: ReportComponentType[] =
-  [ReportComponentType.HEADING, ReportComponentType.RICH_TEXT];
-
-export interface HeadingReportComponentConfig {
-  value: string;
-  dataSources: Datasource[];
+export interface ReportComponentTypeData {
+  title: string;
+  previewImage: string;
+  previewComponent: Type<ReportComponentPreview>;
 }
 
-export interface RichTextReportComponentConfig {
-  value: string;
-  dataSources: Datasource[];
-}
-
-
-
-export interface EntityTableReportComponentConfig {
-  dataSource: Datasource;
-}
-
-export type ReportComponentConfigs = Partial<HeadingReportComponentConfig & RichTextReportComponentConfig & EntityTableReportComponentConfig>;
-
-export const reportComponentTypeDefaultConfigMap = new Map<ReportComponentType, ReportComponentConfigs>(
+export const reportComponentTypeMap = new Map<ReportComponentType, ReportComponentTypeData>(
   [
     [
       ReportComponentType.HEADING,
       {
-        value: 'Your heading',
-        dataSources: []
+        title: 'Heading',
+        previewImage: '/assets/widget/single-switch/right-layout.svg',
+        previewComponent: HeadingPreviewComponent
       }
     ],
     [
       ReportComponentType.RICH_TEXT,
       {
-        value: '<p>Your <b>text</b> here</p>',
-        dataSources: []
+        title: 'Rich text',
+        previewImage: '/assets/widget/signal-strength/cellular-bar-layout.svg',
+        previewComponent: RichTextPreviewComponent
       }
     ]
   ]
 );
-
-export interface ReportComponentConfig extends ReportComponentConfigs {
-  type: ReportComponentType;
-}
-
-export const defaultReportComponentConfig = (type: ReportComponentType): ReportComponentConfig => {
-  const config = reportComponentTypeDefaultConfigMap.get(type);
-  if (config) {
-    return { type, ...deepClone(config)};
-  }
-}

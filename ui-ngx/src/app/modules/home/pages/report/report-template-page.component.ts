@@ -31,8 +31,10 @@
 
 import {
   AfterViewChecked,
-  AfterViewInit, ChangeDetectorRef,
-  Component, EventEmitter,
+  AfterViewInit,
+  ChangeDetectorRef,
+  Component,
+  EventEmitter,
   HostBinding,
   OnDestroy,
   OnInit,
@@ -66,6 +68,7 @@ import {
   ReportTemplateSettingsDialogComponent,
   ReportTemplateSettingsDialogData
 } from '@home/pages/report/report-template-settings-dialog.component';
+import { ReportComponentConfig, ReportComponentType } from '@shared/models/report-component.models';
 
 @Component({
   selector: 'tb-report-template-page',
@@ -97,6 +100,8 @@ export class ReportTemplatePageComponent extends PageComponent
 
   updateBreadcrumbs = new EventEmitter();
 
+  selectedReportComponent: ReportComponentConfig;
+
   private destroy$ = new Subject<void>();
 
   constructor(private route: ActivatedRoute,
@@ -110,7 +115,7 @@ export class ReportTemplatePageComponent extends PageComponent
     ).subscribe(
       () => {
         this.reset();
-        this.init();
+        this.init(this.route.snapshot.data.reportTemplate);
       }
     );
   }
@@ -136,7 +141,7 @@ export class ReportTemplatePageComponent extends PageComponent
   saveReportTemplate() {
     this.reportTemplateService.saveReportTemplate(this.reportTemplate).subscribe(
       (saved) => {
-        this.reportTemplate = saved;
+        this.init(saved);
         this.isDirty = false;
         this.cd.markForCheck();
       }
@@ -146,7 +151,7 @@ export class ReportTemplatePageComponent extends PageComponent
   declineReportTemplate() {
     this.reportTemplateService.getReportTemplate(this.reportTemplate.id.id).subscribe(
       (saved) => {
-        this.reportTemplate = saved;
+        this.init(saved);
         this.isDirty = false;
         this.updateBreadcrumbs.emit();
         this.cd.markForCheck();
@@ -246,8 +251,20 @@ export class ReportTemplatePageComponent extends PageComponent
     });
   }
 
-  private init() {
-    this.reportTemplate = this.route.snapshot.data.reportTemplate;
+  private init(reportTemplate: ReportTemplate) {
+    this.reportTemplate = reportTemplate;
+    if (!this.reportTemplate.configuration.header) {
+      this.reportTemplate.configuration.header = { enabled: true, components: [] };
+    }
+    if (!this.reportTemplate.configuration.header.components) {
+      this.reportTemplate.configuration.header.components = [];
+    }
+    if (!this.reportTemplate.configuration.footer) {
+      this.reportTemplate.configuration.header = { enabled: true, components: [] };
+    }
+    if (!this.reportTemplate.configuration.footer.components) {
+      this.reportTemplate.configuration.footer.components = [];
+    }
   }
 
   private reset(): void {

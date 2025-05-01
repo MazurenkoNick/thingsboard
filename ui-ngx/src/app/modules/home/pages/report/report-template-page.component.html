@@ -72,13 +72,14 @@
       </button>
     </div>
   </mat-toolbar>
-  <mat-drawer-container class="size-full">
+  <mat-drawer-container class="size-full" cdkDropListGroup>
     <mat-drawer class="tb-report-components-library"
                 *ngIf="!readonly"
                 disableClose="true"
                 mode="side"
                 opened
                 position="start">
+      <tb-report-component-library></tb-report-component-library>
     </mat-drawer>
     <mat-drawer class="tb-report-component-settings"
                 disableClose="true"
@@ -87,14 +88,19 @@
                 position="end">
     </mat-drawer>
     <mat-drawer-content class="tb-report-template-content">
-      <div class="tb-report-components-container">
-        Header
-      </div>
-      <div class="tb-report-components-container">
-        {{  reportTemplate | json }}
-      </div>
-      <div class="tb-report-components-container">
-        Footer
+      <div class="tb-report-template-layout">
+        <div class="tb-report-components-container">
+          <div class="tb-report-components-container-title">Header</div>
+          <tb-report-components [reportComponents]="reportTemplate.configuration.header.components"></tb-report-components>
+        </div>
+        <div class="tb-report-components-container">
+          <div class="tb-report-components-container-title">Content</div>
+          <tb-report-components [reportComponents]="reportTemplate.configuration.components"></tb-report-components>
+        </div>
+        <div class="tb-report-components-container">
+          <div class="tb-report-components-container-title">Footer</div>
+          <tb-report-components [reportComponents]="reportTemplate.configuration.footer.components"></tb-report-components>
+        </div>
       </div>
     </mat-drawer-content>
   </mat-drawer-container>
