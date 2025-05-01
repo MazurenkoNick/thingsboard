@@ -31,6 +31,9 @@
 package org.thingsboard.server.common.data.util;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
+import java.util.HashMap;
+import java.util.Map;
 
 @SuppressWarnings("unchecked")
 public class ReflectionUtils {
@@ -41,6 +44,26 @@ public class ReflectionUtils {
         Class<Annotation> annotationClass = (Class<Annotation>) Class.forName(annotationType);
         Annotation annotation = Class.forName(targetType).getAnnotation(annotationClass);
         return (T) annotationClass.getDeclaredMethod(property).invoke(annotation);
+    }
+
+    public static Map<String, String> toStringMap(Object obj) {
+        Map<String, String> map = new HashMap<>();
+        Class<?> current = obj.getClass();
+
+        while (current != null && current != Object.class) {
+            for (Field field : current.getDeclaredFields()) {
+                field.setAccessible(true);
+                try {
+                    Object value = field.get(obj);
+                    map.put(field.getName(), value != null ? value.toString() : null);
+                } catch (IllegalAccessException e) {
+                    throw new RuntimeException("Error accessing field: " + field.getName(), e);
+                }
+            }
+            current = current.getSuperclass();
+        }
+
+        return map;
     }
 
 }

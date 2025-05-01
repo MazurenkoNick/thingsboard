@@ -44,8 +44,6 @@ import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 import net.sf.jasperreports.engine.data.JRMapCollectionDataSource;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.springframework.stereotype.Service;
-import org.springframework.web.context.request.async.DeferredResult;
-import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.rest.client.RestClient;
 import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.dashboardreport.DashboardReportData;
@@ -54,11 +52,9 @@ import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.job.task.ReportTask;
 import org.thingsboard.server.common.data.kv.TsKvEntry;
-import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageDataIterable;
 import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.page.SortOrder;
-import org.thingsboard.server.common.data.query.AlarmData;
 import org.thingsboard.server.common.data.query.EntityData;
 import org.thingsboard.server.common.data.query.EntityDataQuery;
 import org.thingsboard.server.common.data.report.ReportData;
@@ -77,11 +73,11 @@ import org.thingsboard.server.common.data.report.configuration.components.Timese
 import org.thingsboard.server.common.data.report.configuration.timewindow.History;
 import org.thingsboard.server.common.data.report.configuration.timewindow.TimeIntervalCalculator;
 import org.thingsboard.server.common.data.report.configuration.timewindow.TimeWindowConfiguration;
+import org.thingsboard.server.common.data.util.ReflectionUtils;
 import org.thingsboard.server.queue.util.TbReportComponent;
 import org.thingsboard.server.report.util.JasperReportBuilder;
 import org.thingsboard.server.report.util.WebReportClient;
 
-import java.lang.reflect.Field;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -216,17 +212,10 @@ public class ReportService {
     }
 
     private JRMapCollectionDataSource buildAlarmDataSource(TbReportCtx ctx, AlarmTableComponent component) {
-//        List<EntityId> entityIds = restClient.findEntityDataByQuery(toEntityDataQuery(component.getAlarmSource(), ctx.getEntityAliases(), ctx.getFilters()))
-//                .getData()
-//                .stream()
-//                .map(EntityData::getEntityId).toList();
-        PageData<AlarmData> alarmDatas = ctx.getRestClient().findAlarmDataByQuery(toAlarmDataQuery(component, ctx.getEntityAliases(), ctx.getFilters())); // FIXME Dasha check, why previously used alarmService.findAlarmDataByQueryForEntities(ctx.getTenantId(), ctx.getUserPermissions(), entityIds) ?
-        Collection<Map<String, ?>> alarmList = new ArrayList<>();
-        for (AlarmData alarmData : alarmDatas.getData()) {
-            Map<String, String> mapped = toStringMap(alarmData);
-            mapped.put("status", alarmData.getStatus().name());
-            alarmList.add(mapped);
-        }
+        Collection<Map<String, ?>> alarmList = StreamSupport.stream(
+                new PageDataIterable<>(link -> ctx.getRestClient().findAlarmDataByQuery(toAlarmDataQuery(component, ctx.getEntityAliases(), ctx.getFilters(), link)), 1024).spliterator(),
+                false
+        ).map(ReflectionUtils::toStringMap).collect(Collectors.toList());
         return new JRMapCollectionDataSource(alarmList);
     }
 
@@ -300,23 +289,4 @@ public class ReportService {
         return tsData;
     }
 
-    public static Map<String, String> toStringMap(Object obj) {
-        Map<String, String> map = new HashMap<>();
-        Class<?> current = obj.getClass();
-
-        while (current != null && current != Object.class) {
-            for (Field field : current.getDeclaredFields()) {
-                field.setAccessible(true);
-                try {
-                    Object value = field.get(obj);
-                    map.put(field.getName(), value != null ? value.toString() : null);
-                } catch (IllegalAccessException e) {
-                    throw new RuntimeException("Error accessing field: " + field.getName(), e);
-                }
-            }
-            current = current.getSuperclass();
-        }
-
-        return map;
-    }
 }

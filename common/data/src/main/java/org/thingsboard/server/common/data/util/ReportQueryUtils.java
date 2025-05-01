@@ -99,7 +99,7 @@ public class ReportQueryUtils {
         return alarmCountQuery;
     }
 
-    public static AlarmDataQuery toAlarmDataQuery(AlarmTableComponent component, List<EntityAlias> entityAliases, List<Filter> filters) {
+    public static AlarmDataQuery toAlarmDataQuery(AlarmTableComponent component, List<EntityAlias> entityAliases, List<Filter> filters, PageLink pageLink) {
         DataSource alarmSource = component.getAlarmSource();
 
         EntityFilter entityFilter = findEntityFilterByAliasId(alarmSource, entityAliases);
@@ -110,19 +110,19 @@ public class ReportQueryUtils {
             alarmFields.add(new EntityKey(EntityKeyType.ALARM_FIELD, dataKey.getName()));
         }
         AlarmFilterConfig alarmFilterConfig = alarmSource.getAlarmFilterConfig();
-        AlarmDataPageLink pageLink = new AlarmDataPageLink();
-        pageLink.setPage(0);
-        pageLink.setPageSize(Integer.MAX_VALUE);
-        pageLink.setSortOrder(new EntityDataSortOrder(new EntityKey(EntityKeyType.ALARM_FIELD, "createdTime")));
+        AlarmDataPageLink alarmDataPageLink = new AlarmDataPageLink();
+        alarmDataPageLink.setPage(pageLink.getPage());
+        alarmDataPageLink.setPageSize(pageLink.getPageSize());
+        alarmDataPageLink.setSortOrder(Optional.ofNullable(alarmSource.getSortOrder()).orElse(DEFAULT_SORT_ORDER));
 
         TimeIntervalCalculator.TimeRange timeRange = getTimeRange(component.getTimewindow());
-        pageLink.setStartTs(timeRange.startTs);
-        pageLink.setEndTs(timeRange.endTs);
-        pageLink.setSearchPropagatedAlarms(alarmFilterConfig.isSearchPropagatedAlarms());
-        pageLink.setSeverityList(alarmFilterConfig.getSeverityList());
-        pageLink.setStatusList(alarmFilterConfig.getStatusList());
-        pageLink.setTypeList(alarmFilterConfig.getTypeList());
-        return new AlarmDataQuery(entityFilter, pageLink, null, null, keyFilters, alarmFields);
+        alarmDataPageLink.setStartTs(timeRange.startTs);
+        alarmDataPageLink.setEndTs(timeRange.endTs);
+        alarmDataPageLink.setSearchPropagatedAlarms(alarmFilterConfig.isSearchPropagatedAlarms());
+        alarmDataPageLink.setSeverityList(alarmFilterConfig.getSeverityList());
+        alarmDataPageLink.setStatusList(alarmFilterConfig.getStatusList());
+        alarmDataPageLink.setTypeList(alarmFilterConfig.getTypeList());
+        return new AlarmDataQuery(entityFilter, alarmDataPageLink, null, null, keyFilters, alarmFields);
     }
 
     private static EntityFilter findEntityFilterByAliasId(DataSource dataSource, List<EntityAlias> entityAliases) {
