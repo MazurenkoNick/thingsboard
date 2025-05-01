@@ -28,47 +28,27 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.common.data.job.task;
+package org.thingsboard.rule.engine.api;
 
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
-import lombok.experimental.SuperBuilder;
-import org.thingsboard.server.common.data.job.JobType;
-import org.thingsboard.server.common.data.report.ReportRequest;
-import org.thingsboard.server.common.data.report.ReportTemplate;
+import com.fasterxml.jackson.databind.JsonNode;
+import org.thingsboard.server.common.data.exception.ThingsboardException;
+import org.thingsboard.server.common.data.id.DashboardId;
+import org.thingsboard.server.common.data.id.TenantId;
+import org.thingsboard.server.common.data.id.UserId;
+import org.thingsboard.server.common.data.dashboardreport.DashboardReportConfig;
+import org.thingsboard.server.common.data.dashboardreport.DashboardReportData;
 
-@Data
-@NoArgsConstructor
-@EqualsAndHashCode(callSuper = true)
-@SuperBuilder
-@ToString(callSuper = true)
-public class ReportTask extends Task<ReportTaskResult> {
+import java.util.function.Consumer;
 
-    private ReportTemplate reportTemplate;
-    private ReportRequest reportRequest;
-    private String accessToken;
-    private long accessTokenExpirationTs;
+public interface DashboardReportService {
 
-    @Override
-    public Object getKey() {
-        return reportRequest.getTemplateId();
-    }
+    void generateDashboardReport(String baseUrl, DashboardId dashboardId, TenantId tenantId, UserId userId, String reportName,
+                                 JsonNode reportParams, String accessToken, long accessTokenExpiration,
+                                 Consumer<DashboardReportData> onSuccess, Consumer<Throwable> onFailure);
 
-    @Override
-    public ReportTaskResult toFailed(Throwable error) {
-        return ReportTaskResult.failed(this, error);
-    }
-
-    @Override
-    public ReportTaskResult toDiscarded() {
-        return ReportTaskResult.discarded();
-    }
-
-    @Override
-    public JobType getJobType() {
-        return JobType.REPORT;
-    }
+    void generateReport(TenantId tenantId, DashboardReportConfig reportConfig,
+                        String reportsServerEndpointUrl,
+                        Consumer<DashboardReportData> onSuccess,
+                        Consumer<Throwable> onFailure) throws ThingsboardException;
 
 }

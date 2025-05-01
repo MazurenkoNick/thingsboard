@@ -53,7 +53,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.async.DeferredResult;
 import org.thingsboard.common.util.JacksonUtil;
-import org.thingsboard.rest.client.RestClient;
 import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.dashboardreport.DashboardReportConfig;
 import org.thingsboard.server.common.data.dashboardreport.DashboardReportData;
@@ -82,7 +81,9 @@ import org.thingsboard.server.common.data.report.configuration.components.Timese
 import org.thingsboard.server.common.data.report.configuration.timewindow.History;
 import org.thingsboard.server.common.data.report.configuration.timewindow.TimeIntervalCalculator;
 import org.thingsboard.server.common.data.report.configuration.timewindow.TimeWindowConfiguration;
-import org.thingsboard.server.report.JasperReportBuilder;
+import org.thingsboard.server.queue.util.TbReportComponent;
+import org.thingsboard.server.report.util.JasperReportBuilder;
+import org.thingsboard.server.report.util.WebReportClient;
 
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Field;
@@ -112,8 +113,9 @@ import static org.thingsboard.server.common.data.util.ReportQueryUtils.toAlarmDa
 import static org.thingsboard.server.common.data.util.ReportQueryUtils.toEntityCountQuery;
 import static org.thingsboard.server.common.data.util.ReportQueryUtils.toEntityDataQuery;
 import static org.thingsboard.server.common.data.util.ReportQueryUtils.toSingleDeviceQuery;
-import static org.thingsboard.server.report.JasperReportBuilder.getComponentDataSource;
+import static org.thingsboard.server.report.util.JasperReportBuilder.getComponentDataSource;
 
+@TbReportComponent
 @Service
 @Slf4j
 @RequiredArgsConstructor
@@ -123,9 +125,9 @@ public class ReportService {
     private final SimpleDateFormat defaultDateFormat = new SimpleDateFormat("yyyy-MM-dd_HH:mm:ss"); // fixme dasha make configurable (?)
     private static final Pattern reportNameDatePattern = Pattern.compile("%d\\{([^\\}]*)\\}");
 
-    private final DashboardReportService dashboardReportService;
+    private final WebReportClient webReportClient;
 
-    public ReportData generateReport(ReportTask task, RestClient restClient) throws ThingsboardException {
+    public ReportData generateReport(ReportTask task, TbReportCtx ctx) throws ThingsboardException {
         TenantId tenantId = task.getTenantId();
         ReportRequest reportRequest = task.getReportRequest();
 
@@ -134,7 +136,6 @@ public class ReportService {
         ReportTemplateConfiguration configuration = reportTemplate.getConfiguration();
 
         try {
-            TbReportCtx ctx = new TbReportCtx(tenantId, reportRequest.getCustomerId(), configuration, restClient);
             JasperReportBuilder reportBuilder = new JasperReportBuilder(configuration);
 
             Optional.ofNullable(configuration.getHeader()).ifPresent(reportBuilder::addPageHeader);
@@ -208,18 +209,14 @@ public class ReportService {
         };
     }
 
-    private JRDataSource buildDashboardDataSource(TbReportCtx ctx, DashboardComponent component) throws ThingsboardException {
+    private JRDataSource buildDashboardDataSource(TbReportCtx ctx, DashboardComponent component) {
         SettableFuture<DashboardReportData> futureToSet = SettableFuture.create();
-        dashboardReportService.generateReport(
-                ctx.getTenantId(),
-                component.getConfig(),
-                null,
-                futureToSet::set,
-                error -> {
+        webReportClient.requestDashboardReport(component.getConfig(), null,
+                ctx.getAccessToken(), ctx.getAccessTokenExpTs(),
+                futureToSet::set, error -> {
                     log.error("Failed to generate dashboard report", error);
                     futureToSet.setException(error);
-                }
-        );
+                });
         try {
             return new JRBeanCollectionDataSource(List.of(futureToSet.get()));
         } catch (InterruptedException | ExecutionException e) {
