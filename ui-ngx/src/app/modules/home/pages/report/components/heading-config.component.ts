@@ -29,41 +29,29 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { NgModule } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { SharedModule } from '@shared/shared.module';
-import {
-  EditReportComponentTooltipComponent,
-  ReportComponentComponent
-} from '@home/pages/report/components/report-component.component';
-import { ReportComponentsComponent } from '@home/pages/report/components/report-components.component';
-import { HeadingPreviewComponent } from '@home/pages/report/components/heading-preview.component';
-import { RichTextPreviewComponent } from '@home/pages/report/components/rich-text-preview.component';
-import { ReportComponentLibraryComponent } from '@home/pages/report/components/report-component-library.component';
-import { ReportComponentConfigComponent } from '@home/pages/report/components/report-component-config.component';
-import { HeadingConfigComponent } from '@home/pages/report/components/heading-config.component';
-import { RichTextConfigComponent } from '@home/pages/report/components/rich-text-config.component';
+import { Component, DestroyRef, ViewEncapsulation } from '@angular/core';
+import { FormBuilder, FormGroup } from '@angular/forms';
+import { HeadingReportComponentConfig, ReportComponentConfig } from '@app/shared/public-api';
+import { AbstractReportComponentConfig } from '@home/pages/report/components/report-component-config.component';
 
-@NgModule({
-  declarations: [
-    EditReportComponentTooltipComponent,
-    ReportComponentComponent,
-    ReportComponentsComponent,
-    ReportComponentLibraryComponent,
-    HeadingPreviewComponent,
-    HeadingConfigComponent,
-    RichTextPreviewComponent,
-    RichTextConfigComponent,
-    ReportComponentConfigComponent
-  ],
-  imports: [
-    CommonModule,
-    SharedModule
-  ],
-  exports: [
-    ReportComponentsComponent,
-    ReportComponentLibraryComponent,
-    ReportComponentConfigComponent
-  ]
+@Component({
+  selector: 'tb-report-heading-config',
+  templateUrl: './heading-config.component.html',
+  styleUrls: [],
+  encapsulation: ViewEncapsulation.None
 })
-export class ReportComponentsModule { }
+export class HeadingConfigComponent extends AbstractReportComponentConfig {
+
+  constructor(destroyRef: DestroyRef,
+              private fb: FormBuilder) {
+    super(destroyRef);
+  }
+
+  protected buildForm(reportComponentConfig: ReportComponentConfig): FormGroup {
+    const headingConfig: HeadingReportComponentConfig = reportComponentConfig as HeadingReportComponentConfig;
+    return this.fb.group({
+      value: [headingConfig.value, []]
+    });
+  }
+
+}

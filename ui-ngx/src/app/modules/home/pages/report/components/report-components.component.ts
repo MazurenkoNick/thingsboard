@@ -30,13 +30,15 @@
 ///
 
 import {
-  ChangeDetectorRef,
   Component,
   ElementRef,
-  EventEmitter, HostBinding,
+  EventEmitter,
+  HostBinding,
   Input,
+  OnChanges,
+  OnInit,
   Output,
-  viewChild,
+  SimpleChanges,
   ViewEncapsulation
 } from '@angular/core';
 import {
@@ -45,14 +47,14 @@ import {
   ReportComponentType
 } from '@shared/models/report-component.models';
 import {
-  CdkDrag,
-  CdkDragDrop, CdkDragEnd,
+  CdkDragDrop,
   CdkDragEnter,
   CdkDragExit,
-  CdkDragStart, CdkDropList,
+  CdkDragStart,
   moveItemInArray,
   transferArrayItem
 } from '@angular/cdk/drag-drop';
+import { deepClone } from '@core/utils';
 
 @Component({
   selector: 'tb-report-components',
@@ -60,7 +62,7 @@ import {
   styleUrls: ['./report-components.component.scss'],
   encapsulation: ViewEncapsulation.None
 })
-export class ReportComponentsComponent {
+export class ReportComponentsComponent implements OnInit, OnChanges {
 
   @HostBinding('style.position')
   position = 'relative';
@@ -76,21 +78,31 @@ export class ReportComponentsComponent {
 
   reportsComponentHeight = 100;
 
-  constructor(private cd: ChangeDetectorRef,
-              public element: ElementRef<HTMLElement>) {}
+  constructor(public element: ElementRef<HTMLElement>) {}
+
+  ngOnInit() {
+    this.updateListHeight();
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    for (const propName of Object.keys(changes)) {
+      const change = changes[propName];
+      if (!change.firstChange && change.currentValue !== change.previousValue) {
+        if (propName === 'reportComponents') {
+          this.updateListHeight();
+        }
+      }
+    }
+  }
 
   dropListEnter(event: CdkDragEnter) {
-    if (!this.reportComponents?.length) {
+    if (!this.reportComponents?.length || (this.reportComponents.length === 1 && this.reportComponents[0] === event.item.data)) {
       this.reportsComponentHeight = event.item.getPlaceholderElement().offsetHeight;
-      //event.item.getPlaceholderElement().style.height = '100px';
-    }/* else {
-      event.item.getPlaceholderElement().style.height = event.item.element.nativeElement.offsetHeight + 'px';
     }
-    this.cd.detectChanges();*/
   }
 
   dropListExit(event: CdkDragExit) {
-    this.reportsComponentHeight = 100;
+    this.updateListHeight(event.item.data);
   }
 
   componentDrop(event: CdkDragDrop<any[]>) {
@@ -114,7 +126,7 @@ export class ReportComponentsComponent {
         }
       }
     }
-    this.reportsComponentHeight = 100;
+    this.updateListHeight();
     this.componentsChanged.emit();
   }
 
@@ -122,23 +134,37 @@ export class ReportComponentsComponent {
     this.componentEdit.emit(reportComponent);
   }
 
+  duplicateComponent(reportComponent: ReportComponentConfig): void {
+    const duplicate = deepClone(reportComponent);
+    const index = this.reportComponents.indexOf(reportComponent);
+    this.reportComponents.splice(index + 1, 0, duplicate);
+    this.componentsChanged.emit();
+  }
+
   componentRemove(reportComponent: ReportComponentConfig): void {
     const index = this.reportComponents.indexOf(reportComponent);
     if (index > -1) {
       this.reportComponents.splice(index, 1);
-      this.cd.detectChanges();
+      this.updateListHeight();
       this.componentsChanged.emit();
     }
   }
 
   componentDragStarted(event: CdkDragStart){
-    event.source.getPlaceholderElement().style.height = event.source.element.nativeElement.offsetHeight + 'px';
+    event.source.getPlaceholderElement().style.height = Math.max(60, event.source.element.nativeElement.offsetHeight) + 'px';
     document.body.style.cursor = 'grabbing';
-    this.cd.detectChanges();
   }
 
   componentDragEnded() {
     document.body.style.cursor = 'auto';
+  }
+
+  private updateListHeight(reportComponent?: ReportComponentConfig) {
+    if (!this.reportComponents?.length || (this.reportComponents.length === 1 && this.reportComponents[0] === reportComponent)) {
+      this.reportsComponentHeight = 100;
+    } else {
+      this.reportsComponentHeight = undefined;
+    }
   }
 
 }

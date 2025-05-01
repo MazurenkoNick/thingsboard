@@ -75,31 +75,86 @@
   <mat-drawer-container class="size-full" cdkDropListGroup>
     <mat-drawer class="tb-report-components-library"
                 *ngIf="!readonly"
+                #reportComponentsLibrary
                 disableClose="true"
                 mode="side"
                 opened
                 position="start">
-      <tb-report-component-library></tb-report-component-library>
+      <mat-toolbar class="mat-elevation-z1">
+        <div translate>report-template.report-components</div>
+      </mat-toolbar>
+      <tb-report-component-library class="min-h-0 flex-1"></tb-report-component-library>
     </mat-drawer>
-    <mat-drawer class="tb-report-component-settings"
+    <mat-drawer class="tb-report-settings"
+                [class.tb-report-component-settings]="!!activeReportComponent"
                 disableClose="true"
                 mode="side"
                 opened
                 position="end">
+      @if (activeReportComponent) {
+        <tb-details-panel class="flex-1"
+                          [color]="null"
+                          showCloseDetails="false"
+                          headerTitle="{{ reportComponentTypeMap.get(activeReportComponent.type).title | translate }}"
+                          headerHeightPx="68"
+                          isReadOnly="true">
+          <div class="details-buttons flex flex-row items-center justify-end gap-3">
+            <button mat-stroked-button color="primary"
+                    (click)="cancelReportComponentEdit()">
+              <mat-icon>close</mat-icon>
+              {{ 'action.cancel' | translate }}
+            </button>
+            <button [disabled]="!reportConfig?.reportConfigForm?.valid || !reportConfig?.reportConfigForm?.dirty"
+                    mat-flat-button color="primary"
+                    (click)="saveReportComponent()">
+              <mat-icon>done</mat-icon>
+              {{ 'action.save' | translate }}
+            </button>
+          </div>
+          <tb-report-component-config
+            #reportConfig
+            [reportComponent]="editingReportComponent"
+            (saveComponent)="saveReportComponent()"
+            (cancelEdit)="cancelReportComponentEdit()">
+          </tb-report-component-config>
+        </tb-details-panel>
+      } @else {
+        <tb-details-panel class="flex-1"
+                          [color]="null"
+                          showCloseDetails="false"
+                          isReadOnly="true"
+                          headerTitle="{{reportTemplate.name}}"
+                          headerSubtitle="{{ 'report-template.report-template-settings' | translate }}">
+          <div class="mat-padding">
+            <tb-report-template-settings [formControl]="reportTemplateSettingsFormControl"></tb-report-template-settings>
+          </div>
+        </tb-details-panel>
+      }
     </mat-drawer>
     <mat-drawer-content class="tb-report-template-content">
       <div class="tb-report-template-layout">
         <div class="tb-report-components-container">
-          <div class="tb-report-components-container-title">Header</div>
-          <tb-report-components [reportComponents]="reportTemplate.configuration.header.components"></tb-report-components>
+          <div class="tb-report-components-container-title" translate>report-template.header</div>
+          <tb-report-components
+            [reportComponents]="reportTemplate.configuration.header.components"
+            (componentsChanged)="reportComponentsChanged()"
+            (componentEdit)="editReportComponent($event)">
+          </tb-report-components>
         </div>
         <div class="tb-report-components-container">
-          <div class="tb-report-components-container-title">Content</div>
-          <tb-report-components [reportComponents]="reportTemplate.configuration.components"></tb-report-components>
+          <div class="tb-report-components-container-title" translate>report-template.content</div>
+          <tb-report-components
+            [reportComponents]="reportTemplate.configuration.components"
+            (componentsChanged)="reportComponentsChanged()"
+            (componentEdit)="editReportComponent($event)">
+          </tb-report-components>
         </div>
         <div class="tb-report-components-container">
-          <div class="tb-report-components-container-title">Footer</div>
-          <tb-report-components [reportComponents]="reportTemplate.configuration.footer.components"></tb-report-components>
+          <div class="tb-report-components-container-title" translate>report-template.footer</div>
+          <tb-report-components
+            [reportComponents]="reportTemplate.configuration.footer.components"
+            (componentsChanged)="reportComponentsChanged()"
+            (componentEdit)="editReportComponent($event)"></tb-report-components>
         </div>
       </div>
     </mat-drawer-content>

@@ -30,26 +30,9 @@
     OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 
 -->
-<div class="tb-drop-list tb-report-components"
-     [style.min-height.px]="reportsComponentHeight"
-     cdkDropList
-     cdkDropListOrientation="vertical"
-     cdkDropListAutoScrollStep="20"
-     [cdkDropListData]="reportComponents"
-     (cdkDropListDropped)="componentDrop($event)"
-     (cdkDropListEntered)="dropListEnter($event)"
-     (cdkDropListExited)="dropListExit($event)">
-  <div class="tb-no-reports-components" translate>
-    report-template.drop-report-components
+<div class="tb-form-panel no-border" [formGroup]="reportConfigForm">
+  <div class="tb-form-panel">
+    <div class="tb-form-panel-title" translate>report-template.component.rich-text.text</div>
+    <editor [init]="tinyMceOptions" formControlName="value"></editor>
   </div>
-  @for (item of reportComponents; track item) {
-    <div cdkDrag class="tb-draggable" [cdkDragData]="item"
-         (cdkDragStarted)="componentDragStarted($event)"
-         (cdkDragEnded)="componentDragEnded()">
-      <tb-report-component [reportComponent]="item"
-                           (edit)="onComponentEdit(item)"
-                           (makeCopy)="duplicateComponent(item)"
-                           (remove)="componentRemove(item)"></tb-report-component>
-    </div>
-  }
 </div>

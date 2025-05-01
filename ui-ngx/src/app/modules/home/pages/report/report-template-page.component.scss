@@ -85,9 +85,14 @@
       }
     }
   }
-  .tb-report-component-settings {
+  .tb-report-settings {
     z-index: 1;
     width: 500px;
-    min-width: 500px;
+    transition: all 500ms ease;
+    transition-property: width;
+    will-change: width;
+    &.tb-report-component-settings {
+      width: 700px;
+    }
   }
 }

@@ -36,7 +36,7 @@ import { Store } from '@ngrx/store';
 import { AppState } from '@core/core.state';
 import { Router } from '@angular/router';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 
 export interface ReportTemplateSettingsDialogData {
   settings: ReportTemplateSettings;
@@ -51,7 +51,7 @@ export class ReportTemplateSettingsDialogComponent extends DialogComponent<Repor
 
   settings: ReportTemplateSettings;
 
-  settingsFormGroup: FormGroup;
+  settingsFormControl: FormControl;
 
   constructor(protected store: Store<AppState>,
               protected router: Router,
@@ -60,11 +60,7 @@ export class ReportTemplateSettingsDialogComponent extends DialogComponent<Repor
               private fb: FormBuilder) {
     super(store, router, dialogRef);
     this.settings = data.settings;
-    this.settingsFormGroup = this.fb.group({
-      name: [this.settings.name, [Validators.required]],
-      fileName: [this.settings.fileName, [Validators.required]],
-      description: [this.settings.description, []]
-    });
+    this.settingsFormControl = this.fb.control(this.settings);
   }
 
   cancel(): void {
@@ -72,7 +68,7 @@ export class ReportTemplateSettingsDialogComponent extends DialogComponent<Repor
   }
 
   save(): void {
-    const settings = {...this.settings, ...this.settingsFormGroup.getRawValue()};
+    const settings = {...this.settings, ...this.settingsFormControl.getRawValue()};
     this.dialogRef.close(settings);
   }
 }

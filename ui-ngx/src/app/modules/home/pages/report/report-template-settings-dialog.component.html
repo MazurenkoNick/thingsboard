@@ -41,46 +41,7 @@
     </button>
   </mat-toolbar>
   <div mat-dialog-content class="tb-form-panel no-border no-padding">
-    <div class="tb-form-panel no-border no-padding" [formGroup]="settingsFormGroup">
-      <div class="tb-form-row">
-        <div class="fixed-title-width" translate>report-template.name</div>
-        <mat-form-field class="flex-1" appearance="outline" subscriptSizing="dynamic">
-          <input required matInput formControlName="name" placeholder="{{ 'widget-config.set' | translate }}">
-          <mat-icon matSuffix
-                    matTooltipPosition="above"
-                    matTooltipClass="tb-error-tooltip"
-                    [matTooltip]="'report-template.name-required' | translate"
-                    *ngIf="settingsFormGroup.get('name').hasError('required')
-                              && settingsFormGroup.get('name').touched"
-                    class="tb-error">
-            warning
-          </mat-icon>
-        </mat-form-field>
-      </div>
-      <div class="tb-form-row">
-        <div class="fixed-title-width" translate>report-template.file-name-pattern</div>
-        <mat-form-field class="flex-1" appearance="outline" subscriptSizing="dynamic">
-          <input required matInput formControlName="fileName" placeholder="{{ 'widget-config.set' | translate }}">
-          @if (settingsFormGroup.get('fileName').hasError('required') && settingsFormGroup.get('fileName').touched) {
-            <mat-icon matSuffix
-                      matTooltipPosition="above"
-                      matTooltipClass="tb-error-tooltip"
-                      [matTooltip]="'report-template.file-name-pattern-required' | translate"
-                      class="tb-error">
-              warning
-            </mat-icon>
-          } @else {
-            <div matIconSuffix tb-help-popup="date/date-format" [tb-help-popup-style]="{width: '800px'}"></div>
-          }
-        </mat-form-field>
-      </div>
-      <div class="tb-form-row">
-        <div class="fixed-title-width" translate>report-template.description</div>
-        <mat-form-field class="flex-1" appearance="outline" subscriptSizing="dynamic">
-          <textarea matInput formControlName="description" rows="2" placeholder="{{ 'widget-config.set' | translate }}"></textarea>
-        </mat-form-field>
-      </div>
-    </div>
+    <tb-report-template-settings [formControl]="settingsFormControl"></tb-report-template-settings>
   </div>
   <div mat-dialog-actions class="flex items-center justify-end">
     <button mat-button color="primary"
@@ -91,7 +52,7 @@
     </button>
     <button mat-raised-button color="primary"
             type="button"
-            [disabled]="(isLoading$ | async) || settingsFormGroup.invalid || !settingsFormGroup.dirty"
+            [disabled]="(isLoading$ | async) || settingsFormControl.invalid || !settingsFormControl.dirty"
             (click)="save()">
       {{ 'action.save' | translate }}
     </button>

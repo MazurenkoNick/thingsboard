@@ -69,6 +69,9 @@ export class ReportComponentComponent implements OnInit, OnDestroy {
   edit = new EventEmitter();
 
   @Output()
+  makeCopy = new EventEmitter();
+
+  @Output()
   remove = new EventEmitter();
 
   @ViewChild('reportPreviewContainer', {static: true}) reportPreviewContainer: TbAnchorComponent;
@@ -105,6 +108,13 @@ export class ReportComponentComponent implements OnInit, OnDestroy {
       event.stopPropagation();
     }
     this.edit.emit();
+  }
+
+  onCopy(event: MouseEvent) {
+    if (event) {
+      event.stopPropagation();
+    }
+    this.makeCopy.emit();
   }
 
   onRemove(event: MouseEvent) {
@@ -199,6 +209,12 @@ export class ReportComponentComponent implements OnInit, OnDestroy {
                 matTooltip="{{ 'action.edit' | translate }}"
                 matTooltipPosition="above">
           <tb-icon>edit</tb-icon>
+        </button>
+        <button mat-icon-button class="tb-mat-20"
+                (click)="container.onCopy($event)"
+                matTooltip="{{ 'action.duplicate' | translate }}"
+                matTooltipPosition="above">
+          <tb-icon>content_copy</tb-icon>
         </button>
         <button mat-icon-button class="tb-mat-20"
                 (click)="container.onRemove($event);"

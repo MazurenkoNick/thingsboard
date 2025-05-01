@@ -36,7 +36,7 @@ import { ReportComponentPreview } from '@home/pages/report/components/report-com
 @Component({
   selector: 'tb-rich-text-preview',
   templateUrl: './rich-text-preview.component.html',
-  styleUrls: [],
+  styleUrls: ['./rich-text-preview.component.scss'],
   encapsulation: ViewEncapsulation.None
 })
 export class RichTextPreviewComponent implements ReportComponentPreview {

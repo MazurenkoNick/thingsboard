@@ -46,6 +46,7 @@ import { ReportTemplateSettingsDialogComponent } from '@home/pages/report/report
 import { ReportComponentComponent } from '@home/pages/report/components/report-component.component';
 import { ReportComponentsComponent } from '@home/pages/report/components/report-components.component';
 import { ReportComponentsModule } from '@home/pages/report/components/report-components.module';
+import { ReportTemplateSettingsComponent } from '@home/pages/report/report-template-settings.component';
 
 @NgModule({
   declarations: [
@@ -53,6 +54,7 @@ import { ReportComponentsModule } from '@home/pages/report/components/report-com
     ReportTemplateTabsComponent,
     ReportTemplateFormComponent,
     ReportTemplatePageComponent,
+    ReportTemplateSettingsComponent,
     ReportTemplateSettingsDialogComponent
   ],
   imports: [

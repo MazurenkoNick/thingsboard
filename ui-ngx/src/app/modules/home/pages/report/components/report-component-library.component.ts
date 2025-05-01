@@ -30,8 +30,7 @@
 ///
 
 import { Component, ElementRef, viewChild, ViewEncapsulation } from '@angular/core';
-import { reportComponentTypeMap } from '@home/pages/report/components/report-component.models';
-import { reportComponentTypes } from '@shared/models/report-component.models';
+import { reportComponentTypeMap, reportComponentTypes } from '@home/pages/report/components/report-component.models';
 import { CdkDragStart } from '@angular/cdk/drag-drop';
 
 @Component({
@@ -62,7 +61,7 @@ export class ReportComponentLibraryComponent {
   }
 
   dragStarted(event: CdkDragStart) {
-    event.source.getPlaceholderElement().style.height = event.source.element.nativeElement.offsetHeight + 'px';
+    event.source.getPlaceholderElement().style.height = Math.max(60, event.source.element.nativeElement.offsetHeight) + 'px';
     document.body.style.cursor = 'grabbing';
     this.copyExistingLibItemsToActiveList();
     this.setActiveListVisibility(true);

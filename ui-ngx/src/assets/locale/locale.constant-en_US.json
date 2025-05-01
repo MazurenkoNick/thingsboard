@@ -85,7 +85,8 @@
         "upload": "Upload",
         "delete-anyway": "Delete anyway",
         "delete-selected": "Delete selected",
-        "set": "Set"
+        "set": "Set",
+        "duplicate": "Duplicate"
     },
     "aggregation": {
         "aggregation": "Aggregation",
@@ -6985,8 +6986,24 @@
         "delete": "Delete report template",
         "copyId": "Copy report template Id",
         "settings": "Settings",
+        "report-template-settings": "Report template settings",
         "file-name-pattern": "File name pattern",
-        "file-name-pattern-required": "Report file name pattern is required!"
+        "file-name-pattern-required": "Report file name pattern is required!",
+        "report-components": "Report components",
+        "drop-report-components": "Drop report components from sidebar here",
+        "header": "Header",
+        "footer": "Footer",
+        "content": "Content",
+        "component": {
+            "heading": {
+                "type": "Heading",
+                "heading-text": "Heading text"
+            },
+            "rich-text": {
+                "type": "Rich text",
+                "text": "Text"
+            }
+        }
     },
     "blob-entity": {
         "blob-entity": "Blob entity",

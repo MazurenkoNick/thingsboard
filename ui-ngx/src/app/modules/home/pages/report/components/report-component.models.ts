@@ -33,6 +33,9 @@ import { ReportComponentConfig, ReportComponentType } from '@shared/models/repor
 import { Type } from '@angular/core';
 import { HeadingPreviewComponent } from '@home/pages/report/components/heading-preview.component';
 import { RichTextPreviewComponent } from '@home/pages/report/components/rich-text-preview.component';
+import { AbstractReportComponentConfig } from '@home/pages/report/components/report-component-config.component';
+import { HeadingConfigComponent } from '@home/pages/report/components/heading-config.component';
+import { RichTextConfigComponent } from '@home/pages/report/components/rich-text-config.component';
 
 export interface ReportComponentPreview {
   reportComponent: ReportComponentConfig;
@@ -42,6 +45,7 @@ export interface ReportComponentTypeData {
   title: string;
   previewImage: string;
   previewComponent: Type<ReportComponentPreview>;
+  configComponent: Type<AbstractReportComponentConfig>;
 }
 
 export const reportComponentTypeMap = new Map<ReportComponentType, ReportComponentTypeData>(
@@ -49,18 +53,22 @@ export const reportComponentTypeMap = new Map<ReportComponentType, ReportCompone
     [
       ReportComponentType.HEADING,
       {
-        title: 'Heading',
-        previewImage: '/assets/widget/single-switch/right-layout.svg',
-        previewComponent: HeadingPreviewComponent
+        title: 'report-template.component.heading.type',
+        previewImage: '/assets/report/components/heading.svg',
+        previewComponent: HeadingPreviewComponent,
+        configComponent: HeadingConfigComponent
       }
     ],
     [
       ReportComponentType.RICH_TEXT,
       {
-        title: 'Rich text',
-        previewImage: '/assets/widget/signal-strength/cellular-bar-layout.svg',
-        previewComponent: RichTextPreviewComponent
+        title: 'report-template.component.rich-text.type',
+        previewImage: '/assets/report/components/rich-text.svg',
+        previewComponent: RichTextPreviewComponent,
+        configComponent: RichTextConfigComponent
       }
     ]
   ]
 );
+
+export const reportComponentTypes = Array.from(reportComponentTypeMap.keys());

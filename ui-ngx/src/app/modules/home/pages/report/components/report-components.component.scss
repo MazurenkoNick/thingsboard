@@ -30,7 +30,6 @@
  */
 .tb-report-components {
   position: relative;
-  min-height: 100px;
   background: #eeeeee;
   .tb-no-reports-components {
     z-index: 0;
@@ -38,8 +37,13 @@
     inset: 0;
     border: 2px dashed #bdc3c7;
     border-radius: 10px;
-    padding: 30px;
     user-select: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    font-weight: 500;
+    color: rgba(0,0,0,0.37);
   }
   .cdk-drag-placeholder {
     &:before {
@@ -54,7 +58,7 @@
     }
   }
   .tb-draggable {
-    cursor: move;
+    cursor: pointer;
   }
   .tb-draggable, .tb-report-component-placeholder {
     position: relative;

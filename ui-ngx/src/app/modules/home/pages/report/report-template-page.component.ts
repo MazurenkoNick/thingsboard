@@ -30,14 +30,12 @@
 ///
 
 import {
-  AfterViewChecked,
-  AfterViewInit,
   ChangeDetectorRef,
   Component,
+  DestroyRef, ElementRef,
   EventEmitter,
   HostBinding,
-  OnDestroy,
-  OnInit,
+  OnInit, viewChild,
   ViewEncapsulation
 } from '@angular/core';
 import { PageComponent } from '@shared/components/page.component';
@@ -51,9 +49,7 @@ import {
   ReportTemplateSettings
 } from '@shared/models/report.models';
 import { UserPermissionsService } from '@core/http/user-permissions.service';
-import { takeUntil } from 'rxjs/operators';
-import { ActivatedRoute } from '@angular/router';
-import { Subject } from 'rxjs';
+import { ActivatedRoute, Router } from '@angular/router';
 import { ReportTemplateService } from '@core/http/report-template.service';
 import { FiltersDialogComponent, FiltersDialogData } from '@home/components/filter/filters-dialog.component';
 import { Filters } from '@shared/models/query/query.models';
@@ -68,7 +64,11 @@ import {
   ReportTemplateSettingsDialogComponent,
   ReportTemplateSettingsDialogData
 } from '@home/pages/report/report-template-settings-dialog.component';
-import { ReportComponentConfig, ReportComponentType } from '@shared/models/report-component.models';
+import { ReportComponentConfig } from '@shared/models/report-component.models';
+import { FormBuilder, FormControl } from '@angular/forms';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { reportComponentTypeMap } from '@home/pages/report/components/report-component.models';
+import { MatDrawer } from '@angular/material/sidenav';
 
 @Component({
   selector: 'tb-report-template-page',
@@ -77,7 +77,9 @@ import { ReportComponentConfig, ReportComponentType } from '@shared/models/repor
   encapsulation: ViewEncapsulation.None
 })
 export class ReportTemplatePageComponent extends PageComponent
-  implements AfterViewInit, OnInit, OnDestroy, HasDirtyFlag, AfterViewChecked {
+  implements OnInit, HasDirtyFlag {
+
+  reportComponentTypeMap = reportComponentTypeMap;
 
   get isDirty(): boolean {
     return this.isDirtyValue;
@@ -90,6 +92,10 @@ export class ReportTemplatePageComponent extends PageComponent
   @HostBinding('style.width') width = '100%';
   @HostBinding('style.height') height = '100%';
 
+  reportComponentsLibrary = viewChild('reportComponentsLibrary', {
+    read: MatDrawer,
+  });
+
   readonly = !this.userPermissionsService.hasGenericPermission(Resource.REPORT_TEMPLATE, Operation.WRITE);
 
   isDirtyValue: boolean;
@@ -100,50 +106,42 @@ export class ReportTemplatePageComponent extends PageComponent
 
   updateBreadcrumbs = new EventEmitter();
 
-  selectedReportComponent: ReportComponentConfig;
+  activeReportComponent: ReportComponentConfig;
+  editingReportComponent: ReportComponentConfig;
 
-  private destroy$ = new Subject<void>();
+  reportTemplateSettingsFormControl: FormControl;
 
   constructor(private route: ActivatedRoute,
               private userPermissionsService: UserPermissionsService,
               private reportTemplateService: ReportTemplateService,
+              private destroyRef: DestroyRef,
               private dialog: MatDialog,
-              private cd: ChangeDetectorRef) {
+              private fb: FormBuilder,
+              private cd: ChangeDetectorRef,
+              private router: Router) {
     super();
-    this.route.data.pipe(
-      takeUntil(this.destroy$)
-    ).subscribe(
-      () => {
-        this.reset();
-        this.init(this.route.snapshot.data.reportTemplate);
-      }
-    );
   }
 
   ngOnInit() {
-
-  }
-
-  ngAfterViewChecked(){
-
-  }
-
-  ngAfterViewInit() {
-
-  }
-
-  ngOnDestroy() {
-    super.ngOnDestroy();
-    this.destroy$.next();
-    this.destroy$.complete();
+    this.reportTemplateSettingsFormControl = this.fb.control(null);
+    this.reportTemplateSettingsFormControl.valueChanges.pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe((settings: ReportTemplateSettings) => {
+      this.updateReportTemplateSettings(settings);
+    });
+    this.route.data.pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(
+      () => {
+        this.init(this.route.snapshot.data.reportTemplate);
+      }
+    );
   }
 
   saveReportTemplate() {
     this.reportTemplateService.saveReportTemplate(this.reportTemplate).subscribe(
       (saved) => {
         this.init(saved);
-        this.isDirty = false;
-        this.cd.markForCheck();
       }
     );
   }
@@ -152,11 +150,42 @@ export class ReportTemplatePageComponent extends PageComponent
     this.reportTemplateService.getReportTemplate(this.reportTemplate.id.id).subscribe(
       (saved) => {
         this.init(saved);
-        this.isDirty = false;
-        this.updateBreadcrumbs.emit();
-        this.cd.markForCheck();
       }
     );
+  }
+
+  public reportComponentsChanged(): void {
+    this.cancelReportComponentEdit();
+    this.isDirty = true;
+  }
+
+  public editReportComponent(reportComponent: ReportComponentConfig): void {
+    this.activeReportComponent = reportComponent;
+    this.editingReportComponent = deepClone(reportComponent);
+    const reportComponentsLibrary = this.reportComponentsLibrary()
+    if (reportComponentsLibrary) {
+      reportComponentsLibrary.close().then();
+    }
+  }
+
+  public saveReportComponent(): void {
+    Object.assign(this.activeReportComponent, this.editingReportComponent);
+    this.activeReportComponent = null;
+    this.editingReportComponent = null;
+    this.isDirty = true;
+    const reportComponentsLibrary = this.reportComponentsLibrary()
+    if (reportComponentsLibrary) {
+      reportComponentsLibrary.open().then();
+    }
+  }
+
+  public cancelReportComponentEdit(): void {
+    this.activeReportComponent = null;
+    this.editingReportComponent = null;
+    const reportComponentsLibrary = this.reportComponentsLibrary()
+    if (reportComponentsLibrary) {
+      reportComponentsLibrary.open().then();
+    }
   }
 
   public openFilters($event: Event) {
@@ -241,17 +270,23 @@ export class ReportTemplatePageComponent extends PageComponent
       }
     }).afterClosed().subscribe((settings) => {
       if (settings) {
-        this.reportTemplate.name = settings.name;
-        this.reportTemplate.configuration.fileName = settings.fileName;
-        this.reportTemplate.description = settings.description;
-        this.isDirty = true;
-        this.updateBreadcrumbs.emit();
-        this.cd.markForCheck();
+        this.updateReportTemplateSettings(settings);
+        this.reportTemplateSettingsFormControl.patchValue(settings, {emitEvent: false});
       }
     });
   }
 
+  private updateReportTemplateSettings(settings: ReportTemplateSettings): void {
+    this.reportTemplate.name = settings.name;
+    this.reportTemplate.configuration.fileName = settings.fileName;
+    this.reportTemplate.description = settings.description;
+    this.isDirty = true;
+    this.updateBreadcrumbs.emit();
+    this.cd.markForCheck();
+  }
+
   private init(reportTemplate: ReportTemplate) {
+    this.cancelReportComponentEdit();
     this.reportTemplate = reportTemplate;
     if (!this.reportTemplate.configuration.header) {
       this.reportTemplate.configuration.header = { enabled: true, components: [] };
@@ -265,10 +300,14 @@ export class ReportTemplatePageComponent extends PageComponent
     if (!this.reportTemplate.configuration.footer.components) {
       this.reportTemplate.configuration.footer.components = [];
     }
+    const settings: ReportTemplateSettings = {
+      name: this.reportTemplate.name,
+      fileName: this.reportTemplate.configuration.fileName,
+      description: this.reportTemplate.description
+    };
+    this.reportTemplateSettingsFormControl.patchValue(settings, {emitEvent: false});
+    this.isDirty = false;
+    this.updateBreadcrumbs.emit();
+    this.cd.markForCheck();
   }
-
-  private reset(): void {
-
-  }
-
 }

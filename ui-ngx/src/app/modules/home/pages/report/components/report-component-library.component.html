@@ -35,7 +35,7 @@
      [cdkDropListSortingDisabled]="true">
   @for (type of reportComponentTypes; track type) {
     <div class="tb-report-component-library-item">
-      <div class="tb-report-component-library-item-title">{{ reportComponentTypeMap.get(type).title }}</div>
+      <div class="tb-report-component-library-item-title">{{ reportComponentTypeMap.get(type).title | translate }}</div>
       <div cdkDrag
            [cdkDragData]="type"
            (cdkDragStarted)="dragStarted($event)"

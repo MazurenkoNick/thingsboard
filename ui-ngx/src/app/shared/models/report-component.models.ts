@@ -45,9 +45,6 @@ export enum ReportComponentType {
   SUB_REPORT = 'SUB_REPORT'
 }
 
-export const reportComponentTypes: ReportComponentType[] =
-  [ReportComponentType.HEADING, ReportComponentType.RICH_TEXT];
-
 export interface HeadingReportComponentConfig {
   value: string;
   dataSources: Datasource[];
@@ -71,14 +68,14 @@ export const reportComponentTypeDefaultConfigMap = new Map<ReportComponentType, 
     [
       ReportComponentType.HEADING,
       {
-        value: 'Your heading',
+        value: 'Heading text',
         dataSources: []
       }
     ],
     [
       ReportComponentType.RICH_TEXT,
       {
-        value: '<p>Your <b>text</b> here</p>',
+        value: '<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec libero orci, faucibus in iaculis quis, vestibulum sit amet ligula. Nulla facilisi. Ut ut iaculis tortor.</p>',
         dataSources: []
       }
     ]
