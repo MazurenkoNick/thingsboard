@@ -30,7 +30,26 @@
  */
 package org.thingsboard.server.common.data.job;
 
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import org.thingsboard.server.common.data.id.BlobEntityId;
+import org.thingsboard.server.common.data.job.task.ReportTaskResult;
+import org.thingsboard.server.common.data.job.task.TaskResult;
+
+@Data
+@EqualsAndHashCode(callSuper = true)
 public class ReportJobResult extends JobResult {
+
+    private BlobEntityId reportBlobId;
+
+    @Override
+    public void processTaskResult(TaskResult taskResult) {
+        super.processTaskResult(taskResult);
+        ReportTaskResult reportTaskResult = (ReportTaskResult) taskResult;
+        if (reportTaskResult.getReportBlobId() != null) {
+            this.reportBlobId = reportTaskResult.getReportBlobId();
+        }
+    }
 
     @Override
     public JobType getJobType() {

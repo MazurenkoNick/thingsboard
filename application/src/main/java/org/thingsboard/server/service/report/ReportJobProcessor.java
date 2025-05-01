@@ -35,9 +35,9 @@ import org.springframework.stereotype.Component;
 import org.thingsboard.server.common.data.job.Job;
 import org.thingsboard.server.common.data.job.JobType;
 import org.thingsboard.server.common.data.job.ReportJobConfiguration;
-import org.thingsboard.server.common.data.job.ReportTask;
-import org.thingsboard.server.common.data.job.Task;
-import org.thingsboard.server.common.data.job.TaskFailure;
+import org.thingsboard.server.common.data.job.task.ReportTask;
+import org.thingsboard.server.common.data.job.task.Task;
+import org.thingsboard.server.common.data.job.task.TaskResult;
 import org.thingsboard.server.common.data.report.ReportRequest;
 import org.thingsboard.server.common.data.report.ReportTemplate;
 import org.thingsboard.server.dao.report.ReportTemplateService;
@@ -56,7 +56,7 @@ public class ReportJobProcessor implements JobProcessor {
     private final SystemSecurityService systemSecurityService;
 
     @Override
-    public int process(Job job, Consumer<Task> taskConsumer) throws Exception {
+    public int process(Job job, Consumer<Task<?>> taskConsumer) throws Exception {
         ReportJobConfiguration configuration = job.getConfiguration();
         ReportRequest reportRequest = configuration.getRequest();
         ReportTemplate reportTemplate = reportTemplateService.findReportTemplateById(job.getTenantId(), reportRequest.getTemplateId());
@@ -68,7 +68,7 @@ public class ReportJobProcessor implements JobProcessor {
     }
 
     @Override
-    public void reprocess(Job job, List<TaskFailure> failures, Consumer<Task> taskConsumer) throws Exception {
+    public void reprocess(Job job, List<TaskResult> failures, Consumer<Task<?>> taskConsumer) throws Exception {
 
     }
 

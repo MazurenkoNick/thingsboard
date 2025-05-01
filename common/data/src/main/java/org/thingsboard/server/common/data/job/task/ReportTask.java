@@ -28,29 +28,46 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.common.data.job;
+package org.thingsboard.server.common.data.job.task;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import lombok.Data;
-import org.thingsboard.server.common.data.job.task.TaskResult;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
+import lombok.experimental.SuperBuilder;
+import org.thingsboard.server.common.data.job.JobType;
+import org.thingsboard.server.common.data.report.ReportRequest;
+import org.thingsboard.server.common.data.report.ReportTemplate;
 
-import java.io.Serializable;
-import java.util.List;
-
-@JsonIgnoreProperties(ignoreUnknown = true)
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
-@JsonSubTypes({
-        @Type(name = "REPORT", value = ReportJobConfiguration.class),
-        @Type(name = "DUMMY", value = DummyJobConfiguration.class),
-})
 @Data
-public abstract class JobConfiguration implements Serializable {
+@NoArgsConstructor
+@EqualsAndHashCode(callSuper = true)
+@SuperBuilder
+@ToString(callSuper = true)
+public class ReportTask extends Task<ReportTaskResult> {
 
-    private List<TaskResult> toReprocess;
+    private ReportTemplate reportTemplate;
+    private ReportRequest reportRequest;
+    private String accessToken;
 
-    public abstract JobType getType();
+    @Override
+    public Object getKey() {
+        return reportRequest.getTemplateId();
+    }
+
+    @Override
+    public ReportTaskResult toFailed(Throwable error) {
+        return ReportTaskResult.failed(this, error);
+    }
+
+    @Override
+    public ReportTaskResult toDiscarded() {
+        return ReportTaskResult.discarded();
+    }
+
+    @Override
+    public JobType getJobType() {
+        return JobType.REPORT;
+    }
 
 }

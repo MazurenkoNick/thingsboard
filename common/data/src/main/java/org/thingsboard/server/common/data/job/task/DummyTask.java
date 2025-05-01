@@ -28,13 +28,14 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.common.data.job;
+package org.thingsboard.server.common.data.job.task;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
+import org.thingsboard.server.common.data.job.JobType;
 
 import java.util.List;
 
@@ -43,7 +44,7 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder
 @ToString(callSuper = true)
-public class DummyTask extends Task {
+public class DummyTask extends Task<DummyTaskResult> {
 
     private int number;
     private long processingTimeMs;
@@ -56,34 +57,18 @@ public class DummyTask extends Task {
     }
 
     @Override
-    public TaskFailure toFailure(Throwable error) {
-        return new DummyTaskFailure(number, failAlways, error.getMessage());
+    public DummyTaskResult toFailed(Throwable error) {
+        return DummyTaskResult.failed(this, error);
+    }
+
+    @Override
+    public DummyTaskResult toDiscarded() {
+        return DummyTaskResult.discarded();
     }
 
     @Override
     public JobType getJobType() {
         return JobType.DUMMY;
-    }
-
-    @Data
-    @EqualsAndHashCode(callSuper = true)
-    @NoArgsConstructor
-    public static class DummyTaskFailure extends TaskFailure {
-
-        private int number;
-        private boolean failAlways;
-
-        public DummyTaskFailure(int number, boolean failAlways, String error) {
-            super(error);
-            this.number = number;
-            this.failAlways = failAlways;
-        }
-
-        @Override
-        public JobType getJobType() {
-            return JobType.DUMMY;
-        }
-
     }
 
 }

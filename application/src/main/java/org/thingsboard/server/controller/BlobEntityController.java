@@ -35,12 +35,13 @@ import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.ByteArrayResource;
-import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -57,8 +58,10 @@ import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.TimePageLink;
 import org.thingsboard.server.common.data.permission.Operation;
+import org.thingsboard.server.common.data.permission.Resource;
 import org.thingsboard.server.common.data.security.Authority;
 import org.thingsboard.server.config.annotations.ApiOperation;
+import org.thingsboard.server.dao.blob.BlobEntityService;
 import org.thingsboard.server.queue.util.TbCoreComponent;
 import org.thingsboard.server.service.entitiy.blob.TbBlobService;
 import org.thingsboard.server.service.security.model.SecurityUser;
@@ -100,6 +103,17 @@ public class BlobEntityController extends BaseController {
     public static final String BLOB_ENTITY_QUERY_END_TIME_DESCRIPTION = "The end timestamp in milliseconds of the search time range over the BlobEntityWithCustomerInfo class field: 'createdTime'.";
 
     private final TbBlobService tbBlobService;
+    private final BlobEntityService blobEntityService;
+
+    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN')")
+    @PostMapping(value = "/blobEntity")
+    public BlobEntityInfo createBlobEntity(@RequestBody BlobEntity blobEntity) throws ThingsboardException {
+        if (blobEntity.getId() != null) {
+            throw new IllegalArgumentException("Blob entity can't be updated");
+        }
+        accessControlService.checkPermission(getCurrentUser(), Resource.BLOB_ENTITY, Operation.CREATE, null, blobEntity);
+        return new BlobEntityInfo(blobEntityService.saveBlobEntity(blobEntity));
+    }
 
     @ApiOperation(value = "Get Blob Entity With Customer Info (getBlobEntityInfoById)",
             notes = "Fetch the BlobEntityWithCustomerInfo object based on the provided Blob entity Id. " +
@@ -122,7 +136,7 @@ public class BlobEntityController extends BaseController {
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
     @RequestMapping(value = "/blobEntity/{blobEntityId}/download", method = RequestMethod.GET)
     @ResponseBody
-    public ResponseEntity<Resource> downloadBlobEntity(
+    public ResponseEntity<ByteArrayResource> downloadBlobEntity(
             @Parameter(description = BLOB_ENTITY_ID_PARAM_DESCRIPTION, required = true)
             @PathVariable(BLOB_ENTITY_ID) String strBlobEntityId) throws ThingsboardException {
         checkParameter(BLOB_ENTITY_ID, strBlobEntityId);
