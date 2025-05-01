@@ -1,0 +1,90 @@
+/**
+ * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
+ *
+ * Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
+ *
+ * NOTICE: All information contained herein is, and remains
+ * the property of ThingsBoard, Inc. and its suppliers,
+ * if any.  The intellectual and technical concepts contained
+ * herein are proprietary to ThingsBoard, Inc.
+ * and its suppliers and may be covered by U.S. and Foreign Patents,
+ * patents in process, and are protected by trade secret or copyright law.
+ *
+ * Dissemination of this information or reproduction of this material is strictly forbidden
+ * unless prior written permission is obtained from COMPANY.
+ *
+ * Access to the source code contained herein is hereby forbidden to anyone except current COMPANY employees,
+ * managers or contractors who have executed Confidentiality and Non-disclosure agreements
+ * explicitly covering such access.
+ *
+ * The copyright notice above does not evidence any actual or intended publication
+ * or disclosure  of  this source code, which includes
+ * information that is confidential and/or proprietary, and is a trade secret, of  COMPANY.
+ * ANY REPRODUCTION, MODIFICATION, DISTRIBUTION, PUBLIC  PERFORMANCE,
+ * OR PUBLIC DISPLAY OF OR THROUGH USE  OF THIS  SOURCE CODE  WITHOUT
+ * THE EXPRESS WRITTEN CONSENT OF COMPANY IS STRICTLY PROHIBITED,
+ * AND IN VIOLATION OF APPLICABLE LAWS AND INTERNATIONAL TREATIES.
+ * THE RECEIPT OR POSSESSION OF THIS SOURCE CODE AND/OR RELATED INFORMATION
+ * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
+ * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
+ */
+package org.thingsboard.server.service.report;
+
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
+import org.thingsboard.server.common.data.job.Job;
+import org.thingsboard.server.common.data.job.JobType;
+import org.thingsboard.server.common.data.job.ReportJobConfiguration;
+import org.thingsboard.server.common.data.job.ReportTask;
+import org.thingsboard.server.common.data.job.Task;
+import org.thingsboard.server.common.data.job.TaskFailure;
+import org.thingsboard.server.common.data.report.ReportRequest;
+import org.thingsboard.server.common.data.report.ReportTemplate;
+import org.thingsboard.server.dao.report.ReportTemplateService;
+import org.thingsboard.server.service.job.JobProcessor;
+import org.thingsboard.server.service.security.model.token.AccessJwtToken;
+import org.thingsboard.server.service.security.system.SystemSecurityService;
+
+import java.util.List;
+import java.util.function.Consumer;
+
+@Component
+@RequiredArgsConstructor
+public class ReportJobProcessor implements JobProcessor {
+
+    private final ReportTemplateService reportTemplateService;
+    private final SystemSecurityService systemSecurityService;
+
+    @Override
+    public int process(Job job, Consumer<Task> taskConsumer) throws Exception {
+        ReportJobConfiguration configuration = job.getConfiguration();
+        ReportRequest reportRequest = configuration.getRequest();
+        ReportTemplate reportTemplate = reportTemplateService.findReportTemplateById(job.getTenantId(), reportRequest.getTemplateId());
+        AccessJwtToken accessToken = systemSecurityService.createUserAccessToken(job.getTenantId(), configuration.getUserId());
+
+        ReportTask task = createTask(job, reportTemplate, reportRequest, accessToken.getToken());
+        taskConsumer.accept(task);
+        return 1;
+    }
+
+    @Override
+    public void reprocess(Job job, List<TaskFailure> failures, Consumer<Task> taskConsumer) throws Exception {
+
+    }
+
+    private ReportTask createTask(Job job, ReportTemplate reportTemplate, ReportRequest reportRequest, String accessToken) {
+        return ReportTask.builder()
+                .tenantId(job.getTenantId())
+                .jobId(job.getId())
+                .reportTemplate(reportTemplate)
+                .reportRequest(reportRequest)
+                .accessToken(accessToken)
+                .build();
+    }
+
+    @Override
+    public JobType getType() {
+        return JobType.REPORT;
+    }
+
+}
