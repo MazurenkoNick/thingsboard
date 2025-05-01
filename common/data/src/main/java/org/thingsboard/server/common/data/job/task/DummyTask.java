@@ -28,29 +28,47 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.common.data.job;
+package org.thingsboard.server.common.data.job.task;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import lombok.Data;
-import org.thingsboard.server.common.data.job.task.TaskResult;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
+import lombok.experimental.SuperBuilder;
+import org.thingsboard.server.common.data.job.JobType;
 
-import java.io.Serializable;
 import java.util.List;
 
-@JsonIgnoreProperties(ignoreUnknown = true)
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
-@JsonSubTypes({
-        @Type(name = "REPORT", value = ReportJobConfiguration.class),
-        @Type(name = "DUMMY", value = DummyJobConfiguration.class),
-})
 @Data
-public abstract class JobConfiguration implements Serializable {
+@NoArgsConstructor
+@EqualsAndHashCode(callSuper = true)
+@SuperBuilder
+@ToString(callSuper = true)
+public class DummyTask extends Task<DummyTaskResult> {
 
-    private List<TaskResult> toReprocess;
+    private int number;
+    private long processingTimeMs;
+    private List<String> errors; // errors for each attempt
+    private boolean failAlways;
 
-    public abstract JobType getType();
+    @Override
+    public Object getKey() {
+        return number;
+    }
+
+    @Override
+    public DummyTaskResult toFailed(Throwable error) {
+        return DummyTaskResult.failed(this, error);
+    }
+
+    @Override
+    public DummyTaskResult toDiscarded() {
+        return DummyTaskResult.discarded();
+    }
+
+    @Override
+    public JobType getJobType() {
+        return JobType.DUMMY;
+    }
 
 }

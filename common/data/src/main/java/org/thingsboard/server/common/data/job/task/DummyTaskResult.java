@@ -28,44 +28,57 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.common.data.job;
+package org.thingsboard.server.common.data.job.task;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
-import org.thingsboard.server.common.data.id.JobId;
-import org.thingsboard.server.common.data.id.TenantId;
+import org.thingsboard.server.common.data.job.JobType;
 
 @Data
-@JsonIgnoreProperties(ignoreUnknown = true)
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "jobType")
-@JsonSubTypes({
-        @Type(name = "REPORT", value = ReportTask.class),
-        @Type(name = "DUMMY", value = DummyTask.class)
-})
+@EqualsAndHashCode(callSuper = true)
+@NoArgsConstructor
 @SuperBuilder
-@AllArgsConstructor
-public abstract class Task {
+public class DummyTaskResult extends TaskResult {
 
-    private TenantId tenantId;
-    private JobId jobId;
-    private int retries;
+    private static final DummyTaskResult SUCCESS = DummyTaskResult.builder().success(true).build();
+    private static final DummyTaskResult DISCARDED = DummyTaskResult.builder().discarded(true).build();
 
-    public Task() {
+    private DummyTaskFailure failure;
+
+    public static DummyTaskResult success() {
+        return SUCCESS;
     }
 
-    private int attempt = 0;
+    public static DummyTaskResult failed(DummyTask task, Throwable error) {
+        DummyTaskResult result = new DummyTaskResult();
+        result.setFailure(DummyTaskFailure.builder()
+                .error(error.getMessage())
+                .number(task.getNumber())
+                .failAlways(task.isFailAlways())
+                .build());
+        return result;
+    }
 
-    @JsonIgnore
-    public abstract Object getKey();
+    public static DummyTaskResult discarded() {
+        return DISCARDED;
+    }
 
-    public abstract TaskFailure toFailure(Throwable error);
+    @Override
+    public JobType getJobType() {
+        return JobType.DUMMY;
+    }
 
-    public abstract JobType getJobType();
+    @Data
+    @NoArgsConstructor
+    @EqualsAndHashCode(callSuper = true)
+    @SuperBuilder
+    public static class DummyTaskFailure extends TaskFailure {
+
+        private int number;
+        private boolean failAlways;
+
+    }
 
 }

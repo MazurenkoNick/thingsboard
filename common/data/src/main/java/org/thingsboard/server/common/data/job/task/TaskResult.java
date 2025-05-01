@@ -28,21 +28,32 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.common.data.job;
+package org.thingsboard.server.common.data.job.task;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
+import org.thingsboard.server.common.data.job.JobType;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Builder
-public class TaskResult {
+@SuperBuilder
+@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "jobType")
+@JsonSubTypes({
+        @Type(name = "DUMMY", value = DummyTaskResult.class)
+})
+public abstract class TaskResult {
 
     private boolean success;
     private boolean discarded;
-    private TaskFailure failure;
+
+    public abstract JobType getJobType();
 
 }
