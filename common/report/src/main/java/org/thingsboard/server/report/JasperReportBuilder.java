@@ -106,7 +106,7 @@ public class JasperReportBuilder {
         // define report fields
         switch (component.getType()) {
             case DASHBOARD:
-                jasperDesign.addField(createField("data", byte[].class));
+                jasperDesign.addField(createByteField("data"));
                 break;
             case TIME_SERIES_TABLE: {
                 jasperDesign.addField(createField("ts", String.class));
@@ -195,7 +195,15 @@ public class JasperReportBuilder {
         image.setWidth(500);
         image.setHeight(500);
         image.setScaleImage(ScaleImageEnum.RETAIN_SHAPE);
-        image.setExpression(new JRDesignExpression("new java.io.ByteArrayInputStream($F{data})"));
+
+        JRDesignExpression expression = new JRDesignExpression();
+        expression.setText("new java.io.ByteArrayInputStream($F{data})");
+        expression.setValueClass(java.io.InputStream.class);
+
+        image.setExpression(expression);
+        //image.setExpression(new JRDesignExpression("net.sf.jasperreports.renderers.SimpleDataRenderer.getInstance($F{data})"));
+        //image.setExpression(new JRDesignExpression("$F{data}"));
+
 
         detailBand.addElement(image);
 
@@ -229,6 +237,13 @@ public class JasperReportBuilder {
         field.setName(name);
         field.setValueClass(type);
         return field;
+    }
+
+    public JRDesignField createByteField(String name) {
+        JRDesignField imageField = new JRDesignField();
+        imageField.setName(name);
+        imageField.setValueClassName("byte[]");
+        return imageField;
     }
 
     public void addColumnHeader(List<String> titles) {

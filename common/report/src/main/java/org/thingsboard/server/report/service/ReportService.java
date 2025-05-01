@@ -32,6 +32,7 @@ package org.thingsboard.server.report.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.util.concurrent.SettableFuture;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.sf.jasperreports.engine.JRDataSource;
@@ -41,6 +42,7 @@ import net.sf.jasperreports.engine.JasperExportManager;
 import net.sf.jasperreports.engine.JasperFillManager;
 import net.sf.jasperreports.engine.JasperPrint;
 import net.sf.jasperreports.engine.JasperReport;
+import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 import net.sf.jasperreports.engine.data.JRMapCollectionDataSource;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.springframework.core.io.ByteArrayResource;
@@ -95,6 +97,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.TimeZone;
+import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -119,6 +122,8 @@ public class ReportService {
     private static final JRMapCollectionDataSource EMPTY_DATA_SOURCE = new JRMapCollectionDataSource(List.of(Map.of()));
     private final SimpleDateFormat defaultDateFormat = new SimpleDateFormat("yyyy-MM-dd_HH:mm:ss"); // fixme dasha make configurable (?)
     private static final Pattern reportNameDatePattern = Pattern.compile("%d\\{([^\\}]*)\\}");
+
+    private final DashboardReportService dashboardReportService;
 
     public ReportData generateReport(ReportTask task, RestClient restClient) throws ThingsboardException {
         TenantId tenantId = task.getTenantId();
@@ -203,8 +208,23 @@ public class ReportService {
         };
     }
 
-    private JRDataSource buildDashboardDataSource(TbReportCtx ctx, DashboardComponent component) {
-        return EMPTY_DATA_SOURCE;
+    private JRDataSource buildDashboardDataSource(TbReportCtx ctx, DashboardComponent component) throws ThingsboardException {
+        SettableFuture<DashboardReportData> futureToSet = SettableFuture.create();
+        dashboardReportService.generateReport(
+                ctx.getTenantId(),
+                component.getConfig(),
+                null,
+                futureToSet::set,
+                error -> {
+                    log.error("Failed to generate dashboard report", error);
+                    futureToSet.setException(error);
+                }
+        );
+        try {
+            return new JRBeanCollectionDataSource(List.of(futureToSet.get()));
+        } catch (InterruptedException | ExecutionException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private JRMapCollectionDataSource buildAlarmDataSource(TbReportCtx ctx, AlarmTableComponent component) {

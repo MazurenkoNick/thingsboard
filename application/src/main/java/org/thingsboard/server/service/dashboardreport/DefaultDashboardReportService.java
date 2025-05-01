@@ -50,7 +50,7 @@ import org.springframework.web.reactive.function.client.ExchangeFilterFunctions;
 import org.springframework.web.reactive.function.client.ExchangeStrategies;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.thingsboard.common.util.JacksonUtil;
-import org.thingsboard.rule.engine.api.DashboardReportService;
+import org.thingsboard.server.report.service.DashboardReportService;
 import org.thingsboard.server.cache.limits.RateLimitService;
 import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.dashboardreport.DashboardReportConfig;

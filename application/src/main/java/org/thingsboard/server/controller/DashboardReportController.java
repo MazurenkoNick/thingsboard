@@ -47,7 +47,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.context.request.async.DeferredResult;
-import org.thingsboard.rule.engine.api.DashboardReportService;
+import org.thingsboard.server.report.service.DashboardReportService;
 import org.thingsboard.server.common.data.DashboardInfo;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.id.DashboardId;

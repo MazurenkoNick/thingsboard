@@ -50,7 +50,7 @@ import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.rule.engine.api.DeviceStateManager;
 import org.thingsboard.rule.engine.api.MailService;
 import org.thingsboard.rule.engine.api.NotificationCenter;
-import org.thingsboard.rule.engine.api.DashboardReportService;
+import org.thingsboard.server.report.service.DashboardReportService;
 import org.thingsboard.rule.engine.api.SmsService;
 import org.thingsboard.rule.engine.api.notification.SlackService;
 import org.thingsboard.rule.engine.api.sms.SmsSenderFactory;
