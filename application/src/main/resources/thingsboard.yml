@@ -2069,7 +2069,7 @@ queue:
   tasks:
     stats:
       # Interval in milliseconds to process job stats
-      processing_interval_ms: "${TB_QUEUE_TASKS_STATS_PROCESSING_INTERVAL_MS:5000}"
+      processing_interval_ms: "${TB_QUEUE_TASKS_STATS_PROCESSING_INTERVAL_MS:1000}"
 
 # Event configuration parameters
 event:

@@ -86,7 +86,7 @@ public class DefaultJobManager implements JobManager {
     private final ExecutorService executor;
     private final ExecutorService consumerExecutor;
 
-    @Value("${queue.tasks.stats.processing_interval_ms:5000}")
+    @Value("${queue.tasks.stats.processing_interval_ms:1000}")
     private int statsProcessingInterval;
 
     public DefaultJobManager(JobService jobService, JobStatsService jobStatsService, TbCoreQueueFactory queueFactory, List<JobProcessor> jobProcessors) {

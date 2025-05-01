@@ -52,7 +52,7 @@ public class ReportTaskProcessor extends TaskProcessor<ReportTask, ReportTaskRes
 
     private final ReportService reportService;
 
-    @Value("${service.tb_core.base_url:http://localhost:${server.port}") // for monolith - sending request to itself todo: make configurable via yaml
+    @Value("${service.tb_core.base_url:http://localhost:${server.port}}") // for monolith - sending request to itself todo: make configurable via yaml
     private String tbCoreBaseUrl;
 
     @Override

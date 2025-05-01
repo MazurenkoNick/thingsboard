@@ -49,7 +49,7 @@ import org.thingsboard.server.common.data.job.Job;
 import org.thingsboard.server.common.data.job.JobStatus;
 import org.thingsboard.server.common.data.job.JobType;
 import org.thingsboard.server.common.data.job.ReportJobConfiguration;
-import org.thingsboard.server.common.data.job.task.ReportTaskResult;
+import org.thingsboard.server.common.data.job.ReportJobResult;
 import org.thingsboard.server.common.data.report.ReportRequest;
 import org.thingsboard.server.config.annotations.ApiOperation;
 import org.thingsboard.server.dao.blob.BlobEntityService;
@@ -87,9 +87,7 @@ public class ReportController extends BaseController {
             throw new IllegalStateException("Failed to generate report: " + job.getResult().getResults());
         }
 
-        BlobEntityId reportBlobId = job.getResult().getResults().stream()
-                .map(taskResult -> ((ReportTaskResult) taskResult).getReportBlobId())
-                .findFirst().orElseThrow(() -> new IllegalStateException("No report blob id found in the job result"));
+        BlobEntityId reportBlobId = ((ReportJobResult) job.getResult()).getReportBlobId();
         BlobEntity reportBlobEntity = blobEntityService.findBlobEntityById(tenantId, reportBlobId);
 
         ByteArrayResource resource = new ByteArrayResource(reportBlobEntity.getData().array());

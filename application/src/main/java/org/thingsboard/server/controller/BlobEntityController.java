@@ -35,7 +35,6 @@ import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.ByteArrayResource;
-import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -59,6 +58,7 @@ import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.TimePageLink;
 import org.thingsboard.server.common.data.permission.Operation;
+import org.thingsboard.server.common.data.permission.Resource;
 import org.thingsboard.server.common.data.security.Authority;
 import org.thingsboard.server.config.annotations.ApiOperation;
 import org.thingsboard.server.dao.blob.BlobEntityService;
@@ -111,7 +111,7 @@ public class BlobEntityController extends BaseController {
         if (blobEntity.getId() != null) {
             throw new IllegalArgumentException("Blob entity can't be updated");
         }
-        checkEntity(getCurrentUser(), blobEntity, Operation.CREATE);
+        accessControlService.checkPermission(getCurrentUser(), Resource.BLOB_ENTITY, Operation.CREATE, null, blobEntity);
         return new BlobEntityInfo(blobEntityService.saveBlobEntity(blobEntity));
     }
 
@@ -136,7 +136,7 @@ public class BlobEntityController extends BaseController {
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
     @RequestMapping(value = "/blobEntity/{blobEntityId}/download", method = RequestMethod.GET)
     @ResponseBody
-    public ResponseEntity<Resource> downloadBlobEntity(
+    public ResponseEntity<ByteArrayResource> downloadBlobEntity(
             @Parameter(description = BLOB_ENTITY_ID_PARAM_DESCRIPTION, required = true)
             @PathVariable(BLOB_ENTITY_ID) String strBlobEntityId) throws ThingsboardException {
         checkParameter(BLOB_ENTITY_ID, strBlobEntityId);
