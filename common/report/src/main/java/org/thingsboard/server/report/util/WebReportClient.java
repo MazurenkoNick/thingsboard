@@ -77,7 +77,7 @@ public class WebReportClient {
     @Value("${reports.service.web_report.endpointUrl}")
     private String dashboardReportsServerEndpointUrl;
 
-    @Value("${reports.service.web_report.endpointUrl:52428800}")
+    @Value("${reports.service.web_report.maxResponseSize:52428800}")
     private int maxResponseSize;
 
     private EventLoopGroup eventLoopGroup;
