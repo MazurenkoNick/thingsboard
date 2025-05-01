@@ -143,11 +143,6 @@ public class TbIntegrationQueueProducerProvider implements TbQueueProducerProvid
     }
 
     @Override
-    public TbQueueProducer<TbProtoQueueMsg<TransportProtos.JobStatsMsg>> getJobStatsProducer() {
-        throw new RuntimeException(NOT_IMPLEMENTED);
-    }
-
-    @Override
     public TbQueueProducer<TbProtoQueueMsg<ToIntegrationExecutorNotificationMsg>> getTbIntegrationExecutorNotificationsMsgProducer() {
         throw new RuntimeException(NOT_IMPLEMENTED);
     }
