@@ -42,24 +42,35 @@ import org.thingsboard.server.common.data.job.task.ReportTask;
 import org.thingsboard.server.common.data.job.task.ReportTaskResult;
 import org.thingsboard.server.common.data.report.ReportData;
 import org.thingsboard.server.queue.task.TaskProcessor;
+import org.thingsboard.server.queue.util.TbReportComponent;
 import org.thingsboard.server.report.service.ReportService;
+import org.thingsboard.server.report.service.TbReportCtx;
 
 import java.nio.ByteBuffer;
 
+@TbReportComponent
 @Component
 @RequiredArgsConstructor
 public class ReportTaskProcessor extends TaskProcessor<ReportTask, ReportTaskResult> {
 
     private final ReportService reportService;
 
-    @Value("${service.tb_core.base_url:http://localhost:${server.port}}") // for monolith - sending request to itself todo: make configurable via yaml
+    @Value("${service.tb_core.base_url:http://localhost:${server.port}}") // for monolith - sending request to itself
     private String tbCoreBaseUrl;
 
     @Override
     public ReportTaskResult process(ReportTask task) throws Exception {
         ReportData reportData;
         try (RestClient restClient = new RestClient(new RestTemplate(), tbCoreBaseUrl, task.getAccessToken())) {
-            reportData = reportService.generateReport(task, restClient);
+            TbReportCtx reportCtx = TbReportCtx.builder()
+                    .tenantId(task.getTenantId())
+                    .customerId(task.getReportRequest().getCustomerId())
+                    .configuration(task.getReportTemplate().getConfiguration())
+                    .restClient(restClient)
+                    .accessToken(task.getAccessToken())
+                    .accessTokenExpTs(task.getAccessTokenExpirationTs())
+                    .build();
+            reportData = reportService.generateReport(task, reportCtx);
 
             BlobEntity blobEntity = new BlobEntity();
             blobEntity.setTenantId(task.getTenantId());
@@ -67,7 +78,7 @@ public class ReportTaskProcessor extends TaskProcessor<ReportTask, ReportTaskRes
             blobEntity.setData(ByteBuffer.wrap(reportData.getData()));
             blobEntity.setContentType(reportData.getContentType());
             blobEntity.setName(reportData.getName());
-            blobEntity.setType("report");
+            blobEntity.setType("test_report");
             BlobEntityInfo savedBlobEntity = restClient.createBlobEntity(blobEntity);
             return ReportTaskResult.success(savedBlobEntity.getId());
         }

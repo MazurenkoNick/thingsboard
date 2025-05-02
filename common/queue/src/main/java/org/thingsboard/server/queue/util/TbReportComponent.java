@@ -28,33 +28,15 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.report.service;
+package org.thingsboard.server.queue.util;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import org.thingsboard.server.common.data.exception.ThingsboardException;
-import org.thingsboard.server.common.data.id.DashboardId;
-import org.thingsboard.server.common.data.id.TenantId;
-import org.thingsboard.server.common.data.id.UserId;
-import org.thingsboard.server.common.data.dashboardreport.DashboardReportConfig;
-import org.thingsboard.server.common.data.dashboardreport.DashboardReportData;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 
-import java.util.function.Consumer;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 
-public interface DashboardReportService {
-
-    void generateDashboardReport(String baseUrl,
-                                 DashboardId dashboardId,
-                                 TenantId tenantId,
-                                 UserId userId,
-                                 String publicId,
-                                 String reportName,
-                                 JsonNode reportParams,
-                                 Consumer<DashboardReportData> onSuccess,
-                                 Consumer<Throwable> onFailure) throws ThingsboardException;
-
-    void generateReport(TenantId tenantId, DashboardReportConfig reportConfig,
-                        String reportsServerEndpointUrl,
-                        Consumer<DashboardReportData> onSuccess,
-                        Consumer<Throwable> onFailure) throws ThingsboardException;
-
+@Retention(RetentionPolicy.RUNTIME)
+@ConditionalOnExpression("'${service.type:null}' == 'tb-report' || '${service.type:null}' == 'monolith' || " +
+                         "('${service.type:null}' == 'tb-core' && '${reports.service.mode:local}' == 'local')")
+public @interface TbReportComponent {
 }

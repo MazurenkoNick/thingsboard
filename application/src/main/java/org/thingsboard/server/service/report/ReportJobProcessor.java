@@ -62,23 +62,24 @@ public class ReportJobProcessor implements JobProcessor {
         ReportTemplate reportTemplate = reportTemplateService.findReportTemplateById(job.getTenantId(), reportRequest.getTemplateId());
         AccessJwtToken accessToken = systemSecurityService.createUserAccessToken(job.getTenantId(), configuration.getUserId());
 
-        ReportTask task = createTask(job, reportTemplate, reportRequest, accessToken.getToken());
+        ReportTask task = createTask(job, reportTemplate, reportRequest, accessToken);
         taskConsumer.accept(task);
         return 1;
     }
 
     @Override
     public void reprocess(Job job, List<TaskResult> failures, Consumer<Task<?>> taskConsumer) throws Exception {
-
+        process(job, taskConsumer);
     }
 
-    private ReportTask createTask(Job job, ReportTemplate reportTemplate, ReportRequest reportRequest, String accessToken) {
+    private ReportTask createTask(Job job, ReportTemplate reportTemplate, ReportRequest reportRequest, AccessJwtToken accessToken) {
         return ReportTask.builder()
                 .tenantId(job.getTenantId())
                 .jobId(job.getId())
                 .reportTemplate(reportTemplate)
                 .reportRequest(reportRequest)
-                .accessToken(accessToken)
+                .accessToken(accessToken.getToken())
+                .accessTokenExpirationTs(accessToken.getClaims().getExpiration().getTime())
                 .build();
     }
 
