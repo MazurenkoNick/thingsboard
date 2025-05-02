@@ -47,6 +47,7 @@ import org.thingsboard.server.common.data.job.JobStatus;
 import org.thingsboard.server.common.data.job.JobType;
 import org.thingsboard.server.common.data.job.task.DummyTaskResult;
 import org.thingsboard.server.common.data.job.task.DummyTaskResult.DummyTaskFailure;
+import org.thingsboard.server.common.data.notification.Notification;
 import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.controller.AbstractControllerTest;
 import org.thingsboard.server.dao.job.JobService;
@@ -119,6 +120,16 @@ public class JobManagerTest extends AbstractControllerTest {
             assertThat(job.getResult().getSuccessfulCount()).isEqualTo(tasksCount);
             assertThat(job.getResult().getResults()).isEmpty();
             assertThat(job.getResult().getCompletedCount()).isEqualTo(tasksCount);
+        });
+
+        await().atMost(TIMEOUT, TimeUnit.SECONDS).untilAsserted(() -> {
+            Notification jobCompletionNotification = getMyNotifications(true, 100).stream()
+                    .filter(notification -> notification.getSubject().contains("Job"))
+                    .findFirst().orElseThrow();
+            System.err.println(jobCompletionNotification);
+
+            assertThat(jobCompletionNotification.getSubject()).isEqualTo("Job 'test job' is completed");
+            assertThat(jobCompletionNotification.getText()).isEqualTo("Processed 5/5 tasks");
         });
     }
 

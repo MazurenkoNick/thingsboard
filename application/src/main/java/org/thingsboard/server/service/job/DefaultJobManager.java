@@ -119,10 +119,25 @@ public class DefaultJobManager implements JobManager {
 
     @Override
     public void onJobUpdate(Job job) {
-        if (job.getStatus() == JobStatus.PENDING) {
-            executor.execute(() -> {
-                processJob(job);
-            });
+        switch (job.getStatus()) {
+            case PENDING -> {
+                executor.execute(() -> {
+                    try {
+                        processJob(job);
+                    } catch (Throwable e) {
+                        log.error("Failed to process job update: {}", job, e);
+                    }
+                });
+            }
+            case COMPLETED -> {
+                executor.execute(() -> {
+                    try {
+                        getJobProcessor(job.getType()).onJobCompleted(job);
+                    } catch (Throwable e) {
+                        log.error("Failed to process job update: {}", job, e);
+                    }
+                });
+            }
         }
     }
 
@@ -130,7 +145,7 @@ public class DefaultJobManager implements JobManager {
         TenantId tenantId = job.getTenantId();
         JobId jobId = job.getId();
         try {
-            JobProcessor processor = jobProcessors.get(job.getType());
+            JobProcessor processor = getJobProcessor(job.getType());
             List<TaskResult> toReprocess = job.getConfiguration().getToReprocess();
             if (toReprocess == null) {
                 int tasksCount = processor.process(job, this::submitTask); // todo: think about stopping tb - while tasks are being submitted
@@ -142,11 +157,7 @@ public class DefaultJobManager implements JobManager {
             }
         } catch (Throwable e) {
             log.error("[{}][{}][{}] Failed to submit tasks", tenantId, jobId, job.getType(), e);
-            try {
-                jobService.markAsFailed(tenantId, jobId, ExceptionUtils.getStackTrace(e));
-            } catch (Throwable e2) {
-                log.error("[{}][{}] Failed to mark job as failed", tenantId, jobId, e2);
-            }
+            jobService.markAsFailed(tenantId, jobId, ExceptionUtils.getStackTrace(e));
         }
     }
 
@@ -237,6 +248,10 @@ public class DefaultJobManager implements JobManager {
         consumer.commit();
 
         Thread.sleep(statsProcessingInterval); // todo: test with bigger interval
+    }
+
+    private JobProcessor getJobProcessor(JobType jobType) {
+        return jobProcessors.get(jobType);
     }
 
     @PreDestroy

@@ -32,6 +32,7 @@ package org.thingsboard.server.service.job;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import org.thingsboard.rule.engine.api.NotificationCenter;
 import org.thingsboard.server.common.data.job.DummyJobConfiguration;
 import org.thingsboard.server.common.data.job.Job;
 import org.thingsboard.server.common.data.job.JobType;
@@ -40,14 +41,21 @@ import org.thingsboard.server.common.data.job.task.DummyTaskResult;
 import org.thingsboard.server.common.data.job.task.DummyTaskResult.DummyTaskFailure;
 import org.thingsboard.server.common.data.job.task.Task;
 import org.thingsboard.server.common.data.job.task.TaskResult;
+import org.thingsboard.server.common.data.notification.info.GeneralNotificationInfo;
+import org.thingsboard.server.common.data.notification.targets.platform.AllUsersFilter;
+import org.thingsboard.server.common.data.notification.template.NotificationTemplate;
+import org.thingsboard.server.dao.notification.DefaultNotifications;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 
 @Component
 @RequiredArgsConstructor
 public class DummyJobProcessor implements JobProcessor {
+
+    private final NotificationCenter notificationCenter;
 
     @Override
     public int process(Job job, Consumer<Task<?>> taskConsumer) throws Exception {
@@ -85,6 +93,21 @@ public class DummyJobProcessor implements JobProcessor {
             taskConsumer.accept(createTask(job, job.getConfiguration(), failure.getNumber(), failure.isFailAlways() ?
                     List.of(failure.getError()) : Collections.emptyList(), failure.isFailAlways()));
         }
+    }
+
+    @Override
+    public void onJobCompleted(Job job) {
+        NotificationTemplate template = DefaultNotifications.DefaultNotification.builder()
+                .name("Job completion")
+                .subject("Job '${description}' is completed")
+                .text("Processed ${successfulCount}/${totalCount} tasks")
+                .build().toTemplate();
+        notificationCenter.sendGeneralWebNotification(job.getTenantId(), new AllUsersFilter(),
+                template, new GeneralNotificationInfo(Map.of(
+                        "description", job.getDescription(),
+                        "successfulCount", String.valueOf(job.getResult().getSuccessfulCount()),
+                        "totalCount", String.valueOf(job.getResult().getTotalCount())
+                )));
     }
 
     private DummyTask createTask(Job job, DummyJobConfiguration configuration, int number, List<String> errors, boolean failAlways) {
