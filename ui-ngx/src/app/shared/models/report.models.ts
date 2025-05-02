@@ -141,3 +141,25 @@ export const defaultReportTemplate: ReportTemplate = {
     components: []
   }
 };
+
+export const validateAndUpdateReportTemplate = (reportTemplate: ReportTemplate): ReportTemplate => {
+  reportTemplate.configuration.header = validateAndUpdateReportTemplateHeaderFooter(reportTemplate.configuration.header);
+  reportTemplate.configuration.footer = validateAndUpdateReportTemplateHeaderFooter(reportTemplate.configuration.footer);
+  return reportTemplate;
+}
+
+const validateAndUpdateReportTemplateHeaderFooter = (headerFooter: HeaderFooter): HeaderFooter => {
+  if (!headerFooter) {
+    headerFooter = { enabled: true, components: [], firstPage: { enabled: false, components: [] } };
+  }
+  if (!headerFooter.components) {
+    headerFooter.components = [];
+  }
+  if (!headerFooter.firstPage) {
+    headerFooter.firstPage = { enabled: false, components: [] };
+  }
+  if (!headerFooter.firstPage.components) {
+    headerFooter.firstPage.components = [];
+  }
+  return headerFooter;
+}

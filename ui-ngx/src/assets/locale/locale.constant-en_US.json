@@ -86,7 +86,9 @@
         "delete-anyway": "Delete anyway",
         "delete-selected": "Delete selected",
         "set": "Set",
-        "duplicate": "Duplicate"
+        "duplicate": "Duplicate",
+        "disable": "Disable",
+        "enable": "Enable"
     },
     "aggregation": {
         "aggregation": "Aggregation",
@@ -6992,7 +6994,13 @@
         "report-components": "Report components",
         "drop-report-components": "Drop report components from sidebar here",
         "header": "Header",
+        "header-disabled": "Header disabled",
+        "first-page-header": "First page header",
+        "first-page-header-disabled": "First page header disabled",
         "footer": "Footer",
+        "footer-disabled": "Footer disabled",
+        "first-page-footer": "First page footer",
+        "first-page-footer-disabled": "First page footer disabled",
         "content": "Content",
         "component": {
             "heading": {

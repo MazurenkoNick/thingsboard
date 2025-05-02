@@ -42,11 +42,11 @@ import { PageComponent } from '@shared/components/page.component';
 import { HasDirtyFlag } from '@core/guards/confirm-on-exit.guard';
 import { Operation, Resource } from '@shared/models/security.models';
 import {
-  filterToReportFilter,
+  filterToReportFilter, HeaderFooter,
   ReportFilter,
   reportFilterToFilter,
   ReportTemplate,
-  ReportTemplateSettings
+  ReportTemplateSettings, validateAndUpdateReportTemplate
 } from '@shared/models/report.models';
 import { UserPermissionsService } from '@core/http/user-permissions.service';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -89,6 +89,16 @@ export class ReportTemplatePageComponent extends PageComponent
     this.isDirtyValue = value;
   }
 
+  get currentHeader(): HeaderFooter {
+    return this.headerToggleValue === 'header' ? this.reportTemplate.configuration.header :
+      this.reportTemplate.configuration.header.firstPage;
+  }
+
+  get currentFooter(): HeaderFooter {
+    return this.footerToggleValue === 'footer' ? this.reportTemplate.configuration.footer :
+      this.reportTemplate.configuration.footer.firstPage;
+  }
+
   @HostBinding('style.width') width = '100%';
   @HostBinding('style.height') height = '100%';
 
@@ -110,6 +120,9 @@ export class ReportTemplatePageComponent extends PageComponent
   editingReportComponent: ReportComponentConfig;
 
   reportTemplateSettingsFormControl: FormControl;
+
+  headerToggleValue: 'header' | 'firstPageHeader' = 'header';
+  footerToggleValue: 'footer' | 'firstPageFooter' = 'footer';
 
   constructor(private route: ActivatedRoute,
               private userPermissionsService: UserPermissionsService,
@@ -154,17 +167,39 @@ export class ReportTemplatePageComponent extends PageComponent
     );
   }
 
+  public disableHeader(): void {
+    this.currentHeader.enabled = false;
+    this.isDirty = true;
+  }
+
+  public enableHeader(): void {
+    this.currentHeader.enabled = true;
+    this.isDirty = true;
+  }
+
+  public disableFooter(): void {
+    this.currentFooter.enabled = false;
+    this.isDirty = true;
+  }
+
+  public enableFooter(): void {
+    this.currentFooter.enabled = true;
+    this.isDirty = true;
+  }
+
   public reportComponentsChanged(): void {
     this.cancelReportComponentEdit();
     this.isDirty = true;
   }
 
   public editReportComponent(reportComponent: ReportComponentConfig): void {
-    this.activeReportComponent = reportComponent;
-    this.editingReportComponent = deepClone(reportComponent);
-    const reportComponentsLibrary = this.reportComponentsLibrary()
-    if (reportComponentsLibrary) {
-      reportComponentsLibrary.close().then();
+    if (this.activeReportComponent !== reportComponent) {
+      this.activeReportComponent = reportComponent;
+      this.editingReportComponent = deepClone(reportComponent);
+      const reportComponentsLibrary = this.reportComponentsLibrary()
+      if (reportComponentsLibrary) {
+        reportComponentsLibrary.close().then();
+      }
     }
   }
 
@@ -287,19 +322,9 @@ export class ReportTemplatePageComponent extends PageComponent
 
   private init(reportTemplate: ReportTemplate) {
     this.cancelReportComponentEdit();
-    this.reportTemplate = reportTemplate;
-    if (!this.reportTemplate.configuration.header) {
-      this.reportTemplate.configuration.header = { enabled: true, components: [] };
-    }
-    if (!this.reportTemplate.configuration.header.components) {
-      this.reportTemplate.configuration.header.components = [];
-    }
-    if (!this.reportTemplate.configuration.footer) {
-      this.reportTemplate.configuration.header = { enabled: true, components: [] };
-    }
-    if (!this.reportTemplate.configuration.footer.components) {
-      this.reportTemplate.configuration.footer.components = [];
-    }
+    this.headerToggleValue = 'header';
+    this.footerToggleValue = 'footer';
+    this.reportTemplate = validateAndUpdateReportTemplate(reportTemplate);
     const settings: ReportTemplateSettings = {
       name: this.reportTemplate.name,
       fileName: this.reportTemplate.configuration.fileName,
