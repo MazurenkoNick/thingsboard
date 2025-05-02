@@ -55,6 +55,7 @@ import org.thingsboard.server.common.data.query.EntityData;
 import org.thingsboard.server.common.data.report.ReportData;
 import org.thingsboard.server.common.data.report.ReportRequest;
 import org.thingsboard.server.common.data.report.ReportTemplate;
+import org.thingsboard.server.common.data.report.TbReportFormat;
 import org.thingsboard.server.common.data.report.configuration.DataSource;
 import org.thingsboard.server.common.data.report.configuration.EntityAlias;
 import org.thingsboard.server.common.data.report.configuration.Filter;
@@ -203,6 +204,11 @@ public class PdfReportService extends AbstractReportService {
                     List.of(Map.of("count", restClient.countAlarmsByQuery(toAlarmCountQuery(dataSource, configuration))));
             default -> throw new IllegalArgumentException("Unknown data source type: " + dataSource.getType());
         };
+    }
+
+    @Override
+    public TbReportFormat getFormat() {
+        return TbReportFormat.PDF;
     }
 
 }

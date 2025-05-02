@@ -41,20 +41,32 @@ import org.thingsboard.server.common.data.job.JobType;
 import org.thingsboard.server.common.data.job.task.ReportTask;
 import org.thingsboard.server.common.data.job.task.ReportTaskResult;
 import org.thingsboard.server.common.data.report.ReportData;
+import org.thingsboard.server.common.data.report.TbReportFormat;
 import org.thingsboard.server.common.data.report.configuration.ReportTemplateConfig;
 import org.thingsboard.server.queue.task.TaskProcessor;
 import org.thingsboard.server.queue.util.TbReportComponent;
-import org.thingsboard.server.report.service.ReportRegistry;
+import org.thingsboard.server.report.service.ReportService;
 import org.thingsboard.server.report.service.TbReportCtx;
 
 import java.nio.ByteBuffer;
+import java.util.EnumMap;
+import java.util.List;
+import java.util.Map;
 
 @TbReportComponent
 @Component
-@RequiredArgsConstructor
 public class ReportTaskProcessor extends TaskProcessor<ReportTask, ReportTaskResult> {
 
-    private final ReportRegistry reportRegistry;
+    private final Map<TbReportFormat, ReportService> reportServices = new EnumMap<>(TbReportFormat.class);
+
+    private ReportTaskProcessor(List<ReportService> reportServices) {
+        reportServices.forEach(service -> {
+            TbReportFormat format = service.getFormat();
+            if (format != null) {
+                this.reportServices.put(format, service);
+            }
+        });
+    }
 
     @Value("${service.tb_core.base_url:http://localhost:${server.port}}") // for monolith - sending request to itself
     private String tbCoreBaseUrl;
@@ -72,8 +84,7 @@ public class ReportTaskProcessor extends TaskProcessor<ReportTask, ReportTaskRes
                     .accessToken(task.getAccessToken())
                     .accessTokenExpTs(task.getAccessTokenExpirationTs())
                     .build();
-            reportData = reportRegistry.getBuilder(configuration.getFormat())
-                    .generateReport(task, reportCtx);
+            reportData = reportServices.get(configuration.getFormat()).generateReport(task, reportCtx);
 
             BlobEntity blobEntity = new BlobEntity();
             blobEntity.setTenantId(task.getTenantId());

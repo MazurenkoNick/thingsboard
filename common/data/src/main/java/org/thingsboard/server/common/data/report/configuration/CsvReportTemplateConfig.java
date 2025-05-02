@@ -32,14 +32,14 @@ package org.thingsboard.server.common.data.report.configuration;
 
 import lombok.Data;
 import org.thingsboard.server.common.data.report.TbReportFormat;
-import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
+import org.thingsboard.server.common.data.report.configuration.components.TableReportComponent;
 
 @Data
 public class CsvReportTemplateConfig extends AbstractReportTemplateConfig {
 
     private EntityAlias entityAlias;
     private Filter filter;
-    private ReportComponent component;
+    private TableReportComponent component;
 
     @Override
     public TbReportFormat getFormat() {

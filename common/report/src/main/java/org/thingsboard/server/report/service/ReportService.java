@@ -33,9 +33,12 @@ package org.thingsboard.server.report.service;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.job.task.ReportTask;
 import org.thingsboard.server.common.data.report.ReportData;
+import org.thingsboard.server.common.data.report.TbReportFormat;
 
 public interface ReportService {
 
     ReportData generateReport(ReportTask task, TbReportCtx ctx) throws ThingsboardException;
+
+    TbReportFormat getFormat();
 
 }

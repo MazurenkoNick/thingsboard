@@ -41,6 +41,7 @@ import org.thingsboard.server.common.data.job.task.ReportTask;
 import org.thingsboard.server.common.data.report.ReportData;
 import org.thingsboard.server.common.data.report.ReportRequest;
 import org.thingsboard.server.common.data.report.ReportTemplate;
+import org.thingsboard.server.common.data.report.TbReportFormat;
 import org.thingsboard.server.common.data.report.configuration.CsvReportTemplateConfig;
 import org.thingsboard.server.common.data.report.configuration.components.AlarmTableComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
@@ -97,6 +98,11 @@ public class CsvReportService extends AbstractReportService {
             case ENTITY_TABLE -> buildEntityDataSource(ctx, getSingleDataSource(component));
             default -> List.of(Map.of());
         };
+    }
+
+    @Override
+    public TbReportFormat getFormat() {
+        return TbReportFormat.CSV;
     }
 
 }

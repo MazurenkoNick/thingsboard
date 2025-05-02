@@ -116,10 +116,11 @@ public abstract class AbstractReportService implements ReportService {
     }
 
     protected List<Map<String, ?>> buildAlarmDataSource(TbReportCtx ctx, AlarmTableComponent component) {
+        List<String> keyList = component.getAlarmSource().getDataKeys().stream().map(DataKey::getName).toList();
         return StreamSupport.stream(
                 new PageDataIterable<>(link -> ctx.getRestClient().findAlarmDataByQuery(toAlarmDataQuery(component, ctx.getConfiguration(), link)), 1024).spliterator(),
                 false
-        ).map(alarmData -> toMapData(component, alarmData)).collect(Collectors.toList());
+        ).map(alarmData -> toMapData(alarmData, keyList)).collect(Collectors.toList());
     }
 
     protected Map<String, ?> toMap(EntityData entityData) {
@@ -132,14 +133,13 @@ public abstract class AbstractReportService implements ReportService {
         return latestValues;
     }
 
-    protected Map<String, Object> toMapData(AlarmTableComponent component, AlarmData alarmData) {
+    protected Map<String, Object> toMapData(AlarmData alarmData, List<String> keys) {
         Map<String, Object> data = new HashMap<>();
-        List<String> keys = component.getAlarmSource().getDataKeys().stream().map(DataKey::getName).toList();
         JsonNode alarmDataJson = JacksonUtil.valueToTree(alarmData);
         keys.forEach(key -> {
-            Object value = JacksonUtil.getByKeyPath(alarmDataJson, key);
+            JsonNode value = JacksonUtil.getByKeyPath(alarmDataJson, key);
             if (value != null) {
-                data.put(key, value);
+                data.put(key, value.asText());
             }
         });
         return data;
