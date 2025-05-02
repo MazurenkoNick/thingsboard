@@ -44,7 +44,10 @@ import java.util.Arrays;
 @EnableAsync
 @EnableScheduling
 @EnableAutoConfiguration
-@ComponentScan({"org.thingsboard.server.report"})
+@ComponentScan({"org.thingsboard.server.report", "org.thingsboard.server.queue.task",
+        "org.thingsboard.server.queue.discovery", "org.thingsboard.server.queue.kafka",
+        "org.thingsboard.server.queue.settings", "org.thingsboard.server.queue.environment",
+        "org.thingsboard.server.common.stats"})
 @Slf4j
 public class ThingsboardReportApplication {
 

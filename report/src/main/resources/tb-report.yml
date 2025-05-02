@@ -127,11 +127,11 @@ queue:
     # Key-value properties for Kafka consumer per specific topic, e.g. tb_ota_package is a topic name for ota, tb_rule_engine.sq is a topic name for default SequentialByOriginator queue.
     # Check TB_QUEUE_CORE_OTA_TOPIC and TB_QUEUE_RE_SQ_TOPIC params
     consumer-properties-per-topic:
-      edqs.events: # FIXME tmp
-        # Key-value properties for Kafka consumer for edqs.events topic
+      tasks:
+        # Key-value properties for Kafka consumer for tasks topics
         - key: max.poll.records
-          # Max poll records for edqs.events topic
-          value: "${TB_QUEUE_KAFKA_EDQS_EVENTS_MAX_POLL_RECORDS:512}"
+          # Max poll records for tasks topics
+          value: "${TB_QUEUE_KAFKA_TASKS_MAX_POLL_RECORDS:1}"
 
     other-inline: "${TB_QUEUE_KAFKA_OTHER_PROPERTIES:}" # In this section you can specify custom parameters (semicolon separated) for Kafka consumer/producer/admin # Example "metrics.recording.level:INFO;metrics.sample.window.ms:30000"
     other: # DEPRECATED. In this section, you can specify custom parameters for Kafka consumer/producer and expose the env variables to configure outside
@@ -140,8 +140,8 @@ queue:
     #  - key: "session.timeout.ms" # refer to https://docs.confluent.io/platform/current/installation/configuration/consumer-configs.html#consumerconfigs_session.timeout.ms
     #    value: "${TB_QUEUE_KAFKA_SESSION_TIMEOUT_MS:10000}" # (10 seconds)
     topic-properties:
-      # Kafka properties for EDQS events topics FIXME tmp
-      edqs-events: "${TB_QUEUE_KAFKA_EDQS_EVENTS_TOPIC_PROPERTIES:retention.ms:86400000;segment.bytes:52428800;retention.bytes:-1;partitions:1;min.insync.replicas:1}"
+      # Kafka properties for tasks topics
+      tasks: "${TB_QUEUE_KAFKA_TASKS_TOPIC_PROPERTIES:retention.ms:604800000;segment.bytes:52428800;retention.bytes:104857600;partitions:1;min.insync.replicas:1}"
     consumer-stats:
       # Prints lag between consumer group offset and last messages offset in Kafka topics
       enabled: "${TB_QUEUE_KAFKA_CONSUMER_STATS_ENABLED:true}"
@@ -149,6 +149,14 @@ queue:
       print-interval-ms: "${TB_QUEUE_KAFKA_CONSUMER_STATS_MIN_PRINT_INTERVAL_MS:60000}"
       # Time to wait for the stats-loading requests to Kafka to finish
       kafka-response-timeout-ms: "${TB_QUEUE_KAFKA_CONSUMER_STATS_RESPONSE_TIMEOUT_MS:1000}"
+
+  tasks:
+    # Partitions count for tasks queues
+    partitions: "${TB_QUEUE_TASKS_PARTITIONS:12}"
+    stats:
+      # Interval in milliseconds to process job stats
+      processing_interval_ms: "${TB_QUEUE_TASKS_STATS_PROCESSING_INTERVAL_MS:1000}"
+
   partitions:
     hash_function_name: "${TB_QUEUE_PARTITIONS_HASH_FUNCTION_NAME:murmur3_128}" # murmur3_32, murmur3_128 or sha256
 
@@ -159,6 +167,14 @@ service:
   id: "${TB_SERVICE_ID:}"
   tb_core:
     base_url: "${TB_CORE_BASE_URL:http://localhost:8080}"
+
+reports:
+  service:
+    web_report:
+      # Report server endpoint
+      base_url: "${REPORTS_SERVER_ENDPOINT_URL:http://localhost:8383}"
+      # Maximum response size. The default value set to 50 mb
+      max_response_size: "${MAX_RESPONSE_SIZE:52428800}" # 50MB
 
 # Metrics parameters
 metrics:

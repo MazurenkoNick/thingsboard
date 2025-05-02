@@ -611,9 +611,9 @@ reports:
     mode: "${REPORT_SERVICE_MODE:local}" # local or remote (with tb-report microservice)
     web_report:
       # Report server endpoint
-      endpointUrl: "${REPORTS_SERVER_ENDPOINT_URL:http://localhost:8383}"
+      base_url: "${REPORTS_SERVER_ENDPOINT_URL:http://localhost:8383}"
       # Maximum response size. The default value set to 50 mb
-      maxResponseSize: "${MAX_RESPONSE_SIZE:52428800}" # 50MB
+      max_response_size: "${MAX_RESPONSE_SIZE:52428800}" # 50MB
   rate_limits:
     # Enable/disable reports tenant rate limits
     enabled: "${REPORTS_TENANT_RATE_LIMITS_ENABLED:false}"

@@ -74,10 +74,10 @@ public class WebReportClient {
 
     private static final Pattern reportNameDatePattern = Pattern.compile("%d\\{([^\\}]*)\\}");
 
-    @Value("${reports.service.web_report.endpointUrl}")
-    private String dashboardReportsServerEndpointUrl;
+    @Value("${reports.service.web_report.base_url}")
+    private String webReportServerBaseUrl;
 
-    @Value("${reports.service.web_report.maxResponseSize:52428800}")
+    @Value("${reports.service.web_report.max_response_size:52428800}")
     private int maxResponseSize;
 
     private EventLoopGroup eventLoopGroup;
@@ -128,7 +128,7 @@ public class WebReportClient {
     public void requestDashboardReport(JsonNode dashboardReportRequest, String reportsServerEndpointUrl,
                                        Consumer<DashboardReportData> onSuccess, Consumer<Throwable> onFailure) {
         if (StringUtils.isEmpty(reportsServerEndpointUrl)) {
-            reportsServerEndpointUrl = this.dashboardReportsServerEndpointUrl;
+            reportsServerEndpointUrl = this.webReportServerBaseUrl;
         }
         String endpointUrl = reportsServerEndpointUrl + "/dashboardReport";
 
