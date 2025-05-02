@@ -44,7 +44,7 @@ public interface JobProcessor {
 
     void reprocess(Job job, List<TaskResult> taskFailures, Consumer<Task<?>> taskConsumer) throws Exception;
 
-    void onJobCompleted(Job job);
+    default void onJobCompleted(Job job) {}
 
     JobType getType();
 

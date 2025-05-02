@@ -149,6 +149,7 @@ public class DefaultJobService extends AbstractEntityService implements JobServi
                     job.setStatus(CANCELLED);
                 } else if (result.getFailedCount() > 0) {
                     job.setStatus(FAILED);
+                    publishEvent = true;
                 } else {
                     job.setStatus(COMPLETED);
                     publishEvent = true;
