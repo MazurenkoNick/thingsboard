@@ -30,27 +30,36 @@
 ///
 
 import {
-  ChangeDetectorRef,
   Component,
   ComponentRef,
   DestroyRef,
   Directive,
-  EventEmitter,
+  EventEmitter, HostBinding,
   Input,
   OnChanges,
   OnInit,
   Output,
   SimpleChanges,
   ViewChild,
-  ViewContainerRef,
   ViewEncapsulation
 } from '@angular/core';
 import { ReportComponentConfig } from '@shared/models/report-component.models';
 import { TbAnchorComponent } from '@shared/components/tb-anchor.component';
-import { FormBuilder, FormGroup } from '@angular/forms';
+import { FormGroup } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { mergeDeep } from '@core/utils';
-import { reportComponentTypeMap } from '@home/pages/report/components/report-component.models';
+import { genNextLabel, isObject, mergeDeep } from '@core/utils';
+import { ReportComponentContext, reportComponentTypeMap } from '@home/pages/report/components/report-component.models';
+import { DataKeyType } from '@shared/models/telemetry/telemetry.models';
+import { Observable, of } from 'rxjs';
+import { DataKey, Datasource, widgetType } from '@shared/models/widget.models';
+import { catchError, mergeMap } from 'rxjs/operators';
+import { WidgetConfigCallbacks } from '@home/components/widget/config/widget-config.component.models';
+import { FormProperty } from '@shared/models/dynamic-form.models';
+import { DataKeySettingsFunction } from '@home/components/widget/lib/settings/common/key/data-keys.component.models';
+import { alarmFields } from '@shared/models/alarm.models';
+import { entityFields } from '@shared/models/entity.models';
+import { singleEntityFilterFromDeviceId } from '@shared/models/query/query.models';
+import { EntityType } from '@shared/models/entity-type.models';
 
 @Component({
   selector: 'tb-report-component-config',
@@ -59,6 +68,11 @@ import { reportComponentTypeMap } from '@home/pages/report/components/report-com
   encapsulation: ViewEncapsulation.None
 })
 export class ReportComponentConfigComponent implements OnInit, OnChanges {
+
+  @HostBinding('style.width') width = '100%';
+
+  @Input()
+  context: ReportComponentContext;
 
   @Input()
   reportComponent: ReportComponentConfig;
@@ -70,9 +84,7 @@ export class ReportComponentConfigComponent implements OnInit, OnChanges {
   private reportConfigComponentRef: ComponentRef<AbstractReportComponentConfig>;
   private reportConfigComponent: AbstractReportComponentConfig;
 
-  constructor(private container: ViewContainerRef,
-              private cd: ChangeDetectorRef,
-              private fb: FormBuilder) {}
+  constructor() {}
 
   ngOnInit() {
     this.init();
@@ -101,6 +113,7 @@ export class ReportComponentConfigComponent implements OnInit, OnChanges {
       if (typeData) {
         this.reportConfigComponentRef = this.reportConfigContainer.viewContainerRef.createComponent(typeData.configComponent);
         this.reportConfigComponent = this.reportConfigComponentRef.instance;
+        this.reportConfigComponent.context = this.context;
         this.reportConfigComponent.reportConfigUpdated.subscribe((updated) => {
           Object.assign(this.reportComponent, updated);
         });
@@ -113,8 +126,19 @@ export class ReportComponentConfigComponent implements OnInit, OnChanges {
 @Directive()
 export abstract class AbstractReportComponentConfig {
 
+  @Input()
+  context: ReportComponentContext;
+
   @Output()
   reportConfigUpdated = new EventEmitter<ReportComponentConfig>();
+
+  widgetType = widgetType;
+
+  callbacks: WidgetConfigCallbacks = {
+    generateDataKey: this.generateDataKey.bind(this),
+    fetchEntityKeys: this.fetchEntityKeys.bind(this),
+    fetchEntityKeysForDevice: this.fetchEntityKeysForDevice.bind(this)
+  } as any;
 
   reportConfigForm: FormGroup;
 
@@ -134,9 +158,88 @@ export abstract class AbstractReportComponentConfig {
   }
 
   private updateModel() {
-    this.reportComponentConfig = mergeDeep(this.reportComponentConfig, this.reportConfigForm.getRawValue());
+    this.reportComponentConfig = {
+      type: this.reportComponentConfig.type,
+      ...this.reportConfigForm.getRawValue()
+    };
     this.reportConfigUpdated.emit(this.reportComponentConfig);
   }
 
+  private fetchEntityKeys(entityAliasId: string, dataKeyTypes: Array<DataKeyType>): Observable<Array<DataKey>> {
+    return this.context.aliasController.getAliasInfo(entityAliasId).pipe(
+      mergeMap((aliasInfo) => this.context.entityService.getEntityKeysByEntityFilter(
+        aliasInfo.entityFilter,
+        dataKeyTypes,  [],
+        {ignoreLoading: true, ignoreErrors: true}
+      ).pipe(
+        catchError(() => of([]))
+      )),
+      catchError(() => of([] as Array<DataKey>))
+    );
+  }
+
+  private fetchEntityKeysForDevice(deviceId: string, dataKeyTypes: Array<DataKeyType>): Observable<Array<DataKey>> {
+    const entityFilter = singleEntityFilterFromDeviceId(deviceId);
+    return this.context.entityService.getEntityKeysByEntityFilter(
+      entityFilter,
+      dataKeyTypes, [EntityType.DEVICE],
+      {ignoreLoading: true, ignoreErrors: true}
+    ).pipe(
+      catchError(() => of([]))
+    );
+  }
+
+  private generateDataKey(chip: any, type: DataKeyType, dataKeySettingsForm: FormProperty[],
+                          isLatestDataKey: boolean, dataKeySettingsFunction: DataKeySettingsFunction): DataKey {
+    if (isObject(chip)) {
+      (chip as DataKey)._hash = Math.random();
+      return chip;
+    } else {
+      let label: string = chip;
+      if (type === DataKeyType.alarm || type === DataKeyType.entityField) {
+        const keyField = type === DataKeyType.alarm ? alarmFields[label] : entityFields[chip];
+        if (keyField) {
+          label = this.context.translate.instant(keyField.name);
+        }
+      }
+      const datasources = this.getDataSources();
+      label = genNextLabel(label, datasources);
+      const result: DataKey = {
+        name: chip,
+        type,
+        label,
+        color: this.genNextColor(),
+        settings: {},
+        _hash: Math.random()
+      };
+      if (type === DataKeyType.count) {
+        result.name = 'count';
+      }
+      return result;
+    }
+  }
+
+  private genNextColor(): string {
+    let i = 0;
+    const datasources = this.getDataSources();
+    if (datasources) {
+      datasources.forEach((datasource) => {
+        if (datasource && (datasource.dataKeys || datasource.latestDataKeys)) {
+          i += ((datasource.dataKeys ? datasource.dataKeys.length : 0) +
+            (datasource.latestDataKeys ? datasource.latestDataKeys.length : 0));
+        }
+      });
+    }
+    return this.context.utils.getMaterialColor(i);
+  }
+
   protected abstract buildForm(reportComponentConfig: ReportComponentConfig): FormGroup;
+
+  protected getDataSources(): Datasource[] {
+    if (this.reportConfigForm.get('dataSources')) {
+      return this.reportConfigForm.get('dataSources').value;
+    } else {
+      return [];
+    }
+  };
 }

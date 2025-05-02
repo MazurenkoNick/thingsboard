@@ -7002,6 +7002,7 @@
         "first-page-footer": "First page footer",
         "first-page-footer-disabled": "First page footer disabled",
         "content": "Content",
+        "data": "Data",
         "component": {
             "heading": {
                 "type": "Heading",

@@ -32,24 +32,28 @@
 import {
   ChangeDetectorRef,
   Component,
-  DestroyRef, ElementRef,
+  DestroyRef,
   EventEmitter,
   HostBinding,
-  OnInit, viewChild,
+  OnInit,
+  viewChild,
   ViewEncapsulation
 } from '@angular/core';
 import { PageComponent } from '@shared/components/page.component';
 import { HasDirtyFlag } from '@core/guards/confirm-on-exit.guard';
 import { Operation, Resource } from '@shared/models/security.models';
 import {
-  filterToReportFilter, HeaderFooter,
-  ReportFilter,
-  reportFilterToFilter,
+  entityAliasesListToAliases,
+  entityAliasesToList,
+  filtersToReportFilterList,
+  HeaderFooter,
+  reportFilterListToFilters,
   ReportTemplate,
-  ReportTemplateSettings, validateAndUpdateReportTemplate
+  ReportTemplateSettings,
+  validateAndUpdateReportTemplate
 } from '@shared/models/report.models';
 import { UserPermissionsService } from '@core/http/user-permissions.service';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import { ReportTemplateService } from '@core/http/report-template.service';
 import { FiltersDialogComponent, FiltersDialogData } from '@home/components/filter/filters-dialog.component';
 import { Filters } from '@shared/models/query/query.models';
@@ -59,7 +63,7 @@ import {
   EntityAliasesDialogComponent,
   EntityAliasesDialogData
 } from '@home/components/alias/entity-aliases-dialog.component';
-import { EntityAlias, EntityAliases } from '@shared/models/alias.models';
+import { EntityAliases } from '@shared/models/alias.models';
 import {
   ReportTemplateSettingsDialogComponent,
   ReportTemplateSettingsDialogData
@@ -67,8 +71,13 @@ import {
 import { ReportComponentConfig } from '@shared/models/report-component.models';
 import { FormBuilder, FormControl } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { reportComponentTypeMap } from '@home/pages/report/components/report-component.models';
+import { ReportComponentContext, reportComponentTypeMap } from '@home/pages/report/components/report-component.models';
 import { MatDrawer } from '@angular/material/sidenav';
+import { EntityService } from '@core/http/entity.service';
+import { IStateController, StateParams } from '@core/api/widget-api.models';
+import { TranslateService } from '@ngx-translate/core';
+import { UtilsService } from '@core/services/utils.service';
+import { AliasController } from '@core/api/alias-controller';
 
 @Component({
   selector: 'tb-report-template-page',
@@ -124,18 +133,33 @@ export class ReportTemplatePageComponent extends PageComponent
   headerToggleValue: 'header' | 'firstPageHeader' = 'header';
   footerToggleValue: 'footer' | 'firstPageFooter' = 'footer';
 
+  reportComponentContext: ReportComponentContext;
+
+  // @ts-ignore
+  private stateController: IStateController = {
+    getStateParams: (): StateParams => ({})
+  };
+
   constructor(private route: ActivatedRoute,
               private userPermissionsService: UserPermissionsService,
               private reportTemplateService: ReportTemplateService,
+              private entityService: EntityService,
+              private utils: UtilsService,
+              private translate: TranslateService,
               private destroyRef: DestroyRef,
               private dialog: MatDialog,
               private fb: FormBuilder,
-              private cd: ChangeDetectorRef,
-              private router: Router) {
+              private cd: ChangeDetectorRef) {
     super();
   }
 
   ngOnInit() {
+    this.reportComponentContext = {
+      translate: this.translate,
+      utils: this.utils,
+      entityService: this.entityService,
+      aliasController: null
+    };
     this.reportTemplateSettingsFormControl = this.fb.control(null);
     this.reportTemplateSettingsFormControl.valueChanges.pipe(
       takeUntilDestroyed(this.destroyRef)
@@ -227,11 +251,8 @@ export class ReportTemplatePageComponent extends PageComponent
     if ($event) {
       $event.stopPropagation();
     }
-    const filters: Filters = {};
     const reportFilters = deepClone(this.reportTemplate.configuration.filters);
-    for (const reportFilter of reportFilters) {
-      filters[reportFilter.id] = reportFilterToFilter(reportFilter);
-    }
+    const filters = reportFilterListToFilters(reportFilters);
     this.dialog.open<FiltersDialogComponent, FiltersDialogData,
       Filters>(FiltersDialogComponent, {
       disableClose: true,
@@ -244,11 +265,8 @@ export class ReportTemplatePageComponent extends PageComponent
       }
     }).afterClosed().subscribe((filters) => {
       if (filters) {
-        const reportFilters: ReportFilter[] = [];
-        for (const id of Object.keys(filters)) {
-          reportFilters.push(filterToReportFilter(filters[id]));
-        }
-        this.reportTemplate.configuration.filters = reportFilters;
+        this.reportTemplate.configuration.filters = filtersToReportFilterList(filters);
+        this.reportComponentContext.aliasController.updateFilters(filters);
         this.isDirty = true;
         this.cd.markForCheck();
       }
@@ -259,11 +277,8 @@ export class ReportTemplatePageComponent extends PageComponent
     if ($event) {
       $event.stopPropagation();
     }
-    const entityAliases: EntityAliases = {};
     const entityAliasesList = deepClone(this.reportTemplate.configuration.entityAliases);
-    for (const entityAlias of entityAliasesList) {
-      entityAliases[entityAlias.id] = entityAlias;
-    }
+    const entityAliases = entityAliasesListToAliases(entityAliasesList);
     this.dialog.open<EntityAliasesDialogComponent, EntityAliasesDialogData,
       EntityAliases>(EntityAliasesDialogComponent, {
       disableClose: true,
@@ -276,11 +291,8 @@ export class ReportTemplatePageComponent extends PageComponent
       }
     }).afterClosed().subscribe((entityAliases) => {
       if (entityAliases) {
-        const entityAliasesList: EntityAlias[] = [];
-        for (const id of Object.keys(entityAliases)) {
-          entityAliasesList.push(entityAliases[id]);
-        }
-        this.reportTemplate.configuration.entityAliases = entityAliasesList;
+        this.reportTemplate.configuration.entityAliases = entityAliasesToList(entityAliases);
+        this.reportComponentContext.aliasController.updateEntityAliases(entityAliases);
         this.isDirty = true;
         this.cd.markForCheck();
       }
@@ -325,6 +337,18 @@ export class ReportTemplatePageComponent extends PageComponent
     this.headerToggleValue = 'header';
     this.footerToggleValue = 'footer';
     this.reportTemplate = validateAndUpdateReportTemplate(reportTemplate);
+
+    const entityAliases = entityAliasesListToAliases(this.reportTemplate.configuration.entityAliases);
+    const filters = reportFilterListToFilters(this.reportTemplate.configuration.filters);
+
+    this.reportComponentContext.aliasController = new AliasController(this.utils,
+      this.entityService,
+      this.translate,
+      () => this.stateController,
+      entityAliases,
+      filters
+    );
+
     const settings: ReportTemplateSettings = {
       name: this.reportTemplate.name,
       fileName: this.reportTemplate.configuration.fileName,
@@ -335,4 +359,5 @@ export class ReportTemplatePageComponent extends PageComponent
     this.updateBreadcrumbs.emit();
     this.cd.markForCheck();
   }
+
 }

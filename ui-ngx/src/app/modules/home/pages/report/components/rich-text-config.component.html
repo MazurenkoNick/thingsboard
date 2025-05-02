@@ -31,8 +31,26 @@
 
 -->
 <div class="tb-form-panel no-border" [formGroup]="reportConfigForm">
-  <div class="tb-form-panel">
+  <div class="tb-report-component-config-header">
+    <tb-toggle-select [(ngModel)]="settingsTab" [ngModelOptions]="{standalone: true}" appearance="fill">
+      <tb-toggle-option value="content">{{ 'report-template.content' | translate }}</tb-toggle-option>
+      <tb-toggle-option value="data">{{ 'report-template.data' | translate }}</tb-toggle-option>
+    </tb-toggle-select>
+  </div>
+  <div class="tb-form-panel" [class.!hidden]="settingsTab !== 'content'">
     <div class="tb-form-panel-title" translate>report-template.component.rich-text.text</div>
     <editor [init]="tinyMceOptions" formControlName="value"></editor>
   </div>
+  <tb-datasources [class.!hidden]="settingsTab !== 'data'"
+                  formControlName="dataSources"
+                  [dataSourcesOptions]="{
+                    widgetType: widgetType.latest,
+                    maxDatasources: -1,
+                    datasourcesOptional: true,
+                    allowFunctions: false
+                  }"
+                  hideDataKeyColor
+                  [callbacks]="callbacks"
+                  [aliasController]="context.aliasController">
+  </tb-datasources>
 </div>

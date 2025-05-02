@@ -58,7 +58,7 @@ export interface RichTextReportComponentConfig {
 
 
 export interface EntityTableReportComponentConfig {
-  dataSource: Datasource;
+  dataSources: Datasource[];
 }
 
 export type ReportComponentConfigs = Partial<HeadingReportComponentConfig & RichTextReportComponentConfig & EntityTableReportComponentConfig>;

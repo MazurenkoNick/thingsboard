@@ -36,6 +36,11 @@ import { RichTextPreviewComponent } from '@home/pages/report/components/rich-tex
 import { AbstractReportComponentConfig } from '@home/pages/report/components/report-component-config.component';
 import { HeadingConfigComponent } from '@home/pages/report/components/heading-config.component';
 import { RichTextConfigComponent } from '@home/pages/report/components/rich-text-config.component';
+import { IAliasController } from '@core/api/widget-api.models';
+import { WidgetConfigCallbacks } from '@home/components/widget/config/widget-config.component.models';
+import { EntityService } from '@core/http/entity.service';
+import { TranslateService } from '@ngx-translate/core';
+import { UtilsService } from '@core/services/utils.service';
 
 export interface ReportComponentPreview {
   reportComponent: ReportComponentConfig;
@@ -72,3 +77,10 @@ export const reportComponentTypeMap = new Map<ReportComponentType, ReportCompone
 );
 
 export const reportComponentTypes = Array.from(reportComponentTypeMap.keys());
+
+export interface ReportComponentContext {
+  translate: TranslateService,
+  utils: UtilsService,
+  entityService: EntityService;
+  aliasController: IAliasController;
+}

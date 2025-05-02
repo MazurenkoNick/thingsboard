@@ -31,17 +31,19 @@
 
 import { Component, DestroyRef, ViewEncapsulation } from '@angular/core';
 import { FormBuilder, FormGroup } from '@angular/forms';
-import { ReportComponentConfig, RichTextReportComponentConfig } from '@app/shared/public-api';
+import { Datasource, ReportComponentConfig, RichTextReportComponentConfig } from '@app/shared/public-api';
 import { AbstractReportComponentConfig } from '@home/pages/report/components/report-component-config.component';
 import { EditorOptions } from 'tinymce';
 
 @Component({
   selector: 'tb-report-rich-text-config',
   templateUrl: './rich-text-config.component.html',
-  styleUrls: [],
+  styleUrls: ['./report-component-config.scss'],
   encapsulation: ViewEncapsulation.None
 })
 export class RichTextConfigComponent extends AbstractReportComponentConfig {
+
+  settingsTab: 'content' | 'data' = 'content';
 
   tinyMceOptions: Partial<EditorOptions> = {
     base_url: '/assets/tinymce',
@@ -68,7 +70,8 @@ export class RichTextConfigComponent extends AbstractReportComponentConfig {
   protected buildForm(reportComponentConfig: ReportComponentConfig): FormGroup {
     const richTextConfig: RichTextReportComponentConfig = reportComponentConfig as RichTextReportComponentConfig;
     return this.fb.group({
-      value: [richTextConfig.value, []]
+      value: [richTextConfig.value, []],
+      dataSources: [richTextConfig.dataSources, []]
     });
   }
 

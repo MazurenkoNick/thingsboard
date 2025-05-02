@@ -36,9 +36,9 @@ import { CustomerId } from '@shared/models/id/customer-id';
 import { HasTenantId, HasVersion } from '@shared/models/entity.models';
 import { SchedulerEventId } from '@shared/models/id/scheduler-event-id';
 import { EntityId } from '@shared/models/id/entity-id';
-import { EntityAlias } from '@shared/models/alias.models';
+import { EntityAlias, EntityAliases } from '@shared/models/alias.models';
 import {
-  Filter,
+  Filter, Filters,
   KeyFilter,
   keyFilterInfosToKeyFilters,
   keyFiltersToKeyFilterInfos
@@ -83,6 +83,38 @@ export interface ReportFilter {
   id: string;
   filter: string;
   keyFilters: Array<KeyFilter>;
+}
+
+export const entityAliasesToList = (entityAliases: EntityAliases): EntityAlias[] => {
+  const entityAliasesList: EntityAlias[] = [];
+  for (const id of Object.keys(entityAliases)) {
+    entityAliasesList.push(entityAliases[id]);
+  }
+  return entityAliasesList;
+}
+
+export const entityAliasesListToAliases = (entityAliasesList: EntityAlias[]): EntityAliases => {
+  const entityAliases: EntityAliases = {};
+  for (const entityAlias of entityAliasesList) {
+    entityAliases[entityAlias.id] = entityAlias;
+  }
+  return entityAliases;
+}
+
+export const filtersToReportFilterList = (filters: Filters): ReportFilter[] => {
+  const reportFilters: ReportFilter[] = [];
+  for (const id of Object.keys(filters)) {
+    reportFilters.push(filterToReportFilter(filters[id]));
+  }
+  return reportFilters;
+}
+
+export const reportFilterListToFilters = (reportFilters: ReportFilter[]): Filters => {
+  const filters: Filters = {};
+  for (const filter of reportFilters) {
+    filters[filter.id] = reportFilterToFilter(filter);
+  }
+  return filters;
 }
 
 export const reportFilterToFilter = (reportFilter: ReportFilter): Filter => {

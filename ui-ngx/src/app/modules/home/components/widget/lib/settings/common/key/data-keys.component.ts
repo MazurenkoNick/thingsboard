@@ -65,7 +65,7 @@ import { MatAutocomplete, MatAutocompleteTrigger } from '@angular/material/autoc
 import { MatChipGrid, MatChipInputEvent, MatChipRow } from '@angular/material/chips';
 import { coerceBooleanProperty } from '@angular/cdk/coercion';
 import { DataKeyType } from '@shared/models/telemetry/telemetry.models';
-import { DataKey, DatasourceType, Widget, widgetType } from '@shared/models/widget.models';
+import { DataKey, Datasource, DatasourceType, Widget, widgetType } from '@shared/models/widget.models';
 import { IAliasController } from '@core/api/widget-api.models';
 import { DataKeySettingsFunction } from './data-keys.component.models';
 import { alarmFields } from '@shared/models/alarm.models';
@@ -210,6 +210,9 @@ export class DataKeysComponent implements ControlValueAccessor, OnInit, OnChange
 
   @Input()
   deviceId: string;
+
+  @Input()
+  datasources: Datasource[];
 
   @Input()
   generateKey: (key: DataKey) => DataKey;
@@ -626,7 +629,8 @@ export class DataKeysComponent implements ControlValueAccessor, OnInit, OnChange
           hideDataKeyLabel: this.hideDataKeyLabel,
           hideDataKeyColor: this.hideDataKeyColor,
           hideDataKeyUnits: this.hideDataKeyUnits,
-          hideDataKeyDecimals: this.hideDataKeyDecimals
+          hideDataKeyDecimals: this.hideDataKeyDecimals,
+          datasources: this.datasources
         }
       }).afterClosed().subscribe((updatedDataKey) => {
         if (updatedDataKey) {

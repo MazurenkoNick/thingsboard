@@ -31,16 +31,18 @@
 
 import { Component, DestroyRef, ViewEncapsulation } from '@angular/core';
 import { FormBuilder, FormGroup } from '@angular/forms';
-import { HeadingReportComponentConfig, ReportComponentConfig } from '@app/shared/public-api';
+import { Datasource, HeadingReportComponentConfig, ReportComponentConfig } from '@app/shared/public-api';
 import { AbstractReportComponentConfig } from '@home/pages/report/components/report-component-config.component';
 
 @Component({
   selector: 'tb-report-heading-config',
   templateUrl: './heading-config.component.html',
-  styleUrls: [],
+  styleUrls: ['./report-component-config.scss'],
   encapsulation: ViewEncapsulation.None
 })
 export class HeadingConfigComponent extends AbstractReportComponentConfig {
+
+  settingsTab: 'content' | 'data' = 'content';
 
   constructor(destroyRef: DestroyRef,
               private fb: FormBuilder) {
@@ -50,7 +52,8 @@ export class HeadingConfigComponent extends AbstractReportComponentConfig {
   protected buildForm(reportComponentConfig: ReportComponentConfig): FormGroup {
     const headingConfig: HeadingReportComponentConfig = reportComponentConfig as HeadingReportComponentConfig;
     return this.fb.group({
-      value: [headingConfig.value, []]
+      value: [headingConfig.value, []],
+      dataSources: [headingConfig.dataSources, []]
     });
   }
 

@@ -43,6 +43,7 @@ import { ReportComponentLibraryComponent } from '@home/pages/report/components/r
 import { ReportComponentConfigComponent } from '@home/pages/report/components/report-component-config.component';
 import { HeadingConfigComponent } from '@home/pages/report/components/heading-config.component';
 import { RichTextConfigComponent } from '@home/pages/report/components/rich-text-config.component';
+import { WidgetConfigComponentsModule } from '@home/components/widget/config/widget-config-components.module';
 
 @NgModule({
   declarations: [
@@ -58,7 +59,8 @@ import { RichTextConfigComponent } from '@home/pages/report/components/rich-text
   ],
   imports: [
     CommonModule,
-    SharedModule
+    SharedModule,
+    WidgetConfigComponentsModule
   ],
   exports: [
     ReportComponentsComponent,
