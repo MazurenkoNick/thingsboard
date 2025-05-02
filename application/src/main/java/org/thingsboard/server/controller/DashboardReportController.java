@@ -31,9 +31,10 @@
 package org.thingsboard.server.controller;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
@@ -47,17 +48,22 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.context.request.async.DeferredResult;
-import org.thingsboard.server.report.service.DashboardReportService;
 import org.thingsboard.server.common.data.DashboardInfo;
-import org.thingsboard.server.common.data.exception.ThingsboardException;
-import org.thingsboard.server.common.data.id.DashboardId;
-import org.thingsboard.server.common.data.permission.Operation;
+import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.dashboardreport.DashboardReportConfig;
 import org.thingsboard.server.common.data.dashboardreport.DashboardReportData;
+import org.thingsboard.server.common.data.exception.ThingsboardException;
+import org.thingsboard.server.common.data.id.DashboardId;
+import org.thingsboard.server.common.data.id.TenantId;
+import org.thingsboard.server.common.data.id.UserId;
+import org.thingsboard.server.common.data.permission.Operation;
 import org.thingsboard.server.config.annotations.ApiOperation;
 import org.thingsboard.server.queue.util.TbCoreComponent;
+import org.thingsboard.rule.engine.api.DashboardReportService;
 import org.thingsboard.server.service.security.model.SecurityUser;
 import org.thingsboard.server.service.security.model.UserPrincipal;
+import org.thingsboard.server.service.security.model.token.AccessJwtToken;
+import org.thingsboard.server.service.security.system.SystemSecurityService;
 import org.thingsboard.server.utils.MiscUtils;
 
 import java.text.SimpleDateFormat;
@@ -70,6 +76,7 @@ import static org.thingsboard.server.controller.ControllerConstants.MARKDOWN_COD
 import static org.thingsboard.server.controller.ControllerConstants.REPORT_PARAMS_EXAMPLE;
 import static org.thingsboard.server.controller.ControllerConstants.TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH;
 
+@RequiredArgsConstructor
 @RestController
 @TbCoreComponent
 @RequestMapping("/api")
@@ -77,8 +84,8 @@ public class DashboardReportController extends BaseController {
 
     private SimpleDateFormat defaultDateFormat = new SimpleDateFormat("yyyy-MM-dd_HH:mm:ss");
 
-    @Autowired
-    private DashboardReportService dashboardReportService;
+    private final DashboardReportService dashboardReportService;
+    private final SystemSecurityService systemSecurityService;
 
     public static final String DASHBOARD_ID = "dashboardId";
 
@@ -93,7 +100,7 @@ public class DashboardReportController extends BaseController {
                                                                             @PathVariable(DASHBOARD_ID) String strDashboardId,
                                                                             @Parameter(example = REPORT_PARAMS_EXAMPLE, required = true)
                                                                             @RequestBody JsonNode reportParams,
-                                                                            HttpServletRequest request) throws ThingsboardException {
+                                                                            HttpServletRequest request, UserId userId) throws ThingsboardException {
         DeferredResult<ResponseEntity<Resource>> result = new DeferredResult<>();
         checkParameter(DASHBOARD_ID, strDashboardId);
         try {
@@ -109,10 +116,18 @@ public class DashboardReportController extends BaseController {
             if (currentUser.getUserPrincipal().getType() == UserPrincipal.Type.PUBLIC_ID) {
                 publicId = currentUser.getUserPrincipal().getValue();
             }
-            dashboardReportService.
-                    generateDashboardReport(baseUrl, dashboardId, getTenantId(), currentUser.getId(), publicId, name, reportParams,
-                            onSuccess(result),
-                            result::setErrorResult);
+
+            AccessJwtToken accessToken;
+            TenantId tenantId = currentUser.getTenantId();
+            if (StringUtils.isEmpty(publicId)) {
+                accessToken = systemSecurityService.createUserAccessToken(tenantId, userId);
+            } else {
+                accessToken = systemSecurityService.createUserAccessTokenFromPublicId(tenantId, publicId);
+                ((ObjectNode) reportParams).put("publicId", publicId);
+            }
+            dashboardReportService.generateDashboardReport(baseUrl, dashboardId, tenantId, userId, name,
+                    reportParams, accessToken.getToken(), accessToken.getClaims().getExpiration().getTime(),
+                    onSuccess(result), result::setErrorResult);
         } catch (Exception e) {
             result.setErrorResult(e);
         }

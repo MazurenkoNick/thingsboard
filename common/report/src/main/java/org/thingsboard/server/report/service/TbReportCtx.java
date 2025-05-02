@@ -31,6 +31,7 @@
 package org.thingsboard.server.report.service;
 
 import com.google.common.util.concurrent.ListenableFuture;
+import lombok.Builder;
 import lombok.Data;
 import org.thingsboard.rest.client.RestClient;
 import org.thingsboard.server.common.data.id.CustomerId;
@@ -51,18 +52,23 @@ public class TbReportCtx {
     private final CustomerId customerId;
     private final List<EntityAlias> entityAliases;
     private final List<Filter> filters;
-    private final List<ListenableFuture<Void>> futures;
-    private final Map<String, Object> params;
     private final RestClient restClient;
+    private final String accessToken;
+    private final long accessTokenExpTs;
 
-    public TbReportCtx(TenantId tenantId, CustomerId customerId, ReportTemplateConfiguration configuration, RestClient restClient) {
+    private final List<ListenableFuture<Void>> futures = new ArrayList<>();
+    private final Map<String, Object> params = new HashMap<>();
+
+    @Builder
+    public TbReportCtx(TenantId tenantId, CustomerId customerId, ReportTemplateConfiguration configuration,
+                       RestClient restClient, String accessToken, long accessTokenExpTs) {
         this.tenantId = tenantId;
         this.customerId = customerId;
-        this.restClient = restClient;
-        this.futures = new ArrayList<>();
         this.entityAliases = configuration.getEntityAliases();
         this.filters = configuration.getFilters();
-        this.params = new HashMap<>();
+        this.restClient = restClient;
+        this.accessToken = accessToken;
+        this.accessTokenExpTs = accessTokenExpTs;
     }
 
 }

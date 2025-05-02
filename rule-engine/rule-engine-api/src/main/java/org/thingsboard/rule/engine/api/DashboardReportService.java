@@ -28,42 +28,27 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.common.data.util;
+package org.thingsboard.rule.engine.api;
 
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Field;
-import java.util.HashMap;
-import java.util.Map;
+import com.fasterxml.jackson.databind.JsonNode;
+import org.thingsboard.server.common.data.exception.ThingsboardException;
+import org.thingsboard.server.common.data.id.DashboardId;
+import org.thingsboard.server.common.data.id.TenantId;
+import org.thingsboard.server.common.data.id.UserId;
+import org.thingsboard.server.common.data.dashboardreport.DashboardReportConfig;
+import org.thingsboard.server.common.data.dashboardreport.DashboardReportData;
 
-@SuppressWarnings("unchecked")
-public class ReflectionUtils {
+import java.util.function.Consumer;
 
-    private ReflectionUtils() {}
+public interface DashboardReportService {
 
-    public static <T> T getAnnotationProperty(String targetType, String annotationType, String property) throws Exception {
-        Class<Annotation> annotationClass = (Class<Annotation>) Class.forName(annotationType);
-        Annotation annotation = Class.forName(targetType).getAnnotation(annotationClass);
-        return (T) annotationClass.getDeclaredMethod(property).invoke(annotation);
-    }
+    void generateDashboardReport(String baseUrl, DashboardId dashboardId, TenantId tenantId, UserId userId, String reportName,
+                                 JsonNode reportParams, String accessToken, long accessTokenExpiration,
+                                 Consumer<DashboardReportData> onSuccess, Consumer<Throwable> onFailure);
 
-    public static Map<String, String> toStringMap(Object obj) {
-        Map<String, String> map = new HashMap<>();
-        Class<?> current = obj.getClass();
-
-        while (current != null && current != Object.class) {
-            for (Field field : current.getDeclaredFields()) {
-                field.setAccessible(true);
-                try {
-                    Object value = field.get(obj);
-                    map.put(field.getName(), value != null ? value.toString() : null);
-                } catch (IllegalAccessException e) {
-                    throw new RuntimeException("Error accessing field: " + field.getName(), e);
-                }
-            }
-            current = current.getSuperclass();
-        }
-
-        return map;
-    }
+    void generateReport(TenantId tenantId, DashboardReportConfig reportConfig,
+                        String reportsServerEndpointUrl,
+                        Consumer<DashboardReportData> onSuccess,
+                        Consumer<Throwable> onFailure) throws ThingsboardException;
 
 }

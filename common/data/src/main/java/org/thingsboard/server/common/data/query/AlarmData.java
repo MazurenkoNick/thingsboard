@@ -30,6 +30,7 @@
  */
 package org.thingsboard.server.common.data.query;
 
+import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import org.thingsboard.server.common.data.alarm.Alarm;
@@ -40,6 +41,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @EqualsAndHashCode(callSuper = true)
+@AllArgsConstructor
 public class AlarmData extends AlarmInfo {
 
     private static final long serialVersionUID = -7042457913823369638L;

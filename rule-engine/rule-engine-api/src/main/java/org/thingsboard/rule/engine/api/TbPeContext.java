@@ -51,7 +51,6 @@ import org.thingsboard.server.dao.integration.IntegrationService;
 import org.thingsboard.server.dao.report.ReportTemplateService;
 import org.thingsboard.server.dao.role.RoleService;
 import org.thingsboard.server.dao.scheduler.SchedulerEventService;
-import org.thingsboard.server.report.service.DashboardReportService;
 
 import java.util.Set;
 

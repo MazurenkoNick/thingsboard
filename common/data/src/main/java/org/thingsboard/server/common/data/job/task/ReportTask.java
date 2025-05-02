@@ -49,6 +49,7 @@ public class ReportTask extends Task<ReportTaskResult> {
     private ReportTemplate reportTemplate;
     private ReportRequest reportRequest;
     private String accessToken;
+    private long accessTokenExpirationTs;
 
     @Override
     public Object getKey() {

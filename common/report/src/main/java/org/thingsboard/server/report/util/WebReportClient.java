@@ -28,7 +28,7 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.service.dashboardreport;
+package org.thingsboard.server.report.util;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -37,32 +37,23 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.handler.ssl.SslContextBuilder;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.reactive.function.client.ExchangeFilterFunctions;
 import org.springframework.web.reactive.function.client.ExchangeStrategies;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.thingsboard.common.util.JacksonUtil;
-import org.thingsboard.server.report.service.DashboardReportService;
-import org.thingsboard.server.cache.limits.RateLimitService;
 import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.dashboardreport.DashboardReportConfig;
 import org.thingsboard.server.common.data.dashboardreport.DashboardReportData;
 import org.thingsboard.server.common.data.exception.ThingsboardErrorCode;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
-import org.thingsboard.server.common.data.id.DashboardId;
-import org.thingsboard.server.common.data.id.TenantId;
-import org.thingsboard.server.common.data.id.UserId;
-import org.thingsboard.server.common.data.limit.LimitedApi;
-import org.thingsboard.server.service.security.model.token.AccessJwtToken;
-import org.thingsboard.server.service.security.system.SystemSecurityService;
 import reactor.netty.http.client.HttpClient;
 
 import javax.net.ssl.SSLException;
@@ -72,33 +63,22 @@ import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.TimeZone;
-import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-@Service
 @Slf4j
-@RequiredArgsConstructor
-public class DefaultDashboardReportService implements DashboardReportService {
+@Component
+public class WebReportClient {
 
     private static final Pattern reportNameDatePattern = Pattern.compile("%d\\{([^\\}]*)\\}");
 
-    @Value("${reports.server.endpointUrl}")
+    @Value("${reports.service.web_report.endpointUrl}")
     private String dashboardReportsServerEndpointUrl;
 
-    @Value("${reports.rate_limits.enabled:false}")
-    private boolean rateLimitsEnabled;
-
-    @Value("${reports.rate_limits.configuration:5:300}")
-    private String rateLimitsConfiguration;
-
-    @Value("${reports.server.maxResponseSize:52428800}")
+    @Value("${reports.service.web_report.maxResponseSize:52428800}")
     private int maxResponseSize;
-
-    private final SystemSecurityService systemSecurityService;
-    private final RateLimitService rateLimitService;
 
     private EventLoopGroup eventLoopGroup;
     private WebClient webClient;
@@ -138,55 +118,15 @@ public class DefaultDashboardReportService implements DashboardReportService {
         }
     }
 
-    private void checkLimits(TenantId tenantId) {
-        if (rateLimitsEnabled) {
-            if (!rateLimitService.checkRateLimit(LimitedApi.REPORTS, (Object) tenantId, rateLimitsConfiguration)) {
-                log.trace("[{}] Report generation limits exceeded!", tenantId);
-                throw new RuntimeException("Failed to generate report due to rate limits!");
-            }
-        }
+    public void requestDashboardReport(DashboardReportConfig reportConfig, String reportsServerEndpointUrl,
+                                       String accessToken, long accessTokenExpiration,
+                                       Consumer<DashboardReportData> onSuccess, Consumer<Throwable> onFailure) {
+        JsonNode dashboardReportRequest = createDashboardReportRequest(reportConfig, accessToken, accessTokenExpiration);
+        requestDashboardReport(dashboardReportRequest, reportsServerEndpointUrl, onSuccess, onFailure);
     }
 
-    @Override
-    public void generateDashboardReport(String baseUrl, DashboardId dashboardId, TenantId tenantId, UserId userId, String publicId,
-                                        String reportName, JsonNode reportParams, Consumer<DashboardReportData> onSuccess,
-                                        Consumer<Throwable> onFailure) throws ThingsboardException {
-        checkLimits(tenantId);
-        log.trace("Executing generateDashboardReport, baseUrl [{}], dashboardId [{}], userId [{}]", baseUrl, dashboardId, userId);
-
-        AccessJwtToken accessToken;
-        if (StringUtils.isEmpty(publicId)) {
-            accessToken = systemSecurityService.createUserAccessToken(tenantId, userId);
-        } else {
-            accessToken = systemSecurityService.createUserAccessTokenFromPublicId(tenantId, publicId);
-            ((ObjectNode) reportParams).put("publicId", publicId);
-        }
-
-        String token = accessToken.getToken();
-        long expiration = accessToken.getClaims().getExpiration().getTime();
-
-        ObjectNode dashboardReportRequest = JacksonUtil.newObjectNode();
-        dashboardReportRequest.put("baseUrl", baseUrl);
-        dashboardReportRequest.put("dashboardId", dashboardId.toString());
-        dashboardReportRequest.set("reportParams", reportParams);
-        dashboardReportRequest.put("name", reportName);
-        dashboardReportRequest.put("token", token);
-        dashboardReportRequest.put("expiration", expiration);
-
-        requestReport(dashboardReportRequest, null, onSuccess, onFailure);
-    }
-
-    @Override
-    public void generateReport(TenantId tenantId, DashboardReportConfig reportConfig, String reportsServerEndpointUrl, Consumer<DashboardReportData> onSuccess, Consumer<Throwable> onFailure) throws ThingsboardException {
-        checkLimits(tenantId);
-        log.trace("Executing generateReport, reportConfig [{}]", reportConfig);
-
-        JsonNode dashboardReportRequest = createDashboardReportRequest(tenantId, reportConfig);
-        requestReport(dashboardReportRequest, reportsServerEndpointUrl, onSuccess, onFailure);
-    }
-
-    private void requestReport(JsonNode dashboardReportRequest, String reportsServerEndpointUrl, Consumer<DashboardReportData> onSuccess,
-                               Consumer<Throwable> onFailure) {
+    public void requestDashboardReport(JsonNode dashboardReportRequest, String reportsServerEndpointUrl,
+                                       Consumer<DashboardReportData> onSuccess, Consumer<Throwable> onFailure) {
         if (StringUtils.isEmpty(reportsServerEndpointUrl)) {
             reportsServerEndpointUrl = this.dashboardReportsServerEndpointUrl;
         }
@@ -211,25 +151,14 @@ public class DefaultDashboardReportService implements DashboardReportService {
                 });
     }
 
-    private void processError(Consumer<Throwable> onFailure, Throwable t) {
-        if (t instanceof RestClientResponseException) {
-            onFailure.accept(new ThingsboardException(((RestClientResponseException) t).getStatusText(), ThingsboardErrorCode.GENERAL));
-        } else {
-            onFailure.accept(t);
-        }
-    }
-
-    private JsonNode createDashboardReportRequest(TenantId tenantId, DashboardReportConfig reportConfig) throws ThingsboardException {
-        AccessJwtToken accessToken = systemSecurityService.createUserAccessToken(tenantId, new UserId(UUID.fromString(reportConfig.getUserId())));
-        String token = accessToken.getToken();
-        long expiration = accessToken.getClaims().getExpiration().getTime();
+    private JsonNode createDashboardReportRequest(DashboardReportConfig reportConfig, String accessToken, long accessTokenExpiration) {
         TimeZone tz = TimeZone.getTimeZone(reportConfig.getTimezone());
         String reportName = prepareReportName(reportConfig.getNamePattern(), new Date(), tz);
         ObjectNode dashboardReportRequest = JacksonUtil.newObjectNode();
         dashboardReportRequest.put("baseUrl", reportConfig.getBaseUrl());
         dashboardReportRequest.put("dashboardId", reportConfig.getDashboardId());
-        dashboardReportRequest.put("token", token);
-        dashboardReportRequest.put("expiration", expiration);
+        dashboardReportRequest.put("token", accessToken);
+        dashboardReportRequest.put("expiration", accessTokenExpiration);
         dashboardReportRequest.put("name", reportName);
         dashboardReportRequest.set("reportParams", createReportParams(reportConfig));
         return dashboardReportRequest;
@@ -257,6 +186,14 @@ public class DefaultDashboardReportService implements DashboardReportService {
             name = name.replace(toReplace, replacement);
         }
         return name;
+    }
+
+    private void processError(Consumer<Throwable> onFailure, Throwable t) {
+        if (t instanceof RestClientResponseException) {
+            onFailure.accept(new ThingsboardException(((RestClientResponseException) t).getStatusText(), ThingsboardErrorCode.GENERAL));
+        } else {
+            onFailure.accept(t);
+        }
     }
 
     private DashboardReportData extractResponse(ResponseEntity<byte[]> responseEntity) throws UnsupportedEncodingException {
