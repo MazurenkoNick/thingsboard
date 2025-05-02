@@ -40,7 +40,7 @@ import lombok.EqualsAndHashCode;
 import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.server.common.data.report.BaseReportTemplate;
 import org.thingsboard.server.common.data.report.ReportTemplate;
-import org.thingsboard.server.common.data.report.configuration.ReportTemplateConfiguration;
+import org.thingsboard.server.common.data.report.configuration.ReportTemplateConfig;
 import org.thingsboard.server.dao.model.ModelConstants;
 import org.thingsboard.server.dao.util.mapping.JsonConverter;
 
@@ -69,7 +69,7 @@ public class ReportTemplateEntity extends AbstractReportTemplateEntity<ReportTem
     public ReportTemplate toData() {
         BaseReportTemplate baseReportTemplate = super.toBaseReportTemplate();
         ReportTemplate reportTemplate = new ReportTemplate(baseReportTemplate);
-        reportTemplate.setConfiguration(JacksonUtil.treeToValue(configuration, ReportTemplateConfiguration.class));
+        reportTemplate.setConfiguration(JacksonUtil.treeToValue(configuration, ReportTemplateConfig.class));
         return reportTemplate;
     }
 }

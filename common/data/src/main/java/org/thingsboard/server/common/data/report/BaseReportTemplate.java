@@ -80,9 +80,9 @@ public class BaseReportTemplate extends BaseData<ReportTemplateId> implements Ha
     private String description;
 
     @Schema(description = "Scheduler event id")
-    private SchedulerEventId schedulerEventId;
+    private SchedulerEventId schedulerEventId; // fixme: should not be here. scheduler event must reference template, not the other way
 
-    private ReportTemplateId externalId;
+    private ReportTemplateId externalId; // fixme: add version control support
 
     private Long version;
 

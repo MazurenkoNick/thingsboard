@@ -30,7 +30,6 @@
  */
 package org.thingsboard.server.common.data.report;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
@@ -44,27 +43,13 @@ public class ReportRequest {
     @NotNull
     @Schema(description = "Json object representing the report template id.", requiredMode = Schema.RequiredMode.REQUIRED)
     ReportTemplateId templateId;
-    @NotNull
-    @Schema(description = "The file name pattern will be used during report generation.", example = "report-%d{yyyy-MM-dd_HH:mm:ss}", requiredMode = Schema.RequiredMode.REQUIRED)
-    String namePattern;
     @Schema(description = "Json object representing the report customer id.", requiredMode = Schema.RequiredMode.REQUIRED)
     CustomerId customerId;
     @Schema(description = "Json object representing the report entity id.")
     EntityId entityId;
-    @NotNull
-    @Schema(description = "Dashboard report file type, can be PDF | CSV.", example = "PDF")
-    TbReportFormat format;
-    @Schema(description = "Base URL of ThingsBoard UI that should be accessible by Web Report Server.", example = "https:thingsboard.cloud")
-    String baseUrl;
-    @Schema(description = "Timezone in which target dashboard will be presented in dashboard report.", example = "Europe/Kiev")
+    @Schema(description = "Timezone in which target dashboard will be presented in dashboard report.", example = "Europe/Kiev") // fixme: description
     String timezone;
-    @Schema(description = "If set, timewindow configured in the target dashboard will be used during dashboard report generation.", example = "true")
-    boolean useDashboardTimewindow;
-    @Schema(description = "Specific dashboard timewindow that will be used during dashboard report generation.")
-    JsonNode timewindow;
-    @Schema(description = "If set, credentials of user created this dashboard report configuration will be used to open dashboard UI during dashboard report generation.", example = "true")
-    boolean useCurrentUserCredentials;
     @Schema(description = "A string value representing the user id.", example = "784f394c-42b6-435a-983c-b7beff2784f9")
-    String userId;
+    String userId; // fixme: use it for jwt generation
 
 }

@@ -30,41 +30,21 @@
  */
 package org.thingsboard.server.report.service;
 
-import com.google.common.util.concurrent.ListenableFuture;
-import lombok.Builder;
-import lombok.Data;
-import org.thingsboard.rest.client.RestClient;
-import org.thingsboard.server.common.data.id.CustomerId;
-import org.thingsboard.server.common.data.id.TenantId;
-import org.thingsboard.server.common.data.report.configuration.ReportTemplateConfig;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.thingsboard.server.common.data.report.TbReportFormat;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+@Service
+@RequiredArgsConstructor
+public class ReportRegistry {
+    private final PdfReportService pdfBuilder;
+    private final CsvReportService csvBuilder;
 
-@Data
-public class TbReportCtx {
-
-    private final TenantId tenantId;
-    private final CustomerId customerId;
-    private final ReportTemplateConfig configuration;
-    private final RestClient restClient;
-    private final String accessToken;
-    private final long accessTokenExpTs;
-
-    private final List<ListenableFuture<Void>> futures = new ArrayList<>();
-    private final Map<String, Object> params = new HashMap<>();
-
-    @Builder
-    public TbReportCtx(TenantId tenantId, CustomerId customerId, ReportTemplateConfig configuration,
-                       RestClient restClient, String accessToken, long accessTokenExpTs) {
-        this.tenantId = tenantId;
-        this.customerId = customerId;
-        this.configuration = configuration;
-        this.restClient = restClient;
-        this.accessToken = accessToken;
-        this.accessTokenExpTs = accessTokenExpTs;
+    public ReportService getBuilder(TbReportFormat format) {
+        return switch (format) {
+            case PDF -> pdfBuilder;
+            case CSV -> csvBuilder;
+            default -> throw new IllegalArgumentException("Unsupported format: " + format);
+        };
     }
-
 }

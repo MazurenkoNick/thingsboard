@@ -44,7 +44,7 @@ import org.thingsboard.server.common.data.page.SortOrder;
 import org.thingsboard.server.common.data.report.ReportTemplate;
 import org.thingsboard.server.common.data.report.ReportTemplateInfo;
 import org.thingsboard.server.common.data.report.ReportTemplateType;
-import org.thingsboard.server.common.data.report.configuration.ReportTemplateConfiguration;
+import org.thingsboard.server.common.data.report.configuration.PdfReportTemplateConfig;
 import org.thingsboard.server.dao.AbstractJpaDaoTest;
 import org.thingsboard.server.dao.customer.CustomerDao;
 import org.thingsboard.server.dao.report.ReportTemplateDao;
@@ -112,7 +112,7 @@ public class JpaReportTemplateInfoDaoTest extends AbstractJpaDaoTest {
         reportTemplate.setCustomerId(new CustomerId(customerId));
         reportTemplate.setName("REPORT_TEMPLATE_" + index);
         reportTemplate.setType(ReportTemplateType.REPORT);
-        reportTemplate.setConfiguration(new ReportTemplateConfiguration());
+        reportTemplate.setConfiguration(new PdfReportTemplateConfig());
         reportTemplateDao.save(AbstractServiceTest.SYSTEM_TENANT_ID, reportTemplate);
     }
 

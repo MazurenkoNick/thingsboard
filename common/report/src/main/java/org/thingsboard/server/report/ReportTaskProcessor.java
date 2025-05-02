@@ -41,9 +41,10 @@ import org.thingsboard.server.common.data.job.JobType;
 import org.thingsboard.server.common.data.job.task.ReportTask;
 import org.thingsboard.server.common.data.job.task.ReportTaskResult;
 import org.thingsboard.server.common.data.report.ReportData;
+import org.thingsboard.server.common.data.report.configuration.ReportTemplateConfig;
 import org.thingsboard.server.queue.task.TaskProcessor;
 import org.thingsboard.server.queue.util.TbReportComponent;
-import org.thingsboard.server.report.service.ReportService;
+import org.thingsboard.server.report.service.ReportRegistry;
 import org.thingsboard.server.report.service.TbReportCtx;
 
 import java.nio.ByteBuffer;
@@ -53,24 +54,26 @@ import java.nio.ByteBuffer;
 @RequiredArgsConstructor
 public class ReportTaskProcessor extends TaskProcessor<ReportTask, ReportTaskResult> {
 
-    private final ReportService reportService;
+    private final ReportRegistry reportRegistry;
 
     @Value("${service.tb_core.base_url:http://localhost:${server.port}}") // for monolith - sending request to itself
     private String tbCoreBaseUrl;
 
     @Override
     public ReportTaskResult process(ReportTask task) throws Exception {
+        ReportTemplateConfig configuration = task.getReportTemplate().getConfiguration();
         ReportData reportData;
         try (RestClient restClient = new RestClient(new RestTemplate(), tbCoreBaseUrl, task.getAccessToken())) {
             TbReportCtx reportCtx = TbReportCtx.builder()
                     .tenantId(task.getTenantId())
                     .customerId(task.getReportRequest().getCustomerId())
-                    .configuration(task.getReportTemplate().getConfiguration())
+                    .configuration(configuration)
                     .restClient(restClient)
                     .accessToken(task.getAccessToken())
                     .accessTokenExpTs(task.getAccessTokenExpirationTs())
                     .build();
-            reportData = reportService.generateReport(task, reportCtx);
+            reportData = reportRegistry.getBuilder(configuration.getFormat())
+                    .generateReport(task, reportCtx);
 
             BlobEntity blobEntity = new BlobEntity();
             blobEntity.setTenantId(task.getTenantId());

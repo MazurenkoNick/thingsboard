@@ -28,34 +28,13 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.utils;
+package org.thingsboard.server.common.data.report.configuration;
 
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
-import org.apache.commons.csv.CSVFormat;
-import org.apache.commons.csv.CSVRecord;
-import org.apache.commons.io.input.CharSequenceReader;
+import lombok.Data;
 
-import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+@Data
+public abstract class AbstractReportTemplateConfig implements ReportTemplateConfig {
 
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class CsvUtils {
-
-    public static List<List<String>> parseCsv(String content, Character delimiter) throws Exception {
-        CSVFormat csvFormat = delimiter.equals(',') ? CSVFormat.DEFAULT : CSVFormat.DEFAULT.withDelimiter(delimiter);
-
-        List<CSVRecord> records;
-        try (CharSequenceReader reader = new CharSequenceReader(content)) {
-            records = csvFormat.parse(reader).getRecords();
-        }
-
-        return records.stream()
-                .map(record -> Stream.iterate(0, i -> i < record.size(), i -> i + 1)
-                        .map(record::get)
-                        .collect(Collectors.toList()))
-                .collect(Collectors.toList());
-    }
+    protected String namePattern;
 
 }

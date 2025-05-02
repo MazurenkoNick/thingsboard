@@ -38,7 +38,7 @@ import org.thingsboard.server.common.data.id.ReportTemplateId;
 import org.thingsboard.server.common.data.id.SchedulerEventId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.report.ReportTemplate;
-import org.thingsboard.server.common.data.report.configuration.ReportTemplateConfiguration;
+import org.thingsboard.server.common.data.report.configuration.PdfReportTemplateConfig;
 import org.thingsboard.server.dao.AbstractJpaDaoTest;
 import org.thingsboard.server.dao.report.ReportTemplateDao;
 
@@ -59,10 +59,10 @@ public class JpaReportTemplateDaoTest extends AbstractJpaDaoTest {
     }
 
     private ReportTemplate saveReportTemplate(UUID id, UUID tenantId, UUID customerId, String name) {
-        return saveReportTemplate(id, tenantId, customerId, name, new ReportTemplateConfiguration(), null, null);
+        return saveReportTemplate(id, tenantId, customerId, name, new PdfReportTemplateConfig(), null, null);
     }
 
-    private ReportTemplate saveReportTemplate(UUID id, UUID tenantId, UUID customerId, String name, ReportTemplateConfiguration configuration, String description, UUID schedulerEventId) {
+    private ReportTemplate saveReportTemplate(UUID id, UUID tenantId, UUID customerId, String name, PdfReportTemplateConfig configuration, String description, UUID schedulerEventId) {
         ReportTemplate reportTemplate = new ReportTemplate();
         reportTemplate.setId(new ReportTemplateId(id));
         reportTemplate.setTenantId(TenantId.fromUUID(tenantId));

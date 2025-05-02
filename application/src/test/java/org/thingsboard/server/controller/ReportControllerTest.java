@@ -43,12 +43,11 @@ import org.thingsboard.server.common.data.User;
 import org.thingsboard.server.common.data.query.DeviceTypeFilter;
 import org.thingsboard.server.common.data.report.ReportRequest;
 import org.thingsboard.server.common.data.report.ReportTemplate;
-import org.thingsboard.server.common.data.report.TbReportFormat;
 import org.thingsboard.server.common.data.report.configuration.DataKey;
 import org.thingsboard.server.common.data.report.configuration.DataSource;
 import org.thingsboard.server.common.data.report.configuration.EntityAlias;
 import org.thingsboard.server.common.data.report.configuration.components.EntityTableComponent;
-import org.thingsboard.server.common.data.report.configuration.ReportTemplateConfiguration;
+import org.thingsboard.server.common.data.report.configuration.PdfReportTemplateConfig;
 import org.thingsboard.server.common.data.security.Authority;
 import org.thingsboard.server.dao.service.DaoSqlTest;
 
@@ -93,7 +92,7 @@ public class ReportControllerTest extends AbstractControllerTest {
 
     @Test
     public void testCreateReportWithLongTable() throws Exception {
-        ReportTemplateConfiguration configuration = new ReportTemplateConfiguration();
+        PdfReportTemplateConfig configuration = new PdfReportTemplateConfig();
         DeviceTypeFilter filter = new DeviceTypeFilter();
         filter.setDeviceTypes(List.of("default"));
         filter.setDeviceNameFilter("");
@@ -110,7 +109,7 @@ public class ReportControllerTest extends AbstractControllerTest {
         dataSource.setEntityAliasId("784f394c-42b6-435a-983c-b7beff2784f9");
         tableComponent.setDataSources(List.of(dataSource));
         configuration.setComponents(List.of(tableComponent));
-        configuration.setFileName("testReport");
+        configuration.setNamePattern("testReport");
         ReportTemplate reportTemplate = new ReportTemplate();
         reportTemplate.setConfiguration(configuration);
         reportTemplate.setName("Device inventory report");
@@ -130,7 +129,6 @@ public class ReportControllerTest extends AbstractControllerTest {
         //generate report
         ReportRequest reportRequest = new ReportRequest();
         reportRequest.setTemplateId(savedTemplate.getId());
-        reportRequest.setFormat(TbReportFormat.PDF);
         ResultActions resultActions = doPost("/api/v2/report/test", reportRequest).andExpect(status().isOk());
         MockHttpServletResponse response = resultActions.andReturn().getResponse();
     }
