@@ -173,6 +173,14 @@ export interface ReportTemplate<Config extends ReportTemplateConfig = ReportTemp
   configuration: Config;
 }
 
+export interface ReportRequest {
+  reportTemplateConfig: ReportTemplateConfig;
+  customerId?: CustomerId;
+  entityId?: EntityId;
+  timezone?: string;
+  userId?: string;
+}
+
 export const defaultReportTemplate: ReportTemplate<PdfReportTemplateConfig> = {
   name: '',
   type: ReportTemplateType.REPORT,

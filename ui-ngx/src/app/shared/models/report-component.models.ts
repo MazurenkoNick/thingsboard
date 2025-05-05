@@ -31,6 +31,7 @@
 
 import { Datasource } from '@shared/models/widget.models';
 import { deepClone } from '@core/utils';
+import { Font, textAlignment, verticalAlignment } from '@shared/models/widget-settings.models';
 
 export enum ReportComponentType {
   HEADING = 'HEADING',
@@ -54,6 +55,11 @@ export interface TableReportComponentConfig extends ReportComponentConfig {
 
 export interface HeadingReportComponentConfig extends ReportComponentConfig {
   value: string;
+  font?: Font;
+  color?: string;
+  textAlignment?: textAlignment;
+  verticalAlignment?: verticalAlignment;
+  height?: number;
   type:  ReportComponentType.HEADING;
 }
 

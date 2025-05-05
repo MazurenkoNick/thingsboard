@@ -6959,7 +6959,8 @@
         "customer-user": "Customer user",
         "user-credentials-description": "Credentials of specified user will be used to open dashboard UI during report generation.",
         "timezone-description": "Time zone in which target dashboard will be presented in report.",
-        "reporting": "Reporting"
+        "reporting": "Reporting",
+        "generating-report": "Generating report..."
     },
     "report-template": {
         "report-template": "Report template",

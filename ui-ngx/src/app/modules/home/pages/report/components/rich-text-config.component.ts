@@ -33,7 +33,7 @@ import { Component, DestroyRef, ViewEncapsulation } from '@angular/core';
 import { FormBuilder, FormGroup } from '@angular/forms';
 import { RichTextReportComponentConfig } from '@app/shared/public-api';
 import { AbstractReportComponentConfig } from '@home/pages/report/components/report-component-config.component';
-import { EditorOptions } from 'tinymce';
+import { Editor, EditorOptions } from 'tinymce';
 
 @Component({
   selector: 'tb-report-rich-text-config',
@@ -59,12 +59,80 @@ export class RichTextConfigComponent extends AbstractReportComponentConfig<RichT
     branding: false,
     promotion: false,
     relative_urls: false,
-    urlconverter_callback: (url) => url
+    contextmenu: ['link', 'variables'],
+    urlconverter_callback: (url) => url,
+    setup: (editor) => this.setupEditor(editor)
   };
 
   constructor(destroyRef: DestroyRef,
               private fb: FormBuilder) {
     super(destroyRef);
+  }
+
+  private setupEditor(editor: Editor) {
+    editor.ui.registry.addAutocompleter('variables', {
+      trigger: '$',
+      minChars: 0,
+      columns: 'auto',
+      onAction: (autocompleteApi, rng, value) => {
+        editor.selection.setRng(rng);
+        editor.insertContent(value);
+        autocompleteApi.hide();
+      },
+      fetch: (pattern) => {
+        return new Promise((resolve) => {
+          const results= ['active'].map((val) => ({
+            type: 'cardmenuitem',
+            value: '${'+val+'}',
+            label: val,
+            items: [
+              {
+                type: 'cardtext',
+                text: val,
+                name: 'char_name'
+              }
+            ]
+          } as any));
+          resolve(results);
+        });
+      }
+    });
+    editor.ui.registry.addNestedMenuItem('variables', {
+      text: 'Variable...',
+      getSubmenuItems: () => {
+        return [
+          {
+            text: 'active',
+            type: 'menuitem',
+            onAction: () => {
+              editor.insertContent('${active}');
+            }
+          }
+        ];
+      }
+    });
+
+    editor.ui.registry.addContextMenu('variables', {
+      update: element => {
+        return [
+          {
+            text: 'Variable...',
+            type: 'submenu',
+            getSubmenuItems: () => {
+              return [
+                {
+                  text: 'active',
+                  type: 'item',
+                  onAction: () => {
+                    editor.insertContent('${active}');
+                  }
+                }
+              ];
+            }
+          }
+        ];
+      }
+    });
   }
 
   protected buildForm(reportComponentConfig: RichTextReportComponentConfig): FormGroup {

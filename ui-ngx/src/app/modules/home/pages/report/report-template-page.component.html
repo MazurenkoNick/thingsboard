@@ -44,6 +44,12 @@
               (click)="isFullscreen = !isFullscreen">
         <mat-icon>{{ isFullscreen ? 'fullscreen_exit' : 'fullscreen' }}</mat-icon>
       </button>
+      <button mat-icon-button
+              matTooltip="{{'report.generate-test-report' | translate}}"
+              matTooltipPosition="below"
+              (click)="generateTestReport()">
+        <mat-icon>download</mat-icon>
+      </button>
       <button mat-stroked-button [disabled]="(isLoading$ | async)" (click)="saveReportTemplate()">
         <mat-icon>done</mat-icon>{{ 'action.save' | translate }}</button>
       <button mat-button [disabled]="(isLoading$ | async)" (click)="declineReportTemplate()">

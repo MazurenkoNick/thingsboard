@@ -47,7 +47,7 @@ import {
   entityAliasesToList,
   filtersToReportFilterList,
   HeaderFooter, PdfReportTemplateConfig,
-  reportFilterListToFilters,
+  reportFilterListToFilters, ReportRequest,
   ReportTemplate,
   ReportTemplateSettings,
   validateAndUpdateReportTemplate
@@ -78,6 +78,8 @@ import { IStateController, StateParams } from '@core/api/widget-api.models';
 import { TranslateService } from '@ngx-translate/core';
 import { UtilsService } from '@core/services/utils.service';
 import { AliasController } from '@core/api/alias-controller';
+import { DialogService } from '@core/services/dialog.service';
+import { ReportService } from '@core/http/report.service';
 
 @Component({
   selector: 'tb-report-template-page',
@@ -143,11 +145,13 @@ export class ReportTemplatePageComponent extends PageComponent
   constructor(private route: ActivatedRoute,
               private userPermissionsService: UserPermissionsService,
               private reportTemplateService: ReportTemplateService,
+              private reportService: ReportService,
               private entityService: EntityService,
               private utils: UtilsService,
               private translate: TranslateService,
               private destroyRef: DestroyRef,
               private dialog: MatDialog,
+              private dialogService: DialogService,
               private fb: FormBuilder,
               private cd: ChangeDetectorRef) {
     super();
@@ -321,6 +325,14 @@ export class ReportTemplatePageComponent extends PageComponent
         this.reportTemplateSettingsFormControl.patchValue(settings, {emitEvent: false});
       }
     });
+  }
+
+  generateTestReport() {
+    const reportRequest: ReportRequest = {
+      reportTemplateConfig: this.reportTemplate.configuration
+    };
+    this.dialogService.progress(
+      this.reportService.downloadTestReport(reportRequest), this.translate.instant('report.generating-report')).subscribe();
   }
 
   private updateReportTemplateSettings(settings: ReportTemplateSettings): void {
