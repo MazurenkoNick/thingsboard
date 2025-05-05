@@ -42,10 +42,12 @@ import org.thingsboard.server.common.data.job.task.ReportTask;
 import org.thingsboard.server.common.data.job.task.Task;
 import org.thingsboard.server.common.data.job.task.TaskResult;
 import org.thingsboard.server.common.data.msg.TbMsgType;
+import org.thingsboard.server.common.data.notification.rule.trigger.ReportGeneratedTrigger;
 import org.thingsboard.server.common.data.report.ReportRequest;
 import org.thingsboard.server.common.data.report.ReportTemplate;
 import org.thingsboard.server.common.msg.TbMsg;
 import org.thingsboard.server.common.msg.TbMsgMetaData;
+import org.thingsboard.server.common.msg.notification.NotificationRuleProcessor;
 import org.thingsboard.server.dao.report.ReportTemplateService;
 import org.thingsboard.server.queue.TbQueueCallback;
 import org.thingsboard.server.service.job.JobProcessor;
@@ -62,6 +64,7 @@ public class ReportJobProcessor implements JobProcessor {
 
     private final ReportTemplateService reportTemplateService;
     private final SystemSecurityService systemSecurityService;
+    private final NotificationRuleProcessor notificationRuleProcessor;
     private final TbClusterService clusterService;
 
     @Override
@@ -107,6 +110,15 @@ public class ReportJobProcessor implements JobProcessor {
                 )))
                 .build();
         clusterService.pushMsgToRuleEngine(job.getTenantId(), configuration.getUserId(), tbMsg, TbQueueCallback.EMPTY);
+
+        ReportTemplate reportTemplate = reportTemplateService.findReportTemplateById(job.getTenantId(), configuration.getRequest().getTemplateId());
+        notificationRuleProcessor.process(ReportGeneratedTrigger.builder()
+                .tenantId(job.getTenantId())
+                .customerId(configuration.getRequest().getCustomerId())
+                .reportBlobId(jobResult.getReportBlobId())
+                .reportName(jobResult.getReportName())
+                .reportFormat(reportTemplate.getConfiguration().getFormat())
+                .build());
     }
 
     @Override

@@ -5005,6 +5005,7 @@
         "new-platform-version-trigger-settings": "New platform version trigger settings",
         "rate-limits-trigger-settings": "Exceeded rate limits trigger settings",
         "task-processing-failure-trigger-settings": "Task processing failure trigger settings",
+        "report-generated-trigger-settings": "Report generated trigger settings",
         "at-least-one-should-be-selected": "At least one should be selected",
         "basic-settings": "Basic settings",
         "button-text": "Button text",
@@ -5227,6 +5228,7 @@
             "edge-communication-failure": "Edge communication failure",
             "edge-connection": "Edge connection",
             "task-processing-failure": "Task processing failure",
+            "report-generated": "Report generated",
             "user-activated": "User activated",
             "user-registered": "User registered"
         },
@@ -5253,6 +5255,7 @@
             "edge-connection": "Edge connection",
             "edge-communication-failure": "Edge communication failure",
             "task-processing-failure": "Task processing failure",
+            "report-generated": "Report generated",
             "trigger": "Trigger",
             "trigger-required": "Trigger is required"
         },

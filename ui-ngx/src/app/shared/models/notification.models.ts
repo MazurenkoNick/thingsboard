@@ -573,7 +573,8 @@ export enum NotificationType {
   EDGE_COMMUNICATION_FAILURE = 'EDGE_COMMUNICATION_FAILURE',
   TASK_PROCESSING_FAILURE = 'TASK_PROCESSING_FAILURE',
   USER_ACTIVATED = 'USER_ACTIVATED',
-  USER_REGISTERED = 'USER_REGISTERED'
+  USER_REGISTERED = 'USER_REGISTERED',
+  REPORT_GENERATED = 'REPORT_GENERATED'
 }
 
 export const NotificationTypeIcons = new Map<NotificationType, string | null>([
@@ -586,7 +587,8 @@ export const NotificationTypeIcons = new Map<NotificationType, string | null>([
   [NotificationType.ENTITIES_LIMIT, 'data_thresholding'],
   [NotificationType.API_USAGE_LIMIT, 'insert_chart'],
   [NotificationType.INTEGRATION_LIFECYCLE_EVENT, 'integration_instructions'],
-  [NotificationType.TASK_PROCESSING_FAILURE, 'warning']
+  [NotificationType.TASK_PROCESSING_FAILURE, 'warning'],
+  [NotificationType.REPORT_GENERATED, 'description']
 ]);
 
 export const AlarmSeverityNotificationColors = new Map<AlarmSeverity, string>(
@@ -722,6 +724,12 @@ export const NotificationTemplateTypeTranslateMap = new Map<NotificationType, No
       name: 'notification.template-type.user-registered',
       helpId: 'notification/user_registered'
     }
+  ],
+  [NotificationType.REPORT_GENERATED,
+    {
+      name: 'notification.template-type.report-generated',
+      helpId: 'notification/report_generated'   // TODO: add help doc
+    }
   ]
 ]);
 
@@ -740,6 +748,7 @@ export enum TriggerType {
   EDGE_CONNECTION = 'EDGE_CONNECTION',
   EDGE_COMMUNICATION_FAILURE = 'EDGE_COMMUNICATION_FAILURE',
   TASK_PROCESSING_FAILURE = 'TASK_PROCESSING_FAILURE',
+  REPORT_GENERATED = 'REPORT_GENERATED',
 }
 
 export const TriggerTypeTranslationMap = new Map<TriggerType, string>([
@@ -756,7 +765,8 @@ export const TriggerTypeTranslationMap = new Map<TriggerType, string>([
   [TriggerType.RATE_LIMITS, 'notification.trigger.rate-limits'],
   [TriggerType.EDGE_CONNECTION, 'notification.trigger.edge-connection'],
   [TriggerType.EDGE_COMMUNICATION_FAILURE, 'notification.trigger.edge-communication-failure'],
-  [TriggerType.TASK_PROCESSING_FAILURE, 'notification.trigger.task-processing-failure']
+  [TriggerType.TASK_PROCESSING_FAILURE, 'notification.trigger.task-processing-failure'],
+  [TriggerType.REPORT_GENERATED, 'notification.trigger.report-generated']
 ]);
 
 export interface NotificationUserSettings {

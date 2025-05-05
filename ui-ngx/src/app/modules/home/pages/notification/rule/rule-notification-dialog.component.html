@@ -664,6 +664,18 @@
         </section>
       </form>
     </mat-step>
+    <mat-step *ngIf="ruleNotificationForm.get('triggerType').value === triggerType.REPORT_GENERATED"
+              [stepControl]="reportGeneratedTemplateForm">
+      <ng-template matStepLabel>{{ 'notification.report-generated-trigger-settings' | translate }}</ng-template>
+      <form [formGroup]="ruleNotificationForm">
+        <section formGroupName="additionalConfig">
+          <mat-form-field class="mat-block">
+            <mat-label translate>notification.description</mat-label>
+            <input matInput formControlName="description">
+          </mat-form-field>
+        </section>
+      </form>
+    </mat-step>
   </mat-horizontal-stepper>
 </div>
 <mat-divider></mat-divider>

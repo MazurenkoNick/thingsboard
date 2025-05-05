@@ -28,37 +28,59 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.common.data.notification;
+package org.thingsboard.server.common.data.notification.info;
 
 import lombok.AllArgsConstructor;
-import lombok.Getter;
+import lombok.Builder;
+import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.thingsboard.server.common.data.id.BlobEntityId;
+import org.thingsboard.server.common.data.id.CustomerId;
+import org.thingsboard.server.common.data.id.TenantId;
+import org.thingsboard.server.common.data.id.UUIDBased;
+import org.thingsboard.server.common.data.report.TbReportFormat;
 
-@AllArgsConstructor
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+import static org.thingsboard.server.common.data.util.CollectionsUtil.mapOf;
+
+@Data
 @NoArgsConstructor
-public enum NotificationType {
+@AllArgsConstructor
+@Builder
+public class ReportGeneratedNotificationInfo implements RuleOriginatedNotificationInfo {
 
-    GENERAL,
-    ALARM,
-    DEVICE_ACTIVITY,
-    ENTITY_ACTION,
-    ALARM_COMMENT,
-    RULE_ENGINE_COMPONENT_LIFECYCLE_EVENT,
-    ALARM_ASSIGNMENT,
-    NEW_PLATFORM_VERSION,
-    ENTITIES_LIMIT,
-    API_USAGE_LIMIT,
-    RULE_NODE,
-    INTEGRATION_LIFECYCLE_EVENT,
-    RATE_LIMITS,
-    EDGE_CONNECTION,
-    EDGE_COMMUNICATION_FAILURE,
-    TASK_PROCESSING_FAILURE,
-    USER_ACTIVATED(true),
-    USER_REGISTERED(true),
-    REPORT_GENERATED;
+    private TenantId tenantId;
+    private CustomerId customerId;
+    private BlobEntityId reportBlobId;
+    private String reportName;
+    private TbReportFormat reportFormat;
 
-    @Getter
-    private boolean system;
+    @Override
+    public Map<String, String> getTemplateData() {
+        return mapOf(
+                "customerId", Optional.ofNullable(customerId).map(UUIDBased::toString).orElse(""),
+                "reportBlobId", reportBlobId.toString(),
+                "reportName", reportName,
+                "reportFormat", reportFormat.name()
+        );
+    }
+
+    @Override
+    public List<BlobEntityId> getAttachments() {
+        return List.of(reportBlobId);
+    }
+
+    @Override
+    public TenantId getAffectedTenantId() {
+        return tenantId;
+    }
+
+    @Override
+    public CustomerId getAffectedCustomerId() {
+        return customerId;
+    }
 
 }

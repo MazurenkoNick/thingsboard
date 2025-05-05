@@ -96,7 +96,7 @@ public class ReportTaskProcessor extends TaskProcessor<ReportTask, ReportTaskRes
             blobEntity.setName(reportData.getName());
             blobEntity.setType(task.isTestReport() ? "test_report" : "report");
             BlobEntityInfo savedBlobEntity = restClient.createBlobEntity(blobEntity);
-            return ReportTaskResult.success(savedBlobEntity.getId());
+            return ReportTaskResult.success(savedBlobEntity.getId(), reportData.getName());
         }
     }
 

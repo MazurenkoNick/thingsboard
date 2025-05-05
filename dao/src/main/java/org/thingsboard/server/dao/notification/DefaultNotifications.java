@@ -65,6 +65,7 @@ import org.thingsboard.server.common.data.notification.rule.trigger.config.NewPl
 import org.thingsboard.server.common.data.notification.rule.trigger.config.NotificationRuleTriggerConfig;
 import org.thingsboard.server.common.data.notification.rule.trigger.config.NotificationRuleTriggerType;
 import org.thingsboard.server.common.data.notification.rule.trigger.config.RateLimitsNotificationRuleTriggerConfig;
+import org.thingsboard.server.common.data.notification.rule.trigger.config.ReportGeneratedNotificationRuleTriggerConfig;
 import org.thingsboard.server.common.data.notification.rule.trigger.config.RuleEngineComponentLifecycleEventNotificationRuleTriggerConfig;
 import org.thingsboard.server.common.data.notification.rule.trigger.config.TaskProcessingFailureNotificationRuleTriggerConfig;
 import org.thingsboard.server.common.data.notification.template.NotificationTemplate;
@@ -400,6 +401,20 @@ public class DefaultNotifications {
                     .name("Task processing failure")
                     .triggerConfig(TaskProcessingFailureNotificationRuleTriggerConfig.builder().build())
                     .description("Send notification to system admins when task processing fails")
+                    .build())
+            .build();
+
+    public static final DefaultNotification reportGenerated = DefaultNotification.builder()
+            .name("Report generated notification")
+            .type(NotificationType.REPORT_GENERATED)
+            .subject("Report generated")
+            .text("${reportFormat} report '${reportName}' is ready")
+            .icon("description").color(null)
+            .button("Download").link("/api/blobEntity/${reportBlobId}/download")
+            .rule(DefaultRule.builder()
+                    .name("Report generated")
+                    .triggerConfig(ReportGeneratedNotificationRuleTriggerConfig.builder().build())
+                    .description("Send notification to tenant admins when report is generated")
                     .build())
             .build();
 

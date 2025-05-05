@@ -44,6 +44,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.thingsboard.server.common.data.blob.BlobEntity;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.id.BlobEntityId;
+import org.thingsboard.server.common.data.id.ReportTemplateId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.job.Job;
 import org.thingsboard.server.common.data.job.JobStatus;
@@ -51,12 +52,15 @@ import org.thingsboard.server.common.data.job.JobType;
 import org.thingsboard.server.common.data.job.ReportJobConfiguration;
 import org.thingsboard.server.common.data.job.ReportJobResult;
 import org.thingsboard.server.common.data.report.ReportRequest;
+import org.thingsboard.server.common.data.report.ReportTemplate;
 import org.thingsboard.server.config.annotations.ApiOperation;
 import org.thingsboard.server.dao.blob.BlobEntityService;
 import org.thingsboard.server.dao.job.JobService;
 import org.thingsboard.server.queue.util.TbCoreComponent;
 import org.thingsboard.server.service.job.JobManager;
 import org.thingsboard.server.service.security.model.SecurityUser;
+
+import java.util.UUID;
 
 import static org.thingsboard.server.controller.ControllerConstants.TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH;
 
@@ -72,12 +76,12 @@ public class ReportController extends BaseController {
 
     @ApiOperation(value = "Download test report (downloadTestReport)",
             notes = "Generate and download test report." + TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH)
-    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
+    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN')")
     @PostMapping(value = "/report/deprecated/test", produces = {"application/pdf"})
     @Deprecated // FIXME: this is temporary API for testing purposes
     public ResponseEntity<Resource> testReportAndDownload(@RequestBody ReportRequest reportRequest) throws Exception {
         TenantId tenantId = getTenantId();
-        Job job = testReport(reportRequest);
+        Job job = requestTestReport(reportRequest);
         do {
             Thread.sleep(1000);
             job = jobService.findJobById(tenantId, job.getId());
@@ -99,19 +103,41 @@ public class ReportController extends BaseController {
                 .body(resource);
     }
 
-    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
-    @PostMapping(value = "/report/test", produces = {"application/pdf"})
-    public Job testReport(@RequestBody ReportRequest reportRequest) throws ThingsboardException {
+    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN')")
+    @PostMapping(value = "/report/test")
+    public Job requestTestReport(@RequestBody ReportRequest reportRequest) throws ThingsboardException {
         SecurityUser currentUser = getCurrentUser();
+        ReportTemplateId templateId = reportRequest.getTemplateId();
+        ReportTemplate reportTemplate = reportTemplateService.findReportTemplateById(currentUser.getTenantId(), templateId);
+
         return jobManager.submitJob(Job.builder()
                 .tenantId(currentUser.getTenantId())
                 .type(JobType.REPORT)
-                .key(reportRequest.getTemplateId().toString()) // fixme
-                .description("Report generation for request: " + reportRequest) // fixme: tmp
+                .key(UUID.randomUUID().toString())
+                .description("Test report generation for template '" + reportTemplate.getName() + "'")
                 .configuration(ReportJobConfiguration.builder()
                         .request(reportRequest)
                         .userId(currentUser.getId())
                         .testReport(true)
+                        .build())
+                .build());
+    }
+
+    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN')")
+    @PostMapping(value = "/report")
+    public Job requestReport(@RequestBody ReportRequest reportRequest) throws ThingsboardException {
+        SecurityUser currentUser = getCurrentUser();
+        ReportTemplateId templateId = reportRequest.getTemplateId();
+        ReportTemplate reportTemplate = reportTemplateService.findReportTemplateById(currentUser.getTenantId(), templateId);
+
+        return jobManager.submitJob(Job.builder()
+                .tenantId(currentUser.getTenantId())
+                .type(JobType.REPORT)
+                .key(UUID.randomUUID().toString())
+                .description("Report generation for template '" + reportTemplate.getName() + "'")
+                .configuration(ReportJobConfiguration.builder()
+                        .request(reportRequest)
+                        .userId(currentUser.getId())
                         .build())
                 .build());
     }
