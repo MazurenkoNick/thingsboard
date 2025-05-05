@@ -30,7 +30,7 @@
 ///
 
 import { Component, Input, ViewEncapsulation } from '@angular/core';
-import { ReportComponentConfig } from '@shared/models/report-component.models';
+import { RichTextReportComponentConfig } from '@shared/models/report-component.models';
 import { ReportComponentPreview } from '@home/pages/report/components/report-component.models';
 
 @Component({
@@ -39,10 +39,10 @@ import { ReportComponentPreview } from '@home/pages/report/components/report-com
   styleUrls: ['./rich-text-preview.component.scss'],
   encapsulation: ViewEncapsulation.None
 })
-export class RichTextPreviewComponent implements ReportComponentPreview {
+export class RichTextPreviewComponent implements ReportComponentPreview<RichTextReportComponentConfig> {
 
   @Input()
-  reportComponent: ReportComponentConfig;
+  reportComponent: RichTextReportComponentConfig;
 
   constructor() {}
 

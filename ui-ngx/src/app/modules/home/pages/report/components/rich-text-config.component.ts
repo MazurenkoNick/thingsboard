@@ -31,7 +31,7 @@
 
 import { Component, DestroyRef, ViewEncapsulation } from '@angular/core';
 import { FormBuilder, FormGroup } from '@angular/forms';
-import { Datasource, ReportComponentConfig, RichTextReportComponentConfig } from '@app/shared/public-api';
+import { RichTextReportComponentConfig } from '@app/shared/public-api';
 import { AbstractReportComponentConfig } from '@home/pages/report/components/report-component-config.component';
 import { EditorOptions } from 'tinymce';
 
@@ -41,7 +41,7 @@ import { EditorOptions } from 'tinymce';
   styleUrls: ['./report-component-config.scss'],
   encapsulation: ViewEncapsulation.None
 })
-export class RichTextConfigComponent extends AbstractReportComponentConfig {
+export class RichTextConfigComponent extends AbstractReportComponentConfig<RichTextReportComponentConfig> {
 
   settingsTab: 'content' | 'data' = 'content';
 
@@ -67,11 +67,10 @@ export class RichTextConfigComponent extends AbstractReportComponentConfig {
     super(destroyRef);
   }
 
-  protected buildForm(reportComponentConfig: ReportComponentConfig): FormGroup {
-    const richTextConfig: RichTextReportComponentConfig = reportComponentConfig as RichTextReportComponentConfig;
+  protected buildForm(reportComponentConfig: RichTextReportComponentConfig): FormGroup {
     return this.fb.group({
-      value: [richTextConfig.value, []],
-      dataSources: [richTextConfig.dataSources, []]
+      value: [reportComponentConfig.value, []],
+      dataSources: [reportComponentConfig.dataSources, []]
     });
   }
 

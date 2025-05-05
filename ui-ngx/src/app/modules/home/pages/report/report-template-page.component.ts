@@ -46,7 +46,7 @@ import {
   entityAliasesListToAliases,
   entityAliasesToList,
   filtersToReportFilterList,
-  HeaderFooter,
+  HeaderFooter, PdfReportTemplateConfig,
   reportFilterListToFilters,
   ReportTemplate,
   ReportTemplateSettings,
@@ -121,7 +121,7 @@ export class ReportTemplatePageComponent extends PageComponent
 
   isFullscreen = false;
 
-  reportTemplate: ReportTemplate;
+  reportTemplate: ReportTemplate<PdfReportTemplateConfig>;
 
   updateBreadcrumbs = new EventEmitter();
 
@@ -184,7 +184,7 @@ export class ReportTemplatePageComponent extends PageComponent
   }
 
   declineReportTemplate() {
-    this.reportTemplateService.getReportTemplate(this.reportTemplate.id.id).subscribe(
+    this.reportTemplateService.getReportTemplate<PdfReportTemplateConfig>(this.reportTemplate.id.id).subscribe(
       (saved) => {
         this.init(saved);
       }
@@ -305,7 +305,7 @@ export class ReportTemplatePageComponent extends PageComponent
     }
     const settings: ReportTemplateSettings = {
       name: this.reportTemplate.name,
-      fileName: this.reportTemplate.configuration.fileName,
+      namePattern: this.reportTemplate.configuration.namePattern,
       description: this.reportTemplate.description
     };
     this.dialog.open<ReportTemplateSettingsDialogComponent, ReportTemplateSettingsDialogData,
@@ -325,14 +325,14 @@ export class ReportTemplatePageComponent extends PageComponent
 
   private updateReportTemplateSettings(settings: ReportTemplateSettings): void {
     this.reportTemplate.name = settings.name;
-    this.reportTemplate.configuration.fileName = settings.fileName;
+    this.reportTemplate.configuration.namePattern = settings.namePattern;
     this.reportTemplate.description = settings.description;
     this.isDirty = true;
     this.updateBreadcrumbs.emit();
     this.cd.markForCheck();
   }
 
-  private init(reportTemplate: ReportTemplate) {
+  private init(reportTemplate: ReportTemplate<PdfReportTemplateConfig>) {
     this.cancelReportComponentEdit();
     this.headerToggleValue = 'header';
     this.footerToggleValue = 'footer';
@@ -351,7 +351,7 @@ export class ReportTemplatePageComponent extends PageComponent
 
     const settings: ReportTemplateSettings = {
       name: this.reportTemplate.name,
-      fileName: this.reportTemplate.configuration.fileName,
+      namePattern: this.reportTemplate.configuration.namePattern,
       description: this.reportTemplate.description
     };
     this.reportTemplateSettingsFormControl.patchValue(settings, {emitEvent: false});

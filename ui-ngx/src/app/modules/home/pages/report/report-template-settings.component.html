@@ -49,8 +49,8 @@
   <div class="tb-form-row">
     <div class="fixed-title-width" translate>report-template.file-name-pattern</div>
     <mat-form-field class="flex-1" appearance="outline" subscriptSizing="dynamic">
-      <input required matInput formControlName="fileName" placeholder="{{ 'widget-config.set' | translate }}">
-      @if (settingsFormGroup.get('fileName').hasError('required') && settingsFormGroup.get('fileName').touched) {
+      <input required matInput formControlName="namePattern" placeholder="{{ 'widget-config.set' | translate }}">
+      @if (settingsFormGroup.get('namePattern').hasError('required') && settingsFormGroup.get('namePattern').touched) {
         <mat-icon matSuffix
                   matTooltipPosition="above"
                   matTooltipClass="tb-error-tooltip"

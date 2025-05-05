@@ -124,13 +124,13 @@ export class ReportComponentConfigComponent implements OnInit, OnChanges {
 }
 
 @Directive()
-export abstract class AbstractReportComponentConfig {
+export abstract class AbstractReportComponentConfig<C extends ReportComponentConfig = ReportComponentConfig> {
 
   @Input()
   context: ReportComponentContext;
 
   @Output()
-  reportConfigUpdated = new EventEmitter<ReportComponentConfig>();
+  reportConfigUpdated = new EventEmitter<C>();
 
   widgetType = widgetType;
 
@@ -142,11 +142,11 @@ export abstract class AbstractReportComponentConfig {
 
   reportConfigForm: FormGroup;
 
-  private reportComponentConfig: ReportComponentConfig;
+  private reportComponentConfig: C;
 
   protected constructor(private destroyRef: DestroyRef) {}
 
-  setupConfig(reportComponentConfig: ReportComponentConfig): FormGroup {
+  setupConfig(reportComponentConfig: C): FormGroup {
     this.reportComponentConfig = reportComponentConfig;
     this.reportConfigForm = this.buildForm(reportComponentConfig);
     this.reportConfigForm.valueChanges.pipe(
@@ -233,7 +233,7 @@ export abstract class AbstractReportComponentConfig {
     return this.context.utils.getMaterialColor(i);
   }
 
-  protected abstract buildForm(reportComponentConfig: ReportComponentConfig): FormGroup;
+  protected abstract buildForm(reportComponentConfig: C): FormGroup;
 
   protected getDataSources(): Datasource[] {
     if (this.reportConfigForm.get('dataSources')) {

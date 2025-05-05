@@ -37,20 +37,19 @@ import { AbstractReportComponentConfig } from '@home/pages/report/components/rep
 import { HeadingConfigComponent } from '@home/pages/report/components/heading-config.component';
 import { RichTextConfigComponent } from '@home/pages/report/components/rich-text-config.component';
 import { IAliasController } from '@core/api/widget-api.models';
-import { WidgetConfigCallbacks } from '@home/components/widget/config/widget-config.component.models';
 import { EntityService } from '@core/http/entity.service';
 import { TranslateService } from '@ngx-translate/core';
 import { UtilsService } from '@core/services/utils.service';
 
-export interface ReportComponentPreview {
-  reportComponent: ReportComponentConfig;
+export interface ReportComponentPreview<C extends ReportComponentConfig = ReportComponentConfig> {
+  reportComponent: C;
 }
 
-export interface ReportComponentTypeData {
+export interface ReportComponentTypeData<C extends ReportComponentConfig = ReportComponentConfig> {
   title: string;
   previewImage: string;
-  previewComponent: Type<ReportComponentPreview>;
-  configComponent: Type<AbstractReportComponentConfig>;
+  previewComponent: Type<ReportComponentPreview<C>>;
+  configComponent: Type<AbstractReportComponentConfig<C>>;
 }
 
 export const reportComponentTypeMap = new Map<ReportComponentType, ReportComponentTypeData>(

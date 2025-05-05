@@ -30,7 +30,7 @@
 ///
 
 import { Component, Input, ViewEncapsulation } from '@angular/core';
-import { ReportComponentConfig } from '@shared/models/report-component.models';
+import { HeadingReportComponentConfig } from '@shared/models/report-component.models';
 import { ReportComponentPreview } from '@home/pages/report/components/report-component.models';
 
 @Component({
@@ -39,10 +39,10 @@ import { ReportComponentPreview } from '@home/pages/report/components/report-com
   styleUrls: [],
   encapsulation: ViewEncapsulation.None
 })
-export class HeadingPreviewComponent implements ReportComponentPreview {
+export class HeadingPreviewComponent implements ReportComponentPreview<HeadingReportComponentConfig> {
 
   @Input()
-  reportComponent: ReportComponentConfig;
+  reportComponent: HeadingReportComponentConfig;
 
   constructor() {}
 

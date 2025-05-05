@@ -30,8 +30,6 @@
 ///
 
 import { Datasource } from '@shared/models/widget.models';
-import { HeadingPreviewComponent } from '@home/pages/report/components/heading-preview.component';
-import { RichTextPreviewComponent } from '@home/pages/report/components/rich-text-preview.component';
 import { deepClone } from '@core/utils';
 
 export enum ReportComponentType {
@@ -45,29 +43,37 @@ export enum ReportComponentType {
   SUB_REPORT = 'SUB_REPORT'
 }
 
-export interface HeadingReportComponentConfig {
+export interface ReportComponentConfig {
+  dataSources: Datasource[];
+  type: ReportComponentType;
+}
+
+export interface TableReportComponentConfig extends ReportComponentConfig {
+  type: ReportComponentType;
+}
+
+export interface HeadingReportComponentConfig extends ReportComponentConfig {
   value: string;
-  dataSources: Datasource[];
+  type:  ReportComponentType.HEADING;
 }
 
-export interface RichTextReportComponentConfig {
+export interface RichTextReportComponentConfig extends ReportComponentConfig {
   value: string;
-  dataSources: Datasource[];
+  type: ReportComponentType.RICH_TEXT;
 }
 
-
-
-export interface EntityTableReportComponentConfig {
-  dataSources: Datasource[];
+export interface EntityTableReportComponentConfig extends TableReportComponentConfig {
+  type: ReportComponentType.ENTITY_TABLE;
 }
 
-export type ReportComponentConfigs = Partial<HeadingReportComponentConfig & RichTextReportComponentConfig & EntityTableReportComponentConfig>;
+export type ReportComponentConfigs = HeadingReportComponentConfig | RichTextReportComponentConfig | EntityTableReportComponentConfig;
 
 export const reportComponentTypeDefaultConfigMap = new Map<ReportComponentType, ReportComponentConfigs>(
   [
     [
       ReportComponentType.HEADING,
       {
+        type: ReportComponentType.HEADING,
         value: 'Heading text',
         dataSources: []
       }
@@ -75,16 +81,13 @@ export const reportComponentTypeDefaultConfigMap = new Map<ReportComponentType, 
     [
       ReportComponentType.RICH_TEXT,
       {
+        type: ReportComponentType.RICH_TEXT,
         value: '<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec libero orci, faucibus in iaculis quis, vestibulum sit amet ligula. Nulla facilisi. Ut ut iaculis tortor.</p>',
         dataSources: []
       }
     ]
   ]
 );
-
-export interface ReportComponentConfig extends ReportComponentConfigs {
-  type: ReportComponentType;
-}
 
 export const defaultReportComponentConfig = (type: ReportComponentType): ReportComponentConfig => {
   const config = reportComponentTypeDefaultConfigMap.get(type);

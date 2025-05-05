@@ -43,7 +43,7 @@ import {
   keyFilterInfosToKeyFilters,
   keyFiltersToKeyFilterInfos
 } from '@shared/models/query/query.models';
-import { ReportComponentConfig } from '@shared/models/report-component.models';
+import { ReportComponentConfig, TableReportComponentConfig } from '@shared/models/report-component.models';
 
 export enum ReportTemplateType {
   REPORT = 'REPORT',
@@ -136,14 +136,26 @@ export const filterToReportFilter = (filter: Filter): ReportFilter => {
   };
 }
 
+export enum TbReportFormat {
+  PDF = 'PDF',
+  CSV = 'CSV'
+}
+
+export interface ReportTemplateConfig {
+  format: TbReportFormat;
+}
+
+export interface AbstractReportTemplateConfig extends ReportTemplateConfig {
+  namePattern: string;
+}
+
 export interface ReportTemplateSettings {
   name: string;
-  fileName: string;
+  namePattern: string;
   description?: string;
 }
 
-export interface ReportTemplateConfiguration {
-  fileName: string;
+export interface PdfReportTemplateConfig extends AbstractReportTemplateConfig {
   entityAliases: EntityAlias[];
   filters: ReportFilter[];
   header: HeaderFooter;
@@ -151,15 +163,22 @@ export interface ReportTemplateConfiguration {
   components: ReportComponentConfig[];
 }
 
-export interface ReportTemplate extends BaseReportTemplate {
-  configuration: ReportTemplateConfiguration;
+export interface CsvReportTemplateConfig extends AbstractReportTemplateConfig {
+  entityAlias: EntityAlias;
+  filter: ReportFilter;
+  component: TableReportComponentConfig;
 }
 
-export const defaultReportTemplate: ReportTemplate = {
+export interface ReportTemplate<Config extends ReportTemplateConfig = ReportTemplateConfig> extends BaseReportTemplate {
+  configuration: Config;
+}
+
+export const defaultReportTemplate: ReportTemplate<PdfReportTemplateConfig> = {
   name: '',
   type: ReportTemplateType.REPORT,
   configuration: {
-    fileName: 'report-%d{yyyy-MM-dd_HH:mm:ss}',
+    format: TbReportFormat.PDF,
+    namePattern: 'report-%d{yyyy-MM-dd_HH:mm:ss}',
     header: {
       enabled: true,
       components: []
@@ -171,12 +190,21 @@ export const defaultReportTemplate: ReportTemplate = {
     entityAliases: [],
     filters: [],
     components: []
-  }
+  } as PdfReportTemplateConfig
 };
 
-export const validateAndUpdateReportTemplate = (reportTemplate: ReportTemplate): ReportTemplate => {
-  reportTemplate.configuration.header = validateAndUpdateReportTemplateHeaderFooter(reportTemplate.configuration.header);
-  reportTemplate.configuration.footer = validateAndUpdateReportTemplateHeaderFooter(reportTemplate.configuration.footer);
+export const validateAndUpdateReportTemplate =
+  <Config extends ReportTemplateConfig>(reportTemplate: ReportTemplate<Config>): ReportTemplate<Config> => {
+  if (!reportTemplate.configuration.format) {
+    reportTemplate.configuration.format = TbReportFormat.PDF;
+  }
+  if (reportTemplate.configuration.format === TbReportFormat.PDF) {
+    const configuration = reportTemplate.configuration as any as PdfReportTemplateConfig;
+    configuration.header = validateAndUpdateReportTemplateHeaderFooter(configuration.header);
+    configuration.footer = validateAndUpdateReportTemplateHeaderFooter(configuration.footer);
+  } else {
+    const configuration = reportTemplate.configuration as any as CsvReportTemplateConfig;
+  }
   return reportTemplate;
 }
 

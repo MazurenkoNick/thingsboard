@@ -70,7 +70,7 @@ export class ReportTemplateSettingsComponent implements OnInit, ControlValueAcce
   ngOnInit(): void {
     this.settingsFormGroup = this.fb.group({
       name: [null, [Validators.required]],
-      fileName: [null, [Validators.required]],
+      namePattern: [null, [Validators.required]],
       description: [null, []]
     });
     this.settingsFormGroup.valueChanges.pipe(
