@@ -44,7 +44,6 @@ import org.springframework.web.bind.annotation.RestController;
 import org.thingsboard.server.common.data.blob.BlobEntity;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.id.BlobEntityId;
-import org.thingsboard.server.common.data.id.ReportTemplateId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.job.Job;
 import org.thingsboard.server.common.data.job.JobStatus;
@@ -52,7 +51,6 @@ import org.thingsboard.server.common.data.job.JobType;
 import org.thingsboard.server.common.data.job.ReportJobConfiguration;
 import org.thingsboard.server.common.data.job.ReportJobResult;
 import org.thingsboard.server.common.data.report.ReportRequest;
-import org.thingsboard.server.common.data.report.ReportTemplate;
 import org.thingsboard.server.config.annotations.ApiOperation;
 import org.thingsboard.server.dao.blob.BlobEntityService;
 import org.thingsboard.server.dao.job.JobService;
@@ -107,14 +105,12 @@ public class ReportController extends BaseController {
     @PostMapping(value = "/report/test")
     public Job requestTestReport(@RequestBody ReportRequest reportRequest) throws ThingsboardException {
         SecurityUser currentUser = getCurrentUser();
-        ReportTemplateId templateId = reportRequest.getTemplateId();
-        ReportTemplate reportTemplate = reportTemplateService.findReportTemplateById(currentUser.getTenantId(), templateId);
 
         return jobManager.submitJob(Job.builder()
                 .tenantId(currentUser.getTenantId())
                 .type(JobType.REPORT)
                 .key(UUID.randomUUID().toString())
-                .description("Test report generation for template '" + reportTemplate.getName() + "'")
+                .description("Test report generation")
                 .configuration(ReportJobConfiguration.builder()
                         .request(reportRequest)
                         .userId(currentUser.getId())
@@ -127,14 +123,12 @@ public class ReportController extends BaseController {
     @PostMapping(value = "/report")
     public Job requestReport(@RequestBody ReportRequest reportRequest) throws ThingsboardException {
         SecurityUser currentUser = getCurrentUser();
-        ReportTemplateId templateId = reportRequest.getTemplateId();
-        ReportTemplate reportTemplate = reportTemplateService.findReportTemplateById(currentUser.getTenantId(), templateId);
 
         return jobManager.submitJob(Job.builder()
                 .tenantId(currentUser.getTenantId())
                 .type(JobType.REPORT)
                 .key(UUID.randomUUID().toString())
-                .description("Report generation for template '" + reportTemplate.getName() + "'")
+                .description("Report generation for template")
                 .configuration(ReportJobConfiguration.builder()
                         .request(reportRequest)
                         .userId(currentUser.getId())

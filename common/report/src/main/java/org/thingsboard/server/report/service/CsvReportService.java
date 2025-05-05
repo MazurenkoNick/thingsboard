@@ -71,8 +71,7 @@ public class CsvReportService extends AbstractReportService {
         ReportRequest reportRequest = task.getReportRequest();
 
         log.trace("[{}] Executing generateReport, reportRequest [{}]", tenantId, reportRequest);
-        ReportTemplate reportTemplate = task.getReportTemplate();
-        CsvReportTemplateConfig configuration = (CsvReportTemplateConfig) reportTemplate.getConfiguration();
+        CsvReportTemplateConfig configuration = (CsvReportTemplateConfig) task.getReportTemplateConfig();
 
         try {
             TableReportComponent component = configuration.getComponent();

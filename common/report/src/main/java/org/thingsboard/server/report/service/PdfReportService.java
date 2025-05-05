@@ -99,14 +99,13 @@ public class PdfReportService extends AbstractReportService {
         ReportRequest reportRequest = task.getReportRequest();
 
         log.trace("[{}] Executing generateReport, reportRequest [{}]", tenantId, reportRequest);
-        ReportTemplate reportTemplate = task.getReportTemplate();
-        PdfReportTemplateConfig configuration = (PdfReportTemplateConfig) reportTemplate.getConfiguration();
+        PdfReportTemplateConfig configuration = (PdfReportTemplateConfig) task.getReportTemplateConfig();
 
         try {
             JasperReportBuilder reportBuilder = new JasperReportBuilder(configuration);
 
-            Optional.ofNullable(configuration.getHeader()).ifPresent(reportBuilder::addPageHeader);
-            Optional.ofNullable(configuration.getFooter()).ifPresent(reportBuilder::addPageFooter);
+            //Optional.ofNullable(configuration.getHeader()).ifPresent(reportBuilder::addPageHeader);
+            //Optional.ofNullable(configuration.getFooter()).ifPresent(reportBuilder::addPageFooter);
 
             renderContent(ctx, reportBuilder, configuration.getComponents());
 
