@@ -28,43 +28,19 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.report.service;
+package org.thingsboard.server.queue.task;
 
-import com.google.common.util.concurrent.ListenableFuture;
-import lombok.Builder;
-import lombok.Data;
-import org.thingsboard.rest.client.RestClient;
-import org.thingsboard.server.common.data.id.CustomerId;
-import org.thingsboard.server.common.data.id.TenantId;
-import org.thingsboard.server.common.data.report.configuration.ReportTemplateConfig;
+import org.thingsboard.server.common.data.job.JobType;
+import org.thingsboard.server.gen.transport.TransportProtos.JobStatsMsg;
+import org.thingsboard.server.gen.transport.TransportProtos.TaskProto;
+import org.thingsboard.server.queue.TbQueueConsumer;
+import org.thingsboard.server.queue.TbQueueProducer;
+import org.thingsboard.server.queue.common.TbProtoQueueMsg;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+public interface TaskProcessorQueueFactory {
 
-@Data
-public class TbReportCtx {
+    TbQueueConsumer<TbProtoQueueMsg<TaskProto>> createTaskConsumer(JobType jobType);
 
-    private final TenantId tenantId;
-    private final CustomerId customerId;
-    private final ReportTemplateConfig configuration;
-    private final RestClient restClient;
-    private final String accessToken;
-    private final long accessTokenExpTs;
-
-    private final List<ListenableFuture<Void>> futures = new ArrayList<>();
-    private final Map<String, Object> params = new HashMap<>();
-
-    @Builder
-    public TbReportCtx(TenantId tenantId, CustomerId customerId, ReportTemplateConfig configuration,
-                       RestClient restClient, String accessToken, long accessTokenExpTs) {
-        this.tenantId = tenantId;
-        this.customerId = customerId;
-        this.configuration = configuration;
-        this.restClient = restClient;
-        this.accessToken = accessToken;
-        this.accessTokenExpTs = accessTokenExpTs;
-    }
+    TbQueueProducer<TbProtoQueueMsg<JobStatsMsg>> createJobStatsProducer();
 
 }

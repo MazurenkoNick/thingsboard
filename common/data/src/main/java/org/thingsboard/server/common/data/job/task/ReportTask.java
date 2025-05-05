@@ -48,6 +48,7 @@ public class ReportTask extends Task<ReportTaskResult> {
 
     private ReportTemplate reportTemplate;
     private ReportRequest reportRequest;
+    private boolean testReport;
     private String accessToken;
     private long accessTokenExpirationTs;
 

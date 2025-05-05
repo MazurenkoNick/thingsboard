@@ -111,6 +111,7 @@ public class ReportController extends BaseController {
                 .configuration(ReportJobConfiguration.builder()
                         .request(reportRequest)
                         .userId(currentUser.getId())
+                        .testReport(true)
                         .build())
                 .build());
     }

@@ -55,7 +55,7 @@ import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.report.configuration.DataKey;
 import org.thingsboard.server.common.data.report.configuration.DataSource;
 import org.thingsboard.server.common.data.report.configuration.HeaderFooter;
-import org.thingsboard.server.common.data.report.configuration.ReportTemplateConfiguration;
+import org.thingsboard.server.common.data.report.configuration.PdfReportTemplateConfig;
 import org.thingsboard.server.common.data.report.configuration.components.AlarmTableComponent;
 import org.thingsboard.server.common.data.report.configuration.components.DashboardComponent;
 import org.thingsboard.server.common.data.report.configuration.components.EntityTableComponent;
@@ -76,7 +76,7 @@ public class JasperReportBuilder {
     private JasperDesign jasperDesign;
     private int usablePageWidth;
 
-    public JasperReportBuilder(ReportTemplateConfiguration configuration) {
+    public JasperReportBuilder(PdfReportTemplateConfig configuration) {
         this.jasperDesign = new JasperDesign();
         this.jasperDesign.setName("MainReport");
         this.jasperDesign.setPageWidth(595);

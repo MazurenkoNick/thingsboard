@@ -47,6 +47,7 @@ public class ReportJobConfiguration extends JobConfiguration {
 
     private ReportRequest request;
     private UserId userId;
+    private boolean testReport;
 
     @Override
     public JobType getType() {

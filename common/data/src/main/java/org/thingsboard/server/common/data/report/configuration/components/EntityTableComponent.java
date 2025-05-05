@@ -42,7 +42,7 @@ import java.util.List;
 @Data
 @EqualsAndHashCode
 @NoArgsConstructor
-public class EntityTableComponent implements ReportComponent {
+public class EntityTableComponent implements TableReportComponent {
 
     private List<DataSource> dataSources;
 

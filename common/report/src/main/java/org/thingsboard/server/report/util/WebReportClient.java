@@ -59,25 +59,22 @@ import reactor.netty.http.client.HttpClient;
 import javax.net.ssl.SSLException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
-import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+
+import static org.thingsboard.server.report.util.ReportUtils.prepareReportName;
 
 @Slf4j
 @Component
 public class WebReportClient {
 
-    private static final Pattern reportNameDatePattern = Pattern.compile("%d\\{([^\\}]*)\\}");
+    @Value("${reports.service.web_report.base_url}")
+    private String webReportServerBaseUrl;
 
-    @Value("${reports.service.web_report.endpointUrl}")
-    private String dashboardReportsServerEndpointUrl;
-
-    @Value("${reports.service.web_report.maxResponseSize:52428800}")
+    @Value("${reports.service.web_report.max_response_size:52428800}")
     private int maxResponseSize;
 
     private EventLoopGroup eventLoopGroup;
@@ -128,7 +125,7 @@ public class WebReportClient {
     public void requestDashboardReport(JsonNode dashboardReportRequest, String reportsServerEndpointUrl,
                                        Consumer<DashboardReportData> onSuccess, Consumer<Throwable> onFailure) {
         if (StringUtils.isEmpty(reportsServerEndpointUrl)) {
-            reportsServerEndpointUrl = this.dashboardReportsServerEndpointUrl;
+            reportsServerEndpointUrl = this.webReportServerBaseUrl;
         }
         String endpointUrl = reportsServerEndpointUrl + "/dashboardReport";
 
@@ -173,19 +170,6 @@ public class WebReportClient {
         }
         reportParams.put("timezone", reportConfig.getTimezone());
         return reportParams;
-    }
-
-    private String prepareReportName(String namePattern, Date reportDate, TimeZone tz) {
-        String name = namePattern;
-        Matcher matcher = reportNameDatePattern.matcher(namePattern);
-        while (matcher.find()) {
-            String toReplace = matcher.group(0);
-            SimpleDateFormat dateFormat = new SimpleDateFormat(matcher.group(1));
-            dateFormat.setTimeZone(tz);
-            String replacement = dateFormat.format(reportDate);
-            name = name.replace(toReplace, replacement);
-        }
-        return name;
     }
 
     private void processError(Consumer<Throwable> onFailure, Throwable t) {

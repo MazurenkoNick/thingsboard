@@ -43,7 +43,7 @@ import java.util.List;
 @Data
 @EqualsAndHashCode
 @NoArgsConstructor
-public class TimeseriesTableComponent implements ReportComponent {
+public class TimeseriesTableComponent implements TableReportComponent {
 
     private List<DataSource> dataSources;
     private TimeWindowConfiguration timewindow;

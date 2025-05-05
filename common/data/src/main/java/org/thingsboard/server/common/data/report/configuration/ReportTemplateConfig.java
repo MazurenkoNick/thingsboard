@@ -28,43 +28,23 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.report.service;
+package org.thingsboard.server.common.data.report.configuration;
 
-import com.google.common.util.concurrent.ListenableFuture;
-import lombok.Builder;
-import lombok.Data;
-import org.thingsboard.rest.client.RestClient;
-import org.thingsboard.server.common.data.id.CustomerId;
-import org.thingsboard.server.common.data.id.TenantId;
-import org.thingsboard.server.common.data.report.configuration.ReportTemplateConfig;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import org.thingsboard.server.common.data.report.TbReportFormat;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonTypeInfo(
+        use = JsonTypeInfo.Id.NAME,
+        property = "format")
+@JsonSubTypes({
+        @JsonSubTypes.Type(value = PdfReportTemplateConfig.class, name = "PDF"),
+        @JsonSubTypes.Type(value = CsvReportTemplateConfig.class, name = "CSV")
+})
+public interface ReportTemplateConfig {
 
-@Data
-public class TbReportCtx {
-
-    private final TenantId tenantId;
-    private final CustomerId customerId;
-    private final ReportTemplateConfig configuration;
-    private final RestClient restClient;
-    private final String accessToken;
-    private final long accessTokenExpTs;
-
-    private final List<ListenableFuture<Void>> futures = new ArrayList<>();
-    private final Map<String, Object> params = new HashMap<>();
-
-    @Builder
-    public TbReportCtx(TenantId tenantId, CustomerId customerId, ReportTemplateConfig configuration,
-                       RestClient restClient, String accessToken, long accessTokenExpTs) {
-        this.tenantId = tenantId;
-        this.customerId = customerId;
-        this.configuration = configuration;
-        this.restClient = restClient;
-        this.accessToken = accessToken;
-        this.accessTokenExpTs = accessTokenExpTs;
-    }
+    TbReportFormat getFormat();
 
 }

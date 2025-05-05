@@ -35,7 +35,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import org.thingsboard.server.common.data.id.ReportTemplateId;
-import org.thingsboard.server.common.data.report.configuration.ReportTemplateConfiguration;
+import org.thingsboard.server.common.data.report.configuration.ReportTemplateConfig;
 
 @Schema
 @Data
@@ -45,8 +45,8 @@ public class ReportTemplate extends BaseReportTemplate {
 
     private static final long serialVersionUID = 1729877416392618039L;
 
-    @Schema(description = "a JSON value with report template configuration", implementation = ReportTemplateConfiguration.class)
-    private ReportTemplateConfiguration configuration;
+    @Schema(description = "a JSON value with report template configuration")
+    private ReportTemplateConfig configuration;
 
     public ReportTemplate() {
         super();

@@ -28,34 +28,36 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.utils;
+package org.thingsboard.server.queue.task;
 
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
-import org.apache.commons.csv.CSVFormat;
-import org.apache.commons.csv.CSVRecord;
-import org.apache.commons.io.input.CharSequenceReader;
+import lombok.RequiredArgsConstructor;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
+import org.springframework.stereotype.Component;
+import org.thingsboard.server.common.data.job.JobType;
+import org.thingsboard.server.gen.transport.TransportProtos.JobStatsMsg;
+import org.thingsboard.server.gen.transport.TransportProtos.TaskProto;
+import org.thingsboard.server.queue.TbQueueConsumer;
+import org.thingsboard.server.queue.TbQueueProducer;
+import org.thingsboard.server.queue.common.TbProtoQueueMsg;
+import org.thingsboard.server.queue.memory.InMemoryStorage;
+import org.thingsboard.server.queue.memory.InMemoryTbQueueConsumer;
+import org.thingsboard.server.queue.memory.InMemoryTbQueueProducer;
 
-import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+@Component
+@ConditionalOnExpression("'${queue.type:null}'=='in-memory'")
+@RequiredArgsConstructor
+public class InMemoryTaskProcessorQueueFactory implements TaskProcessorQueueFactory {
 
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class CsvUtils {
+    private final InMemoryStorage storage;
 
-    public static List<List<String>> parseCsv(String content, Character delimiter) throws Exception {
-        CSVFormat csvFormat = delimiter.equals(',') ? CSVFormat.DEFAULT : CSVFormat.DEFAULT.withDelimiter(delimiter);
+    @Override
+    public TbQueueConsumer<TbProtoQueueMsg<TaskProto>> createTaskConsumer(JobType jobType) {
+        return new InMemoryTbQueueConsumer<>(storage, jobType.getTasksTopic());
+    }
 
-        List<CSVRecord> records;
-        try (CharSequenceReader reader = new CharSequenceReader(content)) {
-            records = csvFormat.parse(reader).getRecords();
-        }
-
-        return records.stream()
-                .map(record -> Stream.iterate(0, i -> i < record.size(), i -> i + 1)
-                        .map(record::get)
-                        .collect(Collectors.toList()))
-                .collect(Collectors.toList());
+    @Override
+    public TbQueueProducer<TbProtoQueueMsg<JobStatsMsg>> createJobStatsProducer() {
+        return new InMemoryTbQueueProducer<>(storage, "jobs.stats");
     }
 
 }

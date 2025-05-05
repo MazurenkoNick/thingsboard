@@ -45,10 +45,12 @@ import org.thingsboard.server.common.data.query.EntityKeyType;
 import org.thingsboard.server.common.data.query.KeyFilter;
 import org.thingsboard.server.common.data.query.SingleEntityFilter;
 import org.thingsboard.server.common.data.report.configuration.AlarmFilterConfig;
+import org.thingsboard.server.common.data.report.configuration.CsvReportTemplateConfig;
 import org.thingsboard.server.common.data.report.configuration.DataKey;
 import org.thingsboard.server.common.data.report.configuration.DataSource;
-import org.thingsboard.server.common.data.report.configuration.EntityAlias;
 import org.thingsboard.server.common.data.report.configuration.Filter;
+import org.thingsboard.server.common.data.report.configuration.PdfReportTemplateConfig;
+import org.thingsboard.server.common.data.report.configuration.ReportTemplateConfig;
 import org.thingsboard.server.common.data.report.configuration.components.AlarmTableComponent;
 import org.thingsboard.server.common.data.report.configuration.timewindow.TimeIntervalCalculator;
 
@@ -63,31 +65,34 @@ public class ReportQueryUtils {
 
     private static final EntityDataSortOrder DEFAULT_SORT_ORDER = new EntityDataSortOrder(new EntityKey(EntityKeyType.ENTITY_FIELD, "id"), EntityDataSortOrder.Direction.ASC);
 
-    public static EntityDataQuery toSingleEntityQuery(DataSource dataSource, List<Filter> filters, PageLink pageLink) {
+    public static EntityDataQuery toSingleEntityQuery(DataSource dataSource, ReportTemplateConfig reportTemplateConfig, PageLink pageLink) {
         SingleEntityFilter singleEntityFilter = new SingleEntityFilter();
         String deviceId = Optional.ofNullable(dataSource.getDeviceId())
                 .orElseThrow(() -> new IllegalArgumentException("Device ID is null"));
         singleEntityFilter.setSingleEntity(new DeviceId(UUID.fromString(deviceId)));
+        List<KeyFilter> keyFilters = findKeyFilters(dataSource, reportTemplateConfig);
 
-        return buildEntityDataQuery(singleEntityFilter, dataSource, filters, pageLink);
+        return buildEntityDataQuery(singleEntityFilter, dataSource, keyFilters, pageLink);
     }
 
-    public static EntityDataQuery toEntityDataQuery(DataSource dataSource, List<EntityAlias> entityAliases, List<Filter> filters, PageLink pageLink) {
-        EntityFilter entityFilter = findEntityFilterByAliasId(dataSource, entityAliases);
+    public static EntityDataQuery toEntityDataQuery(DataSource dataSource, ReportTemplateConfig reportTemplateConfig, PageLink pageLink) {
+        EntityFilter entityFilter = findEntityFilterByAliasId(dataSource, reportTemplateConfig);
+        List<KeyFilter> keyFilters = findKeyFilters(dataSource, reportTemplateConfig);
 
-        return buildEntityDataQuery(entityFilter, dataSource, filters, pageLink);
+        return buildEntityDataQuery(entityFilter, dataSource, keyFilters, pageLink);
     }
 
-    public static EntityCountQuery toEntityCountQuery(DataSource dataSource, List<EntityAlias> entityAliases, List<Filter> filters) {
-        EntityFilter entityFilter = findEntityFilterByAliasId(dataSource, entityAliases);
-        List<KeyFilter> keyFilters = findKeyFilters(dataSource, filters);
+    public static EntityCountQuery toEntityCountQuery(DataSource dataSource, ReportTemplateConfig reportTemplateConfig) {
+        EntityFilter entityFilter = findEntityFilterByAliasId(dataSource, reportTemplateConfig);
+        List<KeyFilter> keyFilters = findKeyFilters(dataSource, reportTemplateConfig);
 
         return new EntityCountQuery(entityFilter, keyFilters);
     }
 
-    public static AlarmCountQuery toAlarmCountQuery(DataSource dataSource, List<EntityAlias> entityAliases, List<Filter> filters) {
-        List<KeyFilter> keyFilters = findKeyFilters(dataSource, filters);
-        AlarmCountQuery alarmCountQuery = new AlarmCountQuery(findEntityFilterByAliasId(dataSource, entityAliases), keyFilters);
+    public static AlarmCountQuery toAlarmCountQuery(DataSource dataSource, ReportTemplateConfig reportTemplateConfig) {
+        EntityFilter entityFilter = findEntityFilterByAliasId(dataSource, reportTemplateConfig);
+        List<KeyFilter> keyFilters = findKeyFilters(dataSource, reportTemplateConfig);
+        AlarmCountQuery alarmCountQuery = new AlarmCountQuery(entityFilter, keyFilters);
 
         AlarmFilterConfig alarmFilterConfig = dataSource.getAlarmFilterConfig();
         if (alarmFilterConfig != null) {
@@ -99,11 +104,11 @@ public class ReportQueryUtils {
         return alarmCountQuery;
     }
 
-    public static AlarmDataQuery toAlarmDataQuery(AlarmTableComponent component, List<EntityAlias> entityAliases, List<Filter> filters, PageLink pageLink) {
+    public static AlarmDataQuery toAlarmDataQuery(AlarmTableComponent component, ReportTemplateConfig reportTemplateConfig, PageLink pageLink) {
         DataSource alarmSource = component.getAlarmSource();
 
-        EntityFilter entityFilter = findEntityFilterByAliasId(alarmSource, entityAliases);
-        List<KeyFilter> keyFilters = findKeyFilters(alarmSource, filters);
+        EntityFilter entityFilter = findEntityFilterByAliasId(alarmSource, reportTemplateConfig);
+        List<KeyFilter> keyFilters = findKeyFilters(alarmSource, reportTemplateConfig);
 
         List<EntityKey> alarmFields = new ArrayList<>();
         for (DataKey dataKey : alarmSource.getDataKeys()) {
@@ -125,31 +130,40 @@ public class ReportQueryUtils {
         return new AlarmDataQuery(entityFilter, alarmDataPageLink, null, null, keyFilters, alarmFields);
     }
 
-    private static EntityFilter findEntityFilterByAliasId(DataSource dataSource, List<EntityAlias> entityAliases) {
-        return entityAliases.stream()
-                .filter(alias -> alias.getId().equals(dataSource.getEntityAliasId()))
-                .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("Entity alias not found: " + dataSource.getEntityAliasId()))
-                .getFilter();
-    }
-
-    private static List<KeyFilter> findKeyFilters(DataSource dataSource, List<Filter> filters) {
-        if (dataSource.getFilterId() == null) {
-            return null;
-        } else {
-            return filters.stream()
-                    .filter(filter -> filter.getId().equals(dataSource.getFilterId()))
+    private static EntityFilter findEntityFilterByAliasId(DataSource dataSource, ReportTemplateConfig reportTemplateConfig) {
+        return switch (reportTemplateConfig.getFormat()) {
+            case PDF -> ((PdfReportTemplateConfig) reportTemplateConfig).getEntityAliases().stream()
+                    .filter(alias -> alias.getId().equals(dataSource.getEntityAliasId()))
                     .findFirst()
-                    .orElseThrow(() -> new IllegalArgumentException("Entity filter not found: " + dataSource.getFilterId()))
-                    .getKeyFilters();
-        }
+                    .orElseThrow(() -> new IllegalArgumentException("Entity alias not found: " + dataSource.getEntityAliasId()))
+                    .getFilter();
+            case CSV -> ((CsvReportTemplateConfig) reportTemplateConfig).getEntityAlias().getFilter();
+        };
     }
 
-    private static EntityDataQuery buildEntityDataQuery(EntityFilter filter, DataSource dataSource, List<Filter> filters, PageLink pageLink) {
+    private static List<KeyFilter> findKeyFilters(DataSource dataSource, ReportTemplateConfig reportTemplateConfig) {
+        return switch (reportTemplateConfig.getFormat()) {
+            case PDF -> {
+                List<Filter> filters = ((PdfReportTemplateConfig) reportTemplateConfig).getFilters();
+                if (dataSource.getFilterId() != null) {
+                    yield filters.stream()
+                            .filter(filter -> filter.getId().equals(dataSource.getFilterId()))
+                            .findFirst()
+                            .orElseThrow(() -> new IllegalArgumentException("Entity filter not found: " + dataSource.getFilterId()))
+                            .getKeyFilters();
+                }
+                yield null;
+            }
+            case CSV -> {
+                Filter filter = ((CsvReportTemplateConfig) reportTemplateConfig).getFilter();
+                yield (filter != null) ? filter.getKeyFilters() : null;
+            }
+        };
+    }
+
+    private static EntityDataQuery buildEntityDataQuery(EntityFilter filter, DataSource dataSource, List<KeyFilter> keyFilters, PageLink pageLink) {
         EntityDataSortOrder sortOrder = Optional.ofNullable(dataSource.getSortOrder()).orElse(DEFAULT_SORT_ORDER);
         EntityDataPageLink entityDataPageLink = new EntityDataPageLink(pageLink.getPageSize(), pageLink.getPage(), pageLink.getTextSearch(), sortOrder);
-
-        List<KeyFilter> keyFilters = findKeyFilters(dataSource, filters);
 
         List<EntityKey> entityFields = new ArrayList<>();
         List<EntityKey> latestValues = new ArrayList<>();

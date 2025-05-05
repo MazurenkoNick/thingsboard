@@ -52,6 +52,20 @@ public class ReportJobResult extends JobResult {
     }
 
     @Override
+    public String getDescription() {
+        if (getGeneralError() != null) {
+            return getGeneralError();
+        }
+        String error = getResults().stream()
+                .map(taskResult -> ((ReportTaskResult) taskResult).getError())
+                .findFirst().orElse(null);
+        if (error != null) {
+            return error;
+        }
+        return "report successfully generated";
+    }
+
+    @Override
     public JobType getJobType() {
         return JobType.REPORT;
     }

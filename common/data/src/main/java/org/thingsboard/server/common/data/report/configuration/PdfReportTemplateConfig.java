@@ -28,19 +28,28 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.queue.provider;
+package org.thingsboard.server.common.data.report.configuration;
 
-import org.thingsboard.server.common.data.job.JobType;
-import org.thingsboard.server.gen.transport.TransportProtos.JobStatsMsg;
-import org.thingsboard.server.gen.transport.TransportProtos.TaskProto;
-import org.thingsboard.server.queue.TbQueueConsumer;
-import org.thingsboard.server.queue.TbQueueProducer;
-import org.thingsboard.server.queue.common.TbProtoQueueMsg;
+import jakarta.validation.constraints.NotNull;
+import lombok.Data;
+import org.thingsboard.server.common.data.report.TbReportFormat;
+import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
 
-public interface TaskProcessorQueueFactory {
+import java.util.List;
 
-    TbQueueConsumer<TbProtoQueueMsg<TaskProto>> createTaskConsumer(JobType jobType);
+@Data
+public class PdfReportTemplateConfig extends AbstractReportTemplateConfig {
 
-    TbQueueProducer<TbProtoQueueMsg<JobStatsMsg>> createJobStatsProducer();
+    private List<EntityAlias> entityAliases;
+    private List<Filter> filters;
+    private HeaderFooter header;
+    private HeaderFooter footer;
+    @NotNull
+    private List<ReportComponent> components;
+
+    @Override
+    public TbReportFormat getFormat() {
+        return TbReportFormat.PDF;
+    }
 
 }

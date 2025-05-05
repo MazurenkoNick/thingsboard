@@ -32,20 +32,28 @@ package org.thingsboard.server.service.report;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import org.thingsboard.common.util.JacksonUtil;
+import org.thingsboard.server.cluster.TbClusterService;
 import org.thingsboard.server.common.data.job.Job;
 import org.thingsboard.server.common.data.job.JobType;
 import org.thingsboard.server.common.data.job.ReportJobConfiguration;
+import org.thingsboard.server.common.data.job.ReportJobResult;
 import org.thingsboard.server.common.data.job.task.ReportTask;
 import org.thingsboard.server.common.data.job.task.Task;
 import org.thingsboard.server.common.data.job.task.TaskResult;
+import org.thingsboard.server.common.data.msg.TbMsgType;
 import org.thingsboard.server.common.data.report.ReportRequest;
 import org.thingsboard.server.common.data.report.ReportTemplate;
+import org.thingsboard.server.common.msg.TbMsg;
+import org.thingsboard.server.common.msg.TbMsgMetaData;
 import org.thingsboard.server.dao.report.ReportTemplateService;
+import org.thingsboard.server.queue.TbQueueCallback;
 import org.thingsboard.server.service.job.JobProcessor;
 import org.thingsboard.server.service.security.model.token.AccessJwtToken;
 import org.thingsboard.server.service.security.system.SystemSecurityService;
 
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 
 @Component
@@ -54,6 +62,7 @@ public class ReportJobProcessor implements JobProcessor {
 
     private final ReportTemplateService reportTemplateService;
     private final SystemSecurityService systemSecurityService;
+    private final TbClusterService clusterService;
 
     @Override
     public int process(Job job, Consumer<Task<?>> taskConsumer) throws Exception {
@@ -62,7 +71,15 @@ public class ReportJobProcessor implements JobProcessor {
         ReportTemplate reportTemplate = reportTemplateService.findReportTemplateById(job.getTenantId(), reportRequest.getTemplateId());
         AccessJwtToken accessToken = systemSecurityService.createUserAccessToken(job.getTenantId(), configuration.getUserId());
 
-        ReportTask task = createTask(job, reportTemplate, reportRequest, accessToken);
+        ReportTask task = ReportTask.builder()
+                .tenantId(job.getTenantId())
+                .jobId(job.getId())
+                .reportTemplate(reportTemplate)
+                .reportRequest(reportRequest)
+                .testReport(configuration.isTestReport())
+                .accessToken(accessToken.getToken())
+                .accessTokenExpirationTs(accessToken.getClaims().getExpiration().getTime())
+                .build();
         taskConsumer.accept(task);
         return 1;
     }
@@ -72,15 +89,24 @@ public class ReportJobProcessor implements JobProcessor {
         process(job, taskConsumer);
     }
 
-    private ReportTask createTask(Job job, ReportTemplate reportTemplate, ReportRequest reportRequest, AccessJwtToken accessToken) {
-        return ReportTask.builder()
-                .tenantId(job.getTenantId())
-                .jobId(job.getId())
-                .reportTemplate(reportTemplate)
-                .reportRequest(reportRequest)
-                .accessToken(accessToken.getToken())
-                .accessTokenExpirationTs(accessToken.getClaims().getExpiration().getTime())
+    @Override
+    public void onJobCompleted(Job job) {
+        ReportJobConfiguration configuration = job.getConfiguration();
+        if (configuration.isTestReport()) {
+            return;
+        }
+
+        ReportJobResult jobResult = (ReportJobResult) job.getResult();
+        TbMsg tbMsg = TbMsg.newMsg()
+                .type(TbMsgType.REPORT_GENERATED)
+                .originator(configuration.getUserId())
+                .customerId(configuration.getRequest().getCustomerId())
+                .data(JacksonUtil.toString(configuration.getRequest()))
+                .metaData(new TbMsgMetaData(Map.of(
+                        "reportBlobEntityId", jobResult.getReportBlobId().toString()
+                )))
                 .build();
+        clusterService.pushMsgToRuleEngine(job.getTenantId(), configuration.getUserId(), tbMsg, TbQueueCallback.EMPTY);
     }
 
     @Override
