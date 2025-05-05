@@ -77,7 +77,7 @@ public class ReportTaskProcessor extends TaskProcessor<ReportTask, ReportTaskRes
 
     @Override
     public ReportTaskResult process(ReportTask task) throws Exception {
-        ReportTemplateConfig configuration = task.getReportTemplate().getConfiguration();
+        ReportTemplateConfig configuration = task.getReportTemplateConfig();
         ReportData reportData;
         try (RestClient restClient = new RestClient(new RestTemplate(), tbCoreBaseUrl, task.getAccessToken())) {
             TbReportCtx reportCtx = TbReportCtx.builder()

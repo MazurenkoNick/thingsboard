@@ -45,6 +45,7 @@ import org.thingsboard.server.common.data.msg.TbMsgType;
 import org.thingsboard.server.common.data.notification.rule.trigger.ReportGeneratedTrigger;
 import org.thingsboard.server.common.data.report.ReportRequest;
 import org.thingsboard.server.common.data.report.ReportTemplate;
+import org.thingsboard.server.common.data.report.configuration.ReportTemplateConfig;
 import org.thingsboard.server.common.msg.TbMsg;
 import org.thingsboard.server.common.msg.TbMsgMetaData;
 import org.thingsboard.server.common.msg.notification.NotificationRuleProcessor;
@@ -71,13 +72,13 @@ public class ReportJobProcessor implements JobProcessor {
     public int process(Job job, Consumer<Task<?>> taskConsumer) throws Exception {
         ReportJobConfiguration configuration = job.getConfiguration();
         ReportRequest reportRequest = configuration.getRequest();
-        ReportTemplate reportTemplate = reportTemplateService.findReportTemplateById(job.getTenantId(), reportRequest.getTemplateId());
+        ReportTemplateConfig reportTemplateConfig = reportRequest.getReportTemplateConfig();
         AccessJwtToken accessToken = systemSecurityService.createUserAccessToken(job.getTenantId(), configuration.getUserId());
 
         ReportTask task = ReportTask.builder()
                 .tenantId(job.getTenantId())
                 .jobId(job.getId())
-                .reportTemplate(reportTemplate)
+                .reportTemplateConfig(reportTemplateConfig)
                 .reportRequest(reportRequest)
                 .testReport(configuration.isTestReport())
                 .accessToken(accessToken.getToken())
@@ -111,13 +112,13 @@ public class ReportJobProcessor implements JobProcessor {
                 .build();
         clusterService.pushMsgToRuleEngine(job.getTenantId(), configuration.getUserId(), tbMsg, TbQueueCallback.EMPTY);
 
-        ReportTemplate reportTemplate = reportTemplateService.findReportTemplateById(job.getTenantId(), configuration.getRequest().getTemplateId());
+        ReportRequest request = configuration.getRequest();
         notificationRuleProcessor.process(ReportGeneratedTrigger.builder()
                 .tenantId(job.getTenantId())
                 .customerId(configuration.getRequest().getCustomerId())
                 .reportBlobId(jobResult.getReportBlobId())
                 .reportName(jobResult.getReportName())
-                .reportFormat(reportTemplate.getConfiguration().getFormat())
+                .reportFormat(request.getReportTemplateConfig().getFormat())
                 .build());
     }
 
