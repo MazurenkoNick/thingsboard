@@ -30,7 +30,6 @@
  */
 package org.thingsboard.server.report;
 
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
@@ -58,6 +57,9 @@ import java.util.Map;
 public class ReportTaskProcessor extends TaskProcessor<ReportTask, ReportTaskResult> {
 
     private final Map<TbReportFormat, ReportService> reportServices = new EnumMap<>(TbReportFormat.class);
+
+    @Value("${reports.generation_timeout_ms:120000}")
+    private int timeoutMs;
 
     private ReportTaskProcessor(List<ReportService> reportServices) {
         reportServices.forEach(service -> {
@@ -96,6 +98,11 @@ public class ReportTaskProcessor extends TaskProcessor<ReportTask, ReportTaskRes
             BlobEntityInfo savedBlobEntity = restClient.createBlobEntity(blobEntity);
             return ReportTaskResult.success(savedBlobEntity.getId());
         }
+    }
+
+    @Override
+    public long getTaskProcessingTimeout() {
+        return timeoutMs;
     }
 
     @Override

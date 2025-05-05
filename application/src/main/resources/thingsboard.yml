@@ -614,6 +614,8 @@ reports:
       base_url: "${REPORTS_SERVER_ENDPOINT_URL:http://localhost:8383}"
       # Maximum response size. The default value set to 50 mb
       max_response_size: "${MAX_RESPONSE_SIZE:52428800}" # 50MB
+  # Timeout in milliseconds for generating report, 2 minutes by default
+  generation_timeout_ms: "${REPORT_GENERATION_TIMEOUT_MS:120000}"
   rate_limits:
     # Enable/disable reports tenant rate limits
     enabled: "${REPORTS_TENANT_RATE_LIMITS_ENABLED:false}"
