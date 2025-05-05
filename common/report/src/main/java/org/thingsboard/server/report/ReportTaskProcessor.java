@@ -30,6 +30,7 @@
  */
 package org.thingsboard.server.report;
 
+import lombok.Setter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
@@ -70,6 +71,7 @@ public class ReportTaskProcessor extends TaskProcessor<ReportTask, ReportTaskRes
         });
     }
 
+    @Setter
     @Value("${service.tb_core.base_url:http://localhost:${server.port}}") // for monolith - sending request to itself
     private String tbCoreBaseUrl;
 

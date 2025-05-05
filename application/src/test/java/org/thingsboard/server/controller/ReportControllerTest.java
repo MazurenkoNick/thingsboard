@@ -32,105 +32,117 @@ package org.thingsboard.server.controller;
 
 import lombok.extern.slf4j.Slf4j;
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.web.servlet.ResultActions;
+import org.thingsboard.server.common.data.DataConstants;
 import org.thingsboard.server.common.data.Device;
-import org.thingsboard.server.common.data.Tenant;
-import org.thingsboard.server.common.data.User;
+import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.query.DeviceTypeFilter;
 import org.thingsboard.server.common.data.report.ReportRequest;
 import org.thingsboard.server.common.data.report.ReportTemplate;
+import org.thingsboard.server.common.data.report.ReportTemplateType;
+import org.thingsboard.server.common.data.report.configuration.CsvReportTemplateConfig;
 import org.thingsboard.server.common.data.report.configuration.DataKey;
 import org.thingsboard.server.common.data.report.configuration.DataSource;
 import org.thingsboard.server.common.data.report.configuration.EntityAlias;
 import org.thingsboard.server.common.data.report.configuration.components.EntityTableComponent;
-import org.thingsboard.server.common.data.report.configuration.PdfReportTemplateConfig;
-import org.thingsboard.server.common.data.security.Authority;
 import org.thingsboard.server.dao.service.DaoSqlTest;
+import org.thingsboard.server.report.ReportTaskProcessor;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @Slf4j
 @DaoSqlTest
 public class ReportControllerTest extends AbstractControllerTest {
-    private Tenant savedTenant;
-    private User tenantAdmin;
+
+    @Autowired
+    private ReportTaskProcessor reportTaskProcessor;
 
     @Before
     public void beforeTest() throws Exception {
-        loginSysAdmin();
-
-        Tenant tenant = new Tenant();
-        tenant.setTitle("Report tenant");
-        savedTenant = saveTenant(tenant);
-        Assert.assertNotNull(savedTenant);
-
-        tenantAdmin = new User();
-        tenantAdmin.setAuthority(Authority.TENANT_ADMIN);
-        tenantAdmin.setTenantId(savedTenant.getId());
-        tenantAdmin.setEmail("reportTenant@thingsboard.org");
-
-        tenantAdmin = createUserAndLogin(tenantAdmin, "testPassword1");
+        reportTaskProcessor.setTbCoreBaseUrl("http://localhost:" + serverPort);
+        loginTenantAdmin();
     }
 
     @After
     public void afterTest() throws Exception {
-        loginSysAdmin();
-        deleteTenant(savedTenant.getId());
-    }
-
-    @Before
-    public void setup() throws Exception {
-        loginTenantAdmin();
     }
 
     @Test
-    public void testCreateReportWithLongTable() throws Exception {
-        PdfReportTemplateConfig configuration = new PdfReportTemplateConfig();
-        DeviceTypeFilter filter = new DeviceTypeFilter();
-        filter.setDeviceTypes(List.of("default"));
-        filter.setDeviceNameFilter("");
-        configuration.setEntityAliases(List.of(
-                new EntityAlias("784f394c-42b6-435a-983c-b7beff2784f9", "Devices", filter)
-        ));
-        EntityTableComponent tableComponent = new EntityTableComponent();
-        DataSource dataSource = new DataSource();
-        dataSource.setDataKeys(List.of(
-                new DataKey("name", "entityField", "NAME"),
-                new DataKey("createdTime", "entityField", "CREATED TIME")
-        ));
-        dataSource.setType("entity");
-        dataSource.setEntityAliasId("784f394c-42b6-435a-983c-b7beff2784f9");
-        tableComponent.setDataSources(List.of(dataSource));
-        configuration.setComponents(List.of(tableComponent));
-        configuration.setNamePattern("testReport");
+    public void testCreateCsvReportWithEntityTable() throws Exception {
+        String devicesAliasId = StringUtils.randomAlphabetic(10);
+        EntityAlias entityAlias = buildDevicesEntityAlias(devicesAliasId);
+
+        EntityTableComponent tableComponent = EntityTableComponent.builder()
+                .dataSources(List.of(DataSource.builder()
+                        .type("entity")
+                        .entityAliasId(devicesAliasId)
+                        .dataKeys(List.of(
+                                new DataKey("createdTime", "entityField", "CREATED TIME"),
+                                new DataKey("name", "entityField", "NAME"),
+                                new DataKey("type", "entityField", "TYPE"),
+                                new DataKey("temperature", "timeseries", "TEMPERATURE"),
+                                new DataKey("active", "attribute", "ACTIVE")
+                        ))
+                        .build()))
+                .build();
+
+        CsvReportTemplateConfig configuration = new CsvReportTemplateConfig();
+        configuration.setEntityAlias(entityAlias);
+        configuration.setComponent(tableComponent);
+
         ReportTemplate reportTemplate = new ReportTemplate();
         reportTemplate.setConfiguration(configuration);
         reportTemplate.setName("Device inventory report");
+        reportTemplate.setType(ReportTemplateType.REPORT);
 
         ReportTemplate savedTemplate = doPost("/api/reportTemplate", reportTemplate, ReportTemplate.class);
 
         List<Device> devices = new ArrayList<>();
+        List<String> expectedReportLines = new ArrayList<>();
         for (int i = 0; i < 97; i++) {
             Device device = new Device();
             device.setName("Device" + i);
             device.setType("default");
             device.setLabel("testLabel" + (int) (Math.random() * 1000));
-            devices.add(doPost("/api/device", device, Device.class));
-            Thread.sleep(1);
+            device = doPost("/api/device", device, Device.class);
+            devices.add(device);
+
+            long temperature = (long) (Math.random() * 100);
+            String payload = "{\"temperature\":" + temperature + "}";
+            doPost("/api/plugins/telemetry/" + device.getId() + "/" + DataConstants.SHARED_SCOPE, payload, String.class, status().isOk());
+            expectedReportLines.add(device.getCreatedTime() + "," +
+                    device.getName() + "," +
+                    device.getType() + "," +
+                    temperature + "," +
+                    "true");
         }
 
         //generate report
         ReportRequest reportRequest = new ReportRequest();
         reportRequest.setTemplateId(savedTemplate.getId());
-        ResultActions resultActions = doPost("/api/v2/report/test", reportRequest).andExpect(status().isOk());
-        MockHttpServletResponse response = resultActions.andReturn().getResponse();
+        ResultActions resultActions = doPost("/api/v2/report/deprecated/test", reportRequest).andExpect(status().isOk());
+        String csvReport = resultActions.andReturn().getResponse().getContentAsString();
+
+        // Check headers and content
+        String[] lines = csvReport.split("\r?\n");
+        assertThat(lines[0]).contains("CREATED TIME,NAME,TYPE,TEMPERATURE,ACTIVE");
+        for (int i = 0; i < devices.size(); i++) {
+            assertThat(lines[i + 1]).contains(expectedReportLines.get(i));
+        }
+    }
+
+    private static EntityAlias buildDevicesEntityAlias(String aliasId) {
+        DeviceTypeFilter filter = new DeviceTypeFilter();
+        filter.setDeviceTypes(List.of("default"));
+        filter.setDeviceNameFilter("");
+        return new EntityAlias(aliasId, "devices", filter);
     }
 
 }

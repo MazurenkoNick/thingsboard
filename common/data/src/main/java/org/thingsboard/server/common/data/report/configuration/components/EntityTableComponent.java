@@ -31,6 +31,8 @@
 package org.thingsboard.server.common.data.report.configuration.components;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -40,8 +42,10 @@ import java.util.List;
 
 @Schema
 @Data
+@Builder
 @EqualsAndHashCode
 @NoArgsConstructor
+@AllArgsConstructor
 public class EntityTableComponent implements TableReportComponent {
 
     private List<DataSource> dataSources;

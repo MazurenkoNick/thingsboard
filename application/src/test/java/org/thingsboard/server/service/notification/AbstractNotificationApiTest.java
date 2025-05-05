@@ -225,7 +225,7 @@ public abstract class AbstractNotificationApiTest extends AbstractControllerTest
 
     @Override
     protected NotificationApiWsClient buildAndConnectWebSocketClient() throws URISyntaxException, InterruptedException {
-        NotificationApiWsClient wsClient = new NotificationApiWsClient(WS_URL + wsPort);
+        NotificationApiWsClient wsClient = new NotificationApiWsClient(WS_URL + serverPort);
         assertThat(wsClient.connectBlocking(TIMEOUT, TimeUnit.SECONDS)).isTrue();
         wsClient.authenticate(token);
         return wsClient;

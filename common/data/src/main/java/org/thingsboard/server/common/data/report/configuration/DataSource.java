@@ -31,6 +31,8 @@
 package org.thingsboard.server.common.data.report.configuration;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -40,14 +42,17 @@ import java.util.List;
 
 @Schema
 @Data
+@Builder
 @EqualsAndHashCode
 @NoArgsConstructor
+@AllArgsConstructor
 public class DataSource {
     private String type;
     private String deviceId;
     private String entityAliasId;
     private String filterId;
     private List<DataKey> dataKeys;
+    private List<DataKey> latestDataKeys;
     private AlarmFilterConfig alarmFilterConfig;
     private EntityDataSortOrder sortOrder;
 }

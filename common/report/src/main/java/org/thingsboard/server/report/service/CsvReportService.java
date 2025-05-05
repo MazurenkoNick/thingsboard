@@ -43,8 +43,10 @@ import org.thingsboard.server.common.data.report.ReportRequest;
 import org.thingsboard.server.common.data.report.ReportTemplate;
 import org.thingsboard.server.common.data.report.TbReportFormat;
 import org.thingsboard.server.common.data.report.configuration.CsvReportTemplateConfig;
+import org.thingsboard.server.common.data.report.configuration.DataKey;
 import org.thingsboard.server.common.data.report.configuration.components.AlarmTableComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
+import org.thingsboard.server.common.data.report.configuration.components.TableReportComponent;
 import org.thingsboard.server.common.data.report.configuration.components.TimeseriesTableComponent;
 import org.thingsboard.server.queue.util.TbReportComponent;
 
@@ -73,9 +75,11 @@ public class CsvReportService extends AbstractReportService {
         CsvReportTemplateConfig configuration = (CsvReportTemplateConfig) reportTemplate.getConfiguration();
 
         try {
-            List<Map<String, ?>> dataSource = buildDataSource(ctx, configuration.getComponent());
+            TableReportComponent component = configuration.getComponent();
+            List<DataKey> headers = getTableHeaders(component);
+            List<Map<String, ?>> dataSource = buildDataSource(ctx, component);
 
-            byte[] csvBytes = generateCsv(dataSource);
+            byte[] csvBytes = generateCsv(headers, dataSource);
 
             String requestTimeZone = reportRequest.getTimezone();
             TimeZone timeZone = (requestTimeZone == null) ? TimeZone.getDefault() : TimeZone.getTimeZone(requestTimeZone);
@@ -89,6 +93,11 @@ public class CsvReportService extends AbstractReportService {
         } catch (Exception e) {
             throw new ThingsboardException(ExceptionUtils.getRootCause(e), ThingsboardErrorCode.GENERAL);
         }
+    }
+
+    private static List<DataKey> getTableHeaders(TableReportComponent component) {
+        List<DataKey> headers = component.getDataSources().get(0).getDataKeys();
+        return headers;
     }
 
     private List<Map<String, ?>> buildDataSource(TbReportCtx ctx, ReportComponent component) throws ThingsboardException {
