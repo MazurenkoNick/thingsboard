@@ -41,6 +41,7 @@ import org.thingsboard.server.common.data.job.task.TaskResult;
 public class ReportJobResult extends JobResult {
 
     private BlobEntityId reportBlobId;
+    private String reportName;
 
     @Override
     public void processTaskResult(TaskResult taskResult) {
@@ -48,6 +49,9 @@ public class ReportJobResult extends JobResult {
         ReportTaskResult reportTaskResult = (ReportTaskResult) taskResult;
         if (reportTaskResult.getReportBlobId() != null) {
             this.reportBlobId = reportTaskResult.getReportBlobId();
+        }
+        if (reportTaskResult.getReportName() != null) {
+            this.reportName = reportTaskResult.getReportName();
         }
     }
 

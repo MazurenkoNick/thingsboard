@@ -36,6 +36,7 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.io.input.CharSequenceReader;
+import org.thingsboard.server.common.data.report.configuration.DataKey;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -44,7 +45,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -66,18 +66,19 @@ public class CsvUtils {
                 .collect(Collectors.toList());
     }
 
-    public static byte[] generateCsv(List<Map<String, ?>> dataset) throws IOException {
+    public static byte[] generateCsv(List<DataKey> dataKeys, List<Map<String, ?>> dataset) throws IOException {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         try (OutputStreamWriter writer = new OutputStreamWriter(out, StandardCharsets.UTF_8);
              CSVPrinter csvPrinter = new CSVPrinter(writer, CSVFormat.DEFAULT)) {
 
             // Extract headers from first record
-            Set<String> headers = dataset.get(0).keySet();
+            List<String> headers = dataKeys.stream().map(DataKey::getLabel).toList();
             csvPrinter.printRecord(headers);
 
             // Write rows
+            List<String> headerKeys = dataKeys.stream().map(DataKey::getName).toList();
             for (Map<String, ?> row : dataset) {
-                List<String> values = headers.stream()
+                List<String> values = headerKeys.stream()
                         .map(h -> Objects.toString(row.get(h), ""))
                         .collect(Collectors.toList());
                 csvPrinter.printRecord(values);

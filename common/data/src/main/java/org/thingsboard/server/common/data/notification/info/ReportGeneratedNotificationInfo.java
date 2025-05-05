@@ -28,40 +28,59 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.service.job.task;
+package org.thingsboard.server.common.data.notification.info;
 
-import lombok.RequiredArgsConstructor;
-import org.thingsboard.server.common.data.job.JobType;
-import org.thingsboard.server.common.data.job.task.DummyTask;
-import org.thingsboard.server.common.data.job.task.DummyTaskResult;
-import org.thingsboard.server.queue.task.TaskProcessor;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.thingsboard.server.common.data.id.BlobEntityId;
+import org.thingsboard.server.common.data.id.CustomerId;
+import org.thingsboard.server.common.data.id.TenantId;
+import org.thingsboard.server.common.data.id.UUIDBased;
+import org.thingsboard.server.common.data.report.TbReportFormat;
 
-@RequiredArgsConstructor
-public class DummyTaskProcessor extends TaskProcessor<DummyTask, DummyTaskResult> {
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+import static org.thingsboard.server.common.data.util.CollectionsUtil.mapOf;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class ReportGeneratedNotificationInfo implements RuleOriginatedNotificationInfo {
+
+    private TenantId tenantId;
+    private CustomerId customerId;
+    private BlobEntityId reportBlobId;
+    private String reportName;
+    private TbReportFormat reportFormat;
 
     @Override
-    public DummyTaskResult process(DummyTask task) throws Exception {
-        if (task.getProcessingTimeMs() > 0) {
-            Thread.sleep(task.getProcessingTimeMs());
-        }
-        if (task.isFailAlways()) {
-            throw new RuntimeException(task.getErrors().get(0));
-        }
-        if (task.getErrors() != null && task.getAttempt() <= task.getErrors().size()) {
-            String error = task.getErrors().get(task.getAttempt() - 1);
-            throw new RuntimeException(error);
-        }
-        return DummyTaskResult.success();
+    public Map<String, String> getTemplateData() {
+        return mapOf(
+                "customerId", Optional.ofNullable(customerId).map(UUIDBased::toString).orElse(""),
+                "reportBlobId", reportBlobId.toString(),
+                "reportName", reportName,
+                "reportFormat", reportFormat.name()
+        );
     }
 
     @Override
-    public long getTaskProcessingTimeout() {
-        return 2000;
+    public List<BlobEntityId> getAttachments() {
+        return List.of(reportBlobId);
     }
 
     @Override
-    public JobType getJobType() {
-        return JobType.DUMMY;
+    public TenantId getAffectedTenantId() {
+        return tenantId;
+    }
+
+    @Override
+    public CustomerId getAffectedCustomerId() {
+        return customerId;
     }
 
 }

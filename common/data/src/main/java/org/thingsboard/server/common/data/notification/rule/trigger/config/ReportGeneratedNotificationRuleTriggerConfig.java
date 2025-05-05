@@ -28,40 +28,18 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.service.job.task;
+package org.thingsboard.server.common.data.notification.rule.trigger.config;
 
-import lombok.RequiredArgsConstructor;
-import org.thingsboard.server.common.data.job.JobType;
-import org.thingsboard.server.common.data.job.task.DummyTask;
-import org.thingsboard.server.common.data.job.task.DummyTaskResult;
-import org.thingsboard.server.queue.task.TaskProcessor;
+import lombok.Builder;
+import lombok.Data;
 
-@RequiredArgsConstructor
-public class DummyTaskProcessor extends TaskProcessor<DummyTask, DummyTaskResult> {
+@Data
+@Builder
+public class ReportGeneratedNotificationRuleTriggerConfig implements NotificationRuleTriggerConfig {
 
     @Override
-    public DummyTaskResult process(DummyTask task) throws Exception {
-        if (task.getProcessingTimeMs() > 0) {
-            Thread.sleep(task.getProcessingTimeMs());
-        }
-        if (task.isFailAlways()) {
-            throw new RuntimeException(task.getErrors().get(0));
-        }
-        if (task.getErrors() != null && task.getAttempt() <= task.getErrors().size()) {
-            String error = task.getErrors().get(task.getAttempt() - 1);
-            throw new RuntimeException(error);
-        }
-        return DummyTaskResult.success();
-    }
-
-    @Override
-    public long getTaskProcessingTimeout() {
-        return 2000;
-    }
-
-    @Override
-    public JobType getJobType() {
-        return JobType.DUMMY;
+    public NotificationRuleTriggerType getTriggerType() {
+        return NotificationRuleTriggerType.REPORT_GENERATED;
     }
 
 }

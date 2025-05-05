@@ -37,7 +37,7 @@ import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 import org.thingsboard.server.common.data.job.JobType;
 import org.thingsboard.server.common.data.report.ReportRequest;
-import org.thingsboard.server.common.data.report.ReportTemplate;
+import org.thingsboard.server.common.data.report.configuration.ReportTemplateConfig;
 
 @Data
 @NoArgsConstructor
@@ -46,7 +46,7 @@ import org.thingsboard.server.common.data.report.ReportTemplate;
 @ToString(callSuper = true)
 public class ReportTask extends Task<ReportTaskResult> {
 
-    private ReportTemplate reportTemplate;
+    private ReportTemplateConfig reportTemplateConfig;
     private ReportRequest reportRequest;
     private boolean testReport;
     private String accessToken;
@@ -54,7 +54,7 @@ public class ReportTask extends Task<ReportTaskResult> {
 
     @Override
     public Object getKey() {
-        return reportRequest.getTemplateId();
+        return "";
     }
 
     @Override

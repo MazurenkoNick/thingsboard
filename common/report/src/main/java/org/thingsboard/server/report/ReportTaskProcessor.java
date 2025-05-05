@@ -30,7 +30,7 @@
  */
 package org.thingsboard.server.report;
 
-import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
@@ -59,6 +59,9 @@ public class ReportTaskProcessor extends TaskProcessor<ReportTask, ReportTaskRes
 
     private final Map<TbReportFormat, ReportService> reportServices = new EnumMap<>(TbReportFormat.class);
 
+    @Value("${reports.generation_timeout_ms:120000}")
+    private int timeoutMs;
+
     private ReportTaskProcessor(List<ReportService> reportServices) {
         reportServices.forEach(service -> {
             TbReportFormat format = service.getFormat();
@@ -68,12 +71,13 @@ public class ReportTaskProcessor extends TaskProcessor<ReportTask, ReportTaskRes
         });
     }
 
+    @Setter
     @Value("${service.tb_core.base_url:http://localhost:${server.port}}") // for monolith - sending request to itself
     private String tbCoreBaseUrl;
 
     @Override
     public ReportTaskResult process(ReportTask task) throws Exception {
-        ReportTemplateConfig configuration = task.getReportTemplate().getConfiguration();
+        ReportTemplateConfig configuration = task.getReportTemplateConfig();
         ReportData reportData;
         try (RestClient restClient = new RestClient(new RestTemplate(), tbCoreBaseUrl, task.getAccessToken())) {
             TbReportCtx reportCtx = TbReportCtx.builder()
@@ -94,8 +98,13 @@ public class ReportTaskProcessor extends TaskProcessor<ReportTask, ReportTaskRes
             blobEntity.setName(reportData.getName());
             blobEntity.setType(task.isTestReport() ? "test_report" : "report");
             BlobEntityInfo savedBlobEntity = restClient.createBlobEntity(blobEntity);
-            return ReportTaskResult.success(savedBlobEntity.getId());
+            return ReportTaskResult.success(savedBlobEntity.getId(), reportData.getName());
         }
+    }
+
+    @Override
+    public long getTaskProcessingTimeout() {
+        return timeoutMs;
     }
 
     @Override

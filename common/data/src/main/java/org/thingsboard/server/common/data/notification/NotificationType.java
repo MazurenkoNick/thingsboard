@@ -55,7 +55,8 @@ public enum NotificationType {
     EDGE_COMMUNICATION_FAILURE,
     TASK_PROCESSING_FAILURE,
     USER_ACTIVATED(true),
-    USER_REGISTERED(true);
+    USER_REGISTERED(true),
+    REPORT_GENERATED;
 
     @Getter
     private boolean system;

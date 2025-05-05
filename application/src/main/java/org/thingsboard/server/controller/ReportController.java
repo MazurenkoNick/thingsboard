@@ -58,6 +58,8 @@ import org.thingsboard.server.queue.util.TbCoreComponent;
 import org.thingsboard.server.service.job.JobManager;
 import org.thingsboard.server.service.security.model.SecurityUser;
 
+import java.util.UUID;
+
 import static org.thingsboard.server.controller.ControllerConstants.TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH;
 
 @RequiredArgsConstructor
@@ -72,12 +74,12 @@ public class ReportController extends BaseController {
 
     @ApiOperation(value = "Download test report (downloadTestReport)",
             notes = "Generate and download test report." + TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH)
-    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
+    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN')")
     @PostMapping(value = "/report/deprecated/test", produces = {"application/pdf"})
     @Deprecated // FIXME: this is temporary API for testing purposes
     public ResponseEntity<Resource> testReportAndDownload(@RequestBody ReportRequest reportRequest) throws Exception {
         TenantId tenantId = getTenantId();
-        Job job = testReport(reportRequest);
+        Job job = requestTestReport(reportRequest);
         do {
             Thread.sleep(1000);
             job = jobService.findJobById(tenantId, job.getId());
@@ -99,19 +101,37 @@ public class ReportController extends BaseController {
                 .body(resource);
     }
 
-    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
-    @PostMapping(value = "/report/test", produces = {"application/pdf"})
-    public Job testReport(@RequestBody ReportRequest reportRequest) throws ThingsboardException {
+    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN')")
+    @PostMapping(value = "/report/test")
+    public Job requestTestReport(@RequestBody ReportRequest reportRequest) throws ThingsboardException {
         SecurityUser currentUser = getCurrentUser();
+
         return jobManager.submitJob(Job.builder()
                 .tenantId(currentUser.getTenantId())
                 .type(JobType.REPORT)
-                .key(reportRequest.getTemplateId().toString()) // fixme
-                .description("Report generation for request: " + reportRequest) // fixme: tmp
+                .key(UUID.randomUUID().toString())
+                .description("Test report generation")
                 .configuration(ReportJobConfiguration.builder()
                         .request(reportRequest)
                         .userId(currentUser.getId())
                         .testReport(true)
+                        .build())
+                .build());
+    }
+
+    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN')")
+    @PostMapping(value = "/report")
+    public Job requestReport(@RequestBody ReportRequest reportRequest) throws ThingsboardException {
+        SecurityUser currentUser = getCurrentUser();
+
+        return jobManager.submitJob(Job.builder()
+                .tenantId(currentUser.getTenantId())
+                .type(JobType.REPORT)
+                .key(UUID.randomUUID().toString())
+                .description("Report generation for template")
+                .configuration(ReportJobConfiguration.builder()
+                        .request(reportRequest)
+                        .userId(currentUser.getId())
                         .build())
                 .build());
     }

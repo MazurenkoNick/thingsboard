@@ -33,9 +33,11 @@ package org.thingsboard.server.common.data.notification.info;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import org.thingsboard.server.common.data.id.BlobEntityId;
 import org.thingsboard.server.common.data.id.DashboardId;
 import org.thingsboard.server.common.data.id.EntityId;
 
+import java.util.List;
 import java.util.Map;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -53,6 +55,10 @@ public interface NotificationInfo {
         return null;
     }
 
+    @JsonIgnore
+    default List<BlobEntityId> getAttachments() {
+        return null;
+    }
 
     static NotificationInfo userActivated(String userFullName, String userEmail) {
         return UserActivatedNotificationInfo.builder()

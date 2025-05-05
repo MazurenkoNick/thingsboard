@@ -46,12 +46,14 @@ public class ReportTaskResult extends TaskResult {
     private static final ReportTaskResult DISCARDED = ReportTaskResult.builder().discarded(true).build();
 
     private BlobEntityId reportBlobId;
+    private String reportName;
     private String error;
 
-    public static ReportTaskResult success(BlobEntityId reportBlobId) {
+    public static ReportTaskResult success(BlobEntityId reportBlobId, String reportName) {
         return ReportTaskResult.builder()
                 .success(true)
                 .reportBlobId(reportBlobId)
+                .reportName(reportName)
                 .build();
     }
 
