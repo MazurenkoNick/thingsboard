@@ -47,6 +47,7 @@ import net.sf.jasperreports.engine.design.JRDesignSubreport;
 import net.sf.jasperreports.engine.design.JRDesignTextField;
 import net.sf.jasperreports.engine.design.JasperDesign;
 import net.sf.jasperreports.engine.type.BreakTypeEnum;
+import net.sf.jasperreports.engine.type.HorizontalTextAlignEnum;
 import net.sf.jasperreports.engine.type.ModeEnum;
 import net.sf.jasperreports.engine.type.ScaleImageEnum;
 import net.sf.jasperreports.engine.type.VerticalTextAlignEnum;
@@ -64,10 +65,16 @@ import org.thingsboard.server.common.data.report.configuration.components.PageBr
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
 import org.thingsboard.server.common.data.report.configuration.components.RichTextComponent;
 import org.thingsboard.server.common.data.report.configuration.components.TimeseriesTableComponent;
+import org.thingsboard.server.common.data.report.configuration.style.Font;
+import org.thingsboard.server.common.data.report.configuration.style.FontStyle;
+import org.thingsboard.server.common.data.report.configuration.style.FontWeight;
+import org.thingsboard.server.common.data.report.configuration.style.TextAlignment;
+import org.thingsboard.server.common.data.report.configuration.style.VerticalAlignment;
 
 import java.awt.*;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Data
@@ -125,23 +132,47 @@ public class JasperReportBuilder {
         }
     }
 
-    public void addHeading(String htmlText) {
-        JRDesignTextField htmlField = new JRDesignTextField();
-        htmlField.setX(0);
-        htmlField.setY(0);
-        htmlField.setWidth(500);
-        htmlField.setHeight(30);
-        //htmlField.setHorizontalTextAlign(HorizontalTextAlignEnum.CENTER);
-        htmlField.setVerticalTextAlign(VerticalTextAlignEnum.MIDDLE);
-        htmlField.setMarkup("html");
+    public void addHeading(HeadingComponent component) {
+        JRDesignTextField textField = new JRDesignTextField();
+        textField.setX(0);
+        textField.setY(0);
+        textField.setWidth(500);
+        textField.setHeight(20);
 
+        // Set text color if provided
+        if (component.getColor() != null) {
+            Color color = Color.decode(component.getColor());
+            textField.setForecolor(color);
+        }
+
+        // Set font style if defined
+        Font font = component.getFont();
+        if (font != null) {
+            textField.setBold(font.getWeight() == FontWeight.bold);
+            textField.setItalic(font.getStyle() == FontStyle.italic);
+            if (font.getSize() != null) {
+                textField.setFontSize(font.getSize());
+            }
+        }
+
+        // Set horizontal and vertical alignment
+        TextAlignment textAlignment = component.getTextAlignment();
+        if (textAlignment != null) {
+            textField.setHorizontalTextAlign(HorizontalTextAlignEnum.valueOf(textAlignment.getValue()));
+        }
+        VerticalAlignment verticalAlignment = component.getVerticalAlignment();
+        if (verticalAlignment != null) {
+            textField.setVerticalTextAlign(VerticalTextAlignEnum.valueOf(verticalAlignment.getValue()));
+        }
+
+        // Set the text content as a string literal
         JRDesignExpression expression = new JRDesignExpression();
-        expression.setText(htmlText);
-        htmlField.setExpression(expression);
+        expression.setText("\"" + component.getValue() + "\"");
+        textField.setExpression(expression);
 
         JRDesignBand detailBand = new JRDesignBand();
         detailBand.setHeight(30);
-        detailBand.addElement(htmlField);
+        detailBand.addElement(textField);
 
         JRDesignSection detailSection = (JRDesignSection) jasperDesign.getDetailSection();
         detailSection.addBand(detailBand);
@@ -219,8 +250,9 @@ public class JasperReportBuilder {
         htmlField.setHeight(100);
         htmlField.setMarkup("html");
 
+        // Set the text content as a string literal
         JRDesignExpression expression = new JRDesignExpression();
-        expression.setText(richText);
+        expression.setText("\"" + richText + "\"");
         htmlField.setExpression(expression);
 
         JRDesignBand detailBand = new JRDesignBand();
@@ -346,7 +378,7 @@ public class JasperReportBuilder {
 
     public JasperReport buildHeading(HeadingComponent component) throws JRException {
         JasperReportBuilder heading = new JasperReportBuilder(component, getUsablePageWidth());
-        heading.addHeading(component.getValue());
+        heading.addHeading(component);
         return JasperCompileManager.compileReport(heading.getJasperDesign());
     }
 
