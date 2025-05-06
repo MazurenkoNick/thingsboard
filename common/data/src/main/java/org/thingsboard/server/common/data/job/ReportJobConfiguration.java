@@ -35,8 +35,11 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import org.thingsboard.server.common.data.id.CustomerId;
+import org.thingsboard.server.common.data.id.EntityId;
+import org.thingsboard.server.common.data.id.ReportTemplateId;
 import org.thingsboard.server.common.data.id.UserId;
-import org.thingsboard.server.common.data.report.ReportRequest;
+import org.thingsboard.server.common.data.report.TbReportFormat;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -45,9 +48,13 @@ import org.thingsboard.server.common.data.report.ReportRequest;
 @Builder
 public class ReportJobConfiguration extends JobConfiguration {
 
-    private ReportRequest request;
+    private ReportTemplateId reportTemplateId;
+    private TbReportFormat reportFormat;
     private UserId userId;
-    private boolean testReport;
+
+    private CustomerId customerId;
+    private EntityId entityId;
+    private String timezone;
 
     @Override
     public JobType getType() {

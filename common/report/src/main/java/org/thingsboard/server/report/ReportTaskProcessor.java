@@ -30,6 +30,7 @@
  */
 package org.thingsboard.server.report;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.thingsboard.server.common.data.blob.BlobEntity;
@@ -38,54 +39,30 @@ import org.thingsboard.server.common.data.job.JobType;
 import org.thingsboard.server.common.data.job.task.ReportTask;
 import org.thingsboard.server.common.data.job.task.ReportTaskResult;
 import org.thingsboard.server.common.data.report.ReportData;
-import org.thingsboard.server.common.data.report.TbReportFormat;
 import org.thingsboard.server.common.data.report.configuration.ReportTemplateConfig;
 import org.thingsboard.server.queue.task.TaskProcessor;
 import org.thingsboard.server.queue.util.TbReportComponent;
 import org.thingsboard.server.report.datasource.ReportDataService;
 import org.thingsboard.server.report.datasource.ReportDataServiceContext;
-import org.thingsboard.server.report.service.ReportService;
-import org.thingsboard.server.report.service.TbReportCtx;
+import org.thingsboard.server.report.service.TbReportService;
 
 import java.nio.ByteBuffer;
-import java.util.EnumMap;
-import java.util.List;
-import java.util.Map;
 
 @TbReportComponent
 @Component
+@RequiredArgsConstructor
 public class ReportTaskProcessor extends TaskProcessor<ReportTask, ReportTaskResult> {
 
-    private final Map<TbReportFormat, ReportService> reportServices = new EnumMap<>(TbReportFormat.class);
+    private final TbReportService tbReportService;
     private final ReportDataService dataService;
 
     @Value("${reports.generation_timeout_ms:120000}")
     private int timeoutMs;
 
-    private ReportTaskProcessor(List<ReportService> reportServices, ReportDataService dataService) {
-        reportServices.forEach(service -> {
-            TbReportFormat format = service.getFormat();
-            if (format != null) {
-                this.reportServices.put(format, service);
-            }
-        });
-        this.dataService = dataService;
-    }
-
     @Override
     public ReportTaskResult process(ReportTask task) throws Exception {
-        ReportTemplateConfig configuration = task.getReportTemplateConfig();
-        ReportData reportData;
-        try (ReportDataServiceContext dataServiceContext = dataService.newContext(task.getAccessToken())) {
-            TbReportCtx reportCtx = TbReportCtx.builder()
-                    .tenantId(task.getTenantId())
-                    .customerId(task.getReportRequest().getCustomerId())
-                    .configuration(configuration)
-                    .dataServiceContext(dataServiceContext)
-                    .accessToken(task.getAccessToken())
-                    .accessTokenExpTs(task.getAccessTokenExpirationTs())
-                    .build();
-            reportData = reportServices.get(configuration.getFormat()).generateReport(task, reportCtx);
+        try (ReportDataServiceContext dataServiceContext = tbReportService.newContext(task)) { // todo: inside tbReportCtx
+            ReportData reportData = tbReportService.generateReport(task, dataServiceContext);
 
             BlobEntity blobEntity = new BlobEntity();
             blobEntity.setTenantId(task.getTenantId());
@@ -93,7 +70,7 @@ public class ReportTaskProcessor extends TaskProcessor<ReportTask, ReportTaskRes
             blobEntity.setData(ByteBuffer.wrap(reportData.getData()));
             blobEntity.setContentType(reportData.getContentType());
             blobEntity.setName(reportData.getName());
-            blobEntity.setType(task.isTestReport() ? "test_report" : "report");
+            blobEntity.setType("report");
             BlobEntityInfo savedBlobEntity = dataService.createBlobEntity(blobEntity, dataServiceContext);
             return ReportTaskResult.success(savedBlobEntity.getId(), reportData.getName());
         }

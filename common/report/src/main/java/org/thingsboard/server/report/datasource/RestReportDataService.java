@@ -30,7 +30,6 @@
  */
 package org.thingsboard.server.report.datasource;
 
-import lombok.Getter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.stereotype.Service;
@@ -99,7 +98,7 @@ public class RestReportDataService implements ReportDataService {
         return ((RestReportDataServiceContext) ctx).restClient();
     }
 
-    private record RestReportDataServiceContext(@Getter RestClient restClient) implements ReportDataServiceContext {
+    private record RestReportDataServiceContext(RestClient restClient) implements ReportDataServiceContext {
         @Override
         public void close() {
             restClient.close();

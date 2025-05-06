@@ -32,14 +32,10 @@ package org.thingsboard.server.report.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.springframework.stereotype.Service;
-import org.thingsboard.server.common.data.exception.ThingsboardErrorCode;
-import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.job.task.ReportTask;
 import org.thingsboard.server.common.data.report.ReportData;
-import org.thingsboard.server.common.data.report.ReportRequest;
 import org.thingsboard.server.common.data.report.TbReportFormat;
 import org.thingsboard.server.common.data.report.configuration.CsvReportTemplateConfig;
 import org.thingsboard.server.common.data.report.configuration.DataKey;
@@ -63,32 +59,27 @@ import static org.thingsboard.server.report.util.ReportUtils.prepareReportName;
 public class CsvReportService extends AbstractReportService {
 
     @Override
-    public ReportData generateReport(ReportTask task, TbReportCtx ctx) throws ThingsboardException {
+    public ReportData generateReport(ReportTask task, TbReportCtx ctx) {
         TenantId tenantId = task.getTenantId();
-        ReportRequest reportRequest = task.getReportRequest();
 
-        log.trace("[{}] Executing generateReport, reportRequest [{}]", tenantId, reportRequest);
+        log.trace("[{}] Executing generateReport, reportRequest [{}]", tenantId, task);
         CsvReportTemplateConfig configuration = (CsvReportTemplateConfig) task.getReportTemplateConfig();
 
-        try {
-            TableReportComponent component = configuration.getComponent();
-            List<DataKey> headers = getTableHeaders(component);
-            List<Map<String, ?>> dataSource = buildDataSource(ctx, component);
+        TableReportComponent component = configuration.getComponent();
+        List<DataKey> headers = getTableHeaders(component);
+        List<Map<String, ?>> dataSource = buildDataSource(ctx, component);
 
-            byte[] csvBytes = generateCsv(headers, dataSource);
+        byte[] csvBytes = generateCsv(headers, dataSource);
 
-            String requestTimeZone = reportRequest.getTimezone();
-            TimeZone timeZone = (requestTimeZone == null) ? TimeZone.getDefault() : TimeZone.getTimeZone(requestTimeZone);
-            String reportName = prepareReportName(configuration.getNamePattern(), new Date(), timeZone);
+        String requestTimeZone = task.getTimezone();
+        TimeZone timeZone = (requestTimeZone == null) ? TimeZone.getDefault() : TimeZone.getTimeZone(requestTimeZone);
+        String reportName = prepareReportName(configuration.getNamePattern(), new Date(), timeZone);
 
-            return ReportData.builder()
-                    .data(csvBytes)
-                    .contentType(configuration.getFormat().getContentType())
-                    .name(reportName)
-                    .build();
-        } catch (Exception e) {
-            throw new ThingsboardException(ExceptionUtils.getRootCause(e), ThingsboardErrorCode.GENERAL);
-        }
+        return ReportData.builder()
+                .data(csvBytes)
+                .contentType(configuration.getFormat().getContentType())
+                .name(reportName)
+                .build();
     }
 
     private static List<DataKey> getTableHeaders(TableReportComponent component) {

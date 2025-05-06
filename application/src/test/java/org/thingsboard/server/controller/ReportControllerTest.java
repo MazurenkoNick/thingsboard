@@ -34,15 +34,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.web.servlet.ResultActions;
 import org.thingsboard.server.common.data.DataConstants;
 import org.thingsboard.server.common.data.Device;
 import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.job.Job;
 import org.thingsboard.server.common.data.job.JobStatus;
 import org.thingsboard.server.common.data.job.ReportJobResult;
-import org.thingsboard.server.common.data.job.task.ReportTaskResult;
 import org.thingsboard.server.common.data.query.DeviceTypeFilter;
 import org.thingsboard.server.common.data.report.ReportRequest;
 import org.thingsboard.server.common.data.report.ReportTemplate;
@@ -53,7 +50,6 @@ import org.thingsboard.server.common.data.report.configuration.DataSource;
 import org.thingsboard.server.common.data.report.configuration.EntityAlias;
 import org.thingsboard.server.common.data.report.configuration.components.EntityTableComponent;
 import org.thingsboard.server.dao.service.DaoSqlTest;
-import org.thingsboard.server.report.ReportTaskProcessor;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -66,9 +62,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Slf4j
 @DaoSqlTest
 public class ReportControllerTest extends AbstractControllerTest {
-
-    @Autowired
-    private ReportTaskProcessor reportTaskProcessor;
 
     @Before
     public void beforeTest() throws Exception {
@@ -126,16 +119,16 @@ public class ReportControllerTest extends AbstractControllerTest {
             doPost("/api/plugins/telemetry/DEVICE/" + device.getId() + "/timeseries/" + DataConstants.SHARED_SCOPE, telemetryPayload, String.class, status().isOk());
             doPost("/api/plugins/telemetry/" + device.getId() + "/" + DataConstants.SHARED_SCOPE, attributePayload, String.class, status().isOk());
             expectedReportLines.add(device.getCreatedTime() + "," +
-                    device.getName() + "," +
-                    device.getType() + "," +
-                    temperature + "," +
-                    threshold);
+                                    device.getName() + "," +
+                                    device.getType() + "," +
+                                    temperature + "," +
+                                    threshold);
         }
 
         //generate report
         ReportRequest reportRequest = new ReportRequest();
         reportRequest.setReportTemplateConfig(configuration);
-        String csvReport = doPost("/api/v2/report/deprecated/test", reportRequest, String.class);
+        String csvReport = doPost("/api/v2/report/test", reportRequest, String.class);
 
         // Check headers and content
         String[] lines = csvReport.split("\r?\n");
@@ -185,10 +178,10 @@ public class ReportControllerTest extends AbstractControllerTest {
             doPost("/api/plugins/telemetry/DEVICE/" + device.getId() + "/timeseries/" + DataConstants.SHARED_SCOPE, telemetryPayload, String.class, status().isOk());
             doPost("/api/plugins/telemetry/" + device.getId() + "/" + DataConstants.SHARED_SCOPE, attributePayload, String.class, status().isOk());
             expectedReportLines.add(device.getCreatedTime() + "," +
-                    device.getName() + "," +
-                    device.getType() + "," +
-                    temperature + "," +
-                    threshold);
+                                    device.getName() + "," +
+                                    device.getType() + "," +
+                                    temperature + "," +
+                                    threshold);
         }
 
         //generate report

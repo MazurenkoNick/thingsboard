@@ -32,6 +32,8 @@ package org.thingsboard.server.service.report;
 
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 import org.thingsboard.server.common.data.blob.BlobEntity;
@@ -64,8 +66,10 @@ public class LocalReportDataService implements ReportDataService {
 
     private final EntityQueryService entityQueryService;
     private final TbTelemetryService tbTelemetryService;
-    private final TbBlobService tbBlobService;
     private final JwtTokenFactory tokenFactory;
+    @Autowired
+    @Lazy
+    private TbBlobService tbBlobService;
 
     @Override
     public ReportDataServiceContext newContext(String accessToken) {

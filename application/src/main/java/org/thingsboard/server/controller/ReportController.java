@@ -41,22 +41,26 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.thingsboard.server.common.data.blob.BlobEntity;
+import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
-import org.thingsboard.server.common.data.id.BlobEntityId;
+import org.thingsboard.server.common.data.id.ReportTemplateId;
 import org.thingsboard.server.common.data.id.TenantId;
+import org.thingsboard.server.common.data.id.UserId;
 import org.thingsboard.server.common.data.job.Job;
-import org.thingsboard.server.common.data.job.JobStatus;
 import org.thingsboard.server.common.data.job.JobType;
 import org.thingsboard.server.common.data.job.ReportJobConfiguration;
-import org.thingsboard.server.common.data.job.ReportJobResult;
+import org.thingsboard.server.common.data.job.task.ReportTask;
+import org.thingsboard.server.common.data.permission.Operation;
+import org.thingsboard.server.common.data.report.ReportData;
 import org.thingsboard.server.common.data.report.ReportRequest;
+import org.thingsboard.server.common.data.report.ReportTemplate;
 import org.thingsboard.server.config.annotations.ApiOperation;
-import org.thingsboard.server.dao.blob.BlobEntityService;
-import org.thingsboard.server.dao.job.JobService;
 import org.thingsboard.server.queue.util.TbCoreComponent;
+import org.thingsboard.server.report.service.TbReportService;
 import org.thingsboard.server.service.job.JobManager;
 import org.thingsboard.server.service.security.model.SecurityUser;
+import org.thingsboard.server.service.security.model.token.AccessJwtToken;
+import org.thingsboard.server.service.security.system.SystemSecurityService;
 
 import java.util.UUID;
 
@@ -69,69 +73,65 @@ import static org.thingsboard.server.controller.ControllerConstants.TENANT_OR_CU
 public class ReportController extends BaseController {
 
     private final JobManager jobManager;
-    private final JobService jobService;
-    private final BlobEntityService blobEntityService;
+    private final TbReportService tbReportService;
+    private final SystemSecurityService systemSecurityService;
 
     @ApiOperation(value = "Download test report (downloadTestReport)",
             notes = "Generate and download test report." + TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN')")
-    @PostMapping(value = "/report/deprecated/test", produces = {"application/pdf"})
-    @Deprecated // FIXME: this is temporary API for testing purposes
+    @PostMapping(value = "/report/test")
     public ResponseEntity<Resource> testReportAndDownload(@RequestBody ReportRequest reportRequest) throws Exception {
         TenantId tenantId = getTenantId();
-        Job job = requestTestReport(reportRequest);
-        do {
-            Thread.sleep(1000);
-            job = jobService.findJobById(tenantId, job.getId());
-        } while (!job.getStatus().isOneOf(JobStatus.COMPLETED, JobStatus.FAILED, JobStatus.CANCELLED) && !Thread.currentThread().isInterrupted());
+        UserId userId = StringUtils.isNotEmpty(reportRequest.getUserId()) ? new UserId(UUID.fromString(reportRequest.getUserId())) : getCurrentUser().getId();
+        AccessJwtToken accessToken = systemSecurityService.createUserAccessToken(tenantId, userId);
 
-        if (job.getStatus() != JobStatus.COMPLETED) {
-            throw new IllegalStateException("Failed to generate report: " + job.getResult().getResults());
-        }
+        ReportTask reportTask = ReportTask.builder()
+                .tenantId(tenantId)
+                .reportTemplateConfig(reportRequest.getReportTemplateConfig())
+                .customerId(reportRequest.getCustomerId())
+                .entityId(reportRequest.getEntityId())
+                .timezone(reportRequest.getTimezone())
+                .accessToken(accessToken.getToken())
+                .accessTokenExpirationTs(accessToken.getClaims().getExpiration().getTime())
+                .build();
+        ReportData reportData = tbReportService.generateReport(reportTask, tbReportService.newContext(reportTask));
 
-        BlobEntityId reportBlobId = ((ReportJobResult) job.getResult()).getReportBlobId();
-        BlobEntity reportBlobEntity = blobEntityService.findBlobEntityById(tenantId, reportBlobId);
-
-        ByteArrayResource resource = new ByteArrayResource(reportBlobEntity.getData().array());
+        ByteArrayResource resource = new ByteArrayResource(reportData.getData());
         return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment;filename=" + reportBlobEntity.getName())
-                .header("x-filename", reportBlobEntity.getName())
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment;filename=" + reportData.getName())
+                .header("x-filename", reportData.getName())
                 .contentLength(resource.contentLength())
-                .contentType(MediaType.parseMediaType(reportBlobEntity.getContentType()))
+                .contentType(MediaType.parseMediaType(reportData.getContentType()))
                 .body(resource);
-    }
-
-    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN')")
-    @PostMapping(value = "/report/test")
-    public Job requestTestReport(@RequestBody ReportRequest reportRequest) throws ThingsboardException {
-        SecurityUser currentUser = getCurrentUser();
-
-        return jobManager.submitJob(Job.builder()
-                .tenantId(currentUser.getTenantId())
-                .type(JobType.REPORT)
-                .key(UUID.randomUUID().toString())
-                .description("Test report generation")
-                .configuration(ReportJobConfiguration.builder()
-                        .request(reportRequest)
-                        .userId(currentUser.getId())
-                        .testReport(true)
-                        .build())
-                .build());
     }
 
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN')")
     @PostMapping(value = "/report")
     public Job requestReport(@RequestBody ReportRequest reportRequest) throws ThingsboardException {
         SecurityUser currentUser = getCurrentUser();
+        ReportTemplateId reportTemplateId = reportRequest.getReportTemplateId();
+        if (reportTemplateId == null) {
+            /*
+             * we can't use template configuration instead of id in the job config, because job can execute much later,
+             * and job processor needs the up-to-date config when the job gets to be executed
+             * */
+            throw new IllegalArgumentException("Report template id must be specified");
+        }
+        ReportTemplate reportTemplate = checkReportTemplateId(reportTemplateId, Operation.READ);
+        UserId userId = StringUtils.isNotEmpty(reportRequest.getUserId()) ? new UserId(UUID.fromString(reportRequest.getUserId())) : getCurrentUser().getId();
 
         return jobManager.submitJob(Job.builder()
                 .tenantId(currentUser.getTenantId())
                 .type(JobType.REPORT)
                 .key(UUID.randomUUID().toString())
-                .description("Report generation for template")
+                .description("Report generation for template '" + reportTemplate.getName() + "'")
                 .configuration(ReportJobConfiguration.builder()
-                        .request(reportRequest)
-                        .userId(currentUser.getId())
+                        .reportTemplateId(reportTemplateId)
+                        .reportFormat(reportTemplate.getConfiguration().getFormat())
+                        .userId(userId)
+                        .customerId(reportRequest.getCustomerId())
+                        .entityId(reportRequest.getEntityId())
+                        .timezone(reportRequest.getTimezone())
                         .build())
                 .build());
     }

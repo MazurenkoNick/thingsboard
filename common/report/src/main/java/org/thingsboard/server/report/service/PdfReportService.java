@@ -42,17 +42,13 @@ import net.sf.jasperreports.engine.JasperPrint;
 import net.sf.jasperreports.engine.JasperReport;
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 import net.sf.jasperreports.engine.data.JRMapCollectionDataSource;
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.springframework.stereotype.Service;
 import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.dashboardreport.DashboardReportData;
-import org.thingsboard.server.common.data.exception.ThingsboardErrorCode;
-import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.job.task.ReportTask;
 import org.thingsboard.server.common.data.query.EntityData;
 import org.thingsboard.server.common.data.report.ReportData;
-import org.thingsboard.server.common.data.report.ReportRequest;
 import org.thingsboard.server.common.data.report.TbReportFormat;
 import org.thingsboard.server.common.data.report.configuration.DataSource;
 import org.thingsboard.server.common.data.report.configuration.PdfReportTemplateConfig;
@@ -87,36 +83,31 @@ public class PdfReportService extends AbstractReportService {
 
     private final WebReportClient webReportClient;
 
-    public ReportData generateReport(ReportTask task, TbReportCtx ctx) throws ThingsboardException {
+    public ReportData generateReport(ReportTask task, TbReportCtx ctx) throws Exception {
         TenantId tenantId = task.getTenantId();
-        ReportRequest reportRequest = task.getReportRequest();
 
-        log.trace("[{}] Executing generateReport, reportRequest [{}]", tenantId, reportRequest);
+        log.trace("[{}] Executing generateReport, reportRequest [{}]", tenantId, task);
         PdfReportTemplateConfig configuration = (PdfReportTemplateConfig) task.getReportTemplateConfig();
 
-        try {
-            JasperReportBuilder reportBuilder = new JasperReportBuilder(configuration);
+        JasperReportBuilder reportBuilder = new JasperReportBuilder(configuration);
 
-            //Optional.ofNullable(configuration.getHeader()).ifPresent(reportBuilder::addPageHeader);
-            //Optional.ofNullable(configuration.getFooter()).ifPresent(reportBuilder::addPageFooter);
+        //Optional.ofNullable(configuration.getHeader()).ifPresent(reportBuilder::addPageHeader);
+        //Optional.ofNullable(configuration.getFooter()).ifPresent(reportBuilder::addPageFooter);
 
-            renderContent(ctx, reportBuilder, configuration.getComponents());
+        renderContent(ctx, reportBuilder, configuration.getComponents());
 
-            JasperReport mainReport = JasperCompileManager.compileReport(reportBuilder.getJasperDesign());
-            JasperPrint print = JasperFillManager.fillReport(mainReport, ctx.getParams(), new JREmptyDataSource());
+        JasperReport mainReport = JasperCompileManager.compileReport(reportBuilder.getJasperDesign());
+        JasperPrint print = JasperFillManager.fillReport(mainReport, ctx.getParams(), new JREmptyDataSource());
 
-            String requestTimeZone = reportRequest.getTimezone();
-            TimeZone timeZone = (requestTimeZone == null) ? TimeZone.getDefault() : TimeZone.getTimeZone(requestTimeZone);
-            String reportName = prepareReportName(configuration.getNamePattern(), new Date(), timeZone);
+        String requestTimeZone = task.getTimezone();
+        TimeZone timeZone = (requestTimeZone == null) ? TimeZone.getDefault() : TimeZone.getTimeZone(requestTimeZone);
+        String reportName = prepareReportName(configuration.getNamePattern(), new Date(), timeZone);
 
-            return ReportData.builder()
-                    .data(JasperExportManager.exportReportToPdf(print))
-                    .contentType(configuration.getFormat().getContentType())
-                    .name(reportName)
-                    .build();
-        } catch (Exception e) {
-            throw new ThingsboardException(ExceptionUtils.getRootCause(e), ThingsboardErrorCode.GENERAL);
-        }
+        return ReportData.builder()
+                .data(JasperExportManager.exportReportToPdf(print))
+                .contentType(configuration.getFormat().getContentType())
+                .name(reportName)
+                .build();
     }
 
     private void renderContent(TbReportCtx ctx, JasperReportBuilder parentBuilder, List<ReportComponent> components) throws Exception {

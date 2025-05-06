@@ -50,7 +50,7 @@ export class ReportService {
   }
 
   public downloadTestReport(reportRequest: ReportRequest): Observable<any> {
-    const url = '/api/v2/report/deprecated/test';
+    const url = '/api/v2/report/test';
     const params: {[param: string]: string} = {};
     return this.downloadReport(url, reportRequest, params);
   }

@@ -34,7 +34,6 @@ import org.thingsboard.server.common.data.blob.BlobEntity;
 import org.thingsboard.server.common.data.blob.BlobEntityInfo;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.kv.Aggregation;
-import org.thingsboard.server.common.data.kv.IntervalType;
 import org.thingsboard.server.common.data.kv.TsKvEntry;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.SortOrder;

@@ -78,8 +78,7 @@ public abstract class AbstractTbEntityService {
 
     @Autowired
     protected DbCallbackExecutorService dbExecutor;
-    @Autowired
-    @Lazy
+    @Autowired(required = false)
     protected TbLogEntityActionService logEntityActionService;
     @Autowired(required = false)
     protected EdgeService edgeService;

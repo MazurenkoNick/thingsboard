@@ -31,17 +31,18 @@
 package org.thingsboard.server.common.data.report;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.EntityId;
+import org.thingsboard.server.common.data.id.ReportTemplateId;
 import org.thingsboard.server.common.data.report.configuration.ReportTemplateConfig;
 
 @Data
 public class ReportRequest {
 
-    @NotNull
-    @Schema(description = "Json object representing the report template id.", requiredMode = Schema.RequiredMode.REQUIRED)
+    @Schema(description = "Json object representing the report template id.")
+    ReportTemplateId reportTemplateId;
+    @Schema(description = "Json object representing the report template config.")
     ReportTemplateConfig reportTemplateConfig;
     @Schema(description = "Json object representing the report customer id.", requiredMode = Schema.RequiredMode.REQUIRED)
     CustomerId customerId;

@@ -30,14 +30,49 @@
  */
 package org.thingsboard.server.report.service;
 
+import org.springframework.stereotype.Service;
 import org.thingsboard.server.common.data.job.task.ReportTask;
 import org.thingsboard.server.common.data.report.ReportData;
 import org.thingsboard.server.common.data.report.TbReportFormat;
+import org.thingsboard.server.common.data.report.configuration.ReportTemplateConfig;
+import org.thingsboard.server.report.datasource.ReportDataService;
+import org.thingsboard.server.report.datasource.ReportDataServiceContext;
 
-public interface ReportService {
+import java.util.EnumMap;
+import java.util.List;
+import java.util.Map;
 
-    ReportData generateReport(ReportTask task, TbReportCtx ctx) throws Exception;
+@Service
+public class TbReportService {
 
-    TbReportFormat getFormat();
+    private final Map<TbReportFormat, ReportService> reportServices = new EnumMap<>(TbReportFormat.class);
+    private final ReportDataService dataService;
+
+    private TbReportService(List<ReportService> reportServices, ReportDataService dataService) {
+        reportServices.forEach(service -> {
+            TbReportFormat format = service.getFormat();
+            if (format != null) {
+                this.reportServices.put(format, service);
+            }
+        });
+        this.dataService = dataService;
+    }
+
+    public ReportDataServiceContext newContext(ReportTask task) {
+        return dataService.newContext(task.getAccessToken());
+    }
+
+    public ReportData generateReport(ReportTask task, ReportDataServiceContext dataServiceContext) throws Exception {
+        ReportTemplateConfig configuration = task.getReportTemplateConfig();
+        TbReportCtx reportCtx = TbReportCtx.builder()
+                .tenantId(task.getTenantId())
+                .customerId(task.getCustomerId())
+                .configuration(configuration)
+                .dataServiceContext(dataServiceContext)
+                .accessToken(task.getAccessToken())
+                .accessTokenExpTs(task.getAccessTokenExpirationTs())
+                .build();
+        return reportServices.get(configuration.getFormat()).generateReport(task, reportCtx);
+    }
 
 }
