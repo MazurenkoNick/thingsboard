@@ -54,6 +54,7 @@ import org.thingsboard.server.common.data.permission.Operation;
 import org.thingsboard.server.common.data.report.ReportData;
 import org.thingsboard.server.common.data.report.ReportRequest;
 import org.thingsboard.server.common.data.report.ReportTemplate;
+import org.thingsboard.server.common.data.report.configuration.ReportTemplateConfig;
 import org.thingsboard.server.config.annotations.ApiOperation;
 import org.thingsboard.server.queue.util.TbCoreComponent;
 import org.thingsboard.server.report.service.TbReportService;
@@ -84,10 +85,14 @@ public class ReportController extends BaseController {
         TenantId tenantId = getTenantId();
         UserId userId = StringUtils.isNotEmpty(reportRequest.getUserId()) ? new UserId(UUID.fromString(reportRequest.getUserId())) : getCurrentUser().getId();
         AccessJwtToken accessToken = systemSecurityService.createUserAccessToken(tenantId, userId);
+        ReportTemplateConfig configuration = reportRequest.getReportTemplateConfig();
+        if (configuration == null) {
+            configuration = checkReportTemplateId(reportRequest.getReportTemplateId(), Operation.READ).getConfiguration();
+        }
 
         ReportTask reportTask = ReportTask.builder()
                 .tenantId(tenantId)
-                .reportTemplateConfig(reportRequest.getReportTemplateConfig())
+                .reportTemplateConfig(configuration)
                 .customerId(reportRequest.getCustomerId())
                 .entityId(reportRequest.getEntityId())
                 .timezone(reportRequest.getTimezone())
