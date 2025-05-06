@@ -28,40 +28,27 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.common.data.report.configuration.components;
+package org.thingsboard.server.common.data.report.configuration.style;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import org.thingsboard.server.common.data.report.configuration.DataSource;
-import org.thingsboard.server.common.data.report.configuration.style.Margins;
+import lombok.Getter;
 
-import java.io.Serializable;
-import java.util.List;
+public enum PageSize {
 
+    A4(595, 842),
+    LETTER(612, 792),
+    LEGAL(612, 1008),
+    A5(420, 595),
+    A3(842, 1191),
+    TABLOID(792, 1224);
 
-@JsonIgnoreProperties(ignoreUnknown = true)
-@JsonTypeInfo(
-        use = JsonTypeInfo.Id.NAME,
-        include = JsonTypeInfo.As.EXISTING_PROPERTY,
-        property = "type")
-@JsonSubTypes({
-        @JsonSubTypes.Type(value = HeadingComponent.class, name = "HEADING"),
-        @JsonSubTypes.Type(value = RichTextComponent.class, name = "RICH_TEXT"),
-        @JsonSubTypes.Type(value = EntityTableComponent.class, name = "ENTITY_TABLE"),
-        @JsonSubTypes.Type(value = PageBreakComponent.class, name = "PAGE_BREAK"),
-        @JsonSubTypes.Type(value = TimeseriesTableComponent.class, name = "TIME_SERIES_TABLE"),
-        @JsonSubTypes.Type(value = AlarmTableComponent.class, name = "ALARM_TABLE"),
-        @JsonSubTypes.Type(value = DashboardComponent.class, name = "DASHBOARD")
-})
-public interface ReportComponent extends Serializable {
+    @Getter
+    private final int width;
+    @Getter
+    private final int height;
 
-    Margins getMargins();
-
-    String getBackground();
-
-    List<DataSource> getDataSources();
-
-    ReportComponentType getType();
+    PageSize(int pageWidth, int pageHeight) {
+        this.width = pageWidth;
+        this.height = pageHeight;
+    }
 
 }

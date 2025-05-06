@@ -34,18 +34,15 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import org.thingsboard.server.common.data.report.configuration.DataSource;
 import org.thingsboard.server.common.data.report.configuration.style.Font;
 import org.thingsboard.server.common.data.report.configuration.style.TextAlignment;
 import org.thingsboard.server.common.data.report.configuration.style.VerticalAlignment;
-
-import java.util.List;
 
 @Schema
 @Data
 @EqualsAndHashCode
 @NoArgsConstructor
-public class HeadingComponent implements ReportComponent {
+public class HeadingComponent extends AbstractReportComponent {
 
     private String value;
     private Font font;
@@ -53,7 +50,6 @@ public class HeadingComponent implements ReportComponent {
     private TextAlignment textAlignment;
     private VerticalAlignment verticalAlignment;
     private Integer height;
-    private List<DataSource> dataSources;
 
     @Override
     public ReportComponentType getType() {

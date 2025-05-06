@@ -36,24 +36,16 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.thingsboard.server.common.data.dashboardreport.DashboardReportConfig;
-import org.thingsboard.server.common.data.report.configuration.DataSource;
-
-import java.util.List;
 
 @Schema
 @Data
 @EqualsAndHashCode
 @NoArgsConstructor
-public class DashboardComponent implements ReportComponent {
+public class DashboardComponent extends AbstractReportComponent implements ReportComponent {
 
     @NotNull
     @Schema(description = "Dashboard report configuration.")
     private DashboardReportConfig config;
-
-    @Override
-    public List<DataSource> getDataSources() {
-        return null;
-    }
 
     @Override
     public ReportComponentType getType() {

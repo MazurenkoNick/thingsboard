@@ -42,12 +42,7 @@ import java.util.List;
 @Data
 @EqualsAndHashCode
 @NoArgsConstructor
-public class PageBreakComponent implements ReportComponent {
-
-    @Override
-    public List<DataSource> getDataSources() {
-        return null;
-    }
+public class PageBreakComponent extends AbstractReportComponent implements ReportComponent {
 
     @Override
     public ReportComponentType getType() {

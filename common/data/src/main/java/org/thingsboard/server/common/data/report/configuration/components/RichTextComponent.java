@@ -34,18 +34,14 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import org.thingsboard.server.common.data.report.configuration.DataSource;
-
-import java.util.List;
 
 @Schema
 @Data
 @EqualsAndHashCode
 @NoArgsConstructor
-public class RichTextComponent implements ReportComponent {
+public class RichTextComponent extends AbstractReportComponent {
 
     private String value;
-    private List<DataSource> dataSources;
 
     @Override
     public ReportComponentType getType() {
