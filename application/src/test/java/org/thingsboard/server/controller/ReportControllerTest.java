@@ -87,7 +87,7 @@ public class ReportControllerTest extends AbstractControllerTest {
                                 new DataKey("name", "entityField", "NAME"),
                                 new DataKey("type", "entityField", "TYPE"),
                                 new DataKey("temperature", "timeseries", "TEMPERATURE"),
-                                new DataKey("active", "attribute", "ACTIVE")
+                                new DataKey("threshold", "attribute", "THRESHOLD")
                         ))
                         .build()))
                 .build();
@@ -114,24 +114,27 @@ public class ReportControllerTest extends AbstractControllerTest {
             devices.add(device);
 
             long temperature = (long) (Math.random() * 100);
-            String payload = "{\"temperature\":" + temperature + "}";
-            doPost("/api/plugins/telemetry/" + device.getId() + "/" + DataConstants.SHARED_SCOPE, payload, String.class, status().isOk());
+            long threshold = (long) (Math.random() * 100);
+            String telemetryPayload = "{\"temperature\":" + temperature + "}";
+            String attributePayload = "{\"threshold\":" + threshold + "}";
+            doPost("/api/plugins/telemetry/DEVICE/" + device.getId() + "/timeseries/" + DataConstants.SHARED_SCOPE, telemetryPayload, String.class, status().isOk());
+            doPost("/api/plugins/telemetry/" + device.getId() + "/" + DataConstants.SHARED_SCOPE, attributePayload, String.class, status().isOk());
             expectedReportLines.add(device.getCreatedTime() + "," +
                     device.getName() + "," +
                     device.getType() + "," +
                     temperature + "," +
-                    "true");
+                    threshold);
         }
 
         //generate report
         ReportRequest reportRequest = new ReportRequest();
-        reportRequest.setReportTemplateConfig(savedTemplate.getConfiguration());
+        reportRequest.setReportTemplateConfig(configuration);
         ResultActions resultActions = doPost("/api/v2/report/deprecated/test", reportRequest).andExpect(status().isOk());
         String csvReport = resultActions.andReturn().getResponse().getContentAsString();
 
         // Check headers and content
         String[] lines = csvReport.split("\r?\n");
-        assertThat(lines[0]).contains("CREATED TIME,NAME,TYPE,TEMPERATURE,ACTIVE");
+        assertThat(lines[0]).contains("CREATED TIME,NAME,TYPE,TEMPERATURE,THRESHOLD");
         for (int i = 0; i < devices.size(); i++) {
             assertThat(lines[i + 1]).contains(expectedReportLines.get(i));
         }
