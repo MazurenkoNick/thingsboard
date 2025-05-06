@@ -53,11 +53,6 @@ public class ReportTask extends Task<ReportTaskResult> {
     private long accessTokenExpirationTs;
 
     @Override
-    public Object getKey() {
-        return "";
-    }
-
-    @Override
     public ReportTaskResult toFailed(Throwable error) {
         return ReportTaskResult.failed(this, error);
     }

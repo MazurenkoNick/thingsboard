@@ -33,10 +33,11 @@ package org.thingsboard.server.report.service;
 import com.google.common.util.concurrent.ListenableFuture;
 import lombok.Builder;
 import lombok.Data;
-import org.thingsboard.rest.client.RestClient;
 import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.report.configuration.ReportTemplateConfig;
+import org.thingsboard.server.report.datasource.ReportDataService;
+import org.thingsboard.server.report.datasource.ReportDataServiceContext;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -49,7 +50,7 @@ public class TbReportCtx {
     private final TenantId tenantId;
     private final CustomerId customerId;
     private final ReportTemplateConfig configuration;
-    private final RestClient restClient;
+    private final ReportDataServiceContext dataServiceContext;
     private final String accessToken;
     private final long accessTokenExpTs;
 
@@ -58,11 +59,11 @@ public class TbReportCtx {
 
     @Builder
     public TbReportCtx(TenantId tenantId, CustomerId customerId, ReportTemplateConfig configuration,
-                       RestClient restClient, String accessToken, long accessTokenExpTs) {
+                       ReportDataServiceContext dataServiceContext, String accessToken, long accessTokenExpTs) {
         this.tenantId = tenantId;
         this.customerId = customerId;
         this.configuration = configuration;
-        this.restClient = restClient;
+        this.dataServiceContext = dataServiceContext;
         this.accessToken = accessToken;
         this.accessTokenExpTs = accessTokenExpTs;
     }

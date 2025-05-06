@@ -30,11 +30,8 @@
  */
 package org.thingsboard.server.report;
 
-import lombok.Setter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.RestTemplate;
-import org.thingsboard.rest.client.RestClient;
 import org.thingsboard.server.common.data.blob.BlobEntity;
 import org.thingsboard.server.common.data.blob.BlobEntityInfo;
 import org.thingsboard.server.common.data.job.JobType;
@@ -45,6 +42,8 @@ import org.thingsboard.server.common.data.report.TbReportFormat;
 import org.thingsboard.server.common.data.report.configuration.ReportTemplateConfig;
 import org.thingsboard.server.queue.task.TaskProcessor;
 import org.thingsboard.server.queue.util.TbReportComponent;
+import org.thingsboard.server.report.datasource.ReportDataService;
+import org.thingsboard.server.report.datasource.ReportDataServiceContext;
 import org.thingsboard.server.report.service.ReportService;
 import org.thingsboard.server.report.service.TbReportCtx;
 
@@ -58,33 +57,31 @@ import java.util.Map;
 public class ReportTaskProcessor extends TaskProcessor<ReportTask, ReportTaskResult> {
 
     private final Map<TbReportFormat, ReportService> reportServices = new EnumMap<>(TbReportFormat.class);
+    private final ReportDataService dataService;
 
     @Value("${reports.generation_timeout_ms:120000}")
     private int timeoutMs;
 
-    private ReportTaskProcessor(List<ReportService> reportServices) {
+    private ReportTaskProcessor(List<ReportService> reportServices, ReportDataService dataService) {
         reportServices.forEach(service -> {
             TbReportFormat format = service.getFormat();
             if (format != null) {
                 this.reportServices.put(format, service);
             }
         });
+        this.dataService = dataService;
     }
-
-    @Setter
-    @Value("${service.tb_core.base_url:http://localhost:${server.port}}") // for monolith - sending request to itself
-    private String tbCoreBaseUrl;
 
     @Override
     public ReportTaskResult process(ReportTask task) throws Exception {
         ReportTemplateConfig configuration = task.getReportTemplateConfig();
         ReportData reportData;
-        try (RestClient restClient = new RestClient(new RestTemplate(), tbCoreBaseUrl, task.getAccessToken())) {
+        try (ReportDataServiceContext dataServiceContext = dataService.newContext(task.getAccessToken())) {
             TbReportCtx reportCtx = TbReportCtx.builder()
                     .tenantId(task.getTenantId())
                     .customerId(task.getReportRequest().getCustomerId())
                     .configuration(configuration)
-                    .restClient(restClient)
+                    .dataServiceContext(dataServiceContext)
                     .accessToken(task.getAccessToken())
                     .accessTokenExpTs(task.getAccessTokenExpirationTs())
                     .build();
@@ -97,7 +94,7 @@ public class ReportTaskProcessor extends TaskProcessor<ReportTask, ReportTaskRes
             blobEntity.setContentType(reportData.getContentType());
             blobEntity.setName(reportData.getName());
             blobEntity.setType(task.isTestReport() ? "test_report" : "report");
-            BlobEntityInfo savedBlobEntity = restClient.createBlobEntity(blobEntity);
+            BlobEntityInfo savedBlobEntity = dataService.createBlobEntity(blobEntity, dataServiceContext);
             return ReportTaskResult.success(savedBlobEntity.getId(), reportData.getName());
         }
     }

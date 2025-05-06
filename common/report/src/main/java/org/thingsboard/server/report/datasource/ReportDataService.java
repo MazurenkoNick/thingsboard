@@ -28,31 +28,41 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.service.telemetry;
+package org.thingsboard.server.report.datasource;
 
-import com.google.common.util.concurrent.ListenableFuture;
-import org.thingsboard.server.common.data.exception.ThingsboardException;
+import org.thingsboard.server.common.data.blob.BlobEntity;
+import org.thingsboard.server.common.data.blob.BlobEntityInfo;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.kv.Aggregation;
 import org.thingsboard.server.common.data.kv.IntervalType;
 import org.thingsboard.server.common.data.kv.TsKvEntry;
-import org.thingsboard.server.service.security.model.SecurityUser;
+import org.thingsboard.server.common.data.page.PageData;
+import org.thingsboard.server.common.data.page.SortOrder;
+import org.thingsboard.server.common.data.query.AlarmCountQuery;
+import org.thingsboard.server.common.data.query.AlarmData;
+import org.thingsboard.server.common.data.query.AlarmDataQuery;
+import org.thingsboard.server.common.data.query.EntityCountQuery;
+import org.thingsboard.server.common.data.query.EntityData;
+import org.thingsboard.server.common.data.query.EntityDataQuery;
 
 import java.util.List;
 
-public interface TbTelemetryService {
+public interface ReportDataService {
 
-    ListenableFuture<List<TsKvEntry>> getTimeseries(EntityId entityId,
-                                                   List<String> keys,
-                                                   Long startTs,
-                                                   Long endTs,
-                                                   IntervalType intervalType,
-                                                   Long interval,
-                                                   String timeZone,
-                                                   Integer limit,
-                                                   Aggregation agg,
-                                                   String orderBy,
-                                                   Boolean useStrictDataTypes,
-                                                   SecurityUser currentUser) throws ThingsboardException;
+    ReportDataServiceContext newContext(String accessToken);
+
+    PageData<EntityData> findEntityDataByQuery(EntityDataQuery query, ReportDataServiceContext ctx);
+
+    Long countEntitiesByQuery(EntityCountQuery query, ReportDataServiceContext ctx);
+
+    PageData<AlarmData> findAlarmDataByQuery(AlarmDataQuery query, ReportDataServiceContext ctx);
+
+    Long countAlarmsByQuery(AlarmCountQuery query, ReportDataServiceContext ctx);
+
+    List<TsKvEntry> getTimeseries(EntityId entityId, List<String> keys, Long startTs, Long endTs,
+                                  Long interval, Aggregation agg, SortOrder.Direction sortOrder,
+                                  Integer limit, boolean useStrictDataTypes, ReportDataServiceContext ctx);
+
+    BlobEntityInfo createBlobEntity(BlobEntity blobEntity, ReportDataServiceContext ctx);
 
 }

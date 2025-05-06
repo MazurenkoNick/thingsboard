@@ -31,8 +31,8 @@
 package org.thingsboard.server.report.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.thingsboard.common.util.JacksonUtil;
-import org.thingsboard.rest.client.RestClient;
 import org.thingsboard.server.common.data.id.DeviceId;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.kv.TsKvEntry;
@@ -50,7 +50,7 @@ import org.thingsboard.server.common.data.report.configuration.components.Timese
 import org.thingsboard.server.common.data.report.configuration.timewindow.History;
 import org.thingsboard.server.common.data.report.configuration.timewindow.TimeIntervalCalculator;
 import org.thingsboard.server.common.data.report.configuration.timewindow.TimeWindowConfiguration;
-import org.thingsboard.server.common.data.util.ReflectionUtils;
+import org.thingsboard.server.report.datasource.ReportDataService;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -58,7 +58,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
 import static org.thingsboard.server.common.data.report.configuration.timewindow.TimeIntervalCalculator.getTimeRange;
 import static org.thingsboard.server.common.data.util.ReportQueryUtils.toAlarmDataQuery;
@@ -68,22 +67,24 @@ import static org.thingsboard.server.report.util.JasperReportBuilder.getSingleDa
 
 public abstract class AbstractReportService implements ReportService {
 
+    @Autowired
+    protected ReportDataService dataService;
+
     protected List<EntityData> fetchEntities(TbReportCtx ctx, DataSource dataSource) {
         ReportTemplateConfig configuration = ctx.getConfiguration();
-
-        final RestClient restClient = ctx.getRestClient();
         return switch (dataSource.getType()) {
-            case "device" -> fetchEntityDataByQuery(pageLink -> toSingleEntityQuery(dataSource, configuration, pageLink), restClient);
-            case "entity" -> fetchEntityDataByQuery(pageLink -> toEntityDataQuery(dataSource, configuration, pageLink), restClient);
+            case "device" -> fetchEntityDataByQuery(pageLink -> toSingleEntityQuery(dataSource, configuration, pageLink), ctx);
+            case "entity" -> fetchEntityDataByQuery(pageLink -> toEntityDataQuery(dataSource, configuration, pageLink), ctx);
             default -> throw new IllegalArgumentException("Unknown data source type: " + dataSource.getType());
         };
     }
 
-    protected List<EntityData> fetchEntityDataByQuery(Function<PageLink, EntityDataQuery> querySupplier, RestClient restClient) {
-        return StreamSupport.stream(
-                new PageDataIterable<>(link -> restClient.findEntityDataByQuery(querySupplier.apply(link)), 1024).spliterator(),
-                false
-        ).toList();
+    protected List<EntityData> fetchEntityDataByQuery(Function<PageLink, EntityDataQuery> querySupplier, TbReportCtx ctx) {
+        List<EntityData> data = new ArrayList<>();
+        for (EntityData entityData : new PageDataIterable<>(link -> dataService.findEntityDataByQuery(querySupplier.apply(link), ctx.getDataServiceContext()), 1024)) {
+            data.add(entityData);
+        }
+        return data;
     }
 
     protected List<Map<String, ?>> buildEntityDataSource(TbReportCtx ctx, DataSource dataSource) {
@@ -110,17 +111,19 @@ public abstract class AbstractReportService implements ReportService {
                 .toList();
 
         // todo dasha make sort order configurable (?)
-        List<TsKvEntry> result = ctx.getRestClient().getTimeseries(entityId, keys, historyConf.getInterval(), timeWindowConf.getAggregation().getType(),
-                SortOrder.Direction.DESC, timeRange.startTs, timeRange.endTs, timeWindowConf.getAggregation().getLimit(), false);
+        List<TsKvEntry> result = dataService.getTimeseries(entityId, keys, timeRange.startTs, timeRange.endTs,
+                historyConf.getInterval(), timeWindowConf.getAggregation().getType(), SortOrder.Direction.DESC,
+                timeWindowConf.getAggregation().getLimit(), false, ctx.getDataServiceContext());
         return collectTsData(result);
     }
 
     protected List<Map<String, ?>> buildAlarmDataSource(TbReportCtx ctx, AlarmTableComponent component) {
         List<String> keyList = component.getAlarmSource().getDataKeys().stream().map(DataKey::getName).toList();
-        return StreamSupport.stream(
-                new PageDataIterable<>(link -> ctx.getRestClient().findAlarmDataByQuery(toAlarmDataQuery(component, ctx.getConfiguration(), link)), 1024).spliterator(),
-                false
-        ).map(alarmData -> toMapData(alarmData, keyList)).collect(Collectors.toList());
+        List<Map<String, ?>> data = new ArrayList<>();
+        for (AlarmData alarmData : new PageDataIterable<>(link -> dataService.findAlarmDataByQuery(toAlarmDataQuery(component, ctx.getConfiguration(), link), ctx.getDataServiceContext()), 1024)) {
+            data.add(toMapData(alarmData, keyList));
+        }
+        return data;
     }
 
     protected Map<String, ?> toMap(EntityData entityData) {

@@ -44,7 +44,6 @@ import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 import net.sf.jasperreports.engine.data.JRMapCollectionDataSource;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.springframework.stereotype.Service;
-import org.thingsboard.rest.client.RestClient;
 import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.dashboardreport.DashboardReportData;
 import org.thingsboard.server.common.data.exception.ThingsboardErrorCode;
@@ -54,18 +53,14 @@ import org.thingsboard.server.common.data.job.task.ReportTask;
 import org.thingsboard.server.common.data.query.EntityData;
 import org.thingsboard.server.common.data.report.ReportData;
 import org.thingsboard.server.common.data.report.ReportRequest;
-import org.thingsboard.server.common.data.report.ReportTemplate;
 import org.thingsboard.server.common.data.report.TbReportFormat;
 import org.thingsboard.server.common.data.report.configuration.DataSource;
-import org.thingsboard.server.common.data.report.configuration.EntityAlias;
-import org.thingsboard.server.common.data.report.configuration.Filter;
 import org.thingsboard.server.common.data.report.configuration.PdfReportTemplateConfig;
 import org.thingsboard.server.common.data.report.configuration.ReportTemplateConfig;
 import org.thingsboard.server.common.data.report.configuration.components.AlarmTableComponent;
 import org.thingsboard.server.common.data.report.configuration.components.DashboardComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
 import org.thingsboard.server.common.data.report.configuration.components.TimeseriesTableComponent;
-import org.thingsboard.server.queue.util.TbReportComponent;
 import org.thingsboard.server.report.util.JasperReportBuilder;
 import org.thingsboard.server.report.util.WebReportClient;
 
@@ -74,7 +69,6 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.TimeZone;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
@@ -86,7 +80,6 @@ import static org.thingsboard.server.common.data.util.ReportQueryUtils.toEntityC
 import static org.thingsboard.server.report.util.JasperReportBuilder.getSingleDataSource;
 import static org.thingsboard.server.report.util.ReportUtils.prepareReportName;
 
-@TbReportComponent
 @Service
 @Slf4j
 @RequiredArgsConstructor
@@ -157,8 +150,7 @@ public class PdfReportService extends AbstractReportService {
         return switch (component.getType()) {
             case TIME_SERIES_TABLE ->
                     new JRMapCollectionDataSource(buildTsDataSource(ctx, ((TimeseriesTableComponent) component), entityData.getEntityId()));
-            case ALARM_TABLE ->
-                    new JRMapCollectionDataSource(buildAlarmDataSource(ctx, ((AlarmTableComponent) component)));
+            case ALARM_TABLE -> new JRMapCollectionDataSource(buildAlarmDataSource(ctx, ((AlarmTableComponent) component)));
             case DASHBOARD -> buildDashboardDataSource(ctx, ((DashboardComponent) component));
             default -> buildMultipleDataSource(ctx, component.getDataSources());
         };
@@ -193,14 +185,12 @@ public class PdfReportService extends AbstractReportService {
 
     private Collection<Map<String, ?>> buildSingleDataSource(TbReportCtx ctx, DataSource dataSource) {
         ReportTemplateConfig configuration = ctx.getConfiguration();
-        final RestClient restClient = ctx.getRestClient();
         return switch (dataSource.getType()) {
-            case "device", "entity" ->
-                    fetchEntities(ctx, dataSource).stream().map(this::toMap).collect(Collectors.toList());
+            case "device", "entity" -> fetchEntities(ctx, dataSource).stream().map(this::toMap).collect(Collectors.toList());
             case "entityCount" ->
-                    List.of(Map.of("count", restClient.countEntitiesByQuery(toEntityCountQuery(dataSource, configuration))));
+                    List.of(Map.of("count", dataService.countEntitiesByQuery(toEntityCountQuery(dataSource, configuration), ctx.getDataServiceContext())));
             case "alarmCount" ->
-                    List.of(Map.of("count", restClient.countAlarmsByQuery(toAlarmCountQuery(dataSource, configuration))));
+                    List.of(Map.of("count", dataService.countAlarmsByQuery(toAlarmCountQuery(dataSource, configuration), ctx.getDataServiceContext())));
             default -> throw new IllegalArgumentException("Unknown data source type: " + dataSource.getType());
         };
     }

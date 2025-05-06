@@ -66,7 +66,6 @@ public class ReportControllerTest extends AbstractControllerTest {
 
     @Before
     public void beforeTest() throws Exception {
-        reportTaskProcessor.setTbCoreBaseUrl("http://localhost:" + serverPort);
         loginTenantAdmin();
     }
 
@@ -126,7 +125,7 @@ public class ReportControllerTest extends AbstractControllerTest {
 
         //generate report
         ReportRequest reportRequest = new ReportRequest();
-        reportRequest.setTemplateId(savedTemplate.getId());
+        reportRequest.setReportTemplateConfig(savedTemplate.getConfiguration());
         ResultActions resultActions = doPost("/api/v2/report/deprecated/test", reportRequest).andExpect(status().isOk());
         String csvReport = resultActions.andReturn().getResponse().getContentAsString();
 

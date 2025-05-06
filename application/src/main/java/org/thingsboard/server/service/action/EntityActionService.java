@@ -34,6 +34,8 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.server.cluster.TbClusterService;
@@ -89,12 +91,12 @@ public class EntityActionService {
     }
 
     public <E extends HasName, I extends EntityId> void pushEntityActionToRuleEngine(I entityId, E entity, User user, TenantId tenantId, CustomerId customerId,
-                                                                                      ActionType actionType, Object... additionalInfo) {
+                                                                                     ActionType actionType, Object... additionalInfo) {
         Optional<TbMsgType> msgType = actionType.getRuleEngineMsgType();
         if (msgType.isPresent()) {
             try {
                 TbMsgMetaData metaData = new TbMsgMetaData();
-                if(user != null) {
+                if (user != null) {
                     metaData.putValue("userId", user.getId().toString());
                     metaData.putValue("userName", user.getName());
                     metaData.putValue("userEmail", user.getEmail());

@@ -40,7 +40,6 @@ import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.job.task.ReportTask;
 import org.thingsboard.server.common.data.report.ReportData;
 import org.thingsboard.server.common.data.report.ReportRequest;
-import org.thingsboard.server.common.data.report.ReportTemplate;
 import org.thingsboard.server.common.data.report.TbReportFormat;
 import org.thingsboard.server.common.data.report.configuration.CsvReportTemplateConfig;
 import org.thingsboard.server.common.data.report.configuration.DataKey;
@@ -48,7 +47,6 @@ import org.thingsboard.server.common.data.report.configuration.components.AlarmT
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
 import org.thingsboard.server.common.data.report.configuration.components.TableReportComponent;
 import org.thingsboard.server.common.data.report.configuration.components.TimeseriesTableComponent;
-import org.thingsboard.server.queue.util.TbReportComponent;
 
 import java.util.Date;
 import java.util.List;
@@ -60,7 +58,6 @@ import static org.thingsboard.server.report.util.JasperReportBuilder.getSingleDa
 import static org.thingsboard.server.report.util.ReportUtils.prepareReportName;
 
 @Service
-@TbReportComponent
 @RequiredArgsConstructor
 @Slf4j
 public class CsvReportService extends AbstractReportService {
@@ -95,11 +92,10 @@ public class CsvReportService extends AbstractReportService {
     }
 
     private static List<DataKey> getTableHeaders(TableReportComponent component) {
-        List<DataKey> headers = component.getDataSources().get(0).getDataKeys();
-        return headers;
+        return component.getDataSources().get(0).getDataKeys();
     }
 
-    private List<Map<String, ?>> buildDataSource(TbReportCtx ctx, ReportComponent component) throws ThingsboardException {
+    private List<Map<String, ?>> buildDataSource(TbReportCtx ctx, ReportComponent component) {
         return switch (component.getType()) {
             case TIME_SERIES_TABLE -> buildTsDataSource(ctx, ((TimeseriesTableComponent) component));
             case ALARM_TABLE -> buildAlarmDataSource(ctx, ((AlarmTableComponent) component));

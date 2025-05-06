@@ -108,11 +108,7 @@ public class BlobEntityController extends BaseController {
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN')")
     @PostMapping(value = "/blobEntity")
     public BlobEntityInfo createBlobEntity(@RequestBody BlobEntity blobEntity) throws ThingsboardException {
-        if (blobEntity.getId() != null) {
-            throw new IllegalArgumentException("Blob entity can't be updated");
-        }
-        accessControlService.checkPermission(getCurrentUser(), Resource.BLOB_ENTITY, Operation.CREATE, null, blobEntity);
-        return new BlobEntityInfo(blobEntityService.saveBlobEntity(blobEntity));
+        return tbBlobService.create(blobEntity, getCurrentUser());
     }
 
     @ApiOperation(value = "Get Blob Entity With Customer Info (getBlobEntityInfoById)",
