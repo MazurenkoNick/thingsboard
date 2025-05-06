@@ -39,4 +39,5 @@ public class Font {
      private Float size;
      private FontWeight weight;
      private FontStyle style;
+     private String family;
 }
