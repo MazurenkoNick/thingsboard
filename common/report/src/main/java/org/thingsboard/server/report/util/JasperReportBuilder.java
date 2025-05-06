@@ -49,7 +49,10 @@ import net.sf.jasperreports.engine.design.JasperDesign;
 import net.sf.jasperreports.engine.type.BreakTypeEnum;
 import net.sf.jasperreports.engine.type.HorizontalTextAlignEnum;
 import net.sf.jasperreports.engine.type.ModeEnum;
+import net.sf.jasperreports.engine.type.PositionTypeEnum;
 import net.sf.jasperreports.engine.type.ScaleImageEnum;
+import net.sf.jasperreports.engine.type.SplitTypeEnum;
+import net.sf.jasperreports.engine.type.TextAdjustEnum;
 import net.sf.jasperreports.engine.type.VerticalTextAlignEnum;
 import net.sf.jasperreports.engine.type.WhenNoDataTypeEnum;
 import org.thingsboard.server.common.data.StringUtils;
@@ -136,8 +139,10 @@ public class JasperReportBuilder {
         JRDesignTextField textField = new JRDesignTextField();
         textField.setX(0);
         textField.setY(0);
+        textField.setHeight(1);
         textField.setWidth(500);
-        textField.setHeight(20);
+        textField.setPositionType(PositionTypeEnum.FLOAT);
+        textField.setTextAdjust(TextAdjustEnum.STRETCH_HEIGHT);
 
         // Set text color if provided
         if (component.getColor() != null) {
@@ -159,8 +164,6 @@ public class JasperReportBuilder {
                 textField.setFontSize(fontSize);
             }
         }
-        int fieldHeight = calculateFieldHeight(font);
-        textField.setHeight(fieldHeight);
 
         // Set horizontal and vertical alignment
         TextAlignment textAlignment = component.getTextAlignment();
@@ -178,19 +181,12 @@ public class JasperReportBuilder {
         textField.setExpression(expression);
 
         JRDesignBand detailBand = new JRDesignBand();
-        detailBand.setHeight(fieldHeight);
+        detailBand.setHeight(1);
+        detailBand.setSplitType(SplitTypeEnum.STRETCH);
         detailBand.addElement(textField);
 
         JRDesignSection detailSection = (JRDesignSection) jasperDesign.getDetailSection();
         detailSection.addBand(detailBand);
-    }
-
-    private int calculateFieldHeight(Font font) {
-        if (font == null || font.getSize() == null) {
-            return DEFAULT_TEXT_HEIGHT;
-        }
-        float lineSpacingFactor = 1.3f; // safe default
-        return (int) Math.ceil(font.getSize() * lineSpacingFactor);
     }
 
     public void addPageHeader(HeaderFooter header) {
@@ -262,7 +258,9 @@ public class JasperReportBuilder {
         htmlField.setX(0);
         htmlField.setY(0);
         htmlField.setWidth(500);
-        htmlField.setHeight(100);
+        htmlField.setHeight(1);
+        htmlField.setPositionType(PositionTypeEnum.FLOAT);
+        htmlField.setTextAdjust(TextAdjustEnum.STRETCH_HEIGHT);
         htmlField.setMarkup("html");
 
         JRDesignExpression expression = new JRDesignExpression();
@@ -270,7 +268,8 @@ public class JasperReportBuilder {
         htmlField.setExpression(expression);
 
         JRDesignBand detailBand = new JRDesignBand();
-        detailBand.setHeight(100);
+        detailBand.setHeight(1);
+        detailBand.setSplitType(SplitTypeEnum.STRETCH);
         detailBand.addElement(htmlField);
 
         JRDesignSection detailSection = (JRDesignSection) jasperDesign.getDetailSection();

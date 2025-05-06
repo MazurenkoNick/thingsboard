@@ -32,6 +32,7 @@
 import { Datasource } from '@shared/models/widget.models';
 import { deepClone } from '@core/utils';
 import { alignment, Font } from '@shared/models/widget-settings.models';
+import { BlockMargins } from '@shared/models/report.models';
 
 export enum ReportComponentType {
   HEADING = 'HEADING',
@@ -45,6 +46,8 @@ export enum ReportComponentType {
 }
 
 export interface ReportComponentConfig {
+  background?: string;
+  margins?: BlockMargins;
   dataSources: Datasource[];
   type: ReportComponentType;
 }

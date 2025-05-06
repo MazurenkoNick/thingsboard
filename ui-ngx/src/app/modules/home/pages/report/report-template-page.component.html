@@ -138,7 +138,8 @@
     </mat-drawer>
     <mat-drawer-content class="tb-report-template-content">
       <div class="tb-report-template-layout">
-        <div class="tb-report-components-container">
+        <div class="tb-report-components-container" [style.width.in]="pageWidthInch"
+                                                    [style.min-width.in]="pageWidthInch">
           <div class="flex flex-row justify-between">
             <tb-toggle-select [(ngModel)]="headerToggleValue">
               <tb-toggle-option value="header">{{ 'report-template.header' | translate }}</tb-toggle-option>
@@ -172,7 +173,8 @@
             (componentEdit)="editReportComponent($event)">
           </tb-report-components>
         </div>
-        <div class="tb-report-components-container">
+        <div class="tb-report-components-container" [style.width.in]="pageWidthInch"
+                                                    [style.min-width.in]="pageWidthInch">
           <div class="tb-report-components-container-title" translate>report-template.content</div>
           <tb-report-components
             [reportComponents]="reportTemplate.configuration.components"
@@ -180,7 +182,8 @@
             (componentEdit)="editReportComponent($event)">
           </tb-report-components>
         </div>
-        <div class="tb-report-components-container">
+        <div class="tb-report-components-container" [style.width.in]="pageWidthInch"
+                                                    [style.min-width.in]="pageWidthInch">
           <div class="flex flex-row justify-between">
             <tb-toggle-select [(ngModel)]="footerToggleValue">
               <tb-toggle-option value="footer">{{ 'report-template.footer' | translate }}</tb-toggle-option>

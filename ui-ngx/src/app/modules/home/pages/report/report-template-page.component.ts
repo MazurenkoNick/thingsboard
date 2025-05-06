@@ -143,6 +143,8 @@ export class ReportTemplatePageComponent extends PageComponent
 
   reportComponentContext: ReportComponentContext;
 
+  pageWidthInch = 8.26;
+
   // @ts-ignore
   private stateController: IStateController = {
     getStateParams: (): StateParams => ({})

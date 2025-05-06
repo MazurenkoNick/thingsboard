@@ -155,7 +155,32 @@ export interface ReportTemplateSettings {
   description?: string;
 }
 
+export enum PageSize {
+  A4 = 'A4',
+  LETTER = 'LETTER',
+  LEGAL = 'LEGAL',
+  A5 = 'A5',
+  A3 = 'A3',
+  TABLOID = 'TABLOID'
+}
+
+export enum PageOrientation {
+  PORTRAIT = 'PORTRAIT',
+  LANDSCAPE = 'LANDSCAPE'
+}
+
+export interface BlockMargins {
+  left: number;
+  right: number;
+  top: number;
+  bottom: number;
+}
+
 export interface PdfReportTemplateConfig extends AbstractReportTemplateConfig {
+  pageSize: PageSize;
+  pageOrientation: PageOrientation;
+  pageMargins: BlockMargins;
+  pageBackground?: string;
   entityAliases: EntityAlias[];
   filters: ReportFilter[];
   header: HeaderFooter;
@@ -186,6 +211,14 @@ export const defaultReportTemplate: ReportTemplate<PdfReportTemplateConfig> = {
   type: ReportTemplateType.REPORT,
   configuration: {
     format: TbReportFormat.PDF,
+    pageSize: PageSize.A4,
+    pageOrientation: PageOrientation.PORTRAIT,
+    pageMargins: {
+      left: 20,
+      right: 20,
+      top: 20,
+      bottom: 20
+    },
     namePattern: 'report-%d{yyyy-MM-dd_HH:mm:ss}',
     header: {
       enabled: true,
