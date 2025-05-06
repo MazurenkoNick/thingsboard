@@ -250,9 +250,8 @@ public class JasperReportBuilder {
         htmlField.setHeight(100);
         htmlField.setMarkup("html");
 
-        // Set the text content as a string literal
         JRDesignExpression expression = new JRDesignExpression();
-        expression.setText("\"" + richText + "\"");
+        expression.setText(escapeHtmlForJasperExpression(richText));
         htmlField.setExpression(expression);
 
         JRDesignBand detailBand = new JRDesignBand();
@@ -261,6 +260,13 @@ public class JasperReportBuilder {
 
         JRDesignSection detailSection = (JRDesignSection) jasperDesign.getDetailSection();
         detailSection.addBand(detailBand);
+    }
+
+    private String escapeHtmlForJasperExpression(String rawHtml) {
+        String escaped = rawHtml
+                .replace("\\", "\\\\")
+                .replace("\"", "\\\"");
+        return "\"" + escaped + "\"";
     }
 
     public JRDesignField createField(String name, Class<?> type) {
