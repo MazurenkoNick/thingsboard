@@ -63,7 +63,9 @@ import java.util.List;
 @Service
 public class LocalReportDataService implements ReportDataService {
 
+    @Lazy
     private final EntityQueryService entityQueryService;
+    @Lazy
     private final TbTelemetryService tbTelemetryService;
     @Autowired
     @Lazy

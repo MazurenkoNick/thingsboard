@@ -66,7 +66,7 @@ public class CsvReportService extends AbstractReportService {
         log.trace("[{}] Executing generateReport, reportRequest [{}]", tenantId, task);
         CsvReportTemplateConfig configuration = (CsvReportTemplateConfig) task.getReportTemplateConfig();
 
-        TableReportComponent component = configuration.getComponent();
+        ReportComponent component = configuration.getComponent();
         List<DataKey> headers = getTableHeaders(component);
         List<Map<String, ?>> dataSource = buildDataSource(ctx, component);
 
@@ -83,7 +83,7 @@ public class CsvReportService extends AbstractReportService {
                 .build();
     }
 
-    private static List<DataKey> getTableHeaders(TableReportComponent component) {
+    private static List<DataKey> getTableHeaders(ReportComponent component) {
         return component.getDataSources().get(0).getDataKeys();
     }
 

@@ -77,8 +77,8 @@ public class ReportControllerTest extends AbstractControllerTest {
         String devicesAliasId = StringUtils.randomAlphabetic(10);
         EntityAlias entityAlias = buildDevicesEntityAlias(devicesAliasId);
 
-        EntityTableComponent tableComponent = EntityTableComponent.builder()
-                .dataSources(List.of(DataSource.builder()
+        EntityTableComponent tableComponent = new EntityTableComponent();
+        tableComponent.setDataSources(List.of(DataSource.builder()
                         .type("entity")
                         .entityAliasId(devicesAliasId)
                         .dataKeys(List.of(
@@ -88,8 +88,7 @@ public class ReportControllerTest extends AbstractControllerTest {
                                 new DataKey("temperature", "timeseries", "TEMPERATURE"),
                                 new DataKey("threshold", "attribute", "THRESHOLD")
                         ))
-                        .build()))
-                .build();
+                        .build()));
 
         CsvReportTemplateConfig configuration = new CsvReportTemplateConfig();
         configuration.setEntityAlias(entityAlias);
@@ -143,8 +142,8 @@ public class ReportControllerTest extends AbstractControllerTest {
         String devicesAliasId = StringUtils.randomAlphabetic(10);
         EntityAlias entityAlias = buildDevicesEntityAlias(devicesAliasId);
 
-        EntityTableComponent tableComponent = EntityTableComponent.builder()
-                .dataSources(List.of(DataSource.builder()
+        EntityTableComponent tableComponent = new EntityTableComponent();
+        tableComponent.setDataSources(List.of(DataSource.builder()
                         .type("entity")
                         .entityAliasId(devicesAliasId)
                         .dataKeys(List.of(
@@ -154,8 +153,7 @@ public class ReportControllerTest extends AbstractControllerTest {
                                 new DataKey("temperature", "timeseries", "TEMPERATURE"),
                                 new DataKey("threshold", "attribute", "THRESHOLD")
                         ))
-                        .build()))
-                .build();
+                        .build()));
 
         CsvReportTemplateConfig configuration = new CsvReportTemplateConfig();
         configuration.setEntityAlias(entityAlias);

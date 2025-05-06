@@ -34,18 +34,14 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import org.thingsboard.server.common.data.report.configuration.DataSource;
 import org.thingsboard.server.common.data.report.configuration.timewindow.TimeWindowConfiguration;
-
-import java.util.List;
 
 @Schema
 @Data
 @EqualsAndHashCode
 @NoArgsConstructor
-public class TimeseriesTableComponent implements TableReportComponent {
+public class TimeseriesTableComponent extends AbstractReportComponent implements TableReportComponent {
 
-    private List<DataSource> dataSources;
     private TimeWindowConfiguration timewindow;
 
     @Override

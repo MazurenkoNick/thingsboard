@@ -41,6 +41,7 @@ import net.sf.jasperreports.engine.design.JRDesignExpression;
 import net.sf.jasperreports.engine.design.JRDesignField;
 import net.sf.jasperreports.engine.design.JRDesignImage;
 import net.sf.jasperreports.engine.design.JRDesignParameter;
+import net.sf.jasperreports.engine.design.JRDesignRectangle;
 import net.sf.jasperreports.engine.design.JRDesignSection;
 import net.sf.jasperreports.engine.design.JRDesignStaticText;
 import net.sf.jasperreports.engine.design.JRDesignSubreport;
@@ -71,6 +72,8 @@ import org.thingsboard.server.common.data.report.configuration.components.Timese
 import org.thingsboard.server.common.data.report.configuration.style.Font;
 import org.thingsboard.server.common.data.report.configuration.style.FontStyle;
 import org.thingsboard.server.common.data.report.configuration.style.FontWeight;
+import org.thingsboard.server.common.data.report.configuration.style.Margins;
+import org.thingsboard.server.common.data.report.configuration.style.PageSize;
 import org.thingsboard.server.common.data.report.configuration.style.TextAlignment;
 import org.thingsboard.server.common.data.report.configuration.style.VerticalAlignment;
 
@@ -79,38 +82,45 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static org.thingsboard.server.common.data.report.configuration.style.PageSize.A4;
+
 @Data
 public class JasperReportBuilder {
 
-    private static final int DEFAULT_TEXT_HEIGHT = 20;
+    private static final int DEFAULT_PAGE_MARGIN_SIZE = 20;
+    private static final int DEFAULT_COMPONENT_MARGIN_SIZE = 0;
+
     private JasperDesign jasperDesign;
     private int usablePageWidth;
+    private int usablePageHeight;
 
     public JasperReportBuilder(PdfReportTemplateConfig configuration) {
         this.jasperDesign = new JasperDesign();
         this.jasperDesign.setName("MainReport");
-        this.jasperDesign.setPageWidth(595);
-        this.jasperDesign.setPageHeight(842);
-        this.jasperDesign.setColumnWidth(515);
-        this.jasperDesign.setLeftMargin(40);
-        this.jasperDesign.setRightMargin(40);
-        this.jasperDesign.setTopMargin(50);
-        this.jasperDesign.setBottomMargin(50);
         this.jasperDesign.setWhenNoDataType(WhenNoDataTypeEnum.ALL_SECTIONS_NO_DETAIL);
-        this.usablePageWidth= jasperDesign.getPageWidth() - jasperDesign.getLeftMargin() - jasperDesign.getRightMargin();
+        PageSize pageSize = configuration.getPageSize();
+        if (pageSize != null) {
+            this.jasperDesign.setPageWidth(pageSize.getWidth());
+            this.jasperDesign.setPageHeight(pageSize.getHeight());
+        } else {
+            this.jasperDesign.setPageWidth(A4.getWidth());
+            this.jasperDesign.setPageHeight(A4.getWidth());
+        }
+        setMargins(configuration.getPageMargins(), DEFAULT_PAGE_MARGIN_SIZE);
+        this.usablePageWidth = jasperDesign.getPageWidth() - jasperDesign.getLeftMargin() - jasperDesign.getRightMargin();
+        this.usablePageHeight = jasperDesign.getPageHeight() - jasperDesign.getTopMargin() - jasperDesign.getBottomMargin();
+        setBackground(configuration.getPageBackground());
     }
 
-    public JasperReportBuilder(ReportComponent component, int usablePageWidth) throws JRException {
-        this.usablePageWidth = usablePageWidth;
+    public JasperReportBuilder(ReportComponent component, JasperReportBuilder parentBuilder) throws JRException {
         this.jasperDesign = new JasperDesign();
         this.jasperDesign.setName(StringUtils.randomAlphabetic(8));
-        this.jasperDesign.setPageWidth(595);
-        this.jasperDesign.setPageHeight(842);
-        this.jasperDesign.setColumnWidth(200);
-        this.jasperDesign.setLeftMargin(0);
-        this.jasperDesign.setRightMargin(0);
-        this.jasperDesign.setTopMargin(0);
-        this.jasperDesign.setBottomMargin(0);
+        this.jasperDesign.setPageWidth(parentBuilder.getJasperDesign().getPageWidth());
+        this.jasperDesign.setPageHeight(parentBuilder.getJasperDesign().getPageHeight());
+        setMargins(component.getMargins(), DEFAULT_COMPONENT_MARGIN_SIZE);
+        this.usablePageWidth = parentBuilder.getUsablePageWidth() - jasperDesign.getLeftMargin() - jasperDesign.getRightMargin();
+        this.usablePageHeight = parentBuilder.getUsablePageHeight() - jasperDesign.getTopMargin() - jasperDesign.getBottomMargin();
+        setBackground(component.getBackground());
 
         // define report fields
         switch (component.getType()) {
@@ -135,22 +145,54 @@ public class JasperReportBuilder {
         }
     }
 
+    private void setBackground(String background) {
+        if (background != null) {
+            JRDesignBand backgroundBand = new JRDesignBand();
+            backgroundBand.setHeight(usablePageHeight);
+
+            JRDesignRectangle backgroundRect = new JRDesignRectangle();
+            backgroundRect.setX(0);
+            backgroundRect.setY(0);
+            backgroundRect.setWidth(usablePageWidth);
+            backgroundRect.setHeight(usablePageHeight);
+            backgroundRect.setBackcolor(Color.decode(background));
+            backgroundRect.setMode(ModeEnum.OPAQUE);
+
+            backgroundBand.addElement(backgroundRect);
+            jasperDesign.setBackground(backgroundBand);
+        }
+    }
+
+    private void setMargins(Margins margins, int defaultPageMarginSize) {
+        if (margins != null) {
+            this.jasperDesign.setLeftMargin(margins.getLeft());
+            this.jasperDesign.setRightMargin(margins.getRight());
+            this.jasperDesign.setTopMargin(margins.getTop());
+            this.jasperDesign.setBottomMargin(margins.getBottom());
+        } else {
+            this.jasperDesign.setLeftMargin(defaultPageMarginSize);
+            this.jasperDesign.setRightMargin(defaultPageMarginSize);
+            this.jasperDesign.setTopMargin(defaultPageMarginSize);
+            this.jasperDesign.setBottomMargin(defaultPageMarginSize);
+        }
+    }
+
     public void addHeading(HeadingComponent component) {
         JRDesignTextField textField = new JRDesignTextField();
         textField.setX(0);
         textField.setY(0);
         textField.setHeight(1);
-        textField.setWidth(500);
+        textField.setWidth(usablePageWidth);
         textField.setPositionType(PositionTypeEnum.FLOAT);
         textField.setTextAdjust(TextAdjustEnum.STRETCH_HEIGHT);
 
         // Set text color if provided
-        if (component.getColor() != null) {
-            Color color = Color.decode(component.getColor());
-            textField.setForecolor(color);
+        String color = component.getColor();
+        if (color != null) {
+            textField.setForecolor(Color.decode(color));
         }
 
-        // Set font style if defined
+        // Set font style if provided
         Font font = component.getFont();
         if (font != null) {
             textField.setBold(font.getWeight() == FontWeight.bold);
@@ -239,13 +281,7 @@ public class JasperReportBuilder {
 
         JRDesignExpression expression = new JRDesignExpression();
         expression.setText("new java.io.ByteArrayInputStream($F{data})");
-        expression.setValueClass(java.io.InputStream.class);
-
         image.setExpression(expression);
-        //image.setExpression(new JRDesignExpression("net.sf.jasperreports.renderers.SimpleDataRenderer.getInstance($F{data})"));
-        //image.setExpression(new JRDesignExpression("$F{data}"));
-
-
         detailBand.addElement(image);
 
         // Set the detail band into the design
@@ -397,19 +433,19 @@ public class JasperReportBuilder {
     }
 
     public JasperReport buildHeading(HeadingComponent component) throws JRException {
-        JasperReportBuilder heading = new JasperReportBuilder(component, getUsablePageWidth());
+        JasperReportBuilder heading = new JasperReportBuilder(component, this);
         heading.addHeading(component);
         return JasperCompileManager.compileReport(heading.getJasperDesign());
     }
 
     public JasperReport buildRichText(RichTextComponent component) throws JRException {
-        JasperReportBuilder richText = new JasperReportBuilder(component, getUsablePageWidth());
+        JasperReportBuilder richText = new JasperReportBuilder(component, this);
         richText.addRichText(component.getValue());
         return JasperCompileManager.compileReport(richText.getJasperDesign());
     }
 
     public JasperReport buildEntityTable(EntityTableComponent component) throws JRException {
-        JasperReportBuilder table = new JasperReportBuilder(component, getUsablePageWidth());
+        JasperReportBuilder table = new JasperReportBuilder(component, this);
 
         List<DataKey> dataKeys = getSingleDataSource(component).getDataKeys();
         List<String> entityKeys = dataKeys.stream().map(DataKey::getName).toList();
@@ -421,7 +457,7 @@ public class JasperReportBuilder {
     }
 
     public JasperReport buildTimeSeriesTable(TimeseriesTableComponent component) throws JRException {
-        JasperReportBuilder table = new JasperReportBuilder(component, getUsablePageWidth());
+        JasperReportBuilder table = new JasperReportBuilder(component, this);
 
         List<DataKey> dataKeys = getSingleDataSource(component).getDataKeys();
         List<String> entityKeys = dataKeys.stream().map(DataKey::getName).collect(Collectors.toList());
@@ -436,7 +472,7 @@ public class JasperReportBuilder {
     }
 
     public JasperReport buildAlarmTable(AlarmTableComponent component) throws JRException {
-        JasperReportBuilder table = new JasperReportBuilder(component, getUsablePageWidth());
+        JasperReportBuilder table = new JasperReportBuilder(component, this);
 
         List<DataKey> dataKeys = component.getAlarmSource().getDataKeys();
         List<String> entityKeys = dataKeys.stream().map(DataKey::getName).collect(Collectors.toList());
@@ -448,13 +484,13 @@ public class JasperReportBuilder {
     }
 
     private JasperReport buildDashboard(DashboardComponent component) throws JRException {
-        JasperReportBuilder imageDesign = new JasperReportBuilder(component, getUsablePageWidth());
+        JasperReportBuilder imageDesign = new JasperReportBuilder(component, this);
         imageDesign.addImage();
         return JasperCompileManager.compileReport(imageDesign.getJasperDesign());
     }
 
     public JasperReport buildPageBreak(PageBreakComponent component) throws JRException {
-        JasperReportBuilder pageBreak = new JasperReportBuilder(component, getUsablePageWidth());
+        JasperReportBuilder pageBreak = new JasperReportBuilder(component, this);
         pageBreak.addPageBreak();
         return JasperCompileManager.compileReport(pageBreak.getJasperDesign());
     }

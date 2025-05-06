@@ -44,7 +44,7 @@ import java.util.List;
 @Data
 @EqualsAndHashCode
 @NoArgsConstructor
-public class AlarmTableComponent implements TableReportComponent {
+public class AlarmTableComponent extends AbstractReportComponent implements TableReportComponent {
 
     private DataSource alarmSource;
     private TimeWindowConfiguration timewindow;

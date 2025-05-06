@@ -34,12 +34,19 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import org.thingsboard.server.common.data.report.TbReportFormat;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
+import org.thingsboard.server.common.data.report.configuration.style.Margins;
+import org.thingsboard.server.common.data.report.configuration.style.PageOrientation;
+import org.thingsboard.server.common.data.report.configuration.style.PageSize;
 
 import java.util.List;
 
 @Data
 public class PdfReportTemplateConfig extends AbstractReportTemplateConfig {
 
+    private PageSize pageSize;
+    private PageOrientation pageOrientation;
+    private Margins pageMargins;
+    private String pageBackground;
     private List<EntityAlias> entityAliases;
     private List<Filter> filters;
     private HeaderFooter header;
