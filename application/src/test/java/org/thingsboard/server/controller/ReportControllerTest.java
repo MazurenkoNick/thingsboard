@@ -34,11 +34,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.web.servlet.ResultActions;
 import org.thingsboard.server.common.data.DataConstants;
 import org.thingsboard.server.common.data.Device;
 import org.thingsboard.server.common.data.StringUtils;
+import org.thingsboard.server.common.data.job.Job;
+import org.thingsboard.server.common.data.job.JobStatus;
+import org.thingsboard.server.common.data.job.ReportJobResult;
 import org.thingsboard.server.common.data.query.DeviceTypeFilter;
 import org.thingsboard.server.common.data.report.ReportRequest;
 import org.thingsboard.server.common.data.report.ReportTemplate;
@@ -49,24 +50,21 @@ import org.thingsboard.server.common.data.report.configuration.DataSource;
 import org.thingsboard.server.common.data.report.configuration.EntityAlias;
 import org.thingsboard.server.common.data.report.configuration.components.EntityTableComponent;
 import org.thingsboard.server.dao.service.DaoSqlTest;
-import org.thingsboard.server.report.ReportTaskProcessor;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @Slf4j
 @DaoSqlTest
 public class ReportControllerTest extends AbstractControllerTest {
 
-    @Autowired
-    private ReportTaskProcessor reportTaskProcessor;
-
     @Before
     public void beforeTest() throws Exception {
-        reportTaskProcessor.setTbCoreBaseUrl("http://localhost:" + serverPort);
         loginTenantAdmin();
     }
 
@@ -75,7 +73,7 @@ public class ReportControllerTest extends AbstractControllerTest {
     }
 
     @Test
-    public void testCreateCsvReportWithEntityTable() throws Exception {
+    public void testReportWithEntityTable() throws Exception {
         String devicesAliasId = StringUtils.randomAlphabetic(10);
         EntityAlias entityAlias = buildDevicesEntityAlias(devicesAliasId);
 
@@ -88,7 +86,7 @@ public class ReportControllerTest extends AbstractControllerTest {
                                 new DataKey("name", "entityField", "NAME"),
                                 new DataKey("type", "entityField", "TYPE"),
                                 new DataKey("temperature", "timeseries", "TEMPERATURE"),
-                                new DataKey("active", "attribute", "ACTIVE")
+                                new DataKey("threshold", "attribute", "THRESHOLD")
                         ))
                         .build()))
                 .build();
@@ -115,24 +113,91 @@ public class ReportControllerTest extends AbstractControllerTest {
             devices.add(device);
 
             long temperature = (long) (Math.random() * 100);
-            String payload = "{\"temperature\":" + temperature + "}";
-            doPost("/api/plugins/telemetry/" + device.getId() + "/" + DataConstants.SHARED_SCOPE, payload, String.class, status().isOk());
+            long threshold = (long) (Math.random() * 100);
+            String telemetryPayload = "{\"temperature\":" + temperature + "}";
+            String attributePayload = "{\"threshold\":" + threshold + "}";
+            doPost("/api/plugins/telemetry/DEVICE/" + device.getId() + "/timeseries/" + DataConstants.SHARED_SCOPE, telemetryPayload, String.class, status().isOk());
+            doPost("/api/plugins/telemetry/" + device.getId() + "/" + DataConstants.SHARED_SCOPE, attributePayload, String.class, status().isOk());
             expectedReportLines.add(device.getCreatedTime() + "," +
-                    device.getName() + "," +
-                    device.getType() + "," +
-                    temperature + "," +
-                    "true");
+                                    device.getName() + "," +
+                                    device.getType() + "," +
+                                    temperature + "," +
+                                    threshold);
         }
 
         //generate report
         ReportRequest reportRequest = new ReportRequest();
-        reportRequest.setTemplateId(savedTemplate.getId());
-        ResultActions resultActions = doPost("/api/v2/report/deprecated/test", reportRequest).andExpect(status().isOk());
-        String csvReport = resultActions.andReturn().getResponse().getContentAsString();
+        reportRequest.setReportTemplateConfig(configuration);
+        String csvReport = doPost("/api/v2/report/test", reportRequest, String.class);
 
         // Check headers and content
         String[] lines = csvReport.split("\r?\n");
-        assertThat(lines[0]).contains("CREATED TIME,NAME,TYPE,TEMPERATURE,ACTIVE");
+        assertThat(lines[0]).contains("CREATED TIME,NAME,TYPE,TEMPERATURE,THRESHOLD");
+        for (int i = 0; i < devices.size(); i++) {
+            assertThat(lines[i + 1]).contains(expectedReportLines.get(i));
+        }
+    }
+
+    @Test
+    public void testCreateJobForCsvReport() throws Exception {
+        String devicesAliasId = StringUtils.randomAlphabetic(10);
+        EntityAlias entityAlias = buildDevicesEntityAlias(devicesAliasId);
+
+        EntityTableComponent tableComponent = EntityTableComponent.builder()
+                .dataSources(List.of(DataSource.builder()
+                        .type("entity")
+                        .entityAliasId(devicesAliasId)
+                        .dataKeys(List.of(
+                                new DataKey("createdTime", "entityField", "CREATED TIME"),
+                                new DataKey("name", "entityField", "NAME"),
+                                new DataKey("type", "entityField", "TYPE"),
+                                new DataKey("temperature", "timeseries", "TEMPERATURE"),
+                                new DataKey("threshold", "attribute", "THRESHOLD")
+                        ))
+                        .build()))
+                .build();
+
+        CsvReportTemplateConfig configuration = new CsvReportTemplateConfig();
+        configuration.setEntityAlias(entityAlias);
+        configuration.setComponent(tableComponent);
+
+        List<Device> devices = new ArrayList<>();
+        List<String> expectedReportLines = new ArrayList<>();
+        for (int i = 0; i < 97; i++) {
+            Device device = new Device();
+            device.setName("Device" + i);
+            device.setType("default");
+            device.setLabel("testLabel" + (int) (Math.random() * 1000));
+            device = doPost("/api/device", device, Device.class);
+            devices.add(device);
+
+            long temperature = (long) (Math.random() * 100);
+            long threshold = (long) (Math.random() * 100);
+            String telemetryPayload = "{\"temperature\":" + temperature + "}";
+            String attributePayload = "{\"threshold\":" + threshold + "}";
+            doPost("/api/plugins/telemetry/DEVICE/" + device.getId() + "/timeseries/" + DataConstants.SHARED_SCOPE, telemetryPayload, String.class, status().isOk());
+            doPost("/api/plugins/telemetry/" + device.getId() + "/" + DataConstants.SHARED_SCOPE, attributePayload, String.class, status().isOk());
+            expectedReportLines.add(device.getCreatedTime() + "," +
+                                    device.getName() + "," +
+                                    device.getType() + "," +
+                                    temperature + "," +
+                                    threshold);
+        }
+
+        //generate report
+        ReportRequest reportRequest = new ReportRequest();
+        reportRequest.setReportTemplateConfig(configuration);
+        Job job = doPost("/api/v2/report", reportRequest, Job.class);
+
+        Job completedJob = await().atMost(TIMEOUT, TimeUnit.SECONDS).until(() -> doGet("/api/job/" + job.getId(), Job.class),
+                result -> result.getStatus() == JobStatus.COMPLETED);
+
+        ReportJobResult result = (ReportJobResult) completedJob.getResult();
+        String csvReport = doGet("/api/blobEntity/" + result.getReportBlobId() + "/download", String.class);
+
+        // Check headers and content
+        String[] lines = csvReport.split("\r?\n");
+        assertThat(lines[0]).contains("CREATED TIME,NAME,TYPE,TEMPERATURE,THRESHOLD");
         for (int i = 0; i < devices.size(); i++) {
             assertThat(lines[i + 1]).contains(expectedReportLines.get(i));
         }

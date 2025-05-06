@@ -45,7 +45,6 @@ import org.thingsboard.server.common.data.msg.TbMsgType;
 import org.thingsboard.server.common.data.notification.rule.trigger.ReportGeneratedTrigger;
 import org.thingsboard.server.common.data.report.ReportRequest;
 import org.thingsboard.server.common.data.report.ReportTemplate;
-import org.thingsboard.server.common.data.report.configuration.ReportTemplateConfig;
 import org.thingsboard.server.common.msg.TbMsg;
 import org.thingsboard.server.common.msg.TbMsgMetaData;
 import org.thingsboard.server.common.msg.notification.NotificationRuleProcessor;
@@ -71,16 +70,19 @@ public class ReportJobProcessor implements JobProcessor {
     @Override
     public int process(Job job, Consumer<Task<?>> taskConsumer) throws Exception {
         ReportJobConfiguration configuration = job.getConfiguration();
-        ReportRequest reportRequest = configuration.getRequest();
-        ReportTemplateConfig reportTemplateConfig = reportRequest.getReportTemplateConfig();
+        if (configuration.getReportTemplateId() == null) {
+            throw new IllegalArgumentException("Report template must be specified");
+        }
+        ReportTemplate reportTemplate = reportTemplateService.findReportTemplateById(job.getTenantId(), configuration.getReportTemplateId());
         AccessJwtToken accessToken = systemSecurityService.createUserAccessToken(job.getTenantId(), configuration.getUserId());
 
         ReportTask task = ReportTask.builder()
                 .tenantId(job.getTenantId())
                 .jobId(job.getId())
-                .reportTemplateConfig(reportTemplateConfig)
-                .reportRequest(reportRequest)
-                .testReport(configuration.isTestReport())
+                .reportTemplateConfig(reportTemplate.getConfiguration())
+                .customerId(configuration.getCustomerId())
+                .entityId(configuration.getEntityId())
+                .timezone(configuration.getTimezone())
                 .accessToken(accessToken.getToken())
                 .accessTokenExpirationTs(accessToken.getClaims().getExpiration().getTime())
                 .build();
@@ -96,29 +98,24 @@ public class ReportJobProcessor implements JobProcessor {
     @Override
     public void onJobCompleted(Job job) {
         ReportJobConfiguration configuration = job.getConfiguration();
-        if (configuration.isTestReport()) {
-            return;
-        }
-
         ReportJobResult jobResult = (ReportJobResult) job.getResult();
         TbMsg tbMsg = TbMsg.newMsg()
                 .type(TbMsgType.REPORT_GENERATED)
                 .originator(configuration.getUserId())
-                .customerId(configuration.getRequest().getCustomerId())
-                .data(JacksonUtil.toString(configuration.getRequest()))
+                .customerId(configuration.getCustomerId())
+                .data(JacksonUtil.toString(configuration))
                 .metaData(new TbMsgMetaData(Map.of(
                         "reportBlobEntityId", jobResult.getReportBlobId().toString()
                 )))
                 .build();
         clusterService.pushMsgToRuleEngine(job.getTenantId(), configuration.getUserId(), tbMsg, TbQueueCallback.EMPTY);
 
-        ReportRequest request = configuration.getRequest();
         notificationRuleProcessor.process(ReportGeneratedTrigger.builder()
                 .tenantId(job.getTenantId())
-                .customerId(configuration.getRequest().getCustomerId())
+                .customerId(configuration.getCustomerId())
                 .reportBlobId(jobResult.getReportBlobId())
                 .reportName(jobResult.getReportName())
-                .reportFormat(request.getReportTemplateConfig().getFormat())
+                .reportFormat(configuration.getReportFormat())
                 .build());
     }
 

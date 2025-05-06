@@ -32,6 +32,7 @@ package org.thingsboard.server.report.util;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import lombok.SneakyThrows;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.CSVRecord;
@@ -39,7 +40,6 @@ import org.apache.commons.io.input.CharSequenceReader;
 import org.thingsboard.server.common.data.report.configuration.DataKey;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -66,7 +66,8 @@ public class CsvUtils {
                 .collect(Collectors.toList());
     }
 
-    public static byte[] generateCsv(List<DataKey> dataKeys, List<Map<String, ?>> dataset) throws IOException {
+    @SneakyThrows
+    public static byte[] generateCsv(List<DataKey> dataKeys, List<Map<String, ?>> dataset) {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         try (OutputStreamWriter writer = new OutputStreamWriter(out, StandardCharsets.UTF_8);
              CSVPrinter csvPrinter = new CSVPrinter(writer, CSVFormat.DEFAULT)) {

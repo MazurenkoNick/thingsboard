@@ -165,7 +165,6 @@ import org.thingsboard.server.common.data.query.EntityDataSortOrder;
 import org.thingsboard.server.common.data.query.EntityKey;
 import org.thingsboard.server.common.data.queue.Queue;
 import org.thingsboard.server.common.data.report.ReportTemplate;
-import org.thingsboard.server.common.data.report.ReportTemplate;
 import org.thingsboard.server.common.data.report.ReportTemplateInfo;
 import org.thingsboard.server.common.data.role.Role;
 import org.thingsboard.server.common.data.role.RoleType;
@@ -506,7 +505,7 @@ public abstract class BaseController {
     public void handleControllerException(Exception e, HttpServletResponse response) {
         ThingsboardException thingsboardException = handleException(e);
         if (thingsboardException.getErrorCode() == ThingsboardErrorCode.GENERAL && thingsboardException.getCause() instanceof Exception
-                && StringUtils.equals(thingsboardException.getCause().getMessage(), thingsboardException.getMessage())) {
+            && StringUtils.equals(thingsboardException.getCause().getMessage(), thingsboardException.getMessage())) {
             e = (Exception) thingsboardException.getCause();
         } else {
             e = thingsboardException;
@@ -551,7 +550,7 @@ public abstract class BaseController {
         if (exception instanceof ThingsboardException) {
             return (ThingsboardException) exception;
         } else if (exception instanceof IllegalArgumentException || exception instanceof IncorrectParameterException
-                || exception instanceof DataValidationException || cause instanceof IncorrectParameterException) {
+                   || exception instanceof DataValidationException || cause instanceof IncorrectParameterException) {
             return new ThingsboardException(exception.getMessage(), ThingsboardErrorCode.BAD_REQUEST_PARAMS);
         } else if (exception instanceof MessagingException) {
             return new ThingsboardException("Unable to send mail", ThingsboardErrorCode.GENERAL);
@@ -680,9 +679,9 @@ public abstract class BaseController {
             throw new ThingsboardException("EntityGroup type is required!", ThingsboardErrorCode.BAD_REQUEST_PARAMS);
         }
         if (groupType != EntityType.CUSTOMER && groupType != EntityType.ASSET
-                && groupType != EntityType.DEVICE && groupType != EntityType.USER
-                && groupType != EntityType.ENTITY_VIEW && groupType != EntityType.EDGE
-                && groupType != EntityType.DASHBOARD) {
+            && groupType != EntityType.DEVICE && groupType != EntityType.USER
+            && groupType != EntityType.ENTITY_VIEW && groupType != EntityType.EDGE
+            && groupType != EntityType.DASHBOARD) {
             throw new ThingsboardException("Unsupported entityGroup type '" + groupType + "'! Only 'CUSTOMER', 'ASSET', 'DEVICE', 'USER', 'ENTITY_VIEW' or 'DASHBOARD' types are allowed.", ThingsboardErrorCode.BAD_REQUEST_PARAMS);
         }
         return groupType;

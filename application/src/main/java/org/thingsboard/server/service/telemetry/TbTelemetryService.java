@@ -28,29 +28,31 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.common.data.report;
+package org.thingsboard.server.service.telemetry;
 
-import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Data;
-import org.thingsboard.server.common.data.id.CustomerId;
+import com.google.common.util.concurrent.ListenableFuture;
+import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.id.EntityId;
-import org.thingsboard.server.common.data.id.ReportTemplateId;
-import org.thingsboard.server.common.data.report.configuration.ReportTemplateConfig;
+import org.thingsboard.server.common.data.kv.Aggregation;
+import org.thingsboard.server.common.data.kv.IntervalType;
+import org.thingsboard.server.common.data.kv.TsKvEntry;
+import org.thingsboard.server.service.security.model.SecurityUser;
 
-@Data
-public class ReportRequest {
+import java.util.List;
 
-    @Schema(description = "Json object representing the report template id.")
-    ReportTemplateId reportTemplateId;
-    @Schema(description = "Json object representing the report template config.")
-    ReportTemplateConfig reportTemplateConfig;
-    @Schema(description = "Json object representing the report customer id.", requiredMode = Schema.RequiredMode.REQUIRED)
-    CustomerId customerId;
-    @Schema(description = "Json object representing the report entity id.")
-    EntityId entityId;
-    @Schema(description = "Timezone in which target dashboard will be presented in dashboard report.", example = "Europe/Kiev") // fixme: description
-    String timezone;
-    @Schema(description = "A string value representing the user id.", example = "784f394c-42b6-435a-983c-b7beff2784f9")
-    String userId; // fixme: use it for jwt generation
+public interface TbTelemetryService {
+
+    ListenableFuture<List<TsKvEntry>> getTimeseries(EntityId entityId,
+                                                   List<String> keys,
+                                                   Long startTs,
+                                                   Long endTs,
+                                                   IntervalType intervalType,
+                                                   Long interval,
+                                                   String timeZone,
+                                                   Integer limit,
+                                                   Aggregation agg,
+                                                   String orderBy,
+                                                   Boolean useStrictDataTypes,
+                                                   SecurityUser currentUser) throws ThingsboardException;
 
 }
