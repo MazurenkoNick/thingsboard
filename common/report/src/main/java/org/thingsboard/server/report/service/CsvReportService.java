@@ -43,6 +43,7 @@ import org.thingsboard.server.common.data.report.configuration.components.AlarmT
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
 import org.thingsboard.server.common.data.report.configuration.components.TableReportComponent;
 import org.thingsboard.server.common.data.report.configuration.components.TimeseriesTableComponent;
+import org.thingsboard.server.report.context.TbReportCtx;
 
 import java.util.Date;
 import java.util.List;

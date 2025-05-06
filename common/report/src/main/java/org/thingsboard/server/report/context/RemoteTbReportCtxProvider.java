@@ -28,39 +28,47 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.report.datasource;
+package org.thingsboard.server.report.context;
 
-import org.thingsboard.server.common.data.blob.BlobEntity;
-import org.thingsboard.server.common.data.blob.BlobEntityInfo;
-import org.thingsboard.server.common.data.id.EntityId;
-import org.thingsboard.server.common.data.kv.Aggregation;
-import org.thingsboard.server.common.data.kv.TsKvEntry;
-import org.thingsboard.server.common.data.page.PageData;
-import org.thingsboard.server.common.data.page.SortOrder;
-import org.thingsboard.server.common.data.query.AlarmCountQuery;
-import org.thingsboard.server.common.data.query.AlarmData;
-import org.thingsboard.server.common.data.query.AlarmDataQuery;
-import org.thingsboard.server.common.data.query.EntityCountQuery;
-import org.thingsboard.server.common.data.query.EntityData;
-import org.thingsboard.server.common.data.query.EntityDataQuery;
-import org.thingsboard.server.report.context.TbReportCtx;
+import lombok.Data;
+import lombok.experimental.SuperBuilder;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+import org.thingsboard.rest.client.RestClient;
+import org.thingsboard.server.common.data.job.task.ReportTask;
 
-import java.util.List;
+import java.io.IOException;
 
-public interface ReportDataService {
+@ConditionalOnMissingBean(value = TbReportCtxProvider.class, ignored = RemoteTbReportCtxProvider.class)
+@Service
+public class RemoteTbReportCtxProvider implements TbReportCtxProvider {
 
-    PageData<EntityData> findEntityDataByQuery(EntityDataQuery query, TbReportCtx ctx);
+    @Value("${service.tb_core.base_url:http://localhost:${server.port}}")
+    private String tbCoreBaseUrl;
 
-    Long countEntitiesByQuery(EntityCountQuery query, TbReportCtx ctx);
+    @Override
+    public TbReportCtx newContext(ReportTask task) {
+        return RemoteTbReportCtx.builder()
+                .configuration(task.getReportTemplateConfig())
+                .accessToken(task.getAccessToken())
+                .accessTokenExpTs(task.getAccessTokenExpirationTs())
+                .restClient(new RestClient(new RestTemplate(), tbCoreBaseUrl, task.getAccessToken()))
+                .build();
+    }
 
-    PageData<AlarmData> findAlarmDataByQuery(AlarmDataQuery query, TbReportCtx ctx);
+    @Data
+    @SuperBuilder
+    public static class RemoteTbReportCtx extends TbReportCtx {
 
-    Long countAlarmsByQuery(AlarmCountQuery query, TbReportCtx ctx);
+        private final RestClient restClient;
 
-    List<TsKvEntry> getTimeseries(EntityId entityId, List<String> keys, Long startTs, Long endTs,
-                                  Long interval, Aggregation agg, SortOrder.Direction sortOrder,
-                                  Integer limit, boolean useStrictDataTypes, TbReportCtx ctx);
+        @Override
+        public void close() throws IOException {
+            restClient.close();
+        }
 
-    BlobEntityInfo createBlobEntity(BlobEntity blobEntity, TbReportCtx ctx);
+    }
 
 }

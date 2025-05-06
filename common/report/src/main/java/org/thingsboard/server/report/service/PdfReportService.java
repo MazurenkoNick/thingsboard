@@ -57,6 +57,7 @@ import org.thingsboard.server.common.data.report.configuration.components.AlarmT
 import org.thingsboard.server.common.data.report.configuration.components.DashboardComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
 import org.thingsboard.server.common.data.report.configuration.components.TimeseriesTableComponent;
+import org.thingsboard.server.report.context.TbReportCtx;
 import org.thingsboard.server.report.util.JasperReportBuilder;
 import org.thingsboard.server.report.util.WebReportClient;
 
@@ -178,10 +179,8 @@ public class PdfReportService extends AbstractReportService {
         ReportTemplateConfig configuration = ctx.getConfiguration();
         return switch (dataSource.getType()) {
             case "device", "entity" -> fetchEntities(ctx, dataSource).stream().map(this::toMap).collect(Collectors.toList());
-            case "entityCount" ->
-                    List.of(Map.of("count", dataService.countEntitiesByQuery(toEntityCountQuery(dataSource, configuration), ctx.getDataServiceContext())));
-            case "alarmCount" ->
-                    List.of(Map.of("count", dataService.countAlarmsByQuery(toAlarmCountQuery(dataSource, configuration), ctx.getDataServiceContext())));
+            case "entityCount" -> List.of(Map.of("count", dataService.countEntitiesByQuery(toEntityCountQuery(dataSource, configuration), ctx)));
+            case "alarmCount" -> List.of(Map.of("count", dataService.countAlarmsByQuery(toAlarmCountQuery(dataSource, configuration), ctx)));
             default -> throw new IllegalArgumentException("Unknown data source type: " + dataSource.getType());
         };
     }

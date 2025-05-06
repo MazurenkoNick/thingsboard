@@ -94,7 +94,7 @@ public class ReportController extends BaseController {
                 .accessToken(accessToken.getToken())
                 .accessTokenExpirationTs(accessToken.getClaims().getExpiration().getTime())
                 .build();
-        ReportData reportData = tbReportService.generateReport(reportTask, tbReportService.newContext(reportTask));
+        ReportData reportData = tbReportService.generateTestReport(reportTask);
 
         ByteArrayResource resource = new ByteArrayResource(reportData.getData());
         return ResponseEntity.ok()

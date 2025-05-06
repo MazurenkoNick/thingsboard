@@ -33,20 +33,13 @@ package org.thingsboard.server.report;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import org.thingsboard.server.common.data.blob.BlobEntity;
 import org.thingsboard.server.common.data.blob.BlobEntityInfo;
 import org.thingsboard.server.common.data.job.JobType;
 import org.thingsboard.server.common.data.job.task.ReportTask;
 import org.thingsboard.server.common.data.job.task.ReportTaskResult;
-import org.thingsboard.server.common.data.report.ReportData;
-import org.thingsboard.server.common.data.report.configuration.ReportTemplateConfig;
 import org.thingsboard.server.queue.task.TaskProcessor;
 import org.thingsboard.server.queue.util.TbReportComponent;
-import org.thingsboard.server.report.datasource.ReportDataService;
-import org.thingsboard.server.report.datasource.ReportDataServiceContext;
 import org.thingsboard.server.report.service.TbReportService;
-
-import java.nio.ByteBuffer;
 
 @TbReportComponent
 @Component
@@ -54,26 +47,14 @@ import java.nio.ByteBuffer;
 public class ReportTaskProcessor extends TaskProcessor<ReportTask, ReportTaskResult> {
 
     private final TbReportService tbReportService;
-    private final ReportDataService dataService;
 
     @Value("${reports.generation_timeout_ms:120000}")
     private int timeoutMs;
 
     @Override
     public ReportTaskResult process(ReportTask task) throws Exception {
-        try (ReportDataServiceContext dataServiceContext = tbReportService.newContext(task)) { // todo: inside tbReportCtx
-            ReportData reportData = tbReportService.generateReport(task, dataServiceContext);
-
-            BlobEntity blobEntity = new BlobEntity();
-            blobEntity.setTenantId(task.getTenantId());
-            blobEntity.setCustomerId(null); // fixme: what customer id to use??? one from request or from userId?
-            blobEntity.setData(ByteBuffer.wrap(reportData.getData()));
-            blobEntity.setContentType(reportData.getContentType());
-            blobEntity.setName(reportData.getName());
-            blobEntity.setType("report");
-            BlobEntityInfo savedBlobEntity = dataService.createBlobEntity(blobEntity, dataServiceContext);
-            return ReportTaskResult.success(savedBlobEntity.getId(), reportData.getName());
-        }
+        BlobEntityInfo blobEntityInfo = tbReportService.generateReport(task);
+        return ReportTaskResult.success(blobEntityInfo.getId(), blobEntityInfo.getName());
     }
 
     @Override

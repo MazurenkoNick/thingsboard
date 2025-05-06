@@ -50,6 +50,7 @@ import org.thingsboard.server.common.data.report.configuration.components.Timese
 import org.thingsboard.server.common.data.report.configuration.timewindow.History;
 import org.thingsboard.server.common.data.report.configuration.timewindow.TimeIntervalCalculator;
 import org.thingsboard.server.common.data.report.configuration.timewindow.TimeWindowConfiguration;
+import org.thingsboard.server.report.context.TbReportCtx;
 import org.thingsboard.server.report.datasource.ReportDataService;
 
 import java.util.ArrayList;
@@ -81,7 +82,7 @@ public abstract class AbstractReportService implements ReportService {
 
     protected List<EntityData> fetchEntityDataByQuery(Function<PageLink, EntityDataQuery> querySupplier, TbReportCtx ctx) {
         List<EntityData> data = new ArrayList<>();
-        for (EntityData entityData : new PageDataIterable<>(link -> dataService.findEntityDataByQuery(querySupplier.apply(link), ctx.getDataServiceContext()), 1024)) {
+        for (EntityData entityData : new PageDataIterable<>(link -> dataService.findEntityDataByQuery(querySupplier.apply(link), ctx), 1024)) {
             data.add(entityData);
         }
         return data;
@@ -113,14 +114,14 @@ public abstract class AbstractReportService implements ReportService {
         // todo dasha make sort order configurable (?)
         List<TsKvEntry> result = dataService.getTimeseries(entityId, keys, timeRange.startTs, timeRange.endTs,
                 historyConf.getInterval(), timeWindowConf.getAggregation().getType(), SortOrder.Direction.DESC,
-                timeWindowConf.getAggregation().getLimit(), false, ctx.getDataServiceContext());
+                timeWindowConf.getAggregation().getLimit(), false, ctx);
         return collectTsData(result);
     }
 
     protected List<Map<String, ?>> buildAlarmDataSource(TbReportCtx ctx, AlarmTableComponent component) {
         List<String> keyList = component.getAlarmSource().getDataKeys().stream().map(DataKey::getName).toList();
         List<Map<String, ?>> data = new ArrayList<>();
-        for (AlarmData alarmData : new PageDataIterable<>(link -> dataService.findAlarmDataByQuery(toAlarmDataQuery(component, ctx.getConfiguration(), link), ctx.getDataServiceContext()), 1024)) {
+        for (AlarmData alarmData : new PageDataIterable<>(link -> dataService.findAlarmDataByQuery(toAlarmDataQuery(component, ctx.getConfiguration(), link), ctx), 1024)) {
             data.add(toMapData(alarmData, keyList));
         }
         return data;

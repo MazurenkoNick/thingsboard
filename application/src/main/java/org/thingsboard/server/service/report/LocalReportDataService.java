@@ -49,12 +49,11 @@ import org.thingsboard.server.common.data.query.AlarmDataQuery;
 import org.thingsboard.server.common.data.query.EntityCountQuery;
 import org.thingsboard.server.common.data.query.EntityData;
 import org.thingsboard.server.common.data.query.EntityDataQuery;
+import org.thingsboard.server.report.context.TbReportCtx;
 import org.thingsboard.server.report.datasource.ReportDataService;
-import org.thingsboard.server.report.datasource.ReportDataServiceContext;
 import org.thingsboard.server.service.entitiy.blob.TbBlobService;
 import org.thingsboard.server.service.query.EntityQueryService;
 import org.thingsboard.server.service.security.model.SecurityUser;
-import org.thingsboard.server.service.security.model.token.JwtTokenFactory;
 import org.thingsboard.server.service.telemetry.TbTelemetryService;
 
 import java.util.List;
@@ -66,57 +65,45 @@ public class LocalReportDataService implements ReportDataService {
 
     private final EntityQueryService entityQueryService;
     private final TbTelemetryService tbTelemetryService;
-    private final JwtTokenFactory tokenFactory;
     @Autowired
     @Lazy
     private TbBlobService tbBlobService;
 
     @Override
-    public ReportDataServiceContext newContext(String accessToken) {
-        SecurityUser securityUser = tokenFactory.parseAccessJwtToken(accessToken);
-        return new LocalReportDataServiceContext(securityUser);
-    }
-
-    @Override
-    public PageData<EntityData> findEntityDataByQuery(EntityDataQuery query, ReportDataServiceContext ctx) {
+    public PageData<EntityData> findEntityDataByQuery(EntityDataQuery query, TbReportCtx ctx) {
         return entityQueryService.findEntityDataByQuery(getSecurityUser(ctx), query);
     }
 
     @Override
-    public Long countEntitiesByQuery(EntityCountQuery query, ReportDataServiceContext ctx) {
+    public Long countEntitiesByQuery(EntityCountQuery query, TbReportCtx ctx) {
         return entityQueryService.countEntitiesByQuery(getSecurityUser(ctx), query);
     }
 
     @Override
-    public PageData<AlarmData> findAlarmDataByQuery(AlarmDataQuery query, ReportDataServiceContext ctx) {
+    public PageData<AlarmData> findAlarmDataByQuery(AlarmDataQuery query, TbReportCtx ctx) {
         return entityQueryService.findAlarmDataByQuery(getSecurityUser(ctx), query);
     }
 
     @Override
-    public Long countAlarmsByQuery(AlarmCountQuery query, ReportDataServiceContext ctx) {
+    public Long countAlarmsByQuery(AlarmCountQuery query, TbReportCtx ctx) {
         return entityQueryService.countAlarmsByQuery(getSecurityUser(ctx), query);
     }
 
     @SneakyThrows
     @Override
     public List<TsKvEntry> getTimeseries(EntityId entityId, List<String> keys, Long startTs, Long endTs, Long interval, Aggregation agg, SortOrder.Direction sortOrder,
-                                         Integer limit, boolean useStrictDataTypes, ReportDataServiceContext ctx) {
+                                         Integer limit, boolean useStrictDataTypes, TbReportCtx ctx) {
         return tbTelemetryService.getTimeseries(entityId, keys, startTs, endTs, null, interval, null, limit, agg, sortOrder.name(), useStrictDataTypes, getSecurityUser(ctx)).get(); // .get() will be interrupted on task processing timeout
     }
 
     @SneakyThrows
     @Override
-    public BlobEntityInfo createBlobEntity(BlobEntity blobEntity, ReportDataServiceContext ctx) {
+    public BlobEntityInfo createBlobEntity(BlobEntity blobEntity, TbReportCtx ctx) {
         return tbBlobService.create(blobEntity, getSecurityUser(ctx));
     }
 
-    private SecurityUser getSecurityUser(ReportDataServiceContext ctx) {
-        return ((LocalReportDataServiceContext) ctx).securityUser();
-    }
-
-    private record LocalReportDataServiceContext(SecurityUser securityUser) implements ReportDataServiceContext {
-        @Override
-        public void close() {}
+    private SecurityUser getSecurityUser(TbReportCtx ctx) {
+        return ((LocalTbReportCtxProvider.LocalTbReportCtx) ctx).getSecurityUser();
     }
 
 }

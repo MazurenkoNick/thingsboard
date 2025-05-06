@@ -30,10 +30,8 @@
  */
 package org.thingsboard.server.report.datasource;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 import org.thingsboard.rest.client.RestClient;
 import org.thingsboard.server.common.data.blob.BlobEntity;
 import org.thingsboard.server.common.data.blob.BlobEntityInfo;
@@ -48,61 +46,48 @@ import org.thingsboard.server.common.data.query.AlarmDataQuery;
 import org.thingsboard.server.common.data.query.EntityCountQuery;
 import org.thingsboard.server.common.data.query.EntityData;
 import org.thingsboard.server.common.data.query.EntityDataQuery;
+import org.thingsboard.server.report.context.RemoteTbReportCtxProvider;
+import org.thingsboard.server.report.context.TbReportCtx;
 
 import java.util.List;
 
-@ConditionalOnMissingBean(value = ReportDataService.class, ignored = RestReportDataService.class)
+@ConditionalOnMissingBean(value = ReportDataService.class, ignored = RemoteReportDataService.class)
 @Service
-public class RestReportDataService implements ReportDataService {
-
-    @Value("${service.tb_core.base_url:http://localhost:${server.port}}")
-    private String tbCoreBaseUrl;
+public class RemoteReportDataService implements ReportDataService {
 
     @Override
-    public ReportDataServiceContext newContext(String accessToken) {
-        return new RestReportDataServiceContext(new RestClient(new RestTemplate(), tbCoreBaseUrl, accessToken));
-    }
-
-    @Override
-    public PageData<EntityData> findEntityDataByQuery(EntityDataQuery query, ReportDataServiceContext ctx) {
+    public PageData<EntityData> findEntityDataByQuery(EntityDataQuery query, TbReportCtx ctx) {
         return getRestClient(ctx).findEntityDataByQuery(query);
     }
 
     @Override
-    public Long countEntitiesByQuery(EntityCountQuery query, ReportDataServiceContext ctx) {
+    public Long countEntitiesByQuery(EntityCountQuery query, TbReportCtx ctx) {
         return getRestClient(ctx).countEntitiesByQuery(query);
     }
 
     @Override
-    public PageData<AlarmData> findAlarmDataByQuery(AlarmDataQuery query, ReportDataServiceContext ctx) {
+    public PageData<AlarmData> findAlarmDataByQuery(AlarmDataQuery query, TbReportCtx ctx) {
         return getRestClient(ctx).findAlarmDataByQuery(query);
     }
 
     @Override
-    public Long countAlarmsByQuery(AlarmCountQuery query, ReportDataServiceContext ctx) {
+    public Long countAlarmsByQuery(AlarmCountQuery query, TbReportCtx ctx) {
         return getRestClient(ctx).countAlarmsByQuery(query);
     }
 
     @Override
     public List<TsKvEntry> getTimeseries(EntityId entityId, List<String> keys, Long startTs, Long endTs, Long interval, Aggregation agg, SortOrder.Direction sortOrder,
-                                         Integer limit, boolean useStrictDataTypes, ReportDataServiceContext ctx) {
+                                         Integer limit, boolean useStrictDataTypes, TbReportCtx ctx) {
         return getRestClient(ctx).getTimeseries(entityId, keys, interval, agg, sortOrder, startTs, endTs, limit, useStrictDataTypes);
     }
 
     @Override
-    public BlobEntityInfo createBlobEntity(BlobEntity blobEntity, ReportDataServiceContext ctx) {
+    public BlobEntityInfo createBlobEntity(BlobEntity blobEntity, TbReportCtx ctx) {
         return getRestClient(ctx).createBlobEntity(blobEntity);
     }
 
-    private RestClient getRestClient(ReportDataServiceContext ctx) {
-        return ((RestReportDataServiceContext) ctx).restClient();
-    }
-
-    private record RestReportDataServiceContext(RestClient restClient) implements ReportDataServiceContext {
-        @Override
-        public void close() {
-            restClient.close();
-        }
+    private RestClient getRestClient(TbReportCtx ctx) {
+        return ((RemoteTbReportCtxProvider.RemoteTbReportCtx) ctx).getRestClient();
     }
 
 }

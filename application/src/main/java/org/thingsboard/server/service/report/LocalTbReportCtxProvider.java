@@ -28,8 +28,46 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.report.datasource;
+package org.thingsboard.server.service.report;
 
-import java.io.Closeable;
+import lombok.Data;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.SuperBuilder;
+import org.springframework.context.annotation.Primary;
+import org.springframework.stereotype.Service;
+import org.thingsboard.server.common.data.job.task.ReportTask;
+import org.thingsboard.server.report.context.TbReportCtx;
+import org.thingsboard.server.report.context.TbReportCtxProvider;
+import org.thingsboard.server.service.security.model.SecurityUser;
+import org.thingsboard.server.service.security.model.token.JwtTokenFactory;
 
-public interface ReportDataServiceContext extends Closeable {}
+@RequiredArgsConstructor
+@Primary
+@Service
+public class LocalTbReportCtxProvider implements TbReportCtxProvider {
+
+    private final JwtTokenFactory tokenFactory;
+
+    @Override
+    public LocalTbReportCtx newContext(ReportTask task) {
+        SecurityUser securityUser = tokenFactory.parseAccessJwtToken(task.getAccessToken());
+        return LocalTbReportCtx.builder()
+                .configuration(task.getReportTemplateConfig())
+                .accessToken(task.getAccessToken())
+                .accessTokenExpTs(task.getAccessTokenExpirationTs())
+                .securityUser(securityUser)
+                .build();
+    }
+
+    @Data
+    @SuperBuilder
+    public static class LocalTbReportCtx extends TbReportCtx {
+
+        private final SecurityUser securityUser;
+
+        @Override
+        public void close() {}
+
+    }
+
+}
