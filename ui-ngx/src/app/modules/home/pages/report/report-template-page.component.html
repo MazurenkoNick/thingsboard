@@ -92,16 +92,16 @@
       <tb-report-component-library class="min-h-0 flex-1"></tb-report-component-library>
     </mat-drawer>
     <mat-drawer class="tb-report-settings"
-                [class.tb-report-component-settings]="!!activeReportComponent"
+                [class.tb-report-component-settings]="!!editingReportComponent"
                 disableClose="true"
                 mode="side"
                 opened
                 position="end">
-      @if (activeReportComponent) {
+      @if (editingReportComponent) {
         <tb-details-panel class="flex-1"
                           [color]="null"
                           showCloseDetails="false"
-                          headerTitle="{{ reportComponentTypeMap.get(activeReportComponent.type).title | translate }}"
+                          headerTitle="{{ reportComponentTypeMap.get(editingReportComponent.type).title | translate }}"
                           headerHeightPx="68"
                           isReadOnly="true">
           <div class="details-buttons flex flex-row items-center justify-end gap-3">
@@ -110,8 +110,7 @@
               <mat-icon>close</mat-icon>
               {{ 'action.cancel' | translate }}
             </button>
-            <button [disabled]="!reportConfig?.reportConfigForm?.valid || !reportConfig?.reportConfigForm?.dirty"
-                    mat-flat-button color="primary"
+            <button mat-flat-button color="primary"
                     (click)="saveReportComponent()">
               <mat-icon>done</mat-icon>
               {{ 'action.save' | translate }}
@@ -120,7 +119,8 @@
           <tb-report-component-config
             #reportConfig
             [context]="reportComponentContext"
-            [reportComponent]="editingReportComponent">
+            [reportComponent]="editingReportComponent"
+            (reportComponentUpdated)="reportComponentUpdated()">
           </tb-report-component-config>
         </tb-details-panel>
       } @else {

@@ -77,6 +77,9 @@ export class ReportComponentConfigComponent implements OnInit, OnChanges {
   @Input()
   reportComponent: ReportComponentConfig;
 
+  @Output()
+  reportComponentUpdated = new EventEmitter();
+
   @ViewChild('reportConfigContainer', {static: true}) reportConfigContainer: TbAnchorComponent;
 
   reportConfigForm: FormGroup;
@@ -116,6 +119,7 @@ export class ReportComponentConfigComponent implements OnInit, OnChanges {
         this.reportConfigComponent.context = this.context;
         this.reportConfigComponent.reportConfigUpdated.subscribe((updated) => {
           Object.assign(this.reportComponent, updated);
+          this.reportComponentUpdated.emit();
         });
         this.reportConfigForm = this.reportConfigComponent.setupConfig(this.reportComponent);
       }

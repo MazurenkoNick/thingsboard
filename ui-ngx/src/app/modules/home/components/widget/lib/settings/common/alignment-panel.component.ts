@@ -29,36 +29,43 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { Component, DestroyRef, ViewEncapsulation } from '@angular/core';
-import { FormBuilder, FormGroup } from '@angular/forms';
-import { HeadingReportComponentConfig } from '@app/shared/public-api';
-import { AbstractReportComponentConfig } from '@home/pages/report/components/report-component-config.component';
+import { Component, EventEmitter, Input, OnInit, Output, ViewEncapsulation } from '@angular/core';
+import {
+  alignment,
+  alignmentIcons,
+  alignmentTranslations,
+  horizontalAlignments, verticalAlignments
+} from '@shared/models/widget-settings.models';
 
 @Component({
-  selector: 'tb-report-heading-config',
-  templateUrl: './heading-config.component.html',
-  styleUrls: ['./report-component-config.scss'],
+  selector: 'tb-alignment-panel',
+  templateUrl: './alignment-panel.component.html',
+  styleUrls: ['./alignment-panel.component.scss'],
   encapsulation: ViewEncapsulation.None
 })
-export class HeadingConfigComponent extends AbstractReportComponentConfig<HeadingReportComponentConfig> {
+export class AlignmentPanelComponent implements OnInit {
 
-  settingsTab: 'content' | 'data' = 'content';
+  alignments: alignment[];
+  alignmentTranslations = alignmentTranslations;
+  alignmentIcons = alignmentIcons;
 
-  constructor(destroyRef: DestroyRef,
-              private fb: FormBuilder) {
-    super(destroyRef);
+  @Input()
+  alignment: alignment;
+
+  @Input()
+  horizontal: boolean;
+
+  @Output()
+  alignmentSelected = new EventEmitter<alignment>();
+
+  constructor() {
   }
 
-  protected buildForm(reportComponentConfig: HeadingReportComponentConfig): FormGroup {
-    return this.fb.group({
-      value: [reportComponentConfig.value, []],
-      font: [reportComponentConfig.font, []],
-      color: [reportComponentConfig.color, []],
-      textAlignment: [reportComponentConfig.textAlignment, []],
-      verticalAlignment: [reportComponentConfig.verticalAlignment, []],
-      height: [reportComponentConfig.height, []],
-      dataSources: [reportComponentConfig.dataSources, []]
-    });
+  ngOnInit() {
+    this.alignments = this.horizontal ? horizontalAlignments : verticalAlignments;
   }
 
+  selectAlignment(alignment: alignment) {
+    this.alignmentSelected.emit(alignment);
+  }
 }

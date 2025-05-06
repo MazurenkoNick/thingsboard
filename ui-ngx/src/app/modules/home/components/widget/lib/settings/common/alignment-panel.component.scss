@@ -28,17 +28,23 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.common.data.report.configuration.style;
-
-import lombok.Getter;
-
-public enum TextAlignment {
-
-    center("CENTER"), right("RIGHT"), left("LEFT"), justify("JUSTIFIED");
-    @Getter
-    private final String value;
-
-    TextAlignment(String value) {
-        this.value = value;
+.tb-alignment-panel {
+  display: flex;
+  flex-direction: row;
+  gap: 6px;
+  button.mat-mdc-button-base.tb-select-alignment-button {
+    width: 36px;
+    min-width: 36px;
+    height: 36px;
+    padding: 6px;
+    &:not(.mat-primary) {
+      color: rgba(0, 0, 0, 0.54);
     }
+    > .mat-icon {
+      width: 24px;
+      height: 24px;
+      font-size: 24px;
+      margin: 0;
+    }
+  }
 }

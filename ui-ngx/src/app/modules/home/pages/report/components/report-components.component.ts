@@ -56,6 +56,11 @@ import {
 } from '@angular/cdk/drag-drop';
 import { deepClone } from '@core/utils';
 
+export interface EditReportComponentData {
+  reportComponent: ReportComponentConfig;
+  componentUpdated: () => void;
+}
+
 @Component({
   selector: 'tb-report-components',
   templateUrl: './report-components.component.html',
@@ -74,7 +79,7 @@ export class ReportComponentsComponent implements OnInit, OnChanges {
   componentsChanged = new EventEmitter();
 
   @Output()
-  componentEdit = new EventEmitter<ReportComponentConfig>();
+  componentEdit = new EventEmitter<EditReportComponentData>();
 
   reportsComponentHeight = 100;
 
@@ -130,8 +135,8 @@ export class ReportComponentsComponent implements OnInit, OnChanges {
     this.componentsChanged.emit();
   }
 
-  onComponentEdit(reportComponent: ReportComponentConfig): void {
-    this.componentEdit.emit(reportComponent);
+  onComponentEdit(reportComponent: ReportComponentConfig, componentUpdated: () => void): void {
+    this.componentEdit.emit({reportComponent, componentUpdated});
   }
 
   duplicateComponent(reportComponent: ReportComponentConfig): void {

@@ -29,9 +29,11 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { Component, Input, ViewEncapsulation } from '@angular/core';
+import { Component, HostBinding, ViewEncapsulation } from '@angular/core';
 import { HeadingReportComponentConfig } from '@shared/models/report-component.models';
-import { ReportComponentPreview } from '@home/pages/report/components/report-component.models';
+import { ComponentStyle, Font, textStyle } from '@shared/models/widget-settings.models';
+import { deepClone } from '@core/utils';
+import { AbstractReportComponentPreview } from '@home/pages/report/components/report-component.component';
 
 @Component({
   selector: 'tb-report-heading-preview',
@@ -39,11 +41,46 @@ import { ReportComponentPreview } from '@home/pages/report/components/report-com
   styleUrls: [],
   encapsulation: ViewEncapsulation.None
 })
-export class HeadingPreviewComponent implements ReportComponentPreview<HeadingReportComponentConfig> {
+export class HeadingPreviewComponent extends AbstractReportComponentPreview<HeadingReportComponentConfig> {
 
-  @Input()
-  reportComponent: HeadingReportComponentConfig;
+  @HostBinding('style.width')
+  width = '100%';
 
-  constructor() {}
+  headingStyle: ComponentStyle;
+
+  componentUpdated() {
+    const font: Font = deepClone(this.reportComponent.font || { size: 10, sizeUnit: 'pt' } as Font);
+    if (!font.size) {
+      font.size = 10;
+    }
+    if (font.sizeUnit !== 'pt') {
+      font.sizeUnit = 'pt';
+    }
+    this.headingStyle = textStyle(font);
+    this.headingStyle.color = this.reportComponent.color || '#000';
+    if (this.reportComponent.textAlignment) {
+      this.headingStyle.textAlign = this.reportComponent.textAlignment;
+      this.headingStyle.justifyContent = this.reportComponent.textAlignment === 'justify' ?
+        'normal' : this.reportComponent.textAlignment;
+    }
+    if (this.reportComponent.verticalAlignment) {
+      switch (this.reportComponent.verticalAlignment) {
+        case 'top':
+          this.headingStyle.alignItems = 'start';
+          break;
+        case 'middle':
+          this.headingStyle.alignItems = 'center';
+          break;
+        case 'bottom':
+          this.headingStyle.alignItems = 'end';
+          break;
+      }
+    }
+    if (this.reportComponent.height) {
+      this.headingStyle.height = this.reportComponent.height + 'pt';
+    } else {
+      this.headingStyle.height = '100%';
+    }
+  }
 
 }

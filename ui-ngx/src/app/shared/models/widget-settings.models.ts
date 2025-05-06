@@ -63,11 +63,11 @@ import {
 
 export type ComponentStyle = {[klass: string]: any};
 
-export const cssUnits = ['px', 'em', '%', 'rem', 'pt', 'pc', 'in', 'cm', 'mm', 'ex', 'ch', 'vw', 'vh', 'vmin', 'vmax'] as const;
+export const cssUnits = ['px', 'em', '%', 'rem', 'pt', 'pc', 'in', 'cm', 'mm', 'ex', 'ch', 'vw', 'vh', 'vmin', 'vmax'];
 type cssUnitTuple = typeof cssUnits;
 export type cssUnit = cssUnitTuple[number];
 
-export const fontWeights = ['normal', 'bold', 'bolder', 'lighter', '100', '200', '300', '400', '500', '600', '700', '800', '900'] as const;
+export const fontWeights = ['normal', 'bold', 'bolder', 'lighter', '100', '200', '300', '400', '500', '600', '700', '800', '900'];
 type fontWeightTuple = typeof fontWeights;
 export type fontWeight = fontWeightTuple[number];
 
@@ -80,7 +80,7 @@ export const fontWeightTranslations = new Map<fontWeight, string>(
   ]
 );
 
-export const fontStyles = ['normal', 'italic', 'oblique'] as const;
+export const fontStyles = ['normal', 'italic', 'oblique'];
 type fontStyleTuple = typeof fontStyles;
 export type fontStyle = fontStyleTuple[number];
 
@@ -94,13 +94,36 @@ export const fontStyleTranslations = new Map<fontStyle, string>(
 
 export const commonFonts = ['Roboto', 'monospace', 'sans-serif', 'serif'];
 
-export const textAlignments = ['left', 'right', 'center'];
-type textAlignmentTuple = typeof textAlignments;
-export type textAlignment = textAlignmentTuple[number];
+export const alignments = ['left', 'center', 'right', 'justify', 'top', 'middle', 'bottom'];
+type alignmentTuple = typeof alignments;
+export type alignment = alignmentTuple[number];
 
-export const verticalAlignments = ['top', 'bottom', 'middle'];
-type verticalAlignmentTuple = typeof verticalAlignments;
-export type verticalAlignment = verticalAlignmentTuple[number];
+export const alignmentTranslations = new Map<alignment, string>(
+  [
+    ['left', 'widgets.alignment.align-left'],
+    ['center', 'widgets.alignment.align-center'],
+    ['right', 'widgets.alignment.align-right'],
+    ['justify', 'widgets.alignment.justify'],
+    ['top', 'widgets.alignment.align-top'],
+    ['middle', 'widgets.alignment.align-middle'],
+    ['bottom', 'widgets.alignment.align-bottom']
+  ]
+);
+
+export const alignmentIcons = new Map<alignment, string>(
+  [
+    ['left', 'format_align_left'],
+    ['center', 'format_align_center'],
+    ['right', 'format_align_right'],
+    ['justify', 'format_align_justify'],
+    ['top', 'mdi:format-align-top'],
+    ['middle', 'mdi:format-align-middle'],
+    ['bottom', 'mdi:format-align-bottom']
+  ]
+);
+
+export const horizontalAlignments: alignment[] = ['left', 'center', 'right', 'justify'];
+export const verticalAlignments: alignment[] = ['top', 'middle', 'bottom'];
 
 export interface Font {
   size: number;

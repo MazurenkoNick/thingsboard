@@ -30,28 +30,27 @@
     OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 
 -->
-<div class="tb-form-panel no-border" [formGroup]="reportConfigForm">
-  <div class="tb-report-component-config-header">
-    <tb-toggle-select [(ngModel)]="settingsTab" [ngModelOptions]="{standalone: true}" appearance="fill">
-      <tb-toggle-option value="content">{{ 'report-template.content' | translate }}</tb-toggle-option>
-      <tb-toggle-option value="data">{{ 'report-template.data' | translate }}</tb-toggle-option>
-    </tb-toggle-select>
-  </div>
-  <div class="tb-form-panel stroked" [class.!hidden]="settingsTab !== 'content'">
-    <div class="tb-form-panel-title" translate>report-template.component.rich-text.text</div>
-    <editor [init]="tinyMceOptions" formControlName="value"></editor>
-  </div>
-  <tb-datasources [class.!hidden]="settingsTab !== 'data'"
-                  formControlName="dataSources"
-                  stroked
-                  [dataSourcesOptions]="{
-                    widgetType: widgetType.latest,
-                    maxDatasources: -1,
-                    datasourcesOptional: true,
-                    allowFunctions: false
-                  }"
-                  hideDataKeyColor
-                  [callbacks]="callbacks"
-                  [aliasController]="context.aliasController">
-  </tb-datasources>
+<div class="tb-alignment-panel">
+  @for (alignmentOption of alignments; track alignmentOption) {
+    @if(alignmentOption === alignment) {
+      <button class="tb-select-alignment-button"
+              mat-raised-button
+              color="primary"
+              (click)="selectAlignment(alignmentOption)"
+              matTooltip="{{ alignmentTranslations.get(alignmentOption) | translate }}"
+              matTooltipPosition="above"
+              type="button">
+        <tb-icon matButtonIcon>{{alignmentIcons.get(alignmentOption)}}</tb-icon>
+      </button>
+    } @else {
+      <button class="tb-select-alignment-button"
+              mat-button
+              (click)="selectAlignment(alignmentOption)"
+              matTooltip="{{ alignmentTranslations.get(alignmentOption) | translate }}"
+              matTooltipPosition="above"
+              type="button">
+        <tb-icon matButtonIcon>{{alignmentIcons.get(alignmentOption)}}</tb-icon>
+      </button>
+    }
+  }
 </div>

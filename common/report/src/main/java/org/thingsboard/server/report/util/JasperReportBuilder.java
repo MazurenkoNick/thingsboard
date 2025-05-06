@@ -74,12 +74,12 @@ import org.thingsboard.server.common.data.report.configuration.style.VerticalAli
 import java.awt.*;
 import java.util.Collection;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Data
 public class JasperReportBuilder {
 
+    private static final int DEFAULT_TEXT_HEIGHT = 20;
     private JasperDesign jasperDesign;
     private int usablePageWidth;
 
@@ -150,10 +150,17 @@ public class JasperReportBuilder {
         if (font != null) {
             textField.setBold(font.getWeight() == FontWeight.bold);
             textField.setItalic(font.getStyle() == FontStyle.italic);
-            if (font.getSize() != null) {
-                textField.setFontSize(font.getSize());
+            String fontFamily = font.getFamily();
+            if (fontFamily != null) {
+                textField.setFontName(fontFamily);
+            }
+            Float fontSize = font.getSize();
+            if (fontSize != null) {
+                textField.setFontSize(fontSize);
             }
         }
+        int fieldHeight = calculateFieldHeight(font);
+        textField.setHeight(fieldHeight);
 
         // Set horizontal and vertical alignment
         TextAlignment textAlignment = component.getTextAlignment();
@@ -171,11 +178,19 @@ public class JasperReportBuilder {
         textField.setExpression(expression);
 
         JRDesignBand detailBand = new JRDesignBand();
-        detailBand.setHeight(30);
+        detailBand.setHeight(fieldHeight);
         detailBand.addElement(textField);
 
         JRDesignSection detailSection = (JRDesignSection) jasperDesign.getDetailSection();
         detailSection.addBand(detailBand);
+    }
+
+    private int calculateFieldHeight(Font font) {
+        if (font == null || font.getSize() == null) {
+            return DEFAULT_TEXT_HEIGHT;
+        }
+        float lineSpacingFactor = 1.3f; // safe default
+        return (int) Math.ceil(font.getSize() * lineSpacingFactor);
     }
 
     public void addPageHeader(HeaderFooter header) {
@@ -250,9 +265,8 @@ public class JasperReportBuilder {
         htmlField.setHeight(100);
         htmlField.setMarkup("html");
 
-        // Set the text content as a string literal
         JRDesignExpression expression = new JRDesignExpression();
-        expression.setText("\"" + richText + "\"");
+        expression.setText(escapeHtmlForJasperExpression(richText));
         htmlField.setExpression(expression);
 
         JRDesignBand detailBand = new JRDesignBand();
@@ -261,6 +275,13 @@ public class JasperReportBuilder {
 
         JRDesignSection detailSection = (JRDesignSection) jasperDesign.getDetailSection();
         detailSection.addBand(detailBand);
+    }
+
+    private String escapeHtmlForJasperExpression(String rawHtml) {
+        String escaped = rawHtml
+                .replace("\\", "\\\\")
+                .replace("\"", "\\\"");
+        return "\"" + escaped + "\"";
     }
 
     public JRDesignField createField(String name, Class<?> type) {

@@ -40,15 +40,12 @@ import { IAliasController } from '@core/api/widget-api.models';
 import { EntityService } from '@core/http/entity.service';
 import { TranslateService } from '@ngx-translate/core';
 import { UtilsService } from '@core/services/utils.service';
-
-export interface ReportComponentPreview<C extends ReportComponentConfig = ReportComponentConfig> {
-  reportComponent: C;
-}
+import { AbstractReportComponentPreview } from '@home/pages/report/components/report-component.component';
 
 export interface ReportComponentTypeData<C extends ReportComponentConfig = ReportComponentConfig> {
   title: string;
   previewImage: string;
-  previewComponent: Type<ReportComponentPreview<C>>;
+  previewComponent: Type<AbstractReportComponentPreview<C>>;
   configComponent: Type<AbstractReportComponentConfig<C>>;
 }
 
@@ -82,4 +79,12 @@ export interface ReportComponentContext {
   utils: UtilsService,
   entityService: EntityService;
   aliasController: IAliasController;
+}
+
+export const assignReportComponent = (reportComponent: ReportComponentConfig, sourceReportComponent: ReportComponentConfig): void => {
+  Object.assign(reportComponent, sourceReportComponent);
+  for(const key in reportComponent){
+    if(!(key in sourceReportComponent))
+      delete reportComponent[key];
+  }
 }
