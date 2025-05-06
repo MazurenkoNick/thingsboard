@@ -44,6 +44,12 @@
               (click)="isFullscreen = !isFullscreen">
         <mat-icon>{{ isFullscreen ? 'fullscreen_exit' : 'fullscreen' }}</mat-icon>
       </button>
+      <button mat-icon-button
+              matTooltip="{{'report.generate-test-report' | translate}}"
+              matTooltipPosition="below"
+              (click)="generateTestReport()">
+        <mat-icon>download</mat-icon>
+      </button>
       <button mat-stroked-button [disabled]="(isLoading$ | async)" (click)="saveReportTemplate()">
         <mat-icon>done</mat-icon>{{ 'action.save' | translate }}</button>
       <button mat-button [disabled]="(isLoading$ | async)" (click)="declineReportTemplate()">
@@ -72,29 +78,142 @@
       </button>
     </div>
   </mat-toolbar>
-  <mat-drawer-container class="size-full">
+  <mat-drawer-container class="size-full" cdkDropListGroup>
     <mat-drawer class="tb-report-components-library"
                 *ngIf="!readonly"
+                #reportComponentsLibrary
                 disableClose="true"
                 mode="side"
                 opened
                 position="start">
+      <mat-toolbar class="mat-elevation-z1">
+        <div translate>report-template.report-components</div>
+      </mat-toolbar>
+      <tb-report-component-library class="min-h-0 flex-1"></tb-report-component-library>
     </mat-drawer>
-    <mat-drawer class="tb-report-component-settings"
+    <mat-drawer class="tb-report-settings"
+                [class.tb-report-component-settings]="!!activeReportComponent"
                 disableClose="true"
                 mode="side"
                 opened
                 position="end">
+      @if (activeReportComponent) {
+        <tb-details-panel class="flex-1"
+                          [color]="null"
+                          showCloseDetails="false"
+                          headerTitle="{{ reportComponentTypeMap.get(activeReportComponent.type).title | translate }}"
+                          headerHeightPx="68"
+                          isReadOnly="true">
+          <div class="details-buttons flex flex-row items-center justify-end gap-3">
+            <button mat-stroked-button color="primary"
+                    (click)="cancelReportComponentEdit()">
+              <mat-icon>close</mat-icon>
+              {{ 'action.cancel' | translate }}
+            </button>
+            <button [disabled]="!reportConfig?.reportConfigForm?.valid || !reportConfig?.reportConfigForm?.dirty"
+                    mat-flat-button color="primary"
+                    (click)="saveReportComponent()">
+              <mat-icon>done</mat-icon>
+              {{ 'action.save' | translate }}
+            </button>
+          </div>
+          <tb-report-component-config
+            #reportConfig
+            [context]="reportComponentContext"
+            [reportComponent]="editingReportComponent">
+          </tb-report-component-config>
+        </tb-details-panel>
+      } @else {
+        <tb-details-panel class="flex-1"
+                          [color]="null"
+                          showCloseDetails="false"
+                          isReadOnly="true"
+                          headerTitle="{{reportTemplate.name}}"
+                          headerSubtitle="{{ 'report-template.report-template-settings' | translate }}">
+          <div class="mat-padding">
+            <tb-report-template-settings [formControl]="reportTemplateSettingsFormControl"></tb-report-template-settings>
+          </div>
+        </tb-details-panel>
+      }
     </mat-drawer>
     <mat-drawer-content class="tb-report-template-content">
-      <div class="tb-report-components-container">
-        Header
-      </div>
-      <div class="tb-report-components-container">
-        {{  reportTemplate | json }}
-      </div>
-      <div class="tb-report-components-container">
-        Footer
+      <div class="tb-report-template-layout">
+        <div class="tb-report-components-container">
+          <div class="flex flex-row justify-between">
+            <tb-toggle-select [(ngModel)]="headerToggleValue">
+              <tb-toggle-option value="header">{{ 'report-template.header' | translate }}</tb-toggle-option>
+              <tb-toggle-option value="firstPageHeader">{{ 'report-template.first-page-header' | translate }}</tb-toggle-option>
+            </tb-toggle-select>
+            @if (currentHeader.enabled) {
+              <button mat-stroked-button color="primary" (click)="disableHeader()">
+                {{ 'action.disable' | translate }}
+              </button>
+            } @else {
+              <button mat-stroked-button color="primary" (click)="enableHeader()">
+                {{ 'action.enable' | translate }}
+              </button>
+            }
+          </div>
+          @if (!currentHeader.enabled) {
+            <div class="tb-disabled-header">
+              {{ (headerToggleValue === 'header' ? 'report-template.header-disabled' : 'report-template.first-page-header-disabled') | translate }}
+            </div>
+          }
+          <tb-report-components
+            [class.!hidden]="headerToggleValue !== 'header' || !reportTemplate.configuration.header.enabled"
+            [reportComponents]="reportTemplate.configuration.header.components"
+            (componentsChanged)="reportComponentsChanged()"
+            (componentEdit)="editReportComponent($event)">
+          </tb-report-components>
+          <tb-report-components
+            [class.!hidden]="headerToggleValue !== 'firstPageHeader' || !reportTemplate.configuration.header.firstPage.enabled"
+            [reportComponents]="reportTemplate.configuration.header.firstPage.components"
+            (componentsChanged)="reportComponentsChanged()"
+            (componentEdit)="editReportComponent($event)">
+          </tb-report-components>
+        </div>
+        <div class="tb-report-components-container">
+          <div class="tb-report-components-container-title" translate>report-template.content</div>
+          <tb-report-components
+            [reportComponents]="reportTemplate.configuration.components"
+            (componentsChanged)="reportComponentsChanged()"
+            (componentEdit)="editReportComponent($event)">
+          </tb-report-components>
+        </div>
+        <div class="tb-report-components-container">
+          <div class="flex flex-row justify-between">
+            <tb-toggle-select [(ngModel)]="footerToggleValue">
+              <tb-toggle-option value="footer">{{ 'report-template.footer' | translate }}</tb-toggle-option>
+              <tb-toggle-option value="firstPageFooter">{{ 'report-template.first-page-footer' | translate }}</tb-toggle-option>
+            </tb-toggle-select>
+            @if (currentFooter.enabled) {
+              <button mat-stroked-button color="primary" (click)="disableFooter()">
+                {{ 'action.disable' | translate }}
+              </button>
+            } @else {
+              <button mat-stroked-button color="primary" (click)="enableFooter()">
+                {{ 'action.enable' | translate }}
+              </button>
+            }
+          </div>
+          @if (!currentFooter.enabled) {
+            <div class="tb-disabled-header">
+              {{ (footerToggleValue === 'footer' ? 'report-template.footer-disabled' : 'report-template.first-page-footer-disabled') | translate }}
+            </div>
+          }
+          <tb-report-components
+            [class.!hidden]="footerToggleValue !== 'footer' || !reportTemplate.configuration.footer.enabled"
+            [reportComponents]="reportTemplate.configuration.footer.components"
+            (componentsChanged)="reportComponentsChanged()"
+            (componentEdit)="editReportComponent($event)">
+          </tb-report-components>
+          <tb-report-components
+            [class.!hidden]="footerToggleValue !== 'firstPageFooter' || !reportTemplate.configuration.footer.firstPage.enabled"
+            [reportComponents]="reportTemplate.configuration.footer.firstPage.components"
+            (componentsChanged)="reportComponentsChanged()"
+            (componentEdit)="editReportComponent($event)">
+          </tb-report-components>
+        </div>
       </div>
     </mat-drawer-content>
   </mat-drawer-container>

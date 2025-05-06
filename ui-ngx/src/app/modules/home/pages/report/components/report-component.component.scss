@@ -28,35 +28,77 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.common.data.report.configuration.components;
+.tb-report-component {
+  width: 100%;
+  min-height: 60px;
+  background: #fff;
+  padding: 2px;
+  &.tb-hover {
+    border: solid 2px #bdc3c7;
+    padding: 0;
+  }
+}
 
-import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import org.thingsboard.server.common.data.report.configuration.DataSource;
-import org.thingsboard.server.common.data.report.configuration.style.Font;
-import org.thingsboard.server.common.data.report.configuration.style.TextAlignment;
-import org.thingsboard.server.common.data.report.configuration.style.VerticalAlignment;
+.cdk-drag-preview {
+  .tb-report-component {
+    border: none;
+    padding: 2px;
+  }
+}
 
-import java.util.List;
+.cdk-drag-placeholder {
+  .tb-report-component {
+    border: dotted 3px #999;
+    padding: 0;
+  }
+}
 
-@Schema
-@Data
-@EqualsAndHashCode
-@NoArgsConstructor
-public class HeadingComponent implements ReportComponent {
-
-    private String value;
-    private Font font;
-    private String color;
-    private TextAlignment textAlignment;
-    private VerticalAlignment verticalAlignment;
-    private Integer height;
-    private List<DataSource> dataSources;
-
-    @Override
-    public ReportComponentType getType() {
-        return ReportComponentType.HEADING;
+.tooltipster-sidetip.tb-report-component-edit-tooltip {
+  position: absolute !important;
+  .tooltipster-box {
+    user-select: none;
+    background: #fff;
+    border: 1px solid rgba(0, 0, 0, 0.38);
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.5);
+    .tooltipster-content {
+      padding: 4px 8px;
+      font-size: 12px;
+      line-height: 12px;
+      font-weight: 500;
+      color: rgba(0, 0, 0, 0.76);
+      .tb-report-component-action-container {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        .tb-report-component-actions-panel {
+          display: flex;
+          flex-direction: row;
+          place-content: center space-between;
+          align-items: center;
+          gap: 8px;
+        }
+      }
     }
+  }
+  .tooltipster-arrow {
+    .tooltipster-arrow-uncropped {
+      .tooltipster-arrow-background {
+        border-width: 12px;
+      }
+    }
+  }
+  &.tooltipster-top {
+    .tooltipster-arrow {
+      bottom: -1px;
+      .tooltipster-arrow-uncropped {
+        .tooltipster-arrow-border {
+          border-top-color: rgba(0, 0, 0, 0.38);
+        }
+        .tooltipster-arrow-background {
+          border-top-color: #fff;
+          left: -2px;
+        }
+      }
+    }
+  }
 }

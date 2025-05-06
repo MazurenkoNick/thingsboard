@@ -36,14 +36,14 @@ import { CustomerId } from '@shared/models/id/customer-id';
 import { HasTenantId, HasVersion } from '@shared/models/entity.models';
 import { SchedulerEventId } from '@shared/models/id/scheduler-event-id';
 import { EntityId } from '@shared/models/id/entity-id';
-import { EntityAlias } from '@shared/models/alias.models';
+import { EntityAlias, EntityAliases } from '@shared/models/alias.models';
 import {
-  Filter,
+  Filter, Filters,
   KeyFilter,
   keyFilterInfosToKeyFilters,
   keyFiltersToKeyFilterInfos
 } from '@shared/models/query/query.models';
-import { ReportComponentConfig } from '@shared/models/report-component.models';
+import { ReportComponentConfig, TableReportComponentConfig } from '@shared/models/report-component.models';
 
 export enum ReportTemplateType {
   REPORT = 'REPORT',
@@ -85,6 +85,38 @@ export interface ReportFilter {
   keyFilters: Array<KeyFilter>;
 }
 
+export const entityAliasesToList = (entityAliases: EntityAliases): EntityAlias[] => {
+  const entityAliasesList: EntityAlias[] = [];
+  for (const id of Object.keys(entityAliases)) {
+    entityAliasesList.push(entityAliases[id]);
+  }
+  return entityAliasesList;
+}
+
+export const entityAliasesListToAliases = (entityAliasesList: EntityAlias[]): EntityAliases => {
+  const entityAliases: EntityAliases = {};
+  for (const entityAlias of entityAliasesList) {
+    entityAliases[entityAlias.id] = entityAlias;
+  }
+  return entityAliases;
+}
+
+export const filtersToReportFilterList = (filters: Filters): ReportFilter[] => {
+  const reportFilters: ReportFilter[] = [];
+  for (const id of Object.keys(filters)) {
+    reportFilters.push(filterToReportFilter(filters[id]));
+  }
+  return reportFilters;
+}
+
+export const reportFilterListToFilters = (reportFilters: ReportFilter[]): Filters => {
+  const filters: Filters = {};
+  for (const filter of reportFilters) {
+    filters[filter.id] = reportFilterToFilter(filter);
+  }
+  return filters;
+}
+
 export const reportFilterToFilter = (reportFilter: ReportFilter): Filter => {
   const keyFilterInfos = keyFiltersToKeyFilterInfos(reportFilter.keyFilters);
   return {
@@ -104,14 +136,26 @@ export const filterToReportFilter = (filter: Filter): ReportFilter => {
   };
 }
 
+export enum TbReportFormat {
+  PDF = 'PDF',
+  CSV = 'CSV'
+}
+
+export interface ReportTemplateConfig {
+  format: TbReportFormat;
+}
+
+export interface AbstractReportTemplateConfig extends ReportTemplateConfig {
+  namePattern: string;
+}
+
 export interface ReportTemplateSettings {
   name: string;
-  fileName: string;
+  namePattern: string;
   description?: string;
 }
 
-export interface ReportTemplateConfiguration {
-  fileName: string;
+export interface PdfReportTemplateConfig extends AbstractReportTemplateConfig {
   entityAliases: EntityAlias[];
   filters: ReportFilter[];
   header: HeaderFooter;
@@ -119,15 +163,30 @@ export interface ReportTemplateConfiguration {
   components: ReportComponentConfig[];
 }
 
-export interface ReportTemplate extends BaseReportTemplate {
-  configuration: ReportTemplateConfiguration;
+export interface CsvReportTemplateConfig extends AbstractReportTemplateConfig {
+  entityAlias: EntityAlias;
+  filter: ReportFilter;
+  component: TableReportComponentConfig;
 }
 
-export const defaultReportTemplate: ReportTemplate = {
+export interface ReportTemplate<Config extends ReportTemplateConfig = ReportTemplateConfig> extends BaseReportTemplate {
+  configuration: Config;
+}
+
+export interface ReportRequest {
+  reportTemplateConfig: ReportTemplateConfig;
+  customerId?: CustomerId;
+  entityId?: EntityId;
+  timezone?: string;
+  userId?: string;
+}
+
+export const defaultReportTemplate: ReportTemplate<PdfReportTemplateConfig> = {
   name: '',
   type: ReportTemplateType.REPORT,
   configuration: {
-    fileName: 'report-%d{yyyy-MM-dd_HH:mm:ss}',
+    format: TbReportFormat.PDF,
+    namePattern: 'report-%d{yyyy-MM-dd_HH:mm:ss}',
     header: {
       enabled: true,
       components: []
@@ -139,5 +198,36 @@ export const defaultReportTemplate: ReportTemplate = {
     entityAliases: [],
     filters: [],
     components: []
-  }
+  } as PdfReportTemplateConfig
 };
+
+export const validateAndUpdateReportTemplate =
+  <Config extends ReportTemplateConfig>(reportTemplate: ReportTemplate<Config>): ReportTemplate<Config> => {
+  if (!reportTemplate.configuration.format) {
+    reportTemplate.configuration.format = TbReportFormat.PDF;
+  }
+  if (reportTemplate.configuration.format === TbReportFormat.PDF) {
+    const configuration = reportTemplate.configuration as any as PdfReportTemplateConfig;
+    configuration.header = validateAndUpdateReportTemplateHeaderFooter(configuration.header);
+    configuration.footer = validateAndUpdateReportTemplateHeaderFooter(configuration.footer);
+  } else {
+    const configuration = reportTemplate.configuration as any as CsvReportTemplateConfig;
+  }
+  return reportTemplate;
+}
+
+const validateAndUpdateReportTemplateHeaderFooter = (headerFooter: HeaderFooter): HeaderFooter => {
+  if (!headerFooter) {
+    headerFooter = { enabled: true, components: [], firstPage: { enabled: false, components: [] } };
+  }
+  if (!headerFooter.components) {
+    headerFooter.components = [];
+  }
+  if (!headerFooter.firstPage) {
+    headerFooter.firstPage = { enabled: false, components: [] };
+  }
+  if (!headerFooter.firstPage.components) {
+    headerFooter.firstPage.components = [];
+  }
+  return headerFooter;
+}

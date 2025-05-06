@@ -97,6 +97,7 @@
                   [callbacks]="callbacks"
                   [entityAliasId]="datasourceFormGroup.get('entityAliasId').value"
                   [deviceId]="datasourceFormGroup.get('deviceId').value"
+                  [datasources]="datasources"
                   formControlName="dataKeys">
     </tb-data-keys>
     <tb-data-keys *ngIf="hasAdditionalLatestDataKeys" class="tb-data-keys flex-1"
@@ -117,6 +118,7 @@
                   [callbacks]="callbacks"
                   [entityAliasId]="datasourceFormGroup.get('entityAliasId').value"
                   [deviceId]="datasourceFormGroup.get('deviceId').value"
+                  [datasources]="datasources"
                   formControlName="latestDataKeys">
     </tb-data-keys>
   </section>

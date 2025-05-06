@@ -28,35 +28,50 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.common.data.report.configuration.components;
-
-import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import org.thingsboard.server.common.data.report.configuration.DataSource;
-import org.thingsboard.server.common.data.report.configuration.style.Font;
-import org.thingsboard.server.common.data.report.configuration.style.TextAlignment;
-import org.thingsboard.server.common.data.report.configuration.style.VerticalAlignment;
-
-import java.util.List;
-
-@Schema
-@Data
-@EqualsAndHashCode
-@NoArgsConstructor
-public class HeadingComponent implements ReportComponent {
-
-    private String value;
-    private Font font;
-    private String color;
-    private TextAlignment textAlignment;
-    private VerticalAlignment verticalAlignment;
-    private Integer height;
-    private List<DataSource> dataSources;
-
-    @Override
-    public ReportComponentType getType() {
-        return ReportComponentType.HEADING;
+.tb-report-component-library {
+  width: 100%;
+  height: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px 8px;
+  &.tb-drag-active-list {
+    display: none;
+  }
+}
+.tb-report-component-library-item {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  .tb-report-component-library-item-title {
+    font-size: 13px;
+  }
+}
+.tb-report-component-library-drag-item {
+  box-sizing: content-box;
+  width: 234px;
+  cursor: move;
+  &:active {
+    cursor: grabbing;
+  }
+  &:hover {
+    .tb-report-component-library-item-preview {
+      box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.1);
     }
+  }
+}
+.tb-report-component-placeholder {
+  width: 100%;
+  height: 100%;
+  border: dotted 3px #999;
+  background: #eee;
+}
+.tb-report-component-library-item-preview {
+  width: 100%;
+  height: auto;
+  border: 1px solid #eaedf1;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.1);
 }

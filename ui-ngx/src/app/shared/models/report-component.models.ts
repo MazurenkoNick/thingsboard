@@ -30,6 +30,8 @@
 ///
 
 import { Datasource } from '@shared/models/widget.models';
+import { deepClone } from '@core/utils';
+import { Font, textAlignment, verticalAlignment } from '@shared/models/widget-settings.models';
 
 export enum ReportComponentType {
   HEADING = 'HEADING',
@@ -42,22 +44,60 @@ export enum ReportComponentType {
   SUB_REPORT = 'SUB_REPORT'
 }
 
-export interface HeadingReportComponentConfig {
-  value: string;
+export interface ReportComponentConfig {
   dataSources: Datasource[];
-}
-
-export interface RichTextReportComponentConfig {
-  value: string;
-  dataSources: Datasource[];
-}
-
-export interface EntityTableReportComponentConfig {
-  dataSource: Datasource;
-}
-
-export type ReportComponentConfigs = Partial<HeadingReportComponentConfig & RichTextReportComponentConfig & EntityTableReportComponentConfig>;
-
-export interface ReportComponentConfig extends ReportComponentConfigs {
   type: ReportComponentType;
+}
+
+export interface TableReportComponentConfig extends ReportComponentConfig {
+  type: ReportComponentType;
+}
+
+export interface HeadingReportComponentConfig extends ReportComponentConfig {
+  value: string;
+  font?: Font;
+  color?: string;
+  textAlignment?: textAlignment;
+  verticalAlignment?: verticalAlignment;
+  height?: number;
+  type:  ReportComponentType.HEADING;
+}
+
+export interface RichTextReportComponentConfig extends ReportComponentConfig {
+  value: string;
+  type: ReportComponentType.RICH_TEXT;
+}
+
+export interface EntityTableReportComponentConfig extends TableReportComponentConfig {
+  type: ReportComponentType.ENTITY_TABLE;
+}
+
+export type ReportComponentConfigs = HeadingReportComponentConfig | RichTextReportComponentConfig | EntityTableReportComponentConfig;
+
+export const reportComponentTypeDefaultConfigMap = new Map<ReportComponentType, ReportComponentConfigs>(
+  [
+    [
+      ReportComponentType.HEADING,
+      {
+        type: ReportComponentType.HEADING,
+        value: 'Heading text',
+        dataSources: []
+      }
+    ],
+    [
+      ReportComponentType.RICH_TEXT,
+      {
+        type: ReportComponentType.RICH_TEXT,
+        value: '<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec libero orci, faucibus in iaculis quis, vestibulum sit amet ligula. Nulla facilisi. Ut ut iaculis tortor.</p>',
+        dataSources: []
+      }
+    ]
+  ]
+);
+
+export const defaultReportComponentConfig = (type: ReportComponentType): ReportComponentConfig => {
+  const config = reportComponentTypeDefaultConfigMap.get(type);
+  if (config) {
+    return { type, ...deepClone(config)};
+  }
 }

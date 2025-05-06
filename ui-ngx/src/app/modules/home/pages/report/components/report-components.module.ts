@@ -32,38 +32,40 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SharedModule } from '@shared/shared.module';
-import { HomeDialogsModule } from '../../dialogs/home-dialogs.module';
-import { HomeComponentsModule } from '@modules/home/components/home-components.module';
-import { RoleComponent } from '@home/pages/role/role.component';
-import { RoleTabsComponent } from '@home/pages/role/role-tabs.component';
-import { RoleRoutingModule } from '@home/pages/role/role-routing.module';
-import { ReportTemplatePageComponent } from '@home/pages/report/report-template-page.component';
-import { ReportTemplateRoutingModule } from '@home/pages/report/report-template-routing.module';
-import { ReportTemplateTableHeaderComponent } from '@home/pages/report/report-template-table-header.component';
-import { ReportTemplateTabsComponent } from '@home/pages/report/report-template-tabs.component';
-import { ReportTemplateFormComponent } from '@home/pages/report/report-template-form.component';
-import { ReportTemplateSettingsDialogComponent } from '@home/pages/report/report-template-settings-dialog.component';
-import { ReportComponentComponent } from '@home/pages/report/components/report-component.component';
+import {
+  EditReportComponentTooltipComponent,
+  ReportComponentComponent
+} from '@home/pages/report/components/report-component.component';
 import { ReportComponentsComponent } from '@home/pages/report/components/report-components.component';
-import { ReportComponentsModule } from '@home/pages/report/components/report-components.module';
-import { ReportTemplateSettingsComponent } from '@home/pages/report/report-template-settings.component';
+import { HeadingPreviewComponent } from '@home/pages/report/components/heading-preview.component';
+import { RichTextPreviewComponent } from '@home/pages/report/components/rich-text-preview.component';
+import { ReportComponentLibraryComponent } from '@home/pages/report/components/report-component-library.component';
+import { ReportComponentConfigComponent } from '@home/pages/report/components/report-component-config.component';
+import { HeadingConfigComponent } from '@home/pages/report/components/heading-config.component';
+import { RichTextConfigComponent } from '@home/pages/report/components/rich-text-config.component';
+import { WidgetConfigComponentsModule } from '@home/components/widget/config/widget-config-components.module';
 
 @NgModule({
   declarations: [
-    ReportTemplateTableHeaderComponent,
-    ReportTemplateTabsComponent,
-    ReportTemplateFormComponent,
-    ReportTemplatePageComponent,
-    ReportTemplateSettingsComponent,
-    ReportTemplateSettingsDialogComponent
+    EditReportComponentTooltipComponent,
+    ReportComponentComponent,
+    ReportComponentsComponent,
+    ReportComponentLibraryComponent,
+    HeadingPreviewComponent,
+    HeadingConfigComponent,
+    RichTextPreviewComponent,
+    RichTextConfigComponent,
+    ReportComponentConfigComponent
   ],
   imports: [
     CommonModule,
     SharedModule,
-    HomeComponentsModule,
-    HomeDialogsModule,
-    ReportComponentsModule,
-    ReportTemplateRoutingModule
+    WidgetConfigComponentsModule
+  ],
+  exports: [
+    ReportComponentsComponent,
+    ReportComponentLibraryComponent,
+    ReportComponentConfigComponent
   ]
 })
-export class ReportTemplateModule { }
+export class ReportComponentsModule { }

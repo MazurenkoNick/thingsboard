@@ -29,46 +29,21 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { ReportTemplateSettings } from '@shared/models/report.models';
-import { Component, Inject } from '@angular/core';
-import { DialogComponent } from '@shared/components/dialog.component';
-import { Store } from '@ngrx/store';
-import { AppState } from '@core/core.state';
-import { Router } from '@angular/router';
-import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
-import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
-
-export interface ReportTemplateSettingsDialogData {
-  settings: ReportTemplateSettings;
-}
+import { Component, Input, ViewEncapsulation } from '@angular/core';
+import { RichTextReportComponentConfig } from '@shared/models/report-component.models';
+import { ReportComponentPreview } from '@home/pages/report/components/report-component.models';
 
 @Component({
-  selector: 'tb-report-template-settings-dialog',
-  templateUrl: './report-template-settings-dialog.component.html',
-  styleUrls: []
+  selector: 'tb-rich-text-preview',
+  templateUrl: './rich-text-preview.component.html',
+  styleUrls: ['./rich-text-preview.component.scss'],
+  encapsulation: ViewEncapsulation.None
 })
-export class ReportTemplateSettingsDialogComponent extends DialogComponent<ReportTemplateSettingsDialogComponent, ReportTemplateSettingsDialogData> {
+export class RichTextPreviewComponent implements ReportComponentPreview<RichTextReportComponentConfig> {
 
-  settings: ReportTemplateSettings;
+  @Input()
+  reportComponent: RichTextReportComponentConfig;
 
-  settingsFormControl: FormControl;
+  constructor() {}
 
-  constructor(protected store: Store<AppState>,
-              protected router: Router,
-              @Inject(MAT_DIALOG_DATA) public data: ReportTemplateSettingsDialogData,
-              public dialogRef: MatDialogRef<ReportTemplateSettingsDialogComponent, ReportTemplateSettingsDialogData>,
-              private fb: FormBuilder) {
-    super(store, router, dialogRef);
-    this.settings = data.settings;
-    this.settingsFormControl = this.fb.control(this.settings);
-  }
-
-  cancel(): void {
-    this.dialogRef.close(null);
-  }
-
-  save(): void {
-    const settings = {...this.settings, ...this.settingsFormControl.getRawValue()};
-    this.dialogRef.close(settings);
-  }
 }

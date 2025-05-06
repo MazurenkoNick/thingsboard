@@ -172,7 +172,7 @@ public class PdfReportService extends AbstractReportService {
     }
 
     private JRMapCollectionDataSource buildMultipleDataSource(TbReportCtx ctx, List<DataSource> dataSources) {
-        if (dataSources == null) {
+        if (dataSources == null || dataSources.isEmpty()) {
             return new JRMapCollectionDataSource(List.of(Map.of()));
         }
         Collection<Map<String, ?>> entryList = new ArrayList<>();

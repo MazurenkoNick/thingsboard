@@ -94,6 +94,14 @@ export const fontStyleTranslations = new Map<fontStyle, string>(
 
 export const commonFonts = ['Roboto', 'monospace', 'sans-serif', 'serif'];
 
+export const textAlignments = ['left', 'right', 'center'];
+type textAlignmentTuple = typeof textAlignments;
+export type textAlignment = textAlignmentTuple[number];
+
+export const verticalAlignments = ['top', 'bottom', 'middle'];
+type verticalAlignmentTuple = typeof verticalAlignments;
+export type verticalAlignment = verticalAlignmentTuple[number];
+
 export interface Font {
   size: number;
   sizeUnit: cssUnit;

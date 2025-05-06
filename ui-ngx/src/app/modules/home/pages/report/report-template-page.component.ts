@@ -30,28 +30,30 @@
 ///
 
 import {
-  AfterViewChecked,
-  AfterViewInit, ChangeDetectorRef,
-  Component, EventEmitter,
+  ChangeDetectorRef,
+  Component,
+  DestroyRef,
+  EventEmitter,
   HostBinding,
-  OnDestroy,
   OnInit,
+  viewChild,
   ViewEncapsulation
 } from '@angular/core';
 import { PageComponent } from '@shared/components/page.component';
 import { HasDirtyFlag } from '@core/guards/confirm-on-exit.guard';
 import { Operation, Resource } from '@shared/models/security.models';
 import {
-  filterToReportFilter,
-  ReportFilter,
-  reportFilterToFilter,
+  entityAliasesListToAliases,
+  entityAliasesToList,
+  filtersToReportFilterList,
+  HeaderFooter, PdfReportTemplateConfig,
+  reportFilterListToFilters, ReportRequest,
   ReportTemplate,
-  ReportTemplateSettings
+  ReportTemplateSettings,
+  validateAndUpdateReportTemplate
 } from '@shared/models/report.models';
 import { UserPermissionsService } from '@core/http/user-permissions.service';
-import { takeUntil } from 'rxjs/operators';
 import { ActivatedRoute } from '@angular/router';
-import { Subject } from 'rxjs';
 import { ReportTemplateService } from '@core/http/report-template.service';
 import { FiltersDialogComponent, FiltersDialogData } from '@home/components/filter/filters-dialog.component';
 import { Filters } from '@shared/models/query/query.models';
@@ -61,11 +63,23 @@ import {
   EntityAliasesDialogComponent,
   EntityAliasesDialogData
 } from '@home/components/alias/entity-aliases-dialog.component';
-import { EntityAlias, EntityAliases } from '@shared/models/alias.models';
+import { EntityAliases } from '@shared/models/alias.models';
 import {
   ReportTemplateSettingsDialogComponent,
   ReportTemplateSettingsDialogData
 } from '@home/pages/report/report-template-settings-dialog.component';
+import { ReportComponentConfig } from '@shared/models/report-component.models';
+import { FormBuilder, FormControl } from '@angular/forms';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { ReportComponentContext, reportComponentTypeMap } from '@home/pages/report/components/report-component.models';
+import { MatDrawer } from '@angular/material/sidenav';
+import { EntityService } from '@core/http/entity.service';
+import { IStateController, StateParams } from '@core/api/widget-api.models';
+import { TranslateService } from '@ngx-translate/core';
+import { UtilsService } from '@core/services/utils.service';
+import { AliasController } from '@core/api/alias-controller';
+import { DialogService } from '@core/services/dialog.service';
+import { ReportService } from '@core/http/report.service';
 
 @Component({
   selector: 'tb-report-template-page',
@@ -74,7 +88,9 @@ import {
   encapsulation: ViewEncapsulation.None
 })
 export class ReportTemplatePageComponent extends PageComponent
-  implements AfterViewInit, OnInit, OnDestroy, HasDirtyFlag, AfterViewChecked {
+  implements OnInit, HasDirtyFlag {
+
+  reportComponentTypeMap = reportComponentTypeMap;
 
   get isDirty(): boolean {
     return this.isDirtyValue;
@@ -84,8 +100,22 @@ export class ReportTemplatePageComponent extends PageComponent
     this.isDirtyValue = value;
   }
 
+  get currentHeader(): HeaderFooter {
+    return this.headerToggleValue === 'header' ? this.reportTemplate.configuration.header :
+      this.reportTemplate.configuration.header.firstPage;
+  }
+
+  get currentFooter(): HeaderFooter {
+    return this.footerToggleValue === 'footer' ? this.reportTemplate.configuration.footer :
+      this.reportTemplate.configuration.footer.firstPage;
+  }
+
   @HostBinding('style.width') width = '100%';
   @HostBinding('style.height') height = '100%';
+
+  reportComponentsLibrary = viewChild('reportComponentsLibrary', {
+    read: MatDrawer,
+  });
 
   readonly = !this.userPermissionsService.hasGenericPermission(Resource.REPORT_TEMPLATE, Operation.WRITE);
 
@@ -93,76 +123,140 @@ export class ReportTemplatePageComponent extends PageComponent
 
   isFullscreen = false;
 
-  reportTemplate: ReportTemplate;
+  reportTemplate: ReportTemplate<PdfReportTemplateConfig>;
 
   updateBreadcrumbs = new EventEmitter();
 
-  private destroy$ = new Subject<void>();
+  activeReportComponent: ReportComponentConfig;
+  editingReportComponent: ReportComponentConfig;
+
+  reportTemplateSettingsFormControl: FormControl;
+
+  headerToggleValue: 'header' | 'firstPageHeader' = 'header';
+  footerToggleValue: 'footer' | 'firstPageFooter' = 'footer';
+
+  reportComponentContext: ReportComponentContext;
+
+  // @ts-ignore
+  private stateController: IStateController = {
+    getStateParams: (): StateParams => ({})
+  };
 
   constructor(private route: ActivatedRoute,
               private userPermissionsService: UserPermissionsService,
               private reportTemplateService: ReportTemplateService,
+              private reportService: ReportService,
+              private entityService: EntityService,
+              private utils: UtilsService,
+              private translate: TranslateService,
+              private destroyRef: DestroyRef,
               private dialog: MatDialog,
+              private dialogService: DialogService,
+              private fb: FormBuilder,
               private cd: ChangeDetectorRef) {
     super();
-    this.route.data.pipe(
-      takeUntil(this.destroy$)
-    ).subscribe(
-      () => {
-        this.reset();
-        this.init();
-      }
-    );
   }
 
   ngOnInit() {
-
-  }
-
-  ngAfterViewChecked(){
-
-  }
-
-  ngAfterViewInit() {
-
-  }
-
-  ngOnDestroy() {
-    super.ngOnDestroy();
-    this.destroy$.next();
-    this.destroy$.complete();
+    this.reportComponentContext = {
+      translate: this.translate,
+      utils: this.utils,
+      entityService: this.entityService,
+      aliasController: null
+    };
+    this.reportTemplateSettingsFormControl = this.fb.control(null);
+    this.reportTemplateSettingsFormControl.valueChanges.pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe((settings: ReportTemplateSettings) => {
+      this.updateReportTemplateSettings(settings);
+    });
+    this.route.data.pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(
+      () => {
+        this.init(this.route.snapshot.data.reportTemplate);
+      }
+    );
   }
 
   saveReportTemplate() {
     this.reportTemplateService.saveReportTemplate(this.reportTemplate).subscribe(
       (saved) => {
-        this.reportTemplate = saved;
-        this.isDirty = false;
-        this.cd.markForCheck();
+        this.init(saved);
       }
     );
   }
 
   declineReportTemplate() {
-    this.reportTemplateService.getReportTemplate(this.reportTemplate.id.id).subscribe(
+    this.reportTemplateService.getReportTemplate<PdfReportTemplateConfig>(this.reportTemplate.id.id).subscribe(
       (saved) => {
-        this.reportTemplate = saved;
-        this.isDirty = false;
-        this.updateBreadcrumbs.emit();
-        this.cd.markForCheck();
+        this.init(saved);
       }
     );
+  }
+
+  public disableHeader(): void {
+    this.currentHeader.enabled = false;
+    this.isDirty = true;
+  }
+
+  public enableHeader(): void {
+    this.currentHeader.enabled = true;
+    this.isDirty = true;
+  }
+
+  public disableFooter(): void {
+    this.currentFooter.enabled = false;
+    this.isDirty = true;
+  }
+
+  public enableFooter(): void {
+    this.currentFooter.enabled = true;
+    this.isDirty = true;
+  }
+
+  public reportComponentsChanged(): void {
+    this.cancelReportComponentEdit();
+    this.isDirty = true;
+  }
+
+  public editReportComponent(reportComponent: ReportComponentConfig): void {
+    if (this.activeReportComponent !== reportComponent) {
+      this.activeReportComponent = reportComponent;
+      this.editingReportComponent = deepClone(reportComponent);
+      const reportComponentsLibrary = this.reportComponentsLibrary()
+      if (reportComponentsLibrary) {
+        reportComponentsLibrary.close().then();
+      }
+    }
+  }
+
+  public saveReportComponent(): void {
+    Object.assign(this.activeReportComponent, this.editingReportComponent);
+    this.activeReportComponent = null;
+    this.editingReportComponent = null;
+    this.isDirty = true;
+    const reportComponentsLibrary = this.reportComponentsLibrary()
+    if (reportComponentsLibrary) {
+      reportComponentsLibrary.open().then();
+    }
+  }
+
+  public cancelReportComponentEdit(): void {
+    this.activeReportComponent = null;
+    this.editingReportComponent = null;
+    const reportComponentsLibrary = this.reportComponentsLibrary()
+    if (reportComponentsLibrary) {
+      reportComponentsLibrary.open().then();
+    }
   }
 
   public openFilters($event: Event) {
     if ($event) {
       $event.stopPropagation();
     }
-    const filters: Filters = {};
     const reportFilters = deepClone(this.reportTemplate.configuration.filters);
-    for (const reportFilter of reportFilters) {
-      filters[reportFilter.id] = reportFilterToFilter(reportFilter);
-    }
+    const filters = reportFilterListToFilters(reportFilters);
     this.dialog.open<FiltersDialogComponent, FiltersDialogData,
       Filters>(FiltersDialogComponent, {
       disableClose: true,
@@ -175,11 +269,8 @@ export class ReportTemplatePageComponent extends PageComponent
       }
     }).afterClosed().subscribe((filters) => {
       if (filters) {
-        const reportFilters: ReportFilter[] = [];
-        for (const id of Object.keys(filters)) {
-          reportFilters.push(filterToReportFilter(filters[id]));
-        }
-        this.reportTemplate.configuration.filters = reportFilters;
+        this.reportTemplate.configuration.filters = filtersToReportFilterList(filters);
+        this.reportComponentContext.aliasController.updateFilters(filters);
         this.isDirty = true;
         this.cd.markForCheck();
       }
@@ -190,11 +281,8 @@ export class ReportTemplatePageComponent extends PageComponent
     if ($event) {
       $event.stopPropagation();
     }
-    const entityAliases: EntityAliases = {};
     const entityAliasesList = deepClone(this.reportTemplate.configuration.entityAliases);
-    for (const entityAlias of entityAliasesList) {
-      entityAliases[entityAlias.id] = entityAlias;
-    }
+    const entityAliases = entityAliasesListToAliases(entityAliasesList);
     this.dialog.open<EntityAliasesDialogComponent, EntityAliasesDialogData,
       EntityAliases>(EntityAliasesDialogComponent, {
       disableClose: true,
@@ -207,11 +295,8 @@ export class ReportTemplatePageComponent extends PageComponent
       }
     }).afterClosed().subscribe((entityAliases) => {
       if (entityAliases) {
-        const entityAliasesList: EntityAlias[] = [];
-        for (const id of Object.keys(entityAliases)) {
-          entityAliasesList.push(entityAliases[id]);
-        }
-        this.reportTemplate.configuration.entityAliases = entityAliasesList;
+        this.reportTemplate.configuration.entityAliases = entityAliasesToList(entityAliases);
+        this.reportComponentContext.aliasController.updateEntityAliases(entityAliases);
         this.isDirty = true;
         this.cd.markForCheck();
       }
@@ -224,7 +309,7 @@ export class ReportTemplatePageComponent extends PageComponent
     }
     const settings: ReportTemplateSettings = {
       name: this.reportTemplate.name,
-      fileName: this.reportTemplate.configuration.fileName,
+      namePattern: this.reportTemplate.configuration.namePattern,
       description: this.reportTemplate.description
     };
     this.dialog.open<ReportTemplateSettingsDialogComponent, ReportTemplateSettingsDialogData,
@@ -236,22 +321,55 @@ export class ReportTemplatePageComponent extends PageComponent
       }
     }).afterClosed().subscribe((settings) => {
       if (settings) {
-        this.reportTemplate.name = settings.name;
-        this.reportTemplate.configuration.fileName = settings.fileName;
-        this.reportTemplate.description = settings.description;
-        this.isDirty = true;
-        this.updateBreadcrumbs.emit();
-        this.cd.markForCheck();
+        this.updateReportTemplateSettings(settings);
+        this.reportTemplateSettingsFormControl.patchValue(settings, {emitEvent: false});
       }
     });
   }
 
-  private init() {
-    this.reportTemplate = this.route.snapshot.data.reportTemplate;
+  generateTestReport() {
+    const reportRequest: ReportRequest = {
+      reportTemplateConfig: this.reportTemplate.configuration
+    };
+    this.dialogService.progress(
+      this.reportService.downloadTestReport(reportRequest), this.translate.instant('report.generating-report')).subscribe();
   }
 
-  private reset(): void {
+  private updateReportTemplateSettings(settings: ReportTemplateSettings): void {
+    this.reportTemplate.name = settings.name;
+    this.reportTemplate.configuration.namePattern = settings.namePattern;
+    this.reportTemplate.description = settings.description;
+    this.isDirty = true;
+    this.updateBreadcrumbs.emit();
+    this.cd.markForCheck();
+  }
 
+  private init(reportTemplate: ReportTemplate<PdfReportTemplateConfig>) {
+    this.cancelReportComponentEdit();
+    this.headerToggleValue = 'header';
+    this.footerToggleValue = 'footer';
+    this.reportTemplate = validateAndUpdateReportTemplate(reportTemplate);
+
+    const entityAliases = entityAliasesListToAliases(this.reportTemplate.configuration.entityAliases);
+    const filters = reportFilterListToFilters(this.reportTemplate.configuration.filters);
+
+    this.reportComponentContext.aliasController = new AliasController(this.utils,
+      this.entityService,
+      this.translate,
+      () => this.stateController,
+      entityAliases,
+      filters
+    );
+
+    const settings: ReportTemplateSettings = {
+      name: this.reportTemplate.name,
+      namePattern: this.reportTemplate.configuration.namePattern,
+      description: this.reportTemplate.description
+    };
+    this.reportTemplateSettingsFormControl.patchValue(settings, {emitEvent: false});
+    this.isDirty = false;
+    this.updateBreadcrumbs.emit();
+    this.cd.markForCheck();
   }
 
 }
