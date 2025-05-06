@@ -36,6 +36,7 @@ import { ReportRequest } from '@shared/models/report.models';
 import { map } from 'rxjs/operators';
 import { WINDOW } from '@core/services/window.service';
 import { DOCUMENT } from '@angular/common';
+import { blobToBase64 } from '@core/utils';
 
 @Injectable({
   providedIn: 'root'
@@ -49,38 +50,38 @@ export class ReportService {
   ) {
   }
 
-  public downloadTestReport(reportRequest: ReportRequest): Observable<any> {
+  public downloadTestReport(reportRequest: ReportRequest, downloadElseOpen = true): Observable<any> {
     const url = '/api/v2/report/deprecated/test';
-    const params: {[param: string]: string} = {};
-    return this.downloadReport(url, reportRequest, params);
+    return this.downloadReport(url, reportRequest, downloadElseOpen);
   }
 
-  private downloadReport(url: string, reportRequest: ReportRequest, params?: {[param: string]: string}): Observable<any> {
-    if (!params) {
-      params = {};
-    }
+  private downloadReport(url: string, reportRequest: ReportRequest, downloadElseOpen = true): Observable<any> {
+
     return this.http.post(url, reportRequest, {
-      params,
       responseType: 'arraybuffer',
       observe: 'response'
     }).pipe(
       map((response) => {
         const headers = response.headers;
-        const filename = headers.get('x-filename');
         const contentType = headers.get('content-type');
-        const linkElement = this.document.createElement('a');
         const blob = new Blob([response.body], { type: contentType });
         const href = URL.createObjectURL(blob);
-        linkElement.setAttribute('href', href);
-        linkElement.setAttribute('download', filename);
-        const clickEvent = new MouseEvent('click',
-          {
-            view: this.window,
-            bubbles: true,
-            cancelable: false
-          }
-        );
-        linkElement.dispatchEvent(clickEvent);
+        if (downloadElseOpen) {
+          const filename = headers.get('x-filename');
+          const linkElement = this.document.createElement('a');
+          linkElement.setAttribute('href', href);
+          linkElement.setAttribute('download', filename);
+          const clickEvent = new MouseEvent('click',
+            {
+              view: this.window,
+              bubbles: true,
+              cancelable: false
+            }
+          );
+          linkElement.dispatchEvent(clickEvent);
+        } else {
+          this.window.open(href, '_blank');
+        }
         return null;
       })
     );

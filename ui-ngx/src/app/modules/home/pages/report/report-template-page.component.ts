@@ -350,7 +350,7 @@ export class ReportTemplatePageComponent extends PageComponent
       reportTemplateConfig: this.reportTemplate.configuration
     };
     this.dialogService.progress(
-      this.reportService.downloadTestReport(reportRequest), this.translate.instant('report.generating-report')).subscribe();
+      this.reportService.downloadTestReport(reportRequest, false), this.translate.instant('report.generating-report')).subscribe();
   }
 
   private updateReportTemplateSettings(settings: ReportTemplateSettings): void {

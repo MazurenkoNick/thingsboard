@@ -81,7 +81,7 @@ public class ReportController extends BaseController {
         TenantId tenantId = getTenantId();
         Job job = requestTestReport(reportRequest);
         do {
-            Thread.sleep(1000);
+            Thread.sleep(200);
             job = jobService.findJobById(tenantId, job.getId());
         } while (!job.getStatus().isOneOf(JobStatus.COMPLETED, JobStatus.FAILED, JobStatus.CANCELLED) && !Thread.currentThread().isInterrupted());
 
