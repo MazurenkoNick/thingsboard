@@ -67,11 +67,13 @@
       width: 100%;
       display: flex;
       flex-direction: column;
-      gap: 16px;
       align-items: center;
+      .tb-report-template-sections {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
       .tb-report-components-container {
-        width: 640px;
-        min-width: 640px;
         min-height: 84px;
         display: flex;
         flex-direction: column;

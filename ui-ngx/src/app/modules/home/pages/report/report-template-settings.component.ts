@@ -38,7 +38,13 @@ import {
   Validators
 } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { ReportTemplateSettings } from '@shared/models/report.models';
+import {
+  pageOrientations,
+  pageOrientationTranslationMap,
+  pageSizes,
+  paperSizeDisplayMap,
+  PdfReportTemplateSettings
+} from '@shared/models/report.models';
 
 @Component({
   selector: 'tb-report-template-settings',
@@ -54,10 +60,16 @@ import { ReportTemplateSettings } from '@shared/models/report.models';
 })
 export class ReportTemplateSettingsComponent implements OnInit, ControlValueAccessor {
 
+  pageSizes = pageSizes;
+  paperSizeDisplayMap = paperSizeDisplayMap;
+
+  pageOrientations = pageOrientations;
+  pageOrientationTranslationMap = pageOrientationTranslationMap;
+
   @Input()
   disabled: boolean;
 
-  private modelValue: ReportTemplateSettings;
+  private modelValue: PdfReportTemplateSettings;
 
   private propagateChange = null;
 
@@ -71,7 +83,16 @@ export class ReportTemplateSettingsComponent implements OnInit, ControlValueAcce
     this.settingsFormGroup = this.fb.group({
       name: [null, [Validators.required]],
       namePattern: [null, [Validators.required]],
-      description: [null, []]
+      description: [null, []],
+      pageSize: [null, []],
+      pageOrientation: [null, []],
+      pageMargins: this.fb.group({
+        left: [null, [Validators.min(0)]],
+        right: [null, [Validators.min(0)]],
+        top: [null, [Validators.min(0)]],
+        bottom: [null, [Validators.min(0)]]
+      }),
+      pageBackground: [null, []]
     });
     this.settingsFormGroup.valueChanges.pipe(
       takeUntilDestroyed(this.destroyRef)
@@ -96,7 +117,7 @@ export class ReportTemplateSettingsComponent implements OnInit, ControlValueAcce
     }
   }
 
-  writeValue(value: ReportTemplateSettings): void {
+  writeValue(value: PdfReportTemplateSettings): void {
     this.modelValue = value;
     this.settingsFormGroup.patchValue(
       value, {emitEvent: false}

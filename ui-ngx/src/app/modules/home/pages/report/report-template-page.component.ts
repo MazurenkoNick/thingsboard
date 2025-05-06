@@ -46,10 +46,16 @@ import {
   entityAliasesListToAliases,
   entityAliasesToList,
   filtersToReportFilterList,
-  HeaderFooter, PdfReportTemplateConfig,
-  reportFilterListToFilters, ReportRequest,
+  HeaderFooter,
+  PageOrientation,
+  paperSizeToPointsMap,
+  PdfReportTemplateConfig,
+  PdfReportTemplateSettings,
+  reportFilterListToFilters,
+  ReportRequest,
   ReportTemplate,
-  ReportTemplateSettings,
+  toPdfReportTemplateSettings,
+  updateFromPdfReportTemplateSettings,
   validateAndUpdateReportTemplate
 } from '@shared/models/report.models';
 import { UserPermissionsService } from '@core/http/user-permissions.service';
@@ -143,7 +149,18 @@ export class ReportTemplatePageComponent extends PageComponent
 
   reportComponentContext: ReportComponentContext;
 
-  pageWidthInch = 8.26;
+  pageWidth: number;
+
+  marginLeft: number;
+  marginRight: number;
+
+  contentMarginTop: number;
+  contentMarginBottom: number;
+
+  headerMarginTop: number;
+  footerMarginBottom: number;
+
+  background: string;
 
   // @ts-ignore
   private stateController: IStateController = {
@@ -175,7 +192,7 @@ export class ReportTemplatePageComponent extends PageComponent
     this.reportTemplateSettingsFormControl = this.fb.control(null);
     this.reportTemplateSettingsFormControl.valueChanges.pipe(
       takeUntilDestroyed(this.destroyRef)
-    ).subscribe((settings: ReportTemplateSettings) => {
+    ).subscribe((settings: PdfReportTemplateSettings) => {
       this.updateReportTemplateSettings(settings);
     });
     this.route.data.pipe(
@@ -327,13 +344,9 @@ export class ReportTemplatePageComponent extends PageComponent
     if ($event) {
       $event.stopPropagation();
     }
-    const settings: ReportTemplateSettings = {
-      name: this.reportTemplate.name,
-      namePattern: this.reportTemplate.configuration.namePattern,
-      description: this.reportTemplate.description
-    };
+    const settings = toPdfReportTemplateSettings(this.reportTemplate);
     this.dialog.open<ReportTemplateSettingsDialogComponent, ReportTemplateSettingsDialogData,
-      ReportTemplateSettings>(ReportTemplateSettingsDialogComponent, {
+      PdfReportTemplateSettings>(ReportTemplateSettingsDialogComponent, {
       disableClose: true,
       panelClass: ['tb-dialog', 'tb-fullscreen-dialog'],
       data: {
@@ -355,13 +368,30 @@ export class ReportTemplatePageComponent extends PageComponent
       this.reportService.downloadTestReport(reportRequest, false), this.translate.instant('report.generating-report')).subscribe();
   }
 
-  private updateReportTemplateSettings(settings: ReportTemplateSettings): void {
-    this.reportTemplate.name = settings.name;
-    this.reportTemplate.configuration.namePattern = settings.namePattern;
-    this.reportTemplate.description = settings.description;
+  private updateReportTemplateSettings(settings: PdfReportTemplateSettings): void {
+    updateFromPdfReportTemplateSettings(this.reportTemplate, settings);
+    this.updatePageLayout();
     this.isDirty = true;
     this.updateBreadcrumbs.emit();
     this.cd.markForCheck();
+  }
+
+  private updatePageLayout() {
+    const pageSize = this.reportTemplate.configuration.pageSize;
+    const orientation = this.reportTemplate.configuration.pageOrientation;
+    const pageSizePoints = paperSizeToPointsMap.get(pageSize);
+
+    this.pageWidth = orientation === PageOrientation.PORTRAIT ? pageSizePoints[0] : pageSizePoints[1];
+    this.background = this.reportTemplate.configuration.pageBackground;
+
+    this.marginLeft = this.reportTemplate.configuration.pageMargins.left;
+    this.marginRight = this.reportTemplate.configuration.pageMargins.right;
+
+    this.contentMarginTop = this.reportTemplate.configuration.pageMargins.top;
+    this.contentMarginBottom = this.reportTemplate.configuration.pageMargins.bottom;
+
+    this.headerMarginTop = 0;
+    this.footerMarginBottom = 0;
   }
 
   private init(reportTemplate: ReportTemplate<PdfReportTemplateConfig>) {
@@ -369,6 +399,8 @@ export class ReportTemplatePageComponent extends PageComponent
     this.headerToggleValue = 'header';
     this.footerToggleValue = 'footer';
     this.reportTemplate = validateAndUpdateReportTemplate(reportTemplate);
+
+    this.updatePageLayout();
 
     const entityAliases = entityAliasesListToAliases(this.reportTemplate.configuration.entityAliases);
     const filters = reportFilterListToFilters(this.reportTemplate.configuration.filters);
@@ -381,11 +413,8 @@ export class ReportTemplatePageComponent extends PageComponent
       filters
     );
 
-    const settings: ReportTemplateSettings = {
-      name: this.reportTemplate.name,
-      namePattern: this.reportTemplate.configuration.namePattern,
-      description: this.reportTemplate.description
-    };
+    const settings = toPdfReportTemplateSettings(this.reportTemplate);
+
     this.reportTemplateSettingsFormControl.patchValue(settings, {emitEvent: false});
     this.isDirty = false;
     this.updateBreadcrumbs.emit();

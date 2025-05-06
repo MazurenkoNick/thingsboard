@@ -72,6 +72,30 @@ export class ReportComponentsComponent implements OnInit, OnChanges {
   @HostBinding('style.position')
   position = 'relative';
 
+  @HostBinding('style.background')
+  @Input()
+  background: string;
+
+  @HostBinding('style.width.pt')
+  @Input()
+  width: number;
+
+  @HostBinding('style.padding-left.pt')
+  @Input()
+  marginLeft: number;
+
+  @HostBinding('style.padding-right.pt')
+  @Input()
+  marginRight: number;
+
+  @HostBinding('style.padding-top.pt')
+  @Input()
+  marginTop: number;
+
+  @HostBinding('style.padding-bottom.pt')
+  @Input()
+  marginBottom: number;
+
   @Input()
   reportComponents: ReportComponentConfig[];
 
@@ -156,7 +180,7 @@ export class ReportComponentsComponent implements OnInit, OnChanges {
   }
 
   componentDragStarted(event: CdkDragStart){
-    event.source.getPlaceholderElement().style.height = Math.max(60, event.source.element.nativeElement.offsetHeight) + 'px';
+    //event.source.getPlaceholderElement().style.height = Math.max(60, event.source.element.nativeElement.offsetHeight) + 'px';
     document.body.style.cursor = 'grabbing';
   }
 

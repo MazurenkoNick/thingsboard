@@ -45,7 +45,7 @@
   @for (item of reportComponents; track item) {
     <div cdkDrag class="tb-draggable" [cdkDragData]="item"
          (cdkDragStarted)="componentDragStarted($event)"
-         (cdkDragEnded)="componentDragEnded()">
+         (cdkDragEnded)="componentDragEnded()" [style.background]="background">
       <tb-report-component [reportComponent]="item"
                            (edit)="onComponentEdit(item, $event)"
                            (makeCopy)="duplicateComponent(item)"

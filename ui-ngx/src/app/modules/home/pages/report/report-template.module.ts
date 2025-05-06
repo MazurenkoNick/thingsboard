@@ -47,6 +47,7 @@ import { ReportComponentComponent } from '@home/pages/report/components/report-c
 import { ReportComponentsComponent } from '@home/pages/report/components/report-components.component';
 import { ReportComponentsModule } from '@home/pages/report/components/report-components.module';
 import { ReportTemplateSettingsComponent } from '@home/pages/report/report-template-settings.component';
+import { WidgetSettingsCommonModule } from '@home/components/widget/lib/settings/common/widget-settings-common.module';
 
 @NgModule({
   declarations: [
@@ -63,7 +64,8 @@ import { ReportTemplateSettingsComponent } from '@home/pages/report/report-templ
     HomeComponentsModule,
     HomeDialogsModule,
     ReportComponentsModule,
-    ReportTemplateRoutingModule
+    ReportTemplateRoutingModule,
+    WidgetSettingsCommonModule
   ]
 })
 export class ReportTemplateModule { }

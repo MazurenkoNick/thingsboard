@@ -29,7 +29,7 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { ReportTemplateSettings } from '@shared/models/report.models';
+import { PdfReportTemplateSettings } from '@shared/models/report.models';
 import { Component, Inject } from '@angular/core';
 import { DialogComponent } from '@shared/components/dialog.component';
 import { Store } from '@ngrx/store';
@@ -39,7 +39,7 @@ import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 
 export interface ReportTemplateSettingsDialogData {
-  settings: ReportTemplateSettings;
+  settings: PdfReportTemplateSettings;
 }
 
 @Component({
@@ -49,7 +49,7 @@ export interface ReportTemplateSettingsDialogData {
 })
 export class ReportTemplateSettingsDialogComponent extends DialogComponent<ReportTemplateSettingsDialogComponent, ReportTemplateSettingsDialogData> {
 
-  settings: ReportTemplateSettings;
+  settings: PdfReportTemplateSettings;
 
   settingsFormControl: FormControl;
 

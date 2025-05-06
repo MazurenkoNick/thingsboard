@@ -35,7 +35,7 @@ import {
   Component,
   ComponentRef, Directive,
   ElementRef,
-  EventEmitter,
+  EventEmitter, HostBinding,
   Input, OnChanges,
   OnDestroy,
   OnInit,
@@ -58,6 +58,9 @@ import { ReportComponentsComponent } from '@home/pages/report/components/report-
   encapsulation: ViewEncapsulation.None
 })
 export class ReportComponentComponent implements OnInit, OnDestroy {
+
+  @HostBinding('style.background')
+  background: string;
 
   @Input()
   reportComponent: ReportComponentConfig;
@@ -100,7 +103,19 @@ export class ReportComponentComponent implements OnInit, OnDestroy {
       this.reportComponentPreview.reportComponent = this.reportComponent;
     }
     this.initEditReportComponentTooltip();
+    this.updateComponentLayout();
   }
+
+  /*ngOnChanges(changes: SimpleChanges): void {
+    for (const propName of Object.keys(changes)) {
+      const change = changes[propName];
+      if (!change.firstChange && change.currentValue !== change.previousValue) {
+        if (propName === 'pageBackground') {
+          this.updateComponentLayout();
+        }
+      }
+    }
+  }*/
 
   ngOnDestroy(): void {
     if (this.editReportComponentTooltip && !this.editReportComponentTooltip.status().destroyed) {
@@ -139,10 +154,15 @@ export class ReportComponentComponent implements OnInit, OnDestroy {
     this.hovered = false;
   }
 
+  private updateComponentLayout() {
+    this.background = this.reportComponent.background;// || this.pageBackground;
+  }
+
   private _componentUpdated() {
     if (this.reportComponentPreview) {
       this.reportComponentPreview.componentUpdated();
     }
+    this.updateComponentLayout();
   }
 
   private initEditReportComponentTooltip() {

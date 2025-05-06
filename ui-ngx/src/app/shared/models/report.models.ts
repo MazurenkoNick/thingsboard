@@ -38,7 +38,8 @@ import { SchedulerEventId } from '@shared/models/id/scheduler-event-id';
 import { EntityId } from '@shared/models/id/entity-id';
 import { EntityAlias, EntityAliases } from '@shared/models/alias.models';
 import {
-  Filter, Filters,
+  Filter,
+  Filters,
   KeyFilter,
   keyFilterInfosToKeyFilters,
   keyFiltersToKeyFilterInfos
@@ -164,10 +165,43 @@ export enum PageSize {
   TABLOID = 'TABLOID'
 }
 
+export const pageSizes = Object.keys(PageSize) as PageSize[];
+
+export const paperSizeDisplayMap = new Map<PageSize, string>(
+  [
+    [PageSize.A4, 'A4'],
+    [PageSize.LETTER, 'US Letter'],
+    [PageSize.LEGAL, 'US Legal'],
+    [PageSize.A5, 'A5'],
+    [PageSize.A3, 'A3'],
+    [PageSize.TABLOID, 'Tabloid']
+  ]
+);
+
+export const paperSizeToPointsMap = new Map<PageSize, [number, number]>(
+  [
+    [PageSize.A4, [595, 842]],
+    [PageSize.LETTER, [612, 792]],
+    [PageSize.LEGAL, [612, 1008]],
+    [PageSize.A5, [420, 595]],
+    [PageSize.A3, [842, 1191]],
+    [PageSize.TABLOID, [792, 1224]]
+  ]
+);
+
 export enum PageOrientation {
   PORTRAIT = 'PORTRAIT',
   LANDSCAPE = 'LANDSCAPE'
 }
+
+export const pageOrientations = Object.keys(PageOrientation) as PageOrientation[];
+
+export const pageOrientationTranslationMap = new Map<PageOrientation, string>(
+  [
+    [PageOrientation.PORTRAIT, 'report-template.orientation-portrait'],
+    [PageOrientation.LANDSCAPE, 'report-template.orientation-landscape']
+  ]
+);
 
 export interface BlockMargins {
   left: number;
@@ -188,6 +222,13 @@ export interface PdfReportTemplateConfig extends AbstractReportTemplateConfig {
   components: ReportComponentConfig[];
 }
 
+export interface PdfReportTemplateSettings extends ReportTemplateSettings {
+  pageSize: PageSize;
+  pageOrientation: PageOrientation;
+  pageMargins: BlockMargins;
+  pageBackground?: string;
+}
+
 export interface CsvReportTemplateConfig extends AbstractReportTemplateConfig {
   entityAlias: EntityAlias;
   filter: ReportFilter;
@@ -196,6 +237,29 @@ export interface CsvReportTemplateConfig extends AbstractReportTemplateConfig {
 
 export interface ReportTemplate<Config extends ReportTemplateConfig = ReportTemplateConfig> extends BaseReportTemplate {
   configuration: Config;
+}
+
+export const toPdfReportTemplateSettings = (reportTemplate: ReportTemplate<PdfReportTemplateConfig>): PdfReportTemplateSettings => {
+  return {
+    name: reportTemplate.name,
+    namePattern: reportTemplate.configuration.namePattern,
+    description: reportTemplate.description,
+    pageSize: reportTemplate.configuration.pageSize,
+    pageOrientation: reportTemplate.configuration.pageOrientation,
+    pageMargins: reportTemplate.configuration.pageMargins,
+    pageBackground: reportTemplate.configuration.pageBackground
+  };
+}
+
+export const updateFromPdfReportTemplateSettings =
+  (reportTemplate: ReportTemplate<PdfReportTemplateConfig>, settings: PdfReportTemplateSettings): void => {
+    reportTemplate.name = settings.name;
+    reportTemplate.configuration.namePattern = settings.namePattern;
+    reportTemplate.description = settings.description;
+    reportTemplate.configuration.pageSize = settings.pageSize;
+    reportTemplate.configuration.pageOrientation = settings.pageOrientation;
+    reportTemplate.configuration.pageMargins = settings.pageMargins;
+    reportTemplate.configuration.pageBackground = settings.pageBackground;
 }
 
 export interface ReportRequest {
@@ -211,6 +275,7 @@ export const defaultReportTemplate: ReportTemplate<PdfReportTemplateConfig> = {
   type: ReportTemplateType.REPORT,
   configuration: {
     format: TbReportFormat.PDF,
+    namePattern: 'report-%d{yyyy-MM-dd_HH:mm:ss}',
     pageSize: PageSize.A4,
     pageOrientation: PageOrientation.PORTRAIT,
     pageMargins: {
@@ -219,7 +284,7 @@ export const defaultReportTemplate: ReportTemplate<PdfReportTemplateConfig> = {
       top: 20,
       bottom: 20
     },
-    namePattern: 'report-%d{yyyy-MM-dd_HH:mm:ss}',
+    pageBackground: '#fff',
     header: {
       enabled: true,
       components: []
@@ -241,6 +306,23 @@ export const validateAndUpdateReportTemplate =
   }
   if (reportTemplate.configuration.format === TbReportFormat.PDF) {
     const configuration = reportTemplate.configuration as any as PdfReportTemplateConfig;
+    if (!configuration.pageSize) {
+      configuration.pageSize = PageSize.A4;
+    }
+    if (!configuration.pageOrientation) {
+      configuration.pageOrientation = PageOrientation.PORTRAIT;
+    }
+    if (!configuration.pageMargins) {
+      configuration.pageMargins = {
+        left: 20,
+        right: 20,
+        top: 20,
+        bottom: 20
+      };
+    }
+    if (!configuration.pageBackground) {
+      configuration.pageBackground = '#fff';
+    }
     configuration.header = validateAndUpdateReportTemplateHeaderFooter(configuration.header);
     configuration.footer = validateAndUpdateReportTemplateHeaderFooter(configuration.footer);
   } else {

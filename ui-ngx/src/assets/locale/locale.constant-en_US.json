@@ -7007,6 +7007,18 @@
         "first-page-footer-disabled": "First page footer disabled",
         "content": "Content",
         "data": "Data",
+        "common-settings": "Common settings",
+        "page-settings": "Page settings",
+        "paper-size": "Paper size",
+        "orientation": "Orientation",
+        "orientation-portrait": "Portrait",
+        "orientation-landscape": "Landscape",
+        "margins": "Margins",
+        "left": "Left",
+        "right": "Right",
+        "top": "Top",
+        "bottom": "Bottom",
+        "background": "Background",
         "component": {
             "heading": {
                 "type": "Heading",
