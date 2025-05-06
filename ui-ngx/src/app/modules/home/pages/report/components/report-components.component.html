@@ -47,7 +47,7 @@
          (cdkDragStarted)="componentDragStarted($event)"
          (cdkDragEnded)="componentDragEnded()">
       <tb-report-component [reportComponent]="item"
-                           (edit)="onComponentEdit(item)"
+                           (edit)="onComponentEdit(item, $event)"
                            (makeCopy)="duplicateComponent(item)"
                            (remove)="componentRemove(item)"></tb-report-component>
     </div>

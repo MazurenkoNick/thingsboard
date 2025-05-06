@@ -7010,7 +7010,9 @@
         "component": {
             "heading": {
                 "type": "Heading",
-                "heading-text": "Heading text"
+                "text": "Text",
+                "layout": "Layout",
+                "height": "Height"
             },
             "rich-text": {
                 "type": "Rich text",
@@ -10924,6 +10926,20 @@
             "preview": "Preview",
             "line-height": "Line height",
             "auto": "Auto"
+        },
+        "alignment": {
+            "horizontal-alignment": "Horizontal alignment",
+            "vertical-alignment": "Vertical alignment",
+            "alignment": "Alignment",
+            "horizontal": "Horizontal",
+            "vertical": "Vertical",
+            "align-left": "Align left",
+            "align-center": "Align center",
+            "align-right": "Align right",
+            "justify": "Justify",
+            "align-top": "Align top",
+            "align-middle": "Align middle",
+            "align-bottom": "Align bottom"
         },
         "home": {
             "no-data-available": "No data available"

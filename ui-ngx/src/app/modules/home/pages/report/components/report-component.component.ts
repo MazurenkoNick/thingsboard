@@ -33,13 +33,13 @@ import {
   AfterViewInit,
   ChangeDetectorRef,
   Component,
-  ComponentRef,
+  ComponentRef, Directive,
   ElementRef,
   EventEmitter,
-  Input,
+  Input, OnChanges,
   OnDestroy,
   OnInit,
-  Output,
+  Output, SimpleChanges,
   ViewChild,
   ViewContainerRef,
   ViewEncapsulation
@@ -66,7 +66,7 @@ export class ReportComponentComponent implements OnInit, OnDestroy {
   dragging = false;
 
   @Output()
-  edit = new EventEmitter();
+  edit = new EventEmitter<() => void>();
 
   @Output()
   makeCopy = new EventEmitter();
@@ -82,6 +82,10 @@ export class ReportComponentComponent implements OnInit, OnDestroy {
 
   private editReportComponentTooltip: ITooltipsterInstance;
 
+  private reportComponentPreview: AbstractReportComponentPreview;
+
+  private componentUpdated = this._componentUpdated.bind(this);
+
   constructor(private reportComponents: ReportComponentsComponent,
               private elementRef: ElementRef,
               private container: ViewContainerRef,
@@ -92,7 +96,8 @@ export class ReportComponentComponent implements OnInit, OnDestroy {
     this.typeData = reportComponentTypeMap.get(type);
     if (this.typeData) {
       const compRef = this.reportPreviewContainer.viewContainerRef.createComponent(this.typeData.previewComponent);
-      compRef.instance.reportComponent = this.reportComponent;
+      this.reportComponentPreview = compRef.instance;
+      this.reportComponentPreview.reportComponent = this.reportComponent;
     }
     this.initEditReportComponentTooltip();
   }
@@ -107,7 +112,7 @@ export class ReportComponentComponent implements OnInit, OnDestroy {
     if (event) {
       event.stopPropagation();
     }
-    this.edit.emit();
+    this.edit.emit(this.componentUpdated);
   }
 
   onCopy(event: MouseEvent) {
@@ -132,6 +137,12 @@ export class ReportComponentComponent implements OnInit, OnDestroy {
 
   mouseLeave(_event: MouseEvent) {
     this.hovered = false;
+  }
+
+  private _componentUpdated() {
+    if (this.reportComponentPreview) {
+      this.reportComponentPreview.componentUpdated();
+    }
   }
 
   private initEditReportComponentTooltip() {
@@ -242,4 +253,18 @@ export class EditReportComponentTooltipComponent implements AfterViewInit {
   ngAfterViewInit() {
     this.viewInited.emit();
   }
+}
+
+@Directive()
+export abstract class AbstractReportComponentPreview<C extends ReportComponentConfig = ReportComponentConfig> implements OnInit {
+
+  @Input()
+  reportComponent: C;
+
+  ngOnInit() {
+    this.componentUpdated();
+  }
+
+  componentUpdated() {}
+
 }

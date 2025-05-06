@@ -31,7 +31,7 @@
 
 import { Datasource } from '@shared/models/widget.models';
 import { deepClone } from '@core/utils';
-import { Font, textAlignment, verticalAlignment } from '@shared/models/widget-settings.models';
+import { alignment, Font } from '@shared/models/widget-settings.models';
 
 export enum ReportComponentType {
   HEADING = 'HEADING',
@@ -57,8 +57,8 @@ export interface HeadingReportComponentConfig extends ReportComponentConfig {
   value: string;
   font?: Font;
   color?: string;
-  textAlignment?: textAlignment;
-  verticalAlignment?: verticalAlignment;
+  textAlignment?: alignment;
+  verticalAlignment?: alignment;
   height?: number;
   type:  ReportComponentType.HEADING;
 }
@@ -81,6 +81,17 @@ export const reportComponentTypeDefaultConfigMap = new Map<ReportComponentType, 
       {
         type: ReportComponentType.HEADING,
         value: 'Heading text',
+        font: {
+          size: 40,
+          sizeUnit: 'pt',
+          weight: 'normal',
+          style: 'normal',
+          family: 'Roboto'
+        } as Font,
+        color: '#000',
+        textAlignment: 'center',
+        verticalAlignment: 'middle',
+        height: undefined,
         dataSources: []
       }
     ],

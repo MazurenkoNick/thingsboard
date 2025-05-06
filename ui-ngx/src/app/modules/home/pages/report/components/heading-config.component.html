@@ -37,14 +37,53 @@
       <tb-toggle-option value="data">{{ 'report-template.data' | translate }}</tb-toggle-option>
     </tb-toggle-select>
   </div>
-  <div class="tb-form-row" [class.!hidden]="settingsTab !== 'content'">
-    <div class="fixed-title-width" translate>report-template.component.heading.heading-text</div>
-    <mat-form-field class="flex-1" appearance="outline" subscriptSizing="dynamic">
-      <input matInput formControlName="value" placeholder="{{ 'widget-config.set' | translate }}">
-    </mat-form-field>
+  <div class="tb-form-panel no-border no-padding" [class.!hidden]="settingsTab !== 'content'">
+    <div class="tb-form-panel stroked">
+      <div class="tb-form-panel-title" translate>report-template.component.heading.text</div>
+      <div class="tb-form-row no-border no-padding">
+        <div class="flex flex-1 flex-row items-center justify-start gap-2">
+          <mat-form-field class="flex-1" appearance="outline" subscriptSizing="dynamic">
+            <input matInput formControlName="value" placeholder="{{ 'widget-config.set' | translate }}">
+          </mat-form-field>
+          <tb-font-settings formControlName="font"
+                            disabledLineHeight
+                            forceSizeUnit="pt"
+                            [allowedFontWeights]="['normal', 'bold']"
+                            [allowedFontStyles]="['normal', 'italic']"
+                            clearButton
+                            [previewText]="reportConfigForm.get('value').value">
+          </tb-font-settings>
+          <tb-color-input asBoxInput
+                          colorClearButton
+                          formControlName="color">
+          </tb-color-input>
+        </div>
+      </div>
+    </div>
+    <div class="tb-form-panel stroked">
+      <div class="tb-form-panel-title" translate>report-template.component.heading.layout</div>
+      <div class="tb-form-row space-between">
+        <div class="fixed-title-width" translate>widgets.alignment.alignment</div>
+        <div class="flex flex-row items-center justify-start gap-2">
+          <div class="tb-small-label" translate>widgets.alignment.horizontal</div>
+          <tb-alignment horizontal formControlName="textAlignment"></tb-alignment>
+          <mat-divider vertical></mat-divider>
+          <div class="tb-small-label" translate>widgets.alignment.vertical</div>
+          <tb-alignment horizontal="false" formControlName="verticalAlignment"></tb-alignment>
+        </div>
+      </div>
+      <div class="tb-form-row space-between">
+        <div>{{ 'report-template.component.heading.height' | translate }}</div>
+        <mat-form-field appearance="outline" class="number" subscriptSizing="dynamic">
+          <input matInput formControlName="height" type="number" min="0" step="1" placeholder="{{ 'widget-config.set' | translate }}">
+          <div matSuffix>pt</div>
+        </mat-form-field>
+      </div>
+    </div>
   </div>
   <tb-datasources [class.!hidden]="settingsTab !== 'data'"
                   formControlName="dataSources"
+                  stroked
                   [dataSourcesOptions]="{
                     widgetType: widgetType.latest,
                     maxDatasources: -1,

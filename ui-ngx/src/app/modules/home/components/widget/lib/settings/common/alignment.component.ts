@@ -29,69 +29,49 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { Component, forwardRef, Input, OnInit, Renderer2, ViewContainerRef } from '@angular/core';
+import { Component, forwardRef, Input, Renderer2, ViewContainerRef } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
-import { ComponentStyle, cssUnit, Font, fontStyle, fontWeight } from '@shared/models/widget-settings.models';
+import {
+  alignment, alignmentIcons, alignmentTranslations
+} from '@shared/models/widget-settings.models';
 import { MatButton } from '@angular/material/button';
 import { TbPopoverService } from '@shared/components/popover.service';
-import { FontSettingsPanelComponent } from '@home/components/widget/lib/settings/common/font-settings-panel.component';
-import { isDefinedAndNotNull } from '@core/utils';
+import {
+  AlignmentPanelComponent
+} from '@home/components/widget/lib/settings/common/alignment-panel.component';
 import { coerceBoolean } from '@shared/decorators/coercion';
 
 @Component({
-  selector: 'tb-font-settings',
-  templateUrl: './font-settings.component.html',
+  selector: 'tb-alignment',
+  templateUrl: './alignment.component.html',
   styleUrls: [],
   providers: [
     {
       provide: NG_VALUE_ACCESSOR,
-      useExisting: forwardRef(() => FontSettingsComponent),
+      useExisting: forwardRef(() => AlignmentComponent),
       multi: true
     }
   ]
 })
-export class FontSettingsComponent implements OnInit, ControlValueAccessor {
+export class AlignmentComponent implements ControlValueAccessor {
+
+  alignmentTranslations = alignmentTranslations;
+  alignmentIcons = alignmentIcons;
 
   @Input()
   disabled: boolean;
 
   @Input()
-  previewText: string | (() => string);
-
-  @Input()
-  initialPreviewStyle: ComponentStyle;
-
-  @Input()
   @coerceBoolean()
-  clearButton = false;
+  horizontal = true;
 
-  @Input()
-  @coerceBoolean()
-  autoScale = false;
-
-  @Input()
-  @coerceBoolean()
-  disabledLineHeight = false;
-
-  @Input()
-  allowedFontWeights: fontWeight[];
-
-  @Input()
-  allowedFontStyles: fontStyle[];
-
-  @Input()
-  forceSizeUnit: cssUnit;
-
-  private modelValue: Font;
+  modelValue: alignment;
 
   private propagateChange = null;
 
   constructor(private popoverService: TbPopoverService,
               private renderer: Renderer2,
               private viewContainerRef: ViewContainerRef) {}
-
-  ngOnInit(): void {
-  }
 
   registerOnChange(fn: any): void {
     this.propagateChange = fn;
@@ -104,11 +84,14 @@ export class FontSettingsComponent implements OnInit, ControlValueAccessor {
     this.disabled = isDisabled;
   }
 
-  writeValue(value: Font): void {
+  writeValue(value: alignment): void {
     this.modelValue = value;
+    if (!this.modelValue) {
+      this.modelValue = this.horizontal ? 'left' : 'top';
+    }
   }
 
-  openFontSettingsPopup($event: Event, matButton: MatButton) {
+  openAlignmentPopup($event: Event, matButton: MatButton) {
     if ($event) {
       $event.stopPropagation();
     }
@@ -117,33 +100,23 @@ export class FontSettingsComponent implements OnInit, ControlValueAccessor {
       this.popoverService.hidePopover(trigger);
     } else {
       const ctx: any = {
-        font: this.modelValue,
-        initialPreviewStyle: this.initialPreviewStyle,
-        clearButton: this.clearButton,
-        autoScale: this.autoScale,
-        disabledLineHeight: this.disabledLineHeight,
-        forceSizeUnit: this.forceSizeUnit,
-        allowedFontWeights: this.allowedFontWeights,
-        allowedFontStyles: this.allowedFontStyles
+        alignment: this.modelValue,
+        horizontal: this.horizontal
       };
-      if (isDefinedAndNotNull(this.previewText)) {
-        const previewText = typeof this.previewText === 'string' ? this.previewText : this.previewText();
-        if (previewText) {
-          ctx.previewText = previewText;
-        }
-      }
-      const fontSettingsPanelPopover = this.popoverService.displayPopover({
+      const alignmentPanelPopover = this.popoverService.displayPopover({
         trigger,
         renderer: this.renderer,
-        componentType: FontSettingsPanelComponent,
+        componentType: AlignmentPanelComponent,
         hostView: this.viewContainerRef,
-        preferredPlacement: 'left',
+        preferredPlacement: ['top', 'topLeft', 'topRight'],
         context: ctx,
-        isModal: true
+        showCloseButton: false,
+        isModal: false,
+        popoverContentStyle: {padding: '6px'}
       });
-      fontSettingsPanelPopover.tbComponentRef.instance.fontApplied.subscribe((font) => {
-        fontSettingsPanelPopover.hide();
-        this.modelValue = font;
+      alignmentPanelPopover.tbComponentRef.instance.alignmentSelected.subscribe((alignment) => {
+        alignmentPanelPopover.hide();
+        this.modelValue = alignment;
         this.propagateChange(this.modelValue);
       });
     }

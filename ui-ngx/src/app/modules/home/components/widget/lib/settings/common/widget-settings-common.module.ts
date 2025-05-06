@@ -282,6 +282,10 @@ import {
 import {
   ShapeFillStripeSettingsPanelComponent
 } from '@home/components/widget/lib/settings/common/map/shape-fill-stripe-settings-panel.component';
+import {
+  AlignmentPanelComponent
+} from '@home/components/widget/lib/settings/common/alignment-panel.component';
+import { AlignmentComponent } from '@home/components/widget/lib/settings/common/alignment.component';
 
 @NgModule({
   declarations: [
@@ -293,6 +297,8 @@ import {
     ColorSettingsPanelComponent,
     CssUnitSelectComponent,
     CssSizeInputComponent,
+    AlignmentComponent,
+    AlignmentPanelComponent,
     DateFormatSelectComponent,
     DateFormatSettingsPanelComponent,
     AutoDateFormatSettingsComponent,
@@ -403,6 +409,8 @@ import {
     ColorSettingsPanelComponent,
     CssUnitSelectComponent,
     CssSizeInputComponent,
+    AlignmentComponent,
+    AlignmentPanelComponent,
     DateFormatSelectComponent,
     DateFormatSettingsPanelComponent,
     AutoDateFormatSettingsComponent,

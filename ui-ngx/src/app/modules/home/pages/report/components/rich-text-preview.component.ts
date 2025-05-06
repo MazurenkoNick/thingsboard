@@ -29,9 +29,9 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { Component, Input, ViewEncapsulation } from '@angular/core';
+import { Component, HostBinding, Input, ViewEncapsulation } from '@angular/core';
 import { RichTextReportComponentConfig } from '@shared/models/report-component.models';
-import { ReportComponentPreview } from '@home/pages/report/components/report-component.models';
+import { AbstractReportComponentPreview } from '@home/pages/report/components/report-component.component';
 
 @Component({
   selector: 'tb-rich-text-preview',
@@ -39,11 +39,9 @@ import { ReportComponentPreview } from '@home/pages/report/components/report-com
   styleUrls: ['./rich-text-preview.component.scss'],
   encapsulation: ViewEncapsulation.None
 })
-export class RichTextPreviewComponent implements ReportComponentPreview<RichTextReportComponentConfig> {
+export class RichTextPreviewComponent extends AbstractReportComponentPreview<RichTextReportComponentConfig> {
 
-  @Input()
-  reportComponent: RichTextReportComponentConfig;
-
-  constructor() {}
+  @HostBinding('style.width')
+  width = '100%';
 
 }

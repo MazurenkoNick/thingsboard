@@ -122,6 +122,10 @@ export class DatasourcesComponent implements ControlValueAccessor, OnInit, Valid
 
   @Input()
   @coerceBoolean()
+  stroked = false;
+
+  @Input()
+  @coerceBoolean()
   hideDatasourcesMode = false;
 
   @Input()

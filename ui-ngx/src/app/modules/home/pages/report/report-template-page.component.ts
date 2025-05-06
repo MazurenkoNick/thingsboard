@@ -71,7 +71,11 @@ import {
 import { ReportComponentConfig } from '@shared/models/report-component.models';
 import { FormBuilder, FormControl } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { ReportComponentContext, reportComponentTypeMap } from '@home/pages/report/components/report-component.models';
+import {
+  assignReportComponent,
+  ReportComponentContext,
+  reportComponentTypeMap
+} from '@home/pages/report/components/report-component.models';
 import { MatDrawer } from '@angular/material/sidenav';
 import { EntityService } from '@core/http/entity.service';
 import { IStateController, StateParams } from '@core/api/widget-api.models';
@@ -80,6 +84,7 @@ import { UtilsService } from '@core/services/utils.service';
 import { AliasController } from '@core/api/alias-controller';
 import { DialogService } from '@core/services/dialog.service';
 import { ReportService } from '@core/http/report.service';
+import { EditReportComponentData } from '@home/pages/report/components/report-components.component';
 
 @Component({
   selector: 'tb-report-template-page',
@@ -127,8 +132,9 @@ export class ReportTemplatePageComponent extends PageComponent
 
   updateBreadcrumbs = new EventEmitter();
 
-  activeReportComponent: ReportComponentConfig;
+  prevReportComponent: ReportComponentConfig;
   editingReportComponent: ReportComponentConfig;
+  editingReportComponentUpdated: () => void;
 
   reportTemplateSettingsFormControl: FormControl;
 
@@ -220,10 +226,11 @@ export class ReportTemplatePageComponent extends PageComponent
     this.isDirty = true;
   }
 
-  public editReportComponent(reportComponent: ReportComponentConfig): void {
-    if (this.activeReportComponent !== reportComponent) {
-      this.activeReportComponent = reportComponent;
-      this.editingReportComponent = deepClone(reportComponent);
+  public editReportComponent(editReportComponentData: EditReportComponentData): void {
+    if (this.editingReportComponent !== editReportComponentData.reportComponent) {
+      this.editingReportComponent = editReportComponentData.reportComponent;
+      this.editingReportComponentUpdated = editReportComponentData.componentUpdated;
+      this.prevReportComponent = deepClone(editReportComponentData.reportComponent);
       const reportComponentsLibrary = this.reportComponentsLibrary()
       if (reportComponentsLibrary) {
         reportComponentsLibrary.close().then();
@@ -231,11 +238,17 @@ export class ReportTemplatePageComponent extends PageComponent
     }
   }
 
-  public saveReportComponent(): void {
-    Object.assign(this.activeReportComponent, this.editingReportComponent);
-    this.activeReportComponent = null;
-    this.editingReportComponent = null;
+  public reportComponentUpdated() {
+    if (this.editingReportComponentUpdated) {
+      this.editingReportComponentUpdated();
+    }
     this.isDirty = true;
+  }
+
+  public saveReportComponent(): void {
+    this.prevReportComponent = null;
+    this.editingReportComponent = null;
+    this.editingReportComponentUpdated = null;
     const reportComponentsLibrary = this.reportComponentsLibrary()
     if (reportComponentsLibrary) {
       reportComponentsLibrary.open().then();
@@ -243,11 +256,16 @@ export class ReportTemplatePageComponent extends PageComponent
   }
 
   public cancelReportComponentEdit(): void {
-    this.activeReportComponent = null;
-    this.editingReportComponent = null;
-    const reportComponentsLibrary = this.reportComponentsLibrary()
-    if (reportComponentsLibrary) {
-      reportComponentsLibrary.open().then();
+    if (this.editingReportComponent) {
+      assignReportComponent(this.editingReportComponent, this.prevReportComponent);
+      this.reportComponentUpdated();
+      this.prevReportComponent = null;
+      this.editingReportComponent = null;
+      this.editingReportComponentUpdated = null;
+      const reportComponentsLibrary = this.reportComponentsLibrary()
+      if (reportComponentsLibrary) {
+        reportComponentsLibrary.open().then();
+      }
     }
   }
 
