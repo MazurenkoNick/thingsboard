@@ -28,29 +28,47 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.common.data.report;
+package org.thingsboard.server.report.context;
 
-import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
-import org.thingsboard.server.common.data.id.CustomerId;
-import org.thingsboard.server.common.data.id.EntityId;
-import org.thingsboard.server.common.data.id.ReportTemplateId;
-import org.thingsboard.server.common.data.report.configuration.ReportTemplateConfig;
+import lombok.experimental.SuperBuilder;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+import org.thingsboard.rest.client.RestClient;
+import org.thingsboard.server.common.data.job.task.ReportTask;
 
-@Data
-public class ReportRequest {
+import java.io.IOException;
 
-    @Schema(description = "Json object representing the report template id.")
-    ReportTemplateId reportTemplateId;
-    @Schema(description = "Json object representing the report template config.")
-    ReportTemplateConfig reportTemplateConfig;
-    @Schema(description = "Json object representing the report customer id.", requiredMode = Schema.RequiredMode.REQUIRED)
-    CustomerId customerId;
-    @Schema(description = "Json object representing the report entity id.")
-    EntityId entityId;
-    @Schema(description = "Timezone in which target dashboard will be presented in dashboard report.", example = "Europe/Kiev") // fixme: description
-    String timezone;
-    @Schema(description = "A string value representing the user id.", example = "784f394c-42b6-435a-983c-b7beff2784f9")
-    String userId; // fixme: use it for jwt generation
+@ConditionalOnMissingBean(value = TbReportCtxProvider.class, ignored = RemoteTbReportCtxProvider.class)
+@Service
+public class RemoteTbReportCtxProvider implements TbReportCtxProvider {
+
+    @Value("${service.tb_core.base_url:http://localhost:${server.port}}")
+    private String tbCoreBaseUrl;
+
+    @Override
+    public TbReportCtx newContext(ReportTask task) {
+        return RemoteTbReportCtx.builder()
+                .configuration(task.getReportTemplateConfig())
+                .accessToken(task.getAccessToken())
+                .accessTokenExpTs(task.getAccessTokenExpirationTs())
+                .restClient(new RestClient(new RestTemplate(), tbCoreBaseUrl, task.getAccessToken()))
+                .build();
+    }
+
+    @Data
+    @SuperBuilder
+    public static class RemoteTbReportCtx extends TbReportCtx {
+
+        private final RestClient restClient;
+
+        @Override
+        public void close() throws IOException {
+            restClient.close();
+        }
+
+    }
 
 }

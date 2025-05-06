@@ -28,29 +28,28 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.common.data.report;
+package org.thingsboard.server.report.context;
 
-import io.swagger.v3.oas.annotations.media.Schema;
+import com.google.common.util.concurrent.ListenableFuture;
 import lombok.Data;
-import org.thingsboard.server.common.data.id.CustomerId;
-import org.thingsboard.server.common.data.id.EntityId;
-import org.thingsboard.server.common.data.id.ReportTemplateId;
+import lombok.experimental.SuperBuilder;
 import org.thingsboard.server.common.data.report.configuration.ReportTemplateConfig;
 
-@Data
-public class ReportRequest {
+import java.io.Closeable;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-    @Schema(description = "Json object representing the report template id.")
-    ReportTemplateId reportTemplateId;
-    @Schema(description = "Json object representing the report template config.")
-    ReportTemplateConfig reportTemplateConfig;
-    @Schema(description = "Json object representing the report customer id.", requiredMode = Schema.RequiredMode.REQUIRED)
-    CustomerId customerId;
-    @Schema(description = "Json object representing the report entity id.")
-    EntityId entityId;
-    @Schema(description = "Timezone in which target dashboard will be presented in dashboard report.", example = "Europe/Kiev") // fixme: description
-    String timezone;
-    @Schema(description = "A string value representing the user id.", example = "784f394c-42b6-435a-983c-b7beff2784f9")
-    String userId; // fixme: use it for jwt generation
+@Data
+@SuperBuilder
+public abstract class TbReportCtx implements Closeable {
+
+    private final ReportTemplateConfig configuration;
+    private final String accessToken;
+    private final long accessTokenExpTs;
+
+    private final List<ListenableFuture<Void>> futures = new ArrayList<>();
+    private final Map<String, Object> params = new HashMap<>();
 
 }

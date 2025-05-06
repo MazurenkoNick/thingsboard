@@ -28,29 +28,46 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.common.data.report;
+package org.thingsboard.server.service.report;
 
-import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
-import org.thingsboard.server.common.data.id.CustomerId;
-import org.thingsboard.server.common.data.id.EntityId;
-import org.thingsboard.server.common.data.id.ReportTemplateId;
-import org.thingsboard.server.common.data.report.configuration.ReportTemplateConfig;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.SuperBuilder;
+import org.springframework.context.annotation.Primary;
+import org.springframework.stereotype.Service;
+import org.thingsboard.server.common.data.job.task.ReportTask;
+import org.thingsboard.server.report.context.TbReportCtx;
+import org.thingsboard.server.report.context.TbReportCtxProvider;
+import org.thingsboard.server.service.security.model.SecurityUser;
+import org.thingsboard.server.service.security.model.token.JwtTokenFactory;
 
-@Data
-public class ReportRequest {
+@RequiredArgsConstructor
+@Primary
+@Service
+public class LocalTbReportCtxProvider implements TbReportCtxProvider {
 
-    @Schema(description = "Json object representing the report template id.")
-    ReportTemplateId reportTemplateId;
-    @Schema(description = "Json object representing the report template config.")
-    ReportTemplateConfig reportTemplateConfig;
-    @Schema(description = "Json object representing the report customer id.", requiredMode = Schema.RequiredMode.REQUIRED)
-    CustomerId customerId;
-    @Schema(description = "Json object representing the report entity id.")
-    EntityId entityId;
-    @Schema(description = "Timezone in which target dashboard will be presented in dashboard report.", example = "Europe/Kiev") // fixme: description
-    String timezone;
-    @Schema(description = "A string value representing the user id.", example = "784f394c-42b6-435a-983c-b7beff2784f9")
-    String userId; // fixme: use it for jwt generation
+    private final JwtTokenFactory tokenFactory;
+
+    @Override
+    public LocalTbReportCtx newContext(ReportTask task) {
+        SecurityUser securityUser = tokenFactory.parseAccessJwtToken(task.getAccessToken());
+        return LocalTbReportCtx.builder()
+                .configuration(task.getReportTemplateConfig())
+                .accessToken(task.getAccessToken())
+                .accessTokenExpTs(task.getAccessTokenExpirationTs())
+                .securityUser(securityUser)
+                .build();
+    }
+
+    @Data
+    @SuperBuilder
+    public static class LocalTbReportCtx extends TbReportCtx {
+
+        private final SecurityUser securityUser;
+
+        @Override
+        public void close() {}
+
+    }
 
 }

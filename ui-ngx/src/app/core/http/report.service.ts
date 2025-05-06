@@ -51,7 +51,7 @@ export class ReportService {
   }
 
   public downloadTestReport(reportRequest: ReportRequest, downloadElseOpen = true): Observable<any> {
-    const url = '/api/v2/report/deprecated/test';
+    const url = '/api/v2/report/test';
     return this.downloadReport(url, reportRequest, downloadElseOpen);
   }
 
