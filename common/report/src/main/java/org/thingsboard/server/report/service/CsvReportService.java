@@ -41,7 +41,6 @@ import org.thingsboard.server.common.data.report.configuration.CsvReportTemplate
 import org.thingsboard.server.common.data.report.configuration.DataKey;
 import org.thingsboard.server.common.data.report.configuration.components.AlarmTableComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
-import org.thingsboard.server.common.data.report.configuration.components.TableReportComponent;
 import org.thingsboard.server.common.data.report.configuration.components.TimeseriesTableComponent;
 import org.thingsboard.server.report.context.TbReportCtx;
 
@@ -51,8 +50,8 @@ import java.util.Map;
 import java.util.TimeZone;
 
 import static org.thingsboard.server.report.util.CsvUtils.generateCsv;
-import static org.thingsboard.server.report.util.JasperReportBuilder.getSingleDataSource;
-import static org.thingsboard.server.report.util.ReportUtils.prepareReportName;
+import static org.thingsboard.server.report.util.ReportLayoutContext.getSingleDataSource;
+import static org.thingsboard.server.report.util.JasperReportUtils.prepareReportName;
 
 @Service
 @RequiredArgsConstructor

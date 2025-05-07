@@ -30,16 +30,30 @@
  */
 package org.thingsboard.server.report.util;
 
+import net.sf.jasperreports.engine.design.JRDesignExpression;
+import net.sf.jasperreports.engine.design.JRDesignTextField;
+
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class ReportUtils {
+public class JasperReportUtils {
 
     public static final Pattern REPORT_NAME_DATE_PATTERN = Pattern.compile("%d\\{([^\\}]*)\\}");
     public static final String DEFAULT_NAME_PATTERN = "report-%d{yyyy-MM-dd_HH:mm:ss}";
+
+    public static JRDesignTextField createTextField(String expression, int x, int y) {
+        JRDesignTextField field = new JRDesignTextField();
+        field.setX(x);
+        field.setY(y);
+        field.setWidth(180);
+        field.setHeight(20);
+        field.setBlankWhenNull(true);
+        field.setExpression(new JRDesignExpression(expression));
+        return field;
+    }
 
     public static String prepareReportName(String namePattern, Date reportDate, TimeZone tz) {
         String name = (namePattern == null || namePattern.isEmpty()) ? DEFAULT_NAME_PATTERN : namePattern;
