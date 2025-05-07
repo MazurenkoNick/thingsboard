@@ -72,6 +72,18 @@ public class GroupPermission extends BaseData<GroupPermissionId> implements HasN
             Operation.READ_TELEMETRY
     );
 
+    public static final Map<Resource, List<Operation>> CUSTOMER_ADMIN_GROUP_PERMISSIONS = new HashMap<>();
+    static {
+        Arrays.stream(Resource.values())
+                .filter(resource -> !resource.equals(Resource.ALL))
+                .forEach(resource -> CUSTOMER_ADMIN_GROUP_PERMISSIONS.put(resource, List.of(Operation.ALL)));
+
+        List<Operation> edgeOperations = new ArrayList<>(Operation.defaultEntityOperations);
+        edgeOperations.remove(Operation.CREATE);
+        edgeOperations.remove(Operation.ALL);
+        CUSTOMER_ADMIN_GROUP_PERMISSIONS.put(Resource.EDGE, edgeOperations);
+    }
+
     public static final List<Operation> TENANT_READ_ONLY_GROUP_PERMISSIONS = new ArrayList<>(READ_ONLY_GROUP_PERMISSIONS);
     static {
         TENANT_READ_ONLY_GROUP_PERMISSIONS.add(Operation.READ_CALCULATED_FIELD);

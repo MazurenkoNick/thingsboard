@@ -99,8 +99,8 @@ export class EdgesTableConfigResolver  {
   resolve(route: ActivatedRouteSnapshot): Observable<EntityTableConfig<EdgeInfo>> {
     const groupParams = resolveGroupParams(route);
     const config = new EntityTableConfig<EdgeInfo>(groupParams);
+    this.configDefaults(config);
     const authUser = getCurrentAuthUser(this.store);
-    this.configDefaults(authUser, config);
     config.componentsData = {
       includeCustomers: true,
       edgeType: '',
@@ -130,16 +130,13 @@ export class EdgesTableConfigResolver  {
     );
   }
 
-  configDefaults(authUser: AuthUser, config: EntityTableConfig<EdgeInfo>) {
+  configDefaults(config: EntityTableConfig<EdgeInfo>) {
     config.entityType = EntityType.EDGE;
     config.entityComponent = EdgeComponent;
     config.entityTabsComponent = GroupEntityTabsComponent<EdgeInfo>;
     config.entityTranslations = entityTypeTranslations.get(EntityType.EDGE);
     config.entityResources = entityTypeResources.get(EntityType.EDGE);
     config.addDialogStyle = {height: '1000px'};
-    if(authUser.authority === Authority.CUSTOMER_USER){
-      config.addEnabled = false;
-    }
     config.entityTitle = (edge) => edge ?
       this.utils.customTranslation(edge.name, edge.name) : '';
 
