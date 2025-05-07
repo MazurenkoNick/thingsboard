@@ -58,9 +58,9 @@ import org.thingsboard.server.common.data.report.configuration.components.Dashbo
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponentType;
 import org.thingsboard.server.common.data.report.configuration.components.TimeseriesTableComponent;
+import org.thingsboard.server.report.context.ReportLayoutContext;
 import org.thingsboard.server.report.context.TbReportCtx;
-import org.thingsboard.server.report.util.ReportLayoutContext;
-import org.thingsboard.server.report.util.ReportComponentRenderer;
+import org.thingsboard.server.report.renderer.ReportComponentRenderer;
 import org.thingsboard.server.report.util.WebReportClient;
 
 import java.util.ArrayList;
@@ -77,7 +77,7 @@ import static org.thingsboard.server.common.data.report.configuration.components
 import static org.thingsboard.server.common.data.report.configuration.components.ReportComponentType.TIME_SERIES_TABLE;
 import static org.thingsboard.server.common.data.util.ReportQueryUtils.toAlarmCountQuery;
 import static org.thingsboard.server.common.data.util.ReportQueryUtils.toEntityCountQuery;
-import static org.thingsboard.server.report.util.ReportLayoutContext.getSingleDataSource;
+import static org.thingsboard.server.report.context.ReportLayoutContext.getSingleDataSource;
 import static org.thingsboard.server.report.util.JasperReportUtils.prepareReportName;
 
 @Service
@@ -152,9 +152,9 @@ public class PdfReportService extends AbstractReportService {
     }
 
     public JasperReport buildJasperReport(ReportLayoutContext parentLayoutCtx, ReportComponent component) throws JRException {
-        ReportLayoutContext reportBuilder = new ReportLayoutContext(component, parentLayoutCtx);
-        componentsRenderers.get(component.getType()).render(reportBuilder, component);
-        return JasperCompileManager.compileReport(reportBuilder.getJasperDesign());
+        ReportLayoutContext layoutCtx = new ReportLayoutContext(component, parentLayoutCtx);
+        componentsRenderers.get(component.getType()).render(layoutCtx, component);
+        return JasperCompileManager.compileReport(layoutCtx.getJasperDesign());
     }
 
     private JRDataSource buildDataSource(TbReportCtx ctx, ReportComponent component, EntityData entityData) {

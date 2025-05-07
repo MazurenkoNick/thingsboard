@@ -50,7 +50,7 @@ import java.util.Map;
 import java.util.TimeZone;
 
 import static org.thingsboard.server.report.util.CsvUtils.generateCsv;
-import static org.thingsboard.server.report.util.ReportLayoutContext.getSingleDataSource;
+import static org.thingsboard.server.report.context.ReportLayoutContext.getSingleDataSource;
 import static org.thingsboard.server.report.util.JasperReportUtils.prepareReportName;
 
 @Service
