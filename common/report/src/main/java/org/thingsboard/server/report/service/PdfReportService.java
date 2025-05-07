@@ -31,10 +31,10 @@
 package org.thingsboard.server.report.service;
 
 import com.google.common.util.concurrent.SettableFuture;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.sf.jasperreports.engine.JRDataSource;
 import net.sf.jasperreports.engine.JREmptyDataSource;
+import net.sf.jasperreports.engine.JRException;
 import net.sf.jasperreports.engine.JasperCompileManager;
 import net.sf.jasperreports.engine.JasperExportManager;
 import net.sf.jasperreports.engine.JasperFillManager;
@@ -56,14 +56,17 @@ import org.thingsboard.server.common.data.report.configuration.ReportTemplateCon
 import org.thingsboard.server.common.data.report.configuration.components.AlarmTableComponent;
 import org.thingsboard.server.common.data.report.configuration.components.DashboardComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
+import org.thingsboard.server.common.data.report.configuration.components.ReportComponentType;
 import org.thingsboard.server.common.data.report.configuration.components.TimeseriesTableComponent;
+import org.thingsboard.server.report.context.ReportLayoutContext;
 import org.thingsboard.server.report.context.TbReportCtx;
-import org.thingsboard.server.report.util.JasperReportBuilder;
+import org.thingsboard.server.report.renderer.ReportComponentRenderer;
 import org.thingsboard.server.report.util.WebReportClient;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
@@ -74,15 +77,25 @@ import static org.thingsboard.server.common.data.report.configuration.components
 import static org.thingsboard.server.common.data.report.configuration.components.ReportComponentType.TIME_SERIES_TABLE;
 import static org.thingsboard.server.common.data.util.ReportQueryUtils.toAlarmCountQuery;
 import static org.thingsboard.server.common.data.util.ReportQueryUtils.toEntityCountQuery;
-import static org.thingsboard.server.report.util.JasperReportBuilder.getSingleDataSource;
-import static org.thingsboard.server.report.util.ReportUtils.prepareReportName;
+import static org.thingsboard.server.report.context.ReportLayoutContext.getSingleDataSource;
+import static org.thingsboard.server.report.util.JasperReportUtils.prepareReportName;
 
 @Service
 @Slf4j
-@RequiredArgsConstructor
 public class PdfReportService extends AbstractReportService {
 
+    private final Map<ReportComponentType, ReportComponentRenderer> componentsRenderers = new EnumMap<>(ReportComponentType.class);
     private final WebReportClient webReportClient;
+
+    private PdfReportService(List<ReportComponentRenderer> renderers, WebReportClient webReportClient) {
+        renderers.forEach(renderer -> {
+            ReportComponentType type = renderer.getType();
+            if (type != null) {
+                this.componentsRenderers.put(type, renderer);
+            }
+        });
+        this.webReportClient = webReportClient;
+    }
 
     public ReportData generateReport(ReportTask task, TbReportCtx ctx) throws Exception {
         TenantId tenantId = task.getTenantId();
@@ -90,14 +103,14 @@ public class PdfReportService extends AbstractReportService {
         log.trace("[{}] Executing generateReport, reportRequest [{}]", tenantId, task);
         PdfReportTemplateConfig configuration = (PdfReportTemplateConfig) task.getReportTemplateConfig();
 
-        JasperReportBuilder reportBuilder = new JasperReportBuilder(configuration);
+        ReportLayoutContext layoutCtx = new ReportLayoutContext(configuration);
 
         //Optional.ofNullable(configuration.getHeader()).ifPresent(reportBuilder::addPageHeader);
         //Optional.ofNullable(configuration.getFooter()).ifPresent(reportBuilder::addPageFooter);
 
-        renderContent(ctx, reportBuilder, configuration.getComponents());
+        renderContent(ctx, layoutCtx, configuration.getComponents());
 
-        JasperReport mainReport = JasperCompileManager.compileReport(reportBuilder.getJasperDesign());
+        JasperReport mainReport = JasperCompileManager.compileReport(layoutCtx.getJasperDesign());
         JasperPrint print = JasperFillManager.fillReport(mainReport, ctx.getParams(), new JREmptyDataSource());
 
         String requestTimeZone = task.getTimezone();
@@ -111,7 +124,7 @@ public class PdfReportService extends AbstractReportService {
                 .build();
     }
 
-    private void renderContent(TbReportCtx ctx, JasperReportBuilder parentBuilder, List<ReportComponent> components) throws Exception {
+    private void renderContent(TbReportCtx ctx, ReportLayoutContext parentBuilder, List<ReportComponent> components) throws Exception {
         for (ReportComponent component : components) {
             if (component.getType() == TIME_SERIES_TABLE || component.getType() == SUB_REPORT) { // check if component is complex
                 List<EntityData> entityDatas = fetchEntities(ctx, getSingleDataSource(component));
@@ -124,18 +137,24 @@ public class PdfReportService extends AbstractReportService {
         }
     }
 
-    private void renderComponent(TbReportCtx ctx, JasperReportBuilder parentBuilder, ReportComponent component, EntityData entityData) throws Exception {
+    private void renderComponent(TbReportCtx ctx, ReportLayoutContext layoutCtx, ReportComponent component, EntityData entityData) throws Exception {
         String subReportId = "component_" + StringUtils.randomAlphabetic(10);
         String subReportDSId = "componentDS_" + StringUtils.randomAlphabetic(10);
 
-        parentBuilder.buildSubReportBand(subReportId, subReportDSId);
+        layoutCtx.addSubReportBand(subReportId, subReportDSId);
 
-        JasperReport subReport = parentBuilder.buildComponent(component);
+        JasperReport subReport = buildJasperReport(layoutCtx, component);
         JRDataSource subReportDS = buildDataSource(ctx, component, entityData);
 
         Map<String, Object> params = ctx.getParams();
         params.put(subReportId, subReport);
         params.put(subReportDSId, subReportDS);
+    }
+
+    public JasperReport buildJasperReport(ReportLayoutContext parentLayoutCtx, ReportComponent component) throws JRException {
+        ReportLayoutContext layoutCtx = new ReportLayoutContext(component, parentLayoutCtx);
+        componentsRenderers.get(component.getType()).render(layoutCtx, component);
+        return JasperCompileManager.compileReport(layoutCtx.getJasperDesign());
     }
 
     private JRDataSource buildDataSource(TbReportCtx ctx, ReportComponent component, EntityData entityData) {

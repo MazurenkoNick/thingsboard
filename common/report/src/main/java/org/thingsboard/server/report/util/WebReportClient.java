@@ -65,7 +65,7 @@ import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
-import static org.thingsboard.server.report.util.ReportUtils.prepareReportName;
+import static org.thingsboard.server.report.util.JasperReportUtils.prepareReportName;
 
 @Slf4j
 @Component
