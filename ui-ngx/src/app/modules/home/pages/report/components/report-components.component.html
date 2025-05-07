@@ -39,14 +39,20 @@
      (cdkDropListDropped)="componentDrop($event)"
      (cdkDropListEntered)="dropListEnter($event)"
      (cdkDropListExited)="dropListExit($event)">
-  <div class="tb-no-reports-components" translate>
-    report-template.drop-report-components
+  <div class="tb-no-reports-components">
+    <div translate class="text-center p-4">
+      report-template.drop-report-components
+    </div>
   </div>
   @for (item of reportComponents; track item) {
-    <div cdkDrag class="tb-draggable" [cdkDragData]="item"
+    <div cdkDrag class="tb-draggable tb-report-component-draggable"
+         #reportComponentDrag
+         [cdkDragData]="item"
          (cdkDragStarted)="componentDragStarted($event)"
          (cdkDragEnded)="componentDragEnded()" [style.background]="background">
       <tb-report-component [reportComponent]="item"
+                           [scale]="scale"
+                           [width]="reportComponentDrag.offsetWidth"
                            (edit)="onComponentEdit(item, $event)"
                            (makeCopy)="duplicateComponent(item)"
                            (remove)="componentRemove(item)"></tb-report-component>

@@ -29,7 +29,7 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { Component, HostBinding, Input, ViewEncapsulation } from '@angular/core';
+import { Component, ViewEncapsulation } from '@angular/core';
 import { RichTextReportComponentConfig } from '@shared/models/report-component.models';
 import { AbstractReportComponentPreview } from '@home/pages/report/components/report-component.component';
 
@@ -41,7 +41,7 @@ import { AbstractReportComponentPreview } from '@home/pages/report/components/re
 })
 export class RichTextPreviewComponent extends AbstractReportComponentPreview<RichTextReportComponentConfig> {
 
-  @HostBinding('style.width')
-  width = '100%';
+  onComponentUpdated() {
+  }
 
 }

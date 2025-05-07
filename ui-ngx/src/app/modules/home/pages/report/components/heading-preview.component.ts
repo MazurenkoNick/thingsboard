@@ -43,12 +43,9 @@ import { AbstractReportComponentPreview } from '@home/pages/report/components/re
 })
 export class HeadingPreviewComponent extends AbstractReportComponentPreview<HeadingReportComponentConfig> {
 
-  @HostBinding('style.width')
-  width = '100%';
-
   headingStyle: ComponentStyle;
 
-  componentUpdated() {
+  onComponentUpdated() {
     const font: Font = deepClone(this.reportComponent.font || { size: 10, sizeUnit: 'pt' } as Font);
     if (!font.size) {
       font.size = 10;

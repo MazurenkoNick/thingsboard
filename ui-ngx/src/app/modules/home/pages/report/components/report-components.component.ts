@@ -80,6 +80,9 @@ export class ReportComponentsComponent implements OnInit, OnChanges {
   @Input()
   width: number;
 
+  @Input()
+  scale = 1;
+
   @HostBinding('style.padding-left.pt')
   @Input()
   marginLeft: number;
@@ -101,6 +104,9 @@ export class ReportComponentsComponent implements OnInit, OnChanges {
 
   @Output()
   componentsChanged = new EventEmitter();
+
+  @Output()
+  componentRemoved = new EventEmitter<ReportComponentConfig>();
 
   @Output()
   componentEdit = new EventEmitter<EditReportComponentData>();
@@ -175,6 +181,7 @@ export class ReportComponentsComponent implements OnInit, OnChanges {
     if (index > -1) {
       this.reportComponents.splice(index, 1);
       this.updateListHeight();
+      this.componentRemoved.emit(reportComponent);
       this.componentsChanged.emit();
     }
   }

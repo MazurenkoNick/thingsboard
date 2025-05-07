@@ -30,6 +30,11 @@
  */
 .tb-report-components {
   position: relative;
+  &.cdk-drop-list-dragging {
+    .tb-no-reports-components {
+      display: none;
+    }
+  }
   .tb-no-reports-components {
     z-index: 0;
     position: absolute;
@@ -44,6 +49,8 @@
     font-weight: 500;
     color: rgba(0,0,0,0.57);
     background: rgba(215, 215, 215, 0.75);
+    transform-origin: left top;
+    overflow: hidden;
   }
   .cdk-drag-placeholder {
     &:before {
@@ -64,4 +71,8 @@
     position: relative;
     z-index: 1;
   }
+}
+
+.cdk-drag-preview.tb-report-component-draggable {
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.5);
 }

@@ -49,25 +49,43 @@
       height: 30px;
     }
   }
-  .mat-drawer-side.tb-report-components-library {
+  .tb-report-template-container {
+    display: flex;
+    flex-direction: row;
+    overflow: hidden;
+    &.tb-close-library {
+      .tb-report-components-library {
+        transform: translate3d(-100%, 0, 0);
+        margin-right: -251px;
+      }
+    }
+  }
+  .tb-dynamic-panel {
+    transition-duration: 400ms;
+    transition-timing-function: cubic-bezier(0.25, 0.8, 0.25, 1);
+  }
+  .tb-report-components-library {
     box-sizing: content-box;
     z-index: 1;
     width: 250px;
-    min-width: 250px;
-    border-right-color: var(--mat-sidenav-container-divider-color);
-    border-right-width: 1px;
-    border-right-style: solid;
+    display: flex;
+    flex-direction: column;
+    background: #fff;
+    border-right: var(--mat-sidenav-container-divider-color) 1px solid;
+    transition-property: transform, margin-right;
   }
-  .mat-drawer-content.tb-report-template-content {
+  .tb-report-template-content {
     z-index: 0;
     padding: 16px 8px;
-    overflow-y: auto;
-    overflow-x: hidden;
+    overflow: auto;
+    flex: 1;
     .tb-report-template-layout {
       width: 100%;
+      min-width: 400px;
       display: flex;
       flex-direction: column;
       align-items: center;
+      overflow: hidden;
       .tb-report-template-sections {
         display: flex;
         flex-direction: column;
@@ -102,9 +120,8 @@
   .tb-report-settings {
     z-index: 1;
     width: 500px;
-    transition: all 500ms ease;
+    border-left: var(--mat-sidenav-container-divider-color) 1px solid;
     transition-property: width;
-    will-change: width;
     &.tb-report-component-settings {
       width: 700px;
     }

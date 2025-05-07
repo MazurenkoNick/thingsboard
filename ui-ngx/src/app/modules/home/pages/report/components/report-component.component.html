@@ -30,7 +30,8 @@
     OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 
 -->
-<div class="tb-report-component" [class.tb-hover]="hovered" (click)="onEdit($event)"
+<div #reportComponentElement class="tb-report-component" [class.tb-hover]="hovered"
+     (click)="onEdit($event)"
      (mouseenter)="mouseEnter($event)" (mouseleave)="mouseLeave($event)">
   @if (!typeData) {
     {{ reportComponent | json }}

@@ -32,24 +32,36 @@
   display: flex;
   width: 100%;
   min-height: 60px;
-  padding: 2px;
+  position: absolute;
+  overflow: visible;
+  transform-origin: left top;
+  &::after {
+    position: absolute;
+    inset: 0;
+    background: transparent;
+  }
   &.tb-hover {
-    border: solid 2px #bdc3c7;
-    padding: 0;
+    &::after {
+      content: '';
+      border: solid 2px #bdc3c7;
+    }
   }
 }
 
 .cdk-drag-preview {
   .tb-report-component {
-    border: none;
-    padding: 2px;
+    &::after {
+      content: unset;
+    }
   }
 }
 
 .cdk-drag-placeholder {
   .tb-report-component {
-    border: dotted 3px #999;
-    padding: 0;
+    &::after {
+      content: '';
+      border: dotted 3px #999;
+    }
   }
 }
 

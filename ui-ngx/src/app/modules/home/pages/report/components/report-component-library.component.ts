@@ -61,7 +61,8 @@ export class ReportComponentLibraryComponent {
   }
 
   dragStarted(event: CdkDragStart) {
-    event.source.getPlaceholderElement().style.height = Math.max(60, event.source.element.nativeElement.offsetHeight) + 'px';
+    //event.source.getPlaceholderElement().style.height = Math.max(60, event.source.element.nativeElement.offsetHeight) + 'px';
+    event.source.getPlaceholderElement().style.height = event.source.element.nativeElement.offsetHeight + 'px';
     document.body.style.cursor = 'grabbing';
     this.copyExistingLibItemsToActiveList();
     this.setActiveListVisibility(true);

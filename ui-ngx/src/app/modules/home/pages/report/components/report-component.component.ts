@@ -35,11 +35,11 @@ import {
   Component,
   ComponentRef, Directive,
   ElementRef,
-  EventEmitter, HostBinding,
+  EventEmitter, HostBinding, inject,
   Input, OnChanges,
   OnDestroy,
   OnInit,
-  Output, SimpleChanges,
+  Output, Renderer2, SimpleChanges, viewChild,
   ViewChild,
   ViewContainerRef,
   ViewEncapsulation
@@ -57,16 +57,32 @@ import { ReportComponentsComponent } from '@home/pages/report/components/report-
   styleUrls: ['./report-component.component.scss'],
   encapsulation: ViewEncapsulation.None
 })
-export class ReportComponentComponent implements OnInit, OnDestroy {
+export class ReportComponentComponent implements OnInit, AfterViewInit, OnDestroy {
+
+  reportComponentElement = viewChild('reportComponentElement', {
+    read: ElementRef<HTMLElement>,
+  });
 
   @HostBinding('style.background')
   background: string;
+
+  @HostBinding('style.display')
+  display = 'block';
+
+  @HostBinding('style.position')
+  position = 'relative';
 
   @Input()
   reportComponent: ReportComponentConfig;
 
   @Input()
   dragging = false;
+
+  @Input()
+  scale = 1;
+
+  @Input()
+  width: number;
 
   @Output()
   edit = new EventEmitter<() => void>();
@@ -90,8 +106,9 @@ export class ReportComponentComponent implements OnInit, OnDestroy {
   private componentUpdated = this._componentUpdated.bind(this);
 
   constructor(private reportComponents: ReportComponentsComponent,
-              private elementRef: ElementRef,
+              private elementRef: ElementRef<HTMLElement>,
               private container: ViewContainerRef,
+              private renderer: Renderer2,
               private cd: ChangeDetectorRef) {}
 
   ngOnInit() {
@@ -106,16 +123,20 @@ export class ReportComponentComponent implements OnInit, OnDestroy {
     this.updateComponentLayout();
   }
 
-  /*ngOnChanges(changes: SimpleChanges): void {
+  ngOnChanges(changes: SimpleChanges): void {
     for (const propName of Object.keys(changes)) {
       const change = changes[propName];
       if (!change.firstChange && change.currentValue !== change.previousValue) {
-        if (propName === 'pageBackground') {
-          this.updateComponentLayout();
+        if (['scale', 'width'].includes(propName)) {
+          this.updateComponentSize();
         }
       }
     }
-  }*/
+  }
+
+  ngAfterViewInit() {
+    this.updateComponentSize();
+  }
 
   ngOnDestroy(): void {
     if (this.editReportComponentTooltip && !this.editReportComponentTooltip.status().destroyed) {
@@ -154,6 +175,15 @@ export class ReportComponentComponent implements OnInit, OnDestroy {
     this.hovered = false;
   }
 
+  private updateComponentSize() {
+    const parentWidth = this.elementRef.nativeElement.getBoundingClientRect().width;
+    this.renderer.setStyle(this.reportComponentElement().nativeElement, 'width', (parentWidth / this.scale) + 'px');
+    this.renderer.setStyle(this.reportComponentElement().nativeElement, 'transform', `scale(${this.scale})`);
+    const rect = this.reportComponentElement().nativeElement.getBoundingClientRect();
+    const targetHeight = rect.height;
+    this.renderer.setStyle(this.elementRef.nativeElement, 'height', targetHeight + 'px');
+  }
+
   private updateComponentLayout() {
     this.background = this.reportComponent.background;// || this.pageBackground;
   }
@@ -163,6 +193,7 @@ export class ReportComponentComponent implements OnInit, OnDestroy {
       this.reportComponentPreview.componentUpdated();
     }
     this.updateComponentLayout();
+    this.updateComponentSize();
   }
 
   private initEditReportComponentTooltip() {
@@ -278,13 +309,23 @@ export class EditReportComponentTooltipComponent implements AfterViewInit {
 @Directive()
 export abstract class AbstractReportComponentPreview<C extends ReportComponentConfig = ReportComponentConfig> implements OnInit {
 
+  @HostBinding('style.width')
+  width = '100%';
+
   @Input()
   reportComponent: C;
+
+  protected cd = inject(ChangeDetectorRef);
 
   ngOnInit() {
     this.componentUpdated();
   }
 
-  componentUpdated() {}
+  componentUpdated() {
+    this.onComponentUpdated();
+    this.cd.detectChanges();
+  }
+
+  protected onComponentUpdated() {}
 
 }

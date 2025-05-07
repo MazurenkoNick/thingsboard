@@ -30,13 +30,14 @@
 ///
 
 import {
+  AfterViewInit,
   ChangeDetectorRef,
   Component,
-  DestroyRef,
+  DestroyRef, ElementRef,
   EventEmitter,
-  HostBinding,
-  OnInit,
-  viewChild,
+  HostBinding, OnDestroy,
+  OnInit, QueryList, Renderer2,
+  viewChild, ViewChildren,
   ViewEncapsulation
 } from '@angular/core';
 import { PageComponent } from '@shared/components/page.component';
@@ -82,7 +83,6 @@ import {
   ReportComponentContext,
   reportComponentTypeMap
 } from '@home/pages/report/components/report-component.models';
-import { MatDrawer } from '@angular/material/sidenav';
 import { EntityService } from '@core/http/entity.service';
 import { IStateController, StateParams } from '@core/api/widget-api.models';
 import { TranslateService } from '@ngx-translate/core';
@@ -90,7 +90,10 @@ import { UtilsService } from '@core/services/utils.service';
 import { AliasController } from '@core/api/alias-controller';
 import { DialogService } from '@core/services/dialog.service';
 import { ReportService } from '@core/http/report.service';
-import { EditReportComponentData } from '@home/pages/report/components/report-components.component';
+import {
+  EditReportComponentData,
+  ReportComponentsComponent
+} from '@home/pages/report/components/report-components.component';
 
 @Component({
   selector: 'tb-report-template-page',
@@ -99,7 +102,7 @@ import { EditReportComponentData } from '@home/pages/report/components/report-co
   encapsulation: ViewEncapsulation.None
 })
 export class ReportTemplatePageComponent extends PageComponent
-  implements OnInit, HasDirtyFlag {
+  implements OnInit, AfterViewInit, OnDestroy, HasDirtyFlag {
 
   reportComponentTypeMap = reportComponentTypeMap;
 
@@ -124,8 +127,15 @@ export class ReportTemplatePageComponent extends PageComponent
   @HostBinding('style.width') width = '100%';
   @HostBinding('style.height') height = '100%';
 
-  reportComponentsLibrary = viewChild('reportComponentsLibrary', {
-    read: MatDrawer,
+  @ViewChildren(ReportComponentsComponent)
+  reportComponentsComponents: QueryList<ReportComponentsComponent>;
+
+  reportTemplateContainerEl = viewChild('reportTemplateContainer', {
+    read: ElementRef<HTMLElement>,
+  });
+
+  reportTemplateLayoutEl = viewChild('reportTemplateLayout', {
+    read: ElementRef<HTMLElement>,
   });
 
   readonly = !this.userPermissionsService.hasGenericPermission(Resource.REPORT_TEMPLATE, Operation.WRITE);
@@ -162,6 +172,12 @@ export class ReportTemplatePageComponent extends PageComponent
 
   background: string;
 
+  scale = 1;
+
+  layoutWidth: number;
+
+  private layoutResize$: ResizeObserver;
+
   // @ts-ignore
   private stateController: IStateController = {
     getStateParams: (): StateParams => ({})
@@ -178,6 +194,7 @@ export class ReportTemplatePageComponent extends PageComponent
               private dialog: MatDialog,
               private dialogService: DialogService,
               private fb: FormBuilder,
+              private renderer: Renderer2,
               private cd: ChangeDetectorRef) {
     super();
   }
@@ -204,6 +221,22 @@ export class ReportTemplatePageComponent extends PageComponent
     );
   }
 
+  ngAfterViewInit() {
+    this.layoutResize$ = new ResizeObserver(() => {
+      this.layoutResize();
+    });
+    this.layoutResize$.observe(this.reportTemplateLayoutEl().nativeElement);
+    setTimeout(() => {
+      this.layoutResize();
+    });
+  }
+
+  ngOnDestroy() {
+    if (this.layoutResize$) {
+      this.layoutResize$.disconnect();
+    }
+  }
+
   saveReportTemplate() {
     this.reportTemplateService.saveReportTemplate(this.reportTemplate).subscribe(
       (saved) => {
@@ -220,29 +253,47 @@ export class ReportTemplatePageComponent extends PageComponent
     );
   }
 
+  public currentHeaderChanged() {
+    this.updatePageLayout();
+  }
+
   public disableHeader(): void {
     this.currentHeader.enabled = false;
+    this.updatePageLayout();
     this.isDirty = true;
   }
 
   public enableHeader(): void {
     this.currentHeader.enabled = true;
+    this.updatePageLayout();
     this.isDirty = true;
+  }
+
+  public currentFooterChanged() {
+    this.updatePageLayout();
   }
 
   public disableFooter(): void {
     this.currentFooter.enabled = false;
+    this.updatePageLayout();
     this.isDirty = true;
   }
 
   public enableFooter(): void {
     this.currentFooter.enabled = true;
+    this.updatePageLayout();
     this.isDirty = true;
   }
 
   public reportComponentsChanged(): void {
-    this.cancelReportComponentEdit();
+    this.updatePageLayout();
     this.isDirty = true;
+  }
+
+  public reportComponentRemoved(reportComponent: ReportComponentConfig) {
+    if (this.editingReportComponent === reportComponent) {
+      this.cancelReportComponentEdit();
+    }
   }
 
   public editReportComponent(editReportComponentData: EditReportComponentData): void {
@@ -250,10 +301,7 @@ export class ReportTemplatePageComponent extends PageComponent
       this.editingReportComponent = editReportComponentData.reportComponent;
       this.editingReportComponentUpdated = editReportComponentData.componentUpdated;
       this.prevReportComponent = deepClone(editReportComponentData.reportComponent);
-      const reportComponentsLibrary = this.reportComponentsLibrary()
-      if (reportComponentsLibrary) {
-        reportComponentsLibrary.close().then();
-      }
+      this.renderer.addClass(this.reportTemplateContainerEl().nativeElement, 'tb-close-library');
     }
   }
 
@@ -268,10 +316,7 @@ export class ReportTemplatePageComponent extends PageComponent
     this.prevReportComponent = null;
     this.editingReportComponent = null;
     this.editingReportComponentUpdated = null;
-    const reportComponentsLibrary = this.reportComponentsLibrary()
-    if (reportComponentsLibrary) {
-      reportComponentsLibrary.open().then();
-    }
+    this.renderer.removeClass(this.reportTemplateContainerEl().nativeElement, 'tb-close-library');
   }
 
   public cancelReportComponentEdit(): void {
@@ -281,10 +326,7 @@ export class ReportTemplatePageComponent extends PageComponent
       this.prevReportComponent = null;
       this.editingReportComponent = null;
       this.editingReportComponentUpdated = null;
-      const reportComponentsLibrary = this.reportComponentsLibrary()
-      if (reportComponentsLibrary) {
-        reportComponentsLibrary.open().then();
-      }
+      this.renderer.removeClass(this.reportTemplateContainerEl().nativeElement, 'tb-close-library');
     }
   }
 
@@ -387,11 +429,44 @@ export class ReportTemplatePageComponent extends PageComponent
     this.marginLeft = this.reportTemplate.configuration.pageMargins.left;
     this.marginRight = this.reportTemplate.configuration.pageMargins.right;
 
-    this.contentMarginTop = this.reportTemplate.configuration.pageMargins.top;
-    this.contentMarginBottom = this.reportTemplate.configuration.pageMargins.bottom;
+    if (this.currentHeader.enabled && this.currentHeader.components?.length) {
+      this.headerMarginTop = this.reportTemplate.configuration.pageMargins.top;
+      this.contentMarginTop = 0;
+    } else {
+      this.headerMarginTop = 0;
+      this.contentMarginTop = this.reportTemplate.configuration.pageMargins.top;
+    }
 
-    this.headerMarginTop = 0;
-    this.footerMarginBottom = 0;
+    if (this.currentFooter.enabled && this.currentFooter.components?.length) {
+      this.footerMarginBottom = this.reportTemplate.configuration.pageMargins.bottom;
+      this.contentMarginBottom = 0;
+    } else {
+      this.footerMarginBottom = 0;
+      this.contentMarginBottom = this.reportTemplate.configuration.pageMargins.bottom;
+    }
+    this.updateScale();
+  }
+
+  private layoutResize() {
+    this.layoutWidth = this.reportTemplateLayoutEl().nativeElement.getBoundingClientRect().width;
+    this.reportComponentsComponents.forEach(component => {
+      this.renderer.setStyle(component.element.nativeElement, 'maxWidth', this.layoutWidth + 'px');
+    });
+    this.updateScale();
+  }
+
+  private updateScale() {
+    if (this.pageWidth && this.layoutWidth) {
+      const pageWidthPx = this.pageWidth * 1.3333343412075;
+      if (pageWidthPx > this.layoutWidth) {
+        this.scale = this.layoutWidth / pageWidthPx;
+      } else {
+        this.scale = 1;
+      }
+    } else {
+      this.scale = 1;
+    }
+    this.cd.markForCheck();
   }
 
   private init(reportTemplate: ReportTemplate<PdfReportTemplateConfig>) {
