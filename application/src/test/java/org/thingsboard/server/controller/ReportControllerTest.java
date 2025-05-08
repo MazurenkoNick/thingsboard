@@ -159,6 +159,12 @@ public class ReportControllerTest extends AbstractControllerTest {
         configuration.setEntityAlias(entityAlias);
         configuration.setComponent(tableComponent);
 
+        ReportTemplate reportTemplate = new ReportTemplate();
+        reportTemplate.setConfiguration(configuration);
+        reportTemplate.setName("Devices report");
+        reportTemplate.setType(ReportTemplateType.REPORT);
+        reportTemplate = doPost("/api/reportTemplate", reportTemplate, ReportTemplate.class);
+
         List<Device> devices = new ArrayList<>();
         List<String> expectedReportLines = new ArrayList<>();
         for (int i = 0; i < 97; i++) {
@@ -184,7 +190,7 @@ public class ReportControllerTest extends AbstractControllerTest {
 
         //generate report
         ReportRequest reportRequest = new ReportRequest();
-        reportRequest.setReportTemplateConfig(configuration);
+        reportRequest.setReportTemplateId(reportTemplate.getId());
         Job job = doPost("/api/v2/report", reportRequest, Job.class);
 
         Job completedJob = await().atMost(TIMEOUT, TimeUnit.SECONDS).until(() -> doGet("/api/job/" + job.getId(), Job.class),

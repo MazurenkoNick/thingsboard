@@ -30,6 +30,7 @@
  */
 package org.thingsboard.server.common.data.job.task;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -50,6 +51,7 @@ public class ReportTask extends Task<ReportTaskResult> {
     private ReportTemplateConfig reportTemplateConfig;
 
     private CustomerId customerId;
+    @JsonProperty
     private EntityId entityId;
     private String timezone;
 
@@ -64,6 +66,11 @@ public class ReportTask extends Task<ReportTaskResult> {
     @Override
     public ReportTaskResult toDiscarded() {
         return ReportTaskResult.discarded();
+    }
+
+    @Override
+    public EntityId getEntityId() {
+        return getJobId();
     }
 
     @Override
