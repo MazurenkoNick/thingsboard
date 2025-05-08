@@ -156,4 +156,9 @@ public class TbIntegrationQueueProducerProvider implements TbQueueProducerProvid
         return toHousekeeper;
     }
 
+    @Override
+    public TbQueueProducer<TbProtoQueueMsg<TransportProtos.ToTbReportNotificationMsg>> getTbReportNotificationsMsgProducer() {
+        throw new RuntimeException(NOT_IMPLEMENTED);
+    }
+
 }
