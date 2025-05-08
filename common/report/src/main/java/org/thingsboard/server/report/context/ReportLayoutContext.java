@@ -52,8 +52,8 @@ import org.thingsboard.server.common.data.report.configuration.PdfReportTemplate
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
 import org.thingsboard.server.common.data.report.configuration.style.Margins;
 import org.thingsboard.server.common.data.report.configuration.style.PageSize;
+import org.thingsboard.server.report.util.ColorUtils;
 
-import java.awt.*;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -137,8 +137,9 @@ public class ReportLayoutContext {
             backgroundRect.setY(0);
             backgroundRect.setWidth(usablePageWidth);
             backgroundRect.setHeight(usablePageHeight);
-            backgroundRect.setBackcolor(Color.decode(background));
+            backgroundRect.setBackcolor(ColorUtils.parseCssColor(background));
             backgroundRect.setMode(ModeEnum.OPAQUE);
+            backgroundRect.getLinePen().setLineWidth(0f);
 
             backgroundBand.addElement(backgroundRect);
             jasperDesign.setBackground(backgroundBand);

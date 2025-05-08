@@ -49,6 +49,7 @@ import org.thingsboard.server.common.data.report.configuration.style.FontWeight;
 import org.thingsboard.server.common.data.report.configuration.style.TextAlignment;
 import org.thingsboard.server.common.data.report.configuration.style.VerticalAlignment;
 import org.thingsboard.server.report.context.ReportLayoutContext;
+import org.thingsboard.server.report.util.ColorUtils;
 
 import java.awt.*;
 import java.util.Optional;
@@ -70,7 +71,7 @@ public class HeadingRenderer implements ReportComponentRenderer {
         // Set text color if provided
         String color = headingComponent.getColor();
         if (color != null) {
-            textField.setForecolor(Color.decode(color));
+            textField.setForecolor(ColorUtils.parseCssColor(color));
         }
 
         // Set font style if provided
