@@ -128,7 +128,7 @@ public class ReportController extends BaseController {
         return jobManager.submitJob(Job.builder()
                 .tenantId(currentUser.getTenantId())
                 .type(JobType.REPORT)
-                .key(UUID.randomUUID().toString())
+                .key(UUID.randomUUID().toString()) // we can submit multiple report jobs at once regardless of the configuration
                 .description("Report generation for template '" + reportTemplate.getName() + "'")
                 .configuration(ReportJobConfiguration.builder()
                         .reportTemplateId(reportTemplateId)

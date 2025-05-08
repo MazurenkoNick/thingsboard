@@ -28,43 +28,14 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.report;
+package org.thingsboard.server.queue.provider;
 
-import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
-import org.thingsboard.server.common.data.blob.BlobEntityInfo;
-import org.thingsboard.server.common.data.job.JobType;
-import org.thingsboard.server.common.data.job.task.ReportTask;
-import org.thingsboard.server.common.data.job.task.ReportTaskResult;
-import org.thingsboard.server.queue.task.TaskProcessor;
-import org.thingsboard.server.queue.util.TbReportComponent;
-import org.thingsboard.server.report.service.TbReportService;
+import org.thingsboard.server.gen.transport.TransportProtos.ToTbReportNotificationMsg;
+import org.thingsboard.server.queue.TbQueueConsumer;
+import org.thingsboard.server.queue.common.TbProtoQueueMsg;
 
-@TbReportComponent
-@Component
-@RequiredArgsConstructor
-public class ReportTaskProcessor extends TaskProcessor<ReportTask, ReportTaskResult> {
+public interface TbReportQueueFactory {
 
-    private final TbReportService tbReportService;
-
-    @Value("${reports.generation_timeout_ms:120000}")
-    private int timeoutMs;
-
-    @Override
-    public ReportTaskResult process(ReportTask task) throws Exception {
-        BlobEntityInfo blobEntityInfo = tbReportService.generateReport(task);
-        return ReportTaskResult.success(blobEntityInfo.getId(), blobEntityInfo.getName());
-    }
-
-    @Override
-    public long getTaskProcessingTimeout() {
-        return timeoutMs;
-    }
-
-    @Override
-    public JobType getJobType() {
-        return JobType.REPORT;
-    }
+    TbQueueConsumer<TbProtoQueueMsg<ToTbReportNotificationMsg>> createTbReportNotificationsConsumer();
 
 }

@@ -34,7 +34,6 @@ import net.sf.jasperreports.engine.design.JRDesignExpression;
 import net.sf.jasperreports.engine.design.JRDesignFrame;
 import net.sf.jasperreports.engine.design.JRDesignTextField;
 import net.sf.jasperreports.engine.type.HorizontalTextAlignEnum;
-import net.sf.jasperreports.engine.type.TextAdjustEnum;
 import net.sf.jasperreports.engine.type.VerticalTextAlignEnum;
 import org.springframework.stereotype.Component;
 import org.thingsboard.server.common.data.report.configuration.components.HeadingComponent;
@@ -47,19 +46,15 @@ import org.thingsboard.server.common.data.report.configuration.style.TextAlignme
 import org.thingsboard.server.common.data.report.configuration.style.VerticalAlignment;
 import org.thingsboard.server.report.util.ColorUtils;
 
+import static org.thingsboard.server.report.util.JasperReportUtils.createJRTextField;
+
 @Component
 public class HeadingRenderer extends ReportComponentWithLayoutRenderer {
 
     @Override
     public void render(JRDesignFrame frame, ReportComponent component) {
         HeadingComponent headingComponent = (HeadingComponent) component;
-
-        JRDesignTextField textField = new JRDesignTextField();
-        textField.setX(0);
-        textField.setY(0);
-        textField.setHeight(1);
-        textField.setWidth(this.layoutWidth);
-        textField.setTextAdjust(TextAdjustEnum.STRETCH_HEIGHT);
+        JRDesignTextField textField = createJRTextField(this.layoutWidth);
 
         // Set text color if provided
         String color = headingComponent.getColor();

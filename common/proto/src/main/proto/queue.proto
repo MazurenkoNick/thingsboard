@@ -1991,3 +1991,7 @@ message JobStatsMsg {
 message TaskResultProto {
   string value = 1;
 }
+
+message ToTbReportNotificationMsg {
+  ComponentLifecycleMsgProto componentLifecycleMsg = 1;
+}

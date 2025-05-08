@@ -30,8 +30,15 @@
  */
 package org.thingsboard.server.report.util;
 
+import net.sf.jasperreports.engine.JRTextField;
+import net.sf.jasperreports.engine.design.JRDesignBand;
 import net.sf.jasperreports.engine.design.JRDesignExpression;
+import net.sf.jasperreports.engine.design.JRDesignSection;
 import net.sf.jasperreports.engine.design.JRDesignTextField;
+import net.sf.jasperreports.engine.type.PositionTypeEnum;
+import net.sf.jasperreports.engine.type.SplitTypeEnum;
+import net.sf.jasperreports.engine.type.TextAdjustEnum;
+import org.thingsboard.server.report.context.ReportLayoutContext;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -43,6 +50,27 @@ public class JasperReportUtils {
 
     public static final Pattern REPORT_NAME_DATE_PATTERN = Pattern.compile("%d\\{([^\\}]*)\\}");
     public static final String DEFAULT_NAME_PATTERN = "report-%d{yyyy-MM-dd_HH:mm:ss}";
+
+    public static JRDesignTextField createJRTextField(int layoutWidth) {
+        JRDesignTextField htmlField = new JRDesignTextField();
+        htmlField.setX(0);
+        htmlField.setY(0);
+        htmlField.setWidth(layoutWidth);
+        htmlField.setHeight(1);
+        htmlField.setTextAdjust(TextAdjustEnum.STRETCH_HEIGHT);
+        return htmlField;
+    }
+
+    public static void addTextElement(ReportLayoutContext layoutCtx, JRTextField jrTextField) {
+        JRDesignBand detailBand = new JRDesignBand();
+        detailBand.setHeight(1);
+        detailBand.setSplitType(SplitTypeEnum.STRETCH);
+
+        detailBand.addElement(jrTextField);
+
+        JRDesignSection detailSection = (JRDesignSection) layoutCtx.getJasperDesign().getDetailSection();
+        detailSection.addBand(detailBand);
+    }
 
     public static JRDesignTextField createTextField(String expression, int x, int y) {
         JRDesignTextField field = new JRDesignTextField();

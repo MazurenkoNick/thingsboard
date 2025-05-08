@@ -114,6 +114,7 @@ import org.thingsboard.server.gen.transport.TransportProtos.ToEdgeMsg;
 import org.thingsboard.server.gen.transport.TransportProtos.ToEdgeNotificationMsg;
 import org.thingsboard.server.gen.transport.TransportProtos.ToRuleEngineMsg;
 import org.thingsboard.server.gen.transport.TransportProtos.ToRuleEngineNotificationMsg;
+import org.thingsboard.server.gen.transport.TransportProtos.ToTbReportNotificationMsg;
 import org.thingsboard.server.gen.transport.TransportProtos.ToTransportMsg;
 import org.thingsboard.server.gen.transport.TransportProtos.ToVersionControlServiceMsg;
 import org.thingsboard.server.queue.TbQueueCallback;
@@ -677,6 +678,9 @@ public class DefaultTbClusterService implements TbClusterService {
 
         boolean toRuleEngine = !toIntegrationExecutor;
 
+        boolean toTbReport = entityType.isOneOf(EntityType.JOB, EntityType.TENANT);
+        Set<String> tbReportServices = partitionService.getAllServiceIds(ServiceType.TB_REPORT);
+
         if (toCore) {
             TbQueueProducer<TbProtoQueueMsg<ToCoreNotificationMsg>> toCoreNfProducer = producerProvider.getTbCoreNotificationsMsgProducer();
             Set<String> tbCoreServices = partitionService.getAllServiceIds(ServiceType.TB_CORE);
@@ -688,6 +692,7 @@ public class DefaultTbClusterService implements TbClusterService {
             }
             // No need to push notifications twice
             tbRuleEngineServices.removeAll(tbCoreServices);
+            tbReportServices.removeAll(tbCoreServices);
         }
         if (toRuleEngine) {
             for (String serviceId : tbRuleEngineServices) {
@@ -695,6 +700,16 @@ public class DefaultTbClusterService implements TbClusterService {
                 ToRuleEngineNotificationMsg toRuleEngineMsg = ToRuleEngineNotificationMsg.newBuilder().setComponentLifecycle(componentLifecycleMsgProto).build();
                 toRuleEngineProducer.send(tpi, new TbProtoQueueMsg<>(msg.getEntityId().getId(), toRuleEngineMsg), null);
                 toRuleEngineNfs.incrementAndGet();
+            }
+            tbReportServices.removeAll(tbRuleEngineServices);
+        }
+        if (toTbReport) {
+            ToTbReportNotificationMsg toTbReportMsg = ToTbReportNotificationMsg.newBuilder()
+                    .setComponentLifecycleMsg(componentLifecycleMsgProto)
+                    .build();
+            for (String serviceId : tbReportServices) {
+                TopicPartitionInfo tpi = topicService.getNotificationsTopic(ServiceType.TB_REPORT, serviceId);
+                producerProvider.getTbReportNotificationsMsgProducer().send(tpi, new TbProtoQueueMsg<>(msg.getEntityId().getId(), toTbReportMsg), null);
             }
         }
     }

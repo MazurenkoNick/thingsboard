@@ -33,11 +33,12 @@ package org.thingsboard.server.report.renderer;
 import net.sf.jasperreports.engine.design.JRDesignExpression;
 import net.sf.jasperreports.engine.design.JRDesignFrame;
 import net.sf.jasperreports.engine.design.JRDesignTextField;
-import net.sf.jasperreports.engine.type.TextAdjustEnum;
 import org.springframework.stereotype.Component;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponentType;
 import org.thingsboard.server.common.data.report.configuration.components.RichTextComponent;
+
+import static org.thingsboard.server.report.util.JasperReportUtils.createJRTextField;
 
 @Component
 public class RichTextRenderer extends ReportComponentWithLayoutRenderer {
@@ -45,12 +46,7 @@ public class RichTextRenderer extends ReportComponentWithLayoutRenderer {
     @Override
     public void render(JRDesignFrame frame, ReportComponent component) {
         RichTextComponent richTextComponent = (RichTextComponent) component;
-        JRDesignTextField htmlField = new JRDesignTextField();
-        htmlField.setX(0);
-        htmlField.setY(0);
-        htmlField.setWidth(this.layoutWidth);
-        htmlField.setHeight(1);
-        htmlField.setTextAdjust(TextAdjustEnum.STRETCH_HEIGHT);
+        JRDesignTextField htmlField = createJRTextField(this.layoutWidth);
         htmlField.setMarkup("html");
 
         JRDesignExpression expression = new JRDesignExpression();
@@ -63,7 +59,8 @@ public class RichTextRenderer extends ReportComponentWithLayoutRenderer {
     private String escapeHtmlForJasperExpression(String rawHtml) {
         String escaped = rawHtml
                 .replace("\\", "\\\\")
-                .replace("\"", "\\\"");
+                .replace("\"", "\\\"")
+                .replace("\n", "<br>");
         return "\"" + escaped + "\"";
     }
 

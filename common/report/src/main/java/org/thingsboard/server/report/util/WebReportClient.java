@@ -71,10 +71,10 @@ import static org.thingsboard.server.report.util.JasperReportUtils.prepareReport
 @Component
 public class WebReportClient {
 
-    @Value("${reports.service.web_report.base_url}")
+    @Value("${reports.web_report.base_url}")
     private String webReportServerBaseUrl;
 
-    @Value("${reports.service.web_report.max_response_size:52428800}")
+    @Value("${reports.web_report.max_response_size:52428800}")
     private int maxResponseSize;
 
     private EventLoopGroup eventLoopGroup;

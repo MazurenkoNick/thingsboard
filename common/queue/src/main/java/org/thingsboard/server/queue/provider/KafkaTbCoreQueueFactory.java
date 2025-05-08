@@ -61,6 +61,7 @@ import org.thingsboard.server.gen.transport.TransportProtos.ToHousekeeperService
 import org.thingsboard.server.gen.transport.TransportProtos.ToOtaPackageStateServiceMsg;
 import org.thingsboard.server.gen.transport.TransportProtos.ToRuleEngineMsg;
 import org.thingsboard.server.gen.transport.TransportProtos.ToRuleEngineNotificationMsg;
+import org.thingsboard.server.gen.transport.TransportProtos.ToTbReportNotificationMsg;
 import org.thingsboard.server.gen.transport.TransportProtos.ToTransportMsg;
 import org.thingsboard.server.gen.transport.TransportProtos.ToUsageStatsServiceMsg;
 import org.thingsboard.server.gen.transport.TransportProtos.ToVersionControlServiceMsg;
@@ -671,6 +672,16 @@ public class KafkaTbCoreQueueFactory implements TbCoreQueueFactory {
                 .decoder(msg -> new TbProtoQueueMsg<>(msg.getKey(), JobStatsMsg.parseFrom(msg.getData()), msg.getHeaders()))
                 .admin(tasksAdmin)
                 .statsService(consumerStatsService)
+                .build();
+    }
+
+    @Override
+    public TbQueueProducer<TbProtoQueueMsg<ToTbReportNotificationMsg>> createTbReportNotificationsMsgProducer() {
+        return TbKafkaProducerTemplate.<TbProtoQueueMsg<ToTbReportNotificationMsg>>builder()
+                .clientId("to-report-notifications-producer-" + serviceInfoProvider.getServiceId())
+                .defaultTopic(topicService.getNotificationsTopic(ServiceType.TB_REPORT, serviceInfoProvider.getServiceId()).getFullTopicName())
+                .settings(kafkaSettings)
+                .admin(notificationAdmin)
                 .build();
     }
 

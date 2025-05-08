@@ -607,13 +607,11 @@ integrations:
 
 # Reports parameters
 reports:
-  service:
-    mode: "${REPORT_SERVICE_MODE:local}" # local or remote (with tb-report microservice)
-    web_report:
-      # Report server endpoint
-      base_url: "${REPORTS_SERVER_ENDPOINT_URL:http://localhost:8383}"
-      # Maximum response size. The default value set to 50 mb
-      max_response_size: "${MAX_RESPONSE_SIZE:52428800}" # 50MB
+  web_report:
+    # Report server endpoint
+    base_url: "${REPORTS_SERVER_ENDPOINT_URL:http://localhost:8383}"
+    # Maximum response size. The default value set to 50 mb
+    max_response_size: "${MAX_RESPONSE_SIZE:52428800}" # 50MB
   # Timeout in milliseconds for generating report, 2 minutes by default
   generation_timeout_ms: "${REPORT_GENERATION_TIMEOUT_MS:120000}"
   rate_limits:
@@ -2085,6 +2083,8 @@ queue:
     # Interval in milliseconds to poll api response from integration executor microservices
     response_poll_interval: "${TB_QUEUE_INTEGRATION_EXECUTOR_RESPONSE_POLL_INTERVAL_MS:25}"
   tasks:
+    # Poll interval in milliseconds for tasks topics
+    poll_interval: "${TB_QUEUE_TASKS_POLL_INTERVAL_MS:500}"
     # Partitions count for tasks queues
     partitions: "${TB_QUEUE_TASKS_PARTITIONS:12}"
     # Custom partitions count for tasks queues per type. Format: 'TYPE1:24;TYPE2:36', e.g. 'CF_REPROCESSING:24;TENANT_EXPORT:6'
@@ -2095,6 +2095,13 @@ queue:
     stats:
       # Interval in milliseconds to process job stats
       processing_interval_ms: "${TB_QUEUE_TASKS_STATS_PROCESSING_INTERVAL_MS:1000}"
+  report:
+    # Report service mode: 'local' or 'remote' (with tb-report microservice)
+    mode: "${TB_REPORT_SERVICE_MODE:local}"
+    # TB Report notifications topic name
+    notifications_topic: "${TB_QUEUE_REPORT_NOTIFICATIONS_TOPIC:tb_report.notifications}"
+    # Poll interval in milliseconds for TB Report queues
+    poll_interval: "${TB_QUEUE_REPORT_POLL_INTERVAL_MS:125}"
 
 # Event configuration parameters
 event:

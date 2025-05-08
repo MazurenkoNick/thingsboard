@@ -34,8 +34,9 @@ import lombok.Data;
 import lombok.experimental.SuperBuilder;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 import org.thingsboard.rest.client.RestClient;
 import org.thingsboard.server.common.data.job.task.ReportTask;
 
@@ -54,7 +55,9 @@ public class RemoteTbReportCtxProvider implements TbReportCtxProvider {
                 .configuration(task.getReportTemplateConfig())
                 .accessToken(task.getAccessToken())
                 .accessTokenExpTs(task.getAccessTokenExpirationTs())
-                .restClient(new RestClient(new RestTemplate(), tbCoreBaseUrl, task.getAccessToken()))
+                .restClient(new RestClient(new RestTemplateBuilder()
+                        .messageConverters(new MappingJackson2HttpMessageConverter())
+                        .build(), tbCoreBaseUrl, task.getAccessToken()))
                 .build();
     }
 
