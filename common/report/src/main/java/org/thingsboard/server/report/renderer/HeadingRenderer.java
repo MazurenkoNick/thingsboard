@@ -30,14 +30,9 @@
  */
 package org.thingsboard.server.report.renderer;
 
-import net.sf.jasperreports.engine.design.JRDesignBand;
 import net.sf.jasperreports.engine.design.JRDesignExpression;
-import net.sf.jasperreports.engine.design.JRDesignSection;
 import net.sf.jasperreports.engine.design.JRDesignTextField;
 import net.sf.jasperreports.engine.type.HorizontalTextAlignEnum;
-import net.sf.jasperreports.engine.type.PositionTypeEnum;
-import net.sf.jasperreports.engine.type.SplitTypeEnum;
-import net.sf.jasperreports.engine.type.TextAdjustEnum;
 import net.sf.jasperreports.engine.type.VerticalTextAlignEnum;
 import org.springframework.stereotype.Component;
 import org.thingsboard.server.common.data.report.configuration.components.HeadingComponent;
@@ -49,9 +44,10 @@ import org.thingsboard.server.common.data.report.configuration.style.FontWeight;
 import org.thingsboard.server.common.data.report.configuration.style.TextAlignment;
 import org.thingsboard.server.common.data.report.configuration.style.VerticalAlignment;
 import org.thingsboard.server.report.context.ReportLayoutContext;
+import org.thingsboard.server.report.util.ColorUtils;
 
-import java.awt.*;
-import java.util.Optional;
+import static org.thingsboard.server.report.util.JasperReportUtils.addTextElement;
+import static org.thingsboard.server.report.util.JasperReportUtils.createJRTextField;
 
 @Component
 public class HeadingRenderer implements ReportComponentRenderer {
@@ -59,18 +55,12 @@ public class HeadingRenderer implements ReportComponentRenderer {
     @Override
     public void render(ReportLayoutContext layoutCtx, ReportComponent component) {
         HeadingComponent headingComponent = (HeadingComponent) component;
-        JRDesignTextField textField = new JRDesignTextField();
-        textField.setX(0);
-        textField.setY(0);
-        textField.setHeight(1);
-        textField.setWidth(layoutCtx.getUsablePageWidth());
-        textField.setPositionType(PositionTypeEnum.FLOAT);
-        textField.setTextAdjust(TextAdjustEnum.STRETCH_HEIGHT);
+        JRDesignTextField textField = createJRTextField(layoutCtx);
 
         // Set text color if provided
         String color = headingComponent.getColor();
         if (color != null) {
-            textField.setForecolor(Color.decode(color));
+            textField.setForecolor(ColorUtils.parseCssColor(color));
         }
 
         // Set font style if provided
@@ -103,13 +93,7 @@ public class HeadingRenderer implements ReportComponentRenderer {
         expression.setText("\"" + headingComponent.getValue() + "\"");
         textField.setExpression(expression);
 
-        JRDesignBand detailBand = new JRDesignBand();
-        detailBand.setHeight(1);
-        detailBand.setSplitType(SplitTypeEnum.STRETCH);
-        detailBand.addElement(textField);
-
-        JRDesignSection detailSection = (JRDesignSection) layoutCtx.getJasperDesign().getDetailSection();
-        detailSection.addBand(detailBand);
+        addTextElement(layoutCtx, textField);
     }
 
     @Override

@@ -323,6 +323,10 @@ export const validateAndUpdateReportTemplate =
     if (!configuration.pageBackground) {
       configuration.pageBackground = '#fff';
     }
+    if (!configuration.components) {
+      configuration.components = [];
+    }
+    configuration.components = configuration.components.map(c => validateAndUpdateReportComponent(c));
     configuration.header = validateAndUpdateReportTemplateHeaderFooter(configuration.header);
     configuration.footer = validateAndUpdateReportTemplateHeaderFooter(configuration.footer);
   } else {
@@ -338,11 +342,25 @@ const validateAndUpdateReportTemplateHeaderFooter = (headerFooter: HeaderFooter)
   if (!headerFooter.components) {
     headerFooter.components = [];
   }
+  headerFooter.components = headerFooter.components.map(c => validateAndUpdateReportComponent(c));
   if (!headerFooter.firstPage) {
     headerFooter.firstPage = { enabled: false, components: [] };
   }
   if (!headerFooter.firstPage.components) {
     headerFooter.firstPage.components = [];
   }
+  headerFooter.firstPage.components = headerFooter.firstPage.components.map(c => validateAndUpdateReportComponent(c));
   return headerFooter;
+}
+
+export const validateAndUpdateReportComponent = (component: ReportComponentConfig): ReportComponentConfig => {
+  if (!component.margins) {
+    component.margins = {
+      left: 0,
+      right: 0,
+      top: 0,
+      bottom: 0
+    };
+  }
+  return component;
 }
