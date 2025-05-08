@@ -53,7 +53,7 @@
       <tb-report-component [reportComponent]="item"
                            [scale]="scale"
                            [width]="reportComponentDrag.offsetWidth"
-                           (edit)="onComponentEdit(item, $event)"
+                           (edit)="onComponentEdit(item)"
                            (makeCopy)="duplicateComponent(item)"
                            (remove)="componentRemove(item)"></tb-report-component>
     </div>

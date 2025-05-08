@@ -38,7 +38,9 @@ import {
   OnChanges,
   OnInit,
   Output,
+  QueryList,
   SimpleChanges,
+  ViewChildren,
   ViewEncapsulation
 } from '@angular/core';
 import {
@@ -55,11 +57,7 @@ import {
   transferArrayItem
 } from '@angular/cdk/drag-drop';
 import { deepClone } from '@core/utils';
-
-export interface EditReportComponentData {
-  reportComponent: ReportComponentConfig;
-  componentUpdated: () => void;
-}
+import { ReportComponentComponent } from '@home/pages/report/components/report-component.component';
 
 @Component({
   selector: 'tb-report-components',
@@ -109,7 +107,10 @@ export class ReportComponentsComponent implements OnInit, OnChanges {
   componentRemoved = new EventEmitter<ReportComponentConfig>();
 
   @Output()
-  componentEdit = new EventEmitter<EditReportComponentData>();
+  componentEdit = new EventEmitter<ReportComponentConfig>();
+
+  @ViewChildren(ReportComponentComponent)
+  reportComponentComponents: QueryList<ReportComponentComponent>;
 
   reportsComponentHeight = 100;
 
@@ -165,8 +166,8 @@ export class ReportComponentsComponent implements OnInit, OnChanges {
     this.componentsChanged.emit();
   }
 
-  onComponentEdit(reportComponent: ReportComponentConfig, componentUpdated: () => void): void {
-    this.componentEdit.emit({reportComponent, componentUpdated});
+  onComponentEdit(reportComponent: ReportComponentConfig): void {
+    this.componentEdit.emit(reportComponent);
   }
 
   duplicateComponent(reportComponent: ReportComponentConfig): void {
@@ -184,6 +185,20 @@ export class ReportComponentsComponent implements OnInit, OnChanges {
       this.componentRemoved.emit(reportComponent);
       this.componentsChanged.emit();
     }
+  }
+
+  componentUpdated(reportComponent: ReportComponentConfig): boolean {
+    if (this.reportComponents) {
+      const index = this.reportComponents.indexOf(reportComponent);
+      if (index > -1) {
+        const component = this.reportComponentComponents.get(index);
+        if (component) {
+          component.componentUpdated();
+          return true;
+        }
+      }
+    }
+    return false;
   }
 
   componentDragStarted(event: CdkDragStart){

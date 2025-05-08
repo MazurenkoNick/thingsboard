@@ -35,50 +35,46 @@
     <tb-toggle-select [(ngModel)]="settingsTab" [ngModelOptions]="{standalone: true}" appearance="fill">
       <tb-toggle-option value="content">{{ 'report-template.content' | translate }}</tb-toggle-option>
       <tb-toggle-option value="data">{{ 'report-template.data' | translate }}</tb-toggle-option>
+      <tb-toggle-option value="layout">{{ 'report-template.layout' | translate }}</tb-toggle-option>
     </tb-toggle-select>
   </div>
   <div class="tb-form-panel no-border no-padding" [class.!hidden]="settingsTab !== 'content'">
-    <div class="tb-form-panel stroked">
-      <div class="tb-form-panel-title" translate>report-template.component.heading.text</div>
-      <div class="tb-form-row no-border no-padding">
-        <div class="flex flex-1 flex-row items-center justify-start gap-2">
-          <mat-form-field class="flex-1" appearance="outline" subscriptSizing="dynamic">
-            <input matInput formControlName="value" placeholder="{{ 'widget-config.set' | translate }}">
-          </mat-form-field>
-          <tb-font-settings formControlName="font"
-                            disabledLineHeight
-                            forceSizeUnit="pt"
-                            [allowedFontWeights]="['normal', 'bold']"
-                            [allowedFontStyles]="['normal', 'italic']"
-                            clearButton
-                            [previewText]="reportConfigForm.get('value').value">
-          </tb-font-settings>
-          <tb-color-input asBoxInput
-                          colorClearButton
-                          formControlName="color">
-          </tb-color-input>
-        </div>
+    <div class="tb-form-row">
+      <div translate>report-template.component.heading.text</div>
+      <div class="flex flex-1 flex-row items-center justify-start gap-2">
+        <mat-form-field class="flex-1" appearance="outline" subscriptSizing="dynamic">
+          <input matInput formControlName="value" placeholder="{{ 'widget-config.set' | translate }}">
+        </mat-form-field>
+        <tb-font-settings formControlName="font"
+                          disabledLineHeight
+                          forceSizeUnit="pt"
+                          [allowedFontWeights]="['normal', 'bold']"
+                          [allowedFontStyles]="['normal', 'italic']"
+                          clearButton
+                          [previewText]="reportConfigForm.get('value').value">
+        </tb-font-settings>
+        <tb-color-input asBoxInput
+                        colorClearButton
+                        formControlName="color">
+        </tb-color-input>
       </div>
     </div>
-    <div class="tb-form-panel stroked">
-      <div class="tb-form-panel-title" translate>report-template.component.heading.layout</div>
-      <div class="tb-form-row space-between">
-        <div class="fixed-title-width" translate>widgets.alignment.alignment</div>
-        <div class="flex flex-row items-center justify-start gap-2">
-          <div class="tb-small-label" translate>widgets.alignment.horizontal</div>
-          <tb-alignment horizontal formControlName="textAlignment"></tb-alignment>
-          <mat-divider vertical></mat-divider>
-          <div class="tb-small-label" translate>widgets.alignment.vertical</div>
-          <tb-alignment horizontal="false" formControlName="verticalAlignment"></tb-alignment>
-        </div>
+    <div class="tb-form-row space-between">
+      <div class="fixed-title-width" translate>widgets.alignment.alignment</div>
+      <div class="flex flex-row items-center justify-start gap-2">
+        <div class="tb-small-label" translate>widgets.alignment.horizontal</div>
+        <tb-alignment horizontal formControlName="textAlignment"></tb-alignment>
+        <mat-divider vertical></mat-divider>
+        <div class="tb-small-label" translate>widgets.alignment.vertical</div>
+        <tb-alignment horizontal="false" formControlName="verticalAlignment"></tb-alignment>
       </div>
-      <div class="tb-form-row space-between">
-        <div>{{ 'report-template.component.heading.height' | translate }}</div>
-        <mat-form-field appearance="outline" class="number" subscriptSizing="dynamic">
-          <input matInput formControlName="height" type="number" min="0" step="1" placeholder="{{ 'widget-config.set' | translate }}">
-          <div matSuffix>pt</div>
-        </mat-form-field>
-      </div>
+    </div>
+    <div class="tb-form-row space-between">
+      <div>{{ 'report-template.component.heading.height' | translate }}</div>
+      <mat-form-field appearance="outline" class="number" subscriptSizing="dynamic">
+        <input matInput formControlName="height" type="number" min="0" step="1" placeholder="{{ 'widget-config.set' | translate }}">
+        <div matSuffix>pt</div>
+      </mat-form-field>
     </div>
   </div>
   <tb-datasources [class.!hidden]="settingsTab !== 'data'"
@@ -94,4 +90,44 @@
                   [callbacks]="callbacks"
                   [aliasController]="context.aliasController">
   </tb-datasources>
+  <div class="tb-form-panel no-border no-padding" [class.!hidden]="settingsTab !== 'layout'">
+    <div class="tb-form-row space-between" formGroupName="margins">
+      <div translate>report-template.margins</div>
+      <div class="flex flex-1 flex-col gap-2">
+        <div class="flex flex-1 flex-row justify-center gap-2">
+          <div class="tb-small-label" translate>report-template.top</div>
+          <mat-form-field appearance="outline" class="number" subscriptSizing="dynamic">
+            <input matInput formControlName="top" type="number" min="0" step="1" placeholder="{{ 'widget-config.set' | translate }}">
+            <div matSuffix>pt</div>
+          </mat-form-field>
+        </div>
+        <div class="flex flex-1 flex-row justify-center gap-2">
+          <div class="tb-small-label" translate>report-template.left</div>
+          <mat-form-field appearance="outline" class="number" subscriptSizing="dynamic">
+            <input matInput formControlName="left" type="number" min="0" step="1" placeholder="{{ 'widget-config.set' | translate }}">
+            <div matSuffix>pt</div>
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="number" subscriptSizing="dynamic">
+            <input matInput formControlName="right" type="number" min="0" step="1" placeholder="{{ 'widget-config.set' | translate }}">
+            <div matSuffix>pt</div>
+          </mat-form-field>
+          <div class="tb-small-label" translate>report-template.right</div>
+        </div>
+        <div class="flex flex-1 flex-row justify-center gap-2">
+          <div class="tb-small-label" translate>report-template.bottom</div>
+          <mat-form-field appearance="outline" class="number" subscriptSizing="dynamic">
+            <input matInput formControlName="bottom" type="number" min="0" step="1" placeholder="{{ 'widget-config.set' | translate }}">
+            <div matSuffix>pt</div>
+          </mat-form-field>
+        </div>
+      </div>
+    </div>
+    <div class="tb-form-row space-between">
+      <div translate>report-template.background</div>
+      <tb-color-input asBoxInput
+                      colorClearButton
+                      formControlName="background">
+      </tb-color-input>
+    </div>
+  </div>
 </div>

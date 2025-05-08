@@ -29,8 +29,8 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { Component, DestroyRef, ViewEncapsulation } from '@angular/core';
-import { FormBuilder, FormGroup } from '@angular/forms';
+import { Component, ViewEncapsulation } from '@angular/core';
+import { FormGroup } from '@angular/forms';
 import { HeadingReportComponentConfig } from '@app/shared/public-api';
 import { AbstractReportComponentConfig } from '@home/pages/report/components/report-component-config.component';
 
@@ -42,12 +42,7 @@ import { AbstractReportComponentConfig } from '@home/pages/report/components/rep
 })
 export class HeadingConfigComponent extends AbstractReportComponentConfig<HeadingReportComponentConfig> {
 
-  settingsTab: 'content' | 'data' = 'content';
-
-  constructor(destroyRef: DestroyRef,
-              private fb: FormBuilder) {
-    super(destroyRef);
-  }
+  settingsTab: 'content' | 'data' | 'layout' = 'content';
 
   protected buildForm(reportComponentConfig: HeadingReportComponentConfig): FormGroup {
     return this.fb.group({

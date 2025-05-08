@@ -28,13 +28,8 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-.tb-report-component {
-  display: flex;
-  width: 100%;
-  min-height: 60px;
-  position: absolute;
-  overflow: visible;
-  transform-origin: left top;
+
+.tb-report-component-host {
   &::after {
     position: absolute;
     inset: 0;
@@ -49,7 +44,7 @@
 }
 
 .cdk-drag-preview {
-  .tb-report-component {
+  .tb-report-component-host {
     &::after {
       content: unset;
     }
@@ -57,12 +52,21 @@
 }
 
 .cdk-drag-placeholder {
-  .tb-report-component {
+  .tb-report-component-host {
     &::after {
       content: '';
       border: dotted 3px #999;
     }
   }
+}
+
+.tb-report-component {
+  display: flex;
+  width: 100%;
+  min-height: 60px;
+  position: absolute;
+  overflow: hidden;
+  transform-origin: left top;
 }
 
 .tooltipster-sidetip.tb-report-component-edit-tooltip {

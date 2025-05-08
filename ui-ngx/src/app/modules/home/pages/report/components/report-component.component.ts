@@ -33,23 +33,33 @@ import {
   AfterViewInit,
   ChangeDetectorRef,
   Component,
-  ComponentRef, Directive,
+  ComponentRef,
+  Directive,
   ElementRef,
-  EventEmitter, HostBinding, inject,
-  Input, OnChanges,
+  EventEmitter,
+  HostBinding, HostListener,
+  inject,
+  Input,
   OnDestroy,
   OnInit,
-  Output, Renderer2, SimpleChanges, viewChild,
+  Output,
+  Renderer2,
+  SimpleChanges,
+  viewChild,
   ViewChild,
   ViewContainerRef,
   ViewEncapsulation
 } from '@angular/core';
 import { ReportComponentConfig } from '@shared/models/report-component.models';
-import { ReportComponentTypeData, reportComponentTypeMap } from '@home/pages/report/components/report-component.models';
+import {
+  pointsToPixels,
+  ReportComponentTypeData,
+  reportComponentTypeMap
+} from '@home/pages/report/components/report-component.models';
 import { TbAnchorComponent } from '@shared/components/tb-anchor.component';
 import { from } from 'rxjs';
-import ITooltipsterInstance = JQueryTooltipster.ITooltipsterInstance;
 import { ReportComponentsComponent } from '@home/pages/report/components/report-components.component';
+import ITooltipsterInstance = JQueryTooltipster.ITooltipsterInstance;
 
 @Component({
   selector: 'tb-report-component',
@@ -63,8 +73,23 @@ export class ReportComponentComponent implements OnInit, AfterViewInit, OnDestro
     read: ElementRef<HTMLElement>,
   });
 
+  @HostBinding('class')
+  class = 'tb-report-component-host';
+
   @HostBinding('style.background')
   background: string;
+
+  @HostBinding('style.padding-left.pt')
+  marginLeft: number;
+
+  @HostBinding('style.padding-right.pt')
+  marginRight: number;
+
+  @HostBinding('style.padding-top.pt')
+  marginTop: number;
+
+  @HostBinding('style.padding-bottom.pt')
+  marginBottom: number;
 
   @HostBinding('style.display')
   display = 'block';
@@ -85,7 +110,7 @@ export class ReportComponentComponent implements OnInit, AfterViewInit, OnDestro
   width: number;
 
   @Output()
-  edit = new EventEmitter<() => void>();
+  edit = new EventEmitter();
 
   @Output()
   makeCopy = new EventEmitter();
@@ -97,13 +122,12 @@ export class ReportComponentComponent implements OnInit, AfterViewInit, OnDestro
 
   typeData: ReportComponentTypeData;
 
+  @HostBinding('class.tb-hover')
   hovered = false;
 
   private editReportComponentTooltip: ITooltipsterInstance;
 
   private reportComponentPreview: AbstractReportComponentPreview;
-
-  private componentUpdated = this._componentUpdated.bind(this);
 
   constructor(private reportComponents: ReportComponentsComponent,
               private elementRef: ElementRef<HTMLElement>,
@@ -128,14 +152,14 @@ export class ReportComponentComponent implements OnInit, AfterViewInit, OnDestro
       const change = changes[propName];
       if (!change.firstChange && change.currentValue !== change.previousValue) {
         if (['scale', 'width'].includes(propName)) {
-          this.updateComponentSize();
+          this.updateComponentLayout();
         }
       }
     }
   }
 
   ngAfterViewInit() {
-    this.updateComponentSize();
+    this.updateComponentLayout();
   }
 
   ngOnDestroy(): void {
@@ -144,11 +168,12 @@ export class ReportComponentComponent implements OnInit, AfterViewInit, OnDestro
     }
   }
 
+  @HostListener('click', ['$event'])
   onEdit(event: MouseEvent) {
     if (event) {
       event.stopPropagation();
     }
-    this.edit.emit(this.componentUpdated);
+    this.edit.emit();
   }
 
   onCopy(event: MouseEvent) {
@@ -165,35 +190,43 @@ export class ReportComponentComponent implements OnInit, AfterViewInit, OnDestro
     this.remove.emit();
   }
 
+  @HostListener('mouseenter', ['$event'])
   mouseEnter(event: MouseEvent) {
     if (event.buttons === 0) {
       this.hovered = true;
     }
   }
 
+  @HostListener('mouseleave', ['$event'])
   mouseLeave(_event: MouseEvent) {
     this.hovered = false;
   }
 
   private updateComponentSize() {
     const parentWidth = this.elementRef.nativeElement.getBoundingClientRect().width;
-    this.renderer.setStyle(this.reportComponentElement().nativeElement, 'width', (parentWidth / this.scale) + 'px');
+    const leftRightMargins = pointsToPixels(this.marginLeft) + pointsToPixels(this.marginRight);
+    this.renderer.setStyle(this.reportComponentElement().nativeElement, 'width', ((parentWidth - leftRightMargins) / this.scale) + 'px');
     this.renderer.setStyle(this.reportComponentElement().nativeElement, 'transform', `scale(${this.scale})`);
     const rect = this.reportComponentElement().nativeElement.getBoundingClientRect();
     const targetHeight = rect.height;
-    this.renderer.setStyle(this.elementRef.nativeElement, 'height', targetHeight + 'px');
+    const topBottomMargins = pointsToPixels(this.marginTop) + pointsToPixels(this.marginBottom);
+    this.renderer.setStyle(this.elementRef.nativeElement, 'height', (targetHeight + topBottomMargins) + 'px');
   }
 
   private updateComponentLayout() {
     this.background = this.reportComponent.background;// || this.pageBackground;
+    this.marginLeft = (this.reportComponent.margins?.left || 0) * this.scale;
+    this.marginRight = (this.reportComponent.margins?.right || 0) * this.scale;
+    this.marginTop = (this.reportComponent.margins?.top || 0) * this.scale;
+    this.marginBottom = (this.reportComponent.margins?.bottom || 0) * this.scale;
+    this.updateComponentSize();
   }
 
-  private _componentUpdated() {
+  public componentUpdated() {
     if (this.reportComponentPreview) {
       this.reportComponentPreview.componentUpdated();
     }
     this.updateComponentLayout();
-    this.updateComponentSize();
   }
 
   private initEditReportComponentTooltip() {

@@ -88,3 +88,5 @@ export const assignReportComponent = (reportComponent: ReportComponentConfig, so
       delete reportComponent[key];
   }
 }
+
+export const pointsToPixels = (points: number): number => points * 1.3333343412075;

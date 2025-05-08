@@ -79,7 +79,7 @@ import { ReportComponentConfig } from '@shared/models/report-component.models';
 import { FormBuilder, FormControl } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
-  assignReportComponent,
+  assignReportComponent, pointsToPixels,
   ReportComponentContext,
   reportComponentTypeMap
 } from '@home/pages/report/components/report-component.models';
@@ -91,7 +91,6 @@ import { AliasController } from '@core/api/alias-controller';
 import { DialogService } from '@core/services/dialog.service';
 import { ReportService } from '@core/http/report.service';
 import {
-  EditReportComponentData,
   ReportComponentsComponent
 } from '@home/pages/report/components/report-components.component';
 
@@ -150,7 +149,6 @@ export class ReportTemplatePageComponent extends PageComponent
 
   prevReportComponent: ReportComponentConfig;
   editingReportComponent: ReportComponentConfig;
-  editingReportComponentUpdated: () => void;
 
   reportTemplateSettingsFormControl: FormControl;
 
@@ -296,18 +294,22 @@ export class ReportTemplatePageComponent extends PageComponent
     }
   }
 
-  public editReportComponent(editReportComponentData: EditReportComponentData): void {
-    if (this.editingReportComponent !== editReportComponentData.reportComponent) {
-      this.editingReportComponent = editReportComponentData.reportComponent;
-      this.editingReportComponentUpdated = editReportComponentData.componentUpdated;
-      this.prevReportComponent = deepClone(editReportComponentData.reportComponent);
+  public editReportComponent(reportComponent: ReportComponentConfig): void {
+    if (this.editingReportComponent !== reportComponent) {
+      this.editingReportComponent = reportComponent;
+      this.prevReportComponent = deepClone(reportComponent);
       this.renderer.addClass(this.reportTemplateContainerEl().nativeElement, 'tb-close-library');
     }
   }
 
   public reportComponentUpdated() {
-    if (this.editingReportComponentUpdated) {
-      this.editingReportComponentUpdated();
+    if (this.editingReportComponent) {
+      for (let index = 0; index < this.reportComponentsComponents.length; index++) {
+        const component = this.reportComponentsComponents.get(index);
+        if (component.componentUpdated(this.editingReportComponent)) {
+          break;
+        }
+      }
     }
     this.isDirty = true;
   }
@@ -315,7 +317,6 @@ export class ReportTemplatePageComponent extends PageComponent
   public saveReportComponent(): void {
     this.prevReportComponent = null;
     this.editingReportComponent = null;
-    this.editingReportComponentUpdated = null;
     this.renderer.removeClass(this.reportTemplateContainerEl().nativeElement, 'tb-close-library');
   }
 
@@ -325,7 +326,6 @@ export class ReportTemplatePageComponent extends PageComponent
       this.reportComponentUpdated();
       this.prevReportComponent = null;
       this.editingReportComponent = null;
-      this.editingReportComponentUpdated = null;
       this.renderer.removeClass(this.reportTemplateContainerEl().nativeElement, 'tb-close-library');
     }
   }
@@ -457,7 +457,7 @@ export class ReportTemplatePageComponent extends PageComponent
 
   private updateScale() {
     if (this.pageWidth && this.layoutWidth) {
-      const pageWidthPx = this.pageWidth * 1.3333343412075;
+      const pageWidthPx = pointsToPixels(this.pageWidth);
       if (pageWidthPx > this.layoutWidth) {
         this.scale = this.layoutWidth / pageWidthPx;
       } else {

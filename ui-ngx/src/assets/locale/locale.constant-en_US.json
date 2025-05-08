@@ -7007,6 +7007,7 @@
         "first-page-footer-disabled": "First page footer disabled",
         "content": "Content",
         "data": "Data",
+        "layout": "Layout",
         "common-settings": "Common settings",
         "page-settings": "Page settings",
         "paper-size": "Paper size",
@@ -7023,7 +7024,6 @@
             "heading": {
                 "type": "Heading",
                 "text": "Text",
-                "layout": "Layout",
                 "height": "Height"
             },
             "rich-text": {

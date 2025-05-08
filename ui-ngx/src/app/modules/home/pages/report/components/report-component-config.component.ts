@@ -34,7 +34,7 @@ import {
   ComponentRef,
   DestroyRef,
   Directive,
-  EventEmitter, HostBinding,
+  EventEmitter, HostBinding, inject,
   Input,
   OnChanges,
   OnInit,
@@ -45,7 +45,7 @@ import {
 } from '@angular/core';
 import { ReportComponentConfig } from '@shared/models/report-component.models';
 import { TbAnchorComponent } from '@shared/components/tb-anchor.component';
-import { FormGroup } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { genNextLabel, isObject, mergeDeep } from '@core/utils';
 import { ReportComponentContext, reportComponentTypeMap } from '@home/pages/report/components/report-component.models';
@@ -136,6 +136,9 @@ export abstract class AbstractReportComponentConfig<C extends ReportComponentCon
   @Output()
   reportConfigUpdated = new EventEmitter<C>();
 
+  protected destroyRef: DestroyRef = inject(DestroyRef);
+  protected fb: FormBuilder = inject(FormBuilder);
+
   widgetType = widgetType;
 
   callbacks: WidgetConfigCallbacks = {
@@ -148,11 +151,19 @@ export abstract class AbstractReportComponentConfig<C extends ReportComponentCon
 
   private reportComponentConfig: C;
 
-  protected constructor(private destroyRef: DestroyRef) {}
-
   setupConfig(reportComponentConfig: C): FormGroup {
     this.reportComponentConfig = reportComponentConfig;
     this.reportConfigForm = this.buildForm(reportComponentConfig);
+    this.reportConfigForm.addControl('margins', this.fb.group(
+      {
+        left: [reportComponentConfig.margins?.left, [Validators.min(0)]],
+        right: [reportComponentConfig.margins?.right, [Validators.min(0)]],
+        top: [reportComponentConfig.margins?.top, [Validators.min(0)]],
+        bottom: [reportComponentConfig.margins?.bottom, [Validators.min(0)]]
+      }
+    ));
+    this.reportConfigForm.addControl('background',
+      this.fb.control(reportComponentConfig.background));
     this.reportConfigForm.valueChanges.pipe(
       takeUntilDestroyed(this.destroyRef)
     ).subscribe(() => {

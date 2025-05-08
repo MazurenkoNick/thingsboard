@@ -29,8 +29,8 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { Component, DestroyRef, ViewEncapsulation } from '@angular/core';
-import { FormBuilder, FormGroup } from '@angular/forms';
+import { Component, ViewEncapsulation } from '@angular/core';
+import { FormGroup } from '@angular/forms';
 import { RichTextReportComponentConfig } from '@app/shared/public-api';
 import { AbstractReportComponentConfig } from '@home/pages/report/components/report-component-config.component';
 import { Editor, EditorOptions } from 'tinymce';
@@ -43,7 +43,7 @@ import { Editor, EditorOptions } from 'tinymce';
 })
 export class RichTextConfigComponent extends AbstractReportComponentConfig<RichTextReportComponentConfig> {
 
-  settingsTab: 'content' | 'data' = 'content';
+  settingsTab: 'content' | 'data' | 'layout' = 'content';
 
   tinyMceOptions: Partial<EditorOptions> = {
     base_url: '/assets/tinymce',
@@ -63,11 +63,6 @@ export class RichTextConfigComponent extends AbstractReportComponentConfig<RichT
     urlconverter_callback: (url) => url,
     setup: (editor) => this.setupEditor(editor)
   };
-
-  constructor(destroyRef: DestroyRef,
-              private fb: FormBuilder) {
-    super(destroyRef);
-  }
 
   private setupEditor(editor: Editor) {
     editor.ui.registry.addAutocompleter('variables', {
