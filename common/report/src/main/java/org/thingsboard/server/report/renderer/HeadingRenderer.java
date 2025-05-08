@@ -30,13 +30,10 @@
  */
 package org.thingsboard.server.report.renderer;
 
-import net.sf.jasperreports.engine.design.JRDesignBand;
 import net.sf.jasperreports.engine.design.JRDesignExpression;
-import net.sf.jasperreports.engine.design.JRDesignSection;
+import net.sf.jasperreports.engine.design.JRDesignFrame;
 import net.sf.jasperreports.engine.design.JRDesignTextField;
 import net.sf.jasperreports.engine.type.HorizontalTextAlignEnum;
-import net.sf.jasperreports.engine.type.PositionTypeEnum;
-import net.sf.jasperreports.engine.type.SplitTypeEnum;
 import net.sf.jasperreports.engine.type.TextAdjustEnum;
 import net.sf.jasperreports.engine.type.VerticalTextAlignEnum;
 import org.springframework.stereotype.Component;
@@ -48,24 +45,20 @@ import org.thingsboard.server.common.data.report.configuration.style.FontStyle;
 import org.thingsboard.server.common.data.report.configuration.style.FontWeight;
 import org.thingsboard.server.common.data.report.configuration.style.TextAlignment;
 import org.thingsboard.server.common.data.report.configuration.style.VerticalAlignment;
-import org.thingsboard.server.report.context.ReportLayoutContext;
 import org.thingsboard.server.report.util.ColorUtils;
 
-import java.awt.*;
-import java.util.Optional;
-
 @Component
-public class HeadingRenderer implements ReportComponentRenderer {
+public class HeadingRenderer extends ReportComponentWithLayoutRenderer {
 
     @Override
-    public void render(ReportLayoutContext layoutCtx, ReportComponent component) {
+    public void render(JRDesignFrame frame, ReportComponent component) {
         HeadingComponent headingComponent = (HeadingComponent) component;
+
         JRDesignTextField textField = new JRDesignTextField();
         textField.setX(0);
         textField.setY(0);
         textField.setHeight(1);
-        textField.setWidth(layoutCtx.getUsablePageWidth());
-        textField.setPositionType(PositionTypeEnum.FLOAT);
+        textField.setWidth(this.layoutWidth);
         textField.setTextAdjust(TextAdjustEnum.STRETCH_HEIGHT);
 
         // Set text color if provided
@@ -104,13 +97,7 @@ public class HeadingRenderer implements ReportComponentRenderer {
         expression.setText("\"" + headingComponent.getValue() + "\"");
         textField.setExpression(expression);
 
-        JRDesignBand detailBand = new JRDesignBand();
-        detailBand.setHeight(1);
-        detailBand.setSplitType(SplitTypeEnum.STRETCH);
-        detailBand.addElement(textField);
-
-        JRDesignSection detailSection = (JRDesignSection) layoutCtx.getJasperDesign().getDetailSection();
-        detailSection.addBand(detailBand);
+        frame.addElement(textField);
     }
 
     @Override

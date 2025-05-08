@@ -30,46 +30,58 @@
  */
 package org.thingsboard.server.report.renderer;
 
-import net.sf.jasperreports.engine.design.JRDesignExpression;
+import net.sf.jasperreports.engine.design.JRDesignBand;
 import net.sf.jasperreports.engine.design.JRDesignFrame;
-import net.sf.jasperreports.engine.design.JRDesignTextField;
-import net.sf.jasperreports.engine.type.TextAdjustEnum;
-import org.springframework.stereotype.Component;
+import net.sf.jasperreports.engine.design.JRDesignSection;
+import net.sf.jasperreports.engine.type.BorderSplitType;
+import net.sf.jasperreports.engine.type.ModeEnum;
+import net.sf.jasperreports.engine.type.PositionTypeEnum;
+import net.sf.jasperreports.engine.type.SplitTypeEnum;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponentType;
-import org.thingsboard.server.common.data.report.configuration.components.RichTextComponent;
+import org.thingsboard.server.report.context.ReportLayoutContext;
+import org.thingsboard.server.report.util.ColorUtils;
 
-@Component
-public class RichTextRenderer extends ReportComponentWithLayoutRenderer {
+public abstract class ReportComponentWithLayoutRenderer implements ReportComponentRenderer {
+
+    protected int layoutWidth;
 
     @Override
-    public void render(JRDesignFrame frame, ReportComponent component) {
-        RichTextComponent richTextComponent = (RichTextComponent) component;
-        JRDesignTextField htmlField = new JRDesignTextField();
-        htmlField.setX(0);
-        htmlField.setY(0);
-        htmlField.setWidth(this.layoutWidth);
-        htmlField.setHeight(1);
-        htmlField.setTextAdjust(TextAdjustEnum.STRETCH_HEIGHT);
-        htmlField.setMarkup("html");
+    public void render(ReportLayoutContext layoutCtx, ReportComponent component) {
 
-        JRDesignExpression expression = new JRDesignExpression();
-        expression.setText(escapeHtmlForJasperExpression(richTextComponent.getValue()));
-        htmlField.setExpression(expression);
+        this.layoutWidth = layoutCtx.getUsablePageWidth() - layoutCtx.getLeftMargin() - layoutCtx.getRightMargin();
 
-        frame.addElement(htmlField);
+        JRDesignFrame frame = new JRDesignFrame();
+        frame.setX(0);
+        frame.setY(0);
+        frame.setWidth(layoutCtx.getUsablePageWidth());
+        frame.setPositionType(PositionTypeEnum.FLOAT);
+        frame.setBorderSplitType(BorderSplitType.NO_BORDERS);
+        if (component.getBackground() != null) {
+            frame.setMode(ModeEnum.OPAQUE);
+            frame.setBackcolor(ColorUtils.parseCssColor(component.getBackground()));
+        }
+        frame.getLineBox().setLeftPadding(layoutCtx.getLeftMargin());
+        frame.getLineBox().setRightPadding(layoutCtx.getRightMargin());
+        frame.getLineBox().setTopPadding(layoutCtx.getTopMargin());
+        frame.getLineBox().setBottomPadding(layoutCtx.getBottomMargin());
+
+        JRDesignBand detailBand = new JRDesignBand();
+        detailBand.setHeight(1);
+        detailBand.setSplitType(SplitTypeEnum.STRETCH);
+
+        this.render(frame, component);
+
+        detailBand.addElement(frame);
+
+        JRDesignSection detailSection = (JRDesignSection) layoutCtx.getJasperDesign().getDetailSection();
+        detailSection.addBand(detailBand);
     }
 
-    private String escapeHtmlForJasperExpression(String rawHtml) {
-        String escaped = rawHtml
-                .replace("\\", "\\\\")
-                .replace("\"", "\\\"");
-        return "\"" + escaped + "\"";
-    }
+    protected abstract void render(JRDesignFrame frame, ReportComponent component);
 
     @Override
     public ReportComponentType getType() {
-        return ReportComponentType.RICH_TEXT;
+        return null;
     }
-
 }

@@ -105,6 +105,9 @@ public class PdfReportService extends AbstractReportService {
 
         ReportLayoutContext layoutCtx = new ReportLayoutContext(configuration);
 
+        layoutCtx.addPageHeader(configuration.getHeader());
+        layoutCtx.addPageFooter(configuration.getFooter());
+
         //Optional.ofNullable(configuration.getHeader()).ifPresent(reportBuilder::addPageHeader);
         //Optional.ofNullable(configuration.getFooter()).ifPresent(reportBuilder::addPageFooter);
 

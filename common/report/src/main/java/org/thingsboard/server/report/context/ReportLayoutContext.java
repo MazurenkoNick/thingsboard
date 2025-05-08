@@ -36,13 +36,19 @@ import net.sf.jasperreports.engine.JRException;
 import net.sf.jasperreports.engine.design.JRDesignBand;
 import net.sf.jasperreports.engine.design.JRDesignExpression;
 import net.sf.jasperreports.engine.design.JRDesignField;
+import net.sf.jasperreports.engine.design.JRDesignFrame;
 import net.sf.jasperreports.engine.design.JRDesignParameter;
 import net.sf.jasperreports.engine.design.JRDesignRectangle;
 import net.sf.jasperreports.engine.design.JRDesignSection;
 import net.sf.jasperreports.engine.design.JRDesignStaticText;
 import net.sf.jasperreports.engine.design.JRDesignSubreport;
+import net.sf.jasperreports.engine.design.JRDesignTextField;
 import net.sf.jasperreports.engine.design.JasperDesign;
 import net.sf.jasperreports.engine.type.ModeEnum;
+import net.sf.jasperreports.engine.type.PositionTypeEnum;
+import net.sf.jasperreports.engine.type.SplitTypeEnum;
+import net.sf.jasperreports.engine.type.StretchTypeEnum;
+import net.sf.jasperreports.engine.type.TextAdjustEnum;
 import net.sf.jasperreports.engine.type.WhenNoDataTypeEnum;
 import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.report.configuration.DataKey;
@@ -51,6 +57,7 @@ import org.thingsboard.server.common.data.report.configuration.HeaderFooter;
 import org.thingsboard.server.common.data.report.configuration.PdfReportTemplateConfig;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
 import org.thingsboard.server.common.data.report.configuration.style.Margins;
+import org.thingsboard.server.common.data.report.configuration.style.PageOrientation;
 import org.thingsboard.server.common.data.report.configuration.style.PageSize;
 import org.thingsboard.server.report.util.ColorUtils;
 
@@ -75,34 +82,43 @@ public class ReportLayoutContext {
     private JasperDesign jasperDesign;
     private int usablePageWidth;
     private int usablePageHeight;
+    private int leftMargin;
+    private int rightMargin;
+    private int topMargin;
+    private int bottomMargin;
+
+    private ReportLayoutContext parent;
 
     public ReportLayoutContext(PdfReportTemplateConfig configuration) {
         this.jasperDesign = new JasperDesign();
         this.jasperDesign.setName("MainReport");
         this.jasperDesign.setWhenNoDataType(WhenNoDataTypeEnum.ALL_SECTIONS_NO_DETAIL);
         PageSize pageSize = configuration.getPageSize();
-        if (pageSize != null) {
+        if (pageSize == null) {
+            pageSize = A4;
+        }
+        if (configuration.getPageOrientation() == PageOrientation.LANDSCAPE) {
+            this.jasperDesign.setPageWidth(pageSize.getHeight());
+            this.jasperDesign.setPageHeight(pageSize.getWidth());
+        } else {
             this.jasperDesign.setPageWidth(pageSize.getWidth());
             this.jasperDesign.setPageHeight(pageSize.getHeight());
-        } else {
-            this.jasperDesign.setPageWidth(A4.getWidth());
-            this.jasperDesign.setPageHeight(A4.getHeight());
         }
         setMargins(configuration.getPageMargins(), DEFAULT_PAGE_MARGIN_SIZE);
-        this.usablePageWidth = jasperDesign.getPageWidth() - jasperDesign.getLeftMargin() - jasperDesign.getRightMargin();
-        this.usablePageHeight = jasperDesign.getPageHeight() - jasperDesign.getTopMargin() - jasperDesign.getBottomMargin();
+        this.usablePageWidth = jasperDesign.getPageWidth() - leftMargin - rightMargin;
+        this.usablePageHeight = jasperDesign.getPageHeight() - topMargin - bottomMargin;
         setBackground(configuration.getPageBackground());
     }
 
     public ReportLayoutContext(ReportComponent component, ReportLayoutContext parentBuilder) throws JRException {
+        this.parent = parentBuilder;
         this.jasperDesign = new JasperDesign();
         this.jasperDesign.setName(StringUtils.randomAlphabetic(8));
         this.jasperDesign.setPageWidth(parentBuilder.getJasperDesign().getPageWidth());
         this.jasperDesign.setPageHeight(parentBuilder.getJasperDesign().getPageHeight());
-        setMargins(component.getMargins(), DEFAULT_COMPONENT_MARGIN_SIZE);
-        this.usablePageWidth = parentBuilder.getUsablePageWidth() - jasperDesign.getLeftMargin() - jasperDesign.getRightMargin();
-        this.usablePageHeight = parentBuilder.getUsablePageHeight() - jasperDesign.getTopMargin() - jasperDesign.getBottomMargin();
-        setBackground(component.getBackground());
+        this.usablePageWidth = parentBuilder.getUsablePageWidth();
+        this.usablePageHeight = parentBuilder.getUsablePageHeight();
+        setMargins(component.getMargins(), DEFAULT_COMPONENT_MARGIN_SIZE, parentBuilder);
 
         // define report fields
         switch (component.getType()) {
@@ -130,13 +146,13 @@ public class ReportLayoutContext {
     private void setBackground(String background) {
         if (background != null) {
             JRDesignBand backgroundBand = new JRDesignBand();
-            backgroundBand.setHeight(usablePageHeight);
+            backgroundBand.setHeight(this.jasperDesign.getPageHeight());
 
             JRDesignRectangle backgroundRect = new JRDesignRectangle();
             backgroundRect.setX(0);
             backgroundRect.setY(0);
-            backgroundRect.setWidth(usablePageWidth);
-            backgroundRect.setHeight(usablePageHeight);
+            backgroundRect.setWidth(this.jasperDesign.getPageWidth());
+            backgroundRect.setHeight(this.jasperDesign.getPageHeight());
             backgroundRect.setBackcolor(ColorUtils.parseCssColor(background));
             backgroundRect.setMode(ModeEnum.OPAQUE);
             backgroundRect.getLinePen().setLineWidth(0f);
@@ -147,32 +163,63 @@ public class ReportLayoutContext {
     }
 
     private void setMargins(Margins margins, int defaultPageMarginSize) {
+        this.setMargins(margins, defaultPageMarginSize, null);
+    }
+
+    private void setMargins(Margins margins, int defaultPageMarginSize, ReportLayoutContext parentBuilder) {
         if (margins != null) {
-            this.jasperDesign.setLeftMargin(margins.getLeft());
-            this.jasperDesign.setRightMargin(margins.getRight());
-            this.jasperDesign.setTopMargin(margins.getTop());
-            this.jasperDesign.setBottomMargin(margins.getBottom());
+            this.leftMargin = margins.getLeft();
+            this.rightMargin = margins.getRight();
+            this.topMargin  = margins.getTop();
+            this.bottomMargin = margins.getBottom();
         } else {
-            this.jasperDesign.setLeftMargin(defaultPageMarginSize);
-            this.jasperDesign.setRightMargin(defaultPageMarginSize);
-            this.jasperDesign.setTopMargin(defaultPageMarginSize);
-            this.jasperDesign.setBottomMargin(defaultPageMarginSize);
+            this.leftMargin = defaultPageMarginSize;
+            this.rightMargin = defaultPageMarginSize;
+            this.topMargin = defaultPageMarginSize;
+            this.bottomMargin = defaultPageMarginSize;
+        }
+        if (parentBuilder != null) {
+            this.jasperDesign.setLeftMargin(parentBuilder.getLeftMargin());
+            this.jasperDesign.setRightMargin(parentBuilder.getRightMargin());
+            this.jasperDesign.setTopMargin(0);
+            this.jasperDesign.setBottomMargin(0);
+            this.jasperDesign.setColumnWidth(this.usablePageWidth);
+        } else {
+            this.jasperDesign.setLeftMargin(0);
+            this.jasperDesign.setRightMargin(0);
+            this.jasperDesign.setTopMargin(0);
+            this.jasperDesign.setBottomMargin(0);
         }
     }
 
     public void addPageHeader(HeaderFooter header) {
-        JRDesignBand pageHeader = createHeaderFooterBand(header);
+        JRDesignBand pageHeader = createHeaderFooterBand(header, true);
         jasperDesign.setPageHeader(pageHeader);
     }
 
     public void addPageFooter(HeaderFooter footer) {
-        JRDesignBand pageHeader = createHeaderFooterBand(footer);
+        JRDesignBand pageHeader = createHeaderFooterBand(footer, false);
         jasperDesign.setPageFooter(pageHeader);
     }
 
-    public JRDesignBand createHeaderFooterBand(HeaderFooter header) {
+    public JRDesignBand createHeaderFooterBand(HeaderFooter header, boolean headerElseFooter) {
         JRDesignBand pageHeader = new JRDesignBand();
+        JRDesignFrame frame = new JRDesignFrame();
+        frame.setX(0);
+        frame.setY(0);
+        frame.setPositionType(PositionTypeEnum.FLOAT);
+        frame.setWidth(usablePageWidth);
+        frame.getLineBox().setLeftPadding(this.leftMargin);
+        if (headerElseFooter) {
+            frame.getLineBox().setTopPadding(this.topMargin);
+            pageHeader.setHeight(this.topMargin);
+        } else {
+            frame.getLineBox().setBottomPadding(this.bottomMargin);
+            pageHeader.setHeight(this.bottomMargin);
+        }
+        pageHeader.addElement(frame);
 
+/*
         pageHeader.setHeight(20);
         HeaderFooter firstPage = header.getFirstPage();
         if (firstPage != null) {
@@ -180,7 +227,7 @@ public class ReportLayoutContext {
             pageHeader.addElement(firstPageHeader);
         }
         JRDesignStaticText otherPagesHeader = createStaticTextElement(header.getText(),  "$V{PAGE_NUMBER} > 1");
-        pageHeader.addElement(otherPagesHeader);
+        pageHeader.addElement(otherPagesHeader);*/
         return pageHeader;
     }
 
