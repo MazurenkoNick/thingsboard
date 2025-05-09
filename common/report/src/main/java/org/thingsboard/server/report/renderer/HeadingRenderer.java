@@ -47,6 +47,7 @@ import org.thingsboard.server.common.data.report.configuration.style.VerticalAli
 import org.thingsboard.server.report.util.ColorUtils;
 
 import static org.thingsboard.server.report.util.JasperReportUtils.createJRTextField;
+import static org.thingsboard.server.report.util.JasperReportUtils.toJRExpression;
 
 @Component
 public class HeadingRenderer extends ReportComponentWithLayoutRenderer {
@@ -89,7 +90,7 @@ public class HeadingRenderer extends ReportComponentWithLayoutRenderer {
 
         // Set the text content as a string literal
         JRDesignExpression expression = new JRDesignExpression();
-        expression.setText("\"" + headingComponent.getValue() + "\"");
+        expression.setText(toJRExpression(headingComponent.getValue()));
         textField.setExpression(expression);
 
         frame.addElement(textField);

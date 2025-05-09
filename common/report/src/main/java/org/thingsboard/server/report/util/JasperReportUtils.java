@@ -61,6 +61,37 @@ public class JasperReportUtils {
         return htmlField;
     }
 
+    public static String toJRExpression(String template) {
+        StringBuilder expr = new StringBuilder("\"");
+        int pos = 0;
+
+        while (pos < template.length()) {
+            int start = template.indexOf("${", pos);
+            if (start == -1) {
+                // No more placeholders
+                expr.append(template.substring(pos).replace("\"", "\\\""));
+                break;
+            }
+
+            // Append literal text before placeholder
+            expr.append(template.substring(pos, start).replace("\"", "\\\""));
+            expr.append("\" + ");
+
+            int end = template.indexOf('}', start);
+            if (end == -1) {
+                throw new IllegalArgumentException("Unmatched '${' in template: " + template);
+            }
+
+            String fieldName = template.substring(start + 2, end).trim();
+            expr.append("$F{" + fieldName + "} + \"");
+
+            pos = end + 1;
+        }
+
+        expr.append("\"");
+        return expr.toString();
+    }
+
     public static void addTextElement(ReportLayoutContext layoutCtx, JRTextField jrTextField) {
         JRDesignBand detailBand = new JRDesignBand();
         detailBand.setHeight(1);
