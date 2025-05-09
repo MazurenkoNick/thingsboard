@@ -32,8 +32,11 @@ package org.thingsboard.server.report.context;
 
 import lombok.Data;
 import net.sf.jasperreports.engine.JRDataSource;
+import net.sf.jasperreports.engine.JRElementGroup;
 import net.sf.jasperreports.engine.JRException;
+import net.sf.jasperreports.engine.JRExpression;
 import net.sf.jasperreports.engine.design.JRDesignBand;
+import net.sf.jasperreports.engine.design.JRDesignElementGroup;
 import net.sf.jasperreports.engine.design.JRDesignExpression;
 import net.sf.jasperreports.engine.design.JRDesignField;
 import net.sf.jasperreports.engine.design.JRDesignFrame;
@@ -42,18 +45,14 @@ import net.sf.jasperreports.engine.design.JRDesignRectangle;
 import net.sf.jasperreports.engine.design.JRDesignSection;
 import net.sf.jasperreports.engine.design.JRDesignStaticText;
 import net.sf.jasperreports.engine.design.JRDesignSubreport;
-import net.sf.jasperreports.engine.design.JRDesignTextField;
 import net.sf.jasperreports.engine.design.JasperDesign;
+import net.sf.jasperreports.engine.type.BorderSplitType;
 import net.sf.jasperreports.engine.type.ModeEnum;
 import net.sf.jasperreports.engine.type.PositionTypeEnum;
-import net.sf.jasperreports.engine.type.SplitTypeEnum;
-import net.sf.jasperreports.engine.type.StretchTypeEnum;
-import net.sf.jasperreports.engine.type.TextAdjustEnum;
 import net.sf.jasperreports.engine.type.WhenNoDataTypeEnum;
 import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.report.configuration.DataKey;
 import org.thingsboard.server.common.data.report.configuration.DataSource;
-import org.thingsboard.server.common.data.report.configuration.HeaderFooter;
 import org.thingsboard.server.common.data.report.configuration.PdfReportTemplateConfig;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
 import org.thingsboard.server.common.data.report.configuration.style.Margins;
@@ -81,7 +80,6 @@ public class ReportLayoutContext {
 
     private JasperDesign jasperDesign;
     private int usablePageWidth;
-    private int usablePageHeight;
     private int leftMargin;
     private int rightMargin;
     private int topMargin;
@@ -89,7 +87,7 @@ public class ReportLayoutContext {
 
     private ReportLayoutContext parent;
 
-    public ReportLayoutContext(PdfReportTemplateConfig configuration) {
+    public ReportLayoutContext(PdfReportTemplateConfig configuration) throws JRException {
         this.jasperDesign = new JasperDesign();
         this.jasperDesign.setName("MainReport");
         this.jasperDesign.setWhenNoDataType(WhenNoDataTypeEnum.ALL_SECTIONS_NO_DETAIL);
@@ -106,18 +104,18 @@ public class ReportLayoutContext {
         }
         setMargins(configuration.getPageMargins(), DEFAULT_PAGE_MARGIN_SIZE);
         this.usablePageWidth = jasperDesign.getPageWidth() - leftMargin - rightMargin;
-        this.usablePageHeight = jasperDesign.getPageHeight() - topMargin - bottomMargin;
         setBackground(configuration.getPageBackground());
     }
 
     public ReportLayoutContext(ReportComponent component, ReportLayoutContext parentBuilder) throws JRException {
         this.parent = parentBuilder;
         this.jasperDesign = new JasperDesign();
+        this.jasperDesign.setIgnorePagination(true);
         this.jasperDesign.setName(StringUtils.randomAlphabetic(8));
         this.jasperDesign.setPageWidth(parentBuilder.getJasperDesign().getPageWidth());
-        this.jasperDesign.setPageHeight(parentBuilder.getJasperDesign().getPageHeight());
+        this.jasperDesign.setPageHeight(0);
         this.usablePageWidth = parentBuilder.getUsablePageWidth();
-        this.usablePageHeight = parentBuilder.getUsablePageHeight();
+
         setMargins(component.getMargins(), DEFAULT_COMPONENT_MARGIN_SIZE, parentBuilder);
 
         // define report fields
@@ -192,33 +190,24 @@ public class ReportLayoutContext {
         }
     }
 
-    public void addPageHeader(HeaderFooter header) {
-        JRDesignBand pageHeader = createHeaderFooterBand(header, true);
-        jasperDesign.setPageHeader(pageHeader);
-    }
-
-    public void addPageFooter(HeaderFooter footer) {
-        JRDesignBand pageHeader = createHeaderFooterBand(footer, false);
-        jasperDesign.setPageFooter(pageHeader);
-    }
-
-    public JRDesignBand createHeaderFooterBand(HeaderFooter header, boolean headerElseFooter) {
+    public JRDesignFrame createHeaderFooter(boolean headerElseFooter) {
         JRDesignBand pageHeader = new JRDesignBand();
         JRDesignFrame frame = new JRDesignFrame();
-        frame.setX(0);
-        frame.setY(0);
-        frame.setPositionType(PositionTypeEnum.FLOAT);
         frame.setWidth(usablePageWidth);
-        frame.getLineBox().setLeftPadding(this.leftMargin);
+        JRDesignFrame empty = new JRDesignFrame();
+        frame.addElement(empty);
+        pageHeader.addElement(frame);
         if (headerElseFooter) {
             frame.getLineBox().setTopPadding(this.topMargin);
-            pageHeader.setHeight(this.topMargin);
         } else {
             frame.getLineBox().setBottomPadding(this.bottomMargin);
             pageHeader.setHeight(this.bottomMargin);
         }
-        pageHeader.addElement(frame);
-
+        if (headerElseFooter) {
+            jasperDesign.setPageHeader(pageHeader);
+        } else {
+            jasperDesign.setPageFooter(pageHeader);
+        }
 /*
         pageHeader.setHeight(20);
         HeaderFooter firstPage = header.getFirstPage();
@@ -228,7 +217,7 @@ public class ReportLayoutContext {
         }
         JRDesignStaticText otherPagesHeader = createStaticTextElement(header.getText(),  "$V{PAGE_NUMBER} > 1");
         pageHeader.addElement(otherPagesHeader);*/
-        return pageHeader;
+        return frame;
     }
 
     public JRDesignStaticText createStaticTextElement(String text, String conditionExpression) {
@@ -258,13 +247,15 @@ public class ReportLayoutContext {
         return imageField;
     }
 
-    public void addSubReportBand(String subReportExpression, String subReportDSExpression) throws JRException {
+    public void addSubReport(String subReportExpression, String subReportDSExpression, JRElementGroup container, JRExpression printWhenExpression) throws JRException {
         jasperDesign.addParameter(createParameter(subReportExpression, net.sf.jasperreports.engine.JasperReport.class));
         jasperDesign.addParameter(createParameter(subReportDSExpression, JRDataSource.class));
 
-        JRDesignBand detailBand = new JRDesignBand();
-
         JRDesignSubreport subReport = new JRDesignSubreport(jasperDesign);
+
+        if (printWhenExpression != null) {
+            subReport.setPrintWhenExpression(printWhenExpression);
+        }
 
         JRDesignExpression subExpr = new JRDesignExpression();
         subExpr.setText("$P{" + subReportExpression + "}");
@@ -274,8 +265,25 @@ public class ReportLayoutContext {
         dsExpr.setText("$P{" + subReportDSExpression + "}");
         subReport.setDataSourceExpression(dsExpr);
 
-        detailBand.addElement(subReport);
+        JRDesignFrame frame = new JRDesignFrame();
+        frame.setX(0);
+        frame.setY(0);
+        frame.setWidth(usablePageWidth);
+        frame.setPositionType(PositionTypeEnum.FLOAT);
+        frame.setBorderSplitType(BorderSplitType.NO_BORDERS);
+        frame.addElement(subReport);
+
+        if (container instanceof JRDesignElementGroup) {
+            ((JRDesignElementGroup)container).addElement(frame);
+        } else if (container instanceof JRDesignFrame) {
+            ((JRDesignFrame)container).addElement(frame);
+        }
+    }
+
+    public JRDesignBand createDetailsBand() {
+        JRDesignBand detailBand = new JRDesignBand();
         ((JRDesignSection) jasperDesign.getDetailSection()).addBand(detailBand);
+        return detailBand;
     }
 
     private JRDesignParameter createParameter(String name, Class<?> valueClass) {

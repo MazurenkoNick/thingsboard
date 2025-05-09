@@ -67,7 +67,6 @@ public abstract class ReportComponentWithLayoutRenderer implements ReportCompone
         frame.getLineBox().setBottomPadding(layoutCtx.getBottomMargin());
 
         JRDesignBand detailBand = new JRDesignBand();
-        detailBand.setHeight(1);
         detailBand.setSplitType(SplitTypeEnum.STRETCH);
 
         this.render(frame, component);

@@ -33,8 +33,11 @@ package org.thingsboard.server.report.service;
 import com.google.common.util.concurrent.SettableFuture;
 import lombok.extern.slf4j.Slf4j;
 import net.sf.jasperreports.engine.JRDataSource;
+import net.sf.jasperreports.engine.JRElementGroup;
 import net.sf.jasperreports.engine.JREmptyDataSource;
 import net.sf.jasperreports.engine.JRException;
+import net.sf.jasperreports.engine.JRExpression;
+import net.sf.jasperreports.engine.JRRewindableDataSource;
 import net.sf.jasperreports.engine.JasperCompileManager;
 import net.sf.jasperreports.engine.JasperExportManager;
 import net.sf.jasperreports.engine.JasperFillManager;
@@ -42,6 +45,9 @@ import net.sf.jasperreports.engine.JasperPrint;
 import net.sf.jasperreports.engine.JasperReport;
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 import net.sf.jasperreports.engine.data.JRMapCollectionDataSource;
+import net.sf.jasperreports.engine.design.JRDesignExpression;
+import net.sf.jasperreports.engine.design.JRDesignFrame;
+import net.sf.jasperreports.engine.xml.JRXmlWriter;
 import org.springframework.stereotype.Service;
 import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.dashboardreport.DashboardReportData;
@@ -51,6 +57,7 @@ import org.thingsboard.server.common.data.query.EntityData;
 import org.thingsboard.server.common.data.report.ReportData;
 import org.thingsboard.server.common.data.report.TbReportFormat;
 import org.thingsboard.server.common.data.report.configuration.DataSource;
+import org.thingsboard.server.common.data.report.configuration.HeaderFooter;
 import org.thingsboard.server.common.data.report.configuration.PdfReportTemplateConfig;
 import org.thingsboard.server.common.data.report.configuration.ReportTemplateConfig;
 import org.thingsboard.server.common.data.report.configuration.components.AlarmTableComponent;
@@ -61,16 +68,19 @@ import org.thingsboard.server.common.data.report.configuration.components.Timese
 import org.thingsboard.server.report.context.ReportLayoutContext;
 import org.thingsboard.server.report.context.TbReportCtx;
 import org.thingsboard.server.report.renderer.ReportComponentRenderer;
+import org.thingsboard.server.report.util.AutoRewindableDataSource;
 import org.thingsboard.server.report.util.WebReportClient;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
 import java.util.concurrent.ExecutionException;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static org.thingsboard.server.common.data.report.configuration.components.ReportComponentType.SUB_REPORT;
@@ -105,13 +115,13 @@ public class PdfReportService extends AbstractReportService {
 
         ReportLayoutContext layoutCtx = new ReportLayoutContext(configuration);
 
-        layoutCtx.addPageHeader(configuration.getHeader());
-        layoutCtx.addPageFooter(configuration.getFooter());
+        renderHeaderFooter(ctx, layoutCtx, configuration.getHeader(), true);
+        renderHeaderFooter(ctx, layoutCtx, configuration.getFooter(), false);
 
         //Optional.ofNullable(configuration.getHeader()).ifPresent(reportBuilder::addPageHeader);
         //Optional.ofNullable(configuration.getFooter()).ifPresent(reportBuilder::addPageFooter);
 
-        renderContent(ctx, layoutCtx, configuration.getComponents());
+        renderContent(ctx, layoutCtx, configuration.getComponents(), false, null, () -> layoutCtx.createDetailsBand());
 
         JasperReport mainReport = JasperCompileManager.compileReport(layoutCtx.getJasperDesign());
         JasperPrint print = JasperFillManager.fillReport(mainReport, ctx.getParams(), new JREmptyDataSource());
@@ -127,27 +137,49 @@ public class PdfReportService extends AbstractReportService {
                 .build();
     }
 
-    private void renderContent(TbReportCtx ctx, ReportLayoutContext parentBuilder, List<ReportComponent> components) throws Exception {
+    private void renderHeaderFooter(TbReportCtx ctx,
+                                    ReportLayoutContext parentBuilder,
+                                    HeaderFooter headerFooter,
+                                    boolean headerElseFooter) throws Exception {
+        JRDesignFrame headerContainer = parentBuilder.createHeaderFooter(headerElseFooter);
+        boolean hasComponents = headerFooter.getEnabled() && headerFooter.getComponents() != null
+                && !headerFooter.getComponents().isEmpty();
+        if (hasComponents) {
+            // JRExpression printWhenExpression = new JRDesignExpression("true");
+            renderContent(ctx, parentBuilder, headerFooter.getComponents(), true, null, () -> headerContainer);
+        }
+    }
+
+    private void renderContent(TbReportCtx ctx, ReportLayoutContext parentBuilder, List<ReportComponent> components,
+                               boolean autoRewind, JRExpression printWhenExpression, Supplier<JRElementGroup> subreportContainerSupplier) throws Exception {
         for (ReportComponent component : components) {
             if (component.getType() == TIME_SERIES_TABLE || component.getType() == SUB_REPORT) { // check if component is complex
                 List<EntityData> entityDatas = fetchEntities(ctx, getSingleDataSource(component));
                 for (EntityData entityData : entityDatas) {
-                    renderComponent(ctx, parentBuilder, component, entityData);
+                    renderComponent(ctx, parentBuilder, component, subreportContainerSupplier.get(), autoRewind, printWhenExpression, entityData);
                 }
             } else {
-                renderComponent(ctx, parentBuilder, component, null);
+                renderComponent(ctx, parentBuilder, component, subreportContainerSupplier.get(), autoRewind, printWhenExpression, null);
             }
         }
     }
 
-    private void renderComponent(TbReportCtx ctx, ReportLayoutContext layoutCtx, ReportComponent component, EntityData entityData) throws Exception {
+    private void renderComponent(TbReportCtx ctx, ReportLayoutContext layoutCtx,
+                                 ReportComponent component, JRElementGroup container,
+                                 boolean autoRewind,
+                                 JRExpression printWhenExpression,
+                                 EntityData entityData) throws Exception {
+
         String subReportId = "component_" + StringUtils.randomAlphabetic(10);
         String subReportDSId = "componentDS_" + StringUtils.randomAlphabetic(10);
 
-        layoutCtx.addSubReportBand(subReportId, subReportDSId);
+        layoutCtx.addSubReport(subReportId, subReportDSId, container, printWhenExpression);
 
         JasperReport subReport = buildJasperReport(layoutCtx, component);
         JRDataSource subReportDS = buildDataSource(ctx, component, entityData);
+        if (autoRewind) {
+            subReportDS = new AutoRewindableDataSource((JRRewindableDataSource) subReportDS);
+        }
 
         Map<String, Object> params = ctx.getParams();
         params.put(subReportId, subReport);

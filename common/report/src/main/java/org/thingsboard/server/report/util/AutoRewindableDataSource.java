@@ -28,27 +28,32 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.common.data.report.configuration;
+package org.thingsboard.server.report.util;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.NotNull;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
+import net.sf.jasperreports.engine.JRDataSource;
+import net.sf.jasperreports.engine.JRException;
+import net.sf.jasperreports.engine.JRField;
+import net.sf.jasperreports.engine.JRRewindableDataSource;
 
-import java.util.List;
+public class AutoRewindableDataSource implements JRDataSource {
 
-@Schema
-@Data
-@EqualsAndHashCode
-@NoArgsConstructor
-public class HeaderFooter {
+    private JRRewindableDataSource source;
 
-    private Boolean enabled;
-    @NotNull
-    private List<ReportComponent> components;
-    private HeaderFooter firstPage;
+    public AutoRewindableDataSource(JRRewindableDataSource source) {
+        this.source = source;
+    }
 
+    @Override
+    public boolean next() throws JRException {
+        boolean result = source.next();
+        if (!result) {
+            source.moveFirst();
+        }
+        return result;
+    }
+
+    @Override
+    public Object getFieldValue(JRField jrField) throws JRException {
+        return source.getFieldValue(jrField);
+    }
 }
