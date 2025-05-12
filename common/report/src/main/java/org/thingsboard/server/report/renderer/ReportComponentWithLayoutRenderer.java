@@ -39,7 +39,7 @@ import net.sf.jasperreports.engine.type.PositionTypeEnum;
 import net.sf.jasperreports.engine.type.SplitTypeEnum;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponentType;
-import org.thingsboard.server.report.context.ReportLayoutContext;
+import org.thingsboard.server.report.context.ReportLayout;
 import org.thingsboard.server.report.util.ColorUtils;
 
 public abstract class ReportComponentWithLayoutRenderer implements ReportComponentRenderer {
@@ -47,7 +47,7 @@ public abstract class ReportComponentWithLayoutRenderer implements ReportCompone
     protected int layoutWidth;
 
     @Override
-    public void render(ReportLayoutContext layoutCtx, ReportComponent component) {
+    public void render(ReportLayout layoutCtx, ReportComponent component) {
 
         this.layoutWidth = layoutCtx.getUsablePageWidth() - layoutCtx.getLeftMargin() - layoutCtx.getRightMargin();
 

@@ -38,13 +38,13 @@ import net.sf.jasperreports.engine.type.ScaleImageEnum;
 import org.springframework.stereotype.Component;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponentType;
-import org.thingsboard.server.report.context.ReportLayoutContext;
+import org.thingsboard.server.report.context.ReportLayout;
 
 @Component
 public class DashboardRenderer implements ReportComponentRenderer {
 
     @Override
-    public void render(ReportLayoutContext layoutCtx, ReportComponent component) {
+    public void render(ReportLayout layoutCtx, ReportComponent component) {
         JRDesignBand detailBand = new JRDesignBand();
         detailBand.setHeight(500); // Make sure it’s tall enough for the image
 

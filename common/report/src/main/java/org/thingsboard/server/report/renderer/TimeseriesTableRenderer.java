@@ -40,20 +40,20 @@ import org.thingsboard.server.common.data.report.configuration.DataKey;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponentType;
 import org.thingsboard.server.common.data.report.configuration.components.TimeseriesTableComponent;
-import org.thingsboard.server.report.context.ReportLayoutContext;
+import org.thingsboard.server.report.context.ReportLayout;
 
 import java.awt.*;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import static org.thingsboard.server.report.util.JasperReportUtils.createTextField;
-import static org.thingsboard.server.report.context.ReportLayoutContext.getSingleDataSource;
+import static org.thingsboard.server.report.context.ReportLayout.getSingleDataSource;
 
 @Component
 public class TimeseriesTableRenderer implements ReportComponentRenderer {
 
     @Override
-    public void render(ReportLayoutContext layoutCtx, ReportComponent component) {
+    public void render(ReportLayout layoutCtx, ReportComponent component) {
         TimeseriesTableComponent tsTableComponent = (TimeseriesTableComponent) component;
         List<DataKey> dataKeys = getSingleDataSource(tsTableComponent).getDataKeys();
         List<String> entityKeys = dataKeys.stream().map(DataKey::getName).collect(Collectors.toList());
@@ -66,7 +66,7 @@ public class TimeseriesTableRenderer implements ReportComponentRenderer {
         addTableDetailBand(layoutCtx, entityKeys);
     }
 
-    public void addColumnHeader(ReportLayoutContext layoutCtx, List<String> titles) {
+    public void addColumnHeader(ReportLayout layoutCtx, List<String> titles) {
         JasperDesign jasperDesign = layoutCtx.getJasperDesign();
         JRDesignBand columnHeader = new JRDesignBand();
         columnHeader.setHeight(20);
@@ -93,7 +93,7 @@ public class TimeseriesTableRenderer implements ReportComponentRenderer {
         return header;
     }
 
-    public void addTableDetailBand(ReportLayoutContext builder, List<String> entityKeys)  {
+    public void addTableDetailBand(ReportLayout builder, List<String> entityKeys)  {
 
         JasperDesign jasperDesign = builder.getJasperDesign();
 

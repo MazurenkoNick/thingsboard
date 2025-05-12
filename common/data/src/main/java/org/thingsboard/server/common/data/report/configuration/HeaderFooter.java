@@ -30,13 +30,13 @@
  */
 package org.thingsboard.server.common.data.report.configuration;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
+import org.thingsboard.server.common.data.report.configuration.style.TextAlignment;
 
 import java.util.List;
 
@@ -46,9 +46,11 @@ import java.util.List;
 @NoArgsConstructor
 public class HeaderFooter {
 
-    private Boolean enabled;
+    private boolean enabled;
     @NotNull
     private List<ReportComponent> components;
+    private boolean printPageNumber;
+    private TextAlignment pageNumberAlignment;
     private HeaderFooter firstPage;
 
 }

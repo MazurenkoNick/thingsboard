@@ -45,7 +45,10 @@ import net.sf.jasperreports.engine.JasperPrint;
 import net.sf.jasperreports.engine.JasperReport;
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 import net.sf.jasperreports.engine.data.JRMapCollectionDataSource;
+import net.sf.jasperreports.engine.design.JRDesignExpression;
 import net.sf.jasperreports.engine.design.JRDesignFrame;
+import net.sf.jasperreports.engine.design.JRDesignTextField;
+import net.sf.jasperreports.engine.type.HorizontalTextAlignEnum;
 import org.springframework.stereotype.Service;
 import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.dashboardreport.DashboardReportData;
@@ -63,10 +66,10 @@ import org.thingsboard.server.common.data.report.configuration.components.Dashbo
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponentType;
 import org.thingsboard.server.common.data.report.configuration.components.TimeseriesTableComponent;
-import org.thingsboard.server.report.context.ReportLayoutContext;
+import org.thingsboard.server.report.context.ReportLayout;
 import org.thingsboard.server.report.context.TbReportCtx;
-import org.thingsboard.server.report.renderer.ReportComponentRenderer;
 import org.thingsboard.server.report.datasource.AutoRewindableDataSource;
+import org.thingsboard.server.report.renderer.ReportComponentRenderer;
 import org.thingsboard.server.report.util.WebReportClient;
 
 import java.util.ArrayList;
@@ -84,7 +87,8 @@ import static org.thingsboard.server.common.data.report.configuration.components
 import static org.thingsboard.server.common.data.report.configuration.components.ReportComponentType.TIME_SERIES_TABLE;
 import static org.thingsboard.server.common.data.util.ReportQueryUtils.toAlarmCountQuery;
 import static org.thingsboard.server.common.data.util.ReportQueryUtils.toEntityCountQuery;
-import static org.thingsboard.server.report.context.ReportLayoutContext.getSingleDataSource;
+import static org.thingsboard.server.report.context.ReportLayout.getSingleDataSource;
+import static org.thingsboard.server.report.util.JasperReportUtils.createJRTextField;
 import static org.thingsboard.server.report.util.JasperReportUtils.prepareReportName;
 
 @Service
@@ -110,7 +114,7 @@ public class PdfReportService extends AbstractReportService {
         log.trace("[{}] Executing generateReport, reportRequest [{}]", tenantId, task);
         PdfReportTemplateConfig configuration = (PdfReportTemplateConfig) task.getReportTemplateConfig();
 
-        ReportLayoutContext layoutCtx = new ReportLayoutContext(configuration);
+        ReportLayout layoutCtx = new ReportLayout(configuration);
 
         renderHeaderFooter(ctx, layoutCtx, configuration.getHeader(), true);
         renderHeaderFooter(ctx, layoutCtx, configuration.getFooter(), false);
@@ -135,19 +139,26 @@ public class PdfReportService extends AbstractReportService {
     }
 
     private void renderHeaderFooter(TbReportCtx ctx,
-                                    ReportLayoutContext parentBuilder,
+                                    ReportLayout parentLayout,
                                     HeaderFooter headerFooter,
                                     boolean headerElseFooter) throws Exception {
-        JRDesignFrame headerContainer = parentBuilder.createHeaderFooter(headerElseFooter);
-        boolean hasComponents = headerFooter.getEnabled() && headerFooter.getComponents() != null
+        JRDesignFrame headerContainer = parentLayout.createHeaderFooter(headerElseFooter);
+        boolean hasComponents = headerFooter.isEnabled() && headerFooter.getComponents() != null
                 && !headerFooter.getComponents().isEmpty();
         if (hasComponents) {
             // JRExpression printWhenExpression = new JRDesignExpression("true");
-            renderContent(ctx, parentBuilder, headerFooter.getComponents(), true, null, () -> headerContainer);
+            renderContent(ctx, parentLayout, headerFooter.getComponents(), true, null, () -> headerContainer);
         }
+        // simple way to add page numbering to header/footer
+        //if (headerFooter.isPrintPageNumber()) {
+            JRDesignTextField pageNumberField = createJRTextField(parentLayout.getUsablePageWidth());
+            pageNumberField.setHorizontalTextAlign(HorizontalTextAlignEnum.RIGHT);
+            pageNumberField.setExpression(new JRDesignExpression("$V{PAGE_NUMBER}"));
+            headerContainer.addElement(pageNumberField);
+        //}
     }
 
-    private void renderContent(TbReportCtx ctx, ReportLayoutContext parentBuilder, List<ReportComponent> components,
+    private void renderContent(TbReportCtx ctx, ReportLayout parentBuilder, List<ReportComponent> components,
                                boolean autoRewind, JRExpression printWhenExpression, Supplier<JRElementGroup> subreportContainerSupplier) throws Exception {
         for (ReportComponent component : components) {
             if (component.getType() == TIME_SERIES_TABLE || component.getType() == SUB_REPORT) { // check if component is complex
@@ -161,7 +172,7 @@ public class PdfReportService extends AbstractReportService {
         }
     }
 
-    private void renderComponent(TbReportCtx ctx, ReportLayoutContext layoutCtx,
+    private void renderComponent(TbReportCtx ctx, ReportLayout layoutCtx,
                                  ReportComponent component, JRElementGroup container,
                                  boolean autoRewind,
                                  JRExpression printWhenExpression,
@@ -183,8 +194,8 @@ public class PdfReportService extends AbstractReportService {
         params.put(subReportDSId, subReportDS);
     }
 
-    public JasperReport buildJasperReport(ReportLayoutContext parentLayoutCtx, ReportComponent component) throws JRException {
-        ReportLayoutContext layoutCtx = new ReportLayoutContext(component, parentLayoutCtx);
+    public JasperReport buildJasperReport(ReportLayout parentLayoutCtx, ReportComponent component) throws JRException {
+        ReportLayout layoutCtx = new ReportLayout(component, parentLayoutCtx);
         componentsRenderers.get(component.getType()).render(layoutCtx, component);
         return JasperCompileManager.compileReport(layoutCtx.getJasperDesign());
     }

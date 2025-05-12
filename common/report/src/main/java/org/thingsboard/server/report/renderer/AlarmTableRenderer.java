@@ -40,7 +40,7 @@ import org.thingsboard.server.common.data.report.configuration.DataKey;
 import org.thingsboard.server.common.data.report.configuration.components.AlarmTableComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponentType;
-import org.thingsboard.server.report.context.ReportLayoutContext;
+import org.thingsboard.server.report.context.ReportLayout;
 
 import java.awt.*;
 import java.util.List;
@@ -52,7 +52,7 @@ import static org.thingsboard.server.report.util.JasperReportUtils.createTextFie
 public class AlarmTableRenderer implements ReportComponentRenderer {
 
     @Override
-    public void render(ReportLayoutContext layoutCtx, ReportComponent richTextComponent) {
+    public void render(ReportLayout layoutCtx, ReportComponent richTextComponent) {
         AlarmTableComponent component = (AlarmTableComponent) richTextComponent;
         List<DataKey> dataKeys = component.getAlarmSource().getDataKeys();
         List<String> entityKeys = dataKeys.stream().map(DataKey::getName).collect(Collectors.toList());
@@ -62,7 +62,7 @@ public class AlarmTableRenderer implements ReportComponentRenderer {
         addTableDetailBand(layoutCtx, entityKeys);
     }
 
-    public void addColumnHeader(ReportLayoutContext builder, List<String> titles) {
+    public void addColumnHeader(ReportLayout builder, List<String> titles) {
         JasperDesign jasperDesign = builder.getJasperDesign();
         JRDesignBand columnHeader = new JRDesignBand();
         columnHeader.setHeight(20);
@@ -89,7 +89,7 @@ public class AlarmTableRenderer implements ReportComponentRenderer {
         return header;
     }
 
-    public void addTableDetailBand(ReportLayoutContext builder, List<String> entityKeys)  {
+    public void addTableDetailBand(ReportLayout builder, List<String> entityKeys)  {
 
         JasperDesign jasperDesign = builder.getJasperDesign();
 

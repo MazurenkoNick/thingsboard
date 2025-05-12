@@ -33,12 +33,13 @@ package org.thingsboard.server.report.util;
 import net.sf.jasperreports.engine.JRTextField;
 import net.sf.jasperreports.engine.design.JRDesignBand;
 import net.sf.jasperreports.engine.design.JRDesignExpression;
+import net.sf.jasperreports.engine.design.JRDesignParameter;
 import net.sf.jasperreports.engine.design.JRDesignSection;
+import net.sf.jasperreports.engine.design.JRDesignSubreportParameter;
 import net.sf.jasperreports.engine.design.JRDesignTextField;
-import net.sf.jasperreports.engine.type.PositionTypeEnum;
 import net.sf.jasperreports.engine.type.SplitTypeEnum;
 import net.sf.jasperreports.engine.type.TextAdjustEnum;
-import org.thingsboard.server.report.context.ReportLayoutContext;
+import org.thingsboard.server.report.context.ReportLayout;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -61,38 +62,46 @@ public class JasperReportUtils {
         return htmlField;
     }
 
+    public static JRDesignTextField createConditionalTextField(String expression, String conditionExpression, int layoutWidth) {
+        JRDesignTextField textField = createJRTextField(layoutWidth);
+        textField.setExpression(new JRDesignExpression(expression));
+        textField.setPrintWhenExpression(
+                new JRDesignExpression(conditionExpression)
+        );
+        return textField;
+    }
+
     public static String toJRExpression(String template) {
         StringBuilder expr = new StringBuilder("\"");
-        int pos = 0;
+        int i = 0;
 
-        while (pos < template.length()) {
-            int start = template.indexOf("${", pos);
-            if (start == -1) {
-                // No more placeholders
-                expr.append(template.substring(pos).replace("\"", "\\\""));
-                break;
+        while (i < template.length()) {
+            if (template.startsWith("${", i)) {
+                int end = template.indexOf('}', i);
+                if (end == -1) throw new IllegalArgumentException("Unmatched ${ in: " + template);
+
+                String token = template.substring(i + 2, end).trim();
+
+                // Decide if it's a field or parameter
+                boolean isParam = token.matches("(?i)PAGE_NO|TOTAL_PAGES|.*_PAGE.*|.*_PARAM.*");
+
+                // Close current string, insert placeholder
+                expr.append("\" + ").append(isParam ? "$P{" : "$F{").append(token).append("} + \"");
+
+                i = end + 1;
+            } else {
+                char c = template.charAt(i);
+                if (c == '"') expr.append("\\\"");
+                else expr.append(c);
+                i++;
             }
-
-            // Append literal text before placeholder
-            expr.append(template.substring(pos, start).replace("\"", "\\\""));
-            expr.append("\" + ");
-
-            int end = template.indexOf('}', start);
-            if (end == -1) {
-                throw new IllegalArgumentException("Unmatched '${' in template: " + template);
-            }
-
-            String fieldName = template.substring(start + 2, end).trim();
-            expr.append("$F{" + fieldName + "} + \"");
-
-            pos = end + 1;
         }
 
         expr.append("\"");
         return expr.toString();
     }
 
-    public static void addTextElement(ReportLayoutContext layoutCtx, JRTextField jrTextField) {
+       public static void addTextElement(ReportLayout layoutCtx, JRTextField jrTextField) {
         JRDesignBand detailBand = new JRDesignBand();
         detailBand.setHeight(1);
         detailBand.setSplitType(SplitTypeEnum.STRETCH);
@@ -101,6 +110,20 @@ public class JasperReportUtils {
 
         JRDesignSection detailSection = (JRDesignSection) layoutCtx.getJasperDesign().getDetailSection();
         detailSection.addBand(detailBand);
+    }
+
+    public static JRDesignParameter createParameter(String name, Class<?> valueClass) {
+        JRDesignParameter param = new JRDesignParameter();
+        param.setName(name);
+        param.setValueClass(valueClass);
+        return param;
+    }
+
+    public static JRDesignSubreportParameter createSubReportParameter(String name, String expression) {
+        JRDesignSubreportParameter parameter = new JRDesignSubreportParameter();
+        parameter.setName(name);
+        parameter.setExpression(new JRDesignExpression(expression));
+        return parameter;
     }
 
     public static JRDesignTextField createTextField(String expression, int x, int y) {

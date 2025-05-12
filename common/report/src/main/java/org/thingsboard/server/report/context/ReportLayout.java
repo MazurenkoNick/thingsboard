@@ -40,10 +40,8 @@ import net.sf.jasperreports.engine.design.JRDesignElementGroup;
 import net.sf.jasperreports.engine.design.JRDesignExpression;
 import net.sf.jasperreports.engine.design.JRDesignField;
 import net.sf.jasperreports.engine.design.JRDesignFrame;
-import net.sf.jasperreports.engine.design.JRDesignParameter;
 import net.sf.jasperreports.engine.design.JRDesignRectangle;
 import net.sf.jasperreports.engine.design.JRDesignSection;
-import net.sf.jasperreports.engine.design.JRDesignStaticText;
 import net.sf.jasperreports.engine.design.JRDesignSubreport;
 import net.sf.jasperreports.engine.design.JasperDesign;
 import net.sf.jasperreports.engine.type.BorderSplitType;
@@ -62,21 +60,19 @@ import org.thingsboard.server.report.util.ColorUtils;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 
 import static org.thingsboard.server.common.data.report.configuration.style.PageSize.A4;
+import static org.thingsboard.server.report.util.JasperReportUtils.createParameter;
+import static org.thingsboard.server.report.util.JasperReportUtils.createSubReportParameter;
 
 @Data
-public class ReportLayoutContext {
+public class ReportLayout {
 
     private static final int DEFAULT_PAGE_MARGIN_SIZE = 20;
+    private static final String PAGE_NUMBER_PARAMETER = "PAGE_NO";
+    private static final String PAGE_NUMBER_TOTAL_PARAMETER = "PAGE_TOTAL";
+
     private static final int DEFAULT_COMPONENT_MARGIN_SIZE = 0;
-    private static final Map<String, String> FONT_MAP = Map.of(
-            "Roboto", "Roboto",
-            "monospace", "Monospaced",
-            "sans-serif", "SansSerif",
-            "serif", "Serif"
-    );
 
     private JasperDesign jasperDesign;
     private int usablePageWidth;
@@ -85,11 +81,12 @@ public class ReportLayoutContext {
     private int topMargin;
     private int bottomMargin;
 
-    private ReportLayoutContext parent;
+    private ReportLayout reportLayout;
 
-    public ReportLayoutContext(PdfReportTemplateConfig configuration) throws JRException {
+    public ReportLayout(PdfReportTemplateConfig configuration) throws JRException {
         this.jasperDesign = new JasperDesign();
         this.jasperDesign.setName("MainReport");
+        this.jasperDesign.setIgnorePagination(false);
         this.jasperDesign.setWhenNoDataType(WhenNoDataTypeEnum.ALL_SECTIONS_NO_DETAIL);
         PageSize pageSize = configuration.getPageSize();
         if (pageSize == null) {
@@ -107,16 +104,20 @@ public class ReportLayoutContext {
         setBackground(configuration.getPageBackground());
     }
 
-    public ReportLayoutContext(ReportComponent component, ReportLayoutContext parentBuilder) throws JRException {
-        this.parent = parentBuilder;
+    public ReportLayout(ReportComponent component, ReportLayout parentLayout) throws JRException {
+        this.reportLayout = parentLayout;
         this.jasperDesign = new JasperDesign();
         this.jasperDesign.setIgnorePagination(true);
         this.jasperDesign.setName(StringUtils.randomAlphabetic(8));
-        this.jasperDesign.setPageWidth(parentBuilder.getJasperDesign().getPageWidth());
+        this.jasperDesign.setPageWidth(parentLayout.getJasperDesign().getPageWidth());
         this.jasperDesign.setPageHeight(0);
-        this.usablePageWidth = parentBuilder.getUsablePageWidth();
+        this.usablePageWidth = parentLayout.getUsablePageWidth();
 
-        setMargins(component.getMargins(), DEFAULT_COMPONENT_MARGIN_SIZE, parentBuilder);
+        setMargins(component.getMargins(), DEFAULT_COMPONENT_MARGIN_SIZE, parentLayout);
+
+        // add parameters
+        jasperDesign.addParameter(createParameter(PAGE_NUMBER_PARAMETER, Integer.class));
+        jasperDesign.addParameter(createParameter(PAGE_NUMBER_TOTAL_PARAMETER, Integer.class));
 
         // define report fields
         switch (component.getType()) {
@@ -164,7 +165,7 @@ public class ReportLayoutContext {
         this.setMargins(margins, defaultPageMarginSize, null);
     }
 
-    private void setMargins(Margins margins, int defaultPageMarginSize, ReportLayoutContext parentBuilder) {
+    private void setMargins(Margins margins, int defaultPageMarginSize, ReportLayout parentBuilder) {
         if (margins != null) {
             this.leftMargin = margins.getLeft();
             this.rightMargin = margins.getRight();
@@ -220,19 +221,6 @@ public class ReportLayoutContext {
         return frame;
     }
 
-    public JRDesignStaticText createStaticTextElement(String text, String conditionExpression) {
-        JRDesignStaticText firstPageText = new JRDesignStaticText();
-        firstPageText.setX(0);
-        firstPageText.setY(0);
-        firstPageText.setWidth(515);
-        firstPageText.setHeight(20);
-        firstPageText.setText(text);
-        firstPageText.setPrintWhenExpression(
-                new JRDesignExpression(conditionExpression)
-        );
-        return firstPageText;
-    }
-
     public JRDesignField createField(String name, Class<?> type) {
         JRDesignField field = new JRDesignField();
         field.setName(name);
@@ -252,6 +240,8 @@ public class ReportLayoutContext {
         jasperDesign.addParameter(createParameter(subReportDSExpression, JRDataSource.class));
 
         JRDesignSubreport subReport = new JRDesignSubreport(jasperDesign);
+        subReport.addParameter(createSubReportParameter(PAGE_NUMBER_PARAMETER, "$V{PAGE_NUMBER}"));
+        subReport.addParameter(createSubReportParameter(PAGE_NUMBER_TOTAL_PARAMETER, "$V{MASTER_TOTAL_PAGES}"));
 
         if (printWhenExpression != null) {
             subReport.setPrintWhenExpression(printWhenExpression);
@@ -284,13 +274,6 @@ public class ReportLayoutContext {
         JRDesignBand detailBand = new JRDesignBand();
         ((JRDesignSection) jasperDesign.getDetailSection()).addBand(detailBand);
         return detailBand;
-    }
-
-    private JRDesignParameter createParameter(String name, Class<?> valueClass) {
-        JRDesignParameter param = new JRDesignParameter();
-        param.setName(name);
-        param.setValueClass(valueClass);
-        return param;
     }
 
     public static DataSource getSingleDataSource(ReportComponent component) {
