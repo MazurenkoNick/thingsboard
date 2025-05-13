@@ -28,31 +28,29 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.dao.job;
+package org.thingsboard.server.queue.settings;
 
-import org.thingsboard.server.common.data.id.JobId;
-import org.thingsboard.server.common.data.id.TenantId;
-import org.thingsboard.server.common.data.job.Job;
-import org.thingsboard.server.common.data.job.JobFilter;
-import org.thingsboard.server.common.data.job.JobStats;
-import org.thingsboard.server.common.data.page.PageData;
-import org.thingsboard.server.common.data.page.PageLink;
-import org.thingsboard.server.dao.entity.EntityDaoService;
+import lombok.Getter;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
-public interface JobService extends EntityDaoService {
+@Getter
+@Component
+public class TasksQueueConfig {
 
-    Job saveJob(TenantId tenantId, Job job);
+    @Value("${queue.tasks.poll_interval:500}")
+    private int pollInterval;
 
-    Job findJobById(TenantId tenantId, JobId jobId);
+    @Value("${queue.tasks.partitioning_strategy:tenant}")
+    private String partitioningStrategy;
 
-    void cancelJob(TenantId tenantId, JobId jobId);
+    @Value("${queue.tasks.stats.topic:jobs.stats}")
+    private String statsTopic;
 
-    void markAsFailed(TenantId tenantId, JobId jobId, String error);
+    @Value("${queue.tasks.stats.poll_interval:500}")
+    private int statsPollInterval;
 
-    void processStats(TenantId tenantId, JobId jobId, JobStats jobStats);
-
-    PageData<Job> findJobsByFilter(TenantId tenantId, JobFilter filter, PageLink pageLink);
-
-    Job findLatestJobByKey(TenantId tenantId, String key);
+    @Value("${queue.tasks.stats.processing_interval:1000}")
+    private int statsProcessingInterval;
 
 }
