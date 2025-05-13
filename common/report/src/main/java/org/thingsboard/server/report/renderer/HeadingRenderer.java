@@ -30,6 +30,7 @@
  */
 package org.thingsboard.server.report.renderer;
 
+import net.sf.jasperreports.engine.JRException;
 import net.sf.jasperreports.engine.design.JRDesignExpression;
 import net.sf.jasperreports.engine.design.JRDesignFrame;
 import net.sf.jasperreports.engine.design.JRDesignTextField;
@@ -44,6 +45,8 @@ import org.thingsboard.server.common.data.report.configuration.style.FontStyle;
 import org.thingsboard.server.common.data.report.configuration.style.FontWeight;
 import org.thingsboard.server.common.data.report.configuration.style.TextAlignment;
 import org.thingsboard.server.common.data.report.configuration.style.VerticalAlignment;
+import org.thingsboard.server.report.context.ReportLayout;
+import org.thingsboard.server.report.context.TbReportCtx;
 import org.thingsboard.server.report.util.ColorUtils;
 
 import static org.thingsboard.server.report.util.JasperReportUtils.createJRTextField;
@@ -53,7 +56,7 @@ import static org.thingsboard.server.report.util.JasperReportUtils.toJRExpressio
 public class HeadingRenderer extends ReportComponentWithLayoutRenderer {
 
     @Override
-    public void render(JRDesignFrame frame, ReportComponent component) {
+    public void render(TbReportCtx ctx, ReportLayout layoutCtx, JRDesignFrame frame, ReportComponent component) throws JRException {
         HeadingComponent headingComponent = (HeadingComponent) component;
         JRDesignTextField textField = createJRTextField(this.layoutWidth);
 

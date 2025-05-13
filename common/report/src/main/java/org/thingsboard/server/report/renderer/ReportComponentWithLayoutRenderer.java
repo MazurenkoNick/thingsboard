@@ -30,6 +30,7 @@
  */
 package org.thingsboard.server.report.renderer;
 
+import net.sf.jasperreports.engine.JRException;
 import net.sf.jasperreports.engine.design.JRDesignBand;
 import net.sf.jasperreports.engine.design.JRDesignFrame;
 import net.sf.jasperreports.engine.design.JRDesignSection;
@@ -40,6 +41,7 @@ import net.sf.jasperreports.engine.type.SplitTypeEnum;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponentType;
 import org.thingsboard.server.report.context.ReportLayout;
+import org.thingsboard.server.report.context.TbReportCtx;
 import org.thingsboard.server.report.util.ColorUtils;
 
 public abstract class ReportComponentWithLayoutRenderer implements ReportComponentRenderer {
@@ -47,7 +49,7 @@ public abstract class ReportComponentWithLayoutRenderer implements ReportCompone
     protected int layoutWidth;
 
     @Override
-    public void render(ReportLayout layoutCtx, ReportComponent component) {
+    public void render(TbReportCtx ctx, ReportLayout layoutCtx, ReportComponent component) throws JRException {
 
         this.layoutWidth = layoutCtx.getUsablePageWidth() - layoutCtx.getLeftMargin() - layoutCtx.getRightMargin();
 
@@ -69,7 +71,7 @@ public abstract class ReportComponentWithLayoutRenderer implements ReportCompone
         JRDesignBand detailBand = new JRDesignBand();
         detailBand.setSplitType(SplitTypeEnum.STRETCH);
 
-        this.render(frame, component);
+        this.render(ctx, layoutCtx, frame, component);
 
         detailBand.addElement(frame);
 
@@ -77,7 +79,7 @@ public abstract class ReportComponentWithLayoutRenderer implements ReportCompone
         detailSection.addBand(detailBand);
     }
 
-    protected abstract void render(JRDesignFrame frame, ReportComponent component);
+    protected abstract void render(TbReportCtx ctx, ReportLayout layoutCtx, JRDesignFrame frame, ReportComponent component) throws JRException;
 
     @Override
     public ReportComponentType getType() {

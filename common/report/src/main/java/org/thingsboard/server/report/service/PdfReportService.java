@@ -48,6 +48,7 @@ import net.sf.jasperreports.engine.data.JRMapCollectionDataSource;
 import net.sf.jasperreports.engine.design.JRDesignExpression;
 import net.sf.jasperreports.engine.design.JRDesignFrame;
 import net.sf.jasperreports.engine.design.JRDesignTextField;
+import net.sf.jasperreports.engine.type.EvaluationTimeEnum;
 import net.sf.jasperreports.engine.type.HorizontalTextAlignEnum;
 import org.springframework.stereotype.Service;
 import org.thingsboard.server.common.data.StringUtils;
@@ -145,17 +146,30 @@ public class PdfReportService extends AbstractReportService {
         JRDesignFrame headerContainer = parentLayout.createHeaderFooter(headerElseFooter);
         boolean hasComponents = headerFooter.isEnabled() && headerFooter.getComponents() != null
                 && !headerFooter.getComponents().isEmpty();
-        if (hasComponents) {
-            // JRExpression printWhenExpression = new JRDesignExpression("true");
-            renderContent(ctx, parentLayout, headerFooter.getComponents(), true, null, () -> headerContainer);
-        }
-        // simple way to add page numbering to header/footer
-        //if (headerFooter.isPrintPageNumber()) {
+        boolean firstPageHeaderEnabled = headerFooter.getFirstPage() != null &&
+                headerFooter.getFirstPage().isEnabled();
+        if (firstPageHeaderEnabled && !headerFooter.getFirstPage().getComponents().isEmpty()) {
+            JRExpression printWhenExpression = new JRDesignExpression("$V{PAGE_NUMBER} == 1");
+            renderContent(ctx, parentLayout, headerFooter.getFirstPage().getComponents(), false, printWhenExpression, () -> headerContainer);
+
             JRDesignTextField pageNumberField = createJRTextField(parentLayout.getUsablePageWidth());
+            pageNumberField.setPrintWhenExpression(printWhenExpression);
             pageNumberField.setHorizontalTextAlign(HorizontalTextAlignEnum.RIGHT);
-            pageNumberField.setExpression(new JRDesignExpression("$V{PAGE_NUMBER}"));
+            pageNumberField.setEvaluationTime(EvaluationTimeEnum.MASTER);
+            pageNumberField.setExpression(new JRDesignExpression("$V{PAGE_NUMBER} + \" / \" + $V{MASTER_TOTAL_PAGES}"));
             headerContainer.addElement(pageNumberField);
-        //}
+        }
+        if (hasComponents) {
+            JRExpression printWhenExpression = firstPageHeaderEnabled ? new JRDesignExpression("$V{PAGE_NUMBER} > 1") : null;
+            renderContent(ctx, parentLayout, headerFooter.getComponents(), true, printWhenExpression, () -> headerContainer);
+
+            JRDesignTextField pageNumberField = createJRTextField(parentLayout.getUsablePageWidth());
+            pageNumberField.setPrintWhenExpression(printWhenExpression);
+            pageNumberField.setHorizontalTextAlign(HorizontalTextAlignEnum.RIGHT);
+            pageNumberField.setEvaluationTime(EvaluationTimeEnum.MASTER);
+            pageNumberField.setExpression(new JRDesignExpression("$V{PAGE_NUMBER} + \" / \" + $V{MASTER_TOTAL_PAGES}"));
+            headerContainer.addElement(pageNumberField);
+        }
     }
 
     private void renderContent(TbReportCtx ctx, ReportLayout parentBuilder, List<ReportComponent> components,
@@ -183,7 +197,7 @@ public class PdfReportService extends AbstractReportService {
 
         layoutCtx.addSubReport(subReportId, subReportDSId, container, printWhenExpression);
 
-        JasperReport subReport = buildJasperReport(layoutCtx, component);
+        JasperReport subReport = buildJasperReport(ctx, layoutCtx, component);
         JRDataSource subReportDS = buildDataSource(ctx, component, entityData);
         if (autoRewind) {
             subReportDS = new AutoRewindableDataSource((JRRewindableDataSource) subReportDS);
@@ -194,9 +208,9 @@ public class PdfReportService extends AbstractReportService {
         params.put(subReportDSId, subReportDS);
     }
 
-    public JasperReport buildJasperReport(ReportLayout parentLayoutCtx, ReportComponent component) throws JRException {
+    public JasperReport buildJasperReport(TbReportCtx ctx, ReportLayout parentLayoutCtx, ReportComponent component) throws JRException {
         ReportLayout layoutCtx = new ReportLayout(component, parentLayoutCtx);
-        componentsRenderers.get(component.getType()).render(layoutCtx, component);
+        componentsRenderers.get(component.getType()).render(ctx, layoutCtx, component);
         return JasperCompileManager.compileReport(layoutCtx.getJasperDesign());
     }
 

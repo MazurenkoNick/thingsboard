@@ -30,13 +30,15 @@
  */
 package org.thingsboard.server.report.renderer;
 
+import net.sf.jasperreports.engine.JRException;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponentType;
 import org.thingsboard.server.report.context.ReportLayout;
+import org.thingsboard.server.report.context.TbReportCtx;
 
 public interface ReportComponentRenderer {
 
-    void render(ReportLayout layoutCtx, ReportComponent component);
+    void render(TbReportCtx ctx, ReportLayout layoutCtx, ReportComponent component) throws JRException;
 
     ReportComponentType getType();
 
