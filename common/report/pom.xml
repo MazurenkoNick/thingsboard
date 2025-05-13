@@ -122,9 +122,9 @@
             <version>6.0.0</version>
         </dependency>
         <dependency>
-            <groupId>org.xhtmlrenderer</groupId>
-            <artifactId>flying-saucer-core</artifactId>
-            <version>9.1.22</version>
+            <groupId>net.sf.jasperreports</groupId>
+            <artifactId>jasperreports-html-component</artifactId>
+            <version>6.5.1</version>
         </dependency>
     </dependencies>
 
@@ -135,6 +135,13 @@
             <url>https://repo.thingsboard.io/artifactory/libs-release-public</url>
         </repository>
     </distributionManagement>
+
+    <repositories>
+        <repository>
+            <id>jaspersoft-ce</id>
+            <url>https://jaspersoft.jfrog.io/artifactory/jr-ce-releases</url>
+        </repository>
+    </repositories>
 
     <build>
         <resources>

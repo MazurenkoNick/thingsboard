@@ -32,6 +32,7 @@ package org.thingsboard.server.report.service;
 
 import com.google.common.util.concurrent.SettableFuture;
 import lombok.extern.slf4j.Slf4j;
+import net.sf.jasperreports.engine.DefaultJasperReportsContext;
 import net.sf.jasperreports.engine.JRDataSource;
 import net.sf.jasperreports.engine.JRElementGroup;
 import net.sf.jasperreports.engine.JREmptyDataSource;
@@ -50,6 +51,8 @@ import net.sf.jasperreports.engine.design.JRDesignFrame;
 import net.sf.jasperreports.engine.design.JRDesignTextField;
 import net.sf.jasperreports.engine.type.EvaluationTimeEnum;
 import net.sf.jasperreports.engine.type.HorizontalTextAlignEnum;
+import net.sf.jasperreports.engine.util.FlyingSaucerHtmlPrintElementFactory;
+import net.sf.jasperreports.engine.util.HtmlPrintElementUtils;
 import org.springframework.stereotype.Service;
 import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.dashboardreport.DashboardReportData;
@@ -71,6 +74,7 @@ import org.thingsboard.server.report.context.ReportLayout;
 import org.thingsboard.server.report.context.TbReportCtx;
 import org.thingsboard.server.report.datasource.AutoRewindableDataSource;
 import org.thingsboard.server.report.renderer.ReportComponentRenderer;
+import org.thingsboard.server.report.util.RichTextHtmlPrintElementFactory;
 import org.thingsboard.server.report.util.WebReportClient;
 
 import java.util.ArrayList;
@@ -95,6 +99,10 @@ import static org.thingsboard.server.report.util.JasperReportUtils.prepareReport
 @Service
 @Slf4j
 public class PdfReportService extends AbstractReportService {
+
+    static {
+        DefaultJasperReportsContext.getInstance().setProperty(HtmlPrintElementUtils.PROPERTY_HTML_PRINTELEMENT_FACTORY, RichTextHtmlPrintElementFactory.class.getName());
+    }
 
     private final Map<ReportComponentType, ReportComponentRenderer> componentsRenderers = new EnumMap<>(ReportComponentType.class);
     private final WebReportClient webReportClient;
