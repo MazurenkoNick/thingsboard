@@ -40,9 +40,11 @@ import net.sf.jasperreports.engine.design.JRDesignElementGroup;
 import net.sf.jasperreports.engine.design.JRDesignExpression;
 import net.sf.jasperreports.engine.design.JRDesignField;
 import net.sf.jasperreports.engine.design.JRDesignFrame;
+import net.sf.jasperreports.engine.design.JRDesignParameter;
 import net.sf.jasperreports.engine.design.JRDesignRectangle;
 import net.sf.jasperreports.engine.design.JRDesignSection;
 import net.sf.jasperreports.engine.design.JRDesignSubreport;
+import net.sf.jasperreports.engine.design.JRDesignSubreportParameter;
 import net.sf.jasperreports.engine.design.JasperDesign;
 import net.sf.jasperreports.engine.type.BorderSplitType;
 import net.sf.jasperreports.engine.type.ModeEnum;
@@ -102,6 +104,11 @@ public class ReportLayout {
         setMargins(configuration.getPageMargins(), DEFAULT_PAGE_MARGIN_SIZE);
         this.usablePageWidth = jasperDesign.getPageWidth() - leftMargin - rightMargin;
         setBackground(configuration.getPageBackground());
+
+        JRDesignParameter param = new JRDesignParameter();
+        param.setName("IMAGE");
+        param.setValueClassName("byte[]");
+        jasperDesign.addParameter(param);
     }
 
     public ReportLayout(ReportComponent component, ReportLayout parentLayout) throws JRException {
@@ -116,6 +123,10 @@ public class ReportLayout {
         setMargins(component.getMargins(), DEFAULT_COMPONENT_MARGIN_SIZE, parentLayout);
 
         // add parameters
+        JRDesignParameter param = new JRDesignParameter();
+        param.setName("IMAGE");
+        param.setValueClassName("byte[]");
+        jasperDesign.addParameter(param);
         jasperDesign.addParameter(createParameter(PAGE_NUMBER_PARAMETER, Integer.class));
         jasperDesign.addParameter(createParameter(PAGE_NUMBER_TOTAL_PARAMETER, Integer.class));
 
@@ -242,6 +253,7 @@ public class ReportLayout {
         JRDesignSubreport subReport = new JRDesignSubreport(jasperDesign);
         subReport.addParameter(createSubReportParameter(PAGE_NUMBER_PARAMETER, "$V{PAGE_NUMBER}"));
         subReport.addParameter(createSubReportParameter(PAGE_NUMBER_TOTAL_PARAMETER, "$V{MASTER_TOTAL_PAGES}"));
+        subReport.addParameter(createSubReportParameter("IMAGE", "$P{IMAGE}"));
 
         if (printWhenExpression != null) {
             subReport.setPrintWhenExpression(printWhenExpression);

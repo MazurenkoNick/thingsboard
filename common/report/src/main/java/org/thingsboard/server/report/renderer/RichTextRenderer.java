@@ -96,11 +96,7 @@ public class RichTextRenderer extends ReportComponentWithLayoutRenderer {
         image.setWidth(this.layoutWidth);
         image.setHeight((int)(rect.getHeight() * (3f/4f)));
 
-        String htmlImageId = "html_image_" + StringUtils.randomAlphabetic(10);
-        JRDesignParameter param = new JRDesignParameter();
-        param.setName(htmlImageId);
-        param.setValueClassName("byte[]");
-        layoutCtx.getJasperDesign().addParameter(param);
+        String htmlImageId = "IMAGE";
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         try {
