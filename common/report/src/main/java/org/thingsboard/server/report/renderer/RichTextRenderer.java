@@ -31,7 +31,6 @@
 package org.thingsboard.server.report.renderer;
 
 import net.sf.jasperreports.components.html.HtmlComponent;
-import net.sf.jasperreports.engine.JRException;
 import net.sf.jasperreports.engine.component.ComponentKey;
 import net.sf.jasperreports.engine.design.JRDesignComponentElement;
 import net.sf.jasperreports.engine.design.JRDesignExpression;
@@ -43,7 +42,6 @@ import org.thingsboard.server.common.data.report.configuration.components.Report
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponentType;
 import org.thingsboard.server.common.data.report.configuration.components.RichTextComponent;
 import org.thingsboard.server.report.context.ReportLayout;
-import org.thingsboard.server.report.context.TbReportCtx;
 
 import static org.thingsboard.server.report.util.JasperReportUtils.toJRExpression;
 
@@ -51,7 +49,7 @@ import static org.thingsboard.server.report.util.JasperReportUtils.toJRExpressio
 public class RichTextRenderer extends ReportComponentWithLayoutRenderer {
 
     @Override
-    public void render(TbReportCtx ctx, ReportLayout layoutCtx, JRDesignFrame frame, ReportComponent component) throws JRException {
+    public void render(ReportLayout layoutCtx, JRDesignFrame frame, ReportComponent component)  {
         RichTextComponent richTextComponent = (RichTextComponent) component;
 
         HtmlComponent hc = new HtmlComponent();

@@ -53,7 +53,7 @@ import static org.thingsboard.server.report.util.JasperReportUtils.createTextFie
 public class AlarmTableRenderer implements ReportComponentRenderer {
 
     @Override
-    public void render(TbReportCtx ctx, ReportLayout layoutCtx, ReportComponent richTextComponent) {
+    public void render(ReportLayout layoutCtx, ReportComponent richTextComponent) {
         AlarmTableComponent component = (AlarmTableComponent) richTextComponent;
         List<DataKey> dataKeys = component.getAlarmSource().getDataKeys();
         List<String> entityKeys = dataKeys.stream().map(DataKey::getName).collect(Collectors.toList());
@@ -63,12 +63,12 @@ public class AlarmTableRenderer implements ReportComponentRenderer {
         addTableDetailBand(layoutCtx, entityKeys);
     }
 
-    public void addColumnHeader(ReportLayout builder, List<String> titles) {
-        JasperDesign jasperDesign = builder.getJasperDesign();
+    public void addColumnHeader(ReportLayout layout, List<String> titles) {
+        JasperDesign jasperDesign = layout.getJasperDesign();
         JRDesignBand columnHeader = new JRDesignBand();
         columnHeader.setHeight(20);
         int x = 0;
-        int columnWidth = Math.min(jasperDesign.getColumnWidth(), builder.getUsablePageWidth() /titles.size());
+        int columnWidth = Math.min(jasperDesign.getColumnWidth(), layout.getUsablePageWidth() /titles.size());
         for (String title : titles) {
             columnHeader.addElement(createHeaderText(title, x, columnWidth));
             x += columnWidth;

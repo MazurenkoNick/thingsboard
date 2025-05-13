@@ -82,13 +82,20 @@ public class JasperReportUtils {
 
                 String token = template.substring(i + 2, end).trim();
 
-                // Decide if it's a field or parameter
-                boolean isParam = token.matches("(?i)PAGE_NO|TOTAL_PAGES|.*_PAGE.*|.*_PARAM.*");
+                expr.append("\" + ");
 
-                // Close current string, insert placeholder
-                expr.append("\" + ").append(isParam ? "$P{" : "$F{").append(token).append("} + \"");
+                if ("createdTime".equals(token)) {
+                    // Special formatting for createdTime as a long timestamp stored in a String field
+                    expr.append("new java.text.SimpleDateFormat(\"yyyy-MM-dd HH:mm:ss\")")
+                            .append(".format(new java.util.Date(Long.parseLong($F{createdTime})))");
+                } else {
+                    boolean isParam = token.matches("(?i)PAGE_NO|TOTAL_PAGES|.*_PAGE.*|.*_PARAM.*");
+                    expr.append(isParam ? "$P{" : "$F{").append(token).append("}");
+                }
 
+                expr.append(" + \"");
                 i = end + 1;
+
             } else {
                 char c = template.charAt(i);
                 if (c == '"') expr.append("\\\"");

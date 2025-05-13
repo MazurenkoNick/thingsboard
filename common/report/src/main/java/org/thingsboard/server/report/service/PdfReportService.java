@@ -51,7 +51,6 @@ import net.sf.jasperreports.engine.design.JRDesignFrame;
 import net.sf.jasperreports.engine.design.JRDesignTextField;
 import net.sf.jasperreports.engine.type.EvaluationTimeEnum;
 import net.sf.jasperreports.engine.type.HorizontalTextAlignEnum;
-import net.sf.jasperreports.engine.util.FlyingSaucerHtmlPrintElementFactory;
 import net.sf.jasperreports.engine.util.HtmlPrintElementUtils;
 import org.springframework.stereotype.Service;
 import org.thingsboard.server.common.data.StringUtils;
@@ -128,9 +127,6 @@ public class PdfReportService extends AbstractReportService {
         renderHeaderFooter(ctx, layoutCtx, configuration.getHeader(), true);
         renderHeaderFooter(ctx, layoutCtx, configuration.getFooter(), false);
 
-        //Optional.ofNullable(configuration.getHeader()).ifPresent(reportBuilder::addPageHeader);
-        //Optional.ofNullable(configuration.getFooter()).ifPresent(reportBuilder::addPageFooter);
-
         renderContent(ctx, layoutCtx, configuration.getComponents(), false, null, () -> layoutCtx.createDetailsBand());
 
         JasperReport mainReport = JasperCompileManager.compileReport(layoutCtx.getJasperDesign());
@@ -205,7 +201,7 @@ public class PdfReportService extends AbstractReportService {
 
         layoutCtx.addSubReport(subReportId, subReportDSId, container, printWhenExpression);
 
-        JasperReport subReport = buildJasperReport(ctx, layoutCtx, component);
+        JasperReport subReport = buildJasperReport(layoutCtx, component);
         JRDataSource subReportDS = buildDataSource(ctx, component, entityData);
         if (autoRewind) {
             subReportDS = new AutoRewindableDataSource((JRRewindableDataSource) subReportDS);
@@ -216,9 +212,9 @@ public class PdfReportService extends AbstractReportService {
         params.put(subReportDSId, subReportDS);
     }
 
-    public JasperReport buildJasperReport(TbReportCtx ctx, ReportLayout parentLayoutCtx, ReportComponent component) throws JRException {
+    public JasperReport buildJasperReport(ReportLayout parentLayoutCtx, ReportComponent component) throws JRException {
         ReportLayout layoutCtx = new ReportLayout(component, parentLayoutCtx);
-        componentsRenderers.get(component.getType()).render(ctx, layoutCtx, component);
+        componentsRenderers.get(component.getType()).render(layoutCtx, component);
         return JasperCompileManager.compileReport(layoutCtx.getJasperDesign());
     }
 

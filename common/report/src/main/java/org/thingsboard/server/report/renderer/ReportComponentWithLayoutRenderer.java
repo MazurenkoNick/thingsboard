@@ -30,7 +30,6 @@
  */
 package org.thingsboard.server.report.renderer;
 
-import net.sf.jasperreports.engine.JRException;
 import net.sf.jasperreports.engine.design.JRDesignBand;
 import net.sf.jasperreports.engine.design.JRDesignFrame;
 import net.sf.jasperreports.engine.design.JRDesignSection;
@@ -41,7 +40,6 @@ import net.sf.jasperreports.engine.type.SplitTypeEnum;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponentType;
 import org.thingsboard.server.report.context.ReportLayout;
-import org.thingsboard.server.report.context.TbReportCtx;
 import org.thingsboard.server.report.util.ColorUtils;
 
 public abstract class ReportComponentWithLayoutRenderer implements ReportComponentRenderer {
@@ -49,37 +47,37 @@ public abstract class ReportComponentWithLayoutRenderer implements ReportCompone
     protected int layoutWidth;
 
     @Override
-    public void render(TbReportCtx ctx, ReportLayout layoutCtx, ReportComponent component) throws JRException {
+    public void render(ReportLayout layout, ReportComponent component) {
 
-        this.layoutWidth = layoutCtx.getUsablePageWidth() - layoutCtx.getLeftMargin() - layoutCtx.getRightMargin();
+        this.layoutWidth = layout.getUsablePageWidth() - layout.getLeftMargin() - layout.getRightMargin();
 
         JRDesignFrame frame = new JRDesignFrame();
         frame.setX(0);
         frame.setY(0);
-        frame.setWidth(layoutCtx.getUsablePageWidth());
+        frame.setWidth(layout.getUsablePageWidth());
         frame.setPositionType(PositionTypeEnum.FLOAT);
         frame.setBorderSplitType(BorderSplitType.NO_BORDERS);
         if (component.getBackground() != null) {
             frame.setMode(ModeEnum.OPAQUE);
             frame.setBackcolor(ColorUtils.parseCssColor(component.getBackground()));
         }
-        frame.getLineBox().setLeftPadding(layoutCtx.getLeftMargin());
-        frame.getLineBox().setRightPadding(layoutCtx.getRightMargin());
-        frame.getLineBox().setTopPadding(layoutCtx.getTopMargin());
-        frame.getLineBox().setBottomPadding(layoutCtx.getBottomMargin());
+        frame.getLineBox().setLeftPadding(layout.getLeftMargin());
+        frame.getLineBox().setRightPadding(layout.getRightMargin());
+        frame.getLineBox().setTopPadding(layout.getTopMargin());
+        frame.getLineBox().setBottomPadding(layout.getBottomMargin());
 
         JRDesignBand detailBand = new JRDesignBand();
         detailBand.setSplitType(SplitTypeEnum.STRETCH);
 
-        this.render(ctx, layoutCtx, frame, component);
+        this.render(layout, frame, component);
 
         detailBand.addElement(frame);
 
-        JRDesignSection detailSection = (JRDesignSection) layoutCtx.getJasperDesign().getDetailSection();
+        JRDesignSection detailSection = (JRDesignSection) layout.getJasperDesign().getDetailSection();
         detailSection.addBand(detailBand);
     }
 
-    protected abstract void render(TbReportCtx ctx, ReportLayout layoutCtx, JRDesignFrame frame, ReportComponent component) throws JRException;
+    protected abstract void render(ReportLayout layoutCtx, JRDesignFrame frame, ReportComponent component);
 
     @Override
     public ReportComponentType getType() {
