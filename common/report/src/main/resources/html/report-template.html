@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <link rel="stylesheet" type="text/css" media="all" href="/html/styles/main.css"/>
+    <style th:inline="text">
+      @page {
+          size: [[${pageWidth}]] [[${pageHeight}]];
+          background: [[${pageBackground}]];
+          margin-left: [[${pageMarginLeft}]];
+          margin-right: [[${pageMarginRight}]];
+          margin-top: [[${pageMarginTop}]];
+          margin-bottom: [[${pageMarginBottom}]];
+      }
+    </style>
+  </head>
+  <body>
+    <div class='header' th:utext="${pageHeader}"></div>
+    <div class='footer' th:utext="${pageFooter}"></div>
+    <div class='content' th:utext="${pageContent}"></div>
+  </body>
+</html>

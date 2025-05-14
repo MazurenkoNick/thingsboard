@@ -51,7 +51,7 @@ import net.sf.jasperreports.engine.design.JRDesignFrame;
 import net.sf.jasperreports.engine.design.JRDesignTextField;
 import net.sf.jasperreports.engine.type.EvaluationTimeEnum;
 import net.sf.jasperreports.engine.type.HorizontalTextAlignEnum;
-import net.sf.jasperreports.engine.util.HtmlPrintElementUtils;
+//import net.sf.jasperreports.engine.util.HtmlPrintElementUtils;
 import org.springframework.stereotype.Service;
 import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.dashboardreport.DashboardReportData;
@@ -69,39 +69,59 @@ import org.thingsboard.server.common.data.report.configuration.components.Dashbo
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponentType;
 import org.thingsboard.server.common.data.report.configuration.components.TimeseriesTableComponent;
+import org.thingsboard.server.common.data.report.configuration.style.PageOrientation;
+import org.thingsboard.server.common.data.report.configuration.style.PageSize;
 import org.thingsboard.server.report.context.ReportLayout;
 import org.thingsboard.server.report.context.TbReportCtx;
 import org.thingsboard.server.report.datasource.AutoRewindableDataSource;
 import org.thingsboard.server.report.renderer.ReportComponentRenderer;
+import org.thingsboard.server.report.util.PdfReportUserAgent;
 import org.thingsboard.server.report.util.RichTextHtmlPrintElementFactory;
 import org.thingsboard.server.report.util.WebReportClient;
+import org.thymeleaf.TemplateEngine;
+import org.thymeleaf.context.Context;
+import org.thymeleaf.templateresolver.ClassLoaderTemplateResolver;
+import org.w3c.tidy.Tidy;
+import org.xhtmlrenderer.pdf.ITextOutputDevice;
+import org.xhtmlrenderer.pdf.ITextRenderer;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.TimeZone;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import static com.lowagie.text.pdf.BaseFont.IDENTITY_H;
+import static org.apache.commons.codec.CharEncoding.UTF_8;
 import static org.thingsboard.server.common.data.report.configuration.components.ReportComponentType.SUB_REPORT;
 import static org.thingsboard.server.common.data.report.configuration.components.ReportComponentType.TIME_SERIES_TABLE;
+import static org.thingsboard.server.common.data.report.configuration.style.PageSize.A4;
 import static org.thingsboard.server.common.data.util.ReportQueryUtils.toAlarmCountQuery;
 import static org.thingsboard.server.common.data.util.ReportQueryUtils.toEntityCountQuery;
 import static org.thingsboard.server.report.context.ReportLayout.getSingleDataSource;
 import static org.thingsboard.server.report.util.JasperReportUtils.createJRTextField;
 import static org.thingsboard.server.report.util.JasperReportUtils.prepareReportName;
+import static org.thymeleaf.templatemode.TemplateMode.HTML;
+import static com.lowagie.text.pdf.BaseFont.EMBEDDED;
+import static org.xhtmlrenderer.pdf.ITextRenderer.DEFAULT_DOTS_PER_POINT;
 
 @Service
 @Slf4j
 public class PdfReportService extends AbstractReportService {
 
-    static {
-        DefaultJasperReportsContext.getInstance().setProperty(HtmlPrintElementUtils.PROPERTY_HTML_PRINTELEMENT_FACTORY, RichTextHtmlPrintElementFactory.class.getName());
-    }
+    //static {
+    //    DefaultJasperReportsContext.getInstance().setProperty(HtmlPrintElementUtils.PROPERTY_HTML_PRINTELEMENT_FACTORY, RichTextHtmlPrintElementFactory.class.getName());
+    //}
 
     private final Map<ReportComponentType, ReportComponentRenderer> componentsRenderers = new EnumMap<>(ReportComponentType.class);
     private final WebReportClient webReportClient;
@@ -122,7 +142,78 @@ public class PdfReportService extends AbstractReportService {
         log.trace("[{}] Executing generateReport, reportRequest [{}]", tenantId, task);
         PdfReportTemplateConfig configuration = (PdfReportTemplateConfig) task.getReportTemplateConfig();
 
-        ReportLayout layoutCtx = new ReportLayout(configuration);
+        ClassLoaderTemplateResolver templateResolver = new ClassLoaderTemplateResolver();
+        templateResolver.setPrefix("/");
+        templateResolver.setSuffix(".html");
+        templateResolver.setTemplateMode(HTML);
+        templateResolver.setCharacterEncoding(UTF_8);
+        TemplateEngine templateEngine = new TemplateEngine();
+        templateEngine.setTemplateResolver(templateResolver);
+
+        Map<String, Object> variables = new HashMap<>();
+        PageSize pageSize = configuration.getPageSize();
+        if (pageSize == null) {
+            pageSize = A4;
+        }
+        if (configuration.getPageOrientation() == PageOrientation.LANDSCAPE) {
+            variables.put("pageWidth", pageSize.getHeight() + "pt" );
+            variables.put("pageHeight", pageSize.getWidth() + "pt" );
+        } else {
+            variables.put("pageWidth", pageSize.getWidth() + "pt" );
+            variables.put("pageHeight", pageSize.getHeight() + "pt" );
+        }
+        String pageBackground = configuration.getPageBackground() != null ? configuration.getPageBackground() : "#fff";
+        variables.put("pageBackground", pageBackground);
+        if (configuration.getPageMargins() != null) {
+            variables.put("pageMarginLeft", configuration.getPageMargins().getLeft() + "pt");
+            variables.put("pageMarginRight", configuration.getPageMargins().getRight() + "pt");
+            variables.put("pageMarginTop", configuration.getPageMargins().getTop() + "pt");
+            variables.put("pageMarginBottom", configuration.getPageMargins().getBottom() + "pt");
+        } else {
+            variables.put("pageMarginLeft", "20pt");
+            variables.put("pageMarginRight", "20pt");
+            variables.put("pageMarginTop", "20pt");
+            variables.put("pageMarginBottom", "20pt");
+        }
+
+
+        variables.put("pageContent", "<p>My super content</p><div class='page-break'></div><p class='page-break'>My next page super content</p>");
+
+        variables.put("pageHeader", "<p>This is header</p>");
+
+        variables.put("pageFooter", "<p>This is footer <span class='page-number'></span> / <span class='page-count'></span></p>");
+
+        Context context = new Context(Locale.getDefault(), variables);
+        String renderedHtmlContent = templateEngine.process("html/report-template", context);
+        String xHtml = convertToXhtml(renderedHtmlContent);
+
+        ITextRenderer renderer = new ITextRenderer(new ITextOutputDevice(DEFAULT_DOTS_PER_POINT), new PdfReportUserAgent());
+        renderer.getFontResolver().addFont("fonts/roboto/roboto.ttf",
+                "Roboto", IDENTITY_H, true, null);
+        renderer.getFontResolver().addFont("fonts/roboto/robotoitalic.ttf",
+                "Roboto", IDENTITY_H, true, null);
+        renderer.getFontResolver().addFont("fonts/monospace/dejavusansmono.ttf",
+                "monospace", IDENTITY_H, true, null);
+        renderer.getFontResolver().addFont("fonts/monospace/dejavusansmonobold.ttf",
+                "monospace", IDENTITY_H, true, null);
+
+        renderer.setDocumentFromString(xHtml);
+        renderer.layout();
+        try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+            renderer.createPDF(outputStream);
+            byte[] reportBytes = outputStream.toByteArray();
+            String requestTimeZone = task.getTimezone();
+            TimeZone timeZone = (requestTimeZone == null) ? TimeZone.getDefault() : TimeZone.getTimeZone(requestTimeZone);
+            String reportName = prepareReportName(configuration.getNamePattern(), new Date(), timeZone);
+
+            return ReportData.builder()
+                    .data(reportBytes)
+                    .contentType(configuration.getFormat().getContentType())
+                    .name(reportName)
+                    .build();
+        }
+
+     /*   ReportLayout layoutCtx = new ReportLayout(configuration);
 
         renderHeaderFooter(ctx, layoutCtx, configuration.getHeader(), true);
         renderHeaderFooter(ctx, layoutCtx, configuration.getFooter(), false);
@@ -140,7 +231,19 @@ public class PdfReportService extends AbstractReportService {
                 .data(JasperExportManager.exportReportToPdf(print))
                 .contentType(configuration.getFormat().getContentType())
                 .name(reportName)
-                .build();
+                .build();*/
+    }
+
+    private String convertToXhtml(String html) throws UnsupportedEncodingException {
+        Tidy tidy = new Tidy();
+        tidy.setInputEncoding(UTF_8);
+        tidy.setOutputEncoding(UTF_8);
+        tidy.setXHTML(true);
+        tidy.setTrimEmptyElements(false);
+        ByteArrayInputStream inputStream = new ByteArrayInputStream(html.getBytes(UTF_8));
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        tidy.parseDOM(inputStream, outputStream);
+        return outputStream.toString(UTF_8);
     }
 
     private void renderHeaderFooter(TbReportCtx ctx,

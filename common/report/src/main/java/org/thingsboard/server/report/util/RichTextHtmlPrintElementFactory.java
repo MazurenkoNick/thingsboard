@@ -30,15 +30,15 @@
  */
 
 package org.thingsboard.server.report.util;
-
+/*
 import net.sf.jasperreports.engine.util.HtmlPrintElement;
-import net.sf.jasperreports.engine.util.HtmlPrintElementFactory;
+import net.sf.jasperreports.engine.util.HtmlPrintElementFactory;*/
 
-public class RichTextHtmlPrintElementFactory implements HtmlPrintElementFactory {
-
+public class RichTextHtmlPrintElementFactory /* implements HtmlPrintElementFactory*/ {
+/*
     @Override
     public HtmlPrintElement getHtmlPrintElement() {
         return new RichTextHtmlPrintElement();
-    }
+    }*/
 
 }

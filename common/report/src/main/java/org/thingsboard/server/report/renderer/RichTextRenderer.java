@@ -30,7 +30,7 @@
  */
 package org.thingsboard.server.report.renderer;
 
-import net.sf.jasperreports.components.html.HtmlComponent;
+//import net.sf.jasperreports.components.html.HtmlComponent;
 import net.sf.jasperreports.engine.component.ComponentKey;
 import net.sf.jasperreports.engine.design.JRDesignComponentElement;
 import net.sf.jasperreports.engine.design.JRDesignExpression;
@@ -51,7 +51,7 @@ public class RichTextRenderer extends ReportComponentWithLayoutRenderer {
     @Override
     public void render(ReportLayout layoutCtx, JRDesignFrame frame, ReportComponent component)  {
         RichTextComponent richTextComponent = (RichTextComponent) component;
-
+/*
         HtmlComponent hc = new HtmlComponent();
         JRDesignExpression expression = new JRDesignExpression();
         String html = richTextComponent.getValue();
@@ -67,7 +67,7 @@ public class RichTextRenderer extends ReportComponentWithLayoutRenderer {
         ce.setWidth(this.layoutWidth);
         ce.setMode(ModeEnum.TRANSPARENT);
 
-        frame.addElement(ce);
+        frame.addElement(ce);*/
     }
 
     private String escapeHtmlForJasperExpression(String rawHtml) {

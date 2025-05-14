@@ -36,7 +36,7 @@ import java.io.ByteArrayInputStream;
 import org.w3c.dom.Document;
 import org.w3c.tidy.Tidy;
 
-import net.sf.jasperreports.components.html.HtmlComponent;
+/*import net.sf.jasperreports.components.html.HtmlComponent;
 import net.sf.jasperreports.engine.JRComponentElement;
 import net.sf.jasperreports.engine.JRException;
 import net.sf.jasperreports.engine.JRGenericPrintElement;
@@ -47,13 +47,13 @@ import net.sf.jasperreports.engine.type.ScaleImageEnum;
 import net.sf.jasperreports.engine.type.VerticalImageAlignEnum;
 import net.sf.jasperreports.engine.util.HtmlPrintElement;
 import net.sf.jasperreports.engine.util.JRExpressionUtil;
-import net.sf.jasperreports.renderers.FlyingSaucerXhtmlToImageRenderer;
+import net.sf.jasperreports.renderers.FlyingSaucerXhtmlToImageRenderer;*/
 
-public class RichTextHtmlPrintElement implements HtmlPrintElement {
+public class RichTextHtmlPrintElement /*implements HtmlPrintElement*/ {
 
     public RichTextHtmlPrintElement(){
     }
-
+/*
     @Override
     public JRPrintImage createImageFromElement(JRGenericPrintElement element) throws JRException {
         String htmlContent = (String) element.getParameterValue(HtmlPrintElement.PARAMETER_HTML_CONTENT);
@@ -152,6 +152,6 @@ public class RichTextHtmlPrintElement implements HtmlPrintElement {
         tidy.setShowWarnings(false);
 
         return tidy.parseDOM(new ByteArrayInputStream(sb.toString().getBytes()), null);
-    }
+    }*/
 
 }

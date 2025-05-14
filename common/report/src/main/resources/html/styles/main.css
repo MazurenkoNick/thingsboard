@@ -1,0 +1,47 @@
+@page {
+
+    @top-center {
+        content: element(header);
+    }
+
+    @bottom-center {
+        content: element(footer);
+    }
+}
+
+style {
+    display: none;
+}
+
+body {
+    font-family: Roboto;
+    font-size: 16px;
+    line-height: normal;
+    margin: 0;
+    padding: 0;
+}
+
+.page-number:before {
+    content: counter(page);
+}
+
+.page-count:before {
+    content: counter(pages);
+}
+
+.page-break {
+    page-break-before: always;
+}
+
+.header {
+    position: running(header);
+}
+
+.footer {
+    position: running(footer);
+}
+
+.header, .footer, .content {
+    display: flex;
+    flex-direction: column;
+}
