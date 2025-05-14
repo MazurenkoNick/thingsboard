@@ -32,28 +32,7 @@ package org.thingsboard.server.report.service;
 
 import com.google.common.util.concurrent.SettableFuture;
 import lombok.extern.slf4j.Slf4j;
-import net.sf.jasperreports.engine.DefaultJasperReportsContext;
-import net.sf.jasperreports.engine.JRDataSource;
-import net.sf.jasperreports.engine.JRElementGroup;
-import net.sf.jasperreports.engine.JREmptyDataSource;
-import net.sf.jasperreports.engine.JRException;
-import net.sf.jasperreports.engine.JRExpression;
-import net.sf.jasperreports.engine.JRRewindableDataSource;
-import net.sf.jasperreports.engine.JasperCompileManager;
-import net.sf.jasperreports.engine.JasperExportManager;
-import net.sf.jasperreports.engine.JasperFillManager;
-import net.sf.jasperreports.engine.JasperPrint;
-import net.sf.jasperreports.engine.JasperReport;
-import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
-import net.sf.jasperreports.engine.data.JRMapCollectionDataSource;
-import net.sf.jasperreports.engine.design.JRDesignExpression;
-import net.sf.jasperreports.engine.design.JRDesignFrame;
-import net.sf.jasperreports.engine.design.JRDesignTextField;
-import net.sf.jasperreports.engine.type.EvaluationTimeEnum;
-import net.sf.jasperreports.engine.type.HorizontalTextAlignEnum;
-//import net.sf.jasperreports.engine.util.HtmlPrintElementUtils;
 import org.springframework.stereotype.Service;
-import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.dashboardreport.DashboardReportData;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.job.task.ReportTask;
@@ -71,16 +50,12 @@ import org.thingsboard.server.common.data.report.configuration.components.Report
 import org.thingsboard.server.common.data.report.configuration.components.TimeseriesTableComponent;
 import org.thingsboard.server.common.data.report.configuration.style.PageOrientation;
 import org.thingsboard.server.common.data.report.configuration.style.PageSize;
-import org.thingsboard.server.report.context.ReportLayout;
+import org.thingsboard.server.report.context.ComponentLayout;
 import org.thingsboard.server.report.context.TbReportCtx;
-import org.thingsboard.server.report.datasource.AutoRewindableDataSource;
 import org.thingsboard.server.report.renderer.ReportComponentRenderer;
 import org.thingsboard.server.report.util.PdfReportUserAgent;
-import org.thingsboard.server.report.util.RichTextHtmlPrintElementFactory;
+import org.thingsboard.server.report.util.ThymeleafUtil;
 import org.thingsboard.server.report.util.WebReportClient;
-import org.thymeleaf.TemplateEngine;
-import org.thymeleaf.context.Context;
-import org.thymeleaf.templateresolver.ClassLoaderTemplateResolver;
 import org.w3c.tidy.Tidy;
 import org.xhtmlrenderer.pdf.ITextOutputDevice;
 import org.xhtmlrenderer.pdf.ITextRenderer;
@@ -94,11 +69,9 @@ import java.util.Date;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.TimeZone;
 import java.util.concurrent.ExecutionException;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static com.lowagie.text.pdf.BaseFont.IDENTITY_H;
@@ -108,20 +81,13 @@ import static org.thingsboard.server.common.data.report.configuration.components
 import static org.thingsboard.server.common.data.report.configuration.style.PageSize.A4;
 import static org.thingsboard.server.common.data.util.ReportQueryUtils.toAlarmCountQuery;
 import static org.thingsboard.server.common.data.util.ReportQueryUtils.toEntityCountQuery;
-import static org.thingsboard.server.report.context.ReportLayout.getSingleDataSource;
-import static org.thingsboard.server.report.util.JasperReportUtils.createJRTextField;
-import static org.thingsboard.server.report.util.JasperReportUtils.prepareReportName;
-import static org.thymeleaf.templatemode.TemplateMode.HTML;
-import static com.lowagie.text.pdf.BaseFont.EMBEDDED;
+import static org.thingsboard.server.report.context.ComponentLayout.getSingleDataSource;
+import static org.thingsboard.server.report.util.ReportUtils.prepareReportName;
 import static org.xhtmlrenderer.pdf.ITextRenderer.DEFAULT_DOTS_PER_POINT;
 
 @Service
 @Slf4j
 public class PdfReportService extends AbstractReportService {
-
-    //static {
-    //    DefaultJasperReportsContext.getInstance().setProperty(HtmlPrintElementUtils.PROPERTY_HTML_PRINTELEMENT_FACTORY, RichTextHtmlPrintElementFactory.class.getName());
-    //}
 
     private final Map<ReportComponentType, ReportComponentRenderer> componentsRenderers = new EnumMap<>(ReportComponentType.class);
     private final WebReportClient webReportClient;
@@ -142,49 +108,14 @@ public class PdfReportService extends AbstractReportService {
         log.trace("[{}] Executing generateReport, reportRequest [{}]", tenantId, task);
         PdfReportTemplateConfig configuration = (PdfReportTemplateConfig) task.getReportTemplateConfig();
 
-        ClassLoaderTemplateResolver templateResolver = new ClassLoaderTemplateResolver();
-        templateResolver.setPrefix("/");
-        templateResolver.setSuffix(".html");
-        templateResolver.setTemplateMode(HTML);
-        templateResolver.setCharacterEncoding(UTF_8);
-        TemplateEngine templateEngine = new TemplateEngine();
-        templateEngine.setTemplateResolver(templateResolver);
+        Map<String, Object> reportVariables = new HashMap<>();
+        fillReportVariables(reportVariables, configuration);
 
-        Map<String, Object> variables = new HashMap<>();
-        PageSize pageSize = configuration.getPageSize();
-        if (pageSize == null) {
-            pageSize = A4;
-        }
-        if (configuration.getPageOrientation() == PageOrientation.LANDSCAPE) {
-            variables.put("pageWidth", pageSize.getHeight() + "pt" );
-            variables.put("pageHeight", pageSize.getWidth() + "pt" );
-        } else {
-            variables.put("pageWidth", pageSize.getWidth() + "pt" );
-            variables.put("pageHeight", pageSize.getHeight() + "pt" );
-        }
-        String pageBackground = configuration.getPageBackground() != null ? configuration.getPageBackground() : "#fff";
-        variables.put("pageBackground", pageBackground);
-        if (configuration.getPageMargins() != null) {
-            variables.put("pageMarginLeft", configuration.getPageMargins().getLeft() + "pt");
-            variables.put("pageMarginRight", configuration.getPageMargins().getRight() + "pt");
-            variables.put("pageMarginTop", configuration.getPageMargins().getTop() + "pt");
-            variables.put("pageMarginBottom", configuration.getPageMargins().getBottom() + "pt");
-        } else {
-            variables.put("pageMarginLeft", "20pt");
-            variables.put("pageMarginRight", "20pt");
-            variables.put("pageMarginTop", "20pt");
-            variables.put("pageMarginBottom", "20pt");
-        }
+        reportVariables.put("pageHeader", renderHeader(configuration.getHeader()));
+        reportVariables.put("pageFooter", renderFooter(configuration.getHeader()));
+        reportVariables.put("pageContent", renderContent(ctx, new ComponentLayout(), configuration.getComponents()));
 
-
-        variables.put("pageContent", "<p>My super content</p><div class='page-break'></div><p class='page-break'>My next page super content</p>");
-
-        variables.put("pageHeader", "<p>This is header</p>");
-
-        variables.put("pageFooter", "<p>This is footer <span class='page-number'></span> / <span class='page-count'></span></p>");
-
-        Context context = new Context(Locale.getDefault(), variables);
-        String renderedHtmlContent = templateEngine.process("html/report-template", context);
+        String renderedHtmlContent = ThymeleafUtil.render("html/report-template", reportVariables);
         String xHtml = convertToXhtml(renderedHtmlContent);
 
         ITextRenderer renderer = new ITextRenderer(new ITextOutputDevice(DEFAULT_DOTS_PER_POINT), new PdfReportUserAgent());
@@ -212,26 +143,6 @@ public class PdfReportService extends AbstractReportService {
                     .name(reportName)
                     .build();
         }
-
-     /*   ReportLayout layoutCtx = new ReportLayout(configuration);
-
-        renderHeaderFooter(ctx, layoutCtx, configuration.getHeader(), true);
-        renderHeaderFooter(ctx, layoutCtx, configuration.getFooter(), false);
-
-        renderContent(ctx, layoutCtx, configuration.getComponents(), false, null, () -> layoutCtx.createDetailsBand());
-
-        JasperReport mainReport = JasperCompileManager.compileReport(layoutCtx.getJasperDesign());
-        JasperPrint print = JasperFillManager.fillReport(mainReport, ctx.getParams(), new JREmptyDataSource());
-
-        String requestTimeZone = task.getTimezone();
-        TimeZone timeZone = (requestTimeZone == null) ? TimeZone.getDefault() : TimeZone.getTimeZone(requestTimeZone);
-        String reportName = prepareReportName(configuration.getNamePattern(), new Date(), timeZone);
-
-        return ReportData.builder()
-                .data(JasperExportManager.exportReportToPdf(print))
-                .contentType(configuration.getFormat().getContentType())
-                .name(reportName)
-                .build();*/
     }
 
     private String convertToXhtml(String html) throws UnsupportedEncodingException {
@@ -246,92 +157,71 @@ public class PdfReportService extends AbstractReportService {
         return outputStream.toString(UTF_8);
     }
 
-    private void renderHeaderFooter(TbReportCtx ctx,
-                                    ReportLayout parentLayout,
-                                    HeaderFooter headerFooter,
-                                    boolean headerElseFooter) throws Exception {
-        JRDesignFrame headerContainer = parentLayout.createHeaderFooter(headerElseFooter);
+    private String renderHeader(HeaderFooter headerFooter) throws Exception {
         boolean hasComponents = headerFooter.isEnabled() && headerFooter.getComponents() != null
                 && !headerFooter.getComponents().isEmpty();
         boolean firstPageHeaderEnabled = headerFooter.getFirstPage() != null &&
                 headerFooter.getFirstPage().isEnabled();
-        if (firstPageHeaderEnabled && !headerFooter.getFirstPage().getComponents().isEmpty()) {
-            JRExpression printWhenExpression = new JRDesignExpression("$V{PAGE_NUMBER} == 1");
-            renderContent(ctx, parentLayout, headerFooter.getFirstPage().getComponents(), false, printWhenExpression, () -> headerContainer);
-
-            JRDesignTextField pageNumberField = createJRTextField(parentLayout.getUsablePageWidth());
-            pageNumberField.setPrintWhenExpression(printWhenExpression);
-            pageNumberField.setHorizontalTextAlign(HorizontalTextAlignEnum.RIGHT);
-            pageNumberField.setEvaluationTime(EvaluationTimeEnum.MASTER);
-            pageNumberField.setExpression(new JRDesignExpression("$V{PAGE_NUMBER} + \" / \" + $V{MASTER_TOTAL_PAGES}"));
-            headerContainer.addElement(pageNumberField);
-        }
-        if (hasComponents) {
-            JRExpression printWhenExpression = firstPageHeaderEnabled ? new JRDesignExpression("$V{PAGE_NUMBER} > 1") : null;
-            renderContent(ctx, parentLayout, headerFooter.getComponents(), true, printWhenExpression, () -> headerContainer);
-
-            JRDesignTextField pageNumberField = createJRTextField(parentLayout.getUsablePageWidth());
-            pageNumberField.setPrintWhenExpression(printWhenExpression);
-            pageNumberField.setHorizontalTextAlign(HorizontalTextAlignEnum.RIGHT);
-            pageNumberField.setEvaluationTime(EvaluationTimeEnum.MASTER);
-            pageNumberField.setExpression(new JRDesignExpression("$V{PAGE_NUMBER} + \" / \" + $V{MASTER_TOTAL_PAGES}"));
-            headerContainer.addElement(pageNumberField);
-        }
+//        if (firstPageHeaderEnabled && !headerFooter.getFirstPage().getComponents().isEmpty()) {
+//            renderContent(ctx, parentLayout, headerFooter.getFirstPage().getComponents(), false, printWhenExpression, () -> headerContainer);
+//
+//            JRDesignTextField pageNumberField = createJRTextField(parentLayout.getUsablePageWidth());
+//            pageNumberField.setPrintWhenExpression(printWhenExpression);
+//            pageNumberField.setHorizontalTextAlign(HorizontalTextAlignEnum.RIGHT);
+//            pageNumberField.setEvaluationTime(EvaluationTimeEnum.MASTER);
+//            pageNumberField.setExpression(new JRDesignExpression("$V{PAGE_NUMBER} + \" / \" + $V{MASTER_TOTAL_PAGES}"));
+//            headerContainer.addElement(pageNumberField);
+//        }
+//        if (hasComponents) {
+//            JRExpression printWhenExpression = firstPageHeaderEnabled ? new JRDesignExpression("$V{PAGE_NUMBER} > 1") : null;
+//            renderContent(ctx, parentLayout, headerFooter.getComponents(), true, printWhenExpression, () -> headerContainer);
+//
+//            JRDesignTextField pageNumberField = createJRTextField(parentLayout.getUsablePageWidth());
+//            pageNumberField.setPrintWhenExpression(printWhenExpression);
+//            pageNumberField.setHorizontalTextAlign(HorizontalTextAlignEnum.RIGHT);
+//            pageNumberField.setEvaluationTime(EvaluationTimeEnum.MASTER);
+//            pageNumberField.setExpression(new JRDesignExpression("$V{PAGE_NUMBER} + \" / \" + $V{MASTER_TOTAL_PAGES}"));
+//            headerContainer.addElement(pageNumberField);
+//        }
+        return "<p>This is header</p>";
     }
 
-    private void renderContent(TbReportCtx ctx, ReportLayout parentBuilder, List<ReportComponent> components,
-                               boolean autoRewind, JRExpression printWhenExpression, Supplier<JRElementGroup> subreportContainerSupplier) throws Exception {
+    private String renderFooter(HeaderFooter headerFooter) {
+        return "<p>This is footer <span class='page-number'></span> / <span class='page-count'></span></p>";
+    }
+
+
+    private String renderContent(TbReportCtx ctx, ComponentLayout componentLayout, List<ReportComponent> components) {
+        StringBuilder content = new StringBuilder();
         for (ReportComponent component : components) {
             if (component.getType() == TIME_SERIES_TABLE || component.getType() == SUB_REPORT) { // check if component is complex
                 List<EntityData> entityDatas = fetchEntities(ctx, getSingleDataSource(component));
                 for (EntityData entityData : entityDatas) {
-                    renderComponent(ctx, parentBuilder, component, subreportContainerSupplier.get(), autoRewind, printWhenExpression, entityData);
+                    content.append(renderComponent(ctx, componentLayout, component, entityData));
                 }
             } else {
-                renderComponent(ctx, parentBuilder, component, subreportContainerSupplier.get(), autoRewind, printWhenExpression, null);
+                content.append(renderComponent(ctx, componentLayout, component, null));
             }
         }
+        return content.toString();
     }
 
-    private void renderComponent(TbReportCtx ctx, ReportLayout layoutCtx,
-                                 ReportComponent component, JRElementGroup container,
-                                 boolean autoRewind,
-                                 JRExpression printWhenExpression,
-                                 EntityData entityData) throws Exception {
-
-        String subReportId = "component_" + StringUtils.randomAlphabetic(10);
-        String subReportDSId = "componentDS_" + StringUtils.randomAlphabetic(10);
-
-        layoutCtx.addSubReport(subReportId, subReportDSId, container, printWhenExpression);
-
-        JasperReport subReport = buildJasperReport(layoutCtx, component);
-        JRDataSource subReportDS = buildDataSource(ctx, component, entityData);
-        if (autoRewind) {
-            subReportDS = new AutoRewindableDataSource((JRRewindableDataSource) subReportDS);
-        }
-
-        Map<String, Object> params = ctx.getParams();
-        params.put(subReportId, subReport);
-        params.put(subReportDSId, subReportDS);
+    private String renderComponent(TbReportCtx ctx, ComponentLayout parentComponentLayout, ReportComponent component, EntityData entityData)  {
+        Map<String, Object> variables = buildComponentContext(ctx, component, entityData);
+        return componentsRenderers.get(component.getType()).render(parentComponentLayout, component, variables);
     }
 
-    public JasperReport buildJasperReport(ReportLayout parentLayoutCtx, ReportComponent component) throws JRException {
-        ReportLayout layoutCtx = new ReportLayout(component, parentLayoutCtx);
-        componentsRenderers.get(component.getType()).render(layoutCtx, component);
-        return JasperCompileManager.compileReport(layoutCtx.getJasperDesign());
-    }
-
-    private JRDataSource buildDataSource(TbReportCtx ctx, ReportComponent component, EntityData entityData) {
+    private Map<String, Object> buildComponentContext(TbReportCtx ctx, ReportComponent component, EntityData entityData) {
         return switch (component.getType()) {
             case TIME_SERIES_TABLE ->
-                    new JRMapCollectionDataSource(buildTsDataSource(ctx, ((TimeseriesTableComponent) component), entityData.getEntityId()));
-            case ALARM_TABLE -> new JRMapCollectionDataSource(buildAlarmDataSource(ctx, ((AlarmTableComponent) component)));
+                    Map.of("data", buildTsDataSource(ctx, ((TimeseriesTableComponent) component), entityData.getEntityId()));
+            case ALARM_TABLE ->  Map.of("data", buildAlarmDataSource(ctx, ((AlarmTableComponent) component)));
             case DASHBOARD -> buildDashboardDataSource(ctx, ((DashboardComponent) component));
             default -> buildMultipleDataSource(ctx, component.getDataSources());
         };
     }
 
-    private JRDataSource buildDashboardDataSource(TbReportCtx ctx, DashboardComponent component) {
+    private Map<String, Object> buildDashboardDataSource(TbReportCtx ctx, DashboardComponent component) {
         SettableFuture<DashboardReportData> futureToSet = SettableFuture.create();
         webReportClient.requestDashboardReport(component.getConfig(), null,
                 ctx.getAccessToken(), ctx.getAccessTokenExpTs(),
@@ -340,22 +230,22 @@ public class PdfReportService extends AbstractReportService {
                     futureToSet.setException(error);
                 });
         try {
-            return new JRBeanCollectionDataSource(List.of(futureToSet.get()));
+            return Map.of("dashboardData", futureToSet.get());
         } catch (InterruptedException | ExecutionException e) {
             throw new RuntimeException(e);
         }
     }
 
-    private JRMapCollectionDataSource buildMultipleDataSource(TbReportCtx ctx, List<DataSource> dataSources) {
+    private Map<String, Object> buildMultipleDataSource(TbReportCtx ctx, List<DataSource> dataSources) {
         if (dataSources == null || dataSources.isEmpty()) {
-            return new JRMapCollectionDataSource(List.of(Map.of()));
+            return Map.of();
         }
         Collection<Map<String, ?>> entryList = new ArrayList<>();
         for (DataSource dataSource : dataSources) {
             Collection<Map<String, ?>> dataMap = buildSingleDataSource(ctx, dataSource);
             entryList.addAll(dataMap);
         }
-        return new JRMapCollectionDataSource(entryList);
+        return Map.of("data", entryList);
     }
 
     private Collection<Map<String, ?>> buildSingleDataSource(TbReportCtx ctx, DataSource dataSource) {
@@ -366,6 +256,33 @@ public class PdfReportService extends AbstractReportService {
             case "alarmCount" -> List.of(Map.of("count", dataService.countAlarmsByQuery(toAlarmCountQuery(dataSource, configuration), ctx)));
             default -> throw new IllegalArgumentException("Unknown data source type: " + dataSource.getType());
         };
+    }
+
+    private void fillReportVariables(Map<String, Object> reportVariables, PdfReportTemplateConfig configuration) {
+        PageSize pageSize = configuration.getPageSize();
+        if (pageSize == null) {
+            pageSize = A4;
+        }
+        if (configuration.getPageOrientation() == PageOrientation.LANDSCAPE) {
+            reportVariables.put("pageWidth", pageSize.getHeight() + "pt" );
+            reportVariables.put("pageHeight", pageSize.getWidth() + "pt" );
+        } else {
+            reportVariables.put("pageWidth", pageSize.getWidth() + "pt" );
+            reportVariables.put("pageHeight", pageSize.getHeight() + "pt" );
+        }
+        String pageBackground = configuration.getPageBackground() != null ? configuration.getPageBackground() : "#fff";
+        reportVariables.put("pageBackground", pageBackground);
+        if (configuration.getPageMargins() != null) {
+            reportVariables.put("pageMarginLeft", configuration.getPageMargins().getLeft() + "pt");
+            reportVariables.put("pageMarginRight", configuration.getPageMargins().getRight() + "pt");
+            reportVariables.put("pageMarginTop", configuration.getPageMargins().getTop() + "pt");
+            reportVariables.put("pageMarginBottom", configuration.getPageMargins().getBottom() + "pt");
+        } else {
+            reportVariables.put("pageMarginLeft", "20pt");
+            reportVariables.put("pageMarginRight", "20pt");
+            reportVariables.put("pageMarginTop", "20pt");
+            reportVariables.put("pageMarginBottom", "20pt");
+        }
     }
 
     @Override

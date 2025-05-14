@@ -32,11 +32,15 @@ package org.thingsboard.server.report.renderer;
 
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponentType;
-import org.thingsboard.server.report.context.ReportLayout;
+import org.thingsboard.server.report.context.ComponentLayout;
+import org.thymeleaf.TemplateEngine;
+import org.thymeleaf.context.Context;
+
+import java.util.Map;
 
 public interface ReportComponentRenderer {
 
-    void render(ReportLayout layoutCtx, ReportComponent component);
+    String render(ComponentLayout layoutCtx, ReportComponent component, Map<String, Object> variables);
 
     ReportComponentType getType();
 

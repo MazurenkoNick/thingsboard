@@ -30,71 +30,19 @@
  */
 package org.thingsboard.server.report.renderer;
 
-import net.sf.jasperreports.engine.design.JRDesignExpression;
-import net.sf.jasperreports.engine.design.JRDesignFrame;
-import net.sf.jasperreports.engine.design.JRDesignTextField;
-import net.sf.jasperreports.engine.type.HorizontalTextAlignEnum;
-import net.sf.jasperreports.engine.type.VerticalTextAlignEnum;
 import org.springframework.stereotype.Component;
-import org.thingsboard.server.common.data.report.configuration.components.HeadingComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponentType;
-import org.thingsboard.server.common.data.report.configuration.style.Font;
-import org.thingsboard.server.common.data.report.configuration.style.FontStyle;
-import org.thingsboard.server.common.data.report.configuration.style.FontWeight;
-import org.thingsboard.server.common.data.report.configuration.style.TextAlignment;
-import org.thingsboard.server.common.data.report.configuration.style.VerticalAlignment;
-import org.thingsboard.server.report.context.ReportLayout;
-import org.thingsboard.server.report.util.ColorUtils;
+import org.thingsboard.server.report.context.ComponentLayout;
 
-import static org.thingsboard.server.report.util.JasperReportUtils.createJRTextField;
-import static org.thingsboard.server.report.util.JasperReportUtils.toJRExpression;
+import java.util.Map;
 
 @Component
-public class HeadingRenderer extends ReportComponentWithLayoutRenderer {
+public class HeadingRenderer implements ReportComponentRenderer {
 
     @Override
-    public void render(ReportLayout layoutCtx, JRDesignFrame frame, ReportComponent component) {
-        HeadingComponent headingComponent = (HeadingComponent) component;
-        JRDesignTextField textField = createJRTextField(this.layoutWidth);
-
-        // Set text color if provided
-        String color = headingComponent.getColor();
-        if (color != null) {
-            textField.setForecolor(ColorUtils.parseCssColor(color));
-        }
-
-        // Set font style if provided
-        Font font = headingComponent.getFont();
-        if (font != null) {
-            textField.setBold(font.getWeight() == FontWeight.bold);
-            textField.setItalic(font.getStyle() == FontStyle.italic);
-            String fontFamily = font.getFamily();
-            if (fontFamily != null) {
-                textField.setFontName(fontFamily);
-            }
-            Float fontSize = font.getSize();
-            if (fontSize != null) {
-                textField.setFontSize(fontSize);
-            }
-        }
-
-        // Set horizontal and vertical alignment
-        TextAlignment textAlignment = headingComponent.getTextAlignment();
-        if (textAlignment != null) {
-            textField.setHorizontalTextAlign(HorizontalTextAlignEnum.valueOf(textAlignment.getValue()));
-        }
-        VerticalAlignment verticalAlignment = headingComponent.getVerticalAlignment();
-        if (verticalAlignment != null) {
-            textField.setVerticalTextAlign(VerticalTextAlignEnum.valueOf(verticalAlignment.getValue()));
-        }
-
-        // Set the text content as a string literal
-        JRDesignExpression expression = new JRDesignExpression();
-        expression.setText(toJRExpression(headingComponent.getValue()));
-        textField.setExpression(expression);
-
-        frame.addElement(textField);
+    public String render(ComponentLayout layoutCtx, ReportComponent component, Map<String, Object> variables) {
+        return "";
     }
 
     @Override

@@ -30,29 +30,23 @@
  */
 package org.thingsboard.server.report.renderer;
 
-import net.sf.jasperreports.engine.design.JRDesignBand;
-import net.sf.jasperreports.engine.design.JRDesignSection;
-import net.sf.jasperreports.engine.design.JRDesignStaticText;
-import net.sf.jasperreports.engine.design.JasperDesign;
-import net.sf.jasperreports.engine.type.ModeEnum;
 import org.springframework.stereotype.Component;
 import org.thingsboard.server.common.data.report.configuration.DataKey;
 import org.thingsboard.server.common.data.report.configuration.components.EntityTableComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponentType;
-import org.thingsboard.server.report.context.ReportLayout;
+import org.thingsboard.server.report.context.ComponentLayout;
 
-import java.awt.*;
 import java.util.List;
+import java.util.Map;
 
-import static org.thingsboard.server.report.context.ReportLayout.getSingleDataSource;
-import static org.thingsboard.server.report.util.JasperReportUtils.createTextField;
+import static org.thingsboard.server.report.context.ComponentLayout.getSingleDataSource;
 
 @Component
 public class EntityTableRenderer implements ReportComponentRenderer {
 
     @Override
-    public void render(ReportLayout layout, ReportComponent component) {
+    public String render(ComponentLayout layout, ReportComponent component, Map<String, Object> variables) {
         EntityTableComponent entityTableComponent = (EntityTableComponent) component;
         List<DataKey> dataKeys = getSingleDataSource(entityTableComponent).getDataKeys();
         List<String> entityKeys = dataKeys.stream().map(DataKey::getName).toList();
@@ -60,48 +54,12 @@ public class EntityTableRenderer implements ReportComponentRenderer {
 
         addColumnHeader(layout, columnsHeaders);
         addTableDetailBand(layout, entityKeys);
+        return "";
     }
 
-    public void addColumnHeader(ReportLayout layout, List<String> titles) {
-        JasperDesign jasperDesign = layout.getJasperDesign();
-        JRDesignBand columnHeader = new JRDesignBand();
-        columnHeader.setHeight(20);
-        int x = 0;
-        int columnWidth = Math.min(jasperDesign.getColumnWidth(), layout.getUsablePageWidth() /titles.size());
-        for (String title : titles) {
-            columnHeader.addElement(createHeaderText(title, x, columnWidth));
-            x += columnWidth;
-        }
-        jasperDesign.setColumnHeader(columnHeader);
+    public void addColumnHeader(ComponentLayout layout, List<String> titles) {
     }
-
-    private JRDesignStaticText createHeaderText(String text, int x, int width) {
-        JRDesignStaticText header = new JRDesignStaticText();
-        header.setX(x);
-        header.setY(0);
-        header.setWidth(width);
-        header.setHeight(20);
-        //header.setHorizontalAlignment(HorizontalAlignEnum.CENTER);
-        header.setText(text);
-        header.setForecolor(Color.WHITE);
-        header.setBackcolor(Color.GRAY);
-        header.setMode(ModeEnum.OPAQUE);
-        return header;
-    }
-
-    public void addTableDetailBand(ReportLayout layout, List<String> entityKeys)  {
-
-        JasperDesign jasperDesign = layout.getJasperDesign();
-
-        JRDesignBand detailBand = new JRDesignBand();
-        detailBand.setHeight(20);
-        int x = 0;
-        int columnWidth = Math.min(jasperDesign.getColumnWidth(), layout.getUsablePageWidth() /entityKeys.size());
-        for (String entityKey : entityKeys) {
-            detailBand.addElement(createTextField("$F{" + entityKey + "}", x, 0));
-            x += columnWidth;
-        }
-        ((JRDesignSection) jasperDesign.getDetailSection()).addBand(detailBand);
+    public void addTableDetailBand(ComponentLayout layout, List<String> entityKeys)  {
     }
 
     @Override

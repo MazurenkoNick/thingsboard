@@ -30,51 +30,22 @@
  */
 package org.thingsboard.server.report.renderer;
 
-//import net.sf.jasperreports.components.html.HtmlComponent;
-import net.sf.jasperreports.engine.component.ComponentKey;
-import net.sf.jasperreports.engine.design.JRDesignComponentElement;
-import net.sf.jasperreports.engine.design.JRDesignExpression;
-import net.sf.jasperreports.engine.design.JRDesignFrame;
-import net.sf.jasperreports.engine.type.ModeEnum;
-import net.sf.jasperreports.engine.type.ScaleImageEnum;
 import org.springframework.stereotype.Component;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponentType;
 import org.thingsboard.server.common.data.report.configuration.components.RichTextComponent;
-import org.thingsboard.server.report.context.ReportLayout;
+import org.thingsboard.server.report.context.ComponentLayout;
+import org.thingsboard.server.report.util.ThymeleafUtil;
 
-import static org.thingsboard.server.report.util.JasperReportUtils.toJRExpression;
+import java.util.Map;
 
 @Component
-public class RichTextRenderer extends ReportComponentWithLayoutRenderer {
+public class RichTextRenderer implements ReportComponentRenderer {
 
     @Override
-    public void render(ReportLayout layoutCtx, JRDesignFrame frame, ReportComponent component)  {
+    public String render(ComponentLayout componentLayout, ReportComponent component, Map<String, Object> variables) {
         RichTextComponent richTextComponent = (RichTextComponent) component;
-/*
-        HtmlComponent hc = new HtmlComponent();
-        JRDesignExpression expression = new JRDesignExpression();
-        String html = richTextComponent.getValue();
-        expression.setText(toJRExpression(escapeHtmlForJasperExpression(html)));
-        hc.setHtmlContentExpression(expression);
-        hc.setScaleType(ScaleImageEnum.REAL_HEIGHT);
-
-        JRDesignComponentElement ce = new JRDesignComponentElement(layoutCtx.getJasperDesign());
-        ce.setComponentKey(new ComponentKey("http://jasperreports.sourceforge.net/htmlcomponent", "hc", "html"));
-        ce.setComponent(hc);
-        ce.setX(0);
-        ce.setY(0);
-        ce.setWidth(this.layoutWidth);
-        ce.setMode(ModeEnum.TRANSPARENT);
-
-        frame.addElement(ce);*/
-    }
-
-    private String escapeHtmlForJasperExpression(String rawHtml) {
-        String escaped = rawHtml
-                .replace("\\", "\\\\")
-                .replace("\n", "");
-        return escaped;
+       return ThymeleafUtil.renderFromString(richTextComponent.getValue(), variables);
     }
 
     @Override

@@ -28,26 +28,54 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.report.renderer;
+package org.thingsboard.server.report.context;
 
-import org.springframework.stereotype.Component;
+import lombok.Data;
+import org.thingsboard.server.common.data.report.configuration.DataSource;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
-import org.thingsboard.server.common.data.report.configuration.components.ReportComponentType;
-import org.thingsboard.server.report.context.ComponentLayout;
+import org.thingsboard.server.common.data.report.configuration.style.Margins;
 
-import java.util.Map;
+import java.util.List;
 
-@Component
-public class DashboardRenderer implements ReportComponentRenderer {
+@Data
+public class ComponentLayout {
 
-    @Override
-    public String render(ComponentLayout layoutCtx, ReportComponent component, Map<String, Object> variables) {
-        return "";
+    private static final int DEFAULT_PAGE_MARGIN_SIZE = 20;
+    private static final int DEFAULT_COMPONENT_MARGIN_SIZE = 0;
+    private int usablePageWidth;
+    private int leftMargin;
+    private int rightMargin;
+    private int topMargin;
+    private int bottomMargin;
+
+    private ComponentLayout reportLayout;
+
+    public ComponentLayout() {
     }
 
-    @Override
-    public ReportComponentType getType() {
-        return ReportComponentType.DASHBOARD;
+    public ComponentLayout(ReportComponent component, ComponentLayout parentLayout) {
+        this.reportLayout = parentLayout;
+        this.usablePageWidth = parentLayout.getUsablePageWidth();
+
+        Margins margins = component.getMargins();
+        if (margins != null) {
+            this.leftMargin = margins.getLeft();
+            this.rightMargin = margins.getRight();
+            this.topMargin  = margins.getTop();
+            this.bottomMargin = margins.getBottom();
+        } else {
+            this.leftMargin = DEFAULT_COMPONENT_MARGIN_SIZE;
+            this.rightMargin = DEFAULT_COMPONENT_MARGIN_SIZE;
+            this.topMargin = DEFAULT_COMPONENT_MARGIN_SIZE;
+            this.bottomMargin = DEFAULT_COMPONENT_MARGIN_SIZE;
+        }
     }
 
+    public static DataSource getSingleDataSource(ReportComponent component) {
+        List<DataSource> dataSources = component.getDataSources();
+        if (dataSources == null || dataSources.isEmpty()) {
+            throw new IllegalArgumentException("Data source is required for component: " + component.getType());
+        }
+        return component.getDataSources().get(0);
+    }
 }

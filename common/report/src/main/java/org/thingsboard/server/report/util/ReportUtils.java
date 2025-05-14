@@ -28,32 +28,30 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.report.datasource;
+package org.thingsboard.server.report.util;
 
-import net.sf.jasperreports.engine.JRDataSource;
-import net.sf.jasperreports.engine.JRException;
-import net.sf.jasperreports.engine.JRField;
-import net.sf.jasperreports.engine.JRRewindableDataSource;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.TimeZone;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
-public class AutoRewindableDataSource implements JRDataSource {
+public class ReportUtils {
 
-    private JRRewindableDataSource source;
+    public static final Pattern REPORT_NAME_DATE_PATTERN = Pattern.compile("%d\\{([^\\}]*)\\}");
+    public static final String DEFAULT_NAME_PATTERN = "report-%d{yyyy-MM-dd_HH:mm:ss}";
 
-    public AutoRewindableDataSource(JRRewindableDataSource source) {
-        this.source = source;
-    }
-
-    @Override
-    public boolean next() throws JRException {
-        boolean result = source.next();
-        if (!result) {
-            source.moveFirst();
+    public static String prepareReportName(String namePattern, Date reportDate, TimeZone tz) {
+        String name = (namePattern == null || namePattern.isEmpty()) ? DEFAULT_NAME_PATTERN : namePattern;
+        Matcher matcher = REPORT_NAME_DATE_PATTERN.matcher(name);
+        while (matcher.find()) {
+            String toReplace = matcher.group(0);
+            SimpleDateFormat dateFormat = new SimpleDateFormat(matcher.group(1));
+            dateFormat.setTimeZone(tz);
+            String replacement = dateFormat.format(reportDate);
+            name = name.replace(toReplace, replacement);
         }
-        return result;
+        return name;
     }
 
-    @Override
-    public Object getFieldValue(JRField jrField) throws JRException {
-        return source.getFieldValue(jrField);
-    }
 }
