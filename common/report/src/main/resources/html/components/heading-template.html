@@ -1,4 +1,9 @@
-<div th:style="'display:flex; text-align:' + ${textAlignment} + '; color:' + ${color} + '; font-size:' + ${fontSize} +
-'px; font-family:' + ${fontFamily} + '; font-style:' + ${fontStyle} + '; font-weight:' + ${fontWeight} + ';'">
-<span th:utext=" ${value}">[Heading]</span>
+<div th:style="|display:flex;
+    text-align: ${textAlignment};
+    color: ${color};
+    font-size: ${fontSize}px;
+    font-family: ${fontFamily};
+    font-style: ${fontStyle};
+    font-weight: ${fontWeight};|">
+    <span th:utext="${value}">[Heading]</span>
 </div>
