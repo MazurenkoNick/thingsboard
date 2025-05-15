@@ -31,9 +31,11 @@
 package org.thingsboard.server.report.renderer;
 
 import org.springframework.stereotype.Component;
+import org.thingsboard.server.common.data.report.configuration.components.HeadingComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponentType;
 import org.thingsboard.server.report.context.ComponentLayout;
+import org.thingsboard.server.report.util.ThymeleafUtil;
 
 import java.util.Map;
 
@@ -42,7 +44,9 @@ public class HeadingRenderer implements ReportComponentRenderer {
 
     @Override
     public String render(ComponentLayout layoutCtx, ReportComponent component, Map<String, Object> variables) {
-        return "";
+        HeadingComponent headingComponent = (HeadingComponent) component;
+        variables.put("component", headingComponent);
+        return ThymeleafUtil.render("html/components/heading-template", variables);
     }
 
     @Override

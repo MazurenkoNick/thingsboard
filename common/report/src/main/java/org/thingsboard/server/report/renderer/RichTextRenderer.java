@@ -45,7 +45,9 @@ public class RichTextRenderer implements ReportComponentRenderer {
     @Override
     public String render(ComponentLayout componentLayout, ReportComponent component, Map<String, Object> variables) {
         RichTextComponent richTextComponent = (RichTextComponent) component;
-       return ThymeleafUtil.renderFromString(richTextComponent.getValue(), variables);
+        String html = richTextComponent.getValue();
+        String escaped = html.replace("\n", "");
+        return ThymeleafUtil.renderFromString(escaped, variables);
     }
 
     @Override
