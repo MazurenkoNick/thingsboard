@@ -37,6 +37,7 @@ import org.xhtmlrenderer.pdf.ITextRenderer;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
+import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.Map;
@@ -79,6 +80,7 @@ public class HtmlRenderUtils {
         tidy.setXHTML(true);
         tidy.setTrimEmptyElements(false);
         tidy.setShowWarnings(false);
+        tidy.setErrout(new PrintWriter(new ByteArrayOutputStream()));
         ByteArrayInputStream inputStream = new ByteArrayInputStream(html.getBytes(UTF_8));
         return tidy.parseDOM(inputStream, out);
     }

@@ -1,0 +1,10 @@
+<div th:with="
+        color=${component.color},
+        fontSize=${component.font != null ? component.font.size : null}
+    "
+     th:style="'display:flex;' +
+              (color != null ? 'color:' + color + ';' : '') +
+              (fontSize != null ? 'font-size:' + fontSize + 'px;' : '')"
+>
+    <span th:utext="${value}">[Heading]</span>
+</div>

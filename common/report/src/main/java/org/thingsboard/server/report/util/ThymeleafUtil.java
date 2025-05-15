@@ -78,6 +78,6 @@ public class ThymeleafUtil {
     }
 
     private static String sanitize(String html) {
-        return html.replaceAll("\n", "");
+        return html.replace("\n", "");
     }
 }

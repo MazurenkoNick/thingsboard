@@ -234,7 +234,7 @@ public class PdfReportService extends AbstractReportService {
 
     private Map<String, Object> buildMultipleDataSource(TbReportCtx ctx, List<DataSource> dataSources) {
         if (dataSources == null || dataSources.isEmpty()) {
-            return Map.of();
+            return new HashMap<>();
         }
         Collection<Map<String, ?>> entryList = new ArrayList<>();
         for (DataSource dataSource : dataSources) {

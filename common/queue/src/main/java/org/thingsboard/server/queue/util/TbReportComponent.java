@@ -36,6 +36,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
 @Retention(RetentionPolicy.RUNTIME)
-@ConditionalOnExpression("'${service.type:null}' == 'tb-report' || '${queue.report.mode:local}' == 'local'")
+@ConditionalOnExpression("'${service.type:null}' == 'tb-report' || ('${queue.report.mode:local}' == 'local' && " +
+                         "('${service.type:null}' == 'monolith' || '${service.type:null}' == 'tb-core'))")
 public @interface TbReportComponent {
 }
