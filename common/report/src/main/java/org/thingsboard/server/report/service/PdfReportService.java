@@ -135,6 +135,7 @@ public class PdfReportService extends AbstractReportService {
 
         renderer.setDocumentFromString(xHtml);
         renderer.layout();
+
         try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
             renderer.createPDF(outputStream);
             byte[] reportBytes = outputStream.toByteArray();

@@ -37,13 +37,10 @@ import org.xhtmlrenderer.util.XRLog;
 import java.io.InputStream;
 import java.net.URL;
 
-import static org.xhtmlrenderer.pdf.ITextRenderer.DEFAULT_DOTS_PER_PIXEL;
-import static org.xhtmlrenderer.pdf.ITextRenderer.DEFAULT_DOTS_PER_POINT;
-
 public class PdfReportUserAgent extends ITextUserAgent {
 
-    public PdfReportUserAgent() {
-        super(new ITextOutputDevice(DEFAULT_DOTS_PER_POINT), DEFAULT_DOTS_PER_PIXEL);
+    public PdfReportUserAgent(float dotsPerPoint, int dotsPerPixel) {
+        super(new ITextOutputDevice(dotsPerPoint), dotsPerPixel);
     }
 
     @Override

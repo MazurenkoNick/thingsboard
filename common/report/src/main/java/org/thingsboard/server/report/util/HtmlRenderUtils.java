@@ -42,7 +42,6 @@ import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.Map;
 
-import static com.lowagie.text.pdf.BaseFont.IDENTITY_H;
 import static org.apache.commons.codec.CharEncoding.UTF_8;
 import static org.xhtmlrenderer.pdf.ITextRenderer.DEFAULT_DOTS_PER_PIXEL;
 import static org.xhtmlrenderer.pdf.ITextRenderer.DEFAULT_DOTS_PER_POINT;
@@ -51,15 +50,8 @@ import static org.xhtmlrenderer.pdf.ITextRenderer.DEFAULT_DOTS_PER_POINT;
 public class HtmlRenderUtils {
 
     public static ITextRenderer createRenderer() throws Exception {
-        ITextRenderer renderer = new ITextRenderer(new ITextOutputDevice(DEFAULT_DOTS_PER_POINT), new PdfReportUserAgent());
-        renderer.getFontResolver().addFont("fonts/roboto/roboto.ttf",
-                "Roboto", IDENTITY_H, true, null);
-        renderer.getFontResolver().addFont("fonts/roboto/robotoitalic.ttf",
-                "Roboto", IDENTITY_H, true, null);
-        renderer.getFontResolver().addFont("fonts/monospace/dejavusansmono.ttf",
-                "monospace", IDENTITY_H, true, null);
-        renderer.getFontResolver().addFont("fonts/monospace/dejavusansmonobold.ttf",
-                "monospace", IDENTITY_H, true, null);
+        ITextRenderer renderer = new ITextRenderer(new ITextOutputDevice(DEFAULT_DOTS_PER_POINT),
+                new PdfReportUserAgent(DEFAULT_DOTS_PER_POINT, DEFAULT_DOTS_PER_PIXEL));
         return renderer;
     }
 

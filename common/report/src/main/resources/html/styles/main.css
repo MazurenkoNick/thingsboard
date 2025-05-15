@@ -41,15 +41,93 @@
     }
 }
 
+@font-face {
+    font-family: "Roboto";
+    font-style: normal;
+    src: url("classpath:fonts/roboto/roboto.ttf");
+    -fs-pdf-font-embed: embed;
+}
+
+@font-face {
+    font-family: "Roboto";
+    font-style: italic;
+    src: url("classpath:fonts/roboto/robotoitalic.ttf");
+    -fs-pdf-font-embed: embed;
+}
+
+@font-face {
+    font-family: "monospace";
+    font-style: normal;
+    font-weight: normal;
+    src: url("classpath:fonts/monospace/dejavusansmono.ttf");
+    -fs-pdf-font-embed: embed;
+}
+
+@font-face {
+    font-family: "monospace";
+    font-style: normal;
+    font-weight: bold;
+    src: url("classpath:fonts/monospace/dejavusansmonobold.ttf");
+    -fs-pdf-font-embed: embed;
+}
+
+@font-face {
+    font-family: "sans-serif";
+    font-style: normal;
+    font-weight: normal;
+    src: url("classpath:fonts/sansserif/dejavusansmono.ttf");
+    -fs-pdf-font-embed: embed;
+}
+
+@font-face {
+    font-family: "sans-serif";
+    font-style: normal;
+    font-weight: bold;
+    src: url("classpath:fonts/sansserif/dejavusansmonobold.ttf");
+    -fs-pdf-font-embed: embed;
+}
+
+@font-face {
+    font-family: "serif";
+    font-style: normal;
+    font-weight: normal;
+    src: url("classpath:fonts/serif/times.ttf");
+    -fs-pdf-font-embed: embed;
+}
+
+@font-face {
+    font-family: "serif";
+    font-style: italic;
+    font-weight: normal;
+    src: url("classpath:fonts/serif/timesi.ttf");
+    -fs-pdf-font-embed: embed;
+}
+
+@font-face {
+    font-family: "serif";
+    font-style: normal;
+    font-weight: bold;
+    src: url("classpath:fonts/serif/timesbd.ttf");
+    -fs-pdf-font-embed: embed;
+}
+
+@font-face {
+    font-family: "serif";
+    font-style: italic;
+    font-weight: bold;
+    src: url("classpath:fonts/serif/timesbi.ttf");
+    -fs-pdf-font-embed: embed;
+}
+
 body {
-    font-family: Roboto;
+    font-family: Roboto, sans-serif;
     font-size: 16px;
     line-height: normal;
     margin: 0;
     padding: 0;
 }
 
-* {
+*, *::before, *::after {
     box-sizing: border-box;
 }
 
@@ -82,10 +160,11 @@ div.report-component {
     display: block;
     position: relative;
     overflow: hidden;
+    font-size: 16px;
     p {
         margin: 1em 0;
         font-weight: 400;
-        letter-spacing: 0.01em;
+        letter-spacing: normal;
         line-height: 1.4;
     }
 }
