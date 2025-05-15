@@ -64,7 +64,7 @@ import static org.thingsboard.server.common.data.report.configuration.timewindow
 import static org.thingsboard.server.common.data.util.ReportQueryUtils.toAlarmDataQuery;
 import static org.thingsboard.server.common.data.util.ReportQueryUtils.toEntityDataQuery;
 import static org.thingsboard.server.common.data.util.ReportQueryUtils.toSingleEntityQuery;
-import static org.thingsboard.server.report.context.ComponentLayout.getSingleDataSource;
+import static org.thingsboard.server.report.service.PdfReportService.getSingleDataSource;
 
 public abstract class AbstractReportService implements ReportService {
 

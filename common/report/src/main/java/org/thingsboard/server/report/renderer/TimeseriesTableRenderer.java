@@ -41,7 +41,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static org.thingsboard.server.report.context.ComponentLayout.getSingleDataSource;
+import static org.thingsboard.server.report.service.PdfReportService.getSingleDataSource;
+
 
 @Component
 public class TimeseriesTableRenderer implements ReportComponentRenderer {

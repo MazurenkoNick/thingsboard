@@ -31,11 +31,8 @@
 package org.thingsboard.server.report.context;
 
 import lombok.Data;
-import org.thingsboard.server.common.data.report.configuration.DataSource;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
 import org.thingsboard.server.common.data.report.configuration.style.Margins;
-
-import java.util.List;
 
 @Data
 public class ComponentLayout {
@@ -48,15 +45,10 @@ public class ComponentLayout {
     private int topMargin;
     private int bottomMargin;
 
-    private ComponentLayout reportLayout;
-
     public ComponentLayout() {
     }
 
     public ComponentLayout(ReportComponent component, ComponentLayout parentLayout) {
-        this.reportLayout = parentLayout;
-        this.usablePageWidth = parentLayout.getUsablePageWidth();
-
         Margins margins = component.getMargins();
         if (margins != null) {
             this.leftMargin = margins.getLeft();
@@ -69,13 +61,6 @@ public class ComponentLayout {
             this.topMargin = DEFAULT_COMPONENT_MARGIN_SIZE;
             this.bottomMargin = DEFAULT_COMPONENT_MARGIN_SIZE;
         }
-    }
-
-    public static DataSource getSingleDataSource(ReportComponent component) {
-        List<DataSource> dataSources = component.getDataSources();
-        if (dataSources == null || dataSources.isEmpty()) {
-            throw new IllegalArgumentException("Data source is required for component: " + component.getType());
-        }
-        return component.getDataSources().get(0);
+        this.usablePageWidth = parentLayout.getUsablePageWidth() - leftMargin - rightMargin;
     }
 }

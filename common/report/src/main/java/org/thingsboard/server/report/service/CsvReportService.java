@@ -49,8 +49,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
 
+import static org.thingsboard.server.report.service.PdfReportService.getSingleDataSource;
 import static org.thingsboard.server.report.util.CsvUtils.generateCsv;
-import static org.thingsboard.server.report.context.ComponentLayout.getSingleDataSource;
 import static org.thingsboard.server.report.util.ReportUtils.prepareReportName;
 
 @Service
