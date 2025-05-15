@@ -36,6 +36,15 @@ import java.util.regex.Pattern;
 
 public class ColorUtils {
 
+    public static String normalizeCssColor(String color) {
+        Color c = parseCssColor(color);
+        if (c.getAlpha() == 255) {
+            return "rgb(" + c.getRed() + "," + c.getGreen() + "," + c.getBlue() + ")";
+        } else {
+            return "rgba(" + c.getRed() + "," + c.getGreen() + "," + c.getBlue() + "," + Math.round(c.getAlpha() / 255.0f * 100.0) / 100.0 + ")";
+        }
+    }
+
     public static Color parseCssColor(String cssColor) {
         if (cssColor == null || cssColor.trim().isEmpty()) {
             throw new IllegalArgumentException("CSS color cannot be null or empty");

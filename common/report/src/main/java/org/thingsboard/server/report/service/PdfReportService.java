@@ -48,21 +48,20 @@ import org.thingsboard.server.common.data.report.configuration.components.Dashbo
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponentType;
 import org.thingsboard.server.common.data.report.configuration.components.TimeseriesTableComponent;
+import org.thingsboard.server.common.data.report.configuration.style.Margins;
 import org.thingsboard.server.common.data.report.configuration.style.PageOrientation;
 import org.thingsboard.server.common.data.report.configuration.style.PageSize;
 import org.thingsboard.server.report.context.ComponentLayout;
 import org.thingsboard.server.report.context.TbReportCtx;
 import org.thingsboard.server.report.renderer.ReportComponentRenderer;
-import org.thingsboard.server.report.util.PdfReportUserAgent;
+import org.thingsboard.server.report.util.ColorUtils;
+import org.thingsboard.server.report.util.HtmlRenderUtils;
 import org.thingsboard.server.report.util.ThymeleafUtil;
 import org.thingsboard.server.report.util.WebReportClient;
-import org.w3c.tidy.Tidy;
-import org.xhtmlrenderer.pdf.ITextOutputDevice;
 import org.xhtmlrenderer.pdf.ITextRenderer;
 
-import java.io.ByteArrayInputStream;
+import java.awt.*;
 import java.io.ByteArrayOutputStream;
-import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -74,8 +73,6 @@ import java.util.TimeZone;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
-import static com.lowagie.text.pdf.BaseFont.IDENTITY_H;
-import static org.apache.commons.codec.CharEncoding.UTF_8;
 import static org.thingsboard.server.common.data.report.configuration.components.ReportComponentType.SUB_REPORT;
 import static org.thingsboard.server.common.data.report.configuration.components.ReportComponentType.TIME_SERIES_TABLE;
 import static org.thingsboard.server.common.data.report.configuration.style.PageSize.A4;
@@ -83,7 +80,6 @@ import static org.thingsboard.server.common.data.util.ReportQueryUtils.toAlarmCo
 import static org.thingsboard.server.common.data.util.ReportQueryUtils.toEntityCountQuery;
 import static org.thingsboard.server.report.context.ComponentLayout.getSingleDataSource;
 import static org.thingsboard.server.report.util.ReportUtils.prepareReportName;
-import static org.xhtmlrenderer.pdf.ITextRenderer.DEFAULT_DOTS_PER_POINT;
 
 @Service
 @Slf4j
@@ -108,25 +104,34 @@ public class PdfReportService extends AbstractReportService {
         log.trace("[{}] Executing generateReport, reportRequest [{}]", tenantId, task);
         PdfReportTemplateConfig configuration = (PdfReportTemplateConfig) task.getReportTemplateConfig();
 
-        Map<String, Object> reportVariables = new HashMap<>();
-        fillReportVariables(reportVariables, configuration);
+        String headerHtml = renderHeader(ctx, configuration.getHeader());
+        String footerHtml = renderFooter(ctx, configuration.getFooter());
 
-        reportVariables.put("pageHeader", renderHeader(configuration.getHeader()));
-        reportVariables.put("pageFooter", renderFooter(configuration.getHeader()));
+        Dimension pageSize = computePageSize(configuration);
+        Insets pageMargins = computePageMargins(configuration);
+
+        int usablePageWidthPx = (int)((pageSize.width - pageMargins.left - pageMargins.right) * 4f / 3f);
+
+        ITextRenderer renderer = HtmlRenderUtils.createRenderer();
+
+        int headerHeightPx = HtmlRenderUtils.measureHtmlHeight(renderer, headerHtml, usablePageWidthPx);
+        int footerHeightPx = HtmlRenderUtils.measureHtmlHeight(renderer, footerHtml, usablePageWidthPx);
+
+        int maxTopMargin = pageMargins.top + (pageSize.height - pageMargins.top - pageMargins.bottom) / 2;
+        int maxBottomMargin = pageMargins.bottom + (pageSize.height - pageMargins.top - pageMargins.bottom) / 2;
+
+        pageMargins.top = Math.min((int)(pageMargins.top + headerHeightPx * 3f / 4f), maxTopMargin);
+        pageMargins.bottom = Math.min((int)(pageMargins.bottom + footerHeightPx * 3f / 4f), maxBottomMargin);
+
+        Map<String, Object> reportVariables = new HashMap<>();
+        fillPageLayoutVariables(reportVariables, configuration, pageSize, pageMargins);
+
+        reportVariables.put("pageHeader", headerHtml);
+        reportVariables.put("pageFooter", footerHtml);
         reportVariables.put("pageContent", renderContent(ctx, new ComponentLayout(), configuration.getComponents()));
 
         String renderedHtmlContent = ThymeleafUtil.render("html/report-template", reportVariables);
-        String xHtml = convertToXhtml(renderedHtmlContent);
-
-        ITextRenderer renderer = new ITextRenderer(new ITextOutputDevice(DEFAULT_DOTS_PER_POINT), new PdfReportUserAgent());
-        renderer.getFontResolver().addFont("fonts/roboto/roboto.ttf",
-                "Roboto", IDENTITY_H, true, null);
-        renderer.getFontResolver().addFont("fonts/roboto/robotoitalic.ttf",
-                "Roboto", IDENTITY_H, true, null);
-        renderer.getFontResolver().addFont("fonts/monospace/dejavusansmono.ttf",
-                "monospace", IDENTITY_H, true, null);
-        renderer.getFontResolver().addFont("fonts/monospace/dejavusansmonobold.ttf",
-                "monospace", IDENTITY_H, true, null);
+        String xHtml = HtmlRenderUtils.convertToXhtml(renderedHtmlContent);
 
         renderer.setDocumentFromString(xHtml);
         renderer.layout();
@@ -145,23 +150,12 @@ public class PdfReportService extends AbstractReportService {
         }
     }
 
-    private String convertToXhtml(String html) throws UnsupportedEncodingException {
-        Tidy tidy = new Tidy();
-        tidy.setInputEncoding(UTF_8);
-        tidy.setOutputEncoding(UTF_8);
-        tidy.setXHTML(true);
-        tidy.setTrimEmptyElements(false);
-        ByteArrayInputStream inputStream = new ByteArrayInputStream(html.getBytes(UTF_8));
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        tidy.parseDOM(inputStream, outputStream);
-        return outputStream.toString(UTF_8);
-    }
-
-    private String renderHeader(HeaderFooter headerFooter) throws Exception {
-        boolean hasComponents = headerFooter.isEnabled() && headerFooter.getComponents() != null
-                && !headerFooter.getComponents().isEmpty();
-        boolean firstPageHeaderEnabled = headerFooter.getFirstPage() != null &&
-                headerFooter.getFirstPage().isEnabled();
+    private String renderHeader(TbReportCtx ctx, HeaderFooter headerFooter) throws Exception {
+        return renderContent(ctx, new ComponentLayout(), headerFooter.getComponents());
+      //  boolean hasComponents = headerFooter.isEnabled() && headerFooter.getComponents() != null
+      //          && !headerFooter.getComponents().isEmpty();
+      //  boolean firstPageHeaderEnabled = headerFooter.getFirstPage() != null &&
+      //          headerFooter.getFirstPage().isEnabled();
 //        if (firstPageHeaderEnabled && !headerFooter.getFirstPage().getComponents().isEmpty()) {
 //            renderContent(ctx, parentLayout, headerFooter.getFirstPage().getComponents(), false, printWhenExpression, () -> headerContainer);
 //
@@ -183,11 +177,12 @@ public class PdfReportService extends AbstractReportService {
 //            pageNumberField.setExpression(new JRDesignExpression("$V{PAGE_NUMBER} + \" / \" + $V{MASTER_TOTAL_PAGES}"));
 //            headerContainer.addElement(pageNumberField);
 //        }
-        return "<p>This is header</p>";
+        //return "<p>This is header</p>";
     }
 
-    private String renderFooter(HeaderFooter headerFooter) {
-        return "<p>This is footer <span class='page-number'></span> / <span class='page-count'></span></p>";
+    private String renderFooter(TbReportCtx ctx, HeaderFooter headerFooter) {
+        return renderContent(ctx, new ComponentLayout(), headerFooter.getComponents());
+        //return "<p>This is footer <span class='page-number'></span> / <span class='page-count'></span></p>";
     }
 
 
@@ -208,7 +203,8 @@ public class PdfReportService extends AbstractReportService {
 
     private String renderComponent(TbReportCtx ctx, ComponentLayout parentComponentLayout, ReportComponent component, EntityData entityData)  {
         Map<String, Object> variables = buildComponentContext(ctx, component, entityData);
-        return componentsRenderers.get(component.getType()).render(parentComponentLayout, component, variables);
+        ComponentLayout componentLayout = new ComponentLayout(component, parentComponentLayout);
+        return componentsRenderers.get(component.getType()).render(componentLayout, component, variables);
     }
 
     private Map<String, Object> buildComponentContext(TbReportCtx ctx, ReportComponent component, EntityData entityData) {
@@ -258,31 +254,38 @@ public class PdfReportService extends AbstractReportService {
         };
     }
 
-    private void fillReportVariables(Map<String, Object> reportVariables, PdfReportTemplateConfig configuration) {
+    private Dimension computePageSize(PdfReportTemplateConfig configuration) {
         PageSize pageSize = configuration.getPageSize();
         if (pageSize == null) {
             pageSize = A4;
         }
         if (configuration.getPageOrientation() == PageOrientation.LANDSCAPE) {
-            reportVariables.put("pageWidth", pageSize.getHeight() + "pt" );
-            reportVariables.put("pageHeight", pageSize.getWidth() + "pt" );
+            return new Dimension(pageSize.getHeight(), pageSize.getWidth());
         } else {
-            reportVariables.put("pageWidth", pageSize.getWidth() + "pt" );
-            reportVariables.put("pageHeight", pageSize.getHeight() + "pt" );
+            return new Dimension(pageSize.getWidth(), pageSize.getHeight());
         }
-        String pageBackground = configuration.getPageBackground() != null ? configuration.getPageBackground() : "#fff";
-        reportVariables.put("pageBackground", pageBackground);
+    }
+
+    private Insets computePageMargins(PdfReportTemplateConfig configuration) {
         if (configuration.getPageMargins() != null) {
-            reportVariables.put("pageMarginLeft", configuration.getPageMargins().getLeft() + "pt");
-            reportVariables.put("pageMarginRight", configuration.getPageMargins().getRight() + "pt");
-            reportVariables.put("pageMarginTop", configuration.getPageMargins().getTop() + "pt");
-            reportVariables.put("pageMarginBottom", configuration.getPageMargins().getBottom() + "pt");
+            Margins margins = configuration.getPageMargins();
+            return new Insets(margins.getTop(), margins.getLeft(), margins.getBottom(), margins.getRight());
         } else {
-            reportVariables.put("pageMarginLeft", "20pt");
-            reportVariables.put("pageMarginRight", "20pt");
-            reportVariables.put("pageMarginTop", "20pt");
-            reportVariables.put("pageMarginBottom", "20pt");
+            return new Insets(20, 20, 20, 20);
         }
+    }
+
+    private void fillPageLayoutVariables(Map<String, Object> reportVariables, PdfReportTemplateConfig configuration,
+                                         Dimension pageSize, Insets pageMargins) {
+        reportVariables.put("pageWidth", pageSize.getWidth() + "pt" );
+        reportVariables.put("pageHeight", pageSize.getHeight() + "pt" );
+        reportVariables.put("pageMarginLeft", pageMargins.left + "pt");
+        reportVariables.put("pageMarginRight", pageMargins.right + "pt");
+        reportVariables.put("pageMarginTop", pageMargins.top + "pt");
+        reportVariables.put("pageMarginBottom", pageMargins.bottom + "pt");
+
+        String pageBackground = configuration.getPageBackground() != null ? ColorUtils.normalizeCssColor(configuration.getPageBackground()) : "#fff";
+        reportVariables.put("pageBackground", pageBackground);
     }
 
     @Override

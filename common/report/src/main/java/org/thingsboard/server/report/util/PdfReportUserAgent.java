@@ -56,8 +56,7 @@ public class PdfReportUserAgent extends ITextUserAgent {
         java.io.InputStream is = null;
         URL url = PdfReportUserAgent.class.getResource(uri);
         if (url == null) {
-            XRLog.load("Didn't find resource [" + uri + "].");
-            return null;
+            return super.resolveAndOpenStream(uri);
         }
         try {
             is = url.openStream();

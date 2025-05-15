@@ -32,15 +32,13 @@
 
     @top-center {
         content: element(header);
+        vertical-align: bottom;
     }
 
     @bottom-center {
         content: element(footer);
+        vertical-align: top;
     }
-}
-
-style {
-    display: none;
 }
 
 body {
@@ -49,6 +47,10 @@ body {
     line-height: normal;
     margin: 0;
     padding: 0;
+}
+
+* {
+    box-sizing: border-box;
 }
 
 .page-number:before {
@@ -60,7 +62,7 @@ body {
 }
 
 .page-break {
-    page-break-before: always;
+    page-break-after: always;
 }
 
 .header {
@@ -74,4 +76,16 @@ body {
 .header, .footer, .content {
     display: flex;
     flex-direction: column;
+}
+
+div.report-component {
+    display: block;
+    position: relative;
+    overflow: hidden;
+    p {
+        margin: 1em 0;
+        font-weight: 400;
+        letter-spacing: 0.01em;
+        line-height: 1.4;
+    }
 }

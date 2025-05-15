@@ -30,26 +30,36 @@
  */
 package org.thingsboard.server.report.renderer;
 
-import org.springframework.stereotype.Component;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
-import org.thingsboard.server.common.data.report.configuration.components.ReportComponentType;
-import org.thingsboard.server.common.data.report.configuration.components.RichTextComponent;
+import org.thingsboard.server.report.context.ComponentLayout;
+import org.thingsboard.server.report.util.ColorUtils;
 import org.thingsboard.server.report.util.ThymeleafUtil;
 
+import java.util.HashMap;
 import java.util.Map;
 
-@Component
-public class RichTextRenderer extends ReportComponentWithLayoutRenderer {
+public abstract class ReportComponentWithLayoutRenderer implements ReportComponentRenderer {
+
+    private static final String componentWithLayoutTpl = "<div class=\"report-component\" " +
+            "th:style=\"'background: ' + ${background} + '; " +
+            "padding-left: ' + ${leftPadding} + 'pt; " +
+            "padding-top: ' + ${topPadding} + 'pt; " +
+            "padding-right: ' + ${rightPadding} + 'pt; " +
+            "padding-bottom: ' + ${bottomPadding} + 'pt;'\" " +
+            "th:utext=\"${htmlContent}\"></div>";
 
     @Override
-    protected String renderContent(ReportComponent component, Map<String, Object> variables) {
-        RichTextComponent richTextComponent = (RichTextComponent) component;
-        return ThymeleafUtil.renderFromString(richTextComponent.getValue(), variables);
+    public String render(ComponentLayout componentLayout, ReportComponent component, Map<String, Object> variables) {
+        String content = this.renderContent(component, variables);
+        Map<String, Object> layoutVariables = new HashMap<>();
+        layoutVariables.put("htmlContent", content);
+        layoutVariables.put("background", component.getBackground() != null ? ColorUtils.normalizeCssColor(component.getBackground()) : "transparent");
+        layoutVariables.put("leftPadding", componentLayout.getLeftMargin());
+        layoutVariables.put("topPadding", componentLayout.getTopMargin());
+        layoutVariables.put("rightPadding", componentLayout.getRightMargin());
+        layoutVariables.put("bottomPadding", componentLayout.getBottomMargin());
+        return ThymeleafUtil.renderFromString(componentWithLayoutTpl, layoutVariables);
     }
 
-    @Override
-    public ReportComponentType getType() {
-        return ReportComponentType.RICH_TEXT;
-    }
-
+    protected abstract String renderContent(ReportComponent component, Map<String, Object> variables);
 }
