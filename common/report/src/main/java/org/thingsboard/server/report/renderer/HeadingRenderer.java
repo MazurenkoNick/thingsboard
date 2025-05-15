@@ -37,6 +37,7 @@ import org.thingsboard.server.common.data.report.configuration.components.Report
 import org.thingsboard.server.report.context.ComponentLayout;
 import org.thingsboard.server.report.util.ThymeleafUtil;
 
+import java.util.HashMap;
 import java.util.Map;
 
 @Component
@@ -45,8 +46,12 @@ public class HeadingRenderer implements ReportComponentRenderer {
     @Override
     public String render(ComponentLayout layoutCtx, ReportComponent component, Map<String, Object> variables) {
         HeadingComponent headingComponent = (HeadingComponent) component;
-        variables.put("component", headingComponent);
-        return ThymeleafUtil.render("html/components/heading-template", variables);
+        String processedText = ThymeleafUtil.renderFromString(headingComponent.getValue(), variables);
+
+        HashMap<String, Object> componentVariables = new HashMap<>();
+        componentVariables.put("component", headingComponent);
+        componentVariables.put("value", processedText);
+        return ThymeleafUtil.render("html/components/heading-template", componentVariables);
     }
 
     @Override
