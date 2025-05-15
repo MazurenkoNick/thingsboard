@@ -36,6 +36,7 @@ import org.thingsboard.server.common.data.report.configuration.components.Report
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponentType;
 import org.thingsboard.server.common.data.report.configuration.components.TimeseriesTableComponent;
 import org.thingsboard.server.report.context.ComponentLayout;
+import org.thingsboard.server.report.context.ReportDataSource;
 
 import java.util.List;
 import java.util.Map;
@@ -48,7 +49,7 @@ import static org.thingsboard.server.report.service.PdfReportService.getSingleDa
 public class TimeseriesTableRenderer implements ReportComponentRenderer {
 
     @Override
-    public String render(ComponentLayout layoutCtx, ReportComponent component, Map<String, Object> variables) {
+    public String render(ComponentLayout layoutCtx, ReportComponent component, ReportDataSource reportDataSource) {
         TimeseriesTableComponent tsTableComponent = (TimeseriesTableComponent) component;
         List<DataKey> dataKeys = getSingleDataSource(tsTableComponent).getDataKeys();
         List<String> entityKeys = dataKeys.stream().map(DataKey::getName).collect(Collectors.toList());

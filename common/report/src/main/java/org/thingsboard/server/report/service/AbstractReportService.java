@@ -88,13 +88,6 @@ public abstract class AbstractReportService implements ReportService {
         return data;
     }
 
-    protected List<Map<String, ?>> buildEntityDataSource(TbReportCtx ctx, DataSource dataSource) {
-        return switch (dataSource.getType()) {
-            case "device", "entity" -> fetchEntities(ctx, dataSource).stream().map(this::toMap).collect(Collectors.toList());
-            default -> throw new IllegalArgumentException("Unknown data source type: " + dataSource.getType());
-        };
-    }
-
     protected List<Map<String, ?>> buildTsDataSource(TbReportCtx ctx, TimeseriesTableComponent component) {
         String deviceId = component.getDataSources().get(0).getDeviceId();
         DeviceId entityId = DeviceId.fromString(deviceId);
@@ -134,6 +127,7 @@ public abstract class AbstractReportService implements ReportService {
                 latestValues.put(key, tsValue.getValue());
             }
         }));
+        latestValues.put("id", entityData.getEntityId().toString());
         return latestValues;
     }
 

@@ -1,0 +1,14 @@
+<table>
+    <thead>
+    <tr>
+        <th th:each="colKey : ${#lists.newArrayList(columns.keySet())}"
+            th:text="${columns[colKey]}">Header</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="row : ${rows}">
+        <td th:each="colKey : ${#lists.newArrayList(columns.keySet())}"
+            th:text="${row[colKey]}">[Value]</td>
+    </tr>
+    </tbody>
+</table>

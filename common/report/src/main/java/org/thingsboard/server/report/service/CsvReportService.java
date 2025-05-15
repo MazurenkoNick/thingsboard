@@ -39,6 +39,7 @@ import org.thingsboard.server.common.data.report.ReportData;
 import org.thingsboard.server.common.data.report.TbReportFormat;
 import org.thingsboard.server.common.data.report.configuration.CsvReportTemplateConfig;
 import org.thingsboard.server.common.data.report.configuration.DataKey;
+import org.thingsboard.server.common.data.report.configuration.DataSource;
 import org.thingsboard.server.common.data.report.configuration.components.AlarmTableComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
 import org.thingsboard.server.common.data.report.configuration.components.TimeseriesTableComponent;
@@ -48,6 +49,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
+import java.util.stream.Collectors;
 
 import static org.thingsboard.server.report.service.PdfReportService.getSingleDataSource;
 import static org.thingsboard.server.report.util.CsvUtils.generateCsv;
@@ -92,6 +94,13 @@ public class CsvReportService extends AbstractReportService {
             case ALARM_TABLE -> buildAlarmDataSource(ctx, ((AlarmTableComponent) component));
             case ENTITY_TABLE -> buildEntityDataSource(ctx, getSingleDataSource(component));
             default -> List.of(Map.of());
+        };
+    }
+
+    private List<Map<String, ?>> buildEntityDataSource(TbReportCtx ctx, DataSource dataSource) {
+        return switch (dataSource.getType()) {
+            case "device", "entity" -> fetchEntities(ctx, dataSource).stream().map(this::toMap).collect(Collectors.toList());
+            default -> throw new IllegalArgumentException("Unknown data source type: " + dataSource.getType());
         };
     }
 

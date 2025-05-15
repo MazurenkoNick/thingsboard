@@ -36,6 +36,7 @@ import org.thingsboard.server.common.data.report.configuration.components.AlarmT
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponentType;
 import org.thingsboard.server.report.context.ComponentLayout;
+import org.thingsboard.server.report.context.ReportDataSource;
 
 import java.util.List;
 import java.util.Map;
@@ -46,7 +47,7 @@ import java.util.stream.Collectors;
 public class AlarmTableRenderer implements ReportComponentRenderer {
 
     @Override
-    public String render(ComponentLayout componentLayout, ReportComponent richTextComponent, Map<String, Object> variables) {
+    public String render(ComponentLayout componentLayout, ReportComponent richTextComponent, ReportDataSource reportDataSource) {
         AlarmTableComponent component = (AlarmTableComponent) richTextComponent;
         List<DataKey> dataKeys = component.getAlarmSource().getDataKeys();
         List<String> entityKeys = dataKeys.stream().map(DataKey::getName).collect(Collectors.toList());

@@ -34,6 +34,7 @@ import org.springframework.stereotype.Component;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponentType;
 import org.thingsboard.server.report.context.ComponentLayout;
+import org.thingsboard.server.report.context.ReportDataSource;
 
 import java.util.Map;
 
@@ -42,7 +43,7 @@ import java.util.Map;
 public class PageBreakRenderer implements ReportComponentRenderer {
 
     @Override
-    public String render(ComponentLayout layoutCtx, ReportComponent component, Map<String, Object> variables) {
+    public String render(ComponentLayout layoutCtx, ReportComponent component, ReportDataSource reportDataSource) {
         return "";
     }
 

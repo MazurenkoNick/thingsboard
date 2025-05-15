@@ -34,26 +34,27 @@ import org.springframework.stereotype.Component;
 import org.thingsboard.server.common.data.report.configuration.components.HeadingComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponentType;
-import org.thingsboard.server.report.context.ComponentLayout;
+import org.thingsboard.server.common.data.report.configuration.style.Font;
+import org.thingsboard.server.report.context.ReportDataSource;
 import org.thingsboard.server.report.util.ThymeleafUtil;
 
 import java.util.HashMap;
-import java.util.Map;
 
 @Component
 public class HeadingRenderer extends ReportComponentWithLayoutRenderer {
 
     @Override
-    public String renderContent(ReportComponent component, Map<String, Object> variables) {
+    public String renderContent(ReportComponent component, ReportDataSource reportDataSource) {
         HeadingComponent headingComponent = (HeadingComponent) component;
-        String processedText = ThymeleafUtil.renderFromString(headingComponent.getValue(), variables);
+        String processedText = ThymeleafUtil.renderFromString(headingComponent.getValue(), reportDataSource.getContextVariables());
 
         HashMap<String, Object> componentVariables = new HashMap<>();
         componentVariables.put("color", headingComponent.getColor());
-        componentVariables.put("fontSize", headingComponent.getFont().getSize());
-        componentVariables.put("fontWeight", headingComponent.getFont().getWeight());
-        componentVariables.put("fontStyle", headingComponent.getFont().getStyle());
-        componentVariables.put("fontFamily", headingComponent.getFont().getFamily());
+        Font font = headingComponent.getFont();
+        componentVariables.put("fontSize", font.getSize());
+        componentVariables.put("fontWeight", font.getWeight());
+        componentVariables.put("fontStyle", font.getStyle());
+        componentVariables.put("fontFamily", font.getFamily());
         componentVariables.put("textAlignment", headingComponent.getTextAlignment());
         componentVariables.put("verticalAlignment", headingComponent.getVerticalAlignment());
         componentVariables.put("value", processedText);

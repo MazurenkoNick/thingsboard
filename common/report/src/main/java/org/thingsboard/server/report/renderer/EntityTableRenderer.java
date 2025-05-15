@@ -31,36 +31,21 @@
 package org.thingsboard.server.report.renderer;
 
 import org.springframework.stereotype.Component;
-import org.thingsboard.server.common.data.report.configuration.DataKey;
 import org.thingsboard.server.common.data.report.configuration.components.EntityTableComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponentType;
 import org.thingsboard.server.report.context.ComponentLayout;
-
-import java.util.List;
-import java.util.Map;
-
-import static org.thingsboard.server.report.service.PdfReportService.getSingleDataSource;
+import org.thingsboard.server.report.context.ReportDataSource;
+import org.thingsboard.server.report.util.ThymeleafUtil;
 
 
 @Component
 public class EntityTableRenderer implements ReportComponentRenderer {
 
     @Override
-    public String render(ComponentLayout layout, ReportComponent component, Map<String, Object> variables) {
+    public String render(ComponentLayout layout, ReportComponent component, ReportDataSource reportDataSource) {
         EntityTableComponent entityTableComponent = (EntityTableComponent) component;
-        List<DataKey> dataKeys = getSingleDataSource(entityTableComponent).getDataKeys();
-        List<String> entityKeys = dataKeys.stream().map(DataKey::getName).toList();
-        List<String> columnsHeaders = dataKeys.stream().map(DataKey::getLabel).toList();
-
-        addColumnHeader(layout, columnsHeaders);
-        addTableDetailBand(layout, entityKeys);
-        return "";
-    }
-
-    public void addColumnHeader(ComponentLayout layout, List<String> titles) {
-    }
-    public void addTableDetailBand(ComponentLayout layout, List<String> entityKeys)  {
+        return ThymeleafUtil.render("html/components/heading-template", reportDataSource.getContextVariables());
     }
 
     @Override
