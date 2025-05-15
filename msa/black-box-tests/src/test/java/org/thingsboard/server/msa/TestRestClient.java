@@ -67,6 +67,7 @@ import org.thingsboard.server.common.data.group.EntityGroupInfo;
 import org.thingsboard.server.common.data.id.AlarmId;
 import org.thingsboard.server.common.data.id.AssetId;
 import org.thingsboard.server.common.data.id.AssetProfileId;
+import org.thingsboard.server.common.data.id.BlobEntityId;
 import org.thingsboard.server.common.data.id.CalculatedFieldId;
 import org.thingsboard.server.common.data.id.ConverterId;
 import org.thingsboard.server.common.data.id.CustomerId;
@@ -77,12 +78,14 @@ import org.thingsboard.server.common.data.id.EntityGroupId;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.EntityViewId;
 import org.thingsboard.server.common.data.id.IntegrationId;
+import org.thingsboard.server.common.data.id.JobId;
 import org.thingsboard.server.common.data.id.RpcId;
 import org.thingsboard.server.common.data.id.RuleChainId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.id.UserId;
 import org.thingsboard.server.common.data.integration.Integration;
 import org.thingsboard.server.common.data.integration.IntegrationType;
+import org.thingsboard.server.common.data.job.Job;
 import org.thingsboard.server.common.data.kv.TsKvEntry;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
@@ -92,6 +95,8 @@ import org.thingsboard.server.common.data.query.EntityData;
 import org.thingsboard.server.common.data.query.EntityDataQuery;
 import org.thingsboard.server.common.data.relation.EntityRelation;
 import org.thingsboard.server.common.data.relation.RelationTypeGroup;
+import org.thingsboard.server.common.data.report.ReportRequest;
+import org.thingsboard.server.common.data.report.ReportTemplate;
 import org.thingsboard.server.common.data.rpc.Rpc;
 import org.thingsboard.server.common.data.rule.RuleChain;
 import org.thingsboard.server.common.data.rule.RuleChainMetaData;
@@ -1150,4 +1155,59 @@ public class TestRestClient {
                 .as(new TypeRef<List<EntityGroupInfo>>() {
                 });
     }
+
+    public ReportTemplate postReportTemplate(ReportTemplate reportTemplate) {
+        return given().spec(requestSpec)
+                .body(reportTemplate)
+                .post("/api/reportTemplate")
+                .then()
+                .assertThat()
+                .statusCode(HTTP_OK)
+                .extract()
+                .as(ReportTemplate.class);
+    }
+
+    public byte[] requestTestReport(ReportRequest request) {
+        return given().spec(requestSpec)
+                .body(request)
+                .accept("text/csv")
+                .post("/api/v2/report/test")
+                .then()
+                .assertThat()
+                .statusCode(HTTP_OK)
+                .extract()
+                .asByteArray();
+    }
+
+    public Job requestReport(ReportRequest request) {
+        return given().spec(requestSpec)
+                .body(request)
+                .post("/api/v2/report")
+                .then()
+                .assertThat()
+                .statusCode(HTTP_OK)
+                .extract()
+                .as(Job.class);
+    }
+
+    public Job getJobById(JobId id) {
+        return given().spec(requestSpec)
+                .get("/api/job/{id}", id.getId())
+                .then()
+                .assertThat()
+                .statusCode(HTTP_OK)
+                .extract()
+                .as(Job.class);
+    }
+
+    public byte[] downloadBlobEntity(BlobEntityId blobEntityId) {
+        return given().spec(requestSpec)
+                .get("/api/blobEntity/{blobEntityId}/download", blobEntityId.getId())
+                .then()
+                .assertThat()
+                .statusCode(HTTP_OK)
+                .extract()
+                .asByteArray();
+    }
+
 }
