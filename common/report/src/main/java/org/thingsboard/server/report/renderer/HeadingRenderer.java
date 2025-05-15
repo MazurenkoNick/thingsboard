@@ -49,7 +49,13 @@ public class HeadingRenderer extends ReportComponentWithLayoutRenderer {
         String processedText = ThymeleafUtil.renderFromString(headingComponent.getValue(), variables);
 
         HashMap<String, Object> componentVariables = new HashMap<>();
-        componentVariables.put("component", headingComponent);
+        componentVariables.put("color", headingComponent.getColor());
+        componentVariables.put("fontSize", headingComponent.getFont().getSize());
+        componentVariables.put("fontWeight", headingComponent.getFont().getWeight());
+        componentVariables.put("fontStyle", headingComponent.getFont().getStyle());
+        componentVariables.put("fontFamily", headingComponent.getFont().getFamily());
+        componentVariables.put("textAlignment", headingComponent.getTextAlignment());
+        componentVariables.put("verticalAlignment", headingComponent.getVerticalAlignment());
         componentVariables.put("value", processedText);
         return ThymeleafUtil.render("html/components/heading-template", componentVariables);
     }
