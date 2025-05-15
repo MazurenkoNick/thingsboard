@@ -59,7 +59,7 @@ public class ThymeleafUtil {
         stringEngine = new TemplateEngine();
         StringTemplateResolver stringResolver = new StringTemplateResolver();
         stringResolver.setTemplateMode("HTML");
-        stringResolver.setResolvablePatterns(Set.of("*"));  // Resolve everything
+        stringResolver.setResolvablePatterns(Set.of("*"));
         stringResolver.setCacheable(false);
         stringResolver.setOrder(2);
         stringEngine.setTemplateResolver(stringResolver);

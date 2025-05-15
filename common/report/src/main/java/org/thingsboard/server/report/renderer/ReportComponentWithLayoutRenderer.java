@@ -40,14 +40,6 @@ import java.util.Map;
 
 public abstract class ReportComponentWithLayoutRenderer implements ReportComponentRenderer {
 
-    private static final String componentWithLayoutTpl = "<div class=\"report-component\" " +
-            "th:style=\"'background: ' + ${background} + '; " +
-            "padding-left: ' + ${leftPadding} + 'pt; " +
-            "padding-top: ' + ${topPadding} + 'pt; " +
-            "padding-right: ' + ${rightPadding} + 'pt; " +
-            "padding-bottom: ' + ${bottomPadding} + 'pt;'\" " +
-            "th:utext=\"${htmlContent}\"></div>";
-
     @Override
     public String render(ComponentLayout componentLayout, ReportComponent component, Map<String, Object> variables) {
         String content = this.renderContent(component, variables);
@@ -58,7 +50,7 @@ public abstract class ReportComponentWithLayoutRenderer implements ReportCompone
         layoutVariables.put("topPadding", componentLayout.getTopMargin());
         layoutVariables.put("rightPadding", componentLayout.getRightMargin());
         layoutVariables.put("bottomPadding", componentLayout.getBottomMargin());
-        return ThymeleafUtil.renderFromString(componentWithLayoutTpl, layoutVariables);
+        return ThymeleafUtil.render("html/components/component-layout", layoutVariables);
     }
 
     protected abstract String renderContent(ReportComponent component, Map<String, Object> variables);

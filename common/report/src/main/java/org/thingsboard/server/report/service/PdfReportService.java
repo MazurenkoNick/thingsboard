@@ -78,7 +78,6 @@ import static org.thingsboard.server.common.data.report.configuration.components
 import static org.thingsboard.server.common.data.report.configuration.style.PageSize.A4;
 import static org.thingsboard.server.common.data.util.ReportQueryUtils.toAlarmCountQuery;
 import static org.thingsboard.server.common.data.util.ReportQueryUtils.toEntityCountQuery;
-import static org.thingsboard.server.report.context.ComponentLayout.getSingleDataSource;
 import static org.thingsboard.server.report.util.ReportUtils.prepareReportName;
 
 @Service
@@ -252,6 +251,14 @@ public class PdfReportService extends AbstractReportService {
             case "alarmCount" -> List.of(Map.of("count", dataService.countAlarmsByQuery(toAlarmCountQuery(dataSource, configuration), ctx)));
             default -> throw new IllegalArgumentException("Unknown data source type: " + dataSource.getType());
         };
+    }
+
+    public static DataSource getSingleDataSource(ReportComponent component) {
+        List<DataSource> dataSources = component.getDataSources();
+        if (dataSources == null || dataSources.isEmpty()) {
+            throw new IllegalArgumentException("Data source is required for component: " + component.getType());
+        }
+        return component.getDataSources().get(0);
     }
 
     private Dimension computePageSize(PdfReportTemplateConfig configuration) {
