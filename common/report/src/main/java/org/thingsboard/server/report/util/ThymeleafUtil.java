@@ -38,6 +38,8 @@ import org.thymeleaf.templateresolver.StringTemplateResolver;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static org.apache.commons.codec.CharEncoding.UTF_8;
 import static org.thymeleaf.templatemode.TemplateMode.HTML;
@@ -82,8 +84,18 @@ public class ThymeleafUtil {
             return input;
         }
 
-        // Regex to find ${key} patterns
-        return input.replaceAll("\\$\\{([^}]+)}", "\\[\\[\\${$1}\\]\\]");
+        Pattern pattern = Pattern.compile("\\$\\{([^}]+)}");
+        Matcher matcher = pattern.matcher(input);
+        StringBuffer result = new StringBuffer();
+
+        while (matcher.find()) {
+            String originalKey = matcher.group(1);
+            String safeKey = originalKey.trim().replaceAll("\\s+", "_");
+            matcher.appendReplacement(result, "[[\\${" + safeKey + "}]]");
+        }
+        matcher.appendTail(result);
+
+        return result.toString();
     }
 
     private static String sanitize(String html) {

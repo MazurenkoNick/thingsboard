@@ -201,22 +201,21 @@ public class PdfReportService extends AbstractReportService {
     }
 
     private String renderComponent(TbReportCtx ctx, ComponentLayout parentComponentLayout, ReportComponent component, EntityData entityData)  {
-        ReportDataSource reportDataSource = buildComponentContext(ctx, component, entityData);
+        ReportDataSource reportDataSource = buildComponentDataSource(ctx, component, entityData);
         ComponentLayout componentLayout = new ComponentLayout(component, parentComponentLayout);
         return componentsRenderers.get(component.getType()).render(componentLayout, component, reportDataSource);
     }
 
-    private ReportDataSource buildComponentContext(TbReportCtx ctx, ReportComponent component, EntityData entityData) {
+    private ReportDataSource buildComponentDataSource(TbReportCtx ctx, ReportComponent component, EntityData entityData) {
         return switch (component.getType()) {
-//            case TIME_SERIES_TABLE ->
-//                    Map.of("data", buildTsDataSource(ctx, ((TimeseriesTableComponent) component), entityData.getEntityId()));
-//            case ALARM_TABLE ->  Map.of("data", buildAlarmDataSource(ctx, ((AlarmTableComponent) component)));
-//            case DASHBOARD -> buildDashboardDataSource(ctx, ((DashboardComponent) component));
+            case TIME_SERIES_TABLE -> new ReportDataSource(buildTsDataSource(ctx, (TimeseriesTableComponent)component, entityData.getEntityId()));
+            case ALARM_TABLE ->  new ReportDataSource(buildAlarmDataSource(ctx, (AlarmTableComponent)component));
+            case DASHBOARD -> buildDashboardDataSource(ctx, ((DashboardComponent) component));
             default -> buildMultipleDataSource(ctx, component.getDataSources());
         };
     }
 
-    private Map<String, Object> buildDashboardDataSource(TbReportCtx ctx, DashboardComponent component) {
+    private ReportDataSource buildDashboardDataSource(TbReportCtx ctx, DashboardComponent component) {
         SettableFuture<DashboardReportData> futureToSet = SettableFuture.create();
         webReportClient.requestDashboardReport(component.getConfig(), null,
                 ctx.getAccessToken(), ctx.getAccessTokenExpTs(),
@@ -225,7 +224,7 @@ public class PdfReportService extends AbstractReportService {
                     futureToSet.setException(error);
                 });
         try {
-            return Map.of("dashboardData", futureToSet.get());
+            return new ReportDataSource(futureToSet.get().getData());
         } catch (InterruptedException | ExecutionException e) {
             throw new RuntimeException(e);
         }

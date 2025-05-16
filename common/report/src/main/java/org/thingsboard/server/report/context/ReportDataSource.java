@@ -31,22 +31,33 @@
 package org.thingsboard.server.report.context;
 
 import lombok.Data;
+import org.thingsboard.server.common.data.report.configuration.DataKey;
+import org.thingsboard.server.common.data.report.configuration.DataSource;
+import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Data
 public class ReportDataSource {
 
     private List<Map<String, ?>> entityDatas;
     private Map<String, Object> data;
+    private byte[] image;
 
     public ReportDataSource() {
         this.entityDatas = new ArrayList<>();
         this.data = new HashMap<>();
     }
+
+    public ReportDataSource(byte[] image) {
+        this.image = image;
+    }
+
     public ReportDataSource(List<Map<String, ?>> entityDatas) {
         this.entityDatas = entityDatas;
         this.data = new HashMap<>();
@@ -57,10 +68,19 @@ public class ReportDataSource {
         this.entityDatas = new ArrayList<>();
     }
 
-    public Map<String, Object> getContextVariables() {
+    public HashMap<String, Object> buildContextVariables(ReportComponent component) {
+        Map<String, String> labelKeyMap = component.getDataSources()
+                .stream()
+                .map(DataSource::getDataKeys)
+                .flatMap(Collection::stream)
+                .collect(Collectors.toMap(DataKey::getLabel, DataKey::getName));
+
         HashMap<String, Object> contextVariables = new HashMap<>(data);
         if (!entityDatas.isEmpty()) {
-            contextVariables.putAll(entityDatas.get(0));
+            Map<String, ?> entityData = entityDatas.get(0);
+            for (String label : labelKeyMap.keySet()) {
+                contextVariables.put(label.trim().replaceAll("\\s+", "_"), entityData.get(labelKeyMap.get(label)));
+            }
         }
         return contextVariables;
     }
