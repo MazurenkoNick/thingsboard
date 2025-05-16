@@ -31,38 +31,11 @@
 package org.thingsboard.server.report.renderer;
 
 import org.springframework.stereotype.Component;
-import org.thingsboard.server.common.data.report.configuration.DataKey;
-import org.thingsboard.server.common.data.report.configuration.components.EntityTableComponent;
-import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponentType;
-import org.thingsboard.server.report.context.ComponentLayout;
-import org.thingsboard.server.report.context.ReportDataSource;
-import org.thingsboard.server.report.util.ThymeleafUtil;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.stream.Collectors;
-
-import static org.thingsboard.server.report.service.PdfReportService.getSingleDataSource;
 
 
 @Component
-public class EntityTableRenderer implements ReportComponentRenderer {
-
-    @Override
-    public String render(ComponentLayout layout, ReportComponent component, ReportDataSource reportDataSource) {
-        EntityTableComponent entityTableComponent = (EntityTableComponent) component;
-        Map<String, String> columns = getSingleDataSource(entityTableComponent)
-                .getDataKeys()
-                .stream()
-                .collect(Collectors.toMap(DataKey::getName, DataKey::getLabel));
-
-        HashMap<String, Object> componentVariables = new HashMap<>();
-        componentVariables.put("columns", columns);
-        componentVariables.put("rows", reportDataSource.getEntityDatas());
-
-        return ThymeleafUtil.render("html/components/heading-template", componentVariables);
-    }
+public class EntityTableRenderer extends TableComponentRenderer {
 
     @Override
     public ReportComponentType getType() {
