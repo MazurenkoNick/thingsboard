@@ -102,8 +102,8 @@ public class PdfReportService extends AbstractReportService {
         log.trace("[{}] Executing generateReport, reportRequest [{}]", tenantId, task);
         PdfReportTemplateConfig configuration = (PdfReportTemplateConfig) task.getReportTemplateConfig();
 
-        String headerHtml = "";//renderHeader(ctx, configuration.getHeader());
-        String footerHtml = "";//renderFooter(ctx, configuration.getFooter());
+        String headerHtml = renderHeader(ctx, configuration.getHeader());
+        String footerHtml = renderFooter(ctx, configuration.getFooter());
 
         Dimension pageSize = computePageSize(configuration);
         Insets pageMargins = computePageMargins(configuration);
