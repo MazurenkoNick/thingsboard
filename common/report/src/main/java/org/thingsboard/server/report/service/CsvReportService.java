@@ -69,7 +69,7 @@ public class CsvReportService extends AbstractReportService {
 
         ReportComponent component = configuration.getComponent();
         List<DataKey> headers = getTableHeaders(component);
-        List<Map<String, ?>> dataSource = buildDataSource(ctx, component);
+        List<Map<String, String>> dataSource = buildDataSource(ctx, component);
 
         byte[] csvBytes = generateCsv(headers, dataSource);
 
@@ -88,7 +88,7 @@ public class CsvReportService extends AbstractReportService {
         return component.getDataSources().get(0).getDataKeys();
     }
 
-    private List<Map<String, ?>> buildDataSource(TbReportCtx ctx, ReportComponent component) {
+    private List<Map<String, String>> buildDataSource(TbReportCtx ctx, ReportComponent component) {
         return switch (component.getType()) {
             case TIME_SERIES_TABLE -> buildTsDataSource(ctx, ((TimeseriesTableComponent) component));
             case ALARM_TABLE -> buildAlarmDataSource(ctx, ((AlarmTableComponent) component));
@@ -97,7 +97,7 @@ public class CsvReportService extends AbstractReportService {
         };
     }
 
-    private List<Map<String, ?>> buildEntityDataSource(TbReportCtx ctx, DataSource dataSource) {
+    private List<Map<String, String>> buildEntityDataSource(TbReportCtx ctx, DataSource dataSource) {
         return switch (dataSource.getType()) {
             case "device", "entity" -> fetchEntities(ctx, dataSource).stream().map(this::toMap).collect(Collectors.toList());
             default -> throw new IllegalArgumentException("Unknown data source type: " + dataSource.getType());

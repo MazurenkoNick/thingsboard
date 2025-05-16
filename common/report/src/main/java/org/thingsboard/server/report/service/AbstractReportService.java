@@ -65,6 +65,7 @@ import static org.thingsboard.server.common.data.util.ReportQueryUtils.toAlarmDa
 import static org.thingsboard.server.common.data.util.ReportQueryUtils.toEntityDataQuery;
 import static org.thingsboard.server.common.data.util.ReportQueryUtils.toSingleEntityQuery;
 import static org.thingsboard.server.report.service.PdfReportService.getSingleDataSource;
+import static org.thingsboard.server.report.util.ReportUtils.formatTimestamp;
 
 public abstract class AbstractReportService implements ReportService {
 
@@ -88,14 +89,14 @@ public abstract class AbstractReportService implements ReportService {
         return data;
     }
 
-    protected List<Map<String, ?>> buildTsDataSource(TbReportCtx ctx, TimeseriesTableComponent component) {
+    protected List<Map<String, String>> buildTsDataSource(TbReportCtx ctx, TimeseriesTableComponent component) {
         String deviceId = component.getDataSources().get(0).getDeviceId();
         DeviceId entityId = DeviceId.fromString(deviceId);
 
         return buildTsDataSource(ctx, component, entityId);
     }
 
-    protected List<Map<String, ?>> buildTsDataSource(TbReportCtx ctx, TimeseriesTableComponent component, EntityId entityId) {
+    protected List<Map<String, String>> buildTsDataSource(TbReportCtx ctx, TimeseriesTableComponent component, EntityId entityId) {
         TimeWindowConfiguration timeWindowConf = component.getTimewindow();
         History historyConf = timeWindowConf.getHistory();
         TimeIntervalCalculator.TimeRange timeRange = getTimeRange(timeWindowConf);
@@ -111,28 +112,28 @@ public abstract class AbstractReportService implements ReportService {
         return collectTsData(result);
     }
 
-    protected List<Map<String, ?>> buildAlarmDataSource(TbReportCtx ctx, AlarmTableComponent component) {
+    protected List<Map<String, String>> buildAlarmDataSource(TbReportCtx ctx, AlarmTableComponent component) {
         List<String> keyList = component.getAlarmSource().getDataKeys().stream().map(DataKey::getName).toList();
-        List<Map<String, ?>> data = new ArrayList<>();
+        List<Map<String, String>> data = new ArrayList<>();
         for (AlarmData alarmData : new PageDataIterable<>(link -> dataService.findAlarmDataByQuery(toAlarmDataQuery(component, ctx.getConfiguration(), link), ctx), 1024)) {
             data.add(toMapData(alarmData, keyList));
         }
         return data;
     }
 
-    protected Map<String, ?> toMap(EntityData entityData) {
+    protected Map<String, String> toMap(EntityData entityData) {
         HashMap<String, String> latestValues = new HashMap<>();
         entityData.getLatest().forEach((keyType, keyValueMap) -> keyValueMap.forEach((key, tsValue) -> {
             if (tsValue.getValue() != null) {
-                latestValues.put(key, tsValue.getValue());
+                latestValues.put(key, key.equals("createdTime") ? formatTimestamp(tsValue.getValue()): tsValue.getValue());
             }
         }));
         latestValues.put("id", entityData.getEntityId().toString());
         return latestValues;
     }
 
-    protected Map<String, Object> toMapData(AlarmData alarmData, List<String> keys) {
-        Map<String, Object> data = new HashMap<>();
+    protected Map<String, String> toMapData(AlarmData alarmData, List<String> keys) {
+        Map<String, String> data = new HashMap<>();
         JsonNode alarmDataJson = JacksonUtil.valueToTree(alarmData);
         keys.forEach(key -> {
             JsonNode value = JacksonUtil.getByKeyPath(alarmDataJson, key);
@@ -143,12 +144,12 @@ public abstract class AbstractReportService implements ReportService {
         return data;
     }
 
-    protected List<Map<String, ?>> collectTsData(List<TsKvEntry> tsKvEntries) {
-        List<Map<String, ?>> tsData = new ArrayList<>();
+    protected List<Map<String, String>> collectTsData(List<TsKvEntry> tsKvEntries) {
+        List<Map<String, String>> tsData = new ArrayList<>();
         Map<Long, List<TsKvEntry>> groupedByTs = tsKvEntries.stream().collect(Collectors.groupingBy(TsKvEntry::getTs));
 
         groupedByTs.forEach((ts, entries) -> {
-            Map<String, Object> tsValues = new HashMap<>();
+            Map<String, String> tsValues = new HashMap<>();
             tsValues.put("ts", ts.toString());
             for (TsKvEntry entry : entries) {
                 tsValues.put(entry.getKey(), entry.getValueAsString());

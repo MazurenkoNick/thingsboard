@@ -67,7 +67,7 @@ public class CsvUtils {
     }
 
     @SneakyThrows
-    public static byte[] generateCsv(List<DataKey> dataKeys, List<Map<String, ?>> dataset) {
+    public static byte[] generateCsv(List<DataKey> dataKeys, List<Map<String, String>> dataset) {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         try (OutputStreamWriter writer = new OutputStreamWriter(out, StandardCharsets.UTF_8);
              CSVPrinter csvPrinter = new CSVPrinter(writer, CSVFormat.DEFAULT)) {

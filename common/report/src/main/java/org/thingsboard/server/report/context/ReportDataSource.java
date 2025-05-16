@@ -38,33 +38,36 @@ import org.thingsboard.server.common.data.report.configuration.components.Report
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Data
 public class ReportDataSource {
 
-    private List<Map<String, ?>> entityDatas;
-    private Map<String, Object> data;
+    private List<Map<String, String>> entityDatas;
+    private Map<String, Object> variables;
     private byte[] image;
 
     public ReportDataSource() {
         this.entityDatas = new ArrayList<>();
-        this.data = new HashMap<>();
+        this.variables = new HashMap<>();
     }
 
     public ReportDataSource(byte[] image) {
         this.image = image;
     }
 
-    public ReportDataSource(List<Map<String, ?>> entityDatas) {
+    public ReportDataSource(List<Map<String, String>> entityDatas) {
         this.entityDatas = entityDatas;
-        this.data = new HashMap<>();
+        this.variables = new HashMap<>();
     }
 
-    public ReportDataSource(Map<String, Object> data) {
-        this.data = data;
+    public ReportDataSource(Map<String, Object> variables) {
+        this.variables = variables;
         this.entityDatas = new ArrayList<>();
     }
 
@@ -75,9 +78,9 @@ public class ReportDataSource {
                 .flatMap(Collection::stream)
                 .collect(Collectors.toMap(DataKey::getLabel, DataKey::getName));
 
-        HashMap<String, Object> contextVariables = new HashMap<>(data);
+        HashMap<String, Object> contextVariables = new HashMap<>(variables);
         if (!entityDatas.isEmpty()) {
-            Map<String, ?> entityData = entityDatas.get(0);
+            Map<String, String> entityData = entityDatas.get(0);
             for (String label : labelKeyMap.keySet()) {
                 contextVariables.put(label.trim().replaceAll("\\s+", "_"), entityData.get(labelKeyMap.get(label)));
             }
@@ -87,41 +90,33 @@ public class ReportDataSource {
 
     public ReportDataSource merge(ReportDataSource otherDataSource) {
         this.entityDatas = mergeEntityDatas(this.entityDatas, otherDataSource.getEntityDatas());
-        this.data = mergeVariables(this.data, otherDataSource.getData());
+        this.variables = mergeVariables(this.variables, otherDataSource.getVariables());
         return this;
     }
 
-    private Map<String, Object> mergeVariables(Map<String, Object> variables, Map<String, Object> variables1) {
-        for (String key : variables1.keySet()) {
-            variables.put(key, variables1.get(key));
+    private Map<String, Object> mergeVariables(Map<String, Object> variables, Map<String, Object> otherVariables) {
+        for (String key : otherVariables.keySet()) {
+            variables.put(key, otherVariables.get(key));
         }
         return variables;
     }
 
-    private List<Map<String, ?>> mergeEntityDatas(List<Map<String, ?>> list1, List<Map<String, ?>> list2) {
-        Map<Object, Map<String, Object>> mergedMap = new HashMap<>();
+    private List<Map<String, String>> mergeEntityDatas(List<Map<String, String>> dataList, List<Map<String, String>> otherDataList) {
+        Map<String, Map<String, String>> merged = new LinkedHashMap<>();
 
-        for (Map<String, ?> map : list1) {
-            Object id = map.get("id");
-            if (id != null) {
-                mergedMap.put(id, new HashMap<>(map));
-            }
-        }
-
-        for (Map<String, ?> map : list2) {
-            Object id = map.get("id");
-            if (id != null) {
-                mergedMap.compute(id, (key, existing) -> {
-                    if (existing == null) {
-                        return new HashMap<>(map);
-                    } else {
-                        existing.putAll(map);
-                        return existing;
+        Stream.of(dataList, otherDataList)
+                .filter(Objects::nonNull)
+                .flatMap(Collection::stream)
+                .forEach(map -> {
+                    String id = map.get("id");
+                    if (id != null) {
+                        merged.merge(id, new HashMap<>(map), (existing, incoming) -> {
+                            existing.putAll(incoming);
+                            return existing;
+                        });
                     }
                 });
-            }
-        }
 
-        return new ArrayList<>(mergedMap.values());
+        return new ArrayList<>(merged.values());
     }
 }

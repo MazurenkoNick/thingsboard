@@ -253,7 +253,7 @@ public class PdfReportService extends AbstractReportService {
     }
 
     private ReportDataSource buildEntityDataSource(TbReportCtx ctx, DataSource dataSource) {
-        List<Map<String, ?>> collect = fetchEntities(ctx, dataSource).stream().map(this::toMap).collect(Collectors.toList());
+        List<Map<String, String>> collect = fetchEntities(ctx, dataSource).stream().map(this::toMap).collect(Collectors.toList());
         return new ReportDataSource(collect);
     }
 
