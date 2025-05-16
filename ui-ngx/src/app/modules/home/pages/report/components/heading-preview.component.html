@@ -30,4 +30,8 @@
     OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 
 -->
-<div [style]="headingStyle" style="display: flex;">{{ reportComponent.value }}</div>
+<div style="display: table; width: 100%;" [style.height]="height">
+  <div  style="display: table-cell;" [style]="headingStyle">
+    {{ reportComponent.value }}
+  </div>
+</div>

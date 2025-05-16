@@ -34,7 +34,10 @@ import org.springframework.stereotype.Component;
 import org.thingsboard.server.common.data.report.configuration.components.HeadingComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponentType;
+import org.thingsboard.server.common.data.report.configuration.style.TextAlignment;
+import org.thingsboard.server.common.data.report.configuration.style.VerticalAlignment;
 import org.thingsboard.server.report.context.ComponentLayout;
+import org.thingsboard.server.report.util.ColorUtils;
 import org.thingsboard.server.report.util.ThymeleafUtil;
 
 import java.util.HashMap;
@@ -49,13 +52,20 @@ public class HeadingRenderer extends ReportComponentWithLayoutRenderer {
         String processedText = ThymeleafUtil.renderFromString(headingComponent.getValue(), variables);
 
         HashMap<String, Object> componentVariables = new HashMap<>();
-        componentVariables.put("color", headingComponent.getColor());
+        componentVariables.put("color", headingComponent.getColor() != null ? ColorUtils.normalizeCssColor(headingComponent.getColor()) : "#000");
         componentVariables.put("fontSize", headingComponent.getFont().getSize());
         componentVariables.put("fontWeight", headingComponent.getFont().getWeight());
         componentVariables.put("fontStyle", headingComponent.getFont().getStyle());
         componentVariables.put("fontFamily", headingComponent.getFont().getFamily());
-        componentVariables.put("textAlignment", headingComponent.getTextAlignment());
-        componentVariables.put("verticalAlignment", headingComponent.getVerticalAlignment());
+        TextAlignment textAlignment = headingComponent.getTextAlignment() != null ? headingComponent.getTextAlignment() : TextAlignment.center;
+        componentVariables.put("textAlignment", textAlignment.name());
+        VerticalAlignment verticalAlignment = headingComponent.getTextAlignment() != null ? headingComponent.getVerticalAlignment() : VerticalAlignment.middle;
+        componentVariables.put("verticalAlignment", verticalAlignment.name());
+        if (headingComponent.getHeight() != null && headingComponent.getHeight() > 0) {
+            componentVariables.put("height", headingComponent.getHeight() + "pt");
+        } else {
+            componentVariables.put("height", "100%");
+        }
         componentVariables.put("value", processedText);
         return ThymeleafUtil.render("html/components/heading-template", componentVariables);
     }

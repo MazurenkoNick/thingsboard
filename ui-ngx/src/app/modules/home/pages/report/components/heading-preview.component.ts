@@ -45,6 +45,8 @@ export class HeadingPreviewComponent extends AbstractReportComponentPreview<Head
 
   headingStyle: ComponentStyle;
 
+  height: string;
+
   onComponentUpdated() {
     const font: Font = deepClone(this.reportComponent.font || { size: 10, sizeUnit: 'pt' } as Font);
     if (!font.size) {
@@ -57,26 +59,14 @@ export class HeadingPreviewComponent extends AbstractReportComponentPreview<Head
     this.headingStyle.color = this.reportComponent.color || '#000';
     if (this.reportComponent.textAlignment) {
       this.headingStyle.textAlign = this.reportComponent.textAlignment;
-      this.headingStyle.justifyContent = this.reportComponent.textAlignment === 'justify' ?
-        'normal' : this.reportComponent.textAlignment;
     }
     if (this.reportComponent.verticalAlignment) {
-      switch (this.reportComponent.verticalAlignment) {
-        case 'top':
-          this.headingStyle.alignItems = 'start';
-          break;
-        case 'middle':
-          this.headingStyle.alignItems = 'center';
-          break;
-        case 'bottom':
-          this.headingStyle.alignItems = 'end';
-          break;
-      }
+      this.headingStyle.verticalAlign = this.reportComponent.verticalAlignment;
     }
     if (this.reportComponent.height) {
-      this.headingStyle.height = this.reportComponent.height + 'pt';
+      this.height = this.reportComponent.height + 'pt';
     } else {
-      this.headingStyle.height = '100%';
+      this.height = '100%';
     }
   }
 

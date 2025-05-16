@@ -46,6 +46,7 @@
     font-style: normal;
     src: url("classpath:fonts/roboto/roboto.ttf");
     -fs-pdf-font-embed: embed;
+    -fs-pdf-font-encoding: Identity-H;
 }
 
 @font-face {
@@ -53,6 +54,7 @@
     font-style: italic;
     src: url("classpath:fonts/roboto/robotoitalic.ttf");
     -fs-pdf-font-embed: embed;
+    -fs-pdf-font-encoding: Identity-H;
 }
 
 @font-face {
@@ -61,6 +63,7 @@
     font-weight: normal;
     src: url("classpath:fonts/monospace/dejavusansmono.ttf");
     -fs-pdf-font-embed: embed;
+    -fs-pdf-font-encoding: Identity-H;
 }
 
 @font-face {
@@ -69,6 +72,7 @@
     font-weight: bold;
     src: url("classpath:fonts/monospace/dejavusansmonobold.ttf");
     -fs-pdf-font-embed: embed;
+    -fs-pdf-font-encoding: Identity-H;
 }
 
 @font-face {
@@ -77,6 +81,7 @@
     font-weight: normal;
     src: url("classpath:fonts/sansserif/dejavusansmono.ttf");
     -fs-pdf-font-embed: embed;
+    -fs-pdf-font-encoding: Identity-H;
 }
 
 @font-face {
@@ -85,6 +90,7 @@
     font-weight: bold;
     src: url("classpath:fonts/sansserif/dejavusansmonobold.ttf");
     -fs-pdf-font-embed: embed;
+    -fs-pdf-font-encoding: Identity-H;
 }
 
 @font-face {
@@ -93,6 +99,7 @@
     font-weight: normal;
     src: url("classpath:fonts/serif/times.ttf");
     -fs-pdf-font-embed: embed;
+    -fs-pdf-font-encoding: Identity-H;
 }
 
 @font-face {
@@ -101,6 +108,7 @@
     font-weight: normal;
     src: url("classpath:fonts/serif/timesi.ttf");
     -fs-pdf-font-embed: embed;
+    -fs-pdf-font-encoding: Identity-H;
 }
 
 @font-face {
@@ -109,6 +117,7 @@
     font-weight: bold;
     src: url("classpath:fonts/serif/timesbd.ttf");
     -fs-pdf-font-embed: embed;
+    -fs-pdf-font-encoding: Identity-H;
 }
 
 @font-face {
@@ -117,6 +126,7 @@
     font-weight: bold;
     src: url("classpath:fonts/serif/timesbi.ttf");
     -fs-pdf-font-embed: embed;
+    -fs-pdf-font-encoding: Identity-H;
 }
 
 body {
@@ -157,14 +167,12 @@ body {
 }
 
 div.report-component {
-    display: block;
     position: relative;
     overflow: hidden;
     font-size: 16px;
     p {
         margin: 1em 0;
         font-weight: 400;
-        letter-spacing: normal;
         line-height: 1.4;
     }
 }

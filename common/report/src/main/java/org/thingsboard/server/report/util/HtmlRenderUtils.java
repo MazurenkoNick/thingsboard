@@ -30,9 +30,13 @@
  */
 package org.thingsboard.server.report.util;
 
+import org.thingsboard.server.report.util.itext.PdfReportTextRenderer;
+import org.thingsboard.server.report.util.itext.PdfReportUserAgent;
 import org.w3c.tidy.Tidy;
+import org.xhtmlrenderer.pdf.ITextFontResolver;
 import org.xhtmlrenderer.pdf.ITextOutputDevice;
 import org.xhtmlrenderer.pdf.ITextRenderer;
+import org.xhtmlrenderer.pdf.ITextReplacedElementFactory;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -50,8 +54,12 @@ import static org.xhtmlrenderer.pdf.ITextRenderer.DEFAULT_DOTS_PER_POINT;
 public class HtmlRenderUtils {
 
     public static ITextRenderer createRenderer() throws Exception {
-        ITextRenderer renderer = new ITextRenderer(new ITextOutputDevice(DEFAULT_DOTS_PER_POINT),
-                new PdfReportUserAgent(DEFAULT_DOTS_PER_POINT, DEFAULT_DOTS_PER_PIXEL));
+        ITextOutputDevice outputDevice = new ITextOutputDevice(DEFAULT_DOTS_PER_POINT);
+        ITextRenderer renderer = new ITextRenderer(DEFAULT_DOTS_PER_POINT, DEFAULT_DOTS_PER_PIXEL, outputDevice,
+                new PdfReportUserAgent(DEFAULT_DOTS_PER_POINT, DEFAULT_DOTS_PER_PIXEL),
+                new ITextFontResolver(),
+                new ITextReplacedElementFactory(outputDevice),
+                new PdfReportTextRenderer());
         return renderer;
     }
 
