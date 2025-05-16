@@ -31,38 +31,11 @@
 package org.thingsboard.server.report.renderer;
 
 import org.springframework.stereotype.Component;
-import org.thingsboard.server.common.data.report.configuration.DataKey;
-import org.thingsboard.server.common.data.report.configuration.components.AlarmTableComponent;
-import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponentType;
-import org.thingsboard.server.report.context.ComponentLayout;
-
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 
 @Component
-public class AlarmTableRenderer implements ReportComponentRenderer {
-
-    @Override
-    public String render(ComponentLayout componentLayout, ReportComponent richTextComponent, Map<String, Object> variables) {
-        AlarmTableComponent component = (AlarmTableComponent) richTextComponent;
-        List<DataKey> dataKeys = component.getAlarmSource().getDataKeys();
-        List<String> entityKeys = dataKeys.stream().map(DataKey::getName).collect(Collectors.toList());
-        List<String> columnsHeaders = dataKeys.stream().map(DataKey::getLabel).collect(Collectors.toList());
-
-        addColumnHeader(componentLayout, columnsHeaders);
-        addTableDetailBand(componentLayout, entityKeys);
-        return "";
-    }
-
-    public void addColumnHeader(ComponentLayout layout, List<String> titles) {
-    }
-
-
-    public void addTableDetailBand(ComponentLayout componentLayout, List<String> entityKeys)  {
-    }
+public class AlarmTableRenderer extends TableComponentRenderer {
 
     @Override
     public ReportComponentType getType() {

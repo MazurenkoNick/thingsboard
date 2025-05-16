@@ -30,16 +30,31 @@
  */
 package org.thingsboard.server.report.renderer;
 
-import org.springframework.stereotype.Component;
-import org.thingsboard.server.common.data.report.configuration.components.ReportComponentType;
+import org.thingsboard.server.common.data.report.configuration.DataKey;
+import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
+import org.thingsboard.server.report.context.ReportDataSource;
+import org.thingsboard.server.report.util.ThymeleafUtil;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.stream.Collectors;
 
-@Component
-public class TimeseriesTableRenderer extends TableComponentRenderer {
+import static org.thingsboard.server.report.service.PdfReportService.getSingleDataSource;
+
+public abstract class TableComponentRenderer extends ReportComponentWithLayoutRenderer {
 
     @Override
-    public ReportComponentType getType() {
-        return ReportComponentType.TIME_SERIES_TABLE;
+    protected String renderContent(ReportComponent component, ReportDataSource reportDataSource) {
+        Map<String, String> columns = getSingleDataSource(component)
+                .getDataKeys()
+                .stream()
+                .collect(Collectors.toMap(DataKey::getName, DataKey::getLabel));
+
+        HashMap<String, Object> componentVariables = new HashMap<>();
+        componentVariables.put("columns", columns);
+        componentVariables.put("rows", reportDataSource.getEntityDatas());
+
+        return ThymeleafUtil.render("html/components/table-template", componentVariables);
     }
 
 }

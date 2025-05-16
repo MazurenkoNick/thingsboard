@@ -39,6 +39,7 @@ import org.thingsboard.server.common.data.report.ReportData;
 import org.thingsboard.server.common.data.report.TbReportFormat;
 import org.thingsboard.server.common.data.report.configuration.CsvReportTemplateConfig;
 import org.thingsboard.server.common.data.report.configuration.DataKey;
+import org.thingsboard.server.common.data.report.configuration.DataSource;
 import org.thingsboard.server.common.data.report.configuration.components.AlarmTableComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
 import org.thingsboard.server.common.data.report.configuration.components.TimeseriesTableComponent;
@@ -48,6 +49,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
+import java.util.stream.Collectors;
 
 import static org.thingsboard.server.report.service.PdfReportService.getSingleDataSource;
 import static org.thingsboard.server.report.util.CsvUtils.generateCsv;
@@ -67,7 +69,7 @@ public class CsvReportService extends AbstractReportService {
 
         ReportComponent component = configuration.getComponent();
         List<DataKey> headers = getTableHeaders(component);
-        List<Map<String, ?>> dataSource = buildDataSource(ctx, component);
+        List<Map<String, String>> dataSource = buildDataSource(ctx, component);
 
         byte[] csvBytes = generateCsv(headers, dataSource);
 
@@ -86,12 +88,19 @@ public class CsvReportService extends AbstractReportService {
         return component.getDataSources().get(0).getDataKeys();
     }
 
-    private List<Map<String, ?>> buildDataSource(TbReportCtx ctx, ReportComponent component) {
+    private List<Map<String, String>> buildDataSource(TbReportCtx ctx, ReportComponent component) {
         return switch (component.getType()) {
             case TIME_SERIES_TABLE -> buildTsDataSource(ctx, ((TimeseriesTableComponent) component));
             case ALARM_TABLE -> buildAlarmDataSource(ctx, ((AlarmTableComponent) component));
             case ENTITY_TABLE -> buildEntityDataSource(ctx, getSingleDataSource(component));
             default -> List.of(Map.of());
+        };
+    }
+
+    private List<Map<String, String>> buildEntityDataSource(TbReportCtx ctx, DataSource dataSource) {
+        return switch (dataSource.getType()) {
+            case "device", "entity" -> fetchEntities(ctx, dataSource).stream().map(this::toMap).collect(Collectors.toList());
+            default -> throw new IllegalArgumentException("Unknown data source type: " + dataSource.getType());
         };
     }
 

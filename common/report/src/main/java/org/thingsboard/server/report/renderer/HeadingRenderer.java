@@ -36,20 +36,19 @@ import org.thingsboard.server.common.data.report.configuration.components.Report
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponentType;
 import org.thingsboard.server.common.data.report.configuration.style.TextAlignment;
 import org.thingsboard.server.common.data.report.configuration.style.VerticalAlignment;
-import org.thingsboard.server.report.context.ComponentLayout;
 import org.thingsboard.server.report.util.ColorUtils;
+import org.thingsboard.server.report.context.ReportDataSource;
 import org.thingsboard.server.report.util.ThymeleafUtil;
 
 import java.util.HashMap;
-import java.util.Map;
 
 @Component
 public class HeadingRenderer extends ReportComponentWithLayoutRenderer {
 
     @Override
-    public String renderContent(ReportComponent component, Map<String, Object> variables) {
+    public String renderContent(ReportComponent component, ReportDataSource reportDataSource) {
         HeadingComponent headingComponent = (HeadingComponent) component;
-        String processedText = ThymeleafUtil.renderFromString(headingComponent.getValue(), variables);
+        String processedText = ThymeleafUtil.renderFromString(headingComponent.getValue(), reportDataSource.buildContextVariables(component));
 
         HashMap<String, Object> componentVariables = new HashMap<>();
         componentVariables.put("color", headingComponent.getColor() != null ? ColorUtils.normalizeCssColor(headingComponent.getColor()) : "#000");

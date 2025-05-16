@@ -34,16 +34,15 @@ import org.springframework.stereotype.Component;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponentType;
 import org.thingsboard.server.report.context.ComponentLayout;
-
-import java.util.Map;
+import org.thingsboard.server.report.context.ReportDataSource;
 
 
 @Component
 public class PageBreakRenderer implements ReportComponentRenderer {
 
     @Override
-    public String render(ComponentLayout layoutCtx, ReportComponent component, Map<String, Object> variables) {
-        return "";
+    public String render(ComponentLayout layoutCtx, ReportComponent component, ReportDataSource reportDataSource) {
+        return "<div class=\"page-break\">&nbsp;</div>";
     }
 
     @Override

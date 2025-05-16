@@ -31,6 +31,9 @@
 package org.thingsboard.server.report.util;
 
 import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.TimeZone;
 import java.util.regex.Matcher;
@@ -40,6 +43,19 @@ public class ReportUtils {
 
     public static final Pattern REPORT_NAME_DATE_PATTERN = Pattern.compile("%d\\{([^\\}]*)\\}");
     public static final String DEFAULT_NAME_PATTERN = "report-%d{yyyy-MM-dd_HH:mm:ss}";
+
+    public static String formatTimestamp(String timestampStr) {
+        try {
+            long timestamp = Long.parseLong(timestampStr);
+
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+                    .withZone(ZoneId.systemDefault());
+
+            return formatter.format(Instant.ofEpochMilli(timestamp));
+        } catch (NumberFormatException e) {
+            return "Invalid timestamp: " + timestampStr;
+        }
+    }
 
     public static String prepareReportName(String namePattern, Date reportDate, TimeZone tz) {
         String name = (namePattern == null || namePattern.isEmpty()) ? DEFAULT_NAME_PATTERN : namePattern;

@@ -32,6 +32,7 @@ package org.thingsboard.server.report.renderer;
 
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
 import org.thingsboard.server.report.context.ComponentLayout;
+import org.thingsboard.server.report.context.ReportDataSource;
 import org.thingsboard.server.report.util.ColorUtils;
 import org.thingsboard.server.report.util.ThymeleafUtil;
 
@@ -41,8 +42,8 @@ import java.util.Map;
 public abstract class ReportComponentWithLayoutRenderer implements ReportComponentRenderer {
 
     @Override
-    public String render(ComponentLayout componentLayout, ReportComponent component, Map<String, Object> variables) {
-        String content = this.renderContent(component, variables);
+    public String render(ComponentLayout componentLayout, ReportComponent component, ReportDataSource reportDataSource) {
+        String content = this.renderContent(component, reportDataSource);
         Map<String, Object> layoutVariables = new HashMap<>();
         layoutVariables.put("htmlContent", content);
         layoutVariables.put("background", component.getBackground() != null ? ColorUtils.normalizeCssColor(component.getBackground()) : "transparent");
@@ -53,5 +54,5 @@ public abstract class ReportComponentWithLayoutRenderer implements ReportCompone
         return ThymeleafUtil.render("html/components/component-layout", layoutVariables);
     }
 
-    protected abstract String renderContent(ReportComponent component, Map<String, Object> variables);
+    protected abstract String renderContent(ReportComponent component, ReportDataSource reportDataSource);
 }

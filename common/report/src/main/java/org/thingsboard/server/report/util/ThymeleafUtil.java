@@ -38,6 +38,8 @@ import org.thymeleaf.templateresolver.StringTemplateResolver;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static org.apache.commons.codec.CharEncoding.UTF_8;
 import static org.thymeleaf.templatemode.TemplateMode.HTML;
@@ -67,14 +69,33 @@ public class ThymeleafUtil {
 
     public static String render(String templateHtml, Map<String, Object> variables) {
         Context context = new Context(Locale.getDefault(), variables);
-        return classEngine.process(templateHtml, context);
+        return classEngine.process(convertToThymeleafInline(templateHtml), context);
     }
 
     public static String renderFromString(String html, Map<String, Object> variables) {
         Context context = new Context();
         context.setVariables(variables);
 
-        return stringEngine.process(sanitize(html), context);
+        return stringEngine.process(convertToThymeleafInline(sanitize(html)), context);
+    }
+
+    public static String convertToThymeleafInline(String input) {
+        if (input == null || input.isEmpty()) {
+            return input;
+        }
+
+        Pattern pattern = Pattern.compile("\\$\\{([^}]+)}");
+        Matcher matcher = pattern.matcher(input);
+        StringBuffer result = new StringBuffer();
+
+        while (matcher.find()) {
+            String originalKey = matcher.group(1);
+            String safeKey = originalKey.trim().replaceAll("\\s+", "_");
+            matcher.appendReplacement(result, "[[\\${" + safeKey + "}]]");
+        }
+        matcher.appendTail(result);
+
+        return result.toString();
     }
 
     private static String sanitize(String html) {
