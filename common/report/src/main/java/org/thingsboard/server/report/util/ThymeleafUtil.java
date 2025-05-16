@@ -67,14 +67,23 @@ public class ThymeleafUtil {
 
     public static String render(String templateHtml, Map<String, Object> variables) {
         Context context = new Context(Locale.getDefault(), variables);
-        return classEngine.process(templateHtml, context);
+        return classEngine.process(convertToThymeleafInline(templateHtml), context);
     }
 
     public static String renderFromString(String html, Map<String, Object> variables) {
         Context context = new Context();
         context.setVariables(variables);
 
-        return stringEngine.process(sanitize(html), context);
+        return stringEngine.process(convertToThymeleafInline(sanitize(html)), context);
+    }
+
+    public static String convertToThymeleafInline(String input) {
+        if (input == null || input.isEmpty()) {
+            return input;
+        }
+
+        // Regex to find ${key} patterns
+        return input.replaceAll("\\$\\{([^}]+)}", "\\[\\[\\${$1}\\]\\]");
     }
 
     private static String sanitize(String html) {
