@@ -36,15 +36,13 @@ import org.thingsboard.server.common.data.report.configuration.components.Report
 import org.thingsboard.server.report.context.ComponentLayout;
 import org.thingsboard.server.report.context.ReportDataSource;
 
-import java.util.Map;
-
 
 @Component
 public class PageBreakRenderer implements ReportComponentRenderer {
 
     @Override
     public String render(ComponentLayout layoutCtx, ReportComponent component, ReportDataSource reportDataSource) {
-        return "";
+        return "<div class=\"page-break\">&nbsp;</div>";
     }
 
     @Override
