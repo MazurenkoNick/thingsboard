@@ -170,9 +170,10 @@ div.report-component {
     position: relative;
     overflow: hidden;
     font-size: 16px;
-    p {
-        margin: 1em 0;
-        font-weight: 400;
-        line-height: 1.4;
-    }
+}
+
+div.report-component p {
+    margin: 1em 0;
+    font-weight: 400;
+    line-height: 1.4;
 }
