@@ -80,6 +80,7 @@ public class GroupPermission extends BaseData<GroupPermissionId> implements HasN
 
         List<Operation> edgeOperations = new ArrayList<>(Operation.defaultEntityOperations);
         edgeOperations.remove(Operation.CREATE);
+        edgeOperations.remove(Operation.WRITE);
         edgeOperations.remove(Operation.ALL);
         CUSTOMER_ADMIN_GROUP_PERMISSIONS.put(Resource.EDGE, edgeOperations);
     }
