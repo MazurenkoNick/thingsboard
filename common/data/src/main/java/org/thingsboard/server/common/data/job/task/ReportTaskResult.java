@@ -33,6 +33,7 @@ package org.thingsboard.server.common.data.job.task;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 import org.thingsboard.server.common.data.id.BlobEntityId;
 import org.thingsboard.server.common.data.job.JobType;
@@ -41,16 +42,16 @@ import org.thingsboard.server.common.data.job.JobType;
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @SuperBuilder
+@ToString(callSuper = true)
 public class ReportTaskResult extends TaskResult {
-
-    private static final ReportTaskResult DISCARDED = ReportTaskResult.builder().discarded(true).build();
 
     private BlobEntityId reportBlobId;
     private String reportName;
     private String error;
 
-    public static ReportTaskResult success(BlobEntityId reportBlobId, String reportName) {
+    public static ReportTaskResult success(ReportTask task, BlobEntityId reportBlobId, String reportName) {
         return ReportTaskResult.builder()
+                .key(task.getKey())
                 .success(true)
                 .reportBlobId(reportBlobId)
                 .reportName(reportName)
@@ -59,12 +60,16 @@ public class ReportTaskResult extends TaskResult {
 
     public static ReportTaskResult failed(ReportTask task, Throwable error) {
         return ReportTaskResult.builder()
+                .key(task.getKey())
                 .error(error.getMessage())
                 .build();
     }
 
-    public static ReportTaskResult discarded() {
-        return DISCARDED;
+    public static ReportTaskResult discarded(ReportTask task) {
+        return ReportTaskResult.builder()
+                .key(task.getKey())
+                .discarded(true)
+                .build();
     }
 
     @Override
