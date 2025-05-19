@@ -49,7 +49,7 @@ import java.util.stream.Stream;
 public class ReportDataSource {
 
     private List<Map<String, String>> entityDatas;
-    private Map<String, Object> variables;
+    private Map<String, String> variables;
     private byte[] image;
 
     public ReportDataSource() {
@@ -66,7 +66,12 @@ public class ReportDataSource {
         this.variables = new HashMap<>();
     }
 
-    public ReportDataSource(Map<String, Object> variables) {
+    public ReportDataSource(List<Map<String, String>> entityDatas, Map<String, String> variables) {
+        this.entityDatas = entityDatas;
+        this.variables = variables;
+    }
+
+    public ReportDataSource(Map<String, String> variables) {
         this.variables = variables;
         this.entityDatas = new ArrayList<>();
     }
@@ -94,7 +99,7 @@ public class ReportDataSource {
         return this;
     }
 
-    private Map<String, Object> mergeVariables(Map<String, Object> variables, Map<String, Object> otherVariables) {
+    private Map<String, String> mergeVariables(Map<String, String> variables, Map<String, String> otherVariables) {
         for (String key : otherVariables.keySet()) {
             variables.put(key, otherVariables.get(key));
         }
