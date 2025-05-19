@@ -89,9 +89,22 @@ public class ThymeleafUtil {
         StringBuffer result = new StringBuffer();
 
         while (matcher.find()) {
-            String originalKey = matcher.group(1);
-            String safeKey = originalKey.trim().replaceAll("\\s+", "_");
-            matcher.appendReplacement(result, "[[\\${" + safeKey + "}]]");
+            String originalKey = matcher.group(1).trim();
+
+            String replacement;
+            switch (originalKey) {
+                case "pageNumber":
+                    replacement = "<span class=\"page-number\"></span>";
+                    break;
+                case "totalPages":
+                    replacement = "<span class=\"page-count\"></span>";
+                    break;
+                default:
+                    String safeKey = originalKey.replaceAll("\\s+", "_");
+                    replacement = "[[${" + safeKey + "}]]";
+            }
+
+            matcher.appendReplacement(result, Matcher.quoteReplacement(replacement));
         }
         matcher.appendTail(result);
 

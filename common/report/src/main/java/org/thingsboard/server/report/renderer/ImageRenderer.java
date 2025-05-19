@@ -28,33 +28,38 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.dao.job;
+package org.thingsboard.server.report.renderer;
 
-import org.thingsboard.server.common.data.id.JobId;
-import org.thingsboard.server.common.data.id.TenantId;
-import org.thingsboard.server.common.data.job.Job;
-import org.thingsboard.server.common.data.job.JobFilter;
-import org.thingsboard.server.common.data.job.JobStats;
-import org.thingsboard.server.common.data.page.PageData;
-import org.thingsboard.server.common.data.page.PageLink;
-import org.thingsboard.server.dao.entity.EntityDaoService;
+import org.springframework.stereotype.Component;
+import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
+import org.thingsboard.server.common.data.report.configuration.components.ReportComponentType;
+import org.thingsboard.server.report.context.ComponentLayout;
+import org.thingsboard.server.report.context.ReportDataSource;
+import org.thingsboard.server.report.util.ThymeleafUtil;
 
-public interface JobService extends EntityDaoService {
+import java.util.Base64;
+import java.util.HashMap;
 
-    Job saveJob(TenantId tenantId, Job job);
+@Component
+public class ImageRenderer implements ReportComponentRenderer {
 
-    Job findJobById(TenantId tenantId, JobId jobId);
+    @Override
+    public String render(ComponentLayout layoutCtx, ReportComponent component, ReportDataSource reportDataSource) {
+        String base64Image = encodeImage(reportDataSource.getImage(), "image/jpeg");
 
-    void cancelJob(TenantId tenantId, JobId jobId);
+        HashMap<String, Object> componentVariables = new HashMap<>();
+        componentVariables.put("imageSrc", base64Image);
+        return ThymeleafUtil.render("html/components/image", componentVariables);
+    }
 
-    void markAsFailed(TenantId tenantId, JobId jobId, String error);
+    public String encodeImage(byte[] imageBytes, String mimeType) {
+        String base64 = Base64.getEncoder().encodeToString(imageBytes);
+        return "data:" + mimeType + ";base64," + base64;
+    }
 
-    void processStats(TenantId tenantId, JobId jobId, JobStats jobStats);
-
-    PageData<Job> findJobsByFilter(TenantId tenantId, JobFilter filter, PageLink pageLink);
-
-    Job findLatestJobByKey(TenantId tenantId, String key);
-
-    void deleteJob(TenantId tenantId, JobId jobId);
+    @Override
+    public ReportComponentType getType() {
+        return ReportComponentType.IMAGE;
+    }
 
 }

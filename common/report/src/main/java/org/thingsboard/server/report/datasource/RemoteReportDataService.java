@@ -33,9 +33,13 @@ package org.thingsboard.server.report.datasource;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.stereotype.Service;
 import org.thingsboard.rest.client.RestClient;
+import org.thingsboard.server.common.data.TbResource;
 import org.thingsboard.server.common.data.blob.BlobEntity;
 import org.thingsboard.server.common.data.blob.BlobEntityInfo;
+import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.id.EntityId;
+import org.thingsboard.server.common.data.id.ReportTemplateId;
+import org.thingsboard.server.common.data.id.TbResourceId;
 import org.thingsboard.server.common.data.kv.Aggregation;
 import org.thingsboard.server.common.data.kv.TsKvEntry;
 import org.thingsboard.server.common.data.page.PageData;
@@ -46,14 +50,26 @@ import org.thingsboard.server.common.data.query.AlarmDataQuery;
 import org.thingsboard.server.common.data.query.EntityCountQuery;
 import org.thingsboard.server.common.data.query.EntityData;
 import org.thingsboard.server.common.data.query.EntityDataQuery;
+import org.thingsboard.server.common.data.report.ReportTemplate;
 import org.thingsboard.server.report.context.RemoteTbReportCtxProvider;
 import org.thingsboard.server.report.context.TbReportCtx;
 
 import java.util.List;
+import java.util.Optional;
 
 @ConditionalOnMissingBean(value = ReportDataService.class, ignored = RemoteReportDataService.class)
 @Service
 public class RemoteReportDataService implements ReportDataService {
+
+    @Override
+    public Optional<ReportTemplate> findReportTemplate(ReportTemplateId templateId, TbReportCtx ctx) throws ThingsboardException {
+        return getRestClient(ctx).findReportTemplate(templateId);
+    }
+
+    @Override
+    public TbResource findTbResource(TbResourceId resourceId, TbReportCtx ctx) {
+        return getRestClient(ctx).getResourceId(resourceId);
+    }
 
     @Override
     public PageData<EntityData> findEntityDataByQuery(EntityDataQuery query, TbReportCtx ctx) {

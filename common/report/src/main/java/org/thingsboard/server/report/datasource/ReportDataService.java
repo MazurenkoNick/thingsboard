@@ -30,9 +30,13 @@
  */
 package org.thingsboard.server.report.datasource;
 
+import org.thingsboard.server.common.data.TbResource;
 import org.thingsboard.server.common.data.blob.BlobEntity;
 import org.thingsboard.server.common.data.blob.BlobEntityInfo;
+import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.id.EntityId;
+import org.thingsboard.server.common.data.id.ReportTemplateId;
+import org.thingsboard.server.common.data.id.TbResourceId;
 import org.thingsboard.server.common.data.kv.Aggregation;
 import org.thingsboard.server.common.data.kv.TsKvEntry;
 import org.thingsboard.server.common.data.page.PageData;
@@ -43,11 +47,17 @@ import org.thingsboard.server.common.data.query.AlarmDataQuery;
 import org.thingsboard.server.common.data.query.EntityCountQuery;
 import org.thingsboard.server.common.data.query.EntityData;
 import org.thingsboard.server.common.data.query.EntityDataQuery;
+import org.thingsboard.server.common.data.report.ReportTemplate;
 import org.thingsboard.server.report.context.TbReportCtx;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface ReportDataService {
+
+    Optional<ReportTemplate> findReportTemplate(ReportTemplateId templateId, TbReportCtx ctx) throws ThingsboardException;
+
+    TbResource findTbResource(TbResourceId resourceId, TbReportCtx ctx) throws ThingsboardException;
 
     PageData<EntityData> findEntityDataByQuery(EntityDataQuery query, TbReportCtx ctx);
 

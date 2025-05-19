@@ -35,6 +35,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.ReportTemplateId;
@@ -46,6 +47,7 @@ import org.thingsboard.server.common.data.report.TbReportFormat;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
+@ToString(callSuper = true)
 public class ReportJobConfiguration extends JobConfiguration {
 
     private ReportTemplateId reportTemplateId;

@@ -52,6 +52,7 @@ import org.thingsboard.server.common.data.report.configuration.timewindow.TimeIn
 import org.thingsboard.server.common.data.report.configuration.timewindow.TimeWindowConfiguration;
 import org.thingsboard.server.report.context.TbReportCtx;
 import org.thingsboard.server.report.datasource.ReportDataService;
+import org.thymeleaf.util.StringUtils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -123,12 +124,26 @@ public abstract class AbstractReportService implements ReportService {
 
     protected Map<String, String> toMap(EntityData entityData) {
         HashMap<String, String> latestValues = new HashMap<>();
-        entityData.getLatest().forEach((keyType, keyValueMap) -> keyValueMap.forEach((key, tsValue) -> {
-            if (tsValue.getValue() != null) {
-                latestValues.put(key, key.equals("createdTime") ? formatTimestamp(tsValue.getValue()): tsValue.getValue());
-            }
-        }));
-        latestValues.put("id", entityData.getEntityId().toString());
+        if (entityData != null) {
+            entityData.getLatest().forEach((keyType, keyValueMap) -> keyValueMap.forEach((key, tsValue) -> {
+                if (tsValue.getValue() != null) {
+                    latestValues.put(key, key.equals("createdTime") ? formatTimestamp(tsValue.getValue()): tsValue.getValue());
+                }
+            }));
+            latestValues.put("id", entityData.getEntityId().toString());
+        }
+        return latestValues;
+    }
+
+    protected Map<String, String> toStateEntityMap(EntityData entityData) {
+        HashMap<String, String> latestValues = new HashMap<>();
+        if (entityData != null) {
+            entityData.getLatest().forEach((keyType, keyValueMap) -> keyValueMap.forEach((key, tsValue) -> {
+                if (tsValue.getValue() != null) {
+                    latestValues.put("entity" + StringUtils.capitalize(key), tsValue.getValue());
+                }
+            }));
+        }
         return latestValues;
     }
 

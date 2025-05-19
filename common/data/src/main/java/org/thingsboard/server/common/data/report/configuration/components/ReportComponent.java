@@ -52,7 +52,9 @@ import java.util.List;
         @JsonSubTypes.Type(value = PageBreakComponent.class, name = "PAGE_BREAK"),
         @JsonSubTypes.Type(value = TimeseriesTableComponent.class, name = "TIME_SERIES_TABLE"),
         @JsonSubTypes.Type(value = AlarmTableComponent.class, name = "ALARM_TABLE"),
-        @JsonSubTypes.Type(value = DashboardComponent.class, name = "DASHBOARD")
+        @JsonSubTypes.Type(value = DashboardComponent.class, name = "DASHBOARD"),
+        @JsonSubTypes.Type(value = ImageComponent.class, name = "IMAGE"),
+        @JsonSubTypes.Type(value = SubReportComponent.class, name = "SUB_REPORT")
 })
 public interface ReportComponent extends Serializable {
 

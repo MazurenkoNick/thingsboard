@@ -48,7 +48,7 @@ public class HeadingRenderer extends ReportComponentWithLayoutRenderer {
     @Override
     public String renderContent(ReportComponent component, ReportDataSource reportDataSource) {
         HeadingComponent headingComponent = (HeadingComponent) component;
-        String processedText = ThymeleafUtil.renderFromString(headingComponent.getValue(), reportDataSource.buildContextVariables(component));
+        String processedText = ThymeleafUtil.renderFromString(headingComponent.getValue(), reportDataSource.getContextVariables(component));
 
         HashMap<String, Object> componentVariables = new HashMap<>();
         componentVariables.put("color", headingComponent.getColor() != null ? ColorUtils.normalizeCssColor(headingComponent.getColor()) : "#000");

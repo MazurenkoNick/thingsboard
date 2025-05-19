@@ -65,7 +65,7 @@ public class ReportTask extends Task<ReportTaskResult> {
 
     @Override
     public ReportTaskResult toDiscarded() {
-        return ReportTaskResult.discarded();
+        return ReportTaskResult.discarded(this);
     }
 
     @Override

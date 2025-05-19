@@ -54,7 +54,7 @@ public class ReportTaskProcessor extends TaskProcessor<ReportTask, ReportTaskRes
     @Override
     public ReportTaskResult process(ReportTask task) throws Exception {
         BlobEntityInfo blobEntityInfo = tbReportService.generateReport(task);
-        return ReportTaskResult.success(blobEntityInfo.getId(), blobEntityInfo.getName());
+        return ReportTaskResult.success(task, blobEntityInfo.getId(), blobEntityInfo.getName());
     }
 
     @Override

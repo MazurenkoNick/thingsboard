@@ -43,7 +43,6 @@ import org.thingsboard.server.common.data.job.task.Task;
 import org.thingsboard.server.common.data.job.task.TaskResult;
 import org.thingsboard.server.common.data.msg.TbMsgType;
 import org.thingsboard.server.common.data.notification.rule.trigger.ReportGeneratedTrigger;
-import org.thingsboard.server.common.data.report.ReportRequest;
 import org.thingsboard.server.common.data.report.ReportTemplate;
 import org.thingsboard.server.common.msg.TbMsg;
 import org.thingsboard.server.common.msg.TbMsgMetaData;
@@ -79,6 +78,7 @@ public class ReportJobProcessor implements JobProcessor {
         ReportTask task = ReportTask.builder()
                 .tenantId(job.getTenantId())
                 .jobId(job.getId())
+                .key(configuration.getTasksKey())
                 .reportTemplateConfig(reportTemplate.getConfiguration())
                 .customerId(configuration.getCustomerId())
                 .entityId(configuration.getEntityId())

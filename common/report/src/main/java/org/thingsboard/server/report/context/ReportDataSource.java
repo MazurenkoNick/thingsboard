@@ -49,29 +49,32 @@ import java.util.stream.Stream;
 public class ReportDataSource {
 
     private List<Map<String, String>> entityDatas;
-    private Map<String, Object> variables;
+    private Map<String, String> variables;
     private byte[] image;
 
     public ReportDataSource() {
-        this.entityDatas = new ArrayList<>();
-        this.variables = new HashMap<>();
+        this(new ArrayList<>(), new HashMap<>());
     }
 
     public ReportDataSource(byte[] image) {
+        this();
         this.image = image;
     }
 
     public ReportDataSource(List<Map<String, String>> entityDatas) {
+        this(entityDatas, new HashMap<>());
+    }
+
+    public ReportDataSource(Map<String, String> variables) {
+        this(new ArrayList<>(), variables);
+    }
+
+    public ReportDataSource(List<Map<String, String>> entityDatas, Map<String, String> variables) {
         this.entityDatas = entityDatas;
-        this.variables = new HashMap<>();
-    }
-
-    public ReportDataSource(Map<String, Object> variables) {
         this.variables = variables;
-        this.entityDatas = new ArrayList<>();
     }
 
-    public HashMap<String, Object> buildContextVariables(ReportComponent component) {
+    public HashMap<String, Object> getContextVariables(ReportComponent component) {
         Map<String, String> labelKeyMap = component.getDataSources()
                 .stream()
                 .map(DataSource::getDataKeys)
@@ -79,8 +82,7 @@ public class ReportDataSource {
                 .collect(Collectors.toMap(DataKey::getLabel, DataKey::getName));
 
         HashMap<String, Object> contextVariables = new HashMap<>(variables);
-        if (!entityDatas.isEmpty()) {
-            Map<String, String> entityData = entityDatas.get(0);
+        for (Map<String, String> entityData : entityDatas) {
             for (String label : labelKeyMap.keySet()) {
                 contextVariables.put(label.trim().replaceAll("\\s+", "_"), entityData.get(labelKeyMap.get(label)));
             }
@@ -88,17 +90,10 @@ public class ReportDataSource {
         return contextVariables;
     }
 
-    public ReportDataSource merge(ReportDataSource otherDataSource) {
-        this.entityDatas = mergeEntityDatas(this.entityDatas, otherDataSource.getEntityDatas());
-        this.variables = mergeVariables(this.variables, otherDataSource.getVariables());
+    public ReportDataSource merge(ReportDataSource other) {
+        this.entityDatas = mergeEntityDatas(this.entityDatas, other.getEntityDatas());
+        this.variables.putAll(other.getVariables());
         return this;
-    }
-
-    private Map<String, Object> mergeVariables(Map<String, Object> variables, Map<String, Object> otherVariables) {
-        for (String key : otherVariables.keySet()) {
-            variables.put(key, otherVariables.get(key));
-        }
-        return variables;
     }
 
     private List<Map<String, String>> mergeEntityDatas(List<Map<String, String>> dataList, List<Map<String, String>> otherDataList) {

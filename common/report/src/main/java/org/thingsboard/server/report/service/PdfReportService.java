@@ -33,11 +33,16 @@ package org.thingsboard.server.report.service;
 import com.google.common.util.concurrent.SettableFuture;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.thingsboard.server.common.data.TbResource;
 import org.thingsboard.server.common.data.dashboardreport.DashboardReportData;
+import org.thingsboard.server.common.data.exception.ThingsboardException;
+import org.thingsboard.server.common.data.id.ReportTemplateId;
+import org.thingsboard.server.common.data.id.TbResourceId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.job.task.ReportTask;
 import org.thingsboard.server.common.data.query.EntityData;
 import org.thingsboard.server.common.data.report.ReportData;
+import org.thingsboard.server.common.data.report.ReportTemplate;
 import org.thingsboard.server.common.data.report.TbReportFormat;
 import org.thingsboard.server.common.data.report.configuration.DataSource;
 import org.thingsboard.server.common.data.report.configuration.HeaderFooter;
@@ -45,8 +50,10 @@ import org.thingsboard.server.common.data.report.configuration.PdfReportTemplate
 import org.thingsboard.server.common.data.report.configuration.ReportTemplateConfig;
 import org.thingsboard.server.common.data.report.configuration.components.AlarmTableComponent;
 import org.thingsboard.server.common.data.report.configuration.components.DashboardComponent;
+import org.thingsboard.server.common.data.report.configuration.components.ImageComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponentType;
+import org.thingsboard.server.common.data.report.configuration.components.SubReportComponent;
 import org.thingsboard.server.common.data.report.configuration.components.TimeseriesTableComponent;
 import org.thingsboard.server.common.data.report.configuration.style.Margins;
 import org.thingsboard.server.common.data.report.configuration.style.PageOrientation;
@@ -126,7 +133,7 @@ public class PdfReportService extends AbstractReportService {
 
         reportVariables.put("pageHeader", headerHtml);
         reportVariables.put("pageFooter", footerHtml);
-        reportVariables.put("pageContent", renderContent(ctx, new ComponentLayout(), configuration.getComponents()));
+        reportVariables.put("pageContent", renderContent(ctx, new ComponentLayout(), configuration.getComponents(), null));
 
         String renderedHtmlContent = ThymeleafUtil.render("html/report-template", reportVariables);
         String xHtml = HtmlRenderUtils.convertToXhtml(renderedHtmlContent);
@@ -150,7 +157,7 @@ public class PdfReportService extends AbstractReportService {
     }
 
     private String renderHeader(TbReportCtx ctx, HeaderFooter headerFooter) throws Exception {
-        return renderContent(ctx, new ComponentLayout(), headerFooter.getComponents());
+        return renderContent(ctx, new ComponentLayout(), headerFooter.getComponents(), null);
       //  boolean hasComponents = headerFooter.isEnabled() && headerFooter.getComponents() != null
       //          && !headerFooter.getComponents().isEmpty();
       //  boolean firstPageHeaderEnabled = headerFooter.getFirstPage() != null &&
@@ -179,40 +186,66 @@ public class PdfReportService extends AbstractReportService {
         //return "<p>This is header</p>";
     }
 
-    private String renderFooter(TbReportCtx ctx, HeaderFooter headerFooter) {
-        return renderContent(ctx, new ComponentLayout(), headerFooter.getComponents());
+    private String renderFooter(TbReportCtx ctx, HeaderFooter headerFooter) throws ThingsboardException {
+        return renderContent(ctx, new ComponentLayout(), headerFooter.getComponents(), null);
         //return "<p>This is footer <span class='page-number'></span> / <span class='page-count'></span></p>";
     }
 
 
-    private String renderContent(TbReportCtx ctx, ComponentLayout componentLayout, List<ReportComponent> components) {
+    private String renderContent(TbReportCtx ctx, ComponentLayout componentLayout, List<ReportComponent> components, EntityData stateEntity) throws ThingsboardException {
         StringBuilder content = new StringBuilder();
         for (ReportComponent component : components) {
-            if (component.getType() == TIME_SERIES_TABLE || component.getType() == SUB_REPORT) { // check if component is complex
+            if (component.getType() == SUB_REPORT) {
+                ReportTemplateId templateId = ((SubReportComponent) component).getTemplateId();
+                ReportTemplate reportTemplate = dataService.findReportTemplate(templateId, ctx).orElseThrow(() -> new IllegalArgumentException("Report template was not found: " + templateId));
+                PdfReportTemplateConfig reportConfiguration = (PdfReportTemplateConfig) reportTemplate.getConfiguration();
+
                 List<EntityData> entityDatas = fetchEntities(ctx, getSingleDataSource(component));
-                for (EntityData entityData : entityDatas) {
-                    content.append(renderComponent(ctx, componentLayout, component, entityData));
+                for (EntityData entity : entityDatas) {
+                    content.append(renderContent(ctx, componentLayout, reportConfiguration.getComponents(), entity));
+                }
+            } else if (component.getType() == TIME_SERIES_TABLE) {
+                List<EntityData> entityDatas = fetchEntities(ctx, getSingleDataSource(component));
+                for (EntityData entity : entityDatas) {
+                    content.append(renderComponent(ctx, componentLayout, component, entity));
                 }
             } else {
-                content.append(renderComponent(ctx, componentLayout, component, null));
+                content.append(renderComponent(ctx, componentLayout, component, stateEntity));
             }
         }
         return content.toString();
     }
 
-    private String renderComponent(TbReportCtx ctx, ComponentLayout parentComponentLayout, ReportComponent component, EntityData entityData)  {
-        ReportDataSource reportDataSource = buildComponentDataSource(ctx, component, entityData);
+    private String renderComponent(TbReportCtx ctx, ComponentLayout parentComponentLayout, ReportComponent component, EntityData stateEntity)  {
+        ReportDataSource reportDataSource = buildComponentDataSource(ctx, component, stateEntity);
         ComponentLayout componentLayout = new ComponentLayout(component, parentComponentLayout);
         return componentsRenderers.get(component.getType()).render(componentLayout, component, reportDataSource);
     }
 
-    private ReportDataSource buildComponentDataSource(TbReportCtx ctx, ReportComponent component, EntityData entityData) {
-        return switch (component.getType()) {
-            case TIME_SERIES_TABLE -> new ReportDataSource(buildTsDataSource(ctx, (TimeseriesTableComponent)component, entityData.getEntityId()));
-            case ALARM_TABLE ->  new ReportDataSource(buildAlarmDataSource(ctx, (AlarmTableComponent)component));
+    private ReportDataSource buildComponentDataSource(TbReportCtx ctx, ReportComponent component, EntityData stateEntity) {
+        ReportDataSource reportDataSource = switch (component.getType()) {
+            case TIME_SERIES_TABLE ->
+                    new ReportDataSource(buildTsDataSource(ctx, (TimeseriesTableComponent) component, stateEntity.getEntityId()));
+            case ALARM_TABLE -> new ReportDataSource(buildAlarmDataSource(ctx, (AlarmTableComponent) component));
             case DASHBOARD -> buildDashboardDataSource(ctx, ((DashboardComponent) component));
+            case IMAGE -> buildImageDataSource(ctx, ((ImageComponent) component));
             default -> buildMultipleDataSource(ctx, component.getDataSources());
         };
+        // Merge state entity data into the report variables
+        reportDataSource.getVariables().putAll(toStateEntityMap(stateEntity));
+        return reportDataSource;
+    }
+
+    private ReportDataSource buildImageDataSource(TbReportCtx ctx, ImageComponent component) {
+        TbResourceId tbResourceId = component.getTbResourceId();
+        TbResource tbResource = null;
+        try {
+            tbResource = dataService.findTbResource(tbResourceId, ctx);
+        } catch (ThingsboardException e) {
+            log.error("Failed to download resource by id: {}", tbResourceId, e);
+            throw new RuntimeException("Failed to find resource by id: " + tbResourceId, e);
+        }
+        return new ReportDataSource(tbResource.getData());
     }
 
     private ReportDataSource buildDashboardDataSource(TbReportCtx ctx, DashboardComponent component) {
@@ -253,19 +286,19 @@ public class PdfReportService extends AbstractReportService {
     }
 
     private ReportDataSource buildEntityDataSource(TbReportCtx ctx, DataSource dataSource) {
-        List<Map<String, String>> collect = fetchEntities(ctx, dataSource).stream().map(this::toMap).collect(Collectors.toList());
-        return new ReportDataSource(collect);
+        List<Map<String, String>> entityDatas = fetchEntities(ctx, dataSource).stream().map(this::toMap).collect(Collectors.toList());
+        return new ReportDataSource(entityDatas);
     }
 
     private ReportDataSource buildEntityCountDataSource(TbReportCtx ctx, DataSource dataSource, ReportTemplateConfig configuration) {
-        Map<String, Object> map = new HashMap<>();
-        map.put("count", dataService.countEntitiesByQuery(toEntityCountQuery(dataSource, configuration), ctx));
+        Map<String, String> map = new HashMap<>();
+        map.put("count", dataService.countEntitiesByQuery(toEntityCountQuery(dataSource, configuration), ctx).toString());
         return new ReportDataSource(map);
     }
 
     private ReportDataSource buildAlarmCountDataSource(TbReportCtx ctx, DataSource dataSource, ReportTemplateConfig configuration) {
-        Map<String, Object> map = new HashMap<>();
-        map.put("count", dataService.countAlarmsByQuery(toAlarmCountQuery(dataSource, configuration), ctx));
+        Map<String, String> map = new HashMap<>();
+        map.put("count", dataService.countAlarmsByQuery(toAlarmCountQuery(dataSource, configuration), ctx).toString());
         return new ReportDataSource(map);
     }
 
