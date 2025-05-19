@@ -30,6 +30,7 @@
  */
 package org.thingsboard.server.report.util;
 
+import org.thingsboard.server.report.util.itext.PdfReportFontResolver;
 import org.thingsboard.server.report.util.itext.PdfReportTextRenderer;
 import org.thingsboard.server.report.util.itext.PdfReportUserAgent;
 import org.w3c.tidy.Tidy;
@@ -57,7 +58,7 @@ public class HtmlRenderUtils {
         ITextOutputDevice outputDevice = new ITextOutputDevice(DEFAULT_DOTS_PER_POINT);
         ITextRenderer renderer = new ITextRenderer(DEFAULT_DOTS_PER_POINT, DEFAULT_DOTS_PER_PIXEL, outputDevice,
                 new PdfReportUserAgent(DEFAULT_DOTS_PER_POINT, DEFAULT_DOTS_PER_PIXEL),
-                new ITextFontResolver(),
+                new PdfReportFontResolver(),
                 new ITextReplacedElementFactory(outputDevice),
                 new PdfReportTextRenderer());
         return renderer;

@@ -28,35 +28,64 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.report.util.itext;
-
-import com.lowagie.text.pdf.BaseFont;
-import org.xhtmlrenderer.extend.FontContext;
-import org.xhtmlrenderer.pdf.FontDescription;
-import org.xhtmlrenderer.pdf.ITextFSFont;
-import org.xhtmlrenderer.pdf.ITextFSFontMetrics;
-import org.xhtmlrenderer.pdf.ITextTextRenderer;
-import org.xhtmlrenderer.render.FSFont;
-import org.xhtmlrenderer.render.FSFontMetrics;
-
-public class PdfReportTextRenderer extends ITextTextRenderer {
-
-    @Override
-    public FSFontMetrics getFSFontMetrics(FontContext context, FSFont font, String string) {
-        FontDescription description = ((ITextFSFont)font).getFontDescription();
-        BaseFont bf = description.getFont();
-        float size = font.getSize2D();
-        float strikethroughThickness = description.getYStrikeoutSize() != 0 ?
-                description.getYStrikeoutSize() / 1000f * size :
-                size / 12.0f;
-
-        return new ITextFSFontMetrics(
-                bf.getFontDescriptor(BaseFont.AWT_ASCENT, size) + bf.getFontDescriptor(BaseFont.AWT_LEADING, size),
-                -bf.getFontDescriptor(BaseFont.AWT_DESCENT, size),
-                -description.getYStrikeoutPosition() / 1000f * size,
-                strikethroughThickness,
-                -description.getUnderlinePosition() / 1000f * size,
-                description.getUnderlineThickness() / 1000f * size
-        );
-    }
+body.tb-report-component, tb-report-component .tb-report-component {
+  font-family: Roboto;
+  font-size: 12pt;
+  line-height: normal;
+  letter-spacing: normal;
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    line-height: normal;
+    letter-spacing: normal;
+    font-weight: bold;
+  }
+  h1 {
+    font-size: 2em;
+    margin: 0.67em 0;
+  }
+  h2 {
+    font-size: 1.5em;
+    margin: 0.83em 0;
+  }
+  h3 {
+    font-size: 1.17em;
+    margin: 1em 0;
+  }
+  h4 {
+    font-size: 1em;
+    margin: 1.33em 0;
+  }
+  h5 {
+    font-size: 0.83em;
+    margin: 1.67em 0;
+  }
+  h6 {
+    font-size: 0.67em;
+    margin: 2.33em 0;
+  }
+  pre {
+    line-height: normal;
+    font-size: 1em;
+    font-family: monospace;
+    margin: 1em 0;
+    white-space: normal;
+  }
+  p {
+    line-height: normal;
+    letter-spacing: normal;
+    font-size: 1em;
+    margin: 1em 0;
+  }
+  strong {
+    font-weight: bold;
+  }
+  hr {
+    margin: 0.5em 0;
+    border-style: inset;
+    border-width: 1px;
+  }
 }

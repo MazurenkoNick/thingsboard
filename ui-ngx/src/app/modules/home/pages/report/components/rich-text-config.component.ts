@@ -47,9 +47,13 @@ export class RichTextConfigComponent extends AbstractReportComponentConfig<RichT
 
   tinyMceOptions: Partial<EditorOptions> = {
     base_url: '/assets/tinymce',
+
+    body_class: 'tb-report-component',
+    content_css: ['/report-component.css'],
     suffix: '.min',
     plugins: ['link', 'table', 'image', 'lists', 'code', 'fullscreen'],
     menubar: 'edit insert tools view format table',
+    font_family_formats: 'Roboto=Roboto; Monospaced=monospace; Sans Serif=sans-serif; Serif=serif;',
     toolbar: 'undo redo | fontfamily fontsize blocks | bold italic  strikethrough | forecolor backcolor ' +
       '| link table image | alignleft aligncenter alignright alignjustify  ' +
       '| numlist bullist | outdent indent  | removeformat | code | fullscreen',

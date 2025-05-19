@@ -30,33 +30,18 @@
  */
 package org.thingsboard.server.report.util.itext;
 
-import com.lowagie.text.pdf.BaseFont;
-import org.xhtmlrenderer.extend.FontContext;
-import org.xhtmlrenderer.pdf.FontDescription;
-import org.xhtmlrenderer.pdf.ITextFSFont;
-import org.xhtmlrenderer.pdf.ITextFSFontMetrics;
-import org.xhtmlrenderer.pdf.ITextTextRenderer;
-import org.xhtmlrenderer.render.FSFont;
-import org.xhtmlrenderer.render.FSFontMetrics;
+import org.xhtmlrenderer.pdf.FontFamily;
+import org.xhtmlrenderer.pdf.ITextFontResolver;
 
-public class PdfReportTextRenderer extends ITextTextRenderer {
+import java.util.Collections;
+import java.util.Map;
 
-    @Override
-    public FSFontMetrics getFSFontMetrics(FontContext context, FSFont font, String string) {
-        FontDescription description = ((ITextFSFont)font).getFontDescription();
-        BaseFont bf = description.getFont();
-        float size = font.getSize2D();
-        float strikethroughThickness = description.getYStrikeoutSize() != 0 ?
-                description.getYStrikeoutSize() / 1000f * size :
-                size / 12.0f;
+public class PdfReportFontResolver extends ITextFontResolver {
 
-        return new ITextFSFontMetrics(
-                bf.getFontDescriptor(BaseFont.AWT_ASCENT, size) + bf.getFontDescriptor(BaseFont.AWT_LEADING, size),
-                -bf.getFontDescriptor(BaseFont.AWT_DESCENT, size),
-                -description.getYStrikeoutPosition() / 1000f * size,
-                strikethroughThickness,
-                -description.getUnderlinePosition() / 1000f * size,
-                description.getUnderlineThickness() / 1000f * size
-        );
+    protected Map<String, FontFamily> loadFonts() {
+        return Collections.emptyMap();
     }
+
 }
+
+

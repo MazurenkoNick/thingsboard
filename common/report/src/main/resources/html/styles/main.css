@@ -58,81 +58,118 @@
 }
 
 @font-face {
-    font-family: "monospace";
+    font-family: "Monospaced";
     font-style: normal;
     font-weight: normal;
-    src: url("classpath:fonts/monospace/dejavusansmono.ttf");
+    src: url("classpath:fonts/monospace/DejaVuSansMono.ttf");
     -fs-pdf-font-embed: embed;
     -fs-pdf-font-encoding: Identity-H;
 }
 
 @font-face {
-    font-family: "monospace";
+    font-family: "Monospaced";
     font-style: normal;
     font-weight: bold;
-    src: url("classpath:fonts/monospace/dejavusansmonobold.ttf");
+    src: url("classpath:fonts/monospace/DejaVuSansMono-Bold.ttf");
     -fs-pdf-font-embed: embed;
     -fs-pdf-font-encoding: Identity-H;
 }
 
 @font-face {
-    font-family: "sans-serif";
-    font-style: normal;
-    font-weight: normal;
-    src: url("classpath:fonts/sansserif/dejavusansmono.ttf");
-    -fs-pdf-font-embed: embed;
-    -fs-pdf-font-encoding: Identity-H;
-}
-
-@font-face {
-    font-family: "sans-serif";
-    font-style: normal;
-    font-weight: bold;
-    src: url("classpath:fonts/sansserif/dejavusansmonobold.ttf");
-    -fs-pdf-font-embed: embed;
-    -fs-pdf-font-encoding: Identity-H;
-}
-
-@font-face {
-    font-family: "serif";
-    font-style: normal;
-    font-weight: normal;
-    src: url("classpath:fonts/serif/times.ttf");
-    -fs-pdf-font-embed: embed;
-    -fs-pdf-font-encoding: Identity-H;
-}
-
-@font-face {
-    font-family: "serif";
+    font-family: "Monospaced";
     font-style: italic;
     font-weight: normal;
-    src: url("classpath:fonts/serif/timesi.ttf");
+    src: url("classpath:fonts/monospace/DejaVuSansMono-Oblique.ttf");
     -fs-pdf-font-embed: embed;
     -fs-pdf-font-encoding: Identity-H;
 }
 
 @font-face {
-    font-family: "serif";
-    font-style: normal;
-    font-weight: bold;
-    src: url("classpath:fonts/serif/timesbd.ttf");
-    -fs-pdf-font-embed: embed;
-    -fs-pdf-font-encoding: Identity-H;
-}
-
-@font-face {
-    font-family: "serif";
+    font-family: "Monospaced";
     font-style: italic;
     font-weight: bold;
-    src: url("classpath:fonts/serif/timesbi.ttf");
+    src: url("classpath:fonts/monospace/DejaVuSansMono-BoldOblique.ttf");
+    -fs-pdf-font-embed: embed;
+    -fs-pdf-font-encoding: Identity-H;
+}
+
+@font-face {
+    font-family: "SansSerif";
+    font-style: normal;
+    font-weight: normal;
+    src: url("classpath:fonts/sansserif/LiberationSans-Regular.ttf");
+    -fs-pdf-font-embed: embed;
+    -fs-pdf-font-encoding: Identity-H;
+}
+
+@font-face {
+    font-family: "SansSerif";
+    font-style: normal;
+    font-weight: bold;
+    src: url("classpath:fonts/sansserif/LiberationSans-Bold.ttf");
+    -fs-pdf-font-embed: embed;
+    -fs-pdf-font-encoding: Identity-H;
+}
+
+@font-face {
+    font-family: "SansSerif";
+    font-style: italic;
+    font-weight: normal;
+    src: url("classpath:fonts/sansserif/LiberationSans-Italic.ttf");
+    -fs-pdf-font-embed: embed;
+    -fs-pdf-font-encoding: Identity-H;
+}
+
+@font-face {
+    font-family: "SansSerif";
+    font-style: italic;
+    font-weight: bold;
+    src: url("classpath:fonts/sansserif/LiberationSans-BoldItalic.ttf");
+    -fs-pdf-font-embed: embed;
+    -fs-pdf-font-encoding: Identity-H;
+}
+
+@font-face {
+    font-family: "Serif";
+    font-style: normal;
+    font-weight: normal;
+    src: url("classpath:fonts/serif/LiberationSerif-Regular.ttf");
+    -fs-pdf-font-embed: embed;
+    -fs-pdf-font-encoding: Identity-H;
+}
+
+@font-face {
+    font-family: "Serif";
+    font-style: normal;
+    font-weight: bold;
+    src: url("classpath:fonts/serif/LiberationSerif-Bold.ttf");
+    -fs-pdf-font-embed: embed;
+    -fs-pdf-font-encoding: Identity-H;
+}
+
+@font-face {
+    font-family: "Serif";
+    font-style: italic;
+    font-weight: normal;
+    src: url("classpath:fonts/serif/LiberationSerif-Italic.ttf");
+    -fs-pdf-font-embed: embed;
+    -fs-pdf-font-encoding: Identity-H;
+}
+
+@font-face {
+    font-family: "Serif";
+    font-style: italic;
+    font-weight: bold;
+    src: url("classpath:fonts/serif/LiberationSerif-BoldItalic.ttf");
     -fs-pdf-font-embed: embed;
     -fs-pdf-font-encoding: Identity-H;
 }
 
 body {
     font-family: Roboto, sans-serif;
-    font-size: 16px;
+    font-size: 12pt;
     line-height: normal;
+    letter-spacing: normal;
     margin: 0;
     padding: 0;
 }
@@ -166,14 +203,73 @@ body {
     flex-direction: column;
 }
 
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    line-height: normal;
+    letter-spacing: normal;
+    font-weight: bold;
+}
+
+h1 {
+    font-size: 2em;
+    margin: 0.67em 0;
+}
+
+h2 {
+    font-size: 1.5em;
+    margin: 0.83em 0;
+}
+
+h3 {
+    font-size: 1.17em;
+    margin: 1em 0;
+}
+
+h4 {
+    font-size: 1em;
+    margin: 1.33em 0;
+}
+
+h5 {
+    font-size: 0.83em;
+    margin: 1.67em 0;
+}
+
+h6 {
+    font-size: 0.67em;
+    margin: 2.33em 0;
+}
+
+pre {
+    line-height: normal;
+    font-size: 1em;
+    font-family: monospace;
+    margin: 1em 0;
+    white-space: normal;
+}
+
+p {
+    line-height: normal;
+    letter-spacing: normal;
+    font-size: 1em;
+    margin: 1em 0;
+}
+
+strong {
+    font-weight: bold;
+}
+
+hr {
+    margin: 0.5em 0;
+    border-style: inset;
+    border-width: 1px;
+}
+
 div.report-component {
     position: relative;
     overflow: hidden;
-    font-size: 16px;
-}
-
-div.report-component p {
-    margin: 1em 0;
-    font-weight: 400;
-    line-height: 1.4;
 }

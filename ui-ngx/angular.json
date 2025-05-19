@@ -107,6 +107,10 @@
                 "input": "src/theme/login-theme.scss",
                 "bundleName": "login-theme"
               },
+              {
+                "input": "src/app/modules/home/pages/report/components/report-component-style.scss",
+                "bundleName": "report-component"
+              },
               "src/styles.scss",
               "src/form.scss",
               "node_modules/jquery.terminal/css/jquery.terminal.min.css",
