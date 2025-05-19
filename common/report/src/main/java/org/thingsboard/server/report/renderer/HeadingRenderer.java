@@ -52,10 +52,18 @@ public class HeadingRenderer extends ReportComponentWithLayoutRenderer {
 
         HashMap<String, Object> componentVariables = new HashMap<>();
         componentVariables.put("color", headingComponent.getColor() != null ? ColorUtils.normalizeCssColor(headingComponent.getColor()) : "#000");
-        componentVariables.put("fontSize", headingComponent.getFont().getSize());
+        if (headingComponent.getFont().getSize() != null && headingComponent.getFont().getSize() > 0) {
+            componentVariables.put("fontSize", headingComponent.getFont().getSize());
+        } else {
+            componentVariables.put("fontSize", 10);
+        }
         componentVariables.put("fontWeight", headingComponent.getFont().getWeight());
         componentVariables.put("fontStyle", headingComponent.getFont().getStyle());
-        componentVariables.put("fontFamily", headingComponent.getFont().getFamily());
+        if (headingComponent.getFont().getFamily() != null && headingComponent.getFont().getFamily().length() > 0) {
+            componentVariables.put("fontFamily", headingComponent.getFont().getFamily());
+        } else {
+            componentVariables.put("fontFamily", "Roboto");
+        }
         TextAlignment textAlignment = headingComponent.getTextAlignment() != null ? headingComponent.getTextAlignment() : TextAlignment.center;
         componentVariables.put("textAlignment", textAlignment.name());
         VerticalAlignment verticalAlignment = headingComponent.getTextAlignment() != null ? headingComponent.getVerticalAlignment() : VerticalAlignment.middle;
