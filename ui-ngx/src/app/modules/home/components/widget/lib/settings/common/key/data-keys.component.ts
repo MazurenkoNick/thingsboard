@@ -34,7 +34,8 @@ import {
   Component,
   DestroyRef,
   ElementRef,
-  forwardRef, HostBinding,
+  forwardRef,
+  HostBinding,
   Input,
   OnChanges,
   OnInit,
@@ -72,10 +73,7 @@ import { alarmFields } from '@shared/models/alarm.models';
 import { UtilsService } from '@core/services/utils.service';
 import { ErrorStateMatcher } from '@angular/material/core';
 import { MatDialog } from '@angular/material/dialog';
-import {
-  DataKeyConfigDialogComponent,
-  DataKeyConfigDialogData
-} from './data-key-config-dialog.component';
+import { DataKeyConfigDialogComponent, DataKeyConfigDialogData } from './data-key-config-dialog.component';
 import { deepClone, guid, isDefinedAndNotNull, isObject, isUndefined } from '@core/utils';
 import { Dashboard } from '@shared/models/dashboard.models';
 import { AggregationType } from '@shared/models/time/time.models';
@@ -183,6 +181,10 @@ export class DataKeysComponent implements ControlValueAccessor, OnInit, OnChange
   @Input()
   @coerceBoolean()
   simpleDataKeysLabel = false;
+
+  @Input()
+  @coerceBoolean()
+  supportsUnitConversion = false;
 
   @Input()
   aliasController: IAliasController;
@@ -630,7 +632,8 @@ export class DataKeysComponent implements ControlValueAccessor, OnInit, OnChange
           hideDataKeyColor: this.hideDataKeyColor,
           hideDataKeyUnits: this.hideDataKeyUnits,
           hideDataKeyDecimals: this.hideDataKeyDecimals,
-          datasources: this.datasources
+          datasources: this.datasources,
+          supportsUnitConversion: this.supportsUnitConversion
         }
       }).afterClosed().subscribe((updatedDataKey) => {
         if (updatedDataKey) {

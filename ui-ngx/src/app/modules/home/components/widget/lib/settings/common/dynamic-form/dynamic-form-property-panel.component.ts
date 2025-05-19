@@ -119,6 +119,7 @@ export class DynamicFormPropertyPanelComponent implements OnInit {
       {
         id: [this.property.id, [Validators.required]],
         name: [this.property.name, [Validators.required]],
+        hint: [this.property.hint, []],
         group: [this.property.group, []],
         type: [this.property.type, [Validators.required]],
         arrayItemType: [this.property.arrayItemType, [Validators.required]],
@@ -147,7 +148,8 @@ export class DynamicFormPropertyPanelComponent implements OnInit {
         allowClear: [this.property.allowClear || true, []],
         dateTimeType: [this.property.dateTimeType || 'datetime', []],
         htmlContent: [this.property.htmlContent || '', []],
-        htmlClassList: [this.property.htmlClassList || [], []]
+        htmlClassList: [this.property.htmlClassList || [], []],
+        supportsUnitConversion: [this.property.supportsUnitConversion ?? false]
       }
     );
     if (this.disabled) {

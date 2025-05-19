@@ -102,6 +102,7 @@ export type PropertyConditionFunction = (property: FormProperty, model: any) => 
 export interface FormPropertyBase {
   id: string;
   name: string;
+  hint?: string;
   group?: string;
   type: FormPropertyType;
   default: any;
@@ -177,8 +178,13 @@ export interface FormHtmlSection extends FormPropertyBase {
   htmlContent?: string;
 }
 
+export interface FormUnitProperty extends FormPropertyBase {
+  supportsUnitConversion?: boolean;
+}
+
 export type FormProperty = FormPropertyBase & FormTextareaProperty & FormNumberProperty & FormSelectProperty & FormRadiosProperty
-  & FormDateTimeProperty & FormJavascriptProperty & FormMarkdownProperty & FormFieldSetProperty & FormArrayProperty & FormHtmlSection;
+  & FormDateTimeProperty & FormJavascriptProperty & FormMarkdownProperty & FormFieldSetProperty & FormArrayProperty & FormHtmlSection
+  & FormUnitProperty;
 
 export const cleanupFormProperties = (properties: FormProperty[]): FormProperty[] => {
   for (const property of properties) {
@@ -228,6 +234,9 @@ export const cleanupFormProperty = (property: FormProperty): FormProperty => {
     delete property.htmlClassList;
     delete property.htmlContent;
   }
+  if (property.type !== FormPropertyType.units) {
+    delete property.supportsUnitConversion;
+  }
   for (const key of Object.keys(property)) {
     const val = property[key];
     if (isUndefinedOrNull(val) || isEmptyStr(val)) {
@@ -252,6 +261,7 @@ export interface FormPropertyContainerBase {
 }
 
 export interface FormPropertyRow extends FormPropertyContainerBase {
+  hint?: string;
   properties?: FormProperty[];
   switch?: FormProperty;
   rowClass?: string;
@@ -291,9 +301,9 @@ export const toPropertyGroups = (properties: FormProperty[],
                                  customTranslate: CustomTranslatePipe,
                                  sanitizer: DomSanitizer): FormPropertyGroup[] => {
   const groups: {title: string, properties: FormProperty[]}[] = [];
-  for (let property of properties) {
+  for (const property of properties) {
     if (!property.group) {
-      let group = groups.length ? groups[groups.length - 1] : null;
+      const group = groups.length ? groups[groups.length - 1] : null;
       if (group && !group.title) {
         group.properties.push(property);
       } else {
@@ -326,7 +336,7 @@ const toPropertyContainers = (properties: FormProperty[],
                               customTranslate: CustomTranslatePipe,
                               sanitizer: DomSanitizer): FormPropertyContainer[] => {
   const result: FormPropertyContainer[] = [];
-  for (let property of properties) {
+  for (const property of properties) {
     if (property.type === FormPropertyType.array) {
       const propertyArray: FormPropertyArray = {
         property,
@@ -377,6 +387,7 @@ const toPropertyContainers = (properties: FormProperty[],
       if (!propertyRow) {
         propertyRow = {
           label: property.name,
+          hint: property.hint,
           type: FormPropertyContainerType.row,
           properties: [],
           rowClass: property.rowClass,
@@ -397,7 +408,7 @@ const toPropertyContainers = (properties: FormProperty[],
       }
     }
   }
-  for (let container of result.filter(c =>
+  for (const container of result.filter(c =>
     c.type === FormPropertyContainerType.row && !c.switch && c.properties?.length === 1)) {
     const property = container.properties[0];
     if (isInputFieldPropertyType(property.type)) {
