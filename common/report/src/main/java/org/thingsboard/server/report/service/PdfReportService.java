@@ -33,9 +33,11 @@ package org.thingsboard.server.report.service;
 import com.google.common.util.concurrent.SettableFuture;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.thingsboard.server.common.data.TbResource;
 import org.thingsboard.server.common.data.dashboardreport.DashboardReportData;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.id.ReportTemplateId;
+import org.thingsboard.server.common.data.id.TbResourceId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.job.task.ReportTask;
 import org.thingsboard.server.common.data.query.EntityData;
@@ -48,6 +50,7 @@ import org.thingsboard.server.common.data.report.configuration.PdfReportTemplate
 import org.thingsboard.server.common.data.report.configuration.ReportTemplateConfig;
 import org.thingsboard.server.common.data.report.configuration.components.AlarmTableComponent;
 import org.thingsboard.server.common.data.report.configuration.components.DashboardComponent;
+import org.thingsboard.server.common.data.report.configuration.components.ImageComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponentType;
 import org.thingsboard.server.common.data.report.configuration.components.SubReportComponent;
@@ -213,19 +216,36 @@ public class PdfReportService extends AbstractReportService {
         return content.toString();
     }
 
-    private String renderComponent(TbReportCtx ctx, ComponentLayout parentComponentLayout, ReportComponent component, EntityData entityData)  {
-        ReportDataSource reportDataSource = buildComponentDataSource(ctx, component, entityData);
+    private String renderComponent(TbReportCtx ctx, ComponentLayout parentComponentLayout, ReportComponent component, EntityData stateEntity)  {
+        ReportDataSource reportDataSource = buildComponentDataSource(ctx, component, stateEntity);
         ComponentLayout componentLayout = new ComponentLayout(component, parentComponentLayout);
         return componentsRenderers.get(component.getType()).render(componentLayout, component, reportDataSource);
     }
 
-    private ReportDataSource buildComponentDataSource(TbReportCtx ctx, ReportComponent component, EntityData entityData) {
-        return switch (component.getType()) {
-            case TIME_SERIES_TABLE -> new ReportDataSource(buildTsDataSource(ctx, (TimeseriesTableComponent)component, entityData.getEntityId()));
-            case ALARM_TABLE ->  new ReportDataSource(buildAlarmDataSource(ctx, (AlarmTableComponent)component));
+    private ReportDataSource buildComponentDataSource(TbReportCtx ctx, ReportComponent component, EntityData stateEntity) {
+        ReportDataSource reportDataSource = switch (component.getType()) {
+            case TIME_SERIES_TABLE ->
+                    new ReportDataSource(buildTsDataSource(ctx, (TimeseriesTableComponent) component, stateEntity.getEntityId()));
+            case ALARM_TABLE -> new ReportDataSource(buildAlarmDataSource(ctx, (AlarmTableComponent) component));
             case DASHBOARD -> buildDashboardDataSource(ctx, ((DashboardComponent) component));
-            default -> buildMultipleDataSource(ctx, component.getDataSources(), entityData);
+            case IMAGE -> buildImageDataSource(ctx, ((ImageComponent) component));
+            default -> buildMultipleDataSource(ctx, component.getDataSources());
         };
+        // Merge state entity data into the report variables
+        reportDataSource.getVariables().putAll(toStateEntityMap(stateEntity));
+        return reportDataSource;
+    }
+
+    private ReportDataSource buildImageDataSource(TbReportCtx ctx, ImageComponent component) {
+        TbResourceId tbResourceId = component.getTbResourceId();
+        TbResource tbResource = null;
+        try {
+            tbResource = dataService.findTbResource(tbResourceId, ctx);
+        } catch (ThingsboardException e) {
+            log.error("Failed to download resource by id: {}", tbResourceId, e);
+            throw new RuntimeException("Failed to find resource by id: " + tbResourceId, e);
+        }
+        return new ReportDataSource(tbResource.getData());
     }
 
     private ReportDataSource buildDashboardDataSource(TbReportCtx ctx, DashboardComponent component) {
@@ -243,31 +263,31 @@ public class PdfReportService extends AbstractReportService {
         }
     }
 
-    private ReportDataSource buildMultipleDataSource(TbReportCtx ctx, List<DataSource> dataSources, EntityData stateEntity) {
+    private ReportDataSource buildMultipleDataSource(TbReportCtx ctx, List<DataSource> dataSources) {
         if (dataSources == null || dataSources.isEmpty()) {
-            return new ReportDataSource(toStateEntityMap(stateEntity));
+            return new ReportDataSource();
         }
         ReportDataSource mainDataSource = new ReportDataSource();
         for (DataSource dataSource : dataSources) {
-            ReportDataSource singleDataSource = buildSingleDataSource(ctx, dataSource, stateEntity);
+            ReportDataSource singleDataSource = buildSingleDataSource(ctx, dataSource);
             mainDataSource.merge(singleDataSource);
         }
         return mainDataSource;
     }
 
-    private ReportDataSource buildSingleDataSource(TbReportCtx ctx, DataSource dataSource, EntityData stateEntity) {
+    private ReportDataSource buildSingleDataSource(TbReportCtx ctx, DataSource dataSource) {
         ReportTemplateConfig configuration = ctx.getConfiguration();
         return switch (dataSource.getType()) {
-            case "device", "entity" -> buildEntityDataSource(ctx, dataSource, stateEntity);
+            case "device", "entity" -> buildEntityDataSource(ctx, dataSource);
             case "entityCount" -> buildEntityCountDataSource(ctx, dataSource, configuration);
             case "alarmCount" -> buildAlarmCountDataSource(ctx, dataSource, configuration);
             default -> throw new IllegalArgumentException("Unknown data source type: " + dataSource.getType());
         };
     }
 
-    private ReportDataSource buildEntityDataSource(TbReportCtx ctx, DataSource dataSource, EntityData stateEntity) {
+    private ReportDataSource buildEntityDataSource(TbReportCtx ctx, DataSource dataSource) {
         List<Map<String, String>> entityDatas = fetchEntities(ctx, dataSource).stream().map(this::toMap).collect(Collectors.toList());
-        return new ReportDataSource(entityDatas, toStateEntityMap(stateEntity));
+        return new ReportDataSource(entityDatas);
     }
 
     private ReportDataSource buildEntityCountDataSource(TbReportCtx ctx, DataSource dataSource, ReportTemplateConfig configuration) {

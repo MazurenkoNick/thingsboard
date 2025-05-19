@@ -35,13 +35,26 @@ import org.thingsboard.server.common.data.report.configuration.components.Report
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponentType;
 import org.thingsboard.server.report.context.ComponentLayout;
 import org.thingsboard.server.report.context.ReportDataSource;
+import org.thingsboard.server.report.util.ThymeleafUtil;
+
+import java.util.Base64;
+import java.util.HashMap;
 
 @Component
 public class ImageRenderer implements ReportComponentRenderer {
 
     @Override
     public String render(ComponentLayout layoutCtx, ReportComponent component, ReportDataSource reportDataSource) {
-        return "";
+        String base64Image = encodeImage(reportDataSource.getImage(), "image/jpeg");
+
+        HashMap<String, Object> componentVariables = new HashMap<>();
+        componentVariables.put("imageSrc", base64Image);
+        return ThymeleafUtil.render("html/components/image", componentVariables);
+    }
+
+    public String encodeImage(byte[] imageBytes, String mimeType) {
+        String base64 = Base64.getEncoder().encodeToString(imageBytes);
+        return "data:" + mimeType + ";base64," + base64;
     }
 
     @Override

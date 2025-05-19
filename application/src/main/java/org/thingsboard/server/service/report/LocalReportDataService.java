@@ -36,11 +36,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
+import org.thingsboard.server.common.data.TbResource;
 import org.thingsboard.server.common.data.blob.BlobEntity;
 import org.thingsboard.server.common.data.blob.BlobEntityInfo;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.ReportTemplateId;
+import org.thingsboard.server.common.data.id.TbResourceId;
 import org.thingsboard.server.common.data.kv.Aggregation;
 import org.thingsboard.server.common.data.kv.TsKvEntry;
 import org.thingsboard.server.common.data.page.PageData;
@@ -55,6 +57,7 @@ import org.thingsboard.server.common.data.query.EntityData;
 import org.thingsboard.server.common.data.query.EntityDataQuery;
 import org.thingsboard.server.common.data.report.ReportTemplate;
 import org.thingsboard.server.dao.report.ReportTemplateService;
+import org.thingsboard.server.dao.resource.ResourceService;
 import org.thingsboard.server.report.context.TbReportCtx;
 import org.thingsboard.server.report.datasource.ReportDataService;
 import org.thingsboard.server.service.entitiy.blob.TbBlobService;
@@ -79,6 +82,8 @@ public class LocalReportDataService implements ReportDataService {
     private final AccessControlService accessControlService;
     @Lazy
     private final ReportTemplateService reportTemplateService;
+    @Lazy
+    private final ResourceService resourceService;
     @Autowired
     @Lazy
     private TbBlobService tbBlobService;
@@ -89,6 +94,14 @@ public class LocalReportDataService implements ReportDataService {
         ReportTemplate reportTemplate = reportTemplateService.findReportTemplateById(securityUser.getTenantId(), templateId);
         accessControlService.checkPermission(securityUser, Resource.REPORT_TEMPLATE, Operation.READ, templateId, reportTemplate);
         return Optional.ofNullable(reportTemplate);
+    }
+
+    @Override
+    public TbResource findTbResource(TbResourceId resourceId, TbReportCtx ctx) throws ThingsboardException {
+        SecurityUser securityUser = getSecurityUser(ctx);
+        TbResource resource = resourceService.findResourceById(securityUser.getTenantId(), resourceId);
+        accessControlService.checkPermission(securityUser, Resource.TB_RESOURCE, Operation.READ, resourceId, resource);
+        return resource;
     }
 
     @Override
