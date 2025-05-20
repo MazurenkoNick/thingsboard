@@ -28,18 +28,6 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-@page {
-
-    @top-center {
-        content: element(header);
-        vertical-align: bottom;
-    }
-
-    @bottom-center {
-        content: element(footer);
-        vertical-align: top;
-    }
-}
 
 @font-face {
     font-family: "Roboto";
@@ -190,19 +178,6 @@ body {
     page-break-after: always;
 }
 
-.header {
-    position: running(header);
-}
-
-.footer {
-    position: running(footer);
-}
-
-.header, .footer, .content {
-    display: flex;
-    flex-direction: column;
-}
-
 h1,
 h2,
 h3,
@@ -270,6 +245,5 @@ hr {
 }
 
 div.report-component {
-    position: relative;
     overflow: hidden;
 }

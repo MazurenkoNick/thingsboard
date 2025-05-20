@@ -59,6 +59,7 @@ import org.thingsboard.server.common.data.report.configuration.style.Margins;
 import org.thingsboard.server.common.data.report.configuration.style.PageOrientation;
 import org.thingsboard.server.common.data.report.configuration.style.PageSize;
 import org.thingsboard.server.report.context.ComponentLayout;
+import org.thingsboard.server.report.context.HeaderFooterRenderLayout;
 import org.thingsboard.server.report.context.ReportDataSource;
 import org.thingsboard.server.report.context.TbReportCtx;
 import org.thingsboard.server.report.renderer.ReportComponentRenderer;
@@ -109,30 +110,18 @@ public class PdfReportService extends AbstractReportService {
         log.trace("[{}] Executing generateReport, reportRequest [{}]", tenantId, task);
         PdfReportTemplateConfig configuration = (PdfReportTemplateConfig) task.getReportTemplateConfig();
 
-        String headerHtml = renderHeader(ctx, configuration.getHeader());
-        String footerHtml = renderFooter(ctx, configuration.getFooter());
-
         Dimension pageSize = computePageSize(configuration);
         Insets pageMargins = computePageMargins(configuration);
-
         int usablePageWidthPx = (int)((pageSize.width - pageMargins.left - pageMargins.right) * 4f / 3f);
 
         ITextRenderer renderer = HtmlRenderUtils.createRenderer();
 
-        int headerHeightPx = HtmlRenderUtils.measureHtmlHeight(renderer, headerHtml, usablePageWidthPx);
-        int footerHeightPx = HtmlRenderUtils.measureHtmlHeight(renderer, footerHtml, usablePageWidthPx);
-
-        int maxTopMargin = pageMargins.top + (pageSize.height - pageMargins.top - pageMargins.bottom) / 2;
-        int maxBottomMargin = pageMargins.bottom + (pageSize.height - pageMargins.top - pageMargins.bottom) / 2;
-
-        pageMargins.top = Math.min((int)(pageMargins.top + headerHeightPx * 3f / 4f), maxTopMargin);
-        pageMargins.bottom = Math.min((int)(pageMargins.bottom + footerHeightPx * 3f / 4f), maxBottomMargin);
+        HeaderFooterRenderLayout headerLayout = renderHeaderFooter(renderer, ctx, configuration.getHeader(), usablePageWidthPx);
+        HeaderFooterRenderLayout footerLayout = renderHeaderFooter(renderer, ctx, configuration.getFooter(), usablePageWidthPx);
 
         Map<String, Object> reportVariables = new HashMap<>();
-        fillPageLayoutVariables(reportVariables, configuration, pageSize, pageMargins);
+        fillPageLayoutVariables(reportVariables, configuration, headerLayout, footerLayout, pageSize, pageMargins);
 
-        reportVariables.put("pageHeader", headerHtml);
-        reportVariables.put("pageFooter", footerHtml);
         reportVariables.put("pageContent", renderContent(ctx, new ComponentLayout(), configuration.getComponents(), null));
 
         String renderedHtmlContent = ThymeleafUtil.render("html/report-template", reportVariables);
@@ -156,41 +145,26 @@ public class PdfReportService extends AbstractReportService {
         }
     }
 
-    private String renderHeader(TbReportCtx ctx, HeaderFooter headerFooter) throws Exception {
-        return renderContent(ctx, new ComponentLayout(), headerFooter.getComponents(), null);
-      //  boolean hasComponents = headerFooter.isEnabled() && headerFooter.getComponents() != null
-      //          && !headerFooter.getComponents().isEmpty();
-      //  boolean firstPageHeaderEnabled = headerFooter.getFirstPage() != null &&
-      //          headerFooter.getFirstPage().isEnabled();
-//        if (firstPageHeaderEnabled && !headerFooter.getFirstPage().getComponents().isEmpty()) {
-//            renderContent(ctx, parentLayout, headerFooter.getFirstPage().getComponents(), false, printWhenExpression, () -> headerContainer);
-//
-//            JRDesignTextField pageNumberField = createJRTextField(parentLayout.getUsablePageWidth());
-//            pageNumberField.setPrintWhenExpression(printWhenExpression);
-//            pageNumberField.setHorizontalTextAlign(HorizontalTextAlignEnum.RIGHT);
-//            pageNumberField.setEvaluationTime(EvaluationTimeEnum.MASTER);
-//            pageNumberField.setExpression(new JRDesignExpression("$V{PAGE_NUMBER} + \" / \" + $V{MASTER_TOTAL_PAGES}"));
-//            headerContainer.addElement(pageNumberField);
-//        }
-//        if (hasComponents) {
-//            JRExpression printWhenExpression = firstPageHeaderEnabled ? new JRDesignExpression("$V{PAGE_NUMBER} > 1") : null;
-//            renderContent(ctx, parentLayout, headerFooter.getComponents(), true, printWhenExpression, () -> headerContainer);
-//
-//            JRDesignTextField pageNumberField = createJRTextField(parentLayout.getUsablePageWidth());
-//            pageNumberField.setPrintWhenExpression(printWhenExpression);
-//            pageNumberField.setHorizontalTextAlign(HorizontalTextAlignEnum.RIGHT);
-//            pageNumberField.setEvaluationTime(EvaluationTimeEnum.MASTER);
-//            pageNumberField.setExpression(new JRDesignExpression("$V{PAGE_NUMBER} + \" / \" + $V{MASTER_TOTAL_PAGES}"));
-//            headerContainer.addElement(pageNumberField);
-//        }
-        //return "<p>This is header</p>";
+    private HeaderFooterRenderLayout renderHeaderFooter(ITextRenderer renderer,
+                                                        TbReportCtx ctx, HeaderFooter headerFooter,
+                                                        int usablePageWidthPx) throws Exception {
+        HeaderFooterRenderLayout headerFooterRenderLayout = new HeaderFooterRenderLayout();
+        headerFooterRenderLayout.setEnabled(headerFooter.isEnabled());
+        if (headerFooter.isEnabled()) {
+            String htmlContent = renderContent(ctx, new ComponentLayout(), headerFooter.getComponents(), null);
+            headerFooterRenderLayout.setHtmlContent(htmlContent);
+            int heightPx = HtmlRenderUtils.measureHtmlHeight(renderer, htmlContent, usablePageWidthPx);
+            headerFooterRenderLayout.setHeightPx(heightPx);
+        }
+        headerFooterRenderLayout.setFirstPageEnabled(headerFooter.getFirstPage() != null && headerFooter.getFirstPage().isEnabled());
+        if (headerFooterRenderLayout.isFirstPageEnabled()) {
+            String htmlContent = renderContent(ctx, new ComponentLayout(), headerFooter.getFirstPage().getComponents(), null);
+            headerFooterRenderLayout.setFirstPageHtmlContent(htmlContent);
+            int heightPx = HtmlRenderUtils.measureHtmlHeight(renderer, htmlContent, usablePageWidthPx);
+            headerFooterRenderLayout.setFirstPageHeightPx(heightPx);
+        }
+        return headerFooterRenderLayout;
     }
-
-    private String renderFooter(TbReportCtx ctx, HeaderFooter headerFooter) throws ThingsboardException {
-        return renderContent(ctx, new ComponentLayout(), headerFooter.getComponents(), null);
-        //return "<p>This is footer <span class='page-number'></span> / <span class='page-count'></span></p>";
-    }
-
 
     private String renderContent(TbReportCtx ctx, ComponentLayout componentLayout, List<ReportComponent> components, EntityData stateEntity) throws ThingsboardException {
         StringBuilder content = new StringBuilder();
@@ -238,7 +212,7 @@ public class PdfReportService extends AbstractReportService {
 
     private ReportDataSource buildImageDataSource(TbReportCtx ctx, ImageComponent component) {
         TbResourceId tbResourceId = component.getTbResourceId();
-        TbResource tbResource = null;
+        TbResource tbResource;
         try {
             tbResource = dataService.findTbResource(tbResourceId, ctx);
         } catch (ThingsboardException e) {
@@ -331,17 +305,58 @@ public class PdfReportService extends AbstractReportService {
         }
     }
 
-    private void fillPageLayoutVariables(Map<String, Object> reportVariables, PdfReportTemplateConfig configuration,
+    private void fillPageLayoutVariables(Map<String, Object> reportVariables,
+                                         PdfReportTemplateConfig configuration,
+                                         HeaderFooterRenderLayout headerLayout,
+                                         HeaderFooterRenderLayout footerLayout,
                                          Dimension pageSize, Insets pageMargins) {
         reportVariables.put("pageWidth", pageSize.getWidth() + "pt" );
         reportVariables.put("pageHeight", pageSize.getHeight() + "pt" );
         reportVariables.put("pageMarginLeft", pageMargins.left + "pt");
         reportVariables.put("pageMarginRight", pageMargins.right + "pt");
-        reportVariables.put("pageMarginTop", pageMargins.top + "pt");
-        reportVariables.put("pageMarginBottom", pageMargins.bottom + "pt");
 
         String pageBackground = configuration.getPageBackground() != null ? ColorUtils.normalizeCssColor(configuration.getPageBackground()) : "#fff";
         reportVariables.put("pageBackground", pageBackground);
+
+        int minContentHeight = 100;
+
+        int minHalfPageContentHeight = Math.max((pageSize.height - pageMargins.top - pageMargins.bottom - minContentHeight) / 2, 0);
+        int maxTopMargin = pageMargins.top + minHalfPageContentHeight;
+        int maxBottomMargin = pageMargins.bottom + minHalfPageContentHeight;
+
+        int pageMarginTop = this.fillHeaderFooterVariables(reportVariables, headerLayout, pageMargins, maxTopMargin, true);
+        reportVariables.put("pageMarginTop", pageMarginTop + "pt");
+
+        int pageMarginBottom = this.fillHeaderFooterVariables(reportVariables, footerLayout, pageMargins, maxBottomMargin, false);
+        reportVariables.put("pageMarginBottom", pageMarginBottom + "pt");
+    }
+
+    private int fillHeaderFooterVariables(Map<String, Object> reportVariables,
+                                          HeaderFooterRenderLayout headerFooterLayout,
+                                          Insets pageMargins,
+                                          int maxMargin,
+                                          boolean headerElseFooter) {
+        String prefix = headerElseFooter ? "Header" : "Footer";
+        String marginPrefix = headerElseFooter ? "Top" : "Bottom";
+        reportVariables.put("enable" + prefix, headerFooterLayout.isEnabled());
+        int startMargin = headerElseFooter ? pageMargins.top : pageMargins.bottom;
+        int margin = startMargin;
+        reportVariables.put("page" + prefix + "Padding", startMargin + "pt");
+        if (headerFooterLayout.isEnabled()) {
+            reportVariables.put("page" + prefix, headerFooterLayout.getHtmlContent());
+            margin = Math.min((int)(startMargin + headerFooterLayout.getHeightPx() * 3f / 4f), maxMargin);
+            int height = margin - startMargin;
+            reportVariables.put("page" + prefix + "Height", height + "pt");
+        }
+        reportVariables.put("enableFirstPage" + prefix, headerFooterLayout.isFirstPageEnabled());
+        if (headerFooterLayout.isFirstPageEnabled()) {
+            int firstPageMargin = Math.min((int)(startMargin + headerFooterLayout.getFirstPageHeightPx() * 3f / 4f), maxMargin);
+            reportVariables.put("firstPageMargin" + marginPrefix, firstPageMargin + "pt");
+            reportVariables.put("firstPage" + prefix, headerFooterLayout.getFirstPageHtmlContent());
+            int height = firstPageMargin - startMargin;
+            reportVariables.put("firstPage" + prefix + "Height", height + "pt");
+        }
+        return margin;
     }
 
     @Override
