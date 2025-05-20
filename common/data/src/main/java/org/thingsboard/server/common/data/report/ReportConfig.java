@@ -28,51 +28,29 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.common.data.job.task;
+package org.thingsboard.server.common.data.report;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
-import lombok.experimental.SuperBuilder;
-import org.thingsboard.server.common.data.id.CustomerId;
-import org.thingsboard.server.common.data.id.EntityId;
-import org.thingsboard.server.common.data.job.JobType;
-import org.thingsboard.server.common.data.report.configuration.ReportTemplateConfig;
+import org.thingsboard.server.common.data.id.NotificationTargetId;
+import org.thingsboard.server.common.data.id.NotificationTemplateId;
+import org.thingsboard.server.common.data.id.ReportTemplateId;
+import org.thingsboard.server.common.data.id.UserId;
 
 @Data
-@NoArgsConstructor
-@EqualsAndHashCode(callSuper = true)
-@SuperBuilder
-@ToString(callSuper = true)
-public class ReportTask extends Task<ReportTaskResult> {
+public class ReportConfig {
 
-    private ReportTemplateConfig reportTemplateConfig;
-
+    @Schema(description = "Json object representing the report template id.")
+    private ReportTemplateId reportTemplateId;
+    @Schema(description = "Json object representing the user id.", example = "784f394c-42b6-435a-983c-b7beff2784f9")
+    private UserId userId;
+    @Schema(description = "Timezone in which target dashboard will be presented in dashboard report.", example = "Europe/Kiev", requiredMode = Schema.RequiredMode.REQUIRED)
     private String timezone;
-
-    private String accessToken;
-    private long accessTokenExpirationTs;
-
-    @Override
-    public ReportTaskResult toFailed(Throwable error) {
-        return ReportTaskResult.failed(this, error);
-    }
-
-    @Override
-    public ReportTaskResult toDiscarded() {
-        return ReportTaskResult.discarded(this);
-    }
-
-    @Override
-    public EntityId getEntityId() {
-        return getJobId();
-    }
-
-    @Override
-    public JobType getJobType() {
-        return JobType.REPORT;
-    }
+    @Schema(description = "Json object representing the notification target id.", example = "784f394c-42b6-435a-983c-b7beff2784f9")
+    private NotificationTargetId notificationTargetId;
+    @Schema(description = "Json object representing the notification template id.", example = "784f394c-42b6-435a-983c-b7beff2784f9")
+    private NotificationTemplateId notificationTemplateId;
+    @Schema(description = "A long value representing the ttl of generated report.", example = "60000")
+    private long ttl;
 
 }

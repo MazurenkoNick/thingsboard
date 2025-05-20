@@ -90,7 +90,6 @@ public class ReportController extends BaseController {
         ReportTask reportTask = ReportTask.builder()
                 .tenantId(tenantId)
                 .reportTemplateConfig(configuration)
-                .customerId(reportRequest.getCustomerId())
                 .timezone(reportRequest.getTimezone())
                 .accessToken(accessToken.getToken())
                 .accessTokenExpirationTs(accessToken.getClaims().getExpiration().getTime())
@@ -119,7 +118,7 @@ public class ReportController extends BaseController {
         }
         ReportTemplate reportTemplate = checkReportTemplateId(reportTemplateId, Operation.READ);
         UserId userId = StringUtils.isNotEmpty(reportRequest.getUserId()) ? new UserId(UUID.fromString(reportRequest.getUserId())) : getCurrentUser().getId();
-        return jobManager.submitJob(Job.newReportJob(reportTemplate, userId, reportRequest.getCustomerId(), reportRequest.getTimezone()));
+        return jobManager.submitJob(Job.newReportJob(reportTemplate, userId, reportRequest.getTimezone()));
     }
 
 }

@@ -52,7 +52,6 @@ public class ReportJobConfiguration extends JobConfiguration {
     private ReportTemplateId reportTemplateId;
     private TbReportFormat reportFormat;
     private UserId userId;
-    private CustomerId customerId;
     private String timezone;
 
     @Override

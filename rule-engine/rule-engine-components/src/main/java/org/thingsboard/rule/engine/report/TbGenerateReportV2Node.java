@@ -67,7 +67,7 @@ public class TbGenerateReportV2Node implements TbNode {
     public void onMsg(TbContext ctx, TbMsg msg) {
         DonAsynchron.withCallback(ctx.getExternalCallExecutor().submit(() -> {
             ReportTemplate reportTemplate = ctx.getPeContext().getReportTemplateService().findReportTemplateById(ctx.getTenantId(), config.getReportTemplateId());
-            Job job = Job.newReportJob(reportTemplate, config.getUserId(), config.getCustomerId(), config.getTimezone());
+            Job job = Job.newReportJob(reportTemplate, config.getUserId(), config.getTimezone());
             ctx.getJobManager().submitJob(job);
         }), result -> ctx.tellSuccess(msg), error -> ctx.tellFailure(msg, error));
     }

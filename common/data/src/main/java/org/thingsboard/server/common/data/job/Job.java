@@ -95,7 +95,6 @@ public class Job extends BaseData<JobId> implements HasTenantId {
 
     public static Job newReportJob(ReportTemplate reportTemplate,
                                    UserId userId,
-                                   CustomerId customerId,
                                    String timezone) {
         return Job.builder()
                 .tenantId(reportTemplate.getTenantId())
@@ -106,7 +105,6 @@ public class Job extends BaseData<JobId> implements HasTenantId {
                         .reportTemplateId(reportTemplate.getId()) // todo: also get from msg body
                         .reportFormat(reportTemplate.getConfiguration().getFormat())
                         .userId(userId) // todo: also get from msg body
-                        .customerId(customerId) // todo: also get from msg body
                         .timezone(timezone) // todo: also get from msg body
                         .build())
                 .build();

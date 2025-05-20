@@ -80,7 +80,6 @@ public class ReportJobProcessor implements JobProcessor {
                 .jobId(job.getId())
                 .key(configuration.getTasksKey())
                 .reportTemplateConfig(reportTemplate.getConfiguration())
-                .customerId(configuration.getCustomerId())
                 .timezone(configuration.getTimezone())
                 .accessToken(accessToken.getToken())
                 .accessTokenExpirationTs(accessToken.getClaims().getExpiration().getTime())
@@ -101,7 +100,6 @@ public class ReportJobProcessor implements JobProcessor {
         TbMsg tbMsg = TbMsg.newMsg()
                 .type(TbMsgType.REPORT_GENERATED)
                 .originator(configuration.getUserId())
-                .customerId(configuration.getCustomerId())
                 .data(JacksonUtil.toString(configuration))
                 .metaData(new TbMsgMetaData(Map.of(
                         "reportBlobEntityId", jobResult.getReportBlobId().toString()
@@ -111,7 +109,6 @@ public class ReportJobProcessor implements JobProcessor {
 
         notificationRuleProcessor.process(ReportGeneratedTrigger.builder()
                 .tenantId(job.getTenantId())
-                .customerId(configuration.getCustomerId())
                 .reportBlobId(jobResult.getReportBlobId())
                 .reportName(jobResult.getReportName())
                 .reportFormat(configuration.getReportFormat())

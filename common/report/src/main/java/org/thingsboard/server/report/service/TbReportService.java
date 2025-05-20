@@ -76,7 +76,6 @@ public class TbReportService {
 
             BlobEntity blobEntity = new BlobEntity();
             blobEntity.setTenantId(task.getTenantId());
-            blobEntity.setCustomerId(task.getCustomerId());
             blobEntity.setData(ByteBuffer.wrap(reportData.getData()));
             blobEntity.setContentType(reportData.getContentType());
             blobEntity.setName(reportData.getName());
