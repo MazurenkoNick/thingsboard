@@ -41,14 +41,13 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.thingsboard.rule.engine.api.JobManager;
 import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.id.ReportTemplateId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.id.UserId;
 import org.thingsboard.server.common.data.job.Job;
-import org.thingsboard.server.common.data.job.JobType;
-import org.thingsboard.server.common.data.job.ReportJobConfiguration;
 import org.thingsboard.server.common.data.job.task.ReportTask;
 import org.thingsboard.server.common.data.permission.Operation;
 import org.thingsboard.server.common.data.report.ReportData;
@@ -58,8 +57,6 @@ import org.thingsboard.server.common.data.report.configuration.ReportTemplateCon
 import org.thingsboard.server.config.annotations.ApiOperation;
 import org.thingsboard.server.queue.util.TbCoreComponent;
 import org.thingsboard.server.report.service.TbReportService;
-import org.thingsboard.server.service.job.JobManager;
-import org.thingsboard.server.service.security.model.SecurityUser;
 import org.thingsboard.server.service.security.model.token.AccessJwtToken;
 import org.thingsboard.server.service.security.system.SystemSecurityService;
 
@@ -94,7 +91,6 @@ public class ReportController extends BaseController {
                 .tenantId(tenantId)
                 .reportTemplateConfig(configuration)
                 .customerId(reportRequest.getCustomerId())
-                .entityId(reportRequest.getEntityId())
                 .timezone(reportRequest.getTimezone())
                 .accessToken(accessToken.getToken())
                 .accessTokenExpirationTs(accessToken.getClaims().getExpiration().getTime())
@@ -113,7 +109,6 @@ public class ReportController extends BaseController {
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN')")
     @PostMapping(value = "/report")
     public Job requestReport(@RequestBody ReportRequest reportRequest) throws ThingsboardException {
-        SecurityUser currentUser = getCurrentUser();
         ReportTemplateId reportTemplateId = reportRequest.getReportTemplateId();
         if (reportTemplateId == null) {
             /*
@@ -124,21 +119,7 @@ public class ReportController extends BaseController {
         }
         ReportTemplate reportTemplate = checkReportTemplateId(reportTemplateId, Operation.READ);
         UserId userId = StringUtils.isNotEmpty(reportRequest.getUserId()) ? new UserId(UUID.fromString(reportRequest.getUserId())) : getCurrentUser().getId();
-
-        return jobManager.submitJob(Job.builder()
-                .tenantId(currentUser.getTenantId())
-                .type(JobType.REPORT)
-                .key(UUID.randomUUID().toString()) // we can submit multiple report jobs at once regardless of the configuration
-                .description("Report generation for template '" + reportTemplate.getName() + "'")
-                .configuration(ReportJobConfiguration.builder()
-                        .reportTemplateId(reportTemplateId)
-                        .reportFormat(reportTemplate.getConfiguration().getFormat())
-                        .userId(userId)
-                        .customerId(reportRequest.getCustomerId())
-                        .entityId(reportRequest.getEntityId())
-                        .timezone(reportRequest.getTimezone())
-                        .build())
-                .build());
+        return jobManager.submitJob(Job.newReportJob(reportTemplate, userId, reportRequest.getCustomerId(), reportRequest.getTimezone()));
     }
 
 }

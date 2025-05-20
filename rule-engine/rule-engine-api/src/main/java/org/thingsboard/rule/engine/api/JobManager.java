@@ -28,36 +28,20 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.common.data.job;
+package org.thingsboard.rule.engine.api;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
-import org.thingsboard.server.common.data.id.CustomerId;
-import org.thingsboard.server.common.data.id.ReportTemplateId;
-import org.thingsboard.server.common.data.id.UserId;
-import org.thingsboard.server.common.data.report.TbReportFormat;
+import org.thingsboard.server.common.data.id.JobId;
+import org.thingsboard.server.common.data.id.TenantId;
+import org.thingsboard.server.common.data.job.Job;
 
-@Data
-@EqualsAndHashCode(callSuper = true)
-@AllArgsConstructor
-@NoArgsConstructor
-@Builder
-@ToString(callSuper = true)
-public class ReportJobConfiguration extends JobConfiguration {
+public interface JobManager {
 
-    private ReportTemplateId reportTemplateId;
-    private TbReportFormat reportFormat;
-    private UserId userId;
-    private CustomerId customerId;
-    private String timezone;
+    Job submitJob(Job job);
 
-    @Override
-    public JobType getType() {
-        return JobType.REPORT;
-    }
+    void cancelJob(TenantId tenantId, JobId jobId);
+
+    void reprocessJob(TenantId tenantId, JobId jobId);
+
+    void onJobUpdate(Job job);
 
 }

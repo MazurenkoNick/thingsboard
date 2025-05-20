@@ -54,14 +54,13 @@ import java.util.UUID;
 @Slf4j
 @RuleNode(
         type = ComponentType.ACTION,
-        name = "generate report",
+        name = "generate dashboard report",
         configClazz = TbGenerateReportNodeConfiguration.class,
-        nodeDescription = "Generates report",
+        nodeDescription = "Generates dashboard report",
         nodeDetails = "Generates dashboard based reports.",
         configDirective = "tbActionNodeGenerateReportConfig",
         icon = "description"
 )
-
 public class TbGenerateReportNode extends TbAbstractExternalNode {
     private static final String ATTACHMENTS = "attachments";
 

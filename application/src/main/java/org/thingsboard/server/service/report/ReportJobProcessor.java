@@ -81,7 +81,6 @@ public class ReportJobProcessor implements JobProcessor {
                 .key(configuration.getTasksKey())
                 .reportTemplateConfig(reportTemplate.getConfiguration())
                 .customerId(configuration.getCustomerId())
-                .entityId(configuration.getEntityId())
                 .timezone(configuration.getTimezone())
                 .accessToken(accessToken.getToken())
                 .accessTokenExpirationTs(accessToken.getClaims().getExpiration().getTime())
