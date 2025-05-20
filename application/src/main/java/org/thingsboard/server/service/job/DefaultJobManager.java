@@ -73,7 +73,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-@TbCoreComponent
 @Component
 @Slf4j
 public class DefaultJobManager implements JobManager {

@@ -28,36 +28,29 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.common.data.job;
+package org.thingsboard.rule.engine.report;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
+import org.thingsboard.rule.engine.api.NodeConfiguration;
+import org.thingsboard.server.common.data.dashboardreport.DashboardReportConfig;
 import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.ReportTemplateId;
 import org.thingsboard.server.common.data.id.UserId;
-import org.thingsboard.server.common.data.report.TbReportFormat;
 
 @Data
-@EqualsAndHashCode(callSuper = true)
-@AllArgsConstructor
-@NoArgsConstructor
-@Builder
-@ToString(callSuper = true)
-public class ReportJobConfiguration extends JobConfiguration {
+public class TbGenerateReportV2NodeConfiguration implements NodeConfiguration<TbGenerateReportV2NodeConfiguration> {
 
+    @NotNull
     private ReportTemplateId reportTemplateId;
-    private TbReportFormat reportFormat;
-    private UserId userId;
     private CustomerId customerId;
+    @NotNull
+    private UserId userId;
     private String timezone;
 
     @Override
-    public JobType getType() {
-        return JobType.REPORT;
+    public TbGenerateReportV2NodeConfiguration defaultConfiguration() {
+        return new TbGenerateReportV2NodeConfiguration();
     }
 
 }
