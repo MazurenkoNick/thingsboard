@@ -38,58 +38,45 @@ import {
   Validators
 } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import {
-  pageOrientations,
-  pageOrientationTranslationMap,
-  pageSizes,
-  paperSizeDisplayMap,
-  PdfReportTemplateSettings
-} from '@shared/models/report.models';
+import { Insets } from '@shared/models/report.models';
 
 @Component({
-  selector: 'tb-report-template-settings',
-  templateUrl: './report-template-settings.component.html',
+  selector: 'tb-report-insets',
+  templateUrl: './report-insets.component.html',
   styleUrls: [],
   providers: [
     {
       provide: NG_VALUE_ACCESSOR,
-      useExisting: forwardRef(() => ReportTemplateSettingsComponent),
+      useExisting: forwardRef(() => ReportInsetsComponent),
       multi: true
     }
   ]
 })
-export class ReportTemplateSettingsComponent implements OnInit, ControlValueAccessor {
-
-  pageSizes = pageSizes;
-  paperSizeDisplayMap = paperSizeDisplayMap;
-
-  pageOrientations = pageOrientations;
-  pageOrientationTranslationMap = pageOrientationTranslationMap;
+export class ReportInsetsComponent implements OnInit, ControlValueAccessor {
 
   @Input()
   disabled: boolean;
 
-  private modelValue: PdfReportTemplateSettings;
+  private modelValue: Insets;
 
   private propagateChange = null;
 
-  public settingsFormGroup: UntypedFormGroup;
+  public insetsFormGroup: UntypedFormGroup;
 
   constructor(private fb: UntypedFormBuilder,
               private destroyRef: DestroyRef) {
   }
 
   ngOnInit(): void {
-    this.settingsFormGroup = this.fb.group({
-      name: [null, [Validators.required]],
-      namePattern: [null, [Validators.required]],
-      description: [null, []],
-      pageSize: [null, []],
-      pageOrientation: [null, []],
-      pageMargins: [null, []],
-      pageBackground: [null, []]
-    });
-    this.settingsFormGroup.valueChanges.pipe(
+    this.insetsFormGroup = this.fb.group(
+      {
+        left: [null, [Validators.min(0)]],
+        right: [null, [Validators.min(0)]],
+        top: [null, [Validators.min(0)]],
+        bottom: [null, [Validators.min(0)]]
+      }
+    )
+    this.insetsFormGroup.valueChanges.pipe(
       takeUntilDestroyed(this.destroyRef)
     ).subscribe(() => {
       this.updateModel();
@@ -106,21 +93,26 @@ export class ReportTemplateSettingsComponent implements OnInit, ControlValueAcce
   setDisabledState(isDisabled: boolean): void {
     this.disabled = isDisabled;
     if (isDisabled) {
-      this.settingsFormGroup.disable({emitEvent: false});
+      this.insetsFormGroup.disable({emitEvent: false});
     } else {
-      this.settingsFormGroup.enable({emitEvent: false});
+      this.insetsFormGroup.enable({emitEvent: false});
     }
   }
 
-  writeValue(value: PdfReportTemplateSettings): void {
+  writeValue(value: Insets): void {
     this.modelValue = value;
-    this.settingsFormGroup.patchValue(
-      value, {emitEvent: false}
+    this.insetsFormGroup.patchValue(
+      {
+        left: value?.left,
+        right: value?.right,
+        top: value?.top,
+        bottom: value?.bottom
+      }, {emitEvent: false}
     );
   }
 
   private updateModel() {
-    this.modelValue = this.settingsFormGroup.getRawValue();
+    this.modelValue = this.insetsFormGroup.getRawValue();
     this.propagateChange(this.modelValue);
   }
 }

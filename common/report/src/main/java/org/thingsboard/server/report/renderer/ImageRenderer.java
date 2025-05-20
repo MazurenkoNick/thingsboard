@@ -33,7 +33,6 @@ package org.thingsboard.server.report.renderer;
 import org.springframework.stereotype.Component;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponentType;
-import org.thingsboard.server.report.context.ComponentLayout;
 import org.thingsboard.server.report.context.ComponentDataSource;
 import org.thingsboard.server.report.util.ThymeleafUtil;
 
@@ -44,7 +43,7 @@ import java.util.HashMap;
 public class ImageRenderer implements ReportComponentRenderer {
 
     @Override
-    public String render(ComponentLayout layoutCtx, ReportComponent component, ComponentDataSource reportDataSource) {
+    public String render(ReportComponent component, ComponentDataSource reportDataSource) {
         String base64Image = encodeImage(reportDataSource.getImage(), "image/jpeg");
 
         HashMap<String, Object> componentVariables = new HashMap<>();

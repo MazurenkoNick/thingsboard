@@ -30,10 +30,19 @@
  */
 package org.thingsboard.server.common.data.report.configuration.style;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
 
 @Data
-public class Margins {
+@AllArgsConstructor
+public class Insets {
+
+     public Insets(int margin) {
+          this.left = margin;
+          this.top = margin;
+          this.right = margin;
+          this.bottom = margin;
+     }
 
      private int left;
      private int right;

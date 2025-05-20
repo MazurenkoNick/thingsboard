@@ -31,7 +31,7 @@
 package org.thingsboard.server.report.renderer;
 
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
-import org.thingsboard.server.report.context.ComponentLayout;
+import org.thingsboard.server.common.data.report.configuration.style.Insets;
 import org.thingsboard.server.report.context.ComponentDataSource;
 import org.thingsboard.server.report.util.ColorUtils;
 import org.thingsboard.server.report.util.ThymeleafUtil;
@@ -41,16 +41,34 @@ import java.util.Map;
 
 public abstract class ReportComponentWithLayoutRenderer implements ReportComponentRenderer {
 
+    private static final int DEFAULT_COMPONENT_MARGIN_SIZE = 0;
+    private static final int DEFAULT_COMPONENT_PADDING_SIZE = 0;
+
     @Override
-    public String render(ComponentLayout componentLayout, ReportComponent component, ComponentDataSource reportDataSource) {
+    public String render(ReportComponent component, ComponentDataSource reportDataSource) {
         String content = this.renderContent(component, reportDataSource);
         Map<String, Object> layoutVariables = new HashMap<>();
         layoutVariables.put("htmlContent", content);
         layoutVariables.put("background", component.getBackground() != null ? ColorUtils.normalizeCssColor(component.getBackground()) : "transparent");
-        layoutVariables.put("leftPadding", componentLayout.getLeftMargin());
-        layoutVariables.put("topPadding", componentLayout.getTopMargin());
-        layoutVariables.put("rightPadding", componentLayout.getRightMargin());
-        layoutVariables.put("bottomPadding", componentLayout.getBottomMargin());
+
+        Insets margins = component.getMargins();
+        if (margins == null) {
+            margins = new Insets(DEFAULT_COMPONENT_MARGIN_SIZE);
+        }
+        layoutVariables.put("leftMargin", margins.getLeft());
+        layoutVariables.put("rightMargin", margins.getRight());
+        layoutVariables.put("topMargin", margins.getTop());
+        layoutVariables.put("bottomMargin", margins.getBottom());
+
+        Insets paddings = component.getPaddings();
+        if (paddings == null) {
+            paddings = new Insets(DEFAULT_COMPONENT_PADDING_SIZE);
+        }
+        layoutVariables.put("leftPadding", paddings.getLeft());
+        layoutVariables.put("rightPadding", paddings.getRight());
+        layoutVariables.put("topPadding", paddings.getTop());
+        layoutVariables.put("bottomPadding", paddings.getBottom());
+
         return ThymeleafUtil.render("html/components/component-layout", layoutVariables);
     }
 

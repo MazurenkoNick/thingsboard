@@ -31,6 +31,7 @@
 
 -->
 <div class="tb-drop-list tb-report-components"
+     [style.background]="background"
      [style.min-height.px]="reportsComponentHeight"
      cdkDropList
      cdkDropListOrientation="vertical"
@@ -39,8 +40,8 @@
      (cdkDropListDropped)="componentDrop($event)"
      (cdkDropListEntered)="dropListEnter($event)"
      (cdkDropListExited)="dropListExit($event)">
-  <div class="tb-no-reports-components">
-    <div translate class="text-center p-4">
+  <div class="tb-no-reports-components" *ngIf="showNoReportComponents">
+    <div translate class="p-4 text-center">
       report-template.drop-report-components
     </div>
   </div>
@@ -49,7 +50,7 @@
          #reportComponentDrag
          [cdkDragData]="item"
          (cdkDragStarted)="componentDragStarted($event)"
-         (cdkDragEnded)="componentDragEnded()" [style.background]="background">
+         (cdkDragEnded)="componentDragEnded()">
       <tb-report-component [reportComponent]="item"
                            [scale]="scale"
                            [width]="reportComponentDrag.offsetWidth"

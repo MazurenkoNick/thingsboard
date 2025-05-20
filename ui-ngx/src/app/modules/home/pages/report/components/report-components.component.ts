@@ -114,6 +114,8 @@ export class ReportComponentsComponent implements OnInit, OnChanges {
 
   reportsComponentHeight = 100;
 
+  showNoReportComponents = false;
+
   constructor(public element: ElementRef<HTMLElement>) {}
 
   ngOnInit() {
@@ -213,8 +215,10 @@ export class ReportComponentsComponent implements OnInit, OnChanges {
   private updateListHeight(reportComponent?: ReportComponentConfig) {
     if (!this.reportComponents?.length || (this.reportComponents.length === 1 && this.reportComponents[0] === reportComponent)) {
       this.reportsComponentHeight = 100;
+      this.showNoReportComponents = true;
     } else {
       this.reportsComponentHeight = undefined;
+      this.showNoReportComponents = false;
     }
   }
 

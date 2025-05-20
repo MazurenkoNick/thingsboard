@@ -55,10 +55,9 @@ import org.thingsboard.server.common.data.report.configuration.components.Report
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponentType;
 import org.thingsboard.server.common.data.report.configuration.components.SubReportComponent;
 import org.thingsboard.server.common.data.report.configuration.components.TimeseriesTableComponent;
-import org.thingsboard.server.common.data.report.configuration.style.Margins;
+import org.thingsboard.server.common.data.report.configuration.style.Insets;
 import org.thingsboard.server.common.data.report.configuration.style.PageOrientation;
 import org.thingsboard.server.common.data.report.configuration.style.PageSize;
-import org.thingsboard.server.report.context.ComponentLayout;
 import org.thingsboard.server.report.context.HeaderFooterRenderLayout;
 import org.thingsboard.server.report.context.ComponentDataSource;
 import org.thingsboard.server.report.context.TbReportCtx;
@@ -112,7 +111,7 @@ public class PdfReportService extends AbstractReportService {
 
         Dimension pageSize = computePageSize(configuration);
         Insets pageMargins = computePageMargins(configuration);
-        int usablePageWidthPx = (int)((pageSize.width - pageMargins.left - pageMargins.right) * 4f / 3f);
+        int usablePageWidthPx = (int)((pageSize.width - pageMargins.getLeft() - pageMargins.getRight()) * 4f / 3f);
 
         ITextRenderer renderer = HtmlRenderUtils.createRenderer();
 
@@ -122,7 +121,7 @@ public class PdfReportService extends AbstractReportService {
         Map<String, Object> reportVariables = new HashMap<>();
         fillPageLayoutVariables(reportVariables, configuration, headerLayout, footerLayout, pageSize, pageMargins);
 
-        reportVariables.put("pageContent", renderContent(ctx, new ComponentLayout(), configuration.getComponents(), null));
+        reportVariables.put("pageContent", renderContent(ctx, configuration.getComponents(), null));
 
         String renderedHtmlContent = ThymeleafUtil.render("html/report-template", reportVariables);
         String xHtml = HtmlRenderUtils.convertToXhtml(renderedHtmlContent);
@@ -151,14 +150,14 @@ public class PdfReportService extends AbstractReportService {
         HeaderFooterRenderLayout headerFooterRenderLayout = new HeaderFooterRenderLayout();
         headerFooterRenderLayout.setEnabled(headerFooter.isEnabled());
         if (headerFooter.isEnabled()) {
-            String htmlContent = renderContent(ctx, new ComponentLayout(), headerFooter.getComponents(), null);
+            String htmlContent = renderContent(ctx, headerFooter.getComponents(), null);
             headerFooterRenderLayout.setHtmlContent(htmlContent);
             int heightPx = HtmlRenderUtils.measureHtmlHeight(renderer, htmlContent, usablePageWidthPx);
             headerFooterRenderLayout.setHeightPx(heightPx);
         }
         headerFooterRenderLayout.setFirstPageEnabled(headerFooter.getFirstPage() != null && headerFooter.getFirstPage().isEnabled());
         if (headerFooterRenderLayout.isFirstPageEnabled()) {
-            String htmlContent = renderContent(ctx, new ComponentLayout(), headerFooter.getFirstPage().getComponents(), null);
+            String htmlContent = renderContent(ctx, headerFooter.getFirstPage().getComponents(), null);
             headerFooterRenderLayout.setFirstPageHtmlContent(htmlContent);
             int heightPx = HtmlRenderUtils.measureHtmlHeight(renderer, htmlContent, usablePageWidthPx);
             headerFooterRenderLayout.setFirstPageHeightPx(heightPx);
@@ -166,7 +165,7 @@ public class PdfReportService extends AbstractReportService {
         return headerFooterRenderLayout;
     }
 
-    private String renderContent(TbReportCtx ctx, ComponentLayout componentLayout, List<ReportComponent> components, EntityData stateEntity) throws ThingsboardException {
+    private String renderContent(TbReportCtx ctx, List<ReportComponent> components, EntityData stateEntity) throws ThingsboardException {
         StringBuilder content = new StringBuilder();
         for (ReportComponent component : components) {
             ReportComponentType type = component.getType();
@@ -177,24 +176,23 @@ public class PdfReportService extends AbstractReportService {
 
                 List<EntityData> entityDatas = fetchEntities(ctx, getSingleDataSource(component));
                 for (EntityData entity : entityDatas) {
-                    content.append(renderContent(ctx, componentLayout, reportConfiguration.getComponents(), entity));
+                    content.append(renderContent(ctx, reportConfiguration.getComponents(), entity));
                 }
             } else if (type == TIME_SERIES_TABLE) {
                 List<EntityData> entityDatas = fetchEntities(ctx, getSingleDataSource(component));
                 for (EntityData entity : entityDatas) {
-                    content.append(renderComponent(ctx, componentLayout, component, entity));
+                    content.append(renderComponent(ctx, component, entity));
                 }
             } else {
-                content.append(renderComponent(ctx, componentLayout, component, stateEntity));
+                content.append(renderComponent(ctx, component, stateEntity));
             }
         }
         return content.toString();
     }
 
-    private String renderComponent(TbReportCtx ctx, ComponentLayout parentComponentLayout, ReportComponent component, EntityData stateEntity)  {
+    private String renderComponent(TbReportCtx ctx, ReportComponent component, EntityData stateEntity)  {
         ComponentDataSource reportDataSource = buildComponentDataSource(ctx, component, stateEntity);
-        ComponentLayout componentLayout = new ComponentLayout(component, parentComponentLayout);
-        return componentsRenderers.get(component.getType()).render(componentLayout, component, reportDataSource);
+        return componentsRenderers.get(component.getType()).render(component, reportDataSource);
     }
 
     private ComponentDataSource buildComponentDataSource(TbReportCtx ctx, ReportComponent component, EntityData stateEntity) {
@@ -289,8 +287,7 @@ public class PdfReportService extends AbstractReportService {
 
     private Insets computePageMargins(PdfReportTemplateConfig configuration) {
         if (configuration.getPageMargins() != null) {
-            Margins margins = configuration.getPageMargins();
-            return new Insets(margins.getTop(), margins.getLeft(), margins.getBottom(), margins.getRight());
+            return configuration.getPageMargins();
         } else {
             return new Insets(20, 20, 20, 20);
         }
@@ -303,17 +300,17 @@ public class PdfReportService extends AbstractReportService {
                                          Dimension pageSize, Insets pageMargins) {
         reportVariables.put("pageWidth", pageSize.getWidth() + "pt" );
         reportVariables.put("pageHeight", pageSize.getHeight() + "pt" );
-        reportVariables.put("pageMarginLeft", pageMargins.left + "pt");
-        reportVariables.put("pageMarginRight", pageMargins.right + "pt");
+        reportVariables.put("pageMarginLeft", pageMargins.getLeft() + "pt");
+        reportVariables.put("pageMarginRight", pageMargins.getRight() + "pt");
 
         String pageBackground = configuration.getPageBackground() != null ? ColorUtils.normalizeCssColor(configuration.getPageBackground()) : "#fff";
         reportVariables.put("pageBackground", pageBackground);
 
         int minContentHeight = 100;
 
-        int minHalfPageContentHeight = Math.max((pageSize.height - pageMargins.top - pageMargins.bottom - minContentHeight) / 2, 0);
-        int maxTopMargin = pageMargins.top + minHalfPageContentHeight;
-        int maxBottomMargin = pageMargins.bottom + minHalfPageContentHeight;
+        int minHalfPageContentHeight = Math.max((pageSize.height - pageMargins.getTop() - pageMargins.getBottom() - minContentHeight) / 2, 0);
+        int maxTopMargin = pageMargins.getTop() + minHalfPageContentHeight;
+        int maxBottomMargin = pageMargins.getBottom() + minHalfPageContentHeight;
 
         int pageMarginTop = this.fillHeaderFooterVariables(reportVariables, headerLayout, pageMargins, maxTopMargin, true);
         reportVariables.put("pageMarginTop", pageMarginTop + "pt");
@@ -330,7 +327,7 @@ public class PdfReportService extends AbstractReportService {
         String prefix = headerElseFooter ? "Header" : "Footer";
         String marginPrefix = headerElseFooter ? "Top" : "Bottom";
         reportVariables.put("enable" + prefix, headerFooterLayout.isEnabled());
-        int startMargin = headerElseFooter ? pageMargins.top : pageMargins.bottom;
+        int startMargin = headerElseFooter ? pageMargins.getTop() : pageMargins.getBottom();
         int margin = startMargin;
         reportVariables.put("page" + prefix + "Padding", startMargin + "pt");
         if (headerFooterLayout.isEnabled()) {

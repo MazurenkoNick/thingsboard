@@ -79,17 +79,29 @@ export class ReportComponentComponent implements OnInit, AfterViewInit, OnDestro
   @HostBinding('style.background')
   background: string;
 
-  @HostBinding('style.padding-left.pt')
+  @HostBinding('style.margin-left.pt')
   marginLeft: number;
 
-  @HostBinding('style.padding-right.pt')
+  @HostBinding('style.margin-right.pt')
   marginRight: number;
 
-  @HostBinding('style.padding-top.pt')
+  @HostBinding('style.margin-top.pt')
   marginTop: number;
 
-  @HostBinding('style.padding-bottom.pt')
+  @HostBinding('style.margin-bottom.pt')
   marginBottom: number;
+
+  @HostBinding('style.padding-left.pt')
+  paddingLeft: number;
+
+  @HostBinding('style.padding-right.pt')
+  paddingRight: number;
+
+  @HostBinding('style.padding-top.pt')
+  paddingTop: number;
+
+  @HostBinding('style.padding-bottom.pt')
+  paddingBottom: number;
 
   @HostBinding('style.display')
   display = 'block';
@@ -204,13 +216,13 @@ export class ReportComponentComponent implements OnInit, AfterViewInit, OnDestro
 
   private updateComponentSize() {
     const parentWidth = this.elementRef.nativeElement.getBoundingClientRect().width;
-    const leftRightMargins = pointsToPixels(this.marginLeft) + pointsToPixels(this.marginRight);
-    this.renderer.setStyle(this.reportComponentElement().nativeElement, 'width', ((parentWidth - leftRightMargins) / this.scale) + 'px');
+    const leftRightPaddings = pointsToPixels(this.paddingLeft) + pointsToPixels(this.paddingRight);
+    this.renderer.setStyle(this.reportComponentElement().nativeElement, 'width', ((parentWidth - leftRightPaddings) / this.scale) + 'px');
     this.renderer.setStyle(this.reportComponentElement().nativeElement, 'transform', `scale(${this.scale})`);
     const rect = this.reportComponentElement().nativeElement.getBoundingClientRect();
     const targetHeight = rect.height;
-    const topBottomMargins = pointsToPixels(this.marginTop) + pointsToPixels(this.marginBottom);
-    this.renderer.setStyle(this.elementRef.nativeElement, 'height', (targetHeight + topBottomMargins) + 'px');
+    const topBottomPaddings = pointsToPixels(this.paddingTop) + pointsToPixels(this.paddingBottom);
+    this.renderer.setStyle(this.elementRef.nativeElement, 'height', (targetHeight + topBottomPaddings) + 'px');
   }
 
   private updateComponentLayout() {
@@ -219,6 +231,10 @@ export class ReportComponentComponent implements OnInit, AfterViewInit, OnDestro
     this.marginRight = (this.reportComponent.margins?.right || 0) * this.scale;
     this.marginTop = (this.reportComponent.margins?.top || 0) * this.scale;
     this.marginBottom = (this.reportComponent.margins?.bottom || 0) * this.scale;
+    this.paddingLeft = (this.reportComponent.paddings?.left || 0) * this.scale;
+    this.paddingRight = (this.reportComponent.paddings?.right || 0) * this.scale;
+    this.paddingTop = (this.reportComponent.paddings?.top || 0) * this.scale;
+    this.paddingBottom = (this.reportComponent.paddings?.bottom || 0) * this.scale;
     this.updateComponentSize();
   }
 

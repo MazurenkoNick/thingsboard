@@ -95,36 +95,9 @@
         }
       </mat-chip-listbox>
     </div>
-    <div class="tb-form-row space-between" formGroupName="pageMargins">
+    <div class="tb-form-row space-between">
       <div translate>report-template.margins</div>
-      <div class="flex flex-1 flex-col gap-2">
-        <div class="flex flex-1 flex-row justify-center gap-2">
-          <div class="tb-small-label" translate>report-template.top</div>
-          <mat-form-field appearance="outline" class="number" subscriptSizing="dynamic">
-            <input matInput formControlName="top" type="number" min="0" step="1" placeholder="{{ 'widget-config.set' | translate }}">
-            <div matSuffix>pt</div>
-          </mat-form-field>
-        </div>
-        <div class="flex flex-1 flex-row justify-center gap-2">
-          <div class="tb-small-label" translate>report-template.left</div>
-          <mat-form-field appearance="outline" class="number" subscriptSizing="dynamic">
-            <input matInput formControlName="left" type="number" min="0" step="1" placeholder="{{ 'widget-config.set' | translate }}">
-            <div matSuffix>pt</div>
-          </mat-form-field>
-          <mat-form-field appearance="outline" class="number" subscriptSizing="dynamic">
-            <input matInput formControlName="right" type="number" min="0" step="1" placeholder="{{ 'widget-config.set' | translate }}">
-            <div matSuffix>pt</div>
-          </mat-form-field>
-          <div class="tb-small-label" translate>report-template.right</div>
-        </div>
-        <div class="flex flex-1 flex-row justify-center gap-2">
-          <div class="tb-small-label" translate>report-template.bottom</div>
-          <mat-form-field appearance="outline" class="number" subscriptSizing="dynamic">
-            <input matInput formControlName="bottom" type="number" min="0" step="1" placeholder="{{ 'widget-config.set' | translate }}">
-            <div matSuffix>pt</div>
-          </mat-form-field>
-        </div>
-      </div>
+      <tb-report-insets formControlName="pageMargins"></tb-report-insets>
     </div>
     <div class="tb-form-row space-between">
       <div translate>report-template.background</div>

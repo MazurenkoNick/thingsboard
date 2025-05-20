@@ -7032,6 +7032,7 @@
         "orientation-portrait": "Portrait",
         "orientation-landscape": "Landscape",
         "margins": "Margins",
+        "paddings": "Paddings",
         "left": "Left",
         "right": "Right",
         "top": "Top",

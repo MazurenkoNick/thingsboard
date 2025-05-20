@@ -203,7 +203,7 @@ export const pageOrientationTranslationMap = new Map<PageOrientation, string>(
   ]
 );
 
-export interface BlockMargins {
+export interface Insets {
   left: number;
   right: number;
   top: number;
@@ -213,7 +213,7 @@ export interface BlockMargins {
 export interface PdfReportTemplateConfig extends AbstractReportTemplateConfig {
   pageSize: PageSize;
   pageOrientation: PageOrientation;
-  pageMargins: BlockMargins;
+  pageMargins: Insets;
   pageBackground?: string;
   entityAliases: EntityAlias[];
   filters: ReportFilter[];
@@ -225,7 +225,7 @@ export interface PdfReportTemplateConfig extends AbstractReportTemplateConfig {
 export interface PdfReportTemplateSettings extends ReportTemplateSettings {
   pageSize: PageSize;
   pageOrientation: PageOrientation;
-  pageMargins: BlockMargins;
+  pageMargins: Insets;
   pageBackground?: string;
 }
 
