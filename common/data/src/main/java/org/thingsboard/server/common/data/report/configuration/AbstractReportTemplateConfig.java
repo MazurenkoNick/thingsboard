@@ -36,5 +36,6 @@ import lombok.Data;
 public abstract class AbstractReportTemplateConfig implements ReportTemplateConfig {
 
     protected String namePattern;
+    protected String timeDataPattern;
 
 }

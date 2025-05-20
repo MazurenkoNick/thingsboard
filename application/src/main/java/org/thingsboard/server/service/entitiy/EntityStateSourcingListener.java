@@ -37,6 +37,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionalEventListener;
 import org.thingsboard.common.util.JacksonUtil;
+import org.thingsboard.rule.engine.api.JobManager;
 import org.thingsboard.server.cluster.TbClusterService;
 import org.thingsboard.server.common.data.ApiUsageState;
 import org.thingsboard.server.common.data.Customer;
@@ -78,9 +79,7 @@ import org.thingsboard.server.dao.eventsourcing.DeleteEntityEvent;
 import org.thingsboard.server.dao.eventsourcing.SaveEntityEvent;
 import org.thingsboard.server.dao.tenant.TenantService;
 import org.thingsboard.server.queue.TbQueueCallback;
-import org.thingsboard.server.service.job.JobManager;
 
-import java.util.Optional;
 import java.util.Set;
 
 @Slf4j
@@ -91,7 +90,7 @@ public class EntityStateSourcingListener {
     private final TenantService tenantService;
     private final TbClusterService tbClusterService;
     private final EdgeSynchronizationManager edgeSynchronizationManager;
-    private final Optional<JobManager> jobManager;
+    private final JobManager jobManager;
 
     @PostConstruct
     public void init() {
@@ -354,7 +353,7 @@ public class EntityStateSourcingListener {
     }
 
     private void onJobUpdate(Job job) {
-        jobManager.ifPresent(jobManager -> jobManager.onJobUpdate(job));
+        jobManager.onJobUpdate(job);
 
         ComponentLifecycleEvent event;
         if (job.getResult().getCancellationTs() > 0) {

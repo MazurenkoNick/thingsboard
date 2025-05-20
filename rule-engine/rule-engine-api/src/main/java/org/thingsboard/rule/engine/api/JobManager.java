@@ -28,30 +28,20 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.report.util;
+package org.thingsboard.rule.engine.api;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.TimeZone;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import org.thingsboard.server.common.data.id.JobId;
+import org.thingsboard.server.common.data.id.TenantId;
+import org.thingsboard.server.common.data.job.Job;
 
-public class ReportUtils {
+public interface JobManager {
 
-    public static final Pattern REPORT_NAME_DATE_PATTERN = Pattern.compile("%d\\{([^\\}]*)\\}");
-    public static final String DEFAULT_REPORT_NAME_PATTERN = "report-%d{yyyy-MM-dd_HH:mm:ss}";
+    Job submitJob(Job job);
 
-    public static String prepareReportName(String namePattern, Date reportDate, TimeZone tz) {
-        String name = (namePattern == null || namePattern.isEmpty()) ? DEFAULT_REPORT_NAME_PATTERN : namePattern;
-        Matcher matcher = REPORT_NAME_DATE_PATTERN.matcher(name);
-        while (matcher.find()) {
-            String toReplace = matcher.group(0);
-            SimpleDateFormat dateFormat = new SimpleDateFormat(matcher.group(1));
-            dateFormat.setTimeZone(tz);
-            String replacement = dateFormat.format(reportDate);
-            name = name.replace(toReplace, replacement);
-        }
-        return name;
-    }
+    void cancelJob(TenantId tenantId, JobId jobId);
+
+    void reprocessJob(TenantId tenantId, JobId jobId);
+
+    void onJobUpdate(Job job);
 
 }

@@ -45,6 +45,8 @@ import org.thingsboard.server.common.data.report.TbReportFormat;
 })
 public interface ReportTemplateConfig {
 
+    String getTimeDataPattern();
+
     TbReportFormat getFormat();
 
 }

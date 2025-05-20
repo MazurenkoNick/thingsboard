@@ -40,8 +40,11 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 import org.thingsboard.server.common.data.BaseData;
 import org.thingsboard.server.common.data.HasTenantId;
+import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.JobId;
 import org.thingsboard.server.common.data.id.TenantId;
+import org.thingsboard.server.common.data.id.UserId;
+import org.thingsboard.server.common.data.report.ReportTemplate;
 
 import java.util.UUID;
 
@@ -88,6 +91,25 @@ public class Job extends BaseData<JobId> implements HasTenantId {
     @SuppressWarnings("unchecked")
     public <C extends JobConfiguration> C getConfiguration() {
         return (C) configuration;
+    }
+
+    public static Job newReportJob(ReportTemplate reportTemplate,
+                                   UserId userId,
+                                   CustomerId customerId,
+                                   String timezone) {
+        return Job.builder()
+                .tenantId(reportTemplate.getTenantId())
+                .type(JobType.REPORT)
+                .key(UUID.randomUUID().toString()) // we can submit multiple report jobs at once regardless of the configuration
+                .description("Report generation for template '" + reportTemplate.getName() + "'") // todo: hyperlink to template
+                .configuration(ReportJobConfiguration.builder()
+                        .reportTemplateId(reportTemplate.getId()) // todo: also get from msg body
+                        .reportFormat(reportTemplate.getConfiguration().getFormat())
+                        .userId(userId) // todo: also get from msg body
+                        .customerId(customerId) // todo: also get from msg body
+                        .timezone(timezone) // todo: also get from msg body
+                        .build())
+                .build();
     }
 
 }

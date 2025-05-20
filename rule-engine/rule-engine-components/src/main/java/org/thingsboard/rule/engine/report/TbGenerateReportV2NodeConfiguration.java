@@ -28,30 +28,29 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.report.util;
+package org.thingsboard.rule.engine.report;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.TimeZone;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import jakarta.validation.constraints.NotNull;
+import lombok.Data;
+import org.thingsboard.rule.engine.api.NodeConfiguration;
+import org.thingsboard.server.common.data.dashboardreport.DashboardReportConfig;
+import org.thingsboard.server.common.data.id.CustomerId;
+import org.thingsboard.server.common.data.id.ReportTemplateId;
+import org.thingsboard.server.common.data.id.UserId;
 
-public class ReportUtils {
+@Data
+public class TbGenerateReportV2NodeConfiguration implements NodeConfiguration<TbGenerateReportV2NodeConfiguration> {
 
-    public static final Pattern REPORT_NAME_DATE_PATTERN = Pattern.compile("%d\\{([^\\}]*)\\}");
-    public static final String DEFAULT_REPORT_NAME_PATTERN = "report-%d{yyyy-MM-dd_HH:mm:ss}";
+    @NotNull
+    private ReportTemplateId reportTemplateId;
+    private CustomerId customerId;
+    @NotNull
+    private UserId userId;
+    private String timezone;
 
-    public static String prepareReportName(String namePattern, Date reportDate, TimeZone tz) {
-        String name = (namePattern == null || namePattern.isEmpty()) ? DEFAULT_REPORT_NAME_PATTERN : namePattern;
-        Matcher matcher = REPORT_NAME_DATE_PATTERN.matcher(name);
-        while (matcher.find()) {
-            String toReplace = matcher.group(0);
-            SimpleDateFormat dateFormat = new SimpleDateFormat(matcher.group(1));
-            dateFormat.setTimeZone(tz);
-            String replacement = dateFormat.format(reportDate);
-            name = name.replace(toReplace, replacement);
-        }
-        return name;
+    @Override
+    public TbGenerateReportV2NodeConfiguration defaultConfiguration() {
+        return new TbGenerateReportV2NodeConfiguration();
     }
 
 }

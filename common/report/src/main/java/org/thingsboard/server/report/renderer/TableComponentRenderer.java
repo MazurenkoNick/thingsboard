@@ -32,7 +32,7 @@ package org.thingsboard.server.report.renderer;
 
 import org.thingsboard.server.common.data.report.configuration.DataKey;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
-import org.thingsboard.server.report.context.ReportDataSource;
+import org.thingsboard.server.report.context.ComponentDataSource;
 import org.thingsboard.server.report.util.ThymeleafUtil;
 
 import java.util.HashMap;
@@ -44,7 +44,7 @@ import static org.thingsboard.server.report.service.PdfReportService.getSingleDa
 public abstract class TableComponentRenderer extends ReportComponentWithLayoutRenderer {
 
     @Override
-    protected String renderContent(ReportComponent component, ReportDataSource reportDataSource) {
+    protected String renderContent(ReportComponent component, ComponentDataSource reportDataSource) {
         Map<String, String> columns = getSingleDataSource(component)
                 .getDataKeys()
                 .stream()

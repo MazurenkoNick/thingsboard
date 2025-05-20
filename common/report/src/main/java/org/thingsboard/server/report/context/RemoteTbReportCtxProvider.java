@@ -53,6 +53,7 @@ public class RemoteTbReportCtxProvider implements TbReportCtxProvider {
     public TbReportCtx newContext(ReportTask task) {
         return RemoteTbReportCtx.builder()
                 .configuration(task.getReportTemplateConfig())
+                .timeZone(task.getTimezone())
                 .accessToken(task.getAccessToken())
                 .accessTokenExpTs(task.getAccessTokenExpirationTs())
                 .restClient(new RestClient(new RestTemplateBuilder()

@@ -51,8 +51,6 @@ public class ReportTask extends Task<ReportTaskResult> {
     private ReportTemplateConfig reportTemplateConfig;
 
     private CustomerId customerId;
-    @JsonProperty
-    private EntityId entityId;
     private String timezone;
 
     private String accessToken;
