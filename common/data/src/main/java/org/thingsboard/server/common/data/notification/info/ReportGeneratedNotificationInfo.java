@@ -38,7 +38,6 @@ import org.thingsboard.server.common.data.id.BlobEntityId;
 import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.id.UUIDBased;
-import org.thingsboard.server.common.data.report.TbReportFormat;
 
 import java.util.List;
 import java.util.Map;
@@ -56,15 +55,13 @@ public class ReportGeneratedNotificationInfo implements RuleOriginatedNotificati
     private CustomerId customerId;
     private BlobEntityId reportBlobId;
     private String reportName;
-    private TbReportFormat reportFormat;
 
     @Override
     public Map<String, String> getTemplateData() {
         return mapOf(
                 "customerId", Optional.ofNullable(customerId).map(UUIDBased::toString).orElse(""),
                 "reportBlobId", reportBlobId.toString(),
-                "reportName", reportName,
-                "reportFormat", reportFormat.name()
+                "reportName", reportName
         );
     }
 

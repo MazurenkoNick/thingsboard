@@ -41,12 +41,12 @@ import lombok.ToString;
 import org.thingsboard.server.common.data.BaseData;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.HasTenantId;
-import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.CustomerId;
+import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.JobId;
+import org.thingsboard.server.common.data.id.ReportTemplateId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.id.UserId;
-import org.thingsboard.server.common.data.report.ReportTemplate;
 
 import java.util.Set;
 import java.util.UUID;
@@ -100,18 +100,18 @@ public class Job extends BaseData<JobId> implements HasTenantId {
         return (C) configuration;
     }
 
-    public static Job newReportJob(ReportTemplate reportTemplate,
+    public static Job newReportJob(TenantId tenantId,
+                                   ReportTemplateId reportTemplateId,
                                    UserId userId,
                                    CustomerId customerId,
                                    String timezone) {
         return Job.builder()
-                .tenantId(reportTemplate.getTenantId())
+                .tenantId(tenantId)
                 .type(JobType.REPORT)
                 .key(UUID.randomUUID().toString()) // we can submit multiple report jobs at once regardless of the configuration
-                .description("Report generation for template '" + reportTemplate.getName() + "'") // todo: hyperlink to template
+                .entityId(reportTemplateId)
                 .configuration(ReportJobConfiguration.builder()
-                        .reportTemplateId(reportTemplate.getId()) // todo: also get from msg body
-                        .reportFormat(reportTemplate.getConfiguration().getFormat())
+                        .reportTemplateId(reportTemplateId) // todo: also get from msg body
                         .userId(userId) // todo: also get from msg body
                         .customerId(customerId) // todo: also get from msg body
                         .timezone(timezone) // todo: also get from msg body

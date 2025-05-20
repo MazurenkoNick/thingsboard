@@ -51,7 +51,6 @@ public class ReportGeneratedTriggerProcessor implements NotificationRuleTriggerP
                 .customerId(trigger.getCustomerId())
                 .reportBlobId(trigger.getReportBlobId())
                 .reportName(trigger.getReportName())
-                .reportFormat(trigger.getReportFormat())
                 .build();
     }
 

@@ -37,7 +37,6 @@ import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.notification.rule.trigger.config.NotificationRuleTriggerType;
-import org.thingsboard.server.common.data.report.TbReportFormat;
 
 @Data
 @Builder
@@ -47,7 +46,6 @@ public class ReportGeneratedTrigger implements NotificationRuleTrigger {
     private CustomerId customerId;
     private BlobEntityId reportBlobId;
     private String reportName;
-    private TbReportFormat reportFormat;
 
     @Override
     public NotificationRuleTriggerType getType() {

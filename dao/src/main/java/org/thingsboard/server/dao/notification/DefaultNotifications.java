@@ -408,7 +408,7 @@ public class DefaultNotifications {
             .name("Report generated notification")
             .type(NotificationType.REPORT_GENERATED)
             .subject("Report generated")
-            .text("${reportFormat} report '${reportName}' is ready")
+            .text("Report '${reportName}' is ready")
             .icon("description").color(null)
             .button("Download").link("/api/blobEntity/${reportBlobId}/download")
             .rule(DefaultRule.builder()

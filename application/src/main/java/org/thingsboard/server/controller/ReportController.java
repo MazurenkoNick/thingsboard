@@ -43,7 +43,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.thingsboard.rule.engine.api.JobManager;
 import org.thingsboard.server.common.data.StringUtils;
-import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.id.ReportTemplateId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.id.UserId;
@@ -52,7 +51,6 @@ import org.thingsboard.server.common.data.job.task.ReportTask;
 import org.thingsboard.server.common.data.permission.Operation;
 import org.thingsboard.server.common.data.report.ReportData;
 import org.thingsboard.server.common.data.report.ReportRequest;
-import org.thingsboard.server.common.data.report.ReportTemplate;
 import org.thingsboard.server.common.data.report.configuration.ReportTemplateConfig;
 import org.thingsboard.server.config.annotations.ApiOperation;
 import org.thingsboard.server.queue.util.TbCoreComponent;
@@ -108,7 +106,7 @@ public class ReportController extends BaseController {
 
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN')")
     @PostMapping(value = "/report")
-    public Job requestReport(@RequestBody ReportRequest reportRequest) throws ThingsboardException {
+    public Job requestReport(@RequestBody ReportRequest reportRequest) throws Exception {
         ReportTemplateId reportTemplateId = reportRequest.getReportTemplateId();
         if (reportTemplateId == null) {
             /*
@@ -117,9 +115,10 @@ public class ReportController extends BaseController {
              * */
             throw new IllegalArgumentException("Report template id must be specified");
         }
-        ReportTemplate reportTemplate = checkReportTemplateId(reportTemplateId, Operation.READ);
+        checkReportTemplateId(reportTemplateId, Operation.READ);
         UserId userId = StringUtils.isNotEmpty(reportRequest.getUserId()) ? new UserId(UUID.fromString(reportRequest.getUserId())) : getCurrentUser().getId();
-        return jobManager.submitJob(Job.newReportJob(reportTemplate, userId, reportRequest.getCustomerId(), reportRequest.getTimezone()));
+        return jobManager.submitJob(Job.newReportJob(getTenantId(), reportTemplateId, userId,
+                reportRequest.getCustomerId(), reportRequest.getTimezone())).get();
     }
 
 }
