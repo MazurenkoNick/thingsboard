@@ -97,13 +97,6 @@ public class CsvReportService extends AbstractReportService {
         };
     }
 
-    private List<Map<String, String>> buildEntityDataSource(TbReportCtx ctx, DataSource dataSource) {
-        return switch (dataSource.getType()) {
-            case "device", "entity" -> fetchEntities(ctx, dataSource).stream().map(this::toMap).collect(Collectors.toList());
-            default -> throw new IllegalArgumentException("Unknown data source type: " + dataSource.getType());
-        };
-    }
-
     @Override
     public TbReportFormat getFormat() {
         return TbReportFormat.CSV;

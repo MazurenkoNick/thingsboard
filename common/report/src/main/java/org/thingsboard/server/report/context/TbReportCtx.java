@@ -46,6 +46,7 @@ import java.util.Map;
 public abstract class TbReportCtx implements Closeable {
 
     private final ReportTemplateConfig configuration;
+    private final String timeZone;
     private final String accessToken;
     private final long accessTokenExpTs;
 

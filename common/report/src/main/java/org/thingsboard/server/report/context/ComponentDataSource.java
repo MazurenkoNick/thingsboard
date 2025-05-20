@@ -46,30 +46,30 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Data
-public class ReportDataSource {
+public class ComponentDataSource {
 
     private List<Map<String, String>> entityDatas;
     private Map<String, String> variables;
     private byte[] image;
 
-    public ReportDataSource() {
+    public ComponentDataSource() {
         this(new ArrayList<>(), new HashMap<>());
     }
 
-    public ReportDataSource(byte[] image) {
+    public ComponentDataSource(byte[] image) {
         this();
         this.image = image;
     }
 
-    public ReportDataSource(List<Map<String, String>> entityDatas) {
+    public ComponentDataSource(List<Map<String, String>> entityDatas) {
         this(entityDatas, new HashMap<>());
     }
 
-    public ReportDataSource(Map<String, String> variables) {
+    public ComponentDataSource(Map<String, String> variables) {
         this(new ArrayList<>(), variables);
     }
 
-    public ReportDataSource(List<Map<String, String>> entityDatas, Map<String, String> variables) {
+    public ComponentDataSource(List<Map<String, String>> entityDatas, Map<String, String> variables) {
         this.entityDatas = entityDatas;
         this.variables = variables;
     }
@@ -90,7 +90,7 @@ public class ReportDataSource {
         return contextVariables;
     }
 
-    public ReportDataSource merge(ReportDataSource other) {
+    public ComponentDataSource merge(ComponentDataSource other) {
         this.entityDatas = mergeEntityDatas(this.entityDatas, other.getEntityDatas());
         this.variables.putAll(other.getVariables());
         return this;

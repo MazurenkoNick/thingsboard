@@ -31,9 +31,6 @@
 package org.thingsboard.server.report.util;
 
 import java.text.SimpleDateFormat;
-import java.time.Instant;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.TimeZone;
 import java.util.regex.Matcher;
@@ -42,23 +39,10 @@ import java.util.regex.Pattern;
 public class ReportUtils {
 
     public static final Pattern REPORT_NAME_DATE_PATTERN = Pattern.compile("%d\\{([^\\}]*)\\}");
-    public static final String DEFAULT_NAME_PATTERN = "report-%d{yyyy-MM-dd_HH:mm:ss}";
-
-    public static String formatTimestamp(String timestampStr) {
-        try {
-            long timestamp = Long.parseLong(timestampStr);
-
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
-                    .withZone(ZoneId.systemDefault());
-
-            return formatter.format(Instant.ofEpochMilli(timestamp));
-        } catch (NumberFormatException e) {
-            return "Invalid timestamp: " + timestampStr;
-        }
-    }
+    public static final String DEFAULT_REPORT_NAME_PATTERN = "report-%d{yyyy-MM-dd_HH:mm:ss}";
 
     public static String prepareReportName(String namePattern, Date reportDate, TimeZone tz) {
-        String name = (namePattern == null || namePattern.isEmpty()) ? DEFAULT_NAME_PATTERN : namePattern;
+        String name = (namePattern == null || namePattern.isEmpty()) ? DEFAULT_REPORT_NAME_PATTERN : namePattern;
         Matcher matcher = REPORT_NAME_DATE_PATTERN.matcher(name);
         while (matcher.find()) {
             String toReplace = matcher.group(0);
