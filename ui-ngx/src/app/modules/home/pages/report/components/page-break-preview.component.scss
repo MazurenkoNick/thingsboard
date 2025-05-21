@@ -28,25 +28,22 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.report.renderer;
+.tb-page-break-preview {
+  height: 100%;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 16px;
+  background: #eee;
 
-import org.springframework.stereotype.Component;
-import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
-import org.thingsboard.server.common.data.report.configuration.components.ReportComponentType;
-import org.thingsboard.server.report.context.ComponentData;
+  .tb-page-break-line {
+    flex: 1;
+    border-bottom: 2px solid rgba(0,0,0,0.47);
+  }
 
-
-@Component
-public class PageBreakRenderer implements ReportComponentRenderer {
-
-    @Override
-    public String render(ReportComponent component, ComponentData reportDataSource) {
-        return "<div class=\"page-break\"></div>";
-    }
-
-    @Override
-    public ReportComponentType getType() {
-        return ReportComponentType.PAGE_BREAK;
-    }
-
+  .tb-page-break-title {
+    font-weight: bold;
+    font-size: 18px;
+    color: rgba(0,0,0,0.47);
+  }
 }

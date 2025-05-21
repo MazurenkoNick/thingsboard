@@ -7047,6 +7047,9 @@
             "rich-text": {
                 "type": "Rich text",
                 "text": "Text"
+            },
+            "page-break": {
+                "type": "Page break"
             }
         }
     },

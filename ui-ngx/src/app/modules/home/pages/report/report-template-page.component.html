@@ -214,16 +214,24 @@
                           headerHeightPx="68"
                           isReadOnly="true">
           <div class="details-buttons flex flex-row items-center justify-end gap-3">
-            <button mat-stroked-button color="primary"
-                    (click)="cancelReportComponentEdit()">
-              <mat-icon>close</mat-icon>
-              {{ 'action.cancel' | translate }}
-            </button>
-            <button mat-flat-button color="primary"
-                    (click)="saveReportComponent()">
-              <mat-icon>done</mat-icon>
-              {{ 'action.save' | translate }}
-            </button>
+            @if(reportComponentTypeMap.get(editingReportComponent.type).editable) {
+              <button mat-stroked-button color="primary"
+                      (click)="cancelReportComponentEdit()">
+                <mat-icon>close</mat-icon>
+                {{ 'action.cancel' | translate }}
+              </button>
+              <button mat-flat-button color="primary"
+                      (click)="saveReportComponent()">
+                <mat-icon>done</mat-icon>
+                {{ 'action.save' | translate }}
+              </button>
+            } @else {
+              <button mat-stroked-button color="primary"
+                      (click)="cancelReportComponentEdit()">
+                <mat-icon>close</mat-icon>
+                {{ 'action.close' | translate }}
+              </button>
+            }
           </div>
           <tb-report-component-config
             #reportConfig

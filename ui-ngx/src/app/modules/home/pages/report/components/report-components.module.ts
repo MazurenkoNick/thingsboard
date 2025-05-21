@@ -45,6 +45,8 @@ import { HeadingConfigComponent } from '@home/pages/report/components/heading-co
 import { RichTextConfigComponent } from '@home/pages/report/components/rich-text-config.component';
 import { WidgetConfigComponentsModule } from '@home/components/widget/config/widget-config-components.module';
 import { ReportInsetsComponent } from '@home/pages/report/components/report-insets.component';
+import { PageBreakPreviewComponent } from '@home/pages/report/components/page-break-preview.component';
+import { EmptyReportConfigComponent } from '@home/pages/report/components/empty-report-config.component';
 
 @NgModule({
   declarations: [
@@ -53,10 +55,12 @@ import { ReportInsetsComponent } from '@home/pages/report/components/report-inse
     ReportComponentsComponent,
     ReportComponentLibraryComponent,
     ReportInsetsComponent,
+    EmptyReportConfigComponent,
     HeadingPreviewComponent,
     HeadingConfigComponent,
     RichTextPreviewComponent,
     RichTextConfigComponent,
+    PageBreakPreviewComponent,
     ReportComponentConfigComponent
   ],
   imports: [

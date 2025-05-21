@@ -121,6 +121,12 @@ export class ReportComponentComponent implements OnInit, AfterViewInit, OnDestro
   @Input()
   width: number;
 
+  @Input()
+  pageMarginLeft: number;
+
+  @Input()
+  pageMarginRight: number;
+
   @Output()
   edit = new EventEmitter();
 
@@ -165,6 +171,11 @@ export class ReportComponentComponent implements OnInit, AfterViewInit, OnDestro
       if (!change.firstChange && change.currentValue !== change.previousValue) {
         if (['scale', 'width'].includes(propName)) {
           this.updateComponentLayout();
+        }
+        if (['pageMarginLeft', 'pageMarginRight'].includes(propName)) {
+          if (this.typeData.pageBreak) {
+            this.updateComponentLayout();
+          }
         }
       }
     }
@@ -227,8 +238,13 @@ export class ReportComponentComponent implements OnInit, AfterViewInit, OnDestro
 
   private updateComponentLayout() {
     this.background = this.reportComponent.background;// || this.pageBackground;
-    this.marginLeft = (this.reportComponent.margins?.left || 0) * this.scale;
-    this.marginRight = (this.reportComponent.margins?.right || 0) * this.scale;
+    if (this.typeData.pageBreak) {
+      this.marginLeft = -this.pageMarginLeft / this.scale;
+      this.marginRight = -this.pageMarginRight / this.scale;
+    } else {
+      this.marginLeft = (this.reportComponent.margins?.left || 0) * this.scale;
+      this.marginRight = (this.reportComponent.margins?.right || 0) * this.scale;
+    }
     this.marginTop = (this.reportComponent.margins?.top || 0) * this.scale;
     this.marginBottom = (this.reportComponent.margins?.bottom || 0) * this.scale;
     this.paddingLeft = (this.reportComponent.paddings?.left || 0) * this.scale;

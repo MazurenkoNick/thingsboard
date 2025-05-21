@@ -242,7 +242,9 @@ export abstract class AbstractReportComponentConfig<C extends ReportComponentCon
     return this.context.utils.getMaterialColor(i);
   }
 
-  protected abstract buildForm(reportComponentConfig: C): FormGroup;
+  protected buildForm(_reportComponentConfig: C): FormGroup {
+    return this.fb.group({});
+  }
 
   protected getDataSources(): Datasource[] {
     if (this.reportConfigForm.get('dataSources')) {

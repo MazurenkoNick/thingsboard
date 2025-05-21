@@ -41,12 +41,16 @@ import { EntityService } from '@core/http/entity.service';
 import { TranslateService } from '@ngx-translate/core';
 import { UtilsService } from '@core/services/utils.service';
 import { AbstractReportComponentPreview } from '@home/pages/report/components/report-component.component';
+import { PageBreakPreviewComponent } from '@home/pages/report/components/page-break-preview.component';
+import { EmptyReportConfigComponent } from '@home/pages/report/components/empty-report-config.component';
 
 export interface ReportComponentTypeData<C extends ReportComponentConfig = ReportComponentConfig> {
   title: string;
   previewImage: string;
   previewComponent: Type<AbstractReportComponentPreview<C>>;
   configComponent: Type<AbstractReportComponentConfig<C>>;
+  editable: boolean;
+  pageBreak?: boolean;
 }
 
 export const reportComponentTypeMap = new Map<ReportComponentType, ReportComponentTypeData>(
@@ -57,7 +61,8 @@ export const reportComponentTypeMap = new Map<ReportComponentType, ReportCompone
         title: 'report-template.component.heading.type',
         previewImage: '/assets/report/components/heading.svg',
         previewComponent: HeadingPreviewComponent,
-        configComponent: HeadingConfigComponent
+        configComponent: HeadingConfigComponent,
+        editable: true
       }
     ],
     [
@@ -66,7 +71,19 @@ export const reportComponentTypeMap = new Map<ReportComponentType, ReportCompone
         title: 'report-template.component.rich-text.type',
         previewImage: '/assets/report/components/rich-text.svg',
         previewComponent: RichTextPreviewComponent,
-        configComponent: RichTextConfigComponent
+        configComponent: RichTextConfigComponent,
+        editable: true
+      }
+    ],
+    [
+      ReportComponentType.PAGE_BREAK,
+      {
+        title: 'report-template.component.page-break.type',
+        previewImage: '/assets/report/components/page-break.svg',
+        previewComponent: PageBreakPreviewComponent,
+        configComponent: EmptyReportConfigComponent,
+        editable: false,
+        pageBreak: true
       }
     ]
   ]

@@ -30,35 +30,8 @@
     OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 
 -->
-<div class="tb-drop-list tb-report-components"
-     [style.background]="background"
-     [style.min-height.px]="reportsComponentHeight"
-     cdkDropList
-     cdkDropListOrientation="vertical"
-     cdkDropListAutoScrollStep="20"
-     [cdkDropListData]="reportComponents"
-     (cdkDropListDropped)="componentDrop($event)"
-     (cdkDropListEntered)="dropListEnter($event)"
-     (cdkDropListExited)="dropListExit($event)">
-  <div class="tb-no-reports-components" *ngIf="showNoReportComponents">
-    <div translate class="p-4 text-center">
-      report-template.drop-report-components
-    </div>
-  </div>
-  @for (item of reportComponents; track item) {
-    <div cdkDrag class="tb-draggable tb-report-component-draggable"
-         #reportComponentDrag
-         [cdkDragData]="item"
-         (cdkDragStarted)="componentDragStarted($event)"
-         (cdkDragEnded)="componentDragEnded()">
-      <tb-report-component [reportComponent]="item"
-                           [scale]="scale"
-                           [pageMarginLeft]="marginLeft"
-                           [pageMarginRight]="marginRight"
-                           [width]="reportComponentDrag.offsetWidth"
-                           (edit)="onComponentEdit(item)"
-                           (makeCopy)="duplicateComponent(item)"
-                           (remove)="componentRemove(item)"></tb-report-component>
-    </div>
-  }
+<div class="tb-page-break-preview">
+  <div class="tb-page-break-line"></div>
+  <div class="tb-page-break-title">{{ 'report-template.component.page-break.type' | translate }}</div>
+  <div class="tb-page-break-line"></div>
 </div>

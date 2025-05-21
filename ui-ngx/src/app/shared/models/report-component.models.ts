@@ -42,14 +42,15 @@ export enum ReportComponentType {
   ALARM_TABLE = 'ALARM_TABLE',
   DASHBOARD = 'DASHBOARD',
   IMAGE = 'IMAGE',
-  SUB_REPORT = 'SUB_REPORT'
+  SUB_REPORT = 'SUB_REPORT',
+  PAGE_BREAK = 'PAGE_BREAK'
 }
 
 export interface ReportComponentConfig {
   background?: string;
   margins?: Insets;
   paddings?: Insets;
-  dataSources: Datasource[];
+  dataSources?: Datasource[];
   type: ReportComponentType;
 }
 
@@ -76,7 +77,15 @@ export interface EntityTableReportComponentConfig extends TableReportComponentCo
   type: ReportComponentType.ENTITY_TABLE;
 }
 
-export type ReportComponentConfigs = HeadingReportComponentConfig | RichTextReportComponentConfig | EntityTableReportComponentConfig;
+export interface PageBreakReportComponentConfig extends ReportComponentConfig {
+  type: ReportComponentType.PAGE_BREAK;
+}
+
+export type ReportComponentConfigs =
+  HeadingReportComponentConfig |
+  RichTextReportComponentConfig |
+  EntityTableReportComponentConfig |
+  PageBreakReportComponentConfig;
 
 export const reportComponentTypeDefaultConfigMap = new Map<ReportComponentType, ReportComponentConfigs>(
   [
@@ -105,6 +114,12 @@ export const reportComponentTypeDefaultConfigMap = new Map<ReportComponentType, 
         type: ReportComponentType.RICH_TEXT,
         value: '<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec libero orci, faucibus in iaculis quis, vestibulum sit amet ligula. Nulla facilisi. Ut ut iaculis tortor.</p>',
         dataSources: []
+      }
+    ],
+    [
+      ReportComponentType.PAGE_BREAK,
+      {
+        type: ReportComponentType.PAGE_BREAK
       }
     ]
   ]
