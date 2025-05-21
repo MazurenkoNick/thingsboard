@@ -30,8 +30,8 @@
  */
 package org.thingsboard.server.dao.sql.report;
 
-import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Component;
 import org.thingsboard.server.common.data.EntityType;
@@ -41,20 +41,33 @@ import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.report.Report;
 import org.thingsboard.server.dao.DaoUtil;
+import org.thingsboard.server.dao.model.ModelConstants;
 import org.thingsboard.server.dao.model.sql.ReportEntity;
 import org.thingsboard.server.dao.report.ReportDao;
-import org.thingsboard.server.dao.sql.JpaAbstractDao;
+import org.thingsboard.server.dao.sql.JpaPartitionedAbstractDao;
+import org.thingsboard.server.dao.sqlts.insert.sql.SqlPartitioningRepository;
 import org.thingsboard.server.dao.util.SqlDao;
 
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Component
-@AllArgsConstructor
 @SqlDao
-public class JpaReportDao extends JpaAbstractDao<ReportEntity, Report> implements ReportDao {
+public class JpaReportDao extends JpaPartitionedAbstractDao<ReportEntity, Report> implements ReportDao {
 
     private final ReportRepository reportRepository;
+    private final SqlPartitioningRepository partitioningRepository;
+
+    @Value("${sql.reports.partition_size:168}")
+    private int partitionSizeInHours;
+
+    private static final String TABLE_NAME = ModelConstants.REPORT_TABLE_NAME;
+
+    public JpaReportDao(ReportRepository reportRepository, SqlPartitioningRepository partitioningRepository) {
+        this.reportRepository = reportRepository;
+        this.partitioningRepository = partitioningRepository;
+    }
 
     @Override
     public void saveData(TenantId tenantId, ReportId reportId, byte[] data) {
@@ -74,6 +87,11 @@ public class JpaReportDao extends JpaAbstractDao<ReportEntity, Report> implement
     }
 
     @Override
+    public void createPartition(ReportEntity entity) {
+        partitioningRepository.createPartitionIfNotExists(TABLE_NAME, entity.getCreatedTime(), TimeUnit.HOURS.toMillis(partitionSizeInHours));
+    }
+
+    @Override
     protected Class<ReportEntity> getEntityClass() {
         return ReportEntity.class;
     }
@@ -87,4 +105,5 @@ public class JpaReportDao extends JpaAbstractDao<ReportEntity, Report> implement
     public EntityType getEntityType() {
         return EntityType.REPORT;
     }
+
 }

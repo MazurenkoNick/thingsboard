@@ -1200,7 +1200,7 @@ CREATE TABLE IF NOT EXISTS report_template (
 );
 
 CREATE TABLE IF NOT EXISTS report (
-    id uuid NOT NULL CONSTRAINT report_pkey PRIMARY KEY,
+    id uuid NOT NULL,
     created_time bigint NOT NULL,
     tenant_id uuid NOT NULL,
     customer_id uuid,
@@ -1210,4 +1210,4 @@ CREATE TABLE IF NOT EXISTS report (
     user_id uuid NOT NULL,
     data bytea,
     CONSTRAINT fk_report_template FOREIGN KEY (template_id) REFERENCES report_template(id) ON DELETE SET NULL
-);
+) PARTITION BY RANGE (created_time);
