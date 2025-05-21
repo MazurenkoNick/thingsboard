@@ -34,10 +34,13 @@ import org.thingsboard.server.report.util.itext.PdfReportFontResolver;
 import org.thingsboard.server.report.util.itext.PdfReportTextRenderer;
 import org.thingsboard.server.report.util.itext.PdfReportUserAgent;
 import org.w3c.tidy.Tidy;
+import org.xhtmlrenderer.extend.ReplacedElementFactory;
+import org.xhtmlrenderer.extend.TextRenderer;
 import org.xhtmlrenderer.pdf.ITextFontResolver;
 import org.xhtmlrenderer.pdf.ITextOutputDevice;
 import org.xhtmlrenderer.pdf.ITextRenderer;
 import org.xhtmlrenderer.pdf.ITextReplacedElementFactory;
+import org.xhtmlrenderer.pdf.ITextUserAgent;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -54,13 +57,19 @@ import static org.xhtmlrenderer.pdf.ITextRenderer.DEFAULT_DOTS_PER_POINT;
 
 public class HtmlRenderUtils {
 
+    private static final ITextFontResolver fontResolver = new PdfReportFontResolver();
+    private static final TextRenderer textRenderer = new PdfReportTextRenderer();
+
     public static ITextRenderer createRenderer() throws Exception {
         ITextOutputDevice outputDevice = new ITextOutputDevice(DEFAULT_DOTS_PER_POINT);
-        ITextRenderer renderer = new ITextRenderer(DEFAULT_DOTS_PER_POINT, DEFAULT_DOTS_PER_PIXEL, outputDevice,
-                new PdfReportUserAgent(DEFAULT_DOTS_PER_POINT, DEFAULT_DOTS_PER_PIXEL),
-                new PdfReportFontResolver(),
-                new ITextReplacedElementFactory(outputDevice),
-                new PdfReportTextRenderer());
+        ITextUserAgent userAgent = new PdfReportUserAgent(outputDevice, DEFAULT_DOTS_PER_PIXEL);
+        ReplacedElementFactory replacedElementFactory = new ITextReplacedElementFactory(outputDevice);
+        ITextRenderer renderer = new ITextRenderer(DEFAULT_DOTS_PER_POINT, DEFAULT_DOTS_PER_PIXEL,
+                outputDevice,
+                userAgent,
+                fontResolver,
+                replacedElementFactory,
+                textRenderer);
         return renderer;
     }
 

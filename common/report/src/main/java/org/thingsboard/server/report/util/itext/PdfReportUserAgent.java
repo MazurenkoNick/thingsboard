@@ -39,8 +39,8 @@ import java.net.URL;
 
 public class PdfReportUserAgent extends ITextUserAgent {
 
-    public PdfReportUserAgent(float dotsPerPoint, int dotsPerPixel) {
-        super(new ITextOutputDevice(dotsPerPoint), dotsPerPixel);
+    public PdfReportUserAgent(ITextOutputDevice outputDevice, int dotsPerPixel) {
+        super(outputDevice, dotsPerPixel);
     }
 
     @Override
