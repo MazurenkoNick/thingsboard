@@ -379,7 +379,10 @@ public class DefaultSchedulerService extends AbstractPartitionBasedService<Tenan
     }
 
     private String getMsgType(SchedulerEvent event, JsonNode configuration) {
-        return (configuration.has("msgType") && !configuration.get("msgType").isNull()) ? configuration.get("msgType").asText() : event.getType();
+        String msgType = (configuration.has("msgType") && !configuration.get("msgType").isNull())
+                ? configuration.get("msgType").asText()
+                : event.getType();
+        return msgType.equals("generateDashboardReport") ? GENERATE_REPORT : msgType; // for backward compatibility with rule node msg type
     }
 
     private TbMsgMetaData getTbMsgMetaData(SchedulerEvent event, JsonNode configuration) throws JsonProcessingException {
