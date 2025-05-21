@@ -28,18 +28,30 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.common.data.notification.rule.trigger.config;
+package org.thingsboard.server.common.data.id;
 
-import lombok.Builder;
-import lombok.Data;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
+import org.thingsboard.server.common.data.EntityType;
 
-@Data
-@Builder
-public class ReportGeneratedNotificationRuleTriggerConfig implements NotificationRuleTriggerConfig {
+import java.util.UUID;
 
+public class ReportId extends UUIDBased implements EntityId {
+
+    @JsonCreator
+    public ReportId(@JsonProperty("id") UUID id) {
+        super(id);
+    }
+
+    public static ReportId fromString(String reportId) {
+        return new ReportId(UUID.fromString(reportId));
+    }
+
+    @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "string", example = "REPORT", allowableValues = "REPORT")
     @Override
-    public NotificationRuleTriggerType getTriggerType() {
-        return NotificationRuleTriggerType.REPORT_GENERATED;
+    public EntityType getEntityType() {
+        return EntityType.REPORT;
     }
 
 }

@@ -36,6 +36,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import org.thingsboard.server.common.data.id.BlobEntityId;
 import org.thingsboard.server.common.data.id.DashboardId;
 import org.thingsboard.server.common.data.id.EntityId;
+import org.thingsboard.server.common.data.id.ReportId;
 
 import java.util.List;
 import java.util.Map;
@@ -57,6 +58,11 @@ public interface NotificationInfo {
 
     @JsonIgnore
     default List<BlobEntityId> getAttachments() {
+        return null;
+    }
+
+    @JsonIgnore
+    default List<ReportId> getReports() {
         return null;
     }
 

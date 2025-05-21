@@ -31,9 +31,8 @@
 package org.thingsboard.server.report.service;
 
 import org.springframework.stereotype.Service;
-import org.thingsboard.server.common.data.blob.BlobEntity;
-import org.thingsboard.server.common.data.blob.BlobEntityInfo;
 import org.thingsboard.server.common.data.job.task.ReportTask;
+import org.thingsboard.server.common.data.report.Report;
 import org.thingsboard.server.common.data.report.ReportData;
 import org.thingsboard.server.common.data.report.TbReportFormat;
 import org.thingsboard.server.common.data.report.configuration.ReportTemplateConfig;
@@ -41,7 +40,6 @@ import org.thingsboard.server.report.context.TbReportCtx;
 import org.thingsboard.server.report.context.TbReportCtxProvider;
 import org.thingsboard.server.report.datasource.ReportDataService;
 
-import java.nio.ByteBuffer;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
@@ -70,18 +68,17 @@ public class TbReportService {
         }
     }
 
-    public BlobEntityInfo generateReport(ReportTask task) throws Exception {
+    public Report generateReport(ReportTask task) throws Exception {
         try (TbReportCtx ctx = contextProvider.newContext(task)) {
             ReportData reportData = generateReport(task, ctx);
 
-            BlobEntity blobEntity = new BlobEntity();
-            blobEntity.setTenantId(task.getTenantId());
-            blobEntity.setCustomerId(task.getCustomerId());
-            blobEntity.setData(ByteBuffer.wrap(reportData.getData()));
-            blobEntity.setContentType(reportData.getContentType());
-            blobEntity.setName(reportData.getName());
-            blobEntity.setType("report");
-            return dataService.createBlobEntity(blobEntity, ctx);
+            Report report = new Report();
+            report.setTenantId(task.getTenantId());
+            report.setTemplateId(task.getReportTemplateId());
+            report.setFormat(task.getReportTemplateConfig().getFormat());
+            report.setName(reportData.getName());
+            report.setUserId(task.getUserId());
+            return dataService.createReport(report, reportData.getData(), ctx);
         }
     }
 

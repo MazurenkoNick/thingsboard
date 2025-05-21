@@ -196,6 +196,7 @@ import org.thingsboard.server.common.data.relation.EntityRelation;
 import org.thingsboard.server.common.data.relation.EntityRelationInfo;
 import org.thingsboard.server.common.data.relation.EntityRelationsQuery;
 import org.thingsboard.server.common.data.relation.RelationTypeGroup;
+import org.thingsboard.server.common.data.report.Report;
 import org.thingsboard.server.common.data.report.ReportTemplate;
 import org.thingsboard.server.common.data.role.Role;
 import org.thingsboard.server.common.data.role.RoleType;
@@ -5056,6 +5057,13 @@ public class RestClient implements Closeable {
                 throw exception;
             }
         }
+    }
+
+    public Report createReport(Report report, byte[] data) {
+        HttpEntity<MultiValueMap<String, Object>> request = createMultipartRequest(report.getName(), data, report.getFormat().getContentType(), Map.of(
+                "info", JacksonUtil.toString(report)
+        ));
+        return restTemplate.postForObject(baseURL + "/api/v2/report", request, Report.class);
     }
 
     @SneakyThrows

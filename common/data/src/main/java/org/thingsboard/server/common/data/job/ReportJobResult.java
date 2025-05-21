@@ -32,41 +32,23 @@ package org.thingsboard.server.common.data.job;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import org.thingsboard.server.common.data.id.BlobEntityId;
 import org.thingsboard.server.common.data.job.task.ReportTaskResult;
 import org.thingsboard.server.common.data.job.task.TaskResult;
+import org.thingsboard.server.common.data.report.Report;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class ReportJobResult extends JobResult {
 
-    private BlobEntityId reportBlobId;
-    private String reportName;
+    private Report report;
 
     @Override
     public void processTaskResult(TaskResult taskResult) {
         super.processTaskResult(taskResult);
         ReportTaskResult reportTaskResult = (ReportTaskResult) taskResult;
-        if (reportTaskResult.getReportBlobId() != null) {
-            this.reportBlobId = reportTaskResult.getReportBlobId();
+        if (reportTaskResult.getReport() != null) {
+            this.report = reportTaskResult.getReport();
         }
-        if (reportTaskResult.getReportName() != null) {
-            this.reportName = reportTaskResult.getReportName();
-        }
-    }
-
-    @Override
-    public String getDescription() {
-        if (getGeneralError() != null) {
-            return getGeneralError();
-        }
-        String error = getResults().stream()
-                .map(taskResult -> ((ReportTaskResult) taskResult).getError())
-                .findFirst().orElse(null);
-        if (error != null) {
-            return error;
-        }
-        return "report successfully generated";
     }
 
     @Override

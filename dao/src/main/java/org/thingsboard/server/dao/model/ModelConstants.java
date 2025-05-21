@@ -602,6 +602,14 @@ public class ModelConstants {
 
     public static final String REPORT_TEMPLATE_INFO_VIEW_TABLE_NAME = "report_template_info_view";
 
+    public static final String REPORT_TABLE_NAME = "report";
+    public static final String REPORT_TENANT_ID_PROPERTY = TENANT_ID_PROPERTY;
+    public static final String REPORT_CUSTOMER_ID_PROPERTY = CUSTOMER_ID_PROPERTY;
+    public static final String REPORT_TEMPLATE_ID_PROPERTY = "template_id";
+    public static final String REPORT_FORMAT_PROPERTY = "format";
+    public static final String REPORT_NAME_PROPERTY = "name";
+    public static final String REPORT_USER_ID_PROPERTY = "user_id";
+
     /**
      * Role constants.
      */
@@ -952,7 +960,8 @@ public class ModelConstants {
     public static final String JOB_TABLE_NAME = "job";
     public static final String JOB_TYPE_PROPERTY = "type";
     public static final String JOB_KEY_PROPERTY = "key";
-    public static final String JOB_DESCRIPTION_PROPERTY = "description";
+    public static final String JOB_ENTITY_ID_PROPERTY = "entity_id";
+    public static final String JOB_ENTITY_TYPE_PROPERTY = "entity_type";
     public static final String JOB_STATUS_PROPERTY = "status";
     public static final String JOB_CONFIGURATION_PROPERTY = "configuration";
     public static final String JOB_RESULT_PROPERTY = "result";
@@ -1005,13 +1014,13 @@ public class ModelConstants {
     }
 
     public static final String SUB_CUSTOMERS_QUERY = " e.tenant_id = :tenantId AND e.customer_id IN (WITH RECURSIVE customers_ids(id) AS " +
-            "(SELECT id id FROM customer ce WHERE ce.tenant_id = :tenantId and id = :customerId " +
-            "UNION SELECT ce1.id id FROM customer ce1, customers_ids parent WHERE ce1.tenant_id = :tenantId " +
-            "and ce1.parent_customer_id = parent.id) SELECT id FROM customers_ids) ";
+                                                     "(SELECT id id FROM customer ce WHERE ce.tenant_id = :tenantId and id = :customerId " +
+                                                     "UNION SELECT ce1.id id FROM customer ce1, customers_ids parent WHERE ce1.tenant_id = :tenantId " +
+                                                     "and ce1.parent_customer_id = parent.id) SELECT id FROM customers_ids) ";
 
     public static final String CUSTOMERS_SUB_CUSTOMERS_QUERY = " e.tenant_id = :tenantId AND e.parent_customer_id IN (WITH RECURSIVE customers_ids(id) AS " +
-            "(SELECT id id FROM customer ce WHERE ce.tenant_id = :tenantId and id = :customerId " +
-            "UNION SELECT ce1.id id FROM customer ce1, customers_ids parent WHERE ce1.tenant_id = :tenantId " +
-            "and ce1.parent_customer_id = parent.id) SELECT id FROM customers_ids) ";
+                                                               "(SELECT id id FROM customer ce WHERE ce.tenant_id = :tenantId and id = :customerId " +
+                                                               "UNION SELECT ce1.id id FROM customer ce1, customers_ids parent WHERE ce1.tenant_id = :tenantId " +
+                                                               "and ce1.parent_customer_id = parent.id) SELECT id FROM customers_ids) ";
 
 }
