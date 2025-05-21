@@ -128,7 +128,7 @@ export class ReportComponentConfigComponent implements OnInit, OnChanges {
 }
 
 @Directive()
-export abstract class AbstractReportComponentConfig<C extends ReportComponentConfig = ReportComponentConfig> {
+export abstract class AbstractReportComponentConfig<C extends ReportComponentConfig = ReportComponentConfig> implements OnInit {
 
   @Input()
   context: ReportComponentContext;
@@ -151,6 +151,13 @@ export abstract class AbstractReportComponentConfig<C extends ReportComponentCon
 
   private reportComponentConfig: C;
 
+  ngOnInit() {
+    const aliasAndFilterCallbacks = this.context.aliasAndFilterCallbacks;
+    this.callbacks.createEntityAlias = aliasAndFilterCallbacks.createEntityAlias;
+    this.callbacks.editEntityAlias = aliasAndFilterCallbacks.editEntityAlias;
+    this.callbacks.createFilter = aliasAndFilterCallbacks.createFilter;
+  }
+
   setupConfig(reportComponentConfig: C): FormGroup {
     this.reportComponentConfig = reportComponentConfig;
     this.reportConfigForm = this.buildForm(reportComponentConfig);
@@ -167,9 +174,10 @@ export abstract class AbstractReportComponentConfig<C extends ReportComponentCon
   }
 
   private updateModel() {
+    const output = this.prepareOutputConfig(this.reportConfigForm.getRawValue());
     this.reportComponentConfig = {
       type: this.reportComponentConfig.type,
-      ...this.reportConfigForm.getRawValue()
+      ...output
     };
     this.reportConfigUpdated.emit(this.reportComponentConfig);
   }
@@ -244,6 +252,10 @@ export abstract class AbstractReportComponentConfig<C extends ReportComponentCon
 
   protected buildForm(_reportComponentConfig: C): FormGroup {
     return this.fb.group({});
+  }
+
+  protected prepareOutputConfig(config: any): any {
+    return config;
   }
 
   protected getDataSources(): Datasource[] {

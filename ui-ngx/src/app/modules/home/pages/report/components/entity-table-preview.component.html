@@ -30,17 +30,19 @@
     OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 
 -->
-<table class="tb-report-table" cellspacing="0" cellpadding="2">
-    <thead>
+<table class="tb-entity-table-preview tb-report-table" cellspacing="0" cellpadding="2">
+  <thead>
     <tr>
-        <th th:each="colKey : ${columns.keySet()}"
-            th:text="${columns[colKey]}">Header</th>
+      @for (column of columns; track column) {
+        <th>{{ column.label }}</th>
+      }
     </tr>
-    </thead>
-    <tbody>
-    <tr th:each="row : ${rows}">
-        <td th:each="colKey : ${columns.keySet()}"
-            th:text="${row[colKey]}">[Value]</td>
+  </thead>
+  <tbody>
+    <tr>
+      @for (column of columns; track column) {
+        <td>{{ '${' + column.label + '}' }}</td>
+      }
     </tr>
-    </tbody>
+  </tbody>
 </table>

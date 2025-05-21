@@ -123,3 +123,23 @@ hr {
 div.report-component {
     overflow: hidden;
 }
+
+table.tb-report-table {
+    -fs-table-paginate: paginate;
+    width: 100%;
+    border-spacing: 0;
+    margin: 2px 0;
+    border-collapse: collapse;
+}
+
+table.tb-report-table, table.tb-report-table th, table.tb-report-table td {
+    border: 1px solid rgb(128,128,128);
+}
+
+table.tb-report-table tr {
+    height: 2em;
+}
+
+table.tb-report-table th {
+    text-align: center;
+}

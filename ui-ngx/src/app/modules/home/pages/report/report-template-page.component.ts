@@ -46,7 +46,7 @@ import { Operation, Resource } from '@shared/models/security.models';
 import {
   entityAliasesListToAliases,
   entityAliasesToList,
-  filtersToReportFilterList,
+  filtersToReportFilterList, filterToReportFilter,
   HeaderFooter,
   PageOrientation,
   paperSizeToPointsMap,
@@ -63,14 +63,14 @@ import { UserPermissionsService } from '@core/http/user-permissions.service';
 import { ActivatedRoute } from '@angular/router';
 import { ReportTemplateService } from '@core/http/report-template.service';
 import { FiltersDialogComponent, FiltersDialogData } from '@home/components/filter/filters-dialog.component';
-import { Filters } from '@shared/models/query/query.models';
+import { Filter, Filters } from '@shared/models/query/query.models';
 import { deepClone } from '@core/utils';
 import { MatDialog } from '@angular/material/dialog';
 import {
   EntityAliasesDialogComponent,
   EntityAliasesDialogData
 } from '@home/components/alias/entity-aliases-dialog.component';
-import { EntityAliases } from '@shared/models/alias.models';
+import { EntityAlias, EntityAliases } from '@shared/models/alias.models';
 import {
   ReportTemplateSettingsDialogComponent,
   ReportTemplateSettingsDialogData
@@ -93,6 +93,20 @@ import { ReportService } from '@core/http/report.service';
 import {
   ReportComponentsComponent
 } from '@home/pages/report/components/report-components.component';
+import { EntityType } from '@shared/models/entity-type.models';
+import { Observable } from 'rxjs';
+import {
+  EntityAliasDialogComponent,
+  EntityAliasDialogData
+} from '@home/components/alias/entity-alias-dialog.component';
+import { tap } from 'rxjs/operators';
+import { FilterDialogComponent, FilterDialogData } from '@home/components/filter/filter-dialog.component';
+import {
+  EntityAliasSelectCallbacks
+} from '@home/components/widget/lib/settings/common/alias/entity-alias-select.component.models';
+import {
+  FilterSelectCallbacks
+} from '@home/components/widget/lib/settings/common/filter/filter-select.component.models';
 
 @Component({
   selector: 'tb-report-template-page',
@@ -202,7 +216,12 @@ export class ReportTemplatePageComponent extends PageComponent
       translate: this.translate,
       utils: this.utils,
       entityService: this.entityService,
-      aliasController: null
+      aliasController: null,
+      aliasAndFilterCallbacks: {
+        createEntityAlias: this.createEntityAlias.bind(this),
+        editEntityAlias: this.editEntityAlias.bind(this),
+        createFilter: this.createFilter.bind(this)
+      }
     };
     this.reportTemplateSettingsFormControl = this.fb.control(null);
     this.reportTemplateSettingsFormControl.valueChanges.pipe(
@@ -356,6 +375,31 @@ export class ReportTemplatePageComponent extends PageComponent
     });
   }
 
+  private createFilter(filter: string): Observable<Filter> {
+    const singleFilter: Filter = {id: null, filter, keyFilters: [], editable: true};
+    const reportFilters = deepClone(this.reportTemplate.configuration.filters);
+    const filters = reportFilterListToFilters(reportFilters);
+    return this.dialog.open<FilterDialogComponent, FilterDialogData,
+      Filter>(FilterDialogComponent, {
+      disableClose: true,
+      panelClass: ['tb-dialog', 'tb-fullscreen-dialog'],
+      data: {
+        isAdd: true,
+        filters,
+        filter: singleFilter
+      }
+    }).afterClosed().pipe(
+      tap((result) => {
+        if (result) {
+          const reportFilter = filterToReportFilter(result);
+          this.reportTemplate.configuration.filters.push(reportFilter);
+          const updatedFilters = reportFilterListToFilters(this.reportTemplate.configuration.filters);
+          this.reportComponentContext.aliasController.updateFilters(updatedFilters);
+        }
+      })
+    );
+  }
+
   public openEntityAliases($event: Event) {
     if ($event) {
       $event.stopPropagation();
@@ -380,6 +424,62 @@ export class ReportTemplatePageComponent extends PageComponent
         this.cd.markForCheck();
       }
     });
+  }
+
+  private createEntityAlias(alias: string, allowedEntityTypes: Array<EntityType>): Observable<EntityAlias> {
+    const singleEntityAlias: EntityAlias = {id: null, alias, filter: {resolveMultiple: false}};
+    const entityAliasesList = deepClone(this.reportTemplate.configuration.entityAliases);
+    const entityAliases = entityAliasesListToAliases(entityAliasesList);
+    return this.dialog.open<EntityAliasDialogComponent, EntityAliasDialogData,
+      EntityAlias>(EntityAliasDialogComponent, {
+      disableClose: true,
+      panelClass: ['tb-dialog', 'tb-fullscreen-dialog'],
+      data: {
+        isAdd: true,
+        allowedEntityTypes,
+        entityAliases,
+        alias: singleEntityAlias
+      }
+    }).afterClosed().pipe(
+      tap((entityAlias) => {
+        if (entityAlias) {
+          this.reportTemplate.configuration.entityAliases.push(entityAlias);
+          const updatedEntityAliases = entityAliasesListToAliases(this.reportTemplate.configuration.entityAliases);
+          this.reportComponentContext.aliasController.updateEntityAliases(updatedEntityAliases);
+          this.isDirty = true;
+          this.cd.markForCheck();
+        }
+      })
+    );
+  }
+
+  private editEntityAlias(alias: EntityAlias, allowedEntityTypes: Array<EntityType>): Observable<EntityAlias> {
+    const entityAliasesList = deepClone(this.reportTemplate.configuration.entityAliases);
+    const entityAliases = entityAliasesListToAliases(entityAliasesList);
+    return this.dialog.open<EntityAliasDialogComponent, EntityAliasDialogData,
+      EntityAlias>(EntityAliasDialogComponent, {
+      disableClose: true,
+      panelClass: ['tb-dialog', 'tb-fullscreen-dialog'],
+      data: {
+        isAdd: false,
+        allowedEntityTypes,
+        entityAliases,
+        alias: deepClone(alias)
+      }
+    }).afterClosed().pipe(
+      tap((entityAlias) => {
+        if (entityAlias) {
+          const index = this.reportTemplate.configuration.entityAliases.findIndex(alias => alias.id === entityAlias.id);
+          if (index > -1) {
+            this.reportTemplate.configuration.entityAliases[index] = entityAlias;
+            const updatedEntityAliases = entityAliasesListToAliases(this.reportTemplate.configuration.entityAliases);
+            this.reportComponentContext.aliasController.updateEntityAliases(updatedEntityAliases);
+            this.isDirty = true;
+            this.cd.markForCheck();
+          }
+        }
+      })
+    );
   }
 
   public openReportTemplateSettings($event: Event) {

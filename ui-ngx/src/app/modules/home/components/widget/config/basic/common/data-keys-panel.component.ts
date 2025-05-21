@@ -36,7 +36,7 @@ import {
   forwardRef,
   Input,
   OnChanges,
-  OnInit,
+  OnInit, Optional,
   SimpleChanges,
   ViewEncapsulation
 } from '@angular/core';
@@ -58,11 +58,19 @@ import { dataKeyRowValidator, dataKeyValid } from '@home/components/widget/confi
 import { CdkDragDrop } from '@angular/cdk/drag-drop';
 import { DataKeyType } from '@shared/models/telemetry/telemetry.models';
 import { UtilsService } from '@core/services/utils.service';
-import { DataKeysCallbacks, DataKeySettingsFunction } from '@home/components/widget/lib/settings/common/key/data-keys.component.models';
+import { DataKeySettingsFunction } from '@home/components/widget/lib/settings/common/key/data-keys.component.models';
 import { coerceBoolean } from '@shared/decorators/coercion';
 import { TimeSeriesChartYAxisId } from '@home/components/widget/lib/chart/time-series-chart.models';
 import { FormProperty } from '@shared/models/dynamic-form.models';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { isDefinedAndNotNull } from '@core/utils';
+import { WidgetConfigCallbacks } from '@home/components/widget/config/widget-config.component.models';
+import { IAliasController } from '@core/api/widget-api.models';
+
+export interface DataKeysPanelOptions {
+  widgetType?: widgetType;
+  callbacks?: WidgetConfigCallbacks;
+}
 
 @Component({
   selector: 'tb-data-keys-panel',
@@ -153,6 +161,12 @@ export class DataKeysPanelComponent implements ControlValueAccessor, OnInit, OnC
   @Input()
   yAxisIds: TimeSeriesChartYAxisId[];
 
+  @Input()
+  aliasController: IAliasController;
+
+  @Input()
+  dataKeysPanelOptions: DataKeysPanelOptions;
+
   dataKeyType: DataKeyType;
 
   keysListFormGroup: UntypedFormGroup;
@@ -160,24 +174,24 @@ export class DataKeysPanelComponent implements ControlValueAccessor, OnInit, OnC
   errorText = '';
 
   get widgetType(): widgetType {
-    return this.widgetConfigComponent.widgetType;
+    return this.widgetConfigComponent?.widgetType || this.getDataKeysPanelOption('widgetType');
   }
 
-  get callbacks(): DataKeysCallbacks {
-    return this.widgetConfigComponent.widgetConfigCallbacks;
+  get callbacks(): WidgetConfigCallbacks {
+    return this.widgetConfigComponent?.widgetConfigCallbacks || this.getDataKeysPanelOption('callbacks');
   }
 
   get hasAdditionalLatestDataKeys(): boolean {
-    return !this.hideSourceSelection && this.widgetConfigComponent.widgetType === widgetType.timeseries &&
-      this.widgetConfigComponent.modelValue?.typeParameters?.hasAdditionalLatestDataKeys;
+    return !this.hideSourceSelection && this.widgetType === widgetType.timeseries &&
+      this.widgetConfigComponent?.modelValue?.typeParameters?.hasAdditionalLatestDataKeys;
   }
 
   get dataKeySettingsForm(): FormProperty[] {
-    return this.widgetConfigComponent.modelValue?.dataKeySettingsForm;
+    return this.widgetConfigComponent?.modelValue?.dataKeySettingsForm;
   }
 
   get dataKeySettingsFunction(): DataKeySettingsFunction {
-    return this.widgetConfigComponent.modelValue?.dataKeySettingsFunction;
+    return this.widgetConfigComponent?.modelValue?.dataKeySettingsFunction;
   }
 
   get dragEnabled(): boolean {
@@ -198,7 +212,7 @@ export class DataKeysPanelComponent implements ControlValueAccessor, OnInit, OnC
               private dialog: MatDialog,
               private cd: ChangeDetectorRef,
               private utils: UtilsService,
-              private widgetConfigComponent: WidgetConfigComponent,
+              @Optional() private widgetConfigComponent: WidgetConfigComponent,
               private destroyRef: DestroyRef) {
   }
 
@@ -317,6 +331,18 @@ export class DataKeysPanelComponent implements ControlValueAccessor, OnInit, OnC
       });
     }
     return this.fb.array(keysControls);
+  }
+
+  private hasDataKeysPanelOptions(key: string): boolean {
+    if (this.dataKeysPanelOptions) {
+      return isDefinedAndNotNull(this.dataKeysPanelOptions[key]);
+    } else {
+      return false;
+    }
+  }
+
+  private getDataKeysPanelOption<T>(key: string): T {
+    return this.dataKeysPanelOptions[key];
   }
 
 }

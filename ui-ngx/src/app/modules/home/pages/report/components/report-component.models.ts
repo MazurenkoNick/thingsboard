@@ -43,6 +43,14 @@ import { UtilsService } from '@core/services/utils.service';
 import { AbstractReportComponentPreview } from '@home/pages/report/components/report-component.component';
 import { PageBreakPreviewComponent } from '@home/pages/report/components/page-break-preview.component';
 import { EmptyReportConfigComponent } from '@home/pages/report/components/empty-report-config.component';
+import { EntityTablePreviewComponent } from '@home/pages/report/components/entity-table-preview.component';
+import { EntityTableConfigComponent } from '@home/pages/report/components/entity-table-config.component';
+import {
+  EntityAliasSelectCallbacks
+} from '@home/components/widget/lib/settings/common/alias/entity-alias-select.component.models';
+import {
+  FilterSelectCallbacks
+} from '@home/components/widget/lib/settings/common/filter/filter-select.component.models';
 
 export interface ReportComponentTypeData<C extends ReportComponentConfig = ReportComponentConfig> {
   title: string;
@@ -76,6 +84,16 @@ export const reportComponentTypeMap = new Map<ReportComponentType, ReportCompone
       }
     ],
     [
+      ReportComponentType.ENTITY_TABLE,
+      {
+        title: 'report-template.component.entity-table.type',
+        previewImage: '/assets/report/components/rich-text.svg',
+        previewComponent: EntityTablePreviewComponent,
+        configComponent: EntityTableConfigComponent,
+        editable: true
+      }
+    ],
+    [
       ReportComponentType.PAGE_BREAK,
       {
         title: 'report-template.component.page-break.type',
@@ -96,6 +114,7 @@ export interface ReportComponentContext {
   utils: UtilsService,
   entityService: EntityService;
   aliasController: IAliasController;
+  aliasAndFilterCallbacks: EntityAliasSelectCallbacks & FilterSelectCallbacks;
 }
 
 export const assignReportComponent = (reportComponent: ReportComponentConfig, sourceReportComponent: ReportComponentConfig): void => {

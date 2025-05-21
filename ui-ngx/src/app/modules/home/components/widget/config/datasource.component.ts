@@ -88,7 +88,8 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 export class DatasourceComponent implements ControlValueAccessor, OnInit, Validator {
 
   public get basicMode(): boolean {
-    return !this.widgetConfigComponent?.widgetEditMode && this.widgetConfigComponent?.widgetConfigMode === WidgetConfigMode.basic;
+    return this.datasourcesComponent?.basicMode ||
+        (!this.widgetConfigComponent?.widgetEditMode && this.widgetConfigComponent?.widgetConfigMode === WidgetConfigMode.basic);
   }
 
   public get widgetType(): widgetType {

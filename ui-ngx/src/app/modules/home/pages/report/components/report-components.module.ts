@@ -47,6 +47,9 @@ import { WidgetConfigComponentsModule } from '@home/components/widget/config/wid
 import { ReportInsetsComponent } from '@home/pages/report/components/report-insets.component';
 import { PageBreakPreviewComponent } from '@home/pages/report/components/page-break-preview.component';
 import { EmptyReportConfigComponent } from '@home/pages/report/components/empty-report-config.component';
+import { EntityTablePreviewComponent } from '@home/pages/report/components/entity-table-preview.component';
+import { EntityTableConfigComponent } from '@home/pages/report/components/entity-table-config.component';
+import { BasicWidgetConfigModule } from '@home/components/widget/config/basic/basic-widget-config.module';
 
 @NgModule({
   declarations: [
@@ -61,12 +64,15 @@ import { EmptyReportConfigComponent } from '@home/pages/report/components/empty-
     RichTextPreviewComponent,
     RichTextConfigComponent,
     PageBreakPreviewComponent,
+    EntityTablePreviewComponent,
+    EntityTableConfigComponent,
     ReportComponentConfigComponent
   ],
   imports: [
     CommonModule,
     SharedModule,
-    WidgetConfigComponentsModule
+    WidgetConfigComponentsModule,
+    BasicWidgetConfigModule
   ],
   exports: [
     ReportComponentsComponent,

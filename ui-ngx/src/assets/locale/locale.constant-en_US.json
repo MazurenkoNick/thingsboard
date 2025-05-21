@@ -7049,6 +7049,9 @@
             },
             "page-break": {
                 "type": "Page break"
+            },
+            "entity-table": {
+                "type": "Entity table"
             }
         }
     },

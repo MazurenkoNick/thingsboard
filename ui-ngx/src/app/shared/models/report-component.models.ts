@@ -29,10 +29,11 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { Datasource } from '@shared/models/widget.models';
+import { Datasource, DatasourceType } from '@shared/models/widget.models';
 import { deepClone } from '@core/utils';
 import { alignment, Font } from '@shared/models/widget-settings.models';
 import { Insets } from '@shared/models/report.models';
+import { DataKeyType } from '@shared/models/telemetry/telemetry.models';
 
 export enum ReportComponentType {
   HEADING = 'HEADING',
@@ -114,6 +115,24 @@ export const reportComponentTypeDefaultConfigMap = new Map<ReportComponentType, 
         type: ReportComponentType.RICH_TEXT,
         value: '<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec libero orci, faucibus in iaculis quis, vestibulum sit amet ligula. Nulla facilisi. Ut ut iaculis tortor.</p>',
         dataSources: []
+      }
+    ],
+    [
+      ReportComponentType.ENTITY_TABLE,
+      {
+        type: ReportComponentType.ENTITY_TABLE,
+        dataSources: [
+          {
+            type: DatasourceType.entity,
+            dataKeys: [
+              {
+                name: 'name',
+                type: DataKeyType.entityField,
+                label: 'Name'
+              }
+            ]
+          }
+        ]
       }
     ],
     [
