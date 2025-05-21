@@ -32,7 +32,7 @@ package org.thingsboard.server.report.renderer;
 
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
 import org.thingsboard.server.common.data.report.configuration.style.Insets;
-import org.thingsboard.server.report.context.ComponentDataSource;
+import org.thingsboard.server.report.context.ComponentData;
 import org.thingsboard.server.report.util.ColorUtils;
 import org.thingsboard.server.report.util.ThymeleafUtil;
 
@@ -45,7 +45,7 @@ public abstract class ReportComponentWithLayoutRenderer implements ReportCompone
     private static final int DEFAULT_COMPONENT_PADDING_SIZE = 0;
 
     @Override
-    public String render(ReportComponent component, ComponentDataSource reportDataSource) {
+    public String render(ReportComponent component, ComponentData reportDataSource) {
         String content = this.renderContent(component, reportDataSource);
         Map<String, Object> layoutVariables = new HashMap<>();
         layoutVariables.put("htmlContent", content);
@@ -72,5 +72,5 @@ public abstract class ReportComponentWithLayoutRenderer implements ReportCompone
         return ThymeleafUtil.render("html/components/component-layout", layoutVariables);
     }
 
-    protected abstract String renderContent(ReportComponent component, ComponentDataSource reportDataSource);
+    protected abstract String renderContent(ReportComponent component, ComponentData reportDataSource);
 }

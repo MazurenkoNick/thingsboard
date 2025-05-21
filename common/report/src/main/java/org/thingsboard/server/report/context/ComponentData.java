@@ -33,7 +33,6 @@ package org.thingsboard.server.report.context;
 import lombok.Data;
 import org.thingsboard.server.common.data.report.configuration.DataKey;
 import org.thingsboard.server.common.data.report.configuration.DataSource;
-import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -46,51 +45,51 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Data
-public class ComponentDataSource {
+public class ComponentData {
 
     private List<Map<String, String>> entityDatas;
-    private Map<String, String> variables;
+    private Map<String, Object> variables;
     private byte[] image;
 
-    public ComponentDataSource() {
-        this(new ArrayList<>(), new HashMap<>());
+    public ComponentData() {
+        this(null, new ArrayList<>(), new HashMap<>());
     }
 
-    public ComponentDataSource(byte[] image) {
+    public ComponentData(byte[] image) {
         this();
         this.image = image;
     }
 
-    public ComponentDataSource(List<Map<String, String>> entityDatas) {
-        this(entityDatas, new HashMap<>());
+    public ComponentData(List<Map<String, String>> entityDatas) {
+        this(null, entityDatas, new HashMap<>());
     }
 
-    public ComponentDataSource(Map<String, String> variables) {
-        this(new ArrayList<>(), variables);
+    public ComponentData(DataSource dataSource, List<Map<String, String>> entityDatas) {
+        this(dataSource, entityDatas, new HashMap<>());
     }
 
-    public ComponentDataSource(List<Map<String, String>> entityDatas, Map<String, String> variables) {
+    public ComponentData(Map<String, Object> variables) {
+        this(null, new ArrayList<>(), variables);
+    }
+
+    public ComponentData(DataSource dataSource, List<Map<String, String>> entityDatas, Map<String, Object> variables) {
         this.entityDatas = entityDatas;
         this.variables = variables;
-    }
 
-    public HashMap<String, Object> getContextVariables(ReportComponent component) {
-        Map<String, String> labelKeyMap = component.getDataSources()
-                .stream()
-                .map(DataSource::getDataKeys)
-                .flatMap(Collection::stream)
-                .collect(Collectors.toMap(DataKey::getLabel, DataKey::getName));
+        if (dataSource != null) {
+            Map<String, String> labelKeyMap = dataSource.getDataKeys()
+                    .stream()
+                    .collect(Collectors.toMap(DataKey::getLabel, DataKey::getName));
 
-        HashMap<String, Object> contextVariables = new HashMap<>(variables);
-        for (Map<String, String> entityData : entityDatas) {
-            for (String label : labelKeyMap.keySet()) {
-                contextVariables.put(label.trim().replaceAll("\\s+", "_"), entityData.get(labelKeyMap.get(label)));
+            for (Map<String, String> entityData : entityDatas) {
+                for (String label : labelKeyMap.keySet()) {
+                    variables.put(normalizeLabel(label), entityData.get(labelKeyMap.get(label)));
+                }
             }
         }
-        return contextVariables;
     }
 
-    public ComponentDataSource merge(ComponentDataSource other) {
+    public ComponentData merge(ComponentData other) {
         this.entityDatas = mergeEntityDatas(this.entityDatas, other.getEntityDatas());
         this.variables.putAll(other.getVariables());
         return this;
@@ -113,5 +112,9 @@ public class ComponentDataSource {
                 });
 
         return new ArrayList<>(merged.values());
+    }
+
+    private String normalizeLabel(String label) {
+        return label.trim().replaceAll("\\s+", "_");
     }
 }

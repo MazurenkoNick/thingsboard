@@ -34,16 +34,16 @@ import org.springframework.stereotype.Component;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponentType;
 import org.thingsboard.server.common.data.report.configuration.components.RichTextComponent;
-import org.thingsboard.server.report.context.ComponentDataSource;
+import org.thingsboard.server.report.context.ComponentData;
 import org.thingsboard.server.report.util.ThymeleafUtil;
 
 @Component
 public class RichTextRenderer extends ReportComponentWithLayoutRenderer {
 
     @Override
-    protected String renderContent(ReportComponent component, ComponentDataSource reportDataSource) {
+    protected String renderContent(ReportComponent component, ComponentData reportDataSource) {
         RichTextComponent richTextComponent = (RichTextComponent) component;
-        return ThymeleafUtil.renderFromString(richTextComponent.getValue(), reportDataSource.getContextVariables(richTextComponent));
+        return ThymeleafUtil.renderFromString(richTextComponent.getValue(), reportDataSource.getVariables());
     }
 
     @Override
