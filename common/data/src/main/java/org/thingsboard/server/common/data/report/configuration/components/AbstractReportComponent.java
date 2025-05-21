@@ -36,7 +36,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.thingsboard.server.common.data.report.configuration.DataSource;
-import org.thingsboard.server.common.data.report.configuration.style.Margins;
+import org.thingsboard.server.common.data.report.configuration.style.Insets;
 
 import java.util.List;
 
@@ -47,7 +47,8 @@ import java.util.List;
 @AllArgsConstructor
 public abstract class AbstractReportComponent implements ReportComponent {
 
-    private Margins margins;
+    private Insets margins;
+    private Insets paddings;
     private String background;
     private List<DataSource> dataSources;
 

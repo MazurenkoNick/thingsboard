@@ -30,15 +30,31 @@
     OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 
 -->
-<div class="report-component"
-     th:style="|background: ${background};
-     margin-left: ${leftMargin}pt;
-     margin-top: ${topMargin}pt;
-     margin-right: ${rightMargin}pt;
-     margin-bottom: ${bottomMargin}pt;
-     padding-left: ${leftPadding}pt;
-     padding-top: ${topPadding}pt;
-     padding-right: ${rightPadding}pt;
-     padding-bottom: ${bottomPadding}pt;|"
-     th:utext="${htmlContent}">
+<div [formGroup]="insetsFormGroup" class="flex flex-1 flex-col gap-2">
+  <div class="flex flex-1 flex-row justify-center gap-2">
+    <div class="tb-small-label" translate>report-template.top</div>
+    <mat-form-field appearance="outline" class="number" subscriptSizing="dynamic">
+      <input matInput formControlName="top" type="number" min="0" step="1" placeholder="{{ 'widget-config.set' | translate }}">
+      <div matSuffix>pt</div>
+    </mat-form-field>
+  </div>
+  <div class="flex flex-1 flex-row justify-center gap-2">
+    <div class="tb-small-label" translate>report-template.left</div>
+    <mat-form-field appearance="outline" class="number" subscriptSizing="dynamic">
+      <input matInput formControlName="left" type="number" min="0" step="1" placeholder="{{ 'widget-config.set' | translate }}">
+      <div matSuffix>pt</div>
+    </mat-form-field>
+    <mat-form-field appearance="outline" class="number" subscriptSizing="dynamic">
+      <input matInput formControlName="right" type="number" min="0" step="1" placeholder="{{ 'widget-config.set' | translate }}">
+      <div matSuffix>pt</div>
+    </mat-form-field>
+    <div class="tb-small-label" translate>report-template.right</div>
+  </div>
+  <div class="flex flex-1 flex-row justify-center gap-2">
+    <div class="tb-small-label" translate>report-template.bottom</div>
+    <mat-form-field appearance="outline" class="number" subscriptSizing="dynamic">
+      <input matInput formControlName="bottom" type="number" min="0" step="1" placeholder="{{ 'widget-config.set' | translate }}">
+      <div matSuffix>pt</div>
+    </mat-form-field>
+  </div>
 </div>

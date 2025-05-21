@@ -31,36 +31,13 @@
 package org.thingsboard.server.report.context;
 
 import lombok.Data;
-import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
-import org.thingsboard.server.common.data.report.configuration.style.Margins;
 
 @Data
-public class ComponentLayout {
-
-    private static final int DEFAULT_PAGE_MARGIN_SIZE = 20;
-    private static final int DEFAULT_COMPONENT_MARGIN_SIZE = 0;
-    private int usablePageWidth;
-    private int leftMargin;
-    private int rightMargin;
-    private int topMargin;
-    private int bottomMargin;
-
-    public ComponentLayout() {
-    }
-
-    public ComponentLayout(ReportComponent component, ComponentLayout parentLayout) {
-        Margins margins = component.getMargins();
-        if (margins != null) {
-            this.leftMargin = margins.getLeft();
-            this.rightMargin = margins.getRight();
-            this.topMargin  = margins.getTop();
-            this.bottomMargin = margins.getBottom();
-        } else {
-            this.leftMargin = DEFAULT_COMPONENT_MARGIN_SIZE;
-            this.rightMargin = DEFAULT_COMPONENT_MARGIN_SIZE;
-            this.topMargin = DEFAULT_COMPONENT_MARGIN_SIZE;
-            this.bottomMargin = DEFAULT_COMPONENT_MARGIN_SIZE;
-        }
-        this.usablePageWidth = parentLayout.getUsablePageWidth() - leftMargin - rightMargin;
-    }
+public class HeaderFooterRenderLayout {
+    private String htmlContent;
+    private String firstPageHtmlContent;
+    private boolean enabled;
+    private boolean firstPageEnabled;
+    private int heightPx;
+    private int firstPageHeightPx;
 }

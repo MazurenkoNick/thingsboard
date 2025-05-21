@@ -37,7 +37,7 @@ import org.thingsboard.server.common.data.report.configuration.components.Report
 import org.thingsboard.server.common.data.report.configuration.style.TextAlignment;
 import org.thingsboard.server.common.data.report.configuration.style.VerticalAlignment;
 import org.thingsboard.server.report.util.ColorUtils;
-import org.thingsboard.server.report.context.ReportDataSource;
+import org.thingsboard.server.report.context.ComponentDataSource;
 import org.thingsboard.server.report.util.ThymeleafUtil;
 
 import java.util.HashMap;
@@ -46,7 +46,7 @@ import java.util.HashMap;
 public class HeadingRenderer extends ReportComponentWithLayoutRenderer {
 
     @Override
-    public String renderContent(ReportComponent component, ReportDataSource reportDataSource) {
+    public String renderContent(ReportComponent component, ComponentDataSource reportDataSource) {
         HeadingComponent headingComponent = (HeadingComponent) component;
         String processedText = ThymeleafUtil.renderFromString(headingComponent.getValue(), reportDataSource.getContextVariables(component));
 

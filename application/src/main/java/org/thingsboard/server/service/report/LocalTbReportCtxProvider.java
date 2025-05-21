@@ -53,6 +53,7 @@ public class LocalTbReportCtxProvider implements TbReportCtxProvider {
         SecurityUser securityUser = tokenFactory.parseAccessJwtToken(task.getAccessToken());
         return LocalTbReportCtx.builder()
                 .configuration(task.getReportTemplateConfig())
+                .timeZone(task.getTimezone())
                 .accessToken(task.getAccessToken())
                 .accessTokenExpTs(task.getAccessTokenExpirationTs())
                 .securityUser(securityUser)

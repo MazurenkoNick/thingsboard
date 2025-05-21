@@ -34,7 +34,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import org.thingsboard.server.common.data.report.configuration.DataSource;
-import org.thingsboard.server.common.data.report.configuration.style.Margins;
+import org.thingsboard.server.common.data.report.configuration.style.Insets;
 
 import java.io.Serializable;
 import java.util.List;
@@ -58,7 +58,9 @@ import java.util.List;
 })
 public interface ReportComponent extends Serializable {
 
-    Margins getMargins();
+    Insets getMargins();
+
+    Insets getPaddings();
 
     String getBackground();
 

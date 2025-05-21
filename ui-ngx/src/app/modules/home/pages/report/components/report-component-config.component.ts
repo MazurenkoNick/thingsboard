@@ -154,14 +154,8 @@ export abstract class AbstractReportComponentConfig<C extends ReportComponentCon
   setupConfig(reportComponentConfig: C): FormGroup {
     this.reportComponentConfig = reportComponentConfig;
     this.reportConfigForm = this.buildForm(reportComponentConfig);
-    this.reportConfigForm.addControl('margins', this.fb.group(
-      {
-        left: [reportComponentConfig.margins?.left, [Validators.min(0)]],
-        right: [reportComponentConfig.margins?.right, [Validators.min(0)]],
-        top: [reportComponentConfig.margins?.top, [Validators.min(0)]],
-        bottom: [reportComponentConfig.margins?.bottom, [Validators.min(0)]]
-      }
-    ));
+    this.reportConfigForm.addControl('paddings', this.fb.control(reportComponentConfig.paddings));
+    this.reportConfigForm.addControl('margins', this.fb.control(reportComponentConfig.margins));
     this.reportConfigForm.addControl('background',
       this.fb.control(reportComponentConfig.background));
     this.reportConfigForm.valueChanges.pipe(

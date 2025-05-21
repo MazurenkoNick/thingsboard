@@ -54,6 +54,9 @@ import org.thingsboard.server.report.context.TbReportCtx;
 import org.thingsboard.server.report.datasource.ReportDataService;
 import org.thymeleaf.util.StringUtils;
 
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -66,7 +69,6 @@ import static org.thingsboard.server.common.data.util.ReportQueryUtils.toAlarmDa
 import static org.thingsboard.server.common.data.util.ReportQueryUtils.toEntityDataQuery;
 import static org.thingsboard.server.common.data.util.ReportQueryUtils.toSingleEntityQuery;
 import static org.thingsboard.server.report.service.PdfReportService.getSingleDataSource;
-import static org.thingsboard.server.report.util.ReportUtils.formatTimestamp;
 
 public abstract class AbstractReportService implements ReportService {
 
@@ -90,6 +92,13 @@ public abstract class AbstractReportService implements ReportService {
         return data;
     }
 
+    protected List<Map<String, String>> buildEntityDataSource(TbReportCtx ctx, DataSource dataSource) {
+        return switch (dataSource.getType()) {
+            case "device", "entity" -> fetchEntities(ctx, dataSource).stream().map(entityData -> toStringMap(entityData, ctx)).collect(Collectors.toList());
+            default -> throw new IllegalArgumentException("Unknown data source type: " + dataSource.getType());
+        };
+    }
+
     protected List<Map<String, String>> buildTsDataSource(TbReportCtx ctx, TimeseriesTableComponent component) {
         String deviceId = component.getDataSources().get(0).getDeviceId();
         DeviceId entityId = DeviceId.fromString(deviceId);
@@ -110,24 +119,24 @@ public abstract class AbstractReportService implements ReportService {
         List<TsKvEntry> result = dataService.getTimeseries(entityId, keys, timeRange.startTs, timeRange.endTs,
                 historyConf.getInterval(), timeWindowConf.getAggregation().getType(), SortOrder.Direction.DESC,
                 timeWindowConf.getAggregation().getLimit(), false, ctx);
-        return collectTsData(result);
+        return collectTsData(result, ctx);
     }
 
     protected List<Map<String, String>> buildAlarmDataSource(TbReportCtx ctx, AlarmTableComponent component) {
         List<String> keyList = component.getAlarmSource().getDataKeys().stream().map(DataKey::getName).toList();
         List<Map<String, String>> data = new ArrayList<>();
         for (AlarmData alarmData : new PageDataIterable<>(link -> dataService.findAlarmDataByQuery(toAlarmDataQuery(component, ctx.getConfiguration(), link), ctx), 1024)) {
-            data.add(toMapData(alarmData, keyList));
+            data.add(toStringMap(alarmData, keyList, ctx));
         }
         return data;
     }
 
-    protected Map<String, String> toMap(EntityData entityData) {
+    protected Map<String, String> toStringMap(EntityData entityData, TbReportCtx ctx) {
         HashMap<String, String> latestValues = new HashMap<>();
         if (entityData != null) {
             entityData.getLatest().forEach((keyType, keyValueMap) -> keyValueMap.forEach((key, tsValue) -> {
                 if (tsValue.getValue() != null) {
-                    latestValues.put(key, key.equals("createdTime") ? formatTimestamp(tsValue.getValue()): tsValue.getValue());
+                    latestValues.put(key, formatData(ctx, key, tsValue.getValue()));
                 }
             }));
             latestValues.put("id", entityData.getEntityId().toString());
@@ -147,19 +156,19 @@ public abstract class AbstractReportService implements ReportService {
         return latestValues;
     }
 
-    protected Map<String, String> toMapData(AlarmData alarmData, List<String> keys) {
+    protected Map<String, String> toStringMap(AlarmData alarmData, List<String> keys, TbReportCtx ctx) {
         Map<String, String> data = new HashMap<>();
         JsonNode alarmDataJson = JacksonUtil.valueToTree(alarmData);
         keys.forEach(key -> {
             JsonNode value = JacksonUtil.getByKeyPath(alarmDataJson, key);
             if (value != null) {
-                data.put(key, value.asText());
+                data.put(key, formatData(ctx, key, value.asText()));
             }
         });
         return data;
     }
 
-    protected List<Map<String, String>> collectTsData(List<TsKvEntry> tsKvEntries) {
+    protected List<Map<String, String>> collectTsData(List<TsKvEntry> tsKvEntries, TbReportCtx ctx) {
         List<Map<String, String>> tsData = new ArrayList<>();
         Map<Long, List<TsKvEntry>> groupedByTs = tsKvEntries.stream().collect(Collectors.groupingBy(TsKvEntry::getTs));
 
@@ -167,10 +176,30 @@ public abstract class AbstractReportService implements ReportService {
             Map<String, String> tsValues = new HashMap<>();
             tsValues.put("ts", ts.toString());
             for (TsKvEntry entry : entries) {
-                tsValues.put(entry.getKey(), entry.getValueAsString());
+                tsValues.put(entry.getKey(), formatData(ctx, entry.getKey(), entry.getValueAsString()));
             }
             tsData.add(tsValues);
         });
         return tsData;
+    }
+
+    protected String formatData(TbReportCtx ctx, String key, String value) {
+        return key.equals("createdTime") ? formatTimestamp(value, ctx) : value;
+    }
+
+    protected String formatTimestamp(String timestampStr, TbReportCtx ctx) {
+        String timeDataPattern = ctx.getConfiguration().getTimeDataPattern();
+        if (timeDataPattern == null || timeDataPattern.isEmpty()) {
+            return timestampStr;
+        }
+        try {
+            long timestamp = Long.parseLong(timestampStr);
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern(timeDataPattern)
+                    .withZone(ctx.getTimeZone() != null ? ZoneId.of(ctx.getTimeZone()) : ZoneId.systemDefault());
+
+            return formatter.format(Instant.ofEpochMilli(timestamp));
+        } catch (NumberFormatException e) {
+            return "Invalid timestamp: " + timestampStr;
+        }
     }
 }

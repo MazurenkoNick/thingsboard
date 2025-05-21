@@ -170,7 +170,7 @@ export class DatasourceComponent implements ControlValueAccessor, OnInit, Valida
   }
 
   public get supportsUnitConversion(): boolean {
-    return this.widgetConfigComponent.modelValue?.typeParameters?.supportsUnitConversion ?? false;
+    return this.widgetConfigComponent?.modelValue?.typeParameters?.supportsUnitConversion ?? false;
   }
 
   public get dashboard(): Dashboard {
