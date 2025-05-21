@@ -38,9 +38,10 @@ import org.thingsboard.rule.engine.api.TbNode;
 import org.thingsboard.rule.engine.api.TbNodeConfiguration;
 import org.thingsboard.rule.engine.api.TbNodeException;
 import org.thingsboard.rule.engine.api.util.TbNodeUtils;
+import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.job.Job;
+import org.thingsboard.server.common.data.job.ReportJobConfiguration;
 import org.thingsboard.server.common.data.plugin.ComponentType;
-import org.thingsboard.server.common.data.report.ReportTemplate;
 import org.thingsboard.server.common.msg.TbMsg;
 
 @Slf4j
@@ -65,11 +66,24 @@ public class TbGenerateReportV2Node implements TbNode {
 
     @Override
     public void onMsg(TbContext ctx, TbMsg msg) {
-        DonAsynchron.withCallback(ctx.getExternalCallExecutor().submit(() -> {
-            ReportTemplate reportTemplate = ctx.getPeContext().getReportTemplateService().findReportTemplateById(ctx.getTenantId(), config.getReportTemplateId());
-            Job job = Job.newReportJob(reportTemplate, config.getUserId(), config.getCustomerId(), config.getTimezone());
-            ctx.getJobManager().submitJob(job);
-        }), result -> ctx.tellSuccess(msg), error -> ctx.tellFailure(msg, error));
+        TenantId tenantId = ctx.getTenantId();
+        Job job = Job.newReportJob()
+                .tenantId(tenantId)
+                .reportTemplateId(config.getReportTemplateId())
+                .userId(config.getUserId())
+                .timezone(config.getTimezone())
+                .recipientId(config.getRecipientId())
+                .notificationTemplateId(config.getNotificationTemplateId())
+                .build();
+        ReportJobConfiguration configuration = job.getConfiguration();
+        configuration.setRuleChainId(ctx.getSelf().getRuleChainId());
+        configuration.setRuleNodeId(ctx.getSelfId());
+
+        DonAsynchron.withCallback(ctx.getJobManager().submitJob(job), result -> {
+            // do nothing, tellSuccess will be done when the job is completed
+        }, error -> {
+            ctx.tellFailure(msg, error);
+        });
     }
 
 }

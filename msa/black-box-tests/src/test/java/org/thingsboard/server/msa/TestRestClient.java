@@ -59,8 +59,8 @@ import org.thingsboard.server.common.data.User;
 import org.thingsboard.server.common.data.alarm.Alarm;
 import org.thingsboard.server.common.data.asset.Asset;
 import org.thingsboard.server.common.data.asset.AssetProfile;
-import org.thingsboard.server.common.data.converter.Converter;
 import org.thingsboard.server.common.data.cf.CalculatedField;
+import org.thingsboard.server.common.data.converter.Converter;
 import org.thingsboard.server.common.data.event.EventType;
 import org.thingsboard.server.common.data.group.EntityGroup;
 import org.thingsboard.server.common.data.group.EntityGroupInfo;
@@ -1182,7 +1182,7 @@ public class TestRestClient {
     public Job requestReport(ReportRequest request) {
         return given().spec(requestSpec)
                 .body(request)
-                .post("/api/v2/report")
+                .post("/api/v2/report/request")
                 .then()
                 .assertThat()
                 .statusCode(HTTP_OK)

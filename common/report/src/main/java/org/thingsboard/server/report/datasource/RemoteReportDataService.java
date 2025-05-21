@@ -34,8 +34,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.stereotype.Service;
 import org.thingsboard.rest.client.RestClient;
 import org.thingsboard.server.common.data.TbResource;
-import org.thingsboard.server.common.data.blob.BlobEntity;
-import org.thingsboard.server.common.data.blob.BlobEntityInfo;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.ReportTemplateId;
@@ -50,6 +48,7 @@ import org.thingsboard.server.common.data.query.AlarmDataQuery;
 import org.thingsboard.server.common.data.query.EntityCountQuery;
 import org.thingsboard.server.common.data.query.EntityData;
 import org.thingsboard.server.common.data.query.EntityDataQuery;
+import org.thingsboard.server.common.data.report.Report;
 import org.thingsboard.server.common.data.report.ReportTemplate;
 import org.thingsboard.server.report.context.RemoteTbReportCtxProvider;
 import org.thingsboard.server.report.context.TbReportCtx;
@@ -98,8 +97,8 @@ public class RemoteReportDataService implements ReportDataService {
     }
 
     @Override
-    public BlobEntityInfo createBlobEntity(BlobEntity blobEntity, TbReportCtx ctx) {
-        return getRestClient(ctx).createBlobEntity(blobEntity);
+    public Report createReport(Report report, byte[] data, TbReportCtx ctx) {
+        return getRestClient(ctx).createReport(report, data);
     }
 
     private RestClient getRestClient(TbReportCtx ctx) {

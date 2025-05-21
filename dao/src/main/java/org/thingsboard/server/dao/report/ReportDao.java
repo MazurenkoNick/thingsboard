@@ -28,51 +28,21 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.common.data.job.task;
+package org.thingsboard.server.dao.report;
 
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
-import lombok.experimental.SuperBuilder;
-import org.thingsboard.server.common.data.job.JobType;
+import org.thingsboard.server.common.data.id.ReportId;
+import org.thingsboard.server.common.data.id.TenantId;
+import org.thingsboard.server.common.data.page.PageData;
+import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.report.Report;
+import org.thingsboard.server.dao.Dao;
 
-@Data
-@EqualsAndHashCode(callSuper = true)
-@NoArgsConstructor
-@SuperBuilder
-@ToString(callSuper = true)
-public class ReportTaskResult extends TaskResult {
+public interface ReportDao extends Dao<Report> {
 
-    private Report report;
-    private String error;
+    void saveData(TenantId tenantId, ReportId reportId, byte[] data);
 
-    public static ReportTaskResult success(ReportTask task, Report report) {
-        return ReportTaskResult.builder()
-                .key(task.getKey())
-                .success(true)
-                .report(report)
-                .build();
-    }
+    byte[] getData(TenantId tenantId, ReportId reportId);
 
-    public static ReportTaskResult failed(ReportTask task, Throwable error) {
-        return ReportTaskResult.builder()
-                .key(task.getKey())
-                .error(error.getMessage())
-                .build();
-    }
-
-    public static ReportTaskResult discarded(ReportTask task) {
-        return ReportTaskResult.builder()
-                .key(task.getKey())
-                .discarded(true)
-                .build();
-    }
-
-    @Override
-    public JobType getJobType() {
-        return JobType.REPORT;
-    }
+    PageData<Report> findByTenantId(TenantId tenantId, PageLink pageLink);
 
 }

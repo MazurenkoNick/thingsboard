@@ -36,10 +36,12 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
-import org.thingsboard.server.common.data.id.CustomerId;
+import org.thingsboard.server.common.data.id.NotificationTargetId;
+import org.thingsboard.server.common.data.id.NotificationTemplateId;
 import org.thingsboard.server.common.data.id.ReportTemplateId;
+import org.thingsboard.server.common.data.id.RuleChainId;
+import org.thingsboard.server.common.data.id.RuleNodeId;
 import org.thingsboard.server.common.data.id.UserId;
-import org.thingsboard.server.common.data.report.TbReportFormat;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -50,10 +52,14 @@ import org.thingsboard.server.common.data.report.TbReportFormat;
 public class ReportJobConfiguration extends JobConfiguration {
 
     private ReportTemplateId reportTemplateId;
-    private TbReportFormat reportFormat;
     private UserId userId;
-    private CustomerId customerId;
     private String timezone;
+
+    private NotificationTargetId recipientId;
+    private NotificationTemplateId notificationTemplateId;
+
+    private RuleChainId ruleChainId;
+    private RuleNodeId ruleNodeId;
 
     @Override
     public JobType getType() {

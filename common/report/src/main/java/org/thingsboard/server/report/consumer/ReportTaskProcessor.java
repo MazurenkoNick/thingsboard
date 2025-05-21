@@ -33,10 +33,10 @@ package org.thingsboard.server.report.consumer;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import org.thingsboard.server.common.data.blob.BlobEntityInfo;
 import org.thingsboard.server.common.data.job.JobType;
 import org.thingsboard.server.common.data.job.task.ReportTask;
 import org.thingsboard.server.common.data.job.task.ReportTaskResult;
+import org.thingsboard.server.common.data.report.Report;
 import org.thingsboard.server.queue.task.TaskProcessor;
 import org.thingsboard.server.queue.util.TbReportComponent;
 import org.thingsboard.server.report.service.TbReportService;
@@ -53,8 +53,8 @@ public class ReportTaskProcessor extends TaskProcessor<ReportTask, ReportTaskRes
 
     @Override
     public ReportTaskResult process(ReportTask task) throws Exception {
-        BlobEntityInfo blobEntityInfo = tbReportService.generateReport(task);
-        return ReportTaskResult.success(task, blobEntityInfo.getId(), blobEntityInfo.getName());
+        Report report = tbReportService.generateReport(task);
+        return ReportTaskResult.success(task, report);
     }
 
     @Override

@@ -100,6 +100,8 @@ public class EntityIdFactory {
                 return new BlobEntityId(uuid);
             case REPORT_TEMPLATE:
                 return new ReportTemplateId(uuid);
+            case REPORT:
+                return new ReportId(uuid);
             case ENTITY_VIEW:
                 return new EntityViewId(uuid);
             case ROLE:

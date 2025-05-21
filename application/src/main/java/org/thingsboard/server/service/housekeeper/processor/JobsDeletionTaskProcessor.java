@@ -28,36 +28,31 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.service.notification.rule.trigger;
+package org.thingsboard.server.service.housekeeper.processor;
 
-import org.springframework.stereotype.Service;
-import org.thingsboard.server.common.data.notification.info.ReportGeneratedNotificationInfo;
-import org.thingsboard.server.common.data.notification.rule.trigger.ReportGeneratedTrigger;
-import org.thingsboard.server.common.data.notification.rule.trigger.config.NotificationRuleTriggerType;
-import org.thingsboard.server.common.data.notification.rule.trigger.config.ReportGeneratedNotificationRuleTriggerConfig;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
+import org.thingsboard.server.common.data.housekeeper.HousekeeperTask;
+import org.thingsboard.server.common.data.housekeeper.HousekeeperTaskType;
+import org.thingsboard.server.dao.job.JobService;
 
-@Service
-public class ReportGeneratedTriggerProcessor implements NotificationRuleTriggerProcessor<ReportGeneratedTrigger, ReportGeneratedNotificationRuleTriggerConfig> {
+@Component
+@RequiredArgsConstructor
+@Slf4j
+public class JobsDeletionTaskProcessor extends HousekeeperTaskProcessor<HousekeeperTask> {
+
+    private final JobService jobService;
 
     @Override
-    public boolean matchesFilter(ReportGeneratedTrigger trigger, ReportGeneratedNotificationRuleTriggerConfig triggerConfig) {
-        return true;
+    public void process(HousekeeperTask task) throws Exception {
+        int deletedCount = jobService.deleteJobsByEntityId(task.getTenantId(), task.getEntityId());
+        log.debug("[{}][{}][{}] Deleted {} jobs", task.getTenantId(), task.getEntityId().getEntityType(), task.getEntityId(), deletedCount);
     }
 
     @Override
-    public ReportGeneratedNotificationInfo constructNotificationInfo(ReportGeneratedTrigger trigger) {
-        return ReportGeneratedNotificationInfo.builder()
-                .tenantId(trigger.getTenantId())
-                .customerId(trigger.getCustomerId())
-                .reportBlobId(trigger.getReportBlobId())
-                .reportName(trigger.getReportName())
-                .reportFormat(trigger.getReportFormat())
-                .build();
-    }
-
-    @Override
-    public NotificationRuleTriggerType getTriggerType() {
-        return NotificationRuleTriggerType.REPORT_GENERATED;
+    public HousekeeperTaskType getTaskType() {
+        return HousekeeperTaskType.DELETE_JOBS;
     }
 
 }

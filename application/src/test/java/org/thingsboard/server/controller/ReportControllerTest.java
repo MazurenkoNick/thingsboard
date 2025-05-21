@@ -34,12 +34,18 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.thingsboard.server.common.data.DataConstants;
 import org.thingsboard.server.common.data.Device;
 import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.job.Job;
 import org.thingsboard.server.common.data.job.JobStatus;
 import org.thingsboard.server.common.data.job.ReportJobResult;
+import org.thingsboard.server.common.data.notification.Notification;
+import org.thingsboard.server.common.data.notification.NotificationType;
+import org.thingsboard.server.common.data.notification.targets.NotificationTarget;
+import org.thingsboard.server.common.data.notification.targets.platform.AffectedUserFilter;
+import org.thingsboard.server.common.data.notification.template.NotificationTemplate;
 import org.thingsboard.server.common.data.query.DeviceTypeFilter;
 import org.thingsboard.server.common.data.report.ReportRequest;
 import org.thingsboard.server.common.data.report.ReportTemplate;
@@ -49,6 +55,7 @@ import org.thingsboard.server.common.data.report.configuration.DataKey;
 import org.thingsboard.server.common.data.report.configuration.DataSource;
 import org.thingsboard.server.common.data.report.configuration.EntityAlias;
 import org.thingsboard.server.common.data.report.configuration.components.EntityTableComponent;
+import org.thingsboard.server.dao.notification.DefaultNotifications;
 import org.thingsboard.server.dao.service.DaoSqlTest;
 
 import java.util.ArrayList;
@@ -62,6 +69,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Slf4j
 @DaoSqlTest
 public class ReportControllerTest extends AbstractControllerTest {
+
+    @Autowired
+    private DefaultNotifications defaultNotifications;
 
     @Before
     public void beforeTest() throws Exception {
@@ -158,6 +168,7 @@ public class ReportControllerTest extends AbstractControllerTest {
         CsvReportTemplateConfig configuration = new CsvReportTemplateConfig();
         configuration.setEntityAlias(entityAlias);
         configuration.setComponent(tableComponent);
+        configuration.setNamePattern("test.csv");
 
         ReportTemplate reportTemplate = new ReportTemplate();
         reportTemplate.setConfiguration(configuration);
@@ -188,16 +199,21 @@ public class ReportControllerTest extends AbstractControllerTest {
                                     threshold);
         }
 
+        NotificationTarget recipient = createNotificationTarget(new AffectedUserFilter());
+        NotificationTemplate notificationTemplate = saveNotificationTemplate(DefaultNotifications.reportGenerated.toTemplate());
+
         //generate report
         ReportRequest reportRequest = new ReportRequest();
         reportRequest.setReportTemplateId(reportTemplate.getId());
-        Job job = doPost("/api/v2/report", reportRequest, Job.class);
+        reportRequest.setRecipientId(recipient.getId());
+        reportRequest.setNotificationTemplateId(notificationTemplate.getId());
+        Job job = doPost("/api/v2/report/request", reportRequest, Job.class);
 
         Job completedJob = await().atMost(TIMEOUT, TimeUnit.SECONDS).until(() -> doGet("/api/job/" + job.getId(), Job.class),
                 result -> result.getStatus() == JobStatus.COMPLETED);
 
         ReportJobResult result = (ReportJobResult) completedJob.getResult();
-        String csvReport = doGet("/api/blobEntity/" + result.getReportBlobId() + "/download", String.class);
+        String csvReport = doGet("/api/v2/report/" + result.getReport().getId() + "/download", String.class);
 
         // Check headers and content
         String[] lines = csvReport.split("\r?\n");
@@ -205,6 +221,15 @@ public class ReportControllerTest extends AbstractControllerTest {
         for (int i = 0; i < devices.size(); i++) {
             assertThat(lines[i + 1]).contains(expectedReportLines.get(i));
         }
+
+        await().atMost(TIMEOUT, TimeUnit.SECONDS).untilAsserted(() -> {
+            Notification reportNotification = getMyNotifications(true, 10).stream()
+                    .filter(notification -> notification.getType() == NotificationType.REPORT_GENERATED)
+                    .findFirst().orElse(null);
+            assertThat(reportNotification).isNotNull();
+            assertThat(reportNotification.getSubject()).isEqualTo("Report generated");
+            assertThat(reportNotification.getText()).isEqualTo("CSV report 'test.csv' is ready");
+        });
     }
 
     private static EntityAlias buildDevicesEntityAlias(String aliasId) {

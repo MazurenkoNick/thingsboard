@@ -31,8 +31,6 @@
 package org.thingsboard.server.report.datasource;
 
 import org.thingsboard.server.common.data.TbResource;
-import org.thingsboard.server.common.data.blob.BlobEntity;
-import org.thingsboard.server.common.data.blob.BlobEntityInfo;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.ReportTemplateId;
@@ -47,6 +45,7 @@ import org.thingsboard.server.common.data.query.AlarmDataQuery;
 import org.thingsboard.server.common.data.query.EntityCountQuery;
 import org.thingsboard.server.common.data.query.EntityData;
 import org.thingsboard.server.common.data.query.EntityDataQuery;
+import org.thingsboard.server.common.data.report.Report;
 import org.thingsboard.server.common.data.report.ReportTemplate;
 import org.thingsboard.server.report.context.TbReportCtx;
 
@@ -71,6 +70,6 @@ public interface ReportDataService {
                                   Long interval, Aggregation agg, SortOrder.Direction sortOrder,
                                   Integer limit, boolean useStrictDataTypes, TbReportCtx ctx);
 
-    BlobEntityInfo createBlobEntity(BlobEntity blobEntity, TbReportCtx ctx);
+    Report createReport(Report report, byte[] data, TbReportCtx ctx);
 
 }

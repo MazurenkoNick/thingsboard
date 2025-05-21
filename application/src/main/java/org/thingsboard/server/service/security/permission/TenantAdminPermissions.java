@@ -84,7 +84,6 @@ public class TenantAdminPermissions extends AbstractPermissions {
         put(Resource.INTEGRATION, tenantStandaloneEntityPermissionChecker);
         put(Resource.SCHEDULER_EVENT, tenantStandaloneEntityPermissionChecker);
         put(Resource.BLOB_ENTITY, tenantStandaloneEntityPermissionChecker);
-        put(Resource.REPORT_TEMPLATE, tenantStandaloneEntityPermissionChecker);
         put(Resource.CUSTOMER_GROUP, tenantEntityGroupPermissionChecker);
         put(Resource.DEVICE_GROUP, tenantEntityGroupPermissionChecker);
         put(Resource.ASSET_GROUP, tenantEntityGroupPermissionChecker);
@@ -110,6 +109,8 @@ public class TenantAdminPermissions extends AbstractPermissions {
         put(Resource.MOBILE_APP, tenantStandaloneEntityPermissionChecker);
         put(Resource.MOBILE_APP_BUNDLE, tenantStandaloneEntityPermissionChecker);
         put(Resource.DOMAIN, tenantStandaloneEntityPermissionChecker);
+        put(Resource.REPORT_TEMPLATE, tenantStandaloneEntityPermissionChecker);
+        put(Resource.REPORT, tenantStandaloneEntityPermissionChecker);
     }
 
     public static final PermissionChecker tenantStandaloneEntityPermissionChecker = new PermissionChecker() {

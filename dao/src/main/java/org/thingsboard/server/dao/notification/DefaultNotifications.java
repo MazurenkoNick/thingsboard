@@ -65,7 +65,6 @@ import org.thingsboard.server.common.data.notification.rule.trigger.config.NewPl
 import org.thingsboard.server.common.data.notification.rule.trigger.config.NotificationRuleTriggerConfig;
 import org.thingsboard.server.common.data.notification.rule.trigger.config.NotificationRuleTriggerType;
 import org.thingsboard.server.common.data.notification.rule.trigger.config.RateLimitsNotificationRuleTriggerConfig;
-import org.thingsboard.server.common.data.notification.rule.trigger.config.ReportGeneratedNotificationRuleTriggerConfig;
 import org.thingsboard.server.common.data.notification.rule.trigger.config.RuleEngineComponentLifecycleEventNotificationRuleTriggerConfig;
 import org.thingsboard.server.common.data.notification.rule.trigger.config.TaskProcessingFailureNotificationRuleTriggerConfig;
 import org.thingsboard.server.common.data.notification.template.NotificationTemplate;
@@ -410,12 +409,7 @@ public class DefaultNotifications {
             .subject("Report generated")
             .text("${reportFormat} report '${reportName}' is ready")
             .icon("description").color(null)
-            .button("Download").link("/api/blobEntity/${reportBlobId}/download")
-            .rule(DefaultRule.builder()
-                    .name("Report generated")
-                    .triggerConfig(ReportGeneratedNotificationRuleTriggerConfig.builder().build())
-                    .description("Send notification to tenant admins when report is generated")
-                    .build())
+            .button("Download").link("/api/v2/report/${reportId}/download")
             .build();
 
     private final NotificationTemplateService templateService;
