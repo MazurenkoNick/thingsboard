@@ -33,7 +33,6 @@ package org.thingsboard.server.report.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.thingsboard.common.util.JacksonUtil;
-import org.thingsboard.server.common.data.id.DeviceId;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.kv.TsKvEntry;
 import org.thingsboard.server.common.data.page.PageDataIterable;
@@ -92,21 +91,14 @@ public abstract class AbstractReportService implements ReportService {
         return data;
     }
 
-    protected List<Map<String, String>> buildEntityDataSource(TbReportCtx ctx, DataSource dataSource) {
+    protected List<Map<String, String>> fetchEntityDatas(TbReportCtx ctx, DataSource dataSource) {
         return switch (dataSource.getType()) {
             case "device", "entity" -> fetchEntities(ctx, dataSource).stream().map(entityData -> toStringMap(entityData, ctx)).collect(Collectors.toList());
             default -> throw new IllegalArgumentException("Unknown data source type: " + dataSource.getType());
         };
     }
 
-    protected List<Map<String, String>> buildTsDataSource(TbReportCtx ctx, TimeseriesTableComponent component) {
-        String deviceId = component.getDataSources().get(0).getDeviceId();
-        DeviceId entityId = DeviceId.fromString(deviceId);
-
-        return buildTsDataSource(ctx, component, entityId);
-    }
-
-    protected List<Map<String, String>> buildTsDataSource(TbReportCtx ctx, TimeseriesTableComponent component, EntityId entityId) {
+    protected List<Map<String, String>> fetchEntityTsData(TbReportCtx ctx, TimeseriesTableComponent component, EntityId entityId) {
         TimeWindowConfiguration timeWindowConf = component.getTimewindow();
         History historyConf = timeWindowConf.getHistory();
         TimeIntervalCalculator.TimeRange timeRange = getTimeRange(timeWindowConf);
@@ -122,7 +114,7 @@ public abstract class AbstractReportService implements ReportService {
         return collectTsData(result, ctx);
     }
 
-    protected List<Map<String, String>> buildAlarmDataSource(TbReportCtx ctx, AlarmTableComponent component) {
+    protected List<Map<String, String>> fetchAlarmDatas(TbReportCtx ctx, AlarmTableComponent component) {
         List<String> keyList = component.getAlarmSource().getDataKeys().stream().map(DataKey::getName).toList();
         List<Map<String, String>> data = new ArrayList<>();
         for (AlarmData alarmData : new PageDataIterable<>(link -> dataService.findAlarmDataByQuery(toAlarmDataQuery(component, ctx.getConfiguration(), link), ctx), 1024)) {
