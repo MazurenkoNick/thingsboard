@@ -28,35 +28,30 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.service.notification.rule.trigger;
+package org.thingsboard.server.common.data.id;
 
-import org.springframework.stereotype.Service;
-import org.thingsboard.server.common.data.notification.info.ReportGeneratedNotificationInfo;
-import org.thingsboard.server.common.data.notification.rule.trigger.ReportGeneratedTrigger;
-import org.thingsboard.server.common.data.notification.rule.trigger.config.NotificationRuleTriggerType;
-import org.thingsboard.server.common.data.notification.rule.trigger.config.ReportGeneratedNotificationRuleTriggerConfig;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
+import org.thingsboard.server.common.data.EntityType;
 
-@Service
-public class ReportGeneratedTriggerProcessor implements NotificationRuleTriggerProcessor<ReportGeneratedTrigger, ReportGeneratedNotificationRuleTriggerConfig> {
+import java.util.UUID;
 
-    @Override
-    public boolean matchesFilter(ReportGeneratedTrigger trigger, ReportGeneratedNotificationRuleTriggerConfig triggerConfig) {
-        return true;
+public class ReportId extends UUIDBased implements EntityId {
+
+    @JsonCreator
+    public ReportId(@JsonProperty("id") UUID id) {
+        super(id);
     }
 
-    @Override
-    public ReportGeneratedNotificationInfo constructNotificationInfo(ReportGeneratedTrigger trigger) {
-        return ReportGeneratedNotificationInfo.builder()
-                .tenantId(trigger.getTenantId())
-                .customerId(trigger.getCustomerId())
-                .reportBlobId(trigger.getReportBlobId())
-                .reportName(trigger.getReportName())
-                .build();
+    public static ReportId fromString(String reportId) {
+        return new ReportId(UUID.fromString(reportId));
     }
 
+    @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "string", example = "REPORT", allowableValues = "REPORT")
     @Override
-    public NotificationRuleTriggerType getTriggerType() {
-        return NotificationRuleTriggerType.REPORT_GENERATED;
+    public EntityType getEntityType() {
+        return EntityType.REPORT;
     }
 
 }

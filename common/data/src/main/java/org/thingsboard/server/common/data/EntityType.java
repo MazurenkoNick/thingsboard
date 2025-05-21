@@ -62,6 +62,7 @@ public enum EntityType {
     SCHEDULER_EVENT(103),
     BLOB_ENTITY(104),
     REPORT_TEMPLATE(107),
+    REPORT(108),
     ENTITY_VIEW(15, true) {
         // backward compatibility for TbOriginatorTypeSwitchNode to return correct rule node connection.
         @Override

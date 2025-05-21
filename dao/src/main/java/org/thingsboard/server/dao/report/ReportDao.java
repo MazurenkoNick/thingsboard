@@ -28,33 +28,21 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.common.data.notification.rule.trigger;
+package org.thingsboard.server.dao.report;
 
-import lombok.Builder;
-import lombok.Data;
-import org.thingsboard.server.common.data.id.BlobEntityId;
-import org.thingsboard.server.common.data.id.CustomerId;
-import org.thingsboard.server.common.data.id.EntityId;
+import org.thingsboard.server.common.data.id.ReportId;
 import org.thingsboard.server.common.data.id.TenantId;
-import org.thingsboard.server.common.data.notification.rule.trigger.config.NotificationRuleTriggerType;
+import org.thingsboard.server.common.data.page.PageData;
+import org.thingsboard.server.common.data.page.PageLink;
+import org.thingsboard.server.common.data.report.Report;
+import org.thingsboard.server.dao.Dao;
 
-@Data
-@Builder
-public class ReportGeneratedTrigger implements NotificationRuleTrigger {
+public interface ReportDao extends Dao<Report> {
 
-    private TenantId tenantId;
-    private CustomerId customerId;
-    private BlobEntityId reportBlobId;
-    private String reportName;
+    void saveData(TenantId tenantId, ReportId reportId, byte[] data);
 
-    @Override
-    public NotificationRuleTriggerType getType() {
-        return NotificationRuleTriggerType.REPORT_GENERATED;
-    }
+    byte[] getData(TenantId tenantId, ReportId reportId);
 
-    @Override
-    public EntityId getOriginatorEntityId() {
-        return tenantId;
-    }
+    PageData<Report> findByTenantId(TenantId tenantId, PageLink pageLink);
 
 }

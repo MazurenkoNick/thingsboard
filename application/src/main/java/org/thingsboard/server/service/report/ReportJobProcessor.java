@@ -33,7 +33,9 @@ package org.thingsboard.server.service.report;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.thingsboard.common.util.JacksonUtil;
+import org.thingsboard.rule.engine.api.NotificationCenter;
 import org.thingsboard.server.cluster.TbClusterService;
+import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.job.Job;
 import org.thingsboard.server.common.data.job.JobStatus;
 import org.thingsboard.server.common.data.job.JobType;
@@ -43,22 +45,19 @@ import org.thingsboard.server.common.data.job.task.ReportTask;
 import org.thingsboard.server.common.data.job.task.Task;
 import org.thingsboard.server.common.data.job.task.TaskResult;
 import org.thingsboard.server.common.data.msg.TbMsgType;
-import org.thingsboard.server.common.data.notification.rule.trigger.ReportGeneratedTrigger;
+import org.thingsboard.server.common.data.notification.NotificationRequest;
+import org.thingsboard.server.common.data.notification.NotificationRequestConfig;
+import org.thingsboard.server.common.data.notification.info.ReportGeneratedNotificationInfo;
+import org.thingsboard.server.common.data.report.Report;
 import org.thingsboard.server.common.data.report.ReportTemplate;
 import org.thingsboard.server.common.msg.TbMsg;
-import org.thingsboard.server.common.msg.TbMsgMetaData;
-import org.thingsboard.server.common.msg.notification.NotificationRuleProcessor;
-import org.thingsboard.server.common.msg.queue.ServiceType;
-import org.thingsboard.server.common.msg.queue.TopicPartitionInfo;
 import org.thingsboard.server.dao.report.ReportTemplateService;
-import org.thingsboard.server.queue.TbQueueCallback;
 import org.thingsboard.server.queue.discovery.PartitionService;
 import org.thingsboard.server.service.job.JobProcessor;
 import org.thingsboard.server.service.security.model.token.AccessJwtToken;
 import org.thingsboard.server.service.security.system.SystemSecurityService;
 
 import java.util.List;
-import java.util.Map;
 import java.util.function.Consumer;
 
 @Component
@@ -67,7 +66,7 @@ public class ReportJobProcessor implements JobProcessor {
 
     private final ReportTemplateService reportTemplateService;
     private final SystemSecurityService systemSecurityService;
-    private final NotificationRuleProcessor notificationRuleProcessor;
+    private final NotificationCenter notificationCenter;
     private final TbClusterService clusterService;
     private final PartitionService partitionService;
 
@@ -84,9 +83,10 @@ public class ReportJobProcessor implements JobProcessor {
                 .tenantId(job.getTenantId())
                 .jobId(job.getId())
                 .key(configuration.getTasksKey())
+                .reportTemplateId(reportTemplate.getId())
                 .reportTemplateConfig(reportTemplate.getConfiguration())
-                .customerId(configuration.getCustomerId())
                 .timezone(configuration.getTimezone())
+                .userId(configuration.getUserId())
                 .accessToken(accessToken.getToken())
                 .accessTokenExpirationTs(accessToken.getClaims().getExpiration().getTime())
                 .build();
@@ -113,11 +113,11 @@ public class ReportJobProcessor implements JobProcessor {
                 TbMsg tbMsg = TbMsg.newMsg()
                         .type(TbMsgType.REPORT_GENERATED)
                         .originator(configuration.getUserId())
-                        .customerId(configuration.getCustomerId())
+//                        .customerId(configuration.getCustomerId())
                         .data(JacksonUtil.toString(configuration))
-                        .metaData(new TbMsgMetaData(Map.of(
-                                "reportBlobEntityId", result.getReportBlobId().toString()
-                        )))
+//                        .metaData(new TbMsgMetaData(Map.of(
+//                                "reportId", result.getReportBlobId().toString()
+//                        )))
                         .ruleChainId(configuration.getRuleChainId())
                         .ruleNodeId(configuration.getRuleNodeId())
                         .build();
@@ -125,12 +125,28 @@ public class ReportJobProcessor implements JobProcessor {
 //                clusterService.pushMsgToRuleEngine(job.getTenantId(), configuration.getReportTemplateId(), tbMsg, TbQueueCallback.EMPTY);
             }
         }
-        notificationRuleProcessor.process(ReportGeneratedTrigger.builder()
-                .tenantId(job.getTenantId())
-                .customerId(configuration.getCustomerId())
-                .reportBlobId(result.getReportBlobId())
-                .reportName(result.getReportName())
-                .build());
+        if (job.getStatus() != JobStatus.COMPLETED) {
+            return;
+        }
+
+        TenantId tenantId = job.getTenantId();
+        Report report = result.getReport();
+        if (configuration.getRecipientId() != null && configuration.getNotificationTemplateId() != null) {
+            NotificationRequest notificationRequest = NotificationRequest.builder()
+                    .tenantId(tenantId)
+                    .targets(List.of(configuration.getRecipientId().getId()))
+                    .templateId(configuration.getNotificationTemplateId())
+                    .info(ReportGeneratedNotificationInfo.builder()
+                            .tenantId(tenantId)
+                            .reportId(report.getId())
+                            .reportFormat(report.getFormat())
+                            .reportName(report.getName())
+                            .userId(report.getUserId())
+                            .build())
+                    .additionalConfig(new NotificationRequestConfig())
+                    .build();
+            notificationCenter.processNotificationRequest(tenantId, notificationRequest, null);
+        }
     }
 
     @Override

@@ -28,56 +28,63 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.common.data.notification.info;
+package org.thingsboard.server.dao.sql.report;
 
 import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Component;
+import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.id.ReportId;
 import org.thingsboard.server.common.data.id.TenantId;
-import org.thingsboard.server.common.data.id.UserId;
-import org.thingsboard.server.common.data.report.TbReportFormat;
+import org.thingsboard.server.common.data.page.PageData;
+import org.thingsboard.server.common.data.page.PageLink;
+import org.thingsboard.server.common.data.report.Report;
+import org.thingsboard.server.dao.DaoUtil;
+import org.thingsboard.server.dao.model.sql.ReportEntity;
+import org.thingsboard.server.dao.report.ReportDao;
+import org.thingsboard.server.dao.sql.JpaAbstractDao;
+import org.thingsboard.server.dao.util.SqlDao;
 
-import java.util.List;
-import java.util.Map;
+import java.util.UUID;
 
-import static org.thingsboard.server.common.data.util.CollectionsUtil.mapOf;
-
-@Data
-@NoArgsConstructor
+@Slf4j
+@Component
 @AllArgsConstructor
-@Builder
-public class ReportGeneratedNotificationInfo implements RuleOriginatedNotificationInfo {
+@SqlDao
+public class JpaReportDao extends JpaAbstractDao<ReportEntity, Report> implements ReportDao {
 
-    private TenantId tenantId;
-    private ReportId reportId;
-    private TbReportFormat reportFormat;
-    private String reportName;
-    private UserId userId;
+    private final ReportRepository reportRepository;
 
     @Override
-    public Map<String, String> getTemplateData() {
-        return mapOf(
-                "reportId", reportId.toString(),
-                "reportFormat", reportFormat.name(),
-                "reportName", reportName
-        );
+    public void saveData(TenantId tenantId, ReportId reportId, byte[] data) {
+        reportRepository.saveData(reportId.getId(), data);
     }
 
     @Override
-    public List<ReportId> getReports() {
-        return List.of(reportId);
+    public byte[] getData(TenantId tenantId, ReportId reportId) {
+        return reportRepository.getDataById(reportId.getId());
     }
 
     @Override
-    public TenantId getAffectedTenantId() {
-        return tenantId;
+    public PageData<Report> findByTenantId(TenantId tenantId, PageLink pageLink) {
+        return DaoUtil.toPageData(reportRepository.findByTenantIdAndSearchText(tenantId.getId(),
+                pageLink.getTextSearch(),
+                DaoUtil.toPageable(pageLink)));
     }
 
     @Override
-    public UserId getAffectedUserId() {
-        return userId;
+    protected Class<ReportEntity> getEntityClass() {
+        return ReportEntity.class;
     }
 
+    @Override
+    protected JpaRepository<ReportEntity, UUID> getRepository() {
+        return reportRepository;
+    }
+
+    @Override
+    public EntityType getEntityType() {
+        return EntityType.REPORT;
+    }
 }

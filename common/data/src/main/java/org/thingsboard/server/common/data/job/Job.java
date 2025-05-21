@@ -41,9 +41,10 @@ import lombok.ToString;
 import org.thingsboard.server.common.data.BaseData;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.HasTenantId;
-import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.JobId;
+import org.thingsboard.server.common.data.id.NotificationTargetId;
+import org.thingsboard.server.common.data.id.NotificationTemplateId;
 import org.thingsboard.server.common.data.id.ReportTemplateId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.id.UserId;
@@ -74,7 +75,8 @@ public class Job extends BaseData<JobId> implements HasTenantId {
     private JobResult result;
 
     public static final Set<EntityType> SUPPORTED_ENTITY_TYPES = Set.of(
-            EntityType.DEVICE, EntityType.ASSET, EntityType.DEVICE_PROFILE, EntityType.ASSET_PROFILE
+            EntityType.DEVICE, EntityType.ASSET, EntityType.DEVICE_PROFILE, EntityType.ASSET_PROFILE,
+            EntityType.REPORT_TEMPLATE
     );
 
     @Builder(toBuilder = true)
@@ -100,23 +102,52 @@ public class Job extends BaseData<JobId> implements HasTenantId {
         return (C) configuration;
     }
 
-    public static Job newReportJob(TenantId tenantId,
-                                   ReportTemplateId reportTemplateId,
-                                   UserId userId,
-                                   CustomerId customerId,
-                                   String timezone) {
-        return Job.builder()
-                .tenantId(tenantId)
-                .type(JobType.REPORT)
-                .key(UUID.randomUUID().toString()) // we can submit multiple report jobs at once regardless of the configuration
-                .entityId(reportTemplateId)
-                .configuration(ReportJobConfiguration.builder()
-                        .reportTemplateId(reportTemplateId) // todo: also get from msg body
-                        .userId(userId) // todo: also get from msg body
-                        .customerId(customerId) // todo: also get from msg body
-                        .timezone(timezone) // todo: also get from msg body
-                        .build())
-                .build();
+    public static ReportJobBuilder newReportJob() {
+        return new ReportJobBuilder();
+    }
+
+    public static class ReportJobBuilder {
+
+        private TenantId tenantId;
+        private EntityId entityId;
+        private final ReportJobConfiguration configuration = new ReportJobConfiguration();
+
+        public ReportJobBuilder tenantId(TenantId tenantId) {
+            this.tenantId = tenantId;
+            return this;
+        }
+
+        public ReportJobBuilder reportTemplateId(ReportTemplateId reportTemplateId) {
+            this.entityId = reportTemplateId;
+            this.configuration.setReportTemplateId(reportTemplateId);
+            return this;
+        }
+
+        public ReportJobBuilder userId(UserId userId) {
+            this.configuration.setUserId(userId);
+            return this;
+        }
+
+        public ReportJobBuilder timezone(String timezone) {
+            this.configuration.setTimezone(timezone);
+            return this;
+        }
+
+        public ReportJobBuilder recipientId(NotificationTargetId recipientId) {
+            this.configuration.setRecipientId(recipientId);
+            return this;
+        }
+
+        public ReportJobBuilder notificationTemplateId(NotificationTemplateId notificationTemplateId) {
+            this.configuration.setNotificationTemplateId(notificationTemplateId);
+            return this;
+        }
+
+        public Job build() {
+            String key = UUID.randomUUID().toString(); // we can submit multiple report jobs at once regardless of the configuration
+            return new Job(tenantId, JobType.REPORT, key, entityId, configuration);
+        }
+
     }
 
 }

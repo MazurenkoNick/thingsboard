@@ -748,7 +748,6 @@ export enum TriggerType {
   EDGE_CONNECTION = 'EDGE_CONNECTION',
   EDGE_COMMUNICATION_FAILURE = 'EDGE_COMMUNICATION_FAILURE',
   TASK_PROCESSING_FAILURE = 'TASK_PROCESSING_FAILURE',
-  REPORT_GENERATED = 'REPORT_GENERATED',
 }
 
 export const TriggerTypeTranslationMap = new Map<TriggerType, string>([
@@ -766,7 +765,6 @@ export const TriggerTypeTranslationMap = new Map<TriggerType, string>([
   [TriggerType.EDGE_CONNECTION, 'notification.trigger.edge-connection'],
   [TriggerType.EDGE_COMMUNICATION_FAILURE, 'notification.trigger.edge-communication-failure'],
   [TriggerType.TASK_PROCESSING_FAILURE, 'notification.trigger.task-processing-failure'],
-  [TriggerType.REPORT_GENERATED, 'notification.trigger.report-generated']
 ]);
 
 export interface NotificationUserSettings {

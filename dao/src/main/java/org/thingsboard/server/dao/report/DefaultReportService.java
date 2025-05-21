@@ -1,0 +1,97 @@
+/**
+ * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
+ *
+ * Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
+ *
+ * NOTICE: All information contained herein is, and remains
+ * the property of ThingsBoard, Inc. and its suppliers,
+ * if any.  The intellectual and technical concepts contained
+ * herein are proprietary to ThingsBoard, Inc.
+ * and its suppliers and may be covered by U.S. and Foreign Patents,
+ * patents in process, and are protected by trade secret or copyright law.
+ *
+ * Dissemination of this information or reproduction of this material is strictly forbidden
+ * unless prior written permission is obtained from COMPANY.
+ *
+ * Access to the source code contained herein is hereby forbidden to anyone except current COMPANY employees,
+ * managers or contractors who have executed Confidentiality and Non-disclosure agreements
+ * explicitly covering such access.
+ *
+ * The copyright notice above does not evidence any actual or intended publication
+ * or disclosure  of  this source code, which includes
+ * information that is confidential and/or proprietary, and is a trade secret, of  COMPANY.
+ * ANY REPRODUCTION, MODIFICATION, DISTRIBUTION, PUBLIC  PERFORMANCE,
+ * OR PUBLIC DISPLAY OF OR THROUGH USE  OF THIS  SOURCE CODE  WITHOUT
+ * THE EXPRESS WRITTEN CONSENT OF COMPANY IS STRICTLY PROHIBITED,
+ * AND IN VIOLATION OF APPLICABLE LAWS AND INTERNATIONAL TREATIES.
+ * THE RECEIPT OR POSSESSION OF THIS SOURCE CODE AND/OR RELATED INFORMATION
+ * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
+ * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
+ */
+package org.thingsboard.server.dao.report;
+
+import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.thingsboard.server.common.data.EntityType;
+import org.thingsboard.server.common.data.id.EntityId;
+import org.thingsboard.server.common.data.id.HasId;
+import org.thingsboard.server.common.data.id.ReportId;
+import org.thingsboard.server.common.data.id.TenantId;
+import org.thingsboard.server.common.data.page.PageData;
+import org.thingsboard.server.common.data.page.PageLink;
+import org.thingsboard.server.common.data.report.Report;
+import org.thingsboard.server.dao.entity.AbstractEntityService;
+import org.thingsboard.server.dao.service.ConstraintValidator;
+
+import java.util.Optional;
+
+@Service
+@RequiredArgsConstructor
+public class DefaultReportService extends AbstractEntityService implements ReportService {
+
+    private final ReportDao reportDao;
+
+    @Transactional
+    @Override
+    public Report createReport(Report report, byte[] data) {
+        if (report.getId() != null) {
+            throw new IllegalArgumentException("Report can't be updated");
+        }
+        ConstraintValidator.validateFields(report);
+
+        report = reportDao.save(report.getTenantId(), report);
+        reportDao.saveData(report.getTenantId(), report.getId(), data);
+        return report;
+    }
+
+    @Override
+    public Report findReportById(TenantId tenantId, ReportId reportId) {
+        return reportDao.findById(tenantId, reportId.getId());
+    }
+
+    @Override
+    public byte[] getReportData(TenantId tenantId, ReportId reportId) {
+        return reportDao.getData(tenantId, reportId);
+    }
+
+    @Override
+    public PageData<Report> findReportsByTenantId(TenantId tenantId, PageLink pageLink) {
+        return reportDao.findByTenantId(tenantId, pageLink);
+    }
+
+    @Override
+    public Optional<HasId<?>> findEntity(TenantId tenantId, EntityId entityId) {
+        return Optional.ofNullable(reportDao.findById(tenantId, entityId.getId()));
+    }
+
+    @Override
+    public void deleteEntity(TenantId tenantId, EntityId id, boolean force) {
+        reportDao.removeById(tenantId, id.getId());
+    }
+
+    @Override
+    public EntityType getEntityType() {
+        return EntityType.REPORT;
+    }
+}

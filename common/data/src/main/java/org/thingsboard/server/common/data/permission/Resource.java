@@ -67,7 +67,6 @@ public enum Resource {
     INTEGRATION(EntityType.INTEGRATION),
     SCHEDULER_EVENT(EntityType.SCHEDULER_EVENT),
     BLOB_ENTITY(EntityType.BLOB_ENTITY),
-    REPORT_TEMPLATE(EntityType.REPORT_TEMPLATE),
     CUSTOMER_GROUP(EntityType.ENTITY_GROUP),
     DEVICE_GROUP(EntityType.ENTITY_GROUP),
     ASSET_GROUP(EntityType.ENTITY_GROUP),
@@ -88,7 +87,9 @@ public enum Resource {
     NOTIFICATION(EntityType.NOTIFICATION_TARGET, EntityType.NOTIFICATION_TEMPLATE,
             EntityType.NOTIFICATION_REQUEST, EntityType.NOTIFICATION_RULE),
     MOBILE_APP_SETTINGS,
-    CUSTOM_MENU;
+    CUSTOM_MENU,
+    REPORT_TEMPLATE(EntityType.REPORT_TEMPLATE),
+    REPORT(EntityType.REPORT);
 
     private static final Map<EntityType, Resource> groupResourceByGroupType = new HashMap<>();
     private static final Map<EntityType, Resource> resourceByEntityType = new HashMap<>();
@@ -150,7 +151,6 @@ public enum Resource {
         operationsByResource.put(Resource.INTEGRATION, Operation.defaultEntityOperations);
         operationsByResource.put(Resource.SCHEDULER_EVENT, Operation.defaultEntityOperations);
         operationsByResource.put(Resource.BLOB_ENTITY, Operation.defaultEntityOperations);
-        operationsByResource.put(Resource.REPORT_TEMPLATE, Operation.defaultEntityOperations);
         operationsByResource.put(Resource.CUSTOMER_GROUP, Operation.defaultEntityGroupOperations);
         operationsByResource.put(Resource.DEVICE_GROUP, Operation.defaultEntityGroupOperations);
         operationsByResource.put(Resource.ASSET_GROUP, Operation.defaultEntityGroupOperations);
@@ -167,6 +167,8 @@ public enum Resource {
         operationsByResource.put(Resource.VERSION_CONTROL, Set.of(Operation.ALL, Operation.READ, Operation.WRITE, Operation.DELETE));
         operationsByResource.put(Resource.NOTIFICATION, Operation.crudOperations);
         operationsByResource.put(Resource.MOBILE_APP_SETTINGS, Set.of(Operation.ALL, Operation.READ, Operation.WRITE));
+        operationsByResource.put(Resource.REPORT_TEMPLATE, Operation.crudOperations);
+        operationsByResource.put(Resource.REPORT, Operation.crudOperations);
 
         resourcesByAuthority.put(Authority.SYS_ADMIN, Set.of(
                 Resource.ALL,
@@ -216,7 +218,6 @@ public enum Resource {
                 Resource.INTEGRATION,
                 Resource.SCHEDULER_EVENT,
                 Resource.BLOB_ENTITY,
-                Resource.REPORT_TEMPLATE,
                 Resource.CUSTOMER_GROUP,
                 Resource.USER_GROUP,
                 Resource.DEVICE_GROUP,
@@ -237,7 +238,9 @@ public enum Resource {
                 Resource.QUEUE_STATS,
                 Resource.VERSION_CONTROL,
                 Resource.NOTIFICATION,
-                Resource.MOBILE_APP_SETTINGS
+                Resource.MOBILE_APP_SETTINGS,
+                Resource.REPORT_TEMPLATE,
+                Resource.REPORT
         ));
 
         resourcesByAuthority.put(Authority.CUSTOMER_USER, Set.of(

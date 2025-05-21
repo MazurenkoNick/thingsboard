@@ -28,51 +28,33 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.common.data.job.task;
+package org.thingsboard.server.dao.sql.report;
 
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
-import lombok.experimental.SuperBuilder;
-import org.thingsboard.server.common.data.job.JobType;
-import org.thingsboard.server.common.data.report.Report;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+import org.thingsboard.server.dao.model.sql.ReportEntity;
 
-@Data
-@EqualsAndHashCode(callSuper = true)
-@NoArgsConstructor
-@SuperBuilder
-@ToString(callSuper = true)
-public class ReportTaskResult extends TaskResult {
+import java.util.UUID;
 
-    private Report report;
-    private String error;
+@Repository
+public interface ReportRepository extends JpaRepository<ReportEntity, UUID> {
 
-    public static ReportTaskResult success(ReportTask task, Report report) {
-        return ReportTaskResult.builder()
-                .key(task.getKey())
-                .success(true)
-                .report(report)
-                .build();
-    }
+    @Query("SELECT r FROM ReportEntity r WHERE r.tenantId = :tenantId " +
+           "AND (:searchText IS NULL OR ilike(r.name, CONCAT('%', :searchText, '%')) = true)")
+    Page<ReportEntity> findByTenantIdAndSearchText(@Param("tenantId") UUID tenantId,
+                                                   @Param("searchText") String searchText,
+                                                   Pageable pageable);
 
-    public static ReportTaskResult failed(ReportTask task, Throwable error) {
-        return ReportTaskResult.builder()
-                .key(task.getKey())
-                .error(error.getMessage())
-                .build();
-    }
+    @Modifying
+    @Query(value = "UPDATE report SET data = :data WHERE id = :id", nativeQuery = true)
+    void saveData(UUID id, byte[] data);
 
-    public static ReportTaskResult discarded(ReportTask task) {
-        return ReportTaskResult.builder()
-                .key(task.getKey())
-                .discarded(true)
-                .build();
-    }
-
-    @Override
-    public JobType getJobType() {
-        return JobType.REPORT;
-    }
+    @Query(value = "SELECT data FROM report WHERE id = :id", nativeQuery = true)
+    byte[] getDataById(UUID id);
 
 }

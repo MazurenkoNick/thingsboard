@@ -28,18 +28,48 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.common.data.notification.rule.trigger.config;
+package org.thingsboard.server.common.data.report;
 
-import lombok.Builder;
-import lombok.Data;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
+import org.thingsboard.server.common.data.BaseData;
+import org.thingsboard.server.common.data.EntityType;
+import org.thingsboard.server.common.data.HasCustomerId;
+import org.thingsboard.server.common.data.HasName;
+import org.thingsboard.server.common.data.TenantEntity;
+import org.thingsboard.server.common.data.id.CustomerId;
+import org.thingsboard.server.common.data.id.ReportId;
+import org.thingsboard.server.common.data.id.ReportTemplateId;
+import org.thingsboard.server.common.data.id.TenantId;
+import org.thingsboard.server.common.data.id.UserId;
 
-@Data
-@Builder
-public class ReportGeneratedNotificationRuleTriggerConfig implements NotificationRuleTriggerConfig {
+@Setter
+@Getter
+@EqualsAndHashCode(callSuper = true)
+@ToString(callSuper = true)
+public class Report extends BaseData<ReportId> implements HasName, TenantEntity, HasCustomerId {
+
+    @NotNull
+    private TenantId tenantId;
+    private CustomerId customerId;
+    @NotNull
+    private ReportTemplateId templateId;
+    @NotNull
+    private TbReportFormat format;
+    @NotBlank
+    private String name;
+    @NotNull
+    private UserId userId;
 
     @Override
-    public NotificationRuleTriggerType getTriggerType() {
-        return NotificationRuleTriggerType.REPORT_GENERATED;
+    @JsonIgnore
+    public EntityType getEntityType() {
+        return EntityType.REPORT;
     }
 
 }

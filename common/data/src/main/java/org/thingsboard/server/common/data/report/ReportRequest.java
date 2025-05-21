@@ -32,7 +32,8 @@ package org.thingsboard.server.common.data.report;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
-import org.thingsboard.server.common.data.id.CustomerId;
+import org.thingsboard.server.common.data.id.NotificationTargetId;
+import org.thingsboard.server.common.data.id.NotificationTemplateId;
 import org.thingsboard.server.common.data.id.ReportTemplateId;
 import org.thingsboard.server.common.data.report.configuration.ReportTemplateConfig;
 
@@ -44,11 +45,12 @@ public class ReportRequest {
     @Schema(description = "Json object representing the report template config.")
     private ReportTemplateConfig reportTemplateConfig;
 
-    @Schema(description = "Json object representing the report customer id.", requiredMode = Schema.RequiredMode.REQUIRED)
-    private CustomerId customerId;
     @Schema(description = "Timezone in which target dashboard will be presented in dashboard report.", example = "Europe/Kiev") // fixme: description
     private String timezone;
     @Schema(description = "A string value representing the user id.", example = "784f394c-42b6-435a-983c-b7beff2784f9")
     private String userId;
+
+    private NotificationTargetId recipientId;
+    private NotificationTemplateId notificationTemplateId;
 
 }

@@ -35,8 +35,9 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
-import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.EntityId;
+import org.thingsboard.server.common.data.id.ReportTemplateId;
+import org.thingsboard.server.common.data.id.UserId;
 import org.thingsboard.server.common.data.job.JobType;
 import org.thingsboard.server.common.data.report.configuration.ReportTemplateConfig;
 
@@ -47,11 +48,11 @@ import org.thingsboard.server.common.data.report.configuration.ReportTemplateCon
 @ToString(callSuper = true)
 public class ReportTask extends Task<ReportTaskResult> {
 
+    private ReportTemplateId reportTemplateId;
     private ReportTemplateConfig reportTemplateConfig;
 
-    private CustomerId customerId;
     private String timezone;
-
+    private UserId userId;
     private String accessToken;
     private long accessTokenExpirationTs;
 

@@ -32,13 +32,9 @@ package org.thingsboard.server.service.report;
 
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 import org.thingsboard.server.common.data.TbResource;
-import org.thingsboard.server.common.data.blob.BlobEntity;
-import org.thingsboard.server.common.data.blob.BlobEntityInfo;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.ReportTemplateId;
@@ -55,12 +51,13 @@ import org.thingsboard.server.common.data.query.AlarmDataQuery;
 import org.thingsboard.server.common.data.query.EntityCountQuery;
 import org.thingsboard.server.common.data.query.EntityData;
 import org.thingsboard.server.common.data.query.EntityDataQuery;
+import org.thingsboard.server.common.data.report.Report;
 import org.thingsboard.server.common.data.report.ReportTemplate;
+import org.thingsboard.server.dao.report.ReportService;
 import org.thingsboard.server.dao.report.ReportTemplateService;
 import org.thingsboard.server.dao.resource.ResourceService;
 import org.thingsboard.server.report.context.TbReportCtx;
 import org.thingsboard.server.report.datasource.ReportDataService;
-import org.thingsboard.server.service.entitiy.blob.TbBlobService;
 import org.thingsboard.server.service.query.EntityQueryService;
 import org.thingsboard.server.service.security.model.SecurityUser;
 import org.thingsboard.server.service.security.permission.AccessControlService;
@@ -74,19 +71,12 @@ import java.util.Optional;
 @Service
 public class LocalReportDataService implements ReportDataService {
 
-    @Lazy
     private final EntityQueryService entityQueryService;
-    @Lazy
     private final TbTelemetryService tbTelemetryService;
-    @Lazy
     private final AccessControlService accessControlService;
-    @Lazy
     private final ReportTemplateService reportTemplateService;
-    @Lazy
     private final ResourceService resourceService;
-    @Autowired
-    @Lazy
-    private TbBlobService tbBlobService;
+    private final ReportService reportService;
 
     @Override
     public Optional<ReportTemplate> findReportTemplate(ReportTemplateId templateId, TbReportCtx ctx) throws ThingsboardException {
@@ -133,8 +123,9 @@ public class LocalReportDataService implements ReportDataService {
 
     @SneakyThrows
     @Override
-    public BlobEntityInfo createBlobEntity(BlobEntity blobEntity, TbReportCtx ctx) {
-        return tbBlobService.create(blobEntity, getSecurityUser(ctx));
+    public Report createReport(Report report, byte[] data, TbReportCtx ctx) {
+        accessControlService.checkPermission(getSecurityUser(ctx), Resource.REPORT, Operation.CREATE);
+        return reportService.createReport(report, data);
     }
 
     private SecurityUser getSecurityUser(TbReportCtx ctx) {
