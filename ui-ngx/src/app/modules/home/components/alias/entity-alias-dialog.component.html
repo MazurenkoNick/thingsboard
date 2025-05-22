@@ -65,7 +65,9 @@
                         [disableResolveMultiple]="disableResolveMultiple"
                         [resolveMultiple]="!disableResolveMultiple ? entityAliasFormGroup.get('resolveMultiple').value : false"
                         (resolveMultipleChanged)="entityAliasFormGroup.get('resolveMultiple').patchValue($event)"
-                        [allowedEntityTypes]="allowedEntityTypes">
+                        [allowedEntityTypes]="allowedEntityTypes"
+                        [reportMode]="reportMode"
+                        [subReport]="subReport">
       </tb-entity-filter>
       <tb-error [error]="entityAliasFormGroup.hasError('noEntityMatched')
                 ? translate.instant('alias.entity-filter-no-entity-matched') : ''"></tb-error>

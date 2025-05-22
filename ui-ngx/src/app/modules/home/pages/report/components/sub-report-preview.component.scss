@@ -28,23 +28,15 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-.tb-page-break-preview {
+.tb-sub-report-preview {
   height: 100%;
-  min-height: 40px;
+  min-height: 60px;
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: 16px;
-  background: #eee;
-
-  .tb-page-break-line {
-    flex: 1;
-    border-bottom: 2px solid rgba(0,0,0,0.47);
-  }
-
-  .tb-page-break-title {
-    font-weight: bold;
-    font-size: 18px;
-    color: rgba(0,0,0,0.47);
-  }
+  justify-content: center;
+  font-weight: bold;
+  font-size: 24px;
+  color: rgba(0,0,0,0.47);
+  border: dashed 2px rgba(0, 0, 0, 0.47);
 }

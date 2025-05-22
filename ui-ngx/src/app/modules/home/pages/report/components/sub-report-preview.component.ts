@@ -29,26 +29,47 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { Component, ViewEncapsulation } from '@angular/core';
-import { RichTextReportComponentConfig } from '@shared/models/report-component.models';
+import { Component, inject, ViewEncapsulation } from '@angular/core';
+import { RichTextReportComponentConfig, SubReportReportComponentConfig } from '@shared/models/report-component.models';
 import { AbstractReportComponentPreview } from '@home/pages/report/components/report-component.component';
+import { ReportTemplateService } from '@core/http/report-template.service';
+import { Observable, of } from 'rxjs';
+import { ReportTemplateInfo } from '@shared/models/report.models';
+import { catchError, share } from 'rxjs/operators';
+import { getEntityDetailsPageURL } from '@core/utils';
+import { EntityType } from '@shared/models/entity-type.models';
+import { Router } from '@angular/router';
 
 @Component({
-  selector: 'tb-rich-text-preview',
-  templateUrl: './rich-text-preview.component.html',
-  styleUrls: ['./rich-text-preview.component.scss'],
+  selector: 'tb-sub-report-preview',
+  templateUrl: './sub-report-preview.component.html',
+  styleUrls: ['./sub-report-preview.component.scss'],
   encapsulation: ViewEncapsulation.None
 })
-export class RichTextPreviewComponent extends AbstractReportComponentPreview<RichTextReportComponentConfig> {
+export class SubReportPreviewComponent extends AbstractReportComponentPreview<SubReportReportComponentConfig> {
 
-  html: string;
+  subReport$: Observable<ReportTemplateInfo>;
+
+  private reportTemplateService = inject(ReportTemplateService);
+  private router = inject(Router);
 
   onComponentUpdated() {
-    if (this.reportComponent.value && this.reportComponent.value.trim().length) {
-      this.html = this.reportComponent.value;
+    if (this.reportComponent.templateId !== null) {
+      this.subReport$ = this.reportTemplateService
+      .getReportTemplateInfo(this.reportComponent.templateId.id, {ignoreLoading: true, ignoreErrors: true}).pipe(
+        catchError(() => of(null)),
+        share()
+      );
     } else {
-      this.html = '<p>&nbsp;</p>';
+      this.subReport$ = of(null);
     }
+  }
+
+  openSubReportNewTab($event: Event, subReport: ReportTemplateInfo) {
+    $event.stopPropagation();
+    const subReportUrl = getEntityDetailsPageURL(subReport.id.id, EntityType.REPORT_TEMPLATE);
+    const url = this.router.serializeUrl(this.router.createUrlTree([subReportUrl]));
+    window.open(url, '_blank');
   }
 
 }

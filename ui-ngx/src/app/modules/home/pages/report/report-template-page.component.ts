@@ -33,11 +33,16 @@ import {
   AfterViewInit,
   ChangeDetectorRef,
   Component,
-  DestroyRef, ElementRef,
+  DestroyRef,
+  ElementRef,
   EventEmitter,
-  HostBinding, OnDestroy,
-  OnInit, QueryList, Renderer2,
-  viewChild, ViewChildren,
+  HostBinding,
+  OnDestroy,
+  OnInit,
+  QueryList,
+  Renderer2,
+  viewChild,
+  ViewChildren,
   ViewEncapsulation
 } from '@angular/core';
 import { PageComponent } from '@shared/components/page.component';
@@ -46,15 +51,17 @@ import { Operation, Resource } from '@shared/models/security.models';
 import {
   entityAliasesListToAliases,
   entityAliasesToList,
-  filtersToReportFilterList, filterToReportFilter,
+  filtersToReportFilterList,
+  filterToReportFilter,
   HeaderFooter,
-  PageOrientation,
+  PageOrientation, PageSize,
   paperSizeToPointsMap,
   PdfReportTemplateConfig,
   PdfReportTemplateSettings,
   reportFilterListToFilters,
   ReportRequest,
   ReportTemplate,
+  ReportTemplateType,
   toPdfReportTemplateSettings,
   updateFromPdfReportTemplateSettings,
   validateAndUpdateReportTemplate
@@ -79,7 +86,8 @@ import { ReportComponentConfig } from '@shared/models/report-component.models';
 import { FormBuilder, FormControl } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
-  assignReportComponent, pointsToPixels,
+  assignReportComponent,
+  pointsToPixels,
   ReportComponentContext,
   reportComponentTypeMap
 } from '@home/pages/report/components/report-component.models';
@@ -90,9 +98,7 @@ import { UtilsService } from '@core/services/utils.service';
 import { AliasController } from '@core/api/alias-controller';
 import { DialogService } from '@core/services/dialog.service';
 import { ReportService } from '@core/http/report.service';
-import {
-  ReportComponentsComponent
-} from '@home/pages/report/components/report-components.component';
+import { ReportComponentsComponent } from '@home/pages/report/components/report-components.component';
 import { EntityType } from '@shared/models/entity-type.models';
 import { Observable } from 'rxjs';
 import {
@@ -101,12 +107,6 @@ import {
 } from '@home/components/alias/entity-alias-dialog.component';
 import { tap } from 'rxjs/operators';
 import { FilterDialogComponent, FilterDialogData } from '@home/components/filter/filter-dialog.component';
-import {
-  EntityAliasSelectCallbacks
-} from '@home/components/widget/lib/settings/common/alias/entity-alias-select.component.models';
-import {
-  FilterSelectCallbacks
-} from '@home/components/widget/lib/settings/common/filter/filter-select.component.models';
 
 @Component({
   selector: 'tb-report-template-page',
@@ -152,6 +152,8 @@ export class ReportTemplatePageComponent extends PageComponent
   });
 
   readonly = !this.userPermissionsService.hasGenericPermission(Resource.REPORT_TEMPLATE, Operation.WRITE);
+
+  subReport = false;
 
   isDirtyValue: boolean;
 
@@ -414,7 +416,9 @@ export class ReportTemplatePageComponent extends PageComponent
         entityAliases,
         widgets: [],
         disableResolveMultiple: true,
-        isSingleEntityAlias: false
+        isSingleEntityAlias: false,
+        reportMode: true,
+        subReport: this.subReport
       }
     }).afterClosed().subscribe((entityAliases) => {
       if (entityAliases) {
@@ -438,7 +442,9 @@ export class ReportTemplatePageComponent extends PageComponent
         isAdd: true,
         allowedEntityTypes,
         entityAliases,
-        alias: singleEntityAlias
+        alias: singleEntityAlias,
+        reportMode: true,
+        subReport: this.subReport
       }
     }).afterClosed().pipe(
       tap((entityAlias) => {
@@ -464,7 +470,9 @@ export class ReportTemplatePageComponent extends PageComponent
         isAdd: false,
         allowedEntityTypes,
         entityAliases,
-        alias: deepClone(alias)
+        alias: deepClone(alias),
+        reportMode: true,
+        subReport: this.subReport
       }
     }).afterClosed().pipe(
       tap((entityAlias) => {
@@ -492,6 +500,7 @@ export class ReportTemplatePageComponent extends PageComponent
       disableClose: true,
       panelClass: ['tb-dialog', 'tb-fullscreen-dialog'],
       data: {
+        subReport: this.subReport,
         settings
       }
     }).afterClosed().subscribe((settings) => {
@@ -519,30 +528,35 @@ export class ReportTemplatePageComponent extends PageComponent
   }
 
   private updatePageLayout() {
-    const pageSize = this.reportTemplate.configuration.pageSize;
-    const orientation = this.reportTemplate.configuration.pageOrientation;
+    const pageSize = this.subReport ? PageSize.A4 : this.reportTemplate.configuration.pageSize;
+    const orientation = this.subReport ? PageOrientation.PORTRAIT : this.reportTemplate.configuration.pageOrientation;
     const pageSizePoints = paperSizeToPointsMap.get(pageSize);
 
     this.pageWidth = orientation === PageOrientation.PORTRAIT ? pageSizePoints[0] : pageSizePoints[1];
-    this.background = this.reportTemplate.configuration.pageBackground;
+    this.background = this.subReport ? "#fff" : this.reportTemplate.configuration.pageBackground;
 
-    this.marginLeft = this.reportTemplate.configuration.pageMargins.left;
-    this.marginRight = this.reportTemplate.configuration.pageMargins.right;
+    this.marginLeft = this.subReport ? 20 : this.reportTemplate.configuration.pageMargins.left;
+    this.marginRight =this.subReport ? 20 : this.reportTemplate.configuration.pageMargins.right;
 
-    if (this.currentHeader.enabled && this.currentHeader.components?.length) {
-      this.headerMarginTop = this.reportTemplate.configuration.pageMargins.top;
-      this.contentMarginTop = 0;
+    if (this.subReport) {
+      this.contentMarginTop = 20;
+      this.contentMarginBottom = 20;
     } else {
-      this.headerMarginTop = 0;
-      this.contentMarginTop = this.reportTemplate.configuration.pageMargins.top;
-    }
+      if (this.currentHeader.enabled && this.currentHeader.components?.length) {
+        this.headerMarginTop = this.reportTemplate.configuration.pageMargins.top;
+        this.contentMarginTop = 0;
+      } else {
+        this.headerMarginTop = 0;
+        this.contentMarginTop = this.reportTemplate.configuration.pageMargins.top;
+      }
 
-    if (this.currentFooter.enabled && this.currentFooter.components?.length) {
-      this.footerMarginBottom = this.reportTemplate.configuration.pageMargins.bottom;
-      this.contentMarginBottom = 0;
-    } else {
-      this.footerMarginBottom = 0;
-      this.contentMarginBottom = this.reportTemplate.configuration.pageMargins.bottom;
+      if (this.currentFooter.enabled && this.currentFooter.components?.length) {
+        this.footerMarginBottom = this.reportTemplate.configuration.pageMargins.bottom;
+        this.contentMarginBottom = 0;
+      } else {
+        this.footerMarginBottom = 0;
+        this.contentMarginBottom = this.reportTemplate.configuration.pageMargins.bottom;
+      }
     }
     this.updateScale();
   }
@@ -574,6 +588,7 @@ export class ReportTemplatePageComponent extends PageComponent
     this.headerToggleValue = 'header';
     this.footerToggleValue = 'footer';
     this.reportTemplate = validateAndUpdateReportTemplate(reportTemplate);
+    this.subReport = this.reportTemplate.type === ReportTemplateType.SUB_REPORT;
 
     this.updatePageLayout();
 

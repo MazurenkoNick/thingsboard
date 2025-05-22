@@ -34,6 +34,7 @@ import { deepClone } from '@core/utils';
 import { alignment, Font } from '@shared/models/widget-settings.models';
 import { Insets } from '@shared/models/report.models';
 import { DataKeyType } from '@shared/models/telemetry/telemetry.models';
+import { ReportTemplateId } from '@shared/models/id/report-template-id';
 
 export enum ReportComponentType {
   HEADING = 'HEADING',
@@ -78,6 +79,11 @@ export interface EntityTableReportComponentConfig extends TableReportComponentCo
   type: ReportComponentType.ENTITY_TABLE;
 }
 
+export interface SubReportReportComponentConfig extends ReportComponentConfig {
+  templateId: ReportTemplateId;
+  type: ReportComponentType.SUB_REPORT;
+}
+
 export interface PageBreakReportComponentConfig extends ReportComponentConfig {
   type: ReportComponentType.PAGE_BREAK;
 }
@@ -86,6 +92,7 @@ export type ReportComponentConfigs =
   HeadingReportComponentConfig |
   RichTextReportComponentConfig |
   EntityTableReportComponentConfig |
+  SubReportReportComponentConfig |
   PageBreakReportComponentConfig;
 
 export const reportComponentTypeDefaultConfigMap = new Map<ReportComponentType, ReportComponentConfigs>(
@@ -133,6 +140,19 @@ export const reportComponentTypeDefaultConfigMap = new Map<ReportComponentType, 
             ]
           }
         ]
+      }
+    ],
+    [
+      ReportComponentType.SUB_REPORT,
+      {
+        type: ReportComponentType.SUB_REPORT,
+        dataSources: [
+          {
+            type: DatasourceType.entity,
+            dataKeys: []
+          }
+        ],
+        templateId: null
       }
     ],
     [

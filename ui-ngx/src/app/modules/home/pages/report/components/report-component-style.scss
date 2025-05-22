@@ -29,10 +29,11 @@
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
 body.tb-report-component, tb-report-component .tb-report-component {
-  font-family: Roboto;
+  font-family: Roboto, sans-serif;;
   font-size: 12pt;
   line-height: normal;
   letter-spacing: normal;
+  color: rgba(0,0,0,0.87);
   h1,
   h2,
   h3,

@@ -31,13 +31,6 @@
 
 -->
 <div class="tb-form-panel no-border" [formGroup]="reportConfigForm">
-  <div class="tb-report-component-config-header">
-    <tb-toggle-select [(ngModel)]="settingsTab" [ngModelOptions]="{standalone: true}" appearance="fill">
-      <tb-toggle-option value="data">{{ 'report-template.data' | translate }}</tb-toggle-option>
-      <tb-toggle-option value="layout">{{ 'report-template.layout' | translate }}</tb-toggle-option>
-    </tb-toggle-select>
-  </div>
-  <div class="tb-form-panel no-border no-padding" [class.!hidden]="settingsTab !== 'data'">
     <tb-datasources
       [configMode]="basicMode"
       stroked
@@ -53,40 +46,20 @@
       [callbacks]="callbacks"
       [aliasController]="context.aliasController">
     </tb-datasources>
-    <tb-data-keys-panel
-      [dataKeysPanelOptions]="{
-        widgetType: widgetType.latest,
-        callbacks: callbacks
-      }"
-      stroked
-      panelTitle="{{ 'widgets.table.columns' | translate }}"
-      addKeyTitle="{{ 'widgets.table.add-column' | translate }}"
-      keySettingsTitle="{{ 'widgets.table.column-settings' | translate }}"
-      removeKeyTitle="{{ 'widgets.table.remove-column' | translate }}"
-      noKeysText="{{ 'widgets.table.no-columns' | translate }}"
-      hideDataKeyColor
-      [datasourceType]="datasource?.type"
-      [deviceId]="datasource?.deviceId"
-      [entityAliasId]="datasource?.entityAliasId"
-      [aliasController]="context.aliasController"
-      formControlName="columns">
-    </tb-data-keys-panel>
-  </div>
-  <div class="tb-form-panel no-border no-padding" [class.!hidden]="settingsTab !== 'layout'">
-    <div class="tb-form-row space-between">
-      <div translate>report-template.paddings</div>
-      <tb-report-insets formControlName="paddings"></tb-report-insets>
+    <div class="tb-form-panel stroked">
+      <div class="tb-form-panel-title" translate>report-template.type-sub-report</div>
+      <div class="tb-form-row no-border no-padding">
+        <tb-entity-autocomplete
+          [entityType]="EntityType.REPORT_TEMPLATE"
+          [entitySubtype]="ReportTemplateType.SUB_REPORT"
+          class="flex-1"
+          useFullEntityId
+          newTabDetailsButton
+          newTabDetailsButtonHint="{{ 'report-template.component.sub-report.open-subreport-new-tab' | translate }}"
+          placeholder="{{ 'report-template.component.sub-report.select-sub-report' | translate }}"
+          formControlName="templateId"
+          inlineField>
+        </tb-entity-autocomplete>
+      </div>
     </div>
-    <div class="tb-form-row space-between">
-      <div translate>report-template.margins</div>
-      <tb-report-insets formControlName="margins"></tb-report-insets>
-    </div>
-    <div class="tb-form-row space-between">
-      <div translate>report-template.background</div>
-      <tb-color-input asBoxInput
-                      colorClearButton
-                      formControlName="background">
-      </tb-color-input>
-    </div>
-  </div>
 </div>

@@ -30,25 +30,45 @@
 ///
 
 import { Component, ViewEncapsulation } from '@angular/core';
-import { RichTextReportComponentConfig } from '@shared/models/report-component.models';
-import { AbstractReportComponentPreview } from '@home/pages/report/components/report-component.component';
+import { FormGroup } from '@angular/forms';
+import {
+  Datasource, EntityType,
+  pageSizes,
+  paperSizeDisplayMap, ReportTemplateType,
+  SubReportReportComponentConfig,
+  WidgetConfigMode
+} from '@app/shared/public-api';
+import { AbstractReportComponentConfig } from '@home/pages/report/components/report-component-config.component';
 
 @Component({
-  selector: 'tb-rich-text-preview',
-  templateUrl: './rich-text-preview.component.html',
-  styleUrls: ['./rich-text-preview.component.scss'],
+  selector: 'tb-sub-report-config',
+  templateUrl: './sub-report-config.component.html',
+  styleUrls: ['./report-component-config.scss'],
   encapsulation: ViewEncapsulation.None
 })
-export class RichTextPreviewComponent extends AbstractReportComponentPreview<RichTextReportComponentConfig> {
+export class SubReportConfigComponent extends AbstractReportComponentConfig<SubReportReportComponentConfig> {
 
-  html: string;
+  EntityType = EntityType;
+  ReportTemplateType = ReportTemplateType;
 
-  onComponentUpdated() {
-    if (this.reportComponent.value && this.reportComponent.value.trim().length) {
-      this.html = this.reportComponent.value;
+  basicMode = WidgetConfigMode.basic;
+
+  public get datasource(): Datasource {
+    const datasources: Datasource[] = this.reportConfigForm.get('dataSources').value;
+    if (datasources && datasources.length) {
+      return datasources[0];
     } else {
-      this.html = '<p>&nbsp;</p>';
+      return null;
     }
   }
 
+  protected buildForm(reportComponentConfig: SubReportReportComponentConfig): FormGroup {
+    return this.fb.group({
+      dataSources: [reportComponentConfig.dataSources, []],
+      templateId: [reportComponentConfig.templateId, []]
+    });
+  }
+
+  protected readonly pageSizes = pageSizes;
+  protected readonly paperSizeDisplayMap = paperSizeDisplayMap;
 }

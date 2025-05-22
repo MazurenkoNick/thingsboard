@@ -39,6 +39,7 @@
     &::after {
       content: '';
       border: solid 2px #bdc3c7;
+      pointer-events: none;
     }
   }
 }
@@ -63,7 +64,7 @@
 .tb-report-component {
   display: flex;
   width: 100%;
-  min-height: 60px;
+  min-height: 0;
   position: absolute;
   overflow: hidden;
   transform-origin: left top;

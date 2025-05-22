@@ -96,6 +96,10 @@ export class DataKeysPanelComponent implements ControlValueAccessor, OnInit, OnC
   disabled: boolean;
 
   @Input()
+  @coerceBoolean()
+  stroked = false;
+
+  @Input()
   panelTitle: string;
 
   @Input()

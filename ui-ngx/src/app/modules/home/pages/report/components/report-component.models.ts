@@ -51,6 +51,8 @@ import {
 import {
   FilterSelectCallbacks
 } from '@home/components/widget/lib/settings/common/filter/filter-select.component.models';
+import { SubReportPreviewComponent } from '@home/pages/report/components/sub-report-preview.component';
+import { SubReportConfigComponent } from '@home/pages/report/components/sub-report-config.component';
 
 export interface ReportComponentTypeData<C extends ReportComponentConfig = ReportComponentConfig> {
   title: string;
@@ -87,9 +89,19 @@ export const reportComponentTypeMap = new Map<ReportComponentType, ReportCompone
       ReportComponentType.ENTITY_TABLE,
       {
         title: 'report-template.component.entity-table.type',
-        previewImage: '/assets/report/components/rich-text.svg',
+        previewImage: '/assets/report/components/entity-table.svg',
         previewComponent: EntityTablePreviewComponent,
         configComponent: EntityTableConfigComponent,
+        editable: true
+      }
+    ],
+    [
+      ReportComponentType.SUB_REPORT,
+      {
+        title: 'report-template.component.sub-report.type',
+        previewImage: '/assets/report/components/subreport.svg',
+        previewComponent: SubReportPreviewComponent,
+        configComponent: SubReportConfigComponent,
         editable: true
       }
     ],
