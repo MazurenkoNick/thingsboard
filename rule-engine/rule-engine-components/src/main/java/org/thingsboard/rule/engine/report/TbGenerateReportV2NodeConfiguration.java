@@ -33,7 +33,6 @@ package org.thingsboard.rule.engine.report;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import org.thingsboard.rule.engine.api.NodeConfiguration;
-import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.NotificationTargetId;
 import org.thingsboard.server.common.data.id.NotificationTemplateId;
 import org.thingsboard.server.common.data.id.ReportTemplateId;
@@ -42,9 +41,9 @@ import org.thingsboard.server.common.data.id.UserId;
 @Data
 public class TbGenerateReportV2NodeConfiguration implements NodeConfiguration<TbGenerateReportV2NodeConfiguration> {
 
+    private boolean useConfigFromMessage; // TODO: implement
     @NotNull
     private ReportTemplateId reportTemplateId;
-    private CustomerId customerId;
     @NotNull
     private UserId userId;
     private String timezone;

@@ -30,6 +30,7 @@
  */
 package org.thingsboard.server.common.data.job;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -39,9 +40,8 @@ import lombok.ToString;
 import org.thingsboard.server.common.data.id.NotificationTargetId;
 import org.thingsboard.server.common.data.id.NotificationTemplateId;
 import org.thingsboard.server.common.data.id.ReportTemplateId;
-import org.thingsboard.server.common.data.id.RuleChainId;
-import org.thingsboard.server.common.data.id.RuleNodeId;
 import org.thingsboard.server.common.data.id.UserId;
+import org.thingsboard.server.common.data.rule.RuleNode;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -58,8 +58,8 @@ public class ReportJobConfiguration extends JobConfiguration {
     private NotificationTargetId recipientId;
     private NotificationTemplateId notificationTemplateId;
 
-    private RuleChainId ruleChainId;
-    private RuleNodeId ruleNodeId;
+    private RuleNode ruleNode;
+    private JsonNode outputTbMsg;
 
     @Override
     public JobType getType() {

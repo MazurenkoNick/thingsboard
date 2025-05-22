@@ -105,7 +105,6 @@ public enum TbMsgType {
     REMOVED_FROM_ENTITY_GROUP("Removed from Group"),
     REST_API_REQUEST("REST API request"),
     generateReport("Generate Report"),
-    REPORT_GENERATED("Report Generated"),
     OPC_UA_INT_SUCCESS,
     OPC_UA_INT_FAILURE,
 

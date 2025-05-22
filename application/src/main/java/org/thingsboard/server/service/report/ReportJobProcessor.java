@@ -31,9 +31,11 @@
 package org.thingsboard.server.service.report;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.rule.engine.api.NotificationCenter;
+import org.thingsboard.server.actors.ActorSystemContext;
 import org.thingsboard.server.cluster.TbClusterService;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.job.Job;
@@ -42,24 +44,33 @@ import org.thingsboard.server.common.data.job.JobType;
 import org.thingsboard.server.common.data.job.ReportJobConfiguration;
 import org.thingsboard.server.common.data.job.ReportJobResult;
 import org.thingsboard.server.common.data.job.task.ReportTask;
+import org.thingsboard.server.common.data.job.task.ReportTaskResult;
 import org.thingsboard.server.common.data.job.task.Task;
 import org.thingsboard.server.common.data.job.task.TaskResult;
-import org.thingsboard.server.common.data.msg.TbMsgType;
+import org.thingsboard.server.common.data.msg.TbNodeConnectionType;
 import org.thingsboard.server.common.data.notification.NotificationRequest;
 import org.thingsboard.server.common.data.notification.NotificationRequestConfig;
 import org.thingsboard.server.common.data.notification.info.ReportGeneratedNotificationInfo;
 import org.thingsboard.server.common.data.report.Report;
 import org.thingsboard.server.common.data.report.ReportTemplate;
 import org.thingsboard.server.common.msg.TbMsg;
+import org.thingsboard.server.common.msg.queue.ServiceType;
+import org.thingsboard.server.common.msg.queue.TopicPartitionInfo;
 import org.thingsboard.server.dao.report.ReportTemplateService;
+import org.thingsboard.server.gen.transport.TransportProtos;
+import org.thingsboard.server.queue.common.SimpleTbQueueCallback;
 import org.thingsboard.server.queue.discovery.PartitionService;
 import org.thingsboard.server.service.job.JobProcessor;
 import org.thingsboard.server.service.security.model.token.AccessJwtToken;
 import org.thingsboard.server.service.security.system.SystemSecurityService;
 
 import java.util.List;
+import java.util.Set;
 import java.util.function.Consumer;
 
+import static java.util.function.Predicate.not;
+
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class ReportJobProcessor implements JobProcessor {
@@ -69,6 +80,7 @@ public class ReportJobProcessor implements JobProcessor {
     private final NotificationCenter notificationCenter;
     private final TbClusterService clusterService;
     private final PartitionService partitionService;
+    private final ActorSystemContext actorSystemContext;
 
     @Override
     public int process(Job job, Consumer<Task<?>> taskConsumer) throws Exception {
@@ -103,33 +115,50 @@ public class ReportJobProcessor implements JobProcessor {
     public void onJobFinished(Job job) {
         ReportJobResult result = (ReportJobResult) job.getResult();
         ReportJobConfiguration configuration = job.getConfiguration();
+        TenantId tenantId = job.getTenantId();
 
-        if (configuration.getRuleNodeId() != null) {
+        if (configuration.getOutputTbMsg() != null) {
             /*
              * fixme:
              *  from scheduler event, do we produce any message to rule engine?
              * */
-            if (job.getStatus() == JobStatus.COMPLETED) {
-                TbMsg tbMsg = TbMsg.newMsg()
-                        .type(TbMsgType.REPORT_GENERATED)
-                        .originator(configuration.getUserId())
-//                        .customerId(configuration.getCustomerId())
-                        .data(JacksonUtil.toString(configuration))
-//                        .metaData(new TbMsgMetaData(Map.of(
-//                                "reportId", result.getReportBlobId().toString()
-//                        )))
-                        .ruleChainId(configuration.getRuleChainId())
-                        .ruleNodeId(configuration.getRuleNodeId())
-                        .build();
-//                TopicPartitionInfo tpi = partitionService.resolve(ServiceType.TB_RULE_ENGINE, job.getTenantId(), )
-//                clusterService.pushMsgToRuleEngine(job.getTenantId(), configuration.getReportTemplateId(), tbMsg, TbQueueCallback.EMPTY);
+            TbMsg outputMsg = JacksonUtil.treeToValue(configuration.getOutputTbMsg(), TbMsg.class);
+            String relationType;
+            String error;
+            if (result.getGeneralError() != null) {
+                relationType = TbNodeConnectionType.FAILURE;
+                error = result.getGeneralError();
+            } else if (result.getFailedCount() > 0) {
+                relationType = TbNodeConnectionType.FAILURE;
+                error = result.getResults().stream()
+                        .filter(not(TaskResult::isSuccess))
+                        .findFirst().map(taskResult -> ((ReportTaskResult) taskResult).getError())
+                        .orElse(null);
+            } else {
+                relationType = TbNodeConnectionType.SUCCESS;
+                error = null;
             }
+            outputMsg.getMetaData().putValue("reportId", result.getReport().getId().toString());
+
+            TransportProtos.ToRuleEngineMsg.Builder ruleEngineMsg = TransportProtos.ToRuleEngineMsg.newBuilder()
+                    .setTenantIdMSB(tenantId.getId().getMostSignificantBits())
+                    .setTenantIdLSB(tenantId.getId().getLeastSignificantBits())
+                    .setTbMsgProto(TbMsg.toProto(outputMsg))
+                    .addRelationTypes(relationType);
+            if (error != null) {
+                ruleEngineMsg.setFailureMessage(error);
+            }
+            TopicPartitionInfo tpi = partitionService.resolve(ServiceType.TB_RULE_ENGINE, outputMsg.getQueueName(), tenantId, outputMsg.getOriginator());
+            clusterService.pushMsgToRuleEngine(tpi, outputMsg.getId(), ruleEngineMsg.build(), new SimpleTbQueueCallback(tbQueueMsgMetadata -> {
+                actorSystemContext.persistDebugOutputIfNeeded(tenantId, configuration.getRuleNode(), outputMsg, Set.of(relationType), null, error);
+            }, throwable -> {
+                log.error("[{}] Failed to send msg {}", tenantId, ruleEngineMsg, throwable);
+            }));
         }
         if (job.getStatus() != JobStatus.COMPLETED) {
             return;
         }
 
-        TenantId tenantId = job.getTenantId();
         Report report = result.getReport();
         if (configuration.getRecipientId() != null && configuration.getNotificationTemplateId() != null) {
             NotificationRequest notificationRequest = NotificationRequest.builder()

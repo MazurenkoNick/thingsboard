@@ -36,15 +36,14 @@ import com.google.common.util.concurrent.FutureCallback;
 import io.netty.channel.EventLoopGroup;
 import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.util.Arrays;
-import org.thingsboard.common.util.DebugModeUtil;
 import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.common.util.ListeningExecutor;
+import org.thingsboard.rule.engine.api.DashboardReportService;
 import org.thingsboard.rule.engine.api.DeviceStateManager;
 import org.thingsboard.rule.engine.api.JobManager;
 import org.thingsboard.rule.engine.api.MailService;
 import org.thingsboard.rule.engine.api.MqttClientSettings;
 import org.thingsboard.rule.engine.api.NotificationCenter;
-import org.thingsboard.rule.engine.api.DashboardReportService;
 import org.thingsboard.rule.engine.api.RuleEngineAlarmService;
 import org.thingsboard.rule.engine.api.RuleEngineApiUsageStateService;
 import org.thingsboard.rule.engine.api.RuleEngineAssetProfileCache;
@@ -1264,11 +1263,7 @@ public class DefaultTbContext implements TbContext, TbPeContext {
 
     private void persistDebugOutput(TbMsg msg, Set<String> relationTypes, Throwable error, String failureMessage) {
         RuleNode ruleNode = nodeCtx.getSelf();
-        if (DebugModeUtil.isDebugAllAvailable(ruleNode)) {
-            relationTypes.forEach(relationType -> mainCtx.persistDebugOutput(getTenantId(), ruleNode.getId(), msg, relationType, error, failureMessage));
-        } else if (DebugModeUtil.isDebugFailuresAvailable(ruleNode, relationTypes)) {
-            mainCtx.persistDebugOutput(getTenantId(), ruleNode.getId(), msg, TbNodeConnectionType.FAILURE, error, failureMessage);
-        }
+        mainCtx.persistDebugOutputIfNeeded(getTenantId(), ruleNode, msg, relationTypes, error, failureMessage);
     }
 
 }

@@ -58,7 +58,6 @@ import org.thingsboard.server.common.data.job.Job;
 import org.thingsboard.server.common.data.ota.DeviceGroupOtaPackage;
 import org.thingsboard.server.common.data.page.PageDataIterable;
 import org.thingsboard.server.common.data.report.ReportConfig;
-import org.thingsboard.server.common.data.report.ReportTemplate;
 import org.thingsboard.server.common.data.scheduler.SchedulerEvent;
 import org.thingsboard.server.common.data.scheduler.SchedulerEventInfo;
 import org.thingsboard.server.common.data.scheduler.SchedulerRepeat;
@@ -347,8 +346,13 @@ public class DefaultSchedulerService extends AbstractPartitionBasedService<Tenan
                     }
                     if (GENERATE_REPORT.equals(event.getType())) {
                         ReportConfig reportConfig = JacksonUtil.treeToValue(configuration, ReportConfig.class);
-                        ReportTemplate reportTemplate = reportTemplateService.findReportTemplateById(tenantId, reportConfig.getReportTemplateId());
-                        jobManager.submitJob(Job.newReportJob(reportTemplate, reportConfig.getUserId(), reportConfig.getTimezone()));
+                        jobManager.submitJob(Job.newReportJob().tenantId(tenantId)
+                                .reportTemplateId(reportConfig.getReportTemplateId())
+                                .userId(reportConfig.getUserId())
+                                .timezone(reportConfig.getTimezone())
+                                .recipientId(reportConfig.getRecipientId())
+                                .notificationTemplateId(reportConfig.getNotificationTemplateId())
+                                .build());
                     } else {
                         TbMsgMetaData tbMsgMD = getTbMsgMetaData(event, configuration);
                         TbMsg tbMsg = TbMsg.newMsg()
