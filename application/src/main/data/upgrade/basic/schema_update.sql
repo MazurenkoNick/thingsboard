@@ -29,3 +29,4 @@
 -- OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 --
 
+UPDATE scheduler_event SET type = 'generateDashboardReport' WHERE type = 'generateReport';
