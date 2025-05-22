@@ -29,9 +29,20 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { Component, ElementRef, viewChild, ViewEncapsulation } from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  Input,
+  OnChanges,
+  OnInit,
+  SimpleChanges,
+  viewChild,
+  ViewEncapsulation
+} from '@angular/core';
 import { reportComponentTypeMap, reportComponentTypes } from '@home/pages/report/components/report-component.models';
 import { CdkDragStart } from '@angular/cdk/drag-drop';
+import { coerceBoolean } from '@shared/decorators/coercion';
+import { ReportComponentType } from '@shared/models/report-component.models';
 
 @Component({
   selector: 'tb-report-component-library',
@@ -39,7 +50,11 @@ import { CdkDragStart } from '@angular/cdk/drag-drop';
   styleUrls: ['./report-component-library.component.scss'],
   encapsulation: ViewEncapsulation.None
 })
-export class ReportComponentLibraryComponent {
+export class ReportComponentLibraryComponent implements OnInit, OnChanges {
+
+  @Input()
+  @coerceBoolean()
+  subReport = false;
 
   libraryDragOriginList = viewChild('libraryDragOriginList', {
     read: ElementRef,
@@ -49,12 +64,27 @@ export class ReportComponentLibraryComponent {
     read: ElementRef,
   });
 
-  reportComponentTypes = reportComponentTypes;
+  reportComponentTypes: ReportComponentType[];
   reportComponentTypeMap = reportComponentTypeMap;
 
   private itemDragEntered = false;
 
   constructor() {}
+
+  ngOnInit() {
+    this.updateReportComponentTypes();
+  }
+
+  ngOnChanges(changes: SimpleChanges) {
+    for (const propName of Object.keys(changes)) {
+      const change = changes[propName];
+      if (!change.firstChange && change.currentValue !== change.previousValue) {
+        if (propName === 'subReport') {
+          this.updateReportComponentTypes();
+        }
+      }
+    }
+  }
 
   dropListEnterPredicate(): boolean {
     return false;
@@ -85,6 +115,14 @@ export class ReportComponentLibraryComponent {
       this.setActiveListVisibility(false);
     }
     this.itemDragEntered = false;
+  }
+
+  private updateReportComponentTypes() {
+    if (this.subReport) {
+      this.reportComponentTypes = reportComponentTypes.filter((type) => type !== ReportComponentType.SUB_REPORT );
+    } else {
+      this.reportComponentTypes = reportComponentTypes;
+    }
   }
 
   private copyExistingLibItemsToActiveList() {

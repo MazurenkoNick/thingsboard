@@ -30,25 +30,30 @@
 ///
 
 import { Component, ViewEncapsulation } from '@angular/core';
-import { RichTextReportComponentConfig } from '@shared/models/report-component.models';
+import {
+  EntityTableReportComponentConfig,
+  RichTextReportComponentConfig
+} from '@shared/models/report-component.models';
 import { AbstractReportComponentPreview } from '@home/pages/report/components/report-component.component';
+import { DataKey, Datasource } from '@shared/models/widget.models';
 
 @Component({
-  selector: 'tb-rich-text-preview',
-  templateUrl: './rich-text-preview.component.html',
-  styleUrls: ['./rich-text-preview.component.scss'],
+  selector: 'tb-entity-table-preview',
+  templateUrl: './entity-table-preview.component.html',
+  styleUrls: ['./entity-table-preview.component.scss'],
   encapsulation: ViewEncapsulation.None
 })
-export class RichTextPreviewComponent extends AbstractReportComponentPreview<RichTextReportComponentConfig> {
+export class EntityTablePreviewComponent extends AbstractReportComponentPreview<EntityTableReportComponentConfig> {
 
-  html: string;
+  get columns(): DataKey[] {
+    const datasources: Datasource[] = this.reportComponent.dataSources;
+    if (datasources && datasources.length) {
+      return datasources[0].dataKeys || [];
+    }
+    return [];
+  }
 
   onComponentUpdated() {
-    if (this.reportComponent.value && this.reportComponent.value.trim().length) {
-      this.html = this.reportComponent.value;
-    } else {
-      this.html = '<p>&nbsp;</p>';
-    }
   }
 
 }

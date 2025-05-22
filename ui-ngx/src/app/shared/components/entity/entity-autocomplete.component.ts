@@ -53,6 +53,8 @@ import { getCurrentAuthUser } from '@core/auth/auth.selectors';
 import { Authority } from '@shared/models/authority.enum';
 import { getEntityDetailsPageURL, isDefinedAndNotNull, isEqual } from '@core/utils';
 import { coerceArray, coerceBoolean } from '@shared/decorators/coercion';
+import { ReportTemplateType } from '@shared/models/report.models';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'tb-entity-autocomplete',
@@ -108,6 +110,7 @@ export class EntityAutocompleteComponent implements ControlValueAccessor, OnInit
   set entitySubtype(entitySubtype: string) {
     if (this.entitySubtypeValue !== entitySubtype) {
       this.entitySubtypeValue = entitySubtype;
+      this.load();
       const currentEntity = this.getCurrentEntity();
       if (currentEntity) {
         if ((currentEntity as any).type !== this.entitySubtypeValue) {
@@ -156,6 +159,13 @@ export class EntityAutocompleteComponent implements ControlValueAccessor, OnInit
   allowCreateNew: boolean;
 
   @Input()
+  @coerceBoolean()
+  newTabDetailsButton: boolean;
+
+  @Input()
+  newTabDetailsButtonHint: string;
+
+  @Input()
   subscriptSizing: SubscriptSizing = 'fixed';
 
   @Input()
@@ -187,7 +197,8 @@ export class EntityAutocompleteComponent implements ControlValueAccessor, OnInit
 
   constructor(private store: Store<AppState>,
               private entityService: EntityService,
-              private fb: UntypedFormBuilder) {
+              private fb: UntypedFormBuilder,
+              private router: Router) {
     this.selectEntityFormGroup = this.fb.group({
       entity: [null]
     });
@@ -365,9 +376,14 @@ export class EntityAutocompleteComponent implements ControlValueAccessor, OnInit
           break;
         case EntityType.REPORT_TEMPLATE:
           this.entityText = 'report-template.report-template';
-          this.noEntitiesMatchingText = 'report-template.no-report-templates-matching';
+          if (this.entitySubtypeValue === ReportTemplateType.SUB_REPORT) {
+            this.noEntitiesMatchingText = 'report-template.no-sub-reports-matching';
+            this.notFoundEntities = 'report-template.no-sub-reports-text';
+          } else {
+            this.noEntitiesMatchingText = 'report-template.no-report-templates-matching';
+            this.notFoundEntities = 'report-template.no-report-templates-text';
+          }
           this.entityRequiredText = 'report-template.report-template-required';
-          this.notFoundEntities = 'report-template.no-report-templates-text';
           break;
         case EntityType.ROLE:
           this.entityText = 'role.role';
@@ -375,13 +391,6 @@ export class EntityAutocompleteComponent implements ControlValueAccessor, OnInit
           this.entityRequiredText = 'role.role-required';
           this.notFoundEntities = 'role.no-roles-text';
           break;
-      }
-    }
-    const currentEntity = this.getCurrentEntity();
-    if (currentEntity) {
-      const currentEntityType = currentEntity.id.entityType;
-      if (this.entityTypeValue && currentEntityType !== this.entityTypeValue) {
-        this.reset();
       }
     }
   }
@@ -514,6 +523,12 @@ export class EntityAutocompleteComponent implements ControlValueAccessor, OnInit
   createNewEntity($event: Event) {
     $event.stopPropagation();
     this.createNew.emit();
+  }
+
+  openEntityDetailsNewTab($event: Event) {
+    $event.stopPropagation();
+    const url = this.router.serializeUrl(this.router.createUrlTree([this.entityURL]));
+    window.open(url, '_blank');
   }
 
   get showEntityLink(): boolean {

@@ -148,8 +148,10 @@ public class PdfReportFontResolver extends ITextFontResolver {
 
     private void addRoboto() {
         PdfReportFontFamily roboto = new PdfReportFontFamily("Roboto");
-        loadFont(roboto, "/fonts/roboto/roboto.ttf", IDENTITY_H, EMBEDDED, null, IdentValue.NORMAL);
-        loadFont(roboto, "/fonts/roboto/robotoitalic.ttf", IDENTITY_H, EMBEDDED, null, IdentValue.ITALIC);
+        loadFont(roboto, "/fonts/roboto/Roboto-Regular.ttf", IDENTITY_H, EMBEDDED, IdentValue.NORMAL, IdentValue.NORMAL);
+        loadFont(roboto, "/fonts/roboto/Roboto-Bold.ttf", IDENTITY_H, EMBEDDED, IdentValue.BOLD, IdentValue.NORMAL);
+        loadFont(roboto, "/fonts/roboto/Roboto-Italic.ttf", IDENTITY_H, EMBEDDED, IdentValue.NORMAL, IdentValue.ITALIC);
+        loadFont(roboto, "/fonts/roboto/Roboto-BoldItalic.ttf", IDENTITY_H, EMBEDDED, IdentValue.BOLD, IdentValue.ITALIC);
         families.put("Roboto", roboto);
     }
 

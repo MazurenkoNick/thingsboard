@@ -67,6 +67,8 @@ export interface EntityAliasesDialogData {
   singleEntityAlias?: EntityAlias;
   customTitle?: string;
   disableResolveMultiple?: boolean;
+  reportMode?: boolean;
+  subReport?: boolean;
 }
 
 @Component({
@@ -84,6 +86,9 @@ export class EntityAliasesDialogComponent extends DialogComponent<EntityAliasesD
   allowedEntityTypes: Array<EntityType | AliasEntityType>;
 
   aliasToWidgetsMap: {[aliasId: string]: Array<string>} = {};
+
+  reportMode: boolean;
+  subReport: boolean;
 
   entityAliasesFormGroup: UntypedFormGroup;
 
@@ -105,7 +110,8 @@ export class EntityAliasesDialogComponent extends DialogComponent<EntityAliasesD
     this.disableAdd = this.data.disableAdd;
     this.disableResolveMultiple = this.data.disableResolveMultiple;
     this.allowedEntityTypes = this.data.allowedEntityTypes;
-
+    this.reportMode = data.reportMode;
+    this.subReport = data.subReport;
     if (data.widgets) {
       let widgetsTitleList: Array<string>;
       if (this.data.isSingleWidget && this.data.widgets.length === 1) {
@@ -235,7 +241,9 @@ export class EntityAliasesDialogComponent extends DialogComponent<EntityAliasesD
         allowedEntityTypes: this.allowedEntityTypes,
         entityAliases: aliasesArray,
         alias: isAdd ? null : deepClone(alias),
-        disableResolveMultiple: this.disableResolveMultiple
+        disableResolveMultiple: this.disableResolveMultiple,
+        reportMode: this.reportMode,
+        subReport: this.subReport
       }
     }).afterClosed().subscribe((entityAlias) => {
       if (entityAlias) {

@@ -31,7 +31,12 @@
 
 import { Component, EventEmitter, forwardRef, Input, OnDestroy, OnInit, Output } from '@angular/core';
 import { ControlValueAccessor, FormBuilder, FormGroup, NG_VALUE_ACCESSOR, Validators } from '@angular/forms';
-import { AliasFilterType, aliasFilterTypeTranslationMap, EntityAliasFilter } from '@shared/models/alias.models';
+import {
+  AliasFilterType,
+  aliasFilterTypeTranslationMap,
+  EntityAliasFilter,
+  reportAliasFilterTypeTranslationMap
+} from '@shared/models/alias.models';
 import { AliasEntityType, EntityType } from '@shared/models/entity-type.models';
 import { EntityService } from '@core/http/entity.service';
 import { EntitySearchDirection, entitySearchDirectionTranslations } from '@shared/models/relation.models';
@@ -39,6 +44,7 @@ import { Subject, Subscription } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { entityGroupTypes } from '@app/shared/models/entity-group.models';
 import { defaultSchedulerEventConfigTypes } from '@home/components/scheduler/scheduler-event-config.models';
+import { coerceBoolean } from '@shared/decorators/coercion';
 
 @Component({
   selector: 'tb-entity-filter',
@@ -64,6 +70,14 @@ export class EntityFilterComponent implements ControlValueAccessor, OnInit, OnDe
 
   @Input() disableResolveMultiple: boolean;
 
+  @Input()
+  @coerceBoolean()
+  reportMode = false;
+
+  @Input()
+  @coerceBoolean()
+  subReport = false;
+
   entityFilterFormGroup: FormGroup;
   filterFormGroup: FormGroup;
 
@@ -73,7 +87,7 @@ export class EntityFilterComponent implements ControlValueAccessor, OnInit, OnDe
   listEntityTypes: Array<EntityType | AliasEntityType>;
 
   aliasFilterType = AliasFilterType;
-  aliasFilterTypeTranslations = aliasFilterTypeTranslationMap;
+  aliasFilterTypeTranslations: Map<AliasFilterType, string>;
   entityType = EntityType;
 
   directionTypes = Object.keys(EntitySearchDirection);
@@ -91,8 +105,9 @@ export class EntityFilterComponent implements ControlValueAccessor, OnInit, OnDe
   }
 
   ngOnInit(): void {
-
-    this.aliasFilterTypes = this.entityService.getAliasFilterTypesByEntityTypes(this.allowedEntityTypes);
+    const excludeStateAliases = this.reportMode && !this.subReport;
+    this.aliasFilterTypeTranslations = this.reportMode ? reportAliasFilterTypeTranslationMap : aliasFilterTypeTranslationMap;
+    this.aliasFilterTypes = this.entityService.getAliasFilterTypesByEntityTypes(this.allowedEntityTypes, excludeStateAliases);
     this.entityGroupTypes = entityGroupTypes.filter((entityType) =>
       this.allowedEntityTypes ? this.allowedEntityTypes.indexOf(entityType) > - 1 : true
     );

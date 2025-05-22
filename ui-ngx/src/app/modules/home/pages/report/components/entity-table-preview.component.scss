@@ -28,23 +28,6 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-.tb-page-break-preview {
-  height: 100%;
-  min-height: 40px;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 16px;
-  background: #eee;
+.tb-entity-table-preview {
 
-  .tb-page-break-line {
-    flex: 1;
-    border-bottom: 2px solid rgba(0,0,0,0.47);
-  }
-
-  .tb-page-break-title {
-    font-weight: bold;
-    font-size: 18px;
-    color: rgba(0,0,0,0.47);
-  }
 }

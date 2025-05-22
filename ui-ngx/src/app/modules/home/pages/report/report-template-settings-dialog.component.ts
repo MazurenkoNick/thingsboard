@@ -39,6 +39,7 @@ import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 
 export interface ReportTemplateSettingsDialogData {
+  subReport: boolean;
   settings: PdfReportTemplateSettings;
 }
 
@@ -49,6 +50,7 @@ export interface ReportTemplateSettingsDialogData {
 })
 export class ReportTemplateSettingsDialogComponent extends DialogComponent<ReportTemplateSettingsDialogComponent, ReportTemplateSettingsDialogData> {
 
+  subReport: boolean;
   settings: PdfReportTemplateSettings;
 
   settingsFormControl: FormControl;
@@ -59,6 +61,7 @@ export class ReportTemplateSettingsDialogComponent extends DialogComponent<Repor
               public dialogRef: MatDialogRef<ReportTemplateSettingsDialogComponent, ReportTemplateSettingsDialogData>,
               private fb: FormBuilder) {
     super(store, router, dialogRef);
+    this.subReport = data.subReport;
     this.settings = data.settings;
     this.settingsFormControl = this.fb.control(this.settings);
   }

@@ -47,7 +47,14 @@ export class HeadingPreviewComponent extends AbstractReportComponentPreview<Head
 
   height: string;
 
+  text: string;
+
   onComponentUpdated() {
+    if (this.reportComponent.value && this.reportComponent.value.trim().length) {
+      this.text = this.reportComponent.value;
+    } else {
+      this.text = '&nbsp;';
+    }
     const font: Font = deepClone(this.reportComponent.font || { size: 10, sizeUnit: 'pt' } as Font);
     if (!font.size) {
       font.size = 10;

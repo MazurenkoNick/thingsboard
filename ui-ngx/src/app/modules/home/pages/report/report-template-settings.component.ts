@@ -29,7 +29,7 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { Component, DestroyRef, forwardRef, Input, OnInit } from '@angular/core';
+import { Component, DestroyRef, forwardRef, Input, OnChanges, OnInit, SimpleChanges } from '@angular/core';
 import {
   ControlValueAccessor,
   NG_VALUE_ACCESSOR,
@@ -45,6 +45,7 @@ import {
   paperSizeDisplayMap,
   PdfReportTemplateSettings
 } from '@shared/models/report.models';
+import { coerceBoolean } from '@shared/decorators/coercion';
 
 @Component({
   selector: 'tb-report-template-settings',
@@ -58,7 +59,7 @@ import {
     }
   ]
 })
-export class ReportTemplateSettingsComponent implements OnInit, ControlValueAccessor {
+export class ReportTemplateSettingsComponent implements OnInit, OnChanges, ControlValueAccessor {
 
   pageSizes = pageSizes;
   paperSizeDisplayMap = paperSizeDisplayMap;
@@ -68,6 +69,10 @@ export class ReportTemplateSettingsComponent implements OnInit, ControlValueAcce
 
   @Input()
   disabled: boolean;
+
+  @Input()
+  @coerceBoolean()
+  subReport = false;
 
   private modelValue: PdfReportTemplateSettings;
 
@@ -94,6 +99,18 @@ export class ReportTemplateSettingsComponent implements OnInit, ControlValueAcce
     ).subscribe(() => {
       this.updateModel();
     });
+    this.updateValidators();
+  }
+
+  ngOnChanges(changes: SimpleChanges) {
+    for (const propName of Object.keys(changes)) {
+      const change = changes[propName];
+      if (!change.firstChange && change.currentValue !== change.previousValue) {
+        if (propName === 'subReport') {
+          this.updateValidators();
+        }
+      }
+    }
   }
 
   registerOnChange(fn: any): void {
@@ -109,6 +126,7 @@ export class ReportTemplateSettingsComponent implements OnInit, ControlValueAcce
       this.settingsFormGroup.disable({emitEvent: false});
     } else {
       this.settingsFormGroup.enable({emitEvent: false});
+      this.updateValidators();
     }
   }
 
@@ -117,6 +135,22 @@ export class ReportTemplateSettingsComponent implements OnInit, ControlValueAcce
     this.settingsFormGroup.patchValue(
       value, {emitEvent: false}
     );
+  }
+
+  private updateValidators() {
+    if (this.subReport) {
+      this.settingsFormGroup.get('namePattern').disable({emitEvent: false});
+      this.settingsFormGroup.get('pageSize').disable({emitEvent: false});
+      this.settingsFormGroup.get('pageOrientation').disable({emitEvent: false});
+      this.settingsFormGroup.get('pageMargins').disable({emitEvent: false});
+      this.settingsFormGroup.get('pageBackground').disable({emitEvent: false});
+    } else {
+      this.settingsFormGroup.get('namePattern').enable({emitEvent: false});
+      this.settingsFormGroup.get('pageSize').enable({emitEvent: false});
+      this.settingsFormGroup.get('pageOrientation').enable({emitEvent: false});
+      this.settingsFormGroup.get('pageMargins').enable({emitEvent: false});
+      this.settingsFormGroup.get('pageBackground').enable({emitEvent: false});
+    }
   }
 
   private updateModel() {

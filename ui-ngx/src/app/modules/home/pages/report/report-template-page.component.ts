@@ -33,11 +33,16 @@ import {
   AfterViewInit,
   ChangeDetectorRef,
   Component,
-  DestroyRef, ElementRef,
+  DestroyRef,
+  ElementRef,
   EventEmitter,
-  HostBinding, OnDestroy,
-  OnInit, QueryList, Renderer2,
-  viewChild, ViewChildren,
+  HostBinding,
+  OnDestroy,
+  OnInit,
+  QueryList,
+  Renderer2,
+  viewChild,
+  ViewChildren,
   ViewEncapsulation
 } from '@angular/core';
 import { PageComponent } from '@shared/components/page.component';
@@ -47,14 +52,16 @@ import {
   entityAliasesListToAliases,
   entityAliasesToList,
   filtersToReportFilterList,
+  filterToReportFilter,
   HeaderFooter,
-  PageOrientation,
+  PageOrientation, PageSize,
   paperSizeToPointsMap,
   PdfReportTemplateConfig,
   PdfReportTemplateSettings,
   reportFilterListToFilters,
   ReportRequest,
   ReportTemplate,
+  ReportTemplateType,
   toPdfReportTemplateSettings,
   updateFromPdfReportTemplateSettings,
   validateAndUpdateReportTemplate
@@ -63,14 +70,14 @@ import { UserPermissionsService } from '@core/http/user-permissions.service';
 import { ActivatedRoute } from '@angular/router';
 import { ReportTemplateService } from '@core/http/report-template.service';
 import { FiltersDialogComponent, FiltersDialogData } from '@home/components/filter/filters-dialog.component';
-import { Filters } from '@shared/models/query/query.models';
+import { Filter, Filters } from '@shared/models/query/query.models';
 import { deepClone } from '@core/utils';
 import { MatDialog } from '@angular/material/dialog';
 import {
   EntityAliasesDialogComponent,
   EntityAliasesDialogData
 } from '@home/components/alias/entity-aliases-dialog.component';
-import { EntityAliases } from '@shared/models/alias.models';
+import { EntityAlias, EntityAliases } from '@shared/models/alias.models';
 import {
   ReportTemplateSettingsDialogComponent,
   ReportTemplateSettingsDialogData
@@ -79,7 +86,8 @@ import { ReportComponentConfig } from '@shared/models/report-component.models';
 import { FormBuilder, FormControl } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
-  assignReportComponent, pointsToPixels,
+  assignReportComponent,
+  pointsToPixels,
   ReportComponentContext,
   reportComponentTypeMap
 } from '@home/pages/report/components/report-component.models';
@@ -90,9 +98,15 @@ import { UtilsService } from '@core/services/utils.service';
 import { AliasController } from '@core/api/alias-controller';
 import { DialogService } from '@core/services/dialog.service';
 import { ReportService } from '@core/http/report.service';
+import { ReportComponentsComponent } from '@home/pages/report/components/report-components.component';
+import { EntityType } from '@shared/models/entity-type.models';
+import { Observable } from 'rxjs';
 import {
-  ReportComponentsComponent
-} from '@home/pages/report/components/report-components.component';
+  EntityAliasDialogComponent,
+  EntityAliasDialogData
+} from '@home/components/alias/entity-alias-dialog.component';
+import { tap } from 'rxjs/operators';
+import { FilterDialogComponent, FilterDialogData } from '@home/components/filter/filter-dialog.component';
 
 @Component({
   selector: 'tb-report-template-page',
@@ -138,6 +152,8 @@ export class ReportTemplatePageComponent extends PageComponent
   });
 
   readonly = !this.userPermissionsService.hasGenericPermission(Resource.REPORT_TEMPLATE, Operation.WRITE);
+
+  subReport = false;
 
   isDirtyValue: boolean;
 
@@ -202,7 +218,12 @@ export class ReportTemplatePageComponent extends PageComponent
       translate: this.translate,
       utils: this.utils,
       entityService: this.entityService,
-      aliasController: null
+      aliasController: null,
+      aliasAndFilterCallbacks: {
+        createEntityAlias: this.createEntityAlias.bind(this),
+        editEntityAlias: this.editEntityAlias.bind(this),
+        createFilter: this.createFilter.bind(this)
+      }
     };
     this.reportTemplateSettingsFormControl = this.fb.control(null);
     this.reportTemplateSettingsFormControl.valueChanges.pipe(
@@ -356,6 +377,31 @@ export class ReportTemplatePageComponent extends PageComponent
     });
   }
 
+  private createFilter(filter: string): Observable<Filter> {
+    const singleFilter: Filter = {id: null, filter, keyFilters: [], editable: true};
+    const reportFilters = deepClone(this.reportTemplate.configuration.filters);
+    const filters = reportFilterListToFilters(reportFilters);
+    return this.dialog.open<FilterDialogComponent, FilterDialogData,
+      Filter>(FilterDialogComponent, {
+      disableClose: true,
+      panelClass: ['tb-dialog', 'tb-fullscreen-dialog'],
+      data: {
+        isAdd: true,
+        filters,
+        filter: singleFilter
+      }
+    }).afterClosed().pipe(
+      tap((result) => {
+        if (result) {
+          const reportFilter = filterToReportFilter(result);
+          this.reportTemplate.configuration.filters.push(reportFilter);
+          const updatedFilters = reportFilterListToFilters(this.reportTemplate.configuration.filters);
+          this.reportComponentContext.aliasController.updateFilters(updatedFilters);
+        }
+      })
+    );
+  }
+
   public openEntityAliases($event: Event) {
     if ($event) {
       $event.stopPropagation();
@@ -370,7 +416,9 @@ export class ReportTemplatePageComponent extends PageComponent
         entityAliases,
         widgets: [],
         disableResolveMultiple: true,
-        isSingleEntityAlias: false
+        isSingleEntityAlias: false,
+        reportMode: true,
+        subReport: this.subReport
       }
     }).afterClosed().subscribe((entityAliases) => {
       if (entityAliases) {
@@ -380,6 +428,66 @@ export class ReportTemplatePageComponent extends PageComponent
         this.cd.markForCheck();
       }
     });
+  }
+
+  private createEntityAlias(alias: string, allowedEntityTypes: Array<EntityType>): Observable<EntityAlias> {
+    const singleEntityAlias: EntityAlias = {id: null, alias, filter: {resolveMultiple: false}};
+    const entityAliasesList = deepClone(this.reportTemplate.configuration.entityAliases);
+    const entityAliases = entityAliasesListToAliases(entityAliasesList);
+    return this.dialog.open<EntityAliasDialogComponent, EntityAliasDialogData,
+      EntityAlias>(EntityAliasDialogComponent, {
+      disableClose: true,
+      panelClass: ['tb-dialog', 'tb-fullscreen-dialog'],
+      data: {
+        isAdd: true,
+        allowedEntityTypes,
+        entityAliases,
+        alias: singleEntityAlias,
+        reportMode: true,
+        subReport: this.subReport
+      }
+    }).afterClosed().pipe(
+      tap((entityAlias) => {
+        if (entityAlias) {
+          this.reportTemplate.configuration.entityAliases.push(entityAlias);
+          const updatedEntityAliases = entityAliasesListToAliases(this.reportTemplate.configuration.entityAliases);
+          this.reportComponentContext.aliasController.updateEntityAliases(updatedEntityAliases);
+          this.isDirty = true;
+          this.cd.markForCheck();
+        }
+      })
+    );
+  }
+
+  private editEntityAlias(alias: EntityAlias, allowedEntityTypes: Array<EntityType>): Observable<EntityAlias> {
+    const entityAliasesList = deepClone(this.reportTemplate.configuration.entityAliases);
+    const entityAliases = entityAliasesListToAliases(entityAliasesList);
+    return this.dialog.open<EntityAliasDialogComponent, EntityAliasDialogData,
+      EntityAlias>(EntityAliasDialogComponent, {
+      disableClose: true,
+      panelClass: ['tb-dialog', 'tb-fullscreen-dialog'],
+      data: {
+        isAdd: false,
+        allowedEntityTypes,
+        entityAliases,
+        alias: deepClone(alias),
+        reportMode: true,
+        subReport: this.subReport
+      }
+    }).afterClosed().pipe(
+      tap((entityAlias) => {
+        if (entityAlias) {
+          const index = this.reportTemplate.configuration.entityAliases.findIndex(alias => alias.id === entityAlias.id);
+          if (index > -1) {
+            this.reportTemplate.configuration.entityAliases[index] = entityAlias;
+            const updatedEntityAliases = entityAliasesListToAliases(this.reportTemplate.configuration.entityAliases);
+            this.reportComponentContext.aliasController.updateEntityAliases(updatedEntityAliases);
+            this.isDirty = true;
+            this.cd.markForCheck();
+          }
+        }
+      })
+    );
   }
 
   public openReportTemplateSettings($event: Event) {
@@ -392,6 +500,7 @@ export class ReportTemplatePageComponent extends PageComponent
       disableClose: true,
       panelClass: ['tb-dialog', 'tb-fullscreen-dialog'],
       data: {
+        subReport: this.subReport,
         settings
       }
     }).afterClosed().subscribe((settings) => {
@@ -419,30 +528,35 @@ export class ReportTemplatePageComponent extends PageComponent
   }
 
   private updatePageLayout() {
-    const pageSize = this.reportTemplate.configuration.pageSize;
-    const orientation = this.reportTemplate.configuration.pageOrientation;
+    const pageSize = this.subReport ? PageSize.A4 : this.reportTemplate.configuration.pageSize;
+    const orientation = this.subReport ? PageOrientation.PORTRAIT : this.reportTemplate.configuration.pageOrientation;
     const pageSizePoints = paperSizeToPointsMap.get(pageSize);
 
     this.pageWidth = orientation === PageOrientation.PORTRAIT ? pageSizePoints[0] : pageSizePoints[1];
-    this.background = this.reportTemplate.configuration.pageBackground;
+    this.background = this.subReport ? "#fff" : this.reportTemplate.configuration.pageBackground;
 
-    this.marginLeft = this.reportTemplate.configuration.pageMargins.left;
-    this.marginRight = this.reportTemplate.configuration.pageMargins.right;
+    this.marginLeft = this.subReport ? 20 : this.reportTemplate.configuration.pageMargins.left;
+    this.marginRight =this.subReport ? 20 : this.reportTemplate.configuration.pageMargins.right;
 
-    if (this.currentHeader.enabled && this.currentHeader.components?.length) {
-      this.headerMarginTop = this.reportTemplate.configuration.pageMargins.top;
-      this.contentMarginTop = 0;
+    if (this.subReport) {
+      this.contentMarginTop = 20;
+      this.contentMarginBottom = 20;
     } else {
-      this.headerMarginTop = 0;
-      this.contentMarginTop = this.reportTemplate.configuration.pageMargins.top;
-    }
+      if (this.currentHeader.enabled && this.currentHeader.components?.length) {
+        this.headerMarginTop = this.reportTemplate.configuration.pageMargins.top;
+        this.contentMarginTop = 0;
+      } else {
+        this.headerMarginTop = 0;
+        this.contentMarginTop = this.reportTemplate.configuration.pageMargins.top;
+      }
 
-    if (this.currentFooter.enabled && this.currentFooter.components?.length) {
-      this.footerMarginBottom = this.reportTemplate.configuration.pageMargins.bottom;
-      this.contentMarginBottom = 0;
-    } else {
-      this.footerMarginBottom = 0;
-      this.contentMarginBottom = this.reportTemplate.configuration.pageMargins.bottom;
+      if (this.currentFooter.enabled && this.currentFooter.components?.length) {
+        this.footerMarginBottom = this.reportTemplate.configuration.pageMargins.bottom;
+        this.contentMarginBottom = 0;
+      } else {
+        this.footerMarginBottom = 0;
+        this.contentMarginBottom = this.reportTemplate.configuration.pageMargins.bottom;
+      }
     }
     this.updateScale();
   }
@@ -474,6 +588,7 @@ export class ReportTemplatePageComponent extends PageComponent
     this.headerToggleValue = 'header';
     this.footerToggleValue = 'footer';
     this.reportTemplate = validateAndUpdateReportTemplate(reportTemplate);
+    this.subReport = this.reportTemplate.type === ReportTemplateType.SUB_REPORT;
 
     this.updatePageLayout();
 

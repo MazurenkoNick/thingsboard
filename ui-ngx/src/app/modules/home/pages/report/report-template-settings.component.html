@@ -48,7 +48,7 @@
         </mat-icon>
       </mat-form-field>
     </div>
-    <div class="tb-form-row">
+    <div *ngIf="!subReport" class="tb-form-row">
       <div class="fixed-title-width" translate>report-template.file-name-pattern</div>
       <mat-form-field class="flex-1" appearance="outline" subscriptSizing="dynamic">
         <input required matInput formControlName="namePattern" placeholder="{{ 'widget-config.set' | translate }}">
@@ -72,7 +72,7 @@
       </mat-form-field>
     </div>
   </div>
-  <div class="tb-form-panel">
+  <div *ngIf="!subReport" class="tb-form-panel">
     <div class="tb-form-panel-title" translate>report-template.page-settings</div>
     <div class="tb-form-row space-between">
       <div>{{ 'report-template.paper-size' | translate }}</div>

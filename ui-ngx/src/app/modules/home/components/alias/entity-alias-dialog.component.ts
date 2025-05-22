@@ -59,6 +59,8 @@ export interface EntityAliasDialogData {
   entityAliases: EntityAliases | Array<EntityAlias>;
   alias?: EntityAlias;
   disableResolveMultiple?: boolean;
+  reportMode?: boolean;
+  subReport?: boolean;
 }
 
 @Component({
@@ -77,6 +79,9 @@ export class EntityAliasDialogComponent extends DialogComponent<EntityAliasDialo
 
   alias: EntityAlias;
 
+  reportMode: boolean;
+  subReport: boolean;
+
   entityAliasFormGroup: UntypedFormGroup;
 
   submitted = false;
@@ -94,6 +99,8 @@ export class EntityAliasDialogComponent extends DialogComponent<EntityAliasDialo
     this.isAdd = data.isAdd;
     this.disableResolveMultiple = data.disableResolveMultiple;
     this.allowedEntityTypes = data.allowedEntityTypes;
+    this.reportMode = data.reportMode;
+    this.subReport = data.subReport;
     if (Array.isArray(data.entityAliases)) {
       this.entityAliases = data.entityAliases;
     } else {

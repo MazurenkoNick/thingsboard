@@ -721,8 +721,10 @@
         "filter-type-entity-group-name": "Entity group name",
         "filter-type-entities-by-group-name": "Entities by group name",
         "filter-type-state-entity": "Entity from dashboard state",
+        "filter-type-state-entity-master-report": "Entity from master report",
         "filter-type-state-entity-description": "Entity taken from dashboard state parameters",
         "filter-type-state-entity-owner": "Owner of entity from dashboard state",
+        "filter-type-state-entity-owner-master-report": "Owner of entity from master report",
         "filter-type-state-entity-owner-description": "Owner of entity taken from dashboard state parameters",
         "filter-type-asset-type": "Asset type",
         "filter-type-asset-type-description": "Assets of type '{{assetTypes}}'",
@@ -759,13 +761,18 @@
         "entity-filter-no-entity-matched": "No entities matching specified filter were found.",
         "no-entity-filter-specified": "No entity filter specified",
         "root-state-entity": "Use dashboard state entity as root",
+        "root-master-report-entity": "Use master report entity as root",
         "group-state-entity": "Use dashboard state entity as entity group",
+        "group-master-report-entity": "Use entity from master report as entity group",
         "group-state-entity-owner": "Use dashboard state entity as entity group owner",
+        "group-master-report-entity-owner": "Use entity from master report as entity group owner",
         "last-level-relation": "Fetch last level relation only",
         "root-entity": "Root entity",
         "state-entity-parameter-name": "State entity parameter name",
         "default-state-entity": "Default state entity",
+        "default-master-report-entity": "Default master report entity",
         "default-state-entity-group": "Default state entity group",
+        "default-master-report-entity-group": "Default master report entity group",
         "default-entity-parameter-name": "By default",
         "max-relation-level": "Max relation level",
         "unlimited-level": "Unlimited level",
@@ -775,6 +782,7 @@
         "any-relation": "any",
         "originator": "Originator",
         "originator-state-entity": "Use dashboard state entity as originator",
+        "originator-master-report-entity": "Use entity from master report as originator",
         "scheduler-event-type": "Scheduler event type"
     },
     "asset": {
@@ -6984,11 +6992,13 @@
         "add": "Add report template",
         "search": "Search report templates",
         "no-report-templates-text": "No report templates found",
+        "no-sub-reports-text": "No subreports found",
         "report-template-details": "Report template details",
         "selected-report-templates": "{ count, plural, =1 {1 report template} other {# report templates} } selected",
         "type-report": "Report",
-        "type-sub-report": "Sub-report",
+        "type-sub-report": "Subreport",
         "no-report-templates-matching": "No report templates matching '{{entity}}' were found.",
+        "no-sub-reports-matching": "No subreports matching '{{entity}}' were found.",
         "report-template-required": "Report template is required",
         "delete-report-template-title": "Are you sure you want to delete the report template '{{reportTemplateTitle}}'?",
         "delete-report-template-text": "Be careful, after the confirmation the report template and all related data will become unrecoverable.",
@@ -7009,6 +7019,7 @@
         "copyId": "Copy report template Id",
         "settings": "Settings",
         "report-template-settings": "Report template settings",
+        "sub-report-settings": "Subreport settings",
         "file-name-pattern": "File name pattern",
         "file-name-pattern-required": "Report file name pattern is required!",
         "report-components": "Report components",
@@ -7049,6 +7060,15 @@
             },
             "page-break": {
                 "type": "Page break"
+            },
+            "entity-table": {
+                "type": "Entity table"
+            },
+            "sub-report": {
+                "type": "Subreport",
+                "no-sub-report": "No subreport selected",
+                "select-sub-report": "Select subreport",
+                "open-subreport-new-tab": "Open subreport in new tab"
             }
         }
     },

@@ -30,24 +30,60 @@
 ///
 
 import { Component, ViewEncapsulation } from '@angular/core';
-import { RichTextReportComponentConfig } from '@shared/models/report-component.models';
-import { AbstractReportComponentPreview } from '@home/pages/report/components/report-component.component';
+import { FormGroup } from '@angular/forms';
+import {
+  DataKey,
+  Datasource,
+  EntityTableReportComponentConfig,
+  HeadingReportComponentConfig,
+  WidgetConfigMode
+} from '@app/shared/public-api';
+import { AbstractReportComponentConfig } from '@home/pages/report/components/report-component-config.component';
 
 @Component({
-  selector: 'tb-rich-text-preview',
-  templateUrl: './rich-text-preview.component.html',
-  styleUrls: ['./rich-text-preview.component.scss'],
+  selector: 'tb-entity-table-config',
+  templateUrl: './entity-table-config.component.html',
+  styleUrls: ['./report-component-config.scss'],
   encapsulation: ViewEncapsulation.None
 })
-export class RichTextPreviewComponent extends AbstractReportComponentPreview<RichTextReportComponentConfig> {
+export class EntityTableConfigComponent extends AbstractReportComponentConfig<EntityTableReportComponentConfig> {
 
-  html: string;
+  settingsTab: 'data' | 'layout' = 'data';
 
-  onComponentUpdated() {
-    if (this.reportComponent.value && this.reportComponent.value.trim().length) {
-      this.html = this.reportComponent.value;
+  basicMode = WidgetConfigMode.basic;
+
+  public get datasource(): Datasource {
+    const datasources: Datasource[] = this.reportConfigForm.get('dataSources').value;
+    if (datasources && datasources.length) {
+      return datasources[0];
     } else {
-      this.html = '<p>&nbsp;</p>';
+      return null;
+    }
+  }
+
+  protected buildForm(reportComponentConfig: EntityTableReportComponentConfig): FormGroup {
+    return this.fb.group({
+      dataSources: [reportComponentConfig.dataSources, []],
+      columns: [this.getColumns(reportComponentConfig.dataSources), []],
+    });
+  }
+
+  protected prepareOutputConfig(config: any): any {
+    this.setColumns(config.columns, config.dataSources);
+    delete config.columns;
+    return config;
+  }
+
+  private getColumns(datasources?: Datasource[]): DataKey[] {
+    if (datasources && datasources.length) {
+      return datasources[0].dataKeys || [];
+    }
+    return [];
+  }
+
+  private setColumns(columns: DataKey[], datasources?: Datasource[]) {
+    if (datasources && datasources.length) {
+      datasources[0].dataKeys = columns;
     }
   }
 

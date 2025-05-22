@@ -52,12 +52,14 @@
     <ng-template [ngSwitchCase]="aliasFilterType.entityGroup">
       <section class="flex flex-col" id="entityGroupFilter">
         <label class="tb-small">{{ 'entity-group.entity-group' | translate }}</label>
-        <section class="tb-root-state-entity-switch flex flex-row items-center justify-start" style="padding-left: 0;">
-          <mat-slide-toggle class="root-state-entity-switch"
-                            formControlName="groupStateEntity">
-          </mat-slide-toggle>
-          <label class="tb-small root-state-entity-label" translate>alias.group-state-entity</label>
-        </section>
+        @if (!reportMode || reportMode && subReport) {
+          <section class="tb-root-state-entity-switch flex flex-row items-center justify-start" style="padding-left: 0;">
+            <mat-slide-toggle class="root-state-entity-switch"
+                              formControlName="groupStateEntity">
+            </mat-slide-toggle>
+            <label class="tb-small root-state-entity-label">{{ (subReport ? 'alias.group-master-report-entity' : 'alias.group-state-entity') | translate }}</label>
+          </section>
+        }
         <div class="flex flex-1 flex-row" *ngIf="!filterFormGroup.get('groupStateEntity').value">
           <tb-entity-type-select
                             style="min-width: 100px; padding-right: 8px;"
@@ -76,13 +78,13 @@
           </tb-entity-group-autocomplete>
         </div>
         <div class="flex flex-1 flex-col" *ngIf="filterFormGroup.get('groupStateEntity').value">
-          <mat-form-field floatLabel="always" class="mat-block" style="margin-top: 14px; padding-right: 8px;">
+          <mat-form-field *ngIf="!reportMode" floatLabel="always" class="mat-block" style="margin-top: 14px; padding-right: 8px;">
             <mat-label translate>alias.state-entity-parameter-name</mat-label>
             <input matInput formControlName="stateEntityParamName"
                    placeholder="{{ 'alias.default-entity-parameter-name' | translate }}">
           </mat-form-field>
           <div class="flex flex-1 flex-col">
-            <label class="tb-small">{{ 'alias.default-state-entity-group' | translate }}</label>
+            <label class="tb-small">{{ (reportMode ? 'alias.default-master-report-entity-group' : 'alias.default-state-entity-group') | translate }}</label>
             <div class="flex flex-1 flex-row">
               <tb-entity-type-select
                 style="min-width: 100px; padding-right: 8px;"
@@ -169,14 +171,16 @@
     </ng-template>
     <ng-template [ngSwitchCase]="aliasFilterType.entitiesByGroupName">
       <section class="flex flex-col" id="entityGroupByNameFilter">
-        <section class="tb-root-state-entity-switch flex flex-row items-center justify-start" style="padding-left: 0;">
-          <mat-slide-toggle class="root-state-entity-switch"
-                            formControlName="groupStateEntity">
-          </mat-slide-toggle>
-          <label class="tb-small root-state-entity-label" translate>alias.group-state-entity-owner</label>
-        </section>
+        @if (!reportMode || reportMode && subReport) {
+          <section class="tb-root-state-entity-switch flex flex-row items-center justify-start" style="padding-left: 0;">
+            <mat-slide-toggle class="root-state-entity-switch"
+                              formControlName="groupStateEntity">
+            </mat-slide-toggle>
+            <label class="tb-small root-state-entity-label">{{ (subReport ? 'alias.group-master-report-entity-owner' : 'alias.group-state-entity-owner') | translate }}</label>
+          </section>
+        }
         <div class="flex flex-1 flex-col" style="margin-top: 16px;">
-          <mat-form-field *ngIf="filterFormGroup.get('groupStateEntity').value"
+          <mat-form-field *ngIf="!reportMode && filterFormGroup.get('groupStateEntity').value"
                           floatLabel="always" class="mat-block" style="padding-right: 8px;">
             <mat-label translate>alias.state-entity-parameter-name</mat-label>
             <input matInput formControlName="stateEntityParamName"
@@ -204,13 +208,13 @@
     <ng-template [ngSwitchCase]="entityFilterFormGroup.get('type').value === aliasFilterType.stateEntity ||
                                  entityFilterFormGroup.get('type').value === aliasFilterType.stateEntityOwner ?
                                  entityFilterFormGroup.get('type').value : ''">
-      <mat-form-field floatLabel="always" class="mat-block">
+      <mat-form-field *ngIf="!reportMode" floatLabel="always" class="mat-block">
         <mat-label translate>alias.state-entity-parameter-name</mat-label>
         <input matInput formControlName="stateEntityParamName"
                placeholder="{{ 'alias.default-entity-parameter-name' | translate }}">
       </mat-form-field>
       <div class="flex flex-col">
-        <label class="tb-small">{{ 'alias.default-state-entity' | translate }}</label>
+        <label class="tb-small">{{ (reportMode ? 'alias.default-master-report-entity' : 'alias.default-state-entity') | translate }}</label>
         <tb-entity-select class="flex-1"
                           useAliasEntityTypes="true"
                           formControlName="defaultStateEntity">
@@ -267,11 +271,13 @@
       <section class="tb-form-panel no-border no-padding">
         <div class="tb-form-panel stroked no-gap">
           <div class="tb-form-panel-title" translate>alias.root-entity</div>
-          <mat-slide-toggle class="mat-slide margin" formControlName="rootStateEntity">
-            {{ 'alias.root-state-entity' | translate }}
-          </mat-slide-toggle>
+          @if (!reportMode || reportMode && subReport) {
+            <mat-slide-toggle class="mat-slide margin" formControlName="rootStateEntity">
+              {{ (subReport ? 'alias.root-master-report-entity' : 'alias.root-state-entity') | translate }}
+            </mat-slide-toggle>
+          }
           <div *ngIf="filterFormGroup.get('rootStateEntity').value" class="tb-form-panel no-border no-padding no-gap">
-            <mat-form-field>
+            <mat-form-field *ngIf="!reportMode">
               <mat-label translate>alias.state-entity-parameter-name</mat-label>
               <input matInput formControlName="stateEntityParamName">
             </mat-form-field>
@@ -323,12 +329,14 @@
                                  entityFilterFormGroup.get('type').value === aliasFilterType.edgeSearchQuery ?
                                  entityFilterFormGroup.get('type').value : ''">
       <label class="tb-small">{{ 'alias.root-entity' | translate }}</label>
-      <section class="tb-root-state-entity-switch flex flex-row items-center justify-start" style="padding-left: 0;">
-        <mat-slide-toggle class="root-state-entity-switch"
-                          formControlName="rootStateEntity">
-        </mat-slide-toggle>
-        <label class="tb-small root-state-entity-label" translate>alias.root-state-entity</label>
-      </section>
+      @if (!reportMode || reportMode && subReport) {
+        <section class="tb-root-state-entity-switch flex flex-row items-center justify-start" style="padding-left: 0;">
+          <mat-slide-toggle class="root-state-entity-switch"
+                            formControlName="rootStateEntity">
+          </mat-slide-toggle>
+          <label class="tb-small root-state-entity-label">{{ (subReport ? 'alias.root-master-report-entity' : 'alias.root-state-entity') | translate }}</label>
+        </section>
+      }
       <div class="flex flex-1 flex-row" *ngIf="!filterFormGroup.get('rootStateEntity').value">
         <tb-entity-select class="flex-1"
                           required
@@ -337,13 +345,13 @@
         </tb-entity-select>
       </div>
       <div class="flex flex-1 flex-col gt-sm:flex-row" *ngIf="filterFormGroup.get('rootStateEntity').value">
-        <mat-form-field floatLabel="always" class="mat-block" style="margin-top: 24px; padding-right: 8px;">
+        <mat-form-field *ngIf="!reportMode" floatLabel="always" class="mat-block" style="margin-top: 24px; padding-right: 8px;">
           <mat-label translate>alias.state-entity-parameter-name</mat-label>
           <input matInput formControlName="stateEntityParamName"
                  placeholder="{{ 'alias.default-entity-parameter-name' | translate }}">
         </mat-form-field>
         <div class="flex flex-1 flex-col">
-          <label class="tb-small">{{ 'alias.default-state-entity' | translate }}</label>
+          <label class="tb-small">{{ (reportMode ? 'alias.default-master-report-entity' : 'alias.default-state-entity') | translate }}</label>
           <tb-entity-select class="flex-1"
                             useAliasEntityTypes="true"
                             formControlName="defaultStateEntity">
@@ -417,12 +425,14 @@
     </ng-template>
     <ng-template [ngSwitchCase]="aliasFilterType.schedulerEvent">
       <label class="tb-small">{{ 'alias.originator' | translate }}</label>
-      <section class="tb-root-state-entity-switch flex flex-row items-center justify-start" style="padding-left: 0;">
-        <mat-slide-toggle class="root-state-entity-switch"
-                          formControlName="originatorStateEntity">
-        </mat-slide-toggle>
-        <label class="tb-small root-state-entity-label" translate>alias.originator-state-entity</label>
-      </section>
+      @if (!reportMode || reportMode && subReport) {
+        <section class="tb-root-state-entity-switch flex flex-row items-center justify-start" style="padding-left: 0;">
+          <mat-slide-toggle class="root-state-entity-switch"
+                            formControlName="originatorStateEntity">
+          </mat-slide-toggle>
+          <label class="tb-small root-state-entity-label">{{ (subReport ? 'alias.originator-master-report-entity' : 'alias.originator-state-entity') | translate }}</label>
+        </section>
+      }
       <div class="flex flex-1 flex-row" *ngIf="!filterFormGroup.get('originatorStateEntity').value">
         <tb-entity-select class="flex-1"
                           useAliasEntityTypes="true"
@@ -430,13 +440,13 @@
         </tb-entity-select>
       </div>
       <div class="flex flex-1 flex-row" *ngIf="filterFormGroup.get('originatorStateEntity').value">
-        <mat-form-field floatLabel="always" class="mat-block" style="margin-top: 24px; padding-right: 8px;">
+        <mat-form-field *ngIf="!reportMode" floatLabel="always" class="mat-block" style="margin-top: 24px; padding-right: 8px;">
           <mat-label translate>alias.state-entity-parameter-name</mat-label>
           <input matInput formControlName="stateEntityParamName"
                  placeholder="{{ 'alias.default-entity-parameter-name' | translate }}">
         </mat-form-field>
         <div class="flex flex-1 flex-col">
-          <label class="tb-small">{{ 'alias.default-state-entity' | translate }}</label>
+          <label class="tb-small">{{ (reportMode ? 'alias.default-master-report-entity' : 'alias.default-state-entity') | translate }}</label>
           <tb-entity-select class="flex-1"
                             useAliasEntityTypes="true"
                             formControlName="defaultStateEntity">
