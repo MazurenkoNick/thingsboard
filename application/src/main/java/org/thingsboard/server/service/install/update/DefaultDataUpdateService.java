@@ -39,11 +39,15 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
+import org.thingsboard.common.util.JacksonUtil;
+import org.thingsboard.server.common.data.AdminSettings;
+import org.thingsboard.server.common.data.AttributeScope;
 import org.thingsboard.server.common.data.Customer;
 import org.thingsboard.server.common.data.Dashboard;
 import org.thingsboard.server.common.data.DashboardInfo;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.ShortCustomerInfo;
+import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.Tenant;
 import org.thingsboard.server.common.data.User;
 import org.thingsboard.server.common.data.alarm.AlarmSeverity;
@@ -58,6 +62,7 @@ import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.id.UserId;
 import org.thingsboard.server.common.data.integration.AbstractIntegration;
 import org.thingsboard.server.common.data.integration.Integration;
+import org.thingsboard.server.common.data.kv.AttributeKvEntry;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageDataIterable;
 import org.thingsboard.server.common.data.page.PageLink;
@@ -68,6 +73,7 @@ import org.thingsboard.server.common.data.relation.RelationTypeGroup;
 import org.thingsboard.server.common.data.rule.RuleNode;
 import org.thingsboard.server.common.data.security.Authority;
 import org.thingsboard.server.dao.asset.AssetService;
+import org.thingsboard.server.dao.attributes.AttributesService;
 import org.thingsboard.server.dao.customer.CustomerService;
 import org.thingsboard.server.dao.dashboard.DashboardService;
 import org.thingsboard.server.dao.device.DeviceService;
@@ -77,6 +83,7 @@ import org.thingsboard.server.dao.group.EntityGroupService;
 import org.thingsboard.server.dao.integration.IntegrationService;
 import org.thingsboard.server.dao.relation.RelationService;
 import org.thingsboard.server.dao.rule.RuleChainService;
+import org.thingsboard.server.dao.settings.AdminSettingsService;
 import org.thingsboard.server.dao.tenant.TenantService;
 import org.thingsboard.server.dao.user.UserService;
 import org.thingsboard.server.dao.wl.WhiteLabelingService;
@@ -156,6 +163,12 @@ public class DefaultDataUpdateService implements DataUpdateService {
     @Autowired
     private DbUpgradeExecutorService executorService;
 
+    @Autowired
+    private AttributesService attributesService;
+
+    @Autowired
+    private AdminSettingsService adminSettingsService;
+
     @Override
     public void updateData(boolean fromCe) throws Exception {
         log.info("Updating data ...");
@@ -164,6 +177,7 @@ public class DefaultDataUpdateService implements DataUpdateService {
         } else {
             //TODO: should be cleaned after each release
             updateInputNodes();
+            migrateTenantAttributeSettingsToAdminSettings();
         }
         log.info("Data updated.");
     }
@@ -206,6 +220,64 @@ public class DefaultDataUpdateService implements DataUpdateService {
             }
         }
         log.info("Created {} relations for input nodes", n);
+    }
+
+    private void migrateTenantAttributeSettingsToAdminSettings() {
+        log.info("Starting migration of tenant attribute settings to admin_settings...");
+        List<String> migratedKeys = List.of("mail", "sms", "jwt", "twoFaSettings");
+        PageLink pageLink = new PageLink(1024);
+        PageData<Tenant> tenants;
+        do {
+            tenants = tenantService.findTenants(pageLink);
+            for (Tenant tenant : tenants.getData()) {
+                List<String> migratedForTenant = new ArrayList<>();
+                TenantId tenantId = tenant.getId();
+                for (String key : migratedKeys) {
+                    try {
+                        String attributeValue = attributesService.find(tenantId, tenantId, AttributeScope.SERVER_SCOPE, key).get()
+                                .map(AttributeKvEntry::getValueAsString).orElse(null);
+
+                        if (StringUtils.isEmpty(attributeValue)) {
+                            continue;
+                        }
+
+                        JsonNode jsonValue;
+                        try {
+                            jsonValue = JacksonUtil.toJsonNode(attributeValue);
+                        } catch (Exception e) {
+                            log.warn("Failed to parse attribute [{}] for tenant [{}] as JSON: {}", key, tenantId, e.getMessage());
+                            continue;
+                        }
+
+                        AdminSettings existing = adminSettingsService.findAdminSettingsByTenantIdAndKey(tenantId, key);
+                        if (existing != null) {
+                            log.info("Skipping migration of [{}] for tenant [{}]: already exists", key, tenantId);
+                            continue;
+                        }
+
+                        AdminSettings adminSettings = new AdminSettings();
+                        adminSettings.setTenantId(tenantId);
+                        adminSettings.setKey(key);
+                        adminSettings.setJsonValue(jsonValue);
+
+                        adminSettingsService.saveAdminSettings(tenantId, adminSettings);
+                        migratedForTenant.add(key);
+                    } catch (Exception e) {
+                        log.error("Error migrating [{}] settings for tenant [{}]", key, tenantId, e);
+                    }
+                }
+                if (!migratedForTenant.isEmpty()) {
+                    attributesService.removeAll(tenantId, tenantId, AttributeScope.SERVER_SCOPE, migratedForTenant);
+                    log.info("[{}] Migrated settings: {}. Old attributes removed.", tenantId, migratedForTenant);
+                }
+                log.info("[{}] Admin settings migration has finished for tenant with name: {}", tenantId, tenant.getName());
+            }
+
+            if (tenants.hasNext()) {
+                pageLink = pageLink.nextPageLink();
+            }
+        } while (tenants.hasNext());
+        log.info("Tenant attribute settings migration fully completed.");
     }
 
     @Override

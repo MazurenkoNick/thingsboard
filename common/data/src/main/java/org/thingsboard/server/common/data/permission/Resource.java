@@ -234,7 +234,8 @@ public enum Resource {
                 Resource.QUEUE_STATS,
                 Resource.VERSION_CONTROL,
                 Resource.NOTIFICATION,
-                Resource.MOBILE_APP_SETTINGS
+                Resource.MOBILE_APP_SETTINGS,
+                Resource.ADMIN_SETTINGS
         ));
 
         resourcesByAuthority.put(Authority.CUSTOMER_USER, Set.of(

@@ -67,7 +67,6 @@ import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.rule.engine.api.MailService;
 import org.thingsboard.rule.engine.api.SmsService;
 import org.thingsboard.server.common.data.AdminSettings;
-import org.thingsboard.server.common.data.AttributeScope;
 import org.thingsboard.server.common.data.FeaturesInfo;
 import org.thingsboard.server.common.data.LicenseInfo;
 import org.thingsboard.server.common.data.LicenseUsageInfo;
@@ -80,9 +79,6 @@ import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.TenantId;
-import org.thingsboard.server.common.data.kv.AttributeKvEntry;
-import org.thingsboard.server.common.data.kv.BaseAttributeKvEntry;
-import org.thingsboard.server.common.data.kv.StringDataEntry;
 import org.thingsboard.server.common.data.permission.Operation;
 import org.thingsboard.server.common.data.permission.Resource;
 import org.thingsboard.server.common.data.security.Authority;
@@ -111,8 +107,6 @@ import org.thingsboard.server.service.system.SystemInfoService;
 import org.thingsboard.server.service.update.UpdateService;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -170,11 +164,10 @@ public class AdminController extends BaseController {
             @RequestParam(required = false, defaultValue = "false") boolean systemByDefault) throws Exception {
         Authority authority = getCurrentUser().getAuthority();
         AdminSettings adminSettings;
+        accessControlService.checkPermission(getCurrentUser(), Resource.ADMIN_SETTINGS, Operation.READ);
         if (Authority.SYS_ADMIN.equals(authority)) {
-            accessControlService.checkPermission(getCurrentUser(), Resource.ADMIN_SETTINGS, Operation.READ);
             adminSettings = checkNotNull(adminSettingsService.findAdminSettingsByKey(TenantId.SYS_TENANT_ID, key), "No Administration settings found for key: " + key);
         } else {
-            accessControlService.checkPermission(getCurrentUser(), Resource.WHITE_LABELING, Operation.READ);
             adminSettings = getTenantAdminSettings(getTenantId(), key, systemByDefault);
         }
         if (adminSettings.getKey().equals("mail")) {
@@ -194,15 +187,10 @@ public class AdminController extends BaseController {
     public AdminSettings saveAdminSettings(
             @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "A JSON value representing the Administration Settings.")
             @RequestBody AdminSettings adminSettings) throws Exception {
-        Authority authority = getCurrentUser().getAuthority();
-        adminSettings.setTenantId(getTenantId());
-        if (Authority.SYS_ADMIN.equals(authority)) {
-            accessControlService.checkPermission(getCurrentUser(), Resource.ADMIN_SETTINGS, Operation.WRITE);
-            adminSettings = checkNotNull(adminSettingsService.saveAdminSettings(TenantId.SYS_TENANT_ID, adminSettings));
-        } else {
-            accessControlService.checkPermission(getCurrentUser(), Resource.WHITE_LABELING, Operation.WRITE);
-            adminSettings = saveTenantAdminSettings(getTenantId(), adminSettings);
-        }
+        TenantId tenantId = getTenantId();
+        adminSettings.setTenantId(tenantId);
+        accessControlService.checkPermission(getCurrentUser(), Resource.ADMIN_SETTINGS, Operation.WRITE);
+        adminSettings = checkNotNull(adminSettingsService.saveAdminSettings(tenantId, adminSettings));
         if (adminSettings.getKey().equals("mail")) {
             ((ObjectNode) adminSettings.getJsonValue()).remove("password");
             ((ObjectNode) adminSettings.getJsonValue()).remove("refreshToken");
@@ -529,11 +517,10 @@ public class AdminController extends BaseController {
         internalSessionMap.put(state, currentUser.getTenantId());
 
         AdminSettings adminSettings;
+        accessControlService.checkPermission(currentUser, Resource.ADMIN_SETTINGS, Operation.READ);
         if (Authority.SYS_ADMIN.equals(currentUser.getAuthority())) {
-            accessControlService.checkPermission(currentUser, Resource.ADMIN_SETTINGS, Operation.READ);
             adminSettings = checkNotNull(adminSettingsService.findAdminSettingsByKey(TenantId.SYS_TENANT_ID, MAIL_SETTINGS_KEY), "No Administration settings found for key: " + MAIL_SETTINGS_KEY);
         } else {
-            accessControlService.checkPermission(currentUser, Resource.WHITE_LABELING, Operation.READ);
             adminSettings = getTenantAdminSettings(currentUser.getTenantId(), MAIL_SETTINGS_KEY, true);
         }
         JsonNode jsonValue = adminSettings.getJsonValue();
@@ -594,95 +581,24 @@ public class AdminController extends BaseController {
         ((ObjectNode) jsonValue).put("refreshToken", tokenResponse.getRefreshToken());
         ((ObjectNode) jsonValue).put("tokenGenerated", true);
 
-        if (TenantId.SYS_TENANT_ID.equals(tenantId)) {
-            adminSettingsService.saveAdminSettings(tenantId, adminSettings);
-        } else {
-            saveTenantAdminSettings(tenantId, adminSettings);
-        }
+        adminSettingsService.saveAdminSettings(tenantId, adminSettings);
         response.sendRedirect(prevUri);
     }
 
     private AdminSettings getTenantAdminSettings(TenantId tenantId, String key, boolean systemByDefault) throws Exception {
-        String jsonString = getTenantAttributeValue(tenantId, key);
-        JsonNode jsonValue = null;
-        if (!StringUtils.isEmpty(jsonString)) {
-            try {
-                jsonValue = JacksonUtil.toJsonNode(jsonString);
-            } catch (Exception e) {
-            }
-        }
-        if (jsonValue == null) {
+        AdminSettings adminSettings = adminSettingsService.findAdminSettingsByTenantIdAndKey(tenantId, key);
+        if (adminSettings == null) {
             if (systemByDefault) {
-                AdminSettings systemAdminSettings = checkNotNull(adminSettingsService.findAdminSettingsByKey(tenantId, key));
-                jsonValue = systemAdminSettings.getJsonValue();
+                return checkNotNull(adminSettingsService.findAdminSettingsByKey(tenantId, key));
             } else {
-                jsonValue = JacksonUtil.newObjectNode();
+                adminSettings = new AdminSettings();
+                adminSettings.setTenantId(tenantId);
+                adminSettings.setKey(key);
+                adminSettings.setJsonValue(JacksonUtil.newObjectNode());
+                return adminSettings;
             }
         }
-        AdminSettings adminSettings = new AdminSettings();
-        adminSettings.setKey(key);
-        adminSettings.setJsonValue(jsonValue);
         return adminSettings;
-    }
-
-    private AdminSettings saveTenantAdminSettings(TenantId tenantId, AdminSettings adminSettings) throws Exception {
-        JsonNode jsonValue = adminSettings.getJsonValue();
-        if (adminSettings.getKey().equals("mail")) {
-            JsonNode oldJsonValue = JacksonUtil.toJsonNode(getTenantAttributeValue(tenantId, "mail"));
-            if (oldJsonValue != null) {
-                if (!jsonValue.has("password") && oldJsonValue.has("password")) {
-                    ((ObjectNode) jsonValue).put("password", oldJsonValue.get("password").asText());
-                }
-                if (!jsonValue.has("refreshToken") && oldJsonValue.has("refreshToken")) {
-                    ((ObjectNode) jsonValue).put("refreshToken", oldJsonValue.get("refreshToken").asText());
-                }
-                dropRefreshTokenIfProviderInfoChanged(jsonValue, oldJsonValue);
-            }
-        }
-        String jsonString = null;
-        if (jsonValue != null) {
-            try {
-                jsonString = JacksonUtil.toString(jsonValue);
-            } catch (Exception e) {
-            }
-        }
-        if (jsonString == null) {
-            jsonString = "";
-        }
-        saveTenantAttribute(tenantId, adminSettings.getKey(), jsonString);
-        return adminSettings;
-    }
-
-    private String getTenantAttributeValue(TenantId tenantId, String key) throws Exception {
-        List<AttributeKvEntry> attributeKvEntries =
-                attributesService.find(tenantId, tenantId, AttributeScope.SERVER_SCOPE, Arrays.asList(key)).get();
-        if (attributeKvEntries != null && !attributeKvEntries.isEmpty()) {
-            AttributeKvEntry kvEntry = attributeKvEntries.get(0);
-            return kvEntry.getValueAsString();
-        } else {
-            return "";
-        }
-    }
-
-    private void saveTenantAttribute(TenantId tenantId, String key, String value) throws Exception {
-        List<AttributeKvEntry> attributes = new ArrayList<>();
-        long ts = System.currentTimeMillis();
-        attributes.add(new BaseAttributeKvEntry(new StringDataEntry(key, value), ts));
-        attributesService.save(tenantId, tenantId, AttributeScope.SERVER_SCOPE, attributes).get();
-    }
-
-    private void dropRefreshTokenIfProviderInfoChanged(JsonNode newJsonValue, JsonNode oldJsonValue) {
-        if (newJsonValue.has("enableOauth2") && newJsonValue.get("enableOauth2").asBoolean()) {
-            if ((newJsonValue.has("useSystemMailSettings") && newJsonValue.get("useSystemMailSettings").asBoolean()) ||
-                    (!newJsonValue.get("providerId").equals(oldJsonValue.get("providerId"))) ||
-                    (!newJsonValue.get("clientId").equals(oldJsonValue.get("clientId"))) ||
-                    (!newJsonValue.get("clientSecret").equals(oldJsonValue.get("clientSecret"))) ||
-                    (!newJsonValue.get("redirectUri").equals(oldJsonValue.get("redirectUri"))) ||
-                    (newJsonValue.has("providerTenantId") && !newJsonValue.get("providerTenantId").equals(oldJsonValue.get("providerTenantId")))) {
-                ((ObjectNode) newJsonValue).put("tokenGenerated", false);
-                ((ObjectNode) newJsonValue).remove("refreshToken");
-            }
-        }
     }
 
 }
