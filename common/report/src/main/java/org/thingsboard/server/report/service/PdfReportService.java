@@ -50,6 +50,7 @@ import org.thingsboard.server.common.data.report.configuration.PdfReportTemplate
 import org.thingsboard.server.common.data.report.configuration.ReportTemplateConfig;
 import org.thingsboard.server.common.data.report.configuration.components.AlarmTableComponent;
 import org.thingsboard.server.common.data.report.configuration.components.DashboardComponent;
+import org.thingsboard.server.common.data.report.configuration.components.ErrorComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ImageComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponentType;
@@ -79,6 +80,7 @@ import java.util.Optional;
 import java.util.TimeZone;
 import java.util.concurrent.ExecutionException;
 
+import static org.thingsboard.server.common.data.report.configuration.components.ReportComponentType.ERROR;
 import static org.thingsboard.server.common.data.report.configuration.components.ReportComponentType.SUB_REPORT;
 import static org.thingsboard.server.common.data.report.configuration.components.ReportComponentType.TIME_SERIES_TABLE;
 import static org.thingsboard.server.common.data.report.configuration.style.PageSize.A4;
@@ -170,14 +172,7 @@ public class PdfReportService extends AbstractReportService {
         for (ReportComponent component : components) {
             ReportComponentType type = component.getType();
             if (type == SUB_REPORT) {
-                ReportTemplateId templateId = ((SubReportComponent) component).getTemplateId();
-                ReportTemplate reportTemplate = dataService.findReportTemplate(templateId, ctx).orElseThrow(() -> new IllegalArgumentException("Report template was not found: " + templateId));
-                PdfReportTemplateConfig reportConfiguration = (PdfReportTemplateConfig) reportTemplate.getConfiguration();
-
-                List<EntityData> entityDatas = fetchEntities(ctx, getSingleDataSource(component));
-                for (EntityData entity : entityDatas) {
-                    content.append(renderContent(ctx, reportConfiguration.getComponents(), entity));
-                }
+                content.append(renderSubreport(ctx, component));
             } else if (type == TIME_SERIES_TABLE) {
                 List<EntityData> entityDatas = fetchEntities(ctx, getSingleDataSource(component));
                 for (EntityData entity : entityDatas) {
@@ -190,9 +185,14 @@ public class PdfReportService extends AbstractReportService {
         return content.toString();
     }
 
-    private String renderComponent(TbReportCtx ctx, ReportComponent component, EntityData stateEntity)  {
-        ComponentData componentData = getComponentData(ctx, component, stateEntity);
-        return componentsRenderers.get(component.getType()).render(component, componentData);
+    private String renderComponent(TbReportCtx ctx, ReportComponent component, EntityData stateEntity) {
+        try {
+            ComponentData componentData = getComponentData(ctx, component, stateEntity);
+            return componentsRenderers.get(component.getType()).render(component, componentData);
+        } catch (Exception e) {
+            log.error("Failed to render component of type [{}]", component.getType(), e);
+            return componentsRenderers.get(ERROR).render(new ErrorComponent("Failed to render component of type: " + component.getType(), e), null);
+        }
     }
 
     private ComponentData getComponentData(TbReportCtx ctx, ReportComponent component, EntityData stateEntity) {
@@ -207,6 +207,26 @@ public class PdfReportService extends AbstractReportService {
         // Merge state entity data into the report variables
         reportDataSource.getVariables().putAll(toStateEntityMap(stateEntity));
         return reportDataSource;
+    }
+
+    private String renderSubreport(TbReportCtx ctx, ReportComponent component) {
+        StringBuilder content = new StringBuilder();
+        ReportTemplateId templateId = ((SubReportComponent) component).getTemplateId();
+        ReportTemplate reportTemplate;
+        try {
+            reportTemplate = dataService.findReportTemplate(templateId, ctx)
+                    .orElseThrow(() -> new IllegalArgumentException("Report template was not found: " + templateId));
+            PdfReportTemplateConfig reportConfiguration = (PdfReportTemplateConfig) reportTemplate.getConfiguration();
+
+            List<EntityData> entityDatas = fetchEntities(ctx, getSingleDataSource(component));
+            for (EntityData entity : entityDatas) {
+                content.append(renderContent(ctx, reportConfiguration.getComponents(), entity));
+            }
+            return content.toString();
+        } catch (Exception e) {
+            log.error("Failed to render subreport, template id: {}", templateId, e);
+            return componentsRenderers.get(ERROR).render(new ErrorComponent("Failed to load sub-report " + templateId, e), null);
+        }
     }
 
     private ComponentData buildImageComponentData(TbReportCtx ctx, ImageComponent component) {

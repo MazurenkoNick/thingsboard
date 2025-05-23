@@ -28,39 +28,23 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.report.renderer;
+package org.thingsboard.server.common.data.report.configuration;
 
-import org.thingsboard.server.common.data.report.configuration.DataKey;
-import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
-import org.thingsboard.server.report.context.ComponentData;
-import org.thingsboard.server.report.util.ThymeleafUtil;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import org.thingsboard.server.common.data.report.configuration.style.DataKeySettingsType;
 
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.stream.Collectors;
+@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonTypeInfo(
+        use = JsonTypeInfo.Id.NAME,
+        include = JsonTypeInfo.As.EXISTING_PROPERTY,
+        property = "type")
+@JsonSubTypes({
+        @JsonSubTypes.Type(value = ColumnSettings.class, name = "COLUMN"),
 
-import static org.thingsboard.server.report.service.PdfReportService.getSingleDataSource;
+})
+public interface DataKeySettings {
 
-public abstract class TableComponentRenderer extends ReportComponentWithLayoutRenderer {
-
-    @Override
-    protected String renderContent(ReportComponent component, ComponentData reportDataSource) {
-        Map<String, String> columns = getSingleDataSource(component)
-                .getDataKeys()
-                .stream()
-                .collect(Collectors.toMap(
-                        DataKey::getName,
-                        DataKey::getLabel,
-                        (v1, v2) -> v1,
-                        LinkedHashMap::new
-                ));
-
-        HashMap<String, Object> componentVariables = new HashMap<>();
-        componentVariables.put("columns", columns);
-        componentVariables.put("rows", reportDataSource.getEntityDatas());
-
-        return ThymeleafUtil.render("html/components/table-template", componentVariables);
-    }
-
+    DataKeySettingsType getType();
 }
