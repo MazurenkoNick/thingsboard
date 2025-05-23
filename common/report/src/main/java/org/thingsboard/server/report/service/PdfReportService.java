@@ -55,6 +55,7 @@ import org.thingsboard.server.common.data.report.configuration.components.Report
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponentType;
 import org.thingsboard.server.common.data.report.configuration.components.SubReportComponent;
 import org.thingsboard.server.common.data.report.configuration.components.TimeseriesTableComponent;
+import org.thingsboard.server.common.data.report.configuration.image.ImageSourceType;
 import org.thingsboard.server.common.data.report.configuration.style.Insets;
 import org.thingsboard.server.common.data.report.configuration.style.PageOrientation;
 import org.thingsboard.server.common.data.report.configuration.style.PageSize;
@@ -113,7 +114,7 @@ public class PdfReportService extends AbstractReportService {
         Insets pageMargins = computePageMargins(configuration);
         int usablePageWidthPx = (int)((pageSize.width - pageMargins.getLeft() - pageMargins.getRight()) * 4f / 3f);
 
-        ITextRenderer renderer = HtmlRenderUtils.createRenderer();
+        ITextRenderer renderer = HtmlRenderUtils.createRenderer(dataService, ctx, usablePageWidthPx);
 
         HeaderFooterRenderLayout headerLayout = renderHeaderFooter(renderer, ctx, configuration.getHeader(), usablePageWidthPx);
         HeaderFooterRenderLayout footerLayout = renderHeaderFooter(renderer, ctx, configuration.getFooter(), usablePageWidthPx);
@@ -210,15 +211,15 @@ public class PdfReportService extends AbstractReportService {
     }
 
     private ComponentData buildImageComponentData(TbReportCtx ctx, ImageComponent component) {
-        TbResourceId tbResourceId = component.getTbResourceId();
-        TbResource tbResource;
-        try {
-            tbResource = dataService.findTbResource(tbResourceId, ctx);
-        } catch (ThingsboardException e) {
-            log.error("Failed to download resource by id: {}", tbResourceId, e);
-            throw new RuntimeException("Failed to find resource by id: " + tbResourceId, e);
+        if (ImageSourceType.entityKey.equals(component.getSourceType())) {
+            var dataSources = component.getDataSources();
+            if (dataSources == null || dataSources.isEmpty()) {
+                return new ComponentData();
+            }
+            return buildSingleComponentData(ctx, dataSources.get(0));
+        } else {
+            return new ComponentData();
         }
-        return new ComponentData(tbResource.getData());
     }
 
     private ComponentData buildDashboardComponentData(TbReportCtx ctx, DashboardComponent component) {

@@ -7064,6 +7064,9 @@
             "entity-table": {
                 "type": "Entity table"
             },
+            "image": {
+                "type": "Image"
+            },
             "sub-report": {
                 "type": "Subreport",
                 "no-sub-report": "No subreport selected",

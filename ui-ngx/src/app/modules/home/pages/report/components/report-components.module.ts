@@ -52,6 +52,8 @@ import { EntityTableConfigComponent } from '@home/pages/report/components/entity
 import { BasicWidgetConfigModule } from '@home/components/widget/config/basic/basic-widget-config.module';
 import { SubReportPreviewComponent } from '@home/pages/report/components/sub-report-preview.component';
 import { SubReportConfigComponent } from '@home/pages/report/components/sub-report-config.component';
+import { ImagePreviewComponent } from '@home/pages/report/components/image-preview.component';
+import { ImageConfigComponent } from '@home/pages/report/components/image-config.component';
 
 @NgModule({
   declarations: [
@@ -68,6 +70,8 @@ import { SubReportConfigComponent } from '@home/pages/report/components/sub-repo
     PageBreakPreviewComponent,
     EntityTablePreviewComponent,
     EntityTableConfigComponent,
+    ImagePreviewComponent,
+    ImageConfigComponent,
     SubReportPreviewComponent,
     SubReportConfigComponent,
     ReportComponentConfigComponent

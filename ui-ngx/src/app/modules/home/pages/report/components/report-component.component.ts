@@ -33,7 +33,7 @@ import {
   AfterViewInit,
   ChangeDetectorRef,
   Component,
-  ComponentRef,
+  ComponentRef, DestroyRef,
   Directive,
   ElementRef,
   EventEmitter,
@@ -60,6 +60,7 @@ import { TbAnchorComponent } from '@shared/components/tb-anchor.component';
 import { from } from 'rxjs';
 import { ReportComponentsComponent } from '@home/pages/report/components/report-components.component';
 import ITooltipsterInstance = JQueryTooltipster.ITooltipsterInstance;
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'tb-report-component',
@@ -151,6 +152,7 @@ export class ReportComponentComponent implements OnInit, AfterViewInit, OnDestro
               private elementRef: ElementRef<HTMLElement>,
               private container: ViewContainerRef,
               private renderer: Renderer2,
+              private destroyRef: DestroyRef,
               private cd: ChangeDetectorRef) {}
 
   ngOnInit() {
@@ -160,6 +162,11 @@ export class ReportComponentComponent implements OnInit, AfterViewInit, OnDestro
       const compRef = this.reportPreviewContainer.viewContainerRef.createComponent(this.typeData.previewComponent);
       this.reportComponentPreview = compRef.instance;
       this.reportComponentPreview.reportComponent = this.reportComponent;
+      this.reportComponentPreview.contentResized.pipe(
+        takeUntilDestroyed(this.destroyRef)
+      ).subscribe(() => {
+        this.updateComponentLayout();
+      });
     }
     this.initEditReportComponentTooltip();
     this.updateComponentLayout();
@@ -379,6 +386,9 @@ export abstract class AbstractReportComponentPreview<C extends ReportComponentCo
 
   @Input()
   reportComponent: C;
+
+  @Output()
+  contentResized = new EventEmitter();
 
   protected cd = inject(ChangeDetectorRef);
 

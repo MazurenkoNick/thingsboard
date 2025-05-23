@@ -147,6 +147,11 @@
                     <exclude>tb-report.yml</exclude>
                 </excludes>
             </resource>
+            <resource>
+                <directory>${project.basedir}/../ui-ngx/src/assets</directory>
+                <targetPath>public/assets</targetPath>
+                <filtering>false</filtering>
+            </resource>
         </resources>
         <plugins>
             <plugin>

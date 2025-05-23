@@ -124,6 +124,10 @@
             <groupId>net.sf.jtidy</groupId>
             <artifactId>jtidy</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.github.weisj</groupId>
+            <artifactId>jsvg</artifactId>
+        </dependency>
     </dependencies>
 
     <distributionManagement>

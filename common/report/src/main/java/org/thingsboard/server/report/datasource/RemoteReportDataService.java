@@ -34,6 +34,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.stereotype.Service;
 import org.thingsboard.rest.client.RestClient;
 import org.thingsboard.server.common.data.TbResource;
+import org.thingsboard.server.common.data.TbResourceInfo;
+import org.thingsboard.server.common.data.exception.ThingsboardErrorCode;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.ReportTemplateId;
@@ -53,6 +55,7 @@ import org.thingsboard.server.common.data.report.ReportTemplate;
 import org.thingsboard.server.report.context.RemoteTbReportCtxProvider;
 import org.thingsboard.server.report.context.TbReportCtx;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
@@ -63,6 +66,27 @@ public class RemoteReportDataService implements ReportDataService {
     @Override
     public Optional<ReportTemplate> findReportTemplate(ReportTemplateId templateId, TbReportCtx ctx) throws ThingsboardException {
         return getRestClient(ctx).findReportTemplate(templateId);
+    }
+
+    @Override
+    public TbResource findImage(String type, String key, TbReportCtx ctx) {
+        RestClient restClient = getRestClient(ctx);
+        TbResourceInfo info = restClient.getImageInfo(type, key);
+        return restClient.getResourceId(info.getId());
+    }
+
+    @Override
+    public TbResource findPublicImage(String publicKey, TbReportCtx ctx) throws ThingsboardException {
+        RestClient restClient = getRestClient(ctx);
+        try {
+            byte[] data = restClient.downloadPublicImage(publicKey);
+            // TODO:
+            TbResource tbResource = new TbResource();
+            tbResource.setData(data);
+            return tbResource;
+        } catch (IOException e) {
+            throw new ThingsboardException("Failed to download public image", e, ThingsboardErrorCode.GENERAL);
+        }
     }
 
     @Override

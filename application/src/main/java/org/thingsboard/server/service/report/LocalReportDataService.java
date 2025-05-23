@@ -35,10 +35,13 @@ import lombok.SneakyThrows;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 import org.thingsboard.server.common.data.TbResource;
+import org.thingsboard.server.common.data.TbResourceInfo;
+import org.thingsboard.server.common.data.exception.ThingsboardErrorCode;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.ReportTemplateId;
 import org.thingsboard.server.common.data.id.TbResourceId;
+import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.kv.Aggregation;
 import org.thingsboard.server.common.data.kv.TsKvEntry;
 import org.thingsboard.server.common.data.page.PageData;
@@ -55,6 +58,7 @@ import org.thingsboard.server.common.data.report.Report;
 import org.thingsboard.server.common.data.report.ReportTemplate;
 import org.thingsboard.server.dao.report.ReportService;
 import org.thingsboard.server.dao.report.ReportTemplateService;
+import org.thingsboard.server.dao.resource.ImageService;
 import org.thingsboard.server.dao.resource.ResourceService;
 import org.thingsboard.server.report.context.TbReportCtx;
 import org.thingsboard.server.report.datasource.ReportDataService;
@@ -75,6 +79,7 @@ public class LocalReportDataService implements ReportDataService {
     private final TbTelemetryService tbTelemetryService;
     private final AccessControlService accessControlService;
     private final ReportTemplateService reportTemplateService;
+    private final ImageService imageService;
     private final ResourceService resourceService;
     private final ReportService reportService;
 
@@ -84,6 +89,21 @@ public class LocalReportDataService implements ReportDataService {
         ReportTemplate reportTemplate = reportTemplateService.findReportTemplateById(securityUser.getTenantId(), templateId);
         accessControlService.checkPermission(securityUser, Resource.REPORT_TEMPLATE, Operation.READ, templateId, reportTemplate);
         return Optional.ofNullable(reportTemplate);
+    }
+
+    @Override
+    public TbResource findImage(String type, String key, TbReportCtx ctx) throws ThingsboardException {
+        SecurityUser securityUser = getSecurityUser(ctx);
+        TenantId tenantId = "system".equals(type) ? TenantId.SYS_TENANT_ID : securityUser.getTenantId();
+        TbResourceInfo imageInfo = checkNotNull(imageService.getImageInfoByTenantIdAndKey(tenantId, key));
+        return checkNotNull(resourceService.findResourceById(tenantId, imageInfo.getId()));
+    }
+
+    @Override
+    public TbResource findPublicImage(String publicKey, TbReportCtx ctx) throws ThingsboardException {
+        SecurityUser securityUser = getSecurityUser(ctx);
+        TbResourceInfo imageInfo = checkNotNull(imageService.getPublicImageInfoByKey(publicKey));
+        return checkNotNull(resourceService.findResourceById(securityUser.getTenantId(), imageInfo.getId()));
     }
 
     @Override
@@ -132,4 +152,10 @@ public class LocalReportDataService implements ReportDataService {
         return ((LocalTbReportCtxProvider.LocalTbReportCtx) ctx).getSecurityUser();
     }
 
+    private <T> T checkNotNull(T reference) throws ThingsboardException {
+        if (reference == null) {
+            throw new ThingsboardException("Requested item wasn't found!", ThingsboardErrorCode.ITEM_NOT_FOUND);
+        }
+        return reference;
+    }
 }

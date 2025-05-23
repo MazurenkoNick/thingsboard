@@ -53,6 +53,8 @@ import {
 } from '@home/components/widget/lib/settings/common/filter/filter-select.component.models';
 import { SubReportPreviewComponent } from '@home/pages/report/components/sub-report-preview.component';
 import { SubReportConfigComponent } from '@home/pages/report/components/sub-report-config.component';
+import { ImagePreviewComponent } from '@home/pages/report/components/image-preview.component';
+import { ImageConfigComponent } from '@home/pages/report/components/image-config.component';
 
 export interface ReportComponentTypeData<C extends ReportComponentConfig = ReportComponentConfig> {
   title: string;
@@ -92,6 +94,16 @@ export const reportComponentTypeMap = new Map<ReportComponentType, ReportCompone
         previewImage: '/assets/report/components/entity-table.svg',
         previewComponent: EntityTablePreviewComponent,
         configComponent: EntityTableConfigComponent,
+        editable: true
+      }
+    ],
+    [
+      ReportComponentType.IMAGE,
+      {
+        title: 'report-template.component.image.type',
+        previewImage: '/assets/report/components/image.svg',
+        previewComponent: ImagePreviewComponent,
+        configComponent: ImageConfigComponent,
         editable: true
       }
     ],

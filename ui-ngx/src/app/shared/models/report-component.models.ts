@@ -79,6 +79,11 @@ export interface EntityTableReportComponentConfig extends TableReportComponentCo
   type: ReportComponentType.ENTITY_TABLE;
 }
 
+export interface ImageReportComponentConfig extends ReportComponentConfig {
+  imageUrl: string;
+  type: ReportComponentType.IMAGE;
+}
+
 export interface SubReportReportComponentConfig extends ReportComponentConfig {
   templateId: ReportTemplateId;
   type: ReportComponentType.SUB_REPORT;
@@ -92,6 +97,7 @@ export type ReportComponentConfigs =
   HeadingReportComponentConfig |
   RichTextReportComponentConfig |
   EntityTableReportComponentConfig |
+  ImageReportComponentConfig |
   SubReportReportComponentConfig |
   PageBreakReportComponentConfig;
 
@@ -140,6 +146,14 @@ export const reportComponentTypeDefaultConfigMap = new Map<ReportComponentType, 
             ]
           }
         ]
+      }
+    ],
+    [
+      ReportComponentType.IMAGE,
+      {
+        type: ReportComponentType.IMAGE,
+        imageUrl: '/assets/report/components/image.svg',
+        dataSources: []
       }
     ],
     [

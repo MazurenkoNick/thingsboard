@@ -35,6 +35,7 @@ import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.ReportTemplateId;
 import org.thingsboard.server.common.data.id.TbResourceId;
+import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.kv.Aggregation;
 import org.thingsboard.server.common.data.kv.TsKvEntry;
 import org.thingsboard.server.common.data.page.PageData;
@@ -55,6 +56,10 @@ import java.util.Optional;
 public interface ReportDataService {
 
     Optional<ReportTemplate> findReportTemplate(ReportTemplateId templateId, TbReportCtx ctx) throws ThingsboardException;
+
+    TbResource findImage(String type, String key, TbReportCtx ctx) throws ThingsboardException;
+
+    TbResource findPublicImage(String publicKey, TbReportCtx ctx) throws ThingsboardException;
 
     TbResource findTbResource(TbResourceId resourceId, TbReportCtx ctx) throws ThingsboardException;
 

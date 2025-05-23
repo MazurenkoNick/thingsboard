@@ -28,27 +28,9 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.common.data.report.configuration.components;
+package org.thingsboard.server.common.data.report.configuration.image;
 
-import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import org.thingsboard.server.common.data.id.TbResourceId;
-import org.thingsboard.server.common.data.report.configuration.image.ImageSourceType;
-
-@Schema
-@Data
-@EqualsAndHashCode
-@NoArgsConstructor
-public class ImageComponent extends AbstractReportComponent implements ReportComponent {
-
-    private ImageSourceType sourceType;
-    private String imageUrl;
-
-    @Override
-    public ReportComponentType getType() {
-        return ReportComponentType.IMAGE;
-    }
-
+public enum ImageSourceType {
+    image,
+    entityKey
 }

@@ -29,11 +29,18 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { Component, ViewEncapsulation } from '@angular/core';
+import { Component, inject, ViewEncapsulation } from '@angular/core';
 import { FormGroup } from '@angular/forms';
-import { RichTextReportComponentConfig } from '@app/shared/public-api';
+import {
+  ImagePipe,
+  isImageResourceUrl,
+  removeTbImagePrefix,
+  RichTextReportComponentConfig
+} from '@app/shared/public-api';
 import { AbstractReportComponentConfig } from '@home/pages/report/components/report-component-config.component';
 import { Editor, EditorOptions } from 'tinymce';
+import { tap } from 'rxjs/operators';
+import { forkJoin, Observable } from 'rxjs';
 
 @Component({
   selector: 'tb-report-rich-text-config',
@@ -42,6 +49,8 @@ import { Editor, EditorOptions } from 'tinymce';
   encapsulation: ViewEncapsulation.None
 })
 export class RichTextConfigComponent extends AbstractReportComponentConfig<RichTextReportComponentConfig> {
+
+  imagePipe = inject(ImagePipe);
 
   settingsTab: 'content' | 'data' | 'layout' = 'content';
 
@@ -69,6 +78,24 @@ export class RichTextConfigComponent extends AbstractReportComponentConfig<RichT
   };
 
   private setupEditor(editor: Editor) {
+    editor.on('SetContent', (event) => {
+      const images = $<HTMLImageElement>('img', editor.getBody());
+      const imageTasks: Observable<any>[] = [];
+      for (const image of images) {
+        let imageUrl = image.getAttribute('src');
+        imageUrl = removeTbImagePrefix(imageUrl);
+        if (isImageResourceUrl(imageUrl)) {
+          imageTasks.push(this.imagePipe.transform(imageUrl, {asString: true}).pipe(
+            tap((newUrl) => {
+              image.setAttribute('src', newUrl as string);
+            })
+          ));
+        }
+      }
+      if (imageTasks.length) {
+        forkJoin(imageTasks).subscribe();
+      }
+    });
     editor.ui.registry.addAutocompleter('variables', {
       trigger: '$',
       minChars: 0,
@@ -105,7 +132,7 @@ export class RichTextConfigComponent extends AbstractReportComponentConfig<RichT
             type: 'menuitem',
             onAction: () => {
               editor.insertContent('${active}');
-            }
+          }
           }
         ];
       }

@@ -31,29 +31,40 @@
 package org.thingsboard.server.report.renderer;
 
 import org.springframework.stereotype.Component;
+import org.thingsboard.server.common.data.report.configuration.components.ImageComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponentType;
+import org.thingsboard.server.common.data.report.configuration.image.ImageSourceType;
 import org.thingsboard.server.report.context.ComponentData;
 import org.thingsboard.server.report.util.ThymeleafUtil;
 
 import java.util.Base64;
 import java.util.HashMap;
 
+import static org.thingsboard.server.report.service.PdfReportService.getSingleDataSource;
+
 @Component
-public class ImageRenderer implements ReportComponentRenderer {
+public class ImageRenderer extends ReportComponentWithLayoutRenderer {
 
     @Override
-    public String render(ReportComponent component, ComponentData reportDataSource) {
-        String base64Image = encodeImage(reportDataSource.getImage(), "image/jpeg");
-
+    public String renderContent(ReportComponent component, ComponentData reportDataSource) {
+        ImageComponent imageComponent = (ImageComponent) component;
+        String imageUrl = "";
+        if (ImageSourceType.entityKey.equals(imageComponent.getSourceType())) {
+            if (!reportDataSource.getEntityDatas().isEmpty()) {
+                var entityData = reportDataSource.getEntityDatas().get(0);
+                var dataSource = getSingleDataSource(component);
+                if (!dataSource.getDataKeys().isEmpty()) {
+                    var dataKey = dataSource.getDataKeys().get(0);
+                    imageUrl = entityData.get(dataKey.getLabel());
+                }
+            }
+        } else {
+            imageUrl = imageComponent.getImageUrl();
+        }
         HashMap<String, Object> componentVariables = new HashMap<>();
-        componentVariables.put("imageSrc", base64Image);
+        componentVariables.put("imageUrl", imageUrl);
         return ThymeleafUtil.render("html/components/image", componentVariables);
-    }
-
-    public String encodeImage(byte[] imageBytes, String mimeType) {
-        String base64 = Base64.getEncoder().encodeToString(imageBytes);
-        return "data:" + mimeType + ";base64," + base64;
     }
 
     @Override

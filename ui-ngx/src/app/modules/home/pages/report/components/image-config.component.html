@@ -30,7 +30,31 @@
     OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 
 -->
-<div style="width: 100%; margin: 0 auto; page-break-inside: avoid;">
-    <img th:src="${imageUrl}"
-         style="width: 100%; height: auto; display: block;" />
+<div class="tb-form-panel no-border" [formGroup]="reportConfigForm">
+  <div class="tb-report-component-config-header">
+    <tb-toggle-select [(ngModel)]="settingsTab" [ngModelOptions]="{standalone: true}" appearance="fill">
+      <tb-toggle-option value="image">{{ 'report-template.component.image.type' | translate }}</tb-toggle-option>
+      <tb-toggle-option value="layout">{{ 'report-template.layout' | translate }}</tb-toggle-option>
+    </tb-toggle-select>
+  </div>
+  <tb-gallery-image-input [class.!hidden]="settingsTab !== 'image'"
+                          formControlName="imageUrl">
+  </tb-gallery-image-input>
+  <div class="tb-form-panel no-border no-padding" [class.!hidden]="settingsTab !== 'layout'">
+    <div class="tb-form-row space-between">
+      <div translate>report-template.paddings</div>
+      <tb-report-insets formControlName="paddings"></tb-report-insets>
+    </div>
+    <div class="tb-form-row space-between">
+      <div translate>report-template.margins</div>
+      <tb-report-insets formControlName="margins"></tb-report-insets>
+    </div>
+    <div class="tb-form-row space-between">
+      <div translate>report-template.background</div>
+      <tb-color-input asBoxInput
+                      colorClearButton
+                      formControlName="background">
+      </tb-color-input>
+    </div>
+  </div>
 </div>
