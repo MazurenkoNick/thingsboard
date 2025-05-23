@@ -32,7 +32,6 @@ package org.thingsboard.rule.engine.report;
 
 import lombok.extern.slf4j.Slf4j;
 import org.thingsboard.common.util.DonAsynchron;
-import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.rule.engine.api.RuleNode;
 import org.thingsboard.rule.engine.api.TbContext;
 import org.thingsboard.rule.engine.api.TbNode;
@@ -42,9 +41,10 @@ import org.thingsboard.rule.engine.api.util.TbNodeUtils;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.job.Job;
 import org.thingsboard.server.common.data.job.ReportJobConfiguration;
-import org.thingsboard.server.common.data.msg.TbNodeConnectionType;
 import org.thingsboard.server.common.data.plugin.ComponentType;
 import org.thingsboard.server.common.msg.TbMsg;
+
+import java.util.Base64;
 
 @Slf4j
 @RuleNode(
@@ -80,7 +80,9 @@ public class TbGenerateReportV2Node implements TbNode {
         ReportJobConfiguration configuration = job.getConfiguration();
 
         TbMsg outputMsg = TbMsg.newMsg(msg, msg.getQueueName(), ctx.getSelf().getRuleChainId(), ctx.getSelfId());
-        configuration.setOutputTbMsg(JacksonUtil.valueToTree(outputMsg));
+        configuration.setRuleNode(ctx.getSelf());
+        configuration.setOutputTbMsgProto(Base64.getEncoder().encodeToString(TbMsg.toProto(outputMsg).toByteArray()));
+        configuration.setQueueName(msg.getQueueName());
 
         DonAsynchron.withCallback(ctx.getJobManager().submitJob(job), result -> {
             // do nothing, tellSuccess will be done when the job is completed

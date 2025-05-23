@@ -30,7 +30,6 @@
  */
 package org.thingsboard.server.common.data.job;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -59,7 +58,8 @@ public class ReportJobConfiguration extends JobConfiguration {
     private NotificationTemplateId notificationTemplateId;
 
     private RuleNode ruleNode;
-    private JsonNode outputTbMsg;
+    private String outputTbMsgProto;
+    private String queueName;
 
     @Override
     public JobType getType() {

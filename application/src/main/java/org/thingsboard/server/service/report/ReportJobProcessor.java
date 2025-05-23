@@ -30,6 +30,7 @@
  */
 package org.thingsboard.server.service.report;
 
+import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -47,6 +48,7 @@ import org.thingsboard.server.common.data.job.task.ReportTask;
 import org.thingsboard.server.common.data.job.task.ReportTaskResult;
 import org.thingsboard.server.common.data.job.task.Task;
 import org.thingsboard.server.common.data.job.task.TaskResult;
+import org.thingsboard.server.common.data.msg.TbMsgType;
 import org.thingsboard.server.common.data.msg.TbNodeConnectionType;
 import org.thingsboard.server.common.data.notification.NotificationRequest;
 import org.thingsboard.server.common.data.notification.NotificationRequestConfig;
@@ -54,6 +56,7 @@ import org.thingsboard.server.common.data.notification.info.ReportGeneratedNotif
 import org.thingsboard.server.common.data.report.Report;
 import org.thingsboard.server.common.data.report.ReportTemplate;
 import org.thingsboard.server.common.msg.TbMsg;
+import org.thingsboard.server.common.msg.gen.MsgProtos;
 import org.thingsboard.server.common.msg.queue.ServiceType;
 import org.thingsboard.server.common.msg.queue.TopicPartitionInfo;
 import org.thingsboard.server.dao.report.ReportTemplateService;
@@ -64,6 +67,7 @@ import org.thingsboard.server.service.job.JobProcessor;
 import org.thingsboard.server.service.security.model.token.AccessJwtToken;
 import org.thingsboard.server.service.security.system.SystemSecurityService;
 
+import java.util.Base64;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -117,12 +121,14 @@ public class ReportJobProcessor implements JobProcessor {
         ReportJobConfiguration configuration = job.getConfiguration();
         TenantId tenantId = job.getTenantId();
 
-        if (configuration.getOutputTbMsg() != null) {
-            /*
-             * fixme:
-             *  from scheduler event, do we produce any message to rule engine?
-             * */
-            TbMsg outputMsg = JacksonUtil.treeToValue(configuration.getOutputTbMsg(), TbMsg.class);
+        if (configuration.getOutputTbMsgProto() != null) {
+            TbMsg outputMsg;
+            try {
+                outputMsg = TbMsg.fromProto(configuration.getQueueName(), MsgProtos.TbMsgProto.parseFrom(
+                        Base64.getDecoder().decode(configuration.getOutputTbMsgProto())), null);
+            } catch (InvalidProtocolBufferException e) {
+                throw new RuntimeException(e);
+            }
             String relationType;
             String error;
             if (result.getGeneralError() != null) {
@@ -137,8 +143,8 @@ public class ReportJobProcessor implements JobProcessor {
             } else {
                 relationType = TbNodeConnectionType.SUCCESS;
                 error = null;
+                outputMsg.getMetaData().putValue("reportId", result.getReport().getId().toString());
             }
-            outputMsg.getMetaData().putValue("reportId", result.getReport().getId().toString());
 
             TransportProtos.ToRuleEngineMsg.Builder ruleEngineMsg = TransportProtos.ToRuleEngineMsg.newBuilder()
                     .setTenantIdMSB(tenantId.getId().getMostSignificantBits())

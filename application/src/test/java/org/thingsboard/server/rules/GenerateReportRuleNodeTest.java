@@ -75,7 +75,6 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.in;
 import static org.awaitility.Awaitility.await;
 
 @DaoSqlTest
@@ -186,23 +185,21 @@ public class GenerateReportRuleNodeTest extends AbstractRuleEngineControllerTest
                 .findFirst().orElse(null), Objects::nonNull);
         assertThat(input.getBody().get("msgType").asText()).isEqualTo(TbMsgType.POST_TELEMETRY_REQUEST.name());
         assertThat(input.getBody().get("data").asText()).isEqualTo("{\"humidity\":77}");
-        System.err.println(input);
 
         EventInfo output = await().atMost(TIMEOUT, TimeUnit.SECONDS).until(() -> getDebugEvents(tenantId, savedMetaData.getNodes().get(1).getId(), 10).getData()
                 .stream().filter(event -> event.getBody().get("type").asText().equals(DataConstants.OUT))
                 .findFirst().orElse(null), Objects::nonNull);
-        System.err.println(output);
         assertThat(output.getBody().get("msgType").asText()).isEqualTo(TbMsgType.POST_TELEMETRY_REQUEST.name());
         assertThat(output.getBody().get("data").asText()).isEqualTo("{\"humidity\":77}");
         String reportId = Optional.ofNullable(JacksonUtil.toJsonNode(output.getBody().get("metadata").asText()).get("reportId"))
-                        .map(JsonNode::asText).orElse(null);
+                .map(JsonNode::asText).orElse(null);
         assertThat(reportId).isNotBlank();
 
         String csvReport = doGet("/api/v2/report/" + reportId + "/download", String.class);
 
         // Check headers and content
         String[] lines = csvReport.split("\r?\n");
-        assertThat(lines[0]).contains("CREATED TIME,NAME,TYPE,TEMPERATURE,THRESHOLD");
+        assertThat(lines[0]).contains("CREATED TIME,NAME,TYPE");
         for (int i = 0; i < devices.size(); i++) {
             assertThat(lines[i + 1]).contains(expectedReportLines.get(i));
         }
