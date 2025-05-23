@@ -142,7 +142,7 @@ public class TbMailSenderTest {
     @Test
     public void testFallbackNotAllowedThrowsException() {
         var json = JacksonUtil.newObjectNode();
-        json.put("useSystemMailSettings", true); // або не вказуємо
+        json.put("useSystemMailSettings", true);
 
         AdminSettings tenantSettings = new AdminSettings();
         tenantSettings.setKey("mail");

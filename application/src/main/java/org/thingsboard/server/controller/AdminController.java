@@ -164,10 +164,11 @@ public class AdminController extends BaseController {
             @RequestParam(required = false, defaultValue = "false") boolean systemByDefault) throws Exception {
         Authority authority = getCurrentUser().getAuthority();
         AdminSettings adminSettings;
-        accessControlService.checkPermission(getCurrentUser(), Resource.ADMIN_SETTINGS, Operation.READ);
         if (Authority.SYS_ADMIN.equals(authority)) {
+            accessControlService.checkPermission(getCurrentUser(), Resource.ADMIN_SETTINGS, Operation.READ);
             adminSettings = checkNotNull(adminSettingsService.findAdminSettingsByKey(TenantId.SYS_TENANT_ID, key), "No Administration settings found for key: " + key);
         } else {
+            accessControlService.checkPermission(getCurrentUser(), Resource.WHITE_LABELING, Operation.READ);
             adminSettings = getTenantAdminSettings(getTenantId(), key, systemByDefault);
         }
         if (adminSettings.getKey().equals("mail")) {
@@ -187,9 +188,14 @@ public class AdminController extends BaseController {
     public AdminSettings saveAdminSettings(
             @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "A JSON value representing the Administration Settings.")
             @RequestBody AdminSettings adminSettings) throws Exception {
+        Authority authority = getCurrentUser().getAuthority();
         TenantId tenantId = getTenantId();
         adminSettings.setTenantId(tenantId);
-        accessControlService.checkPermission(getCurrentUser(), Resource.ADMIN_SETTINGS, Operation.WRITE);
+        if (Authority.SYS_ADMIN.equals(authority)) {
+            accessControlService.checkPermission(getCurrentUser(), Resource.ADMIN_SETTINGS, Operation.WRITE);
+        } else {
+            accessControlService.checkPermission(getCurrentUser(), Resource.WHITE_LABELING, Operation.WRITE);
+        }
         adminSettings = checkNotNull(adminSettingsService.saveAdminSettings(tenantId, adminSettings));
         if (adminSettings.getKey().equals("mail")) {
             ((ObjectNode) adminSettings.getJsonValue()).remove("password");
@@ -517,10 +523,11 @@ public class AdminController extends BaseController {
         internalSessionMap.put(state, currentUser.getTenantId());
 
         AdminSettings adminSettings;
-        accessControlService.checkPermission(currentUser, Resource.ADMIN_SETTINGS, Operation.READ);
         if (Authority.SYS_ADMIN.equals(currentUser.getAuthority())) {
+            accessControlService.checkPermission(currentUser, Resource.ADMIN_SETTINGS, Operation.READ);
             adminSettings = checkNotNull(adminSettingsService.findAdminSettingsByKey(TenantId.SYS_TENANT_ID, MAIL_SETTINGS_KEY), "No Administration settings found for key: " + MAIL_SETTINGS_KEY);
         } else {
+            accessControlService.checkPermission(currentUser, Resource.WHITE_LABELING, Operation.READ);
             adminSettings = getTenantAdminSettings(currentUser.getTenantId(), MAIL_SETTINGS_KEY, true);
         }
         JsonNode jsonValue = adminSettings.getJsonValue();

@@ -47,6 +47,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.permission.Operation;
 import org.thingsboard.server.common.data.permission.Resource;
+import org.thingsboard.server.common.data.security.Authority;
 import org.thingsboard.server.common.data.security.model.mfa.PlatformTwoFaSettings;
 import org.thingsboard.server.common.data.security.model.mfa.account.AccountTwoFaSettings;
 import org.thingsboard.server.common.data.security.model.mfa.account.TwoFaAccountConfig;
@@ -234,7 +235,11 @@ public class TwoFactorAuthConfigController extends BaseController {
     @PreAuthorize("hasAnyAuthority('SYS_ADMIN', 'TENANT_ADMIN')")
     public PlatformTwoFaSettings getPlatformTwoFaSettings() throws ThingsboardException {
         SecurityUser user = getCurrentUser();
-        accessControlService.checkPermission(user, Resource.ADMIN_SETTINGS, Operation.READ);
+        if (user.getAuthority() == Authority.SYS_ADMIN) {
+            accessControlService.checkPermission(user, Resource.ADMIN_SETTINGS, Operation.READ);
+        } else {
+            accessControlService.checkPermission(user, Resource.WHITE_LABELING, Operation.READ);
+        }
         return twoFaConfigManager.getPlatformTwoFaSettings(user.getTenantId(), false).orElse(null);
     }
 
@@ -287,13 +292,18 @@ public class TwoFactorAuthConfigController extends BaseController {
     public PlatformTwoFaSettings savePlatformTwoFaSettings(@Parameter(description = "Settings value", required = true)
                                                            @RequestBody PlatformTwoFaSettings twoFaSettings) throws ThingsboardException {
         SecurityUser user = getCurrentUser();
-        accessControlService.checkPermission(user, Resource.ADMIN_SETTINGS, Operation.WRITE);
+        if (user.getAuthority() == Authority.SYS_ADMIN) {
+            accessControlService.checkPermission(user, Resource.ADMIN_SETTINGS, Operation.WRITE);
+        } else {
+            accessControlService.checkPermission(user, Resource.WHITE_LABELING, Operation.WRITE);
+        }
         return twoFaConfigManager.savePlatformTwoFaSettings(user.getTenantId(), twoFaSettings);
     }
 
     @Data
     public static class TwoFaAccountConfigUpdateRequest {
         private boolean useByDefault;
+
     }
 
 }

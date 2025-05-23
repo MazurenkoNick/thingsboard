@@ -184,7 +184,9 @@ public class DefaultTwoFaConfigManager implements TwoFaConfigManager {
 
     @Override
     public PlatformTwoFaSettings savePlatformTwoFaSettings(TenantId tenantId, PlatformTwoFaSettings twoFactorAuthSettings) throws ThingsboardException {
-        ConstraintValidator.validateFields(twoFactorAuthSettings);
+        if (tenantId.equals(TenantId.SYS_TENANT_ID) || !twoFactorAuthSettings.isUseSystemTwoFactorAuthSettings()) {
+            ConstraintValidator.validateFields(twoFactorAuthSettings);
+        }
         for (TwoFaProviderConfig providerConfig : twoFactorAuthSettings.getProviders()) {
             twoFactorAuthService.checkProvider(tenantId, providerConfig.getProviderType());
         }
