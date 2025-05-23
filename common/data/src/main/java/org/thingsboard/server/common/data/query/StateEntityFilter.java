@@ -28,31 +28,19 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.report.context;
+package org.thingsboard.server.common.data.query;
 
-import com.google.common.util.concurrent.ListenableFuture;
 import lombok.Data;
-import lombok.experimental.SuperBuilder;
-import org.thingsboard.server.common.data.report.configuration.ReportTemplateConfig;
-
-import java.io.Closeable;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import org.thingsboard.server.common.data.id.EntityId;
 
 @Data
-@SuperBuilder
-public abstract class TbReportCtx implements Closeable {
+public class StateEntityFilter implements EntityFilter {
 
-    private final ReportTemplateConfig configuration;
-    private final String timeZone;
-    private final String accessToken;
-    private final long accessTokenExpTs;
+    @Override
+    public EntityFilterType getType() {
+        return EntityFilterType.STATE_ENTITY;
+    }
 
-    private final List<ListenableFuture<Void>> futures = new ArrayList<>();
-    private final Map<String, Object> params = new HashMap<>();
-
-    public abstract TbReportCtx createSubReportCxt(ReportTemplateConfig reportTemplateConfig);
+    private EntityId defaultStateEntity;
 
 }

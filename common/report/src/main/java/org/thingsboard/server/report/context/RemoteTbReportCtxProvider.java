@@ -39,6 +39,7 @@ import org.springframework.http.converter.json.MappingJackson2HttpMessageConvert
 import org.springframework.stereotype.Service;
 import org.thingsboard.rest.client.RestClient;
 import org.thingsboard.server.common.data.job.task.ReportTask;
+import org.thingsboard.server.common.data.report.configuration.ReportTemplateConfig;
 
 import java.io.IOException;
 
@@ -73,6 +74,21 @@ public class RemoteTbReportCtxProvider implements TbReportCtxProvider {
             restClient.close();
         }
 
+        @Override
+        public TbReportCtx createSubReportCxt(ReportTemplateConfig reportTemplateConfig) {
+            RemoteTbReportCtx copy = RemoteTbReportCtx.builder()
+                    .configuration(reportTemplateConfig)
+                    .timeZone(this.getTimeZone())
+                    .accessToken(this.getAccessToken())
+                    .accessTokenExpTs(this.getAccessTokenExpTs())
+                    .restClient(this.getRestClient())
+                    .build();
+
+            copy.getFutures().addAll(this.getFutures());
+            copy.getParams().putAll(this.getParams());
+
+            return copy;
+        }
     }
 
 }

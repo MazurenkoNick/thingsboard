@@ -39,6 +39,7 @@ public enum EntityFilterType {
     ENTITY_GROUP_LIST("entityGroupList"),
     ENTITY_GROUP_NAME("entityGroupName"),
     ENTITIES_BY_GROUP_NAME("entitiesByGroupName"),
+    STATE_ENTITY("stateEntity"),
     STATE_ENTITY_OWNER("stateEntityOwner"),
     ASSET_TYPE("assetType"),
     DEVICE_TYPE("deviceType"),

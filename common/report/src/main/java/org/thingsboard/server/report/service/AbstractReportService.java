@@ -41,6 +41,8 @@ import org.thingsboard.server.common.data.page.SortOrder;
 import org.thingsboard.server.common.data.query.AlarmData;
 import org.thingsboard.server.common.data.query.EntityData;
 import org.thingsboard.server.common.data.query.EntityDataQuery;
+import org.thingsboard.server.common.data.query.EntityFilter;
+import org.thingsboard.server.common.data.query.StateEntityFilter;
 import org.thingsboard.server.common.data.report.configuration.DataKey;
 import org.thingsboard.server.common.data.report.configuration.DataSource;
 import org.thingsboard.server.common.data.report.configuration.ReportTemplateConfig;
@@ -51,12 +53,12 @@ import org.thingsboard.server.common.data.report.configuration.timewindow.TimeIn
 import org.thingsboard.server.common.data.report.configuration.timewindow.TimeWindowConfiguration;
 import org.thingsboard.server.report.context.TbReportCtx;
 import org.thingsboard.server.report.datasource.ReportDataService;
-import org.thymeleaf.util.StringUtils;
 
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -64,6 +66,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static org.thingsboard.server.common.data.report.configuration.timewindow.TimeIntervalCalculator.getTimeRange;
+import static org.thingsboard.server.common.data.util.ReportQueryUtils.findEntityFilterByAliasId;
 import static org.thingsboard.server.common.data.util.ReportQueryUtils.toAlarmDataQuery;
 import static org.thingsboard.server.common.data.util.ReportQueryUtils.toEntityDataQuery;
 import static org.thingsboard.server.common.data.util.ReportQueryUtils.toSingleEntityQuery;
@@ -74,11 +77,31 @@ public abstract class AbstractReportService implements ReportService {
     @Autowired
     protected ReportDataService dataService;
 
-    protected List<EntityData> fetchEntities(TbReportCtx ctx, DataSource dataSource) {
+    protected List<EntityData> fetchEntities(TbReportCtx ctx, DataSource dataSource, EntityData stateEntity) {
         ReportTemplateConfig configuration = ctx.getConfiguration();
         return switch (dataSource.getType()) {
-            case "device" -> fetchEntityDataByQuery(pageLink -> toSingleEntityQuery(dataSource, configuration, pageLink), ctx);
-            case "entity" -> fetchEntityDataByQuery(pageLink -> toEntityDataQuery(dataSource, configuration, pageLink), ctx);
+            case "device" -> {
+                if (dataSource.getDeviceId() == null) {
+                    yield Collections.emptyList();
+                } else {
+                    yield fetchEntityDataByQuery(pageLink -> toSingleEntityQuery(dataSource, configuration, pageLink), ctx);}
+            }
+            case "entity" -> {
+                if (dataSource.getEntityAliasId() == null) {
+                    yield Collections.emptyList();
+                } else {
+                    EntityFilter entityFilter = findEntityFilterByAliasId(dataSource, ctx.getConfiguration());
+                    if (entityFilter instanceof StateEntityFilter) {
+                        if (stateEntity == null) {
+                            yield Collections.emptyList();
+                        } else {
+                            yield fetchEntityDataByQuery(pageLink -> toSingleEntityQuery(stateEntity.getEntityId(), dataSource, configuration, pageLink), ctx);
+                        }
+                    } else {
+                        yield fetchEntityDataByQuery(pageLink -> toEntityDataQuery(dataSource, configuration, pageLink), ctx);
+                    }
+                }
+            }
             default -> throw new IllegalArgumentException("Unknown data source type: " + dataSource.getType());
         };
     }
@@ -91,9 +114,9 @@ public abstract class AbstractReportService implements ReportService {
         return data;
     }
 
-    protected List<Map<String, String>> fetchEntityDatas(TbReportCtx ctx, DataSource dataSource) {
+    protected List<Map<String, String>> fetchEntityDatas(TbReportCtx ctx, DataSource dataSource, EntityData stateEntity) {
         return switch (dataSource.getType()) {
-            case "device", "entity" -> fetchEntities(ctx, dataSource).stream().map(entityData -> toStringMap(entityData, ctx)).collect(Collectors.toList());
+            case "device", "entity" -> fetchEntities(ctx, dataSource, stateEntity).stream().map(entityData -> toStringMap(entityData, ctx)).collect(Collectors.toList());
             default -> throw new IllegalArgumentException("Unknown data source type: " + dataSource.getType());
         };
     }
@@ -103,11 +126,15 @@ public abstract class AbstractReportService implements ReportService {
         History historyConf = timeWindowConf.getHistory();
         TimeIntervalCalculator.TimeRange timeRange = getTimeRange(timeWindowConf);
 
-        List<String> keys = getSingleDataSource(component).getDataKeys().stream()
+        DataSource singleDataSource = getSingleDataSource(component);
+        if (singleDataSource == null) {
+            return Collections.emptyList();
+        }
+        List<String> keys = singleDataSource.getDataKeys().stream()
                 .map(DataKey::getName)
                 .toList();
 
-        // todo dasha make sort order configurable (?)
+        // todo: dasha make sort order configurable (?)
         List<TsKvEntry> result = dataService.getTimeseries(entityId, keys, timeRange.startTs, timeRange.endTs,
                 historyConf.getInterval(), timeWindowConf.getAggregation().getType(), SortOrder.Direction.DESC,
                 timeWindowConf.getAggregation().getLimit(), false, ctx);
@@ -115,7 +142,11 @@ public abstract class AbstractReportService implements ReportService {
     }
 
     protected List<Map<String, String>> fetchAlarmDatas(TbReportCtx ctx, AlarmTableComponent component) {
-        List<String> keyList = component.getAlarmSource().getDataKeys().stream().map(DataKey::getName).toList();
+        DataSource alarmSource = component.getAlarmSource();
+        if (alarmSource == null) {
+            return Collections.emptyList();
+        }
+        List<String> keyList = alarmSource.getDataKeys().stream().map(DataKey::getName).toList();
         List<Map<String, String>> data = new ArrayList<>();
         for (AlarmData alarmData : new PageDataIterable<>(link -> dataService.findAlarmDataByQuery(toAlarmDataQuery(component, ctx.getConfiguration(), link), ctx), 1024)) {
             data.add(toStringMap(alarmData, keyList, ctx));
@@ -132,18 +163,6 @@ public abstract class AbstractReportService implements ReportService {
                 }
             }));
             latestValues.put("id", entityData.getEntityId().toString());
-        }
-        return latestValues;
-    }
-
-    protected Map<String, String> toStateEntityMap(EntityData entityData) {
-        HashMap<String, String> latestValues = new HashMap<>();
-        if (entityData != null) {
-            entityData.getLatest().forEach((keyType, keyValueMap) -> keyValueMap.forEach((key, tsValue) -> {
-                if (tsValue.getValue() != null) {
-                    latestValues.put("entity" + StringUtils.capitalize(key), tsValue.getValue());
-                }
-            }));
         }
         return latestValues;
     }
