@@ -46,5 +46,8 @@ public class DataKey {
     private String name;
     private String type;
     private String label;
+    private String units;
+    private Integer decimals;
+    private DataKeySettings settings;
 
 }

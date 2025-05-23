@@ -30,37 +30,30 @@
  */
 package org.thingsboard.server.report.renderer;
 
-import org.thingsboard.server.common.data.report.configuration.DataKey;
+import org.springframework.stereotype.Component;
+import org.thingsboard.server.common.data.report.configuration.components.ErrorComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
+import org.thingsboard.server.common.data.report.configuration.components.ReportComponentType;
 import org.thingsboard.server.report.context.ComponentData;
 import org.thingsboard.server.report.util.ThymeleafUtil;
 
 import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.stream.Collectors;
 
-import static org.thingsboard.server.report.service.PdfReportService.getSingleDataSource;
-
-public abstract class TableComponentRenderer extends ReportComponentWithLayoutRenderer {
+@Component
+public class ErrorRenderer extends ReportComponentWithLayoutRenderer {
 
     @Override
     protected String renderContent(ReportComponent component, ComponentData reportDataSource) {
-        Map<String, String> columns = getSingleDataSource(component)
-                .getDataKeys()
-                .stream()
-                .collect(Collectors.toMap(
-                        DataKey::getName,
-                        DataKey::getLabel,
-                        (v1, v2) -> v1,
-                        LinkedHashMap::new
-                ));
-
+        ErrorComponent errorComponent = (ErrorComponent) component;
         HashMap<String, Object> componentVariables = new HashMap<>();
-        componentVariables.put("columns", columns);
-        componentVariables.put("rows", reportDataSource.getEntityDatas());
+        componentVariables.put("errorMessage", errorComponent.getErrorMessage());
+        componentVariables.put("exception", errorComponent.getException().getMessage());
+        return ThymeleafUtil.render("html/components/error-template", componentVariables);
+    }
 
-        return ThymeleafUtil.render("html/components/table-template", componentVariables);
+    @Override
+    public ReportComponentType getType() {
+        return ReportComponentType.ERROR;
     }
 
 }

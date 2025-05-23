@@ -36,6 +36,7 @@ import lombok.experimental.SuperBuilder;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 import org.thingsboard.server.common.data.job.task.ReportTask;
+import org.thingsboard.server.common.data.report.configuration.ReportTemplateConfig;
 import org.thingsboard.server.report.context.TbReportCtx;
 import org.thingsboard.server.report.context.TbReportCtxProvider;
 import org.thingsboard.server.service.security.model.SecurityUser;
@@ -69,6 +70,21 @@ public class LocalTbReportCtxProvider implements TbReportCtxProvider {
         @Override
         public void close() {}
 
+        @Override
+        public TbReportCtx createSubReportCxt(ReportTemplateConfig reportTemplateConfig) {
+            LocalTbReportCtx copy = LocalTbReportCtx.builder()
+                    .configuration(reportTemplateConfig)
+                    .timeZone(this.getTimeZone())
+                    .accessToken(this.getAccessToken())
+                    .accessTokenExpTs(this.getAccessTokenExpTs())
+                    .securityUser(this.getSecurityUser())
+                    .build();
+
+            copy.getFutures().addAll(this.getFutures());
+            copy.getParams().putAll(this.getParams());
+
+            return copy;
+        }
     }
 
 }

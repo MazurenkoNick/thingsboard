@@ -53,4 +53,6 @@ public abstract class TbReportCtx implements Closeable {
     private final List<ListenableFuture<Void>> futures = new ArrayList<>();
     private final Map<String, Object> params = new HashMap<>();
 
+    public abstract TbReportCtx createSubReportCxt(ReportTemplateConfig reportTemplateConfig);
+
 }

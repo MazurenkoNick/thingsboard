@@ -31,6 +31,7 @@
 package org.thingsboard.server.common.data.util;
 
 import org.thingsboard.server.common.data.id.DeviceId;
+import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.query.AlarmCountQuery;
 import org.thingsboard.server.common.data.query.AlarmDataPageLink;
@@ -70,6 +71,14 @@ public class ReportQueryUtils {
         String deviceId = Optional.ofNullable(dataSource.getDeviceId())
                 .orElseThrow(() -> new IllegalArgumentException("Device ID is null"));
         singleEntityFilter.setSingleEntity(new DeviceId(UUID.fromString(deviceId)));
+        List<KeyFilter> keyFilters = findKeyFilters(dataSource, reportTemplateConfig);
+
+        return buildEntityDataQuery(singleEntityFilter, dataSource, keyFilters, pageLink);
+    }
+
+    public static EntityDataQuery toSingleEntityQuery(EntityId entityId, DataSource dataSource, ReportTemplateConfig reportTemplateConfig, PageLink pageLink) {
+        SingleEntityFilter singleEntityFilter = new SingleEntityFilter();
+        singleEntityFilter.setSingleEntity(entityId);
         List<KeyFilter> keyFilters = findKeyFilters(dataSource, reportTemplateConfig);
 
         return buildEntityDataQuery(singleEntityFilter, dataSource, keyFilters, pageLink);
@@ -130,7 +139,7 @@ public class ReportQueryUtils {
         return new AlarmDataQuery(entityFilter, alarmDataPageLink, null, null, keyFilters, alarmFields);
     }
 
-    private static EntityFilter findEntityFilterByAliasId(DataSource dataSource, ReportTemplateConfig reportTemplateConfig) {
+    public static EntityFilter findEntityFilterByAliasId(DataSource dataSource, ReportTemplateConfig reportTemplateConfig) {
         return switch (reportTemplateConfig.getFormat()) {
             case PDF -> ((PdfReportTemplateConfig) reportTemplateConfig).getEntityAliases().stream()
                     .filter(alias -> alias.getId().equals(dataSource.getEntityAliasId()))

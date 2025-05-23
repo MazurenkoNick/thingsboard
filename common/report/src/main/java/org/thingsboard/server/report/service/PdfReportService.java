@@ -50,6 +50,7 @@ import org.thingsboard.server.common.data.report.configuration.PdfReportTemplate
 import org.thingsboard.server.common.data.report.configuration.ReportTemplateConfig;
 import org.thingsboard.server.common.data.report.configuration.components.AlarmTableComponent;
 import org.thingsboard.server.common.data.report.configuration.components.DashboardComponent;
+import org.thingsboard.server.common.data.report.configuration.components.ErrorComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ImageComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponentType;
@@ -59,8 +60,8 @@ import org.thingsboard.server.common.data.report.configuration.image.ImageSource
 import org.thingsboard.server.common.data.report.configuration.style.Insets;
 import org.thingsboard.server.common.data.report.configuration.style.PageOrientation;
 import org.thingsboard.server.common.data.report.configuration.style.PageSize;
-import org.thingsboard.server.report.context.HeaderFooterRenderLayout;
 import org.thingsboard.server.report.context.ComponentData;
+import org.thingsboard.server.report.context.HeaderFooterRenderLayout;
 import org.thingsboard.server.report.context.TbReportCtx;
 import org.thingsboard.server.report.renderer.ReportComponentRenderer;
 import org.thingsboard.server.report.util.ColorUtils;
@@ -80,6 +81,7 @@ import java.util.Optional;
 import java.util.TimeZone;
 import java.util.concurrent.ExecutionException;
 
+import static org.thingsboard.server.common.data.report.configuration.components.ReportComponentType.ERROR;
 import static org.thingsboard.server.common.data.report.configuration.components.ReportComponentType.SUB_REPORT;
 import static org.thingsboard.server.common.data.report.configuration.components.ReportComponentType.TIME_SERIES_TABLE;
 import static org.thingsboard.server.common.data.report.configuration.style.PageSize.A4;
@@ -166,24 +168,14 @@ public class PdfReportService extends AbstractReportService {
         return headerFooterRenderLayout;
     }
 
-    private String renderContent(TbReportCtx ctx, List<ReportComponent> components, EntityData stateEntity) throws ThingsboardException {
+    private String renderContent(TbReportCtx ctx, List<ReportComponent> components, EntityData stateEntity) {
         StringBuilder content = new StringBuilder();
         for (ReportComponent component : components) {
             ReportComponentType type = component.getType();
             if (type == SUB_REPORT) {
-                ReportTemplateId templateId = ((SubReportComponent) component).getTemplateId();
-                ReportTemplate reportTemplate = dataService.findReportTemplate(templateId, ctx).orElseThrow(() -> new IllegalArgumentException("Report template was not found: " + templateId));
-                PdfReportTemplateConfig reportConfiguration = (PdfReportTemplateConfig) reportTemplate.getConfiguration();
-
-                List<EntityData> entityDatas = fetchEntities(ctx, getSingleDataSource(component));
-                for (EntityData entity : entityDatas) {
-                    content.append(renderContent(ctx, reportConfiguration.getComponents(), entity));
-                }
+                content.append(renderSubreport(ctx, component));
             } else if (type == TIME_SERIES_TABLE) {
-                List<EntityData> entityDatas = fetchEntities(ctx, getSingleDataSource(component));
-                for (EntityData entity : entityDatas) {
-                    content.append(renderComponent(ctx, component, entity));
-                }
+                content.append(renderTimeseriesTables(ctx, stateEntity, component));
             } else {
                 content.append(renderComponent(ctx, component, stateEntity));
             }
@@ -191,23 +183,66 @@ public class PdfReportService extends AbstractReportService {
         return content.toString();
     }
 
-    private String renderComponent(TbReportCtx ctx, ReportComponent component, EntityData stateEntity)  {
-        ComponentData componentData = getComponentData(ctx, component, stateEntity);
-        return componentsRenderers.get(component.getType()).render(component, componentData);
+    private String renderComponent(TbReportCtx ctx, ReportComponent component, EntityData stateEntity) {
+        try {
+            ComponentData componentData = getComponentData(ctx, component, stateEntity);
+            return componentsRenderers.get(component.getType()).render(component, componentData);
+        } catch (Exception e) {
+            log.error("Failed to render component of type [{}]", component.getType(), e);
+            return componentsRenderers.get(ERROR).render(new ErrorComponent("Failed to render component of type: " + component.getType(), e), null);
+        }
     }
 
     private ComponentData getComponentData(TbReportCtx ctx, ReportComponent component, EntityData stateEntity) {
-        ComponentData reportDataSource = switch (component.getType()) {
+        return switch (component.getType()) {
             case TIME_SERIES_TABLE ->
                     new ComponentData(fetchEntityTsData(ctx, (TimeseriesTableComponent) component, stateEntity.getEntityId()));
             case ALARM_TABLE -> new ComponentData(fetchAlarmDatas(ctx, (AlarmTableComponent) component));
             case DASHBOARD -> buildDashboardComponentData(ctx, ((DashboardComponent) component));
             case IMAGE -> buildImageComponentData(ctx, ((ImageComponent) component));
-            default -> buildMultipleDataSourceData(ctx, component.getDataSources());
+            default -> buildMultipleDataSourceData(ctx, component.getDataSources(), stateEntity);
         };
-        // Merge state entity data into the report variables
-        reportDataSource.getVariables().putAll(toStateEntityMap(stateEntity));
-        return reportDataSource;
+    }
+
+    private String renderTimeseriesTables(TbReportCtx ctx, EntityData stateEntity, ReportComponent component) {
+        StringBuilder content = new StringBuilder();
+        DataSource dataSource = getSingleDataSource(component);
+        if (dataSource != null) {
+            List<EntityData> entityDatas = fetchEntities(ctx, dataSource, stateEntity);
+            for (EntityData entity : entityDatas) {
+                content.append(renderComponent(ctx, component, entity));
+            }
+            return content.toString();
+        } else {
+            return "";
+        }
+    }
+
+    private String renderSubreport(TbReportCtx ctx, ReportComponent component) {
+        ReportTemplateId templateId = ((SubReportComponent) component).getTemplateId();
+        if (templateId == null) {
+            return "";
+        }
+        StringBuilder content = new StringBuilder();
+        try {
+            DataSource dataSource = getSingleDataSource(component);
+            if (dataSource == null) {
+                return "";
+            }
+            ReportTemplate reportTemplate = dataService.findReportTemplate(templateId, ctx)
+                    .orElseThrow(() -> new IllegalArgumentException("Report template was not found: " + templateId));
+            PdfReportTemplateConfig reportConfiguration = (PdfReportTemplateConfig) reportTemplate.getConfiguration();
+
+            TbReportCtx subReportCtx = ctx.createSubReportCxt(reportConfiguration);
+            List<EntityData> entityDatas = fetchEntities(ctx, dataSource, null);
+            for (EntityData entity : entityDatas) {
+                content.append(renderContent(subReportCtx, reportConfiguration.getComponents(), entity));
+            }
+            return content.toString();
+        } catch (Exception e) {
+            log.error("Failed to render subreport, template id: {}", templateId, e);
+            return componentsRenderers.get(ERROR).render(new ErrorComponent("Failed to load sub-report " + templateId, e), null);
+        }
     }
 
     private ComponentData buildImageComponentData(TbReportCtx ctx, ImageComponent component) {
@@ -237,22 +272,22 @@ public class PdfReportService extends AbstractReportService {
         }
     }
 
-    private ComponentData buildMultipleDataSourceData(TbReportCtx ctx, List<DataSource> dataSources) {
+    private ComponentData buildMultipleDataSourceData(TbReportCtx ctx, List<DataSource> dataSources, EntityData stateEntity) {
         if (dataSources == null || dataSources.isEmpty()) {
             return new ComponentData();
         }
         ComponentData mainDataSource = new ComponentData();
         for (DataSource dataSource : dataSources) {
-            ComponentData singleDataSource = buildSingleComponentData(ctx, dataSource);
+            ComponentData singleDataSource = buildSingleComponentData(ctx, dataSource, stateEntity);
             mainDataSource.merge(singleDataSource);
         }
         return mainDataSource;
     }
 
-    private ComponentData buildSingleComponentData(TbReportCtx ctx, DataSource dataSource) {
+    private ComponentData buildSingleComponentData(TbReportCtx ctx, DataSource dataSource, EntityData stateEntity) {
         ReportTemplateConfig configuration = ctx.getConfiguration();
         return switch (dataSource.getType()) {
-            case "device", "entity" -> new ComponentData(dataSource, fetchEntityDatas(ctx, dataSource));
+            case "device", "entity" -> new ComponentData(dataSource, fetchEntityDatas(ctx, dataSource, stateEntity));
             case "entityCount" -> buildEntityCountDataSource(ctx, dataSource, configuration);
             case "alarmCount" -> buildAlarmCountDataSource(ctx, dataSource, configuration);
             default -> throw new IllegalArgumentException("Unknown data source type: " + dataSource.getType());
@@ -274,7 +309,7 @@ public class PdfReportService extends AbstractReportService {
     public static DataSource getSingleDataSource(ReportComponent component) {
         List<DataSource> dataSources = component.getDataSources();
         if (dataSources == null || dataSources.isEmpty()) {
-            throw new IllegalArgumentException("Data source is required for component: " + component.getType());
+            return null;
         }
         return component.getDataSources().get(0);
     }

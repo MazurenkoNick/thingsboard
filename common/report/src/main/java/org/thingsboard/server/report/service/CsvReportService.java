@@ -91,7 +91,7 @@ public class CsvReportService extends AbstractReportService {
         return switch (component.getType()) {
             case TIME_SERIES_TABLE -> fetchEntityTsDatas(ctx, ((TimeseriesTableComponent) component));
             case ALARM_TABLE -> fetchAlarmDatas(ctx, ((AlarmTableComponent) component));
-            case ENTITY_TABLE -> fetchEntityDatas(ctx, getSingleDataSource(component));
+            case ENTITY_TABLE -> fetchEntityDatas(ctx, getSingleDataSource(component), null);
             default -> List.of(Map.of());
         };
     }
