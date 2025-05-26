@@ -29,45 +29,50 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { AfterViewInit, Component, ElementRef, OnDestroy, viewChild, ViewEncapsulation } from '@angular/core';
-import { RichTextReportComponentConfig } from '@shared/models/report-component.models';
-import { AbstractReportComponentPreview } from '@home/pages/report/components/report-component.component';
+import { Component, Inject } from '@angular/core';
+import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+import { Store } from '@ngrx/store';
+import { AppState } from '@core/core.state';
+import { UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms';
+import { Router } from '@angular/router';
+import { DialogComponent } from '@app/shared/components/dialog.component';
+
+export interface ReportImageData {
+  imageUrl: string;
+  width: number;
+  height: number;
+}
 
 @Component({
-  selector: 'tb-rich-text-preview',
-  templateUrl: './rich-text-preview.component.html',
-  styleUrls: ['./rich-text-preview.component.scss'],
-  encapsulation: ViewEncapsulation.None
+  selector: 'tb-report-image-dialog',
+  templateUrl: './report-image-dialog.component.html',
+  styleUrls: ['./report-image-dialog.component.scss']
 })
-export class RichTextPreviewComponent extends AbstractReportComponentPreview<RichTextReportComponentConfig> implements AfterViewInit, OnDestroy {
+export class ReportImageDialogComponent extends DialogComponent<ReportImageDialogComponent, ReportImageData> {
 
-  richTextEl = viewChild('richText', {
-    read: ElementRef<HTMLElement>,
-  });
+  reportImageFormGroup: UntypedFormGroup;
 
-  private richTextResize$: ResizeObserver;
+  constructor(protected store: Store<AppState>,
+              protected router: Router,
+              @Inject(MAT_DIALOG_DATA) public data: ReportImageData,
+              public dialogRef: MatDialogRef<ReportImageDialogComponent, ReportImageData>,
+              private fb: UntypedFormBuilder) {
+    super(store, router, dialogRef);
 
-  html: string;
-
-  onComponentUpdated() {
-    if (this.reportComponent.value && this.reportComponent.value.trim().length) {
-      this.html = this.reportComponent.value;
-    } else {
-      this.html = '<p>&nbsp;</p>';
-    }
-  }
-
-  ngAfterViewInit() {
-    this.richTextResize$ = new ResizeObserver(() => {
-      this.contentResized.emit();
+    this.reportImageFormGroup = this.fb.group({
+      imageUrl: [data.imageUrl, []],
+      width: [data.width, [Validators.min(0)]],
+      height: [data.height, [Validators.min(0)]]
     });
-    this.richTextResize$.observe(this.richTextEl().nativeElement);
   }
 
-  ngOnDestroy() {
-    if (this.richTextResize$) {
-      this.richTextResize$.disconnect();
-    }
+  cancel(): void {
+    this.dialogRef.close(null);
+  }
+
+  save(): void {
+    const result: ReportImageData = this.reportImageFormGroup.value;
+    this.dialogRef.close(result);
   }
 
 }

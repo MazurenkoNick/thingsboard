@@ -267,6 +267,7 @@ import { JsFuncModulesComponent } from '@shared/components/js-func-modules.compo
 import { JsFuncModuleRowComponent } from '@shared/components/js-func-module-row.component';
 import { EntityKeyAutocompleteComponent } from '@shared/components/entity/entity-key-autocomplete.component';
 import { DurationLeftPipe } from '@shared/pipe/duration-left.pipe';
+import { HtmlWithImagePipe } from '@shared/pipe/html-with-image.pipe';
 
 export function MarkedOptionsFactory(markedOptionsService: MarkedOptionsService) {
   return markedOptionsService;
@@ -289,6 +290,7 @@ export function MarkedOptionsFactory(markedOptionsService: MarkedOptionsService)
     HasGroupEntityOrGenericPermissionPipe,
     ShortNumberPipe,
     ImagePipe,
+    HtmlWithImagePipe,
     CustomTranslatePipe,
     DurationLeftPipe,
     {
@@ -435,6 +437,7 @@ export function MarkedOptionsFactory(markedOptionsService: MarkedOptionsService)
     FileSizePipe,
     DateAgoPipe,
     ImagePipe,
+    HtmlWithImagePipe,
     CustomTranslatePipe,
     SafePipe,
     ShortNumberPipe,
@@ -721,6 +724,7 @@ export function MarkedOptionsFactory(markedOptionsService: MarkedOptionsService)
     FileSizePipe,
     DateAgoPipe,
     ImagePipe,
+    HtmlWithImagePipe,
     CustomTranslatePipe,
     SafePipe,
     ShortNumberPipe,

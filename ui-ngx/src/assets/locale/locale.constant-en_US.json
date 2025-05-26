@@ -7048,6 +7048,8 @@
         "top": "Top",
         "bottom": "Bottom",
         "background": "Background",
+        "insert-update-image": "Insert/update image",
+        "image": "Image",
         "component": {
             "heading": {
                 "type": "Heading",

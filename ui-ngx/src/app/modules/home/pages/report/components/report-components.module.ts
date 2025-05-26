@@ -54,6 +54,7 @@ import { SubReportPreviewComponent } from '@home/pages/report/components/sub-rep
 import { SubReportConfigComponent } from '@home/pages/report/components/sub-report-config.component';
 import { ImagePreviewComponent } from '@home/pages/report/components/image-preview.component';
 import { ImageConfigComponent } from '@home/pages/report/components/image-config.component';
+import { ReportImageDialogComponent } from '@home/pages/report/components/report-image-dialog.component';
 
 @NgModule({
   declarations: [
@@ -62,6 +63,7 @@ import { ImageConfigComponent } from '@home/pages/report/components/image-config
     ReportComponentsComponent,
     ReportComponentLibraryComponent,
     ReportInsetsComponent,
+    ReportImageDialogComponent,
     EmptyReportConfigComponent,
     HeadingPreviewComponent,
     HeadingConfigComponent,

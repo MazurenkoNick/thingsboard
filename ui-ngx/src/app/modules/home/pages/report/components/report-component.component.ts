@@ -148,6 +148,8 @@ export class ReportComponentComponent implements OnInit, AfterViewInit, OnDestro
 
   private reportComponentPreview: AbstractReportComponentPreview;
 
+  private reportComponentHeight = 0;
+
   constructor(private reportComponents: ReportComponentsComponent,
               private elementRef: ElementRef<HTMLElement>,
               private container: ViewContainerRef,
@@ -238,7 +240,8 @@ export class ReportComponentComponent implements OnInit, AfterViewInit, OnDestro
     this.renderer.setStyle(this.reportComponentElement().nativeElement, 'width', ((parentWidth - leftRightPaddings) / this.scale) + 'px');
     this.renderer.setStyle(this.reportComponentElement().nativeElement, 'transform', `scale(${this.scale})`);
     const rect = this.reportComponentElement().nativeElement.getBoundingClientRect();
-    const targetHeight = rect.height;
+    const targetHeight = rect.height > 0 ? rect.height : this.reportComponentHeight;
+    this.reportComponentHeight = targetHeight;
     const topBottomPaddings = pointsToPixels(this.paddingTop) + pointsToPixels(this.paddingBottom);
     this.renderer.setStyle(this.elementRef.nativeElement, 'height', (targetHeight + topBottomPaddings) + 'px');
   }

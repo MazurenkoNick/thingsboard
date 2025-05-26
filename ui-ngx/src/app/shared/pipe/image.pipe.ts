@@ -44,6 +44,8 @@ export interface UrlHolder {
   url?: string;
 }
 
+export type CustomImageUrlCallback = (url: string) => Observable<SafeUrl | string> | null;
+
 @Pipe({
   name: 'image'
 })
@@ -70,7 +72,13 @@ export class ImagePipe implements PipeTransform {
         const faviconElseLogo = loginFavicon;
         imageObservable = this.imageService.resolveLoginImageUrl(url, faviconElseLogo, asString, emptyUrl);
       } else {
-        imageObservable = this.imageService.resolveImageUrl(url, preview, asString, emptyUrl);
+        if (!!args?.customImageUrlCallback) {
+          const callback: CustomImageUrlCallback = args.customImageUrlCallback;
+          imageObservable = callback(url);
+        }
+        if (!imageObservable) {
+          imageObservable = this.imageService.resolveImageUrl(url, preview, asString, emptyUrl);
+        }
       }
       imageObservable.subscribe((imageUrl) => {
         Promise.resolve().then(() => {
