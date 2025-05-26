@@ -43,6 +43,12 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class DataKey {
 
+    public DataKey(String name, String type, String label) {
+        this.name = name;
+        this.type = type;
+        this.label = label;
+    }
+
     private String name;
     private String type;
     private String label;
