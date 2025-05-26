@@ -30,22 +30,12 @@
  */
 package org.thingsboard.server.common.data.report.configuration;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import org.thingsboard.server.common.data.report.configuration.style.DataKeySettingsType;
 
-@JsonIgnoreProperties(ignoreUnknown = true)
-@JsonTypeInfo(
-        use = JsonTypeInfo.Id.NAME,
-        include = JsonTypeInfo.As.EXISTING_PROPERTY,
-        property = "type",
-        defaultImpl = DefaultDataKeySettings.class)
-@JsonSubTypes({
-        @JsonSubTypes.Type(value = ColumnSettings.class, name = "COLUMN"),
-        @JsonSubTypes.Type(value = DefaultDataKeySettings.class, name = "DEFAULT")
-})
-public interface DataKeySettings {
+public class DefaultDataKeySettings implements DataKeySettings {
 
-    DataKeySettingsType getType();
+    @Override
+    public DataKeySettingsType getType() {
+        return DataKeySettingsType.DEFAULT;
+    }
 }

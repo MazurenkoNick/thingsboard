@@ -31,5 +31,5 @@
 package org.thingsboard.server.common.data.report.configuration.style;
 
 public enum DataKeySettingsType {
-     COLUMN, GENERAL;
+     COLUMN, DEFAULT;
 }

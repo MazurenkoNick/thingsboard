@@ -30,22 +30,17 @@
  */
 package org.thingsboard.server.common.data.report.configuration;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import org.thingsboard.server.common.data.report.configuration.style.DataKeySettingsType;
+import lombok.Data;
+import org.thingsboard.server.common.data.report.configuration.style.Font;
+import org.thingsboard.server.common.data.report.configuration.style.TextAlignment;
+import org.thingsboard.server.common.data.report.configuration.style.VerticalAlignment;
 
-@JsonIgnoreProperties(ignoreUnknown = true)
-@JsonTypeInfo(
-        use = JsonTypeInfo.Id.NAME,
-        include = JsonTypeInfo.As.EXISTING_PROPERTY,
-        property = "type",
-        defaultImpl = DefaultDataKeySettings.class)
-@JsonSubTypes({
-        @JsonSubTypes.Type(value = ColumnSettings.class, name = "COLUMN"),
-        @JsonSubTypes.Type(value = DefaultDataKeySettings.class, name = "DEFAULT")
-})
-public interface DataKeySettings {
+@Data
+public class CellSettings {
 
-    DataKeySettingsType getType();
+    private Font font;
+    private String color;
+    private TextAlignment textAlignment;
+    private VerticalAlignment verticalAlignment;
+
 }

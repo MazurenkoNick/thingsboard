@@ -47,6 +47,7 @@ import org.thingsboard.server.common.data.query.EntitySearchQueryFilter;
 import org.thingsboard.server.common.data.query.KeyFilter;
 import org.thingsboard.server.common.data.query.SingleEntityFilter;
 import org.thingsboard.server.common.data.query.StateEntityFilter;
+import org.thingsboard.server.common.data.query.StateEntityOwnerFilter;
 import org.thingsboard.server.common.data.report.configuration.DataKey;
 import org.thingsboard.server.common.data.report.configuration.DataSource;
 import org.thingsboard.server.common.data.report.configuration.ReportTemplateConfig;
@@ -84,55 +85,66 @@ public abstract class AbstractReportService implements ReportService {
     protected List<EntityData> fetchEntities(TbReportCtx ctx, DataSource dataSource, EntityData stateEntity) {
         return switch (dataSource.getType()) {
             case "device" -> fetchDevice(ctx, dataSource);
-            case "entity" -> getEntityDatas(ctx, dataSource, stateEntity);
+            case "entity" -> fetchEntitiesByDataSource(ctx, dataSource, stateEntity);
             default -> throw new IllegalArgumentException("Unknown data source type: " + dataSource.getType());
         };
     }
 
-    private List<EntityData> getEntityDatas(TbReportCtx ctx, DataSource dataSource, EntityData stateEntity) {
+    private List<EntityData> fetchEntitiesByDataSource(TbReportCtx ctx, DataSource dataSource, EntityData stateEntity) {
         if (dataSource.getEntityAliasId() == null) {
             return Collections.emptyList();
         } else {
             EntityFilter entityFilter = findEntityFilterByAliasId(dataSource, ctx.getConfiguration());
             List<KeyFilter> keyFilters = findKeyFilters(dataSource, ctx.getConfiguration());
 
-            if (entityFilter instanceof StateEntityFilter stateEntityFilter) {
-                return fetchStateEntity(ctx, dataSource, stateEntity, keyFilters, stateEntityFilter);
-            } else if (entityFilter instanceof EntitySearchQueryFilter searchFilter && searchFilter.isRootStateEntity()) {
-                return fetchSearchQueryEntities(ctx, dataSource, stateEntity, entityFilter, keyFilters, searchFilter);
-            } else {
-                return fetchEntityDataByQuery(pageLink -> buildEntityDataQuery(entityFilter, dataSource, keyFilters, pageLink), ctx);
+            if (entityFilter instanceof StateEntityFilter stateFilter) {
+                return fetchStateEntity(stateFilter, dataSource, keyFilters, stateEntity, ctx);
             }
-        }
-    }
-
-    private List<EntityData> fetchSearchQueryEntities(TbReportCtx ctx, DataSource dataSource, EntityData stateEntity, EntityFilter entityFilter, List<KeyFilter> keyFilters, EntitySearchQueryFilter searchFilter) {
-        if (stateEntity == null) {
-            if (searchFilter.getDefaultStateEntity() == null) {
-                return Collections.emptyList();
-            } else {
-                ((EntitySearchQueryFilter) entityFilter).setRootEntity(searchFilter.getDefaultStateEntity());
-                return fetchEntityDataByQuery(pageLink -> buildEntityDataQuery(entityFilter, dataSource, keyFilters, pageLink), ctx);
+            if (entityFilter instanceof StateEntityOwnerFilter ownerFilter) {
+                return fetchStateEntityOwner(ownerFilter, dataSource, keyFilters, stateEntity, ctx);
             }
-        } else {
-            ((EntitySearchQueryFilter) entityFilter).setRootEntity(stateEntity.getEntityId());
+            if (entityFilter instanceof EntitySearchQueryFilter searchFilter && searchFilter.isRootStateEntity()) {
+                return fetchSearchQueryEntities(searchFilter, dataSource, keyFilters, stateEntity, ctx);
+            }
             return fetchEntityDataByQuery(pageLink -> buildEntityDataQuery(entityFilter, dataSource, keyFilters, pageLink), ctx);
         }
     }
 
-    private List<EntityData> fetchStateEntity(TbReportCtx ctx, DataSource dataSource, EntityData stateEntity, List<KeyFilter> keyFilters, StateEntityFilter stateEntityFilter) {
-        SingleEntityFilter singleEntityFilter = new SingleEntityFilter();
-        if (stateEntity == null) {
-            if (stateEntityFilter.getDefaultStateEntity() == null) {
-                return Collections.emptyList();
-            } else {
-                singleEntityFilter.setSingleEntity(stateEntityFilter.getDefaultStateEntity());
-                return fetchEntityDataByQuery(pageLink -> buildEntityDataQuery(singleEntityFilter, dataSource, keyFilters, pageLink), ctx);
-            }
-        } else {
-            singleEntityFilter.setSingleEntity(stateEntity.getEntityId());
-            return fetchEntityDataByQuery(pageLink -> buildEntityDataQuery(singleEntityFilter, dataSource, keyFilters, pageLink), ctx);
+    private List<EntityData> fetchSearchQueryEntities(EntitySearchQueryFilter entityFilter, DataSource dataSource, List<KeyFilter> keyFilters, EntityData stateEntity, TbReportCtx ctx) {
+        EntityId entityId = (stateEntity != null)
+                ? stateEntity.getEntityId()
+                : entityFilter.getDefaultStateEntity();
+        if (entityId == null) {
+            return Collections.emptyList();
         }
+        entityFilter.setRootEntity(entityId);
+        return fetchEntityDataByQuery(pageLink -> buildEntityDataQuery(entityFilter, dataSource, keyFilters, pageLink), ctx);
+    }
+
+    private List<EntityData> fetchStateEntity(StateEntityFilter stateEntityFilter, DataSource dataSource, List<KeyFilter> keyFilters, EntityData stateEntity, TbReportCtx ctx) {
+        EntityId entityId = (stateEntity != null)
+                ? stateEntity.getEntityId()
+                : stateEntityFilter.getDefaultStateEntity();
+
+        if (entityId == null) {
+            return Collections.emptyList();
+        }
+        SingleEntityFilter singleEntityFilter = new SingleEntityFilter();
+        singleEntityFilter.setSingleEntity(entityId);
+        return fetchEntityDataByQuery(pageLink -> buildEntityDataQuery(singleEntityFilter, dataSource, keyFilters, pageLink), ctx);
+    }
+
+    private List<EntityData> fetchStateEntityOwner(StateEntityOwnerFilter ownerFilter, DataSource dataSource, List<KeyFilter> keyFilters, EntityData stateEntity, TbReportCtx ctx) {
+        EntityId entityId = (stateEntity != null)
+                ? stateEntity.getEntityId()
+                : ownerFilter.getDefaultStateEntity();
+
+        if (entityId == null) {
+            return Collections.emptyList();
+        }
+        StateEntityOwnerFilter stateEntityOwnerFilter = new StateEntityOwnerFilter();
+        stateEntityOwnerFilter.setSingleEntity(entityId);
+        return fetchEntityDataByQuery(pageLink -> buildEntityDataQuery(stateEntityOwnerFilter, dataSource, keyFilters, pageLink), ctx);
     }
 
     private List<EntityData> fetchDevice(TbReportCtx ctx, DataSource dataSource) {
