@@ -251,7 +251,7 @@ public class PdfReportService extends AbstractReportService {
             if (dataSources == null || dataSources.isEmpty()) {
                 return new ComponentData();
             }
-            return buildSingleComponentData(ctx, dataSources.get(0));
+            return buildSingleComponentData(ctx, dataSources.get(0), null);
         } else {
             return new ComponentData();
         }

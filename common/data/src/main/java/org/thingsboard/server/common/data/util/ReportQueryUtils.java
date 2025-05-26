@@ -30,8 +30,6 @@
  */
 package org.thingsboard.server.common.data.util;
 
-import org.thingsboard.server.common.data.id.DeviceId;
-import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.query.AlarmCountQuery;
 import org.thingsboard.server.common.data.query.AlarmDataPageLink;
@@ -44,7 +42,6 @@ import org.thingsboard.server.common.data.query.EntityFilter;
 import org.thingsboard.server.common.data.query.EntityKey;
 import org.thingsboard.server.common.data.query.EntityKeyType;
 import org.thingsboard.server.common.data.query.KeyFilter;
-import org.thingsboard.server.common.data.query.SingleEntityFilter;
 import org.thingsboard.server.common.data.report.configuration.AlarmFilterConfig;
 import org.thingsboard.server.common.data.report.configuration.CsvReportTemplateConfig;
 import org.thingsboard.server.common.data.report.configuration.DataKey;
@@ -58,38 +55,12 @@ import org.thingsboard.server.common.data.report.configuration.timewindow.TimeIn
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 
 import static org.thingsboard.server.common.data.report.configuration.timewindow.TimeIntervalCalculator.getTimeRange;
 
 public class ReportQueryUtils {
 
     private static final EntityDataSortOrder DEFAULT_SORT_ORDER = new EntityDataSortOrder(new EntityKey(EntityKeyType.ENTITY_FIELD, "id"), EntityDataSortOrder.Direction.ASC);
-
-    public static EntityDataQuery toSingleEntityQuery(DataSource dataSource, ReportTemplateConfig reportTemplateConfig, PageLink pageLink) {
-        SingleEntityFilter singleEntityFilter = new SingleEntityFilter();
-        String deviceId = Optional.ofNullable(dataSource.getDeviceId())
-                .orElseThrow(() -> new IllegalArgumentException("Device ID is null"));
-        singleEntityFilter.setSingleEntity(new DeviceId(UUID.fromString(deviceId)));
-        List<KeyFilter> keyFilters = findKeyFilters(dataSource, reportTemplateConfig);
-
-        return buildEntityDataQuery(singleEntityFilter, dataSource, keyFilters, pageLink);
-    }
-
-    public static EntityDataQuery toSingleEntityQuery(EntityId entityId, DataSource dataSource, ReportTemplateConfig reportTemplateConfig, PageLink pageLink) {
-        SingleEntityFilter singleEntityFilter = new SingleEntityFilter();
-        singleEntityFilter.setSingleEntity(entityId);
-        List<KeyFilter> keyFilters = findKeyFilters(dataSource, reportTemplateConfig);
-
-        return buildEntityDataQuery(singleEntityFilter, dataSource, keyFilters, pageLink);
-    }
-
-    public static EntityDataQuery toEntityDataQuery(DataSource dataSource, ReportTemplateConfig reportTemplateConfig, PageLink pageLink) {
-        EntityFilter entityFilter = findEntityFilterByAliasId(dataSource, reportTemplateConfig);
-        List<KeyFilter> keyFilters = findKeyFilters(dataSource, reportTemplateConfig);
-
-        return buildEntityDataQuery(entityFilter, dataSource, keyFilters, pageLink);
-    }
 
     public static EntityCountQuery toEntityCountQuery(DataSource dataSource, ReportTemplateConfig reportTemplateConfig) {
         EntityFilter entityFilter = findEntityFilterByAliasId(dataSource, reportTemplateConfig);
@@ -150,7 +121,7 @@ public class ReportQueryUtils {
         };
     }
 
-    private static List<KeyFilter> findKeyFilters(DataSource dataSource, ReportTemplateConfig reportTemplateConfig) {
+    public static List<KeyFilter> findKeyFilters(DataSource dataSource, ReportTemplateConfig reportTemplateConfig) {
         return switch (reportTemplateConfig.getFormat()) {
             case PDF -> {
                 List<Filter> filters = ((PdfReportTemplateConfig) reportTemplateConfig).getFilters();
@@ -170,7 +141,7 @@ public class ReportQueryUtils {
         };
     }
 
-    private static EntityDataQuery buildEntityDataQuery(EntityFilter filter, DataSource dataSource, List<KeyFilter> keyFilters, PageLink pageLink) {
+    public static EntityDataQuery buildEntityDataQuery(EntityFilter filter, DataSource dataSource, List<KeyFilter> keyFilters, PageLink pageLink) {
         EntityDataSortOrder sortOrder = Optional.ofNullable(dataSource.getSortOrder()).orElse(DEFAULT_SORT_ORDER);
         EntityDataPageLink entityDataPageLink = new EntityDataPageLink(pageLink.getPageSize(), pageLink.getPage(), pageLink.getTextSearch(), sortOrder);
 

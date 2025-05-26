@@ -33,6 +33,7 @@ package org.thingsboard.server.report.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.thingsboard.common.util.JacksonUtil;
+import org.thingsboard.server.common.data.id.DeviceId;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.kv.TsKvEntry;
 import org.thingsboard.server.common.data.page.PageDataIterable;
@@ -42,6 +43,9 @@ import org.thingsboard.server.common.data.query.AlarmData;
 import org.thingsboard.server.common.data.query.EntityData;
 import org.thingsboard.server.common.data.query.EntityDataQuery;
 import org.thingsboard.server.common.data.query.EntityFilter;
+import org.thingsboard.server.common.data.query.EntitySearchQueryFilter;
+import org.thingsboard.server.common.data.query.KeyFilter;
+import org.thingsboard.server.common.data.query.SingleEntityFilter;
 import org.thingsboard.server.common.data.query.StateEntityFilter;
 import org.thingsboard.server.common.data.report.configuration.DataKey;
 import org.thingsboard.server.common.data.report.configuration.DataSource;
@@ -66,10 +70,10 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static org.thingsboard.server.common.data.report.configuration.timewindow.TimeIntervalCalculator.getTimeRange;
+import static org.thingsboard.server.common.data.util.ReportQueryUtils.buildEntityDataQuery;
 import static org.thingsboard.server.common.data.util.ReportQueryUtils.findEntityFilterByAliasId;
+import static org.thingsboard.server.common.data.util.ReportQueryUtils.findKeyFilters;
 import static org.thingsboard.server.common.data.util.ReportQueryUtils.toAlarmDataQuery;
-import static org.thingsboard.server.common.data.util.ReportQueryUtils.toEntityDataQuery;
-import static org.thingsboard.server.common.data.util.ReportQueryUtils.toSingleEntityQuery;
 import static org.thingsboard.server.report.service.PdfReportService.getSingleDataSource;
 
 public abstract class AbstractReportService implements ReportService {
@@ -78,32 +82,69 @@ public abstract class AbstractReportService implements ReportService {
     protected ReportDataService dataService;
 
     protected List<EntityData> fetchEntities(TbReportCtx ctx, DataSource dataSource, EntityData stateEntity) {
-        ReportTemplateConfig configuration = ctx.getConfiguration();
         return switch (dataSource.getType()) {
-            case "device" -> {
-                if (dataSource.getDeviceId() == null) {
-                    yield Collections.emptyList();
-                } else {
-                    yield fetchEntityDataByQuery(pageLink -> toSingleEntityQuery(dataSource, configuration, pageLink), ctx);}
-            }
-            case "entity" -> {
-                if (dataSource.getEntityAliasId() == null) {
-                    yield Collections.emptyList();
-                } else {
-                    EntityFilter entityFilter = findEntityFilterByAliasId(dataSource, ctx.getConfiguration());
-                    if (entityFilter instanceof StateEntityFilter) {
-                        if (stateEntity == null) {
-                            yield Collections.emptyList();
-                        } else {
-                            yield fetchEntityDataByQuery(pageLink -> toSingleEntityQuery(stateEntity.getEntityId(), dataSource, configuration, pageLink), ctx);
-                        }
-                    } else {
-                        yield fetchEntityDataByQuery(pageLink -> toEntityDataQuery(dataSource, configuration, pageLink), ctx);
-                    }
-                }
-            }
+            case "device" -> fetchDevice(ctx, dataSource);
+            case "entity" -> getEntityDatas(ctx, dataSource, stateEntity);
             default -> throw new IllegalArgumentException("Unknown data source type: " + dataSource.getType());
         };
+    }
+
+    private List<EntityData> getEntityDatas(TbReportCtx ctx, DataSource dataSource, EntityData stateEntity) {
+        if (dataSource.getEntityAliasId() == null) {
+            return Collections.emptyList();
+        } else {
+            EntityFilter entityFilter = findEntityFilterByAliasId(dataSource, ctx.getConfiguration());
+            List<KeyFilter> keyFilters = findKeyFilters(dataSource, ctx.getConfiguration());
+
+            if (entityFilter instanceof StateEntityFilter stateEntityFilter) {
+                return fetchStateEntity(ctx, dataSource, stateEntity, keyFilters, stateEntityFilter);
+            } else if (entityFilter instanceof EntitySearchQueryFilter searchFilter && searchFilter.isRootStateEntity()) {
+                return fetchSearchQueryEntities(ctx, dataSource, stateEntity, entityFilter, keyFilters, searchFilter);
+            } else {
+                return fetchEntityDataByQuery(pageLink -> buildEntityDataQuery(entityFilter, dataSource, keyFilters, pageLink), ctx);
+            }
+        }
+    }
+
+    private List<EntityData> fetchSearchQueryEntities(TbReportCtx ctx, DataSource dataSource, EntityData stateEntity, EntityFilter entityFilter, List<KeyFilter> keyFilters, EntitySearchQueryFilter searchFilter) {
+        if (stateEntity == null) {
+            if (searchFilter.getDefaultStateEntity() == null) {
+                return Collections.emptyList();
+            } else {
+                ((EntitySearchQueryFilter) entityFilter).setRootEntity(searchFilter.getDefaultStateEntity());
+                return fetchEntityDataByQuery(pageLink -> buildEntityDataQuery(entityFilter, dataSource, keyFilters, pageLink), ctx);
+            }
+        } else {
+            ((EntitySearchQueryFilter) entityFilter).setRootEntity(stateEntity.getEntityId());
+            return fetchEntityDataByQuery(pageLink -> buildEntityDataQuery(entityFilter, dataSource, keyFilters, pageLink), ctx);
+        }
+    }
+
+    private List<EntityData> fetchStateEntity(TbReportCtx ctx, DataSource dataSource, EntityData stateEntity, List<KeyFilter> keyFilters, StateEntityFilter stateEntityFilter) {
+        SingleEntityFilter singleEntityFilter = new SingleEntityFilter();
+        if (stateEntity == null) {
+            if (stateEntityFilter.getDefaultStateEntity() == null) {
+                return Collections.emptyList();
+            } else {
+                singleEntityFilter.setSingleEntity(stateEntityFilter.getDefaultStateEntity());
+                return fetchEntityDataByQuery(pageLink -> buildEntityDataQuery(singleEntityFilter, dataSource, keyFilters, pageLink), ctx);
+            }
+        } else {
+            singleEntityFilter.setSingleEntity(stateEntity.getEntityId());
+            return fetchEntityDataByQuery(pageLink -> buildEntityDataQuery(singleEntityFilter, dataSource, keyFilters, pageLink), ctx);
+        }
+    }
+
+    private List<EntityData> fetchDevice(TbReportCtx ctx, DataSource dataSource) {
+        ReportTemplateConfig configuration = ctx.getConfiguration();
+        if (dataSource.getDeviceId() == null) {
+            return Collections.emptyList();
+        } else {
+            SingleEntityFilter singleEntityFilter = new SingleEntityFilter();
+            singleEntityFilter.setSingleEntity(DeviceId.fromString(dataSource.getDeviceId()));
+            List<KeyFilter> keyFilters = findKeyFilters(dataSource, configuration);
+            return fetchEntityDataByQuery(pageLink -> buildEntityDataQuery(singleEntityFilter, dataSource, keyFilters, pageLink), ctx);
+        }
     }
 
     protected List<EntityData> fetchEntityDataByQuery(Function<PageLink, EntityDataQuery> querySupplier, TbReportCtx ctx) {
