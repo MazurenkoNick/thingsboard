@@ -34,13 +34,35 @@
     <thead>
     <tr>
         <th th:each="colKey : ${columns.keySet()}"
-            th:text="${columns[colKey]}">Header</th>
+            th:style="|display: table-cell;
+                 text-align: ${columns[colKey].textAlignment};
+                 vertical-align: ${columns[colKey].verticalAlignment};
+                 color: ${columns[colKey].color};
+                 font-size: ${columns[colKey].fontSize}pt;
+                 font-family: ${columns[colKey].fontFamily};
+                 font-style: ${columns[colKey].fontStyle};
+                 font-weight: ${columns[colKey].fontWeight};|"
+            th:text="${columns[colKey].value}">Header</th>
     </tr>
     </thead>
     <tbody>
     <tr th:each="row : ${rows}">
         <td th:each="colKey : ${columns.keySet()}"
-            th:text="${row[colKey]}">[Value]</td>
+            th:style="|display: table-cell;
+                 text-align: ${row[colKey].textAlignment};
+                 vertical-align: ${row[colKey].verticalAlignment};
+                 color: ${row[colKey].color};
+                 font-size: ${row[colKey].fontSize}pt;
+                 font-family: ${row[colKey].fontFamily};
+                 font-style: ${row[colKey].fontStyle};
+                 font-weight: ${row[colKey].fontWeight};|"
+            th:text="${row[colKey].value}">[Value]</td>
+    </tr>
+    <!-- Empty table fallback row -->
+    <tr th:if="${#lists.isEmpty(rows)}">
+        <td th:colspan="${columns.size()}">
+            Table content is empty
+        </td>
     </tr>
     </tbody>
 </table>

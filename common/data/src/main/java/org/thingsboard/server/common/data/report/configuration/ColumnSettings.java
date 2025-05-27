@@ -30,8 +30,10 @@
  */
 package org.thingsboard.server.common.data.report.configuration;
 
+import lombok.Data;
 import org.thingsboard.server.common.data.report.configuration.style.DataKeySettingsType;
 
+@Data
 public class ColumnSettings implements DataKeySettings {
 
     private CellSettings headerSettings;
