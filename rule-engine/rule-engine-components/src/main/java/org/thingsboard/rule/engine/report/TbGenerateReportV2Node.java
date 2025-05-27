@@ -32,6 +32,7 @@ package org.thingsboard.rule.engine.report;
 
 import lombok.extern.slf4j.Slf4j;
 import org.thingsboard.common.util.DonAsynchron;
+import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.rule.engine.api.RuleNode;
 import org.thingsboard.rule.engine.api.TbContext;
 import org.thingsboard.rule.engine.api.TbNode;
@@ -42,6 +43,7 @@ import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.job.Job;
 import org.thingsboard.server.common.data.job.ReportJobConfiguration;
 import org.thingsboard.server.common.data.plugin.ComponentType;
+import org.thingsboard.server.common.data.report.ReportConfig;
 import org.thingsboard.server.common.msg.TbMsg;
 
 import java.util.Base64;
@@ -69,13 +71,23 @@ public class TbGenerateReportV2Node implements TbNode {
     @Override
     public void onMsg(TbContext ctx, TbMsg msg) {
         TenantId tenantId = ctx.getTenantId();
+        ReportConfig reportConfig;
+        if (config.isUseConfigFromMessage()) {
+            reportConfig = JacksonUtil.fromString(msg.getData(), ReportConfig.class);
+        } else {
+            reportConfig = config.getConfig();
+        }
+        if (reportConfig == null) {
+            throw new IllegalArgumentException("Report configuration is missing");
+        }
+
         Job job = Job.newReportJob()
                 .tenantId(tenantId)
-                .reportTemplateId(config.getReportTemplateId())
-                .userId(config.getUserId())
-                .timezone(config.getTimezone())
-                .recipientId(config.getRecipientId())
-                .notificationTemplateId(config.getNotificationTemplateId())
+                .reportTemplateId(reportConfig.getReportTemplateId())
+                .userId(reportConfig.getUserId())
+                .timezone(reportConfig.getTimezone())
+                .recipientId(reportConfig.getRecipientId())
+                .notificationTemplateId(reportConfig.getNotificationTemplateId())
                 .build();
         ReportJobConfiguration configuration = job.getConfiguration();
 

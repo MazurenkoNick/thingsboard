@@ -31,6 +31,7 @@
 package org.thingsboard.server.common.data.report;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import org.thingsboard.server.common.data.id.NotificationTargetId;
 import org.thingsboard.server.common.data.id.NotificationTemplateId;
@@ -40,8 +41,10 @@ import org.thingsboard.server.common.data.id.UserId;
 @Data
 public class ReportConfig {
 
+    @NotNull
     @Schema(description = "Json object representing the report template id.")
     private ReportTemplateId reportTemplateId;
+    @NotNull
     @Schema(description = "Json object representing the user id.", example = "784f394c-42b6-435a-983c-b7beff2784f9")
     private UserId userId;
     @Schema(description = "Timezone in which target dashboard will be presented in dashboard report.", example = "Europe/Kiev", requiredMode = Schema.RequiredMode.REQUIRED)
@@ -50,7 +53,5 @@ public class ReportConfig {
     private NotificationTargetId recipientId;
     @Schema(description = "Json object representing the notification template id.", example = "784f394c-42b6-435a-983c-b7beff2784f9")
     private NotificationTemplateId notificationTemplateId;
-    @Schema(description = "A long value representing the ttl of generated report.", example = "60000")
-    private long ttl;
 
 }

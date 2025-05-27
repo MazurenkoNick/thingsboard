@@ -52,6 +52,7 @@ import org.thingsboard.server.common.data.notification.targets.NotificationTarge
 import org.thingsboard.server.common.data.notification.targets.platform.AffectedUserFilter;
 import org.thingsboard.server.common.data.notification.template.NotificationTemplate;
 import org.thingsboard.server.common.data.query.DeviceTypeFilter;
+import org.thingsboard.server.common.data.report.ReportConfig;
 import org.thingsboard.server.common.data.report.ReportTemplate;
 import org.thingsboard.server.common.data.report.ReportTemplateType;
 import org.thingsboard.server.common.data.report.configuration.CsvReportTemplateConfig;
@@ -167,10 +168,12 @@ public class GenerateReportRuleNodeTest extends AbstractRuleEngineControllerTest
         generateReportNode.setConfigurationVersion(TbGenerateReportV2Node.class.getAnnotation(org.thingsboard.rule.engine.api.RuleNode.class).version());
         generateReportNode.setDebugSettings(DebugSettings.all());
         TbGenerateReportV2NodeConfiguration generateReportNodeConfiguration = new TbGenerateReportV2NodeConfiguration();
-        generateReportNodeConfiguration.setReportTemplateId(reportTemplate.getId());
-        generateReportNodeConfiguration.setUserId(tenantAdminUserId);
-        generateReportNodeConfiguration.setRecipientId(recipient.getId());
-        generateReportNodeConfiguration.setNotificationTemplateId(notificationTemplate.getId());
+        ReportConfig reportConfig = new ReportConfig();
+        reportConfig.setReportTemplateId(reportTemplate.getId());
+        reportConfig.setUserId(tenantAdminUserId);
+        reportConfig.setRecipientId(recipient.getId());
+        reportConfig.setNotificationTemplateId(notificationTemplate.getId());
+        generateReportNodeConfiguration.setConfig(reportConfig);
         generateReportNode.setConfiguration(JacksonUtil.valueToTree(generateReportNodeConfiguration));
 
         metaData.setNodes(Arrays.asList(generatorNode, generateReportNode));
@@ -196,8 +199,6 @@ public class GenerateReportRuleNodeTest extends AbstractRuleEngineControllerTest
         assertThat(reportId).isNotBlank();
 
         String csvReport = doGet("/api/v2/report/" + reportId + "/download", String.class);
-
-        // Check headers and content
         String[] lines = csvReport.split("\r?\n");
         assertThat(lines[0]).contains("CREATED TIME,NAME,TYPE");
         for (int i = 0; i < devices.size(); i++) {
@@ -213,4 +214,5 @@ public class GenerateReportRuleNodeTest extends AbstractRuleEngineControllerTest
             assertThat(reportNotification.getText()).isEqualTo("CSV report 'test.csv' is ready");
         });
     }
+
 }
