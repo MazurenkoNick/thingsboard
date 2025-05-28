@@ -67,6 +67,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -75,7 +76,7 @@ import static org.thingsboard.server.common.data.util.ReportQueryUtils.buildEnti
 import static org.thingsboard.server.common.data.util.ReportQueryUtils.findEntityFilterByAliasId;
 import static org.thingsboard.server.common.data.util.ReportQueryUtils.findKeyFilters;
 import static org.thingsboard.server.common.data.util.ReportQueryUtils.toAlarmDataQuery;
-import static org.thingsboard.server.report.service.PdfReportService.getSingleDataSource;
+import static org.thingsboard.server.report.util.ReportUtils.getSingleDataSource;
 
 public abstract class AbstractReportService implements ReportService {
 
@@ -179,11 +180,11 @@ public abstract class AbstractReportService implements ReportService {
         History historyConf = timeWindowConf.getHistory();
         TimeIntervalCalculator.TimeRange timeRange = getTimeRange(timeWindowConf);
 
-        DataSource singleDataSource = getSingleDataSource(component);
-        if (singleDataSource == null) {
+        Optional<DataSource> singleDataSource = getSingleDataSource(component);
+        if (singleDataSource.isEmpty()) {
             return Collections.emptyList();
         }
-        List<String> keys = singleDataSource.getDataKeys().stream()
+        List<String> keys = singleDataSource.get().getDataKeys().stream()
                 .map(DataKey::getName)
                 .toList();
 

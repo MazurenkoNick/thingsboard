@@ -49,9 +49,11 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static org.thingsboard.server.report.service.PdfReportService.getSingleDataSource;
+import static org.thingsboard.server.report.util.ReportUtils.getSingleDataSource;
+
 
 public abstract class TableComponentRenderer extends ReportComponentWithLayoutRenderer {
 
@@ -65,12 +67,17 @@ public abstract class TableComponentRenderer extends ReportComponentWithLayoutRe
 
     @Override
     protected String renderContent(ReportComponent component, ComponentData reportDataSource) {
-        DataSource dataSource = getSingleDataSource(component);
-        if (dataSource == null || dataSource.getDataKeys() == null || dataSource.getDataKeys().isEmpty()) {
-            return ThymeleafUtil.renderFromString(TABLE_IS_NOT_CONFIGURED, Map.of());
+        Optional<DataSource> dataSource = getSingleDataSource(component);
+        if (dataSource.isEmpty()) {
+            return ThymeleafUtil.render("html/components/error-template", Map.of("errorMessage", "No columns are configured for the table component. " +
+                    "Please check the data source configuration."));
+        }
+        List<DataKey> dataKeys  = dataSource.get().getDataKeys();
+        if (dataKeys == null || dataKeys.isEmpty()) {
+            return ThymeleafUtil.render("html/components/error-template", Map.of("errorMessage", "No columns are configured for the table component. " +
+                    "Please check the data source configuration."));
         }
 
-        List<DataKey> dataKeys = dataSource.getDataKeys();
         HashMap<String, CellVariables> headerStyles = getCellVariablesMap(dataKeys, true);
         HashMap<String, CellVariables> cellStyles = getCellVariablesMap(dataKeys, false);
 

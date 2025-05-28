@@ -30,8 +30,13 @@
  */
 package org.thingsboard.server.report.util;
 
+import org.thingsboard.server.common.data.report.configuration.DataSource;
+import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
+
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
+import java.util.Optional;
 import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -52,6 +57,26 @@ public class ReportUtils {
             name = name.replace(toReplace, replacement);
         }
         return name;
+    }
+
+    public static Optional<DataSource> getSingleDataSource(ReportComponent component) {
+        List<DataSource> dataSources = component.getDataSources();
+        if (dataSources == null || dataSources.isEmpty()) {
+            return Optional.empty();
+        }
+        DataSource dataSource = component.getDataSources().get(0);
+        switch (dataSource.getType()) {
+            case "device":
+                if (dataSource.getDeviceId() == null) {
+                    return Optional.empty();
+                }
+                break;
+            case "entity":
+                if (dataSource.getEntityAliasId() == null) {
+                    return Optional.empty();
+                }
+        }
+        return Optional.of(dataSource);
     }
 
 }

@@ -40,18 +40,21 @@ import org.thingsboard.server.common.data.report.ReportData;
 import org.thingsboard.server.common.data.report.TbReportFormat;
 import org.thingsboard.server.common.data.report.configuration.CsvReportTemplateConfig;
 import org.thingsboard.server.common.data.report.configuration.DataKey;
+import org.thingsboard.server.common.data.report.configuration.DataSource;
 import org.thingsboard.server.common.data.report.configuration.components.AlarmTableComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
 import org.thingsboard.server.common.data.report.configuration.components.TimeseriesTableComponent;
 import org.thingsboard.server.report.context.TbReportCtx;
 
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.TimeZone;
 
-import static org.thingsboard.server.report.service.PdfReportService.getSingleDataSource;
 import static org.thingsboard.server.report.util.CsvUtils.generateCsv;
+import static org.thingsboard.server.report.util.ReportUtils.getSingleDataSource;
 import static org.thingsboard.server.report.util.ReportUtils.prepareReportName;
 
 @Service
@@ -91,16 +94,29 @@ public class CsvReportService extends AbstractReportService {
         return switch (component.getType()) {
             case TIME_SERIES_TABLE -> fetchEntityTsDatas(ctx, ((TimeseriesTableComponent) component));
             case ALARM_TABLE -> fetchAlarmDatas(ctx, ((AlarmTableComponent) component));
-            case ENTITY_TABLE -> fetchEntityDatas(ctx, getSingleDataSource(component), null);
+            case ENTITY_TABLE -> fetchEntityTableDatas(ctx, component);
             default -> List.of(Map.of());
         };
     }
 
-    private List<Map<String, String>> fetchEntityTsDatas(TbReportCtx ctx, TimeseriesTableComponent component) {
-        String deviceId = component.getDataSources().get(0).getDeviceId();
-        DeviceId entityId = DeviceId.fromString(deviceId);
+    private List<Map<String, String>> fetchEntityTableDatas(TbReportCtx ctx, ReportComponent component) {
+        Optional<DataSource> dataSource = getSingleDataSource(component);
+        if (dataSource.isEmpty()) {
+            return Collections.emptyList();
+        }
+        return fetchEntityDatas(ctx, dataSource.get(), null);
+    }
 
-        return fetchEntityTsData(ctx, component, entityId);
+    private List<Map<String, String>> fetchEntityTsDatas(TbReportCtx ctx, TimeseriesTableComponent component) {
+        Optional<DataSource> dataSource = getSingleDataSource(component);
+        if (dataSource.isEmpty()) {
+            return Collections.emptyList();
+        }
+        String deviceId = dataSource.get().getDeviceId();
+        if (deviceId == null) {
+            return Collections.emptyList();
+        }
+        return fetchEntityTsData(ctx, component, DeviceId.fromString(deviceId));
     }
 
     @Override

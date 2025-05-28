@@ -87,6 +87,7 @@ import static org.thingsboard.server.common.data.report.configuration.components
 import static org.thingsboard.server.common.data.report.configuration.style.PageSize.A4;
 import static org.thingsboard.server.common.data.util.ReportQueryUtils.toAlarmCountQuery;
 import static org.thingsboard.server.common.data.util.ReportQueryUtils.toEntityCountQuery;
+import static org.thingsboard.server.report.util.ReportUtils.getSingleDataSource;
 import static org.thingsboard.server.report.util.ReportUtils.prepareReportName;
 
 @Service
@@ -225,16 +226,16 @@ public class PdfReportService extends AbstractReportService {
         }
         StringBuilder content = new StringBuilder();
         try {
-            DataSource dataSource = getSingleDataSource(component);
-            if (dataSource == null) {
-                return "";
+            Optional<DataSource> dataSource = getSingleDataSource(component);
+            if (dataSource.isEmpty()) {
+                return renderError("Data source is not configured for Subreport");
             }
             ReportTemplate reportTemplate = dataService.findReportTemplate(templateId, ctx)
                     .orElseThrow(() -> new IllegalArgumentException("Report template was not found: " + templateId));
             PdfReportTemplateConfig reportConfiguration = (PdfReportTemplateConfig) reportTemplate.getConfiguration();
 
             TbReportCtx subReportCtx = ctx.createSubReportCxt(reportConfiguration);
-            List<EntityData> entityDatas = fetchEntities(ctx, dataSource, null);
+            List<EntityData> entityDatas = fetchEntities(ctx, dataSource.get(), null);
             for (EntityData entity : entityDatas) {
                 content.append(renderContent(subReportCtx, reportConfiguration.getComponents(), entity));
             }
@@ -247,11 +248,11 @@ public class PdfReportService extends AbstractReportService {
 
     private ComponentData buildImageComponentData(TbReportCtx ctx, ImageComponent component) {
         if (ImageSourceType.entityKey.equals(component.getSourceType())) {
-            var dataSources = component.getDataSources();
-            if (dataSources == null || dataSources.isEmpty()) {
+            Optional<DataSource> dataSource = getSingleDataSource(component);
+            if (dataSource.isEmpty()) {
                 return new ComponentData();
             }
-            return buildSingleComponentData(ctx, dataSources.get(0), null);
+            return buildSingleComponentData(ctx, dataSource.get(), null);
         } else {
             return new ComponentData();
         }
@@ -304,14 +305,6 @@ public class PdfReportService extends AbstractReportService {
         Map<String, Object> map = new HashMap<>();
         map.put("count", dataService.countAlarmsByQuery(toAlarmCountQuery(dataSource, configuration), ctx).toString());
         return new ComponentData(map);
-    }
-
-    public static DataSource getSingleDataSource(ReportComponent component) {
-        List<DataSource> dataSources = component.getDataSources();
-        if (dataSources == null || dataSources.isEmpty()) {
-            return null;
-        }
-        return component.getDataSources().get(0);
     }
 
     private Dimension computePageSize(PdfReportTemplateConfig config) {

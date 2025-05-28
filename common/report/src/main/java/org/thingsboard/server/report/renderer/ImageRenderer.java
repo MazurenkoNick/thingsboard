@@ -31,6 +31,7 @@
 package org.thingsboard.server.report.renderer;
 
 import org.springframework.stereotype.Component;
+import org.thingsboard.server.common.data.report.configuration.DataKey;
 import org.thingsboard.server.common.data.report.configuration.components.ImageComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponentType;
@@ -38,10 +39,11 @@ import org.thingsboard.server.common.data.report.configuration.image.ImageSource
 import org.thingsboard.server.report.context.ComponentData;
 import org.thingsboard.server.report.util.ThymeleafUtil;
 
-import java.util.Base64;
 import java.util.HashMap;
+import java.util.List;
 
-import static org.thingsboard.server.report.service.PdfReportService.getSingleDataSource;
+import static org.thingsboard.server.report.util.ReportUtils.getSingleDataSource;
+
 
 @Component
 public class ImageRenderer extends ReportComponentWithLayoutRenderer {
@@ -54,9 +56,12 @@ public class ImageRenderer extends ReportComponentWithLayoutRenderer {
             if (!reportDataSource.getEntityDatas().isEmpty()) {
                 var entityData = reportDataSource.getEntityDatas().get(0);
                 var dataSource = getSingleDataSource(component);
-                if (!dataSource.getDataKeys().isEmpty()) {
-                    var dataKey = dataSource.getDataKeys().get(0);
-                    imageUrl = entityData.get(dataKey.getLabel());
+                if (dataSource.isPresent()) {
+                    List<DataKey> dataKeys = dataSource.get().getDataKeys();
+                    if (dataKeys != null && !dataKeys.isEmpty()) {
+                        var dataKey = dataKeys.get(0);
+                        imageUrl = entityData.get(dataKey.getLabel());
+                    }
                 }
             }
         } else {
