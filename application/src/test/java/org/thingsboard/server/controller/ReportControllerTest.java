@@ -38,8 +38,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.thingsboard.server.common.data.DataConstants;
 import org.thingsboard.server.common.data.Device;
 import org.thingsboard.server.common.data.StringUtils;
+import org.thingsboard.server.common.data.id.ReportTemplateId;
 import org.thingsboard.server.common.data.job.Job;
 import org.thingsboard.server.common.data.job.JobStatus;
+import org.thingsboard.server.common.data.job.JobType;
 import org.thingsboard.server.common.data.job.ReportJobResult;
 import org.thingsboard.server.common.data.notification.Notification;
 import org.thingsboard.server.common.data.notification.NotificationType;
@@ -89,16 +91,16 @@ public class ReportControllerTest extends AbstractControllerTest {
 
         EntityTableComponent tableComponent = new EntityTableComponent();
         tableComponent.setDataSources(List.of(DataSource.builder()
-                        .type("entity")
-                        .entityAliasId(devicesAliasId)
-                        .dataKeys(List.of(
-                                new DataKey("createdTime", "entityField", "CREATED TIME"),
-                                new DataKey("name", "entityField", "NAME"),
-                                new DataKey("type", "entityField", "TYPE"),
-                                new DataKey("temperature", "timeseries", "TEMPERATURE"),
-                                new DataKey("threshold", "attribute", "THRESHOLD")
-                        ))
-                        .build()));
+                .type("entity")
+                .entityAliasId(devicesAliasId)
+                .dataKeys(List.of(
+                        new DataKey("createdTime", "entityField", "CREATED TIME"),
+                        new DataKey("name", "entityField", "NAME"),
+                        new DataKey("type", "entityField", "TYPE"),
+                        new DataKey("temperature", "timeseries", "TEMPERATURE"),
+                        new DataKey("threshold", "attribute", "THRESHOLD")
+                ))
+                .build()));
 
         CsvReportTemplateConfig configuration = new CsvReportTemplateConfig();
         configuration.setEntityAlias(entityAlias);
@@ -154,16 +156,16 @@ public class ReportControllerTest extends AbstractControllerTest {
 
         EntityTableComponent tableComponent = new EntityTableComponent();
         tableComponent.setDataSources(List.of(DataSource.builder()
-                        .type("entity")
-                        .entityAliasId(devicesAliasId)
-                        .dataKeys(List.of(
-                                new DataKey("createdTime", "entityField", "CREATED TIME"),
-                                new DataKey("name", "entityField", "NAME"),
-                                new DataKey("type", "entityField", "TYPE"),
-                                new DataKey("temperature", "timeseries", "TEMPERATURE"),
-                                new DataKey("threshold", "attribute", "THRESHOLD")
-                        ))
-                        .build()));
+                .type("entity")
+                .entityAliasId(devicesAliasId)
+                .dataKeys(List.of(
+                        new DataKey("createdTime", "entityField", "CREATED TIME"),
+                        new DataKey("name", "entityField", "NAME"),
+                        new DataKey("type", "entityField", "TYPE"),
+                        new DataKey("temperature", "timeseries", "TEMPERATURE"),
+                        new DataKey("threshold", "attribute", "THRESHOLD")
+                ))
+                .build()));
 
         CsvReportTemplateConfig configuration = new CsvReportTemplateConfig();
         configuration.setEntityAlias(entityAlias);
@@ -175,6 +177,7 @@ public class ReportControllerTest extends AbstractControllerTest {
         reportTemplate.setName("Devices report");
         reportTemplate.setType(ReportTemplateType.REPORT);
         reportTemplate = doPost("/api/reportTemplate", reportTemplate, ReportTemplate.class);
+        ReportTemplateId reportTemplateId = reportTemplate.getId();
 
         List<Device> devices = new ArrayList<>();
         List<String> expectedReportLines = new ArrayList<>();
@@ -204,15 +207,21 @@ public class ReportControllerTest extends AbstractControllerTest {
 
         //generate report
         ReportRequest reportRequest = new ReportRequest();
-        reportRequest.setReportTemplateId(reportTemplate.getId());
+        reportRequest.setReportTemplateId(reportTemplateId);
         reportRequest.setRecipientId(recipient.getId());
         reportRequest.setNotificationTemplateId(notificationTemplate.getId());
-        Job job = doPost("/api/v2/report/request", reportRequest, Job.class);
+        doPost("/api/v2/report/request", reportRequest, Job.class);
 
-        Job completedJob = await().atMost(TIMEOUT, TimeUnit.SECONDS).until(() -> doGet("/api/job/" + job.getId(), Job.class),
-                result -> result.getStatus() == JobStatus.COMPLETED);
+        List<Job> jobs = await().atMost(TIMEOUT, TimeUnit.SECONDS).until(() ->
+                        findJobs(List.of(JobType.REPORT), List.of(reportTemplateId.getId())),
+                result -> !result.isEmpty() && result.get(0).getStatus() == JobStatus.COMPLETED);
+        Job job = jobs.get(0);
+        assertThat(job.getResult().getCompletedCount()).isEqualTo(1);
+        assertThat(job.getResult().getTotalCount()).isEqualTo(1);
+        assertThat(job.getEntityId()).isEqualTo(reportTemplateId);
+        assertThat(job.getEntityName()).isEqualTo(reportTemplate.getName());
 
-        ReportJobResult result = (ReportJobResult) completedJob.getResult();
+        ReportJobResult result = (ReportJobResult) job.getResult();
         String csvReport = doGet("/api/v2/report/" + result.getReport().getId() + "/download", String.class);
 
         // Check headers and content

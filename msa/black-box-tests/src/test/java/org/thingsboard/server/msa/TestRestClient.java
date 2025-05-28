@@ -81,6 +81,7 @@ import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.EntityViewId;
 import org.thingsboard.server.common.data.id.IntegrationId;
 import org.thingsboard.server.common.data.id.JobId;
+import org.thingsboard.server.common.data.id.ReportId;
 import org.thingsboard.server.common.data.id.RpcId;
 import org.thingsboard.server.common.data.id.RuleChainId;
 import org.thingsboard.server.common.data.id.TenantId;
@@ -1228,6 +1229,16 @@ public class TestRestClient {
     public byte[] downloadBlobEntity(BlobEntityId blobEntityId) {
         return given().spec(requestSpec)
                 .get("/api/blobEntity/{blobEntityId}/download", blobEntityId.getId())
+                .then()
+                .assertThat()
+                .statusCode(HTTP_OK)
+                .extract()
+                .asByteArray();
+    }
+
+    public byte[] downloadReport(ReportId reportId) {
+        return given().spec(requestSpec)
+                .get("/api/v2/report/{reportId}/download", reportId.getId())
                 .then()
                 .assertThat()
                 .statusCode(HTTP_OK)
