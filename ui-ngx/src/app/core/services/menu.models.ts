@@ -190,6 +190,7 @@ export enum MenuId {
   scheduler = 'scheduler',
   roles = 'roles',
   self_registration = 'self_registration',
+  task_manager = 'task_manager',
   reporting = 'reporting',
   trendz_settings = 'trendz_settings'
 }
@@ -1176,6 +1177,16 @@ export const menuSectionMap = new Map<MenuId, MenuSection>([
     }
   ],
   [
+    MenuId.task_manager,
+    {
+      id: MenuId.task_manager,
+      name: 'task.task-manager',
+      type: 'link',
+      path: '/features/taskManager',
+      icon: 'mdi:invoice-text-clock-outline'
+    }
+  ],
+  [
     MenuId.reporting,
     {
       id: MenuId.reporting,
@@ -1484,6 +1495,9 @@ const menuFilters = new Map<MenuId, MenuFilter>([
             userPermissionsService.hasReadGenericPermission(Resource.AUDIT_LOG)
   ],
   [
+    MenuId.task_manager, (authState) => authState.authUser.authority === Authority.TENANT_ADMIN
+  ],
+  [
     MenuId.reporting, (authState, userPermissionsService) =>
             userPermissionsService.hasReadGenericPermission(Resource.REPORT_TEMPLATE)
   ],
@@ -1667,7 +1681,8 @@ export const defaultUserMenuMap = new Map<Authority, MenuReference[]>([
         pages: [
           {id: MenuId.otaUpdates},
           {id: MenuId.version_control},
-          {id: MenuId.scheduler}
+          {id: MenuId.scheduler},
+          {id: MenuId.task_manager}
         ]
       },
       {

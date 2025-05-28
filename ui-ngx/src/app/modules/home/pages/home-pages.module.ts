@@ -58,6 +58,7 @@ import { EdgeModule } from '@home/pages/edge/edge.module';
 import { OtaUpdateModule } from '@home/pages/ota-update/ota-update.module';
 import { SolutionTemplatesModule } from '@home/pages/solution-template/solution-templates.module';
 import { VcModule } from '@home/pages/vc/vc.module';
+import { TaskManagerModule } from '@home/pages/task-manager/task-manager.module';
 import { AssetProfileModule } from '@home/pages/asset-profile/asset-profile.module';
 import { ProfilesModule } from '@home/pages/profiles/profiles.module';
 import { AlarmModule } from '@home/pages/alarm/alarm.module';
@@ -113,6 +114,7 @@ import { ReportTemplateModule } from '@home/pages/report/report-template.module'
     OtaUpdateModule,
     SolutionTemplatesModule,
     VcModule,
+    TaskManagerModule,
     AccountModule,
     ScadaSymbolModule,
     CustomTranslationModule,
