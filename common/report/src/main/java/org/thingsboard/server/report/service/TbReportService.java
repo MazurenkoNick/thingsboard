@@ -30,6 +30,7 @@
  */
 package org.thingsboard.server.report.service;
 
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.thingsboard.server.common.data.job.task.ReportTask;
 import org.thingsboard.server.common.data.report.Report;
@@ -51,7 +52,7 @@ public class TbReportService {
     private final TbReportCtxProvider contextProvider;
     private final ReportDataService dataService;
 
-    private TbReportService(List<ReportService> reportServices, TbReportCtxProvider contextProvider, ReportDataService dataService) {
+    private TbReportService(List<ReportService> reportServices, @Lazy TbReportCtxProvider contextProvider, @Lazy ReportDataService dataService) {
         reportServices.forEach(service -> {
             TbReportFormat format = service.getFormat();
             if (format != null) {

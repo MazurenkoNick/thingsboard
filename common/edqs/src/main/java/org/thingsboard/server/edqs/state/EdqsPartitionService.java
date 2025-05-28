@@ -43,9 +43,7 @@ import org.thingsboard.server.queue.edqs.EdqsConfig.EdqsPartitioningStrategy;
 @RequiredArgsConstructor
 public class EdqsPartitionService {
 
-    @Lazy
-    @Autowired
-    private HashPartitionService hashPartitionService;
+    private final HashPartitionService hashPartitionService;
     private final EdqsConfig edqsConfig;
 
     public Integer resolvePartition(TenantId tenantId, Object key) {

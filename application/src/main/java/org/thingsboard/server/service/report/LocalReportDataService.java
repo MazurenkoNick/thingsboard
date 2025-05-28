@@ -68,7 +68,6 @@ import org.thingsboard.server.service.security.permission.AccessControlService;
 import org.thingsboard.server.service.telemetry.TbTelemetryService;
 
 import java.util.List;
-import java.util.Optional;
 
 @RequiredArgsConstructor
 @Primary

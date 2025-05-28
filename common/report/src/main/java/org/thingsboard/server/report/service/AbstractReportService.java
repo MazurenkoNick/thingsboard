@@ -32,6 +32,7 @@ package org.thingsboard.server.report.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.server.common.data.id.DeviceId;
 import org.thingsboard.server.common.data.id.EntityId;
@@ -80,6 +81,7 @@ import static org.thingsboard.server.report.util.ReportUtils.getSingleDataSource
 
 public abstract class AbstractReportService implements ReportService {
 
+    @Lazy
     @Autowired
     protected ReportDataService dataService;
 
