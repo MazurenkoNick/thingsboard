@@ -33,11 +33,8 @@ package org.thingsboard.server.report.service;
 import com.google.common.util.concurrent.SettableFuture;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.thingsboard.server.common.data.TbResource;
 import org.thingsboard.server.common.data.dashboardreport.DashboardReportData;
-import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.id.ReportTemplateId;
-import org.thingsboard.server.common.data.id.TbResourceId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.job.task.ReportTask;
 import org.thingsboard.server.common.data.query.EntityData;
@@ -190,7 +187,7 @@ public class PdfReportService extends AbstractReportService {
             return componentsRenderers.get(component.getType()).render(component, componentData);
         } catch (Exception e) {
             log.error("Failed to render component of type [{}]", component.getType(), e);
-            return componentsRenderers.get(ERROR).render(new ErrorComponent("Failed to render component of type: " + component.getType(), e), null);
+            return renderError("Failed to render component of type: " + component.getType(), e);
         }
     }
 
@@ -207,22 +204,21 @@ public class PdfReportService extends AbstractReportService {
 
     private String renderTimeseriesTables(TbReportCtx ctx, EntityData stateEntity, ReportComponent component) {
         StringBuilder content = new StringBuilder();
-        DataSource dataSource = getSingleDataSource(component);
-        if (dataSource != null) {
-            List<EntityData> entityDatas = fetchEntities(ctx, dataSource, stateEntity);
-            for (EntityData entity : entityDatas) {
-                content.append(renderComponent(ctx, component, entity));
-            }
-            return content.toString();
-        } else {
-            return "";
+        Optional<DataSource> dataSource = getSingleDataSource(component);
+        if (dataSource.isEmpty()) {
+            return renderError("Data source is not configured for Subreport");
         }
+        List<EntityData> entityDatas = fetchEntities(ctx, dataSource.get(), stateEntity);
+        for (EntityData entity : entityDatas) {
+            content.append(renderComponent(ctx, component, entity));
+        }
+        return content.toString();
     }
 
     private String renderSubreport(TbReportCtx ctx, ReportComponent component) {
         ReportTemplateId templateId = ((SubReportComponent) component).getTemplateId();
         if (templateId == null) {
-            return "";
+            return renderError("Report template id is not configured for Subreport");
         }
         StringBuilder content = new StringBuilder();
         try {
@@ -230,8 +226,10 @@ public class PdfReportService extends AbstractReportService {
             if (dataSource.isEmpty()) {
                 return renderError("Data source is not configured for Subreport");
             }
-            ReportTemplate reportTemplate = dataService.findReportTemplate(templateId, ctx)
-                    .orElseThrow(() -> new IllegalArgumentException("Report template was not found: " + templateId));
+            ReportTemplate reportTemplate = dataService.findReportTemplate(templateId, ctx);
+            if (reportTemplate == null) {
+                return renderError("Template with id " + templateId + " not found. Please check the configuration.");
+            }
             PdfReportTemplateConfig reportConfiguration = (PdfReportTemplateConfig) reportTemplate.getConfiguration();
 
             TbReportCtx subReportCtx = ctx.createSubReportCxt(reportConfiguration);
@@ -241,9 +239,17 @@ public class PdfReportService extends AbstractReportService {
             }
             return content.toString();
         } catch (Exception e) {
-            log.error("Failed to render subreport, template id: {}", templateId, e);
-            return componentsRenderers.get(ERROR).render(new ErrorComponent("Failed to load sub-report " + templateId, e), null);
+            log.error("Failed to render Subreport, template id: {}", templateId, e);
+            return renderError("Failed to render sub-report " + templateId, e);
         }
+    }
+
+    private String renderError(String errorMessage) {
+        return renderError(errorMessage, null);
+    }
+
+    private String renderError(String errorMessage, Exception e) {
+        return componentsRenderers.get(ERROR).render(new ErrorComponent(errorMessage, e), null);
     }
 
     private ComponentData buildImageComponentData(TbReportCtx ctx, ImageComponent component) {
@@ -297,13 +303,13 @@ public class PdfReportService extends AbstractReportService {
 
     private ComponentData buildEntityCountDataSource(TbReportCtx ctx, DataSource dataSource, ReportTemplateConfig configuration) {
         Map<String, Object> map = new HashMap<>();
-        map.put("count", dataService.countEntitiesByQuery(toEntityCountQuery(dataSource, configuration), ctx).toString());
+        map.put("count", dataService.countEntitiesByQuery(toEntityCountQuery(dataSource, configuration), ctx));
         return new ComponentData(map);
     }
 
     private ComponentData buildAlarmCountDataSource(TbReportCtx ctx, DataSource dataSource, ReportTemplateConfig configuration) {
         Map<String, Object> map = new HashMap<>();
-        map.put("count", dataService.countAlarmsByQuery(toAlarmCountQuery(dataSource, configuration), ctx).toString());
+        map.put("count", dataService.countAlarmsByQuery(toAlarmCountQuery(dataSource, configuration), ctx));
         return new ComponentData(map);
     }
 

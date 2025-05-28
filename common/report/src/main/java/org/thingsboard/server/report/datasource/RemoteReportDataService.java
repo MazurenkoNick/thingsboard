@@ -57,14 +57,13 @@ import org.thingsboard.server.report.context.TbReportCtx;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Optional;
 
 @ConditionalOnMissingBean(value = ReportDataService.class, ignored = RemoteReportDataService.class)
 @Service
 public class RemoteReportDataService implements ReportDataService {
 
     @Override
-    public Optional<ReportTemplate> findReportTemplate(ReportTemplateId templateId, TbReportCtx ctx) throws ThingsboardException {
+    public ReportTemplate findReportTemplate(ReportTemplateId templateId, TbReportCtx ctx) {
         return getRestClient(ctx).findReportTemplate(templateId);
     }
 

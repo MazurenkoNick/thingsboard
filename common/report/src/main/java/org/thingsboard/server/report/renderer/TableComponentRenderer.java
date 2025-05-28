@@ -57,14 +57,6 @@ import static org.thingsboard.server.report.util.ReportUtils.getSingleDataSource
 
 public abstract class TableComponentRenderer extends ReportComponentWithLayoutRenderer {
 
-    private static final String TABLE_IS_NOT_CONFIGURED = "<table class=\"tb-report-table\">\n" +
-            "    <thead>\n" +
-            "    <tr>\n" +
-            "        <td>Table columns are not configured</td>\n" +
-            "    </tr>\n" +
-            "    </thead>\n" +
-            "</table>";
-
     @Override
     protected String renderContent(ReportComponent component, ComponentData reportDataSource) {
         Optional<DataSource> dataSource = getSingleDataSource(component);

@@ -5045,14 +5045,14 @@ public class RestClient implements Closeable {
                 paletteSettings, String.class).getBody();
     }
 
-    public Optional<ReportTemplate> findReportTemplate(ReportTemplateId templateId) {
+    public ReportTemplate findReportTemplate(ReportTemplateId templateId) {
         try {
             ResponseEntity<ReportTemplate> reportTemplate =
                     restTemplate.getForEntity(baseURL + "/api/reportTemplate/{reportTemplateId}", ReportTemplate.class, templateId.getId());
-            return Optional.ofNullable(reportTemplate.getBody());
+            return reportTemplate.getBody();
         } catch (HttpClientErrorException exception) {
             if (exception.getStatusCode() == HttpStatus.NOT_FOUND) {
-                return Optional.empty();
+                return null;
             } else {
                 throw exception;
             }

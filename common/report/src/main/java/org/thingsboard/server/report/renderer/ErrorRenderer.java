@@ -47,7 +47,10 @@ public class ErrorRenderer extends ReportComponentWithLayoutRenderer {
         ErrorComponent errorComponent = (ErrorComponent) component;
         HashMap<String, Object> componentVariables = new HashMap<>();
         componentVariables.put("errorMessage", errorComponent.getErrorMessage());
-        componentVariables.put("exception", errorComponent.getException().getMessage());
+        Exception exception = errorComponent.getException();
+        if (exception != null) {
+            componentVariables.put("exception", exception.getMessage());
+        }
         return ThymeleafUtil.render("html/components/error-template", componentVariables);
     }
 

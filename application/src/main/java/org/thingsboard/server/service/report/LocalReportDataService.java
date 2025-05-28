@@ -84,11 +84,11 @@ public class LocalReportDataService implements ReportDataService {
     private final ReportService reportService;
 
     @Override
-    public Optional<ReportTemplate> findReportTemplate(ReportTemplateId templateId, TbReportCtx ctx) throws ThingsboardException {
+    public ReportTemplate findReportTemplate(ReportTemplateId templateId, TbReportCtx ctx) throws ThingsboardException {
         SecurityUser securityUser = getSecurityUser(ctx);
         ReportTemplate reportTemplate = reportTemplateService.findReportTemplateById(securityUser.getTenantId(), templateId);
         accessControlService.checkPermission(securityUser, Resource.REPORT_TEMPLATE, Operation.READ, templateId, reportTemplate);
-        return Optional.ofNullable(reportTemplate);
+        return reportTemplate;
     }
 
     @Override
