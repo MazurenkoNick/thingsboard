@@ -360,6 +360,7 @@ public class DefaultEntityQueryRepository implements EntityQueryRepository {
         entityTableMap.put(EntityType.ASSET_PROFILE, "asset_profile");
         entityTableMap.put(EntityType.TENANT_PROFILE, "tenant_profile");
         entityTableMap.put(EntityType.QUEUE_STATS, "queue_stats");
+        entityTableMap.put(EntityType.REPORT_TEMPLATE, "report_template");
 
         entityNameColumns.put(EntityType.DEVICE, "name");
         entityNameColumns.put(EntityType.CUSTOMER, "title");
@@ -386,6 +387,7 @@ public class DefaultEntityQueryRepository implements EntityQueryRepository {
         entityNameColumns.put(EntityType.BLOB_ENTITY, "name");
         entityNameColumns.put(EntityType.ROLE, "name");
         entityNameColumns.put(EntityType.QUEUE_STATS, "queue_name");
+        entityNameColumns.put(EntityType.REPORT_TEMPLATE, "name");
     }
 
     public static EntityType[] RELATION_QUERY_ENTITY_TYPES = new EntityType[]{
@@ -995,7 +997,7 @@ public class DefaultEntityQueryRepository implements EntityQueryRepository {
 
             if (!StringUtils.isEmpty(pageLink.getTextSearch())) {
                 ctx.addStringParameter("textSearch", "%" + pageLink.getTextSearch() + "%");
-                fromClause.append(" AND e.").append(entityNameColumns.get(entityType)).append(" ILIKE :textSearch");
+                fromClause.append(" AND e.").append(getNameColumn(entityType)).append(" ILIKE :textSearch");
             }
 
             int totalElements = jdbcTemplate.queryForObject(String.format("select count(*) %s", fromClause), ctx, Integer.class);

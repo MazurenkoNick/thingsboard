@@ -39,7 +39,6 @@ import org.testng.annotations.Test;
 import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.server.common.data.Device;
 import org.thingsboard.server.common.data.StringUtils;
-import org.thingsboard.server.common.data.id.BlobEntityId;
 import org.thingsboard.server.common.data.id.JobId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.id.UserId;
@@ -47,6 +46,7 @@ import org.thingsboard.server.common.data.job.Job;
 import org.thingsboard.server.common.data.job.JobStatus;
 import org.thingsboard.server.common.data.job.ReportJobResult;
 import org.thingsboard.server.common.data.query.DeviceTypeFilter;
+import org.thingsboard.server.common.data.report.Report;
 import org.thingsboard.server.common.data.report.ReportRequest;
 import org.thingsboard.server.common.data.report.ReportTemplate;
 import org.thingsboard.server.common.data.report.ReportTemplateType;
@@ -114,9 +114,10 @@ public class ReportServiceTest extends AbstractContainerTest {
                 job -> job.getStatus() == JobStatus.COMPLETED);
 
         ReportJobResult result = (ReportJobResult) reportJob.getResult();
-        BlobEntityId reportBlobId = result.getReportBlobId();
-        String csvReport = new String(testRestClient.downloadBlobEntity(reportBlobId));
+        Report report = result.getReport();
+        assertThat(report).isNotNull();
 
+        String csvReport = new String(testRestClient.downloadReport(report.getId()));
         checkCsvReport(csvReport);
     }
 

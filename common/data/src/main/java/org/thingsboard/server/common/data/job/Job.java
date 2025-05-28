@@ -66,6 +66,7 @@ public class Job extends BaseData<JobId> implements HasTenantId {
     private String key;
     @NotNull
     private EntityId entityId;
+    private String entityName; // read-only
     @NotNull
     private JobStatus status;
     @NotNull
@@ -92,6 +93,7 @@ public class Job extends BaseData<JobId> implements HasTenantId {
 
     public void presetResult() {
         this.result = switch (type) {
+            case CF_REPROCESSING -> new CfReprocessingJobResult();
             case REPORT -> new ReportJobResult();
             case DUMMY -> new DummyJobResult();
         };
