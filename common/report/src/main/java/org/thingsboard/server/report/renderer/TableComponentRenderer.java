@@ -61,7 +61,7 @@ public abstract class TableComponentRenderer extends ReportComponentWithLayoutRe
     protected String renderContent(ReportComponent component, ComponentData reportDataSource) {
         Optional<DataSource> dataSource = getSingleDataSource(component);
         if (dataSource.isEmpty()) {
-            return ThymeleafUtil.render("html/components/error-template", Map.of("errorMessage", "No columns are configured for the table component. " +
+            return ThymeleafUtil.render("html/components/error-template", Map.of("errorMessage", "No datasource is configured for table. " +
                     "Please check the data source configuration."));
         }
         List<DataKey> dataKeys  = dataSource.get().getDataKeys();
