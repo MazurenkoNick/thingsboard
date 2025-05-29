@@ -30,8 +30,10 @@
  */
 package org.thingsboard.server.report.renderer;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.thingsboard.server.common.data.report.configuration.CellSettings;
 import org.thingsboard.server.common.data.report.configuration.ColumnSettings;
 import org.thingsboard.server.common.data.report.configuration.DataKey;
@@ -57,6 +59,22 @@ import static org.thingsboard.server.report.util.ReportUtils.getSingleDataSource
 
 public abstract class TableComponentRenderer extends ReportComponentWithLayoutRenderer {
 
+    public static final Map<String, String> SEVERITY_COLOR = new HashMap<>();
+    public static final Map<String, String> DISPLAY_STATUS = new HashMap<>();
+
+    static {
+        SEVERITY_COLOR.put("CRITICAL", "red");
+        SEVERITY_COLOR.put("MAJOR", "orange");
+        SEVERITY_COLOR.put("MINOR", "#ffca3d");
+        SEVERITY_COLOR.put("WARNING", "#abab00");
+        SEVERITY_COLOR.put("INDETERMINATE", "green");
+
+        DISPLAY_STATUS.put("ACTIVE_UNACK", "Active Unacknowledged");
+        DISPLAY_STATUS.put("ACTIVE_ACK", "Active Acknowledged");
+        DISPLAY_STATUS.put("CLEARED_UNACK", "Cleared Unacknowledged");
+        DISPLAY_STATUS.put("CLEARED_ACK", "Cleared Acknowledged");
+    }
+
     @Override
     protected String renderContent(ReportComponent component, ComponentData reportDataSource) {
         Optional<DataSource> dataSource = getSingleDataSource(component);
@@ -78,8 +96,10 @@ public abstract class TableComponentRenderer extends ReportComponentWithLayoutRe
                         .collect(Collectors.toMap(
                                 Map.Entry::getKey,
                                 entry -> {
-                                    CellVariables base = cellStyles.getOrDefault(entry.getKey(), defaultCellStyle(false));
-                                    return base.toBuilder().value(entry.getValue()).build();
+                                    CellVariables baseStyles = cellStyles.getOrDefault(entry.getKey(), new CellVariables());
+                                    return baseStyles.toBuilder()
+                                            .color(formatColor(entry, baseStyles.getColor()))
+                                            .value(formatValue(entry)).build();
                                 },
                                 (v1, v2) -> v1,
                                 LinkedHashMap::new
@@ -91,6 +111,27 @@ public abstract class TableComponentRenderer extends ReportComponentWithLayoutRe
         componentVariables.put("rows", rows);
 
         return ThymeleafUtil.render("html/components/table-template", componentVariables);
+    }
+
+    private String formatColor(Map.Entry<String, String> entry, String defaultColor) {
+        if (defaultColor != null) {
+            return defaultColor;
+        }
+        String key = entry.getKey();
+        String value = entry.getValue();
+        if ("severity".equals(key)) {
+            return SEVERITY_COLOR.getOrDefault(value, value);
+        }
+        return value;
+    }
+
+    private String formatValue(Map.Entry<String, String> entry) {
+        String key = entry.getKey();
+        String value = entry.getValue();
+        if ("status".equals(key)) {
+            return DISPLAY_STATUS.getOrDefault(value, value);
+        }
+        return value;
     }
 
     private HashMap<String, CellVariables> getCellVariablesMap(List<DataKey> dataKeys, boolean isHeader) {
@@ -106,7 +147,7 @@ public abstract class TableComponentRenderer extends ReportComponentWithLayoutRe
     protected CellVariables toCellVariables(DataKey dataKey, boolean isHeader) {
         DataKeySettings settings = dataKey.getSettings();
         if (settings instanceof ColumnSettings columnSettings) {
-            CellSettings cellSettings = isHeader ? columnSettings.getHeaderSettings() : columnSettings.getCellSettings();
+            CellSettings cellSettings = isHeader ? columnSettings.getHeader() : columnSettings.getCell();
             if (cellSettings != null) {
                 Font font = cellSettings.getFont();
                 return CellVariables.builder()
@@ -121,34 +162,26 @@ public abstract class TableComponentRenderer extends ReportComponentWithLayoutRe
                         .build();
             }
         }
-        CellVariables cellVariables = defaultCellStyle(isHeader);
-        cellVariables.setValue(isHeader ? dataKey.getLabel() : "");
-        return cellVariables;
-    }
-
-    private CellVariables defaultCellStyle(boolean isHeader) {
-        return CellVariables.builder()
-                .color("#000")
-                .fontSize(isHeader ? 14 : 10)
-                .fontWeight(isHeader ? "bold" : "normal")
-                .fontStyle("normal")
-                .fontFamily("Roboto")
-                .textAlignment(isHeader ? TextAlignment.center.name() : TextAlignment.left.name())
-                .verticalAlignment(VerticalAlignment.middle.name())
-                .build();
+        return new CellVariables(isHeader ? dataKey.getLabel() : "");
     }
 
     @Data
+    @AllArgsConstructor
+    @NoArgsConstructor
     @Builder(toBuilder = true)
     static class CellVariables {
         private String value;
         private String color;
-        private float fontSize;
+        private Float fontSize;
         private String fontWeight;
         private String fontStyle;
         private String fontFamily;
         private String textAlignment;
         private String verticalAlignment;
+
+        public CellVariables(String value) {
+            this.value = value;
+        }
     }
 
 }

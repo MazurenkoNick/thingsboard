@@ -36,8 +36,8 @@ import org.thingsboard.server.common.data.report.configuration.style.DataKeySett
 @Data
 public class ColumnSettings implements DataKeySettings {
 
-    private CellSettings headerSettings;
-    private CellSettings cellSettings;
+    private CellSettings header;
+    private CellSettings cell;
 
     @Override
     public DataKeySettingsType getType() {
