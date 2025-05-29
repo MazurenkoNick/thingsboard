@@ -88,6 +88,7 @@ public class PdfReportUserAgent extends ITextUserAgent {
 
     @Override
     public ImageResource getImageResource(String uriStr) {
+        uriStr = StringUtils.removeStart(uriStr, DataConstants.TB_IMAGE_PREFIX);
         String unresolvedUri = uriStr;
         if (!isEmbeddedBase64Image(uriStr) && !isTbImage(uriStr)) {
             uriStr = resolveURI(uriStr);
@@ -201,11 +202,10 @@ public class PdfReportUserAgent extends ITextUserAgent {
     }
 
     private TbResource loadInternalTbImage(final String uri) throws Exception {
-        String link = StringUtils.removeStart(uri, DataConstants.TB_IMAGE_PREFIX);
         String imageType = null;
-        if (link.startsWith("/api/images/tenant/")) {
+        if (uri.startsWith("/api/images/tenant/")) {
             imageType = "tenant";
-        } else if (link.startsWith("/api/images/system/")) {
+        } else if (uri.startsWith("/api/images/system/")) {
             imageType = "system";
         }
         if (imageType != null) {

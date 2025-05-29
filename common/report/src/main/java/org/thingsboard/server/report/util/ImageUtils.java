@@ -38,16 +38,20 @@ import com.github.weisj.jsvg.parser.LoaderContext;
 import com.github.weisj.jsvg.parser.ParserProvider;
 import com.github.weisj.jsvg.parser.SVGLoader;
 import org.jetbrains.annotations.Nullable;
-import org.thingsboard.server.common.data.DataConstants;
 import org.thingsboard.server.report.util.itext.PdfSvgDocument;
 
 import java.io.ByteArrayInputStream;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class ImageUtils {
 
-    public static PdfSvgDocument checkAndLoadSvg(byte[] data) {
+    static {
+        Logger.getLogger("com.github.weisj.jsvg").setLevel(Level.OFF);
+    }
 
+    public static PdfSvgDocument checkAndLoadSvg(byte[] data) {
         SVGLoader loader = new SVGLoader();
         try {
             AtomicReference<ViewBox> viewBoxRef = new AtomicReference<>();
@@ -62,11 +66,13 @@ public class ImageUtils {
             SVGDocument document = loader.load(new ByteArrayInputStream(data), null, LoaderContext.builder()
                     .parserProvider(parserProvider)
                     .build());
-            return new PdfSvgDocument(document, viewBoxRef.get());
+            if (document != null) {
+                return new PdfSvgDocument(document, viewBoxRef.get());
+            }
         } catch (Exception e) {
             // Invalid SVG or not SVG
-            return null;
         }
+        return null;
     }
 
     public static boolean isTbImage(String uri) {
@@ -74,10 +80,11 @@ public class ImageUtils {
     }
 
     public static boolean isInternalTbImage(String uri) {
-        return uri.startsWith(DataConstants.TB_IMAGE_PREFIX + "/api/images");
+        return uri.startsWith("/api/images/tenant/") ||
+               uri.startsWith("/api/images/system/");
     }
 
     public static boolean isPublicTbImage(String uri) {
-        return uri.startsWith("/api/images/public");
+        return uri.startsWith("/api/images/public/");
     }
 }
