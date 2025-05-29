@@ -35,13 +35,13 @@
     <tr>
         <th th:each="colKey : ${columns.keySet()}"
             th:style="|display: table-cell;
-                 text-align: ${columns[colKey].textAlignment};
-                 vertical-align: ${columns[colKey].verticalAlignment};
-                 color: ${columns[colKey].color};
-                 font-size: ${columns[colKey].fontSize}pt;
-                 font-family: ${columns[colKey].fontFamily};
-                 font-style: ${columns[colKey].fontStyle};
-                 font-weight: ${columns[colKey].fontWeight};|"
+                 ${columns[colKey].textAlignment != null ? 'text-align:' + columns[colKey].textAlignment + ';' : ''}
+                 ${columns[colKey].verticalAlignment != null ? 'vertical-align:' + columns[colKey].verticalAlignment + ';' : ''}
+                 ${columns[colKey].color != null ? 'color:' + columns[colKey].color + ';' : ''}
+                 ${columns[colKey].fontSize != null ? 'font-size:' + columns[colKey].fontSize + 'pt;' : ''}
+                 ${columns[colKey].fontFamily != null ? 'font-family:' + columns[colKey].fontFamily + ';' : ''}
+                 ${columns[colKey].fontStyle != null ? 'font-style:' + columns[colKey].fontStyle + ';' : ''}
+                 ${columns[colKey].fontWeight != null ? 'font-weight:' + columns[colKey].fontWeight + ';' : ''}|"
             th:text="${columns[colKey].value}">Header</th>
     </tr>
     </thead>
@@ -49,13 +49,13 @@
     <tr th:each="row : ${rows}">
         <td th:each="colKey : ${columns.keySet()}"
             th:style="|display: table-cell;
-                 text-align: ${row[colKey].textAlignment};
-                 vertical-align: ${row[colKey].verticalAlignment};
-                 color: ${row[colKey].color};
-                 font-size: ${row[colKey].fontSize}pt;
-                 font-family: ${row[colKey].fontFamily};
-                 font-style: ${row[colKey].fontStyle};
-                 font-weight: ${row[colKey].fontWeight};|"
+                 ${row[colKey].textAlignment != null ? 'text-align:' + row[colKey].textAlignment + ';' : ''}
+                 ${row[colKey].verticalAlignment != null ? 'vertical-align:' + row[colKey].verticalAlignment + ';' : ''}
+                 ${row[colKey].color != null ? 'color:' + row[colKey].color + ';' : ''}
+                 ${row[colKey].fontSize != null ? 'font-size:' + row[colKey].fontSize + 'pt;' : ''}
+                 ${row[colKey].fontFamily != null ? 'font-family:' + row[colKey].fontFamily + ';' : ''}
+                 ${row[colKey].fontStyle != null ? 'font-style:' + row[colKey].fontStyle + ';' : ''}
+                 ${row[colKey].fontWeight != null ? 'font-weight:' + row[colKey].fontWeight + ';' : ''}|"
             th:text="${row[colKey].value}">[Value]</td>
     </tr>
     <!-- Empty table fallback row -->
