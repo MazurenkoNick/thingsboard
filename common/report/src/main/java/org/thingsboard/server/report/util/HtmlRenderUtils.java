@@ -62,9 +62,9 @@ public class HtmlRenderUtils {
     private static final ITextFontResolver fontResolver = new PdfReportFontResolver();
     private static final TextRenderer textRenderer = new PdfReportTextRenderer();
 
-    public static ITextRenderer createRenderer(ReportDataService dataService, TbReportCtx ctx) {
+    public static ITextRenderer createRenderer(ReportDataService dataService, TbReportCtx ctx, int usablePageWidthPx) {
         ITextOutputDevice outputDevice = new ITextOutputDevice(DEFAULT_DOTS_PER_POINT);
-        ITextUserAgent userAgent = new PdfReportUserAgent(dataService, ctx, outputDevice, DEFAULT_DOTS_PER_PIXEL);
+        ITextUserAgent userAgent = new PdfReportUserAgent(dataService, ctx, outputDevice, DEFAULT_DOTS_PER_PIXEL, usablePageWidthPx);
         ReplacedElementFactory replacedElementFactory = new ITextReplacedElementFactory(outputDevice);
         return new ITextRenderer(DEFAULT_DOTS_PER_POINT, DEFAULT_DOTS_PER_PIXEL,
                 outputDevice,

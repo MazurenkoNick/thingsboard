@@ -52,12 +52,19 @@ public class PdfSvgDocument {
         return this._document.size();
     }
 
-    public BufferedImage render(float factor, int targetWidth, int targetHeight) {
+    public BufferedImage render(float targetWidth, float targetHeight, int usablePageWidthPx) {
         ViewBox targetViewBox;
         if (_viewBox != null) {
-            targetViewBox = new ViewBox(_viewBox.x * factor, _viewBox.y * factor, targetWidth , targetHeight);
+            targetViewBox = new ViewBox(_viewBox.x, _viewBox.y, targetWidth, targetHeight);
         } else {
-            targetViewBox = new ViewBox(0,0, size().width * factor, size().height * factor);
+            targetViewBox = new ViewBox(0,0, size().width , size().height);
+        }
+        if (targetViewBox.width != usablePageWidthPx) {
+            float scale = usablePageWidthPx / targetViewBox.width;
+            targetViewBox.width = usablePageWidthPx;
+            targetViewBox.height = targetViewBox.height * scale;
+            targetViewBox.x = targetViewBox.x * scale;
+            targetViewBox.y = targetViewBox.y * scale;
         }
         BufferedImage image = new BufferedImage((int)targetViewBox.width, (int)targetViewBox.height, BufferedImage.TYPE_INT_ARGB);
         Graphics2D graphics = image.createGraphics();

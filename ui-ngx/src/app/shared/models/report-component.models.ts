@@ -79,8 +79,47 @@ export interface EntityTableReportComponentConfig extends TableReportComponentCo
   type: ReportComponentType.ENTITY_TABLE;
 }
 
+export const imageSourceTypes = ['image', 'entityKey'];
+type imageSourceTypeTuple = typeof imageSourceTypes;
+export type imageSourceType = imageSourceTypeTuple[number];
+
+export const imageSourceTypeTranslations = new Map<imageSourceType, string>(
+  [
+    ['image', 'report-template.component.image.source-image'],
+    ['entityKey', 'report-template.component.image.source-entity-key']
+  ]
+);
+
+export const imageWidthTypes = ['fitWidth', 'original', 'custom'];
+type imageWidthTypeTuple = typeof imageWidthTypes;
+export type imageWidthType = imageWidthTypeTuple[number];
+
+export const imageWidthTypeTranslations = new Map<imageWidthType, string>(
+  [
+    ['fitWidth', 'report-template.component.image.width-fit-width'],
+    ['original', 'report-template.component.image.width-original'],
+    ['custom', 'report-template.component.image.width-custom']
+  ]
+);
+
+export const imageAlignments = ['left', 'center', 'right'];
+type imageAlignmentTuple = typeof imageAlignments;
+export type imageAlignment = imageAlignmentTuple[number];
+
+export const imageAlignmentTranslations = new Map<imageAlignment, string>(
+  [
+    ['left', 'report-template.component.image.alignment-left'],
+    ['center', 'report-template.component.image.alignment-center'],
+    ['right', 'report-template.component.image.alignment-right']
+  ]
+);
+
 export interface ImageReportComponentConfig extends ReportComponentConfig {
+  sourceType: imageSourceType;
   imageUrl: string;
+  widthType: imageWidthType;
+  customWidth?: number;
+  alignment: imageAlignment;
   type: ReportComponentType.IMAGE;
 }
 
@@ -152,7 +191,10 @@ export const reportComponentTypeDefaultConfigMap = new Map<ReportComponentType, 
       ReportComponentType.IMAGE,
       {
         type: ReportComponentType.IMAGE,
-        imageUrl: '/assets/report/components/image.svg',
+        sourceType: 'image',
+        imageUrl: null,
+        widthType: 'fitWidth',
+        alignment: 'center',
         dataSources: []
       }
     ],

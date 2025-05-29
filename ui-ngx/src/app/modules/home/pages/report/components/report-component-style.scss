@@ -100,6 +100,7 @@ body.tb-report-component, tb-report-component .tb-report-component {
       height: 2em;
     }
     th, td {
+      overflow: hidden;
       padding: 2px;
       border-bottom: 1px solid rgba(0, 0, 0, 0.87);
       border-right: 1px solid rgba(0, 0, 0, 0.87);

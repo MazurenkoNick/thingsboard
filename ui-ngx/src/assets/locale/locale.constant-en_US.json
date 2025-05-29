@@ -7094,7 +7094,17 @@
                 "type": "Entity table"
             },
             "image": {
-                "type": "Image"
+                "type": "Image",
+                "source-image": "Image",
+                "source-entity-key": "Entity key",
+                "image-width": "Image width",
+                "width-fit-width": "Fit width",
+                "width-original": "Original",
+                "width-custom": "Custom",
+                "image-alignment": "Image alignment",
+                "alignment-left": "Left",
+                "alignment-center": "Center",
+                "alignment-right": "Right"
             },
             "sub-report": {
                 "type": "Subreport",

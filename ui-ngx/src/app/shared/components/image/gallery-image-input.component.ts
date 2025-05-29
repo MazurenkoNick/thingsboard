@@ -211,8 +211,8 @@ export class GalleryImageInputComponent extends PageComponent implements OnInit,
     this.cd.markForCheck();
     if (this.imageUrl !== value) {
       this.imageUrl = value;
-      this.imageLoaded();
       this.propagateChange(prependTbImagePrefix(this.imageUrl));
+      this.imageLoaded();
     }
   }
 

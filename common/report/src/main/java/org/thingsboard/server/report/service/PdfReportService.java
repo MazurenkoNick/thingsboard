@@ -114,7 +114,7 @@ public class PdfReportService extends AbstractReportService {
         Insets pageMargins = computePageMargins(configuration);
         int usablePageWidthPx = (int)((pageSize.width - pageMargins.getLeft() - pageMargins.getRight()) * 4f / 3f);
 
-        ITextRenderer renderer = HtmlRenderUtils.createRenderer(dataService, ctx);
+        ITextRenderer renderer = HtmlRenderUtils.createRenderer(dataService, ctx, usablePageWidthPx);
 
         HeaderFooterRenderLayout headerLayout = renderHeaderFooter(renderer, ctx, configuration.getHeader(), usablePageWidthPx);
         HeaderFooterRenderLayout footerLayout = renderHeaderFooter(renderer, ctx, configuration.getFooter(), usablePageWidthPx);

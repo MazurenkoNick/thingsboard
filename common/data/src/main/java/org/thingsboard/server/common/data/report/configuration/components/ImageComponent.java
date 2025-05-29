@@ -34,8 +34,9 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import org.thingsboard.server.common.data.id.TbResourceId;
+import org.thingsboard.server.common.data.report.configuration.image.ImageAlignment;
 import org.thingsboard.server.common.data.report.configuration.image.ImageSourceType;
+import org.thingsboard.server.common.data.report.configuration.image.ImageWidthType;
 
 @Schema
 @Data
@@ -45,6 +46,9 @@ public class ImageComponent extends AbstractReportComponent implements ReportCom
 
     private ImageSourceType sourceType;
     private String imageUrl;
+    private ImageWidthType widthType;
+    private int customWidth;
+    private ImageAlignment alignment;
 
     @Override
     public ReportComponentType getType() {

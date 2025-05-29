@@ -71,14 +71,16 @@ public class PdfReportUserAgent extends ITextUserAgent {
     private final ReportDataService _dataService;
     private final ITextOutputDevice _outputDevice;
     private final int dotsPerPixel;
+    private final int usablePageWidthPx;
 
     public PdfReportUserAgent(ReportDataService dataService, TbReportCtx ctx,
-                              ITextOutputDevice outputDevice, int dotsPerPixel) {
+                              ITextOutputDevice outputDevice, int dotsPerPixel, int usablePageWidthPx) {
         super(outputDevice, dotsPerPixel);
         this._dataService = dataService;
         this._ctx = ctx;
         this._outputDevice = outputDevice;
         this.dotsPerPixel = dotsPerPixel;
+        this.usablePageWidthPx = usablePageWidthPx;
     }
 
     @Override
@@ -235,7 +237,7 @@ public class PdfReportUserAgent extends ITextUserAgent {
     private ITextFSImage loadITextFSImage(byte[] data, boolean skipSvgCheck) throws IOException {
         PdfSvgDocument svgDocument = skipSvgCheck ? null : checkAndLoadSvg(data);
         if (svgDocument != null) {
-            return new PdfSvgFSImage(svgDocument, this.dotsPerPixel);
+            return new PdfSvgFSImage(svgDocument, this.dotsPerPixel, this.usablePageWidthPx);
         } else {
             Image image = Image.getInstance(data);
             if (dotsPerPixel != 1.0f) {

@@ -28,11 +28,10 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-.tb-image-preview {
-  width: 100%;
-  img {
-    width: 100%;
-    height: auto;
-    display: inline-block;
-  }
+package org.thingsboard.server.common.data.report.configuration.image;
+
+public enum ImageAlignment {
+    left,
+    center,
+    right
 }

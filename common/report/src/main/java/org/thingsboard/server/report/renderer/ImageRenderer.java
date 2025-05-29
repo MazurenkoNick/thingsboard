@@ -36,6 +36,7 @@ import org.thingsboard.server.common.data.report.configuration.components.ImageC
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponentType;
 import org.thingsboard.server.common.data.report.configuration.image.ImageSourceType;
+import org.thingsboard.server.common.data.report.configuration.image.ImageWidthType;
 import org.thingsboard.server.report.context.ComponentData;
 import org.thingsboard.server.report.util.ThymeleafUtil;
 
@@ -66,9 +67,28 @@ public class ImageRenderer extends ReportComponentWithLayoutRenderer {
             }
         } else {
             imageUrl = imageComponent.getImageUrl();
+            if (imageUrl == null || imageUrl.isEmpty()) {
+                imageUrl = "/assets/report/components/image.svg";
+            }
         }
         HashMap<String, Object> componentVariables = new HashMap<>();
         componentVariables.put("imageUrl", imageUrl);
+        String imageWidth = "100%";
+        if (ImageWidthType.original.equals(imageComponent.getWidthType())) {
+            imageWidth = "auto";
+        } else if (ImageWidthType.custom.equals(imageComponent.getWidthType())) {
+            int customWidth = 100;
+            if (imageComponent.getCustomWidth() >= 1) {
+                customWidth = imageComponent.getCustomWidth();
+            }
+            imageWidth = customWidth + "px";
+        }
+        componentVariables.put("imageWidth", imageWidth);
+        String imageAlign = "center";
+        if (imageComponent.getAlignment() != null) {
+            imageAlign = imageComponent.getAlignment().name();
+        }
+        componentVariables.put("imageAlign", imageAlign);
         return ThymeleafUtil.render("html/components/image", componentVariables);
     }
 

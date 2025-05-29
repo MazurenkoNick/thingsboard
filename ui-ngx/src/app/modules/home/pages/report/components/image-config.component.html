@@ -37,9 +37,41 @@
       <tb-toggle-option value="layout">{{ 'report-template.layout' | translate }}</tb-toggle-option>
     </tb-toggle-select>
   </div>
-  <tb-gallery-image-input [class.!hidden]="settingsTab !== 'image'"
-                          formControlName="imageUrl">
-  </tb-gallery-image-input>
+  <div class="tb-form-panel no-border no-padding" [class.!hidden]="settingsTab !== 'image'">
+    <tb-gallery-image-input formControlName="imageUrl"
+                            detectImageSize
+                            (imageSize)="imageSizeUpdated($event)">
+    </tb-gallery-image-input>
+    <div class="tb-form-row space-between">
+      <div>{{ 'report-template.component.image.image-width' | translate }}</div>
+      <div class="flex flex-row items-center justify-start gap-2">
+        <mat-form-field class="medium-width" appearance="outline" subscriptSizing="dynamic">
+          <mat-select formControlName="widthType">
+            <mat-option *ngFor="let widthType of imageWidthTypes" [value]="widthType">
+              {{ imageWidthTypeTranslations.get(widthType) | translate }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+        @if (reportConfigForm.get('widthType').value === 'custom') {
+          <div class="tb-small-label" translate>report-template.width</div>
+          <mat-form-field appearance="outline" class="number" subscriptSizing="dynamic">
+            <input matInput formControlName="customWidth" type="number" min="1" step="1" placeholder="{{ 'widget-config.set' | translate }}">
+            <div matSuffix>px</div>
+          </mat-form-field>
+        }
+      </div>
+    </div>
+    <div class="tb-form-row space-between">
+      <div>{{ 'report-template.component.image.image-alignment' | translate }}</div>
+      <mat-form-field class="medium-width" appearance="outline" subscriptSizing="dynamic">
+        <mat-select formControlName="alignment">
+          <mat-option *ngFor="let alignment of imageAlignments" [value]="alignment">
+            {{ imageAlignmentTranslations.get(alignment) | translate }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+  </div>
   <div class="tb-form-panel no-border no-padding" [class.!hidden]="settingsTab !== 'layout'">
     <div class="tb-form-row space-between">
       <div translate>report-template.paddings</div>

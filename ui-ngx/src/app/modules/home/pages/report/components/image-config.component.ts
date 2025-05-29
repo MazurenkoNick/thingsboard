@@ -30,8 +30,14 @@
 ///
 
 import { Component, ViewEncapsulation } from '@angular/core';
-import { FormGroup } from '@angular/forms';
-import { ImageReportComponentConfig } from '@app/shared/public-api';
+import { FormGroup, Validators } from '@angular/forms';
+import {
+  imageAlignments,
+  imageAlignmentTranslations,
+  ImageReportComponentConfig,
+  imageWidthTypes,
+  imageWidthTypeTranslations
+} from '@app/shared/public-api';
 import { AbstractReportComponentConfig } from '@home/pages/report/components/report-component-config.component';
 
 @Component({
@@ -42,11 +48,31 @@ import { AbstractReportComponentConfig } from '@home/pages/report/components/rep
 })
 export class ImageConfigComponent extends AbstractReportComponentConfig<ImageReportComponentConfig> {
 
+  imageWidthTypes = imageWidthTypes;
+  imageWidthTypeTranslations = imageWidthTypeTranslations;
+
+  imageAlignments = imageAlignments;
+  imageAlignmentTranslations = imageAlignmentTranslations;
+
   settingsTab: 'image' | 'layout' = 'image';
 
+  private initialImageUrl: string;
+
   protected buildForm(reportComponentConfig: ImageReportComponentConfig): FormGroup {
+    this.initialImageUrl = reportComponentConfig.imageUrl;
     return this.fb.group({
-      imageUrl: [reportComponentConfig.imageUrl, []]
+      imageUrl: [this.initialImageUrl, []],
+      widthType: [reportComponentConfig.widthType || 'fitWidth', []],
+      customWidth: [reportComponentConfig.customWidth || 100, [Validators.min(1)]],
+      alignment: [reportComponentConfig.alignment || 'center', []]
     });
+  }
+
+  imageSizeUpdated(size: {width: number, height: number}): void {
+    if (!this.reportConfigForm.get('customWidth').touched &&
+         this.reportConfigForm.get('imageUrl').value !== this.initialImageUrl) {
+        this.initialImageUrl = null;
+        this.reportConfigForm.get('customWidth').patchValue(size.width);
+    }
   }
 }

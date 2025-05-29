@@ -40,18 +40,20 @@ public class PdfSvgFSImage extends ITextFSImage {
 
     private final PdfSvgDocument _svgDocument;
     private Image _image;
-    private final float factor;
+    private final float dotsPerPixel;
+    private final int usablePageWidthPx;
     private final int width;
     private final int height;
 
-    public PdfSvgFSImage(PdfSvgDocument svgDocument, float factor) {
-        this(svgDocument, factor, (int)(svgDocument.size().width * factor), (int)(svgDocument.size().height * factor));
+    public PdfSvgFSImage(PdfSvgDocument svgDocument, float dotsPerPixel, int usablePageWidthPx) {
+        this(svgDocument, dotsPerPixel, usablePageWidthPx, (int)(svgDocument.size().width * dotsPerPixel), (int)(svgDocument.size().height * dotsPerPixel));
     }
 
-    public PdfSvgFSImage(PdfSvgDocument svgDocument, float factor, int width, int height) {
+    public PdfSvgFSImage(PdfSvgDocument svgDocument, float dotsPerPixel, int usablePageWidthPx, int width, int height) {
         super(null);
         this._svgDocument = svgDocument;
-        this.factor = factor;
+        this.dotsPerPixel = dotsPerPixel;
+        this.usablePageWidthPx = usablePageWidthPx;
         this.width = width;
         this.height = height;
     }
@@ -83,7 +85,7 @@ public class PdfSvgFSImage extends ITextFSImage {
             }
 
             if (currentWith != targetWidth || currentHeight != targetHeight) {
-                return new PdfSvgFSImage(this._svgDocument, this.factor, targetWidth, targetHeight);
+                return new PdfSvgFSImage(this._svgDocument, this.dotsPerPixel, this.usablePageWidthPx, targetWidth, targetHeight);
             }
         }
         return this;
@@ -93,7 +95,8 @@ public class PdfSvgFSImage extends ITextFSImage {
     public Image getImage() {
         if (_image == null) {
             try {
-                BufferedImage bufferedImage = this._svgDocument.render(this.factor, this.width, this.height);
+                BufferedImage bufferedImage = this._svgDocument.render((float) this.width / this.dotsPerPixel,
+                        (float) this.height / this.dotsPerPixel, this.usablePageWidthPx);
                 _image = Image.getInstance(bufferedImage, null);
             } catch (Exception e) {}
         }
@@ -103,7 +106,7 @@ public class PdfSvgFSImage extends ITextFSImage {
 
     @Override
     public Object clone() {
-        return new PdfSvgFSImage(_svgDocument, this.factor, this.width, this.height);
+        return new PdfSvgFSImage(_svgDocument, this.dotsPerPixel, this.usablePageWidthPx, this.width, this.height);
     }
 
 }

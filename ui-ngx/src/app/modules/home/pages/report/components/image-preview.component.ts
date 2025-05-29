@@ -49,12 +49,24 @@ export class ImagePreviewComponent extends AbstractReportComponentPreview<ImageR
 
   imageUrl: string;
 
+  imageWidth: string = '100%';
+
+  imageAlign: string = 'center';
+
   onComponentUpdated() {
     if (this.reportComponent.imageUrl && this.reportComponent.imageUrl.trim().length) {
       this.imageUrl = this.reportComponent.imageUrl;
     } else {
       this.imageUrl = '/assets/report/components/image.svg';
     }
+    this.imageWidth = '100%';
+    if (this.reportComponent.widthType === 'original') {
+      this.imageWidth = 'auto';
+    } else if (this.reportComponent.widthType === 'custom') {
+      const customWidth = this.reportComponent.customWidth || 100;
+      this.imageWidth = customWidth + 'px';
+    }
+    this.imageAlign = this.reportComponent.alignment || 'center';
   }
 
   ngAfterViewInit() {
