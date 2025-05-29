@@ -7073,6 +7073,10 @@
         "background": "Background",
         "insert-update-image": "Insert/update image",
         "image": "Image",
+        "image-size": "Image size",
+        "width": "Width",
+        "height": "Height",
+        "preserve-image-proportions": "Preserve image proportions",
         "component": {
             "heading": {
                 "type": "Heading",

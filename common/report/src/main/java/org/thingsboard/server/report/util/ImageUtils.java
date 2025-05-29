@@ -31,50 +31,39 @@
 package org.thingsboard.server.report.util;
 
 import com.github.weisj.jsvg.SVGDocument;
-import com.github.weisj.jsvg.SVGRenderingHints;
 import com.github.weisj.jsvg.attributes.ViewBox;
-import com.github.weisj.jsvg.geometry.size.FloatSize;
 import com.github.weisj.jsvg.parser.DefaultParserProvider;
+import com.github.weisj.jsvg.parser.DomProcessor;
 import com.github.weisj.jsvg.parser.LoaderContext;
+import com.github.weisj.jsvg.parser.ParserProvider;
 import com.github.weisj.jsvg.parser.SVGLoader;
+import org.jetbrains.annotations.Nullable;
 import org.thingsboard.server.common.data.DataConstants;
+import org.thingsboard.server.report.util.itext.PdfSvgDocument;
 
-import java.awt.*;
-import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class ImageUtils {
 
-    public static BufferedImage checkAndLoadImageFromSvg(byte[] data, int minWidth) {
+    public static PdfSvgDocument checkAndLoadSvg(byte[] data) {
+
         SVGLoader loader = new SVGLoader();
-        SVGDocument svgDocument;
         try {
-            svgDocument = loader.load(new ByteArrayInputStream(data), null, LoaderContext.builder()
-                    .parserProvider(new DefaultParserProvider())
+            AtomicReference<ViewBox> viewBoxRef = new AtomicReference<>();
+            ParserProvider parserProvider = new DefaultParserProvider() {
+                public @Nullable DomProcessor createPreProcessor() {
+                    return root -> {
+                        viewBoxRef.set(root.attributeNode().getViewBox());
+                    };
+                }
+            };
+
+            SVGDocument document = loader.load(new ByteArrayInputStream(data), null, LoaderContext.builder()
+                    .parserProvider(parserProvider)
                     .build());
+            return new PdfSvgDocument(document, viewBoxRef.get());
         } catch (Exception e) {
-            // Invalid SVG or not SVG
-            return null;
-        }
-        if (svgDocument != null) {
-            FloatSize imageSize = svgDocument.size();
-            int width = (int) imageSize.width;
-            int height = (int) imageSize.height;
-            if (width < minWidth) {
-                double aspectRatio = (double) width / height;
-                width = minWidth;
-                height = (int) (minWidth / aspectRatio);
-            }
-            BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-            Graphics2D graphics = image.createGraphics();
-            graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            graphics.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
-            graphics.setRenderingHint(SVGRenderingHints.KEY_IMAGE_ANTIALIASING, SVGRenderingHints.VALUE_IMAGE_ANTIALIASING_ON);
-            graphics.setRenderingHint(SVGRenderingHints.KEY_SOFT_CLIPPING, SVGRenderingHints.VALUE_SOFT_CLIPPING_ON);
-            svgDocument.render((Component)null,graphics, new ViewBox(0, 0, width, height));
-            graphics.dispose();
-            return image;
-        } else {
             // Invalid SVG or not SVG
             return null;
         }

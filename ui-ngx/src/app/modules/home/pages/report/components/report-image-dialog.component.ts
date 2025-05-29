@@ -29,13 +29,14 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { Component, Inject } from '@angular/core';
+import { Component, DestroyRef, Inject } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { Store } from '@ngrx/store';
 import { AppState } from '@core/core.state';
 import { UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { DialogComponent } from '@app/shared/components/dialog.component';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 export interface ReportImageData {
   imageUrl: string;
@@ -52,10 +53,19 @@ export class ReportImageDialogComponent extends DialogComponent<ReportImageDialo
 
   reportImageFormGroup: UntypedFormGroup;
 
+  origImageSize: {width: number, height: number};
+
+  preserveAspect = true;
+
+  private aspect: number = 1;
+
+  private updateImageSize = !this.data.width  || !this.data.height;
+
   constructor(protected store: Store<AppState>,
               protected router: Router,
               @Inject(MAT_DIALOG_DATA) public data: ReportImageData,
               public dialogRef: MatDialogRef<ReportImageDialogComponent, ReportImageData>,
+              private destroyRef: DestroyRef,
               private fb: UntypedFormBuilder) {
     super(store, router, dialogRef);
 
@@ -63,6 +73,19 @@ export class ReportImageDialogComponent extends DialogComponent<ReportImageDialo
       imageUrl: [data.imageUrl, []],
       width: [data.width, [Validators.min(0)]],
       height: [data.height, [Validators.min(0)]]
+    });
+    if (this.data.width && this.data.height) {
+      this.aspect = this.data.width / this.data.height;
+    }
+    this.reportImageFormGroup.get('width').valueChanges.pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(() => {
+      this.widthUpdated();
+    });
+    this.reportImageFormGroup.get('height').valueChanges.pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(() => {
+      this.heightUpdated();
     });
   }
 
@@ -72,7 +95,55 @@ export class ReportImageDialogComponent extends DialogComponent<ReportImageDialo
 
   save(): void {
     const result: ReportImageData = this.reportImageFormGroup.value;
+    if (!result.width || !result.height) {
+      result.width = this.origImageSize.width;
+      result.height = this.origImageSize.height;
+    }
     this.dialogRef.close(result);
+  }
+
+  imageSizeUpdated(size: {width: number, height: number}): void {
+    this.origImageSize = size;
+    if (this.updateImageSize) {
+      this.reportImageFormGroup.get('width').patchValue(this.origImageSize.width, {emitEvent: false});
+      this.reportImageFormGroup.get('height').patchValue(this.origImageSize.height, {emitEvent: false});
+      this.aspect = this.origImageSize.width / this.origImageSize.height;
+    }
+    this.updateImageSize = true;
+  }
+
+  togglePreserveAspect() {
+    this.preserveAspect = !this.preserveAspect;
+  }
+
+  private widthUpdated() {
+    const newWidth = this.reportImageFormGroup.get('width').value;
+    if (newWidth) {
+      if (this.preserveAspect) {
+        const newHeight = newWidth / this.aspect;
+        this.reportImageFormGroup.get('height').patchValue(newHeight, {emitEvent: false});
+      } else {
+        const height = this.reportImageFormGroup.get('height').value;
+        if (height) {
+          this.aspect = newWidth / height;
+        }
+      }
+    }
+  }
+
+  private heightUpdated() {
+    const newHeight = this.reportImageFormGroup.get('height').value;
+    if (newHeight) {
+      if (this.preserveAspect) {
+        const newWidth = newHeight * this.aspect;
+        this.reportImageFormGroup.get('width').patchValue(newWidth, {emitEvent: false});
+      } else {
+        const width = this.reportImageFormGroup.get('width').value;
+        if (width) {
+          this.aspect = width / newHeight;
+        }
+      }
+    }
   }
 
 }

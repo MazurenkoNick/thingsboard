@@ -50,7 +50,6 @@ import org.xhtmlrenderer.util.ContentTypeDetectingInputStreamWrapper;
 import org.xhtmlrenderer.util.ImageUtil;
 import org.xhtmlrenderer.util.XRLog;
 
-import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -59,7 +58,7 @@ import java.net.URL;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 
-import static org.thingsboard.server.report.util.ImageUtils.checkAndLoadImageFromSvg;
+import static org.thingsboard.server.report.util.ImageUtils.checkAndLoadSvg;
 import static org.thingsboard.server.report.util.ImageUtils.isInternalTbImage;
 import static org.thingsboard.server.report.util.ImageUtils.isPublicTbImage;
 import static org.thingsboard.server.report.util.ImageUtils.isTbImage;
@@ -68,20 +67,18 @@ import static org.xhtmlrenderer.util.ImageUtil.isEmbeddedBase64Image;
 
 public class PdfReportUserAgent extends ITextUserAgent {
 
-    private final TbReportCtx ctx;
-    private final ReportDataService dataService;
+    private final TbReportCtx _ctx;
+    private final ReportDataService _dataService;
     private final ITextOutputDevice _outputDevice;
     private final int dotsPerPixel;
-    private final int usablePageWidthPx;
 
     public PdfReportUserAgent(ReportDataService dataService, TbReportCtx ctx,
-                              ITextOutputDevice outputDevice, int dotsPerPixel, int usablePageWidthPx) {
+                              ITextOutputDevice outputDevice, int dotsPerPixel) {
         super(outputDevice, dotsPerPixel);
-        this.dataService = dataService;
-        this.ctx = ctx;
+        this._dataService = dataService;
+        this._ctx = ctx;
         this._outputDevice = outputDevice;
         this.dotsPerPixel = dotsPerPixel;
-        this.usablePageWidthPx = usablePageWidthPx;
     }
 
     @Override
@@ -157,9 +154,8 @@ public class PdfReportUserAgent extends ITextUserAgent {
                         PDFAsImage image = new PDFAsImage(uri, initialWidth, initialHeight);
                         return new ImageResource(uriStr, image);
                     } else {
-                        Image image = this.loadImage(readBytes(cis));
-                        scaleToOutputResolution(image);
-                        return new ImageResource(uriStr, new ITextFSImage(image));
+                        ITextFSImage image = this.loadITextFSImage(readBytes(cis));
+                        return new ImageResource(uriStr, image);
                     }
                 }
             }
@@ -172,9 +168,8 @@ public class PdfReportUserAgent extends ITextUserAgent {
     private ImageResource loadEmbeddedBase64ImageResource(final String uri) {
         try {
             byte[] buffer = ImageUtil.getEmbeddedBase64Image(uri);
-            Image image = this.loadImage(buffer);
-            scaleToOutputResolution(image);
-            return new ImageResource(null, new ITextFSImage(image));
+            ITextFSImage image = this.loadITextFSImage(buffer);
+            return new ImageResource(null, image);
         } catch (BadElementException | IOException e) {
             XRLog.exception("Can't read XHTML embedded image.", e);
         }
@@ -196,9 +191,8 @@ public class PdfReportUserAgent extends ITextUserAgent {
                 if (descriptor != null) {
                     skipSvgCheck = !descriptor.getMediaType().contains("svg+xml");
                 }
-                Image image = this.loadImage(imageData, skipSvgCheck);
-                scaleToOutputResolution(image);
-                return new ImageResource(uri, new ITextFSImage(image));
+                ITextFSImage image = this.loadITextFSImage(imageData, skipSvgCheck);
+                return new ImageResource(uri, image);
             }
         } catch (Exception e) {
             XRLog.exception("Can't read TB image.", e);
@@ -219,7 +213,7 @@ public class PdfReportUserAgent extends ITextUserAgent {
             if (parts.length >= 5) {
                 String key = parts[4];
                 key = URLDecoder.decode(key, StandardCharsets.UTF_8);
-                return this.dataService.findImage(imageType, key, this.ctx);
+                return this._dataService.findImage(imageType, key, this._ctx);
             }
         }
         return null;
@@ -229,28 +223,25 @@ public class PdfReportUserAgent extends ITextUserAgent {
         var parts = uri.split("/");
         if (parts.length >= 5) {
             String publicKey = parts[4];
-            return this.dataService.findPublicImage(publicKey, this.ctx);
+            return this._dataService.findPublicImage(publicKey, this._ctx);
         }
         return null;
     }
 
-    private void scaleToOutputResolution(Image image) {
-        float factor = dotsPerPixel;
-        if (factor != 1.0f) {
-            image.scaleAbsolute(image.getPlainWidth() * factor, image.getPlainHeight() * factor);
-        }
+    private ITextFSImage loadITextFSImage(byte[] data) throws IOException {
+        return loadITextFSImage(data, false);
     }
 
-    private Image loadImage(byte[] data) throws IOException {
-        return loadImage(data, false);
-    }
-
-    private Image loadImage(byte[] data, boolean skipSvgCheck) throws IOException {
-        BufferedImage image = skipSvgCheck ? null : checkAndLoadImageFromSvg(data, this.usablePageWidthPx);
-        if (image != null) {
-            return Image.getInstance(image, null);
+    private ITextFSImage loadITextFSImage(byte[] data, boolean skipSvgCheck) throws IOException {
+        PdfSvgDocument svgDocument = skipSvgCheck ? null : checkAndLoadSvg(data);
+        if (svgDocument != null) {
+            return new PdfSvgFSImage(svgDocument, this.dotsPerPixel);
         } else {
-            return Image.getInstance(data);
+            Image image = Image.getInstance(data);
+            if (dotsPerPixel != 1.0f) {
+                image.scaleAbsolute(image.getPlainWidth() * dotsPerPixel, image.getPlainHeight() * dotsPerPixel);
+            }
+            return new ITextFSImage(image);
         }
     }
 }

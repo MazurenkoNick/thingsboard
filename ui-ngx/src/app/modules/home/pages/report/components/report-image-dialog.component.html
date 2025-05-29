@@ -43,8 +43,32 @@
   <div mat-dialog-content style="position: relative;">
     <div [formGroup]="reportImageFormGroup" class="tb-form-panel no-border">
       <tb-gallery-image-input label="{{'report-template.image' | translate}}"
+                              detectImageSize
+                              (imageSize)="imageSizeUpdated($event)"
                               formControlName="imageUrl">
       </tb-gallery-image-input>
+      <div class="tb-form-row space-between">
+        <div>{{ 'report-template.image-size' | translate }}</div>
+        <div class="flex flex-row items-center justify-start gap-2">
+          <div class="tb-small-label" translate>report-template.width</div>
+          <mat-form-field appearance="outline" class="number" subscriptSizing="dynamic">
+            <input matInput formControlName="width" type="number" min="0" step="1" placeholder="{{ 'widget-config.set' | translate }}">
+            <div matSuffix>px</div>
+          </mat-form-field>
+          <div class="tb-small-label" translate>report-template.height</div>
+          <mat-form-field appearance="outline" class="number" subscriptSizing="dynamic">
+            <input matInput formControlName="height" type="number" min="0" step="1" placeholder="{{ 'widget-config.set' | translate }}">
+            <div matSuffix>px</div>
+          </mat-form-field>
+          <button mat-icon-button
+                  type="button"
+                  (click)="togglePreserveAspect()"
+                  matTooltip="{{ 'report-template.preserve-image-proportions' | translate }}"
+                  matTooltipPosition="above">
+            <tb-icon matButtonIcon>{{ preserveAspect ? 'mdi:lock' : 'mdi:lock-open'}}</tb-icon>
+          </button>
+        </div>
+      </div>
     </div>
   </div>
   <div mat-dialog-actions class="flex items-center justify-end">
