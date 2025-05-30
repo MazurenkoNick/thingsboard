@@ -72,8 +72,9 @@ public class ImageRenderer extends ReportComponentWithLayoutRenderer {
             }
         }
         HashMap<String, Object> componentVariables = new HashMap<>();
+        componentVariables.put("layoutWidth", this.layoutWidthPx + "px");
         componentVariables.put("imageUrl", imageUrl);
-        String imageWidth = "100%";
+        String imageWidth = this.layoutWidthPx + "px";
         if (ImageWidthType.original.equals(imageComponent.getWidthType())) {
             imageWidth = "auto";
         } else if (ImageWidthType.custom.equals(imageComponent.getWidthType())) {

@@ -122,7 +122,7 @@ public class PdfReportService extends AbstractReportService {
         Map<String, Object> reportVariables = new HashMap<>();
         fillPageLayoutVariables(reportVariables, configuration, headerLayout, footerLayout, pageSize, pageMargins);
 
-        reportVariables.put("pageContent", renderContent(ctx, configuration.getComponents(), null));
+        reportVariables.put("pageContent", renderContent(usablePageWidthPx, ctx, configuration.getComponents(), null));
 
         String renderedHtmlContent = ThymeleafUtil.render("html/report-template", reportVariables);
         String xHtml = HtmlRenderUtils.convertToXhtml(renderedHtmlContent);
@@ -151,14 +151,14 @@ public class PdfReportService extends AbstractReportService {
         HeaderFooterRenderLayout headerFooterRenderLayout = new HeaderFooterRenderLayout();
         headerFooterRenderLayout.setEnabled(headerFooter.isEnabled());
         if (headerFooter.isEnabled()) {
-            String htmlContent = renderContent(ctx, headerFooter.getComponents(), null);
+            String htmlContent = renderContent(usablePageWidthPx, ctx, headerFooter.getComponents(), null);
             headerFooterRenderLayout.setHtmlContent(htmlContent);
             int heightPx = HtmlRenderUtils.measureHtmlHeight(renderer, htmlContent, usablePageWidthPx);
             headerFooterRenderLayout.setHeightPx(heightPx);
         }
         headerFooterRenderLayout.setFirstPageEnabled(headerFooter.getFirstPage() != null && headerFooter.getFirstPage().isEnabled());
         if (headerFooterRenderLayout.isFirstPageEnabled()) {
-            String htmlContent = renderContent(ctx, headerFooter.getFirstPage().getComponents(), null);
+            String htmlContent = renderContent(usablePageWidthPx, ctx, headerFooter.getFirstPage().getComponents(), null);
             headerFooterRenderLayout.setFirstPageHtmlContent(htmlContent);
             int heightPx = HtmlRenderUtils.measureHtmlHeight(renderer, htmlContent, usablePageWidthPx);
             headerFooterRenderLayout.setFirstPageHeightPx(heightPx);
@@ -166,24 +166,24 @@ public class PdfReportService extends AbstractReportService {
         return headerFooterRenderLayout;
     }
 
-    private String renderContent(TbReportCtx ctx, List<ReportComponent> components, EntityData stateEntity) {
+    private String renderContent(int usablePageWidthPx, TbReportCtx ctx, List<ReportComponent> components, EntityData stateEntity) {
         StringBuilder content = new StringBuilder();
         for (ReportComponent component : components) {
             ReportComponentType type = component.getType();
             if (type == SUB_REPORT) {
-                content.append(renderSubreport(ctx, component));
+                content.append(renderSubreport(usablePageWidthPx, ctx, component));
             } else if (type == TIME_SERIES_TABLE) {
-                content.append(renderTimeseriesTables(ctx, stateEntity, component));
+                content.append(renderTimeseriesTables(usablePageWidthPx, ctx, stateEntity, component));
             } else {
-                content.append(renderComponent(ctx, component, stateEntity));
+                content.append(renderComponent(usablePageWidthPx, ctx, component, stateEntity));
             }
         }
         return content.toString();
     }
 
-    private String renderComponent(TbReportCtx ctx, ReportComponent component, EntityData stateEntity) {
+    private String renderComponent(int usablePageWidthPx, TbReportCtx ctx, ReportComponent component, EntityData stateEntity) {
         try {
-            ComponentData componentData = getComponentData(ctx, component, stateEntity);
+            ComponentData componentData = getComponentData(usablePageWidthPx, ctx, component, stateEntity);
             return componentsRenderers.get(component.getType()).render(component, componentData);
         } catch (Exception e) {
             log.error("Failed to render component of type [{}]", component.getType(), e);
@@ -191,18 +191,18 @@ public class PdfReportService extends AbstractReportService {
         }
     }
 
-    private ComponentData getComponentData(TbReportCtx ctx, ReportComponent component, EntityData stateEntity) {
+    private ComponentData getComponentData(int usablePageWidthPx, TbReportCtx ctx, ReportComponent component, EntityData stateEntity) {
         return switch (component.getType()) {
             case TIME_SERIES_TABLE ->
-                    new ComponentData(fetchEntityTsData(ctx, (TimeseriesTableComponent) component, stateEntity.getEntityId()));
-            case ALARM_TABLE -> new ComponentData(fetchAlarmDatas(ctx, (AlarmTableComponent) component));
-            case DASHBOARD -> buildDashboardComponentData(ctx, ((DashboardComponent) component));
-            case IMAGE -> buildImageComponentData(ctx, ((ImageComponent) component));
-            default -> buildMultipleDataSourceData(ctx, component.getDataSources(), stateEntity);
+                    new ComponentData(usablePageWidthPx, fetchEntityTsData(ctx, (TimeseriesTableComponent) component, stateEntity.getEntityId()));
+            case ALARM_TABLE -> new ComponentData(usablePageWidthPx, fetchAlarmDatas(ctx, (AlarmTableComponent) component));
+            case DASHBOARD -> buildDashboardComponentData(usablePageWidthPx, ctx, ((DashboardComponent) component));
+            case IMAGE -> buildImageComponentData(usablePageWidthPx, ctx, ((ImageComponent) component));
+            default -> buildMultipleDataSourceData(usablePageWidthPx, ctx, component.getDataSources(), stateEntity);
         };
     }
 
-    private String renderTimeseriesTables(TbReportCtx ctx, EntityData stateEntity, ReportComponent component) {
+    private String renderTimeseriesTables(int usablePageWidthPx, TbReportCtx ctx, EntityData stateEntity, ReportComponent component) {
         StringBuilder content = new StringBuilder();
         Optional<DataSource> dataSource = getSingleDataSource(component);
         if (dataSource.isEmpty()) {
@@ -210,12 +210,12 @@ public class PdfReportService extends AbstractReportService {
         }
         List<EntityData> entityDatas = fetchEntities(ctx, dataSource.get(), stateEntity);
         for (EntityData entity : entityDatas) {
-            content.append(renderComponent(ctx, component, entity));
+            content.append(renderComponent(usablePageWidthPx, ctx, component, entity));
         }
         return content.toString();
     }
 
-    private String renderSubreport(TbReportCtx ctx, ReportComponent component) {
+    private String renderSubreport(int usablePageWidthPx, TbReportCtx ctx, ReportComponent component) {
         ReportTemplateId templateId = ((SubReportComponent) component).getTemplateId();
         if (templateId == null) {
             return renderError("Report template id is not configured for Subreport");
@@ -235,7 +235,7 @@ public class PdfReportService extends AbstractReportService {
             TbReportCtx subReportCtx = ctx.createSubReportCxt(reportConfiguration);
             List<EntityData> entityDatas = fetchEntities(ctx, dataSource.get(), null);
             for (EntityData entity : entityDatas) {
-                content.append(renderContent(subReportCtx, reportConfiguration.getComponents(), entity));
+                content.append(renderContent(usablePageWidthPx, subReportCtx, reportConfiguration.getComponents(), entity));
             }
             return content.toString();
         } catch (Exception e) {
@@ -252,19 +252,19 @@ public class PdfReportService extends AbstractReportService {
         return componentsRenderers.get(ERROR).render(new ErrorComponent(errorMessage, e), null);
     }
 
-    private ComponentData buildImageComponentData(TbReportCtx ctx, ImageComponent component) {
+    private ComponentData buildImageComponentData(int usablePageWidthPx, TbReportCtx ctx, ImageComponent component) {
         if (ImageSourceType.entityKey.equals(component.getSourceType())) {
             Optional<DataSource> dataSource = getSingleDataSource(component);
             if (dataSource.isEmpty()) {
-                return new ComponentData();
+                return new ComponentData(usablePageWidthPx);
             }
-            return buildSingleComponentData(ctx, dataSource.get(), null);
+            return buildSingleComponentData(usablePageWidthPx, ctx, dataSource.get(), null);
         } else {
-            return new ComponentData();
+            return new ComponentData(usablePageWidthPx);
         }
     }
 
-    private ComponentData buildDashboardComponentData(TbReportCtx ctx, DashboardComponent component) {
+    private ComponentData buildDashboardComponentData(int usablePageWidthPx, TbReportCtx ctx, DashboardComponent component) {
         SettableFuture<DashboardReportData> futureToSet = SettableFuture.create();
         webReportClient.requestDashboardReport(component.getConfig(), null,
                 ctx.getAccessToken(), ctx.getAccessTokenExpTs(),
@@ -273,44 +273,44 @@ public class PdfReportService extends AbstractReportService {
                     futureToSet.setException(error);
                 });
         try {
-            return new ComponentData(futureToSet.get().getData());
+            return new ComponentData(usablePageWidthPx, futureToSet.get().getData());
         } catch (InterruptedException | ExecutionException e) {
             throw new RuntimeException(e);
         }
     }
 
-    private ComponentData buildMultipleDataSourceData(TbReportCtx ctx, List<DataSource> dataSources, EntityData stateEntity) {
+    private ComponentData buildMultipleDataSourceData(int usablePageWidthPx, TbReportCtx ctx, List<DataSource> dataSources, EntityData stateEntity) {
         if (dataSources == null || dataSources.isEmpty()) {
-            return new ComponentData();
+            return new ComponentData(usablePageWidthPx);
         }
-        ComponentData mainDataSource = new ComponentData();
+        ComponentData mainDataSource = new ComponentData(usablePageWidthPx);
         for (DataSource dataSource : dataSources) {
-            ComponentData singleDataSource = buildSingleComponentData(ctx, dataSource, stateEntity);
+            ComponentData singleDataSource = buildSingleComponentData(usablePageWidthPx, ctx, dataSource, stateEntity);
             mainDataSource.merge(singleDataSource);
         }
         return mainDataSource;
     }
 
-    private ComponentData buildSingleComponentData(TbReportCtx ctx, DataSource dataSource, EntityData stateEntity) {
+    private ComponentData buildSingleComponentData(int usablePageWidthPx, TbReportCtx ctx, DataSource dataSource, EntityData stateEntity) {
         ReportTemplateConfig configuration = ctx.getConfiguration();
         return switch (dataSource.getType()) {
-            case "device", "entity" -> new ComponentData(dataSource, fetchEntityDatas(ctx, dataSource, stateEntity));
-            case "entityCount" -> buildEntityCountDataSource(ctx, dataSource, configuration);
-            case "alarmCount" -> buildAlarmCountDataSource(ctx, dataSource, configuration);
+            case "device", "entity" -> new ComponentData(usablePageWidthPx, dataSource, fetchEntityDatas(ctx, dataSource, stateEntity));
+            case "entityCount" -> buildEntityCountDataSource(usablePageWidthPx, ctx, dataSource, configuration);
+            case "alarmCount" -> buildAlarmCountDataSource(usablePageWidthPx, ctx, dataSource, configuration);
             default -> throw new IllegalArgumentException("Unknown data source type: " + dataSource.getType());
         };
     }
 
-    private ComponentData buildEntityCountDataSource(TbReportCtx ctx, DataSource dataSource, ReportTemplateConfig configuration) {
+    private ComponentData buildEntityCountDataSource(int usablePageWidthPx, TbReportCtx ctx, DataSource dataSource, ReportTemplateConfig configuration) {
         Map<String, Object> map = new HashMap<>();
         map.put("count", dataService.countEntitiesByQuery(toEntityCountQuery(dataSource, configuration), ctx));
-        return new ComponentData(map);
+        return new ComponentData(usablePageWidthPx, map);
     }
 
-    private ComponentData buildAlarmCountDataSource(TbReportCtx ctx, DataSource dataSource, ReportTemplateConfig configuration) {
+    private ComponentData buildAlarmCountDataSource(int usablePageWidthPx, TbReportCtx ctx, DataSource dataSource, ReportTemplateConfig configuration) {
         Map<String, Object> map = new HashMap<>();
         map.put("count", dataService.countAlarmsByQuery(toAlarmCountQuery(dataSource, configuration), ctx));
-        return new ComponentData(map);
+        return new ComponentData(usablePageWidthPx, map);
     }
 
     private Dimension computePageSize(PdfReportTemplateConfig config) {

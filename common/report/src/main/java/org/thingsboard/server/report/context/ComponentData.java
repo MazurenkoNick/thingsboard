@@ -52,32 +52,34 @@ import java.util.stream.Stream;
 @Slf4j
 public class ComponentData {
 
+    private final int usablePageWidthPx;
     private List<Map<String, String>> entityDatas;
     private Map<String, Object> variables;
     private byte[] image;
 
-    public ComponentData() {
-        this(null, new ArrayList<>(), new HashMap<>());
+    public ComponentData(int usablePageWidthPx) {
+        this(usablePageWidthPx,null, new ArrayList<>(), new HashMap<>());
     }
 
-    public ComponentData(byte[] image) {
-        this();
+    public ComponentData(int usablePageWidthPx, byte[] image) {
+        this(usablePageWidthPx);
         this.image = image;
     }
 
-    public ComponentData(List<Map<String, String>> entityDatas) {
-        this(null, entityDatas, new HashMap<>());
+    public ComponentData(int usablePageWidthPx, List<Map<String, String>> entityDatas) {
+        this(usablePageWidthPx, null, entityDatas, new HashMap<>());
     }
 
-    public ComponentData(DataSource dataSource, List<Map<String, String>> entityDatas) {
-        this(dataSource, entityDatas, new HashMap<>());
+    public ComponentData(int usablePageWidthPx, DataSource dataSource, List<Map<String, String>> entityDatas) {
+        this(usablePageWidthPx, dataSource, entityDatas, new HashMap<>());
     }
 
-    public ComponentData(Map<String, Object> variables) {
-        this(null, new ArrayList<>(), variables);
+    public ComponentData(int usablePageWidthPx, Map<String, Object> variables) {
+        this(usablePageWidthPx, null, new ArrayList<>(), variables);
     }
 
-    public ComponentData(DataSource dataSource, List<Map<String, String>> entityDatas, Map<String, Object> variables) {
+    public ComponentData(int usablePageWidthPx, DataSource dataSource, List<Map<String, String>> entityDatas, Map<String, Object> variables) {
+        this.usablePageWidthPx = usablePageWidthPx;
         this.entityDatas = entityDatas;
         this.variables = variables;
 

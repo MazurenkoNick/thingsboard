@@ -30,7 +30,8 @@
     OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 
 -->
-<div th:style="|width: 100%;
+<div th:style="|width: ${layoutWidth};
+                overflow: hidden;
                 text-align: ${imageAlign};
                 page-break-inside: avoid;|">
     <img th:src="${imageUrl}"

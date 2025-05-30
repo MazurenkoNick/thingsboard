@@ -44,26 +44,33 @@ public abstract class ReportComponentWithLayoutRenderer implements ReportCompone
     private static final int DEFAULT_COMPONENT_MARGIN_SIZE = 0;
     private static final int DEFAULT_COMPONENT_PADDING_SIZE = 0;
 
+    protected int layoutWidthPx;
+
     @Override
     public String render(ReportComponent component, ComponentData reportDataSource) {
+        Insets margins = component.getMargins();
+        if (margins == null) {
+            margins = new Insets(DEFAULT_COMPONENT_MARGIN_SIZE);
+        }
+        Insets paddings = component.getPaddings();
+        if (paddings == null) {
+            paddings = new Insets(DEFAULT_COMPONENT_PADDING_SIZE);
+        }
+
+        this.layoutWidthPx = reportDataSource.getUsablePageWidthPx();
+        this.layoutWidthPx = (int)((float)this.layoutWidthPx - (float)(margins.getLeft() + margins.getRight()) * 4f / 3f);
+        this.layoutWidthPx = (int)((float)this.layoutWidthPx - (float)(paddings.getLeft() + paddings.getRight()) * 4f / 3f);
+
         String content = this.renderContent(component, reportDataSource);
         Map<String, Object> layoutVariables = new HashMap<>();
         layoutVariables.put("htmlContent", content);
         layoutVariables.put("background", component.getBackground() != null ? ColorUtils.normalizeCssColor(component.getBackground()) : "transparent");
 
-        Insets margins = component.getMargins();
-        if (margins == null) {
-            margins = new Insets(DEFAULT_COMPONENT_MARGIN_SIZE);
-        }
         layoutVariables.put("leftMargin", margins.getLeft());
         layoutVariables.put("rightMargin", margins.getRight());
         layoutVariables.put("topMargin", margins.getTop());
         layoutVariables.put("bottomMargin", margins.getBottom());
 
-        Insets paddings = component.getPaddings();
-        if (paddings == null) {
-            paddings = new Insets(DEFAULT_COMPONENT_PADDING_SIZE);
-        }
         layoutVariables.put("leftPadding", paddings.getLeft());
         layoutVariables.put("rightPadding", paddings.getRight());
         layoutVariables.put("topPadding", paddings.getTop());
