@@ -79,12 +79,12 @@ public abstract class TableComponentRenderer extends ReportComponentWithLayoutRe
     protected String renderContent(ReportComponent component, ComponentData reportDataSource) {
         Optional<DataSource> dataSource = getSingleDataSource(component);
         if (dataSource.isEmpty()) {
-            return ThymeleafUtil.render("html/components/error-template", Map.of("errorMessage", "No datasource is configured for table. " +
+            return ThymeleafUtil.renderFromHtmlTemplate("html/components/error-template", Map.of("errorMessage", "No datasource is configured for table. " +
                     "Please check the data source configuration."));
         }
         List<DataKey> dataKeys  = dataSource.get().getDataKeys();
         if (dataKeys == null || dataKeys.isEmpty()) {
-            return ThymeleafUtil.render("html/components/error-template", Map.of("errorMessage", "No columns are configured for the table component. " +
+            return ThymeleafUtil.renderFromHtmlTemplate("html/components/error-template", Map.of("errorMessage", "No columns are configured for the table component. " +
                     "Please check the data source configuration."));
         }
 
@@ -110,7 +110,7 @@ public abstract class TableComponentRenderer extends ReportComponentWithLayoutRe
         componentVariables.put("columns", headerStyles);
         componentVariables.put("rows", rows);
 
-        return ThymeleafUtil.render("html/components/table-template", componentVariables);
+        return ThymeleafUtil.renderFromHtmlTemplate("html/components/table-template", componentVariables);
     }
 
     private String formatColor(Map.Entry<String, String> entry, String defaultColor) {

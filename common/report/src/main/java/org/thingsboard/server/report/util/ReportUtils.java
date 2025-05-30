@@ -30,6 +30,8 @@
  */
 package org.thingsboard.server.report.util;
 
+import org.thingsboard.server.common.data.StringUtils;
+import org.thingsboard.server.common.data.report.configuration.DataKey;
 import org.thingsboard.server.common.data.report.configuration.DataSource;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
 
@@ -57,6 +59,30 @@ public class ReportUtils {
             name = name.replace(toReplace, replacement);
         }
         return name;
+    }
+
+    public static void prepareReportComponent(ReportComponent component) {
+        List<DataSource> dataSources = component.getDataSources();
+        if (dataSources != null && !dataSources.isEmpty()) {
+            for (DataSource dataSource : dataSources) {
+                if (dataSource != null) {
+                    prepareDataKeys(dataSource.getDataKeys());
+                    prepareDataKeys(dataSource.getLatestDataKeys());
+                }
+            }
+        }
+    }
+
+    private static void prepareDataKeys(List<DataKey> dataKeys) {
+        if (dataKeys != null && !dataKeys.isEmpty()) {
+            for (DataKey dataKey : dataKeys) {
+                if (dataKey != null) {
+                    if (StringUtils.isBlank(dataKey.getLabel())) {
+                        dataKey.setLabel(dataKey.getName());
+                    }
+                }
+            }
+        }
     }
 
     public static Optional<DataSource> getSingleDataSource(ReportComponent component) {

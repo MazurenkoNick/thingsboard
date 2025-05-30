@@ -48,7 +48,7 @@ public class DashboardRenderer implements ReportComponentRenderer {
 
         HashMap<String, Object> componentVariables = new HashMap<>();
         componentVariables.put("imageSrc", base64Image);
-        return ThymeleafUtil.render("html/components/image", componentVariables);
+        return ThymeleafUtil.renderFromHtmlTemplate("html/components/image", componentVariables);
     }
 
     public String encodeImage(byte[] imageBytes, String mimeType) {

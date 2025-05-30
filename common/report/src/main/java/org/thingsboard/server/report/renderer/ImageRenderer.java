@@ -90,7 +90,7 @@ public class ImageRenderer extends ReportComponentWithLayoutRenderer {
             imageAlign = imageComponent.getAlignment().name();
         }
         componentVariables.put("imageAlign", imageAlign);
-        return ThymeleafUtil.render("html/components/image", componentVariables);
+        return ThymeleafUtil.renderFromHtmlTemplate("html/components/image", componentVariables);
     }
 
     @Override

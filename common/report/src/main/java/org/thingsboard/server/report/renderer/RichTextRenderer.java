@@ -43,7 +43,7 @@ public class RichTextRenderer extends ReportComponentWithLayoutRenderer {
     @Override
     protected String renderContent(ReportComponent component, ComponentData reportDataSource) {
         RichTextComponent richTextComponent = (RichTextComponent) component;
-        return ThymeleafUtil.renderFromString(richTextComponent.getValue(), reportDataSource.getVariables());
+        return ThymeleafUtil.renderFromHtmlString(richTextComponent.getValue(), reportDataSource.getVariables());
     }
 
     @Override

@@ -40,6 +40,7 @@ import org.thingsboard.server.common.data.ImageDescriptor;
 import org.thingsboard.server.common.data.TbResource;
 import org.thingsboard.server.report.context.TbReportCtx;
 import org.thingsboard.server.report.datasource.ReportDataService;
+import org.thingsboard.server.report.util.ThymeleafUtil;
 import org.xhtmlrenderer.extend.FSImage;
 import org.xhtmlrenderer.pdf.ITextFSImage;
 import org.xhtmlrenderer.pdf.ITextOutputDevice;
@@ -57,6 +58,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
 
 import static org.thingsboard.server.report.util.ImageUtils.checkAndLoadSvg;
 import static org.thingsboard.server.report.util.ImageUtils.isInternalTbImage;
@@ -101,15 +103,11 @@ public class PdfReportUserAgent extends ITextUserAgent {
             resource = loadImageResource(uriStr);
             _imageCache.put(unresolvedUri, resource);
         }
-        if (resource != null) {
-            FSImage image = resource.getImage();
-            if (image instanceof ITextFSImage) {
-                image = (FSImage) ((ITextFSImage) resource.getImage()).clone();
-            }
-            return new ImageResource(resource.getImageUri(), image);
-        } else {
-            return new ImageResource(uriStr, null);
+        FSImage image = resource.getImage();
+        if (image instanceof ITextFSImage) {
+            image = (FSImage) ((ITextFSImage) resource.getImage()).clone();
         }
+        return new ImageResource(resource.getImageUri(), image);
     }
 
     @Override
@@ -164,8 +162,9 @@ public class PdfReportUserAgent extends ITextUserAgent {
             }
         } catch (BadElementException | IOException | URISyntaxException e) {
             XRLog.exception("Can't read image file; unexpected problem for URI '" + uriStr + "'", e);
+            return errorImageResource(uriStr, "Can't read image file", false, e);
         }
-        return null;
+        return errorLoadImageFromUriResource(uriStr, null);
     }
 
     private ImageResource loadEmbeddedBase64ImageResource(final String uri) {
@@ -175,8 +174,8 @@ public class PdfReportUserAgent extends ITextUserAgent {
             return new ImageResource(null, image);
         } catch (BadElementException | IOException e) {
             XRLog.exception("Can't read XHTML embedded image.", e);
+            return errorLoadImageFromBase64Resource(e);
         }
-        return new ImageResource(null, null);
     }
 
     private ImageResource loadTbImageResource(final String uri) {
@@ -199,8 +198,41 @@ public class PdfReportUserAgent extends ITextUserAgent {
             }
         } catch (Exception e) {
             XRLog.exception("Can't read TB image.", e);
+            return errorLoadTbImageResource(uri, e);
         }
-        return null;
+        return errorLoadTbImageResource(uri, null);
+    }
+
+    private ImageResource errorLoadImageFromBase64Resource(Exception exception) {
+        return errorImageResource(null, "Failed to load image from base64 data", true, exception);
+    }
+
+    private ImageResource errorLoadTbImageResource(final String uri, Exception exception) {
+        return errorImageResource(uri, "Can't read TB image.", false, exception);
+    }
+
+    private ImageResource errorLoadImageFromUriResource(final String uri, Exception exception) {
+        return errorImageResource(uri,  "Failed to load image.", false, exception);
+    }
+
+    private ImageResource errorImageResource(final String uri, String errorMessage, boolean base64data, Exception exception) {
+        HashMap<String, Object> errorImageVariables = new HashMap<>();
+        errorImageVariables.put("errorMessage", errorMessage);
+        if (base64data) {
+            errorImageVariables.put("uri", "Base64 Data");
+        } else {
+            errorImageVariables.put("uri", uri);
+        }
+        if (exception != null) {
+            errorImageVariables.put("exception", exception.getMessage());
+            errorImageVariables.put("uriPos", 11);
+        } else {
+            errorImageVariables.put("uriPos", 16);
+        }
+        String errorImageSvg = ThymeleafUtil.renderFromSvgTemplate("svg/error-image", errorImageVariables);
+        PdfSvgDocument svgDocument = checkAndLoadSvg(errorImageSvg);
+        ITextFSImage image = new PdfSvgFSImage(svgDocument, this.dotsPerPixel, this.usablePageWidthPx);
+        return new ImageResource(uri, image);
     }
 
     private TbResource loadInternalTbImage(final String uri) throws Exception {

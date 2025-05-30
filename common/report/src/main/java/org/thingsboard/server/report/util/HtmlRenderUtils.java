@@ -101,7 +101,7 @@ public class HtmlRenderUtils {
         variables.put("htmlContent", htmlContent);
         variables.put("pageWidth", width + "px");
         variables.put("pageHeight", "1000px");
-        String renderedHtmlContent = ThymeleafUtil.render("html/measure-template", variables);
+        String renderedHtmlContent = ThymeleafUtil.renderFromHtmlTemplate("html/measure-template", variables);
         org.w3c.dom.Document document = parseDom(renderedHtmlContent);
         renderer.setDocument(document);
         renderer.layout();

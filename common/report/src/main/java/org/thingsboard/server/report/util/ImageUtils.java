@@ -41,6 +41,7 @@ import org.jetbrains.annotations.Nullable;
 import org.thingsboard.server.report.util.itext.PdfSvgDocument;
 
 import java.io.ByteArrayInputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -49,6 +50,10 @@ public class ImageUtils {
 
     static {
         Logger.getLogger("com.github.weisj.jsvg").setLevel(Level.OFF);
+    }
+
+    public static PdfSvgDocument checkAndLoadSvg(String svgString) {
+        return checkAndLoadSvg(svgString.getBytes(StandardCharsets.UTF_8));
     }
 
     public static PdfSvgDocument checkAndLoadSvg(byte[] data) {

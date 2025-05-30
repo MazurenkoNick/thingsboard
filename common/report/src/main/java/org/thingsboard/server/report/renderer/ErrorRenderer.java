@@ -51,7 +51,7 @@ public class ErrorRenderer extends ReportComponentWithLayoutRenderer {
         if (exception != null) {
             componentVariables.put("exception", exception.getMessage());
         }
-        return ThymeleafUtil.render("html/components/error-template", componentVariables);
+        return ThymeleafUtil.renderFromHtmlTemplate("html/components/error-template", componentVariables);
     }
 
     @Override

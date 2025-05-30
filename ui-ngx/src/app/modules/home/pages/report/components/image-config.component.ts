@@ -32,11 +32,16 @@
 import { Component, ViewEncapsulation } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
 import {
+  DataKeyType,
+  Datasource,
+  getDataKey,
   imageAlignments,
   imageAlignmentTranslations,
   ImageReportComponentConfig,
   imageWidthTypes,
-  imageWidthTypeTranslations
+  imageWidthTypeTranslations,
+  updateDataKeys,
+  WidgetConfigMode
 } from '@app/shared/public-api';
 import { AbstractReportComponentConfig } from '@home/pages/report/components/report-component-config.component';
 
@@ -54,18 +59,40 @@ export class ImageConfigComponent extends AbstractReportComponentConfig<ImageRep
   imageAlignments = imageAlignments;
   imageAlignmentTranslations = imageAlignmentTranslations;
 
+  basicMode = WidgetConfigMode.basic;
+
+  DataKeyType = DataKeyType;
+
   settingsTab: 'image' | 'layout' = 'image';
+
+  public get datasource(): Datasource {
+    const datasources: Datasource[] = this.reportConfigForm.get('dataSources').value;
+    if (datasources && datasources.length) {
+      return datasources[0];
+    } else {
+      return null;
+    }
+  }
 
   private initialImageUrl: string;
 
   protected buildForm(reportComponentConfig: ImageReportComponentConfig): FormGroup {
     this.initialImageUrl = reportComponentConfig.imageUrl;
     return this.fb.group({
-      imageUrl: [this.initialImageUrl, []],
+      sourceType: [reportComponentConfig.sourceType || 'image', []],
+      imageUrl: [reportComponentConfig.imageUrl, []],
+      dataSources: [reportComponentConfig.dataSources, []],
+      entityKey: [getDataKey(reportComponentConfig.dataSources), []],
       widthType: [reportComponentConfig.widthType || 'fitWidth', []],
       customWidth: [reportComponentConfig.customWidth || 100, [Validators.min(1)]],
       alignment: [reportComponentConfig.alignment || 'center', []]
     });
+  }
+
+  protected prepareOutputConfig(config: any): any {
+    updateDataKeys(config.dataSources, [config.entityKey]);
+    delete config.entityKey;
+    return config;
   }
 
   imageSizeUpdated(size: {width: number, height: number}): void {

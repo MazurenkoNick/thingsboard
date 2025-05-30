@@ -85,6 +85,7 @@ import static org.thingsboard.server.common.data.report.configuration.style.Page
 import static org.thingsboard.server.common.data.util.ReportQueryUtils.toAlarmCountQuery;
 import static org.thingsboard.server.common.data.util.ReportQueryUtils.toEntityCountQuery;
 import static org.thingsboard.server.report.util.ReportUtils.getSingleDataSource;
+import static org.thingsboard.server.report.util.ReportUtils.prepareReportComponent;
 import static org.thingsboard.server.report.util.ReportUtils.prepareReportName;
 
 @Service
@@ -124,7 +125,7 @@ public class PdfReportService extends AbstractReportService {
 
         reportVariables.put("pageContent", renderContent(usablePageWidthPx, ctx, configuration.getComponents(), null));
 
-        String renderedHtmlContent = ThymeleafUtil.render("html/report-template", reportVariables);
+        String renderedHtmlContent = ThymeleafUtil.renderFromHtmlTemplate("html/report-template", reportVariables);
         String xHtml = HtmlRenderUtils.convertToXhtml(renderedHtmlContent);
 
         renderer.setDocumentFromString(xHtml);
@@ -169,6 +170,7 @@ public class PdfReportService extends AbstractReportService {
     private String renderContent(int usablePageWidthPx, TbReportCtx ctx, List<ReportComponent> components, EntityData stateEntity) {
         StringBuilder content = new StringBuilder();
         for (ReportComponent component : components) {
+            prepareReportComponent(component);
             ReportComponentType type = component.getType();
             if (type == SUB_REPORT) {
                 content.append(renderSubreport(usablePageWidthPx, ctx, component));
@@ -187,7 +189,7 @@ public class PdfReportService extends AbstractReportService {
             return componentsRenderers.get(component.getType()).render(component, componentData);
         } catch (Exception e) {
             log.error("Failed to render component of type [{}]", component.getType(), e);
-            return renderError("Failed to render component of type: " + component.getType(), e);
+            return renderError(usablePageWidthPx, "Failed to render component of type: " + component.getType(), e);
         }
     }
 
@@ -206,7 +208,7 @@ public class PdfReportService extends AbstractReportService {
         StringBuilder content = new StringBuilder();
         Optional<DataSource> dataSource = getSingleDataSource(component);
         if (dataSource.isEmpty()) {
-            return renderError("Data source is not configured for Subreport");
+            return renderError(usablePageWidthPx, "Data source is not configured for Subreport");
         }
         List<EntityData> entityDatas = fetchEntities(ctx, dataSource.get(), stateEntity);
         for (EntityData entity : entityDatas) {
@@ -218,17 +220,17 @@ public class PdfReportService extends AbstractReportService {
     private String renderSubreport(int usablePageWidthPx, TbReportCtx ctx, ReportComponent component) {
         ReportTemplateId templateId = ((SubReportComponent) component).getTemplateId();
         if (templateId == null) {
-            return renderError("Report template id is not configured for Subreport");
+            return renderError(usablePageWidthPx, "Report template id is not configured for Subreport");
         }
         StringBuilder content = new StringBuilder();
         try {
             Optional<DataSource> dataSource = getSingleDataSource(component);
             if (dataSource.isEmpty()) {
-                return renderError("Data source is not configured for Subreport");
+                return renderError(usablePageWidthPx, "Data source is not configured for Subreport");
             }
             ReportTemplate reportTemplate = dataService.findReportTemplate(templateId, ctx);
             if (reportTemplate == null) {
-                return renderError("Template with id " + templateId + " not found. Please check the configuration.");
+                return renderError(usablePageWidthPx, "Template with id " + templateId + " not found. Please check the configuration.");
             }
             PdfReportTemplateConfig reportConfiguration = (PdfReportTemplateConfig) reportTemplate.getConfiguration();
 
@@ -240,16 +242,16 @@ public class PdfReportService extends AbstractReportService {
             return content.toString();
         } catch (Exception e) {
             log.error("Failed to render Subreport, template id: {}", templateId, e);
-            return renderError("Failed to render sub-report " + templateId, e);
+            return renderError(usablePageWidthPx, "Failed to render sub-report " + templateId, e);
         }
     }
 
-    private String renderError(String errorMessage) {
-        return renderError(errorMessage, null);
+    private String renderError(int usablePageWidthPx, String errorMessage) {
+        return renderError(usablePageWidthPx, errorMessage, null);
     }
 
-    private String renderError(String errorMessage, Exception e) {
-        return componentsRenderers.get(ERROR).render(new ErrorComponent(errorMessage, e), null);
+    private String renderError(int usablePageWidthPx, String errorMessage, Exception e) {
+        return componentsRenderers.get(ERROR).render(new ErrorComponent(errorMessage, e), new ComponentData(usablePageWidthPx));
     }
 
     private ComponentData buildImageComponentData(int usablePageWidthPx, TbReportCtx ctx, ImageComponent component) {

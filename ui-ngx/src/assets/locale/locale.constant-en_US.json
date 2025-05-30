@@ -7095,8 +7095,10 @@
             },
             "image": {
                 "type": "Image",
+                "image-source": "Image source",
                 "source-image": "Image",
                 "source-entity-key": "Entity key",
+                "image-url-key": "Image URL key",
                 "image-width": "Image width",
                 "width-fit-width": "Fit width",
                 "width-original": "Original",

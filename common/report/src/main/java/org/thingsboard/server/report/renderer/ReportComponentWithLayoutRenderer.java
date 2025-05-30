@@ -76,7 +76,7 @@ public abstract class ReportComponentWithLayoutRenderer implements ReportCompone
         layoutVariables.put("topPadding", paddings.getTop());
         layoutVariables.put("bottomPadding", paddings.getBottom());
 
-        return ThymeleafUtil.render("html/components/component-layout", layoutVariables);
+        return ThymeleafUtil.renderFromHtmlTemplate("html/components/component-layout", layoutVariables);
     }
 
     protected abstract String renderContent(ReportComponent component, ComponentData reportDataSource);

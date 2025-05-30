@@ -32,9 +32,8 @@
 import { Component, ViewEncapsulation } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import {
-  Datasource, EntityType,
-  pageSizes,
-  paperSizeDisplayMap, ReportTemplateType,
+  EntityType,
+  ReportTemplateType,
   SubReportReportComponentConfig,
   WidgetConfigMode
 } from '@app/shared/public-api';
@@ -53,22 +52,10 @@ export class SubReportConfigComponent extends AbstractReportComponentConfig<SubR
 
   basicMode = WidgetConfigMode.basic;
 
-  public get datasource(): Datasource {
-    const datasources: Datasource[] = this.reportConfigForm.get('dataSources').value;
-    if (datasources && datasources.length) {
-      return datasources[0];
-    } else {
-      return null;
-    }
-  }
-
   protected buildForm(reportComponentConfig: SubReportReportComponentConfig): FormGroup {
     return this.fb.group({
       dataSources: [reportComponentConfig.dataSources, []],
       templateId: [reportComponentConfig.templateId, []]
     });
   }
-
-  protected readonly pageSizes = pageSizes;
-  protected readonly paperSizeDisplayMap = paperSizeDisplayMap;
 }
