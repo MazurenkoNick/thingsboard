@@ -38,6 +38,8 @@ import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.rule.engine.api.NotificationCenter;
 import org.thingsboard.server.actors.ActorSystemContext;
 import org.thingsboard.server.cluster.TbClusterService;
+import org.thingsboard.server.common.data.ApiUsageRecordKey;
+import org.thingsboard.server.common.data.exception.ApiUsageLimitsExceededException;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.job.Job;
 import org.thingsboard.server.common.data.job.JobStatus;
@@ -59,10 +61,12 @@ import org.thingsboard.server.common.msg.TbMsg;
 import org.thingsboard.server.common.msg.gen.MsgProtos;
 import org.thingsboard.server.common.msg.queue.ServiceType;
 import org.thingsboard.server.common.msg.queue.TopicPartitionInfo;
+import org.thingsboard.server.common.stats.TbApiUsageReportClient;
 import org.thingsboard.server.dao.report.ReportTemplateService;
 import org.thingsboard.server.gen.transport.TransportProtos;
 import org.thingsboard.server.queue.common.SimpleTbQueueCallback;
 import org.thingsboard.server.queue.discovery.PartitionService;
+import org.thingsboard.server.service.apiusage.TbApiUsageStateService;
 import org.thingsboard.server.service.job.JobProcessor;
 import org.thingsboard.server.service.security.model.token.AccessJwtToken;
 import org.thingsboard.server.service.security.system.SystemSecurityService;
@@ -79,18 +83,26 @@ import static java.util.function.Predicate.not;
 @RequiredArgsConstructor
 public class ReportJobProcessor implements JobProcessor {
 
+    public static final String REPORT_CREATION_DISABLED = "Report creation is disabled";
+
     private final ReportTemplateService reportTemplateService;
     private final SystemSecurityService systemSecurityService;
     private final NotificationCenter notificationCenter;
     private final TbClusterService clusterService;
     private final PartitionService partitionService;
     private final ActorSystemContext actorSystemContext;
+    private final TbApiUsageStateService apiUsageStateService;
+    private final TbApiUsageReportClient apiUsageClient;
 
     @Override
     public int process(Job job, Consumer<Task<?>> taskConsumer) throws Exception {
         ReportJobConfiguration configuration = job.getConfiguration();
         if (configuration.getReportTemplateId() == null) {
             throw new IllegalArgumentException("Report template must be specified");
+        }
+        boolean creationEnabled = apiUsageStateService.getApiUsageState(job.getTenantId()).isReportCreationEnabled();
+        if (!creationEnabled) {
+            throw new ApiUsageLimitsExceededException(REPORT_CREATION_DISABLED);
         }
         ReportTemplate reportTemplate = reportTemplateService.findReportTemplateById(job.getTenantId(), configuration.getReportTemplateId());
         AccessJwtToken accessToken = systemSecurityService.createUserAccessToken(job.getTenantId(), configuration.getUserId());
@@ -164,6 +176,7 @@ public class ReportJobProcessor implements JobProcessor {
         if (job.getStatus() != JobStatus.COMPLETED) {
             return;
         }
+        apiUsageClient.report(job.getTenantId(), null, ApiUsageRecordKey.GENERATED_REPORTS_COUNT);
 
         Report report = result.getReport();
         if (configuration.getRecipientId() != null && configuration.getNotificationTemplateId() != null) {

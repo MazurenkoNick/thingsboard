@@ -82,6 +82,7 @@ public class BasicUsageInfoService implements UsageInfoService {
         usageInfo.setMaxEdges(profileConfiguration.getMaxEdges());
 
         usageInfo.setMaxAlarms(profileConfiguration.getMaxCreatedAlarms());
+        usageInfo.setMaxReports(profileConfiguration.getMaxGeneratedReports());
         usageInfo.setMaxTransportMessages(profileConfiguration.getMaxTransportMessages());
         usageInfo.setMaxJsExecutions(profileConfiguration.getMaxJSExecutions());
         usageInfo.setMaxTbelExecutions(profileConfiguration.getMaxTbelExecutions());
@@ -96,7 +97,8 @@ public class BasicUsageInfoService implements UsageInfoService {
                     ApiUsageRecordKey.TBEL_EXEC_COUNT.getApiCountKey(),
                     ApiUsageRecordKey.EMAIL_EXEC_COUNT.getApiCountKey(),
                     ApiUsageRecordKey.SMS_EXEC_COUNT.getApiCountKey(),
-                    ApiUsageRecordKey.CREATED_ALARMS_COUNT.getApiCountKey());
+                    ApiUsageRecordKey.CREATED_ALARMS_COUNT.getApiCountKey(),
+                    ApiUsageRecordKey.GENERATED_REPORTS_COUNT.getApiCountKey());
             try {
                 List<TsKvEntry> entries = tsService.findLatest(tenantId, apiUsageState.getId(), keys).get();
                 usageInfo.setTransportMessages(getLongValueFromTsEntries(entries, ApiUsageRecordKey.TRANSPORT_MSG_COUNT.getApiCountKey()));
@@ -105,6 +107,7 @@ public class BasicUsageInfoService implements UsageInfoService {
                 usageInfo.setEmails(getLongValueFromTsEntries(entries, ApiUsageRecordKey.EMAIL_EXEC_COUNT.getApiCountKey()));
                 usageInfo.setSms(getLongValueFromTsEntries(entries, ApiUsageRecordKey.SMS_EXEC_COUNT.getApiCountKey()));
                 usageInfo.setAlarms(getLongValueFromTsEntries(entries, ApiUsageRecordKey.CREATED_ALARMS_COUNT.getApiCountKey()));
+                usageInfo.setReports(getLongValueFromTsEntries(entries, ApiUsageRecordKey.GENERATED_REPORTS_COUNT.getApiCountKey()));
             } catch (ExecutionException | InterruptedException e) {
                 throw new RuntimeException("Failed to fetch api usage values from timeseries!");
             }

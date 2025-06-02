@@ -62,6 +62,7 @@ public class DefaultTenantProfileConfiguration implements TenantProfileConfigura
     private long maxResourcesInBytes;
     private long maxOtaPackagesInBytes;
     private long maxResourceSize;
+    private long maxReportSizeInBytes;
     private long maxIntegrations;
     private long maxConverters;
     private long maxSchedulerEvents;
@@ -130,6 +131,8 @@ public class DefaultTenantProfileConfiguration implements TenantProfileConfigura
     private long maxSms;
     @Schema(example = "1000")
     private long maxCreatedAlarms;
+    @Schema(example = "10000")
+    private long maxGeneratedReports;
 
     private String tenantServerRestLimitsConfiguration;
     private String customerServerRestLimitsConfiguration;
@@ -158,6 +161,7 @@ public class DefaultTenantProfileConfiguration implements TenantProfileConfigura
     private int queueStatsTtlDays;
     private int ruleEngineExceptionsTtlDays;
     private int blobEntityTtlDays;
+    private int reportTtlDays;
 
     private double warnThreshold;
 
@@ -186,6 +190,7 @@ public class DefaultTenantProfileConfiguration implements TenantProfileConfigura
             case EMAIL_EXEC_COUNT -> maxEmails;
             case SMS_EXEC_COUNT -> maxSms;
             case CREATED_ALARMS_COUNT -> maxCreatedAlarms;
+            case GENERATED_REPORTS_COUNT -> maxGeneratedReports;
             default -> 0L;
         };
     }

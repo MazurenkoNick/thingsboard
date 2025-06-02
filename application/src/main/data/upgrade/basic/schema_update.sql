@@ -47,3 +47,4 @@ WHERE
 -- UPDATE INTEGRATION PROTOCOL VERSION FOR MQTT CLIENT TYPES END
 
 UPDATE scheduler_event SET type = 'generateDashboardReport' WHERE type = 'generateReport';
+ALTER TABLE api_usage_state ADD COLUMN IF NOT EXISTS report_exec varchar(32) DEFAULT 'ENABLED';

@@ -43,6 +43,7 @@ import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.report.Report;
 import org.thingsboard.server.dao.entity.AbstractEntityService;
 import org.thingsboard.server.dao.service.ConstraintValidator;
+import org.thingsboard.server.dao.service.validator.ReportDataValidator;
 
 import java.util.Optional;
 
@@ -51,6 +52,7 @@ import java.util.Optional;
 public class DefaultReportService extends AbstractEntityService implements ReportService {
 
     private final ReportDao reportDao;
+    private final ReportDataValidator reportDataValidator;
 
     @Transactional
     @Override
@@ -59,6 +61,7 @@ public class DefaultReportService extends AbstractEntityService implements Repor
             throw new IllegalArgumentException("Report can't be updated");
         }
         ConstraintValidator.validateFields(report);
+        reportDataValidator.validateReportSize(report.getTenantId(), data);
 
         report = reportDao.save(report.getTenantId(), report);
         reportDao.saveData(report.getTenantId(), report.getId(), data);
