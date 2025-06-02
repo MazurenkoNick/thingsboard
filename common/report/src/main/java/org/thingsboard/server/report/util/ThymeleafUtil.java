@@ -43,11 +43,13 @@ import java.util.regex.Pattern;
 
 import static org.apache.commons.codec.CharEncoding.UTF_8;
 import static org.thymeleaf.templatemode.TemplateMode.HTML;
+import static org.thymeleaf.templatemode.TemplateMode.TEXT;
 import static org.thymeleaf.templatemode.TemplateMode.XML;
 
 public class ThymeleafUtil {
     private static final TemplateEngine htmlClassEngine;
     private static final TemplateEngine htmlStringEngine;
+    private static final TemplateEngine textStringEngine;
     private static final TemplateEngine svgClassEngine;
 
     static {
@@ -62,18 +64,26 @@ public class ThymeleafUtil {
 
         htmlStringEngine = new TemplateEngine();
         StringTemplateResolver stringResolver = new StringTemplateResolver();
-        stringResolver.setTemplateMode("HTML");
+        stringResolver.setTemplateMode(HTML);
         stringResolver.setResolvablePatterns(Set.of("*"));
         stringResolver.setCacheable(false);
         stringResolver.setOrder(2);
         htmlStringEngine.setTemplateResolver(stringResolver);
+
+        textStringEngine = new TemplateEngine();
+        StringTemplateResolver textStringResolver = new StringTemplateResolver();
+        textStringResolver.setTemplateMode(TEXT);
+        textStringResolver.setResolvablePatterns(Set.of("*"));
+        textStringResolver.setCacheable(false);
+        textStringResolver.setOrder(3);
+        textStringEngine.setTemplateResolver(textStringResolver);
 
         svgClassEngine = new TemplateEngine();
         ClassLoaderTemplateResolver svgClassResolver = new ClassLoaderTemplateResolver();
         svgClassResolver.setPrefix("/");
         svgClassResolver.setSuffix(".svg");
         svgClassResolver.setTemplateMode(XML);
-        svgClassResolver.setOrder(3);
+        svgClassResolver.setOrder(4);
         svgClassResolver.setCharacterEncoding(UTF_8);
         svgClassEngine.setTemplateResolver(svgClassResolver);
     }
@@ -88,6 +98,13 @@ public class ThymeleafUtil {
         context.setVariables(variables);
 
         return htmlStringEngine.process(convertToThymeleafInline(sanitize(html)), context);
+    }
+
+    public static String renderFromTextString(String html, Map<String, Object> variables) {
+        Context context = new Context();
+        context.setVariables(variables);
+
+        return textStringEngine.process(convertToThymeleafInline(sanitize(html)), context);
     }
 
     public static String renderFromSvgTemplate(String templateSvg, Map<String, Object> variables) {

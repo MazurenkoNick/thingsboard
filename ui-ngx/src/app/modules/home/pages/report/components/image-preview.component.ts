@@ -32,6 +32,8 @@
 import { AfterViewInit, Component, ElementRef, OnDestroy, viewChild, ViewEncapsulation } from '@angular/core';
 import { ImageReportComponentConfig } from '@shared/models/report-component.models';
 import { AbstractReportComponentPreview } from '@home/pages/report/components/report-component.component';
+import { getDataKey } from '@shared/models/widget-settings.models';
+import { keyImage } from '@home/pages/report/components/report-component.models';
 
 @Component({
   selector: 'tb-image-preview',
@@ -54,10 +56,19 @@ export class ImagePreviewComponent extends AbstractReportComponentPreview<ImageR
   imageAlign: string = 'center';
 
   onComponentUpdated() {
-    if (this.reportComponent.imageUrl && this.reportComponent.imageUrl.trim().length) {
-      this.imageUrl = this.reportComponent.imageUrl;
+    if (this.reportComponent.sourceType === 'entityKey') {
+      const key = getDataKey(this.reportComponent.dataSources);
+      if (key) {
+        this.imageUrl = keyImage(key.name);
+      } else {
+        this.imageUrl = '/assets/report/components/image.svg';
+      }
     } else {
-      this.imageUrl = '/assets/report/components/image.svg';
+      if (this.reportComponent.imageUrl && this.reportComponent.imageUrl.trim().length) {
+        this.imageUrl = this.reportComponent.imageUrl;
+      } else {
+        this.imageUrl = '/assets/report/components/image.svg';
+      }
     }
     this.imageWidth = '100%';
     if (this.reportComponent.widthType === 'original') {

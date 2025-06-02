@@ -38,7 +38,7 @@
     </tb-toggle-select>
   </div>
   <div class="tb-form-panel no-border no-padding" [class.!hidden]="settingsTab !== 'image'">
-    <div class="tb-image-map-source-settings tb-form-panel stroked">
+    <div class="tb-form-panel stroked">
       <div class="flex flex-row items-center justify-between">
         <div class="tb-form-panel-title">
           {{ 'report-template.component.image.image-source' | translate }}
@@ -57,7 +57,6 @@
         <tb-datasources
           [configMode]="basicMode"
           stroked
-          displayDatasourceFilterForBasicMode
           hideDataKeys
           formControlName="dataSources"
           [dataSourcesOptions]="{

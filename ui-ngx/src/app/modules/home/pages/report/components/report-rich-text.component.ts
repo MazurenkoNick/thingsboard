@@ -40,6 +40,13 @@ import {
   ReportImageDialogComponent
 } from '@home/pages/report/components/report-image-dialog.component';
 import { MatDialog } from '@angular/material/dialog';
+import {
+  extractKeyFromVariable,
+  isKeyVariable, keyImage,
+  ReportVariable
+} from '@home/pages/report/components/report-component.models';
+import { CustomImageUrlCallback } from '@shared/pipe/image.pipe';
+import { of } from 'rxjs';
 
 const TB_SRC_ATTRIBUTE = 'data-tb-src';
 
@@ -61,9 +68,11 @@ export class ReportRichTextComponent implements OnInit, ControlValueAccessor {
   @Input()
   disabled: boolean;
 
+  @Input()
+  variables: ReportVariable[] = [];
+
   tinyMceOptions: Partial<EditorOptions> = {
     base_url: '/assets/tinymce',
-
     body_class: 'tb-report-component',
     content_css: ['/report-component.css'],
     suffix: '.min',
@@ -72,7 +81,7 @@ export class ReportRichTextComponent implements OnInit, ControlValueAccessor {
     menu: {
       customInsert: {
         title: 'Insert',
-        items: 'tb-image link inserttable | hr'
+        items: 'tb-image link inserttable variables | hr'
       }
     },
     font_family_formats: 'Roboto=Roboto; Monospaced=monospace; Sans Serif=sans-serif; Serif=serif;',
@@ -87,7 +96,7 @@ export class ReportRichTextComponent implements OnInit, ControlValueAccessor {
     relative_urls: false,
     automatic_uploads: false,
     images_replace_blob_uris: false,
-    contextmenu: ['link', 'variables'],
+    contextmenu: ['tb-image', 'variables'],
     urlconverter_callback: (url) => url,
     setup: (editor) => this.setupEditor(editor)
   };
@@ -173,6 +182,20 @@ export class ReportRichTextComponent implements OnInit, ControlValueAccessor {
       }
     });
 
+    editor.ui.registry.addContextMenu('tb-image', {
+      update: (element) => {
+        return [
+          {
+            icon: 'image',
+            text: this.translate.instant('report-template.image') + '...',
+            onAction: () => {
+              this.editorImageAction(editor);
+            }
+          }
+        ];
+      }
+    });
+
     editor.on('BeforeSetContent', (event) => {
       event.content = this.processImages(event.content, (image) => {
         const src = image.getAttribute('src');
@@ -183,10 +206,11 @@ export class ReportRichTextComponent implements OnInit, ControlValueAccessor {
       });
     });
 
-    editor.on('SetContent', (event) => {
+    editor.on('SetContent', (_event) => {
       this.htmlWithImagePipe.transform(editor.getBody(), {
         getImageSrcCallback: this.getImageSrcCallback.bind(this),
-        setImageSrcCallback: this.setImageSrcCallback.bind(this)
+        setImageSrcCallback: this.setImageSrcCallback.bind(this),
+        customImageUrlCallback: this.keyImageUrlCallback.bind(this)
       }).subscribe();
     });
 
@@ -209,16 +233,16 @@ export class ReportRichTextComponent implements OnInit, ControlValueAccessor {
         editor.insertContent(value);
         autocompleteApi.hide();
       },
-      fetch: (pattern) => {
+      fetch: (_pattern) => {
         return new Promise((resolve) => {
-          const results= ['active'].map((val) => ({
+          const results= this.variables.map((val) => ({
             type: 'cardmenuitem',
-            value: '${'+val+'}',
-            label: val,
+            value: `\${${val.name}}`,
+            label: val.name,
             items: [
               {
                 type: 'cardtext',
-                text: val,
+                text: val.name,
                 name: 'char_name'
               }
             ]
@@ -230,37 +254,35 @@ export class ReportRichTextComponent implements OnInit, ControlValueAccessor {
     editor.ui.registry.addNestedMenuItem('variables', {
       text: 'Variable...',
       getSubmenuItems: () => {
-        return [
-          {
-            text: 'active',
+        return this.variables.map(variable => ({
+            text: variable.name,
             type: 'menuitem',
             onAction: () => {
-              editor.insertContent('${active}');
-            }
+            editor.insertContent(`\${${variable.name}}`);
           }
-        ];
+        }));
       }
     });
 
     editor.ui.registry.addContextMenu('variables', {
-      update: element => {
-        return [
-          {
-            text: 'Variable...',
-            type: 'submenu',
-            getSubmenuItems: () => {
-              return [
-                {
-                  text: 'active',
+      update: (element) => {
+        if (!element || element.nodeName !== 'IMG') {
+          return [
+            {
+              text: 'Variable...',
+              type: 'submenu',
+              getSubmenuItems: () => {
+                return this.variables.map(variable => ({
+                  text: variable.name,
                   type: 'item',
                   onAction: () => {
-                    editor.insertContent('${active}');
+                    editor.insertContent(`\${${variable.name}}`);
                   }
-                }
-              ];
+                }));
+              }
             }
-          }
-        ];
+          ];
+        }
       }
     });
   }
@@ -276,6 +298,15 @@ export class ReportRichTextComponent implements OnInit, ControlValueAccessor {
       return image.getAttribute(TB_SRC_ATTRIBUTE);
     } else {
       return image.getAttribute('src');
+    }
+  }
+
+  private keyImageUrlCallback: CustomImageUrlCallback = (url) => {
+    if (isKeyVariable(url)) {
+      const key = extractKeyFromVariable(url);
+      return of(keyImage(key));
+    } else {
+      return null;
     }
   }
 
@@ -295,7 +326,7 @@ export class ReportRichTextComponent implements OnInit, ControlValueAccessor {
       ReportImageData>(ReportImageDialogComponent, {
       disableClose: true,
       panelClass: ['tb-dialog', 'tb-fullscreen-dialog'],
-      data: imageData
+      data: {...imageData, entityKeys: this.variables.filter(variable => variable.type === 'entityKey')}
     }).afterClosed().subscribe((result) => {
       if (result) {
         this.insertOrUpdateImage(editor, result);

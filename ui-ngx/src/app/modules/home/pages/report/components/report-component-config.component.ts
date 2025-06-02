@@ -34,7 +34,9 @@ import {
   ComponentRef,
   DestroyRef,
   Directive,
-  EventEmitter, HostBinding, inject,
+  EventEmitter,
+  HostBinding,
+  inject,
   Input,
   OnChanges,
   OnInit,
@@ -45,14 +47,19 @@ import {
 } from '@angular/core';
 import { ReportComponentConfig } from '@shared/models/report-component.models';
 import { TbAnchorComponent } from '@shared/components/tb-anchor.component';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { genNextLabel, isObject, mergeDeep } from '@core/utils';
-import { ReportComponentContext, reportComponentTypeMap } from '@home/pages/report/components/report-component.models';
+import { genNextLabel, isObject } from '@core/utils';
+import {
+  pageVariables,
+  ReportComponentContext,
+  reportComponentTypeMap,
+  ReportVariable
+} from '@home/pages/report/components/report-component.models';
 import { DataKeyType } from '@shared/models/telemetry/telemetry.models';
 import { Observable, of } from 'rxjs';
-import { DataKey, Datasource, widgetType } from '@shared/models/widget.models';
-import { catchError, mergeMap } from 'rxjs/operators';
+import { DataKey, Datasource, DatasourceType, widgetType } from '@shared/models/widget.models';
+import { catchError, map, mergeMap } from 'rxjs/operators';
 import { WidgetConfigCallbacks } from '@home/components/widget/config/widget-config.component.models';
 import { FormProperty } from '@shared/models/dynamic-form.models';
 import { DataKeySettingsFunction } from '@home/components/widget/lib/settings/common/key/data-keys.component.models';
@@ -136,6 +143,15 @@ export abstract class AbstractReportComponentConfig<C extends ReportComponentCon
   @Output()
   reportConfigUpdated = new EventEmitter<C>();
 
+  public get datasource(): Datasource {
+    const datasources = this.getDataSources();
+    if (datasources && datasources.length) {
+      return datasources[0];
+    } else {
+      return null;
+    }
+  }
+
   protected destroyRef: DestroyRef = inject(DestroyRef);
   protected fb: FormBuilder = inject(FormBuilder);
 
@@ -171,6 +187,35 @@ export abstract class AbstractReportComponentConfig<C extends ReportComponentCon
       this.updateModel();
     });
     return this.reportConfigForm;
+  }
+
+  public variables(): ReportVariable[] {
+    const dataSources = this.getDataSources();
+    const dsVars = dataSources.map(ds => {
+      if (ds && ds.dataKeys) {
+        return ds.dataKeys.map(key => {
+          if (key) {
+            const variable: ReportVariable = {
+              type: 'entityKey',
+              name: (key.label || key.name),
+              dataKey: key
+            };
+            return variable;
+          } else {
+            return null;
+          }
+        }).filter(variable => !!variable);
+      } else {
+        return [];
+      }
+    });
+    let variables = dsVars.flat();
+    variables = [...new Map(variables.map(item =>
+      [item.name, item])).values()];
+
+    variables.push(...pageVariables);
+    variables.sort();
+    return variables;
   }
 
   private updateModel() {

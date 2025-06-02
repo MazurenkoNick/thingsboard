@@ -32,6 +32,9 @@
 import { AfterViewInit, Component, ElementRef, OnDestroy, viewChild, ViewEncapsulation } from '@angular/core';
 import { RichTextReportComponentConfig } from '@shared/models/report-component.models';
 import { AbstractReportComponentPreview } from '@home/pages/report/components/report-component.component';
+import { CustomImageUrlCallback } from '@shared/pipe/image.pipe';
+import { extractKeyFromVariable, isKeyVariable, keyImage } from '@home/pages/report/components/report-component.models';
+import { of } from 'rxjs';
 
 @Component({
   selector: 'tb-rich-text-preview',
@@ -48,6 +51,17 @@ export class RichTextPreviewComponent extends AbstractReportComponentPreview<Ric
   private richTextResize$: ResizeObserver;
 
   html: string;
+
+  htmlWithImageOptions =  {
+    customImageUrlCallback: (url: string)=> {
+      if (isKeyVariable(url)) {
+        const key = extractKeyFromVariable(url);
+        return of(keyImage(key));
+      } else {
+        return null;
+      }
+    }
+  };
 
   onComponentUpdated() {
     if (this.reportComponent.value && this.reportComponent.value.trim().length) {

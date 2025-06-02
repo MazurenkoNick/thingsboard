@@ -31,6 +31,7 @@
 package org.thingsboard.server.report.renderer;
 
 import org.springframework.stereotype.Component;
+import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.report.configuration.DataKey;
 import org.thingsboard.server.common.data.report.configuration.components.ImageComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
@@ -43,6 +44,7 @@ import org.thingsboard.server.report.util.ThymeleafUtil;
 import java.util.HashMap;
 import java.util.List;
 
+import static org.thingsboard.server.report.util.ImageUtils.EMPTY_IMAGE_URI;
 import static org.thingsboard.server.report.util.ReportUtils.getSingleDataSource;
 
 
@@ -73,7 +75,7 @@ public class ImageRenderer extends ReportComponentWithLayoutRenderer {
         }
         HashMap<String, Object> componentVariables = new HashMap<>();
         componentVariables.put("layoutWidth", this.layoutWidthPx + "px");
-        componentVariables.put("imageUrl", imageUrl);
+        componentVariables.put("imageUrl", StringUtils.isBlank(imageUrl) ? EMPTY_IMAGE_URI : imageUrl);
         String imageWidth = this.layoutWidthPx + "px";
         if (ImageWidthType.original.equals(imageComponent.getWidthType())) {
             imageWidth = "auto";

@@ -52,15 +52,6 @@ export class EntityTableConfigComponent extends AbstractReportComponentConfig<En
 
   basicMode = WidgetConfigMode.basic;
 
-  public get datasource(): Datasource {
-    const datasources: Datasource[] = this.reportConfigForm.get('dataSources').value;
-    if (datasources && datasources.length) {
-      return datasources[0];
-    } else {
-      return null;
-    }
-  }
-
   protected buildForm(reportComponentConfig: EntityTableReportComponentConfig): FormGroup {
     return this.fb.group({
       dataSources: [reportComponentConfig.dataSources, []],

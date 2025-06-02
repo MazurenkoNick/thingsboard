@@ -61,6 +61,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 
 import static org.thingsboard.server.report.util.ImageUtils.checkAndLoadSvg;
+import static org.thingsboard.server.report.util.ImageUtils.isEmptyImage;
 import static org.thingsboard.server.report.util.ImageUtils.isInternalTbImage;
 import static org.thingsboard.server.report.util.ImageUtils.isPublicTbImage;
 import static org.thingsboard.server.report.util.ImageUtils.isTbImage;
@@ -94,7 +95,7 @@ public class PdfReportUserAgent extends ITextUserAgent {
     public ImageResource getImageResource(String uriStr) {
         uriStr = StringUtils.removeStart(uriStr, DataConstants.TB_IMAGE_PREFIX);
         String unresolvedUri = uriStr;
-        if (!isEmbeddedBase64Image(uriStr) && !isTbImage(uriStr)) {
+        if (!isEmbeddedBase64Image(uriStr) && !isTbImage(uriStr) && !isEmptyImage(uriStr)) {
             uriStr = resolveURI(uriStr);
         }
         ImageResource resource = _imageCache.get(unresolvedUri);
@@ -142,6 +143,8 @@ public class PdfReportUserAgent extends ITextUserAgent {
             return loadEmbeddedBase64ImageResource(uriStr);
         } else if (isTbImage(uriStr)) {
             return loadTbImageResource(uriStr);
+        } else if (isEmptyImage(uriStr)) {
+            return errorEmptyImageResource(uriStr);
         }
         try (InputStream is = resolveAndOpenStream(uriStr)) {
             if (is != null) {
@@ -162,7 +165,7 @@ public class PdfReportUserAgent extends ITextUserAgent {
             }
         } catch (BadElementException | IOException | URISyntaxException e) {
             XRLog.exception("Can't read image file; unexpected problem for URI '" + uriStr + "'", e);
-            return errorImageResource(uriStr, "Can't read image file", false, e);
+            return errorImageResource(uriStr, "Can't read image file", null, e);
         }
         return errorLoadImageFromUriResource(uriStr, null);
     }
@@ -204,25 +207,28 @@ public class PdfReportUserAgent extends ITextUserAgent {
     }
 
     private ImageResource errorLoadImageFromBase64Resource(Exception exception) {
-        return errorImageResource(null, "Failed to load image from base64 data", true, exception);
+        return errorImageResource(null, "Failed to load image from base64 data", "Base64 Data", exception);
     }
 
     private ImageResource errorLoadTbImageResource(final String uri, Exception exception) {
-        return errorImageResource(uri, "Can't read TB image.", false, exception);
+        return errorImageResource(uri, "Can't read TB image.", null, exception);
     }
 
     private ImageResource errorLoadImageFromUriResource(final String uri, Exception exception) {
-        return errorImageResource(uri,  "Failed to load image.", false, exception);
+        return errorImageResource(uri,  "Failed to load image.", null, exception);
     }
 
-    private ImageResource errorImageResource(final String uri, String errorMessage, boolean base64data, Exception exception) {
+    private ImageResource errorEmptyImageResource(final String uri) {
+        return errorImageResource(uri,  "Image uri is empty.", "URI is empty", null);
+    }
+
+    private ImageResource errorImageResource(final String uri, String errorMessage, String uriString, Exception exception) {
         HashMap<String, Object> errorImageVariables = new HashMap<>();
         errorImageVariables.put("errorMessage", errorMessage);
-        if (base64data) {
-            errorImageVariables.put("uri", "Base64 Data");
-        } else {
-            errorImageVariables.put("uri", uri);
+        if (uriString == null) {
+            uriString = uri;
         }
+        errorImageVariables.put("uri", uriString);
         if (exception != null) {
             errorImageVariables.put("exception", exception.getMessage());
             errorImageVariables.put("uriPos", 11);
@@ -257,7 +263,7 @@ public class PdfReportUserAgent extends ITextUserAgent {
         var parts = uri.split("/");
         if (parts.length >= 5) {
             String publicKey = parts[4];
-            return this._dataService.findPublicImage(publicKey, this._ctx);
+           return this._dataService.findPublicImage(publicKey, this._ctx);
         }
         return null;
     }

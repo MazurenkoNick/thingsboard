@@ -42,11 +42,26 @@
   </mat-toolbar>
   <div mat-dialog-content style="position: relative;">
     <div [formGroup]="reportImageFormGroup" class="tb-form-panel no-border">
-      <tb-gallery-image-input label="{{'report-template.image' | translate}}"
-                              detectImageSize
-                              (imageSize)="imageSizeUpdated($event)"
-                              formControlName="imageUrl">
-      </tb-gallery-image-input>
+      <div class="tb-form-panel stroked">
+        <div class="flex flex-row items-center justify-between">
+          <div class="tb-form-panel-title">
+            {{ 'report-template.component.image.image-source' | translate }}
+          </div>
+          <tb-toggle-select formControlName="sourceType">
+            <tb-toggle-option value="image">{{ 'report-template.component.image.source-image' | translate }}</tb-toggle-option>
+            <tb-toggle-option value="entityKey">{{ 'report-template.component.image.source-entity-key' | translate }}</tb-toggle-option>
+          </tb-toggle-select>
+        </div>
+        <tb-gallery-image-input [class.!hidden]="reportImageFormGroup.get('sourceType').value !== 'image'"
+                                detectImageSize
+                                (imageSize)="imageSizeUpdated($event)"
+                                formControlName="imageUrl">
+        </tb-gallery-image-input>
+        <div class="tb-form-row tb-standard-fields column-xs" [class.!hidden]="reportImageFormGroup.get('sourceType').value !== 'entityKey'">
+          <div class="fixed-title-width" translate>report-template.component.image.image-url-key</div>
+          <tb-string-autocomplete [fetchOptionsFn]="fetchKeyOptionsFn" formControlName="imageKey"></tb-string-autocomplete>
+        </div>
+      </div>
       <div class="tb-form-row space-between">
         <div>{{ 'report-template.image-size' | translate }}</div>
         <div class="flex flex-row items-center justify-start gap-2">

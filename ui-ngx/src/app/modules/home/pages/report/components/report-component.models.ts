@@ -56,6 +56,10 @@ import { SubReportConfigComponent } from '@home/pages/report/components/sub-repo
 import { ImagePreviewComponent } from '@home/pages/report/components/image-preview.component';
 import { ImageConfigComponent } from '@home/pages/report/components/image-config.component';
 
+import keyImageTemplate from './key-image-svg.raw';
+import { insertVariable, stringToBase64 } from '@core/utils';
+import { DataKey } from '@shared/models/widget.models';
+
 export interface ReportComponentTypeData<C extends ReportComponentConfig = ReportComponentConfig> {
   title: string;
   previewImage: string;
@@ -150,3 +154,43 @@ export const assignReportComponent = (reportComponent: ReportComponentConfig, so
 }
 
 export const pointsToPixels = (points: number): number => points * 1.3333343412075;
+
+export type ReportVariableType = 'entityKey' | 'pageVariable';
+
+export interface ReportVariable {
+  type: ReportVariableType;
+  name: string;
+  dataKey?: DataKey;
+}
+
+export const pageVariables: ReportVariable[] = [
+  {
+    type: 'pageVariable',
+    name: 'pageNumber'
+  },
+  {
+    type: 'pageVariable',
+    name: 'totalPages'
+  },
+];
+
+export const keyImage = (key: string): string => {
+  const result = insertVariable(keyImageTemplate, 'key', `\${${key}}`);
+  const encodedSvg = stringToBase64(result);
+  return `data:image/svg+xml;base64,${encodedSvg}`;
+}
+
+const variablePattern = /^\${([^}]*)}$/;
+
+export const isKeyVariable = (test: string): boolean => {
+  return variablePattern.test(test);
+}
+
+export const extractKeyFromVariable = (variable: string): string => {
+  const match = variablePattern.exec(variable);
+  if (match !== null) {
+    return match[1];
+  } else {
+    return '';
+  }
+}

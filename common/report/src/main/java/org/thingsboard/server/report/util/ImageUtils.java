@@ -48,6 +48,8 @@ import java.util.logging.Logger;
 
 public class ImageUtils {
 
+    public static final String EMPTY_IMAGE_URI = "tb-empty-image";
+
     static {
         Logger.getLogger("com.github.weisj.jsvg").setLevel(Level.OFF);
     }
@@ -91,5 +93,9 @@ public class ImageUtils {
 
     public static boolean isPublicTbImage(String uri) {
         return uri.startsWith("/api/images/public/");
+    }
+
+    public static boolean isEmptyImage(String uri) {
+        return EMPTY_IMAGE_URI.equals(uri);
     }
 }

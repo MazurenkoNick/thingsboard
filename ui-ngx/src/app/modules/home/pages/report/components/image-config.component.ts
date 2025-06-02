@@ -29,7 +29,7 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { Component, ViewEncapsulation } from '@angular/core';
+import { Component, DestroyRef, inject, ViewEncapsulation } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
 import {
   DataKeyType,
@@ -37,13 +37,15 @@ import {
   getDataKey,
   imageAlignments,
   imageAlignmentTranslations,
-  ImageReportComponentConfig,
+  ImageReportComponentConfig, imageSourceType,
   imageWidthTypes,
   imageWidthTypeTranslations,
   updateDataKeys,
   WidgetConfigMode
 } from '@app/shared/public-api';
 import { AbstractReportComponentConfig } from '@home/pages/report/components/report-component-config.component';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { merge } from 'rxjs';
 
 @Component({
   selector: 'tb-image-config',
@@ -65,20 +67,12 @@ export class ImageConfigComponent extends AbstractReportComponentConfig<ImageRep
 
   settingsTab: 'image' | 'layout' = 'image';
 
-  public get datasource(): Datasource {
-    const datasources: Datasource[] = this.reportConfigForm.get('dataSources').value;
-    if (datasources && datasources.length) {
-      return datasources[0];
-    } else {
-      return null;
-    }
-  }
-
   private initialImageUrl: string;
+  private imageWidth: number;
 
   protected buildForm(reportComponentConfig: ImageReportComponentConfig): FormGroup {
     this.initialImageUrl = reportComponentConfig.imageUrl;
-    return this.fb.group({
+    const form = this.fb.group({
       sourceType: [reportComponentConfig.sourceType || 'image', []],
       imageUrl: [reportComponentConfig.imageUrl, []],
       dataSources: [reportComponentConfig.dataSources, []],
@@ -87,6 +81,12 @@ export class ImageConfigComponent extends AbstractReportComponentConfig<ImageRep
       customWidth: [reportComponentConfig.customWidth || 100, [Validators.min(1)]],
       alignment: [reportComponentConfig.alignment || 'center', []]
     });
+    merge(form.get('sourceType').valueChanges, form.get('widthType').valueChanges).pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(() => {
+      this.updateCustomWidth();
+    });
+    return form;
   }
 
   protected prepareOutputConfig(config: any): any {
@@ -95,7 +95,16 @@ export class ImageConfigComponent extends AbstractReportComponentConfig<ImageRep
     return config;
   }
 
+  private updateCustomWidth() {
+    const sourceType: imageSourceType = this.reportConfigForm.get('sourceType').value;
+    if (!this.reportConfigForm.get('customWidth').touched) {
+      const size = sourceType === 'entityKey' ? 255 : (this.imageWidth || 100);
+      this.reportConfigForm.get('customWidth').patchValue(size);
+    }
+  }
+
   imageSizeUpdated(size: {width: number, height: number}): void {
+    this.imageWidth = size.width;
     if (!this.reportConfigForm.get('customWidth').touched &&
          this.reportConfigForm.get('imageUrl').value !== this.initialImageUrl) {
         this.initialImageUrl = null;

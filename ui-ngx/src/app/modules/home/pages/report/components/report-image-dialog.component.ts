@@ -37,11 +37,19 @@ import { UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms
 import { Router } from '@angular/router';
 import { DialogComponent } from '@app/shared/components/dialog.component';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { imageSourceType } from '@shared/models/report-component.models';
+import {
+  extractKeyFromVariable,
+  isKeyVariable,
+  ReportVariable
+} from '@home/pages/report/components/report-component.models';
+import { Observable, of } from 'rxjs';
 
 export interface ReportImageData {
   imageUrl: string;
   width: number;
   height: number;
+  entityKeys?: ReportVariable[];
 }
 
 @Component({
@@ -53,13 +61,22 @@ export class ReportImageDialogComponent extends DialogComponent<ReportImageDialo
 
   reportImageFormGroup: UntypedFormGroup;
 
+  lastImageSize: {width: number, height: number};
+
   origImageSize: {width: number, height: number};
 
   preserveAspect = true;
 
+  fetchKeyOptionsFn = this.fetchKeyOptions.bind(this);
+
   private aspect: number = 1;
 
-  private updateImageSize = !this.data.width  || !this.data.height;
+  private initImageSize = !this.data.width  || !this.data.height;
+
+  private entityKeys = this.data.entityKeys;
+
+  private keySearchText: string;
+  private latestKeySearchTextResult: Array<string>;
 
   constructor(protected store: Store<AppState>,
               protected router: Router,
@@ -69,8 +86,22 @@ export class ReportImageDialogComponent extends DialogComponent<ReportImageDialo
               private fb: UntypedFormBuilder) {
     super(store, router, dialogRef);
 
+    let sourceType: imageSourceType;
+    let imageUrl = '';
+    let imageKey = '';
+
+    if (isKeyVariable(data.imageUrl)) {
+      sourceType = 'entityKey';
+      imageKey = extractKeyFromVariable(data.imageUrl);
+    } else {
+      sourceType = 'image';
+      imageUrl = data.imageUrl;
+    }
+
     this.reportImageFormGroup = this.fb.group({
-      imageUrl: [data.imageUrl, []],
+      sourceType: [sourceType, []],
+      imageUrl: [imageUrl, []],
+      imageKey: [imageKey, []],
       width: [data.width, [Validators.min(0)]],
       height: [data.height, [Validators.min(0)]]
     });
@@ -87,6 +118,11 @@ export class ReportImageDialogComponent extends DialogComponent<ReportImageDialo
     ).subscribe(() => {
       this.heightUpdated();
     });
+    this.reportImageFormGroup.get('sourceType').valueChanges.pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(() => {
+      this.sourceTypeUpdated();
+    });
   }
 
   cancel(): void {
@@ -94,22 +130,45 @@ export class ReportImageDialogComponent extends DialogComponent<ReportImageDialo
   }
 
   save(): void {
-    const result: ReportImageData = this.reportImageFormGroup.value;
-    if (!result.width || !result.height) {
-      result.width = this.origImageSize.width;
-      result.height = this.origImageSize.height;
+    const sourceType: imageSourceType = this.reportImageFormGroup.get('sourceType').value;
+    let imageUrl: string;
+    if (sourceType === 'image') {
+      imageUrl = this.reportImageFormGroup.get('imageUrl').value;
+    } else {
+      imageUrl = `\${${this.reportImageFormGroup.get('imageKey').value}}`;
     }
+    let width: number = this.reportImageFormGroup.get('width').value;
+    let height: number = this.reportImageFormGroup.get('height').value;
+    if (!width || !height) {
+      width = this.origImageSize.width;
+      height = this.origImageSize.height;
+    }
+    const result: ReportImageData = {imageUrl, width, height};
     this.dialogRef.close(result);
   }
 
   imageSizeUpdated(size: {width: number, height: number}): void {
+    this.lastImageSize = size;
+    this.updateImageSize(this.lastImageSize);
+  }
+
+  private sourceTypeUpdated() {
+    const sourceType: imageSourceType = this.reportImageFormGroup.get('sourceType').value;
+    if (sourceType === 'image') {
+      this.updateImageSize(this.lastImageSize);
+    } else {
+      this.updateImageSize({width: 255, height: 80});
+    }
+  }
+
+  private updateImageSize(size: {width: number, height: number}): void {
     this.origImageSize = size;
-    if (this.updateImageSize) {
+    if (this.initImageSize) {
       this.reportImageFormGroup.get('width').patchValue(this.origImageSize.width, {emitEvent: false});
       this.reportImageFormGroup.get('height').patchValue(this.origImageSize.height, {emitEvent: false});
       this.aspect = this.origImageSize.width / this.origImageSize.height;
     }
-    this.updateImageSize = true;
+    this.initImageSize = true;
   }
 
   togglePreserveAspect() {
@@ -144,6 +203,16 @@ export class ReportImageDialogComponent extends DialogComponent<ReportImageDialo
         }
       }
     }
+  }
+
+  private fetchKeyOptions(searchText: string): Observable<Array<string>> {
+    if (this.keySearchText !== searchText) {
+      this.keySearchText = searchText;
+      this.latestKeySearchTextResult = this.entityKeys
+                                      .filter(variable => variable.name.toUpperCase().includes(searchText.toUpperCase()))
+                                      .map(variable => variable.name);
+    }
+    return of(this.latestKeySearchTextResult);
   }
 
 }
