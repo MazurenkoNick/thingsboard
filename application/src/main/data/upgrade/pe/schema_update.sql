@@ -65,3 +65,5 @@ ALTER TABLE oauth2_client ADD COLUMN IF NOT EXISTS basic_user_groups_name_patter
 ALTER TABLE oauth2_client_registration_template ADD COLUMN IF NOT EXISTS basic_parent_customer_name_pattern varchar(255);
 
 ALTER TABLE oauth2_client_registration_template ADD COLUMN IF NOT EXISTS basic_user_groups_name_pattern varchar(1024);
+
+ALTER TABLE api_usage_state ADD COLUMN IF NOT EXISTS report_exec varchar(32) DEFAULT 'ENABLED';

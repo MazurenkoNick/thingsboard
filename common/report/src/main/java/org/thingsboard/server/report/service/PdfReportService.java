@@ -149,6 +149,9 @@ public class PdfReportService extends AbstractReportService {
     private HeaderFooterRenderLayout renderHeaderFooter(ITextRenderer renderer,
                                                         TbReportCtx ctx, HeaderFooter headerFooter,
                                                         int usablePageWidthPx) throws Exception {
+        if (headerFooter == null) {
+            return new HeaderFooterRenderLayout();
+        }
         HeaderFooterRenderLayout headerFooterRenderLayout = new HeaderFooterRenderLayout();
         headerFooterRenderLayout.setEnabled(headerFooter.isEnabled());
         if (headerFooter.isEnabled()) {

@@ -28,40 +28,33 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.common.data;
+package org.thingsboard.server.dao.service.validator;
 
-import lombok.Data;
+import lombok.AllArgsConstructor;
+import org.apache.commons.io.FileUtils;
+import org.springframework.stereotype.Component;
+import org.thingsboard.server.common.data.id.TenantId;
+import org.thingsboard.server.common.data.report.Report;
+import org.thingsboard.server.common.data.tenant.profile.DefaultTenantProfileConfiguration;
+import org.thingsboard.server.dao.service.DataValidator;
+import org.thingsboard.server.dao.tenant.TbTenantProfileCache;
 
-@Data
-public class UsageInfo {
+@Component
+@AllArgsConstructor
+public class ReportDataValidator extends DataValidator<Report> {
 
-    private long devices;
-    private long maxDevices;
-    private long assets;
-    private long maxAssets;
-    private long customers;
-    private long maxCustomers;
-    private long users;
-    private long maxUsers;
-    private long dashboards;
-    private long maxDashboards;
-    private long edges;
-    private long maxEdges;
+    private final TbTenantProfileCache tenantProfileCache;
 
-    private long transportMessages;
-    private long maxTransportMessages;
-    private long jsExecutions;
-    private long tbelExecutions;
-    private long maxJsExecutions;
-    private long maxTbelExecutions;
-    private long emails;
-    private long maxEmails;
-    private long sms;
-    private long maxSms;
-    private Boolean smsEnabled;
-    private long alarms;
-    private long maxAlarms;
-    private long reports;
-    private long maxReports;
-
+    public void validateReportSize(TenantId tenantId, byte[] data) {
+        int dataSize = data.length;
+        if (!tenantId.isSysTenantId()) {
+            DefaultTenantProfileConfiguration profileConfiguration = tenantProfileCache.get(tenantId).getDefaultProfileConfiguration();
+            long maxReportSize = profileConfiguration.getMaxReportSizeInBytes();
+            if (maxReportSize > 0 && dataSize > maxReportSize) {
+                throw new IllegalArgumentException("Report exceeds the maximum size of " + FileUtils.byteCountToDisplaySize(maxReportSize));
+            }
+        }
+    }
 }
+
+

@@ -44,7 +44,8 @@ public enum ApiUsageRecordKey {
     SMS_EXEC_COUNT(ApiFeature.SMS, "smsCount", "smsLimit", "SMS message"),
     CREATED_ALARMS_COUNT(ApiFeature.ALARM, "createdAlarmsCount", "createdAlarmsLimit", "alarm"),
     ACTIVE_DEVICES("activeDevicesCount"),
-    INACTIVE_DEVICES("inactiveDevicesCount");
+    INACTIVE_DEVICES("inactiveDevicesCount"),
+    GENERATED_REPORTS_COUNT(ApiFeature.REPORT, "generatedReportsCount", "generatedReportsLimit", "report");
 
     private static final ApiUsageRecordKey[] JS_RECORD_KEYS = {JS_EXEC_COUNT};
     private static final ApiUsageRecordKey[] TBEL_RECORD_KEYS = {TBEL_EXEC_COUNT};
@@ -54,6 +55,7 @@ public enum ApiUsageRecordKey {
     private static final ApiUsageRecordKey[] EMAIL_RECORD_KEYS = {EMAIL_EXEC_COUNT};
     private static final ApiUsageRecordKey[] SMS_RECORD_KEYS = {SMS_EXEC_COUNT};
     private static final ApiUsageRecordKey[] ALARM_RECORD_KEYS = {CREATED_ALARMS_COUNT};
+    private static final ApiUsageRecordKey[] REPORT_RECORD_KEYS = {GENERATED_REPORTS_COUNT};
 
     @Getter
     private final ApiFeature apiFeature;
@@ -100,6 +102,8 @@ public enum ApiUsageRecordKey {
                 return SMS_RECORD_KEYS;
             case ALARM:
                 return ALARM_RECORD_KEYS;
+            case REPORT:
+                return REPORT_RECORD_KEYS;
             default:
                 return new ApiUsageRecordKey[]{};
         }

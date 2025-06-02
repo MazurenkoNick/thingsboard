@@ -99,6 +99,7 @@ enum ApiUsageRecordKeyProto {
   CREATED_ALARMS_COUNT = 8;
   ACTIVE_DEVICES       = 9;
   INACTIVE_DEVICES     = 10;
+  GENERATED_REPORTS_COUNT = 100;
 }
 
 /**
@@ -403,6 +404,7 @@ message ApiUsageStateProto {
   string smsExecState = 15;
   string alarmExecState = 16;
   int64 version = 17;
+  string reportExecState = 100;
 }
 
 message RepositorySettingsProto {

@@ -492,6 +492,7 @@ public class ProtoUtils {
             case CREATED_ALARMS_COUNT -> ApiUsageRecordKeyProto.CREATED_ALARMS_COUNT;
             case ACTIVE_DEVICES -> ApiUsageRecordKeyProto.ACTIVE_DEVICES;
             case INACTIVE_DEVICES -> ApiUsageRecordKeyProto.INACTIVE_DEVICES;
+            case GENERATED_REPORTS_COUNT -> ApiUsageRecordKeyProto.GENERATED_REPORTS_COUNT;
         };
     }
 
@@ -509,6 +510,7 @@ public class ProtoUtils {
             case CREATED_ALARMS_COUNT -> ApiUsageRecordKey.CREATED_ALARMS_COUNT;
             case ACTIVE_DEVICES -> ApiUsageRecordKey.ACTIVE_DEVICES;
             case INACTIVE_DEVICES -> ApiUsageRecordKey.INACTIVE_DEVICES;
+            case GENERATED_REPORTS_COUNT -> ApiUsageRecordKey.GENERATED_REPORTS_COUNT;
         };
     }
 
@@ -1230,6 +1232,7 @@ public class ProtoUtils {
                 .setEmailExecState(apiUsageState.getEmailExecState().name())
                 .setSmsExecState(apiUsageState.getSmsExecState().name())
                 .setAlarmExecState(apiUsageState.getAlarmExecState().name())
+                .setReportExecState(apiUsageState.getReportExecState().name())
                 .setVersion(apiUsageState.getVersion())
                 .build();
     }
@@ -1247,6 +1250,7 @@ public class ProtoUtils {
         apiUsageState.setEmailExecState(ApiUsageStateValue.valueOf(proto.getEmailExecState()));
         apiUsageState.setSmsExecState(ApiUsageStateValue.valueOf(proto.getSmsExecState()));
         apiUsageState.setAlarmExecState(ApiUsageStateValue.valueOf(proto.getAlarmExecState()));
+        apiUsageState.setReportExecState(ApiUsageStateValue.valueOf(proto.getReportExecState()));
         apiUsageState.setVersion(proto.getVersion());
         return apiUsageState;
     }

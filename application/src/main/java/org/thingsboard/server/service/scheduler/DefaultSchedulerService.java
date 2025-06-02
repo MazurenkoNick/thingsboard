@@ -72,7 +72,6 @@ import org.thingsboard.server.dao.device.DeviceService;
 import org.thingsboard.server.dao.group.EntityGroupService;
 import org.thingsboard.server.dao.ota.DeviceGroupOtaPackageService;
 import org.thingsboard.server.dao.ota.OtaPackageService;
-import org.thingsboard.server.dao.report.ReportTemplateService;
 import org.thingsboard.server.dao.scheduler.SchedulerEventService;
 import org.thingsboard.server.dao.tenant.TenantService;
 import org.thingsboard.server.gen.transport.TransportProtos;
@@ -126,7 +125,6 @@ public class DefaultSchedulerService extends AbstractPartitionBasedService<Tenan
     private final DeviceGroupOtaPackageService deviceGroupOtaPackageService;
     private final OtaPackageService otaPackageService;
     private final TbServiceInfoProvider serviceInfoProvider;
-    private final ReportTemplateService reportTemplateService;
     private final JobManager jobManager;
 
     private final ConcurrentMap<TenantId, List<SchedulerEventId>> tenantEvents = new ConcurrentHashMap<>();

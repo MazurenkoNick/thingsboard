@@ -387,6 +387,7 @@ public class FieldsUtil {
                 .emailExecState(entity.getEmailExecState())
                 .smsExecState(entity.getSmsExecState())
                 .alarmExecState(entity.getAlarmExecState())
+                .reportExecState(entity.getReportExecState())
                 .version(entity.getVersion())
                 .build();
     }
