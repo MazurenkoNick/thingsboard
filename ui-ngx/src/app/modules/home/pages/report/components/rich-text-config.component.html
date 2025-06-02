@@ -40,7 +40,7 @@
   </div>
   <div class="tb-form-panel stroked" [class.!hidden]="settingsTab !== 'content'">
     <div class="tb-form-panel-title" translate>report-template.component.rich-text.text</div>
-    <editor [init]="tinyMceOptions" formControlName="value"></editor>
+    <tb-report-rich-text formControlName="value"></tb-report-rich-text>
   </div>
   <tb-datasources [class.!hidden]="settingsTab !== 'data'"
                   formControlName="dataSources"
