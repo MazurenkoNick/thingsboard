@@ -191,8 +191,9 @@ export enum MenuId {
   roles = 'roles',
   self_registration = 'self_registration',
   task_manager = 'task_manager',
-  reporting = 'reporting',
-  trendz_settings = 'trendz_settings'
+  trendz_settings = 'trendz_settings',
+  secrets = 'secrets',
+  reporting = 'reporting'
 }
 
 declare type MenuFilter = (_authState: AuthState, userPermissionsService: UserPermissionsService) => boolean;
@@ -1167,6 +1168,16 @@ export const menuSectionMap = new Map<MenuId, MenuSection>([
     }
   ],
   [
+    MenuId.secrets,
+    {
+      id: MenuId.secrets,
+      name: 'secret-storage.secret-storage',
+      type: 'link',
+      path: '/security-settings/secrets',
+      icon: 'mdi:key-variant'
+    }
+  ],
+  [
     MenuId.self_registration,
     {
       id: MenuId.self_registration,
@@ -1474,6 +1485,10 @@ const menuFilters = new Map<MenuId, MenuFilter>([
             authState.whiteLabelingAllowed && userPermissionsService.hasReadGenericPermission(Resource.WHITE_LABELING)
   ],
   [
+    MenuId.secrets, (_authState, userPermissionsService) =>
+            userPermissionsService.hasReadGenericPermission(Resource.SECRET)
+  ],
+  [
     MenuId.roles, (_authState, userPermissionsService) =>
             userPermissionsService.hasReadGenericPermission(Resource.ROLE)
   ],
@@ -1495,7 +1510,9 @@ const menuFilters = new Map<MenuId, MenuFilter>([
             userPermissionsService.hasReadGenericPermission(Resource.AUDIT_LOG)
   ],
   [
-    MenuId.task_manager, (authState) => authState.authUser.authority === Authority.TENANT_ADMIN
+    MenuId.task_manager, (authState, userPermissionsService) =>
+            authState.authUser.authority === Authority.TENANT_ADMIN &&
+            userPermissionsService.hasReadGenericPermission(Resource.JOB)
   ],
   [
     MenuId.reporting, (authState, userPermissionsService) =>
@@ -1746,6 +1763,7 @@ export const defaultUserMenuMap = new Map<Authority, MenuReference[]>([
         pages: [
           {id: MenuId.two_fa},
           {id: MenuId.roles},
+          {id: MenuId.secrets},
           {id: MenuId.self_registration},
           {id: MenuId.audit_log},
           {

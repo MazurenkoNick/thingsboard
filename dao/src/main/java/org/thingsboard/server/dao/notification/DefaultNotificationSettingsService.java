@@ -190,6 +190,7 @@ public class DefaultNotificationSettingsService implements NotificationSettingsS
             defaultNotifications.create(tenantId, DefaultNotifications.exceededRateLimitsForSysadmin, sysAdmins.getId());
             defaultNotifications.create(tenantId, DefaultNotifications.newPlatformVersion, sysAdmins.getId());
             defaultNotifications.create(tenantId, DefaultNotifications.taskProcessingFailure, tenantAdmins.getId());
+            defaultNotifications.create(tenantId, DefaultNotifications.resourcesShortage, sysAdmins.getId());
             return;
         }
 
@@ -219,10 +220,17 @@ public class DefaultNotificationSettingsService implements NotificationSettingsS
             NotificationTarget affectedTenantAdmins = notificationTargetService.findNotificationTargetsByTenantIdAndUsersFilterType(tenantId, UsersFilterType.AFFECTED_TENANT_ADMINISTRATORS).stream()
                     .findFirst().orElseGet(() -> createTarget(tenantId, "Affected tenant's administrators", new AffectedTenantAdministratorsFilter(), ""));
 
-            // put your update code here. example:
-            // if (!isNotificationConfigured(tenantId, NotificationType.TASK_PROCESSING_FAILURE)) {
-            //    defaultNotifications.create(tenantId, DefaultNotifications.taskProcessingFailure, sysAdmins.getId());
-            // }
+            if (!isNotificationConfigured(tenantId, NotificationType.RATE_LIMITS)) {
+                defaultNotifications.create(tenantId, DefaultNotifications.exceededRateLimits, affectedTenantAdmins.getId());
+                defaultNotifications.create(tenantId, DefaultNotifications.exceededPerEntityRateLimits, affectedTenantAdmins.getId());
+                defaultNotifications.create(tenantId, DefaultNotifications.exceededRateLimitsForSysadmin, sysAdmins.getId());
+            }
+            if (!isNotificationConfigured(tenantId, NotificationType.TASK_PROCESSING_FAILURE)) {
+                defaultNotifications.create(tenantId, DefaultNotifications.taskProcessingFailure, sysAdmins.getId());
+            }
+            if (!isNotificationConfigured(tenantId, NotificationType.RESOURCES_SHORTAGE)) {
+                defaultNotifications.create(tenantId, DefaultNotifications.resourcesShortage, sysAdmins.getId());
+            }
         } else {
             NotificationTarget tenantAdmins = notificationTargetService.findNotificationTargetsByTenantIdAndUsersFilterType(tenantId, UsersFilterType.TENANT_ADMINISTRATORS)
                     .stream().findFirst()

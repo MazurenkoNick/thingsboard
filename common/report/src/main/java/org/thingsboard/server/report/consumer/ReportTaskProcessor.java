@@ -58,7 +58,7 @@ public class ReportTaskProcessor extends TaskProcessor<ReportTask, ReportTaskRes
     }
 
     @Override
-    public long getTaskProcessingTimeout() {
+    public long getProcessingTimeout(ReportTask task) {
         return timeoutMs;
     }
 

@@ -147,6 +147,7 @@ public class ThingsboardInstallService {
                     installScripts.loadSystemImagesAndResources();
                     systemDataLoaderService.createDefaultCustomMenu();
                     installScripts.updateSystemNotificationTemplates();
+                    installScripts.generateTenantEncryptionKey();
                     databaseSchemaVersionService.updateSchemaVersion();
                 }
                 log.info("Upgrade finished successfully!");

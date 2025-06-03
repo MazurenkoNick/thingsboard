@@ -96,6 +96,7 @@ import org.thingsboard.server.dao.audit.AuditLogService;
 import org.thingsboard.server.dao.blob.BlobEntityService;
 import org.thingsboard.server.dao.cassandra.CassandraCluster;
 import org.thingsboard.server.dao.cf.CalculatedFieldService;
+import org.thingsboard.server.dao.component.ComponentDescriptorService;
 import org.thingsboard.server.dao.converter.ConverterService;
 import org.thingsboard.server.dao.customer.CustomerService;
 import org.thingsboard.server.dao.dashboard.DashboardService;
@@ -132,6 +133,8 @@ import org.thingsboard.server.dao.role.RoleService;
 import org.thingsboard.server.dao.rule.RuleChainService;
 import org.thingsboard.server.dao.rule.RuleNodeStateService;
 import org.thingsboard.server.dao.scheduler.SchedulerEventService;
+import org.thingsboard.server.dao.secret.SecretConfigurationService;
+import org.thingsboard.server.dao.secret.SecretService;
 import org.thingsboard.server.dao.tenant.TbTenantProfileCache;
 import org.thingsboard.server.dao.tenant.TenantProfileService;
 import org.thingsboard.server.dao.tenant.TenantService;
@@ -253,6 +256,11 @@ public class ActorSystemContext {
     @Getter
     @Setter
     private ComponentDiscoveryService componentService;
+
+    @Autowired
+    @Getter
+    @Setter
+    private ComponentDescriptorService componentDescriptorService;
 
     @Autowired
     @Getter
@@ -659,6 +667,14 @@ public class ActorSystemContext {
     @Autowired
     @Getter
     private JobManager jobManager;
+
+    @Autowired
+    @Getter
+    private SecretConfigurationService secretConfigurationService;
+
+    @Autowired
+    @Getter
+    private SecretService secretService;
 
     @Value("${actors.session.max_concurrent_sessions_per_device:1}")
     @Getter

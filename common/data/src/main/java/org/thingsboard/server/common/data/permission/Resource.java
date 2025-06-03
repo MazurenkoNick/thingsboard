@@ -88,6 +88,8 @@ public enum Resource {
             EntityType.NOTIFICATION_REQUEST, EntityType.NOTIFICATION_RULE),
     MOBILE_APP_SETTINGS,
     CUSTOM_MENU,
+    JOB(EntityType.JOB),
+    SECRET(EntityType.SECRET),
     REPORT_TEMPLATE(EntityType.REPORT_TEMPLATE),
     REPORT(EntityType.REPORT);
 
@@ -167,6 +169,8 @@ public enum Resource {
         operationsByResource.put(Resource.VERSION_CONTROL, Set.of(Operation.ALL, Operation.READ, Operation.WRITE, Operation.DELETE));
         operationsByResource.put(Resource.NOTIFICATION, Operation.crudOperations);
         operationsByResource.put(Resource.MOBILE_APP_SETTINGS, Set.of(Operation.ALL, Operation.READ, Operation.WRITE));
+        operationsByResource.put(Resource.JOB, Operation.crudOperations);
+        operationsByResource.put(Resource.SECRET, Operation.crudOperations);
         operationsByResource.put(Resource.REPORT_TEMPLATE, Operation.crudOperations);
         operationsByResource.put(Resource.REPORT, Operation.crudOperations);
 
@@ -192,7 +196,8 @@ public enum Resource {
                 Resource.QUEUE,
                 Resource.QUEUE_STATS,
                 Resource.NOTIFICATION,
-                Resource.MOBILE_APP_SETTINGS
+                Resource.MOBILE_APP_SETTINGS,
+                Resource.SECRET
         ));
 
         resourcesByAuthority.put(Authority.TENANT_ADMIN, Set.of(
@@ -239,6 +244,8 @@ public enum Resource {
                 Resource.VERSION_CONTROL,
                 Resource.NOTIFICATION,
                 Resource.MOBILE_APP_SETTINGS,
+                Resource.SECRET,
+                Resource.JOB,
                 Resource.REPORT_TEMPLATE,
                 Resource.REPORT
         ));

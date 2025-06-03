@@ -72,6 +72,7 @@ import { ScadaSymbolModule } from '@home/pages/scada-symbol/scada-symbol.module'
 import { GatewaysModule } from '@home/pages/gateways/gateways.module';
 import { MobileModule } from '@home/pages/mobile/mobile.module';
 import { CustomMenuModule } from '@home/pages/custom-menu/custom-menu.module';
+import { SecretStorageModule } from '@home/pages/secret-storage/secret-storage.module';
 import { ReportTemplateModule } from '@home/pages/report/report-template.module';
 
 @NgModule({
@@ -105,6 +106,7 @@ import { ReportTemplateModule } from '@home/pages/report/report-template.module'
     UserModule,
     AccountModule,
     RoleModule,
+    SecretStorageModule,
     IntegrationsCenterModule,
     ConverterModule,
     IntegrationModule,

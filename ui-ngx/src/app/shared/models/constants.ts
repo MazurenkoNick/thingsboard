@@ -273,6 +273,7 @@ export const HelpLinks = {
     scheduler: `${helpBaseUrl}/docs${docPlatformPrefix}/user-guide/scheduler`,
     reportTemplates: `${helpBaseUrl}/docs${docPlatformPrefix}/user-guide/reports`,
     trendzSettings: `${helpBaseUrl}/docs/trendz/`,
+    secretStorage: `${helpBaseUrl}/docs${docPlatformPrefix}/user-guide/secret-storage`,
   }
 };
 /* eslint-enable max-len */

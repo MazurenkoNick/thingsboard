@@ -51,6 +51,7 @@ import org.thingsboard.server.dao.integration.IntegrationService;
 import org.thingsboard.server.dao.report.ReportTemplateService;
 import org.thingsboard.server.dao.role.RoleService;
 import org.thingsboard.server.dao.scheduler.SchedulerEventService;
+import org.thingsboard.server.dao.secret.SecretService;
 
 import java.util.Set;
 
@@ -76,6 +77,8 @@ public interface TbPeContext {
     ConverterService getConverterService();
 
     SchedulerEventService getSchedulerEventService();
+
+    SecretService getSecretService();
 
     EntityId getOwner(TenantId tenantId, EntityId entityId);
 

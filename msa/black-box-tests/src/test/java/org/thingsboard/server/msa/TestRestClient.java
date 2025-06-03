@@ -84,6 +84,7 @@ import org.thingsboard.server.common.data.id.JobId;
 import org.thingsboard.server.common.data.id.ReportId;
 import org.thingsboard.server.common.data.id.RpcId;
 import org.thingsboard.server.common.data.id.RuleChainId;
+import org.thingsboard.server.common.data.id.SecretId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.id.UserId;
 import org.thingsboard.server.common.data.integration.Integration;
@@ -103,6 +104,7 @@ import org.thingsboard.server.common.data.report.ReportTemplate;
 import org.thingsboard.server.common.data.rpc.Rpc;
 import org.thingsboard.server.common.data.rule.RuleChain;
 import org.thingsboard.server.common.data.rule.RuleChainMetaData;
+import org.thingsboard.server.common.data.secret.Secret;
 import org.thingsboard.server.common.data.security.DeviceCredentials;
 
 import java.util.HashMap;
@@ -118,6 +120,7 @@ import static org.hamcrest.core.AnyOf.anyOf;
 import static org.thingsboard.server.common.data.StringUtils.isEmpty;
 
 public class TestRestClient {
+
     private static final String JWT_TOKEN_HEADER_PARAM = "X-Authorization";
     private static final String CONTENT_TYPE_HEADER = "Content-Type";
     private final RequestSpecification requestSpec;
@@ -1113,8 +1116,7 @@ public class TestRestClient {
                 .then()
                 .statusCode(anyOf(is(HTTP_OK), is(HTTP_NOT_FOUND)));
         if (((ValidatableResponseImpl) response).extract().response().getStatusCode() == HTTP_OK) {
-            return response.extract()
-                    .as(Device.class);
+            return response.extract().as(Device.class);
         } else {
             return null;
         }
@@ -1155,7 +1157,6 @@ public class TestRestClient {
                 .then()
                 .statusCode(anyOf(is(HTTP_OK), is(HTTP_NOT_FOUND)));
     }
-
 
     public EntityGroupInfo findCustomerAdminsGroup(CustomerId customerId) throws Exception {
         return findGroupByOwnerIdTypeAndName(customerId, EntityType.USER, EntityGroup.GROUP_CUSTOMER_ADMINS_NAME);
@@ -1249,6 +1250,23 @@ public class TestRestClient {
     public void changeOwner(EntityId ownerId, EntityId entityId) {
         given().spec(requestSpec)
                 .post("/api/owner/{ownerEntityType}/{ownerId}/{entityType}/{entityId}", ownerId.getEntityType().name(), ownerId.getId(), entityId.getEntityType().name(), entityId.getId())
+                .then()
+                .statusCode(HTTP_OK);
+    }
+
+    public Secret saveSecret(Secret secret) {
+        return given().spec(requestSpec)
+                .body(secret)
+                .post("/api/secret")
+                .then()
+                .statusCode(HTTP_OK)
+                .extract()
+                .as(Secret.class);
+    }
+
+    public ValidatableResponse deleteSecret(SecretId secretId) {
+        return given().spec(requestSpec)
+                .delete("/api/secret/{secretId}", secretId.getId())
                 .then()
                 .statusCode(HTTP_OK);
     }
