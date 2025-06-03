@@ -440,6 +440,9 @@
       <tb-unit-input *ngIf="propertyItemType === FormPropertyType.units"
                      [supportsUnitConversion]="propertyFormGroup.get('supportsUnitConversion').value"
                      formControlName="default"></tb-unit-input>
+      <tb-css-size-input *ngIf="propertyItemType === FormPropertyType.cssSize"
+                         formControlName="default">
+      </tb-css-size-input>
       <tb-value-input *ngIf="propertyItemType === FormPropertyType.switch"
                       [valueType]="ValueType.BOOLEAN"
                       formControlName="default"></tb-value-input>

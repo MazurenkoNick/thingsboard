@@ -46,7 +46,7 @@
     .mat-mdc-form-field, tb-unit-input {
       &:not(.fixed-width) {
         width: auto;
-        &.medium-width {
+        &.standard-width, &.medium-width {
           width: auto;
         }
       }
@@ -250,6 +250,9 @@
     }
     .mat-mdc-form-field, tb-unit-input {
       width: 106px;
+      &.standard-width {
+        width: 180px;
+      }
       &.medium-width {
         width: 220px;
       }

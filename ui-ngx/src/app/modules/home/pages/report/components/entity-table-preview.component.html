@@ -34,14 +34,14 @@
   <thead>
     <tr>
       @for (column of columns; track column) {
-        <th>{{ column.label }}</th>
+        <th [style]="headerStyle(column)">{{ column.label }}</th>
       }
     </tr>
   </thead>
   <tbody>
     <tr>
       @for (column of columns; track column) {
-        <td>{{ '${' + column.label + '}' }}</td>
+        <td [style]="cellStyle(column)">{{ '${' + column.label + '}' }}</td>
       }
     </tr>
   </tbody>

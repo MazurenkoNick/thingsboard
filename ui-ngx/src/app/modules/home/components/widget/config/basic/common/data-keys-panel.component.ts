@@ -70,6 +70,7 @@ import { IAliasController } from '@core/api/widget-api.models';
 export interface DataKeysPanelOptions {
   widgetType?: widgetType;
   callbacks?: WidgetConfigCallbacks;
+  settingsForm?: FormProperty[];
 }
 
 @Component({
@@ -191,7 +192,7 @@ export class DataKeysPanelComponent implements ControlValueAccessor, OnInit, OnC
   }
 
   get dataKeySettingsForm(): FormProperty[] {
-    return this.widgetConfigComponent?.modelValue?.dataKeySettingsForm;
+    return this.widgetConfigComponent?.modelValue?.dataKeySettingsForm || this.getDataKeysPanelOption('settingsForm');
   }
 
   get dataKeySettingsFunction(): DataKeySettingsFunction {

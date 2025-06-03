@@ -34,6 +34,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.report.configuration.CellSettings;
 import org.thingsboard.server.common.data.report.configuration.ColumnSettings;
 import org.thingsboard.server.common.data.report.configuration.DataKey;
@@ -152,13 +153,15 @@ public abstract class TableComponentRenderer extends ReportComponentWithLayoutRe
                 Font font = cellSettings.getFont();
                 return CellVariables.builder()
                         .value(isHeader ? dataKey.getLabel() : "")
-                        .color(cellSettings.getColor() != null ? ColorUtils.normalizeCssColor(cellSettings.getColor()) : "#000")
-                        .fontSize(font.getSize() != null && font.getSize() > 0 ? font.getSize() : 10)
-                        .fontWeight(font.getWeight().name())
-                        .fontStyle(font.getStyle().name())
-                        .fontFamily(font.getFamily() != null && font.getFamily().length() > 0 ? font.getFamily() : "Roboto")
-                        .textAlignment(cellSettings.getTextAlignment() != null ? cellSettings.getTextAlignment().name() : TextAlignment.center.name())
-                        .verticalAlignment(cellSettings.getTextAlignment() != null ? cellSettings.getVerticalAlignment().name() : VerticalAlignment.middle.name())
+                        .width(isHeader && !StringUtils.isBlank(columnSettings.getColumnWidth()) ? columnSettings.getColumnWidth() : null)
+                        .color(cellSettings.getColor() != null ? ColorUtils.normalizeCssColor(cellSettings.getColor()) : null)
+                        .backgroundColor(cellSettings.getBackgroundColor() != null ? ColorUtils.normalizeCssColor(cellSettings.getBackgroundColor()) : null)
+                        .fontSize(font != null && font.getSize() != null && font.getSize() > 0 ? font.getSize() : null)
+                        .fontWeight(font != null && font.getWeight() != null ? font.getWeight().name() : null)
+                        .fontStyle(font != null && font.getStyle() != null ? font.getStyle().name() : null)
+                        .fontFamily(font != null && font.getFamily() != null && !font.getFamily().isEmpty() ? font.getFamily() : null)
+                        .textAlignment(cellSettings.getTextAlignment() != null ? cellSettings.getTextAlignment().name() : null)
+                        .verticalAlignment(cellSettings.getTextAlignment() != null ? cellSettings.getVerticalAlignment().name() : null)
                         .build();
             }
         }
@@ -171,7 +174,9 @@ public abstract class TableComponentRenderer extends ReportComponentWithLayoutRe
     @Builder(toBuilder = true)
     static class CellVariables {
         private String value;
+        private String width;
         private String color;
+        private String backgroundColor;
         private Float fontSize;
         private String fontWeight;
         private String fontStyle;

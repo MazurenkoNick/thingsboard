@@ -31,10 +31,11 @@
 
 import { Datasource, DatasourceType } from '@shared/models/widget.models';
 import { deepClone } from '@core/utils';
-import { alignment, Font } from '@shared/models/widget-settings.models';
+import { alignment, alignmentTranslations, Font } from '@shared/models/widget-settings.models';
 import { Insets } from '@shared/models/report.models';
 import { DataKeyType } from '@shared/models/telemetry/telemetry.models';
 import { ReportTemplateId } from '@shared/models/id/report-template-id';
+import { FormProperty, FormPropertyType } from '@shared/models/dynamic-form.models';
 
 export enum ReportComponentType {
   HEADING = 'HEADING',
@@ -59,6 +60,138 @@ export interface ReportComponentConfig {
 export interface TableReportComponentConfig extends ReportComponentConfig {
   type: ReportComponentType;
 }
+
+export enum ReportDataKeySettingsType {
+  DEFAULT = 'DEFAULT',
+  COLUMN = 'COLUMN'
+}
+
+export interface ReportDataKeySettings {
+  type: ReportDataKeySettingsType;
+}
+
+export interface TableReportCellSettings {
+  font?: Font;
+  color?: string;
+  backgroundColor?: string;
+  textAlignment?: alignment;
+  verticalAlignment?: alignment;
+}
+
+export interface TableReportColumnSettings extends ReportDataKeySettings {
+  type: ReportDataKeySettingsType.COLUMN;
+  columnWidth?: string;
+  header?: TableReportCellSettings;
+  cell?: TableReportCellSettings;
+}
+
+const tableReportCellSettings = (header = false): FormProperty[] => ([
+  {
+    id: 'font',
+    type: FormPropertyType.font,
+    name: '{i18n:report-template.text-style}',
+    forceSizeUnit: 'pt',
+    allowedFontWeights: ['normal', 'bold'],
+    allowedFontStyles: ['normal', 'italic'],
+    default: {
+      family: 'Roboto',
+      size: 12,
+      sizeUnit: 'pt',
+      weight: header ? 'bold' : 'normal',
+      style: 'normal'
+    } as Font
+  },
+  {
+    id: 'color',
+    type: FormPropertyType.color,
+    name: '{i18n:report-template.text-style}',
+    default: 'rgba(0,0,0,0.87)'
+  },
+  {
+    id: 'backgroundColor',
+    type: FormPropertyType.color,
+    name: '{i18n:report-template.background-color}',
+    default: null
+  },
+  {
+    id: 'textAlignment',
+    type: FormPropertyType.select,
+    name: '{i18n:report-template.alignment}',
+    subLabel: '{i18n:report-template.horizontal}',
+    fieldClass: 'standard-width',
+    items: [
+      {
+        label: `{i18n:${alignmentTranslations.get('left')}}`,
+        value: 'left'
+      },
+      {
+        label: `{i18n:${alignmentTranslations.get('center')}}`,
+        value: 'center'
+      },
+      {
+        label: `{i18n:${alignmentTranslations.get('right')}}`,
+        value: 'right'
+      },
+      {
+        label: `{i18n:${alignmentTranslations.get('justify')}}`,
+        value: 'justify'
+      }
+    ],
+    default: header ? 'center' : 'left'
+  },
+  {
+    id: 'verticalAlignment',
+    type: FormPropertyType.select,
+    name: '{i18n:report-template.alignment}',
+    subLabel: '{i18n:report-template.vertical}',
+    fieldClass: 'standard-width',
+    items: [
+      {
+        label: `{i18n:${alignmentTranslations.get('top')}}`,
+        value: 'top'
+      },
+      {
+        label: `{i18n:${alignmentTranslations.get('middle')}}`,
+        value: 'middle'
+      },
+      {
+        label: `{i18n:${alignmentTranslations.get('bottom')}}`,
+        value: 'bottom'
+      }
+    ],
+    default: 'middle'
+  }
+]);
+
+export const TableReportColumnSettingsForm: FormProperty[] = [
+  {
+    id: 'type',
+    type: FormPropertyType.text,
+    name: '',
+    rowClass: '!hidden',
+    default: ReportDataKeySettingsType.COLUMN
+  },
+  {
+    id: 'columnWidth',
+    type: FormPropertyType.cssSize,
+    name: '{i18n:report-template.component.table.column-width}',
+    default: null
+  },
+  {
+    id: 'header',
+    type: FormPropertyType.fieldset,
+    name: '{i18n:report-template.component.table.header}',
+    properties: tableReportCellSettings(true),
+    default: null
+  },
+  {
+    id: 'cell',
+    type: FormPropertyType.fieldset,
+    name: '{i18n:report-template.component.table.cell}',
+    properties: tableReportCellSettings(),
+    default: null
+  }
+];
 
 export interface HeadingReportComponentConfig extends ReportComponentConfig {
   value: string;

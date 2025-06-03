@@ -237,7 +237,7 @@ export class DataKeyConfigComponent extends PageComponent implements OnInit, Con
       });
     }
 
-    if (this.hasAdvanced) {
+    if (this.hasAdvanced && this.widget) {
       const widgetInfo = this.widgetComponentService.getInstantWidgetInfo(this.widget);
       const typeParameters = widgetInfo.typeParameters;
       const dataKeySettingsFunction: DataKeySettingsFunction = typeParameters?.dataKeySettingsFunction;

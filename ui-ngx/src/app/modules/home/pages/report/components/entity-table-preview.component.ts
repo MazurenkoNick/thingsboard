@@ -32,10 +32,11 @@
 import { Component, ViewEncapsulation } from '@angular/core';
 import {
   EntityTableReportComponentConfig,
-  RichTextReportComponentConfig
+  RichTextReportComponentConfig, TableReportColumnSettings
 } from '@shared/models/report-component.models';
 import { AbstractReportComponentPreview } from '@home/pages/report/components/report-component.component';
 import { DataKey, Datasource } from '@shared/models/widget.models';
+import { ComponentStyle, textStyle } from '@shared/models/widget-settings.models';
 
 @Component({
   selector: 'tb-entity-table-preview',
@@ -54,6 +55,35 @@ export class EntityTablePreviewComponent extends AbstractReportComponentPreview<
   }
 
   onComponentUpdated() {
+  }
+
+  headerStyle(column: DataKey): ComponentStyle {
+    return this.styleFromColumnSettings(column, true);
+  }
+
+  cellStyle(column: DataKey): ComponentStyle {
+    return this.styleFromColumnSettings(column);
+  }
+
+  private styleFromColumnSettings(column: DataKey, header = false): ComponentStyle {
+    let style: ComponentStyle = {};
+    if (column?.settings) {
+      const columnSettings: TableReportColumnSettings =  column.settings;
+      if (columnSettings) {
+        const cellSettings = header ? columnSettings.header : columnSettings.cell;
+        if (cellSettings) {
+          style = textStyle(cellSettings.font);
+          style.textAlign = cellSettings.textAlignment;
+          style.verticalAlign = cellSettings.verticalAlignment;
+          style.color = cellSettings.color;
+          style.backgroundColor = cellSettings.backgroundColor;
+        }
+        if (header && columnSettings.columnWidth) {
+          style.width = columnSettings.columnWidth;
+        }
+      }
+    }
+    return style;
   }
 
 }

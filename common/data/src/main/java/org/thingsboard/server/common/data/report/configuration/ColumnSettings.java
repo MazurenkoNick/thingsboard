@@ -36,6 +36,7 @@ import org.thingsboard.server.common.data.report.configuration.style.DataKeySett
 @Data
 public class ColumnSettings implements DataKeySettings {
 
+    private String columnWidth;
     private CellSettings header;
     private CellSettings cell;
 

@@ -40,6 +40,7 @@ public class CellSettings {
 
     private Font font;
     private String color;
+    private String backgroundColor;
     private TextAlignment textAlignment;
     private VerticalAlignment verticalAlignment;
 

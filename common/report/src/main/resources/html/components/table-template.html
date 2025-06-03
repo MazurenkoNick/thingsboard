@@ -35,9 +35,11 @@
     <tr>
         <th th:each="colKey : ${columns.keySet()}"
             th:style="|display: table-cell;
+                 ${columns[colKey].width != null ? 'width:' + columns[colKey].width + ';' : ''}
                  ${columns[colKey].textAlignment != null ? 'text-align:' + columns[colKey].textAlignment + ';' : ''}
                  ${columns[colKey].verticalAlignment != null ? 'vertical-align:' + columns[colKey].verticalAlignment + ';' : ''}
                  ${columns[colKey].color != null ? 'color:' + columns[colKey].color + ';' : ''}
+                 ${columns[colKey].backgroundColor != null ? 'background-color:' + columns[colKey].backgroundColor + ';' : ''}
                  ${columns[colKey].fontSize != null ? 'font-size:' + columns[colKey].fontSize + 'pt;' : ''}
                  ${columns[colKey].fontFamily != null ? 'font-family:' + columns[colKey].fontFamily + ';' : ''}
                  ${columns[colKey].fontStyle != null ? 'font-style:' + columns[colKey].fontStyle + ';' : ''}
@@ -52,6 +54,7 @@
                  ${row[colKey].textAlignment != null ? 'text-align:' + row[colKey].textAlignment + ';' : ''}
                  ${row[colKey].verticalAlignment != null ? 'vertical-align:' + row[colKey].verticalAlignment + ';' : ''}
                  ${row[colKey].color != null ? 'color:' + row[colKey].color + ';' : ''}
+                 ${row[colKey].backgroundColor != null ? 'background-color:' + row[colKey].backgroundColor + ';' : ''}
                  ${row[colKey].fontSize != null ? 'font-size:' + row[colKey].fontSize + 'pt;' : ''}
                  ${row[colKey].fontFamily != null ? 'font-family:' + row[colKey].fontFamily + ';' : ''}
                  ${row[colKey].fontStyle != null ? 'font-style:' + row[colKey].fontStyle + ';' : ''}

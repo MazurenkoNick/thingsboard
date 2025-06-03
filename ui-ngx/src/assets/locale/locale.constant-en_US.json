@@ -2138,6 +2138,7 @@
             "type-font": "Font",
             "type-units": "Units",
             "type-icon": "Icon",
+            "type-css-size": "CSS size",
             "type-fieldset": "Fieldset",
             "type-array": "Array",
             "type-html-section": "HTML section",
@@ -7139,6 +7140,11 @@
         "width": "Width",
         "height": "Height",
         "preserve-image-proportions": "Preserve image proportions",
+        "text-style": "Text style",
+        "background-color": "Background color",
+        "alignment": "Alignment",
+        "horizontal": "Horizontal",
+        "vertical": "Vertical",
         "component": {
             "heading": {
                 "type": "Heading",
@@ -7151,6 +7157,12 @@
             },
             "page-break": {
                 "type": "Page break"
+            },
+            "table": {
+                "column-settings": "Column settings",
+                "column-width": "Column width",
+                "header": "Header",
+                "cell": "Cell"
             },
             "entity-table": {
                 "type": "Entity table"

@@ -210,7 +210,7 @@ export class DataKeyRowComponent implements ControlValueAccessor, OnInit, OnChan
   }
 
   get dataKeySettingsForm(): FormProperty[] {
-    return this.widgetConfigComponent?.modelValue?.dataKeySettingsForm;
+    return this.widgetConfigComponent?.modelValue?.dataKeySettingsForm || this.dataKeysPanelComponent?.dataKeySettingsForm;
   }
 
   get dataKeySettingsDirective(): string {

@@ -35,7 +35,7 @@ import {
   DataKey,
   Datasource,
   EntityTableReportComponentConfig,
-  HeadingReportComponentConfig,
+  TableReportColumnSettingsForm,
   WidgetConfigMode
 } from '@app/shared/public-api';
 import { AbstractReportComponentConfig } from '@home/pages/report/components/report-component-config.component';
@@ -51,6 +51,8 @@ export class EntityTableConfigComponent extends AbstractReportComponentConfig<En
   settingsTab: 'data' | 'layout' = 'data';
 
   basicMode = WidgetConfigMode.basic;
+
+  TableReportColumnSettingsForm = TableReportColumnSettingsForm;
 
   protected buildForm(reportComponentConfig: EntityTableReportComponentConfig): FormGroup {
     return this.fb.group({
