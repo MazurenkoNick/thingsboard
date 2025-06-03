@@ -38,8 +38,7 @@
       <tb-toggle-option value="layout">{{ 'report-template.layout' | translate }}</tb-toggle-option>
     </tb-toggle-select>
   </div>
-  <div class="tb-form-panel stroked flex-1 overflow-y-auto" [class.!hidden]="settingsTab !== 'content'">
-    <div class="tb-form-panel-title" translate>report-template.component.rich-text.text</div>
+  <div class="tb-form-panel no-border no-padding flex-1 overflow-y-auto" [class.!hidden]="settingsTab !== 'content'">
     <tb-report-rich-text class="flex-1" [variables]="variables()" [background]="reportConfigForm.get('background').value" formControlName="value"></tb-report-rich-text>
   </div>
   <tb-datasources [class.!hidden]="settingsTab !== 'data'"
