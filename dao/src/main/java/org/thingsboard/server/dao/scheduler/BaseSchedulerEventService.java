@@ -190,9 +190,13 @@ public class BaseSchedulerEventService extends AbstractEntityService implements 
     public void deleteSchedulerEvent(TenantId tenantId, SchedulerEventId schedulerEventId) {
         log.trace("Executing deleteSchedulerEvent [{}]", schedulerEventId);
         validateId(schedulerEventId, id -> INCORRECT_SCHEDULER_EVENT_ID + id);
+        SchedulerEvent schedulerEvent = findSchedulerEventById(tenantId, schedulerEventId);
+        if (schedulerEvent == null) {
+            return;
+        }
         schedulerEventDao.removeById(tenantId, schedulerEventId.getId());
         entityCountService.publishCountEntityEvictEvent(tenantId, EntityType.SCHEDULER_EVENT);
-        eventPublisher.publishEvent(DeleteEntityEvent.builder().tenantId(tenantId).entityId(schedulerEventId).build());
+        eventPublisher.publishEvent(DeleteEntityEvent.builder().tenantId(tenantId).entityId(schedulerEventId).entity(schedulerEvent).build());
     }
 
     @Override

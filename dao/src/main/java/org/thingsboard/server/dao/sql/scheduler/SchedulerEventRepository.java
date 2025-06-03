@@ -37,12 +37,13 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.thingsboard.server.common.data.edqs.fields.SchedulerEventFields;
+import org.thingsboard.server.dao.ExportableEntityRepository;
 import org.thingsboard.server.dao.model.sql.SchedulerEventEntity;
 
 import java.util.List;
 import java.util.UUID;
 
-public interface SchedulerEventRepository extends JpaRepository<SchedulerEventEntity, UUID> {
+public interface SchedulerEventRepository extends JpaRepository<SchedulerEventEntity, UUID>, ExportableEntityRepository<SchedulerEventEntity> {
 
     Long countByTenantId(UUID tenantId);
 
@@ -61,5 +62,10 @@ public interface SchedulerEventRepository extends JpaRepository<SchedulerEventEn
             "e.tenantId, e.customerId, e.name, e.version, e.type, e.schedule, e.configuration, e.additionalInfo, e.originatorId, e.originatorType) " +
             "FROM SchedulerEventEntity e WHERE e.id > :id ORDER BY e.id")
     List<SchedulerEventFields> findNextBatch(@Param("id") UUID id, Limit limit);
+
+    SchedulerEventEntity findByTenantIdAndName(UUID tenantId, String name);
+
+    @Query("SELECT externalId FROM SchedulerEventEntity WHERE id = :id")
+    UUID getExternalIdById(@Param("id") UUID id);
 
 }

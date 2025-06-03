@@ -1080,7 +1080,7 @@ public class EntityGroupController extends AutoCommitController {
         if (!EntityType.TENANT.equals(ownerId.getEntityType()) && !EntityType.CUSTOMER.equals(ownerId.getEntityType())) {
             throw new ThingsboardException("Unsupported owner type '" + ownerId.getEntityType() + "'! Only 'TENANT' or 'CUSTOMER' types are allowed.", ThingsboardErrorCode.BAD_REQUEST_PARAMS);
         } else if (EntityType.TENANT.equals(ownerId.getEntityType())) {
-            TenantId tenantId = new TenantId(ownerId.getId());
+            TenantId tenantId = TenantId.fromUUID(ownerId.getId());
             Tenant tenant = checkTenantId(tenantId, Operation.READ);
             return new EntityInfo(tenant.getUuidId(), EntityType.TENANT.name(), tenant.getTitle());
         } else {

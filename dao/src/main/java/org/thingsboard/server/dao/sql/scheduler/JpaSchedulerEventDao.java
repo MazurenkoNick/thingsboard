@@ -37,6 +37,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Component;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.edqs.fields.SchedulerEventFields;
+import org.thingsboard.server.common.data.id.SchedulerEventId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
@@ -59,16 +60,6 @@ public class JpaSchedulerEventDao extends JpaAbstractDao<SchedulerEventEntity, S
     SchedulerEventRepository schedulerEventRepository;
 
     @Override
-    protected Class<SchedulerEventEntity> getEntityClass() {
-        return SchedulerEventEntity.class;
-    }
-
-    @Override
-    protected JpaRepository<SchedulerEventEntity, UUID> getRepository() {
-        return schedulerEventRepository;
-    }
-
-    @Override
     public PageData<SchedulerEvent> findSchedulerEventsByTenantIdAndEdgeId(UUID tenantId, UUID edgeId, PageLink pageLink) {
         log.debug("Try to find scheduler events by tenantId [{}], edgeId [{}] and pageLink [{}]", tenantId, edgeId, pageLink);
         return DaoUtil.toPageData(schedulerEventRepository
@@ -77,6 +68,11 @@ public class JpaSchedulerEventDao extends JpaAbstractDao<SchedulerEventEntity, S
                         edgeId,
                         pageLink.getTextSearch(),
                         DaoUtil.toPageable(pageLink)));
+    }
+
+    @Override
+    public PageData<SchedulerEvent> findByTenantId(UUID tenantId, PageLink pageLink) {
+        return DaoUtil.toPageData(schedulerEventRepository.findByTenantId(tenantId, DaoUtil.toPageable(pageLink)));
     }
 
     @Override
@@ -92,6 +88,25 @@ public class JpaSchedulerEventDao extends JpaAbstractDao<SchedulerEventEntity, S
     @Override
     public List<SchedulerEventFields> findNextBatch(UUID id, int batchSize) {
         return schedulerEventRepository.findNextBatch(id, Limit.of(batchSize));
+    }
+
+    public SchedulerEvent findByTenantIdAndExternalId(UUID tenantId, UUID externalId) {
+        return DaoUtil.getData(schedulerEventRepository.findByTenantIdAndExternalId(tenantId, externalId));
+    }
+
+    @Override
+    public SchedulerEventId getExternalIdByInternal(SchedulerEventId internalId) {
+        return DaoUtil.toEntityId(schedulerEventRepository.getExternalIdById(internalId.getId()), SchedulerEventId::new);
+    }
+
+    @Override
+    protected Class<SchedulerEventEntity> getEntityClass() {
+        return SchedulerEventEntity.class;
+    }
+
+    @Override
+    protected JpaRepository<SchedulerEventEntity, UUID> getRepository() {
+        return schedulerEventRepository;
     }
 
     @Override
