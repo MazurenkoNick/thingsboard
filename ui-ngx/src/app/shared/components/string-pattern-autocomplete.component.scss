@@ -59,6 +59,14 @@
 }
 
 :host ::ng-deep {
+
+  .mdc-text-field--outlined .mat-mdc-form-field-infix {
+    .highlighted-text {
+      padding-top: var(--mat-form-field-container-vertical-padding);
+      padding-bottom: var(--mat-form-field-container-vertical-padding);
+    }
+  }
+
   .highlighted-text {
     .highlight {
       color: var(--tb-primary-600);

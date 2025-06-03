@@ -137,6 +137,9 @@ export class ReportComponentConfigComponent implements OnInit, OnChanges {
 @Directive()
 export abstract class AbstractReportComponentConfig<C extends ReportComponentConfig = ReportComponentConfig> implements OnInit {
 
+  @HostBinding('style.height')
+  height = '100%';
+
   @Input()
   context: ReportComponentContext;
 
@@ -216,6 +219,10 @@ export abstract class AbstractReportComponentConfig<C extends ReportComponentCon
     variables.push(...pageVariables);
     variables.sort();
     return variables;
+  }
+
+  public variableNames(): string[] {
+    return this.variables().map(value => value.name);
   }
 
   private updateModel() {

@@ -29,7 +29,16 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { Component, DestroyRef, forwardRef, Input, OnInit, ViewEncapsulation } from '@angular/core';
+import {
+  Component,
+  DestroyRef, ElementRef,
+  forwardRef,
+  Input,
+  OnChanges,
+  OnInit, SimpleChanges,
+  viewChild,
+  ViewEncapsulation
+} from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR, UntypedFormBuilder, UntypedFormControl } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Editor, EditorOptions } from 'tinymce';
@@ -46,9 +55,13 @@ import {
   ReportVariable
 } from '@home/pages/report/components/report-component.models';
 import { CustomImageUrlCallback } from '@shared/pipe/image.pipe';
-import { of } from 'rxjs';
+import { forkJoin, of } from 'rxjs';
+import { EditorComponent } from '@tinymce/tinymce-angular';
+import { MatIconRegistry } from '@angular/material/icon';
+import { DataKeyType } from '@shared/models/telemetry/telemetry.models';
 
 const TB_SRC_ATTRIBUTE = 'data-tb-src';
+const MCE_SRC_ATTRIBUTE = 'data-mce-src';
 
 @Component({
   selector: 'tb-report-rich-text',
@@ -63,7 +76,11 @@ const TB_SRC_ATTRIBUTE = 'data-tb-src';
   ],
   encapsulation: ViewEncapsulation.None
 })
-export class ReportRichTextComponent implements OnInit, ControlValueAccessor {
+export class ReportRichTextComponent implements OnInit, ControlValueAccessor, OnChanges {
+
+  editorComponent = viewChild('editor', {
+    read: EditorComponent,
+  });
 
   @Input()
   disabled: boolean;
@@ -71,25 +88,29 @@ export class ReportRichTextComponent implements OnInit, ControlValueAccessor {
   @Input()
   variables: ReportVariable[] = [];
 
+  @Input()
+  background: string;
+
   tinyMceOptions: Partial<EditorOptions> = {
     base_url: '/assets/tinymce',
     body_class: 'tb-report-component',
     content_css: ['/report-component.css'],
     suffix: '.min',
-    plugins: ['link', 'table', 'lists', 'code', 'fullscreen'],
+    plugins: ['table', 'lists', 'code', 'fullscreen'],
     menubar: 'edit customInsert tools view format table',
     menu: {
       customInsert: {
         title: 'Insert',
-        items: 'tb-image link inserttable variables | hr'
+        items: 'tb-image inserttable variables | hr'
       }
     },
     font_family_formats: 'Roboto=Roboto; Monospaced=monospace; Sans Serif=sans-serif; Serif=serif;',
-    toolbar: 'undo redo | fontfamily fontsize blocks | bold italic  strikethrough | forecolor backcolor ' +
-      '| link table tb-image | alignleft aligncenter alignright alignjustify  ' +
-      '| numlist bullist | outdent indent  | removeformat | code | fullscreen',
-    toolbar_mode: 'sliding',
-    height: 400,
+    toolbar: 'undo redo | fontfamily fontsize blocks ' +
+      '| bold italic strikethrough | forecolor backcolor ' +
+      '| table tb-image | alignleft aligncenter alignright alignjustify ' +
+      '| numlist bullist | outdent indent | removeformat | code | fullscreen',
+    toolbar_mode: 'wrap',
+    height: '100%',
     autofocus: false,
     branding: false,
     promotion: false,
@@ -112,6 +133,7 @@ export class ReportRichTextComponent implements OnInit, ControlValueAccessor {
   constructor(private fb: UntypedFormBuilder,
               private translate: TranslateService,
               private dialog: MatDialog,
+              private iconRegistry: MatIconRegistry,
               private htmlWithImagePipe: HtmlWithImagePipe,
               private destroyRef: DestroyRef) {
   }
@@ -123,6 +145,20 @@ export class ReportRichTextComponent implements OnInit, ControlValueAccessor {
     ).subscribe(() => {
       this.updateModel();
     });
+  }
+
+  ngOnChanges(changes: SimpleChanges) {
+    for (const propName of Object.keys(changes)) {
+      const change = changes[propName];
+      if (!change.firstChange && change.currentValue !== change.previousValue) {
+        if (propName === 'background') {
+          const editorComponent = this.editorComponent();
+          if (editorComponent) {
+            this.updateEditorBackground(editorComponent.editor);
+          }
+        }
+      }
+    }
   }
 
   registerOnChange(fn: any): void {
@@ -152,8 +188,19 @@ export class ReportRichTextComponent implements OnInit, ControlValueAccessor {
   }
 
   private setupEditor(editor: Editor) {
+    editor.on('PreInit', () => {
+      this.updateEditorBackground(editor);
+    });
     this.setupTbImagePlugin(editor);
     this.setupVariables(editor);
+  }
+
+  private updateEditorBackground(editor: Editor) {
+    if (this.background) {
+      editor.getBody().style.background = this.background;
+    } else {
+      editor.getBody().style.background = '';
+    }
   }
 
   private setupTbImagePlugin(editor: Editor) {
@@ -172,6 +219,21 @@ export class ReportRichTextComponent implements OnInit, ControlValueAccessor {
       onAction: () => {
         this.editorImageAction(editor);
       }
+    });
+
+    editor.ui.registry.addButton('tb-edit-image', {
+      icon: 'image',
+      tooltip: this.translate.instant('report-template.edit-image'),
+      onAction: () => {
+        this.editorImageAction(editor);
+      }
+    });
+
+    editor.ui.registry.addContextToolbar('tb-image', {
+      position: 'node',
+      type: 'contexttoolbar',
+      predicate: elem => elem.nodeName === 'IMG',
+      items: 'tb-edit-image alignleft aligncenter alignright'
     });
 
     editor.ui.registry.addMenuItem('tb-image', {
@@ -198,7 +260,12 @@ export class ReportRichTextComponent implements OnInit, ControlValueAccessor {
 
     editor.on('BeforeSetContent', (event) => {
       event.content = this.processImages(event.content, (image) => {
-        const src = image.getAttribute('src');
+        let src: string;
+        if (image.hasAttribute(MCE_SRC_ATTRIBUTE)) {
+          src = image.getAttribute(MCE_SRC_ATTRIBUTE);
+        } else {
+          src = image.getAttribute('src');
+        }
         if (!image.hasAttribute(TB_SRC_ATTRIBUTE) || src !== '#') {
           image.setAttribute(TB_SRC_ATTRIBUTE, src);
         }
@@ -224,37 +291,47 @@ export class ReportRichTextComponent implements OnInit, ControlValueAccessor {
   }
 
   private setupVariables(editor: Editor) {
+    forkJoin({
+      variable: this.iconRegistry.getNamedSvgIcon('variable', 'mdi'),
+      attribute: this.iconRegistry.getNamedSvgIcon('alpha-a-circle-outline', 'mdi'),
+      timeseries: this.iconRegistry.getNamedSvgIcon('chart-timeline-variant', 'mdi'),
+      entity: this.iconRegistry.getNamedSvgIcon('alpha-e-circle-outline', 'mdi'),
+      page: this.iconRegistry.getNamedSvgIcon('variable-box', 'mdi')
+    }).subscribe((icons) => {
+      editor.ui.registry.addIcon('variable', icons.variable.outerHTML);
+      editor.ui.registry.addIcon('tb-key-attribute', icons.attribute.outerHTML);
+      editor.ui.registry.addIcon('tb-key-timeseries', icons.timeseries.outerHTML);
+      editor.ui.registry.addIcon('tb-key-entity', icons.entity.outerHTML);
+      editor.ui.registry.addIcon('tb-page-var', icons.page.outerHTML);
+    });
     editor.ui.registry.addAutocompleter('variables', {
       trigger: '$',
       minChars: 0,
-      columns: 'auto',
+      columns: 1,
       onAction: (autocompleteApi, rng, value) => {
         editor.selection.setRng(rng);
         editor.insertContent(value);
         autocompleteApi.hide();
       },
-      fetch: (_pattern) => {
+      fetch: (pattern) => {
         return new Promise((resolve) => {
-          const results= this.variables.map((val) => ({
-            type: 'cardmenuitem',
+          const results= this.variables.filter(variable => variable.name.toUpperCase().includes(pattern.toUpperCase()))
+          .map((val) => ({
+            type: 'autocompleteitem',
             value: `\${${val.name}}`,
-            label: val.name,
-            items: [
-              {
-                type: 'cardtext',
-                text: val.name,
-                name: 'char_name'
-              }
-            ]
-          } as any));
+            text: val.name,
+            icon: this.variableIcon(val)
+          }) as any);
           resolve(results);
         });
       }
     });
     editor.ui.registry.addNestedMenuItem('variables', {
+      icon: 'variable',
       text: 'Variable...',
       getSubmenuItems: () => {
         return this.variables.map(variable => ({
+            icon: this.variableIcon(variable),
             text: variable.name,
             type: 'menuitem',
             onAction: () => {
@@ -269,10 +346,12 @@ export class ReportRichTextComponent implements OnInit, ControlValueAccessor {
         if (!element || element.nodeName !== 'IMG') {
           return [
             {
+              icon: 'variable',
               text: 'Variable...',
               type: 'submenu',
               getSubmenuItems: () => {
                 return this.variables.map(variable => ({
+                  icon: this.variableIcon(variable),
                   text: variable.name,
                   type: 'item',
                   onAction: () => {
@@ -401,6 +480,22 @@ export class ReportRichTextComponent implements OnInit, ControlValueAccessor {
         editor.selection.select(insertedElm);
       }
     });
+  }
+
+  private variableIcon(variable: ReportVariable): string {
+    if (variable.type === 'pageVariable') {
+      return 'tb-page-var';
+    } else if (variable.dataKey?.type) {
+      switch (variable.dataKey.type) {
+        case DataKeyType.timeseries:
+          return 'tb-key-timeseries'
+        case DataKeyType.attribute:
+          return 'tb-key-attribute'
+        case DataKeyType.entityField:
+          return 'tb-key-entity'
+      }
+    }
+    return 'tb-page-var';
   }
 
 }

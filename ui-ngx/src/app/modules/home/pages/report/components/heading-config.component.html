@@ -42,9 +42,10 @@
     <div class="tb-form-row">
       <div translate>report-template.component.heading.text</div>
       <div class="flex flex-1 flex-row items-center justify-start gap-2">
-        <mat-form-field class="flex-1" appearance="outline" subscriptSizing="dynamic">
-          <input matInput formControlName="value" placeholder="{{ 'widget-config.set' | translate }}">
-        </mat-form-field>
+        <tb-string-pattern-autocomplete formControlName="value"
+                                        class="flex-1"
+                                        appearance="outline" subscriptSizing="dynamic"
+                                        [predefinedValues]="variableNames()"></tb-string-pattern-autocomplete>
         <tb-font-settings formControlName="font"
                           disabledLineHeight
                           forceSizeUnit="pt"
