@@ -43,6 +43,7 @@ import org.thingsboard.server.common.data.id.ReportTemplateId;
 public class SubReportComponent extends AbstractReportComponent implements ReportComponent {
 
     private ReportTemplateId templateId;
+    private boolean avoidPageBreakInside;
 
     @Override
     public ReportComponentType getType() {

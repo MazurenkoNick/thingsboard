@@ -123,6 +123,23 @@ hr {
     border-top-width: 0;
 }
 
+img {
+    display: inline-block;
+    page-break-inside: avoid;
+}
+
+div.no-page-break {
+    page-break-inside: avoid;
+}
+
+div.no-page-break * {
+    page-break-inside: avoid;
+}
+
+div.no-page-break table, div.no-page-break tr {
+    page-break-inside: avoid;
+}
+
 div.report-component {
     overflow: hidden;
 }
@@ -137,6 +154,7 @@ table.tb-report-table {
 
 table.tb-report-table tr {
     height: 2em;
+    page-break-inside: avoid;
 }
 
 table.tb-report-table th, table.tb-report-table td {

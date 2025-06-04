@@ -221,7 +221,8 @@ public class PdfReportService extends AbstractReportService {
     }
 
     private String renderSubreport(int usablePageWidthPx, TbReportCtx ctx, ReportComponent component) {
-        ReportTemplateId templateId = ((SubReportComponent) component).getTemplateId();
+        SubReportComponent subReportComponent = ((SubReportComponent) component);
+        ReportTemplateId templateId = subReportComponent.getTemplateId();
         if (templateId == null) {
             return renderError(usablePageWidthPx, "Report template id is not configured for Subreport");
         }
@@ -240,7 +241,13 @@ public class PdfReportService extends AbstractReportService {
             TbReportCtx subReportCtx = ctx.createSubReportCxt(reportConfiguration);
             List<EntityData> entityDatas = fetchEntities(ctx, dataSource.get(), null);
             for (EntityData entity : entityDatas) {
+                if (subReportComponent.isAvoidPageBreakInside()) {
+                    content.append("<div class=\"no-page-break\">");
+                }
                 content.append(renderContent(usablePageWidthPx, subReportCtx, reportConfiguration.getComponents(), entity));
+                if (subReportComponent.isAvoidPageBreakInside()) {
+                    content.append("</div>");
+                }
             }
             return content.toString();
         } catch (Exception e) {

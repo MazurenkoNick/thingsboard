@@ -190,9 +190,13 @@ export interface FormUnitProperty extends FormPropertyBase {
   supportsUnitConversion?: boolean;
 }
 
+export interface FormCssSizeProperty extends FormPropertyBase {
+  allowedCssUnits?: cssUnit[];
+}
+
 export type FormProperty = FormPropertyBase & FormTextareaProperty & FormNumberProperty & FormFontProperty & FormSelectProperty & FormRadiosProperty
   & FormDateTimeProperty & FormJavascriptProperty & FormMarkdownProperty & FormFieldSetProperty & FormArrayProperty & FormHtmlSection
-  & FormUnitProperty;
+  & FormUnitProperty & FormCssSizeProperty;
 
 export const cleanupFormProperties = (properties: FormProperty[]): FormProperty[] => {
   for (const property of properties) {

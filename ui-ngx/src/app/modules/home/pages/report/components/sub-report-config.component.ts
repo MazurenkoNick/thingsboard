@@ -55,7 +55,8 @@ export class SubReportConfigComponent extends AbstractReportComponentConfig<SubR
   protected buildForm(reportComponentConfig: SubReportReportComponentConfig): FormGroup {
     return this.fb.group({
       dataSources: [reportComponentConfig.dataSources, []],
-      templateId: [reportComponentConfig.templateId, []]
+      templateId: [reportComponentConfig.templateId, []],
+      avoidPageBreakInside: [reportComponentConfig.avoidPageBreakInside, []]
     });
   }
 }

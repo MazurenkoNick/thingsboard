@@ -152,6 +152,7 @@
           <tb-css-size-input *ngIf="property.type === FormPropertyType.cssSize"
                              [class]="property.fieldClass"
                              [required]="property.required"
+                             [allowedCssUnits]="property.allowedCssUnits"
                              formControlName="{{ property.id }}">
           </tb-css-size-input>
           <tb-material-icon-select *ngIf="property.type === FormPropertyType.icon"

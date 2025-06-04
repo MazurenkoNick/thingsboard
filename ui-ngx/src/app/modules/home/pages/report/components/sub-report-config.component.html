@@ -31,35 +31,40 @@
 
 -->
 <div class="tb-form-panel no-border" [formGroup]="reportConfigForm">
-    <tb-datasources
-      [configMode]="basicMode"
-      stroked
-      displayDatasourceFilterForBasicMode
-      hideDataKeys
-      formControlName="dataSources"
-      [dataSourcesOptions]="{
-                    widgetType: widgetType.latest,
-                    maxDatasources: 1,
-                    datasourcesOptional: false,
-                    allowFunctions: false
-      }"
-      [callbacks]="callbacks"
-      [aliasController]="context.aliasController">
-    </tb-datasources>
-    <div class="tb-form-panel stroked">
-      <div class="tb-form-panel-title" translate>report-template.type-sub-report</div>
-      <div class="tb-form-row no-border no-padding">
-        <tb-entity-autocomplete
-          [entityType]="EntityType.REPORT_TEMPLATE"
-          [entitySubtype]="ReportTemplateType.SUB_REPORT"
-          class="flex-1"
-          useFullEntityId
-          newTabDetailsButton
-          newTabDetailsButtonHint="{{ 'report-template.component.sub-report.open-subreport-new-tab' | translate }}"
-          placeholder="{{ 'report-template.component.sub-report.select-sub-report' | translate }}"
-          formControlName="templateId"
-          inlineField>
-        </tb-entity-autocomplete>
-      </div>
+  <tb-datasources
+    [configMode]="basicMode"
+    stroked
+    displayDatasourceFilterForBasicMode
+    hideDataKeys
+    formControlName="dataSources"
+    [dataSourcesOptions]="{
+                  widgetType: widgetType.latest,
+                  maxDatasources: 1,
+                  datasourcesOptional: false,
+                  allowFunctions: false
+    }"
+    [callbacks]="callbacks"
+    [aliasController]="context.aliasController">
+  </tb-datasources>
+  <div class="tb-form-panel stroked">
+    <div class="tb-form-panel-title" translate>report-template.type-sub-report</div>
+    <div class="tb-form-row no-border no-padding">
+      <tb-entity-autocomplete
+        [entityType]="EntityType.REPORT_TEMPLATE"
+        [entitySubtype]="ReportTemplateType.SUB_REPORT"
+        class="flex-1"
+        useFullEntityId
+        newTabDetailsButton
+        newTabDetailsButtonHint="{{ 'report-template.component.sub-report.open-subreport-new-tab' | translate }}"
+        placeholder="{{ 'report-template.component.sub-report.select-sub-report' | translate }}"
+        formControlName="templateId"
+        inlineField>
+      </tb-entity-autocomplete>
     </div>
+  </div>
+  <div class="tb-form-row">
+    <mat-slide-toggle class="mat-slide" formControlName="avoidPageBreakInside">
+      {{ 'report-template.component.sub-report.avoid-page-break-inside' | translate }}
+    </mat-slide-toggle>
+  </div>
 </div>

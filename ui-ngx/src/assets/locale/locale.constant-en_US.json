@@ -7191,7 +7191,8 @@
                 "type": "Subreport",
                 "no-sub-report": "No subreport selected",
                 "select-sub-report": "Select subreport",
-                "open-subreport-new-tab": "Open subreport in new tab"
+                "open-subreport-new-tab": "Open subreport in new tab",
+                "avoid-page-break-inside": "Avoid page break inside"
             }
         }
     },

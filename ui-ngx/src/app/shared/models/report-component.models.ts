@@ -175,6 +175,7 @@ export const TableReportColumnSettingsForm: FormProperty[] = [
     id: 'columnWidth',
     type: FormPropertyType.cssSize,
     name: '{i18n:report-template.component.table.column-width}',
+    allowedCssUnits: ['px', 'em', '%', 'pt', 'pc', 'in', 'cm', 'mm'],
     default: null
   },
   {
@@ -258,6 +259,7 @@ export interface ImageReportComponentConfig extends ReportComponentConfig {
 
 export interface SubReportReportComponentConfig extends ReportComponentConfig {
   templateId: ReportTemplateId;
+  avoidPageBreakInside: boolean;
   type: ReportComponentType.SUB_REPORT;
 }
 
@@ -341,7 +343,8 @@ export const reportComponentTypeDefaultConfigMap = new Map<ReportComponentType, 
             dataKeys: []
           }
         ],
-        templateId: null
+        templateId: null,
+        avoidPageBreakInside: false
       }
     ],
     [

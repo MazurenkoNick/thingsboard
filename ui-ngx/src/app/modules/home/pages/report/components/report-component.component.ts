@@ -61,6 +61,7 @@ import { from } from 'rxjs';
 import { ReportComponentsComponent } from '@home/pages/report/components/report-components.component';
 import ITooltipsterInstance = JQueryTooltipster.ITooltipsterInstance;
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import ITooltipsterGeoHelper = JQueryTooltipster.ITooltipsterGeoHelper;
 
 @Component({
   selector: 'tb-report-component',
@@ -289,6 +290,9 @@ export class ReportComponentComponent implements OnInit, AfterViewInit, OnDestro
         trackOrigin: true,
         trackerInterval: 25,
         content: '',
+        checkOverflowY: (geo: ITooltipsterGeoHelper, bcr: DOMRect) => {
+          return geo.origin.windowOffset.top < bcr.top || geo.origin.windowOffset.bottom < bcr.bottom;
+        },
         functionPosition: (instance, helper, position) => {
           const clientRect = helper.origin.getBoundingClientRect();
           const container = parent.getBoundingClientRect();
