@@ -100,7 +100,7 @@ public class DashboardReportController extends BaseController {
                                                                             @PathVariable(DASHBOARD_ID) String strDashboardId,
                                                                             @Parameter(example = REPORT_PARAMS_EXAMPLE, required = true)
                                                                             @RequestBody JsonNode reportParams,
-                                                                            HttpServletRequest request, UserId userId) throws ThingsboardException {
+                                                                            HttpServletRequest request) throws ThingsboardException {
         DeferredResult<ResponseEntity<Resource>> result = new DeferredResult<>();
         checkParameter(DASHBOARD_ID, strDashboardId);
         try {
@@ -120,12 +120,12 @@ public class DashboardReportController extends BaseController {
             AccessJwtToken accessToken;
             TenantId tenantId = currentUser.getTenantId();
             if (StringUtils.isEmpty(publicId)) {
-                accessToken = systemSecurityService.createUserAccessToken(tenantId, userId);
+                accessToken = systemSecurityService.createUserAccessToken(tenantId, currentUser.getId());
             } else {
                 accessToken = systemSecurityService.createUserAccessTokenFromPublicId(tenantId, publicId);
                 ((ObjectNode) reportParams).put("publicId", publicId);
             }
-            dashboardReportService.generateDashboardReport(baseUrl, dashboardId, tenantId, userId, name,
+            dashboardReportService.generateDashboardReport(baseUrl, dashboardId, tenantId, currentUser.getId(), name,
                     reportParams, accessToken.getToken(), accessToken.getClaims().getExpiration().getTime(),
                     onSuccess(result), result::setErrorResult);
         } catch (Exception e) {

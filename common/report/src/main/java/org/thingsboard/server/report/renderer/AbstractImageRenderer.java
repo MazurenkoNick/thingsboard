@@ -30,46 +30,44 @@
  */
 package org.thingsboard.server.report.renderer;
 
-import org.springframework.stereotype.Component;
-import org.thingsboard.server.common.data.exception.ThingsboardErrorCode;
-import org.thingsboard.server.common.data.exception.ThingsboardException;
-import org.thingsboard.server.common.data.report.configuration.components.ErrorComponent;
+import org.thingsboard.server.common.data.StringUtils;
+import org.thingsboard.server.common.data.report.configuration.components.AbstractImageComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
-import org.thingsboard.server.common.data.report.configuration.components.ReportComponentType;
+import org.thingsboard.server.common.data.report.configuration.image.ImageWidthType;
 import org.thingsboard.server.report.context.ComponentData;
 import org.thingsboard.server.report.util.ThymeleafUtil;
 
 import java.util.HashMap;
 
-@Component
-public class ErrorRenderer extends ReportComponentWithLayoutRenderer {
+import static org.thingsboard.server.report.util.ImageUtils.EMPTY_IMAGE_URI;
+
+public abstract class AbstractImageRenderer<C extends AbstractImageComponent> extends ReportComponentWithLayoutRenderer {
 
     @Override
-    protected String renderContent(ReportComponent component, ComponentData reportDataSource) {
-        ErrorComponent errorComponent = (ErrorComponent) component;
+    public String renderContent(ReportComponent component, ComponentData reportDataSource) {
+        C imageComponent = (C) component;
+        String imageUrl = this.getImageUrl(imageComponent, reportDataSource);
         HashMap<String, Object> componentVariables = new HashMap<>();
-        componentVariables.put("errorMessage", errorComponent.getErrorMessage());
-        Exception exception = errorComponent.getException();
-        if (exception != null) {
-            if (exception instanceof RuntimeException runtimeException) {
-                if (runtimeException.getCause() != null && runtimeException.getCause() instanceof Exception cause) {
-                    exception = cause;
-                }
+        componentVariables.put("layoutWidth", this.layoutWidthPx + "px");
+        componentVariables.put("imageUrl", StringUtils.isBlank(imageUrl) ? EMPTY_IMAGE_URI : imageUrl);
+        String imageWidth = this.layoutWidthPx + "px";
+        if (ImageWidthType.original.equals(imageComponent.getWidthType())) {
+            imageWidth = "auto";
+        } else if (ImageWidthType.custom.equals(imageComponent.getWidthType())) {
+            int customWidth = 100;
+            if (imageComponent.getCustomWidth() >= 1) {
+                customWidth = imageComponent.getCustomWidth();
             }
-            String message;
-            if (exception instanceof ThingsboardException thingsboardException) {
-                message = "[" + thingsboardException.getErrorCode().name() + "] " + thingsboardException.getMessage();
-            } else {
-                message = exception.getMessage();
-            }
-            componentVariables.put("exception", message);
+            imageWidth = customWidth + "px";
         }
-        return ThymeleafUtil.renderFromHtmlTemplate("html/components/error-template", componentVariables);
+        componentVariables.put("imageWidth", imageWidth);
+        String imageAlign = "center";
+        if (imageComponent.getAlignment() != null) {
+            imageAlign = imageComponent.getAlignment().name();
+        }
+        componentVariables.put("imageAlign", imageAlign);
+        return ThymeleafUtil.renderFromHtmlTemplate("html/components/image", componentVariables);
     }
 
-    @Override
-    public ReportComponentType getType() {
-        return ReportComponentType.ERROR;
-    }
-
+    protected abstract String getImageUrl(C component, ComponentData reportDataSource);
 }

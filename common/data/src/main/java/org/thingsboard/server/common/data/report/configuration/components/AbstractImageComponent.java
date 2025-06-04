@@ -31,11 +31,10 @@
 package org.thingsboard.server.common.data.report.configuration.components;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import org.thingsboard.server.common.data.dashboardreport.DashboardReportConfig;
 import org.thingsboard.server.common.data.report.configuration.image.ImageAlignment;
 import org.thingsboard.server.common.data.report.configuration.image.ImageWidthType;
 
@@ -43,15 +42,11 @@ import org.thingsboard.server.common.data.report.configuration.image.ImageWidthT
 @Data
 @EqualsAndHashCode
 @NoArgsConstructor
-public class DashboardComponent extends AbstractImageComponent {
+@AllArgsConstructor
+public abstract class AbstractImageComponent extends AbstractReportComponent implements ReportComponent {
 
-    @NotNull
-    @Schema(description = "Dashboard report configuration.")
-    private DashboardReportConfig config;
-
-    @Override
-    public ReportComponentType getType() {
-        return ReportComponentType.DASHBOARD;
-    }
+    private ImageWidthType widthType;
+    private int customWidth;
+    private ImageAlignment alignment;
 
 }

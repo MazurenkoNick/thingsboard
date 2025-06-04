@@ -72,6 +72,9 @@ export class EntityTablePreviewComponent extends AbstractReportComponentPreview<
       if (columnSettings) {
         const cellSettings = header ? columnSettings.header : columnSettings.cell;
         if (cellSettings) {
+          if (cellSettings.font && cellSettings.font.sizeUnit !== 'pt') {
+            cellSettings.font.sizeUnit = 'pt';
+          }
           style = textStyle(cellSettings.font);
           style.textAlign = cellSettings.textAlignment;
           style.verticalAlign = cellSettings.verticalAlignment;

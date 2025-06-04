@@ -60,6 +60,7 @@ import { TranslateService } from '@ngx-translate/core';
 import { takeUntil } from 'rxjs/operators';
 import { Subject } from 'rxjs';
 import { safeMerge } from '@home/components/scheduler/config/config.models';
+import { coerceBoolean } from '@shared/decorators/coercion';
 
 @Component({
   selector: 'tb-dashboard-report-config',
@@ -86,6 +87,10 @@ export class DashboardReportConfigComponent extends PageComponent implements Con
   reportsServerEndpointUrl: string;
 
   @Input()
+  @coerceBoolean()
+  pdfReportMode = false;
+
+  @Input()
   disabled: boolean;
 
   authUser = getCurrentAuthUser(this.store);
@@ -110,67 +115,6 @@ export class DashboardReportConfigComponent extends PageComponent implements Con
               private dialog: MatDialog,
               private fb: UntypedFormBuilder) {
     super(store);
-    this.reportConfigFormGroup = this.fb.group({
-      baseUrl: [null, [Validators.required]],
-      dashboardId: [null, [Validators.required]],
-      state: [null, []],
-      timezone: [null, [Validators.required]],
-      useDashboardTimewindow: [true, []],
-      timewindow: [null, [Validators.required]],
-      namePattern: [null, [Validators.required]],
-      type: [null, [Validators.required]],
-      useCurrentUserCredentials: [true, []],
-      userId: [null, [Validators.required]],
-    });
-
-    this.reportConfigFormGroup.get('useDashboardTimewindow').valueChanges.pipe(
-      takeUntil(this.destroy$)
-    ).subscribe(() => {
-      this.updateEnabledState();
-    });
-
-    this.reportConfigFormGroup.get('useCurrentUserCredentials').valueChanges.pipe(
-      takeUntil(this.destroy$)
-    ).subscribe((useCurrentUserCredentials: boolean) => {
-      if (useCurrentUserCredentials) {
-        this.reportConfigFormGroup.get('userId').patchValue(this.authUser.userId, {emitEvent: false});
-      } else {
-        this.reportConfigFormGroup.get('userId').patchValue(null, {emitEvent: false});
-      }
-      this.updateEnabledState();
-    });
-
-    this.reportConfigFormGroup.get('dashboardId').valueChanges.pipe(
-      takeUntil(this.destroy$)
-    ).subscribe(() => {
-      this.reportConfigFormGroup.get('state').patchValue('', {emitEvent: false});
-    });
-
-    this.reportConfigFormGroup.valueChanges.pipe(
-      takeUntil(this.destroy$)
-    ).subscribe(() => {
-      this.updateModel();
-    });
-  }
-
-  private updateEnabledState() {
-    if (this.disabled) {
-      this.reportConfigFormGroup.disable({emitEvent: false});
-    } else {
-      this.reportConfigFormGroup.enable({emitEvent: false});
-      const useDashboardTimewindow: boolean = this.reportConfigFormGroup.get('useDashboardTimewindow').value;
-      const useCurrentUserCredentials: boolean = this.reportConfigFormGroup.get('useCurrentUserCredentials').value;
-      if (useDashboardTimewindow) {
-        this.reportConfigFormGroup.get('timewindow').disable({emitEvent: false});
-      } else {
-        this.reportConfigFormGroup.get('timewindow').enable({emitEvent: false});
-      }
-      if (useCurrentUserCredentials) {
-        this.reportConfigFormGroup.get('userId').disable({emitEvent: false});
-      } else {
-        this.reportConfigFormGroup.get('userId').enable({emitEvent: false});
-      }
-    }
   }
 
   selectDashboardState() {
@@ -204,6 +148,50 @@ export class DashboardReportConfigComponent extends PageComponent implements Con
   }
 
   ngOnInit() {
+    this.reportConfigFormGroup = this.fb.group({
+      baseUrl: [null, this.pdfReportMode ? [] : [Validators.required]],
+      dashboardId: [null, this.pdfReportMode ? [] : [Validators.required]],
+      state: [null, []],
+      timezone: [null, this.pdfReportMode ? [] : [Validators.required]],
+      useDashboardTimewindow: [true, []],
+      timewindow: [null, this.pdfReportMode ? [] : [Validators.required]],
+      useCurrentUserCredentials: [true, []],
+      userId: [null, this.pdfReportMode ? [] : [Validators.required]],
+    });
+
+    if (!this.pdfReportMode) {
+      this.reportConfigFormGroup.addControl('namePattern', this.fb.control(null, [Validators.required]));
+      this.reportConfigFormGroup.addControl('type', this.fb.control(null, [Validators.required]));
+    }
+
+    this.reportConfigFormGroup.get('useDashboardTimewindow').valueChanges.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(() => {
+      this.updateEnabledState();
+    });
+
+    this.reportConfigFormGroup.get('useCurrentUserCredentials').valueChanges.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe((useCurrentUserCredentials: boolean) => {
+      if (useCurrentUserCredentials) {
+        this.reportConfigFormGroup.get('userId').patchValue(this.authUser.userId, {emitEvent: false});
+      } else {
+        this.reportConfigFormGroup.get('userId').patchValue(null, {emitEvent: false});
+      }
+      this.updateEnabledState();
+    });
+
+    this.reportConfigFormGroup.get('dashboardId').valueChanges.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(() => {
+      this.reportConfigFormGroup.get('state').patchValue('', {emitEvent: false});
+    });
+
+    this.reportConfigFormGroup.valueChanges.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(() => {
+      this.updateModel();
+    });
   }
 
   ngAfterViewInit(): void {
@@ -243,13 +231,33 @@ export class DashboardReportConfigComponent extends PageComponent implements Con
     return null;
   }
 
+  private updateEnabledState() {
+    if (this.disabled) {
+      this.reportConfigFormGroup.disable({emitEvent: false});
+    } else {
+      this.reportConfigFormGroup.enable({emitEvent: false});
+      const useDashboardTimewindow: boolean = this.reportConfigFormGroup.get('useDashboardTimewindow').value;
+      const useCurrentUserCredentials: boolean = this.reportConfigFormGroup.get('useCurrentUserCredentials').value;
+      if (useDashboardTimewindow) {
+        this.reportConfigFormGroup.get('timewindow').disable({emitEvent: false});
+      } else {
+        this.reportConfigFormGroup.get('timewindow').enable({emitEvent: false});
+      }
+      if (useCurrentUserCredentials) {
+        this.reportConfigFormGroup.get('userId').disable({emitEvent: false});
+      } else {
+        this.reportConfigFormGroup.get('userId').enable({emitEvent: false});
+      }
+    }
+  }
+
   private createDefaultReportConfig(): DashboardReportConfig {
     return {
       baseUrl: this.utils.baseUrl(),
       useDashboardTimewindow: true,
       timewindow: historyInterval(DAY),
       namePattern: 'report-%d{yyyy-MM-dd_HH:mm:ss}',
-      type: 'pdf',
+      type: this.pdfReportMode ? 'png' : 'pdf',
       timezone: getDefaultTimezone(),
       useCurrentUserCredentials: true,
       userId: this.authUser.userId,

@@ -86,7 +86,7 @@
       </mat-toolbar>
       <tb-report-component-library [subReport]="subReport" class="min-h-0 flex-1"></tb-report-component-library>
     </div>
-    <div class="tb-report-template-content">
+    <div class="tb-report-template-content" cdkScrollable>
       <div #reportTemplateLayout class="tb-report-template-layout">
         <div class="tb-report-template-sections">
           <div *ngIf="!subReport" class="tb-report-components-container">

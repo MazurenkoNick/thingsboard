@@ -33,6 +33,8 @@ package org.thingsboard.server.report.service;
 import com.google.common.util.concurrent.SettableFuture;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.thingsboard.server.common.data.StringUtils;
+import org.thingsboard.server.common.data.dashboardreport.DashboardReportConfig;
 import org.thingsboard.server.common.data.dashboardreport.DashboardReportData;
 import org.thingsboard.server.common.data.id.ReportTemplateId;
 import org.thingsboard.server.common.data.id.TenantId;
@@ -54,6 +56,7 @@ import org.thingsboard.server.common.data.report.configuration.components.Report
 import org.thingsboard.server.common.data.report.configuration.components.SubReportComponent;
 import org.thingsboard.server.common.data.report.configuration.components.TimeseriesTableComponent;
 import org.thingsboard.server.common.data.report.configuration.image.ImageSourceType;
+import org.thingsboard.server.common.data.report.configuration.image.ImageWidthType;
 import org.thingsboard.server.common.data.report.configuration.style.Insets;
 import org.thingsboard.server.common.data.report.configuration.style.PageOrientation;
 import org.thingsboard.server.common.data.report.configuration.style.PageSize;
@@ -277,8 +280,19 @@ public class PdfReportService extends AbstractReportService {
     }
 
     private ComponentData buildDashboardComponentData(int usablePageWidthPx, TbReportCtx ctx, DashboardComponent component) {
+        if (component.getConfig() == null) {
+            return new ComponentData(usablePageWidthPx, "Dashboard report config is empty");
+        }
+        if (StringUtils.isBlank(component.getConfig().getBaseUrl())) {
+            return new ComponentData(usablePageWidthPx, "Base URL is not configured for dashboard report");
+        }
+        if (StringUtils.isBlank(component.getConfig().getDashboardId())) {
+            return new ComponentData(usablePageWidthPx, "Dashboard id is not configured for dashboard report");
+        }
         SettableFuture<DashboardReportData> futureToSet = SettableFuture.create();
-        webReportClient.requestDashboardReport(component.getConfig(), null,
+        DashboardReportConfig config = component.getConfig();
+        config.setType("png");
+        webReportClient.requestDashboardReport(config, null,
                 ctx.getAccessToken(), ctx.getAccessTokenExpTs(),
                 futureToSet::set, error -> {
                     log.error("Failed to generate dashboard report", error);
@@ -286,8 +300,10 @@ public class PdfReportService extends AbstractReportService {
                 });
         try {
             return new ComponentData(usablePageWidthPx, futureToSet.get().getData());
-        } catch (InterruptedException | ExecutionException e) {
+        } catch (InterruptedException e) {
             throw new RuntimeException(e);
+        } catch (ExecutionException e) {
+            throw new RuntimeException(e.getCause());
         }
     }
 

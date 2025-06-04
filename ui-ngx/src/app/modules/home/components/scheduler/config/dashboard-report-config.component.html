@@ -31,7 +31,7 @@
 
 -->
 <section [formGroup]="reportConfigFormGroup" class="tb-form-panel no-border no-padding flex flex-col">
-  <div class="tb-form-panel stroked">
+  <div *ngIf="!pdfReportMode" class="tb-form-panel stroked">
     <mat-expansion-panel class="tb-settings" [expanded]="true">
       <mat-expansion-panel-header>
         <mat-panel-title>
@@ -41,7 +41,7 @@
       <div class="no-gap flex flex-col">
         <mat-form-field class="mat-block flex-1">
           <mat-label translate>report.name-pattern</mat-label>
-          <input matInput formControlName="namePattern" required>
+          <input matInput formControlName="namePattern">
           <div matIconSuffix tb-help-popup="date/date-format" [tb-help-popup-style]="{width: '800px'}"></div>
           <mat-error *ngIf="reportConfigFormGroup.get('namePattern').hasError('required')">
             {{ 'report.name-pattern-required' | translate }}
@@ -49,7 +49,7 @@
         </mat-form-field>
         <mat-form-field class="mat-block flex-1">
           <mat-label translate>report.type</mat-label>
-          <mat-select matInput formControlName="type" required>
+          <mat-select matInput formControlName="type">
             <mat-option *ngFor="let reportType of reportTypesList" [value]="reportType">
               {{ reportTypeNames.get(reportType) }}
             </mat-option>
@@ -68,14 +68,14 @@
       <div class="no-gap flex flex-col">
         <mat-form-field class="mat-block flex-1">
           <mat-label translate>report.base-url</mat-label>
-          <input matInput formControlName="baseUrl" required>
+          <input matInput formControlName="baseUrl">
           <mat-error *ngIf="reportConfigFormGroup.get('baseUrl').hasError('required')">
             {{ 'report.base-url-required' | translate }}
           </mat-error>
         </mat-form-field>
         <tb-entity-autocomplete
           class="flex-1"
-          required
+          [required]="!pdfReportMode"
           [entityType]="entityType.DASHBOARD"
           formControlName="dashboardId">
         </tb-entity-autocomplete>
@@ -95,7 +95,7 @@
         <div class="flex flex-col">
           <tb-timezone-select
             userTimezoneByDefault
-            required
+            [required]="!pdfReportMode"
             formControlName="timezone">
           </tb-timezone-select>
           <div class="tb-hint" translate
@@ -137,7 +137,7 @@
             </div>
             <tb-entity-autocomplete
               [class.!hidden]="reportConfigFormGroup.get('useCurrentUserCredentials').value"
-              required
+              [required]="!pdfReportMode"
               [entityType]="entityType.USER"
               labelText="report.customer-user-credentials"
               requiredText="report.customer-user-credentials-required"

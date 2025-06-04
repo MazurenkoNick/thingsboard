@@ -46,6 +46,7 @@ export interface GenerateReportRequest {
     accessToken?: string;
     publicId?: string;
     state?: string;
+    pageWidth?: number;
     reportTimewindow?: string;
     timezone: string;
     reportContentType: ReportContentType;
@@ -105,6 +106,7 @@ export function parseGenerateReportRequest(req: Request): GenerateReportRequest 
         let publicId: string | undefined;
         let reportTimewindow: string | undefined;
         let timezone = 'Europe/London';
+        let pageWidth: number | undefined;
         if (!baseUrl.endsWith("/")) {
             baseUrl += "/";
         }
@@ -121,6 +123,12 @@ export function parseGenerateReportRequest(req: Request): GenerateReportRequest 
             if (typeof reportParams.timezone === 'string') {
                 timezone = reportParams.timezone;
             }
+            if (reportParams.pageWidth) {
+                const pageWidthValue = Number.parseInt(reportParams.pageWidth);
+                if (Number.isInteger(pageWidthValue) && pageWidthValue > 0) {
+                    pageWidth = pageWidthValue;
+                }
+            }
         }
         const reportContentType = reportContentTypeMap.get(type);
         if (!reportContentType) {
@@ -136,7 +144,8 @@ export function parseGenerateReportRequest(req: Request): GenerateReportRequest 
             publicId,
             state,
             reportTimewindow,
-            timezone
+            timezone,
+            pageWidth
         };
         return generateReportRequest;
     } else {

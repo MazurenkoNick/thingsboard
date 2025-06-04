@@ -56,9 +56,15 @@ public class ComponentData {
     private List<Map<String, String>> entityDatas;
     private Map<String, Object> variables;
     private byte[] image;
+    private String error;
 
     public ComponentData(int usablePageWidthPx) {
         this(usablePageWidthPx,null, new ArrayList<>(), new HashMap<>());
+    }
+
+    public ComponentData(int usablePageWidthPx, String error) {
+        this(usablePageWidthPx);
+        this.error = error;
     }
 
     public ComponentData(int usablePageWidthPx, byte[] image) {

@@ -31,24 +31,18 @@
 package org.thingsboard.server.report.renderer;
 
 import org.springframework.stereotype.Component;
-import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
+import org.thingsboard.server.common.data.report.configuration.components.DashboardComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponentType;
 import org.thingsboard.server.report.context.ComponentData;
-import org.thingsboard.server.report.util.ThymeleafUtil;
 
 import java.util.Base64;
-import java.util.HashMap;
 
 @Component
-public class DashboardRenderer implements ReportComponentRenderer {
+public class DashboardRenderer extends AbstractImageRenderer<DashboardComponent> {
 
     @Override
-    public String render(ReportComponent component, ComponentData reportDataSource) {
-        String base64Image = encodeImage(reportDataSource.getImage(), "image/jpeg");
-
-        HashMap<String, Object> componentVariables = new HashMap<>();
-        componentVariables.put("imageSrc", base64Image);
-        return ThymeleafUtil.renderFromHtmlTemplate("html/components/image", componentVariables);
+    protected String getImageUrl(DashboardComponent component, ComponentData reportDataSource) {
+        return encodeImage(reportDataSource.getImage(), "image/png");
     }
 
     public String encodeImage(byte[] imageBytes, String mimeType) {

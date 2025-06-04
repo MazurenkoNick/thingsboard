@@ -59,6 +59,8 @@ import { ImageConfigComponent } from '@home/pages/report/components/image-config
 import keyImageTemplate from './key-image-svg.raw';
 import { insertVariable, stringToBase64 } from '@core/utils';
 import { DataKey } from '@shared/models/widget.models';
+import { DashboardPreviewComponent } from '@home/pages/report/components/dashboard-preview.component';
+import { DashboardConfigComponent } from '@home/pages/report/components/dashboard-config.component';
 
 export interface ReportComponentTypeData<C extends ReportComponentConfig = ReportComponentConfig> {
   title: string;
@@ -108,6 +110,16 @@ export const reportComponentTypeMap = new Map<ReportComponentType, ReportCompone
         previewImage: '/assets/report/components/image.svg',
         previewComponent: ImagePreviewComponent,
         configComponent: ImageConfigComponent,
+        editable: true
+      }
+    ],
+    [
+      ReportComponentType.DASHBOARD,
+      {
+        title: 'report-template.component.dashboard.type',
+        previewImage: '/assets/report/components/image.svg',
+        previewComponent: DashboardPreviewComponent,
+        configComponent: DashboardConfigComponent,
         editable: true
       }
     ],

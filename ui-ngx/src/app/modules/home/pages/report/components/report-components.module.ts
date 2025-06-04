@@ -56,6 +56,9 @@ import { ImagePreviewComponent } from '@home/pages/report/components/image-previ
 import { ImageConfigComponent } from '@home/pages/report/components/image-config.component';
 import { ReportImageDialogComponent } from '@home/pages/report/components/report-image-dialog.component';
 import { ReportRichTextComponent } from '@home/pages/report/components/report-rich-text.component';
+import { DashboardPreviewComponent } from '@home/pages/report/components/dashboard-preview.component';
+import { DashboardConfigComponent } from '@home/pages/report/components/dashboard-config.component';
+import { SharedHomeComponentsModule } from '@home/components/shared-home-components.module';
 
 @NgModule({
   declarations: [
@@ -76,6 +79,8 @@ import { ReportRichTextComponent } from '@home/pages/report/components/report-ri
     EntityTableConfigComponent,
     ImagePreviewComponent,
     ImageConfigComponent,
+    DashboardPreviewComponent,
+    DashboardConfigComponent,
     SubReportPreviewComponent,
     SubReportConfigComponent,
     ReportComponentConfigComponent
@@ -83,6 +88,7 @@ import { ReportRichTextComponent } from '@home/pages/report/components/report-ri
   imports: [
     CommonModule,
     SharedModule,
+    SharedHomeComponentsModule,
     WidgetConfigComponentsModule,
     BasicWidgetConfigModule
   ],

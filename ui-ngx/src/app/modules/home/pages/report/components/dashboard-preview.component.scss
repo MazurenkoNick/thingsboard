@@ -28,30 +28,32 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.common.data.report.configuration.components;
-
-import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.NotNull;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import org.thingsboard.server.common.data.dashboardreport.DashboardReportConfig;
-import org.thingsboard.server.common.data.report.configuration.image.ImageAlignment;
-import org.thingsboard.server.common.data.report.configuration.image.ImageWidthType;
-
-@Schema
-@Data
-@EqualsAndHashCode
-@NoArgsConstructor
-public class DashboardComponent extends AbstractImageComponent {
-
-    @NotNull
-    @Schema(description = "Dashboard report configuration.")
-    private DashboardReportConfig config;
-
-    @Override
-    public ReportComponentType getType() {
-        return ReportComponentType.DASHBOARD;
+.tb-dashboard-preview {
+  width: 100%;
+  font-size: 0;
+  .tb-dashboard-img {
+    position: relative;
+    width: 100%;
+    height: auto;
+    display: inline-block;
+    border: dashed 2px rgba(0, 0, 0, 0.47);
+    padding: 30px 10px 30px;
+    background: #eaedf2;
+    font-weight: bold;
+    color: rgba(0,0,0,0.47);
+    .tb-type-title {
+      position: absolute;
+      left: 10px;
+      top: 10px;
+      font-size: 14px;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      gap: 8px;
     }
-
+    .tb-dashboard-title {
+      font-size: 24px;
+      text-align: center;
+    }
+  }
 }

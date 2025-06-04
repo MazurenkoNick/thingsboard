@@ -30,6 +30,7 @@
  */
 package org.thingsboard.server.report.renderer;
 
+import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
 import org.thingsboard.server.common.data.report.configuration.style.Insets;
 import org.thingsboard.server.report.context.ComponentData;
@@ -48,6 +49,9 @@ public abstract class ReportComponentWithLayoutRenderer implements ReportCompone
 
     @Override
     public String render(ReportComponent component, ComponentData reportDataSource) {
+        if (StringUtils.isNotBlank(reportDataSource.getError())) {
+            return ThymeleafUtil.renderFromHtmlTemplate("html/components/error-template", Map.of("errorMessage", reportDataSource.getError()));
+        }
         Insets margins = component.getMargins();
         if (margins == null) {
             margins = new Insets(DEFAULT_COMPONENT_MARGIN_SIZE);

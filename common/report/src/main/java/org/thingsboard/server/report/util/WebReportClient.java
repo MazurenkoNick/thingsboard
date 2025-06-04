@@ -40,6 +40,8 @@ import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
@@ -48,6 +50,7 @@ import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.reactive.function.client.ExchangeFilterFunctions;
 import org.springframework.web.reactive.function.client.ExchangeStrategies;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.dashboardreport.DashboardReportConfig;
@@ -118,7 +121,14 @@ public class WebReportClient {
     public void requestDashboardReport(DashboardReportConfig reportConfig, String reportsServerEndpointUrl,
                                        String accessToken, long accessTokenExpiration,
                                        Consumer<DashboardReportData> onSuccess, Consumer<Throwable> onFailure) {
-        JsonNode dashboardReportRequest = createDashboardReportRequest(reportConfig, accessToken, accessTokenExpiration);
+        JsonNode dashboardReportRequest = createDashboardReportRequest(reportConfig, accessToken, accessTokenExpiration, null);
+        requestDashboardReport(dashboardReportRequest, reportsServerEndpointUrl, onSuccess, onFailure);
+    }
+
+    public void requestDashboardReport(DashboardReportConfig reportConfig, String reportsServerEndpointUrl,
+                                       String accessToken, long accessTokenExpiration, Integer pageWidth,
+                                       Consumer<DashboardReportData> onSuccess, Consumer<Throwable> onFailure) {
+        JsonNode dashboardReportRequest = createDashboardReportRequest(reportConfig, accessToken, accessTokenExpiration, pageWidth);
         requestDashboardReport(dashboardReportRequest, reportsServerEndpointUrl, onSuccess, onFailure);
     }
 
@@ -148,7 +158,7 @@ public class WebReportClient {
                 });
     }
 
-    private JsonNode createDashboardReportRequest(DashboardReportConfig reportConfig, String accessToken, long accessTokenExpiration) {
+    private JsonNode createDashboardReportRequest(DashboardReportConfig reportConfig, String accessToken, long accessTokenExpiration, Integer pageWidth) {
         TimeZone tz = TimeZone.getTimeZone(reportConfig.getTimezone());
         String reportName = prepareReportName(reportConfig.getNamePattern(), new Date(), tz);
         ObjectNode dashboardReportRequest = JacksonUtil.newObjectNode();
@@ -157,11 +167,11 @@ public class WebReportClient {
         dashboardReportRequest.put("token", accessToken);
         dashboardReportRequest.put("expiration", accessTokenExpiration);
         dashboardReportRequest.put("name", reportName);
-        dashboardReportRequest.set("reportParams", createReportParams(reportConfig));
+        dashboardReportRequest.set("reportParams", createReportParams(reportConfig, pageWidth));
         return dashboardReportRequest;
     }
 
-    private JsonNode createReportParams(DashboardReportConfig reportConfig) {
+    private JsonNode createReportParams(DashboardReportConfig reportConfig, Integer pageWidth) {
         ObjectNode reportParams = JacksonUtil.newObjectNode();
         reportParams.put("type", reportConfig.getType());
         reportParams.put("state", reportConfig.getState());
@@ -169,12 +179,28 @@ public class WebReportClient {
             reportParams.set("timewindow", reportConfig.getTimewindow());
         }
         reportParams.put("timezone", reportConfig.getTimezone());
+        if (pageWidth != null) {
+            reportParams.put("pageWidth", pageWidth);
+        }
         return reportParams;
     }
 
     private void processError(Consumer<Throwable> onFailure, Throwable t) {
         if (t instanceof RestClientResponseException) {
             onFailure.accept(new ThingsboardException(((RestClientResponseException) t).getStatusText(), ThingsboardErrorCode.GENERAL));
+        } else if (t instanceof WebClientResponseException) {
+            WebClientResponseException webClientResponseException = (WebClientResponseException) t;
+            String error = webClientResponseException.getResponseBodyAsString();
+            if (StringUtils.isBlank(error)) {
+                error = webClientResponseException.getStatusText();
+            }
+            HttpStatusCode httpStatusCode = webClientResponseException.getStatusCode();
+            HttpStatus httpStatus = HttpStatus.resolve(httpStatusCode.value());
+            ThingsboardErrorCode errorCode = ThingsboardErrorCode.GENERAL;
+            if (HttpStatus.BAD_REQUEST.equals(httpStatus)) {
+                errorCode = ThingsboardErrorCode.BAD_REQUEST_PARAMS;
+            }
+            onFailure.accept(new ThingsboardException(error, errorCode));
         } else {
             onFailure.accept(t);
         }

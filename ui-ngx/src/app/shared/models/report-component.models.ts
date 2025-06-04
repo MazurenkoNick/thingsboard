@@ -36,6 +36,7 @@ import { Insets } from '@shared/models/report.models';
 import { DataKeyType } from '@shared/models/telemetry/telemetry.models';
 import { ReportTemplateId } from '@shared/models/id/report-template-id';
 import { FormProperty, FormPropertyType } from '@shared/models/dynamic-form.models';
+import { DashboardReportConfig } from '@shared/models/dashboard-report.models';
 
 export enum ReportComponentType {
   HEADING = 'HEADING',
@@ -248,13 +249,21 @@ export const imageAlignmentTranslations = new Map<imageAlignment, string>(
   ]
 );
 
-export interface ImageReportComponentConfig extends ReportComponentConfig {
-  sourceType: imageSourceType;
-  imageUrl: string;
+export interface BaseImageReportComponentConfig extends ReportComponentConfig {
   widthType: imageWidthType;
   customWidth?: number;
   alignment: imageAlignment;
+}
+
+export interface ImageReportComponentConfig extends BaseImageReportComponentConfig {
+  sourceType: imageSourceType;
+  imageUrl: string;
   type: ReportComponentType.IMAGE;
+}
+
+export interface DashboardReportComponentConfig extends BaseImageReportComponentConfig {
+  config: Partial<DashboardReportConfig>;
+  type: ReportComponentType.DASHBOARD;
 }
 
 export interface SubReportReportComponentConfig extends ReportComponentConfig {
@@ -272,6 +281,7 @@ export type ReportComponentConfigs =
   RichTextReportComponentConfig |
   EntityTableReportComponentConfig |
   ImageReportComponentConfig |
+  DashboardReportComponentConfig |
   SubReportReportComponentConfig |
   PageBreakReportComponentConfig;
 
@@ -331,6 +341,17 @@ export const reportComponentTypeDefaultConfigMap = new Map<ReportComponentType, 
         widthType: 'fitWidth',
         alignment: 'center',
         dataSources: []
+      }
+    ],
+    [
+      ReportComponentType.DASHBOARD,
+      {
+        type: ReportComponentType.DASHBOARD,
+        config: {
+          type: 'png'
+        },
+        widthType: 'fitWidth',
+        alignment: 'center'
       }
     ],
     [

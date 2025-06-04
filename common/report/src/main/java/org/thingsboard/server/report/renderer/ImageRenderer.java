@@ -31,31 +31,23 @@
 package org.thingsboard.server.report.renderer;
 
 import org.springframework.stereotype.Component;
-import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.report.configuration.DataKey;
 import org.thingsboard.server.common.data.report.configuration.components.ImageComponent;
-import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponentType;
 import org.thingsboard.server.common.data.report.configuration.image.ImageSourceType;
-import org.thingsboard.server.common.data.report.configuration.image.ImageWidthType;
 import org.thingsboard.server.report.context.ComponentData;
-import org.thingsboard.server.report.util.ThymeleafUtil;
 
-import java.util.HashMap;
 import java.util.List;
 
-import static org.thingsboard.server.report.util.ImageUtils.EMPTY_IMAGE_URI;
 import static org.thingsboard.server.report.util.ReportUtils.getSingleDataSource;
 
-
 @Component
-public class ImageRenderer extends ReportComponentWithLayoutRenderer {
+public class ImageRenderer extends AbstractImageRenderer<ImageComponent> {
 
     @Override
-    public String renderContent(ReportComponent component, ComponentData reportDataSource) {
-        ImageComponent imageComponent = (ImageComponent) component;
+    protected String getImageUrl(ImageComponent component, ComponentData reportDataSource) {
         String imageUrl = "";
-        if (ImageSourceType.entityKey.equals(imageComponent.getSourceType())) {
+        if (ImageSourceType.entityKey.equals(component.getSourceType())) {
             if (!reportDataSource.getEntityDatas().isEmpty()) {
                 var entityData = reportDataSource.getEntityDatas().get(0);
                 var dataSource = getSingleDataSource(component);
@@ -68,31 +60,12 @@ public class ImageRenderer extends ReportComponentWithLayoutRenderer {
                 }
             }
         } else {
-            imageUrl = imageComponent.getImageUrl();
+            imageUrl = component.getImageUrl();
             if (imageUrl == null || imageUrl.isEmpty()) {
                 imageUrl = "/assets/report/components/image.svg";
             }
         }
-        HashMap<String, Object> componentVariables = new HashMap<>();
-        componentVariables.put("layoutWidth", this.layoutWidthPx + "px");
-        componentVariables.put("imageUrl", StringUtils.isBlank(imageUrl) ? EMPTY_IMAGE_URI : imageUrl);
-        String imageWidth = this.layoutWidthPx + "px";
-        if (ImageWidthType.original.equals(imageComponent.getWidthType())) {
-            imageWidth = "auto";
-        } else if (ImageWidthType.custom.equals(imageComponent.getWidthType())) {
-            int customWidth = 100;
-            if (imageComponent.getCustomWidth() >= 1) {
-                customWidth = imageComponent.getCustomWidth();
-            }
-            imageWidth = customWidth + "px";
-        }
-        componentVariables.put("imageWidth", imageWidth);
-        String imageAlign = "center";
-        if (imageComponent.getAlignment() != null) {
-            imageAlign = imageComponent.getAlignment().name();
-        }
-        componentVariables.put("imageAlign", imageAlign);
-        return ThymeleafUtil.renderFromHtmlTemplate("html/components/image", componentVariables);
+        return imageUrl;
     }
 
     @Override

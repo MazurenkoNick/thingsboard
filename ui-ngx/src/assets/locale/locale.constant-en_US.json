@@ -7150,6 +7150,7 @@
         "alignment": "Alignment",
         "horizontal": "Horizontal",
         "vertical": "Vertical",
+        "dashboard": "Dashboard",
         "component": {
             "heading": {
                 "type": "Heading",
@@ -7186,6 +7187,10 @@
                 "alignment-left": "Left",
                 "alignment-center": "Center",
                 "alignment-right": "Right"
+            },
+            "dashboard": {
+                "type": "Dashboard",
+                "no-dashboard": "No dashboard selected"
             },
             "sub-report": {
                 "type": "Subreport",

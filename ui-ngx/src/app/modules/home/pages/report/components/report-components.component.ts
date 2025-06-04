@@ -58,6 +58,7 @@ import {
 } from '@angular/cdk/drag-drop';
 import { deepClone } from '@core/utils';
 import { ReportComponentComponent } from '@home/pages/report/components/report-component.component';
+import { reportComponentTypeMap } from '@home/pages/report/components/report-component.models';
 
 @Component({
   selector: 'tb-report-components',
@@ -153,6 +154,9 @@ export class ReportComponentsComponent implements OnInit, OnChanges {
           const reportComponent = defaultReportComponentConfig(item.data as ReportComponentType);
           if (reportComponent) {
             this.reportComponents.splice(event.currentIndex, 0, reportComponent);
+            if (reportComponentTypeMap.get(reportComponent.type).editable) {
+              this.componentEdit.emit(reportComponent);
+            }
           }
         } else if (typeof item.data === 'object') {
           transferArrayItem(
