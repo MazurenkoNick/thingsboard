@@ -50,6 +50,8 @@ import { CalculatedFieldsService } from '@core/http/calculated-fields.service';
 import { ImportExportService } from '@shared/import-export/import-export.service';
 import { EntityDebugSettingsService } from '@home/components/entity/debug/entity-debug-settings.service';
 import { DatePipe } from '@angular/common';
+import { TbPopoverService } from '@shared/components/popover.service';
+import { UserPermissionsService } from '@core/http/user-permissions.service';
 
 @Component({
   selector: 'tb-calculated-fields-table',
@@ -65,7 +67,9 @@ export class CalculatedFieldsTableComponent {
   active = input<boolean>();
   entityId = input<EntityId>();
   entityName = input<string>();
+  ownerId = input<EntityId>();
   readonly = input(false);
+  hideClearEventAction  = input(false);
 
   calculatedFieldsTableConfig: CalculatedFieldsTableConfig;
 
@@ -78,7 +82,9 @@ export class CalculatedFieldsTableComponent {
               private renderer: Renderer2,
               private importExportService: ImportExportService,
               private entityDebugSettingsService: EntityDebugSettingsService,
-              private destroyRef: DestroyRef) {
+              private destroyRef: DestroyRef,
+              private popoverService: TbPopoverService,
+              private userPermissionsService: UserPermissionsService,) {
 
     effect(() => {
       if (this.active()) {
@@ -92,9 +98,13 @@ export class CalculatedFieldsTableComponent {
           this.destroyRef,
           this.renderer,
           this.entityName(),
+          this.ownerId(),
           this.importExportService,
           this.entityDebugSettingsService,
           this.readonly(),
+          this.hideClearEventAction(),
+          this.popoverService,
+          this.userPermissionsService,
         );
         this.cd.markForCheck();
       }

@@ -56,7 +56,9 @@
          label="{{ 'entity.type-calculated-fields' | translate }}" #calculatedFieldsTab="matTab">
   <tb-calculated-fields-table
     [readonly]="!(resource[entityType] | hasGenericPermission: operation.WRITE_CALCULATED_FIELD)"
+    [hideClearEventAction]="!(entityGroup | hasGroupEntityOrGenericPermission: entityResource: operation.WRITE)"
     [active]="calculatedFieldsTab.isActive"
+    [ownerId]="entity.ownerId"
     [entityId]="entity.id"
   />
 </mat-tab>
