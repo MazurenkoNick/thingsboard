@@ -77,7 +77,7 @@ export class DashboardConfigComponent extends AbstractReportComponentConfig<Dash
 
   private updateCustomWidth() {
     if (!this.reportConfigForm.get('customWidth').touched) {
-      const size = 255;
+      const size = 200;
       this.reportConfigForm.get('customWidth').patchValue(size);
     }
   }

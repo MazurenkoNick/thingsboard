@@ -72,6 +72,7 @@ import org.xhtmlrenderer.pdf.ITextRenderer;
 
 import java.awt.*;
 import java.io.ByteArrayOutputStream;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.EnumMap;
 import java.util.HashMap;
@@ -232,9 +233,6 @@ public class PdfReportService extends AbstractReportService {
         StringBuilder content = new StringBuilder();
         try {
             Optional<DataSource> dataSource = getSingleDataSource(component);
-            if (dataSource.isEmpty()) {
-                return renderError(usablePageWidthPx, "Data source is not configured for Subreport");
-            }
             ReportTemplate reportTemplate = dataService.findReportTemplate(templateId, ctx);
             if (reportTemplate == null) {
                 return renderError(usablePageWidthPx, "Template with id " + templateId + " not found. Please check the configuration.");
@@ -242,7 +240,13 @@ public class PdfReportService extends AbstractReportService {
             PdfReportTemplateConfig reportConfiguration = (PdfReportTemplateConfig) reportTemplate.getConfiguration();
 
             TbReportCtx subReportCtx = ctx.createSubReportCxt(reportConfiguration);
-            List<EntityData> entityDatas = fetchEntities(ctx, dataSource.get(), null);
+            List<EntityData> entityDatas;
+            if (dataSource.isEmpty()) {
+                entityDatas = new ArrayList<>();
+                entityDatas.add(null);
+            } else {
+                entityDatas = fetchEntities(ctx, dataSource.get(), null);
+            }
             for (EntityData entity : entityDatas) {
                 if (subReportComponent.isAvoidPageBreakInside()) {
                     content.append("<div class=\"no-page-break\">");

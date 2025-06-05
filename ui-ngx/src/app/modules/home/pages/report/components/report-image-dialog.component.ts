@@ -157,7 +157,7 @@ export class ReportImageDialogComponent extends DialogComponent<ReportImageDialo
     if (sourceType === 'image') {
       this.updateImageSize(this.lastImageSize);
     } else {
-      this.updateImageSize({width: 255, height: 80});
+      this.updateImageSize({width: 200, height: 120});
     }
   }
 

@@ -98,7 +98,7 @@ export class ImageConfigComponent extends AbstractReportComponentConfig<ImageRep
   private updateCustomWidth() {
     const sourceType: imageSourceType = this.reportConfigForm.get('sourceType').value;
     if (!this.reportConfigForm.get('customWidth').touched) {
-      const size = sourceType === 'entityKey' ? 255 : (this.imageWidth || 100);
+      const size = sourceType === 'entityKey' ? 200 : (this.imageWidth || 100);
       this.reportConfigForm.get('customWidth').patchValue(size);
     }
   }

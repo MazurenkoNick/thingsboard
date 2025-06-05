@@ -117,7 +117,7 @@ export const reportComponentTypeMap = new Map<ReportComponentType, ReportCompone
       ReportComponentType.DASHBOARD,
       {
         title: 'report-template.component.dashboard.type',
-        previewImage: '/assets/report/components/image.svg',
+        previewImage: '/assets/report/components/dashboard.svg',
         previewComponent: DashboardPreviewComponent,
         configComponent: DashboardConfigComponent,
         editable: true
