@@ -35,6 +35,7 @@ import io.netty.buffer.Unpooled;
 import io.netty.channel.EventLoopGroup;
 import io.netty.handler.codec.mqtt.MqttConnectReturnCode;
 import io.netty.handler.codec.mqtt.MqttQoS;
+import io.netty.handler.codec.mqtt.MqttVersion;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.util.concurrent.Future;
@@ -55,6 +56,7 @@ import org.thingsboard.mqtt.MqttClient;
 import org.thingsboard.mqtt.MqttClientConfig;
 import org.thingsboard.mqtt.MqttConnectResult;
 import org.thingsboard.rule.engine.AbstractRuleNodeUpgradeTest;
+import org.thingsboard.rule.engine.api.MqttClientSettings;
 import org.thingsboard.rule.engine.api.TbContext;
 import org.thingsboard.rule.engine.api.TbNode;
 import org.thingsboard.rule.engine.api.TbNodeConfiguration;
@@ -95,6 +97,7 @@ import static org.mockito.BDDMockito.spy;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.BDDMockito.willAnswer;
 import static org.mockito.BDDMockito.willReturn;
+import static org.mockito.Mockito.lenient;
 
 @ExtendWith(MockitoExtension.class)
 public class TbMqttNodeTest extends AbstractRuleNodeUpgradeTest {
@@ -121,6 +124,22 @@ public class TbMqttNodeTest extends AbstractRuleNodeUpgradeTest {
     protected void setUp() {
         mqttNode = spy(new TbMqttNode());
         mqttNodeConfig = new TbMqttNodeConfiguration().defaultConfiguration();
+        lenient().when(ctxMock.getMqttClientSettings()).thenReturn(new MqttClientSettings() {
+            @Override
+            public int getRetransmissionMaxAttempts() {
+                return 3;
+            }
+
+            @Override
+            public long getRetransmissionInitialDelayMillis() {
+                return 5000L;
+            }
+
+            @Override
+            public double getRetransmissionJitterFactor() {
+                return 0.15;
+            }
+        });
     }
 
     @Test
@@ -135,6 +154,7 @@ public class TbMqttNodeTest extends AbstractRuleNodeUpgradeTest {
         assertThat(mqttNodeConfig.isCleanSession()).isTrue();
         assertThat(mqttNodeConfig.isSsl()).isFalse();
         assertThat(mqttNodeConfig.isParseToPlainText()).isFalse();
+        assertThat(mqttNodeConfig.getProtocolVersion()).isEqualTo(MqttVersion.MQTT_3_1_1);
         assertThat(mqttNodeConfig.getCredentials()).isInstanceOf(AnonymousCredentials.class);
     }
 
@@ -178,7 +198,8 @@ public class TbMqttNodeTest extends AbstractRuleNodeUpgradeTest {
         SslContext actualSslContext = mqttClientConfig.getValue().getSslContext();
         assertThat(actualSslContext)
                 .usingRecursiveComparison()
-                .ignoringFields("ctx", "ctxLock", "sessionContext.context.ctx", "sessionContext.context.ctxLock")
+                .ignoringFields("ctx", "ctxLock", "sessionContext.context.ctx", "sessionContext.context.ctxLock",
+                        "sslContext")
                 .isEqualTo(SslContextBuilder.forClient().build());
     }
 
@@ -378,20 +399,42 @@ public class TbMqttNodeTest extends AbstractRuleNodeUpgradeTest {
         then(mqttClientMock).shouldHaveNoInteractions();
     }
 
+    @ParameterizedTest
+    @MethodSource
+    public void verifyProtocolVersionMapping(MqttVersion expectedVersion) throws Exception {
+        mqttNodeConfig.setProtocolVersion(expectedVersion);
+
+        given(ctxMock.isExternalNodeForceAck()).willReturn(false);
+        mockSuccessfulInit();
+        mqttNode.init(ctxMock, new TbNodeConfiguration(JacksonUtil.valueToTree(mqttNodeConfig)));
+
+        ArgumentCaptor<MqttClientConfig> configCaptor = ArgumentCaptor.forClass(MqttClientConfig.class);
+        then(mqttNode).should().prepareMqttClientConfig(configCaptor.capture());
+        assertThat(expectedVersion).isEqualTo(configCaptor.getValue().getProtocolVersion());
+    }
+
+    private static Stream<Arguments> verifyProtocolVersionMapping() {
+        return Stream.of(MqttVersion.values()).map(Arguments::of);
+    }
+
     private static Stream<Arguments> givenFromVersionAndConfig_whenUpgrade_thenVerifyHasChangesAndConfig() {
         return Stream.of(
                 // default config for version 0
                 Arguments.of(0,
                         "{\"topicPattern\":\"my-topic\",\"port\":1883,\"connectTimeoutSec\":10,\"cleanSession\":true, \"ssl\":false, \"retainedMessage\":false,\"credentials\":{\"type\":\"anonymous\"}}",
                         true,
-                        "{\"topicPattern\":\"my-topic\",\"port\":1883,\"connectTimeoutSec\":10,\"cleanSession\":true, \"ssl\":false, \"retainedMessage\":false,\"credentials\":{\"type\":\"anonymous\"},\"parseToPlainText\":false}"),
+                        "{\"topicPattern\":\"my-topic\",\"port\":1883,\"connectTimeoutSec\":10,\"cleanSession\":true, \"ssl\":false, \"retainedMessage\":false,\"credentials\":{\"type\":\"anonymous\"},\"parseToPlainText\":false, \"protocolVersion\":\"MQTT_3_1\"}"),
                 // default config for version 1 with upgrade from version 0
                 Arguments.of(1,
                         "{\"topicPattern\":\"my-topic\",\"port\":1883,\"connectTimeoutSec\":10,\"cleanSession\":true, \"ssl\":false, \"retainedMessage\":false,\"credentials\":{\"type\":\"anonymous\"},\"parseToPlainText\":false}",
+                        true,
+                        "{\"topicPattern\":\"my-topic\",\"port\":1883,\"connectTimeoutSec\":10,\"cleanSession\":true, \"ssl\":false, \"retainedMessage\":false,\"credentials\":{\"type\":\"anonymous\"},\"parseToPlainText\":false, \"protocolVersion\":\"MQTT_3_1\"}"),
+                // default config for version 2 with upgrade from version 1
+                Arguments.of(2,
+                        "{\"topicPattern\":\"my-topic\",\"port\":1883,\"connectTimeoutSec\":10,\"cleanSession\":true, \"ssl\":false, \"retainedMessage\":false,\"credentials\":{\"type\":\"anonymous\"},\"parseToPlainText\":false, \"protocolVersion\":\"MQTT_3_1\"}",
                         false,
-                        "{\"topicPattern\":\"my-topic\",\"port\":1883,\"connectTimeoutSec\":10,\"cleanSession\":true, \"ssl\":false, \"retainedMessage\":false,\"credentials\":{\"type\":\"anonymous\"},\"parseToPlainText\":false}")
+                        "{\"topicPattern\":\"my-topic\",\"port\":1883,\"connectTimeoutSec\":10,\"cleanSession\":true, \"ssl\":false, \"retainedMessage\":false,\"credentials\":{\"type\":\"anonymous\"},\"parseToPlainText\":false, \"protocolVersion\":\"MQTT_3_1\"}")
         );
-
     }
 
     @Override

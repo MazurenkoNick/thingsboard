@@ -35,7 +35,7 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>org.thingsboard</groupId>
-        <version>4.1.0PE-SNAPSHOT</version>
+        <version>4.1.0PE-RC</version>
         <artifactId>thingsboard</artifactId>
     </parent>
     <artifactId>dao</artifactId>
@@ -73,6 +73,14 @@
         <dependency>
             <groupId>org.thingsboard.common</groupId>
             <artifactId>util</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.thingsboard.common</groupId>
+            <artifactId>discovery-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.networknt</groupId>
+            <artifactId>json-schema-validator</artifactId>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
@@ -271,7 +279,7 @@
         <dependency>
             <groupId>org.thingsboard.license</groupId>
             <artifactId>client</artifactId>
-            <version>1.3.0</version>
+            <version>1.3.1</version>
         </dependency>
     </dependencies>
     <build>
