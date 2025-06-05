@@ -347,6 +347,12 @@ export const reportComponentTypeDefaultConfigMap = new Map<ReportComponentType, 
       ReportComponentType.DASHBOARD,
       {
         type: ReportComponentType.DASHBOARD,
+        dataSources: [
+          {
+            type: DatasourceType.entity,
+            dataKeys: []
+          }
+        ],
         config: {
           type: 'png'
         },

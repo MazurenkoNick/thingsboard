@@ -43,6 +43,7 @@ import org.thingsboard.server.common.data.query.EntityData;
 import org.thingsboard.server.common.data.report.ReportData;
 import org.thingsboard.server.common.data.report.ReportTemplate;
 import org.thingsboard.server.common.data.report.TbReportFormat;
+import org.thingsboard.server.common.data.report.configuration.DataKey;
 import org.thingsboard.server.common.data.report.configuration.DataSource;
 import org.thingsboard.server.common.data.report.configuration.HeaderFooter;
 import org.thingsboard.server.common.data.report.configuration.PdfReportTemplateConfig;
@@ -56,7 +57,6 @@ import org.thingsboard.server.common.data.report.configuration.components.Report
 import org.thingsboard.server.common.data.report.configuration.components.SubReportComponent;
 import org.thingsboard.server.common.data.report.configuration.components.TimeseriesTableComponent;
 import org.thingsboard.server.common.data.report.configuration.image.ImageSourceType;
-import org.thingsboard.server.common.data.report.configuration.image.ImageWidthType;
 import org.thingsboard.server.common.data.report.configuration.style.Insets;
 import org.thingsboard.server.common.data.report.configuration.style.PageOrientation;
 import org.thingsboard.server.common.data.report.configuration.style.PageSize;
@@ -82,6 +82,7 @@ import java.util.Optional;
 import java.util.TimeZone;
 import java.util.concurrent.ExecutionException;
 
+import static org.thingsboard.server.common.data.report.configuration.components.ReportComponentType.DASHBOARD;
 import static org.thingsboard.server.common.data.report.configuration.components.ReportComponentType.ERROR;
 import static org.thingsboard.server.common.data.report.configuration.components.ReportComponentType.SUB_REPORT;
 import static org.thingsboard.server.common.data.report.configuration.components.ReportComponentType.TIME_SERIES_TABLE;
@@ -91,6 +92,7 @@ import static org.thingsboard.server.common.data.util.ReportQueryUtils.toEntityC
 import static org.thingsboard.server.report.util.ReportUtils.getSingleDataSource;
 import static org.thingsboard.server.report.util.ReportUtils.prepareReportComponent;
 import static org.thingsboard.server.report.util.ReportUtils.prepareReportName;
+import static org.thingsboard.server.report.util.ReportUtils.updateDashboardReportStateParamsWithEntity;
 
 @Service
 @Slf4j
@@ -181,6 +183,8 @@ public class PdfReportService extends AbstractReportService {
             ReportComponentType type = component.getType();
             if (type == SUB_REPORT) {
                 content.append(renderSubreport(usablePageWidthPx, ctx, component));
+            } else if (type == DASHBOARD) {
+                content.append(renderDashboard(usablePageWidthPx, ctx, stateEntity, component));
             } else if (type == TIME_SERIES_TABLE) {
                 content.append(renderTimeseriesTables(usablePageWidthPx, ctx, stateEntity, component));
             } else {
@@ -205,7 +209,7 @@ public class PdfReportService extends AbstractReportService {
             case TIME_SERIES_TABLE ->
                     new ComponentData(usablePageWidthPx, fetchEntityTsData(ctx, (TimeseriesTableComponent) component, stateEntity.getEntityId()));
             case ALARM_TABLE -> new ComponentData(usablePageWidthPx, fetchAlarmDatas(ctx, (AlarmTableComponent) component));
-            case DASHBOARD -> buildDashboardComponentData(usablePageWidthPx, ctx, ((DashboardComponent) component));
+            case DASHBOARD -> buildDashboardComponentData(usablePageWidthPx, ctx, ((DashboardComponent) component), stateEntity);
             case IMAGE -> buildImageComponentData(usablePageWidthPx, ctx, ((ImageComponent) component));
             default -> buildMultipleDataSourceData(usablePageWidthPx, ctx, component.getDataSources(), stateEntity);
         };
@@ -218,6 +222,32 @@ public class PdfReportService extends AbstractReportService {
             return renderError(usablePageWidthPx, "Data source is not configured for Subreport");
         }
         List<EntityData> entityDatas = fetchEntities(ctx, dataSource.get(), stateEntity);
+        for (EntityData entity : entityDatas) {
+            content.append(renderComponent(usablePageWidthPx, ctx, component, entity));
+        }
+        return content.toString();
+    }
+
+    private String renderDashboard(int usablePageWidthPx, TbReportCtx ctx, EntityData stateEntity, ReportComponent component) {
+        StringBuilder content = new StringBuilder();
+        Optional<DataSource> dataSource = getSingleDataSource(component);
+        List<EntityData> entityDatas;
+        if (dataSource.isEmpty()) {
+            entityDatas = new ArrayList<>();
+            entityDatas.add(null);
+        } else {
+            DataSource dashboardDataSource = dataSource.get();
+            List<DataKey> dataKeys = dashboardDataSource.getDataKeys();
+            if (dataKeys == null) {
+                dataKeys = new ArrayList<>();
+                dashboardDataSource.setDataKeys(dataKeys);
+            }
+            DataKey entityNameDataKey = new DataKey();
+            entityNameDataKey.setType("entityField");
+            entityNameDataKey.setName("name");
+            dataKeys.add(entityNameDataKey);
+            entityDatas = fetchEntities(ctx, dashboardDataSource, stateEntity);
+        }
         for (EntityData entity : entityDatas) {
             content.append(renderComponent(usablePageWidthPx, ctx, component, entity));
         }
@@ -283,7 +313,7 @@ public class PdfReportService extends AbstractReportService {
         }
     }
 
-    private ComponentData buildDashboardComponentData(int usablePageWidthPx, TbReportCtx ctx, DashboardComponent component) {
+    private ComponentData buildDashboardComponentData(int usablePageWidthPx, TbReportCtx ctx, DashboardComponent component, EntityData stateEntity) {
         if (component.getConfig() == null) {
             return new ComponentData(usablePageWidthPx, "Dashboard report config is empty");
         }
@@ -296,6 +326,9 @@ public class PdfReportService extends AbstractReportService {
         SettableFuture<DashboardReportData> futureToSet = SettableFuture.create();
         DashboardReportConfig config = component.getConfig();
         config.setType("png");
+        if (stateEntity != null) {
+            config.setState(updateDashboardReportStateParamsWithEntity(config.getState(), stateEntity));
+        }
         webReportClient.requestDashboardReport(config, null,
                 ctx.getAccessToken(), ctx.getAccessTokenExpTs(),
                 futureToSet::set, error -> {

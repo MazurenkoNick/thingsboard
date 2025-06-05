@@ -38,7 +38,24 @@
     </tb-toggle-select>
   </div>
   <div class="tb-form-panel no-border no-padding" [class.!hidden]="settingsTab !== 'dashboard'">
+    <tb-datasources
+      [configMode]="basicMode"
+      stroked
+      displayDatasourceFilterForBasicMode
+      hideDataKeys
+      formControlName="dataSources"
+      [dataSourcesOptions]="{
+                  widgetType: widgetType.latest,
+                  maxDatasources: 1,
+                  datasourcesOptional: true,
+                  allowFunctions: false
+      }"
+      [callbacks]="callbacks"
+      [aliasController]="context.aliasController">
+    </tb-datasources>
     <tb-dashboard-report-config pdfReportMode formControlName="config"></tb-dashboard-report-config>
+  </div>
+  <div class="tb-form-panel no-border no-padding" [class.!hidden]="settingsTab !== 'layout'">
     <div class="tb-form-row space-between">
       <div>{{ 'report-template.component.image.image-width' | translate }}</div>
       <div class="flex flex-row items-center justify-start gap-2">
@@ -68,8 +85,6 @@
         </mat-select>
       </mat-form-field>
     </div>
-  </div>
-  <div class="tb-form-panel no-border no-padding" [class.!hidden]="settingsTab !== 'layout'">
     <div class="tb-form-row space-between">
       <div translate>report-template.paddings</div>
       <tb-report-insets formControlName="paddings"></tb-report-insets>

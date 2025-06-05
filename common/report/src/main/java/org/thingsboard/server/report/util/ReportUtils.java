@@ -30,12 +30,20 @@
  */
 package org.thingsboard.server.report.util;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.NullNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.server.common.data.StringUtils;
+import org.thingsboard.server.common.data.query.EntityData;
+import org.thingsboard.server.common.data.query.EntityKeyType;
 import org.thingsboard.server.common.data.report.configuration.DataKey;
 import org.thingsboard.server.common.data.report.configuration.DataSource;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
 
 import java.text.SimpleDateFormat;
+import java.util.Base64;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -103,6 +111,49 @@ public class ReportUtils {
                 }
         }
         return Optional.of(dataSource);
+    }
+
+    public static String updateDashboardReportStateParamsWithEntity(String state, EntityData stateEntity) {
+        JsonNode stateObj = null;
+        if (StringUtils.isNotBlank(state)) {
+            try {
+                String decoded = new String(Base64.getDecoder().decode(state));
+                JsonNode parsed = JacksonUtil.toJsonNode(decoded);
+                if (parsed.isArray() && !parsed.isEmpty()) {
+                    stateObj = parsed;
+                }
+            } catch (Exception ignored) {}
+        }
+        if (stateObj == null) {
+            stateObj = JacksonUtil.newArrayNode();
+            ObjectNode stateData = JacksonUtil.newObjectNode();
+            stateData.set("id", NullNode.getInstance());
+            ((ArrayNode)stateObj).add(stateData);
+        }
+
+        ObjectNode stateParams;
+        JsonNode stateData = stateObj.get(stateObj.size() - 1);
+        if (stateData.has("params") && stateData.get("params").isObject()) {
+            stateParams = (ObjectNode) stateData.get("params");
+        } else {
+            stateParams = JacksonUtil.newObjectNode();
+            ((ObjectNode) stateData).set("params", stateParams);
+        }
+        stateParams.set("entityId", JacksonUtil.valueToTree(stateEntity.getEntityId()));
+        String entityName = null;
+        if (stateEntity.getLatest().containsKey(EntityKeyType.ENTITY_FIELD)) {
+            var entityFields = stateEntity.getLatest().get(EntityKeyType.ENTITY_FIELD);
+            if (entityFields.containsKey("name")) {
+                entityName = entityFields.get("name").getValue();
+            }
+        }
+        stateParams.remove("entityName");
+        stateParams.remove("entityLabel");
+        if (entityName != null) {
+            stateParams.put("entityName", entityName);
+        }
+        String newStateJsonStr = JacksonUtil.toString(stateObj);
+        return new String(Base64.getEncoder().encode(newStateJsonStr.getBytes()));
     }
 
 }

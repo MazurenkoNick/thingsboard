@@ -62,6 +62,7 @@ export class DashboardConfigComponent extends AbstractReportComponentConfig<Dash
 
   protected buildForm(reportComponentConfig: DashboardReportComponentConfig): FormGroup {
     const form = this.fb.group({
+      dataSources: [reportComponentConfig.dataSources, []],
       config: [reportComponentConfig.config, []],
       widthType: [reportComponentConfig.widthType || 'fitWidth', []],
       customWidth: [reportComponentConfig.customWidth || 100, [Validators.min(1)]],
