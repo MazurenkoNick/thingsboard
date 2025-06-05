@@ -59,6 +59,8 @@
           <div tbTruncateWithTooltip>
             @if (argument.refEntityId?.entityType === ArgumentEntityType.Tenant) {
               {{ 'calculated-fields.argument-current-tenant' | translate }}
+            } @else if (argument.refDynamicSource === CFArgumentDynamicSourceType.CURRENT_OWNER) {
+              {{ 'calculated-fields.argument-owner' | translate }}
             } @else if (argument.refEntityId?.id) {
               {{ entityTypeTranslations.get(argument.refEntityId.entityType).type | translate }}
             } @else {
@@ -131,7 +133,7 @@
         </mat-cell>
       </ng-container>
       <mat-header-row class="mat-row-select"
-                      *matHeaderRowDef="['name', 'entityType', 'target', 'type', 'key', 'actions']; sticky: true"></mat-header-row>
+                      *matHeaderRowDef="['name', 'entityType', 'target', 'type', 'key', 'actions']"></mat-header-row>
       <mat-row
         *matRowDef="let argument; columns: ['name', 'entityType', 'target', 'type', 'key', 'actions']"></mat-row>
     </table>
