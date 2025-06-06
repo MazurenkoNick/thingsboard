@@ -60,6 +60,7 @@ import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.text.SimpleDateFormat;
 import java.util.Optional;
+import java.util.TimeZone;
 
 @Service
 @Slf4j
@@ -107,7 +108,9 @@ public class BasicSubscriptionService implements SubscriptionService, TbLicenseC
     public void init() {
         try {
             if (StringUtils.isNotEmpty(licenseSecret)) {
-                long releaseDate = new SimpleDateFormat("yyyy-MM-dd").parse(Version.PROJECT_BUILD_DATE).getTime();
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+                sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+                long releaseDate = sdf.parse(Version.PROJECT_BUILD_DATE).getTime();
                 try {
                     tbLicenseClient = OfflineTbLicenseClient.builder()
                             .listener(this)
