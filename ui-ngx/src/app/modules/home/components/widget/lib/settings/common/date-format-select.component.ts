@@ -46,7 +46,7 @@ import {
   dateFormats,
   DateFormatSettings,
   dateFormatsWithAuto,
-  defaultAutoDateFormatSettings
+  defaultAutoDateFormatSettings, toDateFormatSettings
 } from '@shared/models/widget-settings.models';
 import { TranslateService } from '@ngx-translate/core';
 import { DatePipe } from '@angular/common';
@@ -89,6 +89,10 @@ export class DateFormatSelectComponent implements OnInit, ControlValueAccessor {
   @Input()
   @coerceBoolean()
   includeAuto = false;
+
+  @Input()
+  @coerceBoolean()
+  asStringFormat = false;
 
   dateFormatList: DateFormatSettings[];
 
@@ -142,15 +146,25 @@ export class DateFormatSelectComponent implements OnInit, ControlValueAccessor {
     }
   }
 
-  writeValue(value: DateFormatSettings): void {
-    this.modelValue = value;
+  writeValue(value: DateFormatSettings | string): void {
+    let dateFormat: DateFormatSettings;
+    if (typeof value === 'string') {
+      dateFormat = toDateFormatSettings(value);
+    } else {
+      dateFormat = value;
+    }
+    this.modelValue = dateFormat;
     this.dateFormatFormControl.patchValue(this.modelValue, {emitEvent: false});
   }
 
   updateModel(value: DateFormatSettings): void {
     if (!compareDateFormats(this.modelValue, value)) {
       this.modelValue = value;
-      this.propagateChange(this.modelValue);
+      if (this.asStringFormat) {
+        this.propagateChange(this.modelValue.format);
+      } else {
+        this.propagateChange(this.modelValue);
+      }
     }
   }
 

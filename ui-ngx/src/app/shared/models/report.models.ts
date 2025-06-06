@@ -144,6 +144,7 @@ export enum TbReportFormat {
 
 export interface ReportTemplateConfig {
   format: TbReportFormat;
+  timeDataPattern?: string;
 }
 
 export interface AbstractReportTemplateConfig extends ReportTemplateConfig {
@@ -153,6 +154,7 @@ export interface AbstractReportTemplateConfig extends ReportTemplateConfig {
 export interface ReportTemplateSettings {
   name: string;
   namePattern: string;
+  timeDataPattern?: string;
   description?: string;
 }
 
@@ -243,6 +245,7 @@ export const toPdfReportTemplateSettings = (reportTemplate: ReportTemplate<PdfRe
   return {
     name: reportTemplate.name,
     namePattern: reportTemplate.configuration.namePattern,
+    timeDataPattern: reportTemplate.configuration.timeDataPattern,
     description: reportTemplate.description,
     pageSize: reportTemplate.configuration.pageSize,
     pageOrientation: reportTemplate.configuration.pageOrientation,
@@ -255,6 +258,7 @@ export const updateFromPdfReportTemplateSettings =
   (reportTemplate: ReportTemplate<PdfReportTemplateConfig>, settings: PdfReportTemplateSettings): void => {
     reportTemplate.name = settings.name;
     reportTemplate.configuration.namePattern = settings.namePattern;
+    reportTemplate.configuration.timeDataPattern = settings.timeDataPattern;
     reportTemplate.description = settings.description;
     reportTemplate.configuration.pageSize = settings.pageSize;
     reportTemplate.configuration.pageOrientation = settings.pageOrientation;
@@ -276,6 +280,7 @@ export const defaultReportTemplate: ReportTemplate<PdfReportTemplateConfig> = {
   configuration: {
     format: TbReportFormat.PDF,
     namePattern: 'report-%d{yyyy-MM-dd_HH:mm:ss}',
+    timeDataPattern: 'yyyy-MM-dd HH:mm:ss',
     pageSize: PageSize.A4,
     pageOrientation: PageOrientation.PORTRAIT,
     pageMargins: {

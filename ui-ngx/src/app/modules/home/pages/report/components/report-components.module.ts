@@ -59,6 +59,8 @@ import { ReportRichTextComponent } from '@home/pages/report/components/report-ri
 import { DashboardPreviewComponent } from '@home/pages/report/components/dashboard-preview.component';
 import { DashboardConfigComponent } from '@home/pages/report/components/dashboard-config.component';
 import { SharedHomeComponentsModule } from '@home/components/shared-home-components.module';
+import { AlarmTablePreviewComponent } from '@home/pages/report/components/alarm-table-preview.component';
+import { AlarmTableConfigComponent } from '@home/pages/report/components/alarm-table-config.component';
 
 @NgModule({
   declarations: [
@@ -77,6 +79,8 @@ import { SharedHomeComponentsModule } from '@home/components/shared-home-compone
     PageBreakPreviewComponent,
     EntityTablePreviewComponent,
     EntityTableConfigComponent,
+    AlarmTablePreviewComponent,
+    AlarmTableConfigComponent,
     ImagePreviewComponent,
     ImageConfigComponent,
     DashboardPreviewComponent,

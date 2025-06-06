@@ -107,6 +107,7 @@ import {
 } from '@home/components/alias/entity-alias-dialog.component';
 import { tap } from 'rxjs/operators';
 import { FilterDialogComponent, FilterDialogData } from '@home/components/filter/filter-dialog.component';
+import { getDefaultTimezone } from '@shared/models/time/time.models';
 
 @Component({
   selector: 'tb-report-template-page',
@@ -513,7 +514,8 @@ export class ReportTemplatePageComponent extends PageComponent
 
   generateTestReport() {
     const reportRequest: ReportRequest = {
-      reportTemplateConfig: this.reportTemplate.configuration
+      reportTemplateConfig: this.reportTemplate.configuration,
+      timezone: getDefaultTimezone()
     };
     this.dialogService.progress(
       this.reportService.downloadTestReport(reportRequest, false), this.translate.instant('report.generating-report')).subscribe();

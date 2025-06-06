@@ -7112,6 +7112,7 @@
         "sub-report-settings": "Subreport settings",
         "file-name-pattern": "File name pattern",
         "file-name-pattern-required": "Report file name pattern is required!",
+        "default-date-format": "Default date format",
         "report-components": "Report components",
         "drop-report-components": "Drop report components from sidebar here",
         "header": "Header",
@@ -7151,6 +7152,7 @@
         "horizontal": "Horizontal",
         "vertical": "Vertical",
         "dashboard": "Dashboard",
+        "timewindow": "Time window",
         "component": {
             "heading": {
                 "type": "Heading",
@@ -7172,6 +7174,9 @@
             },
             "entity-table": {
                 "type": "Entity table"
+            },
+            "alarm-table": {
+                "type": "Alarm table"
             },
             "image": {
                 "type": "Image",

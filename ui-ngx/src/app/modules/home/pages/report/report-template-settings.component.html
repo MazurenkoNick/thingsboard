@@ -48,23 +48,32 @@
         </mat-icon>
       </mat-form-field>
     </div>
-    <div *ngIf="!subReport" class="tb-form-row">
-      <div class="fixed-title-width" translate>report-template.file-name-pattern</div>
-      <mat-form-field class="flex-1" appearance="outline" subscriptSizing="dynamic">
-        <input required matInput formControlName="namePattern" placeholder="{{ 'widget-config.set' | translate }}">
-        @if (settingsFormGroup.get('namePattern').hasError('required') && settingsFormGroup.get('namePattern').touched) {
-          <mat-icon matSuffix
-                    matTooltipPosition="above"
-                    matTooltipClass="tb-error-tooltip"
-                    [matTooltip]="'report-template.file-name-pattern-required' | translate"
-                    class="tb-error">
-            warning
-          </mat-icon>
-        } @else {
-          <div matIconSuffix tb-help-popup="date/date-format" [tb-help-popup-style]="{width: '800px'}"></div>
-        }
-      </mat-form-field>
-    </div>
+    @if (!subReport) {
+      <div class="tb-form-row">
+        <div class="fixed-title-width" translate>report-template.file-name-pattern</div>
+        <mat-form-field class="flex-1" appearance="outline" subscriptSizing="dynamic">
+          <input required matInput formControlName="namePattern" placeholder="{{ 'widget-config.set' | translate }}">
+          @if (settingsFormGroup.get('namePattern').hasError('required') && settingsFormGroup.get('namePattern').touched) {
+            <mat-icon matSuffix
+                      matTooltipPosition="above"
+                      matTooltipClass="tb-error-tooltip"
+                      [matTooltip]="'report-template.file-name-pattern-required' | translate"
+                      class="tb-error">
+              warning
+            </mat-icon>
+          } @else {
+            <div matIconSuffix tb-help-popup="date/date-format" [tb-help-popup-style]="{width: '800px'}"></div>
+          }
+        </mat-form-field>
+      </div>
+      <div class="tb-form-row">
+        <div class="fixed-title-width" translate>report-template.default-date-format</div>
+        <tb-date-format-select class="flex-1"
+                               asStringFormat
+                               excludeLastUpdateAgo
+                               formControlName="timeDataPattern"></tb-date-format-select>
+      </div>
+    }
     <div class="tb-form-row">
       <div class="fixed-title-width" translate>report-template.description</div>
       <mat-form-field class="flex-1" appearance="outline" subscriptSizing="dynamic">

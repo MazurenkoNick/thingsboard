@@ -765,6 +765,16 @@ export const customDateFormat = (format: string): DateFormatSettings => ({
   auto: false
 });
 
+export const toDateFormatSettings = (strFormat: string): DateFormatSettings => {
+  const found = dateFormats.filter(format => !!format.format && !format.custom)
+                                              .find(format => format.format === strFormat);
+  if (found) {
+    return found;
+  } else {
+    return customDateFormat(strFormat);
+  }
+}
+
 export const defaultAutoDateFormatSettings: AutoDateFormatSettings = {
   millisecond: 'MMM dd yyyy HH:mm:ss.SSS',
   second: 'MMM dd yyyy HH:mm:ss',

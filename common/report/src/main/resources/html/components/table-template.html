@@ -63,9 +63,9 @@
     </tr>
     <!-- Empty table fallback row -->
     <tr th:if="${#lists.isEmpty(rows)}">
-        <td th:colspan="${columns.size()}">
-            Table content is empty
-        </td>
+        <td style="text-align: center;"
+            th:colspan="${columns.size()}"
+            th:text="${noDataMessage}">Table content is empty</td>
     </tr>
     </tbody>
 </table>

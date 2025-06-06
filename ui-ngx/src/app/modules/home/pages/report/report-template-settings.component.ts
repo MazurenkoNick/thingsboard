@@ -88,6 +88,7 @@ export class ReportTemplateSettingsComponent implements OnInit, OnChanges, Contr
     this.settingsFormGroup = this.fb.group({
       name: [null, [Validators.required]],
       namePattern: [null, [Validators.required]],
+      timeDataPattern: [null, []],
       description: [null, []],
       pageSize: [null, []],
       pageOrientation: [null, []],
@@ -140,12 +141,14 @@ export class ReportTemplateSettingsComponent implements OnInit, OnChanges, Contr
   private updateValidators() {
     if (this.subReport) {
       this.settingsFormGroup.get('namePattern').disable({emitEvent: false});
+      this.settingsFormGroup.get('timeDataPattern').disable({emitEvent: false});
       this.settingsFormGroup.get('pageSize').disable({emitEvent: false});
       this.settingsFormGroup.get('pageOrientation').disable({emitEvent: false});
       this.settingsFormGroup.get('pageMargins').disable({emitEvent: false});
       this.settingsFormGroup.get('pageBackground').disable({emitEvent: false});
     } else {
       this.settingsFormGroup.get('namePattern').enable({emitEvent: false});
+      this.settingsFormGroup.get('timeDataPattern').enable({emitEvent: false});
       this.settingsFormGroup.get('pageSize').enable({emitEvent: false});
       this.settingsFormGroup.get('pageOrientation').enable({emitEvent: false});
       this.settingsFormGroup.get('pageMargins').enable({emitEvent: false});

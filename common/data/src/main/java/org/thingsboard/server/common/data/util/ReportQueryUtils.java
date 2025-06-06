@@ -30,6 +30,7 @@
  */
 package org.thingsboard.server.common.data.util;
 
+import org.thingsboard.server.common.data.id.DeviceId;
 import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.query.AlarmCountQuery;
 import org.thingsboard.server.common.data.query.AlarmDataPageLink;
@@ -42,6 +43,7 @@ import org.thingsboard.server.common.data.query.EntityFilter;
 import org.thingsboard.server.common.data.query.EntityKey;
 import org.thingsboard.server.common.data.query.EntityKeyType;
 import org.thingsboard.server.common.data.query.KeyFilter;
+import org.thingsboard.server.common.data.query.SingleEntityFilter;
 import org.thingsboard.server.common.data.report.configuration.AlarmFilterConfig;
 import org.thingsboard.server.common.data.report.configuration.CsvReportTemplateConfig;
 import org.thingsboard.server.common.data.report.configuration.DataKey;
@@ -55,12 +57,15 @@ import org.thingsboard.server.common.data.report.configuration.timewindow.TimeIn
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static org.thingsboard.server.common.data.report.configuration.timewindow.TimeIntervalCalculator.getTimeRange;
 
 public class ReportQueryUtils {
 
     private static final EntityDataSortOrder DEFAULT_SORT_ORDER = new EntityDataSortOrder(new EntityKey(EntityKeyType.ENTITY_FIELD, "id"), EntityDataSortOrder.Direction.ASC);
+    private static final EntityDataSortOrder DEFAULT_ALARM_SORT_ORDER = new EntityDataSortOrder(new EntityKey(EntityKeyType.ALARM_FIELD, "createdTime"), EntityDataSortOrder.Direction.DESC);
 
     public static EntityCountQuery toEntityCountQuery(DataSource dataSource, ReportTemplateConfig reportTemplateConfig) {
         EntityFilter entityFilter = findEntityFilterByAliasId(dataSource, reportTemplateConfig);
@@ -86,19 +91,34 @@ public class ReportQueryUtils {
 
     public static AlarmDataQuery toAlarmDataQuery(AlarmTableComponent component, ReportTemplateConfig reportTemplateConfig, PageLink pageLink) {
         DataSource alarmSource = component.getAlarmSource();
+        EntityFilter entityFilter;
+        switch (alarmSource.getType()) {
+            case "device" -> entityFilter = singleDeviceFilter(alarmSource);
+            case "entity" -> entityFilter = findEntityFilterByAliasId(alarmSource, reportTemplateConfig);
+            default -> throw new IllegalArgumentException("Unknown alarm source type: " + alarmSource.getType());
+        }
 
-        EntityFilter entityFilter = findEntityFilterByAliasId(alarmSource, reportTemplateConfig);
         List<KeyFilter> keyFilters = findKeyFilters(alarmSource, reportTemplateConfig);
 
-        List<EntityKey> alarmFields = new ArrayList<>();
-        for (DataKey dataKey : alarmSource.getDataKeys()) {
-            alarmFields.add(new EntityKey(EntityKeyType.ALARM_FIELD, dataKey.getName()));
-        }
+        List<EntityKey> alarmFields = alarmSource.getDataKeys().stream().filter(dataKey -> "alarm".equals(dataKey.getType())).map(dataKey ->
+                new EntityKey(EntityKeyType.ALARM_FIELD, dataKey.getName())).toList();
+
+        List<EntityKey> entityFields = alarmSource.getDataKeys().stream().filter(dataKey -> "entityField".equals(dataKey.getType())).map(dataKey ->
+                new EntityKey(EntityKeyType.ENTITY_FIELD, dataKey.getName())).toList();
+
+        List<EntityKey> attrFields = alarmSource.getDataKeys().stream().filter(dataKey -> "attribute".equals(dataKey.getType())).map(dataKey ->
+                new EntityKey(EntityKeyType.ATTRIBUTE, dataKey.getName())).toList();
+
+        List<EntityKey> tsFields = alarmSource.getDataKeys().stream().filter(dataKey -> "timeseries".equals(dataKey.getType())).map(dataKey ->
+                new EntityKey(EntityKeyType.TIME_SERIES, dataKey.getName())).toList();
+
+        List<EntityKey> latestValues = Stream.concat(attrFields.stream(), tsFields.stream()).toList();
+
         AlarmFilterConfig alarmFilterConfig = alarmSource.getAlarmFilterConfig();
         AlarmDataPageLink alarmDataPageLink = new AlarmDataPageLink();
         alarmDataPageLink.setPage(pageLink.getPage());
         alarmDataPageLink.setPageSize(pageLink.getPageSize());
-        alarmDataPageLink.setSortOrder(Optional.ofNullable(alarmSource.getSortOrder()).orElse(DEFAULT_SORT_ORDER));
+        alarmDataPageLink.setSortOrder(Optional.ofNullable(alarmSource.getSortOrder()).orElse(DEFAULT_ALARM_SORT_ORDER));
 
         TimeIntervalCalculator.TimeRange timeRange = getTimeRange(component.getTimewindow());
         alarmDataPageLink.setStartTs(timeRange.startTs);
@@ -107,7 +127,14 @@ public class ReportQueryUtils {
         alarmDataPageLink.setSeverityList(alarmFilterConfig.getSeverityList());
         alarmDataPageLink.setStatusList(alarmFilterConfig.getStatusList());
         alarmDataPageLink.setTypeList(alarmFilterConfig.getTypeList());
-        return new AlarmDataQuery(entityFilter, alarmDataPageLink, null, null, keyFilters, alarmFields);
+        alarmDataPageLink.setAssigneeId(alarmFilterConfig.getAssigneeId());
+        return new AlarmDataQuery(entityFilter, alarmDataPageLink, entityFields, latestValues, keyFilters, alarmFields);
+    }
+
+    public static EntityFilter singleDeviceFilter(DataSource dataSource) {
+        SingleEntityFilter singleEntityFilter = new SingleEntityFilter();
+        singleEntityFilter.setSingleEntity(DeviceId.fromString(dataSource.getDeviceId()));
+        return singleEntityFilter;
     }
 
     public static EntityFilter findEntityFilterByAliasId(DataSource dataSource, ReportTemplateConfig reportTemplateConfig) {

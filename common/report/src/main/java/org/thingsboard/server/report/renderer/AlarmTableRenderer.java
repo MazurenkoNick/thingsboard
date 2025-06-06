@@ -37,6 +37,14 @@ import org.thingsboard.server.common.data.report.configuration.components.Report
 @Component
 public class AlarmTableRenderer extends TableComponentRenderer {
 
+    protected String dataSourceName() {
+        return "alarm source";
+    }
+
+    protected String noDataMessage() {
+        return "No alarms found";
+    }
+
     @Override
     public ReportComponentType getType() {
         return ReportComponentType.ALARM_TABLE;

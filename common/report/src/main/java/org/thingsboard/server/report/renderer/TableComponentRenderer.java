@@ -76,17 +76,25 @@ public abstract class TableComponentRenderer extends ReportComponentWithLayoutRe
         DISPLAY_STATUS.put("CLEARED_ACK", "Cleared Acknowledged");
     }
 
+    protected String dataSourceName() {
+        return "data source";
+    }
+
+    protected String noDataMessage() {
+        return "Table content is empty";
+    }
+
     @Override
     protected String renderContent(ReportComponent component, ComponentData reportDataSource) {
         Optional<DataSource> dataSource = getSingleDataSource(component);
         if (dataSource.isEmpty()) {
-            return ThymeleafUtil.renderFromHtmlTemplate("html/components/error-template", Map.of("errorMessage", "No datasource is configured for table. " +
-                    "Please check the data source configuration."));
+            return ThymeleafUtil.renderFromHtmlTemplate("html/components/error-template", Map.of("errorMessage", "No "+dataSourceName()+" is configured for table. " +
+                    "Please check the "+dataSourceName()+" configuration."));
         }
         List<DataKey> dataKeys  = dataSource.get().getDataKeys();
         if (dataKeys == null || dataKeys.isEmpty()) {
             return ThymeleafUtil.renderFromHtmlTemplate("html/components/error-template", Map.of("errorMessage", "No columns are configured for the table component. " +
-                    "Please check the data source configuration."));
+                    "Please check the "+dataSourceName()+" configuration."));
         }
 
         HashMap<String, CellVariables> headerStyles = getCellVariablesMap(dataKeys, true);
@@ -99,8 +107,10 @@ public abstract class TableComponentRenderer extends ReportComponentWithLayoutRe
                                 entry -> {
                                     CellVariables baseStyles = cellStyles.getOrDefault(entry.getKey(), new CellVariables());
                                     return baseStyles.toBuilder()
+                                            .fontSize(formatFontSize(entry, baseStyles.getFontSize()))
+                                            .fontWeight(formatFontWeight(entry, baseStyles.getFontWeight()))
                                             .color(formatColor(entry, baseStyles.getColor()))
-                                            .value(formatValue(entry)).build();
+                                            .value(formatValue(entry, row)).build();
                                 },
                                 (v1, v2) -> v1,
                                 LinkedHashMap::new
@@ -110,8 +120,30 @@ public abstract class TableComponentRenderer extends ReportComponentWithLayoutRe
         HashMap<String, Object> componentVariables = new HashMap<>();
         componentVariables.put("columns", headerStyles);
         componentVariables.put("rows", rows);
-
+        componentVariables.put("noDataMessage", noDataMessage());
         return ThymeleafUtil.renderFromHtmlTemplate("html/components/table-template", componentVariables);
+    }
+
+    private Float formatFontSize(Map.Entry<String, String> entry, Float defaultSize) {
+        if (defaultSize != null) {
+            return defaultSize;
+        }
+        String key = entry.getKey();
+        if ("createdTime".equals(key)) {
+            return 9f;
+        }
+        return null;
+    }
+
+    private String formatFontWeight(Map.Entry<String, String> entry, String defaultWeight) {
+        if (defaultWeight != null) {
+            return defaultWeight;
+        }
+        String key = entry.getKey();
+        if ("severity".equals(key)) {
+            return "bold";
+        }
+        return null;
     }
 
     private String formatColor(Map.Entry<String, String> entry, String defaultColor) {
@@ -123,10 +155,10 @@ public abstract class TableComponentRenderer extends ReportComponentWithLayoutRe
         if ("severity".equals(key)) {
             return SEVERITY_COLOR.getOrDefault(value, value);
         }
-        return value;
+        return null;
     }
 
-    private String formatValue(Map.Entry<String, String> entry) {
+    private String formatValue(Map.Entry<String, String> entry, Map<String, String> row) {
         String key = entry.getKey();
         String value = entry.getValue();
         if ("status".equals(key)) {

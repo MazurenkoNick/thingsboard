@@ -61,6 +61,7 @@ public class TimeIntervalCalculator {
                 yield new TimeRange(fixedTimeWindow.getStartTimeMs(), historyConf.getFixedTimeWindow().getEndTimeMs());
             }
             case 2 -> getQuickTimeRange(historyConf.getQuickInterval(), timeWindowConf.getTimezone());
+            case 3 -> new TimeRange(0, 0);
             default -> throw new IllegalArgumentException("Unknown history type: " + historyConf.getHistoryType());
         };
     }

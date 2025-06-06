@@ -61,6 +61,8 @@ import { insertVariable, stringToBase64 } from '@core/utils';
 import { DataKey } from '@shared/models/widget.models';
 import { DashboardPreviewComponent } from '@home/pages/report/components/dashboard-preview.component';
 import { DashboardConfigComponent } from '@home/pages/report/components/dashboard-config.component';
+import { AlarmTablePreviewComponent } from '@home/pages/report/components/alarm-table-preview.component';
+import { AlarmTableConfigComponent } from '@home/pages/report/components/alarm-table-config.component';
 
 export interface ReportComponentTypeData<C extends ReportComponentConfig = ReportComponentConfig> {
   title: string;
@@ -100,6 +102,16 @@ export const reportComponentTypeMap = new Map<ReportComponentType, ReportCompone
         previewImage: '/assets/report/components/entity-table.svg',
         previewComponent: EntityTablePreviewComponent,
         configComponent: EntityTableConfigComponent,
+        editable: true
+      }
+    ],
+    [
+      ReportComponentType.ALARM_TABLE,
+      {
+        title: 'report-template.component.alarm-table.type',
+        previewImage: '/assets/report/components/alarm-table.svg',
+        previewComponent: AlarmTablePreviewComponent,
+        configComponent: AlarmTableConfigComponent,
         editable: true
       }
     ],

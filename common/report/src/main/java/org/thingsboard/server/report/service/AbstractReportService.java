@@ -34,6 +34,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.thingsboard.common.util.JacksonUtil;
+import org.thingsboard.server.common.data.alarm.AlarmAssignee;
 import org.thingsboard.server.common.data.id.DeviceId;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.kv.TsKvEntry;
@@ -76,6 +77,7 @@ import static org.thingsboard.server.common.data.report.configuration.timewindow
 import static org.thingsboard.server.common.data.util.ReportQueryUtils.buildEntityDataQuery;
 import static org.thingsboard.server.common.data.util.ReportQueryUtils.findEntityFilterByAliasId;
 import static org.thingsboard.server.common.data.util.ReportQueryUtils.findKeyFilters;
+import static org.thingsboard.server.common.data.util.ReportQueryUtils.singleDeviceFilter;
 import static org.thingsboard.server.common.data.util.ReportQueryUtils.toAlarmDataQuery;
 import static org.thingsboard.server.report.util.ReportUtils.getSingleDataSource;
 
@@ -155,10 +157,9 @@ public abstract class AbstractReportService implements ReportService {
         if (dataSource.getDeviceId() == null) {
             return Collections.emptyList();
         } else {
-            SingleEntityFilter singleEntityFilter = new SingleEntityFilter();
-            singleEntityFilter.setSingleEntity(DeviceId.fromString(dataSource.getDeviceId()));
+            EntityFilter entityFilter = singleDeviceFilter(dataSource);
             List<KeyFilter> keyFilters = findKeyFilters(dataSource, configuration);
-            return fetchEntityDataByQuery(pageLink -> buildEntityDataQuery(singleEntityFilter, dataSource, keyFilters, pageLink), ctx);
+            return fetchEntityDataByQuery(pageLink -> buildEntityDataQuery(entityFilter, dataSource, keyFilters, pageLink), ctx);
         }
     }
 
@@ -202,37 +203,78 @@ public abstract class AbstractReportService implements ReportService {
         if (alarmSource == null) {
             return Collections.emptyList();
         }
-        List<String> keyList = alarmSource.getDataKeys().stream().map(DataKey::getName).toList();
+        switch (alarmSource.getType()) {
+            case "device":
+                if (alarmSource.getDeviceId() == null) {
+                    return Collections.emptyList();
+                }
+                break;
+             case "entity":
+                 if (alarmSource.getEntityAliasId() == null) {
+                     return Collections.emptyList();
+                 }
+                 break;
+            default:
+                return Collections.emptyList();
+        }
+        List<String> alarmKeys = alarmSource.getDataKeys().stream().filter(dataKey -> dataKey.getType().equals("alarm")).map(DataKey::getName).toList();
         List<Map<String, String>> data = new ArrayList<>();
         for (AlarmData alarmData : new PageDataIterable<>(link -> dataService.findAlarmDataByQuery(toAlarmDataQuery(component, ctx.getConfiguration(), link), ctx), 1024)) {
-            data.add(toStringMap(alarmData, keyList, ctx));
+            data.add(toStringMap(alarmData, alarmKeys, ctx));
         }
         return data;
     }
 
     protected Map<String, String> toStringMap(EntityData entityData, TbReportCtx ctx) {
-        HashMap<String, String> latestValues = new HashMap<>();
+        HashMap<String, String> data = new HashMap<>();
         if (entityData != null) {
             entityData.getLatest().forEach((keyType, keyValueMap) -> keyValueMap.forEach((key, tsValue) -> {
                 if (tsValue.getValue() != null) {
-                    latestValues.put(key, formatData(ctx, key, tsValue.getValue()));
+                    data.put(key, formatData(ctx, key, tsValue.getValue()));
                 }
             }));
-            latestValues.put("id", entityData.getEntityId().toString());
+            data.put("id", entityData.getEntityId().toString());
         }
-        return latestValues;
+        return data;
     }
 
-    protected Map<String, String> toStringMap(AlarmData alarmData, List<String> keys, TbReportCtx ctx) {
+    protected Map<String, String> toStringMap(AlarmData alarmData, List<String> alarmKeys, TbReportCtx ctx) {
         Map<String, String> data = new HashMap<>();
         JsonNode alarmDataJson = JacksonUtil.valueToTree(alarmData);
-        keys.forEach(key -> {
-            JsonNode value = JacksonUtil.getByKeyPath(alarmDataJson, key);
+        alarmKeys.forEach(key -> {
+            String value = null;
+            if (key.equals("assignee")) {
+                value = getAssigneeDisplayName(alarmData);
+            } else {
+                String targetKey = key;
+                if (key.equals("originator")) {
+                    targetKey = "originatorName";
+                }
+                JsonNode jsonValue = JacksonUtil.getByKeyPath(alarmDataJson, targetKey);
+                if (jsonValue != null) {
+                    value = jsonValue.asText();
+                }
+            }
             if (value != null) {
-                data.put(key, formatData(ctx, key, value.asText()));
+                data.put(key, formatData(ctx, key, value));
             }
         });
+        alarmData.getLatest().forEach((keyType, keyValueMap) -> keyValueMap.forEach((key, tsValue) -> {
+            if (tsValue.getValue() != null) {
+                data.put(key, formatData(ctx, key, tsValue.getValue()));
+            }
+        }));
         return data;
+    }
+
+    private String getAssigneeDisplayName(AlarmData alarmData) {
+        if (alarmData.getAssignee() != null) {
+            return alarmData.getAssignee().getTitle();
+        } else if (alarmData.getAssigneeId() != null) {
+            return "User deleted";
+        } else {
+            return "Unassigned";
+        }
     }
 
     protected List<Map<String, String>> collectTsData(List<TsKvEntry> tsKvEntries, TbReportCtx ctx) {

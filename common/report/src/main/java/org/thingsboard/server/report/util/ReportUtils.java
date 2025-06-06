@@ -40,7 +40,9 @@ import org.thingsboard.server.common.data.query.EntityData;
 import org.thingsboard.server.common.data.query.EntityKeyType;
 import org.thingsboard.server.common.data.report.configuration.DataKey;
 import org.thingsboard.server.common.data.report.configuration.DataSource;
+import org.thingsboard.server.common.data.report.configuration.components.AlarmTableComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
+import org.thingsboard.server.common.data.report.configuration.components.ReportComponentType;
 
 import java.text.SimpleDateFormat;
 import java.util.Base64;
@@ -94,11 +96,18 @@ public class ReportUtils {
     }
 
     public static Optional<DataSource> getSingleDataSource(ReportComponent component) {
-        List<DataSource> dataSources = component.getDataSources();
-        if (dataSources == null || dataSources.isEmpty()) {
+        DataSource dataSource = null;
+        if (ReportComponentType.ALARM_TABLE.equals(component.getType())) {
+            dataSource = ((AlarmTableComponent)component).getAlarmSource();
+        } else {
+            List<DataSource> dataSources = component.getDataSources();
+            if (dataSources != null && !dataSources.isEmpty()) {
+                dataSource = dataSources.get(0);
+            }
+        }
+        if (dataSource == null) {
             return Optional.empty();
         }
-        DataSource dataSource = component.getDataSources().get(0);
         switch (dataSource.getType()) {
             case "device":
                 if (dataSource.getDeviceId() == null) {

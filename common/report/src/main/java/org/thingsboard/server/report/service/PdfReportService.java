@@ -368,13 +368,27 @@ public class PdfReportService extends AbstractReportService {
 
     private ComponentData buildEntityCountDataSource(int usablePageWidthPx, TbReportCtx ctx, DataSource dataSource, ReportTemplateConfig configuration) {
         Map<String, Object> map = new HashMap<>();
-        map.put("count", dataService.countEntitiesByQuery(toEntityCountQuery(dataSource, configuration), ctx));
+        String label = null;
+        if (dataSource.getDataKeys() != null && !dataSource.getDataKeys().isEmpty()) {
+            label = dataSource.getDataKeys().get(0).getLabel();
+        }
+        if (StringUtils.isBlank(label)) {
+            label = "count";
+        }
+        map.put(label, dataService.countEntitiesByQuery(toEntityCountQuery(dataSource, configuration), ctx));
         return new ComponentData(usablePageWidthPx, map);
     }
 
     private ComponentData buildAlarmCountDataSource(int usablePageWidthPx, TbReportCtx ctx, DataSource dataSource, ReportTemplateConfig configuration) {
         Map<String, Object> map = new HashMap<>();
-        map.put("count", dataService.countAlarmsByQuery(toAlarmCountQuery(dataSource, configuration), ctx));
+        String label = null;
+        if (dataSource.getDataKeys() != null && !dataSource.getDataKeys().isEmpty()) {
+            label = dataSource.getDataKeys().get(0).getLabel();
+        }
+        if (StringUtils.isBlank(label)) {
+            label = "count";
+        }
+        map.put(label, dataService.countAlarmsByQuery(toAlarmCountQuery(dataSource, configuration), ctx));
         return new ComponentData(usablePageWidthPx, map);
     }
 

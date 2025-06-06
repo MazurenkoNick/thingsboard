@@ -37,6 +37,7 @@ import { DataKeyType } from '@shared/models/telemetry/telemetry.models';
 import { ReportTemplateId } from '@shared/models/id/report-template-id';
 import { FormProperty, FormPropertyType } from '@shared/models/dynamic-form.models';
 import { DashboardReportConfig } from '@shared/models/dashboard-report.models';
+import { DAY, historyInterval, Timewindow } from '@shared/models/time/time.models';
 
 export enum ReportComponentType {
   HEADING = 'HEADING',
@@ -214,6 +215,12 @@ export interface EntityTableReportComponentConfig extends TableReportComponentCo
   type: ReportComponentType.ENTITY_TABLE;
 }
 
+export interface AlarmTableReportComponentConfig extends TableReportComponentConfig {
+  alarmSource: Datasource;
+  timewindow: Timewindow;
+  type: ReportComponentType.ALARM_TABLE;
+}
+
 export const imageSourceTypes = ['image', 'entityKey'];
 type imageSourceTypeTuple = typeof imageSourceTypes;
 export type imageSourceType = imageSourceTypeTuple[number];
@@ -280,6 +287,7 @@ export type ReportComponentConfigs =
   HeadingReportComponentConfig |
   RichTextReportComponentConfig |
   EntityTableReportComponentConfig |
+  AlarmTableReportComponentConfig |
   ImageReportComponentConfig |
   DashboardReportComponentConfig |
   SubReportReportComponentConfig |
@@ -330,6 +338,49 @@ export const reportComponentTypeDefaultConfigMap = new Map<ReportComponentType, 
             ]
           }
         ]
+      }
+    ],
+    [
+      ReportComponentType.ALARM_TABLE,
+      {
+        type: ReportComponentType.ALARM_TABLE,
+        alarmSource: {
+          type: DatasourceType.entity,
+          alarmFilterConfig: {},
+          dataKeys: [
+            {
+              name: 'createdTime',
+              type: DataKeyType.alarm,
+              label: "Created time"
+            },
+            {
+              name: 'originator',
+              type: DataKeyType.alarm,
+              label: "Originator"
+            },
+            {
+              name: 'type',
+              type: DataKeyType.alarm,
+              label: "Type"
+            },
+            {
+              name: 'severity',
+              type: DataKeyType.alarm,
+              label: "Severity"
+            },
+            {
+              name: 'status',
+              type: DataKeyType.alarm,
+              label: "Status"
+            },
+            {
+              name: 'assignee',
+              type: DataKeyType.alarm,
+              label: "Assignee"
+            }
+          ]
+        },
+        timewindow: historyInterval(DAY)
       }
     ],
     [
