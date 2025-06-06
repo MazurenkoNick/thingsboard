@@ -74,4 +74,12 @@ public interface DashboardRepository extends JpaRepository<DashboardEntity, UUID
     @Query("SELECT new org.thingsboard.server.common.data.edqs.fields.DashboardFields(d.id, d.createdTime, d.tenantId, " +
             "d.customerId, d.title, d.version) FROM DashboardEntity d WHERE d.id > :id ORDER BY d.id")
     List<DashboardFields> findNextBatch(@Param("id") UUID id, Limit limit);
+
+    @Query(
+            value = "SELECT COUNT(*) " +
+                    "FROM dashboard d " +
+                    "WHERE d.configuration LIKE CONCAT('%\"layoutType\":\"', :layoutType, '\"%')",
+            nativeQuery = true
+    )
+    long countAllDashboardsByLayoutType(@Param("layoutType") String layoutType);
 }

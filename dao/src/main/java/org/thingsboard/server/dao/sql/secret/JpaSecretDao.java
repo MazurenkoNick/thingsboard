@@ -37,13 +37,16 @@ import org.springframework.stereotype.Component;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.secret.Secret;
+import org.thingsboard.server.common.data.util.TbPair;
 import org.thingsboard.server.dao.DaoUtil;
 import org.thingsboard.server.dao.model.sql.SecretEntity;
 import org.thingsboard.server.dao.secret.SecretDao;
 import org.thingsboard.server.dao.sql.JpaAbstractDao;
 import org.thingsboard.server.dao.util.SqlDao;
 
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Slf4j
 @SqlDao
@@ -61,6 +64,11 @@ public class JpaSecretDao extends JpaAbstractDao<SecretEntity, Secret> implement
     @Override
     public void deleteByTenantId(TenantId tenantId) {
         secretRepository.deleteByTenantId(tenantId.getId());
+    }
+
+    @Override
+    public Map<String, Long> countSecretsPerType() {
+        return secretRepository.countSecretsPerType().stream().collect(Collectors.toMap(e -> e.getFirst().name(), TbPair::getSecond));
     }
 
     @Override

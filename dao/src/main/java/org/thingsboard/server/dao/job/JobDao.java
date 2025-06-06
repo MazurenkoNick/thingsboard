@@ -41,6 +41,8 @@ import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.dao.Dao;
 
+import java.util.Map;
+
 public interface JobDao extends Dao<Job> {
 
     PageData<Job> findByTenantIdAndFilter(TenantId tenantId, JobFilter filter, PageLink pageLink);
@@ -60,5 +62,7 @@ public interface JobDao extends Dao<Job> {
     void removeByTenantId(TenantId tenantId);
 
     int removeByEntityId(TenantId tenantId, EntityId entityId);
+
+    Map<String, Map<String, Long>> countJobsByTypeAndStatusLastMonth();
 
 }

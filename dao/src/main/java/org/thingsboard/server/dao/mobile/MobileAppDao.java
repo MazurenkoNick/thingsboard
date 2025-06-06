@@ -47,4 +47,5 @@ public interface MobileAppDao extends Dao<MobileApp> {
     void deleteByTenantId(TenantId tenantId);
 
     MobileApp findByPkgNameAndPlatformType(TenantId tenantId, String pkgName, PlatformType platform);
+
 }

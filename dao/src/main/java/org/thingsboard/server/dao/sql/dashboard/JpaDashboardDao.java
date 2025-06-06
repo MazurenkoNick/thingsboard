@@ -125,6 +125,11 @@ public class JpaDashboardDao extends JpaAbstractDao<DashboardEntity, Dashboard> 
     }
 
     @Override
+    public Long countScadaDashboards() {
+        return dashboardRepository.countAllDashboardsByLayoutType("scada");
+    }
+
+    @Override
     public PageData<Dashboard> findAllByTenantId(TenantId tenantId, PageLink pageLink) {
         return findByTenantId(tenantId.getId(), pageLink);
     }
