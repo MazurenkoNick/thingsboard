@@ -46,14 +46,19 @@ import org.thingsboard.server.common.data.job.JobType;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.util.CollectionsUtil;
+import org.thingsboard.server.common.data.util.TbTriple;
 import org.thingsboard.server.dao.DaoUtil;
 import org.thingsboard.server.dao.job.JobDao;
 import org.thingsboard.server.dao.model.sql.JobEntity;
 import org.thingsboard.server.dao.sql.JpaAbstractDao;
 import org.thingsboard.server.dao.util.SqlDao;
 
+import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.util.Arrays;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Component
 @SqlDao
@@ -101,6 +106,20 @@ public class JpaJobDao extends JpaAbstractDao<JobEntity, Job> implements JobDao 
     @Override
     public Job findOldestByTenantIdAndTypeAndStatusForUpdate(TenantId tenantId, JobType type, JobStatus status) {
         return DaoUtil.getData(jobRepository.findOldestByTenantIdAndTypeAndStatusForUpdate(tenantId.getId(), type.name(), status.name()));
+    }
+
+    @Override
+    public Map<String, Map<String, Long>> countJobsByTypeAndStatusLastMonth() {
+        long sinceMillis = LocalDate
+                .now(ZoneOffset.UTC)
+                .minusMonths(1)
+                .atStartOfDay(ZoneOffset.UTC)
+                .toInstant()
+                .toEpochMilli();
+
+        return jobRepository.findCountsGroupedByTypeAndStatusSince(sinceMillis)
+                        .stream()
+                        .collect(Collectors.groupingBy(e -> e.getFirst().name(), Collectors.toMap(e -> e.getSecond().name(), TbTriple::getThird)));
     }
 
     @Override

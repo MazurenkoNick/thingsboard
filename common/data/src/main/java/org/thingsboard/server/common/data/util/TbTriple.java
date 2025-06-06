@@ -28,31 +28,21 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.dao.domain;
+package org.thingsboard.server.common.data.util;
 
-import org.thingsboard.server.common.data.domain.Domain;
-import org.thingsboard.server.common.data.domain.DomainOauth2Client;
-import org.thingsboard.server.common.data.id.CustomerId;
-import org.thingsboard.server.common.data.id.DomainId;
-import org.thingsboard.server.common.data.id.TenantId;
-import org.thingsboard.server.common.data.page.PageData;
-import org.thingsboard.server.common.data.page.PageLink;
-import org.thingsboard.server.dao.Dao;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 
-import java.util.List;
+@Data
+@AllArgsConstructor
+public class TbTriple<S, T, C> {
 
-public interface DomainDao extends Dao<Domain> {
+    private S first;
+    private T second;
+    private C third;
 
-    PageData<Domain> findByTenantIdAndCustomerId(TenantId tenantId, CustomerId customerId, PageLink pageLink);
-
-    int countDomainByTenantIdAndOauth2Enabled(TenantId tenantId, boolean oauth2Enabled);
-
-    List<DomainOauth2Client> findOauth2ClientsByDomainId(TenantId tenantId, DomainId domainId);
-
-    void addOauth2Client(DomainOauth2Client domainOauth2Client);
-
-    void removeOauth2Client(DomainOauth2Client domainOauth2Client);
-
-    void deleteByTenantId(TenantId tenantId);
+    public static <S, T, C> TbTriple<S, T, C> of(S first, T second, C third) {
+        return new TbTriple<>(first, second, third);
+    }
 
 }

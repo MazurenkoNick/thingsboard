@@ -50,4 +50,5 @@ public interface QueueDao extends Dao<Queue> {
     List<Queue> findAllByTenantId(TenantId tenantId);
 
     PageData<Queue> findQueuesByTenantId(TenantId tenantId, PageLink pageLink);
+
 }

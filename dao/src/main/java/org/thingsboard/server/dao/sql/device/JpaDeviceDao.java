@@ -53,6 +53,7 @@ import org.thingsboard.server.common.data.ota.OtaPackageType;
 import org.thingsboard.server.common.data.ota.OtaPackageUtil;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
+import org.thingsboard.server.common.data.util.TbPair;
 import org.thingsboard.server.dao.DaoUtil;
 import org.thingsboard.server.dao.device.DeviceDao;
 import org.thingsboard.server.dao.model.sql.DeviceEntity;
@@ -60,8 +61,10 @@ import org.thingsboard.server.dao.sql.JpaAbstractDao;
 import org.thingsboard.server.dao.util.SqlDao;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import static org.thingsboard.server.dao.DaoUtil.convertTenantEntityInfosToDto;
 
@@ -332,6 +335,11 @@ public class JpaDeviceDao extends JpaAbstractDao<DeviceEntity, Device> implement
                 tenantId.getId(),
                 deviceProfileId.getId(),
                 DaoUtil.toPageable(pageLink)));
+    }
+
+    @Override
+    public Map<String, Long> countDevicesPerTransportType() {
+        return deviceRepository.countDevicesPerTransportType().stream().collect(Collectors.toMap(e -> e.getFirst().name(), TbPair::getSecond));
     }
 
     @Override

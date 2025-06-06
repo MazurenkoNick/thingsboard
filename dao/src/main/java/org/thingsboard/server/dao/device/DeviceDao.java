@@ -48,6 +48,7 @@ import org.thingsboard.server.dao.ExportableCustomerEntityDao;
 import org.thingsboard.server.dao.TenantEntityDao;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -232,6 +233,8 @@ public interface DeviceDao extends Dao<Device>, TenantEntityDao<Device>, Exporta
     PageData<ProfileEntityIdInfo> findProfileEntityIdInfos(PageLink pageLink);
 
     PageData<ProfileEntityIdInfo> findProfileEntityIdInfosByTenantId(UUID tenantId, PageLink pageLink);
+
+    Map<String, Long> countDevicesPerTransportType();
 
     EntityInfo findDeviceEntityInfoById(TenantId tenantId, DeviceId deviceId);
 

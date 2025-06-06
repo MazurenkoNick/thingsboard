@@ -41,6 +41,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 import org.thingsboard.server.common.data.job.JobStatus;
 import org.thingsboard.server.common.data.job.JobType;
+import org.thingsboard.server.common.data.util.TbTriple;
 import org.thingsboard.server.dao.model.sql.JobEntity;
 
 import java.util.List;
@@ -91,5 +92,11 @@ public interface JobRepository extends JpaRepository<JobEntity, UUID> {
     @Modifying
     @Query("DELETE FROM JobEntity j WHERE j.entityId = :entityId")
     int deleteByEntityId(UUID entityId);
+
+    @Query("SELECT NEW org.thingsboard.server.common.data.util.TbTriple(job.type, job.status, COUNT(job)) " +
+            "FROM JobEntity job " +
+            "WHERE job.createdTime >= :sinceMillis " +
+            "GROUP BY job.type, job.status")
+    List<TbTriple<JobType, JobStatus, Long>> findCountsGroupedByTypeAndStatusSince(@Param("sinceMillis") long sinceMillis);
 
 }

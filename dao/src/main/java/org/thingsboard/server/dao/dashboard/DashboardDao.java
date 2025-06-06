@@ -63,4 +63,6 @@ public interface DashboardDao extends Dao<Dashboard>, TenantEntityDao<Dashboard>
 
     PageData<DashboardId> findAllIds(PageLink pageLink);
 
+    Long countScadaDashboards();
+
 }

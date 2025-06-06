@@ -54,6 +54,7 @@ if [ -f ${firstlaunch} ]; then
     java -cp ${jarfile} $JAVA_OPTS -Dloader.main=org.thingsboard.server.ThingsboardServerApplication \
                         -Dspring.jpa.hibernate.ddl-auto=none \
                         -Dlogging.config=${CONF_FOLDER}/logback.xml \
+                        -Dplatform=docker \
                         org.springframework.boot.loader.launch.PropertiesLauncher
 else
     echo "ERROR: ThingsBoard is not installed"

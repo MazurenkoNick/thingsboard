@@ -39,6 +39,7 @@ import org.springframework.data.repository.query.Param;
 import org.thingsboard.server.common.data.DeviceTransportType;
 import org.thingsboard.server.common.data.EntityInfo;
 import org.thingsboard.server.common.data.edqs.fields.DeviceFields;
+import org.thingsboard.server.common.data.util.TbPair;
 import org.thingsboard.server.dao.ExportableEntityRepository;
 import org.thingsboard.server.dao.model.sql.DeviceEntity;
 
@@ -354,4 +355,7 @@ public interface DeviceRepository extends JpaRepository<DeviceEntity, UUID>, Exp
            "FROM DeviceEntity d WHERE d.id = :id")
     EntityInfo findEntityInfoById(UUID id);
 
+
+    @Query("SELECT new org.thingsboard.server.common.data.util.TbPair(dpe.transportType, count(*)) FROM DeviceEntity de INNER JOIN DeviceProfileEntity dpe on de.deviceProfileId = dpe.id GROUP BY dpe.transportType")
+    List<TbPair<DeviceTransportType, Long>> countDevicesPerTransportType();
 }
