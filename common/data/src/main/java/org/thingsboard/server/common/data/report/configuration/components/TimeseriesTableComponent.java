@@ -34,6 +34,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import org.thingsboard.server.common.data.report.configuration.ColumnSettings;
 import org.thingsboard.server.common.data.report.configuration.timewindow.TimeWindowConfiguration;
 
 @Schema
@@ -43,6 +44,10 @@ import org.thingsboard.server.common.data.report.configuration.timewindow.TimeWi
 public class TimeseriesTableComponent extends AbstractReportComponent implements TableReportComponent {
 
     private TimeWindowConfiguration timewindow;
+    private boolean showTimestamp;
+    private String timestampLabel;
+    private String timestampPattern;
+    private ColumnSettings timestampColumnSettings;
 
     @Override
     public ReportComponentType getType() {

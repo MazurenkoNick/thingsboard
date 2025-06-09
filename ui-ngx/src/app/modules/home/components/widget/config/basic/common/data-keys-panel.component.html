@@ -35,6 +35,7 @@
      [class.no-padding]="hidePanel"
      [class.stroked]="stroked">
   <div *ngIf="!hidePanel" class="tb-form-panel-title">{{ panelTitle }}</div>
+  <ng-content></ng-content>
   <div class="tb-form-table">
     <div class="tb-form-table-header no-padding-right">
       <div *ngIf="hasAdditionalLatestDataKeys" class="tb-form-table-header-cell tb-source-header" translate>datakey.source</div>

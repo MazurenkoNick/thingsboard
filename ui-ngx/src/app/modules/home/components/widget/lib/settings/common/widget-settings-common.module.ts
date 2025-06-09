@@ -286,6 +286,9 @@ import {
   AlignmentPanelComponent
 } from '@home/components/widget/lib/settings/common/alignment-panel.component';
 import { AlignmentComponent } from '@home/components/widget/lib/settings/common/alignment.component';
+import {
+  DynamicFormDialogComponent
+} from '@home/components/widget/lib/settings/common/dynamic-form/dynamic-form-dialog.component';
 
 @NgModule({
   declarations: [
@@ -359,6 +362,7 @@ import { AlignmentComponent } from '@home/components/widget/lib/settings/common/
     DynamicFormSelectItemRowComponent,
     DynamicFormComponent,
     DynamicFormArrayComponent,
+    DynamicFormDialogComponent,
     MapLayerSettingsPanelComponent,
     MapLayerRowComponent,
     MapLayersComponent,
@@ -470,6 +474,7 @@ import { AlignmentComponent } from '@home/components/widget/lib/settings/common/
     DynamicFormSelectItemRowComponent,
     DynamicFormComponent,
     DynamicFormArrayComponent,
+    DynamicFormDialogComponent,
     MapSettingsComponent,
     EntityAliasSelectComponent,
     FilterSelectComponent,

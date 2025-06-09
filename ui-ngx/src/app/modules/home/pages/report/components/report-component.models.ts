@@ -63,6 +63,8 @@ import { DashboardPreviewComponent } from '@home/pages/report/components/dashboa
 import { DashboardConfigComponent } from '@home/pages/report/components/dashboard-config.component';
 import { AlarmTablePreviewComponent } from '@home/pages/report/components/alarm-table-preview.component';
 import { AlarmTableConfigComponent } from '@home/pages/report/components/alarm-table-config.component';
+import { TimeseriesTablePreviewComponent } from '@home/pages/report/components/timeseries-table-preview.component';
+import { TimeseriesTableConfigComponent } from '@home/pages/report/components/timeseries-table-config.component';
 
 export interface ReportComponentTypeData<C extends ReportComponentConfig = ReportComponentConfig> {
   title: string;
@@ -102,6 +104,16 @@ export const reportComponentTypeMap = new Map<ReportComponentType, ReportCompone
         previewImage: '/assets/report/components/entity-table.svg',
         previewComponent: EntityTablePreviewComponent,
         configComponent: EntityTableConfigComponent,
+        editable: true
+      }
+    ],
+    [
+      ReportComponentType.TIME_SERIES_TABLE,
+      {
+        title: 'report-template.component.timeseries-table.type',
+        previewImage: '/assets/report/components/entity-table.svg',
+        previewComponent: TimeseriesTablePreviewComponent,
+        configComponent: TimeseriesTableConfigComponent,
         editable: true
       }
     ],

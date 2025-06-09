@@ -36,6 +36,7 @@ import org.springframework.stereotype.Service;
 import org.thingsboard.server.common.data.id.DeviceId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.job.task.ReportTask;
+import org.thingsboard.server.common.data.query.EntityData;
 import org.thingsboard.server.common.data.report.ReportData;
 import org.thingsboard.server.common.data.report.TbReportFormat;
 import org.thingsboard.server.common.data.report.configuration.CsvReportTemplateConfig;
@@ -116,7 +117,10 @@ public class CsvReportService extends AbstractReportService {
         if (deviceId == null) {
             return Collections.emptyList();
         }
-        return fetchEntityTsData(ctx, component, DeviceId.fromString(deviceId));
+        EntityData entity = new EntityData();
+        entity.setEntityId(DeviceId.fromString(deviceId));
+        entity.setLatest(Collections.emptyMap());
+        return fetchEntityTsData(ctx, component, entity);
     }
 
     @Override

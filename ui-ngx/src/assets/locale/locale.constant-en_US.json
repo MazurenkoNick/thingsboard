@@ -7178,6 +7178,11 @@
             "entity-table": {
                 "type": "Entity table"
             },
+            "timeseries-table": {
+                "type": "Time series table",
+                "display-timestamp": "Timestamp",
+                "timestamp-column-settings": "Timestamp column settings"
+            },
             "alarm-table": {
                 "type": "Alarm table"
             },

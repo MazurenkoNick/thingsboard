@@ -35,7 +35,7 @@ import {
   AlarmTableReportComponentConfig,
   DataKey,
   Datasource,
-  EntityTableReportComponentConfig,
+  EntityTableReportComponentConfig, ReportDataKeySettingsType,
   TableReportColumnSettingsForm,
   WidgetConfigMode, widgetType
 } from '@app/shared/public-api';
@@ -83,6 +83,11 @@ export class AlarmTableConfigComponent extends AbstractReportComponentConfig<Ala
 
   private setColumns(columns: DataKey[], alarmSource?: Datasource) {
     if (alarmSource) {
+      columns.forEach(key => {
+        if (key?.settings) {
+          key.settings.type = ReportDataKeySettingsType.COLUMN;
+        }
+      });
       alarmSource.dataKeys = columns;
     }
   }

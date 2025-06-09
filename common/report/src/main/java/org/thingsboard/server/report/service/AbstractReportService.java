@@ -66,7 +66,9 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -178,7 +180,7 @@ public abstract class AbstractReportService implements ReportService {
         };
     }
 
-    protected List<Map<String, String>> fetchEntityTsData(TbReportCtx ctx, TimeseriesTableComponent component, EntityId entityId) {
+    protected List<Map<String, String>> fetchEntityTsData(TbReportCtx ctx, TimeseriesTableComponent component, EntityData entity) {
         TimeWindowConfiguration timeWindowConf = component.getTimewindow();
         History historyConf = timeWindowConf.getHistory();
         TimeIntervalCalculator.TimeRange timeRange = getTimeRange(timeWindowConf);
@@ -192,10 +194,11 @@ public abstract class AbstractReportService implements ReportService {
                 .toList();
 
         // todo: dasha make sort order configurable (?)
-        List<TsKvEntry> result = dataService.getTimeseries(entityId, keys, timeRange.startTs, timeRange.endTs,
+        List<TsKvEntry> result = dataService.getTimeseries(entity.getEntityId(), keys, timeRange.startTs, timeRange.endTs,
                 historyConf.getInterval(), timeWindowConf.getAggregation().getType(), SortOrder.Direction.DESC,
                 timeWindowConf.getAggregation().getLimit(), false, ctx);
-        return collectTsData(result, ctx);
+        SortOrder sortOrder = SortOrder.of("rawTs", SortOrder.Direction.DESC);
+        return collectTsData(keys, entity, result, component.isShowTimestamp(), component.getTimestampPattern(), sortOrder, ctx);
     }
 
     protected List<Map<String, String>> fetchAlarmDatas(TbReportCtx ctx, AlarmTableComponent component) {
@@ -277,17 +280,39 @@ public abstract class AbstractReportService implements ReportService {
         }
     }
 
-    protected List<Map<String, String>> collectTsData(List<TsKvEntry> tsKvEntries, TbReportCtx ctx) {
+    protected List<Map<String, String>> collectTsData(List<String> keys, EntityData entity,
+                                                      List<TsKvEntry> tsKvEntries, boolean showTs, String tsPattern,
+                                                      SortOrder sortOrder, TbReportCtx ctx) {
         List<Map<String, String>> tsData = new ArrayList<>();
         Map<Long, List<TsKvEntry>> groupedByTs = tsKvEntries.stream().collect(Collectors.groupingBy(TsKvEntry::getTs));
 
         groupedByTs.forEach((ts, entries) -> {
             Map<String, String> tsValues = new HashMap<>();
-            tsValues.put("ts", ts.toString());
+            tsValues.put("rawTs", ts.toString());
+            if (showTs) {
+                tsValues.put("ts", formatTimestamp(ts.toString(), tsPattern, ctx));
+            }
             for (TsKvEntry entry : entries) {
                 tsValues.put(entry.getKey(), formatData(ctx, entry.getKey(), entry.getValueAsString()));
             }
+            keys.forEach(key -> tsValues.putIfAbsent(key, null));
+            entity.getLatest().forEach((keyType, keyValueMap) -> keyValueMap.forEach((key, tsValue) -> {
+                if (tsValue.getValue() != null) {
+                    tsValues.put(key, formatData(ctx, key, tsValue.getValue()));
+                }
+            }));
             tsData.add(tsValues);
+        });
+        tsData.sort((row1, row2) -> {
+            String p1 = row1.get(sortOrder.getProperty());
+            if (p1 == null) {
+                p1 = "";
+            }
+            String p2 = row2.get(sortOrder.getProperty());
+            if (p2 == null) {
+                p2 = "";
+            }
+            return p1.compareTo(p2) * (sortOrder.getDirection() == SortOrder.Direction.ASC ? 1 : -1 );
         });
         return tsData;
     }
@@ -297,7 +322,13 @@ public abstract class AbstractReportService implements ReportService {
     }
 
     protected String formatTimestamp(String timestampStr, TbReportCtx ctx) {
-        String timeDataPattern = ctx.getConfiguration().getTimeDataPattern();
+        return formatTimestamp(timestampStr, null, ctx);
+    }
+
+    protected String formatTimestamp(String timestampStr, String timeDataPattern, TbReportCtx ctx) {
+        if (timeDataPattern == null || timeDataPattern.isEmpty()) {
+            timeDataPattern = ctx.getConfiguration().getTimeDataPattern();
+        }
         if (timeDataPattern == null || timeDataPattern.isEmpty()) {
             return timestampStr;
         }

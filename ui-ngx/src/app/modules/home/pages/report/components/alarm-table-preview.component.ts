@@ -41,8 +41,8 @@ import { ComponentStyle, textStyle } from '@shared/models/widget-settings.models
 
 @Component({
   selector: 'tb-alarm-table-preview',
-  templateUrl: './alarm-table-preview.component.html',
-  styleUrls: ['./alarm-table-preview.component.scss'],
+  templateUrl: './report-table-preview.component.html',
+  styleUrls: ['./report-table-preview.component.scss'],
   encapsulation: ViewEncapsulation.None
 })
 export class AlarmTablePreviewComponent extends AbstractReportComponentPreview<AlarmTableReportComponentConfig> {
@@ -62,6 +62,16 @@ export class AlarmTablePreviewComponent extends AbstractReportComponentPreview<A
     return this.styleFromColumnSettings(column);
   }
 
+  columnWidth(column: DataKey): string {
+    if (column?.settings) {
+      const columnSettings: TableReportColumnSettings =  column.settings;
+      if (columnSettings?.columnWidth) {
+        return columnSettings?.columnWidth;
+      }
+    }
+    return null;
+  }
+
   private styleFromColumnSettings(column: DataKey, header = false): ComponentStyle {
     let style: ComponentStyle = {};
     if (column?.settings) {
@@ -77,9 +87,6 @@ export class AlarmTablePreviewComponent extends AbstractReportComponentPreview<A
           style.verticalAlign = cellSettings.verticalAlignment;
           style.color = cellSettings.color;
           style.backgroundColor = cellSettings.backgroundColor;
-        }
-        if (header && columnSettings.columnWidth) {
-          style.width = columnSettings.columnWidth;
         }
       }
     }

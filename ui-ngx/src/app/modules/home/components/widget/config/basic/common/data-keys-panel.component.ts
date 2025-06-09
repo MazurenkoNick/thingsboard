@@ -71,6 +71,7 @@ export interface DataKeysPanelOptions {
   widgetType?: widgetType;
   callbacks?: WidgetConfigCallbacks;
   settingsForm?: FormProperty[];
+  hasAdditionalLatestDataKeys?: boolean;
 }
 
 @Component({
@@ -188,7 +189,7 @@ export class DataKeysPanelComponent implements ControlValueAccessor, OnInit, OnC
 
   get hasAdditionalLatestDataKeys(): boolean {
     return !this.hideSourceSelection && this.widgetType === widgetType.timeseries &&
-      this.widgetConfigComponent?.modelValue?.typeParameters?.hasAdditionalLatestDataKeys;
+      (this.widgetConfigComponent?.modelValue?.typeParameters?.hasAdditionalLatestDataKeys || this.getDataKeysPanelOption('hasAdditionalLatestDataKeys'));
   }
 
   get dataKeySettingsForm(): FormProperty[] {

@@ -61,6 +61,8 @@ import { DashboardConfigComponent } from '@home/pages/report/components/dashboar
 import { SharedHomeComponentsModule } from '@home/components/shared-home-components.module';
 import { AlarmTablePreviewComponent } from '@home/pages/report/components/alarm-table-preview.component';
 import { AlarmTableConfigComponent } from '@home/pages/report/components/alarm-table-config.component';
+import { TimeseriesTablePreviewComponent } from '@home/pages/report/components/timeseries-table-preview.component';
+import { TimeseriesTableConfigComponent } from '@home/pages/report/components/timeseries-table-config.component';
 
 @NgModule({
   declarations: [
@@ -81,6 +83,8 @@ import { AlarmTableConfigComponent } from '@home/pages/report/components/alarm-t
     EntityTableConfigComponent,
     AlarmTablePreviewComponent,
     AlarmTableConfigComponent,
+    TimeseriesTablePreviewComponent,
+    TimeseriesTableConfigComponent,
     ImagePreviewComponent,
     ImageConfigComponent,
     DashboardPreviewComponent,

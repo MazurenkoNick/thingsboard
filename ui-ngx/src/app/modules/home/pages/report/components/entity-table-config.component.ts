@@ -34,7 +34,7 @@ import { FormGroup } from '@angular/forms';
 import {
   DataKey,
   Datasource,
-  EntityTableReportComponentConfig,
+  EntityTableReportComponentConfig, ReportDataKeySettingsType,
   TableReportColumnSettingsForm,
   WidgetConfigMode
 } from '@app/shared/public-api';
@@ -76,6 +76,11 @@ export class EntityTableConfigComponent extends AbstractReportComponentConfig<En
 
   private setColumns(columns: DataKey[], datasources?: Datasource[]) {
     if (datasources && datasources.length) {
+      columns.forEach(key => {
+        if (key?.settings) {
+          key.settings.type = ReportDataKeySettingsType.COLUMN;
+        }
+      });
       datasources[0].dataKeys = columns;
     }
   }

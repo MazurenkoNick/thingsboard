@@ -37,7 +37,7 @@ import { DataKeyType } from '@shared/models/telemetry/telemetry.models';
 import { ReportTemplateId } from '@shared/models/id/report-template-id';
 import { FormProperty, FormPropertyType } from '@shared/models/dynamic-form.models';
 import { DashboardReportConfig } from '@shared/models/dashboard-report.models';
-import { DAY, historyInterval, Timewindow } from '@shared/models/time/time.models';
+import { AggregationType, DAY, historyInterval, Timewindow } from '@shared/models/time/time.models';
 
 export enum ReportComponentType {
   HEADING = 'HEADING',
@@ -221,6 +221,15 @@ export interface AlarmTableReportComponentConfig extends TableReportComponentCon
   type: ReportComponentType.ALARM_TABLE;
 }
 
+export interface TimeseriesTableReportComponentConfig extends TableReportComponentConfig {
+  timewindow: Timewindow;
+  showTimestamp: boolean;
+  timestampLabel: string;
+  timestampPattern: string;
+  timestampColumnSettings?: TableReportColumnSettings;
+  type: ReportComponentType.TIME_SERIES_TABLE;
+}
+
 export const imageSourceTypes = ['image', 'entityKey'];
 type imageSourceTypeTuple = typeof imageSourceTypes;
 export type imageSourceType = imageSourceTypeTuple[number];
@@ -288,6 +297,7 @@ export type ReportComponentConfigs =
   RichTextReportComponentConfig |
   EntityTableReportComponentConfig |
   AlarmTableReportComponentConfig |
+  TimeseriesTableReportComponentConfig |
   ImageReportComponentConfig |
   DashboardReportComponentConfig |
   SubReportReportComponentConfig |
@@ -381,6 +391,38 @@ export const reportComponentTypeDefaultConfigMap = new Map<ReportComponentType, 
           ]
         },
         timewindow: historyInterval(DAY)
+      }
+    ],
+    [
+      ReportComponentType.TIME_SERIES_TABLE,
+      {
+        type: ReportComponentType.TIME_SERIES_TABLE,
+        dataSources: [
+          {
+            type: DatasourceType.entity,
+            dataKeys: [
+              {
+                name: 'temperature',
+                type: DataKeyType.timeseries,
+                label: 'Temperature',
+                units: '°C',
+                decimals: 0
+              }
+            ]
+          }
+        ],
+        timewindow: {...historyInterval(DAY),
+          aggregation: {
+            type: AggregationType.NONE,
+            limit: 200
+          }
+        },
+        showTimestamp: true,
+        timestampLabel: 'Timestamp',
+        timestampPattern: 'yyyy-MM-dd HH:mm:ss',
+        timestampColumnSettings: {
+          type: ReportDataKeySettingsType.COLUMN
+        }
       }
     ],
     [

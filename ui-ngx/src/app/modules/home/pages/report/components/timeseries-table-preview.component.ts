@@ -31,30 +31,42 @@
 
 import { Component, ViewEncapsulation } from '@angular/core';
 import {
-  EntityTableReportComponentConfig,
-  RichTextReportComponentConfig, TableReportColumnSettings
+  TableReportColumnSettings,
+  TimeseriesTableReportComponentConfig
 } from '@shared/models/report-component.models';
 import { AbstractReportComponentPreview } from '@home/pages/report/components/report-component.component';
 import { DataKey, Datasource } from '@shared/models/widget.models';
 import { ComponentStyle, textStyle } from '@shared/models/widget-settings.models';
+import { DataKeyType } from '@shared/models/telemetry/telemetry.models';
 
 @Component({
-  selector: 'tb-entity-table-preview',
+  selector: 'tb-timeseries-table-preview',
   templateUrl: './report-table-preview.component.html',
   styleUrls: ['./report-table-preview.component.scss'],
   encapsulation: ViewEncapsulation.None
 })
-export class EntityTablePreviewComponent extends AbstractReportComponentPreview<EntityTableReportComponentConfig> {
+export class TimeseriesTablePreviewComponent extends AbstractReportComponentPreview<TimeseriesTableReportComponentConfig> {
 
-  get columns(): DataKey[] {
-    const datasources: Datasource[] = this.reportComponent.dataSources;
-    if (datasources && datasources.length) {
-      return datasources[0].dataKeys || [];
-    }
-    return [];
-  }
+  columns: DataKey[] = [];
 
   onComponentUpdated() {
+    this.columns = [];
+    if (this.reportComponent.showTimestamp) {
+      this.columns.push(
+        {
+          name: 'ts',
+          label: this.reportComponent.timestampLabel || 'Timestamp',
+          type: DataKeyType.timeseries,
+          settings: this.reportComponent.timestampColumnSettings
+        }
+      );
+    }
+    const datasources: Datasource[] = this.reportComponent.dataSources;
+    if (datasources && datasources.length) {
+      const datasource = datasources[0];
+      this.columns.push(...(datasource.dataKeys || []));
+      this.columns.push(...(datasource.latestDataKeys || []));
+    }
   }
 
   headerStyle(column: DataKey): ComponentStyle {
@@ -91,6 +103,11 @@ export class EntityTablePreviewComponent extends AbstractReportComponentPreview<
           style.color = cellSettings.color;
           style.backgroundColor = cellSettings.backgroundColor;
         }
+      }
+    }
+    if (!header) {
+      if ('ts' === column.name) {
+        style.fontSize = style.fontSize || '9pt';
       }
     }
     return style;

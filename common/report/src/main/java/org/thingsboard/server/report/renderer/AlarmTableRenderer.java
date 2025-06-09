@@ -33,9 +33,28 @@ package org.thingsboard.server.report.renderer;
 import org.springframework.stereotype.Component;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponentType;
 
+import java.util.HashMap;
+import java.util.Map;
+
 
 @Component
 public class AlarmTableRenderer extends TableComponentRenderer {
+
+    private static final Map<String, String> SEVERITY_COLOR = new HashMap<>();
+    private static final Map<String, String> DISPLAY_STATUS = new HashMap<>();
+
+    static {
+        SEVERITY_COLOR.put("CRITICAL", "red");
+        SEVERITY_COLOR.put("MAJOR", "orange");
+        SEVERITY_COLOR.put("MINOR", "#ffca3d");
+        SEVERITY_COLOR.put("WARNING", "#abab00");
+        SEVERITY_COLOR.put("INDETERMINATE", "green");
+
+        DISPLAY_STATUS.put("ACTIVE_UNACK", "Active Unacknowledged");
+        DISPLAY_STATUS.put("ACTIVE_ACK", "Active Acknowledged");
+        DISPLAY_STATUS.put("CLEARED_UNACK", "Cleared Unacknowledged");
+        DISPLAY_STATUS.put("CLEARED_ACK", "Cleared Acknowledged");
+    }
 
     protected String dataSourceName() {
         return "alarm source";
@@ -43,6 +62,40 @@ public class AlarmTableRenderer extends TableComponentRenderer {
 
     protected String noDataMessage() {
         return "No alarms found";
+    }
+
+    protected Float defaultFontSize(Map.Entry<String, String> entry) {
+        String key = entry.getKey();
+        if ("createdTime".equals(key)) {
+            return 9f;
+        }
+        return null;
+    }
+
+    protected String defaultFontWeight(Map.Entry<String, String> entry) {
+        String key = entry.getKey();
+        if ("severity".equals(key)) {
+            return "bold";
+        }
+        return null;
+    }
+
+    protected String defaultColor(Map.Entry<String, String> entry) {
+        String key = entry.getKey();
+        String value = entry.getValue();
+        if ("severity".equals(key)) {
+            return SEVERITY_COLOR.getOrDefault(value, value);
+        }
+        return null;
+    }
+
+    protected String defaultValue(Map.Entry<String, String> entry, Map<String, String> row) {
+        String key = entry.getKey();
+        String value = entry.getValue();
+        if ("status".equals(key)) {
+            return DISPLAY_STATUS.getOrDefault(value, value);
+        }
+        return super.defaultValue(entry, row);
     }
 
     @Override
