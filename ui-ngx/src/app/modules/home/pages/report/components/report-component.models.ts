@@ -111,7 +111,7 @@ export const reportComponentTypeMap = new Map<ReportComponentType, ReportCompone
       ReportComponentType.TIME_SERIES_TABLE,
       {
         title: 'report-template.component.timeseries-table.type',
-        previewImage: '/assets/report/components/entity-table.svg',
+        previewImage: '/assets/report/components/timeseries-table.svg',
         previewComponent: TimeseriesTablePreviewComponent,
         configComponent: TimeseriesTableConfigComponent,
         editable: true
