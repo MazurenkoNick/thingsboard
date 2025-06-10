@@ -20,32 +20,32 @@
             th:utext="${headingText}">Title</th>
     </tr>
     <tr>
-        <th th:each="colKey : ${columns.keySet()}"
+        <th th:each="label : ${columns.keySet()}"
             th:style="|display: table-cell;
-                 ${columns[colKey].textAlignment != null ? 'text-align:' + columns[colKey].textAlignment + ';' : ''}
-                 ${columns[colKey].verticalAlignment != null ? 'vertical-align:' + columns[colKey].verticalAlignment + ';' : ''}
-                 ${columns[colKey].color != null ? 'color:' + columns[colKey].color + ';' : ''}
-                 ${columns[colKey].backgroundColor != null ? 'background-color:' + columns[colKey].backgroundColor + ';' : ''}
-                 ${columns[colKey].fontSize != null ? 'font-size:' + columns[colKey].fontSize + 'pt;' : ''}
-                 ${columns[colKey].fontFamily != null ? 'font-family:' + columns[colKey].fontFamily + ';' : ''}
-                 ${columns[colKey].fontStyle != null ? 'font-style:' + columns[colKey].fontStyle + ';' : ''}
-                 ${columns[colKey].fontWeight != null ? 'font-weight:' + columns[colKey].fontWeight + ';' : ''}|"
-            th:text="${columns[colKey].value}">Header</th>
+                 ${columns[label].textAlignment != null ? 'text-align:' + columns[label].textAlignment + ';' : ''}
+                 ${columns[label].verticalAlignment != null ? 'vertical-align:' + columns[label].verticalAlignment + ';' : ''}
+                 ${columns[label].color != null ? 'color:' + columns[label].color + ';' : ''}
+                 ${columns[label].backgroundColor != null ? 'background-color:' + columns[label].backgroundColor + ';' : ''}
+                 ${columns[label].fontSize != null ? 'font-size:' + columns[label].fontSize + 'pt;' : ''}
+                 ${columns[label].fontFamily != null ? 'font-family:' + columns[label].fontFamily + ';' : ''}
+                 ${columns[label].fontStyle != null ? 'font-style:' + columns[label].fontStyle + ';' : ''}
+                 ${columns[label].fontWeight != null ? 'font-weight:' + columns[label].fontWeight + ';' : ''}|"
+            th:text="${label}">Header</th>
     </tr>
     </thead>
     <tbody>
     <tr th:each="row : ${rows}">
-        <td th:each="colKey : ${columns.keySet()}"
+        <td th:each="label : ${columns.keySet()}"
             th:style="|display: table-cell;
-                 ${row[colKey].textAlignment != null ? 'text-align:' + row[colKey].textAlignment + ';' : ''}
-                 ${row[colKey].verticalAlignment != null ? 'vertical-align:' + row[colKey].verticalAlignment + ';' : ''}
-                 ${row[colKey].color != null ? 'color:' + row[colKey].color + ';' : ''}
-                 ${row[colKey].backgroundColor != null ? 'background-color:' + row[colKey].backgroundColor + ';' : ''}
-                 ${row[colKey].fontSize != null ? 'font-size:' + row[colKey].fontSize + 'pt;' : ''}
-                 ${row[colKey].fontFamily != null ? 'font-family:' + row[colKey].fontFamily + ';' : ''}
-                 ${row[colKey].fontStyle != null ? 'font-style:' + row[colKey].fontStyle + ';' : ''}
-                 ${row[colKey].fontWeight != null ? 'font-weight:' + row[colKey].fontWeight + ';' : ''}|"
-            th:text="${row[colKey].value}">[Value]</td>
+                 ${row[label].textAlignment != null ? 'text-align:' + row[label].textAlignment + ';' : ''}
+                 ${row[label].verticalAlignment != null ? 'vertical-align:' + row[label].verticalAlignment + ';' : ''}
+                 ${row[label].color != null ? 'color:' + row[label].color + ';' : ''}
+                 ${row[label].backgroundColor != null ? 'background-color:' + row[label].backgroundColor + ';' : ''}
+                 ${row[label].fontSize != null ? 'font-size:' + row[label].fontSize + 'pt;' : ''}
+                 ${row[label].fontFamily != null ? 'font-family:' + row[label].fontFamily + ';' : ''}
+                 ${row[label].fontStyle != null ? 'font-style:' + row[label].fontStyle + ';' : ''}
+                 ${row[label].fontWeight != null ? 'font-weight:' + row[label].fontWeight + ';' : ''}|"
+            th:text="${row[label].value}">[Value]</td>
     </tr>
     <!-- Empty table fallback row -->
     <tr th:if="${#lists.isEmpty(rows)}">
