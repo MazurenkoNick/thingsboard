@@ -53,9 +53,11 @@
   </mat-error>
 </mat-form-field>
 <ng-template #autocompleteTemplate>
-  <div role="listbox" class="mat-mdc-autocomplete-panel mat-mdc-autocomplete-visible tb-autocomplete">
-    @for(option of filteredOptions; track option) {
-      <mat-option (click)="optionSelected(option)" class="mdc-list-item">
+  <div role="listbox" class="mat-mdc-autocomplete-panel mat-mdc-autocomplete-visible tb-autocomplete tb-sting-pattern-autocomplete-panel">
+    @for(option of filteredOptions; track option; let i = $index) {
+      <mat-option (click)="optionSelected(option)"
+                  class="mdc-list-item" #optionItem
+                  [class.mat-mdc-option-active]="i === activeOptionIndex">
         <span class="flex-1" [innerHTML]="option | highlight:searchText:false:'ig'"></span>
       </mat-option>
     }
