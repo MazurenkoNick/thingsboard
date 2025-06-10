@@ -39,11 +39,13 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -90,40 +92,24 @@ public class ComponentData {
         this.variables = variables;
 
         if (dataSource != null && !this.entityDatas.isEmpty()) {
-            Map<String, DataKey> labelToDataKey = dataSource.getDataKeys().stream()
-                    .collect(Collectors.toMap(DataKey::getLabel, Function.identity()));
+            Map<String, DataKey> labelToDataKey = Stream.concat(
+                            Optional.ofNullable(dataSource.getDataKeys()).orElse(Collections.emptyList()).stream(),
+                            Optional.ofNullable(dataSource.getLatestDataKeys()).orElse(Collections.emptyList()).stream())
+                    .collect(Collectors.toMap(
+                            dataKey -> normalizeLabel(dataKey.getLabel()),
+                            Function.identity(),
+                            (existing, replacement) -> existing,
+                            LinkedHashMap::new
+                    ));
 
-            for (Map<String, String> entityData : this.entityDatas) {
-                for (Map.Entry<String, DataKey> entry : labelToDataKey.entrySet()) {
+            for (Map.Entry<String, DataKey> entry : labelToDataKey.entrySet()) {
+                for (Map<String, String> entityData : this.entityDatas) {
                     String label = entry.getKey();
                     DataKey dataKey = entry.getValue();
-                    String formatted = formatAndStoreValue(dataKey, entityData);
-                    this.variables.put(normalizeLabel(label), formatted);
+                    this.variables.put(label, entityData.getOrDefault(dataKey.getName(), ""));
                 }
             }
         }
-    }
-
-    private String formatAndStoreValue(DataKey dataKey, Map<String, String> entityData) {
-        String value = entityData.get(dataKey.getName());
-        if (value == null || value.isBlank()) {
-            return "";
-        }
-        try {
-            if (dataKey.getDecimals() != null) {
-                BigDecimal decimal = new BigDecimal(value);
-                value = decimal.setScale(dataKey.getDecimals(), RoundingMode.UNNECESSARY).toPlainString();
-            }
-        } catch (NumberFormatException | ArithmeticException e) {
-            log.warn("Failed to format value for data key '{}': {}", dataKey.getName(), e.getMessage());
-        }
-
-        if (dataKey.getUnits() != null) {
-            value += dataKey.getUnits();
-        }
-
-        entityData.put(dataKey.getName(), value);
-        return value;
     }
 
     public ComponentData merge(ComponentData other) {

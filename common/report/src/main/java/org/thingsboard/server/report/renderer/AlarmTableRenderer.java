@@ -64,38 +64,32 @@ public class AlarmTableRenderer extends TableComponentRenderer {
         return "No alarms found";
     }
 
-    protected Float defaultFontSize(Map.Entry<String, String> entry) {
-        String key = entry.getKey();
+    protected Float defaultFontSize(String key, String value) {
         if ("createdTime".equals(key)) {
             return 9f;
         }
         return null;
     }
 
-    protected String defaultFontWeight(Map.Entry<String, String> entry) {
-        String key = entry.getKey();
+    protected String defaultFontWeight(String key, String value) {
         if ("severity".equals(key)) {
             return "bold";
         }
         return null;
     }
 
-    protected String defaultColor(Map.Entry<String, String> entry) {
-        String key = entry.getKey();
-        String value = entry.getValue();
+    protected String defaultColor(String key, String value) {
         if ("severity".equals(key)) {
             return SEVERITY_COLOR.getOrDefault(value, value);
         }
         return null;
     }
 
-    protected String defaultValue(Map.Entry<String, String> entry, Map<String, String> row) {
-        String key = entry.getKey();
-        String value = entry.getValue();
+    protected String defaultValue(String key, String value) {
         if ("status".equals(key)) {
             return DISPLAY_STATUS.getOrDefault(value, value);
         }
-        return super.defaultValue(entry, row);
+        return super.defaultValue(key, value);
     }
 
     @Override

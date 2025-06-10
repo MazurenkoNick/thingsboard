@@ -34,6 +34,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.report.configuration.CellSettings;
 import org.thingsboard.server.common.data.report.configuration.ColumnSettings;
@@ -52,16 +53,23 @@ import org.thingsboard.server.report.context.ComponentData;
 import org.thingsboard.server.report.util.ColorUtils;
 import org.thingsboard.server.report.util.ThymeleafUtil;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static org.thingsboard.server.report.util.ReportUtils.getSingleDataSource;
 
-
+@Slf4j
 public abstract class TableComponentRenderer extends ReportComponentWithLayoutRenderer {
 
     protected String dataSourceName() {
@@ -94,37 +102,47 @@ public abstract class TableComponentRenderer extends ReportComponentWithLayoutRe
     protected String renderContent(ReportComponent component, ComponentData reportDataSource) {
         Optional<DataSource> dataSource = getSingleDataSource(component);
         if (dataSource.isEmpty()) {
-            return ThymeleafUtil.renderFromHtmlTemplate("html/components/error-template", Map.of("errorMessage", "No "+dataSourceName()+" is configured for table. " +
-                    "Please check the "+dataSourceName()+" configuration."));
+            return ThymeleafUtil.renderFromHtmlTemplate("html/components/error-template", Map.of("errorMessage", "No " + dataSourceName() + " is configured for table. " +
+                    "Please check the " + dataSourceName() + " configuration."));
         }
-        List<DataKey> dataKeys  = dataSource.get().getDataKeys();
-        if (dataKeys == null || dataKeys.isEmpty()) {
+        List<DataKey> dataKeys = dataSource.stream().flatMap(ds -> Stream.of(Optional.ofNullable(ds.getDataKeys()).orElse(Collections.emptyList()),
+                        Optional.ofNullable(ds.getLatestDataKeys()).orElse(Collections.emptyList())))
+                .flatMap(Collection::stream)
+                .toList();
+        if (dataKeys.isEmpty()) {
             return ThymeleafUtil.renderFromHtmlTemplate("html/components/error-template", Map.of("errorMessage", "No columns are configured for the table component. " +
-                    "Please check the "+dataSourceName()+" configuration."));
+                    "Please check the " + dataSourceName() + " configuration."));
         }
+        Map<String, DataKey> labelToDataKey = dataKeys.stream()
+                .collect(Collectors.toMap(
+                        DataKey::getLabel,
+                        Function.identity(),
+                        (existing, replacement) -> existing,
+                        LinkedHashMap::new
+                ));
 
-        HashMap<String, CellVariables> headerStyles = getCellVariablesMap(component, dataSource.get(), true);
-        HashMap<String, CellVariables> cellStyles = getCellVariablesMap(component, dataSource.get(), false);
+        HashMap<String, CellVariables> columns = getCellVariablesMap(component, labelToDataKey, true);
+        HashMap<String, CellVariables> cellStyles = getCellVariablesMap(component, labelToDataKey, false);
 
-        List<LinkedHashMap<String, CellVariables>> rows = reportDataSource.getEntityDatas().stream()
-                .map(row -> row.entrySet().stream()
-                        .collect(Collectors.toMap(
-                                Map.Entry::getKey,
-                                entry -> {
-                                    CellVariables baseStyles = cellStyles.getOrDefault(entry.getKey(), new CellVariables());
-                                    return baseStyles.toBuilder()
-                                            .fontSize(formatFontSize(entry, baseStyles.getFontSize()))
-                                            .fontWeight(formatFontWeight(entry, baseStyles.getFontWeight()))
-                                            .color(formatColor(entry, baseStyles.getColor()))
-                                            .value(formatValue(entry, row)).build();
-                                },
-                                (v1, v2) -> v1,
-                                LinkedHashMap::new
-                        ))
-                ).toList();
+        List<LinkedHashMap<String, CellVariables>> rows = new ArrayList<>();
+        for (Map<String, String> entityData : reportDataSource.getEntityDatas()) {
+            LinkedHashMap<String, CellVariables> row = new LinkedHashMap<>();
+            for (Map.Entry<String, CellVariables> column : columns.entrySet()) {
+                String label = column.getKey();
+                String key = column.getValue().getValue();
+                CellVariables baseStyles = cellStyles.getOrDefault(label, new CellVariables());
+                CellVariables cellVariables = baseStyles.toBuilder()
+                        .fontSize(formatFontSize(key, entityData.get(key), baseStyles.getFontSize()))
+                        .fontWeight(formatFontWeight(key, entityData.get(key), baseStyles.getFontWeight()))
+                        .color(formatColor(key, entityData.get(key), baseStyles.getColor()))
+                        .value(formatValue(key, entityData.get(key), labelToDataKey.get(label))).build();
+                row.put(label, cellVariables);
+            }
+            rows.add(row);
+        }
 
         HashMap<String, Object> componentVariables = new HashMap<>();
-        componentVariables.put("columns", headerStyles);
+        componentVariables.put("columns", columns);
         componentVariables.put("rows", rows);
         componentVariables.put("noDataMessage", noDataMessage());
 
@@ -174,56 +192,69 @@ public abstract class TableComponentRenderer extends ReportComponentWithLayoutRe
         }
     }
 
-    private Float formatFontSize(Map.Entry<String, String> entry, Float defaultSize) {
+    private Float formatFontSize(String key, String value, Float defaultSize) {
         if (defaultSize != null) {
             return defaultSize;
         }
-        return defaultFontSize(entry);
+        return defaultFontSize(key, value);
     }
 
-    private String formatFontWeight(Map.Entry<String, String> entry, String defaultWeight) {
+    private String formatFontWeight(String key, String value, String defaultWeight) {
         if (defaultWeight != null) {
             return defaultWeight;
         }
-        return defaultFontWeight(entry);
+        return defaultFontWeight(key, value);
     }
 
-    private String formatColor(Map.Entry<String, String> entry, String defaultColor) {
+    private String formatColor(String key, String value, String defaultColor) {
         if (defaultColor != null) {
             return defaultColor;
         }
-        return defaultColor(entry);
+        return defaultColor(key, value);
     }
 
-    private String formatValue(Map.Entry<String, String> entry, Map<String, String> row) {
-        return defaultValue(entry, row);
+    private String formatValue(String key, String value, DataKey dataKey) {
+        if (value == null || value.isBlank()) {
+            return "";
+        }
+        if (dataKey != null) {
+            try {
+                if (dataKey.getDecimals() != null) {
+                    BigDecimal decimal = new BigDecimal(value);
+                    value = decimal.setScale(dataKey.getDecimals(), RoundingMode.HALF_UP).toPlainString();
+                }
+            } catch (NumberFormatException | ArithmeticException e) {
+                log.warn("Failed to format value for data key '{}': {}", dataKey.getName(), e.getMessage());
+            }
+
+            if (dataKey.getUnits() != null) {
+                value += dataKey.getUnits();
+            }
+            return value;
+        }
+        return defaultValue(key, value);
     }
 
-    protected Float defaultFontSize(Map.Entry<String, String> entry) {
+    protected Float defaultFontSize(String key, String value) {
         return null;
     }
 
-    protected String defaultFontWeight(Map.Entry<String, String> entry) {
+    protected String defaultFontWeight(String key, String value) {
         return null;
     }
 
-    protected String defaultColor(Map.Entry<String, String> entry) {
+    protected String defaultColor(String key, String value) {
         return null;
     }
 
-    protected String defaultValue(Map.Entry<String, String> entry, Map<String, String> row) {
-        return entry.getValue();
+    protected String defaultValue(String key, String value) {
+        return value;
     }
 
-    protected HashMap<String, CellVariables> getCellVariablesMap(ReportComponent component, DataSource dataSource, boolean isHeader) {
-        List<DataKey> dataKeys = dataSource.getDataKeys();
-        return dataKeys.stream()
-                .collect(Collectors.toMap(
-                        DataKey::getName,
-                        dataKey -> toCellVariables(dataKey, isHeader),
-                        (v1, v2) -> v1,
-                        LinkedHashMap::new
-                ));
+    protected HashMap<String, CellVariables> getCellVariablesMap(ReportComponent component, Map<String, DataKey> labelToDataKey, boolean isHeader) {
+        HashMap<String, CellVariables> result = new LinkedHashMap<>();
+        labelToDataKey.forEach((key, dataKey) -> result.put(key, toCellVariables(dataKey, isHeader)));
+        return result;
     }
 
     protected CellVariables toCellVariables(DataKey dataKey, boolean isHeader) {
@@ -232,16 +263,16 @@ public abstract class TableComponentRenderer extends ReportComponentWithLayoutRe
         if (settings instanceof ColumnSettings) {
             columnSettings = (ColumnSettings) settings;
         }
-        return toCellVariables(dataKey.getLabel(), columnSettings, isHeader);
+        return toCellVariables(dataKey.getName(), columnSettings, isHeader);
     }
 
-    protected CellVariables toCellVariables(String label, ColumnSettings columnSettings, boolean isHeader) {
+    protected CellVariables toCellVariables(String name, ColumnSettings columnSettings, boolean isHeader) {
         if (columnSettings != null) {
             CellSettings cellSettings = isHeader ? columnSettings.getHeader() : columnSettings.getCell();
             if (cellSettings != null) {
                 Font font = cellSettings.getFont();
                 return CellVariables.builder()
-                        .value(isHeader ? label : "")
+                        .value(isHeader ? name : "")
                         .width(isHeader && !StringUtils.isBlank(columnSettings.getColumnWidth()) ? columnSettings.getColumnWidth() : null)
                         .color(cellSettings.getColor() != null ? ColorUtils.normalizeCssColor(cellSettings.getColor()) : null)
                         .backgroundColor(cellSettings.getBackgroundColor() != null ? ColorUtils.normalizeCssColor(cellSettings.getBackgroundColor()) : null)
@@ -254,7 +285,7 @@ public abstract class TableComponentRenderer extends ReportComponentWithLayoutRe
                         .build();
             }
         }
-        return new CellVariables(isHeader ? label : "");
+        return new CellVariables(isHeader ? name : "");
     }
 
     @Data
