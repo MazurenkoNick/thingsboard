@@ -306,7 +306,7 @@ export abstract class AbstractReportComponentConfig<C extends ReportComponentCon
     return this.fb.group({});
   }
 
-  protected prepareOutputConfig(config: any): any {
+  protected prepareOutputConfig(config: any): C {
     return config;
   }
 

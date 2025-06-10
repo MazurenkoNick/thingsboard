@@ -59,10 +59,6 @@ export interface ReportComponentConfig {
   type: ReportComponentType;
 }
 
-export interface TableReportComponentConfig extends ReportComponentConfig {
-  type: ReportComponentType;
-}
-
 export enum ReportDataKeySettingsType {
   DEFAULT = 'DEFAULT',
   COLUMN = 'COLUMN'
@@ -211,6 +207,21 @@ export interface RichTextReportComponentConfig extends ReportComponentConfig {
   type: ReportComponentType.RICH_TEXT;
 }
 
+export interface Heading {
+  text: string;
+  font?: Font;
+  color?: string;
+  textAlignment?: alignment;
+  verticalAlignment?: alignment;
+  height?: number;
+}
+
+export interface TableReportComponentConfig extends ReportComponentConfig {
+  showTableHeading: boolean;
+  tableHeading: Heading;
+  type: ReportComponentType;
+}
+
 export interface EntityTableReportComponentConfig extends TableReportComponentConfig {
   type: ReportComponentType.ENTITY_TABLE;
 }
@@ -336,6 +347,21 @@ export const reportComponentTypeDefaultConfigMap = new Map<ReportComponentType, 
       ReportComponentType.ENTITY_TABLE,
       {
         type: ReportComponentType.ENTITY_TABLE,
+        showTableHeading: false,
+        tableHeading: {
+          text: "Entities",
+          font: {
+            size: 20,
+            sizeUnit: 'pt',
+            weight: 'normal',
+            style: 'normal',
+            family: 'Roboto'
+          } as Font,
+          color: '#000',
+          textAlignment: 'center',
+          verticalAlignment: 'middle',
+          height: 40
+        },
         dataSources: [
           {
             type: DatasourceType.entity,
@@ -354,6 +380,21 @@ export const reportComponentTypeDefaultConfigMap = new Map<ReportComponentType, 
       ReportComponentType.ALARM_TABLE,
       {
         type: ReportComponentType.ALARM_TABLE,
+        showTableHeading: false,
+        tableHeading: {
+          text: "Alarms",
+          font: {
+            size: 20,
+            sizeUnit: 'pt',
+            weight: 'normal',
+            style: 'normal',
+            family: 'Roboto'
+          } as Font,
+          color: '#000',
+          textAlignment: 'center',
+          verticalAlignment: 'middle',
+          height: 40
+        },
         alarmSource: {
           type: DatasourceType.entity,
           alarmFilterConfig: {},
@@ -397,6 +438,21 @@ export const reportComponentTypeDefaultConfigMap = new Map<ReportComponentType, 
       ReportComponentType.TIME_SERIES_TABLE,
       {
         type: ReportComponentType.TIME_SERIES_TABLE,
+        showTableHeading: true,
+        tableHeading: {
+          text: '${entityName}',
+          font: {
+            size: 20,
+            sizeUnit: 'pt',
+            weight: 'normal',
+            style: 'normal',
+            family: 'Roboto'
+          } as Font,
+          color: '#000',
+          textAlignment: 'center',
+          verticalAlignment: 'middle',
+          height: 40
+        },
         dataSources: [
           {
             type: DatasourceType.entity,

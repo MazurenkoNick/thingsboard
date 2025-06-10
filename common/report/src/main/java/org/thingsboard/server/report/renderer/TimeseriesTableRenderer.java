@@ -37,14 +37,12 @@ import org.thingsboard.server.common.data.report.configuration.DataSource;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponentType;
 import org.thingsboard.server.common.data.report.configuration.components.TimeseriesTableComponent;
-import org.thingsboard.server.report.context.ComponentData;
 
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-
 
 @Component
 public class TimeseriesTableRenderer extends TableComponentRenderer {
@@ -64,14 +62,6 @@ public class TimeseriesTableRenderer extends TableComponentRenderer {
             return 9f;
         }
         return null;
-    }
-
-    protected boolean displayTitle(ComponentData reportDataSource) {
-        return (boolean) reportDataSource.getVariables().getOrDefault("showTitle", false);
-    }
-
-    protected String title(ComponentData reportDataSource) {
-        return (String) reportDataSource.getVariables().getOrDefault("title", "Time series table");
     }
 
     protected HashMap<String, CellVariables> getCellVariablesMap(ReportComponent component, DataSource dataSource, boolean isHeader) {

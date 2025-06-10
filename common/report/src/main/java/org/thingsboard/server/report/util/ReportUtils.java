@@ -53,6 +53,8 @@ import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static org.thingsboard.server.common.data.util.DataSourceUtils.getEntityLatestValue;
+
 public class ReportUtils {
 
     public static final Pattern REPORT_NAME_DATE_PATTERN = Pattern.compile("%d\\{([^\\}]*)\\}");
@@ -149,18 +151,12 @@ public class ReportUtils {
             ((ObjectNode) stateData).set("params", stateParams);
         }
         stateParams.set("entityId", JacksonUtil.valueToTree(stateEntity.getEntityId()));
-        String entityName = null;
-        if (stateEntity.getLatest().containsKey(EntityKeyType.ENTITY_FIELD)) {
-            var entityFields = stateEntity.getLatest().get(EntityKeyType.ENTITY_FIELD);
-            if (entityFields.containsKey("name")) {
-                entityName = entityFields.get("name").getValue();
-            }
-        }
+        Optional<String> entityName = getEntityLatestValue(stateEntity, EntityKeyType.ENTITY_FIELD, "name");
+        Optional<String> entityLabel = getEntityLatestValue(stateEntity, EntityKeyType.ENTITY_FIELD, "label");
         stateParams.remove("entityName");
         stateParams.remove("entityLabel");
-        if (entityName != null) {
-            stateParams.put("entityName", entityName);
-        }
+        entityName.ifPresent(s -> stateParams.put("entityName", s));
+        entityLabel.ifPresent(s -> stateParams.put("entityLabel", s));
         String newStateJsonStr = JacksonUtil.toString(stateObj);
         return new String(Base64.getEncoder().encode(newStateJsonStr.getBytes()));
     }

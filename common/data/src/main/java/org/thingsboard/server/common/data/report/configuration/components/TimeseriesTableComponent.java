@@ -41,7 +41,7 @@ import org.thingsboard.server.common.data.report.configuration.timewindow.TimeWi
 @Data
 @EqualsAndHashCode
 @NoArgsConstructor
-public class TimeseriesTableComponent extends AbstractReportComponent implements TableReportComponent {
+public class TimeseriesTableComponent extends AbstractTableReportComponent {
 
     private TimeWindowConfiguration timewindow;
     private boolean showTimestamp;

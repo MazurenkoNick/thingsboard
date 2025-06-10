@@ -34,8 +34,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.thingsboard.common.util.JacksonUtil;
-import org.thingsboard.server.common.data.alarm.AlarmAssignee;
-import org.thingsboard.server.common.data.id.DeviceId;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.kv.TsKvEntry;
 import org.thingsboard.server.common.data.page.PageDataIterable;
@@ -45,6 +43,7 @@ import org.thingsboard.server.common.data.query.AlarmData;
 import org.thingsboard.server.common.data.query.EntityData;
 import org.thingsboard.server.common.data.query.EntityDataQuery;
 import org.thingsboard.server.common.data.query.EntityFilter;
+import org.thingsboard.server.common.data.query.EntityKeyType;
 import org.thingsboard.server.common.data.query.EntitySearchQueryFilter;
 import org.thingsboard.server.common.data.query.KeyFilter;
 import org.thingsboard.server.common.data.query.SingleEntityFilter;
@@ -66,9 +65,7 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -76,11 +73,14 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static org.thingsboard.server.common.data.report.configuration.timewindow.TimeIntervalCalculator.getTimeRange;
+import static org.thingsboard.server.common.data.util.DataSourceUtils.getAlarmLatestValue;
+import static org.thingsboard.server.common.data.util.DataSourceUtils.getEntityLatestValue;
 import static org.thingsboard.server.common.data.util.ReportQueryUtils.buildEntityDataQuery;
 import static org.thingsboard.server.common.data.util.ReportQueryUtils.findEntityFilterByAliasId;
 import static org.thingsboard.server.common.data.util.ReportQueryUtils.findKeyFilters;
 import static org.thingsboard.server.common.data.util.ReportQueryUtils.singleDeviceFilter;
 import static org.thingsboard.server.common.data.util.ReportQueryUtils.toAlarmDataQuery;
+import static org.thingsboard.server.common.data.util.DataSourceUtils.setDataKeyIfNotExists;
 import static org.thingsboard.server.report.util.ReportUtils.getSingleDataSource;
 
 public abstract class AbstractReportService implements ReportService {
@@ -237,6 +237,10 @@ public abstract class AbstractReportService implements ReportService {
                 }
             }));
             data.put("id", entityData.getEntityId().toString());
+            Optional<String> entityName = getEntityLatestValue(entityData, EntityKeyType.ENTITY_FIELD, "name");
+            Optional<String> entityLabel = getEntityLatestValue(entityData, EntityKeyType.ENTITY_FIELD, "label");
+            data.put("entityName", entityName.orElse(""));
+            data.put("entityLabel", entityLabel.orElse(""));
         }
         return data;
     }
@@ -267,6 +271,10 @@ public abstract class AbstractReportService implements ReportService {
                 data.put(key, formatData(ctx, key, tsValue.getValue()));
             }
         }));
+        Optional<String> entityName = getAlarmLatestValue(alarmData, EntityKeyType.ENTITY_FIELD, "name");
+        Optional<String> entityLabel = getAlarmLatestValue(alarmData, EntityKeyType.ENTITY_FIELD, "label");
+        data.put("entityName", entityName.orElse(""));
+        data.put("entityLabel", entityLabel.orElse(""));
         return data;
     }
 
@@ -283,9 +291,10 @@ public abstract class AbstractReportService implements ReportService {
     protected List<Map<String, String>> collectTsData(List<String> keys, EntityData entity,
                                                       List<TsKvEntry> tsKvEntries, boolean showTs, String tsPattern,
                                                       SortOrder sortOrder, TbReportCtx ctx) {
+        Optional<String> entityName = getEntityLatestValue(entity, EntityKeyType.ENTITY_FIELD, "name");
+        Optional<String> entityLabel = getEntityLatestValue(entity, EntityKeyType.ENTITY_FIELD, "label");
         List<Map<String, String>> tsData = new ArrayList<>();
         Map<Long, List<TsKvEntry>> groupedByTs = tsKvEntries.stream().collect(Collectors.groupingBy(TsKvEntry::getTs));
-
         groupedByTs.forEach((ts, entries) -> {
             Map<String, String> tsValues = new HashMap<>();
             tsValues.put("rawTs", ts.toString());
@@ -301,6 +310,8 @@ public abstract class AbstractReportService implements ReportService {
                     tsValues.put(key, formatData(ctx, key, tsValue.getValue()));
                 }
             }));
+            tsValues.put("entityName", entityName.orElse(""));
+            tsValues.put("entityLabel", entityLabel.orElse(""));
             tsData.add(tsValues);
         });
         tsData.sort((row1, row2) -> {

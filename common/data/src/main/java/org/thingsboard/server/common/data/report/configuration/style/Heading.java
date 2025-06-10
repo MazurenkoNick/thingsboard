@@ -28,14 +28,20 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.common.data.report.configuration.components;
+package org.thingsboard.server.common.data.report.configuration.style;
 
-import org.thingsboard.server.common.data.report.configuration.style.Heading;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import lombok.Data;
 
-public interface TableReportComponent extends ReportComponent {
+@Data
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class Heading {
 
-    boolean isShowTableHeading();
-
-    Heading getTableHeading();
+    private String text;
+    private Font font;
+    private String color;
+    private TextAlignment textAlignment;
+    private VerticalAlignment verticalAlignment;
+    private Integer height;
 
 }

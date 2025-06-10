@@ -30,12 +30,22 @@
  */
 package org.thingsboard.server.common.data.report.configuration.components;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import org.thingsboard.server.common.data.report.configuration.style.Heading;
 
-public interface TableReportComponent extends ReportComponent {
+@Schema
+@Data
+@EqualsAndHashCode(callSuper = true)
+@NoArgsConstructor
+@AllArgsConstructor
+public abstract class AbstractTableReportComponent extends AbstractReportComponent implements TableReportComponent {
 
-    boolean isShowTableHeading();
+    private boolean showTableHeading;
 
-    Heading getTableHeading();
+    private Heading tableHeading;
 
 }

@@ -218,7 +218,7 @@ export class DataKeyRowComponent implements ControlValueAccessor, OnInit, OnChan
   }
 
   get latestDataKeySettingsForm(): FormProperty[] {
-    return this.widgetConfigComponent?.modelValue?.latestDataKeySettingsForm;
+    return this.widgetConfigComponent?.modelValue?.latestDataKeySettingsForm  || this.dataKeysPanelComponent?.latestDataKeySettingsForm;;
   }
 
   get latestDataKeySettingsDirective(): string {

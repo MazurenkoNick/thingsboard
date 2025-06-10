@@ -71,6 +71,7 @@ export interface DataKeysPanelOptions {
   widgetType?: widgetType;
   callbacks?: WidgetConfigCallbacks;
   settingsForm?: FormProperty[];
+  latestSettingsForm?: FormProperty[];
   hasAdditionalLatestDataKeys?: boolean;
 }
 
@@ -194,6 +195,10 @@ export class DataKeysPanelComponent implements ControlValueAccessor, OnInit, OnC
 
   get dataKeySettingsForm(): FormProperty[] {
     return this.widgetConfigComponent?.modelValue?.dataKeySettingsForm || this.getDataKeysPanelOption('settingsForm');
+  }
+
+  get latestDataKeySettingsForm(): FormProperty[] {
+    return this.widgetConfigComponent?.modelValue?.latestDataKeySettingsForm || this.getDataKeysPanelOption('latestSettingsForm');
   }
 
   get dataKeySettingsFunction(): DataKeySettingsFunction {

@@ -37,6 +37,12 @@
     }
   </colgroup>
   <thead>
+    @if (showTableHeading) {
+      <tr [style.height]="headingHeight">
+        <th [attr.colspan]="columns.length" class="tb-report-table-heading" [style]="headingStyle" [innerHTML]="headingText | safe: 'html'">
+        </th>
+      </tr>
+    }
     <tr>
       @for (column of columns; track column) {
         <th [style]="headerStyle(column)">{{ column.label }}</th>

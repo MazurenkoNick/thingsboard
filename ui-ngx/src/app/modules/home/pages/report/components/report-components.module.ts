@@ -63,6 +63,7 @@ import { AlarmTablePreviewComponent } from '@home/pages/report/components/alarm-
 import { AlarmTableConfigComponent } from '@home/pages/report/components/alarm-table-config.component';
 import { TimeseriesTablePreviewComponent } from '@home/pages/report/components/timeseries-table-preview.component';
 import { TimeseriesTableConfigComponent } from '@home/pages/report/components/timeseries-table-config.component';
+import { ReportHeadingComponent } from '@home/pages/report/components/report-heading.component';
 
 @NgModule({
   declarations: [
@@ -71,6 +72,7 @@ import { TimeseriesTableConfigComponent } from '@home/pages/report/components/ti
     ReportComponentsComponent,
     ReportComponentLibraryComponent,
     ReportInsetsComponent,
+    ReportHeadingComponent,
     ReportImageDialogComponent,
     ReportRichTextComponent,
     EmptyReportConfigComponent,

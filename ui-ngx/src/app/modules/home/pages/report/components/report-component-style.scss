@@ -115,5 +115,10 @@ body.tb-report-component, tb-report-component .tb-report-component {
       border-top: 1px solid rgba(0, 0, 0, 0.87);
       text-align: center;
     }
+    th.tb-report-table-heading {
+      border-top: 0;
+      border-left: 0;
+      border-right: 0;
+    }
   }
 }

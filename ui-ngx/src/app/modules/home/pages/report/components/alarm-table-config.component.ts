@@ -40,6 +40,7 @@ import {
   WidgetConfigMode, widgetType
 } from '@app/shared/public-api';
 import { AbstractReportComponentConfig } from '@home/pages/report/components/report-component-config.component';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'tb-alarm-table-config',
@@ -56,15 +57,24 @@ export class AlarmTableConfigComponent extends AbstractReportComponentConfig<Ala
   TableReportColumnSettingsForm = TableReportColumnSettingsForm;
 
   protected buildForm(reportComponentConfig: AlarmTableReportComponentConfig): FormGroup {
-    return this.fb.group({
+    const form = this.fb.group({
       timewindow: [reportComponentConfig.timewindow, []],
       dataSources: [[reportComponentConfig.alarmSource], []],
       alarmFilterConfig: [reportComponentConfig.alarmSource.alarmFilterConfig, []],
+      showTableHeading: [reportComponentConfig.showTableHeading, []],
+      tableHeading: [reportComponentConfig.tableHeading, []],
       columns: [this.getColumns(reportComponentConfig.alarmSource), []],
     });
+    form.get('showTableHeading').valueChanges.pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(() => {
+      this.updateValidators(form);
+    });
+    this.updateValidators(form);
+    return form;
   }
 
-  protected prepareOutputConfig(config: any): any {
+  protected prepareOutputConfig(config: any): AlarmTableReportComponentConfig {
     config.alarmSource = config.dataSources[0];
     delete config.dataSources;
     config.alarmSource.alarmFilterConfig = config.alarmFilterConfig;
@@ -89,6 +99,15 @@ export class AlarmTableConfigComponent extends AbstractReportComponentConfig<Ala
         }
       });
       alarmSource.dataKeys = columns;
+    }
+  }
+
+  private updateValidators(form: FormGroup) {
+    const showTableHeading: boolean = form.get('showTableHeading').value;
+    if (showTableHeading) {
+      form.get('tableHeading').enable({emitEvent: false});
+    } else {
+      form.get('tableHeading').disable({emitEvent: false});
     }
   }
 }

@@ -41,7 +41,13 @@ import org.thingsboard.server.common.data.report.configuration.DataKey;
 import org.thingsboard.server.common.data.report.configuration.DataKeySettings;
 import org.thingsboard.server.common.data.report.configuration.DataSource;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
+import org.thingsboard.server.common.data.report.configuration.components.TableReportComponent;
 import org.thingsboard.server.common.data.report.configuration.style.Font;
+import org.thingsboard.server.common.data.report.configuration.style.FontStyle;
+import org.thingsboard.server.common.data.report.configuration.style.FontWeight;
+import org.thingsboard.server.common.data.report.configuration.style.Heading;
+import org.thingsboard.server.common.data.report.configuration.style.TextAlignment;
+import org.thingsboard.server.common.data.report.configuration.style.VerticalAlignment;
 import org.thingsboard.server.report.context.ComponentData;
 import org.thingsboard.server.report.util.ColorUtils;
 import org.thingsboard.server.report.util.ThymeleafUtil;
@@ -66,12 +72,22 @@ public abstract class TableComponentRenderer extends ReportComponentWithLayoutRe
         return "Table content is empty";
     }
 
-    protected boolean displayTitle(ComponentData reportDataSource) {
-        return false;
-    }
-
-    protected String title(ComponentData reportDataSource) {
-        return null;
+    protected String headingText(Heading tableHeading, ComponentData reportDataSource) {
+        Map<String, Object> tableHeadingVariables = new HashMap<>();
+        String entityName = "";
+        String entityLabel = "";
+        Integer rowCount = 0;
+        List<Map<String, String>> entityDatas = reportDataSource.getEntityDatas();
+        if (!entityDatas.isEmpty()) {
+            rowCount = entityDatas.size();
+            Map<String, String> row = entityDatas.get(0);
+            entityName = row.get("entityName");
+            entityLabel = row.get("entityLabel");
+        }
+        tableHeadingVariables.put("entityName", entityName);
+        tableHeadingVariables.put("entityLabel", entityLabel);
+        tableHeadingVariables.put("rowCount", String.valueOf(rowCount));
+        return ThymeleafUtil.renderFromHtmlString(tableHeading.getText(), tableHeadingVariables);
     }
 
     @Override
@@ -111,9 +127,51 @@ public abstract class TableComponentRenderer extends ReportComponentWithLayoutRe
         componentVariables.put("columns", headerStyles);
         componentVariables.put("rows", rows);
         componentVariables.put("noDataMessage", noDataMessage());
-        componentVariables.put("displayTitle", displayTitle(reportDataSource));
-        componentVariables.put("title", title(reportDataSource));
+
+        TableReportComponent tableReportComponent = (TableReportComponent) component;
+        if (tableReportComponent.isShowTableHeading() && tableReportComponent.getTableHeading() != null) {
+            componentVariables.put("showTableHeading", true);
+            Heading tableHeading = tableReportComponent.getTableHeading();
+            String headingText = headingText(tableHeading, reportDataSource);
+            componentVariables.put("headingText", headingText);
+            this.formatTableHeading(tableHeading, componentVariables);
+        } else {
+            componentVariables.put("showTableHeading", false);
+        }
         return ThymeleafUtil.renderFromHtmlTemplate("html/components/table-template", componentVariables);
+    }
+
+    private void formatTableHeading(Heading tableHeading, Map<String, Object> componentVariables) {
+        componentVariables.put("headingColor", tableHeading.getColor() != null ? ColorUtils.normalizeCssColor(tableHeading.getColor()) : "#000");
+        Font headingFont = tableHeading.getFont();
+        if (headingFont == null) {
+            headingFont = new Font();
+            headingFont.setSize(20f);
+            headingFont.setFamily("Roboto");
+            headingFont.setStyle(FontStyle.normal);
+            headingFont.setWeight(FontWeight.normal);
+        }
+        if (headingFont.getSize() != null && headingFont.getSize() > 0) {
+            componentVariables.put("headingFontSize", headingFont.getSize());
+        } else {
+            componentVariables.put("headingFontSize", 10);
+        }
+        componentVariables.put("headingFontWeight", headingFont.getWeight() != null ? headingFont.getWeight() : FontWeight.normal);
+        componentVariables.put("headingFontStyle", headingFont.getStyle() != null ? headingFont.getStyle() : FontStyle.normal);
+        if (StringUtils.isNotBlank(headingFont.getFamily())) {
+            componentVariables.put("headingFontFamily", headingFont.getFamily());
+        } else {
+            componentVariables.put("headingFontFamily", "Roboto");
+        }
+        TextAlignment textAlignment = tableHeading.getTextAlignment() != null ? tableHeading.getTextAlignment() : TextAlignment.center;
+        componentVariables.put("headingTextAlignment", textAlignment.name());
+        VerticalAlignment verticalAlignment = tableHeading.getTextAlignment() != null ? tableHeading.getVerticalAlignment() : VerticalAlignment.middle;
+        componentVariables.put("headingVerticalAlignment", verticalAlignment.name());
+        if (tableHeading.getHeight() != null && tableHeading.getHeight() > 0) {
+            componentVariables.put("headingHeight", tableHeading.getHeight() + "pt");
+        } else {
+            componentVariables.put("headingHeight", "100%");
+        }
     }
 
     private Float formatFontSize(Map.Entry<String, String> entry, Float defaultSize) {

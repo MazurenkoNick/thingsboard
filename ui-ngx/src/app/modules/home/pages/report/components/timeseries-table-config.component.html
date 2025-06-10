@@ -64,11 +64,26 @@
       [callbacks]="callbacks"
       [aliasController]="context.aliasController">
     </tb-datasources>
+    <div class="tb-form-panel stroked tb-slide-toggle">
+      <mat-expansion-panel class="tb-settings" [expanded]="reportConfigForm.get('showTableHeading').value" disabled>
+        <mat-expansion-panel-header class="flex flex-row flex-wrap">
+          <mat-panel-title>
+            <mat-slide-toggle class="mat-slide flex items-stretch justify-center" formControlName="showTableHeading" (click)="$event.stopPropagation()">
+              {{ 'report-template.component.table.table-heading' | translate }}
+            </mat-slide-toggle>
+          </mat-panel-title>
+        </mat-expansion-panel-header>
+        <ng-template matExpansionPanelContent>
+          <tb-report-heading [variableNames]="['entityName', 'entityLabel', 'rowCount']" formControlName="tableHeading"></tb-report-heading>
+        </ng-template>
+      </mat-expansion-panel>
+    </div>
     <tb-data-keys-panel
       [dataKeysPanelOptions]="{
         widgetType: widgetType.timeseries,
         callbacks: callbacks,
         settingsForm: TableReportColumnSettingsForm,
+        latestSettingsForm: TableReportColumnSettingsForm,
         hasAdditionalLatestDataKeys: true
       }"
       stroked

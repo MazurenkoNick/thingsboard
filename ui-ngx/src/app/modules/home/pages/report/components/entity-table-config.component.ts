@@ -39,6 +39,7 @@ import {
   WidgetConfigMode
 } from '@app/shared/public-api';
 import { AbstractReportComponentConfig } from '@home/pages/report/components/report-component-config.component';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'tb-entity-table-config',
@@ -55,10 +56,19 @@ export class EntityTableConfigComponent extends AbstractReportComponentConfig<En
   TableReportColumnSettingsForm = TableReportColumnSettingsForm;
 
   protected buildForm(reportComponentConfig: EntityTableReportComponentConfig): FormGroup {
-    return this.fb.group({
+    const form = this.fb.group({
+      showTableHeading: [reportComponentConfig.showTableHeading, []],
+      tableHeading: [reportComponentConfig.tableHeading, []],
       dataSources: [reportComponentConfig.dataSources, []],
       columns: [this.getColumns(reportComponentConfig.dataSources), []],
     });
+    form.get('showTableHeading').valueChanges.pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(() => {
+      this.updateValidators(form);
+    });
+    this.updateValidators(form);
+    return form;
   }
 
   protected prepareOutputConfig(config: any): any {
@@ -85,4 +95,12 @@ export class EntityTableConfigComponent extends AbstractReportComponentConfig<En
     }
   }
 
+  private updateValidators(form: FormGroup) {
+    const showTableHeading: boolean = form.get('showTableHeading').value;
+    if (showTableHeading) {
+      form.get('tableHeading').enable({emitEvent: false});
+    } else {
+      form.get('tableHeading').disable({emitEvent: false});
+    }
+  }
 }

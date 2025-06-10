@@ -40,11 +40,9 @@ import org.thingsboard.server.common.data.id.ReportTemplateId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.job.task.ReportTask;
 import org.thingsboard.server.common.data.query.EntityData;
-import org.thingsboard.server.common.data.query.EntityKeyType;
 import org.thingsboard.server.common.data.report.ReportData;
 import org.thingsboard.server.common.data.report.ReportTemplate;
 import org.thingsboard.server.common.data.report.TbReportFormat;
-import org.thingsboard.server.common.data.report.configuration.DataKey;
 import org.thingsboard.server.common.data.report.configuration.DataSource;
 import org.thingsboard.server.common.data.report.configuration.HeaderFooter;
 import org.thingsboard.server.common.data.report.configuration.PdfReportTemplateConfig;
@@ -207,6 +205,8 @@ public class PdfReportService extends AbstractReportService {
 
     private ComponentData getComponentData(int usablePageWidthPx, TbReportCtx ctx, ReportComponent component, EntityData stateEntity) {
         return switch (component.getType()) {
+            case TIME_SERIES_TABLE ->
+                    new ComponentData(usablePageWidthPx, fetchEntityTsData(ctx, (TimeseriesTableComponent) component, stateEntity));
             case ALARM_TABLE -> new ComponentData(usablePageWidthPx, fetchAlarmDatas(ctx, (AlarmTableComponent) component));
             case DASHBOARD -> buildDashboardComponentData(usablePageWidthPx, ctx, ((DashboardComponent) component), stateEntity);
             case IMAGE -> buildImageComponentData(usablePageWidthPx, ctx, ((ImageComponent) component));
@@ -224,52 +224,18 @@ public class PdfReportService extends AbstractReportService {
         if (ds.getDataKeys().isEmpty()) {
             return renderError(usablePageWidthPx, "At least one time series column should be specified for time series table");
         }
-        List<DataKey> latestDataKeys = ds.getLatestDataKeys();
-        DataKey entityNameField =
-                latestDataKeys.stream().filter(key -> key.getName().equals("name") && key.getType().equals("entityField")).findAny().orElse(null);
-        if (entityNameField == null) {
-            latestDataKeys = new ArrayList<>(latestDataKeys);
-            latestDataKeys.add(new DataKey("name", "entityField", "name"));
-        }
-
         DataSource latestDataSource = DataSource.builder()
                 .type(ds.getType())
                 .deviceId(ds.getDeviceId())
                 .entityAliasId(ds.getEntityAliasId())
                 .filterId(ds.getFilterId())
                 .sortOrder(ds.getSortOrder())
-                .dataKeys(latestDataKeys).build();
+                .dataKeys(ds.getLatestDataKeys()).build();
         List<EntityData> entityDatas = fetchEntities(ctx, latestDataSource, stateEntity);
-        boolean showTitle = entityDatas.size() > 1;
-        for (int i = 0; i < entityDatas.size(); i++) {
-            EntityData entity = entityDatas.get(i);
-            if (i > 0) {
-                content.append("<div style=\"padding-top: 24pt;\"></div>");
-            }
-            content.append(renderTimeseriesTable(usablePageWidthPx, ctx, component, entity, showTitle));
+        for (EntityData entity : entityDatas) {
+            content.append(renderComponent(usablePageWidthPx, ctx, component, entity));
         }
         return content.toString();
-    }
-
-    private String renderTimeseriesTable(int usablePageWidthPx, TbReportCtx ctx, ReportComponent component, EntityData entity, boolean showTitle) {
-        try {
-            ComponentData componentData = new ComponentData(usablePageWidthPx, fetchEntityTsData(ctx, (TimeseriesTableComponent) component, entity));
-            componentData.getVariables().put("showTitle", showTitle);
-            String title = "Time series table";
-            var entityFields = entity.getLatest().get(EntityKeyType.ENTITY_FIELD);
-            if (entityFields != null) {
-                var nameValue = entityFields.get("name");
-                if (nameValue != null) {
-                    title = nameValue.getValue();
-                }
-            }
-            componentData.getVariables().put("title", title);
-            return componentsRenderers.get(component.getType()).render(component, componentData);
-        }
-        catch (Exception e) {
-            log.error("Failed to render time series table component", e);
-            return renderError(usablePageWidthPx, "Failed to render time series table component", e);
-        }
     }
 
     private String renderDashboard(int usablePageWidthPx, TbReportCtx ctx, EntityData stateEntity, ReportComponent component) {
@@ -281,15 +247,6 @@ public class PdfReportService extends AbstractReportService {
             entityDatas.add(null);
         } else {
             DataSource dashboardDataSource = dataSource.get();
-            List<DataKey> dataKeys = dashboardDataSource.getDataKeys();
-            if (dataKeys == null) {
-                dataKeys = new ArrayList<>();
-                dashboardDataSource.setDataKeys(dataKeys);
-            }
-            DataKey entityNameDataKey = new DataKey();
-            entityNameDataKey.setType("entityField");
-            entityNameDataKey.setName("name");
-            dataKeys.add(entityNameDataKey);
             entityDatas = fetchEntities(ctx, dashboardDataSource, stateEntity);
         }
         for (EntityData entity : entityDatas) {

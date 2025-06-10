@@ -30,14 +30,10 @@
 ///
 
 import { Component, ViewEncapsulation } from '@angular/core';
-import {
-  AlarmTableReportComponentConfig,
-  EntityTableReportComponentConfig,
-  RichTextReportComponentConfig, TableReportColumnSettings
-} from '@shared/models/report-component.models';
-import { AbstractReportComponentPreview } from '@home/pages/report/components/report-component.component';
-import { DataKey, Datasource } from '@shared/models/widget.models';
+import { AlarmTableReportComponentConfig, TableReportColumnSettings } from '@shared/models/report-component.models';
+import { DataKey } from '@shared/models/widget.models';
 import { ComponentStyle, textStyle } from '@shared/models/widget-settings.models';
+import { AbstractReportTablePreviewComponent } from '@home/pages/report/components/report-table-preview.component';
 
 @Component({
   selector: 'tb-alarm-table-preview',
@@ -45,51 +41,14 @@ import { ComponentStyle, textStyle } from '@shared/models/widget-settings.models
   styleUrls: ['./report-table-preview.component.scss'],
   encapsulation: ViewEncapsulation.None
 })
-export class AlarmTablePreviewComponent extends AbstractReportComponentPreview<AlarmTableReportComponentConfig> {
+export class AlarmTablePreviewComponent extends AbstractReportTablePreviewComponent<AlarmTableReportComponentConfig> {
 
   get columns(): DataKey[] {
     return this.reportComponent.alarmSource.dataKeys;
   }
 
-  onComponentUpdated() {
-  }
-
-  headerStyle(column: DataKey): ComponentStyle {
-    return this.styleFromColumnSettings(column, true);
-  }
-
-  cellStyle(column: DataKey): ComponentStyle {
-    return this.styleFromColumnSettings(column);
-  }
-
-  columnWidth(column: DataKey): string {
-    if (column?.settings) {
-      const columnSettings: TableReportColumnSettings =  column.settings;
-      if (columnSettings?.columnWidth) {
-        return columnSettings?.columnWidth;
-      }
-    }
-    return null;
-  }
-
-  private styleFromColumnSettings(column: DataKey, header = false): ComponentStyle {
-    let style: ComponentStyle = {};
-    if (column?.settings) {
-      const columnSettings: TableReportColumnSettings =  column.settings;
-      if (columnSettings) {
-        const cellSettings = header ? columnSettings.header : columnSettings.cell;
-        if (cellSettings) {
-          if (cellSettings.font && cellSettings.font.sizeUnit !== 'pt') {
-            cellSettings.font.sizeUnit = 'pt';
-          }
-          style = textStyle(cellSettings.font);
-          style.textAlign = cellSettings.textAlignment;
-          style.verticalAlign = cellSettings.verticalAlignment;
-          style.color = cellSettings.color;
-          style.backgroundColor = cellSettings.backgroundColor;
-        }
-      }
-    }
+  protected styleFromColumnSettings(column: DataKey, header = false): ComponentStyle {
+    const style = super.styleFromColumnSettings(column, header);
     if (!header) {
       if ('createdTime' === column.name) {
         style.fontSize = style.fontSize || '9pt';

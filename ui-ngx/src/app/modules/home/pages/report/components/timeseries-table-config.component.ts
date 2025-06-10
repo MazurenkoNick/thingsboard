@@ -48,6 +48,7 @@ import {
   DynamicFormDialogData
 } from '@home/components/widget/lib/settings/common/dynamic-form/dynamic-form-dialog.component';
 import { TranslateService } from '@ngx-translate/core';
+import { merge } from 'rxjs';
 
 @Component({
   selector: 'tb-timeseries-table-config',
@@ -70,13 +71,15 @@ export class TimeseriesTableConfigComponent extends AbstractReportComponentConfi
     const form = this.fb.group({
       timewindow: [reportComponentConfig.timewindow, []],
       dataSources: [reportComponentConfig.dataSources, []],
+      showTableHeading: [reportComponentConfig.showTableHeading, []],
+      tableHeading: [reportComponentConfig.tableHeading, []],
       showTimestamp: [reportComponentConfig.showTimestamp, []],
       timestampLabel: [reportComponentConfig.timestampLabel, []],
       timestampPattern: [reportComponentConfig.timestampPattern, []],
       timestampColumnSettings: [reportComponentConfig.timestampColumnSettings, []],
       columns: [this.getColumns(reportComponentConfig.dataSources), []],
     });
-    form.get('showTimestamp').valueChanges.pipe(
+    merge(form.get('showTimestamp').valueChanges, form.get('showTableHeading').valueChanges).pipe(
       takeUntilDestroyed(this.destroyRef)
     ).subscribe(() => {
       this.updateValidators(form);
@@ -145,12 +148,18 @@ export class TimeseriesTableConfigComponent extends AbstractReportComponentConfi
 
   private updateValidators(form: FormGroup) {
     const showTimestamp: boolean = form.get('showTimestamp').value;
+    const showTableHeading: boolean = form.get('showTableHeading').value;
     if (showTimestamp) {
       form.get('timestampLabel').enable({emitEvent: false});
       form.get('timestampPattern').enable({emitEvent: false});
     } else {
       form.get('timestampLabel').disable({emitEvent: false});
       form.get('timestampPattern').disable({emitEvent: false});
+    }
+    if (showTableHeading) {
+      form.get('tableHeading').enable({emitEvent: false});
+    } else {
+      form.get('tableHeading').disable({emitEvent: false});
     }
   }
 

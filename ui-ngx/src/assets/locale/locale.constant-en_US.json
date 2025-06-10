@@ -7170,6 +7170,7 @@
                 "type": "Page break"
             },
             "table": {
+                "table-heading": "Table heading",
                 "column-settings": "Column settings",
                 "column-width": "Column width",
                 "header": "Header",

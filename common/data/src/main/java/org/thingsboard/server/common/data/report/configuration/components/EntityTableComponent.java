@@ -39,7 +39,7 @@ import lombok.NoArgsConstructor;
 @Data
 @EqualsAndHashCode
 @NoArgsConstructor
-public class EntityTableComponent extends AbstractReportComponent implements TableReportComponent {
+public class EntityTableComponent extends AbstractTableReportComponent {
 
     @Override
     public ReportComponentType getType() {

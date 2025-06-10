@@ -61,6 +61,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.thingsboard.server.common.data.report.configuration.timewindow.TimeIntervalCalculator.getTimeRange;
+import static org.thingsboard.server.common.data.util.DataSourceUtils.setEntityKeyIfNotExists;
 
 public class ReportQueryUtils {
 
@@ -105,6 +106,9 @@ public class ReportQueryUtils {
 
         List<EntityKey> entityFields = alarmSource.getDataKeys().stream().filter(dataKey -> "entityField".equals(dataKey.getType())).map(dataKey ->
                 new EntityKey(EntityKeyType.ENTITY_FIELD, dataKey.getName())).toList();
+
+        entityFields = setEntityKeyIfNotExists(entityFields, EntityKeyType.ENTITY_FIELD, "name");
+        entityFields = setEntityKeyIfNotExists(entityFields, EntityKeyType.ENTITY_FIELD, "label");
 
         List<EntityKey> attrFields = alarmSource.getDataKeys().stream().filter(dataKey -> "attribute".equals(dataKey.getType())).map(dataKey ->
                 new EntityKey(EntityKeyType.ATTRIBUTE, dataKey.getName())).toList();
@@ -174,19 +178,23 @@ public class ReportQueryUtils {
 
         List<EntityKey> entityFields = new ArrayList<>();
         List<EntityKey> latestValues = new ArrayList<>();
-        for (DataKey dataKey : dataSource.getDataKeys()) {
-            switch (dataKey.getType()) {
-                case "attribute" -> {
-                    latestValues.add(new EntityKey(EntityKeyType.ATTRIBUTE, dataKey.getName()));
-                }
-                case "timeseries" -> {
-                    latestValues.add(new EntityKey(EntityKeyType.TIME_SERIES, dataKey.getName()));
-                }
-                case "entityField" -> {
-                    entityFields.add(new EntityKey(EntityKeyType.ENTITY_FIELD, dataKey.getName()));
+        if (dataSource.getDataKeys() != null) {
+            for (DataKey dataKey : dataSource.getDataKeys()) {
+                switch (dataKey.getType()) {
+                    case "attribute" -> {
+                        latestValues.add(new EntityKey(EntityKeyType.ATTRIBUTE, dataKey.getName()));
+                    }
+                    case "timeseries" -> {
+                        latestValues.add(new EntityKey(EntityKeyType.TIME_SERIES, dataKey.getName()));
+                    }
+                    case "entityField" -> {
+                        entityFields.add(new EntityKey(EntityKeyType.ENTITY_FIELD, dataKey.getName()));
+                    }
                 }
             }
         }
+        entityFields = setEntityKeyIfNotExists(entityFields, EntityKeyType.ENTITY_FIELD, "name");
+        entityFields = setEntityKeyIfNotExists(entityFields, EntityKeyType.ENTITY_FIELD, "label");
         return new EntityDataQuery(filter, entityDataPageLink, entityFields, latestValues, keyFilters);
     }
 
