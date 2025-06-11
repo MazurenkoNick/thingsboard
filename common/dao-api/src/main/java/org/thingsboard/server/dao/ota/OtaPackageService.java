@@ -58,6 +58,8 @@ public interface OtaPackageService extends EntityDaoService {
 
     OtaPackageInfo findOtaPackageInfoById(TenantId tenantId, OtaPackageId otaPackageId);
 
+    OtaPackage findOtaPackageByTenantIdAndTitle(TenantId tenantId, OtaPackageType type, String title);
+
     ListenableFuture<OtaPackageInfo> findOtaPackageInfoByIdAsync(TenantId tenantId, OtaPackageId otaPackageId);
 
     PageData<OtaPackageInfo> findTenantOtaPackagesByTenantId(TenantId tenantId, PageLink pageLink);
@@ -73,4 +75,5 @@ public interface OtaPackageService extends EntityDaoService {
     PageData<OtaPackageInfo> findOtaPackageInfosByGroupIdAndHasData(EntityGroupId deviceGroupId, OtaPackageType type, PageLink pageLink);
 
     long sumDataSizeByTenantId(TenantId tenantId);
+
 }

@@ -28,20 +28,25 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.dao.ota;
+package org.thingsboard.server.common.data.sync.ie;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import lombok.EqualsAndHashCode;
 import org.thingsboard.server.common.data.OtaPackage;
-import org.thingsboard.server.common.data.id.OtaPackageId;
-import org.thingsboard.server.common.data.id.TenantId;
-import org.thingsboard.server.common.data.ota.OtaPackageType;
-import org.thingsboard.server.dao.Dao;
-import org.thingsboard.server.dao.ExportableEntityDao;
-import org.thingsboard.server.dao.TenantEntityWithDataDao;
 
-public interface OtaPackageDao extends Dao<OtaPackage>, TenantEntityWithDataDao, ExportableEntityDao<OtaPackageId, OtaPackage> {
+@EqualsAndHashCode(callSuper = true)
+public class OtaPackageExportData extends EntityExportData<OtaPackage> {
 
-    Long sumDataSizeByTenantId(TenantId tenantId);
+    @JsonIgnoreProperties(value = {"tenantId", "createdTime"}, ignoreUnknown = true)
+    @Override
+    public OtaPackage getEntity() {
+        return super.getEntity();
+    }
 
-    OtaPackage findOtaPackageByTenantIdAndTitle(TenantId tenantId, OtaPackageType type, String title);
+    @JsonIgnoreProperties(value = {"tenantId", "createdTime"}, ignoreUnknown = true)
+    @Override
+    public void setEntity(OtaPackage entity) {
+        super.setEntity(entity);
+    }
 
 }

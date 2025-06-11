@@ -28,20 +28,37 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.dao.ota;
+package org.thingsboard.server.service.sync.ie.exporting.impl;
 
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.OtaPackage;
 import org.thingsboard.server.common.data.id.OtaPackageId;
-import org.thingsboard.server.common.data.id.TenantId;
-import org.thingsboard.server.common.data.ota.OtaPackageType;
-import org.thingsboard.server.dao.Dao;
-import org.thingsboard.server.dao.ExportableEntityDao;
-import org.thingsboard.server.dao.TenantEntityWithDataDao;
+import org.thingsboard.server.common.data.sync.ie.OtaPackageExportData;
+import org.thingsboard.server.queue.util.TbCoreComponent;
+import org.thingsboard.server.service.sync.vc.data.EntitiesExportCtx;
 
-public interface OtaPackageDao extends Dao<OtaPackage>, TenantEntityWithDataDao, ExportableEntityDao<OtaPackageId, OtaPackage> {
+import java.util.Set;
 
-    Long sumDataSizeByTenantId(TenantId tenantId);
+@Service
+@TbCoreComponent
+@RequiredArgsConstructor
+public class OtaPackageExportService extends BaseEntityExportService<OtaPackageId, OtaPackage, OtaPackageExportData> {
 
-    OtaPackage findOtaPackageByTenantIdAndTitle(TenantId tenantId, OtaPackageType type, String title);
+    @Override
+    protected void setRelatedEntities(EntitiesExportCtx<?> ctx, OtaPackage otaPackage, OtaPackageExportData exportData) {
+        otaPackage.setDeviceProfileId(getExternalIdOrElseInternal(ctx, otaPackage.getDeviceProfileId()));
+    }
+
+    @Override
+    protected OtaPackageExportData newExportData() {
+        return new OtaPackageExportData();
+    }
+
+    @Override
+    public Set<EntityType> getSupportedEntityTypes() {
+        return Set.of(EntityType.OTA_PACKAGE);
+    }
 
 }
