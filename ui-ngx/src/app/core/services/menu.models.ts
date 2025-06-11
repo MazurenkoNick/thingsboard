@@ -880,8 +880,7 @@ export const menuSectionMap = new Map<MenuId, MenuSection>([
       name: 'solution-template.solution-templates',
       type: 'link',
       path: '/solutionTemplates',
-      icon: 'apps',
-      isNew: true
+      icon: 'apps'
     }
   ],
   [
@@ -1207,7 +1206,8 @@ export const menuSectionMap = new Map<MenuId, MenuSection>([
       name: 'report.reporting',
       type: 'toggle',
       path: '/reporting',
-      icon: 'mdi:chart-box-multiple'
+      icon: 'mdi:chart-box-multiple',
+      isNew: true
     }
   ],
   [
