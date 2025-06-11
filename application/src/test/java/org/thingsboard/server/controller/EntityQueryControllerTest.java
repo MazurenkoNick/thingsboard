@@ -383,7 +383,7 @@ public class EntityQueryControllerTest extends AbstractControllerTest {
 
     @Test
     public void testCustomerCountAlarmsWithEntityFilter() throws Exception {
-        loginTenantAdmin();
+        loginCustomerAdminUser();
         List<Device> devices = new ArrayList<>();
         for (int i = 0; i < 10; i++) {
             Device device = new Device();
@@ -405,8 +405,6 @@ public class EntityQueryControllerTest extends AbstractControllerTest {
             assets.add(doPost("/api/asset", asset, Asset.class));
             Thread.sleep(1);
         }
-
-        loginCustomerUser();
 
         for (int i = 0; i < devices.size(); i++) {
             Alarm alarm = new Alarm();
@@ -517,7 +515,7 @@ public class EntityQueryControllerTest extends AbstractControllerTest {
 
     @Test
     public void testFindCustomerAlarmsWithEntityFilter() throws Exception {
-        loginTenantAdmin();
+        loginCustomerAdminUser();
         List<Device> devices = new ArrayList<>();
         for (int i = 0; i < 10; i++) {
             Device device = new Device();
@@ -539,8 +537,6 @@ public class EntityQueryControllerTest extends AbstractControllerTest {
             assets.add(doPost("/api/asset", asset, Asset.class));
             Thread.sleep(1);
         }
-
-        loginCustomerUser();
 
         for (int i = 0; i < devices.size(); i++) {
             Alarm alarm = new Alarm();
