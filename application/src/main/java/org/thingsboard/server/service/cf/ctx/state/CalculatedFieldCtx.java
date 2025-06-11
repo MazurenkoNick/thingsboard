@@ -78,7 +78,7 @@ public class CalculatedFieldCtx {
     private final List<String> argNames;
     private Output output;
     private String expression;
-    private boolean preserveMsgTs;
+    private boolean useLatestTs;
     private TbelInvokeService tbelInvokeService;
     private CalculatedFieldScriptEngine calculatedFieldScriptEngine;
     private ThreadLocal<Expression> customExpression;
@@ -115,7 +115,7 @@ public class CalculatedFieldCtx {
         this.argNames = new ArrayList<>(arguments.keySet());
         this.output = configuration.getOutput();
         this.expression = configuration.getExpression();
-        this.preserveMsgTs = CalculatedFieldType.SIMPLE.equals(calculatedField.getType()) && ((SimpleCalculatedFieldConfiguration) configuration).isPreserveMsgTs();
+        this.useLatestTs = CalculatedFieldType.SIMPLE.equals(calculatedField.getType()) && ((SimpleCalculatedFieldConfiguration) configuration).isUseLatestTs();
         this.tbelInvokeService = tbelInvokeService;
 
         this.maxDataPointsPerRollingArg = apiLimitService.getLimit(tenantId, DefaultTenantProfileConfiguration::getMaxDataPointsPerRollingArg);
@@ -281,6 +281,25 @@ public class CalculatedFieldCtx {
         return map != null && matchesTimeSeriesKeys(map, keys);
     }
 
+    public boolean dynamicSourceMatches(CalculatedFieldTelemetryMsgProto proto) {
+        if (!proto.getTsDataList().isEmpty()) {
+            List<TsKvEntry> updatedTelemetry = proto.getTsDataList().stream()
+                    .map(ProtoUtils::fromProto)
+                    .toList();
+            return dynamicSourceMatches(updatedTelemetry);
+        } else if (!proto.getAttrDataList().isEmpty()) {
+            AttributeScope scope = AttributeScope.valueOf(proto.getScope().name());
+            List<AttributeKvEntry> updatedTelemetry = proto.getAttrDataList().stream()
+                    .map(ProtoUtils::fromProto)
+                    .toList();
+            return dynamicSourceMatches(updatedTelemetry, scope);
+        } else if (!proto.getRemovedTsKeysList().isEmpty()) {
+            return matchesDynamicSourceKeys(proto.getRemovedTsKeysList());
+        } else {
+            return matchesDynamicSourceKeys(proto.getRemovedAttrKeysList(), AttributeScope.valueOf(proto.getScope().name()));
+        }
+    }
+
     public boolean linkMatches(EntityId entityId, CalculatedFieldTelemetryMsgProto proto) {
         if (!proto.getTsDataList().isEmpty()) {
             List<TsKvEntry> updatedTelemetry = proto.getTsDataList().stream()
@@ -298,6 +317,18 @@ public class CalculatedFieldCtx {
         } else {
             return linkMatchesAttrKeys(entityId, proto.getRemovedAttrKeysList(), AttributeScope.valueOf(proto.getScope().name()));
         }
+    }
+
+    public Map<ReferencedEntityKey, String> getLinkedAndDynamicArgs(EntityId entityId) {
+        var argNames = new HashMap<ReferencedEntityKey, String>();
+        var linkedArgNames = linkedEntityArguments.get(entityId);
+        if (linkedArgNames != null && !linkedArgNames.isEmpty()) {
+            argNames.putAll(linkedArgNames);
+        }
+        if (dynamicEntityArguments != null && !dynamicEntityArguments.isEmpty()) {
+            argNames.putAll(dynamicEntityArguments);
+        }
+        return argNames;
     }
 
     public CalculatedFieldEntityCtxId toCalculatedFieldEntityCtxId() {

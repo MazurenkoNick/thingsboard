@@ -546,9 +546,6 @@ public abstract class BaseController {
     }
 
     private ThingsboardException handleException(Throwable exception, boolean logException) {
-        if (exception instanceof ExecutionException) {
-            exception = exception.getCause();
-        }
         if (logException && logControllerErrorStackTrace) {
             try {
                 SecurityUser user = getCurrentUser();
@@ -563,6 +560,9 @@ public abstract class BaseController {
         }
 
         Throwable cause = exception.getCause();
+        if (exception instanceof ExecutionException) {
+            exception = cause;
+        }
         if (exception instanceof ThingsboardException) {
             return (ThingsboardException) exception;
         } else if (exception instanceof IllegalArgumentException || exception instanceof IncorrectParameterException
