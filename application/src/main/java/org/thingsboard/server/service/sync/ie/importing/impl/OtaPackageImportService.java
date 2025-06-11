@@ -63,7 +63,7 @@ public class OtaPackageImportService extends BaseEntityImportService<OtaPackageI
     protected OtaPackage findExistingEntity(EntitiesImportCtx ctx, OtaPackage otaPackage, IdProvider idProvider) {
         OtaPackage existingOtaPackage = super.findExistingEntity(ctx, otaPackage, idProvider);
         if (existingOtaPackage == null && ctx.isFindExistingByName()) {
-            existingOtaPackage = otaPackageService.findOtaPackageByTenantIdAndTitle(ctx.getTenantId(), otaPackage.getType(), otaPackage.getTitle());
+            existingOtaPackage = otaPackageService.findOtaPackageByTenantIdAndTitleAndVersion(ctx.getTenantId(), otaPackage.getTitle(), otaPackage.getVersion());
         }
         return existingOtaPackage;
     }
@@ -71,11 +71,6 @@ public class OtaPackageImportService extends BaseEntityImportService<OtaPackageI
     @Override
     protected OtaPackage deepCopy(OtaPackage otaPackage) {
         return new OtaPackage(otaPackage);
-    }
-
-    @Override
-    protected void cleanupForComparison(OtaPackage otaPackage) {
-        super.cleanupForComparison(otaPackage);
     }
 
     @Override
