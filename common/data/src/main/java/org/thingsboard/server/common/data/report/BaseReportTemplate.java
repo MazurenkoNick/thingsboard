@@ -32,6 +32,7 @@ package org.thingsboard.server.common.data.report;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotNull;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -71,6 +72,9 @@ public class BaseReportTemplate extends BaseData<ReportTemplateId> implements Ha
     @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Report name", example = "Weekly Report")
     private String name;
 
+    @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Report format", allowableValues = {"PDF, CSV"})
+    private TbReportFormat format;
+
     @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Report template type", allowableValues = {"REPORT, SUB_REPORT"})
     private ReportTemplateType type;
 
@@ -78,9 +82,6 @@ public class BaseReportTemplate extends BaseData<ReportTemplateId> implements Ha
     @Length(fieldName = "description", max = 1024)
     @Schema(description = "Description")
     private String description;
-
-    @Schema(description = "Scheduler event id")
-    private SchedulerEventId schedulerEventId; // fixme: should not be here. scheduler event must reference template, not the other way
 
     private ReportTemplateId externalId; // fixme: add version control support
 
@@ -99,9 +100,9 @@ public class BaseReportTemplate extends BaseData<ReportTemplateId> implements Ha
         this.tenantId = reportTemplate.getTenantId();
         this.customerId = reportTemplate.getCustomerId();
         this.name = reportTemplate.getName();
+        this.format = reportTemplate.getFormat();
         this.type = reportTemplate.getType();
         this.description = reportTemplate.getDescription();
-        this.schedulerEventId = reportTemplate.getSchedulerEventId();
         this.externalId = reportTemplate.getExternalId();
         this.version = reportTemplate.getVersion();
     }

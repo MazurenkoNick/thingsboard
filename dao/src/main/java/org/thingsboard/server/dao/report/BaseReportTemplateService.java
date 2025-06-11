@@ -50,7 +50,6 @@ import org.thingsboard.server.dao.entity.EntityCountService;
 import org.thingsboard.server.dao.eventsourcing.DeleteEntityEvent;
 import org.thingsboard.server.dao.eventsourcing.SaveEntityEvent;
 import org.thingsboard.server.dao.exception.IncorrectParameterException;
-import org.thingsboard.server.dao.scheduler.SchedulerEventService;
 import org.thingsboard.server.dao.service.DataValidator;
 import org.thingsboard.server.dao.service.PaginatedRemover;
 
@@ -75,7 +74,6 @@ public class BaseReportTemplateService extends AbstractEntityService implements 
     private final ReportTemplateInfoDao reportTemplateInfoDao;
     private final DataValidator<ReportTemplate> reportTemplateDataValidator;
     private final EntityCountService countService;
-    private final SchedulerEventService schedulerEventService;
 
     @Override
     public ReportTemplate findReportTemplateById(TenantId tenantId, ReportTemplateId reportTemplateId) {
@@ -140,9 +138,6 @@ public class BaseReportTemplateService extends AbstractEntityService implements 
 
     private void deleteReportTemplate(TenantId tenantId, BaseReportTemplate reportTemplate) {
         log.trace("Executing deleteReportTemplate, tenantId [{}], reportTemplateId [{}]", tenantId, reportTemplate.getId());
-        if (reportTemplate.getSchedulerEventId() != null && !reportTemplate.getSchedulerEventId().isNullUid()) {
-            schedulerEventService.deleteSchedulerEvent(tenantId, reportTemplate.getSchedulerEventId());
-        }
         reportTemplateDao.removeById(tenantId, reportTemplate.getUuidId());
         eventPublisher.publishEvent(DeleteEntityEvent.builder().tenantId(tenantId).entityId(reportTemplate.getId()).entity(reportTemplate).build());
     }

@@ -39,6 +39,9 @@ import { TranslateService } from '@ngx-translate/core';
 import { EntityTableConfig } from '@home/models/entity/entities-table-config.models';
 import { MatDialog } from '@angular/material/dialog';
 import {
+  CsvReportTemplateConfig, defaultCsvReportTemplateConfig,
+  defaultPdfReportTemplateConfig,
+  PdfReportTemplateConfig,
   reportFormats,
   ReportTemplate,
   ReportTemplateType,
@@ -48,6 +51,7 @@ import {
 } from '@shared/models/report.models';
 import { startWith } from 'rxjs/operators';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { mergeDeep } from '@core/utils';
 
 @Component({
   selector: 'tb-report-template-form',
@@ -96,10 +100,8 @@ export class ReportTemplateFormComponent extends EntityComponent<ReportTemplate>
     const form = this.fb.group(
       {
         name: [entity ? entity.name : '', [Validators.required, Validators.maxLength(255)]],
-        configuration: this.fb.group({
-          format: [entity ? entity.configuration?.format : TbReportFormat.PDF, [Validators.required]]
-        }),
-        type: [entity ? entity.type : ReportTemplateType.REPORT, [Validators.required]],
+        format: [entity?.format ? entity.format : TbReportFormat.PDF, [Validators.required]],
+        type: [entity?.type ? entity.type : ReportTemplateType.REPORT, [Validators.required]],
         description: [entity?.description]
       }
     );
@@ -108,7 +110,7 @@ export class ReportTemplateFormComponent extends EntityComponent<ReportTemplate>
 
   updateForm(entity: ReportTemplate) {
     this.entityForm.patchValue({name: entity.name});
-    this.entityForm.get('configuration').patchValue({format: entity.configuration.format});
+    this.entityForm.patchValue({format: entity.format});
     this.entityForm.patchValue({type: entity.type});
     this.entityForm.patchValue({description: entity.description});
   }
@@ -117,8 +119,19 @@ export class ReportTemplateFormComponent extends EntityComponent<ReportTemplate>
     super.updateFormState();
     if (this.isEdit && this.entityForm && !this.isAdd) {
       this.entityForm.get('type').disable({ emitEvent: false });
-      this.entityForm.get('configuration').disable({ emitEvent: false });
+      this.entityForm.get('format').disable({ emitEvent: false });
     }
+  }
+
+  override prepareFormValue(value: ReportTemplate): ReportTemplate {
+    if (this.isAdd) {
+      if (value.format === TbReportFormat.PDF) {
+        value.configuration = mergeDeep({} as PdfReportTemplateConfig, defaultPdfReportTemplateConfig);
+      } else {
+        value.configuration = mergeDeep({} as CsvReportTemplateConfig, defaultCsvReportTemplateConfig);
+      }
+    }
+    return super.prepareFormValue(value);
   }
 
   onReportTemplateIdCopied() {
@@ -133,7 +146,7 @@ export class ReportTemplateFormComponent extends EntityComponent<ReportTemplate>
   }
 
   private observeReportTemplateFormatChange(): void {
-    this.entityForm.get('configuration').get('format').valueChanges.pipe(
+    this.entityForm.get('format').valueChanges.pipe(
       startWith(TbReportFormat.PDF),
       takeUntilDestroyed(this.destroyRef)
     ).subscribe((format: TbReportFormat) => this.onReportFormatChanged(format));

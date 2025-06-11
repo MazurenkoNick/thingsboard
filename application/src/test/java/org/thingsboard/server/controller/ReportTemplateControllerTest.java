@@ -45,6 +45,7 @@ import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.report.ReportTemplate;
 import org.thingsboard.server.common.data.report.ReportTemplateInfo;
 import org.thingsboard.server.common.data.report.ReportTemplateType;
+import org.thingsboard.server.common.data.report.TbReportFormat;
 import org.thingsboard.server.common.data.report.configuration.PdfReportTemplateConfig;
 import org.thingsboard.server.common.data.security.Authority;
 import org.thingsboard.server.dao.service.DaoSqlTest;
@@ -95,6 +96,7 @@ public class ReportTemplateControllerTest extends AbstractControllerTest {
     public void testSaveReportTemplate() throws Exception {
         ReportTemplate reportTemplate = new ReportTemplate();
         reportTemplate.setName("My report");
+        reportTemplate.setFormat(TbReportFormat.PDF);
         reportTemplate.setType(ReportTemplateType.REPORT);
         reportTemplate.setDescription("My report");
         reportTemplate.setConfiguration(new PdfReportTemplateConfig());
@@ -132,6 +134,7 @@ public class ReportTemplateControllerTest extends AbstractControllerTest {
     public void testSaveReportTemplateWithViolationOfLengthValidation() throws Exception {
         ReportTemplate reportTemplate = new ReportTemplate();
         reportTemplate.setName(StringUtils.randomAlphabetic(300));
+        reportTemplate.setFormat(TbReportFormat.PDF);
         reportTemplate.setType(ReportTemplateType.REPORT);
         reportTemplate.setConfiguration(new PdfReportTemplateConfig());
 
@@ -161,6 +164,7 @@ public class ReportTemplateControllerTest extends AbstractControllerTest {
     public void testUpdateReportTemplateFromDifferentTenant() throws Exception {
         ReportTemplate reportTemplate = new ReportTemplate();
         reportTemplate.setName("My report");
+        reportTemplate.setFormat(TbReportFormat.PDF);
         reportTemplate.setType(ReportTemplateType.REPORT);
         reportTemplate.setConfiguration(new PdfReportTemplateConfig());
         ReportTemplate savedReportTemplate = doPost("/api/reportTemplate", reportTemplate, ReportTemplate.class);
@@ -189,6 +193,7 @@ public class ReportTemplateControllerTest extends AbstractControllerTest {
     public void testFindReportTemplateById() throws Exception {
         ReportTemplate reportTemplate = new ReportTemplate();
         reportTemplate.setName("My report");
+        reportTemplate.setFormat(TbReportFormat.PDF);
         reportTemplate.setType(ReportTemplateType.REPORT);
         reportTemplate.setConfiguration(new PdfReportTemplateConfig());
         ReportTemplate savedReportTemplate = doPost("/api/reportTemplate", reportTemplate, ReportTemplate.class);
@@ -201,6 +206,7 @@ public class ReportTemplateControllerTest extends AbstractControllerTest {
     public void testDeleteReportTemplate() throws Exception {
         ReportTemplate reportTemplate = new ReportTemplate();
         reportTemplate.setName("My report");
+        reportTemplate.setFormat(TbReportFormat.PDF);
         reportTemplate.setType(ReportTemplateType.REPORT);
         reportTemplate.setConfiguration(new PdfReportTemplateConfig());
         ReportTemplate savedReportTemplate = doPost("/api/reportTemplate", reportTemplate, ReportTemplate.class);
@@ -223,6 +229,7 @@ public class ReportTemplateControllerTest extends AbstractControllerTest {
     @Test
     public void testSaveReportTemplateWithEmptyName() throws Exception {
         ReportTemplate reportTemplate = new ReportTemplate();
+        reportTemplate.setFormat(TbReportFormat.PDF);
         reportTemplate.setType(ReportTemplateType.REPORT);
         reportTemplate.setConfiguration(new PdfReportTemplateConfig());
 
@@ -238,9 +245,28 @@ public class ReportTemplateControllerTest extends AbstractControllerTest {
     }
 
     @Test
+    public void testSaveReportTemplateWithEmptyFormat() throws Exception {
+        ReportTemplate reportTemplate = new ReportTemplate();
+        reportTemplate.setName("My report");
+        reportTemplate.setType(ReportTemplateType.REPORT);
+        reportTemplate.setConfiguration(new PdfReportTemplateConfig());
+
+        Mockito.reset(tbClusterService, auditLogService);
+
+        String msgError = "Report template format " + msgErrorShouldBeSpecified;
+        doPost("/api/reportTemplate", reportTemplate)
+                .andExpect(status().isBadRequest())
+                .andExpect(statusReason(containsString(msgError)));
+
+        testNotifyEntityEqualsOneTimeServiceNeverError(reportTemplate, savedTenant.getId(),
+                tenantAdmin.getId(), tenantAdmin.getEmail(), ActionType.ADDED, new DataValidationException(msgError));
+    }
+
+    @Test
     public void testSaveReportTemplateWithEmptyType() throws Exception {
         ReportTemplate reportTemplate = new ReportTemplate();
         reportTemplate.setName("My report");
+        reportTemplate.setFormat(TbReportFormat.PDF);
         reportTemplate.setConfiguration(new PdfReportTemplateConfig());
 
         Mockito.reset(tbClusterService, auditLogService);
@@ -264,6 +290,7 @@ public class ReportTemplateControllerTest extends AbstractControllerTest {
         for (int i = 0; i < cntEntity; i++) {
             ReportTemplate reportTemplate = new ReportTemplate();
             reportTemplate.setName("ReportTemplate" + i);
+            reportTemplate.setFormat(TbReportFormat.PDF);
             reportTemplate.setType(ReportTemplateType.REPORT);
             reportTemplate.setConfiguration(new PdfReportTemplateConfig());
             reportTemplates.add(new ReportTemplateInfo(doPost("/api/reportTemplate", reportTemplate, ReportTemplate.class)));
@@ -301,6 +328,7 @@ public class ReportTemplateControllerTest extends AbstractControllerTest {
             String name = title1 + suffix;
             name = i % 2 == 0 ? name.toLowerCase() : name.toUpperCase();
             reportTemplate.setName(name);
+            reportTemplate.setFormat(TbReportFormat.PDF);
             reportTemplate.setType(ReportTemplateType.REPORT);
             reportTemplate.setConfiguration(new PdfReportTemplateConfig());
             reportTemplatesTitle1.add(new ReportTemplateInfo(doPost("/api/reportTemplate", reportTemplate, ReportTemplate.class)));
@@ -313,6 +341,7 @@ public class ReportTemplateControllerTest extends AbstractControllerTest {
             String name = title2 + suffix;
             name = i % 2 == 0 ? name.toLowerCase() : name.toUpperCase();
             reportTemplate.setName(name);
+            reportTemplate.setFormat(TbReportFormat.PDF);
             reportTemplate.setType(ReportTemplateType.REPORT);
             reportTemplate.setConfiguration(new PdfReportTemplateConfig());
             reportTemplatesTitle2.add(new ReportTemplateInfo(doPost("/api/reportTemplate", reportTemplate, ReportTemplate.class)));

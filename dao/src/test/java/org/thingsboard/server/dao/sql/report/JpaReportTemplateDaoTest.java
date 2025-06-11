@@ -39,6 +39,7 @@ import org.thingsboard.server.common.data.id.SchedulerEventId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.report.ReportTemplate;
 import org.thingsboard.server.common.data.report.configuration.PdfReportTemplateConfig;
+import org.thingsboard.server.common.data.report.configuration.ReportTemplateConfig;
 import org.thingsboard.server.dao.AbstractJpaDaoTest;
 import org.thingsboard.server.dao.report.ReportTemplateDao;
 
@@ -59,20 +60,18 @@ public class JpaReportTemplateDaoTest extends AbstractJpaDaoTest {
     }
 
     private ReportTemplate saveReportTemplate(UUID id, UUID tenantId, UUID customerId, String name) {
-        return saveReportTemplate(id, tenantId, customerId, name, new PdfReportTemplateConfig(), null, null);
+        return saveReportTemplate(id, tenantId, customerId, name, new PdfReportTemplateConfig(), null);
     }
 
-    private ReportTemplate saveReportTemplate(UUID id, UUID tenantId, UUID customerId, String name, PdfReportTemplateConfig configuration, String description, UUID schedulerEventId) {
+    private ReportTemplate saveReportTemplate(UUID id, UUID tenantId, UUID customerId, String name, ReportTemplateConfig configuration, String description) {
         ReportTemplate reportTemplate = new ReportTemplate();
         reportTemplate.setId(new ReportTemplateId(id));
         reportTemplate.setTenantId(TenantId.fromUUID(tenantId));
         reportTemplate.setCustomerId(new CustomerId(customerId));
         reportTemplate.setName(name);
+        reportTemplate.setFormat(configuration.getFormat());
         reportTemplate.setConfiguration(configuration);
         reportTemplate.setDescription(description);
-        if (schedulerEventId != null) {
-            reportTemplate.setSchedulerEventId(new SchedulerEventId(schedulerEventId));
-        }
         return reportTemplateDao.save(TenantId.fromUUID(tenantId), reportTemplate);
     }
 }

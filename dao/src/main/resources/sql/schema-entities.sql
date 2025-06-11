@@ -1210,14 +1210,13 @@ CREATE TABLE IF NOT EXISTS report_template (
     tenant_id uuid,
     customer_id uuid,
     name varchar(255),
+    format varchar,
     type varchar(255),
     description varchar(1024),
     configuration varchar(10000000),
-    scheduler_event_id uuid UNIQUE,
     external_id uuid,
     version BIGINT DEFAULT 1,
-    CONSTRAINT report_template_external_id_unq_key UNIQUE (tenant_id, external_id),
-    CONSTRAINT fk_report_template_scheduler_event FOREIGN KEY (scheduler_event_id) REFERENCES scheduler_event(id) ON DELETE SET NULL
+    CONSTRAINT report_template_external_id_unq_key UNIQUE (tenant_id, external_id)
 );
 
 CREATE TABLE IF NOT EXISTS report (

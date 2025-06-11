@@ -44,7 +44,11 @@ import {
   keyFilterInfosToKeyFilters,
   keyFiltersToKeyFilterInfos
 } from '@shared/models/query/query.models';
-import { ReportComponentConfig, TableReportComponentConfig } from '@shared/models/report-component.models';
+import {
+  ReportComponentConfig,
+  ReportComponentType,
+  TableReportComponentConfig
+} from '@shared/models/report-component.models';
 import { ReportId } from '@shared/models/id/report-id';
 import { UserId } from '@shared/models/id/user-id';
 
@@ -74,6 +78,7 @@ export interface BaseReportTemplate extends BaseData<ReportTemplateId>, HasTenan
   tenantId?: TenantId;
   customerId?: CustomerId;
   name: string;
+  format: TbReportFormat;
   type: ReportTemplateType;
   description?: string;
   schedulerEventId?: SchedulerEventId;
@@ -234,6 +239,7 @@ export interface PdfReportTemplateConfig extends AbstractReportTemplateConfig {
   header: HeaderFooter;
   footer: HeaderFooter;
   components: ReportComponentConfig[];
+  format: TbReportFormat.PDF;
 }
 
 export interface PdfReportTemplateSettings extends ReportTemplateSettings {
@@ -247,6 +253,7 @@ export interface CsvReportTemplateConfig extends AbstractReportTemplateConfig {
   entityAlias: EntityAlias;
   filter: ReportFilter;
   component: TableReportComponentConfig;
+  format: TbReportFormat.CSV;
 }
 
 export interface ReportTemplate<Config extends ReportTemplateConfig = ReportTemplateConfig> extends BaseReportTemplate {
@@ -286,40 +293,55 @@ export interface ReportRequest {
   userId?: string;
 }
 
-export const defaultReportTemplate: ReportTemplate<PdfReportTemplateConfig> = {
-  name: '',
-  type: ReportTemplateType.REPORT,
-  configuration: {
-    format: TbReportFormat.PDF,
-    namePattern: 'report-%d{yyyy-MM-dd_HH:mm:ss}',
-    timeDataPattern: 'yyyy-MM-dd HH:mm:ss',
-    pageSize: PageSize.A4,
-    pageOrientation: PageOrientation.PORTRAIT,
-    pageMargins: {
-      left: 20,
-      right: 20,
-      top: 20,
-      bottom: 20
-    },
-    pageBackground: '#fff',
-    header: {
-      enabled: true,
-      components: []
-    },
-    footer: {
-      enabled: true,
-      components: []
-    },
-    entityAliases: [],
-    filters: [],
+export const defaultPdfReportTemplateConfig: PdfReportTemplateConfig = {
+  format: TbReportFormat.PDF,
+  namePattern: 'report-%d{yyyy-MM-dd_HH:mm:ss}',
+  timeDataPattern: 'yyyy-MM-dd HH:mm:ss',
+  pageSize: PageSize.A4,
+  pageOrientation: PageOrientation.PORTRAIT,
+  pageMargins: {
+    left: 20,
+    right: 20,
+    top: 20,
+    bottom: 20
+  },
+  pageBackground: '#fff',
+  header: {
+    enabled: true,
     components: []
-  } as PdfReportTemplateConfig
+  },
+  footer: {
+    enabled: true,
+    components: []
+  },
+  entityAliases: [],
+  filters: [],
+  components: []
+};
+
+export const defaultCsvReportTemplateConfig: CsvReportTemplateConfig = {
+  format: TbReportFormat.CSV,
+  namePattern: 'report-%d{yyyy-MM-dd_HH:mm:ss}',
+  timeDataPattern: 'yyyy-MM-dd HH:mm:ss',
+  component: {
+    type: ReportComponentType.TIME_SERIES_TABLE,
+    showTableHeading: true,
+    dataSources: [],
+    tableHeading: {
+      text: '${entityName}'
+    }
+  },
+  entityAlias: null,
+  filter: null
 };
 
 export const validateAndUpdateReportTemplate =
   <Config extends ReportTemplateConfig>(reportTemplate: ReportTemplate<Config>): ReportTemplate<Config> => {
+  if (!reportTemplate.format) {
+    reportTemplate.format = TbReportFormat.PDF;
+  }
   if (!reportTemplate.configuration.format) {
-    reportTemplate.configuration.format = TbReportFormat.PDF;
+    reportTemplate.configuration.format = reportTemplate.format;
   }
   if (reportTemplate.configuration.format === TbReportFormat.PDF) {
     const configuration = reportTemplate.configuration as any as PdfReportTemplateConfig;

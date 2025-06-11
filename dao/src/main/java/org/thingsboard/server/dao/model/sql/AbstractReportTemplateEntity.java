@@ -43,10 +43,13 @@ import org.thingsboard.server.common.data.id.SchedulerEventId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.report.BaseReportTemplate;
 import org.thingsboard.server.common.data.report.ReportTemplateType;
+import org.thingsboard.server.common.data.report.TbReportFormat;
 import org.thingsboard.server.dao.model.BaseVersionedEntity;
 import org.thingsboard.server.dao.model.ModelConstants;
 
 import java.util.UUID;
+
+import static org.thingsboard.server.dao.model.ModelConstants.REPORT_TEMPLATE_FORMAT_PROPERTY;
 
 @Data
 @Slf4j
@@ -64,14 +67,15 @@ public abstract class AbstractReportTemplateEntity<T extends BaseReportTemplate>
     private String name;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = REPORT_TEMPLATE_FORMAT_PROPERTY)
+    private TbReportFormat format;
+
+    @Enumerated(EnumType.STRING)
     @Column(name = ModelConstants.REPORT_TEMPLATE_TYPE_PROPERTY)
     private ReportTemplateType type;
 
     @Column(name = ModelConstants.REPORT_TEMPLATE_DESCRIPTION_PROPERTY)
     private String description;
-
-    @Column(name = ModelConstants.REPORT_TEMPLATE_SCHEDULER_EVENT_ID_PROPERTY)
-    private UUID schedulerEventId;
 
     @Column(name = ModelConstants.EXTERNAL_ID_PROPERTY)
     private UUID externalId;
@@ -89,11 +93,9 @@ public abstract class AbstractReportTemplateEntity<T extends BaseReportTemplate>
             this.customerId = reportTemplate.getCustomerId().getId();
         }
         this.name = reportTemplate.getName();
+        this.format = reportTemplate.getFormat();
         this.type = reportTemplate.getType();
         this.description = reportTemplate.getDescription();
-        if (reportTemplate.getSchedulerEventId() != null) {
-            this.schedulerEventId = reportTemplate.getSchedulerEventId().getId();
-        }
         if (reportTemplate.getExternalId() != null) {
             this.externalId = reportTemplate.getExternalId().getId();
         }
@@ -104,9 +106,9 @@ public abstract class AbstractReportTemplateEntity<T extends BaseReportTemplate>
         this.tenantId = reportTemplateEntity.getTenantId();
         this.customerId = reportTemplateEntity.getCustomerId();
         this.name = reportTemplateEntity.getName();
+        this.format = reportTemplateEntity.getFormat();
         this.type = reportTemplateEntity.getType();
         this.description = reportTemplateEntity.getDescription();
-        this.schedulerEventId = reportTemplateEntity.getSchedulerEventId();
         this.externalId = reportTemplateEntity.getExternalId();
     }
 
@@ -120,11 +122,9 @@ public abstract class AbstractReportTemplateEntity<T extends BaseReportTemplate>
             reportTemplate.setCustomerId(new CustomerId(customerId));
         }
         reportTemplate.setName(name);
+        reportTemplate.setFormat(format);
         reportTemplate.setType(type);
         reportTemplate.setDescription(description);
-        if (schedulerEventId != null) {
-            reportTemplate.setSchedulerEventId(new SchedulerEventId(schedulerEventId));
-        }
         if (externalId != null) {
             reportTemplate.setExternalId(new ReportTemplateId(externalId));
         }

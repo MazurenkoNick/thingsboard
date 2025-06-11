@@ -64,6 +64,9 @@ public class ReportTemplateDataValidator extends DataValidator<ReportTemplate> {
     @Override
     protected void validateDataImpl(TenantId tenantId, ReportTemplate reportTemplate) {
         validateString("Report template name", reportTemplate.getName());
+        if (reportTemplate.getFormat() == null) {
+            throw new DataValidationException("Report template format should be specified!");
+        }
         if (reportTemplate.getType() == null) {
             throw new DataValidationException("Report template type should be specified!");
         }

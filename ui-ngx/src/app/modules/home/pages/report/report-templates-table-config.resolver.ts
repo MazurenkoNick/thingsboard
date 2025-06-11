@@ -48,7 +48,6 @@ import { EntityType, entityTypeResources, entityTypeTranslations } from '@shared
 import { EntityAction } from '@home/models/entity/entity-component.models';
 import { UserPermissionsService } from '@core/http/user-permissions.service';
 import {
-  defaultReportTemplate,
   ReportTemplate,
   ReportTemplateInfo,
   reportTemplateTypeTranslationMap
@@ -137,22 +136,18 @@ export class ReportTemplatesTableConfigResolver  {
     config.entityAdded = reportTemplate => {
       this.openReportTemplate(null, reportTemplate, config);
     };
-    config.defaultEntity = () => {
-      return mergeDeep({} as ReportTemplate, defaultReportTemplate);
-    };
   }
 
   configureColumns(authUser: AuthUser, config: EntityTableConfig<ReportTemplateInfo>): Array<EntityColumn<ReportTemplateInfo>> {
     const columns: Array<EntityColumn<ReportTemplateInfo>> = [
       new DateEntityTableColumn<ReportTemplateInfo>('createdTime', 'common.created-time', this.datePipe, '150px'),
       new EntityTableColumn<ReportTemplateInfo>('name', 'report-template.name',
-        config.componentsData.includeCustomers ? '30%' : '60%', config.entityTitle)
-    ];
-    columns.push(
-      new EntityTableColumn<ReportTemplateInfo>( 'type', 'report-template.type', '40%', entity => {
+        config.componentsData.includeCustomers ? '30%' : '60%', config.entityTitle),
+      new EntityTableColumn<ReportTemplateInfo>( 'type', 'report-template.type', '20%', entity => {
         return this.translate.instant(reportTemplateTypeTranslationMap.get(entity.type))
-      })
-    );
+      }),
+      new EntityTableColumn<ReportTemplateInfo>( 'format', 'report-template.format', '20%')
+    ];
     if (config.componentsData.includeCustomers) {
       const title = (authUser.authority === Authority.CUSTOMER_USER)
         ? 'entity.sub-customer-name' : 'entity.customer-name';

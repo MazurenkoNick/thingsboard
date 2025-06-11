@@ -73,7 +73,7 @@
           {{ 'report-template.name-max-length' | translate }}
         </mat-error>
       </mat-form-field>
-      <mat-form-field class="mat-block" formGroupName="configuration">
+      <mat-form-field class="mat-block">
         <mat-label translate>report-template.format</mat-label>
         <mat-select formControlName="format" required>
           <mat-option *ngFor="let format of reportFormats" [value]="format">
@@ -81,7 +81,7 @@
           </mat-option>
         </mat-select>
       </mat-form-field>
-      @if (entityForm.get('configuration').get('format').value === TbReportFormat.PDF) {
+      @if (entityForm.get('format').value === TbReportFormat.PDF) {
         <mat-form-field class="mat-block">
           <mat-label translate>report-template.type</mat-label>
           <mat-select formControlName="type" required>

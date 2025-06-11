@@ -75,8 +75,8 @@ public interface ReportTemplateInfoRepository extends JpaRepository<ReportTempla
                                                                Pageable pageable);
 
     @Query(value = "SELECT e.*, e.owner_name as ownername, e.created_time as createdtime " +
-            "FROM (select r.id, r.created_time, r.customer_id, r.\"name\", r.type, r.description, " +
-            "r.tenant_id, r.external_id, r.version, r.scheduler_event_id, " +
+            "FROM (select r.id, r.created_time, r.customer_id, r.\"name\", r.format, r.type, r.description, " +
+            "r.tenant_id, r.external_id, r.version,, " +
             "c.title as owner_name from report_template_info_view r " +
             "LEFT JOIN customer c on c.id = r.customer_id AND c.id != :customerId) e " +
             "WHERE" + SUB_CUSTOMERS_QUERY +
