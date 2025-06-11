@@ -29,37 +29,35 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-export * from './alarm-id';
-export * from './asset-id';
-export * from './audit-log-id';
-export * from './customer-id';
-export * from './dashboard-id';
-export * from './device-credentials-id';
-export * from './device-id';
-export * from './device-profile-id';
-export * from './entity-id';
-export * from './entity-view-id';
-export * from './event-id';
-export * from './has-uuid';
-export * from './job-id';
-export * from './mobile-app-bundle-id';
-export * from './mobile-app-id';
-export * from './notification-id';
-export * from './notification-request-id';
-export * from './notification-rule-id';
-export * from './notification-target-id';
-export * from './notification-template-id';
-export * from './ota-package-id';
-export * from './rpc-id';
-export * from './rule-chain-id';
-export * from './rule-node-id';
-export * from './tenant-id';
-export * from './tenant-profile-id';
-export * from './user-id';
-export * from './widget-type-id';
-export * from './widgets-bundle-id';
-export * from './edge-id';
-export * from './asset-id';
-export * from './secret-storage-id';
-export * from './report-template-id';
-export * from './report-id';
+import { Route, RouterModule } from '@angular/router';
+import { Authority } from '@shared/models/authority.enum';
+import { NgModule } from '@angular/core';
+import { reportTemplatesRoute } from '@home/pages/report/report-template-routing.module';
+import { MenuId } from '@core/services/menu.models';
+
+export const reportingRoute: Route = {
+  path: 'reporting',
+  data: {
+    auth: [Authority.TENANT_ADMIN, Authority.CUSTOMER_USER],
+    breadcrumb: {
+      menuId: MenuId.reporting
+    }
+  },
+  children: [
+    {
+      path: '',
+      children: [],
+      data: {
+        auth: [Authority.TENANT_ADMIN, Authority.CUSTOMER_USER],
+        redirectTo: 'templates'
+      }
+    },
+    reportTemplatesRoute,
+  ]
+};
+
+@NgModule({
+  imports: [RouterModule.forChild([reportingRoute])],
+  exports: [RouterModule]
+})
+export class ReportingRoutingModule { }

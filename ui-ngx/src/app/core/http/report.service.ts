@@ -30,13 +30,15 @@
 ///
 
 import { Inject, Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { ReportRequest } from '@shared/models/report.models';
+import { Report, ReportRequest } from '@shared/models/report.models';
 import { map } from 'rxjs/operators';
 import { WINDOW } from '@core/services/window.service';
 import { DOCUMENT } from '@angular/common';
-import { blobToBase64 } from '@core/utils';
+import { PageLink } from '@shared/models/page/page-link';
+import { defaultHttpOptionsFromConfig, RequestConfig } from '@core/http/http-utils';
+import { PageData } from '@shared/models/page/page-data';
 
 @Injectable({
   providedIn: 'root'
@@ -50,17 +52,36 @@ export class ReportService {
   ) {
   }
 
-  public downloadTestReport(reportRequest: ReportRequest, downloadElseOpen = true): Observable<any> {
-    const url = '/api/v2/report/test';
-    return this.downloadReport(url, reportRequest, downloadElseOpen);
+  public getReport(reportId: string, config?: RequestConfig): Observable<Report> {
+    return this.http.get<Report>(`/api/v2/report/${reportId}`, defaultHttpOptionsFromConfig(config));
   }
 
-  private downloadReport(url: string, reportRequest: ReportRequest, downloadElseOpen = true): Observable<any> {
+  public getReports(pageLink: PageLink, config?: RequestConfig): Observable<PageData<Report>> {
+    return this.http.get<PageData<Report>>(`/api/v2/reports${pageLink.toQuery()}`,
+      defaultHttpOptionsFromConfig(config));
+  }
 
-    return this.http.post(url, reportRequest, {
+  public downloadReport(reportId: string): Observable<any> {
+    const url = `/api/v2/report/${reportId}/download`;
+    const response = this.http.get(url, {
       responseType: 'arraybuffer',
       observe: 'response'
-    }).pipe(
+    });
+    return this.processDownloadReportResponse(response);
+  }
+
+  public downloadTestReport(reportRequest: ReportRequest, downloadElseOpen = true): Observable<any> {
+    const url = '/api/v2/report/test';
+    const response = this.http.post(url, reportRequest, {
+      responseType: 'arraybuffer',
+      observe: 'response'
+    });
+    return this.processDownloadReportResponse(response, downloadElseOpen);
+  }
+
+  private processDownloadReportResponse(response: Observable<HttpResponse<ArrayBuffer>>, downloadElseOpen = true): Observable<any> {
+
+    return response.pipe(
       map((response) => {
         const headers = response.headers;
         const contentType = headers.get('content-type');

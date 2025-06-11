@@ -74,6 +74,7 @@ import { MobileModule } from '@home/pages/mobile/mobile.module';
 import { CustomMenuModule } from '@home/pages/custom-menu/custom-menu.module';
 import { SecretStorageModule } from '@home/pages/secret-storage/secret-storage.module';
 import { ReportTemplateModule } from '@home/pages/report/report-template.module';
+import { ReportingModule } from '@home/pages/report/reporting.module';
 
 @NgModule({
   exports: [
@@ -121,6 +122,7 @@ import { ReportTemplateModule } from '@home/pages/report/report-template.module'
     ScadaSymbolModule,
     CustomTranslationModule,
     CustomMenuModule,
+    ReportingModule,
     ReportTemplateModule
   ]
 })

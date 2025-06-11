@@ -39,11 +39,15 @@ import { TranslateService } from '@ngx-translate/core';
 import { EntityTableConfig } from '@home/models/entity/entities-table-config.models';
 import { MatDialog } from '@angular/material/dialog';
 import {
+  reportFormats,
   ReportTemplate,
   ReportTemplateType,
   reportTemplateTypes,
-  reportTemplateTypeTranslationMap
+  reportTemplateTypeTranslationMap,
+  TbReportFormat
 } from '@shared/models/report.models';
+import { startWith } from 'rxjs/operators';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'tb-report-template-form',
@@ -58,6 +62,10 @@ export class ReportTemplateFormComponent extends EntityComponent<ReportTemplate>
 
   reportTemplateTypeTranslationMap = reportTemplateTypeTranslationMap;
 
+  TbReportFormat = TbReportFormat;
+
+  reportFormats = reportFormats;
+
   constructor(protected store: Store<AppState>,
               protected translate: TranslateService,
               private dialog: MatDialog,
@@ -71,6 +79,9 @@ export class ReportTemplateFormComponent extends EntityComponent<ReportTemplate>
 
   ngOnInit() {
     super.ngOnInit();
+    if (this.isAdd) {
+      this.observeReportTemplateFormatChange();
+    }
   }
 
   hideDelete() {
@@ -85,6 +96,9 @@ export class ReportTemplateFormComponent extends EntityComponent<ReportTemplate>
     const form = this.fb.group(
       {
         name: [entity ? entity.name : '', [Validators.required, Validators.maxLength(255)]],
+        configuration: this.fb.group({
+          format: [entity ? entity.configuration?.format : TbReportFormat.PDF, [Validators.required]]
+        }),
         type: [entity ? entity.type : ReportTemplateType.REPORT, [Validators.required]],
         description: [entity?.description]
       }
@@ -94,6 +108,7 @@ export class ReportTemplateFormComponent extends EntityComponent<ReportTemplate>
 
   updateForm(entity: ReportTemplate) {
     this.entityForm.patchValue({name: entity.name});
+    this.entityForm.get('configuration').patchValue({format: entity.configuration.format});
     this.entityForm.patchValue({type: entity.type});
     this.entityForm.patchValue({description: entity.description});
   }
@@ -102,6 +117,7 @@ export class ReportTemplateFormComponent extends EntityComponent<ReportTemplate>
     super.updateFormState();
     if (this.isEdit && this.entityForm && !this.isAdd) {
       this.entityForm.get('type').disable({ emitEvent: false });
+      this.entityForm.get('configuration').disable({ emitEvent: false });
     }
   }
 
@@ -115,4 +131,28 @@ export class ReportTemplateFormComponent extends EntityComponent<ReportTemplate>
         horizontalPosition: 'right'
       }));
   }
+
+  private observeReportTemplateFormatChange(): void {
+    this.entityForm.get('configuration').get('format').valueChanges.pipe(
+      startWith(TbReportFormat.PDF),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe((format: TbReportFormat) => this.onReportFormatChanged(format));
+  }
+
+  private onReportFormatChanged(format: TbReportFormat) {
+    this.updateReportFormatFieldsState(format);
+    if (format === TbReportFormat.CSV) {
+      this.entityForm.get('type').patchValue(ReportTemplateType.REPORT, {emitEvent: false});
+    }
+  }
+
+  private updateReportFormatFieldsState(format: TbReportFormat) {
+    if (format === TbReportFormat.PDF) {
+      this.entityForm.get('type').enable({emitEvent: false});
+    } else {
+      this.entityForm.get('type').disable({emitEvent: false});
+    }
+  }
+
+
 }

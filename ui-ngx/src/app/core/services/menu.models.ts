@@ -193,7 +193,10 @@ export enum MenuId {
   task_manager = 'task_manager',
   trendz_settings = 'trendz_settings',
   secrets = 'secrets',
-  reporting = 'reporting'
+  reporting = 'reporting',
+  report_templates = 'report_templates',
+  report_scheduling = 'report_scheduling',
+  reports = 'reports'
 }
 
 declare type MenuFilter = (_authState: AuthState, userPermissionsService: UserPermissionsService) => boolean;
@@ -1202,8 +1205,38 @@ export const menuSectionMap = new Map<MenuId, MenuSection>([
     {
       id: MenuId.reporting,
       name: 'report.reporting',
+      type: 'toggle',
+      path: '/reporting',
+      icon: 'mdi:chart-box-multiple'
+    }
+  ],
+  [
+    MenuId.report_templates,
+    {
+      id: MenuId.report_templates,
+      name: 'report.templates',
       type: 'link',
-      path: '/reportTemplates',
+      path: '/reporting/templates',
+      icon: 'mdi:file-document-edit-outline'
+    }
+  ],
+  [
+    MenuId.report_scheduling,
+    {
+      id: MenuId.report_scheduling,
+      name: 'report.scheduling',
+      type: 'link',
+      path: '/reporting/scheduling',
+      icon: 'mdi:file-clock-outline'
+    }
+  ],
+  [
+    MenuId.reports,
+    {
+      id: MenuId.reports,
+      name: 'report.reports',
+      type: 'link',
+      path: '/reporting/reports',
       icon: 'mdi:chart-box-multiple'
     }
   ],
@@ -1515,8 +1548,17 @@ const menuFilters = new Map<MenuId, MenuFilter>([
             userPermissionsService.hasReadGenericPermission(Resource.JOB)
   ],
   [
-    MenuId.reporting, (authState, userPermissionsService) =>
+    MenuId.report_templates, (authState, userPermissionsService) =>
             userPermissionsService.hasReadGenericPermission(Resource.REPORT_TEMPLATE)
+  ],
+  [
+    MenuId.report_scheduling, (authState, userPermissionsService) =>
+            userPermissionsService.hasReadGenericPermission(Resource.REPORT_TEMPLATE) &&
+            userPermissionsService.hasReadGenericPermission(Resource.SCHEDULER_EVENT)
+  ],
+  [
+    MenuId.reports, (authState, userPermissionsService) =>
+            userPermissionsService.hasReadGenericPermission(Resource.REPORT)
   ],
   [
     MenuId.trendz_settings, (authState, userPermissionsService) =>
@@ -1614,7 +1656,14 @@ export const defaultUserMenuMap = new Map<Authority, MenuReference[]>([
           {id: MenuId.dashboard_shared}
         ]
       },
-      {id: MenuId.reporting},
+      {
+        id: MenuId.reporting,
+        pages: [
+          {id: MenuId.report_templates},
+          {id: MenuId.report_scheduling},
+          {id: MenuId.reports}
+        ]
+      },
       {id: MenuId.solution_templates},
       {
         id: MenuId.entities,
@@ -1790,7 +1839,14 @@ export const defaultUserMenuMap = new Map<Authority, MenuReference[]>([
           {id: MenuId.dashboard_shared}
         ]
       },
-      {id: MenuId.reporting},
+      {
+        id: MenuId.reporting,
+        pages: [
+          {id: MenuId.report_templates},
+          {id: MenuId.report_scheduling},
+          {id: MenuId.reports}
+        ]
+      },
       {
         id: MenuId.entities,
         pages: [

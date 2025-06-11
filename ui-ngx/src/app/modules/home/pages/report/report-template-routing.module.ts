@@ -30,7 +30,7 @@
 ///
 
 import { Injectable, NgModule } from '@angular/core';
-import { ActivatedRouteSnapshot, RouterModule, Routes } from '@angular/router';
+import { ActivatedRouteSnapshot, Route } from '@angular/router';
 
 import { EntitiesTableComponent } from '../../components/entity/entities-table.component';
 import { Authority } from '@shared/models/authority.enum';
@@ -64,50 +64,46 @@ export const reportTemplateBreadcumbLabelFunction: BreadCrumbLabelFunction<Repor
   return label;
 });
 
-const routes: Routes = [
-  {
-    path: 'reportTemplates',
-    data: {
-      breadcrumb: {
-        menuId: MenuId.reporting
+export const reportTemplatesRoute: Route = {
+  path: 'templates',
+  data: {
+    breadcrumb: {
+      menuId: MenuId.report_templates
+    }
+  },
+  children: [
+    {
+      path: '',
+      component: EntitiesTableComponent,
+      data: {
+        auth: [Authority.TENANT_ADMIN, Authority.CUSTOMER_USER],
+        title: 'report-template.report-templates'
+      },
+      resolve: {
+        entitiesTableConfig: ReportTemplatesTableConfigResolver
       }
     },
-    children: [
-      {
-        path: '',
-        component: EntitiesTableComponent,
-        data: {
-          auth: [Authority.TENANT_ADMIN, Authority.CUSTOMER_USER],
-          title: 'report-template.report-templates'
-        },
-        resolve: {
-          entitiesTableConfig: ReportTemplatesTableConfigResolver
-        }
+    {
+      path: ':reportTemplateId',
+      component: ReportTemplatePageComponent,
+      canDeactivate: [ConfirmOnExitGuard],
+      data: {
+        breadcrumb: {
+          labelFunction: reportTemplateBreadcumbLabelFunction,
+          icon: 'mdi:chart-box-outline'
+        } as BreadCrumbConfig<ReportTemplatePageComponent>,
+        auth: [Authority.TENANT_ADMIN, Authority.CUSTOMER_USER],
+        title: 'report-template.report-template'
       },
-      {
-        path: ':reportTemplateId',
-        component: ReportTemplatePageComponent,
-        canDeactivate: [ConfirmOnExitGuard],
-        data: {
-          breadcrumb: {
-            labelFunction: reportTemplateBreadcumbLabelFunction,
-            icon: 'mdi:chart-box-outline'
-          } as BreadCrumbConfig<ReportTemplatePageComponent>,
-          auth: [Authority.TENANT_ADMIN, Authority.CUSTOMER_USER],
-          title: 'report-template.report-template'
-        },
-        resolve: {
-          reportTemplate: ReportTemplateResolver
-        }
+      resolve: {
+        reportTemplate: ReportTemplateResolver
       }
-    ]
-  }
-];
+    }
+  ]
+}
 
 // @dynamic
 @NgModule({
-  imports: [RouterModule.forChild(routes)],
-  exports: [RouterModule],
   providers: [
     ReportTemplatesTableConfigResolver,
     ReportTemplateResolver

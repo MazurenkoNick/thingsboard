@@ -43,8 +43,10 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.thingsboard.common.util.JacksonUtil;
@@ -76,6 +78,8 @@ import java.util.UUID;
 
 import static org.thingsboard.server.controller.ControllerConstants.PAGE_NUMBER_DESCRIPTION;
 import static org.thingsboard.server.controller.ControllerConstants.PAGE_SIZE_DESCRIPTION;
+import static org.thingsboard.server.controller.ControllerConstants.RBAC_READ_CHECK;
+import static org.thingsboard.server.controller.ControllerConstants.REPORT_ID_PARAM_DESCRIPTION;
 import static org.thingsboard.server.controller.ControllerConstants.SORT_ORDER_DESCRIPTION;
 import static org.thingsboard.server.controller.ControllerConstants.SORT_PROPERTY_DESCRIPTION;
 import static org.thingsboard.server.controller.ControllerConstants.TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH;
@@ -85,6 +89,11 @@ import static org.thingsboard.server.controller.ControllerConstants.TENANT_OR_CU
 @TbCoreComponent
 @RequestMapping("/api/v2")
 public class ReportController extends BaseController {
+
+    private static final String REPORT_DESCRIPTION = "The platform uses Report to store generated reports information.";
+    private static final String INVALID_REPORT_ID = "Referencing non-existing Report Id will cause 'Not Found' error.";
+
+    public static final String REPORT_ID = "reportId";
 
     private final JobManager jobManager;
     private final TbReportService tbReportService;
@@ -101,7 +110,7 @@ public class ReportController extends BaseController {
 
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN')")
     @GetMapping(value = "/report/{reportId}/download")
-    public ResponseEntity<ByteArrayResource> downloadReport(@PathVariable("reportId") UUID id) throws ThingsboardException {
+    public ResponseEntity<ByteArrayResource> downloadReport(@PathVariable(REPORT_ID) UUID id) throws ThingsboardException {
         ReportId reportId = new ReportId(id);
         Report report = checkReportId(reportId, Operation.READ);
         byte[] data = reportService.getReportData(getTenantId(), reportId);
@@ -112,6 +121,20 @@ public class ReportController extends BaseController {
                 .contentLength(resource.contentLength())
                 .header("Content-Type", report.getFormat().getContentType())
                 .body(resource);
+    }
+
+    @ApiOperation(value = "Get Report (getReportById)",
+            notes = "Fetch the Report object based on the provided report Id. " +
+                    REPORT_DESCRIPTION + INVALID_REPORT_ID +
+                    TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH + "\n\n" + RBAC_READ_CHECK)
+    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
+    @RequestMapping(value = "/report/{reportId}", method = RequestMethod.GET)
+    @ResponseBody
+    public Report getReportById(@Parameter(description = REPORT_ID_PARAM_DESCRIPTION, required = true)
+                                @PathVariable(REPORT_ID) String strReportId) throws ThingsboardException {
+        checkParameter(REPORT_ID, strReportId);
+        ReportId reportId = new ReportId(toUUID(strReportId));
+        return checkReportId(reportId, Operation.READ);
     }
 
     @GetMapping("/reports")

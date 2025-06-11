@@ -63,7 +63,8 @@ import {
   edgeAliasFilterTypes,
   EntityAlias,
   EntityAliasFilter,
-  EntityAliasFilterResult, stateAliasFilterTypes
+  EntityAliasFilterResult,
+  stateAliasFilterTypes
 } from '@shared/models/alias.models';
 import {
   EdgeImportEntityData,
@@ -133,6 +134,7 @@ import { PlatformType } from '@shared/models/oauth2.models';
 import { DomainService } from '@core/http/domain.service';
 import { ReportTemplateService } from '@core/http/report-template.service';
 import { ReportTemplate, ReportTemplateType } from '@shared/models/report.models';
+import { ReportService } from './report.service';
 
 @Injectable({
   providedIn: 'root'
@@ -163,6 +165,7 @@ export class EntityService {
     private schedulerEventService: SchedulerEventService,
     private blobEntityService: BlobEntityService,
     private reportTemplateService: ReportTemplateService,
+    private reportService: ReportService,
     private roleService: RoleService,
     private entityGroupService: EntityGroupService,
     private userPermissionsService: UserPermissionsService,
@@ -233,6 +236,9 @@ export class EntityService {
         } else {
           observable = this.reportTemplateService.getReportTemplateInfo(entityId, config);
         }
+        break;
+      case EntityType.REPORT:
+        observable = this.reportService.getReport(entityId, config);
         break;
       case EntityType.ROLE:
         observable = this.roleService.getRole(entityId, config);
@@ -315,6 +321,9 @@ export class EntityService {
       case EntityType.REPORT_TEMPLATE:
         observable = this.reportTemplateService.saveReportTemplate(entity as ReportTemplate, config);
         break;
+      case EntityType.REPORT:
+        console.error('Save Report Entity is not implemented!');
+        break;
       case EntityType.ROLE:
         observable = this.roleService.saveRole(entity as Role, config);
         break;
@@ -387,7 +396,7 @@ export class EntityService {
     }
   }
 
-  /*private getEntitiesByIdsObservable(fetchEntityFunction: (entityId: string) => Observable<BaseData<EntityId>>,
+  private getEntitiesByIdsObservable(fetchEntityFunction: (entityId: string) => Observable<BaseData<EntityId>>,
                                      entityIds: Array<string>): Observable<Array<BaseData<EntityId>>> {
     const tasks: Observable<BaseData<EntityId>>[] = [];
     entityIds.forEach((entityId) => {
@@ -407,7 +416,7 @@ export class EntityService {
         }
       })
     );
-  }*/
+  }
 
 
   private getEntitiesObservable(entityType: EntityType, entityIds: Array<string>,
@@ -461,6 +470,11 @@ export class EntityService {
         break;
       case EntityType.REPORT_TEMPLATE:
         observable = this.reportTemplateService.getReportTemplatesByIds(entityIds, config);
+        break;
+      case EntityType.REPORT:
+        observable = this.getEntitiesByIdsObservable(
+          (id) => this.reportService.getReport(id, config),
+          entityIds);
         break;
       case EntityType.ROLE:
         observable = this.roleService.getRolesByIds(entityIds, config);
@@ -628,6 +642,10 @@ export class EntityService {
       case EntityType.REPORT_TEMPLATE:
         pageLink.sortOrder.property = 'name';
         entitiesObservable = this.reportTemplateService.getAllReportTemplateInfos(false, pageLink, subType as ReportTemplateType, config);
+        break;
+      case EntityType.REPORT:
+        pageLink.sortOrder.property = 'name';
+        entitiesObservable = this.reportService.getReports(pageLink, config);
         break;
       case EntityType.ROLE:
         pageLink.sortOrder.property = 'name';
@@ -1042,6 +1060,7 @@ export class EntityService {
         entityTypes.push(EntityType.SCHEDULER_EVENT);
         entityTypes.push(EntityType.BLOB_ENTITY);
         entityTypes.push(EntityType.REPORT_TEMPLATE);
+        entityTypes.push(EntityType.REPORT);
         entityTypes.push(EntityType.ROLE);
         if (authState.edgesSupportEnabled) {
           entityTypes.push(EntityType.EDGE);
@@ -1063,6 +1082,7 @@ export class EntityService {
         entityTypes.push(EntityType.SCHEDULER_EVENT);
         entityTypes.push(EntityType.BLOB_ENTITY);
         entityTypes.push(EntityType.REPORT_TEMPLATE);
+        entityTypes.push(EntityType.REPORT);
         if (authState.edgesSupportEnabled) {
           entityTypes.push(EntityType.EDGE);
         }
@@ -1155,6 +1175,7 @@ export class EntityService {
         entityFieldKeys.push(entityFields.type.keyName);
         break;
       case EntityType.API_USAGE_STATE:
+      case EntityType.REPORT:
         entityFieldKeys.push(entityFields.name.keyName);
         break;
       case EntityType.SCHEDULER_EVENT:

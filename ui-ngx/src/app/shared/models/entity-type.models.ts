@@ -447,6 +447,20 @@ export const entityTypeTranslations = new Map<EntityType | AliasEntityType, Enti
       }
     ],
     [
+      EntityType.REPORT,
+      {
+        type: 'entity.type-report',
+        typePlural: 'entity.type-reports',
+        list: 'entity.list-of-reports',
+        nameStartsWith: 'entity.report-name-starts-with',
+        details: 'report.report-details',
+        add: 'report.add',
+        noEntities: 'report.no-reports-text',
+        search: 'report.search',
+        selectedEntities: 'report.selected-reports'
+      }
+    ],
+    [
       EntityType.ROLE,
       {
         type: 'entity.type-role',
@@ -840,6 +854,12 @@ export const entityTypeResources = new Map<EntityType, EntityTypeResource<BaseDa
       {
         helpLinkId: 'reportTemplates'
       }
+    ],
+    [
+      EntityType.REPORT,
+      {
+        helpLinkId: 'reports'
+      }
     ]
   ]
 );
@@ -868,7 +888,7 @@ export const baseDetailsPageByEntityType = new Map<EntityType, string>([
   [EntityType.OAUTH2_CLIENT, '/security-settings/oauth2/clients/details'],
   [EntityType.DOMAIN, '/security-settings/oauth2/clients/details'],
   [EntityType.MOBILE_APP, '/mobile-center/applications'],
-  [EntityType.REPORT_TEMPLATE, '/reportTemplates']
+  [EntityType.REPORT_TEMPLATE, '/reporting/templates']
 ]);
 
 export const groupUrlPrefixByEntityType = new Map<EntityType, string>([

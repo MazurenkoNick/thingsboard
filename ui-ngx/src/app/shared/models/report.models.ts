@@ -45,6 +45,16 @@ import {
   keyFiltersToKeyFilterInfos
 } from '@shared/models/query/query.models';
 import { ReportComponentConfig, TableReportComponentConfig } from '@shared/models/report-component.models';
+import { ReportId } from '@shared/models/id/report-id';
+import { UserId } from '@shared/models/id/user-id';
+
+export interface Report extends BaseData<ReportId>, HasTenantId {
+  tenantId?: TenantId;
+  customerId?: CustomerId;
+  name: string;
+  format: TbReportFormat;
+  userId: UserId;
+}
 
 export enum ReportTemplateType {
   REPORT = 'REPORT',
@@ -141,6 +151,8 @@ export enum TbReportFormat {
   PDF = 'PDF',
   CSV = 'CSV'
 }
+
+export const reportFormats = Object.keys(TbReportFormat) as TbReportFormat[];
 
 export interface ReportTemplateConfig {
   format: TbReportFormat;
