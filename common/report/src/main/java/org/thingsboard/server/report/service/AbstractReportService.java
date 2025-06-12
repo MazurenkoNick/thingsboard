@@ -34,6 +34,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.thingsboard.common.util.JacksonUtil;
+import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.kv.TsKvEntry;
 import org.thingsboard.server.common.data.page.PageDataIterable;
@@ -53,10 +54,12 @@ import org.thingsboard.server.common.data.report.configuration.DataKey;
 import org.thingsboard.server.common.data.report.configuration.DataSource;
 import org.thingsboard.server.common.data.report.configuration.ReportTemplateConfig;
 import org.thingsboard.server.common.data.report.configuration.components.AlarmTableComponent;
+import org.thingsboard.server.common.data.report.configuration.components.EntityTableComponent;
 import org.thingsboard.server.common.data.report.configuration.components.TimeseriesTableComponent;
 import org.thingsboard.server.common.data.report.configuration.timewindow.History;
 import org.thingsboard.server.common.data.report.configuration.timewindow.TimeIntervalCalculator;
 import org.thingsboard.server.common.data.report.configuration.timewindow.TimeWindowConfiguration;
+import org.thingsboard.server.report.context.ComponentData;
 import org.thingsboard.server.report.context.TbReportCtx;
 import org.thingsboard.server.report.datasource.ReportDataService;
 
@@ -79,8 +82,9 @@ import static org.thingsboard.server.common.data.util.ReportQueryUtils.buildEnti
 import static org.thingsboard.server.common.data.util.ReportQueryUtils.findEntityFilterByAliasId;
 import static org.thingsboard.server.common.data.util.ReportQueryUtils.findKeyFilters;
 import static org.thingsboard.server.common.data.util.ReportQueryUtils.singleDeviceFilter;
+import static org.thingsboard.server.common.data.util.ReportQueryUtils.toAlarmCountQuery;
 import static org.thingsboard.server.common.data.util.ReportQueryUtils.toAlarmDataQuery;
-import static org.thingsboard.server.common.data.util.DataSourceUtils.setDataKeyIfNotExists;
+import static org.thingsboard.server.common.data.util.ReportQueryUtils.toEntityCountQuery;
 import static org.thingsboard.server.report.util.ReportUtils.getSingleDataSource;
 
 public abstract class AbstractReportService implements ReportService {
@@ -88,6 +92,42 @@ public abstract class AbstractReportService implements ReportService {
     @Lazy
     @Autowired
     protected ReportDataService dataService;
+
+    protected ComponentData buildSingleComponentData(int usablePageWidthPx, TbReportCtx ctx, DataSource dataSource, EntityData stateEntity) {
+        ReportTemplateConfig configuration = ctx.getConfiguration();
+        return switch (dataSource.getType()) {
+            case "device", "entity" -> new ComponentData(usablePageWidthPx, dataSource, fetchEntityDatas(ctx, dataSource, stateEntity));
+            case "entityCount" -> buildEntityCountDataSource(usablePageWidthPx, ctx, dataSource, configuration);
+            case "alarmCount" -> buildAlarmCountDataSource(usablePageWidthPx, ctx, dataSource, configuration);
+            default -> throw new IllegalArgumentException("Unknown data source type: " + dataSource.getType());
+        };
+    }
+
+    protected ComponentData buildEntityCountDataSource(int usablePageWidthPx, TbReportCtx ctx, DataSource dataSource, ReportTemplateConfig configuration) {
+        Map<String, Object> map = new HashMap<>();
+        String label = null;
+        if (dataSource.getDataKeys() != null && !dataSource.getDataKeys().isEmpty()) {
+            label = dataSource.getDataKeys().get(0).getLabel();
+        }
+        if (StringUtils.isBlank(label)) {
+            label = "count";
+        }
+        map.put(label, dataService.countEntitiesByQuery(toEntityCountQuery(dataSource, configuration), ctx));
+        return new ComponentData(usablePageWidthPx, map);
+    }
+
+    protected ComponentData buildAlarmCountDataSource(int usablePageWidthPx, TbReportCtx ctx, DataSource dataSource, ReportTemplateConfig configuration) {
+        Map<String, Object> map = new HashMap<>();
+        String label = null;
+        if (dataSource.getDataKeys() != null && !dataSource.getDataKeys().isEmpty()) {
+            label = dataSource.getDataKeys().get(0).getLabel();
+        }
+        if (StringUtils.isBlank(label)) {
+            label = "count";
+        }
+        map.put(label, dataService.countAlarmsByQuery(toAlarmCountQuery(dataSource, configuration), ctx));
+        return new ComponentData(usablePageWidthPx, map);
+    }
 
     protected List<EntityData> fetchEntities(TbReportCtx ctx, DataSource dataSource, EntityData stateEntity) {
         return switch (dataSource.getType()) {
@@ -178,6 +218,14 @@ public abstract class AbstractReportService implements ReportService {
             case "device", "entity" -> fetchEntities(ctx, dataSource, stateEntity).stream().map(entityData -> toStringMap(entityData, ctx)).collect(Collectors.toList());
             default -> throw new IllegalArgumentException("Unknown data source type: " + dataSource.getType());
         };
+    }
+
+    protected List<Map<String, String>> fetchEntityTableData(TbReportCtx ctx, EntityTableComponent component, EntityData stateEntity) {
+        Optional<DataSource> singleDataSource = getSingleDataSource(component);
+        if (singleDataSource.isEmpty()) {
+            return Collections.emptyList();
+        }
+        return fetchEntityDatas(ctx, singleDataSource.get(), stateEntity);
     }
 
     protected List<Map<String, String>> fetchEntityTsData(TbReportCtx ctx, TimeseriesTableComponent component, EntityData entity) {
@@ -352,5 +400,13 @@ public abstract class AbstractReportService implements ReportService {
         } catch (NumberFormatException e) {
             return "Invalid timestamp: " + timestampStr;
         }
+    }
+
+    protected String renderError(int usablePageWidthPx, String errorMessage) {
+        return renderError(usablePageWidthPx, errorMessage, null);
+    }
+
+    protected String renderError(int usablePageWidthPx, String errorMessage, Exception e) {
+        return "";
     }
 }

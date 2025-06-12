@@ -57,7 +57,6 @@ import org.thingsboard.server.common.data.report.configuration.timewindow.TimeIn
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.thingsboard.server.common.data.report.configuration.timewindow.TimeIntervalCalculator.getTimeRange;
@@ -142,34 +141,26 @@ public class ReportQueryUtils {
     }
 
     public static EntityFilter findEntityFilterByAliasId(DataSource dataSource, ReportTemplateConfig reportTemplateConfig) {
-        return switch (reportTemplateConfig.getFormat()) {
-            case PDF -> ((PdfReportTemplateConfig) reportTemplateConfig).getEntityAliases().stream()
-                    .filter(alias -> alias.getId().equals(dataSource.getEntityAliasId()))
-                    .findFirst()
-                    .orElseThrow(() -> new IllegalArgumentException("Entity alias not found: " + dataSource.getEntityAliasId()))
-                    .getFilter();
-            case CSV -> ((CsvReportTemplateConfig) reportTemplateConfig).getEntityAlias().getFilter();
-        };
+        if (dataSource.getEntityAliasId() != null) {
+
+        }
+        return reportTemplateConfig.getEntityAliases().stream()
+            .filter(alias -> alias.getId().equals(dataSource.getEntityAliasId()))
+            .findFirst()
+            .orElseThrow(() -> new IllegalArgumentException("Entity alias not found: " + dataSource.getEntityAliasId()))
+            .getFilter();
     }
 
     public static List<KeyFilter> findKeyFilters(DataSource dataSource, ReportTemplateConfig reportTemplateConfig) {
-        return switch (reportTemplateConfig.getFormat()) {
-            case PDF -> {
-                List<Filter> filters = ((PdfReportTemplateConfig) reportTemplateConfig).getFilters();
-                if (dataSource.getFilterId() != null) {
-                    yield filters.stream()
-                            .filter(filter -> filter.getId().equals(dataSource.getFilterId()))
-                            .findFirst()
-                            .orElseThrow(() -> new IllegalArgumentException("Entity filter not found: " + dataSource.getFilterId()))
-                            .getKeyFilters();
-                }
-                yield null;
-            }
-            case CSV -> {
-                Filter filter = ((CsvReportTemplateConfig) reportTemplateConfig).getFilter();
-                yield (filter != null) ? filter.getKeyFilters() : null;
-            }
-        };
+        if (dataSource.getFilterId() != null) {
+            return reportTemplateConfig.getFilters().stream()
+                    .filter(filter -> filter.getId().equals(dataSource.getFilterId()))
+                    .findFirst()
+                    .orElseThrow(() -> new IllegalArgumentException("Entity filter not found: " + dataSource.getFilterId()))
+                    .getKeyFilters();
+        } else {
+            return null;
+        }
     }
 
     public static EntityDataQuery buildEntityDataQuery(EntityFilter filter, DataSource dataSource, List<KeyFilter> keyFilters, PageLink pageLink) {

@@ -177,8 +177,8 @@ public class ReportServiceTest extends AbstractContainerTest {
                 .build()));
 
         CsvReportTemplateConfig configuration = new CsvReportTemplateConfig();
-        configuration.setEntityAlias(entityAlias);
-        configuration.setComponent(tableComponent);
+        configuration.setEntityAliases(entityAlias);
+        configuration.setComponents(List.of(tableComponent));
 
         ReportTemplate csvReportTemplate = new ReportTemplate();
         csvReportTemplate.setConfiguration(configuration);

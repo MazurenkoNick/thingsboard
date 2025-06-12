@@ -34,7 +34,7 @@ import org.thingsboard.server.common.data.report.configuration.components.Report
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponentType;
 import org.thingsboard.server.report.context.ComponentData;
 
-public interface ReportComponentRenderer<C extends ReportComponent> {
+public interface PdfReportComponentRenderer<C extends ReportComponent> {
 
     String render(C component, ComponentData reportDataSource);
 

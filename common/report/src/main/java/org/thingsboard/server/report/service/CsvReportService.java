@@ -30,39 +30,49 @@
  */
 package org.thingsboard.server.report.service;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.thingsboard.server.common.data.id.DeviceId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.job.task.ReportTask;
 import org.thingsboard.server.common.data.query.EntityData;
 import org.thingsboard.server.common.data.report.ReportData;
 import org.thingsboard.server.common.data.report.TbReportFormat;
 import org.thingsboard.server.common.data.report.configuration.CsvReportTemplateConfig;
-import org.thingsboard.server.common.data.report.configuration.DataKey;
-import org.thingsboard.server.common.data.report.configuration.DataSource;
 import org.thingsboard.server.common.data.report.configuration.components.AlarmTableComponent;
-import org.thingsboard.server.common.data.report.configuration.components.DataReportComponent;
+import org.thingsboard.server.common.data.report.configuration.components.EntityTableComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
+import org.thingsboard.server.common.data.report.configuration.components.ReportComponentType;
 import org.thingsboard.server.common.data.report.configuration.components.TimeseriesTableComponent;
+import org.thingsboard.server.report.context.ComponentData;
 import org.thingsboard.server.report.context.TbReportCtx;
+import org.thingsboard.server.report.renderer.CsvReportComponentRenderer;
 
 import java.util.Collections;
 import java.util.Date;
+import java.util.EnumMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.TimeZone;
 
+import static org.thingsboard.server.common.data.report.configuration.components.ReportComponentType.TIME_SERIES_TABLE;
 import static org.thingsboard.server.report.util.CsvUtils.generateCsv;
-import static org.thingsboard.server.report.util.ReportUtils.getSingleDataSource;
 import static org.thingsboard.server.report.util.ReportUtils.prepareReportName;
 
 @Service
-@RequiredArgsConstructor
 @Slf4j
 public class CsvReportService extends AbstractReportService {
+
+    private final Map<ReportComponentType, CsvReportComponentRenderer<ReportComponent>> componentsRenderers = new EnumMap<>(ReportComponentType.class);
+
+    private CsvReportService(List<CsvReportComponentRenderer> renderers) {
+        renderers.forEach(renderer -> {
+            ReportComponentType type = renderer.getType();
+            if (type != null) {
+                this.componentsRenderers.put(type, renderer);
+            }
+        });
+    }
 
     @Override
     public ReportData generateReport(ReportTask task, TbReportCtx ctx) {
@@ -71,11 +81,8 @@ public class CsvReportService extends AbstractReportService {
         log.trace("[{}] Executing generateReport, reportRequest [{}]", tenantId, task);
         CsvReportTemplateConfig configuration = (CsvReportTemplateConfig) task.getReportTemplateConfig();
 
-        ReportComponent component = configuration.getComponent();
-        List<DataKey> headers = getTableHeaders(component);
-        List<Map<String, String>> dataSource = buildDataSource(ctx, (DataReportComponent) component);
-
-        byte[] csvBytes = generateCsv(headers, dataSource);
+        List<List<String>> content = renderContent(ctx, configuration.getComponents());
+        byte[] csvBytes = generateCsv(content);
 
         String requestTimeZone = task.getTimezone();
         TimeZone timeZone = (requestTimeZone == null) ? TimeZone.getDefault() : TimeZone.getTimeZone(requestTimeZone);
@@ -88,40 +95,37 @@ public class CsvReportService extends AbstractReportService {
                 .build();
     }
 
-    private static List<DataKey> getTableHeaders(ReportComponent component) {
-        return ((DataReportComponent)component).getDataSources().get(0).getDataKeys();
+    private List<List<String>> renderContent(TbReportCtx ctx, List<ReportComponent> components) {
+        List<List<String>> content = new LinkedList<>();
+        for (ReportComponent component : components) {
+            ReportComponentType type = component.getType();
+             if (type == TIME_SERIES_TABLE) {
+                //content.append(renderTimeseriesTables(usablePageWidthPx, ctx, component));
+            } else {
+                content.addAll(renderComponent(ctx, component, null));
+            }
+        }
+        return content;
     }
 
-    private List<Map<String, String>> buildDataSource(TbReportCtx ctx, DataReportComponent component) {
+    private List<List<String>> renderComponent(TbReportCtx ctx, ReportComponent component, EntityData stateEntity) {
+        try {
+            ComponentData componentData = getComponentData(ctx, component, stateEntity);
+            return componentsRenderers.get(component.getType()).render(component, componentData);
+        } catch (Exception e) {
+            log.error("Failed to render component of type [{}]", component.getType(), e);
+            return Collections.emptyList(); //renderError(usablePageWidthPx, "Failed to render component of type: " + component.getType(), e);
+        }
+    }
+
+    private ComponentData getComponentData(TbReportCtx ctx, ReportComponent component, EntityData stateEntity) {
         return switch (component.getType()) {
-            case TIME_SERIES_TABLE -> fetchEntityTsDatas(ctx, ((TimeseriesTableComponent) component));
-            case ALARM_TABLE -> fetchAlarmDatas(ctx, ((AlarmTableComponent) component));
-            case ENTITY_TABLE -> fetchEntityTableDatas(ctx, component);
-            default -> List.of(Map.of());
+            case TIME_SERIES_TABLE ->
+                    new ComponentData(0, fetchEntityTsData(ctx, (TimeseriesTableComponent) component, stateEntity));
+            case ALARM_TABLE -> new ComponentData(0, fetchAlarmDatas(ctx, (AlarmTableComponent) component));
+            case ENTITY_TABLE -> new ComponentData(0, fetchEntityTableData(ctx, (EntityTableComponent) component, null));
+            default -> throw new IllegalArgumentException("Unsupported component type: " + component.getType());
         };
-    }
-
-    private List<Map<String, String>> fetchEntityTableDatas(TbReportCtx ctx, DataReportComponent component) {
-        Optional<DataSource> dataSource = getSingleDataSource(component);
-        if (dataSource.isEmpty()) {
-            return Collections.emptyList();
-        }
-        return fetchEntityDatas(ctx, dataSource.get(), null);
-    }
-
-    private List<Map<String, String>> fetchEntityTsDatas(TbReportCtx ctx, TimeseriesTableComponent component) {
-        Optional<DataSource> dataSource = getSingleDataSource(component);
-        if (dataSource.isEmpty()) {
-            return Collections.emptyList();
-        }
-        String deviceId = dataSource.get().getDeviceId();
-        if (deviceId == null) {
-            return Collections.emptyList();
-        }
-        EntityData entity = new EntityData();
-        entity.setEntityId(DeviceId.fromString(deviceId));
-        entity.setLatest(Collections.emptyMap());
-        return fetchEntityTsData(ctx, component, entity);
     }
 
     @Override

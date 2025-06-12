@@ -40,7 +40,7 @@ import org.thingsboard.server.report.util.ThymeleafUtil;
 import java.util.HashMap;
 
 @Component
-public class ErrorRenderer implements ReportComponentRenderer<ErrorComponent> {
+public class ErrorRenderer implements PdfReportComponentRenderer<ErrorComponent> {
 
     @Override
     public String render(ErrorComponent errorComponent, ComponentData reportDataSource) {

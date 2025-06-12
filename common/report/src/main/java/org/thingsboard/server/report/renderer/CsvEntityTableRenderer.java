@@ -31,22 +31,61 @@
 package org.thingsboard.server.report.renderer;
 
 import org.springframework.stereotype.Component;
-import org.thingsboard.server.common.data.report.configuration.components.PageBreakComponent;
+import org.thingsboard.server.common.data.report.configuration.DataKey;
+import org.thingsboard.server.common.data.report.configuration.DataSource;
+import org.thingsboard.server.common.data.report.configuration.components.EntityTableComponent;
+import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponentType;
 import org.thingsboard.server.report.context.ComponentData;
 
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import static org.thingsboard.server.report.util.ReportUtils.getSingleDataSource;
+
 
 @Component
-public class PageBreakRenderer implements PdfReportComponentRenderer<PageBreakComponent> {
+public class CsvEntityTableRenderer implements CsvReportComponentRenderer<EntityTableComponent> {
+
 
     @Override
-    public String render(PageBreakComponent component, ComponentData reportDataSource) {
-        return "<div class=\"page-break\"></div>";
+    public List<List<String>> render(EntityTableComponent component, ComponentData reportDataSource) {
+        List<List<String>> content = new LinkedList<>();
+
+        Optional<DataSource> dataSource = getSingleDataSource(component);
+        if (dataSource.isEmpty()) {
+            return Collections.emptyList(); //renderError(usablePageWidthPx, "Data source is not configured for time series table");
+        }
+        List<DataKey> dataKeys = dataSource.get().getDataKeys();
+
+        Map<String, String> labelToDataKey = dataKeys.stream()
+                .collect(Collectors.toMap(
+                        DataKey::getLabel,
+                        DataKey::getName,
+                        (s, s2) -> s2,
+                        LinkedHashMap::new));
+        List<String> headers = labelToDataKey.keySet().stream().toList();
+        content.add(headers);
+
+        List<Map<String, String>> entityDatas = reportDataSource.getEntityDatas();
+
+        for (Map<String, String> row : entityDatas) {
+            List<String> values = labelToDataKey.values().stream()
+                    .map(h -> Objects.toString(row.get(h), "")).toList();
+            content.add(values);
+        }
+        return content;
     }
 
     @Override
     public ReportComponentType getType() {
-        return ReportComponentType.PAGE_BREAK;
+        return ReportComponentType.ENTITY_TABLE;
     }
 
 }

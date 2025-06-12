@@ -107,8 +107,8 @@ public class GenerateReportRuleNodeTest extends AbstractRuleEngineControllerTest
                 .build()));
 
         CsvReportTemplateConfig configuration = new CsvReportTemplateConfig();
-        configuration.setEntityAlias(entityAlias);
-        configuration.setComponent(tableComponent);
+        configuration.setEntityAliases(List.of(entityAlias));
+        configuration.setComponents(List.of(tableComponent));
         configuration.setNamePattern("test.csv");
 
         ReportTemplate reportTemplate = new ReportTemplate();
