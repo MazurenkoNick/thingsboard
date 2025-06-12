@@ -69,6 +69,9 @@ public abstract class ReportComponentWithLayoutRenderer<C extends LayoutReportCo
         Map<String, Object> layoutVariables = new HashMap<>();
         layoutVariables.put("htmlContent", content);
         layoutVariables.put("background", component.getBackground() != null ? ColorUtils.normalizeCssColor(component.getBackground()) : "transparent");
+        layoutVariables.put("borderWidth", component.getBorderWidth() != null ? component.getBorderWidth() : "0");
+        layoutVariables.put("borderRadius", component.getBorderRadius() != null ? component.getBorderRadius() : "0");
+        layoutVariables.put("borderColor", component.getBorderColor() != null ? ColorUtils.normalizeCssColor(component.getBorderColor()) : "transparent");
 
         layoutVariables.put("leftMargin", margins.getLeft());
         layoutVariables.put("rightMargin", margins.getRight());

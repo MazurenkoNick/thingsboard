@@ -7156,6 +7156,8 @@
         "top": "Top",
         "bottom": "Bottom",
         "background": "Background",
+        "border": "Border",
+        "radius": "Radius",
         "insert-update-image": "Insert/update image",
         "edit-image": "Edit image",
         "image": "Image",

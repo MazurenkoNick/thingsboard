@@ -40,4 +40,10 @@ public interface LayoutReportComponent extends ReportComponent {
 
     String getBackground();
 
+    Integer getBorderWidth();
+
+    Integer getBorderRadius();
+
+    String getBorderColor();
+
 }

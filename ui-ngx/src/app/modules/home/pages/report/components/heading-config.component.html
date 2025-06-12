@@ -70,5 +70,26 @@
                       formControlName="background">
       </tb-color-input>
     </div>
+    <div class="tb-form-row space-between">
+      <div translate>report-template.border</div>
+      <div class="flex flex-row items-center justify-start gap-2">
+        <div class="tb-small-label" translate>report-template.width</div>
+        <mat-form-field appearance="outline" class="number" subscriptSizing="dynamic">
+          <input matInput formControlName="borderWidth" type="number" min="0" step="1" placeholder="{{ 'widget-config.set' | translate }}">
+          <div matSuffix>pt</div>
+        </mat-form-field>
+        <mat-divider vertical></mat-divider>
+        <div class="tb-small-label" translate>report-template.radius</div>
+        <mat-form-field appearance="outline" class="number" subscriptSizing="dynamic">
+          <input matInput formControlName="borderRadius" type="number" min="0" step="1" placeholder="{{ 'widget-config.set' | translate }}">
+          <div matSuffix>pt</div>
+        </mat-form-field>
+        <mat-divider vertical></mat-divider>
+        <tb-color-input asBoxInput
+                        colorClearButton
+                        formControlName="borderColor">
+        </tb-color-input>
+      </div>
+    </div>
   </div>
 </div>

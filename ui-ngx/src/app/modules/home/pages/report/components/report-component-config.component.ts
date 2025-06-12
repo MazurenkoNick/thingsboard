@@ -190,6 +190,12 @@ export abstract class AbstractReportComponentConfig<C extends ReportComponentCon
       this.reportConfigForm.addControl('margins', this.fb.control(reportComponentConfig.margins));
       this.reportConfigForm.addControl('background',
         this.fb.control(reportComponentConfig.background));
+      this.reportConfigForm.addControl('borderWidth',
+        this.fb.control(reportComponentConfig.borderWidth));
+      this.reportConfigForm.addControl('borderRadius',
+        this.fb.control(reportComponentConfig.borderRadius));
+      this.reportConfigForm.addControl('borderColor',
+        this.fb.control(reportComponentConfig.borderColor));
     }
     this.reportConfigForm.valueChanges.pipe(
       takeUntilDestroyed(this.destroyRef)

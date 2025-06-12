@@ -82,6 +82,18 @@ export class ReportComponentComponent implements OnInit, AfterViewInit, OnDestro
   @HostBinding('style.background')
   background: string;
 
+  @HostBinding('style.border-width.pt')
+  borderWidth: number;
+
+  @HostBinding('style.border-radius.pt')
+  borderRadius: number;
+
+  @HostBinding('style.border-color')
+  borderColor: string;
+
+  @HostBinding('style.border-style')
+  borderStyle = 'solid';
+
   @HostBinding('style.margin-left.pt')
   marginLeft: number;
 
@@ -148,6 +160,10 @@ export class ReportComponentComponent implements OnInit, AfterViewInit, OnDestro
 
   @HostBinding('class.tb-hover')
   hovered = false;
+
+  public get isPlainFormat(): boolean {
+    return this.format === TbReportFormat.CSV;
+  }
 
   private editReportComponentTooltip: ITooltipsterInstance;
 
@@ -242,19 +258,23 @@ export class ReportComponentComponent implements OnInit, AfterViewInit, OnDestro
 
   private updateComponentSize() {
     const parentWidth = this.elementRef.nativeElement.getBoundingClientRect().width;
+    const border = pointsToPixels(this.borderWidth)*2;
     const leftRightPaddings = pointsToPixels(this.paddingLeft) + pointsToPixels(this.paddingRight);
-    this.renderer.setStyle(this.reportComponentElement().nativeElement, 'width', ((parentWidth - leftRightPaddings) / this.scale) + 'px');
+    this.renderer.setStyle(this.reportComponentElement().nativeElement, 'width', ((parentWidth - leftRightPaddings - border) / this.scale) + 'px');
     this.renderer.setStyle(this.reportComponentElement().nativeElement, 'transform', `scale(${this.scale})`);
     const rect = this.reportComponentElement().nativeElement.getBoundingClientRect();
     const targetHeight = rect.height > 0 ? rect.height : this.reportComponentHeight;
     this.reportComponentHeight = targetHeight;
     const topBottomPaddings = pointsToPixels(this.paddingTop) + pointsToPixels(this.paddingBottom);
-    this.renderer.setStyle(this.elementRef.nativeElement, 'height', (targetHeight + topBottomPaddings) + 'px');
+    this.renderer.setStyle(this.elementRef.nativeElement, 'height', (targetHeight + topBottomPaddings + border) + 'px');
   }
 
   private updateComponentLayout() {
-    if (isLayoutReportComponentConfig(this.reportComponent)) {
+    if (isLayoutReportComponentConfig(this.reportComponent) && !this.isPlainFormat) {
       this.background = this.reportComponent.background;
+      this.borderWidth = (this.reportComponent.borderWidth || 0) * this.scale;
+      this.borderRadius = (this.reportComponent.borderRadius || 0) * this.scale;
+      this.borderColor = this.reportComponent.borderColor || 'transparent';
       this.marginLeft = (this.reportComponent.margins?.left || 0) * this.scale;
       this.marginRight = (this.reportComponent.margins?.right || 0) * this.scale;
       this.marginTop = (this.reportComponent.margins?.top || 0) * this.scale;
@@ -264,8 +284,13 @@ export class ReportComponentComponent implements OnInit, AfterViewInit, OnDestro
       this.paddingTop = (this.reportComponent.paddings?.top || 0) * this.scale;
       this.paddingBottom = (this.reportComponent.paddings?.bottom || 0) * this.scale;
     } else {
+      this.borderWidth = 0;
       this.paddingLeft = this.paddingRight = this.paddingTop = this.paddingBottom =
         this.marginLeft = this.marginRight = this.marginTop = this.marginBottom = 0;
+      if (isLayoutReportComponentConfig(this.reportComponent)) {
+        this.marginTop = (this.reportComponent.margins?.top || 0) * this.scale;
+        this.marginBottom = (this.reportComponent.margins?.bottom || 0) * this.scale;
+      }
       if (this.typeData.pageBreak) {
         this.marginLeft = -this.pageMarginLeft / this.scale;
         this.marginRight = -this.pageMarginRight / this.scale;

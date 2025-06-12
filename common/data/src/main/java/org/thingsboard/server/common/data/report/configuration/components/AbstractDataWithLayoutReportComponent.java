@@ -47,5 +47,8 @@ public abstract class AbstractDataWithLayoutReportComponent extends AbstractData
     private Insets margins;
     private Insets paddings;
     private String background;
+    private Integer borderWidth;
+    private Integer borderRadius;
+    private String borderColor;
 
 }

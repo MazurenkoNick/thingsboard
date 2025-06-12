@@ -63,6 +63,9 @@ export interface LayoutReportComponentConfig extends ReportComponentConfig {
   background?: string;
   margins?: Insets;
   paddings?: Insets;
+  borderWidth?: number;
+  borderRadius?: number;
+  borderColor?: string;
 }
 
 export const isLayoutReportComponentConfig = (obj: any): obj is LayoutReportComponentConfig => {
