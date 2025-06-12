@@ -30,7 +30,7 @@
     OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 
 -->
-<table class="tb-report-table-preview tb-report-table">
+<table class="tb-report-table-preview tb-report-table" [class.tb-plain-table]="!canHaveLayout">
   <colgroup>
     @for (column of columns; track column) {
       <col [attr.width]="columnWidth(column)">

@@ -47,11 +47,7 @@ import { DatePipe } from '@angular/common';
 import { EntityType, entityTypeResources, entityTypeTranslations } from '@shared/models/entity-type.models';
 import { EntityAction } from '@home/models/entity/entity-component.models';
 import { UserPermissionsService } from '@core/http/user-permissions.service';
-import {
-  ReportTemplate,
-  ReportTemplateInfo,
-  reportTemplateTypeTranslationMap
-} from '@shared/models/report.models';
+import { ReportTemplate, ReportTemplateInfo, reportTemplateTypeTranslationMap } from '@shared/models/report.models';
 import { ReportTemplateService } from '@core/http/report-template.service';
 import { mergeMap } from 'rxjs/operators';
 import { UtilsService } from '@core/services/utils.service';
@@ -63,7 +59,6 @@ import { AppState } from '@core/core.state';
 import { ReportTemplateTableHeaderComponent } from '@home/pages/report/report-template-table-header.component';
 import { ReportTemplateTabsComponent } from '@home/pages/report/report-template-tabs.component';
 import { ReportTemplateFormComponent } from '@home/pages/report/report-template-form.component';
-import { mergeDeep } from '@core/utils';
 import { ImportExportService } from '@shared/import-export/import-export.service';
 
 @Injectable()
@@ -78,7 +73,7 @@ export class ReportTemplatesTableConfigResolver  {
               private router: Router,
               private datePipe: DatePipe) {}
 
-  resolve(route: ActivatedRouteSnapshot): EntityTableConfig<ReportTemplateInfo> {
+  resolve(_route: ActivatedRouteSnapshot): EntityTableConfig<ReportTemplateInfo> {
     const config = new EntityTableConfig<ReportTemplateInfo>();
     this.configDefaults(config);
     const authUser = getCurrentAuthUser(this.store);
@@ -186,9 +181,8 @@ export class ReportTemplatesTableConfigResolver  {
     return actions;
   }
 
-  configureGroupActions(config: EntityTableConfig<ReportTemplateInfo>): Array<GroupActionDescriptor<ReportTemplateInfo>> {
-    const actions: Array<GroupActionDescriptor<ReportTemplateInfo>> = [];
-    return actions;
+  configureGroupActions(_config: EntityTableConfig<ReportTemplateInfo>): Array<GroupActionDescriptor<ReportTemplateInfo>> {
+    return [];
   }
 
   configureAddActions(config: EntityTableConfig<ReportTemplateInfo>): Array<HeaderActionDescriptor> {
@@ -215,18 +209,17 @@ export class ReportTemplatesTableConfigResolver  {
       $event.stopPropagation();
     }
     const url = this.router.createUrlTree([reportTemplate.id.id], {relativeTo: config.getTable().route});
-    this.router.navigateByUrl(url);
+    this.router.navigateByUrl(url).then(() => {});
   }
 
-  importReportTemplate($event: Event, config: EntityTableConfig<ReportTemplateInfo>) {
-    // TODO:
-    /*this.importExport.importDashboard(customerId, this.editMissingAliases.bind(this)).subscribe(
-      (dashboard) => {
-        if (dashboard) {
-          config.updateData();
+  importReportTemplate(_$event: Event, config: EntityTableConfig<ReportTemplateInfo>) {
+    this.importExport.importReportTemplate().subscribe(
+      {
+        next: reportTemplate => {
+          config.entityAdded(reportTemplate);
         }
       }
-    );*/
+    );
   }
 
   exportReportTemplate($event: Event, reportTemplate: ReportTemplateInfo) {

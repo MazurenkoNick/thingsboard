@@ -86,7 +86,7 @@ export class TimeseriesTablePreviewComponent extends AbstractReportTablePreviewC
 
   protected styleFromColumnSettings(column: DataKey, header = false): ComponentStyle {
     const style = super.styleFromColumnSettings(column, header);
-    if (!header) {
+    if (this.canHaveLayout && !header) {
       if ('ts' === column.name) {
         style.fontSize = style.fontSize || '9pt';
       }

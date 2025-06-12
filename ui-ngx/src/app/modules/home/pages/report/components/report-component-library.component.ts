@@ -39,10 +39,15 @@ import {
   viewChild,
   ViewEncapsulation
 } from '@angular/core';
-import { reportComponentTypeMap, reportComponentTypes } from '@home/pages/report/components/report-component.models';
+import {
+  csvReportComponentTypes,
+  reportComponentTypeMap,
+  reportComponentTypes
+} from '@home/pages/report/components/report-component.models';
 import { CdkDragStart } from '@angular/cdk/drag-drop';
 import { coerceBoolean } from '@shared/decorators/coercion';
 import { ReportComponentType } from '@shared/models/report-component.models';
+import { TbReportFormat } from '@shared/models/report.models';
 
 @Component({
   selector: 'tb-report-component-library',
@@ -55,6 +60,9 @@ export class ReportComponentLibraryComponent implements OnInit, OnChanges {
   @Input()
   @coerceBoolean()
   subReport = false;
+
+  @Input()
+  format: TbReportFormat = TbReportFormat.PDF;
 
   libraryDragOriginList = viewChild('libraryDragOriginList', {
     read: ElementRef,
@@ -79,7 +87,7 @@ export class ReportComponentLibraryComponent implements OnInit, OnChanges {
     for (const propName of Object.keys(changes)) {
       const change = changes[propName];
       if (!change.firstChange && change.currentValue !== change.previousValue) {
-        if (propName === 'subReport') {
+        if (['subReport', 'format'].includes(propName)) {
           this.updateReportComponentTypes();
         }
       }
@@ -118,10 +126,11 @@ export class ReportComponentLibraryComponent implements OnInit, OnChanges {
   }
 
   private updateReportComponentTypes() {
+    const componentTypes = this.format === TbReportFormat.CSV ? csvReportComponentTypes : reportComponentTypes;
     if (this.subReport) {
-      this.reportComponentTypes = reportComponentTypes.filter((type) => type !== ReportComponentType.SUB_REPORT );
+      this.reportComponentTypes = componentTypes.filter((type) => type !== ReportComponentType.SUB_REPORT );
     } else {
-      this.reportComponentTypes = reportComponentTypes;
+      this.reportComponentTypes = componentTypes;
     }
   }
 

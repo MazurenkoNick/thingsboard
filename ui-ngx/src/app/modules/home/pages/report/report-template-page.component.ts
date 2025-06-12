@@ -54,16 +54,20 @@ import {
   filtersToReportFilterList,
   filterToReportFilter,
   HeaderFooter,
-  PageOrientation, PageSize,
+  isPdfReportTemplateConfig,
+  PageOrientation,
+  PageSize,
   paperSizeToPointsMap,
   PdfReportTemplateConfig,
   PdfReportTemplateSettings,
   reportFilterListToFilters,
   ReportRequest,
   ReportTemplate,
+  ReportTemplateSettings,
   ReportTemplateType,
-  toPdfReportTemplateSettings,
-  updateFromPdfReportTemplateSettings,
+  TbReportFormat,
+  toReportTemplateSettings,
+  updateFromReportTemplateSettings,
   validateAndUpdateReportTemplate
 } from '@shared/models/report.models';
 import { UserPermissionsService } from '@core/http/user-permissions.service';
@@ -129,14 +133,20 @@ export class ReportTemplatePageComponent extends PageComponent
     this.isDirtyValue = value;
   }
 
+  get showHeaderFooter(): boolean {
+    return !this.subReport && this.format === TbReportFormat.PDF;
+  }
+
+  get pdfConfiguration(): PdfReportTemplateConfig {
+    return isPdfReportTemplateConfig(this.reportTemplate?.configuration) ? this.reportTemplate.configuration : null;
+  }
+
   get currentHeader(): HeaderFooter {
-    return this.headerToggleValue === 'header' ? this.reportTemplate.configuration.header :
-      this.reportTemplate.configuration.header.firstPage;
+    return this.headerToggleValue === 'header' ? this.pdfConfiguration?.header : this.pdfConfiguration?.header?.firstPage;
   }
 
   get currentFooter(): HeaderFooter {
-    return this.footerToggleValue === 'footer' ? this.reportTemplate.configuration.footer :
-      this.reportTemplate.configuration.footer.firstPage;
+    return this.footerToggleValue === 'footer' ? this.pdfConfiguration?.footer : this.pdfConfiguration?.footer?.firstPage;
   }
 
   @HostBinding('style.width') width = '100%';
@@ -155,13 +165,15 @@ export class ReportTemplatePageComponent extends PageComponent
 
   readonly = !this.userPermissionsService.hasGenericPermission(Resource.REPORT_TEMPLATE, Operation.WRITE);
 
+  format: TbReportFormat;
+
   subReport = false;
 
   isDirtyValue: boolean;
 
   isFullscreen = false;
 
-  reportTemplate: ReportTemplate<PdfReportTemplateConfig>;
+  reportTemplate: ReportTemplate;
 
   timePreview: string;
 
@@ -228,7 +240,8 @@ export class ReportTemplatePageComponent extends PageComponent
         createEntityAlias: this.createEntityAlias.bind(this),
         editEntityAlias: this.editEntityAlias.bind(this),
         createFilter: this.createFilter.bind(this)
-      }
+      },
+      format: null
     };
     this.reportTemplateSettingsFormControl = this.fb.control(null);
     this.reportTemplateSettingsFormControl.valueChanges.pipe(
@@ -499,13 +512,14 @@ export class ReportTemplatePageComponent extends PageComponent
     if ($event) {
       $event.stopPropagation();
     }
-    const settings = toPdfReportTemplateSettings(this.reportTemplate);
+    const settings = toReportTemplateSettings(this.reportTemplate);
     this.dialog.open<ReportTemplateSettingsDialogComponent, ReportTemplateSettingsDialogData,
-      PdfReportTemplateSettings>(ReportTemplateSettingsDialogComponent, {
+      ReportTemplateSettings>(ReportTemplateSettingsDialogComponent, {
       disableClose: true,
       panelClass: ['tb-dialog', 'tb-fullscreen-dialog'],
       data: {
         subReport: this.subReport,
+        format: this.format,
         settings
       }
     }).afterClosed().subscribe((settings) => {
@@ -522,12 +536,12 @@ export class ReportTemplatePageComponent extends PageComponent
       timezone: getDefaultTimezone()
     };
     this.dialogService.progress(
-      this.reportService.downloadTestReport(reportRequest, false), this.translate.instant('report.generating-report')).subscribe();
+      this.reportService.downloadTestReport(reportRequest, this.format !== TbReportFormat.PDF), this.translate.instant('report.generating-report')).subscribe();
   }
 
-  private updateReportTemplateSettings(settings: PdfReportTemplateSettings): void {
+  private updateReportTemplateSettings(settings: ReportTemplateSettings): void {
     this.timePreview = this.date.transform(Date.now(), settings.timeDataPattern);
-    updateFromPdfReportTemplateSettings(this.reportTemplate, settings);
+    updateFromReportTemplateSettings(this.reportTemplate, settings);
     this.updatePageLayout();
     this.isDirty = true;
     this.updateBreadcrumbs.emit();
@@ -535,20 +549,22 @@ export class ReportTemplatePageComponent extends PageComponent
   }
 
   private updatePageLayout() {
-    const pageSize = this.subReport ? PageSize.A4 : this.reportTemplate.configuration.pageSize;
-    const orientation = this.subReport ? PageOrientation.PORTRAIT : this.reportTemplate.configuration.pageOrientation;
-    const pageSizePoints = paperSizeToPointsMap.get(pageSize);
-
-    this.pageWidth = orientation === PageOrientation.PORTRAIT ? pageSizePoints[0] : pageSizePoints[1];
-    this.background = this.subReport ? "#fff" : this.reportTemplate.configuration.pageBackground;
-
-    this.marginLeft = this.subReport ? 20 : this.reportTemplate.configuration.pageMargins.left;
-    this.marginRight =this.subReport ? 20 : this.reportTemplate.configuration.pageMargins.right;
-
-    if (this.subReport) {
+    let pageSize: PageSize;
+    let orientation: PageOrientation;
+    if (this.subReport || !isPdfReportTemplateConfig(this.reportTemplate.configuration)) {
+      pageSize = PageSize.A4;
+      orientation = PageOrientation.PORTRAIT;
+      this.background = '#fff';
+      this.marginLeft = 20;
+      this.marginRight = 20;
       this.contentMarginTop = 20;
       this.contentMarginBottom = 20;
     } else {
+      pageSize = this.reportTemplate.configuration.pageSize;
+      orientation = this.reportTemplate.configuration.pageOrientation;
+      this.background = this.reportTemplate.configuration.pageBackground;
+      this.marginLeft = this.reportTemplate.configuration.pageMargins.left;
+      this.marginRight = this.reportTemplate.configuration.pageMargins.right;
       if (this.currentHeader.enabled && this.currentHeader.components?.length) {
         this.headerMarginTop = this.reportTemplate.configuration.pageMargins.top;
         this.contentMarginTop = 0;
@@ -565,6 +581,9 @@ export class ReportTemplatePageComponent extends PageComponent
         this.contentMarginBottom = this.reportTemplate.configuration.pageMargins.bottom;
       }
     }
+
+    const pageSizePoints = paperSizeToPointsMap.get(pageSize);
+    this.pageWidth = orientation === PageOrientation.PORTRAIT ? pageSizePoints[0] : pageSizePoints[1];
     this.updateScale();
   }
 
@@ -590,11 +609,12 @@ export class ReportTemplatePageComponent extends PageComponent
     this.cd.markForCheck();
   }
 
-  private init(reportTemplate: ReportTemplate<PdfReportTemplateConfig>) {
+  private init(reportTemplate: ReportTemplate) {
     this.cancelReportComponentEdit();
     this.headerToggleValue = 'header';
     this.footerToggleValue = 'footer';
     this.reportTemplate = validateAndUpdateReportTemplate(reportTemplate);
+    this.format = this.reportTemplate.format;
     this.subReport = this.reportTemplate.type === ReportTemplateType.SUB_REPORT;
 
     this.updatePageLayout();
@@ -609,8 +629,9 @@ export class ReportTemplatePageComponent extends PageComponent
       entityAliases,
       filters
     );
+    this.reportComponentContext.format = this.format;
 
-    const settings = toPdfReportTemplateSettings(this.reportTemplate);
+    const settings = toReportTemplateSettings(this.reportTemplate);
 
     this.timePreview = this.date.transform(Date.now(), settings.timeDataPattern);
 

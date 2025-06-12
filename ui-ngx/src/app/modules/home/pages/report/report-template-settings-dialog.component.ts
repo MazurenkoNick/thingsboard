@@ -29,18 +29,19 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { PdfReportTemplateSettings } from '@shared/models/report.models';
+import { ReportTemplateSettings, TbReportFormat } from '@shared/models/report.models';
 import { Component, Inject } from '@angular/core';
 import { DialogComponent } from '@shared/components/dialog.component';
 import { Store } from '@ngrx/store';
 import { AppState } from '@core/core.state';
 import { Router } from '@angular/router';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
-import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormControl } from '@angular/forms';
 
 export interface ReportTemplateSettingsDialogData {
   subReport: boolean;
-  settings: PdfReportTemplateSettings;
+  format: TbReportFormat;
+  settings: ReportTemplateSettings;
 }
 
 @Component({
@@ -51,7 +52,8 @@ export interface ReportTemplateSettingsDialogData {
 export class ReportTemplateSettingsDialogComponent extends DialogComponent<ReportTemplateSettingsDialogComponent, ReportTemplateSettingsDialogData> {
 
   subReport: boolean;
-  settings: PdfReportTemplateSettings;
+  format: TbReportFormat;
+  settings: ReportTemplateSettings;
 
   settingsFormControl: FormControl;
 
@@ -62,6 +64,7 @@ export class ReportTemplateSettingsDialogComponent extends DialogComponent<Repor
               private fb: FormBuilder) {
     super(store, router, dialogRef);
     this.subReport = data.subReport;
+    this.format = data.format;
     this.settings = data.settings;
     this.settingsFormControl = this.fb.control(this.settings);
   }

@@ -53,10 +53,13 @@ export class SubReportConfigComponent extends AbstractReportComponentConfig<SubR
   basicMode = WidgetConfigMode.basic;
 
   protected buildForm(reportComponentConfig: SubReportReportComponentConfig): FormGroup {
-    return this.fb.group({
+    const form: FormGroup = this.fb.group({
       dataSources: [reportComponentConfig.dataSources, []],
-      templateId: [reportComponentConfig.templateId, []],
-      avoidPageBreakInside: [reportComponentConfig.avoidPageBreakInside, []]
+      templateId: [reportComponentConfig.templateId, []]
     });
+    if (this.canHaveLayout) {
+      form.addControl('avoidPageBreakInside', this.fb.control(reportComponentConfig.avoidPageBreakInside, []));
+    }
+    return form;
   }
 }

@@ -31,12 +31,14 @@
 
 -->
 <div class="tb-form-panel no-border" [formGroup]="reportConfigForm">
-  <div class="tb-report-component-config-header">
-    <tb-toggle-select [(ngModel)]="settingsTab" [ngModelOptions]="{standalone: true}" appearance="fill">
-      <tb-toggle-option value="data">{{ 'report-template.data' | translate }}</tb-toggle-option>
-      <tb-toggle-option value="layout">{{ 'report-template.layout' | translate }}</tb-toggle-option>
-    </tb-toggle-select>
-  </div>
+  @if (canHaveLayout) {
+    <div class="tb-report-component-config-header">
+      <tb-toggle-select [(ngModel)]="settingsTab" [ngModelOptions]="{standalone: true}" appearance="fill">
+        <tb-toggle-option value="data">{{ 'report-template.data' | translate }}</tb-toggle-option>
+        <tb-toggle-option value="layout">{{ 'report-template.layout' | translate }}</tb-toggle-option>
+      </tb-toggle-select>
+    </div>
+  }
   <div class="tb-form-panel no-border no-padding" [class.!hidden]="settingsTab !== 'data'">
     <div class="tb-form-row space-between">
       <div>{{ 'report-template.timewindow' | translate }}</div>
@@ -86,7 +88,9 @@
           </mat-panel-title>
         </mat-expansion-panel-header>
         <ng-template matExpansionPanelContent>
-          <tb-report-heading [variableNames]="['entityName', 'entityLabel', 'rowCount']" formControlName="tableHeading"></tb-report-heading>
+          <tb-report-heading [variableNames]="['entityName', 'entityLabel', 'rowCount']"
+                             [withLayout]="canHaveLayout"
+                             formControlName="tableHeading"></tb-report-heading>
         </ng-template>
       </mat-expansion-panel>
     </div>
@@ -94,7 +98,7 @@
       [dataKeysPanelOptions]="{
         widgetType: widgetType.alarm,
         callbacks: callbacks,
-        settingsForm: TableReportColumnSettingsForm
+        settingsForm: canHaveLayout ? TableReportColumnSettingsForm : null
       }"
       stroked
       panelTitle="{{ 'widgets.table.columns' | translate }}"
@@ -113,21 +117,23 @@
       formControlName="columns">
     </tb-data-keys-panel>
   </div>
-  <div class="tb-form-panel no-border no-padding" [class.!hidden]="settingsTab !== 'layout'">
-    <div class="tb-form-row space-between">
-      <div translate>report-template.paddings</div>
-      <tb-report-insets formControlName="paddings"></tb-report-insets>
+  @if (canHaveLayout) {
+    <div class="tb-form-panel no-border no-padding" [class.!hidden]="settingsTab !== 'layout'">
+      <div class="tb-form-row space-between">
+        <div translate>report-template.paddings</div>
+        <tb-report-insets formControlName="paddings"></tb-report-insets>
+      </div>
+      <div class="tb-form-row space-between">
+        <div translate>report-template.margins</div>
+        <tb-report-insets formControlName="margins"></tb-report-insets>
+      </div>
+      <div class="tb-form-row space-between">
+        <div translate>report-template.background</div>
+        <tb-color-input asBoxInput
+                        colorClearButton
+                        formControlName="background">
+        </tb-color-input>
+      </div>
     </div>
-    <div class="tb-form-row space-between">
-      <div translate>report-template.margins</div>
-      <tb-report-insets formControlName="margins"></tb-report-insets>
-    </div>
-    <div class="tb-form-row space-between">
-      <div translate>report-template.background</div>
-      <tb-color-input asBoxInput
-                      colorClearButton
-                      formControlName="background">
-      </tb-color-input>
-    </div>
-  </div>
+  }
 </div>

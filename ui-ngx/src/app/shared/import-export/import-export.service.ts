@@ -124,7 +124,7 @@ import { FormProperty, propertyValid } from '@shared/models/dynamic-form.models'
 import { CalculatedFieldsService } from '@core/http/calculated-fields.service';
 import { CalculatedField } from '@shared/models/calculated-field.models';
 import { ReportTemplateService } from '@core/http/report-template.service';
-import { ReportTemplate } from '@shared/models/report.models';
+import { ReportTemplate, ReportTemplateType, TbReportFormat } from '@shared/models/report.models';
 
 export type editMissingAliasesFunction = (widgets: Array<Widget>, isSingleWidget: boolean,
                                           customTitle: string, missingEntityAliases: EntityAliases) => Observable<EntityAliases>;
@@ -224,6 +224,22 @@ export class ImportExportService {
         this.handleExportError(e, 'report-template.export-failed-error');
       }
     });
+  }
+
+  public importReportTemplate(): Observable<ReportTemplate> {
+    return this.openImportDialog('report-template.import', 'report-template.report-template-file').pipe(
+      mergeMap((reportTemplate: ReportTemplate) => {
+        if (!this.validateImportedReportTemplate(reportTemplate)) {
+          this.store.dispatch(new ActionNotificationShow(
+            {message: this.translate.instant('report-template.invalid-report-template-file-error'),
+              type: 'error'}));
+          throw new Error('Invalid report template file');
+        } else {
+          return this.reportTemplateService.saveReportTemplate(this.prepareImport(reportTemplate));
+        }
+      }),
+      catchError(() => of(null))
+    );
   }
 
   public exportCalculatedField(calculatedFieldId: string): void {
@@ -1180,6 +1196,28 @@ export class ImportExportService {
       || !isNotEmptyStr(image.fileName)
       || !isNotEmptyStr(image.mediaType)
       || !isNotEmptyStr(image.resourceKey));
+  }
+
+  private validateImportedReportTemplate(reportTemplate: ReportTemplate): boolean {
+    if (   !isNotEmptyStr(reportTemplate.name)
+        || isUndefined(reportTemplate.format)
+        || isUndefined(reportTemplate.type)
+        || isUndefined(reportTemplate.configuration)) {
+      return false;
+    }
+    if (!TbReportFormat[reportTemplate.format]) {
+      return false;
+    }
+    if (!ReportTemplateType[reportTemplate.type]) {
+      return false;
+    }
+    if (!reportTemplate.configuration.format) {
+      return false;
+    }
+    if (reportTemplate.configuration.format !== reportTemplate.format) {
+      return false;
+    }
+    return true;
   }
 
   private validateImportedDashboard(dashboard: Dashboard): boolean {

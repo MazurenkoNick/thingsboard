@@ -62,6 +62,7 @@ import { ReportComponentsComponent } from '@home/pages/report/components/report-
 import ITooltipsterInstance = JQueryTooltipster.ITooltipsterInstance;
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import ITooltipsterGeoHelper = JQueryTooltipster.ITooltipsterGeoHelper;
+import { TbReportFormat } from '@shared/models/report.models';
 
 @Component({
   selector: 'tb-report-component',
@@ -115,6 +116,9 @@ export class ReportComponentComponent implements OnInit, AfterViewInit, OnDestro
   reportComponent: ReportComponentConfig;
 
   @Input()
+  format: TbReportFormat;
+
+  @Input()
   dragging = false;
 
   @Input()
@@ -165,6 +169,7 @@ export class ReportComponentComponent implements OnInit, AfterViewInit, OnDestro
       const compRef = this.reportPreviewContainer.viewContainerRef.createComponent(this.typeData.previewComponent);
       this.reportComponentPreview = compRef.instance;
       this.reportComponentPreview.reportComponent = this.reportComponent;
+      this.reportComponentPreview.format = this.format;
       this.reportComponentPreview.contentResized.pipe(
         takeUntilDestroyed(this.destroyRef)
       ).subscribe(() => {
@@ -398,8 +403,15 @@ export abstract class AbstractReportComponentPreview<C extends ReportComponentCo
   @Input()
   reportComponent: C;
 
+  @Input()
+  format: TbReportFormat;
+
   @Output()
   contentResized = new EventEmitter();
+
+  public get canHaveLayout(): boolean {
+    return this.format === TbReportFormat.PDF;
+  }
 
   protected cd = inject(ChangeDetectorRef);
 

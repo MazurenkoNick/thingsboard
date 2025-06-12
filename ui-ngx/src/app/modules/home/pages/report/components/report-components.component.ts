@@ -59,6 +59,7 @@ import {
 import { deepClone } from '@core/utils';
 import { ReportComponentComponent } from '@home/pages/report/components/report-component.component';
 import { reportComponentTypeMap } from '@home/pages/report/components/report-component.models';
+import { TbReportFormat } from '@shared/models/report.models';
 
 @Component({
   selector: 'tb-report-components',
@@ -70,6 +71,9 @@ export class ReportComponentsComponent implements OnInit, OnChanges {
 
   @HostBinding('style.position')
   position = 'relative';
+
+  @Input()
+  format: TbReportFormat;
 
   @HostBinding('style.background')
   @Input()

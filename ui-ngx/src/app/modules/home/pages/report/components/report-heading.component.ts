@@ -33,6 +33,7 @@ import { Component, DestroyRef, forwardRef, Input, OnInit } from '@angular/core'
 import { ControlValueAccessor, NG_VALUE_ACCESSOR, UntypedFormBuilder, UntypedFormGroup } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Heading } from '@shared/models/report-component.models';
+import { coerceBoolean } from '@shared/decorators/coercion';
 
 @Component({
   selector: 'tb-report-heading',
@@ -53,6 +54,10 @@ export class ReportHeadingComponent implements OnInit, ControlValueAccessor {
 
   @Input()
   disabled: boolean;
+
+  @Input()
+  @coerceBoolean()
+  withLayout = true;
 
   private modelValue: Heading;
 
@@ -75,6 +80,13 @@ export class ReportHeadingComponent implements OnInit, ControlValueAccessor {
         height: [null]
       }
     )
+    if (this.withLayout) {
+      this.headingFormGroup.addControl('font', this.fb.control(null));
+      this.headingFormGroup.addControl('color', this.fb.control(null));
+      this.headingFormGroup.addControl('textAlignment', this.fb.control(null));
+      this.headingFormGroup.addControl('verticalAlignment', this.fb.control(null));
+      this.headingFormGroup.addControl('height', this.fb.control(null));
+    }
     this.headingFormGroup.valueChanges.pipe(
       takeUntilDestroyed(this.destroyRef)
     ).subscribe(() => {

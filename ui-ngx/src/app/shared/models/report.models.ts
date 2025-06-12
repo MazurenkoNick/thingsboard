@@ -43,11 +43,7 @@ import {
   keyFilterInfosToKeyFilters,
   keyFiltersToKeyFilterInfos
 } from '@shared/models/query/query.models';
-import {
-  ReportComponentConfig,
-  ReportComponentType,
-  TableReportComponentConfig
-} from '@shared/models/report-component.models';
+import { ReportComponentConfig } from '@shared/models/report-component.models';
 import { ReportId } from '@shared/models/id/report-id';
 import { UserId } from '@shared/models/id/user-id';
 
@@ -159,11 +155,11 @@ export const reportFormats = Object.keys(TbReportFormat) as TbReportFormat[];
 
 export interface ReportTemplateConfig {
   format: TbReportFormat;
-  timeDataPattern?: string;
-}
-
-export interface AbstractReportTemplateConfig extends ReportTemplateConfig {
   namePattern: string;
+  timeDataPattern?: string;
+  entityAliases: EntityAlias[];
+  filters: ReportFilter[];
+  components: ReportComponentConfig[];
 }
 
 export interface ReportTemplateSettings {
@@ -227,17 +223,22 @@ export interface Insets {
   bottom?: number;
 }
 
-export interface PdfReportTemplateConfig extends AbstractReportTemplateConfig {
+export interface PdfReportTemplateConfig extends ReportTemplateConfig {
   pageSize: PageSize;
   pageOrientation: PageOrientation;
   pageMargins: Insets;
   pageBackground?: string;
-  entityAliases: EntityAlias[];
-  filters: ReportFilter[];
   header: HeaderFooter;
   footer: HeaderFooter;
-  components: ReportComponentConfig[];
   format: TbReportFormat.PDF;
+}
+
+export const isPdfReportTemplateConfig = (obj: any): obj is PdfReportTemplateConfig => {
+  return typeof obj === 'object' && obj !== null && 'format' in obj && obj.format === TbReportFormat.PDF;
+}
+
+export interface CsvReportTemplateConfig extends ReportTemplateConfig {
+  format: TbReportFormat.CSV;
 }
 
 export interface PdfReportTemplateSettings extends ReportTemplateSettings {
@@ -247,40 +248,42 @@ export interface PdfReportTemplateSettings extends ReportTemplateSettings {
   pageBackground?: string;
 }
 
-export interface CsvReportTemplateConfig extends AbstractReportTemplateConfig {
-  entityAlias: EntityAlias;
-  filter: ReportFilter;
-  component: TableReportComponentConfig;
-  format: TbReportFormat.CSV;
-}
-
 export interface ReportTemplate<Config extends ReportTemplateConfig = ReportTemplateConfig> extends BaseReportTemplate {
   configuration: Config;
 }
 
-export const toPdfReportTemplateSettings = (reportTemplate: ReportTemplate<PdfReportTemplateConfig>): PdfReportTemplateSettings => {
-  return {
+export const toReportTemplateSettings = (reportTemplate: ReportTemplate): ReportTemplateSettings => {
+  const settings: ReportTemplateSettings = {
     name: reportTemplate.name,
     namePattern: reportTemplate.configuration.namePattern,
     timeDataPattern: reportTemplate.configuration.timeDataPattern,
-    description: reportTemplate.description,
-    pageSize: reportTemplate.configuration.pageSize,
-    pageOrientation: reportTemplate.configuration.pageOrientation,
-    pageMargins: reportTemplate.configuration.pageMargins,
-    pageBackground: reportTemplate.configuration.pageBackground
+    description: reportTemplate.description
   };
+  if (reportTemplate.format === TbReportFormat.PDF) {
+    const pdfSettings = settings as PdfReportTemplateSettings;
+    const pdfConfig = reportTemplate.configuration as PdfReportTemplateConfig;
+    pdfSettings.pageSize = pdfConfig.pageSize;
+    pdfSettings.pageOrientation = pdfConfig.pageOrientation;
+    pdfSettings.pageMargins = pdfConfig.pageMargins;
+    pdfSettings.pageBackground = pdfConfig.pageBackground;
+  }
+  return settings;
 }
 
-export const updateFromPdfReportTemplateSettings =
-  (reportTemplate: ReportTemplate<PdfReportTemplateConfig>, settings: PdfReportTemplateSettings): void => {
+export const updateFromReportTemplateSettings =
+  (reportTemplate: ReportTemplate, settings: ReportTemplateSettings): void => {
     reportTemplate.name = settings.name;
     reportTemplate.configuration.namePattern = settings.namePattern;
     reportTemplate.configuration.timeDataPattern = settings.timeDataPattern;
     reportTemplate.description = settings.description;
-    reportTemplate.configuration.pageSize = settings.pageSize;
-    reportTemplate.configuration.pageOrientation = settings.pageOrientation;
-    reportTemplate.configuration.pageMargins = settings.pageMargins;
-    reportTemplate.configuration.pageBackground = settings.pageBackground;
+    if (reportTemplate.format === TbReportFormat.PDF) {
+      const pdfConfiguration = reportTemplate.configuration as PdfReportTemplateConfig;
+      const pdfSettings = settings as PdfReportTemplateSettings;
+      pdfConfiguration.pageSize = pdfSettings.pageSize;
+      pdfConfiguration.pageOrientation = pdfSettings.pageOrientation;
+      pdfConfiguration.pageMargins = pdfSettings.pageMargins;
+      pdfConfiguration.pageBackground = pdfSettings.pageBackground;
+    }
 }
 
 export interface ReportRequest {
@@ -321,53 +324,44 @@ export const defaultCsvReportTemplateConfig: CsvReportTemplateConfig = {
   format: TbReportFormat.CSV,
   namePattern: 'report-%d{yyyy-MM-dd_HH:mm:ss}',
   timeDataPattern: 'yyyy-MM-dd HH:mm:ss',
-  component: {
-    type: ReportComponentType.TIME_SERIES_TABLE,
-    showTableHeading: true,
-    dataSources: [],
-    tableHeading: {
-      text: '${entityName}'
-    }
-  },
-  entityAlias: null,
-  filter: null
+  entityAliases: [],
+  filters: [],
+  components: []
 };
 
-export const validateAndUpdateReportTemplate =
-  <Config extends ReportTemplateConfig>(reportTemplate: ReportTemplate<Config>): ReportTemplate<Config> => {
+export const validateAndUpdateReportTemplate = (reportTemplate: ReportTemplate): ReportTemplate => {
   if (!reportTemplate.format) {
     reportTemplate.format = TbReportFormat.PDF;
   }
   if (!reportTemplate.configuration.format) {
     reportTemplate.configuration.format = reportTemplate.format;
   }
+  const configuration = reportTemplate.configuration;
+  if (!configuration.components) {
+    configuration.components = [];
+  }
+  configuration.components = configuration.components.map(c => validateAndUpdateReportComponent(c));
   if (reportTemplate.configuration.format === TbReportFormat.PDF) {
-    const configuration = reportTemplate.configuration as any as PdfReportTemplateConfig;
-    if (!configuration.pageSize) {
-      configuration.pageSize = PageSize.A4;
+    const pdfConfiguration = reportTemplate.configuration as PdfReportTemplateConfig;
+    if (!pdfConfiguration.pageSize) {
+      pdfConfiguration.pageSize = PageSize.A4;
     }
-    if (!configuration.pageOrientation) {
-      configuration.pageOrientation = PageOrientation.PORTRAIT;
+    if (!pdfConfiguration.pageOrientation) {
+      pdfConfiguration.pageOrientation = PageOrientation.PORTRAIT;
     }
-    if (!configuration.pageMargins) {
-      configuration.pageMargins = {
+    if (!pdfConfiguration.pageMargins) {
+      pdfConfiguration.pageMargins = {
         left: 20,
         right: 20,
         top: 20,
         bottom: 20
       };
     }
-    if (!configuration.pageBackground) {
-      configuration.pageBackground = '#fff';
+    if (!pdfConfiguration.pageBackground) {
+      pdfConfiguration.pageBackground = '#fff';
     }
-    if (!configuration.components) {
-      configuration.components = [];
-    }
-    configuration.components = configuration.components.map(c => validateAndUpdateReportComponent(c));
-    configuration.header = validateAndUpdateReportTemplateHeaderFooter(configuration.header);
-    configuration.footer = validateAndUpdateReportTemplateHeaderFooter(configuration.footer);
-  } else {
-    const configuration = reportTemplate.configuration as any as CsvReportTemplateConfig;
+    pdfConfiguration.header = validateAndUpdateReportTemplateHeaderFooter(pdfConfiguration.header);
+    pdfConfiguration.footer = validateAndUpdateReportTemplateHeaderFooter(pdfConfiguration.footer);
   }
   return reportTemplate;
 }

@@ -58,8 +58,8 @@ import {
 } from '@home/pages/report/components/report-component.models';
 import { DataKeyType } from '@shared/models/telemetry/telemetry.models';
 import { Observable, of } from 'rxjs';
-import { DataKey, Datasource, DatasourceType, widgetType } from '@shared/models/widget.models';
-import { catchError, map, mergeMap } from 'rxjs/operators';
+import { DataKey, Datasource, widgetType } from '@shared/models/widget.models';
+import { catchError, mergeMap } from 'rxjs/operators';
 import { WidgetConfigCallbacks } from '@home/components/widget/config/widget-config.component.models';
 import { FormProperty } from '@shared/models/dynamic-form.models';
 import { DataKeySettingsFunction } from '@home/components/widget/lib/settings/common/key/data-keys.component.models';
@@ -67,6 +67,7 @@ import { alarmFields } from '@shared/models/alarm.models';
 import { entityFields } from '@shared/models/entity.models';
 import { singleEntityFilterFromDeviceId } from '@shared/models/query/query.models';
 import { EntityType } from '@shared/models/entity-type.models';
+import { TbReportFormat } from '@shared/models/report.models';
 
 @Component({
   selector: 'tb-report-component-config',
@@ -146,6 +147,10 @@ export abstract class AbstractReportComponentConfig<C extends ReportComponentCon
   @Output()
   reportConfigUpdated = new EventEmitter<C>();
 
+  public get canHaveLayout(): boolean {
+    return this.context.format === TbReportFormat.PDF;
+  }
+
   public get datasource(): Datasource {
     const datasources = this.getDataSources();
     if (datasources && datasources.length) {
@@ -180,7 +185,7 @@ export abstract class AbstractReportComponentConfig<C extends ReportComponentCon
   setupConfig(reportComponentConfig: C): FormGroup {
     this.reportComponentConfig = reportComponentConfig;
     this.reportConfigForm = this.buildForm(reportComponentConfig);
-    if (isLayoutReportComponentConfig(reportComponentConfig)) {
+    if (isLayoutReportComponentConfig(reportComponentConfig) && this.canHaveLayout) {
       this.reportConfigForm.addControl('paddings', this.fb.control(reportComponentConfig.paddings));
       this.reportConfigForm.addControl('margins', this.fb.control(reportComponentConfig.margins));
       this.reportConfigForm.addControl('background',

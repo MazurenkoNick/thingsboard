@@ -81,40 +81,44 @@
       </mat-form-field>
     </div>
   </div>
-  <div *ngIf="!subReport" class="tb-form-panel">
-    <div class="tb-form-panel-title" translate>report-template.page-settings</div>
-    <div class="tb-form-row space-between">
-      <div>{{ 'report-template.paper-size' | translate }}</div>
-      <mat-form-field class="medium-width" appearance="outline" subscriptSizing="dynamic">
-        <mat-select formControlName="pageSize">
-          @for (size of pageSizes; track size) {
-            <mat-option [value]="size">
-              {{ paperSizeDisplayMap.get(size) }}
-            </mat-option>
-          }
-        </mat-select>
-      </mat-form-field>
-    </div>
-    <div class="tb-form-row space-between">
-      <div>{{ 'report-template.orientation' | translate }}</div>
-      <mat-chip-listbox class="center-stretch" formControlName="pageOrientation">
-        @for (orientation of pageOrientations; track orientation) {
-          <mat-chip-option [selectable]="settingsFormGroup.get('pageOrientation').value !== orientation"
-                           [value]="orientation">{{ pageOrientationTranslationMap.get(orientation) | translate }}</mat-chip-option>
-        }
-      </mat-chip-listbox>
-    </div>
-    <div class="tb-form-row space-between">
-      <div translate>report-template.margins</div>
-      <tb-report-insets formControlName="pageMargins"></tb-report-insets>
-    </div>
-    <div class="tb-form-row space-between">
-      <div translate>report-template.background</div>
-      <tb-color-input asBoxInput
-                      disableAlpha
-                      formControlName="pageBackground">
-      </tb-color-input>
-    </div>
 
-  </div>
+  @if (!subReport && format === TbReportFormat.PDF) {
+    <div class="tb-form-panel">
+      <div class="tb-form-panel-title" translate>report-template.page-settings</div>
+      <div class="tb-form-row space-between">
+        <div>{{ 'report-template.paper-size' | translate }}</div>
+        <mat-form-field class="medium-width" appearance="outline" subscriptSizing="dynamic">
+          <mat-select formControlName="pageSize">
+            @for (size of pageSizes; track size) {
+              <mat-option [value]="size">
+                {{ paperSizeDisplayMap.get(size) }}
+              </mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+      </div>
+      <div class="tb-form-row space-between">
+        <div>{{ 'report-template.orientation' | translate }}</div>
+        <mat-chip-listbox class="center-stretch" formControlName="pageOrientation">
+          @for (orientation of pageOrientations; track orientation) {
+            <mat-chip-option [selectable]="settingsFormGroup.get('pageOrientation').value !== orientation"
+                             [value]="orientation">{{ pageOrientationTranslationMap.get(orientation) | translate }}</mat-chip-option>
+          }
+        </mat-chip-listbox>
+      </div>
+      <div class="tb-form-row space-between">
+        <div translate>report-template.margins</div>
+        <tb-report-insets formControlName="pageMargins"></tb-report-insets>
+      </div>
+      <div class="tb-form-row space-between">
+        <div translate>report-template.background</div>
+        <tb-color-input asBoxInput
+                        disableAlpha
+                        formControlName="pageBackground">
+        </tb-color-input>
+      </div>
+
+    </div>
+  }
+
 </div>

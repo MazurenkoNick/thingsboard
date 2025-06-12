@@ -113,12 +113,25 @@ body.tb-report-component, tb-report-component .tb-report-component {
     }
     th {
       border-top: 1px solid rgba(0, 0, 0, 0.87);
-      text-align: center;
     }
     th.tb-report-table-heading {
-      border-top: 0;
-      border-left: 0;
-      border-right: 0;
+      border-bottom: 0;
+    }
+    &:not(.tb-plain-table) {
+      th {
+        text-align: center;
+      }
+      th.tb-report-table-heading {
+        border-top: 0;
+        border-left: 0;
+        border-right: 0;
+      }
+    }
+    &.tb-plain-table {
+      th {
+        text-align: left;
+        font-weight: normal;
+      }
     }
   }
 }

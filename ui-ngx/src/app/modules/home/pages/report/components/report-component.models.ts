@@ -65,6 +65,7 @@ import { AlarmTablePreviewComponent } from '@home/pages/report/components/alarm-
 import { AlarmTableConfigComponent } from '@home/pages/report/components/alarm-table-config.component';
 import { TimeseriesTablePreviewComponent } from '@home/pages/report/components/timeseries-table-preview.component';
 import { TimeseriesTableConfigComponent } from '@home/pages/report/components/timeseries-table-config.component';
+import { TbReportFormat } from '@shared/models/report.models';
 
 export interface ReportComponentTypeData<C extends ReportComponentConfig = ReportComponentConfig> {
   title: string;
@@ -173,12 +174,21 @@ export const reportComponentTypeMap = new Map<ReportComponentType, ReportCompone
 
 export const reportComponentTypes = Array.from(reportComponentTypeMap.keys());
 
+export const csvReportComponentTypes: ReportComponentType[] =
+  [
+    ReportComponentType.ENTITY_TABLE,
+    ReportComponentType.TIME_SERIES_TABLE,
+    ReportComponentType.ALARM_TABLE,
+    ReportComponentType.SUB_REPORT
+  ];
+
 export interface ReportComponentContext {
   translate: TranslateService,
   utils: UtilsService,
   entityService: EntityService;
   aliasController: IAliasController;
   aliasAndFilterCallbacks: EntityAliasSelectCallbacks & FilterSelectCallbacks;
+  format: TbReportFormat;
 }
 
 export const assignReportComponent = (reportComponent: ReportComponentConfig, sourceReportComponent: ReportComponentConfig): void => {

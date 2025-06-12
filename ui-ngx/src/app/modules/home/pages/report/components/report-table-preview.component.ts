@@ -46,36 +46,38 @@ export abstract class AbstractReportTablePreviewComponent<C extends TableReportC
 
   onComponentUpdated() {
     if (this.reportComponent.showTableHeading && this.reportComponent.tableHeading) {
-      this.showTableHeading = true;
-      const tableHeading = this.reportComponent.tableHeading;
-      if (tableHeading.text && tableHeading.text.trim().length) {
-        this.headingText = tableHeading.text;
-      } else {
-        this.headingText = '&nbsp;';
-      }
-      const font: Font = deepClone(tableHeading.font || { size: 20, sizeUnit: 'pt' } as Font);
-      if (!font.size) {
-        font.size = 20;
-      }
-      if (font.sizeUnit !== 'pt') {
-        font.sizeUnit = 'pt';
-      }
-      this.headingStyle = textStyle(font);
-      if (!this.headingStyle.fontWeight) {
-        this.headingStyle.fontWeight = 'normal';
-      }
-      this.headingStyle.color = tableHeading.color || '#000';
-      if (tableHeading.textAlignment) {
-        this.headingStyle.textAlign = tableHeading.textAlignment;
-      }
-      if (tableHeading.verticalAlignment) {
-        this.headingStyle.verticalAlign = tableHeading.verticalAlignment;
-      }
-      if (tableHeading.height) {
-        this.headingHeight = tableHeading.height + 'pt';
-      } else {
-        this.headingHeight = '100%';
-      }
+        this.showTableHeading = true;
+        const tableHeading = this.reportComponent.tableHeading;
+        if (tableHeading.text && tableHeading.text.trim().length) {
+          this.headingText = tableHeading.text;
+        } else {
+          this.headingText = '&nbsp;';
+        }
+        if (this.canHaveLayout) {
+          const font: Font = deepClone(tableHeading.font || {size: 20, sizeUnit: 'pt'} as Font);
+          if (!font.size) {
+            font.size = 20;
+          }
+          if (font.sizeUnit !== 'pt') {
+            font.sizeUnit = 'pt';
+          }
+          this.headingStyle = textStyle(font);
+          if (!this.headingStyle.fontWeight) {
+            this.headingStyle.fontWeight = 'normal';
+          }
+          this.headingStyle.color = tableHeading.color || '#000';
+          if (tableHeading.textAlignment) {
+            this.headingStyle.textAlign = tableHeading.textAlignment;
+          }
+          if (tableHeading.verticalAlignment) {
+            this.headingStyle.verticalAlign = tableHeading.verticalAlignment;
+          }
+          if (tableHeading.height) {
+            this.headingHeight = tableHeading.height + 'pt';
+          } else {
+            this.headingHeight = '100%';
+          }
+        }
     } else {
       this.showTableHeading = false;
     }
@@ -91,7 +93,7 @@ export abstract class AbstractReportTablePreviewComponent<C extends TableReportC
   }
 
   columnWidth(column: DataKey): string {
-    if (column?.settings) {
+    if (this.canHaveLayout && column?.settings) {
       const columnSettings: TableReportColumnSettings =  column.settings;
       if (columnSettings?.columnWidth) {
         return columnSettings?.columnWidth;
@@ -106,7 +108,7 @@ export abstract class AbstractReportTablePreviewComponent<C extends TableReportC
 
   protected styleFromColumnSettings(column: DataKey, header = false): ComponentStyle {
     let style: ComponentStyle = {};
-    if (column?.settings) {
+    if (this.canHaveLayout && column?.settings) {
       const columnSettings: TableReportColumnSettings =  column.settings;
       if (columnSettings) {
         const cellSettings = header ? columnSettings.header : columnSettings.cell;

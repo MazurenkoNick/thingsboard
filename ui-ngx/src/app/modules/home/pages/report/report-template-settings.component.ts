@@ -43,7 +43,8 @@ import {
   pageOrientationTranslationMap,
   pageSizes,
   paperSizeDisplayMap,
-  PdfReportTemplateSettings
+  ReportTemplateSettings,
+  TbReportFormat
 } from '@shared/models/report.models';
 import { coerceBoolean } from '@shared/decorators/coercion';
 
@@ -67,6 +68,8 @@ export class ReportTemplateSettingsComponent implements OnInit, OnChanges, Contr
   pageOrientations = pageOrientations;
   pageOrientationTranslationMap = pageOrientationTranslationMap;
 
+  TbReportFormat = TbReportFormat;
+
   @Input()
   disabled: boolean;
 
@@ -74,7 +77,10 @@ export class ReportTemplateSettingsComponent implements OnInit, OnChanges, Contr
   @coerceBoolean()
   subReport = false;
 
-  private modelValue: PdfReportTemplateSettings;
+  @Input()
+  format: TbReportFormat = TbReportFormat.PDF;
+
+  private modelValue: ReportTemplateSettings;
 
   private propagateChange = null;
 
@@ -107,7 +113,7 @@ export class ReportTemplateSettingsComponent implements OnInit, OnChanges, Contr
     for (const propName of Object.keys(changes)) {
       const change = changes[propName];
       if (!change.firstChange && change.currentValue !== change.previousValue) {
-        if (propName === 'subReport') {
+        if (['subReport', 'format'].includes(propName)) {
           this.updateValidators();
         }
       }
@@ -131,7 +137,7 @@ export class ReportTemplateSettingsComponent implements OnInit, OnChanges, Contr
     }
   }
 
-  writeValue(value: PdfReportTemplateSettings): void {
+  writeValue(value: ReportTemplateSettings): void {
     this.modelValue = value;
     this.settingsFormGroup.patchValue(
       value, {emitEvent: false}
@@ -142,13 +148,16 @@ export class ReportTemplateSettingsComponent implements OnInit, OnChanges, Contr
     if (this.subReport) {
       this.settingsFormGroup.get('namePattern').disable({emitEvent: false});
       this.settingsFormGroup.get('timeDataPattern').disable({emitEvent: false});
+    } else {
+      this.settingsFormGroup.get('namePattern').enable({emitEvent: false});
+      this.settingsFormGroup.get('timeDataPattern').enable({emitEvent: false});
+    }
+    if (this.subReport || this.format !== TbReportFormat.PDF) {
       this.settingsFormGroup.get('pageSize').disable({emitEvent: false});
       this.settingsFormGroup.get('pageOrientation').disable({emitEvent: false});
       this.settingsFormGroup.get('pageMargins').disable({emitEvent: false});
       this.settingsFormGroup.get('pageBackground').disable({emitEvent: false});
     } else {
-      this.settingsFormGroup.get('namePattern').enable({emitEvent: false});
-      this.settingsFormGroup.get('timeDataPattern').enable({emitEvent: false});
       this.settingsFormGroup.get('pageSize').enable({emitEvent: false});
       this.settingsFormGroup.get('pageOrientation').enable({emitEvent: false});
       this.settingsFormGroup.get('pageMargins').enable({emitEvent: false});
@@ -157,7 +166,7 @@ export class ReportTemplateSettingsComponent implements OnInit, OnChanges, Contr
   }
 
   private updateModel() {
-    this.modelValue = this.settingsFormGroup.getRawValue();
+    this.modelValue = this.settingsFormGroup.value;
     this.propagateChange(this.modelValue);
   }
 }
