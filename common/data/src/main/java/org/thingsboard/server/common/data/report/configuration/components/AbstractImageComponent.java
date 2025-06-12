@@ -43,7 +43,7 @@ import org.thingsboard.server.common.data.report.configuration.image.ImageWidthT
 @EqualsAndHashCode
 @NoArgsConstructor
 @AllArgsConstructor
-public abstract class AbstractImageComponent extends AbstractReportComponent implements ReportComponent {
+public abstract class AbstractImageComponent extends AbstractDataWithLayoutReportComponent {
 
     private ImageWidthType widthType;
     private int customWidth;

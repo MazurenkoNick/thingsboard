@@ -50,7 +50,7 @@ import {
   ViewContainerRef,
   ViewEncapsulation
 } from '@angular/core';
-import { ReportComponentConfig } from '@shared/models/report-component.models';
+import { isLayoutReportComponentConfig, ReportComponentConfig } from '@shared/models/report-component.models';
 import {
   pointsToPixels,
   ReportComponentTypeData,
@@ -248,20 +248,24 @@ export class ReportComponentComponent implements OnInit, AfterViewInit, OnDestro
   }
 
   private updateComponentLayout() {
-    this.background = this.reportComponent.background;// || this.pageBackground;
-    if (this.typeData.pageBreak) {
-      this.marginLeft = -this.pageMarginLeft / this.scale;
-      this.marginRight = -this.pageMarginRight / this.scale;
-    } else {
+    if (isLayoutReportComponentConfig(this.reportComponent)) {
+      this.background = this.reportComponent.background;
       this.marginLeft = (this.reportComponent.margins?.left || 0) * this.scale;
       this.marginRight = (this.reportComponent.margins?.right || 0) * this.scale;
+      this.marginTop = (this.reportComponent.margins?.top || 0) * this.scale;
+      this.marginBottom = (this.reportComponent.margins?.bottom || 0) * this.scale;
+      this.paddingLeft = (this.reportComponent.paddings?.left || 0) * this.scale;
+      this.paddingRight = (this.reportComponent.paddings?.right || 0) * this.scale;
+      this.paddingTop = (this.reportComponent.paddings?.top || 0) * this.scale;
+      this.paddingBottom = (this.reportComponent.paddings?.bottom || 0) * this.scale;
+    } else {
+      this.paddingLeft = this.paddingRight = this.paddingTop = this.paddingBottom =
+        this.marginLeft = this.marginRight = this.marginTop = this.marginBottom = 0;
+      if (this.typeData.pageBreak) {
+        this.marginLeft = -this.pageMarginLeft / this.scale;
+        this.marginRight = -this.pageMarginRight / this.scale;
+      }
     }
-    this.marginTop = (this.reportComponent.margins?.top || 0) * this.scale;
-    this.marginBottom = (this.reportComponent.margins?.bottom || 0) * this.scale;
-    this.paddingLeft = (this.reportComponent.paddings?.left || 0) * this.scale;
-    this.paddingRight = (this.reportComponent.paddings?.right || 0) * this.scale;
-    this.paddingTop = (this.reportComponent.paddings?.top || 0) * this.scale;
-    this.paddingBottom = (this.reportComponent.paddings?.bottom || 0) * this.scale;
     this.updateComponentSize();
   }
 

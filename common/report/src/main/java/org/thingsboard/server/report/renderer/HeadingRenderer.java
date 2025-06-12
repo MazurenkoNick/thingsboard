@@ -32,22 +32,20 @@ package org.thingsboard.server.report.renderer;
 
 import org.springframework.stereotype.Component;
 import org.thingsboard.server.common.data.report.configuration.components.HeadingComponent;
-import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponentType;
 import org.thingsboard.server.common.data.report.configuration.style.TextAlignment;
 import org.thingsboard.server.common.data.report.configuration.style.VerticalAlignment;
-import org.thingsboard.server.report.util.ColorUtils;
 import org.thingsboard.server.report.context.ComponentData;
+import org.thingsboard.server.report.util.ColorUtils;
 import org.thingsboard.server.report.util.ThymeleafUtil;
 
 import java.util.HashMap;
 
 @Component
-public class HeadingRenderer extends ReportComponentWithLayoutRenderer {
+public class HeadingRenderer extends ReportComponentWithLayoutRenderer<HeadingComponent> {
 
     @Override
-    public String renderContent(ReportComponent component, ComponentData reportDataSource) {
-        HeadingComponent headingComponent = (HeadingComponent) component;
+    public String renderContent(HeadingComponent headingComponent, ComponentData reportDataSource) {
         String processedText = ThymeleafUtil.renderFromHtmlString(headingComponent.getValue(), reportDataSource.getVariables());
 
         HashMap<String, Object> componentVariables = new HashMap<>();
@@ -59,7 +57,7 @@ public class HeadingRenderer extends ReportComponentWithLayoutRenderer {
         }
         componentVariables.put("fontWeight", headingComponent.getFont().getWeight());
         componentVariables.put("fontStyle", headingComponent.getFont().getStyle());
-        if (headingComponent.getFont().getFamily() != null && headingComponent.getFont().getFamily().length() > 0) {
+        if (headingComponent.getFont().getFamily() != null && !headingComponent.getFont().getFamily().isEmpty()) {
             componentVariables.put("fontFamily", headingComponent.getFont().getFamily());
         } else {
             componentVariables.put("fontFamily", "Roboto");

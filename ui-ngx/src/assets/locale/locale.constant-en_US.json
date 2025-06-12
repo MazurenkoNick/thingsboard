@@ -7170,6 +7170,7 @@
         "vertical": "Vertical",
         "dashboard": "Dashboard",
         "timewindow": "Time window",
+        "export-failed-error": "Unable to export report template: {{error}}",
         "component": {
             "heading": {
                 "type": "Heading",

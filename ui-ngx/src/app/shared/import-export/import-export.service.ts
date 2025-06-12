@@ -123,6 +123,8 @@ import {
 import { FormProperty, propertyValid } from '@shared/models/dynamic-form.models';
 import { CalculatedFieldsService } from '@core/http/calculated-fields.service';
 import { CalculatedField } from '@shared/models/calculated-field.models';
+import { ReportTemplateService } from '@core/http/report-template.service';
+import { ReportTemplate } from '@shared/models/report.models';
 
 export type editMissingAliasesFunction = (widgets: Array<Widget>, isSingleWidget: boolean,
                                           customTitle: string, missingEntityAliases: EntityAliases) => Observable<EntityAliases>;
@@ -155,6 +157,7 @@ export class ImportExportService {
               private utils: UtilsService,
               private itembuffer: ItemBufferService,
               private calculatedFieldsService: CalculatedFieldsService,
+              private reportTemplateService: ReportTemplateService,
               private dialog: MatDialog) {
 
   }
@@ -208,6 +211,19 @@ export class ImportExportService {
       }),
       catchError(() => of(null))
     );
+  }
+
+  public exportReportTemplate(reportTemplateId: string): void {
+    this.reportTemplateService.getReportTemplate(reportTemplateId).subscribe({
+      next: (reportTemplate) => {
+        let name = reportTemplate.name;
+        name = name.toLowerCase().replace(/\W/g, '_');
+        this.exportToPc(this.prepareReportTemplateExport(reportTemplate), name);
+      },
+      error: (e) => {
+        this.handleExportError(e, 'report-template.export-failed-error');
+      }
+    });
   }
 
   public exportCalculatedField(calculatedFieldId: string): void {
@@ -1445,6 +1461,12 @@ export class ImportExportService {
   private prepareCalculatedFieldExport(calculatedField: CalculatedField): CalculatedField {
     delete calculatedField.entityId;
     return this.prepareExport(calculatedField);
+  }
+
+  private prepareReportTemplateExport(reportTemplate: ReportTemplate): ReportTemplate {
+    reportTemplate = this.prepareExport(reportTemplate);
+    delete reportTemplate.ownerId;
+    return reportTemplate;
   }
 
   private getIncludeResourcesPreference(key: SupportEntityResources): Observable<boolean> {

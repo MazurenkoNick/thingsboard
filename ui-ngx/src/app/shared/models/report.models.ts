@@ -34,7 +34,6 @@ import { ReportTemplateId } from '@shared/models/id/report-template-id';
 import { TenantId } from '@shared/models/id/tenant-id';
 import { CustomerId } from '@shared/models/id/customer-id';
 import { HasTenantId, HasVersion } from '@shared/models/entity.models';
-import { SchedulerEventId } from '@shared/models/id/scheduler-event-id';
 import { EntityId } from '@shared/models/id/entity-id';
 import { EntityAlias, EntityAliases } from '@shared/models/alias.models';
 import {
@@ -81,7 +80,6 @@ export interface BaseReportTemplate extends BaseData<ReportTemplateId>, HasTenan
   format: TbReportFormat;
   type: ReportTemplateType;
   description?: string;
-  schedulerEventId?: SchedulerEventId;
 }
 
 export interface ReportTemplateInfo extends BaseReportTemplate {
@@ -223,10 +221,10 @@ export const pageOrientationTranslationMap = new Map<PageOrientation, string>(
 );
 
 export interface Insets {
-  left: number;
-  right: number;
-  top: number;
-  bottom: number;
+  left?: number;
+  right?: number;
+  top?: number;
+  bottom?: number;
 }
 
 export interface PdfReportTemplateConfig extends AbstractReportTemplateConfig {
@@ -393,13 +391,5 @@ const validateAndUpdateReportTemplateHeaderFooter = (headerFooter: HeaderFooter)
 }
 
 export const validateAndUpdateReportComponent = (component: ReportComponentConfig): ReportComponentConfig => {
-  if (!component.margins) {
-    component.margins = {
-      left: 0,
-      right: 0,
-      top: 0,
-      bottom: 0
-    };
-  }
   return component;
 }

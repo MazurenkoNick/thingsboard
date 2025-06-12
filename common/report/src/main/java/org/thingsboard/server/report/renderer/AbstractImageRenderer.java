@@ -41,11 +41,10 @@ import java.util.HashMap;
 
 import static org.thingsboard.server.report.util.ImageUtils.EMPTY_IMAGE_URI;
 
-public abstract class AbstractImageRenderer<C extends AbstractImageComponent> extends ReportComponentWithLayoutRenderer {
+public abstract class AbstractImageRenderer<C extends AbstractImageComponent> extends ReportComponentWithLayoutRenderer<C> {
 
     @Override
-    public String renderContent(ReportComponent component, ComponentData reportDataSource) {
-        C imageComponent = (C) component;
+    public String renderContent(C imageComponent, ComponentData reportDataSource) {
         String imageUrl = this.getImageUrl(imageComponent, reportDataSource);
         HashMap<String, Object> componentVariables = new HashMap<>();
         componentVariables.put("layoutWidth", this.layoutWidthPx + "px");

@@ -59,14 +59,6 @@ import java.util.List;
 })
 public interface ReportComponent extends Serializable {
 
-    Insets getMargins();
-
-    Insets getPaddings();
-
-    String getBackground();
-
-    List<DataSource> getDataSources();
-
     ReportComponentType getType();
 
 }

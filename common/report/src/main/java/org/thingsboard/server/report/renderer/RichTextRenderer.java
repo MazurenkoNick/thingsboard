@@ -31,18 +31,16 @@
 package org.thingsboard.server.report.renderer;
 
 import org.springframework.stereotype.Component;
-import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponentType;
 import org.thingsboard.server.common.data.report.configuration.components.RichTextComponent;
 import org.thingsboard.server.report.context.ComponentData;
 import org.thingsboard.server.report.util.ThymeleafUtil;
 
 @Component
-public class RichTextRenderer extends ReportComponentWithLayoutRenderer {
+public class RichTextRenderer extends ReportComponentWithLayoutRenderer<RichTextComponent> {
 
     @Override
-    protected String renderContent(ReportComponent component, ComponentData reportDataSource) {
-        RichTextComponent richTextComponent = (RichTextComponent) component;
+    protected String renderContent(RichTextComponent richTextComponent, ComponentData reportDataSource) {
         return ThymeleafUtil.renderFromTextString(richTextComponent.getValue(), reportDataSource.getVariables());
     }
 

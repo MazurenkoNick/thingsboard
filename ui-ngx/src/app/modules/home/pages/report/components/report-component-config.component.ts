@@ -45,7 +45,7 @@ import {
   ViewChild,
   ViewEncapsulation
 } from '@angular/core';
-import { ReportComponentConfig } from '@shared/models/report-component.models';
+import { isLayoutReportComponentConfig, ReportComponentConfig } from '@shared/models/report-component.models';
 import { TbAnchorComponent } from '@shared/components/tb-anchor.component';
 import { FormBuilder, FormGroup } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -180,10 +180,12 @@ export abstract class AbstractReportComponentConfig<C extends ReportComponentCon
   setupConfig(reportComponentConfig: C): FormGroup {
     this.reportComponentConfig = reportComponentConfig;
     this.reportConfigForm = this.buildForm(reportComponentConfig);
-    this.reportConfigForm.addControl('paddings', this.fb.control(reportComponentConfig.paddings));
-    this.reportConfigForm.addControl('margins', this.fb.control(reportComponentConfig.margins));
-    this.reportConfigForm.addControl('background',
-      this.fb.control(reportComponentConfig.background));
+    if (isLayoutReportComponentConfig(reportComponentConfig)) {
+      this.reportConfigForm.addControl('paddings', this.fb.control(reportComponentConfig.paddings));
+      this.reportConfigForm.addControl('margins', this.fb.control(reportComponentConfig.margins));
+      this.reportConfigForm.addControl('background',
+        this.fb.control(reportComponentConfig.background));
+    }
     this.reportConfigForm.valueChanges.pipe(
       takeUntilDestroyed(this.destroyRef)
     ).subscribe(() => {

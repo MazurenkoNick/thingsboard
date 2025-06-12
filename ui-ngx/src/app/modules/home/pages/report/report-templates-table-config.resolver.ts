@@ -64,12 +64,14 @@ import { ReportTemplateTableHeaderComponent } from '@home/pages/report/report-te
 import { ReportTemplateTabsComponent } from '@home/pages/report/report-template-tabs.component';
 import { ReportTemplateFormComponent } from '@home/pages/report/report-template-form.component';
 import { mergeDeep } from '@core/utils';
+import { ImportExportService } from '@shared/import-export/import-export.service';
 
 @Injectable()
 export class ReportTemplatesTableConfigResolver  {
 
   constructor(private store: Store<AppState>,
               private reportTemplateService: ReportTemplateService,
+              private importExport: ImportExportService,
               private userPermissionsService: UserPermissionsService,
               private translate: TranslateService,
               private utils: UtilsService,
@@ -111,6 +113,7 @@ export class ReportTemplatesTableConfigResolver  {
 
   configDefaults(config: EntityTableConfig<ReportTemplateInfo>) {
     config.entityType = EntityType.REPORT_TEMPLATE;
+    config.addAsTextButton = true;
     config.entityComponent = ReportTemplateFormComponent;
     config.entityTabsComponent = ReportTemplateTabsComponent;
     config.entityTranslations = entityTypeTranslations.get(EntityType.REPORT_TEMPLATE);
@@ -230,8 +233,7 @@ export class ReportTemplatesTableConfigResolver  {
     if ($event) {
       $event.stopPropagation();
     }
-    // TODO:
-    // this.importExport.exportDashboard(dashboard.id.id);
+    this.importExport.exportReportTemplate(reportTemplate.id.id);
   }
 
   onReportTemplateAction(action: EntityAction<ReportTemplateInfo>, config: EntityTableConfig<ReportTemplateInfo>): boolean {

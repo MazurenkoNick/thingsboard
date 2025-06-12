@@ -31,7 +31,7 @@
 package org.thingsboard.server.report.renderer;
 
 import org.thingsboard.server.common.data.StringUtils;
-import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
+import org.thingsboard.server.common.data.report.configuration.components.LayoutReportComponent;
 import org.thingsboard.server.common.data.report.configuration.style.Insets;
 import org.thingsboard.server.report.context.ComponentData;
 import org.thingsboard.server.report.util.ColorUtils;
@@ -40,7 +40,7 @@ import org.thingsboard.server.report.util.ThymeleafUtil;
 import java.util.HashMap;
 import java.util.Map;
 
-public abstract class ReportComponentWithLayoutRenderer implements ReportComponentRenderer {
+public abstract class ReportComponentWithLayoutRenderer<C extends LayoutReportComponent> implements ReportComponentRenderer<C> {
 
     private static final int DEFAULT_COMPONENT_MARGIN_SIZE = 0;
     private static final int DEFAULT_COMPONENT_PADDING_SIZE = 0;
@@ -48,7 +48,7 @@ public abstract class ReportComponentWithLayoutRenderer implements ReportCompone
     protected int layoutWidthPx;
 
     @Override
-    public String render(ReportComponent component, ComponentData reportDataSource) {
+    public String render(C component, ComponentData reportDataSource) {
         if (StringUtils.isNotBlank(reportDataSource.getError())) {
             return ThymeleafUtil.renderFromHtmlTemplate("html/components/error-template", Map.of("errorMessage", reportDataSource.getError()));
         }
@@ -83,5 +83,5 @@ public abstract class ReportComponentWithLayoutRenderer implements ReportCompone
         return ThymeleafUtil.renderFromHtmlTemplate("html/components/component-layout", layoutVariables);
     }
 
-    protected abstract String renderContent(ReportComponent component, ComponentData reportDataSource);
+    protected abstract String renderContent(C component, ComponentData reportDataSource);
 }

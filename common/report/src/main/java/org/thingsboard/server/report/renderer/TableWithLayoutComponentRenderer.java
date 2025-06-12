@@ -41,8 +41,7 @@ import org.thingsboard.server.common.data.report.configuration.ColumnSettings;
 import org.thingsboard.server.common.data.report.configuration.DataKey;
 import org.thingsboard.server.common.data.report.configuration.DataKeySettings;
 import org.thingsboard.server.common.data.report.configuration.DataSource;
-import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
-import org.thingsboard.server.common.data.report.configuration.components.TableReportComponent;
+import org.thingsboard.server.common.data.report.configuration.components.TableWithLayoutReportComponent;
 import org.thingsboard.server.common.data.report.configuration.style.Font;
 import org.thingsboard.server.common.data.report.configuration.style.FontStyle;
 import org.thingsboard.server.common.data.report.configuration.style.FontWeight;
@@ -70,7 +69,7 @@ import java.util.stream.Stream;
 import static org.thingsboard.server.report.util.ReportUtils.getSingleDataSource;
 
 @Slf4j
-public abstract class TableComponentRenderer extends ReportComponentWithLayoutRenderer {
+public abstract class TableWithLayoutComponentRenderer<C extends TableWithLayoutReportComponent> extends ReportComponentWithLayoutRenderer<C> {
 
     protected String dataSourceName() {
         return "data source";
@@ -99,7 +98,7 @@ public abstract class TableComponentRenderer extends ReportComponentWithLayoutRe
     }
 
     @Override
-    protected String renderContent(ReportComponent component, ComponentData reportDataSource) {
+    protected String renderContent(C component, ComponentData reportDataSource) {
         Optional<DataSource> dataSource = getSingleDataSource(component);
         if (dataSource.isEmpty()) {
             return ThymeleafUtil.renderFromHtmlTemplate("html/components/error-template", Map.of("errorMessage", "No " + dataSourceName() + " is configured for table. " +
@@ -146,10 +145,9 @@ public abstract class TableComponentRenderer extends ReportComponentWithLayoutRe
         componentVariables.put("rows", rows);
         componentVariables.put("noDataMessage", noDataMessage());
 
-        TableReportComponent tableReportComponent = (TableReportComponent) component;
-        if (tableReportComponent.isShowTableHeading() && tableReportComponent.getTableHeading() != null) {
+        if (component.isShowTableHeading() && component.getTableHeading() != null) {
             componentVariables.put("showTableHeading", true);
-            Heading tableHeading = tableReportComponent.getTableHeading();
+            Heading tableHeading = component.getTableHeading();
             String headingText = headingText(tableHeading, reportDataSource);
             componentVariables.put("headingText", headingText);
             this.formatTableHeading(tableHeading, componentVariables);
@@ -251,7 +249,7 @@ public abstract class TableComponentRenderer extends ReportComponentWithLayoutRe
         return value;
     }
 
-    protected HashMap<String, CellVariables> getCellVariablesMap(ReportComponent component, Map<String, DataKey> labelToDataKey, boolean isHeader) {
+    protected HashMap<String, CellVariables> getCellVariablesMap(C component, Map<String, DataKey> labelToDataKey, boolean isHeader) {
         HashMap<String, CellVariables> result = new LinkedHashMap<>();
         labelToDataKey.forEach((key, dataKey) -> result.put(key, toCellVariables(dataKey, isHeader)));
         return result;

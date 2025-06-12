@@ -52,12 +52,24 @@ export enum ReportComponentType {
 }
 
 export interface ReportComponentConfig {
+  type: ReportComponentType;
+}
+
+export interface DataReportComponentConfig extends ReportComponentConfig {
+  dataSources?: Datasource[];
+}
+
+export interface LayoutReportComponentConfig extends ReportComponentConfig {
   background?: string;
   margins?: Insets;
   paddings?: Insets;
-  dataSources?: Datasource[];
-  type: ReportComponentType;
 }
+
+export const isLayoutReportComponentConfig = (obj: any): obj is LayoutReportComponentConfig => {
+  return typeof obj === 'object' && obj !== null && 'background' in obj && 'margins' in obj && 'paddings' in obj;
+};
+
+export interface DataWithLayoutReportComponentConfig extends DataReportComponentConfig, LayoutReportComponentConfig {}
 
 export enum ReportDataKeySettingsType {
   DEFAULT = 'DEFAULT',
@@ -192,7 +204,7 @@ export const TableReportColumnSettingsForm: FormProperty[] = [
   }
 ];
 
-export interface HeadingReportComponentConfig extends ReportComponentConfig {
+export interface HeadingReportComponentConfig extends DataWithLayoutReportComponentConfig {
   value: string;
   font?: Font;
   color?: string;
@@ -202,7 +214,7 @@ export interface HeadingReportComponentConfig extends ReportComponentConfig {
   type:  ReportComponentType.HEADING;
 }
 
-export interface RichTextReportComponentConfig extends ReportComponentConfig {
+export interface RichTextReportComponentConfig extends DataWithLayoutReportComponentConfig {
   value: string;
   type: ReportComponentType.RICH_TEXT;
 }
@@ -216,23 +228,24 @@ export interface Heading {
   height?: number;
 }
 
-export interface TableReportComponentConfig extends ReportComponentConfig {
+export interface TableReportComponentConfig extends DataReportComponentConfig {
   showTableHeading: boolean;
   tableHeading: Heading;
-  type: ReportComponentType;
 }
 
-export interface EntityTableReportComponentConfig extends TableReportComponentConfig {
+export interface TableWithLayoutReportComponentConfig extends TableReportComponentConfig, LayoutReportComponentConfig {}
+
+export interface EntityTableReportComponentConfig extends TableWithLayoutReportComponentConfig {
   type: ReportComponentType.ENTITY_TABLE;
 }
 
-export interface AlarmTableReportComponentConfig extends TableReportComponentConfig {
+export interface AlarmTableReportComponentConfig extends TableWithLayoutReportComponentConfig {
   alarmSource: Datasource;
   timewindow: Timewindow;
   type: ReportComponentType.ALARM_TABLE;
 }
 
-export interface TimeseriesTableReportComponentConfig extends TableReportComponentConfig {
+export interface TimeseriesTableReportComponentConfig extends TableWithLayoutReportComponentConfig {
   timewindow: Timewindow;
   showTimestamp: boolean;
   timestampLabel: string;
@@ -276,7 +289,7 @@ export const imageAlignmentTranslations = new Map<imageAlignment, string>(
   ]
 );
 
-export interface BaseImageReportComponentConfig extends ReportComponentConfig {
+export interface BaseImageReportComponentConfig extends DataWithLayoutReportComponentConfig {
   widthType: imageWidthType;
   customWidth?: number;
   alignment: imageAlignment;
@@ -293,7 +306,7 @@ export interface DashboardReportComponentConfig extends BaseImageReportComponent
   type: ReportComponentType.DASHBOARD;
 }
 
-export interface SubReportReportComponentConfig extends ReportComponentConfig {
+export interface SubReportReportComponentConfig extends DataReportComponentConfig {
   templateId: ReportTemplateId;
   avoidPageBreakInside: boolean;
   type: ReportComponentType.SUB_REPORT;
@@ -332,7 +345,10 @@ export const reportComponentTypeDefaultConfigMap = new Map<ReportComponentType, 
         textAlignment: 'center',
         verticalAlignment: 'middle',
         height: undefined,
-        dataSources: []
+        dataSources: [],
+        margins: null,
+        paddings: null,
+        background: null
       }
     ],
     [
@@ -340,7 +356,10 @@ export const reportComponentTypeDefaultConfigMap = new Map<ReportComponentType, 
       {
         type: ReportComponentType.RICH_TEXT,
         value: '<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec libero orci, faucibus in iaculis quis, vestibulum sit amet ligula. Nulla facilisi. Ut ut iaculis tortor.</p>',
-        dataSources: []
+        dataSources: [],
+        margins: null,
+        paddings: null,
+        background: null
       }
     ],
     [
@@ -373,7 +392,12 @@ export const reportComponentTypeDefaultConfigMap = new Map<ReportComponentType, 
               }
             ]
           }
-        ]
+        ],
+        margins: {
+          top: 20
+        },
+        paddings: null,
+        background: null
       }
     ],
     [
@@ -431,7 +455,12 @@ export const reportComponentTypeDefaultConfigMap = new Map<ReportComponentType, 
             }
           ]
         },
-        timewindow: historyInterval(DAY)
+        timewindow: historyInterval(DAY),
+        margins: {
+          top: 20
+        },
+        paddings: null,
+        background: null
       }
     ],
     [
@@ -478,7 +507,12 @@ export const reportComponentTypeDefaultConfigMap = new Map<ReportComponentType, 
         timestampPattern: 'yyyy-MM-dd HH:mm:ss',
         timestampColumnSettings: {
           type: ReportDataKeySettingsType.COLUMN
-        }
+        },
+        margins: {
+          top: 20
+        },
+        paddings: null,
+        background: null
       }
     ],
     [
@@ -489,7 +523,10 @@ export const reportComponentTypeDefaultConfigMap = new Map<ReportComponentType, 
         imageUrl: null,
         widthType: 'fitWidth',
         alignment: 'center',
-        dataSources: []
+        dataSources: [],
+        margins: null,
+        paddings: null,
+        background: null
       }
     ],
     [
@@ -506,7 +543,10 @@ export const reportComponentTypeDefaultConfigMap = new Map<ReportComponentType, 
           type: 'png'
         },
         widthType: 'fitWidth',
-        alignment: 'center'
+        alignment: 'center',
+        margins: null,
+        paddings: null,
+        background: null
       }
     ],
     [

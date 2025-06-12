@@ -43,6 +43,7 @@ import org.thingsboard.server.common.data.report.configuration.CsvReportTemplate
 import org.thingsboard.server.common.data.report.configuration.DataKey;
 import org.thingsboard.server.common.data.report.configuration.DataSource;
 import org.thingsboard.server.common.data.report.configuration.components.AlarmTableComponent;
+import org.thingsboard.server.common.data.report.configuration.components.DataReportComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
 import org.thingsboard.server.common.data.report.configuration.components.TimeseriesTableComponent;
 import org.thingsboard.server.report.context.TbReportCtx;
@@ -72,7 +73,7 @@ public class CsvReportService extends AbstractReportService {
 
         ReportComponent component = configuration.getComponent();
         List<DataKey> headers = getTableHeaders(component);
-        List<Map<String, String>> dataSource = buildDataSource(ctx, component);
+        List<Map<String, String>> dataSource = buildDataSource(ctx, (DataReportComponent) component);
 
         byte[] csvBytes = generateCsv(headers, dataSource);
 
@@ -88,10 +89,10 @@ public class CsvReportService extends AbstractReportService {
     }
 
     private static List<DataKey> getTableHeaders(ReportComponent component) {
-        return component.getDataSources().get(0).getDataKeys();
+        return ((DataReportComponent)component).getDataSources().get(0).getDataKeys();
     }
 
-    private List<Map<String, String>> buildDataSource(TbReportCtx ctx, ReportComponent component) {
+    private List<Map<String, String>> buildDataSource(TbReportCtx ctx, DataReportComponent component) {
         return switch (component.getType()) {
             case TIME_SERIES_TABLE -> fetchEntityTsDatas(ctx, ((TimeseriesTableComponent) component));
             case ALARM_TABLE -> fetchAlarmDatas(ctx, ((AlarmTableComponent) component));
@@ -100,7 +101,7 @@ public class CsvReportService extends AbstractReportService {
         };
     }
 
-    private List<Map<String, String>> fetchEntityTableDatas(TbReportCtx ctx, ReportComponent component) {
+    private List<Map<String, String>> fetchEntityTableDatas(TbReportCtx ctx, DataReportComponent component) {
         Optional<DataSource> dataSource = getSingleDataSource(component);
         if (dataSource.isEmpty()) {
             return Collections.emptyList();

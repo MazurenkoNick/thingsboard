@@ -29,15 +29,13 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { Component, ViewEncapsulation } from '@angular/core';
-import {
-  TableReportColumnSettings,
-  TimeseriesTableReportComponentConfig
-} from '@shared/models/report-component.models';
+import { Component, inject, ViewEncapsulation } from '@angular/core';
+import { TimeseriesTableReportComponentConfig } from '@shared/models/report-component.models';
 import { DataKey, Datasource } from '@shared/models/widget.models';
-import { ComponentStyle, textStyle } from '@shared/models/widget-settings.models';
+import { ComponentStyle } from '@shared/models/widget-settings.models';
 import { DataKeyType } from '@shared/models/telemetry/telemetry.models';
 import { AbstractReportTablePreviewComponent } from '@home/pages/report/components/report-table-preview.component';
+import { DatePipe } from '@angular/common';
 
 @Component({
   selector: 'tb-timeseries-table-preview',
@@ -49,17 +47,25 @@ export class TimeseriesTablePreviewComponent extends AbstractReportTablePreviewC
 
   columns: DataKey[] = [];
 
+  private date = inject(DatePipe);
+  private timestampColumn: DataKey = null;
+  private timestampPreview: string;
+
   onComponentUpdated() {
     super.onComponentUpdated();
     this.columns = [];
     if (this.reportComponent.showTimestamp) {
-      this.columns.push(
-        {
+      if (!this.timestampColumn) {
+        this.timestampColumn = {
           name: 'ts',
-          label: this.reportComponent.timestampLabel || 'Timestamp',
-          type: DataKeyType.timeseries,
-          settings: this.reportComponent.timestampColumnSettings
-        }
+          type: DataKeyType.timeseries
+        };
+      }
+      this.timestampColumn.label = this.reportComponent.timestampLabel || 'Timestamp';
+      this.timestampColumn.settings = this.reportComponent.timestampColumnSettings
+      this.timestampPreview = this.date.transform(Date.now(), this.reportComponent.timestampPattern);
+      this.columns.push(
+        this.timestampColumn
       );
     }
     const datasources: Datasource[] = this.reportComponent.dataSources;
@@ -67,6 +73,14 @@ export class TimeseriesTablePreviewComponent extends AbstractReportTablePreviewC
       const datasource = datasources[0];
       this.columns.push(...(datasource.dataKeys || []));
       this.columns.push(...(datasource.latestDataKeys || []));
+    }
+  }
+
+  cellContent(column: DataKey): string {
+    if ('ts' === column.name) {
+      return this.timestampPreview;
+    } else {
+      return super.cellContent(column);
     }
   }
 

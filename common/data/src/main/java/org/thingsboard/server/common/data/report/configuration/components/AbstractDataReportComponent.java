@@ -28,16 +28,24 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.report.renderer;
+package org.thingsboard.server.common.data.report.configuration.components;
 
-import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
-import org.thingsboard.server.common.data.report.configuration.components.ReportComponentType;
-import org.thingsboard.server.report.context.ComponentData;
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import org.thingsboard.server.common.data.report.configuration.DataSource;
 
-public interface ReportComponentRenderer<C extends ReportComponent> {
+import java.util.List;
 
-    String render(C component, ComponentData reportDataSource);
+@Schema
+@Data
+@EqualsAndHashCode
+@NoArgsConstructor
+@AllArgsConstructor
+public abstract class AbstractDataReportComponent implements DataReportComponent {
 
-    ReportComponentType getType();
+    private List<DataSource> dataSources;
 
 }

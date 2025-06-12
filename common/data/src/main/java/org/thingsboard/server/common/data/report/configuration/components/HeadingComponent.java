@@ -42,7 +42,7 @@ import org.thingsboard.server.common.data.report.configuration.style.VerticalAli
 @Data
 @EqualsAndHashCode
 @NoArgsConstructor
-public class HeadingComponent extends AbstractReportComponent {
+public class HeadingComponent extends AbstractDataWithLayoutReportComponent {
 
     private String value;
     private Font font;

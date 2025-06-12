@@ -31,10 +31,8 @@
 package org.thingsboard.server.report.renderer;
 
 import org.springframework.stereotype.Component;
-import org.thingsboard.server.common.data.exception.ThingsboardErrorCode;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.report.configuration.components.ErrorComponent;
-import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponentType;
 import org.thingsboard.server.report.context.ComponentData;
 import org.thingsboard.server.report.util.ThymeleafUtil;
@@ -42,11 +40,10 @@ import org.thingsboard.server.report.util.ThymeleafUtil;
 import java.util.HashMap;
 
 @Component
-public class ErrorRenderer extends ReportComponentWithLayoutRenderer {
+public class ErrorRenderer implements ReportComponentRenderer<ErrorComponent> {
 
     @Override
-    protected String renderContent(ReportComponent component, ComponentData reportDataSource) {
-        ErrorComponent errorComponent = (ErrorComponent) component;
+    public String render(ErrorComponent errorComponent, ComponentData reportDataSource) {
         HashMap<String, Object> componentVariables = new HashMap<>();
         componentVariables.put("errorMessage", errorComponent.getErrorMessage());
         Exception exception = errorComponent.getException();

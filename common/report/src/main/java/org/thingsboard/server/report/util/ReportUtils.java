@@ -41,6 +41,7 @@ import org.thingsboard.server.common.data.query.EntityKeyType;
 import org.thingsboard.server.common.data.report.configuration.DataKey;
 import org.thingsboard.server.common.data.report.configuration.DataSource;
 import org.thingsboard.server.common.data.report.configuration.components.AlarmTableComponent;
+import org.thingsboard.server.common.data.report.configuration.components.DataReportComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponentType;
 
@@ -74,12 +75,14 @@ public class ReportUtils {
     }
 
     public static void prepareReportComponent(ReportComponent component) {
-        List<DataSource> dataSources = component.getDataSources();
-        if (dataSources != null && !dataSources.isEmpty()) {
-            for (DataSource dataSource : dataSources) {
-                if (dataSource != null) {
-                    prepareDataKeys(dataSource.getDataKeys());
-                    prepareDataKeys(dataSource.getLatestDataKeys());
+        if (component instanceof DataReportComponent dataReportComponent) {
+            List<DataSource> dataSources = dataReportComponent.getDataSources();
+            if (dataSources != null && !dataSources.isEmpty()) {
+                for (DataSource dataSource : dataSources) {
+                    if (dataSource != null) {
+                        prepareDataKeys(dataSource.getDataKeys());
+                        prepareDataKeys(dataSource.getLatestDataKeys());
+                    }
                 }
             }
         }
@@ -97,7 +100,7 @@ public class ReportUtils {
         }
     }
 
-    public static Optional<DataSource> getSingleDataSource(ReportComponent component) {
+    public static Optional<DataSource> getSingleDataSource(DataReportComponent component) {
         DataSource dataSource = null;
         if (ReportComponentType.ALARM_TABLE.equals(component.getType())) {
             dataSource = ((AlarmTableComponent)component).getAlarmSource();

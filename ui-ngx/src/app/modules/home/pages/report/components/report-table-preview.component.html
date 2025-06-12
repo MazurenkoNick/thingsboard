@@ -52,7 +52,7 @@
   <tbody>
     <tr>
       @for (column of columns; track column) {
-        <td [style]="cellStyle(column)">{{ '${' + column.label + '}' }}</td>
+        <td [style]="cellStyle(column)">{{ cellContent(column) }}</td>
       }
     </tr>
   </tbody>

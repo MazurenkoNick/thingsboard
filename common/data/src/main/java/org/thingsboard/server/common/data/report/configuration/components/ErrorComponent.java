@@ -41,7 +41,7 @@ import lombok.NoArgsConstructor;
 @EqualsAndHashCode
 @NoArgsConstructor
 @AllArgsConstructor
-public class ErrorComponent extends AbstractReportComponent implements ReportComponent {
+public class ErrorComponent implements ReportComponent {
 
     private String errorMessage;
     private Exception exception;

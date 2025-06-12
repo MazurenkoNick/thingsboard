@@ -39,7 +39,7 @@ import lombok.NoArgsConstructor;
 @Data
 @EqualsAndHashCode
 @NoArgsConstructor
-public class RichTextComponent extends AbstractReportComponent {
+public class RichTextComponent extends AbstractDataWithLayoutReportComponent {
 
     private String value;
 

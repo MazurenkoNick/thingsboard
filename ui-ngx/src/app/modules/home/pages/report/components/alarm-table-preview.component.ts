@@ -29,11 +29,12 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { Component, ViewEncapsulation } from '@angular/core';
-import { AlarmTableReportComponentConfig, TableReportColumnSettings } from '@shared/models/report-component.models';
+import { Component, inject, ViewEncapsulation } from '@angular/core';
+import { AlarmTableReportComponentConfig } from '@shared/models/report-component.models';
 import { DataKey } from '@shared/models/widget.models';
-import { ComponentStyle, textStyle } from '@shared/models/widget-settings.models';
+import { ComponentStyle } from '@shared/models/widget-settings.models';
 import { AbstractReportTablePreviewComponent } from '@home/pages/report/components/report-table-preview.component';
+import { ReportTemplatePageComponent } from '@home/pages/report/report-template-page.component';
 
 @Component({
   selector: 'tb-alarm-table-preview',
@@ -43,8 +44,18 @@ import { AbstractReportTablePreviewComponent } from '@home/pages/report/componen
 })
 export class AlarmTablePreviewComponent extends AbstractReportTablePreviewComponent<AlarmTableReportComponentConfig> {
 
+  private templatePage = inject(ReportTemplatePageComponent);
+
   get columns(): DataKey[] {
     return this.reportComponent.alarmSource.dataKeys;
+  }
+
+  cellContent(column: DataKey): string {
+    if ('createdTime' === column.name) {
+      return this.templatePage.timePreview;
+    } else {
+      return super.cellContent(column);
+    }
   }
 
   protected styleFromColumnSettings(column: DataKey, header = false): ComponentStyle {

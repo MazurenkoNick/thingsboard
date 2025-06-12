@@ -32,7 +32,6 @@ package org.thingsboard.server.report.renderer;
 
 import org.springframework.stereotype.Component;
 import org.thingsboard.server.common.data.report.configuration.DataKey;
-import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponentType;
 import org.thingsboard.server.common.data.report.configuration.components.TimeseriesTableComponent;
 
@@ -41,32 +40,33 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 @Component
-public class TimeseriesTableRenderer extends TableComponentRenderer {
+public class TimeseriesTableRenderer extends TableWithLayoutComponentRenderer<TimeseriesTableComponent> {
 
     @Override
     public ReportComponentType getType() {
         return ReportComponentType.TIME_SERIES_TABLE;
     }
 
+    @Override
     protected String noDataMessage() {
         return "No time series data found";
     }
 
-    protected Float defaultFontSize(Map.Entry<String, String> entry) {
-        String key = entry.getKey();
+    @Override
+    protected Float defaultFontSize(String key, String value) {
         if ("ts".equals(key)) {
             return 9f;
         }
         return null;
     }
 
-    protected HashMap<String, CellVariables> getCellVariablesMap(ReportComponent component, Map<String, DataKey> labelToDataKey, boolean isHeader) {
+    @Override
+    protected HashMap<String, CellVariables> getCellVariablesMap(TimeseriesTableComponent timeseriesTableComponent, Map<String, DataKey> labelToDataKey, boolean isHeader) {
         HashMap<String, CellVariables> variablesMap = new LinkedHashMap<>();
-        TimeseriesTableComponent timeseriesTableComponent = (TimeseriesTableComponent) component;
         if (timeseriesTableComponent.isShowTimestamp() && isHeader) {
             variablesMap.put("Timestamp", toCellVariables("ts", timeseriesTableComponent.getTimestampColumnSettings(), isHeader));
         }
-        HashMap<String, CellVariables> cellVariablesMap = super.getCellVariablesMap(component, labelToDataKey, isHeader);
+        HashMap<String, CellVariables> cellVariablesMap = super.getCellVariablesMap(timeseriesTableComponent, labelToDataKey, isHeader);
         variablesMap.putAll(cellVariablesMap);
         return variablesMap;
     }

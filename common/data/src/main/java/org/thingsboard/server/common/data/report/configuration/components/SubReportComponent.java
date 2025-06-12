@@ -40,7 +40,7 @@ import org.thingsboard.server.common.data.id.ReportTemplateId;
 @Data
 @EqualsAndHashCode
 @NoArgsConstructor
-public class SubReportComponent extends AbstractReportComponent implements ReportComponent {
+public class SubReportComponent extends AbstractDataReportComponent {
 
     private ReportTemplateId templateId;
     private boolean avoidPageBreakInside;

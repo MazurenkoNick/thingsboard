@@ -36,7 +36,6 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
-import org.thingsboard.server.common.data.report.configuration.style.TextAlignment;
 
 import java.util.List;
 
@@ -49,8 +48,6 @@ public class HeaderFooter {
     private boolean enabled;
     @NotNull
     private List<ReportComponent> components;
-    private boolean printPageNumber;
-    private TextAlignment pageNumberAlignment;
     private HeaderFooter firstPage;
 
 }

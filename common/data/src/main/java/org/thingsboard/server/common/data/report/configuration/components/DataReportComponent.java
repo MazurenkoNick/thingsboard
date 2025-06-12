@@ -28,16 +28,14 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.report.renderer;
+package org.thingsboard.server.common.data.report.configuration.components;
 
-import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
-import org.thingsboard.server.common.data.report.configuration.components.ReportComponentType;
-import org.thingsboard.server.report.context.ComponentData;
+import org.thingsboard.server.common.data.report.configuration.DataSource;
 
-public interface ReportComponentRenderer<C extends ReportComponent> {
+import java.util.List;
 
-    String render(C component, ComponentData reportDataSource);
+public interface DataReportComponent extends ReportComponent {
 
-    ReportComponentType getType();
+    List<DataSource> getDataSources();
 
 }

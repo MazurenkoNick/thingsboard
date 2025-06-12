@@ -28,16 +28,16 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.report.renderer;
+package org.thingsboard.server.common.data.report.configuration.components;
 
-import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
-import org.thingsboard.server.common.data.report.configuration.components.ReportComponentType;
-import org.thingsboard.server.report.context.ComponentData;
+import org.thingsboard.server.common.data.report.configuration.style.Insets;
 
-public interface ReportComponentRenderer<C extends ReportComponent> {
+public interface LayoutReportComponent extends ReportComponent {
 
-    String render(C component, ComponentData reportDataSource);
+    Insets getMargins();
 
-    ReportComponentType getType();
+    Insets getPaddings();
+
+    String getBackground();
 
 }

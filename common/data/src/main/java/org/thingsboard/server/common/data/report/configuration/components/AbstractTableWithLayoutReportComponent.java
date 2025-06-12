@@ -35,21 +35,17 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import org.thingsboard.server.common.data.report.configuration.DataSource;
-import org.thingsboard.server.common.data.report.configuration.style.Insets;
-
-import java.util.List;
+import org.thingsboard.server.common.data.report.configuration.style.Heading;
 
 @Schema
 @Data
-@EqualsAndHashCode
+@EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @AllArgsConstructor
-public abstract class AbstractReportComponent implements ReportComponent {
+public abstract class AbstractTableWithLayoutReportComponent extends AbstractDataWithLayoutReportComponent implements TableWithLayoutReportComponent {
 
-    private Insets margins;
-    private Insets paddings;
-    private String background;
-    private List<DataSource> dataSources;
+    private boolean showTableHeading;
+
+    private Heading tableHeading;
 
 }

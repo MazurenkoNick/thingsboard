@@ -32,7 +32,7 @@ package org.thingsboard.server.common.data.report.configuration.components;
 
 import org.thingsboard.server.common.data.report.configuration.style.Heading;
 
-public interface TableReportComponent extends ReportComponent {
+public interface TableReportComponent extends DataReportComponent {
 
     boolean isShowTableHeading();
 

@@ -108,6 +108,7 @@ import {
 import { tap } from 'rxjs/operators';
 import { FilterDialogComponent, FilterDialogData } from '@home/components/filter/filter-dialog.component';
 import { getDefaultTimezone } from '@shared/models/time/time.models';
+import { DatePipe } from '@angular/common';
 
 @Component({
   selector: 'tb-report-template-page',
@@ -162,6 +163,8 @@ export class ReportTemplatePageComponent extends PageComponent
 
   reportTemplate: ReportTemplate<PdfReportTemplateConfig>;
 
+  timePreview: string;
+
   updateBreadcrumbs = new EventEmitter();
 
   prevReportComponent: ReportComponentConfig;
@@ -209,6 +212,7 @@ export class ReportTemplatePageComponent extends PageComponent
               private dialog: MatDialog,
               private dialogService: DialogService,
               private fb: FormBuilder,
+              private date: DatePipe,
               private renderer: Renderer2,
               private cd: ChangeDetectorRef) {
     super();
@@ -522,6 +526,7 @@ export class ReportTemplatePageComponent extends PageComponent
   }
 
   private updateReportTemplateSettings(settings: PdfReportTemplateSettings): void {
+    this.timePreview = this.date.transform(Date.now(), settings.timeDataPattern);
     updateFromPdfReportTemplateSettings(this.reportTemplate, settings);
     this.updatePageLayout();
     this.isDirty = true;
@@ -606,6 +611,8 @@ export class ReportTemplatePageComponent extends PageComponent
     );
 
     const settings = toPdfReportTemplateSettings(this.reportTemplate);
+
+    this.timePreview = this.date.transform(Date.now(), settings.timeDataPattern);
 
     this.reportTemplateSettingsFormControl.patchValue(settings, {emitEvent: false});
     this.isDirty = false;

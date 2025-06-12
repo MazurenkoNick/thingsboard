@@ -100,6 +100,10 @@ export abstract class AbstractReportTablePreviewComponent<C extends TableReportC
     return null;
   }
 
+  cellContent(column: DataKey): string {
+    return '${' + column.label + '}';
+  }
+
   protected styleFromColumnSettings(column: DataKey, header = false): ComponentStyle {
     let style: ComponentStyle = {};
     if (column?.settings) {

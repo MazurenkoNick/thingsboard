@@ -49,6 +49,7 @@ import org.thingsboard.server.common.data.report.configuration.PdfReportTemplate
 import org.thingsboard.server.common.data.report.configuration.ReportTemplateConfig;
 import org.thingsboard.server.common.data.report.configuration.components.AlarmTableComponent;
 import org.thingsboard.server.common.data.report.configuration.components.DashboardComponent;
+import org.thingsboard.server.common.data.report.configuration.components.DataReportComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ErrorComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ImageComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
@@ -97,7 +98,7 @@ import static org.thingsboard.server.report.util.ReportUtils.updateDashboardRepo
 @Slf4j
 public class PdfReportService extends AbstractReportService {
 
-    private final Map<ReportComponentType, ReportComponentRenderer> componentsRenderers = new EnumMap<>(ReportComponentType.class);
+    private final Map<ReportComponentType, ReportComponentRenderer<ReportComponent>> componentsRenderers = new EnumMap<>(ReportComponentType.class);
     private final WebReportClient webReportClient;
 
     private PdfReportService(List<ReportComponentRenderer> renderers, WebReportClient webReportClient) {
@@ -181,11 +182,11 @@ public class PdfReportService extends AbstractReportService {
             prepareReportComponent(component);
             ReportComponentType type = component.getType();
             if (type == SUB_REPORT) {
-                content.append(renderSubreport(usablePageWidthPx, ctx, component));
+                content.append(renderSubreport(usablePageWidthPx, ctx, (SubReportComponent)component));
             } else if (type == DASHBOARD) {
-                content.append(renderDashboard(usablePageWidthPx, ctx, stateEntity, component));
+                content.append(renderDashboard(usablePageWidthPx, ctx, stateEntity, (DataReportComponent) component));
             } else if (type == TIME_SERIES_TABLE) {
-                content.append(renderTimeseriesTables(usablePageWidthPx, ctx, stateEntity, component));
+                content.append(renderTimeseriesTables(usablePageWidthPx, ctx, stateEntity, (TimeseriesTableComponent) component));
             } else {
                 content.append(renderComponent(usablePageWidthPx, ctx, component, stateEntity));
             }
@@ -210,11 +211,11 @@ public class PdfReportService extends AbstractReportService {
             case ALARM_TABLE -> new ComponentData(usablePageWidthPx, fetchAlarmDatas(ctx, (AlarmTableComponent) component));
             case DASHBOARD -> buildDashboardComponentData(usablePageWidthPx, ctx, ((DashboardComponent) component), stateEntity);
             case IMAGE -> buildImageComponentData(usablePageWidthPx, ctx, ((ImageComponent) component));
-            default -> buildMultipleDataSourceData(usablePageWidthPx, ctx, component.getDataSources(), stateEntity);
+            default -> buildMultipleDataSourceData(usablePageWidthPx, ctx, component, stateEntity);
         };
     }
 
-    private String renderTimeseriesTables(int usablePageWidthPx, TbReportCtx ctx, EntityData stateEntity, ReportComponent component) {
+    private String renderTimeseriesTables(int usablePageWidthPx, TbReportCtx ctx, EntityData stateEntity, DataReportComponent component) {
         StringBuilder content = new StringBuilder();
         Optional<DataSource> dataSource = getSingleDataSource(component);
         if (dataSource.isEmpty()) {
@@ -238,7 +239,7 @@ public class PdfReportService extends AbstractReportService {
         return content.toString();
     }
 
-    private String renderDashboard(int usablePageWidthPx, TbReportCtx ctx, EntityData stateEntity, ReportComponent component) {
+    private String renderDashboard(int usablePageWidthPx, TbReportCtx ctx, EntityData stateEntity, DataReportComponent component) {
         StringBuilder content = new StringBuilder();
         Optional<DataSource> dataSource = getSingleDataSource(component);
         List<EntityData> entityDatas;
@@ -255,7 +256,7 @@ public class PdfReportService extends AbstractReportService {
         return content.toString();
     }
 
-    private String renderSubreport(int usablePageWidthPx, TbReportCtx ctx, ReportComponent component) {
+    private String renderSubreport(int usablePageWidthPx, TbReportCtx ctx, DataReportComponent component) {
         SubReportComponent subReportComponent = ((SubReportComponent) component);
         ReportTemplateId templateId = subReportComponent.getTemplateId();
         if (templateId == null) {
@@ -345,7 +346,11 @@ public class PdfReportService extends AbstractReportService {
         }
     }
 
-    private ComponentData buildMultipleDataSourceData(int usablePageWidthPx, TbReportCtx ctx, List<DataSource> dataSources, EntityData stateEntity) {
+    private ComponentData buildMultipleDataSourceData(int usablePageWidthPx, TbReportCtx ctx, ReportComponent component, EntityData stateEntity) {
+        List<DataSource> dataSources = null;
+        if (component instanceof DataReportComponent) {
+            dataSources = ((DataReportComponent) component).getDataSources();
+        }
         if (dataSources == null || dataSources.isEmpty()) {
             return new ComponentData(usablePageWidthPx);
         }

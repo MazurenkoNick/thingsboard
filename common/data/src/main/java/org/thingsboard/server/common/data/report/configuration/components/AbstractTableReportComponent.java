@@ -42,7 +42,7 @@ import org.thingsboard.server.common.data.report.configuration.style.Heading;
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @AllArgsConstructor
-public abstract class AbstractTableReportComponent extends AbstractReportComponent implements TableReportComponent {
+public abstract class AbstractTableReportComponent extends AbstractDataReportComponent implements TableReportComponent {
 
     private boolean showTableHeading;
 
