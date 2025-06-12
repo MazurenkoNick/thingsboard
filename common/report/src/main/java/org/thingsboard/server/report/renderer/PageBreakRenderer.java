@@ -37,7 +37,7 @@ import org.thingsboard.server.report.context.ComponentData;
 
 
 @Component
-public class PageBreakRenderer implements ReportComponentRenderer {
+public class PageBreakRenderer implements PdfReportComponentRenderer {
 
     @Override
     public String render(ReportComponent component, ComponentData reportDataSource) {

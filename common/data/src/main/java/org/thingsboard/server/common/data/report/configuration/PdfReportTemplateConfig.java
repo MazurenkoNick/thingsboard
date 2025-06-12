@@ -30,15 +30,11 @@
  */
 package org.thingsboard.server.common.data.report.configuration;
 
-import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import org.thingsboard.server.common.data.report.TbReportFormat;
-import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
 import org.thingsboard.server.common.data.report.configuration.style.Insets;
 import org.thingsboard.server.common.data.report.configuration.style.PageOrientation;
 import org.thingsboard.server.common.data.report.configuration.style.PageSize;
-
-import java.util.List;
 
 @Data
 public class PdfReportTemplateConfig extends AbstractReportTemplateConfig {
@@ -47,12 +43,8 @@ public class PdfReportTemplateConfig extends AbstractReportTemplateConfig {
     private PageOrientation pageOrientation;
     private Insets pageMargins;
     private String pageBackground;
-    private List<EntityAlias> entityAliases;
-    private List<Filter> filters;
     private HeaderFooter header;
     private HeaderFooter footer;
-    @NotNull
-    private List<ReportComponent> components;
 
     @Override
     public TbReportFormat getFormat() {

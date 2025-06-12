@@ -30,44 +30,16 @@
  */
 package org.thingsboard.server.report.renderer;
 
-import org.springframework.stereotype.Component;
-import org.thingsboard.server.common.data.report.configuration.DataKey;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponentType;
-import org.thingsboard.server.common.data.report.configuration.components.TimeseriesTableComponent;
+import org.thingsboard.server.report.context.ComponentData;
 
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.List;
 
-@Component
-public class TimeseriesTableRenderer extends TableComponentRenderer {
+public interface CsvReportComponentRenderer {
 
-    @Override
-    public ReportComponentType getType() {
-        return ReportComponentType.TIME_SERIES_TABLE;
-    }
+    List<List<String>> render(ReportComponent component, ComponentData reportDataSource);
 
-    protected String noDataMessage() {
-        return "No time series data found";
-    }
-
-    protected Float defaultFontSize(String key, String value) {
-        if ("ts".equals(key)) {
-            return 9f;
-        }
-        return null;
-    }
-
-    protected HashMap<String, CellVariables> getCellVariablesMap(ReportComponent component, Map<String, DataKey> labelToDataKey, boolean isHeader) {
-        HashMap<String, CellVariables> variablesMap = new LinkedHashMap<>();
-        TimeseriesTableComponent timeseriesTableComponent = (TimeseriesTableComponent) component;
-        if (timeseriesTableComponent.isShowTimestamp() && isHeader) {
-            variablesMap.put("Timestamp", toCellVariables("ts", timeseriesTableComponent.getTimestampColumnSettings(), isHeader));
-        }
-        HashMap<String, CellVariables> cellVariablesMap = super.getCellVariablesMap(component, labelToDataKey, isHeader);
-        variablesMap.putAll(cellVariablesMap);
-        return variablesMap;
-    }
+    ReportComponentType getType();
 
 }

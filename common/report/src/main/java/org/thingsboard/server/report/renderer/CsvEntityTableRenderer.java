@@ -32,42 +32,59 @@ package org.thingsboard.server.report.renderer;
 
 import org.springframework.stereotype.Component;
 import org.thingsboard.server.common.data.report.configuration.DataKey;
+import org.thingsboard.server.common.data.report.configuration.DataSource;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponentType;
-import org.thingsboard.server.common.data.report.configuration.components.TimeseriesTableComponent;
+import org.thingsboard.server.report.context.ComponentData;
 
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import static org.thingsboard.server.report.util.ReportUtils.getSingleDataSource;
+
 
 @Component
-public class TimeseriesTableRenderer extends TableComponentRenderer {
+public class CsvEntityTableRenderer implements CsvReportComponentRenderer {
+
+
+    @Override
+    public List<List<String>> render(ReportComponent component, ComponentData reportDataSource) {
+        List<List<String>> content = new LinkedList<>();
+
+        Optional<DataSource> dataSource = getSingleDataSource(component);
+        if (dataSource.isEmpty()) {
+            return Collections.emptyList(); //renderError(usablePageWidthPx, "Data source is not configured for time series table");
+        }
+        List<DataKey> dataKeys = dataSource.get().getDataKeys();
+
+        Map<String, String> labelToDataKey = dataKeys.stream()
+                .collect(Collectors.toMap(
+                        DataKey::getLabel,
+                        DataKey::getName,
+                        (s, s2) -> s2,
+                        LinkedHashMap::new));
+        List<String> headers = labelToDataKey.keySet().stream().toList();
+        content.add(headers);
+
+        List<Map<String, String>> entityDatas = reportDataSource.getEntityDatas();
+
+        for (Map<String, String> row : entityDatas) {
+            List<String> values = labelToDataKey.values().stream()
+                    .map(h -> Objects.toString(row.get(h), "")).toList();
+            content.add(values);
+        }
+        return content;
+    }
 
     @Override
     public ReportComponentType getType() {
-        return ReportComponentType.TIME_SERIES_TABLE;
-    }
-
-    protected String noDataMessage() {
-        return "No time series data found";
-    }
-
-    protected Float defaultFontSize(String key, String value) {
-        if ("ts".equals(key)) {
-            return 9f;
-        }
-        return null;
-    }
-
-    protected HashMap<String, CellVariables> getCellVariablesMap(ReportComponent component, Map<String, DataKey> labelToDataKey, boolean isHeader) {
-        HashMap<String, CellVariables> variablesMap = new LinkedHashMap<>();
-        TimeseriesTableComponent timeseriesTableComponent = (TimeseriesTableComponent) component;
-        if (timeseriesTableComponent.isShowTimestamp() && isHeader) {
-            variablesMap.put("Timestamp", toCellVariables("ts", timeseriesTableComponent.getTimestampColumnSettings(), isHeader));
-        }
-        HashMap<String, CellVariables> cellVariablesMap = super.getCellVariablesMap(component, labelToDataKey, isHeader);
-        variablesMap.putAll(cellVariablesMap);
-        return variablesMap;
+        return ReportComponentType.ENTITY_TABLE;
     }
 
 }

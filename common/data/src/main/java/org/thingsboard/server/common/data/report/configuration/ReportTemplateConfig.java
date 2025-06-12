@@ -34,6 +34,9 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import org.thingsboard.server.common.data.report.TbReportFormat;
+import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
+
+import java.util.List;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeInfo(
@@ -45,8 +48,16 @@ import org.thingsboard.server.common.data.report.TbReportFormat;
 })
 public interface ReportTemplateConfig {
 
+    String getNamePattern();
+
     String getTimeDataPattern();
 
     TbReportFormat getFormat();
+
+    List<EntityAlias> getEntityAliases();
+
+    List<Filter> getFilters();
+
+    List<ReportComponent> getComponents();
 
 }

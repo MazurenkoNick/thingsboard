@@ -46,7 +46,6 @@ import org.thingsboard.server.common.data.report.TbReportFormat;
 import org.thingsboard.server.common.data.report.configuration.DataSource;
 import org.thingsboard.server.common.data.report.configuration.HeaderFooter;
 import org.thingsboard.server.common.data.report.configuration.PdfReportTemplateConfig;
-import org.thingsboard.server.common.data.report.configuration.ReportTemplateConfig;
 import org.thingsboard.server.common.data.report.configuration.components.AlarmTableComponent;
 import org.thingsboard.server.common.data.report.configuration.components.DashboardComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ErrorComponent;
@@ -62,7 +61,7 @@ import org.thingsboard.server.common.data.report.configuration.style.PageSize;
 import org.thingsboard.server.report.context.ComponentData;
 import org.thingsboard.server.report.context.HeaderFooterRenderLayout;
 import org.thingsboard.server.report.context.TbReportCtx;
-import org.thingsboard.server.report.renderer.ReportComponentRenderer;
+import org.thingsboard.server.report.renderer.PdfReportComponentRenderer;
 import org.thingsboard.server.report.util.ColorUtils;
 import org.thingsboard.server.report.util.HtmlRenderUtils;
 import org.thingsboard.server.report.util.ThymeleafUtil;
@@ -86,8 +85,6 @@ import static org.thingsboard.server.common.data.report.configuration.components
 import static org.thingsboard.server.common.data.report.configuration.components.ReportComponentType.SUB_REPORT;
 import static org.thingsboard.server.common.data.report.configuration.components.ReportComponentType.TIME_SERIES_TABLE;
 import static org.thingsboard.server.common.data.report.configuration.style.PageSize.A4;
-import static org.thingsboard.server.common.data.util.ReportQueryUtils.toAlarmCountQuery;
-import static org.thingsboard.server.common.data.util.ReportQueryUtils.toEntityCountQuery;
 import static org.thingsboard.server.report.util.ReportUtils.getSingleDataSource;
 import static org.thingsboard.server.report.util.ReportUtils.prepareReportComponent;
 import static org.thingsboard.server.report.util.ReportUtils.prepareReportName;
@@ -97,10 +94,10 @@ import static org.thingsboard.server.report.util.ReportUtils.updateDashboardRepo
 @Slf4j
 public class PdfReportService extends AbstractReportService {
 
-    private final Map<ReportComponentType, ReportComponentRenderer> componentsRenderers = new EnumMap<>(ReportComponentType.class);
+    private final Map<ReportComponentType, PdfReportComponentRenderer> componentsRenderers = new EnumMap<>(ReportComponentType.class);
     private final WebReportClient webReportClient;
 
-    private PdfReportService(List<ReportComponentRenderer> renderers, WebReportClient webReportClient) {
+    private PdfReportService(List<PdfReportComponentRenderer> renderers, WebReportClient webReportClient) {
         renderers.forEach(renderer -> {
             ReportComponentType type = renderer.getType();
             if (type != null) {
@@ -294,11 +291,11 @@ public class PdfReportService extends AbstractReportService {
         }
     }
 
-    private String renderError(int usablePageWidthPx, String errorMessage) {
+    protected String renderError(int usablePageWidthPx, String errorMessage) {
         return renderError(usablePageWidthPx, errorMessage, null);
     }
 
-    private String renderError(int usablePageWidthPx, String errorMessage, Exception e) {
+    protected String renderError(int usablePageWidthPx, String errorMessage, Exception e) {
         return componentsRenderers.get(ERROR).render(new ErrorComponent(errorMessage, e), new ComponentData(usablePageWidthPx));
     }
 
@@ -355,42 +352,6 @@ public class PdfReportService extends AbstractReportService {
             mainDataSource.merge(singleDataSource);
         }
         return mainDataSource;
-    }
-
-    private ComponentData buildSingleComponentData(int usablePageWidthPx, TbReportCtx ctx, DataSource dataSource, EntityData stateEntity) {
-        ReportTemplateConfig configuration = ctx.getConfiguration();
-        return switch (dataSource.getType()) {
-            case "device", "entity" -> new ComponentData(usablePageWidthPx, dataSource, fetchEntityDatas(ctx, dataSource, stateEntity));
-            case "entityCount" -> buildEntityCountDataSource(usablePageWidthPx, ctx, dataSource, configuration);
-            case "alarmCount" -> buildAlarmCountDataSource(usablePageWidthPx, ctx, dataSource, configuration);
-            default -> throw new IllegalArgumentException("Unknown data source type: " + dataSource.getType());
-        };
-    }
-
-    private ComponentData buildEntityCountDataSource(int usablePageWidthPx, TbReportCtx ctx, DataSource dataSource, ReportTemplateConfig configuration) {
-        Map<String, Object> map = new HashMap<>();
-        String label = null;
-        if (dataSource.getDataKeys() != null && !dataSource.getDataKeys().isEmpty()) {
-            label = dataSource.getDataKeys().get(0).getLabel();
-        }
-        if (StringUtils.isBlank(label)) {
-            label = "count";
-        }
-        map.put(label, dataService.countEntitiesByQuery(toEntityCountQuery(dataSource, configuration), ctx));
-        return new ComponentData(usablePageWidthPx, map);
-    }
-
-    private ComponentData buildAlarmCountDataSource(int usablePageWidthPx, TbReportCtx ctx, DataSource dataSource, ReportTemplateConfig configuration) {
-        Map<String, Object> map = new HashMap<>();
-        String label = null;
-        if (dataSource.getDataKeys() != null && !dataSource.getDataKeys().isEmpty()) {
-            label = dataSource.getDataKeys().get(0).getLabel();
-        }
-        if (StringUtils.isBlank(label)) {
-            label = "count";
-        }
-        map.put(label, dataService.countAlarmsByQuery(toAlarmCountQuery(dataSource, configuration), ctx));
-        return new ComponentData(usablePageWidthPx, map);
     }
 
     private Dimension computePageSize(PdfReportTemplateConfig config) {

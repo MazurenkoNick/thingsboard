@@ -40,7 +40,7 @@ import org.thingsboard.server.report.util.ThymeleafUtil;
 import java.util.HashMap;
 import java.util.Map;
 
-public abstract class ReportComponentWithLayoutRenderer implements ReportComponentRenderer {
+public abstract class ReportComponentWithLayoutRenderer implements PdfReportComponentRenderer {
 
     private static final int DEFAULT_COMPONENT_MARGIN_SIZE = 0;
     private static final int DEFAULT_COMPONENT_PADDING_SIZE = 0;

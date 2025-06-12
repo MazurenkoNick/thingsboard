@@ -103,8 +103,8 @@ public class ReportControllerTest extends AbstractControllerTest {
                 .build()));
 
         CsvReportTemplateConfig configuration = new CsvReportTemplateConfig();
-        configuration.setEntityAlias(entityAlias);
-        configuration.setComponent(tableComponent);
+        configuration.setEntityAliases(List.of(entityAlias));
+        configuration.setComponents(List.of(tableComponent));
 
         ReportTemplate reportTemplate = new ReportTemplate();
         reportTemplate.setConfiguration(configuration);
@@ -168,8 +168,8 @@ public class ReportControllerTest extends AbstractControllerTest {
                 .build()));
 
         CsvReportTemplateConfig configuration = new CsvReportTemplateConfig();
-        configuration.setEntityAlias(entityAlias);
-        configuration.setComponent(tableComponent);
+        configuration.setEntityAliases(List.of(entityAlias));
+        configuration.setComponents(List.of(tableComponent));
         configuration.setNamePattern("test.csv");
 
         ReportTemplate reportTemplate = new ReportTemplate();
