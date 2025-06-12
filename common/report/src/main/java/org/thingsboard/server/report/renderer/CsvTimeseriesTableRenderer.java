@@ -31,27 +31,21 @@
 package org.thingsboard.server.report.renderer;
 
 import org.springframework.stereotype.Component;
-import org.thingsboard.server.common.data.report.configuration.DataKey;
 import org.thingsboard.server.common.data.report.configuration.DataSource;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponentType;
 import org.thingsboard.server.common.data.report.configuration.components.TimeseriesTableComponent;
 import org.thingsboard.server.report.context.ComponentData;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import static org.thingsboard.server.report.util.ReportUtils.getSingleDataSource;
 
 
 @Component
 public class CsvTimeseriesTableRenderer extends AbstractCsvComponentRenderer<TimeseriesTableComponent> {
-
 
     @Override
     public List<List<String>> render(TimeseriesTableComponent component, ComponentData reportDataSource) {
@@ -84,24 +78,7 @@ public class CsvTimeseriesTableRenderer extends AbstractCsvComponentRenderer<Tim
             values.addAll(extractValues(row, labelToKey));
             content.add(values);
         }
-
         return content;
-    }
-
-    private Map<String, String> buildLabelToKeyMap(List<DataKey> dataKeys) {
-        if (dataKeys == null) return Collections.emptyMap();
-        return dataKeys.stream()
-                .collect(Collectors.toMap(
-                        DataKey::getLabel,
-                        DataKey::getName,
-                        (existing, replacement) -> replacement,
-                        LinkedHashMap::new));
-    }
-
-    private List<String> extractValues(Map<String, String> row, Map<String, String> labelToKey) {
-        return labelToKey.values().stream()
-                .map(key -> row.getOrDefault(key, ""))
-                .toList();
     }
 
     @Override

@@ -117,7 +117,7 @@ public class CsvReportService extends AbstractReportService {
             return componentsRenderers.get(component.getType()).render(component, componentData);
         } catch (Exception e) {
             log.error("Failed to render component of type [{}]", component.getType(), e);
-            return List.of(List.of("Failed to render component of type: " + component.getType() + "Error: " + e));
+            return List.of(List.of("Failed to render component of type: " + component.getType() + " ,Error: " + e));
         }
     }
 
@@ -125,11 +125,11 @@ public class CsvReportService extends AbstractReportService {
         List<List<String>> content = new LinkedList<>();
         Optional<DataSource> dataSource = getSingleDataSource(component);
         if (dataSource.isEmpty()) {
-            return Collections.emptyList(); //renderError(usablePageWidthPx, "Data source is not configured for time series table");
+            return List.of(List.of("Data source is not configured for time series table"));
         }
         DataSource ds = dataSource.get();
         if (ds.getDataKeys().isEmpty()) {
-            return Collections.emptyList(); //renderError(usablePageWidthPx, "At least one time series column should be specified for time series table");
+            return List.of(List.of("At least one time series column should be specified for time series table"));
         }
         List<DataKey> latestDataKeys = ds.getLatestDataKeys();
         latestDataKeys.add(new DataKey("name", "entityField", "NAME"));
