@@ -57,7 +57,7 @@ export class SubReportConfigComponent extends AbstractReportComponentConfig<SubR
       dataSources: [reportComponentConfig.dataSources, []],
       templateId: [reportComponentConfig.templateId, []]
     });
-    if (this.canHaveLayout) {
+    if (!this.isPlainFormat) {
       form.addControl('avoidPageBreakInside', this.fb.control(reportComponentConfig.avoidPageBreakInside, []));
     }
     return form;

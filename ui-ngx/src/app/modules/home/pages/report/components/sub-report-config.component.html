@@ -62,7 +62,7 @@
       </tb-entity-autocomplete>
     </div>
   </div>
-  @if (canHaveLayout) {
+  @if (!isPlainFormat) {
     <div class="tb-form-row">
       <mat-slide-toggle class="mat-slide" formControlName="avoidPageBreakInside">
         {{ 'report-template.component.sub-report.avoid-page-break-inside' | translate }}

@@ -60,7 +60,7 @@ export class AlarmTablePreviewComponent extends AbstractReportTablePreviewCompon
 
   protected styleFromColumnSettings(column: DataKey, header = false): ComponentStyle {
     const style = super.styleFromColumnSettings(column, header);
-    if (this.canHaveLayout && !header) {
+    if (!this.isPlainFormat && !header) {
       if ('createdTime' === column.name) {
         style.fontSize = style.fontSize || '9pt';
       }

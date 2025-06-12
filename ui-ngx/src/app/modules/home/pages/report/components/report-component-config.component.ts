@@ -147,8 +147,8 @@ export abstract class AbstractReportComponentConfig<C extends ReportComponentCon
   @Output()
   reportConfigUpdated = new EventEmitter<C>();
 
-  public get canHaveLayout(): boolean {
-    return this.context.format === TbReportFormat.PDF;
+  public get isPlainFormat(): boolean {
+    return this.context.format === TbReportFormat.CSV;
   }
 
   public get datasource(): Datasource {
@@ -185,7 +185,7 @@ export abstract class AbstractReportComponentConfig<C extends ReportComponentCon
   setupConfig(reportComponentConfig: C): FormGroup {
     this.reportComponentConfig = reportComponentConfig;
     this.reportConfigForm = this.buildForm(reportComponentConfig);
-    if (isLayoutReportComponentConfig(reportComponentConfig) && this.canHaveLayout) {
+    if (isLayoutReportComponentConfig(reportComponentConfig) && !this.isPlainFormat) {
       this.reportConfigForm.addControl('paddings', this.fb.control(reportComponentConfig.paddings));
       this.reportConfigForm.addControl('margins', this.fb.control(reportComponentConfig.margins));
       this.reportConfigForm.addControl('background',

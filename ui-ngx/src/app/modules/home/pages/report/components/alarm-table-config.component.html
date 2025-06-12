@@ -31,7 +31,7 @@
 
 -->
 <div class="tb-form-panel no-border" [formGroup]="reportConfigForm">
-  @if (canHaveLayout) {
+  @if (!isPlainFormat) {
     <div class="tb-report-component-config-header">
       <tb-toggle-select [(ngModel)]="settingsTab" [ngModelOptions]="{standalone: true}" appearance="fill">
         <tb-toggle-option value="data">{{ 'report-template.data' | translate }}</tb-toggle-option>
@@ -89,7 +89,7 @@
         </mat-expansion-panel-header>
         <ng-template matExpansionPanelContent>
           <tb-report-heading [variableNames]="['entityName', 'entityLabel', 'rowCount']"
-                             [withLayout]="canHaveLayout"
+                             [withLayout]="!isPlainFormat"
                              formControlName="tableHeading"></tb-report-heading>
         </ng-template>
       </mat-expansion-panel>
@@ -98,7 +98,7 @@
       [dataKeysPanelOptions]="{
         widgetType: widgetType.alarm,
         callbacks: callbacks,
-        settingsForm: canHaveLayout ? TableReportColumnSettingsForm : null
+        settingsForm: !isPlainFormat ? TableReportColumnSettingsForm : null
       }"
       stroked
       panelTitle="{{ 'widgets.table.columns' | translate }}"
@@ -117,7 +117,7 @@
       formControlName="columns">
     </tb-data-keys-panel>
   </div>
-  @if (canHaveLayout) {
+  @if (!isPlainFormat) {
     <div class="tb-form-panel no-border no-padding" [class.!hidden]="settingsTab !== 'layout'">
       <div class="tb-form-row space-between">
         <div translate>report-template.paddings</div>

@@ -53,7 +53,7 @@ export abstract class AbstractReportTablePreviewComponent<C extends TableReportC
         } else {
           this.headingText = '&nbsp;';
         }
-        if (this.canHaveLayout) {
+        if (!this.isPlainFormat) {
           const font: Font = deepClone(tableHeading.font || {size: 20, sizeUnit: 'pt'} as Font);
           if (!font.size) {
             font.size = 20;
@@ -93,7 +93,7 @@ export abstract class AbstractReportTablePreviewComponent<C extends TableReportC
   }
 
   columnWidth(column: DataKey): string {
-    if (this.canHaveLayout && column?.settings) {
+    if (!this.isPlainFormat && column?.settings) {
       const columnSettings: TableReportColumnSettings =  column.settings;
       if (columnSettings?.columnWidth) {
         return columnSettings?.columnWidth;
@@ -108,7 +108,7 @@ export abstract class AbstractReportTablePreviewComponent<C extends TableReportC
 
   protected styleFromColumnSettings(column: DataKey, header = false): ComponentStyle {
     let style: ComponentStyle = {};
-    if (this.canHaveLayout && column?.settings) {
+    if (!this.isPlainFormat && column?.settings) {
       const columnSettings: TableReportColumnSettings =  column.settings;
       if (columnSettings) {
         const cellSettings = header ? columnSettings.header : columnSettings.cell;

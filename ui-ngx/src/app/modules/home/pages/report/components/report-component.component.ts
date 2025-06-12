@@ -409,8 +409,8 @@ export abstract class AbstractReportComponentPreview<C extends ReportComponentCo
   @Output()
   contentResized = new EventEmitter();
 
-  public get canHaveLayout(): boolean {
-    return this.format === TbReportFormat.PDF;
+  public get isPlainFormat(): boolean {
+    return this.format === TbReportFormat.CSV;
   }
 
   protected cd = inject(ChangeDetectorRef);
