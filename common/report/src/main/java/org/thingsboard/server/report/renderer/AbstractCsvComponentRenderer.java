@@ -30,16 +30,21 @@
  */
 package org.thingsboard.server.report.renderer;
 
-import org.thingsboard.server.common.data.report.configuration.components.ReportComponentType;
 import org.thingsboard.server.common.data.report.configuration.components.TableReportComponent;
+import org.thingsboard.server.common.data.report.configuration.style.Heading;
 import org.thingsboard.server.report.context.ComponentData;
+import org.thingsboard.server.report.util.ThymeleafUtil;
 
 import java.util.List;
 
-public interface CsvReportComponentRenderer<C extends TableReportComponent> {
+public abstract class AbstractCsvComponentRenderer<C extends TableReportComponent> implements CsvReportComponentRenderer<C> {
 
-    List<List<String>> render(C component, ComponentData reportDataSource);
-
-    ReportComponentType getType();
+    protected void addOptionalHeading(TableReportComponent component, ComponentData reportDataSource, List<List<String>> content) {
+        if (component.isShowTableHeading() && component.getTableHeading() != null) {
+            Heading tableHeading = component.getTableHeading();
+            String headingText = ThymeleafUtil.renderFromHtmlString(tableHeading.getText(), reportDataSource.getVariables());
+            content.add(List.of(headingText));
+        }
+    }
 
 }

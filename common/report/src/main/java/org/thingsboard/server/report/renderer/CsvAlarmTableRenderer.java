@@ -49,23 +49,27 @@ import static org.thingsboard.server.report.util.ReportUtils.getSingleDataSource
 
 
 @Component
-public class CsvAlarmTableRenderer implements CsvReportComponentRenderer<AlarmTableComponent> {
+public class CsvAlarmTableRenderer extends AbstractCsvComponentRenderer<AlarmTableComponent> {
 
     @Override
     public List<List<String>> render(AlarmTableComponent component, ComponentData reportDataSource) {
         Optional<DataSource> dataSourceOpt = getSingleDataSource(component);
         if (dataSourceOpt.isEmpty()) {
-            return Collections.emptyList(); // renderError(usablePageWidthPx, "Data source is not configured for alarm table");
+            return List.of(List.of("Data source is not configured for alarm table"));
         }
 
         DataSource dataSource = dataSourceOpt.get();
         Map<String, String> labelToDataKeyMap = buildLabelToKeyMap(dataSource.getDataKeys());
         List<List<String>> content = new ArrayList<>();
 
-        // Build and add headers
+        // add heading
+        addOptionalHeading(component, reportDataSource, content);
+
+        // add headers
         ArrayList<String> headers = new ArrayList<>(labelToDataKeyMap.keySet());
         content.add(headers);
 
+        // add data rows
         for (Map<String, String> row : reportDataSource.getEntityDatas()) {
             content.add(extractValues(row, labelToDataKeyMap));
         }

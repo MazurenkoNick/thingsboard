@@ -50,14 +50,14 @@ import static org.thingsboard.server.report.util.ReportUtils.getSingleDataSource
 
 
 @Component
-public class CsvTimeseriesTableRenderer implements CsvReportComponentRenderer<TimeseriesTableComponent> {
+public class CsvTimeseriesTableRenderer extends AbstractCsvComponentRenderer<TimeseriesTableComponent> {
 
 
     @Override
     public List<List<String>> render(TimeseriesTableComponent component, ComponentData reportDataSource) {
         Optional<DataSource> dataSourceOpt = getSingleDataSource(component);
         if (dataSourceOpt.isEmpty()) {
-            return Collections.emptyList(); // renderError(usablePageWidthPx, "Data source is not configured for time series table");
+            return List.of(List.of("Data source is not configured for alarm table"));
         }
 
         DataSource dataSource = dataSourceOpt.get();
@@ -66,6 +66,9 @@ public class CsvTimeseriesTableRenderer implements CsvReportComponentRenderer<Ti
         Map<String, String> labelToKey = buildLabelToKeyMap(dataSource.getDataKeys());
 
         List<List<String>> content = new ArrayList<>();
+
+        // add heading
+        addOptionalHeading(component, reportDataSource, content);
 
         // Build and add headers
         List<String> headers = new ArrayList<>(labelToLatestKey.keySet());
