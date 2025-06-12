@@ -39,6 +39,8 @@ import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.server.common.data.DataConstants;
 import org.thingsboard.server.common.data.Device;
 import org.thingsboard.server.common.data.StringUtils;
+import org.thingsboard.server.common.data.alarm.Alarm;
+import org.thingsboard.server.common.data.alarm.AlarmSeverity;
 import org.thingsboard.server.common.data.id.ReportTemplateId;
 import org.thingsboard.server.common.data.job.Job;
 import org.thingsboard.server.common.data.job.JobStatus;
@@ -55,10 +57,12 @@ import org.thingsboard.server.common.data.report.ReportRequest;
 import org.thingsboard.server.common.data.report.ReportTemplate;
 import org.thingsboard.server.common.data.report.ReportTemplateType;
 import org.thingsboard.server.common.data.report.TbReportFormat;
+import org.thingsboard.server.common.data.report.configuration.AlarmFilterConfig;
 import org.thingsboard.server.common.data.report.configuration.CsvReportTemplateConfig;
 import org.thingsboard.server.common.data.report.configuration.DataKey;
 import org.thingsboard.server.common.data.report.configuration.DataSource;
 import org.thingsboard.server.common.data.report.configuration.EntityAlias;
+import org.thingsboard.server.common.data.report.configuration.components.AlarmTableComponent;
 import org.thingsboard.server.common.data.report.configuration.components.EntityTableComponent;
 import org.thingsboard.server.common.data.report.configuration.components.TimeseriesTableComponent;
 import org.thingsboard.server.common.data.report.configuration.timewindow.AggregationConfiguration;
@@ -73,6 +77,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
@@ -158,6 +163,82 @@ public class ReportControllerTest extends AbstractControllerTest {
         for (int i = 0; i < devices.size(); i++) {
             assertThat(lines[i + 1]).contains(expectedReportLines.get(i));
         }
+    }
+
+    @Test
+    public void testReportWithAlarmTableComponent() throws Exception {
+        String devicesAliasId = StringUtils.randomAlphabetic(10);
+        EntityAlias entityAlias = buildDevicesEntityAlias(devicesAliasId);
+
+        AlarmTableComponent alarmTableComponent = new AlarmTableComponent();
+        AlarmFilterConfig alarmFilterConfig = new AlarmFilterConfig();
+        alarmFilterConfig.setSeverityList(List.of(AlarmSeverity.WARNING));
+        List<DataKey> dataKeys = List.of(
+                new DataKey("createdTime", "alarm", "ALARM CREATED TIME"),
+                new DataKey("name", "entityField", "ORIGINATOR"),
+                new DataKey("originator", "alarm", "ORIGINATOR2"),
+                new DataKey("type", "alarm", "ALARM TYPE"),
+                new DataKey("status", "alarm", "ALARM STATUS")
+        );
+        alarmTableComponent.setAlarmSource(DataSource.builder()
+                .type("entity")
+                .entityAliasId(devicesAliasId)
+                .alarmFilterConfig(alarmFilterConfig)
+                .dataKeys(dataKeys)
+                .build());
+        TimeWindowConfiguration timewindow = buildCurrentDatTimeWindow();
+        alarmTableComponent.setTimewindow(timewindow);
+
+        CsvReportTemplateConfig configuration = new CsvReportTemplateConfig();
+        configuration.setEntityAliases(List.of(entityAlias));
+        configuration.setComponents(List.of(alarmTableComponent));
+
+        ReportTemplate reportTemplate = new ReportTemplate();
+        reportTemplate.setConfiguration(configuration);
+        reportTemplate.setName("Device inventory report");
+        reportTemplate.setType(ReportTemplateType.REPORT);
+        reportTemplate.setFormat(TbReportFormat.CSV);
+
+        ReportTemplate savedTemplate = doPost("/api/reportTemplate", reportTemplate, ReportTemplate.class);
+
+        List<Device> devices = new ArrayList<>();
+        for (int i = 0; i < 10; i++) {
+            Device device = new Device();
+            device.setCustomerId(customerId);
+            device.setName("Device" + i);
+            device.setType("default");
+            device.setLabel("testLabel" + (int) (Math.random() * 1000));
+            devices.add(doPost("/api/device", device, Device.class));
+            Thread.sleep(1);
+        }
+
+        List<String> expectedReportLines = new ArrayList<>();
+        expectedReportLines.add(dataKeys.stream().map(DataKey::getLabel).collect(Collectors.joining(",")));
+
+        for (int i = 0; i < devices.size(); i++) {
+            Alarm alarm = new Alarm();
+            Device device = devices.get(i);
+            alarm.setOriginator(device.getId());
+            alarm.setType("alarm" + i);
+            alarm.setSeverity(AlarmSeverity.WARNING);
+            Alarm createdAlarm = doPost("/api/alarm", alarm, Alarm.class);
+            Thread.sleep(1);
+
+            expectedReportLines.add(createdAlarm.getCreatedTime() + "," +
+                    device.getName() + "," +
+                    device.getName() + "," +
+                    alarm.getType() + "," +
+                    alarm.getStatus());
+        }
+
+        //generate report
+        ReportRequest reportRequest = new ReportRequest();
+        reportRequest.setReportTemplateConfig(configuration);
+        String csvReport = doPost("/api/v2/report/test", reportRequest, String.class);
+
+        // Check headers and content
+        List<String> actualLines = new ArrayList<>(Arrays.asList(csvReport.split("\r?\n")));
+        assertThat(actualLines).containsExactlyInAnyOrderElementsOf(expectedReportLines);
     }
 
     @Test
