@@ -38,7 +38,10 @@ import org.thingsboard.server.common.data.query.EntityData;
 import org.thingsboard.server.common.data.report.ReportData;
 import org.thingsboard.server.common.data.report.TbReportFormat;
 import org.thingsboard.server.common.data.report.configuration.CsvReportTemplateConfig;
+import org.thingsboard.server.common.data.report.configuration.DataKey;
+import org.thingsboard.server.common.data.report.configuration.DataSource;
 import org.thingsboard.server.common.data.report.configuration.components.AlarmTableComponent;
+import org.thingsboard.server.common.data.report.configuration.components.DataReportComponent;
 import org.thingsboard.server.common.data.report.configuration.components.EntityTableComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponentType;
@@ -53,10 +56,12 @@ import java.util.EnumMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.TimeZone;
 
 import static org.thingsboard.server.common.data.report.configuration.components.ReportComponentType.TIME_SERIES_TABLE;
 import static org.thingsboard.server.report.util.CsvUtils.generateCsv;
+import static org.thingsboard.server.report.util.ReportUtils.getSingleDataSource;
 import static org.thingsboard.server.report.util.ReportUtils.prepareReportName;
 
 @Service
@@ -100,7 +105,7 @@ public class CsvReportService extends AbstractReportService {
         for (ReportComponent component : components) {
             ReportComponentType type = component.getType();
              if (type == TIME_SERIES_TABLE) {
-                //content.append(renderTimeseriesTables(usablePageWidthPx, ctx, component));
+                content.addAll(renderTimeseriesTables(ctx, component));
             } else {
                 content.addAll(renderComponent(ctx, component, null));
             }
@@ -116,6 +121,32 @@ public class CsvReportService extends AbstractReportService {
             log.error("Failed to render component of type [{}]", component.getType(), e);
             return Collections.emptyList(); //renderError(usablePageWidthPx, "Failed to render component of type: " + component.getType(), e);
         }
+    }
+
+    private List<List<String>> renderTimeseriesTables(TbReportCtx ctx, ReportComponent component) {
+        List<List<String>> content = new LinkedList<>();
+        Optional<DataSource> dataSource = getSingleDataSource((DataReportComponent)component);
+        if (dataSource.isEmpty()) {
+            return Collections.emptyList(); //renderError(usablePageWidthPx, "Data source is not configured for time series table");
+        }
+        DataSource ds = dataSource.get();
+        if (ds.getDataKeys().isEmpty()) {
+            return Collections.emptyList(); //renderError(usablePageWidthPx, "At least one time series column should be specified for time series table");
+        }
+        List<DataKey> latestDataKeys = ds.getLatestDataKeys();
+        latestDataKeys.add(new DataKey("name", "entityField", "NAME"));
+        DataSource latestDataSource = DataSource.builder()
+                .type(ds.getType())
+                .deviceId(ds.getDeviceId())
+                .entityAliasId(ds.getEntityAliasId())
+                .filterId(ds.getFilterId())
+                .sortOrder(ds.getSortOrder())
+                .dataKeys(latestDataKeys).build();
+        List<EntityData> entityDatas = fetchEntities(ctx, latestDataSource, null);
+        for (EntityData entity : entityDatas) {
+            content.addAll(renderComponent(ctx, component, entity));
+        }
+        return content;
     }
 
     private ComponentData getComponentData(TbReportCtx ctx, ReportComponent component, EntityData stateEntity) {

@@ -35,6 +35,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.server.common.data.DataConstants;
 import org.thingsboard.server.common.data.Device;
 import org.thingsboard.server.common.data.StringUtils;
@@ -43,6 +44,7 @@ import org.thingsboard.server.common.data.job.Job;
 import org.thingsboard.server.common.data.job.JobStatus;
 import org.thingsboard.server.common.data.job.JobType;
 import org.thingsboard.server.common.data.job.ReportJobResult;
+import org.thingsboard.server.common.data.kv.Aggregation;
 import org.thingsboard.server.common.data.notification.Notification;
 import org.thingsboard.server.common.data.notification.NotificationType;
 import org.thingsboard.server.common.data.notification.targets.NotificationTarget;
@@ -52,16 +54,24 @@ import org.thingsboard.server.common.data.query.DeviceTypeFilter;
 import org.thingsboard.server.common.data.report.ReportRequest;
 import org.thingsboard.server.common.data.report.ReportTemplate;
 import org.thingsboard.server.common.data.report.ReportTemplateType;
+import org.thingsboard.server.common.data.report.TbReportFormat;
 import org.thingsboard.server.common.data.report.configuration.CsvReportTemplateConfig;
 import org.thingsboard.server.common.data.report.configuration.DataKey;
 import org.thingsboard.server.common.data.report.configuration.DataSource;
 import org.thingsboard.server.common.data.report.configuration.EntityAlias;
 import org.thingsboard.server.common.data.report.configuration.components.EntityTableComponent;
+import org.thingsboard.server.common.data.report.configuration.components.TimeseriesTableComponent;
+import org.thingsboard.server.common.data.report.configuration.timewindow.AggregationConfiguration;
+import org.thingsboard.server.common.data.report.configuration.timewindow.History;
+import org.thingsboard.server.common.data.report.configuration.timewindow.QuickTimeInterval;
+import org.thingsboard.server.common.data.report.configuration.timewindow.TimeWindowConfiguration;
 import org.thingsboard.server.dao.notification.DefaultNotifications;
 import org.thingsboard.server.dao.service.DaoSqlTest;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -110,6 +120,7 @@ public class ReportControllerTest extends AbstractControllerTest {
         reportTemplate.setConfiguration(configuration);
         reportTemplate.setName("Device inventory report");
         reportTemplate.setType(ReportTemplateType.REPORT);
+        reportTemplate.setFormat(TbReportFormat.CSV);
 
         ReportTemplate savedTemplate = doPost("/api/reportTemplate", reportTemplate, ReportTemplate.class);
 
@@ -150,6 +161,91 @@ public class ReportControllerTest extends AbstractControllerTest {
     }
 
     @Test
+    public void testReportWithTimeSeriesTable() throws Exception {
+        String devicesAliasId = StringUtils.randomAlphabetic(10);
+        EntityAlias entityAlias = buildDevicesEntityAlias(devicesAliasId);
+
+        TimeseriesTableComponent tsComponent = new TimeseriesTableComponent();
+        tsComponent.setDataSources(List.of(DataSource.builder()
+                .type("entity")
+                .entityAliasId(devicesAliasId)
+                .dataKeys(List.of(
+                     new DataKey("temperature", "timeseries", "TEMPERATURE")
+                ))
+                .latestDataKeys(List.of(
+                        new DataKey("name", "entityField", "NAME"),
+                        new DataKey("active", "attribute", "ACTIVE")
+                ))
+                .build()));
+        TimeWindowConfiguration timewindow = buildCurrentDatTimeWindow();
+        tsComponent.setTimewindow(timewindow);
+
+        CsvReportTemplateConfig configuration = new CsvReportTemplateConfig();
+        configuration.setEntityAliases(List.of(entityAlias));
+        configuration.setComponents(List.of(tsComponent));
+
+        ReportTemplate reportTemplate = new ReportTemplate();
+        reportTemplate.setConfiguration(configuration);
+        reportTemplate.setName("Device inventory report");
+        reportTemplate.setType(ReportTemplateType.REPORT);
+        reportTemplate.setFormat(TbReportFormat.CSV);
+
+        ReportTemplate savedTemplate = doPost("/api/reportTemplate", reportTemplate, ReportTemplate.class);
+
+        List<Device> devices = new ArrayList<>();
+        List<String> expectedReportLines = new ArrayList<>();
+        int telemetryCount = 3;
+
+        for (int i = 0; i < 18; i++) {
+            Device device = new Device();
+            device.setName("Device" + i);
+            device.setType("default");
+            device.setLabel("testLabel" + (int) (Math.random() * 1000));
+            device = doPost("/api/device", device, Device.class);
+            devices.add(device);
+
+            expectedReportLines.add("NAME,ACTIVE,TIMESTAMP,TEMPERATURE");
+
+            for (int j = 0; j < telemetryCount; j++) {
+                long temperature = (long) (Math.random() * 100);
+                long threshold = (long) (Math.random() * 100);
+                String attributePayload = "{\"threshold\":" + threshold + "}";
+                long ts = System.currentTimeMillis() - 300000L * j;
+
+                doPost("/api/plugins/telemetry/DEVICE/" + device.getId() + "/timeseries/" + DataConstants.SERVER_SCOPE, JacksonUtil.toJsonNode(String.format("{\"ts\": %s, \"values\": {\"temperature\":%s}}", ts, temperature)));
+                doPost("/api/plugins/telemetry/" + device.getId() + "/" + DataConstants.SHARED_SCOPE, attributePayload, String.class, status().isOk());
+                expectedReportLines.add(device.getName() + "," +
+                        "false" + "," +
+                        ts + "," +
+                        temperature);
+            }
+        }
+
+        //generate report
+        ReportRequest reportRequest = new ReportRequest();
+        reportRequest.setReportTemplateConfig(configuration);
+        String csvReport = doPost("/api/v2/report/test", reportRequest, String.class);
+
+        List<String> actualLines = new ArrayList<>(Arrays.asList(csvReport.split("\r?\n")));
+        assertThat(actualLines).isEqualTo(expectedReportLines);
+    }
+
+    private static TimeWindowConfiguration buildCurrentDatTimeWindow() {
+        TimeWindowConfiguration timewindow = new TimeWindowConfiguration();
+        History history = new History();
+        history.setHistoryType(2);
+        history.setQuickInterval(QuickTimeInterval.CURRENT_DAY);
+        history.setInterval(1000);
+        timewindow.setHistory(history);
+        timewindow.setTimezone(TimeZone.getDefault().getID());
+        AggregationConfiguration aggregation = new AggregationConfiguration();
+        aggregation.setType(Aggregation.NONE);
+        aggregation.setLimit(25000);
+        timewindow.setAggregation(aggregation);
+        return timewindow;
+    }
+
+    @Test
     public void testCreateJobForCsvReport() throws Exception {
         String devicesAliasId = StringUtils.randomAlphabetic(10);
         EntityAlias entityAlias = buildDevicesEntityAlias(devicesAliasId);
@@ -176,6 +272,7 @@ public class ReportControllerTest extends AbstractControllerTest {
         reportTemplate.setConfiguration(configuration);
         reportTemplate.setName("Devices report");
         reportTemplate.setType(ReportTemplateType.REPORT);
+        reportTemplate.setFormat(TbReportFormat.CSV);
         reportTemplate = doPost("/api/reportTemplate", reportTemplate, ReportTemplate.class);
         ReportTemplateId reportTemplateId = reportTemplate.getId();
 
