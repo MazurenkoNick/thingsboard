@@ -31,61 +31,19 @@
 package org.thingsboard.server.report.renderer;
 
 import org.springframework.stereotype.Component;
-import org.thingsboard.server.common.data.report.configuration.DataKey;
-import org.thingsboard.server.common.data.report.configuration.DataSource;
 import org.thingsboard.server.common.data.report.configuration.components.AlarmTableComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponentType;
 import org.thingsboard.server.report.context.ComponentData;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
-import static org.thingsboard.server.report.util.ReportUtils.getSingleDataSource;
 
 
 @Component
-public class CsvAlarmTableRenderer implements CsvReportComponentRenderer<AlarmTableComponent> {
+public class CsvAlarmTableRenderer extends AbstractCsvComponentRenderer<AlarmTableComponent> {
 
     @Override
     public List<List<String>> render(AlarmTableComponent component, ComponentData reportDataSource) {
-        Optional<DataSource> dataSourceOpt = getSingleDataSource(component);
-        if (dataSourceOpt.isEmpty()) {
-            return Collections.emptyList(); // renderError(usablePageWidthPx, "Data source is not configured for alarm table");
-        }
-
-        DataSource dataSource = dataSourceOpt.get();
-        Map<String, String> labelToDataKeyMap = buildLabelToKeyMap(dataSource.getDataKeys());
-        List<List<String>> content = new ArrayList<>();
-
-        // Build and add headers
-        ArrayList<String> headers = new ArrayList<>(labelToDataKeyMap.keySet());
-        content.add(headers);
-
-        for (Map<String, String> row : reportDataSource.getEntityDatas()) {
-            content.add(extractValues(row, labelToDataKeyMap));
-        }
-        return content;
-    }
-
-    private Map<String, String> buildLabelToKeyMap(List<DataKey> dataKeys) {
-        if (dataKeys == null) return Collections.emptyMap();
-        return dataKeys.stream()
-                .collect(Collectors.toMap(
-                        DataKey::getLabel,
-                        DataKey::getName,
-                        (existing, replacement) -> replacement,
-                        LinkedHashMap::new));
-    }
-
-    private List<String> extractValues(Map<String, String> row, Map<String, String> labelToKey) {
-        return labelToKey.values().stream()
-                .map(key -> row.getOrDefault(key, ""))
-                .toList();
+        return renderTable(component, reportDataSource);
     }
 
     @Override

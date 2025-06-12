@@ -31,58 +31,19 @@
 package org.thingsboard.server.report.renderer;
 
 import org.springframework.stereotype.Component;
-import org.thingsboard.server.common.data.report.configuration.DataKey;
-import org.thingsboard.server.common.data.report.configuration.DataSource;
 import org.thingsboard.server.common.data.report.configuration.components.EntityTableComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponentType;
 import org.thingsboard.server.report.context.ComponentData;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
-import static org.thingsboard.server.report.util.ReportUtils.getSingleDataSource;
 
 
 @Component
-public class CsvEntityTableRenderer implements CsvReportComponentRenderer<EntityTableComponent> {
+public class CsvEntityTableRenderer extends AbstractCsvComponentRenderer<EntityTableComponent> {
 
     @Override
     public List<List<String>> render(EntityTableComponent component, ComponentData reportDataSource) {
-        Optional<DataSource> dataSourceOpt = getSingleDataSource(component);
-        if (dataSourceOpt.isEmpty()) {
-            return Collections.emptyList(); // renderError(usablePageWidthPx, "Data source is not configured for time series table");
-        }
-
-        DataSource dataSource = dataSourceOpt.get();
-        List<DataKey> dataKeys = dataSource.getDataKeys();
-        if (dataKeys.isEmpty()) {
-            return Collections.emptyList();
-        }
-
-        Map<String, String> labelToKeyMap = dataKeys.stream()
-                .collect(Collectors.toMap(
-                        DataKey::getLabel,
-                        DataKey::getName,
-                        (existing, replacement) -> replacement,
-                        LinkedHashMap::new
-                ));
-
-        List<List<String>> content = new ArrayList<>();
-        List<String> headers = new ArrayList<>(labelToKeyMap.keySet());
-        content.add(headers);
-
-        for (Map<String, String> row : reportDataSource.getEntityDatas()) {
-            List<String> values = labelToKeyMap.values().stream()
-                    .map(key -> row.getOrDefault(key, ""))
-                    .toList();
-            content.add(values);
-        }
-        return content;
+        return renderTable(component, reportDataSource);
     }
 
     @Override

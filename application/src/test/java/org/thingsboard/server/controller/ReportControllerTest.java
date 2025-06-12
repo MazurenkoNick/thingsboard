@@ -65,6 +65,7 @@ import org.thingsboard.server.common.data.report.configuration.EntityAlias;
 import org.thingsboard.server.common.data.report.configuration.components.AlarmTableComponent;
 import org.thingsboard.server.common.data.report.configuration.components.EntityTableComponent;
 import org.thingsboard.server.common.data.report.configuration.components.TimeseriesTableComponent;
+import org.thingsboard.server.common.data.report.configuration.style.Heading;
 import org.thingsboard.server.common.data.report.configuration.timewindow.AggregationConfiguration;
 import org.thingsboard.server.common.data.report.configuration.timewindow.History;
 import org.thingsboard.server.common.data.report.configuration.timewindow.QuickTimeInterval;
@@ -105,17 +106,23 @@ public class ReportControllerTest extends AbstractControllerTest {
         EntityAlias entityAlias = buildDevicesEntityAlias(devicesAliasId);
 
         EntityTableComponent tableComponent = new EntityTableComponent();
+        List<DataKey> dataKeys = List.of(
+                new DataKey("createdTime", "entityField", "CREATED TIME"),
+                new DataKey("name", "entityField", "NAME"),
+                new DataKey("type", "entityField", "TYPE"),
+                new DataKey("temperature", "timeseries", "TEMPERATURE"),
+                new DataKey("threshold", "attribute", "THRESHOLD")
+        );
         tableComponent.setDataSources(List.of(DataSource.builder()
                 .type("entity")
                 .entityAliasId(devicesAliasId)
-                .dataKeys(List.of(
-                        new DataKey("createdTime", "entityField", "CREATED TIME"),
-                        new DataKey("name", "entityField", "NAME"),
-                        new DataKey("type", "entityField", "TYPE"),
-                        new DataKey("temperature", "timeseries", "TEMPERATURE"),
-                        new DataKey("threshold", "attribute", "THRESHOLD")
-                ))
+                .dataKeys(dataKeys)
                 .build()));
+        tableComponent.setShowTableHeading(true);
+        String tableHeadingText = "This is my table";
+        Heading tableHeading = new Heading();
+        tableHeading.setText(tableHeadingText);
+        tableComponent.setTableHeading(tableHeading);
 
         CsvReportTemplateConfig configuration = new CsvReportTemplateConfig();
         configuration.setEntityAliases(List.of(entityAlias));
@@ -131,6 +138,9 @@ public class ReportControllerTest extends AbstractControllerTest {
 
         List<Device> devices = new ArrayList<>();
         List<String> expectedReportLines = new ArrayList<>();
+        expectedReportLines.add(tableHeadingText);
+        expectedReportLines.add(dataKeys.stream().map(DataKey::getLabel).collect(Collectors.joining(",")));
+
         for (int i = 0; i < 97; i++) {
             Device device = new Device();
             device.setName("Device" + i);
@@ -157,12 +167,9 @@ public class ReportControllerTest extends AbstractControllerTest {
         reportRequest.setReportTemplateConfig(configuration);
         String csvReport = doPost("/api/v2/report/test", reportRequest, String.class);
 
-        // Check headers and content
-        String[] lines = csvReport.split("\r?\n");
-        assertThat(lines[0]).contains("CREATED TIME,NAME,TYPE,TEMPERATURE,THRESHOLD");
-        for (int i = 0; i < devices.size(); i++) {
-            assertThat(lines[i + 1]).contains(expectedReportLines.get(i));
-        }
+        // Check content
+        List<String> actualLines = new ArrayList<>(Arrays.asList(csvReport.split("\r?\n")));
+        assertThat(actualLines).containsExactlyInAnyOrderElementsOf(expectedReportLines);
     }
 
     @Test
@@ -236,7 +243,7 @@ public class ReportControllerTest extends AbstractControllerTest {
         reportRequest.setReportTemplateConfig(configuration);
         String csvReport = doPost("/api/v2/report/test", reportRequest, String.class);
 
-        // Check headers and content
+        // Check content
         List<String> actualLines = new ArrayList<>(Arrays.asList(csvReport.split("\r?\n")));
         assertThat(actualLines).containsExactlyInAnyOrderElementsOf(expectedReportLines);
     }

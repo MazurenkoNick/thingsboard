@@ -41,10 +41,10 @@ import org.thingsboard.server.common.data.report.configuration.CsvReportTemplate
 import org.thingsboard.server.common.data.report.configuration.DataKey;
 import org.thingsboard.server.common.data.report.configuration.DataSource;
 import org.thingsboard.server.common.data.report.configuration.components.AlarmTableComponent;
-import org.thingsboard.server.common.data.report.configuration.components.DataReportComponent;
 import org.thingsboard.server.common.data.report.configuration.components.EntityTableComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponentType;
+import org.thingsboard.server.common.data.report.configuration.components.TableReportComponent;
 import org.thingsboard.server.common.data.report.configuration.components.TimeseriesTableComponent;
 import org.thingsboard.server.report.context.ComponentData;
 import org.thingsboard.server.report.context.TbReportCtx;
@@ -52,14 +52,13 @@ import org.thingsboard.server.report.renderer.CsvReportComponentRenderer;
 
 import java.util.Collections;
 import java.util.Date;
-import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.TimeZone;
 
-import static org.thingsboard.server.common.data.report.configuration.components.ReportComponentType.TIME_SERIES_TABLE;
 import static org.thingsboard.server.report.util.CsvUtils.generateCsv;
 import static org.thingsboard.server.report.util.ReportUtils.getSingleDataSource;
 import static org.thingsboard.server.report.util.ReportUtils.prepareReportName;
@@ -68,7 +67,7 @@ import static org.thingsboard.server.report.util.ReportUtils.prepareReportName;
 @Slf4j
 public class CsvReportService extends AbstractReportService {
 
-    private final Map<ReportComponentType, CsvReportComponentRenderer<ReportComponent>> componentsRenderers = new EnumMap<>(ReportComponentType.class);
+    private final Map<ReportComponentType, CsvReportComponentRenderer<TableReportComponent>> componentsRenderers = new HashMap<>();
 
     private CsvReportService(List<CsvReportComponentRenderer> renderers) {
         renderers.forEach(renderer -> {
@@ -103,35 +102,34 @@ public class CsvReportService extends AbstractReportService {
     private List<List<String>> renderContent(TbReportCtx ctx, List<ReportComponent> components) {
         List<List<String>> content = new LinkedList<>();
         for (ReportComponent component : components) {
-            ReportComponentType type = component.getType();
-             if (type == TIME_SERIES_TABLE) {
-                content.addAll(renderTimeseriesTables(ctx, component));
-            } else {
-                content.addAll(renderComponent(ctx, component, null));
+            switch (component.getType()) {
+                case TIME_SERIES_TABLE -> content.addAll(renderTimeseriesTables(ctx, (TableReportComponent) component));
+                case ALARM_TABLE, ENTITY_TABLE -> content.addAll(renderTableComponent(ctx, (TableReportComponent) component, null));
+                default -> throw new IllegalArgumentException("Unsupported component type: " + component.getType());
             }
         }
         return content;
     }
 
-    private List<List<String>> renderComponent(TbReportCtx ctx, ReportComponent component, EntityData stateEntity) {
+    private List<List<String>> renderTableComponent(TbReportCtx ctx, TableReportComponent component, EntityData stateEntity) {
         try {
             ComponentData componentData = getComponentData(ctx, component, stateEntity);
             return componentsRenderers.get(component.getType()).render(component, componentData);
         } catch (Exception e) {
             log.error("Failed to render component of type [{}]", component.getType(), e);
-            return Collections.emptyList(); //renderError(usablePageWidthPx, "Failed to render component of type: " + component.getType(), e);
+            return List.of(List.of("Failed to render component of type: " + component.getType() + " ,Error: " + e));
         }
     }
 
-    private List<List<String>> renderTimeseriesTables(TbReportCtx ctx, ReportComponent component) {
+    private List<List<String>> renderTimeseriesTables(TbReportCtx ctx, TableReportComponent component) {
         List<List<String>> content = new LinkedList<>();
-        Optional<DataSource> dataSource = getSingleDataSource((DataReportComponent)component);
+        Optional<DataSource> dataSource = getSingleDataSource(component);
         if (dataSource.isEmpty()) {
-            return Collections.emptyList(); //renderError(usablePageWidthPx, "Data source is not configured for time series table");
+            return List.of(List.of("Data source is not configured for time series table"));
         }
         DataSource ds = dataSource.get();
         if (ds.getDataKeys().isEmpty()) {
-            return Collections.emptyList(); //renderError(usablePageWidthPx, "At least one time series column should be specified for time series table");
+            return List.of(List.of("At least one time series column should be specified for time series table"));
         }
         List<DataKey> latestDataKeys = ds.getLatestDataKeys();
         latestDataKeys.add(new DataKey("name", "entityField", "NAME"));
@@ -144,7 +142,7 @@ public class CsvReportService extends AbstractReportService {
                 .dataKeys(latestDataKeys).build();
         List<EntityData> entityDatas = fetchEntities(ctx, latestDataSource, null);
         for (EntityData entity : entityDatas) {
-            content.addAll(renderComponent(ctx, component, entity));
+            content.addAll(renderTableComponent(ctx, component, entity));
         }
         return content;
     }

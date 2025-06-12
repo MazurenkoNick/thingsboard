@@ -30,13 +30,13 @@
  */
 package org.thingsboard.server.report.renderer;
 
-import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponentType;
+import org.thingsboard.server.common.data.report.configuration.components.TableReportComponent;
 import org.thingsboard.server.report.context.ComponentData;
 
 import java.util.List;
 
-public interface CsvReportComponentRenderer<C extends ReportComponent> {
+public interface CsvReportComponentRenderer<C extends TableReportComponent> {
 
     List<List<String>> render(C component, ComponentData reportDataSource);
 
