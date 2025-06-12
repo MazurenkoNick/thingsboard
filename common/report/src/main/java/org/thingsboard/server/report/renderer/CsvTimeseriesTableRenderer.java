@@ -33,13 +33,14 @@ package org.thingsboard.server.report.renderer;
 import org.springframework.stereotype.Component;
 import org.thingsboard.server.common.data.report.configuration.DataKey;
 import org.thingsboard.server.common.data.report.configuration.DataSource;
-import org.thingsboard.server.common.data.report.configuration.components.EntityTableComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponentType;
+import org.thingsboard.server.common.data.report.configuration.components.TimeseriesTableComponent;
 import org.thingsboard.server.report.context.ComponentData;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -49,45 +50,60 @@ import static org.thingsboard.server.report.util.ReportUtils.getSingleDataSource
 
 
 @Component
-public class CsvEntityTableRenderer implements CsvReportComponentRenderer<EntityTableComponent> {
+public class CsvTimeseriesTableRenderer implements CsvReportComponentRenderer<TimeseriesTableComponent> {
+
 
     @Override
-    public List<List<String>> render(EntityTableComponent component, ComponentData reportDataSource) {
+    public List<List<String>> render(TimeseriesTableComponent component, ComponentData reportDataSource) {
         Optional<DataSource> dataSourceOpt = getSingleDataSource(component);
         if (dataSourceOpt.isEmpty()) {
             return Collections.emptyList(); // renderError(usablePageWidthPx, "Data source is not configured for time series table");
         }
 
         DataSource dataSource = dataSourceOpt.get();
-        List<DataKey> dataKeys = dataSource.getDataKeys();
-        if (dataKeys.isEmpty()) {
-            return Collections.emptyList();
+
+        Map<String, String> labelToLatestKey = buildLabelToKeyMap(dataSource.getLatestDataKeys());
+        Map<String, String> labelToKey = buildLabelToKeyMap(dataSource.getDataKeys());
+
+        List<List<String>> content = new ArrayList<>();
+
+        // Build and add headers
+        List<String> headers = new ArrayList<>(labelToLatestKey.keySet());
+        headers.add("TIMESTAMP");
+        headers.addAll(labelToKey.keySet());
+        content.add(headers);
+
+        // Build and add rows
+        for (Map<String, String> row : reportDataSource.getEntityDatas()) {
+            List<String> values = new ArrayList<>();
+            values.addAll(extractValues(row, labelToLatestKey));
+            values.add(row.getOrDefault("rawTs", ""));
+            values.addAll(extractValues(row, labelToKey));
+            content.add(values);
         }
 
-        Map<String, String> labelToKeyMap = dataKeys.stream()
+        return content;
+    }
+
+    private Map<String, String> buildLabelToKeyMap(List<DataKey> dataKeys) {
+        if (dataKeys == null) return Collections.emptyMap();
+        return dataKeys.stream()
                 .collect(Collectors.toMap(
                         DataKey::getLabel,
                         DataKey::getName,
                         (existing, replacement) -> replacement,
-                        LinkedHashMap::new
-                ));
+                        LinkedHashMap::new));
+    }
 
-        List<List<String>> content = new ArrayList<>();
-        List<String> headers = new ArrayList<>(labelToKeyMap.keySet());
-        content.add(headers);
-
-        for (Map<String, String> row : reportDataSource.getEntityDatas()) {
-            List<String> values = labelToKeyMap.values().stream()
-                    .map(key -> row.getOrDefault(key, ""))
-                    .toList();
-            content.add(values);
-        }
-        return content;
+    private List<String> extractValues(Map<String, String> row, Map<String, String> labelToKey) {
+        return labelToKey.values().stream()
+                .map(key -> row.getOrDefault(key, ""))
+                .toList();
     }
 
     @Override
     public ReportComponentType getType() {
-        return ReportComponentType.ENTITY_TABLE;
+        return ReportComponentType.TIME_SERIES_TABLE;
     }
 
 }
