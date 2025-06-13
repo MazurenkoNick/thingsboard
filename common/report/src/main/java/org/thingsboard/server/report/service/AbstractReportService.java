@@ -68,10 +68,12 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.TreeMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -345,7 +347,18 @@ public abstract class AbstractReportService implements ReportService {
         Optional<String> entityName = getEntityLatestValue(entity, EntityKeyType.ENTITY_FIELD, "name");
         Optional<String> entityLabel = getEntityLatestValue(entity, EntityKeyType.ENTITY_FIELD, "label");
         List<Map<String, String>> tsData = new ArrayList<>();
-        Map<Long, List<TsKvEntry>> groupedByTs = tsKvEntries.stream().collect(Collectors.groupingBy(TsKvEntry::getTs));
+
+        Comparator<Long> tsComparator = sortOrder.getDirection() == SortOrder.Direction.ASC
+                ? Comparator.naturalOrder()
+                : Comparator.reverseOrder();
+
+        Map<Long, List<TsKvEntry>> groupedByTs = tsKvEntries.stream()
+                .collect(Collectors.groupingBy(
+                        TsKvEntry::getTs,
+                        () -> new TreeMap<>(tsComparator),
+                        Collectors.toList()
+                ));
+
         groupedByTs.forEach((ts, entries) -> {
             Map<String, String> tsValues = new HashMap<>();
             tsValues.put("rawTs", ts.toString());
@@ -364,17 +377,6 @@ public abstract class AbstractReportService implements ReportService {
             tsValues.put("entityName", entityName.orElse(""));
             tsValues.put("entityLabel", entityLabel.orElse(""));
             tsData.add(tsValues);
-        });
-        tsData.sort((row1, row2) -> {
-            String p1 = row1.get(sortOrder.getProperty());
-            if (p1 == null) {
-                p1 = "";
-            }
-            String p2 = row2.get(sortOrder.getProperty());
-            if (p2 == null) {
-                p2 = "";
-            }
-            return p1.compareTo(p2) * (sortOrder.getDirection() == SortOrder.Direction.ASC ? 1 : -1 );
         });
         return tsData;
     }

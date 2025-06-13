@@ -57,8 +57,9 @@ public class CsvTimeseriesTableRenderer extends AbstractCsvComponentRenderer<Tim
 
         DataSource dataSource = dataSourceOpt.get();
 
-        Map<String, DataKey> labelToLatestKey = buildLabelToDataKeyMap(dataSource.getLatestDataKeys());
-        Map<String, DataKey> labelToKey = buildLabelToDataKeyMap(dataSource.getDataKeys());
+        List<DataKey> allDataKeys = new ArrayList<>(dataSource.getLatestDataKeys());
+        allDataKeys.addAll(dataSource.getDataKeys());
+        Map<String, DataKey> labelToDataKeyMap = buildLabelToDataKeyMap(allDataKeys);
 
         List<List<String>> content = new ArrayList<>();
 
@@ -66,17 +67,16 @@ public class CsvTimeseriesTableRenderer extends AbstractCsvComponentRenderer<Tim
         addOptionalHeading(component, reportDataSource, content);
 
         // Build and add headers
-        List<String> headers = new ArrayList<>(labelToLatestKey.keySet());
-        headers.add("TIMESTAMP");
-        headers.addAll(labelToKey.keySet());
+        List<String> headers = new ArrayList<>();
+        headers.add("Timestamp");
+        headers.addAll(labelToDataKeyMap.keySet());
         content.add(headers);
 
         // Build and add rows
         for (Map<String, String> row : reportDataSource.getEntityDatas()) {
             List<String> values = new ArrayList<>();
-            values.addAll(extractValues(row, labelToLatestKey));
             values.add(row.getOrDefault("rawTs", ""));
-            values.addAll(extractValues(row, labelToKey));
+            values.addAll(extractValues(row, labelToDataKeyMap));
             content.add(values);
         }
         return content;

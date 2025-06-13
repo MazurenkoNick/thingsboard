@@ -292,7 +292,8 @@ public class ReportControllerTest extends AbstractControllerTest {
             device = doPost("/api/device", device, Device.class);
             devices.add(device);
 
-            expectedReportLines.add("NAME,ACTIVE,TIMESTAMP,TEMPERATURE");
+            // headers
+            expectedReportLines.add("Timestamp,NAME,ACTIVE,TEMPERATURE");
 
             for (int j = 0; j < telemetryCount; j++) {
                 long temperature = (long) (Math.random() * 100);
@@ -302,9 +303,9 @@ public class ReportControllerTest extends AbstractControllerTest {
 
                 doPost("/api/plugins/telemetry/DEVICE/" + device.getId() + "/timeseries/" + DataConstants.SERVER_SCOPE, JacksonUtil.toJsonNode(String.format("{\"ts\": %s, \"values\": {\"temperature\":%s}}", ts, temperature)));
                 doPost("/api/plugins/telemetry/" + device.getId() + "/" + DataConstants.SHARED_SCOPE, attributePayload, String.class, status().isOk());
-                expectedReportLines.add(device.getName() + "," +
+                expectedReportLines.add(ts + "," +
+                        device.getName() + "," +
                         "false" + "," +
-                        ts + "," +
                         temperature);
             }
         }
