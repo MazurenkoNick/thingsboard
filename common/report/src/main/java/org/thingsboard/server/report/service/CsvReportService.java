@@ -131,15 +131,13 @@ public class CsvReportService extends AbstractReportService {
         if (ds.getDataKeys().isEmpty()) {
             return List.of(List.of("At least one time series column should be specified for time series table"));
         }
-        List<DataKey> latestDataKeys = ds.getLatestDataKeys();
-        latestDataKeys.add(new DataKey("name", "entityField", "NAME"));
         DataSource latestDataSource = DataSource.builder()
                 .type(ds.getType())
                 .deviceId(ds.getDeviceId())
                 .entityAliasId(ds.getEntityAliasId())
                 .filterId(ds.getFilterId())
                 .sortOrder(ds.getSortOrder())
-                .dataKeys(latestDataKeys).build();
+                .dataKeys(ds.getLatestDataKeys()).build();
         List<EntityData> entityDatas = fetchEntities(ctx, latestDataSource, null);
         for (EntityData entity : entityDatas) {
             content.addAll(renderTableComponent(ctx, component, entity));
