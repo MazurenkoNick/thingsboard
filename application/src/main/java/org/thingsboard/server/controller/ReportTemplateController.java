@@ -45,6 +45,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.ReportTemplateId;
@@ -55,7 +56,9 @@ import org.thingsboard.server.common.data.permission.Operation;
 import org.thingsboard.server.common.data.permission.Resource;
 import org.thingsboard.server.common.data.report.ReportTemplate;
 import org.thingsboard.server.common.data.report.ReportTemplateInfo;
+import org.thingsboard.server.common.data.report.ReportTemplateQuery;
 import org.thingsboard.server.common.data.report.ReportTemplateType;
+import org.thingsboard.server.common.data.report.TbReportFormat;
 import org.thingsboard.server.common.data.security.Authority;
 import org.thingsboard.server.config.annotations.ApiOperation;
 import org.thingsboard.server.queue.util.TbCoreComponent;
@@ -76,7 +79,6 @@ import static org.thingsboard.server.controller.ControllerConstants.RBAC_READ_CH
 import static org.thingsboard.server.controller.ControllerConstants.RBAC_WRITE_CHECK;
 import static org.thingsboard.server.controller.ControllerConstants.REPORT_TEMPLATE_ID_PARAM_DESCRIPTION;
 import static org.thingsboard.server.controller.ControllerConstants.REPORT_TEMPLATE_TEXT_SEARCH_DESCRIPTION;
-import static org.thingsboard.server.controller.ControllerConstants.REPORT_TEMPLATE_TYPE_DESCRIPTION;
 import static org.thingsboard.server.controller.ControllerConstants.SORT_ORDER_DESCRIPTION;
 import static org.thingsboard.server.controller.ControllerConstants.SORT_PROPERTY_DESCRIPTION;
 import static org.thingsboard.server.controller.ControllerConstants.TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH;
@@ -93,6 +95,10 @@ public class ReportTemplateController extends BaseController {
             "Report service uses report template configuration to generate report. See the 'Model' tab of the Response Class for more details. ";
     private static final String REPORT_TEMPLATE_DESCRIPTION = "Report Template extends Report Template Info object and adds " +
             "'configuration' - a JSON structure of report template configuration. See the 'Model' tab of the Response Class for more details. ";
+
+    private static final String REPORT_TEMPLATE_QUERY_TYPE_ARRAY_DESCRIPTION = "A list of string values separated by comma ',' representing one of the ReportTemplateType enumeration value.";
+    private static final String REPORT_TEMPLATE_QUERY_FORMAT_ARRAY_DESCRIPTION = "A list of string values separated by comma ',' representing one of the TbReportFormat enumeration value.";
+
     private static final String INVALID_REPORT_TEMPLATE_ID = "Referencing non-existing Report Template Id will cause 'Not Found' error.";
 
     public static final String REPORT_TEMPLATE_ID = "reportTemplateId";
@@ -170,36 +176,48 @@ public class ReportTemplateController extends BaseController {
     @RequestMapping(value = "/reportTemplateInfos/all", params = {"pageSize", "page"}, method = RequestMethod.GET)
     @ResponseBody
     public PageData<ReportTemplateInfo> getAllReportTemplateInfos(
+            @Parameter(description = REPORT_TEMPLATE_QUERY_TYPE_ARRAY_DESCRIPTION, array = @ArraySchema(schema = @Schema(type = "string", allowableValues = {"REPORT", "SUB_REPORT"})))
+            @RequestParam(required = false) String[] typeList,
+            @Parameter(description = REPORT_TEMPLATE_QUERY_FORMAT_ARRAY_DESCRIPTION, array = @ArraySchema(schema = @Schema(type = "string", allowableValues = {"PDF", "CSV"})))
+            @RequestParam(required = false) String[] formatList,
+            @Parameter(description = INCLUDE_CUSTOMERS_OR_SUB_CUSTOMERS)
+            @RequestParam(required = false) Boolean includeCustomers,
             @Parameter(description = PAGE_SIZE_DESCRIPTION, required = true)
             @RequestParam int pageSize,
             @Parameter(description = PAGE_NUMBER_DESCRIPTION, required = true)
             @RequestParam int page,
-            @Parameter(description = INCLUDE_CUSTOMERS_OR_SUB_CUSTOMERS)
-            @RequestParam(required = false) Boolean includeCustomers,
             @Parameter(description = REPORT_TEMPLATE_TEXT_SEARCH_DESCRIPTION)
             @RequestParam(required = false) String textSearch,
             @Parameter(description = SORT_PROPERTY_DESCRIPTION, schema = @Schema(allowableValues = {"createdTime", "name", "ownerName"}))
             @RequestParam(required = false) String sortProperty,
             @Parameter(description = SORT_ORDER_DESCRIPTION, schema = @Schema(allowableValues = {"ASC", "DESC"}))
-            @RequestParam(required = false) String sortOrder,
-            @Parameter(description = REPORT_TEMPLATE_TYPE_DESCRIPTION)
-            @RequestParam(required = false) ReportTemplateType type) throws ThingsboardException {
+            @RequestParam(required = false) String sortOrder) throws ThingsboardException {
         accessControlService.checkPermission(getCurrentUser(), Resource.REPORT_TEMPLATE, Operation.READ);
         TenantId tenantId = getCurrentUser().getTenantId();
         PageLink pageLink = createPageLink(pageSize, page, textSearch, sortProperty, sortOrder);
-        if (Authority.TENANT_ADMIN.equals(getCurrentUser().getAuthority())) {
-            if (includeCustomers != null && includeCustomers) {
-                return checkNotNull(reportTemplateService.findReportTemplatesByTenantId(tenantId, type, pageLink));
-            } else {
-                return checkNotNull(reportTemplateService.findTenantReportTemplatesByTenantId(tenantId, type, pageLink));
+        List<ReportTemplateType> reportTemplateTypeList = new ArrayList<>();
+        if (typeList != null) {
+            for (String strType : typeList) {
+                if (!StringUtils.isEmpty(strType)) {
+                    reportTemplateTypeList.add(ReportTemplateType.valueOf(strType));
+                }
             }
+        }
+        List<TbReportFormat> reportTemplateFormatList = new ArrayList<>();
+        if (formatList != null) {
+            for (String strFormat : formatList) {
+                if (!StringUtils.isEmpty(strFormat)) {
+                    reportTemplateFormatList.add(TbReportFormat.valueOf(strFormat));
+                }
+            }
+        }
+        boolean includeCustomerReportTemplates = includeCustomers != null && includeCustomers;
+        ReportTemplateQuery query = new ReportTemplateQuery(pageLink, includeCustomerReportTemplates, reportTemplateFormatList, reportTemplateTypeList);
+        if (Authority.TENANT_ADMIN.equals(getCurrentUser().getAuthority())) {
+            return checkNotNull(reportTemplateService.findReportTemplates(tenantId, query));
         } else {
             CustomerId customerId = getCurrentUser().getCustomerId();
-            if (includeCustomers != null && includeCustomers) {
-                return checkNotNull(reportTemplateService.findReportTemplatesByTenantIdAndCustomerIdIncludingSubCustomers(tenantId, customerId, type, pageLink));
-            } else {
-                return checkNotNull(reportTemplateService.findReportTemplatesByTenantIdAndCustomerId(tenantId, customerId, type, pageLink));
-            }
+            return checkNotNull(reportTemplateService.findCustomerReportTemplates(tenantId, customerId, query));
         }
     }
 

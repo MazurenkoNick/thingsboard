@@ -35,7 +35,7 @@ import { AppState } from '@core/core.state';
 import { EntityTableHeaderComponent } from '@home/components/entity/entity-table-header.component';
 import { getCurrentAuthUser } from '@core/auth/auth.selectors';
 import { Authority } from '@shared/models/authority.enum';
-import { ReportTemplateInfo } from '@shared/models/report.models';
+import { ReportTemplateFilter, ReportTemplateInfo } from '@shared/models/report.models';
 
 @Component({
   selector: 'tb-report-template-table-header',
@@ -56,8 +56,13 @@ export class ReportTemplateTableHeaderComponent extends EntityTableHeaderCompone
       'entity.include-sub-customer-entities' : 'entity.include-customer-entities';
   }
 
+  reportTemplateFilterChanged(filter: ReportTemplateFilter) {
+    this.entitiesTableConfig.componentsData.reportTemplateFilterChanged(filter);
+  }
+
   includeCustomersChanged(includeCustomers: boolean) {
     this.entitiesTableConfig.componentsData.includeCustomersChanged(includeCustomers);
   }
+
 
 }

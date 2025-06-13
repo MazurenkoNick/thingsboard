@@ -43,6 +43,7 @@ import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.page.SortOrder;
 import org.thingsboard.server.common.data.report.ReportTemplate;
 import org.thingsboard.server.common.data.report.ReportTemplateInfo;
+import org.thingsboard.server.common.data.report.ReportTemplateQuery;
 import org.thingsboard.server.common.data.report.ReportTemplateType;
 import org.thingsboard.server.common.data.report.configuration.PdfReportTemplateConfig;
 import org.thingsboard.server.dao.AbstractJpaDaoTest;
@@ -75,10 +76,10 @@ public class JpaReportTemplateInfoDaoTest extends AbstractJpaDaoTest {
         }
 
         PageLink pageLink = new PageLink(15, 0, "REPORT_TEMPLATE");
-        PageData<ReportTemplateInfo> reportTemplateInfos1 = reportTemplateInfoDao.findReportTemplatesByTenantId(tenantId1, null, pageLink);
+        PageData<ReportTemplateInfo> reportTemplateInfos1 = reportTemplateInfoDao.findReportTemplates(tenantId1, ReportTemplateQuery.builder().pageLink(pageLink).build());
         Assert.assertEquals(15, reportTemplateInfos1.getData().size());
 
-        PageData<ReportTemplateInfo> reportTemplateInfos2 = reportTemplateInfoDao.findReportTemplatesByTenantId(tenantId1, null, pageLink.nextPageLink());
+        PageData<ReportTemplateInfo> reportTemplateInfos2 = reportTemplateInfoDao.findReportTemplates(tenantId1, ReportTemplateQuery.builder().pageLink(pageLink.nextPageLink()).build());
         Assert.assertEquals(5, reportTemplateInfos2.getData().size());
     }
 
@@ -94,14 +95,17 @@ public class JpaReportTemplateInfoDaoTest extends AbstractJpaDaoTest {
         }
 
         PageLink pageLink = new PageLink(30, 0, "REPORT_TEMPLATE", new SortOrder("ownerName", SortOrder.Direction.ASC));
-        PageData<ReportTemplateInfo> reportTemplateInfos1 = reportTemplateInfoDao.findReportTemplatesByTenantIdAndCustomerIdIncludingSubCustomers(tenantId1, customer1.getUuidId(), null, pageLink);
+        PageData<ReportTemplateInfo> reportTemplateInfos1 = reportTemplateInfoDao.findCustomerReportTemplates(tenantId1, customer1.getUuidId(),
+                ReportTemplateQuery.builder().includeCustomers(true).pageLink(pageLink).build());
         Assert.assertEquals(30, reportTemplateInfos1.getData().size());
         reportTemplateInfos1.getData().forEach(reportTemplateInfo -> Assert.assertNotEquals("CUSTOMER_0", reportTemplateInfo.getOwnerName()));
 
-        PageData<ReportTemplateInfo> reportTemplateInfos2 = reportTemplateInfoDao.findReportTemplatesByTenantIdAndCustomerIdIncludingSubCustomers(tenantId1, customer1.getUuidId(), null,  pageLink.nextPageLink());
+        PageData<ReportTemplateInfo> reportTemplateInfos2 = reportTemplateInfoDao.findCustomerReportTemplates(tenantId1, customer1.getUuidId(),
+                ReportTemplateQuery.builder().includeCustomers(true).pageLink(pageLink.nextPageLink()).build());
         Assert.assertEquals(10, reportTemplateInfos2.getData().size());
 
-        PageData<ReportTemplateInfo> reportTemplateInfos3 = reportTemplateInfoDao.findReportTemplatesByTenantIdAndCustomerIdIncludingSubCustomers(tenantId1, subCustomer2.getUuidId(), null, pageLink);
+        PageData<ReportTemplateInfo> reportTemplateInfos3 = reportTemplateInfoDao.findCustomerReportTemplates(tenantId1, subCustomer2.getUuidId(),
+                ReportTemplateQuery.builder().includeCustomers(true).pageLink(pageLink).build());
         Assert.assertEquals(20, reportTemplateInfos3.getData().size());
     }
 

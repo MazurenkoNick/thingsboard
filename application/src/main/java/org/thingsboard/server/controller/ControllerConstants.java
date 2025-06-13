@@ -124,7 +124,6 @@ public class ControllerConstants {
         "CHIRPSTACK, COAP, CUSTOM, HTTP, IBM_WATSON_IOT, KAFKA, LORIOT, MQTT, OCEANCONNECT, OPC_UA, PUB_SUB, " +
         "RABBITMQ,  SIGFOX,  TCP,  THINGPARK,  TMOBILE_IOT_CDP,  TPE,  TTI,  TTN,  TUYA,  UDP";
     protected static final String CONVERTER_TYPE_DESCRIPTION = "A string value representing the converter type. One of the following:\nUPLINK, DOWNLINK";
-    protected static final String REPORT_TEMPLATE_TYPE_DESCRIPTION = "A string value representing the report template type. One of the following:\nREPORT, SUB_REPORT";
     protected static final String INTEGRATION_NAME_PARAM_DESCRIPTION = "A string value representing the integration name. For example, 'My New Integration'";
     protected static final String ASSET_TEXT_SEARCH_DESCRIPTION = "The case insensitive 'substring' filter based on the asset name.";
     protected static final String BLOB_ENTITY_TEXT_SEARCH_DESCRIPTION = "The case insensitive 'startsWith' filter based on the blob entity name.";

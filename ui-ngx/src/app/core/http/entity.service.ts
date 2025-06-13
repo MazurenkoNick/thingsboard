@@ -133,7 +133,7 @@ import { MobileAppService } from '@core/http/mobile-app.service';
 import { PlatformType } from '@shared/models/oauth2.models';
 import { DomainService } from '@core/http/domain.service';
 import { ReportTemplateService } from '@core/http/report-template.service';
-import { ReportTemplate, ReportTemplateType } from '@shared/models/report.models';
+import { ReportTemplate, ReportTemplateQuery, ReportTemplateType } from '@shared/models/report.models';
 import { ReportService } from './report.service';
 
 @Injectable({
@@ -641,7 +641,11 @@ export class EntityService {
         break;
       case EntityType.REPORT_TEMPLATE:
         pageLink.sortOrder.property = 'name';
-        entitiesObservable = this.reportTemplateService.getAllReportTemplateInfos(false, pageLink, subType as ReportTemplateType, config);
+        const typeList = subType ? [subType as ReportTemplateType] : null;
+        const reportTemplateQuery = new ReportTemplateQuery(pageLink, {
+          typeList
+        });
+        entitiesObservable = this.reportTemplateService.getAllReportTemplateInfos(reportTemplateQuery, config);
         break;
       case EntityType.REPORT:
         pageLink.sortOrder.property = 'name';

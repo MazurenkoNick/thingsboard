@@ -7097,8 +7097,15 @@
         "report-templates": "Report templates",
         "add": "Add report template",
         "search": "Search report templates",
+        "templates-filter": "Templates filter",
+        "filter-not-set": "All",
+        "sub-report": "Subreport",
         "no-report-templates-text": "No report templates found",
         "no-sub-reports-text": "No subreports found",
+        "select-report-template": "Select report template",
+        "open-report-template-new-tab": "Open report template in new tab",
+        "select-sub-report": "Select subreport",
+        "open-subreport-new-tab": "Open subreport in new tab",
         "report-template-details": "Report template details",
         "selected-report-templates": "{ count, plural, =1 {1 report template} other {# report templates} } selected",
         "type-report": "Report",
@@ -7106,6 +7113,7 @@
         "no-report-templates-matching": "No report templates matching '{{entity}}' were found.",
         "no-sub-reports-matching": "No subreports matching '{{entity}}' were found.",
         "report-template-required": "Report template is required",
+        "sub-report-required": "Subreport is required",
         "delete-report-template-title": "Are you sure you want to delete the report template '{{reportTemplateTitle}}'?",
         "delete-report-template-text": "Be careful, after the confirmation the report template and all related data will become unrecoverable.",
         "delete-report-templates-title": "Are you sure you want to delete { count, plural, =1 {1 report template} other {# report templates} }?",
@@ -7229,8 +7237,6 @@
             "sub-report": {
                 "type": "Subreport",
                 "no-sub-report": "No subreport selected",
-                "select-sub-report": "Select subreport",
-                "open-subreport-new-tab": "Open subreport in new tab",
                 "avoid-page-break-inside": "Avoid page break inside"
             }
         }

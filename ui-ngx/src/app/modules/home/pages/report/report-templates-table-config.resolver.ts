@@ -47,7 +47,12 @@ import { DatePipe } from '@angular/common';
 import { EntityType, entityTypeResources, entityTypeTranslations } from '@shared/models/entity-type.models';
 import { EntityAction } from '@home/models/entity/entity-component.models';
 import { UserPermissionsService } from '@core/http/user-permissions.service';
-import { ReportTemplate, ReportTemplateInfo, reportTemplateTypeTranslationMap } from '@shared/models/report.models';
+import {
+  ReportTemplate, ReportTemplateFilter,
+  ReportTemplateInfo,
+  ReportTemplateQuery,
+  reportTemplateTypeTranslationMap
+} from '@shared/models/report.models';
 import { ReportTemplateService } from '@core/http/report-template.service';
 import { mergeMap } from 'rxjs/operators';
 import { UtilsService } from '@core/services/utils.service';
@@ -79,10 +84,18 @@ export class ReportTemplatesTableConfigResolver  {
     const authUser = getCurrentAuthUser(this.store);
     config.componentsData = {
       includeCustomers: true,
+      reportTemplateFilter: {
+        typeList: null,
+        formatList: null
+      },
       includeCustomersChanged: (includeCustomers: boolean) => {
         config.componentsData.includeCustomers = includeCustomers;
         config.columns = this.configureColumns(authUser, config);
         config.getTable().columnsUpdated();
+        config.getTable().resetSortAndFilter(true);
+      },
+      reportTemplateFilterChanged: (filter: ReportTemplateFilter) => {
+        config.componentsData.reportTemplateFilter = filter;
         config.getTable().resetSortAndFilter(true);
       }
     };
@@ -155,8 +168,15 @@ export class ReportTemplatesTableConfigResolver  {
   }
 
   configureEntityFunctions(config: EntityTableConfig<ReportTemplateInfo>): void {
-    config.entitiesFetchFunction = pageLink =>
-      this.reportTemplateService.getAllReportTemplateInfos(config.componentsData.includeCustomers, pageLink);
+    config.entitiesFetchFunction = pageLink => {
+      const reportTemplateQuery = new ReportTemplateQuery(pageLink, {
+        typeList: config.componentsData.reportTemplateFilter.typeList,
+        formatList: config.componentsData.reportTemplateFilter.formatList,
+        includeCustomers: config.componentsData.includeCustomers
+      });
+      return this.reportTemplateService.getAllReportTemplateInfos(reportTemplateQuery);
+    };
+
     config.deleteEntity = id => this.reportTemplateService.deleteReportTemplate(id.id);
   }
 

@@ -44,6 +44,7 @@ import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.report.ReportTemplate;
 import org.thingsboard.server.common.data.report.ReportTemplateInfo;
+import org.thingsboard.server.common.data.report.ReportTemplateQuery;
 import org.thingsboard.server.common.data.report.ReportTemplateType;
 import org.thingsboard.server.common.data.report.TbReportFormat;
 import org.thingsboard.server.common.data.report.configuration.PdfReportTemplateConfig;
@@ -53,8 +54,10 @@ import org.thingsboard.server.exception.DataValidationException;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.is;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.thingsboard.server.dao.model.ModelConstants.NULL_UUID;
 
@@ -405,6 +408,207 @@ public class ReportTemplateControllerTest extends AbstractControllerTest {
                 }, pageLink);
         Assert.assertFalse(pageData.hasNext());
         Assert.assertEquals(0, pageData.getData().size());
+    }
+
+    @Test
+    public void testFindReportTemplatesByQuery() throws Exception {
+        List<ReportTemplateInfo> pdfReportTemplates = new ArrayList<>();
+        for (int i = 0; i < 37; i++) {
+            ReportTemplate reportTemplate = new ReportTemplate();
+            String suffix = StringUtils.randomAlphanumeric(15);
+            String name = "PDF report template " + suffix;
+            name = i % 2 == 0 ? name.toLowerCase() : name.toUpperCase();
+            reportTemplate.setName(name);
+            reportTemplate.setFormat(TbReportFormat.PDF);
+            reportTemplate.setType(ReportTemplateType.REPORT);
+            reportTemplate.setConfiguration(new PdfReportTemplateConfig());
+            pdfReportTemplates.add(new ReportTemplateInfo(doPost("/api/reportTemplate", reportTemplate, ReportTemplate.class)));
+        }
+        pdfReportTemplates.sort(idComparator);
+
+        List<ReportTemplateInfo> csvReportTemplates = new ArrayList<>();
+        for (int i = 0; i < 56; i++) {
+            ReportTemplate reportTemplate = new ReportTemplate();
+            String suffix = StringUtils.randomAlphanumeric(15);
+            String name = "CSV report template " + suffix;
+            name = i % 2 == 0 ? name.toLowerCase() : name.toUpperCase();
+            reportTemplate.setName(name);
+            reportTemplate.setFormat(TbReportFormat.CSV);
+            reportTemplate.setType(ReportTemplateType.REPORT);
+            reportTemplate.setConfiguration(new PdfReportTemplateConfig());
+            csvReportTemplates.add(new ReportTemplateInfo(doPost("/api/reportTemplate", reportTemplate, ReportTemplate.class)));
+        }
+        csvReportTemplates.sort(idComparator);
+
+        List<ReportTemplateInfo> pdfSubReports = new ArrayList<>();
+        for (int i = 0; i < 12; i++) {
+            ReportTemplate reportTemplate = new ReportTemplate();
+            String suffix = StringUtils.randomAlphanumeric(15);
+            String name = "PDF subreport " + suffix;
+            name = i % 2 == 0 ? name.toLowerCase() : name.toUpperCase();
+            reportTemplate.setName(name);
+            reportTemplate.setFormat(TbReportFormat.PDF);
+            reportTemplate.setType(ReportTemplateType.SUB_REPORT);
+            reportTemplate.setConfiguration(new PdfReportTemplateConfig());
+            pdfSubReports.add(new ReportTemplateInfo(doPost("/api/reportTemplate", reportTemplate, ReportTemplate.class)));
+        }
+        pdfSubReports.sort(idComparator);
+
+        List<ReportTemplateInfo> csvSubReports = new ArrayList<>();
+        for (int i = 0; i < 33; i++) {
+            ReportTemplate reportTemplate = new ReportTemplate();
+            String suffix = StringUtils.randomAlphanumeric(15);
+            String name = "CSV subreport " + suffix;
+            name = i % 2 == 0 ? name.toLowerCase() : name.toUpperCase();
+            reportTemplate.setName(name);
+            reportTemplate.setFormat(TbReportFormat.CSV);
+            reportTemplate.setType(ReportTemplateType.SUB_REPORT);
+            reportTemplate.setConfiguration(new PdfReportTemplateConfig());
+            csvSubReports.add(new ReportTemplateInfo(doPost("/api/reportTemplate", reportTemplate, ReportTemplate.class)));
+        }
+        csvSubReports.sort(idComparator);
+
+        List<ReportTemplateInfo> allPdfReportTemplates = new ArrayList<>();
+        allPdfReportTemplates.addAll(pdfReportTemplates);
+        allPdfReportTemplates.addAll(pdfSubReports);
+        allPdfReportTemplates.sort(idComparator);
+
+        List<ReportTemplateInfo> allCsvReportTemplates = new ArrayList<>();
+        allCsvReportTemplates.addAll(csvReportTemplates);
+        allCsvReportTemplates.addAll(csvSubReports);
+        allPdfReportTemplates.sort(idComparator);
+
+        List<ReportTemplateInfo> allReports = new ArrayList<>();
+        allReports.addAll(pdfReportTemplates);
+        allReports.addAll(csvReportTemplates);
+        allReports.sort(idComparator);
+
+        List<ReportTemplateInfo> allSubReports = new ArrayList<>();
+        allSubReports.addAll(pdfSubReports);
+        allSubReports.addAll(csvSubReports);
+        allSubReports.sort(idComparator);
+
+        List<ReportTemplateInfo> allReportTemplates = new ArrayList<>();
+        allReportTemplates.addAll(allReports);
+        allReportTemplates.addAll(allSubReports);
+        allReportTemplates.sort(idComparator);
+
+        ReportTemplateQuery pdfReportTemplatesQuery = ReportTemplateQuery.builder()
+                .pageLink(new PageLink(10, 0))
+                .typeList(List.of(ReportTemplateType.REPORT))
+                .formatList(List.of(TbReportFormat.PDF))
+                .build();
+
+        List<ReportTemplateInfo> loadedPdfReportTemplates = this.loadReportTemplatesByQuery(pdfReportTemplatesQuery);
+
+        Assert.assertEquals(pdfReportTemplates, loadedPdfReportTemplates);
+
+        ReportTemplateQuery csvReportTemplatesQuery = ReportTemplateQuery.builder()
+                .pageLink(new PageLink(10, 0))
+                .typeList(List.of(ReportTemplateType.REPORT))
+                .formatList(List.of(TbReportFormat.CSV))
+                .build();
+
+        List<ReportTemplateInfo> loadedCsvReportTemplates = this.loadReportTemplatesByQuery(csvReportTemplatesQuery);
+
+        Assert.assertEquals(csvReportTemplates, loadedCsvReportTemplates);
+
+        ReportTemplateQuery pdfSubReportsQuery = ReportTemplateQuery.builder()
+                .pageLink(new PageLink(10, 0))
+                .typeList(List.of(ReportTemplateType.SUB_REPORT))
+                .formatList(List.of(TbReportFormat.PDF))
+                .build();
+
+        List<ReportTemplateInfo> loadedPdfSubReports = this.loadReportTemplatesByQuery(pdfSubReportsQuery);
+
+        Assert.assertEquals(pdfSubReports, loadedPdfSubReports);
+
+        ReportTemplateQuery csvSubReportsQuery = ReportTemplateQuery.builder()
+                .pageLink(new PageLink(10, 0))
+                .typeList(List.of(ReportTemplateType.SUB_REPORT))
+                .formatList(List.of(TbReportFormat.CSV))
+                .build();
+
+        List<ReportTemplateInfo> loadedCsvSubReports = this.loadReportTemplatesByQuery(csvSubReportsQuery);
+
+        Assert.assertEquals(csvSubReports, loadedCsvSubReports);
+
+        ReportTemplateQuery allPdfReportTemplatesQuery = ReportTemplateQuery.builder()
+                .pageLink(new PageLink(10, 0))
+                .formatList(List.of(TbReportFormat.PDF))
+                .build();
+
+        List<ReportTemplateInfo> loadedAllPdfReportTemplates = this.loadReportTemplatesByQuery(allPdfReportTemplatesQuery);
+
+        Assert.assertEquals(allPdfReportTemplates, loadedAllPdfReportTemplates);
+
+        ReportTemplateQuery allCsvReportTemplatesQuery = ReportTemplateQuery.builder()
+                .pageLink(new PageLink(10, 0))
+                .formatList(List.of(TbReportFormat.CSV))
+                .build();
+
+        List<ReportTemplateInfo> loadedAllCsvReportTemplates = this.loadReportTemplatesByQuery(allCsvReportTemplatesQuery);
+
+        Assert.assertEquals(allCsvReportTemplates, loadedAllCsvReportTemplates);
+
+        ReportTemplateQuery allReportsQuery = ReportTemplateQuery.builder()
+                .pageLink(new PageLink(10, 0))
+                .typeList(List.of(ReportTemplateType.REPORT))
+                .build();
+
+        List<ReportTemplateInfo> loadedAllReports = this.loadReportTemplatesByQuery(allReportsQuery);
+
+        Assert.assertEquals(allReports, loadedAllReports);
+
+        ReportTemplateQuery allSubReportsQuery = ReportTemplateQuery.builder()
+                .pageLink(new PageLink(10, 0))
+                .typeList(List.of(ReportTemplateType.SUB_REPORT))
+                .build();
+
+        List<ReportTemplateInfo> loadedAllSubReports = this.loadReportTemplatesByQuery(allSubReportsQuery);
+
+        Assert.assertEquals(allSubReports, loadedAllSubReports);
+
+        ReportTemplateQuery allReportTemplatesQuery = ReportTemplateQuery.builder()
+                .pageLink(new PageLink(10, 0))
+                .build();
+
+        List<ReportTemplateInfo> loadedAllReportTemplates = this.loadReportTemplatesByQuery(allReportTemplatesQuery);
+
+        Assert.assertEquals(allReportTemplates, loadedAllReportTemplates);
+
+        for (ReportTemplateInfo reportTemplate : loadedAllReportTemplates) {
+            doDelete("/api/reportTemplate/" + reportTemplate.getId().getId().toString())
+                    .andExpect(status().isOk());
+        }
+        allReportTemplatesQuery = ReportTemplateQuery.builder()
+                .pageLink(new PageLink(10, 0))
+                .build();
+        loadedAllReportTemplates = this.loadReportTemplatesByQuery(allReportTemplatesQuery);
+
+        Assert.assertTrue(loadedAllReportTemplates.isEmpty());
+    }
+
+    private List<ReportTemplateInfo> loadReportTemplatesByQuery(ReportTemplateQuery query) throws Exception {
+        List<ReportTemplateInfo> loadedReportTemplates = new ArrayList<>();
+        PageLink pageLink = query.getPageLink();
+        PageData<ReportTemplateInfo> pageData;
+        String urlTemplate = "/api/reportTemplateInfos/all?typeList={typeList}&formatList={formatList}&includeCustomers={includeCustomers}&";
+        String typeList = query.getTypeList() != null ? query.getTypeList().stream().map(Enum::name).collect(Collectors.joining(",")) : "";
+        String formatList = query.getFormatList() != null ? query.getFormatList().stream().map(Enum::name).collect(Collectors.joining(",")) : "";
+        String includeCustomers = query.isIncludeCustomers() ? "true" : "false";
+        do {
+            pageData = doGetTypedWithPageLink(urlTemplate,
+                    new TypeReference<>() {
+                    }, pageLink, typeList, formatList, includeCustomers);
+            loadedReportTemplates.addAll(pageData.getData());
+            if (pageData.hasNext()) {
+                pageLink = pageLink.nextPageLink();
+            }
+        } while (pageData.hasNext());
+
+        loadedReportTemplates.sort(idComparator);
+        return loadedReportTemplates;
     }
 
 }

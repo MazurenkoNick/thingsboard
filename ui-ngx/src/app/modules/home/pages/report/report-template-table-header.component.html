@@ -30,9 +30,14 @@
     OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 
 -->
-<mat-slide-toggle
-  style="margin-left: 32px;"
-  [ngModel]="entitiesTableConfig.componentsData.includeCustomers"
-  (ngModelChange)="includeCustomersChanged($event)">
-  {{ includeCustomersLabel | translate }}
-</mat-slide-toggle>
+<div class="flex flex-row items-center gap-4">
+  <tb-report-template-filter
+    [ngModel]="entitiesTableConfig.componentsData.reportTemplateFilter"
+    (ngModelChange)="reportTemplateFilterChanged($event)">
+  </tb-report-template-filter>
+  <mat-slide-toggle
+    [ngModel]="entitiesTableConfig.componentsData.includeCustomers"
+    (ngModelChange)="includeCustomersChanged($event)">
+    {{ includeCustomersLabel | translate }}
+  </mat-slide-toggle>
+</div>

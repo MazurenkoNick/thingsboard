@@ -36,7 +36,7 @@ import { Observable } from 'rxjs';
 import {
   ReportTemplate,
   ReportTemplateConfig,
-  ReportTemplateInfo,
+  ReportTemplateInfo, ReportTemplateQuery,
   ReportTemplateType
 } from '@shared/models/report.models';
 import { PageLink } from '@shared/models/page/page-link';
@@ -70,16 +70,8 @@ export class ReportTemplateService {
     return this.http.delete(`/api/reportTemplate/${reportTemplateId}`, defaultHttpOptionsFromConfig(config));
   }
 
-  public getAllReportTemplateInfos(includeCustomers: boolean,
-                                   pageLink: PageLink, type: ReportTemplateType = null, config?: RequestConfig): Observable<PageData<ReportTemplateInfo>> {
-    let url = `/api/reportTemplateInfos/all${pageLink.toQuery()}`;
-    if (includeCustomers) {
-      url += `&includeCustomers=true`;
-    }
-    if (type) {
-      url += `&type=${type}`;
-    }
-    return this.http.get<PageData<ReportTemplateInfo>>(url,
+  public getAllReportTemplateInfos(query: ReportTemplateQuery, config?: RequestConfig): Observable<PageData<ReportTemplateInfo>> {
+    return this.http.get<PageData<ReportTemplateInfo>>(`/api/reportTemplateInfos/all${query.toQuery()}`,
       defaultHttpOptionsFromConfig(config));
   }
 

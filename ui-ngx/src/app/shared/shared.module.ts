@@ -273,6 +273,7 @@ import { SecretKeyInputComponent } from '@shared/components/secret-storage/secre
 import { SecretFileInputComponent } from '@shared/components/secret-storage/secret-file-input.component';
 import { SecretStorageDialogComponent } from '@shared/components/secret-storage/secret-storage-dialog.component';
 import { SecretAutocompleteComponent } from '@shared/components/secret-storage/secret-autocomplete.component';
+import { ReportTemplateAutocompleteComponent } from '@shared/components/report/report-template-autocomplete.component';
 
 export function MarkedOptionsFactory(markedOptionsService: MarkedOptionsService) {
   return markedOptionsService;
@@ -514,7 +515,8 @@ export function MarkedOptionsFactory(markedOptionsService: MarkedOptionsService)
     SecretKeyInputComponent,
     SecretFileInputComponent,
     SecretStorageDialogComponent,
-    SecretAutocompleteComponent
+    SecretAutocompleteComponent,
+    ReportTemplateAutocompleteComponent
   ],
   imports: [
     CommonModule,
@@ -804,7 +806,8 @@ export function MarkedOptionsFactory(markedOptionsService: MarkedOptionsService)
     SecretKeyInputComponent,
     SecretFileInputComponent,
     SecretStorageDialogComponent,
-    SecretAutocompleteComponent
+    SecretAutocompleteComponent,
+    ReportTemplateAutocompleteComponent
   ]
 })
 export class SharedModule { }

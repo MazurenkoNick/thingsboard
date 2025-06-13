@@ -48,9 +48,12 @@ import { ReportComponentsComponent } from '@home/pages/report/components/report-
 import { ReportComponentsModule } from '@home/pages/report/components/report-components.module';
 import { ReportTemplateSettingsComponent } from '@home/pages/report/report-template-settings.component';
 import { WidgetSettingsCommonModule } from '@home/components/widget/lib/settings/common/widget-settings-common.module';
+import { ReportTemplateFilterComponent } from '@home/pages/report/report-template-filter.component';
+import { WidgetConfigComponentsModule } from '@home/components/widget/config/widget-config-components.module';
 
 @NgModule({
   declarations: [
+    ReportTemplateFilterComponent,
     ReportTemplateTableHeaderComponent,
     ReportTemplateTabsComponent,
     ReportTemplateFormComponent,
@@ -65,7 +68,8 @@ import { WidgetSettingsCommonModule } from '@home/components/widget/lib/settings
     HomeDialogsModule,
     ReportComponentsModule,
     ReportTemplateRoutingModule,
-    WidgetSettingsCommonModule
+    WidgetSettingsCommonModule,
+    WidgetConfigComponentsModule
   ]
 })
 export class ReportTemplateModule { }

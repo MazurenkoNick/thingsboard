@@ -28,39 +28,23 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.dao.report;
+package org.thingsboard.server.common.data.report;
 
-import org.thingsboard.server.common.data.id.CustomerId;
-import org.thingsboard.server.common.data.id.ReportTemplateId;
-import org.thingsboard.server.common.data.id.TenantId;
-import org.thingsboard.server.common.data.page.PageData;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
 import org.thingsboard.server.common.data.page.PageLink;
-import org.thingsboard.server.common.data.report.ReportTemplate;
-import org.thingsboard.server.common.data.report.ReportTemplateInfo;
-import org.thingsboard.server.common.data.report.ReportTemplateQuery;
-import org.thingsboard.server.common.data.report.ReportTemplateType;
-import org.thingsboard.server.dao.entity.EntityDaoService;
 
 import java.util.List;
 
-public interface ReportTemplateService extends EntityDaoService {
+@Data
+@Builder
+@AllArgsConstructor
+public class ReportTemplateQuery {
 
-    ReportTemplate findReportTemplateById(TenantId tenantId, ReportTemplateId reportTemplateId);
-
-    ReportTemplateInfo findReportTemplateInfoById(TenantId tenantId, ReportTemplateId reportTemplateId);
-
-    ReportTemplate saveReportTemplate(ReportTemplate reportTemplate);
-
-    void deleteReportTemplate(TenantId tenantId, ReportTemplateId reportTemplateId);
-
-    List<ReportTemplateInfo> findReportTemplateInfoByIds(TenantId tenantId, List<ReportTemplateId> reportTemplateIds);
-
-    PageData<ReportTemplateInfo> findReportTemplates(TenantId tenantId, ReportTemplateQuery query);
-
-    PageData<ReportTemplateInfo> findCustomerReportTemplates(TenantId tenantId, CustomerId customerId, ReportTemplateQuery query);
-
-    void deleteReportTemplatesByTenantId(TenantId tenantId);
-
-    void deleteReportTemplatesByTenantIdAndCustomerId(TenantId tenantId, CustomerId customerId);
+    private PageLink pageLink;
+    private boolean includeCustomers;
+    private List<TbReportFormat> formatList;
+    private List<ReportTemplateType> typeList;
 
 }

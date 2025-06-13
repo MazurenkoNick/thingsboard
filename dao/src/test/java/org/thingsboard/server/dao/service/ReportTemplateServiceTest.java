@@ -43,6 +43,7 @@ import org.thingsboard.server.common.data.relation.EntityRelation;
 import org.thingsboard.server.common.data.relation.RelationTypeGroup;
 import org.thingsboard.server.common.data.report.ReportTemplate;
 import org.thingsboard.server.common.data.report.ReportTemplateInfo;
+import org.thingsboard.server.common.data.report.ReportTemplateQuery;
 import org.thingsboard.server.common.data.report.ReportTemplateType;
 import org.thingsboard.server.common.data.report.TbReportFormat;
 import org.thingsboard.server.common.data.report.configuration.PdfReportTemplateConfig;
@@ -207,7 +208,7 @@ public class ReportTemplateServiceTest extends AbstractServiceTest {
         PageLink pageLink = new PageLink(3);
         PageData<ReportTemplateInfo> pageData;
         do {
-            pageData = reportTemplateService.findReportTemplatesByTenantId(tenantId, null, pageLink);
+            pageData = reportTemplateService.findReportTemplates(tenantId, ReportTemplateQuery.builder().pageLink(pageLink).build());
             loadedReportTemplates.addAll(pageData.getData());
             if (pageData.hasNext()) {
                 pageLink = pageLink.nextPageLink();
@@ -222,7 +223,7 @@ public class ReportTemplateServiceTest extends AbstractServiceTest {
         reportTemplateService.deleteReportTemplatesByTenantId(tenantId);
 
         pageLink = new PageLink(4);
-        pageData = reportTemplateService.findReportTemplatesByTenantId(tenantId, null, pageLink);
+        pageData = reportTemplateService.findReportTemplates(tenantId, ReportTemplateQuery.builder().pageLink(pageLink).build());
         Assert.assertFalse(pageData.hasNext());
         Assert.assertTrue(pageData.getData().isEmpty());
     }
@@ -262,7 +263,7 @@ public class ReportTemplateServiceTest extends AbstractServiceTest {
         PageLink pageLink = new PageLink(3, 0, title1);
         PageData<ReportTemplateInfo> pageData;
         do {
-            pageData = reportTemplateService.findReportTemplatesByTenantId(tenantId, null, pageLink);
+            pageData = reportTemplateService.findReportTemplates(tenantId, ReportTemplateQuery.builder().pageLink(pageLink).build());
             loadedReportTemplatesTitle1.addAll(pageData.getData());
             if (pageData.hasNext()) {
                 pageLink = pageLink.nextPageLink();
@@ -277,7 +278,7 @@ public class ReportTemplateServiceTest extends AbstractServiceTest {
         List<ReportTemplateInfo> loadedReportTemplatesTitle2 = new ArrayList<>();
         pageLink = new PageLink(4, 0, title2);
         do {
-            pageData = reportTemplateService.findReportTemplatesByTenantId(tenantId, null, pageLink);
+            pageData = reportTemplateService.findReportTemplates(tenantId, ReportTemplateQuery.builder().pageLink(pageLink).build());
             loadedReportTemplatesTitle2.addAll(pageData.getData());
             if (pageData.hasNext()) {
                 pageLink = pageLink.nextPageLink();
@@ -294,7 +295,7 @@ public class ReportTemplateServiceTest extends AbstractServiceTest {
         }
 
         pageLink = new PageLink(4, 0, title1);
-        pageData = reportTemplateService.findReportTemplatesByTenantId(tenantId, null, pageLink);
+        pageData = reportTemplateService.findReportTemplates(tenantId, ReportTemplateQuery.builder().pageLink(pageLink).build());
         Assert.assertFalse(pageData.hasNext());
         Assert.assertEquals(0, pageData.getData().size());
 
@@ -303,7 +304,7 @@ public class ReportTemplateServiceTest extends AbstractServiceTest {
         }
 
         pageLink = new PageLink(4, 0, title2);
-        pageData = reportTemplateService.findReportTemplatesByTenantId(tenantId, null, pageLink);
+        pageData = reportTemplateService.findReportTemplates(tenantId, ReportTemplateQuery.builder().pageLink(pageLink).build());
         Assert.assertFalse(pageData.hasNext());
         Assert.assertEquals(0, pageData.getData().size());
     }

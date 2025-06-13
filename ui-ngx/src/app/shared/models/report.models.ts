@@ -46,6 +46,14 @@ import {
 import { ReportComponentConfig } from '@shared/models/report-component.models';
 import { ReportId } from '@shared/models/id/report-id';
 import { UserId } from '@shared/models/id/user-id';
+import { PageLink } from '@shared/models/page/page-link';
+import {
+  isArraysEqualIgnoreUndefined,
+  isDefinedAndNotNull,
+  isEmpty,
+  isEqualIgnoreUndefined,
+  isUndefinedOrNull
+} from '@core/utils';
 
 export interface Report extends BaseData<ReportId>, HasTenantId {
   tenantId?: TenantId;
@@ -292,6 +300,65 @@ export interface ReportRequest {
   entityId?: EntityId;
   timezone?: string;
   userId?: string;
+}
+
+export interface ReportTemplateFilter {
+  includeCustomers?: boolean;
+  formatList?: TbReportFormat[];
+  typeList?: ReportTemplateType[];
+}
+
+
+export const reportTemplateFiltersEquals = (filter1?: ReportTemplateFilter, filter2?: ReportTemplateFilter): boolean => {
+  if (filter1 === filter2) {
+    return true;
+  }
+  if ((isUndefinedOrNull(filter1) || isEmpty(filter1)) && (isUndefinedOrNull(filter2) || isEmpty(filter2))) {
+    return true;
+  } else if (isDefinedAndNotNull(filter1) && isDefinedAndNotNull(filter2)) {
+    if (!isArraysEqualIgnoreUndefined(filter1.typeList, filter2.typeList)) {
+      return false;
+    }
+    if (!isArraysEqualIgnoreUndefined(filter1.formatList, filter2.formatList)) {
+      return false;
+    }
+    if (!isEqualIgnoreUndefined(filter1.includeCustomers, filter2.includeCustomers)) {
+      return false;
+    }
+    return true;
+  }
+  return false;
+}
+
+export class ReportTemplateQuery {
+
+  pageLink: PageLink;
+  includeCustomers: boolean;
+  formatList: TbReportFormat[];
+  typeList: ReportTemplateType[];
+
+  constructor(pageLink: PageLink,
+              reportTemplateFilter: ReportTemplateFilter) {
+    this.pageLink = pageLink;
+    this.includeCustomers = reportTemplateFilter.includeCustomers;
+    this.formatList = reportTemplateFilter.formatList;
+    this.typeList = reportTemplateFilter.typeList;
+  }
+
+  public toQuery(): string {
+    let query = this.pageLink.toQuery();
+    if (this.includeCustomers) {
+      query += '&includeCustomers=true';
+    }
+    if (this.formatList && this.formatList.length) {
+      query += `&formatList=${this.formatList.join(',')}`;
+    }
+    if (this.typeList && this.typeList.length) {
+      query += `&typeList=${this.typeList.join(',')}`;
+    }
+    return query;
+  }
+
 }
 
 export const defaultPdfReportTemplateConfig: PdfReportTemplateConfig = {
