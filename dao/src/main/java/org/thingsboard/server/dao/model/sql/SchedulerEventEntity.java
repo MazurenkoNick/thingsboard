@@ -125,9 +125,7 @@ public final class SchedulerEventEntity extends BaseVersionedEntity<SchedulerEve
         this.configuration = schedulerEvent.getConfiguration();
         this.schedule = schedulerEvent.getSchedule();
         this.enabled = schedulerEvent.isEnabled();
-        if (schedulerEvent.getExternalId() != null) {
-            this.externalId = schedulerEvent.getExternalId().getId();
-        }
+        this.externalId = getUuid(schedulerEvent.getExternalId());
     }
 
     @Override
@@ -150,9 +148,7 @@ public final class SchedulerEventEntity extends BaseVersionedEntity<SchedulerEve
         schedulerEvent.setConfiguration(configuration);
         schedulerEvent.setSchedule(schedule);
         schedulerEvent.setEnabled(enabled);
-        if (externalId != null) {
-            schedulerEvent.setExternalId(new SchedulerEventId(externalId));
-        }
+        schedulerEvent.setExternalId(getEntityId(externalId, SchedulerEventId::new));
         return schedulerEvent;
     }
 

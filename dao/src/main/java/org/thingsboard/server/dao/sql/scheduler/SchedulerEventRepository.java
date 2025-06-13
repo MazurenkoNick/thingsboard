@@ -63,8 +63,6 @@ public interface SchedulerEventRepository extends JpaRepository<SchedulerEventEn
             "FROM SchedulerEventEntity e WHERE e.id > :id ORDER BY e.id")
     List<SchedulerEventFields> findNextBatch(@Param("id") UUID id, Limit limit);
 
-    SchedulerEventEntity findByTenantIdAndName(UUID tenantId, String name);
-
     @Query("SELECT externalId FROM SchedulerEventEntity WHERE id = :id")
     UUID getExternalIdById(@Param("id") UUID id);
 

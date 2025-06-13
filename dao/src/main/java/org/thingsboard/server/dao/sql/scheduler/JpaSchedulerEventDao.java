@@ -90,6 +90,7 @@ public class JpaSchedulerEventDao extends JpaAbstractDao<SchedulerEventEntity, S
         return schedulerEventRepository.findNextBatch(id, Limit.of(batchSize));
     }
 
+    @Override
     public SchedulerEvent findByTenantIdAndExternalId(UUID tenantId, UUID externalId) {
         return DaoUtil.getData(schedulerEventRepository.findByTenantIdAndExternalId(tenantId, externalId));
     }
