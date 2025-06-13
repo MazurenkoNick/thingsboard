@@ -34,6 +34,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.NullNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import lombok.extern.slf4j.Slf4j;
 import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.query.EntityData;
@@ -47,6 +48,8 @@ import org.thingsboard.server.common.data.report.configuration.components.Report
 import org.thingsboard.server.common.data.report.configuration.style.Heading;
 import org.thingsboard.server.report.context.ComponentData;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.text.SimpleDateFormat;
 import java.util.Base64;
 import java.util.Date;
@@ -60,6 +63,7 @@ import java.util.regex.Pattern;
 
 import static org.thingsboard.server.common.data.util.DataSourceUtils.getEntityLatestValue;
 
+@Slf4j
 public class ReportUtils {
 
     public static final Pattern REPORT_NAME_DATE_PATTERN = Pattern.compile("%d\\{([^\\}]*)\\}");
@@ -184,6 +188,24 @@ public class ReportUtils {
         tableHeadingVariables.put("entityLabel", entityLabel);
         tableHeadingVariables.put("rowCount", String.valueOf(rowCount));
         return ThymeleafUtil.renderFromHtmlString(tableHeading.getText(), tableHeadingVariables);
+    }
+
+    public static String formatNumericValue(String value, DataKey dataKey) {
+        if (value == null || value.isBlank()) {
+            return "";
+        }
+        try {
+            if (dataKey.getDecimals() != null) {
+                BigDecimal decimal = new BigDecimal(value);
+                value = decimal.setScale(dataKey.getDecimals(), RoundingMode.HALF_UP).toPlainString();
+            }
+        } catch (NumberFormatException | ArithmeticException e) {
+            log.warn("Failed to format value for data key '{}': {}", dataKey.getName(), e.getMessage());
+        }
+        if (dataKey.getUnits() != null) {
+            value += dataKey.getUnits();
+        }
+        return value;
     }
 
 }

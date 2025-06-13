@@ -52,8 +52,6 @@ import org.thingsboard.server.report.context.ComponentData;
 import org.thingsboard.server.report.util.ColorUtils;
 import org.thingsboard.server.report.util.ThymeleafUtil;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -66,6 +64,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static org.thingsboard.server.report.util.ReportUtils.formatNumericValue;
 import static org.thingsboard.server.report.util.ReportUtils.getSingleDataSource;
 import static org.thingsboard.server.report.util.ReportUtils.tableHeadingText;
 
@@ -198,20 +197,8 @@ public abstract class TableWithLayoutComponentRenderer<C extends TableWithLayout
         if (value == null || value.isBlank()) {
             return "";
         }
-        if (dataKey != null) {
-            try {
-                if (dataKey.getDecimals() != null) {
-                    BigDecimal decimal = new BigDecimal(value);
-                    value = decimal.setScale(dataKey.getDecimals(), RoundingMode.HALF_UP).toPlainString();
-                }
-            } catch (NumberFormatException | ArithmeticException e) {
-                log.warn("Failed to format value for data key '{}': {}", dataKey.getName(), e.getMessage());
-            }
-
-            if (dataKey.getUnits() != null) {
-                value += dataKey.getUnits();
-            }
-            return value;
+        if (dataKey.getDecimals() != null || dataKey.getUnits() != null) {
+            return formatNumericValue(value, dataKey);
         }
         return defaultValue(key, value);
     }

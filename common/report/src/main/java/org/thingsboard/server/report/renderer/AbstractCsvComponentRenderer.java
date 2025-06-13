@@ -44,6 +44,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import static org.thingsboard.server.report.util.ReportUtils.formatNumericValue;
 import static org.thingsboard.server.report.util.ReportUtils.getSingleDataSource;
 import static org.thingsboard.server.report.util.ReportUtils.tableHeadingText;
 
@@ -56,7 +57,7 @@ public abstract class AbstractCsvComponentRenderer<C extends TableReportComponen
         }
 
         DataSource dataSource = dataSourceOpt.get();
-        Map<String, String> labelToDataKeyMap = buildLabelToKeyMap(dataSource.getDataKeys());
+        Map<String, DataKey> labelToDataKeyMap = buildLabelToDataKeyMap(dataSource.getDataKeys());
         List<List<String>> content = new ArrayList<>();
 
         // add heading
@@ -73,19 +74,19 @@ public abstract class AbstractCsvComponentRenderer<C extends TableReportComponen
         return content;
     }
 
-    protected Map<String, String> buildLabelToKeyMap(List<DataKey> dataKeys) {
+    protected Map<String, DataKey> buildLabelToDataKeyMap(List<DataKey> dataKeys) {
         if (dataKeys == null) return Collections.emptyMap();
         return dataKeys.stream()
                 .collect(Collectors.toMap(
                         DataKey::getLabel,
-                        DataKey::getName,
+                        dataKey -> dataKey,
                         (existing, replacement) -> replacement,
                         LinkedHashMap::new));
     }
 
-    protected List<String> extractValues(Map<String, String> row, Map<String, String> labelToKey) {
-        return labelToKey.values().stream()
-                .map(key -> row.getOrDefault(key, ""))
+    protected List<String> extractValues(Map<String, String> row, Map<String, DataKey> labelToDataKey) {
+        return labelToDataKey.values().stream()
+                .map(dataKey -> formatNumericValue(row.get(dataKey.getName()), dataKey))
                 .toList();
     }
 
