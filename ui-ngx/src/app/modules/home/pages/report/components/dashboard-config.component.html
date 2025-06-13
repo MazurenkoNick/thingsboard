@@ -30,14 +30,14 @@
     OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 
 -->
-<div class="tb-form-panel no-border" [formGroup]="reportConfigForm">
+<div class="tb-form-panel no-border h-full" [formGroup]="reportConfigForm">
   <div class="tb-report-component-config-header">
     <tb-toggle-select [(ngModel)]="settingsTab" [ngModelOptions]="{standalone: true}" appearance="fill">
       <tb-toggle-option value="dashboard">{{ 'report-template.dashboard' | translate }}</tb-toggle-option>
       <tb-toggle-option value="layout">{{ 'report-template.layout' | translate }}</tb-toggle-option>
     </tb-toggle-select>
   </div>
-  <div class="tb-form-panel no-border no-padding" [class.!hidden]="settingsTab !== 'dashboard'">
+  <div class="tb-form-panel no-border no-padding overflow-y-auto" [class.!hidden]="settingsTab !== 'dashboard'">
     <tb-datasources
       [configMode]="basicMode"
       stroked
@@ -55,7 +55,7 @@
     </tb-datasources>
     <tb-dashboard-report-config pdfReportMode formControlName="config"></tb-dashboard-report-config>
   </div>
-  <div class="tb-form-panel no-border no-padding" [class.!hidden]="settingsTab !== 'layout'">
+  <div class="tb-form-panel no-border no-padding overflow-y-auto" [class.!hidden]="settingsTab !== 'layout'">
     <div class="tb-form-row space-between">
       <div>{{ 'report-template.component.image.image-width' | translate }}</div>
       <div class="flex flex-row items-center justify-start gap-2">
@@ -85,41 +85,7 @@
         </mat-select>
       </mat-form-field>
     </div>
-    <div class="tb-form-row space-between">
-      <div translate>report-template.paddings</div>
-      <tb-report-insets formControlName="paddings"></tb-report-insets>
-    </div>
-    <div class="tb-form-row space-between">
-      <div translate>report-template.margins</div>
-      <tb-report-insets formControlName="margins"></tb-report-insets>
-    </div>
-    <div class="tb-form-row space-between">
-      <div translate>report-template.background</div>
-      <tb-color-input asBoxInput
-                      colorClearButton
-                      formControlName="background">
-      </tb-color-input>
-    </div>
-    <div class="tb-form-row space-between">
-      <div translate>report-template.border</div>
-      <div class="flex flex-row items-center justify-start gap-2">
-        <div class="tb-small-label" translate>report-template.width</div>
-        <mat-form-field appearance="outline" class="number" subscriptSizing="dynamic">
-          <input matInput formControlName="borderWidth" type="number" min="0" step="1" placeholder="{{ 'widget-config.set' | translate }}">
-          <div matSuffix>pt</div>
-        </mat-form-field>
-        <mat-divider vertical></mat-divider>
-        <div class="tb-small-label" translate>report-template.radius</div>
-        <mat-form-field appearance="outline" class="number" subscriptSizing="dynamic">
-          <input matInput formControlName="borderRadius" type="number" min="0" step="1" placeholder="{{ 'widget-config.set' | translate }}">
-          <div matSuffix>pt</div>
-        </mat-form-field>
-        <mat-divider vertical></mat-divider>
-        <tb-color-input asBoxInput
-                        colorClearButton
-                        formControlName="borderColor">
-        </tb-color-input>
-      </div>
-    </div>
+    <tb-report-component-layout-settings formControlName="layout">
+    </tb-report-component-layout-settings>
   </div>
 </div>

@@ -72,6 +72,36 @@ export const isLayoutReportComponentConfig = (obj: any): obj is LayoutReportComp
   return typeof obj === 'object' && obj !== null && 'background' in obj && 'margins' in obj && 'paddings' in obj;
 };
 
+export interface ReportComponentLayoutSettings {
+  background?: string;
+  margins?: Insets;
+  paddings?: Insets;
+  borderWidth?: number;
+  borderRadius?: number;
+  borderColor?: string;
+}
+
+export const toReportComponentLayoutSettings = (config: LayoutReportComponentConfig): ReportComponentLayoutSettings => {
+  return {
+    background: config.background,
+    margins: config.margins,
+    paddings: config.paddings,
+    borderWidth: config.borderWidth,
+    borderRadius: config.borderRadius,
+    borderColor: config.borderColor
+  };
+}
+
+export const updateFromReportComponentLayoutSettings =
+  (config: LayoutReportComponentConfig, settings: ReportComponentLayoutSettings): void => {
+    config.background = settings.background;
+    config.margins = settings.margins;
+    config.paddings = settings.paddings;
+    config.borderWidth = settings.borderWidth;
+    config.borderRadius = settings.borderRadius;
+    config.borderColor = settings.borderColor;
+}
+
 export interface DataWithLayoutReportComponentConfig extends DataReportComponentConfig, LayoutReportComponentConfig {}
 
 export enum ReportDataKeySettingsType {

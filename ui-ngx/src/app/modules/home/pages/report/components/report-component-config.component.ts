@@ -45,7 +45,11 @@ import {
   ViewChild,
   ViewEncapsulation
 } from '@angular/core';
-import { isLayoutReportComponentConfig, ReportComponentConfig } from '@shared/models/report-component.models';
+import {
+  isLayoutReportComponentConfig,
+  ReportComponentConfig,
+  toReportComponentLayoutSettings, updateFromReportComponentLayoutSettings
+} from '@shared/models/report-component.models';
 import { TbAnchorComponent } from '@shared/components/tb-anchor.component';
 import { FormBuilder, FormGroup } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -175,6 +179,8 @@ export abstract class AbstractReportComponentConfig<C extends ReportComponentCon
 
   private reportComponentConfig: C;
 
+  private hasLayoutConfig = false;
+
   ngOnInit() {
     const aliasAndFilterCallbacks = this.context.aliasAndFilterCallbacks;
     this.callbacks.createEntityAlias = aliasAndFilterCallbacks.createEntityAlias;
@@ -186,16 +192,9 @@ export abstract class AbstractReportComponentConfig<C extends ReportComponentCon
     this.reportComponentConfig = reportComponentConfig;
     this.reportConfigForm = this.buildForm(reportComponentConfig);
     if (isLayoutReportComponentConfig(reportComponentConfig) && !this.isPlainFormat) {
-      this.reportConfigForm.addControl('paddings', this.fb.control(reportComponentConfig.paddings));
-      this.reportConfigForm.addControl('margins', this.fb.control(reportComponentConfig.margins));
-      this.reportConfigForm.addControl('background',
-        this.fb.control(reportComponentConfig.background));
-      this.reportConfigForm.addControl('borderWidth',
-        this.fb.control(reportComponentConfig.borderWidth));
-      this.reportConfigForm.addControl('borderRadius',
-        this.fb.control(reportComponentConfig.borderRadius));
-      this.reportConfigForm.addControl('borderColor',
-        this.fb.control(reportComponentConfig.borderColor));
+      this.hasLayoutConfig = true;
+      const layoutSettings = toReportComponentLayoutSettings(reportComponentConfig);
+      this.reportConfigForm.addControl('layout', this.fb.control(layoutSettings));
     }
     this.reportConfigForm.valueChanges.pipe(
       takeUntilDestroyed(this.destroyRef)
@@ -239,7 +238,12 @@ export abstract class AbstractReportComponentConfig<C extends ReportComponentCon
   }
 
   private updateModel() {
-    const output = this.prepareOutputConfig(this.reportConfigForm.getRawValue());
+    const value = this.reportConfigForm.getRawValue();
+    if (this.hasLayoutConfig) {
+      updateFromReportComponentLayoutSettings(value, value.layout);
+      delete value.layout;
+    }
+    const output = this.prepareOutputConfig(value);
     this.reportComponentConfig = {
       type: this.reportComponentConfig.type,
       ...output

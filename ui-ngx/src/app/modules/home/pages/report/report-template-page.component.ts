@@ -113,6 +113,7 @@ import { tap } from 'rxjs/operators';
 import { FilterDialogComponent, FilterDialogData } from '@home/components/filter/filter-dialog.component';
 import { getDefaultTimezone } from '@shared/models/time/time.models';
 import { DatePipe } from '@angular/common';
+import { EntityId } from '@shared/models/id/entity-id';
 
 @Component({
   selector: 'tb-report-template-page',
@@ -210,7 +211,8 @@ export class ReportTemplatePageComponent extends PageComponent
 
   // @ts-ignore
   private stateController: IStateController = {
-    getStateParams: (): StateParams => ({})
+    getStateParams: (): StateParams => ({}),
+    getEntityId: (): EntityId => null
   };
 
   constructor(private route: ActivatedRoute,

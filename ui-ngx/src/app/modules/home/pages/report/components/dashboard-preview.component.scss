@@ -37,10 +37,11 @@
     height: auto;
     display: inline-block;
     border: dashed 2px rgba(0, 0, 0, 0.47);
-    padding: 40px 10px 40px;
+    padding: 30px 10px 30px;
     background: #eaedf2;
     font-weight: bold;
     color: rgba(0,0,0,0.47);
+    font-size: 24px;
     .tb-type-title {
       position: absolute;
       left: 10px;
@@ -54,9 +55,12 @@
       padding: 3px 6px;
       border-radius: 4px;
     }
-    .tb-dashboard-title {
-      font-size: 24px;
-      text-align: center;
+    .tb-dashboard-content {
+      display: flex;
+      flex-direction: row;
+      justify-content: center;
+      height: 48px;
+      line-height: 48px;
     }
   }
 }

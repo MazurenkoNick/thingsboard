@@ -36,6 +36,10 @@ import { Observable, of } from 'rxjs';
 import { catchError, share } from 'rxjs/operators';
 import { DashboardInfo } from '@shared/models/dashboard.models';
 import { DashboardService } from '@core/http/dashboard.service';
+import { ReportTemplateInfo } from '@shared/models/report.models';
+import { getEntityDetailsPageURL } from '@core/utils';
+import { EntityType } from '@shared/models/entity-type.models';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'tb-dashboard-preview',
@@ -52,6 +56,7 @@ export class DashboardPreviewComponent extends AbstractReportComponentPreview<Da
   imageAlign: string = 'center';
 
   private dashboardService = inject(DashboardService);
+  private router = inject(Router);
 
   onComponentUpdated() {
     if (this.reportComponent.config?.dashboardId) {
@@ -71,6 +76,13 @@ export class DashboardPreviewComponent extends AbstractReportComponentPreview<Da
       this.imageWidth = customWidth + 'px';
     }
     this.imageAlign = this.reportComponent.alignment || 'center';
+  }
+
+  openDashboardNewTab($event: Event, dashboard: DashboardInfo) {
+    $event.stopPropagation();
+    const dashboardUrl = getEntityDetailsPageURL(dashboard.id.id, EntityType.DASHBOARD);
+    const url = this.router.serializeUrl(this.router.createUrlTree([dashboardUrl]));
+    window.open(url, '_blank');
   }
 
 }

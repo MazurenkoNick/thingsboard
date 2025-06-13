@@ -7223,7 +7223,8 @@
             },
             "dashboard": {
                 "type": "Dashboard",
-                "no-dashboard": "No dashboard selected"
+                "no-dashboard": "No dashboard selected",
+                "open-dashboard-new-tab": "Open dashboard in new tab"
             },
             "sub-report": {
                 "type": "Subreport",

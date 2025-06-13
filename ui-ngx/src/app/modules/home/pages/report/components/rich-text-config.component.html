@@ -39,7 +39,7 @@
     </tb-toggle-select>
   </div>
   <div class="tb-form-panel no-border no-padding flex-1 overflow-y-auto" [class.!hidden]="settingsTab !== 'content'">
-    <tb-report-rich-text class="flex-1" [variables]="variables()" [background]="reportConfigForm.get('background').value" formControlName="value"></tb-report-rich-text>
+    <tb-report-rich-text class="flex-1" [variables]="variables()" [background]="reportConfigForm.get('layout').value?.background" formControlName="value"></tb-report-rich-text>
   </div>
   <tb-datasources [class.!hidden]="settingsTab !== 'data'"
                   class="overflow-y-auto"
@@ -55,42 +55,6 @@
                   [callbacks]="callbacks"
                   [aliasController]="context.aliasController">
   </tb-datasources>
-  <div class="tb-form-panel no-border no-padding overflow-y-auto" [class.!hidden]="settingsTab !== 'layout'">
-    <div class="tb-form-row space-between">
-      <div translate>report-template.paddings</div>
-      <tb-report-insets formControlName="paddings"></tb-report-insets>
-    </div>
-    <div class="tb-form-row space-between">
-      <div translate>report-template.margins</div>
-      <tb-report-insets formControlName="margins"></tb-report-insets>
-    </div>
-    <div class="tb-form-row space-between">
-      <div translate>report-template.background</div>
-      <tb-color-input asBoxInput
-                      colorClearButton
-                      formControlName="background">
-      </tb-color-input>
-    </div>
-    <div class="tb-form-row space-between">
-      <div translate>report-template.border</div>
-      <div class="flex flex-row items-center justify-start gap-2">
-        <div class="tb-small-label" translate>report-template.width</div>
-        <mat-form-field appearance="outline" class="number" subscriptSizing="dynamic">
-          <input matInput formControlName="borderWidth" type="number" min="0" step="1" placeholder="{{ 'widget-config.set' | translate }}">
-          <div matSuffix>pt</div>
-        </mat-form-field>
-        <mat-divider vertical></mat-divider>
-        <div class="tb-small-label" translate>report-template.radius</div>
-        <mat-form-field appearance="outline" class="number" subscriptSizing="dynamic">
-          <input matInput formControlName="borderRadius" type="number" min="0" step="1" placeholder="{{ 'widget-config.set' | translate }}">
-          <div matSuffix>pt</div>
-        </mat-form-field>
-        <mat-divider vertical></mat-divider>
-        <tb-color-input asBoxInput
-                        colorClearButton
-                        formControlName="borderColor">
-        </tb-color-input>
-      </div>
-    </div>
-  </div>
+  <tb-report-component-layout-settings class="overflow-y-auto" [class.!hidden]="settingsTab !== 'layout'" formControlName="layout">
+  </tb-report-component-layout-settings>
 </div>
