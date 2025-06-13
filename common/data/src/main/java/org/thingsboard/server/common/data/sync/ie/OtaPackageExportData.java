@@ -28,7 +28,25 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.dao.util;
+package org.thingsboard.server.common.data.sync.ie;
 
-public class TenantRateLimitException extends Exception {
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import lombok.EqualsAndHashCode;
+import org.thingsboard.server.common.data.OtaPackage;
+
+@EqualsAndHashCode(callSuper = true)
+public class OtaPackageExportData extends EntityExportData<OtaPackage> {
+
+    @JsonIgnoreProperties(value = {"tenantId", "createdTime"}, ignoreUnknown = true)
+    @Override
+    public OtaPackage getEntity() {
+        return super.getEntity();
+    }
+
+    @JsonIgnoreProperties(value = {"tenantId", "createdTime"}, ignoreUnknown = true)
+    @Override
+    public void setEntity(OtaPackage entity) {
+        super.setEntity(entity);
+    }
+
 }

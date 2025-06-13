@@ -53,11 +53,12 @@ public enum LimitedApi {
     CASSANDRA_READ_QUERIES_MONOLITH(
             RateLimitUtil.merge(
                     DefaultTenantProfileConfiguration::getCassandraReadQueryTenantCoreRateLimits,
-                    DefaultTenantProfileConfiguration::getCassandraReadQueryTenantRuleEngineRateLimits), "Telemetry read queries", true),
+                    DefaultTenantProfileConfiguration::getCassandraReadQueryTenantRuleEngineRateLimits), "Monolith telemetry Cassandra read queries", true),
     CASSANDRA_WRITE_QUERIES_MONOLITH(
             RateLimitUtil.merge(
                     DefaultTenantProfileConfiguration::getCassandraWriteQueryTenantCoreRateLimits,
-                    DefaultTenantProfileConfiguration::getCassandraWriteQueryTenantRuleEngineRateLimits), "Telemetry write queries", true),
+                    DefaultTenantProfileConfiguration::getCassandraWriteQueryTenantRuleEngineRateLimits), "Monolith telemetry Cassandra write queries", true),
+    CASSANDRA_QUERIES(null, true), // left for backward compatibility with RateLimitsNotificationInfo
     EDGE_EVENTS(DefaultTenantProfileConfiguration::getEdgeEventRateLimits, "Edge events", true),
     EDGE_EVENTS_PER_EDGE(DefaultTenantProfileConfiguration::getEdgeEventRateLimitsPerEdge, "Edge events per edge", false),
     EDGE_UPLINK_MESSAGES(DefaultTenantProfileConfiguration::getEdgeUplinkMessagesRateLimits, "Edge uplink messages", true),

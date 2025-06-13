@@ -41,7 +41,11 @@
         <div class="metrics my-3 flex justify-between gap-4">
           <span> {{ 'task.time-taken' | translate }}:</span>
           <span class="font-normal">
-            {{ (job.result.finishTs - job.result.startTs) | milliSecondsToTimeString: true: true }}
+            @if (timeTaken >= 1000) {
+              {{ timeTaken | milliSecondsToTimeString: true: true }}
+            } @else {
+              {{ 'timewindow.short.milliseconds' | translate: {milliseconds: timeTaken} }}
+            }
           </span>
         </div>
         <mat-divider></mat-divider>
@@ -72,7 +76,7 @@
           @for (error of errors; track error.detailsUrl) {
             <tr>
               <td class="tb-entity-type">{{ error.typeName }}</td>
-              <td class="tb-entity-name">
+              <td class="tb-entity-name" tbTruncateWithTooltip>
                 <a class="tb-reference" [routerLink]="error.detailsUrl">{{ error.entityName }}</a>
               </td>
               <td>
@@ -98,7 +102,7 @@
       {{ 'action.close' | translate }}
     </button>
     <button mat-raised-button
-            *ngIf="job.status === JobStatus.FAILED && hasWritePermission"
+            *ngIf="job.status === JobStatus.FAILED && hasWritePermission && job.result.failedCount <= 100"
             color="primary"
             type="button"
             (click)="reprocess()">

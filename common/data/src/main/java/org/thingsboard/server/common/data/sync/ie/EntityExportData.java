@@ -57,6 +57,7 @@ import java.util.Map;
         @Type(name = "RULE_CHAIN", value = RuleChainExportData.class),
         @Type(name = "WIDGET_TYPE", value = WidgetTypeExportData.class),
         @Type(name = "WIDGETS_BUNDLE", value = WidgetsBundleExportData.class),
+        @Type(name = "OTA_PACKAGE", value = OtaPackageExportData.class),
         @Type(name = "ENTITY_GROUP", value = EntityGroupExportData.class),
         @Type(name = "ASSET", value = GroupEntityExportData.class),
         @Type(name = "DASHBOARD", value = GroupEntityExportData.class),

@@ -137,8 +137,9 @@ public abstract class AbstractIntegrationTest extends AbstractContainerTest {
             if (integration.getDownlinkConverterId() != null) {
                 testRestClient.deleteConverter(integration.getDownlinkConverterId());
             }
-            if (secret.getId() != null) {
+            if (secret != null) {
                 testRestClient.deleteSecret(secret.getId());
+                secret = null;
             }
         }
     }
