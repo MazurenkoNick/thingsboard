@@ -209,14 +209,14 @@ public class SchedulerEventController extends BaseController {
         accessControlService.checkPermission(getCurrentUser(), Resource.SCHEDULER_EVENT, Operation.READ);
         TenantId tenantId = getCurrentUser().getTenantId();
         if (Authority.TENANT_ADMIN.equals(getCurrentUser().getAuthority())) {
-            if (type != null && type.trim().length() > 0) {
+            if (type != null && !type.trim().isEmpty()) {
                 return checkNotNull(schedulerEventService.findSchedulerEventsByTenantIdAndType(tenantId, type));
             } else {
                 return checkNotNull(schedulerEventService.findSchedulerEventsWithCustomerInfoByTenantId(tenantId));
             }
         } else { //CUSTOMER_USER
             CustomerId customerId = getCurrentUser().getCustomerId();
-            if (type != null && type.trim().length() > 0) {
+            if (type != null && !type.trim().isEmpty()) {
                 return checkNotNull(schedulerEventService.findSchedulerEventsByTenantIdAndCustomerIdAndType(tenantId, customerId, type));
             } else {
                 return checkNotNull(schedulerEventService.findSchedulerEventsByTenantIdAndCustomerId(tenantId, customerId));
@@ -279,7 +279,7 @@ public class SchedulerEventController extends BaseController {
         SchedulerEventId schedulerEventId = new SchedulerEventId(toUUID(strSchedulerEventId));
         checkSchedulerEventId(schedulerEventId, Operation.READ);
 
-         return tbSchedulerService.assignToEdge(schedulerEventId, edge, getCurrentUser());
+        return tbSchedulerService.assignToEdge(schedulerEventId, edge, getCurrentUser());
     }
 
     @ApiOperation(value = "Unassign scheduler event from edge (unassignSchedulerEventFromEdge)",
@@ -352,7 +352,7 @@ public class SchedulerEventController extends BaseController {
         PageData<SchedulerEventInfo> pageData;
         do {
             pageData = schedulerEventService.findSchedulerEventInfosByTenantIdAndEdgeId(tenantId, edgeId, pageLink);
-            if (pageData.getData().size() > 0) {
+            if (!pageData.getData().isEmpty()) {
                 result.addAll(pageData.getData());
                 if (pageData.hasNext()) {
                     pageLink = pageLink.nextPageLink();
@@ -361,4 +361,5 @@ public class SchedulerEventController extends BaseController {
         } while (pageData.hasNext());
         return checkNotNull(result);
     }
+
 }

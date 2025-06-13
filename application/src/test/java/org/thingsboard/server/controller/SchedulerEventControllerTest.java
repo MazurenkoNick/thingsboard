@@ -53,7 +53,6 @@ import org.thingsboard.server.dao.service.DaoSqlTest;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -145,7 +144,7 @@ public class SchedulerEventControllerTest extends AbstractControllerTest {
         do {
             pageData = doGetTypedWithPageLink("/api/edge/" + savedEdge.getId().getId() + "/schedulerEvents?",
                     new TypeReference<>() {}, pageLink);
-            loadedEdgeSchedulerEvents.addAll(pageData.getData().stream().map(IdBased::getId).collect(Collectors.toList()));
+            loadedEdgeSchedulerEvents.addAll(pageData.getData().stream().map(IdBased::getId).toList());
             if (pageData.hasNext()) {
                 pageLink = pageLink.nextPageLink();
             }
@@ -178,4 +177,5 @@ public class SchedulerEventControllerTest extends AbstractControllerTest {
         schedulerEvent.setSchedule(schedule);
         return schedulerEvent;
     }
+
 }
