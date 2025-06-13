@@ -205,7 +205,11 @@ export class DateFormatSelectComponent implements OnInit, ControlValueAccessor {
       dateFormatSettingsPanelPopover.tbComponentRef.instance.dateFormatApplied.subscribe((dateFormat) => {
         dateFormatSettingsPanelPopover.hide();
         this.modelValue = dateFormat;
-        this.propagateChange(this.modelValue);
+        if (this.asStringFormat) {
+          this.propagateChange(this.modelValue.format);
+        } else {
+          this.propagateChange(this.modelValue);
+        }
       });
     }
   }
