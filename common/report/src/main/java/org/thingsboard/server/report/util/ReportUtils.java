@@ -44,11 +44,15 @@ import org.thingsboard.server.common.data.report.configuration.components.AlarmT
 import org.thingsboard.server.common.data.report.configuration.components.DataReportComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponentType;
+import org.thingsboard.server.common.data.report.configuration.style.Heading;
+import org.thingsboard.server.report.context.ComponentData;
 
 import java.text.SimpleDateFormat;
 import java.util.Base64;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.TimeZone;
 import java.util.regex.Matcher;
@@ -162,6 +166,24 @@ public class ReportUtils {
         entityLabel.ifPresent(s -> stateParams.put("entityLabel", s));
         String newStateJsonStr = JacksonUtil.toString(stateObj);
         return new String(Base64.getEncoder().encode(newStateJsonStr.getBytes()));
+    }
+
+    public static String tableHeadingText(Heading tableHeading, ComponentData reportDataSource) {
+        Map<String, Object> tableHeadingVariables = new HashMap<>();
+        String entityName = "";
+        String entityLabel = "";
+        Integer rowCount = 0;
+        List<Map<String, String>> entityDatas = reportDataSource.getEntityDatas();
+        if (!entityDatas.isEmpty()) {
+            rowCount = entityDatas.size();
+            Map<String, String> row = entityDatas.get(0);
+            entityName = row.get("entityName");
+            entityLabel = row.get("entityLabel");
+        }
+        tableHeadingVariables.put("entityName", entityName);
+        tableHeadingVariables.put("entityLabel", entityLabel);
+        tableHeadingVariables.put("rowCount", String.valueOf(rowCount));
+        return ThymeleafUtil.renderFromHtmlString(tableHeading.getText(), tableHeadingVariables);
     }
 
 }

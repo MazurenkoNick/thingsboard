@@ -245,6 +245,9 @@ public abstract class AbstractReportService implements ReportService {
         List<TsKvEntry> result = dataService.getTimeseries(entity.getEntityId(), keys, timeRange.startTs, timeRange.endTs,
                 historyConf.getInterval(), timeWindowConf.getAggregation().getType(), SortOrder.Direction.DESC,
                 timeWindowConf.getAggregation().getLimit(), false, ctx);
+        if (result.isEmpty()) {
+            return List.of(toStringMap(entity, ctx));
+        }
         SortOrder sortOrder = SortOrder.of("rawTs", SortOrder.Direction.DESC);
         return collectTsData(keys, entity, result, component.isShowTimestamp(), component.getTimestampPattern(), sortOrder, ctx);
     }

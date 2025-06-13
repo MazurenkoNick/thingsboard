@@ -67,6 +67,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.thingsboard.server.report.util.ReportUtils.getSingleDataSource;
+import static org.thingsboard.server.report.util.ReportUtils.tableHeadingText;
 
 @Slf4j
 public abstract class TableWithLayoutComponentRenderer<C extends TableWithLayoutReportComponent> extends ReportComponentWithLayoutRenderer<C> {
@@ -77,24 +78,6 @@ public abstract class TableWithLayoutComponentRenderer<C extends TableWithLayout
 
     protected String noDataMessage() {
         return "Table content is empty";
-    }
-
-    protected String headingText(Heading tableHeading, ComponentData reportDataSource) {
-        Map<String, Object> tableHeadingVariables = new HashMap<>();
-        String entityName = "";
-        String entityLabel = "";
-        Integer rowCount = 0;
-        List<Map<String, String>> entityDatas = reportDataSource.getEntityDatas();
-        if (!entityDatas.isEmpty()) {
-            rowCount = entityDatas.size();
-            Map<String, String> row = entityDatas.get(0);
-            entityName = row.get("entityName");
-            entityLabel = row.get("entityLabel");
-        }
-        tableHeadingVariables.put("entityName", entityName);
-        tableHeadingVariables.put("entityLabel", entityLabel);
-        tableHeadingVariables.put("rowCount", String.valueOf(rowCount));
-        return ThymeleafUtil.renderFromHtmlString(tableHeading.getText(), tableHeadingVariables);
     }
 
     @Override
@@ -148,7 +131,7 @@ public abstract class TableWithLayoutComponentRenderer<C extends TableWithLayout
         if (component.isShowTableHeading() && component.getTableHeading() != null) {
             componentVariables.put("showTableHeading", true);
             Heading tableHeading = component.getTableHeading();
-            String headingText = headingText(tableHeading, reportDataSource);
+            String headingText = tableHeadingText(tableHeading, reportDataSource);
             componentVariables.put("headingText", headingText);
             this.formatTableHeading(tableHeading, componentVariables);
         } else {

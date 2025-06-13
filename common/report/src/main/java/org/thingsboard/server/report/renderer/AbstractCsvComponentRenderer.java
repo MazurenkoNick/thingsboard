@@ -35,7 +35,6 @@ import org.thingsboard.server.common.data.report.configuration.DataSource;
 import org.thingsboard.server.common.data.report.configuration.components.TableReportComponent;
 import org.thingsboard.server.common.data.report.configuration.style.Heading;
 import org.thingsboard.server.report.context.ComponentData;
-import org.thingsboard.server.report.util.ThymeleafUtil;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -46,6 +45,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static org.thingsboard.server.report.util.ReportUtils.getSingleDataSource;
+import static org.thingsboard.server.report.util.ReportUtils.tableHeadingText;
 
 public abstract class AbstractCsvComponentRenderer<C extends TableReportComponent> implements CsvReportComponentRenderer<C> {
 
@@ -92,7 +92,7 @@ public abstract class AbstractCsvComponentRenderer<C extends TableReportComponen
     protected void addOptionalHeading(TableReportComponent component, ComponentData reportDataSource, List<List<String>> content) {
         if (component.isShowTableHeading() && component.getTableHeading() != null) {
             Heading tableHeading = component.getTableHeading();
-            String headingText = ThymeleafUtil.renderFromHtmlString(tableHeading.getText(), reportDataSource.getVariables());
+            String headingText = tableHeadingText(tableHeading, reportDataSource);
             content.add(List.of(headingText));
         }
     }
