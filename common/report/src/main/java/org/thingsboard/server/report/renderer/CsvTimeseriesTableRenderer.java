@@ -31,6 +31,7 @@
 package org.thingsboard.server.report.renderer;
 
 import org.springframework.stereotype.Component;
+import org.thingsboard.server.common.data.report.configuration.DataKey;
 import org.thingsboard.server.common.data.report.configuration.DataSource;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponentType;
 import org.thingsboard.server.common.data.report.configuration.components.TimeseriesTableComponent;
@@ -56,8 +57,8 @@ public class CsvTimeseriesTableRenderer extends AbstractCsvComponentRenderer<Tim
 
         DataSource dataSource = dataSourceOpt.get();
 
-        Map<String, String> labelToLatestKey = buildLabelToKeyMap(dataSource.getLatestDataKeys());
-        Map<String, String> labelToKey = buildLabelToKeyMap(dataSource.getDataKeys());
+        Map<String, DataKey> labelToLatestKey = buildLabelToDataKeyMap(dataSource.getLatestDataKeys());
+        Map<String, DataKey> labelToKey = buildLabelToDataKeyMap(dataSource.getDataKeys());
 
         List<List<String>> content = new ArrayList<>();
 

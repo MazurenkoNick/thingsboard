@@ -52,8 +52,6 @@ import org.thingsboard.server.report.context.ComponentData;
 import org.thingsboard.server.report.util.ColorUtils;
 import org.thingsboard.server.report.util.ThymeleafUtil;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -66,7 +64,9 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static org.thingsboard.server.report.util.ReportUtils.formatNumericValue;
 import static org.thingsboard.server.report.util.ReportUtils.getSingleDataSource;
+import static org.thingsboard.server.report.util.ReportUtils.tableHeadingText;
 
 @Slf4j
 public abstract class TableWithLayoutComponentRenderer<C extends TableWithLayoutReportComponent> extends ReportComponentWithLayoutRenderer<C> {
@@ -77,24 +77,6 @@ public abstract class TableWithLayoutComponentRenderer<C extends TableWithLayout
 
     protected String noDataMessage() {
         return "Table content is empty";
-    }
-
-    protected String headingText(Heading tableHeading, ComponentData reportDataSource) {
-        Map<String, Object> tableHeadingVariables = new HashMap<>();
-        String entityName = "";
-        String entityLabel = "";
-        Integer rowCount = 0;
-        List<Map<String, String>> entityDatas = reportDataSource.getEntityDatas();
-        if (!entityDatas.isEmpty()) {
-            rowCount = entityDatas.size();
-            Map<String, String> row = entityDatas.get(0);
-            entityName = row.get("entityName");
-            entityLabel = row.get("entityLabel");
-        }
-        tableHeadingVariables.put("entityName", entityName);
-        tableHeadingVariables.put("entityLabel", entityLabel);
-        tableHeadingVariables.put("rowCount", String.valueOf(rowCount));
-        return ThymeleafUtil.renderFromHtmlString(tableHeading.getText(), tableHeadingVariables);
     }
 
     @Override
@@ -148,7 +130,7 @@ public abstract class TableWithLayoutComponentRenderer<C extends TableWithLayout
         if (component.isShowTableHeading() && component.getTableHeading() != null) {
             componentVariables.put("showTableHeading", true);
             Heading tableHeading = component.getTableHeading();
-            String headingText = headingText(tableHeading, reportDataSource);
+            String headingText = tableHeadingText(tableHeading, reportDataSource);
             componentVariables.put("headingText", headingText);
             this.formatTableHeading(tableHeading, componentVariables);
         } else {
@@ -215,20 +197,8 @@ public abstract class TableWithLayoutComponentRenderer<C extends TableWithLayout
         if (value == null || value.isBlank()) {
             return "";
         }
-        if (dataKey != null) {
-            try {
-                if (dataKey.getDecimals() != null) {
-                    BigDecimal decimal = new BigDecimal(value);
-                    value = decimal.setScale(dataKey.getDecimals(), RoundingMode.HALF_UP).toPlainString();
-                }
-            } catch (NumberFormatException | ArithmeticException e) {
-                log.warn("Failed to format value for data key '{}': {}", dataKey.getName(), e.getMessage());
-            }
-
-            if (dataKey.getUnits() != null) {
-                value += dataKey.getUnits();
-            }
-            return value;
+        if (dataKey.getDecimals() != null || dataKey.getUnits() != null) {
+            return formatNumericValue(value, dataKey);
         }
         return defaultValue(key, value);
     }

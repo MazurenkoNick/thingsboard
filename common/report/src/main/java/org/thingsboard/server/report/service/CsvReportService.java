@@ -32,25 +32,27 @@ package org.thingsboard.server.report.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.thingsboard.server.common.data.id.ReportTemplateId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.job.task.ReportTask;
 import org.thingsboard.server.common.data.query.EntityData;
 import org.thingsboard.server.common.data.report.ReportData;
+import org.thingsboard.server.common.data.report.ReportTemplate;
 import org.thingsboard.server.common.data.report.TbReportFormat;
 import org.thingsboard.server.common.data.report.configuration.CsvReportTemplateConfig;
-import org.thingsboard.server.common.data.report.configuration.DataKey;
 import org.thingsboard.server.common.data.report.configuration.DataSource;
 import org.thingsboard.server.common.data.report.configuration.components.AlarmTableComponent;
 import org.thingsboard.server.common.data.report.configuration.components.EntityTableComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponentType;
+import org.thingsboard.server.common.data.report.configuration.components.SubReportComponent;
 import org.thingsboard.server.common.data.report.configuration.components.TableReportComponent;
 import org.thingsboard.server.common.data.report.configuration.components.TimeseriesTableComponent;
 import org.thingsboard.server.report.context.ComponentData;
 import org.thingsboard.server.report.context.TbReportCtx;
 import org.thingsboard.server.report.renderer.CsvReportComponentRenderer;
 
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -85,7 +87,7 @@ public class CsvReportService extends AbstractReportService {
         log.trace("[{}] Executing generateReport, reportRequest [{}]", tenantId, task);
         CsvReportTemplateConfig configuration = (CsvReportTemplateConfig) task.getReportTemplateConfig();
 
-        List<List<String>> content = renderContent(ctx, configuration.getComponents());
+        List<List<String>> content = renderContent(ctx, configuration.getComponents(), null);
         byte[] csvBytes = generateCsv(content);
 
         String requestTimeZone = task.getTimezone();
@@ -99,12 +101,13 @@ public class CsvReportService extends AbstractReportService {
                 .build();
     }
 
-    private List<List<String>> renderContent(TbReportCtx ctx, List<ReportComponent> components) {
+    private List<List<String>> renderContent(TbReportCtx ctx, List<ReportComponent> components, EntityData stateEntity) {
         List<List<String>> content = new LinkedList<>();
         for (ReportComponent component : components) {
             switch (component.getType()) {
-                case TIME_SERIES_TABLE -> content.addAll(renderTimeseriesTables(ctx, (TableReportComponent) component));
-                case ALARM_TABLE, ENTITY_TABLE -> content.addAll(renderTableComponent(ctx, (TableReportComponent) component, null));
+                case SUB_REPORT -> content.addAll(renderSubreport(ctx, (SubReportComponent) component));
+                case TIME_SERIES_TABLE -> content.addAll(renderTimeseriesTables(ctx, (TableReportComponent) component, stateEntity));
+                case ALARM_TABLE, ENTITY_TABLE -> content.addAll(renderTableComponent(ctx, (TableReportComponent) component, stateEntity));
                 default -> throw new IllegalArgumentException("Unsupported component type: " + component.getType());
             }
         }
@@ -121,7 +124,39 @@ public class CsvReportService extends AbstractReportService {
         }
     }
 
-    private List<List<String>> renderTimeseriesTables(TbReportCtx ctx, TableReportComponent component) {
+    private List<List<String>> renderSubreport(TbReportCtx ctx, SubReportComponent subReportComponent) {
+        ReportTemplateId templateId = subReportComponent.getTemplateId();
+        if (templateId == null) {
+            return List.of(List.of("Report template id is not configured for Subreport"));
+        }
+        List<List<String>> content = new LinkedList<>();
+        try {
+            Optional<DataSource> dataSource = getSingleDataSource(subReportComponent);
+            ReportTemplate reportTemplate = dataService.findReportTemplate(templateId, ctx);
+            if (reportTemplate == null) {
+                return List.of(List.of("Template with id " + templateId + " not found. Please check the configuration."));
+            }
+            CsvReportTemplateConfig reportConfiguration = (CsvReportTemplateConfig) reportTemplate.getConfiguration();
+
+            TbReportCtx subReportCtx = ctx.createSubReportCxt(reportConfiguration);
+            List<EntityData> entityDatas;
+            if (dataSource.isEmpty()) {
+                entityDatas = new ArrayList<>();
+                entityDatas.add(null);
+            } else {
+                entityDatas = fetchEntities(ctx, dataSource.get(), null);
+            }
+            for (EntityData entity : entityDatas) {
+                content.addAll(renderContent(subReportCtx, reportConfiguration.getComponents(), entity));
+            }
+            return content;
+        } catch (Exception e) {
+            log.error("Failed to render Subreport, template id: {}", templateId, e);
+            return List.of(List.of("Failed to render sub-report " + templateId + ": " + e.getMessage()));
+        }
+    }
+
+    private List<List<String>> renderTimeseriesTables(TbReportCtx ctx, TableReportComponent component, EntityData entityData) {
         List<List<String>> content = new LinkedList<>();
         Optional<DataSource> dataSource = getSingleDataSource(component);
         if (dataSource.isEmpty()) {
@@ -150,7 +185,7 @@ public class CsvReportService extends AbstractReportService {
             case TIME_SERIES_TABLE ->
                     new ComponentData(0, fetchEntityTsData(ctx, (TimeseriesTableComponent) component, stateEntity));
             case ALARM_TABLE -> new ComponentData(0, fetchAlarmDatas(ctx, (AlarmTableComponent) component));
-            case ENTITY_TABLE -> new ComponentData(0, fetchEntityTableData(ctx, (EntityTableComponent) component, null));
+            case ENTITY_TABLE -> new ComponentData(0, fetchEntityTableData(ctx, (EntityTableComponent) component, stateEntity));
             default -> throw new IllegalArgumentException("Unsupported component type: " + component.getType());
         };
     }

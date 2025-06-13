@@ -34,6 +34,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.NullNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import lombok.extern.slf4j.Slf4j;
 import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.query.EntityData;
@@ -44,11 +45,17 @@ import org.thingsboard.server.common.data.report.configuration.components.AlarmT
 import org.thingsboard.server.common.data.report.configuration.components.DataReportComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponentType;
+import org.thingsboard.server.common.data.report.configuration.style.Heading;
+import org.thingsboard.server.report.context.ComponentData;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.text.SimpleDateFormat;
 import java.util.Base64;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.TimeZone;
 import java.util.regex.Matcher;
@@ -56,6 +63,7 @@ import java.util.regex.Pattern;
 
 import static org.thingsboard.server.common.data.util.DataSourceUtils.getEntityLatestValue;
 
+@Slf4j
 public class ReportUtils {
 
     public static final Pattern REPORT_NAME_DATE_PATTERN = Pattern.compile("%d\\{([^\\}]*)\\}");
@@ -162,6 +170,42 @@ public class ReportUtils {
         entityLabel.ifPresent(s -> stateParams.put("entityLabel", s));
         String newStateJsonStr = JacksonUtil.toString(stateObj);
         return new String(Base64.getEncoder().encode(newStateJsonStr.getBytes()));
+    }
+
+    public static String tableHeadingText(Heading tableHeading, ComponentData reportDataSource) {
+        Map<String, Object> tableHeadingVariables = new HashMap<>();
+        String entityName = "";
+        String entityLabel = "";
+        Integer rowCount = 0;
+        List<Map<String, String>> entityDatas = reportDataSource.getEntityDatas();
+        if (!entityDatas.isEmpty()) {
+            rowCount = entityDatas.size();
+            Map<String, String> row = entityDatas.get(0);
+            entityName = row.get("entityName");
+            entityLabel = row.get("entityLabel");
+        }
+        tableHeadingVariables.put("entityName", entityName);
+        tableHeadingVariables.put("entityLabel", entityLabel);
+        tableHeadingVariables.put("rowCount", String.valueOf(rowCount));
+        return ThymeleafUtil.renderFromHtmlString(tableHeading.getText(), tableHeadingVariables);
+    }
+
+    public static String formatNumericValue(String value, DataKey dataKey) {
+        if (value == null || value.isBlank()) {
+            return "";
+        }
+        try {
+            if (dataKey.getDecimals() != null) {
+                BigDecimal decimal = new BigDecimal(value);
+                value = decimal.setScale(dataKey.getDecimals(), RoundingMode.HALF_UP).toPlainString();
+            }
+        } catch (NumberFormatException | ArithmeticException e) {
+            log.warn("Failed to format value for data key '{}': {}", dataKey.getName(), e.getMessage());
+        }
+        if (dataKey.getUnits() != null) {
+            value += dataKey.getUnits();
+        }
+        return value;
     }
 
 }
