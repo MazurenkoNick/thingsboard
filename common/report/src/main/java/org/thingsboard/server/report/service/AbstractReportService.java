@@ -35,7 +35,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.server.common.data.StringUtils;
-import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.kv.TsKvEntry;
 import org.thingsboard.server.common.data.page.PageDataIterable;
 import org.thingsboard.server.common.data.page.PageLink;
@@ -43,13 +42,7 @@ import org.thingsboard.server.common.data.page.SortOrder;
 import org.thingsboard.server.common.data.query.AlarmData;
 import org.thingsboard.server.common.data.query.EntityData;
 import org.thingsboard.server.common.data.query.EntityDataQuery;
-import org.thingsboard.server.common.data.query.EntityFilter;
 import org.thingsboard.server.common.data.query.EntityKeyType;
-import org.thingsboard.server.common.data.query.EntitySearchQueryFilter;
-import org.thingsboard.server.common.data.query.KeyFilter;
-import org.thingsboard.server.common.data.query.SingleEntityFilter;
-import org.thingsboard.server.common.data.query.StateEntityFilter;
-import org.thingsboard.server.common.data.query.StateEntityOwnerFilter;
 import org.thingsboard.server.common.data.report.configuration.DataKey;
 import org.thingsboard.server.common.data.report.configuration.DataSource;
 import org.thingsboard.server.common.data.report.configuration.ReportTemplateConfig;
@@ -81,9 +74,6 @@ import static org.thingsboard.server.common.data.report.configuration.timewindow
 import static org.thingsboard.server.common.data.util.DataSourceUtils.getAlarmLatestValue;
 import static org.thingsboard.server.common.data.util.DataSourceUtils.getEntityLatestValue;
 import static org.thingsboard.server.common.data.util.ReportQueryUtils.buildEntityDataQuery;
-import static org.thingsboard.server.common.data.util.ReportQueryUtils.findEntityFilterByAliasId;
-import static org.thingsboard.server.common.data.util.ReportQueryUtils.findKeyFilters;
-import static org.thingsboard.server.common.data.util.ReportQueryUtils.singleDeviceFilter;
 import static org.thingsboard.server.common.data.util.ReportQueryUtils.toAlarmCountQuery;
 import static org.thingsboard.server.common.data.util.ReportQueryUtils.toAlarmDataQuery;
 import static org.thingsboard.server.common.data.util.ReportQueryUtils.toEntityCountQuery;
@@ -98,7 +88,7 @@ public abstract class AbstractReportService implements ReportService {
     protected ComponentData buildSingleComponentData(int usablePageWidthPx, TbReportCtx ctx, DataSource dataSource, EntityData stateEntity) {
         ReportTemplateConfig configuration = ctx.getConfiguration();
         return switch (dataSource.getType()) {
-            case "device", "entity" -> new ComponentData(usablePageWidthPx, dataSource, fetchEntityDatas(ctx, dataSource, stateEntity));
+            case "device", "entity" -> new ComponentData(usablePageWidthPx, dataSource, collectEntityDatas(ctx, dataSource, stateEntity));
             case "entityCount" -> buildEntityCountDataSource(usablePageWidthPx, ctx, dataSource, configuration);
             case "alarmCount" -> buildAlarmCountDataSource(usablePageWidthPx, ctx, dataSource, configuration);
             default -> throw new IllegalArgumentException("Unknown data source type: " + dataSource.getType());
@@ -132,78 +122,10 @@ public abstract class AbstractReportService implements ReportService {
     }
 
     protected List<EntityData> fetchEntities(TbReportCtx ctx, DataSource dataSource, EntityData stateEntity) {
-        return switch (dataSource.getType()) {
-            case "device" -> fetchDevice(ctx, dataSource);
-            case "entity" -> fetchEntitiesByDataSource(ctx, dataSource, stateEntity);
-            default -> throw new IllegalArgumentException("Unknown data source type: " + dataSource.getType());
-        };
-    }
-
-    private List<EntityData> fetchEntitiesByDataSource(TbReportCtx ctx, DataSource dataSource, EntityData stateEntity) {
         if (dataSource.getEntityAliasId() == null) {
             return Collections.emptyList();
         } else {
-            EntityFilter entityFilter = findEntityFilterByAliasId(dataSource, ctx.getConfiguration());
-            List<KeyFilter> keyFilters = findKeyFilters(dataSource, ctx.getConfiguration());
-
-            if (entityFilter instanceof StateEntityFilter stateFilter) {
-                return fetchStateEntity(stateFilter, dataSource, keyFilters, stateEntity, ctx);
-            }
-            if (entityFilter instanceof StateEntityOwnerFilter ownerFilter) {
-                return fetchStateEntityOwner(ownerFilter, dataSource, keyFilters, stateEntity, ctx);
-            }
-            if (entityFilter instanceof EntitySearchQueryFilter searchFilter && searchFilter.isRootStateEntity()) {
-                return fetchSearchQueryEntities(searchFilter, dataSource, keyFilters, stateEntity, ctx);
-            }
-            return fetchEntityDataByQuery(pageLink -> buildEntityDataQuery(entityFilter, dataSource, keyFilters, pageLink), ctx);
-        }
-    }
-
-    private List<EntityData> fetchSearchQueryEntities(EntitySearchQueryFilter entityFilter, DataSource dataSource, List<KeyFilter> keyFilters, EntityData stateEntity, TbReportCtx ctx) {
-        EntityId entityId = (stateEntity != null)
-                ? stateEntity.getEntityId()
-                : entityFilter.getDefaultStateEntity();
-        if (entityId == null) {
-            return Collections.emptyList();
-        }
-        entityFilter.setRootEntity(entityId);
-        return fetchEntityDataByQuery(pageLink -> buildEntityDataQuery(entityFilter, dataSource, keyFilters, pageLink), ctx);
-    }
-
-    private List<EntityData> fetchStateEntity(StateEntityFilter stateEntityFilter, DataSource dataSource, List<KeyFilter> keyFilters, EntityData stateEntity, TbReportCtx ctx) {
-        EntityId entityId = (stateEntity != null)
-                ? stateEntity.getEntityId()
-                : stateEntityFilter.getDefaultStateEntity();
-
-        if (entityId == null) {
-            return Collections.emptyList();
-        }
-        SingleEntityFilter singleEntityFilter = new SingleEntityFilter();
-        singleEntityFilter.setSingleEntity(entityId);
-        return fetchEntityDataByQuery(pageLink -> buildEntityDataQuery(singleEntityFilter, dataSource, keyFilters, pageLink), ctx);
-    }
-
-    private List<EntityData> fetchStateEntityOwner(StateEntityOwnerFilter ownerFilter, DataSource dataSource, List<KeyFilter> keyFilters, EntityData stateEntity, TbReportCtx ctx) {
-        EntityId entityId = (stateEntity != null)
-                ? stateEntity.getEntityId()
-                : ownerFilter.getDefaultStateEntity();
-
-        if (entityId == null) {
-            return Collections.emptyList();
-        }
-        StateEntityOwnerFilter stateEntityOwnerFilter = new StateEntityOwnerFilter();
-        stateEntityOwnerFilter.setSingleEntity(entityId);
-        return fetchEntityDataByQuery(pageLink -> buildEntityDataQuery(stateEntityOwnerFilter, dataSource, keyFilters, pageLink), ctx);
-    }
-
-    private List<EntityData> fetchDevice(TbReportCtx ctx, DataSource dataSource) {
-        ReportTemplateConfig configuration = ctx.getConfiguration();
-        if (dataSource.getDeviceId() == null) {
-            return Collections.emptyList();
-        } else {
-            EntityFilter entityFilter = singleDeviceFilter(dataSource);
-            List<KeyFilter> keyFilters = findKeyFilters(dataSource, configuration);
-            return fetchEntityDataByQuery(pageLink -> buildEntityDataQuery(entityFilter, dataSource, keyFilters, pageLink), ctx);
+            return fetchEntityDataByQuery(pageLink -> buildEntityDataQuery(dataSource, ctx.getConfiguration(), stateEntity, pageLink), ctx);
         }
     }
 
@@ -215,7 +137,7 @@ public abstract class AbstractReportService implements ReportService {
         return data;
     }
 
-    protected List<Map<String, String>> fetchEntityDatas(TbReportCtx ctx, DataSource dataSource, EntityData stateEntity) {
+    protected List<Map<String, String>> collectEntityDatas(TbReportCtx ctx, DataSource dataSource, EntityData stateEntity) {
         return switch (dataSource.getType()) {
             case "device", "entity" -> fetchEntities(ctx, dataSource, stateEntity).stream().map(entityData -> toStringMap(entityData, ctx)).collect(Collectors.toList());
             default -> throw new IllegalArgumentException("Unknown data source type: " + dataSource.getType());
@@ -227,7 +149,7 @@ public abstract class AbstractReportService implements ReportService {
         if (singleDataSource.isEmpty()) {
             return Collections.emptyList();
         }
-        return fetchEntityDatas(ctx, singleDataSource.get(), stateEntity);
+        return collectEntityDatas(ctx, singleDataSource.get(), stateEntity);
     }
 
     protected List<Map<String, String>> fetchEntityTsData(TbReportCtx ctx, TimeseriesTableComponent component, EntityData entity) {
@@ -254,7 +176,7 @@ public abstract class AbstractReportService implements ReportService {
         return collectTsData(keys, entity, result, component.isShowTimestamp(), component.getTimestampPattern(), sortOrder, ctx);
     }
 
-    protected List<Map<String, String>> fetchAlarmDatas(TbReportCtx ctx, AlarmTableComponent component) {
+    protected List<Map<String, String>> fetchAlarmDatas(TbReportCtx ctx, AlarmTableComponent component, EntityData stateEntity) {
         DataSource alarmSource = component.getAlarmSource();
         if (alarmSource == null) {
             return Collections.emptyList();
@@ -275,7 +197,7 @@ public abstract class AbstractReportService implements ReportService {
         }
         List<String> alarmKeys = alarmSource.getDataKeys().stream().filter(dataKey -> dataKey.getType().equals("alarm")).map(DataKey::getName).toList();
         List<Map<String, String>> data = new ArrayList<>();
-        for (AlarmData alarmData : new PageDataIterable<>(link -> dataService.findAlarmDataByQuery(toAlarmDataQuery(component, ctx.getConfiguration(), link), ctx), 1024)) {
+        for (AlarmData alarmData : new PageDataIterable<>(link -> dataService.findAlarmDataByQuery(toAlarmDataQuery(component, ctx.getConfiguration(), stateEntity, link), ctx), 1024)) {
             data.add(toStringMap(alarmData, alarmKeys, ctx));
         }
         return data;

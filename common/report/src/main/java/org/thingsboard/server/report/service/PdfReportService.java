@@ -205,7 +205,7 @@ public class PdfReportService extends AbstractReportService {
         return switch (component.getType()) {
             case TIME_SERIES_TABLE ->
                     new ComponentData(usablePageWidthPx, fetchEntityTsData(ctx, (TimeseriesTableComponent) component, stateEntity));
-            case ALARM_TABLE -> new ComponentData(usablePageWidthPx, fetchAlarmDatas(ctx, (AlarmTableComponent) component));
+            case ALARM_TABLE -> new ComponentData(usablePageWidthPx, fetchAlarmDatas(ctx, (AlarmTableComponent) component, stateEntity));
             case DASHBOARD -> buildDashboardComponentData(usablePageWidthPx, ctx, ((DashboardComponent) component), stateEntity);
             case IMAGE -> buildImageComponentData(usablePageWidthPx, ctx, ((ImageComponent) component));
             default -> buildMultipleDataSourceData(usablePageWidthPx, ctx, component, stateEntity);

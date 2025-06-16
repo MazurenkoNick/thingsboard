@@ -184,7 +184,7 @@ public class CsvReportService extends AbstractReportService {
         return switch (component.getType()) {
             case TIME_SERIES_TABLE ->
                     new ComponentData(0, fetchEntityTsData(ctx, (TimeseriesTableComponent) component, stateEntity));
-            case ALARM_TABLE -> new ComponentData(0, fetchAlarmDatas(ctx, (AlarmTableComponent) component));
+            case ALARM_TABLE -> new ComponentData(0, fetchAlarmDatas(ctx, (AlarmTableComponent) component, stateEntity));
             case ENTITY_TABLE -> new ComponentData(0, fetchEntityTableData(ctx, (EntityTableComponent) component, stateEntity));
             default -> throw new IllegalArgumentException("Unsupported component type: " + component.getType());
         };
