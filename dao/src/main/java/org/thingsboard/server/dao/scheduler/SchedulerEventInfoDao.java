@@ -35,6 +35,7 @@ import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.scheduler.SchedulerEventInfo;
 import org.thingsboard.server.common.data.scheduler.SchedulerEventWithCustomerInfo;
+import org.thingsboard.server.common.data.scheduler.SchedulerReportEventInfo;
 import org.thingsboard.server.dao.Dao;
 
 import java.util.List;
@@ -117,4 +118,5 @@ public interface SchedulerEventInfoDao extends Dao<SchedulerEventInfo> {
      */
     PageData<SchedulerEventInfo> findSchedulerEventInfosByTenantIdAndEdgeIdAndCustomerId(UUID tenantId, UUID edgeId, UUID customerId, PageLink pageLink);
 
+    PageData<SchedulerReportEventInfo> findSchedulerReportEvents(UUID tenantId, UUID customerId, PageLink pageLink);
 }

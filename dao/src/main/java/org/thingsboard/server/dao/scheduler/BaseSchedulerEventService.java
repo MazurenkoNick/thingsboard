@@ -50,6 +50,7 @@ import org.thingsboard.server.common.data.relation.RelationTypeGroup;
 import org.thingsboard.server.common.data.scheduler.SchedulerEvent;
 import org.thingsboard.server.common.data.scheduler.SchedulerEventInfo;
 import org.thingsboard.server.common.data.scheduler.SchedulerEventWithCustomerInfo;
+import org.thingsboard.server.common.data.scheduler.SchedulerReportEventInfo;
 import org.thingsboard.server.dao.edge.EdgeService;
 import org.thingsboard.server.dao.entity.AbstractEntityService;
 import org.thingsboard.server.dao.entity.EntityCountService;
@@ -277,6 +278,12 @@ public class BaseSchedulerEventService extends AbstractEntityService implements 
         Validator.validateId(edgeId, id -> "Incorrect edgeId " + id);
         Validator.validateId(customerId, id -> INCORRECT_CUSTOMER_ID + id);
         return schedulerEventInfoDao.findSchedulerEventInfosByTenantIdAndEdgeIdAndCustomerId(tenantId.getId(), edgeId.getId(),  customerId.getId(), pageLink);
+    }
+
+    @Override
+    public PageData<SchedulerReportEventInfo> findSchedulerReportEvents(TenantId tenantId, CustomerId customerId, PageLink pageLink) {
+        log.trace("Executing findSchedulerReportEvents, tenantId [{}], customerId [{}]", tenantId, customerId);
+        return schedulerEventInfoDao.findSchedulerReportEvents(tenantId.getId(), customerId.getId(), pageLink);
     }
 
     @Override

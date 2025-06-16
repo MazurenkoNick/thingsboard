@@ -37,6 +37,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.thingsboard.server.dao.model.sql.SchedulerEventInfoEntity;
 import org.thingsboard.server.dao.model.sql.SchedulerEventWithCustomerInfoEntity;
+import org.thingsboard.server.dao.model.sql.SchedulerReportEventInfoEntity;
 
 import java.util.List;
 import java.util.UUID;
@@ -106,4 +107,8 @@ public interface SchedulerEventInfoRepository extends JpaRepository<SchedulerEve
                                                                         @Param("searchText") String searchText,
                                                                         Pageable pageable);
 
+    @Query("SELECT sei FROM SchedulerReportEventInfoEntity sei WHERE sei.tenantId = :tenantId " +
+            "AND sei.customerId = :customerId " +
+            "AND (:searchText IS NULL OR ilike(sei.name, CONCAT('%', :searchText, '%')) = true)")
+    Page<SchedulerReportEventInfoEntity> findSchedulerReportEventInfo(UUID tenantId, UUID customerId, String searchText, Pageable pageable);
 }

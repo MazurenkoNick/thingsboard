@@ -571,3 +571,44 @@ BEGIN
         END LOOP;
 END
 $$;
+
+DROP VIEW IF EXISTS scheduler_report_event_info_view CASCADE;
+CREATE OR REPLACE VIEW scheduler_report_event_info_view AS
+SELECT
+    se.id,
+    se.created_time,
+    se.name,
+    se.additional_info,
+    se.tenant_id,
+    se.customer_id,
+    se.originator_id,
+    se.originator_type,
+    se.type,
+    se.schedule,
+    se.enabled,
+    json_build_object(
+            'id', se.customer_id,
+            'entityType', 'CUSTOMER',
+            'name', c.title
+        ) AS customer_info,
+    json_build_object(
+            'id', cfg.report_template_id,
+            'entityType', 'REPORT_TEMPLATE',
+            'name', rt.name
+        ) AS report_info,
+    json_build_object(
+            'id', cfg.user_id,
+            'entityType', 'USER',
+            'name', u.email
+        ) AS user_info
+FROM
+    scheduler_event se
+        LEFT JOIN LATERAL (
+        SELECT
+            (se.configuration::json #>>'{reportTemplateId,id}')::uuid AS report_template_id,
+            (se.configuration::json #>>'{userId,id}')::uuid AS user_id
+        ) cfg ON true
+        LEFT JOIN report_template rt ON rt.id = cfg.report_template_id
+        LEFT JOIN tb_user u ON u.id = cfg.user_id
+        LEFT JOIN customer c ON c.id = se.customer_id
+WHERE se.type = 'generateReport';

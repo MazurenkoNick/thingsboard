@@ -160,11 +160,10 @@ public class ReportQueryUtils {
     }
 
     private static EntityFilter buildEntityFilter(DataSource dataSource, ReportTemplateConfig config, EntityData stateEntity) {
-        return switch (dataSource.getType()) {
-            case "device" -> buildSingleEntityFilter(DeviceId.fromString(dataSource.getDeviceId()));
-            case "entity" -> buildAliasBasedFilter(dataSource, config, stateEntity);
-            default -> throw new IllegalArgumentException("Unknown data source type: " + dataSource.getType());
-        };
+        if (dataSource.getType().equals("device")) {
+            return buildSingleEntityFilter(DeviceId.fromString(dataSource.getDeviceId()));
+        }
+        return buildAliasBasedFilter(dataSource, config, stateEntity);
     }
 
     private static EntityFilter buildSingleEntityFilter(EntityId entityId) {
