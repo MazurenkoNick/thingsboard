@@ -73,7 +73,7 @@ import java.util.stream.Collectors;
 import static org.thingsboard.server.common.data.report.configuration.timewindow.TimeIntervalCalculator.getTimeRange;
 import static org.thingsboard.server.common.data.util.DataSourceUtils.getAlarmLatestValue;
 import static org.thingsboard.server.common.data.util.DataSourceUtils.getEntityLatestValue;
-import static org.thingsboard.server.common.data.util.ReportQueryUtils.buildEntityDataQuery;
+import static org.thingsboard.server.common.data.util.ReportQueryUtils.toEntityDataQuery;
 import static org.thingsboard.server.common.data.util.ReportQueryUtils.toAlarmCountQuery;
 import static org.thingsboard.server.common.data.util.ReportQueryUtils.toAlarmDataQuery;
 import static org.thingsboard.server.common.data.util.ReportQueryUtils.toEntityCountQuery;
@@ -125,7 +125,7 @@ public abstract class AbstractReportService implements ReportService {
         if (dataSource.getEntityAliasId() == null) {
             return Collections.emptyList();
         } else {
-            return fetchEntityDataByQuery(pageLink -> buildEntityDataQuery(dataSource, ctx.getConfiguration(), stateEntity, pageLink), ctx);
+            return fetchEntityDataByQuery(pageLink -> toEntityDataQuery(dataSource, ctx.getConfiguration(), stateEntity, pageLink), ctx);
         }
     }
 
@@ -327,13 +327,5 @@ public abstract class AbstractReportService implements ReportService {
         } catch (NumberFormatException e) {
             return "Invalid timestamp: " + timestampStr;
         }
-    }
-
-    protected String renderError(int usablePageWidthPx, String errorMessage) {
-        return renderError(usablePageWidthPx, errorMessage, null);
-    }
-
-    protected String renderError(int usablePageWidthPx, String errorMessage, Exception e) {
-        return "";
     }
 }

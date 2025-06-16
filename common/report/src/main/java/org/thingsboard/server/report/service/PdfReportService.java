@@ -292,11 +292,11 @@ public class PdfReportService extends AbstractReportService {
         }
     }
 
-    protected String renderError(int usablePageWidthPx, String errorMessage) {
+    private String renderError(int usablePageWidthPx, String errorMessage) {
         return renderError(usablePageWidthPx, errorMessage, null);
     }
 
-    protected String renderError(int usablePageWidthPx, String errorMessage, Exception e) {
+    private String renderError(int usablePageWidthPx, String errorMessage, Exception e) {
         return componentsRenderers.get(ERROR).render(new ErrorComponent(errorMessage, e), new ComponentData(usablePageWidthPx));
     }
 

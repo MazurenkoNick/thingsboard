@@ -130,7 +130,36 @@ public class ReportQueryUtils {
         return new AlarmDataQuery(entityFilter, alarmDataPageLink, entityFields, latestValues, keyFilters, alarmFields);
     }
 
-    public static EntityFilter buildEntityFilter(DataSource dataSource, ReportTemplateConfig config, EntityData stateEntity) {
+    public static EntityDataQuery toEntityDataQuery(DataSource dataSource, ReportTemplateConfig reportTemplateConfig, EntityData stateEntity, PageLink pageLink) {
+        EntityDataSortOrder sortOrder = Optional.ofNullable(dataSource.getSortOrder()).orElse(DEFAULT_SORT_ORDER);
+        EntityDataPageLink entityDataPageLink = new EntityDataPageLink(pageLink.getPageSize(), pageLink.getPage(), pageLink.getTextSearch(), sortOrder);
+
+        EntityFilter filter = buildEntityFilter(dataSource, reportTemplateConfig, stateEntity);
+        List<KeyFilter> keyFilters = findKeyFilters(dataSource, reportTemplateConfig);
+
+        List<EntityKey> entityFields = new ArrayList<>();
+        List<EntityKey> latestValues = new ArrayList<>();
+        if (dataSource.getDataKeys() != null) {
+            for (DataKey dataKey : dataSource.getDataKeys()) {
+                switch (dataKey.getType()) {
+                    case "attribute" -> {
+                        latestValues.add(new EntityKey(EntityKeyType.ATTRIBUTE, dataKey.getName()));
+                    }
+                    case "timeseries" -> {
+                        latestValues.add(new EntityKey(EntityKeyType.TIME_SERIES, dataKey.getName()));
+                    }
+                    case "entityField" -> {
+                        entityFields.add(new EntityKey(EntityKeyType.ENTITY_FIELD, dataKey.getName()));
+                    }
+                }
+            }
+        }
+        entityFields = setEntityKeyIfNotExists(entityFields, EntityKeyType.ENTITY_FIELD, "name");
+        entityFields = setEntityKeyIfNotExists(entityFields, EntityKeyType.ENTITY_FIELD, "label");
+        return new EntityDataQuery(filter, entityDataPageLink, entityFields, latestValues, keyFilters);
+    }
+
+    private static EntityFilter buildEntityFilter(DataSource dataSource, ReportTemplateConfig config, EntityData stateEntity) {
         return switch (dataSource.getType()) {
             case "device" -> buildSingleEntityFilter(DeviceId.fromString(dataSource.getDeviceId()));
             case "entity" -> buildAliasBasedFilter(dataSource, config, stateEntity);
@@ -182,7 +211,7 @@ public class ReportQueryUtils {
         return null;
     }
 
-    public static List<KeyFilter> findKeyFilters(DataSource dataSource, ReportTemplateConfig reportTemplateConfig) {
+    private static List<KeyFilter> findKeyFilters(DataSource dataSource, ReportTemplateConfig reportTemplateConfig) {
         if (dataSource.getFilterId() != null) {
             return reportTemplateConfig.getFilters().stream()
                     .filter(filter -> filter.getId().equals(dataSource.getFilterId()))
@@ -192,35 +221,6 @@ public class ReportQueryUtils {
         } else {
             return null;
         }
-    }
-
-    public static EntityDataQuery buildEntityDataQuery(DataSource dataSource, ReportTemplateConfig reportTemplateConfig, EntityData stateEntity, PageLink pageLink) {
-        EntityDataSortOrder sortOrder = Optional.ofNullable(dataSource.getSortOrder()).orElse(DEFAULT_SORT_ORDER);
-        EntityDataPageLink entityDataPageLink = new EntityDataPageLink(pageLink.getPageSize(), pageLink.getPage(), pageLink.getTextSearch(), sortOrder);
-
-        EntityFilter filter = buildEntityFilter(dataSource, reportTemplateConfig, stateEntity);
-        List<KeyFilter> keyFilters = findKeyFilters(dataSource, reportTemplateConfig);
-
-        List<EntityKey> entityFields = new ArrayList<>();
-        List<EntityKey> latestValues = new ArrayList<>();
-        if (dataSource.getDataKeys() != null) {
-            for (DataKey dataKey : dataSource.getDataKeys()) {
-                switch (dataKey.getType()) {
-                    case "attribute" -> {
-                        latestValues.add(new EntityKey(EntityKeyType.ATTRIBUTE, dataKey.getName()));
-                    }
-                    case "timeseries" -> {
-                        latestValues.add(new EntityKey(EntityKeyType.TIME_SERIES, dataKey.getName()));
-                    }
-                    case "entityField" -> {
-                        entityFields.add(new EntityKey(EntityKeyType.ENTITY_FIELD, dataKey.getName()));
-                    }
-                }
-            }
-        }
-        entityFields = setEntityKeyIfNotExists(entityFields, EntityKeyType.ENTITY_FIELD, "name");
-        entityFields = setEntityKeyIfNotExists(entityFields, EntityKeyType.ENTITY_FIELD, "label");
-        return new EntityDataQuery(filter, entityDataPageLink, entityFields, latestValues, keyFilters);
     }
 
 }

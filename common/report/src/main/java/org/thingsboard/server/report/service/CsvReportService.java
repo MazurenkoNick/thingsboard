@@ -120,21 +120,21 @@ public class CsvReportService extends AbstractReportService {
             return componentsRenderers.get(component.getType()).render(component, componentData);
         } catch (Exception e) {
             log.error("Failed to render component of type [{}]", component.getType(), e);
-            return List.of(List.of("Failed to render component of type: " + component.getType() + " ,Error: " + e));
+            return renderError("Failed to render component of type: " + component.getType(), e);
         }
     }
 
     private List<List<String>> renderSubreport(TbReportCtx ctx, SubReportComponent subReportComponent) {
         ReportTemplateId templateId = subReportComponent.getTemplateId();
         if (templateId == null) {
-            return List.of(List.of("Report template id is not configured for Subreport"));
+            return renderError("Report template id is not configured for Subreport component");
         }
         List<List<String>> content = new LinkedList<>();
         try {
             Optional<DataSource> dataSource = getSingleDataSource(subReportComponent);
             ReportTemplate reportTemplate = dataService.findReportTemplate(templateId, ctx);
             if (reportTemplate == null) {
-                return List.of(List.of("Template with id " + templateId + " not found. Please check the configuration."));
+                return renderError("Template with id " + templateId + " not found. Please check the configuration.");
             }
             CsvReportTemplateConfig reportConfiguration = (CsvReportTemplateConfig) reportTemplate.getConfiguration();
 
@@ -152,7 +152,7 @@ public class CsvReportService extends AbstractReportService {
             return content;
         } catch (Exception e) {
             log.error("Failed to render Subreport, template id: {}", templateId, e);
-            return List.of(List.of("Failed to render sub-report " + templateId + ": " + e.getMessage()));
+            return renderError("Failed to render sub-report " + templateId, e);
         }
     }
 
@@ -160,11 +160,11 @@ public class CsvReportService extends AbstractReportService {
         List<List<String>> content = new LinkedList<>();
         Optional<DataSource> dataSource = getSingleDataSource(component);
         if (dataSource.isEmpty()) {
-            return List.of(List.of("Data source is not configured for time series table"));
+            return renderError("Data source is not configured for time series table");
         }
         DataSource ds = dataSource.get();
         if (ds.getDataKeys().isEmpty()) {
-            return List.of(List.of("At least one time series column should be specified for time series table"));
+            return renderError("At least one time series column should be specified for time series table");
         }
         DataSource latestDataSource = DataSource.builder()
                 .type(ds.getType())
@@ -188,6 +188,17 @@ public class CsvReportService extends AbstractReportService {
             case ENTITY_TABLE -> new ComponentData(0, fetchEntityTableData(ctx, (EntityTableComponent) component, stateEntity));
             default -> throw new IllegalArgumentException("Unsupported component type: " + component.getType());
         };
+    }
+
+    private List<List<String>> renderError(String errorDescription) {
+        return renderError(errorDescription, null);
+    }
+
+    private List<List<String>> renderError(String errorDescription, Exception e) {
+        if (e != null) {
+            errorDescription = errorDescription + " Error: " + e.getMessage();
+        }
+        return List.of(List.of(errorDescription));
     }
 
     @Override
