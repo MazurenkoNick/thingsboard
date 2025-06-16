@@ -35,6 +35,7 @@ import { SendRpcRequestComponent } from '@home/components/scheduler/config/send-
 import { UpdateAttributesComponent } from '@home/components/scheduler/config/update-attributes.component';
 import { GenerateDashboardReportComponent } from '@home/components/scheduler/config/generate-dashboard-report.component';
 import { OtaUpdateEventConfigComponent } from '@home/components/scheduler/config/ota-update-event-config.component';
+import { GenerateReportComponent } from '@home/components/scheduler/config/generate-report.component';
 
 export interface SchedulerEventConfigType {
   name: string;
@@ -67,6 +68,13 @@ test = {
 export const defaultSchedulerEventConfigTypes: {[eventType: string]: SchedulerEventConfigType} = {
   generateReport: {
     name: 'Generate Report',
+    componentType: GenerateReportComponent,
+    originator: false,
+    msgType: false,
+    metadata: false
+  },
+  generateDashboardReport: {
+    name: 'Generate Dashboard Report',
     componentType: GenerateDashboardReportComponent,
     originator: false,
     msgType: false,

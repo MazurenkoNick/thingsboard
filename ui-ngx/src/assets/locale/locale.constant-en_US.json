@@ -7090,7 +7090,9 @@
         "add": "Add report",
         "no-reports-text": "No reports found",
         "search": "Search reports",
-        "selected-reports": "{ count, plural, =1 {1 report} other {# reports} } selected"
+        "selected-reports": "{ count, plural, =1 {1 report} other {# reports} } selected",
+        "recipient": "Recipient",
+        "report-recipient": "Report recipient"
     },
     "report-template": {
         "report-template": "Report template",

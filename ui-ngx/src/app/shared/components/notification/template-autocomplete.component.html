@@ -53,6 +53,7 @@
     <mat-icon class="material-icons">edit</mat-icon>
   </button>
   <button #createTemplateButton
+          type="button"
           mat-button color="primary" matSuffix
           *ngIf="allowCreate && !selectTemplateFormGroup.get('templateName').value && !disabled"
           (click)="createTemplate($event, createTemplateButton)">

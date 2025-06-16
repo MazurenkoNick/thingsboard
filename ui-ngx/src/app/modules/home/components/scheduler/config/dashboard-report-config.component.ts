@@ -136,8 +136,12 @@ export class DashboardReportConfigComponent extends PageComponent implements Con
 
   generateTestReport() {
     const progressText = this.translate.instant('dashboard.download-dashboard-progress', {reportType: this.modelValue.type});
+    let config = this.modelValue;
+    if (this.pdfReportMode) {
+      config = {...config, userId: this.authUser.userId};
+    }
     this.dialogService.progress(
-      this.reportService.downloadTestReport(this.modelValue, this.reportsServerEndpointUrl), progressText).subscribe();
+      this.reportService.downloadTestReport(config, this.reportsServerEndpointUrl), progressText).subscribe();
   }
 
   registerOnChange(fn: any): void {
@@ -154,12 +158,12 @@ export class DashboardReportConfigComponent extends PageComponent implements Con
       state: [null, []],
       timezone: [null, this.pdfReportMode ? [] : [Validators.required]],
       useDashboardTimewindow: [true, []],
-      timewindow: [null, this.pdfReportMode ? [] : [Validators.required]],
-      useCurrentUserCredentials: [true, []],
-      userId: [null, this.pdfReportMode ? [] : [Validators.required]],
+      timewindow: [null, this.pdfReportMode ? [] : [Validators.required]]
     });
 
     if (!this.pdfReportMode) {
+      this.reportConfigFormGroup.addControl('useCurrentUserCredentials', this.fb.control(true));
+      this.reportConfigFormGroup.addControl('userId', this.fb.control(null, [Validators.required]));
       this.reportConfigFormGroup.addControl('namePattern', this.fb.control(null, [Validators.required]));
       this.reportConfigFormGroup.addControl('type', this.fb.control(null, [Validators.required]));
     }
@@ -170,16 +174,18 @@ export class DashboardReportConfigComponent extends PageComponent implements Con
       this.updateEnabledState();
     });
 
-    this.reportConfigFormGroup.get('useCurrentUserCredentials').valueChanges.pipe(
-      takeUntil(this.destroy$)
-    ).subscribe((useCurrentUserCredentials: boolean) => {
-      if (useCurrentUserCredentials) {
-        this.reportConfigFormGroup.get('userId').patchValue(this.authUser.userId, {emitEvent: false});
-      } else {
-        this.reportConfigFormGroup.get('userId').patchValue(null, {emitEvent: false});
-      }
-      this.updateEnabledState();
-    });
+    if (!this.pdfReportMode) {
+      this.reportConfigFormGroup.get('useCurrentUserCredentials').valueChanges.pipe(
+        takeUntil(this.destroy$)
+      ).subscribe((useCurrentUserCredentials: boolean) => {
+        if (useCurrentUserCredentials) {
+          this.reportConfigFormGroup.get('userId').patchValue(this.authUser.userId, {emitEvent: false});
+        } else {
+          this.reportConfigFormGroup.get('userId').patchValue(null, {emitEvent: false});
+        }
+        this.updateEnabledState();
+      });
+    }
 
     this.reportConfigFormGroup.get('dashboardId').valueChanges.pipe(
       takeUntil(this.destroy$)
@@ -237,33 +243,38 @@ export class DashboardReportConfigComponent extends PageComponent implements Con
     } else {
       this.reportConfigFormGroup.enable({emitEvent: false});
       const useDashboardTimewindow: boolean = this.reportConfigFormGroup.get('useDashboardTimewindow').value;
-      const useCurrentUserCredentials: boolean = this.reportConfigFormGroup.get('useCurrentUserCredentials').value;
       if (useDashboardTimewindow) {
         this.reportConfigFormGroup.get('timewindow').disable({emitEvent: false});
       } else {
         this.reportConfigFormGroup.get('timewindow').enable({emitEvent: false});
       }
-      if (useCurrentUserCredentials) {
-        this.reportConfigFormGroup.get('userId').disable({emitEvent: false});
-      } else {
-        this.reportConfigFormGroup.get('userId').enable({emitEvent: false});
+      if (!this.pdfReportMode) {
+        const useCurrentUserCredentials: boolean = this.reportConfigFormGroup.get('useCurrentUserCredentials').value;
+        if (useCurrentUserCredentials) {
+          this.reportConfigFormGroup.get('userId').disable({emitEvent: false});
+        } else {
+          this.reportConfigFormGroup.get('userId').enable({emitEvent: false});
+        }
       }
     }
   }
 
-  private createDefaultReportConfig(): DashboardReportConfig {
-    return {
+  private createDefaultReportConfig(): Partial<DashboardReportConfig> {
+    const config: Partial<DashboardReportConfig> =  {
       baseUrl: this.utils.baseUrl(),
       useDashboardTimewindow: true,
       timewindow: historyInterval(DAY),
-      namePattern: 'report-%d{yyyy-MM-dd_HH:mm:ss}',
       type: this.pdfReportMode ? 'png' : 'pdf',
       timezone: getDefaultTimezone(),
-      useCurrentUserCredentials: true,
-      userId: this.authUser.userId,
       dashboardId: null,
       state: ''
     };
+    if (!this.pdfReportMode) {
+      config.namePattern = 'report-%d{yyyy-MM-dd_HH:mm:ss}';
+      config.useCurrentUserCredentials = true;
+      config.userId = this.authUser.userId;
+    }
+    return config;
   }
 
   private updateModel() {

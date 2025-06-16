@@ -45,6 +45,8 @@ import { DashboardReportConfigComponent } from '@home/components/scheduler/confi
 import { SelectDashboardStateDialogComponent } from '@home/components/scheduler/config/select-dashboard-state-dialog.component';
 import { EmailConfigComponent } from '@home/components/scheduler/config/email-config.component';
 import { SchedulerEventScheduleComponent } from '@home/components/scheduler/scheduler-event-schedule.component';
+import { ReportConfigComponent } from '@home/components/scheduler/config/report-config.component';
+import { GenerateReportComponent } from '@home/components/scheduler/config/generate-report.component';
 
 @NgModule({
   declarations:
@@ -57,7 +59,9 @@ import { SchedulerEventScheduleComponent } from '@home/components/scheduler/sche
       UpdateAttributesComponent,
       AttributeKeyValueTableComponent,
       GenerateDashboardReportComponent,
+      GenerateReportComponent,
       DashboardReportConfigComponent,
+      ReportConfigComponent,
       EmailConfigComponent,
       SelectDashboardStateDialogComponent,
       SchedulerEventScheduleComponent,
@@ -76,7 +80,9 @@ import { SchedulerEventScheduleComponent } from '@home/components/scheduler/sche
     UpdateAttributesComponent,
     AttributeKeyValueTableComponent,
     GenerateDashboardReportComponent,
+    GenerateReportComponent,
     DashboardReportConfigComponent,
+    ReportConfigComponent,
     EmailConfigComponent,
     SelectDashboardStateDialogComponent,
     SchedulerEventScheduleComponent,

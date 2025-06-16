@@ -54,6 +54,8 @@ import {
   isEqualIgnoreUndefined,
   isUndefinedOrNull
 } from '@core/utils';
+import { NotificationTargetId } from '@shared/models/id/notification-target-id';
+import { NotificationTemplateId } from '@shared/models/id/notification-template-id';
 
 export interface Report extends BaseData<ReportId>, HasTenantId {
   tenantId?: TenantId;
@@ -300,6 +302,14 @@ export interface ReportRequest {
   entityId?: EntityId;
   timezone?: string;
   userId?: string;
+}
+
+export interface ReportConfig {
+  reportTemplateId: ReportTemplateId;
+  userId: UserId;
+  timezone: string;
+  recipientId?: NotificationTargetId;
+  notificationTemplateId?: NotificationTemplateId;
 }
 
 export interface ReportTemplateFilter {
