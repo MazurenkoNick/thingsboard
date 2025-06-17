@@ -32,18 +32,25 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SharedModule } from '@shared/shared.module';
-import { ReportingRoutingModule } from '@home/pages/report/reporting-routing.module';
-import { ReportTemplateModule } from '@home/pages/report/template/report-template.module';
-import { ScheduledReportModule } from '@home/pages/report/scheduling/scheduled-report.module';
+import { HomeDialogsModule } from '@home/dialogs/home-dialogs.module';
+import { HomeComponentsModule } from '@modules/home/components/home-components.module';
+import {
+  ScheduledReportTableHeaderComponent
+} from '@home/pages/report/scheduling/scheduled-report-table-header.component';
+import { ScheduledReportRoutingModule } from '@home/pages/report/scheduling/scheduled-report-routing.module';
+import { ScheduledReportFilterComponent } from '@home/pages/report/scheduling/scheduled-report-filter.component';
 
 @NgModule({
-  declarations: [],
+  declarations: [
+    ScheduledReportFilterComponent,
+    ScheduledReportTableHeaderComponent
+  ],
   imports: [
     CommonModule,
     SharedModule,
-    ReportTemplateModule,
-    ScheduledReportModule,
-    ReportingRoutingModule
+    HomeComponentsModule,
+    HomeDialogsModule,
+    ScheduledReportRoutingModule
   ]
 })
-export class ReportingModule { }
+export class ScheduledReportModule { }

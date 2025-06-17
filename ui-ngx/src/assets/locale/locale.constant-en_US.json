@@ -7243,6 +7243,21 @@
             }
         }
     },
+    "scheduled-report": {
+        "scheduled-reports": "Scheduled reports",
+        "name": "Name",
+        "schedule": "Schedule",
+        "schedule-report": "Schedule report",
+        "delete-scheduled-report-title": "Are you sure you want to delete the report schedule '{{scheduledReportTitle}}'?",
+        "delete-scheduled-report-text": "Be careful, after the confirmation the report schedule and all related data will become unrecoverable.",
+        "delete-scheduled-reports-title": "Are you sure you want to delete { count, plural, =1 {1 report schedule} other {# report schedules} }?",
+        "delete-scheduled-reports-text": "Be careful, after the confirmation all selected report schedules will be removed and all related data will become unrecoverable.",
+        "edit": "Edit report schedule",
+        "search": "Search scheduled reports",
+        "no-scheduled-reports-text": "No scheduled reports found",
+        "selected-scheduled-reports": "{ count, plural, =1 {1 report schedule} other {# report schedules} } selected",
+        "filter-not-set": "All"
+    },
     "blob-entity": {
         "blob-entity": "Blob entity",
         "select-blob-entity": "Select blob entity",

@@ -29,21 +29,40 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { NgModule } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { SharedModule } from '@shared/shared.module';
-import { ReportingRoutingModule } from '@home/pages/report/reporting-routing.module';
-import { ReportTemplateModule } from '@home/pages/report/template/report-template.module';
-import { ScheduledReportModule } from '@home/pages/report/scheduling/scheduled-report.module';
+import { Component, OnInit } from '@angular/core';
+import { Store } from '@ngrx/store';
+import { AppState } from '@core/core.state';
+import { EntityTableHeaderComponent } from '@home/components/entity/entity-table-header.component';
+import { getCurrentAuthUser } from '@core/auth/auth.selectors';
+import { Authority } from '@shared/models/authority.enum';
+import { ScheduledReportFilter, ScheduledReportInfo } from '@shared/models/report.models';
 
-@NgModule({
-  declarations: [],
-  imports: [
-    CommonModule,
-    SharedModule,
-    ReportTemplateModule,
-    ScheduledReportModule,
-    ReportingRoutingModule
-  ]
+@Component({
+  selector: 'tb-scheduled-report-table-header',
+  templateUrl: './scheduled-report-table-header.component.html',
+  styleUrls: []
 })
-export class ReportingModule { }
+export class ScheduledReportTableHeaderComponent extends EntityTableHeaderComponent<ScheduledReportInfo> implements OnInit {
+
+  includeCustomersLabel: string;
+
+  constructor(protected store: Store<AppState>) {
+    super(store);
+  }
+
+  ngOnInit() {
+    super.ngOnInit();
+    this.includeCustomersLabel = getCurrentAuthUser(this.store).authority === Authority.CUSTOMER_USER ?
+      'entity.include-sub-customer-entities' : 'entity.include-customer-entities';
+  }
+
+  scheduledReportFilterChanged(filter: ScheduledReportFilter) {
+    this.entitiesTableConfig.componentsData.scheduledReportFilterChanged(filter);
+  }
+
+  includeCustomersChanged(includeCustomers: boolean) {
+    this.entitiesTableConfig.componentsData.includeCustomersChanged(includeCustomers);
+  }
+
+
+}

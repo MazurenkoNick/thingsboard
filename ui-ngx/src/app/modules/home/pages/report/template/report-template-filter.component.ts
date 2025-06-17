@@ -205,6 +205,7 @@ export class ReportTemplateFilterComponent implements OnInit, ControlValueAccess
 
   cancel() {
     this.updateReportTemplateFilterForm(this.reportTemplateFilter);
+    this.reportTemplateFilterForm.markAsPristine();
     if (this.overlayRef) {
       this.overlayRef.dispose();
     } else {

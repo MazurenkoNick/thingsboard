@@ -30,37 +30,14 @@
     OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 
 -->
-<div [formGroup]="reportConfigFormGroup" class="tb-form-panel no-border no-padding">
-  <tb-report-template-autocomplete
-    required
-    [type]="ReportTemplateType.REPORT"
-    formControlName="reportTemplateId">
-  </tb-report-template-autocomplete>
-  <tb-entity-autocomplete
-    required
-    useFullEntityId
-    [entityType]="entityType.USER"
-    formControlName="userId">
-  </tb-entity-autocomplete>
-  <tb-timezone-select
-    userTimezoneByDefault
-    required
-    formControlName="timezone">
-  </tb-timezone-select>
-  <div class="tb-form-panel stroked">
-    <div class="tb-form-panel-title" translate>report.recipient</div>
-    <tb-entity-autocomplete
-      allowCreateNew
-      useFullEntityId
-      formControlName="recipientId"
-      labelText="report.report-recipient"
-      [entityType]="entityType.NOTIFICATION_TARGET"
-      (createNew)="createRecipient()">
-    </tb-entity-autocomplete>
-    <tb-template-autocomplete
-      allowCreate allowEdit
-      formControlName="notificationTemplateId"
-      [notificationTypes]="NotificationType.REPORT_GENERATED">
-    </tb-template-autocomplete>
-  </div>
+<div class="flex flex-row items-center gap-4">
+  <tb-scheduled-report-filter
+    [ngModel]="entitiesTableConfig.componentsData.scheduledReportFilter"
+    (ngModelChange)="scheduledReportFilterChanged($event)">
+  </tb-scheduled-report-filter>
+  <mat-slide-toggle
+    [ngModel]="entitiesTableConfig.componentsData.includeCustomers"
+    (ngModelChange)="includeCustomersChanged($event)">
+    {{ includeCustomersLabel | translate }}
+  </mat-slide-toggle>
 </div>

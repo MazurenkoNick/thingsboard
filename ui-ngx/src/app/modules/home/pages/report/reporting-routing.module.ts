@@ -34,6 +34,7 @@ import { Authority } from '@shared/models/authority.enum';
 import { NgModule } from '@angular/core';
 import { reportTemplatesRoute } from '@home/pages/report/template/report-template-routing.module';
 import { MenuId } from '@core/services/menu.models';
+import { scheduledReportsRoute } from '@home/pages/report/scheduling/scheduled-report-routing.module';
 
 export const reportingRoute: Route = {
   path: 'reporting',
@@ -53,6 +54,7 @@ export const reportingRoute: Route = {
       }
     },
     reportTemplatesRoute,
+    scheduledReportsRoute,
   ]
 };
 

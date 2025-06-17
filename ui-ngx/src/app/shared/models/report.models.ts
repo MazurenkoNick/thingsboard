@@ -467,7 +467,7 @@ export const validateAndUpdateReportComponent = (component: ReportComponentConfi
 }
 
 export interface ScheduledReportInfo extends SchedulerEventInfo {
-  reportTemplateInfo: EntityInfoData;
+  templateInfo: EntityInfoData;
   userName: string;
   customerTitle: string;
 }
@@ -476,6 +476,27 @@ export interface ScheduledReportFilter {
   includeCustomers?: boolean;
   reportTemplateId?: ReportTemplateId;
   userId?: UserId;
+}
+
+export const scheduledReportFiltersEquals = (filter1?: ScheduledReportFilter, filter2?: ScheduledReportFilter): boolean => {
+  if (filter1 === filter2) {
+    return true;
+  }
+  if ((isUndefinedOrNull(filter1) || isEmpty(filter1)) && (isUndefinedOrNull(filter2) || isEmpty(filter2))) {
+    return true;
+  } else if (isDefinedAndNotNull(filter1) && isDefinedAndNotNull(filter2)) {
+    if (!isEqualIgnoreUndefined(filter1.reportTemplateId, filter2.reportTemplateId)) {
+      return false;
+    }
+    if (!isEqualIgnoreUndefined(filter1.userId, filter2.userId)) {
+      return false;
+    }
+    if (!isEqualIgnoreUndefined(filter1.includeCustomers, filter2.includeCustomers)) {
+      return false;
+    }
+    return true;
+  }
+  return false;
 }
 
 export class ScheduledReportQuery {

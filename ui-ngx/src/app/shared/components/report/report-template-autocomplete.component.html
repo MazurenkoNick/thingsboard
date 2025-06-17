@@ -40,7 +40,7 @@
   <mat-label *ngIf="!inlineField">{{ labelTranslationKey | translate }}</mat-label>
   <input matInput type="text"
          #reportTemplateInput
-         placeholder="{{ placeholderTranslationKey | translate }}"
+         placeholder="{{ placeholder ? placeholder : (placeholderTranslationKey | translate) }}"
          formControlName="reportTemplate"
          (focusin)="onFocus()"
          [required]="required"

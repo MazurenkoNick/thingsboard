@@ -104,6 +104,9 @@ export class ReportTemplateAutocompleteComponent implements ControlValueAccessor
   disabled: boolean;
 
   @Input()
+  placeholder: string;
+
+  @Input()
   @coerceBoolean()
   newTabDetailsButton: boolean;
 
