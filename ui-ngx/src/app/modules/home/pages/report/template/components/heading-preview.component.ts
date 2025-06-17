@@ -29,35 +29,52 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { Route, RouterModule } from '@angular/router';
-import { Authority } from '@shared/models/authority.enum';
-import { NgModule } from '@angular/core';
-import { reportTemplatesRoute } from '@home/pages/report/template/report-template-routing.module';
-import { MenuId } from '@core/services/menu.models';
+import { Component, ViewEncapsulation } from '@angular/core';
+import { HeadingReportComponentConfig } from '@shared/models/report-component.models';
+import { ComponentStyle, Font, textStyle } from '@shared/models/widget-settings.models';
+import { deepClone } from '@core/utils';
+import { AbstractReportComponentPreview } from '@home/pages/report/template/components/report-component.component';
 
-export const reportingRoute: Route = {
-  path: 'reporting',
-  data: {
-    auth: [Authority.TENANT_ADMIN, Authority.CUSTOMER_USER],
-    breadcrumb: {
-      menuId: MenuId.reporting
-    }
-  },
-  children: [
-    {
-      path: '',
-      children: [],
-      data: {
-        auth: [Authority.TENANT_ADMIN, Authority.CUSTOMER_USER],
-        redirectTo: 'templates'
-      }
-    },
-    reportTemplatesRoute,
-  ]
-};
-
-@NgModule({
-  imports: [RouterModule.forChild([reportingRoute])],
-  exports: [RouterModule]
+@Component({
+  selector: 'tb-report-heading-preview',
+  templateUrl: './heading-preview.component.html',
+  styleUrls: [],
+  encapsulation: ViewEncapsulation.None
 })
-export class ReportingRoutingModule { }
+export class HeadingPreviewComponent extends AbstractReportComponentPreview<HeadingReportComponentConfig> {
+
+  headingStyle: ComponentStyle;
+
+  height: string;
+
+  text: string;
+
+  onComponentUpdated() {
+    if (this.reportComponent.value && this.reportComponent.value.trim().length) {
+      this.text = this.reportComponent.value;
+    } else {
+      this.text = '&nbsp;';
+    }
+    const font: Font = deepClone(this.reportComponent.font || { size: 10, sizeUnit: 'pt' } as Font);
+    if (!font.size) {
+      font.size = 10;
+    }
+    if (font.sizeUnit !== 'pt') {
+      font.sizeUnit = 'pt';
+    }
+    this.headingStyle = textStyle(font);
+    this.headingStyle.color = this.reportComponent.color || '#000';
+    if (this.reportComponent.textAlignment) {
+      this.headingStyle.textAlign = this.reportComponent.textAlignment;
+    }
+    if (this.reportComponent.verticalAlignment) {
+      this.headingStyle.verticalAlign = this.reportComponent.verticalAlignment;
+    }
+    if (this.reportComponent.height) {
+      this.height = this.reportComponent.height + 'pt';
+    } else {
+      this.height = '100%';
+    }
+  }
+
+}

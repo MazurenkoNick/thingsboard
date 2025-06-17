@@ -29,35 +29,27 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { Route, RouterModule } from '@angular/router';
-import { Authority } from '@shared/models/authority.enum';
-import { NgModule } from '@angular/core';
-import { reportTemplatesRoute } from '@home/pages/report/template/report-template-routing.module';
-import { MenuId } from '@core/services/menu.models';
+import { Component, ViewEncapsulation } from '@angular/core';
+import { FormGroup } from '@angular/forms';
+import { ReportComponentConfig } from '@app/shared/public-api';
+import {
+  AbstractReportComponentConfig
+} from '@home/pages/report/template/components/report-component-config.component';
+import { reportComponentTypeMap } from '@home/pages/report/template/components/report-component.models';
 
-export const reportingRoute: Route = {
-  path: 'reporting',
-  data: {
-    auth: [Authority.TENANT_ADMIN, Authority.CUSTOMER_USER],
-    breadcrumb: {
-      menuId: MenuId.reporting
-    }
-  },
-  children: [
-    {
-      path: '',
-      children: [],
-      data: {
-        auth: [Authority.TENANT_ADMIN, Authority.CUSTOMER_USER],
-        redirectTo: 'templates'
-      }
-    },
-    reportTemplatesRoute,
-  ]
-};
-
-@NgModule({
-  imports: [RouterModule.forChild([reportingRoute])],
-  exports: [RouterModule]
+@Component({
+  selector: 'tb-empty-report-config',
+  templateUrl: './empty-report-config.component.html',
+  styleUrls: ['./empty-report-config.component.scss'],
+  encapsulation: ViewEncapsulation.None
 })
-export class ReportingRoutingModule { }
+export class EmptyReportConfigComponent extends AbstractReportComponentConfig {
+
+  public title: string;
+
+  setupConfig(reportComponentConfig: ReportComponentConfig): FormGroup {
+    this.title = reportComponentTypeMap.get(reportComponentConfig.type).title;
+    return this.fb.group({});
+  }
+
+}

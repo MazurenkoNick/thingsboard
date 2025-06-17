@@ -32,16 +32,39 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SharedModule } from '@shared/shared.module';
-import { ReportingRoutingModule } from '@home/pages/report/reporting-routing.module';
-import { ReportTemplateModule } from '@home/pages/report/template/report-template.module';
+import { HomeDialogsModule } from '@home/dialogs/home-dialogs.module';
+import { HomeComponentsModule } from '@modules/home/components/home-components.module';
+import { ReportTemplatePageComponent } from '@home/pages/report/template/report-template-page.component';
+import { ReportTemplateRoutingModule } from '@home/pages/report/template/report-template-routing.module';
+import { ReportTemplateTableHeaderComponent } from '@home/pages/report/template/report-template-table-header.component';
+import { ReportTemplateTabsComponent } from '@home/pages/report/template/report-template-tabs.component';
+import { ReportTemplateFormComponent } from '@home/pages/report/template/report-template-form.component';
+import { ReportTemplateSettingsDialogComponent } from '@home/pages/report/template/report-template-settings-dialog.component';
+import { ReportComponentsModule } from '@home/pages/report/template/components/report-components.module';
+import { ReportTemplateSettingsComponent } from '@home/pages/report/template/report-template-settings.component';
+import { WidgetSettingsCommonModule } from '@home/components/widget/lib/settings/common/widget-settings-common.module';
+import { ReportTemplateFilterComponent } from '@home/pages/report/template/report-template-filter.component';
+import { WidgetConfigComponentsModule } from '@home/components/widget/config/widget-config-components.module';
 
 @NgModule({
-  declarations: [],
+  declarations: [
+    ReportTemplateFilterComponent,
+    ReportTemplateTableHeaderComponent,
+    ReportTemplateTabsComponent,
+    ReportTemplateFormComponent,
+    ReportTemplatePageComponent,
+    ReportTemplateSettingsComponent,
+    ReportTemplateSettingsDialogComponent
+  ],
   imports: [
     CommonModule,
     SharedModule,
-    ReportTemplateModule,
-    ReportingRoutingModule
+    HomeComponentsModule,
+    HomeDialogsModule,
+    ReportComponentsModule,
+    ReportTemplateRoutingModule,
+    WidgetSettingsCommonModule,
+    WidgetConfigComponentsModule
   ]
 })
-export class ReportingModule { }
+export class ReportTemplateModule { }

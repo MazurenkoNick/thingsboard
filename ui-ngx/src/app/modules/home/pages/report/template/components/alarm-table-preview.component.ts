@@ -29,35 +29,46 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { Route, RouterModule } from '@angular/router';
-import { Authority } from '@shared/models/authority.enum';
-import { NgModule } from '@angular/core';
-import { reportTemplatesRoute } from '@home/pages/report/template/report-template-routing.module';
-import { MenuId } from '@core/services/menu.models';
+import { Component, inject, ViewEncapsulation } from '@angular/core';
+import { AlarmTableReportComponentConfig } from '@shared/models/report-component.models';
+import { DataKey } from '@shared/models/widget.models';
+import { ComponentStyle } from '@shared/models/widget-settings.models';
+import { AbstractReportTablePreviewComponent } from '@home/pages/report/template/components/report-table-preview.component';
+import { ReportTemplatePageComponent } from '@home/pages/report/template/report-template-page.component';
 
-export const reportingRoute: Route = {
-  path: 'reporting',
-  data: {
-    auth: [Authority.TENANT_ADMIN, Authority.CUSTOMER_USER],
-    breadcrumb: {
-      menuId: MenuId.reporting
-    }
-  },
-  children: [
-    {
-      path: '',
-      children: [],
-      data: {
-        auth: [Authority.TENANT_ADMIN, Authority.CUSTOMER_USER],
-        redirectTo: 'templates'
-      }
-    },
-    reportTemplatesRoute,
-  ]
-};
-
-@NgModule({
-  imports: [RouterModule.forChild([reportingRoute])],
-  exports: [RouterModule]
+@Component({
+  selector: 'tb-alarm-table-preview',
+  templateUrl: './report-table-preview.component.html',
+  styleUrls: ['./report-table-preview.component.scss'],
+  encapsulation: ViewEncapsulation.None
 })
-export class ReportingRoutingModule { }
+export class AlarmTablePreviewComponent extends AbstractReportTablePreviewComponent<AlarmTableReportComponentConfig> {
+
+  private templatePage = inject(ReportTemplatePageComponent);
+
+  get columns(): DataKey[] {
+    return this.reportComponent.alarmSource.dataKeys;
+  }
+
+  cellContent(column: DataKey): string {
+    if ('createdTime' === column.name) {
+      return this.templatePage.timePreview;
+    } else {
+      return super.cellContent(column);
+    }
+  }
+
+  protected styleFromColumnSettings(column: DataKey, header = false): ComponentStyle {
+    const style = super.styleFromColumnSettings(column, header);
+    if (!this.isPlainFormat && !header) {
+      if ('createdTime' === column.name) {
+        style.fontSize = style.fontSize || '9pt';
+      }
+      if ('severity' === column.name) {
+        style.fontWeight = style.fontWeight || 'bold';
+      }
+    }
+    return style;
+  }
+
+}

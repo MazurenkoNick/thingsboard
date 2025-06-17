@@ -29,35 +29,27 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { Route, RouterModule } from '@angular/router';
-import { Authority } from '@shared/models/authority.enum';
-import { NgModule } from '@angular/core';
-import { reportTemplatesRoute } from '@home/pages/report/template/report-template-routing.module';
-import { MenuId } from '@core/services/menu.models';
+import { Component, ViewEncapsulation } from '@angular/core';
+import { EntityTableReportComponentConfig } from '@shared/models/report-component.models';
+import { DataKey, Datasource } from '@shared/models/widget.models';
+import {
+  AbstractReportTablePreviewComponent
+} from '@home/pages/report/template/components/report-table-preview.component';
 
-export const reportingRoute: Route = {
-  path: 'reporting',
-  data: {
-    auth: [Authority.TENANT_ADMIN, Authority.CUSTOMER_USER],
-    breadcrumb: {
-      menuId: MenuId.reporting
-    }
-  },
-  children: [
-    {
-      path: '',
-      children: [],
-      data: {
-        auth: [Authority.TENANT_ADMIN, Authority.CUSTOMER_USER],
-        redirectTo: 'templates'
-      }
-    },
-    reportTemplatesRoute,
-  ]
-};
-
-@NgModule({
-  imports: [RouterModule.forChild([reportingRoute])],
-  exports: [RouterModule]
+@Component({
+  selector: 'tb-entity-table-preview',
+  templateUrl: './report-table-preview.component.html',
+  styleUrls: ['./report-table-preview.component.scss'],
+  encapsulation: ViewEncapsulation.None
 })
-export class ReportingRoutingModule { }
+export class EntityTablePreviewComponent extends AbstractReportTablePreviewComponent<EntityTableReportComponentConfig> {
+
+  get columns(): DataKey[] {
+    const datasources: Datasource[] = this.reportComponent.dataSources;
+    if (datasources && datasources.length) {
+      return datasources[0].dataKeys || [];
+    }
+    return [];
+  }
+
+}

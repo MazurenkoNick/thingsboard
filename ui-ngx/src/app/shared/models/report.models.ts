@@ -33,7 +33,7 @@ import { BaseData, ExportableEntity } from '@shared/models/base-data';
 import { ReportTemplateId } from '@shared/models/id/report-template-id';
 import { TenantId } from '@shared/models/id/tenant-id';
 import { CustomerId } from '@shared/models/id/customer-id';
-import { HasTenantId, HasVersion } from '@shared/models/entity.models';
+import { EntityInfo, EntityInfoData, HasTenantId, HasVersion } from '@shared/models/entity.models';
 import { EntityId } from '@shared/models/id/entity-id';
 import { EntityAlias, EntityAliases } from '@shared/models/alias.models';
 import {
@@ -56,6 +56,7 @@ import {
 } from '@core/utils';
 import { NotificationTargetId } from '@shared/models/id/notification-target-id';
 import { NotificationTemplateId } from '@shared/models/id/notification-template-id';
+import { SchedulerEventInfo } from '@shared/models/scheduler-event.models';
 
 export interface Report extends BaseData<ReportId>, HasTenantId {
   tenantId?: TenantId;
@@ -463,4 +464,47 @@ const validateAndUpdateReportTemplateHeaderFooter = (headerFooter: HeaderFooter)
 
 export const validateAndUpdateReportComponent = (component: ReportComponentConfig): ReportComponentConfig => {
   return component;
+}
+
+export interface ScheduledReportInfo extends SchedulerEventInfo {
+  reportTemplateInfo: EntityInfoData;
+  userName: string;
+  customerTitle: string;
+}
+
+export interface ScheduledReportFilter {
+  includeCustomers?: boolean;
+  reportTemplateId?: ReportTemplateId;
+  userId?: UserId;
+}
+
+export class ScheduledReportQuery {
+
+  pageLink: PageLink;
+  includeCustomers: boolean;
+  reportTemplateId?: ReportTemplateId;
+  userId?: UserId;
+
+  constructor(pageLink: PageLink,
+              scheduledReportFilter: ScheduledReportFilter) {
+    this.pageLink = pageLink;
+    this.includeCustomers = scheduledReportFilter.includeCustomers;
+    this.reportTemplateId = scheduledReportFilter.reportTemplateId;
+    this.userId = scheduledReportFilter.userId;
+  }
+
+  public toQuery(): string {
+    let query = this.pageLink.toQuery();
+    if (this.includeCustomers) {
+      query += '&includeCustomers=true';
+    }
+    if (this.reportTemplateId?.id) {
+      query += `&reportTemplateId=${this.reportTemplateId.id}`;
+    }
+    if (this.userId?.id) {
+      query += `&userId=${this.userId.id}`;
+    }
+    return query;
+  }
+
 }

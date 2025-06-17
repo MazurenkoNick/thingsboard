@@ -41,6 +41,13 @@ import {
   SchedulerEventWithCustomerInfo
 } from '@shared/models/scheduler-event.models';
 import { isDefinedAndNotNull } from '@core/utils';
+import {
+  ReportTemplateInfo,
+  ReportTemplateQuery,
+  ScheduledReportInfo,
+  ScheduledReportQuery
+} from '@shared/models/report.models';
+import { PageData } from '@shared/models/page/page-data';
 
 @Injectable({
   providedIn: 'root'
@@ -102,6 +109,11 @@ export class SchedulerEventService {
 
   public updateSchedulerStatus(schedulerEventId: string, enabled: boolean, config?: RequestConfig) {
     return this.http.put(`/api/schedulerEvent/${schedulerEventId}/enabled/${enabled}`,
+      defaultHttpOptionsFromConfig(config));
+  }
+
+  public getScheduledReports(query: ScheduledReportQuery, config?: RequestConfig): Observable<PageData<ScheduledReportInfo>> {
+    return this.http.get<PageData<ScheduledReportInfo>>(`/api/scheduledReports${query.toQuery()}`,
       defaultHttpOptionsFromConfig(config));
   }
 

@@ -29,35 +29,26 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { Route, RouterModule } from '@angular/router';
-import { Authority } from '@shared/models/authority.enum';
-import { NgModule } from '@angular/core';
-import { reportTemplatesRoute } from '@home/pages/report/template/report-template-routing.module';
-import { MenuId } from '@core/services/menu.models';
+import { Component } from '@angular/core';
+import { Store } from '@ngrx/store';
+import { AppState } from '@core/core.state';
+import { EntityTabsComponent } from '@home/components/entity/entity-tabs.component';
+import { TranslateService } from '@ngx-translate/core';
+import { ReportTemplate } from '@shared/models/report.models';
 
-export const reportingRoute: Route = {
-  path: 'reporting',
-  data: {
-    auth: [Authority.TENANT_ADMIN, Authority.CUSTOMER_USER],
-    breadcrumb: {
-      menuId: MenuId.reporting
-    }
-  },
-  children: [
-    {
-      path: '',
-      children: [],
-      data: {
-        auth: [Authority.TENANT_ADMIN, Authority.CUSTOMER_USER],
-        redirectTo: 'templates'
-      }
-    },
-    reportTemplatesRoute,
-  ]
-};
-
-@NgModule({
-  imports: [RouterModule.forChild([reportingRoute])],
-  exports: [RouterModule]
+@Component({
+  selector: 'tb-report-template-tabs',
+  templateUrl: './report-template-tabs.component.html',
+  styleUrls: []
 })
-export class ReportingRoutingModule { }
+export class ReportTemplateTabsComponent extends EntityTabsComponent<ReportTemplate> {
+
+  constructor(protected store: Store<AppState>,
+              private translate: TranslateService) {
+    super(store);
+  }
+
+  ngOnInit() {
+    super.ngOnInit();
+  }
+}

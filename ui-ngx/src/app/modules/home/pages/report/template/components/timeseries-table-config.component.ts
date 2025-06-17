@@ -1,0 +1,166 @@
+///
+/// ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
+///
+/// Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
+///
+/// NOTICE: All information contained herein is, and remains
+/// the property of ThingsBoard, Inc. and its suppliers,
+/// if any.  The intellectual and technical concepts contained
+/// herein are proprietary to ThingsBoard, Inc.
+/// and its suppliers and may be covered by U.S. and Foreign Patents,
+/// patents in process, and are protected by trade secret or copyright law.
+///
+/// Dissemination of this information or reproduction of this material is strictly forbidden
+/// unless prior written permission is obtained from COMPANY.
+///
+/// Access to the source code contained herein is hereby forbidden to anyone except current COMPANY employees,
+/// managers or contractors who have executed Confidentiality and Non-disclosure agreements
+/// explicitly covering such access.
+///
+/// The copyright notice above does not evidence any actual or intended publication
+/// or disclosure  of  this source code, which includes
+/// information that is confidential and/or proprietary, and is a trade secret, of  COMPANY.
+/// ANY REPRODUCTION, MODIFICATION, DISTRIBUTION, PUBLIC  PERFORMANCE,
+/// OR PUBLIC DISPLAY OF OR THROUGH USE  OF THIS  SOURCE CODE  WITHOUT
+/// THE EXPRESS WRITTEN CONSENT OF COMPANY IS STRICTLY PROHIBITED,
+/// AND IN VIOLATION OF APPLICABLE LAWS AND INTERNATIONAL TREATIES.
+/// THE RECEIPT OR POSSESSION OF THIS SOURCE CODE AND/OR RELATED INFORMATION
+/// DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
+/// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
+///
+
+import { Component, inject, ViewEncapsulation } from '@angular/core';
+import { FormGroup } from '@angular/forms';
+import {
+  DataKey,
+  Datasource, ReportDataKeySettingsType,
+  TableReportColumnSettings,
+  TableReportColumnSettingsForm,
+  TimeseriesTableReportComponentConfig,
+  WidgetConfigMode
+} from '@app/shared/public-api';
+import { AbstractReportComponentConfig } from '@home/pages/report/template/components/report-component-config.component';
+import { deepClone } from '@core/utils';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { MatDialog } from '@angular/material/dialog';
+import {
+  DynamicFormDialogComponent,
+  DynamicFormDialogData
+} from '@home/components/widget/lib/settings/common/dynamic-form/dynamic-form-dialog.component';
+import { TranslateService } from '@ngx-translate/core';
+import { merge } from 'rxjs';
+
+@Component({
+  selector: 'tb-timeseries-table-config',
+  templateUrl: './timeseries-table-config.component.html',
+  styleUrls: ['./report-component-config.scss'],
+  encapsulation: ViewEncapsulation.None
+})
+export class TimeseriesTableConfigComponent extends AbstractReportComponentConfig<TimeseriesTableReportComponentConfig> {
+
+  settingsTab: 'data' | 'layout' = 'data';
+
+  basicMode = WidgetConfigMode.basic;
+
+  TableReportColumnSettingsForm = TableReportColumnSettingsForm;
+
+  private dialog =  inject(MatDialog);
+  private translate = inject(TranslateService);
+
+  protected buildForm(reportComponentConfig: TimeseriesTableReportComponentConfig): FormGroup {
+    const form = this.fb.group({
+      timewindow: [reportComponentConfig.timewindow, []],
+      dataSources: [reportComponentConfig.dataSources, []],
+      showTableHeading: [reportComponentConfig.showTableHeading, []],
+      tableHeading: [reportComponentConfig.tableHeading, []],
+      showTimestamp: [reportComponentConfig.showTimestamp, []],
+      timestampLabel: [reportComponentConfig.timestampLabel, []],
+      timestampPattern: [reportComponentConfig.timestampPattern, []],
+      timestampColumnSettings: [reportComponentConfig.timestampColumnSettings, []],
+      columns: [this.getColumns(reportComponentConfig.dataSources), []],
+    });
+    merge(form.get('showTimestamp').valueChanges, form.get('showTableHeading').valueChanges).pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(() => {
+      this.updateValidators(form);
+    });
+    this.updateValidators(form);
+    return form;
+  }
+
+  protected prepareOutputConfig(config: any): any {
+    this.setColumns(config.columns, config.dataSources);
+    delete config.columns;
+    return config;
+  }
+
+  editTimestampColumnSettings() {
+    const timestampColumnSettings: TableReportColumnSettings = this.reportConfigForm.get('timestampColumnSettings').value;
+    this.dialog.open<DynamicFormDialogComponent<TableReportColumnSettings>,
+      DynamicFormDialogData<TableReportColumnSettings>, TableReportColumnSettings>(DynamicFormDialogComponent<TableReportColumnSettings>, {
+      disableClose: true,
+      panelClass: ['tb-dialog', 'tb-fullscreen-dialog'],
+      data: {
+        title: this.translate.instant('report-template.component.timeseries-table.timestamp-column-settings'),
+        properties: TableReportColumnSettingsForm,
+        value: timestampColumnSettings
+      }
+    }).afterClosed().subscribe(
+      (res) => {
+        if (res) {
+          this.reportConfigForm.get('timestampColumnSettings').patchValue(res);
+          this.reportConfigForm.markAsDirty();
+        }
+      }
+    );
+  }
+
+  private getColumns(datasources?: Datasource[]): DataKey[] {
+    if (datasources && datasources.length) {
+      const dataKeys = deepClone(datasources[0].dataKeys) || [];
+      dataKeys.forEach(k => {
+        (k as any).latest = false;
+      });
+      const latestDataKeys = deepClone(datasources[0].latestDataKeys) || [];
+      latestDataKeys.forEach(k => {
+        (k as any).latest = true;
+      });
+      return dataKeys.concat(latestDataKeys);
+    }
+    return [];
+  }
+
+  private setColumns(columns: DataKey[], datasources?: Datasource[]) {
+    if (datasources && datasources.length) {
+      columns.forEach(key => {
+        if (key?.settings) {
+          key.settings.type = ReportDataKeySettingsType.COLUMN;
+        }
+      });
+      const dataKeys = deepClone(columns.filter(c => !(c as any).latest));
+      dataKeys.forEach(k => delete (k as any).latest);
+      const latestDataKeys = deepClone(columns.filter(c => (c as any).latest));
+      latestDataKeys.forEach(k => delete (k as any).latest);
+      datasources[0].dataKeys = dataKeys;
+      datasources[0].latestDataKeys = latestDataKeys;
+    }
+  }
+
+  private updateValidators(form: FormGroup) {
+    const showTimestamp: boolean = form.get('showTimestamp').value;
+    const showTableHeading: boolean = form.get('showTableHeading').value;
+    if (showTimestamp) {
+      form.get('timestampLabel').enable({emitEvent: false});
+      form.get('timestampPattern').enable({emitEvent: false});
+    } else {
+      form.get('timestampLabel').disable({emitEvent: false});
+      form.get('timestampPattern').disable({emitEvent: false});
+    }
+    if (showTableHeading) {
+      form.get('tableHeading').enable({emitEvent: false});
+    } else {
+      form.get('tableHeading').disable({emitEvent: false});
+    }
+  }
+
+}

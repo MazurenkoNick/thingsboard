@@ -29,35 +29,37 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { Route, RouterModule } from '@angular/router';
-import { Authority } from '@shared/models/authority.enum';
-import { NgModule } from '@angular/core';
-import { reportTemplatesRoute } from '@home/pages/report/template/report-template-routing.module';
-import { MenuId } from '@core/services/menu.models';
+import { Component, ViewEncapsulation } from '@angular/core';
+import { FormGroup } from '@angular/forms';
+import {
+  EntityType,
+  ReportTemplateType,
+  SubReportReportComponentConfig,
+  WidgetConfigMode
+} from '@app/shared/public-api';
+import { AbstractReportComponentConfig } from '@home/pages/report/template/components/report-component-config.component';
 
-export const reportingRoute: Route = {
-  path: 'reporting',
-  data: {
-    auth: [Authority.TENANT_ADMIN, Authority.CUSTOMER_USER],
-    breadcrumb: {
-      menuId: MenuId.reporting
-    }
-  },
-  children: [
-    {
-      path: '',
-      children: [],
-      data: {
-        auth: [Authority.TENANT_ADMIN, Authority.CUSTOMER_USER],
-        redirectTo: 'templates'
-      }
-    },
-    reportTemplatesRoute,
-  ]
-};
-
-@NgModule({
-  imports: [RouterModule.forChild([reportingRoute])],
-  exports: [RouterModule]
+@Component({
+  selector: 'tb-sub-report-config',
+  templateUrl: './sub-report-config.component.html',
+  styleUrls: ['./report-component-config.scss'],
+  encapsulation: ViewEncapsulation.None
 })
-export class ReportingRoutingModule { }
+export class SubReportConfigComponent extends AbstractReportComponentConfig<SubReportReportComponentConfig> {
+
+  EntityType = EntityType;
+  ReportTemplateType = ReportTemplateType;
+
+  basicMode = WidgetConfigMode.basic;
+
+  protected buildForm(reportComponentConfig: SubReportReportComponentConfig): FormGroup {
+    const form: FormGroup = this.fb.group({
+      dataSources: [reportComponentConfig.dataSources, []],
+      templateId: [reportComponentConfig.templateId, []]
+    });
+    if (!this.isPlainFormat) {
+      form.addControl('avoidPageBreakInside', this.fb.control(reportComponentConfig.avoidPageBreakInside, []));
+    }
+    return form;
+  }
+}
