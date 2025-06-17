@@ -258,10 +258,10 @@ public class SchedulerEventController extends BaseController {
         boolean includeCustomerReportTemplates = includeCustomers != null && includeCustomers;
         ScheduledReportQuery query = new ScheduledReportQuery(pageLink, reportTemplateId, userId, includeCustomerReportTemplates);
         if (Authority.TENANT_ADMIN.equals(getCurrentUser().getAuthority())) {
-            return checkNotNull(schedulerEventService.findSchedulerReportEvents(tenantId, query));
+            return checkNotNull(schedulerEventService.findScheduledReportEvents(tenantId, query));
         } else {
             CustomerId customerId = getCurrentUser().getCustomerId();
-            return checkNotNull(schedulerEventService.findSchedulerReportEvents(tenantId, customerId, query));
+            return checkNotNull(schedulerEventService.findScheduledReportEvents(tenantId, customerId, query));
         }
     }
 

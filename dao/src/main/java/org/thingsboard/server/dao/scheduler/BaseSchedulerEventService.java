@@ -282,15 +282,15 @@ public class BaseSchedulerEventService extends AbstractEntityService implements 
     }
 
     @Override
-    public PageData<ScheduledReportInfo> findSchedulerReportEvents(TenantId tenantId, ScheduledReportQuery query) {
+    public PageData<ScheduledReportInfo> findScheduledReportEvents(TenantId tenantId, ScheduledReportQuery query) {
         log.trace("Executing findSchedulerReportEvents, tenantId [{}]", tenantId);
-        return schedulerEventInfoDao.findSchedulerReportEvents(tenantId.getId(), query);
+        return schedulerEventInfoDao.findScheduledReportEvents(tenantId.getId(), query);
     }
 
     @Override
-    public PageData<ScheduledReportInfo> findSchedulerReportEvents(TenantId tenantId, CustomerId customerId, ScheduledReportQuery query) {
+    public PageData<ScheduledReportInfo> findScheduledReportEvents(TenantId tenantId, CustomerId customerId, ScheduledReportQuery query) {
         log.trace("Executing findSchedulerReportEvents, tenantId [{}], customerId [{}]", tenantId, customerId);
-        return schedulerEventInfoDao.findSchedulerReportEvents(tenantId.getId(), customerId.getId(), query);
+        return schedulerEventInfoDao.findScheduledReportEvents(tenantId.getId(), customerId.getId(), query);
     }
 
     @Override
