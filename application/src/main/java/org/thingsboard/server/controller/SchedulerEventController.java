@@ -254,11 +254,15 @@ public class SchedulerEventController extends BaseController {
             @RequestParam(required = false) String sortOrder) throws ThingsboardException {
         accessControlService.checkPermission(getCurrentUser(), Resource.SCHEDULER_EVENT, Operation.READ);
         TenantId tenantId = getCurrentUser().getTenantId();
-        CustomerId customerId = getCurrentUser().getCustomerId();
         PageLink pageLink = createPageLink(pageSize, page, textSearch, sortProperty, sortOrder);
         boolean includeCustomerReportTemplates = includeCustomers != null && includeCustomers;
         ScheduledReportQuery query = new ScheduledReportQuery(pageLink, reportTemplateId, userId, includeCustomerReportTemplates);
-        return schedulerEventService.findSchedulerReportEvents(tenantId, customerId, query);
+        if (Authority.TENANT_ADMIN.equals(getCurrentUser().getAuthority())) {
+            return checkNotNull(schedulerEventService.findSchedulerReportEvents(tenantId, query));
+        } else {
+            CustomerId customerId = getCurrentUser().getCustomerId();
+            return checkNotNull(schedulerEventService.findSchedulerReportEvents(tenantId, customerId, query));
+        }
     }
 
     @ApiOperation(value = "Get Scheduler Events By Ids (getSchedulerEventsByIds)",

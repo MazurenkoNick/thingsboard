@@ -40,7 +40,10 @@ import org.thingsboard.server.dao.model.sql.SchedulerEventWithCustomerInfoEntity
 import org.thingsboard.server.dao.model.sql.ScheduledReportInfoEntity;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
+
+import static org.thingsboard.server.dao.model.ModelConstants.SUB_CUSTOMERS_QUERY;
 
 public interface SchedulerEventInfoRepository extends JpaRepository<SchedulerEventInfoEntity, UUID> {
 
@@ -108,11 +111,51 @@ public interface SchedulerEventInfoRepository extends JpaRepository<SchedulerEve
                                                                         Pageable pageable);
 
     @Query("SELECT sei FROM ScheduledReportInfoEntity sei WHERE sei.tenantId = :tenantId " +
-            "AND sei.customerId = :customerId " +
+            "AND (sei.customerId IS NULL OR sei.customerId = org.thingsboard.server.common.data.id.EntityId.NULL_UUID)" +
             "AND (:reportTemplateId IS NULL OR (sei.reportTemplateId = :reportTemplateId))" +
             "AND (:userId IS NULL OR (sei.userId = :userId))" +
             "AND (:searchText IS NULL OR ilike(sei.name, CONCAT('%', :searchText, '%')) = true)")
-    Page<ScheduledReportInfoEntity> findSchedulerReportEventInfo(@Param("tenantId") UUID tenantId,
+    Page<ScheduledReportInfoEntity> findTenantScheduledReportInfos(@Param("tenantId") UUID tenantId,
+                                                                   @Param("reportTemplateId") UUID reportTemplateId,
+                                                                   @Param("userId") UUID userId,
+                                                                   @Param("searchText") String searchText,
+                                                                   Pageable pageable);
+
+    @Query("SELECT sei FROM ScheduledReportInfoEntity sei WHERE sei.tenantId = :tenantId " +
+            "AND (:reportTemplateId IS NULL OR (sei.reportTemplateId = :reportTemplateId))" +
+            "AND (:userId IS NULL OR (sei.userId = :userId))" +
+            "AND (:searchText IS NULL OR ilike(sei.name, CONCAT('%', :searchText, '%')) = true)")
+    Page<ScheduledReportInfoEntity> findTenantScheduledReportInfosIncludingCustomers(@Param("tenantId") UUID tenantId,
+                                                                                     @Param("reportTemplateId") UUID reportTemplateId,
+                                                                                     @Param("userId") UUID userId,
+                                                                                     @Param("searchText") String searchText,
+                                                                                     Pageable pageable);
+
+
+    @Query(value = "SELECT * FROM scheduled_reports_info_view e " +
+            "WHERE" + SUB_CUSTOMERS_QUERY +
+            "AND (:reportTemplateId IS NULL OR (e.report_template_id = :reportTemplateId))" +
+            "AND (:userId IS NULL OR (e.user_id = :userId))" +
+            "AND (:searchText IS NULL OR e.name ILIKE CONCAT('%', :searchText, '%')) ",
+            countQuery = "SELECT count(e.id) FROM scheduled_reports_info_view e " +
+                    "WHERE" + SUB_CUSTOMERS_QUERY +
+                    "AND (:reportTemplateId IS NULL OR (e.report_template_id = :reportTemplateId))" +
+                    "AND (:userId IS NULL OR (e.user_id = :userId))" +
+                    "AND (:searchText IS NULL OR e.name ILIKE CONCAT('%', :searchText, '%')) ",
+            nativeQuery = true)
+    Page<ScheduledReportInfoEntity> findCustomerScheduledReportsIncludingSubCustomers(@Param("tenantId") UUID tenantId,
+                                                                    @Param("customerId") UUID customerId,
+                                                                    @Param("reportTemplateId") UUID reportTemplateId,
+                                                                    @Param("userId") UUID userId,
+                                                                    @Param("searchText") String searchText,
+                                                                    Pageable pageable);
+
+    @Query("SELECT sei FROM ScheduledReportInfoEntity sei WHERE sei.tenantId = :tenantId " +
+            "AND (sei.customerId = :customerId)" +
+            "AND (:reportTemplateId IS NULL OR (sei.reportTemplateId = :reportTemplateId))" +
+            "AND (:userId IS NULL OR (sei.userId = :userId))" +
+            "AND (:searchText IS NULL OR ilike(sei.name, CONCAT('%', :searchText, '%')) = true)")
+    Page<ScheduledReportInfoEntity> findCustomerScheduledReports(@Param("tenantId") UUID tenantId,
                                                                  @Param("customerId") UUID customerId,
                                                                  @Param("reportTemplateId") UUID reportTemplateId,
                                                                  @Param("userId") UUID userId,
