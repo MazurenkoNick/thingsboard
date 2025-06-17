@@ -28,28 +28,23 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.common.data.scheduler;
+package org.thingsboard.server.common.data.report;
 
-import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
-import org.thingsboard.server.common.data.EntityInfo;
+import org.thingsboard.server.common.data.page.PageLink;
+
+import java.util.UUID;
 
 @Data
-public class SchedulerReportEventInfo extends SchedulerEventInfo {
+@Builder
+@AllArgsConstructor
+public class ScheduledReportQuery {
 
-    @Schema
-    private EntityInfo reportInfo;
-    @Schema
-    private EntityInfo customerInfo;
-    @Schema
-    private EntityInfo userInfo;
-
-    public SchedulerReportEventInfo() {
-        super();
-    }
-
-    public SchedulerReportEventInfo(SchedulerEventInfo schedulerEventInfo) {
-        super(schedulerEventInfo);
-    }
+    private PageLink pageLink;
+    private UUID reportTemplateId;
+    private UUID userId;
+    private boolean includeCustomers;
 
 }

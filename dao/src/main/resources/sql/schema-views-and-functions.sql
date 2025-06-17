@@ -572,8 +572,8 @@ BEGIN
 END
 $$;
 
-DROP VIEW IF EXISTS scheduler_report_event_info_view CASCADE;
-CREATE OR REPLACE VIEW scheduler_report_event_info_view AS
+DROP VIEW IF EXISTS scheduled_reports_info_view CASCADE;
+CREATE OR REPLACE VIEW scheduled_reports_info_view AS
 SELECT
     se.id,
     se.created_time,

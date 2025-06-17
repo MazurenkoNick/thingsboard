@@ -576,7 +576,7 @@ public class ModelConstants {
     public static final String SCHEDULER_EVENT_CONFIGURATION_PROPERTY = CONFIGURATION_PROPERTY;
     public static final String SCHEDULER_EVENT_SCHEDULE_PROPERTY = "schedule";
     public static final String SCHEDULER_EVENT_ENABLED_PROPERTY = "enabled";
-    public static final String SCHEDULER_REPORT_EVENT_VIEW_NAME = "scheduler_report_event_info_view";
+    public static final String SCHEDULER_REPORT_EVENT_VIEW_NAME = "scheduled_reports_info_view";
     public static final String SCHEDULER_REPORT_EVENT_TEMPLATE_ID_PROPERTY = "report_template_id";
     public static final String SCHEDULER_REPORT_EVENT_TEMPLATE_NAME_PROPERTY = "report_template_name";
     public static final String SCHEDULER_REPORT_EVENT_CUSTOMER_TTTLE_PROPERTY = "customer_title";

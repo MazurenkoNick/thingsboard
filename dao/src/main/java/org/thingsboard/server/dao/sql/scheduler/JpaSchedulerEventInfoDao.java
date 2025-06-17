@@ -37,10 +37,10 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Component;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
-import org.thingsboard.server.common.data.report.SchedulerReportEventQuery;
+import org.thingsboard.server.common.data.report.ScheduledReportQuery;
 import org.thingsboard.server.common.data.scheduler.SchedulerEventInfo;
 import org.thingsboard.server.common.data.scheduler.SchedulerEventWithCustomerInfo;
-import org.thingsboard.server.common.data.scheduler.SchedulerReportEventInfo;
+import org.thingsboard.server.common.data.scheduler.ScheduledReportInfo;
 import org.thingsboard.server.dao.DaoUtil;
 import org.thingsboard.server.dao.model.sql.SchedulerEventInfoEntity;
 import org.thingsboard.server.dao.scheduler.SchedulerEventInfoDao;
@@ -152,7 +152,7 @@ public class JpaSchedulerEventInfoDao extends JpaAbstractDao<SchedulerEventInfoE
     }
 
     @Override
-    public PageData<SchedulerReportEventInfo> findSchedulerReportEvents(UUID tenantId, UUID customerId, SchedulerReportEventQuery query) {
+    public PageData<ScheduledReportInfo> findSchedulerReportEvents(UUID tenantId, UUID customerId, ScheduledReportQuery query) {
         log.debug("Try to find scheduler event infos by tenantId [{}], edgeId [{}], customerId [{}] and pageLink [{}]", tenantId, customerId, customerId, query);
         return DaoUtil.toPageData(schedulerEventInfoRepository
                 .findSchedulerReportEventInfo(
