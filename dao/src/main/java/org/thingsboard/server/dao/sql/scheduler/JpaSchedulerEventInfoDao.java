@@ -63,6 +63,9 @@ public class JpaSchedulerEventInfoDao extends JpaAbstractDao<SchedulerEventInfoE
     @Autowired
     SchedulerEventInfoRepository schedulerEventInfoRepository;
 
+    @Autowired
+    ScheduledReportInfoRepository scheduledReportInfoRepository;
+
     @Override
     protected Class<SchedulerEventInfoEntity> getEntityClass() {
         return SchedulerEventInfoEntity.class;
@@ -157,7 +160,7 @@ public class JpaSchedulerEventInfoDao extends JpaAbstractDao<SchedulerEventInfoE
     @Override
     public PageData<ScheduledReportInfo> findScheduledReportEvents(UUID tenantId, ScheduledReportQuery query) {
         if (query.isIncludeCustomers()) {
-            return DaoUtil.toPageData(schedulerEventInfoRepository
+            return DaoUtil.toPageData(scheduledReportInfoRepository
                     .findTenantScheduledReportInfosIncludingCustomers(
                             tenantId,
                             query.getReportTemplateId(),
@@ -165,7 +168,7 @@ public class JpaSchedulerEventInfoDao extends JpaAbstractDao<SchedulerEventInfoE
                             Objects.toString(query.getPageLink().getTextSearch(), ""),
                             DaoUtil.toPageable(query.getPageLink())));
         } else {
-            return DaoUtil.toPageData(schedulerEventInfoRepository
+            return DaoUtil.toPageData(scheduledReportInfoRepository
                     .findTenantScheduledReportInfos(
                             tenantId,
                             query.getReportTemplateId(),
@@ -179,7 +182,7 @@ public class JpaSchedulerEventInfoDao extends JpaAbstractDao<SchedulerEventInfoE
     public PageData<ScheduledReportInfo> findScheduledReportEvents(UUID tenantId, UUID customerId, ScheduledReportQuery query) {
         log.debug("Try to find scheduler event infos by tenantId [{}], edgeId [{}], customerId [{}] and pageLink [{}]", tenantId, customerId, customerId, query);
         if (query.isIncludeCustomers()) {
-            return DaoUtil.toPageData(schedulerEventInfoRepository
+            return DaoUtil.toPageData(scheduledReportInfoRepository
                     .findCustomerScheduledReportsIncludingSubCustomers(
                             tenantId,
                             customerId,
@@ -188,7 +191,7 @@ public class JpaSchedulerEventInfoDao extends JpaAbstractDao<SchedulerEventInfoE
                             Objects.toString(query.getPageLink().getTextSearch(), ""),
                             DaoUtil.toPageable(query.getPageLink())));
         } else {
-            return DaoUtil.toPageData(schedulerEventInfoRepository
+            return DaoUtil.toPageData(scheduledReportInfoRepository
                     .findCustomerScheduledReports(
                             tenantId,
                             customerId,

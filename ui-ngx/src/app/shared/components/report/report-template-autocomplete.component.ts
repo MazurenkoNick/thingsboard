@@ -84,6 +84,10 @@ export class ReportTemplateAutocompleteComponent implements ControlValueAccessor
   format: TbReportFormat;
 
   @Input()
+  @coerceBoolean()
+  includeCustomers = false;
+
+  @Input()
   floatLabel: FloatLabelType = 'auto';
 
   @Input()
@@ -242,7 +246,8 @@ export class ReportTemplateAutocompleteComponent implements ControlValueAccessor
   private getReportTemplates(pageLink: PageLink): Observable<PageData<ReportTemplateInfo>> {
     const filter: ReportTemplateFilter = {
       typeList: this.type ? [this.type] : null,
-      formatList: this.format ? [this.format] : null
+      formatList: this.format ? [this.format] : null,
+      includeCustomers: this.includeCustomers
     };
     const query = new ReportTemplateQuery(pageLink, filter);
     return this.reportTemplateService.getAllReportTemplateInfos(query, {ignoreLoading: true});
