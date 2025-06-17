@@ -577,9 +577,11 @@ public class ModelConstants {
     public static final String SCHEDULER_EVENT_SCHEDULE_PROPERTY = "schedule";
     public static final String SCHEDULER_EVENT_ENABLED_PROPERTY = "enabled";
     public static final String SCHEDULER_REPORT_EVENT_VIEW_NAME = "scheduler_report_event_info_view";
-    public static final String SCHEDULER_REPORT_EVENT_REPORT_INFO_PROPERTY = "report_info";
-    public static final String SCHEDULER_REPORT_EVENT_CUSTOMER_INFO_PROPERTY = "customer_info";
-    public static final String SCHEDULER_REPORT_EVENT_USER_INFO_PROPERTY = "user_info";
+    public static final String SCHEDULER_REPORT_EVENT_TEMPLATE_ID_PROPERTY = "report_template_id";
+    public static final String SCHEDULER_REPORT_EVENT_TEMPLATE_NAME_PROPERTY = "report_template_name";
+    public static final String SCHEDULER_REPORT_EVENT_CUSTOMER_TTTLE_PROPERTY = "customer_title";
+    public static final String SCHEDULER_REPORT_EVENT_USER_ID_PROPERTY = "user_id";
+    public static final String SCHEDULER_REPORT_EVENT_USER_NAME_PROPERTY = "user_name";
 
     /**
      * Blob entity constants.

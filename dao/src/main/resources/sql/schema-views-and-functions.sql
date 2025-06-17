@@ -586,21 +586,11 @@ SELECT
     se.type,
     se.schedule,
     se.enabled,
-    json_build_object(
-            'id', se.customer_id,
-            'entityType', 'CUSTOMER',
-            'name', c.title
-        ) AS customer_info,
-    json_build_object(
-            'id', cfg.report_template_id,
-            'entityType', 'REPORT_TEMPLATE',
-            'name', rt.name
-        ) AS report_info,
-    json_build_object(
-            'id', cfg.user_id,
-            'entityType', 'USER',
-            'name', u.email
-        ) AS user_info
+    c.title AS customer_title,
+    cfg.report_template_id AS report_template_id,
+    rt.name AS report_template_name,
+    cfg.user_id AS user_id,
+    u.email AS user_name
 FROM
     scheduler_event se
         LEFT JOIN LATERAL (

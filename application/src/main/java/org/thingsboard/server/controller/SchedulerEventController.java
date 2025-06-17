@@ -56,6 +56,7 @@ import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.permission.Operation;
 import org.thingsboard.server.common.data.permission.Resource;
+import org.thingsboard.server.common.data.report.SchedulerReportEventQuery;
 import org.thingsboard.server.common.data.scheduler.SchedulerEvent;
 import org.thingsboard.server.common.data.scheduler.SchedulerEventInfo;
 import org.thingsboard.server.common.data.scheduler.SchedulerEventWithCustomerInfo;
@@ -69,6 +70,7 @@ import org.thingsboard.server.service.security.model.SecurityUser;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
@@ -103,7 +105,8 @@ public class SchedulerEventController extends BaseController {
     private static final String SCHEDULER_EVENT_DESCRIPTION = "Scheduler Event extends Scheduler Event Info object and adds " +
             "'configuration' - a JSON structure of scheduler event configuration. See the 'Model' tab of the Response Class for more details. ";
     private static final String INVALID_SCHEDULER_EVENT_ID = "Referencing non-existing Scheduler Event Id will cause 'Not Found' error.";
-
+    private static final String REPORT_TEMPLATE_ID_DESCRIPTION = "Report template id";
+    private static final String REPORT_USER_DESCRIPTION = "The user used for report generation.";
     private static final int DEFAULT_SCHEDULER_EVENT_LIMIT = 100;
 
     public static final String SCHEDULER_EVENT_ID = "schedulerEventId";
@@ -232,6 +235,10 @@ public class SchedulerEventController extends BaseController {
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
     @GetMapping(value = "/schedulerReportEvents")
     public PageData<SchedulerReportEventInfo> getSchedulerReportEvents(
+            @Parameter(description = REPORT_TEMPLATE_ID_DESCRIPTION, array = @ArraySchema(schema = @Schema(type = "string", allowableValues = {"REPORT", "SUB_REPORT"})))
+            @RequestParam(required = false) UUID reportTemplateId,
+            @Parameter(description = REPORT_USER_DESCRIPTION, array = @ArraySchema(schema = @Schema(type = "string", allowableValues = {"PDF", "CSV"})))
+            @RequestParam(required = false) UUID reportUserId,
             @Parameter(description = PAGE_SIZE_DESCRIPTION, required = true, schema = @Schema(minimum = "1"))
             @RequestParam int pageSize,
             @Parameter(description = PAGE_NUMBER_DESCRIPTION, required = true, schema = @Schema(minimum = "0"))
@@ -246,7 +253,8 @@ public class SchedulerEventController extends BaseController {
         TenantId tenantId = getCurrentUser().getTenantId();
         CustomerId customerId = getCurrentUser().getCustomerId();
         PageLink pageLink = createPageLink(pageSize, page, textSearch, sortProperty, sortOrder);
-        return schedulerEventService.findSchedulerReportEvents(tenantId, customerId, pageLink);
+        SchedulerReportEventQuery query = new SchedulerReportEventQuery(pageLink, reportTemplateId, reportUserId);
+        return schedulerEventService.findSchedulerReportEvents(tenantId, customerId, query);
     }
 
     @ApiOperation(value = "Get Scheduler Events By Ids (getSchedulerEventsByIds)",

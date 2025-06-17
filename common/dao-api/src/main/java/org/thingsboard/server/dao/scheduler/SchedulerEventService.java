@@ -37,6 +37,7 @@ import org.thingsboard.server.common.data.id.SchedulerEventId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
+import org.thingsboard.server.common.data.report.SchedulerReportEventQuery;
 import org.thingsboard.server.common.data.scheduler.SchedulerEvent;
 import org.thingsboard.server.common.data.scheduler.SchedulerEventInfo;
 import org.thingsboard.server.common.data.scheduler.SchedulerEventWithCustomerInfo;
@@ -87,5 +88,5 @@ public interface SchedulerEventService extends EntityDaoService {
 
     PageData<SchedulerEventInfo> findSchedulerEventInfosByTenantIdAndEdgeIdAndCustomerId(TenantId tenantId, EdgeId edgeId, CustomerId customerId, PageLink pageLink);
 
-    PageData<SchedulerReportEventInfo> findSchedulerReportEvents(TenantId tenantId, CustomerId customerId, PageLink pageLink);
+    PageData<SchedulerReportEventInfo> findSchedulerReportEvents(TenantId tenantId, CustomerId customerId, SchedulerReportEventQuery query);
 }

@@ -109,6 +109,13 @@ public interface SchedulerEventInfoRepository extends JpaRepository<SchedulerEve
 
     @Query("SELECT sei FROM SchedulerReportEventInfoEntity sei WHERE sei.tenantId = :tenantId " +
             "AND sei.customerId = :customerId " +
+            "AND (:reportTemplateId IS NULL OR (sei.reportTemplateId = :reportTemplateId))" +
+            "AND (:userId IS NULL OR (sei.userId = :userId))" +
             "AND (:searchText IS NULL OR ilike(sei.name, CONCAT('%', :searchText, '%')) = true)")
-    Page<SchedulerReportEventInfoEntity> findSchedulerReportEventInfo(UUID tenantId, UUID customerId, String searchText, Pageable pageable);
+    Page<SchedulerReportEventInfoEntity> findSchedulerReportEventInfo(@Param("tenantId") UUID tenantId,
+                                                                      @Param("customerId") UUID customerId,
+                                                                      @Param("reportTemplateId") UUID reportTemplateId,
+                                                                      @Param("userId") UUID userId,
+                                                                      @Param("searchText") String searchText,
+                                                                      Pageable pageable);
 }

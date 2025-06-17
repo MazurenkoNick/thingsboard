@@ -31,18 +31,20 @@
 package org.thingsboard.server.dao.model.sql;
 
 import jakarta.persistence.Column;
-import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.thingsboard.server.common.data.EntityInfo;
 import org.thingsboard.server.common.data.scheduler.SchedulerReportEventInfo;
-import org.thingsboard.server.dao.util.mapping.EntityInfoConverter;
 
-import static org.thingsboard.server.dao.model.ModelConstants.SCHEDULER_REPORT_EVENT_CUSTOMER_INFO_PROPERTY;
-import static org.thingsboard.server.dao.model.ModelConstants.SCHEDULER_REPORT_EVENT_REPORT_INFO_PROPERTY;
-import static org.thingsboard.server.dao.model.ModelConstants.SCHEDULER_REPORT_EVENT_USER_INFO_PROPERTY;
+import java.util.UUID;
+
+import static org.thingsboard.server.dao.model.ModelConstants.SCHEDULER_REPORT_EVENT_CUSTOMER_TTTLE_PROPERTY;
+import static org.thingsboard.server.dao.model.ModelConstants.SCHEDULER_REPORT_EVENT_TEMPLATE_ID_PROPERTY;
+import static org.thingsboard.server.dao.model.ModelConstants.SCHEDULER_REPORT_EVENT_TEMPLATE_NAME_PROPERTY;
+import static org.thingsboard.server.dao.model.ModelConstants.SCHEDULER_REPORT_EVENT_USER_ID_PROPERTY;
+import static org.thingsboard.server.dao.model.ModelConstants.SCHEDULER_REPORT_EVENT_USER_NAME_PROPERTY;
 import static org.thingsboard.server.dao.model.ModelConstants.SCHEDULER_REPORT_EVENT_VIEW_NAME;
 
 @Data
@@ -51,15 +53,18 @@ import static org.thingsboard.server.dao.model.ModelConstants.SCHEDULER_REPORT_E
 @Table(name = SCHEDULER_REPORT_EVENT_VIEW_NAME)
 public final class SchedulerReportEventInfoEntity extends AbstractSchedulerEventInfoEntity<SchedulerReportEventInfo> {
 
-    @Convert(converter = EntityInfoConverter.class)
-    @Column(name = SCHEDULER_REPORT_EVENT_REPORT_INFO_PROPERTY)
-    private EntityInfo reportInfo;
-    @Convert(converter = EntityInfoConverter.class)
-    @Column(name = SCHEDULER_REPORT_EVENT_CUSTOMER_INFO_PROPERTY)
-    private EntityInfo customerInfo;
-    @Convert(converter = EntityInfoConverter.class)
-    @Column(name = SCHEDULER_REPORT_EVENT_USER_INFO_PROPERTY)
-    private EntityInfo userInfo;
+    @Column(name = SCHEDULER_REPORT_EVENT_TEMPLATE_ID_PROPERTY)
+    private UUID reportTemplateId;
+
+    @Column(name = SCHEDULER_REPORT_EVENT_TEMPLATE_NAME_PROPERTY)
+    private String reportTemplateName;
+    @Column(name = SCHEDULER_REPORT_EVENT_CUSTOMER_TTTLE_PROPERTY)
+    private String customerTitle;
+    @Column(name = SCHEDULER_REPORT_EVENT_USER_ID_PROPERTY)
+    private UUID userId;
+
+    @Column(name = SCHEDULER_REPORT_EVENT_USER_NAME_PROPERTY)
+    private String userName;
 
     public SchedulerReportEventInfoEntity() {
         super();
@@ -68,9 +73,9 @@ public final class SchedulerReportEventInfoEntity extends AbstractSchedulerEvent
     @Override
     public SchedulerReportEventInfo toData() {
         SchedulerReportEventInfo schedulerReportEventInfo = new SchedulerReportEventInfo(super.toSchedulerEventInfo());
-        schedulerReportEventInfo.setReportInfo(reportInfo);
-        schedulerReportEventInfo.setCustomerInfo(customerInfo);
-        schedulerReportEventInfo.setUserInfo(userInfo);
+        schedulerReportEventInfo.setReportInfo(new EntityInfo(reportTemplateId, "REPORT_TEMPLATE", reportTemplateName));
+        schedulerReportEventInfo.setCustomerInfo(new EntityInfo(getCustomerId(), "CUSTOMER", customerTitle));
+        schedulerReportEventInfo.setUserInfo(new EntityInfo(userId, "USER", userName));
         return schedulerReportEventInfo;
     }
 

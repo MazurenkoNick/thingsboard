@@ -47,6 +47,7 @@ import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.relation.EntityRelation;
 import org.thingsboard.server.common.data.relation.RelationTypeGroup;
+import org.thingsboard.server.common.data.report.SchedulerReportEventQuery;
 import org.thingsboard.server.common.data.scheduler.SchedulerEvent;
 import org.thingsboard.server.common.data.scheduler.SchedulerEventInfo;
 import org.thingsboard.server.common.data.scheduler.SchedulerEventWithCustomerInfo;
@@ -281,9 +282,9 @@ public class BaseSchedulerEventService extends AbstractEntityService implements 
     }
 
     @Override
-    public PageData<SchedulerReportEventInfo> findSchedulerReportEvents(TenantId tenantId, CustomerId customerId, PageLink pageLink) {
+    public PageData<SchedulerReportEventInfo> findSchedulerReportEvents(TenantId tenantId, CustomerId customerId, SchedulerReportEventQuery query) {
         log.trace("Executing findSchedulerReportEvents, tenantId [{}], customerId [{}]", tenantId, customerId);
-        return schedulerEventInfoDao.findSchedulerReportEvents(tenantId.getId(), customerId.getId(), pageLink);
+        return schedulerEventInfoDao.findSchedulerReportEvents(tenantId.getId(), customerId.getId(), query);
     }
 
     @Override
