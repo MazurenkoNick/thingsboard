@@ -139,7 +139,7 @@ export class ScheduledReportsTableConfigResolver  {
     config.deleteEntitiesContent = () => this.translate.instant('scheduled-report.delete-scheduled-reports-text');
 
     config.onEntityAction = action => this.onReportScheduledReportAction(action, config);
-    config.addEntity = () => this.addScheduledReport(config).pipe(
+    config.addEntity = () => this.addScheduledReport().pipe(
       map((res) => {
         return res ? {} as ScheduledReportInfo : null
       })
@@ -223,8 +223,8 @@ export class ScheduledReportsTableConfigResolver  {
     });
   }
 
-  private addScheduledReport(config: EntityTableConfig<ScheduledReportInfo>): Observable<boolean> {
-    return this.openScheduledReportDialog(null, config);
+  private addScheduledReport(): Observable<boolean> {
+    return this.openScheduledReportDialog(null);
   }
 
   private editScheduledReport($event: Event, config: EntityTableConfig<ScheduledReportInfo>, scheduledReport: ScheduledReportInfo) {
@@ -233,7 +233,7 @@ export class ScheduledReportsTableConfigResolver  {
     }
     this.schedulerEventService.getSchedulerEvent(scheduledReport.id.id).subscribe({
       next: (schedulerEvent) => {
-        this.openScheduledReportDialog($event, config, schedulerEvent, !this.userPermissionsService.hasGenericPermission(Resource.SCHEDULER_EVENT, Operation.WRITE)).subscribe(
+        this.openScheduledReportDialog($event, schedulerEvent, !this.userPermissionsService.hasGenericPermission(Resource.SCHEDULER_EVENT, Operation.WRITE)).subscribe(
           {
             next: (res) => {
               if (res) {
@@ -246,7 +246,7 @@ export class ScheduledReportsTableConfigResolver  {
     });
   }
 
-  private openScheduledReportDialog($event: Event, config: EntityTableConfig<ScheduledReportInfo>, scheduledReport?: SchedulerEvent, readonly = false): Observable<boolean> {
+  private openScheduledReportDialog($event: Event, scheduledReport?: SchedulerEvent, readonly = false): Observable<boolean> {
     if ($event) {
       $event.stopPropagation();
     }

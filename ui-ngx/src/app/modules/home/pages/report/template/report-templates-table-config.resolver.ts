@@ -48,9 +48,12 @@ import { EntityType, entityTypeResources, entityTypeTranslations } from '@shared
 import { EntityAction } from '@home/models/entity/entity-component.models';
 import { UserPermissionsService } from '@core/http/user-permissions.service';
 import {
-  ReportTemplate, ReportTemplateFilter,
+  ReportConfig,
+  ReportTemplate,
+  ReportTemplateFilter,
   ReportTemplateInfo,
   ReportTemplateQuery,
+  ReportTemplateType,
   reportTemplateTypeTranslationMap
 } from '@shared/models/report.models';
 import { ReportTemplateService } from '@core/http/report-template.service';
@@ -65,6 +68,16 @@ import { ReportTemplateTableHeaderComponent } from '@home/pages/report/template/
 import { ReportTemplateTabsComponent } from '@home/pages/report/template/report-template-tabs.component';
 import { ReportTemplateFormComponent } from '@home/pages/report/template/report-template-form.component';
 import { ImportExportService } from '@shared/import-export/import-export.service';
+import { SchedulerEvent, SchedulerEventConfiguration } from '@shared/models/scheduler-event.models';
+import {
+  SchedulerEventDialogComponent,
+  SchedulerEventDialogData
+} from '@home/components/scheduler/scheduler-event-dialog.component';
+import { defaultSchedulerEventConfigTypes } from '@home/components/scheduler/scheduler-event-config.models';
+import { MatDialog } from '@angular/material/dialog';
+import { Operation, Resource } from '@shared/models/security.models';
+import { getDefaultTimezone } from '@shared/models/time/time.models';
+import { UserId } from '@shared/models/id/user-id';
 
 @Injectable()
 export class ReportTemplatesTableConfigResolver  {
@@ -73,6 +86,7 @@ export class ReportTemplatesTableConfigResolver  {
               private reportTemplateService: ReportTemplateService,
               private importExport: ImportExportService,
               private userPermissionsService: UserPermissionsService,
+              private dialog: MatDialog,
               private translate: TranslateService,
               private utils: UtilsService,
               private router: Router,
@@ -182,6 +196,16 @@ export class ReportTemplatesTableConfigResolver  {
 
   configureCellActions(config: EntityTableConfig<ReportTemplateInfo>): Array<CellActionDescriptor<ReportTemplateInfo>> {
     const actions: Array<CellActionDescriptor<ReportTemplateInfo>> = [];
+    if (this.userPermissionsService.hasGenericPermission(Resource.SCHEDULER_EVENT, Operation.CREATE)) {
+      actions.push(
+        {
+          name: this.translate.instant('scheduled-report.schedule-report'),
+          icon: 'mdi:file-clock-outline',
+          isEnabled: (reportTemplate) => reportTemplate.type === ReportTemplateType.REPORT,
+          onAction: ($event, entity) => this.scheduleReport($event, entity)
+        },
+      );
+    }
     actions.push(
       {
         name: this.translate.instant('report-template.export'),
@@ -249,6 +273,39 @@ export class ReportTemplatesTableConfigResolver  {
     this.importExport.exportReportTemplate(reportTemplate.id.id);
   }
 
+  private scheduleReport($event: Event, reportTemplate: ReportTemplateInfo) {
+    if ($event) {
+      $event.stopPropagation();
+    }
+
+    const authUser = getCurrentAuthUser(this.store);
+
+    const reportConfig:  Partial<ReportConfig> & SchedulerEventConfiguration = {
+      reportTemplateId: reportTemplate.id,
+      userId: new UserId(authUser.userId),
+      timezone: getDefaultTimezone()
+    };
+
+    const scheduledReport: SchedulerEvent = {
+      name: null,
+      type: 'generateReport',
+      schedule: null,
+      configuration: reportConfig
+    };
+
+    return this.dialog.open<SchedulerEventDialogComponent, SchedulerEventDialogData, boolean>(SchedulerEventDialogComponent, {
+      disableClose: true,
+      panelClass: ['tb-dialog', 'tb-fullscreen-dialog'],
+      data: {
+        schedulerEventConfigTypes: {generateReport: defaultSchedulerEventConfigTypes['generateReport']},
+        isAdd: true,
+        readonly: false,
+        schedulerEvent: scheduledReport,
+        defaultEventType: 'generateReport'
+      }
+    });
+  }
+
   onReportTemplateAction(action: EntityAction<ReportTemplateInfo>, config: EntityTableConfig<ReportTemplateInfo>): boolean {
     switch (action.action) {
       case 'open':
@@ -256,6 +313,9 @@ export class ReportTemplatesTableConfigResolver  {
         return true;
       case 'export':
         this.exportReportTemplate(action.event, action.entity);
+        return true;
+      case 'scheduleReport':
+        this.scheduleReport(action.event, action.entity);
         return true;
     }
     return false;
