@@ -88,5 +88,7 @@ public interface SchedulerEventService extends EntityDaoService {
 
     PageData<SchedulerEventInfo> findSchedulerEventInfosByTenantIdAndEdgeIdAndCustomerId(TenantId tenantId, EdgeId edgeId, CustomerId customerId, PageLink pageLink);
 
-    PageData<ScheduledReportInfo> findSchedulerReportEvents(TenantId tenantId, CustomerId customerId, ScheduledReportQuery query);
+    PageData<ScheduledReportInfo> findScheduledReportEvents(TenantId tenantId, ScheduledReportQuery query);
+
+    PageData<ScheduledReportInfo> findScheduledReportEvents(TenantId tenantId, CustomerId customerId, ScheduledReportQuery query);
 }

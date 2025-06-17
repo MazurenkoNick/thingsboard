@@ -99,7 +99,7 @@ public class ReportController extends BaseController {
     private final TbReportService tbReportService;
     private final SystemSecurityService systemSecurityService;
 
-    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
     @PostMapping(value = "/report")
     public Report createReport(@RequestPart MultipartFile file,
                                @RequestPart String info) throws Exception {
@@ -138,7 +138,7 @@ public class ReportController extends BaseController {
     }
 
     @GetMapping("/reports")
-    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
     public PageData<Report> getReports(@Parameter(description = PAGE_SIZE_DESCRIPTION, required = true)
                                        @RequestParam int pageSize,
                                        @Parameter(description = PAGE_NUMBER_DESCRIPTION, required = true)
@@ -157,7 +157,7 @@ public class ReportController extends BaseController {
 
     @ApiOperation(value = "Download test report (downloadTestReport)",
             notes = "Generate and download test report." + TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH)
-    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
     @PostMapping(value = "/report/test")
     public ResponseEntity<ByteArrayResource> testReportAndDownload(@RequestBody ReportRequest reportRequest) throws Exception {
         TenantId tenantId = getTenantId();
@@ -187,7 +187,7 @@ public class ReportController extends BaseController {
                 .body(resource);
     }
 
-    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
     @PostMapping(value = "/report/request")
     public Job requestReport(@RequestBody ReportRequest reportRequest) throws Exception {
         ReportTemplateId reportTemplateId = reportRequest.getReportTemplateId();

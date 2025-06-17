@@ -119,5 +119,7 @@ public interface SchedulerEventInfoDao extends Dao<SchedulerEventInfo> {
      */
     PageData<SchedulerEventInfo> findSchedulerEventInfosByTenantIdAndEdgeIdAndCustomerId(UUID tenantId, UUID edgeId, UUID customerId, PageLink pageLink);
 
-    PageData<ScheduledReportInfo> findSchedulerReportEvents(UUID tenantId, UUID customerId, ScheduledReportQuery query);
+    PageData<ScheduledReportInfo> findScheduledReportEvents(UUID tenantId, ScheduledReportQuery query);
+
+    PageData<ScheduledReportInfo> findScheduledReportEvents(UUID tenantId, UUID customerId, ScheduledReportQuery query);
 }
