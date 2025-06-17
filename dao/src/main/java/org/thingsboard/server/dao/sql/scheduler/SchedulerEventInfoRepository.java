@@ -37,7 +37,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.thingsboard.server.dao.model.sql.SchedulerEventInfoEntity;
 import org.thingsboard.server.dao.model.sql.SchedulerEventWithCustomerInfoEntity;
-import org.thingsboard.server.dao.model.sql.SchedulerReportEventInfoEntity;
+import org.thingsboard.server.dao.model.sql.ScheduledReportInfoEntity;
 
 import java.util.List;
 import java.util.UUID;
@@ -107,15 +107,15 @@ public interface SchedulerEventInfoRepository extends JpaRepository<SchedulerEve
                                                                         @Param("searchText") String searchText,
                                                                         Pageable pageable);
 
-    @Query("SELECT sei FROM SchedulerReportEventInfoEntity sei WHERE sei.tenantId = :tenantId " +
+    @Query("SELECT sei FROM ScheduledReportInfoEntity sei WHERE sei.tenantId = :tenantId " +
             "AND sei.customerId = :customerId " +
             "AND (:reportTemplateId IS NULL OR (sei.reportTemplateId = :reportTemplateId))" +
             "AND (:userId IS NULL OR (sei.userId = :userId))" +
             "AND (:searchText IS NULL OR ilike(sei.name, CONCAT('%', :searchText, '%')) = true)")
-    Page<SchedulerReportEventInfoEntity> findSchedulerReportEventInfo(@Param("tenantId") UUID tenantId,
-                                                                      @Param("customerId") UUID customerId,
-                                                                      @Param("reportTemplateId") UUID reportTemplateId,
-                                                                      @Param("userId") UUID userId,
-                                                                      @Param("searchText") String searchText,
-                                                                      Pageable pageable);
+    Page<ScheduledReportInfoEntity> findSchedulerReportEventInfo(@Param("tenantId") UUID tenantId,
+                                                                 @Param("customerId") UUID customerId,
+                                                                 @Param("reportTemplateId") UUID reportTemplateId,
+                                                                 @Param("userId") UUID userId,
+                                                                 @Param("searchText") String searchText,
+                                                                 Pageable pageable);
 }

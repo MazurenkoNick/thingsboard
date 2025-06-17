@@ -56,11 +56,11 @@ import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.permission.Operation;
 import org.thingsboard.server.common.data.permission.Resource;
-import org.thingsboard.server.common.data.report.SchedulerReportEventQuery;
+import org.thingsboard.server.common.data.report.ScheduledReportQuery;
 import org.thingsboard.server.common.data.scheduler.SchedulerEvent;
 import org.thingsboard.server.common.data.scheduler.SchedulerEventInfo;
 import org.thingsboard.server.common.data.scheduler.SchedulerEventWithCustomerInfo;
-import org.thingsboard.server.common.data.scheduler.SchedulerReportEventInfo;
+import org.thingsboard.server.common.data.scheduler.ScheduledReportInfo;
 import org.thingsboard.server.common.data.security.Authority;
 import org.thingsboard.server.config.annotations.ApiOperation;
 import org.thingsboard.server.queue.util.TbCoreComponent;
@@ -77,6 +77,7 @@ import java.util.stream.Collectors;
 import static org.thingsboard.server.controller.ControllerConstants.EDGE_ASSIGN_RECEIVE_STEP_DESCRIPTION;
 import static org.thingsboard.server.controller.ControllerConstants.EDGE_ID_PARAM_DESCRIPTION;
 import static org.thingsboard.server.controller.ControllerConstants.EDGE_UNASSIGN_RECEIVE_STEP_DESCRIPTION;
+import static org.thingsboard.server.controller.ControllerConstants.INCLUDE_CUSTOMERS_OR_SUB_CUSTOMERS;
 import static org.thingsboard.server.controller.ControllerConstants.PAGE_DATA_PARAMETERS;
 import static org.thingsboard.server.controller.ControllerConstants.PAGE_NUMBER_DESCRIPTION;
 import static org.thingsboard.server.controller.ControllerConstants.PAGE_SIZE_DESCRIPTION;
@@ -233,12 +234,14 @@ public class SchedulerEventController extends BaseController {
             notes = "Requested scheduler events must be owned by tenant and customer id. "
                     + TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH + "\n\n" + RBAC_READ_CHECK)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
-    @GetMapping(value = "/schedulerReportEvents")
-    public PageData<SchedulerReportEventInfo> getSchedulerReportEvents(
-            @Parameter(description = REPORT_TEMPLATE_ID_DESCRIPTION, array = @ArraySchema(schema = @Schema(type = "string", allowableValues = {"REPORT", "SUB_REPORT"})))
+    @GetMapping(value = "/scheduledReports")
+    public PageData<ScheduledReportInfo> getSchedulerReportEvents(
+            @Parameter(description = REPORT_TEMPLATE_ID_DESCRIPTION)
             @RequestParam(required = false) UUID reportTemplateId,
-            @Parameter(description = REPORT_USER_DESCRIPTION, array = @ArraySchema(schema = @Schema(type = "string", allowableValues = {"PDF", "CSV"})))
-            @RequestParam(required = false) UUID reportUserId,
+            @Parameter(description = REPORT_USER_DESCRIPTION)
+            @RequestParam(required = false) UUID userId,
+            @Parameter(description = INCLUDE_CUSTOMERS_OR_SUB_CUSTOMERS)
+            @RequestParam(required = false) Boolean includeCustomers,
             @Parameter(description = PAGE_SIZE_DESCRIPTION, required = true, schema = @Schema(minimum = "1"))
             @RequestParam int pageSize,
             @Parameter(description = PAGE_NUMBER_DESCRIPTION, required = true, schema = @Schema(minimum = "0"))
@@ -253,7 +256,8 @@ public class SchedulerEventController extends BaseController {
         TenantId tenantId = getCurrentUser().getTenantId();
         CustomerId customerId = getCurrentUser().getCustomerId();
         PageLink pageLink = createPageLink(pageSize, page, textSearch, sortProperty, sortOrder);
-        SchedulerReportEventQuery query = new SchedulerReportEventQuery(pageLink, reportTemplateId, reportUserId);
+        boolean includeCustomerReportTemplates = includeCustomers != null && includeCustomers;
+        ScheduledReportQuery query = new ScheduledReportQuery(pageLink, reportTemplateId, userId, includeCustomerReportTemplates);
         return schedulerEventService.findSchedulerReportEvents(tenantId, customerId, query);
     }
 

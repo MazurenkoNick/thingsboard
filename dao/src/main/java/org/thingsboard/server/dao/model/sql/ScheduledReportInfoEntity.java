@@ -36,7 +36,8 @@ import jakarta.persistence.Table;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.thingsboard.server.common.data.EntityInfo;
-import org.thingsboard.server.common.data.scheduler.SchedulerReportEventInfo;
+import org.thingsboard.server.common.data.EntityType;
+import org.thingsboard.server.common.data.scheduler.ScheduledReportInfo;
 
 import java.util.UUID;
 
@@ -51,31 +52,29 @@ import static org.thingsboard.server.dao.model.ModelConstants.SCHEDULER_REPORT_E
 @EqualsAndHashCode(callSuper = true)
 @Entity
 @Table(name = SCHEDULER_REPORT_EVENT_VIEW_NAME)
-public final class SchedulerReportEventInfoEntity extends AbstractSchedulerEventInfoEntity<SchedulerReportEventInfo> {
+public final class ScheduledReportInfoEntity extends AbstractSchedulerEventInfoEntity<ScheduledReportInfo> {
 
     @Column(name = SCHEDULER_REPORT_EVENT_TEMPLATE_ID_PROPERTY)
     private UUID reportTemplateId;
-
     @Column(name = SCHEDULER_REPORT_EVENT_TEMPLATE_NAME_PROPERTY)
     private String reportTemplateName;
     @Column(name = SCHEDULER_REPORT_EVENT_CUSTOMER_TTTLE_PROPERTY)
     private String customerTitle;
     @Column(name = SCHEDULER_REPORT_EVENT_USER_ID_PROPERTY)
     private UUID userId;
-
     @Column(name = SCHEDULER_REPORT_EVENT_USER_NAME_PROPERTY)
     private String userName;
 
-    public SchedulerReportEventInfoEntity() {
+    public ScheduledReportInfoEntity() {
         super();
     }
 
     @Override
-    public SchedulerReportEventInfo toData() {
-        SchedulerReportEventInfo schedulerReportEventInfo = new SchedulerReportEventInfo(super.toSchedulerEventInfo());
-        schedulerReportEventInfo.setReportInfo(new EntityInfo(reportTemplateId, "REPORT_TEMPLATE", reportTemplateName));
-        schedulerReportEventInfo.setCustomerInfo(new EntityInfo(getCustomerId(), "CUSTOMER", customerTitle));
-        schedulerReportEventInfo.setUserInfo(new EntityInfo(userId, "USER", userName));
+    public ScheduledReportInfo toData() {
+        ScheduledReportInfo schedulerReportEventInfo = new ScheduledReportInfo(super.toSchedulerEventInfo());
+        schedulerReportEventInfo.setTemplateInfo(new EntityInfo(reportTemplateId, EntityType.REPORT_TEMPLATE.name(), reportTemplateName));
+        schedulerReportEventInfo.setCustomerTitle(customerTitle);
+        schedulerReportEventInfo.setUserName(userName);
         return schedulerReportEventInfo;
     }
 

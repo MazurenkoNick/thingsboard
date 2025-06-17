@@ -47,11 +47,11 @@ import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.relation.EntityRelation;
 import org.thingsboard.server.common.data.relation.RelationTypeGroup;
-import org.thingsboard.server.common.data.report.SchedulerReportEventQuery;
+import org.thingsboard.server.common.data.report.ScheduledReportQuery;
 import org.thingsboard.server.common.data.scheduler.SchedulerEvent;
 import org.thingsboard.server.common.data.scheduler.SchedulerEventInfo;
 import org.thingsboard.server.common.data.scheduler.SchedulerEventWithCustomerInfo;
-import org.thingsboard.server.common.data.scheduler.SchedulerReportEventInfo;
+import org.thingsboard.server.common.data.scheduler.ScheduledReportInfo;
 import org.thingsboard.server.dao.edge.EdgeService;
 import org.thingsboard.server.dao.entity.AbstractEntityService;
 import org.thingsboard.server.dao.entity.EntityCountService;
@@ -282,7 +282,7 @@ public class BaseSchedulerEventService extends AbstractEntityService implements 
     }
 
     @Override
-    public PageData<SchedulerReportEventInfo> findSchedulerReportEvents(TenantId tenantId, CustomerId customerId, SchedulerReportEventQuery query) {
+    public PageData<ScheduledReportInfo> findSchedulerReportEvents(TenantId tenantId, CustomerId customerId, ScheduledReportQuery query) {
         log.trace("Executing findSchedulerReportEvents, tenantId [{}], customerId [{}]", tenantId, customerId);
         return schedulerEventInfoDao.findSchedulerReportEvents(tenantId.getId(), customerId.getId(), query);
     }
