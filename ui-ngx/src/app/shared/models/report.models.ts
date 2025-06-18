@@ -66,6 +66,12 @@ export interface Report extends BaseData<ReportId>, HasTenantId {
   userId: UserId;
 }
 
+export interface ReportInfo extends Report {
+  templateInfo: EntityInfoData;
+  customerTitle: string;
+  userName: string;
+}
+
 export enum ReportTemplateType {
   REPORT = 'REPORT',
   SUB_REPORT = 'SUB_REPORT'
@@ -100,7 +106,7 @@ export interface HeaderFooter {
   firstPage?: HeaderFooter;
 }
 
-export interface ReportFilter {
+export interface ReportDataFilter {
   id: string;
   filter: string;
   keyFilters: Array<KeyFilter>;
@@ -122,33 +128,33 @@ export const entityAliasesListToAliases = (entityAliasesList: EntityAlias[]): En
   return entityAliases;
 }
 
-export const filtersToReportFilterList = (filters: Filters): ReportFilter[] => {
-  const reportFilters: ReportFilter[] = [];
+export const filtersToReportDataFilterList = (filters: Filters): ReportDataFilter[] => {
+  const reportDataFilters: ReportDataFilter[] = [];
   for (const id of Object.keys(filters)) {
-    reportFilters.push(filterToReportFilter(filters[id]));
+    reportDataFilters.push(filterToReportDataFilter(filters[id]));
   }
-  return reportFilters;
+  return reportDataFilters;
 }
 
-export const reportFilterListToFilters = (reportFilters: ReportFilter[]): Filters => {
+export const reportDataFilterListToFilters = (reportDataFilters: ReportDataFilter[]): Filters => {
   const filters: Filters = {};
-  for (const filter of reportFilters) {
-    filters[filter.id] = reportFilterToFilter(filter);
+  for (const filter of reportDataFilters) {
+    filters[filter.id] = reportDataFilterToFilter(filter);
   }
   return filters;
 }
 
-export const reportFilterToFilter = (reportFilter: ReportFilter): Filter => {
-  const keyFilterInfos = keyFiltersToKeyFilterInfos(reportFilter.keyFilters);
+export const reportDataFilterToFilter = (reportDataFilter: ReportDataFilter): Filter => {
+  const keyFilterInfos = keyFiltersToKeyFilterInfos(reportDataFilter.keyFilters);
   return {
-    id: reportFilter.id,
-    filter: reportFilter.filter,
+    id: reportDataFilter.id,
+    filter: reportDataFilter.filter,
     keyFilters: keyFilterInfos,
     editable: false
   };
 }
 
-export const filterToReportFilter = (filter: Filter): ReportFilter => {
+export const filterToReportDataFilter = (filter: Filter): ReportDataFilter => {
   const keyFilters = keyFilterInfosToKeyFilters(filter.keyFilters);
   return {
     id: filter.id,
@@ -169,7 +175,7 @@ export interface ReportTemplateConfig {
   namePattern: string;
   timeDataPattern?: string;
   entityAliases: EntityAlias[];
-  filters: ReportFilter[];
+  filters: ReportDataFilter[];
   components: ReportComponentConfig[];
 }
 
@@ -472,13 +478,13 @@ export interface ScheduledReportInfo extends SchedulerEventInfo {
   customerTitle: string;
 }
 
-export interface ScheduledReportFilter {
+export interface ReportFilter {
   includeCustomers?: boolean;
   reportTemplateId?: ReportTemplateId;
   userId?: UserId;
 }
 
-export const scheduledReportFiltersEquals = (filter1?: ScheduledReportFilter, filter2?: ScheduledReportFilter): boolean => {
+export const reportFiltersEquals = (filter1?: ReportFilter, filter2?: ReportFilter): boolean => {
   if (filter1 === filter2) {
     return true;
   }
@@ -499,7 +505,7 @@ export const scheduledReportFiltersEquals = (filter1?: ScheduledReportFilter, fi
   return false;
 }
 
-export class ScheduledReportQuery {
+export class ReportQuery {
 
   pageLink: PageLink;
   includeCustomers: boolean;
@@ -507,11 +513,11 @@ export class ScheduledReportQuery {
   userId?: UserId;
 
   constructor(pageLink: PageLink,
-              scheduledReportFilter: ScheduledReportFilter) {
+              reportFilter: ReportFilter) {
     this.pageLink = pageLink;
-    this.includeCustomers = scheduledReportFilter.includeCustomers;
-    this.reportTemplateId = scheduledReportFilter.reportTemplateId;
-    this.userId = scheduledReportFilter.userId;
+    this.includeCustomers = reportFilter.includeCustomers;
+    this.reportTemplateId = reportFilter.reportTemplateId;
+    this.userId = reportFilter.userId;
   }
 
   public toQuery(): string {

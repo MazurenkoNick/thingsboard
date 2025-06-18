@@ -7092,7 +7092,8 @@
         "search": "Search reports",
         "selected-reports": "{ count, plural, =1 {1 report} other {# reports} } selected",
         "recipient": "Recipient",
-        "report-recipient": "Report recipient"
+        "report-recipient": "Report recipient",
+        "filter-not-set": "All"
     },
     "report-template": {
         "report-template": "Report template",
@@ -7100,7 +7101,6 @@
         "add": "Add report template",
         "search": "Search report templates",
         "templates-filter": "Templates filter",
-        "filter-not-set": "All",
         "sub-report": "Subreport",
         "no-report-templates-text": "No report templates found",
         "no-sub-reports-text": "No subreports found",
@@ -7255,8 +7255,7 @@
         "edit": "Edit report schedule",
         "search": "Search scheduled reports",
         "no-scheduled-reports-text": "No scheduled reports found",
-        "selected-scheduled-reports": "{ count, plural, =1 {1 report schedule} other {# report schedules} } selected",
-        "filter-not-set": "All"
+        "selected-scheduled-reports": "{ count, plural, =1 {1 report schedule} other {# report schedules} } selected"
     },
     "blob-entity": {
         "blob-entity": "Blob entity",

@@ -108,7 +108,7 @@
                 "bundleName": "login-theme"
               },
               {
-                "input": "src/app/modules/home/pages/report/template/components/report-component-style.scss",
+                "input": "src/app/modules/home/pages/reporting/template/components/report-component-style.scss",
                 "bundleName": "report-component"
               },
               "src/styles.scss",

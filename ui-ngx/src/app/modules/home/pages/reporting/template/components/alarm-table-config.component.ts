@@ -1,0 +1,113 @@
+///
+/// ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
+///
+/// Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
+///
+/// NOTICE: All information contained herein is, and remains
+/// the property of ThingsBoard, Inc. and its suppliers,
+/// if any.  The intellectual and technical concepts contained
+/// herein are proprietary to ThingsBoard, Inc.
+/// and its suppliers and may be covered by U.S. and Foreign Patents,
+/// patents in process, and are protected by trade secret or copyright law.
+///
+/// Dissemination of this information or reproduction of this material is strictly forbidden
+/// unless prior written permission is obtained from COMPANY.
+///
+/// Access to the source code contained herein is hereby forbidden to anyone except current COMPANY employees,
+/// managers or contractors who have executed Confidentiality and Non-disclosure agreements
+/// explicitly covering such access.
+///
+/// The copyright notice above does not evidence any actual or intended publication
+/// or disclosure  of  this source code, which includes
+/// information that is confidential and/or proprietary, and is a trade secret, of  COMPANY.
+/// ANY REPRODUCTION, MODIFICATION, DISTRIBUTION, PUBLIC  PERFORMANCE,
+/// OR PUBLIC DISPLAY OF OR THROUGH USE  OF THIS  SOURCE CODE  WITHOUT
+/// THE EXPRESS WRITTEN CONSENT OF COMPANY IS STRICTLY PROHIBITED,
+/// AND IN VIOLATION OF APPLICABLE LAWS AND INTERNATIONAL TREATIES.
+/// THE RECEIPT OR POSSESSION OF THIS SOURCE CODE AND/OR RELATED INFORMATION
+/// DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
+/// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
+///
+
+import { Component, ViewEncapsulation } from '@angular/core';
+import { FormGroup } from '@angular/forms';
+import {
+  AlarmTableReportComponentConfig,
+  DataKey,
+  Datasource,
+  EntityTableReportComponentConfig, ReportDataKeySettingsType,
+  TableReportColumnSettingsForm,
+  WidgetConfigMode, widgetType
+} from '@app/shared/public-api';
+import { AbstractReportComponentConfig } from '@home/pages/reporting/template/components/report-component-config.component';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+
+@Component({
+  selector: 'tb-alarm-table-config',
+  templateUrl: './alarm-table-config.component.html',
+  styleUrls: ['./report-component-config.scss'],
+  encapsulation: ViewEncapsulation.None
+})
+export class AlarmTableConfigComponent extends AbstractReportComponentConfig<AlarmTableReportComponentConfig> {
+
+  settingsTab: 'data' | 'layout' = 'data';
+
+  basicMode = WidgetConfigMode.basic;
+
+  TableReportColumnSettingsForm = TableReportColumnSettingsForm;
+
+  protected buildForm(reportComponentConfig: AlarmTableReportComponentConfig): FormGroup {
+    const form = this.fb.group({
+      timewindow: [reportComponentConfig.timewindow, []],
+      dataSources: [[reportComponentConfig.alarmSource], []],
+      alarmFilterConfig: [reportComponentConfig.alarmSource.alarmFilterConfig, []],
+      showTableHeading: [reportComponentConfig.showTableHeading, []],
+      tableHeading: [reportComponentConfig.tableHeading, []],
+      columns: [this.getColumns(reportComponentConfig.alarmSource), []],
+    });
+    form.get('showTableHeading').valueChanges.pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(() => {
+      this.updateValidators(form);
+    });
+    this.updateValidators(form);
+    return form;
+  }
+
+  protected prepareOutputConfig(config: any): AlarmTableReportComponentConfig {
+    config.alarmSource = config.dataSources[0];
+    delete config.dataSources;
+    config.alarmSource.alarmFilterConfig = config.alarmFilterConfig;
+    delete config.alarmFilterConfig;
+    this.setColumns(config.columns, config.alarmSource);
+    delete config.columns;
+    return config;
+  }
+
+  private getColumns(alarmSource?: Datasource): DataKey[] {
+    if (alarmSource) {
+      return alarmSource.dataKeys || [];
+    }
+    return [];
+  }
+
+  private setColumns(columns: DataKey[], alarmSource?: Datasource) {
+    if (alarmSource) {
+      columns.forEach(key => {
+        if (key?.settings) {
+          key.settings.type = ReportDataKeySettingsType.COLUMN;
+        }
+      });
+      alarmSource.dataKeys = columns;
+    }
+  }
+
+  private updateValidators(form: FormGroup) {
+    const showTableHeading: boolean = form.get('showTableHeading').value;
+    if (showTableHeading) {
+      form.get('tableHeading').enable({emitEvent: false});
+    } else {
+      form.get('tableHeading').disable({emitEvent: false});
+    }
+  }
+}

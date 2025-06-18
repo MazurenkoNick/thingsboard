@@ -45,7 +45,7 @@ import {
   ReportTemplateInfo,
   ReportTemplateQuery,
   ScheduledReportInfo,
-  ScheduledReportQuery
+  ReportQuery
 } from '@shared/models/report.models';
 import { PageData } from '@shared/models/page/page-data';
 
@@ -112,7 +112,7 @@ export class SchedulerEventService {
       defaultHttpOptionsFromConfig(config));
   }
 
-  public getScheduledReports(query: ScheduledReportQuery, config?: RequestConfig): Observable<PageData<ScheduledReportInfo>> {
+  public getScheduledReports(query: ReportQuery, config?: RequestConfig): Observable<PageData<ScheduledReportInfo>> {
     return this.http.get<PageData<ScheduledReportInfo>>(`/api/scheduledReports${query.toQuery()}`,
       defaultHttpOptionsFromConfig(config));
   }

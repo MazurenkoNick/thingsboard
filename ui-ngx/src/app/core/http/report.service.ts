@@ -32,7 +32,7 @@
 import { Inject, Injectable } from '@angular/core';
 import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { Report, ReportRequest } from '@shared/models/report.models';
+import { Report, ReportInfo, ReportQuery, ReportRequest, ScheduledReportInfo } from '@shared/models/report.models';
 import { map } from 'rxjs/operators';
 import { WINDOW } from '@core/services/window.service';
 import { DOCUMENT } from '@angular/common';
@@ -58,6 +58,11 @@ export class ReportService {
 
   public getReports(pageLink: PageLink, config?: RequestConfig): Observable<PageData<Report>> {
     return this.http.get<PageData<Report>>(`/api/v2/reports${pageLink.toQuery()}`,
+      defaultHttpOptionsFromConfig(config));
+  }
+
+  public getReportInfos(query: ReportQuery, config?: RequestConfig): Observable<PageData<ReportInfo>> {
+    return this.http.get<PageData<ReportInfo>>(`/api/v2/reportInfos${query.toQuery()}`,
       defaultHttpOptionsFromConfig(config));
   }
 
