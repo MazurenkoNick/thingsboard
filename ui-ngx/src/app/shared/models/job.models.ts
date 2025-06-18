@@ -38,12 +38,14 @@ import { EntityInfoData } from '@shared/models/entity.models';
 import { CalculatedFieldId } from '@shared/models/id/calculated-field-id';
 
 export enum JobType {
-  CF_REPROCESSING = 'CF_REPROCESSING'
+  CF_REPROCESSING = 'CF_REPROCESSING',
+  REPORT = 'REPORT'
 }
 
 export const jobTypeTranslations = new Map<JobType, string>(
   [
-    [JobType.CF_REPROCESSING, 'task.task-type.calculated-field-reprocessing']
+    [JobType.CF_REPROCESSING, 'task.task-type.calculated-field-reprocessing'],
+    [JobType.REPORT, 'task.task-type.report']
   ]
 )
 

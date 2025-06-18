@@ -8552,6 +8552,8 @@
         "cancel-task": "Cancel task",
         "cancel-task-calculated-field-reprocessing-text": "Data processed so far will be saved, queued items will be canceled",
         "cancel-task-calculated-field-reprocessing-title": "Are you sure you want to cancel reprocessing?",
+        "cancel-task-report-text": "Report generation will be canceled, report file will not be created",
+        "cancel-task-report-title": "Are you sure you want to cancel report generation?",
         "cancel-tasks-text": "Are you sure you want to cancel the selected tasks?",
         "cancel-tasks-title": "Cancel { count, plural, =1 {1 task} other {# tasks} }",
         "delete-task-text": "This action will remove the task from the list, but your data will remain intact",
@@ -8585,7 +8587,8 @@
         },
         "task-type": {
             "any": "Any type",
-            "calculated-field-reprocessing": "Calculated field reprocessing"
+            "calculated-field-reprocessing": "Calculated field reprocessing",
+            "report": "Report generation"
         },
         "tasks-filter": "Tasks filter",
         "tasks-filter-params": "Filter: {{ filterParams }}",
