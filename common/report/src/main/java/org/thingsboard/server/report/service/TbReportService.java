@@ -75,6 +75,7 @@ public class TbReportService {
 
             Report report = new Report();
             report.setTenantId(task.getTenantId());
+            report.setCustomerId(task.getCustomerId());
             report.setTemplateId(task.getReportTemplateId());
             report.setFormat(task.getReportTemplateConfig().getFormat());
             report.setName(reportData.getName());

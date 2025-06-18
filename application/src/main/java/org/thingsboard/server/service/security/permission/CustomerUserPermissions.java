@@ -114,6 +114,7 @@ public class CustomerUserPermissions extends AbstractPermissions {
         put(Resource.OAUTH2_CLIENT, customerStandaloneEntityPermissionChecker);
         put(Resource.OAUTH2_CONFIGURATION_TEMPLATE, new PermissionChecker.GenericPermissionChecker(Operation.READ));
         put(Resource.DOMAIN, customerStandaloneEntityPermissionChecker);
+        put(Resource.REPORT, customerStandaloneEntityPermissionChecker);
     }
 
     private final PermissionChecker<AlarmId, Alarm> customerAlarmPermissionChecker = new PermissionChecker<>() {

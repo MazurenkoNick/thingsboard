@@ -109,6 +109,7 @@ public class ReportJobProcessor implements JobProcessor {
 
         ReportTask task = ReportTask.builder()
                 .tenantId(job.getTenantId())
+                .customerId(reportTemplate.getCustomerId())
                 .jobId(job.getId())
                 .key(configuration.getTasksKey())
                 .reportTemplateId(reportTemplate.getId())
