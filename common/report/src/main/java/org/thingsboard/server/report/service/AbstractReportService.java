@@ -44,6 +44,7 @@ import org.thingsboard.server.common.data.query.AlarmData;
 import org.thingsboard.server.common.data.query.EntityData;
 import org.thingsboard.server.common.data.query.EntityDataQuery;
 import org.thingsboard.server.common.data.query.EntityKeyType;
+import org.thingsboard.server.common.data.query.TsValue;
 import org.thingsboard.server.common.data.report.configuration.DataKey;
 import org.thingsboard.server.common.data.report.configuration.DataSource;
 import org.thingsboard.server.common.data.report.configuration.ReportTemplateConfig;
@@ -125,11 +126,7 @@ public abstract class AbstractReportService implements ReportService {
     }
 
     protected List<EntityData> fetchEntities(TbReportCtx ctx, DataSource dataSource, EntityData stateEntity) {
-        if (dataSource.getEntityAliasId() == null) {
-            return Collections.emptyList();
-        } else {
-            return fetchEntityDataByQuery(pageLink -> toEntityDataQuery(dataSource, ctx.getConfiguration(), stateEntity, pageLink), ctx);
-        }
+       return fetchEntityDataByQuery(pageLink -> toEntityDataQuery(dataSource, ctx.getConfiguration(), stateEntity, pageLink), ctx);
     }
 
     protected List<EntityData> fetchEntityDataByQuery(Function<PageLink, EntityDataQuery> querySupplier, TbReportCtx ctx) {
@@ -141,12 +138,10 @@ public abstract class AbstractReportService implements ReportService {
     }
 
     protected List<Map<String, String>> collectEntityDatas(TbReportCtx ctx, DataSource dataSource, EntityData stateEntity) {
-        Map<String, DataKey> keyToDataKeyMap = dataSource.getDataKeys().stream()
-                .collect(Collectors.toMap(DataKey::getLabel, dataKey -> dataKey));
         return switch (dataSource.getType()) {
             case "device", "entity" -> fetchEntities(ctx, dataSource, stateEntity)
                     .stream()
-                    .map(entityData -> toStringMap(entityData, keyToDataKeyMap, ctx))
+                    .map(entityData -> toStringMap(entityData, dataSource.getDataKeys(), ctx))
                     .collect(Collectors.toList());
             default -> throw new IllegalArgumentException("Unknown data source type: " + dataSource.getType());
         };
@@ -170,21 +165,15 @@ public abstract class AbstractReportService implements ReportService {
             return Collections.emptyList();
         }
         List<DataKey> dataKeys = singleDataSource.get().getDataKeys();
-        Map<String, DataKey> keyToDataKey = dataKeys.stream()
-                .collect(Collectors.toMap(DataKey::getLabel, dataKey -> dataKey));
-        List<String> keys = dataKeys.stream()
-                .map(DataKey::getName)
-                .toList();
+        List<DataKey> latestDataKeys = singleDataSource.get().getLatestDataKeys();
 
         // todo: dasha make sort order configurable (?)
+        List<String> keys = dataKeys.stream().map(DataKey::getName).collect(Collectors.toList());
         List<TsKvEntry> result = dataService.getTimeseries(entity.getEntityId(), keys, timeRange.startTs, timeRange.endTs,
                 historyConf.getInterval(), timeWindowConf.getAggregation().getType(), SortOrder.Direction.DESC,
                 timeWindowConf.getAggregation().getLimit(), false, ctx);
-        if (result.isEmpty()) {
-            return List.of(toStringMap(entity, keyToDataKey, ctx));
-        }
         SortOrder sortOrder = SortOrder.of("rawTs", SortOrder.Direction.DESC);
-        return collectTsData(keyToDataKey, entity, result, component.isShowTimestamp(), component.getTimestampPattern(), sortOrder, ctx);
+        return collectTsData(dataKeys, latestDataKeys, entity, result, component.isShowTimestamp(), component.getTimestampPattern(), sortOrder, ctx);
     }
 
     protected List<Map<String, String>> fetchAlarmDatas(TbReportCtx ctx, AlarmTableComponent component, EntityData stateEntity) {
@@ -206,25 +195,25 @@ public abstract class AbstractReportService implements ReportService {
             default:
                 return Collections.emptyList();
         }
-        Map<String,DataKey> keyToDataKeyMap = alarmSource.getDataKeys()
+        List<DataKey> alarmDataKeys = alarmSource.getDataKeys()
                 .stream()
                 .filter(dataKey -> dataKey.getType().equals("alarm"))
-                .collect(Collectors.toMap(DataKey::getName, Function.identity()));
+                .collect(Collectors.toList());
+        List<DataKey> latestDataKeys = alarmSource.getDataKeys()
+                .stream()
+                .filter(dataKey -> !dataKey.getType().equals("alarm"))
+                .collect(Collectors.toList());
         List<Map<String, String>> data = new ArrayList<>();
         for (AlarmData alarmData : new PageDataIterable<>(link -> dataService.findAlarmDataByQuery(toAlarmDataQuery(component, ctx.getConfiguration(), stateEntity, link), ctx), 1024)) {
-            data.add(toStringMap(alarmData, keyToDataKeyMap, ctx));
+            data.add(toStringMap(alarmData, alarmDataKeys, latestDataKeys, ctx));
         }
         return data;
     }
 
-    protected Map<String, String> toStringMap(EntityData entityData, Map<String, DataKey> dataKeys, TbReportCtx ctx) {
+    protected Map<String, String> toStringMap(EntityData entityData, List<DataKey> dataKeys, TbReportCtx ctx) {
         HashMap<String, String> data = new HashMap<>();
         if (entityData != null) {
-            entityData.getLatest().forEach((keyType, keyValueMap) -> keyValueMap.forEach((key, tsValue) -> {
-                if (tsValue.getValue() != null) {
-                    data.put(key, formatData(ctx, dataKeys.get(key), tsValue.getTs(), tsValue.getValue()));
-                }
-            }));
+            putLatestValues(dataKeys, data, entityData.getLatest(), ctx);
             data.put("id", entityData.getEntityId().toString());
             Optional<String> entityName = getEntityLatestValue(entityData, EntityKeyType.ENTITY_FIELD, "name");
             Optional<String> entityLabel = getEntityLatestValue(entityData, EntityKeyType.ENTITY_FIELD, "label");
@@ -234,12 +223,12 @@ public abstract class AbstractReportService implements ReportService {
         return data;
     }
 
-    protected Map<String, String> toStringMap(AlarmData alarmData, Map<String, DataKey> alarmKeys, TbReportCtx ctx) {
+    protected Map<String, String> toStringMap(AlarmData alarmData, List<DataKey> alarmDataKeys, List<DataKey> latestDataKeys, TbReportCtx ctx) {
         Map<String, String> data = new HashMap<>();
         JsonNode alarmDataJson = JacksonUtil.valueToTree(alarmData);
 
-        alarmKeys.values().forEach(key -> {
-            String targetKey = key.getName();
+        for (DataKey alarmKey : alarmDataKeys) {
+            String targetKey = alarmKey.getName();
             String value = null;
             if (targetKey.equals("assignee")) {
                 value = getAssigneeDisplayName(alarmData);
@@ -253,19 +242,25 @@ public abstract class AbstractReportService implements ReportService {
                 }
             }
             if (value != null) {
-                data.put(targetKey, formatData(ctx, key, 0, value));
+                data.put(alarmKey.getLabel(), formatData(ctx, alarmKey, 0, value));
             }
-        });
-        alarmData.getLatest().forEach((keyType, keyValueMap) -> keyValueMap.forEach((key, tsValue) -> {
-            if (tsValue.getValue() != null) {
-                data.put(key, formatData(ctx, alarmKeys.get(key), tsValue.getTs(), tsValue.getValue()));
-            }
-        }));
+        }
+        putLatestValues(latestDataKeys, data, alarmData.getLatest(), ctx);
         Optional<String> entityName = getAlarmLatestValue(alarmData, EntityKeyType.ENTITY_FIELD, "name");
         Optional<String> entityLabel = getAlarmLatestValue(alarmData, EntityKeyType.ENTITY_FIELD, "label");
         data.put("entityName", entityName.orElse(""));
         data.put("entityLabel", entityLabel.orElse(""));
         return data;
+    }
+
+    private void putLatestValues(List<DataKey> latestDataKeys, Map<String, String> data, Map<EntityKeyType, Map<String, TsValue>> latest, TbReportCtx ctx) {
+        for (DataKey dataKey : latestDataKeys) {
+            Map<String, TsValue> keyValueMap = latest.get(EntityKeyType.fromName(dataKey.getType()));
+            TsValue tsValue = keyValueMap.get(dataKey.getName());
+            if (tsValue != null && tsValue.getValue() != null) {
+                data.put(dataKey.getLabel(), formatData(ctx, dataKey, tsValue.getTs(), tsValue.getValue()));
+            }
+        }
     }
 
     private String getAssigneeDisplayName(AlarmData alarmData) {
@@ -278,7 +273,7 @@ public abstract class AbstractReportService implements ReportService {
         }
     }
 
-    protected List<Map<String, String>> collectTsData(Map<String, DataKey> dataKeys, EntityData entity,
+    protected List<Map<String, String>> collectTsData(List<DataKey> dataKeys, List<DataKey> latestDataKeys, EntityData entity,
                                                       List<TsKvEntry> tsKvEntries, boolean showTs, String tsPattern,
                                                       SortOrder sortOrder, TbReportCtx ctx) {
         Optional<String> entityName = getEntityLatestValue(entity, EntityKeyType.ENTITY_FIELD, "name");
@@ -300,17 +295,20 @@ public abstract class AbstractReportService implements ReportService {
             Map<String, String> tsValues = new HashMap<>();
             tsValues.put("rawTs", ts.toString());
             if (showTs) {
-                tsValues.put("ts", formatTimestamp(ts.toString(), tsPattern, ctx));
+                tsValues.put("Timestamp", formatTimestamp(ts.toString(), tsPattern, ctx));
             }
-            for (TsKvEntry entry : entries) {
-                tsValues.put(entry.getKey(), formatData(ctx, dataKeys.get(entry.getKey()), entry.getTs(), entry.getValueAsString()));
+            for (DataKey dataKey : dataKeys) {
+                entries.stream().filter(tsKvEntry -> tsKvEntry.getKey().equals(dataKey.getName()))
+                        .findFirst()
+                        .ifPresentOrElse(tsKvEntry -> {
+                                    String value = tsKvEntry.getValueAsString();
+                                    if (value != null) {
+                                        tsValues.put(dataKey.getLabel(), formatData(ctx, dataKey, tsKvEntry.getTs(), value));
+                                    }
+                                },
+                                () -> tsValues.putIfAbsent(dataKey.getLabel(), null));
             }
-            dataKeys.keySet().forEach(key -> tsValues.putIfAbsent(key, null));
-            entity.getLatest().forEach((keyType, keyValueMap) -> keyValueMap.forEach((key, tsValue) -> {
-                if (tsValue.getValue() != null) {
-                    tsValues.put(key, formatData(ctx, dataKeys.get(key), tsValue.getTs(), tsValue.getValue()));
-                }
-            }));
+            putLatestValues(latestDataKeys, tsValues, entity.getLatest(), ctx);
             tsValues.put("entityName", entityName.orElse(""));
             tsValues.put("entityLabel", entityLabel.orElse(""));
             tsData.add(tsValues);
