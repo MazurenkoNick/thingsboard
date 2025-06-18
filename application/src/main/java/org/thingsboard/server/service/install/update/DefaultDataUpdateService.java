@@ -228,7 +228,7 @@ public class DefaultDataUpdateService implements DataUpdateService {
         PageDataIterable<TenantId> tenantIds = new PageDataIterable<>(tenantService::findTenantsIds, 1024);
         for (TenantId tenantId : tenantIds) {
             try {
-                List<AttributeKvEntry> attributeKvEntries = attributesService.find(tenantId, tenantId, AttributeScope.SERVER_SCOPE, migratedKeys).get();
+                List<AttributeKvEntry> attributeKvEntries = attributesService.find(tenantId, tenantId, AttributeScope.SERVER_SCOPE, migratedKeys).get(30, TimeUnit.SECONDS);
 
                 if (attributeKvEntries.isEmpty()) {
                     continue;
