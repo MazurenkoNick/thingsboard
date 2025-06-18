@@ -47,7 +47,6 @@ import org.thingsboard.server.common.data.Dashboard;
 import org.thingsboard.server.common.data.DashboardInfo;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.ShortCustomerInfo;
-import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.Tenant;
 import org.thingsboard.server.common.data.User;
 import org.thingsboard.server.common.data.alarm.AlarmSeverity;
@@ -102,6 +101,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static org.thingsboard.server.dao.rule.BaseRuleChainService.TB_RULE_CHAIN_INPUT_NODE;
@@ -225,58 +225,42 @@ public class DefaultDataUpdateService implements DataUpdateService {
     private void migrateTenantAttributeSettingsToAdminSettings() {
         log.info("Starting migration of tenant attribute settings to admin_settings...");
         List<String> migratedKeys = List.of("mail", "sms", "jwt", "twoFaSettings");
-        PageLink pageLink = new PageLink(1024);
-        PageData<Tenant> tenants;
-        do {
-            tenants = tenantService.findTenants(pageLink);
-            for (Tenant tenant : tenants.getData()) {
-                List<String> migratedForTenant = new ArrayList<>();
-                TenantId tenantId = tenant.getId();
-                for (String key : migratedKeys) {
+        PageDataIterable<TenantId> tenantIds = new PageDataIterable<>(tenantService::findTenantsIds, 1024);
+        for (TenantId tenantId : tenantIds) {
+            try {
+                List<AttributeKvEntry> attributeKvEntries = attributesService.find(tenantId, tenantId, AttributeScope.SERVER_SCOPE, migratedKeys).get();
+
+                if (attributeKvEntries.isEmpty()) {
+                    continue;
+                }
+
+                List<String> migratedForTenant = new ArrayList<>(attributeKvEntries.size());
+                for (AttributeKvEntry entry : attributeKvEntries) {
+                    String key = entry.getKey();
+                    if (adminSettingsService.findAdminSettingsByTenantIdAndKey(tenantId, key) != null) {
+                        log.debug("Skipping migration of [{}] for tenant {}: already exists", key, tenantId);
+                        continue;
+                    }
                     try {
-                        String attributeValue = attributesService.find(tenantId, tenantId, AttributeScope.SERVER_SCOPE, key).get()
-                                .map(AttributeKvEntry::getValueAsString).orElse(null);
-
-                        if (StringUtils.isEmpty(attributeValue)) {
-                            continue;
-                        }
-
-                        JsonNode jsonValue;
-                        try {
-                            jsonValue = JacksonUtil.toJsonNode(attributeValue);
-                        } catch (Exception e) {
-                            log.warn("Failed to parse attribute [{}] for tenant [{}] as JSON: {}", key, tenantId, e.getMessage());
-                            continue;
-                        }
-
-                        AdminSettings existing = adminSettingsService.findAdminSettingsByTenantIdAndKey(tenantId, key);
-                        if (existing != null) {
-                            log.info("Skipping migration of [{}] for tenant [{}]: already exists", key, tenantId);
-                            continue;
-                        }
-
+                        JsonNode jsonValue = JacksonUtil.toJsonNode(entry.getValueAsString());
                         AdminSettings adminSettings = new AdminSettings();
                         adminSettings.setTenantId(tenantId);
                         adminSettings.setKey(key);
                         adminSettings.setJsonValue(jsonValue);
-
                         adminSettingsService.saveAdminSettings(tenantId, adminSettings);
                         migratedForTenant.add(key);
                     } catch (Exception e) {
-                        log.error("Error migrating [{}] settings for tenant [{}]", key, tenantId, e);
+                        log.warn("[{}] Failed to parse/migrate attribute [{}]", tenantId, key, e);
                     }
                 }
                 if (!migratedForTenant.isEmpty()) {
-                    attributesService.removeAll(tenantId, tenantId, AttributeScope.SERVER_SCOPE, migratedForTenant);
-                    log.info("[{}] Migrated settings: {}. Old attributes removed.", tenantId, migratedForTenant);
+                    attributesService.removeAll(tenantId, tenantId, AttributeScope.SERVER_SCOPE, migratedForTenant).get(30, TimeUnit.SECONDS);
+                    log.info("[{}] tenant : migrated keys {}", tenantId, migratedForTenant);
                 }
-                log.info("[{}] Admin settings migration has finished for tenant with name: {}", tenantId, tenant.getName());
+            } catch (Exception e) {
+                log.error("Failed to find attribute for tenant {}", tenantId, e);
             }
-
-            if (tenants.hasNext()) {
-                pageLink = pageLink.nextPageLink();
-            }
-        } while (tenants.hasNext());
+        }
         log.info("Tenant attribute settings migration fully completed.");
     }
 
