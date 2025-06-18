@@ -82,7 +82,7 @@ import static org.thingsboard.server.common.data.id.TenantId.SYS_TENANT_ID;
 
 @Slf4j
 @Service
-@ConditionalOnProperty(name = "TB_ANONYMOUS_USAGE_REPORTING", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(prefix = "license.stats", value = "enabled", havingValue = "true", matchIfMissing = true)
 @RequiredArgsConstructor
 public class DefaultTbLicenseStatisticsService implements TbLicenseStatisticsService {
 
