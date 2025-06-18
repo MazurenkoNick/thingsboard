@@ -30,22 +30,39 @@
 ///
 
 import { NgModule } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { SharedModule } from '@shared/shared.module';
-import { ReportingRoutingModule } from '@home/pages/reporting/reporting-routing.module';
-import { ReportTemplateModule } from '@home/pages/reporting/template/report-template.module';
-import { ScheduledReportModule } from '@home/pages/reporting/scheduling/scheduled-report.module';
-import { ReportModule } from '@home/pages/reporting/report/report.module';
+import { Route } from '@angular/router';
 
+import { EntitiesTableComponent } from '@home/components/entity/entities-table.component';
+import { Authority } from '@shared/models/authority.enum';
+import { MenuId } from '@core/public-api';
+import { ReportsTableConfigResolver } from '@home/pages/reporting/report/reports-table-config.resolver';
+
+export const reportsRoute: Route = {
+  path: 'reports',
+  data: {
+    breadcrumb: {
+      menuId: MenuId.reports
+    }
+  },
+  children: [
+    {
+      path: '',
+      component: EntitiesTableComponent,
+      data: {
+        auth: [Authority.TENANT_ADMIN, Authority.CUSTOMER_USER],
+        title: 'report.reports'
+      },
+      resolve: {
+        entitiesTableConfig: ReportsTableConfigResolver
+      }
+    }
+  ]
+}
+
+// @dynamic
 @NgModule({
-  declarations: [],
-  imports: [
-    CommonModule,
-    SharedModule,
-    ReportTemplateModule,
-    ScheduledReportModule,
-    ReportModule,
-    ReportingRoutingModule
+  providers: [
+    ReportsTableConfigResolver
   ]
 })
-export class ReportingModule { }
+export class ReportRoutingModule { }

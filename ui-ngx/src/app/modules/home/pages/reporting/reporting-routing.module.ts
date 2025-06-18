@@ -35,6 +35,7 @@ import { NgModule } from '@angular/core';
 import { reportTemplatesRoute } from '@home/pages/reporting/template/report-template-routing.module';
 import { MenuId } from '@core/services/menu.models';
 import { scheduledReportsRoute } from '@home/pages/reporting/scheduling/scheduled-report-routing.module';
+import { reportsRoute } from '@home/pages/reporting/report/report-routing.module';
 
 export const reportingRoute: Route = {
   path: 'reporting',
@@ -55,6 +56,7 @@ export const reportingRoute: Route = {
     },
     reportTemplatesRoute,
     scheduledReportsRoute,
+    reportsRoute
   ]
 };
 

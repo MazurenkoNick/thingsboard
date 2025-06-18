@@ -58,7 +58,7 @@ import java.util.UUID;
         configClazz = TbGenerateReportNodeConfiguration.class,
         nodeDescription = "Generates dashboard report",
         nodeDetails = "Generates dashboard based reports.",
-        configDirective = "tbActionNodeGenerateReportConfig",
+        configDirective = "tbActionNodeGenerateDashboardReportConfig",
         icon = "description"
 )
 public class TbGenerateReportNode extends TbAbstractExternalNode {

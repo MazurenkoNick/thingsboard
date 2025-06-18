@@ -48,6 +48,8 @@ public interface ReportService extends EntityDaoService {
 
     byte[] getReportData(TenantId tenantId, ReportId reportId);
 
+    void deleteReport(TenantId tenantId, ReportId reportId);
+
     PageData<Report> findReportsByTenantId(TenantId tenantId, PageLink pageLink);
 
     PageData<ReportInfo> findReportInfos(TenantId tenantId, ReportInfoQuery query);

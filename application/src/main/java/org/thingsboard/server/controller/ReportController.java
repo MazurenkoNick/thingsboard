@@ -34,6 +34,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -47,6 +48,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.thingsboard.common.util.JacksonUtil;
@@ -83,6 +85,7 @@ import java.util.UUID;
 import static org.thingsboard.server.controller.ControllerConstants.INCLUDE_CUSTOMERS_OR_SUB_CUSTOMERS;
 import static org.thingsboard.server.controller.ControllerConstants.PAGE_NUMBER_DESCRIPTION;
 import static org.thingsboard.server.controller.ControllerConstants.PAGE_SIZE_DESCRIPTION;
+import static org.thingsboard.server.controller.ControllerConstants.RBAC_DELETE_CHECK;
 import static org.thingsboard.server.controller.ControllerConstants.RBAC_READ_CHECK;
 import static org.thingsboard.server.controller.ControllerConstants.REPORT_ID_PARAM_DESCRIPTION;
 import static org.thingsboard.server.controller.ControllerConstants.REPORT_TEMPLATE_ID_DESCRIPTION;
@@ -142,6 +145,20 @@ public class ReportController extends BaseController {
         checkParameter(REPORT_ID, strReportId);
         ReportId reportId = new ReportId(toUUID(strReportId));
         return checkReportId(reportId, Operation.READ);
+    }
+
+    @ApiOperation(value = "Delete Report (deleteReport)",
+            notes = "Deletes the report. " + INVALID_REPORT_ID + "\n\n" + RBAC_DELETE_CHECK)
+    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
+    @RequestMapping(value = "/report/{reportId}", method = RequestMethod.DELETE)
+    @ResponseStatus(value = HttpStatus.OK)
+    public void deleteReport(
+            @Parameter(description = REPORT_ID_PARAM_DESCRIPTION, required = true)
+            @PathVariable(REPORT_ID) String strReportId) throws Exception {
+        checkParameter(REPORT_ID, strReportId);
+        ReportId reportId = new ReportId(toUUID(strReportId));
+        checkReportId(reportId, Operation.DELETE);
+        reportService.deleteReport(getTenantId(), reportId);
     }
 
     @GetMapping("/reports")

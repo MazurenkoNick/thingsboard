@@ -32,7 +32,7 @@
 import { Inject, Injectable } from '@angular/core';
 import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { Report, ReportInfo, ReportQuery, ReportRequest, ScheduledReportInfo } from '@shared/models/report.models';
+import { Report, ReportInfo, ReportQuery, ReportRequest } from '@shared/models/report.models';
 import { map } from 'rxjs/operators';
 import { WINDOW } from '@core/services/window.service';
 import { DOCUMENT } from '@angular/common';
@@ -54,6 +54,10 @@ export class ReportService {
 
   public getReport(reportId: string, config?: RequestConfig): Observable<Report> {
     return this.http.get<Report>(`/api/v2/report/${reportId}`, defaultHttpOptionsFromConfig(config));
+  }
+
+  public deleteReport(reportId: string, config?: RequestConfig) {
+    return this.http.delete(`/api/v2/report/${reportId}`, defaultHttpOptionsFromConfig(config));
   }
 
   public getReports(pageLink: PageLink, config?: RequestConfig): Observable<PageData<Report>> {

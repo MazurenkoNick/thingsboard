@@ -55,6 +55,7 @@ import org.thingsboard.server.common.data.id.OtaPackageId;
 import org.thingsboard.server.common.data.id.SchedulerEventId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.job.Job;
+import org.thingsboard.server.common.data.msg.TbMsgType;
 import org.thingsboard.server.common.data.ota.DeviceGroupOtaPackage;
 import org.thingsboard.server.common.data.page.PageDataIterable;
 import org.thingsboard.server.common.data.report.ReportConfig;
@@ -384,7 +385,7 @@ public class DefaultSchedulerService extends AbstractPartitionBasedService<Tenan
         String msgType = (configuration.has("msgType") && !configuration.get("msgType").isNull())
                 ? configuration.get("msgType").asText()
                 : event.getType();
-        return msgType.equals("generateDashboardReport") ? GENERATE_REPORT : msgType; // for backward compatibility with rule node msg type
+        return msgType.equals("generateDashboardReport") ? TbMsgType.generateReport.name() : msgType; // for backward compatibility with rule node msg type
     }
 
     private TbMsgMetaData getTbMsgMetaData(SchedulerEvent event, JsonNode configuration) throws JsonProcessingException {

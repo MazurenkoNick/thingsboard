@@ -51,10 +51,15 @@ import org.thingsboard.server.dao.service.validator.ReportDataValidator;
 
 import java.util.Optional;
 
+import static org.thingsboard.server.dao.service.Validator.validateId;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class DefaultReportService extends AbstractEntityService implements ReportService {
+
+    public static final String INCORRECT_TENANT_ID = "Incorrect tenantId ";
+    public static final String INCORRECT_REPORT_ID = "Incorrect reportId ";
 
     private final ReportDao reportDao;
     private final ReportDataValidator reportDataValidator;
@@ -81,6 +86,13 @@ public class DefaultReportService extends AbstractEntityService implements Repor
     @Override
     public byte[] getReportData(TenantId tenantId, ReportId reportId) {
         return reportDao.getData(tenantId, reportId);
+    }
+
+    @Override
+    public void deleteReport(TenantId tenantId, ReportId reportId) {
+        validateId(tenantId, id -> INCORRECT_TENANT_ID + id);
+        validateId(reportId, id -> INCORRECT_REPORT_ID + id);
+        deleteEntity(tenantId, reportId, false);
     }
 
     @Override

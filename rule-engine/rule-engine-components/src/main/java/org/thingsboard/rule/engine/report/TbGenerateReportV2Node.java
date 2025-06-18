@@ -56,7 +56,7 @@ import java.util.Base64;
         nodeDescription = "Requests report generation",
         nodeDetails = "Requests report generation. When report is ready - new message with type REPORT_GENERATED arrives, " +
                       "with report blob entity id in the metadata (reportBlobEntityId)",
-//        configDirective = "tbActionNodeGenerateReportConfig", // TODO: add UI
+        configDirective = "tbActionNodeGenerateReportConfig",
         icon = "description"
 )
 public class TbGenerateReportV2Node implements TbNode {

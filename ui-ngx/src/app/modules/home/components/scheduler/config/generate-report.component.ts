@@ -29,20 +29,19 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { AfterViewInit, Component, forwardRef, Input, OnDestroy, OnInit } from '@angular/core';
+import { AfterViewInit, Component, forwardRef, Input, OnDestroy } from '@angular/core';
 import {
   ControlValueAccessor,
+  NG_VALIDATORS,
+  NG_VALUE_ACCESSOR,
   UntypedFormBuilder,
   UntypedFormGroup,
-  NG_VALUE_ACCESSOR,
-  Validators,
   ValidationErrors,
-  NG_VALIDATORS,
-  Validator
+  Validator,
+  Validators
 } from '@angular/forms';
 import { Store } from '@ngrx/store';
 import { AppState } from '@app/core/core.state';
-import { SchedulerEventConfiguration } from '@shared/models/scheduler-event.models';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { ReportConfig } from '@shared/models/report.models';
@@ -143,8 +142,7 @@ export class GenerateReportComponent implements ControlValueAccessor, AfterViewI
 
   private updateModel() {
     if (this.generateReportFormGroup.valid) {
-      const reportConfig = this.generateReportFormGroup.value?.reportConfig || {};
-      this.modelValue = {...this.modelValue, ...reportConfig};
+      this.modelValue = this.generateReportFormGroup.value?.reportConfig || {};
       this.propagateChange(this.modelValue);
     } else {
       this.propagateChange(null);

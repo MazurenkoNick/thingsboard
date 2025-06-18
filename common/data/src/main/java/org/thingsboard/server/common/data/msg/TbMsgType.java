@@ -104,7 +104,7 @@ public enum TbMsgType {
     ADDED_TO_ENTITY_GROUP("Added to Group"),
     REMOVED_FROM_ENTITY_GROUP("Removed from Group"),
     REST_API_REQUEST("REST API request"),
-    generateDashboardReport("Generate Dashboard Report"),
+    generateReport("Generate Report"),
     OPC_UA_INT_SUCCESS,
     OPC_UA_INT_FAILURE,
 

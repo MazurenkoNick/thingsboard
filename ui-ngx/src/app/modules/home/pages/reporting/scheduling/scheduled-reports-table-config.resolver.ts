@@ -138,7 +138,7 @@ export class ScheduledReportsTableConfigResolver  {
     config.deleteEntitiesTitle = count => this.translate.instant('scheduled-report.delete-scheduled-reports-title', {count});
     config.deleteEntitiesContent = () => this.translate.instant('scheduled-report.delete-scheduled-reports-text');
 
-    config.onEntityAction = action => this.onReportScheduledReportAction(action, config);
+    config.onEntityAction = action => this.onScheduledReportAction(action, config);
     config.addEntity = () => this.addScheduledReport().pipe(
       map((res) => {
         return res ? {} as ScheduledReportInfo : null
@@ -275,7 +275,7 @@ export class ScheduledReportsTableConfigResolver  {
     }).afterClosed();
   }
 
-  onReportScheduledReportAction(action: EntityAction<ScheduledReportInfo>, config: EntityTableConfig<ScheduledReportInfo>): boolean {
+  onScheduledReportAction(action: EntityAction<ScheduledReportInfo>, config: EntityTableConfig<ScheduledReportInfo>): boolean {
     return false;
   }
 

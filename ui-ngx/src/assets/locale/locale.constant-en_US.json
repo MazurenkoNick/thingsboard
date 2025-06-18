@@ -7093,7 +7093,15 @@
         "selected-reports": "{ count, plural, =1 {1 report} other {# reports} } selected",
         "recipient": "Recipient",
         "report-recipient": "Report recipient",
-        "filter-not-set": "All"
+        "filter-not-set": "All",
+        "delete-report-title": "Are you sure you want to delete the report '{{reportName}}'?",
+        "delete-report-text": "Be careful, after the confirmation the report and all related data will become unrecoverable.",
+        "delete-reports-title": "Are you sure you want to delete { count, plural, =1 {1 report} other {# reports} }?",
+        "delete-reports-text": "Be careful, after the confirmation all selected reports will be removed and all related data will become unrecoverable.",
+        "file-name": "File name",
+        "format": "Format",
+        "download": "Download report",
+        "reports-filter": "Reports filter"
     },
     "report-template": {
         "report-template": "Report template",

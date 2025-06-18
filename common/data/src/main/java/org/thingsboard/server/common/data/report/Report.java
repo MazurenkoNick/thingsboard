@@ -78,7 +78,6 @@ public class Report extends BaseData<ReportId> implements HasName, TenantEntity,
         this.tenantId = report.getTenantId();
         this.customerId = report.getCustomerId();
         this.templateId = report.getTemplateId();
-        this.format = report.getFormat();
         this.name = report.getName();
         this.format = report.getFormat();
         this.userId = report.getUserId();
