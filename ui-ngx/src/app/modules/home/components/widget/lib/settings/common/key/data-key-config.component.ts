@@ -75,6 +75,7 @@ import { WidgetConfigCallbacks } from '@home/components/widget/config/widget-con
 import { isNotEmptyTbFunction, TbFunction } from '@shared/models/js-function.models';
 import { FormProperty } from '@shared/models/dynamic-form.models';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { ScriptLanguage } from '@shared/models/rule-node.models';
 
 @Component({
   selector: 'tb-data-key-config',
@@ -96,6 +97,8 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 export class DataKeyConfigComponent extends PageComponent implements OnInit, ControlValueAccessor, Validator {
 
   dataKeyConfigModes = DataKeyConfigMode;
+
+  ScriptLanguage = ScriptLanguage;
 
   dataKeyTypes = DataKeyType;
 
@@ -150,6 +153,10 @@ export class DataKeyConfigComponent extends PageComponent implements OnInit, Con
 
   @Input()
   showPostProcessing = true;
+
+  @Input()
+  @coerceBoolean()
+  reportMode = false;
 
   @Input()
   @coerceBoolean()
@@ -511,7 +518,7 @@ export class DataKeyConfigComponent extends PageComponent implements OnInit, Con
       return this.funcBodyEdit.validateOnSubmit();
     } else if ((this.modelValue.type === DataKeyType.timeseries ||
                 this.modelValue.type === DataKeyType.attribute) && this.dataKeyFormGroup.get('usePostProcessing').value &&
-                this.postFuncBodyEdit) {
+                !this.reportMode && this.postFuncBodyEdit) {
       return this.postFuncBodyEdit.validateOnSubmit();
     } else {
       return of(null);
@@ -526,7 +533,7 @@ export class DataKeyConfigComponent extends PageComponent implements OnInit, Con
         }
       };
     }
-    if (this.hasAdvanced && (!this.dataKeySettingsFormGroup.valid || !this.modelValue.settings)) {
+    if (this.hasAdvanced && (!this.dataKeySettingsFormGroup.valid || !this.modelValue.settings && !this.reportMode)) {
       return {
         dataKeySettings: {
           valid: false

@@ -48,11 +48,11 @@
               matTooltip="{{'report.generate-test-report' | translate}}"
               matTooltipPosition="below"
               (click)="generateTestReport()">
-        <mat-icon>download</mat-icon>
+        <tb-icon matButtonIcon>mdi:file-eye-outline</tb-icon>
       </button>
-      <button mat-stroked-button [disabled]="(isLoading$ | async)" (click)="saveReportTemplate()">
+      <button class="tb-report-template-edit-button" mat-stroked-button [disabled]="(isLoading$ | async) || !isDirty" (click)="saveReportTemplate()">
         <mat-icon>done</mat-icon>{{ 'action.save' | translate }}</button>
-      <button mat-button [disabled]="(isLoading$ | async)" (click)="declineReportTemplate()">
+      <button class="tb-report-template-edit-button" mat-button [disabled]="(isLoading$ | async) || !isDirty" (click)="declineReportTemplate()">
         <mat-icon>close</mat-icon>{{ 'action.decline' | translate }}</button>
       <mat-divider class="tb-toolbar-divider" vertical></mat-divider>
       <button mat-button

@@ -128,6 +128,10 @@ export class DataKeyRowComponent implements ControlValueAccessor, OnInit, OnChan
 
   @Input()
   @coerceBoolean()
+  reportMode = false;
+
+  @Input()
+  @coerceBoolean()
   hasAdditionalLatestDataKeys = false;
 
   @Input()
@@ -354,6 +358,7 @@ export class DataKeyRowComponent implements ControlValueAccessor, OnInit, OnChan
           deviceId: this.deviceId,
           entityAliasId: this.entityAliasId,
           showPostProcessing: this.widgetType !== widgetType.alarm,
+          reportMode: this.reportMode,
           callbacks: this.callbacks,
           hideDataKeyLabel: this.hideDataKeyLabel,
           hideDataKeyColor: this.hideDataKeyColor,

@@ -131,6 +131,10 @@ export class DataKeysPanelComponent implements ControlValueAccessor, OnInit, OnC
 
   @Input()
   @coerceBoolean()
+  reportMode = false;
+
+  @Input()
+  @coerceBoolean()
   hidePanel = false;
 
   @Input()

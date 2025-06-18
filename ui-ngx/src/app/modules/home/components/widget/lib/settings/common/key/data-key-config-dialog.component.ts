@@ -65,6 +65,7 @@ export interface DataKeyConfigDialogData {
   deviceId?: string;
   entityAliasId?: string;
   showPostProcessing?: boolean;
+  reportMode?: boolean;
   callbacks?: WidgetConfigCallbacks;
   hideDataKeyName?: boolean;
   hideDataKeyLabel?: boolean;

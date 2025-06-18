@@ -47,6 +47,11 @@
       border-right-color: rgba(255,255,255,0.75);
       height: 30px;
     }
+    .tb-report-template-edit-button {
+      --mdc-text-button-disabled-label-text-color: rgba(255,255,255,0.38);
+      --mdc-outlined-button-disabled-label-text-color: rgba(255,255,255,0.38);
+      --mdc-outlined-button-disabled-outline-color: rgba(255,255,255,0.38);
+    }
   }
   .tb-report-template-container {
     display: flex;

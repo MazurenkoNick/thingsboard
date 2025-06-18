@@ -190,6 +190,10 @@ export class DatasourceComponent implements ControlValueAccessor, OnInit, Valida
     return this.datasourcesComponent?.displayDatasourceFilterForBasicMode;
   }
 
+  public get reportMode(): boolean {
+    return this.datasourcesComponent?.reportMode;
+  }
+
   public get hideDataKeyLabel(): boolean {
     return this.datasourcesComponent?.hideDataKeyLabel;
   }

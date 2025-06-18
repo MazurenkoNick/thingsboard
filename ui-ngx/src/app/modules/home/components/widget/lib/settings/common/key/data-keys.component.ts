@@ -129,6 +129,10 @@ export class DataKeysComponent implements ControlValueAccessor, OnInit, OnChange
 
   @Input()
   @coerceBoolean()
+  reportMode = false;
+
+  @Input()
+  @coerceBoolean()
   hideDataKeyLabel: boolean;
 
   @Input()
@@ -628,6 +632,7 @@ export class DataKeysComponent implements ControlValueAccessor, OnInit, OnChange
           entityAliasId: this.entityAliasId,
           showPostProcessing: this.widgetType !== widgetType.alarm,
           callbacks: this.callbacks,
+          reportMode: this.reportMode,
           hideDataKeyLabel: this.hideDataKeyLabel,
           hideDataKeyColor: this.hideDataKeyColor,
           hideDataKeyUnits: this.hideDataKeyUnits,
