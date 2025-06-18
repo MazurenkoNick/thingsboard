@@ -31,6 +31,7 @@
 package org.thingsboard.server.report.context;
 
 import lombok.Data;
+import lombok.RequiredArgsConstructor;
 import lombok.experimental.SuperBuilder;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -38,11 +39,13 @@ import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.stereotype.Service;
 import org.thingsboard.rest.client.RestClient;
+import org.thingsboard.script.api.tbel.TbelInvokeService;
 import org.thingsboard.server.common.data.job.task.ReportTask;
 import org.thingsboard.server.common.data.report.configuration.ReportTemplateConfig;
 
 import java.io.IOException;
 
+@RequiredArgsConstructor
 @ConditionalOnMissingBean(value = TbReportCtxProvider.class, ignored = RemoteTbReportCtxProvider.class)
 @Service
 public class RemoteTbReportCtxProvider implements TbReportCtxProvider {
@@ -50,9 +53,13 @@ public class RemoteTbReportCtxProvider implements TbReportCtxProvider {
     @Value("${service.tb_core.base_url:http://localhost:${server.port}}")
     private String tbCoreBaseUrl;
 
+    private final TbelInvokeService tbelInvokeService;
+
     @Override
     public TbReportCtx newContext(ReportTask task) {
         return RemoteTbReportCtx.builder()
+                .tenantId(task.getTenantId())
+                .tbelInvokeService(tbelInvokeService)
                 .configuration(task.getReportTemplateConfig())
                 .timeZone(task.getTimezone())
                 .accessToken(task.getAccessToken())
@@ -71,12 +78,15 @@ public class RemoteTbReportCtxProvider implements TbReportCtxProvider {
 
         @Override
         public void close() throws IOException {
+            super.close();
             restClient.close();
         }
 
         @Override
         public TbReportCtx createSubReportCxt(ReportTemplateConfig reportTemplateConfig) {
             RemoteTbReportCtx copy = RemoteTbReportCtx.builder()
+                    .tenantId(this.getTenantId())
+                    .tbelInvokeService(this.getTbelInvokeService())
                     .configuration(reportTemplateConfig)
                     .timeZone(this.getTimeZone())
                     .accessToken(this.getAccessToken())

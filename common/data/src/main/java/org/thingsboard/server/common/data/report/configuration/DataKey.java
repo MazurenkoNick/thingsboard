@@ -53,6 +53,8 @@ public class DataKey {
     private String type;
     private String label;
     private String units;
+    private String postFuncBody;
+    private boolean usePostProcessing;
     private Integer decimals;
     private DataKeySettings settings;
 
