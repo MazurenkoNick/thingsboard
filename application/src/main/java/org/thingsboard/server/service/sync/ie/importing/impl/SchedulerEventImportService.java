@@ -30,27 +30,21 @@
  */
 package org.thingsboard.server.service.sync.ie.importing.impl;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.server.common.data.EntityType;
-import org.thingsboard.server.common.data.id.DashboardId;
-import org.thingsboard.server.common.data.id.OtaPackageId;
 import org.thingsboard.server.common.data.id.SchedulerEventId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.scheduler.SchedulerEvent;
-import org.thingsboard.server.common.data.sync.ie.EntityExportData;
+import org.thingsboard.server.common.data.sync.ie.SchedulerEventExportData;
 import org.thingsboard.server.dao.scheduler.SchedulerEventService;
 import org.thingsboard.server.queue.util.TbCoreComponent;
 import org.thingsboard.server.service.sync.vc.data.EntitiesImportCtx;
 
-import java.util.UUID;
-
 @Service
 @TbCoreComponent
 @RequiredArgsConstructor
-public class SchedulerEventImportService extends BaseEntityImportService<SchedulerEventId, SchedulerEvent, EntityExportData<SchedulerEvent>> {
+public class SchedulerEventImportService extends BaseEntityImportService<SchedulerEventId, SchedulerEvent, SchedulerEventExportData> {
 
     private final SchedulerEventService schedulerEventService;
 
@@ -65,9 +59,9 @@ public class SchedulerEventImportService extends BaseEntityImportService<Schedul
     }
 
     @Override
-    protected SchedulerEvent prepare(EntitiesImportCtx ctx, SchedulerEvent schedulerEvent, SchedulerEvent oldSchedulerEvent, EntityExportData<SchedulerEvent> exportData, IdProvider idProvider) {
+    protected SchedulerEvent prepare(EntitiesImportCtx ctx, SchedulerEvent schedulerEvent, SchedulerEvent oldSchedulerEvent, SchedulerEventExportData exportData, IdProvider idProvider) {
         schedulerEvent.setOriginatorId(idProvider.getInternalId(schedulerEvent.getOriginatorId()));
-        prepareConfigurationByType(ctx, schedulerEvent, idProvider);
+        exportData.prepareConfiguration(schedulerEvent.getConfiguration(), schedulerEvent.getType(), idProvider::getInternalId, ctx.getUser().getUuidId().toString());
         return schedulerEvent;
     }
 
@@ -77,7 +71,7 @@ public class SchedulerEventImportService extends BaseEntityImportService<Schedul
     }
 
     @Override
-    protected SchedulerEvent saveOrUpdate(EntitiesImportCtx ctx, SchedulerEvent schedulerEvent, EntityExportData<SchedulerEvent> exportData, IdProvider idProvider, CompareResult compareResult) throws Exception {
+    protected SchedulerEvent saveOrUpdate(EntitiesImportCtx ctx, SchedulerEvent schedulerEvent, SchedulerEventExportData exportData, IdProvider idProvider, CompareResult compareResult) throws Exception {
         return schedulerEventService.saveSchedulerEvent(schedulerEvent);
     }
 
@@ -86,35 +80,6 @@ public class SchedulerEventImportService extends BaseEntityImportService<Schedul
         super.cleanupForComparison(schedulerEvent);
         if (schedulerEvent.getCustomerId() != null && schedulerEvent.getCustomerId().isNullUid()) {
             schedulerEvent.setCustomerId(null);
-        }
-    }
-
-    private void prepareConfigurationByType(EntitiesImportCtx ctx, SchedulerEvent schedulerEvent, IdProvider idProvider) {
-        var configuration = (ObjectNode) schedulerEvent.getConfiguration();
-        switch (schedulerEvent.getType()) {
-            case "updateFirmware", "updateSoftware" -> patchOtaPackageConfig(configuration, idProvider);
-            case "generateReport" -> patchGenerateReportConfig(configuration, ctx, idProvider);
-        }
-        schedulerEvent.setConfiguration(configuration);
-    }
-
-    private void patchOtaPackageConfig(ObjectNode configuration, IdProvider idProvider) {
-        ObjectNode config = (ObjectNode) configuration.get("msgBody");
-        OtaPackageId otaPackageId = JacksonUtil.convertValue(config, OtaPackageId.class);
-        if (otaPackageId != null) {
-            OtaPackageId internalId = idProvider.getInternalId(otaPackageId);
-            config.put("id", internalId.getId().toString());
-        }
-    }
-
-    private void patchGenerateReportConfig(ObjectNode configuration, EntitiesImportCtx ctx, IdProvider idProvider) {
-        ObjectNode config = (ObjectNode) configuration.path("msgBody").path("reportConfig");
-        config.put("userId", ctx.getUser().getUuidId().toString()); // user entities are not supported by VC; replacing with current user id
-        String oldDash = config.path("dashboardId").asText(null);
-        if (oldDash != null) {
-            DashboardId oldDashboardId = new DashboardId(UUID.fromString(oldDash));
-            DashboardId dashboardId = idProvider.getInternalId(oldDashboardId);
-            config.put("dashboardId", dashboardId.getId().toString());
         }
     }
 

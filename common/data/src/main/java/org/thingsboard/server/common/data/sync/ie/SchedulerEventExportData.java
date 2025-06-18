@@ -28,37 +28,44 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.service.sync.ie.exporting.impl;
+package org.thingsboard.server.common.data.sync.ie;
 
-import org.springframework.stereotype.Service;
-import org.thingsboard.server.common.data.EntityType;
-import org.thingsboard.server.common.data.id.SchedulerEventId;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import org.thingsboard.server.common.data.id.DashboardId;
+import org.thingsboard.server.common.data.id.EntityId;
+import org.thingsboard.server.common.data.id.OtaPackageId;
 import org.thingsboard.server.common.data.scheduler.SchedulerEvent;
-import org.thingsboard.server.common.data.sync.ie.SchedulerEventExportData;
-import org.thingsboard.server.queue.util.TbCoreComponent;
-import org.thingsboard.server.service.sync.vc.data.EntitiesExportCtx;
 
-import java.util.Set;
+import java.util.UUID;
+import java.util.function.Function;
 
-@Service
-@TbCoreComponent
-public class SchedulerEventExportService extends BaseEntityExportService<SchedulerEventId, SchedulerEvent, SchedulerEventExportData> {
+@Data
+@EqualsAndHashCode(callSuper = true)
+public class SchedulerEventExportData extends EntityExportData<SchedulerEvent> {
 
-    @Override
-    protected void setRelatedEntities(EntitiesExportCtx<?> ctx, SchedulerEvent schedulerEvent, SchedulerEventExportData exportData) {
-        schedulerEvent.setOriginatorId(getExternalIdOrElseInternal(ctx, schedulerEvent.getOriginatorId()));
-        schedulerEvent.setCustomerId(getExternalIdOrElseInternal(ctx, schedulerEvent.getCustomerId()));
-        exportData.prepareConfiguration(schedulerEvent.getConfiguration(), schedulerEvent.getType(), id -> getExternalIdOrElseInternal(ctx, id), ctx.getUser().getUuidId().toString());
-    }
-
-    @Override
-    protected SchedulerEventExportData newExportData() {
-        return new SchedulerEventExportData();
-    }
-
-    @Override
-    public Set<EntityType> getSupportedEntityTypes() {
-        return Set.of(EntityType.SCHEDULER_EVENT);
+    public void prepareConfiguration(JsonNode configuration, String type, Function<EntityId, EntityId> idMapper, String userId) {
+        switch (type) {
+            case "updateFirmware", "updateSoftware" -> {
+                ObjectNode msgBody = configuration.withObject("msgBody");
+                String oldId = msgBody.path("id").asText(null);
+                if (oldId != null) {
+                    OtaPackageId otaPackageId = new OtaPackageId(UUID.fromString(oldId));
+                    msgBody.put("id", idMapper.apply(otaPackageId).getId().toString());
+                }
+            }
+            case "generateReport" -> {
+                ObjectNode reportConfig = configuration.withObject("msgBody").withObject("reportConfig");
+                reportConfig.put("userId", userId);
+                String oldId = reportConfig.path("dashboardId").asText(null);
+                if (oldId != null) {
+                    DashboardId dashboardId = new DashboardId(UUID.fromString(oldId));
+                    reportConfig.put("dashboardId", idMapper.apply(dashboardId).getId().toString());
+                }
+            }
+        }
     }
 
 }

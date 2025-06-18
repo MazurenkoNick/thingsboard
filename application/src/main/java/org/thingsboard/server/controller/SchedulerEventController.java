@@ -45,6 +45,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.edge.Edge;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.id.CustomerId;
@@ -209,17 +210,17 @@ public class SchedulerEventController extends BaseController {
         accessControlService.checkPermission(getCurrentUser(), Resource.SCHEDULER_EVENT, Operation.READ);
         TenantId tenantId = getCurrentUser().getTenantId();
         if (Authority.TENANT_ADMIN.equals(getCurrentUser().getAuthority())) {
-            if (type != null && !type.trim().isEmpty()) {
-                return checkNotNull(schedulerEventService.findSchedulerEventsByTenantIdAndType(tenantId, type));
-            } else {
+            if (StringUtils.isBlank(type)) {
                 return checkNotNull(schedulerEventService.findSchedulerEventsWithCustomerInfoByTenantId(tenantId));
+            } else {
+                return checkNotNull(schedulerEventService.findSchedulerEventsByTenantIdAndType(tenantId, type));
             }
         } else { //CUSTOMER_USER
             CustomerId customerId = getCurrentUser().getCustomerId();
-            if (type != null && !type.trim().isEmpty()) {
-                return checkNotNull(schedulerEventService.findSchedulerEventsByTenantIdAndCustomerIdAndType(tenantId, customerId, type));
-            } else {
+            if (StringUtils.isBlank(type)) {
                 return checkNotNull(schedulerEventService.findSchedulerEventsByTenantIdAndCustomerId(tenantId, customerId));
+            } else {
+                return checkNotNull(schedulerEventService.findSchedulerEventsByTenantIdAndCustomerIdAndType(tenantId, customerId, type));
             }
         }
     }
