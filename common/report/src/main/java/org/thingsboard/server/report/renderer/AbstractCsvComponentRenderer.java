@@ -86,7 +86,7 @@ public abstract class AbstractCsvComponentRenderer<C extends TableReportComponen
 
     protected List<String> extractValues(Map<String, String> row, Map<String, DataKey> labelToDataKey) {
         return labelToDataKey.values().stream()
-                .map(dataKey -> formatNumericValue(row.get(dataKey.getName()), dataKey))
+                .map(dataKey -> formatNumericValue(row.get(dataKey.getLabel()), dataKey))
                 .toList();
     }
 
