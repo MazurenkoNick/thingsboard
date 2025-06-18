@@ -66,6 +66,24 @@ public class Report extends BaseData<ReportId> implements HasName, TenantEntity,
     @NotNull
     private UserId userId;
 
+    public Report() {
+    }
+
+    public Report(ReportId reportId) {
+        super(reportId);
+    }
+
+    public Report(Report report) {
+        super(report);
+        this.tenantId = report.getTenantId();
+        this.customerId = report.getCustomerId();
+        this.templateId = report.getTemplateId();
+        this.format = report.getFormat();
+        this.name = report.getName();
+        this.format = report.getFormat();
+        this.userId = report.getUserId();
+    }
+
     @Override
     @JsonIgnore
     public EntityType getEntityType() {

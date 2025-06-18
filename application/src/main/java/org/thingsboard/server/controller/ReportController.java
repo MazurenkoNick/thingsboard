@@ -53,6 +53,7 @@ import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.rule.engine.api.JobManager;
 import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
+import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.ReportId;
 import org.thingsboard.server.common.data.id.ReportTemplateId;
 import org.thingsboard.server.common.data.id.TenantId;
@@ -65,8 +66,11 @@ import org.thingsboard.server.common.data.permission.Operation;
 import org.thingsboard.server.common.data.permission.Resource;
 import org.thingsboard.server.common.data.report.Report;
 import org.thingsboard.server.common.data.report.ReportData;
+import org.thingsboard.server.common.data.report.ReportInfo;
+import org.thingsboard.server.common.data.report.ReportInfoQuery;
 import org.thingsboard.server.common.data.report.ReportRequest;
 import org.thingsboard.server.common.data.report.configuration.ReportTemplateConfig;
+import org.thingsboard.server.common.data.security.Authority;
 import org.thingsboard.server.config.annotations.ApiOperation;
 import org.thingsboard.server.queue.util.TbCoreComponent;
 import org.thingsboard.server.report.service.TbReportService;
@@ -76,10 +80,13 @@ import org.thingsboard.server.service.security.system.SystemSecurityService;
 
 import java.util.UUID;
 
+import static org.thingsboard.server.controller.ControllerConstants.INCLUDE_CUSTOMERS_OR_SUB_CUSTOMERS;
 import static org.thingsboard.server.controller.ControllerConstants.PAGE_NUMBER_DESCRIPTION;
 import static org.thingsboard.server.controller.ControllerConstants.PAGE_SIZE_DESCRIPTION;
 import static org.thingsboard.server.controller.ControllerConstants.RBAC_READ_CHECK;
 import static org.thingsboard.server.controller.ControllerConstants.REPORT_ID_PARAM_DESCRIPTION;
+import static org.thingsboard.server.controller.ControllerConstants.REPORT_TEMPLATE_ID_DESCRIPTION;
+import static org.thingsboard.server.controller.ControllerConstants.REPORT_USER_DESCRIPTION;
 import static org.thingsboard.server.controller.ControllerConstants.SORT_ORDER_DESCRIPTION;
 import static org.thingsboard.server.controller.ControllerConstants.SORT_PROPERTY_DESCRIPTION;
 import static org.thingsboard.server.controller.ControllerConstants.TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH;
@@ -153,6 +160,39 @@ public class ReportController extends BaseController {
         accessControlService.checkPermission(user, Resource.REPORT, Operation.READ);
         PageLink pageLink = createPageLink(pageSize, page, textSearch, sortProperty, sortOrder);
         return reportService.findReportsByTenantId(user.getTenantId(), pageLink);
+    }
+
+    @GetMapping("/reportInfos")
+    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
+    public PageData<ReportInfo> getReportInfos(
+            @Parameter(description = REPORT_TEMPLATE_ID_DESCRIPTION)
+            @RequestParam(required = false) UUID reportTemplateId,
+            @Parameter(description = REPORT_USER_DESCRIPTION)
+            @RequestParam(required = false) UUID userId,
+            @Parameter(description = INCLUDE_CUSTOMERS_OR_SUB_CUSTOMERS)
+            @RequestParam(required = false) Boolean includeCustomers,
+            @Parameter(description = PAGE_SIZE_DESCRIPTION, required = true)
+            @RequestParam int pageSize,
+            @Parameter(description = PAGE_NUMBER_DESCRIPTION, required = true)
+            @RequestParam int page,
+            @Parameter(description = "Case-insensitive 'substring' filter based on report's name")
+            @RequestParam(required = false) String textSearch,
+            @Parameter(description = SORT_PROPERTY_DESCRIPTION)
+            @RequestParam(required = false) String sortProperty,
+            @Parameter(description = SORT_ORDER_DESCRIPTION)
+            @RequestParam(required = false) String sortOrder,
+            @AuthenticationPrincipal SecurityUser user) throws ThingsboardException {
+        accessControlService.checkPermission(user, Resource.REPORT, Operation.READ);
+        TenantId tenantId = getCurrentUser().getTenantId();
+        PageLink pageLink = createPageLink(pageSize, page, textSearch, sortProperty, sortOrder);
+        boolean includeCustomerReportTemplates = includeCustomers != null && includeCustomers;
+        ReportInfoQuery query = new ReportInfoQuery(pageLink, reportTemplateId, userId, includeCustomerReportTemplates);
+        if (Authority.TENANT_ADMIN.equals(getCurrentUser().getAuthority())) {
+            return checkNotNull(reportService.findReportInfos(tenantId, query));
+        } else {
+            CustomerId customerId = getCurrentUser().getCustomerId();
+            return checkNotNull(reportService.findReportInfos(tenantId, customerId, query));
+        }
     }
 
     @ApiOperation(value = "Download test report (downloadTestReport)",

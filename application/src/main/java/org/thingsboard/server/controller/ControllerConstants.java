@@ -2644,4 +2644,7 @@ public class ControllerConstants {
             "    \"state\": null\n" +
             "}";
 
+    public static final String REPORT_TEMPLATE_ID_DESCRIPTION = "Report template id";
+    public static final String REPORT_USER_DESCRIPTION = "The user used for report generation.";
+
 }

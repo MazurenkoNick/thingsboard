@@ -616,6 +616,8 @@ public class ModelConstants {
     public static final String REPORT_FORMAT_PROPERTY = "format";
     public static final String REPORT_NAME_PROPERTY = "name";
     public static final String REPORT_USER_ID_PROPERTY = "user_id";
+    public static final String REPORT_INFO_VIEW_NAME = "report_info_view";
+
 
     /**
      * Role constants.

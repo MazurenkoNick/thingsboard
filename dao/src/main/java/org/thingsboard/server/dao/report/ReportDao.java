@@ -30,11 +30,14 @@
  */
 package org.thingsboard.server.dao.report;
 
+import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.ReportId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.report.Report;
+import org.thingsboard.server.common.data.report.ReportInfo;
+import org.thingsboard.server.common.data.report.ReportInfoQuery;
 import org.thingsboard.server.dao.Dao;
 
 public interface ReportDao extends Dao<Report> {
@@ -45,4 +48,7 @@ public interface ReportDao extends Dao<Report> {
 
     PageData<Report> findByTenantId(TenantId tenantId, PageLink pageLink);
 
+    PageData<ReportInfo> findReportInfos(TenantId tenantId, ReportInfoQuery query);
+
+    PageData<ReportInfo> findReportInfos(TenantId tenantId, CustomerId customerId, ReportInfoQuery query);
 }

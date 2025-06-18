@@ -32,8 +32,10 @@ package org.thingsboard.server.dao.report;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.thingsboard.server.common.data.EntityType;
+import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.HasId;
 import org.thingsboard.server.common.data.id.ReportId;
@@ -41,12 +43,15 @@ import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.report.Report;
+import org.thingsboard.server.common.data.report.ReportInfo;
+import org.thingsboard.server.common.data.report.ReportInfoQuery;
 import org.thingsboard.server.dao.entity.AbstractEntityService;
 import org.thingsboard.server.dao.service.ConstraintValidator;
 import org.thingsboard.server.dao.service.validator.ReportDataValidator;
 
 import java.util.Optional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class DefaultReportService extends AbstractEntityService implements ReportService {
@@ -81,6 +86,18 @@ public class DefaultReportService extends AbstractEntityService implements Repor
     @Override
     public PageData<Report> findReportsByTenantId(TenantId tenantId, PageLink pageLink) {
         return reportDao.findByTenantId(tenantId, pageLink);
+    }
+
+    @Override
+    public PageData<ReportInfo> findReportInfos(TenantId tenantId, ReportInfoQuery query) {
+        log.trace("Executing findReportInfos, tenantId [{}]", tenantId);
+        return reportDao.findReportInfos(tenantId, query);
+    }
+
+    @Override
+    public PageData<ReportInfo> findReportInfos(TenantId tenantId, CustomerId customerId, ReportInfoQuery query) {
+        log.trace("Executing findReportInfos, tenantId [{}], customerId [{}]", tenantId, customerId);
+        return reportDao.findReportInfos(tenantId, customerId, query);
     }
 
     @Override

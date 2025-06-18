@@ -602,3 +602,23 @@ FROM
         LEFT JOIN tb_user u ON u.id = cfg.user_id
         LEFT JOIN customer c ON c.id = se.customer_id
 WHERE se.type = 'generateReport';
+
+DROP VIEW IF EXISTS report_info_view CASCADE;
+CREATE OR REPLACE VIEW report_info_view AS
+SELECT
+    r.id,
+    r.created_time,
+    r.tenant_id,
+    r.customer_id,
+    r.template_id,
+    r.format,
+    r.name,
+    r.user_id,
+    c.title AS customer_title,
+    rt.name AS report_template_name,
+    u.email AS user_name
+FROM
+    report r
+        LEFT JOIN report_template rt ON rt.id = r.template_id
+        LEFT JOIN tb_user u ON u.id = r.user_id
+        LEFT JOIN customer c ON c.id = r.customer_id;

@@ -28,29 +28,48 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.dao.report;
+package org.thingsboard.server.dao.model.sql;
 
-import org.thingsboard.server.common.data.id.CustomerId;
-import org.thingsboard.server.common.data.id.ReportId;
-import org.thingsboard.server.common.data.id.TenantId;
-import org.thingsboard.server.common.data.page.PageData;
-import org.thingsboard.server.common.data.page.PageLink;
-import org.thingsboard.server.common.data.report.Report;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import org.hibernate.annotations.Immutable;
+import org.thingsboard.server.common.data.EntityInfo;
+import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.report.ReportInfo;
-import org.thingsboard.server.common.data.report.ReportInfoQuery;
-import org.thingsboard.server.dao.entity.EntityDaoService;
+import org.thingsboard.server.dao.model.ModelConstants;
 
-public interface ReportService extends EntityDaoService {
+import static org.thingsboard.server.dao.model.ModelConstants.SCHEDULER_REPORT_EVENT_CUSTOMER_TTTLE_PROPERTY;
+import static org.thingsboard.server.dao.model.ModelConstants.SCHEDULER_REPORT_EVENT_TEMPLATE_NAME_PROPERTY;
+import static org.thingsboard.server.dao.model.ModelConstants.SCHEDULER_REPORT_EVENT_USER_NAME_PROPERTY;
 
-    Report createReport(Report report, byte[] data);
+@Data
+@EqualsAndHashCode(callSuper = true)
+@Entity
+@Immutable
+@Table(name = ModelConstants.REPORT_INFO_VIEW_NAME)
+public class ReportInfoEntity extends AbstractReportEntity<ReportInfo> {
 
-    Report findReportById(TenantId tenantId, ReportId reportId);
+    @Column(name = SCHEDULER_REPORT_EVENT_TEMPLATE_NAME_PROPERTY)
+    private String reportTemplateName;
+    @Column(name = SCHEDULER_REPORT_EVENT_CUSTOMER_TTTLE_PROPERTY)
+    private String customerTitle;
+    @Column(name = SCHEDULER_REPORT_EVENT_USER_NAME_PROPERTY)
+    private String userName;
 
-    byte[] getReportData(TenantId tenantId, ReportId reportId);
+    public ReportInfoEntity() {
+        super();
+    }
 
-    PageData<Report> findReportsByTenantId(TenantId tenantId, PageLink pageLink);
+    @Override
+    public ReportInfo toData() {
+        ReportInfo reportInfo = new ReportInfo(super.toReport());
+        reportInfo.setTemplateInfo(new EntityInfo(getTemplateId(), EntityType.REPORT_TEMPLATE.name(), reportTemplateName));
+        reportInfo.setCustomerTitle(customerTitle);
+        reportInfo.setUserName(userName);
+        return reportInfo;
+    }
 
-    PageData<ReportInfo> findReportInfos(TenantId tenantId, ReportInfoQuery query);
-
-    PageData<ReportInfo> findReportInfos(TenantId tenantId, CustomerId customerId, ReportInfoQuery query);
 }

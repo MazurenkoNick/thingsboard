@@ -39,6 +39,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.server.common.data.BaseData;
 import org.thingsboard.server.common.data.id.EntityId;
+import org.thingsboard.server.common.data.id.ReportId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.id.UUIDBased;
 import org.thingsboard.server.dao.DaoUtil;

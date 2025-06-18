@@ -28,29 +28,28 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.dao.report;
+package org.thingsboard.server.common.data.report;
 
-import org.thingsboard.server.common.data.id.CustomerId;
-import org.thingsboard.server.common.data.id.ReportId;
-import org.thingsboard.server.common.data.id.TenantId;
-import org.thingsboard.server.common.data.page.PageData;
-import org.thingsboard.server.common.data.page.PageLink;
-import org.thingsboard.server.common.data.report.Report;
-import org.thingsboard.server.common.data.report.ReportInfo;
-import org.thingsboard.server.common.data.report.ReportInfoQuery;
-import org.thingsboard.server.dao.entity.EntityDaoService;
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Data;
+import org.thingsboard.server.common.data.EntityInfo;
 
-public interface ReportService extends EntityDaoService {
+@Data
+public class ReportInfo extends Report {
 
-    Report createReport(Report report, byte[] data);
+    @Schema
+    private EntityInfo templateInfo;
+    @Schema
+    private String customerTitle;
+    @Schema
+    private String userName;
 
-    Report findReportById(TenantId tenantId, ReportId reportId);
+    public ReportInfo() {
+        super();
+    }
 
-    byte[] getReportData(TenantId tenantId, ReportId reportId);
+    public ReportInfo(Report report) {
+        super(report);
+    }
 
-    PageData<Report> findReportsByTenantId(TenantId tenantId, PageLink pageLink);
-
-    PageData<ReportInfo> findReportInfos(TenantId tenantId, ReportInfoQuery query);
-
-    PageData<ReportInfo> findReportInfos(TenantId tenantId, CustomerId customerId, ReportInfoQuery query);
 }

@@ -31,10 +31,10 @@
 package org.thingsboard.server.dao.model.sql;
 
 import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
+import jakarta.persistence.MappedSuperclass;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.extern.slf4j.Slf4j;
 import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.ReportId;
 import org.thingsboard.server.common.data.id.ReportTemplateId;
@@ -49,16 +49,15 @@ import java.util.UUID;
 import static org.thingsboard.server.dao.model.ModelConstants.REPORT_CUSTOMER_ID_PROPERTY;
 import static org.thingsboard.server.dao.model.ModelConstants.REPORT_FORMAT_PROPERTY;
 import static org.thingsboard.server.dao.model.ModelConstants.REPORT_NAME_PROPERTY;
-import static org.thingsboard.server.dao.model.ModelConstants.REPORT_TABLE_NAME;
 import static org.thingsboard.server.dao.model.ModelConstants.REPORT_TEMPLATE_ID_PROPERTY;
 import static org.thingsboard.server.dao.model.ModelConstants.REPORT_TENANT_ID_PROPERTY;
 import static org.thingsboard.server.dao.model.ModelConstants.REPORT_USER_ID_PROPERTY;
 
 @Data
+@Slf4j
 @EqualsAndHashCode(callSuper = true)
-@Entity
-@Table(name = REPORT_TABLE_NAME)
-public class ReportEntity extends AbstractReportEntity<Report> {
+@MappedSuperclass
+public abstract class AbstractReportEntity<T extends Report> extends BaseSqlEntity<T> {
 
     @Column(name = REPORT_TENANT_ID_PROPERTY, columnDefinition = "uuid", nullable = false)
     private UUID tenantId;
@@ -78,10 +77,11 @@ public class ReportEntity extends AbstractReportEntity<Report> {
     @Column(name = REPORT_USER_ID_PROPERTY, nullable = false)
     private UUID userId;
 
-    public ReportEntity() {
+    public AbstractReportEntity() {
+        super();
     }
 
-    public ReportEntity(Report report) {
+    public AbstractReportEntity(T report) {
         super(report);
         this.tenantId = report.getTenantId().getId();
         if (report.getCustomerId() != null) {
@@ -90,16 +90,28 @@ public class ReportEntity extends AbstractReportEntity<Report> {
         if (report.getTemplateId() != null) {
             this.templateId = report.getTemplateId().getId();
         }
+        this.templateId = report.getTemplateId().getId();
         this.format = report.getFormat();
         this.name = report.getName();
         this.userId = report.getUserId().getId();
     }
 
-    @Override
-    public Report toData() {
-        Report report = new Report();
-        report.setId(new ReportId(id));
-        report.setTenantId(TenantId.fromUUID(tenantId));
+    public AbstractReportEntity(AbstractReportEntity reportEntity) {
+        super(reportEntity);
+        this.tenantId = reportEntity.getTenantId();
+        this.customerId = reportEntity.getCustomerId();
+        this.templateId = reportEntity.getTemplateId();
+        this.format = reportEntity.getFormat();
+        this.name = reportEntity.getName();
+        this.userId = reportEntity.getUserId();
+    }
+
+    protected Report toReport() {
+        Report report = new Report(new ReportId(id));
+        report.setCreatedTime(getCreatedTime());
+        if (tenantId != null) {
+            report.setTenantId(TenantId.fromUUID(tenantId));
+        }
         if (customerId != null) {
             report.setCustomerId(new CustomerId(customerId));
         }
@@ -108,7 +120,9 @@ public class ReportEntity extends AbstractReportEntity<Report> {
         }
         report.setFormat(format);
         report.setName(name);
-        report.setUserId(new UserId(userId));
+        if (userId != null) {
+            report.setUserId(new UserId(userId));
+        }
         return report;
     }
 

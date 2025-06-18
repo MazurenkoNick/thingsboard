@@ -35,11 +35,14 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Component;
 import org.thingsboard.server.common.data.EntityType;
+import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.ReportId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.report.Report;
+import org.thingsboard.server.common.data.report.ReportInfo;
+import org.thingsboard.server.common.data.report.ReportInfoQuery;
 import org.thingsboard.server.dao.DaoUtil;
 import org.thingsboard.server.dao.model.ModelConstants;
 import org.thingsboard.server.dao.model.sql.ReportEntity;
@@ -48,6 +51,7 @@ import org.thingsboard.server.dao.sql.JpaPartitionedAbstractDao;
 import org.thingsboard.server.dao.sqlts.insert.sql.SqlPartitioningRepository;
 import org.thingsboard.server.dao.util.SqlDao;
 
+import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -57,6 +61,7 @@ import java.util.concurrent.TimeUnit;
 public class JpaReportDao extends JpaPartitionedAbstractDao<ReportEntity, Report> implements ReportDao {
 
     private final ReportRepository reportRepository;
+    private final ReportInfoRepository reportInfoRepository;
     private final SqlPartitioningRepository partitioningRepository;
 
     @Value("${sql.reports.partition_size:168}")
@@ -64,8 +69,9 @@ public class JpaReportDao extends JpaPartitionedAbstractDao<ReportEntity, Report
 
     private static final String TABLE_NAME = ModelConstants.REPORT_TABLE_NAME;
 
-    public JpaReportDao(ReportRepository reportRepository, SqlPartitioningRepository partitioningRepository) {
+    public JpaReportDao(ReportRepository reportRepository, ReportInfoRepository reportInfoRepository, SqlPartitioningRepository partitioningRepository) {
         this.reportRepository = reportRepository;
+        this.reportInfoRepository = reportInfoRepository;
         this.partitioningRepository = partitioningRepository;
     }
 
@@ -84,6 +90,51 @@ public class JpaReportDao extends JpaPartitionedAbstractDao<ReportEntity, Report
         return DaoUtil.toPageData(reportRepository.findByTenantIdAndSearchText(tenantId.getId(),
                 pageLink.getTextSearch(),
                 DaoUtil.toPageable(pageLink)));
+    }
+
+    @Override
+    public PageData<ReportInfo> findReportInfos(TenantId tenantId, ReportInfoQuery query) {
+        if (query.isIncludeCustomers()) {
+            return DaoUtil.toPageData(reportInfoRepository
+                    .findTenantReportInfosIncludingCustomers(
+                            tenantId.getId(),
+                            query.getReportTemplateId(),
+                            query.getUserId(),
+                            Objects.toString(query.getPageLink().getTextSearch(), ""),
+                            DaoUtil.toPageable(query.getPageLink())));
+        } else {
+            return DaoUtil.toPageData(reportInfoRepository
+                    .findTenantReportInfos(
+                            tenantId.getId(),
+                            query.getReportTemplateId(),
+                            query.getUserId(),
+                            Objects.toString(query.getPageLink().getTextSearch(), ""),
+                            DaoUtil.toPageable(query.getPageLink())));
+        }
+    }
+
+    @Override
+    public PageData<ReportInfo> findReportInfos(TenantId tenantId, CustomerId customerId, ReportInfoQuery query) {
+        log.debug("Try to find scheduler event infos by tenantId [{}], edgeId [{}], customerId [{}] and pageLink [{}]", tenantId, customerId, customerId, query);
+        if (query.isIncludeCustomers()) {
+            return DaoUtil.toPageData(reportInfoRepository
+                    .findCustomerReportInfosIncludingSubCustomers(
+                            tenantId.getId(),
+                            customerId.getId(),
+                            query.getReportTemplateId(),
+                            query.getUserId(),
+                            Objects.toString(query.getPageLink().getTextSearch(), ""),
+                            DaoUtil.toPageable(query.getPageLink())));
+        } else {
+            return DaoUtil.toPageData(reportInfoRepository
+                    .findCustomerReportInfos(
+                            tenantId.getId(),
+                            customerId.getId(),
+                            query.getReportTemplateId(),
+                            query.getUserId(),
+                            Objects.toString(query.getPageLink().getTextSearch(), ""),
+                            DaoUtil.toPageable(query.getPageLink())));
+        }
     }
 
     @Override
