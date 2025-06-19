@@ -40,8 +40,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -58,10 +56,8 @@ import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.TimePageLink;
 import org.thingsboard.server.common.data.permission.Operation;
-import org.thingsboard.server.common.data.permission.Resource;
 import org.thingsboard.server.common.data.security.Authority;
 import org.thingsboard.server.config.annotations.ApiOperation;
-import org.thingsboard.server.dao.blob.BlobEntityService;
 import org.thingsboard.server.queue.util.TbCoreComponent;
 import org.thingsboard.server.service.entitiy.blob.TbBlobService;
 import org.thingsboard.server.service.security.model.SecurityUser;
@@ -93,23 +89,18 @@ public class BlobEntityController extends BaseController {
     public static final String BLOB_ENTITY_ID = "blobEntityId";
     public static final String INVALID_BLOB_ENTITY_ID = "Referencing non-existing Blob entity Id will cause an error.";
     public static final String BLOB_ENTITY_DESCRIPTION = "The platform uses Blob(binary large object) entities in the reporting feature, in order to store Dashboard states snapshots of different content types in base64 format. ";
-    public static final String BLOB_ENTITY_INFO_DESCRIPTION = BLOB_ENTITY_DESCRIPTION +
+    public static final String BLOB_ENTITY_INFO_DESCRIPTION =
+            BLOB_ENTITY_DESCRIPTION +
             "BlobEntityInfo represents an object that contains base info about the blob entity(name, type, contentType, etc.). " +
             "See the 'Model' tab of the Response Class for more details.";
-    public static final String BLOB_ENTITY_INFO_WITH_CUSTOMER_INFO_DESCRIPTION = BLOB_ENTITY_DESCRIPTION +
+    public static final String BLOB_ENTITY_INFO_WITH_CUSTOMER_INFO_DESCRIPTION =
+            BLOB_ENTITY_DESCRIPTION +
             "BlobEntityWithCustomerInfo represents an object that contains base info about the blob entity(name, type, contentType, etc.) " +
             "and info about the customer(customerTitle, customerIsPublic) of the user that scheduled generation of the dashboard report. ";
     public static final String BLOB_ENTITY_QUERY_START_TIME_DESCRIPTION = "The start timestamp in milliseconds of the search time range over the BlobEntityWithCustomerInfo class field: 'createdTime'.";
     public static final String BLOB_ENTITY_QUERY_END_TIME_DESCRIPTION = "The end timestamp in milliseconds of the search time range over the BlobEntityWithCustomerInfo class field: 'createdTime'.";
 
     private final TbBlobService tbBlobService;
-    private final BlobEntityService blobEntityService;
-
-    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN')")
-    @PostMapping(value = "/blobEntity")
-    public BlobEntityInfo createBlobEntity(@RequestBody BlobEntity blobEntity) throws ThingsboardException {
-        return tbBlobService.create(blobEntity, getCurrentUser());
-    }
 
     @ApiOperation(value = "Get Blob Entity With Customer Info (getBlobEntityInfoById)",
             notes = "Fetch the BlobEntityWithCustomerInfo object based on the provided Blob entity Id. " +

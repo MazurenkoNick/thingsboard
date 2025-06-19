@@ -187,6 +187,7 @@ public class ReportJobProcessor implements JobProcessor {
                     .templateId(configuration.getNotificationTemplateId())
                     .info(ReportGeneratedNotificationInfo.builder()
                             .tenantId(tenantId)
+                            .customerId(report.getCustomerId())
                             .reportId(report.getId())
                             .reportFormat(report.getFormat())
                             .reportName(report.getName())

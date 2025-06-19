@@ -34,6 +34,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.ReportId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.id.UserId;
@@ -51,6 +52,7 @@ import static org.thingsboard.server.common.data.util.CollectionsUtil.mapOf;
 public class ReportGeneratedNotificationInfo implements RuleOriginatedNotificationInfo {
 
     private TenantId tenantId;
+    private CustomerId customerId;
     private ReportId reportId;
     private TbReportFormat reportFormat;
     private String reportName;
@@ -73,6 +75,11 @@ public class ReportGeneratedNotificationInfo implements RuleOriginatedNotificati
     @Override
     public TenantId getAffectedTenantId() {
         return tenantId;
+    }
+
+    @Override
+    public CustomerId getAffectedCustomerId() {
+        return customerId;
     }
 
     @Override

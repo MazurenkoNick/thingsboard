@@ -60,8 +60,6 @@ public class ReportsCleanUpService extends AbstractCleanUpService {
     @Scheduled(initialDelayString = "#{T(org.apache.commons.lang3.RandomUtils).nextLong(0, ${sql.ttl.reports.checking_interval_ms})}",
             fixedDelayString = "${sql.ttl.reports.checking_interval_ms}")
     public void cleanUp() {
-        if (ttlInSec <= 0) return;
-
         long reportsExpTime = System.currentTimeMillis() - TimeUnit.SECONDS.toMillis(ttlInSec);
         if (isSystemTenantPartitionMine()) {
             partitioningRepository.dropPartitionsBefore(ModelConstants.REPORT_TABLE_NAME, reportsExpTime, TimeUnit.HOURS.toMillis(partitionSizeInHours));
