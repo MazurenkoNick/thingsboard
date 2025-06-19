@@ -30,35 +30,15 @@
  */
 package org.thingsboard.server.common.data.scheduler;
 
-import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Builder;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.ToString;
-import org.thingsboard.server.common.data.id.SchedulerEventId;
+import org.thingsboard.server.common.data.id.CustomerId;
 
 @Data
-@EqualsAndHashCode(callSuper = true)
-@ToString(callSuper = true)
-public class SchedulerEventWithCustomerInfo extends SchedulerEventInfo {
+@Builder
+public class SchedulerEventFilter {
 
-    @Schema(description = "Title of the customer", example = "Company A")
-    private String customerTitle;
-
-    @Schema(description = "Parameter that specifies if customer is public", accessMode = Schema.AccessMode.READ_ONLY, type = "boolean")
-    private boolean customerIsPublic;
-
-    public SchedulerEventWithCustomerInfo() {
-        super();
-    }
-
-    public SchedulerEventWithCustomerInfo(SchedulerEventId schedulerEventId) {
-        super(schedulerEventId);
-    }
-
-    public SchedulerEventWithCustomerInfo(SchedulerEventInfo schedulerEventInfo, String customerTitle, boolean customerIsPublic) {
-        super(schedulerEventInfo);
-        this.customerTitle = customerTitle;
-        this.customerIsPublic = customerIsPublic;
-    }
+    private final CustomerId customerId;
+    private final String type;
 
 }

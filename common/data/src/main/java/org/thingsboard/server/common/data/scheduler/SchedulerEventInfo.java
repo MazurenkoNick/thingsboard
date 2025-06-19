@@ -73,9 +73,7 @@ public class SchedulerEventInfo extends BaseDataWithAdditionalInfo<SchedulerEven
     @Length(fieldName = "type")
     private String type;
     @Schema(description = "a JSON value with schedule time configuration", implementation = com.fasterxml.jackson.databind.JsonNode.class)
-    private transient JsonNode schedule;
-    @JsonIgnore
-    private byte[] scheduleBytes;
+    private JsonNode schedule;
 
     @Schema(description = "Enable/disable scheduler", example = "true")
     @Length(fieldName = "enabled")
@@ -104,9 +102,9 @@ public class SchedulerEventInfo extends BaseDataWithAdditionalInfo<SchedulerEven
     }
 
     @Schema(description = "JSON object with the scheduler event Id. " +
-            "Specify this field to update the scheduler event. " +
-            "Referencing non-existing scheduler event Id will cause error. " +
-            "Omit this field to create new scheduler event" )
+                          "Specify this field to update the scheduler event. " +
+                          "Referencing non-existing scheduler event Id will cause error. " +
+                          "Omit this field to create new scheduler event")
     @Override
     public SchedulerEventId getId() {
         return super.getId();
@@ -142,14 +140,6 @@ public class SchedulerEventInfo extends BaseDataWithAdditionalInfo<SchedulerEven
         } else {
             this.customerId = new CustomerId(CustomerId.NULL_UUID);
         }
-    }
-
-    public JsonNode getSchedule() {
-        return BaseDataWithAdditionalInfo.getJson(() -> schedule, () -> scheduleBytes);
-    }
-
-    public void setSchedule(JsonNode data) {
-        setJson(data, json -> this.schedule = json, bytes -> this.scheduleBytes = bytes);
     }
 
     @Override

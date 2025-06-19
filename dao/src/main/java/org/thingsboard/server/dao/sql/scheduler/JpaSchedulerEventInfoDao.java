@@ -30,13 +30,17 @@
  */
 package org.thingsboard.server.dao.sql.scheduler;
 
+import com.google.common.base.Strings;
 import com.google.common.util.concurrent.ListenableFuture;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Component;
+import org.thingsboard.server.common.data.StringUtils;
+import org.thingsboard.server.common.data.id.SchedulerEventId;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
+import org.thingsboard.server.common.data.scheduler.SchedulerEventFilter;
 import org.thingsboard.server.common.data.scheduler.SchedulerEventInfo;
 import org.thingsboard.server.common.data.scheduler.SchedulerEventWithCustomerInfo;
 import org.thingsboard.server.dao.DaoUtil;
@@ -90,35 +94,25 @@ public class JpaSchedulerEventInfoDao extends JpaAbstractDao<SchedulerEventInfoE
     }
 
     @Override
-    public List<SchedulerEventWithCustomerInfo> findSchedulerEventsWithCustomerInfoByTenantId(UUID tenantId) {
-        return DaoUtil.convertDataList(schedulerEventInfoRepository
-                .findSchedulerEventsWithCustomerInfoByTenantId(
-                        tenantId));
+    public PageData<SchedulerEventWithCustomerInfo> findSchedulerEventsByTenantIdAndFilter(UUID tenantId, SchedulerEventFilter filter, PageLink pageLink) {
+        UUID customerId = filter.getCustomerId() != null && !filter.getCustomerId().isNullUid() ? filter.getCustomerId().getId() : null;
+        String type = StringUtils.isNotBlank(filter.getType()) ? filter.getType() : null;
+        return DaoUtil.toPageData(schedulerEventInfoRepository.findByTenantIdAndCustomerIdAndTypeAndSearchText(tenantId, customerId, type,
+                Strings.emptyToNull(pageLink.getTextSearch()), DaoUtil.toPageable(pageLink)));
     }
 
     @Override
-    public List<SchedulerEventWithCustomerInfo> findSchedulerEventsByTenantIdAndType(UUID tenantId, String type) {
-        return DaoUtil.convertDataList(schedulerEventInfoRepository
-                .findByTenantIdAndType(
-                        tenantId,
-                        type));
+    public List<SchedulerEventId> findSchedulerEventsIdsByTenantIdAndCustomerId(UUID tenantId, UUID customerId) {
+        return schedulerEventInfoRepository.findIdsByTenantIdAndCustomerId(tenantId, customerId).stream()
+                .map(SchedulerEventId::new)
+                .toList();
     }
 
     @Override
-    public List<SchedulerEventWithCustomerInfo> findSchedulerEventsByTenantIdAndCustomerId(UUID tenantId, UUID customerId) {
-        return DaoUtil.convertDataList(schedulerEventInfoRepository
-                .findByTenantIdAndCustomerId(
-                        tenantId,
-                        customerId));
-    }
-
-    @Override
-    public List<SchedulerEventWithCustomerInfo> findSchedulerEventsByTenantIdAndCustomerIdAndType(UUID tenantId, UUID customerId, String type) {
-        return DaoUtil.convertDataList(schedulerEventInfoRepository
-                .findByTenantIdAndCustomerIdAndType(
-                        tenantId,
-                        customerId,
-                        type));
+    public List<SchedulerEventId> findSchedulerEventsIdsByTenantId(UUID tenantId) {
+        return schedulerEventInfoRepository.findIdsByTenantId(tenantId).stream()
+                .map(SchedulerEventId::new)
+                .toList();
     }
 
     @Override

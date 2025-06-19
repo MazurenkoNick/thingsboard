@@ -32,13 +32,11 @@ package org.thingsboard.server.controller;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import org.junit.After;
+import com.google.common.base.Strings;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.thingsboard.common.util.JacksonUtil;
-import org.thingsboard.server.common.data.Tenant;
-import org.thingsboard.server.common.data.User;
 import org.thingsboard.server.common.data.edge.Edge;
 import org.thingsboard.server.common.data.id.IdBased;
 import org.thingsboard.server.common.data.id.SchedulerEventId;
@@ -47,57 +45,35 @@ import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.scheduler.MonthlyRepeat;
 import org.thingsboard.server.common.data.scheduler.SchedulerEvent;
 import org.thingsboard.server.common.data.scheduler.SchedulerEventInfo;
+import org.thingsboard.server.common.data.scheduler.SchedulerEventWithCustomerInfo;
 import org.thingsboard.server.common.data.scheduler.SchedulerRepeat;
-import org.thingsboard.server.common.data.security.Authority;
 import org.thingsboard.server.dao.service.DaoSqlTest;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @DaoSqlTest
 public class SchedulerEventControllerTest extends AbstractControllerTest {
 
-    private Tenant savedTenant;
-    private User tenantAdmin;
-
     @Before
     public void beforeTest() throws Exception {
-        loginSysAdmin();
-
-        Tenant tenant = new Tenant();
-        tenant.setTitle("My tenant");
-        savedTenant = saveTenant(tenant);
-        Assert.assertNotNull(savedTenant);
-
-        tenantAdmin = new User();
-        tenantAdmin.setAuthority(Authority.TENANT_ADMIN);
-        tenantAdmin.setTenantId(savedTenant.getId());
-        tenantAdmin.setEmail("tenant2@thingsboard.org");
-        tenantAdmin.setFirstName("Joe");
-        tenantAdmin.setLastName("Downs");
-
-        tenantAdmin = createUserAndLogin(tenantAdmin, "testPassword1");
-    }
-
-    @After
-    public void afterTest() throws Exception {
-        loginSysAdmin();
-        deleteTenant(savedTenant.getId());
+        loginTenantAdmin();
     }
 
     @Test
     public void testSaveSchedulerEvent() throws Exception {
         SchedulerEvent schedulerEvent = createSchedulerEvent();
-        SchedulerEvent savedSchedulerEvent = doPost("/api/schedulerEvent", schedulerEvent, SchedulerEvent.class);
+        SchedulerEvent savedSchedulerEvent = saveSchedulerEvent(schedulerEvent);
         Assert.assertNotNull(savedSchedulerEvent);
         Assert.assertNotNull(savedSchedulerEvent.getId());
         Assert.assertTrue(savedSchedulerEvent.getCreatedTime() > 0);
         Assert.assertEquals(schedulerEvent.getName(), savedSchedulerEvent.getName());
         savedSchedulerEvent.setName("New Scheduler Event");
-        doPost("/api/schedulerEvent", savedSchedulerEvent, SchedulerEvent.class);
+        saveSchedulerEvent(savedSchedulerEvent);
         SchedulerEvent foundSchedulerEvent = doGet("/api/schedulerEvent/" + savedSchedulerEvent.getId().getId().toString(), SchedulerEvent.class);
         Assert.assertEquals(savedSchedulerEvent.getName(), foundSchedulerEvent.getName());
         Assert.assertTrue(savedSchedulerEvent.isEnabled());
@@ -106,7 +82,7 @@ public class SchedulerEventControllerTest extends AbstractControllerTest {
     @Test
     public void testFindSchedulerEventById() throws Exception {
         SchedulerEvent schedulerEvent = createSchedulerEvent();
-        SchedulerEvent savedSchedulerEvent = doPost("/api/schedulerEvent", schedulerEvent, SchedulerEvent.class);
+        SchedulerEvent savedSchedulerEvent = saveSchedulerEvent(schedulerEvent);
         SchedulerEvent foundSchedulerEvent = doGet("/api/schedulerEvent/" + savedSchedulerEvent.getId().getId().toString(), SchedulerEvent.class);
         Assert.assertNotNull(foundSchedulerEvent);
         Assert.assertEquals(savedSchedulerEvent, foundSchedulerEvent);
@@ -115,13 +91,65 @@ public class SchedulerEventControllerTest extends AbstractControllerTest {
     @Test
     public void testDeleteSchedulerEvent() throws Exception {
         SchedulerEvent schedulerEvent = createSchedulerEvent();
-        SchedulerEvent savedSchedulerEvent = doPost("/api/schedulerEvent", schedulerEvent, SchedulerEvent.class);
+        SchedulerEvent savedSchedulerEvent = saveSchedulerEvent(schedulerEvent);
 
         doDelete("/api/schedulerEvent/" + savedSchedulerEvent.getId().getId().toString())
                 .andExpect(status().isOk());
 
         doGet("/api/schedulerEvent/" + savedSchedulerEvent.getId().getId().toString())
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    public void testFindSchedulerEvents() throws Exception {
+        List<SchedulerEventId> tenantSchedulerEvents = new ArrayList<>();
+        List<SchedulerEventId> customerSchedulerEvents = new ArrayList<>();
+        for (int i = 1; i <= 5; i++) {
+            SchedulerEvent schedulerEvent = createSchedulerEvent();
+            schedulerEvent.setName("event-" + i);
+            schedulerEvent.setType("tenantType");
+            tenantSchedulerEvents.add(saveSchedulerEvent(schedulerEvent).getId());
+        }
+        loginCustomerAdminUser();
+        for (int i = 6; i <= 10; i++) {
+            SchedulerEvent schedulerEvent = createSchedulerEvent();
+            schedulerEvent.setName("event-" + i);
+            schedulerEvent.setType("customerType");
+            customerSchedulerEvents.add(saveSchedulerEvent(schedulerEvent).getId());
+        }
+
+        List<SchedulerEventWithCustomerInfo> events = findSchedulerEvents(null, null);
+        assertThat(events).as("all customer events").extracting(SchedulerEventInfo::getId)
+                .containsExactlyInAnyOrderElementsOf(customerSchedulerEvents);
+        events = findSchedulerEvents("customerType", null);
+        assertThat(events).as("customer events with customerType").extracting(SchedulerEventInfo::getId)
+                .containsExactlyInAnyOrderElementsOf(customerSchedulerEvents);
+        assertThat(events).allSatisfy(event -> {
+            assertThat(event.getCustomerTitle()).isEqualTo("Customer");
+        });
+
+        loginTenantAdmin();
+        events = findSchedulerEvents(null, null);
+        assertThat(events).as("all tenant events").extracting(SchedulerEventInfo::getId)
+                .containsAll(tenantSchedulerEvents).containsAll(customerSchedulerEvents);
+        events = findSchedulerEvents("tenantType", null);
+        assertThat(events).as("tenant events with tenantType").extracting(SchedulerEventInfo::getId)
+                .containsExactlyInAnyOrderElementsOf(tenantSchedulerEvents);
+        events = findSchedulerEvents("customerType", null);
+        assertThat(events).as("tenant events with customerType").extracting(SchedulerEventInfo::getId)
+                .containsExactlyInAnyOrderElementsOf(customerSchedulerEvents);
+
+        events = findSchedulerEvents(null, "unknown");
+        assertThat(events).as("events with search 'unknown'").isEmpty();
+        events = findSchedulerEvents(null, "event-2");
+        assertThat(events).as("events with search 'event-2'").singleElement().extracting(SchedulerEventInfo::getId)
+                .isEqualTo(tenantSchedulerEvents.get(1));
+        events = findSchedulerEvents(null, "Type");
+        assertThat(events).as("events with search 'Type'").extracting(SchedulerEventInfo::getId)
+                .containsAll(tenantSchedulerEvents).containsAll(customerSchedulerEvents);
+        events = findSchedulerEvents(null, "customer");
+        assertThat(events).as("events with search 'customer'").extracting(SchedulerEventInfo::getId)
+                .containsExactlyInAnyOrderElementsOf(customerSchedulerEvents);
     }
 
     @Test
@@ -133,9 +161,9 @@ public class SchedulerEventControllerTest extends AbstractControllerTest {
         for (int i = 0; i < 28; i++) {
             SchedulerEvent schedulerEvent = createSchedulerEvent();
             schedulerEvent.setName("Scheduler Event " + i);
-            SchedulerEvent savedSchedulerEvent = doPost("/api/schedulerEvent", schedulerEvent, SchedulerEvent.class);
+            SchedulerEvent savedSchedulerEvent = saveSchedulerEvent(schedulerEvent);
             doPost("/api/edge/" + savedEdge.getId().getId().toString()
-                    + "/schedulerEvent/" + savedSchedulerEvent.getId().getId().toString(), SchedulerEvent.class);
+                   + "/schedulerEvent/" + savedSchedulerEvent.getId().getId().toString(), SchedulerEvent.class);
             edgeSchedulerEvents.add(savedSchedulerEvent.getId());
         }
 
@@ -152,11 +180,11 @@ public class SchedulerEventControllerTest extends AbstractControllerTest {
         } while (pageData.hasNext());
 
         Assert.assertTrue(edgeSchedulerEvents.size() == loadedEdgeSchedulerEvents.size() &&
-                edgeSchedulerEvents.containsAll(loadedEdgeSchedulerEvents));
+                          edgeSchedulerEvents.containsAll(loadedEdgeSchedulerEvents));
 
         for (SchedulerEventId schedulerEventId : loadedEdgeSchedulerEvents) {
             doDelete("/api/edge/" + savedEdge.getId().getId().toString()
-                    + "/schedulerEvent/" + schedulerEventId.getId().toString(), SchedulerEventInfo.class);
+                     + "/schedulerEvent/" + schedulerEventId.getId().toString(), SchedulerEventInfo.class);
         }
 
         pageLink = new PageLink(17);
@@ -164,6 +192,15 @@ public class SchedulerEventControllerTest extends AbstractControllerTest {
                 new TypeReference<>() {}, pageLink);
         Assert.assertFalse(pageData.hasNext());
         Assert.assertEquals(0, pageData.getTotalElements());
+    }
+
+    private SchedulerEvent saveSchedulerEvent(SchedulerEvent schedulerEvent) {
+        return doPost("/api/schedulerEvent", schedulerEvent, SchedulerEvent.class);
+    }
+
+    private List<SchedulerEventWithCustomerInfo> findSchedulerEvents(String type, String searchText) throws Exception {
+        return doGetTypedWithPageLink("/api/schedulerEvents?type=" + Strings.nullToEmpty(type) + "&",
+                new TypeReference<PageData<SchedulerEventWithCustomerInfo>>() {}, new PageLink(100, 0, searchText)).getData();
     }
 
     private SchedulerEvent createSchedulerEvent() {
