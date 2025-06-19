@@ -51,6 +51,7 @@ public class AutoVersionCreateConfig extends VersionCreateConfig {
         result.setSaveCredentials(this.isSaveCredentials());
         result.setSavePermissions(this.isSavePermissions());
         result.setSaveGroupEntities(this.isSaveGroupEntities());
+        result.setSaveGroupOtaPackages(this.isSaveGroupOtaPackages());
         return result;
     }
 

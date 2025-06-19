@@ -113,6 +113,10 @@ public class EntitiesImportCtx {
         return getSettings().isSaveUserGroupPermissions();
     }
 
+    public boolean isSaveDeviceGroupOtaPackages() {
+        return getSettings().isSaveGroupOtaPackages();
+    }
+
     public boolean isAutoGenerateIntegrationKey() {
         return getSettings().isAutoGenerateIntegrationKey();
     }

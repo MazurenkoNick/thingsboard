@@ -44,4 +44,5 @@ public class EntityDataInfo {
     boolean hasCalculatedFields;
     boolean hasPermissions;
     boolean hasGroupEntities;
+    boolean hasGroupOtaPackages;
 }

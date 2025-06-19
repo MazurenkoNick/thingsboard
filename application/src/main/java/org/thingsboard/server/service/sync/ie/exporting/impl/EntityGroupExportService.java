@@ -38,16 +38,19 @@ import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.group.EntityGroup;
 import org.thingsboard.server.common.data.id.EntityGroupId;
 import org.thingsboard.server.common.data.id.TenantId;
+import org.thingsboard.server.common.data.ota.DeviceGroupOtaPackage;
 import org.thingsboard.server.common.data.permission.GroupPermission;
 import org.thingsboard.server.common.data.role.Role;
 import org.thingsboard.server.common.data.sync.ie.EntityGroupExportData;
 import org.thingsboard.server.dao.grouppermission.GroupPermissionService;
+import org.thingsboard.server.dao.ota.DeviceGroupOtaPackageService;
 import org.thingsboard.server.dao.role.RoleService;
 import org.thingsboard.server.queue.util.TbCoreComponent;
 import org.thingsboard.server.service.sync.vc.data.EntitiesExportCtx;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -60,6 +63,7 @@ public class EntityGroupExportService extends BaseEntityExportService<EntityGrou
 
     private final GroupPermissionService groupPermissionService;
     private final RoleService roleService;
+    private final DeviceGroupOtaPackageService deviceGroupOtaPackageService;
 
     @Override
     protected void setAdditionalExportData(EntitiesExportCtx<?> ctx, EntityGroup entityGroup, EntityGroupExportData exportData) throws ThingsboardException {
@@ -80,7 +84,19 @@ public class EntityGroupExportService extends BaseEntityExportService<EntityGrou
                     .collect(Collectors.toList());
             exportData.setPermissions(permissions);
         }
-        replaceUuidsRecursively(ctx, JacksonUtil.getSafely(exportData.getEntity().getConfiguration(), "actions"),  Collections.emptySet(), CONFIG_PROCESSED_FIELDS_PATTERN);
+        if (exportSettings.isExportGroupOtaPackages() && entityGroup.getType() == EntityType.DEVICE) {
+            List<DeviceGroupOtaPackage> packages = deviceGroupOtaPackageService.findDeviceGroupOtaPackageByGroupId(entityGroup.getId())
+                    .stream()
+                    .filter(Objects::nonNull)
+                    .peek(pkg -> {
+                        pkg.setOtaPackageId(getExternalIdOrElseInternal(ctx, pkg.getOtaPackageId()));
+                        pkg.setGroupId(getExternalIdOrElseInternal(ctx, pkg.getGroupId()));
+                    }).toList();
+            if (!packages.isEmpty()) {
+                exportData.setGroupOtaPackages(packages);
+            }
+        }
+        replaceUuidsRecursively(ctx, JacksonUtil.getSafely(exportData.getEntity().getConfiguration(), "actions"), Collections.emptySet(), CONFIG_PROCESSED_FIELDS_PATTERN);
     }
 
     @Override

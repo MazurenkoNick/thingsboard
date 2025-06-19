@@ -469,6 +469,7 @@ public class DefaultEntitiesVersionControlService implements EntitiesVersionCont
                 .saveCredentials(config.isLoadCredentials())
                 .saveCalculatedFields(config.isLoadCalculatedFields())
                 .saveUserGroupPermissions(config.isLoadPermissions())
+                .saveGroupOtaPackages(config.isLoadGroupOtaPackages())
                 .autoGenerateIntegrationKey(config.isAutoGenerateIntegrationKey())
                 .findExistingByName(false)
                 .build();
@@ -605,6 +606,7 @@ public class DefaultEntitiesVersionControlService implements EntitiesVersionCont
                 .saveCredentials(config.isLoadCredentials())
                 .saveCalculatedFields(config.isLoadCalculatedFields())
                 .saveUserGroupPermissions(config.isLoadPermissions())
+                .saveGroupOtaPackages(config.isLoadGroupOtaPackages())
                 .findExistingByName(config.isFindExistingEntityByName())
                 .autoGenerateIntegrationKey(config.isAutoGenerateIntegrationKey())
                 .build();
@@ -835,6 +837,7 @@ public class DefaultEntitiesVersionControlService implements EntitiesVersionCont
                             .exportCalculatedFields(otherVersion.hasCalculatedFields())
                             .exportPermissions(otherVersion.hasPermissions())
                             .exportGroupEntities(otherVersion.hasGroupEntities())
+                            .exportGroupOtaPackages(otherVersion.hasGroupOtaPackages())
                             .build());
                     EntityExportData<?> currentVersion;
                     try {
@@ -858,7 +861,7 @@ public class DefaultEntitiesVersionControlService implements EntitiesVersionCont
             future = gitServiceQueue.getEntity(user.getTenantId(), versionId, customerIds, externalId);
         }
         return Futures.transform(future,
-                entity -> new EntityDataInfo(entity.hasRelations(), entity.hasAttributes(), entity.hasCredentials(), entity.hasCalculatedFields(), entity.hasPermissions(), entity.hasGroupEntities()), MoreExecutors.directExecutor());
+                entity -> new EntityDataInfo(entity.hasRelations(), entity.hasAttributes(), entity.hasCredentials(), entity.hasCalculatedFields(), entity.hasPermissions(), entity.hasGroupEntities(), entity.hasGroupOtaPackages()), MoreExecutors.directExecutor());
     }
 
     @Override

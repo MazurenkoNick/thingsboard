@@ -63,16 +63,17 @@ public class EntityTypeExportCtx extends EntitiesExportCtx<VersionCreateRequest>
                 .exportCalculatedFields(config.isSaveCalculatedFields())
                 .exportGroupEntities(config.isSaveGroupEntities())
                 .exportPermissions(config.isSavePermissions())
+                .exportGroupOtaPackages(config.isSaveGroupOtaPackages())
                 .build();
         this.overwrite = ObjectUtils.defaultIfNull(config.getSyncStrategy(), defaultSyncStrategy) == SyncStrategy.OVERWRITE;
         this.tasks = new LinkedList<>();
     }
 
-    public void addTask(EntityTypeExportTask task){
+    public void addTask(EntityTypeExportTask task) {
         tasks.add(task);
     }
 
-    public EntityTypeExportTask pollTask(){
+    public EntityTypeExportTask pollTask() {
         return tasks.poll();
     }
 

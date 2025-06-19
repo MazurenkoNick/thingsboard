@@ -47,5 +47,6 @@ public class EntityExportSettings {
     private boolean exportCalculatedFields;
     private boolean exportPermissions;
     private boolean exportGroupEntities;
+    private boolean exportGroupOtaPackages;
 
 }
