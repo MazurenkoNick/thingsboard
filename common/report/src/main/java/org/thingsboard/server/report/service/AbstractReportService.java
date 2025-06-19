@@ -31,6 +31,7 @@
 package org.thingsboard.server.report.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.thingsboard.common.util.JacksonUtil;
@@ -83,6 +84,7 @@ import static org.thingsboard.server.common.data.util.ReportQueryUtils.toEntityC
 import static org.thingsboard.server.common.data.util.ReportQueryUtils.toEntityDataQuery;
 import static org.thingsboard.server.report.util.ReportUtils.getSingleDataSource;
 
+@Slf4j
 public abstract class AbstractReportService implements ReportService {
 
     @Lazy
@@ -359,7 +361,10 @@ public abstract class AbstractReportService implements ReportService {
     private String evalData(TbReportCtx ctx, long timestamp, String value, UUID scriptId) {
         try {
             return ctx.getTbelInvokeService().invokeScript(ctx.getTenantId(), null, scriptId, timestamp, value).get().toString();
-        } catch (InterruptedException | ExecutionException e) {
+        } catch (InterruptedException e) {
+            throw new RuntimeException("Failed to evaluate data: " + value, e);
+        } catch (ExecutionException e) {
+            log.error("Failed to evaluate data {}", value, e);
             return value;
         }
     }
@@ -367,7 +372,10 @@ public abstract class AbstractReportService implements ReportService {
     private UUID evalScript(TbReportCtx ctx, String script)  {
         try {
             return ctx.getTbelInvokeService().eval(ctx.getTenantId(), ScriptType.REPORT_DATA_KEY_SCRIPT, script, "time", "value").get();
-        } catch (InterruptedException | ExecutionException e) {
+        } catch (InterruptedException e) {
+            throw new RuntimeException("Failed to compile script: " + script, e);
+        } catch (ExecutionException e) {
+            log.error("Failed to compile script {} ", script, e);
             return null;
         }
     }
