@@ -88,7 +88,14 @@
                                    [format]="format" class="min-h-0 flex-1">
       </tb-report-component-library>
     </div>
-    <div class="tb-report-template-content" cdkScrollable>
+    <div #reportTemplateContent class="tb-report-template-content" cdkScrollable>
+      <div class="tb-report-content-scroll-wrapper">
+        <button class="tb-report-content-scroll-button"
+                [class.tb-animate]="viewInited"
+                [class.tb-hide]="!hasScroll" mat-fab (click)="scrollBottomTop()">
+          <mat-icon [class.tb-scroll-top]="scrollTop" class="tb-mat-32">expand_more</mat-icon>
+        </button>
+      </div>
       <div #reportTemplateLayout class="tb-report-template-layout">
         <div class="tb-report-template-sections">
           @if (showHeaderFooter) {

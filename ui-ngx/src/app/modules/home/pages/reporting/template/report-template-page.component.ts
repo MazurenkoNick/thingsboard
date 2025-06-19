@@ -114,6 +114,7 @@ import { FilterDialogComponent, FilterDialogData } from '@home/components/filter
 import { getDefaultTimezone } from '@shared/models/time/time.models';
 import { DatePipe } from '@angular/common';
 import { EntityId } from '@shared/models/id/entity-id';
+import { CdkScrollable } from '@angular/cdk/overlay';
 
 @Component({
   selector: 'tb-report-template-page',
@@ -158,6 +159,10 @@ export class ReportTemplatePageComponent extends PageComponent
 
   reportTemplateContainerEl = viewChild('reportTemplateContainer', {
     read: ElementRef<HTMLElement>,
+  });
+
+  reportTemplateContentEl = viewChild('reportTemplateContent', {
+    read: CdkScrollable,
   });
 
   reportTemplateLayoutEl = viewChild('reportTemplateLayout', {
@@ -206,6 +211,11 @@ export class ReportTemplatePageComponent extends PageComponent
   scale = 1;
 
   layoutWidth: number;
+
+  viewInited = false;
+  hasScroll = false;
+  scrollTop = false;
+  private scrolling = false;
 
   private layoutResize$: ResizeObserver;
 
@@ -264,10 +274,29 @@ export class ReportTemplatePageComponent extends PageComponent
     this.layoutResize$ = new ResizeObserver(() => {
       this.layoutResize();
     });
-    this.layoutResize$.observe(this.reportTemplateLayoutEl().nativeElement);
     setTimeout(() => {
-      this.layoutResize();
+      this.layoutResize$.observe(this.reportTemplateLayoutEl().nativeElement);
+      this.viewInited = true;
     });
+    const reportTemplateContent = this.reportTemplateContentEl();
+    if (reportTemplateContent) {
+      reportTemplateContent.elementScrolled().pipe(
+        takeUntilDestroyed(this.destroyRef)
+      ).subscribe(() => {
+        if (this.hasScroll) {
+          const bottomOffset = reportTemplateContent.measureScrollOffset('bottom');
+          const topOffset = reportTemplateContent.measureScrollOffset('top');
+          if (this.scrolling && (bottomOffset === 0 || topOffset === 0)) {
+            this.scrolling = false;
+          }
+          const scrollTop = bottomOffset === 0;
+          if (this.scrollTop !== scrollTop && !this.scrolling) {
+            this.scrollTop = scrollTop;
+            this.cd.markForCheck();
+          }
+        }
+      })
+    }
   }
 
   ngOnDestroy() {
@@ -541,6 +570,20 @@ export class ReportTemplatePageComponent extends PageComponent
       this.reportService.downloadTestReport(reportRequest, this.format !== TbReportFormat.PDF), this.translate.instant('report.generating-report')).subscribe();
   }
 
+  scrollBottomTop() {
+    const reportTemplateContent = this.reportTemplateContentEl();
+    if (reportTemplateContent) {
+      this.scrolling = true;
+      if (this.scrollTop) {
+        reportTemplateContent.scrollTo({top: 0, behavior: 'smooth'});
+        this.scrollTop = false;
+      } else {
+        reportTemplateContent.scrollTo({bottom: 0, behavior: 'smooth'});
+        this.scrollTop = true;
+      }
+    }
+  }
+
   private updateReportTemplateSettings(settings: ReportTemplateSettings): void {
     this.timePreview = this.date.transform(Date.now(), settings.timeDataPattern);
     updateFromReportTemplateSettings(this.reportTemplate, settings);
@@ -590,6 +633,15 @@ export class ReportTemplatePageComponent extends PageComponent
   }
 
   private layoutResize() {
+    const reportTemplateContent = this.reportTemplateContentEl();
+    const bottomOffset = reportTemplateContent.measureScrollOffset('bottom');
+    const topOffset = reportTemplateContent.measureScrollOffset('top');
+    const hasScroll = bottomOffset > 0 || topOffset > 0;
+    if (this.hasScroll !== hasScroll) {
+      this.hasScroll = hasScroll;
+      this.scrollTop = false;
+      this.cd.markForCheck();
+    }
     this.layoutWidth = this.reportTemplateLayoutEl().nativeElement.getBoundingClientRect().width;
     this.reportComponentsComponents.forEach(component => {
       this.renderer.setStyle(component.element.nativeElement, 'maxWidth', this.layoutWidth + 'px');

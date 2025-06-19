@@ -122,8 +122,10 @@ export const entityAliasesToList = (entityAliases: EntityAliases): EntityAlias[]
 
 export const entityAliasesListToAliases = (entityAliasesList: EntityAlias[]): EntityAliases => {
   const entityAliases: EntityAliases = {};
-  for (const entityAlias of entityAliasesList) {
-    entityAliases[entityAlias.id] = entityAlias;
+  if (entityAliasesList) {
+    for (const entityAlias of entityAliasesList) {
+      entityAliases[entityAlias.id] = entityAlias;
+    }
   }
   return entityAliases;
 }
@@ -138,8 +140,10 @@ export const filtersToReportDataFilterList = (filters: Filters): ReportDataFilte
 
 export const reportDataFilterListToFilters = (reportDataFilters: ReportDataFilter[]): Filters => {
   const filters: Filters = {};
-  for (const filter of reportDataFilters) {
-    filters[filter.id] = reportDataFilterToFilter(filter);
+  if (reportDataFilters) {
+    for (const filter of reportDataFilters) {
+      filters[filter.id] = reportDataFilterToFilter(filter);
+    }
   }
   return filters;
 }
