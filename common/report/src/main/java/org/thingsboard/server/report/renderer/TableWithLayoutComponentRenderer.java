@@ -113,10 +113,10 @@ public abstract class TableWithLayoutComponentRenderer<C extends TableWithLayout
                 String key = column.getValue().getValue();
                 CellVariables baseStyles = cellStyles.getOrDefault(label, new CellVariables());
                 CellVariables cellVariables = baseStyles.toBuilder()
-                        .fontSize(formatFontSize(key, entityData.get(key), baseStyles.getFontSize()))
-                        .fontWeight(formatFontWeight(key, entityData.get(key), baseStyles.getFontWeight()))
-                        .color(formatColor(key, entityData.get(key), baseStyles.getColor()))
-                        .value(formatValue(key, entityData.get(key), labelToDataKey.get(label))).build();
+                        .fontSize(formatFontSize(key, entityData.get(label), baseStyles.getFontSize()))
+                        .fontWeight(formatFontWeight(key, entityData.get(label), baseStyles.getFontWeight()))
+                        .color(formatColor(key, entityData.get(label), baseStyles.getColor()))
+                        .value(formatValue(key, entityData.get(label), labelToDataKey.get(label))).build();
                 row.put(label, cellVariables);
             }
             rows.add(row);

@@ -34,6 +34,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.thingsboard.common.util.JacksonUtil;
+import org.thingsboard.script.api.ScriptType;
 import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.kv.TsKvEntry;
 import org.thingsboard.server.common.data.page.PageDataIterable;
@@ -43,6 +44,7 @@ import org.thingsboard.server.common.data.query.AlarmData;
 import org.thingsboard.server.common.data.query.EntityData;
 import org.thingsboard.server.common.data.query.EntityDataQuery;
 import org.thingsboard.server.common.data.query.EntityKeyType;
+import org.thingsboard.server.common.data.query.TsValue;
 import org.thingsboard.server.common.data.report.configuration.DataKey;
 import org.thingsboard.server.common.data.report.configuration.DataSource;
 import org.thingsboard.server.common.data.report.configuration.ReportTemplateConfig;
@@ -67,16 +69,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.TreeMap;
+import java.util.UUID;
+import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static org.thingsboard.server.common.data.report.configuration.timewindow.TimeIntervalCalculator.getTimeRange;
 import static org.thingsboard.server.common.data.util.DataSourceUtils.getAlarmLatestValue;
 import static org.thingsboard.server.common.data.util.DataSourceUtils.getEntityLatestValue;
-import static org.thingsboard.server.common.data.util.ReportQueryUtils.toEntityDataQuery;
 import static org.thingsboard.server.common.data.util.ReportQueryUtils.toAlarmCountQuery;
 import static org.thingsboard.server.common.data.util.ReportQueryUtils.toAlarmDataQuery;
 import static org.thingsboard.server.common.data.util.ReportQueryUtils.toEntityCountQuery;
+import static org.thingsboard.server.common.data.util.ReportQueryUtils.toEntityDataQuery;
 import static org.thingsboard.server.report.util.ReportUtils.getSingleDataSource;
 
 public abstract class AbstractReportService implements ReportService {
@@ -122,11 +126,7 @@ public abstract class AbstractReportService implements ReportService {
     }
 
     protected List<EntityData> fetchEntities(TbReportCtx ctx, DataSource dataSource, EntityData stateEntity) {
-        if (dataSource.getEntityAliasId() == null) {
-            return Collections.emptyList();
-        } else {
-            return fetchEntityDataByQuery(pageLink -> toEntityDataQuery(dataSource, ctx.getConfiguration(), stateEntity, pageLink), ctx);
-        }
+       return fetchEntityDataByQuery(pageLink -> toEntityDataQuery(dataSource, ctx.getConfiguration(), stateEntity, pageLink), ctx);
     }
 
     protected List<EntityData> fetchEntityDataByQuery(Function<PageLink, EntityDataQuery> querySupplier, TbReportCtx ctx) {
@@ -139,7 +139,10 @@ public abstract class AbstractReportService implements ReportService {
 
     protected List<Map<String, String>> collectEntityDatas(TbReportCtx ctx, DataSource dataSource, EntityData stateEntity) {
         return switch (dataSource.getType()) {
-            case "device", "entity" -> fetchEntities(ctx, dataSource, stateEntity).stream().map(entityData -> toStringMap(entityData, ctx)).collect(Collectors.toList());
+            case "device", "entity" -> fetchEntities(ctx, dataSource, stateEntity)
+                    .stream()
+                    .map(entityData -> toStringMap(entityData, dataSource.getDataKeys(), ctx))
+                    .collect(Collectors.toList());
             default -> throw new IllegalArgumentException("Unknown data source type: " + dataSource.getType());
         };
     }
@@ -161,19 +164,16 @@ public abstract class AbstractReportService implements ReportService {
         if (singleDataSource.isEmpty()) {
             return Collections.emptyList();
         }
-        List<String> keys = singleDataSource.get().getDataKeys().stream()
-                .map(DataKey::getName)
-                .toList();
+        List<DataKey> dataKeys = singleDataSource.get().getDataKeys();
+        List<DataKey> latestDataKeys = singleDataSource.get().getLatestDataKeys();
 
         // todo: dasha make sort order configurable (?)
+        List<String> keys = dataKeys.stream().map(DataKey::getName).collect(Collectors.toList());
         List<TsKvEntry> result = dataService.getTimeseries(entity.getEntityId(), keys, timeRange.startTs, timeRange.endTs,
                 historyConf.getInterval(), timeWindowConf.getAggregation().getType(), SortOrder.Direction.DESC,
                 timeWindowConf.getAggregation().getLimit(), false, ctx);
-        if (result.isEmpty()) {
-            return List.of(toStringMap(entity, ctx));
-        }
         SortOrder sortOrder = SortOrder.of("rawTs", SortOrder.Direction.DESC);
-        return collectTsData(keys, entity, result, component.isShowTimestamp(), component.getTimestampPattern(), sortOrder, ctx);
+        return collectTsData(dataKeys, latestDataKeys, entity, result, component.isShowTimestamp(), component.getTimestampPattern(), sortOrder, ctx);
     }
 
     protected List<Map<String, String>> fetchAlarmDatas(TbReportCtx ctx, AlarmTableComponent component, EntityData stateEntity) {
@@ -195,22 +195,25 @@ public abstract class AbstractReportService implements ReportService {
             default:
                 return Collections.emptyList();
         }
-        List<String> alarmKeys = alarmSource.getDataKeys().stream().filter(dataKey -> dataKey.getType().equals("alarm")).map(DataKey::getName).toList();
+        List<DataKey> alarmDataKeys = alarmSource.getDataKeys()
+                .stream()
+                .filter(dataKey -> dataKey.getType().equals("alarm"))
+                .collect(Collectors.toList());
+        List<DataKey> latestDataKeys = alarmSource.getDataKeys()
+                .stream()
+                .filter(dataKey -> !dataKey.getType().equals("alarm"))
+                .collect(Collectors.toList());
         List<Map<String, String>> data = new ArrayList<>();
         for (AlarmData alarmData : new PageDataIterable<>(link -> dataService.findAlarmDataByQuery(toAlarmDataQuery(component, ctx.getConfiguration(), stateEntity, link), ctx), 1024)) {
-            data.add(toStringMap(alarmData, alarmKeys, ctx));
+            data.add(toStringMap(alarmData, alarmDataKeys, latestDataKeys, ctx));
         }
         return data;
     }
 
-    protected Map<String, String> toStringMap(EntityData entityData, TbReportCtx ctx) {
+    protected Map<String, String> toStringMap(EntityData entityData, List<DataKey> dataKeys, TbReportCtx ctx) {
         HashMap<String, String> data = new HashMap<>();
         if (entityData != null) {
-            entityData.getLatest().forEach((keyType, keyValueMap) -> keyValueMap.forEach((key, tsValue) -> {
-                if (tsValue.getValue() != null) {
-                    data.put(key, formatData(ctx, key, tsValue.getValue()));
-                }
-            }));
+            putLatestValues(dataKeys, data, entityData.getLatest(), ctx);
             data.put("id", entityData.getEntityId().toString());
             Optional<String> entityName = getEntityLatestValue(entityData, EntityKeyType.ENTITY_FIELD, "name");
             Optional<String> entityLabel = getEntityLatestValue(entityData, EntityKeyType.ENTITY_FIELD, "label");
@@ -220,16 +223,17 @@ public abstract class AbstractReportService implements ReportService {
         return data;
     }
 
-    protected Map<String, String> toStringMap(AlarmData alarmData, List<String> alarmKeys, TbReportCtx ctx) {
+    protected Map<String, String> toStringMap(AlarmData alarmData, List<DataKey> alarmDataKeys, List<DataKey> latestDataKeys, TbReportCtx ctx) {
         Map<String, String> data = new HashMap<>();
         JsonNode alarmDataJson = JacksonUtil.valueToTree(alarmData);
-        alarmKeys.forEach(key -> {
+
+        for (DataKey alarmKey : alarmDataKeys) {
+            String targetKey = alarmKey.getName();
             String value = null;
-            if (key.equals("assignee")) {
+            if (targetKey.equals("assignee")) {
                 value = getAssigneeDisplayName(alarmData);
             } else {
-                String targetKey = key;
-                if (key.equals("originator")) {
+                if (targetKey.equals("originator")) {
                     targetKey = "originatorName";
                 }
                 JsonNode jsonValue = JacksonUtil.getByKeyPath(alarmDataJson, targetKey);
@@ -238,19 +242,25 @@ public abstract class AbstractReportService implements ReportService {
                 }
             }
             if (value != null) {
-                data.put(key, formatData(ctx, key, value));
+                data.put(alarmKey.getLabel(), formatData(ctx, alarmKey, 0, value));
             }
-        });
-        alarmData.getLatest().forEach((keyType, keyValueMap) -> keyValueMap.forEach((key, tsValue) -> {
-            if (tsValue.getValue() != null) {
-                data.put(key, formatData(ctx, key, tsValue.getValue()));
-            }
-        }));
+        }
+        putLatestValues(latestDataKeys, data, alarmData.getLatest(), ctx);
         Optional<String> entityName = getAlarmLatestValue(alarmData, EntityKeyType.ENTITY_FIELD, "name");
         Optional<String> entityLabel = getAlarmLatestValue(alarmData, EntityKeyType.ENTITY_FIELD, "label");
         data.put("entityName", entityName.orElse(""));
         data.put("entityLabel", entityLabel.orElse(""));
         return data;
+    }
+
+    private void putLatestValues(List<DataKey> latestDataKeys, Map<String, String> data, Map<EntityKeyType, Map<String, TsValue>> latest, TbReportCtx ctx) {
+        for (DataKey dataKey : latestDataKeys) {
+            Map<String, TsValue> keyValueMap = latest.get(EntityKeyType.fromName(dataKey.getType()));
+            TsValue tsValue = keyValueMap.get(dataKey.getName());
+            if (tsValue != null && tsValue.getValue() != null) {
+                data.put(dataKey.getLabel(), formatData(ctx, dataKey, tsValue.getTs(), tsValue.getValue()));
+            }
+        }
     }
 
     private String getAssigneeDisplayName(AlarmData alarmData) {
@@ -263,7 +273,7 @@ public abstract class AbstractReportService implements ReportService {
         }
     }
 
-    protected List<Map<String, String>> collectTsData(List<String> keys, EntityData entity,
+    protected List<Map<String, String>> collectTsData(List<DataKey> dataKeys, List<DataKey> latestDataKeys, EntityData entity,
                                                       List<TsKvEntry> tsKvEntries, boolean showTs, String tsPattern,
                                                       SortOrder sortOrder, TbReportCtx ctx) {
         Optional<String> entityName = getEntityLatestValue(entity, EntityKeyType.ENTITY_FIELD, "name");
@@ -285,17 +295,20 @@ public abstract class AbstractReportService implements ReportService {
             Map<String, String> tsValues = new HashMap<>();
             tsValues.put("rawTs", ts.toString());
             if (showTs) {
-                tsValues.put("ts", formatTimestamp(ts.toString(), tsPattern, ctx));
+                tsValues.put("Timestamp", formatTimestamp(ts.toString(), tsPattern, ctx));
             }
-            for (TsKvEntry entry : entries) {
-                tsValues.put(entry.getKey(), formatData(ctx, entry.getKey(), entry.getValueAsString()));
+            for (DataKey dataKey : dataKeys) {
+                entries.stream().filter(tsKvEntry -> tsKvEntry.getKey().equals(dataKey.getName()))
+                        .findFirst()
+                        .ifPresentOrElse(tsKvEntry -> {
+                                    String value = tsKvEntry.getValueAsString();
+                                    if (value != null) {
+                                        tsValues.put(dataKey.getLabel(), formatData(ctx, dataKey, tsKvEntry.getTs(), value));
+                                    }
+                                },
+                                () -> tsValues.putIfAbsent(dataKey.getLabel(), null));
             }
-            keys.forEach(key -> tsValues.putIfAbsent(key, null));
-            entity.getLatest().forEach((keyType, keyValueMap) -> keyValueMap.forEach((key, tsValue) -> {
-                if (tsValue.getValue() != null) {
-                    tsValues.put(key, formatData(ctx, key, tsValue.getValue()));
-                }
-            }));
+            putLatestValues(latestDataKeys, tsValues, entity.getLatest(), ctx);
             tsValues.put("entityName", entityName.orElse(""));
             tsValues.put("entityLabel", entityLabel.orElse(""));
             tsData.add(tsValues);
@@ -303,8 +316,12 @@ public abstract class AbstractReportService implements ReportService {
         return tsData;
     }
 
-    protected String formatData(TbReportCtx ctx, String key, String value) {
-        return key.equals("createdTime") ? formatTimestamp(value, ctx) : value;
+    protected String formatData(TbReportCtx ctx, DataKey dataKey, long timestamp, String value) {
+        if (dataKey != null) {
+            String processedData = postProcessData(ctx, dataKey, timestamp, value);
+            return "createdTime".equals(dataKey.getName()) ? formatTimestamp(processedData, ctx) : processedData;
+        }
+        return value;
     }
 
     protected String formatTimestamp(String timestampStr, TbReportCtx ctx) {
@@ -326,6 +343,33 @@ public abstract class AbstractReportService implements ReportService {
             return formatter.format(Instant.ofEpochMilli(timestamp));
         } catch (NumberFormatException e) {
             return "Invalid timestamp: " + timestampStr;
+        }
+    }
+
+    private String postProcessData(TbReportCtx ctx, DataKey dataKey, long timestamp, String value) {
+        if (dataKey != null && dataKey.isUsePostProcessing()) {
+            String prepared = value;
+            UUID scriptId = ctx.getScripts().computeIfAbsent(dataKey.getPostFuncBody(), s -> evalScript(ctx, timestamp, prepared, s));
+            if (scriptId != null) {
+                value = evalData(ctx, timestamp, value, scriptId);
+            }
+        }
+        return value;
+    }
+
+    private String evalData(TbReportCtx ctx, long timestamp, String value, UUID scriptId) {
+        try {
+            return ctx.getTbelInvokeService().invokeScript(ctx.getTenantId(), null, scriptId, String.valueOf(timestamp), value).get().toString();
+        } catch (InterruptedException | ExecutionException e) {
+            return value;
+        }
+    }
+
+    private UUID evalScript(TbReportCtx ctx, long timestamp, String value, String script)  {
+        try {
+            return ctx.getTbelInvokeService().eval(ctx.getTenantId(), ScriptType.REPORT_DATA_KEY_SCRIPT, script, String.valueOf(timestamp), value).get();
+        } catch (InterruptedException | ExecutionException e) {
+            return null;
         }
     }
 }

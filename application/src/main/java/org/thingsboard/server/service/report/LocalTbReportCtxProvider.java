@@ -35,6 +35,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.SuperBuilder;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
+import org.thingsboard.script.api.tbel.TbelInvokeService;
 import org.thingsboard.server.common.data.job.task.ReportTask;
 import org.thingsboard.server.common.data.report.configuration.ReportTemplateConfig;
 import org.thingsboard.server.report.context.TbReportCtx;
@@ -48,11 +49,14 @@ import org.thingsboard.server.service.security.model.token.JwtTokenFactory;
 public class LocalTbReportCtxProvider implements TbReportCtxProvider {
 
     private final JwtTokenFactory tokenFactory;
+    private final TbelInvokeService tbelInvokeService;
 
     @Override
     public LocalTbReportCtx newContext(ReportTask task) {
         SecurityUser securityUser = tokenFactory.parseAccessJwtToken(task.getAccessToken());
         return LocalTbReportCtx.builder()
+                .tenantId(securityUser.getTenantId())
+                .tbelInvokeService(tbelInvokeService)
                 .configuration(task.getReportTemplateConfig())
                 .timeZone(task.getTimezone())
                 .accessToken(task.getAccessToken())
@@ -68,11 +72,10 @@ public class LocalTbReportCtxProvider implements TbReportCtxProvider {
         private final SecurityUser securityUser;
 
         @Override
-        public void close() {}
-
-        @Override
         public TbReportCtx createSubReportCxt(ReportTemplateConfig reportTemplateConfig) {
             LocalTbReportCtx copy = LocalTbReportCtx.builder()
+                    .tenantId(this.getTenantId())
+                    .tbelInvokeService(this.getTbelInvokeService())
                     .configuration(reportTemplateConfig)
                     .timeZone(this.getTimeZone())
                     .accessToken(this.getAccessToken())
