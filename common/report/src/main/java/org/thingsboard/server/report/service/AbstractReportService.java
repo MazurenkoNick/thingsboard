@@ -359,7 +359,10 @@ public abstract class AbstractReportService implements ReportService {
     private String evalData(TbReportCtx ctx, long timestamp, String value, UUID scriptId) {
         try {
             return ctx.getTbelInvokeService().invokeScript(ctx.getTenantId(), null, scriptId, timestamp, value).get().toString();
-        } catch (InterruptedException | ExecutionException e) {
+        } catch (InterruptedException e) {
+            throw new RuntimeException("Failed to evaluate data: " + value, e);
+        } catch (ExecutionException e) {
+            log.error("Failed to evaluate data {}", value, e);
             return value;
         }
     }
@@ -367,7 +370,10 @@ public abstract class AbstractReportService implements ReportService {
     private UUID evalScript(TbReportCtx ctx, String script)  {
         try {
             return ctx.getTbelInvokeService().eval(ctx.getTenantId(), ScriptType.REPORT_DATA_KEY_SCRIPT, script, "time", "value").get();
-        } catch (InterruptedException | ExecutionException e) {
+        } catch (InterruptedException e) {
+            throw new RuntimeException("Failed to compile script: " + script, e);
+        } catch (ExecutionException e) {
+            log.error("Failed to compile script {} ", script, e);
             return null;
         }
     }
