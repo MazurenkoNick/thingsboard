@@ -35,6 +35,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import org.thingsboard.server.common.data.kv.Aggregation;
+import org.thingsboard.server.common.data.report.configuration.timewindow.TimeWindowConfiguration;
 
 @Schema
 @Data
@@ -53,6 +55,8 @@ public class DataKey {
     private String type;
     private String label;
     private String units;
+    private Aggregation aggregationType;
+    private TimeWindowConfiguration timeWindowConfiguration;
     private String postFuncBody;
     private boolean usePostProcessing;
     private Integer decimals;

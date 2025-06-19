@@ -348,8 +348,7 @@ public abstract class AbstractReportService implements ReportService {
 
     private String postProcessData(TbReportCtx ctx, DataKey dataKey, long timestamp, String value) {
         if (dataKey != null && dataKey.isUsePostProcessing()) {
-            String prepared = value;
-            UUID scriptId = ctx.getScripts().computeIfAbsent(dataKey.getPostFuncBody(), s -> evalScript(ctx, timestamp, prepared, s));
+            UUID scriptId = ctx.getScripts().computeIfAbsent(dataKey.getPostFuncBody(), s -> evalScript(ctx, s));
             if (scriptId != null) {
                 value = evalData(ctx, timestamp, value, scriptId);
             }
@@ -359,15 +358,15 @@ public abstract class AbstractReportService implements ReportService {
 
     private String evalData(TbReportCtx ctx, long timestamp, String value, UUID scriptId) {
         try {
-            return ctx.getTbelInvokeService().invokeScript(ctx.getTenantId(), null, scriptId, String.valueOf(timestamp), value).get().toString();
+            return ctx.getTbelInvokeService().invokeScript(ctx.getTenantId(), null, scriptId, timestamp, value).get().toString();
         } catch (InterruptedException | ExecutionException e) {
             return value;
         }
     }
 
-    private UUID evalScript(TbReportCtx ctx, long timestamp, String value, String script)  {
+    private UUID evalScript(TbReportCtx ctx, String script)  {
         try {
-            return ctx.getTbelInvokeService().eval(ctx.getTenantId(), ScriptType.REPORT_DATA_KEY_SCRIPT, script, String.valueOf(timestamp), value).get();
+            return ctx.getTbelInvokeService().eval(ctx.getTenantId(), ScriptType.REPORT_DATA_KEY_SCRIPT, script, "time", "value").get();
         } catch (InterruptedException | ExecutionException e) {
             return null;
         }
