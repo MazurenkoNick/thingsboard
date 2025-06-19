@@ -56,7 +56,7 @@ public class DataKey {
     private String label;
     private String units;
     private Aggregation aggregationType;
-    private TimeWindowConfiguration timeWindowConfiguration;
+    private TimeWindowConfiguration timewindow;
     private String postFuncBody;
     private boolean usePostProcessing;
     private Integer decimals;
