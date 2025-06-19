@@ -56,6 +56,7 @@ import org.thingsboard.server.report.context.RemoteTbReportCtxProvider;
 import org.thingsboard.server.report.context.TbReportCtx;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.List;
 
 @ConditionalOnMissingBean(value = ReportDataService.class, ignored = RemoteReportDataService.class)
@@ -105,6 +106,12 @@ public class RemoteReportDataService implements ReportDataService {
 
     @Override
     public PageData<AlarmData> findAlarmDataByQuery(AlarmDataQuery query, TbReportCtx ctx) {
+        return getRestClient(ctx).findAlarmDataByQuery(query);
+    }
+
+    @Override
+    public PageData<AlarmData> findAlarmDataByQueryForEntities(AlarmDataQuery query, Collection<EntityId> entityIds, TbReportCtx ctx) {
+        //TODO: retrieve alarms for specific entities
         return getRestClient(ctx).findAlarmDataByQuery(query);
     }
 

@@ -49,6 +49,7 @@ import org.thingsboard.server.common.data.report.Report;
 import org.thingsboard.server.common.data.report.ReportTemplate;
 import org.thingsboard.server.report.context.TbReportCtx;
 
+import java.util.Collection;
 import java.util.List;
 
 public interface ReportDataService {
@@ -66,6 +67,8 @@ public interface ReportDataService {
     Long countEntitiesByQuery(EntityCountQuery query, TbReportCtx ctx);
 
     PageData<AlarmData> findAlarmDataByQuery(AlarmDataQuery query, TbReportCtx ctx);
+
+    PageData<AlarmData> findAlarmDataByQueryForEntities(AlarmDataQuery query, Collection<EntityId> entityIds, TbReportCtx ctx);
 
     Long countAlarmsByQuery(AlarmCountQuery query, TbReportCtx ctx);
 
