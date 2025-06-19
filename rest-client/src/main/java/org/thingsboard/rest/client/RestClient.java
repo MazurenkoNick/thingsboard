@@ -105,7 +105,6 @@ import org.thingsboard.server.common.data.asset.AssetProfileInfo;
 import org.thingsboard.server.common.data.asset.AssetSearchQuery;
 import org.thingsboard.server.common.data.audit.ActionType;
 import org.thingsboard.server.common.data.audit.AuditLog;
-import org.thingsboard.server.common.data.blob.BlobEntity;
 import org.thingsboard.server.common.data.blob.BlobEntityInfo;
 import org.thingsboard.server.common.data.cf.CalculatedField;
 import org.thingsboard.server.common.data.converter.Converter;
@@ -127,6 +126,7 @@ import org.thingsboard.server.common.data.id.AlarmId;
 import org.thingsboard.server.common.data.id.AssetId;
 import org.thingsboard.server.common.data.id.AssetProfileId;
 import org.thingsboard.server.common.data.id.BlobEntityId;
+import org.thingsboard.server.common.data.id.CalculatedFieldId;
 import org.thingsboard.server.common.data.id.ConverterId;
 import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.DashboardId;
@@ -3615,6 +3615,19 @@ public class RestClient implements Closeable {
         return restTemplate.postForEntity(baseURL + "/api/calculatedField", calculatedField, CalculatedField.class).getBody();
     }
 
+    public Optional<CalculatedField> getCalculatedFieldById(CalculatedFieldId calculatedFieldId) {
+        try {
+            ResponseEntity<CalculatedField> calculatedField = restTemplate.getForEntity(baseURL + "/api/calculatedField/{calculatedFieldId}", CalculatedField.class, calculatedFieldId.getId());
+            return Optional.ofNullable(calculatedField.getBody());
+        } catch (HttpClientErrorException exception) {
+            if (exception.getStatusCode() == HttpStatus.NOT_FOUND) {
+                return Optional.empty();
+            } else {
+                throw exception;
+            }
+        }
+    }
+
     public PageData<CalculatedField> getCalculatedFieldsByEntityId(EntityId entityId, PageLink pageLink) {
         Map<String, String> params = new HashMap<>();
         addPageLinkToParam(params, pageLink);
@@ -3624,6 +3637,36 @@ public class RestClient implements Closeable {
                 new ParameterizedTypeReference<PageData<CalculatedField>>() {
                 }, params).getBody();
 
+    }
+
+    public void deleteCalculatedField(CalculatedFieldId calculatedFieldId) {
+        restTemplate.delete(baseURL + "/api/calculatedField/{calculatedFieldId}", calculatedFieldId.getId());
+    }
+
+    public Optional<JsonNode> getLatestCalculatedFieldDebugEvent(CalculatedFieldId calculatedFieldId) {
+        try {
+            ResponseEntity<JsonNode> jsonNode = restTemplate.getForEntity(baseURL + "/api/calculatedField/{calculatedFieldId}/debug", JsonNode.class, calculatedFieldId.getId());
+            return Optional.ofNullable(jsonNode.getBody());
+        } catch (HttpClientErrorException exception) {
+            if (exception.getStatusCode() == HttpStatus.NOT_FOUND) {
+                return Optional.empty();
+            } else {
+                throw exception;
+            }
+        }
+    }
+
+    public Optional<JsonNode> testCalculatedFieldScript(JsonNode inputParams) {
+        try {
+            ResponseEntity<JsonNode> jsonNode = restTemplate.postForEntity(baseURL + "/api/calculatedField/testScript", inputParams, JsonNode.class);
+            return Optional.ofNullable(jsonNode.getBody());
+        } catch (HttpClientErrorException exception) {
+            if (exception.getStatusCode() == HttpStatus.NOT_FOUND) {
+                return Optional.empty();
+            } else {
+                throw exception;
+            }
+        }
     }
 
     private String getTimeUrlParams(TimePageLink pageLink) {
@@ -3796,10 +3839,6 @@ public class RestClient implements Closeable {
 
     public JsonNode activateUser(JsonNode activateRequest) {
         return restTemplate.postForEntity(baseURL + "/api/noauth/activate/", activateRequest, JsonNode.class).getBody();
-    }
-
-    public BlobEntityInfo createBlobEntity(BlobEntity blobEntity) {
-        return restTemplate.postForEntity(baseURL + "/api/blobEntity", blobEntity, BlobEntityInfo.class).getBody();
     }
 
     public Optional<BlobEntityInfo> getBlobEntityInfoById(BlobEntityId blobEntityId) {

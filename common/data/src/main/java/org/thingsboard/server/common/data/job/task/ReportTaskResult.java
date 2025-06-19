@@ -30,27 +30,32 @@
  */
 package org.thingsboard.server.common.data.job.task;
 
+import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
-import lombok.experimental.SuperBuilder;
 import org.thingsboard.server.common.data.job.JobType;
 import org.thingsboard.server.common.data.report.Report;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
-@SuperBuilder
 @ToString(callSuper = true)
 public class ReportTaskResult extends TaskResult {
 
     private Report report;
     private String error;
 
+    @Builder
+    private ReportTaskResult(boolean success, boolean discarded, Report report, String error) {
+        super(success, discarded);
+        this.report = report;
+        this.error = error;
+    }
+
     public static ReportTaskResult success(ReportTask task, Report report) {
         return ReportTaskResult.builder()
-                .key(task.getKey())
                 .success(true)
                 .report(report)
                 .build();
@@ -58,14 +63,12 @@ public class ReportTaskResult extends TaskResult {
 
     public static ReportTaskResult failed(ReportTask task, Throwable error) {
         return ReportTaskResult.builder()
-                .key(task.getKey())
                 .error(error.getMessage())
                 .build();
     }
 
     public static ReportTaskResult discarded(ReportTask task) {
         return ReportTaskResult.builder()
-                .key(task.getKey())
                 .discarded(true)
                 .build();
     }

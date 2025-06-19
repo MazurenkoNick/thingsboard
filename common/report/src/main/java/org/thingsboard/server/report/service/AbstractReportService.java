@@ -37,6 +37,7 @@ import org.springframework.context.annotation.Lazy;
 import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.script.api.ScriptType;
 import org.thingsboard.server.common.data.StringUtils;
+import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.kv.TsKvEntry;
 import org.thingsboard.server.common.data.page.PageDataIterable;
 import org.thingsboard.server.common.data.page.PageLink;
@@ -205,9 +206,15 @@ public abstract class AbstractReportService implements ReportService {
                 .stream()
                 .filter(dataKey -> !dataKey.getType().equals("alarm"))
                 .collect(Collectors.toList());
+        List<EntityData> entityDataList = fetchEntities(ctx, alarmSource, stateEntity);
+        Map<EntityId, EntityData> entityDataMap = entityDataList.stream()
+                .collect(Collectors.toMap(EntityData::getEntityId, Function.identity()));
         List<Map<String, String>> data = new ArrayList<>();
-        for (AlarmData alarmData : new PageDataIterable<>(link -> dataService.findAlarmDataByQuery(toAlarmDataQuery(component, ctx.getConfiguration(), stateEntity, link), ctx), 1024)) {
-            data.add(toStringMap(alarmData, alarmDataKeys, latestDataKeys, ctx));
+        for (AlarmData alarmData : new PageDataIterable<>(link -> dataService.findAlarmDataByQueryForEntities(toAlarmDataQuery(component, ctx.getConfiguration(), stateEntity, link), entityDataMap.keySet(), ctx), 1024)) {
+            Map<String, String> mergedData = toStringMap(alarmData, alarmDataKeys, ctx);
+            EntityData entityData = entityDataMap.get(alarmData.getEntityId());
+            mergedData.putAll(toStringMap(entityData, latestDataKeys, ctx));
+            data.add(mergedData);
         }
         return data;
     }
@@ -225,7 +232,7 @@ public abstract class AbstractReportService implements ReportService {
         return data;
     }
 
-    protected Map<String, String> toStringMap(AlarmData alarmData, List<DataKey> alarmDataKeys, List<DataKey> latestDataKeys, TbReportCtx ctx) {
+    protected Map<String, String> toStringMap(AlarmData alarmData, List<DataKey> alarmDataKeys, TbReportCtx ctx) {
         Map<String, String> data = new HashMap<>();
         JsonNode alarmDataJson = JacksonUtil.valueToTree(alarmData);
 
@@ -247,7 +254,6 @@ public abstract class AbstractReportService implements ReportService {
                 data.put(alarmKey.getLabel(), formatData(ctx, alarmKey, 0, value));
             }
         }
-        putLatestValues(latestDataKeys, data, alarmData.getLatest(), ctx);
         Optional<String> entityName = getAlarmLatestValue(alarmData, EntityKeyType.ENTITY_FIELD, "name");
         Optional<String> entityLabel = getAlarmLatestValue(alarmData, EntityKeyType.ENTITY_FIELD, "label");
         data.put("entityName", entityName.orElse(""));
@@ -255,12 +261,14 @@ public abstract class AbstractReportService implements ReportService {
         return data;
     }
 
-    private void putLatestValues(List<DataKey> latestDataKeys, Map<String, String> data, Map<EntityKeyType, Map<String, TsValue>> latest, TbReportCtx ctx) {
-        for (DataKey dataKey : latestDataKeys) {
+    private void putLatestValues(List<DataKey> dataKeys, Map<String, String> data, Map<EntityKeyType, Map<String, TsValue>> latest, TbReportCtx ctx) {
+        for (DataKey dataKey : dataKeys) {
             Map<String, TsValue> keyValueMap = latest.get(EntityKeyType.fromName(dataKey.getType()));
-            TsValue tsValue = keyValueMap.get(dataKey.getName());
-            if (tsValue != null && tsValue.getValue() != null) {
-                data.put(dataKey.getLabel(), formatData(ctx, dataKey, tsValue.getTs(), tsValue.getValue()));
+            if (keyValueMap != null) {
+                TsValue tsValue = keyValueMap.get(dataKey.getName());
+                if (tsValue != null && tsValue.getValue() != null) {
+                    data.put(dataKey.getLabel(), formatData(ctx, dataKey, tsValue.getTs(), tsValue.getValue()));
+                }
             }
         }
     }

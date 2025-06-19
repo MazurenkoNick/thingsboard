@@ -28,25 +28,20 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
+package org.thingsboard.server.common.data.kv;
 
-:host {
-  .secret-warning-btn {
-    --mdc-icon-button-icon-color: #FF5722;
-    --mdc-icon-button-disabled-icon-color: #FF5722;
-  }
-  ::ng-deep {
-    .mat-mdc-form-field .mat-mdc-form-field-icon-suffix {
-      display: flex;
-    }
-    .secret-chip-container {
-      .secret-chip {
-        margin: 0 0 0 8px;
-        --mdc-chip-container-height: 24px;
-        --mdc-chip-with-icon-icon-color: rgba(0, 0, 0, 0.38);
-        .mdc-evolution-chip__cell, .mat-mdc-chip-action, .mat-mdc-chip-action-label {
-          overflow: hidden;
+import java.util.Collections;
+import java.util.List;
+
+public record AttributesSaveResult(List<Long> versions) {
+
+    public static final AttributesSaveResult EMPTY = new AttributesSaveResult(Collections.emptyList());
+
+    public static AttributesSaveResult of(List<Long> versions) {
+        if (versions == null) {
+            return EMPTY;
         }
-      }
+        return new AttributesSaveResult(versions);
     }
-  }
+
 }

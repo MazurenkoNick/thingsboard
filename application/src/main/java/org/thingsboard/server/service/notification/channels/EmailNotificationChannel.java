@@ -57,6 +57,7 @@ public class EmailNotificationChannel implements NotificationChannel<User, Email
                 .body(processedTemplate.getBody())
                 .html(true)
                 .attachments(Optional.ofNullable(ctx.getRequest().getInfo()).map(NotificationInfo::getAttachments).orElse(null))
+                .reports(Optional.ofNullable(ctx.getRequest().getInfo()).map(NotificationInfo::getReports).orElse(null))
                 .build());
     }
 

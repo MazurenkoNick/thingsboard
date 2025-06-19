@@ -56,6 +56,7 @@ import org.thingsboard.server.common.data.query.EntityData;
 import org.thingsboard.server.common.data.query.EntityDataQuery;
 import org.thingsboard.server.common.data.report.Report;
 import org.thingsboard.server.common.data.report.ReportTemplate;
+import org.thingsboard.server.dao.alarm.AlarmService;
 import org.thingsboard.server.dao.report.ReportService;
 import org.thingsboard.server.dao.report.ReportTemplateService;
 import org.thingsboard.server.dao.resource.ImageService;
@@ -67,6 +68,7 @@ import org.thingsboard.server.service.security.model.SecurityUser;
 import org.thingsboard.server.service.security.permission.AccessControlService;
 import org.thingsboard.server.service.telemetry.TbTelemetryService;
 
+import java.util.Collection;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -75,6 +77,7 @@ import java.util.List;
 public class LocalReportDataService implements ReportDataService {
 
     private final EntityQueryService entityQueryService;
+    private final AlarmService alarmService;
     private final TbTelemetryService tbTelemetryService;
     private final AccessControlService accessControlService;
     private final ReportTemplateService reportTemplateService;
@@ -126,6 +129,12 @@ public class LocalReportDataService implements ReportDataService {
     @Override
     public PageData<AlarmData> findAlarmDataByQuery(AlarmDataQuery query, TbReportCtx ctx) {
         return entityQueryService.findAlarmDataByQuery(getSecurityUser(ctx), query);
+    }
+
+    @Override
+    public PageData<AlarmData> findAlarmDataByQueryForEntities(AlarmDataQuery query, Collection<EntityId> entityIds, TbReportCtx ctx) {
+        SecurityUser securityUser = getSecurityUser(ctx);
+        return alarmService.findAlarmDataByQueryForEntities(securityUser.getTenantId(), securityUser.getUserPermissions(), query, entityIds);
     }
 
     @Override
