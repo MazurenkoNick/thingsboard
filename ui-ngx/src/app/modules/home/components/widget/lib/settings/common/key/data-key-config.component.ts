@@ -38,7 +38,8 @@ import {
   comparisonResultTypeTranslationMap,
   DataKey,
   dataKeyAggregationTypeHintTranslationMap,
-  DataKeyConfigMode, Datasource,
+  DataKeyConfigMode,
+  Datasource,
   DynamicFormData,
   Widget,
   widgetType
@@ -66,7 +67,13 @@ import { JsFuncComponent } from '@shared/components/js-func.component';
 import { WidgetService } from '@core/http/widget.service';
 import { Dashboard } from '@shared/models/dashboard.models';
 import { IAliasController } from '@core/api/widget-api.models';
-import { aggregationTranslations, AggregationType, ComparisonDuration } from '@shared/models/time/time.models';
+import {
+  aggregationTranslations,
+  AggregationType,
+  ComparisonDuration,
+  historyQuickInterval,
+  QuickTimeInterval
+} from '@shared/models/time/time.models';
 import { genNextLabel, isDefinedAndNotNull } from '@core/utils';
 import { coerceBoolean } from '@shared/decorators/coercion';
 import { WidgetConfigComponentData } from '@home/models/widget-component.models';
@@ -292,6 +299,10 @@ export class DataKeyConfigComponent extends PageComponent implements OnInit, Con
       postFuncBody: [null, []]
     });
 
+    if (this.reportMode && this.widgetType === widgetType.latest) {
+      this.dataKeyFormGroup.addControl('timewindow', this.fb.control(null, [Validators.required]));
+    }
+
     if (!this.hideDataKeyColor) {
       this.dataKeyFormGroup.addControl('color', this.fb.control(null, [Validators.required]));
     }
@@ -305,6 +316,13 @@ export class DataKeyConfigComponent extends PageComponent implements OnInit, Con
           if (aggType !== AggregationType.NONE) {
             const prefix = this.translate.instant(aggregationTranslations.get(aggType));
             newLabel = genNextLabel(prefix + ' ' + newLabel, this.getDatasources());
+            if (this.reportMode) {
+              let timewindow = this.dataKeyFormGroup.get('timewindow').value;
+              if (!timewindow) {
+                timewindow = historyQuickInterval(QuickTimeInterval.CURRENT_MONTH);
+                this.dataKeyFormGroup.get('timewindow').patchValue(timewindow);
+              }
+            }
           }
           this.dataKeyFormGroup.get('label').patchValue(newLabel);
         }
@@ -437,11 +455,17 @@ export class DataKeyConfigComponent extends PageComponent implements OnInit, Con
         this.dataKeyFormGroup.get('comparisonResultType').disable({emitEvent: false});
         this.dataKeyFormGroup.get('comparisonCustomIntervalValue').disable({emitEvent: false});
       }
+      if (this.reportMode) {
+        this.dataKeyFormGroup.get('timewindow').enable({emitEvent: false});
+      }
     } else {
       this.dataKeyFormGroup.get('comparisonEnabled').disable({emitEvent: false});
       this.dataKeyFormGroup.get('timeForComparison').disable({emitEvent: false});
       this.dataKeyFormGroup.get('comparisonResultType').disable({emitEvent: false});
       this.dataKeyFormGroup.get('comparisonCustomIntervalValue').disable({emitEvent: false});
+      if (this.reportMode) {
+        this.dataKeyFormGroup.get('timewindow').disable({emitEvent: false});
+      }
     }
     this.dataKeyFormGroup.get('comparisonEnabled').updateValueAndValidity({emitEvent: false});
     this.dataKeyFormGroup.get('timeForComparison').updateValueAndValidity({emitEvent: false});

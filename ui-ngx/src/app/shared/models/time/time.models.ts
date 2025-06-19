@@ -294,6 +294,14 @@ export const historyInterval = (timewindowMs: number): Timewindow => ({
   }
 });
 
+export const historyQuickInterval = (interval: QuickTimeInterval): Timewindow => ({
+  selectedTab: TimewindowType.HISTORY,
+  history: {
+    historyType: HistoryWindowType.INTERVAL,
+    quickInterval: interval
+  }
+});
+
 export const defaultTimewindow = (timeService: TimeService): Timewindow => {
   const currentTime = moment().valueOf();
   return {

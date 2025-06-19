@@ -113,10 +113,21 @@
               {{ 'datakey.aggregation-type-hint-common' | translate }}
             </section>
           </div>
+          <div *ngIf="reportMode && dataKeyFormGroup.get('aggregationType').value && dataKeyFormGroup.get('aggregationType').value !== aggregationTypes.NONE"
+               class="tb-form-row space-between">
+            <div>{{ 'timewindow.timewindow' | translate }}</div>
+            <tb-timewindow asButton="true"
+                           strokedButton
+                           noMargin
+                           isEdit="true"
+                           timezone="true"
+                           historyOnly
+                           formControlName="timewindow"></tb-timewindow>
+          </div>
         </div>
       </ng-container>
     </div>
-    <div *ngIf="dataKeyFormGroup.get('aggregationType').value && dataKeyFormGroup.get('aggregationType').value !== aggregationTypes.NONE"
+    <div *ngIf="!reportMode && dataKeyFormGroup.get('aggregationType').value && dataKeyFormGroup.get('aggregationType').value !== aggregationTypes.NONE"
          class="tb-form-panel">
       <div class="tb-form-panel-title" translate>datakey.delta-calculation</div>
       <div class="tb-form-panel stroked tb-slide-toggle">
@@ -154,7 +165,7 @@
                     {{ 'widgets.chart.time-for-comparison-custom-interval' | translate }}
                   </mat-option>
                 </mat-select>
-              </mat-form-field>
+             </mat-form-field>
             </div>
             <div *ngIf="dataKeyFormGroup.get('timeForComparison').value === 'customInterval'" class="tb-form-row space-between">
               <div>{{ 'widgets.chart.custom-interval-value' | translate }}</div>
