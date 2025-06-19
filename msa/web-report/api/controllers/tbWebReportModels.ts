@@ -97,7 +97,7 @@ export const reportContentTypeMap = new Map<reportType, ReportContentType>(
     ]
 );
 
-export function parseGenerateReportRequest(req: Request): GenerateReportRequest {
+export function parseGenerateReportRequest(req: Request, localhostBaseUrlOverride?: string): GenerateReportRequest {
     const body = req.body;
     if (body.baseUrl && body.dashboardId) {
         let baseUrl = body.baseUrl;
@@ -107,6 +107,12 @@ export function parseGenerateReportRequest(req: Request): GenerateReportRequest 
         let reportTimewindow: string | undefined;
         let timezone = 'Europe/London';
         let pageWidth: number | undefined;
+        if (localhostBaseUrlOverride) {
+            const hostname = new URL(baseUrl).hostname.toLowerCase();
+            if (hostname === 'localhost' || hostname === '127.0.0.1') {
+                baseUrl = localhostBaseUrlOverride;
+            }
+        }
         if (!baseUrl.endsWith("/")) {
             baseUrl += "/";
         }

@@ -275,7 +275,7 @@ export const HelpLinks = {
     scheduledReports: `${helpBaseUrl}/docs${docPlatformPrefix}/user-guide/reports`,
     reports: `${helpBaseUrl}/docs${docPlatformPrefix}/user-guide/reports`,
     trendzSettings: `${helpBaseUrl}/docs/trendz/`,
-    secretStorage: `${helpBaseUrl}/docs${docPlatformPrefix}/user-guide/secret-storage`,
+    secretStorage: `${helpBaseUrl}/docs${docPlatformPrefix}/user-guide/secrets-storage`,
   }
 };
 /* eslint-enable max-len */

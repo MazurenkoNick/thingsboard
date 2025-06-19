@@ -28,47 +28,20 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.common.data.query;
+package org.thingsboard.server.common.data.kv;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.AllArgsConstructor;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import org.thingsboard.server.common.data.alarm.Alarm;
-import org.thingsboard.server.common.data.alarm.AlarmInfo;
-import org.thingsboard.server.common.data.id.EntityId;
+import java.util.Collections;
+import java.util.List;
 
-import java.util.HashMap;
-import java.util.Map;
+public record AttributesSaveResult(List<Long> versions) {
 
-@EqualsAndHashCode(callSuper = true)
-@AllArgsConstructor
-public class AlarmData extends AlarmInfo {
+    public static final AttributesSaveResult EMPTY = new AttributesSaveResult(Collections.emptyList());
 
-    private static final long serialVersionUID = -7042457913823369638L;
-
-    @Getter
-    private final EntityId entityId;
-    @Getter
-    private final Map<EntityKeyType, Map<String, TsValue>> latest;
-
-    @JsonCreator
-    public AlarmData(@JsonProperty("entityId") EntityId entityId, @JsonProperty("latest") Map<EntityKeyType, Map<String, TsValue>> latest) {
-        this.entityId = entityId;
-        this.latest = latest;
+    public static AttributesSaveResult of(List<Long> versions) {
+        if (versions == null) {
+            return EMPTY;
+        }
+        return new AttributesSaveResult(versions);
     }
 
-    public AlarmData(AlarmInfo main, AlarmData prototype) {
-        super(main);
-        this.entityId = prototype.entityId;
-        this.latest = new HashMap<>();
-        this.latest.putAll(prototype.getLatest());
-    }
-
-    public AlarmData(Alarm alarm, EntityId entityId) {
-        super(alarm);
-        this.entityId = entityId;
-        this.latest = new HashMap<>();
-    }
 }
