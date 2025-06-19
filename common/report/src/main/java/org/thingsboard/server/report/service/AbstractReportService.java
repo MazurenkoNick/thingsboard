@@ -31,6 +31,7 @@
 package org.thingsboard.server.report.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.thingsboard.common.util.JacksonUtil;
@@ -83,6 +84,7 @@ import static org.thingsboard.server.common.data.util.ReportQueryUtils.toEntityC
 import static org.thingsboard.server.common.data.util.ReportQueryUtils.toEntityDataQuery;
 import static org.thingsboard.server.report.util.ReportUtils.getSingleDataSource;
 
+@Slf4j
 public abstract class AbstractReportService implements ReportService {
 
     @Lazy
