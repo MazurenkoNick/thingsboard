@@ -177,13 +177,19 @@ public class BaseSchedulerEventService extends AbstractEntityService implements 
     public SchedulerEvent saveSchedulerEvent(SchedulerEvent schedulerEvent) {
         log.trace("Executing saveSchedulerEvent [{}]", schedulerEvent);
         schedulerEventValidator.validate(schedulerEvent, SchedulerEventInfo::getTenantId);
-        SchedulerEvent savedSchedulerEvent = schedulerEventDao.save(schedulerEvent.getTenantId(), schedulerEvent);
-        if (schedulerEvent.getId() == null) {
-            entityCountService.publishCountEntityEvictEvent(schedulerEvent.getTenantId(), EntityType.SCHEDULER_EVENT);
+        try {
+            SchedulerEvent savedSchedulerEvent = schedulerEventDao.save(schedulerEvent.getTenantId(), schedulerEvent);
+            if (schedulerEvent.getId() == null) {
+                entityCountService.publishCountEntityEvictEvent(schedulerEvent.getTenantId(), EntityType.SCHEDULER_EVENT);
+            }
+            eventPublisher.publishEvent(SaveEntityEvent.builder().tenantId(schedulerEvent.getTenantId())
+                    .entityId(savedSchedulerEvent.getId()).entity(savedSchedulerEvent).created(schedulerEvent.getId() == null).build());
+            return savedSchedulerEvent;
+        } catch (Exception e) {
+            checkConstraintViolation(e,
+                    "scheduler_event_external_id_unq_key", "SchedulerEvent with such external id already exists!");
+            throw e;
         }
-        eventPublisher.publishEvent(SaveEntityEvent.builder().tenantId(schedulerEvent.getTenantId())
-                .entityId(savedSchedulerEvent.getId()).entity(savedSchedulerEvent).created(schedulerEvent.getId() == null).build());
-        return savedSchedulerEvent;
     }
 
     @Override
@@ -280,12 +286,12 @@ public class BaseSchedulerEventService extends AbstractEntityService implements 
         Validator.validateId(tenantId, id -> "Incorrect tenantId " + id);
         Validator.validateId(edgeId, id -> "Incorrect edgeId " + id);
         Validator.validateId(customerId, id -> INCORRECT_CUSTOMER_ID + id);
-        return schedulerEventInfoDao.findSchedulerEventInfosByTenantIdAndEdgeIdAndCustomerId(tenantId.getId(), edgeId.getId(),  customerId.getId(), pageLink);
+        return schedulerEventInfoDao.findSchedulerEventInfosByTenantIdAndEdgeIdAndCustomerId(tenantId.getId(), edgeId.getId(), customerId.getId(), pageLink);
     }
 
     @Override
     public PageData<SchedulerEvent> findSchedulerEventsByTenantIdAndEdgeId(TenantId tenantId,
-                                                                            EdgeId edgeId, PageLink pageLink) {
+                                                                           EdgeId edgeId, PageLink pageLink) {
         log.trace("Executing findSchedulerEventsByTenantIdAndEdgeId, tenantId [{}], edgeId [{}]", tenantId, edgeId);
         Validator.validateId(tenantId, id -> "Incorrect tenantId " + id);
         Validator.validateId(edgeId, id -> "Incorrect edgeId " + id);
