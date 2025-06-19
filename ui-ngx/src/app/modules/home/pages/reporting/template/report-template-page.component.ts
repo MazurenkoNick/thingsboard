@@ -151,11 +151,20 @@ export class ReportTemplatePageComponent extends PageComponent
     return this.footerToggleValue === 'footer' ? this.pdfConfiguration?.footer : this.pdfConfiguration?.footer?.firstPage;
   }
 
+  get disableHeaderButtonWidth(): number {
+    const disableHeaderButton = this.disableHeaderButtonEl();
+    return disableHeaderButton ? disableHeaderButton.nativeElement.offsetWidth : 0;
+  }
+
   @HostBinding('style.width') width = '100%';
   @HostBinding('style.height') height = '100%';
 
   @ViewChildren(ReportComponentsComponent)
   reportComponentsComponents: QueryList<ReportComponentsComponent>;
+
+  disableHeaderButtonEl = viewChild('disableHeaderButton', {
+    read: ElementRef<HTMLElement>,
+  });
 
   reportTemplateContainerEl = viewChild('reportTemplateContainer', {
     read: ElementRef<HTMLElement>,
@@ -205,6 +214,8 @@ export class ReportTemplatePageComponent extends PageComponent
 
   headerMarginTop: number;
   footerMarginBottom: number;
+  headerExpanded = true;
+  footerExpanded = true;
 
   background: string;
 
@@ -319,6 +330,10 @@ export class ReportTemplatePageComponent extends PageComponent
         this.init(saved);
       }
     );
+  }
+
+  public toggleHeader() {
+    this.headerExpanded = !this.headerExpanded;
   }
 
   public currentHeaderChanged() {
@@ -667,6 +682,8 @@ export class ReportTemplatePageComponent extends PageComponent
     this.cancelReportComponentEdit();
     this.headerToggleValue = 'header';
     this.footerToggleValue = 'footer';
+    this.headerExpanded = true;
+    this.footerExpanded = true;
     this.reportTemplate = validateAndUpdateReportTemplate(reportTemplate);
     this.format = this.reportTemplate.format;
     this.subReport = this.reportTemplate.type === ReportTemplateType.SUB_REPORT;

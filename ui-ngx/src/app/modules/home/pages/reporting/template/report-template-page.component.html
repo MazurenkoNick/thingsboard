@@ -99,21 +99,30 @@
       <div #reportTemplateLayout class="tb-report-template-layout">
         <div class="tb-report-template-sections">
           @if (showHeaderFooter) {
-            <div class="tb-report-components-container">
-              <div class="flex flex-row justify-between">
-                <tb-toggle-select [(ngModel)]="headerToggleValue" (ngModelChange)="currentHeaderChanged()">
+            <div class="tb-report-components-container tb-header" [class.tb-expanded]="headerExpanded">
+              <div class="tb-header-toolbar">
+                <tb-toggle-select class="tb-header-select" [(ngModel)]="headerToggleValue" (ngModelChange)="currentHeaderChanged()">
                   <tb-toggle-option value="header">{{ 'report-template.header' | translate }}</tb-toggle-option>
                   <tb-toggle-option value="firstPageHeader">{{ 'report-template.first-page-header' | translate }}</tb-toggle-option>
                 </tb-toggle-select>
-                @if (currentHeader.enabled) {
-                  <button mat-stroked-button color="primary" (click)="disableHeader()">
-                    {{ 'action.disable' | translate }}
+                <div class="tb-header-title">
+                  {{ 'report-template.header' | translate }}
+                </div>
+                <div class="tb-header-toolbar-buttons" [style.right.px]="!headerExpanded ? -(disableHeaderButtonWidth + 8) : 0">
+                  <button mat-button class="tb-report-header-expand-button" (click)="toggleHeader()">
+                    {{ (headerExpanded ? 'report-template.collapse' : 'report-template.expand') | translate }}
+                    <mat-icon class="tb-mat-20" iconPositionEnd>expand_more</mat-icon>
                   </button>
-                } @else {
-                  <button mat-stroked-button color="primary" (click)="enableHeader()">
-                    {{ 'action.enable' | translate }}
-                  </button>
-                }
+                  @if (currentHeader.enabled) {
+                    <button #disableHeaderButton class="tb-disable-header-button" mat-stroked-button color="primary" (click)="disableHeader()">
+                      {{ 'action.disable' | translate }}
+                    </button>
+                  } @else {
+                    <button #disableHeaderButton class="tb-disable-header-button" mat-stroked-button color="primary" (click)="enableHeader()">
+                      {{ 'action.enable' | translate }}
+                    </button>
+                  }
+                </div>
               </div>
               @if (!currentHeader.enabled) {
                 <div class="tb-disabled-header">

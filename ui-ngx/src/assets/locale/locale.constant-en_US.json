@@ -7193,6 +7193,8 @@
         "export-failed-error": "Unable to export report template: {{error}}",
         "report-template-file": "Report template file",
         "invalid-report-template-file-error": "Unable to import report template: Invalid report template data structure.",
+        "collapse": "Collapse",
+        "expand": "Expand",
         "component": {
             "heading": {
                 "type": "Heading",
