@@ -202,34 +202,34 @@ public class EntityGroupImportService extends BaseEntityImportService<EntityGrou
         }
     }
 
-    private void importGroupOtaPackage(EntitiesImportCtx ctx, EntityImportResult<EntityGroup> importResult, EntityGroup entityGroup, List<DeviceGroupOtaPackage> incoming, IdProvider idProvider) {
-        List<DeviceGroupOtaPackage> normalizedIncoming = incoming.stream()
+    private void importGroupOtaPackage(EntitiesImportCtx ctx, EntityImportResult<EntityGroup> importResult, EntityGroup entityGroup, List<DeviceGroupOtaPackage> otaPackages, IdProvider idProvider) {
+        List<DeviceGroupOtaPackage> incoming = otaPackages.stream()
                 .peek(pkg -> {
                     pkg.setGroupId(entityGroup.getId());
                     pkg.setOtaPackageId(idProvider.getInternalId(pkg.getOtaPackageId(), false));
                 }).toList();
 
         List<DeviceGroupOtaPackage> existing = deviceGroupOtaPackageService.findDeviceGroupOtaPackageByGroupId(entityGroup.getId());
-        for (DeviceGroupOtaPackage existingPkg : existing) {
-            boolean found = normalizedIncoming.stream().anyMatch(newPkg -> equalsGroupOtaPackage(newPkg, existingPkg));
+        for (DeviceGroupOtaPackage otaPackage : existing) {
+            boolean found = incoming.stream().anyMatch(newPkg -> equalsGroupOtaPackage(newPkg, otaPackage));
             if (!found) {
-                deviceGroupOtaPackageService.deleteDeviceGroupOtaPackage(ctx.getTenantId(), existingPkg);
-                importResult.addSendEventsCallback(() -> otaPackageStateService.update(ctx.getTenantId(), null, existingPkg));
+                deviceGroupOtaPackageService.deleteDeviceGroupOtaPackage(ctx.getTenantId(), otaPackage);
+                importResult.addSendEventsCallback(() -> otaPackageStateService.update(ctx.getTenantId(), null, otaPackage));
             }
         }
 
-        for (DeviceGroupOtaPackage newPkg : normalizedIncoming) {
-            DeviceGroupOtaPackage existingPkg = existing.stream().filter(e -> e.getOtaPackageType() == newPkg.getOtaPackageType()).findFirst().orElse(null);
-            if (!equalsGroupOtaPackage(newPkg, existingPkg)) {
-                if (existingPkg != null) {
-                    newPkg.setId(existingPkg.getId());
-                    newPkg.setGroupId(existingPkg.getGroupId());
+        for (DeviceGroupOtaPackage newOtaPackage : incoming) {
+            DeviceGroupOtaPackage oldOtaPackage = existing.stream().filter(e -> e.getOtaPackageType() == newOtaPackage.getOtaPackageType()).findFirst().orElse(null);
+            if (!equalsGroupOtaPackage(newOtaPackage, oldOtaPackage)) {
+                if (oldOtaPackage != null) {
+                    newOtaPackage.setId(oldOtaPackage.getId());
+                    newOtaPackage.setGroupId(oldOtaPackage.getGroupId());
                 } else {
-                    newPkg.setId(null);
-                    newPkg.setGroupId(entityGroup.getId());
+                    newOtaPackage.setId(null);
+                    newOtaPackage.setGroupId(entityGroup.getId());
                 }
-                deviceGroupOtaPackageService.saveDeviceGroupOtaPackage(ctx.getTenantId(), newPkg);
-                importResult.addSendEventsCallback(() -> otaPackageStateService.update(ctx.getTenantId(), newPkg, existingPkg));
+                deviceGroupOtaPackageService.saveDeviceGroupOtaPackage(ctx.getTenantId(), newOtaPackage);
+                importResult.addSendEventsCallback(() -> otaPackageStateService.update(ctx.getTenantId(), newOtaPackage, oldOtaPackage));
             }
         }
     }
@@ -238,7 +238,7 @@ public class EntityGroupImportService extends BaseEntityImportService<EntityGrou
         if (a == b) return true;
         if (a == null || b == null) return false;
         return Objects.equals(a.getOtaPackageId(), b.getOtaPackageId()) &&
-                a.getOtaPackageType() == b.getOtaPackageType();
+                a.getOtaPackageType() == b.getOtaPackageType() && a.getGroupId().equals(b.getGroupId());
     }
 
     @Override

@@ -34,10 +34,13 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.io.Serial;
+
 @EqualsAndHashCode(callSuper = true)
 @Data
 public class AutoVersionCreateConfig extends VersionCreateConfig {
 
+    @Serial
     private static final long serialVersionUID = 8245450889383315551L;
 
     private String branch;
