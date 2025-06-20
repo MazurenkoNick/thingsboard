@@ -124,39 +124,41 @@
                   }
                 </div>
               </div>
-              @if (!currentHeader.enabled) {
-                <div class="tb-disabled-header">
-                  {{ (headerToggleValue === 'header' ? 'report-template.header-disabled' : 'report-template.first-page-header-disabled') | translate }}
-                </div>
-              }
-              <tb-report-components
-                [format]="format"
-                [background]="background"
-                [width]="pageWidth"
-                [scale]="scale"
-                [marginTop]="headerMarginTop * scale"
-                [marginLeft]="marginLeft * scale"
-                [marginRight]="marginRight  * scale"
-                [class.!hidden]="headerToggleValue !== 'header' || !pdfConfiguration.header.enabled"
-                [reportComponents]="pdfConfiguration.header.components"
-                (componentsChanged)="reportComponentsChanged()"
-                (componentEdit)="editReportComponent($event)"
-                (componentRemoved)="reportComponentRemoved($event)">
-              </tb-report-components>
-              <tb-report-components
-                [format]="format"
-                [background]="background"
-                [width]="pageWidth"
-                [scale]="scale"
-                [marginTop]="headerMarginTop * scale"
-                [marginLeft]="marginLeft * scale"
-                [marginRight]="marginRight * scale"
-                [class.!hidden]="headerToggleValue !== 'firstPageHeader' || !pdfConfiguration.header.firstPage.enabled"
-                [reportComponents]="pdfConfiguration.header.firstPage.components"
-                (componentsChanged)="reportComponentsChanged()"
-                (componentEdit)="editReportComponent($event)"
-                (componentRemoved)="reportComponentRemoved($event)">
-              </tb-report-components>
+              <div class="tb-header-components">
+                @if (!currentHeader.enabled) {
+                  <div class="tb-disabled-header">
+                    {{ (headerToggleValue === 'header' ? 'report-template.header-disabled' : 'report-template.first-page-header-disabled') | translate }}
+                  </div>
+                }
+                <tb-report-components
+                  [format]="format"
+                  [background]="background"
+                  [width]="pageWidth"
+                  [scale]="scale"
+                  [marginTop]="headerMarginTop * scale"
+                  [marginLeft]="marginLeft * scale"
+                  [marginRight]="marginRight  * scale"
+                  [class.!hidden]="headerToggleValue !== 'header' || !pdfConfiguration.header.enabled"
+                  [reportComponents]="pdfConfiguration.header.components"
+                  (componentsChanged)="reportComponentsChanged()"
+                  (componentEdit)="editReportComponent($event)"
+                  (componentRemoved)="reportComponentRemoved($event)">
+                </tb-report-components>
+                <tb-report-components
+                  [format]="format"
+                  [background]="background"
+                  [width]="pageWidth"
+                  [scale]="scale"
+                  [marginTop]="headerMarginTop * scale"
+                  [marginLeft]="marginLeft * scale"
+                  [marginRight]="marginRight * scale"
+                  [class.!hidden]="headerToggleValue !== 'firstPageHeader' || !pdfConfiguration.header.firstPage.enabled"
+                  [reportComponents]="pdfConfiguration.header.firstPage.components"
+                  (componentsChanged)="reportComponentsChanged()"
+                  (componentEdit)="editReportComponent($event)"
+                  (componentRemoved)="reportComponentRemoved($event)">
+                </tb-report-components>
+              </div>
             </div>
           }
           <div class="tb-report-components-container">

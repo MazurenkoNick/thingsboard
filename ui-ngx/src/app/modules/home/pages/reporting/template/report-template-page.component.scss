@@ -136,20 +136,34 @@
           --tb-report-header-transition-duration: 200ms;
           .tb-header-toolbar {
             position: relative;
+            height: 36px;
             display: flex;
             flex-direction: row;
             align-items: center;
             justify-content: space-between;
           }
           .tb-header-toolbar-buttons {
-            position: relative;
+            position: absolute;
+            top: 0;
+            right: 0;
             display: flex;
             flex-direction: row;
             gap: 8px;
             transition: right var(--tb-report-header-transition-duration) linear;
           }
+          .tb-header-select, .tb-header-title {
+            position: absolute;
+            left: 0;
+            transition: opacity var(--tb-report-header-transition-duration) linear;
+          }
+          .tb-header-select {
+            top: 2px;
+            opacity: 1;
+          }
           .tb-header-title {
-            display: none;
+            top: 0;
+            line-height: 36px;
+            opacity: 0;
           }
           .tb-report-header-expand-button {
             --mdc-text-button-label-text-color: rgba(0,0,0,0.54);
@@ -174,16 +188,19 @@
             font-weight: 500;
             color: rgba(0,0,0,0.37);
           }
-
+          .tb-header-components {
+            display: flex;
+            flex-direction: column;
+          }
           &:not(.tb-expanded) {
             min-height: 0;
             padding-bottom: 5px;
             border-bottom: 1px solid rgba(0,0,0,0.38);
             .tb-header-select {
-              display: none;
+              opacity: 0;
             }
             .tb-header-title {
-              display: block;
+              opacity: 1;
             }
             .tb-disable-header-button {
               opacity: 0;

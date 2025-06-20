@@ -316,7 +316,7 @@ export class DataKeyConfigComponent extends PageComponent implements OnInit, Con
           if (aggType !== AggregationType.NONE) {
             const prefix = this.translate.instant(aggregationTranslations.get(aggType));
             newLabel = genNextLabel(prefix + ' ' + newLabel, this.getDatasources());
-            if (this.reportMode) {
+            if (this.reportMode && this.widgetType === widgetType.latest) {
               let timewindow = this.dataKeyFormGroup.get('timewindow').value;
               if (!timewindow) {
                 timewindow = historyQuickInterval(QuickTimeInterval.CURRENT_MONTH);
@@ -455,7 +455,7 @@ export class DataKeyConfigComponent extends PageComponent implements OnInit, Con
         this.dataKeyFormGroup.get('comparisonResultType').disable({emitEvent: false});
         this.dataKeyFormGroup.get('comparisonCustomIntervalValue').disable({emitEvent: false});
       }
-      if (this.reportMode) {
+      if (this.reportMode && this.widgetType === widgetType.latest) {
         this.dataKeyFormGroup.get('timewindow').enable({emitEvent: false});
       }
     } else {
@@ -463,7 +463,7 @@ export class DataKeyConfigComponent extends PageComponent implements OnInit, Con
       this.dataKeyFormGroup.get('timeForComparison').disable({emitEvent: false});
       this.dataKeyFormGroup.get('comparisonResultType').disable({emitEvent: false});
       this.dataKeyFormGroup.get('comparisonCustomIntervalValue').disable({emitEvent: false});
-      if (this.reportMode) {
+      if (this.reportMode && this.widgetType === widgetType.latest) {
         this.dataKeyFormGroup.get('timewindow').disable({emitEvent: false});
       }
     }
