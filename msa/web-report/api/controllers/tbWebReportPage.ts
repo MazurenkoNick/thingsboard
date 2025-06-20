@@ -40,24 +40,13 @@ import {
 import { performance } from 'perf_hooks';
 import { _logger } from '../../config/logger';
 import config from 'config';
-import { GenerateReportRequest, OpenReportMessage, ReportResultMessage } from './tbWebReportModels';
+import { GenerateReportRequest, OpenReportMessage, ReportResultMessage, WaitWidgetsMessage } from './tbWebReportModels';
 import winston from 'winston';
 
 const defaultPageNavigationTimeout = Number(config.get('browser.defaultPageNavigationTimeout'));
 const loadDashboardResourcesTimeout = Number(config.get('browser.loadDashboardResourcesTimeout'));
 const dashboardIdleWaitTime = Number(config.get('browser.dashboardIdleWaitTime'));
 const useNewPage = Boolean(config.get('browser.useNewPage'));
-
-const heightCalculationScript = "var height = 0;\n" +
-    "     var gridsterChild = document.getElementById('gridster-child');\n" +
-    "     if (gridsterChild) {\n" +
-    "         height = Number(document.getElementById('gridster-child').scrollHeight);\n" +
-    "         var dashboardTitleElements = document.getElementsByClassName(\"tb-dashboard-title\");\n" +
-    "         if (dashboardTitleElements && dashboardTitleElements.length) {\n" +
-    "              height += Number(dashboardTitleElements[0].offsetHeight);\n" +
-    "         }\n" +
-    "     }\n" +
-    "     Math.round(height);";
 
 export class TbWebReportPage {
 
@@ -192,11 +181,6 @@ export class TbWebReportPage {
             if (dashboardIdleWaitTime > 0) {
                 await this.page.waitForTimeout(dashboardIdleWaitTime);
             }
-            const fullHeight: number = await this.page.evaluate(heightCalculationScript);
-
-            const newHeight = fullHeight || pageHeight;
-
-            await this.setPageSize(this.pageWidth, newHeight);
 
             if (request.type === 'pdf') {
                 buffer = await this.page.pdf({printBackground: true, width: this.pageWidth + 'px', height: this.pageHeight + 'px'});
@@ -235,6 +219,18 @@ export class TbWebReportPage {
         const result = await this.waitForReportResult('open report', loadDashboardResourcesTimeout * 3);
         if (!result.success) {
             throw new Error(result.error);
+        }
+
+        const newHeight = result.pageHeight ?? this.pageHeight;
+        await this.setPageSize(this.pageWidth, newHeight);
+
+        const waitWidgetsMessage: WaitWidgetsMessage = {
+            timeout: loadDashboardResourcesTimeout
+        }
+        await this.postWindowMessage({type: 'waitReportWidgets', data: waitWidgetsMessage});
+        const waitWidgetsResult = await this.waitForReportResult('wait widgets', loadDashboardResourcesTimeout * 2);
+        if (!waitWidgetsResult.success) {
+            throw new Error(waitWidgetsResult.error);
         }
     }
 
