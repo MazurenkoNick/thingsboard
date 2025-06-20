@@ -174,6 +174,7 @@ export abstract class TbMap<S extends BaseMapSettings> {
                         protected containerElement: HTMLElement) {
     if (this.ctx.reportService.reportView) {
       this.mapUuid = this.ctx.reportService.onWaitForMap();
+      $(containerElement).addClass('tb-web-report');
     }
     this.ctx.customDataExport = this.customDataExport.bind(this);
     this.ctx.actionsApi.placeMapItem = this.placeMapItem.bind(this);
