@@ -30,27 +30,31 @@
     OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 
 -->
-<div [formGroup]="reportConfigFormGroup" class="tb-form-panel no-border no-padding">
+<div [formGroup]="reportConfigFormGroup" class="tb-form-panel outlined">
   <tb-report-template-autocomplete
     required
+    appearance="outline"
     [type]="ReportTemplateType.REPORT"
     includeCustomers
     formControlName="reportTemplateId">
   </tb-report-template-autocomplete>
   <tb-entity-autocomplete
+    appearance="outline"
     required
     useFullEntityId
     [entityType]="entityType.USER"
     formControlName="userId">
   </tb-entity-autocomplete>
   <tb-timezone-select
+    appearance="outline"
     userTimezoneByDefault
     required
     formControlName="timezone">
   </tb-timezone-select>
-  <div class="tb-form-panel stroked">
+  <div class="tb-form-panel outlined padding stroked">
     <div class="tb-form-panel-title" translate>report.recipient</div>
     <tb-entity-autocomplete
+      appearance="outline"
       allowCreateNew
       useFullEntityId
       formControlName="recipientId"
@@ -59,6 +63,7 @@
       (createNew)="createRecipient()">
     </tb-entity-autocomplete>
     <tb-template-autocomplete
+      appearance="outline"
       allowCreate allowEdit
       formControlName="notificationTemplateId"
       [notificationTypes]="NotificationType.REPORT_GENERATED">

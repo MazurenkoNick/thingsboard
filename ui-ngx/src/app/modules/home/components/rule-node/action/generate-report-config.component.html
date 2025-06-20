@@ -30,10 +30,10 @@
     OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 
 -->
-<section [formGroup]="generateReportConfigForm" class="flex flex-col">
-  <mat-checkbox class="flex-1" formControlName="useConfigFromMessage">
+<section [formGroup]="generateReportConfigForm" class="flex flex-col gap-4">
+  <mat-slide-toggle formControlName="useConfigFromMessage">
     {{ 'rule-node-config.use-report-config-from-message' | translate }}
-  </mat-checkbox>
+  </mat-slide-toggle>
   <tb-report-config
     *ngIf="!generateReportConfigForm.get('useConfigFromMessage').value"
     formControlName="config">

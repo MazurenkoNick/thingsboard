@@ -66,39 +66,34 @@
     </button>
   </div>
 </div>
-<div class="mat-padding flex flex-col">
-  <form [formGroup]="entityForm">
-    <fieldset [disabled]="(isLoading$ | async) || !isEdit">
-      <mat-form-field class="mat-block">
-        <mat-label translate>report-template.name</mat-label>
-        <input matInput formControlName="name" required>
-        <mat-error *ngIf="entityForm.get('name').hasError('required')">
-          {{ 'report-template.name-required' | translate }}
-        </mat-error>
-        <mat-error *ngIf="entityForm.get('name').hasError('maxlength')">
-          {{ 'report-template.name-max-length' | translate }}
-        </mat-error>
-      </mat-form-field>
-      <mat-form-field class="mat-block">
-        <mat-label translate>report-template.format</mat-label>
-        <mat-select formControlName="format" required>
-          <mat-option *ngFor="let format of reportFormats" [value]="format">
-            {{ format }}
-          </mat-option>
-        </mat-select>
-      </mat-form-field>
-      <mat-form-field class="mat-block">
-        <mat-label translate>report-template.type</mat-label>
-        <mat-select formControlName="type" required>
-          <mat-option *ngFor="let type of reportTemplateTypes" [value]="type">
-            {{reportTemplateTypeTranslationMap.get(type) | translate}}
-          </mat-option>
-        </mat-select>
-      </mat-form-field>
-      <mat-form-field class="mat-block">
-        <mat-label translate>report-template.description</mat-label>
-        <textarea matInput formControlName="description" rows="2"></textarea>
-      </mat-form-field>
-    </fieldset>
-  </form>
+<div [formGroup]="entityForm" class="mat-padding tb-form-panel outlined">
+  <mat-form-field class="mat-block" appearance="outline" subscriptSizing="dynamic">
+    <mat-label translate>report-template.name</mat-label>
+    <input matInput formControlName="name" required>
+    <mat-error *ngIf="entityForm.get('name').hasError('required')">
+      {{ 'report-template.name-required' | translate }}
+    </mat-error>
+    <mat-error *ngIf="entityForm.get('name').hasError('maxlength')">
+      {{ 'report-template.name-max-length' | translate }}
+    </mat-error>
+    <mat-hint></mat-hint>
+  </mat-form-field>
+  <div tbFormRow class="space-between">
+    <div translate>report-template.format</div>
+    <tb-toggle-select required formControlName="format" appearance="fill">
+      <tb-toggle-option *ngFor="let format of reportFormats" [value]="format">{{ format }}</tb-toggle-option>
+    </tb-toggle-select>
+  </div>
+  <div tbFormRow class="space-between">
+    <div translate>report-template.type</div>
+    <tb-toggle-select required formControlName="type" appearance="fill">
+      <tb-toggle-option *ngFor="let type of reportTemplateTypes" [value]="type">
+        {{reportTemplateTypeTranslationMap.get(type) | translate}}
+      </tb-toggle-option>
+    </tb-toggle-select>
+  </div>
+  <mat-form-field class="mat-block" appearance="outline">
+    <mat-label translate>report-template.description</mat-label>
+    <textarea matInput formControlName="description" rows="2"></textarea>
+  </mat-form-field>
 </div>

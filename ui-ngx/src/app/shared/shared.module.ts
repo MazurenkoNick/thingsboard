@@ -274,6 +274,7 @@ import { SecretFileInputComponent } from '@shared/components/secret-storage/secr
 import { SecretStorageDialogComponent } from '@shared/components/secret-storage/secret-storage-dialog.component';
 import { SecretAutocompleteComponent } from '@shared/components/secret-storage/secret-autocomplete.component';
 import { ReportTemplateAutocompleteComponent } from '@shared/components/report/report-template-autocomplete.component';
+import { FormRowDirective } from '@shared/directives/form-row.directive';
 
 export function MarkedOptionsFactory(markedOptionsService: MarkedOptionsService) {
   return markedOptionsService;
@@ -433,6 +434,7 @@ export function MarkedOptionsFactory(markedOptionsService: MarkedOptionsService)
     LedLightComponent,
     MarkdownEditorComponent,
     TruncateWithTooltipDirective,
+    FormRowDirective,
     ContextMenuDirective,
     NospacePipe,
     MillisecondsToTimeStringPipe,
@@ -725,6 +727,7 @@ export function MarkedOptionsFactory(markedOptionsService: MarkedOptionsService)
     LedLightComponent,
     MarkdownEditorComponent,
     TruncateWithTooltipDirective,
+    FormRowDirective,
     ContextMenuDirective,
     NospacePipe,
     MillisecondsToTimeStringPipe,

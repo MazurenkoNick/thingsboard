@@ -30,13 +30,13 @@
 ///
 
 import {
-  AfterViewInit,
-  Component, ElementRef, EventEmitter,
+  Component,
+  ElementRef,
+  EventEmitter,
   Input,
-  OnDestroy,
-  OnInit,
   Output,
-  Renderer2, viewChild,
+  Renderer2,
+  viewChild,
   ViewEncapsulation
 } from '@angular/core';
 import { HeaderFooter, TbReportFormat } from '@shared/models/report.models';
@@ -124,6 +124,8 @@ export class ReportTemplateHeaderFooterComponent {
 
   expanded = true;
 
+  private expandAnimation = false;
+
   constructor(private renderer: Renderer2) {
 
   }
@@ -155,28 +157,29 @@ export class ReportTemplateHeaderFooterComponent {
   }
 
   public toggleExpanded() {
+    if (this.expandAnimation) {
+      return;
+    }
+    this.expandAnimation = true;
     const expand = !this.expanded;
     this.expandAnimationStart.emit();
     if (expand) {
       const reportHeaderComponents = this.reportHeaderComponentsEl();
-      this.renderer.setStyle(reportHeaderComponents.nativeElement, 'maxHeight', null);
-      const height = reportHeaderComponents.nativeElement.offsetHeight;
-      this.renderer.setStyle(reportHeaderComponents.nativeElement, 'maxHeight', '0');
+      const children: HTMLCollection = reportHeaderComponents.nativeElement.children;
+      let height = 0;
+      for (let i = 0; i < children.length; i++) {
+        height += (children.item(i) as HTMLElement).offsetHeight;
+      }
+      const reportHeaderToolbarButtons = this.reportHeaderToolbarButtonsEl();
+      this.renderer.setStyle(reportHeaderToolbarButtons.nativeElement, 'right', '0px');
+      this.renderer.setStyle(reportHeaderComponents.nativeElement, 'maxHeight', height + 'px');
       setTimeout(() => {
-        const reportHeaderToolbarButtons = this.reportHeaderToolbarButtonsEl();
-        this.renderer.setStyle(reportHeaderToolbarButtons.nativeElement, 'right', '0px');
-        this.renderer.setStyle(reportHeaderComponents.nativeElement, 'maxHeight', height + 'px');
-        const onTransitionEnd = (ev: TransitionEvent) => {
-          if (ev.propertyName === 'max-height') {
-            this.renderer.setStyle(reportHeaderComponents.nativeElement, 'maxHeight', null);
-            this.renderer.setStyle(reportHeaderComponents.nativeElement, 'overflow', null);
-            reportHeaderComponents.nativeElement.removeEventListener('transitionend', onTransitionEnd);
-            this.expandAnimationFinish.emit();
-          }
-        };
-        reportHeaderComponents.nativeElement.addEventListener('transitionend', onTransitionEnd);
-        this.expanded = expand;
-      });
+        this.renderer.setStyle(reportHeaderComponents.nativeElement, 'maxHeight', null);
+        this.renderer.setStyle(reportHeaderComponents.nativeElement, 'overflow', null);
+        this.expandAnimation = false;
+        this.expandAnimationFinish.emit();
+      }, 400);
+      this.expanded = expand;
     } else {
       const reportHeaderComponents = this.reportHeaderComponentsEl();
       const height = reportHeaderComponents.nativeElement.offsetHeight;
@@ -187,15 +190,12 @@ export class ReportTemplateHeaderFooterComponent {
         const toolbarButtonsRight = -(disabledButtonWidth + 8);
         const reportHeaderToolbarButtons = this.reportHeaderToolbarButtonsEl();
         this.renderer.setStyle(reportHeaderToolbarButtons.nativeElement, 'right', toolbarButtonsRight + 'px');
-        this.renderer.setStyle(reportHeaderComponents.nativeElement, 'maxHeight', '0');
         this.renderer.setStyle(reportHeaderComponents.nativeElement, 'overflow', 'hidden');
-        const onTransitionEnd = (ev: TransitionEvent) => {
-          if (ev.propertyName === 'max-height') {
-            reportHeaderComponents.nativeElement.removeEventListener('transitionend', onTransitionEnd);
-            this.expandAnimationFinish.emit();
-          }
-        };
-        reportHeaderComponents.nativeElement.addEventListener('transitionend', onTransitionEnd);
+        this.renderer.setStyle(reportHeaderComponents.nativeElement, 'maxHeight', '0');
+        setTimeout(() => {
+          this.expandAnimation = false;
+          this.expandAnimationFinish.emit();
+        }, 400);
         this.expanded = expand;
       });
     }

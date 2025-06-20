@@ -29,7 +29,23 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-export * from './truncate-with-tooltip.directive';
-export * from './ellipsis-chip-list.directive';
-export * from './context-menu.directive';
-export * from './form-row.directive';
+import { ContentChildren, Directive, HostBinding, QueryList } from '@angular/core';
+import { NgControl } from '@angular/forms';
+
+@Directive({
+  selector: '[tbFormRow]',
+  host: {
+    'class': 'tb-form-row'
+  }
+})
+export class FormRowDirective {
+
+  @HostBinding('class.disabled')
+  get disabled(): boolean {
+    return !this.controls?.some(control => !control.control.disabled);
+  }
+
+  @ContentChildren(NgControl, {descendants: false})
+  controls: QueryList<NgControl>;
+
+}
