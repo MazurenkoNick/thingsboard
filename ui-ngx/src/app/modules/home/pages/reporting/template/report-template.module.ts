@@ -45,6 +45,9 @@ import { ReportTemplateSettingsComponent } from '@home/pages/reporting/template/
 import { WidgetSettingsCommonModule } from '@home/components/widget/lib/settings/common/widget-settings-common.module';
 import { ReportTemplateFilterComponent } from '@home/pages/reporting/template/report-template-filter.component';
 import { WidgetConfigComponentsModule } from '@home/components/widget/config/widget-config-components.module';
+import {
+  ReportTemplateHeaderFooterComponent
+} from '@home/pages/reporting/template/report-template-header-footer.component';
 
 @NgModule({
   declarations: [
@@ -52,6 +55,7 @@ import { WidgetConfigComponentsModule } from '@home/components/widget/config/wid
     ReportTemplateTableHeaderComponent,
     ReportTemplateTabsComponent,
     ReportTemplateFormComponent,
+    ReportTemplateHeaderFooterComponent,
     ReportTemplatePageComponent,
     ReportTemplateSettingsComponent,
     ReportTemplateSettingsDialogComponent

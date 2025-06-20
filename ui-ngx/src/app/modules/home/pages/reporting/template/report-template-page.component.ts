@@ -119,7 +119,7 @@ import { CdkScrollable } from '@angular/cdk/overlay';
 @Component({
   selector: 'tb-report-template-page',
   templateUrl: './report-template-page.component.html',
-  styleUrls: ['./report-template-page.component.scss'],
+  styleUrls: ['./report-template-page.component.scss', './report-components-container.scss'],
   encapsulation: ViewEncapsulation.None
 })
 export class ReportTemplatePageComponent extends PageComponent
@@ -148,12 +148,7 @@ export class ReportTemplatePageComponent extends PageComponent
   }
 
   get currentFooter(): HeaderFooter {
-    return this.footerToggleValue === 'footer' ? this.pdfConfiguration?.footer : this.pdfConfiguration?.footer?.firstPage;
-  }
-
-  get disableHeaderButtonWidth(): number {
-    const disableHeaderButton = this.disableHeaderButtonEl();
-    return disableHeaderButton ? disableHeaderButton.nativeElement.offsetWidth : 0;
+    return this.footerToggleValue === 'header' ? this.pdfConfiguration?.footer : this.pdfConfiguration?.footer?.firstPage;
   }
 
   @HostBinding('style.width') width = '100%';
@@ -161,10 +156,6 @@ export class ReportTemplatePageComponent extends PageComponent
 
   @ViewChildren(ReportComponentsComponent)
   reportComponentsComponents: QueryList<ReportComponentsComponent>;
-
-  disableHeaderButtonEl = viewChild('disableHeaderButton', {
-    read: ElementRef<HTMLElement>,
-  });
 
   reportTemplateContainerEl = viewChild('reportTemplateContainer', {
     read: ElementRef<HTMLElement>,
@@ -200,7 +191,7 @@ export class ReportTemplatePageComponent extends PageComponent
   reportTemplateSettingsFormControl: FormControl;
 
   headerToggleValue: 'header' | 'firstPageHeader' = 'header';
-  footerToggleValue: 'footer' | 'firstPageFooter' = 'footer';
+  footerToggleValue: 'header' | 'firstPageHeader' = 'header';
 
   reportComponentContext: ReportComponentContext;
 
@@ -214,8 +205,6 @@ export class ReportTemplatePageComponent extends PageComponent
 
   headerMarginTop: number;
   footerMarginBottom: number;
-  headerExpanded = true;
-  footerExpanded = true;
 
   background: string;
 
@@ -332,40 +321,27 @@ export class ReportTemplatePageComponent extends PageComponent
     );
   }
 
-  public toggleHeader() {
-    this.headerExpanded = !this.headerExpanded;
-  }
-
-  public currentHeaderChanged() {
+  public currentHeaderChanged(value: 'header' | 'firstPageHeader') {
+    this.headerToggleValue = value;
     this.updatePageLayout();
   }
 
-  public disableHeader(): void {
-    this.currentHeader.enabled = false;
+  public currentFooterChanged(value: 'header' | 'firstPageHeader') {
+    this.footerToggleValue = value;
     this.updatePageLayout();
-    this.isDirty = true;
   }
 
-  public enableHeader(): void {
-    this.currentHeader.enabled = true;
+  public enabledHeaderFooterChanged() {
     this.updatePageLayout();
     this.isDirty = true;
   }
 
-  public currentFooterChanged() {
-    this.updatePageLayout();
+  public headerFooterExpandAnimationStart() {
+    this.layoutResize$.unobserve(this.reportTemplateLayoutEl().nativeElement);
   }
 
-  public disableFooter(): void {
-    this.currentFooter.enabled = false;
-    this.updatePageLayout();
-    this.isDirty = true;
-  }
-
-  public enableFooter(): void {
-    this.currentFooter.enabled = true;
-    this.updatePageLayout();
-    this.isDirty = true;
+  public headerFooterExpandAnimationFinish() {
+    this.layoutResize$.observe(this.reportTemplateLayoutEl().nativeElement);
   }
 
   public reportComponentsChanged(): void {
@@ -681,9 +657,7 @@ export class ReportTemplatePageComponent extends PageComponent
   private init(reportTemplate: ReportTemplate) {
     this.cancelReportComponentEdit();
     this.headerToggleValue = 'header';
-    this.footerToggleValue = 'footer';
-    this.headerExpanded = true;
-    this.footerExpanded = true;
+    this.footerToggleValue = 'header';
     this.reportTemplate = validateAndUpdateReportTemplate(reportTemplate);
     this.format = this.reportTemplate.format;
     this.subReport = this.reportTemplate.type === ReportTemplateType.SUB_REPORT;

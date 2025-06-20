@@ -99,67 +99,25 @@
       <div #reportTemplateLayout class="tb-report-template-layout">
         <div class="tb-report-template-sections">
           @if (showHeaderFooter) {
-            <div class="tb-report-components-container tb-header" [class.tb-expanded]="headerExpanded">
-              <div class="tb-header-toolbar">
-                <tb-toggle-select class="tb-header-select" [(ngModel)]="headerToggleValue" (ngModelChange)="currentHeaderChanged()">
-                  <tb-toggle-option value="header">{{ 'report-template.header' | translate }}</tb-toggle-option>
-                  <tb-toggle-option value="firstPageHeader">{{ 'report-template.first-page-header' | translate }}</tb-toggle-option>
-                </tb-toggle-select>
-                <div class="tb-header-title">
-                  {{ 'report-template.header' | translate }}
-                </div>
-                <div class="tb-header-toolbar-buttons" [style.right.px]="!headerExpanded ? -(disableHeaderButtonWidth + 8) : 0">
-                  <button mat-button class="tb-report-header-expand-button" (click)="toggleHeader()">
-                    {{ (headerExpanded ? 'report-template.collapse' : 'report-template.expand') | translate }}
-                    <mat-icon class="tb-mat-20" iconPositionEnd>expand_more</mat-icon>
-                  </button>
-                  @if (currentHeader.enabled) {
-                    <button #disableHeaderButton class="tb-disable-header-button" mat-stroked-button color="primary" (click)="disableHeader()">
-                      {{ 'action.disable' | translate }}
-                    </button>
-                  } @else {
-                    <button #disableHeaderButton class="tb-disable-header-button" mat-stroked-button color="primary" (click)="enableHeader()">
-                      {{ 'action.enable' | translate }}
-                    </button>
-                  }
-                </div>
-              </div>
-              <div class="tb-header-components">
-                @if (!currentHeader.enabled) {
-                  <div class="tb-disabled-header">
-                    {{ (headerToggleValue === 'header' ? 'report-template.header-disabled' : 'report-template.first-page-header-disabled') | translate }}
-                  </div>
-                }
-                <tb-report-components
-                  [format]="format"
-                  [background]="background"
-                  [width]="pageWidth"
-                  [scale]="scale"
-                  [marginTop]="headerMarginTop * scale"
-                  [marginLeft]="marginLeft * scale"
-                  [marginRight]="marginRight  * scale"
-                  [class.!hidden]="headerToggleValue !== 'header' || !pdfConfiguration.header.enabled"
-                  [reportComponents]="pdfConfiguration.header.components"
-                  (componentsChanged)="reportComponentsChanged()"
-                  (componentEdit)="editReportComponent($event)"
-                  (componentRemoved)="reportComponentRemoved($event)">
-                </tb-report-components>
-                <tb-report-components
-                  [format]="format"
-                  [background]="background"
-                  [width]="pageWidth"
-                  [scale]="scale"
-                  [marginTop]="headerMarginTop * scale"
-                  [marginLeft]="marginLeft * scale"
-                  [marginRight]="marginRight * scale"
-                  [class.!hidden]="headerToggleValue !== 'firstPageHeader' || !pdfConfiguration.header.firstPage.enabled"
-                  [reportComponents]="pdfConfiguration.header.firstPage.components"
-                  (componentsChanged)="reportComponentsChanged()"
-                  (componentEdit)="editReportComponent($event)"
-                  (componentRemoved)="reportComponentRemoved($event)">
-                </tb-report-components>
-              </div>
-            </div>
+            <tb-report-template-header-footer
+              header
+              [headerToggleValue]="headerToggleValue"
+              [headerFooter]="pdfConfiguration.header"
+              [format]="format"
+              [background]="background"
+              [width]="pageWidth"
+              [scale]="scale"
+              [marginTop]="headerMarginTop * scale"
+              [marginLeft]="marginLeft * scale"
+              [marginRight]="marginRight  * scale"
+              (componentsChanged)="reportComponentsChanged()"
+              (componentEdit)="editReportComponent($event)"
+              (componentRemoved)="reportComponentRemoved($event)"
+              (currentHeaderChanged)="currentHeaderChanged($event)"
+              (enabledHeaderChanged)="enabledHeaderFooterChanged()"
+              (expandAnimationStart)="headerFooterExpandAnimationStart()"
+              (expandAnimationFinish)="headerFooterExpandAnimationFinish()">
+            </tb-report-template-header-footer>
           }
           <div class="tb-report-components-container">
             <div class="tb-report-components-container-title" translate>report-template.content</div>
@@ -179,56 +137,25 @@
             </tb-report-components>
           </div>
           @if (showHeaderFooter) {
-            <div class="tb-report-components-container">
-              <div class="flex flex-row justify-between">
-                <tb-toggle-select [(ngModel)]="footerToggleValue" (ngModelChange)="currentFooterChanged()">
-                  <tb-toggle-option value="footer">{{ 'report-template.footer' | translate }}</tb-toggle-option>
-                  <tb-toggle-option value="firstPageFooter">{{ 'report-template.first-page-footer' | translate }}</tb-toggle-option>
-                </tb-toggle-select>
-                @if (currentFooter.enabled) {
-                  <button mat-stroked-button color="primary" (click)="disableFooter()">
-                    {{ 'action.disable' | translate }}
-                  </button>
-                } @else {
-                  <button mat-stroked-button color="primary" (click)="enableFooter()">
-                    {{ 'action.enable' | translate }}
-                  </button>
-                }
-              </div>
-              @if (!currentFooter.enabled) {
-                <div class="tb-disabled-header">
-                  {{ (footerToggleValue === 'footer' ? 'report-template.footer-disabled' : 'report-template.first-page-footer-disabled') | translate }}
-                </div>
-              }
-              <tb-report-components
-                [format]="format"
-                [background]="background"
-                [width]="pageWidth"
-                [scale]="scale"
-                [marginLeft]="marginLeft * scale"
-                [marginRight]="marginRight * scale"
-                [marginBottom]="footerMarginBottom * scale"
-                [class.!hidden]="footerToggleValue !== 'footer' || !pdfConfiguration.footer.enabled"
-                [reportComponents]="pdfConfiguration.footer.components"
-                (componentsChanged)="reportComponentsChanged()"
-                (componentEdit)="editReportComponent($event)"
-                (componentRemoved)="reportComponentRemoved($event)">
-              </tb-report-components>
-              <tb-report-components
-                [format]="format"
-                [background]="background"
-                [width]="pageWidth"
-                [scale]="scale"
-                [marginLeft]="marginLeft * scale"
-                [marginRight]="marginRight * scale"
-                [marginBottom]="footerMarginBottom * scale"
-                [class.!hidden]="footerToggleValue !== 'firstPageFooter' || !pdfConfiguration.footer.firstPage.enabled"
-                [reportComponents]="pdfConfiguration.footer.firstPage.components"
-                (componentsChanged)="reportComponentsChanged()"
-                (componentEdit)="editReportComponent($event)"
-                (componentRemoved)="reportComponentRemoved($event)">
-              </tb-report-components>
-            </div>
+            <tb-report-template-header-footer
+              header="false"
+              [headerToggleValue]="footerToggleValue"
+              [headerFooter]="pdfConfiguration.footer"
+              [format]="format"
+              [background]="background"
+              [width]="pageWidth"
+              [scale]="scale"
+              [marginLeft]="marginLeft * scale"
+              [marginRight]="marginRight  * scale"
+              [marginBottom]="footerMarginBottom * scale"
+              (componentsChanged)="reportComponentsChanged()"
+              (componentEdit)="editReportComponent($event)"
+              (componentRemoved)="reportComponentRemoved($event)"
+              (currentHeaderChanged)="currentFooterChanged($event)"
+              (enabledHeaderChanged)="enabledHeaderFooterChanged()"
+              (expandAnimationStart)="headerFooterExpandAnimationStart()"
+              (expandAnimationFinish)="headerFooterExpandAnimationFinish()">
+            </tb-report-template-header-footer>
           }
         </div>
       </div>
