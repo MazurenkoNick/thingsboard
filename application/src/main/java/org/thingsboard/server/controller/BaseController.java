@@ -142,8 +142,8 @@ import org.thingsboard.server.common.data.id.UUIDBased;
 import org.thingsboard.server.common.data.id.UserId;
 import org.thingsboard.server.common.data.id.WidgetTypeId;
 import org.thingsboard.server.common.data.id.WidgetsBundleId;
-import org.thingsboard.server.common.data.job.Job;
 import org.thingsboard.server.common.data.integration.Integration;
+import org.thingsboard.server.common.data.job.Job;
 import org.thingsboard.server.common.data.menu.CustomMenu;
 import org.thingsboard.server.common.data.menu.CustomMenuInfo;
 import org.thingsboard.server.common.data.mobile.app.MobileApp;
@@ -201,8 +201,8 @@ import org.thingsboard.server.dao.exception.IncorrectParameterException;
 import org.thingsboard.server.dao.group.EntityGroupService;
 import org.thingsboard.server.dao.grouppermission.GroupPermissionService;
 import org.thingsboard.server.dao.integration.IntegrationService;
-import org.thingsboard.server.dao.menu.CustomMenuService;
 import org.thingsboard.server.dao.job.JobService;
+import org.thingsboard.server.dao.menu.CustomMenuService;
 import org.thingsboard.server.dao.mobile.MobileAppBundleService;
 import org.thingsboard.server.dao.mobile.MobileAppService;
 import org.thingsboard.server.dao.model.ModelConstants;
@@ -238,6 +238,7 @@ import org.thingsboard.server.service.action.EntityActionService;
 import org.thingsboard.server.service.component.ComponentDiscoveryService;
 import org.thingsboard.server.service.edge.EdgeLicenseService;
 import org.thingsboard.server.service.entitiy.TbLogEntityActionService;
+import org.thingsboard.server.service.entitiy.ota.group.TbDeviceGroupOtaPackageService;
 import org.thingsboard.server.service.entitiy.user.TbUserSettingsService;
 import org.thingsboard.server.service.ota.OtaPackageStateService;
 import org.thingsboard.server.service.profile.TbAssetProfileCache;
@@ -438,6 +439,9 @@ public abstract class BaseController {
 
     @Autowired
     protected DeviceGroupOtaPackageService deviceGroupOtaPackageService;
+
+    @Autowired
+    protected TbDeviceGroupOtaPackageService tbDeviceGroupOtaPackageService;
 
     @Autowired
     protected RpcService rpcService;

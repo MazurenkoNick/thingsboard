@@ -63,7 +63,6 @@ public class EntityTypeExportCtx extends EntitiesExportCtx<VersionCreateRequest>
                 .exportCalculatedFields(config.isSaveCalculatedFields())
                 .exportGroupEntities(config.isSaveGroupEntities())
                 .exportPermissions(config.isSavePermissions())
-                .exportGroupOtaPackages(config.isSaveGroupOtaPackages())
                 .build();
         this.overwrite = ObjectUtils.defaultIfNull(config.getSyncStrategy(), defaultSyncStrategy) == SyncStrategy.OVERWRITE;
         this.tasks = new LinkedList<>();
