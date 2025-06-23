@@ -54,16 +54,18 @@ export const exportableEntityTypes: Array<EntityType> = [
   EntityType.INTEGRATION,
   EntityType.ROLE,
   EntityType.TB_RESOURCE,
+  EntityType.OTA_PACKAGE,
   EntityType.NOTIFICATION_TEMPLATE,
   EntityType.NOTIFICATION_TARGET,
   EntityType.NOTIFICATION_RULE
 ];
 
-export const entityTypesWithoutRelatedData: Set<EntityType | AliasEntityType> = new Set([
+export const entityTypesWithoutRelatedData = new Set<EntityType | AliasEntityType>([
   EntityType.NOTIFICATION_TEMPLATE,
   EntityType.NOTIFICATION_TARGET,
   EntityType.NOTIFICATION_RULE,
-  EntityType.TB_RESOURCE
+  EntityType.TB_RESOURCE,
+  EntityType.OTA_PACKAGE,
 ]);
 
 export interface VersionCreateConfig {

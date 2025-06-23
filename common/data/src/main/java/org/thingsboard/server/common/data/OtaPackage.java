@@ -62,4 +62,9 @@ public class OtaPackage extends OtaPackageInfo {
         this.data = otaPackage.getData();
     }
 
+    public OtaPackage(OtaPackageInfo otaPackageInfo) {
+        super(otaPackageInfo);
+        this.data = null;
+    }
+
 }

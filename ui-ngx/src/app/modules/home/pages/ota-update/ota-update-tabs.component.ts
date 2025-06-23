@@ -29,24 +29,31 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { NgModule } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { SharedModule } from '@shared/shared.module';
-import { HomeComponentsModule } from '@home/components/home-components.module';
-import { OtaUpdateRoutingModule } from '@home/pages/ota-update/ota-update-routing.module';
-import { OtaUpdateComponent } from '@home/pages/ota-update/ota-update.component';
-import { OtaUpdateTabsComponent } from '@home/pages/ota-update/ota-update-tabs.component';
+import { Component } from '@angular/core';
+import { Store } from '@ngrx/store';
+import { AppState } from '@core/core.state';
+import { EntityTabsComponent } from '../../components/entity/entity-tabs.component';
+import { WidgetsBundle } from '@shared/models/widgets-bundle.model';
+import { NULL_UUID } from '@shared/models/id/has-uuid';
+import { OtaPackage } from '@shared/models/ota-package.models';
 
-@NgModule({
-  declarations: [
-    OtaUpdateComponent,
-    OtaUpdateTabsComponent
-  ],
-  imports: [
-    CommonModule,
-    SharedModule,
-    HomeComponentsModule,
-    OtaUpdateRoutingModule
-  ]
+@Component({
+  selector: 'tb-ota-update-tabs',
+  templateUrl: './ota-update-tabs.component.html',
+  styleUrls: []
 })
-export class OtaUpdateModule { }
+export class OtaUpdateTabsComponent extends EntityTabsComponent<OtaPackage> {
+
+  constructor(protected store: Store<AppState>) {
+    super(store);
+  }
+
+  isTenantOtaUpdate() {
+    return this.entity && this.entity.tenantId.id !== NULL_UUID;
+  }
+
+  ngOnInit() {
+    super.ngOnInit();
+  }
+
+}
