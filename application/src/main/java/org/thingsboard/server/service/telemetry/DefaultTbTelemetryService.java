@@ -44,6 +44,7 @@ import org.thingsboard.server.common.data.kv.AggregationParams;
 import org.thingsboard.server.common.data.kv.BaseReadTsKvQuery;
 import org.thingsboard.server.common.data.kv.IntervalType;
 import org.thingsboard.server.common.data.kv.ReadTsKvQuery;
+import org.thingsboard.server.common.data.kv.ReadTsKvQueryResult;
 import org.thingsboard.server.common.data.kv.TsKvEntry;
 import org.thingsboard.server.common.data.permission.Operation;
 import org.thingsboard.server.dao.timeseries.TimeseriesService;
@@ -83,6 +84,37 @@ public class DefaultTbTelemetryService implements TbTelemetryService {
                     Futures.addCallback(tsService.findAll(currentUser.getTenantId(), entityId, queries), new FutureCallback<>() {
                         @Override
                         public void onSuccess(List<TsKvEntry> result) {
+                            future.set(result);
+                        }
+
+                        @Override
+                        public void onFailure(Throwable t) {
+                            future.setException(t);
+                        }
+                    }, MoreExecutors.directExecutor());
+                } catch (Throwable e) {
+                    onFailure(e);
+                }
+            }
+
+            @Override
+            public void onFailure(Throwable t) {
+                future.setException(t);
+            }
+        });
+        return future;
+    }
+
+    @Override
+    public ListenableFuture<List<ReadTsKvQueryResult>> getTimeseriesByQueries(EntityId entityId, List<ReadTsKvQuery> queries, SecurityUser currentUser) {
+        SettableFuture<List<ReadTsKvQueryResult>> future = SettableFuture.create();
+        accessValidator.validate(currentUser, Operation.READ_TELEMETRY, entityId, new FutureCallback<>() {
+            @Override
+            public void onSuccess(ValidationResult validationResult) {
+                try {
+                    Futures.addCallback(tsService.findAllByQueries(currentUser.getTenantId(), entityId, queries), new FutureCallback<>() {
+                        @Override
+                        public void onSuccess(List<ReadTsKvQueryResult> result) {
                             future.set(result);
                         }
 

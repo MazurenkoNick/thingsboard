@@ -161,6 +161,8 @@ import org.thingsboard.server.common.data.integration.IntegrationInfo;
 import org.thingsboard.server.common.data.integration.IntegrationType;
 import org.thingsboard.server.common.data.kv.Aggregation;
 import org.thingsboard.server.common.data.kv.AttributeKvEntry;
+import org.thingsboard.server.common.data.kv.ReadTsKvQuery;
+import org.thingsboard.server.common.data.kv.ReadTsKvQueryResult;
 import org.thingsboard.server.common.data.kv.TsKvEntry;
 import org.thingsboard.server.common.data.menu.CustomMenu;
 import org.thingsboard.server.common.data.menu.CustomMenuInfo;
@@ -2223,6 +2225,23 @@ public class RestClient implements Closeable {
                 params).getBody();
 
         return RestJsonConverter.toTimeseries(timeseries);
+    }
+
+    public List<ReadTsKvQueryResult> getTimeseriesByQueries(EntityId entityId, List<ReadTsKvQuery> queries) {
+        Map<String, String> params = new HashMap<>();
+        params.put("entityType", entityId.getEntityType().name());
+        params.put("entityId", entityId.getId().toString());
+
+        StringBuilder urlBuilder = new StringBuilder(baseURL);
+        urlBuilder.append("/api/plugins/telemetry/{entityType}/{entityId}/values/timeseries");
+
+        return restTemplate.exchange(
+                urlBuilder.toString(),
+                HttpMethod.POST,
+                queries == null ? HttpEntity.EMPTY : new HttpEntity<>(queries),
+                new ParameterizedTypeReference<List<ReadTsKvQueryResult>>() {
+                },
+                params).getBody();
     }
 
     public boolean saveDeviceAttributes(DeviceId deviceId, String scope, JsonNode request) {

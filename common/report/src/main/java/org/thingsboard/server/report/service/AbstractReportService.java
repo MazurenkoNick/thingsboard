@@ -38,6 +38,10 @@ import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.script.api.ScriptType;
 import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.id.EntityId;
+import org.thingsboard.server.common.data.kv.Aggregation;
+import org.thingsboard.server.common.data.kv.BaseReadTsKvQuery;
+import org.thingsboard.server.common.data.kv.ReadTsKvQuery;
+import org.thingsboard.server.common.data.kv.ReadTsKvQueryResult;
 import org.thingsboard.server.common.data.kv.TsKvEntry;
 import org.thingsboard.server.common.data.page.PageDataIterable;
 import org.thingsboard.server.common.data.page.PageLink;
@@ -129,15 +133,47 @@ public abstract class AbstractReportService implements ReportService {
     }
 
     protected List<EntityData> fetchEntities(TbReportCtx ctx, DataSource dataSource, EntityData stateEntity) {
-       return fetchEntityDataByQuery(pageLink -> toEntityDataQuery(dataSource, ctx.getConfiguration(), stateEntity, pageLink), ctx);
+       return fetchEntityDataByQuery(pageLink -> toEntityDataQuery(dataSource, ctx.getConfiguration(), stateEntity, pageLink), dataSource, ctx);
     }
 
-    protected List<EntityData> fetchEntityDataByQuery(Function<PageLink, EntityDataQuery> querySupplier, TbReportCtx ctx) {
+    protected List<EntityData> fetchEntityDataByQuery(Function<PageLink, EntityDataQuery> querySupplier, DataSource dataSource, TbReportCtx ctx) {
+        List<DataKey> dataKeysWithAggregation = dataSource.getDataKeys()
+                .stream()
+                .filter(dataKey -> (dataKey.getAggregationType() != null && dataKey.getAggregationType() != Aggregation.NONE))
+                .toList();
         List<EntityData> data = new ArrayList<>();
         for (EntityData entityData : new PageDataIterable<>(link -> dataService.findEntityDataByQuery(querySupplier.apply(link), ctx), 1024)) {
+            if (!dataKeysWithAggregation.isEmpty()) {
+                List<ReadTsKvQuery> queries = new ArrayList<>();
+                for (DataKey key : dataKeysWithAggregation) {
+                    TimeIntervalCalculator.TimeRange timeRange = getTimeRange(key.getTimewindow());
+                    var query = new BaseReadTsKvQuery(key.getName(), timeRange.startTs, timeRange.endTs, timeRange.endTs - timeRange.startTs, 1, key.getAggregationType());
+                    queries.add(query);
+                }
+
+                List<ReadTsKvQueryResult> result = dataService.findTimeseriesByQueries(entityData.getEntityId(), queries, ctx);
+                if (result != null) {
+                    for (ReadTsKvQueryResult queryResult : result) {
+                        entityData.getTimeseries().put(queryResult.getData().get(0).getKey(), toTsValues(queryResult));
+                    }
+                }
+            }
             data.add(entityData);
         }
         return data;
+    }
+
+    public TsValue[] toTsValues(ReadTsKvQueryResult queryResult) {
+        List<TsKvEntry> data = queryResult.getData();
+        if (data != null && !data.isEmpty()) {
+            List<TsValue> queryValues = new ArrayList<>();
+            for (TsKvEntry v : data) {
+                queryValues.add(v.toTsValue()); // TODO: add count here.
+            }
+            return queryValues.toArray(new TsValue[queryValues.size()]);
+        } else {
+            return new TsValue[0];
+        }
     }
 
     protected List<Map<String, String>> collectEntityDatas(TbReportCtx ctx, DataSource dataSource, EntityData stateEntity) {
@@ -223,6 +259,7 @@ public abstract class AbstractReportService implements ReportService {
         HashMap<String, String> data = new HashMap<>();
         if (entityData != null) {
             putLatestValues(dataKeys, data, entityData.getLatest(), ctx);
+            putTimeseriesValues(dataKeys, data, entityData.getTimeseries(), ctx);
             data.put("id", entityData.getEntityId().toString());
             Optional<String> entityName = getEntityLatestValue(entityData, EntityKeyType.ENTITY_FIELD, "name");
             Optional<String> entityLabel = getEntityLatestValue(entityData, EntityKeyType.ENTITY_FIELD, "label");
@@ -273,6 +310,18 @@ public abstract class AbstractReportService implements ReportService {
         }
     }
 
+    private void putTimeseriesValues(List<DataKey> dataKeys, HashMap<String, String> data, Map<String, TsValue[]> timeseries, TbReportCtx ctx) {
+        List<DataKey> dataKeysWithAggregation = dataKeys.stream()
+                .filter(dataKey -> dataKey.getAggregationType() != null && dataKey.getAggregationType() != Aggregation.NONE)
+                .toList();
+        for (DataKey dataKey : dataKeysWithAggregation) {
+            TsValue[] tsValues = timeseries.get(dataKey.getName());
+            for (TsValue tsValue : tsValues) {
+                data.put(dataKey.getLabel(), formatData(ctx, dataKey, tsValue.getTs(), tsValue.getValue()));
+            }
+        }
+    }
+
     private String getAssigneeDisplayName(AlarmData alarmData) {
         if (alarmData.getAssignee() != null) {
             return alarmData.getAssignee().getTitle();
@@ -313,7 +362,7 @@ public abstract class AbstractReportService implements ReportService {
                         .ifPresentOrElse(tsKvEntry -> {
                                     String value = tsKvEntry.getValueAsString();
                                     if (value != null) {
-                                        tsValues.put(dataKey.getLabel(), formatData(ctx, dataKey, tsKvEntry.getTs(), value));
+                                        tsValues.put(dataKey.getLabel(), formatData(ctx, dataKey, tsKvEntry.getTs(), tsKvEntry.getValue()));
                                     }
                                 },
                                 () -> tsValues.putIfAbsent(dataKey.getLabel(), null));
@@ -326,12 +375,12 @@ public abstract class AbstractReportService implements ReportService {
         return tsData;
     }
 
-    protected String formatData(TbReportCtx ctx, DataKey dataKey, long timestamp, String value) {
+    protected String formatData(TbReportCtx ctx, DataKey dataKey, long timestamp, Object value) {
         if (dataKey != null) {
-            String processedData = postProcessData(ctx, dataKey, timestamp, value);
-            return "createdTime".equals(dataKey.getName()) ? formatTimestamp(processedData, ctx) : processedData;
+            Object processedData = postProcessData(ctx, dataKey, timestamp, value);
+            return "createdTime".equals(dataKey.getName()) ? formatTimestamp(processedData.toString(), ctx) : processedData.toString();
         }
-        return value;
+        return value.toString();
     }
 
     protected String formatTimestamp(String timestampStr, TbReportCtx ctx) {
@@ -356,7 +405,7 @@ public abstract class AbstractReportService implements ReportService {
         }
     }
 
-    private String postProcessData(TbReportCtx ctx, DataKey dataKey, long timestamp, String value) {
+    private Object postProcessData(TbReportCtx ctx, DataKey dataKey, long timestamp, Object value) {
         if (dataKey != null && dataKey.isUsePostProcessing()) {
             UUID scriptId = ctx.getScripts().computeIfAbsent(dataKey.getPostFuncBody(), s -> evalScript(ctx, s));
             if (scriptId != null) {
@@ -366,7 +415,7 @@ public abstract class AbstractReportService implements ReportService {
         return value;
     }
 
-    private String evalData(TbReportCtx ctx, long timestamp, String value, UUID scriptId) {
+    private Object evalData(TbReportCtx ctx, long timestamp, Object value, UUID scriptId) {
         try {
             return ctx.getTbelInvokeService().invokeScript(ctx.getTenantId(), null, scriptId, timestamp, value).get().toString();
         } catch (InterruptedException e) {

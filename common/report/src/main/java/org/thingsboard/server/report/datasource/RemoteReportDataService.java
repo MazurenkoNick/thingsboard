@@ -41,6 +41,8 @@ import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.ReportTemplateId;
 import org.thingsboard.server.common.data.id.TbResourceId;
 import org.thingsboard.server.common.data.kv.Aggregation;
+import org.thingsboard.server.common.data.kv.ReadTsKvQuery;
+import org.thingsboard.server.common.data.kv.ReadTsKvQueryResult;
 import org.thingsboard.server.common.data.kv.TsKvEntry;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.SortOrder;
@@ -124,6 +126,11 @@ public class RemoteReportDataService implements ReportDataService {
     public List<TsKvEntry> getTimeseries(EntityId entityId, List<String> keys, Long startTs, Long endTs, Long interval, Aggregation agg, SortOrder.Direction sortOrder,
                                          Integer limit, boolean useStrictDataTypes, TbReportCtx ctx) {
         return getRestClient(ctx).getTimeseries(entityId, keys, interval, agg, sortOrder, startTs, endTs, limit, useStrictDataTypes);
+    }
+
+    @Override
+    public List<ReadTsKvQueryResult> findTimeseriesByQueries(EntityId entityId, List<ReadTsKvQuery> queries, TbReportCtx ctx) {
+        return getRestClient(ctx).getTimeseriesByQueries(entityId, queries);
     }
 
     @Override

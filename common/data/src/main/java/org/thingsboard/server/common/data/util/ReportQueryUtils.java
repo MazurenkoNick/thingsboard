@@ -32,6 +32,7 @@ package org.thingsboard.server.common.data.util;
 
 import org.thingsboard.server.common.data.id.DeviceId;
 import org.thingsboard.server.common.data.id.EntityId;
+import org.thingsboard.server.common.data.kv.Aggregation;
 import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.query.AlarmCountQuery;
 import org.thingsboard.server.common.data.query.AlarmDataPageLink;
@@ -146,7 +147,9 @@ public class ReportQueryUtils {
                         latestValues.add(new EntityKey(EntityKeyType.ATTRIBUTE, dataKey.getName()));
                     }
                     case "timeseries" -> {
-                        latestValues.add(new EntityKey(EntityKeyType.TIME_SERIES, dataKey.getName()));
+                        if (dataKey.getAggregationType() == null || dataKey.getAggregationType() == Aggregation.NONE) {
+                            latestValues.add(new EntityKey(EntityKeyType.TIME_SERIES, dataKey.getName()));
+                        }
                     }
                     case "entityField" -> {
                         entityFields.add(new EntityKey(EntityKeyType.ENTITY_FIELD, dataKey.getName()));

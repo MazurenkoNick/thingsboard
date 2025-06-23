@@ -43,6 +43,8 @@ import org.thingsboard.server.common.data.id.ReportTemplateId;
 import org.thingsboard.server.common.data.id.TbResourceId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.kv.Aggregation;
+import org.thingsboard.server.common.data.kv.ReadTsKvQuery;
+import org.thingsboard.server.common.data.kv.ReadTsKvQueryResult;
 import org.thingsboard.server.common.data.kv.TsKvEntry;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.SortOrder;
@@ -147,6 +149,12 @@ public class LocalReportDataService implements ReportDataService {
     public List<TsKvEntry> getTimeseries(EntityId entityId, List<String> keys, Long startTs, Long endTs, Long interval, Aggregation agg, SortOrder.Direction sortOrder,
                                          Integer limit, boolean useStrictDataTypes, TbReportCtx ctx) {
         return tbTelemetryService.getTimeseries(entityId, keys, startTs, endTs, null, interval, null, limit, agg, sortOrder.name(), useStrictDataTypes, getSecurityUser(ctx)).get(); // .get() will be interrupted on task processing timeout
+    }
+
+    @SneakyThrows
+    @Override
+    public List<ReadTsKvQueryResult> findTimeseriesByQueries(EntityId entityId, List<ReadTsKvQuery> queries, TbReportCtx ctx) {
+        return  tbTelemetryService.getTimeseriesByQueries(entityId, queries, getSecurityUser(ctx)).get();
     }
 
     @SneakyThrows

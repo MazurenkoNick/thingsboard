@@ -91,6 +91,8 @@ import org.thingsboard.server.common.data.kv.IntervalType;
 import org.thingsboard.server.common.data.kv.JsonDataEntry;
 import org.thingsboard.server.common.data.kv.KvEntry;
 import org.thingsboard.server.common.data.kv.LongDataEntry;
+import org.thingsboard.server.common.data.kv.ReadTsKvQuery;
+import org.thingsboard.server.common.data.kv.ReadTsKvQueryResult;
 import org.thingsboard.server.common.data.kv.StringDataEntry;
 import org.thingsboard.server.common.data.kv.TsKvEntry;
 import org.thingsboard.server.common.data.permission.Operation;
@@ -343,6 +345,24 @@ public class TelemetryController extends BaseController {
         Futures.addCallback(tbTelemetryService.getTimeseries(EntityIdFactory.getByTypeAndId(entityType, entityIdStr), toKeysList(keys), startTs, endTs,
                         intervalType, interval, timeZone, limit, Aggregation.valueOf(aggStr), orderBy, useStrictDataTypes, getCurrentUser()),
                 getTsKvListCallback(response, useStrictDataTypes), MoreExecutors.directExecutor());
+        return response;
+    }
+
+    @ApiOperation(value = "Get time series data by queries (getTimeseriesByQueries)",
+            notes = "Returns aggregated time series values according to queries for specified entity. "
+                    + MARKDOWN_CODE_BLOCK_START
+                    + TS_STRICT_DATA_EXAMPLE
+                    + MARKDOWN_CODE_BLOCK_END
+                    + "\n\n" + INVALID_ENTITY_ID_OR_ENTITY_TYPE_DESCRIPTION + TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH)
+    @PreAuthorize("hasAnyAuthority('SYS_ADMIN', 'TENANT_ADMIN', 'CUSTOMER_USER')")
+    @RequestMapping(value = "/{entityType}/{entityId}/values/timeseries", method = RequestMethod.GET, params = {"keys", "startTs", "endTs"})
+    @ResponseBody
+    public DeferredResult<ResponseEntity> getTimeseriesByQueries(
+            @Parameter(description = ENTITY_TYPE_PARAM_DESCRIPTION, required = true, schema = @Schema(defaultValue = "DEVICE")) @PathVariable("entityType") String entityType,
+            @Parameter(description = ENTITY_ID_PARAM_DESCRIPTION, required = true) @PathVariable("entityId") String entityIdStr, @RequestBody List<ReadTsKvQuery> queries) throws ThingsboardException {
+        DeferredResult<ResponseEntity> response = new DeferredResult<>();
+        Futures.addCallback(tbTelemetryService.getTimeseriesByQueries(EntityIdFactory.getByTypeAndId(entityType, entityIdStr), queries, getCurrentUser()),
+                getReadTsKvQueryResult(response), MoreExecutors.directExecutor());
         return response;
     }
 
@@ -839,6 +859,21 @@ public class TelemetryController extends BaseController {
                     result.computeIfAbsent(entry.getKey(), k -> new ArrayList<>()).add(new TsData(entry.getTs(), value));
                 }
                 response.setResult(new ResponseEntity<>(result, HttpStatus.OK));
+            }
+
+            @Override
+            public void onFailure(Throwable e) {
+                log.error("Failed to fetch historical data", e);
+                AccessValidator.handleError(e, response, HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+        };
+    }
+
+    private FutureCallback<List<ReadTsKvQueryResult>> getReadTsKvQueryResult(final DeferredResult<ResponseEntity> response) {
+        return new FutureCallback<>() {
+            @Override
+            public void onSuccess(List<ReadTsKvQueryResult> data) {
+                response.setResult(new ResponseEntity<>(data, HttpStatus.OK));
             }
 
             @Override
