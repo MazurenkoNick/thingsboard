@@ -84,7 +84,7 @@ public class EntityGroupExportService extends BaseEntityExportService<EntityGrou
                     .collect(Collectors.toList());
             exportData.setPermissions(permissions);
         }
-        if (exportSettings.isExportGroupOtaPackages() && entityGroup.getType() == EntityType.DEVICE) {
+        if (entityGroup.getType() == EntityType.DEVICE) {
             List<DeviceGroupOtaPackage> packages = deviceGroupOtaPackageService.findDeviceGroupOtaPackageByGroupId(entityGroup.getId())
                     .stream()
                     .filter(Objects::nonNull)

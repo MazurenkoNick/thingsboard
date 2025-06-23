@@ -95,7 +95,6 @@ public abstract class EntitiesExportCtx<R extends VersionCreateRequest> {
                 .exportCalculatedFields(config.isSaveCalculatedFields())
                 .exportGroupEntities(config.isSaveGroupEntities())
                 .exportPermissions(config.isSavePermissions())
-                .exportGroupOtaPackages(config.isSaveGroupOtaPackages())
                 .build();
     }
 

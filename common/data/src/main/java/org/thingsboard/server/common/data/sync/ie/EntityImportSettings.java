@@ -47,7 +47,6 @@ public class EntityImportSettings {
     private boolean saveCredentials;
     private boolean saveCalculatedFields;
     private boolean saveUserGroupPermissions;
-    private boolean saveGroupOtaPackages;
     private boolean autoGenerateIntegrationKey;
 
 }

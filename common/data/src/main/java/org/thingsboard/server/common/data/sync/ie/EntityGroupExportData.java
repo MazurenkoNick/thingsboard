@@ -59,9 +59,4 @@ public class EntityGroupExportData extends EntityExportData<EntityGroup> {
         return groupEntities;
     }
 
-    @JsonIgnore
-    public boolean hasGroupOtaPackages() {
-        return groupOtaPackages != null;
-    }
-
 }
