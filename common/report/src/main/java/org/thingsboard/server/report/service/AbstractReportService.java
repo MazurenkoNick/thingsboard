@@ -32,6 +32,7 @@ package org.thingsboard.server.report.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.thingsboard.common.util.JacksonUtil;
@@ -78,6 +79,7 @@ import java.util.TreeMap;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static org.thingsboard.server.common.data.report.configuration.timewindow.TimeIntervalCalculator.getTimeRange;
@@ -288,7 +290,7 @@ public abstract class AbstractReportService implements ReportService {
                 }
             }
             if (value != null) {
-                data.put(alarmKey.getLabel(), formatData(ctx, alarmKey, 0, value));
+                data.put(alarmKey.getLabel(), formatValue(ctx, alarmKey, 0, value));
             }
         }
         Optional<String> entityName = getAlarmLatestValue(alarmData, EntityKeyType.ENTITY_FIELD, "name");
@@ -304,7 +306,7 @@ public abstract class AbstractReportService implements ReportService {
             if (keyValueMap != null) {
                 TsValue tsValue = keyValueMap.get(dataKey.getName());
                 if (tsValue != null && tsValue.getValue() != null) {
-                    data.put(dataKey.getLabel(), formatData(ctx, dataKey, tsValue.getTs(), tsValue.getValue()));
+                    data.put(dataKey.getLabel(), formatValue(ctx, dataKey, tsValue.getTs(), tsValue.getValue()));
                 }
             }
         }
@@ -317,7 +319,7 @@ public abstract class AbstractReportService implements ReportService {
         for (DataKey dataKey : dataKeysWithAggregation) {
             TsValue[] tsValues = timeseries.get(dataKey.getName());
             for (TsValue tsValue : tsValues) {
-                data.put(dataKey.getLabel(), formatData(ctx, dataKey, tsValue.getTs(), tsValue.getValue()));
+                data.put(dataKey.getLabel(), formatValue(ctx, dataKey, tsValue.getTs(), tsValue.getValue()));
             }
         }
     }
@@ -362,7 +364,7 @@ public abstract class AbstractReportService implements ReportService {
                         .ifPresentOrElse(tsKvEntry -> {
                                     String value = tsKvEntry.getValueAsString();
                                     if (value != null) {
-                                        tsValues.put(dataKey.getLabel(), formatData(ctx, dataKey, tsKvEntry.getTs(), tsKvEntry.getValue()));
+                                        tsValues.put(dataKey.getLabel(), formatValue(ctx, dataKey, tsKvEntry.getTs(), tsKvEntry.getValue(), false));
                                     }
                                 },
                                 () -> tsValues.putIfAbsent(dataKey.getLabel(), null));
@@ -373,14 +375,6 @@ public abstract class AbstractReportService implements ReportService {
             tsData.add(tsValues);
         });
         return tsData;
-    }
-
-    protected String formatData(TbReportCtx ctx, DataKey dataKey, long timestamp, Object value) {
-        if (dataKey != null) {
-            Object processedData = postProcessData(ctx, dataKey, timestamp, value);
-            return "createdTime".equals(dataKey.getName()) ? formatTimestamp(processedData.toString(), ctx) : processedData.toString();
-        }
-        return value.toString();
     }
 
     protected String formatTimestamp(String timestampStr, TbReportCtx ctx) {
@@ -405,12 +399,42 @@ public abstract class AbstractReportService implements ReportService {
         }
     }
 
-    private Object postProcessData(TbReportCtx ctx, DataKey dataKey, long timestamp, Object value) {
-        if (dataKey != null && dataKey.isUsePostProcessing()) {
+    private String formatValue(TbReportCtx ctx, DataKey dataKey, long timestamp, Object value) {
+        return formatValue(ctx, dataKey, timestamp, value, true);
+    }
+
+    private String formatValue(TbReportCtx ctx, DataKey dataKey, long timestamp, Object value, boolean parseString) {
+        if (dataKey == null) {
+            return value != null ? value.toString() : null;
+        }
+
+        Object processed = postProcess(ctx, dataKey, timestamp, value, parseString);
+
+        return "createdTime".equals(dataKey.getName())
+                ? formatTimestamp(processed.toString(), ctx)
+                : processed.toString();
+    }
+
+    private Object postProcess(TbReportCtx ctx, DataKey dataKey, long timestamp, Object value, boolean parseString) {
+        if (dataKey.isUsePostProcessing()) {
+            Object input = parseString && value instanceof String ? parseStringValue((String) value) : value;
             UUID scriptId = ctx.getScripts().computeIfAbsent(dataKey.getPostFuncBody(), s -> evalScript(ctx, s));
             if (scriptId != null) {
-                value = evalData(ctx, timestamp, value, scriptId);
+                return evalData(ctx, timestamp, input, scriptId);
             }
+        }
+        return value;
+    }
+
+    public static Object parseStringValue(String value) {
+        if (StringUtils.isBlank(value)) {
+            return value;
+        }
+        if (NumberUtils.isParsable(value)) {
+            return Double.parseDouble(value);
+        }
+        if ("true".equalsIgnoreCase(value) || "false".equalsIgnoreCase(value)) {
+            return Boolean.parseBoolean(value);
         }
         return value;
     }
