@@ -41,7 +41,6 @@ public class VersionLoadConfig {
     private boolean loadCalculatedFields;
     private boolean loadPermissions;
     private boolean loadGroupEntities;
-    private boolean loadGroupOtaPackages;
     private boolean autoGenerateIntegrationKey;
 
 }

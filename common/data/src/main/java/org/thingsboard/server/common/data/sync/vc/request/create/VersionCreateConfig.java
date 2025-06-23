@@ -47,6 +47,5 @@ public class VersionCreateConfig implements Serializable {
     private boolean saveCalculatedFields;
     private boolean savePermissions;
     private boolean saveGroupEntities;
-    private boolean saveGroupOtaPackages;
 
 }

@@ -130,7 +130,7 @@ public class EntityGroupImportService extends BaseEntityImportService<EntityGrou
         importResult.addSaveReferencesCallback(() -> {
             EntityGroup savedGroup = importResult.getSavedEntity();
 
-            if (ctx.isSaveDeviceGroupOtaPackages() && savedGroup.getType() == EntityType.DEVICE && exportData.getGroupOtaPackages() != null) {
+            if (savedGroup.getType() == EntityType.DEVICE && exportData.getGroupOtaPackages() != null) {
                 importGroupOtaPackage(ctx, importResult, savedGroup, exportData.getGroupOtaPackages(), idProvider);
             }
 

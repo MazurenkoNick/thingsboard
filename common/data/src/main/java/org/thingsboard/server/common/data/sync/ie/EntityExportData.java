@@ -141,9 +141,4 @@ public class EntityExportData<E extends ExportableEntity<? extends EntityId>> {
         return false;
     }
 
-    @JsonIgnore
-    public boolean hasGroupOtaPackages() {
-        return false;
-    }
-
 }
