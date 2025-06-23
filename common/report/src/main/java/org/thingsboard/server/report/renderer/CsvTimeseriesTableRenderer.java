@@ -68,14 +68,18 @@ public class CsvTimeseriesTableRenderer extends AbstractCsvComponentRenderer<Tim
 
         // Build and add headers
         List<String> headers = new ArrayList<>();
-        headers.add("Timestamp");
+        if (component.isShowTimestamp()) {
+            headers.add(component.getTimestampLabel());
+        }
         headers.addAll(labelToDataKeyMap.keySet());
         content.add(headers);
 
         // Build and add rows
         for (Map<String, String> row : reportDataSource.getEntityDatas()) {
             List<String> values = new ArrayList<>();
-            values.add(row.getOrDefault("rawTs", ""));
+            if (component.isShowTimestamp()) {
+                values.add(row.getOrDefault("Timestamp", ""));
+            }
             values.addAll(extractValues(row, labelToDataKeyMap));
             content.add(values);
         }
