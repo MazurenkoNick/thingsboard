@@ -52,8 +52,4 @@ export class OtaUpdateTabsComponent extends EntityTabsComponent<OtaPackage> {
     return this.entity && this.entity.tenantId.id !== NULL_UUID;
   }
 
-  ngOnInit() {
-    super.ngOnInit();
-  }
-
 }

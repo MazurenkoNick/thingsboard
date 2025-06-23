@@ -101,7 +101,7 @@ export interface OtaPagesIds {
   softwareId?: OtaPackageId;
 }
 
-export interface OtaPackageInfo extends BaseData<OtaPackageId>, ExportableEntity<OtaPackageId> {
+export interface OtaPackageInfo extends Omit<BaseData<OtaPackageId>, 'label'>, ExportableEntity<OtaPackageId> {
   tenantId?: TenantId;
   type: OtaUpdateType;
   deviceProfileId?: DeviceProfileId;
