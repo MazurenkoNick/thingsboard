@@ -30,7 +30,7 @@
     OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 
 -->
-<mat-tab *ngIf="entity && entity.tenantId.id !== NULL_UUID && authUser.authority === authorities.TENANT_ADMIN && !isEdit"
+<mat-tab *ngIf="entity && entity.tenantId.id !== NULL_UUID && ([resource.VERSION_CONTROL, resource.TB_RESOURCE] | hasGenericPermission: operation.READ) && !isEdit"
          label="{{ 'version-control.version-control' | translate }}" #versionControlTab="matTab">
   <tb-version-control detailsMode="true" singleEntityMode="true"
                       (versionRestored)="entitiesTableConfig.updateData()"
