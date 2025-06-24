@@ -43,6 +43,7 @@ import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.id.UserId;
 import org.thingsboard.server.common.data.limit.LimitedApi;
+import org.thingsboard.server.common.data.notification.targets.platform.SystemLevelUsersFilter;
 import org.thingsboard.server.common.data.security.model.mfa.PlatformTwoFaSettings;
 import org.thingsboard.server.common.data.security.model.mfa.account.TwoFaAccountConfig;
 import org.thingsboard.server.common.data.security.model.mfa.provider.TwoFaProviderConfig;
@@ -80,6 +81,19 @@ public class DefaultTwoFactorAuthService implements TwoFactorAuthService {
         return configManager.getAccountTwoFaSettings(tenantId, userId)
                 .map(settings -> !settings.getConfigs().isEmpty())
                 .orElse(false);
+    }
+
+    @Override
+    public boolean isEnforceTwoFaEnabled(TenantId tenantId, User user) {
+        SystemLevelUsersFilter enforcedUsersFilter = configManager.getPlatformTwoFaSettings(TenantId.SYS_TENANT_ID, true)
+                .filter(PlatformTwoFaSettings::isEnforceTwoFa)
+                .map(PlatformTwoFaSettings::getEnforcedUsersFilter)
+                .orElse(null);
+        if (enforcedUsersFilter == null) {
+            return false;
+        }
+
+        return userService.matchesFilter(tenantId, enforcedUsersFilter, user);
     }
 
     @Override

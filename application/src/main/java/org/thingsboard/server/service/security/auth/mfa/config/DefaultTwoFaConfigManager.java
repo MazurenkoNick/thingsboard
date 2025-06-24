@@ -54,6 +54,7 @@ import org.thingsboard.server.dao.service.ConstraintValidator;
 import org.thingsboard.server.dao.settings.AdminSettingsDao;
 import org.thingsboard.server.dao.settings.AdminSettingsService;
 import org.thingsboard.server.dao.user.UserAuthSettingsDao;
+import org.thingsboard.server.exception.DataValidationException;
 import org.thingsboard.server.service.security.auth.mfa.TwoFactorAuthService;
 
 import java.util.Collections;
@@ -206,6 +207,9 @@ public class DefaultTwoFaConfigManager implements TwoFaConfigManager {
             twoFactorAuthService.checkProvider(tenantId, providerConfig.getProviderType());
         }
         if (tenantId.equals(TenantId.SYS_TENANT_ID)) {
+            if (twoFactorAuthSettings.isEnforceTwoFa() && twoFactorAuthSettings.getProviders().isEmpty()) {
+                throw new DataValidationException("At least one 2FA provider is required if enforcing is enabled");
+            }
             AdminSettings settings = Optional.ofNullable(adminSettingsService.findAdminSettingsByKey(tenantId, TWO_FACTOR_AUTH_SETTINGS_KEY))
                     .orElseGet(() -> {
                         AdminSettings newSettings = new AdminSettings();
