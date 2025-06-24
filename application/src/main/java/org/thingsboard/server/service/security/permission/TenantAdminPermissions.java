@@ -50,7 +50,7 @@ import org.thingsboard.server.service.security.model.SecurityUser;
 import java.util.List;
 
 @Slf4j
-@Component(value = "tenantAdminPermissions")
+@Component
 public class TenantAdminPermissions extends AbstractPermissions {
 
     @Autowired
