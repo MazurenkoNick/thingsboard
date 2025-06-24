@@ -279,15 +279,6 @@ public class TenantAdminPermissions extends AbstractPermissions {
 
     };
 
-    public static final PermissionChecker genericPermissionChecker = new PermissionChecker() {
-
-        @Override
-        public boolean hasPermission(SecurityUser user, Resource resource, Operation operation) {
-            return user.getUserPermissions().hasGenericPermission(resource, operation);
-        }
-
-    };
-
     private static final PermissionChecker tbResourcePermissionChecker = new PermissionChecker() {
 
         @Override

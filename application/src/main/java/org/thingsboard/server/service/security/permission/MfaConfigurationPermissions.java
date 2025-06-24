@@ -31,13 +31,14 @@
 package org.thingsboard.server.service.security.permission;
 
 import org.springframework.stereotype.Component;
+import org.thingsboard.server.common.data.permission.Resource;
 
 @Component
 public class MfaConfigurationPermissions extends AbstractPermissions {
 
     public MfaConfigurationPermissions() {
         super();
-        // for compatibility with PE
+        put(Resource.PROFILE, genericPermissionChecker);
     }
 
 }

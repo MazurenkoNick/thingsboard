@@ -80,7 +80,7 @@ public class CustomerUserPermissions extends AbstractPermissions {
 
     public CustomerUserPermissions() {
         super();
-        put(Resource.PROFILE, TenantAdminPermissions.genericPermissionChecker);
+        put(Resource.PROFILE, genericPermissionChecker);
         put(Resource.ALARM, customerAlarmPermissionChecker);
         put(Resource.ASSET, customerGroupEntityPermissionChecker);
         put(Resource.DEVICE, customerGroupEntityPermissionChecker);
@@ -103,7 +103,7 @@ public class CustomerUserPermissions extends AbstractPermissions {
         put(Resource.DASHBOARD_GROUP, customerEntityGroupPermissionChecker);
         put(Resource.WHITE_LABELING, customerWhiteLabelingPermissionChecker);
         put(Resource.GROUP_PERMISSION, customerGroupPermissionEntityChecker);
-        put(Resource.AUDIT_LOG, TenantAdminPermissions.genericPermissionChecker);
+        put(Resource.AUDIT_LOG, genericPermissionChecker);
         put(Resource.DEVICE_PROFILE, profilePermissionChecker);
         put(Resource.ASSET_PROFILE, profilePermissionChecker);
         put(Resource.TB_RESOURCE, customerResourcePermissionChecker);
