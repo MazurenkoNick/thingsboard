@@ -1074,7 +1074,6 @@ public class VersionControlTest extends AbstractControllerTest {
             config.setSaveCalculatedFields(true);
             config.setSavePermissions(true);
             config.setSaveGroupEntities(true);
-            config.setSaveGroupOtaPackages(true);
             return config;
         })));
 
@@ -1145,7 +1144,6 @@ public class VersionControlTest extends AbstractControllerTest {
             config.setLoadCalculatedFields(true);
             config.setLoadPermissions(true);
             config.setLoadGroupEntities(true);
-            config.setLoadGroupOtaPackages(true);
             config.setRemoveOtherEntities(false);
             config.setFindExistingEntityByName(true);
             configModifier.accept(config);
