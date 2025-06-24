@@ -738,15 +738,18 @@ public class UserServiceImpl extends AbstractCachedEntityService<UserCacheKey, U
     public boolean matchesFilter(TenantId tenantId, SystemLevelUsersFilter filter, User user) {
         switch (filter.getType()) {
             case TENANT_ADMINISTRATORS -> {
-//                TenantAdministratorsFilter tenantAdministratorsFilter = (TenantAdministratorsFilter) filter;
-//                if (isNotEmpty(tenantAdministratorsFilter.getTenantsIds())) {
-//                    return tenantAdministratorsFilter.getTenantsIds().contains(user.getTenantId().getId());
-//                } else if (isNotEmpty(tenantAdministratorsFilter.getTenantProfilesIds())) {
-//                    return tenantAdministratorsFilter.getTenantProfilesIds().contains(tenantProfileCache.get(user.getTenantId()).getUuidId());
-//                } else {
-//                    return user.getAuthority() == Authority.TENANT_ADMIN;
-//                }
-                return false; // FIXME!
+                TenantAdministratorsFilter tenantAdministratorsFilter = (TenantAdministratorsFilter) filter;
+                Role tenantAdminsRole = roleService.findOrCreateTenantAdminRole();
+                if (isNotEmpty(tenantAdministratorsFilter.getTenantsIds())) {
+                    return userDao.existsByTenantsIdsAndRoleIdAndUserId(tenantAdministratorsFilter.getTenantsIds().stream()
+                            .map(TenantId::fromUUID).toList(), tenantAdminsRole.getId(), user.getId());
+                } else if (isNotEmpty(tenantAdministratorsFilter.getTenantProfilesIds())) {
+                    return userDao.existsByTenantProfilesIdsAndRoleIdAndUserId(tenantAdministratorsFilter.getTenantProfilesIds().stream()
+                                    .map(TenantProfileId::new).collect(Collectors.toList()),
+                            tenantAdminsRole.getId(), user.getId());
+                } else {
+                    return userDao.existsByRoleIdAndUserId(tenantAdminsRole.getId(), user.getId());
+                }
             }
             case SYSTEM_ADMINISTRATORS -> {
                 return user.getAuthority() == Authority.SYS_ADMIN;
