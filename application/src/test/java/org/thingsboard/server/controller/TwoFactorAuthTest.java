@@ -352,7 +352,7 @@ public class TwoFactorAuthTest extends AbstractControllerTest {
     @Test
     public void testAuthWithoutTwoFaAccountConfig() throws ThingsboardException {
         configureTotpTwoFa();
-        twoFaConfigManager.deleteTwoFaAccountConfig(tenantId, user.getId(), TwoFaProviderType.TOTP);
+        twoFaConfigManager.deleteTwoFaAccountConfig(tenantId, user, TwoFaProviderType.TOTP);
 
         assertDoesNotThrow(() -> {
             login(username, password);
@@ -387,15 +387,15 @@ public class TwoFactorAuthTest extends AbstractControllerTest {
 
         TotpTwoFaAccountConfig totpTwoFaAccountConfig = (TotpTwoFaAccountConfig) twoFactorAuthService.generateNewAccountConfig(twoFaUser, TwoFaProviderType.TOTP);
         totpTwoFaAccountConfig.setUseByDefault(true);
-        twoFaConfigManager.saveTwoFaAccountConfig(tenantId, twoFaUser.getId(), totpTwoFaAccountConfig);
+        twoFaConfigManager.saveTwoFaAccountConfig(tenantId, twoFaUser, totpTwoFaAccountConfig);
 
         SmsTwoFaAccountConfig smsTwoFaAccountConfig = new SmsTwoFaAccountConfig();
         smsTwoFaAccountConfig.setPhoneNumber("+38012312322");
-        twoFaConfigManager.saveTwoFaAccountConfig(tenantId, twoFaUser.getId(), smsTwoFaAccountConfig);
+        twoFaConfigManager.saveTwoFaAccountConfig(tenantId, twoFaUser, smsTwoFaAccountConfig);
 
         EmailTwoFaAccountConfig emailTwoFaAccountConfig = new EmailTwoFaAccountConfig();
         emailTwoFaAccountConfig.setEmail(twoFaUser.getEmail());
-        twoFaConfigManager.saveTwoFaAccountConfig(tenantId, twoFaUser.getId(), emailTwoFaAccountConfig);
+        twoFaConfigManager.saveTwoFaAccountConfig(tenantId, twoFaUser, emailTwoFaAccountConfig);
 
         logInWithMfaToken(twoFaUser.getEmail(), "12345678", Authority.PRE_VERIFICATION_TOKEN);
 
@@ -447,9 +447,6 @@ public class TwoFactorAuthTest extends AbstractControllerTest {
         // verifying enforced users filter
         createDifferentTenant();
         doGet("/api/user/" + savedDifferentTenantUser.getId()).andExpect(status().isOk());
-
-        twoFaSettings.setEnforceTwoFa(false);
-        twoFaConfigManager.savePlatformTwoFaSettings(TenantId.SYS_TENANT_ID, twoFaSettings);
     }
 
     private void logInWithMfaToken(String username, String password, Authority expectedScope) throws Exception {
@@ -476,7 +473,7 @@ public class TwoFactorAuthTest extends AbstractControllerTest {
         twoFaConfigManager.savePlatformTwoFaSettings(tenantId, twoFaSettings);
 
         TotpTwoFaAccountConfig totpTwoFaAccountConfig = (TotpTwoFaAccountConfig) twoFactorAuthService.generateNewAccountConfig(user, TwoFaProviderType.TOTP);
-        twoFaConfigManager.saveTwoFaAccountConfig(tenantId, user.getId(), totpTwoFaAccountConfig);
+        twoFaConfigManager.saveTwoFaAccountConfig(tenantId, user, totpTwoFaAccountConfig);
         return totpTwoFaAccountConfig;
     }
 
@@ -495,7 +492,7 @@ public class TwoFactorAuthTest extends AbstractControllerTest {
 
         SmsTwoFaAccountConfig smsTwoFaAccountConfig = new SmsTwoFaAccountConfig();
         smsTwoFaAccountConfig.setPhoneNumber("+38050505050");
-        twoFaConfigManager.saveTwoFaAccountConfig(tenantId, user.getId(), smsTwoFaAccountConfig);
+        twoFaConfigManager.saveTwoFaAccountConfig(tenantId, user, smsTwoFaAccountConfig);
         return smsTwoFaAccountConfig;
     }
 

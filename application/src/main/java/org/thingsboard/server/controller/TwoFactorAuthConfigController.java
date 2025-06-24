@@ -88,7 +88,7 @@ public class TwoFactorAuthConfigController extends BaseController {
     public AccountTwoFaSettings getAccountTwoFaSettings() throws ThingsboardException {
         SecurityUser user = getCurrentUser();
         accessControlService.checkPermission(user, Resource.PROFILE, Operation.WRITE);
-        return twoFaConfigManager.getAccountTwoFaSettings(user.getTenantId(), user.getId()).orElse(null);
+        return twoFaConfigManager.getAccountTwoFaSettings(user.getTenantId(), user).orElse(null);
     }
 
     @ApiOperation(value = "Generate 2FA account config (generateTwoFaAccountConfig)",
@@ -163,7 +163,7 @@ public class TwoFactorAuthConfigController extends BaseController {
                                                                 @RequestParam(required = false) String verificationCode) throws Exception {
         SecurityUser user = getCurrentUser();
         accessControlService.checkPermission(user, Resource.PROFILE, Operation.WRITE);
-        if (twoFaConfigManager.getTwoFaAccountConfig(user.getTenantId(), user.getId(), accountConfig.getProviderType()).isPresent()) {
+        if (twoFaConfigManager.getTwoFaAccountConfig(user.getTenantId(), user, accountConfig.getProviderType()).isPresent()) {
             throw new IllegalArgumentException("2FA provider is already configured");
         }
 
@@ -174,7 +174,7 @@ public class TwoFactorAuthConfigController extends BaseController {
             verificationSuccess = true;
         }
         if (verificationSuccess) {
-            return twoFaConfigManager.saveTwoFaAccountConfig(user.getTenantId(), user.getId(), accountConfig);
+            return twoFaConfigManager.saveTwoFaAccountConfig(user.getTenantId(), user, accountConfig);
         } else {
             throw new IllegalArgumentException("Verification code is incorrect");
         }
@@ -193,10 +193,10 @@ public class TwoFactorAuthConfigController extends BaseController {
         SecurityUser user = getCurrentUser();
         accessControlService.checkPermission(user, Resource.PROFILE, Operation.WRITE);
 
-        TwoFaAccountConfig accountConfig = twoFaConfigManager.getTwoFaAccountConfig(user.getTenantId(), user.getId(), providerType)
+        TwoFaAccountConfig accountConfig = twoFaConfigManager.getTwoFaAccountConfig(user.getTenantId(), user, providerType)
                 .orElseThrow(() -> new IllegalArgumentException("Config for " + providerType + " 2FA provider not found"));
         accountConfig.setUseByDefault(updateRequest.isUseByDefault());
-        return twoFaConfigManager.saveTwoFaAccountConfig(user.getTenantId(), user.getId(), accountConfig);
+        return twoFaConfigManager.saveTwoFaAccountConfig(user.getTenantId(), user, accountConfig);
     }
 
     @ApiOperation(value = "Delete 2FA account config (deleteTwoFaAccountConfig)", notes =
@@ -208,7 +208,7 @@ public class TwoFactorAuthConfigController extends BaseController {
     public AccountTwoFaSettings deleteTwoFaAccountConfig(@RequestParam TwoFaProviderType providerType) throws ThingsboardException {
         SecurityUser user = getCurrentUser();
         accessControlService.checkPermission(user, Resource.PROFILE, Operation.WRITE);
-        return twoFaConfigManager.deleteTwoFaAccountConfig(user.getTenantId(), user.getId(), providerType);
+        return twoFaConfigManager.deleteTwoFaAccountConfig(user.getTenantId(), user, providerType);
     }
 
     @ApiOperation(value = "Get available 2FA providers (getAvailableTwoFaProviders)", notes =

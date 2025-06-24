@@ -38,9 +38,9 @@ import org.springframework.stereotype.Service;
 import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.server.common.data.AdminSettings;
 import org.thingsboard.server.common.data.AttributeScope;
+import org.thingsboard.server.common.data.User;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.id.TenantId;
-import org.thingsboard.server.common.data.id.UserId;
 import org.thingsboard.server.common.data.kv.BaseAttributeKvEntry;
 import org.thingsboard.server.common.data.kv.JsonDataEntry;
 import org.thingsboard.server.common.data.security.UserAuthSettings;
@@ -79,9 +79,9 @@ public class DefaultTwoFaConfigManager implements TwoFaConfigManager {
 
 
     @Override
-    public Optional<AccountTwoFaSettings> getAccountTwoFaSettings(TenantId tenantId, UserId userId) {
+    public Optional<AccountTwoFaSettings> getAccountTwoFaSettings(TenantId tenantId, User user) {
         PlatformTwoFaSettings platformTwoFaSettings = getPlatformTwoFaSettings(tenantId, true).orElse(null);
-        return Optional.ofNullable(userAuthSettingsDao.findByUserId(userId))
+        return Optional.ofNullable(userAuthSettingsDao.findByUserId(user.getId()))
                 .map(userAuthSettings -> {
                     AccountTwoFaSettings twoFaSettings = userAuthSettings.getTwoFaSettings();
                     if (twoFaSettings == null) return null;
@@ -103,17 +103,22 @@ public class DefaultTwoFaConfigManager implements TwoFaConfigManager {
                     }
 
                     if (updateNeeded) {
-                        twoFaSettings = saveAccountTwoFaSettings(tenantId, userId, twoFaSettings);
+                        twoFaSettings = saveAccountTwoFaSettings(tenantId, user, twoFaSettings);
                     }
                     return twoFaSettings;
                 });
     }
 
-    protected AccountTwoFaSettings saveAccountTwoFaSettings(TenantId tenantId, UserId userId, AccountTwoFaSettings settings) {
-        UserAuthSettings userAuthSettings = Optional.ofNullable(userAuthSettingsDao.findByUserId(userId))
+    protected AccountTwoFaSettings saveAccountTwoFaSettings(TenantId tenantId, User user, AccountTwoFaSettings settings) {
+        if (settings.getConfigs().isEmpty()) {
+            if (twoFactorAuthService.isEnforceTwoFaEnabled(tenantId, user)) {
+                throw new DataValidationException("At least one 2FA provider is required");
+            }
+        }
+        UserAuthSettings userAuthSettings = Optional.ofNullable(userAuthSettingsDao.findByUserId(user.getId()))
                 .orElseGet(() -> {
                     UserAuthSettings newUserAuthSettings = new UserAuthSettings();
-                    newUserAuthSettings.setUserId(userId);
+                    newUserAuthSettings.setUserId(user.getId());
                     return newUserAuthSettings;
                 });
         userAuthSettings.setTwoFaSettings(settings);
@@ -125,18 +130,18 @@ public class DefaultTwoFaConfigManager implements TwoFaConfigManager {
 
 
     @Override
-    public Optional<TwoFaAccountConfig> getTwoFaAccountConfig(TenantId tenantId, UserId userId, TwoFaProviderType providerType) {
-        return getAccountTwoFaSettings(tenantId, userId)
+    public Optional<TwoFaAccountConfig> getTwoFaAccountConfig(TenantId tenantId, User user, TwoFaProviderType providerType) {
+        return getAccountTwoFaSettings(tenantId, user)
                 .map(AccountTwoFaSettings::getConfigs)
                 .flatMap(configs -> Optional.ofNullable(configs.get(providerType)));
     }
 
     @Override
-    public AccountTwoFaSettings saveTwoFaAccountConfig(TenantId tenantId, UserId userId, TwoFaAccountConfig accountConfig) {
+    public AccountTwoFaSettings saveTwoFaAccountConfig(TenantId tenantId, User user, TwoFaAccountConfig accountConfig) {
         getTwoFaProviderConfig(tenantId, accountConfig.getProviderType())
                 .orElseThrow(() -> new IllegalArgumentException("2FA provider is not configured"));
 
-        AccountTwoFaSettings settings = getAccountTwoFaSettings(tenantId, userId).orElseGet(() -> {
+        AccountTwoFaSettings settings = getAccountTwoFaSettings(tenantId, user).orElseGet(() -> {
             AccountTwoFaSettings newSettings = new AccountTwoFaSettings();
             newSettings.setConfigs(new LinkedHashMap<>());
             return newSettings;
@@ -152,12 +157,12 @@ public class DefaultTwoFaConfigManager implements TwoFaConfigManager {
         if (configs.values().stream().noneMatch(TwoFaAccountConfig::isUseByDefault)) {
             configs.values().stream().findFirst().ifPresent(config -> config.setUseByDefault(true));
         }
-        return saveAccountTwoFaSettings(tenantId, userId, settings);
+        return saveAccountTwoFaSettings(tenantId, user, settings);
     }
 
     @Override
-    public AccountTwoFaSettings deleteTwoFaAccountConfig(TenantId tenantId, UserId userId, TwoFaProviderType providerType) {
-        AccountTwoFaSettings settings = getAccountTwoFaSettings(tenantId, userId)
+    public AccountTwoFaSettings deleteTwoFaAccountConfig(TenantId tenantId, User user, TwoFaProviderType providerType) {
+        AccountTwoFaSettings settings = getAccountTwoFaSettings(tenantId, user)
                 .orElseThrow(() -> new IllegalArgumentException("2FA not configured"));
         settings.getConfigs().remove(providerType);
         if (settings.getConfigs().size() == 1) {
@@ -169,7 +174,7 @@ public class DefaultTwoFaConfigManager implements TwoFaConfigManager {
                     .min(Comparator.comparing(TwoFaAccountConfig::getProviderType))
                     .ifPresent(config -> config.setUseByDefault(true));
         }
-        return saveAccountTwoFaSettings(tenantId, userId, settings);
+        return saveAccountTwoFaSettings(tenantId, user, settings);
     }
 
 
