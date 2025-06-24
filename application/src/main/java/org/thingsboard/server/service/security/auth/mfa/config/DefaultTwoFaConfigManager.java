@@ -206,10 +206,16 @@ public class DefaultTwoFaConfigManager implements TwoFaConfigManager {
         for (TwoFaProviderConfig providerConfig : twoFactorAuthSettings.getProviders()) {
             twoFactorAuthService.checkProvider(tenantId, providerConfig.getProviderType());
         }
-        if (tenantId.equals(TenantId.SYS_TENANT_ID)) {
-            if (twoFactorAuthSettings.isEnforceTwoFa() && twoFactorAuthSettings.getProviders().isEmpty()) {
-                throw new DataValidationException("At least one 2FA provider is required if enforcing is enabled");
+        if (tenantId.isSysTenantId()) {
+            if (twoFactorAuthSettings.isEnforceTwoFa()) {
+                if (twoFactorAuthSettings.getProviders().isEmpty()) {
+                    throw new DataValidationException("At least one 2FA provider is required if enforcing is enabled");
+                }
+                if (twoFactorAuthSettings.getEnforcedUsersFilter() == null) {
+                    throw new DataValidationException("Users filter to enforce 2FA for is required");
+                }
             }
+
             AdminSettings settings = Optional.ofNullable(adminSettingsService.findAdminSettingsByKey(tenantId, TWO_FACTOR_AUTH_SETTINGS_KEY))
                     .orElseGet(() -> {
                         AdminSettings newSettings = new AdminSettings();
@@ -219,6 +225,9 @@ public class DefaultTwoFaConfigManager implements TwoFaConfigManager {
             settings.setJsonValue(JacksonUtil.valueToTree(twoFactorAuthSettings));
             adminSettingsService.saveAdminSettings(tenantId, settings);
         } else {
+            twoFactorAuthSettings.setEnforceTwoFa(false);
+            twoFactorAuthSettings.setEnforcedUsersFilter(null);
+
             attributesService.save(TenantId.SYS_TENANT_ID, tenantId, AttributeScope.SERVER_SCOPE, Collections.singletonList(
                     new BaseAttributeKvEntry(new JsonDataEntry(TWO_FACTOR_AUTH_SETTINGS_KEY, JacksonUtil.toString(twoFactorAuthSettings)), System.currentTimeMillis())
             )).get();
