@@ -35,6 +35,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import org.thingsboard.server.common.data.group.EntityGroup;
+import org.thingsboard.server.common.data.ota.DeviceGroupOtaPackage;
 import org.thingsboard.server.common.data.permission.GroupPermission;
 
 import java.util.List;
@@ -45,6 +46,7 @@ import java.util.List;
 public class EntityGroupExportData extends EntityExportData<EntityGroup> {
 
     private List<GroupPermission> permissions;
+    private List<DeviceGroupOtaPackage> groupOtaPackages;
     private boolean groupEntities;
 
     @JsonIgnore

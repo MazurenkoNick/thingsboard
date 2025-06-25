@@ -31,6 +31,7 @@
 package org.thingsboard.server.common.data;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
@@ -139,7 +140,7 @@ public class OtaPackageInfo extends BaseDataWithAdditionalInfo<OtaPackageId> imp
     }
 
     @Override
-    @JsonIgnore
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     public String getName() {
         return title;
     }

@@ -60,15 +60,20 @@ public class DeviceProfileImportService extends BaseEntityImportService<DevicePr
         deviceProfile.setDefaultRuleChainId(idProvider.getInternalId(deviceProfile.getDefaultRuleChainId()));
         deviceProfile.setDefaultEdgeRuleChainId(idProvider.getInternalId(deviceProfile.getDefaultEdgeRuleChainId()));
         deviceProfile.setDefaultDashboardId(idProvider.getInternalId(deviceProfile.getDefaultDashboardId()));
-        deviceProfile.setFirmwareId(idProvider.getInternalId(deviceProfile.getFirmwareId()));
-        deviceProfile.setSoftwareId(idProvider.getInternalId(deviceProfile.getSoftwareId()));
+        deviceProfile.setFirmwareId(idProvider.getInternalId(deviceProfile.getFirmwareId(), false));
+        deviceProfile.setSoftwareId(idProvider.getInternalId(deviceProfile.getSoftwareId(), false));
         return deviceProfile;
     }
 
     @Override
     protected DeviceProfile saveOrUpdate(EntitiesImportCtx ctx, DeviceProfile deviceProfile, EntityExportData<DeviceProfile> exportData, IdProvider idProvider, CompareResult compareResult) {
+        boolean toUpdate = ctx.isFinalImportAttempt() || ctx.getCurrentImportResult().isUpdatedAllExternalIds();
+        if (toUpdate) {
+            deviceProfile.setFirmwareId(idProvider.getInternalId(deviceProfile.getFirmwareId()));
+            deviceProfile.setSoftwareId(idProvider.getInternalId(deviceProfile.getSoftwareId()));
+        }
         DeviceProfile saved = deviceProfileService.saveDeviceProfile(deviceProfile);
-        if (ctx.isFinalImportAttempt() || ctx.getCurrentImportResult().isUpdatedAllExternalIds()) {
+        if (toUpdate) {
             importCalculatedFields(ctx, saved, exportData, idProvider);
         }
         return saved;

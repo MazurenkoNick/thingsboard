@@ -59,6 +59,11 @@ export interface ReportContentType {
 export interface ReportResultMessage {
     success: boolean;
     error?: string;
+    pageHeight?: number;
+}
+
+export interface WaitWidgetsMessage {
+    timeout: number;
 }
 
 export interface OpenReportMessage {
@@ -96,7 +101,7 @@ export const reportContentTypeMap = new Map<reportType, ReportContentType>(
     ]
 );
 
-export function parseGenerateReportRequest(req: Request): GenerateReportRequest {
+export function parseGenerateReportRequest(req: Request, localhostBaseUrlOverride?: string): GenerateReportRequest {
     const body = req.body;
     if (body.baseUrl && body.dashboardId) {
         let baseUrl = body.baseUrl;
@@ -105,6 +110,12 @@ export function parseGenerateReportRequest(req: Request): GenerateReportRequest 
         let publicId: string | undefined;
         let reportTimewindow: string | undefined;
         let timezone = 'Europe/London';
+        if (localhostBaseUrlOverride) {
+            const hostname = new URL(baseUrl).hostname.toLowerCase();
+            if (hostname === 'localhost' || hostname === '127.0.0.1') {
+                baseUrl = localhostBaseUrlOverride;
+            }
+        }
         if (!baseUrl.endsWith("/")) {
             baseUrl += "/";
         }
