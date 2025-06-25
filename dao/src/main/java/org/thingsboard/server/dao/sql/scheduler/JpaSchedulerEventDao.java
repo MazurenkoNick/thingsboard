@@ -76,13 +76,18 @@ public class JpaSchedulerEventDao extends JpaAbstractDao<SchedulerEventEntity, S
     }
 
     @Override
+    public PageData<SchedulerEventId> findIdsByTenantId(UUID tenantId, PageLink pageLink) {
+        return DaoUtil.pageToPageData(schedulerEventRepository.findIdsByTenantId(tenantId, DaoUtil.toPageable(pageLink)).map(SchedulerEventId::new));
+    }
+
+    @Override
     public Long countByTenantId(TenantId tenantId) {
         return schedulerEventRepository.countByTenantId(tenantId.getId());
     }
 
     @Override
     public PageData<SchedulerEvent> findAllByTenantId(TenantId tenantId, PageLink pageLink) {
-        return DaoUtil.toPageData(schedulerEventRepository.findByTenantId(tenantId.getId(), DaoUtil.toPageable(pageLink)));
+        return findByTenantId(tenantId.getId(), pageLink);
     }
 
     @Override

@@ -95,6 +95,7 @@ import org.thingsboard.server.common.data.id.OtaPackageId;
 import org.thingsboard.server.common.data.id.RoleId;
 import org.thingsboard.server.common.data.id.RuleChainId;
 import org.thingsboard.server.common.data.id.TenantId;
+import org.thingsboard.server.common.data.id.UserId;
 import org.thingsboard.server.common.data.integration.Integration;
 import org.thingsboard.server.common.data.integration.IntegrationType;
 import org.thingsboard.server.common.data.msg.TbNodeConnectionType;
@@ -1025,7 +1026,7 @@ public class VersionControlTest extends AbstractControllerTest {
         checkImportedDashboardData(dashboard, importedDashboard);
 
         checkImportedEntity(tenantId1, reportEvent, tenantId2, importedReportEvent);
-        checkImportedSchedulerEventData(reportEvent, importedReportEvent, importedDashboard.getId());
+        checkImportedSchedulerEventData(reportEvent, importedReportEvent, importedDashboard.getId(), tenantAdmin2.getId());
     }
 
     private <E extends ExportableEntity<?> & HasTenantId> void checkImportedEntity(TenantId tenantId1, E initialEntity, TenantId tenantId2, E importedEntity) {
@@ -1579,12 +1580,15 @@ public class VersionControlTest extends AbstractControllerTest {
         }
     }
 
-    private void checkImportedSchedulerEventData(SchedulerEvent initialEvent, SchedulerEvent importedEvent, DashboardId dashboardId) {
+    private void checkImportedSchedulerEventData(SchedulerEvent initialEvent, SchedulerEvent importedEvent, DashboardId dashboardId, UserId currentUserId) {
         checkImportedSchedulerEventData(initialEvent, importedEvent);
         ObjectNode config = (ObjectNode) importedEvent.getConfiguration().path("msgBody").path("reportConfig");
         String oldDash = config.path("dashboardId").asText(null);
         assertThat(oldDash).isNotNull();
         assertThat(oldDash).isEqualTo(dashboardId.toString());
+        String oldUser = config.path("userId").asText(null);
+        assertThat(oldUser).isNotNull();
+        assertThat(oldUser).isEqualTo(currentUserId.toString()); // userId on import is set to current user
     }
 
     private void checkImportedSchedulerEventData(SchedulerEvent initialEvent, SchedulerEvent importedEvent, OtaPackageId otaPackageId) {

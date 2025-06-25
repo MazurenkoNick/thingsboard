@@ -122,8 +122,6 @@ CREATE INDEX IF NOT EXISTS idx_entity_group_external_id ON entity_group(external
 
 CREATE INDEX IF NOT EXISTS idx_ota_package_external_id ON ota_package(tenant_id, external_id);
 
-CREATE INDEX IF NOT EXISTS idx_scheduler_event_external_id ON scheduler_event(tenant_id, external_id);
-
 CREATE INDEX IF NOT EXISTS idx_rule_node_type_id_configuration_version ON rule_node(type, id, configuration_version);
 
 CREATE INDEX IF NOT EXISTS idx_api_usage_state_entity_id ON api_usage_state(entity_id);

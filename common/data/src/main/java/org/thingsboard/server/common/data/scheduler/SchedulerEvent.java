@@ -70,7 +70,7 @@ public class SchedulerEvent extends SchedulerEventInfo implements ExportableEnti
 
     public SchedulerEvent(SchedulerEvent schedulerEvent) {
         super(schedulerEvent);
-        this.setConfiguration(schedulerEvent.getConfiguration());
+        this.setConfiguration(schedulerEvent.getConfiguration().deepCopy());
         this.setExternalId(schedulerEvent.getExternalId());
     }
 
