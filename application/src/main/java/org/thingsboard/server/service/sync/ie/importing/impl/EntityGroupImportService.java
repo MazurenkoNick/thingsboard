@@ -40,14 +40,17 @@ import org.thingsboard.server.common.data.group.EntityGroup;
 import org.thingsboard.server.common.data.id.EntityGroupId;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.TenantId;
+import org.thingsboard.server.common.data.ota.DeviceGroupOtaPackage;
 import org.thingsboard.server.common.data.permission.GroupPermission;
 import org.thingsboard.server.common.data.role.Role;
 import org.thingsboard.server.common.data.sync.ie.EntityGroupExportData;
 import org.thingsboard.server.common.data.sync.ie.EntityImportResult;
 import org.thingsboard.server.dao.group.EntityGroupService;
 import org.thingsboard.server.dao.grouppermission.GroupPermissionService;
+import org.thingsboard.server.dao.ota.DeviceGroupOtaPackageService;
 import org.thingsboard.server.dao.role.RoleService;
 import org.thingsboard.server.queue.util.TbCoreComponent;
+import org.thingsboard.server.service.ota.OtaPackageStateService;
 import org.thingsboard.server.service.security.permission.UserPermissionsService;
 import org.thingsboard.server.service.sync.vc.data.EntitiesImportCtx;
 
@@ -56,6 +59,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.regex.Pattern;
 
 @Service
@@ -70,6 +74,8 @@ public class EntityGroupImportService extends BaseEntityImportService<EntityGrou
     private final GroupPermissionService groupPermissionService;
     private final RoleService roleService;
     private final UserPermissionsService userPermissionsService;
+    private final DeviceGroupOtaPackageService deviceGroupOtaPackageService;
+    private final OtaPackageStateService otaPackageStateService;
 
     @Override
     protected void setOwner(TenantId tenantId, EntityGroup entityGroup, IdProvider idProvider) {
@@ -122,55 +128,14 @@ public class EntityGroupImportService extends BaseEntityImportService<EntityGrou
         super.processAfterSaved(ctx, importResult, exportData, idProvider);
 
         importResult.addSaveReferencesCallback(() -> {
-            if (!ctx.isSaveUserGroupPermissions() || exportData.getPermissions() == null
-                    || importResult.getSavedEntity().getType() != EntityType.USER) {
-                return;
+            EntityGroup savedGroup = importResult.getSavedEntity();
+
+            if (savedGroup.getType() == EntityType.DEVICE && exportData.getGroupOtaPackages() != null) {
+                importGroupOtaPackage(ctx, importResult, savedGroup, exportData.getGroupOtaPackages(), idProvider);
             }
 
-            EntityGroup userGroup = importResult.getSavedEntity();
-            List<GroupPermission> permissions = new ArrayList<>(exportData.getPermissions());
-
-            TenantId tenantId = ctx.getTenantId();
-            for (GroupPermission permission : permissions) {
-                permission.setId(null);
-                permission.setTenantId(tenantId);
-                permission.setRoleId(idProvider.getInternalId(permission.getRoleId()));
-                permission.setUserGroupId(userGroup.getId());
-                permission.setEntityGroupId(idProvider.getInternalId(permission.getEntityGroupId()));
-            }
-
-            if (importResult.getOldEntity() != null) {
-                List<GroupPermission> existingPermissions = new ArrayList<>(groupPermissionService.findGroupPermissionListByTenantIdAndUserGroupId(tenantId, userGroup.getId()));
-
-                for (GroupPermission existingPermission : existingPermissions) {
-                    if (permissions.stream().noneMatch(permission -> permissionsEqual(permission, existingPermission))) {
-                        Role role = roleService.findRoleById(tenantId, existingPermission.getRoleId());
-                        if (role.getOwnerId().equals(TenantId.SYS_TENANT_ID)) continue;
-
-                        groupPermissionService.deleteGroupPermission(tenantId, existingPermission.getId());
-
-                        importResult.addSendEventsCallback(() -> {
-                            userPermissionsService.onGroupPermissionDeleted(existingPermission);
-                            entityActionService.logEntityAction(ctx.getUser(), existingPermission.getId(), existingPermission,
-                                    null, ActionType.DELETED, null, existingPermission.getId().toString());
-                        });
-                    } else {
-                        permissions.removeIf(permission -> permissionsEqual(permission, existingPermission));
-                    }
-                }
-            }
-
-            for (GroupPermission permission : permissions) {
-                Role role = roleService.findRoleById(tenantId, permission.getRoleId());
-                if (role.getOwnerId().equals(TenantId.SYS_TENANT_ID)) continue;
-
-                GroupPermission savedPermission = groupPermissionService.saveGroupPermission(tenantId, permission);
-
-                importResult.addSendEventsCallback(() -> {
-                    userPermissionsService.onGroupPermissionUpdated(savedPermission);
-                    entityActionService.logEntityAction(ctx.getUser(), savedPermission.getId(), savedPermission,
-                            null, ActionType.ADDED, null);
-                });
+            if (ctx.isSaveUserGroupPermissions() && savedGroup.getType() == EntityType.USER && exportData.getPermissions() != null) {
+                importGroupPermissions(ctx, importResult, savedGroup, exportData.getPermissions(), idProvider);
             }
         });
     }
@@ -185,6 +150,95 @@ public class EntityGroupImportService extends BaseEntityImportService<EntityGrou
     @Override
     protected boolean isUpdateNeeded(EntitiesImportCtx ctx, EntityGroupExportData exportData, EntityGroup prepared, EntityGroup existing) {
         return super.isUpdateNeeded(ctx, exportData, prepared, existing) || (ctx.isSaveUserGroupPermissions() && exportData.getPermissions() != null);
+    }
+
+    private void importGroupPermissions(EntitiesImportCtx ctx, EntityImportResult<EntityGroup> importResult, EntityGroup entityGroup, List<GroupPermission> incoming, IdProvider idProvider) {
+        TenantId tenantId = ctx.getTenantId();
+        List<GroupPermission> permissions = new ArrayList<>(incoming);
+        permissions.forEach(permission -> {
+            permission.setId(null);
+            permission.setTenantId(tenantId);
+            permission.setRoleId(idProvider.getInternalId(permission.getRoleId()));
+            permission.setUserGroupId(entityGroup.getId());
+            permission.setEntityGroupId(idProvider.getInternalId(permission.getEntityGroupId()));
+        });
+
+        if (importResult.getOldEntity() != null) {
+            List<GroupPermission> existingPermissions = groupPermissionService
+                    .findGroupPermissionListByTenantIdAndUserGroupId(tenantId, entityGroup.getId());
+
+            for (GroupPermission existingPermission : existingPermissions) {
+                boolean exists = permissions.stream()
+                        .anyMatch(p -> permissionsEqual(p, existingPermission));
+
+                if (!exists) {
+                    Role role = roleService.findRoleById(tenantId, existingPermission.getRoleId());
+                    if (TenantId.SYS_TENANT_ID.equals(role.getOwnerId())) continue;
+
+                    groupPermissionService.deleteGroupPermission(tenantId, existingPermission.getId());
+
+                    importResult.addSendEventsCallback(() -> {
+                        userPermissionsService.onGroupPermissionDeleted(existingPermission);
+                        entityActionService.logEntityAction(ctx.getUser(), existingPermission.getId(), existingPermission,
+                                null, ActionType.DELETED, null, existingPermission.getId().toString());
+                    });
+                } else {
+                    permissions.removeIf(p -> permissionsEqual(p, existingPermission));
+                }
+            }
+        }
+
+        for (GroupPermission permission : permissions) {
+            Role role = roleService.findRoleById(tenantId, permission.getRoleId());
+            if (TenantId.SYS_TENANT_ID.equals(role.getOwnerId())) continue;
+
+            GroupPermission saved = groupPermissionService.saveGroupPermission(tenantId, permission);
+
+            importResult.addSendEventsCallback(() -> {
+                userPermissionsService.onGroupPermissionUpdated(saved);
+                entityActionService.logEntityAction(ctx.getUser(), saved.getId(), saved,
+                        null, ActionType.ADDED, null);
+            });
+        }
+    }
+
+    private void importGroupOtaPackage(EntitiesImportCtx ctx, EntityImportResult<EntityGroup> importResult, EntityGroup entityGroup, List<DeviceGroupOtaPackage> otaPackages, IdProvider idProvider) {
+        List<DeviceGroupOtaPackage> incoming = otaPackages.stream()
+                .peek(pkg -> {
+                    pkg.setGroupId(entityGroup.getId());
+                    pkg.setOtaPackageId(idProvider.getInternalId(pkg.getOtaPackageId()));
+                }).toList();
+
+        List<DeviceGroupOtaPackage> existing = deviceGroupOtaPackageService.findDeviceGroupOtaPackageByGroupId(entityGroup.getId());
+        for (DeviceGroupOtaPackage otaPackage : existing) {
+            boolean notFound = incoming.stream().noneMatch(newPkg -> equalsGroupOtaPackage(newPkg, otaPackage));
+            if (notFound) {
+                deviceGroupOtaPackageService.deleteDeviceGroupOtaPackage(ctx.getTenantId(), otaPackage);
+                importResult.addSendEventsCallback(() -> otaPackageStateService.update(ctx.getTenantId(), null, otaPackage));
+            }
+        }
+
+        for (DeviceGroupOtaPackage newOtaPackage : incoming) {
+            DeviceGroupOtaPackage oldOtaPackage = existing.stream().filter(e -> e.getOtaPackageType() == newOtaPackage.getOtaPackageType()).findFirst().orElse(null);
+            if (!equalsGroupOtaPackage(newOtaPackage, oldOtaPackage)) {
+                if (oldOtaPackage != null) {
+                    newOtaPackage.setId(oldOtaPackage.getId());
+                    newOtaPackage.setGroupId(oldOtaPackage.getGroupId());
+                } else {
+                    newOtaPackage.setId(null);
+                    newOtaPackage.setGroupId(entityGroup.getId());
+                }
+                deviceGroupOtaPackageService.saveDeviceGroupOtaPackage(ctx.getTenantId(), newOtaPackage);
+                importResult.addSendEventsCallback(() -> otaPackageStateService.update(ctx.getTenantId(), newOtaPackage, oldOtaPackage));
+            }
+        }
+    }
+
+    private boolean equalsGroupOtaPackage(DeviceGroupOtaPackage a, DeviceGroupOtaPackage b) {
+        if (a == b) return true;
+        if (a == null || b == null) return false;
+        return Objects.equals(a.getOtaPackageId(), b.getOtaPackageId()) &&
+                a.getOtaPackageType() == b.getOtaPackageType() && a.getGroupId().equals(b.getGroupId());
     }
 
     @Override

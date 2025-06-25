@@ -30,33 +30,27 @@
  */
 package org.thingsboard.server.common.data.sync.ie;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import lombok.Data;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.EqualsAndHashCode;
-import lombok.ToString;
-import org.thingsboard.server.common.data.group.EntityGroup;
-import org.thingsboard.server.common.data.ota.DeviceGroupOtaPackage;
-import org.thingsboard.server.common.data.permission.GroupPermission;
+import org.thingsboard.server.common.data.OtaPackage;
 
-import java.util.List;
-
-@Data
 @EqualsAndHashCode(callSuper = true)
-@ToString(callSuper = true)
-public class EntityGroupExportData extends EntityExportData<EntityGroup> {
+public class OtaPackageExportData extends EntityExportData<OtaPackage> {
 
-    private List<GroupPermission> permissions;
-    private List<DeviceGroupOtaPackage> groupOtaPackages;
-    private boolean groupEntities;
-
-    @JsonIgnore
-    public boolean hasPermissions() {
-        return permissions != null;
+    /*
+     * OtaPackage is not a versioned entity; its 'version' field is part of the domain model (not used for optimistic locking)
+     * We override both methods to ensure 'version' is not ignored during (de)serialization.
+     */
+    @JsonIgnoreProperties(value = {"tenantId", "createdTime"}, ignoreUnknown = true)
+    @Override
+    public OtaPackage getEntity() {
+        return super.getEntity();
     }
 
-    @JsonIgnore
-    public boolean hasGroupEntities() {
-        return groupEntities;
+    @JsonIgnoreProperties(value = {"tenantId", "createdTime"}, ignoreUnknown = true)
+    @Override
+    public void setEntity(OtaPackage entity) {
+        super.setEntity(entity);
     }
 
 }

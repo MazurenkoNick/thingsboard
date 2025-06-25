@@ -28,35 +28,37 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.common.data.sync.ie;
+package org.thingsboard.server.service.sync.ie.exporting.impl;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.ToString;
-import org.thingsboard.server.common.data.group.EntityGroup;
-import org.thingsboard.server.common.data.ota.DeviceGroupOtaPackage;
-import org.thingsboard.server.common.data.permission.GroupPermission;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.thingsboard.server.common.data.EntityType;
+import org.thingsboard.server.common.data.OtaPackage;
+import org.thingsboard.server.common.data.id.OtaPackageId;
+import org.thingsboard.server.common.data.sync.ie.OtaPackageExportData;
+import org.thingsboard.server.queue.util.TbCoreComponent;
+import org.thingsboard.server.service.sync.vc.data.EntitiesExportCtx;
 
-import java.util.List;
+import java.util.Set;
 
-@Data
-@EqualsAndHashCode(callSuper = true)
-@ToString(callSuper = true)
-public class EntityGroupExportData extends EntityExportData<EntityGroup> {
+@Service
+@TbCoreComponent
+@RequiredArgsConstructor
+public class OtaPackageExportService extends BaseEntityExportService<OtaPackageId, OtaPackage, OtaPackageExportData> {
 
-    private List<GroupPermission> permissions;
-    private List<DeviceGroupOtaPackage> groupOtaPackages;
-    private boolean groupEntities;
-
-    @JsonIgnore
-    public boolean hasPermissions() {
-        return permissions != null;
+    @Override
+    protected void setRelatedEntities(EntitiesExportCtx<?> ctx, OtaPackage otaPackage, OtaPackageExportData exportData) {
+        otaPackage.setDeviceProfileId(getExternalIdOrElseInternal(ctx, otaPackage.getDeviceProfileId()));
     }
 
-    @JsonIgnore
-    public boolean hasGroupEntities() {
-        return groupEntities;
+    @Override
+    protected OtaPackageExportData newExportData() {
+        return new OtaPackageExportData();
+    }
+
+    @Override
+    public Set<EntityType> getSupportedEntityTypes() {
+        return Set.of(EntityType.OTA_PACKAGE);
     }
 
 }

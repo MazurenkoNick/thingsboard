@@ -28,35 +28,16 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.common.data.sync.ie;
+package org.thingsboard.server.service.entitiy.ota.group;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.ToString;
-import org.thingsboard.server.common.data.group.EntityGroup;
+import org.thingsboard.server.common.data.User;
+import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.ota.DeviceGroupOtaPackage;
-import org.thingsboard.server.common.data.permission.GroupPermission;
 
-import java.util.List;
+public interface TbDeviceGroupOtaPackageService {
 
-@Data
-@EqualsAndHashCode(callSuper = true)
-@ToString(callSuper = true)
-public class EntityGroupExportData extends EntityExportData<EntityGroup> {
+    DeviceGroupOtaPackage saveDeviceGroupOtaPackage(TenantId tenantId, DeviceGroupOtaPackage deviceGroupOtaPackage, User User) throws Exception;
 
-    private List<GroupPermission> permissions;
-    private List<DeviceGroupOtaPackage> groupOtaPackages;
-    private boolean groupEntities;
-
-    @JsonIgnore
-    public boolean hasPermissions() {
-        return permissions != null;
-    }
-
-    @JsonIgnore
-    public boolean hasGroupEntities() {
-        return groupEntities;
-    }
+    void deleteDeviceGroupOtaPackage(TenantId tenantId, DeviceGroupOtaPackage deviceGroupOtaPackage);
 
 }

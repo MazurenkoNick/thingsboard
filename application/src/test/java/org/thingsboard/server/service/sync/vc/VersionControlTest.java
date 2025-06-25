@@ -98,6 +98,7 @@ import org.thingsboard.server.common.data.integration.Integration;
 import org.thingsboard.server.common.data.integration.IntegrationType;
 import org.thingsboard.server.common.data.msg.TbNodeConnectionType;
 import org.thingsboard.server.common.data.ota.ChecksumAlgorithm;
+import org.thingsboard.server.common.data.ota.DeviceGroupOtaPackage;
 import org.thingsboard.server.common.data.ota.OtaPackageType;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
@@ -147,8 +148,8 @@ import java.util.stream.Collectors;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static org.thingsboard.server.controller.TbResourceControllerTest.TEST_DATA;
 import static org.thingsboard.server.controller.TbResourceControllerTest.JS_TEST_FILE_NAME;
+import static org.thingsboard.server.controller.TbResourceControllerTest.TEST_DATA;
 
 @DaoSqlTest
 @TestPropertySource(properties = {
@@ -308,19 +309,24 @@ public class VersionControlTest extends AbstractControllerTest {
     }
 
     @Test
-    public void testDeviceVc_withProfile_betweenTenants() throws Exception {
+    public void testDeviceVc_withProfileAndOtaPackage_betweenTenants() throws Exception {
         DeviceProfile deviceProfile = createDeviceProfile(null, null, "Device profile of tenant 1");
         createVersion("profiles", EntityType.DEVICE_PROFILE);
-        Device device = createDevice(null, deviceProfile.getId(), "Device of tenant 1", "test1");
-        String versionId = createVersion("devices", EntityType.DEVICE);
+        OtaPackage firmware = createOtaPackage(tenantId1, deviceProfile.getId(), OtaPackageType.FIRMWARE);
+        OtaPackage software = createOtaPackage(tenantId1, deviceProfile.getId(), OtaPackageType.SOFTWARE);
+        Device device = createDevice(null, deviceProfile.getId(), "Device of tenant 1", "test1", newDevice -> {
+            newDevice.setFirmwareId(firmware.getId());
+            newDevice.setSoftwareId(software.getId());
+        });
+        String versionId = createVersion("devices with ota", EntityType.DEVICE, EntityType.OTA_PACKAGE);
         DeviceCredentials deviceCredentials = findDeviceCredentials(device.getId());
         DeviceCredentials newCredentials = new DeviceCredentials(deviceCredentials);
         newCredentials.setCredentialsId("new access token"); // updating access token to avoid constraint errors on import
         doPost("/api/device/credentials", newCredentials, DeviceCredentials.class);
-        assertThat(listVersions()).extracting(EntityVersion::getName).containsExactly("devices", "profiles");
+        assertThat(listVersions()).extracting(EntityVersion::getName).containsExactly("devices with ota", "profiles");
 
         loginTenant2();
-        Map<EntityType, EntityTypeLoadResult> result = loadVersion(versionId, EntityType.DEVICE, EntityType.DEVICE_PROFILE);
+        Map<EntityType, EntityTypeLoadResult> result = loadVersion(versionId, EntityType.DEVICE, EntityType.DEVICE_PROFILE, EntityType.OTA_PACKAGE);
         assertThat(result.get(EntityType.DEVICE).getCreated()).isEqualTo(1);
         assertThat(result.get(EntityType.DEVICE_PROFILE).getCreated()).isEqualTo(1);
 
@@ -339,6 +345,13 @@ public class VersionControlTest extends AbstractControllerTest {
         assertThat(importedCredentials.getCredentialsId()).isEqualTo(deviceCredentials.getCredentialsId());
         assertThat(importedCredentials.getCredentialsValue()).isEqualTo(deviceCredentials.getCredentialsValue());
         assertThat(importedCredentials.getCredentialsType()).isEqualTo(deviceCredentials.getCredentialsType());
+
+        OtaPackage importedFirmwareOta = findOtaPackage(firmware.getTitle());
+        OtaPackage importedSoftwareOta = findOtaPackage(software.getTitle());
+        checkImportedEntity(tenantId1, firmware, tenantId2, importedFirmwareOta);
+        checkImportedOtaPackageData(firmware, importedFirmwareOta);
+        checkImportedEntity(tenantId1, software, tenantId2, importedSoftwareOta);
+        checkImportedOtaPackageData(software, importedSoftwareOta);
     }
 
     @Test
@@ -708,6 +721,40 @@ public class VersionControlTest extends AbstractControllerTest {
     }
 
     @Test
+    public void testDeviceGroupVcWithOtaPackage_betweenTenants() throws Exception {
+        DeviceProfile deviceProfile = createDeviceProfile(null, null, "Device profile for OTA");
+        OtaPackage firmware = createOtaPackage(tenantId1, deviceProfile.getId(), OtaPackageType.FIRMWARE);
+        EntityGroup deviceGroup = createEntityGroup(tenantId1, EntityType.DEVICE, "Device group for OTA");
+
+        DeviceGroupOtaPackage deviceGroupOtaPackage = new DeviceGroupOtaPackage();
+        deviceGroupOtaPackage.setGroupId(deviceGroup.getId());
+        deviceGroupOtaPackage.setOtaPackageType(OtaPackageType.FIRMWARE);
+        deviceGroupOtaPackage.setOtaPackageId(firmware.getId());
+
+        doPost("/api/deviceGroupOtaPackage", deviceGroupOtaPackage, DeviceGroupOtaPackage.class);
+
+        String versionId = createVersion("device group with ota", EntityType.DEVICE, EntityType.DEVICE_PROFILE, EntityType.OTA_PACKAGE);
+
+        loginTenant2();
+        loadVersion(versionId, EntityType.DEVICE, EntityType.DEVICE_PROFILE, EntityType.OTA_PACKAGE);
+
+        EntityGroup importedDeviceGroup = findEntityGroup(deviceGroup.getName(), EntityType.DEVICE);
+        checkImportedEntity(tenantId1, tenantId1, deviceGroup, tenantId2, tenantId2, importedDeviceGroup);
+
+        DeviceProfile importedDeviceProfile = findDeviceProfile(deviceProfile.getName());
+        checkImportedEntity(tenantId1, deviceProfile, tenantId2, importedDeviceProfile);
+
+        OtaPackage importedFirmware = findOtaPackage(firmware.getTitle());
+        checkImportedEntity(tenantId1, firmware, tenantId2, importedFirmware);
+
+        DeviceGroupOtaPackage importedDeviceGroupOtaPackage = findDeviceGroupOtaPackage(importedDeviceGroup.getId(), OtaPackageType.FIRMWARE);
+        assertThat(importedDeviceGroupOtaPackage).isNotNull();
+        assertThat(importedDeviceGroupOtaPackage.getGroupId()).isEqualTo(importedDeviceGroup.getId());
+        assertThat(importedDeviceGroupOtaPackage.getOtaPackageId()).isEqualTo(importedFirmware.getId());
+        assertThat(importedDeviceGroupOtaPackage.getOtaPackageType()).isEqualTo(OtaPackageType.FIRMWARE);
+    }
+
+    @Test
     public void testVcWithCalculatedFields_betweenTenants() throws Exception {
         Asset asset = createAsset(null, null, "Asset 1");
         Device device = createDevice(null, null, "Device 1", "test1");
@@ -844,6 +891,57 @@ public class VersionControlTest extends AbstractControllerTest {
         assertThat(importedCalculatedField.getName()).isEqualTo(calculatedField.getName());
         assertThat(importedCalculatedField.getConfiguration()).isEqualTo(calculatedField.getConfiguration());
         assertThat(importedCalculatedField.getType()).isEqualTo(calculatedField.getType());
+    }
+
+    @Test
+    public void testOtaPackageVc_sameTenant() throws Exception {
+        DeviceProfile deviceProfile = createDeviceProfile(null, null, "Device profile v1.0");
+        OtaPackage firmware = createOtaPackage(tenantId1, deviceProfile.getId(), OtaPackageType.FIRMWARE);
+        OtaPackage software = createOtaPackage(tenantId1, deviceProfile.getId(), OtaPackageType.SOFTWARE);
+        String versionId = createVersion("ota packages", EntityType.OTA_PACKAGE);
+
+        OtaPackage firmwareOta = findOtaPackage(firmware.getTitle());
+        OtaPackage softwareOta = findOtaPackage(software.getTitle());
+
+        loadVersion(versionId, EntityType.OTA_PACKAGE);
+        OtaPackage importedFirmwareOta = findOtaPackage(firmwareOta.getTitle());
+        OtaPackage importedSoftwareOta = findOtaPackage(softwareOta.getTitle());
+        checkImportedEntity(tenantId1, firmwareOta, tenantId1, importedFirmwareOta);
+        checkImportedOtaPackageData(firmwareOta, importedFirmwareOta);
+        checkImportedEntity(tenantId1, softwareOta, tenantId1, importedSoftwareOta);
+        checkImportedOtaPackageData(softwareOta, importedSoftwareOta);
+    }
+
+    @Test
+    public void testOtaPackageVcWithProfile_betweenTenants() throws Exception {
+        DeviceProfile deviceProfile = createDeviceProfile(null, null, "Device profile v1.0");
+        OtaPackage firmware = createOtaPackage(tenantId1, deviceProfile.getId(), OtaPackageType.FIRMWARE);
+        OtaPackage software = createOtaPackage(tenantId1, deviceProfile.getId(), OtaPackageType.SOFTWARE);
+        deviceProfile.setFirmwareId(firmware.getId());
+        deviceProfile.setSoftwareId(software.getId());
+        deviceProfile = doPost("/api/deviceProfile", deviceProfile, DeviceProfile.class);
+        String versionId = createVersion("ota packages", EntityType.DEVICE_PROFILE, EntityType.OTA_PACKAGE);
+
+        loginTenant2();
+        loadVersion(versionId, EntityType.DEVICE_PROFILE, EntityType.OTA_PACKAGE);
+        DeviceProfile importedProfile = findDeviceProfile(deviceProfile.getName());
+        OtaPackage importedFirmwareOta = findOtaPackage(firmware.getTitle());
+        OtaPackage importedSoftwareOta = findOtaPackage(software.getTitle());
+        checkImportedEntity(tenantId1, deviceProfile, tenantId2, importedProfile);
+        checkImportedDeviceProfileData(deviceProfile, importedProfile);
+        checkImportedEntity(tenantId1, firmware, tenantId2, importedFirmwareOta);
+        checkImportedOtaPackageData(firmware, importedFirmwareOta);
+        checkImportedEntity(tenantId1, software, tenantId2, importedSoftwareOta);
+        checkImportedOtaPackageData(software, importedSoftwareOta);
+        assertThat(importedProfile.getFirmwareId()).isEqualTo(importedFirmwareOta.getId());
+        assertThat(importedProfile.getSoftwareId()).isEqualTo(importedSoftwareOta.getId());
+    }
+
+    protected void checkImportedOtaPackageData(OtaPackage otaPackage, OtaPackage importedOtaPackage) {
+        assertThat(importedOtaPackage.getName()).isEqualTo(otaPackage.getName());
+        assertThat(importedOtaPackage.getTag()).isEqualTo(otaPackage.getTag());
+        assertThat(importedOtaPackage.getType()).isEqualTo(otaPackage.getType());
+        assertThat(importedOtaPackage.getFileName()).isEqualTo(otaPackage.getFileName());
     }
 
     @Test
@@ -1167,6 +1265,7 @@ public class VersionControlTest extends AbstractControllerTest {
         otaPackage.setDeviceProfileId(deviceProfileId);
         otaPackage.setType(type);
         otaPackage.setTitle("My " + type);
+        otaPackage.setTag("My " + type);
         otaPackage.setVersion("v1.0");
         otaPackage.setFileName("filename.txt");
         otaPackage.setContentType("text/plain");
@@ -1175,6 +1274,10 @@ public class VersionControlTest extends AbstractControllerTest {
         otaPackage.setDataSize(1L);
         otaPackage.setData(ByteBuffer.wrap(new byte[]{(int) 1}));
         return otaPackageService.saveOtaPackage(otaPackage);
+    }
+
+    private OtaPackage findOtaPackage(String title) throws Exception {
+        return doGetTypedWithPageLink("/api/otaPackages?", new TypeReference<PageData<OtaPackage>>() {}, new PageLink(100, 0, title)).getData().get(0);
     }
 
     protected Dashboard createDashboard(CustomerId customerId, String name) {
@@ -1479,6 +1582,10 @@ public class VersionControlTest extends AbstractControllerTest {
 
     private List<CalculatedField> findCalculatedFieldsByEntityId(EntityId entityId) throws Exception {
         return doGetTypedWithPageLink("/api/" + entityId.getEntityType() + "/" + entityId.getId() + "/calculatedFields?", new TypeReference<PageData<CalculatedField>>() {}, new PageLink(100, 0)).getData();
+    }
+
+    private DeviceGroupOtaPackage findDeviceGroupOtaPackage(EntityGroupId groupId, OtaPackageType otaPackageType) throws Exception {
+        return doGet("/api/deviceGroupOtaPackage/" + groupId.getId() + "/" + otaPackageType, DeviceGroupOtaPackage.class);
     }
 
     private TbResourceInfo createResource(String name) {
