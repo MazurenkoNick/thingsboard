@@ -243,8 +243,7 @@ public class OtaPackageController extends BaseController {
             notes = "Returns a page of OTA Package Info objects owned by tenant, and by entity group. " +
                     PAGE_DATA_PARAMETERS + OTA_PACKAGE_INFO_DESCRIPTION + TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
-    @RequestMapping(value = "/otaPackages/group/{groupId}/{type}", method = RequestMethod.GET)
-    @ResponseBody
+    @GetMapping(value = "/otaPackages/group/{groupId}/{type}")
     public PageData<OtaPackageInfo> getGroupOtaPackages(@Parameter(description = ENTITY_GROUP_ID_PARAM_DESCRIPTION)
                                                         @PathVariable("groupId") String strGroupId,
                                                         @Parameter(description = "OTA Package type.", schema = @Schema(allowableValues = {"FIRMWARE", "SOFTWARE"}))
@@ -266,5 +265,6 @@ public class OtaPackageController extends BaseController {
         PageLink pageLink = createPageLink(pageSize, page, textSearch, sortProperty, sortOrder);
         return checkNotNull(otaPackageService.findOtaPackageInfosByGroupIdAndHasData(groupId, OtaPackageType.valueOf(strType), pageLink));
     }
+
 }
 

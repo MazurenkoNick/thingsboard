@@ -206,13 +206,13 @@ public class EntityGroupImportService extends BaseEntityImportService<EntityGrou
         List<DeviceGroupOtaPackage> incoming = otaPackages.stream()
                 .peek(pkg -> {
                     pkg.setGroupId(entityGroup.getId());
-                    pkg.setOtaPackageId(idProvider.getInternalId(pkg.getOtaPackageId(), false));
+                    pkg.setOtaPackageId(idProvider.getInternalId(pkg.getOtaPackageId()));
                 }).toList();
 
         List<DeviceGroupOtaPackage> existing = deviceGroupOtaPackageService.findDeviceGroupOtaPackageByGroupId(entityGroup.getId());
         for (DeviceGroupOtaPackage otaPackage : existing) {
-            boolean found = incoming.stream().anyMatch(newPkg -> equalsGroupOtaPackage(newPkg, otaPackage));
-            if (!found) {
+            boolean notFound = incoming.stream().noneMatch(newPkg -> equalsGroupOtaPackage(newPkg, otaPackage));
+            if (notFound) {
                 deviceGroupOtaPackageService.deleteDeviceGroupOtaPackage(ctx.getTenantId(), otaPackage);
                 importResult.addSendEventsCallback(() -> otaPackageStateService.update(ctx.getTenantId(), null, otaPackage));
             }
