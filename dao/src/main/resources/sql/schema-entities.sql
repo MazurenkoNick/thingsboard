@@ -664,7 +664,7 @@ CREATE TABLE IF NOT EXISTS scheduler_event (
     schedule varchar,
     configuration varchar(10000000),
     enabled boolean,
-    external_id uuid UNIQUE,
+    external_id uuid,
     version BIGINT DEFAULT 1,
     CONSTRAINT scheduler_event_external_id_unq_key UNIQUE (tenant_id, external_id)
 );
