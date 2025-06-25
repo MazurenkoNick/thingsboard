@@ -52,6 +52,7 @@ import org.thingsboard.server.common.data.DeviceTransportType;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.EntityView;
 import org.thingsboard.server.common.data.ExportableEntity;
+import org.thingsboard.server.common.data.OtaPackage;
 import org.thingsboard.server.common.data.Tenant;
 import org.thingsboard.server.common.data.User;
 import org.thingsboard.server.common.data.asset.Asset;
@@ -87,12 +88,15 @@ import org.thingsboard.server.common.data.id.EntityGroupId;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.EntityViewId;
 import org.thingsboard.server.common.data.id.IntegrationId;
+import org.thingsboard.server.common.data.id.OtaPackageId;
 import org.thingsboard.server.common.data.id.RoleId;
 import org.thingsboard.server.common.data.id.RuleChainId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.integration.Integration;
 import org.thingsboard.server.common.data.integration.IntegrationType;
 import org.thingsboard.server.common.data.msg.TbNodeConnectionType;
+import org.thingsboard.server.common.data.ota.ChecksumAlgorithm;
+import org.thingsboard.server.common.data.ota.OtaPackageType;
 import org.thingsboard.server.common.data.permission.GroupPermission;
 import org.thingsboard.server.common.data.permission.MergedUserPermissions;
 import org.thingsboard.server.common.data.permission.Operation;
@@ -141,6 +145,7 @@ import org.thingsboard.server.service.security.permission.UserPermissionsService
 import org.thingsboard.server.service.sync.vc.data.EntitiesImportCtx;
 import org.thingsboard.server.service.sync.vc.data.SimpleEntitiesExportCtx;
 
+import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -251,7 +256,8 @@ public class ExportImportServiceSqlTest extends AbstractControllerTest {
         AssetProfile assetProfile = createAssetProfile(tenantId1, ruleChain.getId(), dashboard.getId(), "Asset profile 1");
         Asset asset = createAsset(tenantId1, null, assetProfile.getId(), null, "Asset 1");
         DeviceProfile deviceProfile = createDeviceProfile(tenantId1, ruleChain.getId(), dashboard.getId(), "Device profile 1");
-        Device device = createDevice(tenantId1, null, deviceProfile.getId(), null, "Device 1");
+        OtaPackage firmware = createOtaPackage(tenantId1, deviceProfile.getId(), OtaPackageType.FIRMWARE);
+        Device device = createDevice(tenantId1, null, deviceProfile.getId(), null, "Device 1", firmware.getId());
         CalculatedField calculatedField = createCalculatedField(tenantId1, device.getId(), asset.getId());
         Converter converter = createConverter(tenantId1, ConverterType.DOWNLINK, "Converter 1");
         Integration integration = createIntegration(tenantId1, converter.getId(), IntegrationType.HTTP, "Integration 1");
@@ -261,7 +267,7 @@ public class ExportImportServiceSqlTest extends AbstractControllerTest {
 
         Map<EntityType, EntityExportData> entitiesExportData = Stream.of(customer.getId(), asset.getId(), device.getId(),
                         ruleChain.getId(), dashboard.getId(), assetProfile.getId(), deviceProfile.getId(), converter.getId(),
-                        integration.getId(), role.getId(), userGroup.getId())
+                        integration.getId(), role.getId(), userGroup.getId(), firmware.getId())
                 .map(entityId -> {
                     try {
                         return exportEntity(tenantAdmin1, entityId, EntityExportSettings.builder()
@@ -330,12 +336,17 @@ public class ExportImportServiceSqlTest extends AbstractControllerTest {
         verify(tbClusterService).sendNotificationMsgToEdge(any(), any(), eq(importedDeviceProfile.getId()), any(), any(), eq(EdgeEventActionType.ADDED), any(), any(), any());
         verify(otaPackageStateService).update(eq(importedDeviceProfile), eq(false), eq(false));
 
+        OtaPackage importedFirmware = (OtaPackage) importEntity(tenantAdmin2, getAndClone(entitiesExportData, EntityType.OTA_PACKAGE)).getSavedEntity();
+        verify(entityActionService).logEntityAction(any(), eq(importedFirmware.getId()), eq(importedFirmware),
+                any(), eq(ActionType.ADDED), isNull());
+
         Device importedDevice = (Device) importEntity(tenantAdmin2, getAndClone(entitiesExportData, EntityType.DEVICE)).getSavedEntity();
         verify(entityActionService).logEntityAction(any(), eq(importedDevice.getId()), eq(importedDevice),
                 any(), eq(ActionType.ADDED), isNull());
         verify(tbClusterService).onDeviceUpdated(eq(importedDevice), isNull());
         importEntity(tenantAdmin2, getAndClone(entitiesExportData, EntityType.DEVICE));
         verify(tbClusterService, Mockito.never()).onDeviceUpdated(eq(importedDevice), eq(importedDevice));
+        assertThat(importedDevice.getFirmwareId()).isEqualTo(importedFirmware.getId());
 
         // calculated field of imported device:
         List<CalculatedField> calculatedFields = calculatedFieldService.findCalculatedFieldsByEntityId(tenantId2, importedDevice.getId());
@@ -387,7 +398,8 @@ public class ExportImportServiceSqlTest extends AbstractControllerTest {
         assetProfile = assetProfileService.saveAssetProfile(assetProfile);
 
         DeviceProfile deviceProfile = createDeviceProfile(tenantId1, ruleChain.getId(), dashboard.getId(), "Device profile 1");
-        Device device = createDevice(tenantId1, customer.getId(), deviceProfile.getId(), null, "Device 1");
+        OtaPackage firmware = createOtaPackage(tenantId1, deviceProfile.getId(), OtaPackageType.FIRMWARE);
+        Device device = createDevice(tenantId1, customer.getId(), deviceProfile.getId(), null, "Device 1", firmware.getId());
         EntityView entityView = createEntityView(tenantId1, customer.getId(), device.getId(), "Entity view 1");
         Converter converter = createConverter(tenantId1, ConverterType.UPLINK, "Converter 1");
         Integration integration = createIntegration(tenantId1, converter.getId(), IntegrationType.HTTP, "Integration 1");
@@ -396,7 +408,7 @@ public class ExportImportServiceSqlTest extends AbstractControllerTest {
 
         Map<EntityId, EntityId> ids = new HashMap<>();
         for (EntityId entityId : List.of(customer.getId(), ruleChain.getId(), dashboard.getId(), assetProfile.getId(), asset.getId(),
-                deviceProfile.getId(), device.getId(), entityView.getId(), converter.getId(), integration.getId(),
+                deviceProfile.getId(), firmware.getId(), device.getId(), entityView.getId(), converter.getId(), integration.getId(),
                 ruleChain.getId(), dashboard.getId())) {
             EntityExportData exportData = exportEntity(getSecurityUser(tenantAdmin1), entityId);
             EntityImportResult importResult = importEntity(getSecurityUser(tenantAdmin2), exportData, EntityImportSettings.builder()
@@ -430,12 +442,17 @@ public class ExportImportServiceSqlTest extends AbstractControllerTest {
         assertThat(exportedDeviceProfile.getDefaultRuleChainId()).isEqualTo(ruleChain.getId());
         assertThat(exportedDeviceProfile.getDefaultDashboardId()).isEqualTo(dashboard.getId());
 
+        OtaPackage exportedFirmware = (OtaPackage) exportEntity(tenantAdmin2, (OtaPackageId) ids.get(firmware.getId())).getEntity();
+        assertThat(exportedFirmware.getDeviceProfileId()).isEqualTo(exportedDeviceProfile.getId());
+        assertThat(exportedFirmware.getId()).isEqualTo(firmware.getId());
+
         EntityExportData<Device> entityExportData = exportEntity(tenantAdmin2, (DeviceId) ids.get(device.getId()));
         Device exportedDevice = entityExportData.getEntity();
         assertThat(exportedDevice.getCustomerId()).isEqualTo(customer.getId());
         assertThat(exportedDevice.getDeviceProfileId()).isEqualTo(deviceProfile.getId());
+        assertThat(exportedDevice.getFirmwareId()).isEqualTo(firmware.getId());
 
-        List<CalculatedField> calculatedFields = ((DeviceExportData) entityExportData).getCalculatedFields();
+        List<CalculatedField> calculatedFields = entityExportData.getCalculatedFields();
         assertThat(calculatedFields.size()).isOne();
         CalculatedField field = calculatedFields.get(0);
         assertThat(field.getName()).isEqualTo(calculatedField.getName());
@@ -452,6 +469,22 @@ public class ExportImportServiceSqlTest extends AbstractControllerTest {
         DeviceProfile importedDeviceProfile = deviceProfileService.findDeviceProfileById(tenantId2, (DeviceProfileId) ids.get(deviceProfile.getId()));
         importedDeviceProfile.setDefaultDashboardId(null);
         deviceProfileService.saveDeviceProfile(importedDeviceProfile);
+    }
+
+    protected OtaPackage createOtaPackage(TenantId tenantId, DeviceProfileId deviceProfileId, OtaPackageType type) {
+        OtaPackage otaPackage = new OtaPackage();
+        otaPackage.setTenantId(tenantId);
+        otaPackage.setDeviceProfileId(deviceProfileId);
+        otaPackage.setType(type);
+        otaPackage.setTitle("My " + type);
+        otaPackage.setVersion("v1.0");
+        otaPackage.setFileName("filename.txt");
+        otaPackage.setContentType("text/plain");
+        otaPackage.setChecksumAlgorithm(ChecksumAlgorithm.SHA256);
+        otaPackage.setChecksum("4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a");
+        otaPackage.setDataSize(1L);
+        otaPackage.setData(ByteBuffer.wrap(new byte[]{(int) 1}));
+        return otaPackageService.saveOtaPackage(otaPackage);
     }
 
     protected DeviceProfile createDeviceProfile(TenantId tenantId, RuleChainId defaultRuleChainId, DashboardId defaultDashboardId, String name) {
@@ -495,13 +528,14 @@ public class ExportImportServiceSqlTest extends AbstractControllerTest {
         return asset;
     }
 
-    protected Device createDevice(TenantId tenantId, CustomerId customerId, DeviceProfileId deviceProfileId, EntityGroupId entityGroupId, String name) {
+    protected Device createDevice(TenantId tenantId, CustomerId customerId, DeviceProfileId deviceProfileId, EntityGroupId entityGroupId, String name, OtaPackageId firmwareId) {
         Device device = new Device();
         device.setTenantId(tenantId);
         device.setCustomerId(customerId);
         device.setName(name);
         device.setLabel("lbl");
         device.setDeviceProfileId(deviceProfileId);
+        device.setFirmwareId(firmwareId);
         DeviceData deviceData = new DeviceData();
         deviceData.setTransportConfiguration(new DefaultDeviceTransportConfiguration());
         device.setDeviceData(deviceData);

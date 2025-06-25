@@ -40,7 +40,12 @@ import { WINDOW } from '@core/services/window.service';
 import { DOCUMENT } from '@angular/common';
 import { Router } from '@angular/router';
 import { AuthService } from '@core/auth/auth.service';
-import { OpenReportMessage, ReportResultMessage, WindowMessage } from '@shared/models/window-message.model';
+import {
+  OpenReportMessage,
+  ReportResultMessage,
+  WaitWidgetsMessage,
+  WindowMessage
+} from '@shared/models/window-message.model';
 import { CmdUpdateMsg, WebsocketCmd, WebsocketDataMsg } from '@shared/models/telemetry/telemetry.models';
 import { CmdWrapper } from '@shared/models/websocket/websocket.models';
 
@@ -184,6 +189,12 @@ export class ReportService {
               this.postReportResult(result);
             });
             break;
+          case 'waitReportWidgets':
+            const waitWidgetsMessage: WaitWidgetsMessage = message.data;
+            this.waitWidgets(waitWidgetsMessage.timeout).subscribe((result) => {
+              this.postReportResult(result);
+            });
+            break;
           case 'clearReport':
             this.clearReport().subscribe((result) => {
               const resultMessage: ReportResultMessage = {
@@ -237,9 +248,8 @@ export class ReportService {
             return from(this.router.navigateByUrl(url, {replaceUrl: true})).pipe(
               mergeMap((result) => {
                 if (result) {
-                  return this.waitForReportReady(openReportMessage.timeout).pipe(
-                    mergeMap(() => this.waitForReportReady(openReportMessage.timeout)),
-                    map(() => ({ success: true })),
+                  return this.waitForLayoutReady(openReportMessage.timeout).pipe(
+                    map(() => ({ success: true, pageHeight: this.pageHeight() })),
                     catchError((e) => of({ success: false, error: e }))
                   );
                 } else {
@@ -261,10 +271,22 @@ export class ReportService {
     }
   }
 
-  private waitForReportReady(timeout = 3000): Observable<any> {
+  private pageHeight(): number {
+    let height = 0;
+    const gridsterChild = document.getElementById('gridster-child');
+    if (gridsterChild) {
+      height = Math.round(gridsterChild.scrollHeight);
+      const dashboardTitleElements = document.querySelector<HTMLElement>('.tb-dashboard-title');
+      if (dashboardTitleElements) {
+        height += Math.round(dashboardTitleElements.offsetHeight);
+      }
+    }
+    return height;
+  }
+
+  private waitForLayoutReady(timeout = 3000): Observable<any> {
     return from(this.waitForReportPage(timeout)).pipe(
-      mergeMap(() => from(this.waitForWebsocketData(timeout))),
-      mergeMap(() => from(this.waitForWidgetsLoaded(timeout)))
+      mergeMap(() => from(this.waitForWebsocketData(timeout)))
     );
   }
 
@@ -307,6 +329,15 @@ export class ReportService {
           }
         }, 10);
       }
+    );
+  }
+
+  private waitWidgets(timeout = 3000): Observable<ReportResultMessage> {
+    return from(this.waitForWidgetsLoaded(timeout)).pipe(
+      mergeMap(() => this.waitForLayoutReady(timeout)),
+      mergeMap(() => this.waitForWidgetsLoaded(timeout)),
+      map(() => ({ success: true })),
+      catchError((e) => of({ success: false, error: e }))
     );
   }
 

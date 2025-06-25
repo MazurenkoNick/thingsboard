@@ -35,6 +35,7 @@ import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.ota.DeviceGroupOtaPackage;
 import org.thingsboard.server.common.data.ota.OtaPackageType;
 
+import java.util.List;
 import java.util.UUID;
 
 public interface DeviceGroupOtaPackageService {
@@ -42,6 +43,8 @@ public interface DeviceGroupOtaPackageService {
     DeviceGroupOtaPackage findDeviceGroupOtaPackageById(UUID id);
 
     DeviceGroupOtaPackage findDeviceGroupOtaPackageByGroupIdAndType(EntityGroupId groupId, OtaPackageType type);
+
+    List<DeviceGroupOtaPackage> findDeviceGroupOtaPackageByGroupId(EntityGroupId groupId);
 
     DeviceGroupOtaPackage saveDeviceGroupOtaPackage(TenantId tenantId, DeviceGroupOtaPackage deviceGroupOtaPackage);
 
