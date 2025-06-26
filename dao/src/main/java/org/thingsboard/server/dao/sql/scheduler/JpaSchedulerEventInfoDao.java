@@ -45,6 +45,7 @@ import org.thingsboard.server.common.data.scheduler.SchedulerEventInfo;
 import org.thingsboard.server.common.data.scheduler.SchedulerEventWithCustomerInfo;
 import org.thingsboard.server.dao.DaoUtil;
 import org.thingsboard.server.dao.model.sql.SchedulerEventInfoEntity;
+import org.thingsboard.server.dao.model.sql.SchedulerEventWithCustomerInfoEntity;
 import org.thingsboard.server.dao.scheduler.SchedulerEventInfoDao;
 import org.thingsboard.server.dao.sql.JpaAbstractDao;
 import org.thingsboard.server.dao.util.SqlDao;
@@ -98,7 +99,7 @@ public class JpaSchedulerEventInfoDao extends JpaAbstractDao<SchedulerEventInfoE
         UUID customerId = filter.getCustomerId() != null && !filter.getCustomerId().isNullUid() ? filter.getCustomerId().getId() : null;
         String type = StringUtils.isNotBlank(filter.getType()) ? filter.getType() : null;
         return DaoUtil.toPageData(schedulerEventInfoRepository.findByTenantIdAndCustomerIdAndTypeAndSearchText(tenantId, customerId, type,
-                Strings.emptyToNull(pageLink.getTextSearch()), DaoUtil.toPageable(pageLink)));
+                Strings.emptyToNull(pageLink.getTextSearch()), DaoUtil.toPageable(pageLink, SchedulerEventWithCustomerInfoEntity.schedulerEventWithCustomerInfoColumnMap)));
     }
 
     @Override
