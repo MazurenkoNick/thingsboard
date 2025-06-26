@@ -40,8 +40,10 @@ import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.id.SchedulerEventId;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
+import org.thingsboard.server.common.data.scheduler.SchedulerEventDescriptor;
 import org.thingsboard.server.common.data.scheduler.SchedulerEventFilter;
 import org.thingsboard.server.common.data.scheduler.SchedulerEventInfo;
+import org.thingsboard.server.common.data.scheduler.SchedulerEventTimeFilter;
 import org.thingsboard.server.common.data.scheduler.SchedulerEventWithCustomerInfo;
 import org.thingsboard.server.dao.DaoUtil;
 import org.thingsboard.server.dao.model.sql.SchedulerEventInfoEntity;
@@ -50,6 +52,7 @@ import org.thingsboard.server.dao.scheduler.SchedulerEventInfoDao;
 import org.thingsboard.server.dao.sql.JpaAbstractDao;
 import org.thingsboard.server.dao.util.SqlDao;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -100,6 +103,36 @@ public class JpaSchedulerEventInfoDao extends JpaAbstractDao<SchedulerEventInfoE
         String type = StringUtils.isNotBlank(filter.getType()) ? filter.getType() : null;
         return DaoUtil.toPageData(schedulerEventInfoRepository.findByTenantIdAndCustomerIdAndTypeAndSearchText(tenantId, customerId, type,
                 Strings.emptyToNull(pageLink.getTextSearch()), DaoUtil.toPageable(pageLink, SchedulerEventWithCustomerInfoEntity.schedulerEventWithCustomerInfoColumnMap)));
+    }
+
+    @Override
+    public List<SchedulerEventWithCustomerInfo> findAllSchedulerEventsByTenantIdAndEventTimeFilter(UUID tenantId, SchedulerEventTimeFilter filter, String searchText) {
+        List<SchedulerEventWithCustomerInfo> events = findSchedulerEventsByTenantIdAndFilter(tenantId, filter, new PageLink(Integer.MAX_VALUE, 0, searchText)).getData();
+        long startTime = filter.getStartTime();
+        long endTime = filter.getEndTime();
+
+        List<SchedulerEventWithCustomerInfo> result = new ArrayList<>();
+        for (SchedulerEventWithCustomerInfo event : events) {
+            SchedulerEventDescriptor descriptor = event.toDescriptor();
+            List<Long> timestamps = new ArrayList<>();
+
+            long lastEventTime = startTime;
+            while (true) {
+                long eventTime = descriptor.getNextEventTime(lastEventTime);
+                if (eventTime == 0L || eventTime > endTime) {
+                    break;
+                }
+
+                timestamps.add(eventTime);
+                lastEventTime = eventTime;
+            }
+
+            if (!timestamps.isEmpty()) {
+                event.setTimestamps(timestamps);
+                result.add(event);
+            }
+        }
+        return result;
     }
 
     @Override

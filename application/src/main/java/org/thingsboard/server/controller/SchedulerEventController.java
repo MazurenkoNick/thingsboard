@@ -58,6 +58,7 @@ import org.thingsboard.server.common.data.permission.Resource;
 import org.thingsboard.server.common.data.scheduler.SchedulerEvent;
 import org.thingsboard.server.common.data.scheduler.SchedulerEventFilter;
 import org.thingsboard.server.common.data.scheduler.SchedulerEventInfo;
+import org.thingsboard.server.common.data.scheduler.SchedulerEventTimeFilter;
 import org.thingsboard.server.common.data.scheduler.SchedulerEventWithCustomerInfo;
 import org.thingsboard.server.common.data.security.Authority;
 import org.thingsboard.server.config.annotations.ApiOperation;
@@ -244,6 +245,33 @@ public class SchedulerEventController extends BaseController {
                 .type(type)
                 .build();
         return schedulerEventService.findSchedulerEventsByTenantIdAndFilter(currentUser.getTenantId(), filter, pageLink);
+    }
+
+    @ApiOperation(value = "Get scheduler events (getSchedulerEvents)",
+            notes = "Retrieves scheduler events filtering by event run time. " +
+                    "Requested scheduler events must be owned by tenant or assigned to customer which user is performing the request. " +
+                    SCHEDULER_EVENT_WITH_CUSTOMER_INFO_DESCRIPTION + NEW_LINE + PAGE_DATA_PARAMETERS + NEW_LINE +
+                    TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH + NEW_LINE + RBAC_READ_CHECK)
+    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
+    @GetMapping(value = "/schedulerEvents", params = {"startTime", "endTime"})
+    public List<SchedulerEventWithCustomerInfo> getSchedulerEvents(@Parameter(description = "A string value representing the scheduler type. For example, 'generateReport'")
+                                                                   @RequestParam(required = false) String type,
+                                                                   @Parameter(description = "Start time filter in milliseconds for scheduler event run time")
+                                                                   @RequestParam long startTime,
+                                                                   @Parameter(description = "End time filter in milliseconds for scheduler event run time")
+                                                                   @RequestParam long endTime,
+                                                                   @Parameter(description = "Case-insensitive 'substring' filter based on event's name, type, or customer's name")
+                                                                   @RequestParam(required = false) String textSearch) throws ThingsboardException {
+        SecurityUser currentUser = getCurrentUser();
+        accessControlService.checkPermission(currentUser, Resource.SCHEDULER_EVENT, Operation.READ);
+
+        SchedulerEventTimeFilter filter = SchedulerEventTimeFilter.builder()
+                .customerId(currentUser.getCustomerId())
+                .type(type)
+                .startTime(startTime)
+                .endTime(endTime)
+                .build();
+        return schedulerEventService.findAllSchedulerEventsByTenantIdAndEventTimeFilter(currentUser.getTenantId(), filter, textSearch);
     }
 
     @ApiOperation(value = "Get Scheduler Events By Ids (getSchedulerEventsByIds)",

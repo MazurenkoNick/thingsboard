@@ -30,31 +30,25 @@
  */
 package org.thingsboard.server.common.data.scheduler;
 
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
+import lombok.experimental.SuperBuilder;
+import org.thingsboard.server.common.data.id.CustomerId;
 
-/**
- * Created by ashvayka on 28.11.17.
- */
-@JsonTypeInfo(
-        use = JsonTypeInfo.Id.NAME,
-        include = JsonTypeInfo.As.PROPERTY,
-        property = "type")
-@JsonSubTypes({
-        @JsonSubTypes.Type(value = DailyRepeat.class, name = "DAILY"),
-        @JsonSubTypes.Type(value = EveryNDaysRepeat.class, name = "EVERY_N_DAYS"),
-        @JsonSubTypes.Type(value = WeeklyRepeat.class, name = "WEEKLY"),
-        @JsonSubTypes.Type(value = EveryNWeeksRepeat.class, name = "EVERY_N_WEEKS"),
-        @JsonSubTypes.Type(value = MonthlyRepeat.class, name = "MONTHLY"),
-        @JsonSubTypes.Type(value = YearlyRepeat.class, name = "YEARLY"),
-        @JsonSubTypes.Type(value = TimerRepeat.class, name = "TIMER")
-})
-public interface SchedulerRepeat {
+@EqualsAndHashCode(callSuper = true)
+@Data
+@ToString(callSuper = true)
+@SuperBuilder
+public class SchedulerEventTimeFilter extends SchedulerEventFilter {
 
-    long getEndsOn();
+    private final long startTime;
+    private final long endTime;
 
-    SchedulerRepeatType getType();
-
-    long getNext(long startTime, long ts, String timezone);
+    SchedulerEventTimeFilter(CustomerId customerId, String type, long startTime, long endTime) {
+        super(customerId, type);
+        this.startTime = startTime;
+        this.endTime = endTime;
+    }
 
 }

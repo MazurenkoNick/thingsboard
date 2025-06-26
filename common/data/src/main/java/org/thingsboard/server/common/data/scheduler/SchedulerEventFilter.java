@@ -30,12 +30,14 @@
  */
 package org.thingsboard.server.common.data.scheduler;
 
-import lombok.Builder;
 import lombok.Data;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.SuperBuilder;
 import org.thingsboard.server.common.data.id.CustomerId;
 
 @Data
-@Builder
+@RequiredArgsConstructor
+@SuperBuilder
 public class SchedulerEventFilter {
 
     private final CustomerId customerId;

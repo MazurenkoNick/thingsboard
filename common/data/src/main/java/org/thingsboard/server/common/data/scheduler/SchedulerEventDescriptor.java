@@ -30,31 +30,22 @@
  */
 package org.thingsboard.server.common.data.scheduler;
 
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+public record SchedulerEventDescriptor(long startTime,
+                                       String timezone,
+                                       SchedulerRepeat repeat) {
 
-/**
- * Created by ashvayka on 28.11.17.
- */
-@JsonTypeInfo(
-        use = JsonTypeInfo.Id.NAME,
-        include = JsonTypeInfo.As.PROPERTY,
-        property = "type")
-@JsonSubTypes({
-        @JsonSubTypes.Type(value = DailyRepeat.class, name = "DAILY"),
-        @JsonSubTypes.Type(value = EveryNDaysRepeat.class, name = "EVERY_N_DAYS"),
-        @JsonSubTypes.Type(value = WeeklyRepeat.class, name = "WEEKLY"),
-        @JsonSubTypes.Type(value = EveryNWeeksRepeat.class, name = "EVERY_N_WEEKS"),
-        @JsonSubTypes.Type(value = MonthlyRepeat.class, name = "MONTHLY"),
-        @JsonSubTypes.Type(value = YearlyRepeat.class, name = "YEARLY"),
-        @JsonSubTypes.Type(value = TimerRepeat.class, name = "TIMER")
-})
-public interface SchedulerRepeat {
+    public boolean passedAway(long ts) {
+        return repeat == null ? startTime < ts : repeat.getEndsOn() < ts;
+    }
 
-    long getEndsOn();
-
-    SchedulerRepeatType getType();
-
-    long getNext(long startTime, long ts, String timezone);
+    public long getNextEventTime(long ts) {
+        if (repeat != null && repeat.getEndsOn() > ts) {
+            return repeat.getNext(startTime, ts, timezone);
+        } else if (ts < startTime) {
+            return startTime;
+        } else {
+            return 0L;
+        }
+    }
 
 }

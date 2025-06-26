@@ -46,12 +46,17 @@ import org.thingsboard.server.common.data.scheduler.MonthlyRepeat;
 import org.thingsboard.server.common.data.scheduler.SchedulerEvent;
 import org.thingsboard.server.common.data.scheduler.SchedulerEventInfo;
 import org.thingsboard.server.common.data.scheduler.SchedulerEventWithCustomerInfo;
-import org.thingsboard.server.common.data.scheduler.SchedulerRepeat;
 import org.thingsboard.server.dao.service.DaoSqlTest;
 
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.TimeZone;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -117,6 +122,8 @@ public class SchedulerEventControllerTest extends AbstractControllerTest {
             schedulerEvent.setType("customerType");
             customerSchedulerEvents.add(saveSchedulerEvent(schedulerEvent).getId());
         }
+        SchedulerEventId[] allSchedulerEvents = Stream.concat(tenantSchedulerEvents.stream(), customerSchedulerEvents.stream())
+                .toArray(SchedulerEventId[]::new);
 
         List<SchedulerEventWithCustomerInfo> events = findSchedulerEvents(null, null);
         assertThat(events).as("all customer events").extracting(SchedulerEventInfo::getId)
@@ -131,7 +138,7 @@ public class SchedulerEventControllerTest extends AbstractControllerTest {
         loginTenantAdmin();
         events = findSchedulerEvents(null, null);
         assertThat(events).as("all tenant events").extracting(SchedulerEventInfo::getId)
-                .containsAll(tenantSchedulerEvents).containsAll(customerSchedulerEvents);
+                .containsOnly(allSchedulerEvents);
         events = findSchedulerEvents("tenantType", null);
         assertThat(events).as("tenant events with tenantType").extracting(SchedulerEventInfo::getId)
                 .containsExactlyInAnyOrderElementsOf(tenantSchedulerEvents);
@@ -146,10 +153,28 @@ public class SchedulerEventControllerTest extends AbstractControllerTest {
                 .isEqualTo(tenantSchedulerEvents.get(1));
         events = findSchedulerEvents(null, "Type");
         assertThat(events).as("events with search 'Type'").extracting(SchedulerEventInfo::getId)
-                .containsAll(tenantSchedulerEvents).containsAll(customerSchedulerEvents);
+                .containsOnly(allSchedulerEvents);
         events = findSchedulerEvents(null, "customer");
         assertThat(events).as("events with search 'customer'").extracting(SchedulerEventInfo::getId)
                 .containsExactlyInAnyOrderElementsOf(customerSchedulerEvents);
+
+        long weekAgo = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(7);
+        events = findSchedulerEvents(null, weekAgo, System.currentTimeMillis() + TimeUnit.DAYS.toMillis(30 + 7), null);
+        assertThat(events).as("events from week ago to next month").extracting(SchedulerEventInfo::getId)
+                .containsOnly(allSchedulerEvents);
+        assertThat(events).allSatisfy(event -> {
+            assertThat(event.getTimestamps()).hasSize(2);
+            long startTime = event.getSchedule().get("startTime").asLong();
+            assertThat(event.getTimestamps().get(0)).as("first event time").isEqualTo(startTime);
+
+            long nextEventTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(startTime), ZoneId.systemDefault()).plusMonths(1)
+                    .atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
+            assertThat(event.getTimestamps().get(1)).as("second event time").isEqualTo(nextEventTime);
+        });
+
+        long twoWeeksAgo = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(14);
+        events = findSchedulerEvents(null, twoWeeksAgo, weekAgo, null);
+        assertThat(events).as("events from two weeks ago to one week ago").isEmpty();
     }
 
     @Test
@@ -203,14 +228,21 @@ public class SchedulerEventControllerTest extends AbstractControllerTest {
                 new TypeReference<PageData<SchedulerEventWithCustomerInfo>>() {}, new PageLink(100, 0, searchText)).getData();
     }
 
+    private List<SchedulerEventWithCustomerInfo> findSchedulerEvents(String type, long startTime, long endTime, String searchText) throws Exception {
+        return doGetTyped("/api/schedulerEvents?type=" + Strings.nullToEmpty(type) + "&startTime=" + startTime + "&endTime=" + endTime + "&" +
+                          "textSearch=" + Strings.nullToEmpty(searchText),
+                new TypeReference<List<SchedulerEventWithCustomerInfo>>() {});
+    }
+
     private SchedulerEvent createSchedulerEvent() {
         SchedulerEvent schedulerEvent = new SchedulerEvent();
         schedulerEvent.setName("Scheduler Event");
         schedulerEvent.setType("Custom Type");
         ObjectNode schedule = JacksonUtil.newObjectNode();
         schedule.put("startTime", System.currentTimeMillis());
-        schedule.put("timezone", "UTC");
-        SchedulerRepeat schedulerRepeat = new MonthlyRepeat();
+        schedule.put("timezone", TimeZone.getDefault().getDisplayName());
+        MonthlyRepeat schedulerRepeat = new MonthlyRepeat();
+        schedulerRepeat.setEndsOn(Long.MAX_VALUE);
         schedule.set("repeat", JacksonUtil.valueToTree(schedulerRepeat));
         schedulerEvent.setSchedule(schedule);
         return schedulerEvent;

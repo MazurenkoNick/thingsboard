@@ -50,6 +50,7 @@ import org.thingsboard.server.common.data.relation.RelationTypeGroup;
 import org.thingsboard.server.common.data.scheduler.SchedulerEvent;
 import org.thingsboard.server.common.data.scheduler.SchedulerEventFilter;
 import org.thingsboard.server.common.data.scheduler.SchedulerEventInfo;
+import org.thingsboard.server.common.data.scheduler.SchedulerEventTimeFilter;
 import org.thingsboard.server.common.data.scheduler.SchedulerEventWithCustomerInfo;
 import org.thingsboard.server.dao.edge.EdgeService;
 import org.thingsboard.server.dao.entity.AbstractEntityService;
@@ -143,8 +144,14 @@ public class BaseSchedulerEventService extends AbstractEntityService implements 
 
     @Override
     public PageData<SchedulerEventWithCustomerInfo> findSchedulerEventsByTenantIdAndFilter(TenantId tenantId, SchedulerEventFilter filter, PageLink pageLink) {
-        log.trace("Executing findSchedulerEventInfosByTenantIdAndFilter, tenantId [{}], filter [{}], pageLink [{}]", tenantId, filter, pageLink);
+        log.trace("Executing findSchedulerEventsByTenantIdAndFilter, tenantId [{}], filter [{}], pageLink [{}]", tenantId, filter, pageLink);
         return schedulerEventInfoDao.findSchedulerEventsByTenantIdAndFilter(tenantId.getId(), filter, pageLink);
+    }
+
+    @Override
+    public List<SchedulerEventWithCustomerInfo> findAllSchedulerEventsByTenantIdAndEventTimeFilter(TenantId tenantId, SchedulerEventTimeFilter filter, String searchText) {
+        log.trace("Executing findAllSchedulerEventsByTenantIdAndEventTimeFilter, tenantId [{}], filter [{}], searchText [{}]", tenantId, filter, searchText);
+        return schedulerEventInfoDao.findAllSchedulerEventsByTenantIdAndEventTimeFilter(tenantId.getId(), filter, searchText);
     }
 
     @Override
