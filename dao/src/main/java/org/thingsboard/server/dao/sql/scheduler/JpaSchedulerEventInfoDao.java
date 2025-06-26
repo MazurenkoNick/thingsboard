@@ -116,7 +116,7 @@ public class JpaSchedulerEventInfoDao extends JpaAbstractDao<SchedulerEventInfoE
             SchedulerEventDescriptor descriptor = event.toDescriptor();
             List<Long> timestamps = new ArrayList<>();
 
-            long lastEventTime = startTime;
+            long lastEventTime = startTime - 1;
             while (true) {
                 long eventTime = descriptor.getNextEventTime(lastEventTime);
                 if (eventTime == 0L || eventTime > endTime) {
