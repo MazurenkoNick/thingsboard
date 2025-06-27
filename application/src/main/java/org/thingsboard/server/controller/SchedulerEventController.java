@@ -69,6 +69,7 @@ import org.thingsboard.server.service.security.model.SecurityUser;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
@@ -97,12 +98,12 @@ import static org.thingsboard.server.controller.EdgeController.EDGE_ID;
 public class SchedulerEventController extends BaseController {
 
     private static final String SCHEDULER_EVENT_INFO_DESCRIPTION = "Scheduler Events allows you to schedule various types of events with flexible schedule configuration. " +
-                                                                   "Scheduler fires configured scheduler events according to their schedule. See the 'Model' tab of the Response Class for more details. ";
+            "Scheduler fires configured scheduler events according to their schedule. See the 'Model' tab of the Response Class for more details. ";
     private static final String SCHEDULER_EVENT_WITH_CUSTOMER_INFO_DESCRIPTION = "Scheduler Event With Customer Info extends Scheduler Event Info object and adds " +
-                                                                                 "'customerTitle' - a String value representing the title of the customer which user created a Scheduler Event and " +
-                                                                                 "'customerIsPublic' - a boolean parameter that specifies if customer is public. See the 'Model' tab of the Response Class for more details. ";
+            "'customerTitle' - a String value representing the title of the customer which user created a Scheduler Event and " +
+            "'customerIsPublic' - a boolean parameter that specifies if customer is public. See the 'Model' tab of the Response Class for more details. ";
     private static final String SCHEDULER_EVENT_DESCRIPTION = "Scheduler Event extends Scheduler Event Info object and adds " +
-                                                              "'configuration' - a JSON structure of scheduler event configuration. See the 'Model' tab of the Response Class for more details. ";
+            "'configuration' - a JSON structure of scheduler event configuration. See the 'Model' tab of the Response Class for more details. ";
     private static final String INVALID_SCHEDULER_EVENT_ID = "Referencing non-existing Scheduler Event Id will cause 'Not Found' error.";
 
     private static final int DEFAULT_SCHEDULER_EVENT_LIMIT = 100;
@@ -235,7 +236,9 @@ public class SchedulerEventController extends BaseController {
                                                                        @Parameter(description = SORT_ORDER_DESCRIPTION)
                                                                        @RequestParam(required = false) String sortOrder,
                                                                        @Parameter(description = "A string value representing the scheduler type. For example, 'generateReport'")
-                                                                       @RequestParam(required = false) String type) throws ThingsboardException {
+                                                                       @RequestParam(required = false) String type,
+                                                                       @Parameter(description = EDGE_ID_PARAM_DESCRIPTION)
+                                                                       @RequestParam(required = false) UUID edgeId) throws ThingsboardException {
         SecurityUser currentUser = getCurrentUser();
         accessControlService.checkPermission(currentUser, Resource.SCHEDULER_EVENT, Operation.READ);
         PageLink pageLink = createPageLink(pageSize, page, textSearch, sortProperty, sortOrder);
@@ -243,6 +246,7 @@ public class SchedulerEventController extends BaseController {
         SchedulerEventFilter filter = SchedulerEventFilter.builder()
                 .customerId(currentUser.getCustomerId())
                 .type(type)
+                .edgeId(edgeId != null ? new EdgeId(edgeId) : null)
                 .build();
         return schedulerEventService.findSchedulerEventsByTenantIdAndFilter(currentUser.getTenantId(), filter, pageLink);
     }
@@ -260,6 +264,8 @@ public class SchedulerEventController extends BaseController {
                                                                    @RequestParam long startTime,
                                                                    @Parameter(description = "End time filter in milliseconds for scheduler event run time")
                                                                    @RequestParam long endTime,
+                                                                   @Parameter(description = EDGE_ID_PARAM_DESCRIPTION)
+                                                                   @RequestParam(required = false) UUID edgeId,
                                                                    @Parameter(description = "Case-insensitive 'substring' filter based on event's name, type, or customer's name")
                                                                    @RequestParam(required = false) String textSearch) throws ThingsboardException {
         SecurityUser currentUser = getCurrentUser();
@@ -270,6 +276,7 @@ public class SchedulerEventController extends BaseController {
                 .type(type)
                 .startTime(startTime)
                 .endTime(endTime)
+                .edgeId(edgeId != null ? new EdgeId(edgeId) : null)
                 .build();
         return schedulerEventService.findAllSchedulerEventsByTenantIdAndEventTimeFilter(currentUser.getTenantId(), filter, textSearch);
     }

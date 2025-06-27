@@ -35,6 +35,7 @@ import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 import org.thingsboard.server.common.data.id.CustomerId;
+import org.thingsboard.server.common.data.id.EdgeId;
 
 @EqualsAndHashCode(callSuper = true)
 @Data
@@ -45,8 +46,8 @@ public class SchedulerEventTimeFilter extends SchedulerEventFilter {
     private final long startTime;
     private final long endTime;
 
-    SchedulerEventTimeFilter(CustomerId customerId, String type, long startTime, long endTime) {
-        super(customerId, type);
+    SchedulerEventTimeFilter(CustomerId customerId, String type, long startTime, long endTime, EdgeId edgeId) {
+        super(customerId, type, edgeId);
         this.startTime = startTime;
         this.endTime = endTime;
     }

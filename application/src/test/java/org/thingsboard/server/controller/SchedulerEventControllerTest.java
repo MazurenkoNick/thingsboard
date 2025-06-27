@@ -188,7 +188,7 @@ public class SchedulerEventControllerTest extends AbstractControllerTest {
             schedulerEvent.setName("Scheduler Event " + i);
             SchedulerEvent savedSchedulerEvent = saveSchedulerEvent(schedulerEvent);
             doPost("/api/edge/" + savedEdge.getId().getId().toString()
-                   + "/schedulerEvent/" + savedSchedulerEvent.getId().getId().toString(), SchedulerEvent.class);
+                    + "/schedulerEvent/" + savedSchedulerEvent.getId().getId().toString(), SchedulerEvent.class);
             edgeSchedulerEvents.add(savedSchedulerEvent.getId());
         }
 
@@ -196,8 +196,9 @@ public class SchedulerEventControllerTest extends AbstractControllerTest {
         PageLink pageLink = new PageLink(17);
         PageData<SchedulerEventInfo> pageData;
         do {
-            pageData = doGetTypedWithPageLink("/api/edge/" + savedEdge.getId().getId() + "/schedulerEvents?",
-                    new TypeReference<>() {}, pageLink);
+            pageData = doGetTypedWithPageLink("/api/schedulerEvents?edgeId=" + savedEdge.getId().getId() + "&",
+                    new TypeReference<>() {
+                    }, pageLink);
             loadedEdgeSchedulerEvents.addAll(pageData.getData().stream().map(IdBased::getId).collect(Collectors.toList()));
             if (pageData.hasNext()) {
                 pageLink = pageLink.nextPageLink();
@@ -205,16 +206,17 @@ public class SchedulerEventControllerTest extends AbstractControllerTest {
         } while (pageData.hasNext());
 
         Assert.assertTrue(edgeSchedulerEvents.size() == loadedEdgeSchedulerEvents.size() &&
-                          edgeSchedulerEvents.containsAll(loadedEdgeSchedulerEvents));
+                edgeSchedulerEvents.containsAll(loadedEdgeSchedulerEvents));
 
         for (SchedulerEventId schedulerEventId : loadedEdgeSchedulerEvents) {
             doDelete("/api/edge/" + savedEdge.getId().getId().toString()
-                     + "/schedulerEvent/" + schedulerEventId.getId().toString(), SchedulerEventInfo.class);
+                    + "/schedulerEvent/" + schedulerEventId.getId().toString(), SchedulerEventInfo.class);
         }
 
         pageLink = new PageLink(17);
-        pageData = doGetTypedWithPageLink("/api/edge/" + savedEdge.getId().getId() + "/schedulerEvents?",
-                new TypeReference<>() {}, pageLink);
+        pageData = doGetTypedWithPageLink("/api/schedulerEvents?edgeId=" + savedEdge.getId().getId() + "&",
+                new TypeReference<>() {
+                }, pageLink);
         Assert.assertFalse(pageData.hasNext());
         Assert.assertEquals(0, pageData.getTotalElements());
     }
@@ -225,13 +227,15 @@ public class SchedulerEventControllerTest extends AbstractControllerTest {
 
     private List<SchedulerEventWithCustomerInfo> findSchedulerEvents(String type, String searchText) throws Exception {
         return doGetTypedWithPageLink("/api/schedulerEvents?type=" + Strings.nullToEmpty(type) + "&",
-                new TypeReference<PageData<SchedulerEventWithCustomerInfo>>() {}, new PageLink(100, 0, searchText)).getData();
+                new TypeReference<PageData<SchedulerEventWithCustomerInfo>>() {
+                }, new PageLink(100, 0, searchText)).getData();
     }
 
     private List<SchedulerEventWithCustomerInfo> findSchedulerEvents(String type, long startTime, long endTime, String searchText) throws Exception {
         return doGetTyped("/api/schedulerEvents?type=" + Strings.nullToEmpty(type) + "&startTime=" + startTime + "&endTime=" + endTime + "&" +
-                          "textSearch=" + Strings.nullToEmpty(searchText),
-                new TypeReference<List<SchedulerEventWithCustomerInfo>>() {});
+                        "textSearch=" + Strings.nullToEmpty(searchText),
+                new TypeReference<List<SchedulerEventWithCustomerInfo>>() {
+                });
     }
 
     private SchedulerEvent createSchedulerEvent() {

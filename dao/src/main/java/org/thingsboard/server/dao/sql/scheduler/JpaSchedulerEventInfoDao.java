@@ -45,6 +45,7 @@ import org.thingsboard.server.common.data.scheduler.SchedulerEventFilter;
 import org.thingsboard.server.common.data.scheduler.SchedulerEventInfo;
 import org.thingsboard.server.common.data.scheduler.SchedulerEventTimeFilter;
 import org.thingsboard.server.common.data.scheduler.SchedulerEventWithCustomerInfo;
+import org.thingsboard.server.common.data.scheduler.TimerRepeat;
 import org.thingsboard.server.dao.DaoUtil;
 import org.thingsboard.server.dao.model.sql.SchedulerEventInfoEntity;
 import org.thingsboard.server.dao.model.sql.SchedulerEventWithCustomerInfoEntity;
@@ -56,6 +57,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 
 @Component
@@ -101,8 +103,13 @@ public class JpaSchedulerEventInfoDao extends JpaAbstractDao<SchedulerEventInfoE
     public PageData<SchedulerEventWithCustomerInfo> findSchedulerEventsByTenantIdAndFilter(UUID tenantId, SchedulerEventFilter filter, PageLink pageLink) {
         UUID customerId = filter.getCustomerId() != null && !filter.getCustomerId().isNullUid() ? filter.getCustomerId().getId() : null;
         String type = StringUtils.isNotBlank(filter.getType()) ? filter.getType() : null;
-        return DaoUtil.toPageData(schedulerEventInfoRepository.findByTenantIdAndCustomerIdAndTypeAndSearchText(tenantId, customerId, type,
-                Strings.emptyToNull(pageLink.getTextSearch()), DaoUtil.toPageable(pageLink, SchedulerEventWithCustomerInfoEntity.schedulerEventWithCustomerInfoColumnMap)));
+        if (filter.getEdgeId() == null) {
+            return DaoUtil.toPageData(schedulerEventInfoRepository.findByTenantIdAndCustomerIdAndTypeAndSearchText(tenantId, customerId, type,
+                    Strings.emptyToNull(pageLink.getTextSearch()), DaoUtil.toPageable(pageLink, SchedulerEventWithCustomerInfoEntity.schedulerEventWithCustomerInfoColumnMap)));
+        } else {
+            return DaoUtil.toPageData(schedulerEventInfoRepository.findByTenantIdAndCustomerIdAndTypeAndEdgeIdAndSearchText(tenantId, customerId, type,
+                    filter.getEdgeId().getId(), Strings.emptyToNull(pageLink.getTextSearch()), DaoUtil.toPageable(pageLink, SchedulerEventWithCustomerInfoEntity.schedulerEventWithCustomerInfoColumnMap)));
+        }
     }
 
     @Override
@@ -114,8 +121,16 @@ public class JpaSchedulerEventInfoDao extends JpaAbstractDao<SchedulerEventInfoE
         List<SchedulerEventWithCustomerInfo> result = new ArrayList<>();
         for (SchedulerEventWithCustomerInfo event : events) {
             SchedulerEventDescriptor descriptor = event.toDescriptor();
-            List<Long> timestamps = new ArrayList<>();
 
+            if (descriptor.repeat() instanceof TimerRepeat timerRepeat) {
+                long repeatInterval = timerRepeat.getTimeUnit().toMillis(timerRepeat.getRepeatInterval());
+                if (repeatInterval < TimeUnit.DAYS.toMillis(1)) { // expecting the requested time window cannot be less than a day
+                    result.add(event);
+                    continue;
+                }
+            }
+
+            List<Long> timestamps = new ArrayList<>();
             long lastEventTime = startTime - 1;
             while (true) {
                 long eventTime = descriptor.getNextEventTime(lastEventTime);
