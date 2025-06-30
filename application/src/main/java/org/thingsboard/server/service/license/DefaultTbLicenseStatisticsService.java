@@ -47,6 +47,7 @@ import org.thingsboard.server.common.data.kv.KvEntry;
 import org.thingsboard.server.common.data.kv.ReadTsKvQuery;
 import org.thingsboard.server.common.data.kv.ReadTsKvQueryResult;
 import org.thingsboard.server.common.data.kv.TsKvEntry;
+import org.thingsboard.server.common.msg.queue.ServiceType;
 import org.thingsboard.server.dao.converter.ConverterDao;
 import org.thingsboard.server.dao.device.DeviceDao;
 import org.thingsboard.server.dao.dashboard.DashboardDao;
@@ -59,6 +60,8 @@ import org.thingsboard.server.dao.sql.job.JpaJobDao;
 import org.thingsboard.server.dao.tenant.TenantDao;
 import org.thingsboard.server.dao.timeseries.TimeseriesService;
 import org.thingsboard.server.dao.usagerecord.ApiUsageStateDao;
+import org.thingsboard.server.queue.discovery.PartitionService;
+import org.thingsboard.server.queue.util.TbCoreComponent;
 import org.thingsboard.server.service.install.ProjectInfo;
 import org.thingsboard.server.service.solutions.SolutionService;
 import org.thingsboard.server.service.solutions.data.solution.SolutionTemplate;
@@ -82,6 +85,7 @@ import static org.thingsboard.server.common.data.id.TenantId.SYS_TENANT_ID;
 
 @Slf4j
 @Service
+@TbCoreComponent
 @ConditionalOnProperty(prefix = "license.stats", value = "enabled", havingValue = "true", matchIfMissing = true)
 @RequiredArgsConstructor
 public class DefaultTbLicenseStatisticsService implements TbLicenseStatisticsService {
@@ -104,6 +108,7 @@ public class DefaultTbLicenseStatisticsService implements TbLicenseStatisticsSer
     private final ProjectInfo projectInfo;
     private final SolutionService solutionService;
     private final JdbcTemplate jdbcTemplate;
+    private final PartitionService partitionService;
 
     @Value("#{('${database.ts.type}' == 'cassandra') or ('${database.ts_latest.type}' == 'cassandra')}")
     private boolean cassandra;
@@ -113,6 +118,14 @@ public class DefaultTbLicenseStatisticsService implements TbLicenseStatisticsSer
 
     @Override
     public TbInstanceStatistics getCurrentStatistics() {
+        if (partitionService.isSystemPartitionMine(ServiceType.TB_CORE)) {
+            return getTbInstanceStatistics();
+        }
+
+        return null;
+    }
+
+    private TbInstanceStatistics getTbInstanceStatistics() {
         TbInstanceStatistics statistics = new TbInstanceStatistics();
 
         Map<String, Long> entitiesCounts = new HashMap<>();
