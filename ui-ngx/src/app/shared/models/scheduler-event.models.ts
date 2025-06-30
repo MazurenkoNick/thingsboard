@@ -35,6 +35,10 @@ import { CustomerId } from '@shared/models/id/customer-id';
 import { SchedulerEventId } from '@shared/models/id/scheduler-event-id';
 import { EntityId } from '@shared/models/id/entity-id';
 import * as moment_ from 'moment';
+import { EntityDataSortOrder } from '@shared/models/query/query.models';
+import { SortOrder } from '@shared/models/page/sort-order';
+import { EntitiesTableAction } from '@home/models/entity/entity-table-component.models';
+import { PageQueryParam } from '@shared/models/page/page-link';
 
 export enum SchedulerRepeatType {
   DAILY = 'DAILY',
@@ -122,6 +126,7 @@ export interface SchedulerEventSchedule {
 
 export interface SchedulerEventInfo extends BaseData<SchedulerEventId> {
   tenantId?: TenantId;
+  timestamps?: number[];
   customerId?: CustomerId;
   originatorId?: EntityId;
   name: string;
@@ -146,4 +151,11 @@ export interface SchedulerEventConfiguration {
 
 export interface SchedulerEvent extends SchedulerEventInfo {
   configuration: SchedulerEventConfiguration;
+}
+
+export interface CalendarQueryParam extends PageQueryParam{
+  textSearch?: string;
+  mode?: string;
+  calendarView?: string;
+  calendarStart?: number;
 }

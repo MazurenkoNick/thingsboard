@@ -41,6 +41,8 @@ import {
   SchedulerEventWithCustomerInfo
 } from '@shared/models/scheduler-event.models';
 import { isDefinedAndNotNull } from '@core/utils';
+import { PageLink } from '@shared/models/page/page-link';
+import { PageData } from '@shared/models/page/page-data';
 
 @Injectable({
   providedIn: 'root'
@@ -52,13 +54,21 @@ export class SchedulerEventService {
   ) {
   }
 
-  public getSchedulerEvents(type: string = '', config?: RequestConfig): Observable<Array<SchedulerEventWithCustomerInfo>> {
+  public getAllSchedulerEvents(type: string = '', config?: RequestConfig): Observable<Array<SchedulerEventWithCustomerInfo>> {
     let url = '/api/schedulerEvents';
     if (isDefinedAndNotNull(type) && type !== '') {
       url += `?type=${type}`;
     }
     return this.http.get<Array<SchedulerEventWithCustomerInfo>>(url,
       defaultHttpOptionsFromConfig(config));
+  }
+
+  public getSchedulerEvents(type: string, pageLink: PageLink, edgeId?: string, config?: RequestConfig): Observable<PageData<SchedulerEventWithCustomerInfo>> {
+    return this.http.get<PageData<SchedulerEventWithCustomerInfo>>(`/api/schedulerEvents${pageLink.toQuery()}${type ? `&type=${type}` : ''}${edgeId ? `&edgeId=${edgeId}` : ''}`, defaultHttpOptionsFromConfig(config));
+  }
+
+  public getCalendarSchedulerEvents(type: string, startTime: number, endTime: number, textSearch: string, edgeId?: string, config?: RequestConfig): Observable<Array<SchedulerEventWithCustomerInfo>> {
+    return this.http.get<Array<SchedulerEventWithCustomerInfo>>(`/api/schedulerEvents?startTime=${startTime}&endTime=${endTime}${type ? `&type=${type}` : ''}${textSearch ? `&textSearch=${textSearch}` : ''}${edgeId ? `&edgeId=${edgeId}` : ''}`, defaultHttpOptionsFromConfig(config));
   }
 
   public getSchedulerEventsByIds(schedulerEventIds: Array<string>, config?: RequestConfig): Observable<Array<SchedulerEventInfo>> {
