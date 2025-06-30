@@ -194,7 +194,7 @@ public class SchedulerEventControllerTest extends AbstractControllerTest {
 
         List<SchedulerEventId> loadedEdgeSchedulerEvents = new ArrayList<>();
         PageLink pageLink = new PageLink(17);
-        PageData<SchedulerEventInfo> pageData;
+        PageData<SchedulerEventWithCustomerInfo> pageData;
         do {
             pageData = doGetTypedWithPageLink("/api/schedulerEvents?edgeId=" + savedEdge.getId().getId() + "&",
                     new TypeReference<>() {

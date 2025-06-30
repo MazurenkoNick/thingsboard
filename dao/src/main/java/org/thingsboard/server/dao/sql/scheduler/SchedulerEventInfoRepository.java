@@ -79,9 +79,10 @@ public interface SchedulerEventInfoRepository extends JpaRepository<SchedulerEve
                                                                                                Pageable pageable);
 
     @Query("SELECT new org.thingsboard.server.dao.model.sql.SchedulerEventWithCustomerInfoEntity(s, c.title, c.additionalInfo) " +
-            "FROM SchedulerEventInfoEntity s, RelationEntity r " +
+            "FROM SchedulerEventInfoEntity s " +
             "LEFT JOIN CustomerEntity c on c.id = s.customerId " +
-            "WHERE s.tenantId = :tenantId AND s.id = r.toId AND r.toType = 'SCHEDULER_EVENT' AND r.relationTypeGroup = 'EDGE' " +
+            "JOIN RelationEntity r ON r.toId = s.id AND r.toType = 'SCHEDULER_EVENT' " +
+            "WHERE s.tenantId = :tenantId  AND r.relationTypeGroup = 'EDGE' " +
             "AND r.relationType = 'Contains' AND r.fromId = :edgeId AND r.fromType = 'EDGE' " +
             "AND (:customerId IS NULL OR s.customerId = :customerId) " +
             "AND (:type IS NULL OR s.type = :type) " +
