@@ -79,7 +79,6 @@ import java.util.TreeMap;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static org.thingsboard.server.common.data.report.configuration.timewindow.TimeIntervalCalculator.getTimeRange;
@@ -188,22 +187,15 @@ public abstract class AbstractReportService implements ReportService {
         };
     }
 
-    protected List<Map<String, String>> fetchEntityTableData(TbReportCtx ctx, EntityTableComponent component, EntityData stateEntity) {
-        Optional<DataSource> singleDataSource = getSingleDataSource(component);
-        if (singleDataSource.isEmpty()) {
-            return Collections.emptyList();
-        }
-        return collectEntityDatas(ctx, singleDataSource.get(), stateEntity);
-    }
 
-    protected List<Map<String, String>> fetchEntityTsData(TbReportCtx ctx, TimeseriesTableComponent component, EntityData entity) {
+    protected ComponentData buildTsComponentData(int usablePageWidthPx, TbReportCtx ctx, TimeseriesTableComponent component, EntityData entity) {
         TimeWindowConfiguration timeWindowConf = component.getTimewindow();
         History historyConf = timeWindowConf.getHistory();
         TimeIntervalCalculator.TimeRange timeRange = getTimeRange(timeWindowConf);
 
         Optional<DataSource> singleDataSource = getSingleDataSource(component);
         if (singleDataSource.isEmpty()) {
-            return Collections.emptyList();
+            return new ComponentData(usablePageWidthPx);
         }
         List<DataKey> dataKeys = singleDataSource.get().getDataKeys();
         List<DataKey> latestDataKeys = singleDataSource.get().getLatestDataKeys();
@@ -214,27 +206,29 @@ public abstract class AbstractReportService implements ReportService {
                 historyConf.getInterval(), timeWindowConf.getAggregation().getType(), SortOrder.Direction.DESC,
                 timeWindowConf.getAggregation().getLimit(), false, ctx);
         SortOrder sortOrder = SortOrder.of("rawTs", SortOrder.Direction.DESC);
-        return collectTsData(dataKeys, latestDataKeys, entity, result, component.isShowTimestamp(), component.getTimestampPattern(), sortOrder, ctx);
+        List<Map<String, String>> entityDatas = collectTsData(dataKeys, latestDataKeys, entity, result, component.isShowTimestamp(), component.getTimestampPattern(), sortOrder, ctx);
+        Map<String, Object> variables = new HashMap<>(toStringMap(entity, dataKeys, ctx));
+        return new ComponentData(usablePageWidthPx, null, entityDatas, variables);
     }
 
-    protected List<Map<String, String>> fetchAlarmDatas(TbReportCtx ctx, AlarmTableComponent component, EntityData stateEntity) {
+    protected ComponentData buildAlarmComponentData(int usablePageWidthPx, TbReportCtx ctx, AlarmTableComponent component, EntityData stateEntity) {
         DataSource alarmSource = component.getAlarmSource();
         if (alarmSource == null) {
-            return Collections.emptyList();
+            return new ComponentData(usablePageWidthPx);
         }
         switch (alarmSource.getType()) {
             case "device":
                 if (alarmSource.getDeviceId() == null) {
-                    return Collections.emptyList();
+                    return new ComponentData(usablePageWidthPx);
                 }
                 break;
              case "entity":
                  if (alarmSource.getEntityAliasId() == null) {
-                     return Collections.emptyList();
+                     return new ComponentData(usablePageWidthPx);
                  }
                  break;
             default:
-                return Collections.emptyList();
+                return new ComponentData(usablePageWidthPx);
         }
         List<DataKey> alarmDataKeys = alarmSource.getDataKeys()
                 .stream()
@@ -247,14 +241,15 @@ public abstract class AbstractReportService implements ReportService {
         List<EntityData> entityDataList = fetchEntities(ctx, alarmSource, stateEntity);
         Map<EntityId, EntityData> entityDataMap = entityDataList.stream()
                 .collect(Collectors.toMap(EntityData::getEntityId, Function.identity()));
-        List<Map<String, String>> data = new ArrayList<>();
+        List<Map<String, String>> entityDatas = new ArrayList<>();
         for (AlarmData alarmData : new PageDataIterable<>(link -> dataService.findAlarmDataByQueryForEntities(toAlarmDataQuery(component, ctx.getConfiguration(), stateEntity, link), entityDataMap.keySet(), ctx), 1024)) {
             Map<String, String> mergedData = toStringMap(alarmData, alarmDataKeys, ctx);
             EntityData entityData = entityDataMap.get(alarmData.getEntityId());
             mergedData.putAll(toStringMap(entityData, latestDataKeys, ctx));
-            data.add(mergedData);
+            entityDatas.add(mergedData);
         }
-        return data;
+        Map<String, Object> variables = new HashMap<>(toStringMap(stateEntity, latestDataKeys, ctx));
+        return new ComponentData(usablePageWidthPx, null, entityDatas, variables);
     }
 
     protected Map<String, String> toStringMap(EntityData entityData, List<DataKey> dataKeys, TbReportCtx ctx) {
@@ -409,6 +404,9 @@ public abstract class AbstractReportService implements ReportService {
         }
 
         Object processed = postProcess(ctx, dataKey, timestamp, value, parseString);
+        if (processed == null) {
+            return null;
+        }
 
         return "createdTime".equals(dataKey.getName())
                 ? formatTimestamp(processed.toString(), ctx)
@@ -441,7 +439,7 @@ public abstract class AbstractReportService implements ReportService {
 
     private Object evalData(TbReportCtx ctx, long timestamp, Object value, UUID scriptId) {
         try {
-            return ctx.getTbelInvokeService().invokeScript(ctx.getTenantId(), null, scriptId, timestamp, value).get().toString();
+            return ctx.getTbelInvokeService().invokeScript(ctx.getTenantId(), null, scriptId, timestamp, value).get();
         } catch (InterruptedException e) {
             throw new RuntimeException("Failed to evaluate data: " + value, e);
         } catch (ExecutionException e) {

@@ -173,19 +173,12 @@ public class ReportUtils {
     }
 
     public static String tableHeadingText(Heading tableHeading, ComponentData reportDataSource) {
-        Map<String, Object> tableHeadingVariables = new HashMap<>();
-        String entityName = "";
-        String entityLabel = "";
+        Map<String, Object> tableHeadingVariables = reportDataSource.getVariables();
         Integer rowCount = 0;
         List<Map<String, String>> entityDatas = reportDataSource.getEntityDatas();
         if (!entityDatas.isEmpty()) {
             rowCount = entityDatas.size();
-            Map<String, String> row = entityDatas.get(0);
-            entityName = row.get("entityName");
-            entityLabel = row.get("entityLabel");
         }
-        tableHeadingVariables.put("entityName", entityName);
-        tableHeadingVariables.put("entityLabel", entityLabel);
         tableHeadingVariables.put("rowCount", String.valueOf(rowCount));
         return ThymeleafUtil.renderFromHtmlString(tableHeading.getText(), tableHeadingVariables);
     }

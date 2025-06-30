@@ -182,12 +182,21 @@ public class CsvReportService extends AbstractReportService {
 
     private ComponentData getComponentData(TbReportCtx ctx, ReportComponent component, EntityData stateEntity) {
         return switch (component.getType()) {
-            case TIME_SERIES_TABLE ->
-                    new ComponentData(0, fetchEntityTsData(ctx, (TimeseriesTableComponent) component, stateEntity));
-            case ALARM_TABLE -> new ComponentData(0, fetchAlarmDatas(ctx, (AlarmTableComponent) component, stateEntity));
-            case ENTITY_TABLE -> new ComponentData(0, fetchEntityTableData(ctx, (EntityTableComponent) component, stateEntity));
+            case TIME_SERIES_TABLE -> buildTsComponentData(0, ctx, (TimeseriesTableComponent) component, stateEntity);
+            case ALARM_TABLE -> buildAlarmComponentData(0, ctx, (AlarmTableComponent) component, stateEntity);
+            case ENTITY_TABLE -> buildEntityComponentData(ctx, (EntityTableComponent) component, stateEntity);
             default -> throw new IllegalArgumentException("Unsupported component type: " + component.getType());
         };
+    }
+
+    private ComponentData buildEntityComponentData(TbReportCtx ctx, EntityTableComponent component, EntityData stateEntity) {
+        Optional<DataSource> singleDataSource = getSingleDataSource(component);
+        if (singleDataSource.isEmpty()) {
+            return new ComponentData(0);
+        }
+        List<Map<String, String>> entityDatas = collectEntityDatas(ctx, singleDataSource.get(), stateEntity);
+        Map<String, Object> variables = new HashMap<>(toStringMap(stateEntity, singleDataSource.get().getDataKeys(), ctx));
+        return new ComponentData(0, null, entityDatas, variables);
     }
 
     private List<List<String>> renderError(String errorDescription) {
