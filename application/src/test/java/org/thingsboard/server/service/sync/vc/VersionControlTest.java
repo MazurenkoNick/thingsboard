@@ -91,9 +91,11 @@ import org.thingsboard.server.common.data.id.DeviceId;
 import org.thingsboard.server.common.data.id.DeviceProfileId;
 import org.thingsboard.server.common.data.id.EntityGroupId;
 import org.thingsboard.server.common.data.id.EntityId;
+import org.thingsboard.server.common.data.id.OtaPackageId;
 import org.thingsboard.server.common.data.id.RoleId;
 import org.thingsboard.server.common.data.id.RuleChainId;
 import org.thingsboard.server.common.data.id.TenantId;
+import org.thingsboard.server.common.data.id.UserId;
 import org.thingsboard.server.common.data.integration.Integration;
 import org.thingsboard.server.common.data.integration.IntegrationType;
 import org.thingsboard.server.common.data.msg.TbNodeConnectionType;
@@ -114,6 +116,8 @@ import org.thingsboard.server.common.data.rule.RuleChain;
 import org.thingsboard.server.common.data.rule.RuleChainMetaData;
 import org.thingsboard.server.common.data.rule.RuleChainType;
 import org.thingsboard.server.common.data.rule.RuleNode;
+import org.thingsboard.server.common.data.scheduler.SchedulerEvent;
+import org.thingsboard.server.common.data.scheduler.SchedulerEventWithCustomerInfo;
 import org.thingsboard.server.common.data.script.ScriptLanguage;
 import org.thingsboard.server.common.data.security.Authority;
 import org.thingsboard.server.common.data.security.DeviceCredentials;
@@ -964,6 +968,67 @@ public class VersionControlTest extends AbstractControllerTest {
         assertThat(importedResource.getResourceType()).isEqualTo(resource.getResourceType());
     }
 
+    @Test
+    public void testSchedulerEventVc_sameTenant() throws Exception {
+        DeviceProfile deviceProfile = createDeviceProfile(null, null, "Device profile v1.0");
+        SchedulerEvent schedulerEvent = createSchedulerEvent(tenantId1, deviceProfile.getId(), "General", "general", JacksonUtil.newObjectNode());
+        String versionId = createVersion("scheduler event", EntityType.SCHEDULER_EVENT);
+
+        loadVersion(versionId, EntityType.SCHEDULER_EVENT);
+        SchedulerEvent importedEvent = findSchedulerEvent(schedulerEvent.getName());
+        checkImportedEntity(tenantId1, schedulerEvent, tenantId1, importedEvent);
+        checkImportedSchedulerEventData(schedulerEvent, importedEvent);
+    }
+
+    @Test
+    public void testSchedulerEventOtaConfigForVc_betweenTenants() throws Exception {
+        DeviceProfile deviceProfile = createDeviceProfile(null, null, "Device profile v1.0");
+        OtaPackage firmware = createOtaPackage(tenantId1, deviceProfile.getId(), OtaPackageType.FIRMWARE);
+        OtaPackage software = createOtaPackage(tenantId1, deviceProfile.getId(), OtaPackageType.SOFTWARE);
+        SchedulerEvent firmwareEvent = createSchedulerEventForOtaPackageType(tenantId1, deviceProfile.getId(), "Firmware", "updateFirmware", firmware.getId());
+        SchedulerEvent softwareEvent = createSchedulerEventForOtaPackageType(tenantId1, deviceProfile.getId(), "Software", "updateSoftware", software.getId());
+        String versionId = createVersion("scheduler event with ota", EntityType.DEVICE_PROFILE, EntityType.OTA_PACKAGE, EntityType.SCHEDULER_EVENT);
+
+        OtaPackage firmwareOta = findOtaPackage(firmware.getTitle());
+        OtaPackage softwareOta = findOtaPackage(software.getTitle());
+
+        loginTenant2();
+        loadVersion(versionId, EntityType.DEVICE_PROFILE, EntityType.OTA_PACKAGE, EntityType.SCHEDULER_EVENT);
+        OtaPackage importedFirmwareOta = findOtaPackage(firmwareOta.getTitle());
+        OtaPackage importedSoftwareOta = findOtaPackage(softwareOta.getTitle());
+        SchedulerEvent importedFirmwareEvent = findSchedulerEvent(firmwareEvent.getName());
+        SchedulerEvent importedSoftwareEvent = findSchedulerEvent(softwareEvent.getName());
+
+        checkImportedEntity(tenantId1, firmwareOta, tenantId2, importedFirmwareOta);
+        checkImportedOtaPackageData(firmwareOta, importedFirmwareOta);
+        checkImportedEntity(tenantId1, softwareOta, tenantId2, importedSoftwareOta);
+        checkImportedOtaPackageData(softwareOta, importedSoftwareOta);
+
+        checkImportedEntity(tenantId1, firmwareEvent, tenantId2, importedFirmwareEvent);
+        checkImportedSchedulerEventData(firmwareEvent, importedFirmwareEvent, importedFirmwareOta.getId());
+        checkImportedEntity(tenantId1, softwareEvent, tenantId2, importedSoftwareEvent);
+        checkImportedSchedulerEventData(softwareEvent, importedSoftwareEvent, importedSoftwareOta.getId());
+    }
+
+    @Test
+    public void testSchedulerEventGenerateReportForVc_betweenTenants() throws Exception {
+        DeviceProfile deviceProfile = createDeviceProfile(null, null, "Device profile v1.0");
+        Dashboard dashboard = createDashboard(null, "Test Dashboard");
+        SchedulerEvent reportEvent = createSchedulerEventForGenerateReportType(tenantId1, deviceProfile.getId(), "Report", dashboard.getId());
+        String versionId = createVersion("scheduler event with report", EntityType.DEVICE_PROFILE, EntityType.DASHBOARD, EntityType.SCHEDULER_EVENT);
+
+        loginTenant2();
+        loadVersion(versionId, EntityType.DEVICE_PROFILE, EntityType.DASHBOARD, EntityType.SCHEDULER_EVENT);
+        Dashboard importedDashboard = findDashboard(dashboard.getTitle());
+        SchedulerEvent importedReportEvent = findSchedulerEvent(reportEvent.getName());
+
+        checkImportedEntity(tenantId1, dashboard, tenantId2, importedDashboard);
+        checkImportedDashboardData(dashboard, importedDashboard);
+
+        checkImportedEntity(tenantId1, reportEvent, tenantId2, importedReportEvent);
+        checkImportedSchedulerEventData(reportEvent, importedReportEvent, importedDashboard.getId(), tenantAdmin2.getId());
+    }
+
     private <E extends ExportableEntity<?> & HasTenantId> void checkImportedEntity(TenantId tenantId1, E initialEntity, TenantId tenantId2, E importedEntity) {
         assertThat(initialEntity.getTenantId()).isEqualTo(tenantId1);
         assertThat(importedEntity.getTenantId()).isEqualTo(tenantId2);
@@ -1515,6 +1580,90 @@ public class VersionControlTest extends AbstractControllerTest {
         }
     }
 
+    private void checkImportedSchedulerEventData(SchedulerEvent initialEvent, SchedulerEvent importedEvent, DashboardId dashboardId, UserId currentUserId) {
+        checkImportedSchedulerEventData(initialEvent, importedEvent);
+        ObjectNode config = (ObjectNode) importedEvent.getConfiguration().path("msgBody").path("reportConfig");
+        String oldDash = config.path("dashboardId").asText(null);
+        assertThat(oldDash).isNotNull();
+        assertThat(oldDash).isEqualTo(dashboardId.toString());
+        String oldUser = config.path("userId").asText(null);
+        assertThat(oldUser).isNotNull();
+        assertThat(oldUser).isEqualTo(currentUserId.toString()); // userId on import is set to current user
+    }
+
+    private void checkImportedSchedulerEventData(SchedulerEvent initialEvent, SchedulerEvent importedEvent, OtaPackageId otaPackageId) {
+        checkImportedSchedulerEventData(initialEvent, importedEvent);
+        JsonNode importedConfig = importedEvent.getConfiguration();
+        ObjectNode config = (ObjectNode) importedConfig.get("msgBody");
+        OtaPackageId importedOtaPackageId = JacksonUtil.convertValue(config, OtaPackageId.class);
+        assertThat(importedOtaPackageId).isNotNull();
+        assertThat(importedOtaPackageId.getId()).isEqualTo(otaPackageId.getId());
+    }
+
+    private void checkImportedSchedulerEventData(SchedulerEvent initialEvent, SchedulerEvent importedEvent) {
+        assertThat(importedEvent.getName()).isEqualTo(initialEvent.getName());
+        assertThat(importedEvent.getType()).isEqualTo(initialEvent.getType());
+        assertThat(importedEvent.getSchedule()).isEqualTo(initialEvent.getSchedule());
+    }
+
+    private SchedulerEvent createSchedulerEvent(TenantId tenantId, EntityId originatorId, String name, String type, JsonNode configuration) {
+        SchedulerEvent schedulerEvent = new SchedulerEvent();
+        schedulerEvent.setTenantId(tenantId);
+        schedulerEvent.setOwnerId(tenantId);
+        schedulerEvent.setOriginatorId(originatorId);
+        schedulerEvent.setConfiguration(configuration);
+        schedulerEvent.setName(name);
+        schedulerEvent.setType(type);
+        ObjectNode schedule = JacksonUtil.newObjectNode();
+        schedule.put("startTime", Long.MAX_VALUE);
+        schedule.put("timezone", "UTC");
+        schedulerEvent.setSchedule(schedule);
+        return doPost("/api/schedulerEvent", schedulerEvent, SchedulerEvent.class);
+    }
+
+    private SchedulerEvent createSchedulerEventForOtaPackageType(TenantId tenantId, EntityId originatorId, String name, String type, OtaPackageId otaPackageId) {
+        ObjectNode cfg = JacksonUtil.newObjectNode();
+        cfg.put("msgType", type);
+        ObjectNode msgBody = JacksonUtil.newObjectNode();
+        msgBody.put("entityType", "OTA_PACKAGE");
+        msgBody.put("id", otaPackageId.toString());
+        cfg.set("msgBody", msgBody);
+        cfg.set("metadata", JacksonUtil.newObjectNode());
+
+        return createSchedulerEvent(tenantId, originatorId, name, type, cfg);
+    }
+
+    private SchedulerEvent createSchedulerEventForGenerateReportType(TenantId tenantId, EntityId originatorId, String name, DashboardId dashboardId) {
+        ObjectNode reportConfig = JacksonUtil.newObjectNode();
+        reportConfig.put("baseUrl", "http://localhost:8081");
+        reportConfig.put("useDashboardTimewindow", true);
+        ObjectNode history = JacksonUtil.newObjectNode();
+        history.put("historyType", 0);
+        history.put("interval", 1000);
+        history.put("timewindowMs", 86_400_000);
+        ObjectNode timewindow = JacksonUtil.newObjectNode();
+        timewindow.put("selectedTab", 1);
+        timewindow.set("history", history);
+        reportConfig.set("timewindow", timewindow);
+        reportConfig.put("namePattern", "report-%d{yyyy-MM-dd_HH:mm:ss}");
+        reportConfig.put("type", "pdf");
+        reportConfig.put("timezone", "Europe/Kiev");
+        reportConfig.put("useCurrentUserCredentials", true);
+        reportConfig.put("userId", "7a306270-4820-11f0-bc58-39b3596e763d");
+        reportConfig.put("dashboardId", dashboardId.toString());
+        reportConfig.put("state", "");
+
+        ObjectNode msgBody = JacksonUtil.newObjectNode();
+        msgBody.set("reportConfig", reportConfig);
+        msgBody.put("sendEmail", false);
+
+        ObjectNode cfg = JacksonUtil.newObjectNode();
+        cfg.set("msgBody", msgBody);
+        cfg.set("metadata", JacksonUtil.newObjectNode());
+
+        return createSchedulerEvent(tenantId, originatorId, name, "generateReport", cfg);
+    }
+
     private Dashboard assignDashboardToCustomer(DashboardId dashboardId, CustomerId customerId) {
         return doPost("/api/customer/" + customerId + "/dashboard/" + dashboardId, Dashboard.class);
     }
@@ -1604,6 +1753,14 @@ public class VersionControlTest extends AbstractControllerTest {
 
     private TbResource findResource(String name) throws Exception {
         return doGetTypedWithPageLink("/api/resource?", new TypeReference<PageData<TbResource>>() {}, new PageLink(100, 0, name)).getData().get(0);
+    }
+
+    private SchedulerEvent findSchedulerEvent(String name) throws Exception {
+        SchedulerEventWithCustomerInfo eventInfo = doGetTyped("/api/schedulerEvents?", new TypeReference<List<SchedulerEventWithCustomerInfo>>() {}).stream()
+                .filter(event -> event.getName().equals(name))
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("Scheduler event with name " + name + " not found"));
+        return doGet("/api/schedulerEvent/" + eventInfo.getId().getId(), SchedulerEvent.class);
     }
 
 }

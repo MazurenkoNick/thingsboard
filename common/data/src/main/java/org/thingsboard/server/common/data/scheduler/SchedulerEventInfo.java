@@ -50,12 +50,15 @@ import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.validation.Length;
 import org.thingsboard.server.common.data.validation.NoXss;
 
+import java.io.Serial;
+
 @Schema
 @Data
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public class SchedulerEventInfo extends BaseDataWithAdditionalInfo<SchedulerEventId> implements HasName, TenantEntity, HasCustomerId, HasOwnerId, HasVersion {
 
+    @Serial
     private static final long serialVersionUID = 2807343040519549363L;
 
     @Schema(description = "JSON object with Tenant Id", accessMode = Schema.AccessMode.READ_ONLY)
@@ -106,7 +109,7 @@ public class SchedulerEventInfo extends BaseDataWithAdditionalInfo<SchedulerEven
     @Schema(description = "JSON object with the scheduler event Id. " +
             "Specify this field to update the scheduler event. " +
             "Referencing non-existing scheduler event Id will cause error. " +
-            "Omit this field to create new scheduler event" )
+            "Omit this field to create new scheduler event")
     @Override
     public SchedulerEventId getId() {
         return super.getId();

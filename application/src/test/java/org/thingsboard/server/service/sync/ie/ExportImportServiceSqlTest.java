@@ -91,6 +91,7 @@ import org.thingsboard.server.common.data.id.IntegrationId;
 import org.thingsboard.server.common.data.id.OtaPackageId;
 import org.thingsboard.server.common.data.id.RoleId;
 import org.thingsboard.server.common.data.id.RuleChainId;
+import org.thingsboard.server.common.data.id.SchedulerEventId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.integration.Integration;
 import org.thingsboard.server.common.data.integration.IntegrationType;
@@ -110,6 +111,7 @@ import org.thingsboard.server.common.data.rule.RuleChain;
 import org.thingsboard.server.common.data.rule.RuleChainMetaData;
 import org.thingsboard.server.common.data.rule.RuleChainType;
 import org.thingsboard.server.common.data.rule.RuleNode;
+import org.thingsboard.server.common.data.scheduler.SchedulerEvent;
 import org.thingsboard.server.common.data.security.Authority;
 import org.thingsboard.server.common.data.sync.ie.DeviceExportData;
 import org.thingsboard.server.common.data.sync.ie.EntityExportData;
@@ -134,10 +136,12 @@ import org.thingsboard.server.dao.ota.OtaPackageService;
 import org.thingsboard.server.dao.relation.RelationService;
 import org.thingsboard.server.dao.role.RoleService;
 import org.thingsboard.server.dao.rule.RuleChainService;
+import org.thingsboard.server.dao.scheduler.SchedulerEventService;
 import org.thingsboard.server.dao.service.DaoSqlTest;
 import org.thingsboard.server.dao.tenant.TenantService;
 import org.thingsboard.server.service.action.EntityActionService;
 import org.thingsboard.server.service.ota.OtaPackageStateService;
+import org.thingsboard.server.service.scheduler.SchedulerService;
 import org.thingsboard.server.service.security.model.SecurityUser;
 import org.thingsboard.server.service.security.model.UserPrincipal;
 import org.thingsboard.server.service.security.permission.AccessControlService;
@@ -176,6 +180,8 @@ public class ExportImportServiceSqlTest extends AbstractControllerTest {
     private UserPermissionsService userPermissionsService;
     @SpyBean
     private AccessControlService accessControlService;
+    @SpyBean
+    private SchedulerService schedulerService;
 
     @Autowired
     protected EntitiesExportImportService exportImportService;
@@ -211,6 +217,8 @@ public class ExportImportServiceSqlTest extends AbstractControllerTest {
     protected ConverterService converterService;
     @Autowired
     protected RoleService roleService;
+    @Autowired
+    protected SchedulerEventService schedulerEventService;
 
     protected TenantId tenantId1;
     protected User tenantAdmin1;
@@ -264,10 +272,11 @@ public class ExportImportServiceSqlTest extends AbstractControllerTest {
         Role role = createGenericRole(tenantId1, null, "Role 1", Map.of(Resource.DEVICE, List.of(Operation.READ)));
         EntityGroup userGroup = createEntityGroup(tenantId1, EntityType.USER, "User group 1");
         createGroupPermission(tenantId1, userGroup.getId(), role.getId());
+        SchedulerEvent schedulerEvent = createSchedulerEvent(tenantId1, device.getId(), "Scheduler Event 1", "report");
 
         Map<EntityType, EntityExportData> entitiesExportData = Stream.of(customer.getId(), asset.getId(), device.getId(),
                         ruleChain.getId(), dashboard.getId(), assetProfile.getId(), deviceProfile.getId(), converter.getId(),
-                        integration.getId(), role.getId(), userGroup.getId(), firmware.getId())
+                        integration.getId(), role.getId(), userGroup.getId(), firmware.getId(), schedulerEvent.getId())
                 .map(entityId -> {
                     try {
                         return exportEntity(tenantAdmin1, entityId, EntityExportSettings.builder()
@@ -383,6 +392,15 @@ public class ExportImportServiceSqlTest extends AbstractControllerTest {
         Role importedRole = (Role) importEntity(tenantAdmin2, entitiesExportData.get(EntityType.ROLE)).getSavedEntity();
         verify(userPermissionsService).onRoleUpdated(argThat(r -> r.getId().equals(importedRole.getId())));
         verify(entityActionService).logEntityAction(any(), eq(importedRole.getId()), notNull(), any(), eq(ActionType.ADDED), isNull());
+
+        SchedulerEvent importedSchedulerEvent = (SchedulerEvent) importEntity(tenantAdmin2, entitiesExportData.get(EntityType.SCHEDULER_EVENT)).getSavedEntity();
+        verify(schedulerService).onSchedulerEventAdded(argThat(se -> se.getId().equals(importedSchedulerEvent.getId())));
+        verify(entityActionService).logEntityAction(any(), eq(importedSchedulerEvent.getId()), notNull(), any(), eq(ActionType.ADDED), isNull());
+
+        EntityExportData<SchedulerEvent> updatedSchedulerEventEntity = getAndClone(entitiesExportData, EntityType.SCHEDULER_EVENT);
+        updatedSchedulerEventEntity.getEntity().setName("t" + updatedSchedulerEventEntity.getEntity().getName());
+        SchedulerEvent updatedSchedulerEvent = importEntity(tenantAdmin2, updatedSchedulerEventEntity).getSavedEntity();
+        verify(schedulerService).onSchedulerEventUpdated(argThat(se -> se.getId().equals(updatedSchedulerEvent.getId())));
     }
 
     @Test
@@ -403,13 +421,14 @@ public class ExportImportServiceSqlTest extends AbstractControllerTest {
         EntityView entityView = createEntityView(tenantId1, customer.getId(), device.getId(), "Entity view 1");
         Converter converter = createConverter(tenantId1, ConverterType.UPLINK, "Converter 1");
         Integration integration = createIntegration(tenantId1, converter.getId(), IntegrationType.HTTP, "Integration 1");
+        SchedulerEvent schedulerEvent = createSchedulerEvent(tenantId1, device.getId(), "Scheduler Event 1", "report");
 
         CalculatedField calculatedField = createCalculatedField(tenantId1, device.getId(), device.getId());
 
         Map<EntityId, EntityId> ids = new HashMap<>();
         for (EntityId entityId : List.of(customer.getId(), ruleChain.getId(), dashboard.getId(), assetProfile.getId(), asset.getId(),
                 deviceProfile.getId(), firmware.getId(), device.getId(), entityView.getId(), converter.getId(), integration.getId(),
-                ruleChain.getId(), dashboard.getId())) {
+                ruleChain.getId(), dashboard.getId(), schedulerEvent.getId())) {
             EntityExportData exportData = exportEntity(getSecurityUser(tenantAdmin1), entityId);
             EntityImportResult importResult = importEntity(getSecurityUser(tenantAdmin2), exportData, EntityImportSettings.builder()
                     .saveCredentials(false)
@@ -463,6 +482,9 @@ public class ExportImportServiceSqlTest extends AbstractControllerTest {
 
         Integration exportedIntegration = (Integration) exportEntity(tenantAdmin2, (IntegrationId) ids.get(integration.getId())).getEntity();
         assertThat(exportedIntegration.getDefaultConverterId()).isEqualTo(converter.getId());
+
+        SchedulerEvent exportedSchedulerEvent = (SchedulerEvent) exportEntity(tenantAdmin2, (SchedulerEventId) ids.get(schedulerEvent.getId())).getEntity();
+        assertThat(exportedSchedulerEvent.getOriginatorId()).isEqualTo(schedulerEvent.getOriginatorId());
 
         deviceProfile.setDefaultDashboardId(null);
         deviceProfileService.saveDeviceProfile(deviceProfile);
@@ -790,6 +812,21 @@ public class ExportImportServiceSqlTest extends AbstractControllerTest {
         config.setOutput(output);
 
         return config;
+    }
+
+    private SchedulerEvent createSchedulerEvent(TenantId tenantId, EntityId originatorId, String name, String type) {
+        SchedulerEvent schedulerEvent = new SchedulerEvent();
+        schedulerEvent.setTenantId(tenantId);
+        schedulerEvent.setOwnerId(tenantId);
+        schedulerEvent.setOriginatorId(originatorId);
+        schedulerEvent.setConfiguration(JacksonUtil.newObjectNode());
+        schedulerEvent.setName(name);
+        schedulerEvent.setType(type);
+        ObjectNode schedule = JacksonUtil.newObjectNode();
+        schedule.put("startTime", Long.MAX_VALUE);
+        schedule.put("timezone", "UTC");
+        schedulerEvent.setSchedule(schedule);
+        return schedulerEventService.saveSchedulerEvent(schedulerEvent);
     }
 
     protected <E extends ExportableEntity<I>, I extends EntityId> EntityExportData<E> exportEntity(User user, I entityId) throws Exception {

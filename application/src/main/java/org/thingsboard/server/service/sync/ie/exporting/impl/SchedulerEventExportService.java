@@ -28,58 +28,37 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.common.data.scheduler;
+package org.thingsboard.server.service.sync.ie.exporting.impl;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.databind.JsonNode;
-import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
-import org.thingsboard.server.common.data.BaseDataWithAdditionalInfo;
-import org.thingsboard.server.common.data.ExportableEntity;
+import org.springframework.stereotype.Service;
+import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.id.SchedulerEventId;
+import org.thingsboard.server.common.data.scheduler.SchedulerEvent;
+import org.thingsboard.server.common.data.sync.ie.SchedulerEventExportData;
+import org.thingsboard.server.queue.util.TbCoreComponent;
+import org.thingsboard.server.service.sync.vc.data.EntitiesExportCtx;
 
-import java.io.Serial;
+import java.util.Set;
 
-@Data
-@ToString(callSuper = true)
-@EqualsAndHashCode(callSuper = true)
-public class SchedulerEvent extends SchedulerEventInfo implements ExportableEntity<SchedulerEventId> {
+@Service
+@TbCoreComponent
+public class SchedulerEventExportService extends BaseEntityExportService<SchedulerEventId, SchedulerEvent, SchedulerEventExportData> {
 
-    @Serial
-    private static final long serialVersionUID = 2807343050519549363L;
-
-    @Schema(description = "a JSON value with scheduler event configuration", implementation = com.fasterxml.jackson.databind.JsonNode.class)
-    private transient JsonNode configuration;
-    @JsonIgnore
-    private byte[] configurationBytes;
-    @Getter
-    @Setter
-    private SchedulerEventId externalId;
-
-    public SchedulerEvent() {
-        super();
+    @Override
+    protected void setRelatedEntities(EntitiesExportCtx<?> ctx, SchedulerEvent schedulerEvent, SchedulerEventExportData exportData) {
+        schedulerEvent.setOriginatorId(getExternalIdOrElseInternal(ctx, schedulerEvent.getOriginatorId()));
+        schedulerEvent.setCustomerId(getExternalIdOrElseInternal(ctx, schedulerEvent.getCustomerId()));
+        exportData.prepareConfiguration(schedulerEvent.getConfiguration(), schedulerEvent.getType(), id -> getExternalIdOrElseInternal(ctx, id), ctx.getUser().getUuidId().toString());
     }
 
-    public SchedulerEvent(SchedulerEventId id) {
-        super(id);
+    @Override
+    protected SchedulerEventExportData newExportData() {
+        return new SchedulerEventExportData();
     }
 
-    public SchedulerEvent(SchedulerEvent schedulerEvent) {
-        super(schedulerEvent);
-        this.setConfiguration(schedulerEvent.getConfiguration().deepCopy());
-        this.setExternalId(schedulerEvent.getExternalId());
-    }
-
-    public JsonNode getConfiguration() {
-        return BaseDataWithAdditionalInfo.getJson(() -> configuration, () -> configurationBytes);
-    }
-
-    public void setConfiguration(JsonNode data) {
-        setJson(data, json -> this.configuration = json, bytes -> this.configurationBytes = bytes);
+    @Override
+    public Set<EntityType> getSupportedEntityTypes() {
+        return Set.of(EntityType.SCHEDULER_EVENT);
     }
 
 }
