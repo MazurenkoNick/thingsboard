@@ -39,6 +39,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
+import org.thingsboard.common.util.JacksonUtil;
+import org.thingsboard.server.common.data.AdminSettings;
+import org.thingsboard.server.common.data.AttributeScope;
 import org.thingsboard.server.common.data.Customer;
 import org.thingsboard.server.common.data.Dashboard;
 import org.thingsboard.server.common.data.DashboardInfo;
@@ -57,6 +60,7 @@ import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.id.UserId;
 import org.thingsboard.server.common.data.integration.AbstractIntegration;
 import org.thingsboard.server.common.data.integration.Integration;
+import org.thingsboard.server.common.data.kv.AttributeKvEntry;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageDataIterable;
 import org.thingsboard.server.common.data.page.PageLink;
@@ -66,6 +70,7 @@ import org.thingsboard.server.common.data.relation.EntityRelation;
 import org.thingsboard.server.common.data.relation.RelationTypeGroup;
 import org.thingsboard.server.common.data.security.Authority;
 import org.thingsboard.server.dao.asset.AssetService;
+import org.thingsboard.server.dao.attributes.AttributesService;
 import org.thingsboard.server.dao.customer.CustomerService;
 import org.thingsboard.server.dao.dashboard.DashboardService;
 import org.thingsboard.server.dao.device.DeviceService;
@@ -75,6 +80,7 @@ import org.thingsboard.server.dao.group.EntityGroupService;
 import org.thingsboard.server.dao.integration.IntegrationService;
 import org.thingsboard.server.dao.relation.RelationService;
 import org.thingsboard.server.dao.rule.RuleChainService;
+import org.thingsboard.server.dao.settings.AdminSettingsService;
 import org.thingsboard.server.dao.tenant.TenantService;
 import org.thingsboard.server.dao.user.UserService;
 import org.thingsboard.server.dao.wl.WhiteLabelingService;
@@ -92,6 +98,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Service
@@ -120,6 +127,8 @@ public class DefaultDataUpdateService implements DataUpdateService {
     private final SystemDataLoaderService systemDataLoaderService;
     private final ComponentDiscoveryService componentDiscoveryService;
     private final DbUpgradeExecutorService executorService;
+    private final AttributesService attributesService;
+    private final AdminSettingsService adminSettingsService;
 
     @Override
     public void updateData(boolean fromCe) throws Exception {
@@ -128,7 +137,7 @@ public class DefaultDataUpdateService implements DataUpdateService {
             updateDataFromCe();
         } else {
             //TODO: should be cleaned after each release
-
+            migrateTenantAttributeSettingsToAdminSettings();
         }
         log.info("Data updated.");
     }
@@ -144,6 +153,48 @@ public class DefaultDataUpdateService implements DataUpdateService {
         } else {
             systemDataLoaderService.updateMailTemplates(mailTemplatesSettings);
         }
+    }
+
+    private void migrateTenantAttributeSettingsToAdminSettings() {
+        log.info("Starting migration of tenant attribute settings to admin_settings...");
+        List<String> migratedKeys = List.of("mail", "sms", "jwt", "twoFaSettings");
+        PageDataIterable<TenantId> tenantIds = new PageDataIterable<>(tenantService::findTenantsIds, 1024);
+        for (TenantId tenantId : tenantIds) {
+            try {
+                List<AttributeKvEntry> attributeKvEntries = attributesService.find(tenantId, tenantId, AttributeScope.SERVER_SCOPE, migratedKeys).get(30, TimeUnit.SECONDS);
+
+                if (attributeKvEntries.isEmpty()) {
+                    continue;
+                }
+
+                List<String> migratedForTenant = new ArrayList<>(attributeKvEntries.size());
+                for (AttributeKvEntry entry : attributeKvEntries) {
+                    String key = entry.getKey();
+                    if (adminSettingsService.findAdminSettingsByTenantIdAndKey(tenantId, key) != null) {
+                        log.debug("Skipping migration of [{}] for tenant {}: already exists", key, tenantId);
+                        continue;
+                    }
+                    try {
+                        JsonNode jsonValue = JacksonUtil.toJsonNode(entry.getValueAsString());
+                        AdminSettings adminSettings = new AdminSettings();
+                        adminSettings.setTenantId(tenantId);
+                        adminSettings.setKey(key);
+                        adminSettings.setJsonValue(jsonValue);
+                        adminSettingsService.saveAdminSettings(tenantId, adminSettings);
+                        migratedForTenant.add(key);
+                    } catch (Exception e) {
+                        log.warn("[{}] Failed to parse/migrate attribute [{}]", tenantId, key, e);
+                    }
+                }
+                if (!migratedForTenant.isEmpty()) {
+                    attributesService.removeAll(tenantId, tenantId, AttributeScope.SERVER_SCOPE, migratedForTenant).get(30, TimeUnit.SECONDS);
+                    log.info("[{}] tenant : migrated keys {}", tenantId, migratedForTenant);
+                }
+            } catch (Exception e) {
+                log.error("Failed to find attribute for tenant {}", tenantId, e);
+            }
+        }
+        log.info("Tenant attribute settings migration fully completed.");
     }
 
     @Override
