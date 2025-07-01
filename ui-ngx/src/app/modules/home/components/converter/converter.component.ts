@@ -40,7 +40,6 @@ import {
   Converter,
   ConverterConfigV2,
   ConverterDebugInput,
-  ConverterLibraryInfo,
   ConverterMsg,
   ConverterSourceType,
   ConverterType,
@@ -260,11 +259,11 @@ export class ConverterComponent extends EntityComponent<Converter> implements On
   }
 
   private resetToNewTab() {
-    this.updatedConverterLibraryDisableState(this.converterTypeValue);
-    this.entityForm.get('converterLibrary').patchValue(null, {emitEvent: false});
     this.prevLibraryConverterFormValue = null;
     this.prevNewConverterFormValue = null;
     this._converterTypeValue = ConverterSourceType.NEW;
+    this.entityForm.get('converterLibrary').patchValue(null, {emitEvent: false});
+    this.updatedConverterLibraryDisableState(this.converterTypeValue);
   }
 
   hideDelete() {
@@ -275,17 +274,19 @@ export class ConverterComponent extends EntityComponent<Converter> implements On
   }
 
   onConverterSelected(converter: Converter) {
-    this.updatedConverterScriptLangDisableState(converter);
     if (this.prevLibraryConverterFormValue) {
       this.updateForm(this.prevLibraryConverterFormValue, false);
-    } else {
+    } else if (converter) {
+      if (converter.type !== this.entityForm.get('type').value) {
+        converter.type = this.entityForm.get('type').value;
+      }
       this.updateForm(converter, false);
     }
   }
 
   private updatedConverterScriptLangDisableState(converter?: Converter) {
     const scriptLangControl = this.entityForm.get('configuration.scriptLang');
-    if (converter && this.entityForm.get('converterLibrary').value) {
+    if (converter && this.entityForm.get('converterLibrary').value && this.converterTypeValue !== ConverterSourceType.NEW) {
       const { decoder, encoder, tbelDecoder, tbelEncoder } = converter.configuration || {};
       if (converter.type === ConverterType.UPLINK && (!decoder || !tbelDecoder)) {
         scriptLangControl.disable({ emitEvent: false });
@@ -306,6 +307,7 @@ export class ConverterComponent extends EntityComponent<Converter> implements On
     } else {
       converterLibraryControl.disable({emitEvent: false})
     }
+    converterLibraryControl.updateValueAndValidity();
   }
 
   buildForm(entity: Converter): FormGroup {
@@ -356,12 +358,13 @@ export class ConverterComponent extends EntityComponent<Converter> implements On
 
   updatedValidators() {
     this.updatedConverterVersionDisableState();
+    this.updatedConverterScriptLangDisableState(this.entity);
+    this.updatedConverterLibraryDisableState(this.converterTypeValue);
   }
 
   private checkIsNewConverter(entity: Converter, form: FormGroup, emitEvent = true) {
     if (entity && !entity.id) {
       if (!this.entityForm.get('converterLibrary').value) {
-        form.get('type').patchValue(entity.type || ConverterType.UPLINK, {emitEvent});
         form.get('configuration.scriptLang').patchValue(
           this.tbelEnabled ? ScriptLanguage.TBEL : ScriptLanguage.JS, {emitEvent});
         if (!emitEvent) {
@@ -372,6 +375,7 @@ export class ConverterComponent extends EntityComponent<Converter> implements On
       } else {
         this.updatedPredefinedConverterKeys();
         this.updatedConverterVersionDisableState();
+        this.updatedConverterScriptLangDisableState(entity);
         form.updateValueAndValidity();
       }
     } else {
@@ -478,7 +482,7 @@ export class ConverterComponent extends EntityComponent<Converter> implements On
   }
 
   private onSetDefaultScriptBody(converterType: ConverterType): void {
-    if (this.entityForm.get('converterLibrary').value) {
+    if (this.entityForm.get('converterLibrary').value && this.converterTypeValue === ConverterSourceType.LIBRARY) {
       return;
     }
 
@@ -611,13 +615,14 @@ export class ConverterComponent extends EntityComponent<Converter> implements On
   }
 
   private getLibraryDebugIn(): Observable<ConverterDebugInput> {
+    const converterLibrary = this.entityForm.get('converterLibrary').value;
     return forkJoin({
       inContent: this.converterLibraryService
-        .getConverterPayload(this.entityForm.get('integrationType').value, this.entityForm.get('converterLibrary.vendor').value,
-          this.entityForm.get('converterLibrary.model').value, this.entityForm.get('type').value),
+        .getConverterPayload(this.entityForm.get('integrationType').value, converterLibrary?.vendor.name,
+          converterLibrary?.model.name, this.entityForm.get('type').value),
       inMetadata: this.converterLibraryService
-        .getConverterMetaData(this.entityForm.get('integrationType').value, this.entityForm.get('converterLibrary.vendor').value,
-          this.entityForm.get('converterLibrary.model').value, this.entityForm.get('type').value)
+        .getConverterMetaData(this.entityForm.get('integrationType').value, converterLibrary?.vendor.name,
+          converterLibrary?.model.name, this.entityForm.get('type').value)
     })
       .pipe(
         map((payload) => ({

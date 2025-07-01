@@ -82,9 +82,9 @@ public class DefaultEntitiesExportImportService implements EntitiesExportImportS
     protected static final List<EntityType> SUPPORTED_ENTITY_TYPES = List.of(
             EntityType.CUSTOMER, EntityType.ROLE, EntityType.ENTITY_GROUP, EntityType.RULE_CHAIN,
             EntityType.TB_RESOURCE, EntityType.DASHBOARD, EntityType.ASSET_PROFILE, EntityType.ASSET,
-            EntityType.DEVICE_PROFILE, EntityType.DEVICE, EntityType.ENTITY_VIEW, EntityType.CONVERTER,
+            EntityType.DEVICE_PROFILE, EntityType.OTA_PACKAGE, EntityType.DEVICE, EntityType.ENTITY_VIEW, EntityType.CONVERTER,
             EntityType.INTEGRATION, EntityType.WIDGET_TYPE, EntityType.WIDGETS_BUNDLE,
-            EntityType.NOTIFICATION_TEMPLATE, EntityType.NOTIFICATION_TARGET, EntityType.NOTIFICATION_RULE
+            EntityType.NOTIFICATION_TEMPLATE, EntityType.NOTIFICATION_TARGET, EntityType.NOTIFICATION_RULE, EntityType.SCHEDULER_EVENT
     );
 
     @Override
@@ -100,7 +100,7 @@ public class DefaultEntitiesExportImportService implements EntitiesExportImportS
     }
 
     @Override
-    public <E extends ExportableEntity<I>, I extends EntityId> EntityImportResult<E> importEntity(EntitiesImportCtx ctx, EntityExportData<E> exportData) throws ThingsboardException {
+    public <E extends ExportableEntity<I>, I extends EntityId> EntityImportResult<E> importEntity(EntitiesImportCtx ctx, EntityExportData<E> exportData) throws Exception {
         if (!rateLimitService.checkRateLimit(LimitedApi.ENTITY_IMPORT, ctx.getTenantId())) {
             throw new ThingsboardException("Rate limit for entities import is exceeded", ThingsboardErrorCode.TOO_MANY_REQUESTS);
         }

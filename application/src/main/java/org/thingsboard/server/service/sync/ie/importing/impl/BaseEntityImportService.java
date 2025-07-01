@@ -43,7 +43,6 @@ import org.springframework.context.annotation.Lazy;
 import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.rule.engine.api.AttributesSaveRequest;
 import org.thingsboard.server.cluster.TbClusterService;
-import org.thingsboard.server.common.data.AttributeScope;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.ExportableEntity;
 import org.thingsboard.server.common.data.HasDefaultOption;
@@ -73,6 +72,7 @@ import org.thingsboard.server.common.data.sync.ie.EntityImportResult;
 import org.thingsboard.server.dao.cf.CalculatedFieldService;
 import org.thingsboard.server.dao.relation.RelationDao;
 import org.thingsboard.server.dao.relation.RelationService;
+import org.thingsboard.server.dao.secret.SecretConfigurationService;
 import org.thingsboard.server.service.action.EntityActionService;
 import org.thingsboard.server.service.entitiy.TbLogEntityActionService;
 import org.thingsboard.server.service.security.permission.OwnersCacheService;
@@ -90,7 +90,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -117,9 +116,11 @@ public abstract class BaseEntityImportService<I extends EntityId, E extends Expo
     protected TbClusterService clusterService;
     @Autowired
     protected TbLogEntityActionService logEntityActionService;
+    @Autowired
+    protected SecretConfigurationService secretConfigurationService;
 
     @Override
-    public EntityImportResult<E> importEntity(EntitiesImportCtx ctx, D exportData) throws ThingsboardException {
+    public EntityImportResult<E> importEntity(EntitiesImportCtx ctx, D exportData) throws Exception {
         EntityImportResult<E> importResult = new EntityImportResult<>();
         ctx.setCurrentImportResult(importResult);
         importResult.setEntityType(getEntityType());
@@ -177,12 +178,14 @@ public abstract class BaseEntityImportService<I extends EntityId, E extends Expo
     @Data
     @AllArgsConstructor
     static class CompareResult {
+
         private boolean updateNeeded;
         private boolean externalIdChangedOnly;
 
         public CompareResult(boolean updateNeeded) {
             this.updateNeeded = updateNeeded;
         }
+
     }
 
     protected boolean updateRelatedEntitiesIfUnmodified(EntitiesImportCtx ctx, E prepared, D exportData, IdProvider idProvider) {
@@ -236,7 +239,7 @@ public abstract class BaseEntityImportService<I extends EntityId, E extends Expo
         e.setExternalId(null);
     }
 
-    protected abstract E saveOrUpdate(EntitiesImportCtx ctx, E entity, D exportData, IdProvider idProvider, CompareResult compareResult);
+    protected abstract E saveOrUpdate(EntitiesImportCtx ctx, E entity, D exportData, IdProvider idProvider, CompareResult compareResult) throws Exception;
 
     protected void processAfterSaved(EntitiesImportCtx ctx, EntityImportResult<E> importResult, D exportData, IdProvider idProvider) throws ThingsboardException {
         E savedEntity = importResult.getSavedEntity();
@@ -438,7 +441,9 @@ public abstract class BaseEntityImportService<I extends EntityId, E extends Expo
         }
 
         public <ID extends EntityId> ID getInternalId(ID externalId, boolean throwExceptionIfNotFound) {
-            if (externalId == null || externalId.isNullUid()) return null;
+            if (externalId == null || externalId.isNullUid()) {
+                return null;
+            }
 
             if (EntityType.TENANT.equals(externalId.getEntityType())) {
                 return (ID) ctx.getTenantId();
@@ -465,7 +470,9 @@ public abstract class BaseEntityImportService<I extends EntityId, E extends Expo
         }
 
         public Optional<EntityId> getInternalIdByUuid(UUID externalUuid, boolean fetchAllUUIDs, Set<EntityType> hints) {
-            if (externalUuid.equals(EntityId.NULL_UUID)) return Optional.empty();
+            if (externalUuid.equals(EntityId.NULL_UUID)) {
+                return Optional.empty();
+            }
 
             for (EntityType entityType : EntityType.values()) {
                 Optional<EntityId> externalId = buildEntityId(entityType, externalUuid);
@@ -514,10 +521,6 @@ public abstract class BaseEntityImportService<I extends EntityId, E extends Expo
             }
         }
 
-    }
-
-    protected <T extends EntityId, O> T getOldEntityField(O oldEntity, Function<O, T> getter) {
-        return oldEntity == null ? null : getter.apply(oldEntity);
     }
 
     protected void replaceIdsRecursively(EntitiesImportCtx ctx, IdProvider idProvider, JsonNode json,

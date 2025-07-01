@@ -91,7 +91,6 @@ import org.thingsboard.server.common.data.sync.vc.RepositorySettings;
 import org.thingsboard.server.common.data.sync.vc.RepositorySettingsInfo;
 import org.thingsboard.server.common.data.sync.vc.VcUtils;
 import org.thingsboard.server.config.annotations.ApiOperation;
-import org.thingsboard.server.dao.attributes.AttributesService;
 import org.thingsboard.server.dao.audit.AuditLogService;
 import org.thingsboard.server.dao.settings.AdminSettingsService;
 import org.thingsboard.server.dao.settings.SecuritySettingsService;
@@ -123,7 +122,6 @@ import static org.thingsboard.server.controller.ControllerConstants.TENANT_AUTHO
 @RequiredArgsConstructor
 public class AdminController extends BaseController {
 
-    private final AttributesService attributesService;
     private final MailService mailService;
     private final SmsService smsService;
     private final AdminSettingsService adminSettingsService;
@@ -596,7 +594,7 @@ public class AdminController extends BaseController {
         AdminSettings adminSettings = adminSettingsService.findAdminSettingsByTenantIdAndKey(tenantId, key);
         if (adminSettings == null) {
             if (systemByDefault) {
-                return checkNotNull(adminSettingsService.findAdminSettingsByKey(tenantId, key));
+                return checkNotNull(adminSettingsService.findAdminSettingsByTenantIdAndKey(TenantId.SYS_TENANT_ID, key));
             } else {
                 adminSettings = new AdminSettings();
                 adminSettings.setTenantId(tenantId);

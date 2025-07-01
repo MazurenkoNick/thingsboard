@@ -160,11 +160,9 @@ public class DefaultTbClusterService implements TbClusterService {
     private final AtomicInteger toEdgeNfs = new AtomicInteger(0);
 
     @Autowired
-    @Lazy
     private PartitionService partitionService;
 
     @Autowired
-    @Lazy
     private TbQueueProducerProvider producerProvider;
 
     @Autowired
@@ -643,7 +641,8 @@ public class DefaultTbClusterService implements TbClusterService {
         }
     }
 
-    private void broadcast(ComponentLifecycleMsg msg) {
+    @Override
+    public void broadcast(ComponentLifecycleMsg msg) {
         ComponentLifecycleMsgProto componentLifecycleMsgProto = toProto(msg);
         TbQueueProducer<TbProtoQueueMsg<ToRuleEngineNotificationMsg>> toRuleEngineProducer = producerProvider.getRuleEngineNotificationsMsgProducer();
         Set<String> tbRuleEngineServices = partitionService.getAllServiceIds(ServiceType.TB_RULE_ENGINE);
@@ -664,15 +663,16 @@ public class DefaultTbClusterService implements TbClusterService {
         }
 
         boolean toCore = entityType.equals(EntityType.TENANT) ||
-                entityType.equals(EntityType.TENANT_PROFILE) ||
-                entityType.equals(EntityType.DEVICE_PROFILE) ||
-                (entityType.equals(EntityType.ASSET) && msg.getEvent() == ComponentLifecycleEvent.UPDATED) ||
-                entityType.equals(EntityType.ASSET_PROFILE) ||
-                entityType.equals(EntityType.API_USAGE_STATE) ||
-                (entityType.equals(EntityType.DEVICE) && msg.getEvent() == ComponentLifecycleEvent.UPDATED) ||
-                entityType.equals(EntityType.ENTITY_VIEW) ||
-                entityType.equals(EntityType.NOTIFICATION_RULE) ||
-                entityType.equals(EntityType.CALCULATED_FIELD);
+                         entityType.equals(EntityType.TENANT_PROFILE) ||
+                         entityType.equals(EntityType.DEVICE_PROFILE) ||
+                         (entityType.equals(EntityType.ASSET) && msg.getEvent() == ComponentLifecycleEvent.UPDATED) ||
+                         entityType.equals(EntityType.ASSET_PROFILE) ||
+                         entityType.equals(EntityType.API_USAGE_STATE) ||
+                         (entityType.equals(EntityType.DEVICE) && msg.getEvent() == ComponentLifecycleEvent.UPDATED) ||
+                         entityType.equals(EntityType.ENTITY_VIEW) ||
+                         entityType.equals(EntityType.NOTIFICATION_RULE) ||
+                         entityType.equals(EntityType.CALCULATED_FIELD) ||
+                         entityType.equals(EntityType.JOB);
 
         boolean toRuleEngine = !toIntegrationExecutor;
 
@@ -711,7 +711,7 @@ public class DefaultTbClusterService implements TbClusterService {
             int toEdgeNfsCnt = toEdgeNfs.getAndSet(0);
             if (toCoreMsgCnt > 0 || toCoreNfsCnt > 0 || toIeNfsCnt > 0 || toRuleEngineMsgsCnt > 0 || toRuleEngineNfsCnt > 0 || toTransportNfsCnt > 0 || toEdgeMsgCnt > 0 || toEdgeNfsCnt > 0) {
                 log.info("To TbCore: [{}] messages [{}] notifications; To TbRuleEngine: [{}] messages [{}] notifications; To Transport: [{}] notifications; " +
-                                "To Integration Executor: [{}] notifications; To Edge: [{}] messages [{}] notifications",
+                         "To Integration Executor: [{}] notifications; To Edge: [{}] messages [{}] notifications",
                         toCoreMsgCnt, toCoreNfsCnt, toRuleEngineMsgsCnt, toRuleEngineNfsCnt, toTransportNfsCnt, toIeNfsCnt, toEdgeMsgCnt, toEdgeNfsCnt);
             }
         }
@@ -753,6 +753,7 @@ public class DefaultTbClusterService implements TbClusterService {
             }
             msg.event(ComponentLifecycleEvent.UPDATED)
                     .oldProfileId(old.getDeviceProfileId())
+                    .ownerChanged(!entity.getOwnerId().equals(old.getOwnerId()))
                     .oldName(old.getName());
         }
         broadcast(msg.build());
@@ -773,6 +774,7 @@ public class DefaultTbClusterService implements TbClusterService {
         } else {
             msg.event(ComponentLifecycleEvent.UPDATED)
                     .oldProfileId(old.getAssetProfileId())
+                    .ownerChanged(!entity.getOwnerId().equals(old.getOwnerId()))
                     .oldName(old.getName());
         }
         broadcast(msg.build());

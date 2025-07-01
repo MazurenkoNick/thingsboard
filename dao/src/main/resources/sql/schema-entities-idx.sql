@@ -120,6 +120,8 @@ CREATE INDEX IF NOT EXISTS idx_role_external_id ON role(tenant_id, external_id);
 
 CREATE INDEX IF NOT EXISTS idx_entity_group_external_id ON entity_group(external_id);
 
+CREATE INDEX IF NOT EXISTS idx_ota_package_external_id ON ota_package(tenant_id, external_id);
+
 CREATE INDEX IF NOT EXISTS idx_rule_node_type_id_configuration_version ON rule_node(type, id, configuration_version);
 
 CREATE INDEX IF NOT EXISTS idx_api_usage_state_entity_id ON api_usage_state(entity_id);
@@ -168,3 +170,7 @@ CREATE INDEX IF NOT EXISTS idx_group_permission_tenant_id ON group_permission(te
 CREATE INDEX IF NOT EXISTS idx_custom_menu ON custom_menu(tenant_id, customer_id);
 
 CREATE INDEX IF NOT EXISTS mobile_app_bundle_tenant_id ON mobile_app_bundle(tenant_id);
+
+CREATE INDEX IF NOT EXISTS idx_job_tenant_id ON job(tenant_id);
+
+CREATE INDEX IF NOT EXISTS idx_encryption_key_tenant_id ON encryption_key(tenant_id);

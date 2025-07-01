@@ -175,7 +175,8 @@ CREATE TABLE IF NOT EXISTS component_descriptor (
     scope varchar(255),
     type varchar(255),
     clustering_mode varchar(255),
-    has_queue_name boolean DEFAULT false
+    has_queue_name boolean DEFAULT false,
+    has_secrets boolean DEFAULT false
 );
 
 CREATE TABLE IF NOT EXISTS customer (
@@ -276,7 +277,9 @@ CREATE TABLE IF NOT EXISTS ota_package (
     data oid,
     data_size bigint,
     additional_info varchar,
-    CONSTRAINT ota_package_tenant_title_version_unq_key UNIQUE (tenant_id, title, version)
+    external_id uuid,
+    CONSTRAINT ota_package_tenant_title_version_unq_key UNIQUE (tenant_id, title, version),
+    CONSTRAINT ota_package_external_id_unq_key UNIQUE (tenant_id, external_id)
 );
 
 CREATE TABLE IF NOT EXISTS queue (
@@ -313,7 +316,7 @@ CREATE TABLE IF NOT EXISTS asset_profile (
     CONSTRAINT fk_default_rule_chain_asset_profile FOREIGN KEY (default_rule_chain_id) REFERENCES rule_chain(id),
     CONSTRAINT fk_default_dashboard_asset_profile FOREIGN KEY (default_dashboard_id) REFERENCES dashboard(id),
     CONSTRAINT fk_default_edge_rule_chain_asset_profile FOREIGN KEY (default_edge_rule_chain_id) REFERENCES rule_chain(id)
-    );
+);
 
 CREATE TABLE IF NOT EXISTS asset (
     id uuid NOT NULL CONSTRAINT asset_pkey PRIMARY KEY,
@@ -661,7 +664,28 @@ CREATE TABLE IF NOT EXISTS scheduler_event (
     schedule varchar,
     configuration varchar(10000000),
     enabled boolean,
-    version BIGINT DEFAULT 1
+    external_id uuid,
+    version BIGINT DEFAULT 1,
+    CONSTRAINT scheduler_event_external_id_unq_key UNIQUE (tenant_id, external_id)
+);
+
+CREATE TABLE IF NOT EXISTS secret (
+    id uuid NOT NULL CONSTRAINT secret_pkey PRIMARY KEY,
+    created_time bigint NOT NULL,
+    tenant_id uuid,
+    name varchar(255),
+    type varchar(255),
+    description varchar(255),
+    value bytea,
+    CONSTRAINT secret_unq_key UNIQUE (tenant_id, name)
+);
+
+CREATE TABLE IF NOT EXISTS encryption_key (
+    id uuid NOT NULL CONSTRAINT encryption_key_pkey PRIMARY KEY,
+    created_time bigint NOT NULL,
+    tenant_id uuid,
+    password varchar(255),
+    salt varchar(255)
 );
 
 CREATE TABLE IF NOT EXISTS blob_entity (
@@ -1169,3 +1193,16 @@ CREATE TABLE IF NOT EXISTS cf_debug_event (
     e_result varchar,
     e_error varchar
 ) PARTITION BY RANGE (ts);
+
+CREATE TABLE IF NOT EXISTS job (
+    id uuid NOT NULL CONSTRAINT job_pkey PRIMARY KEY,
+    created_time bigint NOT NULL,
+    tenant_id uuid NOT NULL,
+    type varchar NOT NULL,
+    key varchar NOT NULL,
+    entity_id uuid NOT NULL,
+    entity_type varchar NOT NULL,
+    status varchar NOT NULL,
+    configuration varchar NOT NULL,
+    result varchar
+);

@@ -29,19 +29,20 @@
 -- OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 --
 
--- UPDATE INTEGRATION PROTOCOL VERSION FOR MQTT CLIENT TYPES START
+-- UPDATE OTA PACKAGE EXTERNAL ID START
 
-UPDATE integration
-SET configuration = jsonb_set(configuration::jsonb,'{clientConfiguration,protocolVersion}','"MQTT_3_1"', true)::varchar
-WHERE
-    NOT (configuration::jsonb)->'clientConfiguration' ? 'protocolVersion'
-    AND type IN ('MQTT', 'AWS_IOT', 'IBM_WATSON_IOT', 'TTI', 'TTN');
+ALTER TABLE ota_package
+    ADD COLUMN IF NOT EXISTS external_id uuid;
+ALTER TABLE ota_package
+    ADD CONSTRAINT ota_package_external_id_unq_key UNIQUE (tenant_id, external_id);
 
--- Set "MQTT_3_1_1" only for AZURE_IOT_HUB
-UPDATE integration
-SET configuration = jsonb_set(configuration::jsonb,'{clientConfiguration,protocolVersion}','"MQTT_3_1_1"', true)::varchar
-WHERE
-    NOT (configuration::jsonb)->'clientConfiguration' ? 'protocolVersion'
-    AND type = 'AZURE_IOT_HUB';
+-- UPDATE OTA PACKAGE EXTERNAL ID END
 
--- UPDATE INTEGRATION PROTOCOL VERSION FOR MQTT CLIENT TYPES END
+-- UPDATE SCHEDULER_EVENT EXTERNAL ID START
+
+ALTER TABLE scheduler_event
+    ADD COLUMN IF NOT EXISTS external_id uuid;
+ALTER TABLE scheduler_event
+    ADD CONSTRAINT scheduler_event_external_id_unq_key UNIQUE (tenant_id, external_id);
+
+-- UPDATE SCHEDULER_EVENT EXTERNAL ID END

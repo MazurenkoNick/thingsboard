@@ -59,6 +59,7 @@ import { JsLibraryTableHeaderComponent } from '@home/pages/admin/resource/js-lib
 import { JsResourceComponent } from '@home/pages/admin/resource/js-resource.component';
 import { NgxFlowModule } from '@flowjs/ngx-flow';
 import { TrendzSettingsComponent } from '@home/pages/admin/trendz-settings.component';
+import { ResourceLibraryTabsComponent } from '@home/pages/admin/resource/resource-library-tabs.component';
 
 @NgModule({
   declarations:
@@ -78,6 +79,7 @@ import { TrendzSettingsComponent } from '@home/pages/admin/trendz-settings.compo
       HomeSettingsComponent,
       ResourcesLibraryComponent,
       ResourceTabsComponent,
+      ResourceLibraryTabsComponent,
       ResourcesTableHeaderComponent,
       JsResourceComponent,
       JsLibraryTableHeaderComponent,

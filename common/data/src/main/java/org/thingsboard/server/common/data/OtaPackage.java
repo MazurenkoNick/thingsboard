@@ -35,6 +35,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.thingsboard.server.common.data.id.OtaPackageId;
 
+import java.io.Serial;
 import java.nio.ByteBuffer;
 
 @Schema
@@ -42,6 +43,7 @@ import java.nio.ByteBuffer;
 @EqualsAndHashCode(callSuper = true)
 public class OtaPackage extends OtaPackageInfo {
 
+    @Serial
     private static final long serialVersionUID = 3091601761339422546L;
 
     @Schema(description = "OTA Package data.", accessMode = Schema.AccessMode.READ_ONLY)
@@ -59,4 +61,10 @@ public class OtaPackage extends OtaPackageInfo {
         super(otaPackage);
         this.data = otaPackage.getData();
     }
+
+    public OtaPackage(OtaPackageInfo otaPackageInfo) {
+        super(otaPackageInfo);
+        this.data = null;
+    }
+
 }
