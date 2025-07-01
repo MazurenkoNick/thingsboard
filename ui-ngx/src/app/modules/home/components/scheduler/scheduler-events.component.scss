@@ -78,9 +78,13 @@ $tb-button-selected-color: rgb(255, 110, 64) !default;
       }
     }
 
-    .tb-widget-actions {
-      .mat-icon {
-        color: var(--mat-icon-color) !important;
+    .mat-toolbar-tools {
+      .tb-widget-actions {
+        .mdc-icon-button {
+          .mat-icon {
+            color: var(--mat-icon-color);
+          }
+        }
       }
     }
 

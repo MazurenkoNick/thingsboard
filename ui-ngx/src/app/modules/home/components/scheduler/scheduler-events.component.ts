@@ -228,7 +228,7 @@ export class SchedulerEventsComponent extends PageComponent implements OnInit, A
       this.initializeWidgetConfig();
       this.ctx.updateWidgetParams();
     } else {
-      this.displayedColumns = ['createdTime', 'name', 'typeName', 'customerTitle', 'actions'];
+      this.displayedColumns = ['createdTime', 'name', 'type', 'customerTitle', 'actions'];
       if (this.deleteEnabled) {
         this.displayedColumns.unshift('select');
       }
@@ -376,7 +376,7 @@ export class SchedulerEventsComponent extends PageComponent implements OnInit, A
     }
     this.displayedColumns.push('name');
     if (displayType) {
-      this.displayedColumns.push('typeName');
+      this.displayedColumns.push('type');
     }
     if (displayCustomer) {
       this.displayedColumns.push('customerTitle');
@@ -414,9 +414,6 @@ export class SchedulerEventsComponent extends PageComponent implements OnInit, A
     }
 
     const sortOrder: SortOrder = sortOrderFromString(this.defaultSortOrder);
-    if (sortOrder.property === 'type') {
-      sortOrder.property = 'typeName';
-    }
     if (sortOrder.property === 'customer') {
       sortOrder.property = 'customerTitle';
     }
@@ -607,9 +604,6 @@ export class SchedulerEventsComponent extends PageComponent implements OnInit, A
         this.pageLink.page = 0;
       }
       this.pageLink.sortOrder.property = this.sort.active;
-      if (this.pageLink.sortOrder.property === 'typeName') {
-        this.pageLink.sortOrder.property = 'type';
-      }
       this.pageLink.sortOrder.direction = Direction[this.sort.direction.toUpperCase()];
       this.dataSource.edgeId = this.edgeId;
       this.dataSource.loadEntities(this.pageLink, this.defaultEventType);
