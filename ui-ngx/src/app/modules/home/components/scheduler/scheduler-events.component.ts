@@ -39,6 +39,7 @@ import {
   OnChanges,
   OnDestroy,
   OnInit,
+  Optional,
   SimpleChanges,
   ViewChild,
   ViewEncapsulation
@@ -54,6 +55,7 @@ import { Authority } from '@shared/models/authority.enum';
 import {
   CalendarQueryParam,
   SchedulerEvent,
+  SchedulerEventMode,
   SchedulerEventWithCustomerInfo,
   SchedulerRepeatType,
   schedulerTimeUnitRepeatTranslationMap,
@@ -117,6 +119,7 @@ import { asRoughMs, rangeContainsMarker } from '@fullcalendar/core/internal';
 import _moment from 'moment';
 import { FormBuilder } from '@angular/forms';
 import { isValidPageStepCount, isValidPageStepIncrement } from '@home/components/widget/lib/table-widget.models';
+import { WidgetComponent } from '@home/components/widget/widget.component';
 
 @Component({
   selector: 'tb-scheduler-events',
@@ -160,7 +163,7 @@ export class SchedulerEventsComponent extends PageComponent implements OnInit, A
     this.authUser.authority === Authority.CUSTOMER_USER) &&
     this.userPermissionsService.hasGenericPermission(Resource.SCHEDULER_EVENT, Operation.READ);
 
-  mode: 'list' | 'calendar' = 'list';
+  mode: SchedulerEventMode = 'list';
 
   displayPagination = true;
   pageSizeOptions: Array<number> = [];
@@ -210,12 +213,14 @@ export class SchedulerEventsComponent extends PageComponent implements OnInit, A
               private route: ActivatedRoute,
               private cd: ChangeDetectorRef,
               private fb: FormBuilder,
-              private zone: NgZone) {
+              private zone: NgZone,
+              @Optional() public widgetComponent: WidgetComponent) {
     super(store);
   }
 
   ngOnInit(): void {
     if (this.widgetMode) {
+      this.ctx.embedActionsPanel = true;
       this.ctx.$scope.schedulerEventsWidget = this;
     }
     if (this.showData && this.widgetMode) {
@@ -481,6 +486,8 @@ export class SchedulerEventsComponent extends PageComponent implements OnInit, A
           if (this.displayPagination) {
             this.paginator.pageIndex = 0;
           }
+          this.pageLink.textSearch = value.trim();
+          this.updateData();
         } else {
           const queryParams: PageQueryParam = {
             textSearch: isNotEmptyStr(value) ? encodeURI(value) : null,
@@ -488,8 +495,6 @@ export class SchedulerEventsComponent extends PageComponent implements OnInit, A
           };
           this.updatedRouterQueryParams(queryParams);
         }
-        this.pageLink.textSearch = value.trim();
-        this.updateData(true);
       });
 
       let paginatorSubscription$: Observable<object>;
@@ -520,10 +525,11 @@ export class SchedulerEventsComponent extends PageComponent implements OnInit, A
       ((this.displayPagination ? merge(sortSubscription$, paginatorSubscription$) : sortSubscription$) as Observable<PageQueryParam>).pipe(
         takeUntil(this.destroy$)
       ).subscribe((queryParams) => {
-        if (!this.widgetMode) {
+        if (this.widgetMode) {
+          this.updateData();
+        } else {
           this.updatedRouterQueryParams(queryParams);
         }
-        this.updateData(true);
       });
 
       if (!this.widgetMode) {
@@ -542,11 +548,11 @@ export class SchedulerEventsComponent extends PageComponent implements OnInit, A
             this.pageLink.textSearch = null;
             this.textSearch.reset('', {emitEvent: false});
           }
-          this.updateData(true);
+          this.updateData();
         });
       }
 
-      this.updateData(true);
+      this.updateData();
     }
   }
 
@@ -556,7 +562,7 @@ export class SchedulerEventsComponent extends PageComponent implements OnInit, A
     }
   }
 
-  updateMode(mode: 'list' | 'calendar', updateRouterQueryParams: boolean = true) {
+  updateMode(mode: SchedulerEventMode, updateRouterQueryParams: boolean = true) {
     this.mode = mode;
     if (mode === 'calendar') {
       this.dataSource?.selection.clear();
@@ -567,11 +573,12 @@ export class SchedulerEventsComponent extends PageComponent implements OnInit, A
         mode: mode === 'calendar' ? mode : null
       };
       this.updatedRouterQueryParams(queryParams, 'replace');
+    } else {
+      this.updateData();
     }
-    this.updateData(true);
   }
 
-  initializeCalendar() {
+  private initializeCalendar() {
     if (!this.isCalendarInitialized.getValue()) {
       setTimeout(() => {
         this.calendarApi = this.calendarComponent.getApi();
@@ -581,7 +588,7 @@ export class SchedulerEventsComponent extends PageComponent implements OnInit, A
     }
   }
 
-  updateData(reload: boolean = false) {
+  updateData() {
     if (this.mode === 'calendar') {
       this.isCalendarInitialized.pipe(
         filter((isInitialized) => isInitialized),
@@ -605,7 +612,7 @@ export class SchedulerEventsComponent extends PageComponent implements OnInit, A
       }
       this.pageLink.sortOrder.direction = Direction[this.sort.direction.toUpperCase()];
       this.dataSource.edgeId = this.edgeId;
-      this.dataSource.loadEntities(this.pageLink, this.defaultEventType, reload);
+      this.dataSource.loadEntities(this.pageLink, this.defaultEventType);
     }
     if (this.widgetMode) {
       this.ctx.detectChanges();
@@ -634,7 +641,7 @@ export class SchedulerEventsComponent extends PageComponent implements OnInit, A
   }
 
   reloadSchedulerEvents() {
-    this.updateData(true);
+    this.updateData();
   }
 
   deleteSchedulerEvent($event: Event, schedulerEvent: SchedulerEventWithCustomerInfo) {
@@ -784,7 +791,7 @@ export class SchedulerEventsComponent extends PageComponent implements OnInit, A
     }
   }
 
-  updateCalendarDateQueryParams() {
+  private updateCalendarDateQueryParams() {
     if (!this.widgetMode) {
       const today = this.isCalendarToday();
       const queryParams = {
@@ -826,7 +833,7 @@ export class SchedulerEventsComponent extends PageComponent implements OnInit, A
     this.updateCalendarDateQueryParams();
   }
 
-  gotoCalendarDate(date: number) {
+  private gotoCalendarDate(date: number) {
     this.calendarApi.gotoDate(date);
   }
 
@@ -939,55 +946,51 @@ export class SchedulerEventsComponent extends PageComponent implements OnInit, A
     const eventType = this.defaultEventType || '';
     const textSearch = this.pageLink.textSearch || '';
 
-    this.schedulerEventService
-      .getCalendarSchedulerEvents(
-        eventType,
-        arg.start.getTime(),
-        arg.end.getTime(),
-        textSearch,
-        this.edgeId
-      )
-      .pipe(
-        map((schedulerEvents: SchedulerEventWithCustomerInfo[]) => {
-          this.schedulerEvents = schedulerEvents;
-          const events: EventInput[] = [];
-          if (this.schedulerEvents && this.schedulerEvents.length && this.calendarApi) {
-            const start = toMoment(arg.start, this.calendarApi);
-            const end = toMoment(arg.end, this.calendarApi);
-            const rangeStart = start.local();
-            const rangeEnd = end.local();
-            this.schedulerEvents.forEach((event) => {
-              const eventStart = _moment(event.schedule.startTime);
-              let calendarEvent: EventInput;
-              if (rangeEnd.isSameOrAfter(eventStart)) {
-                if (event.schedule.repeat) {
-                  const repeatEndsOn = _moment(event.schedule.repeat.endsOn);
-                  if (event.schedule.repeat.type === SchedulerRepeatType.TIMER) {
-                    calendarEvent = this.toCalendarEvent(event, eventStart, repeatEndsOn);
-                    events.push(calendarEvent);
-                  } else {
-                    event.timestamps.forEach(ts => {
-                      calendarEvent = this.toCalendarEvent(event, _moment(ts));
-                      events.push(calendarEvent);
-                    });
-                  }
-                } else if (rangeStart.isSameOrBefore(eventStart)) {
-                  calendarEvent = this.toCalendarEvent(event, eventStart);
+    this.schedulerEventService.getCalendarSchedulerEvents(
+      eventType,
+      arg.start.getTime(),
+      arg.end.getTime(),
+      textSearch,
+      this.edgeId
+    )
+    .pipe(
+      map((schedulerEvents: SchedulerEventWithCustomerInfo[]) => {
+        this.schedulerEvents = schedulerEvents;
+        const events: EventInput[] = [];
+        if (this.schedulerEvents && this.schedulerEvents.length && this.calendarApi) {
+          const start = toMoment(arg.start, this.calendarApi);
+          const end = toMoment(arg.end, this.calendarApi);
+          const rangeStart = start.local();
+          const rangeEnd = end.local();
+          this.schedulerEvents.forEach((event) => {
+            const eventStart = _moment(event.schedule.startTime);
+            let calendarEvent: EventInput;
+            if (rangeEnd.isSameOrAfter(eventStart)) {
+              if (event.schedule.repeat) {
+                const repeatEndsOn = _moment(event.schedule.repeat.endsOn);
+                if (event.schedule.repeat.type === SchedulerRepeatType.TIMER) {
+                  calendarEvent = this.toCalendarEvent(event, eventStart, repeatEndsOn);
                   events.push(calendarEvent);
+                } else {
+                  event.timestamps.forEach(ts => {
+                    calendarEvent = this.toCalendarEvent(event, _moment(ts));
+                    events.push(calendarEvent);
+                  });
                 }
+              } else if (rangeStart.isSameOrBefore(eventStart)) {
+                calendarEvent = this.toCalendarEvent(event, eventStart);
+                events.push(calendarEvent);
               }
-            });
-          }
-          return events;
-        }),
-        catchError((error) => {
-          failureCallback(error);
-          return of([]);
-        })
-      )
-      .subscribe((events) => {
-        successCallback(events);
-      });
+            }
+          });
+        }
+        return events;
+      })
+    )
+    .subscribe({
+      next: (events) => successCallback(events),
+      error: (error) => failureCallback(error)
+    });
   }
 
   private toCalendarEvent(event: SchedulerEventWithCustomerInfo, start: _moment.Moment, end?: _moment.Moment): EventInput {
@@ -1124,8 +1127,6 @@ class SchedulerEventsDatasource implements DataSource<SchedulerEventWithCustomer
 
   public selection = new SelectionModel<SchedulerEventWithCustomerInfo>(true, []);
 
-  private allEntities: Observable<PageData<SchedulerEventWithCustomerInfo>>;
-
   public dataLoading = true;
 
   public edgeId: string;
@@ -1150,12 +1151,8 @@ class SchedulerEventsDatasource implements DataSource<SchedulerEventWithCustomer
     this.pageDataSubject.next(pageData);
   }
 
-  loadEntities(pageLink: PageLink, eventType: string,
-               reload: boolean = false): Observable<PageData<SchedulerEventWithCustomerInfo>> {
+  loadEntities(pageLink: PageLink, eventType: string): Observable<PageData<SchedulerEventWithCustomerInfo>> {
     this.dataLoading = true;
-    if (reload) {
-      this.allEntities = null;
-    }
     const result = new ReplaySubject<PageData<SchedulerEventWithCustomerInfo>>();
     this.getEntities(eventType, pageLink).pipe(
       tap(() => this.selection.clear()),
@@ -1172,27 +1169,24 @@ class SchedulerEventsDatasource implements DataSource<SchedulerEventWithCustomer
   }
 
   getEntities(eventType: string, pageLink: PageLink): Observable<PageData<SchedulerEventWithCustomerInfo>> {
-    if (!this.allEntities) {
-      this.allEntities = this.schedulerEventService.getSchedulerEvents(eventType, pageLink, this.edgeId).pipe(
-        map((schedulerEvents) => {
-          schedulerEvents.data.forEach((schedulerEvent) => {
-            let typeName = schedulerEvent.type;
-            if (this.schedulerEventConfigTypes[typeName]) {
-              typeName = this.schedulerEventConfigTypes[typeName].name;
-            }
-            schedulerEvent.typeName = typeName;
-          });
-          return schedulerEvents;
-        }),
-        share({
-          connector: () => new ReplaySubject(1),
-          resetOnError: false,
-          resetOnComplete: false,
-          resetOnRefCountZero: false
-        })
-      );
-    }
-    return this.allEntities;
+    return this.schedulerEventService.getSchedulerEventsByPageLink(eventType, pageLink, this.edgeId).pipe(
+      map((schedulerEvents) => {
+        schedulerEvents.data.forEach((schedulerEvent) => {
+          let typeName = schedulerEvent.type;
+          if (this.schedulerEventConfigTypes[typeName]) {
+            typeName = this.schedulerEventConfigTypes[typeName].name;
+          }
+          schedulerEvent.typeName = typeName;
+        });
+        return schedulerEvents;
+      }),
+      share({
+        connector: () => new ReplaySubject(1),
+        resetOnError: false,
+        resetOnComplete: false,
+        resetOnRefCountZero: false
+      })
+    );
   }
 
   isAllSelected(): Observable<boolean> {

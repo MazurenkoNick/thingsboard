@@ -65,38 +65,42 @@
           </div>
         </div>
         <span class="flex-1"></span>
-        <section *ngIf="!widgetMode">
-          <button *ngIf="addEnabled"
-                  [disabled]="isLoading$ | async"
-                  mat-icon-button
-                  (click)="addSchedulerEvent($event)"
-                  matTooltip="{{'scheduler.add-scheduler-event' | translate }}"
-                  matTooltipPosition="above">
-            <mat-icon>add</mat-icon>
-          </button>
-          <button *ngIf="assignEnabled"
-                  [disabled]="isLoading$ | async"
-                  mat-icon-button
-                  (click)="assignToEdgeSchedulerEvent($event)"
-                  matTooltip="{{'edge.assign-to-edge' | translate }}"
-                  matTooltipPosition="above">
-            <mat-icon>add</mat-icon>
-          </button>
-          <button [disabled]="isLoading$ | async"
-                  mat-icon-button
-                  (click)="enterFilterMode()"
-                  matTooltip="{{'action.search' | translate }}"
-                  matTooltipPosition="above">
-            <mat-icon>search</mat-icon>
-          </button>
-          <button [disabled]="isLoading$ | async"
-                  mat-icon-button
-                  (click)="reloadSchedulerEvents()"
-                  matTooltip="{{'action.refresh' | translate }}"
-                  matTooltipPosition="above">
-            <mat-icon>refresh</mat-icon>
-          </button>
-        </section>
+        @if (widgetMode) {
+          <ng-container *ngTemplateOutlet="widgetComponent.widgetHeaderActionsPanel"></ng-container>
+        } @else {
+          <section>
+            <button *ngIf="addEnabled"
+                    [disabled]="isLoading$ | async"
+                    mat-icon-button
+                    (click)="addSchedulerEvent($event)"
+                    matTooltip="{{'scheduler.add-scheduler-event' | translate }}"
+                    matTooltipPosition="above">
+              <mat-icon>add</mat-icon>
+            </button>
+            <button *ngIf="assignEnabled"
+                    [disabled]="isLoading$ | async"
+                    mat-icon-button
+                    (click)="assignToEdgeSchedulerEvent($event)"
+                    matTooltip="{{'edge.assign-to-edge' | translate }}"
+                    matTooltipPosition="above">
+              <mat-icon>add</mat-icon>
+            </button>
+            <button [disabled]="isLoading$ | async"
+                    mat-icon-button
+                    (click)="enterFilterMode()"
+                    matTooltip="{{'action.search' | translate }}"
+                    matTooltipPosition="above">
+              <mat-icon>search</mat-icon>
+            </button>
+            <button [disabled]="isLoading$ | async"
+                    mat-icon-button
+                    (click)="reloadSchedulerEvents()"
+                    matTooltip="{{'action.refresh' | translate }}"
+                    matTooltipPosition="above">
+              <mat-icon>refresh</mat-icon>
+            </button>
+          </section>
+        }
       </div>
     </mat-toolbar>
     <mat-toolbar class="mat-mdc-table-toolbar" [class.!hidden]="!textSearchMode || !dataSource.selection.isEmpty()">

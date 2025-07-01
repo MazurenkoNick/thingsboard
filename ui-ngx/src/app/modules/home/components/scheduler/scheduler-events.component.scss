@@ -78,6 +78,12 @@ $tb-button-selected-color: rgb(255, 110, 64) !default;
       }
     }
 
+    .tb-widget-actions {
+      .mat-icon {
+        color: var(--mat-icon-color) !important;
+      }
+    }
+
     .table-container {
       overflow: auto;
       flex: 1 1 0;

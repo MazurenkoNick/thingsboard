@@ -54,7 +54,7 @@ export class SchedulerEventService {
   ) {
   }
 
-  public getAllSchedulerEvents(type: string = '', config?: RequestConfig): Observable<Array<SchedulerEventWithCustomerInfo>> {
+  public getSchedulerEvents(type: string = '', config?: RequestConfig): Observable<Array<SchedulerEventWithCustomerInfo>> {
     let url = '/api/schedulerEvents';
     if (isDefinedAndNotNull(type) && type !== '') {
       url += `?type=${type}`;
@@ -63,7 +63,7 @@ export class SchedulerEventService {
       defaultHttpOptionsFromConfig(config));
   }
 
-  public getSchedulerEvents(type: string, pageLink: PageLink, edgeId?: string, config?: RequestConfig): Observable<PageData<SchedulerEventWithCustomerInfo>> {
+  public getSchedulerEventsByPageLink(type: string, pageLink: PageLink, edgeId?: string, config?: RequestConfig): Observable<PageData<SchedulerEventWithCustomerInfo>> {
     return this.http.get<PageData<SchedulerEventWithCustomerInfo>>(`/api/schedulerEvents${pageLink.toQuery()}${type ? `&type=${type}` : ''}${edgeId ? `&edgeId=${edgeId}` : ''}`, defaultHttpOptionsFromConfig(config));
   }
 
