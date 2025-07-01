@@ -28,58 +28,44 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.common.data.scheduler;
+package org.thingsboard.server.common.data.sync.ie;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.JsonNode;
-import io.swagger.v3.oas.annotations.media.Schema;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
-import org.thingsboard.server.common.data.BaseDataWithAdditionalInfo;
-import org.thingsboard.server.common.data.ExportableEntity;
-import org.thingsboard.server.common.data.id.SchedulerEventId;
+import org.thingsboard.server.common.data.id.DashboardId;
+import org.thingsboard.server.common.data.id.EntityId;
+import org.thingsboard.server.common.data.id.OtaPackageId;
+import org.thingsboard.server.common.data.scheduler.SchedulerEvent;
 
-import java.io.Serial;
+import java.util.UUID;
+import java.util.function.Function;
 
 @Data
-@ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public class SchedulerEvent extends SchedulerEventInfo implements ExportableEntity<SchedulerEventId> {
+public class SchedulerEventExportData extends EntityExportData<SchedulerEvent> {
 
-    @Serial
-    private static final long serialVersionUID = 2807343050519549363L;
-
-    @Schema(description = "a JSON value with scheduler event configuration", implementation = com.fasterxml.jackson.databind.JsonNode.class)
-    private transient JsonNode configuration;
-    @JsonIgnore
-    private byte[] configurationBytes;
-    @Getter
-    @Setter
-    private SchedulerEventId externalId;
-
-    public SchedulerEvent() {
-        super();
-    }
-
-    public SchedulerEvent(SchedulerEventId id) {
-        super(id);
-    }
-
-    public SchedulerEvent(SchedulerEvent schedulerEvent) {
-        super(schedulerEvent);
-        this.setConfiguration(schedulerEvent.getConfiguration().deepCopy());
-        this.setExternalId(schedulerEvent.getExternalId());
-    }
-
-    public JsonNode getConfiguration() {
-        return BaseDataWithAdditionalInfo.getJson(() -> configuration, () -> configurationBytes);
-    }
-
-    public void setConfiguration(JsonNode data) {
-        setJson(data, json -> this.configuration = json, bytes -> this.configurationBytes = bytes);
+    public void prepareConfiguration(JsonNode configuration, String type, Function<EntityId, EntityId> idMapper, String userId) {
+        switch (type) {
+            case "updateFirmware", "updateSoftware" -> {
+                ObjectNode msgBody = configuration.withObject("msgBody");
+                String oldId = msgBody.path("id").asText(null);
+                if (oldId != null) {
+                    OtaPackageId otaPackageId = new OtaPackageId(UUID.fromString(oldId));
+                    msgBody.put("id", idMapper.apply(otaPackageId).getId().toString());
+                }
+            }
+            case "generateReport" -> {
+                ObjectNode reportConfig = configuration.withObject("msgBody").withObject("reportConfig");
+                reportConfig.put("userId", userId);
+                String oldId = reportConfig.path("dashboardId").asText(null);
+                if (oldId != null) {
+                    DashboardId dashboardId = new DashboardId(UUID.fromString(oldId));
+                    reportConfig.put("dashboardId", idMapper.apply(dashboardId).getId().toString());
+                }
+            }
+        }
     }
 
 }

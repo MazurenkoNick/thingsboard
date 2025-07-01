@@ -37,3 +37,12 @@ ALTER TABLE ota_package
     ADD CONSTRAINT ota_package_external_id_unq_key UNIQUE (tenant_id, external_id);
 
 -- UPDATE OTA PACKAGE EXTERNAL ID END
+
+-- UPDATE SCHEDULER_EVENT EXTERNAL ID START
+
+ALTER TABLE scheduler_event
+    ADD COLUMN IF NOT EXISTS external_id uuid;
+ALTER TABLE scheduler_event
+    ADD CONSTRAINT scheduler_event_external_id_unq_key UNIQUE (tenant_id, external_id);
+
+-- UPDATE SCHEDULER_EVENT EXTERNAL ID END

@@ -66,6 +66,7 @@ import org.thingsboard.server.common.data.notification.NotificationRequest;
 import org.thingsboard.server.common.data.plugin.ComponentLifecycleEvent;
 import org.thingsboard.server.common.data.rule.RuleChain;
 import org.thingsboard.server.common.data.rule.RuleChainType;
+import org.thingsboard.server.common.data.scheduler.SchedulerEvent;
 import org.thingsboard.server.common.data.secret.Secret;
 import org.thingsboard.server.common.data.security.DeviceCredentials;
 import org.thingsboard.server.common.msg.TbMsg;
@@ -81,6 +82,7 @@ import org.thingsboard.server.dao.eventsourcing.SaveEntityEvent;
 import org.thingsboard.server.dao.secret.SecretService;
 import org.thingsboard.server.dao.tenant.TenantService;
 import org.thingsboard.server.queue.TbQueueCallback;
+import org.thingsboard.server.service.scheduler.SchedulerService;
 
 import java.util.List;
 import java.util.Set;
@@ -95,6 +97,7 @@ public class EntityStateSourcingListener {
     private final EdgeSynchronizationManager edgeSynchronizationManager;
     private final JobManager jobManager;
     private final SecretService secretService;
+    private final SchedulerService schedulerService;
 
     @PostConstruct
     public void init() {
@@ -194,6 +197,14 @@ public class EntityStateSourcingListener {
                 entityInfos.values().stream().flatMap(List::stream).forEach(entityInfo ->
                         tbClusterService.broadcastEntityStateChangeEvent(tenantId, entityInfo.getId(), lifecycleEvent));
             }
+            case SCHEDULER_EVENT -> {
+                SchedulerEvent schedulerEvent = (SchedulerEvent) event.getEntity();
+                if (isCreated) {
+                    schedulerService.onSchedulerEventAdded(schedulerEvent);
+                } else {
+                    schedulerService.onSchedulerEventUpdated(schedulerEvent);
+                }
+            }
             default -> {}
         }
     }
@@ -273,6 +284,9 @@ public class EntityStateSourcingListener {
                 if (!converter.isEdgeTemplate()) {
                     tbClusterService.broadcastEntityStateChangeEvent(tenantId, converter.getId(), ComponentLifecycleEvent.DELETED);
                 }
+            }
+            case SCHEDULER_EVENT -> {
+                schedulerService.onSchedulerEventDeleted((SchedulerEvent) event.getEntity());
             }
             default -> {}
         }
