@@ -220,7 +220,6 @@ export class SchedulerEventsComponent extends PageComponent implements OnInit, A
 
   ngOnInit(): void {
     if (this.widgetMode) {
-      this.ctx.embedActionsPanel = true;
       this.ctx.$scope.schedulerEventsWidget = this;
     }
     if (this.showData && this.widgetMode) {
