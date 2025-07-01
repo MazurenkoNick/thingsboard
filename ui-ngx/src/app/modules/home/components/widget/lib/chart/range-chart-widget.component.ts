@@ -38,6 +38,7 @@ import {
   OnDestroy,
   OnInit,
   Renderer2,
+  TemplateRef,
   ViewChild,
   ViewEncapsulation
 } from '@angular/core';
@@ -82,6 +83,9 @@ export class RangeChartWidgetComponent implements OnInit, OnDestroy, AfterViewIn
 
   @Input()
   ctx: WidgetContext;
+
+  @Input()
+  widgetTitlePanel: TemplateRef<any>;
 
   showLegend: boolean;
   legendClass: string;
