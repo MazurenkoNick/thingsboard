@@ -30,27 +30,18 @@
  */
 package org.thingsboard.server.dao.scheduler;
 
+import org.thingsboard.server.common.data.id.SchedulerEventId;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.scheduler.SchedulerEvent;
 import org.thingsboard.server.dao.Dao;
+import org.thingsboard.server.dao.ExportableEntityDao;
 import org.thingsboard.server.dao.TenantEntityDao;
 
 import java.util.UUID;
 
-/**
- * The Interface SchedulerEventDao.
- */
-public interface SchedulerEventDao extends Dao<SchedulerEvent>, TenantEntityDao<SchedulerEvent> {
+public interface SchedulerEventDao extends Dao<SchedulerEvent>, TenantEntityDao<SchedulerEvent>, ExportableEntityDao<SchedulerEventId, SchedulerEvent> {
 
-    /**
-     * Find scheduler event by tenantId, edgeId and page link.
-     *
-     * @param tenantId the tenantId
-     * @param edgeId   the edgeId
-     * @param pageLink the page link
-     * @return the list of scheduler event objects
-     */
     PageData<SchedulerEvent> findSchedulerEventsByTenantIdAndEdgeId(UUID tenantId, UUID edgeId, PageLink pageLink);
 
 }

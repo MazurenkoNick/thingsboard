@@ -167,7 +167,7 @@ public class DefaultSchedulerService extends AbstractPartitionBasedService<Tenan
     @Override
     public void onQueueMsg(TransportProtos.SchedulerServiceMsgProto proto, TbCallback callback) {
         log.debug("onQueueMsg proto {}", proto);
-        TenantId tenantId = new TenantId(new UUID(proto.getTenantIdMSB(), proto.getTenantIdLSB()));
+        TenantId tenantId = TenantId.fromUUID(new UUID(proto.getTenantIdMSB(), proto.getTenantIdLSB()));
         SchedulerEventId eventId = new SchedulerEventId(new UUID(proto.getEventIdMSB(), proto.getEventIdLSB()));
         if (proto.getDeleted()) {
             onEventDeleted(eventId);

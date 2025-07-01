@@ -39,7 +39,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.id.EntityGroupId;
-import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.ota.DeviceGroupOtaPackage;
 import org.thingsboard.server.common.data.ota.OtaPackageType;
 import org.thingsboard.server.common.data.permission.Operation;
@@ -66,15 +65,9 @@ public class DeviceGroupOtaPackageController extends BaseController {
 
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
     @RequestMapping(value = "/deviceGroupOtaPackage", method = RequestMethod.POST)
-    public DeviceGroupOtaPackage saveDeviceGroupOtaPackage(@RequestBody DeviceGroupOtaPackage deviceGroupOtaPackage) throws ThingsboardException {
+    public DeviceGroupOtaPackage saveDeviceGroupOtaPackage(@RequestBody DeviceGroupOtaPackage deviceGroupOtaPackage) throws Exception {
         checkEntityGroupId(deviceGroupOtaPackage.getGroupId(), Operation.WRITE);
-        DeviceGroupOtaPackage oldDeviceGroupOtaPackage = null;
-        if (deviceGroupOtaPackage.getId() != null) {
-            oldDeviceGroupOtaPackage = deviceGroupOtaPackageService.findDeviceGroupOtaPackageById(deviceGroupOtaPackage.getId());
-        }
-        DeviceGroupOtaPackage savedDeviceGroupOtaPackage = deviceGroupOtaPackageService.saveDeviceGroupOtaPackage(getTenantId(), deviceGroupOtaPackage);
-        otaPackageStateService.update(getTenantId(), savedDeviceGroupOtaPackage, oldDeviceGroupOtaPackage);
-        return savedDeviceGroupOtaPackage;
+        return tbDeviceGroupOtaPackageService.saveDeviceGroupOtaPackage(getTenantId(), deviceGroupOtaPackage, getCurrentUser());
     }
 
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
@@ -82,11 +75,9 @@ public class DeviceGroupOtaPackageController extends BaseController {
     public void deleteDeviceGroupOtaPackage(@PathVariable("id") String strId) throws ThingsboardException {
         checkParameter("deviceGroupOtaPackageId", strId);
         UUID id = toUUID(strId);
-        TenantId tenantId = getTenantId();
         DeviceGroupOtaPackage deviceGroupOtaPackage = deviceGroupOtaPackageService.findDeviceGroupOtaPackageById(id);
         checkEntityGroupId(deviceGroupOtaPackage.getGroupId(), Operation.WRITE);
-        deviceGroupOtaPackageService.deleteDeviceGroupOtaPackage(tenantId, deviceGroupOtaPackage);
-        otaPackageStateService.update(tenantId, null, deviceGroupOtaPackage);
+        tbDeviceGroupOtaPackageService.deleteDeviceGroupOtaPackage(getTenantId(), deviceGroupOtaPackage);
     }
 
 }

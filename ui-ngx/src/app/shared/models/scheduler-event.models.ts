@@ -29,7 +29,7 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { BaseData } from '@shared/models/base-data';
+import { BaseData, ExportableEntity } from '@shared/models/base-data';
 import { TenantId } from '@shared/models/id/tenant-id';
 import { CustomerId } from '@shared/models/id/customer-id';
 import { SchedulerEventId } from '@shared/models/id/scheduler-event-id';
@@ -122,7 +122,7 @@ export interface SchedulerEventSchedule {
   };
 }
 
-export interface SchedulerEventInfo extends BaseData<SchedulerEventId> {
+export interface SchedulerEventInfo extends Omit<BaseData<SchedulerEventId>, 'label'>, ExportableEntity<SchedulerEventId> {
   tenantId?: TenantId;
   timestamps?: number[];
   customerId?: CustomerId;

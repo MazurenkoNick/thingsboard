@@ -409,7 +409,7 @@ public class SchedulerEventController extends BaseController {
         PageData<SchedulerEventInfo> pageData;
         do {
             pageData = schedulerEventService.findSchedulerEventInfosByTenantIdAndEdgeId(tenantId, edgeId, pageLink);
-            if (pageData.getData().size() > 0) {
+            if (!pageData.getData().isEmpty()) {
                 result.addAll(pageData.getData());
                 if (pageData.hasNext()) {
                     pageLink = pageLink.nextPageLink();
@@ -418,4 +418,5 @@ public class SchedulerEventController extends BaseController {
         } while (pageData.hasNext());
         return checkNotNull(result);
     }
+
 }

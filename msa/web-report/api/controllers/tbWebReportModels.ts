@@ -59,6 +59,11 @@ export interface ReportContentType {
 export interface ReportResultMessage {
     success: boolean;
     error?: string;
+    pageHeight?: number;
+}
+
+export interface WaitWidgetsMessage {
+    timeout: number;
 }
 
 export interface OpenReportMessage {

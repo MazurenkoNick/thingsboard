@@ -55,7 +55,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -199,7 +198,7 @@ public class SchedulerEventControllerTest extends AbstractControllerTest {
             pageData = doGetTypedWithPageLink("/api/schedulerEvents?edgeId=" + savedEdge.getId().getId() + "&",
                     new TypeReference<>() {
                     }, pageLink);
-            loadedEdgeSchedulerEvents.addAll(pageData.getData().stream().map(IdBased::getId).collect(Collectors.toList()));
+            loadedEdgeSchedulerEvents.addAll(pageData.getData().stream().map(IdBased::getId).toList());
             if (pageData.hasNext()) {
                 pageLink = pageLink.nextPageLink();
             }
@@ -251,4 +250,6 @@ public class SchedulerEventControllerTest extends AbstractControllerTest {
         schedulerEvent.setSchedule(schedule);
         return schedulerEvent;
     }
+
+
 }
