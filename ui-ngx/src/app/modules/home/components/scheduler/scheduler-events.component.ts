@@ -961,7 +961,7 @@ export class SchedulerEventsComponent extends PageComponent implements OnInit, A
             if (rangeEnd.isSameOrAfter(eventStart)) {
               if (event.schedule.repeat) {
                 const repeatEndsOn = _moment(event.schedule.repeat.endsOn);
-                if (event.schedule.repeat.type === SchedulerRepeatType.TIMER) {
+                if (event.schedule.repeat.type === SchedulerRepeatType.TIMER && !event.timestamps?.length) {
                   calendarEvent = this.toCalendarEvent(event, eventStart, repeatEndsOn);
                   events.push(calendarEvent);
                 } else {
