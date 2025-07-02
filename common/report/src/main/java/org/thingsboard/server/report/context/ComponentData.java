@@ -110,6 +110,7 @@ public class ComponentData {
                 }
             }
         }
+        variables.put("rowCount", this.entityDatas.size());
     }
 
     public ComponentData merge(ComponentData other) {

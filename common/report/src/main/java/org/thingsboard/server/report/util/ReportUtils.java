@@ -172,17 +172,6 @@ public class ReportUtils {
         return new String(Base64.getEncoder().encode(newStateJsonStr.getBytes()));
     }
 
-    public static String tableHeadingText(Heading tableHeading, ComponentData reportDataSource) {
-        Map<String, Object> tableHeadingVariables = reportDataSource.getVariables();
-        Integer rowCount = 0;
-        List<Map<String, String>> entityDatas = reportDataSource.getEntityDatas();
-        if (!entityDatas.isEmpty()) {
-            rowCount = entityDatas.size();
-        }
-        tableHeadingVariables.put("rowCount", String.valueOf(rowCount));
-        return ThymeleafUtil.renderFromHtmlString(tableHeading.getText(), tableHeadingVariables);
-    }
-
     public static String formatNumericValue(String value, DataKey dataKey) {
         if (value == null || value.isBlank()) {
             return "";

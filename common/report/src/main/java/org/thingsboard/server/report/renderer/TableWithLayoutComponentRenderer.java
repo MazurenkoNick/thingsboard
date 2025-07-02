@@ -66,7 +66,6 @@ import java.util.stream.Stream;
 
 import static org.thingsboard.server.report.util.ReportUtils.formatNumericValue;
 import static org.thingsboard.server.report.util.ReportUtils.getSingleDataSource;
-import static org.thingsboard.server.report.util.ReportUtils.tableHeadingText;
 
 @Slf4j
 public abstract class TableWithLayoutComponentRenderer<C extends TableWithLayoutReportComponent> extends ReportComponentWithLayoutRenderer<C> {
@@ -130,7 +129,7 @@ public abstract class TableWithLayoutComponentRenderer<C extends TableWithLayout
         if (component.isShowTableHeading() && component.getTableHeading() != null) {
             componentVariables.put("showTableHeading", true);
             Heading tableHeading = component.getTableHeading();
-            String headingText = tableHeadingText(tableHeading, reportDataSource);
+            String headingText = ThymeleafUtil.renderFromHtmlString(tableHeading.getText(), reportDataSource.getVariables());
             componentVariables.put("headingText", headingText);
             this.formatTableHeading(tableHeading, componentVariables);
         } else {
