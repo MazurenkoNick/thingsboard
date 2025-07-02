@@ -30,6 +30,7 @@
  */
 package org.thingsboard.server.controller;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.After;
 import org.junit.Before;
@@ -38,6 +39,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.server.common.data.DataConstants;
 import org.thingsboard.server.common.data.Device;
+import org.thingsboard.server.common.data.EntityInfo;
 import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.alarm.Alarm;
 import org.thingsboard.server.common.data.alarm.AlarmSeverity;
@@ -52,7 +54,10 @@ import org.thingsboard.server.common.data.notification.NotificationType;
 import org.thingsboard.server.common.data.notification.targets.NotificationTarget;
 import org.thingsboard.server.common.data.notification.targets.platform.AffectedUserFilter;
 import org.thingsboard.server.common.data.notification.template.NotificationTemplate;
+import org.thingsboard.server.common.data.page.PageData;
+import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.query.DeviceTypeFilter;
+import org.thingsboard.server.common.data.report.ReportInfo;
 import org.thingsboard.server.common.data.report.ReportRequest;
 import org.thingsboard.server.common.data.report.ReportTemplate;
 import org.thingsboard.server.common.data.report.ReportTemplateType;
@@ -425,6 +430,67 @@ public class ReportControllerTest extends AbstractControllerTest {
             assertThat(reportNotification.getSubject()).isEqualTo("Report generated");
             assertThat(reportNotification.getText()).isEqualTo("CSV report 'test.csv' is ready");
         });
+    }
+
+    @Test
+    public void testGetReportInfos() throws Exception {
+        loginTenantAdmin();
+        ReportTemplate csvTemplate = buildReportTemplate(TbReportFormat.CSV);
+        csvTemplate = doPost("/api/reportTemplate", csvTemplate, ReportTemplate.class);
+
+        ReportTemplate pdfTemplate = buildReportTemplate(TbReportFormat.PDF);
+        pdfTemplate = doPost("/api/reportTemplate", pdfTemplate, ReportTemplate.class);
+
+        NotificationTarget recipient = createNotificationTarget(new AffectedUserFilter());
+        NotificationTemplate notificationTemplate = saveNotificationTemplate(DefaultNotifications.reportGenerated.toTemplate());
+        for (int i = 0; i < 5; i++) {
+            ReportRequest csvRequest = new ReportRequest();
+            csvRequest.setReportTemplateId(csvTemplate.getId());
+            csvRequest.setRecipientId(recipient.getId());
+            csvRequest.setNotificationTemplateId(notificationTemplate.getId());
+            doPost("/api/v2/report/request", csvRequest, Job.class);
+
+            ReportRequest pdfRequest = new ReportRequest();
+            pdfRequest.setReportTemplateId(pdfTemplate.getId());
+            pdfRequest.setRecipientId(recipient.getId());
+            pdfRequest.setNotificationTemplateId(notificationTemplate.getId());
+            doPost("/api/v2/report/request", pdfRequest, Job.class);
+        }
+
+        PageData<ReportInfo> reportInfos = await().atMost(TIMEOUT, TimeUnit.SECONDS).until(() ->
+                        doGetTypedWithPageLink("/api/v2/reportInfos?", new TypeReference<PageData<ReportInfo>>() {
+                        }, new PageLink(30)),
+                result -> result.getData().size() == 10);
+        for (ReportInfo info : reportInfos.getData()) {
+            assertThat(info.getUserName()).isEqualTo(TENANT_ADMIN_EMAIL);
+        }
+
+        // filter by reportTemplateId
+        PageData<ReportInfo> csvReportsByTemplateId = doGetTypedWithPageLink("/api/v2/reportInfos?reportTemplateId=" + csvTemplate.getId().getId() + "&", new TypeReference<>() {
+        }, new PageLink(30));
+
+        assertThat(csvReportsByTemplateId.getData()).hasSize(5);
+        for (ReportInfo info : csvReportsByTemplateId.getData()) {
+            assertThat(info.getTemplateInfo()).isEqualTo(new EntityInfo(csvTemplate.getId(), csvTemplate.getName()));
+            assertThat(info.getFormat()).isEqualTo(TbReportFormat.CSV);
+        }
+
+        // filter by userId
+        PageData<ReportInfo> csvReportsByUserId = doGetTypedWithPageLink("/api/v2/reportInfos?userId=" + customerAdminUserId.getId() + "&", new TypeReference<>() {
+        }, new PageLink(30));
+
+        assertThat(csvReportsByUserId.getData()).isEmpty();
+    }
+
+    private ReportTemplate buildReportTemplate(TbReportFormat format) {
+        ReportTemplate template = new ReportTemplate();
+        template.setName(StringUtils.randomAlphabetic(10));
+        template.setType(ReportTemplateType.REPORT);
+        template.setFormat(format);
+        CsvReportTemplateConfig configuration = new CsvReportTemplateConfig();
+        configuration.setComponents(new ArrayList<>());
+        template.setConfiguration(configuration);
+        return template;
     }
 
     private static EntityAlias buildDevicesEntityAlias(String aliasId) {
