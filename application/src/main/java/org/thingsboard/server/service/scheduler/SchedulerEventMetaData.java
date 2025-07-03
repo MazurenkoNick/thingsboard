@@ -32,32 +32,12 @@ package org.thingsboard.server.service.scheduler;
 
 import com.google.common.util.concurrent.ListenableScheduledFuture;
 import lombok.Data;
-import org.thingsboard.server.common.data.scheduler.SchedulerEventInfo;
-import org.thingsboard.server.common.data.scheduler.SchedulerRepeat;
+import org.thingsboard.server.common.data.scheduler.SchedulerEventDescriptor;
 
-/**
- * Created by ashvayka on 25.06.18.
- */
 @Data
 class SchedulerEventMetaData {
 
-    private final SchedulerEventInfo info;
-    private final long startTime;
-    private final String timezone;
-    private final SchedulerRepeat repeat;
+    private final SchedulerEventDescriptor descriptor;
     private volatile ListenableScheduledFuture<?> nextTaskFuture;
 
-    boolean passedAway(long ts) {
-        return repeat == null ? startTime < ts : repeat.getEndsOn() < ts;
-    }
-
-    long getNextEventTime(long ts) {
-        if (repeat != null && repeat.getEndsOn() > ts) {
-            return repeat.getNext(startTime, ts, timezone);
-        } else if (ts < startTime) {
-            return startTime;
-        } else {
-            return 0L;
-        }
-    }
 }

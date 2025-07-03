@@ -30,31 +30,20 @@
  */
 package org.thingsboard.server.common.data.scheduler;
 
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import lombok.Data;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.SuperBuilder;
+import org.thingsboard.server.common.data.id.CustomerId;
+import org.thingsboard.server.common.data.id.EdgeId;
 
-/**
- * Created by ashvayka on 28.11.17.
- */
-@JsonTypeInfo(
-        use = JsonTypeInfo.Id.NAME,
-        include = JsonTypeInfo.As.PROPERTY,
-        property = "type")
-@JsonSubTypes({
-        @JsonSubTypes.Type(value = DailyRepeat.class, name = "DAILY"),
-        @JsonSubTypes.Type(value = EveryNDaysRepeat.class, name = "EVERY_N_DAYS"),
-        @JsonSubTypes.Type(value = WeeklyRepeat.class, name = "WEEKLY"),
-        @JsonSubTypes.Type(value = EveryNWeeksRepeat.class, name = "EVERY_N_WEEKS"),
-        @JsonSubTypes.Type(value = MonthlyRepeat.class, name = "MONTHLY"),
-        @JsonSubTypes.Type(value = YearlyRepeat.class, name = "YEARLY"),
-        @JsonSubTypes.Type(value = TimerRepeat.class, name = "TIMER")
-})
-public interface SchedulerRepeat {
+@Data
+@RequiredArgsConstructor
+@SuperBuilder
+public class SchedulerEventFilter {
 
-    long getEndsOn();
+    private final CustomerId customerId;
+    private final String type;
 
-    SchedulerRepeatType getType();
-
-    long getNext(long startTime, long ts, String timezone);
+    private final EdgeId edgeId;
 
 }

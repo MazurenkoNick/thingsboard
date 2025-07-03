@@ -36,6 +36,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 import org.thingsboard.server.common.data.BaseDataWithAdditionalInfo;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.HasCustomerId;
@@ -56,6 +57,7 @@ import java.io.Serial;
 @Data
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
+@Slf4j
 public class SchedulerEventInfo extends BaseDataWithAdditionalInfo<SchedulerEventId> implements HasName, TenantEntity, HasCustomerId, HasOwnerId, HasVersion {
 
     @Serial
@@ -76,9 +78,7 @@ public class SchedulerEventInfo extends BaseDataWithAdditionalInfo<SchedulerEven
     @Length(fieldName = "type")
     private String type;
     @Schema(description = "a JSON value with schedule time configuration", implementation = com.fasterxml.jackson.databind.JsonNode.class)
-    private transient JsonNode schedule;
-    @JsonIgnore
-    private byte[] scheduleBytes;
+    private JsonNode schedule;
 
     @Schema(description = "Enable/disable scheduler", example = "true")
     @Length(fieldName = "enabled")
@@ -147,12 +147,20 @@ public class SchedulerEventInfo extends BaseDataWithAdditionalInfo<SchedulerEven
         }
     }
 
-    public JsonNode getSchedule() {
-        return BaseDataWithAdditionalInfo.getJson(() -> schedule, () -> scheduleBytes);
-    }
-
-    public void setSchedule(JsonNode data) {
-        setJson(data, json -> this.schedule = json, bytes -> this.scheduleBytes = bytes);
+    @JsonIgnore
+    public SchedulerEventDescriptor toDescriptor() {
+        long startTime = schedule.get("startTime").asLong();
+        String timezone = schedule.get("timezone").asText();
+        JsonNode repeatNode = schedule.get("repeat");
+        SchedulerRepeat repeat = null;
+        if (repeatNode != null) {
+            try {
+                repeat = mapper.treeToValue(repeatNode, SchedulerRepeat.class);
+            } catch (Exception e) {
+                log.error("Failed to read scheduler config for {}", this, e);
+            }
+        }
+        return new SchedulerEventDescriptor(startTime, timezone, repeat);
     }
 
     @Override
