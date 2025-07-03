@@ -202,8 +202,12 @@ public class ReportController extends BaseController {
         accessControlService.checkPermission(user, Resource.REPORT, Operation.READ);
         TenantId tenantId = getCurrentUser().getTenantId();
         PageLink pageLink = createPageLink(pageSize, page, textSearch, sortProperty, sortOrder);
-        boolean includeCustomerReportTemplates = includeCustomers != null && includeCustomers;
-        ReportInfoQuery query = new ReportInfoQuery(pageLink, reportTemplateId, userId, includeCustomerReportTemplates);
+        ReportInfoQuery query = ReportInfoQuery.builder()
+                .reportTemplateId(reportTemplateId)
+                .userId(userId)
+                .includeCustomers(includeCustomers != null && includeCustomers)
+                .pageLink(pageLink)
+                .build();
         if (Authority.TENANT_ADMIN.equals(getCurrentUser().getAuthority())) {
             return checkNotNull(reportService.findReportInfos(tenantId, query));
         } else {

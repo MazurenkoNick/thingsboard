@@ -37,13 +37,9 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.thingsboard.server.dao.model.sql.SchedulerEventInfoEntity;
 import org.thingsboard.server.dao.model.sql.SchedulerEventWithCustomerInfoEntity;
-import org.thingsboard.server.dao.model.sql.ScheduledReportInfoEntity;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.UUID;
-
-import static org.thingsboard.server.dao.model.ModelConstants.SUB_CUSTOMERS_QUERY;
 
 public interface SchedulerEventInfoRepository extends JpaRepository<SchedulerEventInfoEntity, UUID> {
 

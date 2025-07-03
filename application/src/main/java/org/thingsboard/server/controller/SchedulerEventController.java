@@ -235,7 +235,7 @@ public class SchedulerEventController extends BaseController {
                     + TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH + "\n\n" + RBAC_READ_CHECK)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
     @GetMapping(value = "/scheduledReports")
-    public PageData<ScheduledReportInfo> getSchedulerReportEvents(
+    public PageData<ScheduledReportInfo> getScheduledReportEvents(
             @Parameter(description = REPORT_TEMPLATE_ID_DESCRIPTION)
             @RequestParam(required = false) UUID reportTemplateId,
             @Parameter(description = REPORT_USER_DESCRIPTION)
@@ -246,7 +246,7 @@ public class SchedulerEventController extends BaseController {
             @RequestParam int pageSize,
             @Parameter(description = PAGE_NUMBER_DESCRIPTION, required = true, schema = @Schema(minimum = "0"))
             @RequestParam int page,
-            @Parameter(description = "The case insensitive 'startsWith' filter based on the scheduler event name.")
+            @Parameter(description = "The case insensitive 'substring' filter based on the scheduler event name or customer title.")
             @RequestParam(required = false) String textSearch,
             @Parameter(description = SORT_PROPERTY_DESCRIPTION)
             @RequestParam(required = false) String sortProperty,
@@ -255,8 +255,12 @@ public class SchedulerEventController extends BaseController {
         accessControlService.checkPermission(getCurrentUser(), Resource.SCHEDULER_EVENT, Operation.READ);
         TenantId tenantId = getCurrentUser().getTenantId();
         PageLink pageLink = createPageLink(pageSize, page, textSearch, sortProperty, sortOrder);
-        boolean includeCustomerReportTemplates = includeCustomers != null && includeCustomers;
-        ScheduledReportQuery query = new ScheduledReportQuery(pageLink, reportTemplateId, userId, includeCustomerReportTemplates);
+        ScheduledReportQuery query = ScheduledReportQuery.builder()
+                .reportTemplateId(reportTemplateId)
+                .userId(userId)
+                .includeCustomers(includeCustomers != null && includeCustomers)
+                .pageLink(pageLink)
+                .build();
         if (Authority.TENANT_ADMIN.equals(getCurrentUser().getAuthority())) {
             return checkNotNull(schedulerEventService.findScheduledReportEvents(tenantId, query));
         } else {
@@ -320,7 +324,7 @@ public class SchedulerEventController extends BaseController {
         SchedulerEventId schedulerEventId = new SchedulerEventId(toUUID(strSchedulerEventId));
         checkSchedulerEventId(schedulerEventId, Operation.READ);
 
-         return tbSchedulerService.assignToEdge(schedulerEventId, edge, getCurrentUser());
+        return tbSchedulerService.assignToEdge(schedulerEventId, edge, getCurrentUser());
     }
 
     @ApiOperation(value = "Unassign scheduler event from edge (unassignSchedulerEventFromEdge)",

@@ -154,7 +154,7 @@ public class LocalReportDataService implements ReportDataService {
     @SneakyThrows
     @Override
     public List<ReadTsKvQueryResult> findTimeseriesByQueries(EntityId entityId, List<ReadTsKvQuery> queries, TbReportCtx ctx) {
-        return  tbTelemetryService.getTimeseriesByQueries(entityId, queries, getSecurityUser(ctx)).get();
+        return tbTelemetryService.getTimeseriesByQueries(entityId, queries, getSecurityUser(ctx)).get();
     }
 
     @SneakyThrows

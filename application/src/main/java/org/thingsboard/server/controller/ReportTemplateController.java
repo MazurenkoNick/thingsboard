@@ -35,15 +35,14 @@ import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
@@ -110,8 +109,7 @@ public class ReportTemplateController extends BaseController {
                     REPORT_TEMPLATE_DESCRIPTION + INVALID_REPORT_TEMPLATE_ID +
                     TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH + "\n\n" + RBAC_READ_CHECK)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
-    @RequestMapping(value = "/reportTemplate/{reportTemplateId}", method = RequestMethod.GET)
-    @ResponseBody
+    @GetMapping(value = "/reportTemplate/{reportTemplateId}")
     public ReportTemplate getReportTemplateById(@Parameter(description = REPORT_TEMPLATE_ID_PARAM_DESCRIPTION, required = true)
                                                 @PathVariable(REPORT_TEMPLATE_ID) String strReportTemplateId) throws ThingsboardException {
         checkParameter(REPORT_TEMPLATE_ID, strReportTemplateId);
@@ -124,8 +122,7 @@ public class ReportTemplateController extends BaseController {
                     REPORT_TEMPLATE_INFO_DESCRIPTION + INVALID_REPORT_TEMPLATE_ID +
                     TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH + "\n\n" + RBAC_READ_CHECK)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
-    @RequestMapping(value = "/reportTemplate/info/{reportTemplateId}", method = RequestMethod.GET)
-    @ResponseBody
+    @GetMapping(value = "/reportTemplate/info/{reportTemplateId}")
     public ReportTemplateInfo getReportTemplateInfoById(@Parameter(description = REPORT_TEMPLATE_ID_PARAM_DESCRIPTION, required = true)
                                                         @PathVariable(REPORT_TEMPLATE_ID) String strReportTemplateId) throws ThingsboardException {
         checkParameter(REPORT_TEMPLATE_ID, strReportTemplateId);
@@ -141,8 +138,7 @@ public class ReportTemplateController extends BaseController {
                     "Remove 'id', 'tenantId' and optionally 'customerId' from the request body example (below) to create new Report Template entity. " +
                     TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH + "\n\n" + RBAC_WRITE_CHECK)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
-    @RequestMapping(value = "/reportTemplate", method = RequestMethod.POST)
-    @ResponseBody
+    @PostMapping(value = "/reportTemplate")
     public ReportTemplate saveReportTemplate(
             @Parameter(description = "A JSON value representing the Report Template.")
             @RequestBody ReportTemplate reportTemplate) throws Exception {
@@ -158,8 +154,7 @@ public class ReportTemplateController extends BaseController {
     @ApiOperation(value = "Delete Report Template (deleteReportTemplate)",
             notes = "Deletes the report template. " + INVALID_REPORT_TEMPLATE_ID + "\n\n" + RBAC_DELETE_CHECK)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
-    @RequestMapping(value = "/reportTemplate/{reportTemplateId}", method = RequestMethod.DELETE)
-    @ResponseStatus(value = HttpStatus.OK)
+    @DeleteMapping(value = "/reportTemplate/{reportTemplateId}")
     public void deleteReportTemplate(
             @Parameter(description = REPORT_TEMPLATE_ID_PARAM_DESCRIPTION, required = true)
             @PathVariable(REPORT_TEMPLATE_ID) String strReportTemplateId) throws Exception {
@@ -173,8 +168,7 @@ public class ReportTemplateController extends BaseController {
             notes = "Returns a page of report template info objects owned by the tenant or the customer of a current user. "
                     + REPORT_TEMPLATE_INFO_DESCRIPTION + " " + PAGE_DATA_PARAMETERS + TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH + RBAC_READ_CHECK)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
-    @RequestMapping(value = "/reportTemplateInfos/all", params = {"pageSize", "page"}, method = RequestMethod.GET)
-    @ResponseBody
+    @GetMapping(value = "/reportTemplateInfos/all", params = {"pageSize", "page"})
     public PageData<ReportTemplateInfo> getAllReportTemplateInfos(
             @Parameter(description = REPORT_TEMPLATE_QUERY_TYPE_ARRAY_DESCRIPTION, array = @ArraySchema(schema = @Schema(type = "string", allowableValues = {"REPORT", "SUB_REPORT"})))
             @RequestParam(required = false) String[] typeList,
@@ -211,8 +205,12 @@ public class ReportTemplateController extends BaseController {
                 }
             }
         }
-        boolean includeCustomerReportTemplates = includeCustomers != null && includeCustomers;
-        ReportTemplateQuery query = new ReportTemplateQuery(pageLink, includeCustomerReportTemplates, reportTemplateFormatList, reportTemplateTypeList);
+        ReportTemplateQuery query = ReportTemplateQuery.builder()
+                .pageLink(pageLink)
+                .includeCustomers(includeCustomers != null && includeCustomers)
+                .formatList(reportTemplateFormatList)
+                .typeList(reportTemplateTypeList)
+                .build();
         if (Authority.TENANT_ADMIN.equals(getCurrentUser().getAuthority())) {
             return checkNotNull(reportTemplateService.findReportTemplates(tenantId, query));
         } else {
@@ -225,8 +223,7 @@ public class ReportTemplateController extends BaseController {
             notes = "Returns a list of ReportTemplateInfo objects based on the provided ids. Filters the list based on the user permissions. " +
                     TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH + RBAC_READ_CHECK)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
-    @RequestMapping(value = "/reportTemplates", params = {"reportTemplateIds"}, method = RequestMethod.GET)
-    @ResponseBody
+    @GetMapping(value = "/reportTemplates", params = {"reportTemplateIds"})
     public List<ReportTemplateInfo> getReportTemplatesByIds(
             @Parameter(description = "A list of report template ids, separated by comma ','", array = @ArraySchema(schema = @Schema(type = "string")), required = true)
             @RequestParam("reportTemplateIds") String[] strReportTemplateIds) throws ThingsboardException, ExecutionException, InterruptedException {
