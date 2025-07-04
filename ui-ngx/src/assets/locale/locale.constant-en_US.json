@@ -4172,8 +4172,6 @@
         "type-aws-sqs-description": "Fully managed message queuing service.",
         "type-aws-kinesis": "AWS Kinesis",
         "type-aws-kinesis-description": "Service for real-time video and data streams.",
-        "type-ibm-watson-iot": "IBM Watson IoT",
-        "type-ibm-watson-iot-description": "Fully managed, cloud-hosted service.",
         "type-ttn": "The Things Stack Community",
         "type-ttn-description": "Open and decentralized LoRaWAN network.",
         "type-tti": "The Things Stack Industries",

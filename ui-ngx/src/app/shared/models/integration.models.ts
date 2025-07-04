@@ -57,7 +57,6 @@ export enum IntegrationType {
   AWS_SQS = 'AWS_SQS',
   AZURE_IOT_HUB = 'AZURE_IOT_HUB',
   CUSTOM = 'CUSTOM',
-  IBM_WATSON_IOT = 'IBM_WATSON_IOT',
   KAFKA = 'KAFKA',
   LORIOT = 'LORIOT',
   OCEANCONNECT = 'OCEANCONNECT',
@@ -199,14 +198,6 @@ export const integrationTypeInfoMap = new Map<IntegrationType, IntegrationTypeIn
         name: 'integration.type-aws-kinesis',
         description: 'integration.type-aws-kinesis-description',
         icon: 'assets/integration-icon/aws-kinesis.svg'
-      }
-    ],
-    [
-      IntegrationType.IBM_WATSON_IOT,
-      {
-        name: 'integration.type-ibm-watson-iot',
-        description: 'integration.type-ibm-watson-iot-description',
-        icon: 'assets/integration-icon/ibm-watson-iot.svg'
       }
     ],
     [
@@ -381,7 +372,6 @@ const integrationHelpLinkMap = new Map<IntegrationType, string>(
     [IntegrationType.AWS_IOT, 'integrationAwsIoT'],
     [IntegrationType.AWS_SQS, 'integrationAwsSQS'],
     [IntegrationType.AWS_KINESIS, 'integrationAwsKinesis'],
-    [IntegrationType.IBM_WATSON_IOT, 'integrationIbmWatsonIoT'],
     [IntegrationType.TTN, 'integrationTheThingsNetwork'],
     [IntegrationType.TTI, 'integrationTheThingsIndustries'],
     [IntegrationType.CHIRPSTACK, 'integrationChirpStack'],
