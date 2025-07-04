@@ -122,12 +122,12 @@ public class ReportUtils {
             return Optional.empty();
         }
         switch (dataSource.getType()) {
-            case "device":
+            case DEVICE:
                 if (dataSource.getDeviceId() == null) {
                     return Optional.empty();
                 }
                 break;
-            case "entity":
+            case ENTITY:
                 if (dataSource.getEntityAliasId() == null) {
                     return Optional.empty();
                 }

@@ -66,6 +66,7 @@ import org.thingsboard.server.common.data.report.configuration.AlarmFilterConfig
 import org.thingsboard.server.common.data.report.configuration.CsvReportTemplateConfig;
 import org.thingsboard.server.common.data.report.configuration.DataKey;
 import org.thingsboard.server.common.data.report.configuration.DataSource;
+import org.thingsboard.server.common.data.report.configuration.DataSourceType;
 import org.thingsboard.server.common.data.report.configuration.EntityAlias;
 import org.thingsboard.server.common.data.report.configuration.components.AlarmTableComponent;
 import org.thingsboard.server.common.data.report.configuration.components.EntityTableComponent;
@@ -119,7 +120,7 @@ public class ReportControllerTest extends AbstractControllerTest {
                 new DataKey("threshold", "attribute", "THRESHOLD")
         );
         tableComponent.setDataSources(List.of(DataSource.builder()
-                .type("entity")
+                .type(DataSourceType.ENTITY)
                 .entityAliasId(devicesAliasId)
                 .dataKeys(dataKeys)
                 .build()));
@@ -193,7 +194,7 @@ public class ReportControllerTest extends AbstractControllerTest {
                 new DataKey("status", "alarm", "ALARM STATUS")
         );
         alarmTableComponent.setAlarmSource(DataSource.builder()
-                .type("entity")
+                .type(DataSourceType.ENTITY)
                 .entityAliasId(devicesAliasId)
                 .alarmFilterConfig(alarmFilterConfig)
                 .dataKeys(dataKeys)
@@ -260,7 +261,7 @@ public class ReportControllerTest extends AbstractControllerTest {
 
         TimeseriesTableComponent tsComponent = new TimeseriesTableComponent();
         tsComponent.setDataSources(List.of(DataSource.builder()
-                .type("entity")
+                .type(DataSourceType.ENTITY)
                 .entityAliasId(devicesAliasId)
                 .dataKeys(List.of(
                      new DataKey("temperature", "timeseries", "TEMPERATURE")
@@ -346,7 +347,7 @@ public class ReportControllerTest extends AbstractControllerTest {
 
         EntityTableComponent tableComponent = new EntityTableComponent();
         tableComponent.setDataSources(List.of(DataSource.builder()
-                .type("entity")
+                .type(DataSourceType.ENTITY)
                 .entityAliasId(devicesAliasId)
                 .dataKeys(List.of(
                         new DataKey("createdTime", "entityField", "CREATED TIME"),

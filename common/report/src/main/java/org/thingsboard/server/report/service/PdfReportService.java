@@ -300,7 +300,7 @@ public class PdfReportService extends AbstractReportService {
     }
 
     private ComponentData buildImageComponentData(int usablePageWidthPx, TbReportCtx ctx, ImageComponent component) {
-        if (ImageSourceType.entityKey.equals(component.getSourceType())) {
+        if (ImageSourceType.ENTITY_KEY == component.getSourceType()) {
             Optional<DataSource> dataSource = getSingleDataSource(component);
             if (dataSource.isEmpty()) {
                 return new ComponentData(usablePageWidthPx);

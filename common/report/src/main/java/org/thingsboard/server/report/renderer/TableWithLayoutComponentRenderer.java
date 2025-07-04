@@ -145,25 +145,25 @@ public abstract class TableWithLayoutComponentRenderer<C extends TableWithLayout
             headingFont = new Font();
             headingFont.setSize(20f);
             headingFont.setFamily("Roboto");
-            headingFont.setStyle(FontStyle.normal);
-            headingFont.setWeight(FontWeight.normal);
+            headingFont.setStyle(FontStyle.NORMAL);
+            headingFont.setWeight(FontWeight.NORMAL);
         }
         if (headingFont.getSize() != null && headingFont.getSize() > 0) {
             componentVariables.put("headingFontSize", headingFont.getSize());
         } else {
             componentVariables.put("headingFontSize", 10);
         }
-        componentVariables.put("headingFontWeight", headingFont.getWeight() != null ? headingFont.getWeight() : FontWeight.normal);
-        componentVariables.put("headingFontStyle", headingFont.getStyle() != null ? headingFont.getStyle() : FontStyle.normal);
+        componentVariables.put("headingFontWeight", headingFont.getWeight() != null ? headingFont.getWeight().getValue() : FontWeight.NORMAL.getValue());
+        componentVariables.put("headingFontStyle", headingFont.getStyle() != null ? headingFont.getStyle().getValue() : FontStyle.NORMAL.getValue());
         if (StringUtils.isNotBlank(headingFont.getFamily())) {
             componentVariables.put("headingFontFamily", headingFont.getFamily());
         } else {
             componentVariables.put("headingFontFamily", "Roboto");
         }
-        TextAlignment textAlignment = tableHeading.getTextAlignment() != null ? tableHeading.getTextAlignment() : TextAlignment.center;
-        componentVariables.put("headingTextAlignment", textAlignment.name());
-        VerticalAlignment verticalAlignment = tableHeading.getTextAlignment() != null ? tableHeading.getVerticalAlignment() : VerticalAlignment.middle;
-        componentVariables.put("headingVerticalAlignment", verticalAlignment.name());
+        TextAlignment textAlignment = tableHeading.getTextAlignment() != null ? tableHeading.getTextAlignment() : TextAlignment.CENTER;
+        componentVariables.put("headingTextAlignment", textAlignment.getValue());
+        VerticalAlignment verticalAlignment = tableHeading.getTextAlignment() != null ? tableHeading.getVerticalAlignment() : VerticalAlignment.MIDDLE;
+        componentVariables.put("headingVerticalAlignment", verticalAlignment.getValue());
         if (tableHeading.getHeight() != null && tableHeading.getHeight() > 0) {
             componentVariables.put("headingHeight", tableHeading.getHeight() + "pt");
         } else {

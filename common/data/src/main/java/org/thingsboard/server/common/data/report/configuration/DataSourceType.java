@@ -30,29 +30,32 @@
  */
 package org.thingsboard.server.common.data.report.configuration;
 
-import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import org.thingsboard.server.common.data.query.EntityDataSortOrder;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
 
-import java.util.List;
+public enum DataSourceType {
 
-@Schema
-@Data
-@Builder
-@EqualsAndHashCode
-@NoArgsConstructor
-@AllArgsConstructor
-public class DataSource {
-    private DataSourceType type;
-    private String deviceId;
-    private String entityAliasId;
-    private String filterId;
-    private List<DataKey> dataKeys;
-    private List<DataKey> latestDataKeys;
-    private AlarmFilterConfig alarmFilterConfig;
-    private EntityDataSortOrder sortOrder;
+    DEVICE("device"), ENTITY("entity"), ENTITY_COUNT("entityCount"), ALARM_COUNT("alarmCount");
+
+    private final String label;
+
+    DataSourceType(String label) {
+        this.label = label;
+    }
+
+    @JsonValue
+    public String getLabel() {
+        return label;
+    }
+
+    @JsonCreator
+    public static DataSourceType fromLabel(String value) {
+        for (DataSourceType type : values()) {
+            if (type.label.equalsIgnoreCase(value)) {
+                return type;
+            }
+        }
+        throw new IllegalArgumentException("Unknown DataSourceType: " + value);
+    }
+
 }

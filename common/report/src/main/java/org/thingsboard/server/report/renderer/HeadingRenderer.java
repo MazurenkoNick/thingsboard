@@ -55,17 +55,17 @@ public class HeadingRenderer extends ReportComponentWithLayoutRenderer<HeadingCo
         } else {
             componentVariables.put("fontSize", 10);
         }
-        componentVariables.put("fontWeight", headingComponent.getFont().getWeight());
-        componentVariables.put("fontStyle", headingComponent.getFont().getStyle());
+        componentVariables.put("fontWeight", headingComponent.getFont().getWeight().getValue());
+        componentVariables.put("fontStyle", headingComponent.getFont().getStyle().getValue());
         if (headingComponent.getFont().getFamily() != null && !headingComponent.getFont().getFamily().isEmpty()) {
             componentVariables.put("fontFamily", headingComponent.getFont().getFamily());
         } else {
             componentVariables.put("fontFamily", "Roboto");
         }
-        TextAlignment textAlignment = headingComponent.getTextAlignment() != null ? headingComponent.getTextAlignment() : TextAlignment.center;
-        componentVariables.put("textAlignment", textAlignment.name());
-        VerticalAlignment verticalAlignment = headingComponent.getTextAlignment() != null ? headingComponent.getVerticalAlignment() : VerticalAlignment.middle;
-        componentVariables.put("verticalAlignment", verticalAlignment.name());
+        TextAlignment textAlignment = headingComponent.getTextAlignment() != null ? headingComponent.getTextAlignment() : TextAlignment.CENTER;
+        componentVariables.put("textAlignment", textAlignment.getValue());
+        VerticalAlignment verticalAlignment = headingComponent.getTextAlignment() != null ? headingComponent.getVerticalAlignment() : VerticalAlignment.MIDDLE;
+        componentVariables.put("verticalAlignment", verticalAlignment.getValue());
         if (headingComponent.getHeight() != null && headingComponent.getHeight() > 0) {
             componentVariables.put("height", headingComponent.getHeight() + "pt");
         } else {

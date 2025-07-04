@@ -47,7 +47,7 @@ public class ImageRenderer extends AbstractImageRenderer<ImageComponent> {
     @Override
     protected String getImageUrl(ImageComponent component, ComponentData reportDataSource) {
         String imageUrl = "";
-        if (ImageSourceType.entityKey.equals(component.getSourceType())) {
+        if (ImageSourceType.ENTITY_KEY == component.getSourceType()) {
             if (!reportDataSource.getEntityDatas().isEmpty()) {
                 var entityData = reportDataSource.getEntityDatas().get(0);
                 var dataSource = getSingleDataSource(component);

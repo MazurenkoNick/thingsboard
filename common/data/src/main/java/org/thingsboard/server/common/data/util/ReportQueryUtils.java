@@ -53,6 +53,7 @@ import org.thingsboard.server.common.data.query.StateEntityOwnerFilter;
 import org.thingsboard.server.common.data.report.configuration.AlarmFilterConfig;
 import org.thingsboard.server.common.data.report.configuration.DataKey;
 import org.thingsboard.server.common.data.report.configuration.DataSource;
+import org.thingsboard.server.common.data.report.configuration.DataSourceType;
 import org.thingsboard.server.common.data.report.configuration.ReportTemplateConfig;
 import org.thingsboard.server.common.data.report.configuration.components.AlarmTableComponent;
 import org.thingsboard.server.common.data.report.configuration.timewindow.TimeIntervalCalculator;
@@ -163,7 +164,7 @@ public class ReportQueryUtils {
     }
 
     private static EntityFilter buildEntityFilter(DataSource dataSource, ReportTemplateConfig config, EntityData stateEntity) {
-        if (dataSource.getType().equals("device")) {
+        if (dataSource.getType() == DataSourceType.DEVICE) {
             return buildSingleEntityFilter(DeviceId.fromString(dataSource.getDeviceId()));
         }
         return buildAliasBasedFilter(dataSource, config, stateEntity);

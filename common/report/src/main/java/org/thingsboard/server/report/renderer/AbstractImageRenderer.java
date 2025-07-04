@@ -32,7 +32,7 @@ package org.thingsboard.server.report.renderer;
 
 import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.report.configuration.components.AbstractImageComponent;
-import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
+import org.thingsboard.server.common.data.report.configuration.image.ImageAlignment;
 import org.thingsboard.server.common.data.report.configuration.image.ImageWidthType;
 import org.thingsboard.server.report.context.ComponentData;
 import org.thingsboard.server.report.util.ThymeleafUtil;
@@ -50,9 +50,9 @@ public abstract class AbstractImageRenderer<C extends AbstractImageComponent> ex
         componentVariables.put("layoutWidth", this.layoutWidthPx + "px");
         componentVariables.put("imageUrl", StringUtils.isBlank(imageUrl) ? EMPTY_IMAGE_URI : imageUrl);
         String imageWidth = this.layoutWidthPx + "px";
-        if (ImageWidthType.original.equals(imageComponent.getWidthType())) {
+        if (ImageWidthType.ORIGINAL == imageComponent.getWidthType()) {
             imageWidth = "auto";
-        } else if (ImageWidthType.custom.equals(imageComponent.getWidthType())) {
+        } else if (ImageWidthType.CUSTOM == imageComponent.getWidthType()) {
             int customWidth = 100;
             if (imageComponent.getCustomWidth() >= 1) {
                 customWidth = imageComponent.getCustomWidth();
@@ -60,10 +60,7 @@ public abstract class AbstractImageRenderer<C extends AbstractImageComponent> ex
             imageWidth = customWidth + "px";
         }
         componentVariables.put("imageWidth", imageWidth);
-        String imageAlign = "center";
-        if (imageComponent.getAlignment() != null) {
-            imageAlign = imageComponent.getAlignment().name();
-        }
+        String imageAlign = imageComponent.getAlignment() != null ? imageComponent.getAlignment().getValue() :ImageAlignment.CENTER.getValue();
         componentVariables.put("imageAlign", imageAlign);
         return ThymeleafUtil.renderFromHtmlTemplate("html/components/image", componentVariables);
     }

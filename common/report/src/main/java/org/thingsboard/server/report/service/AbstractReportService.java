@@ -100,9 +100,9 @@ public abstract class AbstractReportService implements ReportService {
     protected ComponentData buildSingleComponentData(int usablePageWidthPx, TbReportCtx ctx, DataSource dataSource, EntityData stateEntity) {
         ReportTemplateConfig configuration = ctx.getConfiguration();
         return switch (dataSource.getType()) {
-            case "device", "entity" -> new ComponentData(usablePageWidthPx, dataSource, collectEntityDatas(ctx, dataSource, stateEntity));
-            case "entityCount" -> buildEntityCountDataSource(usablePageWidthPx, ctx, dataSource, configuration);
-            case "alarmCount" -> buildAlarmCountDataSource(usablePageWidthPx, ctx, dataSource, configuration);
+            case DEVICE, ENTITY -> new ComponentData(usablePageWidthPx, dataSource, collectEntityDatas(ctx, dataSource, stateEntity));
+            case ENTITY_COUNT -> buildEntityCountDataSource(usablePageWidthPx, ctx, dataSource, configuration);
+            case ALARM_COUNT -> buildAlarmCountDataSource(usablePageWidthPx, ctx, dataSource, configuration);
             default -> throw new IllegalArgumentException("Unknown data source type: " + dataSource.getType());
         };
     }
@@ -179,7 +179,7 @@ public abstract class AbstractReportService implements ReportService {
 
     protected List<Map<String, String>> collectEntityDatas(TbReportCtx ctx, DataSource dataSource, EntityData stateEntity) {
         return switch (dataSource.getType()) {
-            case "device", "entity" -> fetchEntities(ctx, dataSource, stateEntity)
+            case DEVICE, ENTITY -> fetchEntities(ctx, dataSource, stateEntity)
                     .stream()
                     .map(entityData -> toStringMap(entityData, dataSource.getDataKeys(), ctx))
                     .collect(Collectors.toList());
@@ -217,12 +217,12 @@ public abstract class AbstractReportService implements ReportService {
             return new ComponentData(usablePageWidthPx);
         }
         switch (alarmSource.getType()) {
-            case "device":
+            case DEVICE:
                 if (alarmSource.getDeviceId() == null) {
                     return new ComponentData(usablePageWidthPx);
                 }
                 break;
-             case "entity":
+            case ENTITY:
                  if (alarmSource.getEntityAliasId() == null) {
                      return new ComponentData(usablePageWidthPx);
                  }

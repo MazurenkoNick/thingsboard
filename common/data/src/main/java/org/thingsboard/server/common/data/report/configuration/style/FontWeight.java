@@ -30,6 +30,33 @@
  */
 package org.thingsboard.server.common.data.report.configuration.style;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
+import lombok.Getter;
+
 public enum FontWeight {
-     normal, bold;
+
+     NORMAL("normal"), BOLD("bold");
+
+     @Getter
+     private final String value;
+
+     FontWeight(String label) {
+          this.value = label;
+     }
+
+     @JsonValue
+     public String getValue() {
+          return value;
+     }
+
+     @JsonCreator
+     public static FontWeight fromLabel(String value) {
+          for (FontWeight type : values()) {
+               if (type.value.equalsIgnoreCase(value)) {
+                    return type;
+               }
+          }
+          throw new IllegalArgumentException("Unknown FontWeight: " + value);
+     }
 }
