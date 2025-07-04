@@ -394,7 +394,7 @@ const integrationHelpLinkMap = new Map<IntegrationType, string>(
 );
 
 export type IntegrationConfiguration = ApachePulsarIntegration | HttpIntegration | ThingParkIntegration | LoriotIntegration |
-  MqttIntegration | AwsIotIntegration | AwsSqsIntegration | AwsKinesisIntegration | IbmWatsonIotIntegration | TtnIntegration |
+  MqttIntegration | AwsIotIntegration | AwsSqsIntegration | AwsKinesisIntegration | TtnIntegration |
   ChipStackIntegration | ParticleIntegration | KpnIntegration | AzureEventHubIntegration | AzureIotHubIntegration | OpcUaIntegration |
   UpdIntegration | TcpIntegration | KafkaIntegration | RabbitMqIntegration | PubSubIntegration | CoapIntegration | TuyaIntegration |
   CustomIntegration;
@@ -765,14 +765,6 @@ export interface HttpIntegration {
   enableSecurity?: boolean;
   headersFilter?: {[key: string]: string} | null;
   replaceNoContentToOk: boolean;
-}
-
-export interface IbmWatsonIotIntegration extends Topics{
-  clientConfiguration: {
-    connectTimeoutSec: number;
-    maxBytesInMessage: number;
-    credentials: BasicCredentials;
-  };
 }
 
 export interface KafkaIntegration {

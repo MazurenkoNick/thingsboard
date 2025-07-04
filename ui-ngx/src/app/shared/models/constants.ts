@@ -246,7 +246,6 @@ export const HelpLinks = {
     integrationAwsIoT: `${helpBaseUrl}/docs${docIntegrationPrefix}/user-guide/integrations/aws-iot`,
     integrationAwsSQS: `${helpBaseUrl}/docs${docIntegrationPrefix}/user-guide/integrations/aws-sqs`,
     integrationAwsKinesis:  `${helpBaseUrl}/docs${docIntegrationPrefix}/user-guide/integrations/aws-kinesis`,
-    integrationIbmWatsonIoT: `${helpBaseUrl}/docs${docIntegrationPrefix}/user-guide/integrations/ibm-watson-iot`,
     integrationTheThingsNetwork: `${helpBaseUrl}/docs${docIntegrationPrefix}/user-guide/integrations/ttn`,
     integrationTheThingsIndustries: `${helpBaseUrl}/docs${docIntegrationPrefix}/user-guide/integrations/tti`,
     integrationChirpStack: `${helpBaseUrl}/docs${docIntegrationPrefix}/user-guide/integrations/chirpstack`,
