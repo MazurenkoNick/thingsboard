@@ -34,21 +34,18 @@ import io.swagger.v3.oas.annotations.Parameter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
-import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.thingsboard.common.util.JacksonUtil;
@@ -138,8 +135,7 @@ public class ReportController extends BaseController {
                     REPORT_DESCRIPTION + INVALID_REPORT_ID +
                     TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH + "\n\n" + RBAC_READ_CHECK)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
-    @RequestMapping(value = "/report/{reportId}", method = RequestMethod.GET)
-    @ResponseBody
+    @GetMapping(value = "/report/{reportId}")
     public Report getReportById(@Parameter(description = REPORT_ID_PARAM_DESCRIPTION, required = true)
                                 @PathVariable(REPORT_ID) String strReportId) throws ThingsboardException {
         checkParameter(REPORT_ID, strReportId);
@@ -150,8 +146,7 @@ public class ReportController extends BaseController {
     @ApiOperation(value = "Delete Report (deleteReport)",
             notes = "Deletes the report. " + INVALID_REPORT_ID + "\n\n" + RBAC_DELETE_CHECK)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
-    @RequestMapping(value = "/report/{reportId}", method = RequestMethod.DELETE)
-    @ResponseStatus(value = HttpStatus.OK)
+    @DeleteMapping(value = "/report/{reportId}")
     public void deleteReport(
             @Parameter(description = REPORT_ID_PARAM_DESCRIPTION, required = true)
             @PathVariable(REPORT_ID) String strReportId) throws Exception {

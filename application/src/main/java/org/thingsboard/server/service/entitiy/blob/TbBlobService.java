@@ -31,14 +31,9 @@
 package org.thingsboard.server.service.entitiy.blob;
 
 import org.thingsboard.server.common.data.User;
-import org.thingsboard.server.common.data.blob.BlobEntity;
 import org.thingsboard.server.common.data.blob.BlobEntityInfo;
-import org.thingsboard.server.common.data.exception.ThingsboardException;
-import org.thingsboard.server.service.security.model.SecurityUser;
 
 public interface TbBlobService {
-
-    BlobEntityInfo create(BlobEntity blobEntity, SecurityUser user) throws ThingsboardException;
 
     void delete(BlobEntityInfo blobEntityInfo, User user);
 

@@ -153,6 +153,7 @@ import static org.thingsboard.server.controller.ControllerConstants.TELEMETRY_KE
 import static org.thingsboard.server.controller.ControllerConstants.TELEMETRY_KEYS_DESCRIPTION;
 import static org.thingsboard.server.controller.ControllerConstants.TELEMETRY_SCOPE_DESCRIPTION;
 import static org.thingsboard.server.controller.ControllerConstants.TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH;
+import static org.thingsboard.server.controller.ControllerConstants.READ_TS_KV_QUERY_RESULT_EXAMPLE;
 import static org.thingsboard.server.controller.ControllerConstants.TS_STRICT_DATA_EXAMPLE;
 
 
@@ -349,19 +350,19 @@ public class TelemetryController extends BaseController {
         return response;
     }
 
-    @ApiOperation(value = "Get time series data by queries (getTimeseriesByQueries)",
+    @ApiOperation(value = "Get time series data by read queries (getTimeseriesByReadTsKvQueries)",
             notes = "Returns aggregated time series values according to queries for specified entity. "
                     + MARKDOWN_CODE_BLOCK_START
-                    + TS_STRICT_DATA_EXAMPLE
+                    + READ_TS_KV_QUERY_RESULT_EXAMPLE
                     + MARKDOWN_CODE_BLOCK_END
                     + "\n\n" + INVALID_ENTITY_ID_OR_ENTITY_TYPE_DESCRIPTION + TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH)
     @PreAuthorize("hasAnyAuthority('SYS_ADMIN', 'TENANT_ADMIN', 'CUSTOMER_USER')")
     @PostMapping(value = "/{entityType}/{entityId}/values/timeseries")
-    public DeferredResult<ResponseEntity> getTimeseriesByQueries(
+    public DeferredResult<ResponseEntity> getTimeseriesByReadTsKvQueries(
             @Parameter(description = ENTITY_TYPE_PARAM_DESCRIPTION, required = true, schema = @Schema(defaultValue = "DEVICE")) @PathVariable("entityType") String entityType,
             @Parameter(description = ENTITY_ID_PARAM_DESCRIPTION, required = true) @PathVariable("entityId") String entityIdStr, @RequestBody List<ReadTsKvQuery> queries) throws ThingsboardException {
         DeferredResult<ResponseEntity> response = new DeferredResult<>();
-        Futures.addCallback(tbTelemetryService.getTimeseriesByQueries(EntityIdFactory.getByTypeAndId(entityType, entityIdStr), queries, getCurrentUser()),
+        Futures.addCallback(tbTelemetryService.getTimeseriesByReadQueries(EntityIdFactory.getByTypeAndId(entityType, entityIdStr), queries, getCurrentUser()),
                 getReadTsKvQueryResult(response), MoreExecutors.directExecutor());
         return response;
     }

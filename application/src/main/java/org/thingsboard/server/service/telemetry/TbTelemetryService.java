@@ -57,7 +57,7 @@ public interface TbTelemetryService {
                                                    Boolean useStrictDataTypes,
                                                    SecurityUser currentUser) throws ThingsboardException;
 
-    ListenableFuture<List<ReadTsKvQueryResult>> getTimeseriesByQueries(EntityId entityId,
-                                                                       List<ReadTsKvQuery> queries,
-                                                                       SecurityUser currentUser);
+    ListenableFuture<List<ReadTsKvQueryResult>> getTimeseriesByReadQueries(EntityId entityId,
+                                                                           List<ReadTsKvQuery> queries,
+                                                                           SecurityUser currentUser);
 }

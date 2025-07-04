@@ -106,7 +106,7 @@ public class DefaultTbTelemetryService implements TbTelemetryService {
     }
 
     @Override
-    public ListenableFuture<List<ReadTsKvQueryResult>> getTimeseriesByQueries(EntityId entityId, List<ReadTsKvQuery> queries, SecurityUser currentUser) {
+    public ListenableFuture<List<ReadTsKvQueryResult>> getTimeseriesByReadQueries(EntityId entityId, List<ReadTsKvQuery> queries, SecurityUser currentUser) {
         SettableFuture<List<ReadTsKvQueryResult>> future = SettableFuture.create();
         accessValidator.validate(currentUser, Operation.READ_TELEMETRY, entityId, new FutureCallback<>() {
             @Override

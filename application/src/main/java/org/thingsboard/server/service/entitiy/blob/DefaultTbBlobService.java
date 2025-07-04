@@ -35,33 +35,17 @@ import org.springframework.stereotype.Service;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.User;
 import org.thingsboard.server.common.data.audit.ActionType;
-import org.thingsboard.server.common.data.blob.BlobEntity;
 import org.thingsboard.server.common.data.blob.BlobEntityInfo;
-import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.id.BlobEntityId;
 import org.thingsboard.server.common.data.id.TenantId;
-import org.thingsboard.server.common.data.permission.Operation;
-import org.thingsboard.server.common.data.permission.Resource;
 import org.thingsboard.server.dao.blob.BlobEntityService;
 import org.thingsboard.server.service.entitiy.AbstractTbEntityService;
-import org.thingsboard.server.service.security.model.SecurityUser;
-import org.thingsboard.server.service.security.permission.AccessControlService;
 
 @Service
 @AllArgsConstructor
 public class DefaultTbBlobService extends AbstractTbEntityService implements TbBlobService {
 
     private final BlobEntityService blobEntityService;
-    private final AccessControlService accessControlService;
-
-    @Override
-    public BlobEntityInfo create(BlobEntity blobEntity, SecurityUser user) throws ThingsboardException {
-        if (blobEntity.getId() != null) {
-            throw new IllegalArgumentException("Blob entity can't be updated");
-        }
-        accessControlService.checkPermission(user, Resource.BLOB_ENTITY, Operation.CREATE, null, blobEntity);
-        return new BlobEntityInfo(blobEntityService.saveBlobEntity(blobEntity));
-    }
 
     @Override
     public void delete(BlobEntityInfo blobEntityInfo, User user) {

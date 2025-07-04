@@ -127,7 +127,7 @@ public class ControllerConstants {
     protected static final String INTEGRATION_NAME_PARAM_DESCRIPTION = "A string value representing the integration name. For example, 'My New Integration'";
     protected static final String ASSET_TEXT_SEARCH_DESCRIPTION = "The case insensitive 'substring' filter based on the asset name.";
     protected static final String BLOB_ENTITY_TEXT_SEARCH_DESCRIPTION = "The case insensitive 'startsWith' filter based on the blob entity name.";
-    protected static final String REPORT_TEMPLATE_TEXT_SEARCH_DESCRIPTION = "The case insensitive 'startsWith' filter based on the report template name.";
+    protected static final String REPORT_TEMPLATE_TEXT_SEARCH_DESCRIPTION = "The case insensitive 'substring' filter based on the report template name.";
     protected static final String CONVERTER_TEXT_SEARCH_DESCRIPTION = "The case insensitive 'startsWith' filter based on the converter name.";
     protected static final String INTEGRATION_TEXT_SEARCH_DESCRIPTION = "The case insensitive 'startsWith' filter based on the integration name.";
     protected static final String DASHBOARD_TEXT_SEARCH_DESCRIPTION = "The case insensitive 'substring' filter based on the dashboard title.";
@@ -1846,6 +1846,35 @@ public class ControllerConstants {
             "    }\n" +
             "  ]\n" +
             "}";
+
+    protected static final String READ_TS_KV_QUERY_RESULT_EXAMPLE = "[\n" +
+            "  {\n" +
+            "    \"queryId\": 49,\n" +
+            "    \"data\": [\n" +
+            "      {\n" +
+            "        \"ts\": 1751450399999,\n" +
+            "        \"kv\": {\n" +
+            "          \"key\": \"temperature\",\n" +
+            "          \"value\": 26,\n" +
+            "          \"doubleValue\": 26,\n" +
+            "          \"valueAsString\": \"26.0\",\n" +
+            "          \"dataType\": \"DOUBLE\",\n" +
+            "          \"longValue\": null,\n" +
+            "          \"booleanValue\": null,\n" +
+            "          \"jsonValue\": null,\n" +
+            "          \"strValue\": null\n" +
+            "        },\n" +
+            "        \"version\": null\n" +
+            "      }\n" +
+            "    ],\n" +
+            "    \"lastEntryTs\": 1750264592675\n" +
+            "  },\n" +
+            "  {\n" +
+            "    \"queryId\": 50,\n" +
+            "    \"data\": [],\n" +
+            "    \"lastEntryTs\": 1751317200000\n" +
+            "  }\n" +
+            "]";
 
     protected static final String SAVE_ATTRIBUTES_REQUEST_PAYLOAD = "The request payload is a JSON object with key-value format of attributes to create or update. " +
             "For example:\n\n"

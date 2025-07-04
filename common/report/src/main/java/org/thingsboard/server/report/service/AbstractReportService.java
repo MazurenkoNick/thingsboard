@@ -56,7 +56,6 @@ import org.thingsboard.server.common.data.report.configuration.DataKey;
 import org.thingsboard.server.common.data.report.configuration.DataSource;
 import org.thingsboard.server.common.data.report.configuration.ReportTemplateConfig;
 import org.thingsboard.server.common.data.report.configuration.components.AlarmTableComponent;
-import org.thingsboard.server.common.data.report.configuration.components.EntityTableComponent;
 import org.thingsboard.server.common.data.report.configuration.components.TimeseriesTableComponent;
 import org.thingsboard.server.common.data.report.configuration.timewindow.History;
 import org.thingsboard.server.common.data.report.configuration.timewindow.TimeIntervalCalculator;
@@ -64,12 +63,12 @@ import org.thingsboard.server.common.data.report.configuration.timewindow.TimeWi
 import org.thingsboard.server.report.context.ComponentData;
 import org.thingsboard.server.report.context.TbReportCtx;
 import org.thingsboard.server.report.datasource.ReportDataService;
+import org.apache.commons.collections4.CollectionUtils;
 
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -144,24 +143,33 @@ public abstract class AbstractReportService implements ReportService {
                 .toList();
         List<EntityData> data = new ArrayList<>();
         for (EntityData entityData : new PageDataIterable<>(link -> dataService.findEntityDataByQuery(querySupplier.apply(link), ctx), 1024)) {
-            if (!dataKeysWithAggregation.isEmpty()) {
-                List<ReadTsKvQuery> queries = new ArrayList<>();
-                for (DataKey key : dataKeysWithAggregation) {
-                    TimeIntervalCalculator.TimeRange timeRange = getTimeRange(key.getTimewindow());
-                    var query = new BaseReadTsKvQuery(key.getName(), timeRange.startTs, timeRange.endTs, timeRange.endTs - timeRange.startTs, 1, key.getAggregationType());
-                    queries.add(query);
-                }
-
-                List<ReadTsKvQueryResult> result = dataService.findTimeseriesByQueries(entityData.getEntityId(), queries, ctx);
-                if (result != null) {
-                    for (ReadTsKvQueryResult queryResult : result) {
-                        entityData.getTimeseries().put(queryResult.getData().get(0).getKey(), toTsValues(queryResult));
-                    }
-                }
-            }
+            updateWithAggregatedData(ctx, dataKeysWithAggregation, entityData);
             data.add(entityData);
         }
         return data;
+    }
+
+    private void updateWithAggregatedData(TbReportCtx ctx, List<DataKey> dataKeysWithAggregation, EntityData entityData) {
+        if (!dataKeysWithAggregation.isEmpty()) {
+            List<ReadTsKvQuery> queries = getReadTsKvQueries(dataKeysWithAggregation);
+            List<ReadTsKvQueryResult> result = dataService.findTimeseriesByQueries(entityData.getEntityId(), queries, ctx);
+            for (ReadTsKvQueryResult queryResult : result) {
+                List<TsKvEntry> queryResultData = queryResult.getData();
+                if (CollectionUtils.isNotEmpty(queryResultData)) {
+                    entityData.getTimeseries().put(queryResultData.get(0).getKey(), toTsValues(queryResult));
+                }
+            }
+        }
+    }
+
+    private List<ReadTsKvQuery> getReadTsKvQueries(List<DataKey> dataKeysWithAggregation) {
+        List<ReadTsKvQuery> queries = new ArrayList<>();
+        for (DataKey key : dataKeysWithAggregation) {
+            TimeIntervalCalculator.TimeRange timeRange = getTimeRange(key.getTimewindow());
+            var query = new BaseReadTsKvQuery(key.getName(), timeRange.startTs, timeRange.endTs, timeRange.endTs - timeRange.startTs, 1, key.getAggregationType());
+            queries.add(query);
+        }
+        return queries;
     }
 
     public TsValue[] toTsValues(ReadTsKvQueryResult queryResult) {
@@ -312,10 +320,12 @@ public abstract class AbstractReportService implements ReportService {
                 .filter(dataKey -> dataKey.getAggregationType() != null && dataKey.getAggregationType() != Aggregation.NONE)
                 .toList();
         for (DataKey dataKey : dataKeysWithAggregation) {
-            TsValue[] tsValues = timeseries.get(dataKey.getName());
-            for (TsValue tsValue : tsValues) {
-                data.put(dataKey.getLabel(), formatValue(ctx, dataKey, tsValue.getTs(), tsValue.getValue()));
-            }
+            timeseries.computeIfPresent(dataKey.getName(), (s, tsValues) -> {
+                for (TsValue tsValue : tsValues) {
+                    data.put(dataKey.getLabel(), formatValue(ctx, dataKey, tsValue.getTs(), tsValue.getValue()));
+                }
+                return tsValues;
+            });
         }
     }
 
