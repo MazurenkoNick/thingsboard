@@ -28,38 +28,35 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.common.data.report.configuration.components;
+package org.thingsboard.server.common.data.report.configuration.style;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import org.thingsboard.server.common.data.report.configuration.DataSource;
-import org.thingsboard.server.common.data.report.configuration.style.Insets;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
+import lombok.Getter;
 
-import java.io.Serializable;
-import java.util.List;
+public enum BorderType {
 
+    SOLID("solid"), DASHED("dashed");
 
-@JsonIgnoreProperties(ignoreUnknown = true)
-@JsonTypeInfo(
-        use = JsonTypeInfo.Id.NAME,
-        include = JsonTypeInfo.As.EXISTING_PROPERTY,
-        property = "type")
-@JsonSubTypes({
-        @JsonSubTypes.Type(value = HeadingComponent.class, name = "HEADING"),
-        @JsonSubTypes.Type(value = RichTextComponent.class, name = "RICH_TEXT"),
-        @JsonSubTypes.Type(value = EntityTableComponent.class, name = "ENTITY_TABLE"),
-        @JsonSubTypes.Type(value = PageBreakComponent.class, name = "PAGE_BREAK"),
-        @JsonSubTypes.Type(value = TimeseriesTableComponent.class, name = "TIME_SERIES_TABLE"),
-        @JsonSubTypes.Type(value = AlarmTableComponent.class, name = "ALARM_TABLE"),
-        @JsonSubTypes.Type(value = DashboardComponent.class, name = "DASHBOARD"),
-        @JsonSubTypes.Type(value = ImageComponent.class, name = "IMAGE"),
-        @JsonSubTypes.Type(value = SubReportComponent.class, name = "SUB_REPORT"),
-        @JsonSubTypes.Type(value = ErrorComponent.class, name = "ERROR"),
-        @JsonSubTypes.Type(value = DividerComponent.class, name = "DIVIDER")
-})
-public interface ReportComponent extends Serializable {
+    @Getter
+    private final String value;
 
-    ReportComponentType getType();
+    BorderType(String label) {
+        this.value = label;
+    }
 
+    @JsonValue
+    public String getValue() {
+        return value;
+    }
+
+    @JsonCreator
+    public static BorderType fromLabel(String value) {
+        for (BorderType type : values()) {
+            if (type.value.equalsIgnoreCase(value)) {
+                return type;
+            }
+        }
+        throw new IllegalArgumentException("Unknown BorderType: " + value);
+    }
 }
