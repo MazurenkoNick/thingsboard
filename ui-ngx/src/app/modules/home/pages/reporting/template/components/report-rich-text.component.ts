@@ -50,7 +50,7 @@ import {
 } from '@home/pages/reporting/template/components/report-image-dialog.component';
 import { MatDialog } from '@angular/material/dialog';
 import {
-  extractKeyFromVariable,
+  extractKeyFromVariable, imagePlaceholder,
   isKeyVariable, keyImage,
   ReportVariable
 } from '@home/pages/reporting/template/components/report-component.models';
@@ -277,7 +277,7 @@ export class ReportRichTextComponent implements OnInit, ControlValueAccessor, On
       this.htmlWithImagePipe.transform(editor.getBody(), {
         getImageSrcCallback: this.getImageSrcCallback.bind(this),
         setImageSrcCallback: this.setImageSrcCallback.bind(this),
-        customImageUrlCallback: this.keyImageUrlCallback.bind(this)
+        customImageUrlCallback: this.customImageUrlCallback.bind(this)
       }).subscribe();
     });
 
@@ -380,8 +380,10 @@ export class ReportRichTextComponent implements OnInit, ControlValueAccessor, On
     }
   }
 
-  private keyImageUrlCallback: CustomImageUrlCallback = (url) => {
-    if (isKeyVariable(url)) {
+  private customImageUrlCallback: CustomImageUrlCallback = (url) => {
+    if (!url) {
+      return of(imagePlaceholder);
+    } else if (isKeyVariable(url)) {
       const key = extractKeyFromVariable(url);
       return of(keyImage(key));
     } else {
@@ -441,10 +443,11 @@ export class ReportRichTextComponent implements OnInit, ControlValueAccessor, On
     editor.undoManager.transact(() => {
       const elm = editor.selection.getNode() as HTMLElement;
       const imgElm = elm.nodeName === 'IMG' ? elm : null;
+      const imageUrl = data.imageUrl ? data.imageUrl : '';
       if (imgElm) {
-        if (data.imageUrl) {
+       // if (data.imageUrl) {
           imgElm.setAttribute('src', '#');
-          imgElm.setAttribute(TB_SRC_ATTRIBUTE, data.imageUrl);
+          imgElm.setAttribute(TB_SRC_ATTRIBUTE, imageUrl);
           imgElm.setAttribute('width', data.width ? (data.width + 'px') : null);
           imgElm.setAttribute('height', data.height ? (data.height + 'px') : null);
           editor.dom.setAttrib(imgElm, 'data-mce-id', '__mceupd');
@@ -453,19 +456,19 @@ export class ReportRichTextComponent implements OnInit, ControlValueAccessor, On
           const updatedElm = editor.dom.select('*[data-mce-id="__mceupd"]')[0];
           editor.dom.setAttrib(updatedElm, 'data-mce-id', null);
           editor.selection.select(updatedElm);
-        } else {
-          editor.dom.remove(imgElm);
-          editor.focus();
-          editor.nodeChanged();
-          if (editor.dom.isEmpty(editor.getBody())) {
-            editor.setContent('');
-            editor.selection.setCursorLocation();
-          }
-        }
-      } else if (data.imageUrl) {
+        /* } else {
+           editor.dom.remove(imgElm);
+           editor.focus();
+           editor.nodeChanged();
+           if (editor.dom.isEmpty(editor.getBody())) {
+             editor.setContent('');
+             editor.selection.setCursorLocation();
+           }
+         }*/
+      } else /* if (data.imageUrl)*/ {
         const image = document.createElement('img');
         image.setAttribute('src', '#');
-        image.setAttribute(TB_SRC_ATTRIBUTE, data.imageUrl);
+        image.setAttribute(TB_SRC_ATTRIBUTE, imageUrl);
         if (data.width) {
           image.setAttribute('width', data.width + 'px');
         }

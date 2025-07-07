@@ -44,9 +44,7 @@ import {
   ViewEncapsulation
 } from '@angular/core';
 import {
-  defaultReportComponentConfig,
-  ReportComponentConfig,
-  ReportComponentType
+  ReportComponentConfig
 } from '@shared/models/report-component.models';
 import {
   CdkDragDrop,
@@ -58,7 +56,10 @@ import {
 } from '@angular/cdk/drag-drop';
 import { deepClone } from '@core/utils';
 import { ReportComponentComponent } from '@home/pages/reporting/template/components/report-component.component';
-import { reportComponentTypeMap } from '@home/pages/reporting/template/components/report-component.models';
+import {
+  reportComponentsLibrary,
+  reportComponentTypeMap
+} from '@home/pages/reporting/template/components/report-component.models';
 import { TbReportFormat } from '@shared/models/report.models';
 
 @Component({
@@ -155,11 +156,14 @@ export class ReportComponentsComponent implements OnInit, OnChanges {
     } else {
       if (item.data) {
         if (typeof item.data === 'string') {
-          const reportComponent = defaultReportComponentConfig(item.data as ReportComponentType);
-          if (reportComponent) {
+          const libraryItem = reportComponentsLibrary.get(item.data);
+          if (libraryItem) {
+            const reportComponent = deepClone(libraryItem.defaultConfig);
             this.reportComponents.splice(event.currentIndex, 0, reportComponent);
             if (reportComponentTypeMap.get(reportComponent.type).editable) {
-              this.componentEdit.emit(reportComponent);
+              setTimeout(() => {
+                this.componentEdit.emit(reportComponent);
+              }, 0);
             }
           }
         } else if (typeof item.data === 'object') {
@@ -211,7 +215,20 @@ export class ReportComponentsComponent implements OnInit, OnChanges {
     return false;
   }
 
-  componentDragStarted(event: CdkDragStart){
+  componentSelected(reportComponent: ReportComponentConfig) {
+    this.reportComponentComponents.forEach(component => component.selected = false);
+    if (reportComponent && this.reportComponents) {
+      const index = this.reportComponents.indexOf(reportComponent);
+      if (index > -1) {
+        const component = this.reportComponentComponents.get(index);
+        if (component) {
+          component.selected = true;
+        }
+      }
+    }
+  }
+
+  componentDragStarted(_event: CdkDragStart){
     //event.source.getPlaceholderElement().style.height = Math.max(60, event.source.element.nativeElement.offsetHeight) + 'px';
     document.body.style.cursor = 'grabbing';
   }

@@ -164,9 +164,14 @@ export class ReportImageDialogComponent extends DialogComponent<ReportImageDialo
   private updateImageSize(size: {width: number, height: number}): void {
     this.origImageSize = size;
     if (this.initImageSize) {
-      this.reportImageFormGroup.get('width').patchValue(this.origImageSize.width, {emitEvent: false});
-      this.reportImageFormGroup.get('height').patchValue(this.origImageSize.height, {emitEvent: false});
       this.aspect = this.origImageSize.width / this.origImageSize.height;
+      let width: number = this.reportImageFormGroup.get('width').value;
+      if (!width) {
+        width = this.origImageSize.width;
+      }
+      const height = width / this.aspect;
+      this.reportImageFormGroup.get('width').patchValue(width, {emitEvent: false});
+      this.reportImageFormGroup.get('height').patchValue(height, {emitEvent: false});
     }
     this.initImageSize = true;
   }

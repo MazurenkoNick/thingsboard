@@ -41,7 +41,7 @@ import {
 } from '@angular/core';
 import {
   csvReportComponentTypes,
-  reportComponentTypeMap,
+  reportComponentsLibrary,
   reportComponentTypes
 } from '@home/pages/reporting/template/components/report-component.models';
 import { CdkDragStart } from '@angular/cdk/drag-drop';
@@ -72,15 +72,15 @@ export class ReportComponentLibraryComponent implements OnInit, OnChanges {
     read: ElementRef,
   });
 
-  reportComponentTypes: ReportComponentType[];
-  reportComponentTypeMap = reportComponentTypeMap;
+  reportComponentIds: string[];
+  reportComponentsLibrary = reportComponentsLibrary;
 
   private itemDragEntered = false;
 
   constructor() {}
 
   ngOnInit() {
-    this.updateReportComponentTypes();
+    this.updateReportComponentIds();
   }
 
   ngOnChanges(changes: SimpleChanges) {
@@ -88,7 +88,7 @@ export class ReportComponentLibraryComponent implements OnInit, OnChanges {
       const change = changes[propName];
       if (!change.firstChange && change.currentValue !== change.previousValue) {
         if (['subReport', 'format'].includes(propName)) {
-          this.updateReportComponentTypes();
+          this.updateReportComponentIds();
         }
       }
     }
@@ -125,13 +125,17 @@ export class ReportComponentLibraryComponent implements OnInit, OnChanges {
     this.itemDragEntered = false;
   }
 
-  private updateReportComponentTypes() {
-    const componentTypes = this.format === TbReportFormat.CSV ? csvReportComponentTypes : reportComponentTypes;
+  private updateReportComponentIds() {
+    let componentTypes = this.format === TbReportFormat.CSV ? csvReportComponentTypes : reportComponentTypes;
+    this.reportComponentIds = [];
     if (this.subReport) {
-      this.reportComponentTypes = componentTypes.filter((type) => type !== ReportComponentType.SUB_REPORT );
-    } else {
-      this.reportComponentTypes = componentTypes;
+      componentTypes = componentTypes.filter((type) => type !== ReportComponentType.SUB_REPORT );
     }
+    reportComponentsLibrary.forEach((item, id) => {
+      if (componentTypes.includes(item.type)) {
+        this.reportComponentIds.push(id);
+      }
+    });
   }
 
   private copyExistingLibItemsToActiveList() {

@@ -42,6 +42,15 @@
       pointer-events: none;
     }
   }
+  &.tb-selected {
+    &::after {
+      content: '';
+      border-radius: 4px;
+      border: solid 1px #0094FF;
+      box-shadow: 0 0 20px 0 rgba(3, 155, 229, 0.30);
+      pointer-events: none;
+    }
+  }
 }
 
 .cdk-drag-preview {

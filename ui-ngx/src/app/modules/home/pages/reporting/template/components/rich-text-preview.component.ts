@@ -32,7 +32,12 @@
 import { AfterViewInit, Component, ElementRef, OnDestroy, viewChild, ViewEncapsulation } from '@angular/core';
 import { RichTextReportComponentConfig } from '@shared/models/report-component.models';
 import { AbstractReportComponentPreview } from '@home/pages/reporting/template/components/report-component.component';
-import { extractKeyFromVariable, isKeyVariable, keyImage } from '@home/pages/reporting/template/components/report-component.models';
+import {
+  extractKeyFromVariable,
+  imagePlaceholder,
+  isKeyVariable,
+  keyImage
+} from '@home/pages/reporting/template/components/report-component.models';
 import { of } from 'rxjs';
 
 @Component({
@@ -53,7 +58,9 @@ export class RichTextPreviewComponent extends AbstractReportComponentPreview<Ric
 
   htmlWithImageOptions =  {
     customImageUrlCallback: (url: string)=> {
-      if (isKeyVariable(url)) {
+      if (!url) {
+        return of(imagePlaceholder);
+      } else if (isKeyVariable(url)) {
         const key = extractKeyFromVariable(url);
         return of(keyImage(key));
       } else {

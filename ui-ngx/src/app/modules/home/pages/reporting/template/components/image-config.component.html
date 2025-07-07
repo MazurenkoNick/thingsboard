@@ -85,8 +85,6 @@
         </div>
       </div>
     </div>
-  </div>
-  <div class="tb-form-panel no-border no-padding overflow-y-auto" [class.!hidden]="settingsTab !== 'layout'">
     <div class="tb-form-row space-between">
       <div>{{ 'report-template.component.image.image-width' | translate }}</div>
       <div class="flex flex-row items-center justify-start gap-2">
@@ -116,6 +114,8 @@
         </mat-select>
       </mat-form-field>
     </div>
+  </div>
+  <div class="tb-form-panel no-border no-padding overflow-y-auto" [class.!hidden]="settingsTab !== 'layout'">
     <tb-report-component-layout-settings formControlName="layout">
     </tb-report-component-layout-settings>
   </div>

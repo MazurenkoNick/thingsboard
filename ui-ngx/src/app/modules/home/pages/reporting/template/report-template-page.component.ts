@@ -39,10 +39,9 @@ import {
   HostBinding,
   OnDestroy,
   OnInit,
-  QueryList,
   Renderer2,
   viewChild,
-  ViewChildren,
+  viewChildren,
   ViewEncapsulation
 } from '@angular/core';
 import { PageComponent } from '@shared/components/page.component';
@@ -115,6 +114,9 @@ import { getDefaultTimezone } from '@shared/models/time/time.models';
 import { DatePipe } from '@angular/common';
 import { EntityId } from '@shared/models/id/entity-id';
 import { CdkScrollable } from '@angular/cdk/overlay';
+import {
+  ReportTemplateHeaderFooterComponent
+} from '@home/pages/reporting/template/report-template-header-footer.component';
 
 @Component({
   selector: 'tb-report-template-page',
@@ -154,8 +156,9 @@ export class ReportTemplatePageComponent extends PageComponent
   @HostBinding('style.width') width = '100%';
   @HostBinding('style.height') height = '100%';
 
-  @ViewChildren(ReportComponentsComponent)
-  reportComponentsComponents: QueryList<ReportComponentsComponent>;
+  reportComponentsComponents = viewChildren(ReportComponentsComponent);
+
+  headerFooterComponents = viewChildren(ReportTemplateHeaderFooterComponent);
 
   reportTemplateContainerEl = viewChild('reportTemplateContainer', {
     read: ElementRef<HTMLElement>,
@@ -359,14 +362,18 @@ export class ReportTemplatePageComponent extends PageComponent
     if (this.editingReportComponent !== reportComponent) {
       this.editingReportComponent = reportComponent;
       this.prevReportComponent = deepClone(reportComponent);
+      const reportComponentsComponents = this.allReportComponentsComponents();
+      for (const component of reportComponentsComponents) {
+        component.componentSelected(reportComponent);
+      }
       this.renderer.addClass(this.reportTemplateContainerEl().nativeElement, 'tb-close-library');
     }
   }
 
   public reportComponentUpdated() {
     if (this.editingReportComponent) {
-      for (let index = 0; index < this.reportComponentsComponents.length; index++) {
-        const component = this.reportComponentsComponents.get(index);
+      const reportComponentsComponents = this.allReportComponentsComponents();
+      for (const component of reportComponentsComponents) {
         if (component.componentUpdated(this.editingReportComponent)) {
           break;
         }
@@ -378,6 +385,10 @@ export class ReportTemplatePageComponent extends PageComponent
   public saveReportComponent(): void {
     this.prevReportComponent = null;
     this.editingReportComponent = null;
+    const reportComponentsComponents = this.allReportComponentsComponents();
+    for (const component of reportComponentsComponents) {
+      component.componentSelected(null);
+    }
     this.renderer.removeClass(this.reportTemplateContainerEl().nativeElement, 'tb-close-library');
   }
 
@@ -387,6 +398,10 @@ export class ReportTemplatePageComponent extends PageComponent
       this.reportComponentUpdated();
       this.prevReportComponent = null;
       this.editingReportComponent = null;
+      const reportComponentsComponents = this.allReportComponentsComponents();
+      for (const component of reportComponentsComponents) {
+        component.componentSelected(null);
+      }
       this.renderer.removeClass(this.reportTemplateContainerEl().nativeElement, 'tb-close-library');
     }
   }
@@ -634,7 +649,8 @@ export class ReportTemplatePageComponent extends PageComponent
       this.cd.markForCheck();
     }
     this.layoutWidth = this.reportTemplateLayoutEl().nativeElement.getBoundingClientRect().width;
-    this.reportComponentsComponents.forEach(component => {
+    const reportComponentsComponents = this.allReportComponentsComponents();
+    reportComponentsComponents.forEach(component => {
       this.renderer.setStyle(component.element.nativeElement, 'maxWidth', this.layoutWidth + 'px');
     });
     this.updateScale();
@@ -684,6 +700,16 @@ export class ReportTemplatePageComponent extends PageComponent
     this.isDirty = false;
     this.updateBreadcrumbs.emit();
     this.cd.markForCheck();
+  }
+
+  private allReportComponentsComponents(): ReportComponentsComponent[] {
+    const result = [...this.reportComponentsComponents()];
+    const headerFooterComponents = this.headerFooterComponents();
+    headerFooterComponents.forEach(headerFooter => {
+      const components = headerFooter.reportComponentsComponents();
+      result.push(...components);
+    });
+    return result;
   }
 
 }

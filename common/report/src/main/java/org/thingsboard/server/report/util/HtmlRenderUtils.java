@@ -32,6 +32,7 @@ package org.thingsboard.server.report.util;
 
 import org.thingsboard.server.report.context.TbReportCtx;
 import org.thingsboard.server.report.datasource.ReportDataService;
+import org.thingsboard.server.report.util.itext.PdfReplacedElementFactory;
 import org.thingsboard.server.report.util.itext.PdfReportFontResolver;
 import org.thingsboard.server.report.util.itext.PdfReportTextRenderer;
 import org.thingsboard.server.report.util.itext.PdfReportUserAgent;
@@ -41,7 +42,6 @@ import org.xhtmlrenderer.extend.TextRenderer;
 import org.xhtmlrenderer.pdf.ITextFontResolver;
 import org.xhtmlrenderer.pdf.ITextOutputDevice;
 import org.xhtmlrenderer.pdf.ITextRenderer;
-import org.xhtmlrenderer.pdf.ITextReplacedElementFactory;
 import org.xhtmlrenderer.pdf.ITextUserAgent;
 
 import java.io.ByteArrayInputStream;
@@ -65,7 +65,7 @@ public class HtmlRenderUtils {
     public static ITextRenderer createRenderer(ReportDataService dataService, TbReportCtx ctx, int usablePageWidthPx) {
         ITextOutputDevice outputDevice = new ITextOutputDevice(DEFAULT_DOTS_PER_POINT);
         ITextUserAgent userAgent = new PdfReportUserAgent(dataService, ctx, outputDevice, DEFAULT_DOTS_PER_PIXEL, usablePageWidthPx);
-        ReplacedElementFactory replacedElementFactory = new ITextReplacedElementFactory(outputDevice);
+        ReplacedElementFactory replacedElementFactory = new PdfReplacedElementFactory();
         return new ITextRenderer(DEFAULT_DOTS_PER_POINT, DEFAULT_DOTS_PER_PIXEL,
                 outputDevice,
                 userAgent,

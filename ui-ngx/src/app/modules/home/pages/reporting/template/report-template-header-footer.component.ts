@@ -36,12 +36,13 @@ import {
   Input,
   Output,
   Renderer2,
-  viewChild,
+  viewChild, viewChildren,
   ViewEncapsulation
 } from '@angular/core';
 import { HeaderFooter, TbReportFormat } from '@shared/models/report.models';
 import { coerceBoolean } from '@shared/decorators/coercion';
 import { ReportComponentConfig } from '@shared/models/report-component.models';
+import { ReportComponentsComponent } from '@home/pages/reporting/template/components/report-components.component';
 
 @Component({
   selector: 'tb-report-template-header-footer',
@@ -109,6 +110,8 @@ export class ReportTemplateHeaderFooterComponent {
 
   @Output()
   expandAnimationFinish = new EventEmitter();
+
+  reportComponentsComponents = viewChildren(ReportComponentsComponent);
 
   reportHeaderToolbarButtonsEl = viewChild('reportHeaderToolbarButtons', {
     read: ElementRef<HTMLElement>,

@@ -33,11 +33,11 @@
 <div class="tb-report-component-library" #libraryDragOriginList cdkDropList
      [cdkDropListEnterPredicate]="dropListEnterPredicate"
      [cdkDropListSortingDisabled]="true">
-  @for (type of reportComponentTypes; track type) {
+  @for (id of reportComponentIds; track id) {
     <div class="tb-report-component-library-item">
-      <div class="tb-report-component-library-item-title">{{ reportComponentTypeMap.get(type).title | translate }}</div>
+      <div class="tb-report-component-library-item-title">{{ reportComponentsLibrary.get(id).title | translate }}</div>
       <div cdkDrag
-           [cdkDragData]="type"
+           [cdkDragData]="id"
            (cdkDragStarted)="dragStarted($event)"
            (cdkDragEnded)="dragEnded()"
            (cdkDragEntered)="dragEntered()"
@@ -46,10 +46,10 @@
         <div *cdkDragPlaceholder>
             <div class="tb-report-component-placeholder"></div>
             <div class="tb-report-component-library-drag-item" style="display: none;">
-              <img class="tb-report-component-library-item-preview" [src]="reportComponentTypeMap.get(type).previewImage">
+              <img class="tb-report-component-library-item-preview" [src]="reportComponentsLibrary.get(id).previewImage">
             </div>
         </div>
-        <img class="tb-report-component-library-item-preview" [src]="reportComponentTypeMap.get(type).previewImage">
+        <img class="tb-report-component-library-item-preview" [src]="reportComponentsLibrary.get(id).previewImage">
       </div>
     </div>
   }

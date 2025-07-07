@@ -29,11 +29,25 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { ReportComponentConfig, ReportComponentType } from '@shared/models/report-component.models';
+import {
+  AlarmTableReportComponentConfig,
+  DashboardReportComponentConfig,
+  EntityTableReportComponentConfig,
+  HeadingReportComponentConfig,
+  ImageReportComponentConfig, PageBreakReportComponentConfig,
+  ReportComponentConfig,
+  ReportComponentType,
+  ReportDataKeySettingsType,
+  RichTextReportComponentConfig,
+  SubReportReportComponentConfig,
+  TimeseriesTableReportComponentConfig
+} from '@shared/models/report-component.models';
 import { Type } from '@angular/core';
 import { HeadingPreviewComponent } from '@home/pages/reporting/template/components/heading-preview.component';
 import { RichTextPreviewComponent } from '@home/pages/reporting/template/components/rich-text-preview.component';
-import { AbstractReportComponentConfig } from '@home/pages/reporting/template/components/report-component-config.component';
+import {
+  AbstractReportComponentConfig
+} from '@home/pages/reporting/template/components/report-component-config.component';
 import { HeadingConfigComponent } from '@home/pages/reporting/template/components/heading-config.component';
 import { RichTextConfigComponent } from '@home/pages/reporting/template/components/rich-text-config.component';
 import { IAliasController } from '@core/api/widget-api.models';
@@ -58,14 +72,328 @@ import { ImageConfigComponent } from '@home/pages/reporting/template/components/
 
 import keyImageTemplate from './key-image-svg.raw';
 import { insertVariable, stringToBase64 } from '@core/utils';
-import { DataKey } from '@shared/models/widget.models';
+import { DataKey, DatasourceType } from '@shared/models/widget.models';
 import { DashboardPreviewComponent } from '@home/pages/reporting/template/components/dashboard-preview.component';
 import { DashboardConfigComponent } from '@home/pages/reporting/template/components/dashboard-config.component';
 import { AlarmTablePreviewComponent } from '@home/pages/reporting/template/components/alarm-table-preview.component';
 import { AlarmTableConfigComponent } from '@home/pages/reporting/template/components/alarm-table-config.component';
-import { TimeseriesTablePreviewComponent } from '@home/pages/reporting/template/components/timeseries-table-preview.component';
-import { TimeseriesTableConfigComponent } from '@home/pages/reporting/template/components/timeseries-table-config.component';
+import {
+  TimeseriesTablePreviewComponent
+} from '@home/pages/reporting/template/components/timeseries-table-preview.component';
+import {
+  TimeseriesTableConfigComponent
+} from '@home/pages/reporting/template/components/timeseries-table-config.component';
 import { TbReportFormat } from '@shared/models/report.models';
+import { Font } from '@shared/models/widget-settings.models';
+import { DataKeyType } from '@shared/models/telemetry/telemetry.models';
+import { AggregationType, DAY, historyInterval } from '@shared/models/time/time.models';
+
+export interface ReportComponentLibraryItem<C extends ReportComponentConfig = ReportComponentConfig> {
+  id: string;
+  title: string;
+  previewImage: string;
+  type: ReportComponentType;
+  defaultConfig: C;
+}
+
+export const reportComponentsLibrary = new Map<string, ReportComponentLibraryItem>(
+  [
+    [
+      'heading',
+      {
+        id: 'heading',
+        title: 'report-template.component.heading.type',
+        previewImage: '/assets/report/components/heading.svg',
+        type: ReportComponentType.HEADING,
+        defaultConfig: {
+          type: ReportComponentType.HEADING,
+          value: 'Heading text',
+          font: {
+            size: 40,
+            sizeUnit: 'pt',
+            weight: 'normal',
+            style: 'normal',
+            family: 'Roboto'
+          } as Font,
+          color: '#000',
+          textAlignment: 'center',
+          verticalAlignment: 'middle',
+          height: undefined,
+          dataSources: [],
+          margins: null,
+          paddings: null,
+          background: null
+        } as HeadingReportComponentConfig
+      }
+    ],
+    [
+      'richText',
+      {
+        id: 'richText',
+        title: 'report-template.component.rich-text.type',
+        previewImage: '/assets/report/components/rich-text.svg',
+        type: ReportComponentType.RICH_TEXT,
+        defaultConfig: {
+          type: ReportComponentType.RICH_TEXT,
+          value: '<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec libero orci, faucibus in iaculis quis, vestibulum sit amet ligula. Nulla facilisi. Ut ut iaculis tortor.</p>',
+          dataSources: [],
+          margins: null,
+          paddings: null,
+          background: null
+        } as RichTextReportComponentConfig
+      }
+    ],
+    [
+      'entityTable',
+      {
+        id: 'entityTable',
+        title: 'report-template.component.entity-table.type',
+        previewImage: '/assets/report/components/entity-table.svg',
+        type: ReportComponentType.ENTITY_TABLE,
+        defaultConfig: {
+          type: ReportComponentType.ENTITY_TABLE,
+          showTableHeading: false,
+          tableHeading: {
+            text: "Entities",
+            font: {
+              size: 20,
+              sizeUnit: 'pt',
+              weight: 'normal',
+              style: 'normal',
+              family: 'Roboto'
+            } as Font,
+            color: '#000',
+            textAlignment: 'center',
+            verticalAlignment: 'middle',
+            height: 40
+          },
+          dataSources: [
+            {
+              type: DatasourceType.entity,
+              dataKeys: [
+                {
+                  name: 'name',
+                  type: DataKeyType.entityField,
+                  label: 'Name'
+                }
+              ]
+            }
+          ],
+          margins: {
+            top: 20
+          },
+          paddings: null,
+          background: null
+        } as EntityTableReportComponentConfig
+      }
+    ],
+    [
+      'timeSeriesTable',
+      {
+        id: 'timeSeriesTable',
+        title: 'report-template.component.timeseries-table.type',
+        previewImage: '/assets/report/components/timeseries-table.svg',
+        type: ReportComponentType.TIME_SERIES_TABLE,
+        defaultConfig: {
+          type: ReportComponentType.TIME_SERIES_TABLE,
+          showTableHeading: true,
+          tableHeading: {
+            text: '${entityName}',
+            font: {
+              size: 20,
+              sizeUnit: 'pt',
+              weight: 'normal',
+              style: 'normal',
+              family: 'Roboto'
+            } as Font,
+            color: '#000',
+            textAlignment: 'center',
+            verticalAlignment: 'middle',
+            height: 40
+          },
+          dataSources: [
+            {
+              type: DatasourceType.entity,
+              dataKeys: [
+                {
+                  name: 'temperature',
+                  type: DataKeyType.timeseries,
+                  label: 'Temperature',
+                  units: '°C',
+                  decimals: 0
+                }
+              ]
+            }
+          ],
+          timewindow: {...historyInterval(DAY),
+            aggregation: {
+              type: AggregationType.NONE,
+              limit: 200
+            }
+          },
+          showTimestamp: true,
+          timestampLabel: 'Timestamp',
+          timestampPattern: 'yyyy-MM-dd HH:mm:ss',
+          timestampColumnSettings: {
+            type: ReportDataKeySettingsType.COLUMN
+          },
+          margins: {
+            top: 20
+          },
+          paddings: null,
+          background: null
+        } as TimeseriesTableReportComponentConfig
+      }
+    ],
+    [
+      'alarmTable',
+      {
+        id: 'alarmTable',
+        title: 'report-template.component.alarm-table.type',
+        previewImage: '/assets/report/components/alarm-table.svg',
+        type: ReportComponentType.ALARM_TABLE,
+        defaultConfig: {
+          type: ReportComponentType.ALARM_TABLE,
+          showTableHeading: false,
+          tableHeading: {
+            text: "Alarms",
+            font: {
+              size: 20,
+              sizeUnit: 'pt',
+              weight: 'normal',
+              style: 'normal',
+              family: 'Roboto'
+            } as Font,
+            color: '#000',
+            textAlignment: 'center',
+            verticalAlignment: 'middle',
+            height: 40
+          },
+          alarmSource: {
+            type: DatasourceType.entity,
+            alarmFilterConfig: {},
+            dataKeys: [
+              {
+                name: 'createdTime',
+                type: DataKeyType.alarm,
+                label: "Created time"
+              },
+              {
+                name: 'originator',
+                type: DataKeyType.alarm,
+                label: "Originator"
+              },
+              {
+                name: 'type',
+                type: DataKeyType.alarm,
+                label: "Type"
+              },
+              {
+                name: 'severity',
+                type: DataKeyType.alarm,
+                label: "Severity"
+              },
+              {
+                name: 'status',
+                type: DataKeyType.alarm,
+                label: "Status"
+              },
+              {
+                name: 'assignee',
+                type: DataKeyType.alarm,
+                label: "Assignee"
+              }
+            ]
+          },
+          timewindow: historyInterval(DAY),
+          margins: {
+            top: 20
+          },
+          paddings: null,
+          background: null
+        } as AlarmTableReportComponentConfig
+      }
+    ],
+    [
+      'image',
+      {
+        id: 'image',
+        title: 'report-template.component.image.type',
+        previewImage: '/assets/report/components/image.svg',
+        type: ReportComponentType.IMAGE,
+        defaultConfig: {
+          type: ReportComponentType.IMAGE,
+          sourceType: 'image',
+          imageUrl: null,
+          widthType: 'fitWidth',
+          alignment: 'center',
+          dataSources: [],
+          margins: null,
+          paddings: null,
+          background: null
+        } as ImageReportComponentConfig
+      }
+    ],
+    [
+      'dashboard',
+      {
+        id: 'dashboard',
+        title: 'report-template.component.dashboard.type',
+        previewImage: '/assets/report/components/dashboard.svg',
+        type: ReportComponentType.DASHBOARD,
+        defaultConfig: {
+          type: ReportComponentType.DASHBOARD,
+          dataSources: [
+            {
+              type: DatasourceType.entity,
+              dataKeys: []
+            }
+          ],
+          config: {
+            type: 'png'
+          },
+          widthType: 'fitWidth',
+          alignment: 'center',
+          margins: null,
+          paddings: null,
+          background: null
+        } as DashboardReportComponentConfig
+      }
+    ],
+    [
+      'subReport',
+      {
+        id: 'subReport',
+        title: 'report-template.component.sub-report.type',
+        previewImage: '/assets/report/components/subreport.svg',
+        type: ReportComponentType.SUB_REPORT,
+        defaultConfig: {
+          type: ReportComponentType.SUB_REPORT,
+          dataSources: [
+            {
+              type: DatasourceType.entity,
+              dataKeys: []
+            }
+          ],
+          templateId: null,
+          avoidPageBreakInside: false
+        } as SubReportReportComponentConfig
+      }
+    ],
+    [
+      'pageBreak',
+      {
+        id: 'pageBreak',
+        title: 'report-template.component.page-break.type',
+        previewImage: '/assets/report/components/page-break.svg',
+        type: ReportComponentType.PAGE_BREAK,
+        defaultConfig: {
+          type: ReportComponentType.PAGE_BREAK
+        } as PageBreakReportComponentConfig
+      }
+    ]
+  ]
+);
 
 export interface ReportComponentTypeData<C extends ReportComponentConfig = ReportComponentConfig> {
   title: string;
@@ -225,6 +553,8 @@ export const keyImage = (key: string): string => {
   const encodedSvg = stringToBase64(result);
   return `data:image/svg+xml;base64,${encodedSvg}`;
 }
+
+export const imagePlaceholder = '/assets/report/components/image-placeholder.svg';
 
 const variablePattern = /^\${([^}]*)}$/;
 

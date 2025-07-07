@@ -161,6 +161,10 @@ export class ReportComponentComponent implements OnInit, AfterViewInit, OnChange
   @HostBinding('class.tb-hover')
   hovered = false;
 
+  @HostBinding('class.tb-selected')
+  @Input()
+  selected = false;
+
   public get isPlainFormat(): boolean {
     return this.format === TbReportFormat.CSV;
   }
