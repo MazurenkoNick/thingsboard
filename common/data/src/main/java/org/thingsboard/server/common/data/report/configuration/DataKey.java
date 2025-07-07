@@ -54,12 +54,12 @@ public class DataKey {
     private String name;
     private String type;
     private String label;
+    private Integer decimals;
     private String units;
     private Aggregation aggregationType;
     private TimeWindowConfiguration timewindow;
-    private String postFuncBody;
     private boolean usePostProcessing;
-    private Integer decimals;
+    private String postFuncBody;
     private DataKeySettings settings;
 
 }

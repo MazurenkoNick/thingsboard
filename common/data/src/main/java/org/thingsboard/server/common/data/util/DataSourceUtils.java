@@ -35,7 +35,6 @@ import org.thingsboard.server.common.data.query.EntityData;
 import org.thingsboard.server.common.data.query.EntityKey;
 import org.thingsboard.server.common.data.query.EntityKeyType;
 import org.thingsboard.server.common.data.query.TsValue;
-import org.thingsboard.server.common.data.report.configuration.DataKey;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -43,16 +42,6 @@ import java.util.Map;
 import java.util.Optional;
 
 public class DataSourceUtils {
-
-    public static List<DataKey> setDataKeyIfNotExists(List<DataKey> dataKeys, String type, String name) {
-        DataKey targetDataKey =
-                dataKeys.stream().filter(key -> key.getName().equals(name) && key.getType().equals(type)).findAny().orElse(null);
-        if (targetDataKey == null) {
-            dataKeys = new ArrayList<>(dataKeys);
-            dataKeys.add(new DataKey(name, type, name));
-        }
-        return dataKeys;
-    }
 
     public static List<EntityKey> setEntityKeyIfNotExists(List<EntityKey> entityKeys, EntityKeyType type, String keyName) {
         EntityKey targetEntityKey =

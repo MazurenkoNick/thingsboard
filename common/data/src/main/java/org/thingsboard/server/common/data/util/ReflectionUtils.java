@@ -31,9 +31,6 @@
 package org.thingsboard.server.common.data.util;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Field;
-import java.util.HashMap;
-import java.util.Map;
 
 @SuppressWarnings("unchecked")
 public class ReflectionUtils {
