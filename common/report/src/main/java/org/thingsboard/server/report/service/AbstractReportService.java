@@ -395,6 +395,9 @@ public abstract class AbstractReportService implements ReportService {
         }
         try {
             long timestamp = Long.parseLong(timestampStr);
+            if (timestampStr.equals("milliseconds")) {
+                return String.valueOf(timestamp);
+            }
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern(timeDataPattern)
                     .withZone(ctx.getTimeZone() != null ? ZoneId.of(ctx.getTimeZone()) : ZoneId.systemDefault());
 
