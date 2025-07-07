@@ -28,31 +28,28 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.edqs.state;
+package org.thingsboard.server.common.data.report.configuration.components;
 
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.thingsboard.server.common.data.id.TenantId;
-import org.thingsboard.server.queue.discovery.HashPartitionService;
-import org.thingsboard.server.queue.edqs.EdqsConfig;
-import org.thingsboard.server.queue.edqs.EdqsConfig.EdqsPartitioningStrategy;
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import org.thingsboard.server.common.data.report.configuration.style.BorderLength;
+import org.thingsboard.server.common.data.report.configuration.style.BorderType;
 
-@Service
-@RequiredArgsConstructor
-public class EdqsPartitionService {
+@Schema
+@Data
+@EqualsAndHashCode
+@NoArgsConstructor
+public class DividerComponent implements ReportComponent {
 
-    private final HashPartitionService hashPartitionService;
-    private final EdqsConfig edqsConfig;
+    private BorderLength length;
+    private BorderType borderType;
+    private Integer widthPx;
+    private String color;
 
-    public Integer resolvePartition(TenantId tenantId, Object key) {
-        if (edqsConfig.getPartitioningStrategy() == EdqsPartitioningStrategy.TENANT) {
-            return hashPartitionService.resolvePartitionIndex(tenantId.getId(), edqsConfig.getPartitions());
-        } else {
-            if (key == null) {
-                throw new IllegalArgumentException("Partitioning key is missing but partitioning strategy is not TENANT");
-            }
-            return hashPartitionService.resolvePartitionIndex(key.toString(), edqsConfig.getPartitions());
-        }
+    @Override
+    public ReportComponentType getType() {
+        return ReportComponentType.DIVIDER;
     }
-
 }

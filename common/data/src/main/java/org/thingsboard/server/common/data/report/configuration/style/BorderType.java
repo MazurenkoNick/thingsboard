@@ -28,31 +28,35 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.edqs.state;
+package org.thingsboard.server.common.data.report.configuration.style;
 
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.thingsboard.server.common.data.id.TenantId;
-import org.thingsboard.server.queue.discovery.HashPartitionService;
-import org.thingsboard.server.queue.edqs.EdqsConfig;
-import org.thingsboard.server.queue.edqs.EdqsConfig.EdqsPartitioningStrategy;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
+import lombok.Getter;
 
-@Service
-@RequiredArgsConstructor
-public class EdqsPartitionService {
+public enum BorderType {
 
-    private final HashPartitionService hashPartitionService;
-    private final EdqsConfig edqsConfig;
+    SOLID("solid"), DASHED("dashed");
 
-    public Integer resolvePartition(TenantId tenantId, Object key) {
-        if (edqsConfig.getPartitioningStrategy() == EdqsPartitioningStrategy.TENANT) {
-            return hashPartitionService.resolvePartitionIndex(tenantId.getId(), edqsConfig.getPartitions());
-        } else {
-            if (key == null) {
-                throw new IllegalArgumentException("Partitioning key is missing but partitioning strategy is not TENANT");
-            }
-            return hashPartitionService.resolvePartitionIndex(key.toString(), edqsConfig.getPartitions());
-        }
+    @Getter
+    private final String value;
+
+    BorderType(String label) {
+        this.value = label;
     }
 
+    @JsonValue
+    public String getValue() {
+        return value;
+    }
+
+    @JsonCreator
+    public static BorderType fromLabel(String value) {
+        for (BorderType type : values()) {
+            if (type.value.equalsIgnoreCase(value)) {
+                return type;
+            }
+        }
+        throw new IllegalArgumentException("Unknown BorderType: " + value);
+    }
 }

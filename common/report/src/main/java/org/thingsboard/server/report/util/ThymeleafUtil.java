@@ -35,6 +35,8 @@ import org.thymeleaf.context.Context;
 import org.thymeleaf.templateresolver.ClassLoaderTemplateResolver;
 import org.thymeleaf.templateresolver.StringTemplateResolver;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -101,10 +103,24 @@ public class ThymeleafUtil {
     }
 
     public static String renderFromTextString(String html, Map<String, Object> variables) {
+        populateMissingImagePlaceholders(html, variables);
+
         Context context = new Context();
         context.setVariables(variables);
 
         return textStringEngine.process(convertToThymeleafInline(sanitize(html)), context);
+    }
+
+    private static void populateMissingImagePlaceholders(String html, Map<String, Object> variables) {
+        List<String> srcList = new ArrayList<>();
+        Pattern pattern = Pattern.compile("<img[^>]+src=[\"']\\$\\{([^\"'}]+)}[\"']", Pattern.CASE_INSENSITIVE);
+        Matcher matcher = pattern.matcher(html);
+        while (matcher.find()) {
+            srcList.add(matcher.group(1));
+        }
+        for (String src : srcList) {
+            variables.putIfAbsent(src, "noImage");
+        }
     }
 
     public static String renderFromSvgTemplate(String templateSvg, Map<String, Object> variables) {
