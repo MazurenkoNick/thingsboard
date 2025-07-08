@@ -38,6 +38,7 @@ import org.thingsboard.server.common.data.report.configuration.components.Timese
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 
 
 @Component
@@ -45,13 +46,23 @@ public class CsvTimeseriesTableRenderer extends AbstractCsvComponentRenderer<Tim
 
     @Override
     public List<DataKey> getColumns(TimeseriesTableComponent component, DataSource dataSource) {
-        List<DataKey> allDataKeys = new LinkedList<>();
+        List<DataKey> dataKeys = new LinkedList<>();
         if (component.isShowTimestamp()) {
-            allDataKeys.add(new DataKey("Timestamp", "timeseries", component.getTimestampLabel()));
+            DataKey tsDataKey = DataKey.builder()
+                    .name("ts")
+                    .label(component.getTimestampLabel())
+                    .settings(component.getTimestampColumnSettings())
+                    .usePostProcessing(false)
+                    .build();
+            dataKeys.add(tsDataKey);
         }
-        allDataKeys.addAll(dataSource.getDataKeys());
-        allDataKeys.addAll(dataSource.getLatestDataKeys());
-        return allDataKeys;
+        Optional.ofNullable(dataSource.getDataKeys())
+                .ifPresent(dataKeys::addAll);
+
+        Optional.ofNullable(dataSource.getLatestDataKeys())
+                .ifPresent(dataKeys::addAll);
+
+        return dataKeys;
     }
 
     @Override

@@ -64,7 +64,13 @@ public class TimeseriesTableRenderer extends TableWithLayoutComponentRenderer<Ti
     protected List<DataKey> getColumns(TimeseriesTableComponent component, DataSource dataSource) {
         List<DataKey> columns = new LinkedList<>();
         if (component.isShowTimestamp()) {
-            columns.add(new DataKey("Timestamp", "timeseries", component.getTimestampLabel()));
+            DataKey tsDataKey = DataKey.builder()
+                    .name("ts")
+                    .label(component.getTimestampLabel())
+                    .settings(component.getTimestampColumnSettings())
+                    .usePostProcessing(false)
+                    .build();
+            columns.add(tsDataKey);
         }
         columns.addAll(super.getColumns(component, dataSource));
         return columns;
