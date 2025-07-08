@@ -127,10 +127,12 @@ public abstract class TableWithLayoutComponentRenderer<C extends TableWithLayout
     }
 
     protected List<DataKey> getColumns(C component, DataSource dataSource) {
-        List<DataKey> allDataKeys = new LinkedList<>();
-        allDataKeys.addAll(dataSource.getDataKeys());
-        allDataKeys.addAll(dataSource.getLatestDataKeys());
-        return allDataKeys;
+        List<DataKey> dataKeys = new LinkedList<>();
+        Optional.ofNullable(dataSource.getDataKeys())
+                .ifPresent(dataKeys::addAll);
+        Optional.ofNullable(dataSource.getLatestDataKeys())
+                .ifPresent(dataKeys::addAll);
+        return dataKeys;
     }
 
     private void formatTableHeading(Heading tableHeading, Map<String, Object> componentVariables) {
