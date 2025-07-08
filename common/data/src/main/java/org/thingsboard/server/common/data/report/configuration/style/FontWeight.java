@@ -36,7 +36,7 @@ import lombok.Getter;
 
 public enum FontWeight {
 
-     NORMAL("normal"), BOLD("bold");
+     NORMAL("normal"), BOLD("bold"), WEIGHT_500("500");
 
      @Getter
      private final String value;

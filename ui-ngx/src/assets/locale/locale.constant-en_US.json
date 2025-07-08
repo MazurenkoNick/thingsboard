@@ -7259,7 +7259,10 @@
             "logo-text": "Logo + text",
             "text-logo": "Text + logo",
             "logo-text-2": "Logo + text 2",
-            "footer-1": "Footer 1"
+            "footer-1": "Footer 1",
+            "footer-2": "Footer 2",
+            "footer-3": "Footer 3",
+            "page-number": "Page number"
         }
     },
     "scheduled-report": {
