@@ -370,7 +370,7 @@ export class ReportTemplatePageComponent extends PageComponent
     }
   }
 
-  public reportComponentUpdated() {
+  public reportComponentUpdated(setDirty = true) {
     if (this.editingReportComponent) {
       const reportComponentsComponents = this.allReportComponentsComponents();
       for (const component of reportComponentsComponents) {
@@ -379,7 +379,9 @@ export class ReportTemplatePageComponent extends PageComponent
         }
       }
     }
-    this.isDirty = true;
+    if (setDirty) {
+      this.isDirty = true;
+    }
   }
 
   public saveReportComponent(): void {
@@ -395,7 +397,7 @@ export class ReportTemplatePageComponent extends PageComponent
   public cancelReportComponentEdit(): void {
     if (this.editingReportComponent) {
       assignReportComponent(this.editingReportComponent, this.prevReportComponent);
-      this.reportComponentUpdated();
+      this.reportComponentUpdated(false);
       this.prevReportComponent = null;
       this.editingReportComponent = null;
       const reportComponentsComponents = this.allReportComponentsComponents();
