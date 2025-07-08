@@ -49,8 +49,15 @@ $$;
 
 ALTER TABLE scheduler_event
     ADD COLUMN IF NOT EXISTS external_id uuid;
-ALTER TABLE scheduler_event
-    ADD CONSTRAINT scheduler_event_external_id_unq_key UNIQUE (tenant_id, external_id);
+
+DO
+$$
+    BEGIN
+        IF NOT EXISTS(SELECT 1 FROM pg_constraint WHERE conname = 'scheduler_event_external_id_unq_key') THEN
+            ALTER TABLE scheduler_event ADD CONSTRAINT scheduler_event_external_id_unq_key UNIQUE (tenant_id, external_id);
+        END IF;
+    END;
+$$;
 
 -- UPDATE SCHEDULER_EVENT EXTERNAL ID END
 
