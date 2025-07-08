@@ -55,4 +55,7 @@ public interface ReportService extends EntityDaoService {
     PageData<ReportInfo> findReportInfos(TenantId tenantId, ReportInfoQuery query);
 
     PageData<ReportInfo> findReportInfos(TenantId tenantId, CustomerId customerId, ReportInfoQuery query);
+
+    void deleteReportsByTenantIdAndCustomerId(TenantId tenantId, CustomerId customerId);
+
 }

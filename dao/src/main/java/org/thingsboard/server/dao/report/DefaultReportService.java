@@ -47,10 +47,12 @@ import org.thingsboard.server.common.data.report.ReportInfo;
 import org.thingsboard.server.common.data.report.ReportInfoQuery;
 import org.thingsboard.server.dao.entity.AbstractEntityService;
 import org.thingsboard.server.dao.service.ConstraintValidator;
+import org.thingsboard.server.dao.service.PaginatedRemover;
 import org.thingsboard.server.dao.service.validator.ReportDataValidator;
 
 import java.util.Optional;
 
+import static org.thingsboard.server.dao.customer.CustomerServiceImpl.INCORRECT_CUSTOMER_ID;
 import static org.thingsboard.server.dao.service.Validator.validateId;
 
 @Slf4j
@@ -111,6 +113,30 @@ public class DefaultReportService extends AbstractEntityService implements Repor
         log.trace("Executing findReportInfos, tenantId [{}], customerId [{}]", tenantId, customerId);
         return reportDao.findReportInfos(tenantId, customerId, query);
     }
+
+    @Override
+    public void deleteReportsByTenantIdAndCustomerId(TenantId tenantId, CustomerId customerId) {
+        log.trace("Executing deleteReportsByTenantIdAndCustomerId, tenantId [{}], customerId [{}]", tenantId, customerId);
+        validateId(tenantId, id -> INCORRECT_TENANT_ID + id);
+        validateId(customerId, id -> INCORRECT_CUSTOMER_ID + id);
+        customerReportEntitiesRemover.removeEntities(tenantId, customerId);
+    }
+
+    private PaginatedRemover<CustomerId, ReportInfo> customerReportEntitiesRemover = new PaginatedRemover<>() {
+        @Override
+        protected PageData<ReportInfo> findEntities(TenantId tenantId, CustomerId customerId, PageLink pageLink) {
+            return reportDao.findReportInfos(tenantId, customerId,
+                    ReportInfoQuery.builder()
+                            .pageLink(pageLink)
+                            .includeCustomers(false)
+                            .build());
+        }
+
+        @Override
+        protected void removeEntity(TenantId tenantId, ReportInfo reportInfo) {
+            deleteReport(tenantId, new ReportId(reportInfo.getId().getId()));
+        }
+    };
 
     @Override
     public Optional<HasId<?>> findEntity(TenantId tenantId, EntityId entityId) {

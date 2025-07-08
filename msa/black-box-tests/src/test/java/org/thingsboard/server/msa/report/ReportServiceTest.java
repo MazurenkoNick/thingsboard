@@ -53,6 +53,7 @@ import org.thingsboard.server.common.data.report.ReportTemplateType;
 import org.thingsboard.server.common.data.report.configuration.CsvReportTemplateConfig;
 import org.thingsboard.server.common.data.report.configuration.DataKey;
 import org.thingsboard.server.common.data.report.configuration.DataSource;
+import org.thingsboard.server.common.data.report.configuration.DataSourceType;
 import org.thingsboard.server.common.data.report.configuration.EntityAlias;
 import org.thingsboard.server.common.data.report.configuration.components.EntityTableComponent;
 import org.thingsboard.server.msa.AbstractContainerTest;
@@ -165,7 +166,7 @@ public class ReportServiceTest extends AbstractContainerTest {
 
         EntityTableComponent tableComponent = new EntityTableComponent();
         tableComponent.setDataSources(List.of(DataSource.builder()
-                .type("entity")
+                .type(DataSourceType.ENTITY)
                 .entityAliasId(devicesAliasId)
                 .dataKeys(List.of(
                         new DataKey("createdTime", "entityField", "CREATED TIME"),
@@ -177,7 +178,7 @@ public class ReportServiceTest extends AbstractContainerTest {
                 .build()));
 
         CsvReportTemplateConfig configuration = new CsvReportTemplateConfig();
-        configuration.setEntityAliases(entityAlias);
+        configuration.setEntityAliases(List.of(entityAlias));
         configuration.setComponents(List.of(tableComponent));
 
         ReportTemplate csvReportTemplate = new ReportTemplate();

@@ -37,7 +37,7 @@ public class History {
     private int historyType;
     private long interval;
     private long timewindowMs;
-    private FixedTimeWindow fixedTimeWindow;
+    private FixedTimeWindow fixedTimewindow;
     private QuickTimeInterval quickInterval;
     private boolean hideInterval;
     private boolean hideLastInterval;

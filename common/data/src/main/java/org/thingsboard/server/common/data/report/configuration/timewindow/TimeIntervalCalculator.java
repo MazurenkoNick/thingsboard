@@ -57,8 +57,8 @@ public class TimeIntervalCalculator {
                 yield new TimeRange(currentTimeMillis - historyConf.getTimewindowMs(), currentTimeMillis);
             }
             case 1 -> {
-                FixedTimeWindow fixedTimeWindow = historyConf.getFixedTimeWindow();
-                yield new TimeRange(fixedTimeWindow.getStartTimeMs(), historyConf.getFixedTimeWindow().getEndTimeMs());
+                FixedTimeWindow fixedTimeWindow = historyConf.getFixedTimewindow();
+                yield new TimeRange(fixedTimeWindow.getStartTimeMs(), historyConf.getFixedTimewindow().getEndTimeMs());
             }
             case 2 -> getQuickTimeRange(historyConf.getQuickInterval(), timeWindowConf.getTimezone());
             case 3 -> new TimeRange(0, 0);

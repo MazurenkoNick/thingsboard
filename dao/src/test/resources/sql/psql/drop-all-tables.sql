@@ -87,6 +87,7 @@ DROP TABLE IF EXISTS device_group_ota_package;
 DROP TABLE IF EXISTS group_permission;
 DROP TABLE IF EXISTS role;
 DROP TABLE IF EXISTS report_template;
+DROP TABLE IF EXISTS report;
 DROP TABLE IF EXISTS blob_entity;
 DROP TABLE IF EXISTS scheduler_event;
 DROP TABLE IF EXISTS integration;

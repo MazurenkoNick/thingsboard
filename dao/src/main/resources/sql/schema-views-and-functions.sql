@@ -574,18 +574,7 @@ $$;
 
 DROP VIEW IF EXISTS scheduled_reports_info_view CASCADE;
 CREATE OR REPLACE VIEW scheduled_reports_info_view AS
-SELECT
-    se.id,
-    se.created_time,
-    se.name,
-    se.additional_info,
-    se.tenant_id,
-    se.customer_id,
-    se.originator_id,
-    se.originator_type,
-    se.type,
-    se.schedule,
-    se.enabled,
+SELECT se.*,
     c.title AS customer_title,
     cfg.report_template_id AS report_template_id,
     rt.name AS report_template_name,
@@ -605,15 +594,7 @@ WHERE se.type = 'generateReport';
 
 DROP VIEW IF EXISTS report_info_view CASCADE;
 CREATE OR REPLACE VIEW report_info_view AS
-SELECT
-    r.id,
-    r.created_time,
-    r.tenant_id,
-    r.customer_id,
-    r.template_id,
-    r.format,
-    r.name,
-    r.user_id,
+SELECT r.*,
     c.title AS customer_title,
     rt.name AS report_template_name,
     u.email AS user_name
