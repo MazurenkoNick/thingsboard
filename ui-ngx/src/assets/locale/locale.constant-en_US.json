@@ -7251,7 +7251,15 @@
                 "no-sub-report": "No subreport selected",
                 "avoid-page-break-inside": "Avoid page break inside"
             },
-            "text-section": "Text section"
+            "text-section": "Text section",
+            "text-image": "Text + image",
+            "image-text": "Image + text",
+            "logo-heading": "Logo + heading",
+            "heading-logo": "Heading + logo",
+            "logo-text": "Logo + text",
+            "text-logo": "Text + logo",
+            "logo-text-2": "Logo + text 2",
+            "footer-1": "Footer 1"
         }
     },
     "scheduled-report": {

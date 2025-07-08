@@ -135,7 +135,7 @@ export const reportComponentsLibrary = new Map<string, ReportComponentLibraryIte
         type: ReportComponentType.RICH_TEXT,
         defaultConfig: {
           type: ReportComponentType.RICH_TEXT,
-          value: '<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec libero orci, faucibus in iaculis quis, vestibulum sit amet ligula. Nulla facilisi. Ut ut iaculis tortor.</p>',
+          value: '<p style="line-height: 1.5;">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec libero orci, faucibus in iaculis quis, vestibulum sit amet ligula. Nulla facilisi. Ut ut iaculis tortor.</p>',
           dataSources: [],
           margins: null,
           paddings: null,
@@ -154,7 +154,67 @@ export const reportComponentsLibrary = new Map<string, ReportComponentLibraryIte
           type: ReportComponentType.RICH_TEXT,
           value: '<p><span style="font-size: 14px; color: rgb(0, 105, 92); font-weight: 500;">SUBHEADING</span></p>\n' +
             '<p><span style="font-size: 28px; font-weight: 500;">Heading</span></p>\n' +
-            '<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec libero orci, faucibus in iaculis quis, vestibulum sit amet ligula. Nulla facilisi. Ut ut iaculis tortor.</p>',
+            '<p style="line-height: 1.5;" >Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec libero orci, faucibus in iaculis quis, vestibulum sit amet ligula. Nulla facilisi. Ut ut iaculis tortor.</p>',
+          dataSources: [],
+          margins: null,
+          paddings: null,
+          background: null
+        } as RichTextReportComponentConfig
+      }
+    ],
+    [
+      'textImage',
+      {
+        id: 'textImage',
+        title: 'report-template.component.text-image',
+        previewImage: '/assets/report/components/text-image.svg',
+        type: ReportComponentType.RICH_TEXT,
+        defaultConfig: {
+          type: ReportComponentType.RICH_TEXT,
+          value: '<table style="border-collapse: collapse; width: 100%; border-width: 0px; border-style: none; border-spacing: 0px;" border="1"><colgroup><col style="width: 49%;"><col style="width: 2%;"><col style="width: 49%;"></colgroup>\n' +
+            '<tbody>\n' +
+            '<tr>\n' +
+            '<td style="border-style: none; padding: 0px;">\n' +
+            '<p><span style="font-size: 28px; font-weight: 500;">Heading</span></p>\n' +
+            '<p style="line-height: 1.5;">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec libero orci, faucibus in iaculis quis, vestibulum sit amet ligula. Nulla facilisi. Ut ut iaculis tortor.</p>\n' +
+            '</td>\n' +
+            '<td style="border-style: none; padding: 0px;">\n' +
+            '<p>&nbsp;</p>\n' +
+            '</td>\n' +
+            '<td style="vertical-align: middle; border-style: none; padding: 0px;"><img style="display: block; margin-left: auto; margin-right: auto;" src="" width="366px" height="232px"></td>\n' +
+            '</tr>\n' +
+            '</tbody>\n' +
+            '</table>',
+          dataSources: [],
+          margins: null,
+          paddings: null,
+          background: null
+        } as RichTextReportComponentConfig
+      }
+    ],
+    [
+      'imageText',
+      {
+        id: 'imageText',
+        title: 'report-template.component.image-text',
+        previewImage: '/assets/report/components/image-text.svg',
+        type: ReportComponentType.RICH_TEXT,
+        defaultConfig: {
+          type: ReportComponentType.RICH_TEXT,
+          value: '<table style="border-collapse: collapse; width: 100%; border-width: 0px; border-style: none; border-spacing: 0px;" border="1"><colgroup><col style="width: 49%;"><col style="width: 2%;"><col style="width: 49%;"></colgroup>\n' +
+            '<tbody>\n' +
+            '<tr>\n' +
+            '<td style="vertical-align: middle; border-style: none; padding: 0px;"><img style="display: block; margin-left: auto; margin-right: auto;" src="" width="366px" height="232px"></td>\n' +
+            '<td style="border-style: none; padding: 0px;">\n' +
+            '<p>&nbsp;</p>\n' +
+            '</td>\n' +
+            '<td style="border-style: none; padding: 0px;">\n' +
+            '<p><span style="font-size: 28px; font-weight: 500;">Heading</span></p>\n' +
+            '<p style="line-height: 1.5;">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec libero orci, faucibus in iaculis quis, vestibulum sit amet ligula. Nulla facilisi. Ut ut iaculis tortor.</p>\n' +
+            '</td>\n' +
+            '</tr>\n' +
+            '</tbody>\n' +
+            '</table>',
           dataSources: [],
           margins: null,
           paddings: null,
@@ -397,6 +457,181 @@ export const reportComponentsLibrary = new Map<string, ReportComponentLibraryIte
           templateId: null,
           avoidPageBreakInside: false
         } as SubReportReportComponentConfig
+      }
+    ],
+    [
+      'logoHeading',
+      {
+        id: 'logoHeading',
+        title: 'report-template.component.logo-heading',
+        previewImage: '/assets/report/components/logo-heading.svg',
+        type: ReportComponentType.RICH_TEXT,
+        defaultConfig: {
+          type: ReportComponentType.RICH_TEXT,
+          value: '<table style="border-collapse: collapse; width: 100%; border-width: 0px; border-style: none; border-spacing: 0px;" border="1"><colgroup><col style="width: 50%;"><col style="width: 50%;"></colgroup>\n' +
+            '<tbody>\n' +
+            '<tr>\n' +
+            '<td style="border-style: none; padding: 0px;"><img style="float: left;" src="tb-image;/assets/report/components/logo-placeholder.svg" width="140px" height="24px"></td>\n' +
+            '<td style="vertical-align: middle; border-style: none; padding: 0px; text-align: right; line-height: 1.2;"><strong><span style="font-size: 20px;">Heading</span></strong></td>\n' +
+            '</tr>\n' +
+            '</tbody>\n' +
+            '</table>',
+          dataSources: [],
+          margins: null,
+          paddings: {
+            top: 9,
+            bottom: 9,
+            left: 6,
+            right: 6
+          },
+          background: null
+        } as RichTextReportComponentConfig
+      }
+    ],
+    [
+      'headingLogo',
+      {
+        id: 'headingLogo',
+        title: 'report-template.component.heading-logo',
+        previewImage: '/assets/report/components/heading-logo.svg',
+        type: ReportComponentType.RICH_TEXT,
+        defaultConfig: {
+          type: ReportComponentType.RICH_TEXT,
+          value: '<table style="border-collapse: collapse; width: 100%; border-width: 0px; border-style: none; border-spacing: 0px;" border="1"><colgroup><col style="width: 50%;"><col style="width: 50%;"></colgroup>\n' +
+            '<tbody>\n' +
+            '<tr>\n' +
+            '<td style="vertical-align: middle; border-style: none; padding: 0px; text-align: left; line-height: 1.2;"><strong><span style="font-size: 20px;">Heading</span></strong></td>\n' +
+            '<td style="border-style: none; padding: 0px;"><img style="float: right;" src="tb-image;/assets/report/components/logo-placeholder.svg" width="140px" height="24px"></td>\n' +
+            '</tr>\n' +
+            '</tbody>\n' +
+            '</table>',
+          dataSources: [],
+          margins: null,
+          paddings: {
+            top: 9,
+            bottom: 9,
+            left: 6,
+            right: 6
+          },
+          background: null
+        } as RichTextReportComponentConfig
+      }
+    ],
+    [
+      'logoText',
+      {
+        id: 'logoText',
+        title: 'report-template.component.logo-text',
+        previewImage: '/assets/report/components/logo-text.svg',
+        type: ReportComponentType.RICH_TEXT,
+        defaultConfig: {
+          type: ReportComponentType.RICH_TEXT,
+          value: '<table style="border-collapse: collapse; width: 100%; border-width: 0px; border-style: none; border-spacing: 0px;" border="1"><colgroup><col style="width: 50%;"><col style="width: 50%;"></colgroup>\n' +
+            '<tbody>\n' +
+            '<tr>\n' +
+            '<td style="border-style: none; padding: 0px;"><img style="float: left;" src="tb-image;/assets/report/components/logo-placeholder.svg" width="140px" height="24px"></td>\n' +
+            '<td style="vertical-align: middle; border-style: none; padding: 0px; text-align: right; line-height: 1.2;"><span style="font-size: 14px; color: rgb(117, 117, 117);">2289 5th Ave New York, New York(NY), 10037</span></td>\n' +
+            '</tr>\n' +
+            '</tbody>\n' +
+            '</table>',
+          dataSources: [],
+          margins: null,
+          paddings: {
+            top: 9,
+            bottom: 9,
+            left: 6,
+            right: 6
+          },
+          background: null
+        } as RichTextReportComponentConfig
+      }
+    ],
+    [
+      'textLogo',
+      {
+        id: 'textLogo',
+        title: 'report-template.component.text-logo',
+        previewImage: '/assets/report/components/text-logo.svg',
+        type: ReportComponentType.RICH_TEXT,
+        defaultConfig: {
+          type: ReportComponentType.RICH_TEXT,
+          value: '<table style="border-collapse: collapse; width: 100%; border-width: 0px; border-style: none; border-spacing: 0px;" border="1"><colgroup><col style="width: 50%;"><col style="width: 50%;"></colgroup>\n' +
+            '<tbody>\n' +
+            '<tr>\n' +
+            '<td style="vertical-align: middle; border-style: none; padding: 0px; text-align: left; line-height: 1.2;"><span style="font-size: 14px; color: rgb(117, 117, 117);">2289 5th Ave New York, New York(NY), 10037</span></td>\n' +
+            '<td style="border-style: none; padding: 0px;"><img style="float: right;" src="tb-image;/assets/report/components/logo-placeholder.svg" width="140px" height="24px"></td>\n' +
+            '</tr>\n' +
+            '</tbody>\n' +
+            '</table>',
+          dataSources: [],
+          margins: null,
+          paddings: {
+            top: 9,
+            bottom: 9,
+            left: 6,
+            right: 6
+          },
+          background: null
+        } as RichTextReportComponentConfig
+      }
+    ],
+    [
+      'logoText2',
+      {
+        id: 'logoText2',
+        title: 'report-template.component.logo-text-2',
+        previewImage: '/assets/report/components/logo-text-2.svg',
+        type: ReportComponentType.RICH_TEXT,
+        defaultConfig: {
+          type: ReportComponentType.RICH_TEXT,
+          value: '<table style="border-collapse: collapse; width: 100%; border-width: 0px; border-style: none; border-spacing: 0px;" border="1"><colgroup><col style="width: 33%;"><col style="width: 33%;"><col style="width: 33%;"></colgroup>\n' +
+            '<tbody>\n' +
+            '<tr>\n' +
+            '<td style="vertical-align: middle; border-style: none; padding: 0px; text-align: right; line-height: 1.2;"><span style="font-size: 14px; color: rgb(117, 117, 117);">2289 5th Ave New York,<br>New York(NY), 10037</span></td>\n' +
+            '<td style="border-style: none; padding: 0px;"><img style="display: block; margin-left: auto; margin-right: auto;" src="tb-image;/assets/report/components/logo-placeholder.svg" width="140px" height="23px"></td>\n' +
+            '<td style="vertical-align: middle; border-style: none; padding: 0px; line-height: 1.2; text-align: left;"><span style="font-size: 14px; color: rgb(117, 117, 117);">Company name<br>+1 (727) 441-2403</span></td>\n' +
+            '</tr>\n' +
+            '</tbody>\n' +
+            '</table>',
+          dataSources: [],
+          margins: null,
+          paddings: {
+            top: 9,
+            bottom: 9,
+            left: 6,
+            right: 6
+          },
+          background: null
+        } as RichTextReportComponentConfig
+      }
+    ],
+    [
+      'footer1',
+      {
+        id: 'footer1',
+        title: 'report-template.component.footer-1',
+        previewImage: '/assets/report/components/footer-1.svg',
+        type: ReportComponentType.RICH_TEXT,
+        defaultConfig: {
+          type: ReportComponentType.RICH_TEXT,
+          value: '<table style="border-collapse: collapse; width: 100%; border-width: 0px; height: 44px;" border="1"><colgroup><col style="width: 100%;"></colgroup>\n' +
+            '<tbody>\n' +
+            '<tr style="height: 24px;">\n' +
+            '<td style="border-width: 0px; height: 24px; line-height: 1.5;"><span style="font-size: 16px; font-weight: 500;">Company name</span></td>\n' +
+            '</tr>\n' +
+            '<tr style="height: 20px;">\n' +
+            '<td style="border-width: 0px; height: 20px; line-height: 1.5;"><span style="font-size: 14px; color: rgb(117, 117, 117);">2289 5th Ave New York, New York(NY), 10037</span></td>\n' +
+            '</tr>\n' +
+            '</tbody>\n' +
+            '</table>',
+          dataSources: [],
+          margins: null,
+          paddings: {
+            left: 6,
+            right: 6
+          },
+          background: null
+        } as RichTextReportComponentConfig
       }
     ],
     [

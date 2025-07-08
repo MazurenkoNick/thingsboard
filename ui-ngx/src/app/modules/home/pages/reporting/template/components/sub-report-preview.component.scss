@@ -35,12 +35,12 @@
   flex-direction: row;
   align-items: center;
   justify-content: center;
-  font-weight: bold;
+  font-weight: 500;
   font-size: 24px;
   line-height: 48px;
   color: rgba(0,0,0,0.47);
-  background: #eaedf2;
-  border: dashed 2px rgba(0, 0, 0, 0.47);
+  background: #f0f0f0;
+  border: dashed 2px rgba(0, 0, 0, 0.16);
   .tb-type-title {
     position: absolute;
     left: 10px;

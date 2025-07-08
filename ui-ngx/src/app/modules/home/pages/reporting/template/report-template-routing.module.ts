@@ -102,7 +102,6 @@ export const reportTemplatesRoute: Route = {
   ]
 }
 
-// @dynamic
 @NgModule({
   providers: [
     ReportTemplatesTableConfigResolver,
