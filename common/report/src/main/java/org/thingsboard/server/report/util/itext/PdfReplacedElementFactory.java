@@ -64,6 +64,9 @@ public class PdfReplacedElementFactory implements ReplacedElementFactory {
                 if (srcAttr.isEmpty()) {
                     srcAttr = "/assets/report/components/image-placeholder.svg";
                 }
+                if (srcAttr.equals("noImage")) {
+                    return null;
+                }
                 FSImage fsImage = uac.getImageResource(srcAttr).getImage();
                 if (fsImage != null) {
                     if (cssWidth != -1 || cssHeight != -1) {
