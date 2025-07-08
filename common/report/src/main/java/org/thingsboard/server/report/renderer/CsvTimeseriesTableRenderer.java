@@ -35,55 +35,23 @@ import org.thingsboard.server.common.data.report.configuration.DataKey;
 import org.thingsboard.server.common.data.report.configuration.DataSource;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponentType;
 import org.thingsboard.server.common.data.report.configuration.components.TimeseriesTableComponent;
-import org.thingsboard.server.report.context.ComponentData;
 
-import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-
-import static org.thingsboard.server.report.util.ReportUtils.getSingleDataSource;
 
 
 @Component
 public class CsvTimeseriesTableRenderer extends AbstractCsvComponentRenderer<TimeseriesTableComponent> {
 
     @Override
-    public List<List<String>> render(TimeseriesTableComponent component, ComponentData reportDataSource) {
-        Optional<DataSource> dataSourceOpt = getSingleDataSource(component);
-        if (dataSourceOpt.isEmpty()) {
-            return List.of(List.of("Data source is not configured for alarm table"));
-        }
-
-        DataSource dataSource = dataSourceOpt.get();
-
-        List<DataKey> allDataKeys = new ArrayList<>(dataSource.getLatestDataKeys());
-        allDataKeys.addAll(dataSource.getDataKeys());
-        Map<String, DataKey> labelToDataKeyMap = buildLabelToDataKeyMap(allDataKeys);
-
-        List<List<String>> content = new ArrayList<>();
-
-        // add heading
-        addOptionalHeading(component, reportDataSource, content);
-
-        // Build and add headers
-        List<String> headers = new ArrayList<>();
+    public List<DataKey> getColumns(TimeseriesTableComponent component, DataSource dataSource) {
+        List<DataKey> allDataKeys = new LinkedList<>();
         if (component.isShowTimestamp()) {
-            headers.add(component.getTimestampLabel());
+            allDataKeys.add(new DataKey("Timestamp", "timeseries", component.getTimestampLabel()));
         }
-        headers.addAll(labelToDataKeyMap.keySet());
-        content.add(headers);
-
-        // Build and add rows
-        for (Map<String, String> row : reportDataSource.getEntityDatas()) {
-            List<String> values = new ArrayList<>();
-            if (component.isShowTimestamp()) {
-                values.add(row.getOrDefault("Timestamp", ""));
-            }
-            values.addAll(extractValues(row, labelToDataKeyMap));
-            content.add(values);
-        }
-        return content;
+        allDataKeys.addAll(dataSource.getDataKeys());
+        allDataKeys.addAll(dataSource.getLatestDataKeys());
+        return allDataKeys;
     }
 
     @Override

@@ -83,10 +83,10 @@ import java.util.stream.Collectors;
 import static org.thingsboard.server.common.data.report.configuration.timewindow.TimeIntervalCalculator.getTimeRange;
 import static org.thingsboard.server.common.data.util.DataSourceUtils.getAlarmLatestValue;
 import static org.thingsboard.server.common.data.util.DataSourceUtils.getEntityLatestValue;
-import static org.thingsboard.server.common.data.util.ReportQueryUtils.toAlarmCountQuery;
-import static org.thingsboard.server.common.data.util.ReportQueryUtils.toAlarmDataQuery;
-import static org.thingsboard.server.common.data.util.ReportQueryUtils.toEntityCountQuery;
-import static org.thingsboard.server.common.data.util.ReportQueryUtils.toEntityDataQuery;
+import static org.thingsboard.server.report.util.ReportQueryUtils.toAlarmCountQuery;
+import static org.thingsboard.server.report.util.ReportQueryUtils.toAlarmDataQuery;
+import static org.thingsboard.server.report.util.ReportQueryUtils.toEntityCountQuery;
+import static org.thingsboard.server.report.util.ReportQueryUtils.toEntityDataQuery;
 import static org.thingsboard.server.report.util.ReportUtils.getSingleDataSource;
 
 @Slf4j

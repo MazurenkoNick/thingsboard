@@ -28,7 +28,7 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.common.data.util;
+package org.thingsboard.server.report.util;
 
 import org.thingsboard.server.common.data.id.DeviceId;
 import org.thingsboard.server.common.data.id.EntityId;
@@ -59,8 +59,12 @@ import org.thingsboard.server.common.data.report.configuration.components.AlarmT
 import org.thingsboard.server.common.data.report.configuration.timewindow.TimeIntervalCalculator;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.thingsboard.server.common.data.report.configuration.timewindow.TimeIntervalCalculator.getTimeRange;
@@ -183,7 +187,7 @@ public class ReportQueryUtils {
                 .orElseThrow(() -> new IllegalArgumentException("Entity alias not found: " + dataSource.getEntityAliasId()))
                 .getFilter();
 
-        EntityId resolvedEntity = resolveEntityId(stateEntity, filter);
+        EntityId resolvedEntity = resolveStateEntityId(stateEntity, filter);
 
         if (filter instanceof StateEntityFilter) {
             return buildSingleEntityFilter(resolvedEntity);
@@ -198,7 +202,7 @@ public class ReportQueryUtils {
         return filter;
     }
 
-    private static EntityId resolveEntityId(EntityData stateEntity, EntityFilter filter) {
+    private static EntityId resolveStateEntityId(EntityData stateEntity, EntityFilter filter) {
         if (stateEntity != null) {
             return stateEntity.getEntityId();
         }
@@ -224,6 +228,16 @@ public class ReportQueryUtils {
         } else {
             return null;
         }
+    }
+
+    public static Map<String, DataKey> mapLabelsToDataKeys(List<DataKey> dataKeys) {
+        if (dataKeys == null) return Collections.emptyMap();
+        return dataKeys.stream()
+                .collect(Collectors.toMap(
+                        DataKey::getLabel,
+                        dataKey -> dataKey,
+                        (existing, replacement) -> replacement,
+                        LinkedHashMap::new));
     }
 
 }

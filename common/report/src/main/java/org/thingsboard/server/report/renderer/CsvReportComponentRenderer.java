@@ -38,7 +38,7 @@ import java.util.List;
 
 public interface CsvReportComponentRenderer<C extends TableReportComponent> {
 
-    List<List<String>> render(C component, ComponentData reportDataSource);
+    List<List<String>> render(C component, ComponentData componentData);
 
     ReportComponentType getType();
 
