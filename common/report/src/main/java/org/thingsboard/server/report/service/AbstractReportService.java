@@ -214,7 +214,7 @@ public abstract class AbstractReportService implements ReportService {
                 historyConf.getInterval(), timeWindowConf.getAggregation().getType(), SortOrder.Direction.DESC,
                 timeWindowConf.getAggregation().getLimit(), false, ctx);
         SortOrder sortOrder = SortOrder.of("rawTs", SortOrder.Direction.DESC);
-        List<Map<String, String>> entityDatas = collectTsData(dataKeys, latestDataKeys, entity, result, component.isShowTimestamp(), component.getTimestampPattern(), sortOrder, ctx);
+        List<Map<String, String>> entityDatas = collectTsData(dataKeys, latestDataKeys, entity, result, component, sortOrder, ctx);
         Map<String, Object> variables = new HashMap<>(toStringMap(entity, dataKeys, ctx));
         return new ComponentData(usablePageWidthPx, null, entityDatas, variables);
     }
@@ -340,7 +340,7 @@ public abstract class AbstractReportService implements ReportService {
     }
 
     protected List<Map<String, String>> collectTsData(List<DataKey> dataKeys, List<DataKey> latestDataKeys, EntityData entity,
-                                                      List<TsKvEntry> tsKvEntries, boolean showTs, String tsPattern,
+                                                      List<TsKvEntry> tsKvEntries, TimeseriesTableComponent component,
                                                       SortOrder sortOrder, TbReportCtx ctx) {
         Optional<String> entityName = getEntityLatestValue(entity, EntityKeyType.ENTITY_FIELD, "name");
         Optional<String> entityLabel = getEntityLatestValue(entity, EntityKeyType.ENTITY_FIELD, "label");
@@ -360,8 +360,8 @@ public abstract class AbstractReportService implements ReportService {
         groupedByTs.forEach((ts, entries) -> {
             Map<String, String> tsValues = new HashMap<>();
             tsValues.put("rawTs", ts.toString());
-            if (showTs) {
-                tsValues.put("Timestamp", formatTimestamp(ts.toString(), tsPattern, ctx));
+            if (component.isShowTimestamp()) {
+                tsValues.put(component.getTimestampLabel(), formatTimestamp(ts.toString(), component.getTimestampPattern(), ctx));
             }
             for (DataKey dataKey : dataKeys) {
                 entries.stream().filter(tsKvEntry -> tsKvEntry.getKey().equals(dataKey.getName()))

@@ -32,12 +32,12 @@ package org.thingsboard.server.report.renderer;
 
 import org.springframework.stereotype.Component;
 import org.thingsboard.server.common.data.report.configuration.DataKey;
+import org.thingsboard.server.common.data.report.configuration.DataSource;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponentType;
 import org.thingsboard.server.common.data.report.configuration.components.TimeseriesTableComponent;
 
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.LinkedList;
+import java.util.List;
 
 @Component
 public class TimeseriesTableRenderer extends TableWithLayoutComponentRenderer<TimeseriesTableComponent> {
@@ -61,14 +61,13 @@ public class TimeseriesTableRenderer extends TableWithLayoutComponentRenderer<Ti
     }
 
     @Override
-    protected HashMap<String, CellVariables> getCellVariablesMap(TimeseriesTableComponent timeseriesTableComponent, Map<String, DataKey> labelToDataKey, boolean isHeader) {
-        HashMap<String, CellVariables> variablesMap = new LinkedHashMap<>();
-        if (timeseriesTableComponent.isShowTimestamp() && isHeader) {
-            variablesMap.put("Timestamp", toCellVariables("ts", timeseriesTableComponent.getTimestampColumnSettings(), isHeader));
+    protected List<DataKey> getColumns(TimeseriesTableComponent component, DataSource dataSource) {
+        List<DataKey> columns = new LinkedList<>();
+        if (component.isShowTimestamp()) {
+            columns.add(new DataKey("Timestamp", "timeseries", component.getTimestampLabel()));
         }
-        HashMap<String, CellVariables> cellVariablesMap = super.getCellVariablesMap(timeseriesTableComponent, labelToDataKey, isHeader);
-        variablesMap.putAll(cellVariablesMap);
-        return variablesMap;
+        columns.addAll(super.getColumns(component, dataSource));
+        return columns;
     }
 
 }

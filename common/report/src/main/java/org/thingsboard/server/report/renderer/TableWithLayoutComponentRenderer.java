@@ -53,14 +53,12 @@ import org.thingsboard.server.report.util.ColorUtils;
 import org.thingsboard.server.report.util.ThymeleafUtil;
 
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Stream;
 
 import static org.thingsboard.server.report.util.ReportQueryUtils.mapLabelsToDataKeys;
 import static org.thingsboard.server.report.util.ReportUtils.formatNumericValue;
@@ -84,38 +82,35 @@ public abstract class TableWithLayoutComponentRenderer<C extends TableWithLayout
             return ThymeleafUtil.renderFromHtmlTemplate("html/components/error-template", Map.of("errorMessage", "No " + dataSourceName() + " is configured for table. " +
                     "Please check the " + dataSourceName() + " configuration."));
         }
-        List<DataKey> dataKeys = dataSource.stream().flatMap(ds -> Stream.of(Optional.ofNullable(ds.getDataKeys()).orElse(Collections.emptyList()),
-                        Optional.ofNullable(ds.getLatestDataKeys()).orElse(Collections.emptyList())))
-                .flatMap(Collection::stream)
-                .toList();
-        if (dataKeys.isEmpty()) {
+        List<DataKey> columns = getColumns(component, dataSource.get());
+        if (columns.isEmpty()) {
             return ThymeleafUtil.renderFromHtmlTemplate("html/components/error-template", Map.of("errorMessage", "No columns are configured for the table component. " +
                     "Please check the " + dataSourceName() + " configuration."));
         }
-        Map<String, DataKey> labelToDataKey = mapLabelsToDataKeys(dataKeys);
+        Map<String, DataKey> labelToDataKey = mapLabelsToDataKeys(columns);
 
-        HashMap<String, CellVariables> columns = getCellVariablesMap(component, labelToDataKey, true);
-        HashMap<String, CellVariables> cellStyles = getCellVariablesMap(component, labelToDataKey, false);
+        HashMap<String, CellVariables> headerVariables = getCellVariablesMap(labelToDataKey, true);
+        HashMap<String, CellVariables> cellVariables = getCellVariablesMap(labelToDataKey, false);
 
         List<LinkedHashMap<String, CellVariables>> rows = new ArrayList<>();
         for (Map<String, String> entityData : reportDataSource.getEntityDatas()) {
             LinkedHashMap<String, CellVariables> row = new LinkedHashMap<>();
-            for (Map.Entry<String, CellVariables> column : columns.entrySet()) {
+            for (Map.Entry<String, CellVariables> column : headerVariables.entrySet()) {
                 String label = column.getKey();
-                String key = column.getValue().getValue();
-                CellVariables baseStyles = cellStyles.getOrDefault(label, new CellVariables());
-                CellVariables cellVariables = baseStyles.toBuilder()
+                String key = column.getValue().getKey();
+                CellVariables baseStyles = cellVariables.getOrDefault(label, new CellVariables());
+                CellVariables variables = baseStyles.toBuilder()
                         .fontSize(formatFontSize(key, entityData.get(label), baseStyles.getFontSize()))
                         .fontWeight(formatFontWeight(key, entityData.get(label), baseStyles.getFontWeight()))
                         .color(formatColor(key, entityData.get(label), baseStyles.getColor()))
                         .value(formatValue(key, entityData.get(label), labelToDataKey.get(label))).build();
-                row.put(label, cellVariables);
+                row.put(label, variables);
             }
             rows.add(row);
         }
 
         HashMap<String, Object> componentVariables = new HashMap<>();
-        componentVariables.put("columns", columns);
+        componentVariables.put("columns", headerVariables);
         componentVariables.put("rows", rows);
         componentVariables.put("noDataMessage", noDataMessage());
 
@@ -129,6 +124,13 @@ public abstract class TableWithLayoutComponentRenderer<C extends TableWithLayout
             componentVariables.put("showTableHeading", false);
         }
         return ThymeleafUtil.renderFromHtmlTemplate("html/components/table-template", componentVariables);
+    }
+
+    protected List<DataKey> getColumns(C component, DataSource dataSource) {
+        List<DataKey> allDataKeys = new LinkedList<>();
+        allDataKeys.addAll(dataSource.getDataKeys());
+        allDataKeys.addAll(dataSource.getLatestDataKeys());
+        return allDataKeys;
     }
 
     private void formatTableHeading(Heading tableHeading, Map<String, Object> componentVariables) {
@@ -212,9 +214,9 @@ public abstract class TableWithLayoutComponentRenderer<C extends TableWithLayout
         return value;
     }
 
-    protected HashMap<String, CellVariables> getCellVariablesMap(C component, Map<String, DataKey> labelToDataKey, boolean isHeader) {
+    protected HashMap<String, CellVariables> getCellVariablesMap(Map<String, DataKey> labelToDataKey, boolean isHeader) {
         HashMap<String, CellVariables> result = new LinkedHashMap<>();
-        labelToDataKey.forEach((key, dataKey) -> result.put(key, toCellVariables(dataKey, isHeader)));
+        labelToDataKey.forEach((label, dataKey) -> result.put(label, toCellVariables(dataKey, isHeader)));
         return result;
     }
 
@@ -227,13 +229,13 @@ public abstract class TableWithLayoutComponentRenderer<C extends TableWithLayout
         return toCellVariables(dataKey.getName(), columnSettings, isHeader);
     }
 
-    protected CellVariables toCellVariables(String name, ColumnSettings columnSettings, boolean isHeader) {
+    protected CellVariables toCellVariables(String key, ColumnSettings columnSettings, boolean isHeader) {
         if (columnSettings != null) {
             CellSettings cellSettings = isHeader ? columnSettings.getHeader() : columnSettings.getCell();
             if (cellSettings != null) {
                 Font font = cellSettings.getFont();
                 return CellVariables.builder()
-                        .value(isHeader ? name : "")
+                        .key(key)
                         .width(isHeader && !StringUtils.isBlank(columnSettings.getColumnWidth()) ? columnSettings.getColumnWidth() : null)
                         .color(cellSettings.getColor() != null ? ColorUtils.normalizeCssColor(cellSettings.getColor()) : null)
                         .backgroundColor(cellSettings.getBackgroundColor() != null ? ColorUtils.normalizeCssColor(cellSettings.getBackgroundColor()) : null)
@@ -246,7 +248,7 @@ public abstract class TableWithLayoutComponentRenderer<C extends TableWithLayout
                         .build();
             }
         }
-        return new CellVariables(isHeader ? name : "");
+        return new CellVariables(isHeader ? key : "");
     }
 
     @Data
@@ -254,6 +256,7 @@ public abstract class TableWithLayoutComponentRenderer<C extends TableWithLayout
     @NoArgsConstructor
     @Builder(toBuilder = true)
     static class CellVariables {
+        private String key;
         private String value;
         private String width;
         private String color;
