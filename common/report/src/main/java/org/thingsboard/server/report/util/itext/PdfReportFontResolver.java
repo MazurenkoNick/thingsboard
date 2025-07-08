@@ -149,8 +149,10 @@ public class PdfReportFontResolver extends ITextFontResolver {
     private void addRoboto() {
         PdfReportFontFamily roboto = new PdfReportFontFamily("Roboto");
         loadFont(roboto, "/fonts/roboto/Roboto-Regular.ttf", IDENTITY_H, EMBEDDED, IdentValue.NORMAL, IdentValue.NORMAL);
-        loadFont(roboto, "/fonts/roboto/Roboto-Bold.ttf", IDENTITY_H, EMBEDDED, IdentValue.BOLD, IdentValue.NORMAL);
         loadFont(roboto, "/fonts/roboto/Roboto-Italic.ttf", IDENTITY_H, EMBEDDED, IdentValue.NORMAL, IdentValue.ITALIC);
+        loadFont(roboto, "/fonts/roboto/Roboto-Medium.ttf", IDENTITY_H, EMBEDDED, IdentValue.FONT_WEIGHT_500, IdentValue.NORMAL);
+        loadFont(roboto, "/fonts/roboto/Roboto-MediumItalic.ttf", IDENTITY_H, EMBEDDED, IdentValue.FONT_WEIGHT_500, IdentValue.ITALIC);
+        loadFont(roboto, "/fonts/roboto/Roboto-Bold.ttf", IDENTITY_H, EMBEDDED, IdentValue.BOLD, IdentValue.NORMAL);
         loadFont(roboto, "/fonts/roboto/Roboto-BoldItalic.ttf", IDENTITY_H, EMBEDDED, IdentValue.BOLD, IdentValue.ITALIC);
         families.put("Roboto", roboto);
     }
@@ -158,8 +160,10 @@ public class PdfReportFontResolver extends ITextFontResolver {
     private void addMonospace() {
         PdfReportFontFamily monospace = new PdfReportFontFamily("monospace");
         loadFont(monospace, "/fonts/monospace/DejaVuSansMono.ttf", IDENTITY_H, EMBEDDED, IdentValue.NORMAL, IdentValue.NORMAL);
-        loadFont(monospace, "/fonts/monospace/DejaVuSansMono-Bold.ttf", IDENTITY_H, EMBEDDED, IdentValue.BOLD, IdentValue.NORMAL);
         loadFont(monospace, "/fonts/monospace/DejaVuSansMono-Oblique.ttf", IDENTITY_H, EMBEDDED, IdentValue.NORMAL, IdentValue.ITALIC);
+        loadFont(monospace, "/fonts/monospace/DejaVuSansMono.ttf", IDENTITY_H, EMBEDDED, IdentValue.FONT_WEIGHT_500, IdentValue.NORMAL);
+        loadFont(monospace, "/fonts/monospace/DejaVuSansMono-Oblique.ttf", IDENTITY_H, EMBEDDED, IdentValue.FONT_WEIGHT_500, IdentValue.ITALIC);
+        loadFont(monospace, "/fonts/monospace/DejaVuSansMono-Bold.ttf", IDENTITY_H, EMBEDDED, IdentValue.BOLD, IdentValue.NORMAL);
         loadFont(monospace, "/fonts/monospace/DejaVuSansMono-BoldOblique.ttf", IDENTITY_H, EMBEDDED, IdentValue.BOLD, IdentValue.ITALIC);
         families.put("monospace", monospace);
     }
@@ -167,8 +171,10 @@ public class PdfReportFontResolver extends ITextFontResolver {
     private void addSansSerif() {
         PdfReportFontFamily sansSerif = new PdfReportFontFamily("sans-serif");
         loadFont(sansSerif, "/fonts/sansserif/LiberationSans-Regular.ttf", IDENTITY_H, EMBEDDED, IdentValue.NORMAL, IdentValue.NORMAL);
-        loadFont(sansSerif, "/fonts/sansserif/LiberationSans-Bold.ttf", IDENTITY_H, EMBEDDED, IdentValue.BOLD, IdentValue.NORMAL);
         loadFont(sansSerif, "/fonts/sansserif/LiberationSans-Italic.ttf", IDENTITY_H, EMBEDDED, IdentValue.NORMAL, IdentValue.ITALIC);
+        loadFont(sansSerif, "/fonts/sansserif/LiberationSans-Regular.ttf", IDENTITY_H, EMBEDDED, IdentValue.FONT_WEIGHT_500, IdentValue.NORMAL);
+        loadFont(sansSerif, "/fonts/sansserif/LiberationSans-Italic.ttf", IDENTITY_H, EMBEDDED, IdentValue.FONT_WEIGHT_500, IdentValue.ITALIC);
+        loadFont(sansSerif, "/fonts/sansserif/LiberationSans-Bold.ttf", IDENTITY_H, EMBEDDED, IdentValue.BOLD, IdentValue.NORMAL);
         loadFont(sansSerif, "/fonts/sansserif/LiberationSans-BoldItalic.ttf", IDENTITY_H, EMBEDDED, IdentValue.BOLD, IdentValue.ITALIC);
         families.put("sans-serif", sansSerif);
     }
@@ -176,8 +182,10 @@ public class PdfReportFontResolver extends ITextFontResolver {
     private void addSerif() {
         PdfReportFontFamily serif = new PdfReportFontFamily("serif");
         loadFont(serif, "/fonts/serif/LiberationSerif-Regular.ttf", IDENTITY_H, EMBEDDED, IdentValue.NORMAL, IdentValue.NORMAL);
-        loadFont(serif, "/fonts/serif/LiberationSerif-Bold.ttf", IDENTITY_H, EMBEDDED, IdentValue.BOLD, IdentValue.NORMAL);
         loadFont(serif, "/fonts/serif/LiberationSerif-Italic.ttf", IDENTITY_H, EMBEDDED, IdentValue.NORMAL, IdentValue.ITALIC);
+        loadFont(serif, "/fonts/serif/LiberationSerif-Regular.ttf", IDENTITY_H, EMBEDDED, IdentValue.FONT_WEIGHT_500, IdentValue.NORMAL);
+        loadFont(serif, "/fonts/serif/LiberationSerif-Italic.ttf", IDENTITY_H, EMBEDDED, IdentValue.FONT_WEIGHT_500, IdentValue.ITALIC);
+        loadFont(serif, "/fonts/serif/LiberationSerif-Bold.ttf", IDENTITY_H, EMBEDDED, IdentValue.BOLD, IdentValue.NORMAL);
         loadFont(serif, "/fonts/serif/LiberationSerif-BoldItalic.ttf", IDENTITY_H, EMBEDDED, IdentValue.BOLD, IdentValue.ITALIC);
         families.put("serif", serif);
     }

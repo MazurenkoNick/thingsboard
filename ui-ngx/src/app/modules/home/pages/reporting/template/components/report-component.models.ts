@@ -107,7 +107,7 @@ export const reportComponentsLibrary = new Map<string, ReportComponentLibraryIte
         type: ReportComponentType.HEADING,
         defaultConfig: {
           type: ReportComponentType.HEADING,
-          value: 'Heading text',
+          value: 'Heading',
           font: {
             size: 40,
             sizeUnit: 'pt',
@@ -136,6 +136,25 @@ export const reportComponentsLibrary = new Map<string, ReportComponentLibraryIte
         defaultConfig: {
           type: ReportComponentType.RICH_TEXT,
           value: '<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec libero orci, faucibus in iaculis quis, vestibulum sit amet ligula. Nulla facilisi. Ut ut iaculis tortor.</p>',
+          dataSources: [],
+          margins: null,
+          paddings: null,
+          background: null
+        } as RichTextReportComponentConfig
+      }
+    ],
+    [
+      'textSection',
+      {
+        id: 'textSection',
+        title: 'report-template.component.text-section',
+        previewImage: '/assets/report/components/text-section.svg',
+        type: ReportComponentType.RICH_TEXT,
+        defaultConfig: {
+          type: ReportComponentType.RICH_TEXT,
+          value: '<p><span style="font-size: 14px; color: rgb(0, 105, 92); font-weight: 500;">SUBHEADING</span></p>\n' +
+            '<p><span style="font-size: 28px; font-weight: 500;">Heading</span></p>\n' +
+            '<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec libero orci, faucibus in iaculis quis, vestibulum sit amet ligula. Nulla facilisi. Ut ut iaculis tortor.</p>',
           dataSources: [],
           margins: null,
           paddings: null,

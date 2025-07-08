@@ -96,6 +96,12 @@ export class ReportRichTextComponent implements OnInit, ControlValueAccessor, On
     body_class: 'tb-report-component',
     content_css: ['/report-component.css'],
     suffix: '.min',
+    formats: {
+      'tb-medium': {
+        inline: 'span',
+        styles: { fontWeight: '500' }
+      }
+    },
     plugins: ['table', 'lists', 'code', 'fullscreen'],
     menubar: 'edit customInsert tools view format table',
     menu: {
@@ -105,8 +111,9 @@ export class ReportRichTextComponent implements OnInit, ControlValueAccessor, On
       }
     },
     font_family_formats: 'Roboto=Roboto; Monospaced=monospace; Sans Serif=sans-serif; Serif=serif;',
-    toolbar: 'undo redo | fontfamily fontsize blocks ' +
-      '| bold italic strikethrough | forecolor backcolor ' +
+    font_size_formats: '8pt 9pt 10pt 11pt 12pt 14pt 16pt 18pt 20pt 21pt 22pt 24pt 36pt 48pt',
+    toolbar: 'undo redo | fontfamily fontsizeinput blocks ' +
+      '| bold tb-medium italic strikethrough | forecolor backcolor ' +
       '| table tb-image | alignleft aligncenter alignright alignjustify ' +
       '| numlist bullist | outdent indent | removeformat | code | fullscreen',
     toolbar_mode: 'wrap',
@@ -192,6 +199,7 @@ export class ReportRichTextComponent implements OnInit, ControlValueAccessor, On
       this.updateEditorBackground(editor);
     });
     this.setupTbImagePlugin(editor);
+    this.setupMediumFontWeight(editor);
     this.setupVariables(editor);
   }
 
@@ -287,6 +295,46 @@ export class ReportRichTextComponent implements OnInit, ControlValueAccessor, On
         image.setAttribute('src', src);
         image.removeAttribute(TB_SRC_ATTRIBUTE);
       });
+    });
+  }
+
+  private setupMediumFontWeight(editor: Editor) {
+    editor.ui.registry.addIcon('medium-weight', '<svg width="24" height="24" focusable="false" version="1.1" xmlns="http://www.w3.org/2000/svg">\n' +
+      ' <path d="m12 15.536 3.819-10.172h2.9896v13.271h-2.2969v-4.375l0.21875-5.8333-3.9102 10.208h-1.6497l-3.9102-10.217 0.22786 5.8425v4.375h-2.2969v-13.271h2.9805z"/>\n' +
+      '</svg>');
+    editor.addCommand('TbMedium', ui => {
+      this.toggleMediumWeightFormat(editor);
+    });
+    editor.addShortcut('Meta+M', 'Set medium weight', 'TbMedium');
+    editor.ui.registry.addToggleButton('tb-medium', {
+      icon: 'medium-weight',
+      tooltip: 'Medium',
+      onSetup: (api)  => {
+        const ref = editor.formatter.formatChanged('tb-medium', (state) => {
+          api.setActive(state);
+        });
+        return () => ref.unbind();
+      },
+      onAction: () => {
+        editor.execCommand('TbMedium');
+      }
+    });
+    editor.ui.registry.addMenuItem('tb-medium', {
+      icon: 'medium-weight',
+      text: 'Medium',
+      shortcut: 'Meta+M',
+      onAction: () => {
+        editor.execCommand('TbMedium');
+      }
+    });
+  }
+
+  private toggleMediumWeightFormat(editor: Editor) {
+    editor.undoManager.transact(() => {
+      if (editor.formatter.match('bold')) {
+        editor.formatter.remove('bold');
+      }
+      editor.formatter.toggle('tb-medium');
     });
   }
 

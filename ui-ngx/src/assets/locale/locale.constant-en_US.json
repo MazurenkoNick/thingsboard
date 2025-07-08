@@ -7250,7 +7250,8 @@
                 "type": "Subreport",
                 "no-sub-report": "No subreport selected",
                 "avoid-page-break-inside": "Avoid page break inside"
-            }
+            },
+            "text-section": "Text section"
         }
     },
     "scheduled-report": {
