@@ -270,8 +270,8 @@ public abstract class TableWithLayoutComponentRenderer<C extends TableWithLayout
         private String textAlignment;
         private String verticalAlignment;
 
-        public CellVariables(String value) {
-            this.value = value;
+        public CellVariables(String key) {
+            this.key = key;
         }
     }
 

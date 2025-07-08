@@ -181,8 +181,7 @@ public class ReportUtils {
                 BigDecimal decimal = new BigDecimal(value);
                 value = decimal.setScale(dataKey.getDecimals(), RoundingMode.HALF_UP).toPlainString();
             }
-        } catch (NumberFormatException | ArithmeticException e) {
-            log.warn("Failed to format value for data key '{}': {}", dataKey.getName(), e.getMessage());
+        } catch (NumberFormatException | ArithmeticException ignored) {
         }
         if (dataKey.getUnits() != null) {
             value += dataKey.getUnits();
