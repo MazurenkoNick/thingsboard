@@ -33,18 +33,10 @@ package org.thingsboard.server.report.renderer;
 import org.springframework.stereotype.Component;
 import org.thingsboard.server.common.data.report.configuration.components.AlarmTableComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponentType;
-import org.thingsboard.server.report.context.ComponentData;
-
-import java.util.List;
 
 
 @Component
 public class CsvAlarmTableRenderer extends AbstractCsvComponentRenderer<AlarmTableComponent> {
-
-    @Override
-    public List<List<String>> render(AlarmTableComponent component, ComponentData reportDataSource) {
-        return renderTable(component, reportDataSource);
-    }
 
     @Override
     public ReportComponentType getType() {

@@ -33,18 +33,10 @@ package org.thingsboard.server.report.renderer;
 import org.springframework.stereotype.Component;
 import org.thingsboard.server.common.data.report.configuration.components.EntityTableComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponentType;
-import org.thingsboard.server.report.context.ComponentData;
-
-import java.util.List;
 
 
 @Component
 public class CsvEntityTableRenderer extends AbstractCsvComponentRenderer<EntityTableComponent> {
-
-    @Override
-    public List<List<String>> render(EntityTableComponent component, ComponentData reportDataSource) {
-        return renderTable(component, reportDataSource);
-    }
 
     @Override
     public ReportComponentType getType() {

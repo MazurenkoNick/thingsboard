@@ -38,62 +38,55 @@ import org.thingsboard.server.report.context.ComponentData;
 import org.thingsboard.server.report.util.ThymeleafUtil;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
+import static org.thingsboard.server.report.util.ReportQueryUtils.mapLabelsToDataKeys;
 import static org.thingsboard.server.report.util.ReportUtils.formatNumericValue;
 import static org.thingsboard.server.report.util.ReportUtils.getSingleDataSource;
 
 public abstract class AbstractCsvComponentRenderer<C extends TableReportComponent> implements CsvReportComponentRenderer<C> {
 
-    protected List<List<String>> renderTable(TableReportComponent component, ComponentData reportDataSource) {
+    public List<List<String>> render(C component, ComponentData componentData) {
         Optional<DataSource> dataSourceOpt = getSingleDataSource(component);
         if (dataSourceOpt.isEmpty()) {
-            return List.of(List.of("Data source is not configured for alarm table"));
+            return List.of(List.of("Data source is not configured for " + component.getType().name() + " component"));
         }
 
         DataSource dataSource = dataSourceOpt.get();
-        Map<String, DataKey> labelToDataKeyMap = buildLabelToDataKeyMap(dataSource.getDataKeys());
+        List<DataKey> dataKeys = getColumns(component, dataSource);
+        Map<String, DataKey> labelToDataKeyMap = mapLabelsToDataKeys(dataKeys);
         List<List<String>> content = new ArrayList<>();
 
         // add heading
-        addOptionalHeading(component, reportDataSource, content);
+        addOptionalHeading(component, componentData, content);
 
         // add headers
         ArrayList<String> headers = new ArrayList<>(labelToDataKeyMap.keySet());
         content.add(headers);
 
         // add data rows
-        for (Map<String, String> row : reportDataSource.getEntityDatas()) {
+        for (Map<String, String> row : componentData.getEntityDatas()) {
             content.add(extractValues(row, labelToDataKeyMap));
         }
         return content;
     }
 
-    protected Map<String, DataKey> buildLabelToDataKeyMap(List<DataKey> dataKeys) {
-        if (dataKeys == null) return Collections.emptyMap();
-        return dataKeys.stream()
-                .collect(Collectors.toMap(
-                        DataKey::getLabel,
-                        dataKey -> dataKey,
-                        (existing, replacement) -> replacement,
-                        LinkedHashMap::new));
+    public List<DataKey> getColumns(C component, DataSource dataSource) {
+        return dataSource.getDataKeys();
     }
 
-    protected List<String> extractValues(Map<String, String> row, Map<String, DataKey> labelToDataKey) {
+    private List<String> extractValues(Map<String, String> row, Map<String, DataKey> labelToDataKey) {
         return labelToDataKey.values().stream()
                 .map(dataKey -> formatNumericValue(row.get(dataKey.getLabel()), dataKey))
                 .toList();
     }
 
-    protected void addOptionalHeading(TableReportComponent component, ComponentData reportDataSource, List<List<String>> content) {
+    private void addOptionalHeading(TableReportComponent component, ComponentData componentData, List<List<String>> content) {
         if (component.isShowTableHeading() && component.getTableHeading() != null) {
             Heading tableHeading = component.getTableHeading();
-            String headingText = ThymeleafUtil.renderFromHtmlString(tableHeading.getText(), reportDataSource.getVariables());
+            String headingText = ThymeleafUtil.renderFromHtmlString(tableHeading.getText(), componentData.getVariables());
             content.add(List.of(headingText));
         }
     }

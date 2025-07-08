@@ -60,10 +60,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static org.thingsboard.server.report.util.ReportQueryUtils.mapLabelsToDataKeys;
 import static org.thingsboard.server.report.util.ReportUtils.formatNumericValue;
 import static org.thingsboard.server.report.util.ReportUtils.getSingleDataSource;
 
@@ -93,13 +92,7 @@ public abstract class TableWithLayoutComponentRenderer<C extends TableWithLayout
             return ThymeleafUtil.renderFromHtmlTemplate("html/components/error-template", Map.of("errorMessage", "No columns are configured for the table component. " +
                     "Please check the " + dataSourceName() + " configuration."));
         }
-        Map<String, DataKey> labelToDataKey = dataKeys.stream()
-                .collect(Collectors.toMap(
-                        DataKey::getLabel,
-                        Function.identity(),
-                        (existing, replacement) -> existing,
-                        LinkedHashMap::new
-                ));
+        Map<String, DataKey> labelToDataKey = mapLabelsToDataKeys(dataKeys);
 
         HashMap<String, CellVariables> columns = getCellVariablesMap(component, labelToDataKey, true);
         HashMap<String, CellVariables> cellStyles = getCellVariablesMap(component, labelToDataKey, false);
