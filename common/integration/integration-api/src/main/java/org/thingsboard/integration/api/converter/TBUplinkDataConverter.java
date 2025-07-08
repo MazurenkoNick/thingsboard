@@ -37,9 +37,6 @@ import org.thingsboard.integration.api.data.UplinkMetaData;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 
-/**
- * Created by ashvayka on 02.12.17.
- */
 public interface TBUplinkDataConverter extends TBDataConverter {
 
     ListenableFuture<List<UplinkData>> convertUplink(ConverterContext context, byte[] data, UplinkMetaData metadata,
