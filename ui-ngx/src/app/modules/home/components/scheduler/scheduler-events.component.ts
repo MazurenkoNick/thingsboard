@@ -306,6 +306,7 @@ export class SchedulerEventsComponent extends PageComponent implements OnInit, A
         timeGridPlugin
       ],
       height: '100%',
+      fixedWeekCount: false,
       initialView: this.currentCalendarViewValue,
       allDaySlot: false,
       editable: this.editEnabled,
@@ -544,7 +545,6 @@ export class SchedulerEventsComponent extends PageComponent implements OnInit, A
             this.pageLink.textSearch = null;
             this.textSearch.reset('', {emitEvent: false});
           }
-          this.updateData();
         });
       }
 
@@ -560,15 +560,15 @@ export class SchedulerEventsComponent extends PageComponent implements OnInit, A
 
   updateMode(mode: SchedulerEventMode, updateRouterQueryParams: boolean = true) {
     this.mode = mode;
-    if (mode === 'calendar') {
-      this.dataSource?.selection.clear();
-      this.initializeCalendar();
-    }
     if (updateRouterQueryParams && !this.widgetMode) {
       const queryParams = {
         mode: mode === 'calendar' ? mode : null
       };
       this.updatedRouterQueryParams(queryParams, 'replace');
+    }
+    if (mode === 'calendar') {
+      this.dataSource?.selection.clear();
+      this.initializeCalendar();
     } else {
       this.updateData();
     }
@@ -581,6 +581,8 @@ export class SchedulerEventsComponent extends PageComponent implements OnInit, A
         this.calendarApi.render();
         this.isCalendarInitialized.next(true);
       }, 0);
+    } else {
+      this.updateData();
     }
   }
 
@@ -775,7 +777,6 @@ export class SchedulerEventsComponent extends PageComponent implements OnInit, A
     }
     this.currentCalendarViewValue = schedulerCalendarViewValueMap.get(this.currentCalendarView);
     this.calendarApi.changeView(this.currentCalendarViewValue);
-    this.calendarApi.refetchEvents();
     if (updateRouterQueryParams && !this.widgetMode) {
       const queryParams = {
         calendarView: this.currentCalendarView !== schedulerCalendarView.month ? this.currentCalendarView : null
@@ -987,8 +988,12 @@ export class SchedulerEventsComponent extends PageComponent implements OnInit, A
   }
 
   private toCalendarEvent(event: SchedulerEventWithCustomerInfo, start: _moment.Moment, end?: _moment.Moment): EventInput {
-    const title = `${event.name} - ${event.typeName}`;
-    let repeatInterval;
+    let typeName = event.type;
+    let repeatInterval: string;
+    if (this.schedulerEventConfigTypes[typeName]) {
+      typeName = this.schedulerEventConfigTypes[typeName].name;
+    }
+    const title = `${event.name} - ${typeName}`;
     if (event.schedule.repeat && event.schedule.repeat.type === SchedulerRepeatType.TIMER) {
       repeatInterval = this.translate.instant(schedulerTimeUnitRepeatTranslationMap.get(event.schedule.repeat.timeUnit),
         {count: event.schedule.repeat.repeatInterval});
@@ -997,25 +1002,24 @@ export class SchedulerEventsComponent extends PageComponent implements OnInit, A
       id: event.id.id,
       title,
       name: event.name,
-      type: event.typeName,
-      info: this.eventInfo(event),
+      type: typeName,
+      info: this.eventInfo(event, start),
       start: start.toDate(),
       end: end ? end.toDate() : null,
       repeatInterval
     };
   }
 
-  private eventInfo(event: SchedulerEventWithCustomerInfo): string {
+  private eventInfo(event: SchedulerEventWithCustomerInfo, startTime: _moment.Moment): string {
     let info = '';
-    const startTime = event.schedule.startTime;
     if (!event.schedule.repeat) {
-      const start = _moment.utc(startTime).local().format('MMM DD, YYYY, hh:mma');
+      const start = startTime.local().format('MMM DD, YYYY, hh:mma');
       info += start;
       return info;
     } else {
-      info += _moment.utc(startTime).local().format('hh:mma');
+      info += startTime.local().format('hh:mma');
       info += '<br/>';
-      info += this.translate.instant('scheduler.starting-from') + ' ' + _moment.utc(startTime).local().format('MMM DD, YYYY') + ', ';
+      info += this.translate.instant('scheduler.starting-from') + ' ' + startTime.local().format('MMM DD, YYYY') + ', ';
       if (event.schedule.repeat.type === SchedulerRepeatType.DAILY) {
         info += this.translate.instant('scheduler.daily') + ', ';
       } else if (event.schedule.repeat.type === SchedulerRepeatType.EVERY_N_DAYS) {
