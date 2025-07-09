@@ -152,6 +152,7 @@
         <google-api-gax.version>2.65.0</google-api-gax.version>
         <google-proto-common.version>2.37.1</google-proto-common.version>
         <google-proto-iam-v1.version>1.51.0</google-proto-iam-v1.version>
+        <google-recaptcha-enterprise.version>3.38.0</google-recaptcha-enterprise.version>
 
         <passay.version>1.6.4</passay.version>
         <ua-parser.version>1.6.1</ua-parser.version>
@@ -168,8 +169,6 @@
         <antisamy.version>1.7.5</antisamy.version>
         <snmp4j.version>3.8.0</snmp4j.version>
         <json-path.version>2.9.0</json-path.version>
-        <recaptcha.enterprise.version>3.38.0</recaptcha.enterprise.version>
-        <google.oauth2-http.version>1.23.0</google.oauth2-http.version>
         <langchain4j.version>1.1.0</langchain4j.version>
         <error_prone_annotations.version>2.38.0</error_prone_annotations.version>
         <animal-sniffer-annotations.version>1.24</animal-sniffer-annotations.version>
@@ -1333,7 +1332,7 @@
             <!-- ...Vulnerability fix - transitive dependency from Spring Boot, remove after Spring Boot upgrade -->
             <dependency>
                 <groupId>org.springframework.boot</groupId>
-                    <artifactId>spring-boot-starter</artifactId>
+                <artifactId>spring-boot-starter</artifactId>
                 <version>${spring-boot.version}</version>
             </dependency>
             <dependency>
@@ -2286,6 +2285,11 @@
                 <version>${google-auth-library.version}</version>
             </dependency>
             <dependency>
+                <groupId>com.google.cloud</groupId>
+                <artifactId>google-cloud-recaptchaenterprise</artifactId>
+                <version>${google-recaptcha-enterprise.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>com.google.http-client</groupId>
                 <artifactId>google-http-client</artifactId>
                 <version>${google-http-client.version}</version>
@@ -2628,16 +2632,6 @@
                 <groupId>com.drewnoakes</groupId>
                 <artifactId>metadata-extractor</artifactId>
                 <version>${drewnoakes-metadata-extractor.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.google.cloud</groupId>
-                <artifactId>google-cloud-recaptchaenterprise</artifactId>
-                <version>${recaptcha.enterprise.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.google.auth</groupId>
-                <artifactId>google-auth-library-oauth2-http</artifactId>
-                <version>${google.oauth2-http.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.xerial.snappy</groupId>
