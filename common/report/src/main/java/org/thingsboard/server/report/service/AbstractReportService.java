@@ -108,35 +108,34 @@ public abstract class AbstractReportService implements ReportService {
 
     protected ComponentData buildEntityCountDataSource(int usablePageWidthPx, TbReportCtx ctx, DataSource dataSource, ReportTemplateConfig configuration) {
         Map<String, Object> map = new HashMap<>();
-        String label = null;
-        if (dataSource.getDataKeys() != null && !dataSource.getDataKeys().isEmpty()) {
-            label = dataSource.getDataKeys().get(0).getLabel();
-        }
-        if (StringUtils.isBlank(label)) {
-            label = "count";
-        }
+        String label = resolveSingleLabel(dataSource, "count");
         map.put(label, dataService.countEntitiesByQuery(toEntityCountQuery(dataSource, configuration), ctx));
         return new ComponentData(usablePageWidthPx, map);
     }
 
     protected ComponentData buildAlarmCountDataSource(int usablePageWidthPx, TbReportCtx ctx, DataSource dataSource, ReportTemplateConfig configuration) {
         Map<String, Object> map = new HashMap<>();
+        String label = resolveSingleLabel(dataSource, "count");
+        map.put(label, dataService.countAlarmsByQuery(toAlarmCountQuery(dataSource, configuration), ctx));
+        return new ComponentData(usablePageWidthPx, map);
+    }
+
+    private String resolveSingleLabel(DataSource dataSource, String fallback) {
         String label = null;
         if (dataSource.getDataKeys() != null && !dataSource.getDataKeys().isEmpty()) {
             label = dataSource.getDataKeys().get(0).getLabel();
         }
-        if (StringUtils.isBlank(label)) {
-            label = "count";
+        if (StringUtils.isNotBlank(label)) {
+            return label;
         }
-        map.put(label, dataService.countAlarmsByQuery(toAlarmCountQuery(dataSource, configuration), ctx));
-        return new ComponentData(usablePageWidthPx, map);
+        return fallback;
     }
 
     protected List<EntityData> fetchEntities(TbReportCtx ctx, DataSource dataSource, EntityData stateEntity) {
        return fetchEntityDataByQuery(pageLink -> toEntityDataQuery(dataSource, ctx.getConfiguration(), stateEntity, pageLink), dataSource, ctx);
     }
 
-    protected List<EntityData> fetchEntityDataByQuery(Function<PageLink, EntityDataQuery> querySupplier, DataSource dataSource, TbReportCtx ctx) {
+    private List<EntityData> fetchEntityDataByQuery(Function<PageLink, EntityDataQuery> querySupplier, DataSource dataSource, TbReportCtx ctx) {
         List<DataKey> dataKeysWithAggregation = dataSource.getDataKeys()
                 .stream()
                 .filter(dataKey -> (dataKey.getAggregationType() != null && dataKey.getAggregationType() != Aggregation.NONE))
@@ -151,18 +150,18 @@ public abstract class AbstractReportService implements ReportService {
 
     private void updateWithAggregatedData(TbReportCtx ctx, List<DataKey> dataKeysWithAggregation, EntityData entityData) {
         if (!dataKeysWithAggregation.isEmpty()) {
-            List<ReadTsKvQuery> queries = getReadTsKvQueries(dataKeysWithAggregation);
+            List<ReadTsKvQuery> queries = buildReadTsKvQueries(dataKeysWithAggregation);
             List<ReadTsKvQueryResult> result = dataService.findTimeseriesByQueries(entityData.getEntityId(), queries, ctx);
             for (ReadTsKvQueryResult queryResult : result) {
                 List<TsKvEntry> queryResultData = queryResult.getData();
                 if (CollectionUtils.isNotEmpty(queryResultData)) {
-                    entityData.getTimeseries().put(queryResultData.get(0).getKey(), toTsValues(queryResult));
+                    entityData.getTimeseries().put(queryResultData.get(0).getKey(), queryResult.toTsValues());
                 }
             }
         }
     }
 
-    private List<ReadTsKvQuery> getReadTsKvQueries(List<DataKey> dataKeysWithAggregation) {
+    private List<ReadTsKvQuery> buildReadTsKvQueries(List<DataKey> dataKeysWithAggregation) {
         List<ReadTsKvQuery> queries = new ArrayList<>();
         for (DataKey key : dataKeysWithAggregation) {
             TimeIntervalCalculator.TimeRange timeRange = getTimeRange(key.getTimewindow());
@@ -170,19 +169,6 @@ public abstract class AbstractReportService implements ReportService {
             queries.add(query);
         }
         return queries;
-    }
-
-    public TsValue[] toTsValues(ReadTsKvQueryResult queryResult) {
-        List<TsKvEntry> data = queryResult.getData();
-        if (data != null && !data.isEmpty()) {
-            List<TsValue> queryValues = new ArrayList<>();
-            for (TsKvEntry v : data) {
-                queryValues.add(v.toTsValue()); // TODO: add count here.
-            }
-            return queryValues.toArray(new TsValue[queryValues.size()]);
-        } else {
-            return new TsValue[0];
-        }
     }
 
     protected List<Map<String, String>> collectEntityDatas(TbReportCtx ctx, DataSource dataSource, EntityData stateEntity) {
