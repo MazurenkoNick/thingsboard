@@ -36,7 +36,6 @@ import org.apache.commons.lang3.StringUtils;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * @author Andrew Shvayka
@@ -95,6 +94,12 @@ public enum EntityType {
     CALCULATED_FIELD(39),
     CALCULATED_FIELD_LINK(40),
     JOB(41),
+    AI_MODEL(42, "ai_model", false) {
+        @Override
+        public String getNormalName() {
+            return "AI model";
+        }
+    },
     SECRET(107);
 
     @Getter
@@ -108,10 +113,12 @@ public enum EntityType {
             .toLowerCase().replaceAll("_", " "));
 
     public static final List<EntityType> GROUP_ENTITY_TYPES = EnumSet.allOf(EntityType.class).stream()
-            .filter(EntityType::isGroupEntityType).collect(Collectors.toUnmodifiableList());
+            .filter(EntityType::isGroupEntityType)
+            .toList();
 
     public static final List<String> NORMAL_NAMES = EnumSet.allOf(EntityType.class).stream()
-            .map(EntityType::getNormalName).collect(Collectors.toUnmodifiableList());
+            .map(EntityType::getNormalName)
+            .toList();
 
     private static final EntityType[] BY_PROTO;
 

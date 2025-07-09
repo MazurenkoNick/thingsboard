@@ -39,6 +39,8 @@ import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.group.EntityGroup;
 import org.thingsboard.server.common.data.group.EntityGroupInfo;
 import org.thingsboard.server.common.data.id.EntityGroupId;
+import org.thingsboard.server.common.data.ai.AiModel;
+import org.thingsboard.server.common.data.id.AiModelId;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.menu.CustomMenuInfo;
 import org.thingsboard.server.common.data.permission.Operation;
@@ -111,6 +113,7 @@ public class TenantAdminPermissions extends AbstractPermissions {
         put(Resource.JOB, tenantStandaloneEntityPermissionChecker);
         put(Resource.DOMAIN, tenantStandaloneEntityPermissionChecker);
         put(Resource.SECRET, tenantStandaloneEntityPermissionChecker);
+        put(Resource.AI_MODEL, aiModelPermissionChecker);
     }
 
     public static final PermissionChecker tenantStandaloneEntityPermissionChecker = new PermissionChecker() {
@@ -346,6 +349,20 @@ public class TenantAdminPermissions extends AbstractPermissions {
                 return user.getTenantId().equals(customMenu.getTenantId()) && user.getCustomerId().equals(customMenu.getCustomerId());
             }
         }
+    };
+
+    private static final PermissionChecker<AiModelId, AiModel> aiModelPermissionChecker = new PermissionChecker<>() {
+
+        @Override
+        public boolean hasPermission(SecurityUser user, Operation operation) {
+            return true;
+        }
+
+        @Override
+        public boolean hasPermission(SecurityUser user, Operation operation, AiModelId entityId, AiModel entity) {
+            return user.getTenantId().equals(entity.getTenantId());
+        }
+
     };
 
 }

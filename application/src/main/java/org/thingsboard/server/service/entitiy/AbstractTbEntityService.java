@@ -136,7 +136,7 @@ public abstract class AbstractTbEntityService {
         logEntityActionService.logEntityAction(tenantId, entityId, entity, customerId, actionType, user);
     }
 
-    protected ListenableFuture<UUID> autoCommit(User user, EntityId entityId) throws Exception {
+    protected ListenableFuture<UUID> autoCommit(User user, EntityId entityId) {
         if (vcService != null) {
             return vcService.autoCommit(user, entityId);
         } else {
@@ -145,7 +145,7 @@ public abstract class AbstractTbEntityService {
         }
     }
 
-    protected ListenableFuture<UUID> autoCommit(User user, EntityType entityType, List<UUID> entityIds) throws Exception {
+    protected ListenableFuture<UUID> autoCommit(User user, EntityType entityType, List<UUID> entityIds) {
         if (vcService != null) {
             return vcService.autoCommit(user, entityType, entityIds);
         } else {

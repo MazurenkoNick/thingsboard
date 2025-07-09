@@ -75,6 +75,7 @@ export enum EntityType {
   MOBILE_APP = 'MOBILE_APP',
   CALCULATED_FIELD = 'CALCULATED_FIELD',
   SECRET = 'SECRET',
+  AI_MODEL = 'AI_MODEL',
 }
 
 export enum AliasEntityType {
@@ -652,6 +653,13 @@ export const entityTypeTranslations = new Map<EntityType | AliasEntityType, Enti
         noEntities: 'calculated-fields.no-found',
         search: 'action.search',
         selectedEntities: 'calculated-fields.selected-fields'
+      }
+    ],
+    [
+      EntityType.AI_MODEL,
+      {
+        type: 'entity.type-ai-model-settings',
+        typePlural: 'entity.type-ai-model-settings'
       }
     ],
     [

@@ -53,6 +53,7 @@ import org.thingsboard.rule.engine.api.MailService;
 import org.thingsboard.rule.engine.api.MqttClientSettings;
 import org.thingsboard.rule.engine.api.NotificationCenter;
 import org.thingsboard.rule.engine.api.ReportService;
+import org.thingsboard.rule.engine.api.RuleEngineAiChatModelService;
 import org.thingsboard.rule.engine.api.SmsService;
 import org.thingsboard.rule.engine.api.notification.SlackService;
 import org.thingsboard.rule.engine.api.sms.SmsSenderFactory;
@@ -85,6 +86,7 @@ import org.thingsboard.server.common.msg.queue.ServiceType;
 import org.thingsboard.server.common.msg.queue.TopicPartitionInfo;
 import org.thingsboard.server.common.msg.tools.TbRateLimits;
 import org.thingsboard.server.common.stats.TbApiUsageReportClient;
+import org.thingsboard.server.dao.ai.AiModelService;
 import org.thingsboard.server.dao.alarm.AlarmCommentService;
 import org.thingsboard.server.dao.asset.AssetProfileService;
 import org.thingsboard.server.dao.asset.AssetService;
@@ -356,6 +358,14 @@ public class ActorSystemContext {
     @Autowired
     @Getter
     private AuditLogService auditLogService;
+
+    @Autowired
+    @Getter
+    private RuleEngineAiChatModelService aiChatModelService;
+
+    @Autowired
+    @Getter
+    private AiModelService aiModelService;
 
     @Autowired
     @Getter
