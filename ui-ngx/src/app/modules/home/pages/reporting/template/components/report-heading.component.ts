@@ -73,11 +73,6 @@ export class ReportHeadingComponent implements OnInit, ControlValueAccessor {
     this.headingFormGroup = this.fb.group(
       {
         text: [null],
-        font: [null],
-        color: [null],
-        textAlignment: [null],
-        verticalAlignment: [null],
-        height: [null]
       }
     )
     if (this.withLayout) {

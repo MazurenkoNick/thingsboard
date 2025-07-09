@@ -31,15 +31,14 @@
 package org.thingsboard.server.report.util.itext;
 
 import com.lowagie.text.BadElementException;
-import com.lowagie.text.Image;
 import com.lowagie.text.Rectangle;
 import com.lowagie.text.pdf.PdfReader;
 import org.apache.commons.lang3.StringUtils;
 import org.thingsboard.server.common.data.DataConstants;
-import org.thingsboard.server.common.data.ImageDescriptor;
 import org.thingsboard.server.common.data.TbResource;
 import org.thingsboard.server.report.context.TbReportCtx;
 import org.thingsboard.server.report.datasource.ReportDataService;
+import org.thingsboard.server.report.util.ImageUtils;
 import org.thingsboard.server.report.util.ThymeleafUtil;
 import org.xhtmlrenderer.extend.FSImage;
 import org.xhtmlrenderer.pdf.ITextFSImage;
@@ -51,6 +50,7 @@ import org.xhtmlrenderer.util.ContentTypeDetectingInputStreamWrapper;
 import org.xhtmlrenderer.util.ImageUtil;
 import org.xhtmlrenderer.util.XRLog;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -60,11 +60,11 @@ import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 
-import static org.thingsboard.server.report.util.ImageUtils.checkAndLoadSvg;
 import static org.thingsboard.server.report.util.ImageUtils.isEmptyImage;
 import static org.thingsboard.server.report.util.ImageUtils.isInternalTbImage;
 import static org.thingsboard.server.report.util.ImageUtils.isPublicTbImage;
 import static org.thingsboard.server.report.util.ImageUtils.isTbImage;
+import static org.xhtmlrenderer.util.ContentTypeDetectingInputStreamWrapper.detectContentType;
 import static org.xhtmlrenderer.util.IOUtil.readBytes;
 import static org.xhtmlrenderer.util.ImageUtil.isEmbeddedBase64Image;
 
@@ -104,11 +104,12 @@ public class PdfReportUserAgent extends ITextUserAgent {
             resource = loadImageResource(uriStr);
             _imageCache.put(unresolvedUri, resource);
         }
-        FSImage image = resource.getImage();
-        if (image instanceof ITextFSImage) {
-            image = (FSImage) ((ITextFSImage) resource.getImage()).clone();
+        if (resource != null) {
+            FSImage image = resource.getImage();
+            return new ImageResource(resource.getImageUri(), image);
+        } else {
+            return new ImageResource(uriStr, null);
         }
-        return new ImageResource(resource.getImageUri(), image);
     }
 
     @Override
@@ -139,16 +140,11 @@ public class PdfReportUserAgent extends ITextUserAgent {
     }
 
     private ImageResource loadImageResource(String uriStr) {
-        if (isEmbeddedBase64Image(uriStr)) {
-            return loadEmbeddedBase64ImageResource(uriStr);
-        } else if (isTbImage(uriStr)) {
-            return loadTbImageResource(uriStr);
-        } else if (isEmptyImage(uriStr)) {
-            return errorEmptyImageResource(uriStr);
-        }
-        try (InputStream is = resolveAndOpenStream(uriStr)) {
+        String originalUri = uriStr;
+        uriStr = isEmbeddedBase64Image(uriStr) ? "Base64 Data" : uriStr;
+        try (InputStream is = resolveImageStream(originalUri)) {
             if (is != null) {
-                try (ContentTypeDetectingInputStreamWrapper cis = new ContentTypeDetectingInputStreamWrapper(is)) {
+                try (ContentTypeDetectingInputStreamWrapper cis = detectContentType(is)) {
                     if (cis.isPdf()) {
                         URI uri = new URI(uriStr);
                         PdfReader reader = _outputDevice.getReader(uri);
@@ -157,72 +153,88 @@ public class PdfReportUserAgent extends ITextUserAgent {
                         float initialHeight = rect.getHeight() * _outputDevice.getDotsPerPoint();
                         PDFAsImage image = new PDFAsImage(uri, initialWidth, initialHeight);
                         return new ImageResource(uriStr, image);
-                    } else {
-                        ITextFSImage image = this.loadITextFSImage(readBytes(cis));
+                    } else if (cis.isSvg()) {
+                        PdfSvgImage image = readSvg(uriStr, cis);
                         return new ImageResource(uriStr, image);
+                    } else {
+                        byte[] image = readBytes(cis);
+                        ITextFSImage itextImage = new ITextFSImage(image, ImageUtils.getOriginalImageSize(image), uriStr);
+                        return new ImageResource(uriStr, itextImage);
                     }
                 }
             }
         } catch (BadElementException | IOException | URISyntaxException e) {
             XRLog.exception("Can't read image file; unexpected problem for URI '" + uriStr + "'", e);
             return errorImageResource(uriStr, "Can't read image file", null, e);
+        } catch (PdfReportImageException e) {
+            return errorImageResource(e);
         }
         return errorLoadImageFromUriResource(uriStr, null);
     }
 
-    private ImageResource loadEmbeddedBase64ImageResource(final String uri) {
-        try {
-            byte[] buffer = ImageUtil.getEmbeddedBase64Image(uri);
-            ITextFSImage image = this.loadITextFSImage(buffer);
-            return new ImageResource(null, image);
-        } catch (BadElementException | IOException e) {
-            XRLog.exception("Can't read XHTML embedded image.", e);
-            return errorLoadImageFromBase64Resource(e);
-        }
-    }
-
-    private ImageResource loadTbImageResource(final String uri) {
-        try {
-            TbResource resource = null;
-            if (isInternalTbImage(uri)) {
-                resource = this.loadInternalTbImage(uri);
-            } else if (isPublicTbImage(uri)) {
-                resource = this.loadPublicTbImage(uri);
+    private InputStream resolveImageStream(String uriStr) throws PdfReportImageException {
+        if (isEmbeddedBase64Image(uriStr)) {
+            try {
+                byte[] buffer = ImageUtil.getEmbeddedBase64Image(uriStr);
+                return new ByteArrayInputStream(buffer);
+            } catch (BadElementException e) {
+                XRLog.exception("Can't read XHTML embedded image.", e);
+                throw errorLoadImageFromBase64Exception(e);
             }
-            if (resource != null) {
-                ImageDescriptor descriptor = resource.getDescriptor(ImageDescriptor.class);
-                byte[] imageData = resource.getData();
-                boolean skipSvgCheck = false;
-                if (descriptor != null) {
-                    skipSvgCheck = !descriptor.getMediaType().contains("svg+xml");
+        } else if (isTbImage(uriStr)) {
+            try {
+                TbResource resource = null;
+                if (isInternalTbImage(uriStr)) {
+                    resource = this.loadInternalTbImage(uriStr);
+                } else if (isPublicTbImage(uriStr)) {
+                    resource = this.loadPublicTbImage(uriStr);
                 }
-                ITextFSImage image = this.loadITextFSImage(imageData, skipSvgCheck);
-                return new ImageResource(uri, image);
+                if (resource != null) {
+                    byte[] imageData = resource.getData();
+                    return new ByteArrayInputStream(imageData);
+                }
+            } catch (Exception e) {
+                XRLog.exception("Can't read TB image.", e);
+                throw errorLoadTbImageException(uriStr, e);
             }
-        } catch (Exception e) {
-            XRLog.exception("Can't read TB image.", e);
-            return errorLoadTbImageResource(uri, e);
+            throw errorLoadTbImageException(uriStr, null);
+        } else if (isEmptyImage(uriStr)) {
+            throw errorEmptyImageException(uriStr);
+        } else {
+            return resolveAndOpenStream(uriStr);
         }
-        return errorLoadTbImageResource(uri, null);
     }
 
-    private ImageResource errorLoadImageFromBase64Resource(Exception exception) {
-        return errorImageResource(null, "Failed to load image from base64 data", "Base64 Data", exception);
+    private PdfSvgImage readSvg(String uri, InputStream in) throws IOException, PdfReportImageException {
+        byte[] svgBytes = readBytes(in);
+        PdfSvgDocument svgDocument = PdfSvgDocument.fromSvgBytes(svgBytes);
+        if (svgDocument == null) {
+            throw new PdfReportImageException(uri, "Could not load image from SVG.", null, null);
+        }
+        return new PdfSvgImage(svgDocument, this.dotsPerPixel, this.usablePageWidthPx);
     }
 
-    private ImageResource errorLoadTbImageResource(final String uri, Exception exception) {
-        return errorImageResource(uri, "Can't read TB image.", null, exception);
+    private PdfReportImageException errorLoadImageFromBase64Exception(Exception exception) {
+        return new PdfReportImageException(null, "Failed to load image from base64 data", "Base64 Data", exception);
+    }
+
+    private PdfReportImageException errorLoadTbImageException(final String uri, Exception exception) {
+        return new PdfReportImageException(uri, "Can't read TB image.", null, exception);
+    }
+
+    private PdfReportImageException errorEmptyImageException(final String uri) {
+        return new PdfReportImageException(uri, "Image uri is empty.", "URI is empty", null);
     }
 
     private ImageResource errorLoadImageFromUriResource(final String uri, Exception exception) {
         return errorImageResource(uri,  "Failed to load image.", null, exception);
     }
 
-    private ImageResource errorEmptyImageResource(final String uri) {
-        return errorImageResource(uri,  "Image uri is empty.", "URI is empty", null);
+    private ImageResource errorImageResource(PdfReportImageException exception) {
+        return errorImageResource(exception.uri, exception.getMessage(), exception.uriString, exception.getCause());
     }
 
-    private ImageResource errorImageResource(final String uri, String errorMessage, String uriString, Exception exception) {
+    private ImageResource errorImageResource(final String uri, String errorMessage, String uriString, Throwable exception) {
         HashMap<String, Object> errorImageVariables = new HashMap<>();
         errorImageVariables.put("errorMessage", errorMessage);
         if (uriString == null) {
@@ -236,8 +248,8 @@ public class PdfReportUserAgent extends ITextUserAgent {
             errorImageVariables.put("uriPos", 16);
         }
         String errorImageSvg = ThymeleafUtil.renderFromSvgTemplate("svg/error-image", errorImageVariables);
-        PdfSvgDocument svgDocument = checkAndLoadSvg(errorImageSvg);
-        ITextFSImage image = new PdfSvgFSImage(svgDocument, this.dotsPerPixel, this.usablePageWidthPx);
+        PdfSvgDocument svgDocument = PdfSvgDocument.fromSvgString(errorImageSvg);
+        PdfSvgImage image = new PdfSvgImage(svgDocument, this.dotsPerPixel, this.usablePageWidthPx);
         return new ImageResource(uri, image);
     }
 
@@ -268,20 +280,16 @@ public class PdfReportUserAgent extends ITextUserAgent {
         return null;
     }
 
-    private ITextFSImage loadITextFSImage(byte[] data) throws IOException {
-        return loadITextFSImage(data, false);
-    }
+    static class PdfReportImageException extends Exception {
 
-    private ITextFSImage loadITextFSImage(byte[] data, boolean skipSvgCheck) throws IOException {
-        PdfSvgDocument svgDocument = skipSvgCheck ? null : checkAndLoadSvg(data);
-        if (svgDocument != null) {
-            return new PdfSvgFSImage(svgDocument, this.dotsPerPixel, this.usablePageWidthPx);
-        } else {
-            Image image = Image.getInstance(data);
-            if (dotsPerPixel != 1.0f) {
-                image.scaleAbsolute(image.getPlainWidth() * dotsPerPixel, image.getPlainHeight() * dotsPerPixel);
-            }
-            return new ITextFSImage(image);
+        private final String uri;
+        private final String uriString;
+
+        PdfReportImageException(final String uri, String errorMessage, String uriString, Exception exception) {
+            super(errorMessage, exception);
+            this.uri = uri;
+            this.uriString = uriString;
         }
+
     }
 }

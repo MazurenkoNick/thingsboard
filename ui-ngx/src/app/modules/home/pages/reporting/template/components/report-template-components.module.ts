@@ -67,6 +67,8 @@ import { ReportHeadingComponent } from '@home/pages/reporting/template/component
 import {
   ReportComponentLayoutSettingsComponent
 } from '@home/pages/reporting/template/components/report-component-layout-settings.component';
+import { DividerPreviewComponent } from '@home/pages/reporting/template/components/divider-preview.component';
+import { DividerConfigComponent } from '@home/pages/reporting/template/components/divider-config.component';
 
 @NgModule({
   declarations: [
@@ -84,6 +86,8 @@ import {
     HeadingConfigComponent,
     RichTextPreviewComponent,
     RichTextConfigComponent,
+    DividerPreviewComponent,
+    DividerConfigComponent,
     PageBreakPreviewComponent,
     EntityTablePreviewComponent,
     EntityTableConfigComponent,

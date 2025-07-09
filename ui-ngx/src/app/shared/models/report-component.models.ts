@@ -46,6 +46,7 @@ export enum ReportComponentType {
   DASHBOARD = 'DASHBOARD',
   IMAGE = 'IMAGE',
   SUB_REPORT = 'SUB_REPORT',
+  DIVIDER = 'DIVIDER',
   PAGE_BREAK = 'PAGE_BREAK'
 }
 
@@ -341,6 +342,44 @@ export interface SubReportReportComponentConfig extends DataReportComponentConfi
   templateId: ReportTemplateId;
   avoidPageBreakInside: boolean;
   type: ReportComponentType.SUB_REPORT;
+}
+
+export enum BorderLength {
+  LONG = 'LONG',
+  SHORT = 'SHORT'
+}
+
+export const borderLengths = Object.keys(BorderLength) as BorderLength[];
+
+export const borderLengthTranslations = new Map<BorderLength, string>(
+  [
+    [BorderLength.LONG, 'report-template.component.divider.divider-type-long'],
+    [BorderLength.SHORT, 'report-template.component.divider.divider-type-short']
+  ]
+);
+
+export enum BorderType {
+  solid = 'solid',
+  dashed = 'dashed',
+  dotted = 'dotted'
+}
+
+export const borderTypes = Object.keys(BorderType) as BorderType[];
+
+export const borderTypeTranslations = new Map<BorderType, string>(
+  [
+    [BorderType.solid, 'report-template.component.divider.line-type-solid'],
+    [BorderType.dashed, 'report-template.component.divider.line-type-dashed'],
+    [BorderType.dotted, 'report-template.component.divider.line-type-dotted']
+  ]
+);
+
+export interface DividerReportComponentConfig extends LayoutReportComponentConfig {
+  length: BorderLength;
+  borderType: BorderType;
+  widthPx: number;
+  color: string;
+  type: ReportComponentType.DIVIDER;
 }
 
 export interface PageBreakReportComponentConfig extends ReportComponentConfig {

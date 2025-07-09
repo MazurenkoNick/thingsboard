@@ -30,83 +30,47 @@
  */
 package org.thingsboard.server.report.util.itext;
 
-import com.lowagie.text.Image;
+import com.google.errorprone.annotations.CheckReturnValue;
 import org.xhtmlrenderer.extend.FSImage;
+import org.xhtmlrenderer.extend.Size;
 import org.xhtmlrenderer.pdf.ITextFSImage;
 
-import java.awt.image.BufferedImage;
-
-public class PdfSvgFSImage extends ITextFSImage {
+public class PdfSvgImage extends ITextFSImage {
 
     private final PdfSvgDocument _svgDocument;
-    private Image _image;
+    private byte[] _image;
     private final float dotsPerPixel;
     private final int usablePageWidthPx;
-    private final int width;
-    private final int height;
 
-    public PdfSvgFSImage(PdfSvgDocument svgDocument, float dotsPerPixel, int usablePageWidthPx) {
-        this(svgDocument, dotsPerPixel, usablePageWidthPx, (int)(svgDocument.size().width * dotsPerPixel), (int)(svgDocument.size().height * dotsPerPixel));
+    public PdfSvgImage(PdfSvgDocument svgDocument, float dotsPerPixel, int usablePageWidthPx) {
+        this(svgDocument, dotsPerPixel, usablePageWidthPx, new Size((int)(svgDocument.size().width * dotsPerPixel), (int)(svgDocument.size().height * dotsPerPixel)));
     }
 
-    public PdfSvgFSImage(PdfSvgDocument svgDocument, float dotsPerPixel, int usablePageWidthPx, int width, int height) {
-        super(null);
+    public PdfSvgImage(PdfSvgDocument svgDocument, float dotsPerPixel, int usablePageWidthPx, Size size) {
+        super(null, size, null);
         this._svgDocument = svgDocument;
         this.dotsPerPixel = dotsPerPixel;
         this.usablePageWidthPx = usablePageWidthPx;
-        this.width = width;
-        this.height = height;
     }
 
-    @Override
-    public int getWidth() {
-        return this.width;
-    }
-
-    @Override
-    public int getHeight() {
-        return this.height;
-    }
-
+    @CheckReturnValue
     @Override
     public FSImage scale(int width, int height) {
-        if (width > 0 || height > 0) {
-            int currentWith = getWidth();
-            int currentHeight = getHeight();
-            int targetWidth = width;
-            int targetHeight = height;
-
-            if (targetWidth == -1) {
-                targetWidth = (int)(currentWith * ((double)targetHeight / currentHeight));
-            }
-
-            if (targetHeight == -1) {
-                targetHeight = (int)(currentHeight * ((double)targetWidth / currentWith));
-            }
-
-            if (currentWith != targetWidth || currentHeight != targetHeight) {
-                return new PdfSvgFSImage(this._svgDocument, this.dotsPerPixel, this.usablePageWidthPx, targetWidth, targetHeight);
-            }
+        Size newSize = size.scale(width, height);
+        if (size != newSize) {
+           return new PdfSvgImage(_svgDocument, dotsPerPixel, usablePageWidthPx, newSize);
         }
         return this;
     }
 
     @Override
-    public Image getImage() {
+    public byte[] getImage() {
         if (_image == null) {
             try {
-                BufferedImage bufferedImage = this._svgDocument.render((float) this.width / this.dotsPerPixel,
-                        (float) this.height / this.dotsPerPixel, this.usablePageWidthPx);
-                _image = Image.getInstance(bufferedImage, null);
+                _image = this._svgDocument.render((float) getWidth() / this.dotsPerPixel,
+                        (float) getHeight() / this.dotsPerPixel, this.usablePageWidthPx);
             } catch (Exception e) {}
         }
         return _image;
     }
-
-
-    @Override
-    public Object clone() {
-        return new PdfSvgFSImage(_svgDocument, this.dotsPerPixel, this.usablePageWidthPx, this.width, this.height);
-    }
-
 }

@@ -28,35 +28,27 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.common.data.report.configuration.style;
+package org.thingsboard.server.common.data.report.configuration.components;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonValue;
-import lombok.Getter;
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import org.thingsboard.server.common.data.report.configuration.style.Insets;
 
-public enum BorderType {
+@Schema
+@Data
+@EqualsAndHashCode
+@NoArgsConstructor
+@AllArgsConstructor
+public abstract class AbstractLayoutReportComponent implements LayoutReportComponent {
 
-    SOLID("solid"), DASHED("dashed"), DOTTED("dotted");
+    private Insets margins;
+    private Insets paddings;
+    private String background;
+    private Integer borderWidth;
+    private Integer borderRadius;
+    private String borderColor;
 
-    @Getter
-    private final String value;
-
-    BorderType(String label) {
-        this.value = label;
-    }
-
-    @JsonValue
-    public String getValue() {
-        return value;
-    }
-
-    @JsonCreator
-    public static BorderType fromLabel(String value) {
-        for (BorderType type : values()) {
-            if (type.value.equalsIgnoreCase(value)) {
-                return type;
-            }
-        }
-        throw new IllegalArgumentException("Unknown BorderType: " + value);
-    }
 }

@@ -30,19 +30,10 @@
  */
 package org.thingsboard.server.report.util;
 
-import com.github.weisj.jsvg.SVGDocument;
-import com.github.weisj.jsvg.attributes.ViewBox;
-import com.github.weisj.jsvg.parser.DefaultParserProvider;
-import com.github.weisj.jsvg.parser.DomProcessor;
-import com.github.weisj.jsvg.parser.LoaderContext;
-import com.github.weisj.jsvg.parser.ParserProvider;
-import com.github.weisj.jsvg.parser.SVGLoader;
-import org.jetbrains.annotations.Nullable;
-import org.thingsboard.server.report.util.itext.PdfSvgDocument;
+import com.lowagie.text.Image;
+import org.xhtmlrenderer.extend.Size;
 
-import java.io.ByteArrayInputStream;
-import java.nio.charset.StandardCharsets;
-import java.util.concurrent.atomic.AtomicReference;
+import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -54,32 +45,9 @@ public class ImageUtils {
         Logger.getLogger("com.github.weisj.jsvg").setLevel(Level.OFF);
     }
 
-    public static PdfSvgDocument checkAndLoadSvg(String svgString) {
-        return checkAndLoadSvg(svgString.getBytes(StandardCharsets.UTF_8));
-    }
-
-    public static PdfSvgDocument checkAndLoadSvg(byte[] data) {
-        SVGLoader loader = new SVGLoader();
-        try {
-            AtomicReference<ViewBox> viewBoxRef = new AtomicReference<>();
-            ParserProvider parserProvider = new DefaultParserProvider() {
-                public @Nullable DomProcessor createPreProcessor() {
-                    return root -> {
-                        viewBoxRef.set(root.attributeNode().getViewBox());
-                    };
-                }
-            };
-
-            SVGDocument document = loader.load(new ByteArrayInputStream(data), null, LoaderContext.builder()
-                    .parserProvider(parserProvider)
-                    .build());
-            if (document != null) {
-                return new PdfSvgDocument(document, viewBoxRef.get());
-            }
-        } catch (Exception e) {
-            // Invalid SVG or not SVG
-        }
-        return null;
+    public static Size getOriginalImageSize(byte[] pngImage) throws IOException {
+        Image img = Image.getInstance(pngImage);
+        return new Size((int) img.getPlainWidth(), (int) img.getPlainHeight());
     }
 
     public static boolean isTbImage(String uri) {

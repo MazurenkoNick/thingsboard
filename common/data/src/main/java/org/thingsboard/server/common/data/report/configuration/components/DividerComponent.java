@@ -41,7 +41,7 @@ import org.thingsboard.server.common.data.report.configuration.style.BorderType;
 @Data
 @EqualsAndHashCode
 @NoArgsConstructor
-public class DividerComponent implements ReportComponent {
+public class DividerComponent extends AbstractLayoutReportComponent {
 
     private BorderLength length;
     private BorderType borderType;

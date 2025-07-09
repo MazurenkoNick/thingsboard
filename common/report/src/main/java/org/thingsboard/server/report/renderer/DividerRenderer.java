@@ -45,17 +45,16 @@ import static org.thingsboard.server.common.data.report.configuration.style.Bord
 
 
 @Component
-public class DividerRenderer implements PdfReportComponentRenderer<DividerComponent> {
+public class DividerRenderer extends ReportComponentWithLayoutRenderer<DividerComponent> {
 
     @Override
-    public String render(DividerComponent component, ComponentData reportDataSource) {
+    protected String renderContent(DividerComponent component, ComponentData reportDataSource) {
         HashMap<String, Object> componentVariables = new HashMap<>();
         componentVariables.put("width", component.getLength() != null && component.getLength() == SHORT ? "50%" : "100%");
         String borderWidth = component.getWidthPx() != null ? component.getWidthPx() + "px" : "1px";
         String borderColor = component.getColor() != null ? ColorUtils.normalizeCssColor(component.getColor()) : "#000";
         String borderStyle = component.getBorderType() != null ? component.getBorderType().getValue() : BorderType.SOLID.getValue();
         componentVariables.put("borderStyle", borderWidth + " " + borderStyle + " " + borderColor);
-
         return ThymeleafUtil.renderFromHtmlTemplate("html/components/divider-template", componentVariables);
     }
 

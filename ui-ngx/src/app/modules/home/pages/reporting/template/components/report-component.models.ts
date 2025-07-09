@@ -31,10 +31,14 @@
 
 import {
   AlarmTableReportComponentConfig,
+  BorderLength,
+  BorderType,
   DashboardReportComponentConfig,
+  DividerReportComponentConfig,
   EntityTableReportComponentConfig,
   HeadingReportComponentConfig,
-  ImageReportComponentConfig, PageBreakReportComponentConfig,
+  ImageReportComponentConfig,
+  PageBreakReportComponentConfig,
   ReportComponentConfig,
   ReportComponentType,
   ReportDataKeySettingsType,
@@ -87,6 +91,8 @@ import { TbReportFormat } from '@shared/models/report.models';
 import { Font } from '@shared/models/widget-settings.models';
 import { DataKeyType } from '@shared/models/telemetry/telemetry.models';
 import { AggregationType, DAY, historyInterval } from '@shared/models/time/time.models';
+import { DividerPreviewComponent } from '@home/pages/reporting/template/components/divider-preview.component';
+import { DividerConfigComponent } from '@home/pages/reporting/template/components/divider-config.component';
 
 export interface ReportComponentLibraryItem<C extends ReportComponentConfig = ReportComponentConfig> {
   id: string;
@@ -744,6 +750,30 @@ export const reportComponentsLibrary = new Map<string, ReportComponentLibraryIte
       }
     ],
     [
+      'divider',
+      {
+        id: 'divider',
+        title: 'report-template.component.divider.type',
+        previewImage: '/assets/report/components/divider.svg',
+        type: ReportComponentType.DIVIDER,
+        defaultConfig: {
+          type: ReportComponentType.DIVIDER,
+          length: BorderLength.LONG,
+          borderType: BorderType.solid,
+          widthPx: 1,
+          color: '#d6d6d6',
+          margins: null,
+          paddings: {
+            top: 15,
+            bottom: 15,
+            left: 8,
+            right: 8
+          },
+          background: null
+        } as DividerReportComponentConfig
+      }
+    ],
+    [
       'pageBreak',
       {
         id: 'pageBreak',
@@ -760,7 +790,6 @@ export const reportComponentsLibrary = new Map<string, ReportComponentLibraryIte
 
 export interface ReportComponentTypeData<C extends ReportComponentConfig = ReportComponentConfig> {
   title: string;
-  previewImage: string;
   previewComponent: Type<AbstractReportComponentPreview<C>>;
   configComponent: Type<AbstractReportComponentConfig<C>>;
   editable: boolean;
@@ -773,7 +802,6 @@ export const reportComponentTypeMap = new Map<ReportComponentType, ReportCompone
       ReportComponentType.HEADING,
       {
         title: 'report-template.component.heading.type',
-        previewImage: '/assets/report/components/heading.svg',
         previewComponent: HeadingPreviewComponent,
         configComponent: HeadingConfigComponent,
         editable: true
@@ -783,7 +811,6 @@ export const reportComponentTypeMap = new Map<ReportComponentType, ReportCompone
       ReportComponentType.RICH_TEXT,
       {
         title: 'report-template.component.rich-text.type',
-        previewImage: '/assets/report/components/rich-text.svg',
         previewComponent: RichTextPreviewComponent,
         configComponent: RichTextConfigComponent,
         editable: true
@@ -793,7 +820,6 @@ export const reportComponentTypeMap = new Map<ReportComponentType, ReportCompone
       ReportComponentType.ENTITY_TABLE,
       {
         title: 'report-template.component.entity-table.type',
-        previewImage: '/assets/report/components/entity-table.svg',
         previewComponent: EntityTablePreviewComponent,
         configComponent: EntityTableConfigComponent,
         editable: true
@@ -803,7 +829,6 @@ export const reportComponentTypeMap = new Map<ReportComponentType, ReportCompone
       ReportComponentType.TIME_SERIES_TABLE,
       {
         title: 'report-template.component.timeseries-table.type',
-        previewImage: '/assets/report/components/timeseries-table.svg',
         previewComponent: TimeseriesTablePreviewComponent,
         configComponent: TimeseriesTableConfigComponent,
         editable: true
@@ -813,7 +838,6 @@ export const reportComponentTypeMap = new Map<ReportComponentType, ReportCompone
       ReportComponentType.ALARM_TABLE,
       {
         title: 'report-template.component.alarm-table.type',
-        previewImage: '/assets/report/components/alarm-table.svg',
         previewComponent: AlarmTablePreviewComponent,
         configComponent: AlarmTableConfigComponent,
         editable: true
@@ -823,7 +847,6 @@ export const reportComponentTypeMap = new Map<ReportComponentType, ReportCompone
       ReportComponentType.IMAGE,
       {
         title: 'report-template.component.image.type',
-        previewImage: '/assets/report/components/image.svg',
         previewComponent: ImagePreviewComponent,
         configComponent: ImageConfigComponent,
         editable: true
@@ -833,7 +856,6 @@ export const reportComponentTypeMap = new Map<ReportComponentType, ReportCompone
       ReportComponentType.DASHBOARD,
       {
         title: 'report-template.component.dashboard.type',
-        previewImage: '/assets/report/components/dashboard.svg',
         previewComponent: DashboardPreviewComponent,
         configComponent: DashboardConfigComponent,
         editable: true
@@ -843,9 +865,17 @@ export const reportComponentTypeMap = new Map<ReportComponentType, ReportCompone
       ReportComponentType.SUB_REPORT,
       {
         title: 'report-template.component.sub-report.type',
-        previewImage: '/assets/report/components/subreport.svg',
         previewComponent: SubReportPreviewComponent,
         configComponent: SubReportConfigComponent,
+        editable: true
+      }
+    ],
+    [
+      ReportComponentType.DIVIDER,
+      {
+        title: 'report-template.component.divider.type',
+        previewComponent: DividerPreviewComponent,
+        configComponent: DividerConfigComponent,
         editable: true
       }
     ],
@@ -853,7 +883,6 @@ export const reportComponentTypeMap = new Map<ReportComponentType, ReportCompone
       ReportComponentType.PAGE_BREAK,
       {
         title: 'report-template.component.page-break.type',
-        previewImage: '/assets/report/components/page-break.svg',
         previewComponent: PageBreakPreviewComponent,
         configComponent: EmptyReportConfigComponent,
         editable: false,

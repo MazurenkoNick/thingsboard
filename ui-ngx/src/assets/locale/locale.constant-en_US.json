@@ -7205,6 +7205,17 @@
                 "type": "Rich text",
                 "text": "Text"
             },
+            "divider": {
+                "type": "Divider",
+                "divider-type": "Type",
+                "divider-type-long": "Long",
+                "divider-type-short": "Short",
+                "line-type": "Line type",
+                "line-type-solid": "Solid",
+                "line-type-dashed": "Dashed",
+                "line-type-dotted": "Dotted",
+                "line-width": "Line width"
+            },
             "page-break": {
                 "type": "Page break"
             },
