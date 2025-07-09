@@ -57,8 +57,8 @@ interface AiModelRepository extends JpaRepository<AiModelEntity, UUID>, Exportab
                     WHERE model.tenant_id = :tenantId
                       AND (:textSearch IS NULL
                         OR model.name ILIKE '%' || :textSearch || '%'
-                        OR (model.configuration ->> 'provider') ILIKE '%' || :textSearch || '%'
-                        OR (model.configuration ->> 'modelId') ILIKE '%' || :textSearch || '%')
+                        OR REPLACE(model.configuration ->> 'provider', '_', ' ') ILIKE '%' || :textSearch || '%'
+                        OR model.configuration ->> 'modelId' ILIKE '%' || :textSearch || '%')
                     """,
             countQuery = """
                     SELECT COUNT(*)
@@ -66,7 +66,7 @@ interface AiModelRepository extends JpaRepository<AiModelEntity, UUID>, Exportab
                     WHERE model.tenant_id = :tenantId
                       AND (:textSearch IS NULL
                         OR model.name ILIKE '%' || :textSearch || '%'
-                        OR (model.configuration ->> 'provider') ILIKE '%' || :textSearch || '%'
+                        OR REPLACE(model.configuration ->> 'provider', '_', ' ') ILIKE '%' || :textSearch || '%'
                         OR (model.configuration ->> 'modelId') ILIKE '%' || :textSearch || '%')
                     """,
             nativeQuery = true
