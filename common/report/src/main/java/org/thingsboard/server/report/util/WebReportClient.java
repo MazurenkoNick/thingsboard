@@ -159,8 +159,7 @@ public class WebReportClient {
     }
 
     private JsonNode createDashboardReportRequest(DashboardReportConfig reportConfig, String accessToken, long accessTokenExpiration, Integer pageWidth) {
-        TimeZone tz = TimeZone.getTimeZone(reportConfig.getTimezone());
-        String reportName = prepareReportName(reportConfig.getNamePattern(), new Date(), tz);
+        String reportName = prepareReportName(reportConfig.getNamePattern(), new Date(), reportConfig.getTimezone());
         ObjectNode dashboardReportRequest = JacksonUtil.newObjectNode();
         dashboardReportRequest.put("baseUrl", reportConfig.getBaseUrl());
         dashboardReportRequest.put("dashboardId", reportConfig.getDashboardId());

@@ -65,13 +65,14 @@ public class ReportUtils {
     public static final Pattern REPORT_NAME_DATE_PATTERN = Pattern.compile("%d\\{([^\\}]*)\\}");
     public static final String DEFAULT_REPORT_NAME_PATTERN = "report-%d{yyyy-MM-dd_HH:mm:ss}";
 
-    public static String prepareReportName(String namePattern, Date reportDate, TimeZone tz) {
+    public static String prepareReportName(String namePattern, Date reportDate, String timeZoneStr) {
+        TimeZone timeZone = (timeZoneStr == null) ? TimeZone.getDefault() : TimeZone.getTimeZone(timeZoneStr);
         String name = (namePattern == null || namePattern.isEmpty()) ? DEFAULT_REPORT_NAME_PATTERN : namePattern;
         Matcher matcher = REPORT_NAME_DATE_PATTERN.matcher(name);
         while (matcher.find()) {
             String toReplace = matcher.group(0);
             SimpleDateFormat dateFormat = new SimpleDateFormat(matcher.group(1));
-            dateFormat.setTimeZone(tz);
+            dateFormat.setTimeZone(timeZone);
             String replacement = dateFormat.format(reportDate);
             name = name.replace(toReplace, replacement);
         }

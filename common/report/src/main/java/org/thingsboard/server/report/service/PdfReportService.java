@@ -78,7 +78,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.TimeZone;
 import java.util.concurrent.ExecutionException;
 
 import static org.thingsboard.server.common.data.report.configuration.components.ReportComponentType.DASHBOARD;
@@ -137,9 +136,7 @@ public class PdfReportService extends AbstractReportService {
         try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
             renderer.createPDF(outputStream);
             byte[] reportBytes = outputStream.toByteArray();
-            String requestTimeZone = task.getTimezone();
-            TimeZone timeZone = (requestTimeZone == null) ? TimeZone.getDefault() : TimeZone.getTimeZone(requestTimeZone);
-            String reportName = prepareReportName(configuration.getNamePattern(), new Date(), timeZone);
+            String reportName = prepareReportName(configuration.getNamePattern(), new Date(), task.getTimezone());
 
             return ReportData.builder()
                     .data(reportBytes)
@@ -268,14 +265,8 @@ public class PdfReportService extends AbstractReportService {
             PdfReportTemplateConfig reportConfiguration = (PdfReportTemplateConfig) reportTemplate.getConfiguration();
 
             TbReportCtx subReportCtx = ctx.createSubReportCxt(reportConfiguration);
-            List<EntityData> entityDatas;
-            if (dataSource.isEmpty()) {
-                entityDatas = new ArrayList<>();
-                entityDatas.add(null);
-            } else {
-                entityDatas = fetchEntities(ctx, dataSource.get(), null);
-            }
-            for (EntityData entity : entityDatas) {
+            List<EntityData> entities = getSubReportEntities(ctx, dataSource);
+            for (EntityData entity : entities) {
                 if (subReportComponent.isAvoidPageBreakInside()) {
                     content.append("<div class=\"no-page-break\">");
                 }

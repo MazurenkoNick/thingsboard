@@ -69,6 +69,7 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -136,16 +137,23 @@ public abstract class AbstractReportService implements ReportService {
     }
 
     private List<EntityData> fetchEntityDataByQuery(Function<PageLink, EntityDataQuery> querySupplier, DataSource dataSource, TbReportCtx ctx) {
-        List<DataKey> dataKeysWithAggregation = dataSource.getDataKeys()
-                .stream()
-                .filter(dataKey -> (dataKey.getAggregationType() != null && dataKey.getAggregationType() != Aggregation.NONE))
-                .toList();
+        List<DataKey> dataKeysWithAggr = getDataKeysWithAggr(dataSource);
         List<EntityData> data = new ArrayList<>();
         for (EntityData entityData : new PageDataIterable<>(link -> dataService.findEntityDataByQuery(querySupplier.apply(link), ctx), 1024)) {
-            updateWithAggregatedData(ctx, dataKeysWithAggregation, entityData);
+            updateWithAggregatedData(ctx, dataKeysWithAggr, entityData);
             data.add(entityData);
         }
         return data;
+    }
+
+    private List<DataKey> getDataKeysWithAggr(DataSource dataSource) {
+        List<DataKey> dataKeys = dataSource.getDataKeys();
+        if (dataKeys != null) {
+            return dataKeys.stream()
+                    .filter(dataKey -> (dataKey.getAggregationType() != null && dataKey.getAggregationType() != Aggregation.NONE))
+                    .toList();
+        }
+        return Collections.emptyList();
     }
 
     private void updateWithAggregatedData(TbReportCtx ctx, List<DataKey> dataKeysWithAggregation, EntityData entityData) {
@@ -290,6 +298,9 @@ public abstract class AbstractReportService implements ReportService {
     }
 
     private void putLatestValues(List<DataKey> dataKeys, Map<String, String> data, Map<EntityKeyType, Map<String, TsValue>> latest, TbReportCtx ctx) {
+        if (dataKeys == null) {
+            return;
+        }
         for (DataKey dataKey : dataKeys) {
             Map<String, TsValue> keyValueMap = latest.get(EntityKeyType.fromName(dataKey.getType()));
             if (keyValueMap != null) {
@@ -302,6 +313,9 @@ public abstract class AbstractReportService implements ReportService {
     }
 
     private void putTimeseriesValues(List<DataKey> dataKeys, HashMap<String, String> data, Map<String, TsValue[]> timeseries, TbReportCtx ctx) {
+        if (dataKeys == null) {
+            return;
+        }
         List<DataKey> dataKeysWithAggregation = dataKeys.stream()
                 .filter(dataKey -> dataKey.getAggregationType() != null && dataKey.getAggregationType() != Aggregation.NONE)
                 .toList();
@@ -366,6 +380,17 @@ public abstract class AbstractReportService implements ReportService {
             tsData.add(tsValues);
         });
         return tsData;
+    }
+
+    protected List<EntityData> getSubReportEntities(TbReportCtx ctx, Optional<DataSource> dataSource) {
+        List<EntityData> entities;
+        if (dataSource.isEmpty()) {
+            entities = new ArrayList<>();
+            entities.add(null);
+        } else {
+            entities = fetchEntities(ctx, dataSource.get(), null);
+        }
+        return entities;
     }
 
     protected String formatTimestamp(String timestampStr, TbReportCtx ctx) {

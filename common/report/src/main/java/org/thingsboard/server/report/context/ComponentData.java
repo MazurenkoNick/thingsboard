@@ -106,7 +106,7 @@ public class ComponentData {
                 for (Map<String, String> entityData : this.entityDatas) {
                     String label = entry.getKey();
                     DataKey dataKey = entry.getValue();
-                    this.variables.put(label, entityData.getOrDefault(dataKey.getName(), ""));
+                    this.variables.put(label, entityData.getOrDefault(dataKey.getLabel(), ""));
                 }
             }
         }
