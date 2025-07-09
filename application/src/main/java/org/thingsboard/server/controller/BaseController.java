@@ -1228,8 +1228,8 @@ public abstract class BaseController {
         return checkEntityId(secretId, secretService::findSecretInfoById, operation);
     }
 
-    AiModel checkAiModelId(AiModelId settingsId, Operation operation) throws ThingsboardException {
-        return checkEntityId(settingsId, (tenantId, id) -> aiModelService.findAiModelByTenantIdAndId(tenantId, id).orElse(null), operation);
+    AiModel checkAiModelId(AiModelId modelId, Operation operation) throws ThingsboardException {
+        return checkEntityId(modelId, (tenantId, id) -> aiModelService.findAiModelByTenantIdAndId(tenantId, id).orElse(null), operation);
     }
 
     protected <I extends EntityId> I emptyId(EntityType entityType) {

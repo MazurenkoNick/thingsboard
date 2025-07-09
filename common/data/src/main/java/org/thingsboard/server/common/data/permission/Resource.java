@@ -89,7 +89,8 @@ public enum Resource {
     MOBILE_APP_SETTINGS,
     CUSTOM_MENU,
     JOB(EntityType.JOB),
-    SECRET(EntityType.SECRET);
+    SECRET(EntityType.SECRET),
+    AI_MODEL(EntityType.AI_MODEL);
 
     private static final Map<EntityType, Resource> groupResourceByGroupType = new HashMap<>();
     private static final Map<EntityType, Resource> resourceByEntityType = new HashMap<>();

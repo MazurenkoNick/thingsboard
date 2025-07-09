@@ -39,9 +39,10 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.thingsboard.server.common.data.BaseData;
+import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.ExportableEntity;
-import org.thingsboard.server.common.data.HasTenantId;
 import org.thingsboard.server.common.data.HasVersion;
+import org.thingsboard.server.common.data.TenantEntity;
 import org.thingsboard.server.common.data.ai.model.AiModelConfig;
 import org.thingsboard.server.common.data.id.AiModelId;
 import org.thingsboard.server.common.data.id.TenantId;
@@ -54,7 +55,7 @@ import java.io.Serial;
 @Builder
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public final class AiModel extends BaseData<AiModelId> implements HasTenantId, HasVersion, ExportableEntity<AiModelId> {
+public final class AiModel extends BaseData<AiModelId> implements TenantEntity, HasVersion, ExportableEntity<AiModelId> {
 
     @Serial
     private static final long serialVersionUID = 9017108678716011604L;
@@ -112,6 +113,11 @@ public final class AiModel extends BaseData<AiModelId> implements HasTenantId, H
         name = model.getName();
         configuration = model.getConfiguration();
         externalId = model.getExternalId() == null ? null : new AiModelId(model.getExternalId().getId());
+    }
+
+    @Override
+    public EntityType getEntityType() {
+        return EntityType.AI_MODEL;
     }
 
 }
