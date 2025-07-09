@@ -7148,6 +7148,7 @@
         "file-name-pattern-required": "Report file name pattern is required!",
         "default-date-format": "Default date format",
         "report-components": "Report components",
+        "search-components": "Search components",
         "drop-report-components": "Drop report components from sidebar here",
         "header": "Header",
         "header-disabled": "Header disabled",

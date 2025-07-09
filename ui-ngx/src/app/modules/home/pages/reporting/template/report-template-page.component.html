@@ -81,11 +81,31 @@
   <div #reportTemplateContainer class="tb-report-template-container size-full" cdkDropListGroup>
     <div class="tb-report-components-library tb-dynamic-panel"
                 *ngIf="!readonly">
-      <mat-toolbar class="mat-elevation-z1">
+      <mat-toolbar class="flex h-auto flex-col items-center gap-4 p-4">
         <div translate>report-template.report-components</div>
+        <mat-form-field appearance="outline" subscriptSizing="dynamic" class="tb-inline-field bg-white">
+          <input matInput
+                 [formControl]="reportComponentSearchFormControl"
+                 placeholder="{{ 'report-template.search-components' | translate }}"/>
+          @if (reportComponentSearchFormControl.value) {
+            <button matSuffix mat-icon-button
+                    (click)="reportComponentSearchFormControl.reset()"
+                    matTooltip="{{'action.clear-search' | translate}}"
+                    matTooltipPosition="above">
+              <mat-icon>close</mat-icon>
+            </button>
+          } @else {
+            <button matSuffix mat-icon-button
+                    matTooltip="{{'report-template.search-components' | translate}}"
+                    matTooltipPosition="above">
+              <mat-icon>search</mat-icon>
+            </button>
+          }
+        </mat-form-field>
       </mat-toolbar>
       <tb-report-component-library [subReport]="subReport"
-                                   [format]="format" class="min-h-0 flex-1">
+                                   [format]="format" class="min-h-0 flex-1"
+                                   [filter]="reportComponentsFilter">
       </tb-report-component-library>
     </div>
     <div #reportTemplateContent class="tb-report-template-content" cdkScrollable>

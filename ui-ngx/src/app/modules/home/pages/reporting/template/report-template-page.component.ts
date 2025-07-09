@@ -103,12 +103,12 @@ import { DialogService } from '@core/services/dialog.service';
 import { ReportService } from '@core/http/report.service';
 import { ReportComponentsComponent } from '@home/pages/reporting/template/components/report-components.component';
 import { EntityType } from '@shared/models/entity-type.models';
-import { Observable } from 'rxjs';
+import { Observable, skip, startWith } from 'rxjs';
 import {
   EntityAliasDialogComponent,
   EntityAliasDialogData
 } from '@home/components/alias/entity-alias-dialog.component';
-import { tap } from 'rxjs/operators';
+import { debounceTime, distinctUntilChanged, tap } from 'rxjs/operators';
 import { FilterDialogComponent, FilterDialogData } from '@home/components/filter/filter-dialog.component';
 import { getDefaultTimezone } from '@shared/models/time/time.models';
 import { DatePipe } from '@angular/common';
@@ -191,6 +191,8 @@ export class ReportTemplatePageComponent extends PageComponent
   prevReportComponent: ReportComponentConfig;
   editingReportComponent: ReportComponentConfig;
 
+  reportComponentSearchFormControl: FormControl;
+  reportComponentsFilter = '';
   reportTemplateSettingsFormControl: FormControl;
 
   headerToggleValue: 'header' | 'firstPageHeader' = 'header';
@@ -218,6 +220,7 @@ export class ReportTemplatePageComponent extends PageComponent
   viewInited = false;
   hasScroll = false;
   scrollTop = false;
+
   private scrolling = false;
 
   private layoutResize$: ResizeObserver;
@@ -258,6 +261,16 @@ export class ReportTemplatePageComponent extends PageComponent
       },
       format: null
     };
+    this.reportComponentSearchFormControl = this.fb.control('', {nonNullable: true});
+    this.reportComponentSearchFormControl.valueChanges.pipe(
+      debounceTime(150),
+      startWith(''),
+      distinctUntilChanged((a: string, b: string) => a.trim() === b.trim()),
+      skip(1),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe((search) => {
+      this.reportComponentsFilter = search;
+    });
     this.reportTemplateSettingsFormControl = this.fb.control(null);
     this.reportTemplateSettingsFormControl.valueChanges.pipe(
       takeUntilDestroyed(this.destroyRef)
@@ -698,6 +711,7 @@ export class ReportTemplatePageComponent extends PageComponent
 
     this.timePreview = this.date.transform(Date.now(), settings.timeDataPattern);
 
+    this.reportComponentSearchFormControl.reset();
     this.reportTemplateSettingsFormControl.patchValue(settings, {emitEvent: false});
     this.isDirty = false;
     this.updateBreadcrumbs.emit();

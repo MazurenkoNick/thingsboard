@@ -48,6 +48,7 @@ import { CdkDragStart } from '@angular/cdk/drag-drop';
 import { coerceBoolean } from '@shared/decorators/coercion';
 import { ReportComponentType } from '@shared/models/report-component.models';
 import { TbReportFormat } from '@shared/models/report.models';
+import { TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'tb-report-component-library',
@@ -64,6 +65,9 @@ export class ReportComponentLibraryComponent implements OnInit, OnChanges {
   @Input()
   format: TbReportFormat = TbReportFormat.PDF;
 
+  @Input()
+  filter: string;
+
   libraryDragOriginList = viewChild('libraryDragOriginList', {
     read: ElementRef,
   });
@@ -75,11 +79,16 @@ export class ReportComponentLibraryComponent implements OnInit, OnChanges {
   reportComponentIds: string[];
   reportComponentsLibrary = reportComponentsLibrary;
 
+  private reportComponentsTitleMap = new Map<string, string>();
+
   private itemDragEntered = false;
 
-  constructor() {}
+  constructor(private translate: TranslateService) {}
 
   ngOnInit() {
+    reportComponentsLibrary.forEach((item, id) => {
+      this.reportComponentsTitleMap.set(id, (this.translate.instant(item.title) as string).toUpperCase());
+    });
     this.updateReportComponentIds();
   }
 
@@ -87,7 +96,7 @@ export class ReportComponentLibraryComponent implements OnInit, OnChanges {
     for (const propName of Object.keys(changes)) {
       const change = changes[propName];
       if (!change.firstChange && change.currentValue !== change.previousValue) {
-        if (['subReport', 'format'].includes(propName)) {
+        if (['subReport', 'format', 'filter'].includes(propName)) {
           this.updateReportComponentIds();
         }
       }
@@ -131,8 +140,9 @@ export class ReportComponentLibraryComponent implements OnInit, OnChanges {
     if (this.subReport) {
       componentTypes = componentTypes.filter((type) => type !== ReportComponentType.SUB_REPORT );
     }
+    const search = this.filter ? this.filter.trim().toUpperCase() : '';
     reportComponentsLibrary.forEach((item, id) => {
-      if (componentTypes.includes(item.type)) {
+      if (componentTypes.includes(item.type) && this.reportComponentsTitleMap.get(id).includes(search)) {
         this.reportComponentIds.push(id);
       }
     });
