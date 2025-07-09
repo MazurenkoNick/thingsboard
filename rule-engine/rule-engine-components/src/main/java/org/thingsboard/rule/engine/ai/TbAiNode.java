@@ -165,7 +165,7 @@ public final class TbAiNode extends TbAbstractExternalNode implements TbNode {
                     .withTimeoutSeconds(timeoutSeconds)
                     .withMaxRetries(0); // disable retries to respect timeout set in rule node config
 
-            return ctx.getAiChatModelService().sendChatRequestAsync(chatModelConfig, chatRequest);
+            return ctx.getAiChatModelService().sendChatRequestAsync(ctx.getTenantId(), chatModelConfig, chatRequest);
         }, ctx.getDbCallbackExecutor());
     }
 

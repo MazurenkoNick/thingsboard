@@ -176,11 +176,11 @@ class AiModelController extends BaseController {
     )
     @PreAuthorize("hasAuthority('TENANT_ADMIN')")
     @PostMapping("/chat")
-    public DeferredResult<TbChatResponse> sendChatRequest(@Valid @RequestBody TbChatRequest tbChatRequest) {
+    public DeferredResult<TbChatResponse> sendChatRequest(@Valid @RequestBody TbChatRequest tbChatRequest) throws ThingsboardException {
         ChatRequest langChainChatRequest = tbChatRequest.toLangChainChatRequest();
         AiChatModelConfig<?> chatModelConfig = tbChatRequest.chatModelConfig();
 
-        ListenableFuture<TbChatResponse> future = aiChatModelService.sendChatRequestAsync(chatModelConfig, langChainChatRequest)
+        ListenableFuture<TbChatResponse> future = aiChatModelService.sendChatRequestAsync(getTenantId(), chatModelConfig, langChainChatRequest)
                 .transform(chatResponse -> (TbChatResponse) new TbChatResponse.Success(chatResponse.aiMessage().text()), directExecutor())
                 .catching(Throwable.class, ex -> new TbChatResponse.Failure(ex.getMessage()), directExecutor());
 
