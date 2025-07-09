@@ -40,39 +40,57 @@ import org.thingsboard.server.report.util.ColorUtils;
 import org.thingsboard.server.report.util.ThymeleafUtil;
 
 import java.util.HashMap;
+import java.util.Map;
 
 @Component
 public class HeadingRenderer extends ReportComponentWithLayoutRenderer<HeadingComponent> {
 
     @Override
-    public String renderContent(HeadingComponent headingComponent, ComponentData reportDataSource) {
-        String processedText = ThymeleafUtil.renderFromHtmlString(headingComponent.getValue(), reportDataSource.getVariables());
+    public String renderContent(HeadingComponent component, ComponentData reportDataSource) {
+        String processedText = ThymeleafUtil.renderFromHtmlString(
+                component.getValue(), reportDataSource.getVariables());
 
-        HashMap<String, Object> componentVariables = new HashMap<>();
-        componentVariables.put("color", headingComponent.getColor() != null ? ColorUtils.normalizeCssColor(headingComponent.getColor()) : "#000");
-        if (headingComponent.getFont().getSize() != null && headingComponent.getFont().getSize() > 0) {
-            componentVariables.put("fontSize", headingComponent.getFont().getSize());
-        } else {
-            componentVariables.put("fontSize", 10);
-        }
-        componentVariables.put("fontWeight", headingComponent.getFont().getWeight().getValue());
-        componentVariables.put("fontStyle", headingComponent.getFont().getStyle().getValue());
-        if (headingComponent.getFont().getFamily() != null && !headingComponent.getFont().getFamily().isEmpty()) {
-            componentVariables.put("fontFamily", headingComponent.getFont().getFamily());
-        } else {
-            componentVariables.put("fontFamily", "Roboto");
-        }
-        TextAlignment textAlignment = headingComponent.getTextAlignment() != null ? headingComponent.getTextAlignment() : TextAlignment.CENTER;
-        componentVariables.put("textAlignment", textAlignment.getValue());
-        VerticalAlignment verticalAlignment = headingComponent.getTextAlignment() != null ? headingComponent.getVerticalAlignment() : VerticalAlignment.MIDDLE;
-        componentVariables.put("verticalAlignment", verticalAlignment.getValue());
-        if (headingComponent.getHeight() != null && headingComponent.getHeight() > 0) {
-            componentVariables.put("height", headingComponent.getHeight() + "pt");
-        } else {
-            componentVariables.put("height", "100%");
-        }
-        componentVariables.put("value", processedText);
-        return ThymeleafUtil.renderFromHtmlTemplate("html/components/heading-template", componentVariables);
+        Map<String, Object> templateVars = new HashMap<>();
+        templateVars.put("color", resolveColor(component));
+        templateVars.put("fontSize", resolveFontSize(component));
+        templateVars.put("fontWeight", component.getFont().getWeight().getValue());
+        templateVars.put("fontStyle", component.getFont().getStyle().getValue());
+        templateVars.put("fontFamily", resolveFontFamily(component));
+        templateVars.put("textAlignment", resolveTextAlignment(component));
+        templateVars.put("verticalAlignment", resolveVerticalAlignment(component));
+        templateVars.put("height", resolveHeight(component));
+        templateVars.put("value", processedText);
+
+        return ThymeleafUtil.renderFromHtmlTemplate("html/components/heading-template", templateVars);
+    }
+
+    private String resolveColor(HeadingComponent component) {
+        return component.getColor() != null ? ColorUtils.normalizeCssColor(component.getColor()) : "#000";
+    }
+
+    private Float resolveFontSize(HeadingComponent component) {
+        Float size = component.getFont().getSize();
+        return (size != null && size > 0) ? size : 10;
+    }
+
+    private String resolveFontFamily(HeadingComponent component) {
+        String family = component.getFont().getFamily();
+        return (family != null && !family.isEmpty()) ? family : "Roboto";
+    }
+
+    private String resolveTextAlignment(HeadingComponent component) {
+        TextAlignment alignment = component.getTextAlignment();
+        return (alignment != null ? alignment : TextAlignment.CENTER).getValue();
+    }
+
+    private String resolveVerticalAlignment(HeadingComponent component) {
+        VerticalAlignment vertical = component.getVerticalAlignment();
+        return (vertical != null ? vertical : VerticalAlignment.MIDDLE).getValue();
+    }
+
+    private String resolveHeight(HeadingComponent component) {
+        Integer height = component.getHeight();
+        return (height != null && height > 0) ? height + "pt" : "100%";
     }
 
     @Override

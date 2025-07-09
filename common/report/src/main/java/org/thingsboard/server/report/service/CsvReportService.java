@@ -39,8 +39,8 @@ import org.thingsboard.server.common.data.query.EntityData;
 import org.thingsboard.server.common.data.report.ReportData;
 import org.thingsboard.server.common.data.report.ReportTemplate;
 import org.thingsboard.server.common.data.report.TbReportFormat;
-import org.thingsboard.server.common.data.report.configuration.CsvReportTemplateConfig;
 import org.thingsboard.server.common.data.report.configuration.DataSource;
+import org.thingsboard.server.common.data.report.configuration.ReportTemplateConfig;
 import org.thingsboard.server.common.data.report.configuration.components.AlarmTableComponent;
 import org.thingsboard.server.common.data.report.configuration.components.EntityTableComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
@@ -52,14 +52,12 @@ import org.thingsboard.server.report.context.ComponentData;
 import org.thingsboard.server.report.context.TbReportCtx;
 import org.thingsboard.server.report.renderer.CsvReportComponentRenderer;
 
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.TimeZone;
 
 import static org.thingsboard.server.report.util.CsvUtils.generateCsv;
 import static org.thingsboard.server.report.util.ReportUtils.getSingleDataSource;
@@ -85,14 +83,11 @@ public class CsvReportService extends AbstractReportService {
         TenantId tenantId = task.getTenantId();
 
         log.trace("[{}] Executing generateReport, reportRequest [{}]", tenantId, task);
-        CsvReportTemplateConfig configuration = (CsvReportTemplateConfig) task.getReportTemplateConfig();
+        ReportTemplateConfig configuration = task.getReportTemplateConfig();
 
-        List<List<String>> content = renderContent(ctx, configuration.getComponents(), null);
+        List<List<String>> content = renderContent(ctx, null);
         byte[] csvBytes = generateCsv(content);
-
-        String requestTimeZone = task.getTimezone();
-        TimeZone timeZone = (requestTimeZone == null) ? TimeZone.getDefault() : TimeZone.getTimeZone(requestTimeZone);
-        String reportName = prepareReportName(configuration.getNamePattern(), new Date(), timeZone);
+        String reportName = prepareReportName(configuration.getNamePattern(), new Date(), task.getTimezone());
 
         return ReportData.builder()
                 .data(csvBytes)
@@ -101,8 +96,9 @@ public class CsvReportService extends AbstractReportService {
                 .build();
     }
 
-    private List<List<String>> renderContent(TbReportCtx ctx, List<ReportComponent> components, EntityData stateEntity) {
+    private List<List<String>> renderContent(TbReportCtx ctx, EntityData stateEntity) {
         List<List<String>> content = new LinkedList<>();
+        List<ReportComponent> components = ctx.getConfiguration().getComponents();
         for (ReportComponent component : components) {
             switch (component.getType()) {
                 case SUB_REPORT -> content.addAll(renderSubreport(ctx, (SubReportComponent) component));
@@ -136,18 +132,10 @@ public class CsvReportService extends AbstractReportService {
             if (reportTemplate == null) {
                 return renderError("Template with id " + templateId + " not found. Please check the configuration.");
             }
-            CsvReportTemplateConfig reportConfiguration = (CsvReportTemplateConfig) reportTemplate.getConfiguration();
-
-            TbReportCtx subReportCtx = ctx.createSubReportCxt(reportConfiguration);
-            List<EntityData> entityDatas;
-            if (dataSource.isEmpty()) {
-                entityDatas = new ArrayList<>();
-                entityDatas.add(null);
-            } else {
-                entityDatas = fetchEntities(ctx, dataSource.get(), null);
-            }
-            for (EntityData entity : entityDatas) {
-                content.addAll(renderContent(subReportCtx, reportConfiguration.getComponents(), entity));
+            TbReportCtx subReportCtx = ctx.createSubReportCxt(reportTemplate.getConfiguration());
+            List<EntityData> entities = getSubReportEntities(ctx, dataSource);
+            for (EntityData entity : entities) {
+                content.addAll(renderContent(subReportCtx, entity));
             }
             return content;
         } catch (Exception e) {

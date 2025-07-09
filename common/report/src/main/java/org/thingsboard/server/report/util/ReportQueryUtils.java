@@ -230,14 +230,5 @@ public class ReportQueryUtils {
         }
     }
 
-    public static Map<String, DataKey> mapLabelsToDataKeys(List<DataKey> dataKeys) {
-        if (dataKeys == null) return Collections.emptyMap();
-        return dataKeys.stream()
-                .collect(Collectors.toMap(
-                        DataKey::getLabel,
-                        dataKey -> dataKey,
-                        (existing, replacement) -> replacement,
-                        LinkedHashMap::new));
-    }
 
 }

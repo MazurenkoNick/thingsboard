@@ -38,30 +38,36 @@ import org.thingsboard.server.report.context.ComponentData;
 import org.thingsboard.server.report.util.ThymeleafUtil;
 
 import java.util.HashMap;
+import java.util.Map;
 
 @Component
 public class ErrorRenderer implements PdfReportComponentRenderer<ErrorComponent> {
 
     @Override
     public String render(ErrorComponent errorComponent, ComponentData reportDataSource) {
-        HashMap<String, Object> componentVariables = new HashMap<>();
+        Map<String, Object> componentVariables = new HashMap<>();
         componentVariables.put("errorMessage", errorComponent.getErrorMessage());
-        Exception exception = errorComponent.getException();
+
+        Exception exception = extractRootException(errorComponent.getException());
         if (exception != null) {
-            if (exception instanceof RuntimeException runtimeException) {
-                if (runtimeException.getCause() != null && runtimeException.getCause() instanceof Exception cause) {
-                    exception = cause;
-                }
-            }
-            String message;
-            if (exception instanceof ThingsboardException thingsboardException) {
-                message = "[" + thingsboardException.getErrorCode().name() + "] " + thingsboardException.getMessage();
-            } else {
-                message = exception.getMessage();
-            }
-            componentVariables.put("exception", message);
+            componentVariables.put("exception", formatExceptionMessage(exception));
         }
+
         return ThymeleafUtil.renderFromHtmlTemplate("html/components/error-template", componentVariables);
+    }
+
+    private Exception extractRootException(Exception exception) {
+        if (exception instanceof RuntimeException runtimeException && runtimeException.getCause() instanceof Exception cause) {
+            return cause;
+        }
+        return exception;
+    }
+
+    private String formatExceptionMessage(Exception exception) {
+        if (exception instanceof ThingsboardException tbException) {
+            return "[" + tbException.getErrorCode().name() + "] " + tbException.getMessage();
+        }
+        return exception.getMessage();
     }
 
     @Override
