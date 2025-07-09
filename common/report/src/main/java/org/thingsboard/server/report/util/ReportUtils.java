@@ -45,17 +45,13 @@ import org.thingsboard.server.common.data.report.configuration.components.AlarmT
 import org.thingsboard.server.common.data.report.configuration.components.DataReportComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponentType;
-import org.thingsboard.server.common.data.report.configuration.style.Heading;
-import org.thingsboard.server.report.context.ComponentData;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.SimpleDateFormat;
 import java.util.Base64;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.TimeZone;
 import java.util.regex.Matcher;
@@ -172,7 +168,7 @@ public class ReportUtils {
         return new String(Base64.getEncoder().encode(newStateJsonStr.getBytes()));
     }
 
-    public static String formatNumericValue(String value, DataKey dataKey) {
+    public static String formatValueWithPrecisionAndUnits(String value, DataKey dataKey) {
         if (value == null || value.isBlank()) {
             return "";
         }

@@ -41,9 +41,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
-import static org.thingsboard.server.report.util.ReportQueryUtils.mapLabelsToDataKeys;
-import static org.thingsboard.server.report.util.ReportUtils.formatNumericValue;
+import static org.thingsboard.server.report.util.ReportUtils.formatValueWithPrecisionAndUnits;
 import static org.thingsboard.server.report.util.ReportUtils.getSingleDataSource;
 
 public abstract class AbstractCsvComponentRenderer<C extends TableReportComponent> implements CsvReportComponentRenderer<C> {
@@ -55,40 +55,41 @@ public abstract class AbstractCsvComponentRenderer<C extends TableReportComponen
         }
 
         DataSource dataSource = dataSourceOpt.get();
-        List<DataKey> dataKeys = getColumns(component, dataSource);
-        Map<String, DataKey> labelToDataKeyMap = mapLabelsToDataKeys(dataKeys);
-        List<List<String>> content = new ArrayList<>();
+        List<DataKey> columns = getColumns(component, dataSource);
 
-        // add heading
-        addOptionalHeading(component, componentData, content);
-
-        // add headers
-        ArrayList<String> headers = new ArrayList<>(labelToDataKeyMap.keySet());
-        content.add(headers);
-
-        // add data rows
-        for (Map<String, String> row : componentData.getEntityDatas()) {
-            content.add(extractValues(row, labelToDataKeyMap));
-        }
-        return content;
+        List<List<String>> csvContent = new ArrayList<>();
+        addHeading(component, componentData, csvContent);
+        addHeaderRow(columns, csvContent);
+        addDataRows(componentData, columns, csvContent);
+        return csvContent;
     }
 
-    public List<DataKey> getColumns(C component, DataSource dataSource) {
-        return dataSource.getDataKeys();
-    }
-
-    private List<String> extractValues(Map<String, String> row, Map<String, DataKey> labelToDataKey) {
-        return labelToDataKey.values().stream()
-                .map(dataKey -> formatNumericValue(row.get(dataKey.getLabel()), dataKey))
-                .toList();
-    }
-
-    private void addOptionalHeading(TableReportComponent component, ComponentData componentData, List<List<String>> content) {
+    private void addHeading(TableReportComponent component, ComponentData componentData, List<List<String>> content) {
         if (component.isShowTableHeading() && component.getTableHeading() != null) {
             Heading tableHeading = component.getTableHeading();
             String headingText = ThymeleafUtil.renderFromHtmlString(tableHeading.getText(), componentData.getVariables());
             content.add(List.of(headingText));
         }
+    }
+
+    private void addHeaderRow(List<DataKey> columns, List<List<String>> content) {
+        List<String> headers = columns.stream()
+                .map(DataKey::getLabel)
+                .collect(Collectors.toList());
+        content.add(headers);
+    }
+
+    private void addDataRows(ComponentData componentData, List<DataKey> columns, List<List<String>> content) {
+        for (Map<String, String> row : componentData.getEntityDatas()) {
+            List<String> formattedValues = columns.stream()
+                    .map(col -> formatValueWithPrecisionAndUnits(row.get(col.getLabel()), col))
+                    .collect(Collectors.toList());
+            content.add(formattedValues);
+        }
+    }
+
+    public List<DataKey> getColumns(C component, DataSource dataSource) {
+        return dataSource.getDataKeys();
     }
 
 }

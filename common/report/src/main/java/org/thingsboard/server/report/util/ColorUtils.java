@@ -45,6 +45,10 @@ public class ColorUtils {
         }
     }
 
+    public static Object normalizeCssColorOrDefault(String color, String defaultColor) {
+        return color != null ? ColorUtils.normalizeCssColor(color) : defaultColor;
+    }
+
     public static Color parseCssColor(String cssColor) {
         if (cssColor == null || cssColor.trim().isEmpty()) {
             throw new IllegalArgumentException("CSS color cannot be null or empty");

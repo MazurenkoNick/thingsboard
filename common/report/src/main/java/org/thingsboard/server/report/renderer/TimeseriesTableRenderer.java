@@ -53,7 +53,7 @@ public class TimeseriesTableRenderer extends TableWithLayoutComponentRenderer<Ti
     }
 
     @Override
-    protected Float defaultFontSize(String key, String value) {
+    protected Float defaultFontSize(String key) {
         if ("ts".equals(key)) {
             return 9f;
         }

@@ -60,8 +60,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import static org.thingsboard.server.report.util.ReportQueryUtils.mapLabelsToDataKeys;
-import static org.thingsboard.server.report.util.ReportUtils.formatNumericValue;
+import static org.thingsboard.server.report.util.ReportUtils.formatValueWithPrecisionAndUnits;
 import static org.thingsboard.server.report.util.ReportUtils.getSingleDataSource;
 
 @Slf4j
@@ -76,54 +75,35 @@ public abstract class TableWithLayoutComponentRenderer<C extends TableWithLayout
     }
 
     @Override
-    protected String renderContent(C component, ComponentData reportDataSource) {
+    protected String renderContent(C component, ComponentData componentData) {
         Optional<DataSource> dataSource = getSingleDataSource(component);
         if (dataSource.isEmpty()) {
-            return ThymeleafUtil.renderFromHtmlTemplate("html/components/error-template", Map.of("errorMessage", "No " + dataSourceName() + " is configured for table. " +
-                    "Please check the " + dataSourceName() + " configuration."));
+            return renderError("No " + dataSourceName() + " is configured for " + getType() + " component. Please check the " + dataSourceName() + " configuration.");
         }
         List<DataKey> columns = getColumns(component, dataSource.get());
         if (columns.isEmpty()) {
-            return ThymeleafUtil.renderFromHtmlTemplate("html/components/error-template", Map.of("errorMessage", "No columns are configured for the table component. " +
-                    "Please check the " + dataSourceName() + " configuration."));
-        }
-        Map<String, DataKey> labelToDataKey = mapLabelsToDataKeys(columns);
-
-        HashMap<String, CellVariables> headerVariables = getCellVariablesMap(labelToDataKey, true);
-        HashMap<String, CellVariables> cellVariables = getCellVariablesMap(labelToDataKey, false);
-
-        List<LinkedHashMap<String, CellVariables>> rows = new ArrayList<>();
-        for (Map<String, String> entityData : reportDataSource.getEntityDatas()) {
-            LinkedHashMap<String, CellVariables> row = new LinkedHashMap<>();
-            for (Map.Entry<String, CellVariables> column : headerVariables.entrySet()) {
-                String label = column.getKey();
-                String key = column.getValue().getKey();
-                CellVariables baseStyles = cellVariables.getOrDefault(label, new CellVariables());
-                CellVariables variables = baseStyles.toBuilder()
-                        .fontSize(formatFontSize(key, entityData.get(label), baseStyles.getFontSize()))
-                        .fontWeight(formatFontWeight(key, entityData.get(label), baseStyles.getFontWeight()))
-                        .color(formatColor(key, entityData.get(label), baseStyles.getColor()))
-                        .value(formatValue(key, entityData.get(label), labelToDataKey.get(label))).build();
-                row.put(label, variables);
-            }
-            rows.add(row);
+            return renderError("No columns are configured for " + getType() + " component. Please check the " + dataSourceName() + " configuration.");
         }
 
-        HashMap<String, Object> componentVariables = new HashMap<>();
-        componentVariables.put("columns", headerVariables);
-        componentVariables.put("rows", rows);
-        componentVariables.put("noDataMessage", noDataMessage());
+        HashMap<String, CellVariables> headers = buildCellVariables(columns, true);
+        List<LinkedHashMap<String, CellVariables>> rows = buildDataRows(columns, componentData);
+
+        HashMap<String, Object> componentVars = new HashMap<>();
+        componentVars.put("columns", headers);
+        componentVars.put("rows", rows);
+        componentVars.put("noDataMessage", noDataMessage());
 
         if (component.isShowTableHeading() && component.getTableHeading() != null) {
-            componentVariables.put("showTableHeading", true);
-            Heading tableHeading = component.getTableHeading();
-            String headingText = ThymeleafUtil.renderFromHtmlString(tableHeading.getText(), reportDataSource.getVariables());
-            componentVariables.put("headingText", headingText);
-            this.formatTableHeading(tableHeading, componentVariables);
+            componentVars.put("showTableHeading", true);
+            populateHeadingVariables(component, componentData, componentVars);
         } else {
-            componentVariables.put("showTableHeading", false);
+            componentVars.put("showTableHeading", false);
         }
-        return ThymeleafUtil.renderFromHtmlTemplate("html/components/table-template", componentVariables);
+        return ThymeleafUtil.renderFromHtmlTemplate("html/components/table-template", componentVars);
+    }
+
+    private String renderError(String errorMessage) {
+        return ThymeleafUtil.renderFromHtmlTemplate("html/components/error-template", Map.of("errorMessage", errorMessage));
     }
 
     protected List<DataKey> getColumns(C component, DataSource dataSource) {
@@ -135,51 +115,58 @@ public abstract class TableWithLayoutComponentRenderer<C extends TableWithLayout
         return dataKeys;
     }
 
-    private void formatTableHeading(Heading tableHeading, Map<String, Object> componentVariables) {
-        componentVariables.put("headingColor", tableHeading.getColor() != null ? ColorUtils.normalizeCssColor(tableHeading.getColor()) : "#000");
-        Font headingFont = tableHeading.getFont();
-        if (headingFont == null) {
-            headingFont = new Font();
-            headingFont.setSize(20f);
-            headingFont.setFamily("Roboto");
-            headingFont.setStyle(FontStyle.NORMAL);
-            headingFont.setWeight(FontWeight.NORMAL);
+    private List<LinkedHashMap<String, CellVariables>> buildDataRows(List<DataKey> columns, ComponentData reportDataSource) {
+        List<LinkedHashMap<String, CellVariables>> rows = new ArrayList<>();
+        HashMap<String, CellVariables> cellDefaults = buildCellVariables(columns, false);
+
+        for (Map<String, String> entityData : reportDataSource.getEntityDatas()) {
+            LinkedHashMap<String, CellVariables> row = new LinkedHashMap<>();
+            for (DataKey dataKey : columns) {
+                String label = dataKey.getLabel();
+                String key = dataKey.getName();
+                CellVariables base = cellDefaults.get(label);
+                String value = entityData.get(label);
+
+                CellVariables variables = base.toBuilder()
+                        .fontSize(formatFontSize(key, base.getFontSize()))
+                        .fontWeight(formatFontWeight(key, base.getFontWeight()))
+                        .color(formatColor(key, value, base.getColor()))
+                        .value(formatValue(key, value, dataKey)).build();
+                row.put(label, variables);
+            }
+            rows.add(row);
         }
-        if (headingFont.getSize() != null && headingFont.getSize() > 0) {
-            componentVariables.put("headingFontSize", headingFont.getSize());
-        } else {
-            componentVariables.put("headingFontSize", 10);
-        }
-        componentVariables.put("headingFontWeight", headingFont.getWeight() != null ? headingFont.getWeight().getValue() : FontWeight.NORMAL.getValue());
-        componentVariables.put("headingFontStyle", headingFont.getStyle() != null ? headingFont.getStyle().getValue() : FontStyle.NORMAL.getValue());
-        if (StringUtils.isNotBlank(headingFont.getFamily())) {
-            componentVariables.put("headingFontFamily", headingFont.getFamily());
-        } else {
-            componentVariables.put("headingFontFamily", "Roboto");
-        }
-        TextAlignment textAlignment = tableHeading.getTextAlignment() != null ? tableHeading.getTextAlignment() : TextAlignment.CENTER;
-        componentVariables.put("headingTextAlignment", textAlignment.getValue());
-        VerticalAlignment verticalAlignment = tableHeading.getTextAlignment() != null ? tableHeading.getVerticalAlignment() : VerticalAlignment.MIDDLE;
-        componentVariables.put("headingVerticalAlignment", verticalAlignment.getValue());
-        if (tableHeading.getHeight() != null && tableHeading.getHeight() > 0) {
-            componentVariables.put("headingHeight", tableHeading.getHeight() + "pt");
-        } else {
-            componentVariables.put("headingHeight", "100%");
-        }
+        return rows;
     }
 
-    private Float formatFontSize(String key, String value, Float defaultSize) {
-        if (defaultSize != null) {
-            return defaultSize;
-        }
-        return defaultFontSize(key, value);
+    private void populateHeadingVariables(C component, ComponentData componentData, Map<String, Object> vars) {
+        Heading heading = component.getTableHeading();
+        String headingText = ThymeleafUtil.renderFromHtmlString(heading.getText(), componentData.getVariables());
+        Font font = getHeadingFont(heading);
+
+        vars.put("headingText", headingText);
+        vars.put("headingColor", ColorUtils.normalizeCssColorOrDefault(heading.getColor(), "#000"));
+        vars.put("headingFontSize", Optional.ofNullable(font.getSize()).filter(s -> s > 0).orElse(10f));
+        vars.put("headingFontWeight", Optional.ofNullable(font.getWeight()).orElse(FontWeight.NORMAL).getValue());
+        vars.put("headingFontStyle", Optional.ofNullable(font.getStyle()).orElse(FontStyle.NORMAL).getValue());
+        vars.put("headingFontFamily", StringUtils.defaultString(font.getFamily(), "Roboto"));
+        vars.put("headingTextAlignment", Optional.ofNullable(heading.getTextAlignment()).orElse(TextAlignment.CENTER).getValue());
+        vars.put("headingVerticalAlignment", Optional.ofNullable(heading.getVerticalAlignment()).orElse(VerticalAlignment.MIDDLE).getValue());
+        vars.put("headingHeight", heading.getHeight() != null && heading.getHeight() > 0 ? heading.getHeight() + "pt" : "100%");
     }
 
-    private String formatFontWeight(String key, String value, String defaultWeight) {
-        if (defaultWeight != null) {
-            return defaultWeight;
+    private Float formatFontSize(String key, Float fontSize) {
+        if (fontSize != null) {
+            return fontSize;
         }
-        return defaultFontWeight(key, value);
+        return defaultFontSize(key);
+    }
+
+    private String formatFontWeight(String key, String fontWeight) {
+        if (fontWeight != null) {
+            return fontWeight;
+        }
+        return defaultFontWeight(key);
     }
 
     private String formatColor(String key, String value, String defaultColor) {
@@ -195,16 +182,16 @@ public abstract class TableWithLayoutComponentRenderer<C extends TableWithLayout
         }
         value = defaultValue(key, value);
         if (dataKey != null && (dataKey.getDecimals() != null || dataKey.getUnits() != null)) {
-            value = formatNumericValue(value, dataKey);
+            value = formatValueWithPrecisionAndUnits(value, dataKey);
         }
         return value;
     }
 
-    protected Float defaultFontSize(String key, String value) {
+    protected Float defaultFontSize(String key) {
         return null;
     }
 
-    protected String defaultFontWeight(String key, String value) {
+    protected String defaultFontWeight(String key) {
         return null;
     }
 
@@ -216,9 +203,11 @@ public abstract class TableWithLayoutComponentRenderer<C extends TableWithLayout
         return value;
     }
 
-    protected HashMap<String, CellVariables> getCellVariablesMap(Map<String, DataKey> labelToDataKey, boolean isHeader) {
+    protected HashMap<String, CellVariables> buildCellVariables(List<DataKey> columns, boolean isHeader) {
         HashMap<String, CellVariables> result = new LinkedHashMap<>();
-        labelToDataKey.forEach((label, dataKey) -> result.put(label, toCellVariables(dataKey, isHeader)));
+        for (DataKey dataKey : columns) {
+            result.put(dataKey.getLabel(), toCellVariables(dataKey, isHeader));
+        }
         return result;
     }
 
@@ -250,7 +239,19 @@ public abstract class TableWithLayoutComponentRenderer<C extends TableWithLayout
                         .build();
             }
         }
-        return new CellVariables(isHeader ? key : "");
+        return new CellVariables(key);
+    }
+
+    private Font getHeadingFont(Heading tableHeading) {
+        Font headingFont = tableHeading.getFont();
+        if (headingFont == null) {
+            headingFont = new Font();
+            headingFont.setSize(20f);
+            headingFont.setFamily("Roboto");
+            headingFont.setStyle(FontStyle.NORMAL);
+            headingFont.setWeight(FontWeight.NORMAL);
+        }
+        return headingFont;
     }
 
     @Data
