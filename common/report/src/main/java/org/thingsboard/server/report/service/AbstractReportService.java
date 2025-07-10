@@ -32,12 +32,11 @@ package org.thingsboard.server.report.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.math.NumberUtils;
+import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.script.api.ScriptType;
-import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.kv.Aggregation;
 import org.thingsboard.server.common.data.kv.BaseReadTsKvQuery;
@@ -54,8 +53,8 @@ import org.thingsboard.server.common.data.query.EntityKeyType;
 import org.thingsboard.server.common.data.query.TsValue;
 import org.thingsboard.server.common.data.report.configuration.DataKey;
 import org.thingsboard.server.common.data.report.configuration.DataSource;
-import org.thingsboard.server.common.data.report.configuration.ReportTemplateConfig;
 import org.thingsboard.server.common.data.report.configuration.components.AlarmTableComponent;
+import org.thingsboard.server.common.data.report.configuration.components.DataReportComponent;
 import org.thingsboard.server.common.data.report.configuration.components.TimeseriesTableComponent;
 import org.thingsboard.server.common.data.report.configuration.timewindow.History;
 import org.thingsboard.server.common.data.report.configuration.timewindow.TimeIntervalCalculator;
@@ -63,11 +62,7 @@ import org.thingsboard.server.common.data.report.configuration.timewindow.TimeWi
 import org.thingsboard.server.report.context.ComponentData;
 import org.thingsboard.server.report.context.TbReportCtx;
 import org.thingsboard.server.report.datasource.ReportDataService;
-import org.apache.commons.collections4.CollectionUtils;
 
-import java.time.Instant;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -84,10 +79,10 @@ import java.util.stream.Collectors;
 import static org.thingsboard.server.common.data.report.configuration.timewindow.TimeIntervalCalculator.getTimeRange;
 import static org.thingsboard.server.common.data.util.DataSourceUtils.getAlarmLatestValue;
 import static org.thingsboard.server.common.data.util.DataSourceUtils.getEntityLatestValue;
-import static org.thingsboard.server.report.util.ReportQueryUtils.toAlarmCountQuery;
 import static org.thingsboard.server.report.util.ReportQueryUtils.toAlarmDataQuery;
-import static org.thingsboard.server.report.util.ReportQueryUtils.toEntityCountQuery;
 import static org.thingsboard.server.report.util.ReportQueryUtils.toEntityDataQuery;
+import static org.thingsboard.server.report.util.ReportUtils.convertStringToTypedValue;
+import static org.thingsboard.server.report.util.ReportUtils.formatTimestamp;
 import static org.thingsboard.server.report.util.ReportUtils.getSingleDataSource;
 
 @Slf4j
@@ -96,41 +91,6 @@ public abstract class AbstractReportService implements ReportService {
     @Lazy
     @Autowired
     protected ReportDataService dataService;
-
-    protected ComponentData buildSingleComponentData(int usablePageWidthPx, TbReportCtx ctx, DataSource dataSource, EntityData stateEntity) {
-        ReportTemplateConfig configuration = ctx.getConfiguration();
-        return switch (dataSource.getType()) {
-            case DEVICE, ENTITY -> new ComponentData(usablePageWidthPx, dataSource, collectEntityDatas(ctx, dataSource, stateEntity));
-            case ENTITY_COUNT -> buildEntityCountDataSource(usablePageWidthPx, ctx, dataSource, configuration);
-            case ALARM_COUNT -> buildAlarmCountDataSource(usablePageWidthPx, ctx, dataSource, configuration);
-            default -> throw new IllegalArgumentException("Unknown data source type: " + dataSource.getType());
-        };
-    }
-
-    protected ComponentData buildEntityCountDataSource(int usablePageWidthPx, TbReportCtx ctx, DataSource dataSource, ReportTemplateConfig configuration) {
-        Map<String, Object> map = new HashMap<>();
-        String label = resolveSingleLabel(dataSource, "count");
-        map.put(label, dataService.countEntitiesByQuery(toEntityCountQuery(dataSource, configuration), ctx));
-        return new ComponentData(usablePageWidthPx, map);
-    }
-
-    protected ComponentData buildAlarmCountDataSource(int usablePageWidthPx, TbReportCtx ctx, DataSource dataSource, ReportTemplateConfig configuration) {
-        Map<String, Object> map = new HashMap<>();
-        String label = resolveSingleLabel(dataSource, "count");
-        map.put(label, dataService.countAlarmsByQuery(toAlarmCountQuery(dataSource, configuration), ctx));
-        return new ComponentData(usablePageWidthPx, map);
-    }
-
-    private String resolveSingleLabel(DataSource dataSource, String fallback) {
-        String label = null;
-        if (dataSource.getDataKeys() != null && !dataSource.getDataKeys().isEmpty()) {
-            label = dataSource.getDataKeys().get(0).getLabel();
-        }
-        if (StringUtils.isNotBlank(label)) {
-            return label;
-        }
-        return fallback;
-    }
 
     protected List<EntityData> fetchEntities(TbReportCtx ctx, DataSource dataSource, EntityData stateEntity) {
        return fetchEntityDataByQuery(pageLink -> toEntityDataQuery(dataSource, ctx.getConfiguration(), stateEntity, pageLink), dataSource, ctx);
@@ -188,7 +148,6 @@ public abstract class AbstractReportService implements ReportService {
             default -> throw new IllegalArgumentException("Unknown data source type: " + dataSource.getType());
         };
     }
-
 
     protected ComponentData buildTsComponentData(int usablePageWidthPx, TbReportCtx ctx, TimeseriesTableComponent component, EntityData entity) {
         TimeWindowConfiguration timeWindowConf = component.getTimewindow();
@@ -297,6 +256,23 @@ public abstract class AbstractReportService implements ReportService {
         return data;
     }
 
+    protected List<EntityData> getSubReportEntities(TbReportCtx ctx, DataReportComponent component) {
+        Optional<DataSource> dataSource = getSingleDataSource(component);
+        List<EntityData> entities;
+        if (dataSource.isEmpty()) {
+            entities = new ArrayList<>();
+            entities.add(null);
+        } else {
+            entities = fetchEntities(ctx, dataSource.get(), null);
+        }
+        return entities;
+    }
+
+    protected void populateReportVars(ComponentData componentData, TbReportCtx ctx) {
+        Map<String, Object> variables = componentData.getVariables();
+        variables.put("reportCreatedTime", ctx.getReportCreatedTime());
+    }
+
     private void putLatestValues(List<DataKey> dataKeys, Map<String, String> data, Map<EntityKeyType, Map<String, TsValue>> latest, TbReportCtx ctx) {
         if (dataKeys == null) {
             return;
@@ -339,7 +315,7 @@ public abstract class AbstractReportService implements ReportService {
         }
     }
 
-    protected List<Map<String, String>> collectTsData(List<DataKey> dataKeys, List<DataKey> latestDataKeys, EntityData entity,
+    private List<Map<String, String>> collectTsData(List<DataKey> dataKeys, List<DataKey> latestDataKeys, EntityData entity,
                                                       List<TsKvEntry> tsKvEntries, TimeseriesTableComponent component,
                                                       SortOrder sortOrder, TbReportCtx ctx) {
         Optional<String> entityName = getEntityLatestValue(entity, EntityKeyType.ENTITY_FIELD, "name");
@@ -361,7 +337,7 @@ public abstract class AbstractReportService implements ReportService {
             Map<String, String> tsValues = new HashMap<>();
             tsValues.put("rawTs", ts.toString());
             if (component.isShowTimestamp()) {
-                tsValues.put(component.getTimestampLabel(), formatTimestamp(ts.toString(), component.getTimestampPattern(), ctx));
+                tsValues.put(component.getTimestampLabel(), formatTimestamp(ts, component.getTimestampPattern(), ctx));
             }
             for (DataKey dataKey : dataKeys) {
                 entries.stream().filter(tsKvEntry -> tsKvEntry.getKey().equals(dataKey.getName()))
@@ -382,47 +358,6 @@ public abstract class AbstractReportService implements ReportService {
         return tsData;
     }
 
-    protected List<EntityData> getSubReportEntities(TbReportCtx ctx, Optional<DataSource> dataSource) {
-        List<EntityData> entities;
-        if (dataSource.isEmpty()) {
-            entities = new ArrayList<>();
-            entities.add(null);
-        } else {
-            entities = fetchEntities(ctx, dataSource.get(), null);
-        }
-        return entities;
-    }
-
-    protected void populateReportVars(ComponentData componentData, TbReportCtx ctx) {
-        Map<String, Object> variables = componentData.getVariables();
-        variables.put("reportCreatedTime", formatTimestamp(String.valueOf(System.currentTimeMillis()), ctx));
-    }
-
-    protected String formatTimestamp(String timestampStr, TbReportCtx ctx) {
-        return formatTimestamp(timestampStr, null, ctx);
-    }
-
-    protected String formatTimestamp(String timestampStr, String timeDataPattern, TbReportCtx ctx) {
-        if (timeDataPattern == null || timeDataPattern.isEmpty()) {
-            timeDataPattern = ctx.getConfiguration().getTimeDataPattern();
-        }
-        if (timeDataPattern == null || timeDataPattern.isEmpty()) {
-            return timestampStr;
-        }
-        try {
-            long timestamp = Long.parseLong(timestampStr);
-            if (timeDataPattern.equals("milliseconds")) {
-                return String.valueOf(timestamp);
-            }
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern(timeDataPattern)
-                    .withZone(ctx.getTimeZone() != null ? ZoneId.of(ctx.getTimeZone()) : ZoneId.systemDefault());
-
-            return formatter.format(Instant.ofEpochMilli(timestamp));
-        } catch (NumberFormatException e) {
-            return "Invalid timestamp: " + timestampStr;
-        }
-    }
-
     private String formatValue(TbReportCtx ctx, DataKey dataKey, long timestamp, Object value) {
         return formatValue(ctx, dataKey, timestamp, value, true);
     }
@@ -438,30 +373,17 @@ public abstract class AbstractReportService implements ReportService {
         }
 
         return "createdTime".equals(dataKey.getName())
-                ? formatTimestamp(processed.toString(), ctx)
+                ? formatTimestamp(processed.toString(), ctx.getConfiguration().getTimeDataPattern(), ctx.getTimeZone())
                 : processed.toString();
     }
 
     private Object postProcess(TbReportCtx ctx, DataKey dataKey, long timestamp, Object value, boolean parseString) {
         if (dataKey.isUsePostProcessing()) {
-            Object input = parseString && value instanceof String ? parseStringValue((String) value) : value;
+            Object input = parseString && value instanceof String ? convertStringToTypedValue((String) value) : value;
             UUID scriptId = ctx.getScripts().computeIfAbsent(dataKey.getPostFuncBody(), s -> evalScript(ctx, s));
             if (scriptId != null) {
                 return evalData(ctx, timestamp, input, scriptId);
             }
-        }
-        return value;
-    }
-
-    public static Object parseStringValue(String value) {
-        if (StringUtils.isBlank(value)) {
-            return value;
-        }
-        if (NumberUtils.isParsable(value)) {
-            return Double.parseDouble(value);
-        }
-        if ("true".equalsIgnoreCase(value) || "false".equalsIgnoreCase(value)) {
-            return Boolean.parseBoolean(value);
         }
         return value;
     }

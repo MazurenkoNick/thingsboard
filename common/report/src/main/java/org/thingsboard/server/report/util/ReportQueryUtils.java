@@ -123,7 +123,7 @@ public class ReportQueryUtils {
         AlarmDataPageLink alarmDataPageLink = new AlarmDataPageLink();
         alarmDataPageLink.setPage(pageLink.getPage());
         alarmDataPageLink.setPageSize(pageLink.getPageSize());
-        alarmDataPageLink.setSortOrder(Optional.ofNullable(alarmSource.getSortOrder()).orElse(DEFAULT_ALARM_SORT_ORDER));
+        alarmDataPageLink.setSortOrder(DEFAULT_ALARM_SORT_ORDER);
 
         TimeIntervalCalculator.TimeRange timeRange = getTimeRange(component.getTimewindow());
         alarmDataPageLink.setStartTs(timeRange.startTs);
@@ -137,8 +137,7 @@ public class ReportQueryUtils {
     }
 
     public static EntityDataQuery toEntityDataQuery(DataSource dataSource, ReportTemplateConfig reportTemplateConfig, EntityData stateEntity, PageLink pageLink) {
-        EntityDataSortOrder sortOrder = Optional.ofNullable(dataSource.getSortOrder()).orElse(DEFAULT_SORT_ORDER);
-        EntityDataPageLink entityDataPageLink = new EntityDataPageLink(pageLink.getPageSize(), pageLink.getPage(), pageLink.getTextSearch(), sortOrder);
+        EntityDataPageLink entityDataPageLink = new EntityDataPageLink(pageLink.getPageSize(), pageLink.getPage(), pageLink.getTextSearch(), DEFAULT_SORT_ORDER);
 
         EntityFilter filter = buildEntityFilter(dataSource, reportTemplateConfig, stateEntity);
         List<KeyFilter> keyFilters = findKeyFilters(dataSource, reportTemplateConfig);

@@ -101,7 +101,7 @@ public class CsvReportService extends AbstractReportService {
         List<ReportComponent> components = ctx.getConfiguration().getComponents();
         for (ReportComponent component : components) {
             switch (component.getType()) {
-                case SUB_REPORT -> content.addAll(renderSubreport(ctx, (SubReportComponent) component));
+                case SUB_REPORT -> content.addAll(renderSubReport(ctx, (SubReportComponent) component));
                 case TIME_SERIES_TABLE -> content.addAll(renderTimeseriesTables(ctx, (TableReportComponent) component, stateEntity));
                 case ALARM_TABLE, ENTITY_TABLE -> content.addAll(renderTableComponent(ctx, (TableReportComponent) component, stateEntity));
                 default -> throw new IllegalArgumentException("Unsupported component type: " + component.getType());
@@ -120,20 +120,19 @@ public class CsvReportService extends AbstractReportService {
         }
     }
 
-    private List<List<String>> renderSubreport(TbReportCtx ctx, SubReportComponent subReportComponent) {
+    private List<List<String>> renderSubReport(TbReportCtx ctx, SubReportComponent subReportComponent) {
         ReportTemplateId templateId = subReportComponent.getTemplateId();
         if (templateId == null) {
             return renderError("Report template id is not configured for Subreport component");
         }
         List<List<String>> content = new LinkedList<>();
         try {
-            Optional<DataSource> dataSource = getSingleDataSource(subReportComponent);
             ReportTemplate reportTemplate = dataService.findReportTemplate(templateId, ctx);
             if (reportTemplate == null) {
                 return renderError("Template with id " + templateId + " not found. Please check the configuration.");
             }
             TbReportCtx subReportCtx = ctx.createSubReportCxt(reportTemplate.getConfiguration());
-            List<EntityData> entities = getSubReportEntities(ctx, dataSource);
+            List<EntityData> entities = getSubReportEntities(ctx, subReportComponent);
             for (EntityData entity : entities) {
                 content.addAll(renderContent(subReportCtx, entity));
             }
@@ -159,7 +158,6 @@ public class CsvReportService extends AbstractReportService {
                 .deviceId(ds.getDeviceId())
                 .entityAliasId(ds.getEntityAliasId())
                 .filterId(ds.getFilterId())
-                .sortOrder(ds.getSortOrder())
                 .dataKeys(ds.getLatestDataKeys()).build();
         List<EntityData> entityDatas = fetchEntities(ctx, latestDataSource, null);
         for (EntityData entity : entityDatas) {

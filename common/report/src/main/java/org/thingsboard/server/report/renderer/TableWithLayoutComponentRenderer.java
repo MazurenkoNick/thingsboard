@@ -41,6 +41,7 @@ import org.thingsboard.server.common.data.report.configuration.ColumnSettings;
 import org.thingsboard.server.common.data.report.configuration.DataKey;
 import org.thingsboard.server.common.data.report.configuration.DataKeySettings;
 import org.thingsboard.server.common.data.report.configuration.DataSource;
+import org.thingsboard.server.common.data.report.configuration.TableSortOrder;
 import org.thingsboard.server.common.data.report.configuration.components.TableWithLayoutReportComponent;
 import org.thingsboard.server.common.data.report.configuration.style.Font;
 import org.thingsboard.server.common.data.report.configuration.style.FontStyle;
@@ -62,6 +63,7 @@ import java.util.Optional;
 
 import static org.thingsboard.server.report.util.ReportUtils.formatValueWithPrecisionAndUnits;
 import static org.thingsboard.server.report.util.ReportUtils.getSingleDataSource;
+import static org.thingsboard.server.report.util.ReportUtils.sortRowsByTableSortOrder;
 
 @Slf4j
 public abstract class TableWithLayoutComponentRenderer<C extends TableWithLayoutReportComponent> extends ReportComponentWithLayoutRenderer<C> {
@@ -86,7 +88,7 @@ public abstract class TableWithLayoutComponentRenderer<C extends TableWithLayout
         }
 
         HashMap<String, CellVariables> headers = buildCellVariables(columns, true);
-        List<LinkedHashMap<String, CellVariables>> rows = buildDataRows(columns, componentData);
+        List<LinkedHashMap<String, CellVariables>> rows = buildDataRows(columns, component.getTableSortOrder(), componentData);
 
         HashMap<String, Object> componentVars = new HashMap<>();
         componentVars.put("columns", headers);
@@ -115,11 +117,13 @@ public abstract class TableWithLayoutComponentRenderer<C extends TableWithLayout
         return dataKeys;
     }
 
-    private List<LinkedHashMap<String, CellVariables>> buildDataRows(List<DataKey> columns, ComponentData reportDataSource) {
+    private List<LinkedHashMap<String, CellVariables>> buildDataRows(List<DataKey> columns, TableSortOrder tableSortOrder, ComponentData reportDataSource) {
         List<LinkedHashMap<String, CellVariables>> rows = new ArrayList<>();
         HashMap<String, CellVariables> cellDefaults = buildCellVariables(columns, false);
 
-        for (Map<String, String> entityData : reportDataSource.getEntityDatas()) {
+        List<Map<String, String>> entityDatas = reportDataSource.getEntityDatas();
+        sortRowsByTableSortOrder(entityDatas, tableSortOrder);
+        for (Map<String, String> entityData : entityDatas) {
             LinkedHashMap<String, CellVariables> row = new LinkedHashMap<>();
             for (DataKey dataKey : columns) {
                 String label = dataKey.getLabel();

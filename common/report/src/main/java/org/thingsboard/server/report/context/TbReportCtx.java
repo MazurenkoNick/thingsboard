@@ -54,6 +54,7 @@ public abstract class TbReportCtx implements Closeable {
     private final String timeZone;
     private final String accessToken;
     private final long accessTokenExpTs;
+    private final String reportCreatedTime;
 
     private final List<ListenableFuture<Void>> futures = new ArrayList<>();
     private final Map<String, Object> params = new HashMap<>();

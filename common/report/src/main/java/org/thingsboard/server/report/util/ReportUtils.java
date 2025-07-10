@@ -35,23 +35,31 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.NullNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.query.EntityData;
 import org.thingsboard.server.common.data.query.EntityKeyType;
 import org.thingsboard.server.common.data.report.configuration.DataKey;
 import org.thingsboard.server.common.data.report.configuration.DataSource;
+import org.thingsboard.server.common.data.report.configuration.TableSortOrder;
 import org.thingsboard.server.common.data.report.configuration.components.AlarmTableComponent;
 import org.thingsboard.server.common.data.report.configuration.components.DataReportComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponentType;
+import org.thingsboard.server.report.context.TbReportCtx;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Base64;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.TimeZone;
 import java.util.regex.Matcher;
@@ -184,6 +192,65 @@ public class ReportUtils {
             value += dataKey.getUnits();
         }
         return value;
+    }
+
+    public static void sortRowsByTableSortOrder(List<Map<String, String>> rows, TableSortOrder tableSortOrder) {
+        if (tableSortOrder == null || tableSortOrder.getColumn() == null) {
+            return;
+        }
+        String column = tableSortOrder.getColumn();
+        if (tableSortOrder.getDirection() == TableSortOrder.Direction.ASC) {
+            rows.sort(Comparator.comparing(row -> row.getOrDefault(column, "")));
+        } else {
+            rows.sort(Comparator.comparing(row -> row.getOrDefault(column, ""), Comparator.reverseOrder()));
+        }
+    }
+
+    public static Object convertStringToTypedValue(String value) {
+        if (StringUtils.isBlank(value)) {
+            return value;
+        }
+        if (NumberUtils.isParsable(value)) {
+            return Double.parseDouble(value);
+        }
+        if ("true".equalsIgnoreCase(value) || "false".equalsIgnoreCase(value)) {
+            return Boolean.parseBoolean(value);
+        }
+        return value;
+    }
+
+    public static String formatTimestamp(long timestamp, String pattern, String timezone) {
+        if (pattern == null || pattern.isEmpty() || pattern.equals("milliseconds")) {
+            return String.valueOf(timestamp);
+        }
+
+        try {
+            ZoneId zoneId = (timezone != null && !timezone.isBlank())
+                    ? ZoneId.of(timezone)
+                    : ZoneId.systemDefault();
+
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern(pattern).withZone(zoneId);
+            return formatter.format(Instant.ofEpochMilli(timestamp));
+        } catch (Exception e) {
+            return "Invalid timestamp: " + timestamp;
+        }
+    }
+
+    public static String formatTimestamp(String timestampStr, String pattern, String timezone) {
+        try {
+            long timestamp = Long.parseLong(timestampStr);
+            return formatTimestamp(timestamp, pattern, timezone);
+        } catch (NumberFormatException e) {
+            return "Invalid timestamp string: " + timestampStr;
+        }
+    }
+
+    public static String formatTimestamp(long timestamp, String pattern, TbReportCtx ctx) {
+        String effectivePattern = (pattern != null && !pattern.isEmpty())
+                ? pattern
+                : ctx.getConfiguration().getTimeDataPattern();
+
+        return formatTimestamp(timestamp, effectivePattern, ctx.getTimeZone());
     }
 
 }
