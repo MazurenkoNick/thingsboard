@@ -192,7 +192,8 @@ export enum MenuId {
   self_registration = 'self_registration',
   task_manager = 'task_manager',
   trendz_settings = 'trendz_settings',
-  secrets = 'secrets'
+  secrets = 'secrets',
+  ai_models = 'ai_models'
 }
 
 declare type MenuFilter = (_authState: AuthState, userPermissionsService: UserPermissionsService) => boolean;
@@ -371,6 +372,16 @@ export const menuSectionMap = new Map<MenuId, MenuSection>([
       type: 'link',
       path: '/notification/rules',
       icon: 'mdi:message-cog'
+    }
+  ],
+  [
+    MenuId.ai_models,
+    {
+      id: MenuId.ai_models,
+      name: 'ai-models.ai-models',
+      type: 'link',
+      path: '/ai-models',
+      icon: 'auto_awesome'
     }
   ],
   [
@@ -1712,6 +1723,7 @@ export const defaultUserMenuMap = new Map<Authority, MenuReference[]>([
           {id: MenuId.notification_rules}
         ]
       },
+      {id: MenuId.ai_models},
       {
         id: MenuId.mobile_center,
         pages: [

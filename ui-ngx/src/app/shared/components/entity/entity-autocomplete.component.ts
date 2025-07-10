@@ -29,16 +29,7 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import {
-  Component,
-  ElementRef,
-  EventEmitter,
-  forwardRef,
-  Input,
-  OnInit,
-  Output,
-  ViewChild
-} from '@angular/core';
+import { Component, ElementRef, EventEmitter, forwardRef, Input, OnInit, Output, ViewChild } from '@angular/core';
 import { MatFormFieldAppearance, SubscriptSizing } from '@angular/material/form-field';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR, UntypedFormBuilder, UntypedFormGroup } from '@angular/forms';
 import { firstValueFrom, merge, Observable, of, Subject } from 'rxjs';
@@ -314,6 +305,12 @@ export class EntityAutocompleteComponent implements ControlValueAccessor, OnInit
           this.noEntitiesMatchingText = 'notification.no-recipients-matching';
           this.entityRequiredText = 'notification.notification-recipient-required';
           this.notFoundEntities = 'notification.no-recipients-text';
+          break;
+        case EntityType.AI_MODEL:
+          this.entityText = 'ai-models.ai-model';
+          this.noEntitiesMatchingText = 'ai-models.no-model-matching';
+          this.entityRequiredText = 'ai-models.model-required';
+          this.notFoundEntities = 'ai-models.no-model-text';
           break;
         case EntityType.DOMAIN:
           this.entityText = 'entity.type-domain';

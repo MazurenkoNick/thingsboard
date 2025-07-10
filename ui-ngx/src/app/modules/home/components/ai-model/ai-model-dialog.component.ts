@@ -1,0 +1,181 @@
+///
+/// ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
+///
+/// Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
+///
+/// NOTICE: All information contained herein is, and remains
+/// the property of ThingsBoard, Inc. and its suppliers,
+/// if any.  The intellectual and technical concepts contained
+/// herein are proprietary to ThingsBoard, Inc.
+/// and its suppliers and may be covered by U.S. and Foreign Patents,
+/// patents in process, and are protected by trade secret or copyright law.
+///
+/// Dissemination of this information or reproduction of this material is strictly forbidden
+/// unless prior written permission is obtained from COMPANY.
+///
+/// Access to the source code contained herein is hereby forbidden to anyone except current COMPANY employees,
+/// managers or contractors who have executed Confidentiality and Non-disclosure agreements
+/// explicitly covering such access.
+///
+/// The copyright notice above does not evidence any actual or intended publication
+/// or disclosure  of  this source code, which includes
+/// information that is confidential and/or proprietary, and is a trade secret, of  COMPANY.
+/// ANY REPRODUCTION, MODIFICATION, DISTRIBUTION, PUBLIC  PERFORMANCE,
+/// OR PUBLIC DISPLAY OF OR THROUGH USE  OF THIS  SOURCE CODE  WITHOUT
+/// THE EXPRESS WRITTEN CONSENT OF COMPANY IS STRICTLY PROHIBITED,
+/// AND IN VIOLATION OF APPLICABLE LAWS AND INTERNATIONAL TREATIES.
+/// THE RECEIPT OR POSSESSION OF THIS SOURCE CODE AND/OR RELATED INFORMATION
+/// DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
+/// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
+///
+
+import { Component, Inject } from '@angular/core';
+import { DialogComponent } from '@shared/components/dialog.component';
+import { Store } from '@ngrx/store';
+import { AppState } from '@core/core.state';
+import { Router } from '@angular/router';
+import { MAT_DIALOG_DATA, MatDialog, MatDialogRef } from '@angular/material/dialog';
+import { Observable, of } from 'rxjs';
+import { StepperOrientation } from '@angular/cdk/stepper';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { EntityType } from '@shared/models/entity-type.models';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import {
+  AiModel,
+  AiModelMap,
+  AiProvider,
+  AiProviderTranslations,
+  ModelType,
+  ProviderFieldsAllList
+} from '@shared/models/ai-model.models';
+import { AiModelService } from '@core/http/ai-model.service';
+import { CheckConnectivityDialogComponent } from '@home/components/ai-model/check-connectivity-dialog.component';
+import { map } from 'rxjs/operators';
+
+export interface AIModelDialogData {
+  AIModel?: AiModel;
+  isAdd?: boolean;
+}
+
+@Component({
+  selector: 'tb-ai-model-dialog',
+  templateUrl: './ai-model-dialog.component.html',
+  styleUrls: ['./ai-model-dialog.component.scss']
+})
+export class AIModelDialogComponent extends DialogComponent<AIModelDialogComponent, AiModel> {
+
+  readonly entityType = EntityType;
+
+  selectedIndex = 0;
+
+  dialogTitle = 'ai-models.ai-model';
+
+  stepperOrientation: Observable<StepperOrientation>;
+
+  aiProvider = AiProvider;
+  providerMap: AiProvider[] = Object.keys(AiProvider) as AiProvider[];
+  providerTranslationMap = AiProviderTranslations;
+
+  AiModelMap = AiModelMap;
+
+  provider: AiProvider = AiProvider.OPENAI;
+
+  aiModelForms: FormGroup;
+
+  isAdd = false;
+
+  constructor(protected store: Store<AppState>,
+              protected router: Router,
+              protected dialogRef: MatDialogRef<AIModelDialogComponent, AiModel>,
+              @Inject(MAT_DIALOG_DATA) public data: AIModelDialogData,
+              private fb: FormBuilder,
+              private aiModelService: AiModelService,
+              private dialog: MatDialog) {
+    super(store, router, dialogRef);
+
+    if (this.data.isAdd) {
+      this.isAdd = true;
+    }
+
+    this.provider = this.data.AIModel ? this.data.AIModel.configuration.provider : AiProvider.OPENAI;
+
+    this.aiModelForms = this.fb.group({
+      name: [this.data.AIModel ? this.data.AIModel.name : '', [Validators.required, Validators.maxLength(255)]],
+      modelType: [ModelType.CHAT],
+      configuration: this.fb.group({
+        provider: [this.provider, [Validators.required]],
+        providerConfig: this.fb.group({
+          apiKey: [this.data.AIModel ? this.data.AIModel.configuration.providerConfig?.apiKey : '', [Validators.required]],
+          personalAccessToken: [this.data.AIModel ? this.data.AIModel.configuration.providerConfig?.personalAccessToken : '', [Validators.required]],
+          endpoint: [this.data.AIModel ? this.data.AIModel.configuration.providerConfig?.endpoint : '', [Validators.required]],
+          serviceVersion: [this.data.AIModel ? this.data.AIModel.configuration.providerConfig?.serviceVersion : ''],
+          projectId: [this.data.AIModel ? this.data.AIModel.configuration.providerConfig?.projectId : '', [Validators.required]],
+          location: [this.data.AIModel ? this.data.AIModel.configuration.providerConfig?.location : '', [Validators.required]],
+          serviceAccountKey: [this.data.AIModel ? this.data.AIModel.configuration.providerConfig?.serviceAccountKey : '', [Validators.required]],
+          fileName: [this.data.AIModel ? this.data.AIModel.configuration.providerConfig?.fileName : '', [Validators.required]],
+        }),
+        modelId: [this.data.AIModel ? this.data.AIModel.configuration?.modelId : '', [Validators.required]],
+        temperature: [this.data.AIModel ? this.data.AIModel.configuration?.temperature : null, [Validators.min(0)]],
+        topP: [this.data.AIModel ? this.data.AIModel.configuration?.topP : null, [Validators.min(0.1), Validators.max(1)]],
+        topK: [this.data.AIModel ? this.data.AIModel.configuration?.topK : null, [Validators.min(0)]],
+        frequencyPenalty: [this.data.AIModel ? this.data.AIModel.configuration?.frequencyPenalty : null],
+        presencePenalty: [this.data.AIModel ? this.data.AIModel.configuration?.presencePenalty : null],
+        maxOutputTokens: [this.data.AIModel ? this.data.AIModel.configuration?.maxOutputTokens : null, [Validators.min(1)]]
+      })
+    });
+
+    this.aiModelForms.get('configuration.provider').valueChanges.pipe(
+      takeUntilDestroyed()
+    ).subscribe((provider: AiProvider) => {
+      this.provider = provider;
+      this.aiModelForms.get('configuration.modelId').reset('');
+      this.aiModelForms.get('configuration.providerConfig').reset({});
+      this.updateValidation(provider);
+    })
+
+    this.updateValidation(this.provider);
+  }
+
+  fetchOptions(searchText: string): Observable<Array<string>> {
+      const search = searchText ? searchText?.toLowerCase() : '';
+      return of(this.provider ? AiModelMap.get(this.provider).modelList || [] : []).pipe(
+        map(name => name?.filter(option => option.toLowerCase().includes(search))),
+      );
+  }
+
+  private updateValidation(provider: AiProvider) {
+    ProviderFieldsAllList.forEach(key => {
+      if (AiModelMap.get(provider).providerFieldsList.includes(key)) {
+        this.aiModelForms.get('configuration.providerConfig').get(key).enable();
+      } else {
+        this.aiModelForms.get('configuration.providerConfig').get(key).disable();
+      }
+    })
+  }
+
+  get providerFieldsList(): string[] {
+    return AiModelMap.get(this.provider).providerFieldsList;
+  }
+  get modelFieldsList(): string[] {
+    return AiModelMap.get(this.provider).modelFieldsList;
+  }
+
+  cancel(): void {
+    this.dialogRef.close(null);
+  }
+
+  checkConnectivity() {
+    return this.dialog.open<CheckConnectivityDialogComponent, AIModelDialogData>(CheckConnectivityDialogComponent, {
+      disableClose: true,
+      panelClass: ['tb-dialog', 'tb-fullscreen-dialog'],
+      data: {
+        AIModel: this.aiModelForms.value
+      }
+    }).afterClosed();
+  }
+
+  add(): void {
+    const aiModel = {...this.data.AIModel, ...this.aiModelForms.value} as AiModel;
+    this.aiModelService.saveAiModel(aiModel).subscribe(aiModel => this.dialogRef.close(aiModel));
+  }
+}
