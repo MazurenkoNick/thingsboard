@@ -40,6 +40,7 @@ import java.util.Map;
 import java.util.Set;
 
 public enum Resource {
+
     ALL(),
     PROFILE(),
     ADMIN_SETTINGS(),
@@ -116,6 +117,7 @@ public enum Resource {
                 }
             }
         }
+
         operationsByResource.put(Resource.ALL, Set.of(Operation.values()));
         operationsByResource.put(Resource.PROFILE, Set.of(Operation.ALL, Operation.WRITE));
         operationsByResource.put(Resource.ADMIN_SETTINGS, Set.of(Operation.ALL, Operation.READ, Operation.WRITE));
@@ -170,6 +172,7 @@ public enum Resource {
         operationsByResource.put(Resource.MOBILE_APP_SETTINGS, Set.of(Operation.ALL, Operation.READ, Operation.WRITE));
         operationsByResource.put(Resource.JOB, Operation.crudOperations);
         operationsByResource.put(Resource.SECRET, Operation.crudOperations);
+        operationsByResource.put(Resource.AI_MODEL, Operation.crudOperations);
 
         resourcesByAuthority.put(Authority.SYS_ADMIN, Set.of(
                 Resource.ALL,
@@ -242,7 +245,8 @@ public enum Resource {
                 Resource.NOTIFICATION,
                 Resource.MOBILE_APP_SETTINGS,
                 Resource.SECRET,
-                Resource.JOB
+                Resource.JOB,
+                Resource.AI_MODEL
         ));
 
         resourcesByAuthority.put(Authority.CUSTOMER_USER, Set.of(
@@ -305,4 +309,5 @@ public enum Resource {
     public Set<EntityType> getEntityTypes() {
         return entityTypes;
     }
+
 }
