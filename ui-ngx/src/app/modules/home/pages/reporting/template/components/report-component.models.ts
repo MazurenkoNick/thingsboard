@@ -96,7 +96,6 @@ import { DividerConfigComponent } from '@home/pages/reporting/template/component
 import { Direction } from '@shared/models/page/sort-order';
 
 export interface ReportComponentLibraryItem<C extends ReportComponentConfig = ReportComponentConfig> {
-  id: string;
   title: string;
   previewImage: string;
   type: ReportComponentType;
@@ -108,7 +107,6 @@ export const reportComponentsLibrary = new Map<string, ReportComponentLibraryIte
     [
       'heading',
       {
-        id: 'heading',
         title: 'report-template.component.heading.type',
         previewImage: '/assets/report/components/heading.svg',
         type: ReportComponentType.HEADING,
@@ -136,7 +134,6 @@ export const reportComponentsLibrary = new Map<string, ReportComponentLibraryIte
     [
       'richText',
       {
-        id: 'richText',
         title: 'report-template.component.rich-text.type',
         previewImage: '/assets/report/components/rich-text.svg',
         type: ReportComponentType.RICH_TEXT,
@@ -153,7 +150,6 @@ export const reportComponentsLibrary = new Map<string, ReportComponentLibraryIte
     [
       'textSection',
       {
-        id: 'textSection',
         title: 'report-template.component.text-section',
         previewImage: '/assets/report/components/text-section.svg',
         type: ReportComponentType.RICH_TEXT,
@@ -172,7 +168,6 @@ export const reportComponentsLibrary = new Map<string, ReportComponentLibraryIte
     [
       'textImage',
       {
-        id: 'textImage',
         title: 'report-template.component.text-image',
         previewImage: '/assets/report/components/text-image.svg',
         type: ReportComponentType.RICH_TEXT,
@@ -202,7 +197,6 @@ export const reportComponentsLibrary = new Map<string, ReportComponentLibraryIte
     [
       'imageText',
       {
-        id: 'imageText',
         title: 'report-template.component.image-text',
         previewImage: '/assets/report/components/image-text.svg',
         type: ReportComponentType.RICH_TEXT,
@@ -232,7 +226,6 @@ export const reportComponentsLibrary = new Map<string, ReportComponentLibraryIte
     [
       'entityTable',
       {
-        id: 'entityTable',
         title: 'report-template.component.entity-table.type',
         previewImage: '/assets/report/components/entity-table.svg',
         type: ReportComponentType.ENTITY_TABLE,
@@ -280,7 +273,6 @@ export const reportComponentsLibrary = new Map<string, ReportComponentLibraryIte
     [
       'timeSeriesTable',
       {
-        id: 'timeSeriesTable',
         title: 'report-template.component.timeseries-table.type',
         previewImage: '/assets/report/components/timeseries-table.svg',
         type: ReportComponentType.TIME_SERIES_TABLE,
@@ -342,7 +334,6 @@ export const reportComponentsLibrary = new Map<string, ReportComponentLibraryIte
     [
       'alarmTable',
       {
-        id: 'alarmTable',
         title: 'report-template.component.alarm-table.type',
         previewImage: '/assets/report/components/alarm-table.svg',
         type: ReportComponentType.ALARM_TABLE,
@@ -415,7 +406,6 @@ export const reportComponentsLibrary = new Map<string, ReportComponentLibraryIte
     [
       'image',
       {
-        id: 'image',
         title: 'report-template.component.image.type',
         previewImage: '/assets/report/components/image.svg',
         type: ReportComponentType.IMAGE,
@@ -435,7 +425,6 @@ export const reportComponentsLibrary = new Map<string, ReportComponentLibraryIte
     [
       'dashboard',
       {
-        id: 'dashboard',
         title: 'report-template.component.dashboard.type',
         previewImage: '/assets/report/components/dashboard.svg',
         type: ReportComponentType.DASHBOARD,
@@ -461,7 +450,6 @@ export const reportComponentsLibrary = new Map<string, ReportComponentLibraryIte
     [
       'subReport',
       {
-        id: 'subReport',
         title: 'report-template.component.sub-report.type',
         previewImage: '/assets/report/components/subreport.svg',
         type: ReportComponentType.SUB_REPORT,
@@ -481,7 +469,6 @@ export const reportComponentsLibrary = new Map<string, ReportComponentLibraryIte
     [
       'logoHeading',
       {
-        id: 'logoHeading',
         title: 'report-template.component.logo-heading',
         previewImage: '/assets/report/components/logo-heading.svg',
         type: ReportComponentType.RICH_TEXT,
@@ -510,7 +497,6 @@ export const reportComponentsLibrary = new Map<string, ReportComponentLibraryIte
     [
       'headingLogo',
       {
-        id: 'headingLogo',
         title: 'report-template.component.heading-logo',
         previewImage: '/assets/report/components/heading-logo.svg',
         type: ReportComponentType.RICH_TEXT,
@@ -539,7 +525,6 @@ export const reportComponentsLibrary = new Map<string, ReportComponentLibraryIte
     [
       'logoText',
       {
-        id: 'logoText',
         title: 'report-template.component.logo-text',
         previewImage: '/assets/report/components/logo-text.svg',
         type: ReportComponentType.RICH_TEXT,
@@ -568,7 +553,6 @@ export const reportComponentsLibrary = new Map<string, ReportComponentLibraryIte
     [
       'textLogo',
       {
-        id: 'textLogo',
         title: 'report-template.component.text-logo',
         previewImage: '/assets/report/components/text-logo.svg',
         type: ReportComponentType.RICH_TEXT,
@@ -597,7 +581,6 @@ export const reportComponentsLibrary = new Map<string, ReportComponentLibraryIte
     [
       'logoText2',
       {
-        id: 'logoText2',
         title: 'report-template.component.logo-text-2',
         previewImage: '/assets/report/components/logo-text-2.svg',
         type: ReportComponentType.RICH_TEXT,
@@ -627,7 +610,6 @@ export const reportComponentsLibrary = new Map<string, ReportComponentLibraryIte
     [
       'footer1',
       {
-        id: 'footer1',
         title: 'report-template.component.footer-1',
         previewImage: '/assets/report/components/footer-1.svg',
         type: ReportComponentType.RICH_TEXT,
@@ -656,7 +638,6 @@ export const reportComponentsLibrary = new Map<string, ReportComponentLibraryIte
     [
       'footer2',
       {
-        id: 'footer2',
         title: 'report-template.component.footer-2',
         previewImage: '/assets/report/components/footer-2.svg',
         type: ReportComponentType.RICH_TEXT,
@@ -694,7 +675,6 @@ export const reportComponentsLibrary = new Map<string, ReportComponentLibraryIte
     [
       'footer3',
       {
-        id: 'footer3',
         title: 'report-template.component.footer-3',
         previewImage: '/assets/report/components/footer-3.svg',
         type: ReportComponentType.RICH_TEXT,
@@ -732,7 +712,6 @@ export const reportComponentsLibrary = new Map<string, ReportComponentLibraryIte
     [
       'pageNumber',
       {
-        id: 'pageNumber',
         title: 'report-template.component.page-number',
         previewImage: '/assets/report/components/page-number.svg',
         type: ReportComponentType.HEADING,
@@ -765,7 +744,6 @@ export const reportComponentsLibrary = new Map<string, ReportComponentLibraryIte
     [
       'createdTime',
       {
-        id: 'createdTime',
         title: 'report-template.component.created-time',
         previewImage: '/assets/report/components/created-time.svg',
         type: ReportComponentType.HEADING,
@@ -798,7 +776,6 @@ export const reportComponentsLibrary = new Map<string, ReportComponentLibraryIte
     [
       'divider',
       {
-        id: 'divider',
         title: 'report-template.component.divider.type',
         previewImage: '/assets/report/components/divider.svg',
         type: ReportComponentType.DIVIDER,
@@ -822,7 +799,6 @@ export const reportComponentsLibrary = new Map<string, ReportComponentLibraryIte
     [
       'pageBreak',
       {
-        id: 'pageBreak',
         title: 'report-template.component.page-break.type',
         previewImage: '/assets/report/components/page-break.svg',
         type: ReportComponentType.PAGE_BREAK,
