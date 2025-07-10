@@ -50,6 +50,11 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 })
 export class AlarmTableConfigComponent extends AbstractReportComponentConfig<AlarmTableReportComponentConfig> {
 
+  get columnLabels(): string[] {
+    const columns: DataKey[] = this.reportConfigForm.get('columns').value;
+    return (columns || []).map(key => key.label);
+  }
+
   settingsTab: 'data' | 'layout' = 'data';
 
   basicMode = WidgetConfigMode.basic;
@@ -63,6 +68,7 @@ export class AlarmTableConfigComponent extends AbstractReportComponentConfig<Ala
       alarmFilterConfig: [reportComponentConfig.alarmSource.alarmFilterConfig, []],
       showTableHeading: [reportComponentConfig.showTableHeading, []],
       tableHeading: [reportComponentConfig.tableHeading, []],
+      tableSortOrder: [reportComponentConfig.tableSortOrder, []],
       columns: [this.getColumns(reportComponentConfig.alarmSource), []],
     });
     form.get('showTableHeading').valueChanges.pipe(

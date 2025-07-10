@@ -49,6 +49,11 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 })
 export class EntityTableConfigComponent extends AbstractReportComponentConfig<EntityTableReportComponentConfig> {
 
+  get columnLabels(): string[] {
+    const columns: DataKey[] = this.reportConfigForm.get('columns').value;
+    return (columns || []).map(key => key.label);
+  }
+
   settingsTab: 'data' | 'layout' = 'data';
 
   basicMode = WidgetConfigMode.basic;
@@ -59,6 +64,7 @@ export class EntityTableConfigComponent extends AbstractReportComponentConfig<En
     const form = this.fb.group({
       showTableHeading: [reportComponentConfig.showTableHeading, []],
       tableHeading: [reportComponentConfig.tableHeading, []],
+      tableSortOrder: [reportComponentConfig.tableSortOrder, []],
       dataSources: [reportComponentConfig.dataSources, []],
       columns: [this.getColumns(reportComponentConfig.dataSources), []],
     });

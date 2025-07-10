@@ -93,6 +93,7 @@ import { DataKeyType } from '@shared/models/telemetry/telemetry.models';
 import { AggregationType, DAY, historyInterval } from '@shared/models/time/time.models';
 import { DividerPreviewComponent } from '@home/pages/reporting/template/components/divider-preview.component';
 import { DividerConfigComponent } from '@home/pages/reporting/template/components/divider-config.component';
+import { Direction } from '@shared/models/page/sort-order';
 
 export interface ReportComponentLibraryItem<C extends ReportComponentConfig = ReportComponentConfig> {
   id: string;
@@ -252,6 +253,10 @@ export const reportComponentsLibrary = new Map<string, ReportComponentLibraryIte
             verticalAlignment: 'middle',
             height: 40
           },
+          tableSortOrder: {
+            column: 'Name',
+            direction: Direction.ASC
+          },
           dataSources: [
             {
               type: DatasourceType.entity,
@@ -295,6 +300,10 @@ export const reportComponentsLibrary = new Map<string, ReportComponentLibraryIte
             textAlignment: 'center',
             verticalAlignment: 'middle',
             height: 40
+          },
+          tableSortOrder: {
+            column: 'Timestamp',
+            direction: Direction.DESC
           },
           dataSources: [
             {
@@ -353,6 +362,10 @@ export const reportComponentsLibrary = new Map<string, ReportComponentLibraryIte
             textAlignment: 'center',
             verticalAlignment: 'middle',
             height: 40
+          },
+          tableSortOrder: {
+            column: 'Created time',
+            direction: Direction.DESC
           },
           alarmSource: {
             type: DatasourceType.entity,

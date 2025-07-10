@@ -7225,7 +7225,11 @@
                 "column-settings": "Column settings",
                 "column-width": "Column width",
                 "header": "Header",
-                "cell": "Cell"
+                "cell": "Cell",
+                "sort-by": "Sort by",
+                "sort-asc": "Ascending",
+                "sort-desc": "Descending",
+                "sort-none": "None"
             },
             "entity-table": {
                 "type": "Entity table"

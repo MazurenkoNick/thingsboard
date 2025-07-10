@@ -58,6 +58,15 @@ import { merge } from 'rxjs';
 })
 export class TimeseriesTableConfigComponent extends AbstractReportComponentConfig<TimeseriesTableReportComponentConfig> {
 
+  get columnLabels(): string[] {
+    const result: string[] = [];
+    if (this.reportConfigForm.get('showTimestamp').value) {
+      result.push(this.reportConfigForm.get('timestampLabel').value);
+    }
+    const columns: DataKey[] = this.reportConfigForm.get('columns').value;
+    return [...result, ...(columns || []).map(key => key.label)];
+  }
+
   settingsTab: 'data' | 'layout' = 'data';
 
   basicMode = WidgetConfigMode.basic;
@@ -77,6 +86,7 @@ export class TimeseriesTableConfigComponent extends AbstractReportComponentConfi
       timestampLabel: [reportComponentConfig.timestampLabel, []],
       timestampPattern: [reportComponentConfig.timestampPattern, []],
       timestampColumnSettings: [reportComponentConfig.timestampColumnSettings, []],
+      tableSortOrder: [reportComponentConfig.tableSortOrder, []],
       columns: [this.getColumns(reportComponentConfig.dataSources), []],
     });
     merge(form.get('showTimestamp').valueChanges, form.get('showTableHeading').valueChanges).pipe(

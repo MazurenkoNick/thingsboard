@@ -69,6 +69,7 @@ import {
 } from '@home/pages/reporting/template/components/report-component-layout-settings.component';
 import { DividerPreviewComponent } from '@home/pages/reporting/template/components/divider-preview.component';
 import { DividerConfigComponent } from '@home/pages/reporting/template/components/divider-config.component';
+import { TableSortOrderComponent } from '@home/pages/reporting/template/components/table-sort-order.component';
 
 @NgModule({
   declarations: [
@@ -79,6 +80,7 @@ import { DividerConfigComponent } from '@home/pages/reporting/template/component
     ReportInsetsComponent,
     ReportComponentLayoutSettingsComponent,
     ReportHeadingComponent,
+    TableSortOrderComponent,
     ReportImageDialogComponent,
     ReportRichTextComponent,
     EmptyReportConfigComponent,

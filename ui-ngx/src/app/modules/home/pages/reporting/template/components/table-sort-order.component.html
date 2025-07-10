@@ -30,36 +30,28 @@
     OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 
 -->
-<table class="tb-report-table-preview tb-report-table" [class.tb-plain-table]="isPlainFormat">
-  <colgroup>
-    @for (column of columns; track column) {
-      <col [attr.width]="columnWidth(column)">
-    }
-  </colgroup>
-  <thead>
-    @if (showTableHeading) {
-      <tr [style.height]="headingHeight">
-        <th [attr.colspan]="columns.length" class="tb-report-table-heading" [style]="headingStyle" [innerHTML]="headingText | safe: 'html'">
-        </th>
-      </tr>
-    }
-    <tr>
-      @for (column of columns; track column) {
-        <th [style]="headerStyle(column)">{{ column.label }}
-          @if (hasSortOrder(column)) {
-            <mat-icon class="tb-mat-16 sort-order">
-              {{ ascSortOrder() ? 'arrow_upward' : 'arrow_downward' }}
-            </mat-icon>
+<div class="tb-form-panel no-padding no-border" [formGroup]="tableSortOrderFormGroup">
+  <div class="tb-form-row">
+    <div class="fixed-title-width" translate>report-template.component.table.sort-by</div>
+    <div class="flex flex-1 flex-row gap-2">
+      <mat-form-field class="flex-1" appearance="outline" subscriptSizing="dynamic">
+        <mat-select formControlName="column" placeholder="{{ 'report-template.component.table.sort-none' | translate }}">
+          <mat-option [value]="null">{{ 'report-template.component.table.sort-none' | translate }}</mat-option>
+          @for (column of columns; track column) {
+            <mat-option [value]="column">
+              {{ column }}
+            </mat-option>
           }
-        </th>
+        </mat-select>
+      </mat-form-field>
+      @if (tableSortOrderFormGroup.get('column').value) {
+        <mat-form-field class="flex-1" appearance="outline" subscriptSizing="dynamic">
+          <mat-select formControlName="direction">
+            <mat-option [value]="Direction.ASC">{{ 'report-template.component.table.sort-asc' | translate }}</mat-option>
+            <mat-option [value]="Direction.DESC">{{ 'report-template.component.table.sort-desc' | translate }}</mat-option>
+          </mat-select>
+        </mat-form-field>
       }
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      @for (column of columns; track column) {
-        <td [style]="cellStyle(column)">{{ cellContent(column) }}</td>
-      }
-    </tr>
-  </tbody>
-</table>
+    </div>
+  </div>
+</div>

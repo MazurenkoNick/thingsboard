@@ -29,5 +29,14 @@
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
 .tb-report-table-preview {
-
+  th {
+    .sort-order {
+      position: relative;
+      top: -2px;
+      left: -2px;
+      vertical-align: bottom;
+      color: rgba(0,0,0,0.56);
+      font-weight: bold;
+    }
+  }
 }

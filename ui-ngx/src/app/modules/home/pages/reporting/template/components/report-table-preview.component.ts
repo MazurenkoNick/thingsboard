@@ -35,6 +35,7 @@ import { TableReportColumnSettings, TableReportComponentConfig } from '@shared/m
 import { ComponentStyle, Font, textStyle } from '@shared/models/widget-settings.models';
 import { deepClone } from '@core/utils';
 import { DataKey } from '@shared/models/widget.models';
+import { Direction } from '@shared/models/page/sort-order';
 
 @Directive()
 export abstract class AbstractReportTablePreviewComponent<C extends TableReportComponentConfig> extends AbstractReportComponentPreview<C> {
@@ -100,6 +101,14 @@ export abstract class AbstractReportTablePreviewComponent<C extends TableReportC
       }
     }
     return null;
+  }
+
+  hasSortOrder(column: DataKey): boolean {
+    return this.reportComponent.tableSortOrder?.column === column.label;
+  }
+
+  ascSortOrder(): boolean {
+    return this.reportComponent.tableSortOrder?.direction !== Direction.DESC;
   }
 
   cellContent(column: DataKey): string {

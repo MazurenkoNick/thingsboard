@@ -36,6 +36,7 @@ import { ReportTemplateId } from '@shared/models/id/report-template-id';
 import { FormProperty, FormPropertyType } from '@shared/models/dynamic-form.models';
 import { DashboardReportConfig } from '@shared/models/dashboard-report.models';
 import { Timewindow } from '@shared/models/time/time.models';
+import { Direction } from '@shared/models/page/sort-order';
 
 export enum ReportComponentType {
   HEADING = 'HEADING',
@@ -260,9 +261,15 @@ export interface Heading {
   height?: number;
 }
 
+export interface TableSortOrder {
+  column: string;
+  direction: Direction;
+}
+
 export interface TableReportComponentConfig extends DataReportComponentConfig {
   showTableHeading: boolean;
   tableHeading: Heading;
+  tableSortOrder: TableSortOrder;
 }
 
 export interface TableWithLayoutReportComponentConfig extends TableReportComponentConfig, LayoutReportComponentConfig {}
