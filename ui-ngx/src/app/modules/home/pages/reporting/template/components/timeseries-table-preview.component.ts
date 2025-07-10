@@ -32,7 +32,7 @@
 import { Component, inject, ViewEncapsulation } from '@angular/core';
 import { TimeseriesTableReportComponentConfig } from '@shared/models/report-component.models';
 import { DataKey, Datasource } from '@shared/models/widget.models';
-import { ComponentStyle } from '@shared/models/widget-settings.models';
+import { ComponentStyle, dateFormatPreview } from '@shared/models/widget-settings.models';
 import { DataKeyType } from '@shared/models/telemetry/telemetry.models';
 import { AbstractReportTablePreviewComponent } from '@home/pages/reporting/template/components/report-table-preview.component';
 import { DatePipe } from '@angular/common';
@@ -62,8 +62,8 @@ export class TimeseriesTablePreviewComponent extends AbstractReportTablePreviewC
         };
       }
       this.timestampColumn.label = this.reportComponent.timestampLabel || 'Timestamp';
-      this.timestampColumn.settings = this.reportComponent.timestampColumnSettings
-      this.timestampPreview = this.date.transform(Date.now(), this.reportComponent.timestampPattern);
+      this.timestampColumn.settings = this.reportComponent.timestampColumnSettings;
+      this.timestampPreview = dateFormatPreview(this.date, this.reportComponent.timestampPattern);
       this.columns.push(
         this.timestampColumn
       );

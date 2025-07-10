@@ -117,6 +117,7 @@ import { CdkScrollable } from '@angular/cdk/overlay';
 import {
   ReportTemplateHeaderFooterComponent
 } from '@home/pages/reporting/template/report-template-header-footer.component';
+import { dateFormatPreview } from '@shared/models/widget-settings.models';
 
 @Component({
   selector: 'tb-report-template-page',
@@ -606,7 +607,7 @@ export class ReportTemplatePageComponent extends PageComponent
   }
 
   private updateReportTemplateSettings(settings: ReportTemplateSettings): void {
-    this.timePreview = this.date.transform(Date.now(), settings.timeDataPattern);
+    this.timePreview = dateFormatPreview(this.date, settings.timeDataPattern);
     updateFromReportTemplateSettings(this.reportTemplate, settings);
     this.updatePageLayout();
     this.isDirty = true;
@@ -709,7 +710,7 @@ export class ReportTemplatePageComponent extends PageComponent
 
     const settings = toReportTemplateSettings(this.reportTemplate);
 
-    this.timePreview = this.date.transform(Date.now(), settings.timeDataPattern);
+    this.timePreview = dateFormatPreview(this.date, settings.timeDataPattern);
 
     this.reportComponentSearchFormControl.reset();
     this.reportTemplateSettingsFormControl.patchValue(settings, {emitEvent: false});

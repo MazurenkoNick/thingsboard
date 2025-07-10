@@ -115,12 +115,14 @@
             <input matInput formControlName="timestampLabel" placeholder="{{ 'widget-config.set' | translate }}">
           </mat-form-field>
           <tb-date-format-select class="flex-1"
+                                 includeMilliseconds
                                  asStringFormat
                                  excludeLastUpdateAgo
                                  formControlName="timestampPattern"></tb-date-format-select>
           @if (!isPlainFormat) {
             <button type="button"
                     class="tb-mat-40"
+                    style="--mdc-icon-button-icon-color: rgba(0, 0, 0, 0.38);"
                     [disabled]="!reportConfigForm.get('showTimestamp').value"
                     mat-icon-button
                     (click)="editTimestampColumnSettings()"

@@ -766,6 +766,9 @@ export const customDateFormat = (format: string): DateFormatSettings => ({
 });
 
 export const toDateFormatSettings = (strFormat: string): DateFormatSettings => {
+  if (strFormat === 'milliseconds') {
+    return millisecondsDateFormat();
+  }
   const found = dateFormats.filter(format => !!format.format && !format.custom)
                                               .find(format => format.format === strFormat);
   if (found) {
@@ -793,6 +796,8 @@ export const autoDateFormat = (): DateFormatSettings => ({
   autoDateFormatSettings: {}
 });
 
+export const millisecondsDateFormat = (): DateFormatSettings => simpleDateFormat('milliseconds');
+
 export const dateFormats = ['MMM yyyy', 'MMM dd yyyy', 'MMM dd yyyy HH:mm', 'dd MMM yyyy HH:mm', 'dd MMM yyyy HH:mm:ss',
   'yyyy MMM dd HH:mm', 'MM/dd/yyyy HH:mm', 'dd/MM/yyyy HH:mm', 'MMM dd yyyy HH:mm:ss', 'yyyy/MM/dd HH:mm:ss', 'yyyy-MM-dd HH:mm:ss',
   'MMM dd yyyy HH:mm:ss.SSS', 'yyyy-MM-dd HH:mm:ss.SSS']
@@ -816,6 +821,10 @@ export const compareDateFormats = (df1: DateFormatSettings, df2: DateFormatSetti
   }
   return false;
 };
+
+export const dateFormatPreview = (date: DatePipe, format: string): string => {
+  return format === 'milliseconds' ? `${Date.now()}` : date.transform(Date.now(), format);
+}
 
 export abstract class DateFormatProcessor {
 

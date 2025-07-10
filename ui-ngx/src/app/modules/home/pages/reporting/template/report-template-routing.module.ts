@@ -38,7 +38,7 @@ import { Observable } from 'rxjs';
 import { BreadCrumbConfig, BreadCrumbLabelFunction } from '@shared/components/breadcrumb';
 import { ConfirmOnExitGuard } from '@core/guards/confirm-on-exit.guard';
 import { MenuId } from '@core/public-api';
-import { ReportTemplate, ReportTemplateType } from '@shared/public-api';
+import { ReportTemplate } from '@shared/public-api';
 import { ReportTemplateService } from '@core/http/report-template.service';
 import { ReportTemplatePageComponent } from '@home/pages/reporting/template/report-template-page.component';
 import { ReportTemplatesTableConfigResolver } from '@home/pages/reporting/template/report-templates-table-config.resolver';
@@ -56,12 +56,8 @@ export class ReportTemplateResolver  {
 }
 
 export const reportTemplateBreadcumbLabelFunction: BreadCrumbLabelFunction<ReportTemplatePageComponent>
-  = ((route, translate, component) => {
-  let label: string = component.reportTemplate.name;
-  if (component.reportTemplate.type === ReportTemplateType.SUB_REPORT) {
-    label += ` (${translate.instant('report-template.type-sub-report')})`;
-  }
-  return label;
+  = ((_route, _translate, component) => {
+  return component.reportTemplate.name;
 });
 
 export const reportTemplatesRoute: Route = {

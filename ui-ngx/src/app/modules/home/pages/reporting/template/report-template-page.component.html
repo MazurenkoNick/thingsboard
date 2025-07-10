@@ -35,6 +35,9 @@
     <div class="flex flex-1 flex-row items-center gap-1.5">
       <div class="tb-report-template-title">
         {{ reportTemplate.name }} - {{ reportTemplate.format }}
+        @if (subReport) {
+          {{ ' (' + ('report-template.type-sub-report' | translate) + ')' }}
+        }
       </div>
     </div>
     <div class="flex flex-1 flex-row-reverse items-center gap-1.5">

@@ -63,6 +63,7 @@ import ITooltipsterInstance = JQueryTooltipster.ITooltipsterInstance;
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import ITooltipsterGeoHelper = JQueryTooltipster.ITooltipsterGeoHelper;
 import { TbReportFormat } from '@shared/models/report.models';
+import { coerceBoolean } from '@shared/decorators/coercion';
 
 @Component({
   selector: 'tb-report-component',
@@ -144,6 +145,10 @@ export class ReportComponentComponent implements OnInit, AfterViewInit, OnChange
 
   @Input()
   pageMarginRight: number;
+
+  @Input()
+  @coerceBoolean()
+  last = false;
 
   @Output()
   edit = new EventEmitter();
@@ -291,9 +296,8 @@ export class ReportComponentComponent implements OnInit, AfterViewInit, OnChange
       this.borderWidth = 0;
       this.paddingLeft = this.paddingRight = this.paddingTop = this.paddingBottom =
         this.marginLeft = this.marginRight = this.marginTop = this.marginBottom = 0;
-      if (isLayoutReportComponentConfig(this.reportComponent)) {
-        this.marginTop = (this.reportComponent.margins?.top || 0) * this.scale;
-        this.marginBottom = (this.reportComponent.margins?.bottom || 0) * this.scale;
+      if (this.isPlainFormat && !this.last) {
+        this.marginBottom = 20 * this.scale;
       }
       if (this.typeData.pageBreak) {
         this.marginLeft = -this.pageMarginLeft / this.scale;

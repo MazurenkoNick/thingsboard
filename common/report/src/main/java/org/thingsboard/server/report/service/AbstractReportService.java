@@ -406,7 +406,7 @@ public abstract class AbstractReportService implements ReportService {
         }
         try {
             long timestamp = Long.parseLong(timestampStr);
-            if (timestampStr.equals("milliseconds")) {
+            if (timeDataPattern.equals("milliseconds")) {
                 return String.valueOf(timestamp);
             }
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern(timeDataPattern)
