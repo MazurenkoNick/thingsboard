@@ -380,7 +380,7 @@ export const menuSectionMap = new Map<MenuId, MenuSection>([
       id: MenuId.ai_models,
       name: 'ai-models.ai-models',
       type: 'link',
-      path: '/ai-models',
+      path: '/settings/ai-models',
       icon: 'auto_awesome'
     }
   ],
@@ -1723,7 +1723,6 @@ export const defaultUserMenuMap = new Map<Authority, MenuReference[]>([
           {id: MenuId.notification_rules}
         ]
       },
-      {id: MenuId.ai_models},
       {
         id: MenuId.mobile_center,
         pages: [
@@ -1751,7 +1750,8 @@ export const defaultUserMenuMap = new Map<Authority, MenuReference[]>([
           {id: MenuId.notification_settings},
           {id: MenuId.repository_settings},
           {id: MenuId.auto_commit_settings},
-          {id: MenuId.trendz_settings}
+          {id: MenuId.trendz_settings},
+          {id: MenuId.ai_models}
         ]
       },
       {

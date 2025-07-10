@@ -76,8 +76,6 @@ export class AIModelDialogComponent extends DialogComponent<AIModelDialogCompone
   providerMap: AiProvider[] = Object.keys(AiProvider) as AiProvider[];
   providerTranslationMap = AiProviderTranslations;
 
-  AiModelMap = AiModelMap;
-
   provider: AiProvider = AiProvider.OPENAI;
 
   aiModelForms: FormGroup;
