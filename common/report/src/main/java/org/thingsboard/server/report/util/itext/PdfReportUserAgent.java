@@ -183,14 +183,13 @@ public class PdfReportUserAgent extends ITextUserAgent {
             }
         } else if (isTbImage(uriStr)) {
             try {
-                TbResource resource = null;
+                byte[] imageData = null;
                 if (isInternalTbImage(uriStr)) {
-                    resource = this.loadInternalTbImage(uriStr);
+                    imageData = this.loadInternalTbImage(uriStr);
                 } else if (isPublicTbImage(uriStr)) {
-                    resource = this.loadPublicTbImage(uriStr);
+                    imageData = this.loadPublicTbImage(uriStr);
                 }
-                if (resource != null) {
-                    byte[] imageData = resource.getData();
+                if (imageData != null) {
                     return new ByteArrayInputStream(imageData);
                 }
             } catch (Exception e) {
@@ -253,7 +252,7 @@ public class PdfReportUserAgent extends ITextUserAgent {
         return new ImageResource(uri, image);
     }
 
-    private TbResource loadInternalTbImage(final String uri) throws Exception {
+    private byte[] loadInternalTbImage(final String uri) throws Exception {
         String imageType = null;
         if (uri.startsWith("/api/images/tenant/")) {
             imageType = "tenant";
@@ -265,17 +264,17 @@ public class PdfReportUserAgent extends ITextUserAgent {
             if (parts.length >= 5) {
                 String key = parts[4];
                 key = URLDecoder.decode(key, StandardCharsets.UTF_8);
-                return this._dataService.findImage(imageType, key, this._ctx);
+                return this._dataService.downloadImage(imageType, key, this._ctx);
             }
         }
         return null;
     }
 
-    private TbResource loadPublicTbImage(final String uri) throws Exception {
+    private byte[] loadPublicTbImage(final String uri) throws Exception {
         var parts = uri.split("/");
         if (parts.length >= 5) {
             String publicKey = parts[4];
-           return this._dataService.findPublicImage(publicKey, this._ctx);
+           return this._dataService.downloadPublicImage(publicKey, this._ctx);
         }
         return null;
     }

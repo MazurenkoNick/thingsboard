@@ -33,13 +33,10 @@ package org.thingsboard.server.report.datasource;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.stereotype.Service;
 import org.thingsboard.rest.client.RestClient;
-import org.thingsboard.server.common.data.TbResource;
-import org.thingsboard.server.common.data.TbResourceInfo;
 import org.thingsboard.server.common.data.exception.ThingsboardErrorCode;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.ReportTemplateId;
-import org.thingsboard.server.common.data.id.TbResourceId;
 import org.thingsboard.server.common.data.kv.Aggregation;
 import org.thingsboard.server.common.data.kv.ReadTsKvQuery;
 import org.thingsboard.server.common.data.kv.ReadTsKvQueryResult;
@@ -71,29 +68,23 @@ public class RemoteReportDataService implements ReportDataService {
     }
 
     @Override
-    public TbResource findImage(String type, String key, TbReportCtx ctx) {
-        RestClient restClient = getRestClient(ctx);
-        TbResourceInfo info = restClient.getImageInfo(type, key);
-        return restClient.getResourceId(info.getId());
-    }
-
-    @Override
-    public TbResource findPublicImage(String publicKey, TbReportCtx ctx) throws ThingsboardException {
+    public byte[] downloadImage(String type, String key, TbReportCtx ctx) throws ThingsboardException {
         RestClient restClient = getRestClient(ctx);
         try {
-            byte[] data = restClient.downloadPublicImage(publicKey);
-            // TODO:
-            TbResource tbResource = new TbResource();
-            tbResource.setData(data);
-            return tbResource;
+            return restClient.downloadImage(type, key);
         } catch (IOException e) {
-            throw new ThingsboardException("Failed to download public image", e, ThingsboardErrorCode.GENERAL);
+            throw new ThingsboardException("Failed to download image", e, ThingsboardErrorCode.GENERAL);
         }
     }
 
     @Override
-    public TbResource findTbResource(TbResourceId resourceId, TbReportCtx ctx) {
-        return getRestClient(ctx).getResourceId(resourceId);
+    public byte[] downloadPublicImage(String publicKey, TbReportCtx ctx) throws ThingsboardException {
+        RestClient restClient = getRestClient(ctx);
+        try {
+            return restClient.downloadPublicImage(publicKey);
+        } catch (IOException e) {
+            throw new ThingsboardException("Failed to download public image", e, ThingsboardErrorCode.GENERAL);
+        }
     }
 
     @Override

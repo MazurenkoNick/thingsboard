@@ -34,13 +34,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
-import org.thingsboard.server.common.data.TbResource;
 import org.thingsboard.server.common.data.TbResourceInfo;
 import org.thingsboard.server.common.data.exception.ThingsboardErrorCode;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.ReportTemplateId;
-import org.thingsboard.server.common.data.id.TbResourceId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.kv.Aggregation;
 import org.thingsboard.server.common.data.kv.ReadTsKvQuery;
@@ -96,26 +94,18 @@ public class LocalReportDataService implements ReportDataService {
     }
 
     @Override
-    public TbResource findImage(String type, String key, TbReportCtx ctx) throws ThingsboardException {
+    public byte[] downloadImage(String type, String key, TbReportCtx ctx) throws ThingsboardException {
         SecurityUser securityUser = getSecurityUser(ctx);
         TenantId tenantId = "system".equals(type) ? TenantId.SYS_TENANT_ID : securityUser.getTenantId();
         TbResourceInfo imageInfo = checkNotNull(imageService.getImageInfoByTenantIdAndKey(tenantId, key));
-        return checkNotNull(resourceService.findResourceById(tenantId, imageInfo.getId()));
+        return checkNotNull(imageService.getImageData(tenantId, imageInfo.getId()));
     }
 
     @Override
-    public TbResource findPublicImage(String publicKey, TbReportCtx ctx) throws ThingsboardException {
+    public byte[] downloadPublicImage(String publicKey, TbReportCtx ctx) throws ThingsboardException {
         SecurityUser securityUser = getSecurityUser(ctx);
         TbResourceInfo imageInfo = checkNotNull(imageService.getPublicImageInfoByKey(publicKey));
-        return checkNotNull(resourceService.findResourceById(securityUser.getTenantId(), imageInfo.getId()));
-    }
-
-    @Override
-    public TbResource findTbResource(TbResourceId resourceId, TbReportCtx ctx) throws ThingsboardException {
-        SecurityUser securityUser = getSecurityUser(ctx);
-        TbResource resource = resourceService.findResourceById(securityUser.getTenantId(), resourceId);
-        accessControlService.checkPermission(securityUser, Resource.TB_RESOURCE, Operation.READ, resourceId, resource);
-        return resource;
+        return checkNotNull(imageService.getImageData(securityUser.getTenantId(), imageInfo.getId()));
     }
 
     @Override

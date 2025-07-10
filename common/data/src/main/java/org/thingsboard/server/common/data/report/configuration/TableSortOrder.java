@@ -28,17 +28,17 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.common.data.report.configuration.components;
+package org.thingsboard.server.common.data.report.configuration;
 
-import org.thingsboard.server.common.data.report.configuration.TableSortOrder;
-import org.thingsboard.server.common.data.report.configuration.style.Heading;
+import lombok.Data;
 
-public interface TableReportComponent extends DataReportComponent {
+@Data
+public class TableSortOrder {
 
-    boolean isShowTableHeading();
+    private String column;
+    private Direction direction;
 
-    Heading getTableHeading();
-
-    TableSortOrder getTableSortOrder();
-
+    public enum Direction {
+        ASC, DESC
+    }
 }

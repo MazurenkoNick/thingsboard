@@ -35,6 +35,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import org.thingsboard.server.common.data.report.configuration.TableSortOrder;
 import org.thingsboard.server.common.data.report.configuration.style.Heading;
 
 @Schema
@@ -47,5 +48,7 @@ public abstract class AbstractTableWithLayoutReportComponent extends AbstractDat
     private boolean showTableHeading;
 
     private Heading tableHeading;
+
+    private TableSortOrder tableSortOrder;
 
 }

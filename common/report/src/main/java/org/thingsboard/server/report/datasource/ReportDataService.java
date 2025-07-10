@@ -58,11 +58,9 @@ public interface ReportDataService {
 
     ReportTemplate findReportTemplate(ReportTemplateId templateId, TbReportCtx ctx) throws ThingsboardException;
 
-    TbResource findImage(String type, String key, TbReportCtx ctx) throws ThingsboardException;
+    byte[] downloadImage(String type, String key, TbReportCtx ctx) throws ThingsboardException;
 
-    TbResource findPublicImage(String publicKey, TbReportCtx ctx) throws ThingsboardException;
-
-    TbResource findTbResource(TbResourceId resourceId, TbReportCtx ctx) throws ThingsboardException;
+    byte[] downloadPublicImage(String publicKey, TbReportCtx ctx) throws ThingsboardException;
 
     PageData<EntityData> findEntityDataByQuery(EntityDataQuery query, TbReportCtx ctx);
 
