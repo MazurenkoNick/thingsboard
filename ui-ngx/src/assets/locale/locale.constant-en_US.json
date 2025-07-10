@@ -1227,6 +1227,7 @@
     "ai-models": {
         "ai-models": "AI models",
         "ai-model": "AI model",
+        "ai-model-view": "View AI model",
         "name": "Name",
         "ai-provider": "AI provider",
         "no-found": "No AI models found",

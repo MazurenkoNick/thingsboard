@@ -48,6 +48,8 @@ import { AiModelService } from '@core/http/ai-model.service';
 import { AiModelTableHeaderComponent } from '@home/pages/ai-model/ai-model-table-header.component';
 import { AIModelDialogComponent, AIModelDialogData } from '@home/components/ai-model/ai-model-dialog.component';
 import { map } from 'rxjs/operators';
+import { Operation, Resource } from '@shared/models/security.models';
+import { UserPermissionsService } from '@core/http/user-permissions.service';
 
 @Injectable()
 export class AiModelsTableConfigResolver {
@@ -57,6 +59,7 @@ export class AiModelsTableConfigResolver {
   constructor(
     private datePipe: DatePipe,
     private aiModelService: AiModelService,
+    private userPermissionsService: UserPermissionsService,
     private translate : TranslateService,
     private dialog: MatDialog
   ) {
@@ -85,6 +88,12 @@ export class AiModelsTableConfigResolver {
       )
     )
 
+    const readonly = !this.userPermissionsService.hasGenericPermission(Resource.AI_MODEL, Operation.WRITE);
+    const allowDelete = this.userPermissionsService.hasGenericPermission(Resource.AI_MODEL, Operation.DELETE);
+    this.config.addEnabled = this.userPermissionsService.hasGenericPermission(Resource.AI_MODEL, Operation.CREATE);
+    this.config.deleteEnabled = () => allowDelete;
+    this.config.entitiesDeleteEnabled = allowDelete;
+
     this.config.deleteEntityTitle = model => this.translate.instant('ai-models.delete-model-title', {modelName: model.name});
     this.config.deleteEntityContent = () => this.translate.instant('ai-models.delete-model-text');
     this.config.deleteEntitiesTitle = count => this.translate.instant('ai-models.delete-models-title', {count});
@@ -94,10 +103,10 @@ export class AiModelsTableConfigResolver {
 
     this.config.entitiesFetchFunction = pageLink => this.aiModelService.getAiModels(pageLink);
 
-    this.config.cellActionDescriptors = this.configureCellActions();
+    this.config.cellActionDescriptors = this.configureCellActions(readonly);
 
     this.config.handleRowClick = ($event, model) => {
-      this.editModel($event, model);
+      this.editModel($event, model, readonly);
       return true;
     };
   }
@@ -106,29 +115,30 @@ export class AiModelsTableConfigResolver {
     return this.config;
   }
 
-  private configureCellActions(): Array<CellActionDescriptor<AiModel>> {
+  private configureCellActions(readonly: boolean): Array<CellActionDescriptor<AiModel>> {
     return [
       {
         name: this.translate.instant('action.edit'),
         icon: 'edit',
         isEnabled: () => true,
-        onAction: ($event, entity) => this.editModel($event, entity)
+        onAction: ($event, entity) => this.editModel($event, entity, readonly)
       }
     ];
   }
 
-  private editModel($event, AIModel: AiModel): void {
+  private editModel($event, AIModel: AiModel, readonly: boolean): void {
     $event?.stopPropagation();
-    this.addModel(AIModel, false).subscribe();
+    this.addModel(AIModel, false, readonly).subscribe();
   }
 
-  private addModel(AIModel: AiModel, isAdd = false): Observable<AiModel> {
+  private addModel(AIModel: AiModel, isAdd = false, readonly?: boolean): Observable<AiModel> {
     return this.dialog.open<AIModelDialogComponent, AIModelDialogData, AiModel>(AIModelDialogComponent, {
       disableClose: true,
       panelClass: ['tb-dialog', 'tb-fullscreen-dialog'],
       data: {
         isAdd,
-        AIModel
+        AIModel,
+        readonly
       }
     }).afterClosed().pipe(map(res => {
       if (res) {

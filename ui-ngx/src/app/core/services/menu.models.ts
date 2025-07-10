@@ -1518,6 +1518,11 @@ const menuFilters = new Map<MenuId, MenuFilter>([
     MenuId.trendz_settings, (authState, userPermissionsService) =>
             authState.authUser.authority === Authority.TENANT_ADMIN &&
             userPermissionsService.hasReadGenericPermission(Resource.ADMIN_SETTINGS)
+  ],
+  [
+    MenuId.ai_models, (authState, userPermissionsService) =>
+            authState.authUser.authority === Authority.TENANT_ADMIN &&
+            userPermissionsService.hasReadGenericPermission(Resource.AI_MODEL)
   ]
 ]);
 

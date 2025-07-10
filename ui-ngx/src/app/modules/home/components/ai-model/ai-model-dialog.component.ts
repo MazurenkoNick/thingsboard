@@ -55,6 +55,7 @@ import { map } from 'rxjs/operators';
 export interface AIModelDialogData {
   AIModel?: AiModel;
   isAdd?: boolean;
+  readonly?: boolean;
 }
 
 @Component({
@@ -131,7 +132,12 @@ export class AIModelDialogComponent extends DialogComponent<AIModelDialogCompone
       this.updateValidation(provider);
     })
 
-    this.updateValidation(this.provider);
+    if (this.data.readonly) {
+      this.dialogTitle = 'ai-models.ai-model-view';
+      this.aiModelForms.disable({emitEvent: false});
+    } else {
+      this.updateValidation(this.provider);
+    }
   }
 
   fetchOptions(searchText: string): Observable<Array<string>> {
