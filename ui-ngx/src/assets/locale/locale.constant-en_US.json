@@ -7274,7 +7274,8 @@
             "footer-1": "Footer 1",
             "footer-2": "Footer 2",
             "footer-3": "Footer 3",
-            "page-number": "Page number"
+            "page-number": "Page number",
+            "created-time": "Created time"
         }
     },
     "scheduled-report": {

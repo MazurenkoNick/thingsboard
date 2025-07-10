@@ -750,6 +750,39 @@ export const reportComponentsLibrary = new Map<string, ReportComponentLibraryIte
       }
     ],
     [
+      'createdTime',
+      {
+        id: 'createdTime',
+        title: 'report-template.component.created-time',
+        previewImage: '/assets/report/components/created-time.svg',
+        type: ReportComponentType.HEADING,
+        defaultConfig: {
+          type: ReportComponentType.HEADING,
+          value: 'Created: ${reportCreatedTime}',
+          font: {
+            size: 9,
+            sizeUnit: 'pt',
+            weight: '500',
+            style: 'normal',
+            family: 'Roboto'
+          } as Font,
+          color: '#000',
+          textAlignment: 'center',
+          verticalAlignment: 'middle',
+          height: undefined,
+          dataSources: [],
+          margins: null,
+          paddings: {
+            top: 6,
+            bottom: 6,
+            left: 6,
+            right: 6
+          },
+          background: null
+        } as HeadingReportComponentConfig
+      }
+    ],
+    [
       'divider',
       {
         id: 'divider',
@@ -938,6 +971,10 @@ export const pageVariables: ReportVariable[] = [
     type: 'pageVariable',
     name: 'totalPages'
   },
+  {
+    type: 'pageVariable',
+    name: 'reportCreatedTime'
+  }
 ];
 
 export const keyImage = (key: string): string => {
