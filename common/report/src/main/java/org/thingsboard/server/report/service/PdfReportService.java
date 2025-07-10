@@ -199,13 +199,18 @@ public class PdfReportService extends AbstractReportService {
     }
 
     private ComponentData getComponentData(int usablePageWidthPx, TbReportCtx ctx, ReportComponent component, EntityData stateEntity) {
-        return switch (component.getType()) {
-            case TIME_SERIES_TABLE -> buildTsComponentData(usablePageWidthPx, ctx, (TimeseriesTableComponent) component, stateEntity);
-            case ALARM_TABLE -> buildAlarmComponentData(usablePageWidthPx, ctx, (AlarmTableComponent) component, stateEntity);
-            case DASHBOARD -> buildDashboardComponentData(usablePageWidthPx, ctx, ((DashboardComponent) component), stateEntity);
+        ComponentData componentData = switch (component.getType()) {
+            case TIME_SERIES_TABLE ->
+                    buildTsComponentData(usablePageWidthPx, ctx, (TimeseriesTableComponent) component, stateEntity);
+            case ALARM_TABLE ->
+                    buildAlarmComponentData(usablePageWidthPx, ctx, (AlarmTableComponent) component, stateEntity);
+            case DASHBOARD ->
+                    buildDashboardComponentData(usablePageWidthPx, ctx, ((DashboardComponent) component), stateEntity);
             case IMAGE -> buildImageComponentData(usablePageWidthPx, ctx, ((ImageComponent) component));
             default -> buildMultipleDataSourceData(usablePageWidthPx, ctx, component, stateEntity);
         };
+        populateReportVars(componentData, ctx);
+        return componentData;
     }
 
     private String renderTimeseriesTables(int usablePageWidthPx, TbReportCtx ctx, EntityData stateEntity, DataReportComponent component) {

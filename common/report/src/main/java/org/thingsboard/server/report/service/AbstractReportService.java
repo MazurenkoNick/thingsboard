@@ -393,6 +393,11 @@ public abstract class AbstractReportService implements ReportService {
         return entities;
     }
 
+    protected void populateReportVars(ComponentData componentData, TbReportCtx ctx) {
+        Map<String, Object> variables = componentData.getVariables();
+        variables.put("reportCreatedTime", formatTimestamp(String.valueOf(System.currentTimeMillis()), ctx));
+    }
+
     protected String formatTimestamp(String timestampStr, TbReportCtx ctx) {
         return formatTimestamp(timestampStr, null, ctx);
     }
