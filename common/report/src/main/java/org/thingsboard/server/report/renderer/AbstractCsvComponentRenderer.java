@@ -32,6 +32,7 @@ package org.thingsboard.server.report.renderer;
 
 import org.thingsboard.server.common.data.report.configuration.DataKey;
 import org.thingsboard.server.common.data.report.configuration.DataSource;
+import org.thingsboard.server.common.data.report.configuration.TableSortOrder;
 import org.thingsboard.server.common.data.report.configuration.components.TableReportComponent;
 import org.thingsboard.server.common.data.report.configuration.style.Heading;
 import org.thingsboard.server.report.context.ComponentData;
@@ -45,6 +46,7 @@ import java.util.stream.Collectors;
 
 import static org.thingsboard.server.report.util.ReportUtils.formatValueWithPrecisionAndUnits;
 import static org.thingsboard.server.report.util.ReportUtils.getSingleDataSource;
+import static org.thingsboard.server.report.util.ReportUtils.sortRowsByTableSortOrder;
 
 public abstract class AbstractCsvComponentRenderer<C extends TableReportComponent> implements CsvReportComponentRenderer<C> {
 
@@ -60,7 +62,7 @@ public abstract class AbstractCsvComponentRenderer<C extends TableReportComponen
         List<List<String>> csvContent = new ArrayList<>();
         addHeading(component, componentData, csvContent);
         addHeaderRow(columns, csvContent);
-        addDataRows(componentData, columns, csvContent);
+        addDataRows(columns, component.getTableSortOrder(), componentData, csvContent);
         return csvContent;
     }
 
@@ -79,8 +81,11 @@ public abstract class AbstractCsvComponentRenderer<C extends TableReportComponen
         content.add(headers);
     }
 
-    private void addDataRows(ComponentData componentData, List<DataKey> columns, List<List<String>> content) {
-        for (Map<String, String> row : componentData.getEntityDatas()) {
+    private void addDataRows(List<DataKey> columns, TableSortOrder tableSortOrder, ComponentData componentData, List<List<String>> content) {
+        List<Map<String, String>> entityDatas = componentData.getEntityDatas();
+        sortRowsByTableSortOrder(entityDatas, tableSortOrder);
+
+        for (Map<String, String> row : entityDatas) {
             List<String> formattedValues = columns.stream()
                     .map(col -> formatValueWithPrecisionAndUnits(row.get(col.getLabel()), col))
                     .collect(Collectors.toList());

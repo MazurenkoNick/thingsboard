@@ -43,6 +43,8 @@ import org.thingsboard.server.report.context.TbReportCtxProvider;
 import org.thingsboard.server.service.security.model.SecurityUser;
 import org.thingsboard.server.service.security.model.token.JwtTokenFactory;
 
+import static org.thingsboard.server.report.util.ReportUtils.formatTimestamp;
+
 @RequiredArgsConstructor
 @Primary
 @Service
@@ -62,6 +64,7 @@ public class LocalTbReportCtxProvider implements TbReportCtxProvider {
                 .accessToken(task.getAccessToken())
                 .accessTokenExpTs(task.getAccessTokenExpirationTs())
                 .securityUser(securityUser)
+                .reportCreatedTime(formatTimestamp(System.currentTimeMillis(), task.getReportTemplateConfig().getTimeDataPattern(), task.getTimezone()))
                 .build();
     }
 
@@ -81,6 +84,7 @@ public class LocalTbReportCtxProvider implements TbReportCtxProvider {
                     .accessToken(this.getAccessToken())
                     .accessTokenExpTs(this.getAccessTokenExpTs())
                     .securityUser(this.getSecurityUser())
+                    .reportCreatedTime(this.getReportCreatedTime())
                     .build();
 
             copy.getFutures().addAll(this.getFutures());

@@ -35,8 +35,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.thingsboard.server.common.data.report.configuration.DataKey;
 import org.thingsboard.server.common.data.report.configuration.DataSource;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -49,6 +47,8 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import static org.thingsboard.server.report.util.ThymeleafUtil.normalizeVariableName;
 
 @Data
 @Slf4j
@@ -91,26 +91,30 @@ public class ComponentData {
         this.entityDatas = entityDatas;
         this.variables = variables;
 
-        if (dataSource != null && !this.entityDatas.isEmpty()) {
-            Map<String, DataKey> labelToDataKey = Stream.concat(
-                            Optional.ofNullable(dataSource.getDataKeys()).orElse(Collections.emptyList()).stream(),
-                            Optional.ofNullable(dataSource.getLatestDataKeys()).orElse(Collections.emptyList()).stream())
-                    .collect(Collectors.toMap(
-                            dataKey -> normalizeLabel(dataKey.getLabel()),
-                            Function.identity(),
-                            (existing, replacement) -> existing,
-                            LinkedHashMap::new
-                    ));
-
-            for (Map.Entry<String, DataKey> entry : labelToDataKey.entrySet()) {
-                for (Map<String, String> entityData : this.entityDatas) {
-                    String label = entry.getKey();
-                    DataKey dataKey = entry.getValue();
-                    this.variables.put(label, entityData.getOrDefault(dataKey.getLabel(), ""));
-                }
-            }
+        if (dataSource != null) {
+            injectVariablesFromEntityDatas(dataSource);
         }
         variables.put("rowCount", this.entityDatas.size());
+    }
+
+    private void injectVariablesFromEntityDatas(DataSource dataSource) {
+        Map<String, DataKey> labelToDataKey = Stream.concat(
+                        Optional.ofNullable(dataSource.getDataKeys()).orElse(Collections.emptyList()).stream(),
+                        Optional.ofNullable(dataSource.getLatestDataKeys()).orElse(Collections.emptyList()).stream())
+                .collect(Collectors.toMap(
+                        dataKey -> normalizeVariableName(dataKey.getLabel()),
+                        Function.identity(),
+                        (existing, replacement) -> existing,
+                        LinkedHashMap::new
+                ));
+
+        for (Map.Entry<String, DataKey> entry : labelToDataKey.entrySet()) {
+            for (Map<String, String> entityData : this.entityDatas) {
+                String label = entry.getKey();
+                DataKey dataKey = entry.getValue();
+                this.variables.put(label, entityData.getOrDefault(dataKey.getLabel(), ""));
+            }
+        }
     }
 
     public ComponentData merge(ComponentData other) {
@@ -138,7 +142,4 @@ public class ComponentData {
         return new ArrayList<>(merged.values());
     }
 
-    private String normalizeLabel(String label) {
-        return label.trim().replaceAll("\\s+", "_");
-    }
 }

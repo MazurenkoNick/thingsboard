@@ -46,6 +46,7 @@ import org.thingsboard.server.common.data.report.TbReportFormat;
 import org.thingsboard.server.common.data.report.configuration.DataSource;
 import org.thingsboard.server.common.data.report.configuration.HeaderFooter;
 import org.thingsboard.server.common.data.report.configuration.PdfReportTemplateConfig;
+import org.thingsboard.server.common.data.report.configuration.ReportTemplateConfig;
 import org.thingsboard.server.common.data.report.configuration.components.AlarmTableComponent;
 import org.thingsboard.server.common.data.report.configuration.components.DashboardComponent;
 import org.thingsboard.server.common.data.report.configuration.components.DataReportComponent;
@@ -85,6 +86,8 @@ import static org.thingsboard.server.common.data.report.configuration.components
 import static org.thingsboard.server.common.data.report.configuration.components.ReportComponentType.SUB_REPORT;
 import static org.thingsboard.server.common.data.report.configuration.components.ReportComponentType.TIME_SERIES_TABLE;
 import static org.thingsboard.server.common.data.report.configuration.style.PageSize.A4;
+import static org.thingsboard.server.report.util.ReportQueryUtils.toAlarmCountQuery;
+import static org.thingsboard.server.report.util.ReportQueryUtils.toEntityCountQuery;
 import static org.thingsboard.server.report.util.ReportUtils.getSingleDataSource;
 import static org.thingsboard.server.report.util.ReportUtils.prepareReportComponent;
 import static org.thingsboard.server.report.util.ReportUtils.prepareReportName;
@@ -176,7 +179,7 @@ public class PdfReportService extends AbstractReportService {
             prepareReportComponent(component);
             ReportComponentType type = component.getType();
             if (type == SUB_REPORT) {
-                content.append(renderSubreport(usablePageWidthPx, ctx, (SubReportComponent)component));
+                content.append(renderSubReport(usablePageWidthPx, ctx, (SubReportComponent)component));
             } else if (type == DASHBOARD) {
                 content.append(renderDashboard(usablePageWidthPx, ctx, stateEntity, (DataReportComponent) component));
             } else if (type == TIME_SERIES_TABLE) {
@@ -228,7 +231,6 @@ public class PdfReportService extends AbstractReportService {
                 .deviceId(ds.getDeviceId())
                 .entityAliasId(ds.getEntityAliasId())
                 .filterId(ds.getFilterId())
-                .sortOrder(ds.getSortOrder())
                 .dataKeys(ds.getLatestDataKeys()).build();
         List<EntityData> entityDatas = fetchEntities(ctx, latestDataSource, stateEntity);
         for (EntityData entity : entityDatas) {
@@ -254,15 +256,14 @@ public class PdfReportService extends AbstractReportService {
         return content.toString();
     }
 
-    private String renderSubreport(int usablePageWidthPx, TbReportCtx ctx, DataReportComponent component) {
+    private String renderSubReport(int usablePageWidthPx, TbReportCtx ctx, DataReportComponent component) {
         SubReportComponent subReportComponent = ((SubReportComponent) component);
         ReportTemplateId templateId = subReportComponent.getTemplateId();
         if (templateId == null) {
-            return renderError(usablePageWidthPx, "Report template id is not configured for Subreport");
+            return renderError(usablePageWidthPx, "Report template id is not configured for SubReport");
         }
         StringBuilder content = new StringBuilder();
         try {
-            Optional<DataSource> dataSource = getSingleDataSource(component);
             ReportTemplate reportTemplate = dataService.findReportTemplate(templateId, ctx);
             if (reportTemplate == null) {
                 return renderError(usablePageWidthPx, "Template with id " + templateId + " not found. Please check the configuration.");
@@ -270,7 +271,7 @@ public class PdfReportService extends AbstractReportService {
             PdfReportTemplateConfig reportConfiguration = (PdfReportTemplateConfig) reportTemplate.getConfiguration();
 
             TbReportCtx subReportCtx = ctx.createSubReportCxt(reportConfiguration);
-            List<EntityData> entities = getSubReportEntities(ctx, dataSource);
+            List<EntityData> entities = getSubReportEntities(ctx, component);
             for (EntityData entity : entities) {
                 if (subReportComponent.isAvoidPageBreakInside()) {
                     content.append("<div class=\"no-page-break\">");
@@ -305,6 +306,41 @@ public class PdfReportService extends AbstractReportService {
         } else {
             return new ComponentData(usablePageWidthPx);
         }
+    }
+
+    private ComponentData buildSingleComponentData(int usablePageWidthPx, TbReportCtx ctx, DataSource dataSource, EntityData stateEntity) {
+        ReportTemplateConfig configuration = ctx.getConfiguration();
+        return switch (dataSource.getType()) {
+            case DEVICE, ENTITY -> new ComponentData(usablePageWidthPx, dataSource, collectEntityDatas(ctx, dataSource, stateEntity));
+            case ENTITY_COUNT -> buildEntityCountDataSource(usablePageWidthPx, ctx, dataSource, configuration);
+            case ALARM_COUNT -> buildAlarmCountDataSource(usablePageWidthPx, ctx, dataSource, configuration);
+            default -> throw new IllegalArgumentException("Unknown data source type: " + dataSource.getType());
+        };
+    }
+
+    private ComponentData buildEntityCountDataSource(int usablePageWidthPx, TbReportCtx ctx, DataSource dataSource, ReportTemplateConfig configuration) {
+        Map<String, Object> map = new HashMap<>();
+        String label = resolveSingleLabel(dataSource, "count");
+        map.put(label, dataService.countEntitiesByQuery(toEntityCountQuery(dataSource, configuration), ctx));
+        return new ComponentData(usablePageWidthPx, map);
+    }
+
+    private ComponentData buildAlarmCountDataSource(int usablePageWidthPx, TbReportCtx ctx, DataSource dataSource, ReportTemplateConfig configuration) {
+        Map<String, Object> map = new HashMap<>();
+        String label = resolveSingleLabel(dataSource, "count");
+        map.put(label, dataService.countAlarmsByQuery(toAlarmCountQuery(dataSource, configuration), ctx));
+        return new ComponentData(usablePageWidthPx, map);
+    }
+
+    private String resolveSingleLabel(DataSource dataSource, String fallback) {
+        String label = null;
+        if (dataSource.getDataKeys() != null && !dataSource.getDataKeys().isEmpty()) {
+            label = dataSource.getDataKeys().get(0).getLabel();
+        }
+        if (StringUtils.isNotBlank(label)) {
+            return label;
+        }
+        return fallback;
     }
 
     private ComponentData buildDashboardComponentData(int usablePageWidthPx, TbReportCtx ctx, DashboardComponent component, EntityData stateEntity) {

@@ -138,10 +138,10 @@ public class ThymeleafUtil {
         StringBuffer result = new StringBuffer();
 
         while (matcher.find()) {
-            String originalKey = matcher.group(1).trim();
+            String var = matcher.group(1).trim();
 
             String replacement;
-            switch (originalKey) {
+            switch (var) {
                 case "pageNumber":
                     replacement = "<span class=\"page-number\"></span>";
                     break;
@@ -149,7 +149,7 @@ public class ThymeleafUtil {
                     replacement = "<span class=\"page-count\"></span>";
                     break;
                 default:
-                    String safeKey = originalKey.replaceAll("\\s+", "_");
+                    String safeKey = normalizeVariableName(var);
                     replacement = "[[${" + safeKey + "}]]";
             }
 
@@ -158,6 +158,10 @@ public class ThymeleafUtil {
         matcher.appendTail(result);
 
         return result.toString();
+    }
+
+    public static String normalizeVariableName(String var) {
+        return var.trim().replaceAll("\\s+", "_");
     }
 
     private static String sanitize(String html) {

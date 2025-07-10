@@ -45,6 +45,8 @@ import org.thingsboard.server.common.data.report.configuration.ReportTemplateCon
 
 import java.io.IOException;
 
+import static org.thingsboard.server.report.util.ReportUtils.formatTimestamp;
+
 @RequiredArgsConstructor
 @ConditionalOnMissingBean(value = TbReportCtxProvider.class, ignored = RemoteTbReportCtxProvider.class)
 @Service
@@ -67,6 +69,7 @@ public class RemoteTbReportCtxProvider implements TbReportCtxProvider {
                 .restClient(new RestClient(new RestTemplateBuilder()
                         .messageConverters(new MappingJackson2HttpMessageConverter())
                         .build(), tbCoreBaseUrl, task.getAccessToken()))
+                .reportCreatedTime(formatTimestamp(System.currentTimeMillis(), task.getReportTemplateConfig().getTimeDataPattern(), task.getTimezone()))
                 .build();
     }
 
@@ -92,6 +95,7 @@ public class RemoteTbReportCtxProvider implements TbReportCtxProvider {
                     .accessToken(this.getAccessToken())
                     .accessTokenExpTs(this.getAccessTokenExpTs())
                     .restClient(this.getRestClient())
+                    .reportCreatedTime(this.getReportCreatedTime())
                     .build();
 
             copy.getFutures().addAll(this.getFutures());
