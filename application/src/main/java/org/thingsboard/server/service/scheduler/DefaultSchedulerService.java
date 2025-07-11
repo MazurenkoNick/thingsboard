@@ -61,7 +61,6 @@ import org.thingsboard.server.common.data.page.PageDataIterable;
 import org.thingsboard.server.common.data.report.ReportConfig;
 import org.thingsboard.server.common.data.scheduler.SchedulerEvent;
 import org.thingsboard.server.common.data.scheduler.SchedulerEventInfo;
-import org.thingsboard.server.common.data.scheduler.SchedulerRepeat;
 import org.thingsboard.server.common.msg.TbMsg;
 import org.thingsboard.server.common.msg.TbMsgDataType;
 import org.thingsboard.server.common.msg.TbMsgMetaData;
@@ -174,7 +173,7 @@ public class DefaultSchedulerService extends AbstractPartitionBasedService<Tenan
     @Override
     public void onQueueMsg(TransportProtos.SchedulerServiceMsgProto proto, TbCallback callback) {
         log.debug("onQueueMsg proto {}", proto);
-        TenantId tenantId = new TenantId(new UUID(proto.getTenantIdMSB(), proto.getTenantIdLSB()));
+        TenantId tenantId = TenantId.fromUUID(new UUID(proto.getTenantIdMSB(), proto.getTenantIdLSB()));
         SchedulerEventId eventId = new SchedulerEventId(new UUID(proto.getEventIdMSB(), proto.getEventIdLSB()));
         if (proto.getDeleted()) {
             onEventDeleted(eventId);
@@ -234,7 +233,7 @@ public class DefaultSchedulerService extends AbstractPartitionBasedService<Tenan
         long passedAway = 0L;
         for (SchedulerEventInfo event : events) {
             SchedulerEventMetaData md = getSchedulerEventMetaData(event);
-            if (!md.passedAway(ts)) {
+            if (!md.getDescriptor().passedAway(ts)) {
                 eventsMetaData.put(event.getId(), md);
                 eventIds.add(event.getId());
                 scheduled++;
@@ -252,7 +251,7 @@ public class DefaultSchedulerService extends AbstractPartitionBasedService<Tenan
         if (!event.isEnabled()) {
             return;
         }
-        long eventTs = md.getNextEventTime(ts);
+        long eventTs = md.getDescriptor().getNextEventTime(ts);
         if (eventTs != 0L) {
             log.debug("schedule next event for ts {}, event {}, metadata {}", ts, event, md);
             long eventDelay = eventTs - ts;
@@ -261,19 +260,7 @@ public class DefaultSchedulerService extends AbstractPartitionBasedService<Tenan
     }
 
     private SchedulerEventMetaData getSchedulerEventMetaData(SchedulerEventInfo event) {
-        JsonNode node = event.getSchedule();
-        long startTime = node.get("startTime").asLong();
-        String timezone = node.get("timezone").asText();
-        JsonNode repeatNode = node.get("repeat");
-        SchedulerRepeat repeat = null;
-        if (repeatNode != null) {
-            try {
-                repeat = JacksonUtil.treeToValue(repeatNode, SchedulerRepeat.class);
-            } catch (IllegalArgumentException e) {
-                log.error("Failed to read scheduler config", e);
-            }
-        }
-        return new SchedulerEventMetaData(event, startTime, timezone, repeat);
+        return new SchedulerEventMetaData(event.toDescriptor());
     }
 
     private void processEvent(TenantId tenantId, SchedulerEventId eventId) {

@@ -49,7 +49,7 @@
              *ngIf="!widgetMode || settings?.enabledViews === 'both'">
           <div class="tb-toolbar-button" [class.tb-selected]="mode === 'list'">
             <button mat-icon-button
-                    (click)="mode = 'list'; triggerResize();"
+                    (click)="updateMode('list')"
                     matTooltip="{{'scheduler.list-mode' | translate }}"
                     matTooltipPosition="below">
               <mat-icon>view_list</mat-icon>
@@ -57,7 +57,7 @@
           </div>
           <div class="tb-toolbar-button" [class.tb-selected]="mode === 'calendar'">
             <button mat-icon-button
-                    (click)="dataSource.selection.clear(); mode = 'calendar'; triggerResize();"
+                    (click)="updateMode('calendar')"
                     matTooltip="{{'scheduler.calendar-mode' | translate }}"
                     matTooltipPosition="below">
               <mat-icon>event</mat-icon>
@@ -65,38 +65,42 @@
           </div>
         </div>
         <span class="flex-1"></span>
-        <section *ngIf="!widgetMode">
-          <button *ngIf="addEnabled"
-                  [disabled]="isLoading$ | async"
-                  mat-icon-button
-                  (click)="addSchedulerEvent($event)"
-                  matTooltip="{{'scheduler.add-scheduler-event' | translate }}"
-                  matTooltipPosition="above">
-            <mat-icon>add</mat-icon>
-          </button>
-          <button *ngIf="assignEnabled"
-                  [disabled]="isLoading$ | async"
-                  mat-icon-button
-                  (click)="assignToEdgeSchedulerEvent($event)"
-                  matTooltip="{{'edge.assign-to-edge' | translate }}"
-                  matTooltipPosition="above">
-            <mat-icon>add</mat-icon>
-          </button>
-          <button [disabled]="isLoading$ | async"
-                  mat-icon-button
-                  (click)="enterFilterMode()"
-                  matTooltip="{{'action.search' | translate }}"
-                  matTooltipPosition="above">
-            <mat-icon>search</mat-icon>
-          </button>
-          <button [disabled]="isLoading$ | async"
-                  mat-icon-button
-                  (click)="reloadSchedulerEvents()"
-                  matTooltip="{{'action.refresh' | translate }}"
-                  matTooltipPosition="above">
-            <mat-icon>refresh</mat-icon>
-          </button>
-        </section>
+        @if (widgetMode) {
+          <ng-container *ngTemplateOutlet="widgetComponent.widgetHeaderActionsPanel"></ng-container>
+        } @else {
+          <section>
+            <button *ngIf="addEnabled"
+                    [disabled]="isLoading$ | async"
+                    mat-icon-button
+                    (click)="addSchedulerEvent($event)"
+                    matTooltip="{{'scheduler.add-scheduler-event' | translate }}"
+                    matTooltipPosition="above">
+              <mat-icon>add</mat-icon>
+            </button>
+            <button *ngIf="assignEnabled"
+                    [disabled]="isLoading$ | async"
+                    mat-icon-button
+                    (click)="assignToEdgeSchedulerEvent($event)"
+                    matTooltip="{{'edge.assign-to-edge' | translate }}"
+                    matTooltipPosition="above">
+              <mat-icon>add</mat-icon>
+            </button>
+            <button [disabled]="isLoading$ | async"
+                    mat-icon-button
+                    (click)="enterFilterMode()"
+                    matTooltip="{{'action.search' | translate }}"
+                    matTooltipPosition="above">
+              <mat-icon>search</mat-icon>
+            </button>
+            <button [disabled]="isLoading$ | async"
+                    mat-icon-button
+                    (click)="reloadSchedulerEvents()"
+                    matTooltip="{{'action.refresh' | translate }}"
+                    matTooltipPosition="above">
+              <mat-icon>refresh</mat-icon>
+            </button>
+          </section>
+        }
       </div>
     </mat-toolbar>
     <mat-toolbar class="mat-mdc-table-toolbar" [class.!hidden]="!textSearchMode || !dataSource.selection.isEmpty()">
@@ -173,7 +177,7 @@
               {{ schedulerEvent.name }}
             </mat-cell>
           </ng-container>
-          <ng-container matColumnDef="typeName">
+          <ng-container matColumnDef="type">
             <mat-header-cell *matHeaderCellDef mat-sort-header style="width: 25%"> {{ 'scheduler.type' | translate }} </mat-header-cell>
             <mat-cell *matCellDef="let schedulerEvent">
               {{ schedulerEvent.typeName }}
@@ -250,18 +254,20 @@
                      [hidePageSize]="hidePageSize"></mat-paginator>
     </div>
     <div class="mat-padding flex flex-1 flex-col" [class.!hidden]="mode !== 'calendar'">
-      <div class="flex flex-row">
-        <h2 class="mat-headline-5">
-          {{ calendarViewTitle() }}
-        </h2>
-        <mat-form-field class="mat-block flex-1" subscriptSizing="dynamic" style="margin-left: 16px; margin-right: 16px;">
-          <mat-label translate>scheduler.calendar-view-type</mat-label>
-          <mat-select [(ngModel)]="currentCalendarView" (ngModelChange)="changeCalendarView()">
-            <mat-option *ngFor="let viewType of schedulerCalendarViews" [value]="viewType">
-              {{ schedulerCalendarViewTranslations.get(viewType) | translate }}
-            </mat-option>
-          </mat-select>
-        </mat-form-field>
+      <div class="flex flex-row gap-2">
+        <div class="flex flex-1 flex-row gap-2 xs:pb-1">
+          <h2 class="mat-headline-5 xs:text-base">
+            {{ calendarViewTitle() }}
+          </h2>
+          <mat-form-field class="mat-block flex-1" subscriptSizing="dynamic">
+            <mat-label translate>scheduler.calendar-view-type</mat-label>
+            <mat-select [(ngModel)]="currentCalendarView" (ngModelChange)="changeCalendarView()">
+              <mat-option *ngFor="let viewType of schedulerCalendarViews" [value]="viewType">
+                {{ schedulerCalendarViewTranslations.get(viewType) | translate }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
         <div class="flex flex-row items-center justify-start gap-2">
           <button mat-button mat-raised-button [disabled]="isCalendarToday()" (click)="gotoCalendarToday()">
             {{'scheduler.today' | translate}}
@@ -310,19 +316,21 @@
             </div>
           </ng-template>
         </mat-menu>
-        <full-calendar #calendar [options]="calendarOptions">
-          <ng-template #eventContent let-arg>
-            <div class="fc-event-main-frame">
-              <div class="fc-event-time">
-                {{ arg.timeText }}
+        @if (mode === 'calendar' || (isCalendarInitialized | async)) {
+          <full-calendar #calendar [options]="calendarOptions">
+            <ng-template #eventContent let-arg>
+              <div class="fc-event-main-frame">
+                <div class="fc-event-time">
+                  {{ arg.timeText }}
+                </div>
+                <div class="fc-event-title-container">
+                  <b class="fc-event-title fc-sticky" *ngIf="arg.event.extendedProps.repeatInterval">{{ arg.event.extendedProps.repeatInterval }}&nbsp;</b>
+                  <div class="fc-event-title fc-sticky">{{ arg.event.title }}</div>
+                </div>
               </div>
-              <div class="fc-event-title-container">
-                <b class="fc-event-title fc-sticky" *ngIf="arg.event.extendedProps.repeatInterval">{{ arg.event.extendedProps.repeatInterval }}&nbsp;</b>
-                <div class="fc-event-title fc-sticky">{{ arg.event.title }}</div>
-              </div>
-            </div>
-          </ng-template>
-        </full-calendar>
+            </ng-template>
+          </full-calendar>
+        }
       </div>
     </div>
   </div>

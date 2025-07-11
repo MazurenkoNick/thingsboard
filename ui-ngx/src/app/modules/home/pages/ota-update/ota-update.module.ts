@@ -35,10 +35,12 @@ import { SharedModule } from '@shared/shared.module';
 import { HomeComponentsModule } from '@home/components/home-components.module';
 import { OtaUpdateRoutingModule } from '@home/pages/ota-update/ota-update-routing.module';
 import { OtaUpdateComponent } from '@home/pages/ota-update/ota-update.component';
+import { OtaUpdateTabsComponent } from '@home/pages/ota-update/ota-update-tabs.component';
 
 @NgModule({
   declarations: [
-    OtaUpdateComponent
+    OtaUpdateComponent,
+    OtaUpdateTabsComponent
   ],
   imports: [
     CommonModule,

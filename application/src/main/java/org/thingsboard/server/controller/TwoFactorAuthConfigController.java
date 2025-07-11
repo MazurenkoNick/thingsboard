@@ -74,7 +74,6 @@ public class TwoFactorAuthConfigController extends BaseController {
     private final TwoFaConfigManager twoFaConfigManager;
     private final TwoFactorAuthService twoFactorAuthService;
 
-
     @ApiOperation(value = "Get account 2FA settings (getAccountTwoFaSettings)",
             notes = "Get user's account 2FA configuration. Configuration contains configs for different 2FA providers." + NEW_LINE +
                     "Example:\n" +
@@ -91,7 +90,6 @@ public class TwoFactorAuthConfigController extends BaseController {
         accessControlService.checkPermission(user, Resource.PROFILE, Operation.WRITE);
         return twoFaConfigManager.getAccountTwoFaSettings(user.getTenantId(), user.getId()).orElse(null);
     }
-
 
     @ApiOperation(value = "Generate 2FA account config (generateTwoFaAccountConfig)",
             notes = "Generate new 2FA account config template for specified provider type. " + NEW_LINE +
@@ -213,7 +211,6 @@ public class TwoFactorAuthConfigController extends BaseController {
         return twoFaConfigManager.deleteTwoFaAccountConfig(user.getTenantId(), user.getId(), providerType);
     }
 
-
     @ApiOperation(value = "Get available 2FA providers (getAvailableTwoFaProviders)", notes =
             "Get the list of provider types available for user to use (the ones configured by tenant or sysadmin).\n" +
                     "Example of response:\n" +
@@ -303,10 +300,10 @@ public class TwoFactorAuthConfigController extends BaseController {
         return twoFaConfigManager.savePlatformTwoFaSettings(user.getTenantId(), twoFaSettings);
     }
 
-
     @Data
     public static class TwoFaAccountConfigUpdateRequest {
         private boolean useByDefault;
+
     }
 
 }

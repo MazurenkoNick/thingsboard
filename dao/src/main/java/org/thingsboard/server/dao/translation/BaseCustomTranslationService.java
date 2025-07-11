@@ -184,7 +184,7 @@ public class BaseCustomTranslationService extends AbstractCachedService<CustomTr
     public void deleteCustomTranslationByTenantId(TenantId tenantId) {
         List<CustomTranslationCompositeKey> customTranslationIds = customTranslationDao.findCustomTranslationByTenantId(tenantId.getId());
         for (CustomTranslationCompositeKey customTranslationId : customTranslationIds) {
-            deleteCustomTranslation(new TenantId(customTranslationId.getTenantId()), new CustomerId(customTranslationId.getCustomerId()), customTranslationId.getLocaleCode(), false);
+            deleteCustomTranslation(TenantId.fromUUID(customTranslationId.getTenantId()), new CustomerId(customTranslationId.getCustomerId()), customTranslationId.getLocaleCode(), false);
         }
     }
 

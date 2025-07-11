@@ -40,6 +40,7 @@ import org.thingsboard.server.common.data.Dashboard;
 import org.thingsboard.server.common.data.Device;
 import org.thingsboard.server.common.data.DeviceProfile;
 import org.thingsboard.server.common.data.EntityView;
+import org.thingsboard.server.common.data.OtaPackage;
 import org.thingsboard.server.common.data.TbResource;
 import org.thingsboard.server.common.data.asset.Asset;
 import org.thingsboard.server.common.data.asset.AssetProfile;
@@ -51,6 +52,7 @@ import org.thingsboard.server.common.data.notification.targets.NotificationTarge
 import org.thingsboard.server.common.data.notification.template.NotificationTemplate;
 import org.thingsboard.server.common.data.role.Role;
 import org.thingsboard.server.common.data.rule.RuleChain;
+import org.thingsboard.server.common.data.scheduler.SchedulerEvent;
 import org.thingsboard.server.common.data.widget.WidgetTypeDetails;
 import org.thingsboard.server.common.data.widget.WidgetsBundle;
 
@@ -81,7 +83,9 @@ import java.lang.annotation.Target;
         @Type(name = "NOTIFICATION_TEMPLATE", value = NotificationTemplate.class),
         @Type(name = "NOTIFICATION_TARGET", value = NotificationTarget.class),
         @Type(name = "NOTIFICATION_RULE", value = NotificationRule.class),
-        @Type(name = "TB_RESOURCE", value = TbResource.class)
+        @Type(name = "TB_RESOURCE", value = TbResource.class),
+        @Type(name = "OTA_PACKAGE", value = OtaPackage.class),
+        @Type(name = "SCHEDULER_EVENT", value = SchedulerEvent.class)
 })
 @JsonIgnoreProperties(value = {"tenantId", "createdTime", "version"}, ignoreUnknown = true)
 public @interface JsonTbEntity {

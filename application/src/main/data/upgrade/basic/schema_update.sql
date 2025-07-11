@@ -29,76 +29,58 @@
 -- OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 --
 
--- UPDATE INTEGRATION PROTOCOL VERSION FOR MQTT CLIENT TYPES START
+-- UPDATE OTA PACKAGE EXTERNAL ID START
 
-UPDATE integration
-SET configuration = jsonb_set(configuration::jsonb,'{clientConfiguration,protocolVersion}','"MQTT_3_1"', true)::varchar
-WHERE
-    configuration::text NOT LIKE '%\\u0000%' -- Just in case to skip corrupted or invalid binary JSON
-    AND NOT (configuration::jsonb)->'clientConfiguration' ? 'protocolVersion'
-    AND type IN ('MQTT', 'AWS_IOT', 'IBM_WATSON_IOT', 'TTI', 'TTN');
+ALTER TABLE ota_package
+    ADD COLUMN IF NOT EXISTS external_id uuid;
 
--- Set "MQTT_3_1_1" only for AZURE_IOT_HUB
-UPDATE integration
-SET configuration = jsonb_set(configuration::jsonb,'{clientConfiguration,protocolVersion}','"MQTT_3_1_1"', true)::varchar
-WHERE
-    configuration::text NOT LIKE '%\\u0000%' -- Just in case to skip corrupted or invalid binary JSON
-    AND NOT (configuration::jsonb)->'clientConfiguration' ? 'protocolVersion'
-    AND type = 'AZURE_IOT_HUB';
+DO
+$$
+    BEGIN
+        IF NOT EXISTS(SELECT 1 FROM pg_constraint WHERE conname = 'ota_package_external_id_unq_key') THEN
+            ALTER TABLE ota_package ADD CONSTRAINT ota_package_external_id_unq_key UNIQUE (tenant_id, external_id);
+        END IF;
+    END;
+$$;
 
--- UPDATE INTEGRATION PROTOCOL VERSION FOR MQTT CLIENT TYPES END
+-- UPDATE OTA PACKAGE EXTERNAL ID END
 
--- UPDATE TENANT PROFILE CASSANDRA RATE LIMITS START
+-- UPDATE SCHEDULER_EVENT EXTERNAL ID START
 
-UPDATE tenant_profile
-SET profile_data = jsonb_set(
-        profile_data,
-        '{configuration}',
-        (
-            (profile_data -> 'configuration') - 'cassandraQueryTenantRateLimitsConfiguration'
-                ||
-            COALESCE(
-                    CASE
-                        WHEN profile_data -> 'configuration' ->
-                             'cassandraQueryTenantRateLimitsConfiguration' IS NOT NULL THEN
-                            jsonb_build_object(
-                                    'cassandraReadQueryTenantCoreRateLimits',
-                                    profile_data -> 'configuration' -> 'cassandraQueryTenantRateLimitsConfiguration',
-                                    'cassandraWriteQueryTenantCoreRateLimits',
-                                    profile_data -> 'configuration' -> 'cassandraQueryTenantRateLimitsConfiguration',
-                                    'cassandraReadQueryTenantRuleEngineRateLimits',
-                                    profile_data -> 'configuration' -> 'cassandraQueryTenantRateLimitsConfiguration',
-                                    'cassandraWriteQueryTenantRuleEngineRateLimits',
-                                    profile_data -> 'configuration' -> 'cassandraQueryTenantRateLimitsConfiguration'
-                            )
-                        END,
-                    '{}'::jsonb
-            )
-            )
-                   )
-WHERE profile_data -> 'configuration' ? 'cassandraQueryTenantRateLimitsConfiguration';
+ALTER TABLE scheduler_event
+    ADD COLUMN IF NOT EXISTS external_id uuid;
 
--- UPDATE TENANT PROFILE CASSANDRA RATE LIMITS END
+DO
+$$
+    BEGIN
+        IF NOT EXISTS(SELECT 1 FROM pg_constraint WHERE conname = 'scheduler_event_external_id_unq_key') THEN
+            ALTER TABLE scheduler_event ADD CONSTRAINT scheduler_event_external_id_unq_key UNIQUE (tenant_id, external_id);
+        END IF;
+    END;
+$$;
 
--- UPDATE NOTIFICATION RULE CASSANDRA RATE LIMITS START
+-- UPDATE SCHEDULER_EVENT EXTERNAL ID END
 
-UPDATE notification_rule
-SET trigger_config = REGEXP_REPLACE(
-        trigger_config,
-        '"CASSANDRA_QUERIES"',
-        '"CASSANDRA_WRITE_QUERIES_CORE","CASSANDRA_READ_QUERIES_CORE","CASSANDRA_WRITE_QUERIES_RULE_ENGINE","CASSANDRA_READ_QUERIES_RULE_ENGINE","CASSANDRA_WRITE_QUERIES_MONOLITH","CASSANDRA_READ_QUERIES_MONOLITH"',
-        'g'
-                     )
-WHERE trigger_type = 'RATE_LIMITS'
-  AND trigger_config LIKE '%"CASSANDRA_QUERIES"%';
-
--- UPDATE NOTIFICATION RULE CASSANDRA RATE LIMITS END
-
--- UPDATE COMPONENT DESCRIPTOR SECRETS START
-
-ALTER TABLE component_descriptor ADD COLUMN IF NOT EXISTS has_secrets boolean default false;
-
--- UPDATE COMPONENT DESCRIPTOR SECRETS END
+-- UPDATE NEW REPORT FEATURE START
 
 UPDATE scheduler_event SET type = 'generateDashboardReport' WHERE type = 'generateReport';
 ALTER TABLE api_usage_state ADD COLUMN IF NOT EXISTS report_exec varchar(32) DEFAULT 'ENABLED';
+
+-- UPDATE NEW REPORT FEATURE END
+
+-- DROP INDEXES THAT DUPLICATE UNIQUE CONSTRAINT START
+
+DROP INDEX IF EXISTS idx_device_external_id;
+DROP INDEX IF EXISTS idx_device_profile_external_id;
+DROP INDEX IF EXISTS idx_asset_external_id;
+DROP INDEX IF EXISTS idx_entity_view_external_id;
+DROP INDEX IF EXISTS idx_rule_chain_external_id;
+DROP INDEX IF EXISTS idx_dashboard_external_id;
+DROP INDEX IF EXISTS idx_customer_external_id;
+DROP INDEX IF EXISTS idx_widgets_bundle_external_id;
+-- PE
+DROP INDEX IF EXISTS idx_converter_external_id;
+DROP INDEX IF EXISTS idx_integration_external_id;
+DROP INDEX IF EXISTS idx_role_external_id;
+
+-- DROP INDEXES THAT DUPLICATE UNIQUE CONSTRAINT END

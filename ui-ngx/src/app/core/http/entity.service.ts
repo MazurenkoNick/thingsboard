@@ -631,9 +631,7 @@ export class EntityService {
         break;
       case EntityType.SCHEDULER_EVENT:
         pageLink.sortOrder.property = 'name';
-        entitiesObservable = this.schedulerEventService.getSchedulerEvents(null, config).pipe(
-          map((schedulerEvents) => pageLink.filterData(schedulerEvents))
-        );
+        entitiesObservable = this.schedulerEventService.getSchedulerEventsByPageLink(null, pageLink, null, config);
         break;
       case EntityType.BLOB_ENTITY:
         pageLink.sortOrder.property = 'name';
@@ -1981,7 +1979,7 @@ export class EntityService {
           .pipe(map(entities => entities.data));
         break;
       case EntityType.SCHEDULER_EVENT:
-        entitiesObservable = this.schedulerEventService.getEdgeSchedulerEvents(edgeId);
+        entitiesObservable = this.schedulerEventService.getSchedulerEventsByPageLink(null, pageLink, edgeId);
         break;
       case EntityType.RULE_CHAIN:
         entitiesObservable = this.ruleChainService.getEdgeRuleChains(edgeId, pageLink).pipe(map(entities => entities.data));

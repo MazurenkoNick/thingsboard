@@ -42,11 +42,10 @@ import {
 } from '@shared/models/scheduler-event.models';
 import { isDefinedAndNotNull } from '@core/utils';
 import {
-  ReportTemplateInfo,
-  ReportTemplateQuery,
   ScheduledReportInfo,
   ReportQuery
 } from '@shared/models/report.models';
+import { PageLink } from '@shared/models/page/page-link';
 import { PageData } from '@shared/models/page/page-data';
 
 @Injectable({
@@ -66,6 +65,14 @@ export class SchedulerEventService {
     }
     return this.http.get<Array<SchedulerEventWithCustomerInfo>>(url,
       defaultHttpOptionsFromConfig(config));
+  }
+
+  public getSchedulerEventsByPageLink(type: string, pageLink: PageLink, edgeId?: string, config?: RequestConfig): Observable<PageData<SchedulerEventWithCustomerInfo>> {
+    return this.http.get<PageData<SchedulerEventWithCustomerInfo>>(`/api/schedulerEvents${pageLink.toQuery()}${type ? `&type=${type}` : ''}${edgeId ? `&edgeId=${edgeId}` : ''}`, defaultHttpOptionsFromConfig(config));
+  }
+
+  public getCalendarSchedulerEvents(type: string, startTime: number, endTime: number, textSearch: string, edgeId?: string, config?: RequestConfig): Observable<Array<SchedulerEventWithCustomerInfo>> {
+    return this.http.get<Array<SchedulerEventWithCustomerInfo>>(`/api/schedulerEvents?startTime=${startTime}&endTime=${endTime}${type ? `&type=${type}` : ''}${textSearch ? `&textSearch=${textSearch}` : ''}${edgeId ? `&edgeId=${edgeId}` : ''}`, defaultHttpOptionsFromConfig(config));
   }
 
   public getSchedulerEventsByIds(schedulerEventIds: Array<string>, config?: RequestConfig): Observable<Array<SchedulerEventInfo>> {
