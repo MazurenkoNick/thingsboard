@@ -79,5 +79,6 @@ export * from './entity-group.models';
 export * from './usage.models';
 export * from './query/query.models';
 export * from './regex.constants';
-export * from './trendz-settings.models'
-export * from './secret-storage.models'
+export * from './trendz-settings.models';
+export * from './secret-storage.models';
+export * from './ai-model.models';

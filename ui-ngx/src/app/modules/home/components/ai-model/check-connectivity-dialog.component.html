@@ -30,43 +30,43 @@
     OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 
 -->
-<section [formGroup]="timeInputForm" class="flex gap-4">
-  <mat-form-field [class]="{'number': inlineField, 'max-w-66%': !inlineField, 'flex-full': !inlineField}"
-                  [appearance]="inlineField ? 'outline' : appearance"
-                  [subscriptSizing]="inlineField ? 'dynamic' : subscriptSizing">
-    @if (labelText && !inlineField) {
-      <mat-label>{{ labelText }}</mat-label>
-    }
-    <input type="number" min="0" step="1" matInput formControlName="time" placeholder="{{ 'widget-config.set' | translate }}">
-    <div matSuffix>
-      <ng-content select="[matSuffix]"></ng-content>
+<mat-toolbar class="transparent">
+  <h2 translate>ai-models.check-connectivity</h2>
+  <span class="flex-1"></span>
+  <button mat-icon-button
+          (click)="cancel()"
+          type="button">
+    <mat-icon class="material-icons">close</mat-icon>
+  </button>
+</mat-toolbar>
+<div mat-dialog-content>
+  <div class="flex h-full flex-1 flex-col items-center justify-center">
+    <mat-progress-spinner color="warn" mode="indeterminate"
+                          strokeWidth="5" *ngIf="!showCheckSuccess && !checkErrMsg">
+    </mat-progress-spinner>
+    <div *ngIf="showCheckSuccess">
+      <div class="flex flex-1 items-center justify-center">
+        <mat-icon class="success connection-icon">check_circle</mat-icon>
+      </div>
+      <span class="connection-status success">{{ "ai-models.check-connectivity-success" | translate }}</span>
     </div>
-    @if (inlineField) {
-      <mat-icon matSuffix
-                  matTooltipPosition="above"
-                  matTooltipClass="tb-error-tooltip"
-                  [matTooltip]="hasError"
-                  *ngIf="hasError"
-                  class="tb-error">
-          warning
-        </mat-icon>
-    } @else {
-      <mat-hint *ngIf="subscriptSizing === 'fixed'"></mat-hint>
-      <mat-error *ngIf="hasError">
-        {{ hasError }}
-      </mat-error>
-    }
-  </mat-form-field>
-  <mat-form-field [class.h-fit.max-w-33%.flex-full]="!inlineField"
-                  [appearance]="inlineField ? 'outline' : appearance"
-                  [subscriptSizing]="inlineField ? 'dynamic' : subscriptSizing">
-    @if (!inlineField) {
-      <mat-label translate>rule-node-config.units</mat-label>
-    }
-    <mat-select formControlName="timeUnit">
-      @for (timeUnit of timeUnits; track timeUnit) {
-        <mat-option [value]="timeUnit">{{ timeUnitTranslations.get(timeUnit) | translate }}</mat-option>
-      }
-    </mat-select>
-  </mat-form-field>
-</section>
+    <div *ngIf="checkErrMsg" class="w-full">
+      <div class="flex flex-1 items-center justify-center">
+        <mat-icon class="error connection-icon">cancel</mat-icon>
+      </div>
+      <div class="connection-status error">{{ "ai-models.check-connectivity-failed" | translate }}</div>
+      <tb-json-object-edit class="json-editor"
+        readonly
+        [ngModel]="checkErrMsg">
+      </tb-json-object-edit>
+    </div>
+  </div>
+</div>
+<div mat-dialog-actions class="justify-end">
+  <button mat-button color="primary"
+          type="button"
+          [disabled]="(isLoading$ | async)"
+          (click)="cancel()" cdkFocusInitial>
+    {{ 'action.cancel' | translate }}
+  </button>
+</div>

@@ -396,6 +396,7 @@ import * as SecretKeyInputComponent from '@shared/components/secret-storage/secr
 import * as SecretFileInputComponent from '@shared/components/secret-storage/secret-file-input.component';
 import * as SecretStorageDialogComponent from '@shared/components/secret-storage/secret-storage-dialog.component';
 import * as SecretAutocompleteComponent from '@shared/components/secret-storage/secret-autocomplete.component';
+import * as AIModelDialogComponent from '@home/components/ai-model/ai-model-dialog.component';
 
 import { IModulesMap } from '@modules/common/modules-map.models';
 import { Observable, of } from 'rxjs';
@@ -774,7 +775,8 @@ class ModulesMap implements IModulesMap {
     '@home/components/scheduler/config/email-config.component': EmailConfigComponent,
     '@home/components/scheduler/scheduler-event-schedule.component': SchedulerEventScheduleComponent,
     '@home/components/profile/queue/tenant-profile-queues.component': TenantProfileQueuesComponent,
-    '@home/components/queue/queue-form.component': QueueFormComponent
+    '@home/components/queue/queue-form.component': QueueFormComponent,
+    '@home/components/ai-model/ai-model-dialog.component': AIModelDialogComponent,
   };
 
   init(): Observable<any> {

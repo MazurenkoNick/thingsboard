@@ -99,6 +99,15 @@ export class SecretFileInputComponent extends PageComponent implements OnInit, C
   @Output()
   fileNameChanged = new EventEmitter<string|string[]>();
 
+  @Input()
+  accept = '*/*';
+
+  @Input()
+  maxSizeByte = 524288;
+
+  @Input()
+  allowedExtensions: string;
+
   secretStorageFile: string;
 
   private modelValue: string;
