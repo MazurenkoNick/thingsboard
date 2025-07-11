@@ -56,6 +56,7 @@ import {
 import { MatDialog } from '@angular/material/dialog';
 import { MatButton } from '@angular/material/button';
 import { coerceBoolean } from '@shared/decorators/coercion';
+import { MatFormFieldAppearance } from '@angular/material/form-field';
 
 @Component({
   selector: 'tb-template-autocomplete',
@@ -85,6 +86,8 @@ export class TemplateAutocompleteComponent implements ControlValueAccessor, OnIn
   @coerceBoolean()
   allowEdit = false;
 
+  @Input()
+  appearance: MatFormFieldAppearance = 'fill';
 
   @Input()
   disabled: boolean;

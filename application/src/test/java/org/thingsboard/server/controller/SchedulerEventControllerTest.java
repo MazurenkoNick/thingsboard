@@ -39,10 +39,19 @@ import org.junit.Test;
 import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.server.common.data.edge.Edge;
 import org.thingsboard.server.common.data.id.IdBased;
+import org.thingsboard.server.common.data.id.ReportTemplateId;
 import org.thingsboard.server.common.data.id.SchedulerEventId;
+import org.thingsboard.server.common.data.id.UserId;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
+import org.thingsboard.server.common.data.report.ReportConfig;
+import org.thingsboard.server.common.data.report.ReportInfo;
+import org.thingsboard.server.common.data.report.ReportTemplate;
+import org.thingsboard.server.common.data.report.ReportTemplateType;
+import org.thingsboard.server.common.data.report.TbReportFormat;
+import org.thingsboard.server.common.data.report.configuration.CsvReportTemplateConfig;
 import org.thingsboard.server.common.data.scheduler.MonthlyRepeat;
+import org.thingsboard.server.common.data.scheduler.ScheduledReportInfo;
 import org.thingsboard.server.common.data.scheduler.SchedulerEvent;
 import org.thingsboard.server.common.data.scheduler.SchedulerEventInfo;
 import org.thingsboard.server.common.data.scheduler.SchedulerEventWithCustomerInfo;
@@ -58,6 +67,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @DaoSqlTest
@@ -218,6 +228,69 @@ public class SchedulerEventControllerTest extends AbstractControllerTest {
                 }, pageLink);
         Assert.assertFalse(pageData.hasNext());
         Assert.assertEquals(0, pageData.getTotalElements());
+    }
+
+    @Test
+    public void testScheduleReportGeneration() throws Exception {
+        loginTenantAdmin();
+        ReportTemplate tenantTemplate = buildTemplate("CSV report template", ReportTemplateType.REPORT, TbReportFormat.CSV);
+        tenantTemplate = doPost("/api/reportTemplate", tenantTemplate, ReportTemplate.class);
+
+        SchedulerEvent schedulerEvent = createReportSchedulerEvent(tenantTemplate.getId(), tenantAdminUserId);
+        doPost("/api/schedulerEvent", schedulerEvent, SchedulerEvent.class);
+
+        loginCustomerAdminUser();
+        ReportTemplate customerTemplate = buildTemplate("CSV report template", ReportTemplateType.REPORT, TbReportFormat.CSV);
+        customerTemplate = doPost("/api/reportTemplate", customerTemplate, ReportTemplate.class);
+
+        SchedulerEvent schedulerEvent2 = createReportSchedulerEvent(customerTemplate.getId(), customerAdminUserId);
+        doPost("/api/schedulerEvent", schedulerEvent2, SchedulerEvent.class);
+
+        // wait for reports
+        loginTenantAdmin();
+        await().atMost(TIMEOUT, TimeUnit.SECONDS).until(() ->
+                        doGetTypedWithPageLink("/api/v2/reportInfos?",  new TypeReference<PageData<ReportInfo>>() {
+                        }, new PageLink(30)),
+                result -> result.getData().size() == 2);
+
+        // check report infos
+        PageData<ScheduledReportInfo> scheduledReportInfos = doGetTypedWithPageLink("/api/scheduledReports?includeCustomers=true&", new TypeReference<PageData<ScheduledReportInfo>>() {
+        }, new PageLink(30));
+        assertThat(scheduledReportInfos.getData()).hasSize(2);
+
+        // filter by report template id
+        PageData<ScheduledReportInfo> tenantReportInfos = doGetTypedWithPageLink("/api/scheduledReports?includeCustomers=true&reportTemplateId=" + tenantTemplate.getId().getId() + "&", new TypeReference<PageData<ScheduledReportInfo>>() {
+        }, new PageLink(30));
+        assertThat(tenantReportInfos.getData()).hasSize(1);
+    }
+
+    private ReportTemplate buildTemplate(String templateName, ReportTemplateType report, TbReportFormat format) {
+        ReportTemplate template = new ReportTemplate();
+        template.setName(templateName);
+        template.setType(report);
+        template.setFormat(format);
+        CsvReportTemplateConfig configuration = new CsvReportTemplateConfig();
+        configuration.setComponents(new ArrayList<>());
+        template.setConfiguration(configuration);
+        return template;
+    }
+
+    private SchedulerEvent createReportSchedulerEvent(ReportTemplateId templateId, UserId userId) {
+        SchedulerEvent schedulerEvent = new SchedulerEvent();
+        schedulerEvent.setName("Report Scheduler Event");
+        schedulerEvent.setType("generateReport");
+        ObjectNode schedule = JacksonUtil.newObjectNode();
+        schedule.put("startTime", System.currentTimeMillis() + 3000);
+        schedule.put("timezone", "UTC");
+        MonthlyRepeat schedulerRepeat = new MonthlyRepeat();
+        schedule.set("repeat", JacksonUtil.valueToTree(schedulerRepeat));
+        schedulerEvent.setSchedule(schedule);
+        ReportConfig reportConfig = new ReportConfig();
+        reportConfig.setReportTemplateId(templateId);
+        reportConfig.setTimezone("Europe/Kiev");
+        reportConfig.setUserId(userId);
+        schedulerEvent.setConfiguration(JacksonUtil.valueToTree(reportConfig));
+        return schedulerEvent;
     }
 
     private SchedulerEvent saveSchedulerEvent(SchedulerEvent schedulerEvent) {

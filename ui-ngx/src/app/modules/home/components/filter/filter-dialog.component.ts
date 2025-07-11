@@ -53,6 +53,7 @@ export interface FilterDialogData {
   isAdd: boolean;
   filters: Filters | Array<Filter>;
   filter?: Filter;
+  disableUserEdit?: boolean;
 }
 
 @Component({
@@ -65,6 +66,8 @@ export class FilterDialogComponent extends DialogComponent<FilterDialogComponent
   implements OnInit, ErrorStateMatcher {
 
   isAdd: boolean;
+  disableUserEdit: boolean;
+
   filters: Array<Filter>;
 
   filter: Filter;
@@ -83,6 +86,7 @@ export class FilterDialogComponent extends DialogComponent<FilterDialogComponent
               public translate: TranslateService) {
     super(store, router, dialogRef);
     this.isAdd = data.isAdd;
+    this.disableUserEdit = data.disableUserEdit;
     if (Array.isArray(data.filters)) {
       this.filters = data.filters;
     } else {
@@ -96,7 +100,7 @@ export class FilterDialogComponent extends DialogComponent<FilterDialogComponent
         id: null,
         filter: '',
         keyFilters: [],
-        editable: true
+        editable: !this.disableUserEdit
       };
     } else {
       this.filter = data.filter;
@@ -104,9 +108,11 @@ export class FilterDialogComponent extends DialogComponent<FilterDialogComponent
 
     this.filterFormGroup = this.fb.group({
       filter: [this.filter.filter, [this.validateDuplicateFilterName(), Validators.required]],
-      editable: [this.filter.editable],
       keyFilters: [this.filter.keyFilters, Validators.required]
     });
+    if (!this.disableUserEdit) {
+      this.filterFormGroup.addControl('editable', this.fb.control(this.filter.editable));
+    }
   }
 
   validateDuplicateFilterName(): ValidatorFn {
@@ -142,7 +148,7 @@ export class FilterDialogComponent extends DialogComponent<FilterDialogComponent
   save(): void {
     this.submitted = true;
     this.filter.filter = this.filterFormGroup.get('filter').value.trim();
-    this.filter.editable = this.filterFormGroup.get('editable').value;
+    this.filter.editable = !this.disableUserEdit ? this.filterFormGroup.get('editable').value : false;
     this.filter.keyFilters = this.filterFormGroup.get('keyFilters').value;
     if (this.isAdd) {
       this.filter.id = this.utils.guid();

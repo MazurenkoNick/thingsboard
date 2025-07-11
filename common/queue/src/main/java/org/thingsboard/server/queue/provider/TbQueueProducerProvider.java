@@ -43,6 +43,7 @@ import org.thingsboard.server.gen.transport.TransportProtos.ToEdgeNotificationMs
 import org.thingsboard.server.gen.transport.TransportProtos.ToHousekeeperServiceMsg;
 import org.thingsboard.server.gen.transport.TransportProtos.ToRuleEngineMsg;
 import org.thingsboard.server.gen.transport.TransportProtos.ToRuleEngineNotificationMsg;
+import org.thingsboard.server.gen.transport.TransportProtos.ToTbReportNotificationMsg;
 import org.thingsboard.server.gen.transport.TransportProtos.ToTransportMsg;
 import org.thingsboard.server.gen.transport.TransportProtos.ToUsageStatsServiceMsg;
 import org.thingsboard.server.gen.transport.TransportProtos.ToVersionControlServiceMsg;
@@ -142,5 +143,7 @@ public interface TbQueueProducerProvider {
     TbQueueProducer<TbProtoQueueMsg<ToCalculatedFieldMsg>> getCalculatedFieldsMsgProducer();
 
     TbQueueProducer<TbProtoQueueMsg<ToCalculatedFieldNotificationMsg>> getCalculatedFieldsNotificationsMsgProducer();
+
+    TbQueueProducer<TbProtoQueueMsg<ToTbReportNotificationMsg>> getTbReportNotificationsMsgProducer();
 
 }

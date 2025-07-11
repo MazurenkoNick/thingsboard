@@ -77,7 +77,7 @@ public abstract class AbstractControllerTest extends AbstractNotifyEntityTest {
     public static final String WS_URL = "ws://localhost:";
 
     @LocalServerPort
-    protected int wsPort;
+    protected int serverPort;
 
     protected volatile TbTestWebSocketClient wsClient; // lazy
     protected volatile TbTestWebSocketClient anotherWsClient; // lazy
@@ -132,7 +132,7 @@ public abstract class AbstractControllerTest extends AbstractNotifyEntityTest {
     }
 
     protected TbTestWebSocketClient buildAndConnectWebSocketClient(String path) throws URISyntaxException, InterruptedException {
-        TbTestWebSocketClient wsClient = new TbTestWebSocketClient(new URI(WS_URL + wsPort + path));
+        TbTestWebSocketClient wsClient = new TbTestWebSocketClient(new URI(WS_URL + serverPort + path));
         assertThat(wsClient.connectBlocking(TIMEOUT, TimeUnit.SECONDS)).isTrue();
         if (!path.contains("token=")) {
             wsClient.authenticate(token);

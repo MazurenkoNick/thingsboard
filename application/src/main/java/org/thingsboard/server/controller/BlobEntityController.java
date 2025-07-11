@@ -35,7 +35,6 @@ import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.ByteArrayResource;
-import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -90,10 +89,12 @@ public class BlobEntityController extends BaseController {
     public static final String BLOB_ENTITY_ID = "blobEntityId";
     public static final String INVALID_BLOB_ENTITY_ID = "Referencing non-existing Blob entity Id will cause an error.";
     public static final String BLOB_ENTITY_DESCRIPTION = "The platform uses Blob(binary large object) entities in the reporting feature, in order to store Dashboard states snapshots of different content types in base64 format. ";
-    public static final String BLOB_ENTITY_INFO_DESCRIPTION = BLOB_ENTITY_DESCRIPTION +
+    public static final String BLOB_ENTITY_INFO_DESCRIPTION =
+            BLOB_ENTITY_DESCRIPTION +
             "BlobEntityInfo represents an object that contains base info about the blob entity(name, type, contentType, etc.). " +
             "See the 'Model' tab of the Response Class for more details.";
-    public static final String BLOB_ENTITY_INFO_WITH_CUSTOMER_INFO_DESCRIPTION = BLOB_ENTITY_DESCRIPTION +
+    public static final String BLOB_ENTITY_INFO_WITH_CUSTOMER_INFO_DESCRIPTION =
+            BLOB_ENTITY_DESCRIPTION +
             "BlobEntityWithCustomerInfo represents an object that contains base info about the blob entity(name, type, contentType, etc.) " +
             "and info about the customer(customerTitle, customerIsPublic) of the user that scheduled generation of the dashboard report. ";
     public static final String BLOB_ENTITY_QUERY_START_TIME_DESCRIPTION = "The start timestamp in milliseconds of the search time range over the BlobEntityWithCustomerInfo class field: 'createdTime'.";
@@ -122,7 +123,7 @@ public class BlobEntityController extends BaseController {
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
     @RequestMapping(value = "/blobEntity/{blobEntityId}/download", method = RequestMethod.GET)
     @ResponseBody
-    public ResponseEntity<Resource> downloadBlobEntity(
+    public ResponseEntity<ByteArrayResource> downloadBlobEntity(
             @Parameter(description = BLOB_ENTITY_ID_PARAM_DESCRIPTION, required = true)
             @PathVariable(BLOB_ENTITY_ID) String strBlobEntityId) throws ThingsboardException {
         checkParameter(BLOB_ENTITY_ID, strBlobEntityId);

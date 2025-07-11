@@ -61,6 +61,13 @@ $$;
 
 -- UPDATE SCHEDULER_EVENT EXTERNAL ID END
 
+-- UPDATE NEW REPORT FEATURE START
+
+UPDATE scheduler_event SET type = 'generateDashboardReport' WHERE type = 'generateReport';
+ALTER TABLE api_usage_state ADD COLUMN IF NOT EXISTS report_exec varchar(32) DEFAULT 'ENABLED';
+
+-- UPDATE NEW REPORT FEATURE END
+
 -- DROP INDEXES THAT DUPLICATE UNIQUE CONSTRAINT START
 
 DROP INDEX IF EXISTS idx_device_external_id;

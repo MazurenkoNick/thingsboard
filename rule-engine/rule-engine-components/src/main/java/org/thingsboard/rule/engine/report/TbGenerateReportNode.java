@@ -44,7 +44,7 @@ import org.thingsboard.server.common.data.User;
 import org.thingsboard.server.common.data.blob.BlobEntity;
 import org.thingsboard.server.common.data.id.UserId;
 import org.thingsboard.server.common.data.plugin.ComponentType;
-import org.thingsboard.server.common.data.report.ReportConfig;
+import org.thingsboard.server.common.data.dashboardreport.DashboardReportConfig;
 import org.thingsboard.server.common.msg.TbMsg;
 import org.thingsboard.server.common.msg.TbMsgMetaData;
 
@@ -54,14 +54,13 @@ import java.util.UUID;
 @Slf4j
 @RuleNode(
         type = ComponentType.ACTION,
-        name = "generate report",
+        name = "generate dashboard report",
         configClazz = TbGenerateReportNodeConfiguration.class,
-        nodeDescription = "Generates report",
+        nodeDescription = "Generates dashboard report",
         nodeDetails = "Generates dashboard based reports.",
-        configDirective = "tbActionNodeGenerateReportConfig",
+        configDirective = "tbActionNodeGenerateDashboardReportConfig",
         icon = "description"
 )
-
 public class TbGenerateReportNode extends TbAbstractExternalNode {
     private static final String ATTACHMENTS = "attachments";
 
@@ -75,13 +74,13 @@ public class TbGenerateReportNode extends TbAbstractExternalNode {
 
     @Override
     public void onMsg(TbContext ctx, TbMsg msg) {
-        ReportConfig reportConfig;
+        DashboardReportConfig reportConfig;
         try {
             if (this.config.isUseReportConfigFromMessage()) {
                 try {
                     JsonNode msgJson = JacksonUtil.toJsonNode(msg.getData());
                     JsonNode reportConfigJson = msgJson.get("reportConfig");
-                    reportConfig = JacksonUtil.treeToValue(reportConfigJson, ReportConfig.class);
+                    reportConfig = JacksonUtil.treeToValue(reportConfigJson, DashboardReportConfig.class);
                 } catch (Exception e) {
                     throw new RuntimeException("Incoming message doesn't contain valid reportConfig JSON configuration!", e);
                 }
@@ -95,7 +94,7 @@ public class TbGenerateReportNode extends TbAbstractExternalNode {
 
             var tbMsg = ackIfNeeded(ctx, msg);
 
-            ctx.getPeContext().getReportService().generateReport(
+            ctx.getPeContext().getDashboardReportService().generateReport(
                     ctx.getTenantId(),
                     reportConfig,
                     reportsServerEndpointUrl,

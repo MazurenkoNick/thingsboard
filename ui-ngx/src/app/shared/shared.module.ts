@@ -267,11 +267,14 @@ import { JsFuncModulesComponent } from '@shared/components/js-func-modules.compo
 import { JsFuncModuleRowComponent } from '@shared/components/js-func-module-row.component';
 import { EntityKeyAutocompleteComponent } from '@shared/components/entity/entity-key-autocomplete.component';
 import { DurationLeftPipe } from '@shared/pipe/duration-left.pipe';
+import { HtmlWithImagePipe } from '@shared/pipe/html-with-image.pipe';
 import { MqttVersionSelectComponent } from '@shared/components/mqtt-version-select.component';
 import { SecretKeyInputComponent } from '@shared/components/secret-storage/secret-key-input.component';
 import { SecretFileInputComponent } from '@shared/components/secret-storage/secret-file-input.component';
 import { SecretStorageDialogComponent } from '@shared/components/secret-storage/secret-storage-dialog.component';
 import { SecretAutocompleteComponent } from '@shared/components/secret-storage/secret-autocomplete.component';
+import { ReportTemplateAutocompleteComponent } from '@shared/components/report/report-template-autocomplete.component';
+import { FormRowDirective } from '@shared/directives/form-row.directive';
 
 export function MarkedOptionsFactory(markedOptionsService: MarkedOptionsService) {
   return markedOptionsService;
@@ -294,6 +297,7 @@ export function MarkedOptionsFactory(markedOptionsService: MarkedOptionsService)
     HasGroupEntityOrGenericPermissionPipe,
     ShortNumberPipe,
     ImagePipe,
+    HtmlWithImagePipe,
     CustomTranslatePipe,
     DurationLeftPipe,
     {
@@ -432,6 +436,7 @@ export function MarkedOptionsFactory(markedOptionsService: MarkedOptionsService)
     LedLightComponent,
     MarkdownEditorComponent,
     TruncateWithTooltipDirective,
+    FormRowDirective,
     ContextMenuDirective,
     NospacePipe,
     MillisecondsToTimeStringPipe,
@@ -442,6 +447,7 @@ export function MarkedOptionsFactory(markedOptionsService: MarkedOptionsService)
     FileSizePipe,
     DateAgoPipe,
     ImagePipe,
+    HtmlWithImagePipe,
     CustomTranslatePipe,
     SafePipe,
     ShortNumberPipe,
@@ -513,7 +519,8 @@ export function MarkedOptionsFactory(markedOptionsService: MarkedOptionsService)
     SecretKeyInputComponent,
     SecretFileInputComponent,
     SecretStorageDialogComponent,
-    SecretAutocompleteComponent
+    SecretAutocompleteComponent,
+    ReportTemplateAutocompleteComponent
   ],
   imports: [
     CommonModule,
@@ -722,6 +729,7 @@ export function MarkedOptionsFactory(markedOptionsService: MarkedOptionsService)
     LedLightComponent,
     MarkdownEditorComponent,
     TruncateWithTooltipDirective,
+    FormRowDirective,
     ContextMenuDirective,
     NospacePipe,
     MillisecondsToTimeStringPipe,
@@ -733,6 +741,7 @@ export function MarkedOptionsFactory(markedOptionsService: MarkedOptionsService)
     FileSizePipe,
     DateAgoPipe,
     ImagePipe,
+    HtmlWithImagePipe,
     CustomTranslatePipe,
     SafePipe,
     ShortNumberPipe,
@@ -802,7 +811,8 @@ export function MarkedOptionsFactory(markedOptionsService: MarkedOptionsService)
     SecretKeyInputComponent,
     SecretFileInputComponent,
     SecretStorageDialogComponent,
-    SecretAutocompleteComponent
+    SecretAutocompleteComponent,
+    ReportTemplateAutocompleteComponent
   ]
 })
 export class SharedModule { }

@@ -113,10 +113,21 @@
               {{ 'datakey.aggregation-type-hint-common' | translate }}
             </section>
           </div>
+          <div *ngIf="reportMode && dataKeyFormGroup.get('aggregationType').value && dataKeyFormGroup.get('aggregationType').value !== aggregationTypes.NONE"
+               class="tb-form-row space-between">
+            <div>{{ 'timewindow.timewindow' | translate }}</div>
+            <tb-timewindow asButton="true"
+                           strokedButton
+                           noMargin
+                           isEdit="true"
+                           timezone="true"
+                           historyOnly
+                           formControlName="timewindow"></tb-timewindow>
+          </div>
         </div>
       </ng-container>
     </div>
-    <div *ngIf="dataKeyFormGroup.get('aggregationType').value && dataKeyFormGroup.get('aggregationType').value !== aggregationTypes.NONE"
+    <div *ngIf="!reportMode && dataKeyFormGroup.get('aggregationType').value && dataKeyFormGroup.get('aggregationType').value !== aggregationTypes.NONE"
          class="tb-form-panel">
       <div class="tb-form-panel-title" translate>datakey.delta-calculation</div>
       <div class="tb-form-panel stroked tb-slide-toggle">
@@ -154,7 +165,7 @@
                     {{ 'widgets.chart.time-for-comparison-custom-interval' | translate }}
                   </mat-option>
                 </mat-select>
-              </mat-form-field>
+             </mat-form-field>
             </div>
             <div *ngIf="dataKeyFormGroup.get('timeForComparison').value === 'customInterval'" class="tb-form-row space-between">
               <div>{{ 'widgets.chart.custom-interval-value' | translate }}</div>
@@ -188,22 +199,38 @@
           </mat-panel-title>
         </mat-expansion-panel-header>
         <ng-template matExpansionPanelContent>
-          <tb-js-func *ngIf="dataKeyFormGroup.get('usePostProcessing').value" #postFuncBodyEdit
-                      [functionArgs]="['time', 'value', 'prevValue', 'timePrev', 'prevOrigValue']"
-                      [globalVariables]="functionScopeVariables"
-                      [validationArgs]="[[1, 1, 1, 1, 1],[1, '1', '1', 1, '1']]"
-                      withModules
-                      resultType="any"
-                      helpId="widget/config/datakey_postprocess_fn"
-                      formControlName="postFuncBody">
-          </tb-js-func>
-          <label *ngIf="dataKeyFormGroup.get('usePostProcessing').value" class="tb-title" style="margin-left: 15px;">
-            time - {{ 'datakey.time-description' | translate }}<br/>
-            value - {{ 'datakey.value-description' | translate }}<br/>
-            prevValue - {{ 'datakey.prev-value-description' | translate }}<br/>
-            timePrev - {{ 'datakey.time-prev-description' | translate }}<br/>
-            prevOrigValue - {{ 'datakey.prev-orig-value-description' | translate }}
-          </label>
+          @if (dataKeyFormGroup.get('usePostProcessing').value) {
+            @if (reportMode) {
+              <tb-js-func [functionArgs]="['time', 'value']"
+                          [scriptLanguage]="ScriptLanguage.TBEL"
+                          [disableUndefinedCheck]="true"
+                          noValidate="true"
+                          helpId="report/datakey_postprocess_fn"
+                          formControlName="postFuncBody">
+              </tb-js-func>
+              <label class="tb-title" style="margin-left: 15px;">
+                time - {{ 'datakey.time-description' | translate }}<br/>
+                value - {{ 'datakey.value-description' | translate }}<br/>
+              </label>
+            } @else {
+              <tb-js-func #postFuncBodyEdit
+                          [functionArgs]="['time', 'value', 'prevValue', 'timePrev', 'prevOrigValue']"
+                          [globalVariables]="functionScopeVariables"
+                          [validationArgs]="[[1, 1, 1, 1, 1],[1, '1', '1', 1, '1']]"
+                          withModules
+                          resultType="any"
+                          helpId="widget/config/datakey_postprocess_fn"
+                          formControlName="postFuncBody">
+              </tb-js-func>
+              <label class="tb-title" style="margin-left: 15px;">
+                time - {{ 'datakey.time-description' | translate }}<br/>
+                value - {{ 'datakey.value-description' | translate }}<br/>
+                prevValue - {{ 'datakey.prev-value-description' | translate }}<br/>
+                timePrev - {{ 'datakey.time-prev-description' | translate }}<br/>
+                prevOrigValue - {{ 'datakey.prev-orig-value-description' | translate }}
+              </label>
+            }
+          }
         </ng-template>
       </mat-expansion-panel>
     </div>
