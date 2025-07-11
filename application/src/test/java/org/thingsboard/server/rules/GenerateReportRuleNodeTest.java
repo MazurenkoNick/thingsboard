@@ -55,6 +55,7 @@ import org.thingsboard.server.common.data.query.DeviceTypeFilter;
 import org.thingsboard.server.common.data.report.ReportConfig;
 import org.thingsboard.server.common.data.report.ReportTemplate;
 import org.thingsboard.server.common.data.report.ReportTemplateType;
+import org.thingsboard.server.common.data.report.TbReportFormat;
 import org.thingsboard.server.common.data.report.configuration.CsvReportTemplateConfig;
 import org.thingsboard.server.common.data.report.configuration.DataKey;
 import org.thingsboard.server.common.data.report.configuration.DataSource;
@@ -115,6 +116,7 @@ public class GenerateReportRuleNodeTest extends AbstractRuleEngineControllerTest
         ReportTemplate reportTemplate = new ReportTemplate();
         reportTemplate.setConfiguration(configuration);
         reportTemplate.setName("Devices report");
+        reportTemplate.setFormat(TbReportFormat.CSV);
         reportTemplate.setType(ReportTemplateType.REPORT);
         reportTemplate = doPost("/api/reportTemplate", reportTemplate, ReportTemplate.class);
 

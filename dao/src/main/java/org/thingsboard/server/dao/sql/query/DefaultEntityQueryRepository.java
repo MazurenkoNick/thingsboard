@@ -94,6 +94,8 @@ import org.thingsboard.server.dao.model.sql.DeviceEntity;
 import org.thingsboard.server.dao.model.sql.EdgeEntity;
 import org.thingsboard.server.dao.model.sql.EntityGroupEntity;
 import org.thingsboard.server.dao.model.sql.EntityViewEntity;
+import org.thingsboard.server.dao.model.sql.ReportInfoEntity;
+import org.thingsboard.server.dao.model.sql.ReportTemplateInfoEntity;
 import org.thingsboard.server.dao.model.sql.RoleEntity;
 import org.thingsboard.server.dao.model.sql.SchedulerEventEntity;
 import org.thingsboard.server.dao.model.sql.UserEntity;
@@ -106,6 +108,9 @@ import org.thingsboard.server.dao.sql.device.DeviceRepository;
 import org.thingsboard.server.dao.sql.edge.EdgeRepository;
 import org.thingsboard.server.dao.sql.entityview.EntityViewRepository;
 import org.thingsboard.server.dao.sql.group.EntityGroupRepository;
+import org.thingsboard.server.dao.sql.report.ReportInfoRepository;
+import org.thingsboard.server.dao.sql.report.ReportTemplateInfoRepository;
+import org.thingsboard.server.dao.sql.report.ReportTemplateRepository;
 import org.thingsboard.server.dao.sql.role.RoleRepository;
 import org.thingsboard.server.dao.sql.scheduler.SchedulerEventRepository;
 import org.thingsboard.server.dao.sql.user.UserRepository;
@@ -173,6 +178,10 @@ public class DefaultEntityQueryRepository implements EntityQueryRepository {
             " THEN (select customer_id from scheduler_event where id = entity_id)" +
             " WHEN entity.entity_type = 'BLOB_ENTITY'" +
             " THEN (select customer_id from blob_entity where id = entity_id)" +
+            " WHEN entity.entity_type = 'REPORT_TEMPLATE'" +
+            " THEN (select customer_id from report_template where id = entity_id)" +
+            " WHEN entity.entity_type = 'REPORT'" +
+            " THEN (select customer_id from report where id = entity_id)" +
             " WHEN entity.entity_type = 'USER'" +
             " THEN (select customer_id from tb_user where id = entity_id)" +
             " WHEN entity.entity_type = 'DASHBOARD'" +
@@ -199,6 +208,10 @@ public class DefaultEntityQueryRepository implements EntityQueryRepository {
             " THEN (select tenant_id from scheduler_event where id = entity_id)" +
             " WHEN entity.entity_type = 'BLOB_ENTITY'" +
             " THEN (select tenant_id from blob_entity where id = entity_id)" +
+            " WHEN entity.entity_type = 'REPORT_TEMPLATE'" +
+            " THEN (select tenant_id from report_template where id = entity_id)" +
+            " WHEN entity.entity_type = 'REPORT'" +
+            " THEN (select tenant_id from report where id = entity_id)" +
             " WHEN entity.entity_type = 'CUSTOMER'" +
             " THEN (select tenant_id from customer where id = entity_id)" +
             " WHEN entity.entity_type = 'USER'" +
@@ -227,6 +240,10 @@ public class DefaultEntityQueryRepository implements EntityQueryRepository {
             " THEN (select created_time from scheduler_event where id = entity_id)" +
             " WHEN entity.entity_type = 'BLOB_ENTITY'" +
             " THEN (select created_time from blob_entity where id = entity_id)" +
+            " WHEN entity.entity_type = 'REPORT_TEMPLATE'" +
+            " THEN (select created_time from report_template where id = entity_id)" +
+            " WHEN entity.entity_type = 'REPORT'" +
+            " THEN (select created_time from report where id = entity_id)" +
             " WHEN entity.entity_type = 'CUSTOMER' " +
             " THEN (select created_time from customer where id = entity_id)" +
             " WHEN entity.entity_type = 'USER'" +
@@ -255,6 +272,10 @@ public class DefaultEntityQueryRepository implements EntityQueryRepository {
             " THEN (select name from scheduler_event where id = entity_id)" +
             " WHEN entity.entity_type = 'BLOB_ENTITY'" +
             " THEN (select name from blob_entity where id = entity_id)" +
+            " WHEN entity.entity_type = 'REPORT_TEMPLATE'" +
+            " THEN (select name from report_template where id = entity_id)" +
+            " WHEN entity.entity_type = 'REPORT'" +
+            " THEN (select name from report where id = entity_id)" +
             " WHEN entity.entity_type = 'CUSTOMER' " +
             " THEN (select title from customer where id = entity_id)" +
             " WHEN entity.entity_type = 'USER'" +
@@ -285,6 +306,8 @@ public class DefaultEntityQueryRepository implements EntityQueryRepository {
             " THEN (select type from scheduler_event where id = entity_id)" +
             " WHEN entity.entity_type = 'BLOB_ENTITY'" +
             " THEN (select type from blob_entity where id = entity_id)" +
+            " WHEN entity.entity_type = 'REPORT_TEMPLATE'" +
+            " THEN (select type from report_template where id = entity_id)" +
             " ELSE entity.entity_type END as type";
     private static final String SELECT_LABEL = " CASE" +
             " WHEN entity.entity_type = 'TENANT'" +
@@ -361,6 +384,7 @@ public class DefaultEntityQueryRepository implements EntityQueryRepository {
         entityTableMap.put(EntityType.TENANT_PROFILE, "tenant_profile");
         entityTableMap.put(EntityType.QUEUE_STATS, "queue_stats");
         entityTableMap.put(EntityType.REPORT_TEMPLATE, "report_template");
+        entityTableMap.put(EntityType.REPORT, "report");
 
         entityNameColumns.put(EntityType.DEVICE, "name");
         entityNameColumns.put(EntityType.CUSTOMER, "title");
@@ -388,11 +412,13 @@ public class DefaultEntityQueryRepository implements EntityQueryRepository {
         entityNameColumns.put(EntityType.ROLE, "name");
         entityNameColumns.put(EntityType.QUEUE_STATS, "queue_name");
         entityNameColumns.put(EntityType.REPORT_TEMPLATE, "name");
+        entityNameColumns.put(EntityType.REPORT, "name");
     }
 
     public static EntityType[] RELATION_QUERY_ENTITY_TYPES = new EntityType[]{
             EntityType.TENANT, EntityType.CUSTOMER, EntityType.USER, EntityType.DASHBOARD, EntityType.ASSET, EntityType.DEVICE,
-            EntityType.CONVERTER, EntityType.INTEGRATION, EntityType.ENTITY_VIEW, EntityType.EDGE, EntityType.ROLE, EntityType.SCHEDULER_EVENT, EntityType.BLOB_ENTITY};
+            EntityType.CONVERTER, EntityType.INTEGRATION, EntityType.ENTITY_VIEW, EntityType.EDGE, EntityType.ROLE, EntityType.SCHEDULER_EVENT, EntityType.BLOB_ENTITY,
+            EntityType.REPORT_TEMPLATE, EntityType.REPORT};
 
     private static final String HIERARCHICAL_GROUPS_QUERY = "select id from entity_group where owner_id in (" +
             " (WITH RECURSIVE customers_ids(id) AS" +
@@ -482,6 +508,8 @@ public class DefaultEntityQueryRepository implements EntityQueryRepository {
     private final RoleRepository roleRepository;
     private final AlarmRepository alarmRepository;
     private final BlobEntityRepository blobEntityRepository;
+    private final ReportTemplateInfoRepository reportTemplateInfoRepository;
+    private final ReportInfoRepository reportInfoRepository;
 
     private final DefaultQueryLogComponent queryLog;
 
@@ -491,7 +519,8 @@ public class DefaultEntityQueryRepository implements EntityQueryRepository {
                                         EdgeRepository edgeRepository,
                                         UserRepository userRepository, DashboardRepository dashboardRepository,
                                         EntityGroupRepository entityGroupRepository, SchedulerEventRepository schedulerEventRepository,
-                                        RoleRepository roleRepository, AlarmRepository alarmRepository, BlobEntityRepository blobEntityRepository
+                                        RoleRepository roleRepository, AlarmRepository alarmRepository, BlobEntityRepository blobEntityRepository,
+                                        ReportTemplateInfoRepository reportTemplateInfoRepository, ReportInfoRepository reportInfoRepository
             , DefaultQueryLogComponent queryLog) {
         this.jdbcTemplate = jdbcTemplate;
         this.transactionTemplate = transactionTemplate;
@@ -507,6 +536,8 @@ public class DefaultEntityQueryRepository implements EntityQueryRepository {
         this.roleRepository = roleRepository;
         this.alarmRepository = alarmRepository;
         this.blobEntityRepository = blobEntityRepository;
+        this.reportTemplateInfoRepository = reportTemplateInfoRepository;
+        this.reportInfoRepository = reportInfoRepository;
         this.queryLog = queryLog;
     }
 
@@ -920,6 +951,18 @@ public class DefaultEntityQueryRepository implements EntityQueryRepository {
                     return getOwnerId(bEntity.getTenantId(), bEntity.getCustomerId());
                 }
                 break;
+            case REPORT_TEMPLATE:
+                ReportTemplateInfoEntity rtiEntity = reportTemplateInfoRepository.findById(stateEntityId.getId()).orElse(null);
+                if (rtiEntity != null) {
+                    return getOwnerId(rtiEntity.getTenantId(), rtiEntity.getCustomerId());
+                }
+                break;
+            case REPORT:
+                ReportInfoEntity riEntity = reportInfoRepository.findById(stateEntityId.getId()).orElse(null);
+                if (riEntity != null) {
+                    return getOwnerId(riEntity.getTenantId(), riEntity.getCustomerId());
+                }
+                break;
         }
         return tenantId;
     }
@@ -1089,6 +1132,10 @@ public class DefaultEntityQueryRepository implements EntityQueryRepository {
             addCustomerEntityCheck(ctx, entitiesQuery, readPermMap, EntityType.BLOB_ENTITY);
             entitiesQuery.append(" OR ");
             addCustomerEntityCheck(ctx, entitiesQuery, readPermMap, EntityType.SCHEDULER_EVENT);
+            entitiesQuery.append(" OR ");
+            addCustomerEntityCheck(ctx, entitiesQuery, readPermMap, EntityType.REPORT_TEMPLATE);
+            entitiesQuery.append(" OR ");
+            addCustomerEntityCheck(ctx, entitiesQuery, readPermMap, EntityType.REPORT);
             // Entity is one of group entities;
             for (EntityType entityType : EntityGroup.groupTypes) {
                 entitiesQuery.append(" OR (e.entity_type = '").append(entityType.name()).append("'");

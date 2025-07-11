@@ -36,6 +36,7 @@ import com.google.common.util.concurrent.FutureCallback;
 import io.netty.channel.EventLoopGroup;
 import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.util.Arrays;
+import org.thingsboard.common.util.DebugModeUtil;
 import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.common.util.ListeningExecutor;
 import org.thingsboard.rule.engine.api.DashboardReportService;
@@ -1275,7 +1276,11 @@ public class DefaultTbContext implements TbContext, TbPeContext {
 
     private void persistDebugOutput(TbMsg msg, Set<String> relationTypes, Throwable error, String failureMessage) {
         RuleNode ruleNode = nodeCtx.getSelf();
-        mainCtx.persistDebugOutputIfNeeded(getTenantId(), ruleNode, msg, relationTypes, error, failureMessage);
+        if (DebugModeUtil.isDebugAllAvailable(ruleNode)) {
+            relationTypes.forEach(relationType -> mainCtx.persistDebugOutput(getTenantId(), ruleNode.getId(), msg, relationType, error, failureMessage));
+        } else if (DebugModeUtil.isDebugFailuresAvailable(ruleNode, relationTypes)) {
+            mainCtx.persistDebugOutput(getTenantId(), ruleNode.getId(), msg, TbNodeConnectionType.FAILURE, error, failureMessage);
+        }
     }
 
 }

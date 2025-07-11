@@ -47,6 +47,7 @@ import org.thingsboard.server.common.data.query.DeviceTypeFilter;
 import org.thingsboard.server.common.data.report.ReportRequest;
 import org.thingsboard.server.common.data.report.ReportTemplate;
 import org.thingsboard.server.common.data.report.ReportTemplateType;
+import org.thingsboard.server.common.data.report.TbReportFormat;
 import org.thingsboard.server.common.data.report.configuration.DataKey;
 import org.thingsboard.server.common.data.report.configuration.DataSource;
 import org.thingsboard.server.common.data.report.configuration.DataSourceType;
@@ -180,6 +181,7 @@ public class ApiUsageTest extends AbstractControllerTest {
 
         ReportTemplate reportTemplate = new ReportTemplate();
         reportTemplate.setName("My report");
+        reportTemplate.setFormat(TbReportFormat.PDF);
         reportTemplate.setType(ReportTemplateType.REPORT);
         reportTemplate.setDescription("My report");
         PdfReportTemplateConfig pdfReportTemplateConfig = new PdfReportTemplateConfig();

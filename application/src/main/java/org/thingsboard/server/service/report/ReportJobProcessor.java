@@ -33,9 +33,11 @@ package org.thingsboard.server.service.report;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.rule.engine.api.NotificationCenter;
+import org.thingsboard.rule.engine.mail.TbMsgToEmailNode;
 import org.thingsboard.server.actors.ActorSystemContext;
 import org.thingsboard.server.cluster.TbClusterService;
 import org.thingsboard.server.common.data.ApiUsageRecordKey;
@@ -90,6 +92,7 @@ public class ReportJobProcessor implements JobProcessor {
     private final NotificationCenter notificationCenter;
     private final TbClusterService clusterService;
     private final PartitionService partitionService;
+    @Lazy
     private final ActorSystemContext actorSystemContext;
     private final TbApiUsageStateService apiUsageStateService;
     private final TbApiUsageReportClient apiUsageClient;
@@ -156,7 +159,7 @@ public class ReportJobProcessor implements JobProcessor {
             } else {
                 relationType = TbNodeConnectionType.SUCCESS;
                 error = null;
-                outputMsg.getMetaData().putValue("reportId", result.getReport().getId().toString());
+                outputMsg.getMetaData().putValue(TbMsgToEmailNode.REPORTS, result.getReport().getId().toString());
             }
 
             TransportProtos.ToRuleEngineMsg.Builder ruleEngineMsg = TransportProtos.ToRuleEngineMsg.newBuilder()

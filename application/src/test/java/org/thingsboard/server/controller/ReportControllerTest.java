@@ -260,6 +260,9 @@ public class ReportControllerTest extends AbstractControllerTest {
         EntityAlias entityAlias = buildDevicesEntityAlias(devicesAliasId);
 
         TimeseriesTableComponent tsComponent = new TimeseriesTableComponent();
+        tsComponent.setShowTimestamp(true);
+        tsComponent.setTimestampLabel("Timestamp");
+        tsComponent.setTimestampPattern("milliseconds");
         tsComponent.setDataSources(List.of(DataSource.builder()
                 .type(DataSourceType.ENTITY)
                 .entityAliasId(devicesAliasId)
@@ -299,7 +302,7 @@ public class ReportControllerTest extends AbstractControllerTest {
             devices.add(device);
 
             // headers
-            expectedReportLines.add("Timestamp,NAME,ACTIVE,TEMPERATURE");
+            expectedReportLines.add("Timestamp,TEMPERATURE,NAME,ACTIVE");
 
             for (int j = 0; j < telemetryCount; j++) {
                 long temperature = (long) (Math.random() * 100);
@@ -310,9 +313,9 @@ public class ReportControllerTest extends AbstractControllerTest {
                 doPost("/api/plugins/telemetry/DEVICE/" + device.getId() + "/timeseries/" + DataConstants.SERVER_SCOPE, JacksonUtil.toJsonNode(String.format("{\"ts\": %s, \"values\": {\"temperature\":%s}}", ts, temperature)));
                 doPost("/api/plugins/telemetry/" + device.getId() + "/" + DataConstants.SHARED_SCOPE, attributePayload, String.class, status().isOk());
                 expectedReportLines.add(ts + "," +
-                        device.getName() + "," +
-                        "false" + "," +
-                        temperature);
+                                temperature + "," +
+                                device.getName() + "," +
+                                "false");
             }
         }
 
