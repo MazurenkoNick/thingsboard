@@ -30,129 +30,241 @@
  */
 package org.thingsboard.server.controller;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import io.swagger.v3.oas.annotations.Parameter;
-import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.ByteArrayResource;
-import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.context.request.async.DeferredResult;
-import org.thingsboard.rule.engine.api.ReportService;
-import org.thingsboard.server.common.data.DashboardInfo;
+import org.springframework.web.multipart.MultipartFile;
+import org.thingsboard.common.util.JacksonUtil;
+import org.thingsboard.rule.engine.api.JobManager;
+import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
-import org.thingsboard.server.common.data.id.DashboardId;
+import org.thingsboard.server.common.data.id.CustomerId;
+import org.thingsboard.server.common.data.id.ReportId;
+import org.thingsboard.server.common.data.id.ReportTemplateId;
+import org.thingsboard.server.common.data.id.TenantId;
+import org.thingsboard.server.common.data.id.UserId;
+import org.thingsboard.server.common.data.job.Job;
+import org.thingsboard.server.common.data.job.task.ReportTask;
+import org.thingsboard.server.common.data.page.PageData;
+import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.permission.Operation;
-import org.thingsboard.server.common.data.report.ReportConfig;
+import org.thingsboard.server.common.data.permission.Resource;
+import org.thingsboard.server.common.data.report.Report;
 import org.thingsboard.server.common.data.report.ReportData;
+import org.thingsboard.server.common.data.report.ReportInfo;
+import org.thingsboard.server.common.data.report.ReportInfoQuery;
+import org.thingsboard.server.common.data.report.ReportRequest;
+import org.thingsboard.server.common.data.report.configuration.ReportTemplateConfig;
+import org.thingsboard.server.common.data.security.Authority;
 import org.thingsboard.server.config.annotations.ApiOperation;
 import org.thingsboard.server.queue.util.TbCoreComponent;
+import org.thingsboard.server.report.service.TbReportService;
 import org.thingsboard.server.service.security.model.SecurityUser;
-import org.thingsboard.server.service.security.model.UserPrincipal;
-import org.thingsboard.server.utils.MiscUtils;
+import org.thingsboard.server.service.security.model.token.AccessJwtToken;
+import org.thingsboard.server.service.security.system.SystemSecurityService;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.function.Consumer;
+import java.util.UUID;
 
-import static org.thingsboard.server.controller.ControllerConstants.DASHBOARD_ID_PARAM_DESCRIPTION;
-import static org.thingsboard.server.controller.ControllerConstants.MARKDOWN_CODE_BLOCK_END;
-import static org.thingsboard.server.controller.ControllerConstants.MARKDOWN_CODE_BLOCK_START;
-import static org.thingsboard.server.controller.ControllerConstants.REPORT_PARAMS_EXAMPLE;
+import static org.thingsboard.server.controller.ControllerConstants.INCLUDE_CUSTOMERS_OR_SUB_CUSTOMERS;
+import static org.thingsboard.server.controller.ControllerConstants.PAGE_NUMBER_DESCRIPTION;
+import static org.thingsboard.server.controller.ControllerConstants.PAGE_SIZE_DESCRIPTION;
+import static org.thingsboard.server.controller.ControllerConstants.RBAC_DELETE_CHECK;
+import static org.thingsboard.server.controller.ControllerConstants.RBAC_READ_CHECK;
+import static org.thingsboard.server.controller.ControllerConstants.REPORT_ID_PARAM_DESCRIPTION;
+import static org.thingsboard.server.controller.ControllerConstants.REPORT_TEMPLATE_ID_DESCRIPTION;
+import static org.thingsboard.server.controller.ControllerConstants.REPORT_USER_DESCRIPTION;
+import static org.thingsboard.server.controller.ControllerConstants.SORT_ORDER_DESCRIPTION;
+import static org.thingsboard.server.controller.ControllerConstants.SORT_PROPERTY_DESCRIPTION;
 import static org.thingsboard.server.controller.ControllerConstants.TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH;
 
+@RequiredArgsConstructor
 @RestController
 @TbCoreComponent
-@RequestMapping("/api")
+@RequestMapping("/api/v2")
 public class ReportController extends BaseController {
 
-    private SimpleDateFormat defaultDateFormat = new SimpleDateFormat("yyyy-MM-dd_HH:mm:ss");
+    private static final String REPORT_DESCRIPTION = "The platform uses Report to store generated reports information.";
+    private static final String INVALID_REPORT_ID = "Referencing non-existing Report Id will cause 'Not Found' error.";
 
-    @Autowired
-    private ReportService reportService;
+    public static final String REPORT_ID = "reportId";
 
-    public static final String DASHBOARD_ID = "dashboardId";
+    private final JobManager jobManager;
+    private final TbReportService tbReportService;
+    private final SystemSecurityService systemSecurityService;
 
-    @ApiOperation(value = "Download dashboard report (downloadDashboardReport)",
-            notes = "Generate and download a report from the specified dashboard. " +
-                    "The request payload is a JSON object with params of report. For example:\n\n"
-                    + MARKDOWN_CODE_BLOCK_START + REPORT_PARAMS_EXAMPLE + MARKDOWN_CODE_BLOCK_END + "\n" + TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
-    @RequestMapping(value = "/report/{dashboardId}/download", method = RequestMethod.POST, produces = {"application/pdf", "image/jpeg", "image/png"})
-    @ResponseBody
-    public DeferredResult<ResponseEntity<Resource>> downloadDashboardReport(@Parameter(description = DASHBOARD_ID_PARAM_DESCRIPTION, required = true)
-                                                                            @PathVariable(DASHBOARD_ID) String strDashboardId,
-                                                                            @Parameter(example = REPORT_PARAMS_EXAMPLE, required = true)
-                                                                            @RequestBody JsonNode reportParams,
-                                                                            HttpServletRequest request) throws ThingsboardException {
-        DeferredResult<ResponseEntity<Resource>> result = new DeferredResult<>();
-        checkParameter(DASHBOARD_ID, strDashboardId);
-        try {
-            DashboardId dashboardId = new DashboardId(toUUID(strDashboardId));
-            DashboardInfo dashboardInfo = checkDashboardInfoId(dashboardId, Operation.READ);
-            String baseUrl = MiscUtils.constructBaseUrl(request);
+    @PostMapping(value = "/report")
+    public Report createReport(@RequestPart MultipartFile file,
+                               @RequestPart String info) throws Exception {
+        Report report = JacksonUtil.fromString(info, Report.class);
+        accessControlService.checkPermission(getCurrentUser(), Resource.REPORT, Operation.CREATE, null, report);
+        return reportService.createReport(report, file.getBytes());
+    }
 
-            String name = dashboardInfo.getTitle();
-            name += "-" + defaultDateFormat.format(new Date());
+    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN')")
+    @GetMapping(value = "/report/{reportId}/download")
+    public ResponseEntity<ByteArrayResource> downloadReport(@PathVariable(REPORT_ID) UUID id) throws ThingsboardException {
+        ReportId reportId = new ReportId(id);
+        Report report = checkReportId(reportId, Operation.READ);
+        byte[] data = reportService.getReportData(getTenantId(), reportId);
+        ByteArrayResource resource = new ByteArrayResource(data);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment;filename=" + report.getName())
+                .header("x-filename", report.getName())
+                .contentLength(resource.contentLength())
+                .header("Content-Type", report.getFormat().getContentType())
+                .body(resource);
+    }
 
-            SecurityUser currentUser = getCurrentUser();
-            String publicId = "";
-            if (currentUser.getUserPrincipal().getType() == UserPrincipal.Type.PUBLIC_ID) {
-                publicId = currentUser.getUserPrincipal().getValue();
-            }
-            reportService.
-                    generateDashboardReport(baseUrl, dashboardId, getTenantId(), currentUser.getId(), publicId, name, reportParams,
-                            onSuccess(result),
-                            result::setErrorResult);
-        } catch (Exception e) {
-            result.setErrorResult(e);
+    @ApiOperation(value = "Get Report (getReportById)",
+            notes = "Fetch the Report object based on the provided report Id. " +
+                    REPORT_DESCRIPTION + INVALID_REPORT_ID +
+                    TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH + "\n\n" + RBAC_READ_CHECK)
+    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
+    @GetMapping(value = "/report/{reportId}")
+    public Report getReportById(@Parameter(description = REPORT_ID_PARAM_DESCRIPTION, required = true)
+                                @PathVariable(REPORT_ID) String strReportId) throws ThingsboardException {
+        checkParameter(REPORT_ID, strReportId);
+        ReportId reportId = new ReportId(toUUID(strReportId));
+        return checkReportId(reportId, Operation.READ);
+    }
+
+    @ApiOperation(value = "Delete Report (deleteReport)",
+            notes = "Deletes the report. " + INVALID_REPORT_ID + "\n\n" + RBAC_DELETE_CHECK)
+    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
+    @DeleteMapping(value = "/report/{reportId}")
+    public void deleteReport(
+            @Parameter(description = REPORT_ID_PARAM_DESCRIPTION, required = true)
+            @PathVariable(REPORT_ID) String strReportId) throws Exception {
+        checkParameter(REPORT_ID, strReportId);
+        ReportId reportId = new ReportId(toUUID(strReportId));
+        checkReportId(reportId, Operation.DELETE);
+        reportService.deleteReport(getTenantId(), reportId);
+    }
+
+    @GetMapping("/reports")
+    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
+    public PageData<Report> getReports(@Parameter(description = PAGE_SIZE_DESCRIPTION, required = true)
+                                       @RequestParam int pageSize,
+                                       @Parameter(description = PAGE_NUMBER_DESCRIPTION, required = true)
+                                       @RequestParam int page,
+                                       @Parameter(description = "Case-insensitive 'substring' filter based on report's name")
+                                       @RequestParam(required = false) String textSearch,
+                                       @Parameter(description = SORT_PROPERTY_DESCRIPTION)
+                                       @RequestParam(required = false) String sortProperty,
+                                       @Parameter(description = SORT_ORDER_DESCRIPTION)
+                                       @RequestParam(required = false) String sortOrder,
+                                       @AuthenticationPrincipal SecurityUser user) throws ThingsboardException {
+        accessControlService.checkPermission(user, Resource.REPORT, Operation.READ);
+        PageLink pageLink = createPageLink(pageSize, page, textSearch, sortProperty, sortOrder);
+        return reportService.findReportsByTenantId(user.getTenantId(), pageLink);
+    }
+
+    @GetMapping("/reportInfos")
+    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
+    public PageData<ReportInfo> getReportInfos(
+            @Parameter(description = REPORT_TEMPLATE_ID_DESCRIPTION)
+            @RequestParam(required = false) UUID reportTemplateId,
+            @Parameter(description = REPORT_USER_DESCRIPTION)
+            @RequestParam(required = false) UUID userId,
+            @Parameter(description = INCLUDE_CUSTOMERS_OR_SUB_CUSTOMERS)
+            @RequestParam(required = false) Boolean includeCustomers,
+            @Parameter(description = PAGE_SIZE_DESCRIPTION, required = true)
+            @RequestParam int pageSize,
+            @Parameter(description = PAGE_NUMBER_DESCRIPTION, required = true)
+            @RequestParam int page,
+            @Parameter(description = "Case-insensitive 'substring' filter based on report's name")
+            @RequestParam(required = false) String textSearch,
+            @Parameter(description = SORT_PROPERTY_DESCRIPTION)
+            @RequestParam(required = false) String sortProperty,
+            @Parameter(description = SORT_ORDER_DESCRIPTION)
+            @RequestParam(required = false) String sortOrder,
+            @AuthenticationPrincipal SecurityUser user) throws ThingsboardException {
+        accessControlService.checkPermission(user, Resource.REPORT, Operation.READ);
+        TenantId tenantId = getCurrentUser().getTenantId();
+        PageLink pageLink = createPageLink(pageSize, page, textSearch, sortProperty, sortOrder);
+        ReportInfoQuery query = ReportInfoQuery.builder()
+                .reportTemplateId(reportTemplateId)
+                .userId(userId)
+                .includeCustomers(includeCustomers != null && includeCustomers)
+                .pageLink(pageLink)
+                .build();
+        if (Authority.TENANT_ADMIN.equals(getCurrentUser().getAuthority())) {
+            return checkNotNull(reportService.findReportInfos(tenantId, query));
+        } else {
+            CustomerId customerId = getCurrentUser().getCustomerId();
+            return checkNotNull(reportService.findReportInfos(tenantId, customerId, query));
         }
-        return result;
     }
 
     @ApiOperation(value = "Download test report (downloadTestReport)",
             notes = "Generate and download test report." + TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
-    @RequestMapping(value = "/report/test", method = RequestMethod.POST, produces = {"application/pdf", "image/jpeg", "image/png"})
-    @ResponseBody
-    public DeferredResult<ResponseEntity<Resource>> downloadTestReport(@RequestBody ReportConfig reportConfig,
-                                                                       @Parameter(description = "A string value representing the report server endpoint.", example = "http://localhost:8383")
-                                                                       @RequestParam(required = false) String reportsServerEndpointUrl) {
-        DeferredResult<ResponseEntity<Resource>> result = new DeferredResult<>();
-        try {
-            String strDashboardId = reportConfig.getDashboardId();
-            checkParameter(DASHBOARD_ID, strDashboardId);
-
-            DashboardId dashboardId = new DashboardId(toUUID(strDashboardId));
-            checkDashboardInfoId(dashboardId, Operation.READ);
-
-            reportService.generateReport(getTenantId(), reportConfig, reportsServerEndpointUrl, onSuccess(result), result::setErrorResult);
-        } catch (Exception e) {
-            result.setErrorResult(e);
+    @PostMapping(value = "/report/test")
+    public ResponseEntity<ByteArrayResource> testReportAndDownload(@RequestBody ReportRequest reportRequest) throws Exception {
+        TenantId tenantId = getTenantId();
+        UserId userId = StringUtils.isNotEmpty(reportRequest.getUserId()) ? new UserId(UUID.fromString(reportRequest.getUserId())) : getCurrentUser().getId();
+        AccessJwtToken accessToken = systemSecurityService.createUserAccessToken(tenantId, userId);
+        ReportTemplateConfig configuration = reportRequest.getReportTemplateConfig();
+        if (configuration == null) {
+            configuration = checkReportTemplateId(reportRequest.getReportTemplateId(), Operation.READ).getConfiguration();
         }
-        return result;
+
+        ReportTask reportTask = ReportTask.builder()
+                .tenantId(tenantId)
+                .reportTemplateConfig(configuration)
+                .timezone(reportRequest.getTimezone())
+                .userId(userId)
+                .accessToken(accessToken.getToken())
+                .accessTokenExpirationTs(accessToken.getClaims().getExpiration().getTime())
+                .build();
+        ReportData reportData = tbReportService.generateTestReport(reportTask);
+
+        ByteArrayResource resource = new ByteArrayResource(reportData.getData());
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment;filename=" + reportData.getName())
+                .header("x-filename", reportData.getName())
+                .contentLength(resource.contentLength())
+                .contentType(MediaType.parseMediaType(reportData.getContentType()))
+                .body(resource);
     }
 
-    private Consumer<ReportData> onSuccess(DeferredResult<ResponseEntity<Resource>> result) {
-        return reportData -> {
-            ByteArrayResource resource = new ByteArrayResource(reportData.getData());
-            ResponseEntity<Resource> response = ResponseEntity.ok().
-                    header(HttpHeaders.CONTENT_DISPOSITION, "attachment;filename=" + reportData.getName())
-                    .header("x-filename", reportData.getName())
-                    .contentLength(resource.contentLength())
-                    .contentType(parseMediaType(reportData.getContentType()))
-                    .body(resource);
-            result.setResult(response);
-        };
+    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
+    @PostMapping(value = "/report/request")
+    public Job requestReport(@RequestBody ReportRequest reportRequest) throws Exception {
+        ReportTemplateId reportTemplateId = reportRequest.getReportTemplateId();
+        if (reportTemplateId == null) {
+            /*
+             * we can't use template configuration instead of id in the job config, because job can execute much later,
+             * and job processor needs the up-to-date config when the job gets to be executed
+             * */
+            throw new IllegalArgumentException("Report template id must be specified");
+        }
+        checkReportTemplateId(reportTemplateId, Operation.READ);
+        UserId userId = StringUtils.isNotEmpty(reportRequest.getUserId()) ? new UserId(UUID.fromString(reportRequest.getUserId())) : getCurrentUser().getId();
+        TenantId tenantId = getTenantId();
+        return jobManager.submitJob(Job.newReportJob()
+                .tenantId(tenantId)
+                .reportTemplateId(reportTemplateId)
+                .userId(userId)
+                .timezone(reportRequest.getTimezone())
+                .recipientId(reportRequest.getRecipientId())
+                .notificationTemplateId(reportRequest.getNotificationTemplateId())
+                .build()).get();
     }
 
 }

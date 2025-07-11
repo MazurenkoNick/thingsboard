@@ -46,7 +46,7 @@
     .mat-mdc-form-field, tb-unit-input {
       &:not(.fixed-width) {
         width: auto;
-        &.medium-width {
+        &.standard-width, &.medium-width {
           width: auto;
         }
       }
@@ -250,6 +250,9 @@
     }
     .mat-mdc-form-field, tb-unit-input {
       width: 106px;
+      &.standard-width {
+        width: 180px;
+      }
       &.medium-width {
         width: 220px;
       }
@@ -434,10 +437,13 @@
           }
         }
         .mat-mdc-form-field-infix {
+          --mat-form-field-container-vertical-padding: 8px;
           padding-top: 8px;
           padding-bottom: 8px;
           min-height: 40px;
           width: auto;
+          font-weight: 400;
+          font-size: 14px;
           .mdc-text-field__input, .mat-mdc-select {
             font-weight: 400;
             font-size: 14px;
@@ -831,6 +837,36 @@
         display: flex;
         align-items: center;
         justify-content: flex-start;
+      }
+    }
+  }
+
+  .tb-form-panel.outlined {
+    --mdc-outlined-text-field-outline-color: rgba(0,0,0,0.12);
+    --mdc-outlined-text-field-container-shape: 6px;
+
+    box-shadow: none;
+    gap: 0;
+    padding-bottom: 0;
+
+    &:not(.stroked) {
+      border-radius: 0;
+    }
+
+    &:not(.mat-padding,.padding) {
+      padding: 0;
+    }
+
+    .tb-form-panel-title {
+      margin-bottom: 16px;
+    }
+
+    .tb-form-row {
+      height: 56px;
+      margin-bottom: 22px;
+      &.disabled {
+        border-color: var(--mdc-outlined-text-field-disabled-outline-color);
+        color: var(--mdc-outlined-text-field-disabled-input-text-color);
       }
     }
   }

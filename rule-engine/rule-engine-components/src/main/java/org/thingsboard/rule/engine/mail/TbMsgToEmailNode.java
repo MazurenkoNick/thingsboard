@@ -42,6 +42,7 @@ import org.thingsboard.rule.engine.api.TbNodeException;
 import org.thingsboard.rule.engine.api.util.TbNodeUtils;
 import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.id.BlobEntityId;
+import org.thingsboard.server.common.data.id.ReportId;
 import org.thingsboard.server.common.data.msg.TbMsgType;
 import org.thingsboard.server.common.data.msg.TbNodeConnectionType;
 import org.thingsboard.server.common.data.plugin.ComponentType;
@@ -75,6 +76,7 @@ public class TbMsgToEmailNode implements TbNode {
     private static final String DYNAMIC = "dynamic";
 
     public static final String ATTACHMENTS = "attachments";
+    public static final String REPORTS = "reports";
     private static final String EMAIL_TIMEZONE = "emailTimezone";
 
     private static final Pattern dateVarPattern = Pattern.compile("%d\\{([^\\}]*)\\}");
@@ -124,10 +126,16 @@ public class TbMsgToEmailNode implements TbNode {
         builder.subject(fromTemplateWithDate(this.config.getSubjectTemplate(), msg, currentDate, tz));
         builder.body(fromTemplateWithDate(this.config.getBodyTemplate(), msg, currentDate, tz));
         String attachmentsStr = msg.getMetaData().getValue(ATTACHMENTS);
-        if (!StringUtils.isEmpty(attachmentsStr)) {
+        if (StringUtils.isNotEmpty(attachmentsStr)) {
             builder.attachments(Arrays.stream(attachmentsStr.split(","))
                     .map(UUID::fromString)
                     .map(BlobEntityId::new).collect(Collectors.toList()));
+        }
+        String reportsStr = msg.getMetaData().getValue(REPORTS); // TODO: update documentation
+        if (StringUtils.isNotEmpty(reportsStr)) {
+            builder.reports(Arrays.stream(reportsStr.split(","))
+                    .map(id -> new ReportId(UUID.fromString(id)))
+                    .toList());
         }
         String imagesStr = msg.getMetaData().getValue(IMAGES);
         if (!StringUtils.isEmpty(imagesStr)) {

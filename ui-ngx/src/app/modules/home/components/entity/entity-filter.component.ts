@@ -31,7 +31,12 @@
 
 import { Component, EventEmitter, forwardRef, Input, OnDestroy, OnInit, Output } from '@angular/core';
 import { ControlValueAccessor, FormBuilder, FormGroup, NG_VALUE_ACCESSOR, Validators } from '@angular/forms';
-import { AliasFilterType, aliasFilterTypeTranslationMap, EntityAliasFilter } from '@shared/models/alias.models';
+import {
+  AliasFilterType,
+  aliasFilterTypeTranslationMap,
+  EntityAliasFilter,
+  reportAliasFilterTypeTranslationMap
+} from '@shared/models/alias.models';
 import { AliasEntityType, EntityType } from '@shared/models/entity-type.models';
 import { EntityService } from '@core/http/entity.service';
 import { EntitySearchDirection, entitySearchDirectionTranslations } from '@shared/models/relation.models';
@@ -39,6 +44,7 @@ import { Subject, Subscription } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { entityGroupTypes } from '@app/shared/models/entity-group.models';
 import { defaultSchedulerEventConfigTypes } from '@home/components/scheduler/scheduler-event-config.models';
+import { coerceBoolean } from '@shared/decorators/coercion';
 
 @Component({
   selector: 'tb-entity-filter',
@@ -62,6 +68,16 @@ export class EntityFilterComponent implements ControlValueAccessor, OnInit, OnDe
 
   @Output() resolveMultipleChanged: EventEmitter<boolean> = new EventEmitter<boolean>();
 
+  @Input() disableResolveMultiple: boolean;
+
+  @Input()
+  @coerceBoolean()
+  reportMode = false;
+
+  @Input()
+  @coerceBoolean()
+  subReport = false;
+
   entityFilterFormGroup: FormGroup;
   filterFormGroup: FormGroup;
 
@@ -71,7 +87,7 @@ export class EntityFilterComponent implements ControlValueAccessor, OnInit, OnDe
   listEntityTypes: Array<EntityType | AliasEntityType>;
 
   aliasFilterType = AliasFilterType;
-  aliasFilterTypeTranslations = aliasFilterTypeTranslationMap;
+  aliasFilterTypeTranslations: Map<AliasFilterType, string>;
   entityType = EntityType;
 
   directionTypes = Object.keys(EntitySearchDirection);
@@ -89,8 +105,9 @@ export class EntityFilterComponent implements ControlValueAccessor, OnInit, OnDe
   }
 
   ngOnInit(): void {
-
-    this.aliasFilterTypes = this.entityService.getAliasFilterTypesByEntityTypes(this.allowedEntityTypes);
+    const excludeStateAliases = this.reportMode && !this.subReport;
+    this.aliasFilterTypeTranslations = this.reportMode ? reportAliasFilterTypeTranslationMap : aliasFilterTypeTranslationMap;
+    this.aliasFilterTypes = this.entityService.getAliasFilterTypesByEntityTypes(this.allowedEntityTypes, excludeStateAliases);
     this.entityGroupTypes = entityGroupTypes.filter((entityType) =>
       this.allowedEntityTypes ? this.allowedEntityTypes.indexOf(entityType) > - 1 : true
     );
@@ -136,9 +153,11 @@ export class EntityFilterComponent implements ControlValueAccessor, OnInit, OnDe
   writeValue(filter: EntityAliasFilter): void {
     if (!filter) {
       filter = {
-        type: null,
-        resolveMultiple: this.resolveMultiple
+        type: null
       };
+      if (!this.disableResolveMultiple) {
+        filter.resolveMultiple = this.resolveMultiple;
+      }
     }
     this.entityFilterFormGroup.get('type').patchValue(filter.type, {emitEvent: false});
     if (filter && filter.type) {
@@ -318,13 +337,15 @@ export class EntityFilterComponent implements ControlValueAccessor, OnInit, OnDe
   }
 
   private filterTypeChanged(type: AliasFilterType) {
-    let resolveMultiple = true;
-    if (type === AliasFilterType.singleEntity || type === AliasFilterType.stateEntity || type === AliasFilterType.apiUsageState ||
+    if (!this.disableResolveMultiple) {
+      let resolveMultiple = true;
+      if (type === AliasFilterType.singleEntity || type === AliasFilterType.stateEntity || type === AliasFilterType.apiUsageState ||
         type === AliasFilterType.stateEntityOwner) {
-      resolveMultiple = false;
-    }
-    if (this.resolveMultiple !== resolveMultiple) {
-      this.resolveMultipleChanged.emit(resolveMultiple);
+        resolveMultiple = false;
+      }
+      if (this.resolveMultiple !== resolveMultiple) {
+        this.resolveMultipleChanged.emit(resolveMultiple);
+      }
     }
     this.updateFilterFormGroup(type);
   }
@@ -333,9 +354,11 @@ export class EntityFilterComponent implements ControlValueAccessor, OnInit, OnDe
     let filter = null;
     if (this.entityFilterFormGroup.valid && this.filterFormGroup.valid) {
       filter = {
-        type: this.entityFilterFormGroup.get('type').value,
-        resolveMultiple: this.resolveMultiple
+        type: this.entityFilterFormGroup.get('type').value
       };
+      if (!this.disableResolveMultiple) {
+        filter.resolveMultiple = this.resolveMultiple;
+      }
       filter = {...filter, ...this.filterFormGroup.value};
     }
     this.propagateChange(filter);

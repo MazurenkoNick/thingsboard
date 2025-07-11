@@ -101,6 +101,7 @@ import momentPlugin, { toMoment } from '@fullcalendar/moment';
 import interactionPlugin, { DateClickArg } from '@fullcalendar/interaction';
 import { FullCalendarComponent } from '@fullcalendar/angular';
 import {
+  scheduleInfo,
   schedulerCalendarView,
   schedulerCalendarViewTranslationMap,
   schedulerCalendarViewValueMap,
@@ -1006,40 +1007,7 @@ export class SchedulerEventsComponent extends PageComponent implements OnInit, A
   }
 
   private eventInfo(event: SchedulerEventWithCustomerInfo): string {
-    let info = '';
-    const startTime = event.schedule.startTime;
-    if (!event.schedule.repeat) {
-      const start = _moment.utc(startTime).local().format('MMM DD, YYYY, hh:mma');
-      info += start;
-      return info;
-    } else {
-      info += _moment.utc(startTime).local().format('hh:mma');
-      info += '<br/>';
-      info += this.translate.instant('scheduler.starting-from') + ' ' + _moment.utc(startTime).local().format('MMM DD, YYYY') + ', ';
-      if (event.schedule.repeat.type === SchedulerRepeatType.DAILY) {
-        info += this.translate.instant('scheduler.daily') + ', ';
-      } else if (event.schedule.repeat.type === SchedulerRepeatType.EVERY_N_DAYS) {
-        info += this.translate.instant('scheduler.every-n-days-text', {days: event.schedule.repeat.days}) + ', ';
-      } else if (event.schedule.repeat.type === SchedulerRepeatType.MONTHLY) {
-        info += this.translate.instant('scheduler.monthly') + ', ';
-      } else if (event.schedule.repeat.type === SchedulerRepeatType.EVERY_N_WEEKS) {
-        info += this.translate.instant('scheduler.every-n-weeks-text', {weeks: event.schedule.repeat.weeks}) + ', ';
-      } else if (event.schedule.repeat.type === SchedulerRepeatType.YEARLY) {
-        info += this.translate.instant('scheduler.yearly') + ', ';
-      } else if (event.schedule.repeat.type === SchedulerRepeatType.TIMER) {
-        const repeatInterval = this.translate.instant(schedulerTimeUnitRepeatTranslationMap.get(event.schedule.repeat.timeUnit),
-          {count: event.schedule.repeat.repeatInterval});
-        info += repeatInterval + ', ';
-      } else {
-        info += this.translate.instant('scheduler.weekly') + ' ' + this.translate.instant('scheduler.on') + ' ';
-        event.schedule.repeat.repeatOn.forEach((day) => {
-          info += this.translate.instant(schedulerWeekday[day]) + ', ';
-        });
-      }
-      info += this.translate.instant('scheduler.until') + ' ';
-      info += _moment.utc(event.schedule.repeat.endsOn).local().format('MMM DD, YYYY');
-      return info;
-    }
+    return scheduleInfo(event.schedule, this.translate);
   }
 
   unassignFromEdge($event: Event, schedulerEvent: SchedulerEventWithCustomerInfo) {

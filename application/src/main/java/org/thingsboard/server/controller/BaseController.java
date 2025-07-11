@@ -129,6 +129,8 @@ import org.thingsboard.server.common.data.id.NotificationTargetId;
 import org.thingsboard.server.common.data.id.OAuth2ClientId;
 import org.thingsboard.server.common.data.id.OtaPackageId;
 import org.thingsboard.server.common.data.id.QueueId;
+import org.thingsboard.server.common.data.id.ReportId;
+import org.thingsboard.server.common.data.id.ReportTemplateId;
 import org.thingsboard.server.common.data.id.RoleId;
 import org.thingsboard.server.common.data.id.RpcId;
 import org.thingsboard.server.common.data.id.RuleChainId;
@@ -164,6 +166,9 @@ import org.thingsboard.server.common.data.plugin.ComponentType;
 import org.thingsboard.server.common.data.query.EntityDataSortOrder;
 import org.thingsboard.server.common.data.query.EntityKey;
 import org.thingsboard.server.common.data.queue.Queue;
+import org.thingsboard.server.common.data.report.Report;
+import org.thingsboard.server.common.data.report.ReportTemplate;
+import org.thingsboard.server.common.data.report.ReportTemplateInfo;
 import org.thingsboard.server.common.data.role.Role;
 import org.thingsboard.server.common.data.role.RoleType;
 import org.thingsboard.server.common.data.rpc.Rpc;
@@ -213,6 +218,8 @@ import org.thingsboard.server.dao.ota.DeviceGroupOtaPackageService;
 import org.thingsboard.server.dao.ota.OtaPackageService;
 import org.thingsboard.server.dao.queue.QueueService;
 import org.thingsboard.server.dao.relation.RelationService;
+import org.thingsboard.server.dao.report.ReportService;
+import org.thingsboard.server.dao.report.ReportTemplateService;
 import org.thingsboard.server.dao.resource.ResourceService;
 import org.thingsboard.server.dao.role.RoleService;
 import org.thingsboard.server.dao.rpc.RpcService;
@@ -391,6 +398,12 @@ public abstract class BaseController {
 
     @Autowired
     protected BlobEntityService blobEntityService;
+
+    @Autowired
+    protected ReportTemplateService reportTemplateService;
+
+    @Autowired
+    protected ReportService reportService;
 
     @Autowired
     protected AuditLogService auditLogService;
@@ -947,6 +960,7 @@ public abstract class BaseController {
                 case MOBILE_APP_BUNDLE -> checkMobileAppBundleId(new MobileAppBundleId(entityId.getId()), operation);
                 case CALCULATED_FIELD -> checkCalculatedFieldId(new CalculatedFieldId(entityId.getId()), operation);
                 case SECRET -> checkSecretId(new SecretId(entityId.getId()), operation);
+                case REPORT_TEMPLATE -> checkReportTemplateInfoId(new ReportTemplateId(entityId.getId()), operation);
                 default -> (HasId<? extends EntityId>) checkEntityId(entityId, entitiesService::findEntityByTenantIdAndId, operation);
             };
         } catch (Exception e) {
@@ -1133,6 +1147,18 @@ public abstract class BaseController {
 
     BlobEntityWithCustomerInfo checkBlobEntityInfoId(BlobEntityId blobEntityId, Operation operation) throws ThingsboardException {
         return checkEntityId(blobEntityId, blobEntityService::findBlobEntityWithCustomerInfoById, operation);
+    }
+
+    ReportTemplate checkReportTemplateId(ReportTemplateId reportTemplateId, Operation operation) throws ThingsboardException {
+        return checkEntityId(reportTemplateId, reportTemplateService::findReportTemplateById, operation);
+    }
+
+    ReportTemplateInfo checkReportTemplateInfoId(ReportTemplateId reportTemplateId, Operation operation) throws ThingsboardException {
+        return checkEntityId(reportTemplateId, reportTemplateService::findReportTemplateInfoById, operation);
+    }
+
+    Report checkReportId(ReportId reportId, Operation operation) throws ThingsboardException {
+        return checkEntityId(reportId, reportService::findReportById, operation);
     }
 
     protected RuleNode checkRuleNode(RuleNodeId ruleNodeId, Operation operation) throws ThingsboardException {

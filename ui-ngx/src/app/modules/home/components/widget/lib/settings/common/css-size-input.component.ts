@@ -85,6 +85,9 @@ export class CssSizeInputComponent implements OnInit, ControlValueAccessor, Vali
   requiredText: string;
 
   @Input()
+  allowedCssUnits: cssUnit[];
+
+  @Input()
   @coerceBoolean()
   allowEmptyUnit = false;
 

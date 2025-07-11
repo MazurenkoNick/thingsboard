@@ -1,0 +1,97 @@
+<!--
+
+    ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
+
+    Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
+
+    NOTICE: All information contained herein is, and remains
+    the property of ThingsBoard, Inc. and its suppliers,
+    if any.  The intellectual and technical concepts contained
+    herein are proprietary to ThingsBoard, Inc.
+    and its suppliers and may be covered by U.S. and Foreign Patents,
+    patents in process, and are protected by trade secret or copyright law.
+
+    Dissemination of this information or reproduction of this material is strictly forbidden
+    unless prior written permission is obtained from COMPANY.
+
+    Access to the source code contained herein is hereby forbidden to anyone except current COMPANY employees,
+    managers or contractors who have executed Confidentiality and Non-disclosure agreements
+    explicitly covering such access.
+
+    The copyright notice above does not evidence any actual or intended publication
+    or disclosure  of  this source code, which includes
+    information that is confidential and/or proprietary, and is a trade secret, of  COMPANY.
+    ANY REPRODUCTION, MODIFICATION, DISTRIBUTION, PUBLIC  PERFORMANCE,
+    OR PUBLIC DISPLAY OF OR THROUGH USE  OF THIS  SOURCE CODE  WITHOUT
+    THE EXPRESS WRITTEN CONSENT OF COMPANY IS STRICTLY PROHIBITED,
+    AND IN VIOLATION OF APPLICABLE LAWS AND INTERNATIONAL TREATIES.
+    THE RECEIPT OR POSSESSION OF THIS SOURCE CODE AND/OR RELATED INFORMATION
+    DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
+    OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
+
+-->
+<ng-container *ngIf="panelMode; else componentMode">
+  <ng-container *ngTemplateOutlet="reportFilterPanel"></ng-container>
+</ng-container>
+<ng-template #componentMode>
+  <ng-container *ngIf="buttonMode; else reportFilterContent">
+    <button color="primary"
+            matTooltip="{{ 'report.reports-filter' | translate }}"
+            matTooltipPosition="above"
+            mat-stroked-button
+            (click)="toggleReportFilterPanel($event)">
+      <mat-icon>filter_list</mat-icon>{{ 'report.reports-filter' | translate }}
+    </button>
+  </ng-container>
+</ng-template>
+<ng-template #reportFilterPanel>
+  <form class="mat-content mat-padding flex flex-col" (ngSubmit)="update()">
+    <ng-container *ngTemplateOutlet="reportFilterContent"></ng-container>
+    <div class="tb-panel-actions flex flex-row items-center justify-end">
+      <button type="button"
+              mat-button
+              color="primary"
+              (click)="reset()">
+        {{ 'action.reset' | translate }}
+      </button>
+      <span class="flex-1"></span>
+      <button type="button"
+              mat-button
+              (click)="cancel()">
+        {{ 'action.cancel' | translate }}
+      </button>
+      <button type="submit"
+              mat-raised-button
+              color="primary"
+              [disabled]="reportFilterForm.invalid || !reportFilterForm.dirty">
+        {{ 'action.update' | translate }}
+      </button>
+    </div>
+  </form>
+</ng-template>
+<ng-template #reportFilterContent>
+  <div class="tb-form-panel tb-report-filter-component no-padding no-border" [formGroup]="reportFilterForm">
+    <div class="tb-form-row space-between">
+      <div class="fixed-title-width" translate>report-template.report-template</div>
+      <tb-report-template-autocomplete
+        class="w-64"
+        inlineField
+        placeholder="{{ 'report.filter-not-set' | translate }}"
+        [type]="ReportTemplateType.REPORT"
+        includeCustomers
+        formControlName="reportTemplateId">
+      </tb-report-template-autocomplete>
+    </div>
+    <div class="tb-form-row space-between">
+      <div class="fixed-title-width" translate>user.user</div>
+      <tb-entity-autocomplete
+        class="w-64"
+        inlineField
+        placeholder="{{ 'report.filter-not-set' | translate }}"
+        useFullEntityId
+        [entityType]="EntityType.USER"
+        formControlName="userId">
+      </tb-entity-autocomplete>
+    </div>
+  </div>
+</ng-template>

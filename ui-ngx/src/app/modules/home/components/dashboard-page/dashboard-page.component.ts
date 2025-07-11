@@ -137,11 +137,11 @@ import {
 } from '@home/components/dashboard-page/states/manage-dashboard-states-dialog.component';
 import { ImportExportService } from '@shared/import-export/import-export.service';
 import { AuthState } from '@app/core/auth/auth.models';
-import { ReportService } from '@core/http/report.service';
+import { DashboardReportService } from '@core/http/dashboard-report.service';
 import { EntityGroupInfo, resolveGroupParams } from '@shared/models/entity-group.models';
 import { UserPermissionsService } from '@core/http/user-permissions.service';
 import { Operation, Resource } from '@shared/models/security.models';
-import { ReportType } from '@shared/models/report.models';
+import { DashboardReportType } from '@shared/models/dashboard-report.models';
 import { FiltersDialogComponent, FiltersDialogData } from '@home/components/filter/filters-dialog.component';
 import { Filters } from '@shared/models/query/query.models';
 import { ConnectedPosition, Overlay, OverlayConfig, OverlayRef } from '@angular/cdk/overlay';
@@ -393,7 +393,7 @@ export class DashboardPageComponent extends PageComponent implements IDashboardC
               private route: ActivatedRoute,
               private router: Router,
               private utils: UtilsService,
-              private reportService: ReportService,
+              private reportService: DashboardReportService,
               private dashboardUtils: DashboardUtilsService,
               private entityService: EntityService,
               private dialogService: DialogService,
@@ -961,7 +961,7 @@ export class DashboardPageComponent extends PageComponent implements IDashboardC
     this.importExport.exportDashboard(this.currentDashboardId);
   }
 
-  public generateDashboardReport($event: Event, reportType: ReportType) {
+  public generateDashboardReport($event: Event, reportType: DashboardReportType) {
     const state = this.route.snapshot.queryParamMap.get('state');
     const progressText = this.translate.instant('dashboard.download-dashboard-progress', {reportType});
     this.dialogService.progress(this.reportService.downloadDashboardReport(this.currentDashboardId, reportType, state,

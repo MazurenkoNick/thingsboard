@@ -390,6 +390,8 @@ sql:
     partition_size: "${SQL_ALARM_COMMENTS_PARTITION_SIZE_HOURS:168}" # Default value - 1 week
   blob_entities:
     partition_size: "${SQL_BLOB_ENTITIES_PARTITION_SIZE_HOURS:168}" # Default value - 1 week
+  reports:
+    partition_size: "${SQL_REPORTS_PARTITION_SIZE_HOURS:168}" # Default value - 1 week
   notifications:
     partition_size: "${SQL_NOTIFICATIONS_PARTITION_SIZE_HOURS:168}" # Default value - 1 week
   # Specify whether to sort entities before batch update. Should be enabled for cluster mode to avoid deadlocks
@@ -445,6 +447,10 @@ sql:
       enabled: "${SQL_TTL_BLOB_ENTITIES_ENABLED:false}" # The parameter to specify whether to use TTL (Time To Live) for blob entities records
       ttl: "${SQL_TTL_BLOB_ENTITIES_SECS:0}" # Disabled by default.
       checking_interval_ms: "${SQL_TTL_BLOB_ENTITIES_CHECKING_INTERVAL_MS:86400000}" # Default value - 1 day
+    reports:
+      enabled: "${SQL_TTL_REPORTS_ENABLED:false}" # The parameter to specify whether to use TTL (Time To Live) for reports
+      ttl: "${SQL_TTL_REPORTS_SECS:0}" # Disabled by default.
+      checking_interval_ms: "${SQL_TTL_REPORTS_CHECKING_INTERVAL_MS:86400000}" # Default value - 1 day
     notifications:
       enabled: "${SQL_TTL_NOTIFICATIONS_ENABLED:true}" # Enable/disable TTL (Time To Live) for notification center records
       ttl: "${SQL_TTL_NOTIFICATIONS_SECS:2592000}" # Default value - 30 days
@@ -608,11 +614,13 @@ integrations:
 
 # Reports parameters
 reports:
-  server:
+  web_report:
     # Report server endpoint
-    endpointUrl: "${REPORTS_SERVER_ENDPOINT_URL:http://localhost:8383}"
+    base_url: "${REPORTS_SERVER_ENDPOINT_URL:http://localhost:8383}"
     # Maximum response size. The default value set to 50 mb
-    maxResponseSize: "${MAX_RESPONSE_SIZE:52428800}" # 50MB
+    max_response_size: "${MAX_RESPONSE_SIZE:52428800}" # 50MB
+  # Timeout in milliseconds for generating report, 2 minutes by default
+  generation_timeout_ms: "${REPORT_GENERATION_TIMEOUT_MS:120000}"
   rate_limits:
     # Enable/disable reports tenant rate limits
     enabled: "${REPORTS_TENANT_RATE_LIMITS_ENABLED:false}"
@@ -2110,6 +2118,13 @@ queue:
       poll_interval: "${TB_QUEUE_TASKS_STATS_POLL_INTERVAL_MS:500}"
       # Interval in milliseconds to process job stats
       processing_interval: "${TB_QUEUE_TASKS_STATS_PROCESSING_INTERVAL_MS:1000}"
+  report:
+    # Report service mode: 'local' or 'remote' (with tb-report microservice)
+    mode: "${TB_REPORT_SERVICE_MODE:local}"
+    # TB Report notifications topic name
+    notifications_topic: "${TB_QUEUE_REPORT_NOTIFICATIONS_TOPIC:tb_report.notifications}"
+    # Poll interval in milliseconds for TB Report queues
+    poll_interval: "${TB_QUEUE_REPORT_POLL_INTERVAL_MS:125}"
 
 # Event configuration parameters
 event:
