@@ -65,6 +65,7 @@ import org.thingsboard.server.common.data.id.OAuth2ClientId;
 import org.thingsboard.server.common.data.id.OtaPackageId;
 import org.thingsboard.server.common.data.id.QueueId;
 import org.thingsboard.server.common.data.id.QueueStatsId;
+import org.thingsboard.server.common.data.id.ReportId;
 import org.thingsboard.server.common.data.id.ReportTemplateId;
 import org.thingsboard.server.common.data.id.RoleId;
 import org.thingsboard.server.common.data.id.RpcId;
@@ -198,6 +199,9 @@ public class TenantIdLoader {
                 break;
             case REPORT_TEMPLATE:
                 tenantEntity = ctx.getPeContext().getReportTemplateService().findReportTemplateById(ctxTenantId, new ReportTemplateId(id));
+                break;
+            case REPORT:
+                tenantEntity = ctx.getPeContext().getReportService().findReportById(ctxTenantId, new ReportId(id));
                 break;
             case ROLE:
                 tenantEntity = ctx.getPeContext().getRoleService().findRoleById(ctxTenantId, new RoleId(id));

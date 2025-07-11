@@ -48,6 +48,7 @@ import org.thingsboard.server.dao.converter.ConverterService;
 import org.thingsboard.server.dao.group.EntityGroupService;
 import org.thingsboard.server.dao.grouppermission.GroupPermissionService;
 import org.thingsboard.server.dao.integration.IntegrationService;
+import org.thingsboard.server.dao.report.ReportService;
 import org.thingsboard.server.dao.report.ReportTemplateService;
 import org.thingsboard.server.dao.role.RoleService;
 import org.thingsboard.server.dao.scheduler.SchedulerEventService;
@@ -69,6 +70,8 @@ public interface TbPeContext {
     BlobEntityService getBlobEntityService();
 
     ReportTemplateService getReportTemplateService();
+
+    ReportService getReportService();
 
     GroupPermissionService getGroupPermissionService();
 

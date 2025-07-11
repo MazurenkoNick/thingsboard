@@ -127,6 +127,7 @@ import org.thingsboard.server.dao.ota.OtaPackageService;
 import org.thingsboard.server.dao.queue.QueueService;
 import org.thingsboard.server.dao.queue.QueueStatsService;
 import org.thingsboard.server.dao.relation.RelationService;
+import org.thingsboard.server.dao.report.ReportService;
 import org.thingsboard.server.dao.report.ReportTemplateService;
 import org.thingsboard.server.dao.resource.ResourceService;
 import org.thingsboard.server.dao.role.RoleService;
@@ -418,6 +419,10 @@ public class ActorSystemContext {
     @Autowired
     @Getter
     private ReportTemplateService reportTemplateService;
+
+    @Autowired
+    @Getter
+    private ReportService reportService;
 
     @Autowired
     @Getter

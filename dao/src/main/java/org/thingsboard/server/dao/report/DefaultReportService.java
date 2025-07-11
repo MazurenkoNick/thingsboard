@@ -115,12 +115,41 @@ public class DefaultReportService extends AbstractEntityService implements Repor
     }
 
     @Override
+    public void deleteReportsByTenantId(TenantId tenantId) {
+        log.trace("Executing deleteReportsByTenantId, tenantId [{}]", tenantId);
+        validateId(tenantId, id -> INCORRECT_TENANT_ID + id);
+        tenantReportsRemover.removeEntities(tenantId, tenantId);
+    }
+
+    @Override
+    public void deleteByTenantId(TenantId tenantId) {
+        deleteReportsByTenantId(tenantId);
+    }
+
+    @Override
     public void deleteReportsByTenantIdAndCustomerId(TenantId tenantId, CustomerId customerId) {
         log.trace("Executing deleteReportsByTenantIdAndCustomerId, tenantId [{}], customerId [{}]", tenantId, customerId);
         validateId(tenantId, id -> INCORRECT_TENANT_ID + id);
         validateId(customerId, id -> INCORRECT_CUSTOMER_ID + id);
         customerReportEntitiesRemover.removeEntities(tenantId, customerId);
     }
+
+    private final PaginatedRemover<TenantId, ReportInfo> tenantReportsRemover = new PaginatedRemover<>() {
+
+        @Override
+        protected PageData<ReportInfo> findEntities(TenantId tenantId, TenantId id, PageLink pageLink) {
+            return reportDao.findReportInfos(id,
+                    ReportInfoQuery.builder()
+                            .pageLink(pageLink)
+                            .includeCustomers(true)
+                            .build());
+        }
+
+        @Override
+        protected void removeEntity(TenantId tenantId, ReportInfo reportInfo) {
+            deleteReport(tenantId, new ReportId(reportInfo.getId().getId()));
+        }
+    };
 
     private PaginatedRemover<CustomerId, ReportInfo> customerReportEntitiesRemover = new PaginatedRemover<>() {
         @Override
