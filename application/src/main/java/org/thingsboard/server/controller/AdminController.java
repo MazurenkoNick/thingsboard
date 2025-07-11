@@ -167,7 +167,7 @@ public class AdminController extends BaseController {
             accessControlService.checkPermission(getCurrentUser(), Resource.WHITE_LABELING, Operation.READ);
             adminSettings = getTenantAdminSettings(getTenantId(), key, systemByDefault);
         }
-        if (adminSettings.getKey().equals("mail")) {
+        if (adminSettings.getKey().equals(MAIL_SETTINGS_KEY)) {
             ((ObjectNode) adminSettings.getJsonValue()).remove("password");
             ((ObjectNode) adminSettings.getJsonValue()).remove("refreshToken");
         }
@@ -192,7 +192,7 @@ public class AdminController extends BaseController {
             accessControlService.checkPermission(getCurrentUser(), Resource.WHITE_LABELING, Operation.WRITE);
         }
         adminSettings = checkNotNull(adminSettingsService.saveAdminSettings(tenantId, adminSettings));
-        if (adminSettings.getKey().equals("mail")) {
+        if (adminSettings.getKey().equals(MAIL_SETTINGS_KEY)) {
             ((ObjectNode) adminSettings.getJsonValue()).remove("password");
             ((ObjectNode) adminSettings.getJsonValue()).remove("refreshToken");
         }
@@ -258,12 +258,12 @@ public class AdminController extends BaseController {
             accessControlService.checkPermission(getCurrentUser(), Resource.WHITE_LABELING, Operation.READ);
         }
         adminSettings = checkNotNull(adminSettings);
-        if (adminSettings.getKey().equals("mail")) {
+        if (adminSettings.getKey().equals(MAIL_SETTINGS_KEY)) {
             AdminSettings mailSettings;
             if (Authority.SYS_ADMIN.equals(authority)) {
-                mailSettings = checkNotNull(adminSettingsService.findAdminSettingsByKey(TenantId.SYS_TENANT_ID, "mail"));
+                mailSettings = checkNotNull(adminSettingsService.findAdminSettingsByKey(TenantId.SYS_TENANT_ID, MAIL_SETTINGS_KEY));
             } else {
-                mailSettings = getTenantAdminSettings(getTenantId(), "mail", false);
+                mailSettings = getTenantAdminSettings(getTenantId(), MAIL_SETTINGS_KEY, false);
             }
             if (adminSettings.getJsonValue().has("enableOauth2") && adminSettings.getJsonValue().get("enableOauth2").asBoolean()) {
                 JsonNode refreshToken = mailSettings.getJsonValue().get("refreshToken");
