@@ -54,18 +54,11 @@ export const aiModelRoutes: Routes = [
   }
 ];
 
-const routes: Routes = [
-  {
-    path: 'ai-models',
-    redirectTo: '/settings/ai-models'
-  }
-];
-
 @NgModule({
   providers: [
     AiModelsTableConfigResolver
   ],
-  imports: [RouterModule.forChild(routes)],
+  imports: [RouterModule.forChild(aiModelRoutes)],
   exports: [RouterModule],
 })
 export class AiModelRoutingModule { }
