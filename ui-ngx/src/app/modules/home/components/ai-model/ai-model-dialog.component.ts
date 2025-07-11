@@ -82,7 +82,7 @@ export class AIModelDialogComponent extends DialogComponent<AIModelDialogCompone
   aiModelForms: FormGroup;
 
   isAdd = false;
-  readonly = true;
+  readonly = false;
 
   constructor(protected store: Store<AppState>,
               protected router: Router,
