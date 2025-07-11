@@ -199,11 +199,21 @@ public class ReportUtils {
             return;
         }
         String column = tableSortOrder.getColumn();
-        if (tableSortOrder.getDirection() == TableSortOrder.Direction.ASC) {
-            rows.sort(Comparator.comparing(row -> row.getOrDefault(column, "")));
-        } else {
-            rows.sort(Comparator.comparing(row -> row.getOrDefault(column, ""), Comparator.reverseOrder()));
+
+        Comparator<Map<String, String>> comparator = Comparator.comparing(row -> row.getOrDefault(column, ""), (v1, v2) -> {
+            boolean isV1Numeric = NumberUtils.isParsable(v1);
+            boolean isV2Numeric = NumberUtils.isParsable(v2);
+
+            if (isV1Numeric && isV2Numeric) {
+                return Double.compare(Double.parseDouble(v1), Double.parseDouble(v2));
+            }
+            return v1.compareToIgnoreCase(v2);
+        });
+
+        if (tableSortOrder.getDirection() == TableSortOrder.Direction.DESC) {
+            comparator = comparator.reversed();
         }
+        rows.sort(comparator);
     }
 
     public static Object convertStringToTypedValue(String value) {
