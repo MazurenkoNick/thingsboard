@@ -198,12 +198,34 @@ public class ReportUtils {
         if (tableSortOrder == null || tableSortOrder.getColumn() == null) {
             return;
         }
+
         String column = tableSortOrder.getColumn();
-        if (tableSortOrder.getDirection() == TableSortOrder.Direction.ASC) {
-            rows.sort(Comparator.comparing(row -> row.getOrDefault(column, "")));
-        } else {
-            rows.sort(Comparator.comparing(row -> row.getOrDefault(column, ""), Comparator.reverseOrder()));
+
+        Comparator<Map<String, String>> comparator = Comparator.comparing(
+                row -> row.getOrDefault(column, ""),
+                ReportUtils::compareMixedValuesNullFirst
+        );
+
+        if (tableSortOrder.getDirection() == TableSortOrder.Direction.DESC) {
+            comparator = comparator.reversed();
         }
+
+        rows.sort(comparator);
+    }
+
+    public static int compareMixedValuesNullFirst(String v1, String v2) {
+        if (v1 == null && v2 == null) return 0;
+        if (v1 == null) return -1;
+        if (v2 == null) return 1;
+
+        boolean isV1Numeric = NumberUtils.isParsable(v1);
+        boolean isV2Numeric = NumberUtils.isParsable(v2);
+
+        if (isV1Numeric && isV2Numeric) {
+            return Double.compare(Double.parseDouble(v1), Double.parseDouble(v2));
+        }
+
+        return v1.compareToIgnoreCase(v2);
     }
 
     public static Object convertStringToTypedValue(String value) {

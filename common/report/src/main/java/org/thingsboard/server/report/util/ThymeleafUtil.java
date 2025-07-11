@@ -112,14 +112,16 @@ public class ThymeleafUtil {
     }
 
     private static void populateMissingImagePlaceholders(String html, Map<String, Object> variables) {
-        List<String> srcList = new ArrayList<>();
         Pattern pattern = Pattern.compile("<img[^>]+src=[\"']\\$\\{([^\"'}]+)}[\"']", Pattern.CASE_INSENSITIVE);
         Matcher matcher = pattern.matcher(html);
+
         while (matcher.find()) {
-            srcList.add(matcher.group(1));
-        }
-        for (String src : srcList) {
-            variables.putIfAbsent(src, "noImage");
+            String key = matcher.group(1);
+            Object value = variables.get(key);
+
+            if (value == null || (value instanceof String str && str.isEmpty())) {
+                variables.put(key, "noImage");
+            }
         }
     }
 
