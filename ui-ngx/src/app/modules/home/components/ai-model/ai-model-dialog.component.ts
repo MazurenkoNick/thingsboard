@@ -82,6 +82,7 @@ export class AIModelDialogComponent extends DialogComponent<AIModelDialogCompone
   aiModelForms: FormGroup;
 
   isAdd = false;
+  readonly = false;
 
   constructor(protected store: Store<AppState>,
               protected router: Router,
@@ -95,6 +96,10 @@ export class AIModelDialogComponent extends DialogComponent<AIModelDialogCompone
     if (this.data.isAdd) {
       this.isAdd = true;
     }
+    if (this.data.readonly) {
+      this.readonly = true;
+    }
+
 
     this.provider = this.data.AIModel ? this.data.AIModel.configuration.provider : AiProvider.OPENAI;
 
@@ -132,7 +137,7 @@ export class AIModelDialogComponent extends DialogComponent<AIModelDialogCompone
       this.updateValidation(provider);
     })
 
-    if (this.data.readonly) {
+    if (this.readonly) {
       this.dialogTitle = 'ai-models.ai-model-view';
       this.aiModelForms.disable({emitEvent: false});
     } else {

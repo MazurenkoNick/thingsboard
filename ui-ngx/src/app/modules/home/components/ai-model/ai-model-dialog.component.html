@@ -257,7 +257,7 @@
           type="button"
           [disabled]="(isLoading$ | async)"
           (click)="cancel()" cdkFocusInitial>
-    {{ 'action.cancel' | translate }}
+    {{ (readonly ? 'action.cancel' : 'action.close') | translate }}
   </button>
   <span class="flex-1"></span>
   <button mat-button mat-stroked-button color="primary"
@@ -265,9 +265,11 @@
           [disabled]="(isLoading$ | async) || aiModelForms.invalid">
     {{ 'ai-models.check-connectivity' | translate }}
   </button>
-  <button mat-button mat-raised-button color="primary"
-          type="button" (click)="add()"
-          [disabled]="(isLoading$ | async) || aiModelForms.invalid || !aiModelForms.dirty">
-    {{ 'action.save' | translate }}
-  </button>
+  @if (readonly) {
+    <button mat-button mat-raised-button color="primary"
+            type="button" (click)="add()"
+            [disabled]="(isLoading$ | async) || aiModelForms.invalid || !aiModelForms.dirty">
+      {{ 'action.save' | translate }}
+    </button>
+  }
 </div>

@@ -37,6 +37,7 @@
     </div>
     <section class="flex flex-col">
       <tb-entity-autocomplete
+        [allowCreateNew]="resource.AI_MODEL | hasGenericPermission: operation.CREATE"
         allowCreateNew
         useFullEntityId
         required

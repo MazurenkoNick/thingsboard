@@ -37,6 +37,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { AIModelDialogComponent, AIModelDialogData } from '@home/components/ai-model/ai-model-dialog.component';
 import { AiModel, AiRuleNodeResponseFormatTypeOnlyText, ResponseFormat } from '@shared/models/ai-model.models';
 import { deepTrim } from '@core/utils';
+import { Operation, Resource } from '@shared/models/security.models';
 
 @Component({
   selector: 'tb-external-node-ai-config',
@@ -50,6 +51,9 @@ export class AiConfigComponent extends RuleNodeConfigurationComponent {
   entityType = EntityType;
 
   responseFormat = ResponseFormat;
+
+  readonly operation = Operation;
+  readonly resource = Resource;
 
   constructor(private fb: UntypedFormBuilder,
               private dialog: MatDialog) {

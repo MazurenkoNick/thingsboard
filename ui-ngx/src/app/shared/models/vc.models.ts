@@ -69,6 +69,7 @@ export const entityTypesWithoutRelatedData = new Set<EntityType | AliasEntityTyp
   EntityType.TB_RESOURCE,
   EntityType.OTA_PACKAGE,
   EntityType.SCHEDULER_EVENT,
+  EntityType.AI_MODEL,
 ]);
 
 export interface VersionCreateConfig {

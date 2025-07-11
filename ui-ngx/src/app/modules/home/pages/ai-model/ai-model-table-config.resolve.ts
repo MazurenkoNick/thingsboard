@@ -32,7 +32,7 @@
 import { Injectable } from '@angular/core';
 import {
   CellActionDescriptor,
-  DateEntityTableColumn,
+  DateEntityTableColumn, defaultEntityTablePermissions,
   EntityTableColumn,
   EntityTableConfig
 } from '@home/models/entity/entities-table-config.models';
@@ -88,12 +88,6 @@ export class AiModelsTableConfigResolver {
       )
     )
 
-    const readonly = !this.userPermissionsService.hasGenericPermission(Resource.AI_MODEL, Operation.WRITE);
-    const allowDelete = this.userPermissionsService.hasGenericPermission(Resource.AI_MODEL, Operation.DELETE);
-    this.config.addEnabled = this.userPermissionsService.hasGenericPermission(Resource.AI_MODEL, Operation.CREATE);
-    this.config.deleteEnabled = () => allowDelete;
-    this.config.entitiesDeleteEnabled = allowDelete;
-
     this.config.deleteEntityTitle = model => this.translate.instant('ai-models.delete-model-title', {modelName: model.name});
     this.config.deleteEntityContent = () => this.translate.instant('ai-models.delete-model-text');
     this.config.deleteEntitiesTitle = count => this.translate.instant('ai-models.delete-models-title', {count});
@@ -103,42 +97,43 @@ export class AiModelsTableConfigResolver {
 
     this.config.entitiesFetchFunction = pageLink => this.aiModelService.getAiModels(pageLink);
 
-    this.config.cellActionDescriptors = this.configureCellActions(readonly);
+    this.config.cellActionDescriptors = this.configureCellActions();
 
     this.config.handleRowClick = ($event, model) => {
-      this.editModel($event, model, readonly);
+      this.editModel($event, model);
       return true;
     };
   }
 
   resolve(_route: ActivatedRouteSnapshot): EntityTableConfig<AiModel> {
+    defaultEntityTablePermissions(this.userPermissionsService, this.config);
     return this.config;
   }
 
-  private configureCellActions(readonly: boolean): Array<CellActionDescriptor<AiModel>> {
+  private configureCellActions(): Array<CellActionDescriptor<AiModel>> {
     return [
       {
         name: this.translate.instant('action.edit'),
         icon: 'edit',
         isEnabled: () => true,
-        onAction: ($event, entity) => this.editModel($event, entity, readonly)
+        onAction: ($event, entity) => this.editModel($event, entity)
       }
     ];
   }
 
-  private editModel($event, AIModel: AiModel, readonly: boolean): void {
+  private editModel($event, AIModel: AiModel): void {
     $event?.stopPropagation();
-    this.addModel(AIModel, false, readonly).subscribe();
+    this.addModel(AIModel, false).subscribe();
   }
 
-  private addModel(AIModel: AiModel, isAdd = false, readonly?: boolean): Observable<AiModel> {
+  private addModel(AIModel: AiModel, isAdd = false): Observable<AiModel> {
     return this.dialog.open<AIModelDialogComponent, AIModelDialogData, AiModel>(AIModelDialogComponent, {
       disableClose: true,
       panelClass: ['tb-dialog', 'tb-fullscreen-dialog'],
       data: {
         isAdd,
         AIModel,
-        readonly
+        readonly: !this.userPermissionsService.hasGenericPermission(Resource.AI_MODEL, Operation.WRITE)
       }
     }).afterClosed().pipe(map(res => {
       if (res) {
