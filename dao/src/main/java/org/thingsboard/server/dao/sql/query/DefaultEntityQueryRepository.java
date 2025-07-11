@@ -110,7 +110,6 @@ import org.thingsboard.server.dao.sql.entityview.EntityViewRepository;
 import org.thingsboard.server.dao.sql.group.EntityGroupRepository;
 import org.thingsboard.server.dao.sql.report.ReportInfoRepository;
 import org.thingsboard.server.dao.sql.report.ReportTemplateInfoRepository;
-import org.thingsboard.server.dao.sql.report.ReportTemplateRepository;
 import org.thingsboard.server.dao.sql.role.RoleRepository;
 import org.thingsboard.server.dao.sql.scheduler.SchedulerEventRepository;
 import org.thingsboard.server.dao.sql.user.UserRepository;
