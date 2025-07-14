@@ -197,7 +197,7 @@ public class GenerateReportRuleNodeTest extends AbstractRuleEngineControllerTest
                 .findFirst().orElse(null), Objects::nonNull);
         assertThat(output.getBody().get("msgType").asText()).isEqualTo(TbMsgType.POST_TELEMETRY_REQUEST.name());
         assertThat(output.getBody().get("data").asText()).isEqualTo("{\"humidity\":77}");
-        String reportId = Optional.ofNullable(JacksonUtil.toJsonNode(output.getBody().get("metadata").asText()).get("reportId"))
+        String reportId = Optional.ofNullable(JacksonUtil.toJsonNode(output.getBody().get("metadata").asText()).get("reports"))
                 .map(JsonNode::asText).orElse(null);
         assertThat(reportId).isNotBlank();
 
