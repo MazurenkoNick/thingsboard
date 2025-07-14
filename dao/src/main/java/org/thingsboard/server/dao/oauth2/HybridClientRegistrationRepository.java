@@ -44,6 +44,7 @@ import java.util.UUID;
 
 @Component
 public class HybridClientRegistrationRepository implements ClientRegistrationRepository {
+
     private static final String defaultRedirectUriTemplate = "{baseUrl}/login/oauth2/code/{registrationId}";
 
     @Autowired
@@ -58,7 +59,7 @@ public class HybridClientRegistrationRepository implements ClientRegistrationRep
         return toSpringClientRegistration(oAuth2Client);
     }
 
-    private ClientRegistration toSpringClientRegistration(OAuth2Client oAuth2Client){
+    private ClientRegistration toSpringClientRegistration(OAuth2Client oAuth2Client) {
         String registrationId = oAuth2Client.getUuidId().toString();
 
         // NONE is used if we need pkce-based code challenge
@@ -84,4 +85,5 @@ public class HybridClientRegistrationRepository implements ClientRegistrationRep
                 .redirectUri(defaultRedirectUriTemplate)
                 .build();
     }
+
 }
