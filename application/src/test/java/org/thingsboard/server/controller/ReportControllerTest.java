@@ -32,10 +32,13 @@ package org.thingsboard.server.controller;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.text.PDFTextStripper;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.web.servlet.ResultActions;
 import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.server.common.data.DataConstants;
 import org.thingsboard.server.common.data.Device;
@@ -68,8 +71,13 @@ import org.thingsboard.server.common.data.report.configuration.DataKey;
 import org.thingsboard.server.common.data.report.configuration.DataSource;
 import org.thingsboard.server.common.data.report.configuration.DataSourceType;
 import org.thingsboard.server.common.data.report.configuration.EntityAlias;
+import org.thingsboard.server.common.data.report.configuration.PdfReportTemplateConfig;
+import org.thingsboard.server.common.data.report.configuration.ReportTemplateConfig;
+import org.thingsboard.server.common.data.report.configuration.TableSortOrder;
 import org.thingsboard.server.common.data.report.configuration.components.AlarmTableComponent;
+import org.thingsboard.server.common.data.report.configuration.components.DataReportComponent;
 import org.thingsboard.server.common.data.report.configuration.components.EntityTableComponent;
+import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
 import org.thingsboard.server.common.data.report.configuration.components.TimeseriesTableComponent;
 import org.thingsboard.server.common.data.report.configuration.style.Heading;
 import org.thingsboard.server.common.data.report.configuration.timewindow.AggregationConfiguration;
@@ -79,6 +87,11 @@ import org.thingsboard.server.common.data.report.configuration.timewindow.TimeWi
 import org.thingsboard.server.dao.notification.DefaultNotifications;
 import org.thingsboard.server.dao.service.DaoSqlTest;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -107,246 +120,113 @@ public class ReportControllerTest extends AbstractControllerTest {
     }
 
     @Test
-    public void testReportWithEntityTable() throws Exception {
+    public void testCSVReportWithEntityTable() throws Exception {
         String devicesAliasId = StringUtils.randomAlphabetic(10);
-        EntityAlias entityAlias = buildDevicesEntityAlias(devicesAliasId);
+        EntityAlias entityAlias = buildDeviceTypeEntityAlias(devicesAliasId);
 
-        EntityTableComponent tableComponent = new EntityTableComponent();
-        List<DataKey> dataKeys = List.of(
-                new DataKey("createdTime", "entityField", "CREATED TIME"),
-                new DataKey("name", "entityField", "NAME"),
-                new DataKey("type", "entityField", "TYPE"),
-                new DataKey("temperature", "timeseries", "TEMPERATURE"),
-                new DataKey("threshold", "attribute", "THRESHOLD")
-        );
-        tableComponent.setDataSources(List.of(DataSource.builder()
-                .type(DataSourceType.ENTITY)
-                .entityAliasId(devicesAliasId)
-                .dataKeys(dataKeys)
-                .build()));
-        tableComponent.setShowTableHeading(true);
-        String tableHeadingText = "This is my table";
-        Heading tableHeading = new Heading();
-        tableHeading.setText(tableHeadingText);
-        tableComponent.setTableHeading(tableHeading);
+        EntityTableComponent tableComponent = buildEntityTableComponent(devicesAliasId);
+        ReportTemplateConfig configuration = createReportConfigTemplate(tableComponent, entityAlias, TbReportFormat.CSV);
 
-        CsvReportTemplateConfig configuration = new CsvReportTemplateConfig();
-        configuration.setEntityAliases(List.of(entityAlias));
-        configuration.setComponents(List.of(tableComponent));
+        List<String> columnHeaders = getColumnHeaders(tableComponent);
+        List<List<String>> expectedLines = generateLatestTestData(columnHeaders, tableComponent.getTableHeading().getText(), configuration.getTimeDataPattern());
 
-        ReportTemplate reportTemplate = new ReportTemplate();
-        reportTemplate.setConfiguration(configuration);
-        reportTemplate.setName("Device inventory report");
-        reportTemplate.setType(ReportTemplateType.REPORT);
-        reportTemplate.setFormat(TbReportFormat.CSV);
+        String csvReport = generateCSVReport(configuration);
 
-        ReportTemplate savedTemplate = doPost("/api/reportTemplate", reportTemplate, ReportTemplate.class);
-
-        List<Device> devices = new ArrayList<>();
-        List<String> expectedReportLines = new ArrayList<>();
-        expectedReportLines.add(tableHeadingText);
-        expectedReportLines.add(dataKeys.stream().map(DataKey::getLabel).collect(Collectors.joining(",")));
-
-        for (int i = 0; i < 97; i++) {
-            Device device = new Device();
-            device.setName("Device" + i);
-            device.setType("default");
-            device.setLabel("testLabel" + (int) (Math.random() * 1000));
-            device = doPost("/api/device", device, Device.class);
-            devices.add(device);
-
-            long temperature = (long) (Math.random() * 100);
-            long threshold = (long) (Math.random() * 100);
-            String telemetryPayload = "{\"temperature\":" + temperature + "}";
-            String attributePayload = "{\"threshold\":" + threshold + "}";
-            doPost("/api/plugins/telemetry/DEVICE/" + device.getId() + "/timeseries/" + DataConstants.SHARED_SCOPE, telemetryPayload, String.class, status().isOk());
-            doPost("/api/plugins/telemetry/" + device.getId() + "/" + DataConstants.SHARED_SCOPE, attributePayload, String.class, status().isOk());
-            expectedReportLines.add(device.getCreatedTime() + "," +
-                                    device.getName() + "," +
-                                    device.getType() + "," +
-                                    temperature + "," +
-                                    threshold);
-        }
-
-        //generate report
-        ReportRequest reportRequest = new ReportRequest();
-        reportRequest.setReportTemplateConfig(configuration);
-        String csvReport = doPost("/api/v2/report/test", reportRequest, String.class);
-
-        // Check content
-        List<String> actualLines = new ArrayList<>(Arrays.asList(csvReport.split("\r?\n")));
-        assertThat(actualLines).containsExactlyInAnyOrderElementsOf(expectedReportLines);
+        assertThat(Arrays.stream(csvReport.split("\\r?\\n")).map(String::trim))
+                .containsAll(expectedLines.stream().map(row -> String.join(",", row)).toList());
     }
 
     @Test
-    public void testReportWithAlarmTableComponent() throws Exception {
+    public void testPDFReportWithEntityTable() throws Exception {
         String devicesAliasId = StringUtils.randomAlphabetic(10);
-        EntityAlias entityAlias = buildDevicesEntityAlias(devicesAliasId);
+        EntityAlias entityAlias = buildDeviceTypeEntityAlias(devicesAliasId);
 
-        AlarmTableComponent alarmTableComponent = new AlarmTableComponent();
-        AlarmFilterConfig alarmFilterConfig = new AlarmFilterConfig();
-        alarmFilterConfig.setSeverityList(List.of(AlarmSeverity.WARNING));
-        List<DataKey> dataKeys = List.of(
-                new DataKey("createdTime", "alarm", "ALARM CREATED TIME"),
-                new DataKey("name", "entityField", "ORIGINATOR"),
-                new DataKey("originator", "alarm", "ORIGINATOR2"),
-                new DataKey("type", "alarm", "ALARM TYPE"),
-                new DataKey("status", "alarm", "ALARM STATUS")
-        );
-        alarmTableComponent.setAlarmSource(DataSource.builder()
-                .type(DataSourceType.ENTITY)
-                .entityAliasId(devicesAliasId)
-                .alarmFilterConfig(alarmFilterConfig)
-                .dataKeys(dataKeys)
-                .build());
-        TimeWindowConfiguration timewindow = buildCurrentDatTimeWindow();
-        alarmTableComponent.setTimewindow(timewindow);
+        EntityTableComponent tableComponent = buildEntityTableComponent(devicesAliasId);
+        ReportTemplateConfig configuration = createReportConfigTemplate(tableComponent, entityAlias, TbReportFormat.PDF);
 
-        CsvReportTemplateConfig configuration = new CsvReportTemplateConfig();
-        configuration.setEntityAliases(List.of(entityAlias));
-        configuration.setComponents(List.of(alarmTableComponent));
+        List<String> columnHeaders = getColumnHeaders(tableComponent);
+        List<List<String>> expectedLines = generateLatestTestData(columnHeaders, tableComponent.getTableHeading().getText(), configuration.getTimeDataPattern());
 
-        ReportTemplate reportTemplate = new ReportTemplate();
-        reportTemplate.setConfiguration(configuration);
-        reportTemplate.setName("Device inventory report");
-        reportTemplate.setType(ReportTemplateType.REPORT);
-        reportTemplate.setFormat(TbReportFormat.CSV);
+        String csvReport = generatePDFReportText(configuration);
 
-        ReportTemplate savedTemplate = doPost("/api/reportTemplate", reportTemplate, ReportTemplate.class);
-
-        List<Device> devices = new ArrayList<>();
-        for (int i = 0; i < 10; i++) {
-            Device device = new Device();
-            device.setCustomerId(customerId);
-            device.setName("Device" + i);
-            device.setType("default");
-            device.setLabel("testLabel" + (int) (Math.random() * 1000));
-            devices.add(doPost("/api/device", device, Device.class));
-            Thread.sleep(1);
-        }
-
-        List<String> expectedReportLines = new ArrayList<>();
-        expectedReportLines.add(dataKeys.stream().map(DataKey::getLabel).collect(Collectors.joining(",")));
-
-        for (int i = 0; i < devices.size(); i++) {
-            Alarm alarm = new Alarm();
-            Device device = devices.get(i);
-            alarm.setOriginator(device.getId());
-            alarm.setType("alarm" + i);
-            alarm.setSeverity(AlarmSeverity.WARNING);
-            Alarm createdAlarm = doPost("/api/alarm", alarm, Alarm.class);
-            Thread.sleep(1);
-
-            expectedReportLines.add(createdAlarm.getCreatedTime() + "," +
-                    device.getName() + "," +
-                    device.getName() + "," +
-                    alarm.getType() + "," +
-                    alarm.getStatus());
-        }
-
-        //generate report
-        ReportRequest reportRequest = new ReportRequest();
-        reportRequest.setReportTemplateConfig(configuration);
-        String csvReport = doPost("/api/v2/report/test", reportRequest, String.class);
-
-        // Check content
-        List<String> actualLines = new ArrayList<>(Arrays.asList(csvReport.split("\r?\n")));
-        assertThat(actualLines).containsExactlyInAnyOrderElementsOf(expectedReportLines);
+        assertThat(Arrays.stream(csvReport.split("\\r?\\n")).map(String::trim))
+                .containsAll(expectedLines.stream().map(row -> String.join(" ", row)).toList());
     }
 
     @Test
-    public void testReportWithTimeSeriesTable() throws Exception {
+    public void testCSVReportWithAlarmTableComponent() throws Exception {
         String devicesAliasId = StringUtils.randomAlphabetic(10);
-        EntityAlias entityAlias = buildDevicesEntityAlias(devicesAliasId);
+        EntityAlias entityAlias = buildDeviceTypeEntityAlias(devicesAliasId);
 
-        TimeseriesTableComponent tsComponent = new TimeseriesTableComponent();
-        tsComponent.setShowTimestamp(true);
-        tsComponent.setTimestampLabel("Timestamp");
-        tsComponent.setTimestampPattern("milliseconds");
-        tsComponent.setDataSources(List.of(DataSource.builder()
-                .type(DataSourceType.ENTITY)
-                .entityAliasId(devicesAliasId)
-                .dataKeys(List.of(
-                     new DataKey("temperature", "timeseries", "TEMPERATURE")
-                ))
-                .latestDataKeys(List.of(
-                        new DataKey("name", "entityField", "NAME"),
-                        new DataKey("active", "attribute", "ACTIVE")
-                ))
-                .build()));
-        TimeWindowConfiguration timewindow = buildCurrentDatTimeWindow();
-        tsComponent.setTimewindow(timewindow);
+        AlarmTableComponent tableComponent = buildAlarmTableComponent(devicesAliasId);
+        ReportTemplateConfig configuration = createReportConfigTemplate(tableComponent, entityAlias, TbReportFormat.CSV);
 
-        CsvReportTemplateConfig configuration = new CsvReportTemplateConfig();
-        configuration.setEntityAliases(List.of(entityAlias));
-        configuration.setComponents(List.of(tsComponent));
+        List<String> columnHeaders = getColumnHeaders(tableComponent);
+        List<List<String>> expectedLines = generateTestAlarmData(columnHeaders, configuration.getTimeDataPattern());
 
-        ReportTemplate reportTemplate = new ReportTemplate();
-        reportTemplate.setConfiguration(configuration);
-        reportTemplate.setName("Device inventory report");
-        reportTemplate.setType(ReportTemplateType.REPORT);
-        reportTemplate.setFormat(TbReportFormat.CSV);
+        String csvReport = generateCSVReport(configuration);
 
-        ReportTemplate savedTemplate = doPost("/api/reportTemplate", reportTemplate, ReportTemplate.class);
-
-        List<Device> devices = new ArrayList<>();
-        List<String> expectedReportLines = new ArrayList<>();
-        int telemetryCount = 3;
-
-        for (int i = 0; i < 18; i++) {
-            Device device = new Device();
-            device.setName("Device" + i);
-            device.setType("default");
-            device.setLabel("testLabel" + (int) (Math.random() * 1000));
-            device = doPost("/api/device", device, Device.class);
-            devices.add(device);
-
-            // headers
-            expectedReportLines.add("Timestamp,TEMPERATURE,NAME,ACTIVE");
-
-            for (int j = 0; j < telemetryCount; j++) {
-                long temperature = (long) (Math.random() * 100);
-                long threshold = (long) (Math.random() * 100);
-                String attributePayload = "{\"threshold\":" + threshold + "}";
-                long ts = System.currentTimeMillis() - 300000L * j;
-
-                doPost("/api/plugins/telemetry/DEVICE/" + device.getId() + "/timeseries/" + DataConstants.SERVER_SCOPE, JacksonUtil.toJsonNode(String.format("{\"ts\": %s, \"values\": {\"temperature\":%s}}", ts, temperature)));
-                doPost("/api/plugins/telemetry/" + device.getId() + "/" + DataConstants.SHARED_SCOPE, attributePayload, String.class, status().isOk());
-                expectedReportLines.add(ts + "," +
-                                temperature + "," +
-                                device.getName() + "," +
-                                "false");
-            }
-        }
-
-        //generate report
-        ReportRequest reportRequest = new ReportRequest();
-        reportRequest.setReportTemplateConfig(configuration);
-        String csvReport = doPost("/api/v2/report/test", reportRequest, String.class);
-
-        List<String> actualLines = new ArrayList<>(Arrays.asList(csvReport.split("\r?\n")));
-        assertThat(actualLines).isEqualTo(expectedReportLines);
+        assertThat(Arrays.stream(csvReport.split("\\r?\\n")).map(String::trim))
+                .containsAll(expectedLines.stream().map(row -> String.join(",", row)).toList());
     }
 
-    private static TimeWindowConfiguration buildCurrentDatTimeWindow() {
-        TimeWindowConfiguration timewindow = new TimeWindowConfiguration();
-        History history = new History();
-        history.setHistoryType(2);
-        history.setQuickInterval(QuickTimeInterval.CURRENT_DAY);
-        history.setInterval(1000);
-        timewindow.setHistory(history);
-        timewindow.setTimezone(TimeZone.getDefault().getID());
-        AggregationConfiguration aggregation = new AggregationConfiguration();
-        aggregation.setType(Aggregation.NONE);
-        aggregation.setLimit(25000);
-        timewindow.setAggregation(aggregation);
-        return timewindow;
+    @Test
+    public void testPDFReportWithAlarmTableComponent() throws Exception {
+        String devicesAliasId = StringUtils.randomAlphabetic(10);
+        EntityAlias entityAlias = buildDeviceTypeEntityAlias(devicesAliasId);
+
+        AlarmTableComponent tableComponent = buildAlarmTableComponent(devicesAliasId);
+        ReportTemplateConfig configuration = createReportConfigTemplate(tableComponent, entityAlias, TbReportFormat.PDF);
+
+        List<String> columnHeaders = getColumnHeaders(tableComponent);
+        List<List<String>> expectedLines = generateTestAlarmData(columnHeaders, configuration.getTimeDataPattern());
+
+        String pdfReport = generatePDFReportText(configuration);
+
+        assertThat(Arrays.stream(pdfReport.split("\\r?\\n")).map(String::trim))
+                .containsAll(expectedLines.stream().map(row -> String.join(" ", row)).toList());
+    }
+
+    @Test
+    public void testReportCsvWithTimeSeriesTable() throws Exception {
+        String devicesAliasId = StringUtils.randomAlphabetic(10);
+        EntityAlias entityAlias = buildDeviceTypeEntityAlias(devicesAliasId);
+
+        TimeseriesTableComponent tsComponent = buildTimeseriesTableComponent(devicesAliasId);
+        ReportTemplateConfig configuration = createReportConfigTemplate(tsComponent, entityAlias, TbReportFormat.CSV);
+
+        List<String> columnHeaders = List.of("Timestamp", "TEMPERATURE", "NAME", "ACTIVE");
+        List<List<String>> expectedLines = generateTsData(columnHeaders);
+
+        String csvReport = generateCSVReport(configuration);
+
+        assertThat(Arrays.stream(csvReport.split("\\r?\\n")).map(String::trim))
+                .containsAll(expectedLines.stream().map(row -> String.join(",", row)).toList());
+    }
+
+    @Test
+    public void testReportPdfWithTimeSeriesTable() throws Exception {
+        String devicesAliasId = StringUtils.randomAlphabetic(10);
+        EntityAlias entityAlias = buildDeviceTypeEntityAlias(devicesAliasId);
+
+        TimeseriesTableComponent tsComponent = buildTimeseriesTableComponent(devicesAliasId);
+        ReportTemplateConfig configuration = createReportConfigTemplate(tsComponent, entityAlias, TbReportFormat.PDF);
+
+        List<String> columnHeaders = List.of("Timestamp", "TEMPERATURE", "NAME", "ACTIVE");
+        List<List<String>> expectedLines = generateTsData(columnHeaders);
+
+        String pdfReport = generatePDFReportText(configuration);
+
+        assertThat(Arrays.stream(pdfReport.split("\\r?\\n")).map(String::trim))
+                .containsAll(expectedLines.stream().map(row -> String.join(" ", row)).toList());
     }
 
     @Test
     public void testCreateJobForCsvReport() throws Exception {
+        List<String> expectedReportLines = new ArrayList<>();
+
         String devicesAliasId = StringUtils.randomAlphabetic(10);
-        EntityAlias entityAlias = buildDevicesEntityAlias(devicesAliasId);
+        EntityAlias entityAlias = buildDeviceTypeEntityAlias(devicesAliasId);
 
         EntityTableComponent tableComponent = new EntityTableComponent();
         tableComponent.setDataSources(List.of(DataSource.builder()
@@ -375,7 +255,6 @@ public class ReportControllerTest extends AbstractControllerTest {
         ReportTemplateId reportTemplateId = reportTemplate.getId();
 
         List<Device> devices = new ArrayList<>();
-        List<String> expectedReportLines = new ArrayList<>();
         for (int i = 0; i < 97; i++) {
             Device device = new Device();
             device.setName("Device" + i);
@@ -486,6 +365,219 @@ public class ReportControllerTest extends AbstractControllerTest {
         assertThat(csvReportsByUserId.getData()).isEmpty();
     }
 
+    private TimeseriesTableComponent buildTimeseriesTableComponent(String devicesAliasId) {
+        TimeseriesTableComponent tsComponent = new TimeseriesTableComponent();
+        tsComponent.setShowTimestamp(true);
+        tsComponent.setTimestampLabel("Timestamp");
+        tsComponent.setTimestampPattern("milliseconds");
+        tsComponent.setDataSources(List.of(DataSource.builder()
+                .type(DataSourceType.ENTITY)
+                .entityAliasId(devicesAliasId)
+                .dataKeys(List.of(
+                        new DataKey("temperature", "timeseries", "TEMPERATURE")
+                ))
+                .latestDataKeys(List.of(
+                        new DataKey("name", "entityField", "NAME"),
+                        new DataKey("active", "attribute", "ACTIVE")
+                ))
+                .build()));
+        TimeWindowConfiguration timewindow = buildCurrentDateTimeWindow();
+        tsComponent.setTimewindow(timewindow);
+        return tsComponent;
+    }
+
+    private List<String> getColumnHeaders(DataReportComponent component) {
+        return component.getDataSources().get(0).getDataKeys().stream().map(DataKey::getLabel).collect(Collectors.toList());
+    }
+
+    private static TimeWindowConfiguration buildCurrentDateTimeWindow() {
+        TimeWindowConfiguration timewindow = new TimeWindowConfiguration();
+        History history = new History();
+        history.setHistoryType(2);
+        history.setQuickInterval(QuickTimeInterval.CURRENT_DAY);
+        history.setInterval(1000);
+        timewindow.setHistory(history);
+        timewindow.setTimezone(TimeZone.getDefault().getID());
+        AggregationConfiguration aggregation = new AggregationConfiguration();
+        aggregation.setType(Aggregation.NONE);
+        aggregation.setLimit(25000);
+        timewindow.setAggregation(aggregation);
+        return timewindow;
+    }
+
+    private String generateCSVReport(ReportTemplateConfig config) throws Exception {
+        ReportRequest request = new ReportRequest();
+        request.setReportTemplateConfig(config);
+        return doPost("/api/v2/report/test", request, String.class);
+    }
+
+    private String generatePDFReportText(ReportTemplateConfig config) throws Exception {
+        ReportRequest request = new ReportRequest();
+        request.setReportTemplateConfig(config);
+        ResultActions result = doPost("/api/v2/report/test", request);
+        byte[] pdfBytes = result.andReturn().getResponse().getContentAsByteArray();
+
+        try (PDDocument doc = PDDocument.load(pdfBytes)) {
+            return new PDFTextStripper().getText(doc);
+        }
+    }
+
+    private ReportTemplateConfig createReportConfigTemplate(ReportComponent component, EntityAlias entityAlias, TbReportFormat tbReportFormat) {
+        String timeDataPattern = "yyyy-MM-dd";
+        return tbReportFormat == TbReportFormat.PDF ?
+                PdfReportTemplateConfig.builder()
+                        .entityAliases(List.of(entityAlias))
+                        .components(List.of(component))
+                        .timeDataPattern(timeDataPattern)
+                        .build() :
+                CsvReportTemplateConfig.builder()
+                        .entityAliases(List.of(entityAlias))
+                        .components(List.of(component))
+                        .timeDataPattern(timeDataPattern)
+                        .build();
+    }
+
+    private EntityTableComponent buildEntityTableComponent(String devicesAliasId) {
+        EntityTableComponent tableComponent = new EntityTableComponent();
+        List<DataKey> dataKeys = List.of(
+                DataKey.builder().name("createdTime").type("entityField").label("CREATED TIME").usePostProcessing(false).build(),
+                DataKey.builder().name("name").type("entityField").label("NAME").usePostProcessing(false).build(),
+                DataKey.builder().name("type").type("entityField").label("TYPE").usePostProcessing(false).build(),
+                DataKey.builder().name("temperature").type("timeseries").label("TEMPERATURE").usePostProcessing(false).units("K").decimals(2).build(),
+                DataKey.builder().name("threshold").type("attribute").label("THRESHOLD").usePostProcessing(false).build()
+        );
+        tableComponent.setDataSources(List.of(DataSource.builder()
+                .type(DataSourceType.ENTITY)
+                .entityAliasId(devicesAliasId)
+                .dataKeys(dataKeys)
+                .build()));
+        tableComponent.setShowTableHeading(true);
+        String tableHeadingText = "This is my table";
+        Heading tableHeading = new Heading();
+        tableHeading.setText(tableHeadingText);
+        tableComponent.setTableHeading(tableHeading);
+        tableComponent.setTableSortOrder(new TableSortOrder("NAME", TableSortOrder.Direction.ASC));
+        return tableComponent;
+    }
+
+    private List<List<String>> generateLatestTestData(List<String> columnHeaders, String tableHeading, String timeDataPattern) throws Exception {
+        List<List<String>> expectedLines = new ArrayList<>();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(timeDataPattern).withZone(ZoneId.systemDefault());
+
+        for (int i = 0; i < 15; i++) {
+            Device device = new Device();
+            device.setName("Device" + i);
+            device.setType("default");
+            device.setLabel("testLabel" + (int) (Math.random() * 1000));
+            device = doPost("/api/device", device, Device.class);
+
+            long temperature = (long) (Math.random() * 100);
+            long threshold = (long) (Math.random() * 100);
+            String telemetryPayload = "{\"temperature\":" + temperature + "}";
+            String attributePayload = "{\"threshold\":" + threshold + "}";
+            doPost("/api/plugins/telemetry/DEVICE/" + device.getId() + "/timeseries/" + DataConstants.SHARED_SCOPE, telemetryPayload, String.class, status().isOk());
+            doPost("/api/plugins/telemetry/" + device.getId() + "/" + DataConstants.SHARED_SCOPE, attributePayload, String.class, status().isOk());
+
+            expectedLines.add(List.of(
+                    formatter.format(Instant.ofEpochMilli(device.getCreatedTime())),
+                    device.getName(),
+                    device.getType(),
+                    BigDecimal.valueOf(temperature).setScale(2, RoundingMode.HALF_UP) + "K",
+                    String.valueOf(threshold)));
+        }
+
+        expectedLines.sort((a, b) -> a.get(1).compareToIgnoreCase(b.get(1))); // sort by NAME column
+        expectedLines.add(0, List.of(tableHeading)); // table heading
+        expectedLines.add(1, columnHeaders); // column headers
+        return expectedLines;
+    }
+
+    private List<List<String>> generateTestAlarmData(List<String> columnHeaders, String timeDataPattern) throws InterruptedException {
+        List<List<String>> expectedLines = new ArrayList<>();
+        List<Device> devices = new ArrayList<>();
+        for (int i = 0; i < 10; i++) {
+            Device device = new Device();
+            device.setCustomerId(customerId);
+            device.setName("Device" + i);
+            device.setType("default");
+            device.setLabel("testLabel" + (int) (Math.random() * 1000));
+            devices.add(doPost("/api/device", device, Device.class));
+            Thread.sleep(1);
+        }
+
+        expectedLines.add(columnHeaders);
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(timeDataPattern).withZone(ZoneId.systemDefault());
+        for (int i = 0; i < devices.size(); i++) {
+            Alarm alarm = new Alarm();
+            Device device = devices.get(i);
+            alarm.setOriginator(device.getId());
+            alarm.setType("alarm" + i);
+            alarm.setSeverity(AlarmSeverity.WARNING);
+            Alarm createdAlarm = doPost("/api/alarm", alarm, Alarm.class);
+            Thread.sleep(1);
+
+            expectedLines.add(List.of(
+                    formatter.format(Instant.ofEpochMilli(device.getCreatedTime())),
+                    device.getName(),
+                    alarm.getType()));
+        }
+        return expectedLines;
+    }
+
+    private AlarmTableComponent buildAlarmTableComponent(String devicesAliasId) {
+        AlarmTableComponent alarmTableComponent = new AlarmTableComponent();
+        AlarmFilterConfig alarmFilterConfig = new AlarmFilterConfig();
+        alarmFilterConfig.setSeverityList(List.of(AlarmSeverity.WARNING));
+        List<DataKey> dataKeys = List.of(
+                new DataKey("createdTime", "alarm", "ALARM CREATED TIME"),
+                new DataKey("name", "entityField", "ORIGINATOR"),
+                new DataKey("type", "alarm", "ALARM TYPE")
+        );
+        alarmTableComponent.setAlarmSource(DataSource.builder()
+                .type(DataSourceType.ENTITY)
+                .entityAliasId(devicesAliasId)
+                .alarmFilterConfig(alarmFilterConfig)
+                .dataKeys(dataKeys)
+                .build());
+        TimeWindowConfiguration timewindow = buildCurrentDateTimeWindow();
+        alarmTableComponent.setTimewindow(timewindow);
+        return alarmTableComponent;
+    }
+
+    private List<List<String>> generateTsData(List<String> columnHeaders) throws Exception {
+        List<Device> devices = new ArrayList<>();
+        List<List<String>> expectedLines = new ArrayList<>();
+        int telemetryCount = 3;
+
+        for (int i = 0; i < 18; i++) {
+            Device device = new Device();
+            device.setName("Device" + i);
+            device.setType("default");
+            device.setLabel("testLabel" + (int) (Math.random() * 1000));
+            device = doPost("/api/device", device, Device.class);
+            devices.add(device);
+
+            expectedLines.add(columnHeaders);
+
+            for (int j = 0; j < telemetryCount; j++) {
+                long temperature = (long) (Math.random() * 100);
+                long threshold = (long) (Math.random() * 100);
+                String attributePayload = "{\"threshold\":" + threshold + "}";
+                long ts = System.currentTimeMillis() - 300000L * j;
+
+                doPost("/api/plugins/telemetry/DEVICE/" + device.getId() + "/timeseries/" + DataConstants.SERVER_SCOPE, JacksonUtil.toJsonNode(String.format("{\"ts\": %s, \"values\": {\"temperature\":%s}}", ts, temperature)));
+                doPost("/api/plugins/telemetry/" + device.getId() + "/" + DataConstants.SHARED_SCOPE, attributePayload, String.class, status().isOk());
+                expectedLines.add(List.of(
+                        String.valueOf(ts),
+                        String.valueOf(temperature),
+                        device.getName(),
+                        "false"));
+            }
+        }
+        return expectedLines;
+    }
+
     private ReportTemplate buildReportTemplate(TbReportFormat format) {
         ReportTemplate template = new ReportTemplate();
         template.setName(StringUtils.randomAlphabetic(10));
@@ -497,7 +589,7 @@ public class ReportControllerTest extends AbstractControllerTest {
         return template;
     }
 
-    private static EntityAlias buildDevicesEntityAlias(String aliasId) {
+    private static EntityAlias buildDeviceTypeEntityAlias(String aliasId) {
         DeviceTypeFilter filter = new DeviceTypeFilter();
         filter.setDeviceTypes(List.of("default"));
         filter.setDeviceNameFilter("");
