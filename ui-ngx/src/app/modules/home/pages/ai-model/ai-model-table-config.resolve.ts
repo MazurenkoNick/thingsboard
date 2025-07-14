@@ -80,10 +80,10 @@ export class AiModelsTableConfigResolver {
     this.config.columns.push(
       new DateEntityTableColumn<AiModel>('createdTime', 'common.created-time', this.datePipe, '170px'),
       new EntityTableColumn<AiModel>('name', 'ai-models.name', '33%'),
-      new EntityTableColumn<AiModel>('provider', 'ai-models.ai-provider', '33%',
+      new EntityTableColumn<AiModel>('provider', 'ai-models.provider', '33%',
           entity => this.translate.instant(AiProviderTranslations.get(entity.configuration.provider))
       ),
-      new EntityTableColumn<AiModel>('aiModel', 'ai-models.ai-model', '33%',
+      new EntityTableColumn<AiModel>('aiModel', 'ai-models.model', '33%',
           entity => entity.configuration.modelId, () => ({}), false
       )
     )
@@ -123,7 +123,7 @@ export class AiModelsTableConfigResolver {
 
   private editModel($event, AIModel: AiModel): void {
     $event?.stopPropagation();
-    this.addModel(AIModel, false).subscribe();
+    this.addModel(AIModel, false).subscribe(res => res ? this.config.updateData() : null);
   }
 
   private addModel(AIModel: AiModel, isAdd = false): Observable<AiModel> {
@@ -135,13 +135,6 @@ export class AiModelsTableConfigResolver {
         AIModel,
         readonly: !this.userPermissionsService.hasGenericPermission(Resource.AI_MODEL, Operation.WRITE)
       }
-    }).afterClosed().pipe(map(res => {
-      if (res) {
-        this.config.updateData();
-        return res;
-      } else {
-        return null;
-      }
-    }));
+    }).afterClosed();
   }
 }
