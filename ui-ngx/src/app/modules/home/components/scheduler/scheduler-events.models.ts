@@ -117,17 +117,16 @@ export interface SchedulerWeekDay {
   tooltip: string;
 }
 
-export const scheduleInfo = (schedule: SchedulerEventSchedule, translate: TranslateService): string => {
+export const scheduleInfo = (schedule: SchedulerEventSchedule, startTime: _moment.Moment, translate: TranslateService): string => {
   let info = '';
-  const startTime = schedule.startTime;
   if (!schedule.repeat) {
-    const start = _moment.utc(startTime).local().format('MMM DD, YYYY, hh:mma');
+    const start = startTime.local().format('MMM DD, YYYY, hh:mma');
     info += start;
     return info;
   } else {
-    info += _moment.utc(startTime).local().format('hh:mma');
+    info += startTime.local().format('hh:mma');
     info += '<br/>';
-    info += translate.instant('scheduler.starting-from') + ' ' + _moment.utc(startTime).local().format('MMM DD, YYYY') + ', ';
+    info += translate.instant('scheduler.starting-from') + ' ' + startTime.local().format('MMM DD, YYYY') + ', ';
     if (schedule.repeat.type === SchedulerRepeatType.DAILY) {
       info += translate.instant('scheduler.daily') + ', ';
     } else if (schedule.repeat.type === SchedulerRepeatType.EVERY_N_DAYS) {
