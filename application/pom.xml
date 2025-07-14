@@ -472,6 +472,7 @@
         <dependency>
             <groupId>org.apache.pdfbox</groupId>
             <artifactId>pdfbox</artifactId>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 

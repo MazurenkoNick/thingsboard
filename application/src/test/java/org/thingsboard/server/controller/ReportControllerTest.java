@@ -32,6 +32,7 @@ package org.thingsboard.server.controller;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.junit.After;
@@ -417,7 +418,7 @@ public class ReportControllerTest extends AbstractControllerTest {
         ResultActions result = doPost("/api/v2/report/test", request);
         byte[] pdfBytes = result.andReturn().getResponse().getContentAsByteArray();
 
-        try (PDDocument doc = PDDocument.load(pdfBytes)) {
+        try (PDDocument doc = Loader.loadPDF(pdfBytes)) {
             return new PDFTextStripper().getText(doc);
         }
     }

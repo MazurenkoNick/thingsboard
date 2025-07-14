@@ -203,7 +203,7 @@
         <thymeleaf.version>3.1.3.RELEASE</thymeleaf.version>
         <flying-saucer.version>9.13.0</flying-saucer.version>
         <jtidy.version>r938</jtidy.version>
-        <pdfbox.version>2.0.29</pdfbox.version>
+        <pdfbox.version>3.0.5</pdfbox.version>
     </properties>
 
     <modules>
