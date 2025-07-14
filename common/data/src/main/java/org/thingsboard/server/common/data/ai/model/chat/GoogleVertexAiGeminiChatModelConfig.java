@@ -48,7 +48,7 @@ public record GoogleVertexAiGeminiChatModelConfig(
         @NotBlank String modelId,
         @PositiveOrZero Double temperature,
         @Positive @Max(1) Double topP,
-        @Positive Integer topK,
+        @PositiveOrZero Integer topK,
         Double frequencyPenalty,
         Double presencePenalty,
         @Positive Integer maxOutputTokens,
