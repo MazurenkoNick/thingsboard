@@ -149,14 +149,12 @@
               </mat-form-field>
             }
             @if (providerFieldsList.includes('secretAccessKey')) {
-              <mat-form-field class="mat-block flex-1" appearance="outline">
-                <mat-label translate>ai-models.secret-access-key</mat-label>
-                <input type="password" required matInput formControlName="secretAccessKey">
-                <tb-toggle-password matSuffix></tb-toggle-password>
-                <mat-error *ngIf="aiModelForms.get('configuration').get('providerConfig').get('secretAccessKey').hasError('required')">
-                  {{ 'ai-models.secret-access-key-required' | translate }}
-                </mat-error>
-              </mat-form-field>
+              <tb-secret-key-input formControlName="secretAccessKey" class="mat-block flex-1"
+                                   appearance="outline"
+                                   required
+                                   label="{{ 'ai-models.secret-access-key' | translate }}"
+                                   requiredText="{{ 'ai-models.secret-access-key-required' | translate }}">
+              </tb-secret-key-input>
             }
           </div>
         </section>
