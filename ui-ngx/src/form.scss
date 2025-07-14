@@ -178,6 +178,9 @@
   .tb-form-panel-title {
     font-weight: 500;
     font-size: 16px;
+    &.tb-normal {
+      font-weight: normal;
+    }
 
     &.tb-required::after {
       font-size: 13px;
@@ -844,6 +847,7 @@
   .tb-form-panel.outlined {
     --mdc-outlined-text-field-outline-color: rgba(0,0,0,0.12);
     --mdc-outlined-text-field-container-shape: 6px;
+    --mat-form-field-trailing-icon-color: rgba(0, 0, 0, 0.56);
 
     box-shadow: none;
     gap: 0;
@@ -857,8 +861,14 @@
       padding: 0;
     }
 
-    .tb-form-panel-title {
+    & > .tb-form-panel-title {
       margin-bottom: 16px;
+    }
+
+    .tb-form-panel {
+      @media #{$mat-xs} {
+        gap: 16px;
+      }
     }
 
     .tb-form-row {
