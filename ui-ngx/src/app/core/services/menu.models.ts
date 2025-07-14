@@ -1632,6 +1632,7 @@ export const defaultUserMenuMap = new Map<Authority, MenuReference[]>([
         pages: [
           {id: MenuId.security_settings_general},
           {id: MenuId.two_fa},
+          {id: MenuId.secrets},
           {
             id: MenuId.oauth2,
             pages: [

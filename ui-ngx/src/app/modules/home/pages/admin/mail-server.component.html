@@ -180,15 +180,10 @@
               </div>
             </div>
             <section *ngIf="!mailSettings.get('enableOauth2').value">
-              <mat-checkbox *ngIf="showChangePassword" formControlName="changePassword" style="padding-bottom: 16px;">
-                {{ 'admin.change-password' | translate }}
-              </mat-checkbox>
-              <mat-form-field class="mat-block" *ngIf="mailSettings.get('changePassword').value || !showChangePassword">
-                <mat-label translate>common.password</mat-label>
-                <input matInput formControlName="password" type="password"
-                       placeholder="{{ 'common.enter-password' | translate }}" autocomplete="new-password"/>
-                <tb-toggle-password matSuffix></tb-toggle-password>
-              </mat-form-field>
+              <tb-secret-key-input formControlName="password"
+                                   class="mat-block flex-1"
+                                   label="{{ 'common.password' | translate }}">
+              </tb-secret-key-input>
             </section>
             <section *ngIf="mailSettings.get('enableOauth2').value">
               <div class="flex flex-row xs:flex-col gt-xs:gap-2">
@@ -202,17 +197,14 @@
                     {{ 'admin.oauth2.client-id-max-length' | translate }}
                   </mat-error>
                 </mat-form-field>
-
-                <mat-form-field class="mat-block flex-1">
-                  <mat-label translate>admin.oauth2.client-secret</mat-label>
-                  <input matInput formControlName="clientSecret" required>
-                  <mat-error *ngIf="mailSettings.get('clientSecret').hasError('required')">
-                    {{ 'admin.oauth2.client-secret-required' | translate }}
-                  </mat-error>
-                  <mat-error *ngIf="mailSettings.get('clientSecret').hasError('maxlength')">
-                    {{ 'admin.oauth2.client-secret-max-length' | translate }}
-                  </mat-error>
-                </mat-form-field>
+                <tb-secret-key-input formControlName="clientSecret"
+                                     required
+                                     class="mat-block flex-1"
+                                     [maxLength]="2048"
+                                     label="{{ 'admin.oauth2.client-secret' | translate }}"
+                                     maxLengthErrorText="{{ 'admin.oauth2.client-secret-max-length' | translate }}"
+                                     requiredText="{{ 'admin.oauth2.client-secret-required' | translate }}">
+                </tb-secret-key-input>
               </div>
 
               <mat-form-field class="mat-block flex-1" *ngIf="mailSettings.get('providerId').value === mailServerOauth2Provider.OFFICE_365">
