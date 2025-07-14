@@ -6970,7 +6970,8 @@
                 "DOMAIN": "Domain",
                 "OAUTH2_CLIENT": "OAuth 2.0 client",
                 "SECRET": "Secret",
-                "JOB": "Task"
+                "JOB": "Task",
+                "AI_MODEL": "AI model"
             }
         },
         "operation": {
