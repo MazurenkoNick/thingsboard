@@ -148,9 +148,9 @@ public class ReportControllerTest extends AbstractControllerTest {
         List<String> columnHeaders = getColumnHeaders(tableComponent);
         List<List<String>> expectedLines = generateLatestTestData(columnHeaders, tableComponent.getTableHeading().getText(), configuration.getTimeDataPattern());
 
-        String csvReport = generatePDFReportText(configuration);
+        String pdfReport = generatePDFReportText(configuration);
 
-        assertThat(Arrays.stream(csvReport.split("\\r?\\n")).map(String::trim))
+        assertThat(Arrays.stream(pdfReport.split("\\r?\\n")).map(String::trim))
                 .containsAll(expectedLines.stream().map(row -> String.join(" ", row)).toList());
     }
 
