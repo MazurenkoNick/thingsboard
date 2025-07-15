@@ -1188,7 +1188,7 @@
         "secrets-storage": "Secrets storage",
         "no-found": "No secrets found",
         "add": "Add secret",
-        "search": "Search secret",
+        "search": "Search secrets",
         "list": "{ count, plural, =1 {One secret} other {List of # secrets} }",
         "selected-fields": "{ count, plural, =1 {1 secret} other {# secrets} } selected",
         "type": "Type",
