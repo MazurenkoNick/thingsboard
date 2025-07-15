@@ -73,7 +73,7 @@ import org.thingsboard.server.common.data.rule.RuleNode;
 import org.thingsboard.server.common.msg.TbMsg;
 import org.thingsboard.server.common.msg.TbMsgMetaData;
 import org.thingsboard.server.dao.ai.AiModelService;
-import org.thingsboard.server.dao.exception.DataValidationException;
+import org.thingsboard.server.exception.DataValidationException;
 
 import java.util.Map;
 import java.util.Optional;
@@ -403,7 +403,7 @@ class TbAiNodeTest {
                 .aiMessage(AiMessage.from("{\"type\":\"joke\",\"setup\":\"Why did the scarecrow win an award?\",\"punchline\":\"Because he was outstanding in his field.\"}"))
                 .build();
 
-        given(aiChatModelServiceMock.sendChatRequestAsync(any(), any())).willReturn(FluentFuture.from(immediateFuture(chatResponse)));
+        given(aiChatModelServiceMock.sendChatRequestAsync(eq(tenantId), any(), any())).willReturn(FluentFuture.from(immediateFuture(chatResponse)));
 
         // WHEN
         aiNode.onMsg(ctxMock, msg);
@@ -441,7 +441,7 @@ class TbAiNodeTest {
                 .aiMessage(AiMessage.from("{\"type\":\"joke\",\"setup\":\"Why did the scarecrow win an award?\",\"punchline\":\"Because he was outstanding in his field.\"}"))
                 .build();
 
-        given(aiChatModelServiceMock.sendChatRequestAsync(any(), any())).willReturn(FluentFuture.from(immediateFuture(chatResponse)));
+        given(aiChatModelServiceMock.sendChatRequestAsync(eq(tenantId), any(), any())).willReturn(FluentFuture.from(immediateFuture(chatResponse)));
 
         // WHEN
         aiNode.onMsg(ctxMock, msg);
@@ -477,7 +477,7 @@ class TbAiNodeTest {
                 .aiMessage(AiMessage.from("{\"type\":\"joke\",\"setup\":\"Why did the scarecrow win an award?\",\"punchline\":\"Because he was outstanding in his field.\"}"))
                 .build();
 
-        given(aiChatModelServiceMock.sendChatRequestAsync(any(), any())).willReturn(FluentFuture.from(immediateFuture(chatResponse)));
+        given(aiChatModelServiceMock.sendChatRequestAsync(eq(tenantId), any(), any())).willReturn(FluentFuture.from(immediateFuture(chatResponse)));
 
         // WHEN
         aiNode.onMsg(ctxMock, msg);
@@ -513,13 +513,13 @@ class TbAiNodeTest {
                 .aiMessage(AiMessage.from("{\"type\":\"joke\",\"setup\":\"Why did the scarecrow win an award?\",\"punchline\":\"Because he was outstanding in his field.\"}"))
                 .build();
 
-        given(aiChatModelServiceMock.sendChatRequestAsync(any(), any())).willReturn(FluentFuture.from(immediateFuture(chatResponse)));
+        given(aiChatModelServiceMock.sendChatRequestAsync(eq(tenantId), any(), any())).willReturn(FluentFuture.from(immediateFuture(chatResponse)));
 
         // WHEN
         aiNode.onMsg(ctxMock, msg);
 
         // THEN
-        then(aiChatModelServiceMock).should().sendChatRequestAsync(any(),
+        then(aiChatModelServiceMock).should().sendChatRequestAsync(eq(tenantId), any(),
                 argThat(actualChatRequest -> {
                     assertThat(actualChatRequest.messages()).hasSize(1);
                     assertThat(actualChatRequest.messages().get(0)).isEqualTo(UserMessage.from("Tell me a joke"));
@@ -550,13 +550,13 @@ class TbAiNodeTest {
                 .aiMessage(AiMessage.from("{\"type\":\"joke\",\"setup\":\"Why did the scarecrow win an award?\",\"punchline\":\"Because he was outstanding in his field.\"}"))
                 .build();
 
-        given(aiChatModelServiceMock.sendChatRequestAsync(any(), any())).willReturn(FluentFuture.from(immediateFuture(chatResponse)));
+        given(aiChatModelServiceMock.sendChatRequestAsync(eq(tenantId), any(), any())).willReturn(FluentFuture.from(immediateFuture(chatResponse)));
 
         // WHEN
         aiNode.onMsg(ctxMock, msg);
 
         // THEN
-        then(aiChatModelServiceMock).should().sendChatRequestAsync(any(),
+        then(aiChatModelServiceMock).should().sendChatRequestAsync(eq(tenantId), any(),
                 argThat(actualChatRequest -> {
                     assertThat(actualChatRequest.messages()).hasSize(2);
                     assertThat(actualChatRequest.messages().get(0)).isEqualTo(SystemMessage.from("Respond with valid JSON"));
@@ -588,13 +588,13 @@ class TbAiNodeTest {
                 .aiMessage(AiMessage.from("{\"joke\":\"Why did the JSON go to therapy?\",\"punchline\":\"Because it had too many unresolved references!\"}"))
                 .build();
 
-        given(aiChatModelServiceMock.sendChatRequestAsync(any(), any())).willReturn(FluentFuture.from(immediateFuture(chatResponse)));
+        given(aiChatModelServiceMock.sendChatRequestAsync(eq(tenantId), any(), any())).willReturn(FluentFuture.from(immediateFuture(chatResponse)));
 
         // WHEN
         aiNode.onMsg(ctxMock, msg);
 
         // THEN
-        then(aiChatModelServiceMock).should().sendChatRequestAsync(any(),
+        then(aiChatModelServiceMock).should().sendChatRequestAsync(eq(tenantId), any(),
                 argThat(actualChatRequest -> {
                     assertThat(actualChatRequest.messages()).hasSize(2);
                     assertThat(actualChatRequest.messages().get(0)).isEqualTo(SystemMessage.from("Respond with valid JSON"));
@@ -626,13 +626,14 @@ class TbAiNodeTest {
                 .aiMessage(AiMessage.from("{\"type\":\"joke\",\"setup\":\"Why did the scarecrow win an award?\",\"punchline\":\"Because he was outstanding in his field.\"}"))
                 .build();
 
-        given(aiChatModelServiceMock.sendChatRequestAsync(any(), any())).willReturn(FluentFuture.from(immediateFuture(chatResponse)));
+        given(aiChatModelServiceMock.sendChatRequestAsync(eq(tenantId), any(), any())).willReturn(FluentFuture.from(immediateFuture(chatResponse)));
 
         // WHEN
         aiNode.onMsg(ctxMock, msg);
 
         // THEN
         then(aiChatModelServiceMock).should().sendChatRequestAsync(
+                eq(tenantId),
                 argThat(actualChatModelConfig -> {
                     assertThat(actualChatModelConfig.timeoutSeconds()).isEqualTo(config.getTimeoutSeconds());
                     return true;
@@ -662,13 +663,14 @@ class TbAiNodeTest {
                 .aiMessage(AiMessage.from("{\"type\":\"joke\",\"setup\":\"Why did the scarecrow win an award?\",\"punchline\":\"Because he was outstanding in his field.\"}"))
                 .build();
 
-        given(aiChatModelServiceMock.sendChatRequestAsync(any(), any())).willReturn(FluentFuture.from(immediateFuture(chatResponse)));
+        given(aiChatModelServiceMock.sendChatRequestAsync(eq(tenantId), any(), any())).willReturn(FluentFuture.from(immediateFuture(chatResponse)));
 
         // WHEN
         aiNode.onMsg(ctxMock, msg);
 
         // THEN
         then(aiChatModelServiceMock).should().sendChatRequestAsync(
+                eq(tenantId),
                 argThat(actualChatModelConfig -> {
                     assertThat(actualChatModelConfig.maxRetries()).isZero();
                     return true;
@@ -699,7 +701,7 @@ class TbAiNodeTest {
                         Because it found someone less complicated and more flexible!"""))
                 .build();
 
-        given(aiChatModelServiceMock.sendChatRequestAsync(any(), any())).willReturn(FluentFuture.from(immediateFuture(chatResponse)));
+        given(aiChatModelServiceMock.sendChatRequestAsync(eq(tenantId), any(), any())).willReturn(FluentFuture.from(immediateFuture(chatResponse)));
 
         // WHEN
         aiNode.onMsg(ctxMock, msg);
@@ -732,13 +734,14 @@ class TbAiNodeTest {
                 .aiMessage(AiMessage.from("{\"type\":\"joke\",\"setup\":\"Why did the scarecrow win an award?\",\"punchline\":\"Because he was outstanding in his field.\"}"))
                 .build();
 
-        given(aiChatModelServiceMock.sendChatRequestAsync(any(), any())).willReturn(FluentFuture.from(immediateFuture(chatResponse)));
+        given(aiChatModelServiceMock.sendChatRequestAsync(eq(tenantId), any(), any())).willReturn(FluentFuture.from(immediateFuture(chatResponse)));
 
         // WHEN
         aiNode.onMsg(ctxMock, msg);
 
         // THEN
         then(aiChatModelServiceMock).should().sendChatRequestAsync(
+                eq(tenantId),
                 argThat(actualChatModelConfig -> {
                     assertThat(actualChatModelConfig)
                             .usingRecursiveComparison()
@@ -773,13 +776,14 @@ class TbAiNodeTest {
                         Because it found someone less complicated and more flexible!"""))
                 .build();
 
-        given(aiChatModelServiceMock.sendChatRequestAsync(any(), any())).willReturn(FluentFuture.from(immediateFuture(chatResponse)));
+        given(aiChatModelServiceMock.sendChatRequestAsync(eq(tenantId), any(), any())).willReturn(FluentFuture.from(immediateFuture(chatResponse)));
 
         // WHEN
         aiNode.onMsg(ctxMock, msg);
 
         // THEN
         then(aiChatModelServiceMock).should().sendChatRequestAsync(
+                eq(tenantId),
                 any(),
                 argThat(actualChatRequest -> {
                     assertThat(actualChatRequest.responseFormat()).isNull();
@@ -811,13 +815,14 @@ class TbAiNodeTest {
                         Because it found someone less complicated and more flexible!"""))
                 .build();
 
-        given(aiChatModelServiceMock.sendChatRequestAsync(any(), any())).willReturn(FluentFuture.from(immediateFuture(chatResponse)));
+        given(aiChatModelServiceMock.sendChatRequestAsync(eq(tenantId), any(), any())).willReturn(FluentFuture.from(immediateFuture(chatResponse)));
 
         // WHEN
         aiNode.onMsg(ctxMock, msg);
 
         // THEN
         then(aiChatModelServiceMock).should().sendChatRequestAsync(
+                eq(tenantId),
                 any(),
                 argThat(actualChatRequest -> {
                     assertThat(actualChatRequest.responseFormat()).isEqualTo(ResponseFormat.builder().type(ResponseFormatType.JSON).build());
@@ -871,7 +876,7 @@ class TbAiNodeTest {
                         }"""))
                 .build();
 
-        given(aiChatModelServiceMock.sendChatRequestAsync(any(), any())).willReturn(FluentFuture.from(immediateFuture(chatResponse)));
+        given(aiChatModelServiceMock.sendChatRequestAsync(eq(tenantId), any(), any())).willReturn(FluentFuture.from(immediateFuture(chatResponse)));
 
         // WHEN
         aiNode.onMsg(ctxMock, msg);
@@ -888,6 +893,7 @@ class TbAiNodeTest {
                 .build();
 
         then(aiChatModelServiceMock).should().sendChatRequestAsync(
+                eq(tenantId),
                 any(),
                 argThat(actualChatRequest -> {
                     assertThat(actualChatRequest.responseFormat()).isEqualTo(ResponseFormat.builder().type(ResponseFormatType.JSON).jsonSchema(expectedJsonSchema).build());
@@ -918,13 +924,14 @@ class TbAiNodeTest {
                 .aiMessage(AiMessage.from("{\"type\":\"joke\",\"setup\":\"Why did the scarecrow win an award?\",\"punchline\":\"Because he was outstanding in his field.\"}"))
                 .build();
 
-        given(aiChatModelServiceMock.sendChatRequestAsync(any(), any())).willReturn(FluentFuture.from(immediateFuture(chatResponse)));
+        given(aiChatModelServiceMock.sendChatRequestAsync(eq(tenantId), any(), any())).willReturn(FluentFuture.from(immediateFuture(chatResponse)));
 
         // WHEN
         aiNode.onMsg(ctxMock, msg);
 
         // THEN
         then(aiChatModelServiceMock).should().sendChatRequestAsync(
+                eq(tenantId),
                 argThat(actualChatModelConfig -> {
                     assertThat(actualChatModelConfig)
                             .usingRecursiveComparison()
