@@ -70,8 +70,8 @@ import java.util.stream.Collectors;
 @Slf4j
 public abstract class AbstractMqttIntegration<T extends MqttIntegrationMsg> extends AbstractIntegration<T> {
 
-    private static final int MQTT_3_MAX_LENGTH = 23;
-    private static final int MQTT_5_MAX_LENGTH = 256;
+    private static final int MQTT_3_MAX_CLIENT_ID_LENGTH = 23;
+    private static final int MQTT_5_MAX_CLIENT_ID_LENGTH = 256;
 
     protected MqttClientConfiguration mqttClientConfiguration;
     @Setter
@@ -99,7 +99,7 @@ public abstract class AbstractMqttIntegration<T extends MqttIntegrationMsg> exte
             throw new IllegalArgumentException("Usage of local network host for MQTT broker connection is not allowed!");
         }
         String clientId = mqttClientConfiguration.getClientId();
-        int maxLength = mqttClientConfiguration.getProtocolVersion() == MqttVersion.MQTT_3_1 ? MQTT_3_MAX_LENGTH : MQTT_5_MAX_LENGTH;
+        int maxLength = mqttClientConfiguration.getProtocolVersion() == MqttVersion.MQTT_3_1 ? MQTT_3_MAX_CLIENT_ID_LENGTH : MQTT_5_MAX_CLIENT_ID_LENGTH;
         if (StringUtils.isNotBlank(clientId) && clientId.length() > maxLength) {
             throw new IllegalArgumentException("The length of Client ID cannot be longer than " + maxLength + ", but current length is " + clientId.length() + ".");
         }
