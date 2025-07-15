@@ -42,6 +42,7 @@ import io.netty.handler.codec.mqtt.MqttVersion;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.util.concurrent.Promise;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.common.util.ListeningExecutor;
@@ -66,18 +67,15 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
-/**
- * Created by ashvayka on 25.12.17.
- */
 @Slf4j
 public abstract class AbstractMqttIntegration<T extends MqttIntegrationMsg> extends AbstractIntegration<T> {
 
-    protected MqttClientConfiguration mqttClientConfiguration;
-    protected MqttClient mqttClient;
+    private static final int MQTT_3_MAX_LENGTH = 23;
+    private static final int MQTT_5_MAX_LENGTH = 256;
 
-    public void setMqttClient(MqttClient mqttClient) {
-        this.mqttClient = mqttClient;
-    }
+    protected MqttClientConfiguration mqttClientConfiguration;
+    @Setter
+    protected MqttClient mqttClient;
 
     @Override
     public void init(TbIntegrationInitParams params) throws Exception {
@@ -101,9 +99,9 @@ public abstract class AbstractMqttIntegration<T extends MqttIntegrationMsg> exte
             throw new IllegalArgumentException("Usage of local network host for MQTT broker connection is not allowed!");
         }
         String clientId = mqttClientConfiguration.getClientId();
-        if (StringUtils.isNotBlank(clientId) && clientId.length() > 23) {
-            throw new IllegalArgumentException("Client ID is too long '" + clientId + "'. " +
-                    "The length of Client ID cannot be longer than 23, but current length is " + clientId.length() + ".");
+        int maxLength = mqttClientConfiguration.getProtocolVersion() == MqttVersion.MQTT_3_1 ? MQTT_3_MAX_LENGTH : MQTT_5_MAX_LENGTH;
+        if (StringUtils.isNotBlank(clientId) && clientId.length() > maxLength) {
+            throw new IllegalArgumentException("The length of Client ID cannot be longer than " + maxLength + ", but current length is " + clientId.length() + ".");
         }
     }
 

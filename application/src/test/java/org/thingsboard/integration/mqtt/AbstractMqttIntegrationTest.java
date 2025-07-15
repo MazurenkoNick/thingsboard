@@ -149,7 +149,7 @@ class AbstractMqttIntegrationTest {
             "      \"cleanSession\":true,\n" +
             "      \"ssl\":false,\n" +
             "      \"connectTimeoutSec\":10,\n" +
-            "      \"clientId\":\"12n3ibfi54gbhgrtnjhrt95654n32f2fg3mi44\",\n" +
+            "      \"clientId\":\"" + "X".repeat(257) + "\",\n" +
             "      \"maxBytesInMessage\":32368,\n" +
             "      \"credentials\":{\n" +
             "         \"type\":\"anonymous\"\n" +
@@ -204,11 +204,11 @@ class AbstractMqttIntegrationTest {
     void testMqttIntegrationClientIdTooLong() {
         Integration integration = getIntegration(configClientIdLong);
 
-        String clientId = "12n3ibfi54gbhgrtnjhrt95654n32f2fg3mi44";
+        String clientId = "X".repeat(257);
         assertThatThrownBy(() -> basicMqttIntegration.validateConfiguration(integration, true))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("Client ID is too long '" + clientId + "'. " +
-                        "The length of Client ID cannot be longer than 23, but current length is " + clientId.length() + ".");
+                        "The length of Client ID cannot be longer than 256, but current length is " + clientId.length() + ".");
     }
 
     private void processTest(String config, int wantedNumberOfInvocations) throws Exception {

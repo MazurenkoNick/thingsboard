@@ -47,9 +47,6 @@ import java.io.File;
 import java.security.Security;
 import java.util.Optional;
 
-/**
- * Created by igor on 3/2/18.
- */
 @Slf4j
 public class TtnIntegration extends BasicMqttIntegration {
 
