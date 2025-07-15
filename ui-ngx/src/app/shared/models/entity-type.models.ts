@@ -76,6 +76,7 @@ export enum EntityType {
   MOBILE_APP_BUNDLE = 'MOBILE_APP_BUNDLE',
   MOBILE_APP = 'MOBILE_APP',
   CALCULATED_FIELD = 'CALCULATED_FIELD',
+  ADMIN_SETTINGS = 'ADMIN_SETTINGS',
   SECRET = 'SECRET',
 }
 
@@ -682,6 +683,12 @@ export const entityTypeTranslations = new Map<EntityType | AliasEntityType, Enti
         noEntities: 'calculated-fields.no-found',
         search: 'action.search',
         selectedEntities: 'calculated-fields.selected-fields'
+      }
+    ],
+    [
+      EntityType.ADMIN_SETTINGS,
+      {
+        type: 'entity.type-admin-settings'
       }
     ],
     [

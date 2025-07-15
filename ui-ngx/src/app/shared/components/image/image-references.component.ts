@@ -140,6 +140,20 @@ export class ImageReferencesComponent implements OnInit {
     }
     return false;
   }
+  private getAdminSettingsPageURL(entity) {
+    let url = '/settings/';
+    switch (entity.name) {
+      case 'mail':
+        return url + 'outgoing-mail';
+        case 'entitiesVersionControl':
+        return url + 'repository';
+      case 'sms':
+      case 'notifications':
+        return url + 'notifications';
+      default:
+        return url + 'general';
+    }
+  }
 
   private toReferencedEntitiesList(references: ResourceReferences): ReferencedEntityInfo[] {
     const result: ReferencedEntityInfo[] = [];
@@ -148,7 +162,7 @@ export class ImageReferencesComponent implements OnInit {
         const entity = reference as BaseData<EntityId>;
         const entityType = entity.id.entityType as EntityType;
         const entityTypeName = this.translate.instant(entityTypeTranslations.get(entityType).type);
-        const detailsUrl = getEntityDetailsPageURL(entity.id.id, entityType);
+        const detailsUrl = entityType === EntityType.ADMIN_SETTINGS ? this.getAdminSettingsPageURL(entity) : getEntityDetailsPageURL(entity.id.id, entityType);
         result.push({
           entity,
           typeName: entityTypeName,
