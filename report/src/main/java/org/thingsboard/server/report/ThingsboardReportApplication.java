@@ -48,7 +48,7 @@ import java.util.Arrays;
         "org.thingsboard.server.queue.discovery", "org.thingsboard.server.queue.kafka",
         "org.thingsboard.server.queue.provider", "org.thingsboard.server.queue.settings",
         "org.thingsboard.server.queue.environment", "org.thingsboard.server.common.stats",
-        "org.thingsboard.script.api"})
+        "org.thingsboard.script.api.tbel"})
 @Slf4j
 public class ThingsboardReportApplication {
 
