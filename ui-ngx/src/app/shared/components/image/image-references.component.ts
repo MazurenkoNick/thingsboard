@@ -140,12 +140,12 @@ export class ImageReferencesComponent implements OnInit {
     }
     return false;
   }
-  private getAdminSettingsPageURL(entity) {
+  private getAdminSettingsPageURL(entity: BaseData<EntityId>) {
     let url = '/settings/';
     switch (entity.name) {
       case 'mail':
         return url + 'outgoing-mail';
-        case 'entitiesVersionControl':
+      case 'entitiesVersionControl':
         return url + 'repository';
       case 'sms':
       case 'notifications':
