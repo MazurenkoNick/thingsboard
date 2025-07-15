@@ -207,8 +207,7 @@ class AbstractMqttIntegrationTest {
         String clientId = "X".repeat(257);
         assertThatThrownBy(() -> basicMqttIntegration.validateConfiguration(integration, true))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Client ID is too long '" + clientId + "'. " +
-                        "The length of Client ID cannot be longer than 256, but current length is " + clientId.length() + ".");
+                .hasMessage("The length of Client ID cannot be longer than 256, but current length is " + clientId.length() + ".");
     }
 
     private void processTest(String config, int wantedNumberOfInvocations) throws Exception {
