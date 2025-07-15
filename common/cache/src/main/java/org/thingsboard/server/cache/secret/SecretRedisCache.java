@@ -28,45 +28,24 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.common.data.id;
+package org.thingsboard.server.cache.secret;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import io.swagger.v3.oas.annotations.media.Schema;
-import org.springframework.util.ConcurrentReferenceHashMap;
-import org.springframework.util.ConcurrentReferenceHashMap.ReferenceType;
-import org.thingsboard.server.common.data.EntityType;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.stereotype.Service;
+import org.thingsboard.server.cache.CacheSpecsMap;
+import org.thingsboard.server.cache.RedisTbTransactionalCache;
+import org.thingsboard.server.cache.TBRedisCacheConfiguration;
+import org.thingsboard.server.cache.TbJsonRedisSerializer;
+import org.thingsboard.server.common.data.CacheConstants;
+import org.thingsboard.server.common.data.secret.Secret;
 
-import java.io.Serial;
-import java.util.UUID;
+@ConditionalOnProperty(prefix = "cache", value = "type", havingValue = "redis")
+@Service("SecretCache")
+public class SecretRedisCache extends RedisTbTransactionalCache<SecretCacheKey, Secret> {
 
-public class EdgeId extends UUIDBased implements EntityId {
-
-    @Serial
-    private static final long serialVersionUID = 1L;
-
-    @JsonIgnore
-    static final ConcurrentReferenceHashMap<UUID, EdgeId> edges = new ConcurrentReferenceHashMap<>(16, ReferenceType.SOFT);
-
-    @JsonCreator
-    public EdgeId(@JsonProperty("id") UUID id) {
-        super(id);
-    }
-
-    public static EdgeId fromString(String edgeId) {
-        return new EdgeId(UUID.fromString(edgeId));
-    }
-
-    @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "string", example = "EDGE", allowableValues = "EDGE")
-    @Override
-    public EntityType getEntityType() {
-        return EntityType.EDGE;
-    }
-
-    @JsonCreator
-    public static EdgeId fromUUID(@JsonProperty("id") UUID id) {
-        return edges.computeIfAbsent(id, EdgeId::new);
+    public SecretRedisCache(TBRedisCacheConfiguration configuration, CacheSpecsMap cacheSpecsMap, RedisConnectionFactory connectionFactory) {
+        super(CacheConstants.SECRET_CACHE, cacheSpecsMap, connectionFactory, configuration, new TbJsonRedisSerializer<>(Secret.class));
     }
 
 }

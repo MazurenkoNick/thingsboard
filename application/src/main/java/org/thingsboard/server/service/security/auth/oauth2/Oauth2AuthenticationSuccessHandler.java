@@ -33,8 +33,8 @@ package org.thingsboard.server.service.security.auth.oauth2;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
@@ -48,8 +48,8 @@ import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.OAuth2ClientId;
 import org.thingsboard.server.common.data.id.TenantId;
-import org.thingsboard.server.common.data.security.Authority;
 import org.thingsboard.server.common.data.oauth2.OAuth2Client;
+import org.thingsboard.server.common.data.security.Authority;
 import org.thingsboard.server.common.data.security.model.JwtPair;
 import org.thingsboard.server.dao.oauth2.OAuth2ClientService;
 import org.thingsboard.server.queue.util.TbCoreComponent;
@@ -67,6 +67,7 @@ import java.util.UUID;
 import static org.thingsboard.server.service.security.auth.oauth2.HttpCookieOAuth2AuthorizationRequestRepository.PREV_URI_COOKIE_NAME;
 
 @Slf4j
+@RequiredArgsConstructor
 @Component(value = "oauth2AuthenticationSuccessHandler")
 @TbCoreComponent
 public class Oauth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
@@ -77,21 +78,6 @@ public class Oauth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
     private final OAuth2AuthorizedClientService oAuth2AuthorizedClientService;
     private final HttpCookieOAuth2AuthorizationRequestRepository httpCookieOAuth2AuthorizationRequestRepository;
     private final SystemSecurityService systemSecurityService;
-
-    @Autowired
-    public Oauth2AuthenticationSuccessHandler(final JwtTokenFactory tokenFactory,
-                                              final OAuth2ClientMapperProvider oauth2ClientMapperProvider,
-                                              final OAuth2ClientService oAuth2ClientService,
-                                              final OAuth2AuthorizedClientService oAuth2AuthorizedClientService,
-                                              final HttpCookieOAuth2AuthorizationRequestRepository httpCookieOAuth2AuthorizationRequestRepository,
-                                              final SystemSecurityService systemSecurityService) {
-        this.tokenFactory = tokenFactory;
-        this.oauth2ClientMapperProvider = oauth2ClientMapperProvider;
-        this.oAuth2ClientService = oAuth2ClientService;
-        this.oAuth2AuthorizedClientService = oAuth2AuthorizedClientService;
-        this.httpCookieOAuth2AuthorizationRequestRepository = httpCookieOAuth2AuthorizationRequestRepository;
-        this.systemSecurityService = systemSecurityService;
-    }
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request,
@@ -131,7 +117,7 @@ public class Oauth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
                 baseUrl = getBaseUrl(request, response, callbackUrlScheme, null);
             }
             getRedirectStrategy().sendRedirect(request, response, baseUrl + errorPrefix +
-                    URLEncoder.encode(e.getMessage(), StandardCharsets.UTF_8.toString()));
+                    URLEncoder.encode(e.getMessage(), StandardCharsets.UTF_8));
         }
     }
 
@@ -167,4 +153,5 @@ public class Oauth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
         }
         return baseUrl + "accessToken=" + tokenPair.getToken() + "&refreshToken=" + tokenPair.getRefreshToken();
     }
+
 }

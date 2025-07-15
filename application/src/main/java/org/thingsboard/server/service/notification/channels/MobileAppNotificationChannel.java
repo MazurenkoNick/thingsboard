@@ -52,6 +52,7 @@ import org.thingsboard.server.common.data.notification.settings.NotificationSett
 import org.thingsboard.server.common.data.notification.template.MobileAppDeliveryMethodNotificationTemplate;
 import org.thingsboard.server.dao.notification.NotificationService;
 import org.thingsboard.server.dao.notification.NotificationSettingsService;
+import org.thingsboard.server.dao.secret.SecretConfigurationService;
 import org.thingsboard.server.dao.user.UserService;
 import org.thingsboard.server.service.notification.NotificationProcessingContext;
 
@@ -72,6 +73,7 @@ public class MobileAppNotificationChannel implements NotificationChannel<User, M
     private final UserService userService;
     private final NotificationService notificationService;
     private final NotificationSettingsService notificationSettingsService;
+    private final SecretConfigurationService secretConfigurationService;
 
     @Override
     public void sendNotification(User recipient, MobileAppDeliveryMethodNotificationTemplate processedTemplate, NotificationProcessingContext ctx) throws Exception {
@@ -108,7 +110,8 @@ public class MobileAppNotificationChannel implements NotificationChannel<User, M
         }
 
         MobileAppNotificationDeliveryMethodConfig config = ctx.getDeliveryMethodConfig(MOBILE_APP);
-        String credentials = config.getFirebaseServiceAccountCredentials();
+        TenantId tenantId = config.isSystemSettings() || config.isUseSystemSettings() ? TenantId.SYS_TENANT_ID : ctx.getTenantId();
+        String credentials = secretConfigurationService.replaceSecretUsage(tenantId, config.getFirebaseServiceAccountCredentials());
         Set<String> validTokens = new HashSet<>(mobileSessions.keySet());
 
         String subject = processedTemplate.getSubject();

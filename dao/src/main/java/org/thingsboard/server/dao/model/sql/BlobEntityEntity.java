@@ -113,7 +113,7 @@ public final class BlobEntityEntity extends BaseSqlEntity<BlobEntity> implements
         BlobEntity blobEntity = new BlobEntity(new BlobEntityId(id));
         blobEntity.setCreatedTime(createdTime);
         if (tenantId != null) {
-            blobEntity.setTenantId(new TenantId(tenantId));
+            blobEntity.setTenantId(TenantId.fromUUID(tenantId));
         }
         if (customerId != null) {
             blobEntity.setCustomerId(new CustomerId(customerId));

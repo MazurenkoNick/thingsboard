@@ -36,9 +36,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Test;
 import org.mockito.Mockito;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.server.common.data.AdminSettings;
 import org.thingsboard.server.common.data.security.model.JwtSettings;
+import org.thingsboard.server.dao.secret.SecretConfigurationService;
 import org.thingsboard.server.dao.service.DaoSqlTest;
 
 import java.nio.charset.StandardCharsets;
@@ -50,6 +52,9 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -58,6 +63,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @DaoSqlTest
 public class AdminControllerTest extends AbstractControllerTest {
     final JwtSettings defaultJwtSettings = new JwtSettings(9000, 604800, "thingsboard.io", "QmlicmJkZk9tSzZPVFozcWY0Sm94UVhybmtBWXZ5YmZMOUZSZzZvcUFiOVhsb3VHUThhUWJGaXp3UHhtcGZ6Tw==");
+
+    @MockBean
+    SecretConfigurationService secretConfigurationService;
 
     @Test
     public void testFindAdminSettingsByKey() throws Exception {
@@ -134,6 +142,7 @@ public class AdminControllerTest extends AbstractControllerTest {
         doPost("/api/admin/settings/testMail", adminSettings)
                 .andExpect(status().isOk());
         Mockito.verify(mailService).sendTestMail(Mockito.any(), Mockito.any(), Mockito.anyString());
+        verify(secretConfigurationService, times(1)).replaceSecretUsages(eq(tenantId), any());
     }
 
     @Test
@@ -151,6 +160,7 @@ public class AdminControllerTest extends AbstractControllerTest {
 
         doPost("/api/admin/settings/testMail", adminSettings).andExpect(status().is5xxServerError());
         Mockito.verify(mailService).sendTestMail(Mockito.any(), Mockito.any(), Mockito.anyString());
+        verify(secretConfigurationService, times(1)).replaceSecretUsages(eq(tenantId), any());
     }
 
     void resetJwtSettingsToDefault() throws Exception {

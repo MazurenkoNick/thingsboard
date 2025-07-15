@@ -28,45 +28,12 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.common.data.id;
+package org.thingsboard.server.cache.secret;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import io.swagger.v3.oas.annotations.media.Schema;
-import org.springframework.util.ConcurrentReferenceHashMap;
-import org.springframework.util.ConcurrentReferenceHashMap.ReferenceType;
-import org.thingsboard.server.common.data.EntityType;
+import org.thingsboard.server.common.data.id.TenantId;
 
-import java.io.Serial;
-import java.util.UUID;
+import java.io.Serializable;
 
-public class EdgeId extends UUIDBased implements EntityId {
-
-    @Serial
-    private static final long serialVersionUID = 1L;
-
-    @JsonIgnore
-    static final ConcurrentReferenceHashMap<UUID, EdgeId> edges = new ConcurrentReferenceHashMap<>(16, ReferenceType.SOFT);
-
-    @JsonCreator
-    public EdgeId(@JsonProperty("id") UUID id) {
-        super(id);
-    }
-
-    public static EdgeId fromString(String edgeId) {
-        return new EdgeId(UUID.fromString(edgeId));
-    }
-
-    @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "string", example = "EDGE", allowableValues = "EDGE")
-    @Override
-    public EntityType getEntityType() {
-        return EntityType.EDGE;
-    }
-
-    @JsonCreator
-    public static EdgeId fromUUID(@JsonProperty("id") UUID id) {
-        return edges.computeIfAbsent(id, EdgeId::new);
-    }
+public record SecretCacheKey(TenantId tenantId, String name) implements Serializable {
 
 }

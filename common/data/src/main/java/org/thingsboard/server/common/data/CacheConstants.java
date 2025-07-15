@@ -79,4 +79,5 @@ public class CacheConstants {
     public static final String MOBILE_SECRET_KEY_CACHE = "mobileSecretKey";
     public static final String CUSTOM_MENU_CACHE = "customMenu";
     public static final String ENTITY_GROUP_CACHE = "entityGroups";
+    public static final String SECRET_CACHE = "secrets";
 }

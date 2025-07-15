@@ -103,6 +103,7 @@ public class DefaultUserPermissionsService implements UserPermissionsService {
         sysAdminGenericPermissions.put(Resource.MOBILE_APP, Set.of(Operation.ALL));
         sysAdminGenericPermissions.put(Resource.MOBILE_APP_BUNDLE, Set.of(Operation.ALL));
         sysAdminGenericPermissions.put(Resource.MOBILE_APP_SETTINGS, Set.of(Operation.ALL));
+        sysAdminGenericPermissions.put(Resource.SECRET, Set.of(Operation.ALL));
         sysAdminPermissions = new MergedUserPermissions(sysAdminGenericPermissions, new HashMap<>());
     }
 

@@ -38,9 +38,6 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.stream.Collectors;
 
-/**
- * @author Andrew Shvayka
- */
 public enum EntityType {
     TENANT(1),
     CUSTOMER(2, true),
@@ -97,7 +94,8 @@ public enum EntityType {
     CALCULATED_FIELD(39),
     CALCULATED_FIELD_LINK(40),
     JOB(41),
-    SECRET(107);
+    SECRET(107),
+    ADMIN_SETTINGS(42);
 
     @Getter
     private final int protoNumber; // Corresponds to EntityTypeProto

@@ -156,7 +156,7 @@ public class IntegrationEntity extends BaseVersionedEntity<Integration> {
         integration.setCreatedTime(this.createdTime);
         integration.setVersion(version);
         if (tenantId != null) {
-            integration.setTenantId(new TenantId(tenantId));
+            integration.setTenantId(TenantId.fromUUID(tenantId));
         }
         if (converterId != null) {
             integration.setDefaultConverterId(new ConverterId(converterId));

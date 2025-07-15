@@ -36,9 +36,6 @@ import org.thingsboard.server.common.data.event.Event;
 
 import java.util.Optional;
 
-/**
- * Created by ashvayka on 05.12.17.
- */
 public interface ConverterContext {
 
     /**

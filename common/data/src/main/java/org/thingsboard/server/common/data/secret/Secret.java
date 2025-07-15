@@ -93,9 +93,4 @@ public class Secret extends SecretInfo {
         this.rawValue = rawValue;
     }
 
-    @Override
-    public String toString() {
-        return super.toString();
-    }
-
 }

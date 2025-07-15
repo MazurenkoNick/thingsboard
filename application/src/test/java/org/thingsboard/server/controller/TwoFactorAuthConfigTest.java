@@ -61,6 +61,7 @@ import org.thingsboard.server.common.data.security.model.mfa.provider.SmsTwoFaPr
 import org.thingsboard.server.common.data.security.model.mfa.provider.TotpTwoFaProviderConfig;
 import org.thingsboard.server.common.data.security.model.mfa.provider.TwoFaProviderConfig;
 import org.thingsboard.server.common.data.security.model.mfa.provider.TwoFaProviderType;
+import org.thingsboard.server.dao.secret.SecretConfigurationService;
 import org.thingsboard.server.dao.service.DaoSqlTest;
 import org.thingsboard.server.service.security.auth.mfa.TwoFactorAuthService;
 import org.thingsboard.server.service.security.auth.mfa.config.TwoFaConfigManager;
@@ -83,6 +84,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.reset;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -101,6 +103,8 @@ public class TwoFactorAuthConfigTest extends AbstractControllerTest {
     private TwoFactorAuthService twoFactorAuthService;
     @SpyBean
     private UserPermissionsService userPermissionsService;
+    @MockBean
+    private SecretConfigurationService secretConfigurationService;
 
     @Before
     public void beforeEach() throws Exception {
@@ -430,6 +434,7 @@ public class TwoFactorAuthConfigTest extends AbstractControllerTest {
         verify(smsService).sendSms(eq(tenantId), any(), argThat(phoneNumbers -> {
             return phoneNumbers[0].equals(smsTwoFaAccountConfig.getPhoneNumber());
         }), eq("Here is your verification code: " + verificationCode));
+        verify(secretConfigurationService, times(1)).replaceSecretUsages(eq(tenantId), any());
     }
 
     @Test
@@ -468,6 +473,7 @@ public class TwoFactorAuthConfigTest extends AbstractControllerTest {
         verify(smsService).sendSms(eq(tenantId), any(), argThat(phoneNumbers -> {
             return phoneNumbers[0].equals(smsTwoFaAccountConfig.getPhoneNumber());
         }), verificationCodeCaptor.capture());
+        verify(secretConfigurationService, times(1)).replaceSecretUsages(eq(tenantId), any());
 
         String correctVerificationCode = verificationCodeCaptor.getValue();
         doPost("/api/2fa/account/config?verificationCode=" + correctVerificationCode, smsTwoFaAccountConfig)
@@ -507,6 +513,7 @@ public class TwoFactorAuthConfigTest extends AbstractControllerTest {
         verify(smsService).sendSms(eq(tenantId), any(), argThat(phoneNumbers -> {
             return phoneNumbers[0].equals(initialSmsTwoFaAccountConfig.getPhoneNumber());
         }), verificationCodeCaptor.capture());
+        verify(secretConfigurationService, times(1)).replaceSecretUsages(eq(tenantId), any());
 
         String correctVerificationCode = verificationCodeCaptor.getValue();
 

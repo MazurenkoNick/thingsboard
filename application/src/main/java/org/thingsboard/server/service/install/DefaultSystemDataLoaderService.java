@@ -593,6 +593,8 @@ public class DefaultSystemDataLoaderService implements SystemDataLoaderService {
         } else if (Authority.CUSTOMER_USER.equals(authority)) {
             EntityGroup users = entityGroupService.findOrCreateCustomerUsersGroup(user.getTenantId(), user.getCustomerId(), null);
             entityGroupService.addEntityToEntityGroup(TenantId.SYS_TENANT_ID, users.getId(), user.getId());
+        } else if (Authority.SYS_ADMIN.equals(authority)) {
+            installScripts.generateSysAdminEncryptionKey();
         }
         return user;
     }

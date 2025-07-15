@@ -119,6 +119,7 @@ interface SlackNotificationDeliveryMethodConfig {
 
 export interface MobileNotificationDeliveryMethodConfig {
   useSystemSettings?: boolean;
+  systemSettings?: boolean;
   firebaseServiceAccountCredentials: string;
   firebaseServiceAccountCredentialsFileName: string;
 }

@@ -45,6 +45,7 @@ import org.thingsboard.server.common.data.report.Report;
 import org.thingsboard.server.common.data.util.CollectionsUtil;
 import org.thingsboard.server.dao.notification.NotificationSettingsService;
 import org.thingsboard.server.dao.report.ReportService;
+import org.thingsboard.server.dao.secret.SecretConfigurationService;
 import org.thingsboard.server.service.notification.NotificationProcessingContext;
 
 import java.util.List;
@@ -56,6 +57,7 @@ public class SlackNotificationChannel implements NotificationChannel<SlackConver
     private final SlackService slackService;
     private final NotificationSettingsService notificationSettingsService;
     private final ReportService reportService;
+    private final SecretConfigurationService secretConfigurationService;
 
     @Override
     public void sendNotification(SlackConversation conversation, SlackDeliveryMethodNotificationTemplate processedTemplate, NotificationProcessingContext ctx) throws Exception {
@@ -73,7 +75,8 @@ public class SlackNotificationChannel implements NotificationChannel<SlackConver
                     })
                     .toList();
         }
-        slackService.sendMessage(ctx.getTenantId(), config.getBotToken(), conversation.getId(), processedTemplate.getBody(), files);
+        String token = secretConfigurationService.replaceSecretUsage(ctx.getTenantId(), config.getBotToken());
+        slackService.sendMessage(ctx.getTenantId(), token, conversation.getId(), processedTemplate.getBody(), files);
     }
 
     @Override

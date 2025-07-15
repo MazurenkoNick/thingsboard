@@ -46,7 +46,9 @@ import org.thingsboard.server.common.data.Customer;
 import org.thingsboard.server.common.data.Dashboard;
 import org.thingsboard.server.common.data.DashboardInfo;
 import org.thingsboard.server.common.data.EntityType;
+import org.thingsboard.server.common.data.SecretType;
 import org.thingsboard.server.common.data.ShortCustomerInfo;
+import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.Tenant;
 import org.thingsboard.server.common.data.User;
 import org.thingsboard.server.common.data.alarm.AlarmSeverity;
@@ -68,7 +70,11 @@ import org.thingsboard.server.common.data.query.DynamicValue;
 import org.thingsboard.server.common.data.query.FilterPredicateValue;
 import org.thingsboard.server.common.data.relation.EntityRelation;
 import org.thingsboard.server.common.data.relation.RelationTypeGroup;
+import org.thingsboard.server.common.data.secret.Secret;
+import org.thingsboard.server.common.data.secret.SecretInfo;
 import org.thingsboard.server.common.data.security.Authority;
+import org.thingsboard.server.common.data.sync.vc.RepositoryAuthMethod;
+import org.thingsboard.server.common.data.sync.vc.RepositorySettings;
 import org.thingsboard.server.dao.asset.AssetService;
 import org.thingsboard.server.dao.attributes.AttributesService;
 import org.thingsboard.server.dao.customer.CustomerService;
@@ -80,6 +86,7 @@ import org.thingsboard.server.dao.group.EntityGroupService;
 import org.thingsboard.server.dao.integration.IntegrationService;
 import org.thingsboard.server.dao.relation.RelationService;
 import org.thingsboard.server.dao.rule.RuleChainService;
+import org.thingsboard.server.dao.secret.SecretService;
 import org.thingsboard.server.dao.settings.AdminSettingsService;
 import org.thingsboard.server.dao.tenant.TenantService;
 import org.thingsboard.server.dao.user.UserService;
@@ -88,6 +95,7 @@ import org.thingsboard.server.service.component.ComponentDiscoveryService;
 import org.thingsboard.server.service.component.RuleNodeClassInfo;
 import org.thingsboard.server.service.install.DbUpgradeExecutorService;
 import org.thingsboard.server.service.install.SystemDataLoaderService;
+import org.thingsboard.server.service.sync.vc.repository.DefaultTbRepositorySettingsService;
 import org.thingsboard.server.utils.TbNodeUpgradeUtils;
 
 import java.lang.reflect.Field;
@@ -129,6 +137,7 @@ public class DefaultDataUpdateService implements DataUpdateService {
     private final DbUpgradeExecutorService executorService;
     private final AttributesService attributesService;
     private final AdminSettingsService adminSettingsService;
+    private final SecretService secretService;
 
     @Override
     public void updateData(boolean fromCe) throws Exception {
@@ -138,6 +147,7 @@ public class DefaultDataUpdateService implements DataUpdateService {
         } else {
             //TODO: should be cleaned after each release
             migrateTenantAttributeSettingsToAdminSettings();
+            migrateSensitiveSettingsToUseSecrets();
         }
         log.info("Data updated.");
     }
@@ -195,6 +205,96 @@ public class DefaultDataUpdateService implements DataUpdateService {
             }
         }
         log.info("Tenant attribute settings migration fully completed.");
+    }
+
+    private void migrateSensitiveSettingsToUseSecrets() {
+        PageDataIterable<TenantId> tenantIds = new PageDataIterable<>(tenantService::findTenantsIds, 1024);
+        for (TenantId tenantId : tenantIds) {
+            migrateVersionControlSettingsToSecrets(tenantId);
+            migrateMailSettingsToSecrets(tenantId);
+        }
+        log.info("Tenant sensitive settings migration to secrets fully completed.");
+    }
+
+    private void migrateVersionControlSettingsToSecrets(TenantId tenantId) {
+        try {
+            var versionControl = adminSettingsService.findAdminSettingsByTenantIdAndKey(tenantId, DefaultTbRepositorySettingsService.SETTINGS_KEY);
+            if (versionControl == null) {
+                return;
+            }
+            RepositorySettings settings = JacksonUtil.convertValue(versionControl.getJsonValue(), RepositorySettings.class);
+            if (settings == null) {
+                return;
+            }
+
+            if (settings.getAuthMethod() == RepositoryAuthMethod.USERNAME_PASSWORD) {
+                if (!isSecretPlaceholder(settings.getPassword()) && StringUtils.isNotBlank(settings.getPassword())) {
+                    String description = "Auto-generated password for authenticating with version control via username and password.";
+                    String password = createSecretAsPlaceholder(tenantId, "Version control: password", settings.getPassword(), SecretType.TEXT, description);
+                    settings.setPassword(password);
+                }
+            } else {
+                if (!isSecretPlaceholder(settings.getPrivateKeyPassword()) && StringUtils.isNotBlank(settings.getPrivateKeyPassword())) {
+                    String keyDescription = "Auto-generated passphrase for the SSH private key used to  access version control.";
+                    String passphrase = createSecretAsPlaceholder(tenantId, "Version Control: passphrase", settings.getPrivateKeyPassword(), SecretType.TEXT, keyDescription);
+                    settings.setPrivateKeyPassword(passphrase);
+                }
+
+                if (!isSecretPlaceholder(settings.getPrivateKey()) && StringUtils.isNotBlank(settings.getPrivateKey())) {
+                    String fileDescription = "Auto-generated SSH private key used for authenticating with version control.";
+                    String file = createSecretAsPlaceholder(tenantId, "Version Control: private key", settings.getPrivateKey(), SecretType.TEXT_FILE, fileDescription);
+                    settings.setPrivateKey(file);
+                }
+            }
+            JsonNode jsonNode = JacksonUtil.valueToTree(settings);
+            versionControl.setJsonValue(jsonNode);
+            adminSettingsService.saveAdminSettings(tenantId, versionControl);
+
+        } catch (Exception e) {
+            log.error("Failed to migrate version control settings to secrets storage for tenant {}", tenantId, e);
+        }
+    }
+
+    private void migrateMailSettingsToSecrets(TenantId tenantId) {
+        try {
+            var mail = adminSettingsService.findAdminSettingsByTenantIdAndKey(tenantId, "mail");
+            if (mail == null) {
+                return;
+            }
+            ObjectNode config = JacksonUtil.asObject(mail.getJsonValue());
+            JsonNode password = config.get("password");
+            if (password != null && !password.isNull() && StringUtils.isNotBlank(password.asText()) && !isSecretPlaceholder(password.asText())) {
+                String description = "Auto-generated password used for authenticating with the SMTP mail server.";
+                String placeholder = createSecretAsPlaceholder(tenantId, "Mail settings: password", password.asText(), SecretType.TEXT, description);
+                config.put("password", placeholder);
+                mail.setJsonValue(config);
+                adminSettingsService.saveAdminSettings(tenantId, mail);
+            }
+        } catch (Exception e) {
+            log.error("Failed to migrate mail settings to secrets storage for tenant {}", tenantId, e);
+        }
+    }
+
+    private String createSecretAsPlaceholder(TenantId tenantId, String baseName, String value, SecretType type, String description) {
+        String name = baseName;
+        int counter = 1;
+
+        while (secretService.findSecretInfoByName(tenantId, name) != null) {
+            name = baseName + " (" + counter++ + ")";
+        }
+
+        Secret secret = new Secret();
+        secret.setTenantId(tenantId);
+        secret.setName(name);
+        secret.setValue(value);
+        secret.setType(type);
+        secret.setDescription(description);
+        SecretInfo secretInfo = secretService.saveSecret(tenantId, secret);
+        return String.format("${secret:%s;type:%s}", secretInfo.getName(), secretInfo.getType());
+    }
+
+    private boolean isSecretPlaceholder(String name) {
+        return StringUtils.isNotBlank(name) && name.startsWith("${secret:") && name.endsWith("}");
     }
 
     @Override
@@ -311,11 +411,7 @@ public class DefaultDataUpdateService implements DataUpdateService {
                     EntityGroup entityGroup;
                     Optional<EntityGroup> customerGroupOptional =
                             entityGroupService.findEntityGroupByTypeAndName(TenantId.SYS_TENANT_ID, tenant.getId(), EntityType.CUSTOMER, EntityGroup.GROUP_ALL_NAME);
-                    if (!customerGroupOptional.isPresent()) {
-                        entityGroup = entityGroupService.createEntityGroupAll(TenantId.SYS_TENANT_ID, tenant.getId(), EntityType.CUSTOMER);
-                    } else {
-                        entityGroup = customerGroupOptional.get();
-                    }
+                    entityGroup = customerGroupOptional.orElseGet(() -> entityGroupService.createEntityGroupAll(TenantId.SYS_TENANT_ID, tenant.getId(), EntityType.CUSTOMER));
                     new CustomersGroupAllUpdater(entityGroup).updateEntities(tenant.getId());
                 }
             };
@@ -342,7 +438,7 @@ public class DefaultDataUpdateService implements DataUpdateService {
                             Optional<EntityGroup> entityGroupOptional =
                                     entityGroupService.findEntityGroupByTypeAndName(TenantId.SYS_TENANT_ID, tenant.getId(), groupType, EntityGroup.GROUP_ALL_NAME);
                             boolean fetchAllTenantEntities;
-                            if (!entityGroupOptional.isPresent()) {
+                            if (entityGroupOptional.isEmpty()) {
                                 entityGroup = entityGroupService.createEntityGroupAll(TenantId.SYS_TENANT_ID, tenant.getId(), groupType);
                                 fetchAllTenantEntities = true;
                             } else {
@@ -355,7 +451,7 @@ public class DefaultDataUpdateService implements DataUpdateService {
                                     entityGroupService.findOrCreateTenantUsersGroup(tenant.getId());
                                     Optional<EntityGroup> tenantAdminsOptional =
                                             entityGroupService.findEntityGroupByTypeAndName(tenant.getId(), tenant.getId(), EntityType.USER, EntityGroup.GROUP_TENANT_ADMINS_NAME);
-                                    if (!tenantAdminsOptional.isPresent()) {
+                                    if (tenantAdminsOptional.isEmpty()) {
                                         EntityGroup tenantAdmins = entityGroupService.findOrCreateTenantAdminsGroup(tenant.getId());
                                         new TenantAdminsGroupAllUpdater(entityGroup, tenantAdmins).updateEntities(tenant.getId());
                                     }
@@ -539,14 +635,14 @@ public class DefaultDataUpdateService implements DataUpdateService {
             for (EntityType groupType : entityGroupTypes) {
                 Optional<EntityGroup> entityGroupOptional =
                         entityGroupService.findEntityGroupByTypeAndName(TenantId.SYS_TENANT_ID, customer.getId(), groupType, EntityGroup.GROUP_ALL_NAME);
-                if (!entityGroupOptional.isPresent()) {
+                if (entityGroupOptional.isEmpty()) {
                     EntityGroup entityGroup = entityGroupService.createEntityGroupAll(TenantId.SYS_TENANT_ID, customer.getId(), groupType);
                     if (groupType == EntityType.USER) {
                         if (!customer.isPublic()) {
                             entityGroupService.findOrCreateCustomerAdminsGroup(customer.getTenantId(), customer.getId(), null);
                             Optional<EntityGroup> customerUsersOptional =
                                     entityGroupService.findEntityGroupByTypeAndName(customer.getTenantId(), customer.getId(), EntityType.USER, EntityGroup.GROUP_CUSTOMER_USERS_NAME);
-                            if (!customerUsersOptional.isPresent()) {
+                            if (customerUsersOptional.isEmpty()) {
                                 EntityGroup customerUsers = entityGroupService.findOrCreateCustomerUsersGroup(customer.getTenantId(), customer.getId(), null);
                                 new CustomerUsersGroupAllUpdater(customer.getTenantId(), entityGroup, customerUsers).updateEntities(customer.getId());
                             }

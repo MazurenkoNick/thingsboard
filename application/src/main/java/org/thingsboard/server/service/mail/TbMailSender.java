@@ -40,6 +40,7 @@ import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.gson.GsonFactory;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.lang.Nullable;
 import org.springframework.mail.MailException;
@@ -64,8 +65,10 @@ public class TbMailSender extends JavaMailSenderImpl {
     private static final String MAIL_PROP = "mail.";
     private final TbMailContextComponent ctx;
     private final Lock lock;
+    @Getter
     private final Boolean oauth2Enabled;
     private volatile String accessToken;
+    @Getter
     private volatile long tokenExpires;
     private final TenantId tenantId;
 
@@ -84,14 +87,6 @@ public class TbMailSender extends JavaMailSenderImpl {
             setPassword(jsonConfig.get("password").asText());
         }
         setJavaMailProperties(createJavaMailProperties(jsonConfig));
-    }
-
-    public Boolean getOauth2Enabled() {
-        return oauth2Enabled;
-    }
-
-    public long getTokenExpires() {
-        return tokenExpires;
     }
 
     @Override

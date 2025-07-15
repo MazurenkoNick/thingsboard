@@ -36,10 +36,10 @@ import jakarta.activation.DataSource;
 import jakarta.annotation.PreDestroy;
 import jakarta.mail.internet.MimeMessage;
 import jakarta.mail.util.ByteArrayDataSource;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.core.NestedRuntimeException;
@@ -73,6 +73,7 @@ import org.thingsboard.server.common.stats.TbApiUsageReportClient;
 import org.thingsboard.server.dao.blob.BlobEntityService;
 import org.thingsboard.server.dao.exception.IncorrectParameterException;
 import org.thingsboard.server.dao.report.ReportService;
+import org.thingsboard.server.dao.secret.SecretConfigurationService;
 import org.thingsboard.server.dao.settings.AdminSettingsService;
 import org.thingsboard.server.dao.wl.WhiteLabelingService;
 import org.thingsboard.server.service.apiusage.TbApiUsageStateService;
@@ -84,40 +85,30 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-@Service
 @Slf4j
+@Service
+@RequiredArgsConstructor
 public class DefaultMailService implements MailService {
 
-    public static final String TARGET_EMAIL = "targetEmail";
-    public static final String UTF_8 = "UTF-8";
+    private static final String TARGET_EMAIL = "targetEmail";
+    private static final String UTF_8 = "UTF-8";
+    private static final String KEY = "mail";
+    private static final long DEFAULT_TIMEOUT = 10_000;
+
+    private final ScheduledExecutorService timeoutScheduler = ThingsBoardExecutors.newSingleThreadScheduledExecutor("mail-service-watchdog");
 
     private final AdminSettingsService adminSettingsService;
     private final BlobEntityService blobEntityService;
     private final TbApiUsageReportClient apiUsageClient;
-
-    private static final long DEFAULT_TIMEOUT = 10_000;
-
     @Lazy
-    @Autowired
-    private TbApiUsageStateService apiUsageStateService;
-
-    @Autowired
-    private MailSenderInternalExecutorService mailExecutorService;
-
-    @Autowired
-    private PasswordResetExecutorService passwordResetExecutorService;
-
-    @Autowired
-    private TbMailContextComponent ctx;
-
-    @Autowired
-    private RateLimitService rateLimitService;
-
-    @Autowired
-    private ReportService reportService;
-
-    @Autowired
-    private WhiteLabelingService whiteLabelingService;
+    private final TbApiUsageStateService apiUsageStateService;
+    private final MailSenderInternalExecutorService mailExecutorService;
+    private final PasswordResetExecutorService passwordResetExecutorService;
+    private final TbMailContextComponent ctx;
+    private final RateLimitService rateLimitService;
+    private final ReportService reportService;
+    private final WhiteLabelingService whiteLabelingService;
+    private final SecretConfigurationService secretConfigurationService;
 
     @Value("${actors.rule.allow_system_mail_service}")
     private boolean allowSystemMailService;
@@ -125,20 +116,9 @@ public class DefaultMailService implements MailService {
     @Value("${mail.per_tenant_rate_limits:}")
     private String perTenantRateLimitConfig;
 
-    private final ScheduledExecutorService timeoutScheduler;
-
-    public DefaultMailService(AdminSettingsService adminSettingsService, BlobEntityService blobEntityService, TbApiUsageReportClient apiUsageClient) {
-        this.adminSettingsService = adminSettingsService;
-        this.blobEntityService = blobEntityService;
-        this.apiUsageClient = apiUsageClient;
-        this.timeoutScheduler = ThingsBoardExecutors.newSingleThreadScheduledExecutor("mail-service-watchdog");
-    }
-
     @PreDestroy
     public void destroy() {
-        if (timeoutScheduler != null) {
-            timeoutScheduler.shutdownNow();
-        }
+        timeoutScheduler.shutdownNow();
     }
 
     @Override
@@ -148,6 +128,7 @@ public class DefaultMailService implements MailService {
 
     @Override
     public void sendTestMail(TenantId tenantId, JsonNode jsonConfig, String email) throws ThingsboardException {
+        secretConfigurationService.replaceSecretUsages(tenantId, jsonConfig);
         TbMailSender testMailSender = new TbMailSender(ctx, tenantId, jsonConfig);
         String mailFrom = getStringValue(jsonConfig, "mailFrom");
 
@@ -234,7 +215,7 @@ public class DefaultMailService implements MailService {
 
     private void sendMail(TenantId tenantId, String email,
                           String subject, String message) throws ThingsboardException {
-        JsonNode jsonConfig = getConfig(tenantId, "mail");
+        JsonNode jsonConfig = getConfig(tenantId);
         TbMailSender mailSender = new TbMailSender(ctx, tenantId, jsonConfig);
         String mailFrom = getStringValue(jsonConfig, "mailFrom");
         sendMail(mailSender, mailFrom, email, subject, message, getTimeout(jsonConfig));
@@ -242,7 +223,7 @@ public class DefaultMailService implements MailService {
 
     @Override
     public void send(TenantId tenantId, CustomerId customerId, TbEmail tbEmail) throws ThingsboardException {
-        ConfigEntry configEntry = getConfig(tenantId, "mail", allowSystemMailService);
+        ConfigEntry configEntry = getConfig(tenantId, allowSystemMailService);
         JsonNode jsonConfig = configEntry.jsonConfig;
         TbMailSender mailSender = new TbMailSender(ctx, configEntry.isSystem ? TenantId.SYS_TENANT_ID : tenantId, jsonConfig);
         sendMail(tenantId, customerId, tbEmail, mailSender, false, getTimeout(jsonConfig));
@@ -254,19 +235,19 @@ public class DefaultMailService implements MailService {
     }
 
     private void sendMail(TenantId tenantId, CustomerId customerId, TbEmail tbEmail, JavaMailSender javaMailSender, boolean externalMailSender, long timeout) throws ThingsboardException {
-        ConfigEntry configEntry = getConfig(tenantId, "mail", true);
+        ConfigEntry configEntry = getConfig(tenantId, true);
         JsonNode jsonConfig = configEntry.jsonConfig;
         if (externalMailSender || !configEntry.isSystem || apiUsageStateService.getApiUsageState(tenantId).isEmailSendEnabled()) {
             if (tenantId != null && !tenantId.isSysTenantId() && StringUtils.isNotEmpty(perTenantRateLimitConfig) &&
-                !rateLimitService.checkRateLimit(LimitedApi.EMAILS, (Object) tenantId, perTenantRateLimitConfig)) {
+                    !rateLimitService.checkRateLimit(LimitedApi.EMAILS, (Object) tenantId, perTenantRateLimitConfig)) {
                 throw new RateLimitExceededException(LimitedApi.EMAILS);
             }
             String mailFrom = getStringValue(jsonConfig, "mailFrom");
             try {
                 MimeMessage mailMsg = javaMailSender.createMimeMessage();
                 boolean multipart = MapUtils.isNotEmpty(tbEmail.getImages())
-                                    || CollectionsUtil.isNotEmpty(tbEmail.getAttachments())
-                                    || CollectionsUtil.isNotEmpty(tbEmail.getReports());
+                        || CollectionsUtil.isNotEmpty(tbEmail.getAttachments())
+                        || CollectionsUtil.isNotEmpty(tbEmail.getReports());
                 MimeMessageHelper helper = new MimeMessageHelper(mailMsg, multipart, "UTF-8");
                 helper.setFrom(StringUtils.isBlank(tbEmail.getFrom()) ? mailFrom : tbEmail.getFrom());
                 helper.setTo(tbEmail.getTo().split("\\s*,\\s*"));
@@ -377,7 +358,7 @@ public class DefaultMailService implements MailService {
 
     @Override
     public void testConnection(TenantId tenantId) throws Exception {
-        JsonNode jsonConfig = getConfig(tenantId, "mail");
+        JsonNode jsonConfig = getConfig(tenantId);
         TbMailSender mailSender = new TbMailSender(ctx, tenantId, jsonConfig);
         mailSender.testConnection();
     }
@@ -385,7 +366,7 @@ public class DefaultMailService implements MailService {
     @Override
     public boolean isConfigured(TenantId tenantId) {
         try {
-            ConfigEntry configEntry = getConfig(tenantId, "mail", allowSystemMailService);
+            ConfigEntry configEntry = getConfig(tenantId, allowSystemMailService);
             JsonNode jsonConfig = configEntry.jsonConfig;
             new TbMailSender(ctx, tenantId, jsonConfig);
             return true;
@@ -402,89 +383,55 @@ public class DefaultMailService implements MailService {
     }
 
     private String toEnabledValueLabel(ApiFeature apiFeature) {
-        switch (apiFeature) {
-            case DB:
-                return "save";
-            case TRANSPORT:
-                return "receive";
-            case JS:
-                return "invoke";
-            case RE:
-                return "process";
-            case EMAIL:
-            case SMS:
-                return "send";
-            case ALARM:
-                return "create";
-            default:
-                throw new RuntimeException("Not implemented!");
-        }
+        return switch (apiFeature) {
+            case DB -> "save";
+            case TRANSPORT -> "receive";
+            case JS -> "invoke";
+            case RE -> "process";
+            case EMAIL, SMS -> "send";
+            case ALARM -> "create";
+            default -> throw new RuntimeException("Not implemented!");
+        };
     }
 
     private String toDisabledValueLabel(ApiFeature apiFeature) {
-        switch (apiFeature) {
-            case DB:
-                return "saved";
-            case TRANSPORT:
-                return "received";
-            case JS:
-                return "invoked";
-            case RE:
-                return "processed";
-            case EMAIL:
-            case SMS:
-                return "sent";
-            case ALARM:
-                return "created";
-            default:
-                throw new RuntimeException("Not implemented!");
-        }
+        return switch (apiFeature) {
+            case DB -> "saved";
+            case TRANSPORT -> "received";
+            case JS -> "invoked";
+            case RE -> "processed";
+            case EMAIL, SMS -> "sent";
+            case ALARM -> "created";
+            default -> throw new RuntimeException("Not implemented!");
+        };
     }
 
     private String toWarningValueLabel(ApiUsageRecordState recordState) {
         String valueInM = recordState.getValueAsString();
         String thresholdInM = recordState.getThresholdAsString();
-        switch (recordState.getKey()) {
-            case STORAGE_DP_COUNT:
-            case TRANSPORT_DP_COUNT:
-                return valueInM + " out of " + thresholdInM + " allowed data points";
-            case TRANSPORT_MSG_COUNT:
-                return valueInM + " out of " + thresholdInM + " allowed messages";
-            case JS_EXEC_COUNT:
-                return valueInM + " out of " + thresholdInM + " allowed JavaScript functions";
-            case TBEL_EXEC_COUNT:
-                return valueInM + " out of " + thresholdInM + " allowed Tbel functions";
-            case RE_EXEC_COUNT:
-                return valueInM + " out of " + thresholdInM + " allowed Rule Engine messages";
-            case EMAIL_EXEC_COUNT:
-                return valueInM + " out of " + thresholdInM + " allowed Email messages";
-            case SMS_EXEC_COUNT:
-                return valueInM + " out of " + thresholdInM + " allowed SMS messages";
-            default:
-                throw new RuntimeException("Not implemented!");
-        }
+        return switch (recordState.getKey()) {
+            case STORAGE_DP_COUNT, TRANSPORT_DP_COUNT -> valueInM + " out of " + thresholdInM + " allowed data points";
+            case TRANSPORT_MSG_COUNT -> valueInM + " out of " + thresholdInM + " allowed messages";
+            case JS_EXEC_COUNT -> valueInM + " out of " + thresholdInM + " allowed JavaScript functions";
+            case TBEL_EXEC_COUNT -> valueInM + " out of " + thresholdInM + " allowed Tbel functions";
+            case RE_EXEC_COUNT -> valueInM + " out of " + thresholdInM + " allowed Rule Engine messages";
+            case EMAIL_EXEC_COUNT -> valueInM + " out of " + thresholdInM + " allowed Email messages";
+            case SMS_EXEC_COUNT -> valueInM + " out of " + thresholdInM + " allowed SMS messages";
+            default -> throw new RuntimeException("Not implemented!");
+        };
     }
 
     private String toDisabledValueLabel(ApiUsageRecordState recordState) {
-        switch (recordState.getKey()) {
-            case STORAGE_DP_COUNT:
-            case TRANSPORT_DP_COUNT:
-                return recordState.getValueAsString() + " data points";
-            case TRANSPORT_MSG_COUNT:
-                return recordState.getValueAsString() + " messages";
-            case JS_EXEC_COUNT:
-                return "JavaScript functions " + recordState.getValueAsString() + " times";
-            case TBEL_EXEC_COUNT:
-                return "TBEL functions " + recordState.getValueAsString() + " times";
-            case RE_EXEC_COUNT:
-                return recordState.getValueAsString() + " Rule Engine messages";
-            case EMAIL_EXEC_COUNT:
-                return recordState.getValueAsString() + " Email messages";
-            case SMS_EXEC_COUNT:
-                return recordState.getValueAsString() + " SMS messages";
-            default:
-                throw new RuntimeException("Not implemented!");
-        }
+        return switch (recordState.getKey()) {
+            case STORAGE_DP_COUNT, TRANSPORT_DP_COUNT -> recordState.getValueAsString() + " data points";
+            case TRANSPORT_MSG_COUNT -> recordState.getValueAsString() + " messages";
+            case JS_EXEC_COUNT -> "JavaScript functions " + recordState.getValueAsString() + " times";
+            case TBEL_EXEC_COUNT -> "TBEL functions " + recordState.getValueAsString() + " times";
+            case RE_EXEC_COUNT -> recordState.getValueAsString() + " Rule Engine messages";
+            case EMAIL_EXEC_COUNT -> recordState.getValueAsString() + " Email messages";
+            case SMS_EXEC_COUNT -> recordState.getValueAsString() + " SMS messages";
+            default -> throw new RuntimeException("Not implemented!");
+        };
     }
 
     private void sendMail(JavaMailSenderImpl mailSender,
@@ -534,16 +481,16 @@ public class DefaultMailService implements MailService {
         }
     }
 
-    private JsonNode getConfig(TenantId tenantId, String key) throws ThingsboardException {
-        return getConfig(tenantId, key, true).jsonConfig;
+    private JsonNode getConfig(TenantId tenantId) throws ThingsboardException {
+        return getConfig(tenantId, true).jsonConfig;
     }
 
-    private ConfigEntry getConfig(TenantId tenantId, String key, boolean allowSystemMailService) throws ThingsboardException {
+    private ConfigEntry getConfig(TenantId tenantId, boolean allowSystemMailService) throws ThingsboardException {
         try {
             JsonNode jsonConfig = null;
             boolean isSystem = false;
             if (tenantId != null && !tenantId.isNullUid()) {
-                AdminSettings adminSettings = adminSettingsService.findAdminSettingsByTenantIdAndKey(tenantId, key);
+                AdminSettings adminSettings = adminSettingsService.findAdminSettingsByTenantIdAndKey(tenantId, KEY);
                 if (adminSettings != null) {
                     jsonConfig = adminSettings.getJsonValue();
                     JsonNode useSystemMailSettingsNode = jsonConfig.get("useSystemMailSettings");
@@ -556,7 +503,7 @@ public class DefaultMailService implements MailService {
                 if (!allowSystemMailService) {
                     throw new RuntimeException("Access to System Mail Service is forbidden!");
                 }
-                AdminSettings settings = adminSettingsService.findAdminSettingsByKey(tenantId, key);
+                AdminSettings settings = adminSettingsService.findAdminSettingsByKey(tenantId, KEY);
                 if (settings != null) {
                     jsonConfig = settings.getJsonValue();
                     isSystem = true;
@@ -565,6 +512,7 @@ public class DefaultMailService implements MailService {
             if (jsonConfig == null) {
                 throw new IncorrectParameterException("Failed to get mail configuration. Settings not found!");
             }
+            secretConfigurationService.replaceSecretUsages(isSystem ? TenantId.SYS_TENANT_ID : tenantId, jsonConfig);
             return new ConfigEntry(jsonConfig, isSystem);
         } catch (Exception e) {
             throw handleException(e);
