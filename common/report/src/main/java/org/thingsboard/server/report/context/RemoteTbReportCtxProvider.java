@@ -34,7 +34,7 @@ import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.SuperBuilder;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.stereotype.Service;
@@ -48,7 +48,7 @@ import java.io.IOException;
 import static org.thingsboard.server.report.util.ReportUtils.formatTimestamp;
 
 @RequiredArgsConstructor
-@ConditionalOnMissingBean(value = TbReportCtxProvider.class, ignored = RemoteTbReportCtxProvider.class)
+@ConditionalOnExpression("'${service.type:null}' == 'tb-report'")
 @Service
 public class RemoteTbReportCtxProvider implements TbReportCtxProvider {
 
