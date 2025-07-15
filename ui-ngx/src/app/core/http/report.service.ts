@@ -39,6 +39,7 @@ import { DOCUMENT } from '@angular/common';
 import { PageLink } from '@shared/models/page/page-link';
 import { defaultHttpOptionsFromConfig, RequestConfig } from '@core/http/http-utils';
 import { PageData } from '@shared/models/page/page-data';
+import { sortEntitiesByIds } from '@shared/models/base-data';
 
 @Injectable({
   providedIn: 'root'
@@ -66,7 +67,7 @@ export class ReportService {
   }
 
   public getReportInfos(query: ReportQuery, config?: RequestConfig): Observable<PageData<ReportInfo>> {
-    return this.http.get<PageData<ReportInfo>>(`/api/v2/reportInfos${query.toQuery()}`,
+    return this.http.get<PageData<ReportInfo>>(`/api/v2/reportInfos/all${query.toQuery()}`,
       defaultHttpOptionsFromConfig(config));
   }
 
@@ -86,6 +87,13 @@ export class ReportService {
       observe: 'response'
     });
     return this.processDownloadReportResponse(response, downloadElseOpen);
+  }
+
+  public getReportsInfosByIds(reportIds: string[], config?: RequestConfig): Observable<Array<ReportInfo>> {
+    return this.http.get<Array<ReportInfo>>(`/api/v2/reportInfos?reportIds=${reportIds.join(',')}`,
+      defaultHttpOptionsFromConfig(config)).pipe(
+      map((reportTemplates) => sortEntitiesByIds(reportTemplates, reportIds))
+    );
   }
 
   private processDownloadReportResponse(response: Observable<HttpResponse<ArrayBuffer>>, downloadElseOpen = true): Observable<any> {
