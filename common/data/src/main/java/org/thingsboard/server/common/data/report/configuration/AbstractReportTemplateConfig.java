@@ -32,11 +32,15 @@ package org.thingsboard.server.common.data.report.configuration;
 
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
 
 import java.util.List;
 
 @Data
+@NoArgsConstructor
+@SuperBuilder
 public abstract class AbstractReportTemplateConfig implements ReportTemplateConfig {
 
     protected String namePattern;
