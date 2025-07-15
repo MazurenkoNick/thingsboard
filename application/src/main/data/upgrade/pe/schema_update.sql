@@ -69,7 +69,3 @@ ALTER TABLE oauth2_client_registration_template ADD COLUMN IF NOT EXISTS basic_u
 ALTER TABLE component_descriptor ADD COLUMN IF NOT EXISTS has_secrets boolean default false;
 
 ALTER TABLE api_usage_state ADD COLUMN IF NOT EXISTS report_exec varchar(32) DEFAULT 'ENABLED';
-
-DELETE FROM integration where type = 'IBM_WATSON_IOT';
-
-DELETE FROM converter where integration_type = 'IBM_WATSON_IOT' and converter_version IS NOT NULL;
