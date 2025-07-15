@@ -47,7 +47,8 @@ import java.util.Arrays;
 @ComponentScan({"org.thingsboard.server.report", "org.thingsboard.server.queue.task",
         "org.thingsboard.server.queue.discovery", "org.thingsboard.server.queue.kafka",
         "org.thingsboard.server.queue.provider", "org.thingsboard.server.queue.settings",
-        "org.thingsboard.server.queue.environment", "org.thingsboard.server.common.stats"})
+        "org.thingsboard.server.queue.environment", "org.thingsboard.server.common.stats",
+        "org.thingsboard.script.api"})
 @Slf4j
 public class ThingsboardReportApplication {
 
