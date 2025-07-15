@@ -57,4 +57,6 @@ public sealed interface AiChatModelConfig<C extends AiChatModelConfig<C>> extend
 
     C withMaxRetries(Integer maxRetries);
 
+    boolean supportsJsonMode();
+
 }

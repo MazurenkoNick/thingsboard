@@ -65,4 +65,9 @@ public record MistralAiChatModelConfig(
         return configurer.configureChatModel(this);
     }
 
+    @Override
+    public boolean supportsJsonMode() {
+        return true;
+    }
+
 }

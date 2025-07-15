@@ -65,4 +65,9 @@ public record AzureOpenAiChatModelConfig(
         return configurer.configureChatModel(this);
     }
 
+    @Override
+    public boolean supportsJsonMode() {
+        return true;
+    }
+
 }
