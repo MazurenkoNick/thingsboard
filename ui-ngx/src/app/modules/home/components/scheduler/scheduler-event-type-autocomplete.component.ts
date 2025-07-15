@@ -45,6 +45,7 @@ import { debounceTime, distinctUntilChanged, map, share, startWith, switchMap, t
 import { TranslateService } from '@ngx-translate/core';
 import { SchedulerEventConfigType } from '@home/components/scheduler/scheduler-event-config.models';
 import { coerceBoolean } from '@shared/decorators/coercion';
+import { MatFormFieldAppearance } from '@angular/material/form-field';
 
 interface SchedulerEventTypeInfo {
   name: string;
@@ -84,6 +85,9 @@ export class SchedulerEventTypeAutocompleteComponent implements ControlValueAcce
 
   @Input()
   placeholder = this.translate.instant('scheduler.select-event-type');
+
+  @Input()
+  appearance: MatFormFieldAppearance = 'fill';
 
   @ViewChild('schedulerEventTypeInput', {static: true}) schedulerEventTypeInput: ElementRef<HTMLInputElement>;
 
