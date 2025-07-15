@@ -80,6 +80,7 @@ import org.thingsboard.server.dao.notification.NotificationService;
 import org.thingsboard.server.dao.notification.NotificationSettingsService;
 import org.thingsboard.server.dao.notification.NotificationTargetService;
 import org.thingsboard.server.dao.notification.NotificationTemplateService;
+import org.thingsboard.server.dao.secret.SecretConfigurationService;
 import org.thingsboard.server.gen.transport.TransportProtos;
 import org.thingsboard.server.queue.common.TbProtoQueueMsg;
 import org.thingsboard.server.queue.discovery.TopicService;
@@ -119,6 +120,7 @@ public class DefaultNotificationCenter extends AbstractSubscriptionService imple
     private final TbQueueProducerProvider producerProvider;
     private final RateLimitService rateLimitService;
     private final TranslationService translationService;
+    private final SecretConfigurationService secretConfigurationService;
 
     private Map<NotificationDeliveryMethod, NotificationChannel> channels;
 
@@ -202,6 +204,7 @@ public class DefaultNotificationCenter extends AbstractSubscriptionService imple
                 .settings(settings)
                 .systemSettings(systemSettings)
                 .translationProvider(locale -> translationService.getFullTranslation(tenantId, null, locale))
+                .secretConfigurationService(secretConfigurationService)
                 .build();
 
         processNotificationRequestAsync(ctx, targets, callback);

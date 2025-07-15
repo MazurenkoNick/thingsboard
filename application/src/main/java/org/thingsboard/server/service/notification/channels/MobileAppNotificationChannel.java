@@ -73,7 +73,6 @@ public class MobileAppNotificationChannel implements NotificationChannel<User, M
     private final UserService userService;
     private final NotificationService notificationService;
     private final NotificationSettingsService notificationSettingsService;
-    private final SecretConfigurationService secretConfigurationService;
 
     @Override
     public void sendNotification(User recipient, MobileAppDeliveryMethodNotificationTemplate processedTemplate, NotificationProcessingContext ctx) throws Exception {
@@ -110,8 +109,6 @@ public class MobileAppNotificationChannel implements NotificationChannel<User, M
         }
 
         MobileAppNotificationDeliveryMethodConfig config = ctx.getDeliveryMethodConfig(MOBILE_APP);
-        TenantId tenantId = config.isSystemSettings() || config.isUseSystemSettings() ? TenantId.SYS_TENANT_ID : ctx.getTenantId();
-        String credentials = secretConfigurationService.replaceSecretUsage(tenantId, config.getFirebaseServiceAccountCredentials());
         Set<String> validTokens = new HashSet<>(mobileSessions.keySet());
 
         String subject = processedTemplate.getSubject();
@@ -120,7 +117,7 @@ public class MobileAppNotificationChannel implements NotificationChannel<User, M
         int unreadCount = notificationService.countUnreadNotificationsByRecipientId(ctx.getTenantId(), MOBILE_APP, recipient.getId());
         for (String token : mobileSessions.keySet()) {
             try {
-                firebaseService.sendMessage(ctx.getTenantId(), credentials, token, subject, body, data, unreadCount);
+                firebaseService.sendMessage(ctx.getTenantId(), config.getFirebaseServiceAccountCredentials(), token, subject, body, data, unreadCount);
             } catch (FirebaseMessagingException e) {
                 MessagingErrorCode errorCode = e.getMessagingErrorCode();
                 if (errorCode == MessagingErrorCode.UNREGISTERED || errorCode == MessagingErrorCode.INVALID_ARGUMENT || errorCode == MessagingErrorCode.SENDER_ID_MISMATCH) {

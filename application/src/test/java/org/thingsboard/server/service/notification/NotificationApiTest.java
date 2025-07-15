@@ -165,7 +165,6 @@ public class NotificationApiTest extends AbstractNotificationApiTest {
         SecretInfo secretInfo = createSecretIfNotExists("Test credentials", TEST_CREDENTIALS);
         MobileAppNotificationDeliveryMethodConfig config = new MobileAppNotificationDeliveryMethodConfig();
         config.setFirebaseServiceAccountCredentials(toSecretPlaceholder(secretInfo.getName(), secretInfo.getType()));
-        config.setSystemSettings(true);
         saveNotificationSettings(config);
 
         loginTenantAdmin();
@@ -1100,7 +1099,6 @@ public class NotificationApiTest extends AbstractNotificationApiTest {
         SecretInfo sysAdminSecret = createSecret("Test secret", sysAdminCredentials);
         var systemConfig = new MobileAppNotificationDeliveryMethodConfig();
         systemConfig.setFirebaseServiceAccountCredentials(toSecretPlaceholder(sysAdminSecret.getName(), sysAdminSecret.getType()));
-        systemConfig.setSystemSettings(true);
         saveNotificationSettings(systemConfig);
 
         loginTenantAdmin();

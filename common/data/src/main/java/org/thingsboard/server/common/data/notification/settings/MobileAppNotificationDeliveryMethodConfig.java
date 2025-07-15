@@ -42,7 +42,6 @@ public class MobileAppNotificationDeliveryMethodConfig implements NotificationDe
     private String firebaseServiceAccountCredentialsFileName;
     private String firebaseServiceAccountCredentials;
     private boolean useSystemSettings;
-    private boolean systemSettings;
 
     @Override
     public NotificationDeliveryMethod getMethod() {

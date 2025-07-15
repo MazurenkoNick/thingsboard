@@ -133,10 +133,6 @@ export class SmsProviderComponent extends PageComponent implements HasConfirmFor
     return this.authUser.authority === Authority.TENANT_ADMIN;
   }
 
-  public isSysAdmin(): boolean {
-    return this.authUser.authority === Authority.SYS_ADMIN;
-  }
-
   private buildSmsProviderForm() {
     this.smsProvider = this.fb.group({
       useSystemSmsSettings: [false],
@@ -271,9 +267,6 @@ export class SmsProviderComponent extends PageComponent implements HasConfirmFor
       if (this.isTenantAdmin() && method === NotificationDeliveryMethod.MOBILE_APP) {
         this.notificationSettings.deliveryMethodsConfigs[method].method = method;
         continue;
-      }
-      if (this.isSysAdmin() && method === NotificationDeliveryMethod.MOBILE_APP) {
-        this.notificationSettings.deliveryMethodsConfigs.MOBILE_APP.systemSettings = this.isSysAdmin();
       }
       const keys = Object.keys(this.notificationSettings.deliveryMethodsConfigs[method]);
       if (keys.every(item => !isNotEmptyStr(this.notificationSettings.deliveryMethodsConfigs[method][item]))) {
