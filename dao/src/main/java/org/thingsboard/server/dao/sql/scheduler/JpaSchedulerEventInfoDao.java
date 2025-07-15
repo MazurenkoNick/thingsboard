@@ -40,11 +40,13 @@ import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.id.SchedulerEventId;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
+import org.thingsboard.server.common.data.report.ScheduledReportQuery;
 import org.thingsboard.server.common.data.scheduler.SchedulerEventDescriptor;
 import org.thingsboard.server.common.data.scheduler.SchedulerEventFilter;
 import org.thingsboard.server.common.data.scheduler.SchedulerEventInfo;
 import org.thingsboard.server.common.data.scheduler.SchedulerEventTimeFilter;
 import org.thingsboard.server.common.data.scheduler.SchedulerEventWithCustomerInfo;
+import org.thingsboard.server.common.data.scheduler.ScheduledReportInfo;
 import org.thingsboard.server.common.data.scheduler.TimerRepeat;
 import org.thingsboard.server.dao.DaoUtil;
 import org.thingsboard.server.dao.model.sql.SchedulerEventInfoEntity;
@@ -67,6 +69,9 @@ public class JpaSchedulerEventInfoDao extends JpaAbstractDao<SchedulerEventInfoE
 
     @Autowired
     SchedulerEventInfoRepository schedulerEventInfoRepository;
+
+    @Autowired
+    ScheduledReportInfoRepository scheduledReportInfoRepository;
 
     @Override
     protected Class<SchedulerEventInfoEntity> getEntityClass() {
@@ -190,6 +195,51 @@ public class JpaSchedulerEventInfoDao extends JpaAbstractDao<SchedulerEventInfoE
                         customerId,
                         Objects.toString(pageLink.getTextSearch(), ""),
                         DaoUtil.toPageable(pageLink)));
+    }
+
+    @Override
+    public PageData<ScheduledReportInfo> findScheduledReportEvents(UUID tenantId, ScheduledReportQuery query) {
+        if (query.isIncludeCustomers()) {
+            return DaoUtil.toPageData(scheduledReportInfoRepository
+                    .findTenantScheduledReportInfosIncludingCustomers(
+                            tenantId,
+                            query.getReportTemplateId(),
+                            query.getUserId(),
+                            Objects.toString(query.getPageLink().getTextSearch(), ""),
+                            DaoUtil.toPageable(query.getPageLink())));
+        } else {
+            return DaoUtil.toPageData(scheduledReportInfoRepository
+                    .findTenantScheduledReportInfos(
+                            tenantId,
+                            query.getReportTemplateId(),
+                            query.getUserId(),
+                            Objects.toString(query.getPageLink().getTextSearch(), ""),
+                            DaoUtil.toPageable(query.getPageLink())));
+        }
+    }
+
+    @Override
+    public PageData<ScheduledReportInfo> findScheduledReportEvents(UUID tenantId, UUID customerId, ScheduledReportQuery query) {
+        log.debug("Try to find scheduler event infos by tenantId [{}], edgeId [{}], customerId [{}] and pageLink [{}]", tenantId, customerId, customerId, query);
+        if (query.isIncludeCustomers()) {
+            return DaoUtil.toPageData(scheduledReportInfoRepository
+                    .findCustomerScheduledReportsIncludingSubCustomers(
+                            tenantId,
+                            customerId,
+                            query.getReportTemplateId(),
+                            query.getUserId(),
+                            Objects.toString(query.getPageLink().getTextSearch(), ""),
+                            DaoUtil.toPageable(query.getPageLink())));
+        } else {
+            return DaoUtil.toPageData(scheduledReportInfoRepository
+                    .findCustomerScheduledReports(
+                            tenantId,
+                            customerId,
+                            query.getReportTemplateId(),
+                            query.getUserId(),
+                            Objects.toString(query.getPageLink().getTextSearch(), ""),
+                            DaoUtil.toPageable(query.getPageLink())));
+        }
     }
 
 }

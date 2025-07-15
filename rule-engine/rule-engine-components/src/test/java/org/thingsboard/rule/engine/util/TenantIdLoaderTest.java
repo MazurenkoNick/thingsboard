@@ -86,6 +86,8 @@ import org.thingsboard.server.common.data.oauth2.OAuth2Client;
 import org.thingsboard.server.common.data.permission.GroupPermission;
 import org.thingsboard.server.common.data.queue.Queue;
 import org.thingsboard.server.common.data.queue.QueueStats;
+import org.thingsboard.server.common.data.report.Report;
+import org.thingsboard.server.common.data.report.ReportTemplate;
 import org.thingsboard.server.common.data.role.Role;
 import org.thingsboard.server.common.data.rpc.Rpc;
 import org.thingsboard.server.common.data.rule.RuleChain;
@@ -119,6 +121,8 @@ import org.thingsboard.server.dao.oauth2.OAuth2ClientService;
 import org.thingsboard.server.dao.ota.OtaPackageService;
 import org.thingsboard.server.dao.queue.QueueService;
 import org.thingsboard.server.dao.queue.QueueStatsService;
+import org.thingsboard.server.dao.report.ReportService;
+import org.thingsboard.server.dao.report.ReportTemplateService;
 import org.thingsboard.server.dao.resource.ResourceService;
 import org.thingsboard.server.dao.role.RoleService;
 import org.thingsboard.server.dao.rule.RuleChainService;
@@ -195,6 +199,10 @@ public class TenantIdLoaderTest {
     private SchedulerEventService schedulerEventService;
     @Mock
     private BlobEntityService blobEntityService;
+    @Mock
+    private ReportTemplateService reportTemplateService;
+    @Mock
+    private ReportService reportService;
     @Mock
     private RoleService roleService;
     @Mock
@@ -468,6 +476,22 @@ public class TenantIdLoaderTest {
                 blobEntity.setTenantId(tenantId);
                 when(tbPeContext.getBlobEntityService()).thenReturn(blobEntityService);
                 doReturn(blobEntity).when(blobEntityService).findBlobEntityById(eq(tenantId), any());
+                break;
+            case REPORT_TEMPLATE:
+                ReportTemplate reportTemplate = new ReportTemplate();
+                reportTemplate.setTenantId(tenantId);
+
+                when(tbPeContext.getReportTemplateService()).thenReturn(reportTemplateService);
+                doReturn(reportTemplate).when(reportTemplateService).findReportTemplateById(eq(tenantId), any());
+
+                break;
+            case REPORT:
+                Report report = new Report();
+                report.setTenantId(tenantId);
+
+                when(tbPeContext.getReportService()).thenReturn(reportService);
+                doReturn(report).when(reportService).findReportById(eq(tenantId), any());
+
                 break;
             case ROLE:
                 Role role = new Role();

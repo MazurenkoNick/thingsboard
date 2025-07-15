@@ -137,6 +137,9 @@
           </tb-color-settings>
           <tb-font-settings *ngIf="property.type === FormPropertyType.font"
                             [class]="property.fieldClass"
+                            [forceSizeUnit]="property.forceSizeUnit"
+                            [allowedFontWeights]="property.allowedFontWeights"
+                            [allowedFontStyles]="property.allowedFontStyles"
                             formControlName="{{ property.id }}"
                             clearButton
                             disabledLineHeight>
@@ -146,6 +149,12 @@
                          [required]="property.required"
                          [supportsUnitConversion]="property.supportsUnitConversion"
                          formControlName="{{ property.id }}"></tb-unit-input>
+          <tb-css-size-input *ngIf="property.type === FormPropertyType.cssSize"
+                             [class]="property.fieldClass"
+                             [required]="property.required"
+                             [allowedCssUnits]="property.allowedCssUnits"
+                             formControlName="{{ property.id }}">
+          </tb-css-size-input>
           <tb-material-icon-select *ngIf="property.type === FormPropertyType.icon"
                                    [required]="property.required"
                                    asBoxInput

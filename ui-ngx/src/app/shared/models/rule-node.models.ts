@@ -443,6 +443,7 @@ export enum MessageType {
   FIRMWARE_UPDATED = 'FIRMWARE_UPDATED',
   SOFTWARE_UPDATED = 'SOFTWARE_UPDATED',
   generateReport = 'generateReport',
+  generateDashboardReport = 'generateDashboardReport',
   OWNER_CHANGED = 'OWNER_CHANGED'
 }
 
@@ -489,6 +490,7 @@ export const messageTypeNames = new Map<MessageType, string>(
     [MessageType.FIRMWARE_UPDATED, 'Firmware Update'],
     [MessageType.SOFTWARE_UPDATED, 'Software Update'],
     [MessageType.generateReport, 'Generate Report'],
+    [MessageType.generateDashboardReport, 'Generate Dashboard Report'],
     [MessageType.OWNER_CHANGED, 'Owner Changed'],
   ]
 );

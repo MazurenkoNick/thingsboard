@@ -83,7 +83,7 @@ import org.thingsboard.server.service.security.AccessValidator;
 import org.thingsboard.server.service.security.model.SecurityUser;
 import org.thingsboard.server.service.security.permission.AccessControlService;
 import org.thingsboard.server.service.telemetry.TelemetrySubscriptionService;
-import org.thingsboard.server.utils.CsvUtils;
+import org.thingsboard.server.report.util.CsvUtils;
 
 import java.util.Arrays;
 import java.util.LinkedHashMap;

@@ -40,6 +40,14 @@
          [placeholder]="placeholderText"
          (focusin)="onFocus()"
          (scroll)="onInputScroll($event)">
+  @if (predefinedValuesButton) {
+    <button type="button"
+            matSuffix
+            mat-icon-button
+            (click)="openValues($event)">
+      <tb-icon matButtonIcon="">mdi:variable</tb-icon>
+    </button>
+  }
   <mat-icon *ngIf="selectionFormControl.hasError('required') && !showInlineError"
             matIconSuffix
             [matTooltip]="errorText"

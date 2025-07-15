@@ -902,6 +902,7 @@ CREATE TABLE IF NOT EXISTS api_usage_state (
     email_exec varchar(32),
     sms_exec varchar(32),
     alarm_exec varchar(32),
+    report_exec varchar(32),
     version BIGINT DEFAULT 1,
     CONSTRAINT api_usage_state_unq_key UNIQUE (tenant_id, entity_id)
 );
@@ -1206,6 +1207,34 @@ CREATE TABLE IF NOT EXISTS job (
     configuration varchar NOT NULL,
     result varchar
 );
+
+CREATE TABLE IF NOT EXISTS report_template (
+    id uuid NOT NULL CONSTRAINT report_template_pkey PRIMARY KEY,
+    created_time bigint NOT NULL,
+    tenant_id uuid,
+    customer_id uuid,
+    name varchar(255),
+    format varchar,
+    type varchar(255),
+    description varchar(1024),
+    configuration varchar(10000000),
+    external_id uuid,
+    version BIGINT DEFAULT 1,
+    CONSTRAINT report_template_external_id_unq_key UNIQUE (tenant_id, external_id)
+);
+
+CREATE TABLE IF NOT EXISTS report (
+    id uuid NOT NULL,
+    created_time bigint NOT NULL,
+    tenant_id uuid NOT NULL,
+    customer_id uuid,
+    template_id uuid,
+    format varchar,
+    name varchar,
+    user_id uuid NOT NULL,
+    data bytea,
+    CONSTRAINT fk_report_template FOREIGN KEY (template_id) REFERENCES report_template(id) ON DELETE SET NULL
+) PARTITION BY RANGE (created_time);
 
 CREATE TABLE IF NOT EXISTS ai_model (
     id              UUID          NOT NULL PRIMARY KEY,

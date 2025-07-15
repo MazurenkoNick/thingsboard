@@ -36,6 +36,7 @@ import org.springframework.stereotype.Service;
 import org.thingsboard.server.gen.integration.ToCoreIntegrationMsg;
 import org.thingsboard.server.gen.integration.ToIntegrationExecutorDownlinkMsg;
 import org.thingsboard.server.gen.integration.ToIntegrationExecutorNotificationMsg;
+import org.thingsboard.server.gen.transport.TransportProtos;
 import org.thingsboard.server.gen.transport.TransportProtos.ToCalculatedFieldMsg;
 import org.thingsboard.server.gen.transport.TransportProtos.ToCalculatedFieldNotificationMsg;
 import org.thingsboard.server.gen.transport.TransportProtos.ToCoreMsg;
@@ -179,6 +180,11 @@ public class TbRuleEngineProducerProvider implements TbQueueProducerProvider {
     @Override
     public TbQueueProducer<TbProtoQueueMsg<ToCalculatedFieldNotificationMsg>> getCalculatedFieldsNotificationsMsgProducer() {
         return toCalculatedFieldNotifications;
+    }
+
+    @Override
+    public TbQueueProducer<TbProtoQueueMsg<TransportProtos.ToTbReportNotificationMsg>> getTbReportNotificationsMsgProducer() {
+        throw new RuntimeException(NOT_IMPLEMENTED);
     }
 
 }

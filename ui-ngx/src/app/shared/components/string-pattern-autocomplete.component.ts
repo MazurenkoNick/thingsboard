@@ -116,6 +116,10 @@ export class StringPatternAutocompleteComponent implements ControlValueAccessor,
   showInlineError = false;
 
   @Input()
+  @coerceBoolean()
+  predefinedValuesButton = false;
+
+  @Input()
   patternSymbol = '$';
 
   @Input()
@@ -130,6 +134,8 @@ export class StringPatternAutocompleteComponent implements ControlValueAccessor,
 
   private modelValue: string | null;
   private overlayRef!: OverlayRef;
+
+  private predefinedValuesButtonMode = false;
 
   private propagateChange = (_val: any) => {
   };
@@ -218,7 +224,7 @@ export class StringPatternAutocompleteComponent implements ControlValueAccessor,
 
   optionSelected(value: string) {
     const position = this.inputRef.nativeElement.selectionStart;
-    const triggerIndex = this.modelValue.lastIndexOf(this.patternSymbol, position - 1);
+    const triggerIndex = this.predefinedValuesButtonMode ? position : this.modelValue.lastIndexOf(this.patternSymbol, position - 1);
     if (triggerIndex === -1) {
       return;
     }
@@ -233,7 +239,7 @@ export class StringPatternAutocompleteComponent implements ControlValueAccessor,
       default:
         prepareValue = value;
     }
-    const newText = `${this.modelValue.substring(0, triggerIndex + 1)}${prepareValue}${this.modelValue.substring(position)}`;
+    const newText = `${this.modelValue.substring(0, triggerIndex)}${this.patternSymbol}${prepareValue}${this.modelValue.substring(position)}`;
     this.selectionFormControl.patchValue(newText);
     this.searchText = '';
     setTimeout(() => {
@@ -241,6 +247,14 @@ export class StringPatternAutocompleteComponent implements ControlValueAccessor,
       this.inputRef.nativeElement.focus();
     });
     this.closeAutocomplete();
+  }
+
+  openValues($event: MouseEvent) {
+    $event.stopPropagation();
+    const selectionStart = this.inputRef.nativeElement.selectionStart;
+    this.filteredOptions = [...this.predefinedValues];
+    this.predefinedValuesButtonMode = true;
+    this.openAutocomplete(selectionStart);
   }
 
   private updateView(value: string) {
@@ -334,7 +348,7 @@ export class StringPatternAutocompleteComponent implements ControlValueAccessor,
   }
 
   private openAutocomplete(cursorIndex?: number): void {
-    const patternIndex = this.modelValue.lastIndexOf(this.patternSymbol, cursorIndex - 1);
+    const patternIndex = this.predefinedValuesButtonMode ? cursorIndex : this.modelValue.lastIndexOf(this.patternSymbol, cursorIndex - 1);
     if (!this.overlayRef) {
       this.overlayRef = this.overlay.create({
         positionStrategy: this.getOverlayPosition(patternIndex),
@@ -353,6 +367,7 @@ export class StringPatternAutocompleteComponent implements ControlValueAccessor,
   }
 
   private closeAutocomplete(): void {
+    this.predefinedValuesButtonMode = false;
     if (this.overlayRef && this.overlayRef.hasAttached()) {
       this.overlayRef.detach();
     }

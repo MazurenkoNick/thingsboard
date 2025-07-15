@@ -91,6 +91,8 @@ public enum Resource {
     CUSTOM_MENU,
     JOB(EntityType.JOB),
     SECRET(EntityType.SECRET),
+    REPORT_TEMPLATE(EntityType.REPORT_TEMPLATE),
+    REPORT(EntityType.REPORT),
     AI_MODEL(EntityType.AI_MODEL);
 
     private static final Map<EntityType, Resource> groupResourceByGroupType = new HashMap<>();
@@ -172,6 +174,8 @@ public enum Resource {
         operationsByResource.put(Resource.MOBILE_APP_SETTINGS, Set.of(Operation.ALL, Operation.READ, Operation.WRITE));
         operationsByResource.put(Resource.JOB, Operation.crudOperations);
         operationsByResource.put(Resource.SECRET, Operation.crudOperations);
+        operationsByResource.put(Resource.REPORT_TEMPLATE, Operation.crudOperations);
+        operationsByResource.put(Resource.REPORT, Operation.crudOperations);
         operationsByResource.put(Resource.AI_MODEL, Operation.crudOperations);
 
         resourcesByAuthority.put(Authority.SYS_ADMIN, Set.of(
@@ -246,6 +250,8 @@ public enum Resource {
                 Resource.MOBILE_APP_SETTINGS,
                 Resource.SECRET,
                 Resource.JOB,
+                Resource.REPORT_TEMPLATE,
+                Resource.REPORT,
                 Resource.AI_MODEL
         ));
 
@@ -265,6 +271,8 @@ public enum Resource {
                 Resource.ROLE,
                 Resource.SCHEDULER_EVENT,
                 Resource.BLOB_ENTITY,
+                Resource.REPORT_TEMPLATE,
+                Resource.REPORT,
                 Resource.CUSTOMER_GROUP,
                 Resource.USER_GROUP,
                 Resource.DEVICE_GROUP,

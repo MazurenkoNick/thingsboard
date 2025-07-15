@@ -103,6 +103,10 @@ export class AlarmFilterConfigComponent implements OnInit, OnDestroy, ControlVal
 
   @coerceBoolean()
   @Input()
+  disableAssignedToCurrentUserOption = false;
+
+  @coerceBoolean()
+  @Input()
   propagatedFilter = true;
 
   @Input()

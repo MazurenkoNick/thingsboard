@@ -84,6 +84,8 @@ public class EntityIdFactory {
             case RULE_NODE -> new RuleNodeId(uuid);
             case SCHEDULER_EVENT -> new SchedulerEventId(uuid);
             case BLOB_ENTITY -> new BlobEntityId(uuid);
+            case REPORT_TEMPLATE -> new ReportTemplateId(uuid);
+            case REPORT -> new ReportId(uuid);
             case ENTITY_VIEW -> new EntityViewId(uuid);
             case ROLE -> new RoleId(uuid);
             case GROUP_PERMISSION -> new GroupPermissionId(uuid);

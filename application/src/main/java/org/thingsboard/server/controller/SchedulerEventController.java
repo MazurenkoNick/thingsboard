@@ -48,6 +48,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.thingsboard.server.common.data.edge.Edge;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
+import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.EdgeId;
 import org.thingsboard.server.common.data.id.SchedulerEventId;
 import org.thingsboard.server.common.data.id.TenantId;
@@ -55,11 +56,13 @@ import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.permission.Operation;
 import org.thingsboard.server.common.data.permission.Resource;
+import org.thingsboard.server.common.data.report.ScheduledReportQuery;
 import org.thingsboard.server.common.data.scheduler.SchedulerEvent;
 import org.thingsboard.server.common.data.scheduler.SchedulerEventFilter;
 import org.thingsboard.server.common.data.scheduler.SchedulerEventInfo;
 import org.thingsboard.server.common.data.scheduler.SchedulerEventTimeFilter;
 import org.thingsboard.server.common.data.scheduler.SchedulerEventWithCustomerInfo;
+import org.thingsboard.server.common.data.scheduler.ScheduledReportInfo;
 import org.thingsboard.server.common.data.security.Authority;
 import org.thingsboard.server.config.annotations.ApiOperation;
 import org.thingsboard.server.queue.util.TbCoreComponent;
@@ -76,6 +79,7 @@ import java.util.stream.Collectors;
 import static org.thingsboard.server.controller.ControllerConstants.EDGE_ASSIGN_RECEIVE_STEP_DESCRIPTION;
 import static org.thingsboard.server.controller.ControllerConstants.EDGE_ID_PARAM_DESCRIPTION;
 import static org.thingsboard.server.controller.ControllerConstants.EDGE_UNASSIGN_RECEIVE_STEP_DESCRIPTION;
+import static org.thingsboard.server.controller.ControllerConstants.INCLUDE_CUSTOMERS_OR_SUB_CUSTOMERS;
 import static org.thingsboard.server.controller.ControllerConstants.NEW_LINE;
 import static org.thingsboard.server.controller.ControllerConstants.PAGE_DATA_PARAMETERS;
 import static org.thingsboard.server.controller.ControllerConstants.PAGE_NUMBER_DESCRIPTION;
@@ -83,6 +87,8 @@ import static org.thingsboard.server.controller.ControllerConstants.PAGE_SIZE_DE
 import static org.thingsboard.server.controller.ControllerConstants.RBAC_DELETE_CHECK;
 import static org.thingsboard.server.controller.ControllerConstants.RBAC_READ_CHECK;
 import static org.thingsboard.server.controller.ControllerConstants.RBAC_WRITE_CHECK;
+import static org.thingsboard.server.controller.ControllerConstants.REPORT_TEMPLATE_ID_DESCRIPTION;
+import static org.thingsboard.server.controller.ControllerConstants.REPORT_USER_DESCRIPTION;
 import static org.thingsboard.server.controller.ControllerConstants.SCHEDULER_EVENT_ID_PARAM_DESCRIPTION;
 import static org.thingsboard.server.controller.ControllerConstants.SORT_ORDER_DESCRIPTION;
 import static org.thingsboard.server.controller.ControllerConstants.SORT_PROPERTY_DESCRIPTION;
@@ -105,7 +111,6 @@ public class SchedulerEventController extends BaseController {
     private static final String SCHEDULER_EVENT_DESCRIPTION = "Scheduler Event extends Scheduler Event Info object and adds " +
             "'configuration' - a JSON structure of scheduler event configuration. See the 'Model' tab of the Response Class for more details. ";
     private static final String INVALID_SCHEDULER_EVENT_ID = "Referencing non-existing Scheduler Event Id will cause 'Not Found' error.";
-
     private static final int DEFAULT_SCHEDULER_EVENT_LIMIT = 100;
 
     public static final String SCHEDULER_EVENT_ID = "schedulerEventId";
@@ -279,6 +284,45 @@ public class SchedulerEventController extends BaseController {
                 .edgeId(edgeId != null ? new EdgeId(edgeId) : null)
                 .build();
         return schedulerEventService.findAllSchedulerEventsByTenantIdAndEventTimeFilter(currentUser.getTenantId(), filter, textSearch);
+    }
+
+    @ApiOperation(value = "Get Scheduler Report Events (getSchedulerReportEvents)",
+            notes = "Requested scheduler events must be owned by tenant and customer id. "
+                    + TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH + "\n\n" + RBAC_READ_CHECK)
+    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
+    @GetMapping(value = "/scheduledReports")
+    public PageData<ScheduledReportInfo> getScheduledReportEvents(
+            @Parameter(description = REPORT_TEMPLATE_ID_DESCRIPTION)
+            @RequestParam(required = false) UUID reportTemplateId,
+            @Parameter(description = REPORT_USER_DESCRIPTION)
+            @RequestParam(required = false) UUID userId,
+            @Parameter(description = INCLUDE_CUSTOMERS_OR_SUB_CUSTOMERS)
+            @RequestParam(required = false) Boolean includeCustomers,
+            @Parameter(description = PAGE_SIZE_DESCRIPTION, required = true, schema = @Schema(minimum = "1"))
+            @RequestParam int pageSize,
+            @Parameter(description = PAGE_NUMBER_DESCRIPTION, required = true, schema = @Schema(minimum = "0"))
+            @RequestParam int page,
+            @Parameter(description = "The case insensitive 'substring' filter based on the scheduler event name or customer title.")
+            @RequestParam(required = false) String textSearch,
+            @Parameter(description = SORT_PROPERTY_DESCRIPTION)
+            @RequestParam(required = false) String sortProperty,
+            @Parameter(description = SORT_ORDER_DESCRIPTION, schema = @Schema(allowableValues = {"ASC", "DESC"}))
+            @RequestParam(required = false) String sortOrder) throws ThingsboardException {
+        accessControlService.checkPermission(getCurrentUser(), Resource.SCHEDULER_EVENT, Operation.READ);
+        TenantId tenantId = getCurrentUser().getTenantId();
+        PageLink pageLink = createPageLink(pageSize, page, textSearch, sortProperty, sortOrder);
+        ScheduledReportQuery query = ScheduledReportQuery.builder()
+                .reportTemplateId(reportTemplateId)
+                .userId(userId)
+                .includeCustomers(includeCustomers != null && includeCustomers)
+                .pageLink(pageLink)
+                .build();
+        if (Authority.TENANT_ADMIN.equals(getCurrentUser().getAuthority())) {
+            return checkNotNull(schedulerEventService.findScheduledReportEvents(tenantId, query));
+        } else {
+            CustomerId customerId = getCurrentUser().getCustomerId();
+            return checkNotNull(schedulerEventService.findScheduledReportEvents(tenantId, customerId, query));
+        }
     }
 
     @ApiOperation(value = "Get Scheduler Events By Ids (getSchedulerEventsByIds)",

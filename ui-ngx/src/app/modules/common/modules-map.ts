@@ -375,8 +375,8 @@ import * as SchedulerEventTemplateConfigComponent from '@home/components/schedul
 import * as SendRpcRequestComponent from '@home/components/scheduler/config/send-rpc-request.component';
 import * as UpdateAttributesComponent from '@home/components/scheduler/config/update-attributes.component';
 import * as AttributeKeyValueTableComponent from '@home/components/scheduler/config/attribute-key-value-table.component';
-import * as GenerateReportComponent from '@home/components/scheduler/config/generate-report.component';
-import * as ReportConfigComponent from '@home/components/scheduler/config/report-config.component';
+import * as GenerateReportComponent from '@home/components/scheduler/config/generate-dashboard-report.component';
+import * as ReportConfigComponent from '@home/components/scheduler/config/dashboard-report-config.component';
 import * as SelectDashboardStateDialogComponent from '@home/components/scheduler/config/select-dashboard-state-dialog.component';
 import * as EmailConfigComponent from '@home/components/scheduler/config/email-config.component';
 import * as SchedulerEventScheduleComponent from '@home/components/scheduler/scheduler-event-schedule.component';
