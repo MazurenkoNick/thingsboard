@@ -30,9 +30,13 @@
  */
 package org.thingsboard.server.common.data.report.configuration;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class TableSortOrder {
 
     private String column;

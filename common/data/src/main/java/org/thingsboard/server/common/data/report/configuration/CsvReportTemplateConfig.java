@@ -31,9 +31,13 @@
 package org.thingsboard.server.common.data.report.configuration;
 
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 import org.thingsboard.server.common.data.report.TbReportFormat;
 
 @Data
+@NoArgsConstructor
+@SuperBuilder
 public class CsvReportTemplateConfig extends AbstractReportTemplateConfig {
 
     @Override
