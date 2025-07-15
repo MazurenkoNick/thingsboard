@@ -54,11 +54,9 @@
       <section class="tb-form-panel no-border no-padding">
         <div class="tb-form-panel stroked" [class.no-padding-bottom]="!filterFormGroup.get('groupStateEntity').value">
           <div class="tb-form-panel-title" translate>entity-group.entity-group</div>
-          @if (!reportMode || reportMode && subReport) {
-            <mat-slide-toggle class="mat-slide" formControlName="groupStateEntity">
-              {{ (subReport ? 'alias.group-master-report-entity' : 'alias.group-state-entity') | translate }}
-            </mat-slide-toggle>
-          }
+          <mat-slide-toggle class="mat-slide" formControlName="groupStateEntity">
+            {{ (reportMode ? (subReport ? 'alias.group-master-report-entity' : 'alias.group-originator-entity') : 'alias.group-state-entity') | translate }}
+          </mat-slide-toggle>
           @if (filterFormGroup.get('groupStateEntity').value) {
             <div class="tb-form-panel no-border no-padding no-gap">
               <mat-form-field *ngIf="!reportMode" floatLabel="always" class="mat-block" appearance="outline">
@@ -67,7 +65,9 @@
                        placeholder="{{ 'alias.default-entity-parameter-name' | translate }}">
               </mat-form-field>
               <div class="tb-form-panel stroked no-padding-bottom">
-                <div class="tb-form-panel-title tb-normal">{{ (reportMode ? 'alias.default-master-report-entity-group' : 'alias.default-state-entity-group') | translate }}</div>
+                <div class="tb-form-panel-title tb-normal">
+                  {{ (reportMode ? (subReport ? 'alias.default-master-report-entity-group' : 'alias.default-originator-entity-group') : 'alias.default-state-entity-group') | translate }}
+                </div>
                 <div class="flex flex-row gap-4 xs:flex-col xs:gap-0">
                   <tb-entity-type-select
                     showLabel
@@ -187,11 +187,9 @@
     </ng-template>
     <ng-template [ngSwitchCase]="aliasFilterType.entitiesByGroupName">
       <section class="tb-form-panel no-border no-padding">
-        @if (!reportMode || reportMode && subReport) {
-          <mat-slide-toggle class="mat-slide" formControlName="groupStateEntity">
-            {{ (subReport ? 'alias.group-master-report-entity-owner' : 'alias.group-state-entity-owner') | translate }}
-          </mat-slide-toggle>
-        }
+        <mat-slide-toggle class="mat-slide" formControlName="groupStateEntity">
+          {{ (reportMode ? (subReport ? 'alias.group-master-report-entity-owner' : 'alias.group-originator-entity-owner') : 'alias.group-state-entity-owner') | translate }}
+        </mat-slide-toggle>
         @if (!reportMode && filterFormGroup.get('groupStateEntity').value) {
           <mat-form-field floatLabel="always" class="mat-block" appearance="outline" subscriptSizing="dynamic">
             <mat-label translate>alias.state-entity-parameter-name</mat-label>
@@ -227,7 +225,7 @@
                placeholder="{{ 'alias.default-entity-parameter-name' | translate }}">
       </mat-form-field>
       <div class="tb-form-panel stroked no-padding-bottom">
-        <div class="tb-form-panel-title tb-normal">{{ (reportMode ? 'alias.default-master-report-entity' : 'alias.default-state-entity') | translate }}</div>
+        <div class="tb-form-panel-title tb-normal">{{ (reportMode ? (subReport ? 'alias.default-master-report-entity' : 'alias.default-originator-entity') : 'alias.default-state-entity') | translate }}</div>
         <tb-entity-select appearance="outline"
                           useAliasEntityTypes="true"
                           formControlName="defaultStateEntity">
@@ -296,11 +294,9 @@
       <section class="tb-form-panel no-border no-padding">
         <div class="tb-form-panel stroked" [class.no-padding-bottom]="!filterFormGroup.get('rootStateEntity').value">
           <div class="tb-form-panel-title" translate>alias.root-entity</div>
-          @if (!reportMode || reportMode && subReport) {
-            <mat-slide-toggle class="mat-slide" formControlName="rootStateEntity">
-              {{ (subReport ? 'alias.root-master-report-entity' : 'alias.root-state-entity') | translate }}
-            </mat-slide-toggle>
-          }
+          <mat-slide-toggle class="mat-slide" formControlName="rootStateEntity">
+            {{ (reportMode ? (subReport ? 'alias.root-master-report-entity' : 'alias.root-originator-entity') : 'alias.root-state-entity') | translate }}
+          </mat-slide-toggle>
           @if (filterFormGroup.get('rootStateEntity').value) {
             <div class="tb-form-panel no-border no-padding no-gap">
               <mat-form-field *ngIf="!reportMode" floatLabel="always" class="mat-block" appearance="outline">
@@ -309,7 +305,9 @@
                        placeholder="{{ 'alias.default-entity-parameter-name' | translate }}">
               </mat-form-field>
               <div class="tb-form-panel stroked no-padding-bottom">
-                <div class="tb-form-panel-title tb-normal">{{ (reportMode ? 'alias.default-master-report-entity' : 'alias.default-state-entity') | translate }}</div>
+                <div class="tb-form-panel-title tb-normal">
+                  {{ (reportMode ? (subReport ? 'alias.default-master-report-entity' : 'alias.default-originator-entity') : 'alias.default-state-entity') | translate }}
+                </div>
                 <tb-entity-select appearance="outline"
                                   useAliasEntityTypes="true"
                                   formControlName="defaultStateEntity">
@@ -368,11 +366,9 @@
       <section class="tb-form-panel no-border no-padding">
         <div class="tb-form-panel stroked" [class.no-padding-bottom]="!filterFormGroup.get('rootStateEntity').value">
           <div class="tb-form-panel-title" translate>alias.root-entity</div>
-          @if (!reportMode || reportMode && subReport) {
-            <mat-slide-toggle class="mat-slide" formControlName="rootStateEntity">
-              {{ (subReport ? 'alias.root-master-report-entity' : 'alias.root-state-entity') | translate }}
-            </mat-slide-toggle>
-          }
+          <mat-slide-toggle class="mat-slide" formControlName="rootStateEntity">
+            {{ (reportMode ? (subReport ? 'alias.root-master-report-entity' : 'alias.root-originator-entity') : 'alias.root-state-entity') | translate }}
+          </mat-slide-toggle>
           @if (filterFormGroup.get('rootStateEntity').value) {
             <div class="tb-form-panel no-border no-padding no-gap">
               <mat-form-field *ngIf="!reportMode" floatLabel="always" class="mat-block" appearance="outline">
@@ -381,7 +377,9 @@
                        placeholder="{{ 'alias.default-entity-parameter-name' | translate }}">
               </mat-form-field>
               <div class="tb-form-panel stroked no-padding-bottom">
-                <div class="tb-form-panel-title tb-normal">{{ (reportMode ? 'alias.default-master-report-entity' : 'alias.default-state-entity') | translate }}</div>
+                <div class="tb-form-panel-title tb-normal">
+                  {{ (reportMode ? (subReport ? 'alias.default-master-report-entity' : 'alias.default-originator-entity') : 'alias.default-state-entity') | translate }}
+                </div>
                 <tb-entity-select appearance="outline"
                                   useAliasEntityTypes="true"
                                   formControlName="defaultStateEntity">
@@ -478,11 +476,9 @@
       <section class="tb-form-panel no-border no-padding">
         <div class="tb-form-panel stroked" [class.no-padding-bottom]="!filterFormGroup.get('originatorStateEntity').value">
           <div class="tb-form-panel-title" translate>alias.originator</div>
-          @if (!reportMode || reportMode && subReport) {
-            <mat-slide-toggle class="mat-slide" formControlName="originatorStateEntity">
-              {{ (subReport ? 'alias.originator-master-report-entity' : 'alias.originator-state-entity') | translate }}
-            </mat-slide-toggle>
-          }
+          <mat-slide-toggle class="mat-slide" formControlName="originatorStateEntity">
+            {{ (reportMode ? (subReport ? 'alias.originator-master-report-entity' : 'alias.originator-from-originator-entity') : 'alias.originator-state-entity') | translate }}
+          </mat-slide-toggle>
           @if (filterFormGroup.get('originatorStateEntity').value) {
             <div class="tb-form-panel no-border no-padding no-gap">
               <mat-form-field *ngIf="!reportMode" floatLabel="always" class="mat-block" appearance="outline">
@@ -491,7 +487,9 @@
                        placeholder="{{ 'alias.default-entity-parameter-name' | translate }}">
               </mat-form-field>
               <div class="tb-form-panel stroked no-padding-bottom">
-                <div class="tb-form-panel-title tb-normal">{{ (reportMode ? 'alias.default-master-report-entity' : 'alias.default-state-entity') | translate }}</div>
+                <div class="tb-form-panel-title tb-normal">
+                  {{ (reportMode ? (subReport ? 'alias.default-master-report-entity' : 'alias.default-originator-entity') : 'alias.default-state-entity') | translate }}
+                </div>
                 <tb-entity-select appearance="outline"
                                   useAliasEntityTypes="true"
                                   formControlName="defaultStateEntity">
@@ -499,8 +497,7 @@
               </div>
             </div>
           } @else {
-            <tb-entity-select required
-                              appearance="outline"
+            <tb-entity-select appearance="outline"
                               useAliasEntityTypes="true"
                               formControlName="originator">
             </tb-entity-select>
