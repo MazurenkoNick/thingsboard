@@ -64,6 +64,7 @@ import { EntityInfoData } from '@shared/models/entity.models';
 import { emptyPageData, PageData } from '@shared/models/page/page-data';
 import { TruncatePipe } from '@shared/pipe/truncate.pipe';
 import { ENTER } from '@angular/cdk/keycodes';
+import { MatFormFieldAppearance } from '@angular/material/form-field';
 
 export type CreateEntityGroupFunction = (groupType: EntityType, groupName?: string, ownerId?: EntityId) => Observable<EntityInfoData>;
 
@@ -106,6 +107,9 @@ export class EntityGroupListComponent implements ControlValueAccessor, OnInit, A
 
   @Input()
   labelText: string;
+
+  @Input()
+  appearance: MatFormFieldAppearance = 'fill';
 
   private requiredValue: boolean;
   get required(): boolean {

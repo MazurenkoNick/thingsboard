@@ -32,7 +32,6 @@ package org.thingsboard.server.service.report;
 
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
-import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 import org.thingsboard.server.common.data.TbResourceInfo;
 import org.thingsboard.server.common.data.exception.ThingsboardErrorCode;
@@ -60,7 +59,7 @@ import org.thingsboard.server.dao.alarm.AlarmService;
 import org.thingsboard.server.dao.report.ReportService;
 import org.thingsboard.server.dao.report.ReportTemplateService;
 import org.thingsboard.server.dao.resource.ImageService;
-import org.thingsboard.server.dao.resource.ResourceService;
+import org.thingsboard.server.queue.util.TbCoreComponent;
 import org.thingsboard.server.report.context.TbReportCtx;
 import org.thingsboard.server.report.datasource.ReportDataService;
 import org.thingsboard.server.service.query.EntityQueryService;
@@ -72,7 +71,7 @@ import java.util.Collection;
 import java.util.List;
 
 @RequiredArgsConstructor
-@Primary
+@TbCoreComponent
 @Service
 public class LocalReportDataService implements ReportDataService {
 
@@ -82,7 +81,6 @@ public class LocalReportDataService implements ReportDataService {
     private final AccessControlService accessControlService;
     private final ReportTemplateService reportTemplateService;
     private final ImageService imageService;
-    private final ResourceService resourceService;
     private final ReportService reportService;
 
     @Override

@@ -30,7 +30,7 @@
  */
 package org.thingsboard.server.report.datasource;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.stereotype.Service;
 import org.thingsboard.rest.client.RestClient;
 import org.thingsboard.server.common.data.exception.ThingsboardErrorCode;
@@ -58,7 +58,7 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 
-@ConditionalOnMissingBean(value = ReportDataService.class, ignored = RemoteReportDataService.class)
+@ConditionalOnExpression("'${service.type:null}' == 'tb-report'")
 @Service
 public class RemoteReportDataService implements ReportDataService {
 

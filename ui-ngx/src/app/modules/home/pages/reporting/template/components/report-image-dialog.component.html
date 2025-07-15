@@ -59,7 +59,7 @@
         </tb-gallery-image-input>
         <div class="tb-form-row tb-standard-fields column-xs" [class.!hidden]="reportImageFormGroup.get('sourceType').value !== 'entityKey'">
           <div class="fixed-title-width" translate>report-template.component.image.image-url-key</div>
-          <tb-string-autocomplete [fetchOptionsFn]="fetchKeyOptionsFn" formControlName="imageKey"></tb-string-autocomplete>
+          <tb-string-autocomplete class="flex-1" [fetchOptionsFn]="fetchKeyOptionsFn" formControlName="imageKey"></tb-string-autocomplete>
         </div>
       </div>
       <div class="tb-form-row space-between">
