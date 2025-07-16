@@ -119,6 +119,7 @@ public class ReportJobProcessor implements JobProcessor {
                 .reportTemplateConfig(reportTemplate.getConfiguration())
                 .timezone(configuration.getTimezone())
                 .userId(configuration.getUserId())
+                .originator(configuration.getOriginator())
                 .accessToken(accessToken.getToken())
                 .accessTokenExpirationTs(accessToken.getClaims().getExpiration().getTime())
                 .build();

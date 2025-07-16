@@ -36,6 +36,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
+import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.NotificationTargetId;
 import org.thingsboard.server.common.data.id.NotificationTemplateId;
 import org.thingsboard.server.common.data.id.ReportTemplateId;
@@ -56,6 +57,8 @@ public class ReportJobConfiguration extends JobConfiguration {
 
     private NotificationTargetId recipientId;
     private NotificationTemplateId notificationTemplateId;
+
+    private EntityId originator;
 
     private RuleNode ruleNode;
     private String outputTbMsgProto;

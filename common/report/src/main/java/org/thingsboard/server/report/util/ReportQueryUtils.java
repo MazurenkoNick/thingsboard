@@ -97,9 +97,9 @@ public class ReportQueryUtils {
         return alarmCountQuery;
     }
 
-    public static AlarmDataQuery toAlarmDataQuery(AlarmTableComponent component, ReportTemplateConfig reportTemplateConfig, EntityData stateEntity, PageLink pageLink) {
+    public static AlarmDataQuery toAlarmDataQuery(AlarmTableComponent component, ReportTemplateConfig reportTemplateConfig, EntityId stateEntityId, PageLink pageLink) {
         DataSource alarmSource = component.getAlarmSource();
-        EntityFilter entityFilter = buildEntityFilter(alarmSource, reportTemplateConfig, stateEntity);
+        EntityFilter entityFilter = buildEntityFilter(alarmSource, reportTemplateConfig, stateEntityId);
         List<KeyFilter> keyFilters = findKeyFilters(alarmSource, reportTemplateConfig);
 
         List<EntityKey> alarmFields = alarmSource.getDataKeys().stream().filter(dataKey -> "alarm".equals(dataKey.getType())).map(dataKey ->
@@ -136,10 +136,10 @@ public class ReportQueryUtils {
         return new AlarmDataQuery(entityFilter, alarmDataPageLink, entityFields, latestValues, keyFilters, alarmFields);
     }
 
-    public static EntityDataQuery toEntityDataQuery(DataSource dataSource, ReportTemplateConfig reportTemplateConfig, EntityData stateEntity, PageLink pageLink) {
+    public static EntityDataQuery toEntityDataQuery(DataSource dataSource, ReportTemplateConfig reportTemplateConfig, EntityId stateEntityId, PageLink pageLink) {
         EntityDataPageLink entityDataPageLink = new EntityDataPageLink(pageLink.getPageSize(), pageLink.getPage(), pageLink.getTextSearch(), DEFAULT_SORT_ORDER);
 
-        EntityFilter filter = buildEntityFilter(dataSource, reportTemplateConfig, stateEntity);
+        EntityFilter filter = buildEntityFilter(dataSource, reportTemplateConfig, stateEntityId);
         List<KeyFilter> keyFilters = findKeyFilters(dataSource, reportTemplateConfig);
 
         List<EntityKey> entityFields = new ArrayList<>();
@@ -166,11 +166,11 @@ public class ReportQueryUtils {
         return new EntityDataQuery(filter, entityDataPageLink, entityFields, latestValues, keyFilters);
     }
 
-    private static EntityFilter buildEntityFilter(DataSource dataSource, ReportTemplateConfig config, EntityData stateEntity) {
+    private static EntityFilter buildEntityFilter(DataSource dataSource, ReportTemplateConfig config, EntityId stateEntityId) {
         if (dataSource.getType() == DataSourceType.DEVICE) {
             return buildSingleEntityFilter(DeviceId.fromString(dataSource.getDeviceId()));
         }
-        return buildAliasBasedFilter(dataSource, config, stateEntity);
+        return buildAliasBasedFilter(dataSource, config, stateEntityId);
     }
 
     private static EntityFilter buildSingleEntityFilter(EntityId entityId) {
@@ -179,14 +179,14 @@ public class ReportQueryUtils {
         return filter;
     }
 
-    private static EntityFilter buildAliasBasedFilter(DataSource dataSource, ReportTemplateConfig config, EntityData stateEntity) {
+    private static EntityFilter buildAliasBasedFilter(DataSource dataSource, ReportTemplateConfig config, EntityId stateEntityId) {
         EntityFilter filter = config.getEntityAliases().stream()
                 .filter(alias -> alias.getId().equals(dataSource.getEntityAliasId()))
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("Entity alias not found: " + dataSource.getEntityAliasId()))
                 .getFilter();
 
-        EntityId resolvedEntity = resolveStateEntityId(stateEntity, filter);
+        EntityId resolvedEntity = resolveStateEntityId(stateEntityId, filter);
 
         if (filter instanceof StateEntityFilter) {
             return buildSingleEntityFilter(resolvedEntity);
@@ -201,9 +201,9 @@ public class ReportQueryUtils {
         return filter;
     }
 
-    private static EntityId resolveStateEntityId(EntityData stateEntity, EntityFilter filter) {
-        if (stateEntity != null) {
-            return stateEntity.getEntityId();
+    private static EntityId resolveStateEntityId(EntityId stateEntityId, EntityFilter filter) {
+        if (stateEntityId != null) {
+            return stateEntityId;
         }
 
         if (filter instanceof StateEntityFilter stateFilter) {
