@@ -1126,6 +1126,8 @@ public class DefaultEntityQueryRepository implements EntityQueryRepository {
             entitiesQuery.append(" OR ");
             addTenantEntityCheck(ctx, entitiesQuery, readPermMap, EntityType.CONVERTER);
             entitiesQuery.append(" OR ");
+            addTenantEntityCheck(ctx, entitiesQuery, readPermMap, EntityType.AI_MODEL);
+            entitiesQuery.append(" OR ");
             addCustomerEntityCheck(ctx, entitiesQuery, readPermMap, EntityType.ROLE);
             entitiesQuery.append(" OR ");
             addCustomerEntityCheck(ctx, entitiesQuery, readPermMap, EntityType.BLOB_ENTITY);
