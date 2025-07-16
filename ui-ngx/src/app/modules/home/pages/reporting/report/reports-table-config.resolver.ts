@@ -48,13 +48,11 @@ import { EntityType, entityTypeResources, entityTypeTranslations } from '@shared
 import { EntityAction } from '@home/models/entity/entity-component.models';
 import { UserPermissionsService } from '@core/http/user-permissions.service';
 import { ReportFilter, ReportInfo, ReportQuery } from '@shared/models/report.models';
-import { UtilsService } from '@core/services/utils.service';
 import { AuthUser } from '@shared/models/user.model';
 import { Authority } from '@shared/models/authority.enum';
 import { getCurrentAuthUser } from '@core/auth/auth.selectors';
 import { Store } from '@ngrx/store';
 import { AppState } from '@core/core.state';
-import { MatDialog } from '@angular/material/dialog';
 import { getEntityDetailsPageURL } from '@core/utils';
 import { ReportService } from '@core/http/report.service';
 import { ReportTableHeaderComponent } from '@home/pages/reporting/report/report-table-header.component';
@@ -65,9 +63,7 @@ export class ReportsTableConfigResolver  {
   constructor(private store: Store<AppState>,
               private reportService: ReportService,
               private userPermissionsService: UserPermissionsService,
-              private dialog: MatDialog,
               private translate: TranslateService,
-              private utils: UtilsService,
               private datePipe: DatePipe) {}
 
   resolve(_route: ActivatedRouteSnapshot): EntityTableConfig<ReportInfo> {
@@ -130,8 +126,8 @@ export class ReportsTableConfigResolver  {
         config.componentsData.includeCustomers ? '20%' : '25%', config.entityTitle),
       new EntityLinkTableColumn<ReportInfo>('reportTemplateName', 'report-template.report-template',
         config.componentsData.includeCustomers ? '20%' : '25%',
-        (report) => report.templateInfo.name,
-        (report) => getEntityDetailsPageURL(report.templateInfo.id.id, EntityType.REPORT_TEMPLATE)),
+        (report) => report.templateInfo?.name ?? '',
+        (report) => report.templateInfo ? getEntityDetailsPageURL(report.templateInfo?.id.id, EntityType.REPORT_TEMPLATE) : ''),
       new EntityTableColumn<ReportInfo>('userName', 'user.user',
         config.componentsData.includeCustomers ? '20%' : '25%', (report) => report.userName),
       new EntityTableColumn<ReportInfo>( 'format', 'report.format',
