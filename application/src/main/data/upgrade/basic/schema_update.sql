@@ -84,3 +84,7 @@ DROP INDEX IF EXISTS idx_integration_external_id;
 DROP INDEX IF EXISTS idx_role_external_id;
 
 -- DROP INDEXES THAT DUPLICATE UNIQUE CONSTRAINT END
+
+DELETE FROM integration where type = 'IBM_WATSON_IOT';
+
+DELETE FROM converter where integration_type = 'IBM_WATSON_IOT';

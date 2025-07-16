@@ -229,6 +229,7 @@ public class ReportController extends BaseController {
                 .reportTemplateConfig(configuration)
                 .timezone(reportRequest.getTimezone())
                 .userId(userId)
+                .originator(reportRequest.getOriginator())
                 .accessToken(accessToken.getToken())
                 .accessTokenExpirationTs(accessToken.getClaims().getExpiration().getTime())
                 .build();
@@ -262,6 +263,7 @@ public class ReportController extends BaseController {
                 .reportTemplateId(reportTemplateId)
                 .userId(userId)
                 .timezone(reportRequest.getTimezone())
+                .originator(reportRequest.getOriginator())
                 .recipientId(reportRequest.getRecipientId())
                 .notificationTemplateId(reportRequest.getNotificationTemplateId())
                 .build()).get();

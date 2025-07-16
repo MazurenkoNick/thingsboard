@@ -135,6 +135,11 @@ public class Job extends BaseData<JobId> implements TenantEntity {
             return this;
         }
 
+        public ReportJobBuilder originator(EntityId originator) {
+            this.configuration.setOriginator(originator);
+            return this;
+        }
+
         public ReportJobBuilder recipientId(NotificationTargetId recipientId) {
             this.configuration.setRecipientId(recipientId);
             return this;

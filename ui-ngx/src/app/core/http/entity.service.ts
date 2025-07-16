@@ -63,8 +63,7 @@ import {
   edgeAliasFilterTypes,
   EntityAlias,
   EntityAliasFilter,
-  EntityAliasFilterResult,
-  stateAliasFilterTypes
+  EntityAliasFilterResult
 } from '@shared/models/alias.models';
 import {
   EdgeImportEntityData,
@@ -895,14 +894,11 @@ export class EntityService {
     );
   }
 
-  public getAliasFilterTypesByEntityTypes(entityTypes: Array<EntityType | AliasEntityType>, excludeStateAliases = false): Array<AliasFilterType> {
+  public getAliasFilterTypesByEntityTypes(entityTypes: Array<EntityType | AliasEntityType>): Array<AliasFilterType> {
     const authState = getCurrentAuthState(this.store);
     let allAliasFilterTypes: Array<AliasFilterType> = Object.values(AliasFilterType);
     if (!authState.edgesSupportEnabled) {
       allAliasFilterTypes = allAliasFilterTypes.filter(aliasFilterType => !edgeAliasFilterTypes.includes(aliasFilterType));
-    }
-    if (excludeStateAliases) {
-      allAliasFilterTypes = allAliasFilterTypes.filter(aliasFilterType => !stateAliasFilterTypes.includes(aliasFilterType));
     }
     if (!entityTypes || !entityTypes.length) {
       return allAliasFilterTypes;

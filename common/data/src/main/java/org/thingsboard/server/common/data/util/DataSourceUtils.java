@@ -30,6 +30,7 @@
  */
 package org.thingsboard.server.common.data.util;
 
+import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.query.AlarmData;
 import org.thingsboard.server.common.data.query.EntityData;
 import org.thingsboard.server.common.data.query.EntityKey;
@@ -37,6 +38,7 @@ import org.thingsboard.server.common.data.query.EntityKeyType;
 import org.thingsboard.server.common.data.query.TsValue;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -70,5 +72,9 @@ public class DataSourceUtils {
             }
         }
         return Optional.empty();
+    }
+
+    public static EntityData entityDataFromEntityId(EntityId entityId) {
+        return new EntityData(entityId, false, false, Collections.emptyMap(), Collections.emptyMap());
     }
 }

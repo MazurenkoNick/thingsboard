@@ -32,6 +32,7 @@ package org.thingsboard.server.common.data.report;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
+import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.NotificationTargetId;
 import org.thingsboard.server.common.data.id.NotificationTemplateId;
 import org.thingsboard.server.common.data.id.ReportTemplateId;
@@ -49,6 +50,9 @@ public class ReportRequest {
     private String timezone;
     @Schema(description = "A string value representing the user id.", example = "784f394c-42b6-435a-983c-b7beff2784f9")
     private String userId;
+
+    @Schema(description = "Json object representing the originator id.")
+    private EntityId originator;
 
     private NotificationTargetId recipientId;
     private NotificationTemplateId notificationTemplateId;
