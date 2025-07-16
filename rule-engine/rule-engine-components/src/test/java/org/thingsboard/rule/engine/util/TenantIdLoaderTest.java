@@ -70,7 +70,6 @@ import org.thingsboard.server.common.data.id.AssetProfileId;
 import org.thingsboard.server.common.data.id.DeviceProfileId;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.EntityIdFactory;
-import org.thingsboard.server.common.data.id.NotificationId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.id.TenantProfileId;
 import org.thingsboard.server.common.data.integration.Integration;
@@ -225,7 +224,6 @@ public class TenantIdLoaderTest {
 
     private TenantId tenantId;
     private TenantProfileId tenantProfileId;
-    private NotificationId notificationId;
     private AbstractListeningExecutor dbExecutor;
 
     @BeforeEach
@@ -237,9 +235,8 @@ public class TenantIdLoaderTest {
             }
         };
         dbExecutor.init();
-        this.tenantId = new TenantId(UUID.randomUUID());
+        this.tenantId = TenantId.fromUUID(UUID.randomUUID());
         this.tenantProfileId = new TenantProfileId(UUID.randomUUID());
-        this.notificationId = new NotificationId(UUID.randomUUID());
 
         when(ctx.getTenantId()).thenReturn(tenantId);
         when(ctx.getPeContext()).thenReturn(tbPeContext);
@@ -258,6 +255,7 @@ public class TenantIdLoaderTest {
         switch (entityType) {
             case TENANT:
             case NOTIFICATION:
+            case ADMIN_SETTINGS:
                 break;
             case CUSTOMER:
                 Customer customer = new Customer();
@@ -591,7 +589,7 @@ public class TenantIdLoaderTest {
 
     @Test
     public void test_findEntityIdAsync_other_tenant() {
-        checkTenant(new TenantId(UUID.randomUUID()), false);
+        checkTenant(TenantId.fromUUID(UUID.randomUUID()), false);
     }
 
 }
