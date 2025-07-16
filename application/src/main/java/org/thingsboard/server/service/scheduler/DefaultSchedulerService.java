@@ -332,7 +332,8 @@ public class DefaultSchedulerService extends AbstractPartitionBasedService<Tenan
                     }
                     if (GENERATE_REPORT.equals(event.getType())) {
                         ReportConfig reportConfig = JacksonUtil.treeToValue(configuration, ReportConfig.class);
-                        jobManager.submitJob(Job.newReportJob().tenantId(tenantId)
+                        jobManager.submitJob(Job.newReportJob()
+                                .tenantId(tenantId)
                                 .reportTemplateId(reportConfig.getReportTemplateId())
                                 .userId(reportConfig.getUserId())
                                 .timezone(reportConfig.getTimezone())
@@ -444,4 +445,5 @@ public class DefaultSchedulerService extends AbstractPartitionBasedService<Tenan
                     }
                 });
     }
+
 }

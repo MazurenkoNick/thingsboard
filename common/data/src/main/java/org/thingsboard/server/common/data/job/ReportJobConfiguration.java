@@ -40,7 +40,10 @@ import org.thingsboard.server.common.data.id.NotificationTargetId;
 import org.thingsboard.server.common.data.id.NotificationTemplateId;
 import org.thingsboard.server.common.data.id.ReportTemplateId;
 import org.thingsboard.server.common.data.id.UserId;
+import org.thingsboard.server.common.data.notification.NotificationRequest;
 import org.thingsboard.server.common.data.rule.RuleNode;
+
+import java.util.List;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -56,6 +59,7 @@ public class ReportJobConfiguration extends JobConfiguration {
 
     private NotificationTargetId recipientId;
     private NotificationTemplateId notificationTemplateId;
+    private List<NotificationRequest> notificationRequests;
 
     private RuleNode ruleNode;
     private String outputTbMsgProto;
