@@ -35,6 +35,7 @@ import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 
 import java.io.IOException;
+import java.util.UUID;
 
 public class AliasEntityIdSerializer extends JsonSerializer<AliasEntityId> {
     @Override
@@ -47,8 +48,14 @@ public class AliasEntityIdSerializer extends JsonSerializer<AliasEntityId> {
             entityType = value.getEntityType().name();
         }
         gen.writeStringField("entityType", entityType);
+        UUID id = null;
         if (value.getId() != null) {
-            gen.writeStringField("id", value.getId().toString());
+            id = value.getId();
+        } else if (value.defaultEntityId() != null) {
+            id = value.defaultEntityId().getId();
+        }
+        if (id != null) {
+            gen.writeStringField("id", id.toString());
         }
         gen.writeEndObject();
     }
