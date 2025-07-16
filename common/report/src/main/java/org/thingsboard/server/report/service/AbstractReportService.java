@@ -92,8 +92,8 @@ public abstract class AbstractReportService implements ReportService {
     @Autowired
     protected ReportDataService dataService;
 
-    protected List<EntityData> fetchEntities(TbReportCtx ctx, DataSource dataSource, EntityData stateEntity) {
-       return fetchEntityDataByQuery(pageLink -> toEntityDataQuery(dataSource, ctx.getConfiguration(), stateEntity, pageLink), dataSource, ctx);
+    protected List<EntityData> fetchEntities(TbReportCtx ctx, DataSource dataSource, EntityId stateEntityId) {
+       return fetchEntityDataByQuery(pageLink -> toEntityDataQuery(dataSource, ctx.getConfiguration(), stateEntityId, pageLink), dataSource, ctx);
     }
 
     private List<EntityData> fetchEntityDataByQuery(Function<PageLink, EntityDataQuery> querySupplier, DataSource dataSource, TbReportCtx ctx) {
@@ -139,9 +139,9 @@ public abstract class AbstractReportService implements ReportService {
         return queries;
     }
 
-    protected List<Map<String, String>> collectEntityDatas(TbReportCtx ctx, DataSource dataSource, EntityData stateEntity) {
+    protected List<Map<String, String>> collectEntityDatas(TbReportCtx ctx, DataSource dataSource, EntityId stateEntityId) {
         return switch (dataSource.getType()) {
-            case DEVICE, ENTITY -> fetchEntities(ctx, dataSource, stateEntity)
+            case DEVICE, ENTITY -> fetchEntities(ctx, dataSource, stateEntityId)
                     .stream()
                     .map(entityData -> toStringMap(entityData, dataSource.getDataKeys(), ctx))
                     .collect(Collectors.toList());
@@ -199,11 +199,12 @@ public abstract class AbstractReportService implements ReportService {
                 .stream()
                 .filter(dataKey -> !dataKey.getType().equals("alarm"))
                 .collect(Collectors.toList());
-        List<EntityData> entityDataList = fetchEntities(ctx, alarmSource, stateEntity);
+        EntityId stateEntityId = stateEntity != null ? stateEntity.getEntityId() : null;
+        List<EntityData> entityDataList = fetchEntities(ctx, alarmSource, stateEntityId);
         Map<EntityId, EntityData> entityDataMap = entityDataList.stream()
                 .collect(Collectors.toMap(EntityData::getEntityId, Function.identity()));
         List<Map<String, String>> entityDatas = new ArrayList<>();
-        for (AlarmData alarmData : new PageDataIterable<>(link -> dataService.findAlarmDataByQueryForEntities(toAlarmDataQuery(component, ctx.getConfiguration(), stateEntity, link), entityDataMap.keySet(), ctx), 1024)) {
+        for (AlarmData alarmData : new PageDataIterable<>(link -> dataService.findAlarmDataByQueryForEntities(toAlarmDataQuery(component, ctx.getConfiguration(), stateEntityId, link), entityDataMap.keySet(), ctx), 1024)) {
             Map<String, String> mergedData = toStringMap(alarmData, alarmDataKeys, ctx);
             EntityData entityData = entityDataMap.get(alarmData.getEntityId());
             mergedData.putAll(toStringMap(entityData, latestDataKeys, ctx));
@@ -256,14 +257,14 @@ public abstract class AbstractReportService implements ReportService {
         return data;
     }
 
-    protected List<EntityData> getSubReportEntities(TbReportCtx ctx, DataReportComponent component) {
+    protected List<EntityData> getSubReportEntities(TbReportCtx ctx, DataReportComponent component, EntityId stateEntityId) {
         Optional<DataSource> dataSource = getSingleDataSource(component);
         List<EntityData> entities;
         if (dataSource.isEmpty()) {
             entities = new ArrayList<>();
             entities.add(null);
         } else {
-            entities = fetchEntities(ctx, dataSource.get(), null);
+            entities = fetchEntities(ctx, dataSource.get(), stateEntityId);
         }
         return entities;
     }

@@ -58,6 +58,8 @@ public class ReportTask extends Task<ReportTaskResult> {
     private String accessToken;
     private long accessTokenExpirationTs;
 
+    private EntityId originator;
+
     @Override
     public ReportTaskResult toFailed(Throwable error) {
         return ReportTaskResult.failed(this, error);
