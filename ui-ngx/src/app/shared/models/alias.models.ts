@@ -90,6 +90,16 @@ export const aliasFilterTypeTranslationMap = new Map<AliasFilterType, string>(
   ]
 );
 
+const reportAliasFilterTypeTranslationMap = new Map(aliasFilterTypeTranslationMap);
+reportAliasFilterTypeTranslationMap.set(AliasFilterType.stateEntity, 'alias.filter-type-state-entity-originator');
+reportAliasFilterTypeTranslationMap.set(AliasFilterType.stateEntityOwner, 'alias.filter-type-state-entity-owner-originator');
+export { reportAliasFilterTypeTranslationMap };
+
+const subReportAliasFilterTypeTranslationMap = new Map(aliasFilterTypeTranslationMap);
+subReportAliasFilterTypeTranslationMap.set(AliasFilterType.stateEntity, 'alias.filter-type-state-entity-master-report');
+subReportAliasFilterTypeTranslationMap.set(AliasFilterType.stateEntityOwner, 'alias.filter-type-state-entity-owner-master-report');
+export { subReportAliasFilterTypeTranslationMap };
+
 export interface SingleEntityFilter {
   singleEntity?: EntityId;
 }

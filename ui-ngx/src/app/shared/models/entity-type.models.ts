@@ -51,6 +51,8 @@ export enum EntityType {
   RULE_NODE = 'RULE_NODE',
   SCHEDULER_EVENT = 'SCHEDULER_EVENT',
   BLOB_ENTITY = 'BLOB_ENTITY',
+  REPORT_TEMPLATE = 'REPORT_TEMPLATE',
+  REPORT = 'REPORT',
   ENTITY_VIEW = 'ENTITY_VIEW',
   WIDGETS_BUNDLE = 'WIDGETS_BUNDLE',
   WIDGET_TYPE = 'WIDGET_TYPE',
@@ -431,6 +433,34 @@ export const entityTypeTranslations = new Map<EntityType | AliasEntityType, Enti
       }
     ],
     [
+      EntityType.REPORT_TEMPLATE,
+      {
+        type: 'entity.type-report-template',
+        typePlural: 'entity.type-report-templates',
+        list: 'entity.list-of-report-templates',
+        nameStartsWith: 'entity.report-template-name-starts-with',
+        details: 'report-template.report-template-details',
+        add: 'report-template.add',
+        noEntities: 'report-template.no-report-templates-text',
+        search: 'report-template.search',
+        selectedEntities: 'report-template.selected-report-templates'
+      }
+    ],
+    [
+      EntityType.REPORT,
+      {
+        type: 'entity.type-report',
+        typePlural: 'entity.type-reports',
+        list: 'entity.list-of-reports',
+        nameStartsWith: 'entity.report-name-starts-with',
+        details: 'report.report-details',
+        add: 'report.add',
+        noEntities: 'report.no-reports-text',
+        search: 'report.search',
+        selectedEntities: 'report.selected-reports'
+      }
+    ],
+    [
       EntityType.ROLE,
       {
         type: 'entity.type-role',
@@ -495,6 +525,8 @@ export const entityTypeTranslations = new Map<EntityType | AliasEntityType, Enti
       EntityType.OTA_PACKAGE,
       {
         type: 'entity.type-ota-package',
+        typePlural: 'entity.type-ota-packages',
+        list: 'entity.list-of-ota-packages',
         details: 'ota-update.ota-update-details',
         add: 'ota-update.add',
         noEntities: 'ota-update.no-packages-text',
@@ -818,6 +850,18 @@ export const entityTypeResources = new Map<EntityType, EntityTypeResource<BaseDa
       {
         helpLinkId: 'secretStorage'
       }
+    ],
+    [
+      EntityType.REPORT_TEMPLATE,
+      {
+        helpLinkId: 'reportTemplates'
+      }
+    ],
+    [
+      EntityType.REPORT,
+      {
+        helpLinkId: 'reports'
+      }
     ]
   ]
 );
@@ -845,7 +889,8 @@ export const baseDetailsPageByEntityType = new Map<EntityType, string>([
   [EntityType.WIDGET_TYPE, '/resources/widgets-library/widget-types/details'],
   [EntityType.OAUTH2_CLIENT, '/security-settings/oauth2/clients/details'],
   [EntityType.DOMAIN, '/security-settings/oauth2/clients/details'],
-  [EntityType.MOBILE_APP, '/mobile-center/applications']
+  [EntityType.MOBILE_APP, '/mobile-center/applications'],
+  [EntityType.REPORT_TEMPLATE, '/reporting/templates']
 ]);
 
 export const groupUrlPrefixByEntityType = new Map<EntityType, string>([

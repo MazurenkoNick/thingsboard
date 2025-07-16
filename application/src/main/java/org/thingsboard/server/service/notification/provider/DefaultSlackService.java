@@ -38,6 +38,7 @@ import com.slack.api.methods.SlackApiRequest;
 import com.slack.api.methods.SlackApiTextResponse;
 import com.slack.api.methods.request.chat.ChatPostMessageRequest;
 import com.slack.api.methods.request.conversations.ConversationsListRequest;
+import com.slack.api.methods.request.files.FilesUploadV2Request;
 import com.slack.api.methods.request.users.UsersListRequest;
 import com.slack.api.methods.response.conversations.ConversationsListResponse;
 import com.slack.api.methods.response.users.UsersListResponse;
@@ -51,6 +52,7 @@ import org.thingsboard.server.common.data.notification.settings.NotificationSett
 import org.thingsboard.server.common.data.notification.settings.SlackNotificationDeliveryMethodConfig;
 import org.thingsboard.server.common.data.notification.targets.slack.SlackConversation;
 import org.thingsboard.server.common.data.notification.targets.slack.SlackConversationType;
+import org.thingsboard.server.common.data.notification.targets.slack.SlackFile;
 import org.thingsboard.server.common.data.util.ThrowingBiFunction;
 import org.thingsboard.server.dao.notification.NotificationSettingsService;
 
@@ -78,6 +80,21 @@ public class DefaultSlackService implements SlackService {
                 .text(message)
                 .build();
         sendRequest(token, request, MethodsClient::chatPostMessage);
+    }
+
+    @Override
+    public void sendMessage(TenantId tenantId, String token, String conversationId, String message, List<SlackFile> files) {
+        FilesUploadV2Request request = FilesUploadV2Request.builder()
+                .initialComment(message)
+                .channel(conversationId)
+                .uploadFiles(files != null ? files.stream()
+                        .map(file -> FilesUploadV2Request.UploadFile.builder()
+                                .filename(file.getName())
+                                .fileData(file.getData())
+                                .build())
+                        .toList() : null)
+                .build();
+        sendRequest(token, request, MethodsClient::filesUploadV2);
     }
 
     @Override

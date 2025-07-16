@@ -41,8 +41,6 @@ import org.thingsboard.server.common.data.edge.EdgeEventActionType;
 import org.thingsboard.server.common.data.edge.EdgeEventType;
 import org.thingsboard.server.common.data.group.EntityGroup;
 import org.thingsboard.server.common.data.id.TenantId;
-import org.thingsboard.server.common.data.ota.DeviceGroupOtaPackage;
-import org.thingsboard.server.common.data.ota.OtaPackageType;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.dao.group.EntityGroupService;
@@ -70,16 +68,11 @@ public class DeviceGroupOtaPackageEdgeEventFetcher implements EdgeEventFetcher {
         List<EdgeEvent> result = new ArrayList<>();
         if (!pageData.getData().isEmpty()) {
             for (EntityGroup entityGroup : pageData.getData()) {
-                DeviceGroupOtaPackage firmware = deviceGroupOtaPackageService.findDeviceGroupOtaPackageByGroupIdAndType(entityGroup.getId(), OtaPackageType.FIRMWARE);
-                if (firmware != null) {
-                    result.add(EdgeUtils.constructEdgeEvent(tenantId, edge.getId(), EdgeEventType.DEVICE_GROUP_OTA,
-                            EdgeEventActionType.UPDATED, firmware.getGroupId(), JacksonUtil.valueToTree(firmware)));
-                }
-                DeviceGroupOtaPackage software = deviceGroupOtaPackageService.findDeviceGroupOtaPackageByGroupIdAndType(entityGroup.getId(), OtaPackageType.SOFTWARE);
-                if (software != null) {
-                    result.add(EdgeUtils.constructEdgeEvent(tenantId, edge.getId(), EdgeEventType.DEVICE_GROUP_OTA,
-                            EdgeEventActionType.UPDATED, software.getGroupId(), JacksonUtil.valueToTree(software)));
-                }
+                deviceGroupOtaPackageService.findDeviceGroupOtaPackageByGroupId(entityGroup.getId())
+                        .forEach(otaPackage -> {
+                            result.add(EdgeUtils.constructEdgeEvent(tenantId, edge.getId(), EdgeEventType.DEVICE_GROUP_OTA,
+                                    EdgeEventActionType.UPDATED, otaPackage.getGroupId(), JacksonUtil.valueToTree(otaPackage)));
+                        });
             }
         }
         return new PageData<>(result, 1, result.size(), false);

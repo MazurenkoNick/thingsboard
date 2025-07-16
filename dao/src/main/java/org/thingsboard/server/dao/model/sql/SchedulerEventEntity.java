@@ -100,6 +100,9 @@ public final class SchedulerEventEntity extends BaseVersionedEntity<SchedulerEve
     @Column(name = SCHEDULER_EVENT_ENABLED_PROPERTY)
     private boolean enabled;
 
+    @Column(name = ModelConstants.EXTERNAL_ID_PROPERTY)
+    private UUID externalId;
+
     public SchedulerEventEntity() {
         super();
     }
@@ -122,6 +125,7 @@ public final class SchedulerEventEntity extends BaseVersionedEntity<SchedulerEve
         this.configuration = schedulerEvent.getConfiguration();
         this.schedule = schedulerEvent.getSchedule();
         this.enabled = schedulerEvent.isEnabled();
+        this.externalId = getUuid(schedulerEvent.getExternalId());
     }
 
     @Override
@@ -130,7 +134,7 @@ public final class SchedulerEventEntity extends BaseVersionedEntity<SchedulerEve
         schedulerEvent.setCreatedTime(createdTime);
         schedulerEvent.setVersion(version);
         if (tenantId != null) {
-            schedulerEvent.setTenantId(new TenantId(tenantId));
+            schedulerEvent.setTenantId(TenantId.fromUUID(tenantId));
         }
         if (customerId != null) {
             schedulerEvent.setCustomerId(new CustomerId(customerId));
@@ -144,6 +148,7 @@ public final class SchedulerEventEntity extends BaseVersionedEntity<SchedulerEve
         schedulerEvent.setConfiguration(configuration);
         schedulerEvent.setSchedule(schedule);
         schedulerEvent.setEnabled(enabled);
+        schedulerEvent.setExternalId(getEntityId(externalId, SchedulerEventId::new));
         return schedulerEvent;
     }
 

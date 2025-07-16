@@ -124,6 +124,7 @@ public class ApiUsageStateServiceImpl extends AbstractEntityService implements A
         apiUsageState.setSmsExecState(ApiUsageStateValue.ENABLED);
         apiUsageState.setEmailExecState(ApiUsageStateValue.ENABLED);
         apiUsageState.setAlarmExecState(ApiUsageStateValue.ENABLED);
+        apiUsageState.setReportExecState(ApiUsageStateValue.ENABLED);
         apiUsageStateValidator.validate(apiUsageState, ApiUsageState::getTenantId);
 
         ApiUsageState saved = apiUsageStateDao.save(apiUsageState.getTenantId(), apiUsageState);

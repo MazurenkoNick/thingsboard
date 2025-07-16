@@ -123,6 +123,8 @@ import {
 import { FormProperty, propertyValid } from '@shared/models/dynamic-form.models';
 import { CalculatedFieldsService } from '@core/http/calculated-fields.service';
 import { CalculatedField } from '@shared/models/calculated-field.models';
+import { ReportTemplateService } from '@core/http/report-template.service';
+import { ReportTemplate, ReportTemplateType, TbReportFormat } from '@shared/models/report.models';
 
 export type editMissingAliasesFunction = (widgets: Array<Widget>, isSingleWidget: boolean,
                                           customTitle: string, missingEntityAliases: EntityAliases) => Observable<EntityAliases>;
@@ -155,6 +157,7 @@ export class ImportExportService {
               private utils: UtilsService,
               private itembuffer: ItemBufferService,
               private calculatedFieldsService: CalculatedFieldsService,
+              private reportTemplateService: ReportTemplateService,
               private dialog: MatDialog) {
 
   }
@@ -204,6 +207,35 @@ export class ImportExportService {
           throw new Error('Invalid image JSON file');
         } else {
           return this.imageService.importImage(imageData);
+        }
+      }),
+      catchError(() => of(null))
+    );
+  }
+
+  public exportReportTemplate(reportTemplateId: string): void {
+    this.reportTemplateService.getReportTemplate(reportTemplateId).subscribe({
+      next: (reportTemplate) => {
+        let name = reportTemplate.name;
+        name = name.toLowerCase().replace(/\W/g, '_');
+        this.exportToPc(this.prepareReportTemplateExport(reportTemplate), name);
+      },
+      error: (e) => {
+        this.handleExportError(e, 'report-template.export-failed-error');
+      }
+    });
+  }
+
+  public importReportTemplate(): Observable<ReportTemplate> {
+    return this.openImportDialog('report-template.import', 'report-template.report-template-file').pipe(
+      mergeMap((reportTemplate: ReportTemplate) => {
+        if (!this.validateImportedReportTemplate(reportTemplate)) {
+          this.store.dispatch(new ActionNotificationShow(
+            {message: this.translate.instant('report-template.invalid-report-template-file-error'),
+              type: 'error'}));
+          throw new Error('Invalid report template file');
+        } else {
+          return this.reportTemplateService.saveReportTemplate(this.prepareImport(reportTemplate));
         }
       }),
       catchError(() => of(null))
@@ -1166,6 +1198,28 @@ export class ImportExportService {
       || !isNotEmptyStr(image.resourceKey));
   }
 
+  private validateImportedReportTemplate(reportTemplate: ReportTemplate): boolean {
+    if (   !isNotEmptyStr(reportTemplate.name)
+        || isUndefined(reportTemplate.format)
+        || isUndefined(reportTemplate.type)
+        || isUndefined(reportTemplate.configuration)) {
+      return false;
+    }
+    if (!TbReportFormat[reportTemplate.format]) {
+      return false;
+    }
+    if (!ReportTemplateType[reportTemplate.type]) {
+      return false;
+    }
+    if (!reportTemplate.configuration.format) {
+      return false;
+    }
+    if (reportTemplate.configuration.format !== reportTemplate.format) {
+      return false;
+    }
+    return true;
+  }
+
   private validateImportedDashboard(dashboard: Dashboard): boolean {
     if (isUndefined(dashboard.title) || isUndefined(dashboard.configuration)) {
       return false;
@@ -1445,6 +1499,12 @@ export class ImportExportService {
   private prepareCalculatedFieldExport(calculatedField: CalculatedField): CalculatedField {
     delete calculatedField.entityId;
     return this.prepareExport(calculatedField);
+  }
+
+  private prepareReportTemplateExport(reportTemplate: ReportTemplate): ReportTemplate {
+    reportTemplate = this.prepareExport(reportTemplate);
+    delete reportTemplate.ownerId;
+    return reportTemplate;
   }
 
   private getIncludeResourcesPreference(key: SupportEntityResources): Observable<boolean> {

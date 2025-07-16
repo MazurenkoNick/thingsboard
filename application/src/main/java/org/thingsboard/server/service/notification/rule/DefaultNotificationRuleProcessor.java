@@ -192,7 +192,7 @@ public class DefaultNotificationRuleProcessor implements NotificationRuleProcess
     @EventListener(ComponentLifecycleMsg.class)
     public void onNotificationRuleDeleted(ComponentLifecycleMsg componentLifecycleMsg) {
         if (componentLifecycleMsg.getEvent() != ComponentLifecycleEvent.DELETED ||
-                componentLifecycleMsg.getEntityId().getEntityType() != EntityType.NOTIFICATION_RULE) {
+            componentLifecycleMsg.getEntityId().getEntityType() != EntityType.NOTIFICATION_RULE) {
             return;
         }
 

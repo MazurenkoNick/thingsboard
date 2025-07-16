@@ -109,6 +109,7 @@ import org.thingsboard.server.common.data.blob.BlobEntityInfo;
 import org.thingsboard.server.common.data.cf.CalculatedField;
 import org.thingsboard.server.common.data.converter.Converter;
 import org.thingsboard.server.common.data.converter.ConverterType;
+import org.thingsboard.server.common.data.dashboardreport.DashboardReportConfig;
 import org.thingsboard.server.common.data.device.DeviceSearchQuery;
 import org.thingsboard.server.common.data.domain.Domain;
 import org.thingsboard.server.common.data.domain.DomainInfo;
@@ -144,6 +145,7 @@ import org.thingsboard.server.common.data.id.OAuth2ClientId;
 import org.thingsboard.server.common.data.id.OAuth2ClientRegistrationTemplateId;
 import org.thingsboard.server.common.data.id.OtaPackageId;
 import org.thingsboard.server.common.data.id.QueueId;
+import org.thingsboard.server.common.data.id.ReportTemplateId;
 import org.thingsboard.server.common.data.id.RoleId;
 import org.thingsboard.server.common.data.id.RuleChainId;
 import org.thingsboard.server.common.data.id.RuleNodeId;
@@ -159,6 +161,8 @@ import org.thingsboard.server.common.data.integration.IntegrationInfo;
 import org.thingsboard.server.common.data.integration.IntegrationType;
 import org.thingsboard.server.common.data.kv.Aggregation;
 import org.thingsboard.server.common.data.kv.AttributeKvEntry;
+import org.thingsboard.server.common.data.kv.ReadTsKvQuery;
+import org.thingsboard.server.common.data.kv.ReadTsKvQueryResult;
 import org.thingsboard.server.common.data.kv.TsKvEntry;
 import org.thingsboard.server.common.data.menu.CustomMenu;
 import org.thingsboard.server.common.data.menu.CustomMenuInfo;
@@ -194,7 +198,8 @@ import org.thingsboard.server.common.data.relation.EntityRelation;
 import org.thingsboard.server.common.data.relation.EntityRelationInfo;
 import org.thingsboard.server.common.data.relation.EntityRelationsQuery;
 import org.thingsboard.server.common.data.relation.RelationTypeGroup;
-import org.thingsboard.server.common.data.report.ReportConfig;
+import org.thingsboard.server.common.data.report.Report;
+import org.thingsboard.server.common.data.report.ReportTemplate;
 import org.thingsboard.server.common.data.role.Role;
 import org.thingsboard.server.common.data.role.RoleType;
 import org.thingsboard.server.common.data.rule.DefaultRuleChainCreateRequest;
@@ -2222,6 +2227,23 @@ public class RestClient implements Closeable {
         return RestJsonConverter.toTimeseries(timeseries);
     }
 
+    public List<ReadTsKvQueryResult> getTimeseriesByQueries(EntityId entityId, List<ReadTsKvQuery> queries) {
+        Map<String, String> params = new HashMap<>();
+        params.put("entityType", entityId.getEntityType().name());
+        params.put("entityId", entityId.getId().toString());
+
+        StringBuilder urlBuilder = new StringBuilder(baseURL);
+        urlBuilder.append("/api/plugins/telemetry/{entityType}/{entityId}/values/timeseries");
+
+        return restTemplate.exchange(
+                urlBuilder.toString(),
+                HttpMethod.POST,
+                queries == null ? HttpEntity.EMPTY : new HttpEntity<>(queries),
+                new ParameterizedTypeReference<List<ReadTsKvQueryResult>>() {
+                },
+                params).getBody();
+    }
+
     public boolean saveDeviceAttributes(DeviceId deviceId, String scope, JsonNode request) {
         return restTemplate
                 .postForEntity(baseURL + "/api/plugins/telemetry/{deviceId}/{scope}", request, Object.class, deviceId.getId().toString(), scope)
@@ -3790,11 +3812,6 @@ public class RestClient implements Closeable {
         }
     }
 
-    @SneakyThrows
-    private ExecutorService getExecutor() {
-        return executor.get();
-    }
-
     @Deprecated
     public Optional<JsonNode> getEntityAttributesById(EntityId entityId, String keys) {
         Map<String, String> params = new HashMap<>();
@@ -4659,7 +4676,7 @@ public class RestClient implements Closeable {
                 dashboardId.getId()).getBody();
     }
 
-    public JsonNode downloadTestReport(ReportConfig reportConfig, String reportsServerEndpointUrl) {
+    public JsonNode downloadTestReport(DashboardReportConfig reportConfig, String reportsServerEndpointUrl) {
         return restTemplate.exchange(
                 baseURL + "/api/report/test?reportsServerEndpointUrl={reportsServerEndpointUrl}",
                 HttpMethod.POST,
@@ -5088,6 +5105,32 @@ public class RestClient implements Closeable {
         return restTemplate.postForEntity(
                 baseURL + "/api/whiteLabel/appThemeCss",
                 paletteSettings, String.class).getBody();
+    }
+
+    public ReportTemplate findReportTemplate(ReportTemplateId templateId) {
+        try {
+            ResponseEntity<ReportTemplate> reportTemplate =
+                    restTemplate.getForEntity(baseURL + "/api/reportTemplate/{reportTemplateId}", ReportTemplate.class, templateId.getId());
+            return reportTemplate.getBody();
+        } catch (HttpClientErrorException exception) {
+            if (exception.getStatusCode() == HttpStatus.NOT_FOUND) {
+                return null;
+            } else {
+                throw exception;
+            }
+        }
+    }
+
+    public Report createReport(Report report, byte[] data) {
+        HttpEntity<MultiValueMap<String, Object>> request = createMultipartRequest(report.getName(), data, report.getFormat().getContentType(), Map.of(
+                "info", JacksonUtil.toString(report)
+        ));
+        return restTemplate.postForObject(baseURL + "/api/v2/report", request, Report.class);
+    }
+
+    @SneakyThrows
+    private ExecutorService getExecutor() {
+        return executor.get();
     }
 
 }

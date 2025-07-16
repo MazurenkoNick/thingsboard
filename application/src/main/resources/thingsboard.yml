@@ -342,7 +342,7 @@ cassandra:
     poll_ms: "${CASSANDRA_QUERY_POLL_MS:50}"
     # Interval in milliseconds for printing Cassandra query queue statistic
     rate_limit_print_interval_ms: "${CASSANDRA_QUERY_RATE_LIMIT_PRINT_MS:10000}"
-    # set all data type values except target to null for the same ts on save
+    # When saving a value, set other data types to null (to avoid having multiple telemetry values with the same timestamp).
     set_null_values_enabled: "${CASSANDRA_QUERY_SET_NULL_VALUES_ENABLED:true}"
     # log one of cassandra queries with specified frequency (0 - logging is disabled)
     print_queries_freq: "${CASSANDRA_QUERY_PRINT_FREQ:0}"
@@ -390,6 +390,8 @@ sql:
     partition_size: "${SQL_ALARM_COMMENTS_PARTITION_SIZE_HOURS:168}" # Default value - 1 week
   blob_entities:
     partition_size: "${SQL_BLOB_ENTITIES_PARTITION_SIZE_HOURS:168}" # Default value - 1 week
+  reports:
+    partition_size: "${SQL_REPORTS_PARTITION_SIZE_HOURS:168}" # Default value - 1 week
   notifications:
     partition_size: "${SQL_NOTIFICATIONS_PARTITION_SIZE_HOURS:168}" # Default value - 1 week
   # Specify whether to sort entities before batch update. Should be enabled for cluster mode to avoid deadlocks
@@ -445,6 +447,10 @@ sql:
       enabled: "${SQL_TTL_BLOB_ENTITIES_ENABLED:false}" # The parameter to specify whether to use TTL (Time To Live) for blob entities records
       ttl: "${SQL_TTL_BLOB_ENTITIES_SECS:0}" # Disabled by default.
       checking_interval_ms: "${SQL_TTL_BLOB_ENTITIES_CHECKING_INTERVAL_MS:86400000}" # Default value - 1 day
+    reports:
+      enabled: "${SQL_TTL_REPORTS_ENABLED:false}" # The parameter to specify whether to use TTL (Time To Live) for reports
+      ttl: "${SQL_TTL_REPORTS_SECS:0}" # Disabled by default.
+      checking_interval_ms: "${SQL_TTL_REPORTS_CHECKING_INTERVAL_MS:86400000}" # Default value - 1 day
     notifications:
       enabled: "${SQL_TTL_NOTIFICATIONS_ENABLED:true}" # Enable/disable TTL (Time To Live) for notification center records
       ttl: "${SQL_TTL_NOTIFICATIONS_SECS:2592000}" # Default value - 30 days
@@ -608,11 +614,13 @@ integrations:
 
 # Reports parameters
 reports:
-  server:
+  web_report:
     # Report server endpoint
-    endpointUrl: "${REPORTS_SERVER_ENDPOINT_URL:http://localhost:8383}"
+    base_url: "${REPORTS_SERVER_ENDPOINT_URL:http://localhost:8383}"
     # Maximum response size. The default value set to 50 mb
-    maxResponseSize: "${MAX_RESPONSE_SIZE:52428800}" # 50MB
+    max_response_size: "${MAX_RESPONSE_SIZE:52428800}" # 50MB
+  # Timeout in milliseconds for generating report, 2 minutes by default
+  generation_timeout_ms: "${REPORT_GENERATION_TIMEOUT_MS:120000}"
   rate_limits:
     # Enable/disable reports tenant rate limits
     enabled: "${REPORTS_TENANT_RATE_LIMITS_ENABLED:false}"
@@ -1809,7 +1817,7 @@ queue:
       # Kafka properties for Notifications topics
       notifications: "${TB_QUEUE_KAFKA_NOTIFICATIONS_TOPIC_PROPERTIES:retention.ms:604800000;segment.bytes:52428800;retention.bytes:1048576000;partitions:1;min.insync.replicas:1}"
       # Kafka properties for JS Executor topics
-      js-executor: "${TB_QUEUE_KAFKA_JE_TOPIC_PROPERTIES:retention.ms:604800000;segment.bytes:52428800;retention.bytes:104857600;partitions:100;min.insync.replicas:1}"
+      js-executor: "${TB_QUEUE_KAFKA_JE_TOPIC_PROPERTIES:retention.ms:86400000;segment.bytes:52428800;retention.bytes:104857600;partitions:30;min.insync.replicas:1}"
       # Kafka properties for OTA updates topic
       ota-updates: "${TB_QUEUE_KAFKA_OTA_TOPIC_PROPERTIES:retention.ms:604800000;segment.bytes:52428800;retention.bytes:1048576000;partitions:10;min.insync.replicas:1}"
       # Kafka properties for Version Control topic
@@ -2110,6 +2118,13 @@ queue:
       poll_interval: "${TB_QUEUE_TASKS_STATS_POLL_INTERVAL_MS:500}"
       # Interval in milliseconds to process job stats
       processing_interval: "${TB_QUEUE_TASKS_STATS_PROCESSING_INTERVAL_MS:1000}"
+  report:
+    # Report service mode: 'local' or 'remote' (with tb-report microservice)
+    mode: "${TB_REPORT_SERVICE_MODE:local}"
+    # TB Report notifications topic name
+    notifications_topic: "${TB_QUEUE_REPORT_NOTIFICATIONS_TOPIC:tb_report.notifications}"
+    # Poll interval in milliseconds for TB Report queues
+    poll_interval: "${TB_QUEUE_REPORT_POLL_INTERVAL_MS:125}"
 
 # Event configuration parameters
 event:

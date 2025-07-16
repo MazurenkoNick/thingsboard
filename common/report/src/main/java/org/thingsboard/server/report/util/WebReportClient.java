@@ -1,0 +1,226 @@
+/**
+ * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
+ *
+ * Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
+ *
+ * NOTICE: All information contained herein is, and remains
+ * the property of ThingsBoard, Inc. and its suppliers,
+ * if any.  The intellectual and technical concepts contained
+ * herein are proprietary to ThingsBoard, Inc.
+ * and its suppliers and may be covered by U.S. and Foreign Patents,
+ * patents in process, and are protected by trade secret or copyright law.
+ *
+ * Dissemination of this information or reproduction of this material is strictly forbidden
+ * unless prior written permission is obtained from COMPANY.
+ *
+ * Access to the source code contained herein is hereby forbidden to anyone except current COMPANY employees,
+ * managers or contractors who have executed Confidentiality and Non-disclosure agreements
+ * explicitly covering such access.
+ *
+ * The copyright notice above does not evidence any actual or intended publication
+ * or disclosure  of  this source code, which includes
+ * information that is confidential and/or proprietary, and is a trade secret, of  COMPANY.
+ * ANY REPRODUCTION, MODIFICATION, DISTRIBUTION, PUBLIC  PERFORMANCE,
+ * OR PUBLIC DISPLAY OF OR THROUGH USE  OF THIS  SOURCE CODE  WITHOUT
+ * THE EXPRESS WRITTEN CONSENT OF COMPANY IS STRICTLY PROHIBITED,
+ * AND IN VIOLATION OF APPLICABLE LAWS AND INTERNATIONAL TREATIES.
+ * THE RECEIPT OR POSSESSION OF THIS SOURCE CODE AND/OR RELATED INFORMATION
+ * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
+ * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
+ */
+package org.thingsboard.server.report.util;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import io.netty.channel.EventLoopGroup;
+import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.handler.ssl.SslContextBuilder;
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.client.reactive.ReactorClientHttpConnector;
+import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestClientResponseException;
+import org.springframework.web.reactive.function.client.ExchangeFilterFunctions;
+import org.springframework.web.reactive.function.client.ExchangeStrategies;
+import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
+import org.thingsboard.common.util.JacksonUtil;
+import org.thingsboard.server.common.data.StringUtils;
+import org.thingsboard.server.common.data.dashboardreport.DashboardReportConfig;
+import org.thingsboard.server.common.data.dashboardreport.DashboardReportData;
+import org.thingsboard.server.common.data.exception.ThingsboardErrorCode;
+import org.thingsboard.server.common.data.exception.ThingsboardException;
+import reactor.netty.http.client.HttpClient;
+
+import javax.net.ssl.SSLException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.TimeZone;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
+
+import static org.thingsboard.server.report.util.ReportUtils.prepareReportName;
+
+@Slf4j
+@Component
+public class WebReportClient {
+
+    @Value("${reports.web_report.base_url}")
+    private String webReportServerBaseUrl;
+
+    @Value("${reports.web_report.max_response_size:52428800}")
+    private int maxResponseSize;
+
+    private EventLoopGroup eventLoopGroup;
+    private WebClient webClient;
+
+    @PostConstruct
+    public void init() {
+        try {
+            this.eventLoopGroup = new NioEventLoopGroup();
+            HttpClient httpClient = HttpClient.create()
+                    .runOn(eventLoopGroup)
+                    .secure(t -> {
+                        try {
+                            t.sslContext(SslContextBuilder.forClient().build());
+                        } catch (SSLException e) {
+                            throw new RuntimeException(e);
+                        }
+                    });
+
+            this.webClient = WebClient.builder()
+                    .filter(ExchangeFilterFunctions.limitResponseSize(maxResponseSize))
+                    .clientConnector(new ReactorClientHttpConnector(httpClient))
+                    .exchangeStrategies(ExchangeStrategies.builder()
+                            .codecs(configurer -> configurer.defaultCodecs()
+                                    .maxInMemorySize(maxResponseSize))
+                            .build())
+                    .build();
+        } catch (Exception e) {
+            log.error("Can't initialize dashboard report service due to {}", e.getMessage(), e);
+            throw new RuntimeException(e);
+        }
+    }
+
+    @PreDestroy
+    public void destroy() {
+        if (this.eventLoopGroup != null) {
+            this.eventLoopGroup.shutdownGracefully(0, 5, TimeUnit.SECONDS);
+        }
+    }
+
+    public void requestDashboardReport(DashboardReportConfig reportConfig, String reportsServerEndpointUrl,
+                                       String accessToken, long accessTokenExpiration,
+                                       Consumer<DashboardReportData> onSuccess, Consumer<Throwable> onFailure) {
+        JsonNode dashboardReportRequest = createDashboardReportRequest(reportConfig, accessToken, accessTokenExpiration, null);
+        requestDashboardReport(dashboardReportRequest, reportsServerEndpointUrl, onSuccess, onFailure);
+    }
+
+    public void requestDashboardReport(DashboardReportConfig reportConfig, String reportsServerEndpointUrl,
+                                       String accessToken, long accessTokenExpiration, Integer pageWidth,
+                                       Consumer<DashboardReportData> onSuccess, Consumer<Throwable> onFailure) {
+        JsonNode dashboardReportRequest = createDashboardReportRequest(reportConfig, accessToken, accessTokenExpiration, pageWidth);
+        requestDashboardReport(dashboardReportRequest, reportsServerEndpointUrl, onSuccess, onFailure);
+    }
+
+    public void requestDashboardReport(JsonNode dashboardReportRequest, String reportsServerEndpointUrl,
+                                       Consumer<DashboardReportData> onSuccess, Consumer<Throwable> onFailure) {
+        if (StringUtils.isEmpty(reportsServerEndpointUrl)) {
+            reportsServerEndpointUrl = this.webReportServerBaseUrl;
+        }
+        String endpointUrl = reportsServerEndpointUrl + "/dashboardReport";
+
+        byte[] requestBody = JacksonUtil.writeValueAsBytes(dashboardReportRequest);
+
+        webClient.post()
+                .uri(endpointUrl)
+                .headers(headers -> prepareHeaders(headers, requestBody))
+                .bodyValue(requestBody)
+                .retrieve()
+                .toEntity(byte[].class)
+                .subscribe(responseEntity -> {
+                    try {
+                        onSuccess.accept(extractResponse(responseEntity));
+                    } catch (Throwable t) {
+                        processError(onFailure, t);
+                    }
+                }, t -> {
+                    processError(onFailure, t);
+                });
+    }
+
+    private JsonNode createDashboardReportRequest(DashboardReportConfig reportConfig, String accessToken, long accessTokenExpiration, Integer pageWidth) {
+        String reportName = prepareReportName(reportConfig.getNamePattern(), new Date(), reportConfig.getTimezone());
+        ObjectNode dashboardReportRequest = JacksonUtil.newObjectNode();
+        dashboardReportRequest.put("baseUrl", reportConfig.getBaseUrl());
+        dashboardReportRequest.put("dashboardId", reportConfig.getDashboardId());
+        dashboardReportRequest.put("token", accessToken);
+        dashboardReportRequest.put("expiration", accessTokenExpiration);
+        dashboardReportRequest.put("name", reportName);
+        dashboardReportRequest.set("reportParams", createReportParams(reportConfig, pageWidth));
+        return dashboardReportRequest;
+    }
+
+    private JsonNode createReportParams(DashboardReportConfig reportConfig, Integer pageWidth) {
+        ObjectNode reportParams = JacksonUtil.newObjectNode();
+        reportParams.put("type", reportConfig.getType());
+        reportParams.put("state", reportConfig.getState());
+        if (!reportConfig.isUseDashboardTimewindow()) {
+            reportParams.set("timewindow", reportConfig.getTimewindow());
+        }
+        reportParams.put("timezone", reportConfig.getTimezone());
+        if (pageWidth != null) {
+            reportParams.put("pageWidth", pageWidth);
+        }
+        return reportParams;
+    }
+
+    private void processError(Consumer<Throwable> onFailure, Throwable t) {
+        if (t instanceof RestClientResponseException) {
+            onFailure.accept(new ThingsboardException(((RestClientResponseException) t).getStatusText(), ThingsboardErrorCode.GENERAL));
+        } else if (t instanceof WebClientResponseException) {
+            WebClientResponseException webClientResponseException = (WebClientResponseException) t;
+            String error = webClientResponseException.getResponseBodyAsString();
+            if (StringUtils.isBlank(error)) {
+                error = webClientResponseException.getStatusText();
+            }
+            HttpStatusCode httpStatusCode = webClientResponseException.getStatusCode();
+            HttpStatus httpStatus = HttpStatus.resolve(httpStatusCode.value());
+            ThingsboardErrorCode errorCode = ThingsboardErrorCode.GENERAL;
+            if (HttpStatus.BAD_REQUEST.equals(httpStatus)) {
+                errorCode = ThingsboardErrorCode.BAD_REQUEST_PARAMS;
+            }
+            onFailure.accept(new ThingsboardException(error, errorCode));
+        } else {
+            onFailure.accept(t);
+        }
+    }
+
+    private DashboardReportData extractResponse(ResponseEntity<byte[]> responseEntity) throws UnsupportedEncodingException {
+        DashboardReportData reportData = new DashboardReportData();
+        reportData.setData(responseEntity.getBody());
+        reportData.setContentType(responseEntity.getHeaders().getContentType().toString());
+        String disposition = responseEntity.getHeaders().getFirst(HttpHeaders.CONTENT_DISPOSITION);
+        String fileName = disposition.replaceFirst("(?i)^.*filename=\"?([^\"]+)\"?.*$", "$1");
+        fileName = URLDecoder.decode(fileName, "ISO_8859_1");
+        reportData.setName(fileName);
+        return reportData;
+    }
+
+    private void prepareHeaders(HttpHeaders headers, byte[] json) {
+        headers.setAccept(Arrays.asList(MediaType.APPLICATION_OCTET_STREAM, MediaType.ALL));
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setContentLength(json.length);
+        headers.setConnection("keep-alive");
+    }
+
+}

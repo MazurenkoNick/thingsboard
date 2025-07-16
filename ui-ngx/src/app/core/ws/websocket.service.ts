@@ -44,7 +44,7 @@ import {
   WebsocketDataMsg
 } from '@shared/models/telemetry/telemetry.models';
 import { ActionNotificationShow } from '@core/notification/notification.actions';
-import { ReportService } from '@core/http/report.service';
+import { DashboardReportService } from '@core/http/dashboard-report.service';
 import Timeout = NodeJS.Timeout;
 
 const RECONNECT_INTERVAL = 2000;
@@ -79,7 +79,7 @@ export abstract class WebsocketService<T extends WsSubscriber> implements WsServ
                         protected apiEndpoint: string,
                         protected cmdWrapper: CmdWrapper,
                         protected window: Window,
-                        protected reportService?: ReportService) {
+                        protected reportService?: DashboardReportService) {
     this.store.pipe(select(selectIsAuthenticated)).subscribe(
       () => {
         this.reset(true);

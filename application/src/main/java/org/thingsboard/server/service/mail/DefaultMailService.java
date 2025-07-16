@@ -37,6 +37,7 @@ import jakarta.annotation.PreDestroy;
 import jakarta.mail.internet.MimeMessage;
 import jakarta.mail.util.ByteArrayDataSource;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -47,7 +48,6 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
-import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.common.util.ThingsBoardExecutors;
 import org.thingsboard.rule.engine.api.MailService;
 import org.thingsboard.rule.engine.api.TbEmail;
@@ -57,7 +57,6 @@ import org.thingsboard.server.common.data.ApiFeature;
 import org.thingsboard.server.common.data.ApiUsageRecordKey;
 import org.thingsboard.server.common.data.ApiUsageRecordState;
 import org.thingsboard.server.common.data.ApiUsageStateValue;
-import org.thingsboard.server.common.data.AttributeScope;
 import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.blob.BlobEntity;
 import org.thingsboard.server.common.data.exception.RateLimitExceededException;
@@ -65,22 +64,21 @@ import org.thingsboard.server.common.data.exception.ThingsboardErrorCode;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.id.BlobEntityId;
 import org.thingsboard.server.common.data.id.CustomerId;
-import org.thingsboard.server.common.data.id.EntityId;
+import org.thingsboard.server.common.data.id.ReportId;
 import org.thingsboard.server.common.data.id.TenantId;
-import org.thingsboard.server.common.data.kv.AttributeKvEntry;
 import org.thingsboard.server.common.data.limit.LimitedApi;
+import org.thingsboard.server.common.data.report.Report;
+import org.thingsboard.server.common.data.util.CollectionsUtil;
 import org.thingsboard.server.common.stats.TbApiUsageReportClient;
-import org.thingsboard.server.dao.attributes.AttributesService;
 import org.thingsboard.server.dao.blob.BlobEntityService;
 import org.thingsboard.server.dao.exception.IncorrectParameterException;
+import org.thingsboard.server.dao.report.ReportService;
 import org.thingsboard.server.dao.settings.AdminSettingsService;
 import org.thingsboard.server.dao.wl.WhiteLabelingService;
 import org.thingsboard.server.service.apiusage.TbApiUsageStateService;
 
 import java.io.ByteArrayInputStream;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -89,12 +87,11 @@ import java.util.concurrent.TimeoutException;
 @Service
 @Slf4j
 public class DefaultMailService implements MailService {
-    public static final String MAIL_PROP = "mail.";
+
     public static final String TARGET_EMAIL = "targetEmail";
     public static final String UTF_8 = "UTF-8";
 
     private final AdminSettingsService adminSettingsService;
-    private final AttributesService attributesService;
     private final BlobEntityService blobEntityService;
     private final TbApiUsageReportClient apiUsageClient;
 
@@ -104,9 +101,6 @@ public class DefaultMailService implements MailService {
     @Autowired
     private TbApiUsageStateService apiUsageStateService;
 
-    @Value("${actors.rule.allow_system_mail_service}")
-    private boolean allowSystemMailService;
-
     @Autowired
     private MailSenderInternalExecutorService mailExecutorService;
 
@@ -114,24 +108,27 @@ public class DefaultMailService implements MailService {
     private PasswordResetExecutorService passwordResetExecutorService;
 
     @Autowired
-    private WhiteLabelingService whiteLabelingService;
-
-    @Autowired
     private TbMailContextComponent ctx;
 
     @Autowired
     private RateLimitService rateLimitService;
+
+    @Autowired
+    private ReportService reportService;
+
+    @Autowired
+    private WhiteLabelingService whiteLabelingService;
+
+    @Value("${actors.rule.allow_system_mail_service}")
+    private boolean allowSystemMailService;
 
     @Value("${mail.per_tenant_rate_limits:}")
     private String perTenantRateLimitConfig;
 
     private final ScheduledExecutorService timeoutScheduler;
 
-    private TbMailSender mailSender;
-
-    public DefaultMailService(AdminSettingsService adminSettingsService, AttributesService attributesService, BlobEntityService blobEntityService, TbApiUsageReportClient apiUsageClient) {
+    public DefaultMailService(AdminSettingsService adminSettingsService, BlobEntityService blobEntityService, TbApiUsageReportClient apiUsageClient) {
         this.adminSettingsService = adminSettingsService;
-        this.attributesService = attributesService;
         this.blobEntityService = blobEntityService;
         this.apiUsageClient = apiUsageClient;
         this.timeoutScheduler = ThingsBoardExecutors.newSingleThreadScheduledExecutor("mail-service-watchdog");
@@ -261,14 +258,15 @@ public class DefaultMailService implements MailService {
         JsonNode jsonConfig = configEntry.jsonConfig;
         if (externalMailSender || !configEntry.isSystem || apiUsageStateService.getApiUsageState(tenantId).isEmailSendEnabled()) {
             if (tenantId != null && !tenantId.isSysTenantId() && StringUtils.isNotEmpty(perTenantRateLimitConfig) &&
-                    !rateLimitService.checkRateLimit(LimitedApi.EMAILS, (Object) tenantId, perTenantRateLimitConfig)) {
+                !rateLimitService.checkRateLimit(LimitedApi.EMAILS, (Object) tenantId, perTenantRateLimitConfig)) {
                 throw new RateLimitExceededException(LimitedApi.EMAILS);
             }
             String mailFrom = getStringValue(jsonConfig, "mailFrom");
             try {
                 MimeMessage mailMsg = javaMailSender.createMimeMessage();
-                boolean multipart = (tbEmail.getImages() != null && !tbEmail.getImages().isEmpty())
-                        || (tbEmail.getAttachments() != null && !tbEmail.getAttachments().isEmpty());
+                boolean multipart = MapUtils.isNotEmpty(tbEmail.getImages())
+                                    || CollectionsUtil.isNotEmpty(tbEmail.getAttachments())
+                                    || CollectionsUtil.isNotEmpty(tbEmail.getReports());
                 MimeMessageHelper helper = new MimeMessageHelper(mailMsg, multipart, "UTF-8");
                 helper.setFrom(StringUtils.isBlank(tbEmail.getFrom()) ? mailFrom : tbEmail.getFrom());
                 helper.setTo(tbEmail.getTo().split("\\s*,\\s*"));
@@ -290,7 +288,6 @@ public class DefaultMailService implements MailService {
                         }
                     }
                 }
-
                 if (tbEmail.getImages() != null) {
                     for (String imgId : tbEmail.getImages().keySet()) {
                         String imgValue = tbEmail.getImages().get(imgId);
@@ -299,6 +296,16 @@ public class DefaultMailService implements MailService {
                         String contentType = helper.getFileTypeMap().getContentType(imgId);
                         InputStreamSource iss = () -> new ByteArrayInputStream(bytes);
                         helper.addInline(imgId, iss, contentType);
+                    }
+                }
+                if (tbEmail.getReports() != null) {
+                    for (ReportId reportId : tbEmail.getReports()) {
+                        Report report = reportService.findReportById(tenantId, reportId);
+                        if (report != null) {
+                            byte[] data = reportService.getReportData(tenantId, reportId);
+                            DataSource dataSource = new ByteArrayDataSource(data, report.getFormat().getContentType());
+                            helper.addAttachment(report.getName(), dataSource);
+                        }
                     }
                 }
                 sendMailWithTimeout(javaMailSender, helper.getMimeMessage(), timeout);
@@ -527,7 +534,6 @@ public class DefaultMailService implements MailService {
         }
     }
 
-
     private JsonNode getConfig(TenantId tenantId, String key) throws ThingsboardException {
         return getConfig(tenantId, key, true).jsonConfig;
     }
@@ -537,14 +543,9 @@ public class DefaultMailService implements MailService {
             JsonNode jsonConfig = null;
             boolean isSystem = false;
             if (tenantId != null && !tenantId.isNullUid()) {
-                String jsonString = getEntityAttributeValue(tenantId, tenantId, key);
-                if (!StringUtils.isEmpty(jsonString)) {
-                    try {
-                        jsonConfig = JacksonUtil.toJsonNode(jsonString);
-                    } catch (Exception e) {
-                    }
-                }
-                if (jsonConfig != null) {
+                AdminSettings adminSettings = adminSettingsService.findAdminSettingsByTenantIdAndKey(tenantId, key);
+                if (adminSettings != null) {
+                    jsonConfig = adminSettings.getJsonValue();
                     JsonNode useSystemMailSettingsNode = jsonConfig.get("useSystemMailSettings");
                     if (useSystemMailSettingsNode == null || useSystemMailSettingsNode.asBoolean()) {
                         jsonConfig = null;
@@ -570,18 +571,7 @@ public class DefaultMailService implements MailService {
         }
     }
 
-    private String getEntityAttributeValue(TenantId tenantId, EntityId entityId, String key) throws Exception {
-        List<AttributeKvEntry> attributeKvEntries =
-                attributesService.find(tenantId, entityId, AttributeScope.SERVER_SCOPE, Arrays.asList(key)).get();
-        if (attributeKvEntries != null && !attributeKvEntries.isEmpty()) {
-            AttributeKvEntry kvEntry = attributeKvEntries.get(0);
-            return kvEntry.getValueAsString();
-        } else {
-            return "";
-        }
-    }
-
-    class ConfigEntry {
+    private static class ConfigEntry {
 
         JsonNode jsonConfig;
         boolean isSystem;

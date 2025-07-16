@@ -42,5 +42,7 @@ public abstract class EntitySearchQueryFilter implements EntityFilter {
     private EntitySearchDirection direction;
     private int maxLevel;
     private boolean fetchLastLevelOnly;
+    private boolean rootStateEntity;
+    private EntityId defaultStateEntity;
 
 }

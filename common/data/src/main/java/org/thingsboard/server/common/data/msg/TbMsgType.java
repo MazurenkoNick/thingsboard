@@ -115,7 +115,7 @@ public enum TbMsgType {
             .filter(tbMsgType -> !tbMsgType.isTellSelfOnly())
             .map(TbMsgType::getRuleNodeConnection)
             .filter(connection -> !TbNodeConnectionType.OTHER.equals(connection))
-            .collect(Collectors.toUnmodifiableList());
+            .toList();
 
     @Getter
     private final String ruleNodeConnection;

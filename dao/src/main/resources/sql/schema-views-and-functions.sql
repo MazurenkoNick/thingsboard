@@ -43,6 +43,13 @@ SELECT created_time, id, tenant_id, name, type, debug_settings, enabled, is_remo
                  LIMIT 1) END) as status
 FROM integration i;
 
+DROP VIEW IF EXISTS report_template_info_view CASCADE;
+CREATE OR REPLACE VIEW report_template_info_view as
+SELECT r.*,
+       c.title as owner_name
+FROM report_template r
+         LEFT JOIN customer c ON c.id = r.customer_id;
+
 DROP VIEW IF EXISTS dashboard_info_view CASCADE;
 CREATE OR REPLACE VIEW dashboard_info_view as
 SELECT d.*, c.title as owner_name,
@@ -564,3 +571,35 @@ BEGIN
         END LOOP;
 END
 $$;
+
+DROP VIEW IF EXISTS scheduled_reports_info_view CASCADE;
+CREATE OR REPLACE VIEW scheduled_reports_info_view AS
+SELECT se.*,
+    c.title AS customer_title,
+    cfg.report_template_id AS report_template_id,
+    rt.name AS report_template_name,
+    cfg.user_id AS user_id,
+    u.email AS user_name
+FROM
+    scheduler_event se
+        LEFT JOIN LATERAL (
+        SELECT
+            (se.configuration::json #>>'{reportTemplateId,id}')::uuid AS report_template_id,
+            (se.configuration::json #>>'{userId,id}')::uuid AS user_id
+        ) cfg ON true
+        LEFT JOIN report_template rt ON rt.id = cfg.report_template_id
+        LEFT JOIN tb_user u ON u.id = cfg.user_id
+        LEFT JOIN customer c ON c.id = se.customer_id
+WHERE se.type = 'generateReport';
+
+DROP VIEW IF EXISTS report_info_view CASCADE;
+CREATE OR REPLACE VIEW report_info_view AS
+SELECT r.*,
+    c.title AS customer_title,
+    rt.name AS report_template_name,
+    u.email AS user_name
+FROM
+    report r
+        LEFT JOIN report_template rt ON rt.id = r.template_id
+        LEFT JOIN tb_user u ON u.id = r.user_id
+        LEFT JOIN customer c ON c.id = r.customer_id;

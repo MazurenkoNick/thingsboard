@@ -52,18 +52,23 @@ export const exportableEntityTypes: Array<EntityType> = [
   EntityType.WIDGETS_BUNDLE,
   EntityType.CONVERTER,
   EntityType.INTEGRATION,
+  EntityType.REPORT_TEMPLATE,
   EntityType.ROLE,
   EntityType.TB_RESOURCE,
-  EntityType.NOTIFICATION_TEMPLATE,
-  EntityType.NOTIFICATION_TARGET,
-  EntityType.NOTIFICATION_RULE
-];
-
-export const entityTypesWithoutRelatedData: Set<EntityType | AliasEntityType> = new Set([
+  EntityType.OTA_PACKAGE,
   EntityType.NOTIFICATION_TEMPLATE,
   EntityType.NOTIFICATION_TARGET,
   EntityType.NOTIFICATION_RULE,
-  EntityType.TB_RESOURCE
+  EntityType.SCHEDULER_EVENT
+];
+
+export const entityTypesWithoutRelatedData = new Set<EntityType | AliasEntityType>([
+  EntityType.NOTIFICATION_TEMPLATE,
+  EntityType.NOTIFICATION_TARGET,
+  EntityType.NOTIFICATION_RULE,
+  EntityType.TB_RESOURCE,
+  EntityType.OTA_PACKAGE,
+  EntityType.SCHEDULER_EVENT
 ]);
 
 export interface VersionCreateConfig {

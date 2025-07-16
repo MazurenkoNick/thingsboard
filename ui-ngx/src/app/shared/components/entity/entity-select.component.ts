@@ -41,6 +41,7 @@ import { Operation } from '@shared/models/security.models';
 import { NULL_UUID } from '@shared/models/id/has-uuid';
 import { coerceBoolean } from '@shared/decorators/coercion';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { MatFormFieldAppearance } from '@angular/material/form-field';
 
 @Component({
   selector: 'tb-entity-select',
@@ -76,6 +77,9 @@ export class EntitySelectComponent implements ControlValueAccessor, OnInit, Afte
 
   @Input()
   additionEntityTypes: {[entityType in string]: string} = {};
+
+  @Input()
+  appearance: MatFormFieldAppearance = 'fill';
 
   displayEntityTypeSelect: boolean;
 

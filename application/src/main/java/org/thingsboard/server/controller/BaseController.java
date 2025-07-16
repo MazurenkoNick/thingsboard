@@ -129,6 +129,8 @@ import org.thingsboard.server.common.data.id.NotificationTargetId;
 import org.thingsboard.server.common.data.id.OAuth2ClientId;
 import org.thingsboard.server.common.data.id.OtaPackageId;
 import org.thingsboard.server.common.data.id.QueueId;
+import org.thingsboard.server.common.data.id.ReportId;
+import org.thingsboard.server.common.data.id.ReportTemplateId;
 import org.thingsboard.server.common.data.id.RoleId;
 import org.thingsboard.server.common.data.id.RpcId;
 import org.thingsboard.server.common.data.id.RuleChainId;
@@ -142,8 +144,8 @@ import org.thingsboard.server.common.data.id.UUIDBased;
 import org.thingsboard.server.common.data.id.UserId;
 import org.thingsboard.server.common.data.id.WidgetTypeId;
 import org.thingsboard.server.common.data.id.WidgetsBundleId;
-import org.thingsboard.server.common.data.job.Job;
 import org.thingsboard.server.common.data.integration.Integration;
+import org.thingsboard.server.common.data.job.Job;
 import org.thingsboard.server.common.data.menu.CustomMenu;
 import org.thingsboard.server.common.data.menu.CustomMenuInfo;
 import org.thingsboard.server.common.data.mobile.app.MobileApp;
@@ -164,6 +166,9 @@ import org.thingsboard.server.common.data.plugin.ComponentType;
 import org.thingsboard.server.common.data.query.EntityDataSortOrder;
 import org.thingsboard.server.common.data.query.EntityKey;
 import org.thingsboard.server.common.data.queue.Queue;
+import org.thingsboard.server.common.data.report.Report;
+import org.thingsboard.server.common.data.report.ReportTemplate;
+import org.thingsboard.server.common.data.report.ReportTemplateInfo;
 import org.thingsboard.server.common.data.role.Role;
 import org.thingsboard.server.common.data.role.RoleType;
 import org.thingsboard.server.common.data.rpc.Rpc;
@@ -201,8 +206,8 @@ import org.thingsboard.server.dao.exception.IncorrectParameterException;
 import org.thingsboard.server.dao.group.EntityGroupService;
 import org.thingsboard.server.dao.grouppermission.GroupPermissionService;
 import org.thingsboard.server.dao.integration.IntegrationService;
-import org.thingsboard.server.dao.menu.CustomMenuService;
 import org.thingsboard.server.dao.job.JobService;
+import org.thingsboard.server.dao.menu.CustomMenuService;
 import org.thingsboard.server.dao.mobile.MobileAppBundleService;
 import org.thingsboard.server.dao.mobile.MobileAppService;
 import org.thingsboard.server.dao.model.ModelConstants;
@@ -213,6 +218,8 @@ import org.thingsboard.server.dao.ota.DeviceGroupOtaPackageService;
 import org.thingsboard.server.dao.ota.OtaPackageService;
 import org.thingsboard.server.dao.queue.QueueService;
 import org.thingsboard.server.dao.relation.RelationService;
+import org.thingsboard.server.dao.report.ReportService;
+import org.thingsboard.server.dao.report.ReportTemplateService;
 import org.thingsboard.server.dao.resource.ResourceService;
 import org.thingsboard.server.dao.role.RoleService;
 import org.thingsboard.server.dao.rpc.RpcService;
@@ -238,6 +245,7 @@ import org.thingsboard.server.service.action.EntityActionService;
 import org.thingsboard.server.service.component.ComponentDiscoveryService;
 import org.thingsboard.server.service.edge.EdgeLicenseService;
 import org.thingsboard.server.service.entitiy.TbLogEntityActionService;
+import org.thingsboard.server.service.entitiy.ota.group.TbDeviceGroupOtaPackageService;
 import org.thingsboard.server.service.entitiy.user.TbUserSettingsService;
 import org.thingsboard.server.service.ota.OtaPackageStateService;
 import org.thingsboard.server.service.profile.TbAssetProfileCache;
@@ -392,6 +400,12 @@ public abstract class BaseController {
     protected BlobEntityService blobEntityService;
 
     @Autowired
+    protected ReportTemplateService reportTemplateService;
+
+    @Autowired
+    protected ReportService reportService;
+
+    @Autowired
     protected AuditLogService auditLogService;
 
     @Autowired
@@ -438,6 +452,9 @@ public abstract class BaseController {
 
     @Autowired
     protected DeviceGroupOtaPackageService deviceGroupOtaPackageService;
+
+    @Autowired
+    protected TbDeviceGroupOtaPackageService tbDeviceGroupOtaPackageService;
 
     @Autowired
     protected RpcService rpcService;
@@ -943,6 +960,7 @@ public abstract class BaseController {
                 case MOBILE_APP_BUNDLE -> checkMobileAppBundleId(new MobileAppBundleId(entityId.getId()), operation);
                 case CALCULATED_FIELD -> checkCalculatedFieldId(new CalculatedFieldId(entityId.getId()), operation);
                 case SECRET -> checkSecretId(new SecretId(entityId.getId()), operation);
+                case REPORT_TEMPLATE -> checkReportTemplateInfoId(new ReportTemplateId(entityId.getId()), operation);
                 default -> (HasId<? extends EntityId>) checkEntityId(entityId, entitiesService::findEntityByTenantIdAndId, operation);
             };
         } catch (Exception e) {
@@ -1129,6 +1147,18 @@ public abstract class BaseController {
 
     BlobEntityWithCustomerInfo checkBlobEntityInfoId(BlobEntityId blobEntityId, Operation operation) throws ThingsboardException {
         return checkEntityId(blobEntityId, blobEntityService::findBlobEntityWithCustomerInfoById, operation);
+    }
+
+    ReportTemplate checkReportTemplateId(ReportTemplateId reportTemplateId, Operation operation) throws ThingsboardException {
+        return checkEntityId(reportTemplateId, reportTemplateService::findReportTemplateById, operation);
+    }
+
+    ReportTemplateInfo checkReportTemplateInfoId(ReportTemplateId reportTemplateId, Operation operation) throws ThingsboardException {
+        return checkEntityId(reportTemplateId, reportTemplateService::findReportTemplateInfoById, operation);
+    }
+
+    Report checkReportId(ReportId reportId, Operation operation) throws ThingsboardException {
+        return checkEntityId(reportId, reportService::findReportById, operation);
     }
 
     protected RuleNode checkRuleNode(RuleNodeId ruleNodeId, Operation operation) throws ThingsboardException {

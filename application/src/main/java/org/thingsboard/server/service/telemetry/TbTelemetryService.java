@@ -35,6 +35,8 @@ import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.kv.Aggregation;
 import org.thingsboard.server.common.data.kv.IntervalType;
+import org.thingsboard.server.common.data.kv.ReadTsKvQuery;
+import org.thingsboard.server.common.data.kv.ReadTsKvQueryResult;
 import org.thingsboard.server.common.data.kv.TsKvEntry;
 import org.thingsboard.server.service.security.model.SecurityUser;
 
@@ -55,4 +57,7 @@ public interface TbTelemetryService {
                                                    Boolean useStrictDataTypes,
                                                    SecurityUser currentUser) throws ThingsboardException;
 
+    ListenableFuture<List<ReadTsKvQueryResult>> getTimeseriesByReadQueries(EntityId entityId,
+                                                                           List<ReadTsKvQuery> queries,
+                                                                           SecurityUser currentUser);
 }

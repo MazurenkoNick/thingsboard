@@ -68,11 +68,15 @@ public class TopicService {
     @Value("${queue.integration.notifications-topic:tb_integration_executor.notifications}")
     private String tbIntegrationExecutorNotificationsTopic;
 
+    @Value("${queue.report.notifications_topic:tb_report.notifications}")
+    private String tbReportNotificationsTopic;
+
     private final ConcurrentMap<String, TopicPartitionInfo> tbCoreNotificationTopics = new ConcurrentHashMap<>();
     private final ConcurrentMap<String, TopicPartitionInfo> tbRuleEngineNotificationTopics = new ConcurrentHashMap<>();
     private final ConcurrentMap<String, TopicPartitionInfo> tbEdgeNotificationTopics = new ConcurrentHashMap<>();
     private final ConcurrentMap<String, TopicPartitionInfo> tbCalculatedFieldNotificationTopics = new ConcurrentHashMap<>();
     private final ConcurrentMap<String, TopicPartitionInfo> tbIntegrationExecutorNotificationTopics = new ConcurrentHashMap<>();
+    private final ConcurrentMap<String, TopicPartitionInfo> tbReportNotificationTopics = new ConcurrentHashMap<>();
     private final ConcurrentReferenceHashMap<EdgeId, TopicPartitionInfo> tbEdgeEventsNotificationTopics = new ConcurrentReferenceHashMap<>();
 
     /**
@@ -91,6 +95,8 @@ public class TopicService {
             case TB_TRANSPORT -> buildNotificationsTopicPartitionInfo(tbTransportNotificationsTopic, serviceId);
             case TB_INTEGRATION_EXECUTOR -> tbIntegrationExecutorNotificationTopics.computeIfAbsent(serviceId,
                     id -> buildNotificationsTopicPartitionInfo(tbIntegrationExecutorNotificationsTopic, serviceId));
+            case TB_REPORT -> tbReportNotificationTopics.computeIfAbsent(serviceId,
+                    id -> buildNotificationsTopicPartitionInfo(tbReportNotificationsTopic, serviceId));
             default -> throw new IllegalStateException("Unexpected service type: " + serviceType);
         };
     }
@@ -137,9 +143,9 @@ public class TopicService {
     public String buildConsumerGroupId(String servicePrefix, TenantId tenantId, String queueName, Integer partitionId) {
         return this.buildTopicName(
                 servicePrefix + queueName
-                        + (tenantId.isSysTenantId() ? "" : ("-isolated-" + tenantId))
-                        + "-consumer"
-                        + suffix(partitionId));
+                + (tenantId.isSysTenantId() ? "" : ("-isolated-" + tenantId))
+                + "-consumer"
+                + suffix(partitionId));
     }
 
     String suffix(Integer partitionId) {

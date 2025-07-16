@@ -88,44 +88,57 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 export class DatasourceComponent implements ControlValueAccessor, OnInit, Validator {
 
   public get basicMode(): boolean {
-    return !this.widgetConfigComponent.widgetEditMode && this.widgetConfigComponent.widgetConfigMode === WidgetConfigMode.basic;
+    return this.datasourcesComponent?.basicMode ||
+        (!this.widgetConfigComponent?.widgetEditMode && this.widgetConfigComponent?.widgetConfigMode === WidgetConfigMode.basic);
   }
 
   public get widgetType(): widgetType {
-    return this.widgetConfigComponent.widgetType;
+    return this.widgetConfigComponent?.widgetType || this.datasourcesComponent?.widgetType;
+  }
+
+  public get allowFunctions(): boolean {
+    if (this.datasourcesComponent) {
+      return this.datasourcesComponent.allowFunctions;
+    } else {
+      return true;
+    }
   }
 
   public get aliasController(): IAliasController {
-    return this.widgetConfigComponent.aliasController;
+    return this.widgetConfigComponent?.aliasController || this.datasourcesComponent?.aliasController;
   }
 
   public get entityAliasSelectCallbacks(): EntityAliasSelectCallbacks {
-    return this.widgetConfigComponent.widgetConfigCallbacks;
+    return this.widgetConfigComponent?.widgetConfigCallbacks || this.datasourcesComponent?.callbacks;
   }
 
   public get filterSelectCallbacks(): FilterSelectCallbacks {
-    return this.widgetConfigComponent.widgetConfigCallbacks;
+    return this.widgetConfigComponent?.widgetConfigCallbacks || this.datasourcesComponent?.callbacks;
   }
 
   public get callbacks(): WidgetConfigCallbacks {
-    return this.widgetConfigComponent.widgetConfigCallbacks;
+    return this.widgetConfigComponent?.widgetConfigCallbacks|| this.datasourcesComponent?.callbacks;
   }
 
   public get dataKeysCallbacks(): DataKeysCallbacks {
-    return this.widgetConfigComponent.widgetConfigCallbacks;
+    return this.widgetConfigComponent?.widgetConfigCallbacks || this.datasourcesComponent?.callbacks;
   }
 
   public get hasAdditionalLatestDataKeys(): boolean {
-    return this.widgetConfigComponent.widgetType === widgetType.timeseries &&
-      this.widgetConfigComponent.modelValue?.typeParameters?.hasAdditionalLatestDataKeys && !this.hideLatestDataKeys;
+    return this.widgetType === widgetType.timeseries &&
+      this.widgetConfigComponent?.modelValue?.typeParameters?.hasAdditionalLatestDataKeys && !this.hideLatestDataKeys;
   }
 
   public get dataKeysOptional(): boolean {
-    return this.widgetConfigComponent.modelValue?.typeParameters?.dataKeysOptional;
+    return this.widgetConfigComponent?.modelValue?.typeParameters?.dataKeysOptional;
   }
 
   public get datasourcesOptional(): boolean {
-    return this.widgetConfigComponent.modelValue?.typeParameters?.datasourcesOptional;
+    return this.widgetConfigComponent?.modelValue?.typeParameters?.datasourcesOptional || this.datasourcesComponent?.datasourcesOptional;
+  }
+
+  public get datasources(): Datasource[] {
+    return this.datasourcesComponent?.datasources;
   }
 
   public get entityAliasOptional(): boolean {
@@ -134,39 +147,39 @@ export class DatasourceComponent implements ControlValueAccessor, OnInit, Valida
   }
 
   public get maxDataKeys(): number {
-    return this.widgetConfigComponent.modelValue?.typeParameters?.maxDataKeys;
+    return this.widgetConfigComponent?.modelValue?.typeParameters?.maxDataKeys;
   }
 
   public get dataKeySettingsForm(): FormProperty[] {
-    return this.widgetConfigComponent.modelValue?.dataKeySettingsForm;
+    return this.widgetConfigComponent?.modelValue?.dataKeySettingsForm;
   }
 
   public get dataKeySettingsDirective(): string {
-    return this.widgetConfigComponent.modelValue?.dataKeySettingsDirective;
+    return this.widgetConfigComponent?.modelValue?.dataKeySettingsDirective;
   }
 
   public get latestDataKeySettingsForm(): FormProperty[] {
-    return this.widgetConfigComponent.modelValue?.latestDataKeySettingsForm;
+    return this.widgetConfigComponent?.modelValue?.latestDataKeySettingsForm;
   }
 
   public get latestDataKeySettingsDirective(): string {
-    return this.widgetConfigComponent.modelValue?.latestDataKeySettingsDirective;
+    return this.widgetConfigComponent?.modelValue?.latestDataKeySettingsDirective;
   }
 
   public get dataKeySettingsFunction(): DataKeySettingsFunction {
-    return this.widgetConfigComponent.modelValue?.dataKeySettingsFunction;
+    return this.widgetConfigComponent?.modelValue?.dataKeySettingsFunction;
   }
 
   public get supportsUnitConversion(): boolean {
-    return this.widgetConfigComponent.modelValue?.typeParameters?.supportsUnitConversion ?? false;
+    return this.widgetConfigComponent?.modelValue?.typeParameters?.supportsUnitConversion ?? false;
   }
 
   public get dashboard(): Dashboard {
-    return this.widgetConfigComponent.dashboard;
+    return this.widgetConfigComponent?.dashboard;
   }
 
   public get widget(): Widget {
-    return this.widgetConfigComponent.widget;
+    return this.widgetConfigComponent?.widget;
   }
 
   public get hideDatasourceLabel(): boolean {
@@ -175,6 +188,10 @@ export class DatasourceComponent implements ControlValueAccessor, OnInit, Valida
 
   public get displayDatasourceFilterForBasicMode(): boolean {
     return this.datasourcesComponent?.displayDatasourceFilterForBasicMode;
+  }
+
+  public get reportMode(): boolean {
+    return this.datasourcesComponent?.reportMode;
   }
 
   public get hideDataKeyLabel(): boolean {
@@ -225,6 +242,7 @@ export class DatasourceComponent implements ControlValueAccessor, OnInit, Valida
   constructor(private fb: UntypedFormBuilder,
               @Optional()
               private datasourcesComponent: DatasourcesComponent,
+              @Optional()
               private widgetConfigComponent: WidgetConfigComponent,
               private destroyRef: DestroyRef) {
   }
@@ -252,11 +270,12 @@ export class DatasourceComponent implements ControlValueAccessor, OnInit, Valida
   }
 
   ngOnInit() {
-    if (this.widgetConfigComponent.functionsOnly) {
+    if (this.widgetConfigComponent?.functionsOnly) {
       this.datasourceTypes = [DatasourceType.function];
     } else {
-      this.datasourceTypes = [DatasourceType.function, DatasourceType.device, DatasourceType.entity];
-      if (this.widgetConfigComponent.widgetType === widgetType.latest) {
+      this.datasourceTypes = this.allowFunctions ? [DatasourceType.function] : [];
+      this.datasourceTypes.push(DatasourceType.device, DatasourceType.entity);
+      if (this.widgetType === widgetType.latest) {
         this.datasourceTypes.push(DatasourceType.entityCount);
         this.datasourceTypes.push(DatasourceType.alarmCount);
       }
@@ -327,6 +346,11 @@ export class DatasourceComponent implements ControlValueAccessor, OnInit, Valida
   }
 
   private datasourceUpdated(datasource: Datasource) {
+    if (datasource.type !== DatasourceType.device) {
+      delete datasource.deviceId;
+    } else {
+      delete datasource.entityAliasId;
+    }
     this.propagateChange(datasource);
   }
 
