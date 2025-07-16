@@ -6226,6 +6226,7 @@
         "credentials-pem": "PEM",
         "credentials-pem-hint": "At least Server CA certificate file or a pair of Client certificate and Client private key files are required",
         "credentials-sas": "Shared Access Signature",
+        "secret-placeholder-hint": "You can inject a secret using the placeholder <code><span style=\"color: #000;\">$&#123;</span>secret:name;type:type<span style=\"color: #000;\">&#125;</span></code>, where 'name' is the secret identifier and 'type' is either TEXT or TEXT_FILE. This is useful in rule node configuration fields that don't support 'Use Secret' directly. Example: <code><span style=\"color: #000;\">$&#123;</span>secret:Header;type:TEXT<span style=\"color: #000;\">&#125;</span></code>",
         "sas-key": "SAS Key",
         "sas-key-required": "SAS Key is required.",
         "hostname": "Hostname",
