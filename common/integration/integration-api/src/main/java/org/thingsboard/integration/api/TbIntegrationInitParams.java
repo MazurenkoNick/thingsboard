@@ -36,9 +36,6 @@ import org.thingsboard.integration.api.converter.TBDownlinkDataConverter;
 import org.thingsboard.integration.api.converter.TBUplinkDataConverter;
 import org.thingsboard.server.common.data.integration.Integration;
 
-/**
- * Created by ashvayka on 05.12.17.
- */
 @Data
 @AllArgsConstructor
 public class TbIntegrationInitParams {

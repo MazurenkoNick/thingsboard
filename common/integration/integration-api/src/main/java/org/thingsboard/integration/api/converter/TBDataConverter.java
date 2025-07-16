@@ -32,9 +32,6 @@ package org.thingsboard.integration.api.converter;
 
 import org.thingsboard.server.common.data.converter.Converter;
 
-/**
- * Created by ashvayka on 02.12.17.
- */
 public interface TBDataConverter {
 
     void init(Converter configuration);

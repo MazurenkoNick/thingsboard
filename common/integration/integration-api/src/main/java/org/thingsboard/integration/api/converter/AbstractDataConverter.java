@@ -43,9 +43,6 @@ import org.thingsboard.server.common.data.script.ScriptLanguage;
 
 import static org.thingsboard.integration.api.util.ConvertUtil.toDebugMessage;
 
-/**
- * Created by ashvayka on 18.12.17.
- */
 @Slf4j
 public abstract class AbstractDataConverter implements TBDataConverter {
 

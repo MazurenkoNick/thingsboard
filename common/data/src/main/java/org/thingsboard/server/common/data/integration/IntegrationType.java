@@ -47,7 +47,6 @@ public enum IntegrationType {
     AWS_IOT(true),
     AWS_SQS(true),
     AWS_KINESIS(false),
-    IBM_WATSON_IOT(true),
     TTN(true),
     TTI(true),
     AZURE_EVENT_HUB(true),

@@ -41,9 +41,6 @@ import org.thingsboard.integration.api.util.ConvertUtil;
 
 import java.nio.charset.StandardCharsets;
 
-/**
- * Created by ashvayka on 04.12.17.
- */
 @Data
 public class BasicMqttIntegrationMsg implements MqttIntegrationMsg {
 

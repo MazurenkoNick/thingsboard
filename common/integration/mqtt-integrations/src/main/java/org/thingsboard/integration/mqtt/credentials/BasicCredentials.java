@@ -36,9 +36,6 @@ import org.thingsboard.mqtt.MqttClientConfig;
 
 import java.util.Optional;
 
-/**
- * Created by ashvayka on 23.01.17.
- */
 @Data
 public class BasicCredentials implements MqttClientCredentials {
 
