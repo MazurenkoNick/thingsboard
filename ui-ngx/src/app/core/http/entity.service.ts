@@ -131,6 +131,9 @@ import { OAuth2Service } from '@core/http/oauth2.service';
 import { MobileAppService } from '@core/http/mobile-app.service';
 import { PlatformType } from '@shared/models/oauth2.models';
 import { DomainService } from '@core/http/domain.service';
+import { ReportTemplateService } from '@core/http/report-template.service';
+import { ReportTemplate, ReportTemplateQuery, ReportTemplateType } from '@shared/models/report.models';
+import { ReportService } from './report.service';
 
 @Injectable({
   providedIn: 'root'
@@ -160,6 +163,8 @@ export class EntityService {
     private integrationService: IntegrationService,
     private schedulerEventService: SchedulerEventService,
     private blobEntityService: BlobEntityService,
+    private reportTemplateService: ReportTemplateService,
+    private reportService: ReportService,
     private roleService: RoleService,
     private entityGroupService: EntityGroupService,
     private userPermissionsService: UserPermissionsService,
@@ -223,6 +228,16 @@ export class EntityService {
         break;
       case EntityType.BLOB_ENTITY:
         observable = this.blobEntityService.getBlobEntityInfo(entityId, config);
+        break;
+      case EntityType.REPORT_TEMPLATE:
+        if (config && config.loadEntityDetails) {
+          observable = this.reportTemplateService.getReportTemplate(entityId, config);
+        } else {
+          observable = this.reportTemplateService.getReportTemplateInfo(entityId, config);
+        }
+        break;
+      case EntityType.REPORT:
+        observable = this.reportService.getReport(entityId, config);
         break;
       case EntityType.ROLE:
         observable = this.roleService.getRole(entityId, config);
@@ -302,6 +317,12 @@ export class EntityService {
       case EntityType.SCHEDULER_EVENT:
         observable = this.schedulerEventService.saveSchedulerEvent(entity as SchedulerEvent, config);
         break;
+      case EntityType.REPORT_TEMPLATE:
+        observable = this.reportTemplateService.saveReportTemplate(entity as ReportTemplate, config);
+        break;
+      case EntityType.REPORT:
+        console.error('Save Report Entity is not implemented!');
+        break;
       case EntityType.ROLE:
         observable = this.roleService.saveRole(entity as Role, config);
         break;
@@ -374,7 +395,7 @@ export class EntityService {
     }
   }
 
-  /*private getEntitiesByIdsObservable(fetchEntityFunction: (entityId: string) => Observable<BaseData<EntityId>>,
+  private getEntitiesByIdsObservable(fetchEntityFunction: (entityId: string) => Observable<BaseData<EntityId>>,
                                      entityIds: Array<string>): Observable<Array<BaseData<EntityId>>> {
     const tasks: Observable<BaseData<EntityId>>[] = [];
     entityIds.forEach((entityId) => {
@@ -394,7 +415,7 @@ export class EntityService {
         }
       })
     );
-  }*/
+  }
 
 
   private getEntitiesObservable(entityType: EntityType, entityIds: Array<string>,
@@ -445,6 +466,14 @@ export class EntityService {
         break;
       case EntityType.BLOB_ENTITY:
         observable = this.blobEntityService.getBlobEntitiesByIds(entityIds, config);
+        break;
+      case EntityType.REPORT_TEMPLATE:
+        observable = this.reportTemplateService.getReportTemplatesByIds(entityIds, config);
+        break;
+      case EntityType.REPORT:
+        observable = this.getEntitiesByIdsObservable(
+          (id) => this.reportService.getReport(id, config),
+          entityIds);
         break;
       case EntityType.ROLE:
         observable = this.roleService.getRolesByIds(entityIds, config);
@@ -606,6 +635,18 @@ export class EntityService {
       case EntityType.BLOB_ENTITY:
         pageLink.sortOrder.property = 'name';
         entitiesObservable = this.blobEntityService.getBlobEntities(pageLink as TimePageLink, null, config);
+        break;
+      case EntityType.REPORT_TEMPLATE:
+        pageLink.sortOrder.property = 'name';
+        const typeList = subType ? [subType as ReportTemplateType] : null;
+        const reportTemplateQuery = new ReportTemplateQuery(pageLink, {
+          typeList
+        });
+        entitiesObservable = this.reportTemplateService.getAllReportTemplateInfos(reportTemplateQuery, config);
+        break;
+      case EntityType.REPORT:
+        pageLink.sortOrder.property = 'name';
+        entitiesObservable = this.reportService.getReports(pageLink, config);
         break;
       case EntityType.ROLE:
         pageLink.sortOrder.property = 'name';
@@ -1016,6 +1057,8 @@ export class EntityService {
         entityTypes.push(EntityType.INTEGRATION);
         entityTypes.push(EntityType.SCHEDULER_EVENT);
         entityTypes.push(EntityType.BLOB_ENTITY);
+        entityTypes.push(EntityType.REPORT_TEMPLATE);
+        entityTypes.push(EntityType.REPORT);
         entityTypes.push(EntityType.ROLE);
         if (authState.edgesSupportEnabled) {
           entityTypes.push(EntityType.EDGE);
@@ -1036,6 +1079,8 @@ export class EntityService {
         entityTypes.push(EntityType.USER);
         entityTypes.push(EntityType.SCHEDULER_EVENT);
         entityTypes.push(EntityType.BLOB_ENTITY);
+        entityTypes.push(EntityType.REPORT_TEMPLATE);
+        entityTypes.push(EntityType.REPORT);
         if (authState.edgesSupportEnabled) {
           entityTypes.push(EntityType.EDGE);
         }
@@ -1118,6 +1163,7 @@ export class EntityService {
       case EntityType.CONVERTER:
       case EntityType.INTEGRATION:
       case EntityType.BLOB_ENTITY:
+      case EntityType.REPORT_TEMPLATE:
       case EntityType.ROLE:
         entityFieldKeys.push(entityFields.name.keyName);
         entityFieldKeys.push(entityFields.type.keyName);
@@ -1127,6 +1173,7 @@ export class EntityService {
         entityFieldKeys.push(entityFields.type.keyName);
         break;
       case EntityType.API_USAGE_STATE:
+      case EntityType.REPORT:
         entityFieldKeys.push(entityFields.name.keyName);
         break;
       case EntityType.SCHEDULER_EVENT:

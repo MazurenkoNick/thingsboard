@@ -56,7 +56,7 @@
               {{ 'filter.duplicate-filter' | translate }}
             </mat-error>
           </mat-form-field>
-          <section class="tb-editable-switch flex flex-col items-center justify-start">
+          <section *ngIf="!disableUserEdit" class="tb-editable-switch flex flex-col items-center justify-start">
             <label class="tb-small editable-label" translate>filter.editable</label>
             <mat-slide-toggle class="editable-switch"
                               formControlName="editable">
@@ -64,6 +64,7 @@
           </section>
         </div>
         <tb-key-filter-list
+          [displayUserParameters]="!disableUserEdit"
           formControlName="keyFilters">
         </tb-key-filter-list>
       </div>

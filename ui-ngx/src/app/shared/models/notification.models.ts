@@ -580,7 +580,8 @@ export enum NotificationType {
   TASK_PROCESSING_FAILURE = 'TASK_PROCESSING_FAILURE',
   RESOURCES_SHORTAGE = 'RESOURCES_SHORTAGE',
   USER_ACTIVATED = 'USER_ACTIVATED',
-  USER_REGISTERED = 'USER_REGISTERED'
+  USER_REGISTERED = 'USER_REGISTERED',
+  REPORT_GENERATED = 'REPORT_GENERATED'
 }
 
 export const NotificationTypeIcons = new Map<NotificationType, string | null>([
@@ -594,7 +595,8 @@ export const NotificationTypeIcons = new Map<NotificationType, string | null>([
   [NotificationType.API_USAGE_LIMIT, 'insert_chart'],
   [NotificationType.INTEGRATION_LIFECYCLE_EVENT, 'integration_instructions'],
   [NotificationType.TASK_PROCESSING_FAILURE, 'warning'],
-  [NotificationType.RESOURCES_SHORTAGE, 'warning']
+  [NotificationType.RESOURCES_SHORTAGE, 'warning'],
+  [NotificationType.REPORT_GENERATED, 'description']
 ]);
 
 export const AlarmSeverityNotificationColors = new Map<AlarmSeverity, string>(
@@ -735,6 +737,12 @@ export const NotificationTemplateTypeTranslateMap = new Map<NotificationType, No
     {
       name: 'notification.template-type.resources-shortage',
       helpId: 'notification/resources_shortage'
+    }
+  ],
+  [NotificationType.REPORT_GENERATED,
+    {
+      name: 'notification.template-type.report-generated',
+      helpId: 'notification/report_generated'   // TODO: add help doc
     }
   ]
 ]);

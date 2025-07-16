@@ -56,6 +56,7 @@ export class TbWebReportPage {
     private session: CDPSession;
     private currentBaseUrl: string;
     private lastReportResult: ReportResultMessage | null;
+    private pageWidth = 1920;
     private pageHeight = 1080;
 
     private crushed = false;
@@ -79,7 +80,7 @@ export class TbWebReportPage {
             deviceScaleFactor: 1,
             isMobile: false,
             viewport: {
-                width: 1920,
+                width: this.pageWidth,
                 height: this.pageHeight
             }
         }
@@ -165,7 +166,16 @@ export class TbWebReportPage {
         let buffer: Buffer;
         try {
 
-            await this.setPageHeight(1080);
+            let pageWidth = 1920;
+            let pageHeight = 1080;
+            if (request.pageWidth) {
+                const scale = pageWidth / request.pageWidth;
+                pageWidth = request.pageWidth;
+                pageHeight = Math.round(pageHeight / scale);
+                this.logger.info('Requested Dashboard page size: %s x %s.', pageWidth, pageHeight);
+            }
+
+            await this.setPageSize(pageWidth, pageHeight);
 
             await this.openReport(request);
             if (dashboardIdleWaitTime > 0) {
@@ -173,7 +183,7 @@ export class TbWebReportPage {
             }
 
             if (request.type === 'pdf') {
-                buffer = await this.page.pdf({printBackground: true, width: '1920px', height: this.pageHeight + 'px'});
+                buffer = await this.page.pdf({printBackground: true, width: this.pageWidth + 'px', height: this.pageHeight + 'px'});
             } else {
                 const options: PageScreenshotOptions = {omitBackground: false, fullPage: true, type: request.type};
                 if (request.type === 'jpeg') {
@@ -211,8 +221,8 @@ export class TbWebReportPage {
             throw new Error(result.error);
         }
 
-        const newHeight = result.pageHeight ?? 1080;
-        await this.setPageHeight(newHeight);
+        const newHeight = result.pageHeight ?? this.pageHeight;
+        await this.setPageSize(this.pageWidth, newHeight);
 
         const waitWidgetsMessage: WaitWidgetsMessage = {
             timeout: loadDashboardResourcesTimeout
@@ -267,11 +277,12 @@ export class TbWebReportPage {
         );
     }
 
-    async setPageHeight(height: number): Promise<void> {
-        if (this.pageHeight !== height) {
+    async setPageSize(width: number, height: number): Promise<void> {
+        if (this.pageWidth !== width || this.pageHeight !== height) {
+            this.pageWidth = width;
             this.pageHeight = height;
             await this.page.setViewportSize({
-                width: 1920,
+                width: this.pageWidth,
                 height: this.pageHeight
             });
         }

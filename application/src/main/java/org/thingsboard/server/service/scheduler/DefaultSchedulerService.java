@@ -40,6 +40,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.thingsboard.common.util.JacksonUtil;
+import org.thingsboard.rule.engine.api.JobManager;
 import org.thingsboard.server.cluster.TbClusterService;
 import org.thingsboard.server.common.data.Device;
 import org.thingsboard.server.common.data.DeviceProfile;
@@ -53,8 +54,11 @@ import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.OtaPackageId;
 import org.thingsboard.server.common.data.id.SchedulerEventId;
 import org.thingsboard.server.common.data.id.TenantId;
+import org.thingsboard.server.common.data.job.Job;
+import org.thingsboard.server.common.data.msg.TbMsgType;
 import org.thingsboard.server.common.data.ota.DeviceGroupOtaPackage;
 import org.thingsboard.server.common.data.page.PageDataIterable;
+import org.thingsboard.server.common.data.report.ReportConfig;
 import org.thingsboard.server.common.data.scheduler.SchedulerEvent;
 import org.thingsboard.server.common.data.scheduler.SchedulerEventInfo;
 import org.thingsboard.server.common.msg.TbMsg;
@@ -94,6 +98,7 @@ import java.util.concurrent.TimeUnit;
 
 import static java.util.Collections.emptyList;
 import static org.thingsboard.server.common.data.DataConstants.EXPIRATION_TIME;
+import static org.thingsboard.server.common.data.DataConstants.GENERATE_REPORT;
 import static org.thingsboard.server.common.data.DataConstants.TIMEOUT;
 import static org.thingsboard.server.common.data.DataConstants.UPDATE_FIRMWARE;
 import static org.thingsboard.server.common.data.DataConstants.UPDATE_SOFTWARE;
@@ -120,6 +125,7 @@ public class DefaultSchedulerService extends AbstractPartitionBasedService<Tenan
     private final DeviceGroupOtaPackageService deviceGroupOtaPackageService;
     private final OtaPackageService otaPackageService;
     private final TbServiceInfoProvider serviceInfoProvider;
+    private final JobManager jobManager;
 
     private final ConcurrentMap<TenantId, List<SchedulerEventId>> tenantEvents = new ConcurrentHashMap<>();
     private final ConcurrentMap<SchedulerEventId, SchedulerEventMetaData> eventsMetaData = new ConcurrentHashMap<>();
@@ -324,16 +330,27 @@ public class DefaultSchedulerService extends AbstractPartitionBasedService<Tenan
                                 throw new RuntimeException("Not implemented!");
                         }
                     }
-                    TbMsgMetaData tbMsgMD = getTbMsgMetaData(event, configuration);
-                    TbMsg tbMsg = TbMsg.newMsg()
-                            .type(msgType)
-                            .originator(originatorId)
-                            .metaData(tbMsgMD)
-                            .dataType(TbMsgDataType.JSON)
-                            .data(getMsgBody(event.getConfiguration()))
-                            .build();
-                    log.debug("pushing message to the rule engine tenant {}, originator {}, msg {}", tenantId, originatorId, tbMsg);
-                    clusterService.pushMsgToRuleEngine(tenantId, originatorId, tbMsg, null);
+                    if (GENERATE_REPORT.equals(event.getType())) {
+                        ReportConfig reportConfig = JacksonUtil.treeToValue(configuration, ReportConfig.class);
+                        jobManager.submitJob(Job.newReportJob().tenantId(tenantId)
+                                .reportTemplateId(reportConfig.getReportTemplateId())
+                                .userId(reportConfig.getUserId())
+                                .timezone(reportConfig.getTimezone())
+                                .recipientId(reportConfig.getRecipientId())
+                                .notificationTemplateId(reportConfig.getNotificationTemplateId())
+                                .build());
+                    } else {
+                        TbMsgMetaData tbMsgMD = getTbMsgMetaData(event, configuration);
+                        TbMsg tbMsg = TbMsg.newMsg()
+                                .type(msgType)
+                                .originator(originatorId)
+                                .metaData(tbMsgMD)
+                                .dataType(TbMsgDataType.JSON)
+                                .data(getMsgBody(event.getConfiguration()))
+                                .build();
+                        log.debug("pushing message to the rule engine tenant {}, originator {}, msg {}", tenantId, originatorId, tbMsg);
+                        clusterService.pushMsgToRuleEngine(tenantId, originatorId, tbMsg, null);
+                    }
                 } catch (Exception e) {
                     log.error(String.format("[%s][%s] Failed to trigger event", event.getTenantId(), eventId), e);
                 }
@@ -352,7 +369,10 @@ public class DefaultSchedulerService extends AbstractPartitionBasedService<Tenan
     }
 
     private String getMsgType(SchedulerEvent event, JsonNode configuration) {
-        return (configuration.has("msgType") && !configuration.get("msgType").isNull()) ? configuration.get("msgType").asText() : event.getType();
+        String msgType = (configuration.has("msgType") && !configuration.get("msgType").isNull())
+                ? configuration.get("msgType").asText()
+                : event.getType();
+        return msgType.equals("generateDashboardReport") ? TbMsgType.generateReport.name() : msgType; // for backward compatibility with rule node msg type
     }
 
     private TbMsgMetaData getTbMsgMetaData(SchedulerEvent event, JsonNode configuration) throws JsonProcessingException {

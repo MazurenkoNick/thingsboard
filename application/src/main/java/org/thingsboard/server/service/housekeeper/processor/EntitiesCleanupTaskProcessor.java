@@ -56,13 +56,14 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static org.thingsboard.server.common.data.EntityType.BLOB_ENTITY;
+import static org.thingsboard.server.common.data.EntityType.REPORT;
 
 @Component
 @RequiredArgsConstructor
 @Slf4j
 public class EntitiesCleanupTaskProcessor extends HousekeeperTaskProcessor<EntitiesCleanupHousekeeperTask> {
 
-    private final EntityType[] typesWithTtl = {BLOB_ENTITY};
+    private final EntityType[] typesWithTtl = {BLOB_ENTITY, REPORT};
 
     private final EntityDaoRegistry entityDaoRegistry;
     private final TenantProfileService tenantProfileService;
@@ -130,6 +131,7 @@ public class EntitiesCleanupTaskProcessor extends HousekeeperTaskProcessor<Entit
         var configuration = tenantProfile.getDefaultProfileConfiguration();
         var ttlDays = switch (entityType) {
             case BLOB_ENTITY -> configuration.getBlobEntityTtlDays();
+            case REPORT -> configuration.getReportTtlDays();
             default -> 0;
         };
         return TimeUnit.DAYS.toMillis(ttlDays);

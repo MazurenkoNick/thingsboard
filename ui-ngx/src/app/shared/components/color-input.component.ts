@@ -95,6 +95,10 @@ export class ColorInputComponent extends PageComponent implements OnInit, Contro
 
   @Input()
   @coerceBoolean()
+  disableAlpha = false;
+
+  @Input()
+  @coerceBoolean()
   openOnInput = false;
 
   @Input()
@@ -129,7 +133,6 @@ export class ColorInputComponent extends PageComponent implements OnInit, Contro
 
   constructor(protected store: Store<AppState>,
               private dialogs: DialogService,
-              private translate: TranslateService,
               private popoverService: TbPopoverService,
               private renderer: Renderer2,
               private viewContainerRef: ViewContainerRef,
@@ -193,7 +196,7 @@ export class ColorInputComponent extends PageComponent implements OnInit, Contro
     $event.stopPropagation();
     if (!this.disabled && !this.readonly) {
       this.dialogs.colorPicker(this.colorFormGroup.get('color').value,
-        this.colorClearButton, this.useThemePalette).subscribe(
+        this.colorClearButton, this.useThemePalette, this.disableAlpha).subscribe(
         (result) => {
           if (!result?.canceled) {
             this.colorFormGroup.patchValue(
@@ -225,6 +228,7 @@ export class ColorInputComponent extends PageComponent implements OnInit, Contro
             color: this.colorFormGroup.get('color').value,
             colorClearButton: this.colorClearButton,
             useThemePalette: this.useThemePalette,
+            disableAlpha: this.disableAlpha,
             colorCancelButton: true
           },
           showCloseButton: false,

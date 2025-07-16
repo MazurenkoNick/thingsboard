@@ -44,7 +44,7 @@ import { MatIconRegistry } from '@angular/material/icon';
 import { selectUserReady } from '@core/auth/auth.selectors';
 import { filter, skip, tap } from 'rxjs/operators';
 import { AuthService } from '@core/auth/auth.service';
-import { ReportService } from '@core/http/report.service';
+import { DashboardReportService } from '@core/http/dashboard-report.service';
 import { svgIcons, svgIconsUrl } from '@shared/models/icon.models';
 import { ActionSettingsChangeLanguage } from '@core/settings/settings.actions';
 import { SETTINGS_KEY } from '@core/settings/settings.effects';
@@ -64,7 +64,7 @@ export class AppComponent {
               private matIconRegistry: MatIconRegistry,
               private domSanitizer: DomSanitizer,
               private authService: AuthService,
-              private reportService: ReportService) {
+              private reportService: DashboardReportService) {
 
     if (!env.production) {
       console.log(`ThingsBoard Version: ${env.tbVersion}`);

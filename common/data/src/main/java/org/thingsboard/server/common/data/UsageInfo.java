@@ -61,5 +61,7 @@ public class UsageInfo {
     private Boolean smsEnabled;
     private long alarms;
     private long maxAlarms;
+    private long reports;
+    private long maxReports;
 
 }

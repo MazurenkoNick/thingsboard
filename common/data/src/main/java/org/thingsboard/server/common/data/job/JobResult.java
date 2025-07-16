@@ -47,6 +47,7 @@ import java.util.List;
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "jobType")
 @JsonSubTypes({
         @Type(name = "CF_REPROCESSING", value = CfReprocessingJobResult.class),
+        @Type(name = "REPORT", value = ReportJobResult.class),
         @Type(name = "DUMMY", value = DummyJobResult.class)
 })
 @Data

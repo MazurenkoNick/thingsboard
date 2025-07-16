@@ -57,6 +57,7 @@ public class ApiUsageState extends BaseData<ApiUsageStateId> implements TenantEn
     private ApiUsageStateValue emailExecState;
     private ApiUsageStateValue smsExecState;
     private ApiUsageStateValue alarmExecState;
+    private ApiUsageStateValue reportExecState;
     private Long version;
 
     public ApiUsageState() {
@@ -79,6 +80,7 @@ public class ApiUsageState extends BaseData<ApiUsageStateId> implements TenantEn
         this.emailExecState = ur.getEmailExecState();
         this.smsExecState = ur.getSmsExecState();
         this.alarmExecState = ur.getAlarmExecState();
+        this.reportExecState = ur.getReportExecState();
         this.version = ur.getVersion();
     }
 
@@ -112,6 +114,10 @@ public class ApiUsageState extends BaseData<ApiUsageStateId> implements TenantEn
 
     public boolean isAlarmCreationEnabled() {
         return alarmExecState != ApiUsageStateValue.DISABLED;
+    }
+
+    public boolean isReportCreationEnabled() {
+        return reportExecState != ApiUsageStateValue.DISABLED;
     }
 
     @Override

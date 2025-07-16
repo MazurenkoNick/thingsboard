@@ -85,6 +85,7 @@ import org.thingsboard.server.queue.TbQueueCallback;
 import org.thingsboard.server.service.scheduler.SchedulerService;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 @Slf4j
@@ -97,7 +98,7 @@ public class EntityStateSourcingListener {
     private final EdgeSynchronizationManager edgeSynchronizationManager;
     private final JobManager jobManager;
     private final SecretService secretService;
-    private final SchedulerService schedulerService;
+    private final Optional<SchedulerService> schedulerService;
 
     @PostConstruct
     public void init() {
@@ -200,9 +201,9 @@ public class EntityStateSourcingListener {
             case SCHEDULER_EVENT -> {
                 SchedulerEvent schedulerEvent = (SchedulerEvent) event.getEntity();
                 if (isCreated) {
-                    schedulerService.onSchedulerEventAdded(schedulerEvent);
+                    schedulerService.ifPresent(service -> service.onSchedulerEventAdded(schedulerEvent));
                 } else {
-                    schedulerService.onSchedulerEventUpdated(schedulerEvent);
+                    schedulerService.ifPresent(service -> service.onSchedulerEventUpdated(schedulerEvent));
                 }
             }
             default -> {}
@@ -286,7 +287,7 @@ public class EntityStateSourcingListener {
                 }
             }
             case SCHEDULER_EVENT -> {
-                schedulerService.onSchedulerEventDeleted((SchedulerEvent) event.getEntity());
+                schedulerService.ifPresent(service -> service.onSchedulerEventDeleted((SchedulerEvent) event.getEntity()));
             }
             default -> {}
         }

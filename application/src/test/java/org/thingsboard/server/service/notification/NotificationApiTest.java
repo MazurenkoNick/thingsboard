@@ -796,12 +796,12 @@ public class NotificationApiTest extends AbstractNotificationApiTest {
         NotificationRequest successfulNotificationRequest = submitNotificationRequest(List.of(notificationTarget.getId()), notificationTemplate.getId(), 0);
         await().atMost(2, TimeUnit.SECONDS)
                 .until(() -> findNotificationRequest(successfulNotificationRequest.getId()).isSent());
-        verify(slackService).sendMessage(eq(tenantId), eq(slackToken), eq(conversationId), eq(slackNotificationTemplate.getBody()));
+        verify(slackService).sendMessage(eq(tenantId), eq(slackToken), eq(conversationId), eq(slackNotificationTemplate.getBody()), eq(null));
         NotificationRequestStats stats = getStats(successfulNotificationRequest.getId());
         assertThat(stats.getSent().get(NotificationDeliveryMethod.SLACK)).hasValue(1);
 
         String errorMessage = "Error!!!";
-        doThrow(new RuntimeException(errorMessage)).when(slackService).sendMessage(any(), any(), any(), any());
+        doThrow(new RuntimeException(errorMessage)).when(slackService).sendMessage(any(), any(), any(), any(), any());
         NotificationRequest failedNotificationRequest = submitNotificationRequest(List.of(notificationTarget.getId()), notificationTemplate.getId(), 0);
         await().atMost(2, TimeUnit.SECONDS)
                 .until(() -> findNotificationRequest(failedNotificationRequest.getId()).isSent());

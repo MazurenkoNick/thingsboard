@@ -72,6 +72,10 @@ export class AlarmAssigneeSelectComponent implements OnInit, ControlValueAccesso
   @Input()
   userMode = false;
 
+  @coerceBoolean()
+  @Input()
+  disableAssignedToCurrentUserOption = false;
+
   assigneeFormGroup: UntypedFormGroup;
   assignee?: User | UserEmailInfo;
   assigneeOption?: AlarmAssigneeOption;
@@ -221,7 +225,8 @@ export class AlarmAssigneeSelectComponent implements OnInit, ControlValueAccesso
           useValue: {
             assigneeId: this.assignee?.id?.id,
             assigneeOption: this.assigneeOption,
-            userMode: this.userMode
+            userMode: this.userMode,
+            disableAssignedToCurrentUserOption: this.disableAssignedToCurrentUserOption
           } as AlarmAssigneeSelectPanelData
         },
         {

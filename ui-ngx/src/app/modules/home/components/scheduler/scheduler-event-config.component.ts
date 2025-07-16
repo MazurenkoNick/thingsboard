@@ -218,13 +218,14 @@ export class SchedulerEventConfigComponent implements ControlValueAccessor, OnIn
       if (schedulerEventConfig) {
         if (this.useDefinedTemplate) {
           const configuration = schedulerEventConfig.configuration;
-          if (!configuration.originatorId) {
+          delete configuration.msgBody;
+          if (!this.showOriginator) {
             delete configuration.originatorId;
           }
-          if (!configuration.msgType) {
+          if (!this.showMsgType) {
             delete configuration.msgType;
           }
-          if (!configuration.metadata) {
+          if (!this.showMetadata) {
             delete configuration.metadata;
           }
           delete schedulerEventConfig.configuration;
