@@ -55,6 +55,7 @@ public class ReportTask extends Task<ReportTaskResult> {
 
     private String timezone;
     private UserId userId;
+    private EntityId userOwnerId;
     private String accessToken;
     private long accessTokenExpirationTs;
 

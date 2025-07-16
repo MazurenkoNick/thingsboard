@@ -30,19 +30,58 @@
  */
 package org.thingsboard.server.common.data.query;
 
-import lombok.Data;
+import org.thingsboard.server.common.data.EntityType;
+import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.EntityId;
-import org.thingsboard.server.common.data.relation.EntitySearchDirection;
+import org.thingsboard.server.common.data.id.EntityIdFactory;
 
-@Data
-public abstract class EntitySearchQueryFilter implements EntityFilter {
+import java.util.UUID;
 
-    private AliasEntityId rootEntity;
-    private String relationType;
-    private EntitySearchDirection direction;
-    private int maxLevel;
-    private boolean fetchLastLevelOnly;
-    private boolean rootStateEntity;
-    private AliasEntityId defaultStateEntity;
+class AliasEntityIdImpl implements AliasEntityId {
 
+    private UUID id;
+    private EntityType entityType;
+    private AliasEntityType aliasEntityType;
+    private EntityId defaultEntityId;
+
+    protected AliasEntityIdImpl(EntityId entityId) {
+        this.id = entityId.getId();
+        this.entityType = entityId.getEntityType();
+    }
+
+    protected AliasEntityIdImpl(AliasEntityType aliasEntityType, UUID id) {
+        this.aliasEntityType = aliasEntityType;
+        if (id != null) {
+            switch (this.aliasEntityType) {
+                case CURRENT_CUSTOMER:
+                    this.defaultEntityId = new CustomerId(id);
+                    break;
+            }
+        }
+    }
+
+    @Override
+    public AliasEntityType getAliasEntityType() {
+        return aliasEntityType;
+    }
+
+    @Override
+    public EntityId defaultEntityId() {
+        return defaultEntityId;
+    }
+
+    @Override
+    public EntityId toEntityId() {
+        return EntityIdFactory.getByTypeAndUuid(entityType, id);
+    }
+
+    @Override
+    public UUID getId() {
+        return id;
+    }
+
+    @Override
+    public EntityType getEntityType() {
+        return entityType;
+    }
 }

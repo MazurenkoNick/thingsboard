@@ -41,6 +41,6 @@ public class StateEntityFilter implements EntityFilter {
         return EntityFilterType.STATE_ENTITY;
     }
 
-    private EntityId defaultStateEntity;
+    private AliasEntityId defaultStateEntity;
 
 }

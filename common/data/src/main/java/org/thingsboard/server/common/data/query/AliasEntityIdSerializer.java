@@ -30,19 +30,26 @@
  */
 package org.thingsboard.server.common.data.query;
 
-import lombok.Data;
-import org.thingsboard.server.common.data.id.EntityId;
-import org.thingsboard.server.common.data.relation.EntitySearchDirection;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.JsonSerializer;
+import com.fasterxml.jackson.databind.SerializerProvider;
 
-@Data
-public abstract class EntitySearchQueryFilter implements EntityFilter {
+import java.io.IOException;
 
-    private AliasEntityId rootEntity;
-    private String relationType;
-    private EntitySearchDirection direction;
-    private int maxLevel;
-    private boolean fetchLastLevelOnly;
-    private boolean rootStateEntity;
-    private AliasEntityId defaultStateEntity;
-
+public class AliasEntityIdSerializer extends JsonSerializer<AliasEntityId> {
+    @Override
+    public void serialize(AliasEntityId value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
+        gen.writeStartObject();
+        String entityType;
+        if (value.isAliasEntityId()) {
+            entityType = value.getAliasEntityType().name();
+        } else {
+            entityType = value.getEntityType().name();
+        }
+        gen.writeStringField("entityType", entityType);
+        if (value.getId() != null) {
+            gen.writeStringField("id", value.getId().toString());
+        }
+        gen.writeEndObject();
+    }
 }

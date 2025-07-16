@@ -35,7 +35,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
-import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.rule.engine.api.NotificationCenter;
 import org.thingsboard.rule.engine.mail.TbMsgToEmailNode;
 import org.thingsboard.server.actors.ActorSystemContext;
@@ -43,6 +42,7 @@ import org.thingsboard.server.cluster.TbClusterService;
 import org.thingsboard.server.common.data.ApiUsageRecordKey;
 import org.thingsboard.server.common.data.exception.ApiUsageLimitsExceededException;
 import org.thingsboard.server.common.data.id.TenantId;
+import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.job.Job;
 import org.thingsboard.server.common.data.job.JobStatus;
 import org.thingsboard.server.common.data.job.JobType;
@@ -52,7 +52,6 @@ import org.thingsboard.server.common.data.job.task.ReportTask;
 import org.thingsboard.server.common.data.job.task.ReportTaskResult;
 import org.thingsboard.server.common.data.job.task.Task;
 import org.thingsboard.server.common.data.job.task.TaskResult;
-import org.thingsboard.server.common.data.msg.TbMsgType;
 import org.thingsboard.server.common.data.msg.TbNodeConnectionType;
 import org.thingsboard.server.common.data.notification.NotificationRequest;
 import org.thingsboard.server.common.data.notification.NotificationRequestConfig;
@@ -71,6 +70,7 @@ import org.thingsboard.server.queue.discovery.PartitionService;
 import org.thingsboard.server.service.apiusage.TbApiUsageStateService;
 import org.thingsboard.server.service.job.JobProcessor;
 import org.thingsboard.server.service.security.model.token.AccessJwtToken;
+import org.thingsboard.server.service.security.permission.OwnersCacheService;
 import org.thingsboard.server.service.security.system.SystemSecurityService;
 
 import java.util.Base64;
@@ -92,6 +92,7 @@ public class ReportJobProcessor implements JobProcessor {
     private final NotificationCenter notificationCenter;
     private final TbClusterService clusterService;
     private final PartitionService partitionService;
+    private final OwnersCacheService ownersCacheService;
     @Lazy
     private final ActorSystemContext actorSystemContext;
     private final TbApiUsageStateService apiUsageStateService;
@@ -109,6 +110,7 @@ public class ReportJobProcessor implements JobProcessor {
         }
         ReportTemplate reportTemplate = reportTemplateService.findReportTemplateById(job.getTenantId(), configuration.getReportTemplateId());
         AccessJwtToken accessToken = systemSecurityService.createUserAccessToken(job.getTenantId(), configuration.getUserId());
+        EntityId userOwnerId = ownersCacheService.getOwner(job.getTenantId(), configuration.getUserId());
 
         ReportTask task = ReportTask.builder()
                 .tenantId(job.getTenantId())
@@ -119,6 +121,7 @@ public class ReportJobProcessor implements JobProcessor {
                 .reportTemplateConfig(reportTemplate.getConfiguration())
                 .timezone(configuration.getTimezone())
                 .userId(configuration.getUserId())
+                .userOwnerId(userOwnerId)
                 .originator(configuration.getOriginator())
                 .accessToken(accessToken.getToken())
                 .accessTokenExpirationTs(accessToken.getClaims().getExpiration().getTime())

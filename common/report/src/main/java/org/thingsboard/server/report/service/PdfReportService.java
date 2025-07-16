@@ -314,26 +314,25 @@ public class PdfReportService extends AbstractReportService {
     }
 
     private ComponentData buildSingleComponentData(int usablePageWidthPx, TbReportCtx ctx, DataSource dataSource, EntityId stateEntityId) {
-        ReportTemplateConfig configuration = ctx.getConfiguration();
         return switch (dataSource.getType()) {
             case DEVICE, ENTITY -> new ComponentData(usablePageWidthPx, dataSource, collectEntityDatas(ctx, dataSource, stateEntityId));
-            case ENTITY_COUNT -> buildEntityCountDataSource(usablePageWidthPx, ctx, dataSource, configuration);
-            case ALARM_COUNT -> buildAlarmCountDataSource(usablePageWidthPx, ctx, dataSource, configuration);
+            case ENTITY_COUNT -> buildEntityCountDataSource(usablePageWidthPx, ctx, dataSource);
+            case ALARM_COUNT -> buildAlarmCountDataSource(usablePageWidthPx, ctx, dataSource);
             default -> throw new IllegalArgumentException("Unknown data source type: " + dataSource.getType());
         };
     }
 
-    private ComponentData buildEntityCountDataSource(int usablePageWidthPx, TbReportCtx ctx, DataSource dataSource, ReportTemplateConfig configuration) {
+    private ComponentData buildEntityCountDataSource(int usablePageWidthPx, TbReportCtx ctx, DataSource dataSource) {
         Map<String, Object> map = new HashMap<>();
         String label = resolveSingleLabel(dataSource, "count");
-        map.put(label, dataService.countEntitiesByQuery(toEntityCountQuery(dataSource, configuration), ctx));
+        map.put(label, dataService.countEntitiesByQuery(toEntityCountQuery(dataSource, ctx), ctx));
         return new ComponentData(usablePageWidthPx, map);
     }
 
-    private ComponentData buildAlarmCountDataSource(int usablePageWidthPx, TbReportCtx ctx, DataSource dataSource, ReportTemplateConfig configuration) {
+    private ComponentData buildAlarmCountDataSource(int usablePageWidthPx, TbReportCtx ctx, DataSource dataSource) {
         Map<String, Object> map = new HashMap<>();
         String label = resolveSingleLabel(dataSource, "count");
-        map.put(label, dataService.countAlarmsByQuery(toAlarmCountQuery(dataSource, configuration), ctx));
+        map.put(label, dataService.countAlarmsByQuery(toAlarmCountQuery(dataSource, ctx), ctx));
         return new ComponentData(usablePageWidthPx, map);
     }
 

@@ -30,19 +30,29 @@
  */
 package org.thingsboard.server.common.data.query;
 
-import lombok.Data;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import io.swagger.v3.oas.annotations.media.Schema;
 import org.thingsboard.server.common.data.id.EntityId;
-import org.thingsboard.server.common.data.relation.EntitySearchDirection;
 
-@Data
-public abstract class EntitySearchQueryFilter implements EntityFilter {
+@JsonDeserialize(using = AliasEntityIdDeserializer.class)
+@JsonSerialize(using = AliasEntityIdSerializer.class)
+@Schema
+public interface AliasEntityId extends EntityId {
 
-    private AliasEntityId rootEntity;
-    private String relationType;
-    private EntitySearchDirection direction;
-    private int maxLevel;
-    private boolean fetchLastLevelOnly;
-    private boolean rootStateEntity;
-    private AliasEntityId defaultStateEntity;
+    AliasEntityType getAliasEntityType();
 
+    EntityId defaultEntityId();
+
+    EntityId toEntityId();
+
+    @JsonIgnore
+    default boolean isAliasEntityId() {
+        return getAliasEntityType() != null;
+    }
+
+    static AliasEntityId fromEntityId(EntityId entityId) {
+        return new AliasEntityIdImpl(entityId);
+    }
 }
