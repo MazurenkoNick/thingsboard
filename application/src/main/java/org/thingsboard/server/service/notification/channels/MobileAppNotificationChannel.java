@@ -52,7 +52,6 @@ import org.thingsboard.server.common.data.notification.settings.NotificationSett
 import org.thingsboard.server.common.data.notification.template.MobileAppDeliveryMethodNotificationTemplate;
 import org.thingsboard.server.dao.notification.NotificationService;
 import org.thingsboard.server.dao.notification.NotificationSettingsService;
-import org.thingsboard.server.dao.secret.SecretConfigurationService;
 import org.thingsboard.server.dao.user.UserService;
 import org.thingsboard.server.service.notification.NotificationProcessingContext;
 
@@ -109,6 +108,7 @@ public class MobileAppNotificationChannel implements NotificationChannel<User, M
         }
 
         MobileAppNotificationDeliveryMethodConfig config = ctx.getDeliveryMethodConfig(MOBILE_APP);
+        String credentials = config.getFirebaseServiceAccountCredentials();
         Set<String> validTokens = new HashSet<>(mobileSessions.keySet());
 
         String subject = processedTemplate.getSubject();
@@ -117,7 +117,7 @@ public class MobileAppNotificationChannel implements NotificationChannel<User, M
         int unreadCount = notificationService.countUnreadNotificationsByRecipientId(ctx.getTenantId(), MOBILE_APP, recipient.getId());
         for (String token : mobileSessions.keySet()) {
             try {
-                firebaseService.sendMessage(ctx.getTenantId(), config.getFirebaseServiceAccountCredentials(), token, subject, body, data, unreadCount);
+                firebaseService.sendMessage(ctx.getTenantId(), credentials, token, subject, body, data, unreadCount);
             } catch (FirebaseMessagingException e) {
                 MessagingErrorCode errorCode = e.getMessagingErrorCode();
                 if (errorCode == MessagingErrorCode.UNREGISTERED || errorCode == MessagingErrorCode.INVALID_ARGUMENT || errorCode == MessagingErrorCode.SENDER_ID_MISMATCH) {

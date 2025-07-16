@@ -40,9 +40,6 @@ import com.google.api.client.auth.oauth2.TokenResponse;
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.gson.GsonFactory;
-import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.MoreExecutors;
 import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -355,8 +352,7 @@ public class AdminController extends BaseController {
     public DeferredResult<RepositorySettings> saveRepositorySettings(@RequestBody RepositorySettings settings) throws ThingsboardException {
         accessControlService.checkPermission(getCurrentUser(), Resource.VERSION_CONTROL, Operation.WRITE);
         settings.setLocalOnly(false); // only to be used in tests
-        ListenableFuture<RepositorySettings> future = versionControlService.saveVersionControlSettings(getTenantId(), settings);
-        return wrapFuture(Futures.transform(future, savedSettings -> savedSettings, MoreExecutors.directExecutor()), vcRequestTimeout);
+        return wrapFuture(versionControlService.saveVersionControlSettings(getTenantId(), settings), vcRequestTimeout);
     }
 
     @ApiOperation(value = "Delete repository settings (deleteRepositorySettings)",

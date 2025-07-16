@@ -101,8 +101,8 @@ public class EntityStateSourcingListener {
     private final JobManager jobManager;
     private final SecretService secretService;
     private final Optional<SchedulerService> schedulerService;
-    private final GitVersionControlQueueService gitServiceQueue;
-    private final EntitiesVersionControlService versionControlService;
+    private final Optional<GitVersionControlQueueService> gitServiceQueue;
+    private final Optional<EntitiesVersionControlService> versionControlService;
 
     @PostConstruct
     public void init() {
@@ -202,12 +202,12 @@ public class EntityStateSourcingListener {
                 entities.forEach((type, entityInfos) -> {
                     if (type == EntityType.RULE_CHAIN || type == EntityType.INTEGRATION) {
                         entityInfos.forEach(entityInfo -> tbClusterService.broadcastEntityStateChangeEvent(tenantId, entityInfo.getId(), lifecycleEvent));
-                    } else if (type == EntityType.ADMIN_SETTINGS) {
+                    } else if (type == EntityType.ADMIN_SETTINGS && gitServiceQueue.isPresent() && versionControlService.isPresent()) {
                         entityInfos.stream()
                                 .filter(entityInfo -> DefaultTbRepositorySettingsService.SETTINGS_KEY.equals(entityInfo.getName())).findFirst()
                                 .ifPresent(entityInfo -> {
-                                    var vcSettings = versionControlService.getVersionControlSettings(tenantId);
-                                    gitServiceQueue.initRepository(tenantId, vcSettings);
+                                    var vcSettings = versionControlService.get().getVersionControlSettings(tenantId);
+                                    gitServiceQueue.get().initRepository(tenantId, vcSettings);
                                 });
                     }
                 });

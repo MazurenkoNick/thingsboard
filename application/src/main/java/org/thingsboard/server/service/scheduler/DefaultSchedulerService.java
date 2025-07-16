@@ -104,16 +104,12 @@ import static org.thingsboard.server.common.data.DataConstants.UPDATE_FIRMWARE;
 import static org.thingsboard.server.common.data.DataConstants.UPDATE_SOFTWARE;
 import static org.thingsboard.server.dao.scheduler.BaseSchedulerEventService.getOriginatorId;
 
-/**
- * Created by ashvayka on 25.06.18.
- */
 @TbCoreComponent
 @Service
 @Slf4j
 @RequiredArgsConstructor
 public class DefaultSchedulerService extends AbstractPartitionBasedService<TenantId> implements SchedulerService {
-    @Value("${server.rest.server_side_rpc.min_timeout:5000}")
-    protected long minTimeout;
+
     private final TenantService tenantService;
     private final TbClusterService clusterService;
     private final PartitionService partitionService;
@@ -126,6 +122,9 @@ public class DefaultSchedulerService extends AbstractPartitionBasedService<Tenan
     private final OtaPackageService otaPackageService;
     private final TbServiceInfoProvider serviceInfoProvider;
     private final JobManager jobManager;
+
+    @Value("${server.rest.server_side_rpc.min_timeout:5000}")
+    protected long minTimeout;
 
     private final ConcurrentMap<TenantId, List<SchedulerEventId>> tenantEvents = new ConcurrentHashMap<>();
     private final ConcurrentMap<SchedulerEventId, SchedulerEventMetaData> eventsMetaData = new ConcurrentHashMap<>();
@@ -352,7 +351,7 @@ public class DefaultSchedulerService extends AbstractPartitionBasedService<Tenan
                         clusterService.pushMsgToRuleEngine(tenantId, originatorId, tbMsg, null);
                     }
                 } catch (Exception e) {
-                    log.error(String.format("[%s][%s] Failed to trigger event", event.getTenantId(), eventId), e);
+                    log.error("[{}][{}] Failed to trigger event", event.getTenantId(), eventId, e);
                 }
                 scheduleNextEvent(System.currentTimeMillis(), event, md);
             } else {
@@ -440,8 +439,9 @@ public class DefaultSchedulerService extends AbstractPartitionBasedService<Tenan
 
                     @Override
                     public void onFailure(Throwable t) {
-                        log.trace("sendSchedulerEvent onFailure tenantId {}, eventId {}, added {}, updated {}, deleted {}, exception {}", tenantId, eventId, added, updated, deleted, t);
+                        log.trace("sendSchedulerEvent onFailure tenantId {}, eventId {}, added {}, updated {}, deleted {}", tenantId, eventId, added, updated, deleted, t);
                     }
                 });
     }
+
 }

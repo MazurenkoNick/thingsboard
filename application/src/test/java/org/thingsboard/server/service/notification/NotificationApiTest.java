@@ -100,7 +100,6 @@ import org.thingsboard.server.common.data.notification.template.NotificationTemp
 import org.thingsboard.server.common.data.notification.template.SlackDeliveryMethodNotificationTemplate;
 import org.thingsboard.server.common.data.notification.template.SmsDeliveryMethodNotificationTemplate;
 import org.thingsboard.server.common.data.notification.template.WebDeliveryMethodNotificationTemplate;
-import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.secret.Secret;
 import org.thingsboard.server.common.data.secret.SecretInfo;
@@ -162,7 +161,7 @@ public class NotificationApiTest extends AbstractNotificationApiTest {
 
         loginSysAdmin();
         encryptionService.createEncryptionKey(TenantId.SYS_TENANT_ID);
-        SecretInfo secretInfo = createSecretIfNotExists("Test credentials", TEST_CREDENTIALS);
+        SecretInfo secretInfo = createSecret("Test credentials", TEST_CREDENTIALS);
         MobileAppNotificationDeliveryMethodConfig config = new MobileAppNotificationDeliveryMethodConfig();
         config.setFirebaseServiceAccountCredentials(toSecretPlaceholder(secretInfo.getName(), secretInfo.getType()));
         saveNotificationSettings(config);
@@ -1202,14 +1201,6 @@ public class NotificationApiTest extends AbstractNotificationApiTest {
         secret.setValue(value);
         secret.setType(SecretType.TEXT);
         return doPost("/api/secret", secret, SecretInfo.class);
-    }
-
-    private SecretInfo createSecretIfNotExists(String name, String value) throws Exception {
-        PageData<SecretInfo> pageData = doGetTypedWithPageLink("/api/secrets?", new TypeReference<>() {}, new PageLink(10, 0));
-        if (pageData != null && pageData.getData() != null && !pageData.getData().isEmpty()) {
-            return pageData.getData().get(0);
-        }
-        return createSecret(name, value);
     }
 
     private String toSecretPlaceholder(String name, SecretType type) {

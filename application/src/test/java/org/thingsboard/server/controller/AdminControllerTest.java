@@ -65,7 +65,7 @@ public class AdminControllerTest extends AbstractControllerTest {
     final JwtSettings defaultJwtSettings = new JwtSettings(9000, 604800, "thingsboard.io", "QmlicmJkZk9tSzZPVFozcWY0Sm94UVhybmtBWXZ5YmZMOUZSZzZvcUFiOVhsb3VHUThhUWJGaXp3UHhtcGZ6Tw==");
 
     @MockBean
-    SecretConfigurationService secretConfigurationService;
+    private SecretConfigurationService secretConfigurationService;
 
     @Test
     public void testFindAdminSettingsByKey() throws Exception {
