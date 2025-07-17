@@ -90,9 +90,9 @@ import java.util.concurrent.TimeoutException;
 @RequiredArgsConstructor
 public class DefaultMailService implements MailService {
 
+    private static final String MAIL_SETTINGS_KEY = "mail";
     private static final String TARGET_EMAIL = "targetEmail";
     private static final String UTF_8 = "UTF-8";
-    private static final String KEY = "mail";
     private static final long DEFAULT_TIMEOUT = 10_000;
 
     private final ScheduledExecutorService timeoutScheduler = ThingsBoardExecutors.newSingleThreadScheduledExecutor("mail-service-watchdog");
@@ -490,7 +490,7 @@ public class DefaultMailService implements MailService {
             JsonNode jsonConfig = null;
             boolean isSystem = false;
             if (tenantId != null && !tenantId.isNullUid()) {
-                AdminSettings adminSettings = adminSettingsService.findAdminSettingsByTenantIdAndKey(tenantId, KEY);
+                AdminSettings adminSettings = adminSettingsService.findAdminSettingsByTenantIdAndKey(tenantId, MAIL_SETTINGS_KEY);
                 if (adminSettings != null) {
                     jsonConfig = adminSettings.getJsonValue();
                     JsonNode useSystemMailSettingsNode = jsonConfig.get("useSystemMailSettings");
@@ -503,7 +503,7 @@ public class DefaultMailService implements MailService {
                 if (!allowSystemMailService) {
                     throw new RuntimeException("Access to System Mail Service is forbidden!");
                 }
-                AdminSettings settings = adminSettingsService.findAdminSettingsByKey(tenantId, KEY);
+                AdminSettings settings = adminSettingsService.findAdminSettingsByKey(tenantId, MAIL_SETTINGS_KEY);
                 if (settings != null) {
                     jsonConfig = settings.getJsonValue();
                     isSystem = true;

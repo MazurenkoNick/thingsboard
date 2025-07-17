@@ -59,7 +59,7 @@ import org.thingsboard.server.service.apiusage.TbApiUsageStateService;
 @RequiredArgsConstructor
 public class DefaultSmsService implements SmsService {
 
-    private static final String KEY = "sms";
+    private static final String SMS_SETTINGS_KEY = "sms";
 
     @Value("${actors.rule.allow_system_sms_service}")
     private boolean allowSystemSmsService;
@@ -130,7 +130,7 @@ public class DefaultSmsService implements SmsService {
             JsonNode jsonConfig = null;
             boolean isSystem = false;
             if (tenantId != null && !tenantId.isNullUid()) {
-                AdminSettings adminSettings = adminSettingsService.findAdminSettingsByTenantIdAndKey(tenantId, KEY);
+                AdminSettings adminSettings = adminSettingsService.findAdminSettingsByTenantIdAndKey(tenantId, SMS_SETTINGS_KEY);
                 if (adminSettings != null) {
                     jsonConfig = adminSettings.getJsonValue();
                     JsonNode useSystemSmsSettingsNode = jsonConfig.get("useSystemSmsSettings");
@@ -143,7 +143,7 @@ public class DefaultSmsService implements SmsService {
                 if (!allowSystemSmsService) {
                     throw new RuntimeException("Access to System SMS Service is forbidden!");
                 }
-                AdminSettings settings = adminSettingsService.findAdminSettingsByKey(tenantId, KEY);
+                AdminSettings settings = adminSettingsService.findAdminSettingsByKey(tenantId, SMS_SETTINGS_KEY);
                 if (settings != null) {
                     jsonConfig = settings.getJsonValue();
                     isSystem = true;

@@ -53,7 +53,6 @@ import org.thingsboard.server.common.data.notification.template.NotificationTemp
 import org.thingsboard.server.common.data.util.TemplateUtils;
 import org.thingsboard.server.dao.secret.SecretConfigurationService;
 
-import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.HashMap;
@@ -87,7 +86,6 @@ public class NotificationProcessingContext {
     private final Map<NotificationDeliveryMethod, DeliveryMethodNotificationTemplate> templates;
     @Getter
     private final NotificationRequestStats stats;
-    @Nullable
     private final SecretConfigurationService secretConfigurationService;
 
     private final Function<String, JsonNode> translationProvider;
@@ -97,7 +95,7 @@ public class NotificationProcessingContext {
     @Builder
     public NotificationProcessingContext(TenantId tenantId, NotificationRequest request, Set<NotificationDeliveryMethod> deliveryMethods,
                                          NotificationTemplate template, NotificationSettings settings, NotificationSettings systemSettings,
-                                         Function<String, JsonNode> translationProvider, @Nullable SecretConfigurationService secretConfigurationService) {
+                                         Function<String, JsonNode> translationProvider, SecretConfigurationService secretConfigurationService) {
         this.tenantId = tenantId;
         this.request = request;
         this.deliveryMethods = deliveryMethods;
@@ -133,9 +131,6 @@ public class NotificationProcessingContext {
             }
         }
         var config = (C) settings.getDeliveryMethodsConfigs().get(deliveryMethod);
-        if (secretConfigurationService == null) { // never happens by flow, but just to be sure
-            return config;
-        }
         return secretConfigurationService.replaceSecretUsages(isSystem ? TenantId.SYS_TENANT_ID : tenantId, config, (Class<C>) config.getClass());
     }
 

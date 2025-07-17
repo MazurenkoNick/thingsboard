@@ -33,8 +33,8 @@ package org.thingsboard.server.service.security.auth.oauth2;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
@@ -67,7 +67,6 @@ import java.util.UUID;
 import static org.thingsboard.server.service.security.auth.oauth2.HttpCookieOAuth2AuthorizationRequestRepository.PREV_URI_COOKIE_NAME;
 
 @Slf4j
-@RequiredArgsConstructor
 @Component(value = "oauth2AuthenticationSuccessHandler")
 @TbCoreComponent
 public class Oauth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
@@ -78,6 +77,21 @@ public class Oauth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
     private final OAuth2AuthorizedClientService oAuth2AuthorizedClientService;
     private final HttpCookieOAuth2AuthorizationRequestRepository httpCookieOAuth2AuthorizationRequestRepository;
     private final SystemSecurityService systemSecurityService;
+
+    @Autowired
+    public Oauth2AuthenticationSuccessHandler(final JwtTokenFactory tokenFactory,
+                                              final OAuth2ClientMapperProvider oauth2ClientMapperProvider,
+                                              final OAuth2ClientService oAuth2ClientService,
+                                              final OAuth2AuthorizedClientService oAuth2AuthorizedClientService,
+                                              final HttpCookieOAuth2AuthorizationRequestRepository httpCookieOAuth2AuthorizationRequestRepository,
+                                              final SystemSecurityService systemSecurityService) {
+        this.tokenFactory = tokenFactory;
+        this.oauth2ClientMapperProvider = oauth2ClientMapperProvider;
+        this.oAuth2ClientService = oAuth2ClientService;
+        this.oAuth2AuthorizedClientService = oAuth2AuthorizedClientService;
+        this.httpCookieOAuth2AuthorizationRequestRepository = httpCookieOAuth2AuthorizationRequestRepository;
+        this.systemSecurityService = systemSecurityService;
+    }
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request,

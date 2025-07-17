@@ -293,8 +293,8 @@ public class DefaultDataUpdateService implements DataUpdateService {
         return String.format("${secret:%s;type:%s}", secretInfo.getName(), secretInfo.getType());
     }
 
-    private boolean isSecretPlaceholder(String name) {
-        return StringUtils.isNotBlank(name) && name.startsWith("${secret:") && name.endsWith("}");
+    private boolean isSecretPlaceholder(String value) {
+        return StringUtils.isNotBlank(value) && value.startsWith("${secret:") && value.endsWith("}");
     }
 
     @Override
