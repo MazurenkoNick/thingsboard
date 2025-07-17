@@ -90,6 +90,8 @@ export class MobileAppConfigurationDialogComponent extends DialogComponent<Mobil
       thingsboardApiEndpoint: window.location.origin,
       appLinksUrlHost: window.location.host,
       appLinksUrlScheme: window.location.protocol.slice(0, -1),
+      registrationRedirectUrlScheme: this.data.bundle.selfRegistrationParams?.redirect?.scheme ?? '',
+      registrationRedirectUrlHost: this.data.bundle.selfRegistrationParams?.redirect?.host ?? '',
     };
     if (!!this.data.androidApp) {
       settings.androidApplicationId = this.data.androidApp.pkgName;
