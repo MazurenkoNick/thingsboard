@@ -43,5 +43,8 @@ public class EntityGroupFilter implements EntityFilter {
 
     private EntityType groupType;
     private String entityGroup;
+    private boolean groupStateEntity;
+    private EntityType defaultStateGroupType;
+    private String defaultStateEntityGroup;
 
 }

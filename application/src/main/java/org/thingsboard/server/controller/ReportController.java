@@ -175,7 +175,7 @@ public class ReportController extends BaseController {
         return reportService.findReportsByTenantId(user.getTenantId(), pageLink);
     }
 
-    @GetMapping("/reportInfos")
+    @GetMapping("/reportInfos/all")
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
     public PageData<ReportInfo> getReportInfos(
             @Parameter(description = REPORT_TEMPLATE_ID_DESCRIPTION)
