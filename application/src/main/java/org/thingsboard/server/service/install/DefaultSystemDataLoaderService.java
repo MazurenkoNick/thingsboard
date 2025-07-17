@@ -659,7 +659,6 @@ public class DefaultSystemDataLoaderService implements SystemDataLoaderService {
         public void onFailure(Throwable t) {
             log.warn("[{}] Failed to update attribute [{}] with value [{}]", deviceId, key, value, t);
         }
-
     }
 
     private <S> void addTsCallback(ListenableFuture<S> saveFuture, final FutureCallback<S> callback) {
