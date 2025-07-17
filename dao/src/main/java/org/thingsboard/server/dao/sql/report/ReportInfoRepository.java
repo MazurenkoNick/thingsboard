@@ -37,6 +37,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 import org.thingsboard.server.dao.model.sql.ReportInfoEntity;
 
+import java.util.List;
 import java.util.UUID;
 
 import static org.thingsboard.server.dao.model.ModelConstants.SUB_CUSTOMERS_QUERY;
@@ -45,23 +46,25 @@ import static org.thingsboard.server.dao.model.ModelConstants.SUB_CUSTOMERS_QUER
 public interface ReportInfoRepository extends JpaRepository<ReportInfoEntity, UUID> {
 
     @Query("SELECT ri FROM ReportInfoEntity ri WHERE ri.tenantId = :tenantId " +
-            "AND (ri.customerId IS NULL OR ri.customerId = org.thingsboard.server.common.data.id.EntityId.NULL_UUID)" +
-            "AND (:reportTemplateId IS NULL OR (ri.templateId = :reportTemplateId))" +
-            "AND (:userId IS NULL OR (ri.userId = :userId))" +
+            "AND (ri.customerId IS NULL OR ri.customerId = org.thingsboard.server.common.data.id.EntityId.NULL_UUID) " +
+            "AND (:reportTemplateId IS NULL OR (ri.templateId = :reportTemplateId)) " +
+            "AND (:userId IS NULL OR (ri.userId = :userId)) " +
             "AND (:searchText IS NULL OR ilike(ri.name, CONCAT('%', :searchText, '%')) = true)")
     Page<ReportInfoEntity> findTenantReportInfosIncludingCustomers(UUID tenantId, UUID reportTemplateId, UUID userId, String searchText, Pageable pageable);
 
     @Query("SELECT ri FROM ReportInfoEntity ri WHERE ri.tenantId = :tenantId " +
-            "AND (:reportTemplateId IS NULL OR (ri.templateId = :reportTemplateId))" +
-            "AND (:userId IS NULL OR (ri.userId = :userId))" +
-            "AND (:searchText IS NULL OR ilike(ri.name, CONCAT('%', :searchText, '%')) = true)")
+            "AND (:reportTemplateId IS NULL OR (ri.templateId = :reportTemplateId)) " +
+            "AND (:userId IS NULL OR (ri.userId = :userId)) " +
+            "AND (:searchText IS NULL OR ilike(ri.name, CONCAT('%', :searchText, '%')) = true " +
+            "OR ilike(ri.customerTitle, CONCAT('%', :searchText, '%')) = true)")
     Page<ReportInfoEntity> findTenantReportInfos(UUID tenantId, UUID reportTemplateId, UUID userId, String searchText, Pageable pageable);
 
     @Query(value = "SELECT * FROM report_info_view e " +
             "WHERE" + SUB_CUSTOMERS_QUERY +
-            "AND (:reportTemplateId IS NULL OR (e.template_id = :reportTemplateId))" +
-            "AND (:userId IS NULL OR (e.user_id = :userId))" +
-            "AND (:searchText IS NULL OR e.name ILIKE CONCAT('%', :searchText, '%')) ",
+            "AND (:reportTemplateId IS NULL OR (e.template_id = :reportTemplateId)) " +
+            "AND (:userId IS NULL OR (e.user_id = :userId)) " +
+            "AND (:searchText IS NULL OR e.name ILIKE CONCAT('%', :searchText, '%') " +
+            "OR e.customer_title ILIKE CONCAT('%', :searchText, '%')) ",
             countQuery = "SELECT count(e.id) FROM scheduled_reports_info_view e " +
                     "WHERE" + SUB_CUSTOMERS_QUERY +
                     "AND (:reportTemplateId IS NULL OR (e.report_template_id = :reportTemplateId))" +
@@ -71,10 +74,12 @@ public interface ReportInfoRepository extends JpaRepository<ReportInfoEntity, UU
     Page<ReportInfoEntity> findCustomerReportInfosIncludingSubCustomers(UUID tenantId, UUID customerId, UUID reportTemplateId, UUID userId, String searchText, Pageable pageable);
 
     @Query("SELECT ri FROM ReportInfoEntity ri WHERE ri.tenantId = :tenantId " +
-            "AND (ri.customerId = :customerId)" +
-            "AND (:reportTemplateId IS NULL OR (ri.templateId = :reportTemplateId))" +
-            "AND (:userId IS NULL OR (ri.userId = :userId))" +
+            "AND (ri.customerId = :customerId) " +
+            "AND (:reportTemplateId IS NULL OR (ri.templateId = :reportTemplateId)) " +
+            "AND (:userId IS NULL OR (ri.userId = :userId)) " +
             "AND (:searchText IS NULL OR ilike(ri.name, CONCAT('%', :searchText, '%')) = true)")
     Page<ReportInfoEntity> findCustomerReportInfos(UUID tenantId, UUID customerId, UUID reportTemplateId, UUID userId, String searchText, Pageable pageable);
+
+    List<ReportInfoEntity> findByIdIn(List<UUID> toUUIDs);
 
 }

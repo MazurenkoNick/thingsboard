@@ -220,7 +220,6 @@ public class JpaSchedulerEventInfoDao extends JpaAbstractDao<SchedulerEventInfoE
 
     @Override
     public PageData<ScheduledReportInfo> findScheduledReportEvents(UUID tenantId, UUID customerId, ScheduledReportQuery query) {
-        log.debug("Try to find scheduler event infos by tenantId [{}], edgeId [{}], customerId [{}] and pageLink [{}]", tenantId, customerId, customerId, query);
         if (query.isIncludeCustomers()) {
             return DaoUtil.toPageData(scheduledReportInfoRepository
                     .findCustomerScheduledReportsIncludingSubCustomers(

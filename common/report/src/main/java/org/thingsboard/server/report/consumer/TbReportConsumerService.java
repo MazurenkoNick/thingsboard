@@ -64,7 +64,7 @@ public class TbReportConsumerService {
     @Value("${queue.report.poll_interval:125}")
     private int pollInterval;
 
-    protected ExecutorService consumersExecutor = Executors.newCachedThreadPool(ThingsBoardThreadFactory.forName("tb-report-consumer"));
+    private final ExecutorService consumersExecutor = Executors.newCachedThreadPool(ThingsBoardThreadFactory.forName("tb-report-consumer"));
     private QueueConsumerManager<TbProtoQueueMsg<ToTbReportNotificationMsg>> notificationsConsumer;
 
     @PostConstruct
@@ -101,10 +101,10 @@ public class TbReportConsumerService {
 
     @PreDestroy
     private void destroy() {
-        notificationsConsumer.stop();
-        if (consumersExecutor != null) {
-            consumersExecutor.shutdownNow();
+        if (notificationsConsumer != null) {
+            notificationsConsumer.stop();
         }
+        consumersExecutor.shutdownNow();
     }
 
 }

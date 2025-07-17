@@ -192,6 +192,9 @@ public class CsvReportService extends AbstractReportService {
     }
 
     private List<List<String>> renderError(String errorDescription, Exception e) {
+        if (e instanceof InterruptedException || (e != null && e.getCause() instanceof InterruptedException)) {
+            throw new RuntimeException(e);
+        }
         if (e != null) {
             errorDescription = errorDescription + " Error: " + e.getMessage();
         }

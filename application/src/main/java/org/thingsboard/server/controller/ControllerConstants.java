@@ -127,7 +127,7 @@ public class ControllerConstants {
     protected static final String INTEGRATION_NAME_PARAM_DESCRIPTION = "A string value representing the integration name. For example, 'My New Integration'";
     protected static final String ASSET_TEXT_SEARCH_DESCRIPTION = "The case insensitive 'substring' filter based on the asset name.";
     protected static final String BLOB_ENTITY_TEXT_SEARCH_DESCRIPTION = "The case insensitive 'startsWith' filter based on the blob entity name.";
-    protected static final String REPORT_TEMPLATE_TEXT_SEARCH_DESCRIPTION = "The case insensitive 'substring' filter based on the report template name.";
+    protected static final String REPORT_TEMPLATE_TEXT_SEARCH_DESCRIPTION = "The case insensitive 'substring' filter based on the report template name or customer title.";
     protected static final String CONVERTER_TEXT_SEARCH_DESCRIPTION = "The case insensitive 'startsWith' filter based on the converter name.";
     protected static final String INTEGRATION_TEXT_SEARCH_DESCRIPTION = "The case insensitive 'startsWith' filter based on the integration name.";
     protected static final String DASHBOARD_TEXT_SEARCH_DESCRIPTION = "The case insensitive 'substring' filter based on the dashboard title.";

@@ -30,29 +30,13 @@
  */
 package org.thingsboard.server.dao.model.sql;
 
-import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import org.thingsboard.server.common.data.id.CustomerId;
-import org.thingsboard.server.common.data.id.ReportId;
-import org.thingsboard.server.common.data.id.ReportTemplateId;
-import org.thingsboard.server.common.data.id.TenantId;
-import org.thingsboard.server.common.data.id.UserId;
 import org.thingsboard.server.common.data.report.Report;
-import org.thingsboard.server.common.data.report.TbReportFormat;
-import org.thingsboard.server.dao.model.BaseSqlEntity;
 
-import java.util.UUID;
-
-import static org.thingsboard.server.dao.model.ModelConstants.REPORT_CUSTOMER_ID_PROPERTY;
-import static org.thingsboard.server.dao.model.ModelConstants.REPORT_FORMAT_PROPERTY;
-import static org.thingsboard.server.dao.model.ModelConstants.REPORT_NAME_PROPERTY;
 import static org.thingsboard.server.dao.model.ModelConstants.REPORT_TABLE_NAME;
-import static org.thingsboard.server.dao.model.ModelConstants.REPORT_TEMPLATE_ID_PROPERTY;
-import static org.thingsboard.server.dao.model.ModelConstants.REPORT_TENANT_ID_PROPERTY;
-import static org.thingsboard.server.dao.model.ModelConstants.REPORT_USER_ID_PROPERTY;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -60,56 +44,17 @@ import static org.thingsboard.server.dao.model.ModelConstants.REPORT_USER_ID_PRO
 @Table(name = REPORT_TABLE_NAME)
 public class ReportEntity extends AbstractReportEntity<Report> {
 
-    @Column(name = REPORT_TENANT_ID_PROPERTY, columnDefinition = "uuid", nullable = false)
-    private UUID tenantId;
-
-    @Column(name = REPORT_CUSTOMER_ID_PROPERTY, columnDefinition = "uuid")
-    private UUID customerId;
-
-    @Column(name = REPORT_TEMPLATE_ID_PROPERTY)
-    private UUID templateId;
-
-    @Column(name = REPORT_FORMAT_PROPERTY, nullable = false)
-    private TbReportFormat format;
-
-    @Column(name = REPORT_NAME_PROPERTY, nullable = false)
-    private String name;
-
-    @Column(name = REPORT_USER_ID_PROPERTY, nullable = false)
-    private UUID userId;
-
     public ReportEntity() {
+        super();
     }
 
     public ReportEntity(Report report) {
         super(report);
-        this.tenantId = report.getTenantId().getId();
-        if (report.getCustomerId() != null) {
-            this.customerId = report.getCustomerId().getId();
-        }
-        if (report.getTemplateId() != null) {
-            this.templateId = report.getTemplateId().getId();
-        }
-        this.format = report.getFormat();
-        this.name = report.getName();
-        this.userId = report.getUserId().getId();
     }
 
     @Override
     public Report toData() {
-        Report report = new Report();
-        report.setId(new ReportId(id));
-        report.setTenantId(TenantId.fromUUID(tenantId));
-        if (customerId != null) {
-            report.setCustomerId(new CustomerId(customerId));
-        }
-        if (templateId != null) {
-            report.setTemplateId(new ReportTemplateId(templateId));
-        }
-        report.setFormat(format);
-        report.setName(name);
-        report.setUserId(new UserId(userId));
-        return report;
+        return super.toReport();
     }
 
 }

@@ -110,6 +110,11 @@ import org.thingsboard.server.common.data.permission.Operation;
 import org.thingsboard.server.common.data.permission.Resource;
 import org.thingsboard.server.common.data.relation.EntityRelation;
 import org.thingsboard.server.common.data.relation.RelationTypeGroup;
+import org.thingsboard.server.common.data.report.ReportTemplate;
+import org.thingsboard.server.common.data.report.ReportTemplateInfo;
+import org.thingsboard.server.common.data.report.ReportTemplateType;
+import org.thingsboard.server.common.data.report.TbReportFormat;
+import org.thingsboard.server.common.data.report.configuration.CsvReportTemplateConfig;
 import org.thingsboard.server.common.data.role.Role;
 import org.thingsboard.server.common.data.role.RoleType;
 import org.thingsboard.server.common.data.rule.RuleChain;
@@ -1011,6 +1016,35 @@ public class VersionControlTest extends AbstractControllerTest {
     }
 
     @Test
+    public void testReportTemplateVc_sameTenant() throws Exception {
+        ReportTemplate reportTemplate = createReportTemplate(tenantId1, null, "Weekly report");
+        String versionId = createVersion("report template", EntityType.REPORT_TEMPLATE);
+
+        loadVersion(versionId, EntityType.REPORT_TEMPLATE);
+        ReportTemplate importedTemplate = findReportTemplate(reportTemplate.getName());
+        checkImportedEntity(tenantId1, reportTemplate, tenantId1, importedTemplate);
+
+        assertThat(importedTemplate.getName()).isEqualTo(reportTemplate.getName());
+        assertThat(importedTemplate.getType()).isEqualTo(reportTemplate.getType());
+        assertThat(importedTemplate.getConfiguration()).isEqualTo(reportTemplate.getConfiguration());
+    }
+
+    @Test
+    public void testReportTemplateVc_betweenTenants() throws Exception {
+        ReportTemplate reportTemplate = createReportTemplate(tenantId1, null, "Weekly report");
+        String versionId = createVersion("report template", EntityType.REPORT_TEMPLATE);
+
+        loginTenant2();
+        loadVersion(versionId, EntityType.REPORT_TEMPLATE);
+        ReportTemplate importedTemplate = findReportTemplate(reportTemplate.getName());
+        checkImportedEntity(tenantId1, reportTemplate, tenantId2, importedTemplate);
+
+        assertThat(importedTemplate.getName()).isEqualTo(reportTemplate.getName());
+        assertThat(importedTemplate.getType()).isEqualTo(reportTemplate.getType());
+        assertThat(importedTemplate.getConfiguration()).isEqualTo(reportTemplate.getConfiguration());
+    }
+
+    @Test
     public void testSchedulerEventGenerateReportForVc_betweenTenants() throws Exception {
         DeviceProfile deviceProfile = createDeviceProfile(null, null, "Device profile v1.0");
         Dashboard dashboard = createDashboard(null, "Test Dashboard");
@@ -1621,6 +1655,17 @@ public class VersionControlTest extends AbstractControllerTest {
         return doPost("/api/schedulerEvent", schedulerEvent, SchedulerEvent.class);
     }
 
+    private ReportTemplate createReportTemplate(TenantId tenantId, CustomerId customerId, String name) {
+        ReportTemplate reportTemplate = new ReportTemplate();
+        reportTemplate.setTenantId(tenantId);
+        reportTemplate.setCustomerId(customerId);
+        reportTemplate.setName(name);
+        reportTemplate.setType(ReportTemplateType.REPORT);
+        reportTemplate.setFormat(TbReportFormat.CSV);
+        reportTemplate.setConfiguration(new CsvReportTemplateConfig());
+        return doPost("/api/reportTemplate", reportTemplate, ReportTemplate.class);
+    }
+
     private SchedulerEvent createSchedulerEventForOtaPackageType(TenantId tenantId, EntityId originatorId, String name, String type, OtaPackageId otaPackageId) {
         ObjectNode cfg = JacksonUtil.newObjectNode();
         cfg.put("msgType", type);
@@ -1761,6 +1806,15 @@ public class VersionControlTest extends AbstractControllerTest {
                 .findFirst()
                 .orElseThrow(() -> new RuntimeException("Scheduler event with name " + name + " not found"));
         return doGet("/api/schedulerEvent/" + eventInfo.getId().getId(), SchedulerEvent.class);
+    }
+
+    private ReportTemplate findReportTemplate(String name) throws Exception {
+        ReportTemplateInfo reportTemplate = doGetTypedWithPageLink("/api/reportTemplateInfos/all?", new TypeReference<PageData<ReportTemplateInfo>>() {}, new PageLink(100, 0, name)).getData()
+                .stream()
+                .filter(template -> template.getName().equals(name))
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("Report template with name " + name + " not found"));
+        return doGet("/api/reportTemplate/" + reportTemplate.getId().getId(), ReportTemplate.class);
     }
 
 }

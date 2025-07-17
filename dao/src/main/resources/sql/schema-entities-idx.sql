@@ -154,3 +154,5 @@ CREATE INDEX IF NOT EXISTS idx_encryption_key_tenant_id ON encryption_key(tenant
 CREATE INDEX IF NOT EXISTS idx_report_tenant_id_created_time ON report(tenant_id, created_time DESC);
 
 CREATE INDEX IF NOT EXISTS idx_report_id ON report(id);
+
+CREATE INDEX IF NOT EXISTS idx_report_template_tenant_id ON report_template(tenant_id);

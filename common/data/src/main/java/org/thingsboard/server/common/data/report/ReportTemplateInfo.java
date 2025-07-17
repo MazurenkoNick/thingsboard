@@ -44,7 +44,6 @@ public class ReportTemplateInfo extends BaseReportTemplate {
 
     private static final long serialVersionUID = 1729877416392618039L;
 
-    @Valid
     @Schema(description = "Owner name", accessMode = Schema.AccessMode.READ_ONLY)
     private String ownerName;
 

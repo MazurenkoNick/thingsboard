@@ -98,7 +98,6 @@ public class RemoteTbReportCtxProvider implements TbReportCtxProvider {
                     .reportCreatedTime(this.getReportCreatedTime())
                     .build();
 
-            copy.getFutures().addAll(this.getFutures());
             copy.getParams().putAll(this.getParams());
 
             return copy;

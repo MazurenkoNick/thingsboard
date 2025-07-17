@@ -37,6 +37,7 @@ import lombok.EqualsAndHashCode;
 import org.thingsboard.server.common.data.id.DashboardId;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.OtaPackageId;
+import org.thingsboard.server.common.data.id.ReportTemplateId;
 import org.thingsboard.server.common.data.scheduler.SchedulerEvent;
 
 import java.util.UUID;
@@ -56,13 +57,22 @@ public class SchedulerEventExportData extends EntityExportData<SchedulerEvent> {
                     msgBody.put("id", idMapper.apply(otaPackageId).getId().toString());
                 }
             }
-            case "generateReport" -> {
+            case "generateDashboardReport" -> {
                 ObjectNode reportConfig = configuration.withObject("msgBody").withObject("reportConfig");
                 reportConfig.put("userId", userId);
                 String oldId = reportConfig.path("dashboardId").asText(null);
                 if (oldId != null) {
                     DashboardId dashboardId = new DashboardId(UUID.fromString(oldId));
                     reportConfig.put("dashboardId", idMapper.apply(dashboardId).getId().toString());
+                }
+            }
+            case "generateReport" -> {
+                ObjectNode reportConfig = configuration.withObject("msgBody").withObject("reportConfig");
+                reportConfig.put("userId", userId);
+                String oldId = reportConfig.path("reportTemplateId").asText(null);
+                if (oldId != null) {
+                    ReportTemplateId templateId = new ReportTemplateId(UUID.fromString(oldId));
+                    reportConfig.put("reportTemplateId", idMapper.apply(templateId).getId().toString());
                 }
             }
         }

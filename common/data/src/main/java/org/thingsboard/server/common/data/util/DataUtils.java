@@ -28,29 +28,28 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.common.data.report;
+package org.thingsboard.server.common.data.util;
 
-import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Data;
-import org.thingsboard.server.common.data.id.NotificationTargetId;
-import org.thingsboard.server.common.data.id.NotificationTemplateId;
-import org.thingsboard.server.common.data.id.ReportTemplateId;
-import org.thingsboard.server.common.data.report.configuration.ReportTemplateConfig;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.collect.Streams;
 
-@Data
-public class ReportRequest {
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
-    @Schema(description = "Json object representing the report template id.")
-    private ReportTemplateId reportTemplateId;
-    @Schema(description = "Json object representing the report template config.")
-    private ReportTemplateConfig reportTemplateConfig;
+public class DataUtils {
 
-    @Schema(description = "Timezone used for report generation.", example = "Europe/Kiev")
-    private String timezone;
-    @Schema(description = "A string value representing the user id.", example = "784f394c-42b6-435a-983c-b7beff2784f9")
-    private String userId;
-
-    private NotificationTargetId recipientId;
-    private NotificationTemplateId notificationTemplateId;
+    public static List<ObjectNode> getChildObjects(String propertyName, JsonNode configuration) {
+        return Optional.ofNullable(configuration)
+                .map(config -> config.get(propertyName))
+                .filter(node -> !node.isEmpty() && (node.isObject() || node.isArray()))
+                .map(node -> Streams.stream(node.elements())
+                        .filter(JsonNode::isObject)
+                        .map(jsonNode -> (ObjectNode) jsonNode)
+                        .collect(Collectors.toList()))
+                .orElse(Collections.emptyList());
+    }
 
 }

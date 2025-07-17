@@ -35,10 +35,10 @@ import org.thingsboard.common.util.DonAsynchron;
 import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.rule.engine.api.RuleNode;
 import org.thingsboard.rule.engine.api.TbContext;
-import org.thingsboard.rule.engine.api.TbNode;
 import org.thingsboard.rule.engine.api.TbNodeConfiguration;
 import org.thingsboard.rule.engine.api.TbNodeException;
 import org.thingsboard.rule.engine.api.util.TbNodeUtils;
+import org.thingsboard.rule.engine.external.TbAbstractExternalNode;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.job.Job;
 import org.thingsboard.server.common.data.job.ReportJobConfiguration;
@@ -54,12 +54,11 @@ import java.util.Base64;
         name = "generate report",
         configClazz = TbGenerateReportV2NodeConfiguration.class,
         nodeDescription = "Requests report generation",
-        nodeDetails = "Requests report generation. When report is ready - new message with type REPORT_GENERATED arrives, " +
-                      "with report blob entity id in the metadata (reportBlobEntityId)",
+        nodeDetails = "Requests report generation. When report is ready - generated report entity id is attached to message metadata (reports)",
         configDirective = "tbActionNodeGenerateReportConfig",
         icon = "description"
 )
-public class TbGenerateReportV2Node implements TbNode {
+public class TbGenerateReportV2Node extends TbAbstractExternalNode {
 
     private TbGenerateReportV2NodeConfiguration config;
 
@@ -97,7 +96,7 @@ public class TbGenerateReportV2Node implements TbNode {
         configuration.setQueueName(msg.getQueueName());
 
         DonAsynchron.withCallback(ctx.getJobManager().submitJob(job), result -> {
-            // do nothing, tellSuccess will be done when the job is completed
+            //TODO: implement job completion callback
         }, error -> {
             ctx.tellFailure(msg, error);
         });

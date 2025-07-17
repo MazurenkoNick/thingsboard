@@ -70,7 +70,7 @@ import org.thingsboard.server.report.util.ThymeleafUtil;
 import org.thingsboard.server.report.util.WebReportClient;
 import org.xhtmlrenderer.pdf.ITextRenderer;
 
-import java.awt.*;
+import java.awt.Dimension;
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.Date;
@@ -293,6 +293,9 @@ public class PdfReportService extends AbstractReportService {
     }
 
     private String renderError(int usablePageWidthPx, String errorMessage, Exception e) {
+        if (e instanceof InterruptedException || (e!= null && e.getCause() instanceof InterruptedException)) {
+            throw new RuntimeException(e);
+        }
         return componentsRenderers.get(ERROR).render(new ErrorComponent(errorMessage, e), new ComponentData(usablePageWidthPx));
     }
 

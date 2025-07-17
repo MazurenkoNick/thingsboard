@@ -31,6 +31,8 @@
 package org.thingsboard.server.controller;
 
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpHeaders;
@@ -77,7 +79,10 @@ import org.thingsboard.server.service.security.model.SecurityUser;
 import org.thingsboard.server.service.security.model.token.AccessJwtToken;
 import org.thingsboard.server.service.security.system.SystemSecurityService;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import static org.thingsboard.server.controller.ControllerConstants.INCLUDE_CUSTOMERS_OR_SUB_CUSTOMERS;
 import static org.thingsboard.server.controller.ControllerConstants.PAGE_NUMBER_DESCRIPTION;
@@ -162,7 +167,7 @@ public class ReportController extends BaseController {
                                        @RequestParam int pageSize,
                                        @Parameter(description = PAGE_NUMBER_DESCRIPTION, required = true)
                                        @RequestParam int page,
-                                       @Parameter(description = "Case-insensitive 'substring' filter based on report's name")
+                                       @Parameter(description = "Case-insensitive 'substring' filter based on report's name or customer title")
                                        @RequestParam(required = false) String textSearch,
                                        @Parameter(description = SORT_PROPERTY_DESCRIPTION)
                                        @RequestParam(required = false) String sortProperty,
@@ -176,6 +181,22 @@ public class ReportController extends BaseController {
 
     @GetMapping("/reportInfos")
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
+    public List<ReportInfo> getReports(
+            @Parameter(description = "A list of report ids, separated by comma ','", array = @ArraySchema(schema = @Schema(type = "string")), required = true)
+            @RequestParam("strReportIds") String[] strReportIds) throws ThingsboardException {
+        checkArrayParameter("strReportIds", strReportIds);
+        SecurityUser user = getCurrentUser();
+        TenantId tenantId = user.getTenantId();
+        List<ReportId> reportIds = new ArrayList<>();
+        for (String strReportTemplateId : strReportIds) {
+            reportIds.add(new ReportId(toUUID(strReportTemplateId)));
+        }
+        List<ReportInfo> reportInfos = checkNotNull(reportService.findReportInfoByIds(tenantId, reportIds));
+        return filterReportTemplatesByReadPermission(reportInfos);
+    }
+
+    @GetMapping("/reportInfos/all")
+    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
     public PageData<ReportInfo> getReportInfos(
             @Parameter(description = REPORT_TEMPLATE_ID_DESCRIPTION)
             @RequestParam(required = false) UUID reportTemplateId,
@@ -187,7 +208,7 @@ public class ReportController extends BaseController {
             @RequestParam int pageSize,
             @Parameter(description = PAGE_NUMBER_DESCRIPTION, required = true)
             @RequestParam int page,
-            @Parameter(description = "Case-insensitive 'substring' filter based on report's name")
+            @Parameter(description = "Case-insensitive 'substring' filter based on report's name or customer title")
             @RequestParam(required = false) String textSearch,
             @Parameter(description = SORT_PROPERTY_DESCRIPTION)
             @RequestParam(required = false) String sortProperty,
@@ -265,6 +286,16 @@ public class ReportController extends BaseController {
                 .recipientId(reportRequest.getRecipientId())
                 .notificationTemplateId(reportRequest.getNotificationTemplateId())
                 .build()).get();
+    }
+
+    private List<ReportInfo> filterReportTemplatesByReadPermission(List<ReportInfo> reportInfos) {
+        return reportInfos.stream().filter(report -> {
+            try {
+                return accessControlService.hasPermission(getCurrentUser(), Resource.REPORT, Operation.READ, report.getId(), report);
+            } catch (ThingsboardException e) {
+                return false;
+            }
+        }).collect(Collectors.toList());
     }
 
 }
