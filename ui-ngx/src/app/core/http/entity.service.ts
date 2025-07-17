@@ -131,6 +131,7 @@ import { OAuth2Service } from '@core/http/oauth2.service';
 import { MobileAppService } from '@core/http/mobile-app.service';
 import { PlatformType } from '@shared/models/oauth2.models';
 import { DomainService } from '@core/http/domain.service';
+import { AiModelService } from '@core/http/ai-model.service';
 import { ReportTemplateService } from '@core/http/report-template.service';
 import { ReportTemplate, ReportTemplateQuery, ReportTemplateType } from '@shared/models/report.models';
 import { ReportService } from './report.service';
@@ -176,6 +177,7 @@ export class EntityService {
     private oauth2Service: OAuth2Service,
     private mobileAppService: MobileAppService,
     private domainService: DomainService,
+    private aiModelService: AiModelService,
   ) { }
 
   private getEntityObservable(entityType: EntityType, entityId: string,
@@ -265,6 +267,9 @@ export class EntityService {
         break;
       case EntityType.DOMAIN:
         observable = this.domainService.getDomainInfoById(entityId, config);
+        break;
+      case EntityType.AI_MODEL:
+        observable = this.aiModelService.getAiModelById(entityId, config);
         break;
     }
     return observable;
@@ -711,6 +716,10 @@ export class EntityService {
       case EntityType.DOMAIN:
         pageLink.sortOrder.property = 'name';
         entitiesObservable = this.domainService.getDomainInfos(pageLink, config);
+        break;
+      case EntityType.AI_MODEL:
+        pageLink.sortOrder.property = 'name';
+        entitiesObservable = this.aiModelService.getAiModels(pageLink, config);
         break;
     }
     return entitiesObservable;

@@ -85,9 +85,9 @@ public interface EntitiesVersionControlService {
 
     ListenableFuture<Void> checkVersionControlAccess(TenantId tenantId, RepositorySettings settings) throws Exception;
 
-    ListenableFuture<UUID> autoCommit(User user, EntityId entityId) throws Exception;
+    ListenableFuture<UUID> autoCommit(User user, EntityId entityId);
 
-    ListenableFuture<UUID> autoCommit(User user, EntityType entityType, List<UUID> entityIds) throws Exception;
+    ListenableFuture<UUID> autoCommit(User user, EntityType entityType, List<UUID> entityIds);
 
     ListenableFuture<UUID> autoCommit(User user, EntityType entityType, EntityGroupId groupId) throws Exception;
 

@@ -74,6 +74,7 @@ public abstract class AbstractNotifyEntityTest extends AbstractWebTest {
     @SpyBean
     protected AuditLogService auditLogService;
 
+    protected final String msgErrorPermission = "You don't have permission to perform this operation!";
     protected final String msgErrorPermissionWrite = "You don't have permission to perform 'WRITE' operation with ";
     protected final String msgErrorPermissionRead = "You don't have permission to perform 'READ' operation with ";
     protected final String msgErrorPermissionDelete = "You don't have permission to perform 'DELETE' operation with ";

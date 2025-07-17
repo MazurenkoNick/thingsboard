@@ -56,6 +56,7 @@ import org.thingsboard.server.common.data.OtaPackage;
 import org.thingsboard.server.common.data.TbResource;
 import org.thingsboard.server.common.data.TenantProfile;
 import org.thingsboard.server.common.data.User;
+import org.thingsboard.server.common.data.ai.AiModel;
 import org.thingsboard.server.common.data.alarm.Alarm;
 import org.thingsboard.server.common.data.asset.Asset;
 import org.thingsboard.server.common.data.asset.AssetProfile;
@@ -94,6 +95,7 @@ import org.thingsboard.server.common.data.scheduler.SchedulerEvent;
 import org.thingsboard.server.common.data.secret.Secret;
 import org.thingsboard.server.common.data.widget.WidgetType;
 import org.thingsboard.server.common.data.widget.WidgetsBundle;
+import org.thingsboard.server.dao.ai.AiModelService;
 import org.thingsboard.server.dao.asset.AssetService;
 import org.thingsboard.server.dao.blob.BlobEntityService;
 import org.thingsboard.server.dao.cf.CalculatedFieldService;
@@ -129,6 +131,7 @@ import org.thingsboard.server.dao.user.UserService;
 import org.thingsboard.server.dao.widget.WidgetTypeService;
 import org.thingsboard.server.dao.widget.WidgetsBundleService;
 
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -219,6 +222,8 @@ public class TenantIdLoaderTest {
     private CalculatedFieldService calculatedFieldService;
     @Mock
     private JobService jobService;
+    @Mock
+    private AiModelService aiModelService;
     @Mock
     private SecretService secretService;
 
@@ -552,6 +557,12 @@ public class TenantIdLoaderTest {
                 job.setTenantId(tenantId);
                 when(ctx.getJobService()).thenReturn(jobService);
                 doReturn(job).when(jobService).findJobById(eq(tenantId), any());
+                break;
+            case AI_MODEL:
+                AiModel aiModel = new AiModel();
+                aiModel.setTenantId(tenantId);
+                when(ctx.getAiModelService()).thenReturn(aiModelService);
+                doReturn(Optional.of(aiModel)).when(aiModelService).findAiModelById(eq(tenantId), any());
                 break;
             default:
                 throw new RuntimeException("Unexpected originator EntityType " + entityType);
