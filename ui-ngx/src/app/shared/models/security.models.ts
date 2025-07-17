@@ -124,7 +124,8 @@ export enum Resource {
   OAUTH2_CLIENT = 'OAUTH2_CLIENT',
   DOMAIN = 'DOMAIN',
   SECRET = 'SECRET',
-  JOB = 'JOB'
+  JOB = 'JOB',
+  AI_MODEL = 'AI_MODEL'
 }
 
 const resourceTypeTranslations = new Map<Resource, string>();
@@ -171,6 +172,7 @@ export const resourceByEntityType = new Map<EntityType, Resource>(
     [EntityType.NOTIFICATION_TEMPLATE, Resource.NOTIFICATION],
     [EntityType.SECRET, Resource.SECRET],
     [EntityType.JOB, Resource.JOB],
+    [EntityType.AI_MODEL, Resource.AI_MODEL],
   ]
 );
 

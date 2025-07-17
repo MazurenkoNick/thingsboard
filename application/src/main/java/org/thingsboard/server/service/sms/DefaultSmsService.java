@@ -31,6 +31,7 @@
 package org.thingsboard.server.service.sms;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.NestedRuntimeException;
@@ -52,8 +53,9 @@ import org.thingsboard.server.dao.exception.IncorrectParameterException;
 import org.thingsboard.server.dao.settings.AdminSettingsService;
 import org.thingsboard.server.service.apiusage.TbApiUsageStateService;
 
-@Service
 @Slf4j
+@Service
+@RequiredArgsConstructor
 public class DefaultSmsService implements SmsService {
 
     @Value("${actors.rule.allow_system_sms_service}")
@@ -63,14 +65,6 @@ public class DefaultSmsService implements SmsService {
     private final AdminSettingsService adminSettingsService;
     private final TbApiUsageStateService apiUsageStateService;
     private final TbApiUsageReportClient apiUsageClient;
-
-    public DefaultSmsService(SmsSenderFactory smsSenderFactory, AdminSettingsService adminSettingsService,
-                             TbApiUsageStateService apiUsageStateService, TbApiUsageReportClient apiUsageClient) {
-        this.smsSenderFactory = smsSenderFactory;
-        this.adminSettingsService = adminSettingsService;
-        this.apiUsageStateService = apiUsageStateService;
-        this.apiUsageClient = apiUsageClient;
-    }
 
     @Override
     public void sendSms(TenantId tenantId, CustomerId customerId, String[] numbersTo, String message) throws ThingsboardException {

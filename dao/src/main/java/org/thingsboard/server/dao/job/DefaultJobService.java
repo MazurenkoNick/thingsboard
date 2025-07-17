@@ -197,7 +197,7 @@ public class DefaultJobService extends AbstractEntityService implements JobServi
                     .entity(job)
                     .build());
         }
-        log.info("[{}] Saved job: {}", tenantId, job);
+        log.debug("[{}] Saved job: {}", tenantId, job);
         if (prevStatus != null && job.getStatus() != prevStatus) {
             log.info("[{}][{}][{}] New job status: {} -> {}", tenantId, job.getId(), job.getType(), prevStatus, job.getStatus());
             if (job.getStatus().isOneOf(CANCELLED, COMPLETED, FAILED) && prevStatus != QUEUED) { // if prev status is QUEUED - means there are already running jobs with this type, no need to check for waiting job

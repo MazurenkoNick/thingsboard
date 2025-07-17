@@ -60,7 +60,6 @@ import org.thingsboard.server.dao.notification.NotificationSettingsService;
 import org.thingsboard.server.dao.service.PaginatedRemover;
 import org.thingsboard.server.dao.service.Validator;
 import org.thingsboard.server.dao.service.validator.TenantDataValidator;
-import org.thingsboard.server.dao.settings.AdminSettingsService;
 import org.thingsboard.server.dao.translation.CustomTranslationService;
 import org.thingsboard.server.dao.trendz.TrendzSettingsService;
 import org.thingsboard.server.dao.usagerecord.ApiUsageStateService;
@@ -98,8 +97,6 @@ public class TenantServiceImpl extends AbstractCachedEntityService<TenantId, Ten
     private ApiUsageStateService apiUsageStateService;
     @Autowired
     private WhiteLabelingService whiteLabelingService;
-    @Autowired
-    private AdminSettingsService adminSettingsService;
     @Autowired
     private NotificationSettingsService notificationSettingsService;
     @Autowired
@@ -211,7 +208,6 @@ public class TenantServiceImpl extends AbstractCachedEntityService<TenantId, Ten
         customTranslationService.deleteCustomTranslationByTenantId(tenantId);
         notificationSettingsService.deleteNotificationSettings(tenantId);
         trendzSettingsService.deleteTrendzSettings(tenantId);
-        adminSettingsService.deleteAdminSettingsByTenantId(tenantId);
         qrCodeSettingService.deleteByTenantId(tenantId);
         customMenuService.deleteByTenantId(tenantId);
         encryptionService.deleteEncryptionKeyByTenantId(tenantId);
@@ -221,7 +217,7 @@ public class TenantServiceImpl extends AbstractCachedEntityService<TenantId, Ten
         eventPublisher.publishEvent(DeleteEntityEvent.builder().tenantId(tenantId).entityId(tenantId).entity(tenant).build());
 
         cleanUpService.removeTenantEntities(tenantId, // don't forget to implement deleteEntity from EntityDaoService when adding entity type to this list
-                EntityType.JOB, EntityType.ENTITY_VIEW, EntityType.WIDGETS_BUNDLE, EntityType.WIDGET_TYPE,
+                EntityType.ADMIN_SETTINGS, EntityType.JOB, EntityType.ENTITY_VIEW, EntityType.WIDGETS_BUNDLE, EntityType.WIDGET_TYPE,
                 EntityType.ASSET, EntityType.ASSET_PROFILE, EntityType.DEVICE, EntityType.DEVICE_PROFILE,
                 EntityType.DASHBOARD, EntityType.EDGE, EntityType.RULE_CHAIN, EntityType.INTEGRATION,
                 EntityType.CONVERTER, EntityType.SCHEDULER_EVENT, EntityType.BLOB_ENTITY, EntityType.REPORT_TEMPLATE, EntityType.ENTITY_GROUP,
@@ -229,7 +225,7 @@ public class TenantServiceImpl extends AbstractCachedEntityService<TenantId, Ten
                 EntityType.OTA_PACKAGE, EntityType.RPC, EntityType.QUEUE, EntityType.NOTIFICATION_REQUEST,
                 EntityType.NOTIFICATION_RULE, EntityType.NOTIFICATION_TEMPLATE, EntityType.NOTIFICATION_TARGET,
                 EntityType.QUEUE_STATS, EntityType.CUSTOMER, EntityType.DOMAIN, EntityType.MOBILE_APP_BUNDLE,
-                EntityType.MOBILE_APP, EntityType.OAUTH2_CLIENT, EntityType.SECRET, EntityType.REPORT
+                EntityType.MOBILE_APP, EntityType.OAUTH2_CLIENT, EntityType.SECRET, EntityType.REPORT, EntityType.AI_MODEL
         );
     }
 
@@ -277,7 +273,7 @@ public class TenantServiceImpl extends AbstractCachedEntityService<TenantId, Ten
         return existsTenantCache.getAndPutInTransaction(tenantId, () -> tenantDao.existsById(tenantId, tenantId.getId()), false);
     }
 
-    private PaginatedRemover<TenantId, Tenant> tenantsRemover = new PaginatedRemover<>() {
+    private final PaginatedRemover<TenantId, Tenant> tenantsRemover = new PaginatedRemover<>() {
 
         @Override
         protected PageData<Tenant> findEntities(TenantId tenantId, TenantId id, PageLink pageLink) {

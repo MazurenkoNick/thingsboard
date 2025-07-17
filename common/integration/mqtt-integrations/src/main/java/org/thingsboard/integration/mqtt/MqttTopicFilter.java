@@ -32,9 +32,6 @@ package org.thingsboard.integration.mqtt;
 
 import lombok.Data;
 
-/**
- * Created by ashvayka on 25.12.17.
- */
 @Data
 public class MqttTopicFilter {
 

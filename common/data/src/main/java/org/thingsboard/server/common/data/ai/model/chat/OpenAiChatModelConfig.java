@@ -28,10 +28,46 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-:host {
-  .fields-group {
-    legend + * {
-      margin-top: 0;
+package org.thingsboard.server.common.data.ai.model.chat;
+
+import dev.langchain4j.model.chat.ChatModel;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
+import lombok.Builder;
+import lombok.With;
+import org.thingsboard.server.common.data.ai.provider.AiProvider;
+import org.thingsboard.server.common.data.ai.provider.OpenAiProviderConfig;
+
+@Builder
+public record OpenAiChatModelConfig(
+        @NotNull @Valid OpenAiProviderConfig providerConfig,
+        @NotBlank String modelId,
+        @PositiveOrZero Double temperature,
+        @Positive @Max(1) Double topP,
+        Double frequencyPenalty,
+        Double presencePenalty,
+        @Positive Integer maxOutputTokens,
+        @With @Positive Integer timeoutSeconds,
+        @With @PositiveOrZero Integer maxRetries
+) implements AiChatModelConfig<OpenAiChatModelConfig> {
+
+    @Override
+    public AiProvider provider() {
+        return AiProvider.OPENAI;
     }
-  }
+
+    @Override
+    public ChatModel configure(Langchain4jChatModelConfigurer configurer) {
+        return configurer.configureChatModel(this);
+    }
+
+    @Override
+    public boolean supportsJsonMode() {
+        return true;
+    }
+
 }

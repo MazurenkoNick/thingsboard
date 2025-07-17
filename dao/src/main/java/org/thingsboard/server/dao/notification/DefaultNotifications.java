@@ -424,7 +424,7 @@ public class DefaultNotifications {
             .subject("Report generated")
             .text("${reportFormat} report '${reportName}' is ready")
             .icon("description").color(null)
-            .button("Download").link("/api/v2/report/${reportId}/download")
+            .button("Go to reports").link("/reporting/reports")
             .build();
 
     private final NotificationTemplateService templateService;

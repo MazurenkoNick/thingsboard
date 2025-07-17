@@ -35,9 +35,6 @@ import org.thingsboard.mqtt.MqttClientConfig;
 
 import java.util.Optional;
 
-/**
- * Created by ashvayka on 23.01.17.
- */
 public class AnonymousCredentials implements MqttClientCredentials {
 
     @Override

@@ -59,6 +59,7 @@ import org.thingsboard.server.common.data.query.EntityCountQuery;
 import org.thingsboard.server.common.data.query.EntityData;
 import org.thingsboard.server.common.data.query.EntityDataPageLink;
 import org.thingsboard.server.common.data.query.EntityDataQuery;
+import org.thingsboard.server.common.data.query.EntityFilter;
 import org.thingsboard.server.common.msg.edqs.EdqsApiService;
 import org.thingsboard.server.common.msg.edqs.EdqsService;
 import org.thingsboard.server.config.annotations.ApiOperation;
@@ -92,6 +93,7 @@ public class EntityQueryController extends BaseController {
             @Parameter(description = "A JSON value representing the entity count query. See API call notes above for more details.")
             @RequestBody EntityCountQuery query) throws ThingsboardException {
         checkNotNull(query);
+        resolveQuery(query);
         return this.entityQueryService.countEntitiesByQuery(getCurrentUser(), query);
     }
 
@@ -103,6 +105,7 @@ public class EntityQueryController extends BaseController {
             @Parameter(description = "A JSON value representing the entity data query. See API call notes above for more details.")
             @RequestBody EntityDataQuery query) throws ThingsboardException {
         checkNotNull(query);
+        resolveQuery(query);
         return this.entityQueryService.findEntityDataByQuery(getCurrentUser(), query);
     }
 
@@ -120,6 +123,7 @@ public class EntityQueryController extends BaseController {
         if (assigneeId != null) {
             checkUserId(assigneeId, Operation.READ);
         }
+        resolveQuery(query);
         return this.entityQueryService.findAlarmDataByQuery(getCurrentUser(), query);
     }
 
@@ -134,6 +138,7 @@ public class EntityQueryController extends BaseController {
         if (assigneeId != null) {
             checkUserId(assigneeId, Operation.READ);
         }
+        resolveQuery(query);
         return this.entityQueryService.countAlarmsByQuery(getCurrentUser(), query);
     }
 
@@ -153,6 +158,7 @@ public class EntityQueryController extends BaseController {
             @RequestParam(value = "scope", required = false) String scope) throws ThingsboardException {
         TenantId tenantId = getTenantId();
         checkNotNull(query);
+        resolveQuery(query);
         EntityDataPageLink pageLink = query.getPageLink();
         if (pageLink.getPageSize() > MAX_PAGE_SIZE) {
             pageLink.setPageSize(MAX_PAGE_SIZE);
@@ -170,5 +176,12 @@ public class EntityQueryController extends BaseController {
     @GetMapping("/edqs/state")
     public EdqsState getEdqsState() {
         return edqsService.getState();
+    }
+
+    private void resolveQuery(EntityCountQuery query) throws ThingsboardException {
+        if (query.getEntityFilter() != null) {
+            var user = getCurrentUser();
+            EntityFilter.resolveEntityFilter(query.getEntityFilter(), getTenantId(), user.getId(), user.getOwnerId());
+        }
     }
 }

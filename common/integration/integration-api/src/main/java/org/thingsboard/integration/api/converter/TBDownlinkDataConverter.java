@@ -36,9 +36,6 @@ import org.thingsboard.server.common.msg.TbMsg;
 
 import java.util.List;
 
-/**
- * Created by ashvayka on 02.12.17.
- */
 public interface TBDownlinkDataConverter extends TBDataConverter {
 
     List<DownlinkData> convertDownLink(ConverterContext context, List<TbMsg> downLinkMsgs, IntegrationMetaData metadata) throws Exception;

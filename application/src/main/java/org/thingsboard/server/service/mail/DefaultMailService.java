@@ -36,10 +36,10 @@ import jakarta.activation.DataSource;
 import jakarta.annotation.PreDestroy;
 import jakarta.mail.internet.MimeMessage;
 import jakarta.mail.util.ByteArrayDataSource;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.core.NestedRuntimeException;
@@ -84,40 +84,28 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-@Service
 @Slf4j
+@Service
+@RequiredArgsConstructor
 public class DefaultMailService implements MailService {
 
-    public static final String TARGET_EMAIL = "targetEmail";
-    public static final String UTF_8 = "UTF-8";
+    private static final String TARGET_EMAIL = "targetEmail";
+    private static final String UTF_8 = "UTF-8";
+    private static final long DEFAULT_TIMEOUT = 10_000;
+
+    private final ScheduledExecutorService timeoutScheduler = ThingsBoardExecutors.newSingleThreadScheduledExecutor("mail-service-watchdog");
 
     private final AdminSettingsService adminSettingsService;
     private final BlobEntityService blobEntityService;
     private final TbApiUsageReportClient apiUsageClient;
-
-    private static final long DEFAULT_TIMEOUT = 10_000;
-
     @Lazy
-    @Autowired
-    private TbApiUsageStateService apiUsageStateService;
-
-    @Autowired
-    private MailSenderInternalExecutorService mailExecutorService;
-
-    @Autowired
-    private PasswordResetExecutorService passwordResetExecutorService;
-
-    @Autowired
-    private TbMailContextComponent ctx;
-
-    @Autowired
-    private RateLimitService rateLimitService;
-
-    @Autowired
-    private ReportService reportService;
-
-    @Autowired
-    private WhiteLabelingService whiteLabelingService;
+    private final TbApiUsageStateService apiUsageStateService;
+    private final MailSenderInternalExecutorService mailExecutorService;
+    private final PasswordResetExecutorService passwordResetExecutorService;
+    private final TbMailContextComponent ctx;
+    private final RateLimitService rateLimitService;
+    private final ReportService reportService;
+    private final WhiteLabelingService whiteLabelingService;
 
     @Value("${actors.rule.allow_system_mail_service}")
     private boolean allowSystemMailService;
@@ -125,20 +113,9 @@ public class DefaultMailService implements MailService {
     @Value("${mail.per_tenant_rate_limits:}")
     private String perTenantRateLimitConfig;
 
-    private final ScheduledExecutorService timeoutScheduler;
-
-    public DefaultMailService(AdminSettingsService adminSettingsService, BlobEntityService blobEntityService, TbApiUsageReportClient apiUsageClient) {
-        this.adminSettingsService = adminSettingsService;
-        this.blobEntityService = blobEntityService;
-        this.apiUsageClient = apiUsageClient;
-        this.timeoutScheduler = ThingsBoardExecutors.newSingleThreadScheduledExecutor("mail-service-watchdog");
-    }
-
     @PreDestroy
     public void destroy() {
-        if (timeoutScheduler != null) {
-            timeoutScheduler.shutdownNow();
-        }
+        timeoutScheduler.shutdownNow();
     }
 
     @Override
@@ -258,15 +235,15 @@ public class DefaultMailService implements MailService {
         JsonNode jsonConfig = configEntry.jsonConfig;
         if (externalMailSender || !configEntry.isSystem || apiUsageStateService.getApiUsageState(tenantId).isEmailSendEnabled()) {
             if (tenantId != null && !tenantId.isSysTenantId() && StringUtils.isNotEmpty(perTenantRateLimitConfig) &&
-                !rateLimitService.checkRateLimit(LimitedApi.EMAILS, (Object) tenantId, perTenantRateLimitConfig)) {
+                    !rateLimitService.checkRateLimit(LimitedApi.EMAILS, (Object) tenantId, perTenantRateLimitConfig)) {
                 throw new RateLimitExceededException(LimitedApi.EMAILS);
             }
             String mailFrom = getStringValue(jsonConfig, "mailFrom");
             try {
                 MimeMessage mailMsg = javaMailSender.createMimeMessage();
                 boolean multipart = MapUtils.isNotEmpty(tbEmail.getImages())
-                                    || CollectionsUtil.isNotEmpty(tbEmail.getAttachments())
-                                    || CollectionsUtil.isNotEmpty(tbEmail.getReports());
+                        || CollectionsUtil.isNotEmpty(tbEmail.getAttachments())
+                        || CollectionsUtil.isNotEmpty(tbEmail.getReports());
                 MimeMessageHelper helper = new MimeMessageHelper(mailMsg, multipart, "UTF-8");
                 helper.setFrom(StringUtils.isBlank(tbEmail.getFrom()) ? mailFrom : tbEmail.getFrom());
                 helper.setTo(tbEmail.getTo().split("\\s*,\\s*"));
@@ -402,89 +379,55 @@ public class DefaultMailService implements MailService {
     }
 
     private String toEnabledValueLabel(ApiFeature apiFeature) {
-        switch (apiFeature) {
-            case DB:
-                return "save";
-            case TRANSPORT:
-                return "receive";
-            case JS:
-                return "invoke";
-            case RE:
-                return "process";
-            case EMAIL:
-            case SMS:
-                return "send";
-            case ALARM:
-                return "create";
-            default:
-                throw new RuntimeException("Not implemented!");
-        }
+        return switch (apiFeature) {
+            case DB -> "save";
+            case TRANSPORT -> "receive";
+            case JS -> "invoke";
+            case RE -> "process";
+            case EMAIL, SMS -> "send";
+            case ALARM -> "create";
+            default -> throw new RuntimeException("Not implemented!");
+        };
     }
 
     private String toDisabledValueLabel(ApiFeature apiFeature) {
-        switch (apiFeature) {
-            case DB:
-                return "saved";
-            case TRANSPORT:
-                return "received";
-            case JS:
-                return "invoked";
-            case RE:
-                return "processed";
-            case EMAIL:
-            case SMS:
-                return "sent";
-            case ALARM:
-                return "created";
-            default:
-                throw new RuntimeException("Not implemented!");
-        }
+        return switch (apiFeature) {
+            case DB -> "saved";
+            case TRANSPORT -> "received";
+            case JS -> "invoked";
+            case RE -> "processed";
+            case EMAIL, SMS -> "sent";
+            case ALARM -> "created";
+            default -> throw new RuntimeException("Not implemented!");
+        };
     }
 
     private String toWarningValueLabel(ApiUsageRecordState recordState) {
         String valueInM = recordState.getValueAsString();
         String thresholdInM = recordState.getThresholdAsString();
-        switch (recordState.getKey()) {
-            case STORAGE_DP_COUNT:
-            case TRANSPORT_DP_COUNT:
-                return valueInM + " out of " + thresholdInM + " allowed data points";
-            case TRANSPORT_MSG_COUNT:
-                return valueInM + " out of " + thresholdInM + " allowed messages";
-            case JS_EXEC_COUNT:
-                return valueInM + " out of " + thresholdInM + " allowed JavaScript functions";
-            case TBEL_EXEC_COUNT:
-                return valueInM + " out of " + thresholdInM + " allowed Tbel functions";
-            case RE_EXEC_COUNT:
-                return valueInM + " out of " + thresholdInM + " allowed Rule Engine messages";
-            case EMAIL_EXEC_COUNT:
-                return valueInM + " out of " + thresholdInM + " allowed Email messages";
-            case SMS_EXEC_COUNT:
-                return valueInM + " out of " + thresholdInM + " allowed SMS messages";
-            default:
-                throw new RuntimeException("Not implemented!");
-        }
+        return switch (recordState.getKey()) {
+            case STORAGE_DP_COUNT, TRANSPORT_DP_COUNT -> valueInM + " out of " + thresholdInM + " allowed data points";
+            case TRANSPORT_MSG_COUNT -> valueInM + " out of " + thresholdInM + " allowed messages";
+            case JS_EXEC_COUNT -> valueInM + " out of " + thresholdInM + " allowed JavaScript functions";
+            case TBEL_EXEC_COUNT -> valueInM + " out of " + thresholdInM + " allowed Tbel functions";
+            case RE_EXEC_COUNT -> valueInM + " out of " + thresholdInM + " allowed Rule Engine messages";
+            case EMAIL_EXEC_COUNT -> valueInM + " out of " + thresholdInM + " allowed Email messages";
+            case SMS_EXEC_COUNT -> valueInM + " out of " + thresholdInM + " allowed SMS messages";
+            default -> throw new RuntimeException("Not implemented!");
+        };
     }
 
     private String toDisabledValueLabel(ApiUsageRecordState recordState) {
-        switch (recordState.getKey()) {
-            case STORAGE_DP_COUNT:
-            case TRANSPORT_DP_COUNT:
-                return recordState.getValueAsString() + " data points";
-            case TRANSPORT_MSG_COUNT:
-                return recordState.getValueAsString() + " messages";
-            case JS_EXEC_COUNT:
-                return "JavaScript functions " + recordState.getValueAsString() + " times";
-            case TBEL_EXEC_COUNT:
-                return "TBEL functions " + recordState.getValueAsString() + " times";
-            case RE_EXEC_COUNT:
-                return recordState.getValueAsString() + " Rule Engine messages";
-            case EMAIL_EXEC_COUNT:
-                return recordState.getValueAsString() + " Email messages";
-            case SMS_EXEC_COUNT:
-                return recordState.getValueAsString() + " SMS messages";
-            default:
-                throw new RuntimeException("Not implemented!");
-        }
+        return switch (recordState.getKey()) {
+            case STORAGE_DP_COUNT, TRANSPORT_DP_COUNT -> recordState.getValueAsString() + " data points";
+            case TRANSPORT_MSG_COUNT -> recordState.getValueAsString() + " messages";
+            case JS_EXEC_COUNT -> "JavaScript functions " + recordState.getValueAsString() + " times";
+            case TBEL_EXEC_COUNT -> "TBEL functions " + recordState.getValueAsString() + " times";
+            case RE_EXEC_COUNT -> recordState.getValueAsString() + " Rule Engine messages";
+            case EMAIL_EXEC_COUNT -> recordState.getValueAsString() + " Email messages";
+            case SMS_EXEC_COUNT -> recordState.getValueAsString() + " SMS messages";
+            default -> throw new RuntimeException("Not implemented!");
+        };
     }
 
     private void sendMail(JavaMailSenderImpl mailSender,

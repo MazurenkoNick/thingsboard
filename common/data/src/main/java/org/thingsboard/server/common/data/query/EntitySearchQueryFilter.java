@@ -37,12 +37,12 @@ import org.thingsboard.server.common.data.relation.EntitySearchDirection;
 @Data
 public abstract class EntitySearchQueryFilter implements EntityFilter {
 
-    private EntityId rootEntity;
+    private AliasEntityId rootEntity;
     private String relationType;
     private EntitySearchDirection direction;
     private int maxLevel;
     private boolean fetchLastLevelOnly;
     private boolean rootStateEntity;
-    private EntityId defaultStateEntity;
+    private AliasEntityId defaultStateEntity;
 
 }

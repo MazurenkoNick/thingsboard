@@ -36,12 +36,9 @@ import org.apache.commons.lang3.StringUtils;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.stream.Collectors;
 
-/**
- * @author Andrew Shvayka
- */
 public enum EntityType {
+
     TENANT(1),
     CUSTOMER(2, true),
     USER(3, "tb_user", true),
@@ -97,7 +94,14 @@ public enum EntityType {
     CALCULATED_FIELD(39),
     CALCULATED_FIELD_LINK(40),
     JOB(41),
-    SECRET(107);
+    SECRET(107),
+    ADMIN_SETTINGS(42),
+    AI_MODEL(43, "ai_model", false) {
+        @Override
+        public String getNormalName() {
+            return "AI model";
+        }
+    };
 
     @Getter
     private final int protoNumber; // Corresponds to EntityTypeProto
@@ -110,10 +114,12 @@ public enum EntityType {
             .toLowerCase().replaceAll("_", " "));
 
     public static final List<EntityType> GROUP_ENTITY_TYPES = EnumSet.allOf(EntityType.class).stream()
-            .filter(EntityType::isGroupEntityType).collect(Collectors.toUnmodifiableList());
+            .filter(EntityType::isGroupEntityType)
+            .toList();
 
     public static final List<String> NORMAL_NAMES = EnumSet.allOf(EntityType.class).stream()
-            .map(EntityType::getNormalName).collect(Collectors.toUnmodifiableList());
+            .map(EntityType::getNormalName)
+            .toList();
 
     private static final EntityType[] BY_PROTO;
 

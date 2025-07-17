@@ -48,7 +48,9 @@ import org.thingsboard.server.common.data.id.NotificationTemplateId;
 import org.thingsboard.server.common.data.id.ReportTemplateId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.id.UserId;
+import org.thingsboard.server.common.data.notification.NotificationRequest;
 
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -135,6 +137,11 @@ public class Job extends BaseData<JobId> implements TenantEntity {
             return this;
         }
 
+        public ReportJobBuilder originator(EntityId originator) {
+            this.configuration.setOriginator(originator);
+            return this;
+        }
+
         public ReportJobBuilder recipientId(NotificationTargetId recipientId) {
             this.configuration.setRecipientId(recipientId);
             return this;
@@ -145,10 +152,16 @@ public class Job extends BaseData<JobId> implements TenantEntity {
             return this;
         }
 
+        public ReportJobBuilder notificationRequests(List<NotificationRequest> notificationRequests) {
+            this.configuration.setNotificationRequests(notificationRequests);
+            return this;
+        }
+
         public Job build() {
             String key = UUID.randomUUID().toString(); // we can submit multiple report jobs at once regardless of the configuration
             return new Job(tenantId, JobType.REPORT, key, entityId, configuration);
         }
+
     }
 
     @Override

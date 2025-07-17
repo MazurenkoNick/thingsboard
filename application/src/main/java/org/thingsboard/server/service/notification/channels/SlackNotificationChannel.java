@@ -35,7 +35,7 @@ import org.springframework.stereotype.Component;
 import org.thingsboard.rule.engine.api.notification.SlackService;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.notification.NotificationDeliveryMethod;
-import org.thingsboard.server.common.data.notification.info.NotificationInfo;
+import org.thingsboard.server.common.data.notification.NotificationRequestConfig;
 import org.thingsboard.server.common.data.notification.settings.NotificationSettings;
 import org.thingsboard.server.common.data.notification.settings.SlackNotificationDeliveryMethodConfig;
 import org.thingsboard.server.common.data.notification.targets.slack.SlackConversation;
@@ -60,10 +60,10 @@ public class SlackNotificationChannel implements NotificationChannel<SlackConver
     @Override
     public void sendNotification(SlackConversation conversation, SlackDeliveryMethodNotificationTemplate processedTemplate, NotificationProcessingContext ctx) throws Exception {
         SlackNotificationDeliveryMethodConfig config = ctx.getDeliveryMethodConfig(NotificationDeliveryMethod.SLACK);
-        NotificationInfo info = ctx.getRequest().getInfo();
         List<SlackFile> files = null;
-        if (info != null && CollectionsUtil.isNotEmpty(info.getReports())) {
-            files = info.getReports().stream()
+        NotificationRequestConfig requestConfig = ctx.getRequest().getAdditionalConfig();
+        if (requestConfig != null && CollectionsUtil.isNotEmpty(requestConfig.getReports())) {
+            files = requestConfig.getReports().stream()
                     .map(reportId -> {
                         Report report = reportService.findReportById(ctx.getTenantId(), reportId);
                         return SlackFile.builder()
