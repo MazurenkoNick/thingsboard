@@ -35,9 +35,6 @@ import org.thingsboard.server.common.data.edge.EdgeEventType;
 
 import java.util.UUID;
 
-/**
- * Created by ashvayka on 25.04.17.
- */
 public class EntityIdFactory {
 
     public static EntityId getByTypeAndUuid(int type, String uuid) {
@@ -114,6 +111,7 @@ public class EntityIdFactory {
             case CALCULATED_FIELD_LINK -> new CalculatedFieldLinkId(uuid);
             case JOB -> new JobId(uuid);
             case SECRET -> new SecretId(uuid);
+            case ADMIN_SETTINGS -> new AdminSettingsId(uuid);
             case AI_MODEL -> new AiModelId(uuid);
         };
     }
@@ -135,7 +133,7 @@ public class EntityIdFactory {
             case ASSET_PROFILE -> new AssetProfileId(uuid);
             case TENANT_PROFILE -> new TenantProfileId(uuid);
             case OTA_PACKAGE -> new OtaPackageId(uuid);
-            case EDGE -> new EdgeId(uuid);
+            case EDGE -> EdgeId.fromUUID(uuid);
             case SCHEDULER_EVENT -> new SchedulerEventId(uuid);
             case ENTITY_GROUP, DEVICE_GROUP_OTA -> new EntityGroupId(uuid);
             case ROLE -> new RoleId(uuid);

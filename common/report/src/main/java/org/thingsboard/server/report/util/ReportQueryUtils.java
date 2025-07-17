@@ -30,6 +30,7 @@
  */
 package org.thingsboard.server.report.util;
 
+import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.id.DeviceId;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.kv.Aggregation;
@@ -37,8 +38,9 @@ import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.query.AlarmCountQuery;
 import org.thingsboard.server.common.data.query.AlarmDataPageLink;
 import org.thingsboard.server.common.data.query.AlarmDataQuery;
+import org.thingsboard.server.common.data.query.AliasEntityId;
+import org.thingsboard.server.common.data.query.AliasEntityType;
 import org.thingsboard.server.common.data.query.EntityCountQuery;
-import org.thingsboard.server.common.data.query.EntityData;
 import org.thingsboard.server.common.data.query.EntityDataPageLink;
 import org.thingsboard.server.common.data.query.EntityDataQuery;
 import org.thingsboard.server.common.data.query.EntityDataSortOrder;
@@ -57,6 +59,7 @@ import org.thingsboard.server.common.data.report.configuration.DataSourceType;
 import org.thingsboard.server.common.data.report.configuration.ReportTemplateConfig;
 import org.thingsboard.server.common.data.report.configuration.components.AlarmTableComponent;
 import org.thingsboard.server.common.data.report.configuration.timewindow.TimeIntervalCalculator;
+import org.thingsboard.server.report.context.TbReportCtx;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -75,16 +78,16 @@ public class ReportQueryUtils {
     private static final EntityDataSortOrder DEFAULT_SORT_ORDER = new EntityDataSortOrder(new EntityKey(EntityKeyType.ENTITY_FIELD, "id"), EntityDataSortOrder.Direction.ASC);
     private static final EntityDataSortOrder DEFAULT_ALARM_SORT_ORDER = new EntityDataSortOrder(new EntityKey(EntityKeyType.ALARM_FIELD, "createdTime"), EntityDataSortOrder.Direction.DESC);
 
-    public static EntityCountQuery toEntityCountQuery(DataSource dataSource, ReportTemplateConfig reportTemplateConfig) {
-        EntityFilter entityFilter = buildEntityFilter(dataSource, reportTemplateConfig, null);
-        List<KeyFilter> keyFilters = findKeyFilters(dataSource, reportTemplateConfig);
+    public static EntityCountQuery toEntityCountQuery(DataSource dataSource, TbReportCtx ctx) {
+        EntityFilter entityFilter = buildEntityFilter(dataSource, ctx, null);
+        List<KeyFilter> keyFilters = findKeyFilters(dataSource, ctx.getConfiguration());
 
         return new EntityCountQuery(entityFilter, keyFilters);
     }
 
-    public static AlarmCountQuery toAlarmCountQuery(DataSource dataSource, ReportTemplateConfig reportTemplateConfig) {
-        EntityFilter entityFilter = buildEntityFilter(dataSource, reportTemplateConfig, null);
-        List<KeyFilter> keyFilters = findKeyFilters(dataSource, reportTemplateConfig);
+    public static AlarmCountQuery toAlarmCountQuery(DataSource dataSource, TbReportCtx ctx) {
+        EntityFilter entityFilter = buildEntityFilter(dataSource, ctx, null);
+        List<KeyFilter> keyFilters = findKeyFilters(dataSource, ctx.getConfiguration());
         AlarmCountQuery alarmCountQuery = new AlarmCountQuery(entityFilter, keyFilters);
 
         AlarmFilterConfig alarmFilterConfig = dataSource.getAlarmFilterConfig();
@@ -97,10 +100,10 @@ public class ReportQueryUtils {
         return alarmCountQuery;
     }
 
-    public static AlarmDataQuery toAlarmDataQuery(AlarmTableComponent component, ReportTemplateConfig reportTemplateConfig, EntityData stateEntity, PageLink pageLink) {
+    public static AlarmDataQuery toAlarmDataQuery(AlarmTableComponent component, TbReportCtx ctx, EntityId stateEntityId, PageLink pageLink) {
         DataSource alarmSource = component.getAlarmSource();
-        EntityFilter entityFilter = buildEntityFilter(alarmSource, reportTemplateConfig, stateEntity);
-        List<KeyFilter> keyFilters = findKeyFilters(alarmSource, reportTemplateConfig);
+        EntityFilter entityFilter = buildEntityFilter(alarmSource, ctx, stateEntityId);
+        List<KeyFilter> keyFilters = findKeyFilters(alarmSource, ctx.getConfiguration());
 
         List<EntityKey> alarmFields = alarmSource.getDataKeys().stream().filter(dataKey -> "alarm".equals(dataKey.getType())).map(dataKey ->
                 new EntityKey(EntityKeyType.ALARM_FIELD, dataKey.getName())).toList();
@@ -136,11 +139,11 @@ public class ReportQueryUtils {
         return new AlarmDataQuery(entityFilter, alarmDataPageLink, entityFields, latestValues, keyFilters, alarmFields);
     }
 
-    public static EntityDataQuery toEntityDataQuery(DataSource dataSource, ReportTemplateConfig reportTemplateConfig, EntityData stateEntity, PageLink pageLink) {
+    public static EntityDataQuery toEntityDataQuery(DataSource dataSource, TbReportCtx ctx, EntityId stateEntityId, PageLink pageLink) {
         EntityDataPageLink entityDataPageLink = new EntityDataPageLink(pageLink.getPageSize(), pageLink.getPage(), pageLink.getTextSearch(), DEFAULT_SORT_ORDER);
 
-        EntityFilter filter = buildEntityFilter(dataSource, reportTemplateConfig, stateEntity);
-        List<KeyFilter> keyFilters = findKeyFilters(dataSource, reportTemplateConfig);
+        EntityFilter filter = buildEntityFilter(dataSource, ctx, stateEntityId);
+        List<KeyFilter> keyFilters = findKeyFilters(dataSource, ctx.getConfiguration());
 
         List<EntityKey> entityFields = new ArrayList<>();
         List<EntityKey> latestValues = new ArrayList<>();
@@ -166,54 +169,87 @@ public class ReportQueryUtils {
         return new EntityDataQuery(filter, entityDataPageLink, entityFields, latestValues, keyFilters);
     }
 
-    private static EntityFilter buildEntityFilter(DataSource dataSource, ReportTemplateConfig config, EntityData stateEntity) {
+    private static EntityFilter buildEntityFilter(DataSource dataSource, TbReportCtx ctx, EntityId stateEntityId) {
         if (dataSource.getType() == DataSourceType.DEVICE) {
             return buildSingleEntityFilter(DeviceId.fromString(dataSource.getDeviceId()));
         }
-        return buildAliasBasedFilter(dataSource, config, stateEntity);
+        return buildAliasBasedFilter(dataSource, ctx, stateEntityId);
     }
 
     private static EntityFilter buildSingleEntityFilter(EntityId entityId) {
         SingleEntityFilter filter = new SingleEntityFilter();
-        filter.setSingleEntity(entityId);
+        filter.setSingleEntity(AliasEntityId.fromEntityId(entityId));
         return filter;
     }
 
-    private static EntityFilter buildAliasBasedFilter(DataSource dataSource, ReportTemplateConfig config, EntityData stateEntity) {
-        EntityFilter filter = config.getEntityAliases().stream()
+    private static EntityFilter buildAliasBasedFilter(DataSource dataSource, TbReportCtx ctx, EntityId stateEntityId) {
+        EntityFilter filter = ctx.getConfiguration().getEntityAliases().stream()
                 .filter(alias -> alias.getId().equals(dataSource.getEntityAliasId()))
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("Entity alias not found: " + dataSource.getEntityAliasId()))
                 .getFilter();
 
-        EntityId resolvedEntity = resolveStateEntityId(stateEntity, filter);
+        EntityId resolvedEntity = resolveStateEntityId(stateEntityId, filter, ctx);
 
-        if (filter instanceof StateEntityFilter) {
+        if (filter instanceof SingleEntityFilter singleEntityFilter) {
+            EntityId resolved = resolveAliasEntityId(singleEntityFilter.getSingleEntity(), ctx);
+            singleEntityFilter.setSingleEntity(AliasEntityId.fromEntityId(resolved));
+        } else if (filter instanceof StateEntityFilter) {
             return buildSingleEntityFilter(resolvedEntity);
         } else if (filter instanceof StateEntityOwnerFilter) {
             StateEntityOwnerFilter ownerFilter = new StateEntityOwnerFilter();
             ownerFilter.setSingleEntity(resolvedEntity);
             return ownerFilter;
         } else if (filter instanceof EntitySearchQueryFilter queryFilter && queryFilter.isRootStateEntity()) {
-            queryFilter.setRootEntity(resolvedEntity);
+            queryFilter.setRootEntity(AliasEntityId.fromEntityId(resolvedEntity));
         }
 
         return filter;
     }
 
-    private static EntityId resolveStateEntityId(EntityData stateEntity, EntityFilter filter) {
-        if (stateEntity != null) {
-            return stateEntity.getEntityId();
+    private static EntityId resolveStateEntityId(EntityId stateEntityId, EntityFilter filter, TbReportCtx ctx) {
+        if (stateEntityId != null) {
+            return stateEntityId;
         }
 
         if (filter instanceof StateEntityFilter stateFilter) {
-            return stateFilter.getDefaultStateEntity();
+            return resolveAliasEntityId(stateFilter.getDefaultStateEntity(), ctx);
         } else if (filter instanceof StateEntityOwnerFilter ownerFilter) {
-            return ownerFilter.getDefaultStateEntity();
+            return resolveAliasEntityId(ownerFilter.getDefaultStateEntity(), ctx);
         } else if (filter instanceof EntitySearchQueryFilter queryFilter) {
-            return queryFilter.getDefaultStateEntity();
+            return resolveAliasEntityId(queryFilter.getDefaultStateEntity(), ctx);
         }
 
+        return null;
+    }
+
+    private static EntityId resolveAliasEntityId(AliasEntityId aliasEntityId, TbReportCtx ctx) {
+        if (aliasEntityId != null) {
+            if (aliasEntityId.isAliasEntityId()) {
+                AliasEntityType aliasEntityType = aliasEntityId.getAliasEntityType();
+                switch (aliasEntityType) {
+                    case CURRENT_CUSTOMER -> {
+                        EntityId userOwnerId = ctx.getUserOwnerId();
+                        if (EntityType.CUSTOMER.equals(userOwnerId.getEntityType())) {
+                            return userOwnerId;
+                        } else {
+                            return aliasEntityId.defaultEntityId();
+                        }
+                    }
+                    case CURRENT_TENANT -> {
+                        return ctx.getTenantId();
+                    }
+                    case CURRENT_USER -> {
+                        return ctx.getUserId();
+                    }
+                    case CURRENT_USER_OWNER -> {
+                        return ctx.getUserOwnerId();
+                    }
+                }
+            } else {
+                return aliasEntityId.toEntityId();
+            }
+        }
         return null;
     }
 

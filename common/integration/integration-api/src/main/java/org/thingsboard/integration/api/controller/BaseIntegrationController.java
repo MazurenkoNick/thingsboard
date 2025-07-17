@@ -33,9 +33,6 @@ package org.thingsboard.integration.api.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.thingsboard.integration.api.IntegrationControllerApi;
 
-/**
- * Created by ashvayka on 18.12.17.
- */
 public class BaseIntegrationController {
 
     @Autowired(required = false)

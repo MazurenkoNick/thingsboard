@@ -86,6 +86,7 @@ public class TbGenerateReportV2Node implements TbNode {
                 .reportTemplateId(reportConfig.getReportTemplateId())
                 .userId(reportConfig.getUserId())
                 .timezone(reportConfig.getTimezone())
+                .originator(msg.getOriginator())
                 .recipientId(reportConfig.getRecipientId())
                 .notificationTemplateId(reportConfig.getNotificationTemplateId())
                 .build();

@@ -28,21 +28,19 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.common.data.query;
+package org.thingsboard.server.transport.lwm2m.rpc.sql;
 
-import lombok.Data;
-import org.thingsboard.server.common.data.id.EntityId;
-import org.thingsboard.server.common.data.relation.EntitySearchDirection;
+import org.junit.Test;
+import org.thingsboard.server.common.data.device.credentials.lwm2m.LwM2MDeviceCredentials;
+import org.thingsboard.server.transport.lwm2m.security.AbstractSecurityLwM2MIntegrationTest;
 
-@Data
-public abstract class EntitySearchQueryFilter implements EntityFilter {
+public class RpcLwm2mIntegrationDataReceivedFromClientTest extends AbstractSecurityLwM2MIntegrationTest {
 
-    private AliasEntityId rootEntity;
-    private String relationType;
-    private EntitySearchDirection direction;
-    private int maxLevel;
-    private boolean fetchLastLevelOnly;
-    private boolean rootStateEntity;
-    private AliasEntityId defaultStateEntity;
+    @Test
+    public void testWithNoSecConnectLwm2mSuccessAndObserveTelemetry() throws Exception {
+        String clientEndpoint = CLIENT_ENDPOINT_NO_SEC;
+        LwM2MDeviceCredentials clientCredentials = getDeviceCredentialsNoSec(createNoSecClientCredentials(clientEndpoint));
+        super.testConnectionWithoutObserveWithDataReceivedSingleTelemetry(SECURITY_NO_SEC, clientCredentials, clientEndpoint, false);
+    }
 
 }

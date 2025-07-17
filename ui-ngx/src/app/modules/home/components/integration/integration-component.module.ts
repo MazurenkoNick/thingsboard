@@ -92,7 +92,6 @@ import {
 import {
   AwsKinesisIntegrationFormComponent
 } from '@home/components/integration/configuration/aws-kinesis-integration-form/aws-kinesis-integration-form.component';
-import { IbmWatsonIotIntegrationFormComponent } from '@home/components/integration/configuration/ibm-watson-iot-integration-form/ibm-watson-iot-integration-form.component';
 import { AwsSqsIntegrationFormComponent } from '@home/components/integration/configuration/aws-sqs-integration-form/aws-sqs-integration-form.component';
 import {
   UdpIntegrationFormComponent
@@ -152,7 +151,6 @@ import {
     ApachePulsarIntegrationFormComponent,
     CustomIntegrationFormComponent,
     AwsKinesisIntegrationFormComponent,
-    IbmWatsonIotIntegrationFormComponent,
     AwsSqsIntegrationFormComponent,
     UdpIntegrationFormComponent,
     AzureEventHubIntegrationFormComponent,

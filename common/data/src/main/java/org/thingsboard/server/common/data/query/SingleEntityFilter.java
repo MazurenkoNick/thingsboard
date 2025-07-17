@@ -40,6 +40,6 @@ public class SingleEntityFilter implements EntityFilter {
         return EntityFilterType.SINGLE_ENTITY;
     }
 
-    private EntityId singleEntity;
+    private AliasEntityId singleEntity;
 
 }
