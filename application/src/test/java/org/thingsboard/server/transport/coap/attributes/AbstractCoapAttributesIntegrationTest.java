@@ -50,6 +50,7 @@ import org.thingsboard.server.common.data.device.profile.DefaultCoapDeviceTypeCo
 import org.thingsboard.server.common.data.device.profile.DeviceProfileTransportConfiguration;
 import org.thingsboard.server.common.data.device.profile.ProtoTransportPayloadConfiguration;
 import org.thingsboard.server.common.data.device.profile.TransportPayloadTypeConfiguration;
+import org.thingsboard.server.common.data.query.AliasEntityId;
 import org.thingsboard.server.common.data.query.EntityKey;
 import org.thingsboard.server.common.data.query.EntityKeyType;
 import org.thingsboard.server.common.data.query.SingleEntityFilter;
@@ -185,7 +186,7 @@ public abstract class AbstractCoapAttributesIntegrationTest extends AbstractCoap
     protected void processJsonTestRequestAttributesValuesFromTheServer() throws Exception {
         client = new CoapTestClient(accessToken, FeatureType.ATTRIBUTES);
         SingleEntityFilter dtf = new SingleEntityFilter();
-        dtf.setSingleEntity(savedDevice.getId());
+        dtf.setSingleEntity(AliasEntityId.fromEntityId(savedDevice.getId()));
         String clientKeysStr = "clientStr,clientBool,clientDbl,clientLong,clientJson";
         String sharedKeysStr = "sharedStr,sharedBool,sharedDbl,sharedLong,sharedJson";
         List<String> clientKeysList = List.of(clientKeysStr.split(","));
@@ -215,7 +216,7 @@ public abstract class AbstractCoapAttributesIntegrationTest extends AbstractCoap
     protected void processProtoTestRequestAttributesValuesFromTheServer() throws Exception {
         client = new CoapTestClient(accessToken, FeatureType.ATTRIBUTES);
         SingleEntityFilter dtf = new SingleEntityFilter();
-        dtf.setSingleEntity(savedDevice.getId());
+        dtf.setSingleEntity(AliasEntityId.fromEntityId(savedDevice.getId()));
         String clientKeysStr = "clientStr,clientBool,clientDbl,clientLong,clientJson";
         String sharedKeysStr = "sharedStr,sharedBool,sharedDbl,sharedLong,sharedJson";
         List<String> clientKeysList = List.of(clientKeysStr.split(","));

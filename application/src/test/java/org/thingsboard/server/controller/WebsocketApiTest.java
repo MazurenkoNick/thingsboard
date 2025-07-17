@@ -59,6 +59,7 @@ import org.thingsboard.server.common.data.kv.StringDataEntry;
 import org.thingsboard.server.common.data.kv.TsKvEntry;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.query.AlarmCountQuery;
+import org.thingsboard.server.common.data.query.AliasEntityId;
 import org.thingsboard.server.common.data.query.DeviceTypeFilter;
 import org.thingsboard.server.common.data.query.EntityCountQuery;
 import org.thingsboard.server.common.data.query.EntityData;
@@ -347,7 +348,7 @@ public class WebsocketApiTest extends AbstractControllerTest {
         loginTenantAdmin();
 
         SingleEntityFilter singleEntityFilter = new SingleEntityFilter();
-        singleEntityFilter.setSingleEntity(tenantId);
+        singleEntityFilter.setSingleEntity(AliasEntityId.fromEntityId(tenantId));
         AlarmCountQuery alarmCountQuery = new AlarmCountQuery(singleEntityFilter);
         AlarmCountCmd cmd1 = new AlarmCountCmd(1, alarmCountQuery);
 
@@ -371,7 +372,7 @@ public class WebsocketApiTest extends AbstractControllerTest {
         Assert.assertEquals(1, update.getCount());
 
         // set wrong entity id in filter, check count = 0
-        singleEntityFilter.setSingleEntity(tenantAdminUserId);
+        singleEntityFilter.setSingleEntity(AliasEntityId.fromEntityId(tenantAdminUserId));
         AlarmCountCmd cmd3 = new AlarmCountCmd(2, alarmCountQuery);
 
         getWsClient().send(cmd3);
@@ -880,7 +881,7 @@ public class WebsocketApiTest extends AbstractControllerTest {
     public void testAttributesSubscription_sysAdmin() throws Exception {
         loginSysAdmin();
         SingleEntityFilter entityFilter = new SingleEntityFilter();
-        entityFilter.setSingleEntity(tenantId);
+        entityFilter.setSingleEntity(AliasEntityId.fromEntityId(tenantId));
 
         assertThatNoException().as("subscribeForAttributes").isThrownBy(() -> {
             JsonNode update = getWsClient().subscribeForAttributes(tenantId, TbAttributeSubscriptionScope.SERVER_SCOPE.name(), List.of("attr"));

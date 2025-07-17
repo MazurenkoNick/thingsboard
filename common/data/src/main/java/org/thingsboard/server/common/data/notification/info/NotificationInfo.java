@@ -53,7 +53,6 @@ public interface NotificationInfo {
         return null;
     }
 
-
     static NotificationInfo userActivated(String userFullName, String userEmail) {
         return UserActivatedNotificationInfo.builder()
                 .userFullName(userFullName)

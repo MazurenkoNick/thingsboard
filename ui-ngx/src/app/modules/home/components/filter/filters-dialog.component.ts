@@ -64,6 +64,7 @@ export interface FiltersDialogData {
   disableAdd?: boolean;
   singleFilter?: Filter;
   customTitle?: string;
+  disableUserEdit?: boolean;
 }
 
 @Component({
@@ -77,6 +78,7 @@ export class FiltersDialogComponent extends DialogComponent<FiltersDialogCompone
 
   title: string;
   disableAdd: boolean;
+  disableUserEdit: boolean;
 
   filterToWidgetsMap: {[filterId: string]: Array<string>} = {};
 
@@ -100,6 +102,7 @@ export class FiltersDialogComponent extends DialogComponent<FiltersDialogCompone
     super(store, router, dialogRef);
     this.title = data.customTitle ? data.customTitle : 'filter.filters';
     this.disableAdd = this.data.disableAdd;
+    this.disableUserEdit = this.data.disableUserEdit;
 
     if (data.widgets) {
       let widgetsTitleList: Array<string>;
@@ -129,7 +132,7 @@ export class FiltersDialogComponent extends DialogComponent<FiltersDialogCompone
     const filterControls: Array<AbstractControl> = [];
     for (const filterId of Object.keys(this.data.filters)) {
       const filter = this.data.filters[filterId];
-      if (isUndefined(filter.editable)) {
+      if (!this.disableUserEdit && isUndefined(filter.editable)) {
         filter.editable = true;
       }
       this.filterNames.add(filter.filter);
@@ -145,9 +148,11 @@ export class FiltersDialogComponent extends DialogComponent<FiltersDialogCompone
     const filterFormControl = this.fb.group({
       id: [filterId],
       filter: [filter ? filter.filter : null, [Validators.required]],
-      keyFilters: [filter ? filter.keyFilters : [], [Validators.required]],
-      editable: [filter ? filter.editable : true]
+      keyFilters: [filter ? filter.keyFilters : [], [Validators.required]]
     });
+    if (!this.disableUserEdit) {
+      filterFormControl.addControl('editable', this.fb.control(filter ? filter.editable : true));
+    }
     return filterFormControl;
   }
 
@@ -229,6 +234,7 @@ export class FiltersDialogComponent extends DialogComponent<FiltersDialogCompone
       panelClass: ['tb-dialog', 'tb-fullscreen-dialog'],
       data: {
         isAdd,
+        disableUserEdit: this.disableUserEdit,
         filters: filtersArray,
         filter: isAdd ? null : deepClone(filter)
       }
@@ -240,8 +246,10 @@ export class FiltersDialogComponent extends DialogComponent<FiltersDialogCompone
         } else {
           const filterFormControl = (this.filtersFormGroup.get('filters') as UntypedFormArray).at(index);
           filterFormControl.get('filter').patchValue(result.filter);
-          filterFormControl.get('editable').patchValue(result.editable);
           filterFormControl.get('keyFilters').patchValue(result.keyFilters);
+          if (!this.disableUserEdit) {
+            filterFormControl.get('editable').patchValue(result.editable);
+          }
         }
         this.filterNames.add(result.filter);
         this.filtersFormGroup.markAsDirty();
@@ -266,7 +274,7 @@ export class FiltersDialogComponent extends DialogComponent<FiltersDialogCompone
       const filterId: string = filterValue.id;
       const filter: string = filterValue.filter;
       const keyFilters: Array<KeyFilterInfo> = filterValue.keyFilters;
-      const editable: boolean = filterValue.editable;
+      const editable: boolean = !this.disableUserEdit ? filterValue.editable : false;
       if (uniqueFilterList[filter]) {
         valid = false;
         message = this.translate.instant('filter.duplicate-filter-error', {filter});

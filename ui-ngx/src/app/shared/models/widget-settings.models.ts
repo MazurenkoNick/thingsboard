@@ -73,11 +73,11 @@ import { TbUnit, TbUnitConverter } from '@shared/models/unit.models';
 
 export type ComponentStyle = {[klass: string]: any};
 
-export const cssUnits = ['px', 'em', '%', 'rem', 'pt', 'pc', 'in', 'cm', 'mm', 'ex', 'ch', 'vw', 'vh', 'vmin', 'vmax'] as const;
+export const cssUnits = ['px', 'em', '%', 'rem', 'pt', 'pc', 'in', 'cm', 'mm', 'ex', 'ch', 'vw', 'vh', 'vmin', 'vmax'];
 type cssUnitTuple = typeof cssUnits;
 export type cssUnit = cssUnitTuple[number];
 
-export const fontWeights = ['normal', 'bold', 'bolder', 'lighter', '100', '200', '300', '400', '500', '600', '700', '800', '900'] as const;
+export const fontWeights = ['normal', 'bold', 'bolder', 'lighter', '100', '200', '300', '400', '500', '600', '700', '800', '900'];
 type fontWeightTuple = typeof fontWeights;
 export type fontWeight = fontWeightTuple[number];
 
@@ -90,7 +90,7 @@ export const fontWeightTranslations = new Map<fontWeight, string>(
   ]
 );
 
-export const fontStyles = ['normal', 'italic', 'oblique'] as const;
+export const fontStyles = ['normal', 'italic', 'oblique'];
 type fontStyleTuple = typeof fontStyles;
 export type fontStyle = fontStyleTuple[number];
 
@@ -103,6 +103,37 @@ export const fontStyleTranslations = new Map<fontStyle, string>(
 );
 
 export const commonFonts = ['Roboto', 'monospace', 'sans-serif', 'serif'];
+
+export const alignments = ['left', 'center', 'right', 'justify', 'top', 'middle', 'bottom'];
+type alignmentTuple = typeof alignments;
+export type alignment = alignmentTuple[number];
+
+export const alignmentTranslations = new Map<alignment, string>(
+  [
+    ['left', 'widgets.alignment.align-left'],
+    ['center', 'widgets.alignment.align-center'],
+    ['right', 'widgets.alignment.align-right'],
+    ['justify', 'widgets.alignment.justify'],
+    ['top', 'widgets.alignment.align-top'],
+    ['middle', 'widgets.alignment.align-middle'],
+    ['bottom', 'widgets.alignment.align-bottom']
+  ]
+);
+
+export const alignmentIcons = new Map<alignment, string>(
+  [
+    ['left', 'format_align_left'],
+    ['center', 'format_align_center'],
+    ['right', 'format_align_right'],
+    ['justify', 'format_align_justify'],
+    ['top', 'mdi:format-align-top'],
+    ['middle', 'mdi:format-align-middle'],
+    ['bottom', 'mdi:format-align-bottom']
+  ]
+);
+
+export const horizontalAlignments: alignment[] = ['left', 'center', 'right', 'justify'];
+export const verticalAlignments: alignment[] = ['top', 'middle', 'bottom'];
 
 export interface Font {
   size: number;
@@ -734,6 +765,19 @@ export const customDateFormat = (format: string): DateFormatSettings => ({
   auto: false
 });
 
+export const toDateFormatSettings = (strFormat: string): DateFormatSettings => {
+  if (strFormat === 'milliseconds') {
+    return millisecondsDateFormat();
+  }
+  const found = dateFormats.filter(format => !!format.format && !format.custom)
+                                              .find(format => format.format === strFormat);
+  if (found) {
+    return found;
+  } else {
+    return customDateFormat(strFormat);
+  }
+}
+
 export const defaultAutoDateFormatSettings: AutoDateFormatSettings = {
   millisecond: 'MMM dd yyyy HH:mm:ss.SSS',
   second: 'MMM dd yyyy HH:mm:ss',
@@ -751,6 +795,8 @@ export const autoDateFormat = (): DateFormatSettings => ({
   auto: true,
   autoDateFormatSettings: {}
 });
+
+export const millisecondsDateFormat = (): DateFormatSettings => simpleDateFormat('milliseconds');
 
 export const dateFormats = ['MMM yyyy', 'MMM dd yyyy', 'MMM dd yyyy HH:mm', 'dd MMM yyyy HH:mm', 'dd MMM yyyy HH:mm:ss',
   'yyyy MMM dd HH:mm', 'MM/dd/yyyy HH:mm', 'dd/MM/yyyy HH:mm', 'MMM dd yyyy HH:mm:ss', 'yyyy/MM/dd HH:mm:ss', 'yyyy-MM-dd HH:mm:ss',
@@ -775,6 +821,10 @@ export const compareDateFormats = (df1: DateFormatSettings, df2: DateFormatSetti
   }
   return false;
 };
+
+export const dateFormatPreview = (date: DatePipe, format: string): string => {
+  return format === 'milliseconds' ? `${Date.now()}` : date.transform(Date.now(), format);
+}
 
 export abstract class DateFormatProcessor {
 

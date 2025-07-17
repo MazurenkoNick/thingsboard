@@ -43,8 +43,14 @@ import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.TenantEntity;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.JobId;
+import org.thingsboard.server.common.data.id.NotificationTargetId;
+import org.thingsboard.server.common.data.id.NotificationTemplateId;
+import org.thingsboard.server.common.data.id.ReportTemplateId;
 import org.thingsboard.server.common.data.id.TenantId;
+import org.thingsboard.server.common.data.id.UserId;
+import org.thingsboard.server.common.data.notification.NotificationRequest;
 
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -72,7 +78,8 @@ public class Job extends BaseData<JobId> implements TenantEntity {
     private JobResult result;
 
     public static final Set<EntityType> SUPPORTED_ENTITY_TYPES = Set.of(
-            EntityType.DEVICE, EntityType.ASSET, EntityType.DEVICE_PROFILE, EntityType.ASSET_PROFILE
+            EntityType.DEVICE, EntityType.ASSET, EntityType.DEVICE_PROFILE, EntityType.ASSET_PROFILE,
+            EntityType.REPORT_TEMPLATE
     );
 
     @Builder(toBuilder = true)
@@ -89,6 +96,7 @@ public class Job extends BaseData<JobId> implements TenantEntity {
     public void presetResult() {
         this.result = switch (type) {
             case CF_REPROCESSING -> new CfReprocessingJobResult();
+            case REPORT -> new ReportJobResult();
             case DUMMY -> new DummyJobResult();
         };
     }
@@ -96,6 +104,64 @@ public class Job extends BaseData<JobId> implements TenantEntity {
     @SuppressWarnings("unchecked")
     public <C extends JobConfiguration> C getConfiguration() {
         return (C) configuration;
+    }
+
+    public static ReportJobBuilder newReportJob() {
+        return new ReportJobBuilder();
+    }
+
+    public static class ReportJobBuilder {
+
+        private TenantId tenantId;
+        private EntityId entityId;
+        private final ReportJobConfiguration configuration = new ReportJobConfiguration();
+
+        public ReportJobBuilder tenantId(TenantId tenantId) {
+            this.tenantId = tenantId;
+            return this;
+        }
+
+        public ReportJobBuilder reportTemplateId(ReportTemplateId reportTemplateId) {
+            this.entityId = reportTemplateId;
+            this.configuration.setReportTemplateId(reportTemplateId);
+            return this;
+        }
+
+        public ReportJobBuilder userId(UserId userId) {
+            this.configuration.setUserId(userId);
+            return this;
+        }
+
+        public ReportJobBuilder timezone(String timezone) {
+            this.configuration.setTimezone(timezone);
+            return this;
+        }
+
+        public ReportJobBuilder originator(EntityId originator) {
+            this.configuration.setOriginator(originator);
+            return this;
+        }
+
+        public ReportJobBuilder recipientId(NotificationTargetId recipientId) {
+            this.configuration.setRecipientId(recipientId);
+            return this;
+        }
+
+        public ReportJobBuilder notificationTemplateId(NotificationTemplateId notificationTemplateId) {
+            this.configuration.setNotificationTemplateId(notificationTemplateId);
+            return this;
+        }
+
+        public ReportJobBuilder notificationRequests(List<NotificationRequest> notificationRequests) {
+            this.configuration.setNotificationRequests(notificationRequests);
+            return this;
+        }
+
+        public Job build() {
+            String key = UUID.randomUUID().toString(); // we can submit multiple report jobs at once regardless of the configuration
+            return new Job(tenantId, JobType.REPORT, key, entityId, configuration);
+        }
+
     }
 
     @Override

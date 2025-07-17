@@ -46,6 +46,7 @@ import org.thingsboard.server.dao.eventsourcing.SaveEntityEvent;
 import org.thingsboard.server.dao.group.EntityGroupDao;
 import org.thingsboard.server.exception.DataValidationException;
 
+import java.util.List;
 import java.util.UUID;
 
 import static org.thingsboard.server.dao.service.Validator.validateId;
@@ -72,6 +73,13 @@ public class BaseDeviceGroupOtaPackageService implements DeviceGroupOtaPackageSe
         log.trace("Executing findDeviceGroupOtaPackageByGroupIdAndType [{}], [{}]", groupId, otaPackageType);
         validateId(groupId, id -> "Incorrect groupId" + id);
         return deviceGroupOtaPackageDao.findDeviceGroupOtaPackageByGroupIdAndType(groupId.getId(), otaPackageType);
+    }
+
+    @Override
+    public List<DeviceGroupOtaPackage> findDeviceGroupOtaPackageByGroupId(EntityGroupId groupId) {
+        log.trace("Executing findDeviceGroupOtaPackageByGroupId [{}]", groupId);
+        validateId(groupId, id -> "Incorrect groupId" + id);
+        return deviceGroupOtaPackageDao.findDeviceGroupOtaPackageByGroupId(groupId.getId());
     }
 
     @Override
@@ -139,4 +147,5 @@ public class BaseDeviceGroupOtaPackageService implements DeviceGroupOtaPackageSe
             }
         }
     }
+
 }

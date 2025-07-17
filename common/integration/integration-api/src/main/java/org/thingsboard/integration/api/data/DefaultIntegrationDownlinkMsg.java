@@ -36,9 +36,6 @@ import org.thingsboard.server.common.data.id.IntegrationId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.msg.TbMsg;
 
-/**
- * Created by ashvayka on 22.02.18.
- */
 @Data
 public class DefaultIntegrationDownlinkMsg implements IntegrationDownlinkMsg {
 

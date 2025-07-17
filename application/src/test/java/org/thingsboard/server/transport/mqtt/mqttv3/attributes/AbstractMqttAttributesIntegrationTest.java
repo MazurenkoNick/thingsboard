@@ -49,6 +49,7 @@ import org.thingsboard.server.common.data.device.profile.ProtoTransportPayloadCo
 import org.thingsboard.server.common.data.device.profile.TransportPayloadTypeConfiguration;
 import org.thingsboard.server.common.data.id.DeviceId;
 import org.thingsboard.server.common.data.page.PageData;
+import org.thingsboard.server.common.data.query.AliasEntityId;
 import org.thingsboard.server.common.data.query.DeviceTypeFilter;
 import org.thingsboard.server.common.data.query.EntityData;
 import org.thingsboard.server.common.data.query.EntityKey;
@@ -354,7 +355,7 @@ public abstract class AbstractMqttAttributesIntegrationTest extends AbstractMqtt
         MqttTestClient client = new MqttTestClient();
         client.connectAndWait(accessToken);
         SingleEntityFilter dtf = new SingleEntityFilter();
-        dtf.setSingleEntity(savedDevice.getId());
+        dtf.setSingleEntity(AliasEntityId.fromEntityId(savedDevice.getId()));
         String clientKeysStr = "clientStr,clientBool,clientDbl,clientLong,clientJson";
         String sharedKeysStr = "sharedStr,sharedBool,sharedDbl,sharedLong,sharedJson";
         List<String> clientKeysList = List.of(clientKeysStr.split(","));
@@ -441,7 +442,7 @@ public abstract class AbstractMqttAttributesIntegrationTest extends AbstractMqtt
                 });
 
         SingleEntityFilter dtf = new SingleEntityFilter();
-        dtf.setSingleEntity(device.getId());
+        dtf.setSingleEntity(AliasEntityId.fromEntityId(device.getId()));
         String sharedKeysStr = "sharedStr,sharedBool,sharedDbl,sharedLong,sharedJson";
         List<String> clientKeysList = List.of(clientKeysStr.split(","));
         List<String> sharedKeysList = List.of(sharedKeysStr.split(","));
@@ -496,7 +497,7 @@ public abstract class AbstractMqttAttributesIntegrationTest extends AbstractMqtt
         assertNotNull(device);
 
         SingleEntityFilter dtf = new SingleEntityFilter();
-        dtf.setSingleEntity(device.getId());
+        dtf.setSingleEntity(AliasEntityId.fromEntityId(device.getId()));
         String sharedKeysStr = "sharedStr,sharedBool,sharedDbl,sharedLong,sharedJson";
         List<String> sharedKeysList = List.of(sharedKeysStr.split(","));
         List<EntityKey> csKeys = getEntityKeys(clientKeysList, CLIENT_ATTRIBUTE);

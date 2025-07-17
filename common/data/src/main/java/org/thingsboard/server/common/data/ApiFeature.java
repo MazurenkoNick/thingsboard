@@ -40,7 +40,8 @@ public enum ApiFeature {
     TBEL("tbelExecutionApiState", "Tbel functions execution"),
     EMAIL("emailApiState", "Email messages"),
     SMS("smsApiState", "SMS messages"),
-    ALARM("alarmApiState", "Alarms");
+    ALARM("alarmApiState", "Alarms"),
+    REPORT("reportApiState", "Reports");
 
     @Getter
     private final String apiStateKey;

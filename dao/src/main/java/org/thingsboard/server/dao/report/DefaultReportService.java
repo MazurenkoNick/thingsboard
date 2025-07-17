@@ -1,0 +1,184 @@
+/**
+ * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
+ *
+ * Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
+ *
+ * NOTICE: All information contained herein is, and remains
+ * the property of ThingsBoard, Inc. and its suppliers,
+ * if any.  The intellectual and technical concepts contained
+ * herein are proprietary to ThingsBoard, Inc.
+ * and its suppliers and may be covered by U.S. and Foreign Patents,
+ * patents in process, and are protected by trade secret or copyright law.
+ *
+ * Dissemination of this information or reproduction of this material is strictly forbidden
+ * unless prior written permission is obtained from COMPANY.
+ *
+ * Access to the source code contained herein is hereby forbidden to anyone except current COMPANY employees,
+ * managers or contractors who have executed Confidentiality and Non-disclosure agreements
+ * explicitly covering such access.
+ *
+ * The copyright notice above does not evidence any actual or intended publication
+ * or disclosure  of  this source code, which includes
+ * information that is confidential and/or proprietary, and is a trade secret, of  COMPANY.
+ * ANY REPRODUCTION, MODIFICATION, DISTRIBUTION, PUBLIC  PERFORMANCE,
+ * OR PUBLIC DISPLAY OF OR THROUGH USE  OF THIS  SOURCE CODE  WITHOUT
+ * THE EXPRESS WRITTEN CONSENT OF COMPANY IS STRICTLY PROHIBITED,
+ * AND IN VIOLATION OF APPLICABLE LAWS AND INTERNATIONAL TREATIES.
+ * THE RECEIPT OR POSSESSION OF THIS SOURCE CODE AND/OR RELATED INFORMATION
+ * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
+ * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
+ */
+package org.thingsboard.server.dao.report;
+
+import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.thingsboard.server.common.data.EntityType;
+import org.thingsboard.server.common.data.id.CustomerId;
+import org.thingsboard.server.common.data.id.EntityId;
+import org.thingsboard.server.common.data.id.HasId;
+import org.thingsboard.server.common.data.id.ReportId;
+import org.thingsboard.server.common.data.id.TenantId;
+import org.thingsboard.server.common.data.page.PageData;
+import org.thingsboard.server.common.data.page.PageLink;
+import org.thingsboard.server.common.data.report.Report;
+import org.thingsboard.server.common.data.report.ReportInfo;
+import org.thingsboard.server.common.data.report.ReportInfoQuery;
+import org.thingsboard.server.dao.entity.AbstractEntityService;
+import org.thingsboard.server.dao.service.ConstraintValidator;
+import org.thingsboard.server.dao.service.PaginatedRemover;
+import org.thingsboard.server.dao.service.validator.ReportDataValidator;
+
+import java.util.Optional;
+
+import static org.thingsboard.server.dao.customer.CustomerServiceImpl.INCORRECT_CUSTOMER_ID;
+import static org.thingsboard.server.dao.service.Validator.validateId;
+
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class DefaultReportService extends AbstractEntityService implements ReportService {
+
+    public static final String INCORRECT_TENANT_ID = "Incorrect tenantId ";
+    public static final String INCORRECT_REPORT_ID = "Incorrect reportId ";
+
+    private final ReportDao reportDao;
+    private final ReportDataValidator reportDataValidator;
+
+    @Transactional
+    @Override
+    public Report createReport(Report report, byte[] data) {
+        if (report.getId() != null) {
+            throw new IllegalArgumentException("Report can't be updated");
+        }
+        ConstraintValidator.validateFields(report);
+        reportDataValidator.validateReportSize(report.getTenantId(), data);
+
+        report = reportDao.save(report.getTenantId(), report);
+        reportDao.saveData(report.getTenantId(), report.getId(), data);
+        return report;
+    }
+
+    @Override
+    public Report findReportById(TenantId tenantId, ReportId reportId) {
+        return reportDao.findById(tenantId, reportId.getId());
+    }
+
+    @Override
+    public byte[] getReportData(TenantId tenantId, ReportId reportId) {
+        return reportDao.getData(tenantId, reportId);
+    }
+
+    @Override
+    public void deleteReport(TenantId tenantId, ReportId reportId) {
+        validateId(tenantId, id -> INCORRECT_TENANT_ID + id);
+        validateId(reportId, id -> INCORRECT_REPORT_ID + id);
+        deleteEntity(tenantId, reportId, false);
+    }
+
+    @Override
+    public PageData<Report> findReportsByTenantId(TenantId tenantId, PageLink pageLink) {
+        return reportDao.findByTenantId(tenantId, pageLink);
+    }
+
+    @Override
+    public PageData<ReportInfo> findReportInfos(TenantId tenantId, ReportInfoQuery query) {
+        log.trace("Executing findReportInfos, tenantId [{}]", tenantId);
+        return reportDao.findReportInfos(tenantId, query);
+    }
+
+    @Override
+    public PageData<ReportInfo> findReportInfos(TenantId tenantId, CustomerId customerId, ReportInfoQuery query) {
+        log.trace("Executing findReportInfos, tenantId [{}], customerId [{}]", tenantId, customerId);
+        return reportDao.findReportInfos(tenantId, customerId, query);
+    }
+
+    @Override
+    public void deleteReportsByTenantId(TenantId tenantId) {
+        log.trace("Executing deleteReportsByTenantId, tenantId [{}]", tenantId);
+        validateId(tenantId, id -> INCORRECT_TENANT_ID + id);
+        tenantReportsRemover.removeEntities(tenantId, tenantId);
+    }
+
+    @Override
+    public void deleteByTenantId(TenantId tenantId) {
+        deleteReportsByTenantId(tenantId);
+    }
+
+    @Override
+    public void deleteReportsByTenantIdAndCustomerId(TenantId tenantId, CustomerId customerId) {
+        log.trace("Executing deleteReportsByTenantIdAndCustomerId, tenantId [{}], customerId [{}]", tenantId, customerId);
+        validateId(tenantId, id -> INCORRECT_TENANT_ID + id);
+        validateId(customerId, id -> INCORRECT_CUSTOMER_ID + id);
+        customerReportEntitiesRemover.removeEntities(tenantId, customerId);
+    }
+
+    private final PaginatedRemover<TenantId, ReportInfo> tenantReportsRemover = new PaginatedRemover<>() {
+
+        @Override
+        protected PageData<ReportInfo> findEntities(TenantId tenantId, TenantId id, PageLink pageLink) {
+            return reportDao.findReportInfos(id,
+                    ReportInfoQuery.builder()
+                            .pageLink(pageLink)
+                            .includeCustomers(true)
+                            .build());
+        }
+
+        @Override
+        protected void removeEntity(TenantId tenantId, ReportInfo reportInfo) {
+            deleteReport(tenantId, new ReportId(reportInfo.getId().getId()));
+        }
+    };
+
+    private PaginatedRemover<CustomerId, ReportInfo> customerReportEntitiesRemover = new PaginatedRemover<>() {
+        @Override
+        protected PageData<ReportInfo> findEntities(TenantId tenantId, CustomerId customerId, PageLink pageLink) {
+            return reportDao.findReportInfos(tenantId, customerId,
+                    ReportInfoQuery.builder()
+                            .pageLink(pageLink)
+                            .includeCustomers(false)
+                            .build());
+        }
+
+        @Override
+        protected void removeEntity(TenantId tenantId, ReportInfo reportInfo) {
+            deleteReport(tenantId, new ReportId(reportInfo.getId().getId()));
+        }
+    };
+
+    @Override
+    public Optional<HasId<?>> findEntity(TenantId tenantId, EntityId entityId) {
+        return Optional.ofNullable(reportDao.findById(tenantId, entityId.getId()));
+    }
+
+    @Override
+    public void deleteEntity(TenantId tenantId, EntityId id, boolean force) {
+        reportDao.removeById(tenantId, id.getId());
+    }
+
+    @Override
+    public EntityType getEntityType() {
+        return EntityType.REPORT;
+    }
+}

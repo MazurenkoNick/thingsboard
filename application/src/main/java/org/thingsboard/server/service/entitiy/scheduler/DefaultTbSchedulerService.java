@@ -43,15 +43,13 @@ import org.thingsboard.server.common.data.scheduler.SchedulerEventInfo;
 import org.thingsboard.server.dao.scheduler.SchedulerEventService;
 import org.thingsboard.server.queue.util.TbCoreComponent;
 import org.thingsboard.server.service.entitiy.AbstractTbEntityService;
-import org.thingsboard.server.service.scheduler.SchedulerService;
 
 @Service
 @TbCoreComponent
 @RequiredArgsConstructor
 public class DefaultTbSchedulerService extends AbstractTbEntityService implements TbSchedulerService {
 
-    private final SchedulerService schedulerService;
-    private final  SchedulerEventService schedulerEventService;
+    private final SchedulerEventService schedulerEventService;
 
     @Override
     public SchedulerEvent save(SchedulerEvent schedulerEvent, User user) throws ThingsboardException {
@@ -60,11 +58,6 @@ public class DefaultTbSchedulerService extends AbstractTbEntityService implement
             logEntityActionService.logEntityAction(user.getTenantId(), savedSchedulerEvent.getId(), savedSchedulerEvent,
                     savedSchedulerEvent.getCustomerId(),
                     schedulerEvent.getId() == null ? ActionType.ADDED : ActionType.UPDATED, user);
-            if (schedulerEvent.getId() == null) {
-                schedulerService.onSchedulerEventAdded(savedSchedulerEvent);
-            } else {
-                schedulerService.onSchedulerEventUpdated(savedSchedulerEvent);
-            }
             return savedSchedulerEvent;
         } catch (Exception e) {
             logEntityActionService.logEntityAction(user.getTenantId(), emptyId(EntityType.SCHEDULER_EVENT), schedulerEvent,
@@ -81,7 +74,6 @@ public class DefaultTbSchedulerService extends AbstractTbEntityService implement
             schedulerEventService.deleteSchedulerEvent(user.getTenantId(), schedulerEventId);
             logEntityActionService.logEntityAction(user.getTenantId(), schedulerEventId, schedulerEvent,
                     schedulerEvent.getCustomerId(), actionType, user, schedulerEventId.getId());
-            schedulerService.onSchedulerEventDeleted(schedulerEvent);
         } catch (Exception e) {
             logEntityActionService.logEntityAction(user.getTenantId(), emptyId(EntityType.SCHEDULER_EVENT),
                     actionType, user, e, schedulerEventId.getId());
@@ -117,4 +109,5 @@ public class DefaultTbSchedulerService extends AbstractTbEntityService implement
             throw e;
         }
     }
+
 }

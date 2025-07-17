@@ -70,6 +70,7 @@ import { catchError } from 'rxjs/operators';
 import { JsLibraryTableConfigResolver } from '@home/pages/admin/resource/js-library-table-config.resolver';
 import { TrendzSettingsComponent } from '@home/pages/admin/trendz-settings.component';
 import { secretsRoutes } from '@home/pages/secret-storage/secret-storage-routing.module';
+import { aiModelRoutes } from '@home/pages/ai-model/ai-model-routing.module';
 
 export const mailTemplateSettingsResolver: ResolveFn<MailTemplatesSettings> = (
   route: ActivatedRouteSnapshot,
@@ -396,6 +397,7 @@ const routes: Routes = [
           }
         }
       },
+      ...aiModelRoutes,
       {
         path: 'security-settings',
         redirectTo: '/security-settings/general'

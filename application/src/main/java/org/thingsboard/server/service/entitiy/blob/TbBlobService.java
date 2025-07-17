@@ -36,4 +36,5 @@ import org.thingsboard.server.common.data.blob.BlobEntityInfo;
 public interface TbBlobService {
 
     void delete(BlobEntityInfo blobEntityInfo, User user);
+
 }

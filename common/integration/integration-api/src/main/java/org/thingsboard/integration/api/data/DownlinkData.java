@@ -35,9 +35,6 @@ import lombok.Data;
 
 import java.util.Map;
 
-/**
- * Created by ashvayka on 04.12.17.
- */
 @Data
 @Builder
 public class DownlinkData {

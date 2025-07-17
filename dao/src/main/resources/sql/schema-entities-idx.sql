@@ -92,31 +92,9 @@ CREATE INDEX IF NOT EXISTS idx_rpc_tenant_id_device_id ON rpc(tenant_id, device_
 
 CREATE INDEX IF NOT EXISTS idx_customer_tenant_id_parent_customer_id ON customer(tenant_id, parent_customer_id);
 
-CREATE INDEX IF NOT EXISTS idx_device_external_id ON device(tenant_id, external_id);
-
-CREATE INDEX IF NOT EXISTS idx_device_profile_external_id ON device_profile(tenant_id, external_id);
-
-CREATE INDEX IF NOT EXISTS idx_asset_external_id ON asset(tenant_id, external_id);
-
-CREATE INDEX IF NOT EXISTS idx_entity_view_external_id ON entity_view(tenant_id, external_id);
-
-CREATE INDEX IF NOT EXISTS idx_rule_chain_external_id ON rule_chain(tenant_id, external_id);
-
 CREATE INDEX IF NOT EXISTS idx_rule_node_external_id ON rule_node(rule_chain_id, external_id);
 
 CREATE INDEX IF NOT EXISTS idx_rule_node_type ON rule_node(type);
-
-CREATE INDEX IF NOT EXISTS idx_dashboard_external_id ON dashboard(tenant_id, external_id);
-
-CREATE INDEX IF NOT EXISTS idx_customer_external_id ON customer(tenant_id, external_id);
-
-CREATE INDEX IF NOT EXISTS idx_widgets_bundle_external_id ON widgets_bundle(tenant_id, external_id);
-
-CREATE INDEX IF NOT EXISTS idx_converter_external_id ON converter(tenant_id, external_id);
-
-CREATE INDEX IF NOT EXISTS idx_integration_external_id ON integration(tenant_id, external_id);
-
-CREATE INDEX IF NOT EXISTS idx_role_external_id ON role(tenant_id, external_id);
 
 CREATE INDEX IF NOT EXISTS idx_entity_group_external_id ON entity_group(external_id);
 
@@ -172,3 +150,9 @@ CREATE INDEX IF NOT EXISTS mobile_app_bundle_tenant_id ON mobile_app_bundle(tena
 CREATE INDEX IF NOT EXISTS idx_job_tenant_id ON job(tenant_id);
 
 CREATE INDEX IF NOT EXISTS idx_encryption_key_tenant_id ON encryption_key(tenant_id);
+
+CREATE INDEX IF NOT EXISTS idx_report_tenant_id_created_time ON report(tenant_id, created_time DESC);
+
+CREATE INDEX IF NOT EXISTS idx_report_id ON report(id);
+
+CREATE INDEX IF NOT EXISTS idx_ai_model_tenant_id ON ai_model(tenant_id);

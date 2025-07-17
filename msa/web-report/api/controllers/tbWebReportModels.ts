@@ -46,6 +46,7 @@ export interface GenerateReportRequest {
     accessToken?: string;
     publicId?: string;
     state?: string;
+    pageWidth?: number;
     reportTimewindow?: string;
     timezone: string;
     reportContentType: ReportContentType;
@@ -59,6 +60,11 @@ export interface ReportContentType {
 export interface ReportResultMessage {
     success: boolean;
     error?: string;
+    pageHeight?: number;
+}
+
+export interface WaitWidgetsMessage {
+    timeout: number;
 }
 
 export interface OpenReportMessage {
@@ -105,6 +111,7 @@ export function parseGenerateReportRequest(req: Request, localhostBaseUrlOverrid
         let publicId: string | undefined;
         let reportTimewindow: string | undefined;
         let timezone = 'Europe/London';
+        let pageWidth: number | undefined;
         if (localhostBaseUrlOverride) {
             const hostname = new URL(baseUrl).hostname.toLowerCase();
             if (hostname === 'localhost' || hostname === '127.0.0.1') {
@@ -127,6 +134,12 @@ export function parseGenerateReportRequest(req: Request, localhostBaseUrlOverrid
             if (typeof reportParams.timezone === 'string') {
                 timezone = reportParams.timezone;
             }
+            if (reportParams.pageWidth) {
+                const pageWidthValue = Number.parseInt(reportParams.pageWidth);
+                if (Number.isInteger(pageWidthValue) && pageWidthValue > 0) {
+                    pageWidth = pageWidthValue;
+                }
+            }
         }
         const reportContentType = reportContentTypeMap.get(type);
         if (!reportContentType) {
@@ -142,7 +155,8 @@ export function parseGenerateReportRequest(req: Request, localhostBaseUrlOverrid
             publicId,
             state,
             reportTimewindow,
-            timezone
+            timezone,
+            pageWidth
         };
         return generateReportRequest;
     } else {

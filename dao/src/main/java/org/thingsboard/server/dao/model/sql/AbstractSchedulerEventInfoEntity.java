@@ -137,7 +137,7 @@ public abstract class AbstractSchedulerEventInfoEntity<T extends SchedulerEventI
         SchedulerEventInfo schedulerEventInfo = new SchedulerEventInfo(new SchedulerEventId(id));
         schedulerEventInfo.setCreatedTime(createdTime);
         if (tenantId != null) {
-            schedulerEventInfo.setTenantId(new TenantId(tenantId));
+            schedulerEventInfo.setTenantId(TenantId.fromUUID(tenantId));
         }
         if (customerId != null) {
             schedulerEventInfo.setCustomerId(new CustomerId(customerId));

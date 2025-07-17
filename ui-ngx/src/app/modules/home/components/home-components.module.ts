@@ -298,6 +298,8 @@ import {
   CalculatedFieldReprocessingPanelComponent
 } from '@home/components/calculated-fields/components/reprocessing/calculated-field-reprocessing-panel.component';
 import { CancelTaskDialogComponent } from '@home/components/task/cancel-task-dialog.component';
+import { CheckConnectivityDialogComponent } from '@home/components/ai-model/check-connectivity-dialog.component';
+import { AIModelDialogComponent } from '@home/components/ai-model/ai-model-dialog.component';
 
 @NgModule({
   declarations:
@@ -483,6 +485,8 @@ import { CancelTaskDialogComponent } from '@home/components/task/cancel-task-dia
       CalculatedFieldTestArgumentsComponent,
       CalculatedFieldReprocessingPanelComponent,
       CancelTaskDialogComponent,
+      CheckConnectivityDialogComponent,
+      AIModelDialogComponent,
     ],
   imports: [
     CommonModule,
@@ -658,6 +662,8 @@ import { CancelTaskDialogComponent } from '@home/components/task/cancel-task-dia
     CalculatedFieldScriptTestDialogComponent,
     CalculatedFieldTestArgumentsComponent,
     CancelTaskDialogComponent,
+    CheckConnectivityDialogComponent,
+    AIModelDialogComponent,
   ],
   providers: [
     WidgetComponentService,

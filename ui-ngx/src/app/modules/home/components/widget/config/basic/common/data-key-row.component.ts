@@ -37,7 +37,7 @@ import {
   forwardRef,
   Input,
   OnChanges,
-  OnInit,
+  OnInit, Optional,
   Output,
   SimpleChanges,
   ViewEncapsulation
@@ -77,6 +77,7 @@ import {
 import { WidgetConfigCallbacks } from '@home/components/widget/config/widget-config.component.models';
 import { FormProperty } from '@shared/models/dynamic-form.models';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { DataKeysPanelComponent } from '@home/components/widget/config/basic/common/data-keys-panel.component';
 
 export const dataKeyValid = (key: DataKey): boolean => !!key && !!key.type && !!key.name;
 
@@ -124,6 +125,10 @@ export class DataKeyRowComponent implements ControlValueAccessor, OnInit, OnChan
 
   @Input()
   deviceId: string;
+
+  @Input()
+  @coerceBoolean()
+  reportMode = false;
 
   @Input()
   @coerceBoolean()
@@ -189,43 +194,43 @@ export class DataKeyRowComponent implements ControlValueAccessor, OnInit, OnChan
   generateDataKey = this._generateDataKey.bind(this);
 
   get widgetType(): widgetType {
-    return this.widgetConfigComponent.widgetType;
+    return this.widgetConfigComponent?.widgetType || this.dataKeysPanelComponent?.widgetType;
   }
 
   get callbacks(): WidgetConfigCallbacks {
-    return this.widgetConfigComponent.widgetConfigCallbacks;
+    return this.widgetConfigComponent?.widgetConfigCallbacks || this.dataKeysPanelComponent?.callbacks;
   }
 
   get widget(): Widget {
-    return this.widgetConfigComponent.widget;
+    return this.widgetConfigComponent?.widget;
   }
 
   get dashboard(): Dashboard {
-    return this.widgetConfigComponent.dashboard;
+    return this.widgetConfigComponent?.dashboard;
   }
 
   get aliasController(): IAliasController {
-    return this.widgetConfigComponent.aliasController;
+    return this.widgetConfigComponent?.aliasController || this.dataKeysPanelComponent?.aliasController;
   }
 
   get dataKeySettingsForm(): FormProperty[] {
-    return this.widgetConfigComponent.modelValue?.dataKeySettingsForm;
+    return this.widgetConfigComponent?.modelValue?.dataKeySettingsForm || this.dataKeysPanelComponent?.dataKeySettingsForm;
   }
 
   get dataKeySettingsDirective(): string {
-    return this.widgetConfigComponent.modelValue?.dataKeySettingsDirective;
+    return this.widgetConfigComponent?.modelValue?.dataKeySettingsDirective;
   }
 
   get latestDataKeySettingsForm(): FormProperty[] {
-    return this.widgetConfigComponent.modelValue?.latestDataKeySettingsForm;
+    return this.widgetConfigComponent?.modelValue?.latestDataKeySettingsForm  || this.dataKeysPanelComponent?.latestDataKeySettingsForm;;
   }
 
   get latestDataKeySettingsDirective(): string {
-    return this.widgetConfigComponent.modelValue?.latestDataKeySettingsDirective;
+    return this.widgetConfigComponent?.modelValue?.latestDataKeySettingsDirective;
   }
 
   get dataKeySettingsFunction(): DataKeySettingsFunction {
-    return this.widgetConfigComponent.modelValue?.dataKeySettingsFunction;
+    return this.widgetConfigComponent?.modelValue?.dataKeySettingsFunction;
   }
 
   get isEntityDatasource(): boolean {
@@ -241,15 +246,16 @@ export class DataKeyRowComponent implements ControlValueAccessor, OnInit, OnChan
   }
 
   get supportsUnitConversion(): boolean {
-    return this.widgetConfigComponent.modelValue?.typeParameters?.supportsUnitConversion ?? false;
+    return this.widgetConfigComponent?.modelValue?.typeParameters?.supportsUnitConversion ?? false;
   }
 
   private propagateChange = (_val: any) => {};
 
   constructor(private fb: UntypedFormBuilder,
               private dialog: MatDialog,
+              @Optional() private dataKeysPanelComponent: DataKeysPanelComponent,
               private cd: ChangeDetectorRef,
-              private widgetConfigComponent: WidgetConfigComponent,
+              @Optional() private widgetConfigComponent: WidgetConfigComponent,
               private destroyRef: DestroyRef) {
   }
 
@@ -352,6 +358,7 @@ export class DataKeyRowComponent implements ControlValueAccessor, OnInit, OnChan
           deviceId: this.deviceId,
           entityAliasId: this.entityAliasId,
           showPostProcessing: this.widgetType !== widgetType.alarm,
+          reportMode: this.reportMode,
           callbacks: this.callbacks,
           hideDataKeyLabel: this.hideDataKeyLabel,
           hideDataKeyColor: this.hideDataKeyColor,

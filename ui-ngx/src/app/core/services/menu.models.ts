@@ -192,7 +192,12 @@ export enum MenuId {
   self_registration = 'self_registration',
   task_manager = 'task_manager',
   trendz_settings = 'trendz_settings',
-  secrets = 'secrets'
+  secrets = 'secrets',
+  ai_models = 'ai_models',
+  reporting = 'reporting',
+  report_templates = 'report_templates',
+  report_scheduling = 'report_scheduling',
+  reports = 'reports'
 }
 
 declare type MenuFilter = (_authState: AuthState, userPermissionsService: UserPermissionsService) => boolean;
@@ -371,6 +376,16 @@ export const menuSectionMap = new Map<MenuId, MenuSection>([
       type: 'link',
       path: '/notification/rules',
       icon: 'mdi:message-cog'
+    }
+  ],
+  [
+    MenuId.ai_models,
+    {
+      id: MenuId.ai_models,
+      name: 'ai-models.ai-models',
+      type: 'link',
+      path: '/settings/ai-models',
+      icon: 'auto_awesome'
     }
   ],
   [
@@ -876,8 +891,7 @@ export const menuSectionMap = new Map<MenuId, MenuSection>([
       name: 'solution-template.solution-templates',
       type: 'link',
       path: '/solutionTemplates',
-      icon: 'apps',
-      isNew: true
+      icon: 'apps'
     }
   ],
   [
@@ -1197,6 +1211,47 @@ export const menuSectionMap = new Map<MenuId, MenuSection>([
     }
   ],
   [
+    MenuId.reporting,
+    {
+      id: MenuId.reporting,
+      name: 'report.reporting',
+      type: 'toggle',
+      path: '/reporting',
+      icon: 'mdi:chart-box-multiple',
+      isNew: true
+    }
+  ],
+  [
+    MenuId.report_templates,
+    {
+      id: MenuId.report_templates,
+      name: 'report.templates',
+      type: 'link',
+      path: '/reporting/templates',
+      icon: 'mdi:file-document-edit-outline'
+    }
+  ],
+  [
+    MenuId.report_scheduling,
+    {
+      id: MenuId.report_scheduling,
+      name: 'report.scheduling',
+      type: 'link',
+      path: '/reporting/scheduling',
+      icon: 'mdi:file-clock-outline'
+    }
+  ],
+  [
+    MenuId.reports,
+    {
+      id: MenuId.reports,
+      name: 'report.reports',
+      type: 'link',
+      path: '/reporting/reports',
+      icon: 'mdi:chart-box-multiple'
+    }
+  ],
+  [
     MenuId.trendz_settings,
     {
       id: MenuId.trendz_settings,
@@ -1504,9 +1559,27 @@ const menuFilters = new Map<MenuId, MenuFilter>([
             userPermissionsService.hasReadGenericPermission(Resource.JOB)
   ],
   [
+    MenuId.report_templates, (authState, userPermissionsService) =>
+            userPermissionsService.hasReadGenericPermission(Resource.REPORT_TEMPLATE)
+  ],
+  [
+    MenuId.report_scheduling, (authState, userPermissionsService) =>
+            userPermissionsService.hasReadGenericPermission(Resource.REPORT_TEMPLATE) &&
+            userPermissionsService.hasReadGenericPermission(Resource.SCHEDULER_EVENT)
+  ],
+  [
+    MenuId.reports, (authState, userPermissionsService) =>
+            userPermissionsService.hasReadGenericPermission(Resource.REPORT)
+  ],
+  [
     MenuId.trendz_settings, (authState, userPermissionsService) =>
             authState.authUser.authority === Authority.TENANT_ADMIN &&
             userPermissionsService.hasReadGenericPermission(Resource.ADMIN_SETTINGS)
+  ],
+  [
+    MenuId.ai_models, (authState, userPermissionsService) =>
+            authState.authUser.authority === Authority.TENANT_ADMIN &&
+            userPermissionsService.hasReadGenericPermission(Resource.AI_MODEL)
   ]
 ]);
 
@@ -1597,6 +1670,14 @@ export const defaultUserMenuMap = new Map<Authority, MenuReference[]>([
           {id: MenuId.dashboard_all},
           {id: MenuId.dashboard_groups},
           {id: MenuId.dashboard_shared}
+        ]
+      },
+      {
+        id: MenuId.reporting,
+        pages: [
+          {id: MenuId.report_templates},
+          {id: MenuId.report_scheduling},
+          {id: MenuId.reports}
         ]
       },
       {id: MenuId.solution_templates},
@@ -1739,7 +1820,8 @@ export const defaultUserMenuMap = new Map<Authority, MenuReference[]>([
           {id: MenuId.notification_settings},
           {id: MenuId.repository_settings},
           {id: MenuId.auto_commit_settings},
-          {id: MenuId.trendz_settings}
+          {id: MenuId.trendz_settings},
+          {id: MenuId.ai_models}
         ]
       },
       {
@@ -1772,6 +1854,14 @@ export const defaultUserMenuMap = new Map<Authority, MenuReference[]>([
           {id: MenuId.dashboard_all},
           {id: MenuId.dashboard_groups},
           {id: MenuId.dashboard_shared}
+        ]
+      },
+      {
+        id: MenuId.reporting,
+        pages: [
+          {id: MenuId.report_templates},
+          {id: MenuId.report_scheduling},
+          {id: MenuId.reports}
         ]
       },
       {

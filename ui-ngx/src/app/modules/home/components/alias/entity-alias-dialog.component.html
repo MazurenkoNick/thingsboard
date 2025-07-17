@@ -43,9 +43,9 @@
   <mat-progress-bar color="warn" mode="indeterminate" *ngIf="isLoading$ | async">
   </mat-progress-bar>
   <div mat-dialog-content>
-    <fieldset class="tb-form-panel no-padding no-border no-gap" [disabled]="isLoading$ | async">
-      <div class="tb-form-row column-xs align-start no-border no-gap no-padding tb-standard-fields">
-        <mat-form-field class="flex">
+    <fieldset class="tb-form-panel outlined" [disabled]="isLoading$ | async">
+      <div class="flex flex-row items-start xs:flex-col xs:items-stretch">
+        <mat-form-field class="flex-1" appearance="outline">
           <mat-label translate>alias.name</mat-label>
           <input matInput formControlName="alias" required>
           <mat-error *ngIf="entityAliasFormGroup.get('alias').hasError('required')">
@@ -55,16 +55,19 @@
             {{ 'alias.duplicate-alias' | translate }}
           </mat-error>
         </mat-form-field>
-        <div class="tb-resolve-multiple-switch" tb-hint-tooltip-icon="{{ 'alias.resolve-multiple-hint' | translate }}">
+        <div *ngIf="!disableResolveMultiple" class="tb-resolve-multiple-switch" tb-hint-tooltip-icon="{{ 'alias.resolve-multiple-hint' | translate }}">
           <mat-slide-toggle class="mat-slide" formControlName="resolveMultiple">
             {{ 'alias.resolve-multiple' | translate }}
           </mat-slide-toggle>
         </div>
       </div>
       <tb-entity-filter formControlName="filter"
-                        [resolveMultiple]="entityAliasFormGroup.get('resolveMultiple').value"
+                        [disableResolveMultiple]="disableResolveMultiple"
+                        [resolveMultiple]="!disableResolveMultiple ? entityAliasFormGroup.get('resolveMultiple').value : false"
                         (resolveMultipleChanged)="entityAliasFormGroup.get('resolveMultiple').patchValue($event)"
-                        [allowedEntityTypes]="allowedEntityTypes">
+                        [allowedEntityTypes]="allowedEntityTypes"
+                        [reportMode]="reportMode"
+                        [subReport]="subReport">
       </tb-entity-filter>
       <tb-error [error]="entityAliasFormGroup.hasError('noEntityMatched')
                 ? translate.instant('alias.entity-filter-no-entity-matched') : ''"></tb-error>

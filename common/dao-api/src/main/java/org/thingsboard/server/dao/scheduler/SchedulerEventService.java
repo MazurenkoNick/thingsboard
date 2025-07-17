@@ -37,9 +37,13 @@ import org.thingsboard.server.common.data.id.SchedulerEventId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
+import org.thingsboard.server.common.data.report.ScheduledReportQuery;
 import org.thingsboard.server.common.data.scheduler.SchedulerEvent;
+import org.thingsboard.server.common.data.scheduler.SchedulerEventFilter;
 import org.thingsboard.server.common.data.scheduler.SchedulerEventInfo;
+import org.thingsboard.server.common.data.scheduler.SchedulerEventTimeFilter;
 import org.thingsboard.server.common.data.scheduler.SchedulerEventWithCustomerInfo;
+import org.thingsboard.server.common.data.scheduler.ScheduledReportInfo;
 import org.thingsboard.server.dao.entity.EntityDaoService;
 
 import java.util.List;
@@ -60,13 +64,9 @@ public interface SchedulerEventService extends EntityDaoService {
 
     List<SchedulerEventInfo> findSchedulerEventsByTenantIdAndEnabled(TenantId tenantId, boolean enabled);
 
-    List<SchedulerEventWithCustomerInfo> findSchedulerEventsWithCustomerInfoByTenantId(TenantId tenantId);
+    PageData<SchedulerEventWithCustomerInfo> findSchedulerEventsByTenantIdAndFilter(TenantId tenantId, SchedulerEventFilter filter, PageLink pageLink);
 
-    List<SchedulerEventWithCustomerInfo> findSchedulerEventsByTenantIdAndType(TenantId tenantId, String type);
-
-    List<SchedulerEventWithCustomerInfo> findSchedulerEventsByTenantIdAndCustomerId(TenantId tenantId, CustomerId customerId);
-
-    List<SchedulerEventWithCustomerInfo> findSchedulerEventsByTenantIdAndCustomerIdAndType(TenantId tenantId, CustomerId customerId, String type);
+    List<SchedulerEventWithCustomerInfo> findAllSchedulerEventsByTenantIdAndEventTimeFilter(TenantId tenantId, SchedulerEventTimeFilter filter, String searchText);
 
     SchedulerEvent saveSchedulerEvent(SchedulerEvent schedulerEvent);
 
@@ -86,4 +86,7 @@ public interface SchedulerEventService extends EntityDaoService {
 
     PageData<SchedulerEventInfo> findSchedulerEventInfosByTenantIdAndEdgeIdAndCustomerId(TenantId tenantId, EdgeId edgeId, CustomerId customerId, PageLink pageLink);
 
+    PageData<ScheduledReportInfo> findScheduledReportEvents(TenantId tenantId, ScheduledReportQuery query);
+
+    PageData<ScheduledReportInfo> findScheduledReportEvents(TenantId tenantId, CustomerId customerId, ScheduledReportQuery query);
 }

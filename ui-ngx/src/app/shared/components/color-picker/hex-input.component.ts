@@ -31,6 +31,7 @@
 
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from '@angular/core';
 import { Color } from '@iplab/ngx-color-picker';
+import { coerceBoolean } from '@shared/decorators/coercion';
 
 @Component({
   selector: `tb-hex-input`,
@@ -42,6 +43,10 @@ export class HexInputComponent {
 
   @Input()
   public color: Color;
+
+  @Input()
+  @coerceBoolean()
+  alpha = true;
 
   @Output()
   public colorChange = new EventEmitter<Color>(false);

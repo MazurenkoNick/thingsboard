@@ -44,6 +44,7 @@ import org.thingsboard.server.dao.model.sql.DeviceGroupOtaPackageEntity;
 import org.thingsboard.server.dao.ota.DeviceGroupOtaPackageDao;
 import org.thingsboard.server.dao.util.SqlDao;
 
+import java.util.List;
 import java.util.UUID;
 
 @Slf4j
@@ -62,6 +63,11 @@ public class JpaDeviceGroupOtaPackageDao implements DeviceGroupOtaPackageDao {
     @Override
     public DeviceGroupOtaPackage findDeviceGroupOtaPackageByGroupIdAndType(UUID groupId, OtaPackageType type) {
         return DaoUtil.getData(deviceGroupOtaPackageRepository.findByGroupIdAndOtaPackageType(groupId, type));
+    }
+
+    @Override
+    public List<DeviceGroupOtaPackage> findDeviceGroupOtaPackageByGroupId(UUID groupId) {
+        return DaoUtil.convertDataList(deviceGroupOtaPackageRepository.findByGroupId(groupId));
     }
 
     @Override
