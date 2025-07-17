@@ -188,26 +188,26 @@ public class ReportQueryUtils {
                 .orElseThrow(() -> new IllegalArgumentException("Entity alias not found: " + dataSource.getEntityAliasId()))
                 .getFilter();
 
-        AliasEntityId resolvedStateEntity = resolveStateEntityId(stateEntityId, filter, ctx);
+        AliasEntityId resolvedEntity = resolveStateEntityId(stateEntityId, filter, ctx);
 
         if (filter instanceof StateEntityFilter) {
-            return buildSingleEntityFilter(resolvedStateEntity);
+            return buildSingleEntityFilter(resolvedEntity);
         } else if (filter instanceof StateEntityOwnerFilter ownerFilter) {
-            ownerFilter.setSingleEntity(resolvedStateEntity);
+            ownerFilter.setSingleEntity(resolvedEntity);
             return ownerFilter;
         } else if (filter instanceof RelationsQueryFilter queryFilter && queryFilter.isRootStateEntity()) {
-            queryFilter.setRootEntity(resolvedStateEntity);
+            queryFilter.setRootEntity(resolvedEntity);
         } else if (filter instanceof EntitySearchQueryFilter queryFilter && queryFilter.isRootStateEntity()) {
-            queryFilter.setRootEntity(resolvedStateEntity);
+            queryFilter.setRootEntity(resolvedEntity);
         } else if (filter instanceof SchedulerEventFilter queryFilter && queryFilter.isOriginatorStateEntity()) {
-            queryFilter.setOriginator(resolvedStateEntity);
+            queryFilter.setOriginator(resolvedEntity);
         } else if (filter instanceof EntityGroupFilter entityGroupFilter && entityGroupFilter.isGroupStateEntity()) {
-            if (resolvedStateEntity != null) {
-                entityGroupFilter.setGroupType(resolvedStateEntity.getEntityType());
-                entityGroupFilter.setEntityGroup(resolvedStateEntity.getId().toString());
+            if (resolvedEntity != null) {
+                entityGroupFilter.setGroupType(resolvedEntity.getEntityType());
+                entityGroupFilter.setEntityGroup(resolvedEntity.getId().toString());
             }
         } else if (filter instanceof EntitiesByGroupNameFilter entitiesByGroupNameFilter && entitiesByGroupNameFilter.isGroupStateEntity()) {
-             entitiesByGroupNameFilter.setOwnerId(resolvedStateEntity);
+             entitiesByGroupNameFilter.setOwnerId(resolvedEntity);
         }
 
         EntityFilter.resolveEntityFilter(filter, ctx.getTenantId(), ctx.getUserId(), ctx.getUserOwnerId());
