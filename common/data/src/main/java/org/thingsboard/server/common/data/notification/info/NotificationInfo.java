@@ -33,12 +33,9 @@ package org.thingsboard.server.common.data.notification.info;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import org.thingsboard.server.common.data.id.BlobEntityId;
 import org.thingsboard.server.common.data.id.DashboardId;
 import org.thingsboard.server.common.data.id.EntityId;
-import org.thingsboard.server.common.data.id.ReportId;
 
-import java.util.List;
 import java.util.Map;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -53,16 +50,6 @@ public interface NotificationInfo {
     }
 
     default DashboardId getDashboardId() {
-        return null;
-    }
-
-    @JsonIgnore
-    default List<BlobEntityId> getAttachments() {
-        return null;
-    }
-
-    @JsonIgnore
-    default List<ReportId> getReports() {
         return null;
     }
 

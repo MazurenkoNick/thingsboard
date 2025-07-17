@@ -68,6 +68,7 @@ import org.thingsboard.server.gen.transport.TransportProtos;
 import org.thingsboard.server.queue.common.SimpleTbQueueCallback;
 import org.thingsboard.server.queue.discovery.PartitionService;
 import org.thingsboard.server.service.apiusage.TbApiUsageStateService;
+import org.thingsboard.server.service.executors.NotificationExecutorService;
 import org.thingsboard.server.service.job.JobProcessor;
 import org.thingsboard.server.service.security.model.token.AccessJwtToken;
 import org.thingsboard.server.service.security.permission.OwnersCacheService;
@@ -90,6 +91,7 @@ public class ReportJobProcessor implements JobProcessor {
     private final ReportTemplateService reportTemplateService;
     private final SystemSecurityService systemSecurityService;
     private final NotificationCenter notificationCenter;
+    private final NotificationExecutorService notificationExecutor;
     private final TbClusterService clusterService;
     private final PartitionService partitionService;
     private final OwnersCacheService ownersCacheService;
@@ -142,44 +144,11 @@ public class ReportJobProcessor implements JobProcessor {
         TenantId tenantId = job.getTenantId();
 
         if (configuration.getOutputTbMsgProto() != null) {
-            TbMsg outputMsg;
             try {
-                outputMsg = TbMsg.fromProto(configuration.getQueueName(), MsgProtos.TbMsgProto.parseFrom(
-                        Base64.getDecoder().decode(configuration.getOutputTbMsgProto())), null);
-            } catch (InvalidProtocolBufferException e) {
-                throw new RuntimeException(e);
+                produceOutputMsg(tenantId, configuration, result);
+            } catch (Exception e) {
+                log.error("[{}] Failed to produce rule engine output msg for job {}", tenantId, job.getId(), e);
             }
-            String relationType;
-            String error;
-            if (result.getGeneralError() != null) {
-                relationType = TbNodeConnectionType.FAILURE;
-                error = result.getGeneralError();
-            } else if (result.getFailedCount() > 0) {
-                relationType = TbNodeConnectionType.FAILURE;
-                error = result.getResults().stream()
-                        .filter(not(TaskResult::isSuccess))
-                        .findFirst().map(taskResult -> ((ReportTaskResult) taskResult).getError())
-                        .orElse(null);
-            } else {
-                relationType = TbNodeConnectionType.SUCCESS;
-                error = null;
-                outputMsg.getMetaData().putValue(TbMsgToEmailNode.REPORTS, result.getReport().getId().toString());
-            }
-
-            TransportProtos.ToRuleEngineMsg.Builder ruleEngineMsg = TransportProtos.ToRuleEngineMsg.newBuilder()
-                    .setTenantIdMSB(tenantId.getId().getMostSignificantBits())
-                    .setTenantIdLSB(tenantId.getId().getLeastSignificantBits())
-                    .setTbMsgProto(TbMsg.toProto(outputMsg))
-                    .addRelationTypes(relationType);
-            if (error != null) {
-                ruleEngineMsg.setFailureMessage(error);
-            }
-            TopicPartitionInfo tpi = partitionService.resolve(ServiceType.TB_RULE_ENGINE, outputMsg.getQueueName(), tenantId, outputMsg.getOriginator());
-            clusterService.pushMsgToRuleEngine(tpi, outputMsg.getId(), ruleEngineMsg.build(), new SimpleTbQueueCallback(tbQueueMsgMetadata -> {
-                actorSystemContext.persistDebugOutputIfNeeded(tenantId, configuration.getRuleNode(), outputMsg, Set.of(relationType), null, error);
-            }, throwable -> {
-                log.error("[{}] Failed to send msg {}", tenantId, ruleEngineMsg, throwable);
-            }));
         }
         if (job.getStatus() != JobStatus.COMPLETED) {
             return;
@@ -192,18 +161,83 @@ public class ReportJobProcessor implements JobProcessor {
                     .tenantId(tenantId)
                     .targets(List.of(configuration.getRecipientId().getId()))
                     .templateId(configuration.getNotificationTemplateId())
+                    .originatorEntityId(report.getUserId())
                     .info(ReportGeneratedNotificationInfo.builder()
                             .tenantId(tenantId)
                             .customerId(report.getCustomerId())
-                            .reportId(report.getId())
                             .reportFormat(report.getFormat())
                             .reportName(report.getName())
                             .userId(report.getUserId())
                             .build())
-                    .additionalConfig(new NotificationRequestConfig())
                     .build();
-            notificationCenter.processNotificationRequest(tenantId, notificationRequest, null);
+            processNotification(notificationRequest, report);
+        } else if (configuration.getNotificationRequests() != null) {
+            configuration.getNotificationRequests().forEach(notificationRequest -> {
+                processNotification(notificationRequest, report);
+            });
         }
+    }
+
+    private void processNotification(NotificationRequest notificationRequest, Report report) {
+        TenantId tenantId = report.getTenantId();
+        NotificationRequestConfig requestConfig;
+        if (notificationRequest.getAdditionalConfig() != null) {
+            requestConfig = notificationRequest.getAdditionalConfig();
+        } else {
+            requestConfig = new NotificationRequestConfig();
+        }
+        requestConfig.setReports(List.of(report.getId()));
+        notificationRequest.setAdditionalConfig(requestConfig);
+
+        log.debug("Submitting notification request with report: {}", notificationRequest);
+        notificationExecutor.executeAsync(() -> {
+            try {
+                notificationCenter.processNotificationRequest(tenantId, notificationRequest, null);
+            } catch (Exception e) {
+                log.error("[{}] Failed to process notification request: {}", tenantId, notificationRequest, e);
+            }
+        });
+    }
+
+    private void produceOutputMsg(TenantId tenantId, ReportJobConfiguration configuration, ReportJobResult result) {
+        TbMsg outputMsg;
+        try {
+            outputMsg = TbMsg.fromProto(configuration.getQueueName(), MsgProtos.TbMsgProto.parseFrom(
+                    Base64.getDecoder().decode(configuration.getOutputTbMsgProto())), null);
+        } catch (InvalidProtocolBufferException e) {
+            throw new RuntimeException(e);
+        }
+        String relationType;
+        String error;
+        if (result.getGeneralError() != null) {
+            relationType = TbNodeConnectionType.FAILURE;
+            error = result.getGeneralError();
+        } else if (result.getFailedCount() > 0) {
+            relationType = TbNodeConnectionType.FAILURE;
+            error = result.getResults().stream()
+                    .filter(not(TaskResult::isSuccess))
+                    .findFirst().map(taskResult -> ((ReportTaskResult) taskResult).getError())
+                    .orElse(null);
+        } else {
+            relationType = TbNodeConnectionType.SUCCESS;
+            error = null;
+            outputMsg.getMetaData().putValue(TbMsgToEmailNode.REPORTS, result.getReport().getId().toString());
+        }
+
+        TransportProtos.ToRuleEngineMsg.Builder ruleEngineMsg = TransportProtos.ToRuleEngineMsg.newBuilder()
+                .setTenantIdMSB(tenantId.getId().getMostSignificantBits())
+                .setTenantIdLSB(tenantId.getId().getLeastSignificantBits())
+                .setTbMsgProto(TbMsg.toProto(outputMsg))
+                .addRelationTypes(relationType);
+        if (error != null) {
+            ruleEngineMsg.setFailureMessage(error);
+        }
+        TopicPartitionInfo tpi = partitionService.resolve(ServiceType.TB_RULE_ENGINE, outputMsg.getQueueName(), tenantId, outputMsg.getOriginator());
+        clusterService.pushMsgToRuleEngine(tpi, outputMsg.getId(), ruleEngineMsg.build(), new SimpleTbQueueCallback(tbQueueMsgMetadata -> {
+            actorSystemContext.persistDebugOutputIfNeeded(tenantId, configuration.getRuleNode(), outputMsg, Set.of(relationType), null, error);
+        }, throwable -> {
+            log.error("[{}] Failed to send msg {}", tenantId, ruleEngineMsg, throwable);
+        }));
     }
 
     @Override
