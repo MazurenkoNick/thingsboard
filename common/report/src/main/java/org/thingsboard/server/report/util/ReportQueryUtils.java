@@ -30,6 +30,7 @@
  */
 package org.thingsboard.server.report.util;
 
+import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.id.DeviceId;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.kv.Aggregation;
@@ -37,16 +38,20 @@ import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.query.AlarmCountQuery;
 import org.thingsboard.server.common.data.query.AlarmDataPageLink;
 import org.thingsboard.server.common.data.query.AlarmDataQuery;
+import org.thingsboard.server.common.data.query.AliasEntityId;
+import org.thingsboard.server.common.data.query.AliasEntityType;
 import org.thingsboard.server.common.data.query.EntityCountQuery;
-import org.thingsboard.server.common.data.query.EntityData;
 import org.thingsboard.server.common.data.query.EntityDataPageLink;
 import org.thingsboard.server.common.data.query.EntityDataQuery;
 import org.thingsboard.server.common.data.query.EntityDataSortOrder;
 import org.thingsboard.server.common.data.query.EntityFilter;
+import org.thingsboard.server.common.data.query.EntityGroupFilter;
 import org.thingsboard.server.common.data.query.EntityKey;
 import org.thingsboard.server.common.data.query.EntityKeyType;
 import org.thingsboard.server.common.data.query.EntitySearchQueryFilter;
 import org.thingsboard.server.common.data.query.KeyFilter;
+import org.thingsboard.server.common.data.query.RelationsQueryFilter;
+import org.thingsboard.server.common.data.query.SchedulerEventFilter;
 import org.thingsboard.server.common.data.query.SingleEntityFilter;
 import org.thingsboard.server.common.data.query.StateEntityFilter;
 import org.thingsboard.server.common.data.query.StateEntityOwnerFilter;
@@ -57,6 +62,7 @@ import org.thingsboard.server.common.data.report.configuration.DataSourceType;
 import org.thingsboard.server.common.data.report.configuration.ReportTemplateConfig;
 import org.thingsboard.server.common.data.report.configuration.components.AlarmTableComponent;
 import org.thingsboard.server.common.data.report.configuration.timewindow.TimeIntervalCalculator;
+import org.thingsboard.server.report.context.TbReportCtx;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -67,6 +73,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static org.thingsboard.server.common.data.query.AliasEntityId.resolveAliasEntityId;
 import static org.thingsboard.server.common.data.report.configuration.timewindow.TimeIntervalCalculator.getTimeRange;
 import static org.thingsboard.server.common.data.util.DataSourceUtils.setEntityKeyIfNotExists;
 
@@ -75,16 +82,16 @@ public class ReportQueryUtils {
     private static final EntityDataSortOrder DEFAULT_SORT_ORDER = new EntityDataSortOrder(new EntityKey(EntityKeyType.ENTITY_FIELD, "id"), EntityDataSortOrder.Direction.ASC);
     private static final EntityDataSortOrder DEFAULT_ALARM_SORT_ORDER = new EntityDataSortOrder(new EntityKey(EntityKeyType.ALARM_FIELD, "createdTime"), EntityDataSortOrder.Direction.DESC);
 
-    public static EntityCountQuery toEntityCountQuery(DataSource dataSource, ReportTemplateConfig reportTemplateConfig) {
-        EntityFilter entityFilter = buildEntityFilter(dataSource, reportTemplateConfig, null);
-        List<KeyFilter> keyFilters = findKeyFilters(dataSource, reportTemplateConfig);
+    public static EntityCountQuery toEntityCountQuery(DataSource dataSource, TbReportCtx ctx) {
+        EntityFilter entityFilter = buildEntityFilter(dataSource, ctx, null);
+        List<KeyFilter> keyFilters = findKeyFilters(dataSource, ctx.getConfiguration());
 
         return new EntityCountQuery(entityFilter, keyFilters);
     }
 
-    public static AlarmCountQuery toAlarmCountQuery(DataSource dataSource, ReportTemplateConfig reportTemplateConfig) {
-        EntityFilter entityFilter = buildEntityFilter(dataSource, reportTemplateConfig, null);
-        List<KeyFilter> keyFilters = findKeyFilters(dataSource, reportTemplateConfig);
+    public static AlarmCountQuery toAlarmCountQuery(DataSource dataSource, TbReportCtx ctx) {
+        EntityFilter entityFilter = buildEntityFilter(dataSource, ctx, null);
+        List<KeyFilter> keyFilters = findKeyFilters(dataSource, ctx.getConfiguration());
         AlarmCountQuery alarmCountQuery = new AlarmCountQuery(entityFilter, keyFilters);
 
         AlarmFilterConfig alarmFilterConfig = dataSource.getAlarmFilterConfig();
@@ -97,10 +104,10 @@ public class ReportQueryUtils {
         return alarmCountQuery;
     }
 
-    public static AlarmDataQuery toAlarmDataQuery(AlarmTableComponent component, ReportTemplateConfig reportTemplateConfig, EntityId stateEntityId, PageLink pageLink) {
+    public static AlarmDataQuery toAlarmDataQuery(AlarmTableComponent component, TbReportCtx ctx, EntityId stateEntityId, PageLink pageLink) {
         DataSource alarmSource = component.getAlarmSource();
-        EntityFilter entityFilter = buildEntityFilter(alarmSource, reportTemplateConfig, stateEntityId);
-        List<KeyFilter> keyFilters = findKeyFilters(alarmSource, reportTemplateConfig);
+        EntityFilter entityFilter = buildEntityFilter(alarmSource, ctx, stateEntityId);
+        List<KeyFilter> keyFilters = findKeyFilters(alarmSource, ctx.getConfiguration());
 
         List<EntityKey> alarmFields = alarmSource.getDataKeys().stream().filter(dataKey -> "alarm".equals(dataKey.getType())).map(dataKey ->
                 new EntityKey(EntityKeyType.ALARM_FIELD, dataKey.getName())).toList();
@@ -136,11 +143,11 @@ public class ReportQueryUtils {
         return new AlarmDataQuery(entityFilter, alarmDataPageLink, entityFields, latestValues, keyFilters, alarmFields);
     }
 
-    public static EntityDataQuery toEntityDataQuery(DataSource dataSource, ReportTemplateConfig reportTemplateConfig, EntityId stateEntityId, PageLink pageLink) {
+    public static EntityDataQuery toEntityDataQuery(DataSource dataSource, TbReportCtx ctx, EntityId stateEntityId, PageLink pageLink) {
         EntityDataPageLink entityDataPageLink = new EntityDataPageLink(pageLink.getPageSize(), pageLink.getPage(), pageLink.getTextSearch(), DEFAULT_SORT_ORDER);
 
-        EntityFilter filter = buildEntityFilter(dataSource, reportTemplateConfig, stateEntityId);
-        List<KeyFilter> keyFilters = findKeyFilters(dataSource, reportTemplateConfig);
+        EntityFilter filter = buildEntityFilter(dataSource, ctx, stateEntityId);
+        List<KeyFilter> keyFilters = findKeyFilters(dataSource, ctx.getConfiguration());
 
         List<EntityKey> entityFields = new ArrayList<>();
         List<EntityKey> latestValues = new ArrayList<>();
@@ -166,56 +173,66 @@ public class ReportQueryUtils {
         return new EntityDataQuery(filter, entityDataPageLink, entityFields, latestValues, keyFilters);
     }
 
-    private static EntityFilter buildEntityFilter(DataSource dataSource, ReportTemplateConfig config, EntityId stateEntityId) {
+    private static EntityFilter buildEntityFilter(DataSource dataSource, TbReportCtx ctx, EntityId stateEntityId) {
         if (dataSource.getType() == DataSourceType.DEVICE) {
             return buildSingleEntityFilter(DeviceId.fromString(dataSource.getDeviceId()));
         }
-        return buildAliasBasedFilter(dataSource, config, stateEntityId);
+        return buildAliasBasedFilter(dataSource, ctx, stateEntityId);
     }
 
     private static EntityFilter buildSingleEntityFilter(EntityId entityId) {
         SingleEntityFilter filter = new SingleEntityFilter();
-        filter.setSingleEntity(entityId);
+        filter.setSingleEntity(AliasEntityId.fromEntityId(entityId));
         return filter;
     }
 
-    private static EntityFilter buildAliasBasedFilter(DataSource dataSource, ReportTemplateConfig config, EntityId stateEntityId) {
-        EntityFilter filter = config.getEntityAliases().stream()
+    private static EntityFilter buildAliasBasedFilter(DataSource dataSource, TbReportCtx ctx, EntityId stateEntityId) {
+        EntityFilter filter = ctx.getConfiguration().getEntityAliases().stream()
                 .filter(alias -> alias.getId().equals(dataSource.getEntityAliasId()))
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("Entity alias not found: " + dataSource.getEntityAliasId()))
                 .getFilter();
 
-        EntityId resolvedEntity = resolveStateEntityId(stateEntityId, filter);
+        AliasEntityId resolvedEntity = resolveStateEntityId(stateEntityId, filter, ctx);
 
         if (filter instanceof StateEntityFilter) {
             return buildSingleEntityFilter(resolvedEntity);
-        } else if (filter instanceof StateEntityOwnerFilter) {
-            StateEntityOwnerFilter ownerFilter = new StateEntityOwnerFilter();
+        } else if (filter instanceof StateEntityOwnerFilter ownerFilter) {
             ownerFilter.setSingleEntity(resolvedEntity);
             return ownerFilter;
+        } else if (filter instanceof RelationsQueryFilter queryFilter && queryFilter.isRootStateEntity()) {
+            queryFilter.setRootEntity(resolvedEntity);
         } else if (filter instanceof EntitySearchQueryFilter queryFilter && queryFilter.isRootStateEntity()) {
             queryFilter.setRootEntity(resolvedEntity);
+        } else if (filter instanceof SchedulerEventFilter queryFilter && queryFilter.isOriginatorStateEntity()) {
+            queryFilter.setOriginator(resolvedEntity);
         }
+
+        EntityFilter.resolveEntityFilter(filter, ctx.getTenantId(), ctx.getUserId(), ctx.getUserOwnerId());
 
         return filter;
     }
 
-    private static EntityId resolveStateEntityId(EntityId stateEntityId, EntityFilter filter) {
+    private static AliasEntityId resolveStateEntityId(EntityId stateEntityId, EntityFilter filter, TbReportCtx ctx) {
         if (stateEntityId != null) {
-            return stateEntityId;
+            return AliasEntityId.fromEntityId(stateEntityId);
         }
 
         if (filter instanceof StateEntityFilter stateFilter) {
-            return stateFilter.getDefaultStateEntity();
+            return resolveAliasEntityId(stateFilter.getDefaultStateEntity(), ctx.getTenantId(), ctx.getUserId(), ctx.getUserOwnerId());
         } else if (filter instanceof StateEntityOwnerFilter ownerFilter) {
-            return ownerFilter.getDefaultStateEntity();
+            return resolveAliasEntityId(ownerFilter.getDefaultStateEntity(), ctx.getTenantId(), ctx.getUserId(), ctx.getUserOwnerId());
+        } else if (filter instanceof RelationsQueryFilter queryFilter) {
+            return resolveAliasEntityId(queryFilter.getDefaultStateEntity(), ctx.getTenantId(), ctx.getUserId(), ctx.getUserOwnerId());
         } else if (filter instanceof EntitySearchQueryFilter queryFilter) {
-            return queryFilter.getDefaultStateEntity();
+            return resolveAliasEntityId(queryFilter.getDefaultStateEntity(), ctx.getTenantId(), ctx.getUserId(), ctx.getUserOwnerId());
+        } else if (filter instanceof SchedulerEventFilter queryFilter) {
+            return resolveAliasEntityId(queryFilter.getDefaultStateEntity(), ctx.getTenantId(), ctx.getUserId(), ctx.getUserOwnerId());
         }
 
         return null;
     }
+
 
     private static List<KeyFilter> findKeyFilters(DataSource dataSource, ReportTemplateConfig reportTemplateConfig) {
         if (dataSource.getFilterId() != null) {

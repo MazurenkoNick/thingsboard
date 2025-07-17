@@ -53,6 +53,7 @@ import org.thingsboard.rule.engine.api.JobManager;
 import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.id.CustomerId;
+import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.ReportId;
 import org.thingsboard.server.common.data.id.ReportTemplateId;
 import org.thingsboard.server.common.data.id.TenantId;
@@ -218,6 +219,7 @@ public class ReportController extends BaseController {
     public ResponseEntity<ByteArrayResource> testReportAndDownload(@RequestBody ReportRequest reportRequest) throws Exception {
         TenantId tenantId = getTenantId();
         UserId userId = StringUtils.isNotEmpty(reportRequest.getUserId()) ? new UserId(UUID.fromString(reportRequest.getUserId())) : getCurrentUser().getId();
+        EntityId userOwnerId = ownersCacheService.getOwner(tenantId, userId);
         AccessJwtToken accessToken = systemSecurityService.createUserAccessToken(tenantId, userId);
         ReportTemplateConfig configuration = reportRequest.getReportTemplateConfig();
         if (configuration == null) {
@@ -229,6 +231,7 @@ public class ReportController extends BaseController {
                 .reportTemplateConfig(configuration)
                 .timezone(reportRequest.getTimezone())
                 .userId(userId)
+                .userOwnerId(userOwnerId)
                 .originator(reportRequest.getOriginator())
                 .accessToken(accessToken.getToken())
                 .accessTokenExpirationTs(accessToken.getClaims().getExpiration().getTime())

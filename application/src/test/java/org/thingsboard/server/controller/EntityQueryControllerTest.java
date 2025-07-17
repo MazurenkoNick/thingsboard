@@ -64,6 +64,7 @@ import org.thingsboard.server.common.data.query.AlarmCountQuery;
 import org.thingsboard.server.common.data.query.AlarmData;
 import org.thingsboard.server.common.data.query.AlarmDataPageLink;
 import org.thingsboard.server.common.data.query.AlarmDataQuery;
+import org.thingsboard.server.common.data.query.AliasEntityId;
 import org.thingsboard.server.common.data.query.DeviceTypeFilter;
 import org.thingsboard.server.common.data.query.DynamicValue;
 import org.thingsboard.server.common.data.query.DynamicValueSourceType;
@@ -766,7 +767,7 @@ public class EntityQueryControllerTest extends AbstractControllerTest {
         }
 
         RelationsQueryFilter filter = new RelationsQueryFilter();
-        filter.setRootEntity(mainDevice.getId());
+        filter.setRootEntity(AliasEntityId.fromEntityId(mainDevice.getId()));
         filter.setDirection(EntitySearchDirection.FROM);
         filter.setNegate(true);
         filter.setFilters(List.of(new RelationEntityTypeFilter("CONTAINS", List.of(EntityType.DEVICE), false)));
@@ -1224,7 +1225,7 @@ public class EntityQueryControllerTest extends AbstractControllerTest {
         EntityCountQuery countQuery = new EntityCountQuery(filter);
         countByQueryAndCheck(countQuery, 97);
 
-        filter.setOriginator(originator);
+        filter.setOriginator(AliasEntityId.fromEntityId(originator));
         countByQueryAndCheck(countQuery, 97);
 
         filter.setEventType("CUSTOM");
@@ -1234,7 +1235,7 @@ public class EntityQueryControllerTest extends AbstractControllerTest {
         countByQueryAndCheck(countQuery, 0);
 
         filter.setEventType("CUSTOM");
-        filter.setOriginator(new DeviceId(UUID.randomUUID()));
+        filter.setOriginator(AliasEntityId.fromEntityId(new DeviceId(UUID.randomUUID())));
         countByQueryAndCheck(countQuery, 0);
     }
 
@@ -1293,7 +1294,7 @@ public class EntityQueryControllerTest extends AbstractControllerTest {
 
 
         SchedulerEventFilter filter2 = new SchedulerEventFilter();
-        filter2.setOriginator(originator);
+        filter2.setOriginator(AliasEntityId.fromEntityId(originator));
 
         EntityDataSortOrder sortOrder2 = new EntityDataSortOrder(
                 new EntityKey(EntityKeyType.ENTITY_FIELD, "createdTime"), EntityDataSortOrder.Direction.ASC

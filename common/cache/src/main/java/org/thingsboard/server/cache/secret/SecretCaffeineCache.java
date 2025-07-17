@@ -42,7 +42,7 @@ import org.thingsboard.server.common.data.secret.Secret;
 public class SecretCaffeineCache extends CaffeineTbTransactionalCache<SecretCacheKey, Secret> {
 
     public SecretCaffeineCache(CacheManager cacheManager) {
-        super(cacheManager, CacheConstants.SECRET_CACHE);
+        super(cacheManager, CacheConstants.SECRETS_CACHE);
     }
 
 }

@@ -31,6 +31,7 @@
 package org.thingsboard.server.common.data;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.swagger.v3.oas.annotations.media.Schema;
 import org.thingsboard.server.common.data.id.IdBased;
 import org.thingsboard.server.common.data.id.UUIDBased;
 
@@ -56,6 +57,11 @@ public abstract class BaseData<I extends UUIDBased> extends IdBased<I> implement
         this.createdTime = data.getCreatedTime();
     }
 
+    @Schema(
+            description = "Entity creation timestamp in milliseconds since Unix epoch",
+            example = "1746028547220",
+            accessMode = Schema.AccessMode.READ_ONLY
+    )
     public long getCreatedTime() {
         return createdTime;
     }

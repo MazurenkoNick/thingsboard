@@ -742,7 +742,7 @@ export const NotificationTemplateTypeTranslateMap = new Map<NotificationType, No
   [NotificationType.REPORT_GENERATED,
     {
       name: 'notification.template-type.report-generated',
-      helpId: 'notification/report_generated'   // TODO: add help doc
+      helpId: 'notification/report_generated'
     }
   ]
 ]);

@@ -122,9 +122,7 @@ public class SecretServiceImpl extends AbstractCachedEntityService<SecretCacheKe
             }
 
             Secret savedSecret = secretDao.save(tenantId, secret);
-            if (secret.getId() != null) {
-                publishEvictEvent(new SecretCacheEvictEvent(savedSecret.getTenantId(), savedSecret.getName()));
-            }
+            publishEvictEvent(new SecretCacheEvictEvent(savedSecret.getTenantId(), savedSecret.getName()));
             eventPublisher.publishEvent(SaveEntityEvent.builder().tenantId(tenantId).entityId(savedSecret.getId()).entity(savedSecret).created(secret.getId() == null).broadcastEvent(isValueUpdated).build());
             return savedSecret;
         } catch (Exception e) {

@@ -78,6 +78,7 @@ export enum EntityType {
   CALCULATED_FIELD = 'CALCULATED_FIELD',
   ADMIN_SETTINGS = 'ADMIN_SETTINGS',
   SECRET = 'SECRET',
+  AI_MODEL = 'AI_MODEL',
 }
 
 export enum AliasEntityType {
@@ -692,6 +693,18 @@ export const entityTypeTranslations = new Map<EntityType | AliasEntityType, Enti
       }
     ],
     [
+      EntityType.AI_MODEL,
+      {
+        type: 'entity.type-ai-model',
+        typePlural: 'entity.type-ai-models',
+        list: 'ai-models.list',
+        add: 'ai-models.add',
+        noEntities: 'ai-models.no-found',
+        search: 'action.search',
+        selectedEntities: 'ai-models.selected-fields'
+      }
+    ],
+    [
       EntityType.SECRET,
       {
         type: 'entity.type-secret-storage',
@@ -856,6 +869,12 @@ export const entityTypeResources = new Map<EntityType, EntityTypeResource<BaseDa
       EntityType.SECRET,
       {
         helpLinkId: 'secretStorage'
+      }
+    ],
+    [
+      EntityType.AI_MODEL,
+      {
+        helpLinkId: 'aiModels'
       }
     ],
     [

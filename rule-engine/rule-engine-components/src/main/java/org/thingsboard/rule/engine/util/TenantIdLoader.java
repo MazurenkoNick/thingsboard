@@ -35,6 +35,7 @@ import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.HasTenantId;
 import org.thingsboard.server.common.data.cf.CalculatedFieldLink;
 import org.thingsboard.server.common.data.group.EntityGroup;
+import org.thingsboard.server.common.data.id.AiModelId;
 import org.thingsboard.server.common.data.id.AlarmId;
 import org.thingsboard.server.common.data.id.ApiUsageStateId;
 import org.thingsboard.server.common.data.id.AssetId;
@@ -241,6 +242,9 @@ public class TenantIdLoader {
                 break;
             case JOB:
                 tenantEntity = ctx.getJobService().findJobById(ctxTenantId, new JobId(id));
+                break;
+            case AI_MODEL:
+                tenantEntity = ctx.getAiModelService().findAiModelById(ctxTenantId, new AiModelId(id)).orElse(null);
                 break;
             default:
                 throw new RuntimeException("Unexpected entity type: " + entityId.getEntityType());

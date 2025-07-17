@@ -98,6 +98,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -158,6 +159,7 @@ public class DefaultNotificationCenter extends AbstractSubscriptionService imple
         }
 
         NotificationRuleId ruleId = request.getRuleId();
+        NotificationRequestConfig requestConfig = request.getAdditionalConfig();
         notificationTemplate.getConfiguration().getDeliveryMethodsTemplates().forEach((deliveryMethod, template) -> {
             if (!template.isEnabled()) return;
             try {
@@ -169,7 +171,7 @@ public class DefaultNotificationCenter extends AbstractSubscriptionService imple
                     return; // if originated by rule or notification type is system - just ignore delivery method
                 }
             }
-            if (ruleId == null && !notificationType.isSystem()) {
+            if (ruleId == null && !notificationType.isSystem() && Optional.ofNullable(requestConfig).map(NotificationRequestConfig::getReports).isEmpty()) {
                 if (targets.stream().noneMatch(target -> target.getConfiguration().getType().getSupportedDeliveryMethods().contains(deliveryMethod))) {
                     throw new IllegalArgumentException("Recipients for " + deliveryMethod.getName() + " delivery method not chosen");
                 }
@@ -180,9 +182,8 @@ public class DefaultNotificationCenter extends AbstractSubscriptionService imple
             throw new IllegalArgumentException("No delivery methods to send notification with");
         }
 
-        if (request.getAdditionalConfig() != null) {
-            NotificationRequestConfig config = request.getAdditionalConfig();
-            if (config.getSendingDelayInSec() > 0 && request.getId() == null) {
+        if (requestConfig != null) {
+            if (requestConfig.getSendingDelayInSec() > 0 && request.getId() == null) {
                 request.setStatus(NotificationRequestStatus.SCHEDULED);
                 request = notificationRequestService.saveNotificationRequest(tenantId, request);
                 forwardToNotificationSchedulerService(tenantId, request.getId());

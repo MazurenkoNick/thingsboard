@@ -93,7 +93,7 @@ public abstract class AbstractReportService implements ReportService {
     protected ReportDataService dataService;
 
     protected List<EntityData> fetchEntities(TbReportCtx ctx, DataSource dataSource, EntityId stateEntityId) {
-       return fetchEntityDataByQuery(pageLink -> toEntityDataQuery(dataSource, ctx.getConfiguration(), stateEntityId, pageLink), dataSource, ctx);
+       return fetchEntityDataByQuery(pageLink -> toEntityDataQuery(dataSource, ctx, stateEntityId, pageLink), dataSource, ctx);
     }
 
     private List<EntityData> fetchEntityDataByQuery(Function<PageLink, EntityDataQuery> querySupplier, DataSource dataSource, TbReportCtx ctx) {
@@ -204,7 +204,7 @@ public abstract class AbstractReportService implements ReportService {
         Map<EntityId, EntityData> entityDataMap = entityDataList.stream()
                 .collect(Collectors.toMap(EntityData::getEntityId, Function.identity()));
         List<Map<String, String>> entityDatas = new ArrayList<>();
-        for (AlarmData alarmData : new PageDataIterable<>(link -> dataService.findAlarmDataByQueryForEntities(toAlarmDataQuery(component, ctx.getConfiguration(), stateEntityId, link), entityDataMap.keySet(), ctx), 1024)) {
+        for (AlarmData alarmData : new PageDataIterable<>(link -> dataService.findAlarmDataByQueryForEntities(toAlarmDataQuery(component, ctx, stateEntityId, link), entityDataMap.keySet(), ctx), 1024)) {
             Map<String, String> mergedData = toStringMap(alarmData, alarmDataKeys, ctx);
             EntityData entityData = entityDataMap.get(alarmData.getEntityId());
             mergedData.putAll(toStringMap(entityData, latestDataKeys, ctx));

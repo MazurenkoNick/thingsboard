@@ -58,6 +58,7 @@ import { SecretStorageService } from '@core/http/secret-storage.service';
 import { Operation, Resource } from '@shared/models/security.models';
 import { UserPermissionsService } from '@core/http/user-permissions.service';
 import { coerceNumber } from '@shared/decorators/coercion';
+import { MatFormFieldAppearance } from '@angular/material/form-field';
 
 @Component({
   selector: 'tb-secret-key-input',
@@ -97,6 +98,9 @@ export class SecretKeyInputComponent extends PageComponent implements OnInit, Co
 
   @Input()
   maxLengthErrorText: string;
+
+  @Input()
+  appearance: MatFormFieldAppearance = 'fill';
 
   secretStorageKey: string;
 

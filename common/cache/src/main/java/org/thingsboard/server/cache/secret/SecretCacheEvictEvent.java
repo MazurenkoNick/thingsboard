@@ -30,15 +30,8 @@
  */
 package org.thingsboard.server.cache.secret;
 
-import org.jetbrains.annotations.NotNull;
 import org.thingsboard.server.common.data.id.TenantId;
 
 public record SecretCacheEvictEvent(TenantId tenantId, String name) {
-
-    @NotNull
-    @Override
-    public String toString() {
-        return tenantId.toString() + ":" + name;
-    }
 
 }

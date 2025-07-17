@@ -45,7 +45,7 @@ import org.thingsboard.server.common.data.secret.Secret;
 public class SecretRedisCache extends RedisTbTransactionalCache<SecretCacheKey, Secret> {
 
     public SecretRedisCache(TBRedisCacheConfiguration configuration, CacheSpecsMap cacheSpecsMap, RedisConnectionFactory connectionFactory) {
-        super(CacheConstants.SECRET_CACHE, cacheSpecsMap, connectionFactory, configuration, new TbJsonRedisSerializer<>(Secret.class));
+        super(CacheConstants.SECRETS_CACHE, cacheSpecsMap, connectionFactory, configuration, new TbJsonRedisSerializer<>(Secret.class));
     }
 
 }

@@ -593,8 +593,6 @@ public class DefaultSystemDataLoaderService implements SystemDataLoaderService {
         } else if (Authority.CUSTOMER_USER.equals(authority)) {
             EntityGroup users = entityGroupService.findOrCreateCustomerUsersGroup(user.getTenantId(), user.getCustomerId(), null);
             entityGroupService.addEntityToEntityGroup(TenantId.SYS_TENANT_ID, users.getId(), user.getId());
-        } else if (Authority.SYS_ADMIN.equals(authority)) {
-            installScripts.generateSysAdminEncryptionKey();
         }
         return user;
     }
@@ -661,6 +659,7 @@ public class DefaultSystemDataLoaderService implements SystemDataLoaderService {
         public void onFailure(Throwable t) {
             log.warn("[{}] Failed to update attribute [{}] with value [{}]", deviceId, key, value, t);
         }
+
     }
 
     private <S> void addTsCallback(ListenableFuture<S> saveFuture, final FutureCallback<S> callback) {

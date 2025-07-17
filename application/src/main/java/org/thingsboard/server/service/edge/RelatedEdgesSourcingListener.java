@@ -97,7 +97,10 @@ public class RelatedEdgesSourcingListener {
         });
     }
 
-    @TransactionalEventListener(fallbackExecution = true)
+    @TransactionalEventListener(
+            fallbackExecution = true,
+            condition = "#event.entityId.getEntityType() != T(org.thingsboard.server.common.data.EntityType).AI_MODEL"
+    )
     public void handleEvent(DeleteEntityEvent<?> event) {
         executorService.submit(() -> {
             log.trace("[{}] DeleteEntityEvent called: {}", event.getTenantId(), event);

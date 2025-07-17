@@ -30,7 +30,10 @@
  */
 package org.thingsboard.server.common.data;
 
-public class CacheConstants {
+public final class CacheConstants {
+
+    private CacheConstants() {}
+
     public static final String DEVICE_CREDENTIALS_CACHE = "deviceCredentials";
     public static final String RELATIONS_CACHE = "relations";
     public static final String DEVICE_CACHE = "devices";
@@ -55,6 +58,7 @@ public class CacheConstants {
     public static final String NOTIFICATION_SETTINGS_CACHE = "notificationSettings";
     public static final String SENT_NOTIFICATIONS_CACHE = "sentNotifications";
     public static final String TRENDZ_SETTINGS_CACHE = "trendzSettings";
+    public static final String AI_MODEL_CACHE = "aiModel";
 
     public static final String ASSET_PROFILE_CACHE = "assetProfiles";
     public static final String REMOTE_INTEGRATIONS_CACHE = "remoteIntegrations";
@@ -79,5 +83,6 @@ public class CacheConstants {
     public static final String MOBILE_SECRET_KEY_CACHE = "mobileSecretKey";
     public static final String CUSTOM_MENU_CACHE = "customMenu";
     public static final String ENTITY_GROUP_CACHE = "entityGroups";
-    public static final String SECRET_CACHE = "secrets";
+    public static final String SECRETS_CACHE = "secrets";
+
 }
