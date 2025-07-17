@@ -37,7 +37,7 @@ ALTER TABLE edge_event ADD COLUMN IF NOT EXISTS entity_group_id uuid;
 
 ALTER TABLE alarm ADD COLUMN IF NOT EXISTS propagate_to_owner_hierarchy boolean DEFAULT false;
 
-ALTER TABLE edge ADD COLUMN IF NOT EXISTS edge_license_key varchar(30) DEFAULT 'PUT_YOUR_EDGE_LICENSE_HERE';
+ALTER TABLE edge ADD COLUMN IF NOT EXISTS edge_license_key varchar DEFAULT 'PUT_YOUR_EDGE_LICENSE_HERE';
 
 ALTER TABLE edge ADD COLUMN IF NOT EXISTS cloud_endpoint varchar(255) DEFAULT 'PUT_YOUR_CLOUD_ENDPOINT_HERE';
 
