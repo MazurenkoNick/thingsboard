@@ -38,6 +38,7 @@ import java.util.EnumSet;
 import java.util.List;
 
 public enum EntityType {
+
     TENANT(1),
     CUSTOMER(2, true),
     USER(3, "tb_user", true),
