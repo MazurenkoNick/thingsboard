@@ -1706,7 +1706,7 @@ public class VersionControlTest extends AbstractControllerTest {
         cfg.set("msgBody", msgBody);
         cfg.set("metadata", JacksonUtil.newObjectNode());
 
-        return createSchedulerEvent(tenantId, originatorId, name, "generateReport", cfg);
+        return createSchedulerEvent(tenantId, originatorId, name, "generateDashboardReport", cfg);
     }
 
     private Dashboard assignDashboardToCustomer(DashboardId dashboardId, CustomerId customerId) {
