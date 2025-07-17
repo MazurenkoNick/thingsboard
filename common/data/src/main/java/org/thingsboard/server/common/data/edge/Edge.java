@@ -77,7 +77,7 @@ public class Edge extends BaseDataWithAdditionalInfo<EdgeId>
     @Length(fieldName = "secret")
     private String secret;
     @NoXss
-    @Length(fieldName = "edgeLicenseKey", max = 30)
+    @Length(fieldName = "edgeLicenseKey", max = 10000)
     private String edgeLicenseKey;
     @NoXss
     @Length(fieldName = "cloudEndpoint")

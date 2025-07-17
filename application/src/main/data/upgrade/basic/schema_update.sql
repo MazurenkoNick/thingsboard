@@ -88,3 +88,11 @@ DROP INDEX IF EXISTS idx_role_external_id;
 DELETE FROM integration where type = 'IBM_WATSON_IOT';
 
 DELETE FROM converter where integration_type = 'IBM_WATSON_IOT';
+
+-- UPDATE EDGE LICENSE KEY TO SUPPORT OFFLINE FEATURE START
+
+DROP VIEW IF EXISTS edge_info_view CASCADE;
+DROP VIEW IF EXISTS edge_active_attribute_view CASCADE;
+ALTER TABLE edge ALTER COLUMN edge_license_key TYPE varchar;
+
+-- UPDATE EDGE LICENSE KEY TO SUPPORT OFFLINE FEATURE END

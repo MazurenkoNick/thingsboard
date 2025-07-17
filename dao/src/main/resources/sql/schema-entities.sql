@@ -939,7 +939,7 @@ CREATE TABLE IF NOT EXISTS edge (
     label varchar(255),
     routing_key varchar(255),
     secret varchar(255),
-    edge_license_key varchar(30),
+    edge_license_key varchar,
     cloud_endpoint varchar(255),
     tenant_id uuid,
     version BIGINT DEFAULT 1,
