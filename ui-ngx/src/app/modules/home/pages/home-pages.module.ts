@@ -73,6 +73,7 @@ import { GatewaysModule } from '@home/pages/gateways/gateways.module';
 import { MobileModule } from '@home/pages/mobile/mobile.module';
 import { CustomMenuModule } from '@home/pages/custom-menu/custom-menu.module';
 import { SecretStorageModule } from '@home/pages/secret-storage/secret-storage.module';
+import { AiModelModule } from '@home/pages/ai-model/ai-model.module';
 import { ReportingModule } from '@home/pages/reporting/reporting.module';
 
 @NgModule({
@@ -121,6 +122,7 @@ import { ReportingModule } from '@home/pages/reporting/reporting.module';
     ScadaSymbolModule,
     CustomTranslationModule,
     CustomMenuModule,
+    AiModelModule,
     ReportingModule
   ]
 })
