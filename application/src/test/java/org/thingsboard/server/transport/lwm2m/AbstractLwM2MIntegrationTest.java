@@ -610,7 +610,7 @@ public abstract class AbstractLwM2MIntegrationTest extends AbstractTransportInte
 
 
         SingleEntityFilter sef = new SingleEntityFilter();
-        sef.setSingleEntity(device.getId());
+        sef.setSingleEntity(AliasEntityId.fromEntityId(device.getId()));
         LatestValueCmd latestCmd = new LatestValueCmd();
         latestCmd.setKeys(Collections.singletonList(new EntityKey(EntityKeyType.TIME_SERIES, "batteryLevel")));
         EntityDataQuery edq = new EntityDataQuery(sef, new EntityDataPageLink(1, 0, null, null),

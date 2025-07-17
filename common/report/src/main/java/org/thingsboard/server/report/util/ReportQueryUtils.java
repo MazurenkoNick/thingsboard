@@ -45,10 +45,13 @@ import org.thingsboard.server.common.data.query.EntityDataPageLink;
 import org.thingsboard.server.common.data.query.EntityDataQuery;
 import org.thingsboard.server.common.data.query.EntityDataSortOrder;
 import org.thingsboard.server.common.data.query.EntityFilter;
+import org.thingsboard.server.common.data.query.EntityGroupFilter;
 import org.thingsboard.server.common.data.query.EntityKey;
 import org.thingsboard.server.common.data.query.EntityKeyType;
 import org.thingsboard.server.common.data.query.EntitySearchQueryFilter;
 import org.thingsboard.server.common.data.query.KeyFilter;
+import org.thingsboard.server.common.data.query.RelationsQueryFilter;
+import org.thingsboard.server.common.data.query.SchedulerEventFilter;
 import org.thingsboard.server.common.data.query.SingleEntityFilter;
 import org.thingsboard.server.common.data.query.StateEntityFilter;
 import org.thingsboard.server.common.data.query.StateEntityOwnerFilter;
@@ -70,6 +73,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static org.thingsboard.server.common.data.query.AliasEntityId.resolveAliasEntityId;
 import static org.thingsboard.server.common.data.report.configuration.timewindow.TimeIntervalCalculator.getTimeRange;
 import static org.thingsboard.server.common.data.util.DataSourceUtils.setEntityKeyIfNotExists;
 
@@ -189,69 +193,46 @@ public class ReportQueryUtils {
                 .orElseThrow(() -> new IllegalArgumentException("Entity alias not found: " + dataSource.getEntityAliasId()))
                 .getFilter();
 
-        EntityId resolvedEntity = resolveStateEntityId(stateEntityId, filter, ctx);
+        AliasEntityId resolvedEntity = resolveStateEntityId(stateEntityId, filter, ctx);
 
-        if (filter instanceof SingleEntityFilter singleEntityFilter) {
-            EntityId resolved = resolveAliasEntityId(singleEntityFilter.getSingleEntity(), ctx);
-            singleEntityFilter.setSingleEntity(AliasEntityId.fromEntityId(resolved));
-        } else if (filter instanceof StateEntityFilter) {
+        if (filter instanceof StateEntityFilter) {
             return buildSingleEntityFilter(resolvedEntity);
-        } else if (filter instanceof StateEntityOwnerFilter) {
-            StateEntityOwnerFilter ownerFilter = new StateEntityOwnerFilter();
+        } else if (filter instanceof StateEntityOwnerFilter ownerFilter) {
             ownerFilter.setSingleEntity(resolvedEntity);
             return ownerFilter;
+        } else if (filter instanceof RelationsQueryFilter queryFilter && queryFilter.isRootStateEntity()) {
+            queryFilter.setRootEntity(resolvedEntity);
         } else if (filter instanceof EntitySearchQueryFilter queryFilter && queryFilter.isRootStateEntity()) {
-            queryFilter.setRootEntity(AliasEntityId.fromEntityId(resolvedEntity));
+            queryFilter.setRootEntity(resolvedEntity);
+        } else if (filter instanceof SchedulerEventFilter queryFilter && queryFilter.isOriginatorStateEntity()) {
+            queryFilter.setOriginator(resolvedEntity);
         }
+
+        EntityFilter.resolveEntityFilter(filter, ctx.getTenantId(), ctx.getUserId(), ctx.getUserOwnerId());
 
         return filter;
     }
 
-    private static EntityId resolveStateEntityId(EntityId stateEntityId, EntityFilter filter, TbReportCtx ctx) {
+    private static AliasEntityId resolveStateEntityId(EntityId stateEntityId, EntityFilter filter, TbReportCtx ctx) {
         if (stateEntityId != null) {
-            return stateEntityId;
+            return AliasEntityId.fromEntityId(stateEntityId);
         }
 
         if (filter instanceof StateEntityFilter stateFilter) {
-            return resolveAliasEntityId(stateFilter.getDefaultStateEntity(), ctx);
+            return resolveAliasEntityId(stateFilter.getDefaultStateEntity(), ctx.getTenantId(), ctx.getUserId(), ctx.getUserOwnerId());
         } else if (filter instanceof StateEntityOwnerFilter ownerFilter) {
-            return resolveAliasEntityId(ownerFilter.getDefaultStateEntity(), ctx);
+            return resolveAliasEntityId(ownerFilter.getDefaultStateEntity(), ctx.getTenantId(), ctx.getUserId(), ctx.getUserOwnerId());
+        } else if (filter instanceof RelationsQueryFilter queryFilter) {
+            return resolveAliasEntityId(queryFilter.getDefaultStateEntity(), ctx.getTenantId(), ctx.getUserId(), ctx.getUserOwnerId());
         } else if (filter instanceof EntitySearchQueryFilter queryFilter) {
-            return resolveAliasEntityId(queryFilter.getDefaultStateEntity(), ctx);
+            return resolveAliasEntityId(queryFilter.getDefaultStateEntity(), ctx.getTenantId(), ctx.getUserId(), ctx.getUserOwnerId());
+        } else if (filter instanceof SchedulerEventFilter queryFilter) {
+            return resolveAliasEntityId(queryFilter.getDefaultStateEntity(), ctx.getTenantId(), ctx.getUserId(), ctx.getUserOwnerId());
         }
 
         return null;
     }
 
-    private static EntityId resolveAliasEntityId(AliasEntityId aliasEntityId, TbReportCtx ctx) {
-        if (aliasEntityId != null) {
-            if (aliasEntityId.isAliasEntityId()) {
-                AliasEntityType aliasEntityType = aliasEntityId.getAliasEntityType();
-                switch (aliasEntityType) {
-                    case CURRENT_CUSTOMER -> {
-                        EntityId userOwnerId = ctx.getUserOwnerId();
-                        if (EntityType.CUSTOMER.equals(userOwnerId.getEntityType())) {
-                            return userOwnerId;
-                        } else {
-                            return aliasEntityId.defaultEntityId();
-                        }
-                    }
-                    case CURRENT_TENANT -> {
-                        return ctx.getTenantId();
-                    }
-                    case CURRENT_USER -> {
-                        return ctx.getUserId();
-                    }
-                    case CURRENT_USER_OWNER -> {
-                        return ctx.getUserOwnerId();
-                    }
-                }
-            } else {
-                return aliasEntityId.toEntityId();
-            }
-        }
-        return null;
-    }
 
     private static List<KeyFilter> findKeyFilters(DataSource dataSource, ReportTemplateConfig reportTemplateConfig) {
         if (dataSource.getFilterId() != null) {

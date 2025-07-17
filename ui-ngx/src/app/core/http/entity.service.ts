@@ -1359,11 +1359,7 @@ export class EntityService {
     const stateEntityGroupType = stateEntityInfo.entityGroupType;
     switch (filter.type) {
       case AliasFilterType.singleEntity:
-        const aliasEntityId = this.resolveAliasEntityId(filter.singleEntity.entityType, filter.singleEntity.id);
-        result.entityFilter = {
-          type: AliasFilterType.singleEntity,
-          singleEntity: aliasEntityId
-        };
+        result.entityFilter = deepClone(filter);
         return of(result);
       case AliasFilterType.entityGroup:
         result.stateEntity = filter.groupStateEntity;
@@ -1456,9 +1452,8 @@ export class EntityService {
           rootEntityId = filter.rootEntity.id;
         }
         if (rootEntityType && rootEntityId) {
-          const queryRootEntityId = this.resolveAliasEntityId(rootEntityType, rootEntityId);
           result.entityFilter = deepClone(filter);
-          result.entityFilter.rootEntity = queryRootEntityId;
+          result.entityFilter.rootEntity = {entityType: rootEntityType, id: rootEntityId};
           return of(result);
         } else {
           return of(result);
@@ -1476,7 +1471,7 @@ export class EntityService {
           originatorId = filter.originator.id;
         }
         if (originatorType && originatorId) {
-          result.entityFilter.originator = this.resolveAliasEntityId(originatorType, originatorId);
+          result.entityFilter.originator = {entityType: originatorType, id: originatorId};
           return of(result);
         } else {
           return of(result);
@@ -1820,42 +1815,7 @@ export class EntityService {
         entityId = filter.defaultStateEntity;
       }
     }
-    if (entityId) {
-      entityId = this.resolveAliasEntityId(entityId.entityType, entityId.id);
-    }
     return {entityId, entityGroupType};
-  }
-
-  private resolveAliasEntityId(entityType: EntityType | AliasEntityType, id: string): EntityId {
-    const entityId: EntityId = {
-      entityType,
-      id
-    };
-    if (entityType === AliasEntityType.CURRENT_CUSTOMER) {
-      const authUser = getCurrentAuthUser(this.store);
-      entityId.entityType = EntityType.CUSTOMER;
-      if (authUser.authority === Authority.CUSTOMER_USER) {
-        entityId.id = authUser.customerId;
-      }
-    } else if (entityType === AliasEntityType.CURRENT_TENANT) {
-      const authUser = getCurrentAuthUser(this.store);
-      entityId.entityType = EntityType.TENANT;
-      entityId.id = authUser.tenantId;
-    } else if (entityType === AliasEntityType.CURRENT_USER) {
-      const authUser = getCurrentAuthUser(this.store);
-      entityId.entityType = EntityType.USER;
-      entityId.id = authUser.userId;
-    } else if (entityType === AliasEntityType.CURRENT_USER_OWNER) {
-      const authUser = getCurrentAuthUser(this.store);
-      if (authUser.authority === Authority.TENANT_ADMIN) {
-        entityId.entityType = EntityType.TENANT;
-        entityId.id = authUser.tenantId;
-      } else if (authUser.authority === Authority.CUSTOMER_USER) {
-        entityId.entityType = EntityType.CUSTOMER;
-        entityId.id = authUser.customerId;
-      }
-    }
-    return entityId;
   }
 
   private createDatasourceFromSubscriptionInfo(subscriptionInfo: SubscriptionInfo): Datasource {
