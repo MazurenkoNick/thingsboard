@@ -164,20 +164,6 @@
           "persistAlarmRulesState": false,
           "fetchAlarmRulesStateOnStart": false
         }
-      },
-      {
-        "additionalInfo": {
-          "description": "Forwards message to the \"Generate Report\" rule chain",
-          "layoutX": 1004,
-          "layoutY": 690
-        },
-        "type": "org.thingsboard.rule.engine.flow.TbRuleChainInputNode",
-        "name": "Generate Report",
-        "debugFailures": false,
-        "debugAll": false,
-        "configuration": {
-          "ruleChainId": "${Generate Report}"
-        }
       }
     ],
     "connections": [
@@ -235,11 +221,6 @@
         "fromIndex": 9,
         "toIndex": 6,
         "type": "Success"
-      },
-      {
-        "fromIndex": 2,
-        "toIndex": 10,
-        "type": "Generate Report"
       }
     ]
   }
