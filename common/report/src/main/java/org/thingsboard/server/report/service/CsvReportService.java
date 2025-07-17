@@ -32,6 +32,7 @@ package org.thingsboard.server.report.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.ReportTemplateId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.job.task.ReportTask;
@@ -59,6 +60,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import static org.thingsboard.server.common.data.util.DataSourceUtils.entityDataFromEntityId;
 import static org.thingsboard.server.report.util.CsvUtils.generateCsv;
 import static org.thingsboard.server.report.util.ReportUtils.getSingleDataSource;
 import static org.thingsboard.server.report.util.ReportUtils.prepareReportName;
@@ -85,7 +87,9 @@ public class CsvReportService extends AbstractReportService {
         log.trace("[{}] Executing generateReport, reportRequest [{}]", tenantId, task);
         ReportTemplateConfig configuration = task.getReportTemplateConfig();
 
-        List<List<String>> content = renderContent(ctx, null);
+        EntityData stateEntity = task.getOriginator() != null ? entityDataFromEntityId(task.getOriginator()) : null;
+
+        List<List<String>> content = renderContent(ctx, stateEntity);
         byte[] csvBytes = generateCsv(content);
         String reportName = prepareReportName(configuration.getNamePattern(), new Date(), task.getTimezone());
 
@@ -99,9 +103,10 @@ public class CsvReportService extends AbstractReportService {
     private List<List<String>> renderContent(TbReportCtx ctx, EntityData stateEntity) {
         List<List<String>> content = new LinkedList<>();
         List<ReportComponent> components = ctx.getConfiguration().getComponents();
+        EntityId stateEntityId = stateEntity != null ? stateEntity.getEntityId() : null;
         for (ReportComponent component : components) {
             switch (component.getType()) {
-                case SUB_REPORT -> content.addAll(renderSubReport(ctx, (SubReportComponent) component));
+                case SUB_REPORT -> content.addAll(renderSubReport(ctx, (SubReportComponent) component, stateEntityId));
                 case TIME_SERIES_TABLE -> content.addAll(renderTimeseriesTables(ctx, (TableReportComponent) component, stateEntity));
                 case ALARM_TABLE, ENTITY_TABLE -> content.addAll(renderTableComponent(ctx, (TableReportComponent) component, stateEntity));
                 default -> throw new IllegalArgumentException("Unsupported component type: " + component.getType());
@@ -120,7 +125,7 @@ public class CsvReportService extends AbstractReportService {
         }
     }
 
-    private List<List<String>> renderSubReport(TbReportCtx ctx, SubReportComponent subReportComponent) {
+    private List<List<String>> renderSubReport(TbReportCtx ctx, SubReportComponent subReportComponent, EntityId stateEntityId) {
         ReportTemplateId templateId = subReportComponent.getTemplateId();
         if (templateId == null) {
             return renderError("Report template id is not configured for Subreport component");
@@ -132,7 +137,7 @@ public class CsvReportService extends AbstractReportService {
                 return renderError("Template with id " + templateId + " not found. Please check the configuration.");
             }
             TbReportCtx subReportCtx = ctx.createSubReportCxt(reportTemplate.getConfiguration());
-            List<EntityData> entities = getSubReportEntities(ctx, subReportComponent);
+            List<EntityData> entities = getSubReportEntities(ctx, subReportComponent, stateEntityId);
             for (EntityData entity : entities) {
                 content.addAll(renderContent(subReportCtx, entity));
             }
@@ -182,7 +187,7 @@ public class CsvReportService extends AbstractReportService {
         if (singleDataSource.isEmpty()) {
             return new ComponentData(0);
         }
-        List<Map<String, String>> entityDatas = collectEntityDatas(ctx, singleDataSource.get(), stateEntity);
+        List<Map<String, String>> entityDatas = collectEntityDatas(ctx, singleDataSource.get(), stateEntity != null ? stateEntity.getEntityId() : null);
         Map<String, Object> variables = new HashMap<>(toStringMap(stateEntity, singleDataSource.get().getDataKeys(), ctx));
         return new ComponentData(0, null, entityDatas, variables);
     }

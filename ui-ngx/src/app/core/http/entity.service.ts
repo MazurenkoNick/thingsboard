@@ -63,8 +63,7 @@ import {
   edgeAliasFilterTypes,
   EntityAlias,
   EntityAliasFilter,
-  EntityAliasFilterResult,
-  stateAliasFilterTypes
+  EntityAliasFilterResult
 } from '@shared/models/alias.models';
 import {
   EdgeImportEntityData,
@@ -132,6 +131,7 @@ import { OAuth2Service } from '@core/http/oauth2.service';
 import { MobileAppService } from '@core/http/mobile-app.service';
 import { PlatformType } from '@shared/models/oauth2.models';
 import { DomainService } from '@core/http/domain.service';
+import { AiModelService } from '@core/http/ai-model.service';
 import { ReportTemplateService } from '@core/http/report-template.service';
 import { ReportTemplate, ReportTemplateQuery, ReportTemplateType } from '@shared/models/report.models';
 import { ReportService } from './report.service';
@@ -177,6 +177,7 @@ export class EntityService {
     private oauth2Service: OAuth2Service,
     private mobileAppService: MobileAppService,
     private domainService: DomainService,
+    private aiModelService: AiModelService,
   ) { }
 
   private getEntityObservable(entityType: EntityType, entityId: string,
@@ -266,6 +267,9 @@ export class EntityService {
         break;
       case EntityType.DOMAIN:
         observable = this.domainService.getDomainInfoById(entityId, config);
+        break;
+      case EntityType.AI_MODEL:
+        observable = this.aiModelService.getAiModelById(entityId, config);
         break;
     }
     return observable;
@@ -711,6 +715,10 @@ export class EntityService {
         pageLink.sortOrder.property = 'name';
         entitiesObservable = this.domainService.getDomainInfos(pageLink, config);
         break;
+      case EntityType.AI_MODEL:
+        pageLink.sortOrder.property = 'name';
+        entitiesObservable = this.aiModelService.getAiModels(pageLink, config);
+        break;
     }
     return entitiesObservable;
   }
@@ -893,14 +901,11 @@ export class EntityService {
     );
   }
 
-  public getAliasFilterTypesByEntityTypes(entityTypes: Array<EntityType | AliasEntityType>, excludeStateAliases = false): Array<AliasFilterType> {
+  public getAliasFilterTypesByEntityTypes(entityTypes: Array<EntityType | AliasEntityType>): Array<AliasFilterType> {
     const authState = getCurrentAuthState(this.store);
     let allAliasFilterTypes: Array<AliasFilterType> = Object.values(AliasFilterType);
     if (!authState.edgesSupportEnabled) {
       allAliasFilterTypes = allAliasFilterTypes.filter(aliasFilterType => !edgeAliasFilterTypes.includes(aliasFilterType));
-    }
-    if (excludeStateAliases) {
-      allAliasFilterTypes = allAliasFilterTypes.filter(aliasFilterType => !stateAliasFilterTypes.includes(aliasFilterType));
     }
     if (!entityTypes || !entityTypes.length) {
       return allAliasFilterTypes;
@@ -1361,11 +1366,7 @@ export class EntityService {
     const stateEntityGroupType = stateEntityInfo.entityGroupType;
     switch (filter.type) {
       case AliasFilterType.singleEntity:
-        const aliasEntityId = this.resolveAliasEntityId(filter.singleEntity.entityType, filter.singleEntity.id);
-        result.entityFilter = {
-          type: AliasFilterType.singleEntity,
-          singleEntity: aliasEntityId
-        };
+        result.entityFilter = deepClone(filter);
         return of(result);
       case AliasFilterType.entityGroup:
         result.stateEntity = filter.groupStateEntity;
@@ -1458,9 +1459,8 @@ export class EntityService {
           rootEntityId = filter.rootEntity.id;
         }
         if (rootEntityType && rootEntityId) {
-          const queryRootEntityId = this.resolveAliasEntityId(rootEntityType, rootEntityId);
           result.entityFilter = deepClone(filter);
-          result.entityFilter.rootEntity = queryRootEntityId;
+          result.entityFilter.rootEntity = {entityType: rootEntityType, id: rootEntityId};
           return of(result);
         } else {
           return of(result);
@@ -1478,7 +1478,7 @@ export class EntityService {
           originatorId = filter.originator.id;
         }
         if (originatorType && originatorId) {
-          result.entityFilter.originator = this.resolveAliasEntityId(originatorType, originatorId);
+          result.entityFilter.originator = {entityType: originatorType, id: originatorId};
           return of(result);
         } else {
           return of(result);
@@ -1822,42 +1822,7 @@ export class EntityService {
         entityId = filter.defaultStateEntity;
       }
     }
-    if (entityId) {
-      entityId = this.resolveAliasEntityId(entityId.entityType, entityId.id);
-    }
     return {entityId, entityGroupType};
-  }
-
-  private resolveAliasEntityId(entityType: EntityType | AliasEntityType, id: string): EntityId {
-    const entityId: EntityId = {
-      entityType,
-      id
-    };
-    if (entityType === AliasEntityType.CURRENT_CUSTOMER) {
-      const authUser = getCurrentAuthUser(this.store);
-      entityId.entityType = EntityType.CUSTOMER;
-      if (authUser.authority === Authority.CUSTOMER_USER) {
-        entityId.id = authUser.customerId;
-      }
-    } else if (entityType === AliasEntityType.CURRENT_TENANT) {
-      const authUser = getCurrentAuthUser(this.store);
-      entityId.entityType = EntityType.TENANT;
-      entityId.id = authUser.tenantId;
-    } else if (entityType === AliasEntityType.CURRENT_USER) {
-      const authUser = getCurrentAuthUser(this.store);
-      entityId.entityType = EntityType.USER;
-      entityId.id = authUser.userId;
-    } else if (entityType === AliasEntityType.CURRENT_USER_OWNER) {
-      const authUser = getCurrentAuthUser(this.store);
-      if (authUser.authority === Authority.TENANT_ADMIN) {
-        entityId.entityType = EntityType.TENANT;
-        entityId.id = authUser.tenantId;
-      } else if (authUser.authority === Authority.CUSTOMER_USER) {
-        entityId.entityType = EntityType.CUSTOMER;
-        entityId.id = authUser.customerId;
-      }
-    }
-    return entityId;
   }
 
   private createDatasourceFromSubscriptionInfo(subscriptionInfo: SubscriptionInfo): Datasource {

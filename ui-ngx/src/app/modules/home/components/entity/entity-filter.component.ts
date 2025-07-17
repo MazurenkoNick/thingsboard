@@ -35,7 +35,7 @@ import {
   AliasFilterType,
   aliasFilterTypeTranslationMap,
   EntityAliasFilter,
-  reportAliasFilterTypeTranslationMap
+  reportAliasFilterTypeTranslationMap, subReportAliasFilterTypeTranslationMap
 } from '@shared/models/alias.models';
 import { AliasEntityType, EntityType } from '@shared/models/entity-type.models';
 import { EntityService } from '@core/http/entity.service';
@@ -105,9 +105,11 @@ export class EntityFilterComponent implements ControlValueAccessor, OnInit, OnDe
   }
 
   ngOnInit(): void {
-    const excludeStateAliases = this.reportMode && !this.subReport;
-    this.aliasFilterTypeTranslations = this.reportMode ? reportAliasFilterTypeTranslationMap : aliasFilterTypeTranslationMap;
-    this.aliasFilterTypes = this.entityService.getAliasFilterTypesByEntityTypes(this.allowedEntityTypes, excludeStateAliases);
+    this.aliasFilterTypeTranslations = aliasFilterTypeTranslationMap;
+    if (this.reportMode) {
+      this.aliasFilterTypeTranslations = this.subReport ? subReportAliasFilterTypeTranslationMap : reportAliasFilterTypeTranslationMap;
+    }
+    this.aliasFilterTypes = this.entityService.getAliasFilterTypesByEntityTypes(this.allowedEntityTypes);
     this.entityGroupTypes = entityGroupTypes.filter((entityType) =>
       this.allowedEntityTypes ? this.allowedEntityTypes.indexOf(entityType) > - 1 : true
     );

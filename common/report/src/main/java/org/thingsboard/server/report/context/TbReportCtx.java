@@ -34,7 +34,9 @@ import com.google.common.util.concurrent.ListenableFuture;
 import lombok.Data;
 import lombok.experimental.SuperBuilder;
 import org.thingsboard.script.api.tbel.TbelInvokeService;
+import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.TenantId;
+import org.thingsboard.server.common.data.id.UserId;
 import org.thingsboard.server.common.data.report.configuration.ReportTemplateConfig;
 
 import java.io.Closeable;
@@ -52,6 +54,8 @@ public abstract class TbReportCtx implements Closeable {
     private final TenantId tenantId;
     private final ReportTemplateConfig configuration;
     private final String timeZone;
+    private final UserId userId;
+    private final EntityId userOwnerId;
     private final String accessToken;
     private final long accessTokenExpTs;
     private final String reportCreatedTime;

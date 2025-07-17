@@ -51,57 +51,65 @@
       </tb-entity-select>
     </ng-template>
     <ng-template [ngSwitchCase]="aliasFilterType.entityGroup">
-      <section class="flex flex-col" id="entityGroupFilter">
-        <label class="tb-small">{{ 'entity-group.entity-group' | translate }}</label>
-        @if (!reportMode || reportMode && subReport) {
-          <section class="tb-root-state-entity-switch flex flex-row items-center justify-start" style="padding-left: 0;">
-            <mat-slide-toggle class="root-state-entity-switch"
-                              formControlName="groupStateEntity">
-            </mat-slide-toggle>
-            <label class="tb-small root-state-entity-label">{{ (subReport ? 'alias.group-master-report-entity' : 'alias.group-state-entity') | translate }}</label>
-          </section>
-        }
-        <div class="flex flex-1 flex-row" *ngIf="!filterFormGroup.get('groupStateEntity').value">
-          <tb-entity-type-select
-                            style="min-width: 100px; padding-right: 8px;"
-                            required
-                            showLabel
-                            [allowedEntityTypes]="entityGroupTypes"
-                            formControlName="groupType">
-          </tb-entity-type-select>
-          <tb-entity-group-autocomplete class="flex-1" *ngIf="filterFormGroup.get('groupType').value"
-                                        required
-                                        [groupType]="filterFormGroup.get('groupType').value"
-                                        formControlName="entityGroup"
-                                        placeholderText="entity-group.select-entity-group"
-                                        notFoundText="entity-group.no-entity-groups-matching"
-                                        requiredText="entity-group.target-entity-group-required">
-          </tb-entity-group-autocomplete>
-        </div>
-        <div class="flex flex-1 flex-col" *ngIf="filterFormGroup.get('groupStateEntity').value">
-          <mat-form-field *ngIf="!reportMode" floatLabel="always" class="mat-block" style="margin-top: 14px; padding-right: 8px;">
-            <mat-label translate>alias.state-entity-parameter-name</mat-label>
-            <input matInput formControlName="stateEntityParamName"
-                   placeholder="{{ 'alias.default-entity-parameter-name' | translate }}">
-          </mat-form-field>
-          <div class="flex flex-1 flex-col">
-            <label class="tb-small">{{ (reportMode ? 'alias.default-master-report-entity-group' : 'alias.default-state-entity-group') | translate }}</label>
-            <div class="flex flex-1 flex-row">
+      <section class="tb-form-panel no-border no-padding">
+        <div class="tb-form-panel stroked" [class.no-padding-bottom]="!filterFormGroup.get('groupStateEntity').value">
+          <div class="tb-form-panel-title" translate>entity-group.entity-group</div>
+          <mat-slide-toggle class="mat-slide" formControlName="groupStateEntity">
+            {{ (reportMode ? (subReport ? 'alias.group-master-report-entity' : 'alias.group-originator-entity') : 'alias.group-state-entity') | translate }}
+          </mat-slide-toggle>
+          @if (filterFormGroup.get('groupStateEntity').value) {
+            <div class="tb-form-panel no-border no-padding no-gap">
+              <mat-form-field *ngIf="!reportMode" floatLabel="always" class="mat-block" appearance="outline">
+                <mat-label translate>alias.state-entity-parameter-name</mat-label>
+                <input matInput formControlName="stateEntityParamName"
+                       placeholder="{{ 'alias.default-entity-parameter-name' | translate }}">
+              </mat-form-field>
+              <div class="tb-form-panel stroked no-padding-bottom">
+                <div class="tb-form-panel-title tb-normal">
+                  {{ (reportMode ? (subReport ? 'alias.default-master-report-entity-group' : 'alias.default-originator-entity-group') : 'alias.default-state-entity-group') | translate }}
+                </div>
+                <div class="flex flex-row gap-4 xs:flex-col xs:gap-0">
+                  <tb-entity-type-select
+                    showLabel
+                    class="flex-1"
+                    appearance="outline"
+                    [allowedEntityTypes]="entityGroupTypes"
+                    formControlName="defaultStateGroupType">
+                  </tb-entity-type-select>
+                  <tb-entity-group-autocomplete *ngIf="filterFormGroup.get('defaultStateGroupType').value"
+                                                class="flex-1"
+                                                appearance="outline"
+                                                [groupType]="filterFormGroup.get('defaultStateGroupType').value"
+                                                formControlName="defaultStateEntityGroup"
+                                                placeholderText="entity-group.select-entity-group"
+                                                notFoundText="entity-group.no-entity-groups-matching"
+                                                requiredText="entity-group.target-entity-group-required">
+                  </tb-entity-group-autocomplete>
+                </div>
+              </div>
+            </div>
+          } @else {
+            <div class="flex flex-row gap-4 xs:flex-col xs:gap-0">
               <tb-entity-type-select
-                style="min-width: 100px; padding-right: 8px;"
+                class="flex-1"
+                appearance="outline"
                 showLabel
+                required
                 [allowedEntityTypes]="entityGroupTypes"
-                formControlName="defaultStateGroupType">
+                formControlName="groupType">
               </tb-entity-type-select>
-              <tb-entity-group-autocomplete class="flex-1" *ngIf="filterFormGroup.get('defaultStateGroupType').value"
-                                            [groupType]="filterFormGroup.get('defaultStateGroupType').value"
-                                            formControlName="defaultStateEntityGroup"
+              <tb-entity-group-autocomplete *ngIf="filterFormGroup.get('groupType').value"
+                                            class="flex-1"
+                                            appearance="outline"
+                                            required
+                                            [groupType]="filterFormGroup.get('groupType').value"
+                                            formControlName="entityGroup"
                                             placeholderText="entity-group.select-entity-group"
                                             notFoundText="entity-group.no-entity-groups-matching"
                                             requiredText="entity-group.target-entity-group-required">
               </tb-entity-group-autocomplete>
             </div>
-          </div>
+          }
         </div>
       </section>
     </ng-template>
@@ -149,12 +157,14 @@
     </ng-template>
     <ng-template [ngSwitchCase]="aliasFilterType.entityGroupList">
       <tb-entity-type-select required
+                             appearance="outline"
                              showLabel
                              [allowedEntityTypes]="entityGroupTypes"
                              formControlName="groupType">
       </tb-entity-type-select>
       <tb-entity-group-list
         required
+        appearance="outline"
         [groupType]="filterFormGroup.get('groupType').value"
         labelText="{{ 'entity-group.entity-group-list' | translate }}"
         formControlName="entityGroupList">
@@ -162,11 +172,12 @@
     </ng-template>
     <ng-template [ngSwitchCase]="aliasFilterType.entityGroupName">
       <tb-entity-type-select required
+                             appearance="outline"
                              showLabel
                              [allowedEntityTypes]="entityGroupTypes"
                              formControlName="groupType">
       </tb-entity-type-select>
-      <mat-form-field class="mat-block">
+      <mat-form-field class="mat-block" appearance="outline">
         <mat-label translate>entity-group.name-starts-with</mat-label>
         <input matInput formControlName="entityGroupNameFilter" required>
         <mat-error *ngIf="filterFormGroup.get('entityGroupNameFilter').hasError('required')">
@@ -175,38 +186,33 @@
       </mat-form-field>
     </ng-template>
     <ng-template [ngSwitchCase]="aliasFilterType.entitiesByGroupName">
-      <section class="flex flex-col" id="entityGroupByNameFilter">
-        @if (!reportMode || reportMode && subReport) {
-          <section class="tb-root-state-entity-switch flex flex-row items-center justify-start" style="padding-left: 0;">
-            <mat-slide-toggle class="root-state-entity-switch"
-                              formControlName="groupStateEntity">
-            </mat-slide-toggle>
-            <label class="tb-small root-state-entity-label">{{ (subReport ? 'alias.group-master-report-entity-owner' : 'alias.group-state-entity-owner') | translate }}</label>
-          </section>
-        }
-        <div class="flex flex-1 flex-col" style="margin-top: 16px;">
-          <mat-form-field *ngIf="!reportMode && filterFormGroup.get('groupStateEntity').value"
-                          floatLabel="always" class="mat-block" style="padding-right: 8px;">
+      <section class="tb-form-panel no-border no-padding">
+        <mat-slide-toggle class="mat-slide" formControlName="groupStateEntity">
+          {{ (reportMode ? (subReport ? 'alias.group-master-report-entity-owner' : 'alias.group-originator-entity-owner') : 'alias.group-state-entity-owner') | translate }}
+        </mat-slide-toggle>
+        @if (!reportMode && filterFormGroup.get('groupStateEntity').value) {
+          <mat-form-field floatLabel="always" class="mat-block" appearance="outline" subscriptSizing="dynamic">
             <mat-label translate>alias.state-entity-parameter-name</mat-label>
             <input matInput formControlName="stateEntityParamName"
                    placeholder="{{ 'alias.default-entity-parameter-name' | translate }}">
           </mat-form-field>
-          <div class="flex flex-1 flex-row">
-            <tb-entity-type-select
-              style="min-width: 100px; padding-right: 8px;"
-              required
-              showLabel
-              [allowedEntityTypes]="entityGroupTypes"
-              formControlName="groupType">
-            </tb-entity-type-select>
-            <mat-form-field class="mat-block flex-1">
-              <mat-label translate>entity-group.entity-group-name</mat-label>
-              <input matInput formControlName="entityGroupNameFilter" required>
-              <mat-error *ngIf="filterFormGroup.get('entityGroupNameFilter').hasError('required')">
-                {{ 'entity-group.entity-group-name-filter-required' | translate }}
-              </mat-error>
-            </mat-form-field>
-          </div>
+        }
+        <div class="flex flex-row gap-4 xs:flex-col xs:gap-0">
+          <tb-entity-type-select
+            class="flex-1"
+            appearance="outline"
+            showLabel
+            required
+            [allowedEntityTypes]="entityGroupTypes"
+            formControlName="groupType">
+          </tb-entity-type-select>
+          <mat-form-field class="mat-block flex-1" appearance="outline">
+            <mat-label translate>entity-group.entity-group-name</mat-label>
+            <input matInput formControlName="entityGroupNameFilter" required>
+            <mat-error *ngIf="filterFormGroup.get('entityGroupNameFilter').hasError('required')">
+              {{ 'entity-group.entity-group-name-filter-required' | translate }}
+            </mat-error>
+          </mat-form-field>
         </div>
       </section>
     </ng-template>
@@ -219,7 +225,7 @@
                placeholder="{{ 'alias.default-entity-parameter-name' | translate }}">
       </mat-form-field>
       <div class="tb-form-panel stroked no-padding-bottom">
-        <div class="tb-form-panel-title tb-normal">{{ (reportMode ? 'alias.default-master-report-entity' : 'alias.default-state-entity') | translate }}</div>
+        <div class="tb-form-panel-title tb-normal">{{ (reportMode ? (subReport ? 'alias.default-master-report-entity' : 'alias.default-originator-entity') : 'alias.default-state-entity') | translate }}</div>
         <tb-entity-select appearance="outline"
                           useAliasEntityTypes="true"
                           formControlName="defaultStateEntity">
@@ -288,11 +294,9 @@
       <section class="tb-form-panel no-border no-padding">
         <div class="tb-form-panel stroked" [class.no-padding-bottom]="!filterFormGroup.get('rootStateEntity').value">
           <div class="tb-form-panel-title" translate>alias.root-entity</div>
-          @if (!reportMode || reportMode && subReport) {
-            <mat-slide-toggle class="mat-slide" formControlName="rootStateEntity">
-              {{ (subReport ? 'alias.root-master-report-entity' : 'alias.root-state-entity') | translate }}
-            </mat-slide-toggle>
-          }
+          <mat-slide-toggle class="mat-slide" formControlName="rootStateEntity">
+            {{ (reportMode ? (subReport ? 'alias.root-master-report-entity' : 'alias.root-originator-entity') : 'alias.root-state-entity') | translate }}
+          </mat-slide-toggle>
           @if (filterFormGroup.get('rootStateEntity').value) {
             <div class="tb-form-panel no-border no-padding no-gap">
               <mat-form-field *ngIf="!reportMode" floatLabel="always" class="mat-block" appearance="outline">
@@ -301,7 +305,9 @@
                        placeholder="{{ 'alias.default-entity-parameter-name' | translate }}">
               </mat-form-field>
               <div class="tb-form-panel stroked no-padding-bottom">
-                <div class="tb-form-panel-title tb-normal">{{ (reportMode ? 'alias.default-master-report-entity' : 'alias.default-state-entity') | translate }}</div>
+                <div class="tb-form-panel-title tb-normal">
+                  {{ (reportMode ? (subReport ? 'alias.default-master-report-entity' : 'alias.default-originator-entity') : 'alias.default-state-entity') | translate }}
+                </div>
                 <tb-entity-select appearance="outline"
                                   useAliasEntityTypes="true"
                                   formControlName="defaultStateEntity">
@@ -360,11 +366,9 @@
       <section class="tb-form-panel no-border no-padding">
         <div class="tb-form-panel stroked" [class.no-padding-bottom]="!filterFormGroup.get('rootStateEntity').value">
           <div class="tb-form-panel-title" translate>alias.root-entity</div>
-          @if (!reportMode || reportMode && subReport) {
-            <mat-slide-toggle class="mat-slide" formControlName="rootStateEntity">
-              {{ (subReport ? 'alias.root-master-report-entity' : 'alias.root-state-entity') | translate }}
-            </mat-slide-toggle>
-          }
+          <mat-slide-toggle class="mat-slide" formControlName="rootStateEntity">
+            {{ (reportMode ? (subReport ? 'alias.root-master-report-entity' : 'alias.root-originator-entity') : 'alias.root-state-entity') | translate }}
+          </mat-slide-toggle>
           @if (filterFormGroup.get('rootStateEntity').value) {
             <div class="tb-form-panel no-border no-padding no-gap">
               <mat-form-field *ngIf="!reportMode" floatLabel="always" class="mat-block" appearance="outline">
@@ -373,7 +377,9 @@
                        placeholder="{{ 'alias.default-entity-parameter-name' | translate }}">
               </mat-form-field>
               <div class="tb-form-panel stroked no-padding-bottom">
-                <div class="tb-form-panel-title tb-normal">{{ (reportMode ? 'alias.default-master-report-entity' : 'alias.default-state-entity') | translate }}</div>
+                <div class="tb-form-panel-title tb-normal">
+                  {{ (reportMode ? (subReport ? 'alias.default-master-report-entity' : 'alias.default-originator-entity') : 'alias.default-state-entity') | translate }}
+                </div>
                 <tb-entity-select appearance="outline"
                                   useAliasEntityTypes="true"
                                   formControlName="defaultStateEntity">
@@ -467,41 +473,44 @@
       </section>
     </ng-template>
     <ng-template [ngSwitchCase]="aliasFilterType.schedulerEvent">
-      <label class="tb-small">{{ 'alias.originator' | translate }}</label>
-      @if (!reportMode || reportMode && subReport) {
-        <section class="tb-root-state-entity-switch flex flex-row items-center justify-start" style="padding-left: 0;">
-          <mat-slide-toggle class="root-state-entity-switch"
-                            formControlName="originatorStateEntity">
+      <section class="tb-form-panel no-border no-padding">
+        <div class="tb-form-panel stroked" [class.no-padding-bottom]="!filterFormGroup.get('originatorStateEntity').value">
+          <div class="tb-form-panel-title" translate>alias.originator</div>
+          <mat-slide-toggle class="mat-slide" formControlName="originatorStateEntity">
+            {{ (reportMode ? (subReport ? 'alias.originator-master-report-entity' : 'alias.originator-from-originator-entity') : 'alias.originator-state-entity') | translate }}
           </mat-slide-toggle>
-          <label class="tb-small root-state-entity-label">{{ (subReport ? 'alias.originator-master-report-entity' : 'alias.originator-state-entity') | translate }}</label>
-        </section>
-      }
-      <div class="flex flex-1 flex-row" *ngIf="!filterFormGroup.get('originatorStateEntity').value">
-        <tb-entity-select class="flex-1"
-                          useAliasEntityTypes="true"
-                          formControlName="originator">
-        </tb-entity-select>
-      </div>
-      <div class="flex flex-1 flex-row" *ngIf="filterFormGroup.get('originatorStateEntity').value">
-        <mat-form-field *ngIf="!reportMode" floatLabel="always" class="mat-block" style="margin-top: 24px; padding-right: 8px;">
-          <mat-label translate>alias.state-entity-parameter-name</mat-label>
-          <input matInput formControlName="stateEntityParamName"
-                 placeholder="{{ 'alias.default-entity-parameter-name' | translate }}">
-        </mat-form-field>
-        <div class="flex flex-1 flex-col">
-          <label class="tb-small">{{ (reportMode ? 'alias.default-master-report-entity' : 'alias.default-state-entity') | translate }}</label>
-          <tb-entity-select class="flex-1"
-                            useAliasEntityTypes="true"
-                            formControlName="defaultStateEntity">
-          </tb-entity-select>
+          @if (filterFormGroup.get('originatorStateEntity').value) {
+            <div class="tb-form-panel no-border no-padding no-gap">
+              <mat-form-field *ngIf="!reportMode" floatLabel="always" class="mat-block" appearance="outline">
+                <mat-label translate>alias.state-entity-parameter-name</mat-label>
+                <input matInput formControlName="stateEntityParamName"
+                       placeholder="{{ 'alias.default-entity-parameter-name' | translate }}">
+              </mat-form-field>
+              <div class="tb-form-panel stroked no-padding-bottom">
+                <div class="tb-form-panel-title tb-normal">
+                  {{ (reportMode ? (subReport ? 'alias.default-master-report-entity' : 'alias.default-originator-entity') : 'alias.default-state-entity') | translate }}
+                </div>
+                <tb-entity-select appearance="outline"
+                                  useAliasEntityTypes="true"
+                                  formControlName="defaultStateEntity">
+                </tb-entity-select>
+              </div>
+            </div>
+          } @else {
+            <tb-entity-select appearance="outline"
+                              useAliasEntityTypes="true"
+                              formControlName="originator">
+            </tb-entity-select>
+          }
         </div>
-      </div>
-      <tb-scheduler-event-type-autocomplete
-        formControlName="eventType"
-        label="{{ 'alias.scheduler-event-type' | translate }}"
-        placeholder=""
-        [schedulerEventConfigTypes]="schedulerEventConfigTypes"
-      ></tb-scheduler-event-type-autocomplete>
+        <tb-scheduler-event-type-autocomplete
+          appearance="outline"
+          formControlName="eventType"
+          label="{{ 'alias.scheduler-event-type' | translate }}"
+          placeholder=""
+          [schedulerEventConfigTypes]="schedulerEventConfigTypes"
+        ></tb-scheduler-event-type-autocomplete>
+      </section>
     </ng-template>
   </section>
 </div>

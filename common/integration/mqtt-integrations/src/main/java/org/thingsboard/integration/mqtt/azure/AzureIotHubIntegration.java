@@ -40,10 +40,13 @@ import org.thingsboard.integration.mqtt.credentials.CertPemClientCredentials;
 import org.thingsboard.integration.mqtt.credentials.MqttClientCredentials;
 import org.thingsboard.mqtt.MqttClientConfig;
 
+import java.time.Clock;
 import java.util.Optional;
 
 @Slf4j
 public class AzureIotHubIntegration extends BasicMqttIntegration {
+
+    private final Clock clock = Clock.systemUTC();
 
     @Override
     public void init(TbIntegrationInitParams params) throws Exception {
@@ -74,7 +77,7 @@ public class AzureIotHubIntegration extends BasicMqttIntegration {
             public void configure(MqttClientConfig config) {
                 config.setUsername(AzureIotHubUtil.buildUsername(mqttClientConfiguration.getHost(), config.getClientId()));
                 if (credentials instanceof AzureIotHubSasCredentials sasCredentials) {
-                    config.setPassword(AzureIotHubUtil.buildSasToken(mqttClientConfiguration.getHost(), sasCredentials.getSasKey()));
+                    config.setPassword(AzureIotHubUtil.buildSasToken(mqttClientConfiguration.getHost(), sasCredentials.getSasKey(), clock));
                 }
             }
         });

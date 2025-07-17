@@ -33,6 +33,8 @@ package org.thingsboard.server.common.data.notification.template;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.Data;
+import org.thingsboard.server.common.data.id.ReportTemplateId;
+import org.thingsboard.server.common.data.id.UserId;
 import org.thingsboard.server.common.data.notification.NotificationDeliveryMethod;
 
 import java.util.HashMap;
@@ -45,11 +47,20 @@ public class NotificationTemplateConfig {
     @NotEmpty
     private Map<NotificationDeliveryMethod, DeliveryMethodNotificationTemplate> deliveryMethodsTemplates;
 
+    private boolean attachReport;
+    private ReportTemplateId reportTemplateId; // TODO: VC
+    private UserId userId;
+    private String timezone;
+
     public NotificationTemplateConfig copy() {
         Map<NotificationDeliveryMethod, DeliveryMethodNotificationTemplate> templates = new HashMap<>(deliveryMethodsTemplates);
         templates.replaceAll((deliveryMethod, template) -> template.copy());
         NotificationTemplateConfig copy = new NotificationTemplateConfig();
         copy.setDeliveryMethodsTemplates(templates);
+        copy.setAttachReport(attachReport);
+        copy.setReportTemplateId(reportTemplateId);
+        copy.setUserId(userId);
+        copy.setTimezone(timezone);
         return copy;
     }
 

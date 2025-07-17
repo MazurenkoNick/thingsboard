@@ -35,12 +35,10 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.thingsboard.server.common.data.id.CustomerId;
-import org.thingsboard.server.common.data.id.ReportId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.id.UserId;
 import org.thingsboard.server.common.data.report.TbReportFormat;
 
-import java.util.List;
 import java.util.Map;
 
 import static org.thingsboard.server.common.data.util.CollectionsUtil.mapOf;
@@ -53,7 +51,6 @@ public class ReportGeneratedNotificationInfo implements RuleOriginatedNotificati
 
     private TenantId tenantId;
     private CustomerId customerId;
-    private ReportId reportId;
     private TbReportFormat reportFormat;
     private String reportName;
     private UserId userId;
@@ -61,15 +58,9 @@ public class ReportGeneratedNotificationInfo implements RuleOriginatedNotificati
     @Override
     public Map<String, String> getTemplateData() {
         return mapOf(
-                "reportId", reportId.toString(),
                 "reportFormat", reportFormat.name(),
                 "reportName", reportName
         );
-    }
-
-    @Override
-    public List<ReportId> getReports() {
-        return List.of(reportId);
     }
 
     @Override

@@ -49,6 +49,7 @@ public class ReportConfig {
     private UserId userId;
     @Schema(description = "Timezone in which target dashboard will be presented in dashboard report.", example = "Europe/Kiev", requiredMode = Schema.RequiredMode.REQUIRED)
     private String timezone;
+
     @Schema(description = "Json object representing the notification target id.", example = "784f394c-42b6-435a-983c-b7beff2784f9")
     private NotificationTargetId recipientId;
     @Schema(description = "Json object representing the notification template id.", example = "784f394c-42b6-435a-983c-b7beff2784f9")

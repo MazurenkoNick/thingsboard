@@ -31,12 +31,16 @@
 package org.thingsboard.server.common.data.report.configuration;
 
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 import org.thingsboard.server.common.data.report.TbReportFormat;
 import org.thingsboard.server.common.data.report.configuration.style.Insets;
 import org.thingsboard.server.common.data.report.configuration.style.PageOrientation;
 import org.thingsboard.server.common.data.report.configuration.style.PageSize;
 
 @Data
+@SuperBuilder
+@NoArgsConstructor
 public class PdfReportTemplateConfig extends AbstractReportTemplateConfig {
 
     private PageSize pageSize;

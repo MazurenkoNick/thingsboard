@@ -42,6 +42,7 @@ import org.thingsboard.server.common.data.DeviceProfile;
 import org.thingsboard.server.common.data.EntityView;
 import org.thingsboard.server.common.data.OtaPackage;
 import org.thingsboard.server.common.data.TbResource;
+import org.thingsboard.server.common.data.ai.AiModel;
 import org.thingsboard.server.common.data.asset.Asset;
 import org.thingsboard.server.common.data.asset.AssetProfile;
 import org.thingsboard.server.common.data.converter.Converter;
@@ -87,8 +88,8 @@ import java.lang.annotation.Target;
         @Type(name = "TB_RESOURCE", value = TbResource.class),
         @Type(name = "OTA_PACKAGE", value = OtaPackage.class),
         @Type(name = "SCHEDULER_EVENT", value = SchedulerEvent.class),
+        @Type(name = "AI_MODEL", value = AiModel.class),
         @Type(name = "REPORT_TEMPLATE", value = ReportTemplate.class)
 })
 @JsonIgnoreProperties(value = {"tenantId", "createdTime", "version"}, ignoreUnknown = true)
-public @interface JsonTbEntity {
-}
+public @interface JsonTbEntity {}

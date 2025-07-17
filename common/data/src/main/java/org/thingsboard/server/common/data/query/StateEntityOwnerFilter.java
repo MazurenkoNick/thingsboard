@@ -42,6 +42,6 @@ public class StateEntityOwnerFilter implements EntityFilter {
     }
 
     private EntityId singleEntity;
-    private EntityId defaultStateEntity;
+    private AliasEntityId defaultStateEntity;
 
 }

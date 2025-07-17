@@ -85,7 +85,7 @@ public class DefaultEntitiesExportImportService implements EntitiesExportImportS
             EntityType.DEVICE_PROFILE, EntityType.OTA_PACKAGE, EntityType.DEVICE, EntityType.ENTITY_VIEW, EntityType.CONVERTER,
             EntityType.INTEGRATION, EntityType.WIDGET_TYPE, EntityType.WIDGETS_BUNDLE,
             EntityType.NOTIFICATION_TEMPLATE, EntityType.NOTIFICATION_TARGET, EntityType.NOTIFICATION_RULE, EntityType.SCHEDULER_EVENT,
-            EntityType.REPORT_TEMPLATE
+            EntityType.AI_MODEL, EntityType.REPORT_TEMPLATE
     );
 
     @Override

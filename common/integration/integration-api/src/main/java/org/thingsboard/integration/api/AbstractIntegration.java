@@ -71,9 +71,6 @@ import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Supplier;
 
-/**
- * Created by ashvayka on 25.12.17.
- */
 @Slf4j
 public abstract class AbstractIntegration<T> implements ThingsboardPlatformIntegration<T> {
 

@@ -34,6 +34,11 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import org.thingsboard.server.common.data.id.EntityId;
+import org.thingsboard.server.common.data.id.TenantId;
+import org.thingsboard.server.common.data.id.UserId;
+
+import static org.thingsboard.server.common.data.query.AliasEntityId.resolveAliasEntityId;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeInfo(
@@ -67,4 +72,20 @@ public interface EntityFilter {
 
     @JsonIgnore
     EntityFilterType getType();
+
+    static void resolveEntityFilter(EntityFilter filter, TenantId tenantId, UserId userId, EntityId userOwnerId) {
+        if (filter instanceof SingleEntityFilter singleEntityFilter) {
+            AliasEntityId resolved = resolveAliasEntityId(singleEntityFilter.getSingleEntity(), tenantId, userId, userOwnerId);
+            singleEntityFilter.setSingleEntity(resolved);
+        } else if (filter instanceof RelationsQueryFilter queryFilter) {
+            AliasEntityId resolved = resolveAliasEntityId(queryFilter.getRootEntity(), tenantId, userId, userOwnerId);
+            queryFilter.setRootEntity(resolved);
+        } else if (filter instanceof EntitySearchQueryFilter queryFilter) {
+            AliasEntityId resolved = resolveAliasEntityId(queryFilter.getRootEntity(), tenantId, userId, userOwnerId);
+            queryFilter.setRootEntity(resolved);
+        } else if (filter instanceof SchedulerEventFilter queryFilter) {
+            AliasEntityId resolved = resolveAliasEntityId(queryFilter.getOriginator(), tenantId, userId, userOwnerId);
+            queryFilter.setOriginator(resolved);
+        }
+    }
 }

@@ -649,9 +649,9 @@ public class DefaultTbClusterService implements TbClusterService {
         Set<String> tbRuleEngineServices = partitionService.getAllServiceIds(ServiceType.TB_RULE_ENGINE);
         EntityType entityType = msg.getEntityId().getEntityType();
 
-        boolean toIntegrationExecutor = entityType.equals(EntityType.CONVERTER) || entityType.equals(EntityType.INTEGRATION);
+        boolean toIntegrationExecutor = entityType.isOneOf(EntityType.CONVERTER, EntityType.INTEGRATION);
 
-        if (entityType.equals(EntityType.TENANT) || entityType.equals(EntityType.TENANT_PROFILE) || toIntegrationExecutor) {
+        if (entityType.isOneOf(EntityType.TENANT, EntityType.TENANT_PROFILE) || toIntegrationExecutor) {
             TbQueueProducer<TbProtoQueueMsg<ToIntegrationExecutorNotificationMsg>> toIeNfProducer = producerProvider.getTbIntegrationExecutorNotificationsMsgProducer();
             Set<String> tbIeServices = partitionService.getAllServiceIds(ServiceType.TB_INTEGRATION_EXECUTOR);
             tbIeServices.addAll(partitionService.getAllServiceIds(ServiceType.TB_CORE));
@@ -663,17 +663,19 @@ public class DefaultTbClusterService implements TbClusterService {
             }
         }
 
-        boolean toCore = entityType.equals(EntityType.TENANT) ||
-                         entityType.equals(EntityType.TENANT_PROFILE) ||
-                         entityType.equals(EntityType.DEVICE_PROFILE) ||
-                         (entityType.equals(EntityType.ASSET) && msg.getEvent() == ComponentLifecycleEvent.UPDATED) ||
-                         entityType.equals(EntityType.ASSET_PROFILE) ||
-                         entityType.equals(EntityType.API_USAGE_STATE) ||
-                         (entityType.equals(EntityType.DEVICE) && msg.getEvent() == ComponentLifecycleEvent.UPDATED) ||
-                         entityType.equals(EntityType.ENTITY_VIEW) ||
-                         entityType.equals(EntityType.NOTIFICATION_RULE) ||
-                         entityType.equals(EntityType.CALCULATED_FIELD) ||
-                         entityType.equals(EntityType.JOB);
+        boolean toCore = entityType.isOneOf(
+                EntityType.TENANT,
+                EntityType.API_USAGE_STATE,
+                EntityType.ENTITY_VIEW,
+                EntityType.NOTIFICATION_RULE,
+                EntityType.CALCULATED_FIELD,
+                EntityType.TENANT_PROFILE,
+                EntityType.DEVICE_PROFILE,
+                EntityType.ASSET_PROFILE,
+                EntityType.JOB,
+                EntityType.CALCULATED_FIELD)
+                || (entityType == EntityType.ASSET && msg.getEvent() == ComponentLifecycleEvent.UPDATED)
+                || (entityType == EntityType.DEVICE && msg.getEvent() == ComponentLifecycleEvent.UPDATED);
 
         boolean toRuleEngine = !toIntegrationExecutor;
 
