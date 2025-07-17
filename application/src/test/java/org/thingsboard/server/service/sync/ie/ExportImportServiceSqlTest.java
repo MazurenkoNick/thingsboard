@@ -104,6 +104,7 @@ import org.thingsboard.server.common.data.permission.MergedUserPermissions;
 import org.thingsboard.server.common.data.permission.Operation;
 import org.thingsboard.server.common.data.permission.Resource;
 import org.thingsboard.server.common.data.plugin.ComponentLifecycleEvent;
+import org.thingsboard.server.common.data.query.AliasEntityId;
 import org.thingsboard.server.common.data.query.SingleEntityFilter;
 import org.thingsboard.server.common.data.relation.EntityRelation;
 import org.thingsboard.server.common.data.relation.RelationTypeGroup;
@@ -855,7 +856,7 @@ public class ExportImportServiceSqlTest extends AbstractControllerTest {
         reportTemplate.setFormat(TbReportFormat.CSV);
         CsvReportTemplateConfig configuration = new CsvReportTemplateConfig();
         SingleEntityFilter filter = new SingleEntityFilter();
-        filter.setSingleEntity(entityId);
+        filter.setSingleEntity(AliasEntityId.fromEntityId(entityId));
         configuration.setEntityAliases(List.of(new EntityAlias(UUID.randomUUID().toString(), "by device id", filter)));
         reportTemplate.setConfiguration(configuration);
         reportTemplate.setType(ReportTemplateType.REPORT);
