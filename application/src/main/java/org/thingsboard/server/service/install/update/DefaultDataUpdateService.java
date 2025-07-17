@@ -227,22 +227,20 @@ public class DefaultDataUpdateService implements DataUpdateService {
                 return;
             }
 
+            String description = "Auto-generated from version control settings.";
             if (settings.getAuthMethod() == RepositoryAuthMethod.USERNAME_PASSWORD) {
                 if (!isSecretPlaceholder(settings.getPassword()) && StringUtils.isNotBlank(settings.getPassword())) {
-                    String description = "Auto-generated password for authenticating with version control via username and password.";
-                    String password = createSecretAsPlaceholder(tenantId, "Version control: password", settings.getPassword(), SecretType.TEXT, description);
+                    String password = createSecretAsPlaceholder(tenantId, "Git repository password", settings.getPassword(), SecretType.TEXT, description);
                     settings.setPassword(password);
                 }
             } else {
                 if (!isSecretPlaceholder(settings.getPrivateKeyPassword()) && StringUtils.isNotBlank(settings.getPrivateKeyPassword())) {
-                    String keyDescription = "Auto-generated passphrase for the SSH private key used to  access version control.";
-                    String passphrase = createSecretAsPlaceholder(tenantId, "Version Control: passphrase", settings.getPrivateKeyPassword(), SecretType.TEXT, keyDescription);
+                    String passphrase = createSecretAsPlaceholder(tenantId, "Git repository private key passphrase", settings.getPrivateKeyPassword(), SecretType.TEXT, description);
                     settings.setPrivateKeyPassword(passphrase);
                 }
 
                 if (!isSecretPlaceholder(settings.getPrivateKey()) && StringUtils.isNotBlank(settings.getPrivateKey())) {
-                    String fileDescription = "Auto-generated SSH private key used for authenticating with version control.";
-                    String file = createSecretAsPlaceholder(tenantId, "Version Control: private key", settings.getPrivateKey(), SecretType.TEXT_FILE, fileDescription);
+                    String file = createSecretAsPlaceholder(tenantId, "Git repository private key", settings.getPrivateKey(), SecretType.TEXT_FILE, description);
                     settings.setPrivateKey(file);
                 }
             }
@@ -264,8 +262,8 @@ public class DefaultDataUpdateService implements DataUpdateService {
             ObjectNode config = JacksonUtil.asObject(mail.getJsonValue());
             JsonNode password = config.get("password");
             if (password != null && !password.isNull() && StringUtils.isNotBlank(password.asText()) && !isSecretPlaceholder(password.asText())) {
-                String description = "Auto-generated password used for authenticating with the SMTP mail server.";
-                String placeholder = createSecretAsPlaceholder(tenantId, "Mail settings: password", password.asText(), SecretType.TEXT, description);
+                String description = "Auto-generated from mail settings.";
+                String placeholder = createSecretAsPlaceholder(tenantId, "Mail server password", password.asText(), SecretType.TEXT, description);
                 config.put("password", placeholder);
                 mail.setJsonValue(config);
                 adminSettingsService.saveAdminSettings(tenantId, mail);

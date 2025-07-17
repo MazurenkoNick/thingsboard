@@ -30,6 +30,7 @@
  */
 package org.thingsboard.server.service.secret;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -76,7 +77,7 @@ public class DefaultSecretConfigurationService implements SecretConfigurationSer
             if (secret == null) {
                 return "";
             }
-            return encryptionService.decryptToString(tenantId, secret.getType(), secret.getRawValue());
+            return encryptionService.decryptToString(tenantId, secret.getType(), secret.getEncryptedValue());
         }
         return value;
     }

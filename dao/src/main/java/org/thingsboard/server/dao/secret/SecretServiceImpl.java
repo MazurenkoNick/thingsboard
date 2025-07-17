@@ -114,11 +114,11 @@ public class SecretServiceImpl extends AbstractCachedEntityService<SecretCacheKe
 
             boolean isValueUpdated = false;
             if (secret.getValue() != null) {
-                byte[] encrypted = encryptionService.encrypt(tenantId, secret.getType(), secret.getRawValue());
-                secret.setRawValue(encrypted);
+                byte[] encrypted = encryptionService.encrypt(tenantId, secret.getType(), secret.getValue().getBytes());
+                secret.setEncryptedValue(encrypted);
                 isValueUpdated = true;
             } else if (old != null) {
-                secret.setRawValue(old.getRawValue());
+                secret.setEncryptedValue(old.getEncryptedValue());
             }
 
             Secret savedSecret = secretDao.save(tenantId, secret);
