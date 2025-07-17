@@ -58,6 +58,14 @@
       <button class="tb-report-template-edit-button" mat-button [disabled]="(isLoading$ | async) || !isDirty" (click)="declineReportTemplate()">
         <mat-icon>close</mat-icon>{{ 'action.decline' | translate }}</button>
       <mat-divider class="tb-toolbar-divider" vertical></mat-divider>
+      <button mat-button #versionControlButton
+              matTooltip="{{'version-control.version-control' | translate}}"
+              matTooltipPosition="below"
+              *ngIf="([resource.VERSION_CONTROL, resource.REPORT_TEMPLATE] | hasGenericPermission: operation.WRITE)"
+              (click)="toggleVersionControl($event, versionControlButton)">
+        <mat-icon>history</mat-icon>
+        {{'version-control.versions' | translate}}
+      </button>
       <button mat-button
               matTooltip="{{ 'filter.filters' | translate }}"
               matTooltipPosition="below"
