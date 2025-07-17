@@ -32,7 +32,8 @@
 import {
   SchedulerEventSchedule,
   SchedulerRepeatType,
-  schedulerTimeUnitRepeatTranslationMap, schedulerWeekday
+  schedulerTimeUnitRepeatTranslationMap,
+  schedulerWeekday
 } from '@shared/models/scheduler-event.models';
 import { TranslateService } from '@ngx-translate/core';
 import _moment from 'moment';
@@ -117,7 +118,11 @@ export interface SchedulerWeekDay {
   tooltip: string;
 }
 
-export const scheduleInfo = (schedule: SchedulerEventSchedule, startTime: _moment.Moment, translate: TranslateService): string => {
+export const scheduleInfo = (
+  schedule: SchedulerEventSchedule,
+  translate: TranslateService,
+  startTime: _moment.Moment = _moment(schedule.startTime)
+): string => {
   let info = '';
   if (!schedule.repeat) {
     const start = startTime.local().format('MMM DD, YYYY, hh:mma');

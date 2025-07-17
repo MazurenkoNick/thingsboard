@@ -58,8 +58,7 @@ import {
   SchedulerEventMode,
   SchedulerEventWithCustomerInfo,
   SchedulerRepeatType,
-  schedulerTimeUnitRepeatTranslationMap,
-  schedulerWeekday
+  schedulerTimeUnitRepeatTranslationMap
 } from '@shared/models/scheduler-event.models';
 import { CollectionViewer, DataSource, SelectionModel } from '@angular/cdk/collections';
 import { BehaviorSubject, forkJoin, merge, Observable, of, ReplaySubject, Subject } from 'rxjs';
@@ -1012,7 +1011,7 @@ export class SchedulerEventsComponent extends PageComponent implements OnInit, A
   }
 
   private eventInfo(event: SchedulerEventWithCustomerInfo, startTime: _moment.Moment): string {
-    return scheduleInfo(event.schedule, startTime, this.translate);
+    return scheduleInfo(event.schedule, this.translate, startTime);
   }
 
   unassignFromEdge($event: Event, schedulerEvent: SchedulerEventWithCustomerInfo) {
