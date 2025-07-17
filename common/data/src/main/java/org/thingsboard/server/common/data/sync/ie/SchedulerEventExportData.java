@@ -31,13 +31,13 @@
 package org.thingsboard.server.common.data.sync.ie;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.thingsboard.server.common.data.id.DashboardId;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.OtaPackageId;
-import org.thingsboard.server.common.data.id.ReportTemplateId;
 import org.thingsboard.server.common.data.scheduler.SchedulerEvent;
 
 import java.util.UUID;
@@ -46,6 +46,8 @@ import java.util.function.Function;
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class SchedulerEventExportData extends EntityExportData<SchedulerEvent> {
+
+    public static final ObjectMapper mapper = new ObjectMapper();
 
     public void prepareConfiguration(JsonNode configuration, String type, Function<EntityId, EntityId> idMapper, String userId) {
         switch (type) {
@@ -67,15 +69,15 @@ public class SchedulerEventExportData extends EntityExportData<SchedulerEvent> {
                 }
             }
             case "generateReport" -> {
-                ObjectNode reportConfig = configuration.withObject("msgBody").withObject("reportConfig");
-                reportConfig.put("userId", userId);
-                String oldId = reportConfig.path("reportTemplateId").asText(null);
-                if (oldId != null) {
-                    ReportTemplateId templateId = new ReportTemplateId(UUID.fromString(oldId));
-                    reportConfig.put("reportTemplateId", idMapper.apply(templateId).getId().toString());
-                }
+                updateIdField((ObjectNode) configuration, "userId", userId);
+                EntityId oldReportTemplateId = mapper.convertValue(configuration.get("reportTemplateId"), EntityId.class);
+                UUID newId = idMapper.apply(oldReportTemplateId).getId();
+                updateIdField((ObjectNode)configuration, "reportTemplateId", newId.toString());
             }
         }
     }
 
+    private void updateIdField(ObjectNode root, String fieldName, String newId) {
+        root.withObject(fieldName).put("id", newId);
+    }
 }

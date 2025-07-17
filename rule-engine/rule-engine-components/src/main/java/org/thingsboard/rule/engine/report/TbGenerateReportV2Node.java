@@ -53,8 +53,8 @@ import java.util.Base64;
         type = ComponentType.ACTION,
         name = "generate report",
         configClazz = TbGenerateReportV2NodeConfiguration.class,
-        nodeDescription = "Requests report generation",
-        nodeDetails = "Requests report generation. When report is ready - generated report entity id is attached to message metadata (reports)",
+        nodeDescription = "Generates report",
+        nodeDetails = "Generates report, creating a \"Report generation\" task in the task manager. The output metadata of the node contains \"reports\" field with the generated report id.",
         configDirective = "tbActionNodeGenerateReportConfig",
         icon = "description"
 )
@@ -96,10 +96,12 @@ public class TbGenerateReportV2Node extends TbAbstractExternalNode {
         configuration.setOutputTbMsgProto(Base64.getEncoder().encodeToString(TbMsg.toProto(outputMsg).toByteArray()));
         configuration.setQueueName(msg.getQueueName());
 
+        var tbMsg = ackIfNeeded(ctx, msg);
+
         DonAsynchron.withCallback(ctx.getJobManager().submitJob(job), result -> {
             //TODO: implement job completion callback
         }, error -> {
-            ctx.tellFailure(msg, error);
+            ctx.tellFailure(tbMsg, error);
         });
     }
 

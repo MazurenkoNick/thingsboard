@@ -58,6 +58,7 @@ import org.thingsboard.server.common.data.HasOwnerId;
 import org.thingsboard.server.common.data.HasTenantId;
 import org.thingsboard.server.common.data.OtaPackage;
 import org.thingsboard.server.common.data.ResourceType;
+import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.TbResource;
 import org.thingsboard.server.common.data.TbResourceInfo;
 import org.thingsboard.server.common.data.Tenant;
@@ -92,6 +93,7 @@ import org.thingsboard.server.common.data.id.DeviceProfileId;
 import org.thingsboard.server.common.data.id.EntityGroupId;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.OtaPackageId;
+import org.thingsboard.server.common.data.id.ReportTemplateId;
 import org.thingsboard.server.common.data.id.RoleId;
 import org.thingsboard.server.common.data.id.RuleChainId;
 import org.thingsboard.server.common.data.id.TenantId;
@@ -108,13 +110,20 @@ import org.thingsboard.server.common.data.permission.GroupPermission;
 import org.thingsboard.server.common.data.permission.GroupPermissionInfo;
 import org.thingsboard.server.common.data.permission.Operation;
 import org.thingsboard.server.common.data.permission.Resource;
+import org.thingsboard.server.common.data.query.DeviceTypeFilter;
 import org.thingsboard.server.common.data.relation.EntityRelation;
 import org.thingsboard.server.common.data.relation.RelationTypeGroup;
+import org.thingsboard.server.common.data.report.ReportConfig;
 import org.thingsboard.server.common.data.report.ReportTemplate;
 import org.thingsboard.server.common.data.report.ReportTemplateInfo;
 import org.thingsboard.server.common.data.report.ReportTemplateType;
 import org.thingsboard.server.common.data.report.TbReportFormat;
 import org.thingsboard.server.common.data.report.configuration.CsvReportTemplateConfig;
+import org.thingsboard.server.common.data.report.configuration.DataKey;
+import org.thingsboard.server.common.data.report.configuration.DataSource;
+import org.thingsboard.server.common.data.report.configuration.DataSourceType;
+import org.thingsboard.server.common.data.report.configuration.EntityAlias;
+import org.thingsboard.server.common.data.report.configuration.components.EntityTableComponent;
 import org.thingsboard.server.common.data.role.Role;
 import org.thingsboard.server.common.data.role.RoleType;
 import org.thingsboard.server.common.data.rule.RuleChain;
@@ -1017,7 +1026,8 @@ public class VersionControlTest extends AbstractControllerTest {
 
     @Test
     public void testReportTemplateVc_sameTenant() throws Exception {
-        ReportTemplate reportTemplate = createReportTemplate(tenantId1, null, "Weekly report");
+        Device device = createDevice(null, null, "Device 1", "test1");
+        ReportTemplate reportTemplate = createReportTemplate(tenantId1, null, "Weekly report", device.getId());
         String versionId = createVersion("report template", EntityType.REPORT_TEMPLATE);
 
         loadVersion(versionId, EntityType.REPORT_TEMPLATE);
@@ -1031,7 +1041,8 @@ public class VersionControlTest extends AbstractControllerTest {
 
     @Test
     public void testReportTemplateVc_betweenTenants() throws Exception {
-        ReportTemplate reportTemplate = createReportTemplate(tenantId1, null, "Weekly report");
+        Device device = createDevice(null, null, "Device 1", "test1");
+        ReportTemplate reportTemplate = createReportTemplate(tenantId1, null, "Weekly report", device.getId());
         String versionId = createVersion("report template", EntityType.REPORT_TEMPLATE);
 
         loginTenant2();
@@ -1061,6 +1072,29 @@ public class VersionControlTest extends AbstractControllerTest {
 
         checkImportedEntity(tenantId1, reportEvent, tenantId2, importedReportEvent);
         checkImportedSchedulerEventData(reportEvent, importedReportEvent, importedDashboard.getId(), tenantAdmin2.getId());
+    }
+
+    @Test
+    public void testSchedulerEventGenerateReportV2ForVc_betweenTenants() throws Exception {
+        DeviceProfile deviceProfile = createDeviceProfile(null, null, "Device profile v1.0");
+        Device device = createDevice(null, null, "Device 1", "test1");
+        ReportTemplate reportTemplate = createReportTemplate(tenantId1, null, "Weekly report", device.getId());
+        SchedulerEvent reportEvent = createSchedulerEventForGenerateReportType(tenantId1, deviceProfile.getId(), "Report V2", reportTemplate.getId(), tenantAdminUserId);
+        String versionId = createVersion("scheduler event with report V2", EntityType.DEVICE_PROFILE, EntityType.DEVICE, EntityType.REPORT_TEMPLATE, EntityType.SCHEDULER_EVENT);
+
+        loginTenant2();
+        loadVersion(versionId, config -> {
+            config.setLoadCredentials(false);
+        }, EntityType.DEVICE_PROFILE, EntityType.DEVICE, EntityType.REPORT_TEMPLATE, EntityType.SCHEDULER_EVENT);
+        ReportTemplate importedReportTemplate = findReportTemplate(reportTemplate.getName());
+
+        SchedulerEvent importedReportEvent = findSchedulerEvent(reportEvent.getName());
+
+        checkImportedEntity(tenantId1, reportTemplate, tenantId2, importedReportTemplate);
+        checkImportedReportTemplateData(importedReportTemplate, importedReportTemplate);
+
+        checkImportedEntity(tenantId1, reportEvent, tenantId2, importedReportEvent);
+        checkImportedSchedulerEventData(reportEvent, importedReportEvent, importedReportTemplate.getId(), tenantAdmin2.getId());
     }
 
     private <E extends ExportableEntity<?> & HasTenantId> void checkImportedEntity(TenantId tenantId1, E initialEntity, TenantId tenantId2, E importedEntity) {
@@ -1138,6 +1172,11 @@ public class VersionControlTest extends AbstractControllerTest {
         if (initialDashboard.getAssignedCustomers() != null) {
             assertThat(importedDashboard.getAssignedCustomers()).containsAll(initialDashboard.getAssignedCustomers());
         }
+    }
+
+    protected void checkImportedReportTemplateData(ReportTemplate initialTemplate, ReportTemplate importedTemplate) {
+        assertThat(importedTemplate.getName()).isEqualTo(initialTemplate.getName());
+        assertThat(importedTemplate.getConfiguration()).isEqualTo(initialTemplate.getConfiguration());
     }
 
     protected void checkImportedEntityGroupData(EntityGroup initialEntityGroup, EntityGroup importedEntityGroup) {
@@ -1625,6 +1664,17 @@ public class VersionControlTest extends AbstractControllerTest {
         assertThat(oldUser).isEqualTo(currentUserId.toString()); // userId on import is set to current user
     }
 
+    private void checkImportedSchedulerEventData(SchedulerEvent initialEvent, SchedulerEvent importedEvent, ReportTemplateId templateId, UserId currentUserId) {
+        checkImportedSchedulerEventData(initialEvent, importedEvent);
+        ObjectNode config = (ObjectNode) importedEvent.getConfiguration();
+        String oldTemplate = config.path("reportTemplateId").path("id").asText(null);
+        assertThat(oldTemplate).isNotNull();
+        assertThat(oldTemplate).isEqualTo(templateId.toString());
+        String oldUser = config.path("userId").path("id").asText(null);
+        assertThat(oldUser).isNotNull();
+        assertThat(oldUser).isEqualTo(currentUserId.toString()); // userId on import is set to current user
+    }
+
     private void checkImportedSchedulerEventData(SchedulerEvent initialEvent, SchedulerEvent importedEvent, OtaPackageId otaPackageId) {
         checkImportedSchedulerEventData(initialEvent, importedEvent);
         JsonNode importedConfig = importedEvent.getConfiguration();
@@ -1655,15 +1705,44 @@ public class VersionControlTest extends AbstractControllerTest {
         return doPost("/api/schedulerEvent", schedulerEvent, SchedulerEvent.class);
     }
 
-    private ReportTemplate createReportTemplate(TenantId tenantId, CustomerId customerId, String name) {
+    private ReportTemplate createReportTemplate(TenantId tenantId, CustomerId customerId, String name, DeviceId deviceId) {
         ReportTemplate reportTemplate = new ReportTemplate();
         reportTemplate.setTenantId(tenantId);
         reportTemplate.setCustomerId(customerId);
         reportTemplate.setName(name);
         reportTemplate.setType(ReportTemplateType.REPORT);
         reportTemplate.setFormat(TbReportFormat.CSV);
-        reportTemplate.setConfiguration(new CsvReportTemplateConfig());
+
+        String devicesAliasId = StringUtils.randomAlphabetic(10);
+        EntityAlias entityAlias = buildDeviceTypeEntityAlias(devicesAliasId);
+
+        EntityTableComponent tableComponent = new EntityTableComponent();
+        List<DataKey> dataKeys = List.of(
+                DataKey.builder().name("createdTime").type("entityField").label("CREATED TIME").usePostProcessing(false).build(),
+                DataKey.builder().name("name").type("entityField").label("NAME").usePostProcessing(false).build(),
+                DataKey.builder().name("type").type("entityField").label("TYPE").usePostProcessing(false).build(),
+                DataKey.builder().name("temperature").type("timeseries").label("TEMPERATURE").usePostProcessing(false).units("K").decimals(2).build(),
+                DataKey.builder().name("threshold").type("attribute").label("THRESHOLD").usePostProcessing(false).build()
+        );
+        tableComponent.setDataSources(List.of(DataSource.builder()
+                .type(DataSourceType.DEVICE)
+                .deviceId(deviceId.getId().toString())
+                .dataKeys(dataKeys)
+                .build()));
+
+        CsvReportTemplateConfig configuration = CsvReportTemplateConfig.builder()
+                .entityAliases(List.of(entityAlias))
+                .components(List.of(tableComponent))
+                .build();
+        reportTemplate.setConfiguration(configuration);
         return doPost("/api/reportTemplate", reportTemplate, ReportTemplate.class);
+    }
+
+    private static EntityAlias buildDeviceTypeEntityAlias(String aliasId) {
+        DeviceTypeFilter filter = new DeviceTypeFilter();
+        filter.setDeviceTypes(List.of("default"));
+        filter.setDeviceNameFilter("");
+        return new EntityAlias(aliasId, "devices", filter);
     }
 
     private SchedulerEvent createSchedulerEventForOtaPackageType(TenantId tenantId, EntityId originatorId, String name, String type, OtaPackageId otaPackageId) {
@@ -1707,6 +1786,14 @@ public class VersionControlTest extends AbstractControllerTest {
         cfg.set("metadata", JacksonUtil.newObjectNode());
 
         return createSchedulerEvent(tenantId, originatorId, name, "generateDashboardReport", cfg);
+    }
+
+    private SchedulerEvent createSchedulerEventForGenerateReportType(TenantId tenantId, EntityId originatorId, String name, ReportTemplateId reportTemplateId, UserId userId) {
+        ReportConfig reportConfig = new ReportConfig();
+        reportConfig.setReportTemplateId(reportTemplateId);
+        reportConfig.setTimezone("Europe/Kiev");
+        reportConfig.setUserId(userId);
+        return createSchedulerEvent(tenantId, originatorId, name, "generateReport", JacksonUtil.valueToTree(reportConfig));
     }
 
     private Dashboard assignDashboardToCustomer(DashboardId dashboardId, CustomerId customerId) {

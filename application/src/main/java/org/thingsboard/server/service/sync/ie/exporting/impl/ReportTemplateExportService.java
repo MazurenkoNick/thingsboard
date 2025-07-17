@@ -35,7 +35,7 @@ import org.springframework.stereotype.Service;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.id.ReportTemplateId;
 import org.thingsboard.server.common.data.report.ReportTemplate;
-import org.thingsboard.server.common.data.sync.ie.ReportTemplateExportData;
+import org.thingsboard.server.common.data.sync.ie.EntityExportData;
 import org.thingsboard.server.queue.util.TbCoreComponent;
 import org.thingsboard.server.service.sync.vc.data.EntitiesExportCtx;
 
@@ -43,10 +43,10 @@ import java.util.Set;
 
 @Service
 @TbCoreComponent
-public class ReportTemplateExportService extends BaseEntityExportService<ReportTemplateId, ReportTemplate, ReportTemplateExportData> {
+public class ReportTemplateExportService extends BaseEntityExportService<ReportTemplateId, ReportTemplate, EntityExportData<ReportTemplate>> {
 
     @Override
-    protected void setRelatedEntities(EntitiesExportCtx<?> ctx, ReportTemplate reportTemplate, ReportTemplateExportData exportData) {
+    protected void setRelatedEntities(EntitiesExportCtx<?> ctx, ReportTemplate reportTemplate, EntityExportData<ReportTemplate> exportData) {
         reportTemplate.setCustomerId(getExternalIdOrElseInternal(ctx, reportTemplate.getCustomerId()));
         for (JsonNode entityAlias : reportTemplate.getEntityAliasesConfig()) {
             replaceUuidsRecursively(ctx, entityAlias, Set.of("id"), null);
@@ -54,11 +54,6 @@ public class ReportTemplateExportService extends BaseEntityExportService<ReportT
         for (JsonNode dataSource : reportTemplate.getComponentDataSources()) {
             replaceUuidsRecursively(ctx, dataSource, Set.of("entityAliasId"), null);
         }
-    }
-
-    @Override
-    protected ReportTemplateExportData newExportData() {
-        return new ReportTemplateExportData();
     }
 
     @Override

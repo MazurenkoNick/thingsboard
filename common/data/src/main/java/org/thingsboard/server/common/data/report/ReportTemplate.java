@@ -53,7 +53,7 @@ import static org.thingsboard.server.common.data.util.DataUtils.getChildObjects;
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public class ReportTemplate extends BaseReportTemplate {
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+
     private static final long serialVersionUID = 1729877416392618039L;
 
     @Schema(description = "a JSON value with report template configuration")
@@ -73,12 +73,17 @@ public class ReportTemplate extends BaseReportTemplate {
 
     public ReportTemplate(ReportTemplate reportTemplate) {
         super(reportTemplate);
-        this.configuration = reportTemplate.getConfiguration();
+        if (reportTemplate.getConfiguration() != null) {
+            this.configuration =  mapper.convertValue(
+                    mapper.valueToTree(reportTemplate.getConfiguration()),
+                    ReportTemplateConfig.class
+            );
+        }
     }
 
     @JsonIgnore
     public List<ObjectNode> getEntityAliasesConfig() {
-        return getChildObjects("entityAliases", OBJECT_MAPPER.valueToTree(configuration));
+        return getChildObjects("entityAliases", mapper.valueToTree(configuration));
     }
 
     @JsonIgnore
@@ -90,7 +95,7 @@ public class ReportTemplate extends BaseReportTemplate {
         return components.stream()
                 .filter(component -> component instanceof DataReportComponent)
                 .flatMap(component -> ((DataReportComponent) component).getDataSources().stream())
-                .map(fromValue -> (ObjectNode) OBJECT_MAPPER.valueToTree(fromValue))
+                .map(fromValue -> (ObjectNode) mapper.valueToTree(fromValue))
                 .collect(Collectors.toList());
     }
 

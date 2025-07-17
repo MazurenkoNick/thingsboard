@@ -37,7 +37,7 @@ import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.id.ReportTemplateId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.report.ReportTemplate;
-import org.thingsboard.server.common.data.sync.ie.ReportTemplateExportData;
+import org.thingsboard.server.common.data.sync.ie.EntityExportData;
 import org.thingsboard.server.dao.report.ReportTemplateService;
 import org.thingsboard.server.queue.util.TbCoreComponent;
 import org.thingsboard.server.service.sync.vc.data.EntitiesImportCtx;
@@ -49,7 +49,7 @@ import java.util.Set;
 @Service
 @TbCoreComponent
 @RequiredArgsConstructor
-public class ReportTemplateImportService extends BaseEntityImportService<ReportTemplateId, ReportTemplate, ReportTemplateExportData> {
+public class ReportTemplateImportService extends BaseEntityImportService<ReportTemplateId, ReportTemplate, EntityExportData<ReportTemplate>> {
 
     private static final LinkedHashSet<EntityType> HINTS = new LinkedHashSet<>(Arrays.asList(EntityType.DASHBOARD, EntityType.DEVICE, EntityType.ASSET));
     private final ReportTemplateService reportTemplateService;
@@ -65,20 +65,23 @@ public class ReportTemplateImportService extends BaseEntityImportService<ReportT
     }
 
     @Override
-    protected ReportTemplate prepare(EntitiesImportCtx ctx, ReportTemplate reportTemplate, ReportTemplate oldReportTemplate, ReportTemplateExportData exportData, IdProvider idProvider) {
+    protected ReportTemplate prepare(EntitiesImportCtx ctx, ReportTemplate reportTemplate, ReportTemplate oldReportTemplate, EntityExportData<ReportTemplate> exportData, IdProvider idProvider) {
         for (JsonNode entityAlias : reportTemplate.getEntityAliasesConfig()) {
             replaceIdsRecursively(ctx, idProvider, entityAlias, Set.of("id"), null, HINTS);
+        }
+        for (JsonNode dataSource : reportTemplate.getComponentDataSources()) {
+            replaceIdsRecursively(ctx, idProvider, dataSource, Set.of("entityAlias"), null, HINTS);
         }
         return reportTemplate;
     }
 
     @Override
-    protected ReportTemplate deepCopy(ReportTemplate schedulerEvent) {
-        return new ReportTemplate(schedulerEvent);
+    protected ReportTemplate deepCopy(ReportTemplate reportTemplate) {
+        return new ReportTemplate(reportTemplate);
     }
 
     @Override
-    protected ReportTemplate saveOrUpdate(EntitiesImportCtx ctx, ReportTemplate reportTemplate, ReportTemplateExportData exportData, IdProvider idProvider, CompareResult compareResult) throws Exception {
+    protected ReportTemplate saveOrUpdate(EntitiesImportCtx ctx, ReportTemplate reportTemplate, EntityExportData<ReportTemplate> exportData, IdProvider idProvider, CompareResult compareResult) throws Exception {
         return reportTemplateService.saveReportTemplate(reportTemplate);
     }
 

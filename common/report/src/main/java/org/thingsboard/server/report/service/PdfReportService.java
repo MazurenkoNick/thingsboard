@@ -32,6 +32,7 @@ package org.thingsboard.server.report.service;
 
 import com.google.common.util.concurrent.SettableFuture;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.springframework.stereotype.Service;
 import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.dashboardreport.DashboardReportConfig;
@@ -298,7 +299,7 @@ public class PdfReportService extends AbstractReportService {
     }
 
     private String renderError(int usablePageWidthPx, String errorMessage, Exception e) {
-        if (e instanceof InterruptedException || (e!= null && e.getCause() instanceof InterruptedException)) {
+        if (e instanceof InterruptedException || ExceptionUtils.getRootCause(e) instanceof InterruptedException) {
             throw new RuntimeException(e);
         }
         return componentsRenderers.get(ERROR).render(new ErrorComponent(errorMessage, e), new ComponentData(usablePageWidthPx));
