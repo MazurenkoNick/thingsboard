@@ -146,7 +146,7 @@ export class EdgeComponent extends GroupEntityComponent<EdgeInfo> {
         type: [entity?.type ? entity.type : 'default', [Validators.required, Validators.maxLength(255)]],
         label: [entity ? entity.label : '', Validators.maxLength(255)],
         cloudEndpoint: [null, [Validators.required, Validators.maxLength(255)]],
-        edgeLicenseKey: ['', [Validators.required, Validators.maxLength(30)]],
+        edgeLicenseKey: ['', [Validators.required]],
         routingKey: this.fb.control({value: entity ? entity.routingKey : null, disabled: true}),
         secret: this.fb.control({value: entity ? entity.secret : null, disabled: true}),
         additionalInfo: this.fb.group(
