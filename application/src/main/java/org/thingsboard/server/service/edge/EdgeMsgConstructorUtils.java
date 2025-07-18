@@ -38,7 +38,6 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import com.google.gson.reflect.TypeToken;
-import com.google.protobuf.ByteString;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.thingsboard.common.util.JacksonUtil;
@@ -768,7 +767,7 @@ public class EdgeMsgConstructorUtils {
     }
 
     public static SecretUpdateMsg constructSecretUpdatedMsg(UpdateMsgType msgType, Secret secret) {
-        return SecretUpdateMsg.newBuilder().setMsgType(msgType).setEntity(JacksonUtil.toString(secret)).setRawValue(ByteString.copyFrom(secret.getRawValue()))
+        return SecretUpdateMsg.newBuilder().setMsgType(msgType).setEntity(JacksonUtil.toString(secret))
                 .setIdMSB(secret.getId().getId().getMostSignificantBits())
                 .setIdLSB(secret.getId().getId().getLeastSignificantBits()).build();
     }

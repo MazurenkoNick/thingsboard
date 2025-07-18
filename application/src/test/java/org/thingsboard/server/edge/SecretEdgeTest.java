@@ -48,6 +48,7 @@ public class SecretEdgeTest extends AbstractEdgeTest {
 
     private static final String DEFAULT_SECRET_NAME = "Edge Test Secret";
     private static final String UPDATED_SECRET_DESCRIPTION = "Updated Edge Test Secret";
+    public static final String TEST_VALUE = "test-value";
 
     @Test
     public void testSecret_create_update_delete() throws Exception {
@@ -69,7 +70,8 @@ public class SecretEdgeTest extends AbstractEdgeTest {
         // update
         edgeImitator.expectMessageAmount(1);
         savedSecret.setDescription(UPDATED_SECRET_DESCRIPTION);
-        secret = new Secret(savedSecret, secret.getRawValue());
+        secret = new Secret(savedSecret, secret.getEncryptedValue());
+        secret.setValue(TEST_VALUE);
         savedSecret = doPost("/api/secret", secret, SecretInfo.class);
         Assert.assertTrue(edgeImitator.waitForMessages());
 
@@ -95,7 +97,7 @@ public class SecretEdgeTest extends AbstractEdgeTest {
         secret.setTenantId(tenantId);
         secret.setName(SecretEdgeTest.DEFAULT_SECRET_NAME);
         secret.setType(SecretType.TEXT);
-        secret.setValue("test-value");
+        secret.setValue(TEST_VALUE);
         secret.setDescription("test-description");
         return secret;
     }

@@ -529,7 +529,6 @@ message SecretUpdateMsg{
   int64 idMSB = 2;
   int64 idLSB = 3;
   string entity = 4;
-  bytes rawValue = 5;
 }
 
 /**
