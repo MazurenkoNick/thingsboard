@@ -35,11 +35,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.Setter;
 import lombok.ToString;
 import org.thingsboard.server.common.data.BaseDataWithAdditionalInfo;
-import org.thingsboard.server.common.data.ExportableEntity;
 import org.thingsboard.server.common.data.id.SchedulerEventId;
 
 import java.io.Serial;
@@ -47,7 +44,7 @@ import java.io.Serial;
 @Data
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public class SchedulerEvent extends SchedulerEventInfo implements ExportableEntity<SchedulerEventId> {
+public class SchedulerEvent extends SchedulerEventInfo {
 
     @Serial
     private static final long serialVersionUID = 2807343050519549363L;
@@ -56,9 +53,6 @@ public class SchedulerEvent extends SchedulerEventInfo implements ExportableEnti
     private transient JsonNode configuration;
     @JsonIgnore
     private byte[] configurationBytes;
-    @Getter
-    @Setter
-    private SchedulerEventId externalId;
 
     public SchedulerEvent() {
         super();
@@ -71,7 +65,11 @@ public class SchedulerEvent extends SchedulerEventInfo implements ExportableEnti
     public SchedulerEvent(SchedulerEvent schedulerEvent) {
         super(schedulerEvent);
         this.setConfiguration(schedulerEvent.getConfiguration().deepCopy());
-        this.setExternalId(schedulerEvent.getExternalId());
+    }
+
+    public SchedulerEvent(SchedulerEventInfo schedulerEventInfo, JsonNode configuration) {
+        super(schedulerEventInfo);
+        this.setConfiguration(configuration.deepCopy());
     }
 
     public JsonNode getConfiguration() {
