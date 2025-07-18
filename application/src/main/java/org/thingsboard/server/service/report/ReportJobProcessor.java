@@ -90,6 +90,7 @@ public class ReportJobProcessor implements JobProcessor {
 
     private final ReportTemplateService reportTemplateService;
     private final SystemSecurityService systemSecurityService;
+    @Lazy
     private final NotificationCenter notificationCenter;
     private final NotificationExecutorService notificationExecutor;
     private final TbClusterService clusterService;

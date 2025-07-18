@@ -36,7 +36,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
-import org.thingsboard.rule.engine.api.JobManager;
 import org.thingsboard.rule.engine.api.NotificationCenter;
 import org.thingsboard.server.cache.limits.RateLimitService;
 import org.thingsboard.server.common.data.EntityType;
@@ -44,7 +43,6 @@ import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.NotificationRequestId;
 import org.thingsboard.server.common.data.id.NotificationRuleId;
 import org.thingsboard.server.common.data.id.TenantId;
-import org.thingsboard.server.common.data.job.Job;
 import org.thingsboard.server.common.data.limit.LimitedApi;
 import org.thingsboard.server.common.data.notification.NotificationRequest;
 import org.thingsboard.server.common.data.notification.NotificationRequestConfig;
@@ -55,13 +53,11 @@ import org.thingsboard.server.common.data.notification.rule.trigger.Notification
 import org.thingsboard.server.common.data.notification.rule.trigger.NotificationRuleTrigger.DeduplicationStrategy;
 import org.thingsboard.server.common.data.notification.rule.trigger.config.NotificationRuleTriggerConfig;
 import org.thingsboard.server.common.data.notification.rule.trigger.config.NotificationRuleTriggerType;
-import org.thingsboard.server.common.data.notification.template.NotificationTemplate;
 import org.thingsboard.server.common.data.plugin.ComponentLifecycleEvent;
 import org.thingsboard.server.common.msg.notification.NotificationRuleProcessor;
 import org.thingsboard.server.common.msg.plugin.ComponentLifecycleMsg;
 import org.thingsboard.server.common.msg.queue.ServiceType;
 import org.thingsboard.server.dao.notification.NotificationRequestService;
-import org.thingsboard.server.dao.notification.NotificationTemplateService;
 import org.thingsboard.server.queue.discovery.PartitionService;
 import org.thingsboard.server.queue.notification.NotificationDeduplicationService;
 import org.thingsboard.server.service.executors.NotificationExecutorService;
@@ -83,12 +79,9 @@ public class DefaultNotificationRuleProcessor implements NotificationRuleProcess
 
     private final NotificationRulesCache notificationRulesCache;
     private final NotificationRequestService notificationRequestService;
-    private final NotificationTemplateService notificationTemplateService;
     private final NotificationDeduplicationService deduplicationService;
     private final PartitionService partitionService;
     private final RateLimitService rateLimitService;
-    @Lazy
-    private final JobManager jobManager;
     @Lazy
     private final NotificationCenter notificationCenter;
     private final NotificationExecutorService notificationExecutor;
@@ -153,40 +146,20 @@ public class DefaultNotificationRuleProcessor implements NotificationRuleProcess
                 return;
             }
 
-            NotificationTemplate template = notificationTemplateService.findNotificationTemplateById(rule.getTenantId(), rule.getTemplateId());
-            Map<Integer, List<UUID>> targetsTable = rule.getRecipientsConfig().getTargetsTable();
             NotificationInfo notificationInfo = constructNotificationInfo(trigger, triggerConfig);
-
-            List<NotificationRequest> notificationRequests = new ArrayList<>(targetsTable.size());
-            targetsTable.forEach((delay, targets) -> {
-                NotificationRequest notificationRequest = constructNotificationRequest(targets, rule, trigger.getOriginatorEntityId(), notificationInfo, delay);
-                notificationRequests.add(notificationRequest);
+            rule.getRecipientsConfig().getTargetsTable().forEach((delay, targets) -> {
+                submitNotificationRequest(targets, rule, trigger.getOriginatorEntityId(), notificationInfo, delay);
             });
-
-            if (template.getConfiguration().isAttachReport()) {
-                jobManager.submitJob(Job.newReportJob()
-                        .tenantId(rule.getTenantId())
-                        .reportTemplateId(template.getConfiguration().getReportTemplateId())
-                        .originator(notificationInfo.getStateEntityId())
-                        .userId(template.getConfiguration().getUserId())
-                        .timezone(template.getConfiguration().getTimezone())
-                        .notificationRequests(notificationRequests)
-                        .build());
-            } else {
-                for (NotificationRequest request : notificationRequests) {
-                    submit(request, rule);
-                }
-            }
         }
     }
 
-    private NotificationRequest constructNotificationRequest(List<UUID> targets, NotificationRule rule,
-                                                             EntityId originatorEntityId, NotificationInfo notificationInfo, int delayInSec) {
+    private void submitNotificationRequest(List<UUID> targets, NotificationRule rule,
+                                           EntityId originatorEntityId, NotificationInfo notificationInfo, int delayInSec) {
         NotificationRequestConfig config = new NotificationRequestConfig();
         if (delayInSec > 0) {
             config.setSendingDelayInSec(delayInSec);
         }
-        return NotificationRequest.builder()
+        NotificationRequest notificationRequest = NotificationRequest.builder()
                 .tenantId(rule.getTenantId())
                 .targets(targets)
                 .templateId(rule.getTemplateId())
@@ -195,15 +168,12 @@ public class DefaultNotificationRuleProcessor implements NotificationRuleProcess
                 .ruleId(rule.getId())
                 .originatorEntityId(originatorEntityId)
                 .build();
-    }
 
-    public void submit(NotificationRequest request, NotificationRule rule) {
         try {
-            log.debug("Submitting notification request for rule '{}' with delay of {} sec to targets {}", rule.getName(),
-                    request.getAdditionalConfig().getSendingDelayInSec(), request.getTargets());
-            notificationCenter.processNotificationRequest(request.getTenantId(), request, null);
+            log.debug("Submitting notification request for rule '{}' with delay of {} sec to targets {}", rule.getName(), delayInSec, targets);
+            notificationCenter.processNotificationRequest(rule.getTenantId(), notificationRequest, null);
         } catch (Exception e) {
-            log.error("Failed to process notification request for tenant {} for rule {}", request.getTenantId(), rule.getId(), e);
+            log.error("Failed to process notification request for tenant {} for rule {}", rule.getTenantId(), rule.getId(), e);
         }
     }
 
