@@ -31,7 +31,6 @@
 package org.thingsboard.server.common.data.report;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
@@ -42,9 +41,9 @@ import org.thingsboard.server.common.data.report.configuration.ReportTemplateCon
 import org.thingsboard.server.common.data.report.configuration.components.DataReportComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
 
+import java.io.Serial;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static org.thingsboard.server.common.data.util.DataUtils.getChildObjects;
 
@@ -54,6 +53,7 @@ import static org.thingsboard.server.common.data.util.DataUtils.getChildObjects;
 @EqualsAndHashCode(callSuper = true)
 public class ReportTemplate extends BaseReportTemplate {
 
+    @Serial
     private static final long serialVersionUID = 1729877416392618039L;
 
     @Schema(description = "a JSON value with report template configuration")
@@ -74,7 +74,7 @@ public class ReportTemplate extends BaseReportTemplate {
     public ReportTemplate(ReportTemplate reportTemplate) {
         super(reportTemplate);
         if (reportTemplate.getConfiguration() != null) {
-            this.configuration =  mapper.convertValue(
+            this.configuration = mapper.convertValue(
                     mapper.valueToTree(reportTemplate.getConfiguration()),
                     ReportTemplateConfig.class
             );
@@ -96,7 +96,7 @@ public class ReportTemplate extends BaseReportTemplate {
                 .filter(component -> component instanceof DataReportComponent)
                 .flatMap(component -> ((DataReportComponent) component).getDataSources().stream())
                 .map(fromValue -> (ObjectNode) mapper.valueToTree(fromValue))
-                .collect(Collectors.toList());
+                .toList();
     }
 
 }

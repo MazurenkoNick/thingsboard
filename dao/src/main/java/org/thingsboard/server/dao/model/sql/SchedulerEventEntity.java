@@ -34,74 +34,24 @@ import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.Table;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import org.thingsboard.server.common.data.EntityType;
-import org.thingsboard.server.common.data.id.CustomerId;
-import org.thingsboard.server.common.data.id.EntityIdFactory;
-import org.thingsboard.server.common.data.id.SchedulerEventId;
-import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.scheduler.SchedulerEvent;
-import org.thingsboard.server.dao.model.BaseVersionedEntity;
 import org.thingsboard.server.dao.model.ModelConstants;
 import org.thingsboard.server.dao.util.mapping.JsonConverter;
 
-import java.util.UUID;
-
-import static org.thingsboard.server.dao.model.ModelConstants.SCHEDULER_EVENT_CUSTOMER_ID_PROPERTY;
-import static org.thingsboard.server.dao.model.ModelConstants.SCHEDULER_EVENT_ENABLED_PROPERTY;
-import static org.thingsboard.server.dao.model.ModelConstants.SCHEDULER_EVENT_NAME_PROPERTY;
-import static org.thingsboard.server.dao.model.ModelConstants.SCHEDULER_EVENT_ORIGINATOR_ID_PROPERTY;
-import static org.thingsboard.server.dao.model.ModelConstants.SCHEDULER_EVENT_ORIGINATOR_TYPE_PROPERTY;
 import static org.thingsboard.server.dao.model.ModelConstants.SCHEDULER_EVENT_TABLE_NAME;
-import static org.thingsboard.server.dao.model.ModelConstants.SCHEDULER_EVENT_TENANT_ID_PROPERTY;
-import static org.thingsboard.server.dao.model.ModelConstants.SCHEDULER_EVENT_TYPE_PROPERTY;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
 @Entity
 @Table(name = SCHEDULER_EVENT_TABLE_NAME)
-public final class SchedulerEventEntity extends BaseVersionedEntity<SchedulerEvent> {
-
-    @Column(name = SCHEDULER_EVENT_TENANT_ID_PROPERTY)
-    private UUID tenantId;
-
-    @Column(name = SCHEDULER_EVENT_CUSTOMER_ID_PROPERTY)
-    private UUID customerId;
-
-    @Column(name = SCHEDULER_EVENT_ORIGINATOR_ID_PROPERTY)
-    private UUID originatorId;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = SCHEDULER_EVENT_ORIGINATOR_TYPE_PROPERTY)
-    private EntityType originatorType;
-
-    @Column(name = SCHEDULER_EVENT_NAME_PROPERTY)
-    private String name;
-
-    @Column(name = SCHEDULER_EVENT_TYPE_PROPERTY)
-    private String type;
-
-    @Convert(converter = JsonConverter.class)
-    @Column(name = ModelConstants.SCHEDULER_EVENT_ADDITIONAL_INFO_PROPERTY)
-    private JsonNode additionalInfo;
+public final class SchedulerEventEntity extends AbstractSchedulerEventInfoEntity<SchedulerEvent> {
 
     @Convert(converter = JsonConverter.class)
     @Column(name = ModelConstants.SCHEDULER_EVENT_CONFIGURATION_PROPERTY)
     private JsonNode configuration;
-
-    @Convert(converter = JsonConverter.class)
-    @Column(name = ModelConstants.SCHEDULER_EVENT_SCHEDULE_PROPERTY)
-    private JsonNode schedule;
-
-    @Column(name = SCHEDULER_EVENT_ENABLED_PROPERTY)
-    private boolean enabled;
-
-    @Column(name = ModelConstants.EXTERNAL_ID_PROPERTY)
-    private UUID externalId;
 
     public SchedulerEventEntity() {
         super();
@@ -109,47 +59,12 @@ public final class SchedulerEventEntity extends BaseVersionedEntity<SchedulerEve
 
     public SchedulerEventEntity(SchedulerEvent schedulerEvent) {
         super(schedulerEvent);
-        if (schedulerEvent.getTenantId() != null) {
-            this.tenantId = schedulerEvent.getTenantId().getId();
-        }
-        if (schedulerEvent.getCustomerId() != null) {
-            this.customerId = schedulerEvent.getCustomerId().getId();
-        }
-        if (schedulerEvent.getOriginatorId() != null) {
-            this.originatorId = schedulerEvent.getOriginatorId().getId();
-            this.originatorType = schedulerEvent.getOriginatorId().getEntityType();
-        }
-        this.name = schedulerEvent.getName();
-        this.type = schedulerEvent.getType();
-        this.additionalInfo = schedulerEvent.getAdditionalInfo();
         this.configuration = schedulerEvent.getConfiguration();
-        this.schedule = schedulerEvent.getSchedule();
-        this.enabled = schedulerEvent.isEnabled();
-        this.externalId = getUuid(schedulerEvent.getExternalId());
     }
 
     @Override
     public SchedulerEvent toData() {
-        SchedulerEvent schedulerEvent = new SchedulerEvent(new SchedulerEventId(id));
-        schedulerEvent.setCreatedTime(createdTime);
-        schedulerEvent.setVersion(version);
-        if (tenantId != null) {
-            schedulerEvent.setTenantId(TenantId.fromUUID(tenantId));
-        }
-        if (customerId != null) {
-            schedulerEvent.setCustomerId(new CustomerId(customerId));
-        }
-        if (originatorId != null && originatorType != null) {
-            schedulerEvent.setOriginatorId(EntityIdFactory.getByTypeAndUuid(originatorType, originatorId));
-        }
-        schedulerEvent.setName(name);
-        schedulerEvent.setType(type);
-        schedulerEvent.setAdditionalInfo(additionalInfo);
-        schedulerEvent.setConfiguration(configuration);
-        schedulerEvent.setSchedule(schedule);
-        schedulerEvent.setEnabled(enabled);
-        schedulerEvent.setExternalId(getEntityId(externalId, SchedulerEventId::new));
-        return schedulerEvent;
+        return new SchedulerEvent(super.toSchedulerEventInfo(), configuration);
     }
 
 }
