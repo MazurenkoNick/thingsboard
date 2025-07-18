@@ -30,12 +30,16 @@
  */
 package org.thingsboard.server.common.data.secret;
 
+import com.fasterxml.jackson.annotation.JsonGetter;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonSetter;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.thingsboard.server.common.data.id.SecretId;
 
 import java.io.Serial;
+import java.util.Base64;
 
 @Schema
 @Data
@@ -48,7 +52,19 @@ public class Secret extends SecretInfo {
     @EqualsAndHashCode.Exclude
     private String value;
 
+    @JsonIgnore
     private byte[] encryptedValue;
+
+    @JsonGetter("encryptedValue")
+    public String getEncryptedValueBase64() {
+        return encryptedValue != null ? Base64.getEncoder().encodeToString(encryptedValue) : null;
+    }
+
+    @JsonSetter("encryptedValue")
+    public void setEncryptedValueBase64(String value) {
+        this.encryptedValue = value != null ? Base64.getDecoder().decode(value) : null;
+    }
+
 
     public Secret() {
         super();
