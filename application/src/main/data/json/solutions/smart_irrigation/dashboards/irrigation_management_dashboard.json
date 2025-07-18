@@ -219,14 +219,17 @@
                   "label": "Volume",
                   "color": "#607d8b",
                   "settings": {
+                    "customTitle": "",
                     "columnWidth": "80px",
                     "useCellStyleFunction": true,
                     "cellStyleFunction": "return {\n  fontWeight: 600\n}",
                     "useCellContentFunction": true,
-                    "cellContentFunction": "var configuration = JSON.parse(value);\nvar volume;\nif (configuration.msgBody && configuration.msgBody.volumeInLitters) {\n    volume = configuration.msgBody.volumeInLitters + ' l';\n} else {\n    volume = '&#8212;';\n}\n\nreturn '<span style=\"background: rgba(111, 116, 242, 0.08); border-radius: 16px; padding: 4px 8px; color: #5553AF;\">'+volume+'</span>';\n",
+                    "useCellContentFunctionOnExport": true,
+                    "cellContentFunction": "var configuration = JSON.parse(value);\nvar volume;\nif (configuration.msgBody && configuration.msgBody.volumeInLitters) {\n    const unit = {\n        from: 'L',\n        METRIC:  'L',\n        IMPERIAL:'gal',\n        HYBRID:  'L'\n    };\n    var usrUnit = ctx.unitService.getTargetUnitSymbol(unit);\n    var unitValue = ctx.unitService.convertUnitValue(configuration.msgBody.volumeInLitters, unit).toFixed(1);\n    volume = unitValue + ' ' + usrUnit;\n} else {\n    volume = '&#8212;';\n}\n\nreturn '<span style=\"background: rgba(111, 116, 242, 0.08); border-radius: 16px; padding: 4px 8px; color: #5553AF;\">'+volume+'</span>';\n",
                     "defaultColumnVisibility": "visible",
                     "columnSelectionToDisplay": "enabled",
-                    "columnExportOption": "onlyVisible"
+                    "columnExportOption": "onlyVisible",
+                    "disableSorting": false
                   },
                   "_hash": 0.17406314101781595,
                   "aggregationType": null,
@@ -236,7 +239,12 @@
                   "usePostProcessing": null,
                   "postFuncBody": null
                 }
-              ]
+              ],
+              "alarmFilterConfig": {
+                "statusList": [
+                  "ACTIVE"
+                ]
+              }
             }
           ],
           "displayTimewindow": true,
@@ -1730,8 +1738,14 @@
                   "color": "#ffc107",
                   "settings": {
                     "useCellStyleFunction": false,
+                    "cellStyleFunction": "",
                     "useCellContentFunction": true,
-                    "cellContentFunction": "var data;\nif (value) {\n    try {\n        data = JSON.parse(value);\n    } catch (e){}\n}\nif (data) {\n    var consumption = data.consumption;\n    if (typeof consumption === 'number') {\n        return consumption.toFixed(0) + ' l';\n    } else {\n        return 'N/A'\n    }\n} else {\n    return 'N/A';\n}\n"
+                    "useCellContentFunctionOnExport": true,
+                    "cellContentFunction": "var data;\nif (value) {\n    try {\n        data = JSON.parse(value);\n    } catch (e){}\n}\nif (data) {\n    const unit = {\n        from: 'L',\n        METRIC:  'L',\n        IMPERIAL:'gal',\n        HYBRID:  'L'\n    };\n\n    \n    var consumption = data.consumption;\n    if (typeof consumption === 'number') {\n        var usrUnit = ctx.unitService.getTargetUnitSymbol(unit);\n        var unitValue = ctx.unitService.convertUnitValue(consumption, unit).toFixed(1);\n        return unitValue + ' ' + usrUnit;\n    } else {\n        return 'N/A'\n    }\n} else {\n    return 'N/A';\n}\n",
+                    "defaultColumnVisibility": "visible",
+                    "columnSelectionToDisplay": "enabled",
+                    "columnExportOption": "onlyVisible",
+                    "disableSorting": false
                   },
                   "_hash": 0.9378980877980216,
                   "aggregationType": null,
