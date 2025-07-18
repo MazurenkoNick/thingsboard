@@ -138,7 +138,7 @@ public class IntegrationInfoEntity extends BaseSqlEntity<IntegrationInfo> implem
         IntegrationInfo integration = new IntegrationInfo(new IntegrationId(id));
         integration.setCreatedTime(this.createdTime);
         if (tenantId != null) {
-            integration.setTenantId(new TenantId(tenantId));
+            integration.setTenantId(TenantId.fromUUID(tenantId));
         }
         integration.setName(name);
         integration.setType(type);

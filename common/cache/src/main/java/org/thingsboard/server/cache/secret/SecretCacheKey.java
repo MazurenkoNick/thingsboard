@@ -28,20 +28,19 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.service.scheduler;
+package org.thingsboard.server.cache.secret;
 
-import org.thingsboard.server.common.data.scheduler.SchedulerEventInfo;
-import org.thingsboard.server.common.msg.queue.TbCallback;
-import org.thingsboard.server.gen.transport.TransportProtos.SchedulerServiceMsgProto;
+import org.jetbrains.annotations.NotNull;
+import org.thingsboard.server.common.data.id.TenantId;
 
-public interface SchedulerService {
+import java.io.Serializable;
 
-    void onSchedulerEventAdded(SchedulerEventInfo event);
+public record SecretCacheKey(TenantId tenantId, String name) implements Serializable {
 
-    void onSchedulerEventUpdated(SchedulerEventInfo event);
-
-    void onSchedulerEventDeleted(SchedulerEventInfo event);
-
-    void onQueueMsg(SchedulerServiceMsgProto msg, TbCallback callback);
+    @NotNull
+    @Override
+    public String toString() {
+        return tenantId + "_" + name;
+    }
 
 }

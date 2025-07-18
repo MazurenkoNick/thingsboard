@@ -34,6 +34,8 @@ import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.thingsboard.server.cache.secret.SecretCacheEvictEvent;
+import org.thingsboard.server.cache.secret.SecretCacheKey;
 import org.thingsboard.server.common.data.EntityInfo;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.TbSecretDeleteResult;
@@ -46,12 +48,13 @@ import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.secret.Secret;
 import org.thingsboard.server.common.data.secret.SecretInfo;
 import org.thingsboard.server.dao.encryptionkey.EncryptionService;
-import org.thingsboard.server.dao.entity.AbstractEntityService;
+import org.thingsboard.server.dao.entity.AbstractCachedEntityService;
 import org.thingsboard.server.dao.eventsourcing.DeleteEntityEvent;
 import org.thingsboard.server.dao.eventsourcing.SaveEntityEvent;
 import org.thingsboard.server.dao.integration.IntegrationDao;
 import org.thingsboard.server.dao.rule.RuleChainDao;
 import org.thingsboard.server.dao.service.DataValidator;
+import org.thingsboard.server.dao.settings.AdminSettingsDao;
 import org.thingsboard.server.dao.sql.HasSecretsEntityDao;
 
 import java.util.HashMap;
@@ -64,7 +67,7 @@ import static org.thingsboard.server.dao.service.Validator.validateId;
 
 @Slf4j
 @Service("SecretDaoService")
-public class SecretServiceImpl extends AbstractEntityService implements SecretService {
+public class SecretServiceImpl extends AbstractCachedEntityService<SecretCacheKey, Secret, SecretCacheEvictEvent> implements SecretService {
 
     private static final String INCORRECT_SECRET_ID = "Incorrect secretId ";
 
@@ -86,12 +89,21 @@ public class SecretServiceImpl extends AbstractEntityService implements SecretSe
     private IntegrationDao integrationDao;
 
     @Autowired
+    private AdminSettingsDao adminSettingsDao;
+
+    @Autowired
     private EncryptionService encryptionService;
 
     @PostConstruct
     public void init() {
         hasSecretsEntityDaoMap.put(EntityType.RULE_CHAIN, ruleChainDao);
         hasSecretsEntityDaoMap.put(EntityType.INTEGRATION, integrationDao);
+        hasSecretsEntityDaoMap.put(EntityType.ADMIN_SETTINGS, adminSettingsDao);
+    }
+
+    @Override
+    public void handleEvictEvent(SecretCacheEvictEvent event) {
+        cache.evict(new SecretCacheKey(event.tenantId(), event.name()));
     }
 
     @Override
@@ -102,14 +114,15 @@ public class SecretServiceImpl extends AbstractEntityService implements SecretSe
 
             boolean isValueUpdated = false;
             if (secret.getValue() != null) {
-                byte[] encrypted = encryptionService.encrypt(tenantId, secret.getType(), secret.getRawValue());
-                secret.setRawValue(encrypted);
+                byte[] encrypted = encryptionService.encrypt(tenantId, secret.getType(), secret.getValue().getBytes());
+                secret.setEncryptedValue(encrypted);
                 isValueUpdated = true;
             } else if (old != null) {
-                secret.setRawValue(old.getRawValue());
+                secret.setEncryptedValue(old.getEncryptedValue());
             }
 
             Secret savedSecret = secretDao.save(tenantId, secret);
+            publishEvictEvent(new SecretCacheEvictEvent(savedSecret.getTenantId(), savedSecret.getName()));
             eventPublisher.publishEvent(SaveEntityEvent.builder().tenantId(tenantId).entityId(savedSecret.getId()).entity(savedSecret).created(secret.getId() == null).broadcastEvent(isValueUpdated).build());
             return savedSecret;
         } catch (Exception e) {
@@ -154,6 +167,7 @@ public class SecretServiceImpl extends AbstractEntityService implements SecretSe
         if (success) {
             secretDao.removeById(tenantId, secretId);
             eventPublisher.publishEvent(DeleteEntityEvent.builder().tenantId(tenantId).entityId(secretInfo.getId()).build());
+            publishEvictEvent(new SecretCacheEvictEvent(tenantId, secretInfo.getName()));
         }
         return result.success(success).build();
     }
@@ -179,7 +193,8 @@ public class SecretServiceImpl extends AbstractEntityService implements SecretSe
     @Override
     public Secret findSecretByName(TenantId tenantId, String name) {
         log.trace("Executing findSecretByName [{}] [{}]", tenantId, name);
-        return secretDao.findByName(tenantId, name);
+        return cache.getAndPutInTransaction(new SecretCacheKey(tenantId, name),
+                () -> secretDao.findByName(tenantId, name), true);
     }
 
     @Override

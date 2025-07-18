@@ -36,15 +36,17 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.thingsboard.server.common.data.EntityType;
+import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.audit.ActionType;
 import org.thingsboard.server.common.data.exception.ThingsboardErrorCode;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
@@ -138,10 +140,9 @@ public class RoleController extends AutoCommitController {
     @ApiOperation(value = "Get Role by Id (getRoleById)",
             notes = "Fetch the Role object based on the provided Role Id. " +
                     ROLE_SHORT_DESCRIPTION + RBAC_READ_CHECK
-            )
+    )
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
-    @RequestMapping(value = "/role/{roleId}", method = RequestMethod.GET)
-    @ResponseBody
+    @GetMapping(value = "/role/{roleId}")
     public Role getRoleById(
             @Parameter(description = ROLE_ID_PARAM_DESCRIPTION, required = true)
             @PathVariable(ROLE_ID) String strRoleId) throws ThingsboardException {
@@ -157,8 +158,7 @@ public class RoleController extends AutoCommitController {
                     "\n\n" + ROLE_SHORT_DESCRIPTION + "\n\n" + ROLE_PERMISSIONS_DESCRIPTION +
                     ControllerConstants.RBAC_WRITE_CHECK)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
-    @RequestMapping(value = "/role", method = RequestMethod.POST)
-    @ResponseBody
+    @PostMapping(value = "/role")
     public Role saveRole(
             @Parameter(description = "A JSON value representing the role.", required = true)
             @RequestBody Role role) throws Exception {
@@ -190,7 +190,7 @@ public class RoleController extends AutoCommitController {
     @ApiOperation(value = "Delete role (deleteRole)",
             notes = "Deletes the role. Referencing non-existing role Id will cause an error." + "\n\n" + RBAC_DELETE_CHECK)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
-    @RequestMapping(value = "/role/{roleId}", method = RequestMethod.DELETE)
+    @DeleteMapping(value = "/role/{roleId}")
     @ResponseStatus(value = HttpStatus.OK)
     public void deleteRole(
             @Parameter(description = ROLE_ID_PARAM_DESCRIPTION, required = true)
@@ -220,8 +220,7 @@ public class RoleController extends AutoCommitController {
             notes = "Returns a page of roles that are available for the current user. " + ROLE_SHORT_DESCRIPTION +
                     PAGE_DATA_PARAMETERS + TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH + RBAC_READ_CHECK)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
-    @RequestMapping(value = "/roles", params = {"pageSize", "page"}, method = RequestMethod.GET)
-    @ResponseBody
+    @GetMapping(value = "/roles", params = {"pageSize", "page"})
     public PageData<Role> getRoles(
             @Parameter(description = PAGE_SIZE_DESCRIPTION, required = true, schema = @Schema(minimum = "1"))
             @RequestParam int pageSize,
@@ -239,7 +238,7 @@ public class RoleController extends AutoCommitController {
         TenantId tenantId = getCurrentUser().getTenantId();
         PageLink pageLink = createPageLink(pageSize, page, textSearch, sortProperty, sortOrder);
 
-        if (type != null && type.trim().length() > 0) {
+        if (StringUtils.isNotBlank(type)) {
             if (Authority.TENANT_ADMIN.equals(getCurrentUser().getAuthority())) {
                 return checkNotNull(roleService.findRolesByTenantIdAndType(tenantId, pageLink, RoleType.valueOf(type)));
             } else {
@@ -257,8 +256,7 @@ public class RoleController extends AutoCommitController {
     @ApiOperation(value = "Get Roles By Ids (getRolesByIds)",
             notes = "Returns the list of rows based on their ids. " + "\n\n" + RBAC_READ_CHECK)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
-    @RequestMapping(value = "/roles", params = {"roleIds"}, method = RequestMethod.GET)
-    @ResponseBody
+    @GetMapping(value = "/roles", params = {"roleIds"})
     public List<Role> getRolesByIds(
             @Parameter(description = "A list of role ids, separated by comma ','", array = @ArraySchema(schema = @Schema(type = "string")))
             @RequestParam("roleIds") String[] strRoleIds) throws Exception {

@@ -79,9 +79,6 @@ export class TwilioSmsProviderConfigurationComponent implements ControlValueAcce
   @Input()
   disabled: boolean;
 
-  @Input({transform: booleanAttribute})
-  isRuleNode = false;
-
   private propagateChange = (v: any) => { };
 
   constructor(private store: Store<AppState>,

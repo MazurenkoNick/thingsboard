@@ -30,16 +30,12 @@
  */
 package org.thingsboard.server.common.data.secret;
 
-import com.fasterxml.jackson.annotation.JsonGetter;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonSetter;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.thingsboard.server.common.data.id.SecretId;
 
 import java.io.Serial;
-import java.nio.charset.StandardCharsets;
 
 @Schema
 @Data
@@ -49,26 +45,10 @@ public class Secret extends SecretInfo {
     @Serial
     private static final long serialVersionUID = 3671364019778017637L;
 
-    @JsonIgnore
-    private byte[] rawValue;
+    @EqualsAndHashCode.Exclude
+    private String value;
 
-    @Schema(description = "Secret value.", requiredMode = Schema.RequiredMode.REQUIRED, example = "Value")
-    @JsonSetter("value")
-    public void setValue(String value) {
-        if (value == null) {
-            this.rawValue = null;
-            return;
-        }
-        this.rawValue = value.getBytes(StandardCharsets.UTF_8);
-    }
-
-    @JsonGetter("value")
-    public String getValue() {
-        if (this.rawValue == null) {
-            return null;
-        }
-        return new String(rawValue, StandardCharsets.UTF_8);
-    }
+    private byte[] encryptedValue;
 
     public Secret() {
         super();
@@ -80,22 +60,19 @@ public class Secret extends SecretInfo {
 
     public Secret(Secret secret) {
         super(secret);
-        this.rawValue = secret.getRawValue();
+        this.value = secret.getValue();
+        this.encryptedValue = secret.getEncryptedValue();
     }
 
     public Secret(SecretInfo secretInfo) {
         super(secretInfo);
-        this.rawValue = null;
+        this.value = null;
+        this.encryptedValue = null;
     }
 
-    public Secret(SecretInfo secretInfo, byte[] rawValue) {
+    public Secret(SecretInfo secretInfo, byte[] encryptedValue) {
         super(secretInfo);
-        this.rawValue = rawValue;
-    }
-
-    @Override
-    public String toString() {
-        return super.toString();
+        this.encryptedValue = encryptedValue;
     }
 
 }

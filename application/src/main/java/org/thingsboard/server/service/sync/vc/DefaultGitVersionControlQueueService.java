@@ -64,6 +64,7 @@ import org.thingsboard.server.common.data.sync.vc.VersionedEntityInfo;
 import org.thingsboard.server.common.data.sync.vc.request.create.VersionCreateRequest;
 import org.thingsboard.server.common.data.util.CollectionsUtil;
 import org.thingsboard.server.common.util.ProtoUtils;
+import org.thingsboard.server.dao.secret.SecretConfigurationService;
 import org.thingsboard.server.gen.transport.TransportProtos;
 import org.thingsboard.server.gen.transport.TransportProtos.CommitRequestMsg;
 import org.thingsboard.server.gen.transport.TransportProtos.EntitiesContentRequestMsg;
@@ -120,6 +121,7 @@ public class DefaultGitVersionControlQueueService implements GitVersionControlQu
     private final DefaultEntitiesVersionControlService entitiesVersionControlService;
     private final SchedulerComponent scheduler;
     private final VersionControlExecutor executor;
+    private final SecretConfigurationService secretConfigurationService;
 
     private final Map<UUID, PendingGitRequest<?>> pendingRequestMap = new ConcurrentHashMap<>();
     private final Map<UUID, HashMap<Integer, String[]>> chunkedMsgs = new ConcurrentHashMap<>();
@@ -131,12 +133,13 @@ public class DefaultGitVersionControlQueueService implements GitVersionControlQu
 
     public DefaultGitVersionControlQueueService(TbServiceInfoProvider serviceInfoProvider, TbClusterService clusterService,
                                                 @Lazy DefaultEntitiesVersionControlService entitiesVersionControlService,
-                                                SchedulerComponent scheduler, VersionControlExecutor executor) {
+                                                SchedulerComponent scheduler, VersionControlExecutor executor, SecretConfigurationService secretConfigurationService) {
         this.serviceInfoProvider = serviceInfoProvider;
         this.clusterService = clusterService;
         this.entitiesVersionControlService = entitiesVersionControlService;
         this.scheduler = scheduler;
         this.executor = executor;
+        this.secretConfigurationService = secretConfigurationService;
     }
 
     @Override
@@ -449,14 +452,16 @@ public class DefaultGitVersionControlQueueService implements GitVersionControlQu
     public ListenableFuture<Void> initRepository(TenantId tenantId, RepositorySettings settings) {
         log.debug("Executing initRepository [{}]", tenantId);
         VoidGitRequest request = new VoidGitRequest(tenantId);
-        return sendRequest(request, builder -> builder.setInitRepositoryRequest(GenericRepositoryRequestMsg.getDefaultInstance()), settings);
+        var repository = secretConfigurationService.replaceSecretUsages(tenantId, settings, RepositorySettings.class);
+        return sendRequest(request, builder -> builder.setInitRepositoryRequest(GenericRepositoryRequestMsg.getDefaultInstance()), repository);
     }
 
     @Override
     public ListenableFuture<Void> testRepository(TenantId tenantId, RepositorySettings settings) {
         log.debug("Executing testRepository [{}]", tenantId);
         VoidGitRequest request = new VoidGitRequest(tenantId);
-        return sendRequest(request, builder -> builder.setTestRepositoryRequest(GenericRepositoryRequestMsg.getDefaultInstance()), settings);
+        var repository = secretConfigurationService.replaceSecretUsages(tenantId, settings, RepositorySettings.class);
+        return sendRequest(request, builder -> builder.setTestRepositoryRequest(GenericRepositoryRequestMsg.getDefaultInstance()), repository);
     }
 
     @Override

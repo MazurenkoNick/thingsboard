@@ -30,6 +30,7 @@
  */
 package org.thingsboard.server.service.secret;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -57,18 +58,33 @@ public class DefaultSecretConfigurationService implements SecretConfigurationSer
 
     @Override
     public void replaceSecretUsages(TenantId tenantId, JsonNode config) {
-        JacksonUtil.replaceAll(config, "", (path, value) -> {
-            Matcher matcher = SECRET_PATTERN.matcher(value);
-            if (matcher.find()) {
-                String name = matcher.group(1);
-                Secret secret = secretService.findSecretByName(tenantId, name);
-                if (secret == null) {
-                    return "";
-                }
-                return encryptionService.decryptToString(tenantId, secret.getType(), secret.getRawValue());
+        replaceAllSecretUsages(tenantId, config);
+    }
+
+    @Override
+    public <T> T replaceSecretUsages(TenantId tenantId, T entity, Class<T> clazz) {
+        JsonNode config = JacksonUtil.valueToTree(entity);
+        JsonNode replaced = replaceAllSecretUsages(tenantId, config);
+        return JacksonUtil.treeToValue(replaced, clazz);
+    }
+
+    @Override
+    public String replaceSecretUsage(TenantId tenantId, String value) {
+        Matcher matcher = SECRET_PATTERN.matcher(value);
+        if (matcher.find()) {
+            String name = matcher.group(1);
+            Secret secret = secretService.findSecretByName(tenantId, name);
+            if (secret == null) {
+                return "";
             }
-            return value;
-        });
+            return encryptionService.decryptToString(tenantId, secret.getType(), secret.getEncryptedValue());
+        }
+        return value;
+    }
+
+    private JsonNode replaceAllSecretUsages(TenantId tenantId, JsonNode config) {
+        JacksonUtil.replaceAll(config, "", (path, value) -> replaceSecretUsage(tenantId, value));
+        return config;
     }
 
 }

@@ -28,20 +28,24 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.service.scheduler;
+package org.thingsboard.server.cache.secret;
 
-import org.thingsboard.server.common.data.scheduler.SchedulerEventInfo;
-import org.thingsboard.server.common.msg.queue.TbCallback;
-import org.thingsboard.server.gen.transport.TransportProtos.SchedulerServiceMsgProto;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.stereotype.Service;
+import org.thingsboard.server.cache.CacheSpecsMap;
+import org.thingsboard.server.cache.RedisTbTransactionalCache;
+import org.thingsboard.server.cache.TBRedisCacheConfiguration;
+import org.thingsboard.server.cache.TbJsonRedisSerializer;
+import org.thingsboard.server.common.data.CacheConstants;
+import org.thingsboard.server.common.data.secret.Secret;
 
-public interface SchedulerService {
+@ConditionalOnProperty(prefix = "cache", value = "type", havingValue = "redis")
+@Service("SecretCache")
+public class SecretRedisCache extends RedisTbTransactionalCache<SecretCacheKey, Secret> {
 
-    void onSchedulerEventAdded(SchedulerEventInfo event);
-
-    void onSchedulerEventUpdated(SchedulerEventInfo event);
-
-    void onSchedulerEventDeleted(SchedulerEventInfo event);
-
-    void onQueueMsg(SchedulerServiceMsgProto msg, TbCallback callback);
+    public SecretRedisCache(TBRedisCacheConfiguration configuration, CacheSpecsMap cacheSpecsMap, RedisConnectionFactory connectionFactory) {
+        super(CacheConstants.SECRETS_CACHE, cacheSpecsMap, connectionFactory, configuration, new TbJsonRedisSerializer<>(Secret.class));
+    }
 
 }

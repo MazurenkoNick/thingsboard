@@ -75,15 +75,6 @@ public class AdminSettingsServiceImpl implements AdminSettingsService {
         return adminSettingsDao.findByTenantIdAndKey(tenantId.getId(), key);
     }
 
-    @Override
-    public void deleteAdminSettingsByKey(TenantId tenantId, String key) {
-        log.trace("Executing deleteAdminSettingsByKey [{}]", key);
-        AdminSettings adminSettings = findAdminSettingsByKey(tenantId, key);
-        if (adminSettings != null) {
-            adminSettingsDao.removeById(tenantId, adminSettings.getId().getId());
-        }
-    }
-
     public AdminSettings saveAdminSettings(TenantId tenantId, AdminSettings adminSettings) {
         log.trace("Executing saveAdminSettings [{}]", adminSettings);
         adminSettingsValidator.validate(adminSettings, data -> tenantId);

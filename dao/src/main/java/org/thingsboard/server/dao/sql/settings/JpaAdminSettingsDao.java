@@ -35,6 +35,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.thingsboard.server.common.data.AdminSettings;
+import org.thingsboard.server.common.data.EntityInfo;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.page.PageData;
@@ -46,6 +47,7 @@ import org.thingsboard.server.dao.settings.AdminSettingsDao;
 import org.thingsboard.server.dao.sql.JpaAbstractDao;
 import org.thingsboard.server.dao.util.SqlDao;
 
+import java.util.List;
 import java.util.UUID;
 
 @Component
@@ -79,6 +81,11 @@ public class JpaAdminSettingsDao extends JpaAbstractDao<AdminSettingsEntity, Adm
     @Override
     public PageData<AdminSettings> findAllByTenantId(TenantId tenantId, PageLink pageLink) {
         return DaoUtil.toPageData(adminSettingsRepository.findByTenantId(tenantId.getId(), DaoUtil.toPageable(pageLink)));
+    }
+
+    @Override
+    public List<EntityInfo> findByTenantIdAndSecretPlaceholder(TenantId tenantId, String placeholder) {
+        return adminSettingsRepository.findByTenantIdAndSecretPlaceholder(tenantId.getId(), placeholder);
     }
 
     @Override

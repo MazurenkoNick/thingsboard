@@ -89,6 +89,9 @@ public class EncryptionServiceImpl implements EncryptionService {
     private BytesEncryptor getEncryptor(TenantId tenantId) {
         return encryptorMap.computeIfAbsent(tenantId, id -> {
             EncryptionKey key = encryptionKeyDao.findByTenantId(tenantId);
+            if (key == null) {
+                throw new RuntimeException("Encryption key not found for tenant " + tenantId);
+            }
             return Encryptors.stronger(key.getPassword(), key.getSalt());
         });
     }
