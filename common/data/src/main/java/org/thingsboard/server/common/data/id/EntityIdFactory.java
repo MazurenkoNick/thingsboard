@@ -148,6 +148,7 @@ public class EntityIdFactory {
             case OAUTH2_CLIENT -> new OAuth2ClientId(uuid);
             case DOMAIN -> new DomainId(uuid);
             case CALCULATED_FIELD -> new CalculatedFieldId(uuid);
+            case SECRET -> new SecretId(uuid);
             default -> throw new IllegalArgumentException("EdgeEventType " + edgeEventType + " is not supported!");
         };
     }

@@ -198,12 +198,6 @@ public class SecretServiceImpl extends AbstractCachedEntityService<SecretCacheKe
     }
 
     @Override
-    public PageData<SecretInfo> findSecretInfosByTenantId(TenantId tenantId, PageLink pageLink) {
-        log.trace("Executing findSecretInfosByTenantId [{}]", tenantId);
-        return secretInfoDao.findByTenantId(tenantId, pageLink);
-    }
-
-    @Override
     public SecretInfo findSecretInfoByName(TenantId tenantId, String name) {
         log.trace("Executing findSecretInfoByName [{}] [{}]", tenantId, name);
         return secretInfoDao.findByName(tenantId, name);
@@ -213,6 +207,18 @@ public class SecretServiceImpl extends AbstractCachedEntityService<SecretCacheKe
     public List<String> findSecretNamesByTenantId(TenantId tenantId) {
         log.trace("Executing findSecretNamesByTenantId [{}]", tenantId);
         return secretInfoDao.findAllNamesByTenantId(tenantId);
+    }
+
+    @Override
+    public PageData<Secret> findSecretsByTenantId(TenantId tenantId, PageLink pageLink) {
+        log.trace("Executing findSecretsByTenantId [{}]", tenantId);
+        return secretDao.findByTenantId(tenantId, pageLink);
+    }
+
+    @Override
+    public PageData<SecretInfo> findSecretInfosByTenantId(TenantId tenantId, PageLink pageLink) {
+        log.trace("Executing findSecretInfosByTenantId [{}]", tenantId);
+        return secretInfoDao.findByTenantId(tenantId, pageLink);
     }
 
     @Override
