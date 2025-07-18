@@ -57,6 +57,7 @@ import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.permission.Operation;
 import org.thingsboard.server.common.data.permission.Resource;
 import org.thingsboard.server.config.annotations.ApiOperation;
+import org.thingsboard.server.queue.util.TbCoreComponent;
 import org.thingsboard.server.service.ai.AiChatModelService;
 
 import java.time.Duration;
@@ -74,6 +75,7 @@ import static org.thingsboard.server.controller.ControllerConstants.TENANT_AUTHO
 
 @Validated
 @RestController
+@TbCoreComponent
 @RequiredArgsConstructor
 @RequestMapping("/api/ai/model")
 class AiModelController extends BaseController {
