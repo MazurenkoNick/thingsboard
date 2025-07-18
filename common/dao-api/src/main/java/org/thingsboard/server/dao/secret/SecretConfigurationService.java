@@ -37,4 +37,8 @@ public interface SecretConfigurationService {
 
     void replaceSecretUsages(TenantId tenantId, JsonNode config);
 
+    <T> T replaceSecretUsages(TenantId tenantId, T entity, Class<T> clazz);
+
+    String replaceSecretUsage(TenantId tenantId, String value);
+
 }

@@ -45,12 +45,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.util.Pair;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.thingsboard.common.util.JacksonUtil;
@@ -99,7 +100,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import static org.thingsboard.integration.api.converter.DedicatedConverterUtil.parseUplinkData;
 import static org.thingsboard.server.controller.ControllerConstants.CONVERTER_CONFIGURATION_DESCRIPTION;
@@ -176,8 +176,7 @@ public class ConverterController extends AutoCommitController {
                     + NEW_LINE + RBAC_READ_CHECK
     )
     @PreAuthorize("hasAuthority('TENANT_ADMIN')")
-    @RequestMapping(value = "/converter/{converterId}", method = RequestMethod.GET)
-    @ResponseBody
+    @GetMapping(value = "/converter/{converterId}")
     public Converter getConverterById(@Parameter(required = true, description = CONVERTER_ID_PARAM_DESCRIPTION)
                                       @PathVariable(CONVERTER_ID) String strConverterId) throws ThingsboardException {
         checkParameter(CONVERTER_ID, strConverterId);
@@ -195,8 +194,7 @@ public class ConverterController extends AutoCommitController {
                     "Remove 'id', 'tenantId' from the request body example (below) to create new converter entity. " +
                     TENANT_AUTHORITY_PARAGRAPH)
     @PreAuthorize("hasAuthority('TENANT_ADMIN')")
-    @RequestMapping(value = "/converter", method = RequestMethod.POST)
-    @ResponseBody
+    @PostMapping(value = "/converter")
     public Converter saveConverter(@io.swagger.v3.oas.annotations.parameters.RequestBody(required = true, description = "A JSON value representing the converter.") @RequestBody Converter converter) throws Exception {
         converter.setTenantId(getCurrentUser().getTenantId());
         checkEntity(converter.getId(), converter, Resource.CONVERTER, null);
@@ -207,8 +205,7 @@ public class ConverterController extends AutoCommitController {
             notes = "Returns a page of converters owned by tenant. " +
                     PAGE_DATA_PARAMETERS + NEW_LINE + RBAC_READ_CHECK)
     @PreAuthorize("hasAuthority('TENANT_ADMIN')")
-    @RequestMapping(value = "/converters", params = {"pageSize", "page"}, method = RequestMethod.GET)
-    @ResponseBody
+    @GetMapping(value = "/converters", params = {"pageSize", "page"})
     public PageData<Converter> getConverters(
             @Parameter(description = "Fetch edge template converters")
             @RequestParam(value = "isEdgeTemplate", required = false, defaultValue = "false") boolean isEdgeTemplate,
@@ -239,7 +236,7 @@ public class ConverterController extends AutoCommitController {
                     "Referencing non-existing converter Id will cause an error. " +
                     "If the converter is associated with the integration, it will not be allowed for deletion." + NEW_LINE + RBAC_DELETE_CHECK)
     @PreAuthorize("hasAuthority('TENANT_ADMIN')")
-    @RequestMapping(value = "/converter/{converterId}", method = RequestMethod.DELETE)
+    @DeleteMapping(value = "/converter/{converterId}")
     @ResponseStatus(value = HttpStatus.OK)
     public void deleteConverter(@Parameter(required = true, description = CONVERTER_ID_PARAM_DESCRIPTION) @PathVariable(CONVERTER_ID) String strConverterId) throws ThingsboardException {
         checkParameter(CONVERTER_ID, strConverterId);
@@ -253,8 +250,7 @@ public class ConverterController extends AutoCommitController {
                     CONVERTER_DEBUG_INPUT_DEFINITION +
                     NEW_LINE + RBAC_READ_CHECK)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN')")
-    @RequestMapping(value = "/converter/{converterId}/debugIn", method = RequestMethod.GET)
-    @ResponseBody
+    @GetMapping(value = "/converter/{converterId}/debugIn")
     public JsonNode getLatestConverterDebugInput(@Parameter(description = CONVERTER_ID_PARAM_DESCRIPTION)
                                                  @PathVariable(CONVERTER_ID) String strConverterId,
                                                  @Parameter(description = CONVERTER_TYPE_DESCRIPTION)
@@ -353,7 +349,7 @@ public class ConverterController extends AutoCommitController {
 
     private Integration getIntegration(ConverterId converterId) throws ThingsboardException {
         List<Integration> relatedIntegrations = integrationService.findIntegrationsByConverterId(getTenantId(), converterId);
-        if (relatedIntegrations.size() > 0 && relatedIntegrations.stream().map(Integration::getType).distinct().limit(2).count() == 1) {
+        if (!relatedIntegrations.isEmpty() && relatedIntegrations.stream().map(Integration::getType).distinct().limit(2).count() == 1) {
             return relatedIntegrations.get(0);
         }
         return null;
@@ -391,7 +387,7 @@ public class ConverterController extends AutoCommitController {
                     String inMetadata = "";
                     String in = body.get("in").asText();
                     JsonNode inJson = JacksonUtil.toJsonNode(in);
-                    if (inJson.isArray() && inJson.size() > 0) {
+                    if (inJson.isArray() && !inJson.isEmpty()) {
                         JsonNode msgJson = inJson.get(inJson.size() - 1);
                         JsonNode msg = msgJson.get("msg");
                         if (msg.isTextual()) {
@@ -414,12 +410,9 @@ public class ConverterController extends AutoCommitController {
     }
 
     @ApiOperation(value = "Test converter function (testUpLinkConverter)",
-            notes = "Returns a JSON object representing the result of the processed incoming message. " + NEW_LINE +
-                    TEST_UPLINK_CONVERTER_DEFINITION
-    )
+            notes = "Returns a JSON object representing the result of the processed incoming message. " + NEW_LINE + TEST_UPLINK_CONVERTER_DEFINITION)
     @PreAuthorize("hasAuthority('TENANT_ADMIN')")
-    @RequestMapping(value = "/converter/testUpLink", method = RequestMethod.POST)
-    @ResponseBody
+    @PostMapping(value = "/converter/testUpLink")
     public JsonNode testUpLinkConverter(
             @Parameter(description = "Script language: JS or TBEL")
             @RequestParam(required = false) ScriptLanguage scriptLang,
@@ -480,8 +473,7 @@ public class ConverterController extends AutoCommitController {
                     TEST_DOWNLINK_CONVERTER_DEFINITION
     )
     @PreAuthorize("hasAuthority('TENANT_ADMIN')")
-    @RequestMapping(value = "/converter/testDownLink", method = RequestMethod.POST)
-    @ResponseBody
+    @PostMapping(value = "/converter/testDownLink")
     public JsonNode testDownLinkConverter(
             @Parameter(description = "Script language: JS or TBEL")
             @RequestParam(required = false) ScriptLanguage scriptLang,
@@ -493,11 +485,9 @@ public class ConverterController extends AutoCommitController {
         JsonNode integrationMetadata = inputParams.get("integrationMetadata");
         String encoder = inputParams.get("encoder").asText();
 
-        Map<String, String> metadataMap = JacksonUtil.convertValue(metadata, new TypeReference<Map<String, String>>() {
-        });
+        Map<String, String> metadataMap = JacksonUtil.convertValue(metadata, new TypeReference<>() {});
 
-        Map<String, String> integrationMetadataMap = JacksonUtil.convertValue(integrationMetadata, new TypeReference<Map<String, String>>() {
-        });
+        Map<String, String> integrationMetadataMap = JacksonUtil.convertValue(integrationMetadata, new TypeReference<>() {});
         IntegrationMetaData integrationMetaData = new IntegrationMetaData(integrationMetadataMap);
 
         JsonNode output = null;
@@ -566,8 +556,7 @@ public class ConverterController extends AutoCommitController {
             notes = "Requested converters must be owned by tenant which is performing the request. " +
                     NEW_LINE + RBAC_READ_CHECK)
     @PreAuthorize("hasAuthority('TENANT_ADMIN')")
-    @RequestMapping(value = "/converters", params = {"converterIds"}, method = RequestMethod.GET)
-    @ResponseBody
+    @GetMapping(value = "/converters", params = {"converterIds"})
     public List<Converter> getConvertersByIds(
             @Parameter(description = "A list of converter ids, separated by comma ','", array = @ArraySchema(schema = @Schema(type = "string")), required = true)
             @RequestParam("converterIds") String[] strConverterIds) throws Exception {
@@ -590,12 +579,11 @@ public class ConverterController extends AutoCommitController {
                     DEDICATED_CONVERTER_DEFINITION
     )
     @PreAuthorize("hasAuthority('TENANT_ADMIN')")
-    @RequestMapping(value = "/converter/unwrap/{integrationType}", method = RequestMethod.POST)
-    @ResponseBody
+    @PostMapping(value = "/converter/unwrap/{integrationType}")
     public JsonNode unwrapRawPayload(@Parameter(description = INTEGRATION_TYPE_DESCRIPTION)
-                                                           @PathVariable IntegrationType integrationType,
-                                                           @io.swagger.v3.oas.annotations.parameters.RequestBody(required = true, description = "A JSON value representing the input message.")
-                                                           @RequestBody JsonNode inputParams) throws Exception {
+                                     @PathVariable IntegrationType integrationType,
+                                     @io.swagger.v3.oas.annotations.parameters.RequestBody(required = true, description = "A JSON value representing the input message.")
+                                     @RequestBody JsonNode inputParams) throws Exception {
         JsonNode payloadJson = inputParams.get("payload");
         byte[] payload = JacksonUtil.writeValueAsBytes(payloadJson);
         JsonNode metadata = inputParams.get("metadata");
@@ -632,7 +620,7 @@ public class ConverterController extends AutoCommitController {
             } catch (ThingsboardException e) {
                 return false;
             }
-        }).collect(Collectors.toList());
+        }).toList();
     }
 
 }

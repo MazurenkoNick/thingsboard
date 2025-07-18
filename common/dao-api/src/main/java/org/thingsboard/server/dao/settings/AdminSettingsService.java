@@ -43,8 +43,6 @@ public interface AdminSettingsService extends EntityDaoService {
 
     AdminSettings findAdminSettingsByTenantIdAndKey(TenantId tenantId, String key);
 
-    void deleteAdminSettingsByKey(TenantId tenantId, String key);
-
     AdminSettings saveAdminSettings(TenantId tenantId, AdminSettings adminSettings);
 
     boolean deleteAdminSettingsByTenantIdAndKey(TenantId tenantId, String key);

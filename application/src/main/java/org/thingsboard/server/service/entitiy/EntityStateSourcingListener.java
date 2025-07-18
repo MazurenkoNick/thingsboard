@@ -83,8 +83,10 @@ import org.thingsboard.server.dao.secret.SecretService;
 import org.thingsboard.server.dao.tenant.TenantService;
 import org.thingsboard.server.queue.TbQueueCallback;
 import org.thingsboard.server.service.scheduler.SchedulerService;
+import org.thingsboard.server.service.sync.vc.EntitiesVersionControlService;
+import org.thingsboard.server.service.sync.vc.GitVersionControlQueueService;
+import org.thingsboard.server.service.sync.vc.repository.DefaultTbRepositorySettingsService;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -99,6 +101,8 @@ public class EntityStateSourcingListener {
     private final JobManager jobManager;
     private final SecretService secretService;
     private final Optional<SchedulerService> schedulerService;
+    private final Optional<GitVersionControlQueueService> gitServiceQueue;
+    private final Optional<EntitiesVersionControlService> versionControlService;
 
     @PostConstruct
     public void init() {
@@ -194,9 +198,19 @@ public class EntityStateSourcingListener {
                     break;
                 }
                 Secret secret = (Secret) event.getEntity();
-                var entityInfos = secretService.findEntitiesBySecret(tenantId, secret);
-                entityInfos.values().stream().flatMap(List::stream).forEach(entityInfo ->
-                        tbClusterService.broadcastEntityStateChangeEvent(tenantId, entityInfo.getId(), lifecycleEvent));
+                var entities = secretService.findEntitiesBySecret(tenantId, secret);
+                entities.forEach((type, entityInfos) -> {
+                    if (type == EntityType.RULE_CHAIN || type == EntityType.INTEGRATION) {
+                        entityInfos.forEach(entityInfo -> tbClusterService.broadcastEntityStateChangeEvent(tenantId, entityInfo.getId(), lifecycleEvent));
+                    } else if (type == EntityType.ADMIN_SETTINGS && gitServiceQueue.isPresent() && versionControlService.isPresent()) {
+                        entityInfos.stream()
+                                .filter(entityInfo -> DefaultTbRepositorySettingsService.SETTINGS_KEY.equals(entityInfo.getName())).findFirst()
+                                .ifPresent(entityInfo -> {
+                                    var vcSettings = versionControlService.get().getVersionControlSettings(tenantId);
+                                    gitServiceQueue.get().initRepository(tenantId, vcSettings);
+                                });
+                    }
+                });
             }
             case SCHEDULER_EVENT -> {
                 SchedulerEvent schedulerEvent = (SchedulerEvent) event.getEntity();

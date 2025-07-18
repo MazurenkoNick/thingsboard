@@ -73,6 +73,7 @@ import org.thingsboard.server.common.stats.TbApiUsageReportClient;
 import org.thingsboard.server.dao.blob.BlobEntityService;
 import org.thingsboard.server.dao.exception.IncorrectParameterException;
 import org.thingsboard.server.dao.report.ReportService;
+import org.thingsboard.server.dao.secret.SecretConfigurationService;
 import org.thingsboard.server.dao.settings.AdminSettingsService;
 import org.thingsboard.server.dao.wl.WhiteLabelingService;
 import org.thingsboard.server.service.apiusage.TbApiUsageStateService;
@@ -89,6 +90,7 @@ import java.util.concurrent.TimeoutException;
 @RequiredArgsConstructor
 public class DefaultMailService implements MailService {
 
+    private static final String MAIL_SETTINGS_KEY = "mail";
     private static final String TARGET_EMAIL = "targetEmail";
     private static final String UTF_8 = "UTF-8";
     private static final long DEFAULT_TIMEOUT = 10_000;
@@ -106,6 +108,7 @@ public class DefaultMailService implements MailService {
     private final RateLimitService rateLimitService;
     private final ReportService reportService;
     private final WhiteLabelingService whiteLabelingService;
+    private final SecretConfigurationService secretConfigurationService;
 
     @Value("${actors.rule.allow_system_mail_service}")
     private boolean allowSystemMailService;
@@ -125,6 +128,7 @@ public class DefaultMailService implements MailService {
 
     @Override
     public void sendTestMail(TenantId tenantId, JsonNode jsonConfig, String email) throws ThingsboardException {
+        secretConfigurationService.replaceSecretUsages(tenantId, jsonConfig);
         TbMailSender testMailSender = new TbMailSender(ctx, tenantId, jsonConfig);
         String mailFrom = getStringValue(jsonConfig, "mailFrom");
 
@@ -211,7 +215,7 @@ public class DefaultMailService implements MailService {
 
     private void sendMail(TenantId tenantId, String email,
                           String subject, String message) throws ThingsboardException {
-        JsonNode jsonConfig = getConfig(tenantId, "mail");
+        JsonNode jsonConfig = getConfig(tenantId);
         TbMailSender mailSender = new TbMailSender(ctx, tenantId, jsonConfig);
         String mailFrom = getStringValue(jsonConfig, "mailFrom");
         sendMail(mailSender, mailFrom, email, subject, message, getTimeout(jsonConfig));
@@ -219,7 +223,7 @@ public class DefaultMailService implements MailService {
 
     @Override
     public void send(TenantId tenantId, CustomerId customerId, TbEmail tbEmail) throws ThingsboardException {
-        ConfigEntry configEntry = getConfig(tenantId, "mail", allowSystemMailService);
+        ConfigEntry configEntry = getConfig(tenantId, allowSystemMailService);
         JsonNode jsonConfig = configEntry.jsonConfig;
         TbMailSender mailSender = new TbMailSender(ctx, configEntry.isSystem ? TenantId.SYS_TENANT_ID : tenantId, jsonConfig);
         sendMail(tenantId, customerId, tbEmail, mailSender, false, getTimeout(jsonConfig));
@@ -231,7 +235,7 @@ public class DefaultMailService implements MailService {
     }
 
     private void sendMail(TenantId tenantId, CustomerId customerId, TbEmail tbEmail, JavaMailSender javaMailSender, boolean externalMailSender, long timeout) throws ThingsboardException {
-        ConfigEntry configEntry = getConfig(tenantId, "mail", true);
+        ConfigEntry configEntry = getConfig(tenantId, true);
         JsonNode jsonConfig = configEntry.jsonConfig;
         if (externalMailSender || !configEntry.isSystem || apiUsageStateService.getApiUsageState(tenantId).isEmailSendEnabled()) {
             if (tenantId != null && !tenantId.isSysTenantId() && StringUtils.isNotEmpty(perTenantRateLimitConfig) &&
@@ -354,7 +358,7 @@ public class DefaultMailService implements MailService {
 
     @Override
     public void testConnection(TenantId tenantId) throws Exception {
-        JsonNode jsonConfig = getConfig(tenantId, "mail");
+        JsonNode jsonConfig = getConfig(tenantId);
         TbMailSender mailSender = new TbMailSender(ctx, tenantId, jsonConfig);
         mailSender.testConnection();
     }
@@ -362,7 +366,7 @@ public class DefaultMailService implements MailService {
     @Override
     public boolean isConfigured(TenantId tenantId) {
         try {
-            ConfigEntry configEntry = getConfig(tenantId, "mail", allowSystemMailService);
+            ConfigEntry configEntry = getConfig(tenantId, allowSystemMailService);
             JsonNode jsonConfig = configEntry.jsonConfig;
             new TbMailSender(ctx, tenantId, jsonConfig);
             return true;
@@ -477,16 +481,16 @@ public class DefaultMailService implements MailService {
         }
     }
 
-    private JsonNode getConfig(TenantId tenantId, String key) throws ThingsboardException {
-        return getConfig(tenantId, key, true).jsonConfig;
+    private JsonNode getConfig(TenantId tenantId) throws ThingsboardException {
+        return getConfig(tenantId, true).jsonConfig;
     }
 
-    private ConfigEntry getConfig(TenantId tenantId, String key, boolean allowSystemMailService) throws ThingsboardException {
+    private ConfigEntry getConfig(TenantId tenantId, boolean allowSystemMailService) throws ThingsboardException {
         try {
             JsonNode jsonConfig = null;
             boolean isSystem = false;
             if (tenantId != null && !tenantId.isNullUid()) {
-                AdminSettings adminSettings = adminSettingsService.findAdminSettingsByTenantIdAndKey(tenantId, key);
+                AdminSettings adminSettings = adminSettingsService.findAdminSettingsByTenantIdAndKey(tenantId, MAIL_SETTINGS_KEY);
                 if (adminSettings != null) {
                     jsonConfig = adminSettings.getJsonValue();
                     JsonNode useSystemMailSettingsNode = jsonConfig.get("useSystemMailSettings");
@@ -499,7 +503,7 @@ public class DefaultMailService implements MailService {
                 if (!allowSystemMailService) {
                     throw new RuntimeException("Access to System Mail Service is forbidden!");
                 }
-                AdminSettings settings = adminSettingsService.findAdminSettingsByKey(tenantId, key);
+                AdminSettings settings = adminSettingsService.findAdminSettingsByKey(tenantId, MAIL_SETTINGS_KEY);
                 if (settings != null) {
                     jsonConfig = settings.getJsonValue();
                     isSystem = true;
@@ -508,6 +512,7 @@ public class DefaultMailService implements MailService {
             if (jsonConfig == null) {
                 throw new IncorrectParameterException("Failed to get mail configuration. Settings not found!");
             }
+            secretConfigurationService.replaceSecretUsages(isSystem ? TenantId.SYS_TENANT_ID : tenantId, jsonConfig);
             return new ConfigEntry(jsonConfig, isSystem);
         } catch (Exception e) {
             throw handleException(e);

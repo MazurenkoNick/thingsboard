@@ -36,13 +36,13 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.thingsboard.server.common.data.EntityType;
@@ -116,8 +116,7 @@ public class IntegrationController extends AutoCommitController {
                     "The server checks that the integration is owned by the same tenant. "
                     + NEW_LINE + RBAC_READ_CHECK)
     @PreAuthorize("hasAuthority('TENANT_ADMIN')")
-    @RequestMapping(value = "/integration/{integrationId}", method = RequestMethod.GET)
-    @ResponseBody
+    @GetMapping(value = "/integration/{integrationId}")
     public Integration getIntegrationById(@Parameter(required = true, description = INTEGRATION_ID_PARAM_DESCRIPTION)
                                           @PathVariable(INTEGRATION_ID) String strIntegrationId) throws Exception {
         checkParameter(INTEGRATION_ID, strIntegrationId);
@@ -130,8 +129,7 @@ public class IntegrationController extends AutoCommitController {
                     "The server checks that the integration is owned by the same tenant. "
                     + NEW_LINE + RBAC_READ_CHECK)
     @PreAuthorize("hasAuthority('TENANT_ADMIN')")
-    @RequestMapping(value = "/integration/routingKey/{routingKey}", method = RequestMethod.GET)
-    @ResponseBody
+    @GetMapping(value = "/integration/routingKey/{routingKey}")
     public Integration getIntegrationByRoutingKey(
             @Parameter(required = true, description = "A string value representing the integration routing key. For example, '542047e6-c1b2-112e-a87e-e49247c09d4b'")
             @PathVariable("routingKey") String routingKey) throws Exception {
@@ -150,8 +148,7 @@ public class IntegrationController extends AutoCommitController {
                     "Remove 'id', 'tenantId' from the request body example (below) to create new Integration entity. " +
                     TENANT_AUTHORITY_PARAGRAPH)
     @PreAuthorize("hasAuthority('TENANT_ADMIN')")
-    @RequestMapping(value = "/integration", method = RequestMethod.POST)
-    @ResponseBody
+    @PostMapping(value = "/integration")
     public Integration saveIntegration(@Parameter(required = true, description = "A JSON value representing the integration.")
                                        @RequestBody Integration integration) throws Exception {
         SecurityUser currentUser = getCurrentUser();
@@ -193,8 +190,7 @@ public class IntegrationController extends AutoCommitController {
             notes = "Returns a page of integrations owned by tenant. " +
                     PAGE_DATA_PARAMETERS + NEW_LINE + RBAC_READ_CHECK)
     @PreAuthorize("hasAuthority('TENANT_ADMIN')")
-    @RequestMapping(value = "/integrations", params = {"pageSize", "page"}, method = RequestMethod.GET)
-    @ResponseBody
+    @GetMapping(value = "/integrations", params = {"pageSize", "page"})
     public PageData<Integration> getIntegrations(
             @Parameter(description = "Fetch edge template integrations")
             @RequestParam(value = "isEdgeTemplate", required = false, defaultValue = "false") boolean isEdgeTemplate,
@@ -222,8 +218,7 @@ public class IntegrationController extends AutoCommitController {
             notes = "Returns a page of integration infos owned by tenant. " +
                     PAGE_DATA_PARAMETERS + NEW_LINE + RBAC_READ_CHECK)
     @PreAuthorize("hasAuthority('TENANT_ADMIN')")
-    @RequestMapping(value = "/integrationInfos", params = {"pageSize", "page"}, method = RequestMethod.GET)
-    @ResponseBody
+    @GetMapping(value = "/integrationInfos", params = {"pageSize", "page"})
     public PageData<IntegrationInfo> getIntegrationInfos(
             @Parameter(description = "Fetch edge template integrations")
             @RequestParam(value = "isEdgeTemplate", required = false, defaultValue = "false") boolean isEdgeTemplate,
@@ -247,8 +242,7 @@ public class IntegrationController extends AutoCommitController {
             notes = "Checks if the connection to the integration is established. " +
                     "Throws an error if the connection is not established. Example: Failed to connect to MQTT broker at host:port.")
     @PreAuthorize("hasAuthority('TENANT_ADMIN')")
-    @RequestMapping(value = "/integration/check", method = RequestMethod.POST)
-    @ResponseBody
+    @PostMapping(value = "/integration/check")
     public void checkIntegrationConnection(@Parameter(required = true, description = "A JSON value representing the integration.")
                                            @RequestBody Integration integration) throws Exception {
         try {
@@ -272,7 +266,7 @@ public class IntegrationController extends AutoCommitController {
                     "Referencing non-existing integration Id will cause an error. " +
                     NEW_LINE + RBAC_DELETE_CHECK)
     @PreAuthorize("hasAuthority('TENANT_ADMIN')")
-    @RequestMapping(value = "/integration/{integrationId}", method = RequestMethod.DELETE)
+    @DeleteMapping(value = "/integration/{integrationId}")
     @ResponseStatus(value = HttpStatus.OK)
     public void deleteIntegration(@Parameter(required = true, description = INTEGRATION_ID_PARAM_DESCRIPTION)
                                   @PathVariable(INTEGRATION_ID) String strIntegrationId) throws Exception {
@@ -298,27 +292,22 @@ public class IntegrationController extends AutoCommitController {
             notes = "Requested integrations must be owned by tenant which is performing the request. " +
                     NEW_LINE + RBAC_READ_CHECK)
     @PreAuthorize("hasAuthority('TENANT_ADMIN')")
-    @RequestMapping(value = "/integrations", params = {"integrationIds"}, method = RequestMethod.GET)
-    @ResponseBody
+    @GetMapping(value = "/integrations", params = {"integrationIds"})
     public List<Integration> getIntegrationsByIds(
             @Parameter(description = "A list of integration ids, separated by comma ','", array = @ArraySchema(schema = @Schema(type = "string")), required = true)
             @RequestParam("integrationIds") String[] strIntegrationIds) throws Exception {
         checkArrayParameter("integrationIds", strIntegrationIds);
-        try {
-            if (!accessControlService.hasPermission(getCurrentUser(), Resource.INTEGRATION, Operation.READ)) {
-                return Collections.emptyList();
-            }
-            SecurityUser user = getCurrentUser();
-            TenantId tenantId = user.getTenantId();
-            List<IntegrationId> integrationIds = new ArrayList<>();
-            for (String strIntegrationId : strIntegrationIds) {
-                integrationIds.add(new IntegrationId(toUUID(strIntegrationId)));
-            }
-            List<Integration> integrations = checkNotNull(integrationService.findIntegrationsByIdsAsync(tenantId, integrationIds).get());
-            return filterIntegrationsByReadPermission(integrations);
-        } catch (Exception e) {
-            throw e;
+        if (!accessControlService.hasPermission(getCurrentUser(), Resource.INTEGRATION, Operation.READ)) {
+            return Collections.emptyList();
         }
+        SecurityUser user = getCurrentUser();
+        TenantId tenantId = user.getTenantId();
+        List<IntegrationId> integrationIds = new ArrayList<>();
+        for (String strIntegrationId : strIntegrationIds) {
+            integrationIds.add(new IntegrationId(toUUID(strIntegrationId)));
+        }
+        List<Integration> integrations = checkNotNull(integrationService.findIntegrationsByIdsAsync(tenantId, integrationIds).get());
+        return filterIntegrationsByReadPermission(integrations);
     }
 
     private List<Integration> filterIntegrationsByReadPermission(List<Integration> integrations) {
@@ -339,8 +328,7 @@ public class IntegrationController extends AutoCommitController {
                     "Third, once integration will be delivered to edge service, it's going to start locally. " +
                     "\n\nOnly integration edge template can be assigned to edge." + TENANT_AUTHORITY_PARAGRAPH)
     @PreAuthorize("hasAuthority('TENANT_ADMIN')")
-    @RequestMapping(value = "/edge/{edgeId}/integration/{integrationId}", method = RequestMethod.POST)
-    @ResponseBody
+    @PostMapping(value = "/edge/{edgeId}/integration/{integrationId}")
     public Integration assignIntegrationToEdge(@PathVariable("edgeId") String strEdgeId,
                                                @PathVariable(INTEGRATION_ID) String strIntegrationId) throws Exception {
         checkParameter("edgeId", strEdgeId);
@@ -373,8 +361,7 @@ public class IntegrationController extends AutoCommitController {
                     EDGE_UNASSIGN_RECEIVE_STEP_DESCRIPTION +
                     "Third, once 'unassign' command will be delivered to edge service, it's going to remove integration locally." + TENANT_AUTHORITY_PARAGRAPH)
     @PreAuthorize("hasAuthority('TENANT_ADMIN')")
-    @RequestMapping(value = "/edge/{edgeId}/integration/{integrationId}", method = RequestMethod.DELETE)
-    @ResponseBody
+    @DeleteMapping(value = "/edge/{edgeId}/integration/{integrationId}")
     public Integration unassignIntegrationFromEdge(@PathVariable("edgeId") String strEdgeId,
                                                    @PathVariable(INTEGRATION_ID) String strIntegrationId) throws Exception {
         checkParameter("edgeId", strEdgeId);
@@ -402,8 +389,7 @@ public class IntegrationController extends AutoCommitController {
     @ApiOperation(value = "Get Edge Integrations (getEdgeIntegrations)",
             notes = "Returns a page of Integrations assigned to the specified edge. " + INTEGRATION_DESCRIPTION + PAGE_DATA_PARAMETERS + TENANT_AUTHORITY_PARAGRAPH)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN')")
-    @RequestMapping(value = "/edge/{edgeId}/integrations", params = {"pageSize", "page"}, method = RequestMethod.GET)
-    @ResponseBody
+    @GetMapping(value = "/edge/{edgeId}/integrations", params = {"pageSize", "page"})
     public PageData<Integration> getEdgeIntegrations(
             @Parameter(description = EDGE_ID_PARAM_DESCRIPTION, required = true)
             @PathVariable(EDGE_ID) String strEdgeId,
@@ -428,8 +414,7 @@ public class IntegrationController extends AutoCommitController {
     @ApiOperation(value = "Get Edge Integrations (getEdgeIntegrationInfos)",
             notes = "Returns a page of Integrations assigned to the specified edge. " + INTEGRATION_DESCRIPTION + PAGE_DATA_PARAMETERS + TENANT_AUTHORITY_PARAGRAPH)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN')")
-    @RequestMapping(value = "/edge/{edgeId}/integrationInfos", params = {"pageSize", "page"}, method = RequestMethod.GET)
-    @ResponseBody
+    @GetMapping(value = "/edge/{edgeId}/integrationInfos", params = {"pageSize", "page"})
     public PageData<IntegrationInfo> getEdgeIntegrationInfos(
             @Parameter(description = EDGE_ID_PARAM_DESCRIPTION, required = true)
             @PathVariable(EDGE_ID) String strEdgeId,
@@ -454,8 +439,7 @@ public class IntegrationController extends AutoCommitController {
     @ApiOperation(value = "Find edge missing attributes for assigned integrations (findEdgeMissingAttributes)",
             notes = "Returns list of edge attribute names that are missing in assigned integrations." + TENANT_AUTHORITY_PARAGRAPH)
     @PreAuthorize("hasAuthority('TENANT_ADMIN')")
-    @RequestMapping(value = "/edge/integration/{edgeId}/missingAttributes", params = {"integrationIds"}, method = RequestMethod.GET)
-    @ResponseBody
+    @GetMapping(value = "/edge/integration/{edgeId}/missingAttributes", params = {"integrationIds"})
     public String findEdgeMissingAttributes(@Parameter(description = EDGE_ID_PARAM_DESCRIPTION, required = true)
                                             @PathVariable(EDGE_ID) String strEdgeId,
                                             @Parameter(description = "A list of assigned integration ids, separated by comma ','", array = @ArraySchema(schema = @Schema(type = "string")), required = true)
@@ -475,8 +459,7 @@ public class IntegrationController extends AutoCommitController {
     @ApiOperation(value = "Find missing attributes for all related edges (findAllRelatedEdgesMissingAttributes)",
             notes = "Returns list of attribute names of all related edges that are missing in the integration configuration." + TENANT_AUTHORITY_PARAGRAPH)
     @PreAuthorize("hasAuthority('TENANT_ADMIN')")
-    @RequestMapping(value = "/edge/integration/{integrationId}/allMissingAttributes", method = RequestMethod.GET)
-    @ResponseBody
+    @GetMapping(value = "/edge/integration/{integrationId}/allMissingAttributes")
     public String findAllRelatedEdgesMissingAttributes(@Parameter(description = INTEGRATION_ID_PARAM_DESCRIPTION, required = true)
                                                        @PathVariable("integrationId") String strIntegrationId) throws Exception {
         checkParameter("integrationId", strIntegrationId);

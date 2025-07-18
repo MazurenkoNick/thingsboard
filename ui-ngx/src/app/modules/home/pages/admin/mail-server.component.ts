@@ -71,7 +71,6 @@ export class MailServerComponent extends PageComponent implements OnInit, OnDest
 
   adminSettings: AdminSettings<MailServerSettings>;
   smtpProtocols = Object.values(SmtpProtocol);
-  showChangePassword = false;
 
   protocols: DomainSchema[] = Object.values(DomainSchema).filter(value => value !== DomainSchema.MIXED);
   domainSchemaTranslations = domainSchemaTranslations;
@@ -112,7 +111,6 @@ export class MailServerComponent extends PageComponent implements OnInit, OnDest
     proxyUser: [{ value: '', disabled: true }],
     proxyPassword: [{ value: '', disabled: true }],
     username: [''],
-    changePassword: [false],
     password: [''],
     enableOauth2: [false],
     providerId: ['CUSTOM', [Validators.required]],
@@ -181,9 +179,6 @@ export class MailServerComponent extends PageComponent implements OnInit, OnDest
       if (this.adminSettings.jsonValue && isString(this.adminSettings.jsonValue.enableTls)) {
         this.adminSettings.jsonValue.enableTls = (this.adminSettings.jsonValue.enableTls as any) === 'true';
       }
-      this.showChangePassword = isDefinedAndNotNull(this.adminSettings.jsonValue.showChangePassword)
-        ? this.adminSettings.jsonValue.showChangePassword : true;
-      delete this.adminSettings.jsonValue.showChangePassword;
       if (!this.adminSettings.jsonValue.providerId) {
         this.adminSettings.jsonValue.providerId = 'CUSTOM';
       }
@@ -193,10 +188,8 @@ export class MailServerComponent extends PageComponent implements OnInit, OnDest
           isDefined(this.adminSettings.jsonValue.useSystemMailSettings) ?
             this.adminSettings.jsonValue.useSystemMailSettings : true, {emitEvent: false}
         );
-        this.showChangePassword = this.showChangePassword && isDefined(this.adminSettings.jsonValue.useSystemMailSettings);
       }
       this.updateValidators();
-      this.enableMailPassword(!this.showChangePassword);
       this.enableTls(this.adminSettings.jsonValue.enableTls);
       this.helpLink = this.templates.get(this.adminSettings.jsonValue.providerId)?.helpLink || null;
       this.enableProxyChanged();
@@ -235,7 +228,6 @@ export class MailServerComponent extends PageComponent implements OnInit, OnDest
       this.mailSettings.get('smtpProtocol').disable({emitEvent: false});
       this.mailSettings.get('enableTls').disable({emitEvent: false});
       this.mailSettings.get('enableProxy').disable({emitEvent: false});
-      this.mailSettings.get('changePassword').disable({emitEvent: false});
       this.mailSettings.get('enableOauth2').disable({emitEvent: false});
       if (this.isTenantAdmin()) {
         this.mailSettings.get('useSystemMailSettings').disable({emitEvent: false});
@@ -244,7 +236,6 @@ export class MailServerComponent extends PageComponent implements OnInit, OnDest
       this.registerDisableOnLoadFormControl(this.mailSettings.get('smtpProtocol'));
       this.registerDisableOnLoadFormControl(this.mailSettings.get('enableTls'));
       this.registerDisableOnLoadFormControl(this.mailSettings.get('enableProxy'));
-      this.registerDisableOnLoadFormControl(this.mailSettings.get('changePassword'));
       if (this.isTenantAdmin()) {
         this.registerDisableOnLoadFormControl(this.mailSettings.get('useSystemMailSettings'));
       }
@@ -260,9 +251,6 @@ export class MailServerComponent extends PageComponent implements OnInit, OnDest
     this.mailSettings.get('enableProxy').valueChanges.pipe(
       takeUntil(this.destroy$)
     ).subscribe(() => this.enableProxyChanged());
-    this.mailSettings.get('changePassword').valueChanges.pipe(
-      takeUntil(this.destroy$)
-    ).subscribe((value) => this.enableMailPassword(value));
     this.mailSettings.get('enableOauth2').valueChanges.pipe(
       takeUntil(this.destroy$)
     ).subscribe( value => {
@@ -410,14 +398,6 @@ export class MailServerComponent extends PageComponent implements OnInit, OnDest
     }
   }
 
-  private enableMailPassword(enable: boolean) {
-    if (enable) {
-      this.mailSettings.get('password').enable({emitEvent: false});
-    } else {
-      this.mailSettings.get('password').disable({emitEvent: false});
-    }
-  }
-
   private enableTls(enable: boolean): void {
     if (enable) {
       this.mailSettings.get('tlsVersion').enable({emitEvent: false});
@@ -440,7 +420,6 @@ export class MailServerComponent extends PageComponent implements OnInit, OnDest
     this.adminService.saveAdminSettings(this.adminSettings).subscribe(
       (adminSettings) => {
         this.adminSettings = adminSettings;
-        this.showChangePassword = true;
         this.mailSettings.reset(this.adminSettings.jsonValue, {emitEvent: false});
         this.domainForm.reset(this.domainForm.value);
         this.parseUrl(this.adminSettings.jsonValue.redirectUri);
@@ -492,7 +471,6 @@ export class MailServerComponent extends PageComponent implements OnInit, OnDest
 
   private get mailSettingsFormValue(): MailServerSettings {
     const formValue = this.mailSettings.getRawValue() as Required<typeof this.mailSettings.value>;
-    delete formValue.changePassword;
     if (!isDefinedAndNotNull(formValue.password)) {
       delete formValue.password;
     }

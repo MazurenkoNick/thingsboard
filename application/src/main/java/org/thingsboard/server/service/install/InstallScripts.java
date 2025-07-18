@@ -818,11 +818,8 @@ public class InstallScripts {
         return existingTemplates > 0;
     }
 
-    public void generateTenantEncryptionKey() {
-        PageDataIterable<TenantId> tenantIterator = new PageDataIterable<>(tenantService::findTenantsIds, 1024);
-        for (TenantId tenantId : tenantIterator) {
-            encryptionService.createEncryptionKey(tenantId);
-        }
+    public void generateSysAdminEncryptionKey() {
+        encryptionService.createEncryptionKey(TenantId.SYS_TENANT_ID);
     }
 
 }

@@ -50,6 +50,7 @@ import org.thingsboard.server.common.data.sms.config.SmsProviderConfiguration;
 import org.thingsboard.server.common.data.sms.config.TestSmsRequest;
 import org.thingsboard.server.common.stats.TbApiUsageReportClient;
 import org.thingsboard.server.dao.exception.IncorrectParameterException;
+import org.thingsboard.server.dao.secret.SecretConfigurationService;
 import org.thingsboard.server.dao.settings.AdminSettingsService;
 import org.thingsboard.server.service.apiusage.TbApiUsageStateService;
 
@@ -58,6 +59,8 @@ import org.thingsboard.server.service.apiusage.TbApiUsageStateService;
 @RequiredArgsConstructor
 public class DefaultSmsService implements SmsService {
 
+    private static final String SMS_SETTINGS_KEY = "sms";
+
     @Value("${actors.rule.allow_system_sms_service}")
     private boolean allowSystemSmsService;
 
@@ -65,10 +68,11 @@ public class DefaultSmsService implements SmsService {
     private final AdminSettingsService adminSettingsService;
     private final TbApiUsageStateService apiUsageStateService;
     private final TbApiUsageReportClient apiUsageClient;
+    private final SecretConfigurationService secretConfigurationService;
 
     @Override
     public void sendSms(TenantId tenantId, CustomerId customerId, String[] numbersTo, String message) throws ThingsboardException {
-        ConfigEntry configEntry = getConfig(tenantId, "sms", allowSystemSmsService);
+        ConfigEntry configEntry = getConfig(tenantId, allowSystemSmsService);
         SmsProviderConfiguration configuration = JacksonUtil.convertValue(configEntry.jsonConfig, SmsProviderConfiguration.class);
         SmsSender smsSender = this.smsSenderFactory.createSmsSender(configuration);
         if (!configEntry.isSystem || apiUsageStateService.getApiUsageState(tenantId).isSmsSendEnabled()) {
@@ -88,10 +92,11 @@ public class DefaultSmsService implements SmsService {
     }
 
     @Override
-    public void sendTestSms(TestSmsRequest testSmsRequest) throws ThingsboardException {
+    public void sendTestSms(TenantId tenantId, TestSmsRequest testSmsRequest) throws ThingsboardException {
         SmsSender testSmsSender;
         try {
-            testSmsSender = this.smsSenderFactory.createSmsSender(testSmsRequest.getProviderConfiguration());
+            SmsProviderConfiguration configuration = secretConfigurationService.replaceSecretUsages(tenantId, testSmsRequest.getProviderConfiguration(), SmsProviderConfiguration.class);
+            testSmsSender = this.smsSenderFactory.createSmsSender(configuration);
         } catch (Exception e) {
             throw handleException(e);
         }
@@ -102,7 +107,7 @@ public class DefaultSmsService implements SmsService {
     @Override
     public boolean isConfigured(TenantId tenantId) {
         try {
-            ConfigEntry configEntry = getConfig(tenantId, "sms", allowSystemSmsService);
+            ConfigEntry configEntry = getConfig(tenantId, allowSystemSmsService);
             JacksonUtil.convertValue(configEntry.jsonConfig, SmsProviderConfiguration.class);
             return true;
         } catch (Exception e) {
@@ -120,12 +125,12 @@ public class DefaultSmsService implements SmsService {
         }
     }
 
-    private ConfigEntry getConfig(TenantId tenantId, String key, boolean allowSystemSmsService) throws ThingsboardException {
+    private ConfigEntry getConfig(TenantId tenantId, boolean allowSystemSmsService) throws ThingsboardException {
         try {
             JsonNode jsonConfig = null;
             boolean isSystem = false;
             if (tenantId != null && !tenantId.isNullUid()) {
-                AdminSettings adminSettings = adminSettingsService.findAdminSettingsByTenantIdAndKey(tenantId, key);
+                AdminSettings adminSettings = adminSettingsService.findAdminSettingsByTenantIdAndKey(tenantId, SMS_SETTINGS_KEY);
                 if (adminSettings != null) {
                     jsonConfig = adminSettings.getJsonValue();
                     JsonNode useSystemSmsSettingsNode = jsonConfig.get("useSystemSmsSettings");
@@ -138,7 +143,7 @@ public class DefaultSmsService implements SmsService {
                 if (!allowSystemSmsService) {
                     throw new RuntimeException("Access to System SMS Service is forbidden!");
                 }
-                AdminSettings settings = adminSettingsService.findAdminSettingsByKey(tenantId, key);
+                AdminSettings settings = adminSettingsService.findAdminSettingsByKey(tenantId, SMS_SETTINGS_KEY);
                 if (settings != null) {
                     jsonConfig = settings.getJsonValue();
                     isSystem = true;
@@ -147,6 +152,7 @@ public class DefaultSmsService implements SmsService {
             if (jsonConfig == null) {
                 throw new IncorrectParameterException("Failed to get sms provider configuration. Settings not found!");
             }
+            secretConfigurationService.replaceSecretUsages(isSystem ? TenantId.SYS_TENANT_ID : tenantId, jsonConfig);
             return new ConfigEntry(jsonConfig, isSystem);
         } catch (Exception e) {
             throw handleException(e);

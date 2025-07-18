@@ -37,13 +37,14 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.thingsboard.server.common.data.edge.Edge;
@@ -74,7 +75,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
-import java.util.stream.Collectors;
 
 import static org.thingsboard.server.controller.ControllerConstants.EDGE_ASSIGN_RECEIVE_STEP_DESCRIPTION;
 import static org.thingsboard.server.controller.ControllerConstants.EDGE_ID_PARAM_DESCRIPTION;
@@ -122,8 +122,7 @@ public class SchedulerEventController extends BaseController {
                     SCHEDULER_EVENT_WITH_CUSTOMER_INFO_DESCRIPTION + INVALID_SCHEDULER_EVENT_ID +
                     TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH + "\n\n" + RBAC_READ_CHECK)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
-    @RequestMapping(value = "/schedulerEvent/info/{schedulerEventId}", method = RequestMethod.GET)
-    @ResponseBody
+    @GetMapping(value = "/schedulerEvent/info/{schedulerEventId}")
     public SchedulerEventWithCustomerInfo getSchedulerEventInfoById(
             @Parameter(description = SCHEDULER_EVENT_ID_PARAM_DESCRIPTION, required = true)
             @PathVariable(SCHEDULER_EVENT_ID) String strSchedulerEventId) throws ThingsboardException {
@@ -137,8 +136,7 @@ public class SchedulerEventController extends BaseController {
                     SCHEDULER_EVENT_DESCRIPTION + INVALID_SCHEDULER_EVENT_ID +
                     TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH + "\n\n" + RBAC_READ_CHECK)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
-    @RequestMapping(value = "/schedulerEvent/{schedulerEventId}", method = RequestMethod.GET)
-    @ResponseBody
+    @GetMapping(value = "/schedulerEvent/{schedulerEventId}")
     public SchedulerEvent getSchedulerEventById(
             @Parameter(description = SCHEDULER_EVENT_ID_PARAM_DESCRIPTION, required = true)
             @PathVariable(SCHEDULER_EVENT_ID) String strSchedulerEventId) throws ThingsboardException {
@@ -155,8 +153,7 @@ public class SchedulerEventController extends BaseController {
                     "Remove 'id', 'tenantId' and optionally 'customerId' from the request body example (below) to create new Scheduler Event entity. " +
                     TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
-    @RequestMapping(value = "/schedulerEvent", method = RequestMethod.POST)
-    @ResponseBody
+    @PostMapping(value = "/schedulerEvent")
     public SchedulerEvent saveSchedulerEvent(
             @Parameter(description = "A JSON value representing the Scheduler Event.")
             @RequestBody SchedulerEvent schedulerEvent) throws ThingsboardException {
@@ -173,8 +170,7 @@ public class SchedulerEventController extends BaseController {
             notes = "Updates scheduler event with enabled = true/false. " + SCHEDULER_EVENT_DESCRIPTION +
                     TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
-    @RequestMapping(value = "/schedulerEvent/{schedulerEventId}/enabled/{enabledValue}", method = RequestMethod.PUT)
-    @ResponseBody
+    @PutMapping(value = "/schedulerEvent/{schedulerEventId}/enabled/{enabledValue}")
     public SchedulerEvent enableSchedulerEvent(
             @Parameter(description = SCHEDULER_EVENT_ID_PARAM_DESCRIPTION, required = true)
             @PathVariable(SCHEDULER_EVENT_ID) String strSchedulerEventId,
@@ -193,7 +189,7 @@ public class SchedulerEventController extends BaseController {
     @ApiOperation(value = "Delete Scheduler Event (deleteSchedulerEvent)",
             notes = "Deletes the scheduler event. " + INVALID_SCHEDULER_EVENT_ID + "\n\n" + RBAC_DELETE_CHECK)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
-    @RequestMapping(value = "/schedulerEvent/{schedulerEventId}", method = RequestMethod.DELETE)
+    @DeleteMapping(value = "/schedulerEvent/{schedulerEventId}")
     @ResponseStatus(value = HttpStatus.OK)
     public void deleteSchedulerEvent(
             @Parameter(description = SCHEDULER_EVENT_ID_PARAM_DESCRIPTION, required = true)
@@ -328,8 +324,7 @@ public class SchedulerEventController extends BaseController {
             notes = "Requested scheduler events must be owned by tenant or assigned to customer which user is performing the request. "
                     + SCHEDULER_EVENT_INFO_DESCRIPTION + TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH + "\n\n" + RBAC_READ_CHECK)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
-    @RequestMapping(value = "/schedulerEvents", params = {"schedulerEventIds"}, method = RequestMethod.GET)
-    @ResponseBody
+    @GetMapping(value = "/schedulerEvents", params = {"schedulerEventIds"})
     public List<SchedulerEventInfo> getSchedulerEventsByIds(
             @Parameter(description = "A list of scheduler event ids, separated by comma ','", array = @ArraySchema(schema = @Schema(type = "string")), required = true)
             @RequestParam("schedulerEventIds") String[] strSchedulerEventIds) throws ThingsboardException, ExecutionException, InterruptedException {
@@ -354,7 +349,7 @@ public class SchedulerEventController extends BaseController {
             } catch (ThingsboardException e) {
                 return false;
             }
-        }).collect(Collectors.toList());
+        }).toList();
     }
 
     @ApiOperation(value = "Assign scheduler event to edge (assignSchedulerEventToEdge)",
@@ -365,8 +360,7 @@ public class SchedulerEventController extends BaseController {
                     "Third, once scheduler event will be delivered to edge service, it is going to be available for usage on remote edge instance. " +
                     TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH + RBAC_WRITE_CHECK)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
-    @RequestMapping(value = "/edge/{edgeId}/schedulerEvent/{schedulerEventId}", method = RequestMethod.POST)
-    @ResponseBody
+    @PostMapping(value = "/edge/{edgeId}/schedulerEvent/{schedulerEventId}")
     public SchedulerEventInfo assignSchedulerEventToEdge(@Parameter(description = EDGE_ID_PARAM_DESCRIPTION)
                                                          @PathVariable(EDGE_ID) String strEdgeId,
                                                          @Parameter(description = SCHEDULER_EVENT_ID_PARAM_DESCRIPTION)
@@ -390,8 +384,7 @@ public class SchedulerEventController extends BaseController {
                     "Third, once 'unassign' command will be delivered to edge service, it's going to remove entity group and entities inside this group locally." +
                     TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH + RBAC_WRITE_CHECK)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
-    @RequestMapping(value = "/edge/{edgeId}/schedulerEvent/{schedulerEventId}", method = RequestMethod.DELETE)
-    @ResponseBody
+    @DeleteMapping(value = "/edge/{edgeId}/schedulerEvent/{schedulerEventId}")
     public SchedulerEventInfo unassignSchedulerEventFromEdge(@Parameter(description = EDGE_ID_PARAM_DESCRIPTION)
                                                              @PathVariable(EDGE_ID) String strEdgeId,
                                                              @Parameter(description = SCHEDULER_EVENT_ID_PARAM_DESCRIPTION)
@@ -411,8 +404,7 @@ public class SchedulerEventController extends BaseController {
                     SCHEDULER_EVENT_DESCRIPTION + SCHEDULER_EVENT_INFO_DESCRIPTION +
                     PAGE_DATA_PARAMETERS + TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH + RBAC_READ_CHECK)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
-    @RequestMapping(value = "/edge/{edgeId}/schedulerEvents", params = {"pageSize", "page"}, method = RequestMethod.GET)
-    @ResponseBody
+    @GetMapping(value = "/edge/{edgeId}/schedulerEvents", params = {"pageSize", "page"})
     public PageData<SchedulerEventInfo> getEdgeSchedulerEvents(
             @Parameter(description = EDGE_ID_PARAM_DESCRIPTION)
             @PathVariable(EDGE_ID) String strEdgeId,
@@ -439,8 +431,7 @@ public class SchedulerEventController extends BaseController {
                     + SCHEDULER_EVENT_DESCRIPTION + SCHEDULER_EVENT_INFO_DESCRIPTION +
                     TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH + RBAC_READ_CHECK)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
-    @RequestMapping(value = "/edge/{edgeId}/allSchedulerEvents", method = RequestMethod.GET)
-    @ResponseBody
+    @GetMapping(value = "/edge/{edgeId}/allSchedulerEvents")
     public List<SchedulerEventInfo> getAllEdgeSchedulerEvents(@Parameter(description = EDGE_ID_PARAM_DESCRIPTION)
                                                               @PathVariable(EDGE_ID) String strEdgeId) throws ThingsboardException {
         checkParameter("edgeId", strEdgeId);

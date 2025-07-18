@@ -51,6 +51,7 @@ import org.thingsboard.server.common.data.notification.template.DeliveryMethodNo
 import org.thingsboard.server.common.data.notification.template.NotificationTemplate;
 import org.thingsboard.server.common.data.notification.template.NotificationTemplateConfig;
 import org.thingsboard.server.common.data.util.TemplateUtils;
+import org.thingsboard.server.dao.secret.SecretConfigurationService;
 
 import java.util.ArrayList;
 import java.util.EnumMap;
@@ -85,6 +86,7 @@ public class NotificationProcessingContext {
     private final Map<NotificationDeliveryMethod, DeliveryMethodNotificationTemplate> templates;
     @Getter
     private final NotificationRequestStats stats;
+    private final SecretConfigurationService secretConfigurationService;
 
     private final Function<String, JsonNode> translationProvider;
     private final Map<String, JsonNode> fullTranslations = new ConcurrentReferenceHashMap<>(4, SOFT);
@@ -93,7 +95,7 @@ public class NotificationProcessingContext {
     @Builder
     public NotificationProcessingContext(TenantId tenantId, NotificationRequest request, Set<NotificationDeliveryMethod> deliveryMethods,
                                          NotificationTemplate template, NotificationSettings settings, NotificationSettings systemSettings,
-                                         Function<String, JsonNode> translationProvider) {
+                                         Function<String, JsonNode> translationProvider, SecretConfigurationService secretConfigurationService) {
         this.tenantId = tenantId;
         this.request = request;
         this.deliveryMethods = deliveryMethods;
@@ -104,6 +106,7 @@ public class NotificationProcessingContext {
         this.notificationType = template.getNotificationType();
         this.templates = new EnumMap<>(NotificationDeliveryMethod.class);
         this.stats = new NotificationRequestStats();
+        this.secretConfigurationService = secretConfigurationService;
         init();
     }
 
@@ -119,13 +122,16 @@ public class NotificationProcessingContext {
 
     public <C extends NotificationDeliveryMethodConfig> C getDeliveryMethodConfig(NotificationDeliveryMethod deliveryMethod) {
         NotificationSettings settings = this.settings;
+        boolean isSystem = false;
         if (deliveryMethod == NotificationDeliveryMethod.MOBILE_APP && !tenantId.isSysTenantId()) {
             var config = (MobileAppNotificationDeliveryMethodConfig) settings.getDeliveryMethodsConfigs().get(deliveryMethod);
             if (config == null || config.isUseSystemSettings()) {
                 settings = this.systemSettings;
+                isSystem = true;
             }
         }
-        return (C) settings.getDeliveryMethodsConfigs().get(deliveryMethod);
+        var config = (C) settings.getDeliveryMethodsConfigs().get(deliveryMethod);
+        return secretConfigurationService.replaceSecretUsages(isSystem ? TenantId.SYS_TENANT_ID : tenantId, config, (Class<C>) config.getClass());
     }
 
     public <T extends DeliveryMethodNotificationTemplate> T getProcessedTemplate(NotificationDeliveryMethod deliveryMethod, NotificationRecipient recipient) {

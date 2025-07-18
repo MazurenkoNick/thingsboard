@@ -45,9 +45,6 @@ import org.thingsboard.server.gen.transport.TransportProtos.SessionInfoProto;
 
 import java.util.UUID;
 
-/**
- * Created by ashvayka on 02.12.17.
- */
 public interface PlatformIntegrationService {
 
     Runnable processUplinkData(AbstractIntegration info, DeviceUplinkDataProto data, IntegrationCallback<Void> callback);
@@ -69,4 +66,5 @@ public interface PlatformIntegrationService {
     void process(SessionInfoProto sessionInfo, PostAttributeMsg msg, IntegrationCallback<Void> callback);
 
     void process(TenantId tenantId, TbMsg tbMsg, IntegrationCallback<Void> callback);
+
 }

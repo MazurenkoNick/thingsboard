@@ -94,7 +94,6 @@ public class BaseWhiteLabelingService extends AbstractCachedService<WhiteLabelin
     private final ImageService imageService;
     private final ApplicationEventPublisher eventPublisher;
 
-
     @Override
     public LoginWhiteLabelingParams getSystemLoginWhiteLabelingParams() {
         WhiteLabeling whiteLabeling = findByEntityId(TenantId.SYS_TENANT_ID, null, LOGIN);

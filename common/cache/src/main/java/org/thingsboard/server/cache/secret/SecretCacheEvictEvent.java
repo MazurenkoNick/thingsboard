@@ -28,20 +28,10 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.service.scheduler;
+package org.thingsboard.server.cache.secret;
 
-import org.thingsboard.server.common.data.scheduler.SchedulerEventInfo;
-import org.thingsboard.server.common.msg.queue.TbCallback;
-import org.thingsboard.server.gen.transport.TransportProtos.SchedulerServiceMsgProto;
+import org.thingsboard.server.common.data.id.TenantId;
 
-public interface SchedulerService {
-
-    void onSchedulerEventAdded(SchedulerEventInfo event);
-
-    void onSchedulerEventUpdated(SchedulerEventInfo event);
-
-    void onSchedulerEventDeleted(SchedulerEventInfo event);
-
-    void onQueueMsg(SchedulerServiceMsgProto msg, TbCallback callback);
+public record SecretCacheEvictEvent(TenantId tenantId, String name) {
 
 }

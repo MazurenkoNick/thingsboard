@@ -40,9 +40,6 @@ import com.google.api.client.auth.oauth2.TokenResponse;
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.gson.GsonFactory;
-import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.MoreExecutors;
 import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -168,7 +165,6 @@ public class AdminController extends BaseController {
             adminSettings = getTenantAdminSettings(getTenantId(), key, systemByDefault);
         }
         if (adminSettings.getKey().equals(MAIL_SETTINGS_KEY)) {
-            ((ObjectNode) adminSettings.getJsonValue()).remove("password");
             ((ObjectNode) adminSettings.getJsonValue()).remove("refreshToken");
         }
         return adminSettings;
@@ -193,7 +189,6 @@ public class AdminController extends BaseController {
         }
         adminSettings = checkNotNull(adminSettingsService.saveAdminSettings(tenantId, adminSettings));
         if (adminSettings.getKey().equals(MAIL_SETTINGS_KEY)) {
-            ((ObjectNode) adminSettings.getJsonValue()).remove("password");
             ((ObjectNode) adminSettings.getJsonValue()).remove("refreshToken");
         }
         return adminSettings;
@@ -297,18 +292,17 @@ public class AdminController extends BaseController {
     public void sendTestSms(
             @Parameter(description = "A JSON value representing the Test SMS request.")
             @RequestBody TestSmsRequest testSmsRequest) throws ThingsboardException {
-        SecurityUser currentUser = getCurrentUser();
-        Authority authority = currentUser.getAuthority();
-        if (Authority.SYS_ADMIN.equals(authority)) {
-            accessControlService.checkPermission(currentUser, Resource.ADMIN_SETTINGS, Operation.READ);
+        SecurityUser user = getCurrentUser();
+        if (Authority.SYS_ADMIN.equals(user.getAuthority())) {
+            accessControlService.checkPermission(user, Resource.ADMIN_SETTINGS, Operation.READ);
         } else {
-            accessControlService.checkPermission(currentUser, Resource.WHITE_LABELING, Operation.READ);
+            accessControlService.checkPermission(user, Resource.WHITE_LABELING, Operation.READ);
         }
         try {
-            smsService.sendTestSms(testSmsRequest);
-            auditLogService.logEntityAction(currentUser.getTenantId(), currentUser.getCustomerId(), currentUser.getId(), currentUser.getName(), currentUser.getId(), currentUser, ActionType.SMS_SENT, null, testSmsRequest.getNumberTo());
+            smsService.sendTestSms(user.getTenantId(), testSmsRequest);
+            auditLogService.logEntityAction(user.getTenantId(), user.getCustomerId(), user.getId(), user.getName(), user.getId(), user, ActionType.SMS_SENT, null, testSmsRequest.getNumberTo());
         } catch (ThingsboardException e) {
-            auditLogService.logEntityAction(currentUser.getTenantId(), currentUser.getCustomerId(), currentUser.getId(), currentUser.getName(), currentUser.getId(), currentUser, ActionType.SMS_SENT, e, testSmsRequest.getNumberTo());
+            auditLogService.logEntityAction(user.getTenantId(), user.getCustomerId(), user.getId(), user.getName(), user.getId(), user, ActionType.SMS_SENT, e, testSmsRequest.getNumberTo());
             throw e;
         }
     }
@@ -319,11 +313,7 @@ public class AdminController extends BaseController {
     @GetMapping("/repositorySettings")
     public RepositorySettings getRepositorySettings() throws ThingsboardException {
         accessControlService.checkPermission(getCurrentUser(), Resource.VERSION_CONTROL, Operation.READ);
-        RepositorySettings versionControlSettings = checkNotNull(versionControlService.getVersionControlSettings(getTenantId()));
-        versionControlSettings.setPassword(null);
-        versionControlSettings.setPrivateKey(null);
-        versionControlSettings.setPrivateKeyPassword(null);
-        return versionControlSettings;
+        return checkNotNull(versionControlService.getVersionControlSettings(getTenantId()));
     }
 
     @ApiOperation(value = "Check repository settings exists (repositorySettingsExists)",
@@ -362,13 +352,7 @@ public class AdminController extends BaseController {
     public DeferredResult<RepositorySettings> saveRepositorySettings(@RequestBody RepositorySettings settings) throws ThingsboardException {
         accessControlService.checkPermission(getCurrentUser(), Resource.VERSION_CONTROL, Operation.WRITE);
         settings.setLocalOnly(false); // only to be used in tests
-        ListenableFuture<RepositorySettings> future = versionControlService.saveVersionControlSettings(getTenantId(), settings);
-        return wrapFuture(Futures.transform(future, savedSettings -> {
-            savedSettings.setPassword(null);
-            savedSettings.setPrivateKey(null);
-            savedSettings.setPrivateKeyPassword(null);
-            return savedSettings;
-        }, MoreExecutors.directExecutor()), vcRequestTimeout);
+        return wrapFuture(versionControlService.saveVersionControlSettings(getTenantId(), settings), vcRequestTimeout);
     }
 
     @ApiOperation(value = "Delete repository settings (deleteRepositorySettings)",
