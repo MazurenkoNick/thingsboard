@@ -48,7 +48,7 @@ public class NotificationTemplateConfig {
     private Map<NotificationDeliveryMethod, DeliveryMethodNotificationTemplate> deliveryMethodsTemplates;
 
     private boolean attachReport;
-    private ReportTemplateId reportTemplateId; // TODO: VC
+    private ReportTemplateId reportTemplateId;
     private UserId userId;
     private String timezone;
 

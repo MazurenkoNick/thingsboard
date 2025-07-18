@@ -35,6 +35,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.thingsboard.rule.engine.api.JobManager;
 import org.thingsboard.rule.engine.api.NotificationCenter;
 import org.thingsboard.server.cache.limits.RateLimitService;
 import org.thingsboard.server.common.data.EntityType;
@@ -46,6 +47,7 @@ import org.thingsboard.server.common.data.id.NotificationRuleId;
 import org.thingsboard.server.common.data.id.NotificationTargetId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.id.UserId;
+import org.thingsboard.server.common.data.job.Job;
 import org.thingsboard.server.common.data.limit.LimitedApi;
 import org.thingsboard.server.common.data.notification.AlreadySentException;
 import org.thingsboard.server.common.data.notification.Notification;
@@ -69,6 +71,7 @@ import org.thingsboard.server.common.data.notification.targets.platform.UsersFil
 import org.thingsboard.server.common.data.notification.targets.slack.SlackNotificationTargetConfig;
 import org.thingsboard.server.common.data.notification.template.DeliveryMethodNotificationTemplate;
 import org.thingsboard.server.common.data.notification.template.NotificationTemplate;
+import org.thingsboard.server.common.data.notification.template.NotificationTemplateConfig;
 import org.thingsboard.server.common.data.notification.template.WebDeliveryMethodNotificationTemplate;
 import org.thingsboard.server.common.data.page.PageDataIterable;
 import org.thingsboard.server.common.msg.queue.ServiceType;
@@ -122,6 +125,7 @@ public class DefaultNotificationCenter extends AbstractSubscriptionService imple
     private final RateLimitService rateLimitService;
     private final TranslationService translationService;
     private final SecretConfigurationService secretConfigurationService;
+    private final JobManager jobManager;
 
     private Map<NotificationDeliveryMethod, NotificationChannel> channels;
 
@@ -160,7 +164,8 @@ public class DefaultNotificationCenter extends AbstractSubscriptionService imple
 
         NotificationRuleId ruleId = request.getRuleId();
         NotificationRequestConfig requestConfig = request.getAdditionalConfig();
-        notificationTemplate.getConfiguration().getDeliveryMethodsTemplates().forEach((deliveryMethod, template) -> {
+        NotificationTemplateConfig templateConfig = notificationTemplate.getConfiguration();
+        templateConfig.getDeliveryMethodsTemplates().forEach((deliveryMethod, template) -> {
             if (!template.isEnabled()) return;
             try {
                 channels.get(deliveryMethod).check(tenantId);
@@ -187,6 +192,16 @@ public class DefaultNotificationCenter extends AbstractSubscriptionService imple
                 request.setStatus(NotificationRequestStatus.SCHEDULED);
                 request = notificationRequestService.saveNotificationRequest(tenantId, request);
                 forwardToNotificationSchedulerService(tenantId, request.getId());
+                return request;
+            } else if (templateConfig.isAttachReport() && requestConfig.getReports() == null) {
+                jobManager.submitJob(Job.newReportJob()
+                        .tenantId(tenantId)
+                        .reportTemplateId(templateConfig.getReportTemplateId())
+                        .originator(Optional.ofNullable(request.getInfo()).map(NotificationInfo::getStateEntityId).orElse(null))
+                        .userId(templateConfig.getUserId())
+                        .timezone(templateConfig.getTimezone())
+                        .notificationRequests(List.of(request))
+                        .build());
                 return request;
             }
         }
