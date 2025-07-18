@@ -30,8 +30,6 @@
  */
 package org.thingsboard.server.common.data.query;
 
-import org.thingsboard.server.common.data.EntityType;
-
 public enum AliasEntityType {
     CURRENT_CUSTOMER,
     CURRENT_TENANT,

@@ -49,7 +49,7 @@
     </button>
   </div>
 </fieldset>
-<fieldset class="tb-help-popup-button-container" [class.hint-button]="hintMode" *ngIf="(wl.isEnableHelpLinks$() | async) && textMode">
+<fieldset class="tb-help-popup-button-container" *ngIf="(wl.isEnableHelpLinks$() | async) && textMode">
   <div #toggleHelpTextButton
        class="tb-toggle-help-popup-text-button"
        (click)="toggleHelp()">
