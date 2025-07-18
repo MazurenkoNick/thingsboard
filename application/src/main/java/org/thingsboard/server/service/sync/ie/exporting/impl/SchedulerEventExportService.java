@@ -30,6 +30,7 @@
  */
 package org.thingsboard.server.service.sync.ie.exporting.impl;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.stereotype.Service;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.id.SchedulerEventId;
@@ -48,7 +49,9 @@ public class SchedulerEventExportService extends BaseEntityExportService<Schedul
     protected void setRelatedEntities(EntitiesExportCtx<?> ctx, SchedulerEvent schedulerEvent, SchedulerEventExportData exportData) {
         schedulerEvent.setOriginatorId(getExternalIdOrElseInternal(ctx, schedulerEvent.getOriginatorId()));
         schedulerEvent.setCustomerId(getExternalIdOrElseInternal(ctx, schedulerEvent.getCustomerId()));
-        exportData.prepareConfiguration(schedulerEvent.getConfiguration(), schedulerEvent.getType(), id -> getExternalIdOrElseInternal(ctx, id), ctx.getUser().getUuidId().toString());
+        JsonNode configuration = exportData.prepareConfiguration(schedulerEvent.getConfiguration(), schedulerEvent.getType(),
+                id -> getExternalIdOrElseInternal(ctx, id), ctx.getUser().getId());
+        schedulerEvent.setConfiguration(configuration);
     }
 
     @Override

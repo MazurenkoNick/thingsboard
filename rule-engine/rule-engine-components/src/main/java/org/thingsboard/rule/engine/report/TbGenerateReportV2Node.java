@@ -68,11 +68,11 @@ public class TbGenerateReportV2Node extends TbAbstractExternalNode {
     }
 
     @Override
-    public void onMsg(TbContext ctx, TbMsg msg) {
+    public void onMsg(TbContext ctx, TbMsg tbMsg) {
         TenantId tenantId = ctx.getTenantId();
         ReportConfig reportConfig;
         if (config.isUseConfigFromMessage()) {
-            reportConfig = JacksonUtil.fromString(msg.getData(), ReportConfig.class);
+            reportConfig = JacksonUtil.fromString(tbMsg.getData(), ReportConfig.class);
         } else {
             reportConfig = config.getConfig();
         }
@@ -85,18 +85,18 @@ public class TbGenerateReportV2Node extends TbAbstractExternalNode {
                 .reportTemplateId(reportConfig.getReportTemplateId())
                 .userId(reportConfig.getUserId())
                 .timezone(reportConfig.getTimezone())
-                .originator(msg.getOriginator())
+                .originator(tbMsg.getOriginator())
                 .recipientId(reportConfig.getRecipientId())
                 .notificationTemplateId(reportConfig.getNotificationTemplateId())
                 .build();
         ReportJobConfiguration configuration = job.getConfiguration();
 
+        var msg = ackIfNeeded(ctx, tbMsg);
+
         TbMsg outputMsg = TbMsg.newMsg(msg, msg.getQueueName(), ctx.getSelf().getRuleChainId(), ctx.getSelfId());
         configuration.setRuleNode(ctx.getSelf());
         configuration.setOutputTbMsgProto(Base64.getEncoder().encodeToString(TbMsg.toProto(outputMsg).toByteArray()));
         configuration.setQueueName(msg.getQueueName());
-
-        var tbMsg = ackIfNeeded(ctx, msg);
 
         DonAsynchron.withCallback(ctx.getJobManager().submitJob(job), result -> {
             //TODO: implement job completion callback

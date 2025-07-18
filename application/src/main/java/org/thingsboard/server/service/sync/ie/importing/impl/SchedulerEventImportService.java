@@ -30,6 +30,7 @@
  */
 package org.thingsboard.server.service.sync.ie.importing.impl;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.thingsboard.server.common.data.EntityType;
@@ -61,7 +62,9 @@ public class SchedulerEventImportService extends BaseEntityImportService<Schedul
     @Override
     protected SchedulerEvent prepare(EntitiesImportCtx ctx, SchedulerEvent schedulerEvent, SchedulerEvent oldSchedulerEvent, SchedulerEventExportData exportData, IdProvider idProvider) {
         schedulerEvent.setOriginatorId(idProvider.getInternalId(schedulerEvent.getOriginatorId()));
-        exportData.prepareConfiguration(schedulerEvent.getConfiguration(), schedulerEvent.getType(), idProvider::getInternalId, ctx.getUser().getUuidId().toString());
+        JsonNode configuration = exportData.prepareConfiguration(schedulerEvent.getConfiguration(), schedulerEvent.getType(),
+                idProvider::getInternalId, ctx.getUser().getId());
+        schedulerEvent.setConfiguration(configuration);
         return schedulerEvent;
     }
 
