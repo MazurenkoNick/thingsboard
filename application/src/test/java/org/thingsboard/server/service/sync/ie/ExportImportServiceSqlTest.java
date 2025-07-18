@@ -89,6 +89,7 @@ import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.EntityViewId;
 import org.thingsboard.server.common.data.id.IntegrationId;
 import org.thingsboard.server.common.data.id.OtaPackageId;
+import org.thingsboard.server.common.data.id.ReportTemplateId;
 import org.thingsboard.server.common.data.id.RoleId;
 import org.thingsboard.server.common.data.id.RuleChainId;
 import org.thingsboard.server.common.data.id.SchedulerEventId;
@@ -103,8 +104,15 @@ import org.thingsboard.server.common.data.permission.MergedUserPermissions;
 import org.thingsboard.server.common.data.permission.Operation;
 import org.thingsboard.server.common.data.permission.Resource;
 import org.thingsboard.server.common.data.plugin.ComponentLifecycleEvent;
+import org.thingsboard.server.common.data.query.AliasEntityId;
+import org.thingsboard.server.common.data.query.SingleEntityFilter;
 import org.thingsboard.server.common.data.relation.EntityRelation;
 import org.thingsboard.server.common.data.relation.RelationTypeGroup;
+import org.thingsboard.server.common.data.report.ReportTemplate;
+import org.thingsboard.server.common.data.report.ReportTemplateType;
+import org.thingsboard.server.common.data.report.TbReportFormat;
+import org.thingsboard.server.common.data.report.configuration.CsvReportTemplateConfig;
+import org.thingsboard.server.common.data.report.configuration.EntityAlias;
 import org.thingsboard.server.common.data.role.Role;
 import org.thingsboard.server.common.data.role.RoleType;
 import org.thingsboard.server.common.data.rule.RuleChain;
@@ -134,6 +142,7 @@ import org.thingsboard.server.dao.grouppermission.GroupPermissionService;
 import org.thingsboard.server.dao.integration.IntegrationService;
 import org.thingsboard.server.dao.ota.OtaPackageService;
 import org.thingsboard.server.dao.relation.RelationService;
+import org.thingsboard.server.dao.report.ReportTemplateService;
 import org.thingsboard.server.dao.role.RoleService;
 import org.thingsboard.server.dao.rule.RuleChainService;
 import org.thingsboard.server.dao.scheduler.SchedulerEventService;
@@ -219,6 +228,8 @@ public class ExportImportServiceSqlTest extends AbstractControllerTest {
     protected RoleService roleService;
     @Autowired
     protected SchedulerEventService schedulerEventService;
+    @Autowired
+    protected ReportTemplateService reportTemplateService;
 
     protected TenantId tenantId1;
     protected User tenantAdmin1;
@@ -273,10 +284,11 @@ public class ExportImportServiceSqlTest extends AbstractControllerTest {
         EntityGroup userGroup = createEntityGroup(tenantId1, EntityType.USER, "User group 1");
         createGroupPermission(tenantId1, userGroup.getId(), role.getId());
         SchedulerEvent schedulerEvent = createSchedulerEvent(tenantId1, device.getId(), "Scheduler Event 1", "report");
+        ReportTemplate reportTemplate = createReportTemplate(tenantId1, null, "Weekly report template", device.getId());
 
         Map<EntityType, EntityExportData> entitiesExportData = Stream.of(customer.getId(), asset.getId(), device.getId(),
                         ruleChain.getId(), dashboard.getId(), assetProfile.getId(), deviceProfile.getId(), converter.getId(),
-                        integration.getId(), role.getId(), userGroup.getId(), firmware.getId(), schedulerEvent.getId())
+                        integration.getId(), role.getId(), userGroup.getId(), firmware.getId(), schedulerEvent.getId(), reportTemplate.getId())
                 .map(entityId -> {
                     try {
                         return exportEntity(tenantAdmin1, entityId, EntityExportSettings.builder()
@@ -401,6 +413,9 @@ public class ExportImportServiceSqlTest extends AbstractControllerTest {
         updatedSchedulerEventEntity.getEntity().setName("t" + updatedSchedulerEventEntity.getEntity().getName());
         SchedulerEvent updatedSchedulerEvent = importEntity(tenantAdmin2, updatedSchedulerEventEntity).getSavedEntity();
         verify(schedulerService).onSchedulerEventUpdated(argThat(se -> se.getId().equals(updatedSchedulerEvent.getId())));
+
+        ReportTemplate importedReportTemplate = (ReportTemplate) importEntity(tenantAdmin2, entitiesExportData.get(EntityType.REPORT_TEMPLATE)).getSavedEntity();
+        verify(entityActionService).logEntityAction(any(), eq(importedReportTemplate.getId()), notNull(), any(), eq(ActionType.ADDED), isNull());
     }
 
     @Test
@@ -422,13 +437,14 @@ public class ExportImportServiceSqlTest extends AbstractControllerTest {
         Converter converter = createConverter(tenantId1, ConverterType.UPLINK, "Converter 1");
         Integration integration = createIntegration(tenantId1, converter.getId(), IntegrationType.HTTP, "Integration 1");
         SchedulerEvent schedulerEvent = createSchedulerEvent(tenantId1, device.getId(), "Scheduler Event 1", "report");
+        ReportTemplate reportTemplate = createReportTemplate(tenantId1, customer.getId(), "Weekly report", device.getId());
 
         CalculatedField calculatedField = createCalculatedField(tenantId1, device.getId(), device.getId());
 
         Map<EntityId, EntityId> ids = new HashMap<>();
         for (EntityId entityId : List.of(customer.getId(), ruleChain.getId(), dashboard.getId(), assetProfile.getId(), asset.getId(),
                 deviceProfile.getId(), firmware.getId(), device.getId(), entityView.getId(), converter.getId(), integration.getId(),
-                ruleChain.getId(), dashboard.getId(), schedulerEvent.getId())) {
+                ruleChain.getId(), dashboard.getId(), schedulerEvent.getId(), reportTemplate.getId())) {
             EntityExportData exportData = exportEntity(getSecurityUser(tenantAdmin1), entityId);
             EntityImportResult importResult = importEntity(getSecurityUser(tenantAdmin2), exportData, EntityImportSettings.builder()
                     .saveCredentials(false)
@@ -485,6 +501,10 @@ public class ExportImportServiceSqlTest extends AbstractControllerTest {
 
         SchedulerEvent exportedSchedulerEvent = (SchedulerEvent) exportEntity(tenantAdmin2, (SchedulerEventId) ids.get(schedulerEvent.getId())).getEntity();
         assertThat(exportedSchedulerEvent.getOriginatorId()).isEqualTo(schedulerEvent.getOriginatorId());
+
+        ReportTemplate exportedReportTemplate = (ReportTemplate) exportEntity(tenantAdmin2, (ReportTemplateId) ids.get(reportTemplate.getId())).getEntity();
+        assertThat(exportedReportTemplate.getCustomerId()).isEqualTo(reportTemplate.getCustomerId());
+        assertThat(((SingleEntityFilter)exportedReportTemplate.getConfiguration().getEntityAliases().get(0).getFilter()).getSingleEntity()).isEqualTo(device.getId());
 
         deviceProfile.setDefaultDashboardId(null);
         deviceProfileService.saveDeviceProfile(deviceProfile);
@@ -827,6 +847,21 @@ public class ExportImportServiceSqlTest extends AbstractControllerTest {
         schedule.put("timezone", "UTC");
         schedulerEvent.setSchedule(schedule);
         return schedulerEventService.saveSchedulerEvent(schedulerEvent);
+    }
+
+    private ReportTemplate createReportTemplate(TenantId tenantId, CustomerId customerId, String name, EntityId entityId) {
+        ReportTemplate reportTemplate = new ReportTemplate();
+        reportTemplate.setTenantId(tenantId);
+        reportTemplate.setCustomerId(customerId);
+        reportTemplate.setFormat(TbReportFormat.CSV);
+        CsvReportTemplateConfig configuration = new CsvReportTemplateConfig();
+        SingleEntityFilter filter = new SingleEntityFilter();
+        filter.setSingleEntity(AliasEntityId.fromEntityId(entityId));
+        configuration.setEntityAliases(List.of(new EntityAlias(UUID.randomUUID().toString(), "by device id", filter)));
+        reportTemplate.setConfiguration(configuration);
+        reportTemplate.setType(ReportTemplateType.REPORT);
+        reportTemplate.setName(name);
+        return reportTemplateService.saveReportTemplate(reportTemplate);
     }
 
     protected <E extends ExportableEntity<I>, I extends EntityId> EntityExportData<E> exportEntity(User user, I entityId) throws Exception {

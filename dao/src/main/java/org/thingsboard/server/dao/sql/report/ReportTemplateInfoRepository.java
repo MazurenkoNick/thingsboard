@@ -60,7 +60,8 @@ public interface ReportTemplateInfoRepository extends JpaRepository<ReportTempla
 
     @Query("SELECT ri FROM ReportTemplateInfoEntity ri " +
             "WHERE ri.tenantId = :tenantId " +
-            "AND (:searchText IS NULL OR ilike(ri.name, CONCAT('%', :searchText, '%')) = true) " +
+            "AND (:searchText IS NULL OR ilike(ri.name, CONCAT('%', :searchText, '%')) = true " +
+            "OR ilike(ri.ownerName, CONCAT('%', :searchText, '%')) = true) " +
             "AND ((:#{#reportTemplateTypes == null} = true) OR ri.type IN (:reportTemplateTypes)) " +
             "AND ((:#{#reportTemplateFormats == null} = true) OR ri.format IN (:reportTemplateFormats))")
     Page<ReportTemplateInfoEntity> findTenantReportTemplatesIncludingCustomers(@Param("tenantId") UUID tenantId,

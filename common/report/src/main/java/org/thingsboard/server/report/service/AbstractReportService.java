@@ -161,7 +161,6 @@ public abstract class AbstractReportService implements ReportService {
         List<DataKey> dataKeys = singleDataSource.get().getDataKeys();
         List<DataKey> latestDataKeys = singleDataSource.get().getLatestDataKeys();
 
-        // todo: dasha make sort order configurable (?)
         List<String> keys = dataKeys.stream().map(DataKey::getName).collect(Collectors.toList());
         List<TsKvEntry> result = dataService.getTimeseries(entity.getEntityId(), keys, timeRange.startTs, timeRange.endTs,
                 historyConf.getInterval(), timeWindowConf.getAggregation().getType(), SortOrder.Direction.DESC,
@@ -395,8 +394,9 @@ public abstract class AbstractReportService implements ReportService {
         } catch (InterruptedException e) {
             throw new RuntimeException("Failed to evaluate data: " + value, e);
         } catch (ExecutionException e) {
-            log.error("Failed to evaluate data {}", value, e);
-            return value;
+            String error = "Failed to evaluate data: " + value;
+            log.error(error, e);
+            return error;
         }
     }
 

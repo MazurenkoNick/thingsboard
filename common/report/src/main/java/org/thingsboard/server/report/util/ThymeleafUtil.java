@@ -35,8 +35,6 @@ import org.thymeleaf.context.Context;
 import org.thymeleaf.templateresolver.ClassLoaderTemplateResolver;
 import org.thymeleaf.templateresolver.StringTemplateResolver;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -49,6 +47,8 @@ import static org.thymeleaf.templatemode.TemplateMode.TEXT;
 import static org.thymeleaf.templatemode.TemplateMode.XML;
 
 public class ThymeleafUtil {
+    private static final Pattern VARIABLE_PATTERN = Pattern.compile("\\$\\{([^}]+)}");
+    private static final Pattern IMAGE_SRC_PATTERN = Pattern.compile("<img[^>]+src=[\"']\\$\\{([^\"'}]+)}[\"']", Pattern.CASE_INSENSITIVE);
     private static final TemplateEngine htmlClassEngine;
     private static final TemplateEngine htmlStringEngine;
     private static final TemplateEngine textStringEngine;
@@ -112,8 +112,7 @@ public class ThymeleafUtil {
     }
 
     private static void populateMissingImagePlaceholders(String html, Map<String, Object> variables) {
-        Pattern pattern = Pattern.compile("<img[^>]+src=[\"']\\$\\{([^\"'}]+)}[\"']", Pattern.CASE_INSENSITIVE);
-        Matcher matcher = pattern.matcher(html);
+        Matcher matcher = IMAGE_SRC_PATTERN.matcher(html);
 
         while (matcher.find()) {
             String key = matcher.group(1);
@@ -135,8 +134,7 @@ public class ThymeleafUtil {
             return input;
         }
 
-        Pattern pattern = Pattern.compile("\\$\\{([^}]+)}");
-        Matcher matcher = pattern.matcher(input);
+        Matcher matcher = VARIABLE_PATTERN.matcher(input);
         StringBuffer result = new StringBuffer();
 
         while (matcher.find()) {

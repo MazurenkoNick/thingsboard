@@ -79,7 +79,7 @@ public class ReportTemplateDataValidator extends DataValidator<ReportTemplate> {
         }
         if (reportTemplate.getCustomerId() == null) {
             reportTemplate.setCustomerId(new CustomerId(NULL_UUID));
-        } else if (!reportTemplate.getCustomerId().getId().equals(NULL_UUID)) {
+        } else if (!reportTemplate.getCustomerId().isNullUid()) {
             Customer customer = customerDao.findById(reportTemplate.getTenantId(), reportTemplate.getCustomerId().getId());
             if (customer == null) {
                 throw new DataValidationException("Can't assign report template to non-existent customer!");

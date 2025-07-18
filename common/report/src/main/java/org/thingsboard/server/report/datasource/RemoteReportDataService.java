@@ -104,7 +104,6 @@ public class RemoteReportDataService implements ReportDataService {
 
     @Override
     public PageData<AlarmData> findAlarmDataByQueryForEntities(AlarmDataQuery query, Collection<EntityId> entityIds, TbReportCtx ctx) {
-        //TODO: retrieve alarms for specific entities
         return getRestClient(ctx).findAlarmDataByQuery(query);
     }
 

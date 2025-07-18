@@ -32,7 +32,6 @@ package org.thingsboard.server.common.data.report;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.NotNull;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -48,7 +47,6 @@ import org.thingsboard.server.common.data.TenantEntity;
 import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.ReportTemplateId;
-import org.thingsboard.server.common.data.id.SchedulerEventId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.validation.Length;
 import org.thingsboard.server.common.data.validation.NoXss;
@@ -83,7 +81,7 @@ public class BaseReportTemplate extends BaseData<ReportTemplateId> implements Ha
     @Schema(description = "Description")
     private String description;
 
-    private ReportTemplateId externalId; // fixme: add version control support
+    private ReportTemplateId externalId;
 
     private Long version;
 

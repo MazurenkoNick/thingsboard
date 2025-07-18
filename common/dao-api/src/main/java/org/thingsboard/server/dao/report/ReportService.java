@@ -40,6 +40,8 @@ import org.thingsboard.server.common.data.report.ReportInfo;
 import org.thingsboard.server.common.data.report.ReportInfoQuery;
 import org.thingsboard.server.dao.entity.EntityDaoService;
 
+import java.util.List;
+
 public interface ReportService extends EntityDaoService {
 
     Report createReport(Report report, byte[] data);
@@ -60,4 +62,5 @@ public interface ReportService extends EntityDaoService {
 
     void deleteReportsByTenantIdAndCustomerId(TenantId tenantId, CustomerId customerId);
 
+    List<ReportInfo> findReportInfoByIds(TenantId tenantId, List<ReportId> reportIds);
 }

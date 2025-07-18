@@ -55,4 +55,6 @@ public interface ReportTemplateRepository extends JpaRepository<ReportTemplateEn
     @Query("SELECT externalId FROM ReportTemplateEntity WHERE id = :id")
     UUID getExternalIdById(@Param("id") UUID id);
 
+    @Query("SELECT se.id FROM ReportTemplateEntity se WHERE se.tenantId = :tenantId")
+    Page<UUID> findIdsByTenantId(@Param("tenantId") UUID tenantId, Pageable pageable);
 }

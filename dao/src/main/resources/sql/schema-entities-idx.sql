@@ -156,3 +156,5 @@ CREATE INDEX IF NOT EXISTS idx_report_tenant_id_created_time ON report(tenant_id
 CREATE INDEX IF NOT EXISTS idx_report_id ON report(id);
 
 CREATE INDEX IF NOT EXISTS idx_ai_model_tenant_id ON ai_model(tenant_id);
+
+CREATE INDEX IF NOT EXISTS idx_report_template_tenant_id ON report_template(tenant_id);

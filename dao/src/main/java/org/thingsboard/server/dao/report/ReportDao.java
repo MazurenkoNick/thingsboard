@@ -40,6 +40,9 @@ import org.thingsboard.server.common.data.report.ReportInfo;
 import org.thingsboard.server.common.data.report.ReportInfoQuery;
 import org.thingsboard.server.dao.Dao;
 
+import java.util.List;
+import java.util.UUID;
+
 public interface ReportDao extends Dao<Report> {
 
     void saveData(TenantId tenantId, ReportId reportId, byte[] data);
@@ -51,4 +54,10 @@ public interface ReportDao extends Dao<Report> {
     PageData<ReportInfo> findReportInfos(TenantId tenantId, ReportInfoQuery query);
 
     PageData<ReportInfo> findReportInfos(TenantId tenantId, CustomerId customerId, ReportInfoQuery query);
+
+    List<ReportInfo> findReportByIds(TenantId tenantId, List<UUID> toUUIDs);
+
+    void deleteByTenantId(TenantId tenantId);
+
+    void deleteByTenantIdAndCustomerId(TenantId tenantId, CustomerId customerId);
 }

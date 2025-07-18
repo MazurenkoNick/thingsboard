@@ -94,7 +94,7 @@ import org.thingsboard.server.dao.model.sql.DeviceEntity;
 import org.thingsboard.server.dao.model.sql.EdgeEntity;
 import org.thingsboard.server.dao.model.sql.EntityGroupEntity;
 import org.thingsboard.server.dao.model.sql.EntityViewEntity;
-import org.thingsboard.server.dao.model.sql.ReportInfoEntity;
+import org.thingsboard.server.dao.model.sql.ReportEntity;
 import org.thingsboard.server.dao.model.sql.ReportTemplateInfoEntity;
 import org.thingsboard.server.dao.model.sql.RoleEntity;
 import org.thingsboard.server.dao.model.sql.SchedulerEventEntity;
@@ -108,7 +108,7 @@ import org.thingsboard.server.dao.sql.device.DeviceRepository;
 import org.thingsboard.server.dao.sql.edge.EdgeRepository;
 import org.thingsboard.server.dao.sql.entityview.EntityViewRepository;
 import org.thingsboard.server.dao.sql.group.EntityGroupRepository;
-import org.thingsboard.server.dao.sql.report.ReportInfoRepository;
+import org.thingsboard.server.dao.sql.report.ReportRepository;
 import org.thingsboard.server.dao.sql.report.ReportTemplateInfoRepository;
 import org.thingsboard.server.dao.sql.role.RoleRepository;
 import org.thingsboard.server.dao.sql.scheduler.SchedulerEventRepository;
@@ -508,7 +508,7 @@ public class DefaultEntityQueryRepository implements EntityQueryRepository {
     private final AlarmRepository alarmRepository;
     private final BlobEntityRepository blobEntityRepository;
     private final ReportTemplateInfoRepository reportTemplateInfoRepository;
-    private final ReportInfoRepository reportInfoRepository;
+    private final ReportRepository reportRepository;
 
     private final DefaultQueryLogComponent queryLog;
 
@@ -519,7 +519,7 @@ public class DefaultEntityQueryRepository implements EntityQueryRepository {
                                         UserRepository userRepository, DashboardRepository dashboardRepository,
                                         EntityGroupRepository entityGroupRepository, SchedulerEventRepository schedulerEventRepository,
                                         RoleRepository roleRepository, AlarmRepository alarmRepository, BlobEntityRepository blobEntityRepository,
-                                        ReportTemplateInfoRepository reportTemplateInfoRepository, ReportInfoRepository reportInfoRepository
+                                        ReportTemplateInfoRepository reportTemplateInfoRepository, ReportRepository reportRepository
             , DefaultQueryLogComponent queryLog) {
         this.jdbcTemplate = jdbcTemplate;
         this.transactionTemplate = transactionTemplate;
@@ -536,7 +536,7 @@ public class DefaultEntityQueryRepository implements EntityQueryRepository {
         this.alarmRepository = alarmRepository;
         this.blobEntityRepository = blobEntityRepository;
         this.reportTemplateInfoRepository = reportTemplateInfoRepository;
-        this.reportInfoRepository = reportInfoRepository;
+        this.reportRepository = reportRepository;
         this.queryLog = queryLog;
     }
 
@@ -957,7 +957,7 @@ public class DefaultEntityQueryRepository implements EntityQueryRepository {
                 }
                 break;
             case REPORT:
-                ReportInfoEntity riEntity = reportInfoRepository.findById(stateEntityId.getId()).orElse(null);
+                ReportEntity riEntity = reportRepository.findById(stateEntityId.getId()).orElse(null);
                 if (riEntity != null) {
                     return getOwnerId(riEntity.getTenantId(), riEntity.getCustomerId());
                 }

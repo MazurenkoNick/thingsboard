@@ -67,6 +67,7 @@ export const entityTypesWithoutRelatedData = new Set<EntityType | AliasEntityTyp
   EntityType.NOTIFICATION_TEMPLATE,
   EntityType.NOTIFICATION_TARGET,
   EntityType.NOTIFICATION_RULE,
+  EntityType.REPORT_TEMPLATE,
   EntityType.TB_RESOURCE,
   EntityType.OTA_PACKAGE,
   EntityType.SCHEDULER_EVENT,
