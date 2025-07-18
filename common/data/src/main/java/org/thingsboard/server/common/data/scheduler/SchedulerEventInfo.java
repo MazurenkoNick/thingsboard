@@ -39,6 +39,7 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import org.thingsboard.server.common.data.BaseDataWithAdditionalInfo;
 import org.thingsboard.server.common.data.EntityType;
+import org.thingsboard.server.common.data.ExportableEntity;
 import org.thingsboard.server.common.data.HasCustomerId;
 import org.thingsboard.server.common.data.HasName;
 import org.thingsboard.server.common.data.HasOwnerId;
@@ -58,7 +59,7 @@ import java.io.Serial;
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 @Slf4j
-public class SchedulerEventInfo extends BaseDataWithAdditionalInfo<SchedulerEventId> implements HasName, TenantEntity, HasCustomerId, HasOwnerId, HasVersion {
+public class SchedulerEventInfo extends BaseDataWithAdditionalInfo<SchedulerEventId> implements HasName, TenantEntity, HasCustomerId, HasOwnerId, HasVersion, ExportableEntity<SchedulerEventId> {
 
     @Serial
     private static final long serialVersionUID = 2807343040519549363L;
@@ -84,6 +85,8 @@ public class SchedulerEventInfo extends BaseDataWithAdditionalInfo<SchedulerEven
     @Length(fieldName = "enabled")
     private boolean enabled = true;
 
+    private SchedulerEventId externalId;
+
     private Long version;
 
     public SchedulerEventInfo() {
@@ -104,6 +107,7 @@ public class SchedulerEventInfo extends BaseDataWithAdditionalInfo<SchedulerEven
         this.enabled = schedulerEventInfo.isEnabled();
         this.setSchedule(schedulerEventInfo.getSchedule());
         this.version = schedulerEventInfo.getVersion();
+        this.externalId = schedulerEventInfo.getExternalId();
     }
 
     @Schema(description = "JSON object with the scheduler event Id. " +
