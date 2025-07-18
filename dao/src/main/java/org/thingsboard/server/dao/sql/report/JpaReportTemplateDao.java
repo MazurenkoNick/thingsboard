@@ -79,6 +79,12 @@ public class JpaReportTemplateDao extends JpaAbstractDao<ReportTemplateEntity, R
     }
 
     @Override
+    public PageData<ReportTemplateId> findIdsByTenantId(UUID tenantId, PageLink pageLink) {
+        return DaoUtil.pageToPageData(reportTemplateRepository.findIdsByTenantId(tenantId, DaoUtil.toPageable(pageLink))
+                .map(ReportTemplateId::new));
+    }
+
+    @Override
     public ReportTemplateId getExternalIdByInternal(ReportTemplateId internalId) {
         return Optional.ofNullable(reportTemplateRepository.getExternalIdById(internalId.getId()))
                 .map(ReportTemplateId::new).orElse(null);

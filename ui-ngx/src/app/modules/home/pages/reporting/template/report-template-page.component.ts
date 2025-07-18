@@ -41,7 +41,7 @@ import {
   OnInit,
   Renderer2,
   viewChild,
-  viewChildren,
+  viewChildren, ViewContainerRef,
   ViewEncapsulation
 } from '@angular/core';
 import { PageComponent } from '@shared/components/page.component';
@@ -118,6 +118,9 @@ import {
   ReportTemplateHeaderFooterComponent
 } from '@home/pages/reporting/template/report-template-header-footer.component';
 import { dateFormatPreview } from '@shared/models/widget-settings.models';
+import { MatButton } from '@angular/material/button';
+import { VersionControlComponent } from '@home/components/vc/version-control.component';
+import { TbPopoverService } from '@shared/components/popover.service';
 
 @Component({
   selector: 'tb-report-template-page',
@@ -245,7 +248,9 @@ export class ReportTemplatePageComponent extends PageComponent
               private fb: FormBuilder,
               private date: DatePipe,
               private renderer: Renderer2,
-              private cd: ChangeDetectorRef) {
+              private cd: ChangeDetectorRef,
+              private popoverService: TbPopoverService,
+              private viewContainerRef: ViewContainerRef,) {
     super();
   }
 
@@ -446,6 +451,41 @@ export class ReportTemplatePageComponent extends PageComponent
         this.cd.markForCheck();
       }
     });
+  }
+
+  public toggleVersionControl($event: Event, versionControlButton: MatButton) {
+    $event?.stopPropagation();
+    const trigger = versionControlButton._elementRef.nativeElement;
+    if (this.popoverService.hasPopover(trigger)) {
+      this.popoverService.hidePopover(trigger);
+    } else {
+      const versionControlPopover = this.popoverService.displayPopover({
+        trigger,
+        renderer: this.renderer,
+        hostView: this.viewContainerRef,
+        componentType: VersionControlComponent,
+        preferredPlacement: 'leftTop',
+        context: {
+          detailsMode: true,
+          active: true,
+          singleEntityMode: true,
+          externalEntityId: this.reportTemplate.externalId || this.reportTemplate.id,
+          entityId: this.reportTemplate.id,
+          entityName: this.reportTemplate.name,
+          onBeforeCreateVersion: () => this.reportTemplateService.saveReportTemplate(this.reportTemplate).pipe(
+            tap((reportTemplate) => {
+              this.init(reportTemplate);
+            })
+          )
+        }
+      });
+      versionControlPopover.tbComponentRef.instance.popoverComponent = versionControlPopover;
+      versionControlPopover.tbComponentRef.instance.versionRestored.subscribe(() => {
+        this.reportTemplateService.getReportTemplate(this.reportTemplate.id.id).subscribe(reportTemplate => {
+          this.init(reportTemplate);
+        });
+      });
+    }
   }
 
   private createFilter(filter: string): Observable<Filter> {

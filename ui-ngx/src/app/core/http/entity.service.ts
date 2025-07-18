@@ -400,7 +400,7 @@ export class EntityService {
     }
   }
 
-  private getEntitiesByIdsObservable(fetchEntityFunction: (entityId: string) => Observable<BaseData<EntityId>>,
+  /*private getEntitiesByIdsObservable(fetchEntityFunction: (entityId: string) => Observable<BaseData<EntityId>>,
                                      entityIds: Array<string>): Observable<Array<BaseData<EntityId>>> {
     const tasks: Observable<BaseData<EntityId>>[] = [];
     entityIds.forEach((entityId) => {
@@ -420,7 +420,7 @@ export class EntityService {
         }
       })
     );
-  }
+  }*/
 
 
   private getEntitiesObservable(entityType: EntityType, entityIds: Array<string>,
@@ -476,9 +476,7 @@ export class EntityService {
         observable = this.reportTemplateService.getReportTemplatesByIds(entityIds, config);
         break;
       case EntityType.REPORT:
-        observable = this.getEntitiesByIdsObservable(
-          (id) => this.reportService.getReport(id, config),
-          entityIds);
+        observable = this.reportService.getReportsInfosByIds(entityIds, config);
         break;
       case EntityType.ROLE:
         observable = this.roleService.getRolesByIds(entityIds, config);

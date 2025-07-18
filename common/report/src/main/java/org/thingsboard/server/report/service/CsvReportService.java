@@ -31,6 +31,7 @@
 package org.thingsboard.server.report.service;
 
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.springframework.stereotype.Service;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.ReportTemplateId;
@@ -197,6 +198,9 @@ public class CsvReportService extends AbstractReportService {
     }
 
     private List<List<String>> renderError(String errorDescription, Exception e) {
+        if (e instanceof InterruptedException || ExceptionUtils.getRootCause(e) instanceof InterruptedException) {
+            throw new RuntimeException(e);
+        }
         if (e != null) {
             errorDescription = errorDescription + " Error: " + e.getMessage();
         }

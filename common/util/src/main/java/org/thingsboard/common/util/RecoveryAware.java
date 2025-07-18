@@ -28,23 +28,10 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.common.data.query;
+package org.thingsboard.common.util;
 
-import lombok.Data;
-import org.thingsboard.server.common.data.EntityType;
+public interface RecoveryAware {
 
-@Data
-public class EntityGroupFilter implements EntityFilter {
-
-    @Override
-    public EntityFilterType getType() {
-        return EntityFilterType.ENTITY_GROUP;
-    }
-
-    private EntityType groupType;
-    private String entityGroup;
-    private boolean groupStateEntity;
-    private EntityType defaultStateGroupType;
-    private String defaultStateEntityGroup;
+    boolean isUnrecoverable();
 
 }

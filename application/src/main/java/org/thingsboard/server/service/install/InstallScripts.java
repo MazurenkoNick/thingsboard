@@ -90,6 +90,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -226,9 +227,8 @@ public class InstallScripts {
     }
 
     public void createDefaultRuleChains(TenantId tenantId) {
-        Map<String, RuleChainId> ruleChainIdMap = loadAdditionalTenantRuleChains(tenantId, getTenantRuleChainsDir());
         Path rootRuleChainFile = getRootTenantRuleChainFile();
-        loadRootRuleChain(tenantId, ruleChainIdMap, rootRuleChainFile);
+        loadRootRuleChain(tenantId, Collections.emptyMap(), rootRuleChainFile);
     }
 
     private RuleChain loadRuleChain(Path path, JsonNode ruleChainJson, TenantId tenantId, String newRuleChainName) {

@@ -51,6 +51,7 @@ import org.thingsboard.server.common.data.integration.Integration;
 import org.thingsboard.server.common.data.notification.rule.NotificationRule;
 import org.thingsboard.server.common.data.notification.targets.NotificationTarget;
 import org.thingsboard.server.common.data.notification.template.NotificationTemplate;
+import org.thingsboard.server.common.data.report.ReportTemplate;
 import org.thingsboard.server.common.data.role.Role;
 import org.thingsboard.server.common.data.rule.RuleChain;
 import org.thingsboard.server.common.data.scheduler.SchedulerEvent;
@@ -87,7 +88,8 @@ import java.lang.annotation.Target;
         @Type(name = "TB_RESOURCE", value = TbResource.class),
         @Type(name = "OTA_PACKAGE", value = OtaPackage.class),
         @Type(name = "SCHEDULER_EVENT", value = SchedulerEvent.class),
-        @Type(name = "AI_MODEL", value = AiModel.class)
+        @Type(name = "AI_MODEL", value = AiModel.class),
+        @Type(name = "REPORT_TEMPLATE", value = ReportTemplate.class)
 })
 @JsonIgnoreProperties(value = {"tenantId", "createdTime", "version"}, ignoreUnknown = true)
 public @interface JsonTbEntity {}

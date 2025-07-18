@@ -46,7 +46,7 @@ public class ReportRequest {
     @Schema(description = "Json object representing the report template config.")
     private ReportTemplateConfig reportTemplateConfig;
 
-    @Schema(description = "Timezone in which target dashboard will be presented in dashboard report.", example = "Europe/Kiev") // fixme: description
+    @Schema(description = "Timezone used for report generation.", example = "Europe/Kiev")
     private String timezone;
     @Schema(description = "A string value representing the user id.", example = "784f394c-42b6-435a-983c-b7beff2784f9")
     private String userId;

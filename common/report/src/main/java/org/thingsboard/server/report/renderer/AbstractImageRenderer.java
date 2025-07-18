@@ -37,7 +37,7 @@ import org.thingsboard.server.common.data.report.configuration.image.ImageWidthT
 import org.thingsboard.server.report.context.ComponentData;
 import org.thingsboard.server.report.util.ThymeleafUtil;
 
-import java.util.HashMap;
+import java.util.Map;
 
 import static org.thingsboard.server.report.util.ImageUtils.EMPTY_IMAGE_URI;
 
@@ -46,22 +46,29 @@ public abstract class AbstractImageRenderer<C extends AbstractImageComponent> ex
     @Override
     public String renderContent(C imageComponent, ComponentData reportDataSource) {
         String imageUrl = this.getImageUrl(imageComponent, reportDataSource);
-        HashMap<String, Object> componentVariables = new HashMap<>();
-        componentVariables.put("layoutWidth", this.layoutWidthPx + "px");
-        componentVariables.put("imageUrl", StringUtils.isBlank(imageUrl) ? EMPTY_IMAGE_URI : imageUrl);
-        String imageWidth = this.layoutWidthPx + "px";
+        String layoutWidth = this.layoutWidthPx + "px";
+
+        String imageWidth;
         if (ImageWidthType.ORIGINAL == imageComponent.getWidthType()) {
             imageWidth = "auto";
         } else if (ImageWidthType.CUSTOM == imageComponent.getWidthType()) {
-            int customWidth = 100;
-            if (imageComponent.getCustomWidth() >= 1) {
-                customWidth = imageComponent.getCustomWidth();
-            }
+            int customWidth = imageComponent.getCustomWidth() >= 1 ? imageComponent.getCustomWidth() : 100;
             imageWidth = customWidth + "px";
+        } else {
+            imageWidth = layoutWidth;
         }
-        componentVariables.put("imageWidth", imageWidth);
-        String imageAlign = imageComponent.getAlignment() != null ? imageComponent.getAlignment().getValue() :ImageAlignment.CENTER.getValue();
-        componentVariables.put("imageAlign", imageAlign);
+
+        String imageAlign = imageComponent.getAlignment() != null ?
+                imageComponent.getAlignment().getValue() :
+                ImageAlignment.CENTER.getValue();
+
+        Map<String, Object> componentVariables = Map.of(
+                "layoutWidth", layoutWidth,
+                "imageUrl", StringUtils.isBlank(imageUrl) ? EMPTY_IMAGE_URI : imageUrl,
+                "imageWidth", imageWidth,
+                "imageAlign", imageAlign
+        );
+
         return ThymeleafUtil.renderFromHtmlTemplate("html/components/image", componentVariables);
     }
 

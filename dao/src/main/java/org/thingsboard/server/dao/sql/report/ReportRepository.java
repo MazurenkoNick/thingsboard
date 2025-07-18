@@ -37,6 +37,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 import org.thingsboard.server.dao.model.sql.ReportEntity;
 
 import java.util.UUID;
@@ -50,6 +51,12 @@ public interface ReportRepository extends JpaRepository<ReportEntity, UUID> {
                                                    @Param("searchText") String searchText,
                                                    Pageable pageable);
 
+    @Query("SELECT r FROM ReportEntity r WHERE r.tenantId = :tenantId AND r.customerId = :customerId " +
+            "AND (:searchText IS NULL OR ilike(r.name, CONCAT('%', :searchText, '%')) = true)")
+    Page<ReportEntity> findByTenantIdAndCustomerId(@Param("tenantId") UUID tenantId,
+                                                   @Param("customerId") UUID customerId,
+                                                   Pageable pageable);
+
     @Modifying
     @Query(value = "UPDATE report SET data = :data WHERE id = :id", nativeQuery = true)
     void saveData(UUID id, byte[] data);
@@ -57,4 +64,13 @@ public interface ReportRepository extends JpaRepository<ReportEntity, UUID> {
     @Query(value = "SELECT data FROM report WHERE id = :id", nativeQuery = true)
     byte[] getDataById(UUID id);
 
+    @Transactional
+    @Modifying
+    @Query("DELETE FROM ReportEntity r WHERE r.tenantId = :tenantId")
+    void deleteByTenantId(@Param("tenantId") UUID tenantId);
+
+    @Transactional
+    @Modifying
+    @Query("DELETE FROM ReportEntity r WHERE r.tenantId = :tenantId AND r.customerId = :customerId")
+    void deleteByTenantIdAndCustomerId(@Param("tenantId") UUID tenantId, @Param("customerId") UUID customerId);
 }

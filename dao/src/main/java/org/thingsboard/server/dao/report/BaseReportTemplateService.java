@@ -142,7 +142,6 @@ public class BaseReportTemplateService extends AbstractEntityService implements 
         eventPublisher.publishEvent(DeleteEntityEvent.builder().tenantId(tenantId).entityId(reportTemplate.getId()).entity(reportTemplate).build());
     }
 
-
     @Override
     public PageData<ReportTemplateInfo> findReportTemplates(TenantId tenantId, ReportTemplateQuery query) {
         log.trace("Executing findReportTemplates, tenantId [{}], query [{}]", tenantId, query);

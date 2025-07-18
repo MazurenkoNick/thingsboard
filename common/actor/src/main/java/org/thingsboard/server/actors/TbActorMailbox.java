@@ -34,8 +34,8 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.thingsboard.server.common.data.EntityType;
+import org.thingsboard.common.util.RecoveryAware;
 import org.thingsboard.server.common.msg.MsgType;
-import org.thingsboard.server.common.msg.TbActorError;
 import org.thingsboard.server.common.msg.TbActorMsg;
 import org.thingsboard.server.common.msg.TbActorStopReason;
 
@@ -50,6 +50,7 @@ import java.util.function.Supplier;
 @Getter
 @RequiredArgsConstructor
 public final class TbActorMailbox implements TbActorCtx {
+
     private static final boolean HIGH_PRIORITY = true;
     private static final boolean NORMAL_PRIORITY = false;
 
@@ -115,7 +116,7 @@ public final class TbActorMailbox implements TbActorCtx {
         if (t instanceof TbActorException && t.getCause() != null) {
             t = t.getCause();
         }
-        return t instanceof TbActorError && ((TbActorError) t).isUnrecoverable();
+        return t instanceof RecoveryAware recoveryAware && recoveryAware.isUnrecoverable();
     }
 
     private void enqueue(TbActorMsg msg, boolean highPriority) {

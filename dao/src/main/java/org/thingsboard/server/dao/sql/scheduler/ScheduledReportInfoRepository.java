@@ -45,9 +45,9 @@ import static org.thingsboard.server.dao.model.ModelConstants.SUB_CUSTOMERS_QUER
 public interface ScheduledReportInfoRepository extends JpaRepository<ScheduledReportInfoEntity, UUID> {
 
     @Query("SELECT sei FROM ScheduledReportInfoEntity sei WHERE sei.tenantId = :tenantId " +
-            "AND (sei.customerId IS NULL OR sei.customerId = org.thingsboard.server.common.data.id.EntityId.NULL_UUID)" +
-            "AND (:reportTemplateId IS NULL OR (sei.reportTemplateId = :reportTemplateId))" +
-            "AND (:userId IS NULL OR (sei.userId = :userId))" +
+            "AND (sei.customerId IS NULL OR sei.customerId = org.thingsboard.server.common.data.id.EntityId.NULL_UUID) " +
+            "AND (:reportTemplateId IS NULL OR (sei.reportTemplateId = :reportTemplateId)) " +
+            "AND (:userId IS NULL OR (sei.userId = :userId)) " +
             "AND (:searchText IS NULL OR ilike(sei.name, CONCAT('%', :searchText, '%')) = true)")
     Page<ScheduledReportInfoEntity> findTenantScheduledReportInfos(@Param("tenantId") UUID tenantId,
                                                                    @Param("reportTemplateId") UUID reportTemplateId,
@@ -56,9 +56,10 @@ public interface ScheduledReportInfoRepository extends JpaRepository<ScheduledRe
                                                                    Pageable pageable);
 
     @Query("SELECT sei FROM ScheduledReportInfoEntity sei WHERE sei.tenantId = :tenantId " +
-            "AND (:reportTemplateId IS NULL OR (sei.reportTemplateId = :reportTemplateId))" +
-            "AND (:userId IS NULL OR (sei.userId = :userId))" +
-            "AND (:searchText IS NULL OR ilike(sei.name, CONCAT('%', :searchText, '%')) = true)")
+            "AND (:reportTemplateId IS NULL OR (sei.reportTemplateId = :reportTemplateId)) " +
+            "AND (:userId IS NULL OR (sei.userId = :userId)) " +
+            "AND (:searchText IS NULL OR ilike(sei.name, CONCAT('%', :searchText, '%')) = true " +
+            "OR ilike(sei.customerTitle, CONCAT('%', :searchText, '%')) = true)")
     Page<ScheduledReportInfoEntity> findTenantScheduledReportInfosIncludingCustomers(@Param("tenantId") UUID tenantId,
                                                                                      @Param("reportTemplateId") UUID reportTemplateId,
                                                                                      @Param("userId") UUID userId,
@@ -94,9 +95,9 @@ public interface ScheduledReportInfoRepository extends JpaRepository<ScheduledRe
                                                                                       Pageable pageable);
 
     @Query("SELECT sei FROM ScheduledReportInfoEntity sei WHERE sei.tenantId = :tenantId " +
-            "AND (sei.customerId = :customerId)" +
-            "AND (:reportTemplateId IS NULL OR (sei.reportTemplateId = :reportTemplateId))" +
-            "AND (:userId IS NULL OR (sei.userId = :userId))" +
+            "AND (sei.customerId = :customerId) " +
+            "AND (:reportTemplateId IS NULL OR (sei.reportTemplateId = :reportTemplateId)) " +
+            "AND (:userId IS NULL OR (sei.userId = :userId)) " +
             "AND (:searchText IS NULL OR ilike(sei.name, CONCAT('%', :searchText, '%')) = true)")
     Page<ScheduledReportInfoEntity> findCustomerScheduledReports(@Param("tenantId") UUID tenantId,
                                                                  @Param("customerId") UUID customerId,

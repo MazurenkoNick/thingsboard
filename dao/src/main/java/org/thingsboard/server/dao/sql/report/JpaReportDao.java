@@ -51,6 +51,7 @@ import org.thingsboard.server.dao.sql.JpaPartitionedAbstractDao;
 import org.thingsboard.server.dao.sqlts.insert.sql.SqlPartitioningRepository;
 import org.thingsboard.server.dao.util.SqlDao;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -115,7 +116,6 @@ public class JpaReportDao extends JpaPartitionedAbstractDao<ReportEntity, Report
 
     @Override
     public PageData<ReportInfo> findReportInfos(TenantId tenantId, CustomerId customerId, ReportInfoQuery query) {
-        log.debug("Try to find scheduler event infos by tenantId [{}], edgeId [{}], customerId [{}] and pageLink [{}]", tenantId, customerId, customerId, query);
         if (query.isIncludeCustomers()) {
             return DaoUtil.toPageData(reportInfoRepository
                     .findCustomerReportInfosIncludingSubCustomers(
@@ -135,6 +135,21 @@ public class JpaReportDao extends JpaPartitionedAbstractDao<ReportEntity, Report
                             Objects.toString(query.getPageLink().getTextSearch(), ""),
                             DaoUtil.toPageable(query.getPageLink())));
         }
+    }
+
+    @Override
+    public List<ReportInfo> findReportByIds(TenantId tenantId, List<UUID> toUUIDs) {
+        return DaoUtil.convertDataList(reportInfoRepository.findByIdIn(toUUIDs));
+    }
+
+    @Override
+    public void deleteByTenantId(TenantId tenantId) {
+        reportRepository.deleteByTenantId(tenantId.getId());
+    }
+
+    @Override
+    public void deleteByTenantIdAndCustomerId(TenantId tenantId, CustomerId customerId) {
+        reportRepository.deleteByTenantIdAndCustomerId(tenantId.getId(), customerId.getId());
     }
 
     @Override

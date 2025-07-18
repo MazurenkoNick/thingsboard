@@ -30,16 +30,16 @@
  */
 package org.thingsboard.server.report.util;
 
-import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.id.DeviceId;
 import org.thingsboard.server.common.data.id.EntityId;
+import org.thingsboard.server.common.data.id.EntityIdFactory;
 import org.thingsboard.server.common.data.kv.Aggregation;
 import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.query.AlarmCountQuery;
 import org.thingsboard.server.common.data.query.AlarmDataPageLink;
 import org.thingsboard.server.common.data.query.AlarmDataQuery;
 import org.thingsboard.server.common.data.query.AliasEntityId;
-import org.thingsboard.server.common.data.query.AliasEntityType;
+import org.thingsboard.server.common.data.query.EntitiesByGroupNameFilter;
 import org.thingsboard.server.common.data.query.EntityCountQuery;
 import org.thingsboard.server.common.data.query.EntityDataPageLink;
 import org.thingsboard.server.common.data.query.EntityDataQuery;
@@ -65,12 +65,7 @@ import org.thingsboard.server.common.data.report.configuration.timewindow.TimeIn
 import org.thingsboard.server.report.context.TbReportCtx;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.thingsboard.server.common.data.query.AliasEntityId.resolveAliasEntityId;
@@ -206,6 +201,13 @@ public class ReportQueryUtils {
             queryFilter.setRootEntity(resolvedEntity);
         } else if (filter instanceof SchedulerEventFilter queryFilter && queryFilter.isOriginatorStateEntity()) {
             queryFilter.setOriginator(resolvedEntity);
+        } else if (filter instanceof EntityGroupFilter entityGroupFilter && entityGroupFilter.isGroupStateEntity()) {
+            if (resolvedEntity != null) {
+                entityGroupFilter.setGroupType(resolvedEntity.getEntityType());
+                entityGroupFilter.setEntityGroup(resolvedEntity.getId().toString());
+            }
+        } else if (filter instanceof EntitiesByGroupNameFilter entitiesByGroupNameFilter && entitiesByGroupNameFilter.isGroupStateEntity()) {
+             entitiesByGroupNameFilter.setOwnerId(resolvedEntity);
         }
 
         EntityFilter.resolveEntityFilter(filter, ctx.getTenantId(), ctx.getUserId(), ctx.getUserOwnerId());
@@ -228,8 +230,11 @@ public class ReportQueryUtils {
             return resolveAliasEntityId(queryFilter.getDefaultStateEntity(), ctx.getTenantId(), ctx.getUserId(), ctx.getUserOwnerId());
         } else if (filter instanceof SchedulerEventFilter queryFilter) {
             return resolveAliasEntityId(queryFilter.getDefaultStateEntity(), ctx.getTenantId(), ctx.getUserId(), ctx.getUserOwnerId());
+        } else if (filter instanceof EntityGroupFilter entityGroupFilter) {
+            if (entityGroupFilter.getDefaultStateGroupType() != null && entityGroupFilter.getDefaultStateEntityGroup() != null) {
+                return AliasEntityId.fromEntityId(EntityIdFactory.getByTypeAndId(entityGroupFilter.getDefaultStateGroupType(), entityGroupFilter.getDefaultStateEntityGroup()));
+            }
         }
-
         return null;
     }
 

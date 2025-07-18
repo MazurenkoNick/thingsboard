@@ -28,23 +28,28 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.common.data.query;
+package org.thingsboard.server.common.data.util;
 
-import lombok.Data;
-import org.thingsboard.server.common.data.EntityType;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.collect.Streams;
 
-@Data
-public class EntityGroupFilter implements EntityFilter {
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
-    @Override
-    public EntityFilterType getType() {
-        return EntityFilterType.ENTITY_GROUP;
+public class DataUtils {
+
+    public static List<ObjectNode> getChildObjects(String propertyName, JsonNode configuration) {
+        return Optional.ofNullable(configuration)
+                .map(config -> config.get(propertyName))
+                .filter(node -> !node.isEmpty() && (node.isObject() || node.isArray()))
+                .map(node -> Streams.stream(node.elements())
+                        .filter(JsonNode::isObject)
+                        .map(jsonNode -> (ObjectNode) jsonNode)
+                        .collect(Collectors.toList()))
+                .orElse(Collections.emptyList());
     }
-
-    private EntityType groupType;
-    private String entityGroup;
-    private boolean groupStateEntity;
-    private EntityType defaultStateGroupType;
-    private String defaultStateEntityGroup;
 
 }

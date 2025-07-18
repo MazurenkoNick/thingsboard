@@ -37,7 +37,7 @@ import org.thingsboard.server.common.data.report.ReportConfig;
 @Data
 public class TbGenerateReportV2NodeConfiguration implements NodeConfiguration<TbGenerateReportV2NodeConfiguration> {
 
-    private boolean useConfigFromMessage; // TODO: implement
+    private boolean useConfigFromMessage;
     private ReportConfig config;
 
     @Override

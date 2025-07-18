@@ -342,7 +342,7 @@ public class ReportControllerTest extends AbstractControllerTest {
         }
 
         PageData<ReportInfo> reportInfos = await().atMost(TIMEOUT, TimeUnit.SECONDS).until(() ->
-                        doGetTypedWithPageLink("/api/v2/reportInfos?", new TypeReference<PageData<ReportInfo>>() {
+                        doGetTypedWithPageLink("/api/v2/reportInfos/all?", new TypeReference<PageData<ReportInfo>>() {
                         }, new PageLink(30)),
                 result -> result.getData().size() == 10);
         for (ReportInfo info : reportInfos.getData()) {
@@ -350,7 +350,7 @@ public class ReportControllerTest extends AbstractControllerTest {
         }
 
         // filter by reportTemplateId
-        PageData<ReportInfo> csvReportsByTemplateId = doGetTypedWithPageLink("/api/v2/reportInfos?reportTemplateId=" + csvTemplate.getId().getId() + "&", new TypeReference<>() {
+        PageData<ReportInfo> csvReportsByTemplateId = doGetTypedWithPageLink("/api/v2/reportInfos/all?reportTemplateId=" + csvTemplate.getId().getId() + "&", new TypeReference<>() {
         }, new PageLink(30));
 
         assertThat(csvReportsByTemplateId.getData()).hasSize(5);
@@ -360,7 +360,7 @@ public class ReportControllerTest extends AbstractControllerTest {
         }
 
         // filter by userId
-        PageData<ReportInfo> csvReportsByUserId = doGetTypedWithPageLink("/api/v2/reportInfos?userId=" + customerAdminUserId.getId() + "&", new TypeReference<>() {
+        PageData<ReportInfo> csvReportsByUserId = doGetTypedWithPageLink("/api/v2/reportInfos/all?userId=" + customerAdminUserId.getId() + "&", new TypeReference<>() {
         }, new PageLink(30));
 
         assertThat(csvReportsByUserId.getData()).isEmpty();

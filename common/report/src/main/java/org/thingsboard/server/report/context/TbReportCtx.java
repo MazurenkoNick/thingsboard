@@ -60,7 +60,6 @@ public abstract class TbReportCtx implements Closeable {
     private final long accessTokenExpTs;
     private final String reportCreatedTime;
 
-    private final List<ListenableFuture<Void>> futures = new ArrayList<>();
     private final Map<String, Object> params = new HashMap<>();
     private final Map<String, UUID> scripts = new HashMap<>();
     private final TbelInvokeService tbelInvokeService;

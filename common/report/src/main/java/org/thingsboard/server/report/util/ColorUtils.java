@@ -30,11 +30,13 @@
  */
 package org.thingsboard.server.report.util;
 
-import java.awt.*;
+import java.awt.Color;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class ColorUtils {
+
+    private static final Pattern HSL_PATTERN = Pattern.compile("hsla?\\(\\s*(\\d+)\\s*,\\s*(\\d+)%\\s*,\\s*(\\d+)%\\s*(,\\s*([0-1]\\.\\d+))?\\s*\\)");
 
     public static String normalizeCssColor(String color) {
         Color c = parseCssColor(color);
@@ -127,8 +129,7 @@ public class ColorUtils {
     }
 
     private static Color parseHslColor(String hsl) {
-        Pattern pattern = Pattern.compile("hsla?\\(\\s*(\\d+)\\s*,\\s*(\\d+)%\\s*,\\s*(\\d+)%\\s*(,\\s*([0-1]\\.\\d+))?\\s*\\)");
-        Matcher matcher = pattern.matcher(hsl);
+        Matcher matcher = HSL_PATTERN.matcher(hsl);
         if (matcher.matches()) {
             float h = Float.parseFloat(matcher.group(1)) / 360.0f; // Нормалізація до [0, 1]
             float s = Float.parseFloat(matcher.group(2)) / 100.0f;

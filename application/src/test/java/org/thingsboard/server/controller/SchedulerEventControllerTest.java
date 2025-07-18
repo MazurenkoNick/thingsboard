@@ -249,7 +249,7 @@ public class SchedulerEventControllerTest extends AbstractControllerTest {
         // wait for reports
         loginTenantAdmin();
         await().atMost(TIMEOUT, TimeUnit.SECONDS).until(() ->
-                        doGetTypedWithPageLink("/api/v2/reportInfos?",  new TypeReference<PageData<ReportInfo>>() {
+                        doGetTypedWithPageLink("/api/v2/reportInfos/all?",  new TypeReference<PageData<ReportInfo>>() {
                         }, new PageLink(30)),
                 result -> result.getData().size() == 2);
 

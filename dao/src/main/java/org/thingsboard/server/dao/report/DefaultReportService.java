@@ -47,12 +47,12 @@ import org.thingsboard.server.common.data.report.ReportInfo;
 import org.thingsboard.server.common.data.report.ReportInfoQuery;
 import org.thingsboard.server.dao.entity.AbstractEntityService;
 import org.thingsboard.server.dao.service.ConstraintValidator;
-import org.thingsboard.server.dao.service.PaginatedRemover;
 import org.thingsboard.server.dao.service.validator.ReportDataValidator;
 
+import java.util.List;
 import java.util.Optional;
 
-import static org.thingsboard.server.dao.customer.CustomerServiceImpl.INCORRECT_CUSTOMER_ID;
+import static org.thingsboard.server.dao.DaoUtil.toUUIDs;
 import static org.thingsboard.server.dao.service.Validator.validateId;
 
 @Slf4j
@@ -117,8 +117,7 @@ public class DefaultReportService extends AbstractEntityService implements Repor
     @Override
     public void deleteReportsByTenantId(TenantId tenantId) {
         log.trace("Executing deleteReportsByTenantId, tenantId [{}]", tenantId);
-        validateId(tenantId, id -> INCORRECT_TENANT_ID + id);
-        tenantReportsRemover.removeEntities(tenantId, tenantId);
+        reportDao.deleteByTenantId(tenantId);
     }
 
     @Override
@@ -129,43 +128,14 @@ public class DefaultReportService extends AbstractEntityService implements Repor
     @Override
     public void deleteReportsByTenantIdAndCustomerId(TenantId tenantId, CustomerId customerId) {
         log.trace("Executing deleteReportsByTenantIdAndCustomerId, tenantId [{}], customerId [{}]", tenantId, customerId);
-        validateId(tenantId, id -> INCORRECT_TENANT_ID + id);
-        validateId(customerId, id -> INCORRECT_CUSTOMER_ID + id);
-        customerReportEntitiesRemover.removeEntities(tenantId, customerId);
+        reportDao.deleteByTenantIdAndCustomerId(tenantId, customerId);
     }
 
-    private final PaginatedRemover<TenantId, ReportInfo> tenantReportsRemover = new PaginatedRemover<>() {
-
-        @Override
-        protected PageData<ReportInfo> findEntities(TenantId tenantId, TenantId id, PageLink pageLink) {
-            return reportDao.findReportInfos(id,
-                    ReportInfoQuery.builder()
-                            .pageLink(pageLink)
-                            .includeCustomers(true)
-                            .build());
-        }
-
-        @Override
-        protected void removeEntity(TenantId tenantId, ReportInfo reportInfo) {
-            deleteReport(tenantId, new ReportId(reportInfo.getId().getId()));
-        }
-    };
-
-    private PaginatedRemover<CustomerId, ReportInfo> customerReportEntitiesRemover = new PaginatedRemover<>() {
-        @Override
-        protected PageData<ReportInfo> findEntities(TenantId tenantId, CustomerId customerId, PageLink pageLink) {
-            return reportDao.findReportInfos(tenantId, customerId,
-                    ReportInfoQuery.builder()
-                            .pageLink(pageLink)
-                            .includeCustomers(false)
-                            .build());
-        }
-
-        @Override
-        protected void removeEntity(TenantId tenantId, ReportInfo reportInfo) {
-            deleteReport(tenantId, new ReportId(reportInfo.getId().getId()));
-        }
-    };
+    @Override
+    public List<ReportInfo> findReportInfoByIds(TenantId tenantId, List<ReportId> reportIds) {
+        log.trace("Executing findReportInfoByIds, reportIds [{}]", reportIds);
+        return reportDao.findReportByIds(tenantId, toUUIDs(reportIds));
+    }
 
     @Override
     public Optional<HasId<?>> findEntity(TenantId tenantId, EntityId entityId) {
