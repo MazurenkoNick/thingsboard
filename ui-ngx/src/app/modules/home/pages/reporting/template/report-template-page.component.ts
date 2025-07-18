@@ -482,6 +482,7 @@ export class ReportTemplatePageComponent extends PageComponent
       versionControlPopover.tbComponentRef.instance.popoverComponent = versionControlPopover;
       versionControlPopover.tbComponentRef.instance.versionRestored.subscribe(() => {
         this.reportTemplateService.getReportTemplate(this.reportTemplate.id.id).subscribe(reportTemplate => {
+          versionControlPopover.hide();
           this.init(reportTemplate);
         });
       });

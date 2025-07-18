@@ -40,8 +40,10 @@ import {
   OnDestroy,
   OnInit,
   Optional,
+  Renderer2,
   SimpleChanges,
   ViewChild,
+  ViewContainerRef,
   ViewEncapsulation
 } from '@angular/core';
 import { PageComponent } from '@shared/components/page.component';
@@ -120,6 +122,9 @@ import _moment from 'moment';
 import { FormBuilder } from '@angular/forms';
 import { isValidPageStepCount, isValidPageStepIncrement } from '@home/components/widget/lib/table-widget.models';
 import { WidgetComponent } from '@home/components/widget/widget.component';
+import { VersionControlComponent } from '@home/components/vc/version-control.component';
+import { MatButton } from '@angular/material/button';
+import { TbPopoverService } from '@shared/components/popover.service';
 
 @Component({
   selector: 'tb-scheduler-events',
@@ -154,6 +159,7 @@ export class SchedulerEventsComponent extends PageComponent implements OnInit, A
   settings: SchedulerEventsWidgetSettings;
 
   editEnabled = this.userPermissionsService.hasGenericPermission(Resource.SCHEDULER_EVENT, Operation.WRITE);
+  vcEnabled = this.userPermissionsService.hasGenericPermission(Resource.VERSION_CONTROL, Operation.READ);
   addEnabled = this.userPermissionsService.hasGenericPermission(Resource.SCHEDULER_EVENT, Operation.CREATE);
   deleteEnabled = this.userPermissionsService.hasGenericPermission(Resource.SCHEDULER_EVENT, Operation.DELETE);
 
@@ -167,7 +173,7 @@ export class SchedulerEventsComponent extends PageComponent implements OnInit, A
 
   displayPagination = true;
   pageSizeOptions: Array<number> = [];
-  defaultPageSize;
+  defaultPageSize: number;
   defaultSortOrder = 'createdTime';
   defaultEventType: string;
   hidePageSize = false;
@@ -214,6 +220,9 @@ export class SchedulerEventsComponent extends PageComponent implements OnInit, A
               private cd: ChangeDetectorRef,
               private fb: FormBuilder,
               private zone: NgZone,
+              private renderer: Renderer2,
+              private popoverService: TbPopoverService,
+              private viewContainerRef: ViewContainerRef,
               @Optional() public widgetComponent: WidgetComponent) {
     super(store);
   }
@@ -221,6 +230,7 @@ export class SchedulerEventsComponent extends PageComponent implements OnInit, A
   ngOnInit(): void {
     if (this.widgetMode) {
       this.ctx.$scope.schedulerEventsWidget = this;
+      this.vcEnabled = false;
     }
     if (this.showData && this.widgetMode) {
       this.settings = this.ctx.settings;
@@ -283,6 +293,7 @@ export class SchedulerEventsComponent extends PageComponent implements OnInit, A
         this.deleteEnabled = false;
         this.addEnabled = false;
         this.editEnabled = false;
+        this.vcEnabled = false;
       }
     }
     if (this.displayPagination) {
@@ -476,7 +487,7 @@ export class SchedulerEventsComponent extends PageComponent implements OnInit, A
 
       this.textSearch.valueChanges.pipe(
         debounceTime(150),
-        distinctUntilChanged((prev, current) => (this.pageLink.textSearch ?? '') === current.trim()),
+        distinctUntilChanged((_prev, current) => (this.pageLink.textSearch ?? '') === current.trim()),
         takeUntil(this.destroy$)
       ).subscribe(value => {
         if (this.widgetMode) {
@@ -693,7 +704,7 @@ export class SchedulerEventsComponent extends PageComponent implements OnInit, A
     this.openAssignSchedulerEventToEdgeDialog($event);
   }
 
-  editSchedulerEvent($event, schedulerEventWithCustomerInfo: SchedulerEventWithCustomerInfo) {
+  editSchedulerEvent($event: Event, schedulerEventWithCustomerInfo: SchedulerEventWithCustomerInfo) {
     if ($event) {
       $event.stopPropagation();
     }
@@ -703,7 +714,7 @@ export class SchedulerEventsComponent extends PageComponent implements OnInit, A
       });
   }
 
-  viewSchedulerEvent($event, schedulerEventWithCustomerInfo: SchedulerEventWithCustomerInfo) {
+  viewSchedulerEvent($event: Event, schedulerEventWithCustomerInfo: SchedulerEventWithCustomerInfo) {
     if ($event) {
       $event.stopPropagation();
     }
@@ -1065,7 +1076,7 @@ export class SchedulerEventsComponent extends PageComponent implements OnInit, A
       schedulerEventWithCustomerInfo.enabled : true;
   }
 
-  enableSchedulerEvent($event, schedulerEvent: SchedulerEventWithCustomerInfo) {
+  enableSchedulerEvent($event: Event, schedulerEvent: SchedulerEventWithCustomerInfo) {
     if ($event) {
       $event.stopPropagation();
     }
@@ -1076,6 +1087,34 @@ export class SchedulerEventsComponent extends PageComponent implements OnInit, A
     });
   }
 
+  public toggleVersionControl($event: Event, scheduled: SchedulerEventWithCustomerInfo, versionControlButton: MatButton): void {
+    $event?.stopPropagation();
+    const trigger = versionControlButton._elementRef.nativeElement;
+    if (this.popoverService.hasPopover(trigger)) {
+      this.popoverService.hidePopover(trigger);
+    } else {
+      const versionControlPopover = this.popoverService.displayPopover({
+        trigger,
+        renderer: this.renderer,
+        hostView: this.viewContainerRef,
+        componentType: VersionControlComponent,
+        preferredPlacement: ['leftTopOnly', 'leftOnly', 'leftBottomOnly'],
+        context: {
+          detailsMode: true,
+          active: true,
+          singleEntityMode: true,
+          externalEntityId: scheduled.externalId || scheduled.id,
+          entityId: scheduled.id,
+          entityName: scheduled.name
+        }
+      });
+      versionControlPopover.tbComponentRef.instance.popoverComponent = versionControlPopover;
+      versionControlPopover.tbComponentRef.instance.versionRestored.subscribe(() => {
+        versionControlPopover.hide();
+        this.reloadSchedulerEvents();
+      });
+    }
+  }
 
   private updatedRouterQueryParams(queryParams: object, queryParamsHandling: QueryParamsHandling = 'merge') {
     this.router.navigate([], {
@@ -1103,12 +1142,12 @@ class SchedulerEventsDatasource implements DataSource<SchedulerEventWithCustomer
               private schedulerEventConfigTypes: { [eventType: string]: SchedulerEventConfigType }) {
   }
 
-  connect(collectionViewer: CollectionViewer):
+  connect(_collectionViewer: CollectionViewer):
     Observable<SchedulerEventWithCustomerInfo[] | ReadonlyArray<SchedulerEventWithCustomerInfo>> {
     return this.entitiesSubject.asObservable();
   }
 
-  disconnect(collectionViewer: CollectionViewer): void {
+  disconnect(_collectionViewer: CollectionViewer): void {
     this.entitiesSubject.complete();
     this.pageDataSubject.complete();
   }

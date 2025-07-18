@@ -47,7 +47,7 @@ import { DatePipe } from '@angular/common';
 import { EntityType } from '@shared/models/entity-type.models';
 import { EntityAction } from '@home/models/entity/entity-component.models';
 import { UserPermissionsService } from '@core/http/user-permissions.service';
-import { ReportFilter, ScheduledReportInfo, ReportQuery } from '@shared/models/report.models';
+import { ReportFilter, ReportQuery, ScheduledReportInfo } from '@shared/models/report.models';
 import { map } from 'rxjs/operators';
 import { UtilsService } from '@core/services/utils.service';
 import { AuthUser } from '@shared/models/user.model';
@@ -70,6 +70,8 @@ import { defaultSchedulerEventConfigTypes } from '@home/components/scheduler/sch
 import { Observable } from 'rxjs';
 import { getEntityDetailsPageURL } from '@core/utils';
 import { scheduleInfo } from '@home/components/scheduler/scheduler-events.models';
+import { VersionControlComponent } from '@home/components/vc/version-control.component';
+import { TbPopoverService } from '@shared/components/popover.service';
 
 @Injectable()
 export class ScheduledReportsTableConfigResolver  {
@@ -80,7 +82,8 @@ export class ScheduledReportsTableConfigResolver  {
               private dialog: MatDialog,
               private translate: TranslateService,
               private utils: UtilsService,
-              private datePipe: DatePipe) {}
+              private datePipe: DatePipe,
+              private popoverService: TbPopoverService) {}
 
   resolve(_route: ActivatedRouteSnapshot): EntityTableConfig<ScheduledReportInfo> {
     const config = new EntityTableConfig<ScheduledReportInfo>();
@@ -205,6 +208,14 @@ export class ScheduledReportsTableConfigResolver  {
         onAction: ($event, entity) => this.editScheduledReport($event, config, entity)
       }
     );
+    if (this.userPermissionsService.hasReadGenericPermission(Resource.VERSION_CONTROL)) {
+      actions.push({
+        name: this.translate.instant('version-control.version-control'),
+        icon: 'history',
+        isEnabled: () => true,
+        onAction: ($event, entity) => this.toggleVersionControl($event, config, entity)
+      })
+    }
     return actions;
   }
 
@@ -275,7 +286,36 @@ export class ScheduledReportsTableConfigResolver  {
     }).afterClosed();
   }
 
-  onScheduledReportAction(action: EntityAction<ScheduledReportInfo>, config: EntityTableConfig<ScheduledReportInfo>): boolean {
+  private toggleVersionControl($event: Event, config: EntityTableConfig<ScheduledReportInfo>, scheduledReport: ScheduledReportInfo): void {
+    $event?.stopPropagation();
+    const trigger = $event.target as HTMLElement;
+    if (this.popoverService.hasPopover(trigger)) {
+      this.popoverService.hidePopover(trigger);
+    } else {
+      const versionControlPopover = this.popoverService.displayPopover({
+        trigger,
+        renderer: config.getTable().renderer,
+        hostView: config.getTable().viewContainerRef,
+        componentType: VersionControlComponent,
+        preferredPlacement: ['leftTopOnly', 'leftOnly', 'leftBottomOnly'],
+        context: {
+          detailsMode: true,
+          active: true,
+          singleEntityMode: true,
+          externalEntityId: scheduledReport.externalId || scheduledReport.id,
+          entityId: scheduledReport.id,
+          entityName: scheduledReport.name
+        }
+      });
+      versionControlPopover.tbComponentRef.instance.popoverComponent = versionControlPopover;
+      versionControlPopover.tbComponentRef.instance.versionRestored.subscribe(() => {
+        versionControlPopover.hide();
+        config.updateData();
+      });
+    }
+  }
+
+  onScheduledReportAction(_action: EntityAction<ScheduledReportInfo>, _config: EntityTableConfig<ScheduledReportInfo>): boolean {
     return false;
   }
 

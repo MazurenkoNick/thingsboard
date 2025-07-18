@@ -224,6 +224,13 @@
                         (click)="unassignFromEdge($event, schedulerEvent)">
                   <mat-icon>assignment_return</mat-icon>
                 </button>
+                <button *ngIf="vcEnabled" #versionControlButton
+                        mat-icon-button [disabled]="isLoading$ | async"
+                        matTooltip="{{ 'version-control.version-control' | translate }}"
+                        matTooltipPosition="above"
+                        (click)="toggleVersionControl($event, schedulerEvent, versionControlButton)">
+                  <mat-icon>history</mat-icon>
+                </button>
                 <button *ngIf="deleteEnabled"
                         mat-icon-button [disabled]="isLoading$ | async"
                         matTooltip="{{ 'scheduler.delete-scheduler-event' | translate }}"
