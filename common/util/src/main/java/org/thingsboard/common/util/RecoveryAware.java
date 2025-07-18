@@ -28,45 +28,10 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.script.api;
+package org.thingsboard.common.util;
 
-import lombok.Getter;
-import org.thingsboard.common.util.RecoveryAware;
+public interface RecoveryAware {
 
-import java.io.Serial;
-import java.util.UUID;
-
-public class TbScriptException extends RuntimeException implements RecoveryAware {
-
-    @Serial
-    private static final long serialVersionUID = -1958193538782818284L;
-
-    public enum ErrorCode {
-
-        COMPILATION,
-        TIMEOUT,
-        RUNTIME,
-        OTHER
-
-    }
-
-    @Getter
-    private final UUID scriptId;
-    @Getter
-    private final ErrorCode errorCode;
-    @Getter
-    private final String body;
-
-    public TbScriptException(UUID scriptId, ErrorCode errorCode, String body, Exception cause) {
-        super(cause);
-        this.scriptId = scriptId;
-        this.errorCode = errorCode;
-        this.body = body;
-    }
-
-    @Override
-    public boolean isUnrecoverable() {
-        return errorCode == ErrorCode.COMPILATION;
-    }
+    boolean isUnrecoverable();
 
 }

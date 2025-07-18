@@ -28,10 +28,37 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.common.msg;
+package org.thingsboard.script.api;
 
-public interface TbActorError {
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 
-    boolean isUnrecoverable();
+import static org.assertj.core.api.Assertions.assertThat;
+
+class TbScriptExceptionTest {
+
+    @Test
+    void givenCompilationError_whenCheckingIsUnrecoverable_thenReturnsTrue() {
+        // GIVEN
+        var exception = new TbScriptException(null, TbScriptException.ErrorCode.COMPILATION, null, null);
+
+        // WHEN-THEN
+        assertThat(exception.isUnrecoverable()).isTrue();
+    }
+
+    @ParameterizedTest
+    @EnumSource(
+            value = TbScriptException.ErrorCode.class,
+            mode = EnumSource.Mode.EXCLUDE,
+            names = "COMPILATION"
+    )
+    void givenRecoverableErrorCodes_whenCheckingIsUnrecoverable_thenReturnsFalse(TbScriptException.ErrorCode errorCode) {
+        // GIVEN
+        var exception = new TbScriptException(null, errorCode, null, null);
+
+        // WHEN-THEN
+        assertThat(exception.isUnrecoverable()).isFalse();
+    }
 
 }
