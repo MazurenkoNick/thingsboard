@@ -33,10 +33,12 @@ package org.thingsboard.server.common.data.report;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import org.thingsboard.server.common.data.id.EntityId;
-import org.thingsboard.server.common.data.id.NotificationTargetId;
 import org.thingsboard.server.common.data.id.NotificationTemplateId;
 import org.thingsboard.server.common.data.id.ReportTemplateId;
 import org.thingsboard.server.common.data.report.configuration.ReportTemplateConfig;
+
+import java.util.List;
+import java.util.UUID;
 
 @Data
 public class ReportRequest {
@@ -54,7 +56,7 @@ public class ReportRequest {
     @Schema(description = "Json object representing the originator id.")
     private EntityId originator;
 
-    private NotificationTargetId recipientId;
+    private List<UUID> targets;
     private NotificationTemplateId notificationTemplateId;
 
 }

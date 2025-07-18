@@ -57,7 +57,6 @@ import {
 import { MatButton } from '@angular/material/button';
 import { TemplateConfiguration } from '@home/pages/notification/template/template-configuration';
 import { Authority } from '@shared/models/authority.enum';
-import { AuthUser } from '@shared/models/user.model';
 import { getCurrentAuthState, getCurrentAuthUser } from '@core/auth/auth.selectors';
 import { TranslateService } from '@ngx-translate/core';
 import { AuthState } from '@core/auth/auth.models';
@@ -116,7 +115,6 @@ export class SentNotificationDialogComponent extends
     }
   };
 
-  private authUser: AuthUser = getCurrentAuthUser(this.store);
   private authState: AuthState = getCurrentAuthState(this.store);
 
   private allowNotificationDeliveryMethods: Array<NotificationDeliveryMethod>;
@@ -294,14 +292,6 @@ export class SentNotificationDialogComponent extends
         return false;
       }
     });
-  }
-
-  private isSysAdmin(): boolean {
-    return this.authUser.authority === Authority.SYS_ADMIN;
-  }
-
-  private isTenantAdmin(): boolean {
-    return this.authUser.authority === Authority.TENANT_ADMIN;
   }
 
   minDate(): Date {

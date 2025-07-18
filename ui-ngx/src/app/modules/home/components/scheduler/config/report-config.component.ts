@@ -57,6 +57,7 @@ import {
   RecipientNotificationDialogData
 } from '@home/pages/notification/recipient/recipient-notification-dialog.component';
 import { MatDialog } from '@angular/material/dialog';
+import { MatButton } from '@angular/material/button';
 
 @Component({
   selector: 'tb-report-config',
@@ -112,7 +113,7 @@ export class ReportConfigComponent extends PageComponent implements ControlValue
       reportTemplateId: [null, [Validators.required]],
       userId: [null, [Validators.required]],
       timezone: [null, [Validators.required]],
-      recipientId: [null, []],
+      targets: [null, []],
       notificationTemplateId: [null, []]
     });
 
@@ -160,7 +161,11 @@ export class ReportConfigComponent extends PageComponent implements ControlValue
     return null;
   }
 
-  createRecipient() {
+  createTarget($event: Event, button: MatButton) {
+    if ($event) {
+      $event.stopPropagation();
+    }
+    button._elementRef.nativeElement.blur();
     this.dialog.open<RecipientNotificationDialogComponent, RecipientNotificationDialogData,
       NotificationTarget>(RecipientNotificationDialogComponent, {
       disableClose: true,
@@ -169,7 +174,12 @@ export class ReportConfigComponent extends PageComponent implements ControlValue
     }).afterClosed()
     .subscribe((res) => {
       if (res) {
-        this.reportConfigFormGroup.get('recipientId').setValue(res.id);
+        let formValue: string[] = this.reportConfigFormGroup.get('targets').value;
+        if (!formValue) {
+          formValue = [];
+        }
+        formValue.push(res.id.id);
+        this.reportConfigFormGroup.get('targets').patchValue(formValue);
       }
     })
   }
@@ -187,7 +197,7 @@ export class ReportConfigComponent extends PageComponent implements ControlValue
       reportTemplateId: null,
       timezone: getDefaultTimezone(),
       userId: new UserId(this.authUser.userId),
-      recipientId: null,
+      targets: [],
       notificationTemplateId: null
     };
   }

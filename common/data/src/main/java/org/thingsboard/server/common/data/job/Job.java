@@ -142,8 +142,8 @@ public class Job extends BaseData<JobId> implements TenantEntity {
             return this;
         }
 
-        public ReportJobBuilder recipientId(NotificationTargetId recipientId) {
-            this.configuration.setRecipientId(recipientId);
+        public ReportJobBuilder targets(List<UUID> targets) {
+            this.configuration.setTargets(targets);
             return this;
         }
 

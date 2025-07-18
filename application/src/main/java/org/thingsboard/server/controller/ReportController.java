@@ -288,7 +288,7 @@ public class ReportController extends BaseController {
                 .userId(userId)
                 .timezone(reportRequest.getTimezone())
                 .originator(reportRequest.getOriginator())
-                .recipientId(reportRequest.getRecipientId())
+                .targets(reportRequest.getTargets())
                 .notificationTemplateId(reportRequest.getNotificationTemplateId())
                 .build()).get();
     }

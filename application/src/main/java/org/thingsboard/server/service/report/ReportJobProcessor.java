@@ -58,6 +58,7 @@ import org.thingsboard.server.common.data.notification.NotificationRequestConfig
 import org.thingsboard.server.common.data.notification.info.ReportGeneratedNotificationInfo;
 import org.thingsboard.server.common.data.report.Report;
 import org.thingsboard.server.common.data.report.ReportTemplate;
+import org.thingsboard.server.common.data.util.CollectionsUtil;
 import org.thingsboard.server.common.msg.TbMsg;
 import org.thingsboard.server.common.msg.gen.MsgProtos;
 import org.thingsboard.server.common.msg.queue.ServiceType;
@@ -156,10 +157,10 @@ public class ReportJobProcessor implements JobProcessor {
         apiUsageClient.report(job.getTenantId(), null, ApiUsageRecordKey.GENERATED_REPORTS_COUNT);
 
         Report report = result.getReport();
-        if (configuration.getRecipientId() != null && configuration.getNotificationTemplateId() != null) {
+        if (CollectionsUtil.isNotEmpty(configuration.getTargets()) && configuration.getNotificationTemplateId() != null) {
             NotificationRequest notificationRequest = NotificationRequest.builder()
                     .tenantId(tenantId)
-                    .targets(List.of(configuration.getRecipientId().getId()))
+                    .targets(configuration.getTargets())
                     .templateId(configuration.getNotificationTemplateId())
                     .originatorEntityId(report.getUserId())
                     .info(ReportGeneratedNotificationInfo.builder()

@@ -81,7 +81,7 @@
               </mat-slide-toggle>
             </section>
           </section>
-          @if (templateNotificationForm.get('notificationType').value !== notificationType.REPORT_GENERATED) {
+          @if (!isSysAdmin() && templateNotificationForm.get('notificationType').value !== notificationType.REPORT_GENERATED) {
             <div class="tb-form-panel stroked no-padding-bottom no-gap">
               <mat-slide-toggle class="toggle" formControlName="attachReport">
                 <div tb-hint-tooltip-icon="{{ 'notification.attach-report-hint' | translate }}" translate>

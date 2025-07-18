@@ -336,7 +336,7 @@ public class DefaultSchedulerService extends AbstractPartitionBasedService<Tenan
                                 .reportTemplateId(reportConfig.getReportTemplateId())
                                 .userId(reportConfig.getUserId())
                                 .timezone(reportConfig.getTimezone())
-                                .recipientId(reportConfig.getRecipientId())
+                                .targets(reportConfig.getTargets())
                                 .notificationTemplateId(reportConfig.getNotificationTemplateId())
                                 .build());
                     } else {

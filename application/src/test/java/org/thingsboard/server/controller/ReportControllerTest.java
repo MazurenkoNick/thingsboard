@@ -283,7 +283,7 @@ public class ReportControllerTest extends AbstractControllerTest {
         //generate report
         ReportRequest reportRequest = new ReportRequest();
         reportRequest.setReportTemplateId(reportTemplateId);
-        reportRequest.setRecipientId(recipient.getId());
+        reportRequest.setTargets(List.of(recipient.getId().getId()));
         reportRequest.setNotificationTemplateId(notificationTemplate.getId());
         doPost("/api/v2/report/request", reportRequest, Job.class);
 
@@ -330,13 +330,13 @@ public class ReportControllerTest extends AbstractControllerTest {
         for (int i = 0; i < 5; i++) {
             ReportRequest csvRequest = new ReportRequest();
             csvRequest.setReportTemplateId(csvTemplate.getId());
-            csvRequest.setRecipientId(recipient.getId());
+            csvRequest.setTargets(List.of(recipient.getId().getId()));
             csvRequest.setNotificationTemplateId(notificationTemplate.getId());
             doPost("/api/v2/report/request", csvRequest, Job.class);
 
             ReportRequest pdfRequest = new ReportRequest();
             pdfRequest.setReportTemplateId(pdfTemplate.getId());
-            pdfRequest.setRecipientId(recipient.getId());
+            pdfRequest.setTargets(List.of(recipient.getId().getId()));
             pdfRequest.setNotificationTemplateId(notificationTemplate.getId());
             doPost("/api/v2/report/request", pdfRequest, Job.class);
         }

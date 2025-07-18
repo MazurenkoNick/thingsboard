@@ -46,7 +46,6 @@ import { BreakpointObserver } from '@angular/cdk/layout';
 import { MediaBreakpoints } from '@shared/models/constants';
 import { TranslateService } from '@ngx-translate/core';
 import { TemplateConfiguration } from '@home/pages/notification/template/template-configuration';
-import { getCurrentAuthUser } from '@core/auth/auth.selectors';
 import { AuthUser } from '@shared/models/user.model';
 import { Authority } from '@shared/models/authority.enum';
 
@@ -80,7 +79,6 @@ export class TemplateNotificationDialogComponent
   notificationTemplateConfigurationForm: FormGroup;
 
   private readonly templateNotification: NotificationTemplate;
-  private authUser: AuthUser = getCurrentAuthUser(this.store);
 
   constructor(protected store: Store<AppState>,
               protected router: Router,
@@ -198,10 +196,6 @@ export class TemplateNotificationDialogComponent
         return false;
       }
     });
-  }
-
-  private isSysAdmin(): boolean {
-    return this.authUser.authority === Authority.SYS_ADMIN;
   }
 
   private allowNotificationType(): NotificationType[] {

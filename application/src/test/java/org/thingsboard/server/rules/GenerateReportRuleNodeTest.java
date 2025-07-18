@@ -174,7 +174,7 @@ public class GenerateReportRuleNodeTest extends AbstractRuleEngineControllerTest
         ReportConfig reportConfig = new ReportConfig();
         reportConfig.setReportTemplateId(reportTemplate.getId());
         reportConfig.setUserId(tenantAdminUserId);
-        reportConfig.setRecipientId(recipient.getId());
+        reportConfig.setTargets(List.of(recipient.getId().getId()));
         reportConfig.setNotificationTemplateId(notificationTemplate.getId());
         generateReportNodeConfiguration.setConfig(reportConfig);
         generateReportNode.setConfiguration(JacksonUtil.valueToTree(generateReportNodeConfiguration));

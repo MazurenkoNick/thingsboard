@@ -52,16 +52,21 @@
     formControlName="timezone">
   </tb-timezone-select>
   <div class="tb-form-panel outlined padding stroked">
-    <div class="tb-form-panel-title" translate>report.recipient</div>
-    <tb-entity-autocomplete
+    <div class="tb-form-panel-title" translate>notification.recipients</div>
+    <tb-entity-list
       appearance="outline"
-      allowCreateNew
-      useFullEntityId
-      formControlName="recipientId"
-      labelText="report.report-recipient"
+      syncIdsWithDB
+      formControlName="targets"
+      labelText="{{ 'notification.recipients' | translate }}"
+      placeholderText="{{ 'notification.recipient' | translate }}"
       [entityType]="entityType.NOTIFICATION_TARGET"
-      (createNew)="createRecipient()">
-    </tb-entity-autocomplete>
+      [entitySubType]="NotificationType.GENERAL">
+      <button #createTargetButton
+              mat-button color="primary" matSuffix
+              (click)="createTarget($event, createTargetButton)">
+        <span style="white-space: nowrap">{{ 'notification.create-new' | translate }}</span>
+      </button>
+    </tb-entity-list>
     <tb-template-autocomplete
       appearance="outline"
       allowCreate allowEdit

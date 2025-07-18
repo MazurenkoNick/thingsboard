@@ -545,6 +545,7 @@ export class SchedulerEventsComponent extends PageComponent implements OnInit, A
             this.pageLink.textSearch = null;
             this.textSearch.reset('', {emitEvent: false});
           }
+          this.updateData();
         });
       }
 
@@ -560,28 +561,30 @@ export class SchedulerEventsComponent extends PageComponent implements OnInit, A
 
   updateMode(mode: SchedulerEventMode, updateRouterQueryParams: boolean = true) {
     this.mode = mode;
+    let updateData = true;
     if (updateRouterQueryParams && !this.widgetMode) {
       const queryParams = {
         mode: mode === 'calendar' ? mode : null
       };
       this.updatedRouterQueryParams(queryParams, 'replace');
+      updateData = false;
     }
     if (mode === 'calendar') {
       this.dataSource?.selection.clear();
-      this.initializeCalendar();
-    } else {
+      this.initializeCalendar(updateData);
+    } else if (updateData) {
       this.updateData();
     }
   }
 
-  private initializeCalendar() {
+  private initializeCalendar(updateData = true) {
     if (!this.isCalendarInitialized.getValue()) {
       setTimeout(() => {
         this.calendarApi = this.calendarComponent.getApi();
         this.calendarApi.render();
         this.isCalendarInitialized.next(true);
       }, 0);
-    } else {
+    } else if (updateData) {
       this.updateData();
     }
   }

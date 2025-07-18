@@ -86,7 +86,7 @@ public class TbGenerateReportV2Node extends TbAbstractExternalNode {
                 .userId(reportConfig.getUserId())
                 .timezone(reportConfig.getTimezone())
                 .originator(tbMsg.getOriginator())
-                .recipientId(reportConfig.getRecipientId())
+                .targets(reportConfig.getTargets())
                 .notificationTemplateId(reportConfig.getNotificationTemplateId())
                 .build();
         ReportJobConfiguration configuration = job.getConfiguration();

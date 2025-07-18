@@ -49,6 +49,9 @@ import { Router } from '@angular/router';
 import { MatDialogRef } from '@angular/material/dialog';
 import { EntityType } from '@shared/models/entity-type.models';
 import { ReportTemplateType } from '@app/shared/models/report.models';
+import { AuthUser } from '@shared/models/user.model';
+import { getCurrentAuthUser } from '@core/auth/auth.selectors';
+import { Authority } from '@shared/models/authority.enum';
 
 @Directive()
 // tslint:disable-next-line:directive-class-suffix
@@ -70,6 +73,8 @@ export abstract class TemplateConfiguration<T, R = any> extends DialogComponent<
   protected readonly destroy$ = new Subject<void>();
 
   protected deliveryMethodFormsMap: Map<NotificationDeliveryMethod, FormGroup>;
+
+  private authUser: AuthUser = getCurrentAuthUser(this.store);
 
   protected constructor(protected store: Store<AppState>,
                         protected router: Router,
@@ -128,6 +133,14 @@ export abstract class TemplateConfiguration<T, R = any> extends DialogComponent<
       }
       return hasAtLeastOne ? null : {atLeastOne: true};
     };
+  }
+
+  isSysAdmin(): boolean {
+    return this.authUser.authority === Authority.SYS_ADMIN;
+  }
+
+  isTenantAdmin(): boolean {
+    return this.authUser.authority === Authority.TENANT_ADMIN;
   }
 
   protected getNotificationTemplateValue(): NotificationTemplate {

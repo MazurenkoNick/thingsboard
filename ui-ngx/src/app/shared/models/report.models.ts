@@ -33,7 +33,7 @@ import { BaseData, ExportableEntity } from '@shared/models/base-data';
 import { ReportTemplateId } from '@shared/models/id/report-template-id';
 import { TenantId } from '@shared/models/id/tenant-id';
 import { CustomerId } from '@shared/models/id/customer-id';
-import { EntityInfo, EntityInfoData, HasTenantId, HasVersion } from '@shared/models/entity.models';
+import { EntityInfoData, HasTenantId, HasVersion } from '@shared/models/entity.models';
 import { EntityId } from '@shared/models/id/entity-id';
 import { EntityAlias, EntityAliases } from '@shared/models/alias.models';
 import {
@@ -54,7 +54,6 @@ import {
   isEqualIgnoreUndefined,
   isUndefinedOrNull
 } from '@core/utils';
-import { NotificationTargetId } from '@shared/models/id/notification-target-id';
 import { NotificationTemplateId } from '@shared/models/id/notification-template-id';
 import { SchedulerEventInfo } from '@shared/models/scheduler-event.models';
 
@@ -308,18 +307,20 @@ export const updateFromReportTemplateSettings =
 }
 
 export interface ReportRequest {
-  reportTemplateConfig: ReportTemplateConfig;
-  customerId?: CustomerId;
-  entityId?: EntityId;
-  timezone?: string;
+  reportTemplateId?: ReportTemplateId;
+  reportTemplateConfig?: ReportTemplateConfig;
   userId?: string;
+  timezone?: string;
+  originator?: EntityId;
+  targets?: Array<string>;
+  notificationTemplateId?: NotificationTemplateId;
 }
 
 export interface ReportConfig {
   reportTemplateId: ReportTemplateId;
   userId: UserId;
   timezone: string;
-  recipientId?: NotificationTargetId;
+  targets?: Array<string>;
   notificationTemplateId?: NotificationTemplateId;
 }
 

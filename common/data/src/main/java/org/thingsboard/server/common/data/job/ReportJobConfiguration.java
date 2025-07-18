@@ -45,6 +45,7 @@ import org.thingsboard.server.common.data.notification.NotificationRequest;
 import org.thingsboard.server.common.data.rule.RuleNode;
 
 import java.util.List;
+import java.util.UUID;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -58,7 +59,7 @@ public class ReportJobConfiguration extends JobConfiguration {
     private UserId userId;
     private String timezone;
 
-    private NotificationTargetId recipientId;
+    private List<UUID> targets;
     private NotificationTemplateId notificationTemplateId;
     private List<NotificationRequest> notificationRequests;
 
