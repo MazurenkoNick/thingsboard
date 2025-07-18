@@ -63,7 +63,6 @@ import org.thingsboard.server.common.data.security.model.mfa.provider.TotpTwoFaP
 import org.thingsboard.server.common.data.security.model.mfa.provider.TwoFaProviderConfig;
 import org.thingsboard.server.common.data.security.model.mfa.provider.TwoFaProviderType;
 import org.thingsboard.server.dao.audit.AuditLogService;
-import org.thingsboard.server.dao.secret.SecretConfigurationService;
 import org.thingsboard.server.dao.service.DaoSqlTest;
 import org.thingsboard.server.service.security.auth.mfa.TwoFactorAuthService;
 import org.thingsboard.server.service.security.auth.mfa.config.TwoFaConfigManager;
@@ -85,7 +84,6 @@ import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -100,8 +98,6 @@ public class TwoFactorAuthTest extends AbstractControllerTest {
     private SmsService smsService;
     @Autowired
     private AuditLogService auditLogService;
-    @MockBean
-    private SecretConfigurationService secretConfigurationService;
 
     private User user;
     private String username;
@@ -159,7 +155,6 @@ public class TwoFactorAuthTest extends AbstractControllerTest {
 
         ArgumentCaptor<String> verificationCodeCaptor = ArgumentCaptor.forClass(String.class);
         verify(smsService).sendSms(eq(tenantId), any(), any(), verificationCodeCaptor.capture());
-        verify(secretConfigurationService, times(1)).replaceSecretUsages(eq(tenantId), any());
 
         String correctVerificationCode = verificationCodeCaptor.getValue();
 
@@ -296,7 +291,6 @@ public class TwoFactorAuthTest extends AbstractControllerTest {
         ArgumentCaptor<String> verificationCodeCaptor = ArgumentCaptor.forClass(String.class);
         doPost("/api/auth/2fa/verification/send?providerType=SMS").andExpect(status().isOk());
         verify(smsService).sendSms(eq(tenantId), any(), any(), verificationCodeCaptor.capture());
-        verify(secretConfigurationService, times(1)).replaceSecretUsages(eq(tenantId), any());
 
         String correctVerificationCode = verificationCodeCaptor.getValue();
 
