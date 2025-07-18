@@ -5272,6 +5272,7 @@
         "delivery-method-not-configure-contact": "Delivery method is not configured. Contact your system administrator.",
         "delivery-methods": "Delivery methods",
         "attach-report": "Attach report",
+        "attach-report-hint": "Generate and attach report file to email or slack message. Currently acceptable only for 'Email' and 'Slack' delivery methods.",
         "description": "Description",
         "device-activity-trigger-settings": "Device active trigger settings",
         "device-list-rule-hint": "If the field is empty, the trigger will be applied to all devices",

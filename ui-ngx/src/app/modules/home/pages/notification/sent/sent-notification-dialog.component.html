@@ -116,7 +116,9 @@
               </section>
               <section class="tb-form-panel stroked no-padding-bottom no-gap mb-5">
                 <mat-slide-toggle class="toggle" formControlName="attachReport">
-                  {{ 'notification.attach-report' | translate }}
+                  <div tb-hint-tooltip-icon="{{ 'notification.attach-report-hint' | translate }}" translate>
+                    notification.attach-report
+                  </div>
                 </mat-slide-toggle>
                 @if (notificationRequestForm.get('template.configuration.attachReport').value) {
                   <div class="tb-form-panel outlined">

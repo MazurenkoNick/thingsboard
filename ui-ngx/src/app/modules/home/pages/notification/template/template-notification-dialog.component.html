@@ -84,7 +84,9 @@
           @if (templateNotificationForm.get('notificationType').value !== notificationType.REPORT_GENERATED) {
             <div class="tb-form-panel stroked no-padding-bottom no-gap">
               <mat-slide-toggle class="toggle" formControlName="attachReport">
-                {{ 'notification.attach-report' | translate }}
+                <div tb-hint-tooltip-icon="{{ 'notification.attach-report-hint' | translate }}" translate>
+                  notification.attach-report
+                </div>
               </mat-slide-toggle>
               @if (templateNotificationForm.get('configuration.attachReport').value) {
                 <div class="tb-form-panel outlined">
