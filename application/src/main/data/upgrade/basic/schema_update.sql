@@ -85,6 +85,8 @@ DROP INDEX IF EXISTS idx_role_external_id;
 
 -- DROP INDEXES THAT DUPLICATE UNIQUE CONSTRAINT END
 
+ALTER TABLE mobile_app ADD COLUMN IF NOT EXISTS title varchar(255);
+
 DELETE FROM integration where type = 'IBM_WATSON_IOT';
 
 DELETE FROM converter where integration_type = 'IBM_WATSON_IOT';
