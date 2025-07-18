@@ -33,8 +33,6 @@ package org.thingsboard.server.common.data.secret;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.Setter;
 import org.thingsboard.server.common.data.id.SecretId;
 
 import java.io.Serial;
@@ -47,8 +45,6 @@ public class Secret extends SecretInfo {
     @Serial
     private static final long serialVersionUID = 3671364019778017637L;
 
-    @Getter
-    @Setter
     @EqualsAndHashCode.Exclude
     private String value;
 
