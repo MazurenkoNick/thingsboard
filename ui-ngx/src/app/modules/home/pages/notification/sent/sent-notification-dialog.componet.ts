@@ -44,7 +44,6 @@ import { AbstractControl, FormBuilder, FormGroup, Validators } from '@angular/fo
 import { NotificationService } from '@core/http/notification.service';
 import { deepTrim, guid, isDefinedAndNotNull } from '@core/utils';
 import { Observable } from 'rxjs';
-import { EntityType } from '@shared/models/entity-type.models';
 import { BreakpointObserver } from '@angular/cdk/layout';
 import { MatStepper } from '@angular/material/stepper';
 import { StepperOrientation, StepperSelectionEvent } from '@angular/cdk/stepper';
@@ -83,8 +82,6 @@ export class SentNotificationDialogComponent extends
   stepperOrientation: Observable<StepperOrientation>;
 
   isAdd = true;
-  entityType = EntityType;
-  notificationType = NotificationType;
 
   notificationRequestForm: FormGroup;
 
@@ -203,6 +200,7 @@ export class SentNotificationDialogComponent extends
       this.deliveryConfiguration = this.templateNotificationForm.get('configuration.deliveryMethodsTemplates').value;
     }
     this.refreshAllowDeliveryMethod();
+    this.updateValidators();
   }
 
   ngOnDestroy() {

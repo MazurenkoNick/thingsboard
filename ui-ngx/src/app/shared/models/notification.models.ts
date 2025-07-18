@@ -43,6 +43,7 @@ import { EntityType } from '@shared/models/entity-type.models';
 import { ApiFeature, ApiUsageStateValue } from '@shared/models/api-usage.models';
 import { LimitedApi } from '@shared/models/limited-api.models';
 import { IntegrationType } from '@shared/models/integration.models';
+import { ReportTemplateId } from '@shared/models/id/report-template-id';
 
 export interface Notification {
   readonly id: NotificationId;
@@ -351,6 +352,10 @@ export interface NotificationTemplate extends Omit<BaseData<NotificationTemplate
 
 interface NotificationTemplateConfig {
   deliveryMethodsTemplates: DeliveryMethodsTemplates;
+  attachReport: boolean;
+  reportTemplateId: ReportTemplateId;
+  userId: UserId;
+  timezone: string;
 }
 
 export type DeliveryMethodsTemplates = {

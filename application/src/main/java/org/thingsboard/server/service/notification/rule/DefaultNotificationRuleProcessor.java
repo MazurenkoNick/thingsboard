@@ -167,6 +167,7 @@ public class DefaultNotificationRuleProcessor implements NotificationRuleProcess
                 jobManager.submitJob(Job.newReportJob()
                         .tenantId(rule.getTenantId())
                         .reportTemplateId(template.getConfiguration().getReportTemplateId())
+                        .originator(notificationInfo.getStateEntityId())
                         .userId(template.getConfiguration().getUserId())
                         .timezone(template.getConfiguration().getTimezone())
                         .notificationRequests(notificationRequests)

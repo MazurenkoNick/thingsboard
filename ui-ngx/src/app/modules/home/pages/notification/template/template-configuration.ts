@@ -39,7 +39,7 @@ import {
   NotificationType
 } from '@shared/models/notification.models';
 import { takeUntil } from 'rxjs/operators';
-import { Subject } from 'rxjs';
+import { merge, Subject } from 'rxjs';
 import { Directive, OnDestroy } from '@angular/core';
 import { deepClone, deepTrim } from '@core/utils';
 import { DialogComponent } from '@shared/components/dialog.component';
@@ -47,10 +47,16 @@ import { Store } from '@ngrx/store';
 import { AppState } from '@core/core.state';
 import { Router } from '@angular/router';
 import { MatDialogRef } from '@angular/material/dialog';
+import { EntityType } from '@shared/models/entity-type.models';
+import { ReportTemplateType } from '@app/shared/models/report.models';
 
 @Directive()
 // tslint:disable-next-line:directive-class-suffix
 export abstract class TemplateConfiguration<T, R = any> extends DialogComponent<T, R> implements OnDestroy{
+
+  notificationType = NotificationType;
+  ReportTemplateType = ReportTemplateType;
+  entityType = EntityType;
 
   templateNotificationForm: FormGroup;
   notificationTemplateConfigurationForm: FormGroup;
@@ -75,7 +81,11 @@ export abstract class TemplateConfiguration<T, R = any> extends DialogComponent<
       name: ['', Validators.required],
       notificationType: [NotificationType.GENERAL],
       configuration: this.fb.group({
-        deliveryMethodsTemplates: this.fb.group({}, {validators: this.atLeastOne()})
+        deliveryMethodsTemplates: this.fb.group({}, {validators: this.atLeastOne()}),
+        attachReport: [],
+        reportTemplateId: [null, [Validators.required]],
+        userId: [null, [Validators.required]],
+        timezone: [null, [Validators.required]]
       })
     });
 
@@ -83,6 +93,13 @@ export abstract class TemplateConfiguration<T, R = any> extends DialogComponent<
       takeUntil(this.destroy$)
     ).subscribe((value) => {
       this.deliveryConfiguration = value;
+    });
+
+    merge(this.templateNotificationForm.get('notificationType').valueChanges,
+          this.templateNotificationForm.get('configuration.attachReport').valueChanges).pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(() => {
+      this.updateValidators();
     });
 
     this.notificationTemplateConfigurationForm = this.fb.group({
@@ -115,7 +132,24 @@ export abstract class TemplateConfiguration<T, R = any> extends DialogComponent<
 
   protected getNotificationTemplateValue(): NotificationTemplate {
     const template = deepClone(this.templateNotificationForm.value);
-    template.configuration = deepClone(this.notificationTemplateConfigurationForm.value);
+    template.configuration.deliveryMethodsTemplates = deepClone(this.notificationTemplateConfigurationForm.get('deliveryMethodsTemplates').value);
     return deepTrim(template);
+  }
+
+  protected updateValidators() {
+    const notificationType: NotificationType = this.templateNotificationForm.get('notificationType').value;
+    if (notificationType === NotificationType.REPORT_GENERATED) {
+      this.templateNotificationForm.get('configuration.attachReport').patchValue(false, {emitEvent: false});
+    }
+    const attachReport: boolean = this.templateNotificationForm.get('configuration.attachReport').value;
+    if (attachReport) {
+      this.templateNotificationForm.get('configuration.reportTemplateId').enable({emitEvent: false});
+      this.templateNotificationForm.get('configuration.userId').enable({emitEvent: false});
+      this.templateNotificationForm.get('configuration.timezone').enable({emitEvent: false});
+    } else {
+      this.templateNotificationForm.get('configuration.reportTemplateId').disable({emitEvent: false});
+      this.templateNotificationForm.get('configuration.userId').disable({emitEvent: false});
+      this.templateNotificationForm.get('configuration.timezone').disable({emitEvent: false});
+    }
   }
 }
