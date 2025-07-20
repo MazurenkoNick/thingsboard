@@ -33,6 +33,7 @@ import {
   AfterViewInit,
   ChangeDetectorRef,
   Component,
+  DestroyRef,
   ElementRef,
   Input,
   NgZone,
@@ -63,26 +64,14 @@ import {
   schedulerTimeUnitRepeatTranslationMap
 } from '@shared/models/scheduler-event.models';
 import { CollectionViewer, DataSource, SelectionModel } from '@angular/cdk/collections';
-import { BehaviorSubject, forkJoin, merge, Observable, of, ReplaySubject, Subject } from 'rxjs';
+import { BehaviorSubject, forkJoin, merge, Observable, of, shareReplay } from 'rxjs';
 import { emptyPageData, PageData } from '@shared/models/page/page-data';
-import {
-  catchError,
-  debounceTime,
-  distinctUntilChanged,
-  filter,
-  map,
-  share,
-  skip,
-  take,
-  takeUntil,
-  tap
-} from 'rxjs/operators';
+import { catchError, debounceTime, distinctUntilChanged, filter, map, share, skip, take, tap } from 'rxjs/operators';
 import { PageLink, PageQueryParam } from '@shared/models/page/page-link';
 import { SchedulerEventService } from '@core/http/scheduler-event.service';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatSort, SortDirection } from '@angular/material/sort';
 import { Direction, SortOrder, sortOrderFromString } from '@shared/models/page/sort-order';
-import { UtilsService } from '@core/services/utils.service';
 import { TranslateService } from '@ngx-translate/core';
 import { deepClone, isDefined, isDefinedAndNotNull, isNotEmptyStr } from '@core/utils';
 import { MatDialog } from '@angular/material/dialog';
@@ -125,6 +114,8 @@ import { WidgetComponent } from '@home/components/widget/widget.component';
 import { VersionControlComponent } from '@home/components/vc/version-control.component';
 import { MatButton } from '@angular/material/button';
 import { TbPopoverService } from '@shared/components/popover.service';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { CustomTranslatePipe } from '@shared/pipe/custom-translate.pipe';
 
 @Component({
   selector: 'tb-scheduler-events',
@@ -136,41 +127,27 @@ export class SchedulerEventsComponent extends PageComponent implements OnInit, A
 
   @ViewChild('schedulerEventWidgetContainer', {static: true}) schedulerEventWidgetContainerRef: ElementRef;
   @ViewChild('searchInput') searchInputField: ElementRef;
-
   @ViewChild(MatPaginator) paginator: MatPaginator;
   @ViewChild(MatSort) sort: MatSort;
-
   @ViewChild('calendarContainer') calendarContainer: ElementRef<HTMLElement>;
   @ViewChild('calendar') calendarComponent: FullCalendarComponent;
-
   @ViewChild('schedulerEventMenuTrigger', {static: true}) schedulerEventMenuTrigger: MatMenuTrigger;
 
-  @Input()
-  widgetMode: boolean;
-
-  @Input()
-  ctx: WidgetContext;
-
-  @Input()
-  edgeId: string = this.route.snapshot.params.edgeId;
-
-  backNavigationCommands? = this.route.snapshot.data.backNavigationCommands;
-
-  settings: SchedulerEventsWidgetSettings;
+  @Input() widgetMode: boolean;
+  @Input() ctx: WidgetContext;
+  @Input() edgeId: string = this.route.snapshot.params.edgeId;
 
   editEnabled = this.userPermissionsService.hasGenericPermission(Resource.SCHEDULER_EVENT, Operation.WRITE);
   vcEnabled = this.userPermissionsService.hasGenericPermission(Resource.VERSION_CONTROL, Operation.READ);
   addEnabled = this.userPermissionsService.hasGenericPermission(Resource.SCHEDULER_EVENT, Operation.CREATE);
   deleteEnabled = this.userPermissionsService.hasGenericPermission(Resource.SCHEDULER_EVENT, Operation.DELETE);
-
   authUser = getCurrentAuthUser(this.store);
-
   showData = (this.authUser.authority === Authority.TENANT_ADMIN ||
-    this.authUser.authority === Authority.CUSTOMER_USER) &&
+      this.authUser.authority === Authority.CUSTOMER_USER) &&
     this.userPermissionsService.hasGenericPermission(Resource.SCHEDULER_EVENT, Operation.READ);
 
+  enabledViews: 'both' | 'list' | 'calendar' = 'both'
   mode: SchedulerEventMode = 'list';
-
   displayPagination = true;
   pageSizeOptions: Array<number> = [];
   defaultPageSize: number;
@@ -178,153 +155,89 @@ export class SchedulerEventsComponent extends PageComponent implements OnInit, A
   defaultEventType: string;
   hidePageSize = false;
   noDataDisplayMessageText = this.translate.instant('scheduler.no-scheduler-events');
-
   displayedColumns: string[];
   pageLink: PageLink;
   textSearchMode = false;
-
   assignEnabled = false;
-
   dataSource: SchedulerEventsDatasource;
-
   isCalendarInitialized = new BehaviorSubject<boolean>(false);
-
   currentCalendarView = schedulerCalendarView.month;
-
   schedulerCalendarViews = Object.keys(schedulerCalendarView) as schedulerCalendarView[];
   schedulerCalendarViewTranslations = schedulerCalendarViewTranslationMap;
-
   schedulerEventMenuPosition = {x: '0px', y: '0px'};
   schedulerContextMenuEvent: MouseEvent;
-
   calendarOptions: CalendarOptions;
-
   textSearch = this.fb.control('', {nonNullable: true});
+  currentCalendarViewValue = schedulerCalendarViewValueMap.get(this.currentCalendarView);
+  schedulerEventConfigTypes: {[eventType: string]: SchedulerEventConfigType};
+  initialCalendarDate: Date | null = null;
 
   private calendarApi: Calendar;
   private schedulerEvents: Array<SchedulerEventWithCustomerInfo> = [];
-  private currentCalendarViewValue = schedulerCalendarViewValueMap.get(this.currentCalendarView);
-  private widgetResize$: ResizeObserver;
-  private destroy$ = new Subject<void>();
-  private schedulerEventConfigTypes: {[eventType: string]: SchedulerEventConfigType};
+  private componentResize$: ResizeObserver;
+  private backNavigationCommands? = this.route.snapshot.data.backNavigationCommands;
+  private modeHandler: SchedulerModeHandler;
 
-  constructor(protected store: Store<AppState>,
-              private utils: UtilsService,
-              public translate: TranslateService,
-              private schedulerEventService: SchedulerEventService,
-              private userPermissionsService: UserPermissionsService,
-              private dialogService: DialogService,
-              private dialog: MatDialog,
-              private router: Router,
-              private route: ActivatedRoute,
-              private cd: ChangeDetectorRef,
-              private fb: FormBuilder,
-              private zone: NgZone,
-              private renderer: Renderer2,
-              private popoverService: TbPopoverService,
-              private viewContainerRef: ViewContainerRef,
-              @Optional() public widgetComponent: WidgetComponent) {
+  constructor(
+    protected store: Store<AppState>,
+    private customTranslatePipe: CustomTranslatePipe,
+    private translate: TranslateService,
+    private schedulerEventService: SchedulerEventService,
+    private userPermissionsService: UserPermissionsService,
+    private dialogService: DialogService,
+    private dialog: MatDialog,
+    private router: Router,
+    private route: ActivatedRoute,
+    private cd: ChangeDetectorRef,
+    private fb: FormBuilder,
+    private zone: NgZone,
+    private renderer: Renderer2,
+    private popoverService: TbPopoverService,
+    private viewContainerRef: ViewContainerRef,
+    private destroyRef: DestroyRef,
+    @Optional() public widgetComponent: WidgetComponent
+  ) {
     super(store);
   }
 
   ngOnInit(): void {
-    if (this.widgetMode) {
-      this.ctx.$scope.schedulerEventsWidget = this;
-      this.vcEnabled = false;
-    }
-    if (this.showData && this.widgetMode) {
-      this.settings = this.ctx.settings;
-      this.initializeWidgetConfig();
-      this.ctx.updateWidgetParams();
-    } else {
-      this.displayedColumns = ['createdTime', 'name', 'type', 'customerTitle', 'actions'];
-      if (this.deleteEnabled) {
-        this.displayedColumns.unshift('select');
-      }
-      const routerQueryParams: CalendarQueryParam = this.route.snapshot.queryParams;
-      const sortOrder: SortOrder = {
-        property: routerQueryParams?.property || this.defaultSortOrder,
-        direction: routerQueryParams?.direction || Direction.ASC
-      };
-      this.defaultPageSize = 10;
-      this.pageSizeOptions = [this.defaultPageSize, this.defaultPageSize * 2, this.defaultPageSize * 3];
-      this.pageLink = new PageLink(this.defaultPageSize, 0, null, sortOrder);
-      if (routerQueryParams.hasOwnProperty('page')) {
-        this.pageLink.page = Number(routerQueryParams.page);
-      }
-      if (routerQueryParams.hasOwnProperty('pageSize')) {
-        this.pageLink.pageSize = Number(routerQueryParams.pageSize);
-      }
-      if (routerQueryParams.hasOwnProperty('mode')) {
-        this.updateMode('calendar', false);
-        this.isCalendarInitialized.pipe(
-          filter((isInitialized) => isInitialized),
-          take(1)
-        ).subscribe(() => {
-          if (routerQueryParams.hasOwnProperty('calendarView')) {
-            this.changeCalendarView(schedulerCalendarView[routerQueryParams.calendarView], false);
-          }
-          if (routerQueryParams.hasOwnProperty('calendarStart')) {
-            this.gotoCalendarDate(+routerQueryParams.calendarStart);
-          }
-        });
-      }
-      const textSearchParam = routerQueryParams.textSearch;
-      if (isNotEmptyStr(textSearchParam)) {
-        this.textSearchMode = true;
-        const decodedTextSearch = decodeURI(textSearchParam);
-        this.pageLink.textSearch = decodedTextSearch.trim();
-        this.textSearch.setValue(decodedTextSearch, {emitEvent: false});
-      }
-      this.schedulerEventConfigTypes = deepClone(defaultSchedulerEventConfigTypes);
-      this.dataSource = new SchedulerEventsDatasource(this.schedulerEventService, this.schedulerEventConfigTypes);
-      if (this.edgeId) {
-        const isEdgeWriteAllowed: boolean = this.userPermissionsService.hasGenericPermission(Resource.EDGE, Operation.WRITE);
-        this.assignEnabled = isEdgeWriteAllowed;
-        if (isEdgeWriteAllowed) {
-          if (!this.deleteEnabled) {
-            this.displayedColumns.unshift('select');
-          }
-        } else {
-          if (this.deleteEnabled) {
-            this.displayedColumns.shift();
-          }
-        }
-        this.deleteEnabled = false;
-        this.addEnabled = false;
-        this.editEnabled = false;
-        this.vcEnabled = false;
-      }
-    }
+    this.modeHandler = SchedulerModeHandler.create(this, this.router, this.route);
+    this.modeHandler.initialize(this.schedulerEventService, this.userPermissionsService, this.customTranslatePipe);
+
     if (this.displayPagination) {
-      this.widgetResize$ = new ResizeObserver(() => {
-        this.zone.run(() => {
-          const showHidePageSize = this.schedulerEventWidgetContainerRef.nativeElement.offsetWidth < hidePageSizePixelValue;
-          if (showHidePageSize !== this.hidePageSize) {
-            this.hidePageSize = showHidePageSize;
-            this.cd.markForCheck();
-          }
-        });
-      });
-      this.widgetResize$.observe(this.schedulerEventWidgetContainerRef.nativeElement);
+      this.setupResizeObserver();
     }
+
+    this.setupCalendarOptions();
+  }
+
+  private setupResizeObserver(): void {
+    this.componentResize$ = new ResizeObserver(() => {
+      this.zone.run(() => {
+        const showHidePageSize = this.schedulerEventWidgetContainerRef.nativeElement.offsetWidth < hidePageSizePixelValue;
+        if (showHidePageSize !== this.hidePageSize) {
+          this.hidePageSize = showHidePageSize;
+          this.cd.markForCheck();
+        }
+      });
+    });
+    this.componentResize$.observe(this.schedulerEventWidgetContainerRef.nativeElement);
+  }
+
+  private setupCalendarOptions(): void {
     this.calendarOptions = {
-      plugins: [
-        interactionPlugin,
-        momentPlugin,
-        dayGridPlugin,
-        listPlugin,
-        timeGridPlugin
-      ],
+      plugins: [interactionPlugin, momentPlugin, dayGridPlugin, listPlugin, timeGridPlugin],
       height: '100%',
       fixedWeekCount: false,
       initialView: this.currentCalendarViewValue,
+      initialDate: this.initialCalendarDate,
       allDaySlot: false,
       editable: this.editEnabled,
       headerToolbar: false,
       selectable: false,
       eventDisplay: 'block',
       eventDurationEditable: false,
+      lazyFetching: false,
       events: this.eventSourceFunction.bind(this),
       eventClick: this.onEventClick.bind(this),
       dateClick: this.onDayClick.bind(this),
@@ -334,15 +247,13 @@ export class SchedulerEventsComponent extends PageComponent implements OnInit, A
   }
 
   ngOnDestroy(): void {
-    if (this.widgetResize$) {
-      this.widgetResize$.disconnect();
+    if (this.componentResize$) {
+      this.componentResize$.disconnect();
     }
     if (this.calendarApi) {
       this.calendarApi.destroy();
       this.isCalendarInitialized.complete();
     }
-    this.destroy$.next();
-    this.destroy$.complete();
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -356,7 +267,65 @@ export class SchedulerEventsComponent extends PageComponent implements OnInit, A
     }
   }
 
-  onEditModeChanged() {
+  ngAfterViewInit(): void {
+    if (!this.showData) return;
+
+    if (this.mode === 'calendar') {
+      this.initializeCalendar();
+    }
+
+    this.setupTextSearchSubscription();
+    this.setupSortAndPaginatorSubscriptions();
+
+    this.modeHandler.setupAfterViewInitSubscriptions(this.destroyRef);
+
+    this.updateData();
+  }
+
+  private setupTextSearchSubscription(): void {
+    this.textSearch.valueChanges.pipe(
+      debounceTime(150),
+      distinctUntilChanged((_prev, current) => (this.pageLink.textSearch ?? '') === current.trim()),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(value => {
+      this.modeHandler.handleTextSearchChange(value);
+    });
+  }
+
+  private setupSortAndPaginatorSubscriptions(): void {
+    const sortSubscription$ = this.sort.sortChange.asObservable().pipe(
+      map(data => {
+        const direction = data.direction.toUpperCase();
+        const queryParams: PageQueryParam = {
+          direction: Direction.ASC === direction ? null : direction as Direction,
+          property: this.defaultSortOrder === data.active ? null : data.active,
+          page: null
+        };
+        if (this.displayPagination) {
+          this.paginator.pageIndex = 0;
+        }
+        return queryParams;
+      })
+    );
+
+    let paginatorSubscription$: Observable<object>;
+    if (this.displayPagination) {
+      paginatorSubscription$ = this.paginator.page.asObservable().pipe(
+        map(data => ({
+          page: data.pageIndex === 0 ? null : data.pageIndex,
+          pageSize: data.pageSize === this.defaultPageSize ? null : data.pageSize
+        }))
+      );
+    }
+
+    (this.displayPagination ? merge(sortSubscription$, paginatorSubscription$) : sortSubscription$).pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(queryParams => {
+      this.modeHandler.handleSortOrPageChange(queryParams as PageQueryParam);
+    });
+  }
+
+  onEditModeChanged(): void {
     if (this.textSearchMode) {
       this.ctx.hideTitlePanel = !this.ctx.isEdit;
       this.ctx.detectChanges(true);
@@ -368,248 +337,49 @@ export class SchedulerEventsComponent extends PageComponent implements OnInit, A
   }
 
   goBack(): void {
-    this.router.navigate(this.backNavigationCommands, { relativeTo: this.route });
+    this.router.navigate(this.backNavigationCommands, { relativeTo: this.route }).then(() => {});
   }
 
-  private initializeWidgetConfig() {
-    this.ctx.widgetConfig.showTitle = false;
-    this.ctx.widgetTitle = this.settings.title;
-    const displayCreatedTime = isDefined(this.settings.displayCreatedTime) ? this.settings.displayCreatedTime : true;
-    const displayType = isDefined(this.settings.displayType) ? this.settings.displayType : true;
-    const displayCustomer = isDefined(this.settings.displayCustomer) ? this.settings.displayCustomer : true;
-
-    this.displayedColumns = [];
-    if (this.deleteEnabled) {
-      this.displayedColumns.push('select');
-    }
-    if (displayCreatedTime) {
-      this.displayedColumns.push('createdTime');
-    }
-    this.displayedColumns.push('name');
-    if (displayType) {
-      this.displayedColumns.push('type');
-    }
-    if (displayCustomer) {
-      this.displayedColumns.push('customerTitle');
-    }
-    this.displayedColumns.push('actions');
-    this.displayPagination = isDefined(this.settings.displayPagination) ? this.settings.displayPagination : true;
-    const pageSize = this.settings.defaultPageSize;
-    let pageStepIncrement = isValidPageStepIncrement(this.settings.pageStepIncrement) ? this.settings.pageStepIncrement : null;
-    let pageStepCount = isValidPageStepCount(this.settings.pageStepCount) ? this.settings.pageStepCount : null;
-
-    if (Number.isInteger(pageSize) && pageSize > 0) {
-      this.defaultPageSize = pageSize;
-    }
-
-    if (!this.defaultPageSize) {
-      this.defaultPageSize = pageStepIncrement ?? 10;
-    }
-
-    if (!isDefinedAndNotNull(pageStepIncrement) || !isDefinedAndNotNull(pageStepCount)) {
-      pageStepIncrement = this.defaultPageSize;
-      pageStepCount = 3;
-    }
-
-    for (let i = 1; i <= pageStepCount; i++) {
-      this.pageSizeOptions.push(pageStepIncrement * i);
-    }
-
-    if (this.settings.defaultSortOrder && this.settings.defaultSortOrder.length) {
-      this.defaultSortOrder = this.settings.defaultSortOrder;
-    }
-
-    const noDataDisplayMessage = this.settings.noDataDisplayMessage;
-    if (isNotEmptyStr(noDataDisplayMessage)) {
-      this.noDataDisplayMessageText = this.utils.customTranslation(noDataDisplayMessage, noDataDisplayMessage);
-    }
-
-    const sortOrder: SortOrder = sortOrderFromString(this.defaultSortOrder);
-    if (sortOrder.property === 'customer') {
-      sortOrder.property = 'customerTitle';
-    }
-    this.pageLink = new PageLink(this.defaultPageSize, 0, null, sortOrder);
-    if (this.settings.forceDefaultEventType && this.settings.forceDefaultEventType.length) {
-      this.defaultEventType = this.settings.forceDefaultEventType;
-    }
-    this.schedulerEventConfigTypes = deepClone(defaultSchedulerEventConfigTypes);
-    if (this.settings.customEventTypes && this.settings.customEventTypes.length) {
-      this.settings.customEventTypes.forEach((customEventType) => {
-        this.schedulerEventConfigTypes[customEventType.value] = customEventType;
-      });
-    }
-    if (this.settings.enabledViews !== 'both') {
-      this.mode = this.settings.enabledViews;
-    }
-    this.ctx.widgetActions = [
-      {
-        name: 'scheduler.add-scheduler-event',
-        show: this.addEnabled,
-        icon: 'add',
-        onAction: ($event) => {
-          this.addSchedulerEvent($event);
-        }
-      },
-      {
-        name: 'action.search',
-        show: true,
-        icon: 'search',
-        onAction: () => {
-          this.enterFilterMode();
-        }
-      },
-      {
-        name: 'action.refresh',
-        show: true,
-        icon: 'refresh',
-        onAction: () => {
-          this.reloadSchedulerEvents();
-        }
-      }
-    ];
-    this.dataSource = new SchedulerEventsDatasource(this.schedulerEventService, this.schedulerEventConfigTypes);
-    this.dataSource.selection.changed.subscribe(() => {
-      const hideTitlePanel = !this.dataSource.selection.isEmpty() || this.textSearchMode;
-      if (this.ctx.hideTitlePanel !== hideTitlePanel) {
-        this.ctx.hideTitlePanel = hideTitlePanel;
-        this.ctx.detectChanges(true);
-      } else {
-        this.ctx.detectChanges();
-      }
-    });
-  }
-
-  ngAfterViewInit() {
-    if (this.showData) {
-      if (this.mode === 'calendar' && this.widgetMode) {
-        this.initializeCalendar();
-      }
-
-      this.textSearch.valueChanges.pipe(
-        debounceTime(150),
-        distinctUntilChanged((_prev, current) => (this.pageLink.textSearch ?? '') === current.trim()),
-        takeUntil(this.destroy$)
-      ).subscribe(value => {
-        if (this.widgetMode) {
-          if (this.displayPagination) {
-            this.paginator.pageIndex = 0;
-          }
-          this.pageLink.textSearch = value.trim();
-          this.updateData();
-        } else {
-          const queryParams: PageQueryParam = {
-            textSearch: isNotEmptyStr(value) ? encodeURI(value) : null,
-            page: null
-          };
-          this.updatedRouterQueryParams(queryParams);
-        }
-      });
-
-      let paginatorSubscription$: Observable<object>;
-      const sortSubscription$: Observable<object> = this.sort.sortChange.asObservable().pipe(
-        map((data) => {
-          const direction = data.direction.toUpperCase();
-          const queryParams: PageQueryParam = {
-            direction: Direction.ASC === direction ? null : direction as Direction,
-            property: this.defaultSortOrder === data.active ? null : data.active,
-            page: null
-          };
-          if (this.displayPagination) {
-            this.paginator.pageIndex = 0;
-          }
-          return queryParams;
-        })
-      );
-
-      if (this.displayPagination) {
-        paginatorSubscription$ = this.paginator.page.asObservable().pipe(
-          map((data) => ({
-            page: data.pageIndex === 0 ? null : data.pageIndex,
-            pageSize: data.pageSize === this.defaultPageSize ? null : data.pageSize
-          }))
-        );
-      }
-
-      ((this.displayPagination ? merge(sortSubscription$, paginatorSubscription$) : sortSubscription$) as Observable<PageQueryParam>).pipe(
-        takeUntil(this.destroy$)
-      ).subscribe((queryParams) => {
-        if (this.widgetMode) {
-          this.updateData();
-        } else {
-          this.updatedRouterQueryParams(queryParams);
-        }
-      });
-
-      if (!this.widgetMode) {
-        this.route.queryParams.pipe(skip(1), takeUntil(this.destroy$)).subscribe((params: PageQueryParam) => {
-          this.paginator.pageIndex = Number(params.page) || 0;
-          this.paginator.pageSize = Number(params.pageSize) || this.defaultPageSize;
-          this.sort.active = params.property || this.defaultSortOrder;
-          this.sort.direction = (params.direction || Direction.ASC).toLowerCase() as SortDirection;
-          const textSearchParam = params.textSearch;
-          if (isNotEmptyStr(textSearchParam)) {
-            this.textSearchMode = true;
-            const decodedTextSearch = decodeURI(textSearchParam);
-            this.pageLink.textSearch = decodedTextSearch.trim();
-            this.textSearch.setValue(decodedTextSearch, {emitEvent: false});
-          } else {
-            this.pageLink.textSearch = null;
-            this.textSearch.reset('', {emitEvent: false});
-          }
-          this.updateData();
-        });
-      }
-
-      this.updateData();
-    }
-  }
-
-  resize() {
+  resize(): void {
     if (this.mode === 'calendar' && this.calendarApi) {
       this.calendarApi.updateSize();
     }
   }
 
-  updateMode(mode: SchedulerEventMode, updateRouterQueryParams: boolean = true) {
+  updateMode(mode: SchedulerEventMode, updateRouterQueryParams: boolean = true): void {
     this.mode = mode;
-    let updateData = true;
-    if (updateRouterQueryParams && !this.widgetMode) {
-      const queryParams = {
-        mode: mode === 'calendar' ? mode : null
-      };
-      this.updatedRouterQueryParams(queryParams, 'replace');
-      updateData = false;
-    }
+    const skipUpdateData = this.modeHandler.handleUpdateMode(mode, updateRouterQueryParams);
     if (mode === 'calendar') {
       this.dataSource?.selection.clear();
-      this.initializeCalendar(updateData);
-    } else if (updateData) {
+      this.initializeCalendar();
+    } else if (!skipUpdateData) {
       this.updateData();
     }
   }
 
-  private initializeCalendar(updateData = true) {
-    if (!this.isCalendarInitialized.getValue()) {
+  private initializeCalendar(): void {
+    if (!this.isCalendarInitialized.value) {
       setTimeout(() => {
         this.calendarApi = this.calendarComponent.getApi();
         this.calendarApi.render();
         this.isCalendarInitialized.next(true);
+        this.cd.markForCheck();
       }, 0);
-    } else if (updateData) {
-      this.updateData();
+    } else {
+      this.calendarApi.refetchEvents();
+      if (this.widgetMode) {
+        this.calendarApi.updateSize();
+      }
     }
   }
 
-  updateData() {
+  updateData(): void {
     if (this.mode === 'calendar') {
       this.isCalendarInitialized.pipe(
-        filter((isInitialized) => isInitialized),
+        filter(isInitialized => isInitialized),
         take(1)
       ).subscribe(() => {
-        this.calendarApi.refetchEvents();
-        if (this.widgetMode) {
-          this.calendarApi.updateSize();
-        }
+        this.resize();
       });
     } else {
       if (this.displayPagination) {
@@ -628,7 +398,7 @@ export class SchedulerEventsComponent extends PageComponent implements OnInit, A
     }
   }
 
-  enterFilterMode() {
+  enterFilterMode(): void {
     this.textSearchMode = true;
     if (this.widgetMode) {
       this.ctx.hideTitlePanel = true;
@@ -640,7 +410,7 @@ export class SchedulerEventsComponent extends PageComponent implements OnInit, A
     }, 10);
   }
 
-  exitFilterMode() {
+  exitFilterMode(): void {
     this.textSearchMode = false;
     this.textSearch.reset();
     if (this.widgetMode) {
@@ -649,101 +419,74 @@ export class SchedulerEventsComponent extends PageComponent implements OnInit, A
     }
   }
 
-  reloadSchedulerEvents() {
+  reloadSchedulerEvents(): void {
     this.updateData();
   }
 
-  deleteSchedulerEvent($event: Event, schedulerEvent: SchedulerEventWithCustomerInfo) {
-    if ($event) {
-      $event.stopPropagation();
-    }
+  deleteSchedulerEvent($event: Event, schedulerEvent: SchedulerEventWithCustomerInfo): void {
+    $event?.stopPropagation();
     const title = this.translate.instant('scheduler.delete-scheduler-event-title', {schedulerEventName: schedulerEvent.name});
     const content = this.translate.instant('scheduler.delete-scheduler-event-text');
-    this.dialogService.confirm(title, content,
-      this.translate.instant('action.no'),
-      this.translate.instant('action.yes')).subscribe((result) => {
+    this.dialogService.confirm(title, content, this.translate.instant('action.no'), this.translate.instant('action.yes')).subscribe(result => {
       if (result) {
-        this.schedulerEventService.deleteSchedulerEvent(schedulerEvent.id.id).subscribe(
-          () => {
-            this.reloadSchedulerEvents();
-          }
-        );
+        this.schedulerEventService.deleteSchedulerEvent(schedulerEvent.id.id).subscribe(() => this.reloadSchedulerEvents());
       }
     });
   }
 
-  deleteSchedulerEvents($event: Event) {
-    if ($event) {
-      $event.stopPropagation();
-    }
+  deleteSchedulerEvents($event: Event): void {
+    $event?.stopPropagation();
     const selectedSchedulerEvents = this.dataSource.selection.selected;
-    if (selectedSchedulerEvents && selectedSchedulerEvents.length) {
+    if (selectedSchedulerEvents?.length) {
       const title = this.translate.instant('scheduler.delete-scheduler-events-title', {count: selectedSchedulerEvents.length});
       const content = this.translate.instant('scheduler.delete-scheduler-events-text');
-      this.dialogService.confirm(title, content,
-        this.translate.instant('action.no'),
-        this.translate.instant('action.yes')).subscribe((result) => {
+      this.dialogService.confirm(title, content, this.translate.instant('action.no'), this.translate.instant('action.yes')).subscribe(result => {
         if (result) {
-          const tasks = selectedSchedulerEvents.map((schedulerEvent) =>
-            this.schedulerEventService.deleteSchedulerEvent(schedulerEvent.id.id));
-          forkJoin(tasks).subscribe(
-            () => {
-              this.reloadSchedulerEvents();
-            }
-          );
+          const tasks = selectedSchedulerEvents.map(event => this.schedulerEventService.deleteSchedulerEvent(event.id.id));
+          forkJoin(tasks).subscribe(() => this.reloadSchedulerEvents());
         }
       });
     }
   }
 
-  addSchedulerEvent($event: Event) {
+  addSchedulerEvent($event: Event): void {
     this.openSchedulerEventDialog($event);
   }
 
-  assignToEdgeSchedulerEvent($event: Event) {
+  assignToEdgeSchedulerEvent($event: Event): void {
     this.openAssignSchedulerEventToEdgeDialog($event);
   }
 
-  editSchedulerEvent($event: Event, schedulerEventWithCustomerInfo: SchedulerEventWithCustomerInfo) {
-    if ($event) {
-      $event.stopPropagation();
-    }
-    this.schedulerEventService.getSchedulerEvent(schedulerEventWithCustomerInfo.id.id)
-      .subscribe((schedulerEvent) => {
-        this.openSchedulerEventDialog($event, schedulerEvent);
-      });
+  editSchedulerEvent($event: Event, schedulerEventWithCustomerInfo: SchedulerEventWithCustomerInfo): void {
+    $event?.stopPropagation();
+    this.schedulerEventService.getSchedulerEvent(schedulerEventWithCustomerInfo.id.id).subscribe(event => {
+      this.openSchedulerEventDialog($event, event);
+    });
   }
 
-  viewSchedulerEvent($event: Event, schedulerEventWithCustomerInfo: SchedulerEventWithCustomerInfo) {
-    if ($event) {
-      $event.stopPropagation();
-    }
-    this.schedulerEventService.getSchedulerEvent(schedulerEventWithCustomerInfo.id.id)
-      .subscribe((schedulerEvent) => {
-        this.openSchedulerEventDialog($event, schedulerEvent, true);
-      });
+  viewSchedulerEvent($event: Event, schedulerEventWithCustomerInfo: SchedulerEventWithCustomerInfo): void {
+    $event?.stopPropagation();
+    this.schedulerEventService.getSchedulerEvent(schedulerEventWithCustomerInfo.id.id).subscribe(event => {
+      this.openSchedulerEventDialog($event, event, true);
+    });
   }
 
-  private openSchedulerEventDialog($event: Event, schedulerEvent?: SchedulerEvent, readonly = false) {
-    if ($event) {
-      $event.stopPropagation();
-    }
+  private openSchedulerEventDialog($event: Event, schedulerEvent?: SchedulerEvent, readonly = false): void {
+    $event?.stopPropagation();
     let isAdd = false;
     if (!schedulerEvent || !schedulerEvent.id) {
       isAdd = true;
-      if (!schedulerEvent) {
-        schedulerEvent = {
-          name: null,
-          type: null,
-          schedule: null,
-          configuration: {
-            originatorId: null,
-            msgType: null,
-            msgBody: {},
-            metadata: {}
-          }
-        };
-      }
+      schedulerEvent = schedulerEvent || {
+        name: null,
+        type: null,
+        schedule: null,
+        configuration: {
+          originatorId: null,
+          msgType: null,
+          msgBody: {},
+          metadata: {}
+        }
+      };
     }
     this.dialog.open<SchedulerEventDialogComponent, SchedulerEventDialogData, boolean>(SchedulerEventDialogComponent, {
       disableClose: true,
@@ -755,104 +498,82 @@ export class SchedulerEventsComponent extends PageComponent implements OnInit, A
         schedulerEvent,
         defaultEventType: this.defaultEventType
       }
-    }).afterClosed().subscribe(
-      (res) => {
-        if (res) {
-          this.reloadSchedulerEvents();
-        }
-      }
-    );
+    }).afterClosed().subscribe(res => {
+      if (res) this.reloadSchedulerEvents();
+    });
   }
 
-  private openAssignSchedulerEventToEdgeDialog($event: Event) {
-    if ($event) {
-      $event.stopPropagation();
-    }
-    this.dialog.open<AddEntitiesToEdgeDialogComponent, AddEntitiesToEdgeDialogData,
-      Array<string>>(AddEntitiesToEdgeDialogComponent, {
+  private openAssignSchedulerEventToEdgeDialog($event: Event): void {
+    $event?.stopPropagation();
+    this.dialog.open<AddEntitiesToEdgeDialogComponent, AddEntitiesToEdgeDialogData, Array<string>>(AddEntitiesToEdgeDialogComponent, {
       disableClose: true,
       panelClass: ['tb-dialog', 'tb-fullscreen-dialog'],
       data: {
         edgeId: this.edgeId,
         entityType: EntityType.SCHEDULER_EVENT
       }
-    }).afterClosed().subscribe(
-      (res) => {
-        if (res) {
-          this.reloadSchedulerEvents();
-        }
-      }
-    );
+    }).afterClosed().subscribe(res => {
+      if (res) this.reloadSchedulerEvents();
+    });
   }
 
-  changeCalendarView(calendarView?: schedulerCalendarView, updateRouterQueryParams: boolean = true) {
+  changeCalendarView(calendarView?: schedulerCalendarView, updateRouterQueryParams: boolean = true): void {
     if (calendarView) {
       this.currentCalendarView = calendarView;
     }
     this.currentCalendarViewValue = schedulerCalendarViewValueMap.get(this.currentCalendarView);
     this.calendarApi.changeView(this.currentCalendarViewValue);
-    if (updateRouterQueryParams && !this.widgetMode) {
-      const queryParams = {
-        calendarView: this.currentCalendarView !== schedulerCalendarView.month ? this.currentCalendarView : null
-      };
-      this.updatedRouterQueryParams(queryParams);
-    }
+    this.modeHandler.handleChangeCalendarView(updateRouterQueryParams);
   }
 
-  private updateCalendarDateQueryParams() {
-    if (!this.widgetMode) {
-      const today = this.isCalendarToday();
-      const queryParams = {
-        calendarStart: today ? null : this.calendarApi.view.activeStart.valueOf()
-      };
-      this.updatedRouterQueryParams(queryParams);
-    }
+  private updateCalendarDate(): void {
+    const today = this.isCalendarToday();
+    this.modeHandler.handleUpdateCalendarDate(today ? null : this.calendarApi.view.currentStart.valueOf());
   }
 
   calendarViewTitle(): string {
-    if (this.calendarApi) {
-      return this.calendarApi.view.title;
-    } else {
-      return '';
-    }
+    return this.calendarApi?.view.title ?? '';
   }
 
-  gotoCalendarToday() {
+  gotoCalendarToday(): void {
     this.calendarApi.today();
-    this.updateCalendarDateQueryParams()
+    this.updateCalendarDate();
   }
 
   isCalendarToday(): boolean {
-    if (this.calendarApi) {
-      const view = this.calendarApi.view;
-      return rangeContainsMarker({start: view.activeStart, end: view.activeEnd}, Date.now());
-    } else {
-      return false;
+    return this.isDateInView(Date.now().valueOf())
+  }
+
+  gotoCalendarPrev(): void {
+    this.calendarApi.prev();
+    this.updateCalendarDate();
+  }
+
+  gotoCalendarNext(): void {
+    this.calendarApi.next();
+    this.updateCalendarDate();
+  }
+
+  gotoCalendarDate(date: number): void {
+    if (!this.isDateInView(date)) {
+      this.calendarApi.gotoDate(date);
     }
   }
 
-  gotoCalendarPrev() {
-    this.calendarApi.prev();
-    this.updateCalendarDateQueryParams();
+  private isDateInView(targetDate: number): boolean {
+    if (!this.calendarApi) return false;
+    const view = this.calendarApi.view;
+    return rangeContainsMarker({start: view.currentStart, end: view.currentEnd}, new Date(targetDate));
   }
 
-  gotoCalendarNext() {
-    this.calendarApi.next();
-    this.updateCalendarDateQueryParams();
-  }
-
-  private gotoCalendarDate(date: number) {
-    this.calendarApi.gotoDate(date);
-  }
-
-  private onEventClick(arg: EventClickArg) {
+  private onEventClick(arg: EventClickArg): void {
     const schedulerEvent = this.schedulerEvents.find(event => event.id.id === arg.event.id);
     if (schedulerEvent) {
       this.openSchedulerEventContextMenu(arg.jsEvent, schedulerEvent);
     }
   }
 
-  private openSchedulerEventContextMenu($event: MouseEvent, schedulerEvent: SchedulerEventWithCustomerInfo) {
+  private openSchedulerEventContextMenu($event: MouseEvent, schedulerEvent: SchedulerEventWithCustomerInfo): void {
     $event.preventDefault();
     $event.stopPropagation();
     const $element = $(this.calendarContainer.nativeElement);
@@ -866,16 +587,14 @@ export class SchedulerEventsComponent extends PageComponent implements OnInit, A
     this.schedulerEventMenuTrigger.openMenu();
   }
 
-  onSchedulerEventContextMenuMouseLeave() {
+  onSchedulerEventContextMenuMouseLeave(): void {
     this.schedulerEventMenuTrigger.closeMenu();
   }
 
-  private onDayClick(event: DateClickArg) {
+  private onDayClick(event: DateClickArg): void {
     if (this.addEnabled) {
       const schedulerEvent = {
-        schedule: {
-          startTime: event.date.getTime()
-        },
+        schedule: { startTime: event.date.getTime() },
         configuration: {
           originatorId: null,
           msgType: null,
@@ -887,62 +606,45 @@ export class SchedulerEventsComponent extends PageComponent implements OnInit, A
     }
   }
 
-  private onEventDrop(arg: EventDropArg) {
+  private onEventDrop(arg: EventDropArg): void {
     const schedulerEvent = this.schedulerEvents.find(event => event.id.id === arg.event.id);
     if (schedulerEvent) {
       this.moveEvent(schedulerEvent, arg.delta, arg.revert);
     }
   }
 
-  private onEventDidMount(event: any) {
+  private onEventDidMount(event: any): void {
     const props: { name: string; type: string; info: string; repeatInterval: string } = event.event.extendedProps;
     const element = $(event.el);
-    import('tooltipster').then(
-      () => {
-        element.tooltipster(
-          {
-            theme: 'tooltipster-shadow',
-            delay: 100,
-            trigger: 'hover',
-            triggerOpen: {
-              click: false,
-              tap: false
-            },
-            triggerClose: {
-              click: true,
-              tap: true,
-              scroll: true
-            },
-            side: 'top',
-            trackOrigin: true
-          }
-        );
-        const tooltip = element.tooltipster('instance');
-        tooltip.content($(
-          `<div class="tb-scheduler-tooltip-title">${props.name}</div>` +
-          `<div class="tb-scheduler-tooltip-content"><b>${this.translate.instant('scheduler.event-type')}:&nbsp;</b>${props.type}</div>` +
-          `<div class="tb-scheduler-tooltip-content">${props.info}</div>`
-        ));
-      }
-    );
+    import('tooltipster').then(() => {
+      element.tooltipster({
+        theme: 'tooltipster-shadow',
+        delay: 100,
+        trigger: 'hover',
+        triggerOpen: { click: false, tap: false },
+        triggerClose: { click: true, tap: true, scroll: true },
+        side: 'top',
+        trackOrigin: true
+      });
+      const tooltip = element.tooltipster('instance');
+      tooltip.content($(
+        `<div class="tb-scheduler-tooltip-title">${props.name}</div>` +
+        `<div class="tb-scheduler-tooltip-content"><b>${this.translate.instant('scheduler.event-type')}:&nbsp;</b>${props.type}</div>` +
+        `<div class="tb-scheduler-tooltip-content">${props.info}</div>`
+      ));
+    });
   }
 
-  private moveEvent(event: SchedulerEventWithCustomerInfo, delta: Duration, revertFunc: () => void) {
+  private moveEvent(event: SchedulerEventWithCustomerInfo, delta: Duration, revertFunc: () => void): void {
     this.schedulerEventService.getSchedulerEvent(event.id.id).subscribe({
-      next: (schedulerEvent) => {
+      next: schedulerEvent => {
         schedulerEvent.schedule.startTime += asRoughMs(delta);
         this.schedulerEventService.saveSchedulerEvent(schedulerEvent).subscribe({
-          next: () => {
-            this.reloadSchedulerEvents();
-          },
-          error: () => {
-            revertFunc();
-          }
+          next: () => this.reloadSchedulerEvents(),
+          error: () => revertFunc()
         });
       },
-      error: () => {
-        revertFunc();
-      }
+      error: () => revertFunc()
     });
   }
 
@@ -950,7 +652,7 @@ export class SchedulerEventsComponent extends PageComponent implements OnInit, A
     arg: { start: Date; end: Date; timeZone: string },
     successCallback: (events: EventInput[]) => void,
     failureCallback: (error: Error) => void
-  ) {
+  ): void {
     const eventType = this.defaultEventType || '';
     const textSearch = this.pageLink.textSearch || '';
 
@@ -960,17 +662,16 @@ export class SchedulerEventsComponent extends PageComponent implements OnInit, A
       arg.end.getTime(),
       textSearch,
       this.edgeId
-    )
-    .pipe(
-      map((schedulerEvents: SchedulerEventWithCustomerInfo[]) => {
+    ).pipe(
+      map(schedulerEvents => {
         this.schedulerEvents = schedulerEvents;
         const events: EventInput[] = [];
-        if (this.schedulerEvents && this.schedulerEvents.length && this.calendarApi) {
+        if (this.schedulerEvents.length && this.calendarApi) {
           const start = toMoment(arg.start, this.calendarApi);
           const end = toMoment(arg.end, this.calendarApi);
           const rangeStart = start.local();
           const rangeEnd = end.local();
-          this.schedulerEvents.forEach((event) => {
+          this.schedulerEvents.forEach(event => {
             const eventStart = _moment(event.schedule.startTime);
             let calendarEvent: EventInput;
             if (rangeEnd.isSameOrAfter(eventStart)) {
@@ -994,10 +695,9 @@ export class SchedulerEventsComponent extends PageComponent implements OnInit, A
         }
         return events;
       })
-    )
-    .subscribe({
-      next: (events) => successCallback(events),
-      error: (error) => failureCallback(error)
+    ).subscribe({
+      next: events => successCallback(events),
+      error: error => failureCallback(error)
     });
   }
 
@@ -1028,63 +728,41 @@ export class SchedulerEventsComponent extends PageComponent implements OnInit, A
     return scheduleInfo(event.schedule, this.translate, startTime);
   }
 
-  unassignFromEdge($event: Event, schedulerEvent: SchedulerEventWithCustomerInfo) {
-    if ($event) {
-      $event.stopPropagation();
-    }
+  unassignFromEdge($event: Event, schedulerEvent: SchedulerEventWithCustomerInfo): void {
+    $event?.stopPropagation();
     const title = this.translate.instant('edge.unassign-scheduler-event-from-edge-title', {schedulerEventName: schedulerEvent.name});
     const content = this.translate.instant('edge.unassign-scheduler-event-from-edge-text');
-    this.dialogService.confirm(title, content,
-      this.translate.instant('action.no'),
-      this.translate.instant('action.yes')).subscribe((result) => {
+    this.dialogService.confirm(title, content, this.translate.instant('action.no'), this.translate.instant('action.yes')).subscribe(result => {
       if (result) {
-        this.schedulerEventService.unassignSchedulerEventFromEdge(this.edgeId, schedulerEvent.id.id).subscribe(
-          () => {
-            this.reloadSchedulerEvents();
-          }
-        );
+        this.schedulerEventService.unassignSchedulerEventFromEdge(this.edgeId, schedulerEvent.id.id).subscribe(() => this.reloadSchedulerEvents());
       }
     });
   }
 
-  unassignFromEdgeSchedulerEvents($event: Event) {
-    if ($event) {
-      $event.stopPropagation();
-    }
+  unassignFromEdgeSchedulerEvents($event: Event): void {
+    $event?.stopPropagation();
     const selectedSchedulerEvents = this.dataSource.selection.selected;
-    if (selectedSchedulerEvents && selectedSchedulerEvents.length) {
+    if (selectedSchedulerEvents?.length) {
       const title = this.translate.instant('edge.unassign-scheduler-events-from-edge-title', {count: selectedSchedulerEvents.length});
       const content = this.translate.instant('edge.unassign-scheduler-events-from-edge-text');
-      this.dialogService.confirm(title, content,
-        this.translate.instant('action.no'),
-        this.translate.instant('action.yes')).subscribe((result) => {
+      this.dialogService.confirm(title, content, this.translate.instant('action.no'), this.translate.instant('action.yes')).subscribe(result => {
         if (result) {
-          const tasks = selectedSchedulerEvents.map((schedulerEvent) =>
-            this.schedulerEventService.unassignSchedulerEventFromEdge(this.edgeId, schedulerEvent.id.id));
-          forkJoin(tasks).subscribe(
-            () => {
-              this.reloadSchedulerEvents();
-            }
-          );
+          const tasks = selectedSchedulerEvents.map(event => this.schedulerEventService.unassignSchedulerEventFromEdge(this.edgeId, event.id.id));
+          forkJoin(tasks).subscribe(() => this.reloadSchedulerEvents());
         }
       });
     }
   }
 
   isEnabled(schedulerEventWithCustomerInfo: SchedulerEventWithCustomerInfo): boolean {
-    return isDefinedAndNotNull(schedulerEventWithCustomerInfo.enabled) ?
-      schedulerEventWithCustomerInfo.enabled : true;
+    return isDefinedAndNotNull(schedulerEventWithCustomerInfo.enabled) ? schedulerEventWithCustomerInfo.enabled : true;
   }
 
-  enableSchedulerEvent($event: Event, schedulerEvent: SchedulerEventWithCustomerInfo) {
-    if ($event) {
-      $event.stopPropagation();
-    }
+  enableSchedulerEvent($event: Event, schedulerEvent: SchedulerEventWithCustomerInfo): void {
+    $event?.stopPropagation();
     schedulerEvent.enabled = !this.isEnabled(schedulerEvent);
     this.schedulerEventService.updateSchedulerStatus(schedulerEvent.id.id, schedulerEvent.enabled, {ignoreLoading: true})
-      .subscribe(() => {
-        this.cd.detectChanges();
-    });
+      .subscribe(() => this.cd.detectChanges());
   }
 
   public toggleVersionControl($event: Event, scheduled: SchedulerEventWithCustomerInfo, versionControlButton: MatButton): void {
@@ -1115,13 +793,377 @@ export class SchedulerEventsComponent extends PageComponent implements OnInit, A
       });
     }
   }
+}
 
-  private updatedRouterQueryParams(queryParams: object, queryParamsHandling: QueryParamsHandling = 'merge') {
+abstract class SchedulerModeHandler {
+  protected component: SchedulerEventsComponent;
+  protected router: Router;
+  protected route: ActivatedRoute;
+
+  protected _displayedColumns: string[];
+  protected _defaultPageSize: number;
+  protected _pageSizeOptions: Array<number>;
+  protected _defaultSortOrder: string;
+  protected _defaultEventType: string;
+  protected _noDataDisplayMessageText: string;
+  protected _pageLink: PageLink;
+
+  constructor(component: SchedulerEventsComponent, router: Router, route: ActivatedRoute) {
+    this.component = component;
+    this.router = router;
+    this.route = route;
+  }
+
+  static create(component: SchedulerEventsComponent, router: Router, route: ActivatedRoute): SchedulerModeHandler {
+    if (component.widgetMode) {
+      return new WidgetSchedulerModeHandler(component, router, route);
+    } else if (component.edgeId) {
+      return new EdgeStandaloneSchedulerModeHandler(component, router, route);
+    } else {
+      return new StandaloneSchedulerModeHandler(component, router, route);
+    }
+  }
+
+  setupSchedulerEventConfigTypes(): void  {
+    this.component.schedulerEventConfigTypes = deepClone(defaultSchedulerEventConfigTypes);
+  }
+
+  abstract initialize(schedulerEventService: SchedulerEventService, userPermissionsService: UserPermissionsService,
+                      customTranslatePipe: CustomTranslatePipe): void;
+
+  abstract setupAfterViewInitSubscriptions(destroyRef: DestroyRef): void;
+
+  abstract handleTextSearchChange(value: string): void;
+
+  abstract handleSortOrPageChange(queryParams: PageQueryParam): void;
+
+  abstract handleQueryParams(params: PageQueryParam): void;
+
+  abstract updateRouterQueryParams(queryParams: object, queryParamsHandling: QueryParamsHandling): void;
+
+  abstract handleUpdateMode(mode: SchedulerEventMode, updateRouterQueryParams: boolean): boolean;
+
+  abstract handleChangeCalendarView(updateRouterQueryParams: boolean): void;
+
+  abstract handleUpdateCalendarDate(startTs: number): void;
+}
+
+class WidgetSchedulerModeHandler extends SchedulerModeHandler {
+
+  settings: SchedulerEventsWidgetSettings;
+
+  setupSchedulerEventConfigTypes(): void {
+    super.setupSchedulerEventConfigTypes();
+    if (this.settings.customEventTypes?.length) {
+      this.settings.customEventTypes.forEach((customEventType) => {
+        this.component.schedulerEventConfigTypes[customEventType.value] = customEventType;
+      });
+    }
+  }
+
+  initialize(schedulerEventService: SchedulerEventService, _userPermissionsService: UserPermissionsService,
+             customTranslatePipe: CustomTranslatePipe): void {
+    this.component.ctx.$scope.schedulerEventsWidget = this.component;
+    this.component.vcEnabled = false;
+    if (this.component.showData) {
+      this.settings = this.component.ctx.settings;
+      this.initializeWidgetConfig(schedulerEventService, customTranslatePipe);
+      this.component.ctx.updateWidgetParams();
+    }
+  }
+
+  private initializeWidgetConfig(schedulerEventService: SchedulerEventService, customTranslatePipe: CustomTranslatePipe): void {
+    this.component.ctx.widgetConfig.showTitle = false;
+    this.component.ctx.widgetTitle = this.settings.title;
+    const displayCreatedTime = isDefined(this.settings.displayCreatedTime) ? this.settings.displayCreatedTime : true;
+    const displayType = isDefined(this.settings.displayType) ? this.settings.displayType : true;
+    const displayCustomer = isDefined(this.settings.displayCustomer) ? this.settings.displayCustomer : true;
+
+    this._displayedColumns = [];
+    if (this.component.deleteEnabled) {
+      this._displayedColumns.push('select');
+    }
+    if (displayCreatedTime) {
+      this._displayedColumns.push('createdTime');
+    }
+    this._displayedColumns.push('name');
+    if (displayType) {
+      this._displayedColumns.push('type');
+    }
+    if (displayCustomer) {
+      this._displayedColumns.push('customerTitle');
+    }
+    this._displayedColumns.push('actions');
+    this.component.displayedColumns = this._displayedColumns;
+
+    this.component.displayPagination = this.settings.displayPagination ?? true;
+
+    const pageSize = this.settings.defaultPageSize;
+    let pageStepIncrement = isValidPageStepIncrement(this.settings.pageStepIncrement) ? this.settings.pageStepIncrement : null;
+    let pageStepCount = isValidPageStepCount(this.settings.pageStepCount) ? this.settings.pageStepCount : null;
+
+    if (Number.isInteger(pageSize) && pageSize > 0) {
+      this._defaultPageSize = pageSize;
+    }
+
+    if (!this._defaultPageSize) {
+      this._defaultPageSize = pageStepIncrement ?? 10;
+    }
+    this.component.defaultPageSize = this._defaultPageSize;
+
+    if (!isDefinedAndNotNull(pageStepIncrement) || !isDefinedAndNotNull(pageStepCount)) {
+      pageStepIncrement = this._defaultPageSize;
+      pageStepCount = 3;
+    }
+
+    this._pageSizeOptions = [];
+    for (let i = 1; i <= pageStepCount; i++) {
+      this._pageSizeOptions.push(pageStepIncrement * i);
+    }
+    this.component.pageSizeOptions = this._pageSizeOptions;
+
+    if (this.settings.defaultSortOrder && this.settings.defaultSortOrder.length) {
+      this._defaultSortOrder = this.settings.defaultSortOrder;
+    }
+    this.component.defaultSortOrder = this._defaultSortOrder;
+
+    const noDataDisplayMessage = this.settings.noDataDisplayMessage;
+    if (isNotEmptyStr(noDataDisplayMessage)) {
+      this._noDataDisplayMessageText = customTranslatePipe.transform(noDataDisplayMessage);
+    }
+    this.component.noDataDisplayMessageText = this._noDataDisplayMessageText;
+
+    const sortOrder: SortOrder = sortOrderFromString(this._defaultSortOrder);
+    if (sortOrder.property === 'customer') {
+      sortOrder.property = 'customerTitle';
+    }
+    this._pageLink = new PageLink(this._defaultPageSize, 0, null, sortOrder);
+    this.component.pageLink = this._pageLink;
+
+    this.setupSchedulerEventConfigTypes();
+
+    if (this.settings.forceDefaultEventType && this.settings.forceDefaultEventType.length) {
+      this._defaultEventType = this.settings.forceDefaultEventType;
+    }
+    this.component.defaultEventType = this._defaultEventType;
+
+    this.component.enabledViews = this.settings.enabledViews;
+    if (this.settings.enabledViews !== 'both') {
+      this.component.mode = this.settings.enabledViews;
+    }
+
+    this.component.ctx.widgetActions = [
+      {
+        name: 'scheduler.add-scheduler-event',
+        show: this.component.addEnabled,
+        icon: 'add',
+        onAction: ($event) => this.component.addSchedulerEvent($event)
+      },
+      {
+        name: 'action.search',
+        show: true,
+        icon: 'search',
+        onAction: () => this.component.enterFilterMode()
+      },
+      {
+        name: 'action.refresh',
+        show: true,
+        icon: 'refresh',
+        onAction: () => this.component.reloadSchedulerEvents()
+      }
+    ];
+
+    this.component.dataSource = new SchedulerEventsDatasource(schedulerEventService, this.component.schedulerEventConfigTypes);
+    this.component.dataSource.selection.changed.subscribe(() => {
+      const hideTitlePanel = !this.component.dataSource.selection.isEmpty() || this.component.textSearchMode;
+      if (this.component.ctx.hideTitlePanel !== hideTitlePanel) {
+        this.component.ctx.hideTitlePanel = hideTitlePanel;
+        this.component.ctx.detectChanges(true);
+      } else {
+        this.component.ctx.detectChanges();
+      }
+    });
+  }
+
+  setupAfterViewInitSubscriptions(): void { }
+
+  handleTextSearchChange(value: string): void {
+    if (this.component.displayPagination) {
+      this.component.paginator.pageIndex = 0;
+    }
+    this.component.pageLink.textSearch = value.trim();
+    this.component.updateData();
+  }
+
+  handleSortOrPageChange(_queryParams: PageQueryParam): void {
+    this.component.updateData();
+  }
+
+  handleQueryParams(_params: PageQueryParam): void { }
+
+  updateRouterQueryParams(_queryParams: object, _queryParamsHandling: QueryParamsHandling = 'merge'): void { }
+
+  handleUpdateMode(_mode: SchedulerEventMode, _updateRouterQueryParams: boolean): boolean {
+    return false;
+  }
+
+  handleChangeCalendarView(_updateRouterQueryParams: boolean): void { }
+
+  handleUpdateCalendarDate(): void { }
+}
+
+class StandaloneSchedulerModeHandler extends SchedulerModeHandler {
+
+  initialize(schedulerEventService: SchedulerEventService, _userPermissionsService: UserPermissionsService): void {
+    this._displayedColumns = ['createdTime', 'name', 'type', 'customerTitle', 'actions'];
+    if (this.component.deleteEnabled) {
+      this._displayedColumns.unshift('select');
+    }
+    this.component.displayedColumns = this._displayedColumns;
+
+    const routerQueryParams: CalendarQueryParam = this.route.snapshot.queryParams;
+    const sortOrder: SortOrder = {
+      property: routerQueryParams?.property || this.component.defaultSortOrder,
+      direction: routerQueryParams?.direction || Direction.ASC
+    };
+    this._defaultPageSize = 10;
+    this.component.defaultPageSize = this._defaultPageSize;
+    this._pageSizeOptions = [this._defaultPageSize, this._defaultPageSize * 2, this._defaultPageSize * 3];
+    this.component.pageSizeOptions = this._pageSizeOptions;
+    this._pageLink = new PageLink(this._defaultPageSize, 0, null, sortOrder);
+    this.component.pageLink = this._pageLink;
+    if (routerQueryParams.hasOwnProperty('page')) {
+      this._pageLink.page = Number(routerQueryParams.page);
+    }
+    if (routerQueryParams.hasOwnProperty('pageSize')) {
+      this._pageLink.pageSize = Number(routerQueryParams.pageSize);
+    }
+    if (routerQueryParams.hasOwnProperty('mode')) {
+      this.component.mode = 'calendar';
+    }
+    const textSearchParam = routerQueryParams.textSearch;
+    if (isNotEmptyStr(textSearchParam)) {
+      this.component.textSearchMode = true;
+      const decodedTextSearch = decodeURI(textSearchParam);
+      this._pageLink.textSearch = decodedTextSearch.trim();
+      this.component.textSearch.setValue(decodedTextSearch, {emitEvent: false});
+    }
+    if (this.component.mode === 'calendar') {
+      if (routerQueryParams.hasOwnProperty('calendarView')) {
+        this.component.currentCalendarView = schedulerCalendarView[routerQueryParams.calendarView];
+        this.component.currentCalendarViewValue = schedulerCalendarViewValueMap.get(this.component.currentCalendarView);
+      }
+      if (routerQueryParams.hasOwnProperty('calendarStart')) {
+        this.component.initialCalendarDate = new Date(+routerQueryParams.calendarStart);
+      }
+    }
+    this.setupSchedulerEventConfigTypes();
+    this.component.dataSource = new SchedulerEventsDatasource(schedulerEventService, this.component.schedulerEventConfigTypes);
+  }
+
+  setupAfterViewInitSubscriptions(destroyRef: DestroyRef): void {
+    this.route.queryParams.pipe(
+      skip(1),
+      takeUntilDestroyed(destroyRef)
+    ).subscribe((params: CalendarQueryParam) => {
+      this.handleQueryParams(params);
+    });
+  }
+
+  handleTextSearchChange(value: string): void {
+    const queryParams: PageQueryParam = {
+      textSearch: isNotEmptyStr(value) ? encodeURI(value) : null,
+      page: null
+    };
+    this.updateRouterQueryParams(queryParams);
+  }
+
+  handleSortOrPageChange(queryParams: PageQueryParam): void {
+    this.updateRouterQueryParams(queryParams);
+  }
+
+  handleQueryParams(params: CalendarQueryParam): void {
+    const newMode = params.mode ? 'calendar' : 'list';
+    const modeChanged = newMode !== this.component.mode;
+    if (modeChanged) {
+      if (newMode === 'calendar') {
+        const newView = params.calendarView ? schedulerCalendarView[params.calendarView] : schedulerCalendarView.month;
+        this.component.currentCalendarView = newView;
+        this.component.currentCalendarViewValue = schedulerCalendarViewValueMap.get(newView);
+        this.component.initialCalendarDate = params.calendarStart ? new Date(+params.calendarStart) : null;
+      }
+      this.component.updateMode(newMode, false);
+    }
+    if (this.component.mode === 'calendar') {
+      const newView = params.calendarView ? schedulerCalendarView[params.calendarView] : schedulerCalendarView.month;
+      if (newView !== this.component.currentCalendarView) {
+        this.component.changeCalendarView(newView, false);
+      }
+      this.component.gotoCalendarDate(params.calendarStart ? +params.calendarStart : Date.now().valueOf());
+    }
+    this.component.paginator.pageIndex = Number(params.page) || 0;
+    this.component.paginator.pageSize = Number(params.pageSize) || this._defaultPageSize;
+    this.component.sort.active = params.property || this.component.defaultSortOrder;
+    this.component.sort.direction = (params.direction || Direction.ASC).toLowerCase() as SortDirection;
+    const textSearchParam = params.textSearch;
+    if (isNotEmptyStr(textSearchParam)) {
+      this.component.textSearchMode = true;
+      const decodedTextSearch = decodeURI(textSearchParam);
+      this._pageLink.textSearch = decodedTextSearch.trim();
+      this.component.textSearch.setValue(decodedTextSearch, {emitEvent: false});
+    } else {
+      this._pageLink.textSearch = null;
+      this.component.textSearch.reset('', {emitEvent: false});
+    }
+    if (!modeChanged) {
+      this.component.updateData();
+    }
+  }
+
+  updateRouterQueryParams(queryParams: object, queryParamsHandling: QueryParamsHandling = 'merge'): void {
     this.router.navigate([], {
       relativeTo: this.route,
       queryParams,
       queryParamsHandling
-    });
+    }).then(() => {});
+  }
+
+  handleUpdateMode(mode: SchedulerEventMode, updateRouterQueryParams: boolean): boolean {
+    if (updateRouterQueryParams) {
+      const queryParams = { mode: mode === 'calendar' ? mode : null };
+      this.updateRouterQueryParams(queryParams, 'replace');
+      return true;
+    }
+    return false;
+  }
+
+  handleChangeCalendarView(updateRouterQueryParams: boolean): void {
+    if (updateRouterQueryParams) {
+      const queryParams = { calendarView: this.component.currentCalendarView !== schedulerCalendarView.month ? this.component.currentCalendarView : null };
+      this.updateRouterQueryParams(queryParams);
+    }
+  }
+
+  handleUpdateCalendarDate(startTs: number): void {
+    const queryParams = { calendarStart: startTs };
+    this.updateRouterQueryParams(queryParams);
+  }
+}
+
+class EdgeStandaloneSchedulerModeHandler extends StandaloneSchedulerModeHandler {
+  initialize(schedulerEventService: SchedulerEventService, userPermissionsService: UserPermissionsService) {
+    super.initialize(schedulerEventService, userPermissionsService);
+    const isEdgeWriteAllowed = userPermissionsService.hasGenericPermission(Resource.EDGE, Operation.WRITE);
+    this.component.assignEnabled = isEdgeWriteAllowed;
+    if (isEdgeWriteAllowed && !this.component.deleteEnabled) {
+      this.component.displayedColumns.unshift('select');
+    } else if (!isEdgeWriteAllowed && this.component.deleteEnabled) {
+      this.component.displayedColumns.shift();
+    }
+    this.component.deleteEnabled = false;
+    this.component.addEnabled = false;
+    this.component.editEnabled = false;
+    this.component.vcEnabled = false;
   }
 }
 
@@ -1131,19 +1173,16 @@ class SchedulerEventsDatasource implements DataSource<SchedulerEventWithCustomer
   private pageDataSubject = new BehaviorSubject<PageData<SchedulerEventWithCustomerInfo>>(emptyPageData<SchedulerEventWithCustomerInfo>());
 
   public pageData$ = this.pageDataSubject.asObservable();
-
   public selection = new SelectionModel<SchedulerEventWithCustomerInfo>(true, []);
-
   public dataLoading = true;
-
   public edgeId: string;
 
-  constructor(private schedulerEventService: SchedulerEventService,
-              private schedulerEventConfigTypes: { [eventType: string]: SchedulerEventConfigType }) {
-  }
+  constructor(
+    private schedulerEventService: SchedulerEventService,
+    private schedulerEventConfigTypes: { [eventType: string]: SchedulerEventConfigType }
+  ) {}
 
-  connect(_collectionViewer: CollectionViewer):
-    Observable<SchedulerEventWithCustomerInfo[] | ReadonlyArray<SchedulerEventWithCustomerInfo>> {
+  connect(_collectionViewer: CollectionViewer): Observable<SchedulerEventWithCustomerInfo[] | ReadonlyArray<SchedulerEventWithCustomerInfo>> {
     return this.entitiesSubject.asObservable();
   }
 
@@ -1152,33 +1191,28 @@ class SchedulerEventsDatasource implements DataSource<SchedulerEventWithCustomer
     this.pageDataSubject.complete();
   }
 
-  reset() {
+  reset(): void {
     const pageData = emptyPageData<SchedulerEventWithCustomerInfo>();
     this.entitiesSubject.next(pageData.data);
     this.pageDataSubject.next(pageData);
   }
 
-  loadEntities(pageLink: PageLink, eventType: string): Observable<PageData<SchedulerEventWithCustomerInfo>> {
+  loadEntities(pageLink: PageLink, eventType: string): void {
     this.dataLoading = true;
-    const result = new ReplaySubject<PageData<SchedulerEventWithCustomerInfo>>();
     this.getEntities(eventType, pageLink).pipe(
       tap(() => this.selection.clear()),
-      catchError(() => of(emptyPageData<SchedulerEventWithCustomerInfo>())),
-    ).subscribe(
-      (pageData) => {
-        this.entitiesSubject.next(pageData.data);
-        this.pageDataSubject.next(pageData);
-        result.next(pageData);
-        this.dataLoading = false;
-      }
-    );
-    return result;
+      catchError(() => of(emptyPageData<SchedulerEventWithCustomerInfo>()))
+    ).subscribe(pageData => {
+      this.entitiesSubject.next(pageData.data);
+      this.pageDataSubject.next(pageData);
+      this.dataLoading = false;
+    });
   }
 
   getEntities(eventType: string, pageLink: PageLink): Observable<PageData<SchedulerEventWithCustomerInfo>> {
     return this.schedulerEventService.getSchedulerEventsByPageLink(eventType, pageLink, this.edgeId).pipe(
-      map((schedulerEvents) => {
-        schedulerEvents.data.forEach((schedulerEvent) => {
+      map(schedulerEvents => {
+        schedulerEvents.data.forEach(schedulerEvent => {
           let typeName = schedulerEvent.type;
           if (this.schedulerEventConfigTypes[typeName]) {
             typeName = this.schedulerEventConfigTypes[typeName].name;
@@ -1187,46 +1221,39 @@ class SchedulerEventsDatasource implements DataSource<SchedulerEventWithCustomer
         });
         return schedulerEvents;
       }),
-      share({
-        connector: () => new ReplaySubject(1),
-        resetOnError: false,
-        resetOnComplete: false,
-        resetOnRefCountZero: false
-      })
+      shareReplay(1)
     );
   }
 
   isAllSelected(): Observable<boolean> {
     const numSelected = this.selection.selected.length;
     return this.entitiesSubject.pipe(
-      map((entities) => numSelected === entities.length),
+      map(entities => numSelected === entities.length),
       share()
     );
   }
 
   isEmpty(): Observable<boolean> {
     return this.entitiesSubject.pipe(
-      map((entities) => !entities.length),
+      map(entities => !entities.length),
       share()
     );
   }
 
   total(): Observable<number> {
     return this.pageDataSubject.pipe(
-      map((pageData) => pageData.totalElements),
+      map(pageData => pageData.totalElements),
       share()
     );
   }
 
-  masterToggle() {
+  masterToggle(): void {
     const entities = this.entitiesSubject.getValue();
     const numSelected = this.selection.selected.length;
     if (numSelected === entities.length) {
       this.selection.clear();
     } else {
-      entities.forEach(row => {
-        this.selection.select(row);
-      });
+      entities.forEach(row => this.selection.select(row));
     }
   }
 }
