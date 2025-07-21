@@ -555,7 +555,7 @@ export class SchedulerEventsComponent extends PageComponent implements OnInit, A
   }
 
   gotoCalendarDate(date: number): void {
-    if (!this.isDateInView(date)) {
+    if (!this.isDateInView(date) && this.calendarApi) {
       this.calendarApi.gotoDate(date);
     }
   }
