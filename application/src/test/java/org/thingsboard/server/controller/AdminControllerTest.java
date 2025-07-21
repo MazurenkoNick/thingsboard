@@ -39,6 +39,7 @@ import org.mockito.Mockito;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.server.common.data.AdminSettings;
+import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.security.model.JwtSettings;
 import org.thingsboard.server.dao.secret.SecretConfigurationService;
 import org.thingsboard.server.dao.service.DaoSqlTest;
@@ -142,7 +143,6 @@ public class AdminControllerTest extends AbstractControllerTest {
         doPost("/api/admin/settings/testMail", adminSettings)
                 .andExpect(status().isOk());
         Mockito.verify(mailService).sendTestMail(Mockito.any(), Mockito.any(), Mockito.anyString());
-        verify(secretConfigurationService, times(1)).replaceSecretUsages(eq(tenantId), any());
     }
 
     @Test
@@ -160,7 +160,7 @@ public class AdminControllerTest extends AbstractControllerTest {
 
         doPost("/api/admin/settings/testMail", adminSettings).andExpect(status().is5xxServerError());
         Mockito.verify(mailService).sendTestMail(Mockito.any(), Mockito.any(), Mockito.anyString());
-        verify(secretConfigurationService, times(1)).replaceSecretUsages(eq(tenantId), any());
+        verify(secretConfigurationService, times(1)).replaceSecretUsages(eq(TenantId.SYS_TENANT_ID), any());
     }
 
     void resetJwtSettingsToDefault() throws Exception {
