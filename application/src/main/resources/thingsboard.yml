@@ -2140,6 +2140,8 @@ queue:
     notifications_topic: "${TB_QUEUE_REPORT_NOTIFICATIONS_TOPIC:tb_report.notifications}"
     # Poll interval in milliseconds for TB Report queues
     poll_interval: "${TB_QUEUE_REPORT_POLL_INTERVAL_MS:125}"
+    # Maximum number of entities to be processed in one subReport component
+    sub_entities_limit: "${TB_REPORT_SUB_ENTITIES:50}"
 
 # Event configuration parameters
 event:

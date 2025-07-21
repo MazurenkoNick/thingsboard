@@ -68,7 +68,7 @@ public class DataSourceUtils {
             Map<String, TsValue> values = latest.get(keyType);
             TsValue value = values.get(key);
             if (value != null) {
-                return Optional.of(value.getValue());
+                return Optional.ofNullable(value.getValue());
             }
         }
         return Optional.empty();
