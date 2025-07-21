@@ -46,6 +46,7 @@ import org.thingsboard.server.common.data.id.UserId;
 import org.thingsboard.server.common.data.report.ReportConfig;
 import org.thingsboard.server.common.data.scheduler.SchedulerEvent;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.Function;
@@ -83,9 +84,8 @@ public class SchedulerEventExportData extends EntityExportData<SchedulerEvent> {
                 ReportConfig reportConfig = mapper.treeToValue(configuration, ReportConfig.class);
                 reportConfig.setUserId(userId);
                 reportConfig.setReportTemplateId((ReportTemplateId) idMapper.apply(reportConfig.getReportTemplateId()));
-                List<UUID> targets = reportConfig.getTargets().stream().map(id -> idMapper.apply(new NotificationTargetId(id)).getId()).toList();
-                reportConfig.setTargets(targets);
-                reportConfig.setNotificationTemplateId((NotificationTemplateId) idMapper.apply(reportConfig.getNotificationTemplateId()));
+                reportConfig.setTargets(null);
+                reportConfig.setNotificationTemplateId(null);
                 yield mapper.valueToTree(reportConfig);
             }
             default -> configuration;
