@@ -556,6 +556,7 @@ export class ReportTemplatePageComponent extends PageComponent
         entityAliases,
         alias: singleEntityAlias,
         reportMode: true,
+        disableResolveMultiple: true,
         subReport: this.subReport
       }
     }).afterClosed().pipe(
@@ -584,6 +585,7 @@ export class ReportTemplatePageComponent extends PageComponent
         entityAliases,
         alias: deepClone(alias),
         reportMode: true,
+        disableResolveMultiple: true,
         subReport: this.subReport
       }
     }).afterClosed().pipe(
