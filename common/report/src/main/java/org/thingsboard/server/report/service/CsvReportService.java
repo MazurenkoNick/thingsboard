@@ -138,7 +138,7 @@ public class CsvReportService extends AbstractReportService {
                 return renderError("Template with id " + templateId + " not found. Please check the configuration.");
             }
             TbReportCtx subReportCtx = ctx.createSubReportCxt(reportTemplate.getConfiguration());
-            List<EntityData> entities = fetchSubReportEntities(subReportComponent, stateEntityId, ctx);
+            List<EntityData> entities = getSubReportEntities(ctx, subReportComponent, stateEntityId);
             for (EntityData entity : entities) {
                 content.addAll(renderContent(subReportCtx, entity));
             }

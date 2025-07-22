@@ -34,7 +34,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.script.api.ScriptType;
@@ -49,6 +48,7 @@ import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.page.SortOrder;
 import org.thingsboard.server.common.data.query.AlarmData;
 import org.thingsboard.server.common.data.query.EntityData;
+import org.thingsboard.server.common.data.query.EntityDataQuery;
 import org.thingsboard.server.common.data.query.EntityKeyType;
 import org.thingsboard.server.common.data.query.TsValue;
 import org.thingsboard.server.common.data.report.configuration.DataKey;
@@ -88,17 +88,18 @@ import static org.thingsboard.server.report.util.ReportUtils.getSingleDataSource
 @Slf4j
 public abstract class AbstractReportService implements ReportService {
 
-    @Value("${queue.report.sub_entities_limit:50}")
-    private int subReportEntitiesLimit;
-
     @Lazy
     @Autowired
     protected ReportDataService dataService;
 
     protected List<EntityData> fetchEntities(TbReportCtx ctx, DataSource dataSource, EntityId stateEntityId) {
+       return fetchEntityDataByQuery(pageLink -> toEntityDataQuery(dataSource, ctx, stateEntityId, pageLink), dataSource, ctx);
+    }
+
+    private List<EntityData> fetchEntityDataByQuery(Function<PageLink, EntityDataQuery> querySupplier, DataSource dataSource, TbReportCtx ctx) {
         List<DataKey> dataKeysWithAggr = getDataKeysWithAggr(dataSource);
         List<EntityData> data = new ArrayList<>();
-        for (EntityData entityData : new PageDataIterable<>(link -> dataService.findEntityDataByQuery(toEntityDataQuery(dataSource, ctx, stateEntityId, link), ctx), 1024)) {
+        for (EntityData entityData : new PageDataIterable<>(link -> dataService.findEntityDataByQuery(querySupplier.apply(link), ctx), 1024)) {
             updateWithAggregatedData(ctx, dataKeysWithAggr, entityData);
             data.add(entityData);
         }
@@ -198,7 +199,7 @@ public abstract class AbstractReportService implements ReportService {
                 .filter(dataKey -> !dataKey.getType().equals("alarm"))
                 .collect(Collectors.toList());
         EntityId stateEntityId = stateEntity != null ? stateEntity.getEntityId() : null;
-        List<EntityData> entityDataList = fetchSubEntities(alarmSource, stateEntityId, ctx);
+        List<EntityData> entityDataList = fetchEntities(ctx, alarmSource, stateEntityId);
         Map<EntityId, EntityData> entityDataMap = entityDataList.stream()
                 .collect(Collectors.toMap(EntityData::getEntityId, Function.identity()));
         List<Map<String, String>> entityDatas = new ArrayList<>();
@@ -255,20 +256,16 @@ public abstract class AbstractReportService implements ReportService {
         return data;
     }
 
-    protected List<EntityData> fetchSubReportEntities(DataReportComponent component, EntityId stateEntityId, TbReportCtx ctx) {
+    protected List<EntityData> getSubReportEntities(TbReportCtx ctx, DataReportComponent component, EntityId stateEntityId) {
         Optional<DataSource> dataSource = getSingleDataSource(component);
         List<EntityData> entities;
         if (dataSource.isEmpty()) {
             entities = new ArrayList<>();
             entities.add(null);
         } else {
-            entities = fetchSubEntities(dataSource.get(), stateEntityId, ctx);
+            entities = fetchEntities(ctx, dataSource.get(), stateEntityId);
         }
         return entities;
-    }
-
-    protected List<EntityData> fetchSubEntities(DataSource dataSource, EntityId stateEntityId, TbReportCtx ctx) {
-        return dataService.findEntityDataByQuery(toEntityDataQuery(dataSource, ctx, stateEntityId, new PageLink(subReportEntitiesLimit)), ctx).getData();
     }
 
     protected void populateReportVars(ComponentData componentData, TbReportCtx ctx) {

@@ -48,6 +48,7 @@ import org.thingsboard.server.common.data.report.TbReportFormat;
 import org.thingsboard.server.common.data.report.configuration.DataSource;
 import org.thingsboard.server.common.data.report.configuration.HeaderFooter;
 import org.thingsboard.server.common.data.report.configuration.PdfReportTemplateConfig;
+import org.thingsboard.server.common.data.report.configuration.ReportTemplateConfig;
 import org.thingsboard.server.common.data.report.configuration.components.AlarmTableComponent;
 import org.thingsboard.server.common.data.report.configuration.components.DashboardComponent;
 import org.thingsboard.server.common.data.report.configuration.components.DataReportComponent;
@@ -185,7 +186,7 @@ public class PdfReportService extends AbstractReportService {
             prepareReportComponent(component);
             ReportComponentType type = component.getType();
             if (type == SUB_REPORT) {
-                content.append(renderSubReport(usablePageWidthPx, ctx, (SubReportComponent) component, stateEntityId));
+                content.append(renderSubReport(usablePageWidthPx, ctx, (SubReportComponent)component, stateEntityId));
             } else if (type == DASHBOARD) {
                 content.append(renderDashboard(usablePageWidthPx, ctx, stateEntityId, (DataReportComponent) component));
             } else if (type == TIME_SERIES_TABLE) {
@@ -238,7 +239,7 @@ public class PdfReportService extends AbstractReportService {
                 .entityAliasId(ds.getEntityAliasId())
                 .filterId(ds.getFilterId())
                 .dataKeys(ds.getLatestDataKeys()).build();
-        List<EntityData> entityDatas = fetchSubEntities(latestDataSource, stateEntityId, ctx);
+        List<EntityData> entityDatas = fetchEntities(ctx, latestDataSource, stateEntityId);
         for (EntityData entity : entityDatas) {
             content.append(renderComponent(usablePageWidthPx, ctx, component, entity));
         }
@@ -277,7 +278,7 @@ public class PdfReportService extends AbstractReportService {
             PdfReportTemplateConfig reportConfiguration = (PdfReportTemplateConfig) reportTemplate.getConfiguration();
 
             TbReportCtx subReportCtx = ctx.createSubReportCxt(reportConfiguration);
-            List<EntityData> entities = fetchSubReportEntities(component, stateEntityId, ctx);
+            List<EntityData> entities = getSubReportEntities(ctx, component, stateEntityId);
             for (EntityData entity : entities) {
                 if (subReportComponent.isAvoidPageBreakInside()) {
                     content.append("<div class=\"no-page-break\">");
