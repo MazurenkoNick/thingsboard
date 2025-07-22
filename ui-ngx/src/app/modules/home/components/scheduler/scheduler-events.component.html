@@ -46,7 +46,7 @@
           <span class="tb-scheduler-events-title" translate>scheduler.scheduler-events</span>
         </ng-template>
         <div class="tb-scheduler-events-view-type-toolbar flex flex-row items-center justify-start"
-             *ngIf="!widgetMode || settings?.enabledViews === 'both'">
+             *ngIf="!widgetMode || enabledViews === 'both'">
           <div class="tb-toolbar-button" [class.tb-selected]="mode === 'list'">
             <button mat-icon-button
                     (click)="updateMode('list')"
@@ -126,7 +126,7 @@
     <mat-toolbar class="mat-mdc-table-toolbar" color="primary" [class.!hidden]="dataSource.selection.isEmpty()">
       <div class="mat-toolbar-tools">
                 <span>
-                  {{ translate.get('scheduler.selected-scheduler-events', {count: dataSource.selection.selected.length}) | async }}
+                  {{ 'scheduler.selected-scheduler-events' | translate : {count: dataSource.selection.selected.length} }}
                 </span>
         <span class="flex-1"></span>
         <button *ngIf="deleteEnabled"
