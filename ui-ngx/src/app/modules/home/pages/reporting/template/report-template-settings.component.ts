@@ -92,7 +92,7 @@ export class ReportTemplateSettingsComponent implements OnInit, OnChanges, Contr
 
   ngOnInit(): void {
     this.settingsFormGroup = this.fb.group({
-      name: [null, [Validators.required]],
+      name: [null, [Validators.required, Validators.maxLength(255)]],
       namePattern: [null, [Validators.required]],
       timeDataPattern: [null, []],
       description: [null, []],
