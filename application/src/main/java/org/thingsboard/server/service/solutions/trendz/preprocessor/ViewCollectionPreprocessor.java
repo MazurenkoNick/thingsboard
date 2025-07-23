@@ -28,16 +28,43 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.dao.trendz;
+package org.thingsboard.server.service.solutions.trendz.preprocessor;
 
-import org.thingsboard.server.common.data.id.TenantId;
-import org.thingsboard.server.common.data.trendz.TrendzSettings;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.thingsboard.server.service.solutions.trendz.TrendzEntityPreprocessor;
+import org.thingsboard.server.service.solutions.trendz.data.TrendzEntityType;
+import org.thingsboard.server.service.solutions.trendz.data.TrendzPreprocessConfig;
 
-public interface TrendzSettingsService {
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 
-    void saveTrendzSettings(TenantId tenantId, TrendzSettings settings);
+@Slf4j
+@Service
+public class ViewCollectionPreprocessor extends TrendzEntityPreprocessor {
 
-    TrendzSettings findTrendzSettings(TenantId tenantId);
+    private static final Set<String> VIEW_COLLECTION_FIELDS_NAMES = Set.of("id", "parentId");
 
-    void deleteTrendzSettings(TenantId tenantId);
+
+    @Override
+    public TrendzEntityType getEntityType() {
+        return TrendzEntityType.VIEW_COLLECTION;
+    }
+
+    @Override
+    public void preprocess(TrendzPreprocessConfig config) {
+        Map<String, Object> importData = config.getImportData();
+        Map<UUID, UUID> oldToNewIdMap = config.getOldToNewIdMap();
+
+        String collectionName = getEntityType().getCollectionName();
+        List<Object> viewCollections = (List<Object>) importData.get(collectionName);
+        for (Object viewCollection : viewCollections) {
+            setUserIds(oldToNewIdMap, viewCollection, config);
+            for (String fieldName : VIEW_COLLECTION_FIELDS_NAMES) {
+                setNewId(oldToNewIdMap, viewCollection, fieldName);
+            }
+        }
+    }
 }

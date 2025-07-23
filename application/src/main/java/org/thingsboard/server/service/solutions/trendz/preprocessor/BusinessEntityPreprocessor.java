@@ -28,16 +28,44 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.dao.trendz;
+package org.thingsboard.server.service.solutions.trendz.preprocessor;
 
-import org.thingsboard.server.common.data.id.TenantId;
-import org.thingsboard.server.common.data.trendz.TrendzSettings;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.thingsboard.server.service.solutions.trendz.TrendzEntityPreprocessor;
+import org.thingsboard.server.service.solutions.trendz.data.TrendzEntityType;
+import org.thingsboard.server.service.solutions.trendz.data.TrendzPreprocessConfig;
 
-public interface TrendzSettingsService {
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
-    void saveTrendzSettings(TenantId tenantId, TrendzSettings settings);
+@Slf4j
+@Service
+public class BusinessEntityPreprocessor extends TrendzEntityPreprocessor {
 
-    TrendzSettings findTrendzSettings(TenantId tenantId);
+    @Override
+    public TrendzEntityType getEntityType() {
+        return TrendzEntityType.BUSINESS_ENTITY;
+    }
 
-    void deleteTrendzSettings(TenantId tenantId);
+
+    @Override
+    public void preprocess(TrendzPreprocessConfig config) {
+        Map<String, Object> importData = config.getImportData();
+        Map<UUID, UUID> oldToNewIdMap = config.getOldToNewIdMap();
+
+        String collectionName = getEntityType().getCollectionName();
+        List<Object> businessEntities = (List<Object>) importData.get(collectionName);
+        for (Object businessEntity : businessEntities) {
+            setUserIds(oldToNewIdMap, businessEntity, config);
+            setNewId(oldToNewIdMap, businessEntity, "id");
+
+            List<Object> businessEntityFields = (List<Object>) ((Map<String, Object>) businessEntity).get("fields");
+            for (Object businessEntityField : businessEntityFields) {
+                setNewId(oldToNewIdMap, businessEntityField, "id");
+                setNewId(oldToNewIdMap, businessEntityField, "businessEntityId");
+            }
+        }
+    }
 }

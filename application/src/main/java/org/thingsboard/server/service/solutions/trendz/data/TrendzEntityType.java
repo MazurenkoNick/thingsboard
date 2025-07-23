@@ -28,16 +28,26 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.dao.trendz;
+package org.thingsboard.server.service.solutions.trendz.data;
 
-import org.thingsboard.server.common.data.id.TenantId;
-import org.thingsboard.server.common.data.trendz.TrendzSettings;
+import lombok.Getter;
 
-public interface TrendzSettingsService {
+@Getter
+public enum TrendzEntityType {
+    BUSINESS_ENTITY("businessEntities", "/apiTrendz/businessEntity/delete/"),
+    VIEW_CONFIG("viewConfigs", "/apiTrendz/view/config/delete/"),
+    VIEW_COLLECTION("viewCollections", "/apiTrendz/view/collection/delete/"),
+    CALCULATION_FIELD("calculationFields", "/apiTrendz/calculation/"),
+    PREDICTION_MODEL("predictionModels", "/apiTrendz/model/prediction/delete/"),
+    ANOMALY_MODEL("anomalyModels", "/apiTrendz/model/delete/"),
+    TASK_SEQUENCE("taskSequences", "/apiTrendz/task/sequence/"),
+    ;
 
-    void saveTrendzSettings(TenantId tenantId, TrendzSettings settings);
+    private final String collectionName;
+    private final String deletePath;
 
-    TrendzSettings findTrendzSettings(TenantId tenantId);
-
-    void deleteTrendzSettings(TenantId tenantId);
+    TrendzEntityType(String collectionName, String deletePath) {
+        this.collectionName = collectionName;
+        this.deletePath = deletePath;
+    }
 }

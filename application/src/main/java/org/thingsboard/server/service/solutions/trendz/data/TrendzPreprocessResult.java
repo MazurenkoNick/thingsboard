@@ -28,16 +28,24 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.dao.trendz;
+package org.thingsboard.server.service.solutions.trendz.data;
 
-import org.thingsboard.server.common.data.id.TenantId;
-import org.thingsboard.server.common.data.trendz.TrendzSettings;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-public interface TrendzSettingsService {
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 
-    void saveTrendzSettings(TenantId tenantId, TrendzSettings settings);
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class TrendzPreprocessResult {
 
-    TrendzSettings findTrendzSettings(TenantId tenantId);
-
-    void deleteTrendzSettings(TenantId tenantId);
+    private ObjectNode preparedMigrationData;
+    private Map<TrendzEntityType, Set<UUID>> trendzEntityIds;
 }

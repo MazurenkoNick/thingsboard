@@ -28,16 +28,44 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.dao.trendz;
+package org.thingsboard.server.service.solutions.trendz.preprocessor;
 
-import org.thingsboard.server.common.data.id.TenantId;
-import org.thingsboard.server.common.data.trendz.TrendzSettings;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.thingsboard.server.service.solutions.trendz.TrendzEntityPreprocessor;
+import org.thingsboard.server.service.solutions.trendz.data.TrendzEntityType;
+import org.thingsboard.server.service.solutions.trendz.data.TrendzPreprocessConfig;
 
-public interface TrendzSettingsService {
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 
-    void saveTrendzSettings(TenantId tenantId, TrendzSettings settings);
+@Slf4j
+@Service
+public class CalculationFieldPreprocessor extends TrendzEntityPreprocessor {
 
-    TrendzSettings findTrendzSettings(TenantId tenantId);
+    private static final Set<String> CALCULATION_FIELD_FIELDS_NAMES = Set.of("id", "businessEntityId", "associatedEntityFieldId");
 
-    void deleteTrendzSettings(TenantId tenantId);
+    @Override
+    public TrendzEntityType getEntityType() {
+        return TrendzEntityType.CALCULATION_FIELD;
+    }
+
+    @Override
+    public void preprocess(TrendzPreprocessConfig config) {
+        Map<String, Object> importData = config.getImportData();
+        Map<UUID, UUID> oldToNewIdMap = config.getOldToNewIdMap();
+
+        String collectionName = getEntityType().getCollectionName();
+        List<Object> calculationFields = (List<Object>) importData.get(collectionName);
+        for (Object calculationField : calculationFields) {
+            setUserIds(oldToNewIdMap, calculationField, config);
+            for (String fieldName : CALCULATION_FIELD_FIELDS_NAMES) {
+                setNewId(oldToNewIdMap, calculationField, fieldName);
+            }
+
+            setNewIdMap(oldToNewIdMap, calculationField, "manualDataset");
+        }
+    }
 }

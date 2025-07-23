@@ -28,16 +28,46 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.dao.trendz;
+package org.thingsboard.server.service.solutions.trendz;
 
-import org.thingsboard.server.common.data.id.TenantId;
-import org.thingsboard.server.common.data.trendz.TrendzSettings;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.thingsboard.server.service.solutions.trendz.data.TrendzEntityType;
 
-public interface TrendzSettingsService {
+import java.util.EnumMap;
+import java.util.Map;
+import java.util.List;
 
-    void saveTrendzSettings(TenantId tenantId, TrendzSettings settings);
+@Slf4j
+@Service
+public class TrendzEntityPreprocessorManager {
 
-    TrendzSettings findTrendzSettings(TenantId tenantId);
+    private final Map<TrendzEntityType, TrendzEntityPreprocessor> entityPreprocessors;
 
-    void deleteTrendzSettings(TenantId tenantId);
+
+    @Autowired
+    public TrendzEntityPreprocessorManager(List<TrendzEntityPreprocessor> preprocessors) {
+        Map<TrendzEntityType, TrendzEntityPreprocessor> preprocessorMap = new EnumMap<>(TrendzEntityType.class);
+
+        for (TrendzEntityPreprocessor preprocessor : preprocessors) {
+            TrendzEntityType type = preprocessor.getEntityType();
+            if (type == null) {
+                continue;
+            }
+            if (preprocessorMap.containsKey(type)) {
+                throw new IllegalStateException("Ambiguous mapping for trendz entity preprocessor type: " + type);
+            }
+            preprocessorMap.put(type, preprocessor);
+        }
+
+        this.entityPreprocessors = Map.copyOf(preprocessorMap);
+    }
+
+    public TrendzEntityPreprocessor getPreprocessor(TrendzEntityType entityType) {
+        if (entityType == null) {
+            throw new IllegalArgumentException("Entity type should not be null!");
+        }
+        return this.entityPreprocessors.get(entityType);
+    }
 }

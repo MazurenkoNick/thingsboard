@@ -28,16 +28,31 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.dao.trendz;
+package org.thingsboard.server.service.solutions.trendz.data;
 
-import org.thingsboard.server.common.data.id.TenantId;
-import org.thingsboard.server.common.data.trendz.TrendzSettings;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-public interface TrendzSettingsService {
+import java.time.ZonedDateTime;
+import java.util.Map;
+import java.util.UUID;
 
-    void saveTrendzSettings(TenantId tenantId, TrendzSettings settings);
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class TrendzPreprocessConfig {
 
-    TrendzSettings findTrendzSettings(TenantId tenantId);
+    private Map<String, Object> importData;
+    private Map<UUID, UUID> oldToNewIdMap;
+    private Map<String, String> nameToIdMap;
 
-    void deleteTrendzSettings(TenantId tenantId);
+    private UUID tenantId;
+    private UUID customerId;
+    private UUID userId;
+
+    private ZonedDateTime startDate;
+    private ZonedDateTime endDate;
 }
