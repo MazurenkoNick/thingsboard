@@ -40,9 +40,8 @@
         <mat-icon matSuffix
                   matTooltipPosition="above"
                   matTooltipClass="tb-error-tooltip"
-                  [matTooltip]="'report-template.name-required' | translate"
-                  *ngIf="settingsFormGroup.get('name').hasError('required')
-                              && settingsFormGroup.get('name').touched"
+                  [matTooltip]="(settingsFormGroup.get('name').hasError('maxlength') ? 'report-template.name-max-length' : 'report-template.name-required') | translate"
+                  *ngIf="settingsFormGroup.get('name').invalid && settingsFormGroup.get('name').touched"
                   class="tb-error">
           warning
         </mat-icon>

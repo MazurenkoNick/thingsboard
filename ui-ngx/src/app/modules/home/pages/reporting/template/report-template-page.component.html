@@ -32,7 +32,7 @@
 -->
 <div class="mat-content tb-report-template flex flex-1 flex-col" tb-fullscreen [fullscreen]="isFullscreen">
   <mat-toolbar color="primary" class="tb-report-template-toolbar">
-    <div class="flex flex-1 flex-row items-center gap-1.5">
+    <div class="flex flex-1 flex-row items-center overflow-hidden">
       <div class="tb-report-template-title">
         {{ reportTemplate.name }} - {{ reportTemplate.format }}
         @if (subReport) {
@@ -40,7 +40,7 @@
         }
       </div>
     </div>
-    <div class="flex flex-1 flex-row-reverse items-center gap-1.5">
+    <div class="flex flex-row-reverse items-center gap-1.5">
       <button mat-icon-button
               matTooltip="{{(isFullscreen ? 'fullscreen.exit' : 'fullscreen.expand') | translate}}"
               matTooltipPosition="below"
