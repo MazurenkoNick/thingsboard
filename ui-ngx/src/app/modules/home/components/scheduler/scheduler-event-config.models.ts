@@ -44,6 +44,7 @@ export interface SchedulerEventConfigType {
   originator?: boolean;
   msgType?: boolean;
   metadata?: boolean;
+  clearMsgBody?: boolean
 }
 
 // Example of custom scheduler event config type
@@ -71,7 +72,8 @@ export const defaultSchedulerEventConfigTypes: {[eventType: string]: SchedulerEv
     componentType: GenerateReportComponent,
     originator: false,
     msgType: false,
-    metadata: false
+    metadata: false,
+    clearMsgBody: true
   },
   generateDashboardReport: {
     name: 'Generate Dashboard Report',
