@@ -38,7 +38,6 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.thingsboard.server.common.data.edqs.fields.EdgeFields;
 import org.thingsboard.server.dao.model.sql.EdgeEntity;
-import org.thingsboard.server.dao.model.sql.EdgeInfoEntity;
 
 import java.util.List;
 import java.util.UUID;
@@ -52,12 +51,6 @@ public interface EdgeRepository extends JpaRepository<EdgeEntity, UUID> {
                                                  @Param("customerId") UUID customerId,
                                                  @Param("textSearch") String textSearch,
                                                  Pageable pageable);
-
-    @Query("SELECT new org.thingsboard.server.dao.model.sql.EdgeInfoEntity(d, c.title, c.additionalInfo) " +
-            "FROM EdgeEntity d " +
-            "LEFT JOIN CustomerEntity c on c.id = d.customerId " +
-            "WHERE d.id = :edgeId")
-    EdgeInfoEntity findEdgeInfoById(@Param("edgeId") UUID edgeId);
 
     @Query(value = "SELECT * FROM edge_active_attribute_view edge_active",
             countQuery = "SELECT count(*) FROM edge_active_attribute_view",
