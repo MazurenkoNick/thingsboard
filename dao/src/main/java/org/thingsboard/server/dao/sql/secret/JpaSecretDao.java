@@ -36,6 +36,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Component;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.id.TenantId;
+import org.thingsboard.server.common.data.page.PageData;
+import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.secret.Secret;
 import org.thingsboard.server.dao.DaoUtil;
 import org.thingsboard.server.dao.model.sql.SecretEntity;
@@ -52,6 +54,11 @@ public class JpaSecretDao extends JpaAbstractDao<SecretEntity, Secret> implement
 
     @Autowired
     private SecretRepository secretRepository;
+
+    @Override
+    public PageData<Secret> findByTenantId(TenantId tenantId, PageLink pageLink) {
+        return DaoUtil.toPageData(secretRepository.findByTenantId(tenantId.getId(), pageLink.getTextSearch(), DaoUtil.toPageable(pageLink)));
+    }
 
     @Override
     public Secret findByName(TenantId tenantId, String name) {

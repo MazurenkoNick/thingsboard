@@ -93,7 +93,6 @@ public class CustomTranslationController extends BaseController {
             )
     @PreAuthorize("hasAnyAuthority('SYS_ADMIN', 'TENANT_ADMIN', 'CUSTOMER_USER')")
     @GetMapping(value = "/translation/custom/merged/{localeCode}")
-    @ResponseBody
     public JsonNode getMergedCustomTranslation(@Parameter(description = "Locale code (e.g. 'en_US').")
                                                @PathVariable("localeCode") String localeCode) throws ThingsboardException {
         Authority authority = getCurrentUser().getAuthority();

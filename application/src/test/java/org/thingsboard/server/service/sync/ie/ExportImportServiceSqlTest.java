@@ -52,6 +52,7 @@ import org.thingsboard.server.common.data.DeviceTransportType;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.EntityView;
 import org.thingsboard.server.common.data.ExportableEntity;
+import org.thingsboard.server.common.data.OtaPackage;
 import org.thingsboard.server.common.data.Tenant;
 import org.thingsboard.server.common.data.User;
 import org.thingsboard.server.common.data.asset.Asset;
@@ -87,25 +88,38 @@ import org.thingsboard.server.common.data.id.EntityGroupId;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.EntityViewId;
 import org.thingsboard.server.common.data.id.IntegrationId;
+import org.thingsboard.server.common.data.id.OtaPackageId;
+import org.thingsboard.server.common.data.id.ReportTemplateId;
 import org.thingsboard.server.common.data.id.RoleId;
 import org.thingsboard.server.common.data.id.RuleChainId;
+import org.thingsboard.server.common.data.id.SchedulerEventId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.integration.Integration;
 import org.thingsboard.server.common.data.integration.IntegrationType;
 import org.thingsboard.server.common.data.msg.TbNodeConnectionType;
+import org.thingsboard.server.common.data.ota.ChecksumAlgorithm;
+import org.thingsboard.server.common.data.ota.OtaPackageType;
 import org.thingsboard.server.common.data.permission.GroupPermission;
 import org.thingsboard.server.common.data.permission.MergedUserPermissions;
 import org.thingsboard.server.common.data.permission.Operation;
 import org.thingsboard.server.common.data.permission.Resource;
 import org.thingsboard.server.common.data.plugin.ComponentLifecycleEvent;
+import org.thingsboard.server.common.data.query.AliasEntityId;
+import org.thingsboard.server.common.data.query.SingleEntityFilter;
 import org.thingsboard.server.common.data.relation.EntityRelation;
 import org.thingsboard.server.common.data.relation.RelationTypeGroup;
+import org.thingsboard.server.common.data.report.ReportTemplate;
+import org.thingsboard.server.common.data.report.ReportTemplateType;
+import org.thingsboard.server.common.data.report.TbReportFormat;
+import org.thingsboard.server.common.data.report.configuration.CsvReportTemplateConfig;
+import org.thingsboard.server.common.data.report.configuration.EntityAlias;
 import org.thingsboard.server.common.data.role.Role;
 import org.thingsboard.server.common.data.role.RoleType;
 import org.thingsboard.server.common.data.rule.RuleChain;
 import org.thingsboard.server.common.data.rule.RuleChainMetaData;
 import org.thingsboard.server.common.data.rule.RuleChainType;
 import org.thingsboard.server.common.data.rule.RuleNode;
+import org.thingsboard.server.common.data.scheduler.SchedulerEvent;
 import org.thingsboard.server.common.data.security.Authority;
 import org.thingsboard.server.common.data.sync.ie.DeviceExportData;
 import org.thingsboard.server.common.data.sync.ie.EntityExportData;
@@ -128,12 +142,15 @@ import org.thingsboard.server.dao.grouppermission.GroupPermissionService;
 import org.thingsboard.server.dao.integration.IntegrationService;
 import org.thingsboard.server.dao.ota.OtaPackageService;
 import org.thingsboard.server.dao.relation.RelationService;
+import org.thingsboard.server.dao.report.ReportTemplateService;
 import org.thingsboard.server.dao.role.RoleService;
 import org.thingsboard.server.dao.rule.RuleChainService;
+import org.thingsboard.server.dao.scheduler.SchedulerEventService;
 import org.thingsboard.server.dao.service.DaoSqlTest;
 import org.thingsboard.server.dao.tenant.TenantService;
 import org.thingsboard.server.service.action.EntityActionService;
 import org.thingsboard.server.service.ota.OtaPackageStateService;
+import org.thingsboard.server.service.scheduler.SchedulerService;
 import org.thingsboard.server.service.security.model.SecurityUser;
 import org.thingsboard.server.service.security.model.UserPrincipal;
 import org.thingsboard.server.service.security.permission.AccessControlService;
@@ -141,6 +158,7 @@ import org.thingsboard.server.service.security.permission.UserPermissionsService
 import org.thingsboard.server.service.sync.vc.data.EntitiesImportCtx;
 import org.thingsboard.server.service.sync.vc.data.SimpleEntitiesExportCtx;
 
+import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -171,6 +189,8 @@ public class ExportImportServiceSqlTest extends AbstractControllerTest {
     private UserPermissionsService userPermissionsService;
     @SpyBean
     private AccessControlService accessControlService;
+    @SpyBean
+    private SchedulerService schedulerService;
 
     @Autowired
     protected EntitiesExportImportService exportImportService;
@@ -206,6 +226,10 @@ public class ExportImportServiceSqlTest extends AbstractControllerTest {
     protected ConverterService converterService;
     @Autowired
     protected RoleService roleService;
+    @Autowired
+    protected SchedulerEventService schedulerEventService;
+    @Autowired
+    protected ReportTemplateService reportTemplateService;
 
     protected TenantId tenantId1;
     protected User tenantAdmin1;
@@ -251,17 +275,20 @@ public class ExportImportServiceSqlTest extends AbstractControllerTest {
         AssetProfile assetProfile = createAssetProfile(tenantId1, ruleChain.getId(), dashboard.getId(), "Asset profile 1");
         Asset asset = createAsset(tenantId1, null, assetProfile.getId(), null, "Asset 1");
         DeviceProfile deviceProfile = createDeviceProfile(tenantId1, ruleChain.getId(), dashboard.getId(), "Device profile 1");
-        Device device = createDevice(tenantId1, null, deviceProfile.getId(), null, "Device 1");
+        OtaPackage firmware = createOtaPackage(tenantId1, deviceProfile.getId(), OtaPackageType.FIRMWARE);
+        Device device = createDevice(tenantId1, null, deviceProfile.getId(), null, "Device 1", firmware.getId());
         CalculatedField calculatedField = createCalculatedField(tenantId1, device.getId(), asset.getId());
         Converter converter = createConverter(tenantId1, ConverterType.DOWNLINK, "Converter 1");
         Integration integration = createIntegration(tenantId1, converter.getId(), IntegrationType.HTTP, "Integration 1");
         Role role = createGenericRole(tenantId1, null, "Role 1", Map.of(Resource.DEVICE, List.of(Operation.READ)));
         EntityGroup userGroup = createEntityGroup(tenantId1, EntityType.USER, "User group 1");
         createGroupPermission(tenantId1, userGroup.getId(), role.getId());
+        SchedulerEvent schedulerEvent = createSchedulerEvent(tenantId1, device.getId(), "Scheduler Event 1", "report");
+        ReportTemplate reportTemplate = createReportTemplate(tenantId1, null, "Weekly report template", device.getId());
 
         Map<EntityType, EntityExportData> entitiesExportData = Stream.of(customer.getId(), asset.getId(), device.getId(),
                         ruleChain.getId(), dashboard.getId(), assetProfile.getId(), deviceProfile.getId(), converter.getId(),
-                        integration.getId(), role.getId(), userGroup.getId())
+                        integration.getId(), role.getId(), userGroup.getId(), firmware.getId(), schedulerEvent.getId(), reportTemplate.getId())
                 .map(entityId -> {
                     try {
                         return exportEntity(tenantAdmin1, entityId, EntityExportSettings.builder()
@@ -330,12 +357,17 @@ public class ExportImportServiceSqlTest extends AbstractControllerTest {
         verify(tbClusterService).sendNotificationMsgToEdge(any(), any(), eq(importedDeviceProfile.getId()), any(), any(), eq(EdgeEventActionType.ADDED), any(), any(), any());
         verify(otaPackageStateService).update(eq(importedDeviceProfile), eq(false), eq(false));
 
+        OtaPackage importedFirmware = (OtaPackage) importEntity(tenantAdmin2, getAndClone(entitiesExportData, EntityType.OTA_PACKAGE)).getSavedEntity();
+        verify(entityActionService).logEntityAction(any(), eq(importedFirmware.getId()), eq(importedFirmware),
+                any(), eq(ActionType.ADDED), isNull());
+
         Device importedDevice = (Device) importEntity(tenantAdmin2, getAndClone(entitiesExportData, EntityType.DEVICE)).getSavedEntity();
         verify(entityActionService).logEntityAction(any(), eq(importedDevice.getId()), eq(importedDevice),
                 any(), eq(ActionType.ADDED), isNull());
         verify(tbClusterService).onDeviceUpdated(eq(importedDevice), isNull());
         importEntity(tenantAdmin2, getAndClone(entitiesExportData, EntityType.DEVICE));
         verify(tbClusterService, Mockito.never()).onDeviceUpdated(eq(importedDevice), eq(importedDevice));
+        assertThat(importedDevice.getFirmwareId()).isEqualTo(importedFirmware.getId());
 
         // calculated field of imported device:
         List<CalculatedField> calculatedFields = calculatedFieldService.findCalculatedFieldsByEntityId(tenantId2, importedDevice.getId());
@@ -372,6 +404,18 @@ public class ExportImportServiceSqlTest extends AbstractControllerTest {
         Role importedRole = (Role) importEntity(tenantAdmin2, entitiesExportData.get(EntityType.ROLE)).getSavedEntity();
         verify(userPermissionsService).onRoleUpdated(argThat(r -> r.getId().equals(importedRole.getId())));
         verify(entityActionService).logEntityAction(any(), eq(importedRole.getId()), notNull(), any(), eq(ActionType.ADDED), isNull());
+
+        SchedulerEvent importedSchedulerEvent = (SchedulerEvent) importEntity(tenantAdmin2, entitiesExportData.get(EntityType.SCHEDULER_EVENT)).getSavedEntity();
+        verify(schedulerService).onSchedulerEventAdded(argThat(se -> se.getId().equals(importedSchedulerEvent.getId())));
+        verify(entityActionService).logEntityAction(any(), eq(importedSchedulerEvent.getId()), notNull(), any(), eq(ActionType.ADDED), isNull());
+
+        EntityExportData<SchedulerEvent> updatedSchedulerEventEntity = getAndClone(entitiesExportData, EntityType.SCHEDULER_EVENT);
+        updatedSchedulerEventEntity.getEntity().setName("t" + updatedSchedulerEventEntity.getEntity().getName());
+        SchedulerEvent updatedSchedulerEvent = importEntity(tenantAdmin2, updatedSchedulerEventEntity).getSavedEntity();
+        verify(schedulerService).onSchedulerEventUpdated(argThat(se -> se.getId().equals(updatedSchedulerEvent.getId())));
+
+        ReportTemplate importedReportTemplate = (ReportTemplate) importEntity(tenantAdmin2, entitiesExportData.get(EntityType.REPORT_TEMPLATE)).getSavedEntity();
+        verify(entityActionService).logEntityAction(any(), eq(importedReportTemplate.getId()), notNull(), any(), eq(ActionType.ADDED), isNull());
     }
 
     @Test
@@ -387,17 +431,20 @@ public class ExportImportServiceSqlTest extends AbstractControllerTest {
         assetProfile = assetProfileService.saveAssetProfile(assetProfile);
 
         DeviceProfile deviceProfile = createDeviceProfile(tenantId1, ruleChain.getId(), dashboard.getId(), "Device profile 1");
-        Device device = createDevice(tenantId1, customer.getId(), deviceProfile.getId(), null, "Device 1");
+        OtaPackage firmware = createOtaPackage(tenantId1, deviceProfile.getId(), OtaPackageType.FIRMWARE);
+        Device device = createDevice(tenantId1, customer.getId(), deviceProfile.getId(), null, "Device 1", firmware.getId());
         EntityView entityView = createEntityView(tenantId1, customer.getId(), device.getId(), "Entity view 1");
         Converter converter = createConverter(tenantId1, ConverterType.UPLINK, "Converter 1");
         Integration integration = createIntegration(tenantId1, converter.getId(), IntegrationType.HTTP, "Integration 1");
+        SchedulerEvent schedulerEvent = createSchedulerEvent(tenantId1, device.getId(), "Scheduler Event 1", "report");
+        ReportTemplate reportTemplate = createReportTemplate(tenantId1, customer.getId(), "Weekly report", device.getId());
 
         CalculatedField calculatedField = createCalculatedField(tenantId1, device.getId(), device.getId());
 
         Map<EntityId, EntityId> ids = new HashMap<>();
         for (EntityId entityId : List.of(customer.getId(), ruleChain.getId(), dashboard.getId(), assetProfile.getId(), asset.getId(),
-                deviceProfile.getId(), device.getId(), entityView.getId(), converter.getId(), integration.getId(),
-                ruleChain.getId(), dashboard.getId())) {
+                deviceProfile.getId(), firmware.getId(), device.getId(), entityView.getId(), converter.getId(), integration.getId(),
+                ruleChain.getId(), dashboard.getId(), schedulerEvent.getId(), reportTemplate.getId())) {
             EntityExportData exportData = exportEntity(getSecurityUser(tenantAdmin1), entityId);
             EntityImportResult importResult = importEntity(getSecurityUser(tenantAdmin2), exportData, EntityImportSettings.builder()
                     .saveCredentials(false)
@@ -430,12 +477,17 @@ public class ExportImportServiceSqlTest extends AbstractControllerTest {
         assertThat(exportedDeviceProfile.getDefaultRuleChainId()).isEqualTo(ruleChain.getId());
         assertThat(exportedDeviceProfile.getDefaultDashboardId()).isEqualTo(dashboard.getId());
 
+        OtaPackage exportedFirmware = (OtaPackage) exportEntity(tenantAdmin2, (OtaPackageId) ids.get(firmware.getId())).getEntity();
+        assertThat(exportedFirmware.getDeviceProfileId()).isEqualTo(exportedDeviceProfile.getId());
+        assertThat(exportedFirmware.getId()).isEqualTo(firmware.getId());
+
         EntityExportData<Device> entityExportData = exportEntity(tenantAdmin2, (DeviceId) ids.get(device.getId()));
         Device exportedDevice = entityExportData.getEntity();
         assertThat(exportedDevice.getCustomerId()).isEqualTo(customer.getId());
         assertThat(exportedDevice.getDeviceProfileId()).isEqualTo(deviceProfile.getId());
+        assertThat(exportedDevice.getFirmwareId()).isEqualTo(firmware.getId());
 
-        List<CalculatedField> calculatedFields = ((DeviceExportData) entityExportData).getCalculatedFields();
+        List<CalculatedField> calculatedFields = entityExportData.getCalculatedFields();
         assertThat(calculatedFields.size()).isOne();
         CalculatedField field = calculatedFields.get(0);
         assertThat(field.getName()).isEqualTo(calculatedField.getName());
@@ -447,11 +499,34 @@ public class ExportImportServiceSqlTest extends AbstractControllerTest {
         Integration exportedIntegration = (Integration) exportEntity(tenantAdmin2, (IntegrationId) ids.get(integration.getId())).getEntity();
         assertThat(exportedIntegration.getDefaultConverterId()).isEqualTo(converter.getId());
 
+        SchedulerEvent exportedSchedulerEvent = (SchedulerEvent) exportEntity(tenantAdmin2, (SchedulerEventId) ids.get(schedulerEvent.getId())).getEntity();
+        assertThat(exportedSchedulerEvent.getOriginatorId()).isEqualTo(schedulerEvent.getOriginatorId());
+
+        ReportTemplate exportedReportTemplate = (ReportTemplate) exportEntity(tenantAdmin2, (ReportTemplateId) ids.get(reportTemplate.getId())).getEntity();
+        assertThat(exportedReportTemplate.getCustomerId()).isEqualTo(reportTemplate.getCustomerId());
+        assertThat(((SingleEntityFilter)exportedReportTemplate.getConfiguration().getEntityAliases().get(0).getFilter()).getSingleEntity()).isEqualTo(device.getId());
+
         deviceProfile.setDefaultDashboardId(null);
         deviceProfileService.saveDeviceProfile(deviceProfile);
         DeviceProfile importedDeviceProfile = deviceProfileService.findDeviceProfileById(tenantId2, (DeviceProfileId) ids.get(deviceProfile.getId()));
         importedDeviceProfile.setDefaultDashboardId(null);
         deviceProfileService.saveDeviceProfile(importedDeviceProfile);
+    }
+
+    protected OtaPackage createOtaPackage(TenantId tenantId, DeviceProfileId deviceProfileId, OtaPackageType type) {
+        OtaPackage otaPackage = new OtaPackage();
+        otaPackage.setTenantId(tenantId);
+        otaPackage.setDeviceProfileId(deviceProfileId);
+        otaPackage.setType(type);
+        otaPackage.setTitle("My " + type);
+        otaPackage.setVersion("v1.0");
+        otaPackage.setFileName("filename.txt");
+        otaPackage.setContentType("text/plain");
+        otaPackage.setChecksumAlgorithm(ChecksumAlgorithm.SHA256);
+        otaPackage.setChecksum("4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a");
+        otaPackage.setDataSize(1L);
+        otaPackage.setData(ByteBuffer.wrap(new byte[]{(int) 1}));
+        return otaPackageService.saveOtaPackage(otaPackage);
     }
 
     protected DeviceProfile createDeviceProfile(TenantId tenantId, RuleChainId defaultRuleChainId, DashboardId defaultDashboardId, String name) {
@@ -495,13 +570,14 @@ public class ExportImportServiceSqlTest extends AbstractControllerTest {
         return asset;
     }
 
-    protected Device createDevice(TenantId tenantId, CustomerId customerId, DeviceProfileId deviceProfileId, EntityGroupId entityGroupId, String name) {
+    protected Device createDevice(TenantId tenantId, CustomerId customerId, DeviceProfileId deviceProfileId, EntityGroupId entityGroupId, String name, OtaPackageId firmwareId) {
         Device device = new Device();
         device.setTenantId(tenantId);
         device.setCustomerId(customerId);
         device.setName(name);
         device.setLabel("lbl");
         device.setDeviceProfileId(deviceProfileId);
+        device.setFirmwareId(firmwareId);
         DeviceData deviceData = new DeviceData();
         deviceData.setTransportConfiguration(new DefaultDeviceTransportConfiguration());
         device.setDeviceData(deviceData);
@@ -756,6 +832,36 @@ public class ExportImportServiceSqlTest extends AbstractControllerTest {
         config.setOutput(output);
 
         return config;
+    }
+
+    private SchedulerEvent createSchedulerEvent(TenantId tenantId, EntityId originatorId, String name, String type) {
+        SchedulerEvent schedulerEvent = new SchedulerEvent();
+        schedulerEvent.setTenantId(tenantId);
+        schedulerEvent.setOwnerId(tenantId);
+        schedulerEvent.setOriginatorId(originatorId);
+        schedulerEvent.setConfiguration(JacksonUtil.newObjectNode());
+        schedulerEvent.setName(name);
+        schedulerEvent.setType(type);
+        ObjectNode schedule = JacksonUtil.newObjectNode();
+        schedule.put("startTime", Long.MAX_VALUE);
+        schedule.put("timezone", "UTC");
+        schedulerEvent.setSchedule(schedule);
+        return schedulerEventService.saveSchedulerEvent(schedulerEvent);
+    }
+
+    private ReportTemplate createReportTemplate(TenantId tenantId, CustomerId customerId, String name, EntityId entityId) {
+        ReportTemplate reportTemplate = new ReportTemplate();
+        reportTemplate.setTenantId(tenantId);
+        reportTemplate.setCustomerId(customerId);
+        reportTemplate.setFormat(TbReportFormat.CSV);
+        CsvReportTemplateConfig configuration = new CsvReportTemplateConfig();
+        SingleEntityFilter filter = new SingleEntityFilter();
+        filter.setSingleEntity(AliasEntityId.fromEntityId(entityId));
+        configuration.setEntityAliases(List.of(new EntityAlias(UUID.randomUUID().toString(), "by device id", filter)));
+        reportTemplate.setConfiguration(configuration);
+        reportTemplate.setType(ReportTemplateType.REPORT);
+        reportTemplate.setName(name);
+        return reportTemplateService.saveReportTemplate(reportTemplate);
     }
 
     protected <E extends ExportableEntity<I>, I extends EntityId> EntityExportData<E> exportEntity(User user, I entityId) throws Exception {

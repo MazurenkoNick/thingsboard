@@ -1372,7 +1372,7 @@ const imageLoader = (imageUrl: string): Observable<HTMLImageElement> => new Obse
   image.src = imageUrl;
 });
 
-const loadImageSize = (imageUrl: string): Observable<[number, number]> =>
+export const loadImageSize = (imageUrl: string): Observable<[number, number]> =>
   imageLoader(imageUrl).pipe(map(image => [image.width, image.height]));
 
 export interface ImageWithAspect {

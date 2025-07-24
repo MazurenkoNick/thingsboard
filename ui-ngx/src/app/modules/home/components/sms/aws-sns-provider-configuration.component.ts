@@ -76,9 +76,6 @@ export class AwsSnsProviderConfigurationComponent implements ControlValueAccesso
   @Input()
   disabled: boolean;
 
-  @Input({transform: booleanAttribute})
-  isRuleNode = false;
-
   private propagateChange = (v: any) => { };
 
   constructor(private store: Store<AppState>,

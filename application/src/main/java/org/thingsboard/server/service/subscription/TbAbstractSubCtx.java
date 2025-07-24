@@ -123,6 +123,10 @@ public abstract class TbAbstractSubCtx {
         return sessionRef.getSecurityCtx().getId();
     }
 
+    public EntityId getOwnerId() {
+        return sessionRef.getSecurityCtx().getOwnerId();
+    }
+
     public MergedUserPermissions getMergedUserPermissions() {
         return sessionRef.getSecurityCtx().getUserPermissions();
     }

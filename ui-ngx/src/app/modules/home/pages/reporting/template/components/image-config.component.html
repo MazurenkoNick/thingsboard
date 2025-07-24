@@ -1,0 +1,122 @@
+<!--
+
+    ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
+
+    Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
+
+    NOTICE: All information contained herein is, and remains
+    the property of ThingsBoard, Inc. and its suppliers,
+    if any.  The intellectual and technical concepts contained
+    herein are proprietary to ThingsBoard, Inc.
+    and its suppliers and may be covered by U.S. and Foreign Patents,
+    patents in process, and are protected by trade secret or copyright law.
+
+    Dissemination of this information or reproduction of this material is strictly forbidden
+    unless prior written permission is obtained from COMPANY.
+
+    Access to the source code contained herein is hereby forbidden to anyone except current COMPANY employees,
+    managers or contractors who have executed Confidentiality and Non-disclosure agreements
+    explicitly covering such access.
+
+    The copyright notice above does not evidence any actual or intended publication
+    or disclosure  of  this source code, which includes
+    information that is confidential and/or proprietary, and is a trade secret, of  COMPANY.
+    ANY REPRODUCTION, MODIFICATION, DISTRIBUTION, PUBLIC  PERFORMANCE,
+    OR PUBLIC DISPLAY OF OR THROUGH USE  OF THIS  SOURCE CODE  WITHOUT
+    THE EXPRESS WRITTEN CONSENT OF COMPANY IS STRICTLY PROHIBITED,
+    AND IN VIOLATION OF APPLICABLE LAWS AND INTERNATIONAL TREATIES.
+    THE RECEIPT OR POSSESSION OF THIS SOURCE CODE AND/OR RELATED INFORMATION
+    DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
+    OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
+
+-->
+<div class="tb-form-panel no-border h-full" [formGroup]="reportConfigForm">
+  <div class="tb-report-component-config-header">
+    <tb-toggle-select [(ngModel)]="settingsTab" [ngModelOptions]="{standalone: true}" appearance="fill">
+      <tb-toggle-option value="image">{{ 'report-template.image' | translate }}</tb-toggle-option>
+      <tb-toggle-option value="layout">{{ 'report-template.layout' | translate }}</tb-toggle-option>
+    </tb-toggle-select>
+  </div>
+  <div class="tb-form-panel no-border no-padding overflow-y-auto" [class.!hidden]="settingsTab !== 'image'">
+    <div class="tb-form-panel stroked">
+      <div class="flex flex-row items-center justify-between">
+        <div class="tb-form-panel-title">
+          {{ 'report-template.component.image.image-source' | translate }}
+        </div>
+        <tb-toggle-select formControlName="sourceType">
+          <tb-toggle-option value="image">{{ 'report-template.component.image.source-image' | translate }}</tb-toggle-option>
+          <tb-toggle-option value="entityKey">{{ 'report-template.component.image.source-entity-key' | translate }}</tb-toggle-option>
+        </tb-toggle-select>
+      </div>
+      <tb-gallery-image-input [class.!hidden]="reportConfigForm.get('sourceType').value !== 'image'"
+                              formControlName="imageUrl"
+                              detectImageSize
+                              (imageSize)="imageSizeUpdated($event)">
+      </tb-gallery-image-input>
+      <div class="tb-form-panel no-border no-padding" [class.!hidden]="reportConfigForm.get('sourceType').value !== 'entityKey'">
+        <tb-datasources
+          [configMode]="basicMode"
+          stroked
+          hideDataKeys
+          formControlName="dataSources"
+          [dataSourcesOptions]="{
+                    widgetType: widgetType.latest,
+                    maxDatasources: 1,
+                    datasourcesOptional: false,
+                    allowFunctions: false
+           }"
+          [callbacks]="callbacks"
+          [aliasController]="context.aliasController">
+        </tb-datasources>
+        <div class="tb-form-row tb-standard-fields column-xs">
+          <div class="fixed-title-width" translate>report-template.component.image.image-url-key</div>
+          <tb-data-key-input
+            class="flex-1"
+            [datasourceType]="datasource?.type"
+            [entityAliasId]="datasource?.entityAliasId"
+            [deviceId]="datasource?.deviceId"
+            [aliasController]="context.aliasController"
+            [widgetType]="widgetType.latest"
+            [dataKeyTypes]="[DataKeyType.attribute, DataKeyType.timeseries]"
+            [callbacks]="callbacks"
+            [editable]="false"
+            formControlName="entityKey">
+          </tb-data-key-input>
+        </div>
+      </div>
+    </div>
+    <div class="tb-form-row space-between">
+      <div>{{ 'report-template.component.image.image-width' | translate }}</div>
+      <div class="flex flex-row items-center justify-start gap-2">
+        <mat-form-field class="medium-width" appearance="outline" subscriptSizing="dynamic">
+          <mat-select formControlName="widthType">
+            <mat-option *ngFor="let widthType of imageWidthTypes" [value]="widthType">
+              {{ imageWidthTypeTranslations.get(widthType) | translate }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+        @if (reportConfigForm.get('widthType').value === 'custom') {
+          <div class="tb-small-label" translate>report-template.width</div>
+          <mat-form-field appearance="outline" class="number" subscriptSizing="dynamic">
+            <input matInput formControlName="customWidth" type="number" min="1" step="1" placeholder="{{ 'widget-config.set' | translate }}">
+            <div matSuffix>px</div>
+          </mat-form-field>
+        }
+      </div>
+    </div>
+    <div class="tb-form-row space-between">
+      <div>{{ 'report-template.component.image.image-alignment' | translate }}</div>
+      <mat-form-field class="medium-width" appearance="outline" subscriptSizing="dynamic">
+        <mat-select formControlName="alignment">
+          <mat-option *ngFor="let alignment of imageAlignments" [value]="alignment">
+            {{ imageAlignmentTranslations.get(alignment) | translate }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+  </div>
+  <div class="tb-form-panel no-border no-padding overflow-y-auto" [class.!hidden]="settingsTab !== 'layout'">
+    <tb-report-component-layout-settings formControlName="layout">
+    </tb-report-component-layout-settings>
+  </div>
+</div>

@@ -30,132 +30,48 @@
     OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 
 -->
-<section [formGroup]="reportConfigFormGroup" class="tb-form-panel no-border no-padding flex flex-col">
-  <div class="tb-form-panel stroked">
-    <mat-expansion-panel class="tb-settings" [expanded]="true">
-      <mat-expansion-panel-header>
-        <mat-panel-title>
-          <div class="tb-panel-title" translate>report.general-report-settings</div>
-        </mat-panel-title>
-      </mat-expansion-panel-header>
-      <div class="no-gap flex flex-col">
-        <mat-form-field class="mat-block flex-1">
-          <mat-label translate>report.name-pattern</mat-label>
-          <input matInput formControlName="namePattern" required>
-          <div matIconSuffix tb-help-popup="date/date-format" [tb-help-popup-style]="{width: '800px'}"></div>
-          <mat-error *ngIf="reportConfigFormGroup.get('namePattern').hasError('required')">
-            {{ 'report.name-pattern-required' | translate }}
-          </mat-error>
-        </mat-form-field>
-        <mat-form-field class="mat-block flex-1">
-          <mat-label translate>report.type</mat-label>
-          <mat-select matInput formControlName="type" required>
-            <mat-option *ngFor="let reportType of reportTypesList" [value]="reportType">
-              {{ reportTypeNames.get(reportType) }}
-            </mat-option>
-          </mat-select>
-        </mat-form-field>
-      </div>
-    </mat-expansion-panel>
+<div [formGroup]="reportConfigFormGroup" class="tb-form-panel outlined">
+  <tb-report-template-autocomplete
+    required
+    appearance="outline"
+    [type]="ReportTemplateType.REPORT"
+    includeCustomers
+    formControlName="reportTemplateId">
+  </tb-report-template-autocomplete>
+  <tb-entity-autocomplete
+    appearance="outline"
+    required
+    useFullEntityId
+    [entityType]="entityType.USER"
+    formControlName="userId">
+  </tb-entity-autocomplete>
+  <tb-timezone-select
+    appearance="outline"
+    userTimezoneByDefault
+    required
+    formControlName="timezone">
+  </tb-timezone-select>
+  <div class="tb-form-panel outlined padding stroked">
+    <div class="tb-form-panel-title" translate>notification.recipients</div>
+    <tb-entity-list
+      appearance="outline"
+      syncIdsWithDB
+      formControlName="targets"
+      labelText="{{ 'notification.recipients' | translate }}"
+      placeholderText="{{ 'notification.recipient' | translate }}"
+      [entityType]="entityType.NOTIFICATION_TARGET"
+      [entitySubType]="NotificationType.GENERAL">
+      <button #createTargetButton
+              mat-button color="primary" matSuffix
+              (click)="createTarget($event, createTargetButton)">
+        <span style="white-space: nowrap">{{ 'notification.create-new' | translate }}</span>
+      </button>
+    </tb-entity-list>
+    <tb-template-autocomplete
+      appearance="outline"
+      allowCreate allowEdit
+      formControlName="notificationTemplateId"
+      [notificationTypes]="NotificationType.REPORT_GENERATED">
+    </tb-template-autocomplete>
   </div>
-  <div class="tb-form-panel stroked report-target-dashboard">
-    <mat-expansion-panel class="tb-settings" [expanded]="true">
-      <mat-expansion-panel-header>
-        <mat-panel-title>
-          <div class="tb-panel-title" translate>report.target-dashboard</div>
-        </mat-panel-title>
-      </mat-expansion-panel-header>
-      <div class="no-gap flex flex-col">
-        <mat-form-field class="mat-block flex-1">
-          <mat-label translate>report.base-url</mat-label>
-          <input matInput formControlName="baseUrl" required>
-          <mat-error *ngIf="reportConfigFormGroup.get('baseUrl').hasError('required')">
-            {{ 'report.base-url-required' | translate }}
-          </mat-error>
-        </mat-form-field>
-        <tb-entity-autocomplete
-          class="flex-1"
-          required
-          [entityType]="entityType.DASHBOARD"
-          formControlName="dashboardId">
-        </tb-entity-autocomplete>
-        <mat-form-field class="mat-block flex-1">
-          <mat-label translate>report.dashboard-state-param</mat-label>
-          <input matInput formControlName="state">
-          <button type="button"
-                  matSuffix
-                  mat-icon-button
-                  (click)="selectDashboardState()"
-                  matTooltip="{{ 'scheduler.select-dashboard-state' | translate }}"
-                  matTooltipPosition="above"
-                  [disabled]="disabled || !reportConfigFormGroup.get('dashboardId').value">
-            <mat-icon>open_in_new</mat-icon>
-          </button>
-        </mat-form-field>
-        <div class="flex flex-col">
-          <tb-timezone-select
-            userTimezoneByDefault
-            required
-            formControlName="timezone">
-          </tb-timezone-select>
-          <div class="tb-hint" translate
-               *ngIf="!reportConfigFormGroup.get('timezone').hasError('required')">
-            report.timezone-description
-          </div>
-        </div>
-        <div class="tb-form-panel no-border no-padding flex flex-col">
-          <div class="tb-form-row space-between column-xs">
-            <mat-slide-toggle class="mat-slide" formControlName="useDashboardTimewindow">
-              <label (click)="$event.stopPropagation();"
-                     class="break-word"
-                     tb-hint-tooltip-icon="{{ 'report.use-dashboard-timewindow-description' | translate }}">
-                {{ 'report.use-dashboard-timewindow' | translate }}
-              </label>
-            </mat-slide-toggle>
-            <tb-timewindow
-              asButton
-              aggregation
-              class="margin-right"
-              formControlName="timewindow">
-            </tb-timewindow>
-          </div>
-          <div [class.!hidden]="!isTenantAdmin" class="tb-form-panel stroked"
-               [class.no-padding-bottom]="!reportConfigFormGroup.get('useCurrentUserCredentials').value">
-            <div class="flex w-full flex-1 flex-row items-center justify-between gap-0 xs:flex-col xs:items-start xs:gap-3">
-              <div class="fixed-title-width" translate
-                   tb-hint-tooltip-icon="{{ 'report.user-credentials-description' | translate }}">
-                report.credentials
-              </div>
-              <tb-toggle-select formControlName="useCurrentUserCredentials" appearance="fill">
-                <tb-toggle-option [value]="true">
-                  {{ 'report.current-user' | translate }}
-                </tb-toggle-option>
-                <tb-toggle-option [value]="false">
-                  {{ 'report.customer-user' | translate }}
-                </tb-toggle-option>
-              </tb-toggle-select>
-            </div>
-            <tb-entity-autocomplete
-              [class.!hidden]="reportConfigFormGroup.get('useCurrentUserCredentials').value"
-              required
-              [entityType]="entityType.USER"
-              labelText="report.customer-user-credentials"
-              requiredText="report.customer-user-credentials-required"
-              formControlName="userId">
-            </tb-entity-autocomplete>
-          </div>
-          <div class="tb-form-row space-between test-generate-row">
-            <div class="fixed-title-width">{{ 'report.preview-report' | translate }}</div>
-            <button *ngIf="!disabled" mat-raised-button color="primary"
-                    type="button"
-                    [disabled]="(isLoading$ | async) || reportConfigFormGroup.invalid"
-                    (click)="generateTestReport()"
-                    class="margin-right">
-              {{ 'report.generate-test-report' | translate }}
-            </button>
-          </div>
-        </div>
-      </div>
-    </mat-expansion-panel>
-  </div>
-</section>
+</div>

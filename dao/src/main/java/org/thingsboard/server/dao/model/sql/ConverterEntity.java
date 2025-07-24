@@ -129,7 +129,7 @@ public final class ConverterEntity extends BaseVersionedEntity<Converter> {
         converter.setCreatedTime(createdTime);
         converter.setVersion(version);
         if (tenantId != null) {
-            converter.setTenantId(new TenantId(tenantId));
+            converter.setTenantId(TenantId.fromUUID(tenantId));
         }
         converter.setName(name);
         converter.setType(type);

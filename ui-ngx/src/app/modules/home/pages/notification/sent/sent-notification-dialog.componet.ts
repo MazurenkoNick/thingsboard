@@ -44,7 +44,6 @@ import { AbstractControl, FormBuilder, FormGroup, Validators } from '@angular/fo
 import { NotificationService } from '@core/http/notification.service';
 import { deepTrim, guid, isDefinedAndNotNull } from '@core/utils';
 import { Observable } from 'rxjs';
-import { EntityType } from '@shared/models/entity-type.models';
 import { BreakpointObserver } from '@angular/cdk/layout';
 import { MatStepper } from '@angular/material/stepper';
 import { StepperOrientation, StepperSelectionEvent } from '@angular/cdk/stepper';
@@ -58,7 +57,6 @@ import {
 import { MatButton } from '@angular/material/button';
 import { TemplateConfiguration } from '@home/pages/notification/template/template-configuration';
 import { Authority } from '@shared/models/authority.enum';
-import { AuthUser } from '@shared/models/user.model';
 import { getCurrentAuthState, getCurrentAuthUser } from '@core/auth/auth.selectors';
 import { TranslateService } from '@ngx-translate/core';
 import { AuthState } from '@core/auth/auth.models';
@@ -83,8 +81,6 @@ export class SentNotificationDialogComponent extends
   stepperOrientation: Observable<StepperOrientation>;
 
   isAdd = true;
-  entityType = EntityType;
-  notificationType = NotificationType;
 
   notificationRequestForm: FormGroup;
 
@@ -119,7 +115,6 @@ export class SentNotificationDialogComponent extends
     }
   };
 
-  private authUser: AuthUser = getCurrentAuthUser(this.store);
   private authState: AuthState = getCurrentAuthState(this.store);
 
   private allowNotificationDeliveryMethods: Array<NotificationDeliveryMethod>;
@@ -203,6 +198,7 @@ export class SentNotificationDialogComponent extends
       this.deliveryConfiguration = this.templateNotificationForm.get('configuration.deliveryMethodsTemplates').value;
     }
     this.refreshAllowDeliveryMethod();
+    this.updateValidators();
   }
 
   ngOnDestroy() {
@@ -296,14 +292,6 @@ export class SentNotificationDialogComponent extends
         return false;
       }
     });
-  }
-
-  private isSysAdmin(): boolean {
-    return this.authUser.authority === Authority.SYS_ADMIN;
-  }
-
-  private isTenantAdmin(): boolean {
-    return this.authUser.authority === Authority.TENANT_ADMIN;
   }
 
   minDate(): Date {

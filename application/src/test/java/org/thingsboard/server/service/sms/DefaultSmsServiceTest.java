@@ -37,6 +37,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.test.context.TestPropertySource;
 import org.testcontainers.shaded.org.apache.commons.lang3.RandomStringUtils;
@@ -50,6 +51,7 @@ import org.thingsboard.server.common.data.tenant.profile.DefaultTenantProfileCon
 import org.thingsboard.server.common.data.tenant.profile.TenantProfileConfiguration;
 import org.thingsboard.server.common.data.tenant.profile.TenantProfileData;
 import org.thingsboard.server.controller.AbstractControllerTest;
+import org.thingsboard.server.dao.secret.SecretConfigurationService;
 import org.thingsboard.server.dao.service.DaoSqlTest;
 import org.thingsboard.server.dao.settings.AdminSettingsService;
 
@@ -61,6 +63,8 @@ import java.util.concurrent.TimeUnit;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @DaoSqlTest
@@ -73,6 +77,8 @@ public class DefaultSmsServiceTest extends AbstractControllerTest {
     private DefaultSmsService defaultSmsService;
     @Autowired
     private AdminSettingsService adminSettingsService;
+    @MockBean
+    private SecretConfigurationService secretConfigurationService;
 
     private TenantProfile tenantProfile;
 
@@ -106,6 +112,8 @@ public class DefaultSmsServiceTest extends AbstractControllerTest {
         assertThrows(RuntimeException.class, () -> {
             defaultSmsService.sendSms(tenantId, null, new String[]{RandomStringUtils.randomNumeric(10)}, "Message");
         }, "SMS sending is disabled due to API limits!");
+        // 1 as exception, 10 in cycle
+        verify(secretConfigurationService, times(11)).replaceSecretUsages(any(), any());
     }
 
     @Test
@@ -129,13 +137,15 @@ public class DefaultSmsServiceTest extends AbstractControllerTest {
             doReturn(1).when(defaultSmsService).sendSms(any(), any(), any());
             defaultSmsService.sendSms(tenantId, null, new String[]{RandomStringUtils.randomNumeric(10)}, "Message");
         }
+        // 1 as exception, 10 in cycle
+        verify(secretConfigurationService, times(11)).replaceSecretUsages(any(), any());
     }
 
     private TenantProfile getDefaultTenantProfile() throws Exception {
 
         PageLink pageLink = new PageLink(17);
         PageData<TenantProfile> pageData = doGetTypedWithPageLink("/api/tenantProfiles?",
-                new TypeReference<>(){}, pageLink);
+                new TypeReference<>() {}, pageLink);
         Assert.assertFalse(pageData.hasNext());
         Assert.assertEquals(1, pageData.getTotalElements());
         List<TenantProfile> tenantProfiles = new ArrayList<>(pageData.getData());
@@ -175,4 +185,5 @@ public class DefaultSmsServiceTest extends AbstractControllerTest {
             doPost("/api/admin/settings", adminSettings).andExpect(status().isOk());
         }
     }
+
 }

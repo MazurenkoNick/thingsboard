@@ -56,6 +56,8 @@ enum EntityTypeProto {
   RULE_NODE             = 12;
   SCHEDULER_EVENT       = 103;
   BLOB_ENTITY           = 104;
+  REPORT_TEMPLATE       = 108;
+  REPORT                = 109;
   ENTITY_VIEW           = 15;
   WIDGETS_BUNDLE        = 16;
   WIDGET_TYPE           = 17;
@@ -84,6 +86,8 @@ enum EntityTypeProto {
   CALCULATED_FIELD_LINK = 40;
   JOB                   = 41;
   SECRET                = 107;
+  ADMIN_SETTINGS        = 42;
+  AI_MODEL              = 43;
 }
 
 enum ApiUsageRecordKeyProto {
@@ -98,6 +102,7 @@ enum ApiUsageRecordKeyProto {
   CREATED_ALARMS_COUNT = 8;
   ACTIVE_DEVICES       = 9;
   INACTIVE_DEVICES     = 10;
+  GENERATED_REPORTS_COUNT = 100;
 }
 
 /**
@@ -402,6 +407,7 @@ message ApiUsageStateProto {
   string smsExecState = 15;
   string alarmExecState = 16;
   int64 version = 17;
+  string reportExecState = 100;
 }
 
 message RepositorySettingsProto {
@@ -1995,4 +2001,8 @@ message JobStatsMsg {
 
 message TaskResultProto {
   string value = 1;
+}
+
+message ToTbReportNotificationMsg {
+  ComponentLifecycleMsgProto componentLifecycleMsg = 1;
 }

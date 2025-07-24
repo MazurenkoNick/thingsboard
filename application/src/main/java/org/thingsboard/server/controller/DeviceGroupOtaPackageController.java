@@ -32,14 +32,15 @@ package org.thingsboard.server.controller;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.id.EntityGroupId;
-import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.ota.DeviceGroupOtaPackage;
 import org.thingsboard.server.common.data.ota.OtaPackageType;
 import org.thingsboard.server.common.data.permission.Operation;
@@ -54,7 +55,7 @@ import java.util.UUID;
 public class DeviceGroupOtaPackageController extends BaseController {
 
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
-    @RequestMapping(value = "/deviceGroupOtaPackage/{groupId}/{firmwareType}", method = RequestMethod.GET)
+    @GetMapping(value = "/deviceGroupOtaPackage/{groupId}/{firmwareType}")
     public DeviceGroupOtaPackage getFirmwareById(@PathVariable("groupId") String strGroupId,
                                                  @PathVariable("firmwareType") String strFirmwareType) throws ThingsboardException {
         checkParameter("groupId", strGroupId);
@@ -65,28 +66,20 @@ public class DeviceGroupOtaPackageController extends BaseController {
     }
 
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
-    @RequestMapping(value = "/deviceGroupOtaPackage", method = RequestMethod.POST)
-    public DeviceGroupOtaPackage saveDeviceGroupOtaPackage(@RequestBody DeviceGroupOtaPackage deviceGroupOtaPackage) throws ThingsboardException {
+    @PostMapping(value = "/deviceGroupOtaPackage")
+    public DeviceGroupOtaPackage saveDeviceGroupOtaPackage(@RequestBody DeviceGroupOtaPackage deviceGroupOtaPackage) throws Exception {
         checkEntityGroupId(deviceGroupOtaPackage.getGroupId(), Operation.WRITE);
-        DeviceGroupOtaPackage oldDeviceGroupOtaPackage = null;
-        if (deviceGroupOtaPackage.getId() != null) {
-            oldDeviceGroupOtaPackage = deviceGroupOtaPackageService.findDeviceGroupOtaPackageById(deviceGroupOtaPackage.getId());
-        }
-        DeviceGroupOtaPackage savedDeviceGroupOtaPackage = deviceGroupOtaPackageService.saveDeviceGroupOtaPackage(getTenantId(), deviceGroupOtaPackage);
-        otaPackageStateService.update(getTenantId(), savedDeviceGroupOtaPackage, oldDeviceGroupOtaPackage);
-        return savedDeviceGroupOtaPackage;
+        return tbDeviceGroupOtaPackageService.saveDeviceGroupOtaPackage(getTenantId(), deviceGroupOtaPackage, getCurrentUser());
     }
 
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
-    @RequestMapping(value = "/deviceGroupOtaPackage/{id}", method = RequestMethod.DELETE)
+    @DeleteMapping(value = "/deviceGroupOtaPackage/{id}")
     public void deleteDeviceGroupOtaPackage(@PathVariable("id") String strId) throws ThingsboardException {
         checkParameter("deviceGroupOtaPackageId", strId);
         UUID id = toUUID(strId);
-        TenantId tenantId = getTenantId();
         DeviceGroupOtaPackage deviceGroupOtaPackage = deviceGroupOtaPackageService.findDeviceGroupOtaPackageById(id);
         checkEntityGroupId(deviceGroupOtaPackage.getGroupId(), Operation.WRITE);
-        deviceGroupOtaPackageService.deleteDeviceGroupOtaPackage(tenantId, deviceGroupOtaPackage);
-        otaPackageStateService.update(tenantId, null, deviceGroupOtaPackage);
+        tbDeviceGroupOtaPackageService.deleteDeviceGroupOtaPackage(getTenantId(), deviceGroupOtaPackage);
     }
 
 }

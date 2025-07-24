@@ -35,9 +35,6 @@ import io.netty.handler.codec.mqtt.MqttVersion;
 import lombok.Data;
 import org.thingsboard.integration.mqtt.credentials.MqttClientCredentials;
 
-/**
- * Created by ashvayka on 25.12.17.
- */
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class MqttClientConfiguration {

@@ -35,7 +35,7 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>org.thingsboard</groupId>
-        <version>4.1.0PE-RC</version>
+        <version>4.2.0PE-SNAPSHOT</version>
         <artifactId>thingsboard</artifactId>
     </parent>
     <artifactId>msa</artifactId>
@@ -68,6 +68,7 @@
         <!-- PE -->
         <module>integration</module>
         <module>web-report</module>
+        <module>report</module>
         <module>migrator</module>
     </modules>
 

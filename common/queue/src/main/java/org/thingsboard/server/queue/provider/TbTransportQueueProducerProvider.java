@@ -162,4 +162,9 @@ public class TbTransportQueueProducerProvider implements TbQueueProducerProvider
         throw new RuntimeException("Not Implemented! Should not be used by Transport!");
     }
 
+    @Override
+    public TbQueueProducer<TbProtoQueueMsg<TransportProtos.ToTbReportNotificationMsg>> getTbReportNotificationsMsgProducer() {
+        throw new RuntimeException(NOT_IMPLEMENTED);
+    }
+
 }

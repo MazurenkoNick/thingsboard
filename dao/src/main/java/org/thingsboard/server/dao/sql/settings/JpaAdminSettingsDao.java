@@ -30,12 +30,13 @@
  */
 package org.thingsboard.server.dao.sql.settings;
 
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.thingsboard.server.common.data.AdminSettings;
+import org.thingsboard.server.common.data.EntityInfo;
+import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
@@ -46,25 +47,15 @@ import org.thingsboard.server.dao.settings.AdminSettingsDao;
 import org.thingsboard.server.dao.sql.JpaAbstractDao;
 import org.thingsboard.server.dao.util.SqlDao;
 
+import java.util.List;
 import java.util.UUID;
 
 @Component
 @SqlDao
-@Slf4j
+@RequiredArgsConstructor
 public class JpaAdminSettingsDao extends JpaAbstractDao<AdminSettingsEntity, AdminSettings> implements AdminSettingsDao, TenantEntityDao<AdminSettings> {
 
-    @Autowired
-    private AdminSettingsRepository adminSettingsRepository;
-
-    @Override
-    protected Class<AdminSettingsEntity> getEntityClass() {
-        return AdminSettingsEntity.class;
-    }
-
-    @Override
-    protected JpaRepository<AdminSettingsEntity, UUID> getRepository() {
-        return adminSettingsRepository;
-    }
+    private final AdminSettingsRepository adminSettingsRepository;
 
     @Override
     public AdminSettings findByTenantIdAndKey(UUID tenantId, String key) {
@@ -90,6 +81,26 @@ public class JpaAdminSettingsDao extends JpaAbstractDao<AdminSettingsEntity, Adm
     @Override
     public PageData<AdminSettings> findAllByTenantId(TenantId tenantId, PageLink pageLink) {
         return DaoUtil.toPageData(adminSettingsRepository.findByTenantId(tenantId.getId(), DaoUtil.toPageable(pageLink)));
+    }
+
+    @Override
+    public List<EntityInfo> findByTenantIdAndSecretPlaceholder(TenantId tenantId, String placeholder) {
+        return adminSettingsRepository.findByTenantIdAndSecretPlaceholder(tenantId.getId(), placeholder);
+    }
+
+    @Override
+    protected Class<AdminSettingsEntity> getEntityClass() {
+        return AdminSettingsEntity.class;
+    }
+
+    @Override
+    protected JpaRepository<AdminSettingsEntity, UUID> getRepository() {
+        return adminSettingsRepository;
+    }
+
+    @Override
+    public EntityType getEntityType() {
+        return EntityType.ADMIN_SETTINGS;
     }
 
 }

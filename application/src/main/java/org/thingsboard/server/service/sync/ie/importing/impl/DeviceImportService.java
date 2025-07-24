@@ -61,8 +61,8 @@ public class DeviceImportService extends BaseGroupEntityImportService<DeviceId, 
     @Override
     protected Device prepare(EntitiesImportCtx ctx, Device device, Device old, DeviceExportData exportData, IdProvider idProvider) {
         device.setDeviceProfileId(idProvider.getInternalId(device.getDeviceProfileId()));
-        device.setFirmwareId(getOldEntityField(old, Device::getFirmwareId));
-        device.setSoftwareId(getOldEntityField(old, Device::getSoftwareId));
+        device.setFirmwareId(idProvider.getInternalId(device.getFirmwareId()));
+        device.setSoftwareId(idProvider.getInternalId(device.getSoftwareId()));
         return device;
     }
 

@@ -56,7 +56,8 @@ public enum NotificationType {
     TASK_PROCESSING_FAILURE,
     RESOURCES_SHORTAGE,
     USER_ACTIVATED(true),
-    USER_REGISTERED(true);
+    USER_REGISTERED(true),
+    REPORT_GENERATED;
 
     @Getter
     private boolean system;

@@ -35,10 +35,11 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.thingsboard.server.common.data.exception.ThingsboardErrorCode;
@@ -71,8 +72,7 @@ public class SolutionController extends BaseController {
     @ApiOperation(value = "Get Solution templates (getSolutionTemplateInfos)",
             notes = "Get a list of solution template descriptors" + "\n\n" + RBAC_READ_CHECK)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN')")
-    @RequestMapping(value = "/templates/infos", method = RequestMethod.GET)
-    @ResponseBody
+    @GetMapping(value = "/templates/infos")
     public List<TenantSolutionTemplateInfo> getSolutionTemplateInfos() throws ThingsboardException {
         checkAllPermissions();
         return checkNotNull(solutionService.getSolutionInfos(getTenantId()));
@@ -81,8 +81,7 @@ public class SolutionController extends BaseController {
     @ApiOperation(value = "Get Solution template details (getSolutionTemplateDetails)",
             notes = "Get a solution template details based on the provided id" + "\n\n" + RBAC_READ_CHECK)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN')")
-    @RequestMapping(value = "/templates/details/{solutionTemplateId}", method = RequestMethod.GET)
-    @ResponseBody
+    @GetMapping(value = "/templates/details/{solutionTemplateId}")
     public TenantSolutionTemplateDetails getSolutionTemplateDetails(
             @Parameter(description = SOLUTION_TEMPLATE_ID_PARAM_DESCRIPTION, required = true)
             @PathVariable("solutionTemplateId") String solutionTemplateId) throws ThingsboardException {
@@ -94,8 +93,7 @@ public class SolutionController extends BaseController {
     @ApiOperation(value = "Get Solution Template Instructions (getSolutionTemplateInstructions)",
             notes = "Get a solution template instructions based on the provided id" + "\n\n" + RBAC_READ_CHECK)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN')")
-    @RequestMapping(value = "/templates/instructions/{solutionTemplateId}", method = RequestMethod.GET)
-    @ResponseBody
+    @GetMapping(value = "/templates/instructions/{solutionTemplateId}")
     public TenantSolutionTemplateInstructions getSolutionTemplateInstructions(
             @Parameter(description = SOLUTION_TEMPLATE_ID_PARAM_DESCRIPTION, required = true)
             @PathVariable("solutionTemplateId") String solutionTemplateId) throws ThingsboardException {
@@ -107,8 +105,7 @@ public class SolutionController extends BaseController {
     @ApiOperation(value = "Install Solution Template (installSolutionTemplate)",
             notes = "Install solution template based on the provided id" + "\n\n" + RBAC_WRITE_CHECK)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN')")
-    @RequestMapping(value = "/templates/{solutionTemplateId}/install", method = RequestMethod.POST)
-    @ResponseBody
+    @PostMapping(value = "/templates/{solutionTemplateId}/install")
     public SolutionInstallResponse installSolutionTemplate(
             @Parameter(description = SOLUTION_TEMPLATE_ID_PARAM_DESCRIPTION, required = true)
             @PathVariable(name = "solutionTemplateId") String solutionTemplateId, HttpServletRequest request) throws ThingsboardException {
@@ -120,7 +117,7 @@ public class SolutionController extends BaseController {
     @ApiOperation(value = "Uninstall Solution Template (uninstallSolutionTemplate)",
             notes = "Uninstall solution template based on the provided id" + "\n\n" + RBAC_DELETE_CHECK)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN')")
-    @RequestMapping(value = "/templates/{solutionTemplateId}/delete", method = RequestMethod.DELETE)
+    @DeleteMapping(value = "/templates/{solutionTemplateId}/delete")
     @ResponseStatus(value = HttpStatus.OK)
     public void uninstallSolutionTemplate(
             @Parameter(description = SOLUTION_TEMPLATE_ID_PARAM_DESCRIPTION, required = true)

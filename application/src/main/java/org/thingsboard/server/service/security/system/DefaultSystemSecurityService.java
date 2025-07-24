@@ -48,18 +48,23 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.LockedException;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.rule.engine.api.MailService;
 import org.thingsboard.server.common.data.AdminSettings;
+import org.thingsboard.server.common.data.Customer;
 import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.User;
 import org.thingsboard.server.common.data.audit.ActionType;
+import org.thingsboard.server.common.data.exception.ThingsboardErrorCode;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.id.CustomerId;
+import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.id.UserId;
+import org.thingsboard.server.common.data.permission.MergedUserPermissions;
 import org.thingsboard.server.common.data.security.Authority;
 import org.thingsboard.server.common.data.security.UserCredentials;
 import org.thingsboard.server.common.data.security.model.SecuritySettings;
@@ -67,6 +72,7 @@ import org.thingsboard.server.common.data.security.model.UserPasswordPolicy;
 import org.thingsboard.server.common.data.security.model.mfa.PlatformTwoFaSettings;
 import org.thingsboard.server.common.data.wl.LoginWhiteLabelingParams;
 import org.thingsboard.server.dao.audit.AuditLogService;
+import org.thingsboard.server.dao.customer.CustomerService;
 import org.thingsboard.server.dao.settings.AdminSettingsService;
 import org.thingsboard.server.dao.settings.SecuritySettingsService;
 import org.thingsboard.server.dao.user.UserService;
@@ -76,12 +82,18 @@ import org.thingsboard.server.exception.DataValidationException;
 import org.thingsboard.server.service.security.auth.rest.RestAuthenticationDetails;
 import org.thingsboard.server.service.security.exception.UserPasswordExpiredException;
 import org.thingsboard.server.service.security.model.SecurityUser;
+import org.thingsboard.server.service.security.model.UserPrincipal;
+import org.thingsboard.server.service.security.model.token.AccessJwtToken;
+import org.thingsboard.server.service.security.model.token.JwtTokenFactory;
+import org.thingsboard.server.service.security.permission.UserPermissionsService;
 import org.thingsboard.server.utils.MiscUtils;
 import ua_parser.Client;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -91,7 +103,10 @@ public class DefaultSystemSecurityService implements SystemSecurityService {
 
     private final AdminSettingsService adminSettingsService;
     private final BCryptPasswordEncoder encoder;
+    private final JwtTokenFactory tokenFactory;
     private final UserService userService;
+    private final UserPermissionsService userPermissionsService;
+    private final CustomerService customerService;
     private final MailService mailService;
     private final AuditLogService auditLogService;
     private final WhiteLabelingService whiteLabelingService;
@@ -329,6 +344,52 @@ public class DefaultSystemSecurityService implements SystemSecurityService {
         auditLogService.logEntityAction(
                 user.getTenantId(), user.getCustomerId(), user.getId(),
                 user.getName(), user.getId(), null, actionType, e, clientAddress, browser, os, device, provider);
+    }
+
+    @Override
+    public AccessJwtToken createUserAccessToken(TenantId tenantId, UserId userId) throws ThingsboardException {
+        User user = userService.findUserById(tenantId, userId);
+        if (user == null) {
+            throw new ThingsboardException("Configured user [id: " + userId + "] was not found in system. Please use other user credentials.", ThingsboardErrorCode.BAD_REQUEST_PARAMS);
+        }
+        UserCredentials credentials = userService.findUserCredentialsByUserId(tenantId, userId);
+        UserPrincipal principal = new UserPrincipal(UserPrincipal.Type.USER_NAME, user.getEmail());
+        MergedUserPermissions mergedUserPermissions;
+        try {
+            mergedUserPermissions = userPermissionsService.getMergedPermissions(user, false);
+        } catch (Exception e) {
+            throw new BadCredentialsException("Failed to get user permissions", e);
+        }
+
+        SecurityUser securityUser = new SecurityUser(user, credentials.isEnabled(), principal, mergedUserPermissions);
+        return tokenFactory.createAccessJwtToken(securityUser);
+    }
+
+    @Override
+    public AccessJwtToken createUserAccessTokenFromPublicId(TenantId tenantId, String publicId) throws ThingsboardException {
+        CustomerId customerId;
+        try {
+            customerId = new CustomerId(UUID.fromString(publicId));
+        } catch (Exception e) {
+            throw new BadCredentialsException("Authentication Failed. Public Id is not valid.");
+        }
+        Customer publicCustomer = customerService.findCustomerById(tenantId, customerId);
+        if (publicCustomer == null) {
+            throw new UsernameNotFoundException("Public entity not found: " + publicId);
+        }
+        if (!publicCustomer.isPublic()) {
+            throw new BadCredentialsException("Authentication Failed. Public Id is not valid.");
+        }
+        User user = new User(new UserId(EntityId.NULL_UUID));
+        user.setTenantId(publicCustomer.getTenantId());
+        user.setCustomerId(publicCustomer.getId());
+        user.setEmail(publicId);
+        user.setAuthority(Authority.CUSTOMER_USER);
+        user.setFirstName("Public");
+        user.setLastName("Public");
+
+        SecurityUser securityUser = new SecurityUser(user, true, new UserPrincipal(UserPrincipal.Type.PUBLIC_ID, publicId), new MergedUserPermissions(new HashMap<>(), new HashMap<>()));
+        return tokenFactory.createAccessJwtToken(securityUser);
     }
 
     private static boolean isPositiveInteger(Integer val) {

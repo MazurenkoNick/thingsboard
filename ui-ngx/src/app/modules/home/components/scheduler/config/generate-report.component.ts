@@ -29,22 +29,22 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { AfterViewInit, Component, forwardRef, Input, OnDestroy, OnInit } from '@angular/core';
+import { AfterViewInit, Component, forwardRef, Input, OnDestroy } from '@angular/core';
 import {
   ControlValueAccessor,
+  NG_VALIDATORS,
+  NG_VALUE_ACCESSOR,
   UntypedFormBuilder,
   UntypedFormGroup,
-  NG_VALUE_ACCESSOR,
-  Validators,
   ValidationErrors,
-  NG_VALIDATORS,
-  Validator
+  Validator,
+  Validators
 } from '@angular/forms';
 import { Store } from '@ngrx/store';
 import { AppState } from '@app/core/core.state';
-import { SchedulerEventConfiguration } from '@shared/models/scheduler-event.models';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
+import { ReportConfig } from '@shared/models/report.models';
 
 @Component({
   selector: 'tb-generate-report-event-config',
@@ -55,15 +55,15 @@ import { takeUntil } from 'rxjs/operators';
     useExisting: forwardRef(() => GenerateReportComponent),
     multi: true
   },
-  {
-    provide: NG_VALIDATORS,
-    useExisting: forwardRef(() => GenerateReportComponent),
-    multi: true
-  }]
+    {
+      provide: NG_VALIDATORS,
+      useExisting: forwardRef(() => GenerateReportComponent),
+      multi: true
+    }]
 })
-export class GenerateReportComponent implements ControlValueAccessor, OnInit, AfterViewInit, OnDestroy, Validator {
+export class GenerateReportComponent implements ControlValueAccessor, AfterViewInit, OnDestroy, Validator {
 
-  modelValue: SchedulerEventConfiguration | null;
+  modelValue: ReportConfig | null;
 
   generateReportFormGroup: UntypedFormGroup;
 
@@ -77,19 +77,7 @@ export class GenerateReportComponent implements ControlValueAccessor, OnInit, Af
   constructor(private store: Store<AppState>,
               private fb: UntypedFormBuilder) {
     this.generateReportFormGroup = this.fb.group({
-      msgBody: this.fb.group(
-        {
-          reportConfig: [null, [Validators.required]],
-          sendEmail: [false, []],
-          emailConfig: [null, [Validators.required]]
-        }
-      )
-    });
-
-    this.generateReportFormGroup.get('msgBody.sendEmail').valueChanges.pipe(
-      takeUntil(this.destroy$)
-    ).subscribe(() => {
-      this.updateEnabledState();
+      reportConfig: [null, [Validators.required]]
     });
 
     this.generateReportFormGroup.valueChanges.pipe(
@@ -104,12 +92,6 @@ export class GenerateReportComponent implements ControlValueAccessor, OnInit, Af
       this.generateReportFormGroup.disable({emitEvent: false});
     } else {
       this.generateReportFormGroup.enable({emitEvent: false});
-      const sendEmail: boolean = this.generateReportFormGroup.get('msgBody.sendEmail').value;
-      if (sendEmail) {
-        this.generateReportFormGroup.get('msgBody.emailConfig').enable({emitEvent: false});
-      } else {
-        this.generateReportFormGroup.get('msgBody.emailConfig').disable({emitEvent: false});
-      }
     }
   }
 
@@ -118,9 +100,6 @@ export class GenerateReportComponent implements ControlValueAccessor, OnInit, Af
   }
 
   registerOnTouched(fn: any): void {
-  }
-
-  ngOnInit() {
   }
 
   ngAfterViewInit(): void {
@@ -141,9 +120,11 @@ export class GenerateReportComponent implements ControlValueAccessor, OnInit, Af
     this.updateEnabledState();
   }
 
-  writeValue(value: SchedulerEventConfiguration | null): void {
+  writeValue(value: ReportConfig | null): void {
     this.modelValue = value;
-    this.generateReportFormGroup.reset(this.modelValue || undefined,{emitEvent: false});
+    this.generateReportFormGroup.reset({
+      reportConfig: this.modelValue
+    },{emitEvent: false});
     this.updateEnabledState();
   }
 
@@ -161,8 +142,7 @@ export class GenerateReportComponent implements ControlValueAccessor, OnInit, Af
 
   private updateModel() {
     if (this.generateReportFormGroup.valid) {
-      const value = this.generateReportFormGroup.value;
-      this.modelValue = {...this.modelValue, ...value};
+      this.modelValue = this.generateReportFormGroup.value?.reportConfig || {};
       this.propagateChange(this.modelValue);
     } else {
       this.propagateChange(null);

@@ -121,7 +121,7 @@ export class WidgetSettingsComponent implements ControlValueAccessor, OnDestroy,
               private widgetService: WidgetService,
               private fb: UntypedFormBuilder) {
     this.widgetSettingsFormGroup = this.fb.group({
-      settings: [null, Validators.required]
+      settings: [null]
     });
   }
 

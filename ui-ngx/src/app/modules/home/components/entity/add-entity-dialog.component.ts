@@ -59,7 +59,7 @@ export class AddEntityDialogComponent extends
   entityComponent: EntityComponent<BaseData<HasId>>;
   detailsForm: UntypedFormGroup;
 
-  entitiesTableConfig: EntityTableConfig<BaseData<HasId>>;
+  entitiesTableConfig: EntityTableConfig<BaseData<EntityId>>;
   customerId: string;
   entityType: EntityType;
   translations: EntityTypeTranslation;
@@ -72,7 +72,7 @@ export class AddEntityDialogComponent extends
 
   constructor(protected store: Store<AppState>,
               protected router: Router,
-              @Inject(MAT_DIALOG_DATA) public data: AddEntityDialogData<BaseData<HasId>>,
+              @Inject(MAT_DIALOG_DATA) public data: AddEntityDialogData<BaseData<EntityId>>,
               public dialogRef: MatDialogRef<AddEntityDialogComponent, BaseData<HasId>>,
               private injector: Injector,
               @SkipSelf() private errorStateMatcher: ErrorStateMatcher) {
@@ -85,7 +85,11 @@ export class AddEntityDialogComponent extends
     this.entityType = this.entitiesTableConfig.entityType;
     this.translations = this.entitiesTableConfig.entityTranslations;
     this.resources = this.entitiesTableConfig.entityResources;
-    this.entity = {};
+    if (this.entitiesTableConfig.defaultEntity) {
+      this.entity = this.entitiesTableConfig.defaultEntity();
+    } else {
+      this.entity = {};
+    }
     const viewContainerRef = this.entityDetailsFormAnchor.viewContainerRef;
     viewContainerRef.clear();
     const injector: Injector = Injector.create(

@@ -48,8 +48,10 @@ import org.thingsboard.rule.engine.api.TbNode;
 import org.thingsboard.rule.engine.api.TbNodeConfiguration;
 import org.thingsboard.rule.engine.credentials.CertPemCredentials;
 import org.thingsboard.rule.engine.mqtt.TbMqttNodeConfiguration;
-import org.thingsboard.server.common.data.StringUtils;
 
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneOffset;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -93,7 +95,10 @@ public class TbAzureIotHubNodeTest extends AbstractRuleNodeUpgradeTest {
 
     @Test
     public void verifyPrepareMqttClientConfigMethodWithAzureIotHubSasCredentials() throws Exception {
-        AzureIotHubSasCredentials credentials = new AzureIotHubSasCredentials();
+        var fixedClock = Clock.fixed(Instant.parse("2030-01-01T00:00:00Z"), ZoneOffset.UTC);
+        azureIotHubNode.setClock(fixedClock);
+
+        var credentials = new AzureIotHubSasCredentials();
         credentials.setSasKey("testSasKey");
         credentials.setCaCert("test-ca-cert.pem");
         azureIotHubNodeConfig.setCredentials(credentials);
@@ -105,8 +110,7 @@ public class TbAzureIotHubNodeTest extends AbstractRuleNodeUpgradeTest {
         azureIotHubNode.prepareMqttClientConfig(mqttClientConfig);
 
         assertThat(mqttClientConfig.getUsername()).isEqualTo(AzureIotHubUtil.buildUsername(azureIotHubNodeConfig.getHost(), mqttClientConfig.getClientId()));
-        assertThat(StringUtils.substringBefore(mqttClientConfig.getPassword(), "&sig=")) // not verifying the signature part because it is time-dependent
-                .isEqualTo(StringUtils.substringBefore(AzureIotHubUtil.buildSasToken(azureIotHubNodeConfig.getHost(), credentials.getSasKey()), "&sig="));
+        assertThat(mqttClientConfig.getPassword()).isEqualTo(AzureIotHubUtil.buildSasToken(azureIotHubNodeConfig.getHost(), credentials.getSasKey(), fixedClock));
     }
 
     @Test

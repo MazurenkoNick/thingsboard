@@ -136,7 +136,7 @@ public class ThingsboardInstallService {
                     entityDatabaseSchemaService.createDatabaseIndexes();
 
                     // TODO: cleanup update code after each release
-                    systemDataLoaderService.updateDefaultNotificationConfigs(false);
+                    systemDataLoaderService.updateDefaultNotificationConfigs(true);
 
                     // Runs upgrade scripts that are not possible in plain SQL.
                     dataUpdateService.updateData(updateFromCE);
@@ -147,7 +147,7 @@ public class ThingsboardInstallService {
                     installScripts.loadSystemImagesAndResources();
                     systemDataLoaderService.createDefaultCustomMenu();
                     installScripts.updateSystemNotificationTemplates();
-                    installScripts.generateTenantEncryptionKey();
+                    installScripts.generateSysAdminEncryptionKey();
                     databaseSchemaVersionService.updateSchemaVersion();
                 }
                 log.info("Upgrade finished successfully!");
@@ -195,6 +195,7 @@ public class ThingsboardInstallService {
 //                systemDataLoaderService.loadSystemRules();
                 installScripts.loadSystemLwm2mResources();
                 installScripts.loadSystemImagesAndResources();
+                installScripts.generateSysAdminEncryptionKey();
 
                 if (loadDemo) {
                     log.info("Loading demo data...");
