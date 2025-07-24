@@ -194,6 +194,8 @@ public class DefaultNotificationCenter extends AbstractSubscriptionService imple
                 forwardToNotificationSchedulerService(tenantId, request.getId());
                 return request;
             } else if (templateConfig.isAttachReport() && requestConfig.getReports() == null) {
+                request.setStatus(NotificationRequestStatus.PROCESSING);
+                request = notificationRequestService.saveNotificationRequest(tenantId, request);
                 jobManager.submitJob(Job.newReportJob()
                         .tenantId(tenantId)
                         .reportTemplateId(templateConfig.getReportTemplateId())
