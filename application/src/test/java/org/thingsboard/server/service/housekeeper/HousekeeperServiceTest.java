@@ -275,7 +275,7 @@ public class HousekeeperServiceTest extends AbstractControllerTest {
 
         doDelete("/api/device/" + device.getId()).andExpect(status().isOk());
 
-        await().atMost(30, TimeUnit.SECONDS).untilAsserted(() -> {
+        await().atMost(TIMEOUT, TimeUnit.SECONDS).untilAsserted(() -> {
             verifyNoAlarms(device.getId());
         });
     }
@@ -289,7 +289,7 @@ public class HousekeeperServiceTest extends AbstractControllerTest {
 
         doDelete("/api/asset/" + asset.getId()).andExpect(status().isOk());
 
-        await().atMost(30, TimeUnit.SECONDS).untilAsserted(() -> {
+        await().atMost(TIMEOUT, TimeUnit.SECONDS).untilAsserted(() -> {
             verifyNoAlarms(asset.getId());
         });
     }
@@ -303,7 +303,7 @@ public class HousekeeperServiceTest extends AbstractControllerTest {
 
         doDelete("/api/dashboard/" + dashboard.getId()).andExpect(status().isOk());
 
-        await().atMost(30, TimeUnit.SECONDS).untilAsserted(() -> {
+        await().atMost(TIMEOUT, TimeUnit.SECONDS).untilAsserted(() -> {
             verifyNoAlarms(dashboard.getId());
         });
     }
@@ -428,7 +428,7 @@ public class HousekeeperServiceTest extends AbstractControllerTest {
         doDelete("/api/device/" + device.getId()).andExpect(status().isOk());
 
         int attempts = 2;
-        await().atMost(30, TimeUnit.SECONDS).pollInterval(1, TimeUnit.SECONDS).untilAsserted(() -> {
+        await().atMost(TIMEOUT, TimeUnit.SECONDS).pollInterval(1, TimeUnit.SECONDS).untilAsserted(() -> {
             for (int i = 0; i <= attempts; i++) {
                 int attempt = i;
                 verify(housekeeperReprocessingService).submitForReprocessing(argThat(getTaskMatcher(device.getId(), HousekeeperTaskType.DELETE_TS_HISTORY,
@@ -438,7 +438,7 @@ public class HousekeeperServiceTest extends AbstractControllerTest {
 
         assertThat(getTimeseriesHistory(device.getId())).isNotEmpty();
         doCallRealMethod().when(tsHistoryDeletionTaskProcessor).process(any());
-        await().atMost(30, TimeUnit.SECONDS).untilAsserted(() -> {
+        await().atMost(TIMEOUT, TimeUnit.SECONDS).untilAsserted(() -> {
             assertThat(getTimeseriesHistory(device.getId())).isEmpty();
         });
     }
@@ -472,7 +472,7 @@ public class HousekeeperServiceTest extends AbstractControllerTest {
         doDelete("/api/device/" + device.getId()).andExpect(status().isOk());
 
         int attempts = 2;
-        await().atMost(30, TimeUnit.SECONDS).pollInterval(1, TimeUnit.SECONDS).untilAsserted(() -> {
+        await().atMost(TIMEOUT, TimeUnit.SECONDS).pollInterval(1, TimeUnit.SECONDS).untilAsserted(() -> {
             for (int i = 0; i <= attempts; i++) {
                 int attempt = i;
                 verify(housekeeperReprocessingService).submitForReprocessing(argThat(getTaskMatcher(device.getId(), HousekeeperTaskType.DELETE_TS_HISTORY,
@@ -486,7 +486,7 @@ public class HousekeeperServiceTest extends AbstractControllerTest {
         doCallRealMethod().when(tsHistoryDeletionTaskProcessor).process(any());
         someExecutor.shutdown();
 
-        await().atMost(30, TimeUnit.SECONDS).untilAsserted(() -> {
+        await().atMost(TIMEOUT, TimeUnit.SECONDS).untilAsserted(() -> {
             assertThat(getTimeseriesHistory(device.getId())).isEmpty();
         });
     }
@@ -502,7 +502,7 @@ public class HousekeeperServiceTest extends AbstractControllerTest {
         doDelete("/api/device/" + device.getId()).andExpect(status().isOk());
 
         int maxAttempts = 5;
-        await().atMost(30, TimeUnit.SECONDS).untilAsserted(() -> {
+        await().atMost(TIMEOUT, TimeUnit.SECONDS).untilAsserted(() -> {
             for (int i = 1; i <= maxAttempts; i++) {
                 verifyTaskProcessing(device.getId(), HousekeeperTaskType.DELETE_TS_HISTORY, i);
             }
