@@ -102,6 +102,7 @@ export class MobileAppTableConfigResolver  {
           onAction: (_$event, entity) => entity.pkgName,
           type: CellActionDescriptorType.COPY_BUTTON
         }),
+      new EntityTableColumn<MobileApp>('title', 'mobile.mobile-package-title', '20%'),
       new EntityTableColumn<MobileApp>('appSecret', 'mobile.application-secret', '15%',
         (entity) => this.truncatePipe.transform(entity.appSecret, true, 10, '…'), () => ({}),
         true, () => ({}), () => undefined, false,

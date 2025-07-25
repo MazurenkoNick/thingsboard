@@ -55,6 +55,7 @@ import java.nio.ByteBuffer;
 @AllArgsConstructor
 @Slf4j
 public class DefaultTbOtaPackageService extends AbstractTbEntityService implements TbOtaPackageService {
+
     private final OtaPackageService otaPackageService;
 
     @Override
@@ -124,4 +125,5 @@ public class DefaultTbOtaPackageService extends AbstractTbEntityService implemen
             throw e;
         }
     }
+
 }

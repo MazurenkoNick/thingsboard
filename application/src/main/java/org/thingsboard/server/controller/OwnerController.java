@@ -35,9 +35,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.thingsboard.server.common.data.Customer;
@@ -100,7 +100,7 @@ public class OwnerController extends AutoCommitController {
     @ApiOperation(value = "Change owner to tenant (changeOwnerToTenant)",
             notes = "Tenant changes Owner from Customer or sub-Customer to Tenant. " + TENANT_AUTHORITY_PARAGRAPH)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN')")
-    @RequestMapping(value = "/owner/TENANT/{ownerId}/{entityType}/{entityId}", method = RequestMethod.POST)
+    @PostMapping(value = "/owner/TENANT/{ownerId}/{entityType}/{entityId}")
     @ResponseStatus(value = HttpStatus.OK)
     public void changeOwnerToTenant(@Parameter(description = TENANT_ID_PARAM_DESCRIPTION)
                                     @PathVariable(OWNER_ID) String ownerIdStr,
@@ -113,7 +113,7 @@ public class OwnerController extends AutoCommitController {
         checkParameter(OWNER_ID, ownerIdStr);
         checkParameter(ENTITY_TYPE, entityType);
         checkParameter(ENTITY_ID, entityIdStr);
-        TenantId targetOwnerId = new TenantId(UUID.fromString(ownerIdStr));
+        TenantId targetOwnerId = TenantId.fromUUID(UUID.fromString(ownerIdStr));
         EntityId entityId = EntityIdFactory.getByTypeAndId(entityType, entityIdStr);
         if (!getCurrentUser().getTenantId().equals(targetOwnerId)) {
             throw new ThingsboardException("You aren't authorized to perform this operation!", ThingsboardErrorCode.PERMISSION_DENIED);
@@ -130,7 +130,7 @@ public class OwnerController extends AutoCommitController {
             notes = "Tenant/Customer changes Owner to Customer or sub-Customer. " +
                     "Sub-Customer can`t perform this operation! " + TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
-    @RequestMapping(value = "/owner/CUSTOMER/{ownerId}/{entityType}/{entityId}", method = RequestMethod.POST)
+    @PostMapping(value = "/owner/CUSTOMER/{ownerId}/{entityType}/{entityId}")
     @ResponseStatus(value = HttpStatus.OK)
     public void changeOwnerToCustomer(@Parameter(description = CUSTOMER_ID_PARAM_DESCRIPTION)
                                       @PathVariable(OWNER_ID) String ownerIdStr,

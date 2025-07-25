@@ -30,32 +30,31 @@
  */
 package org.thingsboard.server.common.data.report;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
+import org.thingsboard.server.common.data.id.NotificationTemplateId;
+import org.thingsboard.server.common.data.id.ReportTemplateId;
+import org.thingsboard.server.common.data.id.UserId;
+
+import java.util.List;
+import java.util.UUID;
 
 @Data
 public class ReportConfig {
 
-    @Schema(description = "Base URL of ThingsBoard UI that should be accessible by Report Server.", example = "https:thingsboard.cloud", requiredMode = Schema.RequiredMode.REQUIRED)
-    String baseUrl;
-    @Schema(description = "A string value representing the dashboard id.", example = "784f394c-42b6-435a-983c-b7beff2784f9", requiredMode = Schema.RequiredMode.REQUIRED)
-    String dashboardId;
-    @Schema(description = "Target dashboard state for report generation.")
-    String state;
-    @Schema(description = "Timezone in which target dashboard will be presented in report.", example = "Europe/Kiev", requiredMode = Schema.RequiredMode.REQUIRED)
-    String timezone;
-    @Schema(description = "If set, timewindow configured in the target dashboard will be used during report generation.", example = "true")
-    boolean useDashboardTimewindow;
-    @Schema(description = "Specific dashboard timewindow that will be used during report generation.")
-    JsonNode timewindow;
-    @Schema(description = "If set, timewindow configured in the target dashboard will be used during report generation.", example = "report-%d{yyyy-MM-dd_HH:mm:ss}", requiredMode = Schema.RequiredMode.REQUIRED)
-    String namePattern;
-    @Schema(description = "Report file type, can be PDF | PNG | JPEG.", example = "pdf")
-    String type;
-    @Schema(description = "If set, credentials of user created this report configuration will be used to open dashboard UI during report generation.", example = "true")
-    boolean useCurrentUserCredentials;
-    @Schema(description = "A string value representing the user id.", example = "784f394c-42b6-435a-983c-b7beff2784f9", requiredMode = Schema.RequiredMode.REQUIRED)
-    String userId;
+    @NotNull
+    @Schema(description = "Json object representing the report template id.")
+    private ReportTemplateId reportTemplateId;
+    @NotNull
+    @Schema(description = "Json object representing the user id.", example = "784f394c-42b6-435a-983c-b7beff2784f9")
+    private UserId userId;
+    @Schema(description = "Timezone in which target dashboard will be presented in dashboard report.", example = "Europe/Kiev", requiredMode = Schema.RequiredMode.REQUIRED)
+    private String timezone;
+
+    @Schema(description = "List of ids representing the notification targets.")
+    private List<UUID> targets;
+    @Schema(description = "Json object representing the notification template id.", example = "784f394c-42b6-435a-983c-b7beff2784f9")
+    private NotificationTemplateId notificationTemplateId;
 
 }

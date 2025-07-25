@@ -32,6 +32,7 @@ package org.thingsboard.server.controller;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -64,8 +65,7 @@ public class UserPermissionsController extends BaseController {
                     "Nevertheless, all API calls check the permissions each time they are executed on the server side." +
                     PAGE_DATA_PARAMETERS + "\n\n" + RBAC_READ_CHECK)
     @PreAuthorize("hasAnyAuthority('SYS_ADMIN', 'TENANT_ADMIN', 'CUSTOMER_USER')")
-    @RequestMapping(value = "/permissions/allowedPermissions", method = RequestMethod.GET)
-    @ResponseBody
+    @GetMapping(value = "/permissions/allowedPermissions")
     public AllowedPermissionsInfo getAllowedPermissions() throws ThingsboardException {
         Set<Resource> allowedResources = Resource.resourcesByAuthority.get(getCurrentUser().getAuthority());
         Map<Resource, Set<Operation>> operationsByResource = new HashMap<>();

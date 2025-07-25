@@ -59,6 +59,7 @@ export interface AlarmAssigneeSelectPanelData {
   assigneeId?: string;
   assigneeOption?: AlarmAssigneeOption;
   userMode?: boolean;
+  disableAssignedToCurrentUserOption?: boolean;
 }
 
 @Component({
@@ -74,6 +75,7 @@ export class AlarmAssigneeSelectPanelComponent implements  OnInit, AfterViewInit
 
   assigneeId?: string;
   assigneeOption?: AlarmAssigneeOption;
+  disableAssignedToCurrentUserOption = false;
 
   assigneeNotSetText = 'alarm.assignee-not-set';
   assignedToCurrentUserText = this.data.userMode ? 'alarm.assigned-to-me' : 'alarm.assigned-to-current-user';
@@ -96,7 +98,7 @@ export class AlarmAssigneeSelectPanelComponent implements  OnInit, AfterViewInit
   }
 
   get displayAssignedToCurrentUser(): boolean {
-    return this.assigneeOption !== AlarmAssigneeOption.currentUser;
+    return !this.disableAssignedToCurrentUserOption && this.assigneeOption !== AlarmAssigneeOption.currentUser;
   }
 
   private destroy$ = new Subject<void>();
@@ -109,6 +111,7 @@ export class AlarmAssigneeSelectPanelComponent implements  OnInit, AfterViewInit
               private utilsService: UtilsService) {
     this.assigneeId = data.assigneeId;
     this.assigneeOption = data.assigneeOption;
+    this.disableAssignedToCurrentUserOption = data.disableAssignedToCurrentUserOption;
     this.selectUserFormGroup = this.fb.group({
       user: [null]
     });

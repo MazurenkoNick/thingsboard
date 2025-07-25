@@ -64,7 +64,7 @@ import { TranslateService } from '@ngx-translate/core';
 import { EntityGroupService } from '@core/http/entity-group.service';
 import { DomSanitizer } from '@angular/platform-browser';
 import { Router } from '@angular/router';
-import { ReportService } from '@core/http/report.service';
+import { DashboardReportService } from '@core/http/dashboard-report.service';
 import { MillisecondsToTimeStringPipe } from '@shared/pipe/milliseconds-to-time-string.pipe';
 import { UserSettingsService } from '@core/http/user-settings.service';
 import { WhiteLabelingService } from '@core/http/white-labeling.service';
@@ -120,7 +120,7 @@ export class DynamicWidgetComponent extends PageComponent implements IDynamicWid
     this.ctx.http = this.$injector.get(HttpClient);
     this.ctx.sanitizer = this.$injector.get(DomSanitizer);
     this.ctx.router = this.$injector.get(Router);
-    this.ctx.reportService = this.$injector.get(ReportService);
+    this.ctx.reportService = this.$injector.get(DashboardReportService);
     this.ctx.wl = this.$injector.get(WhiteLabelingService);
 
     this.ctx.$scope = this;

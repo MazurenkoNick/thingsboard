@@ -61,7 +61,9 @@ export class AlarmsCountV2ConfigComponent extends RuleNodeConfigurationComponent
     EntityType.CONVERTER,
     EntityType.INTEGRATION,
     EntityType.SCHEDULER_EVENT,
-    EntityType.BLOB_ENTITY
+    EntityType.BLOB_ENTITY,
+    EntityType.REPORT_TEMPLATE,
+    EntityType.REPORT
   ];
 
   constructor(private fb: UntypedFormBuilder) {

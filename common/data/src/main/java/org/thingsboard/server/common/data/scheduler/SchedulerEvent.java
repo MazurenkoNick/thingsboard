@@ -39,11 +39,14 @@ import lombok.ToString;
 import org.thingsboard.server.common.data.BaseDataWithAdditionalInfo;
 import org.thingsboard.server.common.data.id.SchedulerEventId;
 
+import java.io.Serial;
+
 @Data
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public class SchedulerEvent extends SchedulerEventInfo {
 
+    @Serial
     private static final long serialVersionUID = 2807343050519549363L;
 
     @Schema(description = "a JSON value with scheduler event configuration", implementation = com.fasterxml.jackson.databind.JsonNode.class)
@@ -61,7 +64,12 @@ public class SchedulerEvent extends SchedulerEventInfo {
 
     public SchedulerEvent(SchedulerEvent schedulerEvent) {
         super(schedulerEvent);
-        this.setConfiguration(schedulerEvent.getConfiguration());
+        this.setConfiguration(schedulerEvent.getConfiguration().deepCopy());
+    }
+
+    public SchedulerEvent(SchedulerEventInfo schedulerEventInfo, JsonNode configuration) {
+        super(schedulerEventInfo);
+        this.setConfiguration(configuration.deepCopy());
     }
 
     public JsonNode getConfiguration() {

@@ -68,11 +68,11 @@ public class EntityTypeExportCtx extends EntitiesExportCtx<VersionCreateRequest>
         this.tasks = new LinkedList<>();
     }
 
-    public void addTask(EntityTypeExportTask task){
+    public void addTask(EntityTypeExportTask task) {
         tasks.add(task);
     }
 
-    public EntityTypeExportTask pollTask(){
+    public EntityTypeExportTask pollTask() {
         return tasks.poll();
     }
 

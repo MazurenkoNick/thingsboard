@@ -1,0 +1,72 @@
+<!--
+
+    ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
+
+    Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
+
+    NOTICE: All information contained herein is, and remains
+    the property of ThingsBoard, Inc. and its suppliers,
+    if any.  The intellectual and technical concepts contained
+    herein are proprietary to ThingsBoard, Inc.
+    and its suppliers and may be covered by U.S. and Foreign Patents,
+    patents in process, and are protected by trade secret or copyright law.
+
+    Dissemination of this information or reproduction of this material is strictly forbidden
+    unless prior written permission is obtained from COMPANY.
+
+    Access to the source code contained herein is hereby forbidden to anyone except current COMPANY employees,
+    managers or contractors who have executed Confidentiality and Non-disclosure agreements
+    explicitly covering such access.
+
+    The copyright notice above does not evidence any actual or intended publication
+    or disclosure  of  this source code, which includes
+    information that is confidential and/or proprietary, and is a trade secret, of  COMPANY.
+    ANY REPRODUCTION, MODIFICATION, DISTRIBUTION, PUBLIC  PERFORMANCE,
+    OR PUBLIC DISPLAY OF OR THROUGH USE  OF THIS  SOURCE CODE  WITHOUT
+    THE EXPRESS WRITTEN CONSENT OF COMPANY IS STRICTLY PROHIBITED,
+    AND IN VIOLATION OF APPLICABLE LAWS AND INTERNATIONAL TREATIES.
+    THE RECEIPT OR POSSESSION OF THIS SOURCE CODE AND/OR RELATED INFORMATION
+    DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
+    OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
+
+-->
+<mat-toolbar class="transparent">
+  <h2 translate>ai-models.check-connectivity</h2>
+  <span class="flex-1"></span>
+  <button mat-icon-button
+          (click)="cancel()"
+          type="button">
+    <mat-icon class="material-icons">close</mat-icon>
+  </button>
+</mat-toolbar>
+<div mat-dialog-content>
+  <div class="flex h-full flex-1 flex-col items-center justify-center">
+    <mat-progress-spinner color="warn" mode="indeterminate"
+                          strokeWidth="5" *ngIf="!showCheckSuccess && !checkErrMsg">
+    </mat-progress-spinner>
+    <div *ngIf="showCheckSuccess">
+      <div class="flex flex-1 items-center justify-center">
+        <mat-icon class="success connection-icon">check_circle</mat-icon>
+      </div>
+      <span class="connection-status success">{{ "ai-models.check-connectivity-success" | translate }}</span>
+    </div>
+    <div *ngIf="checkErrMsg" class="w-full">
+      <div class="flex flex-1 items-center justify-center">
+        <mat-icon class="error connection-icon">cancel</mat-icon>
+      </div>
+      <div class="connection-status error">{{ "ai-models.check-connectivity-failed" | translate }}</div>
+      <tb-json-object-edit class="json-editor"
+        readonly
+        [ngModel]="checkErrMsg">
+      </tb-json-object-edit>
+    </div>
+  </div>
+</div>
+<div mat-dialog-actions class="justify-end">
+  <button mat-button color="primary"
+          type="button"
+          [disabled]="(isLoading$ | async)"
+          (click)="cancel()" cdkFocusInitial>
+    {{ 'action.cancel' | translate }}
+  </button>
+</div>

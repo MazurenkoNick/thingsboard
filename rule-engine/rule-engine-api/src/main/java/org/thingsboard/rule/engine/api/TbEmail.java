@@ -33,6 +33,7 @@ package org.thingsboard.rule.engine.api;
 import lombok.Builder;
 import lombok.Data;
 import org.thingsboard.server.common.data.id.BlobEntityId;
+import org.thingsboard.server.common.data.id.ReportId;
 
 import java.util.List;
 import java.util.Map;
@@ -48,6 +49,7 @@ public class TbEmail {
     private final String subject;
     private final String body;
     private final List<BlobEntityId> attachments;
+    private final List<ReportId> reports;
     private final Map<String, String> images;
     private final boolean html;
 

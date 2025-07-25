@@ -112,7 +112,7 @@ public class GroupPermissionEntity extends BaseSqlEntity<GroupPermission> {
         GroupPermission groupPermission = new GroupPermission(new GroupPermissionId(getUuid()));
         groupPermission.setCreatedTime(this.createdTime);
         if (tenantId != null) {
-            groupPermission.setTenantId(new TenantId(tenantId));
+            groupPermission.setTenantId(TenantId.fromUUID(tenantId));
         }
         if (roleId != null) {
             groupPermission.setRoleId(new RoleId(roleId));

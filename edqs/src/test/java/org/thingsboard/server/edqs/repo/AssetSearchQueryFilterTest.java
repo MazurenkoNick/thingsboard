@@ -46,6 +46,7 @@ import org.thingsboard.server.common.data.permission.MergedGroupPermissionInfo;
 import org.thingsboard.server.common.data.permission.MergedUserPermissions;
 import org.thingsboard.server.common.data.permission.Operation;
 import org.thingsboard.server.common.data.permission.Resource;
+import org.thingsboard.server.common.data.query.AliasEntityId;
 import org.thingsboard.server.common.data.query.AssetSearchQueryFilter;
 import org.thingsboard.server.common.data.query.EntityDataPageLink;
 import org.thingsboard.server.common.data.query.EntityDataQuery;
@@ -223,7 +224,7 @@ public class AssetSearchQueryFilterTest extends AbstractEDQTest {
     private PageData<QueryResult> findData(MergedUserPermissions permissions, CustomerId customerId, EntityId rootId,
                                            EntitySearchDirection direction, String relationType, int maxLevel, boolean lastLevelOnly, List<String> assetTypes) {
         AssetSearchQueryFilter filter = new AssetSearchQueryFilter();
-        filter.setRootEntity(rootId);
+        filter.setRootEntity(AliasEntityId.fromEntityId(rootId));
         filter.setDirection(direction);
         filter.setRelationType(relationType);
         filter.setAssetTypes(assetTypes);

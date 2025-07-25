@@ -64,7 +64,6 @@ import org.thingsboard.server.common.data.security.model.mfa.provider.TwoFaProvi
 import org.thingsboard.server.common.data.security.model.mfa.provider.TwoFaProviderType;
 import org.thingsboard.server.dao.audit.AuditLogService;
 import org.thingsboard.server.dao.service.DaoSqlTest;
-import org.thingsboard.server.dao.user.UserService;
 import org.thingsboard.server.service.security.auth.mfa.TwoFactorAuthService;
 import org.thingsboard.server.service.security.auth.mfa.config.TwoFaConfigManager;
 import org.thingsboard.server.service.security.auth.rest.LoginRequest;
@@ -99,8 +98,6 @@ public class TwoFactorAuthTest extends AbstractControllerTest {
     private SmsService smsService;
     @Autowired
     private AuditLogService auditLogService;
-    @Autowired
-    private UserService userService;
 
     private User user;
     private String username;
@@ -158,6 +155,7 @@ public class TwoFactorAuthTest extends AbstractControllerTest {
 
         ArgumentCaptor<String> verificationCodeCaptor = ArgumentCaptor.forClass(String.class);
         verify(smsService).sendSms(eq(tenantId), any(), any(), verificationCodeCaptor.capture());
+
         String correctVerificationCode = verificationCodeCaptor.getValue();
 
         JsonNode tokenPair = readResponse(doPost("/api/auth/2fa/verification/check?providerType=SMS&verificationCode=" + correctVerificationCode)

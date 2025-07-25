@@ -49,41 +49,52 @@ public interface SchedulerEventInfoRepository extends JpaRepository<SchedulerEve
             "WHERE s.id = :schedulerEventId")
     SchedulerEventWithCustomerInfoEntity findSchedulerEventWithCustomerInfoById(@Param("schedulerEventId") UUID schedulerEventId);
 
-    @Query("SELECT new org.thingsboard.server.dao.model.sql.SchedulerEventWithCustomerInfoEntity(s, c.title, c.additionalInfo) " +
-            "FROM SchedulerEventInfoEntity s " +
-            "LEFT JOIN CustomerEntity c on c.id = s.customerId " +
-            "WHERE s.tenantId = :tenantId")
-    List<SchedulerEventWithCustomerInfoEntity> findSchedulerEventsWithCustomerInfoByTenantId(@Param("tenantId") UUID tenantId);
-
     List<SchedulerEventInfoEntity> findSchedulerEventInfoEntitiesByTenantId(UUID tenantId);
 
     List<SchedulerEventInfoEntity> findSchedulerEventInfoEntitiesByTenantIdAndEnabled(UUID tenantId, boolean enabled);
 
-    @Query("SELECT new org.thingsboard.server.dao.model.sql.SchedulerEventWithCustomerInfoEntity(s, c.title, c.additionalInfo) " +
-            "FROM SchedulerEventInfoEntity s " +
-            "LEFT JOIN CustomerEntity c on c.id = s.customerId " +
-            "WHERE s.tenantId = :tenantId " +
-            "AND s.type = :type")
-    List<SchedulerEventWithCustomerInfoEntity> findByTenantIdAndType(@Param("tenantId") UUID tenantId,
-                                                                     @Param("type") String type);
-
-    @Query("SELECT new org.thingsboard.server.dao.model.sql.SchedulerEventWithCustomerInfoEntity(s, c.title, c.additionalInfo) " +
-            "FROM SchedulerEventInfoEntity s " +
-            "LEFT JOIN CustomerEntity c on c.id = s.customerId " +
+    @Query("SELECT s.id FROM SchedulerEventInfoEntity s " +
             "WHERE s.tenantId = :tenantId " +
             "AND s.customerId = :customerId")
-    List<SchedulerEventWithCustomerInfoEntity> findByTenantIdAndCustomerId(@Param("tenantId") UUID tenantId,
-                                                                           @Param("customerId") UUID customerId);
+    List<UUID> findIdsByTenantIdAndCustomerId(@Param("tenantId") UUID tenantId,
+                                              @Param("customerId") UUID customerId);
+
+    @Query("SELECT s.id FROM SchedulerEventInfoEntity s " +
+            "WHERE s.tenantId = :tenantId")
+    List<UUID> findIdsByTenantId(@Param("tenantId") UUID tenantId);
 
     @Query("SELECT new org.thingsboard.server.dao.model.sql.SchedulerEventWithCustomerInfoEntity(s, c.title, c.additionalInfo) " +
             "FROM SchedulerEventInfoEntity s " +
             "LEFT JOIN CustomerEntity c on c.id = s.customerId " +
             "WHERE s.tenantId = :tenantId " +
-            "AND s.customerId = :customerId " +
-            "AND s.type = :type")
-    List<SchedulerEventWithCustomerInfoEntity> findByTenantIdAndCustomerIdAndType(@Param("tenantId") UUID tenantId,
-                                                                                  @Param("customerId") UUID customerId,
-                                                                                  @Param("type") String type);
+            "AND (:customerId IS NULL OR s.customerId = :customerId) " +
+            "AND (:type IS NULL OR s.type = :type) " +
+            "AND (:searchText IS NULL OR ilike(s.name, CONCAT('%', :searchText, '%')) = true " +
+            "OR ilike(s.type, CONCAT('%', :searchText, '%')) = true " +
+            "OR ilike(c.title, CONCAT('%', :searchText, '%')) = true)")
+    Page<SchedulerEventWithCustomerInfoEntity> findByTenantIdAndCustomerIdAndTypeAndSearchText(@Param("tenantId") UUID tenantId,
+                                                                                               @Param("customerId") UUID customerId,
+                                                                                               @Param("type") String type,
+                                                                                               @Param("searchText") String searchText,
+                                                                                               Pageable pageable);
+
+    @Query("SELECT new org.thingsboard.server.dao.model.sql.SchedulerEventWithCustomerInfoEntity(s, c.title, c.additionalInfo) " +
+            "FROM SchedulerEventInfoEntity s " +
+            "LEFT JOIN CustomerEntity c on c.id = s.customerId " +
+            "JOIN RelationEntity r ON r.toId = s.id AND r.toType = 'SCHEDULER_EVENT' " +
+            "WHERE s.tenantId = :tenantId  AND r.relationTypeGroup = 'EDGE' " +
+            "AND r.relationType = 'Contains' AND r.fromId = :edgeId AND r.fromType = 'EDGE' " +
+            "AND (:customerId IS NULL OR s.customerId = :customerId) " +
+            "AND (:type IS NULL OR s.type = :type) " +
+            "AND (:searchText IS NULL OR ilike(s.name, CONCAT('%', :searchText, '%')) = true " +
+            "OR ilike(s.type, CONCAT('%', :searchText, '%')) = true " +
+            "OR ilike(c.title, CONCAT('%', :searchText, '%')) = true)")
+    Page<SchedulerEventWithCustomerInfoEntity> findByTenantIdAndCustomerIdAndTypeAndEdgeIdAndSearchText(@Param("tenantId") UUID tenantId,
+                                                                                                        @Param("customerId") UUID customerId,
+                                                                                                        @Param("type") String type,
+                                                                                                        @Param("edgeId") UUID edgeId,
+                                                                                                        @Param("searchText") String searchText,
+                                                                                                        Pageable pageable);
 
     List<SchedulerEventInfoEntity> findSchedulerEventsByTenantIdAndIdIn(UUID tenantId, List<UUID> schedulerEventIds);
 

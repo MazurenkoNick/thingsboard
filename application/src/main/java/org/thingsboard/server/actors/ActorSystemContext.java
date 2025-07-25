@@ -45,6 +45,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
+import org.thingsboard.common.util.DebugModeUtil;
 import org.thingsboard.common.util.EventUtil;
 import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.rule.engine.api.DeviceStateManager;
@@ -52,7 +53,8 @@ import org.thingsboard.rule.engine.api.JobManager;
 import org.thingsboard.rule.engine.api.MailService;
 import org.thingsboard.rule.engine.api.MqttClientSettings;
 import org.thingsboard.rule.engine.api.NotificationCenter;
-import org.thingsboard.rule.engine.api.ReportService;
+import org.thingsboard.rule.engine.api.DashboardReportService;
+import org.thingsboard.rule.engine.api.RuleEngineAiChatModelService;
 import org.thingsboard.rule.engine.api.SmsService;
 import org.thingsboard.rule.engine.api.notification.SlackService;
 import org.thingsboard.rule.engine.api.sms.SmsSenderFactory;
@@ -77,7 +79,9 @@ import org.thingsboard.server.common.data.kv.BaseAttributeKvEntry;
 import org.thingsboard.server.common.data.kv.JsonDataEntry;
 import org.thingsboard.server.common.data.limit.LimitedApi;
 import org.thingsboard.server.common.data.msg.TbMsgType;
+import org.thingsboard.server.common.data.msg.TbNodeConnectionType;
 import org.thingsboard.server.common.data.plugin.ComponentLifecycleEvent;
+import org.thingsboard.server.common.data.rule.RuleNode;
 import org.thingsboard.server.common.msg.TbActorMsg;
 import org.thingsboard.server.common.msg.TbMsg;
 import org.thingsboard.server.common.msg.notification.NotificationRuleProcessor;
@@ -85,6 +89,7 @@ import org.thingsboard.server.common.msg.queue.ServiceType;
 import org.thingsboard.server.common.msg.queue.TopicPartitionInfo;
 import org.thingsboard.server.common.msg.tools.TbRateLimits;
 import org.thingsboard.server.common.stats.TbApiUsageReportClient;
+import org.thingsboard.server.dao.ai.AiModelService;
 import org.thingsboard.server.dao.alarm.AlarmCommentService;
 import org.thingsboard.server.dao.asset.AssetProfileService;
 import org.thingsboard.server.dao.asset.AssetService;
@@ -124,6 +129,8 @@ import org.thingsboard.server.dao.ota.OtaPackageService;
 import org.thingsboard.server.dao.queue.QueueService;
 import org.thingsboard.server.dao.queue.QueueStatsService;
 import org.thingsboard.server.dao.relation.RelationService;
+import org.thingsboard.server.dao.report.ReportService;
+import org.thingsboard.server.dao.report.ReportTemplateService;
 import org.thingsboard.server.dao.resource.ResourceService;
 import org.thingsboard.server.dao.role.RoleService;
 import org.thingsboard.server.dao.rule.RuleChainService;
@@ -177,6 +184,7 @@ import org.thingsboard.server.utils.DebugModeRateLimitsConfig;
 
 import java.util.Collections;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -359,6 +367,14 @@ public class ActorSystemContext {
 
     @Autowired
     @Getter
+    private RuleEngineAiChatModelService aiChatModelService;
+
+    @Autowired
+    @Getter
+    private AiModelService aiModelService;
+
+    @Autowired
+    @Getter
     private EntityViewService entityViewService;
 
     @Lazy
@@ -404,11 +420,19 @@ public class ActorSystemContext {
 
     @Autowired
     @Getter
-    private ReportService reportService;
+    private DashboardReportService dashboardReportService;
 
     @Autowired
     @Getter
     private BlobEntityService blobEntityService;
+
+    @Autowired
+    @Getter
+    private ReportTemplateService reportTemplateService;
+
+    @Autowired
+    @Getter
+    private ReportService reportService;
 
     @Autowired
     @Getter
@@ -866,6 +890,14 @@ public class ActorSystemContext {
 
     public void persistDebugOutput(TenantId tenantId, EntityId entityId, TbMsg tbMsg, String relationType) {
         persistDebugAsync(tenantId, entityId, "OUT", tbMsg, relationType, null, null);
+    }
+
+    public void persistDebugOutputIfNeeded(TenantId tenantId, RuleNode ruleNode, TbMsg tbMsg, Set<String> relationTypes, Throwable error, String failureMessage) {
+        if (DebugModeUtil.isDebugAllAvailable(ruleNode)) {
+            relationTypes.forEach(relationType -> persistDebugOutput(tenantId, ruleNode.getId(), tbMsg, relationType, error, failureMessage));
+        } else if (DebugModeUtil.isDebugFailuresAvailable(ruleNode, relationTypes)) {
+            persistDebugOutput(tenantId, ruleNode.getId(), tbMsg, TbNodeConnectionType.FAILURE, error, failureMessage);
+        }
     }
 
     private void persistDebugAsync(TenantId tenantId, EntityId entityId, String type, TbMsg tbMsg, String relationType, Throwable error, String failureMessage) {

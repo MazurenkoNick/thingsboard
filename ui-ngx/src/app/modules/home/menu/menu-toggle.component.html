@@ -30,7 +30,8 @@
     OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 
 -->
-<a mat-button class="tb-button-toggle" (click)="toggleSection($event)">
+<a mat-button class="tb-button-toggle" (click)="toggleSection($event)"
+   [class.is-new]="section.isNew">
   <tb-icon matButtonIcon *ngIf="section.icon !== null">{{section.icon}}</tb-icon>
   <span>{{section.customTranslate ? (section.name | customTranslate) : (section.name | translate)}}</span>
   <span class="pull-right fa fa-chevron-down tb-toggle-icon"

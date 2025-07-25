@@ -66,9 +66,8 @@ public class SecretDataValidator extends DataValidator<Secret> {
                     throw new DataValidationException(String.format("Secret value is %d characters; exceeds maximum of %d characters", value.length(), MAX_TEXT_SIZE_LENGTH));
                 }
             } else {
-                int fileLength = secret.getRawValue().length;
-                if (fileLength > MAX_FILE_SIZE_BYTES) {
-                    throw new DataValidationException(String.format("Secret file size is %d bytes; exceeds the maximum of %d bytes", fileLength, MAX_FILE_SIZE_BYTES));
+                if (value.length() > MAX_FILE_SIZE_BYTES) {
+                    throw new DataValidationException(String.format("Secret file size is %d bytes; exceeds the maximum of %d bytes", value.length(), MAX_FILE_SIZE_BYTES));
                 }
             }
         }

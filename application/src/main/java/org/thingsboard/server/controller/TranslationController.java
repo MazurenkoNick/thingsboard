@@ -48,8 +48,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
@@ -164,8 +162,7 @@ public class TranslationController extends BaseController {
 
     @ApiOperation(value = "Get system translation for login page",
             notes = "Fetch the end-user translation for specified locale.")
-    @RequestMapping(value = "/noauth/translation/login/{localeCode}", method = RequestMethod.GET)
-    @ResponseBody
+    @GetMapping(value = "/noauth/translation/login/{localeCode}")
     public void getLoginPageTranslation(
             @Parameter(description = "Locale code (e.g. 'en_US').")
             @PathVariable("localeCode") String localeCode,

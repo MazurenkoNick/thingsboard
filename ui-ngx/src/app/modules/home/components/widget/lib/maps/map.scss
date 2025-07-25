@@ -54,6 +54,15 @@ div.tb-widget .tb-widget-content.tb-no-interaction {
     position: relative;
     z-index: 1;
   }
+  &.tb-web-report {
+    div:has(> img[src*="googleapis.com/maps"]) {
+      transition: none !important;
+      opacity: 1 !important;
+    }
+    .leaflet-tile-loaded {
+      opacity: 1 !important;
+    }
+  }
 }
 
 .tb-map-layout {

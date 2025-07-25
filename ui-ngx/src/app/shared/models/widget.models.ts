@@ -380,6 +380,7 @@ export const comparisonResultTypeTranslationMap = new Map<ComparisonResultType, 
 export interface KeyInfo {
   name: string;
   aggregationType?: AggregationType;
+  timewindow?: Timewindow;
   comparisonEnabled?: boolean;
   timeForComparison?: ComparisonDuration;
   comparisonCustomIntervalValue?: number;

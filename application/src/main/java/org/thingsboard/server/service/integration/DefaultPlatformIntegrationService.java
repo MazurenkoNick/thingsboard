@@ -138,9 +138,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
 
-/**
- * Created by ashvayka on 02.12.17.
- */
 @Slf4j
 @TbCoreComponent
 @Service
@@ -924,7 +921,6 @@ public class DefaultPlatformIntegrationService extends IntegrationActivityManage
         }
 
     }
-
 
     private static CustomerId getCustomerId(SessionInfoProto sessionInfo) {
         CustomerId customerId;

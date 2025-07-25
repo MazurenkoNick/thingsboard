@@ -35,10 +35,14 @@ import {
   DestroyRef,
   ElementRef,
   forwardRef,
-  Input, OnChanges,
-  OnInit, SimpleChanges,
+  Input,
+  OnChanges,
+  OnInit,
+  QueryList,
+  SimpleChanges,
   TemplateRef,
   ViewChild,
+  ViewChildren,
   ViewContainerRef
 } from '@angular/core';
 import { ControlValueAccessor, FormBuilder, FormControl, NG_VALUE_ACCESSOR, Validators } from '@angular/forms';
@@ -74,6 +78,7 @@ export class StringPatternAutocompleteComponent implements ControlValueAccessor,
   @ViewChild('inputRef', {static: true}) inputRef: ElementRef;
   @ViewChild('highlightTextRef', {static: true}) highlightTextRef: ElementRef;
   @ViewChild('autocompleteTemplate', {static: true}) autocompleteTemplate: TemplateRef<any>;
+  @ViewChildren('optionItem', { read: ElementRef }) optionItems!: QueryList<ElementRef<HTMLElement>>;
 
   @Input()
   disabled: boolean;
@@ -111,16 +116,26 @@ export class StringPatternAutocompleteComponent implements ControlValueAccessor,
   showInlineError = false;
 
   @Input()
+  @coerceBoolean()
+  predefinedValuesButton = false;
+
+  @Input()
   patternSymbol = '$';
+
+  @Input()
+  brackets: 'curly' | 'square';
 
   selectionFormControl: FormControl;
   filteredOptions: Array<string>;
 
   searchText = '';
-  highlightedHtml = ''
+  highlightedHtml = '';
+  activeOptionIndex = -1;
 
   private modelValue: string | null;
   private overlayRef!: OverlayRef;
+
+  private predefinedValuesButtonMode = false;
 
   private propagateChange = (_val: any) => {
   };
@@ -145,6 +160,10 @@ export class StringPatternAutocompleteComponent implements ControlValueAccessor,
       this.onSelectionChange();
       this.cd.markForCheck();
     });
+
+    fromEvent<KeyboardEvent>(this.inputRef.nativeElement, 'keydown')
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(event => this.handleKeydown(event));
   }
 
   ngOnChanges(changes: SimpleChanges) {
@@ -205,18 +224,37 @@ export class StringPatternAutocompleteComponent implements ControlValueAccessor,
 
   optionSelected(value: string) {
     const position = this.inputRef.nativeElement.selectionStart;
-    const triggerIndex = this.modelValue.lastIndexOf(this.patternSymbol, position - 1);
+    const triggerIndex = this.predefinedValuesButtonMode ? position : this.modelValue.lastIndexOf(this.patternSymbol, position - 1);
     if (triggerIndex === -1) {
       return;
     }
-    const newText = `${this.modelValue.substring(0, triggerIndex + 1)}${value}${this.modelValue.substring(position)}`;
+    let prepareValue: string;
+    switch (this.brackets) {
+      case 'curly':
+        prepareValue = `{${value}}`;
+        break;
+      case 'square':
+        prepareValue = `[${value}]`;
+        break;
+      default:
+        prepareValue = value;
+    }
+    const newText = `${this.modelValue.substring(0, triggerIndex)}${this.patternSymbol}${prepareValue}${this.modelValue.substring(position)}`;
     this.selectionFormControl.patchValue(newText);
     this.searchText = '';
     setTimeout(() => {
-      this.inputRef.nativeElement.setSelectionRange(triggerIndex + value.length + 1, triggerIndex + value.length + 1);
+      this.inputRef.nativeElement.setSelectionRange(triggerIndex + prepareValue.length + 1, triggerIndex + prepareValue.length + 1);
       this.inputRef.nativeElement.focus();
     });
     this.closeAutocomplete();
+  }
+
+  openValues($event: MouseEvent) {
+    $event.stopPropagation();
+    const selectionStart = this.inputRef.nativeElement.selectionStart;
+    this.filteredOptions = [...this.predefinedValues];
+    this.predefinedValuesButtonMode = true;
+    this.openAutocomplete(selectionStart);
   }
 
   private updateView(value: string) {
@@ -232,8 +270,10 @@ export class StringPatternAutocompleteComponent implements ControlValueAccessor,
     const selectionEnd = this.inputRef.nativeElement.selectionEnd;
     if (selectionStart === selectionEnd && selectionStart > 0 && !this.disabled) {
       this.filteredOptions = this.getFilteredOptions(this.modelValue, selectionStart);
+      this.activeOptionIndex = 0;
     } else {
       this.filteredOptions = [];
+      this.activeOptionIndex = -1;
     }
     if (this.filteredOptions.length) {
       this.openAutocomplete(selectionStart);
@@ -246,9 +286,23 @@ export class StringPatternAutocompleteComponent implements ControlValueAccessor,
     if (!text) {
       return '';
     }
-    const regex = new RegExp('([' + this.patternSymbol + ']\\w+)', 'g');
-    return text.replace(regex, (_match: string, p1: string) => {
-      if (this.predefinedValues.includes(p1.substring(1))) {
+    let regex: RegExp;
+    let simpleGroup = false;
+    switch (this.brackets) {
+      case 'curly':
+        regex = new RegExp(`([${this.patternSymbol}](\\{([^}]*)\\}))`, 'g');
+        break;
+      case 'square':
+        regex = new RegExp(`([${this.patternSymbol}](\\[([^]]*)\\]))`, 'g');
+        break;
+      default:
+        regex = new RegExp(`([${this.patternSymbol}](\\w+))`, 'g');
+        simpleGroup = true
+        break
+    }
+    return text.replace(regex, (_match: string, p1: string, p2: string, p3: string) => {
+      const value = simpleGroup ? p2 : p3;
+      if (this.predefinedValues.includes(value)) {
         return `<span class="highlight">${p1}</span>`
       }
       return p1;
@@ -267,7 +321,21 @@ export class StringPatternAutocompleteComponent implements ControlValueAccessor,
       currentWordEndIndex = text.length;
     }
 
-    this.searchText = text.substring(triggerIndex + 1, currentWordEndIndex).toLowerCase();
+    let startOffset = 1;
+    switch (this.brackets) {
+      case 'curly':
+        if (text[triggerIndex + startOffset] === '{') {
+          startOffset++;
+        }
+        break;
+      case 'square':
+        if (text[triggerIndex + startOffset] === '[') {
+          startOffset++;
+        }
+        break;
+    }
+
+    this.searchText = text.substring(triggerIndex + startOffset, currentWordEndIndex).toLowerCase();
     if (this.searchText.includes(' ')) {
       return [];
     }
@@ -280,7 +348,7 @@ export class StringPatternAutocompleteComponent implements ControlValueAccessor,
   }
 
   private openAutocomplete(cursorIndex?: number): void {
-    const patternIndex = this.modelValue.lastIndexOf(this.patternSymbol, cursorIndex - 1);
+    const patternIndex = this.predefinedValuesButtonMode ? cursorIndex : this.modelValue.lastIndexOf(this.patternSymbol, cursorIndex - 1);
     if (!this.overlayRef) {
       this.overlayRef = this.overlay.create({
         positionStrategy: this.getOverlayPosition(patternIndex),
@@ -299,6 +367,7 @@ export class StringPatternAutocompleteComponent implements ControlValueAccessor,
   }
 
   private closeAutocomplete(): void {
+    this.predefinedValuesButtonMode = false;
     if (this.overlayRef && this.overlayRef.hasAttached()) {
       this.overlayRef.detach();
     }
@@ -334,5 +403,45 @@ export class StringPatternAutocompleteComponent implements ControlValueAccessor,
 
     const positions = [...belowPositions, ...abovePositions];
     positionStrategy.withPositions(positions);
+  }
+
+  private setActiveOption(index: number): void {
+    if (this.filteredOptions.length === 0) {
+      this.activeOptionIndex = -1;
+      return;
+    }
+
+    this.activeOptionIndex = Math.max(-1, Math.min(index, this.filteredOptions.length - 1));
+    this.cd.markForCheck();
+
+    if (this.activeOptionIndex >= 0 && this.optionItems.get(this.activeOptionIndex)) {
+      this.optionItems.get(this.activeOptionIndex).nativeElement.scrollIntoView({ block: 'nearest' })
+    }
+  }
+
+  private handleKeydown(event: KeyboardEvent): void {
+    if (!this.overlayRef?.hasAttached()) {
+      return;
+    }
+
+    switch (event.key) {
+      case 'ArrowDown':
+        event.preventDefault();
+        this.setActiveOption(this.activeOptionIndex + 1);
+        break;
+      case 'ArrowUp':
+        event.preventDefault();
+        this.setActiveOption(this.activeOptionIndex - 1);
+        break;
+      case 'Enter':
+        event.preventDefault();
+        if (this.activeOptionIndex >= 0 && this.activeOptionIndex < this.filteredOptions.length) {
+          this.optionSelected(this.filteredOptions[this.activeOptionIndex]);
+        }
+        break;
+      case 'Escape':
+        this.closeAutocomplete();
+        break;
+    }
   }
 }

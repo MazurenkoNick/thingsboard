@@ -89,6 +89,7 @@ import org.thingsboard.server.common.data.permission.MergedGroupPermissionInfo;
 import org.thingsboard.server.common.data.permission.MergedUserPermissions;
 import org.thingsboard.server.common.data.permission.Operation;
 import org.thingsboard.server.common.data.permission.Resource;
+import org.thingsboard.server.common.data.query.AliasEntityId;
 import org.thingsboard.server.common.data.query.ApiUsageStateFilter;
 import org.thingsboard.server.common.data.query.AssetSearchQueryFilter;
 import org.thingsboard.server.common.data.query.AssetTypeFilter;
@@ -450,7 +451,7 @@ public class EntityServiceTest extends AbstractControllerTest {
         createTestHierarchy(tenantId, assets, devices, new ArrayList<>(), new ArrayList<>(), new ArrayList<>(), new ArrayList<>());
 
         RelationsQueryFilter filter = new RelationsQueryFilter();
-        filter.setRootEntity(tenantId);
+        filter.setRootEntity(AliasEntityId.fromEntityId(tenantId));
         filter.setDirection(EntitySearchDirection.FROM);
 
         EntityCountQuery countQuery = new EntityCountQuery(filter);
@@ -459,13 +460,13 @@ public class EntityServiceTest extends AbstractControllerTest {
         filter.setFilters(Collections.singletonList(new RelationEntityTypeFilter("Contains", Collections.singletonList(EntityType.DEVICE))));
         countByQueryAndCheck(countQuery, 25);
 
-        filter.setRootEntity(devices.get(0).getId());
+        filter.setRootEntity(AliasEntityId.fromEntityId(devices.get(0).getId()));
         filter.setDirection(EntitySearchDirection.TO);
         filter.setFilters(Collections.singletonList(new RelationEntityTypeFilter("Manages", Collections.singletonList(EntityType.TENANT))));
         countByQueryAndCheck(countQuery, 1);
 
         DeviceSearchQueryFilter filter2 = new DeviceSearchQueryFilter();
-        filter2.setRootEntity(tenantId);
+        filter2.setRootEntity(AliasEntityId.fromEntityId(tenantId));
         filter2.setDirection(EntitySearchDirection.FROM);
         filter2.setRelationType("Contains");
 
@@ -475,12 +476,12 @@ public class EntityServiceTest extends AbstractControllerTest {
         filter2.setDeviceTypes(Arrays.asList("default0", "default1"));
         countByQueryAndCheck(countQuery, 10);
 
-        filter2.setRootEntity(devices.get(0).getId());
+        filter2.setRootEntity(AliasEntityId.fromEntityId(devices.get(0).getId()));
         filter2.setDirection(EntitySearchDirection.TO);
         countByQueryAndCheck(countQuery, 0);
 
         AssetSearchQueryFilter filter3 = new AssetSearchQueryFilter();
-        filter3.setRootEntity(tenantId);
+        filter3.setRootEntity(AliasEntityId.fromEntityId(tenantId));
         filter3.setDirection(EntitySearchDirection.FROM);
         filter3.setRelationType("Manages");
 
@@ -490,7 +491,7 @@ public class EntityServiceTest extends AbstractControllerTest {
         filter3.setAssetTypes(Arrays.asList("type0", "type1"));
         countByQueryAndCheck(countQuery, 2);
 
-        filter3.setRootEntity(devices.get(0).getId());
+        filter3.setRootEntity(AliasEntityId.fromEntityId(devices.get(0).getId()));
         filter3.setDirection(EntitySearchDirection.TO);
         countByQueryAndCheck(countQuery, 0);
     }
@@ -501,7 +502,7 @@ public class EntityServiceTest extends AbstractControllerTest {
         createTestUserRelations(tenantId, users);
 
         RelationsQueryFilter filter = new RelationsQueryFilter();
-        filter.setRootEntity(tenantId);
+        filter.setRootEntity(AliasEntityId.fromEntityId(tenantId));
         filter.setDirection(EntitySearchDirection.FROM);
 
         EntityDataPageLink pageLink = new EntityDataPageLink(10, 0, null, null);
@@ -585,7 +586,7 @@ public class EntityServiceTest extends AbstractControllerTest {
         }
 
         EdgeSearchQueryFilter filter = new EdgeSearchQueryFilter();
-        filter.setRootEntity(tenantId);
+        filter.setRootEntity(AliasEntityId.fromEntityId(tenantId));
         filter.setDirection(EntitySearchDirection.FROM);
         filter.setRelationType("Manages");
 
@@ -639,7 +640,7 @@ public class EntityServiceTest extends AbstractControllerTest {
         Futures.allAsList(attributeFutures).get();
 
         RelationsQueryFilter filter = new RelationsQueryFilter();
-        filter.setRootEntity(tenantId);
+        filter.setRootEntity(AliasEntityId.fromEntityId(tenantId));
         filter.setDirection(EntitySearchDirection.FROM);
         filter.setFilters(Collections.singletonList(new RelationEntityTypeFilter("Contains", Collections.singletonList(EntityType.DEVICE))));
         filter.setMaxLevel(maxLevel);
@@ -789,7 +790,7 @@ public class EntityServiceTest extends AbstractControllerTest {
         Futures.allAsList(attributeFutures).get();
 
         DeviceSearchQueryFilter filter = new DeviceSearchQueryFilter();
-        filter.setRootEntity(tenantId);
+        filter.setRootEntity(AliasEntityId.fromEntityId(tenantId));
         filter.setDirection(EntitySearchDirection.FROM);
         filter.setRelationType("Contains");
         filter.setMaxLevel(2);
@@ -843,7 +844,7 @@ public class EntityServiceTest extends AbstractControllerTest {
         Futures.allAsList(attributeFutures).get();
 
         AssetSearchQueryFilter filter = new AssetSearchQueryFilter();
-        filter.setRootEntity(tenantId);
+        filter.setRootEntity(AliasEntityId.fromEntityId(tenantId));
         filter.setDirection(EntitySearchDirection.FROM);
         filter.setRelationType("Manages");
 
@@ -1532,7 +1533,7 @@ public class EntityServiceTest extends AbstractControllerTest {
         }
 
         SingleEntityFilter singleEntityFilter = new SingleEntityFilter();
-        singleEntityFilter.setSingleEntity(customerDevices.get(0).getId());
+        singleEntityFilter.setSingleEntity(AliasEntityId.fromEntityId(customerDevices.get(0).getId()));
         List<EntityKey> entityFields = List.of(
                 new EntityKey(EntityKeyType.ENTITY_FIELD, "name")
         );
@@ -1559,7 +1560,7 @@ public class EntityServiceTest extends AbstractControllerTest {
 
         // try to find tenant device by customer user
         SingleEntityFilter tenantDeviceFilter = new SingleEntityFilter();
-        tenantDeviceFilter.setSingleEntity(tenantDevices.get(0).getId());
+        tenantDeviceFilter.setSingleEntity(AliasEntityId.fromEntityId(tenantDevices.get(0).getId()));
         EntityDataQuery customerQuery2 = new EntityDataQuery(tenantDeviceFilter, pageLink, entityFields, null, null);
         findByQueryAndCheck(customerId, mergedGenericPermission, customerQuery2, 0);
 
@@ -1573,7 +1574,7 @@ public class EntityServiceTest extends AbstractControllerTest {
     @Test
     public void testFindCustomerBySingleEntityFilter() {
         SingleEntityFilter singleEntityFilter = new SingleEntityFilter();
-        singleEntityFilter.setSingleEntity(customerId);
+        singleEntityFilter.setSingleEntity(AliasEntityId.fromEntityId(customerId));
         List<EntityKey> entityFields = List.of(
                 new EntityKey(EntityKeyType.ENTITY_FIELD, "name")
         );
@@ -2132,7 +2133,7 @@ public class EntityServiceTest extends AbstractControllerTest {
 
         SchedulerEventFilter schedulerEventFilter = new SchedulerEventFilter();
         schedulerEventFilter.setEventType("report");
-        schedulerEventFilter.setOriginator(customerId);
+        schedulerEventFilter.setOriginator(AliasEntityId.fromEntityId(customerId));
 
         List<EntityKey> entityFields = List.of(
                 new EntityKey(EntityKeyType.ENTITY_FIELD, "name")
@@ -2152,7 +2153,7 @@ public class EntityServiceTest extends AbstractControllerTest {
 
         //find entities by other customer id filter
         schedulerEventFilter.setEventType("report");
-        schedulerEventFilter.setOriginator(otherCustomerId);
+        schedulerEventFilter.setOriginator(AliasEntityId.fromEntityId(otherCustomerId));
         findByQueryAndCheck(new CustomerId(CustomerId.NULL_UUID), mergedUserPermissionsPE, query, 0);
 
         // find scheduler events by customer user
@@ -2371,7 +2372,7 @@ public class EntityServiceTest extends AbstractControllerTest {
         EntityDataPageLink pageLink = new EntityDataPageLink(10, 0, null, null);
 
         for (Device device : devices) {
-            filter.setRootEntity(device.getId());
+            filter.setRootEntity(AliasEntityId.fromEntityId(device.getId()));
 
             EntityDataQuery query = new EntityDataQuery(filter, pageLink, Collections.emptyList(), Collections.emptyList(), Collections.emptyList());
             findByQueryAndCheck(customer.getId(), mergedUserPermissions, query, relationsCnt);
@@ -2380,7 +2381,7 @@ public class EntityServiceTest extends AbstractControllerTest {
             In order to be careful with updating Relation Query while adding new Entity Type,
             this checkup will help to find place, where you could check the correctness of building query
              */
-            Assert.assertEquals(42, EntityType.values().length);
+            Assert.assertEquals(46, EntityType.values().length);
         }
     }
 
@@ -2442,7 +2443,7 @@ public class EntityServiceTest extends AbstractControllerTest {
         List<KeyFilter> keyFiltersEqualString = createStringKeyFilters("name", EntityKeyType.ENTITY_FIELD, StringOperation.STARTS_WITH, "Test device ");
 
         for (Asset asset : assets) {
-            filter.setRootEntity(asset.getId());
+            filter.setRootEntity(AliasEntityId.fromEntityId(asset.getId()));
 
             EntityDataQuery query = new EntityDataQuery(filter, pageLink, Collections.emptyList(), Collections.emptyList(), keyFiltersEqualString);
             findByQueryAndCheck(new CustomerId(EntityId.NULL_UUID), groupOnlyPermission, query, relationsCnt / 2);
@@ -2517,7 +2518,7 @@ public class EntityServiceTest extends AbstractControllerTest {
         EntityDataQuery query = new EntityDataQuery(filter, pageLink, Collections.emptyList(), Collections.emptyList(), keyFiltersEqualString);
 
         for (Asset asset : assets) {
-            filter.setRootEntity(asset.getId());
+            filter.setRootEntity(AliasEntityId.fromEntityId(asset.getId()));
 
             //check by user with generic permission
             PageData<EntityData> relationsResult = findByQueryAndCheck(customer.getId(), mergedGenericOnlyPermission, query, relationsCnt);

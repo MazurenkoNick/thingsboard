@@ -34,6 +34,7 @@
   <div class="flex flex-row" style="height: 48px;">
     <div class="flex max-w-50% flex-full items-center justify-start">
       <mat-checkbox color="primary"
+                    [disabled]="disabled"
                     (click)="$event.stopPropagation()"
                     (change)="changeInstanceTypeCheckBox($event.checked)"
                     [checked]="getChecked()"
@@ -47,6 +48,7 @@
     <div class="flex flex-1 flex-row" *ngFor="let deliveryMethod of deliveryMethods">
       <div class="flex flex-1 items-center justify-start">
         <mat-checkbox color="primary"
+                      [disabled]="disabled"
                       [checked]="getChecked(deliveryMethod)"
                       (click)="toggleDeliviryMethod(deliveryMethod)"
         ></mat-checkbox>
