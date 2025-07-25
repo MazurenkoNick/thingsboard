@@ -29,11 +29,12 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { Component, forwardRef, OnDestroy } from '@angular/core';
+import { Component, forwardRef, Input, OnDestroy } from '@angular/core';
 import { Color, ColorPickerControl } from '@iplab/ngx-color-picker';
 import { Subscription } from 'rxjs';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR, UntypedFormControl } from '@angular/forms';
 import { isString } from '@core/utils';
+import { coerceBoolean } from '@shared/decorators/coercion';
 
 export enum ColorType {
   hex = 'hex',
@@ -62,6 +63,10 @@ const colorPresetsHex =
   ]
 })
 export class ColorPickerComponent implements ControlValueAccessor, OnDestroy {
+
+  @Input()
+  @coerceBoolean()
+  disableAlpha = false;
 
   presentations = [ColorType.hex, ColorType.rgba, ColorType.hsla];
   control = new ColorPickerControl();
@@ -138,13 +143,13 @@ export class ColorPickerComponent implements ControlValueAccessor, OnDestroy {
   getValueByType(color: Color, type: ColorType): string {
     switch (type) {
       case ColorType.hex:
-        return color.toHexString(this.control.value.getRgba().getAlpha() !== 1);
+        return color.toHexString(!this.disableAlpha && this.control.value.getRgba().getAlpha() !== 1);
       case ColorType.rgba:
-        return this.control.value.getRgba().getAlpha() !== 1 ? color.toRgbaString() : color.toRgbString();
+        return !this.disableAlpha && this.control.value.getRgba().getAlpha() !== 1 ? color.toRgbaString() : color.toRgbString();
       case ColorType.hsla:
-        return this.control.value.getRgba().getAlpha() !== 1 ? color.toHslaString() : color.toHslString();
+        return !this.disableAlpha && this.control.value.getRgba().getAlpha() !== 1 ? color.toHslaString() : color.toHslString();
       default:
-        return color.toRgbaString();
+        return !this.disableAlpha ? color.toRgbaString() : color.toRgbString();
     }
   }
 }

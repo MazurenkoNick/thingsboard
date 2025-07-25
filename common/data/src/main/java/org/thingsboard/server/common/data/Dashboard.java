@@ -35,7 +35,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.collect.Streams;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import lombok.EqualsAndHashCode;
@@ -49,12 +48,11 @@ import org.thingsboard.server.common.data.validation.Length;
 import org.thingsboard.server.common.data.validation.NoXss;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
+
+import static org.thingsboard.server.common.data.util.DataUtils.getChildObjects;
 
 @Schema
 @EqualsAndHashCode(callSuper = true)
@@ -295,24 +293,12 @@ public class Dashboard extends BaseData<DashboardId> implements GroupEntity<Dash
 
     @JsonIgnore
     public List<ObjectNode> getEntityAliasesConfig() {
-        return getChildObjects("entityAliases");
+        return getChildObjects("entityAliases", configuration);
     }
 
     @JsonIgnore
     public List<ObjectNode> getWidgetsConfig() {
-        return getChildObjects("widgets");
-    }
-
-    @JsonIgnore
-    private List<ObjectNode> getChildObjects(String propertyName) {
-        return Optional.ofNullable(configuration)
-                .map(config -> config.get(propertyName))
-                .filter(node -> !node.isEmpty() && (node.isObject() || node.isArray()))
-                .map(node -> Streams.stream(node.elements())
-                        .filter(JsonNode::isObject)
-                        .map(jsonNode -> (ObjectNode) jsonNode)
-                        .collect(Collectors.toList()))
-                .orElse(Collections.emptyList());
+        return getChildObjects("widgets", configuration);
     }
 
     @Override

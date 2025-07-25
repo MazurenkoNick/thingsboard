@@ -90,7 +90,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -442,7 +441,9 @@ public abstract class BaseEntityImportService<I extends EntityId, E extends Expo
         }
 
         public <ID extends EntityId> ID getInternalId(ID externalId, boolean throwExceptionIfNotFound) {
-            if (externalId == null || externalId.isNullUid()) return null;
+            if (externalId == null || externalId.isNullUid()) {
+                return null;
+            }
 
             if (EntityType.TENANT.equals(externalId.getEntityType())) {
                 return (ID) ctx.getTenantId();
@@ -469,7 +470,9 @@ public abstract class BaseEntityImportService<I extends EntityId, E extends Expo
         }
 
         public Optional<EntityId> getInternalIdByUuid(UUID externalUuid, boolean fetchAllUUIDs, Set<EntityType> hints) {
-            if (externalUuid.equals(EntityId.NULL_UUID)) return Optional.empty();
+            if (externalUuid.equals(EntityId.NULL_UUID)) {
+                return Optional.empty();
+            }
 
             for (EntityType entityType : EntityType.values()) {
                 Optional<EntityId> externalId = buildEntityId(entityType, externalUuid);
@@ -518,10 +521,6 @@ public abstract class BaseEntityImportService<I extends EntityId, E extends Expo
             }
         }
 
-    }
-
-    protected <T extends EntityId, O> T getOldEntityField(O oldEntity, Function<O, T> getter) {
-        return oldEntity == null ? null : getter.apply(oldEntity);
     }
 
     protected void replaceIdsRecursively(EntitiesImportCtx ctx, IdProvider idProvider, JsonNode json,

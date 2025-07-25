@@ -290,7 +290,7 @@ public abstract class BaseTelemetryProcessor extends BaseEdgeProcessor {
         SettableFuture<Void> futureToSet = SettableFuture.create();
         JsonObject json = JsonUtils.getJsonObject(msg.getKvList());
         AttributeScope scope = AttributeScope.valueOf(metaData.getValue(DataConstants.SCOPE));
-        List<AttributeKvEntry> attributes = new ArrayList<>(JsonConverter.convertToAttributes(json, ts));
+        List<AttributeKvEntry> attributes = JsonConverter.convertToAttributes(json, ts);
         ListenableFuture<List<AttributeKvEntry>> future = filterAttributesByTs(tenantId, entityId, scope, attributes);
         Futures.addCallback(future, new FutureCallback<>() {
             @Override
@@ -338,7 +338,7 @@ public abstract class BaseTelemetryProcessor extends BaseEdgeProcessor {
         SettableFuture<Void> futureToSet = SettableFuture.create();
         JsonObject json = JsonUtils.getJsonObject(msg.getKvList());
         AttributeScope scope = AttributeScope.valueOf(metaData.getValue(DataConstants.SCOPE));
-        List<AttributeKvEntry> attributes = new ArrayList<>(JsonConverter.convertToAttributes(json, ts));
+        List<AttributeKvEntry> attributes = JsonConverter.convertToAttributes(json, ts);
         ListenableFuture<List<AttributeKvEntry>> future = filterAttributesByTs(tenantId, entityId, scope, attributes);
         Futures.addCallback(future, new FutureCallback<>() {
             @Override

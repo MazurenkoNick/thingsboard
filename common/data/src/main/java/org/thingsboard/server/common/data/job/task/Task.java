@@ -48,6 +48,7 @@ import org.thingsboard.server.common.data.job.JobType;
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "jobType")
 @JsonSubTypes({
         @Type(name = "CF_REPROCESSING", value = CfReprocessingTask.class),
+        @Type(name = "REPORT", value = ReportTask.class),
         @Type(name = "DUMMY", value = DummyTask.class)
 })
 @SuperBuilder

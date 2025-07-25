@@ -97,6 +97,7 @@ public class ApiUsageStateFilterTest extends AbstractEDQTest {
         apiUsageState.setSmsExecState(ApiUsageStateValue.ENABLED);
         apiUsageState.setEmailExecState(ApiUsageStateValue.ENABLED);
         apiUsageState.setAlarmExecState(ApiUsageStateValue.ENABLED);
+        apiUsageState.setReportExecState(ApiUsageStateValue.ENABLED);
         return apiUsageState;
     }
 

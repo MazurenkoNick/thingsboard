@@ -50,6 +50,7 @@ export interface DefaultTenantProfileConfiguration {
   maxIntegrations: number;
   maxConverters: number;
   maxSchedulerEvents: number;
+  maxGeneratedReports: number;
   maxResourcesInBytes: number;
   maxOtaPackagesInBytes: number;
   maxResourceSize: number;
@@ -152,6 +153,7 @@ export function createTenantProfileConfiguration(type: TenantProfileType): Tenan
           maxIntegrations: 0,
           maxConverters: 0,
           maxSchedulerEvents: 0,
+          maxGeneratedReports: 0,
           maxResourcesInBytes: 0,
           maxOtaPackagesInBytes: 0,
           maxResourceSize: 0,

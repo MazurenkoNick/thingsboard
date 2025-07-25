@@ -44,7 +44,7 @@ import { MatIconRegistry } from '@angular/material/icon';
 import { selectUserReady } from '@core/auth/auth.selectors';
 import { filter, skip, tap } from 'rxjs/operators';
 import { AuthService } from '@core/auth/auth.service';
-import { ReportService } from '@core/http/report.service';
+import { DashboardReportService } from '@core/http/dashboard-report.service';
 import { DevelopmentService } from '@core/http/development.service';
 import { svgIcons, svgIconsUrl } from '@shared/models/icon.models';
 import { ActionSettingsChangeLanguage } from '@core/settings/settings.actions';
@@ -65,7 +65,7 @@ export class AppComponent {
               private matIconRegistry: MatIconRegistry,
               private domSanitizer: DomSanitizer,
               private authService: AuthService,
-              private reportService: ReportService,
+              private reportService: DashboardReportService,
               private developmentService: DevelopmentService) {
 
     if (!env.production) {

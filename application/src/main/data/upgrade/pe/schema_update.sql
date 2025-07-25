@@ -48,7 +48,7 @@ ALTER TABLE edge_event ADD COLUMN IF NOT EXISTS entity_group_id uuid;
 
 ALTER TABLE alarm ADD COLUMN IF NOT EXISTS propagate_to_owner_hierarchy boolean DEFAULT false;
 
-ALTER TABLE edge ADD COLUMN IF NOT EXISTS edge_license_key varchar(30) DEFAULT 'PUT_YOUR_EDGE_LICENSE_HERE';
+ALTER TABLE edge ADD COLUMN IF NOT EXISTS edge_license_key varchar DEFAULT 'PUT_YOUR_EDGE_LICENSE_HERE';
 
 ALTER TABLE edge ADD COLUMN IF NOT EXISTS cloud_endpoint varchar(255) DEFAULT 'PUT_YOUR_CLOUD_ENDPOINT_HERE';
 
@@ -78,3 +78,5 @@ ALTER TABLE oauth2_client_registration_template ADD COLUMN IF NOT EXISTS basic_p
 ALTER TABLE oauth2_client_registration_template ADD COLUMN IF NOT EXISTS basic_user_groups_name_pattern varchar(1024);
 
 ALTER TABLE component_descriptor ADD COLUMN IF NOT EXISTS has_secrets boolean default false;
+
+ALTER TABLE api_usage_state ADD COLUMN IF NOT EXISTS report_exec varchar(32) DEFAULT 'ENABLED';

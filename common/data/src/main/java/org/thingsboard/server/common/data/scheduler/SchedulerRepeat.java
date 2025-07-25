@@ -56,4 +56,5 @@ public interface SchedulerRepeat {
     SchedulerRepeatType getType();
 
     long getNext(long startTime, long ts, String timezone);
+
 }

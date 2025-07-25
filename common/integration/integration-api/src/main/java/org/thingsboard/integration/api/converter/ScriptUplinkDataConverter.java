@@ -39,9 +39,6 @@ import org.thingsboard.script.api.tbel.TbelInvokeService;
 import org.thingsboard.server.common.data.converter.Converter;
 import org.thingsboard.server.common.data.script.ScriptLanguage;
 
-/**
- * Created by ashvayka on 02.12.17.
- */
 public class ScriptUplinkDataConverter extends AbstractUplinkDataConverter {
 
     private ScriptUplinkEvaluator evaluator;

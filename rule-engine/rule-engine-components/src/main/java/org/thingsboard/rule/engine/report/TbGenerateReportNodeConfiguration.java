@@ -32,7 +32,7 @@ package org.thingsboard.rule.engine.report;
 
 import lombok.Data;
 import org.thingsboard.rule.engine.api.NodeConfiguration;
-import org.thingsboard.server.common.data.report.ReportConfig;
+import org.thingsboard.server.common.data.dashboardreport.DashboardReportConfig;
 
 @Data
 public class TbGenerateReportNodeConfiguration implements NodeConfiguration<TbGenerateReportNodeConfiguration> {
@@ -40,7 +40,7 @@ public class TbGenerateReportNodeConfiguration implements NodeConfiguration<TbGe
     private boolean useSystemReportsServer;
     private String reportsServerEndpointUrl;
     private boolean useReportConfigFromMessage;
-    private ReportConfig reportConfig;
+    private DashboardReportConfig reportConfig;
 
     @Override
     public TbGenerateReportNodeConfiguration defaultConfiguration() {

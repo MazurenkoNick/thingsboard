@@ -74,6 +74,7 @@ import org.thingsboard.server.common.data.domain.Domain;
 import org.thingsboard.server.common.data.domain.DomainInfo;
 import org.thingsboard.server.common.data.edge.Edge;
 import org.thingsboard.server.common.data.edge.EdgeEventActionType;
+import org.thingsboard.server.common.data.encryptionkey.EncryptionKey;
 import org.thingsboard.server.common.data.group.EntityGroup;
 import org.thingsboard.server.common.data.group.EntityGroupInfo;
 import org.thingsboard.server.common.data.id.CustomerId;
@@ -84,10 +85,10 @@ import org.thingsboard.server.common.data.id.RoleId;
 import org.thingsboard.server.common.data.id.RuleChainId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.id.TenantProfileId;
+import org.thingsboard.server.common.data.id.UserId;
 import org.thingsboard.server.common.data.menu.CustomMenu;
 import org.thingsboard.server.common.data.menu.CustomMenuConfig;
 import org.thingsboard.server.common.data.menu.CustomMenuItem;
-import org.thingsboard.server.common.data.id.UserId;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.page.TimePageLink;
@@ -119,6 +120,7 @@ import org.thingsboard.server.gen.edge.v1.DeviceProfileUpdateMsg;
 import org.thingsboard.server.gen.edge.v1.DeviceUpdateMsg;
 import org.thingsboard.server.gen.edge.v1.EdgeConfiguration;
 import org.thingsboard.server.gen.edge.v1.EdgeVersion;
+import org.thingsboard.server.gen.edge.v1.EncryptionKeyUpdateMsg;
 import org.thingsboard.server.gen.edge.v1.EntityGroupUpdateMsg;
 import org.thingsboard.server.gen.edge.v1.GroupPermissionProto;
 import org.thingsboard.server.gen.edge.v1.OAuth2ClientUpdateMsg;
@@ -1387,6 +1389,21 @@ public class EdgeControllerTest extends AbstractControllerTest {
         return false;
     }
 
+    private boolean popEncryptionKeyUpdateMsg(List<AbstractMessage> messages, UpdateMsgType msgType, TenantId tenantId) {
+        for (AbstractMessage message : messages) {
+            if (message instanceof EncryptionKeyUpdateMsg encryptionKeyUpdateMsg) {
+                EncryptionKey encryptionKey = JacksonUtil.fromString(encryptionKeyUpdateMsg.getEntity(), EncryptionKey.class, true);
+                Assert.assertNotNull(encryptionKey);
+                if (msgType.equals(encryptionKeyUpdateMsg.getMsgType())
+                        && tenantId.equals(encryptionKey.getTenantId())) {
+                    messages.remove(message);
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     private boolean popEdgeConfigurationMsg(List<AbstractMessage> messages, String name) {
         for (AbstractMessage message : messages) {
             if (message instanceof EdgeConfiguration edgeConfiguration) {
@@ -1796,6 +1813,7 @@ public class EdgeControllerTest extends AbstractControllerTest {
         Assert.assertTrue(popEntityGroupMsg(edgeImitator.getDownlinkMsgs(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, "Tenant Administrators", EntityType.USER, EntityType.TENANT));
         Assert.assertTrue(popGroupPermissionMsg(edgeImitator.getDownlinkMsgs(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, tenantUsersGroupId, tenantUserRoleId));
         Assert.assertTrue(popGroupPermissionMsg(edgeImitator.getDownlinkMsgs(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, tenantAdministratorsGroupId, tenantAdministratorRoleId));
+        Assert.assertTrue(popEncryptionKeyUpdateMsg(edgeImitator.getDownlinkMsgs(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, tenantId));
         Assert.assertTrue(popUserCredentialsMsg(edgeImitator.getDownlinkMsgs(), currentUserId));
         Assert.assertTrue(popUserMsg(edgeImitator.getDownlinkMsgs(), UpdateMsgType.ENTITY_CREATED_RPC_MESSAGE, TENANT_ADMIN_EMAIL, Authority.TENANT_ADMIN));
         Assert.assertTrue(popCustomTranslation(edgeImitator.getDownlinkMsgs(), "en_US")); // sysadmin custom translation
@@ -1899,7 +1917,7 @@ public class EdgeControllerTest extends AbstractControllerTest {
         JsonNode esCustomTranslation = JacksonUtil.toJsonNode("{\"save\":\"" + StringUtils.randomAlphabetic(10) + "\"}");
         doPost("/api/translation/custom/" + localeCode, esCustomTranslation);
 
-        JsonNode savedCT =  doGet("/api/translation/custom/" + localeCode, JsonNode.class);
+        JsonNode savedCT = doGet("/api/translation/custom/" + localeCode, JsonNode.class);
         assertThat(savedCT).isEqualTo(esCustomTranslation);
     }
 
@@ -1921,4 +1939,5 @@ public class EdgeControllerTest extends AbstractControllerTest {
                 Mockito.isNull(), Mockito.eq(savedEntityGroup.getId()), Mockito.isNull(), Mockito.isNull(),
                 Mockito.eq(EdgeEventActionType.UPDATED), Mockito.any());
     }
+
 }

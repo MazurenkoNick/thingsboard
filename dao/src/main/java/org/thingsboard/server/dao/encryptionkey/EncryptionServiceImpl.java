@@ -89,6 +89,9 @@ public class EncryptionServiceImpl implements EncryptionService {
     private BytesEncryptor getEncryptor(TenantId tenantId) {
         return encryptorMap.computeIfAbsent(tenantId, id -> {
             EncryptionKey key = encryptionKeyDao.findByTenantId(tenantId);
+            if (key == null) {
+                throw new RuntimeException("Encryption key not found for tenant " + tenantId);
+            }
             return Encryptors.stronger(key.getPassword(), key.getSalt());
         });
     }
@@ -124,6 +127,11 @@ public class EncryptionServiceImpl implements EncryptionService {
     @Override
     public void deleteEncryptionKeyByTenantId(TenantId tenantId) {
         encryptionKeyDao.deleteByTenantId(tenantId);
+    }
+
+    @Override
+    public EncryptionKey findByTenantId(TenantId tenantId) {
+        return encryptionKeyDao.findByTenantId(tenantId);
     }
 
     @EventListener(ComponentLifecycleMsg.class)

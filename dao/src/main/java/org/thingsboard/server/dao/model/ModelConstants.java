@@ -576,6 +576,12 @@ public class ModelConstants {
     public static final String SCHEDULER_EVENT_CONFIGURATION_PROPERTY = CONFIGURATION_PROPERTY;
     public static final String SCHEDULER_EVENT_SCHEDULE_PROPERTY = "schedule";
     public static final String SCHEDULER_EVENT_ENABLED_PROPERTY = "enabled";
+    public static final String SCHEDULER_REPORT_EVENT_VIEW_NAME = "scheduled_reports_info_view";
+    public static final String SCHEDULER_REPORT_EVENT_TEMPLATE_ID_PROPERTY = "report_template_id";
+    public static final String SCHEDULER_REPORT_EVENT_TEMPLATE_NAME_PROPERTY = "report_template_name";
+    public static final String SCHEDULER_REPORT_EVENT_CUSTOMER_TTTLE_PROPERTY = "customer_title";
+    public static final String SCHEDULER_REPORT_EVENT_USER_ID_PROPERTY = "user_id";
+    public static final String SCHEDULER_REPORT_EVENT_USER_NAME_PROPERTY = "user_name";
 
     /**
      * Blob entity constants.
@@ -588,6 +594,30 @@ public class ModelConstants {
     public static final String BLOB_ENTITY_CONTENT_TYPE_PROPERTY = "content_type";
     public static final String BLOB_ENTITY_ADDITIONAL_INFO_PROPERTY = ADDITIONAL_INFO_PROPERTY;
     public static final String BLOB_ENTITY_DATA_PROPERTY = "data";
+
+    /**
+     * Report constants.
+     */
+    public static final String REPORT_TEMPLATE_TABLE_NAME = "report_template";
+    public static final String REPORT_TEMPLATE_TENANT_ID_PROPERTY = TENANT_ID_PROPERTY;
+    public static final String REPORT_TEMPLATE_CUSTOMER_ID_PROPERTY = CUSTOMER_ID_PROPERTY;
+    public static final String REPORT_TEMPLATE_NAME_PROPERTY = "name";
+    public static final String REPORT_TEMPLATE_FORMAT_PROPERTY = "format";
+    public static final String REPORT_TEMPLATE_TYPE_PROPERTY = "type";
+    public static final String REPORT_TEMPLATE_DESCRIPTION_PROPERTY = "description";
+    public static final String REPORT_TEMPLATE_CONFIGURATION_PROPERTY = CONFIGURATION_PROPERTY;
+
+    public static final String REPORT_TEMPLATE_INFO_VIEW_TABLE_NAME = "report_template_info_view";
+
+    public static final String REPORT_TABLE_NAME = "report";
+    public static final String REPORT_TENANT_ID_PROPERTY = TENANT_ID_PROPERTY;
+    public static final String REPORT_CUSTOMER_ID_PROPERTY = CUSTOMER_ID_PROPERTY;
+    public static final String REPORT_TEMPLATE_ID_PROPERTY = "template_id";
+    public static final String REPORT_FORMAT_PROPERTY = "format";
+    public static final String REPORT_NAME_PROPERTY = "name";
+    public static final String REPORT_USER_ID_PROPERTY = "user_id";
+    public static final String REPORT_INFO_VIEW_NAME = "report_info_view";
+
 
     /**
      * Role constants.
@@ -627,6 +657,7 @@ public class ModelConstants {
      */
     public static final String MOBILE_APP_TABLE_NAME = "mobile_app";
     public static final String MOBILE_APP_PKG_NAME_PROPERTY = "pkg_name";
+    public static final String MOBILE_APP_TITLE_PROPERTY = "title";
     public static final String MOBILE_APP_APP_SECRET_PROPERTY = "app_secret";
     public static final String MOBILE_APP_PLATFORM_TYPE_PROPERTY = "platform_type";
     public static final String MOBILE_APP_STATUS_PROPERTY = "status";
@@ -712,6 +743,7 @@ public class ModelConstants {
     public static final String API_USAGE_STATE_EMAIL_EXEC_COLUMN = "email_exec";
     public static final String API_USAGE_STATE_SMS_EXEC_COLUMN = "sms_exec";
     public static final String API_USAGE_STATE_ALARM_EXEC_COLUMN = "alarm_exec";
+    public static final String API_USAGE_STATE_REPORT_EXEC_COLUMN = "report_exec";
 
     /**
      * Resource constants.
@@ -965,6 +997,14 @@ public class ModelConstants {
     public static final String JOB_CONFIGURATION_PROPERTY = "configuration";
     public static final String JOB_RESULT_PROPERTY = "result";
 
+    /**
+     * AI model constants.
+     */
+    public static final String AI_MODEL_TABLE_NAME = "ai_model";
+    public static final String AI_MODEL_TENANT_ID_COLUMN_NAME = TENANT_ID_COLUMN;
+    public static final String AI_MODEL_NAME_COLUMN_NAME = NAME_PROPERTY;
+    public static final String AI_MODEL_CONFIGURATION_COLUMN_NAME = "configuration";
+
     protected static final String[] NONE_AGGREGATION_COLUMNS = new String[]{LONG_VALUE_COLUMN, DOUBLE_VALUE_COLUMN, BOOLEAN_VALUE_COLUMN, STRING_VALUE_COLUMN, JSON_VALUE_COLUMN, KEY_COLUMN, TS_COLUMN};
 
     protected static final String[] COUNT_AGGREGATION_COLUMNS = new String[]{count(LONG_VALUE_COLUMN), count(DOUBLE_VALUE_COLUMN), count(BOOLEAN_VALUE_COLUMN), count(STRING_VALUE_COLUMN), count(JSON_VALUE_COLUMN), max(TS_COLUMN)};
@@ -1013,13 +1053,13 @@ public class ModelConstants {
     }
 
     public static final String SUB_CUSTOMERS_QUERY = " e.tenant_id = :tenantId AND e.customer_id IN (WITH RECURSIVE customers_ids(id) AS " +
-            "(SELECT id id FROM customer ce WHERE ce.tenant_id = :tenantId and id = :customerId " +
-            "UNION SELECT ce1.id id FROM customer ce1, customers_ids parent WHERE ce1.tenant_id = :tenantId " +
-            "and ce1.parent_customer_id = parent.id) SELECT id FROM customers_ids) ";
+                                                     "(SELECT id id FROM customer ce WHERE ce.tenant_id = :tenantId and id = :customerId " +
+                                                     "UNION SELECT ce1.id id FROM customer ce1, customers_ids parent WHERE ce1.tenant_id = :tenantId " +
+                                                     "and ce1.parent_customer_id = parent.id) SELECT id FROM customers_ids) ";
 
     public static final String CUSTOMERS_SUB_CUSTOMERS_QUERY = " e.tenant_id = :tenantId AND e.parent_customer_id IN (WITH RECURSIVE customers_ids(id) AS " +
-            "(SELECT id id FROM customer ce WHERE ce.tenant_id = :tenantId and id = :customerId " +
-            "UNION SELECT ce1.id id FROM customer ce1, customers_ids parent WHERE ce1.tenant_id = :tenantId " +
-            "and ce1.parent_customer_id = parent.id) SELECT id FROM customers_ids) ";
+                                                               "(SELECT id id FROM customer ce WHERE ce.tenant_id = :tenantId and id = :customerId " +
+                                                               "UNION SELECT ce1.id id FROM customer ce1, customers_ids parent WHERE ce1.tenant_id = :tenantId " +
+                                                               "and ce1.parent_customer_id = parent.id) SELECT id FROM customers_ids) ";
 
 }

@@ -89,12 +89,12 @@ public class EntityActionService {
     }
 
     public <E extends HasName, I extends EntityId> void pushEntityActionToRuleEngine(I entityId, E entity, User user, TenantId tenantId, CustomerId customerId,
-                                                                                      ActionType actionType, Object... additionalInfo) {
+                                                                                     ActionType actionType, Object... additionalInfo) {
         Optional<TbMsgType> msgType = actionType.getRuleEngineMsgType();
         if (msgType.isPresent()) {
             try {
                 TbMsgMetaData metaData = new TbMsgMetaData();
-                if(user != null) {
+                if (user != null) {
                     metaData.putValue("userId", user.getId().toString());
                     metaData.putValue("userName", user.getName());
                     metaData.putValue("userEmail", user.getEmail());

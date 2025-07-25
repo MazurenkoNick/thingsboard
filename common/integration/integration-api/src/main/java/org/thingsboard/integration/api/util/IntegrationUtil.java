@@ -64,8 +64,6 @@ public class IntegrationUtil {
                 return newInstance("org.thingsboard.integration.mqtt.aws.AwsIotIntegration");
             case PUB_SUB:
                 return newInstance("org.thingsboard.gcloud.pubsub.PubSubIntegration");
-            case IBM_WATSON_IOT:
-                return newInstance("org.thingsboard.integration.mqtt.ibm.IbmWatsonIotIntegration");
             case TTI:
             case TTN:
                 return newInstance("org.thingsboard.integration.mqtt.ttn.TtnIntegration");

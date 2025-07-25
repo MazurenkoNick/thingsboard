@@ -37,7 +37,7 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>org.thingsboard</groupId>
-        <version>4.1.0PE-RC</version>
+        <version>4.2.0PE-RC</version>
         <artifactId>rule-engine</artifactId>
     </parent>
     <groupId>org.thingsboard.rule-engine</groupId>
@@ -55,6 +55,11 @@
         <dependency>
             <groupId>org.thingsboard.common</groupId>
             <artifactId>message</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.thingsboard.common</groupId>
+            <artifactId>report</artifactId>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -111,6 +116,10 @@
             <groupId>com.sun.mail</groupId>
             <artifactId>jakarta.mail</artifactId>
             <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>

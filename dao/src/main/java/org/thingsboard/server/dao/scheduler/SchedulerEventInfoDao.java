@@ -31,18 +31,20 @@
 package org.thingsboard.server.dao.scheduler;
 
 import com.google.common.util.concurrent.ListenableFuture;
+import org.thingsboard.server.common.data.id.SchedulerEventId;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
+import org.thingsboard.server.common.data.report.ScheduledReportQuery;
+import org.thingsboard.server.common.data.scheduler.ScheduledReportInfo;
+import org.thingsboard.server.common.data.scheduler.SchedulerEventFilter;
 import org.thingsboard.server.common.data.scheduler.SchedulerEventInfo;
+import org.thingsboard.server.common.data.scheduler.SchedulerEventTimeFilter;
 import org.thingsboard.server.common.data.scheduler.SchedulerEventWithCustomerInfo;
 import org.thingsboard.server.dao.Dao;
 
 import java.util.List;
 import java.util.UUID;
 
-/**
- * The Interface SchedulerEventInfoDao.
- */
 public interface SchedulerEventInfoDao extends Dao<SchedulerEventInfo> {
 
     SchedulerEventWithCustomerInfo findSchedulerEventWithCustomerInfoById(UUID tenantId, UUID schedulerEventId);
@@ -51,70 +53,22 @@ public interface SchedulerEventInfoDao extends Dao<SchedulerEventInfo> {
 
     List<SchedulerEventInfo> findSchedulerEventsByTenantIdAndEnabled(UUID tenantId, boolean enabled);
 
-    /**
-     * Find scheduler events by tenantId.
-     *
-     * @param tenantId the tenantId
-     * @return the list of scheduler event objects
-     */
-    List<SchedulerEventWithCustomerInfo> findSchedulerEventsWithCustomerInfoByTenantId(UUID tenantId);
+    PageData<SchedulerEventWithCustomerInfo> findSchedulerEventsByTenantIdAndFilter(UUID tenantId, SchedulerEventFilter filter, PageLink pageLink);
 
-    /**
-     * Find scheduler events by tenantId and type.
-     *
-     * @param tenantId the tenantId
-     * @param type     the type
-     * @return the list of scheduler event objects
-     */
-    List<SchedulerEventWithCustomerInfo> findSchedulerEventsByTenantIdAndType(UUID tenantId, String type);
+    List<SchedulerEventWithCustomerInfo> findAllSchedulerEventsByTenantIdAndEventTimeFilter(UUID tenantId, SchedulerEventTimeFilter filter, String searchText);
 
-    /**
-     * Find scheduler events by tenantId and customerId.
-     *
-     * @param tenantId   the tenantId
-     * @param customerId the customerId
-     * @return the list of scheduler event objects
-     */
-    List<SchedulerEventWithCustomerInfo> findSchedulerEventsByTenantIdAndCustomerId(UUID tenantId, UUID customerId);
+    List<SchedulerEventId> findSchedulerEventsIdsByTenantIdAndCustomerId(UUID tenantId, UUID customerId);
 
-    /**
-     * Find scheduler events by tenantId, customerId and type.
-     *
-     * @param tenantId   the tenantId
-     * @param customerId the customerId
-     * @param type       the type
-     * @return the list of scheduler event objects
-     */
-    List<SchedulerEventWithCustomerInfo> findSchedulerEventsByTenantIdAndCustomerIdAndType(UUID tenantId, UUID customerId, String type);
+    List<SchedulerEventId> findSchedulerEventsIdsByTenantId(UUID tenantId);
 
-    /**
-     * Find scheduler events by tenantId and scheduler event Ids.
-     *
-     * @param tenantId          the tenantId
-     * @param schedulerEventIds the scheduler event Ids
-     * @return the list of role objects
-     */
     ListenableFuture<List<SchedulerEventInfo>> findSchedulerEventsByTenantIdAndIdsAsync(UUID tenantId, List<UUID> schedulerEventIds);
 
-    /**
-     * Find scheduler event infos by tenantId, edgeId and page link.
-     *
-     * @param tenantId the tenantId
-     * @param edgeId   the edgeId
-     * @param pageLink the page link
-     * @return the list of scheduler event objects
-     */
     PageData<SchedulerEventInfo> findSchedulerEventInfosByTenantIdAndEdgeId(UUID tenantId, UUID edgeId, PageLink pageLink);
 
-    /**
-     * Find scheduler event infos by tenantId, edgeId, ownerId and page link.
-     *
-     * @param tenantId   the tenantId
-     * @param edgeId     the edgeId
-     * @param customerId the customerId
-     * @param pageLink   the page link
-     * @return the list of scheduler event objects
-     */
     PageData<SchedulerEventInfo> findSchedulerEventInfosByTenantIdAndEdgeIdAndCustomerId(UUID tenantId, UUID edgeId, UUID customerId, PageLink pageLink);
+
+    PageData<ScheduledReportInfo> findScheduledReportEvents(UUID tenantId, ScheduledReportQuery query);
+
+    PageData<ScheduledReportInfo> findScheduledReportEvents(UUID tenantId, UUID customerId, ScheduledReportQuery query);
 
 }

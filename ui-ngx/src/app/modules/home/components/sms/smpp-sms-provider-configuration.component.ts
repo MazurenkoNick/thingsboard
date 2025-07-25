@@ -84,9 +84,6 @@ export class SmppSmsProviderConfigurationComponent  implements ControlValueAcces
   @Input()
   disabled: boolean;
 
-  @Input({transform: booleanAttribute})
-  isRuleNode = false;
-
   smppSmsProviderConfigurationFormGroup: UntypedFormGroup;
 
   smppVersions = smppVersions;

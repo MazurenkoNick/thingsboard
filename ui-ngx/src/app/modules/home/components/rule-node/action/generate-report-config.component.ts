@@ -52,43 +52,23 @@ export class GenerateReportConfigComponent extends RuleNodeConfigurationComponen
 
   protected onConfigurationSet(configuration: RuleNodeConfiguration) {
     this.generateReportConfigForm = this.fb.group({
-      useSystemReportsServer: [configuration ? configuration.useSystemReportsServer : false, []],
-      reportsServerEndpointUrl: [configuration ? configuration.reportsServerEndpointUrl : null, []],
-      useReportConfigFromMessage: [configuration ? configuration.useReportConfigFromMessage : false, []],
-      reportConfig: [configuration ? configuration.reportConfig : null, []]
+      useConfigFromMessage: [configuration ? configuration.useConfigFromMessage : false, []],
+      config: [configuration ? configuration.config : null, []]
     });
   }
 
   protected validatorTriggers(): string[] {
-    return ['useSystemReportsServer', 'useReportConfigFromMessage'];
+    return ['useConfigFromMessage'];
   }
 
   protected updateValidators(emitEvent: boolean) {
-    const useSystemReportsServer: boolean = this.generateReportConfigForm.get('useSystemReportsServer').value;
-    const useReportConfigFromMessage: boolean = this.generateReportConfigForm.get('useReportConfigFromMessage').value;
-    if (emitEvent) {
-      const reportsServerEndpointUrl: string = this.generateReportConfigForm.get('reportsServerEndpointUrl').value;
-      if (useSystemReportsServer) {
-        this.generateReportConfigForm.get('reportsServerEndpointUrl').reset(null, {emitEvent: false});
-      } else {
-        if (!reportsServerEndpointUrl || !reportsServerEndpointUrl.length) {
-          this.generateReportConfigForm.get('reportsServerEndpointUrl').reset('http://localhost:8383',
-            {emitEvent: false});
-        }
-      }
-    }
-    if (useSystemReportsServer) {
-      this.generateReportConfigForm.get('reportsServerEndpointUrl').setValidators([]);
+    const useConfigFromMessage: boolean = this.generateReportConfigForm.get('useConfigFromMessage').value;
+    if (useConfigFromMessage) {
+      this.generateReportConfigForm.get('config').setValidators([]);
     } else {
-      this.generateReportConfigForm.get('reportsServerEndpointUrl').setValidators([Validators.required]);
+      this.generateReportConfigForm.get('config').setValidators([Validators.required]);
     }
-    if (useReportConfigFromMessage) {
-      this.generateReportConfigForm.get('reportConfig').setValidators([]);
-    } else {
-      this.generateReportConfigForm.get('reportConfig').setValidators([Validators.required]);
-    }
-    this.generateReportConfigForm.get('reportsServerEndpointUrl').updateValueAndValidity({emitEvent});
-    this.generateReportConfigForm.get('reportConfig').updateValueAndValidity({emitEvent});
+    this.generateReportConfigForm.get('config').updateValueAndValidity({emitEvent});
   }
 
 }

@@ -97,6 +97,8 @@ export enum Resource {
   INTEGRATION = 'INTEGRATION',
   SCHEDULER_EVENT = 'SCHEDULER_EVENT',
   BLOB_ENTITY = 'BLOB_ENTITY',
+  REPORT_TEMPLATE = 'REPORT_TEMPLATE',
+  REPORT = 'REPORT',
   CUSTOMER_GROUP = 'CUSTOMER_GROUP',
   DEVICE_GROUP = 'DEVICE_GROUP',
   ASSET_GROUP = 'ASSET_GROUP',
@@ -122,7 +124,8 @@ export enum Resource {
   OAUTH2_CLIENT = 'OAUTH2_CLIENT',
   DOMAIN = 'DOMAIN',
   SECRET = 'SECRET',
-  JOB = 'JOB'
+  JOB = 'JOB',
+  AI_MODEL = 'AI_MODEL'
 }
 
 const resourceTypeTranslations = new Map<Resource, string>();
@@ -151,6 +154,8 @@ export const resourceByEntityType = new Map<EntityType, Resource>(
     [EntityType.INTEGRATION, Resource.INTEGRATION],
     [EntityType.SCHEDULER_EVENT, Resource.SCHEDULER_EVENT],
     [EntityType.BLOB_ENTITY, Resource.BLOB_ENTITY],
+    [EntityType.REPORT_TEMPLATE, Resource.REPORT_TEMPLATE],
+    [EntityType.REPORT, Resource.REPORT],
     [EntityType.ROLE, Resource.ROLE],
     [EntityType.GROUP_PERMISSION, Resource.GROUP_PERMISSION],
     [EntityType.TB_RESOURCE, Resource.TB_RESOURCE],
@@ -167,6 +172,7 @@ export const resourceByEntityType = new Map<EntityType, Resource>(
     [EntityType.NOTIFICATION_TEMPLATE, Resource.NOTIFICATION],
     [EntityType.SECRET, Resource.SECRET],
     [EntityType.JOB, Resource.JOB],
+    [EntityType.AI_MODEL, Resource.AI_MODEL],
   ]
 );
 

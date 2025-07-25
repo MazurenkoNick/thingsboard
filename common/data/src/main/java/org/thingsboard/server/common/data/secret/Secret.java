@@ -39,7 +39,7 @@ import lombok.EqualsAndHashCode;
 import org.thingsboard.server.common.data.id.SecretId;
 
 import java.io.Serial;
-import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 
 @Schema
 @Data
@@ -49,26 +49,22 @@ public class Secret extends SecretInfo {
     @Serial
     private static final long serialVersionUID = 3671364019778017637L;
 
+    @EqualsAndHashCode.Exclude
+    private String value;
+
     @JsonIgnore
-    private byte[] rawValue;
+    private byte[] encryptedValue;
 
-    @Schema(description = "Secret value.", requiredMode = Schema.RequiredMode.REQUIRED, example = "Value")
-    @JsonSetter("value")
-    public void setValue(String value) {
-        if (value == null) {
-            this.rawValue = null;
-            return;
-        }
-        this.rawValue = value.getBytes(StandardCharsets.UTF_8);
+    @JsonGetter("encryptedValue")
+    public String getEncryptedValueBase64() {
+        return encryptedValue != null ? Base64.getEncoder().encodeToString(encryptedValue) : null;
     }
 
-    @JsonGetter("value")
-    public String getValue() {
-        if (this.rawValue == null) {
-            return null;
-        }
-        return new String(rawValue, StandardCharsets.UTF_8);
+    @JsonSetter("encryptedValue")
+    public void setEncryptedValueBase64(String value) {
+        this.encryptedValue = value != null ? Base64.getDecoder().decode(value) : null;
     }
+
 
     public Secret() {
         super();
@@ -80,22 +76,19 @@ public class Secret extends SecretInfo {
 
     public Secret(Secret secret) {
         super(secret);
-        this.rawValue = secret.getRawValue();
+        this.value = secret.getValue();
+        this.encryptedValue = secret.getEncryptedValue();
     }
 
     public Secret(SecretInfo secretInfo) {
         super(secretInfo);
-        this.rawValue = null;
+        this.value = null;
+        this.encryptedValue = null;
     }
 
-    public Secret(SecretInfo secretInfo, byte[] rawValue) {
+    public Secret(SecretInfo secretInfo, byte[] encryptedValue) {
         super(secretInfo);
-        this.rawValue = rawValue;
-    }
-
-    @Override
-    public String toString() {
-        return super.toString();
+        this.encryptedValue = encryptedValue;
     }
 
 }

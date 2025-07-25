@@ -29,7 +29,7 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { ChangeDetectorRef, Component, DestroyRef, Input, OnInit } from '@angular/core';
+import { Component, DestroyRef, Input, OnInit } from '@angular/core';
 import { PageComponent } from '@shared/components/page.component';
 import { FormGroupDirective, UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms';
 import { select, Store } from '@ngrx/store';
@@ -42,7 +42,6 @@ import {
 } from '@shared/models/settings.models';
 import { ActionNotificationShow } from '@core/notification/notification.actions';
 import { TranslateService } from '@ngx-translate/core';
-import { isNotEmptyStr } from '@core/utils';
 import { DialogService } from '@core/services/dialog.service';
 import { ActionAuthUpdateHasRepository } from '@core/auth/auth.actions';
 import { selectHasRepository } from '@core/auth/auth.selectors';
@@ -78,12 +77,6 @@ export class RepositorySettingsComponent extends PageComponent implements OnInit
   repositoryAuthMethods = Object.values(RepositoryAuthMethod);
   repositoryAuthMethodTranslations = repositoryAuthMethodTranslationMap;
 
-  showChangePassword = false;
-  changePassword = false;
-
-  showChangePrivateKeyPassword = false;
-  changePrivateKeyPassword = false;
-
   readonly = !this.userPermissionsService.hasGenericPermission(Resource.VERSION_CONTROL, Operation.WRITE);
   allowDelete = this.userPermissionsService.hasGenericPermission(Resource.VERSION_CONTROL, Operation.DELETE);
 
@@ -92,7 +85,6 @@ export class RepositorySettingsComponent extends PageComponent implements OnInit
               private dialogService: DialogService,
               private translate: TranslateService,
               private userPermissionsService: UserPermissionsService,
-              private cd: ChangeDetectorRef,
               public fb: UntypedFormBuilder,
               private destroyRef: DestroyRef) {
     super(store);
@@ -107,8 +99,8 @@ export class RepositorySettingsComponent extends PageComponent implements OnInit
       authMethod: [RepositoryAuthMethod.USERNAME_PASSWORD, [Validators.required]],
       username: [null, []],
       password: [null, []],
-      privateKeyFileName: [null, [Validators.required]],
-      privateKey: [null, []],
+      privateKeyFileName: [null, []],
+      privateKey: [null, [Validators.required]],
       privateKeyPassword: [null, []]
     });
     this.updateValidators(false);
@@ -116,11 +108,6 @@ export class RepositorySettingsComponent extends PageComponent implements OnInit
       takeUntilDestroyed(this.destroyRef)
     ).subscribe(() => {
       this.updateValidators(true);
-    });
-    this.repositorySettingsForm.get('privateKeyFileName').valueChanges.pipe(
-      takeUntilDestroyed(this.destroyRef)
-    ).subscribe(() => {
-      this.updateValidators(false);
     });
     this.store.pipe(
       select(selectHasRepository),
@@ -138,11 +125,6 @@ export class RepositorySettingsComponent extends PageComponent implements OnInit
       (settings) => {
         this.settings = settings;
         if (this.settings != null) {
-          if (this.settings.authMethod === RepositoryAuthMethod.USERNAME_PASSWORD) {
-            this.showChangePassword = true;
-          } else {
-            this.showChangePrivateKeyPassword = true;
-          }
           this.repositorySettingsForm.reset(this.settings);
           this.updateValidators(false);
         }
@@ -165,13 +147,6 @@ export class RepositorySettingsComponent extends PageComponent implements OnInit
     this.adminService.saveRepositorySettings(settings).subscribe(
       (savedSettings) => {
         this.settings = savedSettings;
-        if (this.settings.authMethod === RepositoryAuthMethod.USERNAME_PASSWORD) {
-          this.showChangePassword = true;
-          this.changePassword = false;
-        } else {
-          this.showChangePrivateKeyPassword = true;
-          this.changePrivateKeyPassword = false;
-        }
         this.repositorySettingsForm.reset(this.settings);
         this.updateValidators(false);
         this.store.dispatch(new ActionAuthUpdateHasRepository({ hasRepository: true }));
@@ -189,10 +164,6 @@ export class RepositorySettingsComponent extends PageComponent implements OnInit
         this.adminService.deleteRepositorySettings().subscribe(
           () => {
             this.settings = null;
-            this.showChangePassword = false;
-            this.changePassword = false;
-            this.showChangePrivateKeyPassword = false;
-            this.changePrivateKeyPassword = false;
             formDirective.resetForm();
             this.repositorySettingsForm.reset({ defaultBranch: 'main', authMethod: RepositoryAuthMethod.USERNAME_PASSWORD });
             this.updateValidators(false);
@@ -203,35 +174,14 @@ export class RepositorySettingsComponent extends PageComponent implements OnInit
     });
   }
 
-  changePasswordChanged() {
-    if (this.changePassword) {
-      this.repositorySettingsForm.get('password').patchValue('');
-      this.repositorySettingsForm.get('password').markAsDirty();
-    }
-    this.updateValidators(false);
-  }
-
-  changePrivateKeyPasswordChanged() {
-    if (this.changePrivateKeyPassword) {
-      this.repositorySettingsForm.get('privateKeyPassword').patchValue('');
-      this.repositorySettingsForm.get('privateKeyPassword').markAsDirty();
-    }
-    this.updateValidators(false);
-  }
-
   updateValidators(emitEvent?: boolean): void {
     if (this.readonly) {
       return;
     }
     const authMethod: RepositoryAuthMethod = this.repositorySettingsForm.get('authMethod').value;
-    const privateKeyFileName: string = this.repositorySettingsForm.get('privateKeyFileName').value;
     if (authMethod === RepositoryAuthMethod.USERNAME_PASSWORD) {
       this.repositorySettingsForm.get('username').enable({emitEvent});
-      if (this.changePassword || !this.showChangePassword) {
-        this.repositorySettingsForm.get('password').enable({emitEvent});
-      } else {
-        this.repositorySettingsForm.get('password').disable({emitEvent});
-      }
+      this.repositorySettingsForm.get('password').enable({emitEvent});
       this.repositorySettingsForm.get('privateKeyFileName').disable({emitEvent});
       this.repositorySettingsForm.get('privateKey').disable({emitEvent});
       this.repositorySettingsForm.get('privateKeyPassword').disable({emitEvent});
@@ -240,16 +190,7 @@ export class RepositorySettingsComponent extends PageComponent implements OnInit
       this.repositorySettingsForm.get('password').disable({emitEvent});
       this.repositorySettingsForm.get('privateKeyFileName').enable({emitEvent});
       this.repositorySettingsForm.get('privateKey').enable({emitEvent});
-      if (this.changePrivateKeyPassword || !this.showChangePrivateKeyPassword) {
-        this.repositorySettingsForm.get('privateKeyPassword').enable({emitEvent});
-      } else {
-        this.repositorySettingsForm.get('privateKeyPassword').disable({emitEvent});
-      }
-      if (isNotEmptyStr(privateKeyFileName)) {
-        this.repositorySettingsForm.get('privateKey').clearValidators();
-      } else {
-        this.repositorySettingsForm.get('privateKey').setValidators([Validators.required]);
-      }
+      this.repositorySettingsForm.get('privateKeyPassword').enable({emitEvent});
     }
     this.repositorySettingsForm.get('username').updateValueAndValidity({emitEvent: false});
     this.repositorySettingsForm.get('password').updateValueAndValidity({emitEvent: false});

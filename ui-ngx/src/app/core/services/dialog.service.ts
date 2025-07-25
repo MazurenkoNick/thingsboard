@@ -130,7 +130,7 @@ export class DialogService {
     return dialogRef.afterClosed();
   }
 
-  colorPicker(color: string, colorClearButton = false, useThemePalette = false): Observable<ColorPickerDialogResult> {
+  colorPicker(color: string, colorClearButton = false, useThemePalette = false, disableAlpha = false): Observable<ColorPickerDialogResult> {
     return this.dialog.open<ColorPickerDialogComponent, ColorPickerDialogData, ColorPickerDialogResult>(ColorPickerDialogComponent,
       {
         disableClose: true,
@@ -138,7 +138,8 @@ export class DialogService {
         data: {
           color,
           colorClearButton,
-          useThemePalette
+          useThemePalette,
+          disableAlpha
         },
         autoFocus: false
     }).afterClosed();

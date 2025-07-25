@@ -48,7 +48,7 @@ import { getCurrentAuthState, getCurrentAuthUser } from '@core/auth/auth.selecto
 import { ActionAuthUpdateLastPublicDashboardId } from '../auth/auth.actions';
 import { DOCUMENT } from '@angular/common';
 import { FaviconService } from '@core/services/favicon.service';
-import { ReportService } from '@core/http/report.service';
+import { DashboardReportService } from '@core/http/dashboard-report.service';
 
 export const SETTINGS_KEY = 'SETTINGS';
 
@@ -64,7 +64,7 @@ export class SettingsEffects {
     private translate: TranslateService,
     @Inject(DOCUMENT) private document: Document,
     private faviconService: FaviconService,
-    private reportService: ReportService,
+    private reportService: DashboardReportService,
   ) {
   }
 

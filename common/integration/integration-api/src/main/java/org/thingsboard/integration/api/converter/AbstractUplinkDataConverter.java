@@ -71,9 +71,6 @@ import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 
-/**
- * Created by ashvayka on 18.12.17.
- */
 @Slf4j
 public abstract class AbstractUplinkDataConverter extends AbstractDataConverter implements TBUplinkDataConverter {
 

@@ -39,24 +39,32 @@ import org.springframework.stereotype.Component;
 import org.thingsboard.server.common.data.id.OAuth2ClientId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.oauth2.OAuth2Client;
+import org.thingsboard.server.dao.secret.SecretConfigurationService;
 
 import java.util.UUID;
 
 @Component
 public class HybridClientRegistrationRepository implements ClientRegistrationRepository {
+
     private static final String defaultRedirectUriTemplate = "{baseUrl}/login/oauth2/code/{registrationId}";
 
     @Autowired
     private OAuth2ClientService oAuth2ClientService;
 
+    @Autowired(required = false)
+    private SecretConfigurationService secretConfigurationService;
+
     @Override
     public ClientRegistration findByRegistrationId(String registrationId) {
         OAuth2Client oAuth2Client = oAuth2ClientService.findOAuth2ClientById(TenantId.SYS_TENANT_ID, new OAuth2ClientId(UUID.fromString(registrationId)));
-        return oAuth2Client == null ?
-                null : toSpringClientRegistration(oAuth2Client);
+        if (oAuth2Client == null) {
+            return null;
+        }
+        oAuth2Client = secretConfigurationService.replaceSecretUsages(oAuth2Client.getTenantId(), oAuth2Client, OAuth2Client.class);
+        return toSpringClientRegistration(oAuth2Client);
     }
 
-    private ClientRegistration toSpringClientRegistration(OAuth2Client oAuth2Client){
+    private ClientRegistration toSpringClientRegistration(OAuth2Client oAuth2Client) {
         String registrationId = oAuth2Client.getUuidId().toString();
 
         // NONE is used if we need pkce-based code challenge
@@ -82,4 +90,5 @@ public class HybridClientRegistrationRepository implements ClientRegistrationRep
                 .redirectUri(defaultRedirectUriTemplate)
                 .build();
     }
+
 }

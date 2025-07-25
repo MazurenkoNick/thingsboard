@@ -44,12 +44,8 @@ import org.thingsboard.server.dao.edge.EdgeService;
 import org.thingsboard.server.dao.scheduler.SchedulerEventService;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
-/**
- * Created by igor on 3/13/18.
- */
 @DaoSqlTest
 public class SchedulerEventServiceTest extends AbstractServiceTest {
 
@@ -58,7 +54,7 @@ public class SchedulerEventServiceTest extends AbstractServiceTest {
     @Autowired
     SchedulerEventService schedulerEventService;
 
-    private IdComparator<SchedulerEvent> idComparator = new IdComparator<>();
+    private final IdComparator<SchedulerEvent> idComparator = new IdComparator<>();
 
     @Test
     public void testFindEdgeSchedulerEventsByTenantIdAndName() {
@@ -104,8 +100,8 @@ public class SchedulerEventServiceTest extends AbstractServiceTest {
             }
         } while (pageData.hasNext());
 
-        Collections.sort(schedulerEventsName1, idComparator);
-        Collections.sort(loadedSchedulerEventsName1, idComparator);
+        schedulerEventsName1.sort(idComparator);
+        loadedSchedulerEventsName1.sort(idComparator);
 
         Assert.assertEquals(schedulerEventsName1, loadedSchedulerEventsName1);
 
@@ -119,8 +115,8 @@ public class SchedulerEventServiceTest extends AbstractServiceTest {
             }
         } while (pageData.hasNext());
 
-        Collections.sort(schedulerEventsName2, idComparator);
-        Collections.sort(loadedSchedulerEventsName2, idComparator);
+        schedulerEventsName2.sort(idComparator);
+        loadedSchedulerEventsName2.sort(idComparator);
 
         Assert.assertEquals(schedulerEventsName2, loadedSchedulerEventsName2);
 
@@ -154,4 +150,5 @@ public class SchedulerEventServiceTest extends AbstractServiceTest {
         schedulerEvent.setConfiguration(JacksonUtil.newObjectNode());
         return schedulerEvent;
     }
+
 }

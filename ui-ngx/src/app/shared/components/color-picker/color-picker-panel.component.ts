@@ -64,6 +64,10 @@ export class ColorPickerPanelComponent extends PageComponent implements OnInit, 
 
   @Input()
   @coerceBoolean()
+  disableAlpha = false;
+
+  @Input()
+  @coerceBoolean()
   colorCancelButton = false;
 
   @Input()

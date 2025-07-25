@@ -443,6 +443,7 @@ export enum MessageType {
   FIRMWARE_UPDATED = 'FIRMWARE_UPDATED',
   SOFTWARE_UPDATED = 'SOFTWARE_UPDATED',
   generateReport = 'generateReport',
+  generateDashboardReport = 'generateDashboardReport',
   OWNER_CHANGED = 'OWNER_CHANGED'
 }
 
@@ -489,6 +490,7 @@ export const messageTypeNames = new Map<MessageType, string>(
     [MessageType.FIRMWARE_UPDATED, 'Firmware Update'],
     [MessageType.SOFTWARE_UPDATED, 'Software Update'],
     [MessageType.generateReport, 'Generate Report'],
+    [MessageType.generateDashboardReport, 'Generate Dashboard Report'],
     [MessageType.OWNER_CHANGED, 'Owner Changed'],
   ]
 );
@@ -528,8 +530,11 @@ const ruleNodeClazzHelpLinkMap = {
   'org.thingsboard.rule.engine.telemetry.TbCalculatedFieldsNode': 'ruleNodeCalculatedFields',
   'org.thingsboard.rule.engine.action.TbClearAlarmNode': 'ruleNodeClearAlarm',
   'org.thingsboard.rule.engine.action.TbCreateAlarmNode': 'ruleNodeCreateAlarm',
+  'org.thingsboard.rule.engine.action.TbCopyAttributesToEntityViewNode': 'ruleNodeCopyToView',
   'org.thingsboard.rule.engine.action.TbCreateRelationNode': 'ruleNodeCreateRelation',
   'org.thingsboard.rule.engine.action.TbDeleteRelationNode': 'ruleNodeDeleteRelation',
+  'org.thingsboard.rule.engine.action.TbDeviceStateNode': 'ruleNodeDeviceState',
+  'org.thingsboard.rule.engine.action.TbMsgCountNode': 'ruleNodeMessageCount',
   'org.thingsboard.rule.engine.delay.TbMsgDelayNode': 'ruleNodeMsgDelay',
   'org.thingsboard.rule.engine.debug.TbMsgGeneratorNode': 'ruleNodeMsgGenerator',
   'org.thingsboard.rule.engine.geo.TbGpsGeofencingActionNode': 'ruleNodeGpsGeofencingEvents',
@@ -537,9 +542,11 @@ const ruleNodeClazzHelpLinkMap = {
   'org.thingsboard.rule.engine.rpc.TbSendRPCReplyNode': 'ruleNodeRpcCallReply',
   'org.thingsboard.rule.engine.rpc.TbSendRPCRequestNode': 'ruleNodeRpcCallRequest',
   'org.thingsboard.rule.engine.telemetry.TbMsgAttributesNode': 'ruleNodeSaveAttributes',
+  'org.thingsboard.rule.engine.telemetry.TbMsgDeleteAttributesNode': 'ruleNodeDeleteAttributes',
   'org.thingsboard.rule.engine.telemetry.TbMsgTimeseriesNode': 'ruleNodeSaveTimeseries',
   'org.thingsboard.rule.engine.action.TbSaveToCustomCassandraTableNode': 'ruleNodeSaveToCustomTable',
   'org.thingsboard.rule.engine.aws.lambda.TbAwsLambdaNode': 'ruleNodeAwsLambda',
+  'org.thingsboard.rule.engine.ai.TbAiNode': 'ruleNodeAiRequest',
   'org.thingsboard.rule.engine.aws.sns.TbSnsNode': 'ruleNodeAwsSns',
   'org.thingsboard.rule.engine.aws.sqs.TbSqsNode': 'ruleNodeAwsSqs',
   'org.thingsboard.rule.engine.kafka.TbKafkaNode': 'ruleNodeKafka',
@@ -551,6 +558,7 @@ const ruleNodeClazzHelpLinkMap = {
   'org.thingsboard.rule.engine.sms.TbSendSmsNode': 'ruleNodeSendSms',
   'org.thingsboard.rule.engine.edge.TbMsgPushToCloudNode': 'ruleNodePushToCloud',
   'org.thingsboard.rule.engine.edge.TbMsgPushToEdgeNode': 'ruleNodePushToEdge',
+  'org.thingsboard.rule.engine.profile.TbDeviceProfileNode': 'ruleNodeDeviceProfile',
   'org.thingsboard.rule.engine.integration.TbIntegrationDownlinkNode': 'ruleNodeIntegrationDownlink',
   'org.thingsboard.rule.engine.action.TbAddToGroupNode': 'ruleNodeAddToGroup',
   'org.thingsboard.rule.engine.action.TbRemoveFromGroupNode': 'ruleNodeRemoveFromGroup',

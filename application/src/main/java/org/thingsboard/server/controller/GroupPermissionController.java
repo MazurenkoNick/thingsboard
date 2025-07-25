@@ -34,12 +34,13 @@ import io.swagger.v3.oas.annotations.Parameter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.thingsboard.server.common.data.EntityType;
@@ -91,8 +92,7 @@ public class GroupPermissionController extends BaseController {
             notes = "Fetch the Group Permission object based on the provided Group Permission Id. " +
                     GROUP_PERMISSION_DESCRIPTION + RBAC_READ_CHECK)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
-    @RequestMapping(value = "/groupPermission/{groupPermissionId}", method = RequestMethod.GET)
-    @ResponseBody
+    @GetMapping(value = "/groupPermission/{groupPermissionId}")
     public GroupPermission getGroupPermissionById(
             @Parameter(description = GROUP_PERMISSION_ID_PARAM_DESCRIPTION, required = true)
             @PathVariable(GROUP_PERMISSION_ID) String strGroupPermissionId) throws ThingsboardException {
@@ -103,10 +103,9 @@ public class GroupPermissionController extends BaseController {
     @ApiOperation(value = "Get Group Permission Info (getGroupPermissionInfoById)",
             notes = "Fetch the Group Permission Info object based on the provided Group Permission Id and the flag that controls what additional information to load: User or Entity Group. " +
                     GROUP_PERMISSION_INFO_DESCRIPTION + RBAC_READ_CHECK
-            )
+    )
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
-    @RequestMapping(value = "/groupPermission/info/{groupPermissionId}", method = RequestMethod.GET)
-    @ResponseBody
+    @GetMapping(value = "/groupPermission/info/{groupPermissionId}")
     public GroupPermissionInfo getGroupPermissionInfoById(
             @Parameter(description = GROUP_PERMISSION_ID_PARAM_DESCRIPTION, required = true)
             @PathVariable(GROUP_PERMISSION_ID) String strGroupPermissionId,
@@ -123,8 +122,7 @@ public class GroupPermissionController extends BaseController {
                     "Referencing non-existing Group Permission Id will cause 'Not Found' error." +
                     "\n\n" + GROUP_PERMISSION_DESCRIPTION + ControllerConstants.RBAC_WRITE_CHECK)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
-    @RequestMapping(value = "/groupPermission", method = RequestMethod.POST)
-    @ResponseBody
+    @PostMapping(value = "/groupPermission")
     public GroupPermission saveGroupPermission(
             @Parameter(description = "A JSON value representing the group permission.", required = true)
             @RequestBody GroupPermission groupPermission) throws ThingsboardException {
@@ -180,7 +178,7 @@ public class GroupPermissionController extends BaseController {
     @ApiOperation(value = "Delete group permission (deleteGroupPermission)",
             notes = "Deletes the group permission. Referencing non-existing group permission Id will cause an error." + "\n\n" + RBAC_DELETE_CHECK)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
-    @RequestMapping(value = "/groupPermission/{groupPermissionId}", method = RequestMethod.DELETE)
+    @DeleteMapping(value = "/groupPermission/{groupPermissionId}")
     @ResponseStatus(value = HttpStatus.OK)
     public void deleteGroupPermission(
             @Parameter(description = GROUP_PERMISSION_ID_PARAM_DESCRIPTION, required = true)
@@ -217,8 +215,7 @@ public class GroupPermissionController extends BaseController {
             notes = "Returns a list of group permission objects that belongs to specified User Group Id. " +
                     GROUP_PERMISSION_INFO_DESCRIPTION + "\n\n" + RBAC_READ_CHECK)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
-    @RequestMapping(value = "/userGroup/{userGroupId}/groupPermissions", method = RequestMethod.GET)
-    @ResponseBody
+    @GetMapping(value = "/userGroup/{userGroupId}/groupPermissions")
     public List<GroupPermissionInfo> getUserGroupPermissions(
             @Parameter(description = ENTITY_GROUP_ID_PARAM_DESCRIPTION, required = true)
             @PathVariable("userGroupId") String strUserGroupId) throws ThingsboardException, ExecutionException, InterruptedException {
@@ -234,8 +231,7 @@ public class GroupPermissionController extends BaseController {
             notes = "Enrich a list of group permission objects with the information about Role, User and Entity Groups. " +
                     GROUP_PERMISSION_INFO_DESCRIPTION + "\n\n" + RBAC_READ_CHECK)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
-    @RequestMapping(value = "/userGroup/groupPermissions/info", method = RequestMethod.POST)
-    @ResponseBody
+    @PostMapping(value = "/userGroup/groupPermissions/info")
     public List<GroupPermissionInfo> loadUserGroupPermissionInfos(
             @Parameter(description = "JSON array of group permission objects", required = true)
             @RequestBody List<GroupPermission> permissions) throws ThingsboardException, ExecutionException, InterruptedException {
@@ -249,8 +245,7 @@ public class GroupPermissionController extends BaseController {
             notes = "Returns a list of group permission objects that is assigned for the specified Entity Group Id. " +
                     GROUP_PERMISSION_INFO_DESCRIPTION + "\n\n" + RBAC_READ_CHECK)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
-    @RequestMapping(value = "/entityGroup/{entityGroupId}/groupPermissions", method = RequestMethod.GET)
-    @ResponseBody
+    @GetMapping(value = "/entityGroup/{entityGroupId}/groupPermissions")
     public List<GroupPermissionInfo> getEntityGroupPermissions(
             @Parameter(description = ENTITY_GROUP_ID_PARAM_DESCRIPTION, required = true)
             @PathVariable("entityGroupId") String strEntityGroupId) throws ThingsboardException, ExecutionException, InterruptedException {

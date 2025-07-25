@@ -49,7 +49,7 @@ import { isDefined, isObject } from '@core/utils';
 import { MenuService } from '@core/services/menu.service';
 import { UserPermissionsService } from '@core/http/user-permissions.service';
 import { MobileService } from '@core/services/mobile.service';
-import { ReportService } from '@core/http/report.service';
+import { DashboardReportService } from '@core/http/dashboard-report.service';
 
 @Injectable({
   providedIn: 'root'
@@ -67,7 +67,7 @@ export class AuthGuard  {
               private userPermissionsService: UserPermissionsService,
               private menuService: MenuService,
               private mobileService: MobileService,
-              private reportService: ReportService,
+              private reportService: DashboardReportService,
               private zone: NgZone) {}
 
   getAuthState(): Observable<AuthState> {

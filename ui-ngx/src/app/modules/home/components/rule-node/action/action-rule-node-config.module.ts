@@ -59,7 +59,7 @@ import { DeviceStateConfigComponent } from './device-state-config.component';
 import { SendRestApiCallReplyConfigComponent } from './send-rest-api-call-reply-config.component';
 import { AddToGroupConfigComponent } from '@home/components/rule-node/action/add-to-group-config.component';
 import { ChangeOwnerConfigComponent } from '@home/components/rule-node/action/change-owner-config.component';
-import { GenerateReportConfigComponent } from '@home/components/rule-node/action/generate-report-config.component';
+import { GenerateDashboardReportConfigComponent } from '@home/components/rule-node/action/generate-dashboard-report-config.component';
 import {
   IntegrationDownlinkConfigComponent
 } from '@home/components/rule-node/action/integration-downlink-config.component';
@@ -70,6 +70,7 @@ import {
 import {
   AdvancedProcessingSettingRowComponent
 } from '@home/components/rule-node/action/advanced-processing-setting-row.component';
+import { GenerateReportConfigComponent } from '@home/components/rule-node/action/generate-report-config.component';
 
 @NgModule({
   declarations: [
@@ -100,6 +101,7 @@ import {
     AdvancedProcessingSettingRowComponent,
     AddToGroupConfigComponent,
     ChangeOwnerConfigComponent,
+    GenerateDashboardReportConfigComponent,
     GenerateReportConfigComponent,
     IntegrationDownlinkConfigComponent,
     RemoveFromGroupConfigComponent,
@@ -136,6 +138,7 @@ import {
     DeviceStateConfigComponent,
     AddToGroupConfigComponent,
     ChangeOwnerConfigComponent,
+    GenerateDashboardReportConfigComponent,
     GenerateReportConfigComponent,
     IntegrationDownlinkConfigComponent,
     RemoveFromGroupConfigComponent,

@@ -68,6 +68,7 @@ import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.permission.GroupPermission;
 import org.thingsboard.server.common.data.permission.MergedUserPermissions;
+import org.thingsboard.server.common.data.query.AliasEntityId;
 import org.thingsboard.server.common.data.query.EntityData;
 import org.thingsboard.server.common.data.query.EntityDataPageLink;
 import org.thingsboard.server.common.data.query.EntityDataQuery;
@@ -861,7 +862,7 @@ public class BaseEntityGroupService extends AbstractCachedEntityService<EntityGr
         List<ColumnConfiguration> columns = getEntityGroupColumns(entityGroup);
 
         SingleEntityFilter singleEntityFilter = new SingleEntityFilter();
-        singleEntityFilter.setSingleEntity(entityId);
+        singleEntityFilter.setSingleEntity(AliasEntityId.fromEntityId(entityId));
 
         List<ColumnConfiguration> entityFieldsColumns = new ArrayList<>();
         List<ColumnConfiguration> latestValuesColumns = new ArrayList<>();

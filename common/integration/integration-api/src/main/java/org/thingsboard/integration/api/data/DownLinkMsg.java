@@ -38,9 +38,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Created by ashvayka on 22.02.18.
- */
 @Data
 public class DownLinkMsg implements Serializable {
 

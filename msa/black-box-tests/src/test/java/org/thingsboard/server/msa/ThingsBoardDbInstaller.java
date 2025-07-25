@@ -37,6 +37,7 @@ import org.testcontainers.utility.Base58;
 import org.thingsboard.server.common.data.StringUtils;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -45,6 +46,8 @@ import java.util.Map;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+
+import static org.thingsboard.server.msa.TestUtils.addComposeVersion;
 
 @Slf4j
 public class ThingsBoardDbInstaller {
@@ -72,10 +75,12 @@ public class ThingsBoardDbInstaller {
     private final static String TB_TCP_INTEGRATION_LOG_VOLUME = "tb-tcp-integration-log-test-volume";
     private final static String TB_UDP_INTEGRATION_LOG_VOLUME = "tb-udp-integration-log-test-volume";
     private final static String TB_EDQS_LOG_VOLUME = "tb-edqs-log-test-volume";
+    private final static String TB_REPORT_LOG_VOLUME = "tb-report-log-test-volume";
     private final static String JAVA_OPTS = "-Xmx512m";
 
     private final DockerComposeExecutor dockerCompose;
 
+    private final String targetDir;
     private final String postgresDataVolume;
     private final String cassandraDataVolume;
 
@@ -96,29 +101,33 @@ public class ThingsBoardDbInstaller {
     private final String tbTcpIntegrationLogVolume;
     private final String tbUdpIntegrationLogVolume;
     private final String tbEdqsLogVolume;
+    private final String tbReportLogVolume;
 
     private final Map<String, String> env;
 
-    public ThingsBoardDbInstaller() {
+    public ThingsBoardDbInstaller(String targetDir) throws IOException {
+        this.targetDir = targetDir;
         log.info("System property of blackBoxTests.redisCluster is {}", IS_VALKEY_CLUSTER);
-        log.info("System property of blackBoxTests.redisCluster is {}", IS_VALKEY_SENTINEL);
+        log.info("System property of blackBoxTests.redisSentinel is {}", IS_VALKEY_SENTINEL);
         log.info("System property of blackBoxTests.hybridMode is {}", IS_HYBRID_MODE);
         List<File> composeFiles = new ArrayList<>(Arrays.asList(
-                new File("./../../docker/advanced/docker-compose.yml"),
-                new File("./../../docker/advanced/docker-compose.volumes.yml"),
+                new File(targetDir + "advanced/docker-compose.yml"),
+                new File(targetDir + "advanced/docker-compose.volumes.yml"),
                 IS_HYBRID_MODE
-                        ? new File("./../../docker/advanced/docker-compose.hybrid.yml")
-                        : new File("./../../docker/advanced/docker-compose.postgres.yml"),
-                new File("./../../docker/advanced/docker-compose.postgres.volumes.yml"),
-                resolveValkeyComposeFile(),
-                resolveValkeyComposeVolumesFile()
+                        ? new File(targetDir + "advanced/docker-compose.hybrid.yml")
+                        : new File(targetDir + "advanced/docker-compose.postgres.yml"),
+                new File(targetDir + "advanced/docker-compose.postgres.volumes.yml"),
+                resolveValkeyComposeFile(targetDir),
+                resolveValkeyComposeVolumesFile(targetDir)
         ));
         if (IS_HYBRID_MODE) {
-            composeFiles.add(new File("./../../docker/advanced/docker-compose.cassandra.volumes.yml"));
-            composeFiles.add(new File("src/test/resources/docker-compose.hybrid-test-extras.yml"));
+            composeFiles.add(new File(targetDir + "advanced/docker-compose.cassandra.volumes.yml"));
+            composeFiles.add(new File(targetDir + "docker-compose.hybrid-test-extras.yml"));
         } else {
-            composeFiles.add(new File("src/test/resources/docker-compose.postgres-test-extras.yml"));
+            composeFiles.add(new File(targetDir + "docker-compose.postgres-test-extras.yml"));
         }
+
+        addComposeVersion(composeFiles, "3.0");
 
         String identifier = Base58.randomString(6).toLowerCase();
         String project = identifier + Base58.randomString(6).toLowerCase();
@@ -142,10 +151,11 @@ public class ThingsBoardDbInstaller {
         tbTcpIntegrationLogVolume = project + "_" + TB_TCP_INTEGRATION_LOG_VOLUME;
         tbUdpIntegrationLogVolume = project + "_" + TB_UDP_INTEGRATION_LOG_VOLUME;
         tbEdqsLogVolume = project + "_" + TB_EDQS_LOG_VOLUME;
+        tbReportLogVolume = project + "_" + TB_REPORT_LOG_VOLUME;
 
         dockerCompose = new DockerComposeExecutor(composeFiles, project);
 
-        Dotenv dotenv = Dotenv.configure().directory("./../../docker").filename(".env").load();
+        Dotenv dotenv = Dotenv.configure().directory(targetDir).filename(".env").load();
 
         env = new HashMap<>();
         for (DotenvEntry entry : dotenv.entries()) {
@@ -170,6 +180,7 @@ public class ThingsBoardDbInstaller {
         env.put("TB_TCP_INTEGRATION_VOLUME", tbTcpIntegrationLogVolume);
         env.put("TB_UDP_INTEGRATION_VOLUME", tbUdpIntegrationLogVolume);
         env.put("TB_EDQS_LOG_VOLUME", tbEdqsLogVolume);
+        env.put("TB_REPORT_LOG_VOLUME", tbReportLogVolume);
 
         if (IS_VALKEY_CLUSTER) {
             for (int i = 0; i < 6; i++) {
@@ -189,24 +200,24 @@ public class ThingsBoardDbInstaller {
         dockerCompose.withEnv(env);
     }
 
-    private static File resolveValkeyComposeVolumesFile() {
+    private static File resolveValkeyComposeVolumesFile(String targetDir) {
         if (IS_VALKEY_CLUSTER) {
-            return new File("./../../docker/advanced/docker-compose.valkey-cluster.volumes.yml");
+            return new File(targetDir + "advanced/docker-compose.valkey-cluster.volumes.yml");
         }
         if (IS_VALKEY_SENTINEL) {
-            return new File("./../../docker/advanced/docker-compose.valkey-sentinel.volumes.yml");
+            return new File(targetDir + "advanced/docker-compose.valkey-sentinel.volumes.yml");
         }
-        return new File("./../../docker/advanced/docker-compose.valkey.volumes.yml");
+        return new File(targetDir + "advanced/docker-compose.valkey.volumes.yml");
     }
 
-    private static File resolveValkeyComposeFile() {
+    private static File resolveValkeyComposeFile(String targetDir) {
         if (IS_VALKEY_CLUSTER) {
-            return new File("./../../docker/advanced/docker-compose.valkey-cluster.yml");
+            return new File(targetDir + "advanced/docker-compose.valkey-cluster.yml");
         }
         if (IS_VALKEY_SENTINEL) {
-            return new File("./../../docker/advanced/docker-compose.valkey-sentinel.yml");
+            return new File(targetDir + "advanced/docker-compose.valkey-sentinel.yml");
         }
-        return new File("./../../docker/advanced/docker-compose.valkey.yml");
+        return new File(targetDir + "advanced/docker-compose.valkey.yml");
     }
 
     public Map<String, String> getEnv() {
@@ -271,6 +282,9 @@ public class ThingsBoardDbInstaller {
             dockerCompose.withCommand("volume create " + tbEdqsLogVolume);
             dockerCompose.invokeDocker();
 
+            dockerCompose.withCommand("volume create " + tbReportLogVolume);
+            dockerCompose.invokeDocker();
+
             StringBuilder additionalServices = new StringBuilder();
             if (IS_HYBRID_MODE) {
                 additionalServices.append(" cassandra");
@@ -314,7 +328,7 @@ public class ThingsBoardDbInstaller {
         }
     }
 
-    public void savaLogsAndRemoveVolumes() {
+    public void saveLogsAndRemoveVolumes() {
         copyLogs(tbLogVolume, "./target/tb-logs/");
         copyLogs(tbIntegrationExecutorLogVolume, "./target/tb-integration-executor-logs/");
         copyLogs(tbCoapTransportLogVolume, "./target/tb-coap-transport-logs/");
@@ -329,6 +343,7 @@ public class ThingsBoardDbInstaller {
         copyLogs(tbTcpIntegrationLogVolume, "./target/tb-tcp_integration-logs/");
         copyLogs(tbUdpIntegrationLogVolume, "./target/tb-udp_integration-logs/");
         copyLogs(tbEdqsLogVolume, "./target/tb-edqs-logs/");
+        copyLogs(tbReportLogVolume, "./target/tb-report-logs/");
 
         StringJoiner rmVolumesCommand = new StringJoiner(" ")
                 .add("volume rm -f")
@@ -347,7 +362,8 @@ public class ThingsBoardDbInstaller {
                 .add(tbCoapIntegrationLogVolume)
                 .add(tbTcpIntegrationLogVolume)
                 .add(tbUdpIntegrationLogVolume)
-                .add(tbEdqsLogVolume);
+                .add(tbEdqsLogVolume)
+                .add(tbReportLogVolume);
 
         if (IS_HYBRID_MODE) {
             rmVolumesCommand.add(cassandraDataVolume);

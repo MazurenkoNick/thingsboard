@@ -36,8 +36,10 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 import org.thingsboard.server.common.data.BaseDataWithAdditionalInfo;
 import org.thingsboard.server.common.data.EntityType;
+import org.thingsboard.server.common.data.ExportableEntity;
 import org.thingsboard.server.common.data.HasCustomerId;
 import org.thingsboard.server.common.data.HasName;
 import org.thingsboard.server.common.data.HasOwnerId;
@@ -50,12 +52,16 @@ import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.validation.Length;
 import org.thingsboard.server.common.data.validation.NoXss;
 
+import java.io.Serial;
+
 @Schema
 @Data
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public class SchedulerEventInfo extends BaseDataWithAdditionalInfo<SchedulerEventId> implements HasName, TenantEntity, HasCustomerId, HasOwnerId, HasVersion {
+@Slf4j
+public class SchedulerEventInfo extends BaseDataWithAdditionalInfo<SchedulerEventId> implements HasName, TenantEntity, HasCustomerId, HasOwnerId, HasVersion, ExportableEntity<SchedulerEventId> {
 
+    @Serial
     private static final long serialVersionUID = 2807343040519549363L;
 
     @Schema(description = "JSON object with Tenant Id", accessMode = Schema.AccessMode.READ_ONLY)
@@ -73,13 +79,13 @@ public class SchedulerEventInfo extends BaseDataWithAdditionalInfo<SchedulerEven
     @Length(fieldName = "type")
     private String type;
     @Schema(description = "a JSON value with schedule time configuration", implementation = com.fasterxml.jackson.databind.JsonNode.class)
-    private transient JsonNode schedule;
-    @JsonIgnore
-    private byte[] scheduleBytes;
+    private JsonNode schedule;
 
     @Schema(description = "Enable/disable scheduler", example = "true")
     @Length(fieldName = "enabled")
     private boolean enabled = true;
+
+    private SchedulerEventId externalId;
 
     private Long version;
 
@@ -101,12 +107,13 @@ public class SchedulerEventInfo extends BaseDataWithAdditionalInfo<SchedulerEven
         this.enabled = schedulerEventInfo.isEnabled();
         this.setSchedule(schedulerEventInfo.getSchedule());
         this.version = schedulerEventInfo.getVersion();
+        this.externalId = schedulerEventInfo.getExternalId();
     }
 
     @Schema(description = "JSON object with the scheduler event Id. " +
             "Specify this field to update the scheduler event. " +
             "Referencing non-existing scheduler event Id will cause error. " +
-            "Omit this field to create new scheduler event" )
+            "Omit this field to create new scheduler event")
     @Override
     public SchedulerEventId getId() {
         return super.getId();
@@ -144,12 +151,20 @@ public class SchedulerEventInfo extends BaseDataWithAdditionalInfo<SchedulerEven
         }
     }
 
-    public JsonNode getSchedule() {
-        return BaseDataWithAdditionalInfo.getJson(() -> schedule, () -> scheduleBytes);
-    }
-
-    public void setSchedule(JsonNode data) {
-        setJson(data, json -> this.schedule = json, bytes -> this.scheduleBytes = bytes);
+    @JsonIgnore
+    public SchedulerEventDescriptor toDescriptor() {
+        long startTime = schedule.get("startTime").asLong();
+        String timezone = schedule.get("timezone").asText();
+        JsonNode repeatNode = schedule.get("repeat");
+        SchedulerRepeat repeat = null;
+        if (repeatNode != null) {
+            try {
+                repeat = mapper.treeToValue(repeatNode, SchedulerRepeat.class);
+            } catch (Exception e) {
+                log.error("Failed to read scheduler config for {}", this, e);
+            }
+        }
+        return new SchedulerEventDescriptor(startTime, timezone, repeat);
     }
 
     @Override

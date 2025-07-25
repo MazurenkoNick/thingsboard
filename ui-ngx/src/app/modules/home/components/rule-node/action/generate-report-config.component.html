@@ -30,23 +30,12 @@
     OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 
 -->
-<section [formGroup]="generateReportConfigForm" class="flex flex-col">
-  <mat-checkbox class="flex-1" formControlName="useSystemReportsServer">
-    {{ 'rule-node-config.use-system-reports-server' | translate }}
-  </mat-checkbox>
-  <mat-form-field class="mat-block" *ngIf="!generateReportConfigForm.get('useSystemReportsServer').value">
-    <mat-label translate>rule-node-config.reports-server-endpoint-url</mat-label>
-    <input required matInput formControlName="reportsServerEndpointUrl">
-    <mat-error *ngIf="generateReportConfigForm.get('reportsServerEndpointUrl').hasError('required')">
-      {{ 'rule-node-config.reports-server-endpoint-url-is-required' | translate }}
-    </mat-error>
-  </mat-form-field>
-  <mat-checkbox class="flex-1" formControlName="useReportConfigFromMessage">
+<section [formGroup]="generateReportConfigForm" class="flex flex-col gap-4">
+  <mat-slide-toggle formControlName="useConfigFromMessage">
     {{ 'rule-node-config.use-report-config-from-message' | translate }}
-  </mat-checkbox>
+  </mat-slide-toggle>
   <tb-report-config
-    *ngIf="!generateReportConfigForm.get('useReportConfigFromMessage').value"
-    formControlName="reportConfig"
-    [reportsServerEndpointUrl]="generateReportConfigForm.get('reportsServerEndpointUrl').value">
+    *ngIf="!generateReportConfigForm.get('useConfigFromMessage').value"
+    formControlName="config">
   </tb-report-config>
 </section>

@@ -47,6 +47,8 @@ import { getCurrentAuthState } from '@core/auth/auth.selectors';
 import { AuthService } from '@core/auth/auth.service';
 import { UnitSystem, UnitSystems } from '@shared/models/unit.models';
 import { UnitService } from '@core/services/unit.service';
+import { Operation, Resource } from '@shared/models/security.models';
+import { UserPermissionsService } from '@core/http/user-permissions.service';
 
 @Component({
   selector: 'tb-profile',
@@ -61,6 +63,7 @@ export class ProfileComponent extends PageComponent implements OnInit, HasConfir
   languageList: [locelCode: string, localeLanguage: string];
   UnitSystems = UnitSystems;
   authState = getCurrentAuthState(this.store);
+  readonly = !this.userPermissionsService.hasGenericPermission(Resource.PROFILE, Operation.WRITE);
 
   constructor(protected store: Store<AppState>,
               private route: ActivatedRoute,
@@ -68,7 +71,9 @@ export class ProfileComponent extends PageComponent implements OnInit, HasConfir
               private authService: AuthService,
               private translate: TranslateService,
               private unitService: UnitService,
-              private fb: UntypedFormBuilder) {
+              private fb: UntypedFormBuilder,
+              private userPermissionsService: UserPermissionsService,
+              ) {
     super(store);
   }
 
@@ -89,6 +94,9 @@ export class ProfileComponent extends PageComponent implements OnInit, HasConfir
       homeDashboardId: [null],
       homeDashboardHideToolbar: [true]
     });
+    if (this.readonly) {
+      this.profile.disable();
+    }
   }
 
   save(): void {

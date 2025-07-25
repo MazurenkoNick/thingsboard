@@ -44,13 +44,11 @@ public interface TwoFaConfigManager {
 
     Optional<AccountTwoFaSettings> getAccountTwoFaSettings(TenantId tenantId, UserId userId);
 
-
     Optional<TwoFaAccountConfig> getTwoFaAccountConfig(TenantId tenantId, UserId userId, TwoFaProviderType providerType);
 
     AccountTwoFaSettings saveTwoFaAccountConfig(TenantId tenantId, UserId userId, TwoFaAccountConfig accountConfig);
 
     AccountTwoFaSettings deleteTwoFaAccountConfig(TenantId tenantId, UserId userId, TwoFaProviderType providerType);
-
 
     Optional<PlatformTwoFaSettings> getPlatformTwoFaSettings(TenantId tenantId, boolean sysadminSettingsAsDefault);
 

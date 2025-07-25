@@ -39,12 +39,13 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.util.CollectionUtils;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.thingsboard.common.util.JacksonUtil;
@@ -164,8 +165,7 @@ public class EntityGroupController extends AutoCommitController {
                     "\n\n" + ENTITY_GROUP_UNIQUE_KEY +
                     TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH + RBAC_GROUP_READ_CHECK)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
-    @RequestMapping(value = "/entityGroup/{entityGroupId}", method = RequestMethod.GET)
-    @ResponseBody
+    @GetMapping(value = "/entityGroup/{entityGroupId}")
     public EntityGroupInfo getEntityGroupById(
             @Parameter(description = ENTITY_GROUP_ID_PARAM_DESCRIPTION, required = true)
             @PathVariable(ControllerConstants.ENTITY_GROUP_ID) String strEntityGroupId) throws ThingsboardException {
@@ -180,8 +180,7 @@ public class EntityGroupController extends AutoCommitController {
                     "\n\n" + ENTITY_GROUP_UNIQUE_KEY +
                     TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH + RBAC_GROUP_READ_CHECK)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
-    @RequestMapping(value = "/entityGroupInfo/{entityGroupId}", method = RequestMethod.GET)
-    @ResponseBody
+    @GetMapping(value = "/entityGroupInfo/{entityGroupId}")
     public EntityInfo getEntityGroupEntityInfoById(
             @Parameter(description = ENTITY_GROUP_ID_PARAM_DESCRIPTION, required = true)
             @PathVariable(ControllerConstants.ENTITY_GROUP_ID) String strEntityGroupId) throws ThingsboardException {
@@ -197,8 +196,7 @@ public class EntityGroupController extends AutoCommitController {
                     "\n\n" + ENTITY_GROUP_UNIQUE_KEY +
                     TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH + RBAC_GROUP_READ_CHECK)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
-    @RequestMapping(value = "/entityGroup/{ownerType}/{ownerId}/{groupType}/{groupName}", method = RequestMethod.GET)
-    @ResponseBody
+    @GetMapping(value = "/entityGroup/{ownerType}/{ownerId}/{groupType}/{groupName}")
     public EntityGroupInfo getEntityGroupByOwnerAndNameAndType(
             @Parameter(description = OWNER_TYPE_DESCRIPTION, required = true, schema = @Schema(allowableValues = {"TENANT", "CUSTOMER"}))
             @PathVariable("ownerType") String strOwnerType,
@@ -232,8 +230,7 @@ public class EntityGroupController extends AutoCommitController {
                     "Remove 'id', 'tenantId' and optionally 'ownerId' from the request body example (below) to create new Entity Group entity. " +
                     "\n\n" + ENTITY_GROUP_UNIQUE_KEY + TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH + RBAC_GROUP_WRITE_CHECK)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
-    @RequestMapping(value = "/entityGroup", method = RequestMethod.POST)
-    @ResponseBody
+    @PostMapping(value = "/entityGroup")
     public EntityGroupInfo saveEntityGroup(
             @Parameter(description = "A JSON value representing the entity group.", required = true)
             @RequestBody EntityGroup entityGroup) throws Exception {
@@ -265,7 +262,7 @@ public class EntityGroupController extends AutoCommitController {
             notes = "Deletes the entity group but does not delete the entities in the group, since they are also present in reserved group 'All'. " +
                     "Referencing non-existing Entity Group Id will cause an error." + TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH + RBAC_GROUP_DELETE_CHECK)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
-    @RequestMapping(value = "/entityGroup/{entityGroupId}", method = RequestMethod.DELETE)
+    @DeleteMapping(value = "/entityGroup/{entityGroupId}")
     @ResponseStatus(value = HttpStatus.OK)
     public void deleteEntityGroup(
             @Parameter(description = ENTITY_GROUP_ID_PARAM_DESCRIPTION, required = true)
@@ -286,7 +283,7 @@ public class EntityGroupController extends AutoCommitController {
             if (entityGroupService.containsLastTenantAdmin(getTenantId(), entityGroupUsers)) {
                 throw new ThingsboardException("At least one tenant administrator must remain!", ThingsboardErrorCode.INVALID_ARGUMENTS);
             }
-       }
+        }
 
         List<GroupPermissionInfo> groupPermissions = new ArrayList<>(
                 groupPermissionService.findGroupPermissionInfoListByTenantIdAndEntityGroupIdAsync(getTenantId(), entityGroupId).get());
@@ -306,8 +303,7 @@ public class EntityGroupController extends AutoCommitController {
                     + ENTITY_GROUP_DESCRIPTION + ENTITY_GROUP_INFO_DESCRIPTION +
                     TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH + RBAC_GROUP_READ_CHECK)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
-    @RequestMapping(value = "/entityGroups/{groupType}", method = RequestMethod.GET)
-    @ResponseBody
+    @GetMapping(value = "/entityGroups/{groupType}")
     public List<EntityGroupInfo> getEntityGroupsByType(
             @Parameter(description = ENTITY_GROUP_TYPE_PARAMETER_DESCRIPTION, required = true, schema = @Schema(allowableValues = {"CUSTOMER", "ASSET", "DEVICE", "USER", "ENTITY_VIEW", "DASHBOARD", "EDGE"}))
             @PathVariable("groupType") String strGroupType,
@@ -341,8 +337,7 @@ public class EntityGroupController extends AutoCommitController {
                     + ENTITY_GROUP_DESCRIPTION + ENTITY_GROUP_INFO_DESCRIPTION +
                     PAGE_DATA_PARAMETERS + TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH + RBAC_GROUP_READ_CHECK)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
-    @RequestMapping(value = "/entityGroups/{groupType}", params = {"pageSize", "page"}, method = RequestMethod.GET)
-    @ResponseBody
+    @GetMapping(value = "/entityGroups/{groupType}", params = {"pageSize", "page"})
     public PageData<EntityGroupInfo> getEntityGroupsByTypeAndPageLink(
             @Parameter(description = ENTITY_GROUP_TYPE_PARAMETER_DESCRIPTION, required = true, schema = @Schema(allowableValues = {"CUSTOMER", "ASSET", "DEVICE", "USER", "ENTITY_VIEW", "DASHBOARD", "EDGE"}))
             @PathVariable("groupType") String strGroupType,
@@ -385,8 +380,7 @@ public class EntityGroupController extends AutoCommitController {
                     + ENTITY_GROUP_ENTITY_INFO_DESCRIPTION +
                     PAGE_DATA_PARAMETERS + TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH + RBAC_GROUP_READ_CHECK)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
-    @RequestMapping(value = "/entityGroupInfos/{groupType}", params = {"pageSize", "page"}, method = RequestMethod.GET)
-    @ResponseBody
+    @GetMapping(value = "/entityGroupInfos/{groupType}", params = {"pageSize", "page"})
     public PageData<EntityInfo> getEntityGroupEntityInfosByTypeAndPageLink(
             @Parameter(description = ENTITY_GROUP_TYPE_PARAMETER_DESCRIPTION, required = true, schema = @Schema(allowableValues = {"CUSTOMER", "ASSET", "DEVICE", "USER", "ENTITY_VIEW", "DASHBOARD", "EDGE"}))
             @PathVariable("groupType") String strGroupType,
@@ -429,8 +423,7 @@ public class EntityGroupController extends AutoCommitController {
                     + ENTITY_GROUP_DESCRIPTION + ENTITY_GROUP_INFO_DESCRIPTION +
                     TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH + RBAC_GROUP_READ_CHECK)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
-    @RequestMapping(value = "/entityGroups/{groupType}/shared", method = RequestMethod.GET)
-    @ResponseBody
+    @GetMapping(value = "/entityGroups/{groupType}/shared")
     public List<EntityGroupInfo> getSharedEntityGroupsByType(
             @Parameter(description = ENTITY_GROUP_TYPE_PARAMETER_DESCRIPTION, required = true, schema = @Schema(allowableValues = {"CUSTOMER", "ASSET", "DEVICE", "USER", "ENTITY_VIEW", "DASHBOARD", "EDGE"}))
             @PathVariable("groupType") String strGroupType) throws ThingsboardException {
@@ -450,8 +443,7 @@ public class EntityGroupController extends AutoCommitController {
                     + ENTITY_GROUP_DESCRIPTION + ENTITY_GROUP_INFO_DESCRIPTION +
                     PAGE_DATA_PARAMETERS + TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH + RBAC_GROUP_READ_CHECK)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
-    @RequestMapping(value = "/entityGroups/{groupType}/shared", params = {"pageSize", "page"}, method = RequestMethod.GET)
-    @ResponseBody
+    @GetMapping(value = "/entityGroups/{groupType}/shared", params = {"pageSize", "page"})
     public PageData<EntityGroupInfo> getSharedEntityGroupsByTypeAndPageLink(
             @Parameter(description = ENTITY_GROUP_TYPE_PARAMETER_DESCRIPTION, required = true, schema = @Schema(allowableValues = {"CUSTOMER", "ASSET", "DEVICE", "USER", "ENTITY_VIEW", "DASHBOARD", "EDGE"}))
             @PathVariable("groupType") String strGroupType,
@@ -481,8 +473,7 @@ public class EntityGroupController extends AutoCommitController {
                     + ENTITY_GROUP_ENTITY_INFO_DESCRIPTION +
                     PAGE_DATA_PARAMETERS + TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH + RBAC_GROUP_READ_CHECK)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
-    @RequestMapping(value = "/entityGroupInfos/{groupType}/shared", params = {"pageSize", "page"}, method = RequestMethod.GET)
-    @ResponseBody
+    @GetMapping(value = "/entityGroupInfos/{groupType}/shared", params = {"pageSize", "page"})
     public PageData<EntityInfo> getSharedEntityGroupEntityInfosByTypeAndPageLink(
             @Parameter(description = ENTITY_GROUP_TYPE_PARAMETER_DESCRIPTION, required = true, schema = @Schema(allowableValues = {"CUSTOMER", "ASSET", "DEVICE", "USER", "ENTITY_VIEW", "DASHBOARD", "EDGE"}))
             @PathVariable("groupType") String strGroupType,
@@ -512,8 +503,7 @@ public class EntityGroupController extends AutoCommitController {
                     + ENTITY_GROUP_DESCRIPTION + ENTITY_GROUP_INFO_DESCRIPTION +
                     TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH + RBAC_GROUP_READ_CHECK)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
-    @RequestMapping(value = "/entityGroups/{ownerType}/{ownerId}/{groupType}", method = RequestMethod.GET)
-    @ResponseBody
+    @GetMapping(value = "/entityGroups/{ownerType}/{ownerId}/{groupType}")
     public List<EntityGroupInfo> getEntityGroupsByOwnerAndType(
             @Parameter(description = OWNER_TYPE_DESCRIPTION, required = true, schema = @Schema(allowableValues = {"TENANT", "CUSTOMER"}))
             @PathVariable("ownerType") String strOwnerType,
@@ -541,8 +531,7 @@ public class EntityGroupController extends AutoCommitController {
                     ENTITY_GROUP_DESCRIPTION +
                     PAGE_DATA_PARAMETERS + TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH + RBAC_GROUP_READ_CHECK)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
-    @RequestMapping(value = "/entityGroups/{ownerType}/{ownerId}/{groupType}", params = {"pageSize", "page"}, method = RequestMethod.GET)
-    @ResponseBody
+    @GetMapping(value = "/entityGroups/{ownerType}/{ownerId}/{groupType}", params = {"pageSize", "page"})
     public PageData<EntityGroupInfo> getEntityGroupsByOwnerAndTypeAndPageLink(
             @Parameter(description = OWNER_TYPE_DESCRIPTION, required = true, schema = @Schema(allowableValues = {"TENANT", "CUSTOMER"}))
             @PathVariable("ownerType") String strOwnerType,
@@ -580,8 +569,7 @@ public class EntityGroupController extends AutoCommitController {
                     ENTITY_GROUP_ENTITY_INFO_DESCRIPTION +
                     PAGE_DATA_PARAMETERS + TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH + RBAC_GROUP_READ_CHECK)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
-    @RequestMapping(value = "/entityGroupInfos/{ownerType}/{ownerId}/{groupType}", params = {"pageSize", "page"}, method = RequestMethod.GET)
-    @ResponseBody
+    @GetMapping(value = "/entityGroupInfos/{ownerType}/{ownerId}/{groupType}", params = {"pageSize", "page"})
     public PageData<EntityInfo> getEntityGroupEntityInfosByOwnerAndTypeAndPageLink(
             @Parameter(description = OWNER_TYPE_DESCRIPTION, required = true, schema = @Schema(allowableValues = {"TENANT", "CUSTOMER"}))
             @PathVariable("ownerType") String strOwnerType,
@@ -619,8 +607,7 @@ public class EntityGroupController extends AutoCommitController {
                     ENTITY_GROUP_DESCRIPTION +
                     PAGE_DATA_PARAMETERS + TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH + RBAC_GROUP_READ_CHECK)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
-    @RequestMapping(value = "/entityGroupsHierarchy/{ownerType}/{ownerId}/{groupType}", params = {"pageSize", "page"}, method = RequestMethod.GET)
-    @ResponseBody
+    @GetMapping(value = "/entityGroupsHierarchy/{ownerType}/{ownerId}/{groupType}", params = {"pageSize", "page"})
     public PageData<EntityGroupInfo> getEntityGroupsHierarchyByOwnerAndTypeAndPageLink(
             @Parameter(description = OWNER_TYPE_DESCRIPTION, required = true, schema = @Schema(allowableValues = {"TENANT", "CUSTOMER"}))
             @PathVariable("ownerType") String strOwnerType,
@@ -662,8 +649,7 @@ public class EntityGroupController extends AutoCommitController {
                     ENTITY_GROUP_ENTITY_INFO_DESCRIPTION +
                     PAGE_DATA_PARAMETERS + TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH + RBAC_GROUP_READ_CHECK)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
-    @RequestMapping(value = "/entityGroupInfosHierarchy/{ownerType}/{ownerId}/{groupType}", params = {"pageSize", "page"}, method = RequestMethod.GET)
-    @ResponseBody
+    @GetMapping(value = "/entityGroupInfosHierarchy/{ownerType}/{ownerId}/{groupType}", params = {"pageSize", "page"})
     public PageData<EntityInfo> getEntityGroupEntityInfosHierarchyByOwnerAndTypeAndPageLink(
             @Parameter(description = OWNER_TYPE_DESCRIPTION, required = true, schema = @Schema(allowableValues = {"TENANT", "CUSTOMER"}))
             @PathVariable("ownerType") String strOwnerType,
@@ -705,8 +691,7 @@ public class EntityGroupController extends AutoCommitController {
                     + ENTITY_GROUP_DESCRIPTION + ENTITY_GROUP_INFO_DESCRIPTION +
                     TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH + RBAC_GROUP_READ_CHECK)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
-    @RequestMapping(value = "/entityGroup/all/{ownerType}/{ownerId}/{groupType}", method = RequestMethod.GET)
-    @ResponseBody
+    @GetMapping(value = "/entityGroup/all/{ownerType}/{ownerId}/{groupType}")
     public EntityGroupInfo getEntityGroupAllByOwnerAndType(
             @Parameter(description = OWNER_TYPE_DESCRIPTION, required = true, schema = @Schema(allowableValues = {"TENANT", "CUSTOMER"}))
             @PathVariable("ownerType") String strOwnerType,
@@ -733,7 +718,7 @@ public class EntityGroupController extends AutoCommitController {
             notes = "Add entities to the specified entity group. "
                     + ENTITY_GROUP_DESCRIPTION + TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH + RBAC_GROUP_ADD_CHECK)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
-    @RequestMapping(value = "/entityGroup/{entityGroupId}/addEntities", method = RequestMethod.POST)
+    @PostMapping(value = "/entityGroup/{entityGroupId}/addEntities")
     @ResponseStatus(value = HttpStatus.OK)
     public void addEntitiesToEntityGroup(
             @Parameter(description = ENTITY_GROUP_ID_PARAM_DESCRIPTION, required = true)
@@ -800,7 +785,7 @@ public class EntityGroupController extends AutoCommitController {
             notes = "Removes entities from the specified entity group. "
                     + ENTITY_GROUP_DESCRIPTION + TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH + RBAC_GROUP_REMOVE_CHECK)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
-    @RequestMapping(value = "/entityGroup/{entityGroupId}/deleteEntities", method = RequestMethod.POST)
+    @PostMapping(value = "/entityGroup/{entityGroupId}/deleteEntities")
     @ResponseStatus(value = HttpStatus.OK)
     public void removeEntitiesFromEntityGroup(
             @Parameter(description = ENTITY_GROUP_ID_PARAM_DESCRIPTION, required = true)
@@ -860,8 +845,7 @@ public class EntityGroupController extends AutoCommitController {
             notes = "Fetch the Short Entity View object based on the group and entity id. " +
                     SHORT_ENTITY_VIEW_DESCRIPTION + TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH + RBAC_GROUP_READ_CHECK)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
-    @RequestMapping(value = "/entityGroup/{entityGroupId}/{entityId}", method = RequestMethod.GET)
-    @ResponseBody
+    @GetMapping(value = "/entityGroup/{entityGroupId}/{entityId}")
     public ShortEntityView getGroupEntity(
             @Parameter(description = ENTITY_GROUP_ID_PARAM_DESCRIPTION, required = true)
             @PathVariable(ControllerConstants.ENTITY_GROUP_ID) String strEntityGroupId,
@@ -886,8 +870,7 @@ public class EntityGroupController extends AutoCommitController {
                     SHORT_ENTITY_VIEW_DESCRIPTION +
                     PAGE_DATA_PARAMETERS + TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH + RBAC_GROUP_READ_CHECK)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
-    @RequestMapping(value = "/entityGroup/{entityGroupId}/entities", params = {"pageSize", "page"}, method = RequestMethod.GET)
-    @ResponseBody
+    @GetMapping(value = "/entityGroup/{entityGroupId}/entities", params = {"pageSize", "page"})
     public PageData<ShortEntityView> getEntities(
             @Parameter(description = ENTITY_GROUP_ID_PARAM_DESCRIPTION, required = true)
             @PathVariable(ENTITY_GROUP_ID) String strEntityGroupId,
@@ -919,8 +902,7 @@ public class EntityGroupController extends AutoCommitController {
                     "The list always contain at least one element - special group 'All'." +
                     PAGE_DATA_PARAMETERS + TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH + RBAC_READ_CHECK)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
-    @RequestMapping(value = "/entityGroups/{entityType}/{entityId}", method = RequestMethod.GET)
-    @ResponseBody
+    @GetMapping(value = "/entityGroups/{entityType}/{entityId}")
     public List<EntityGroupId> getEntityGroupsForEntity(
             @Parameter(description = ENTITY_GROUP_TYPE_PARAMETER_DESCRIPTION, required = true, schema = @Schema(allowableValues = {"CUSTOMER", "ASSET", "DEVICE", "USER", "ENTITY_VIEW", "DASHBOARD", "EDGE"}))
             @PathVariable("entityType") String strEntityType,
@@ -939,8 +921,7 @@ public class EntityGroupController extends AutoCommitController {
                     + ENTITY_GROUP_DESCRIPTION + ENTITY_GROUP_INFO_DESCRIPTION +
                     TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH + RBAC_GROUP_READ_CHECK)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
-    @RequestMapping(value = "/entityGroups", params = {"entityGroupIds"}, method = RequestMethod.GET)
-    @ResponseBody
+    @GetMapping(value = "/entityGroups", params = {"entityGroupIds"})
     public List<EntityGroupInfo> getEntityGroupsByIds(
             @Parameter(description = "A list of group ids, separated by comma ','", array = @ArraySchema(schema = @Schema(type = "string")))
             @RequestParam("entityGroupIds") String[] strEntityGroupIds) throws ThingsboardException {
@@ -961,8 +942,7 @@ public class EntityGroupController extends AutoCommitController {
                     + ENTITY_GROUP_ENTITY_INFO_DESCRIPTION +
                     TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH + RBAC_GROUP_READ_CHECK)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
-    @RequestMapping(value = "/entityGroupInfos", params = {"entityGroupIds"}, method = RequestMethod.GET)
-    @ResponseBody
+    @GetMapping(value = "/entityGroupInfos", params = {"entityGroupIds"})
     public List<EntityInfo> getEntityGroupEntityInfosByIds(
             @Parameter(description = "A list of group ids, separated by comma ','", array = @ArraySchema(schema = @Schema(type = "string")))
             @RequestParam("entityGroupIds") String[] strEntityGroupIds) throws ThingsboardException {
@@ -983,8 +963,7 @@ public class EntityGroupController extends AutoCommitController {
                     "that the user may select to change the owner of the particular entity or entity group."
                     + TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH + RBAC_READ_CHECK)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
-    @RequestMapping(value = "/owners", params = {"pageSize", "page"}, method = RequestMethod.GET)
-    @ResponseBody
+    @GetMapping(value = "/owners", params = {"pageSize", "page"})
     public PageData<ContactBased<?>> getOwners(
             @Parameter(description = PAGE_SIZE_DESCRIPTION, required = true, schema = @Schema(minimum = "1"))
             @RequestParam int pageSize,
@@ -1006,7 +985,7 @@ public class EntityGroupController extends AutoCommitController {
         if (accessControlService.hasPermission(getCurrentUser(), Resource.CUSTOMER, Operation.READ)) {
             if (Authority.TENANT_ADMIN.equals(getCurrentUser().getAuthority())) {
                 owners.addAll(customerService.findCustomersByTenantId(getTenantId(), pageLink)
-                        .getData().stream().filter(customer -> !customer.isPublic()).collect(Collectors.toList()));
+                        .getData().stream().filter(customer -> !customer.isPublic()).toList());
             } else {
                 Set<EntityId> ownerIds = ownersCacheService.getChildOwners(getTenantId(), getCurrentUser().getOwnerId());
                 if (!ownerIds.isEmpty()) {
@@ -1015,7 +994,7 @@ public class EntityGroupController extends AutoCommitController {
                         customerIds.add(new CustomerId(ownerId.getId()));
                     }
                     owners.addAll(customerService.findCustomersByTenantIdAndIdsAsync(getTenantId(), customerIds).get()
-                            .stream().filter(customer -> !customer.isPublic()).collect(Collectors.toList()));
+                            .stream().filter(customer -> !customer.isPublic()).toList());
                 }
             }
         }
@@ -1030,8 +1009,7 @@ public class EntityGroupController extends AutoCommitController {
                     "that the user may select to change the owner of the particular entity or entity group."
                     + TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH + RBAC_READ_CHECK)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
-    @RequestMapping(value = "/ownerInfos", params = {"pageSize", "page"}, method = RequestMethod.GET)
-    @ResponseBody
+    @GetMapping(value = "/ownerInfos", params = {"pageSize", "page"})
     public PageData<EntityInfo> getOwnerInfos(
             @Parameter(description = PAGE_SIZE_DESCRIPTION, required = true, schema = @Schema(minimum = "1"))
             @RequestParam int pageSize,
@@ -1066,8 +1044,7 @@ public class EntityGroupController extends AutoCommitController {
             notes = "Fetch the owner info (tenant or customer) presented as Entity Info object based on the provided owner Id. " +
                     TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH + RBAC_GROUP_READ_CHECK)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
-    @RequestMapping(value = "/ownerInfo/{ownerType}/{ownerId}", method = RequestMethod.GET)
-    @ResponseBody
+    @GetMapping(value = "/ownerInfo/{ownerType}/{ownerId}")
     public EntityInfo getOwnerInfo(
             @Parameter(description = OWNER_TYPE_DESCRIPTION, required = true, schema = @Schema(allowableValues = {"TENANT", "CUSTOMER"}))
             @PathVariable("ownerType") String strOwnerType,
@@ -1080,7 +1057,7 @@ public class EntityGroupController extends AutoCommitController {
         if (!EntityType.TENANT.equals(ownerId.getEntityType()) && !EntityType.CUSTOMER.equals(ownerId.getEntityType())) {
             throw new ThingsboardException("Unsupported owner type '" + ownerId.getEntityType() + "'! Only 'TENANT' or 'CUSTOMER' types are allowed.", ThingsboardErrorCode.BAD_REQUEST_PARAMS);
         } else if (EntityType.TENANT.equals(ownerId.getEntityType())) {
-            TenantId tenantId = new TenantId(ownerId.getId());
+            TenantId tenantId = TenantId.fromUUID(ownerId.getId());
             Tenant tenant = checkTenantId(tenantId, Operation.READ);
             return new EntityInfo(tenant.getUuidId(), EntityType.TENANT.name(), tenant.getTitle());
         } else {
@@ -1095,7 +1072,7 @@ public class EntityGroupController extends AutoCommitController {
                     "Useful for public dashboards that will be embedded into the public websites. "
                     + TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH + RBAC_GROUP_WRITE_CHECK)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
-    @RequestMapping(value = "/entityGroup/{entityGroupId}/makePublic", method = RequestMethod.POST)
+    @PostMapping(value = "/entityGroup/{entityGroupId}/makePublic")
     @ResponseStatus(value = HttpStatus.OK)
     public void makeEntityGroupPublic(
             @Parameter(description = ENTITY_GROUP_ID_PARAM_DESCRIPTION, required = true)
@@ -1126,7 +1103,7 @@ public class EntityGroupController extends AutoCommitController {
                     "This call is useful to hide the group that was previously made public."
                     + TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH + RBAC_GROUP_WRITE_CHECK)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
-    @RequestMapping(value = "/entityGroup/{entityGroupId}/makePrivate", method = RequestMethod.POST)
+    @PostMapping(value = "/entityGroup/{entityGroupId}/makePrivate")
     @ResponseStatus(value = HttpStatus.OK)
     public void makeEntityGroupPrivate(
             @Parameter(description = ENTITY_GROUP_ID_PARAM_DESCRIPTION, required = true)
@@ -1157,7 +1134,7 @@ public class EntityGroupController extends AutoCommitController {
                     "The request is quite flexible and processing of the request involves multiple security checks using platform RBAC feature."
                     + TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH + RBAC_GROUP_WRITE_CHECK)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
-    @RequestMapping(value = "/entityGroup/{entityGroupId}/share", method = RequestMethod.POST)
+    @PostMapping(value = "/entityGroup/{entityGroupId}/share")
     @ResponseStatus(value = HttpStatus.OK)
     public void shareEntityGroup(
             @Parameter(description = ENTITY_GROUP_ID_PARAM_DESCRIPTION, required = true)
@@ -1224,7 +1201,7 @@ public class EntityGroupController extends AutoCommitController {
             notes = "Share the entity group with specified user group using specified role. "
                     + TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH + RBAC_GROUP_WRITE_CHECK)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
-    @RequestMapping(value = "/entityGroup/{entityGroupId}/{userGroupId}/{roleId}/share", method = RequestMethod.POST)
+    @PostMapping(value = "/entityGroup/{entityGroupId}/{userGroupId}/{roleId}/share")
     @ResponseStatus(value = HttpStatus.OK)
     public void shareEntityGroupToChildOwnerUserGroup(
             @Parameter(description = "A string value representing the Entity Group Id that you would like to share. For example, '784f394c-42b6-435a-983c-b7beff2784f9'", required = true)
@@ -1292,8 +1269,7 @@ public class EntityGroupController extends AutoCommitController {
                     "Once entities will be delivered to edge service, they are going to be available for usage on remote edge instance." +
                     TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH + RBAC_WRITE_CHECK)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
-    @RequestMapping(value = "/edge/{edgeId}/entityGroup/{entityGroupId}/{groupType}", method = RequestMethod.POST)
-    @ResponseBody
+    @PostMapping(value = "/edge/{edgeId}/entityGroup/{entityGroupId}/{groupType}")
     public EntityGroup assignEntityGroupToEdge(@Parameter(description = EDGE_ID_PARAM_DESCRIPTION)
                                                @PathVariable(EDGE_ID) String strEdgeId,
                                                @Parameter(description = "EntityGroup type", required = true, schema = @Schema(allowableValues = {"ASSET", "DEVICE", "USER", "ENTITY_VIEW", "DASHBOARD"}))
@@ -1333,8 +1309,7 @@ public class EntityGroupController extends AutoCommitController {
                     "Third, once 'unassign' command will be delivered to edge service, it's going to remove entity group and entities inside this group locally." +
                     TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH + RBAC_WRITE_CHECK)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
-    @RequestMapping(value = "/edge/{edgeId}/entityGroup/{entityGroupId}/{groupType}", method = RequestMethod.DELETE)
-    @ResponseBody
+    @DeleteMapping(value = "/edge/{edgeId}/entityGroup/{entityGroupId}/{groupType}")
     public EntityGroup unassignEntityGroupFromEdge(@Parameter(description = EDGE_ID_PARAM_DESCRIPTION)
                                                    @PathVariable(EDGE_ID) String strEdgeId,
                                                    @Parameter(description = "EntityGroup type", required = true, schema = @Schema(allowableValues = {"ASSET", "DEVICE", "USER", "ENTITY_VIEW", "DASHBOARD"}))
@@ -1370,8 +1345,7 @@ public class EntityGroupController extends AutoCommitController {
                     + ENTITY_GROUP_DESCRIPTION + ENTITY_GROUP_INFO_DESCRIPTION +
                     TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH + RBAC_READ_CHECK)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
-    @RequestMapping(value = "/allEntityGroups/edge/{edgeId}/{groupType}", method = RequestMethod.GET)
-    @ResponseBody
+    @GetMapping(value = "/allEntityGroups/edge/{edgeId}/{groupType}")
     public List<EntityGroupInfo> getAllEdgeEntityGroups(
             @Parameter(description = EDGE_ID_PARAM_DESCRIPTION)
             @PathVariable("edgeId") String strEdgeId,
@@ -1396,8 +1370,7 @@ public class EntityGroupController extends AutoCommitController {
                     ENTITY_GROUP_DESCRIPTION + ENTITY_GROUP_INFO_DESCRIPTION +
                     PAGE_DATA_PARAMETERS + TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH + RBAC_READ_CHECK)
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
-    @RequestMapping(value = "/entityGroups/edge/{edgeId}/{groupType}", params = {"pageSize", "page"}, method = RequestMethod.GET)
-    @ResponseBody
+    @GetMapping(value = "/entityGroups/edge/{edgeId}/{groupType}", params = {"pageSize", "page"})
     public PageData<EntityGroupInfo> getEdgeEntityGroups(
             @Parameter(description = EDGE_ID_PARAM_DESCRIPTION)
             @PathVariable(EDGE_ID) String strEdgeId,
@@ -1451,6 +1424,7 @@ public class EntityGroupController extends AutoCommitController {
             } catch (ThingsboardException e) {
                 return false;
             }
-        }).collect(Collectors.toList());
+        }).toList();
     }
+
 }
