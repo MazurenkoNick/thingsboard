@@ -62,9 +62,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
-/**
- * Created by ashvayka on 02.04.18.
- */
 public interface RuleEngineAlarmService {
 
     /*
