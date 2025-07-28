@@ -56,12 +56,12 @@
       integration.kinesis-initial-position-in-stream-required</mat-error>
   </mat-form-field>
 
-  <section class="fields-group">
+  <section class="fields-group block">
     <mat-slide-toggle [aria-label]="'integration.kinesis-use-credentials-from-instance-metadata' | translate"
                         formControlName="useCredentialsFromInstanceMetadata">
       {{ 'integration.kinesis-use-credentials-from-instance-metadata' | translate }}
     </mat-slide-toggle>
-    <div class="flex flex-row xs:flex-col gt-xs:gap-2"
+    <div class="flex flex-col"
          *ngIf="!awsKinesisConfigForm.get('useCredentialsFromInstanceMetadata').value" >
       <mat-form-field class="mat-block flex-1">
         <mat-label translate>integration.kinesis-access-key-id</mat-label>
