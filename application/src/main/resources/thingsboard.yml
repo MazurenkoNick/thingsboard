@@ -1033,6 +1033,7 @@ audit-log:
       "ai_model": "${AUDIT_LOG_MASK_AI_MODEL:W}" # AI model logging levels.
       "role": "${AUDIT_LOG_MASK_ROLE:W}" # Roles logging levels.
       "group_permission": "${AUDIT_LOG_MASK_GROUP_PERMISSION:W}" # Group permission logging levels.
+      "report_template": "${AUDIT_LOG_MASK_REPORT_TEMPLATE:W}" # Report template logging levels.
   sink:
     # Type of external sink. possible options: none, elasticsearch
     type: "${AUDIT_LOG_SINK_TYPE:none}"
