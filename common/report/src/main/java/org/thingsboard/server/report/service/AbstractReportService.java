@@ -104,7 +104,7 @@ public abstract class AbstractReportService implements ReportService {
         if (filter instanceof StateEntityOwnerFilter stateEntityOwnerFilter && stateEntityOwnerFilter.getSingleEntity() == null) {
             return Collections.emptyList();
         }
-       return fetchEntityDataByQuery(pageLink -> toEntityDataQuery(dataSource, ctx, filter, pageLink), dataSource, ctx);
+        return fetchEntityDataByQuery(pageLink -> toEntityDataQuery(dataSource, ctx, filter, pageLink), dataSource, ctx);
     }
 
     private List<EntityData> fetchEntityDataByQuery(Function<PageLink, EntityDataQuery> querySupplier, DataSource dataSource, TbReportCtx ctx) {
