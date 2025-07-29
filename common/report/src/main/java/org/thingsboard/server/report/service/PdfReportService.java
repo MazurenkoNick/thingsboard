@@ -75,6 +75,7 @@ import org.xhtmlrenderer.pdf.ITextRenderer;
 import java.awt.Dimension;
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.EnumMap;
 import java.util.HashMap;
@@ -395,6 +396,7 @@ public class PdfReportService extends AbstractReportService {
             ComponentData singleDataSource = buildSingleComponentData(usablePageWidthPx, ctx, dataSource, stateEntity != null ? stateEntity.getEntityId() : null);
             mainDataSource.merge(singleDataSource);
         }
+        mainDataSource.getVariables().putAll(toStringMap(stateEntity, Collections.emptyList(), ctx));
         return mainDataSource;
     }
 

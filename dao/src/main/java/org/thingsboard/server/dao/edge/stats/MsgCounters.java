@@ -28,50 +28,29 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.edqs.data.dp;
+package org.thingsboard.server.dao.edge.stats;
 
-import lombok.Getter;
-import org.thingsboard.server.common.data.edqs.DataPoint;
-import org.thingsboard.server.common.data.kv.DataType;
-import org.thingsboard.common.util.TbStringPool;
+import lombok.Data;
+import org.thingsboard.server.common.data.id.TenantId;
 
-public class StringDataPoint extends AbstractDataPoint {
+import java.util.concurrent.atomic.AtomicLong;
 
-    @Getter
-    private final String value;
+@Data
+public class MsgCounters {
 
-    public StringDataPoint(long ts, String value) {
-        this(ts, value, true);
-    }
+    private final TenantId tenantId;
+    private final AtomicLong msgsAdded = new AtomicLong();
+    private final AtomicLong msgsPushed = new AtomicLong();
+    private final AtomicLong msgsPermanentlyFailed = new AtomicLong();
+    private final AtomicLong msgsTmpFailed = new AtomicLong();
+    private final AtomicLong msgsLag = new AtomicLong();
 
-    public StringDataPoint(long ts, String value, boolean deduplicate) {
-        super(ts);
-        this.value = deduplicate ? TbStringPool.intern(value) : value;
-    }
-
-    @Override
-    public double getDouble() {
-        return Double.parseDouble(value);
-    }
-
-    @Override
-    public long getLong() {
-        return Long.parseLong(value);
-    }
-
-    @Override
-    public DataType getType() {
-        return DataType.STRING;
-    }
-
-    @Override
-    public String getStr() {
-        return value;
-    }
-
-    @Override
-    public String valueToString() {
-        return value;
+    public void clear() {
+        msgsAdded.set(0);
+        msgsPushed.set(0);
+        msgsPermanentlyFailed.set(0);
+        msgsTmpFailed.set(0);
+        msgsLag.set(0);
     }
 
 }

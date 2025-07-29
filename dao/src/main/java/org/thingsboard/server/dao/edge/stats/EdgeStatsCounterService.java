@@ -28,50 +28,45 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.edqs.data.dp;
+package org.thingsboard.server.dao.edge.stats;
 
 import lombok.Getter;
-import org.thingsboard.server.common.data.edqs.DataPoint;
-import org.thingsboard.server.common.data.kv.DataType;
-import org.thingsboard.common.util.TbStringPool;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.stereotype.Service;
+import org.thingsboard.server.common.data.id.EdgeId;
+import org.thingsboard.server.common.data.id.TenantId;
 
-public class StringDataPoint extends AbstractDataPoint {
+import java.util.concurrent.ConcurrentHashMap;
 
-    @Getter
-    private final String value;
+@ConditionalOnProperty(prefix = "edges.stats", name = "enabled", havingValue = "true", matchIfMissing = false)
+@Service
+@Slf4j
+@Getter
+public class EdgeStatsCounterService {
 
-    public StringDataPoint(long ts, String value) {
-        this(ts, value, true);
+    private final ConcurrentHashMap<EdgeId, MsgCounters> counterByEdge = new ConcurrentHashMap<>();
+
+    public void recordEvent(EdgeStatsKey type, TenantId tenantId, EdgeId edgeId, long value) {
+        MsgCounters counters = getOrCreateCounters(tenantId, edgeId);
+        switch (type) {
+            case DOWNLINK_MSGS_ADDED -> counters.getMsgsAdded().addAndGet(value);
+            case DOWNLINK_MSGS_PUSHED -> counters.getMsgsPushed().addAndGet(value);
+            case DOWNLINK_MSGS_PERMANENTLY_FAILED -> counters.getMsgsPermanentlyFailed().addAndGet(value);
+            case DOWNLINK_MSGS_TMP_FAILED -> counters.getMsgsTmpFailed().addAndGet(value);
+        }
     }
 
-    public StringDataPoint(long ts, String value, boolean deduplicate) {
-        super(ts);
-        this.value = deduplicate ? TbStringPool.intern(value) : value;
+    public void setDownlinkMsgsLag(TenantId tenantId, EdgeId edgeId, long value) {
+        getOrCreateCounters(tenantId, edgeId).getMsgsLag().set(value);
     }
 
-    @Override
-    public double getDouble() {
-        return Double.parseDouble(value);
+    public void clear(EdgeId edgeId) {
+        counterByEdge.remove(edgeId);
     }
 
-    @Override
-    public long getLong() {
-        return Long.parseLong(value);
-    }
-
-    @Override
-    public DataType getType() {
-        return DataType.STRING;
-    }
-
-    @Override
-    public String getStr() {
-        return value;
-    }
-
-    @Override
-    public String valueToString() {
-        return value;
+    public MsgCounters getOrCreateCounters(TenantId tenantId, EdgeId edgeId) {
+        return counterByEdge.computeIfAbsent(edgeId, id -> new MsgCounters(tenantId));
     }
 
 }
