@@ -49,7 +49,10 @@ import org.thingsboard.server.common.data.page.SortOrder;
 import org.thingsboard.server.common.data.query.AlarmData;
 import org.thingsboard.server.common.data.query.EntityData;
 import org.thingsboard.server.common.data.query.EntityDataQuery;
+import org.thingsboard.server.common.data.query.EntityFilter;
 import org.thingsboard.server.common.data.query.EntityKeyType;
+import org.thingsboard.server.common.data.query.SingleEntityFilter;
+import org.thingsboard.server.common.data.query.StateEntityOwnerFilter;
 import org.thingsboard.server.common.data.query.TsValue;
 import org.thingsboard.server.common.data.report.configuration.DataKey;
 import org.thingsboard.server.common.data.report.configuration.DataSource;
@@ -79,6 +82,7 @@ import java.util.stream.Collectors;
 import static org.thingsboard.server.common.data.report.configuration.timewindow.TimeIntervalCalculator.getTimeRange;
 import static org.thingsboard.server.common.data.util.DataSourceUtils.getAlarmLatestValue;
 import static org.thingsboard.server.common.data.util.DataSourceUtils.getEntityLatestValue;
+import static org.thingsboard.server.report.util.ReportQueryUtils.buildEntityFilter;
 import static org.thingsboard.server.report.util.ReportQueryUtils.toAlarmDataQuery;
 import static org.thingsboard.server.report.util.ReportQueryUtils.toEntityDataQuery;
 import static org.thingsboard.server.report.util.ReportUtils.convertStringToTypedValue;
@@ -93,7 +97,14 @@ public abstract class AbstractReportService implements ReportService {
     protected ReportDataService dataService;
 
     protected List<EntityData> fetchEntities(TbReportCtx ctx, DataSource dataSource, EntityId stateEntityId) {
-       return fetchEntityDataByQuery(pageLink -> toEntityDataQuery(dataSource, ctx, stateEntityId, pageLink), dataSource, ctx);
+        EntityFilter filter = buildEntityFilter(dataSource, ctx, stateEntityId);
+        if (filter instanceof SingleEntityFilter singleEntityFilter && singleEntityFilter.getSingleEntity() == null) {
+            return Collections.emptyList();
+        }
+        if (filter instanceof StateEntityOwnerFilter stateEntityOwnerFilter && stateEntityOwnerFilter.getSingleEntity() == null) {
+            return Collections.emptyList();
+        }
+       return fetchEntityDataByQuery(pageLink -> toEntityDataQuery(dataSource, ctx, filter, pageLink), dataSource, ctx);
     }
 
     private List<EntityData> fetchEntityDataByQuery(Function<PageLink, EntityDataQuery> querySupplier, DataSource dataSource, TbReportCtx ctx) {
