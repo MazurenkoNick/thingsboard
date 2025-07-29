@@ -1033,6 +1033,7 @@ audit-log:
       "ai_model": "${AUDIT_LOG_MASK_AI_MODEL:W}" # AI model logging levels.
       "role": "${AUDIT_LOG_MASK_ROLE:W}" # Roles logging levels.
       "group_permission": "${AUDIT_LOG_MASK_GROUP_PERMISSION:W}" # Group permission logging levels.
+      "report_template": "${AUDIT_LOG_MASK_REPORT_TEMPLATE:W}" # Report template logging levels.
   sink:
     # Type of external sink. possible options: none, elasticsearch
     type: "${AUDIT_LOG_SINK_TYPE:none}"
@@ -1648,6 +1649,13 @@ edges:
   state:
     # Persist state of edge (active, last connect, last disconnect) into timeseries or attributes tables. 'false' means to store edge state into attributes table
     persistToTelemetry: "${EDGES_PERSIST_STATE_TO_TELEMETRY:false}"
+  stats:
+    # Enable or disable reporting of edge communication stats (true or false)
+    enabled: "${EDGES_STATS_ENABLED:true}"
+    # Time-to-live in days for stored edge communication stats in timeseries
+    ttl: "${EDGES_STATS_TTL:30}"
+    # How often to report edge communication stats in milliseconds
+    report-interval-millis: "${EDGES_STATS_REPORT_INTERVAL_MS:600000}"
 
 # Spring doc common parameters
 springdoc:

@@ -683,6 +683,7 @@ public class DefaultGitVersionControlQueueService implements GitVersionControlQu
             vcSettings = entitiesVersionControlService.getVersionControlSettings(tenantId);
         }
         if (vcSettings != null) {
+            vcSettings = secretConfigurationService.replaceSecretUsages(tenantId, vcSettings, RepositorySettings.class);
             builder.setVcSettings(ProtoUtils.toProto(vcSettings));
         } else if (request.requiresSettings()) {
             throw new RuntimeException("No entity version control settings provisioned!");
