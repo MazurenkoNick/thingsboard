@@ -203,6 +203,9 @@ public abstract class AbstractReportService implements ReportService {
         Map<EntityId, EntityData> entityDataMap = entityDataList.stream()
                 .collect(Collectors.toMap(EntityData::getEntityId, Function.identity()));
         List<Map<String, String>> entityDatas = new ArrayList<>();
+        if (entityDataMap.size() == 0) {
+            return new ComponentData(usablePageWidthPx);
+        }
         for (AlarmData alarmData : new PageDataIterable<>(link -> dataService.findAlarmDataByQueryForEntities(toAlarmDataQuery(component, ctx, stateEntityId, link), entityDataMap.keySet(), ctx), 1024)) {
             Map<String, String> mergedData = toStringMap(alarmData, alarmDataKeys, ctx);
             EntityData entityData = entityDataMap.get(alarmData.getEntityId());

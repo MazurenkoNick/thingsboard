@@ -55,6 +55,7 @@ import org.thingsboard.server.dao.device.DeviceService;
 import org.thingsboard.server.dao.domain.DomainService;
 import org.thingsboard.server.dao.edge.EdgeEventService;
 import org.thingsboard.server.dao.edge.EdgeService;
+import org.thingsboard.server.dao.edge.stats.EdgeStatsCounterService;
 import org.thingsboard.server.dao.encryptionkey.EncryptionService;
 import org.thingsboard.server.dao.entityview.EntityViewService;
 import org.thingsboard.server.dao.group.EntityGroupService;
@@ -122,6 +123,7 @@ import org.thingsboard.server.service.executors.GrpcCallbackExecutorService;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Lazy
 @Data
@@ -248,6 +250,9 @@ public class EdgeContextComponent {
 
     @Autowired
     private WidgetsBundleService widgetsBundleService;
+
+    @Autowired
+    private Optional<EdgeStatsCounterService> statsCounterService;
 
     // PE services
     @Autowired
