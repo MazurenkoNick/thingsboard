@@ -56,7 +56,7 @@ public class TypeCastUtil {
             } catch (RuntimeException ignored) {}
         } else if (value.equalsIgnoreCase("true") || value.equalsIgnoreCase("false")) {
             return Pair.of(DataType.BOOLEAN, Boolean.parseBoolean(value));
-        } if (looksLikeJson(value)) {
+        } else if (looksLikeJson(value)) {
             try {
                 return Pair.of(DataType.JSON, JsonParser.parseString(value));
             } catch (Exception ignored) {
