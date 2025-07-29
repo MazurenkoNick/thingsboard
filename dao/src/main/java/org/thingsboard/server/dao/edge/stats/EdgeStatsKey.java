@@ -28,50 +28,22 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.edqs.data.dp;
+package org.thingsboard.server.dao.edge.stats;
 
 import lombok.Getter;
-import org.thingsboard.server.common.data.edqs.DataPoint;
-import org.thingsboard.server.common.data.kv.DataType;
-import org.thingsboard.common.util.TbStringPool;
 
-public class StringDataPoint extends AbstractDataPoint {
+@Getter
+public enum EdgeStatsKey {
+    DOWNLINK_MSGS_ADDED("downlinkMsgsAdded"),
+    DOWNLINK_MSGS_PUSHED("downlinkMsgsPushed"),
+    DOWNLINK_MSGS_PERMANENTLY_FAILED("downlinkMsgsPermanentlyFailed"),
+    DOWNLINK_MSGS_TMP_FAILED("downlinkMsgsTmpFailed"),
+    DOWNLINK_MSGS_LAG("downlinkMsgsLag");
 
-    @Getter
-    private final String value;
+    private final String key;
 
-    public StringDataPoint(long ts, String value) {
-        this(ts, value, true);
-    }
-
-    public StringDataPoint(long ts, String value, boolean deduplicate) {
-        super(ts);
-        this.value = deduplicate ? TbStringPool.intern(value) : value;
-    }
-
-    @Override
-    public double getDouble() {
-        return Double.parseDouble(value);
-    }
-
-    @Override
-    public long getLong() {
-        return Long.parseLong(value);
-    }
-
-    @Override
-    public DataType getType() {
-        return DataType.STRING;
-    }
-
-    @Override
-    public String getStr() {
-        return value;
-    }
-
-    @Override
-    public String valueToString() {
-        return value;
+    EdgeStatsKey(String key) {
+        this.key = key;
     }
 
 }
