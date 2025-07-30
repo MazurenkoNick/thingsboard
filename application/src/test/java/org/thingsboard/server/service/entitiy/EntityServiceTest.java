@@ -122,6 +122,7 @@ import org.thingsboard.server.common.data.query.SingleEntityFilter;
 import org.thingsboard.server.common.data.query.StateEntityOwnerFilter;
 import org.thingsboard.server.common.data.query.StringFilterPredicate;
 import org.thingsboard.server.common.data.query.StringFilterPredicate.StringOperation;
+import org.thingsboard.server.common.data.query.TsValue;
 import org.thingsboard.server.common.data.relation.EntityRelation;
 import org.thingsboard.server.common.data.relation.EntitySearchDirection;
 import org.thingsboard.server.common.data.relation.RelationEntityTypeFilter;
@@ -2755,7 +2756,7 @@ public class EntityServiceTest extends AbstractControllerTest {
         BasicTsKvEntry timeseries = new BasicTsKvEntry(42L, new DoubleDataEntry("temperature", 45.5));
         timeseriesService.save(TenantId.SYS_TENANT_ID, tenantId, timeseries);
 
-        AttributeKvEntry attr = new BaseAttributeKvEntry( new LongDataEntry("attr", 10L), 42L);
+        AttributeKvEntry attr = new BaseAttributeKvEntry(new LongDataEntry("attr", 10L), 42L);
         attributesService.save(TenantId.SYS_TENANT_ID, tenantId, SERVER_SCOPE, List.of(attr));
 
         SingleEntityFilter singleEntityFilter = new SingleEntityFilter();
@@ -2774,8 +2775,9 @@ public class EntityServiceTest extends AbstractControllerTest {
 
         PageData<EntityData> result = findByQueryAndCheck(query, 1);
 
-        String tsValue = result.getData().get(0).getLatest().get(EntityKeyType.TIME_SERIES).get("temperature").getValue();
-        String attrValue = result.getData().get(0).getLatest().get(SERVER_ATTRIBUTE).get("attr").getValue();
+        Map<EntityKeyType, Map<String, TsValue>> latest = result.getData().get(0).getLatest();
+        String tsValue = latest.get(EntityKeyType.TIME_SERIES).get("temperature").getValue();
+        String attrValue = latest.get(SERVER_ATTRIBUTE).get("attr").getValue();
         assertThat(tsValue).isEqualTo("45.5");
         assertThat(attrValue).isEqualTo("10");
     }
