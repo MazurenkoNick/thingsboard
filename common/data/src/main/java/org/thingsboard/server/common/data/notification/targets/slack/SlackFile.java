@@ -35,7 +35,7 @@ import lombok.Data;
 
 @Data
 @Builder
-public class SlackFile { // TODO: test slack notifications with files
+public class SlackFile {
 
     private final String name;
     private final String type; // one of https://api.slack.com/types/file#file_types
