@@ -105,7 +105,7 @@ public class HtmlRenderUtils {
         org.w3c.dom.Document document = parseDom(renderedHtmlContent);
         renderer.setDocument(document);
         renderer.layout();
-        return renderer.getRootBox().getHeight() / DEFAULT_DOTS_PER_PIXEL;
+        return (int) Math.ceil((double) renderer.getRootBox().getHeight() / DEFAULT_DOTS_PER_PIXEL);
     }
 
 }

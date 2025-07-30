@@ -3,10 +3,9 @@
         <col th:each="colKey : ${columns.keySet()}"
              th:attrappend="width=${columns[colKey].width != null ? columns[colKey].width : null}">
     </colgroup>
-    <thead>
-    <tr th:if="${showTableHeading}"
+    <div th:if="${showTableHeading}"
         th:style="|height: ${headingHeight};|">
-        <th class="tb-report-table-heading"
+        <span class="tb-report-table-heading"
             th:colspan="${columns.size()}"
             th:style="|text-align: ${headingTextAlignment};
                  vertical-align: ${headingVerticalAlignment};
@@ -17,8 +16,9 @@
                  font-family: ${headingFontFamily};
                  font-style: ${headingFontStyle};
                  font-weight: ${headingFontWeight};|"
-            th:utext="${headingText}">Title</th>
-    </tr>
+            th:utext="${headingText}">Title</span>
+    </div>
+    <thead>
     <tr>
         <th th:each="label : ${columns.keySet()}"
             th:style="|display: table-cell;
