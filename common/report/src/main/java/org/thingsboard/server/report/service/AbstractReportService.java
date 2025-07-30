@@ -103,7 +103,7 @@ public abstract class AbstractReportService implements ReportService {
         }
         if (filter instanceof StateEntityOwnerFilter stateEntityOwnerFilter && stateEntityOwnerFilter.getSingleEntity() == null) {
             return Collections.emptyList();
-        }
+        } // TODO: add black-box tests for entity filters
         return fetchEntityDataByQuery(pageLink -> toEntityDataQuery(dataSource, ctx, filter, pageLink), dataSource, ctx);
     }
 
