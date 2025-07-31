@@ -138,10 +138,9 @@ public class ReportQueryUtils {
         return new AlarmDataQuery(entityFilter, alarmDataPageLink, entityFields, latestValues, keyFilters, alarmFields);
     }
 
-    public static EntityDataQuery toEntityDataQuery(DataSource dataSource, TbReportCtx ctx, EntityId stateEntityId, PageLink pageLink) {
+    public static EntityDataQuery toEntityDataQuery(DataSource dataSource, TbReportCtx ctx, EntityFilter filter, PageLink pageLink) {
         EntityDataPageLink entityDataPageLink = new EntityDataPageLink(pageLink.getPageSize(), pageLink.getPage(), pageLink.getTextSearch(), DEFAULT_SORT_ORDER);
 
-        EntityFilter filter = buildEntityFilter(dataSource, ctx, stateEntityId);
         List<KeyFilter> keyFilters = findKeyFilters(dataSource, ctx.getConfiguration());
 
         List<EntityKey> entityFields = new ArrayList<>();
@@ -168,7 +167,7 @@ public class ReportQueryUtils {
         return new EntityDataQuery(filter, entityDataPageLink, entityFields, latestValues, keyFilters);
     }
 
-    private static EntityFilter buildEntityFilter(DataSource dataSource, TbReportCtx ctx, EntityId stateEntityId) {
+    public static EntityFilter buildEntityFilter(DataSource dataSource, TbReportCtx ctx, EntityId stateEntityId) {
         if (dataSource.getType() == DataSourceType.DEVICE) {
             return buildSingleEntityFilter(DeviceId.fromString(dataSource.getDeviceId()));
         }
