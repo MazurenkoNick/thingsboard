@@ -60,6 +60,10 @@ import { UtilsService } from '@core/services/utils.service';
 import { SecretStorageService } from '@core/http/secret-storage.service';
 import { Operation, Resource } from '@shared/models/security.models';
 import { UserPermissionsService } from '@core/http/user-permissions.service';
+import { Store } from '@ngrx/store';
+import { AppState } from '@core/core.state';
+import { getCurrentAuthUser } from '@core/auth/auth.selectors';
+import { Authority } from '@shared/models/authority.enum';
 
 @Component({
   selector: 'tb-secret-file-input',
@@ -110,6 +114,8 @@ export class SecretFileInputComponent extends PageComponent implements OnInit, C
 
   secretStorageFile: string;
 
+  allowSecret = getCurrentAuthUser(this.store).authority !== Authority.CUSTOMER_USER;
+
   private modelValue: string;
 
   private propagateChange = null;
@@ -117,7 +123,8 @@ export class SecretFileInputComponent extends PageComponent implements OnInit, C
   public secretFileFormGroup: UntypedFormGroup;
 
 
-  constructor(private dialog: MatDialog,
+  constructor(protected store: Store<AppState>,
+              private dialog: MatDialog,
               private secretStorageService: SecretStorageService,
               private userPermissionsService: UserPermissionsService,
               private utils: UtilsService,
