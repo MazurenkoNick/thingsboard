@@ -80,6 +80,10 @@ import { BlobEntityService } from '@core/http/blob-entity.service';
 import { TrendzSettingsService } from '@core/http/trendz-settings.service';
 import { SecretStorageService } from '@core/http/secret-storage.service';
 import { AiModelService } from '@core/http/ai-model.service';
+import { DashboardReportService } from '@core/http/dashboard-report.service';
+import { ReportService } from '@core/http/report.service';
+import { ReportTemplateService } from '@core/http/report-template.service';
+import { CustomTranslationService } from '@core/http/custom-translation.service';
 
 export const ServicesMap = new Map<string, Type<any>>(
   [
@@ -91,8 +95,10 @@ export const ServicesMap = new Map<string, Type<any>>(
    ['blobEntityService', BlobEntityService],
    ['entityViewService', EntityViewService],
    ['edgeService', EdgeService],
+   ['customTranslationService', CustomTranslationService],
    ['customerService', CustomerService],
    ['dashboardService', DashboardService],
+   ['dashboardReportService', DashboardReportService],
    ['userService', UserService],
    ['attributeService', AttributeService],
    ['entityRelationService', EntityRelationService],
@@ -116,7 +122,9 @@ export const ServicesMap = new Map<string, Type<any>>(
    ['ruleEngineService', RuleEngineService],
    ['userPermissionsService', UserPermissionsService],
    ['authService', AuthService],
+   ['reportService', ReportService],
    ['resourceService', ResourceService],
+   ['reportTemplateService', ReportTemplateService],
    ['twoFactorAuthenticationService', TwoFactorAuthenticationService],
    ['telemetryWsService', TelemetryWebsocketService],
    ['tenantService', TenantService],
