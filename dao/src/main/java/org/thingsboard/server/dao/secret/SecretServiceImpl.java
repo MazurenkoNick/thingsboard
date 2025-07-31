@@ -30,7 +30,7 @@
  */
 package org.thingsboard.server.dao.secret;
 
-import jakarta.annotation.PostConstruct;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -51,12 +51,10 @@ import org.thingsboard.server.dao.encryptionkey.EncryptionService;
 import org.thingsboard.server.dao.entity.AbstractCachedEntityService;
 import org.thingsboard.server.dao.eventsourcing.DeleteEntityEvent;
 import org.thingsboard.server.dao.eventsourcing.SaveEntityEvent;
-import org.thingsboard.server.dao.integration.IntegrationDao;
-import org.thingsboard.server.dao.rule.RuleChainDao;
-import org.thingsboard.server.dao.service.DataValidator;
-import org.thingsboard.server.dao.settings.AdminSettingsDao;
+import org.thingsboard.server.dao.service.validator.SecretDataValidator;
 import org.thingsboard.server.dao.sql.HasSecretsEntityDao;
 
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -66,39 +64,22 @@ import java.util.UUID;
 import static org.thingsboard.server.dao.service.Validator.validateId;
 
 @Slf4j
-@Service("SecretDaoService")
+@Service
+@RequiredArgsConstructor
 public class SecretServiceImpl extends AbstractCachedEntityService<SecretCacheKey, Secret, SecretCacheEvictEvent> implements SecretService {
 
     private static final String INCORRECT_SECRET_ID = "Incorrect secretId ";
 
-    private final Map<EntityType, HasSecretsEntityDao> hasSecretsEntityDaoMap = new HashMap<>();
+    private final SecretDao secretDao;
+    private final SecretInfoDao secretInfoDao;
+    private final SecretDataValidator secretValidator;
+    private final EncryptionService encryptionService;
+
+    private final Map<EntityType, HasSecretsEntityDao> hasSecretsEntityDaos = new EnumMap<>(EntityType.class);
 
     @Autowired
-    private SecretDao secretDao;
-
-    @Autowired
-    private SecretInfoDao secretInfoDao;
-
-    @Autowired
-    private DataValidator<Secret> secretValidator;
-
-    @Autowired
-    private RuleChainDao ruleChainDao;
-
-    @Autowired
-    private IntegrationDao integrationDao;
-
-    @Autowired
-    private AdminSettingsDao adminSettingsDao;
-
-    @Autowired
-    private EncryptionService encryptionService;
-
-    @PostConstruct
-    public void init() {
-        hasSecretsEntityDaoMap.put(EntityType.RULE_CHAIN, ruleChainDao);
-        hasSecretsEntityDaoMap.put(EntityType.INTEGRATION, integrationDao);
-        hasSecretsEntityDaoMap.put(EntityType.ADMIN_SETTINGS, adminSettingsDao);
+    private void setHasSecretsEntityDaos(List<HasSecretsEntityDao> hasSecretsEntityDaos) {
+        hasSecretsEntityDaos.forEach(dao -> this.hasSecretsEntityDaos.put(dao.getEntityType(), dao));
     }
 
     @Override
@@ -225,7 +206,7 @@ public class SecretServiceImpl extends AbstractCachedEntityService<SecretCacheKe
     public Map<EntityType, List<EntityInfo>> findEntitiesBySecret(TenantId tenantId, SecretInfo secretInfo) {
         Map<EntityType, List<EntityInfo>> affectedEntities = new HashMap<>();
         String placeholder = String.format("${secret:%s;type:%s}", secretInfo.getName(), secretInfo.getType());
-        hasSecretsEntityDaoMap.forEach((entityType, hasSecretsEntityDao) -> {
+        hasSecretsEntityDaos.forEach((entityType, hasSecretsEntityDao) -> {
             var entities = hasSecretsEntityDao.findByTenantIdAndSecretPlaceholder(tenantId, placeholder);
             if (!entities.isEmpty()) {
                 affectedEntities.put(entityType, entities);

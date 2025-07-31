@@ -53,11 +53,6 @@
   .tb-task-filter-config-component {
     flex: 1;
 
-    .mat-mdc-chip {
-      .mdc-evolution-chip__cell, .mat-mdc-chip-action, .mat-mdc-chip-action-label {
-        overflow: hidden;
-      }
-    }
     tb-entity-list, tb-string-items-list {
       .mdc-evolution-chip-set__chips {
         width: 100%;
