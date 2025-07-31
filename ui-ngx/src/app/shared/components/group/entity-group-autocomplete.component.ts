@@ -232,7 +232,7 @@ export class EntityGroupAutocompleteComponent implements ControlValueAccessor, O
         } else {
           groupId = (value as EntityId).id;
         }
-        this.entityGroupService.getEntityGroup(groupId, {ignoreLoading: true}).subscribe({
+        this.entityGroupService.getEntityGroup(groupId, {ignoreLoading: true, ignoreErrors: true}).subscribe({
           next: ({ name, id, ownerId, type }) => {
             const entityGroup = { name, id };
             this.modelValue = this.useFullEntityId ? id : id.id;
