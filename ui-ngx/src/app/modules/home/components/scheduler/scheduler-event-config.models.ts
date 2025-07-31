@@ -44,7 +44,10 @@ export interface SchedulerEventConfigType {
   originator?: boolean;
   msgType?: boolean;
   metadata?: boolean;
-  clearMsgBody?: boolean
+  clearMsgBody?: boolean;
+  clearMetadata?: boolean;
+  clearOriginator?: boolean;
+  clearMsgType?: boolean;
 }
 
 // Example of custom scheduler event config type
@@ -73,14 +76,20 @@ export const defaultSchedulerEventConfigTypes: {[eventType: string]: SchedulerEv
     originator: false,
     msgType: false,
     metadata: false,
-    clearMsgBody: true
+    clearMsgBody: true,
+    clearMetadata: true,
+    clearMsgType: true,
+    clearOriginator: true
   },
   generateDashboardReport: {
     name: 'Generate Dashboard Report',
     componentType: GenerateDashboardReportComponent,
     originator: false,
     msgType: false,
-    metadata: false
+    metadata: false,
+    clearMetadata: true,
+    clearMsgType: true,
+    clearOriginator: true
   },
   updateAttributes: {
     name: 'Update Attributes',
@@ -101,14 +110,16 @@ export const defaultSchedulerEventConfigTypes: {[eventType: string]: SchedulerEv
     componentType: OtaUpdateEventConfigComponent,
     originator: false,
     msgType: false,
-    metadata: false
+    metadata: false,
+    clearMetadata: true,
   },
   updateSoftware: {
     name: 'Update Software',
     componentType: OtaUpdateEventConfigComponent,
     originator: false,
     msgType: false,
-    metadata: false
+    metadata: false,
+    clearMetadata: true,
   }
 };
 
