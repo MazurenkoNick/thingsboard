@@ -234,6 +234,7 @@ export class TemplateAutocompleteComponent implements ControlValueAccessor, OnIn
     button._elementRef.nativeElement.blur();
     this.createTemplateByName($event);
   }
+  
   createTemplateByName($event: Event, name?: string) {
     $event?.stopPropagation();
     this.openNotificationTemplateDialog({
