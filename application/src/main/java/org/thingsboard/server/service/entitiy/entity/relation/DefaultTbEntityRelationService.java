@@ -31,7 +31,6 @@
 package org.thingsboard.server.service.entitiy.entity.relation;
 
 import lombok.AllArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.thingsboard.server.common.data.User;
 import org.thingsboard.server.common.data.audit.ActionType;
@@ -48,7 +47,6 @@ import org.thingsboard.server.service.entitiy.AbstractTbEntityService;
 @Service
 @TbCoreComponent
 @AllArgsConstructor
-@Slf4j
 public class DefaultTbEntityRelationService extends AbstractTbEntityService implements TbEntityRelationService {
 
     private final RelationService relationService;
@@ -86,7 +84,7 @@ public class DefaultTbEntityRelationService extends AbstractTbEntityService impl
     }
 
     @Override
-    public void deleteCommonRelations(TenantId tenantId, CustomerId customerId, EntityId entityId, User user) throws ThingsboardException {
+    public void deleteCommonRelations(TenantId tenantId, CustomerId customerId, EntityId entityId, User user) {
         try {
             relationService.deleteEntityCommonRelations(tenantId, entityId);
             logEntityActionService.logEntityAction(tenantId, entityId, null, customerId, ActionType.RELATIONS_DELETED, user);
@@ -96,4 +94,5 @@ public class DefaultTbEntityRelationService extends AbstractTbEntityService impl
             throw e;
         }
     }
+
 }
