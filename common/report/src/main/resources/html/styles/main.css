@@ -115,12 +115,14 @@ div.report-component {
 }
 
 table.tb-report-table {
-    -fs-table-paginate: paginate;
     width: 100%;
     border-spacing: 0;
-    border-collapse: collapse;
+    border-collapse: separate;
     table-layout: fixed;
-    border: 1px solid rgba(0, 0, 0, 0.87);
+}
+
+.content table.tb-report-table {
+    -fs-table-paginate: paginate;
 }
 
 table.tb-report-table tr {
@@ -131,9 +133,15 @@ table.tb-report-table tr {
 table.tb-report-table th, table.tb-report-table td {
     overflow: hidden;
     padding: 2px;
-    border: 1px solid rgba(0, 0, 0, 0.87);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.87);
+    border-right: 1px solid rgba(0, 0, 0, 0.87);
+}
+
+table.tb-report-table th:first-child, table.tb-report-table td:first-child {
+    border-left: 1px solid rgba(0, 0, 0, 0.87);
 }
 
 table.tb-report-table th {
+    border-top: 1px solid rgba(0, 0, 0, 0.87);
     text-align: center;
 }
