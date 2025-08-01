@@ -106,4 +106,8 @@ public interface ScheduledReportInfoRepository extends JpaRepository<ScheduledRe
                                                                  @Param("searchText") String searchText,
                                                                  Pageable pageable);
 
+    @Query("SELECT count(sei) FROM ScheduledReportInfoEntity sei WHERE sei.tenantId = :tenantId " +
+            "AND sei.reportTemplateId = :reportTemplateId")
+    int countScheduledReportEventsByTemplateId(@Param("tenantId") UUID tenantId, @Param("reportTemplateId") UUID reportTemplateId);
+
 }
