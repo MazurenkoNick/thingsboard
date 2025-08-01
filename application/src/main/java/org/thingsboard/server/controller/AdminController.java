@@ -47,8 +47,11 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.transaction.event.TransactionalEventListener;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -62,6 +65,7 @@ import org.springframework.web.context.request.async.DeferredResult;
 import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.rule.engine.api.MailService;
 import org.thingsboard.rule.engine.api.SmsService;
+import org.thingsboard.server.cache.TbTransactionalCache;
 import org.thingsboard.server.common.data.AdminSettings;
 import org.thingsboard.server.common.data.FeaturesInfo;
 import org.thingsboard.server.common.data.LicenseInfo;
@@ -88,6 +92,7 @@ import org.thingsboard.server.common.data.sync.vc.RepositorySettingsInfo;
 import org.thingsboard.server.common.data.sync.vc.VcUtils;
 import org.thingsboard.server.config.annotations.ApiOperation;
 import org.thingsboard.server.dao.audit.AuditLogService;
+import org.thingsboard.server.dao.mail.MailOauth2StateCacheEvictEvent;
 import org.thingsboard.server.dao.settings.AdminSettingsService;
 import org.thingsboard.server.dao.settings.SecuritySettingsService;
 import org.thingsboard.server.queue.util.TbCoreComponent;
@@ -104,8 +109,6 @@ import org.thingsboard.server.service.update.UpdateService;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 
 import static org.thingsboard.server.controller.ControllerConstants.SYSTEM_AUTHORITY_PARAGRAPH;
 import static org.thingsboard.server.controller.ControllerConstants.SYSTEM_OR_TENANT_AUTHORITY_PARAGRAPH;
@@ -130,12 +133,13 @@ public class AdminController extends BaseController {
     private final UpdateService updateService;
     private final SystemInfoService systemInfoService;
     private final AuditLogService auditLogService;
+    private final TbTransactionalCache<String, TenantId> oauth2StateCache;
+    private final ApplicationEventPublisher eventPublisher;
 
     private static final String PREV_URI_PATH_PARAMETER = "prevUri";
     private static final String PREV_URI_COOKIE_NAME = "prev_uri";
     private static final String STATE_COOKIE_NAME = "state";
     private static final String MAIL_SETTINGS_KEY = "mail";
-    private static final ConcurrentMap<String, TenantId> internalSessionMap = new ConcurrentHashMap<>();
 
     protected static final String RESOURCE_READ_CHECK = "\n\nSecurity check is performed to verify that " +
             "the user has 'READ' permission for the 'ADMIN_SETTINGS' (for 'SYS_ADMIN' authority) or 'WHITE_LABELING' (for 'TENANT_ADMIN' authority) resource.";
@@ -490,7 +494,7 @@ public class AdminController extends BaseController {
             CookieUtils.addCookie(response, PREV_URI_COOKIE_NAME, request.getParameter(PREV_URI_PATH_PARAMETER), 180);
         }
         CookieUtils.addCookie(response, STATE_COOKIE_NAME, state, 180);
-        internalSessionMap.put(state, currentUser.getTenantId());
+        oauth2StateCache.put(state, currentUser.getTenantId());
 
         AdminSettings adminSettings;
         if (Authority.SYS_ADMIN.equals(currentUser.getAuthority())) {
@@ -527,7 +531,13 @@ public class AdminController extends BaseController {
             CookieUtils.deleteCookie(request, response, STATE_COOKIE_NAME);
             throw new ThingsboardException("Refresh token was not generated, invalid state param", ThingsboardErrorCode.BAD_REQUEST_PARAMS);
         }
-        TenantId tenantId = internalSessionMap.remove(cookieState.get().getValue());
+        String stateFromCookie = cookieState.get().getValue();
+        var cacheValueWrapper= oauth2StateCache.get(stateFromCookie);
+        if (cacheValueWrapper == null) {
+            throw new ThingsboardException("State parameter is not valid", ThingsboardErrorCode.BAD_REQUEST_PARAMS);
+        }
+        TenantId tenantId = cacheValueWrapper.get();
+        publishEvictEvent(new MailOauth2StateCacheEvictEvent(stateFromCookie));
 
         CookieUtils.deleteCookie(request, response, STATE_COOKIE_NAME);
         CookieUtils.deleteCookie(request, response, PREV_URI_COOKIE_NAME);
@@ -576,6 +586,19 @@ public class AdminController extends BaseController {
             }
         }
         return adminSettings;
+    }
+
+    private void publishEvictEvent(MailOauth2StateCacheEvictEvent evictEvent) {
+        if (TransactionSynchronizationManager.isActualTransactionActive()) {
+            eventPublisher.publishEvent(evictEvent);
+        } else {
+            handleEvictEvent(evictEvent);
+        }
+    }
+
+    @TransactionalEventListener(classes = MailOauth2StateCacheEvictEvent.class, fallbackExecution = true)
+    private void handleEvictEvent(MailOauth2StateCacheEvictEvent event) {
+        oauth2StateCache.evict(event.state());
     }
 
 }
