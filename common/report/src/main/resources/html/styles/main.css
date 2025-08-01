@@ -145,3 +145,10 @@ table.tb-report-table th {
     border-top: 1px solid rgba(0, 0, 0, 0.87);
     text-align: center;
 }
+
+table.tb-report-table th.tb-report-table-heading {
+    border-top: 0;
+    border-left: 0;
+    border-right: 0;
+    border-bottom: 0;
+}
