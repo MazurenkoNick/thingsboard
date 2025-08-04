@@ -46,5 +46,4 @@ public class TbMaxAggFunction extends TbBaseAggFunction {
         return max;
     }
 
-
 }

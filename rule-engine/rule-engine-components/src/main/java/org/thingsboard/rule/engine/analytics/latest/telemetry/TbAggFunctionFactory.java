@@ -32,25 +32,19 @@ package org.thingsboard.rule.engine.analytics.latest.telemetry;
 
 import org.thingsboard.rule.engine.analytics.incoming.MathFunction;
 
-public class TbAggFunctionFactory {
+public final class TbAggFunctionFactory {
+
+    private TbAggFunctionFactory() {}
 
     public static TbAggFunction createAggFunction(MathFunction mathFunction) {
-        switch (mathFunction) {
-            case MIN:
-                return new TbMinAggFunction();
-            case MAX:
-                return new TbMaxAggFunction();
-            case SUM:
-                return new TbSumAggFunction();
-            case AVG:
-                return new TbAvgAggFunction();
-            case COUNT:
-                return new TbCountAggFunction();
-            case COUNT_UNIQUE:
-                return new TbCountUniqueAggFunction();
-            default:
-                throw new IllegalArgumentException("Unsupported incoming function: " + mathFunction.name() + "!");
-        }
+        return switch (mathFunction) {
+            case MIN -> new TbMinAggFunction();
+            case MAX -> new TbMaxAggFunction();
+            case SUM -> new TbSumAggFunction();
+            case AVG -> new TbAvgAggFunction();
+            case COUNT -> new TbCountAggFunction();
+            case COUNT_UNIQUE -> new TbCountUniqueAggFunction();
+        };
     }
 
 }

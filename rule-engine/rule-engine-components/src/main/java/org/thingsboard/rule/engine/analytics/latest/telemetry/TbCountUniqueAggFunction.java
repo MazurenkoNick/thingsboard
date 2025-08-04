@@ -40,17 +40,16 @@ import java.util.Set;
 
 public class TbCountUniqueAggFunction implements TbAggFunction {
 
-    private Set<String> items = new HashSet<>();
+    private final Set<String> items = new HashSet<>();
 
     @Override
     public void update(Optional<KvEntry> entry, double defaultValue) {
-        if (entry.isPresent()) {
-            items.add(entry.get().getValueAsString());
-        }
+        entry.map(KvEntry::getValueAsString).ifPresent(items::add);
     }
 
     @Override
     public Optional<JsonElement> result() {
         return Optional.of(new JsonPrimitive(items.size()));
     }
+
 }

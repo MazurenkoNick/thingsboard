@@ -30,9 +30,8 @@
  */
 package org.thingsboard.rule.engine.analytics.incoming;
 
-/**
- * Created by ashvayka on 07.06.18.
- */
 public enum MathFunction {
-    MIN, MAX, SUM, AVG, COUNT, COUNT_UNIQUE;
+
+    MIN, MAX, SUM, AVG, COUNT, COUNT_UNIQUE
+
 }

@@ -46,5 +46,4 @@ public class TbMinAggFunction extends TbBaseAggFunction {
         return min;
     }
 
-
 }

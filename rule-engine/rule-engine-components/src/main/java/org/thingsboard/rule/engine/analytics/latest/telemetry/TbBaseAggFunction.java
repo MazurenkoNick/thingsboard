@@ -79,12 +79,12 @@ public abstract class TbBaseAggFunction implements TbAggFunction {
                     try {
                         result = Double.parseDouble(str);
                     } catch (NumberFormatException e) {
-                        throw new IllegalArgumentException("Aggregation failed. Unable to parse value ["+ str +"]" +
-                                " of attribute [" + kvEntry.getKey() + "] to Double");
+                        throw new IllegalArgumentException("Aggregation failed. Unable to parse value [" + str + "] of attribute [" + kvEntry.getKey() + "] to Double");
                     }
                     break;
             }
         }
         return result;
     }
+
 }

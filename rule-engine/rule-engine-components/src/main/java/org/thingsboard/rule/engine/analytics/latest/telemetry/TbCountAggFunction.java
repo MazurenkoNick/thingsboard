@@ -51,5 +51,8 @@ public class TbCountAggFunction implements TbAggFunction {
     }
 
     @Override
-    public boolean fetchAttrValue() { return false; }
+    public boolean fetchAttrValue() {
+        return false;
+    }
+
 }
