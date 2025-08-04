@@ -89,7 +89,8 @@ export const reportTemplatesRoute: Route = {
           icon: 'mdi:chart-box-outline'
         } as BreadCrumbConfig<ReportTemplatePageComponent>,
         auth: [Authority.TENANT_ADMIN, Authority.CUSTOMER_USER],
-        title: 'report-template.report-template'
+        title: 'report-template.report-template',
+        hideTabs: true
       },
       resolve: {
         reportTemplate: ReportTemplateResolver
