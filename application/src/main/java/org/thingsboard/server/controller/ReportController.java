@@ -261,7 +261,7 @@ public class ReportController extends BaseController {
 
         ByteArrayResource resource = new ByteArrayResource(reportData.getData());
         return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment;filename=" + reportData.getName())
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment;filename=\"" + reportData.getName() + "\"")
                 .header("x-filename", reportData.getName())
                 .contentLength(resource.contentLength())
                 .contentType(MediaType.parseMediaType(reportData.getContentType()))
