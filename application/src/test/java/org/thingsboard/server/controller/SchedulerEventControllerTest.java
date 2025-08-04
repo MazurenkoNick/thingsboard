@@ -91,6 +91,7 @@ public class SchedulerEventControllerTest extends AbstractControllerTest {
         SchedulerEvent foundSchedulerEvent = doGet("/api/schedulerEvent/" + savedSchedulerEvent.getId().getId().toString(), SchedulerEvent.class);
         Assert.assertEquals(savedSchedulerEvent.getName(), foundSchedulerEvent.getName());
         Assert.assertTrue(savedSchedulerEvent.isEnabled());
+        Assert.assertNotNull(savedSchedulerEvent.getVersion());
     }
 
     @Test
