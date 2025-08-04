@@ -531,13 +531,12 @@ public class AdminController extends BaseController {
             CookieUtils.deleteCookie(request, response, STATE_COOKIE_NAME);
             throw new ThingsboardException("Refresh token was not generated, invalid state param", ThingsboardErrorCode.BAD_REQUEST_PARAMS);
         }
-        String stateFromCookie = cookieState.get().getValue();
-        var cacheValueWrapper= oauth2StateCache.get(stateFromCookie);
-        if (cacheValueWrapper == null) {
+        var tenantWrapper= oauth2StateCache.get(state);
+        if (tenantWrapper == null) {
             throw new ThingsboardException("State parameter is not valid", ThingsboardErrorCode.BAD_REQUEST_PARAMS);
         }
-        TenantId tenantId = cacheValueWrapper.get();
-        publishEvictEvent(new MailOauth2StateCacheEvictEvent(stateFromCookie));
+        TenantId tenantId = tenantWrapper.get();
+        publishEvictEvent(new MailOauth2StateCacheEvictEvent(state));
 
         CookieUtils.deleteCookie(request, response, STATE_COOKIE_NAME);
         CookieUtils.deleteCookie(request, response, PREV_URI_COOKIE_NAME);
@@ -597,7 +596,7 @@ public class AdminController extends BaseController {
     }
 
     @TransactionalEventListener(classes = MailOauth2StateCacheEvictEvent.class, fallbackExecution = true)
-    private void handleEvictEvent(MailOauth2StateCacheEvictEvent event) {
+    public void handleEvictEvent(MailOauth2StateCacheEvictEvent event) {
         oauth2StateCache.evict(event.state());
     }
 
