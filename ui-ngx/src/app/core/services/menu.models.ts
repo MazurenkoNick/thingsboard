@@ -1215,7 +1215,7 @@ export const menuSectionMap = new Map<MenuId, MenuSection>([
     {
       id: MenuId.reporting,
       name: 'report.reporting',
-      type: 'toggle',
+      type: 'link',
       path: '/reporting',
       icon: 'mdi:chart-box-multiple',
       isNew: true

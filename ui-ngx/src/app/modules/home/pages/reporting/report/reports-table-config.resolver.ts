@@ -88,7 +88,6 @@ export class ReportsTableConfigResolver  {
       }
     };
 
-    config.tableTitle = this.translate.instant('report.reports');
     config.columns = this.configureColumns(authUser, config);
     this.configureEntityFunctions(config);
     config.cellActionDescriptors = this.configureCellActions(config);
