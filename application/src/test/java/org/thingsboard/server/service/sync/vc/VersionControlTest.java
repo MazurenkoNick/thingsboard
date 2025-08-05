@@ -164,6 +164,7 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.awaitility.Awaitility.await;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.thingsboard.server.controller.TbResourceControllerTest.JS_TEST_FILE_NAME;
@@ -1071,6 +1072,28 @@ public class VersionControlTest extends AbstractControllerTest {
         assertThat(importedFirmwareEvent.getOriginatorId()).isEqualTo(importedDeviceGroup.getId());
         assertThat(importedSoftwareEvent.getOriginatorId()).isEqualTo(importedDeviceGroup.getId());
         assertThat(deviceGroup.getId()).isNotEqualTo(importedDeviceGroup.getId());
+    }
+
+    @Test
+    public void testSchedulerEventWithoutExistingDeviceGroupOriginator_betweenTenants() throws Exception {
+        DeviceProfile deviceProfile = createDeviceProfile(null, null, "Device profile v1.0");
+        OtaPackage firmware = createOtaPackage(tenantId1, deviceProfile.getId(), OtaPackageType.FIRMWARE);
+
+        EntityGroup deviceGroup = createEntityGroup(tenantId1, EntityType.DEVICE, "Device group for OTA");
+        DeviceGroupOtaPackage deviceGroupOtaPackageFirmware = new DeviceGroupOtaPackage();
+        deviceGroupOtaPackageFirmware.setGroupId(deviceGroup.getId());
+        deviceGroupOtaPackageFirmware.setOtaPackageType(OtaPackageType.FIRMWARE);
+        deviceGroupOtaPackageFirmware.setOtaPackageId(firmware.getId());
+        doPost("/api/deviceGroupOtaPackage", deviceGroupOtaPackageFirmware, DeviceGroupOtaPackage.class);
+
+        createSchedulerEventForOtaPackageType(tenantId1, deviceGroup.getId(), "Firmware", "updateFirmware", firmware.getId());
+
+        String versionId = createVersion("scheduler event with ota", EntityType.DEVICE_PROFILE, EntityType.OTA_PACKAGE, EntityType.SCHEDULER_EVENT);
+
+        loginTenant2();
+        assertThatThrownBy(() -> loadVersion(versionId, EntityType.DEVICE_PROFILE, EntityType.OTA_PACKAGE, EntityType.SCHEDULER_EVENT))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageMatching("Failed to load version:.*MissingEntityException.*");
     }
 
     @Test

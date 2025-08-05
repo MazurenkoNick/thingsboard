@@ -68,9 +68,8 @@ public class SchedulerEventImportService extends BaseEntityImportService<Schedul
         // so we assign a temporary originator id and rely on reimport to correct it later
         EntityId originatorId = schedulerEvent.getOriginatorId();
         boolean isEntityGroup = originatorId.getEntityType() == EntityType.ENTITY_GROUP;
-        EntityId internalId = idProvider.getInternalId(originatorId, !isEntityGroup);
+        EntityId internalId = idProvider.getInternalId(originatorId, !isEntityGroup || ctx.isFinalImportAttempt());
         schedulerEvent.setOriginatorId(Objects.requireNonNullElse(internalId, originatorId));
-
         JsonNode configuration = exportData.prepareConfiguration(schedulerEvent.getConfiguration(), schedulerEvent.getType(),
                 idProvider::getInternalId, ctx.getUser().getId());
         schedulerEvent.setConfiguration(configuration);
