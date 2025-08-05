@@ -51,6 +51,7 @@ import { TbPopoverService } from '@shared/components/popover.service';
 import { MaterialIconsComponent } from '@shared/components/material-icons.component';
 import { MatButton } from '@angular/material/button';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { tbImageIcon } from '@shared/models/custom-menu.models';
 
 @Component({
   selector: 'tb-material-icon-select',
@@ -85,6 +86,12 @@ export class MaterialIconSelectComponent extends PageComponent implements OnInit
   @Input()
   @coerceBoolean()
   iconClearButton = false;
+
+  @Input()
+  @coerceBoolean()
+  allowedCustomIcon = false;
+
+  isCustomIcon = false;
 
   private requiredValue: boolean;
   get required(): boolean {
@@ -146,11 +153,13 @@ export class MaterialIconSelectComponent extends PageComponent implements OnInit
     this.materialIconFormGroup.patchValue(
       { icon: this.modelValue }, {emitEvent: false}
     );
+    this.defineIconType(value);
   }
 
   private updateModel() {
     const icon: string = this.materialIconFormGroup.get('icon').value;
     if (this.modelValue !== icon) {
+      this.defineIconType(icon);
       this.modelValue = icon;
       this.propagateChange(this.modelValue);
     }
@@ -184,7 +193,8 @@ export class MaterialIconSelectComponent extends PageComponent implements OnInit
         this.viewContainerRef, MaterialIconsComponent, 'left', true, null,
         {
           selectedIcon: this.materialIconFormGroup.get('icon').value,
-          iconClearButton: this.iconClearButton
+          iconClearButton: this.iconClearButton,
+          allowedCustomIcon: this.allowedCustomIcon,
         },
         {},
         {}, {}, true);
@@ -202,5 +212,11 @@ export class MaterialIconSelectComponent extends PageComponent implements OnInit
   clear() {
     this.materialIconFormGroup.get('icon').patchValue(null, {emitEvent: true});
     this.cd.markForCheck();
+  }
+
+  private defineIconType(icon: string) {
+    if (this.allowedCustomIcon) {
+      this.isCustomIcon = tbImageIcon(icon);
+    }
   }
 }

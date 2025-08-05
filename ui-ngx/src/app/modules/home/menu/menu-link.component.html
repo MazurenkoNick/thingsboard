@@ -34,6 +34,10 @@
   [queryParams]="section.queryParams"
   [routerLink]="section.path"
   [class.is-new]="section.isNew">
-  <tb-icon matButtonIcon *ngIf="section.icon !== null">{{section.icon}}</tb-icon>
+  @if (!isCustomIcon) {
+    <tb-icon matButtonIcon *ngIf="section.icon !== null">{{section.icon}}</tb-icon>
+  } @else {
+    <img class="mat-icon" alt="icon" [src]="section.icon | image | async">
+  }
   <span>{{section.customTranslate ? (section.name | customTranslate) : (section.name | translate)}}</span>
 </a>
