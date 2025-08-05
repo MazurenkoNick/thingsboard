@@ -129,7 +129,7 @@ public class ReportController extends BaseController {
         byte[] data = reportService.getReportData(getTenantId(), reportId);
         ByteArrayResource resource = new ByteArrayResource(data);
         return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment;filename=" + report.getName())
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment;filename=\"" + report.getName() + "\"")
                 .header("x-filename", report.getName())
                 .contentLength(resource.contentLength())
                 .header("Content-Type", report.getFormat().getContentType())
@@ -261,7 +261,7 @@ public class ReportController extends BaseController {
 
         ByteArrayResource resource = new ByteArrayResource(reportData.getData());
         return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment;filename=" + reportData.getName())
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment;filename=\"" + reportData.getName() + "\"")
                 .header("x-filename", reportData.getName())
                 .contentLength(resource.contentLength())
                 .contentType(MediaType.parseMediaType(reportData.getContentType()))
