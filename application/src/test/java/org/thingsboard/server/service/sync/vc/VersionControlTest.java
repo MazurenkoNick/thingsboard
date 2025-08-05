@@ -995,7 +995,7 @@ public class VersionControlTest extends AbstractControllerTest {
     }
 
     @Test
-    public void testSchedulerEventOtaConfigForVc_betweenTenants() throws Exception {
+    public void testSchedulerEventOtaConfigForVcWithDeviceProfileOriginator_betweenTenants() throws Exception {
         DeviceProfile deviceProfile = createDeviceProfile(null, null, "Device profile v1.0");
         OtaPackage firmware = createOtaPackage(tenantId1, deviceProfile.getId(), OtaPackageType.FIRMWARE);
         OtaPackage software = createOtaPackage(tenantId1, deviceProfile.getId(), OtaPackageType.SOFTWARE);
@@ -1022,6 +1022,55 @@ public class VersionControlTest extends AbstractControllerTest {
         checkImportedSchedulerEventData(firmwareEvent, importedFirmwareEvent, importedFirmwareOta.getId());
         checkImportedEntity(tenantId1, softwareEvent, tenantId2, importedSoftwareEvent);
         checkImportedSchedulerEventData(softwareEvent, importedSoftwareEvent, importedSoftwareOta.getId());
+    }
+
+    @Test
+    public void testSchedulerEventOtaConfigForVcWithDeviceGroupOriginator_betweenTenants() throws Exception {
+        DeviceProfile deviceProfile = createDeviceProfile(null, null, "Device profile v1.0");
+        OtaPackage firmware = createOtaPackage(tenantId1, deviceProfile.getId(), OtaPackageType.FIRMWARE);
+        OtaPackage software = createOtaPackage(tenantId1, deviceProfile.getId(), OtaPackageType.SOFTWARE);
+
+        EntityGroup deviceGroup = createEntityGroup(tenantId1, EntityType.DEVICE, "Device group for OTA");
+        DeviceGroupOtaPackage deviceGroupOtaPackageFirmware = new DeviceGroupOtaPackage();
+        deviceGroupOtaPackageFirmware.setGroupId(deviceGroup.getId());
+        deviceGroupOtaPackageFirmware.setOtaPackageType(OtaPackageType.FIRMWARE);
+        deviceGroupOtaPackageFirmware.setOtaPackageId(firmware.getId());
+        doPost("/api/deviceGroupOtaPackage", deviceGroupOtaPackageFirmware, DeviceGroupOtaPackage.class);
+
+        DeviceGroupOtaPackage deviceGroupOtaPackageSoftware = new DeviceGroupOtaPackage();
+        deviceGroupOtaPackageSoftware.setGroupId(deviceGroup.getId());
+        deviceGroupOtaPackageSoftware.setOtaPackageType(OtaPackageType.SOFTWARE);
+        deviceGroupOtaPackageSoftware.setOtaPackageId(software.getId());
+        doPost("/api/deviceGroupOtaPackage", deviceGroupOtaPackageSoftware, DeviceGroupOtaPackage.class);
+
+        SchedulerEvent firmwareEvent = createSchedulerEventForOtaPackageType(tenantId1, deviceGroup.getId(), "Firmware", "updateFirmware", firmware.getId());
+        SchedulerEvent softwareEvent = createSchedulerEventForOtaPackageType(tenantId1, deviceGroup.getId(), "Software", "updateSoftware", software.getId());
+        String versionId = createVersion("scheduler event with ota", EntityType.DEVICE, EntityType.DEVICE_PROFILE, EntityType.OTA_PACKAGE, EntityType.SCHEDULER_EVENT);
+
+        OtaPackage firmwareOta = findOtaPackage(firmware.getTitle());
+        OtaPackage softwareOta = findOtaPackage(software.getTitle());
+
+        loginTenant2();
+        loadVersion(versionId, EntityType.DEVICE_PROFILE, EntityType.OTA_PACKAGE, EntityType.DEVICE, EntityType.SCHEDULER_EVENT);
+        OtaPackage importedFirmwareOta = findOtaPackage(firmwareOta.getTitle());
+        OtaPackage importedSoftwareOta = findOtaPackage(softwareOta.getTitle());
+        SchedulerEvent importedFirmwareEvent = findSchedulerEvent(firmwareEvent.getName());
+        SchedulerEvent importedSoftwareEvent = findSchedulerEvent(softwareEvent.getName());
+
+        checkImportedEntity(tenantId1, firmwareOta, tenantId2, importedFirmwareOta);
+        checkImportedOtaPackageData(firmwareOta, importedFirmwareOta);
+        checkImportedEntity(tenantId1, softwareOta, tenantId2, importedSoftwareOta);
+        checkImportedOtaPackageData(softwareOta, importedSoftwareOta);
+
+        checkImportedEntity(tenantId1, firmwareEvent, tenantId2, importedFirmwareEvent);
+        checkImportedSchedulerEventData(firmwareEvent, importedFirmwareEvent, importedFirmwareOta.getId());
+        checkImportedEntity(tenantId1, softwareEvent, tenantId2, importedSoftwareEvent);
+        checkImportedSchedulerEventData(softwareEvent, importedSoftwareEvent, importedSoftwareOta.getId());
+
+        EntityGroup importedDeviceGroup = findEntityGroup(deviceGroup.getName(), EntityType.DEVICE);
+        assertThat(importedFirmwareEvent.getOriginatorId()).isEqualTo(importedDeviceGroup.getId());
+        assertThat(importedSoftwareEvent.getOriginatorId()).isEqualTo(importedDeviceGroup.getId());
+        assertThat(deviceGroup.getId()).isNotEqualTo(importedDeviceGroup.getId());
     }
 
     @Test
