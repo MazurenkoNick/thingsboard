@@ -59,6 +59,10 @@ import { Operation, Resource } from '@shared/models/security.models';
 import { UserPermissionsService } from '@core/http/user-permissions.service';
 import { coerceNumber } from '@shared/decorators/coercion';
 import { MatFormFieldAppearance } from '@angular/material/form-field';
+import { Store } from '@ngrx/store';
+import { AppState } from '@core/core.state';
+import { getCurrentAuthUser } from '@core/auth/auth.selectors';
+import { Authority } from '@shared/models/authority.enum';
 
 @Component({
   selector: 'tb-secret-key-input',
@@ -104,13 +108,16 @@ export class SecretKeyInputComponent extends PageComponent implements OnInit, Co
 
   secretStorageKey: string;
 
+  allowSecret = getCurrentAuthUser(this.store).authority !== Authority.CUSTOMER_USER;
+
   private modelValue: string;
 
   private propagateChange = null;
 
   public secretKeyFormGroup: UntypedFormGroup;
 
-  constructor(private secretStorageService: SecretStorageService,
+  constructor(protected store: Store<AppState>,
+              private secretStorageService: SecretStorageService,
               private userPermissionsService: UserPermissionsService,
               private dialog: MatDialog,
               private fb: UntypedFormBuilder,

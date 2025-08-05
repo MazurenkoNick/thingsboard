@@ -44,6 +44,7 @@ import org.thingsboard.server.dao.DaoUtil;
 import org.thingsboard.server.dao.TenantEntityDao;
 import org.thingsboard.server.dao.model.sql.AdminSettingsEntity;
 import org.thingsboard.server.dao.settings.AdminSettingsDao;
+import org.thingsboard.server.dao.sql.HasSecretsEntityDao;
 import org.thingsboard.server.dao.sql.JpaAbstractDao;
 import org.thingsboard.server.dao.util.SqlDao;
 
@@ -53,7 +54,7 @@ import java.util.UUID;
 @Component
 @SqlDao
 @RequiredArgsConstructor
-public class JpaAdminSettingsDao extends JpaAbstractDao<AdminSettingsEntity, AdminSettings> implements AdminSettingsDao, TenantEntityDao<AdminSettings> {
+public class JpaAdminSettingsDao extends JpaAbstractDao<AdminSettingsEntity, AdminSettings> implements AdminSettingsDao, TenantEntityDao<AdminSettings>, HasSecretsEntityDao {
 
     private final AdminSettingsRepository adminSettingsRepository;
 

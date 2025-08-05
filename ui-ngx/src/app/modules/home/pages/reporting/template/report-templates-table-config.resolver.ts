@@ -122,7 +122,6 @@ export class ReportTemplatesTableConfigResolver  {
       return true;
     };
 
-    config.tableTitle = this.translate.instant('report-template.report-templates');
     config.columns = this.configureColumns(authUser, config);
     this.configureEntityFunctions(config);
     config.cellActionDescriptors = this.configureCellActions(config);

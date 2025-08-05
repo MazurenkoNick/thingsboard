@@ -38,14 +38,13 @@ import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.dao.Dao;
 import org.thingsboard.server.dao.ExportableEntityDao;
 import org.thingsboard.server.dao.TenantEntityDao;
-import org.thingsboard.server.dao.sql.HasSecretsEntityDao;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
-public interface IntegrationDao extends Dao<Integration>, TenantEntityDao<Integration>, ExportableEntityDao<IntegrationId, Integration>, HasSecretsEntityDao {
+public interface IntegrationDao extends Dao<Integration>, TenantEntityDao<Integration>, ExportableEntityDao<IntegrationId, Integration> {
 
     PageData<Integration> findByTenantId(UUID tenantId, PageLink pageLink);
 

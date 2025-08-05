@@ -107,7 +107,6 @@ export class ScheduledReportsTableConfigResolver  {
       }
     };
 
-    config.tableTitle = this.translate.instant('scheduled-report.scheduled-reports');
     config.columns = this.configureColumns(authUser, config);
     this.configureEntityFunctions(config);
     config.cellActionDescriptors = this.configureCellActions(config);

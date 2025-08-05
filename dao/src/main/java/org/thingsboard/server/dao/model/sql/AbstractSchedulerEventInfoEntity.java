@@ -120,6 +120,7 @@ public abstract class AbstractSchedulerEventInfoEntity<T extends SchedulerEventI
         this.schedule = schedulerEventInfo.getSchedule();
         this.enabled = schedulerEventInfo.isEnabled();
         this.externalId = getUuid(schedulerEventInfo.getExternalId());
+        this.version = schedulerEventInfo.getVersion();
     }
 
     public AbstractSchedulerEventInfoEntity(SchedulerEventInfoEntity schedulerEventInfoEntity) {
@@ -135,6 +136,7 @@ public abstract class AbstractSchedulerEventInfoEntity<T extends SchedulerEventI
         this.additionalInfo = schedulerEventInfoEntity.getAdditionalInfo();
         this.enabled = schedulerEventInfoEntity.isEnabled();
         this.externalId = schedulerEventInfoEntity.getExternalId();
+        this.version = schedulerEventInfoEntity.getVersion();
     }
 
     protected SchedulerEventInfo toSchedulerEventInfo() {
@@ -155,6 +157,7 @@ public abstract class AbstractSchedulerEventInfoEntity<T extends SchedulerEventI
         schedulerEventInfo.setAdditionalInfo(additionalInfo);
         schedulerEventInfo.setEnabled(enabled);
         schedulerEventInfo.setExternalId(getEntityId(externalId, SchedulerEventId::new));
+        schedulerEventInfo.setVersion(version);
         return schedulerEventInfo;
     }
 

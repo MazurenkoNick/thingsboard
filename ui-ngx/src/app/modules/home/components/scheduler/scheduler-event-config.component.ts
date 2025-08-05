@@ -83,6 +83,9 @@ export class SchedulerEventConfigComponent implements ControlValueAccessor, OnIn
   showMetadata = true;
 
   private clearMsgBody = false;
+  private clearMetadata = false;
+  private clearMsgType = false;
+  private clearOriginator = false;
   private propagateChange: (value: SchedulerEventConfiguration) => void = () => {};
 
   constructor(private fb: UntypedFormBuilder,
@@ -129,6 +132,9 @@ export class SchedulerEventConfigComponent implements ControlValueAccessor, OnIn
     this.showMsgType = true;
     this.showMetadata = true;
     this.clearMsgBody = false;
+    this.clearMetadata = false;
+    this.clearMsgType = false;
+    this.clearOriginator = false;
     if (this.schedulerEventType) {
       const configType = this.schedulerEventConfigTypes[this.schedulerEventType];
       if (configType) {
@@ -137,6 +143,9 @@ export class SchedulerEventConfigComponent implements ControlValueAccessor, OnIn
         this.showMsgType = configType.msgType;
         this.showMetadata = configType.metadata;
         this.clearMsgBody = configType.clearMsgBody ?? false;
+        this.clearMetadata = configType.clearMetadata ?? false;
+        this.clearMsgType = configType.clearMsgType ?? false;
+        this.clearOriginator = configType.clearOriginator ?? false;
       }
     }
     this.updateEnabledState();
@@ -196,13 +205,13 @@ export class SchedulerEventConfigComponent implements ControlValueAccessor, OnIn
           if (this.clearMsgBody) {
             delete configuration.msgBody;
           }
-          if (!this.showOriginator) {
+          if (this.clearOriginator) {
             delete configuration.originatorId;
           }
-          if (!this.showMsgType) {
+          if (this.clearMsgType) {
             delete configuration.msgType;
           }
-          if (!this.showMetadata) {
+          if (this.clearMetadata) {
             delete configuration.metadata;
           }
           delete schedulerEventConfig.configuration;
