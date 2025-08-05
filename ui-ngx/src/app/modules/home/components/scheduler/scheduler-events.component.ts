@@ -416,7 +416,11 @@ export class SchedulerEventsComponent extends PageComponent implements OnInit, A
   }
 
   reloadSchedulerEvents(): void {
-    this.calendarApi.refetchEvents();
+    if (this.mode === 'calendar') {
+      this.calendarApi.refetchEvents();
+    } else {
+      this.updateData();
+    }
   }
 
   deleteSchedulerEvent($event: Event, schedulerEvent: SchedulerEventWithCustomerInfo): void {
