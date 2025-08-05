@@ -297,7 +297,7 @@ export class ScheduledReportsTableConfigResolver  {
         renderer: config.getTable().renderer,
         hostView: config.getTable().viewContainerRef,
         componentType: VersionControlComponent,
-        preferredPlacement: ['leftTopOnly', 'leftOnly', 'leftBottomOnly'],
+        preferredPlacement: ['left', 'leftTop', 'leftBottom'],
         context: {
           detailsMode: true,
           active: true,
