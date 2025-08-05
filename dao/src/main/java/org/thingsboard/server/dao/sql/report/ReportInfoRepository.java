@@ -59,7 +59,10 @@ public interface ReportInfoRepository extends JpaRepository<ReportInfoEntity, UU
             "OR ilike(ri.customerTitle, CONCAT('%', :searchText, '%')) = true)")
     Page<ReportInfoEntity> findTenantReportInfos(UUID tenantId, UUID reportTemplateId, UUID userId, String searchText, Pageable pageable);
 
-    @Query(value = "SELECT * FROM report_info_view e " +
+    @Query(value = "SELECT e.*, e.created_time as createdtime, e.report_template_name as reportTemplateName, e.customer_title as customertitle, e.user_name as username " +
+            "FROM (select r.id, r.created_time, r.tenant_id, r.customer_id, c.title as customer_title, r.template_id, r.report_template_name, " +
+            "r.format, r.name, r.user_id, r.data, r.user_name from report_info_view r  " +
+            "LEFT JOIN customer c on c.id = r.customer_id AND c.id != :customerId) e  " +
             "WHERE" + SUB_CUSTOMERS_QUERY +
             "AND (:reportTemplateId IS NULL OR (e.template_id = :reportTemplateId)) " +
             "AND (:userId IS NULL OR (e.user_id = :userId)) " +
