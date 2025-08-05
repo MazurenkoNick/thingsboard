@@ -123,7 +123,7 @@ export class EdgesTableConfigResolver  {
         this.configureEntityFunctions(config);
         config.cellActionDescriptors = this.configureCellActions(authUser, config);
         config.groupActionDescriptors = this.configureGroupActions(config);
-        config.addActionDescriptors = this.configureAddActions(config);
+        config.addActionDescriptors = this.configureAddActions(authUser, config);
         config.addEntity = () => { this.addEdge(config); return of(null); };
         return this.allEntitiesTableConfigService.prepareConfiguration(config);
       })
@@ -282,8 +282,11 @@ export class EdgesTableConfigResolver  {
     return actions;
   }
 
-  configureAddActions(config: EntityTableConfig<EdgeInfo>): Array<HeaderActionDescriptor> {
+  configureAddActions(authUser: AuthUser, config: EntityTableConfig<EdgeInfo>): Array<HeaderActionDescriptor> {
     const actions: Array<HeaderActionDescriptor> = [];
+    if (authUser.authority === Authority.CUSTOMER_USER) {
+      return actions;
+    }
     actions.push(
       {
         name: this.translate.instant('edge.add-edge-text'),
