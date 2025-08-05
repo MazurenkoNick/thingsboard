@@ -48,6 +48,7 @@ import org.thingsboard.server.common.data.rule.RuleChainType;
 import org.thingsboard.server.dao.DaoUtil;
 import org.thingsboard.server.dao.model.sql.RuleChainEntity;
 import org.thingsboard.server.dao.rule.RuleChainDao;
+import org.thingsboard.server.dao.sql.HasSecretsEntityDao;
 import org.thingsboard.server.dao.sql.JpaAbstractDao;
 import org.thingsboard.server.dao.util.SqlDao;
 
@@ -59,7 +60,7 @@ import java.util.UUID;
 @Slf4j
 @Component
 @SqlDao
-public class JpaRuleChainDao extends JpaAbstractDao<RuleChainEntity, RuleChain> implements RuleChainDao {
+public class JpaRuleChainDao extends JpaAbstractDao<RuleChainEntity, RuleChain> implements RuleChainDao, HasSecretsEntityDao {
 
     @Autowired
     private RuleChainRepository ruleChainRepository;

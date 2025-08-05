@@ -29,41 +29,8 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { Route, RouterModule } from '@angular/router';
-import { Authority } from '@shared/models/authority.enum';
-import { NgModule } from '@angular/core';
-import { reportTemplatesRoute } from '@home/pages/reporting/template/report-template-routing.module';
-import { MenuId } from '@core/services/menu.models';
-import { scheduledReportsRoute } from '@home/pages/reporting/scheduling/scheduled-report-routing.module';
-import { reportsRoute } from '@home/pages/reporting/report/report-routing.module';
-import { RouterTabsComponent } from '@home/components/router-tabs.component';
-
-export const reportingRoute: Route = {
-  path: 'reporting',
-  component: RouterTabsComponent,
-  data: {
-    auth: [Authority.TENANT_ADMIN, Authority.CUSTOMER_USER],
-    breadcrumb: {
-      menuId: MenuId.reporting
-    }
-  },
-  children: [
-    {
-      path: '',
-      children: [],
-      data: {
-        auth: [Authority.TENANT_ADMIN, Authority.CUSTOMER_USER],
-        redirectTo: 'templates'
-      }
-    },
-    reportTemplatesRoute,
-    scheduledReportsRoute,
-    reportsRoute
-  ]
-};
-
-@NgModule({
-  imports: [RouterModule.forChild([reportingRoute])],
-  exports: [RouterModule]
-})
-export class ReportingRoutingModule { }
+export * from './widget-model.definition';
+export * from './maps/map.models';
+export * from './maps/map-model.definition';
+export * from './maps/marker-shape.models';
+export * from './rpc/knob.component.models';

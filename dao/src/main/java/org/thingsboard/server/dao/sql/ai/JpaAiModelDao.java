@@ -37,6 +37,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.JpaSort;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Component;
+import org.thingsboard.server.common.data.EntityInfo;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.ai.AiModel;
 import org.thingsboard.server.common.data.id.AiModelId;
@@ -47,9 +48,11 @@ import org.thingsboard.server.common.data.page.SortOrder;
 import org.thingsboard.server.dao.DaoUtil;
 import org.thingsboard.server.dao.ai.AiModelDao;
 import org.thingsboard.server.dao.model.sql.AiModelEntity;
+import org.thingsboard.server.dao.sql.HasSecretsEntityDao;
 import org.thingsboard.server.dao.sql.JpaAbstractDao;
 import org.thingsboard.server.dao.util.SqlDao;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -59,7 +62,7 @@ import static java.util.stream.Collectors.toSet;
 @SqlDao
 @Component
 @RequiredArgsConstructor
-class JpaAiModelDao extends JpaAbstractDao<AiModelEntity, AiModel> implements AiModelDao {
+class JpaAiModelDao extends JpaAbstractDao<AiModelEntity, AiModel> implements AiModelDao, HasSecretsEntityDao {
 
     private final AiModelRepository aiModelRepository;
 
@@ -134,6 +137,11 @@ class JpaAiModelDao extends JpaAbstractDao<AiModelEntity, AiModel> implements Ai
     @Override
     public boolean deleteByTenantIdAndId(TenantId tenantId, AiModelId modelId) {
         return aiModelRepository.deleteByTenantIdAndIdIn(tenantId.getId(), Set.of(modelId.getId())) > 0;
+    }
+
+    @Override
+    public List<EntityInfo> findByTenantIdAndSecretPlaceholder(TenantId tenantId, String placeholder) {
+        return aiModelRepository.findByTenantIdAndSecretPlaceholder(tenantId.getId(), placeholder);
     }
 
     @Override

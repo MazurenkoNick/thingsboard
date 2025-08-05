@@ -48,6 +48,7 @@ import org.thingsboard.server.common.data.util.TbPair;
 import org.thingsboard.server.dao.DaoUtil;
 import org.thingsboard.server.dao.integration.IntegrationDao;
 import org.thingsboard.server.dao.model.sql.IntegrationEntity;
+import org.thingsboard.server.dao.sql.HasSecretsEntityDao;
 import org.thingsboard.server.dao.sql.JpaAbstractDao;
 import org.thingsboard.server.dao.util.SqlDao;
 
@@ -60,7 +61,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @Component
 @SqlDao
-public class JpaIntegrationDao extends JpaAbstractDao<IntegrationEntity, Integration> implements IntegrationDao {
+public class JpaIntegrationDao extends JpaAbstractDao<IntegrationEntity, Integration> implements IntegrationDao, HasSecretsEntityDao {
 
     @Autowired
     private IntegrationRepository integrationRepository;

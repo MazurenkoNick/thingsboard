@@ -165,6 +165,7 @@ export class SentNotificationDialogComponent extends
         this.notificationRequestForm.get('template').enable({emitEvent: false});
         this.updateDeliveryMethodsDisableState();
       }
+      this.updateValidators();
     });
 
     this.notificationRequestForm.get('additionalConfig.enabled').valueChanges.pipe(
