@@ -99,8 +99,8 @@ export class EdgesTableConfigResolver  {
   resolve(route: ActivatedRouteSnapshot): Observable<EntityTableConfig<EdgeInfo>> {
     const groupParams = resolveGroupParams(route);
     const config = new EntityTableConfig<EdgeInfo>(groupParams);
-    this.configDefaults(config);
     const authUser = getCurrentAuthUser(this.store);
+    this.configDefaults(authUser, config);
     config.componentsData = {
       includeCustomers: true,
       edgeType: '',
@@ -123,20 +123,24 @@ export class EdgesTableConfigResolver  {
         this.configureEntityFunctions(config);
         config.cellActionDescriptors = this.configureCellActions(authUser, config);
         config.groupActionDescriptors = this.configureGroupActions(config);
-        config.addActionDescriptors = this.configureAddActions(authUser, config);
+        config.addActionDescriptors = this.configureAddActions(config);
         config.addEntity = () => { this.addEdge(config); return of(null); };
         return this.allEntitiesTableConfigService.prepareConfiguration(config);
       })
     );
   }
 
-  configDefaults(config: EntityTableConfig<EdgeInfo>) {
+  configDefaults(authUser: AuthUser, config: EntityTableConfig<EdgeInfo>) {
     config.entityType = EntityType.EDGE;
     config.entityComponent = EdgeComponent;
     config.entityTabsComponent = GroupEntityTabsComponent<EdgeInfo>;
     config.entityTranslations = entityTypeTranslations.get(EntityType.EDGE);
     config.entityResources = entityTypeResources.get(EntityType.EDGE);
     config.addDialogStyle = {height: '1000px'};
+
+    if(authUser.authority === Authority.CUSTOMER_USER){
+      config.addEnabled = false;
+    }
 
     config.entityTitle = (edge) => edge ?
       this.utils.customTranslation(edge.name, edge.name) : '';
@@ -282,11 +286,8 @@ export class EdgesTableConfigResolver  {
     return actions;
   }
 
-  configureAddActions(authUser: AuthUser, config: EntityTableConfig<EdgeInfo>): Array<HeaderActionDescriptor> {
+  configureAddActions(config: EntityTableConfig<EdgeInfo>): Array<HeaderActionDescriptor> {
     const actions: Array<HeaderActionDescriptor> = [];
-    if (authUser.authority === Authority.CUSTOMER_USER) {
-      return actions;
-    }
     actions.push(
       {
         name: this.translate.instant('edge.add-edge-text'),
