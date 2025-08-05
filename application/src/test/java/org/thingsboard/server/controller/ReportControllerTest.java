@@ -47,6 +47,7 @@ import org.thingsboard.server.common.data.EntityInfo;
 import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.alarm.Alarm;
 import org.thingsboard.server.common.data.alarm.AlarmSeverity;
+import org.thingsboard.server.common.data.id.DeviceId;
 import org.thingsboard.server.common.data.id.ReportTemplateId;
 import org.thingsboard.server.common.data.job.Job;
 import org.thingsboard.server.common.data.job.JobStatus;
@@ -155,7 +156,7 @@ public class ReportControllerTest extends AbstractControllerTest {
         String devicesAliasId = StringUtils.randomAlphabetic(10);
         EntityAlias entityAlias = buildDeviceTypeEntityAlias(devicesAliasId);
 
-        AlarmTableComponent tableComponent = buildAlarmTableComponent(devicesAliasId);
+        AlarmTableComponent tableComponent = buildAlarmTableComponent(devicesAliasId, null);
         ReportTemplateConfig configuration = createReportConfigTemplate(tableComponent, entityAlias, TbReportFormat.CSV);
 
         List<String> columnHeaders = getColumnHeaders(tableComponent);
@@ -166,11 +167,39 @@ public class ReportControllerTest extends AbstractControllerTest {
     }
 
     @Test
+    public void testCSVReportWithAlarmTableComponentForOneDevice() throws Exception {
+        String devicesAliasId = StringUtils.randomAlphabetic(10);
+        EntityAlias entityAlias = buildDeviceTypeEntityAlias(devicesAliasId);
+
+        Device device = new Device();
+        device.setName("My device");
+        device.setType("typeA");
+        device.setLabel("sensor");
+        Device createdDevice = doPost("/api/device", device, Device.class);
+
+        AlarmTableComponent tableComponent = buildAlarmTableComponent(null, createdDevice.getId().toString());
+        Heading heading = new Heading();
+        heading.setText("Alarms for device: ${entityName} ${entityLabel}");
+        tableComponent.setTableHeading(heading);
+        tableComponent.setShowTableHeading(true);
+        ReportTemplateConfig configuration = createReportConfigTemplate(tableComponent, entityAlias, TbReportFormat.CSV);
+
+        String expectedHeading = "Alarms for device: My device sensor";
+        List<String> columnHeaders = getColumnHeaders(tableComponent);
+        List<List<String>> expectedLines = generateTestAlarmData(expectedHeading, createdDevice, columnHeaders, configuration.getTimeDataPattern());
+
+        String csvReport = generateCSVReport(configuration);
+
+        assertThat(Arrays.stream(csvReport.split("\\r?\\n")).map(String::trim))
+                .containsAll(expectedLines.stream().map(row -> String.join(",", row)).toList());
+    }
+
+    @Test
     public void testPDFReportWithAlarmTableComponent() throws Exception {
         String devicesAliasId = StringUtils.randomAlphabetic(10);
         EntityAlias entityAlias = buildDeviceTypeEntityAlias(devicesAliasId);
 
-        AlarmTableComponent tableComponent = buildAlarmTableComponent(devicesAliasId);
+        AlarmTableComponent tableComponent = buildAlarmTableComponent(devicesAliasId, null);
         ReportTemplateConfig configuration = createReportConfigTemplate(tableComponent, entityAlias, TbReportFormat.PDF);
 
         List<String> columnHeaders = getColumnHeaders(tableComponent);
@@ -526,7 +555,31 @@ public class ReportControllerTest extends AbstractControllerTest {
         return expectedLines;
     }
 
-    private AlarmTableComponent buildAlarmTableComponent(String devicesAliasId) {
+    private List<List<String>> generateTestAlarmData(String tableHeading, Device device, List<String> columnHeaders, String timeDataPattern) throws InterruptedException {
+        List<List<String>> expectedLines = new ArrayList<>();
+
+        if (tableHeading != null) {
+            expectedLines.add(List.of(tableHeading));
+        }
+        expectedLines.add(columnHeaders);
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(timeDataPattern).withZone(ZoneId.systemDefault());
+        Alarm alarm = new Alarm();
+        alarm.setOriginator(device.getId());
+        alarm.setType("alarm");
+        alarm.setSeverity(AlarmSeverity.WARNING);
+        Alarm createdAlarm = doPost("/api/alarm", alarm, Alarm.class);
+        Thread.sleep(1);
+
+        expectedLines.add(List.of(
+                formatter.format(Instant.ofEpochMilli(device.getCreatedTime())),
+                device.getName(),
+                alarm.getType()));
+
+        return expectedLines;
+    }
+
+    private AlarmTableComponent buildAlarmTableComponent(String devicesAliasId, String deviceId) {
         AlarmTableComponent alarmTableComponent = new AlarmTableComponent();
         AlarmFilterConfig alarmFilterConfig = new AlarmFilterConfig();
         alarmFilterConfig.setSeverityList(List.of(AlarmSeverity.WARNING));
@@ -536,7 +589,8 @@ public class ReportControllerTest extends AbstractControllerTest {
                 new DataKey("type", "alarm", "ALARM TYPE")
         );
         alarmTableComponent.setAlarmSource(DataSource.builder()
-                .type(DataSourceType.ENTITY)
+                .type(devicesAliasId != null ? DataSourceType.ENTITY : DataSourceType.DEVICE)
+                .deviceId(deviceId)
                 .entityAliasId(devicesAliasId)
                 .alarmFilterConfig(alarmFilterConfig)
                 .dataKeys(dataKeys)
