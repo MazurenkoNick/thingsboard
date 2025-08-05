@@ -129,12 +129,10 @@ public class ReportControllerTest extends AbstractControllerTest {
         ReportTemplateConfig configuration = createReportConfigTemplate(tableComponent, entityAlias, TbReportFormat.CSV);
 
         List<String> columnHeaders = getColumnHeaders(tableComponent);
-        List<List<String>> expectedLines = generateLatestTestData(columnHeaders, tableComponent.getTableHeading().getText(), configuration.getTimeDataPattern());
+        List<List<String>> generatedValues = generateLatestTestData(columnHeaders, tableComponent.getTableHeading().getText(), configuration.getTimeDataPattern());
+        List<String> expectedRows = generatedValues.stream().map(row -> String.join(",", row)).toList();
 
-        String csvReport = generateCSVReport(configuration);
-
-        assertThat(Arrays.stream(csvReport.split("\\r?\\n")).map(String::trim))
-                .containsAll(expectedLines.stream().map(row -> String.join(",", row)).toList());
+        generateAndCheckCSVReport(configuration, expectedRows);
     }
 
     @Test
@@ -146,12 +144,10 @@ public class ReportControllerTest extends AbstractControllerTest {
         ReportTemplateConfig configuration = createReportConfigTemplate(tableComponent, entityAlias, TbReportFormat.PDF);
 
         List<String> columnHeaders = getColumnHeaders(tableComponent);
-        List<List<String>> expectedLines = generateLatestTestData(columnHeaders, tableComponent.getTableHeading().getText(), configuration.getTimeDataPattern());
+        List<List<String>> generatedValues = generateLatestTestData(columnHeaders, tableComponent.getTableHeading().getText(), configuration.getTimeDataPattern());
+        List<String> expectedRows = generatedValues.stream().map(row -> String.join(" ", row)).toList();
 
-        String pdfReport = generatePDFReportText(configuration);
-
-        assertThat(Arrays.stream(pdfReport.split("\\r?\\n")).map(String::trim))
-                .containsAll(expectedLines.stream().map(row -> String.join(" ", row)).toList());
+        generateAndCheckPDFReportText(configuration, expectedRows);
     }
 
     @Test
@@ -163,12 +159,10 @@ public class ReportControllerTest extends AbstractControllerTest {
         ReportTemplateConfig configuration = createReportConfigTemplate(tableComponent, entityAlias, TbReportFormat.CSV);
 
         List<String> columnHeaders = getColumnHeaders(tableComponent);
-        List<List<String>> expectedLines = generateTestAlarmData(columnHeaders, configuration.getTimeDataPattern());
+        List<List<String>> generatedValues = generateTestAlarmData(columnHeaders, configuration.getTimeDataPattern());
+        List<String> expectedRows = generatedValues.stream().map(row -> String.join(",", row)).toList();
 
-        String csvReport = generateCSVReport(configuration);
-
-        assertThat(Arrays.stream(csvReport.split("\\r?\\n")).map(String::trim))
-                .containsAll(expectedLines.stream().map(row -> String.join(",", row)).toList());
+        generateAndCheckCSVReport(configuration, expectedRows);
     }
 
     @Test
@@ -180,12 +174,10 @@ public class ReportControllerTest extends AbstractControllerTest {
         ReportTemplateConfig configuration = createReportConfigTemplate(tableComponent, entityAlias, TbReportFormat.PDF);
 
         List<String> columnHeaders = getColumnHeaders(tableComponent);
-        List<List<String>> expectedLines = generateTestAlarmData(columnHeaders, configuration.getTimeDataPattern());
+        List<List<String>> generatedValues = generateTestAlarmData(columnHeaders, configuration.getTimeDataPattern());
+        List<String> expectedRows = generatedValues.stream().map(row -> String.join(" ", row)).toList();
 
-        String pdfReport = generatePDFReportText(configuration);
-
-        assertThat(Arrays.stream(pdfReport.split("\\r?\\n")).map(String::trim))
-                .containsAll(expectedLines.stream().map(row -> String.join(" ", row)).toList());
+        generateAndCheckPDFReportText(configuration, expectedRows);
     }
 
     @Test
@@ -197,12 +189,10 @@ public class ReportControllerTest extends AbstractControllerTest {
         ReportTemplateConfig configuration = createReportConfigTemplate(tsComponent, entityAlias, TbReportFormat.CSV);
 
         List<String> columnHeaders = List.of("Timestamp", "TEMPERATURE", "NAME", "ACTIVE");
-        List<List<String>> expectedLines = generateTsData(columnHeaders);
+        List<List<String>> generatedValues = generateTsData(columnHeaders);
+        List<String> expectedRows = generatedValues.stream().map(row -> String.join(",", row)).toList();
 
-        String csvReport = generateCSVReport(configuration);
-
-        assertThat(Arrays.stream(csvReport.split("\\r?\\n")).map(String::trim))
-                .containsAll(expectedLines.stream().map(row -> String.join(",", row)).toList());
+        generateAndCheckCSVReport(configuration, expectedRows);
     }
 
     @Test
@@ -215,11 +205,9 @@ public class ReportControllerTest extends AbstractControllerTest {
 
         List<String> columnHeaders = List.of("Timestamp", "TEMPERATURE", "NAME", "ACTIVE");
         List<List<String>> expectedLines = generateTsData(columnHeaders);
+        List<String> expectedRows = expectedLines.stream().map(row -> String.join(" ", row)).toList();
 
-        String pdfReport = generatePDFReportText(configuration);
-
-        assertThat(Arrays.stream(pdfReport.split("\\r?\\n")).map(String::trim))
-                .containsAll(expectedLines.stream().map(row -> String.join(" ", row)).toList());
+        generateAndCheckPDFReportText(configuration, expectedRows);
     }
 
     @Test
@@ -406,10 +394,22 @@ public class ReportControllerTest extends AbstractControllerTest {
         return timewindow;
     }
 
-    private String generateCSVReport(ReportTemplateConfig config) throws Exception {
+    private void generateAndCheckCSVReport(ReportTemplateConfig config, List<String> expectedRows) throws Exception {
         ReportRequest request = new ReportRequest();
         request.setReportTemplateConfig(config);
-        return doPost("/api/v2/report/test", request, String.class);
+
+        await().atMost(60, TimeUnit.SECONDS).until(() -> {
+            String csvReport = doPost("/api/v2/report/test", request, String.class);
+            return Arrays.stream(csvReport.split("\\r?\\n")).map(String::trim).toList()
+                    .containsAll(expectedRows);
+        });
+    }
+
+    private void generateAndCheckPDFReportText(ReportTemplateConfig config, List<String> expectedRows) throws Exception {
+        await().atMost(60, TimeUnit.SECONDS).until(() -> {
+            String pdfReport = generatePDFReportText(config);
+            return Arrays.stream(pdfReport.split("\\r?\\n")).map(String::trim).toList().containsAll(expectedRows);
+        });
     }
 
     private String generatePDFReportText(ReportTemplateConfig config) throws Exception {
