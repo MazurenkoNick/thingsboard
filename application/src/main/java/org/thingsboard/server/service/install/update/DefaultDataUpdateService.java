@@ -208,6 +208,7 @@ public class DefaultDataUpdateService implements DataUpdateService {
     }
 
     private void migrateSensitiveSettingsToUseSecrets() {
+        migrateMailSettingsToSecrets(TenantId.SYS_TENANT_ID);
         PageDataIterable<TenantId> tenantIds = new PageDataIterable<>(tenantService::findTenantsIds, 1024);
         for (TenantId tenantId : tenantIds) {
             migrateVersionControlSettingsToSecrets(tenantId);
