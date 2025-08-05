@@ -293,6 +293,9 @@ export class SchedulerEventsComponent extends PageComponent implements OnInit, A
       takeUntilDestroyed(this.destroyRef)
     ).subscribe(value => {
       this.modeHandler.handleTextSearchChange(value);
+      if (this.mode === 'calendar') {
+        this.calendarApi.refetchEvents();
+      }
     });
   }
 
@@ -1069,6 +1072,7 @@ class StandaloneSchedulerModeHandler extends SchedulerModeHandler {
       page: null
     };
     this.updateRouterQueryParams(queryParams);
+    this.component.pageLink.textSearch = value.trim();
   }
 
   handleSortOrPageChange(queryParams: PageQueryParam): void {
