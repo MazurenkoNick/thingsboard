@@ -130,7 +130,15 @@ export class SchedulerEventsComponent extends PageComponent implements OnInit, A
   @ViewChild(MatPaginator) paginator: MatPaginator;
   @ViewChild(MatSort) sort: MatSort;
   @ViewChild('calendarContainer') calendarContainer: ElementRef<HTMLElement>;
-  @ViewChild('calendar') calendarComponent: FullCalendarComponent;
+  @ViewChild('calendar')
+  set calendarComponent(comp: FullCalendarComponent) {
+    if (comp) {
+      this.calendarApi = comp.getApi();
+      this.calendarApi.render();
+      this.isCalendarInitialized.next(true);
+      this.cd.detectChanges();
+    }
+  }
   @ViewChild('schedulerEventMenuTrigger', {static: true}) schedulerEventMenuTrigger: MatMenuTrigger;
 
   @Input() widgetMode: boolean;
@@ -270,10 +278,6 @@ export class SchedulerEventsComponent extends PageComponent implements OnInit, A
   ngAfterViewInit(): void {
     if (!this.showData) return;
 
-    if (this.mode === 'calendar') {
-      this.initializeCalendar();
-    }
-
     this.setupTextSearchSubscription();
     this.setupSortAndPaginatorSubscriptions();
 
@@ -297,7 +301,7 @@ export class SchedulerEventsComponent extends PageComponent implements OnInit, A
       map(data => {
         const direction = data.direction.toUpperCase();
         const queryParams: PageQueryParam = {
-          direction: Direction.ASC === direction ? null : direction as Direction,
+          direction: Direction.DESC === direction ? null : direction as Direction,
           property: this.defaultSortOrder === data.active ? null : data.active,
           page: null
         };
@@ -351,25 +355,14 @@ export class SchedulerEventsComponent extends PageComponent implements OnInit, A
     const skipUpdateData = this.modeHandler.handleUpdateMode(mode, updateRouterQueryParams);
     if (mode === 'calendar') {
       this.dataSource?.selection.clear();
-      this.initializeCalendar();
+      if (this.isCalendarInitialized.value) {
+        this.calendarApi.refetchEvents();
+        if (this.widgetMode) {
+          this.calendarApi.updateSize();
+        }
+      }
     } else if (!skipUpdateData) {
       this.updateData();
-    }
-  }
-
-  private initializeCalendar(): void {
-    if (!this.isCalendarInitialized.value) {
-      setTimeout(() => {
-        this.calendarApi = this.calendarComponent.getApi();
-        this.calendarApi.render();
-        this.isCalendarInitialized.next(true);
-        this.cd.markForCheck();
-      }, 0);
-    } else {
-      this.calendarApi.refetchEvents();
-      if (this.widgetMode) {
-        this.calendarApi.updateSize();
-      }
     }
   }
 
@@ -420,7 +413,7 @@ export class SchedulerEventsComponent extends PageComponent implements OnInit, A
   }
 
   reloadSchedulerEvents(): void {
-    this.updateData();
+    this.calendarApi.refetchEvents();
   }
 
   deleteSchedulerEvent($event: Event, schedulerEvent: SchedulerEventWithCustomerInfo): void {
@@ -1024,7 +1017,7 @@ class StandaloneSchedulerModeHandler extends SchedulerModeHandler {
     const routerQueryParams: CalendarQueryParam = this.route.snapshot.queryParams;
     const sortOrder: SortOrder = {
       property: routerQueryParams?.property || this.component.defaultSortOrder,
-      direction: routerQueryParams?.direction || Direction.ASC
+      direction: routerQueryParams?.direction || Direction.DESC
     };
     this._defaultPageSize = 10;
     this.component.defaultPageSize = this._defaultPageSize;
@@ -1104,7 +1097,7 @@ class StandaloneSchedulerModeHandler extends SchedulerModeHandler {
     this.component.paginator.pageIndex = Number(params.page) || 0;
     this.component.paginator.pageSize = Number(params.pageSize) || this._defaultPageSize;
     this.component.sort.active = params.property || this.component.defaultSortOrder;
-    this.component.sort.direction = (params.direction || Direction.ASC).toLowerCase() as SortDirection;
+    this.component.sort.direction = (params.direction || Direction.DESC).toLowerCase() as SortDirection;
     const textSearchParam = params.textSearch;
     if (isNotEmptyStr(textSearchParam)) {
       this.component.textSearchMode = true;
