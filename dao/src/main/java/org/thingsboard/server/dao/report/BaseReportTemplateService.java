@@ -50,8 +50,10 @@ import org.thingsboard.server.dao.entity.EntityCountService;
 import org.thingsboard.server.dao.eventsourcing.DeleteEntityEvent;
 import org.thingsboard.server.dao.eventsourcing.SaveEntityEvent;
 import org.thingsboard.server.dao.exception.IncorrectParameterException;
+import org.thingsboard.server.dao.scheduler.SchedulerEventService;
 import org.thingsboard.server.dao.service.DataValidator;
 import org.thingsboard.server.dao.service.PaginatedRemover;
+import org.thingsboard.server.exception.DataValidationException;
 
 import java.util.List;
 import java.util.Optional;
@@ -74,6 +76,7 @@ public class BaseReportTemplateService extends AbstractEntityService implements 
     private final ReportTemplateInfoDao reportTemplateInfoDao;
     private final DataValidator<ReportTemplate> reportTemplateDataValidator;
     private final EntityCountService countService;
+    private final SchedulerEventService schedulerEventService;
 
     @Override
     public ReportTemplate findReportTemplateById(TenantId tenantId, ReportTemplateId reportTemplateId) {
@@ -113,6 +116,11 @@ public class BaseReportTemplateService extends AbstractEntityService implements 
     public void deleteReportTemplate(TenantId tenantId, ReportTemplateId reportTemplateId) {
         validateId(tenantId, id -> INCORRECT_TENANT_ID + id);
         validateId(reportTemplateId, id -> INCORRECT_REPORT_TEMPLATE_ID + id);
+        int eventsByTemplateId = schedulerEventService.countScheduledReportEventsByTemplateId(tenantId, reportTemplateId);
+        if (eventsByTemplateId > 0) {
+            throw new DataValidationException("Cannot delete report template with id [" + reportTemplateId + "], because it is used in " +
+                    eventsByTemplateId + " scheduled reports. Please delete the scheduled reports first.");
+        }
         deleteEntity(tenantId, reportTemplateId, false);
     }
 
