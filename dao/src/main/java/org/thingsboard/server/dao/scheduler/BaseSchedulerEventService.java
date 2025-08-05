@@ -287,7 +287,7 @@ public class BaseSchedulerEventService extends AbstractEntityService implements 
 
     @Override
     public int countScheduledReportEventsByTemplateId(TenantId tenantId, ReportTemplateId reportTemplateId) {
-        log.trace("Executing findScheduledReportEventsByTemplateId, tenantId [{}], reportTemplateId [{}]", tenantId, reportTemplateId);
+        log.trace("Executing countScheduledReportEventsByTemplateId, tenantId [{}], reportTemplateId [{}]", tenantId, reportTemplateId);
         return schedulerEventInfoDao.countScheduledReportEventsByTemplateId(tenantId.getId(), reportTemplateId.getId());
     }
 
