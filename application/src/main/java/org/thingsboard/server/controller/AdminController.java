@@ -50,8 +50,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.transaction.event.TransactionalEventListener;
-import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -92,7 +90,6 @@ import org.thingsboard.server.common.data.sync.vc.RepositorySettingsInfo;
 import org.thingsboard.server.common.data.sync.vc.VcUtils;
 import org.thingsboard.server.config.annotations.ApiOperation;
 import org.thingsboard.server.dao.audit.AuditLogService;
-import org.thingsboard.server.dao.mail.MailOauth2StateCacheEvictEvent;
 import org.thingsboard.server.dao.settings.AdminSettingsService;
 import org.thingsboard.server.dao.settings.SecuritySettingsService;
 import org.thingsboard.server.queue.util.TbCoreComponent;
@@ -531,12 +528,12 @@ public class AdminController extends BaseController {
             CookieUtils.deleteCookie(request, response, STATE_COOKIE_NAME);
             throw new ThingsboardException("Refresh token was not generated, invalid state param", ThingsboardErrorCode.BAD_REQUEST_PARAMS);
         }
-        var tenantWrapper= oauth2StateCache.get(state);
+        var tenantWrapper = oauth2StateCache.get(state);
         if (tenantWrapper == null) {
             throw new ThingsboardException("State parameter is not valid", ThingsboardErrorCode.BAD_REQUEST_PARAMS);
         }
         TenantId tenantId = tenantWrapper.get();
-        publishEvictEvent(new MailOauth2StateCacheEvictEvent(state));
+        oauth2StateCache.evict(state);
 
         CookieUtils.deleteCookie(request, response, STATE_COOKIE_NAME);
         CookieUtils.deleteCookie(request, response, PREV_URI_COOKIE_NAME);
@@ -585,19 +582,6 @@ public class AdminController extends BaseController {
             }
         }
         return adminSettings;
-    }
-
-    private void publishEvictEvent(MailOauth2StateCacheEvictEvent evictEvent) {
-        if (TransactionSynchronizationManager.isActualTransactionActive()) {
-            eventPublisher.publishEvent(evictEvent);
-        } else {
-            handleEvictEvent(evictEvent);
-        }
-    }
-
-    @TransactionalEventListener(classes = MailOauth2StateCacheEvictEvent.class, fallbackExecution = true)
-    public void handleEvictEvent(MailOauth2StateCacheEvictEvent event) {
-        oauth2StateCache.evict(event.state());
     }
 
 }
