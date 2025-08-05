@@ -187,11 +187,9 @@ public class ReportControllerTest extends AbstractControllerTest {
         String expectedHeading = "Alarms for device: My device sensor";
         List<String> columnHeaders = getColumnHeaders(tableComponent);
         List<List<String>> expectedLines = generateTestAlarmData(expectedHeading, createdDevice, columnHeaders, configuration.getTimeDataPattern());
+        List<String> expectedRows = expectedLines.stream().map(row -> String.join(",", row)).toList();
 
-        String csvReport = generateCSVReport(configuration);
-
-        assertThat(Arrays.stream(csvReport.split("\\r?\\n")).map(String::trim))
-                .containsAll(expectedLines.stream().map(row -> String.join(",", row)).toList());
+        generateAndCheckCSVReport(configuration, expectedRows);
     }
 
     @Test
