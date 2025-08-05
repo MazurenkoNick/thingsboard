@@ -53,6 +53,7 @@ import {
 import { deepClone, isDefined, isDefinedAndNotNull, isNotEmptyStr, isString, isUndefined } from '@core/utils';
 import {
   Datasource,
+  datasourcesHasAggregation,
   datasourcesHasOnlyComparisonAggregation,
   DatasourceType,
   defaultLegendConfig,
@@ -64,7 +65,8 @@ import {
   WidgetConfigMode,
   WidgetSize,
   widgetType,
-  WidgetTypeDescriptor
+  WidgetTypeDescriptor,
+  widgetTypeHasTimewindow
 } from '@app/shared/models/widget.models';
 import { EntityType } from '@shared/models/entity-type.models';
 import { AliasFilterType, EntityAlias, EntityAliasFilter } from '@app/shared/models/alias.models';
@@ -314,7 +316,11 @@ export class DashboardUtilsService {
     widgetConfig.datasources = this.validateAndUpdateDatasources(widgetConfig.datasources);
     if (type === widgetType.latest) {
       const onlyHistoryTimewindow = datasourcesHasOnlyComparisonAggregation(widgetConfig.datasources);
-      widgetConfig.timewindow = initModelFromDefaultTimewindow(widgetConfig.timewindow, true, onlyHistoryTimewindow, this.timeService);
+      const aggregationEnabledForKeys = datasourcesHasAggregation(widgetConfig.datasources);
+      if (aggregationEnabledForKeys) {
+        widgetConfig.timewindow = initModelFromDefaultTimewindow(widgetConfig.timewindow, true,
+          onlyHistoryTimewindow, this.timeService, false);
+      }
     } else if (type === widgetType.rpc) {
       if (widgetConfig.targetDeviceAliasIds && widgetConfig.targetDeviceAliasIds.length) {
         widgetConfig.targetDevice = {
@@ -364,7 +370,27 @@ export class DashboardUtilsService {
         }
       }
     }
+
+    this.removeTimewindowConfigIfUnused(widgetConfig, type);
     return widgetConfig;
+  }
+
+  public removeTimewindowConfigIfUnused(widgetConfig: WidgetConfig, type: widgetType) {
+    const widgetHasTimewindow = widgetTypeHasTimewindow(type) || (type === widgetType.latest && datasourcesHasAggregation(widgetConfig.datasources));
+    if (!widgetHasTimewindow || widgetConfig.useDashboardTimewindow) {
+      delete widgetConfig.displayTimewindow;
+      delete widgetConfig.timewindow;
+      delete widgetConfig.timewindowStyle;
+
+      if (!widgetHasTimewindow) {
+        delete widgetConfig.useDashboardTimewindow;
+      }
+    }
+  }
+
+  public prepareWidgetForSaving(widget: Widget): Widget {
+    this.removeTimewindowConfigIfUnused(widget.config, widget.type);
+    return widget;
   }
 
   public prepareWidgetForScadaLayout(widget: Widget, isScada: boolean): Widget {
