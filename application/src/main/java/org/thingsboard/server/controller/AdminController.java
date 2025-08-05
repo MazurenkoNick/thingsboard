@@ -89,6 +89,7 @@ import org.thingsboard.server.common.data.sync.vc.RepositorySettingsInfo;
 import org.thingsboard.server.common.data.sync.vc.VcUtils;
 import org.thingsboard.server.config.annotations.ApiOperation;
 import org.thingsboard.server.dao.audit.AuditLogService;
+import org.thingsboard.server.dao.secret.SecretConfigurationService;
 import org.thingsboard.server.dao.settings.AdminSettingsService;
 import org.thingsboard.server.dao.settings.SecuritySettingsService;
 import org.thingsboard.server.queue.util.TbCoreComponent;
@@ -129,6 +130,7 @@ public class AdminController extends BaseController {
     private final UpdateService updateService;
     private final SystemInfoService systemInfoService;
     private final AuditLogService auditLogService;
+    private final SecretConfigurationService secretConfigurationService;
     private final TbTransactionalCache<String, TenantId> oauth2StateCache;
 
     private static final String PREV_URI_PATH_PARAMETER = "prevUri";
@@ -542,7 +544,8 @@ public class AdminController extends BaseController {
         } else {
             adminSettings = getTenantAdminSettings(tenantId, MAIL_SETTINGS_KEY, false);
         }
-        JsonNode jsonValue = adminSettings.getJsonValue();
+        JsonNode jsonValue = adminSettings.getJsonValue().deepCopy();
+        secretConfigurationService.replaceSecretUsages(tenantId, jsonValue);
 
         String clientId = checkNotNull(jsonValue.get("clientId"), "No clientId was configured").asText();
         String clientSecret = checkNotNull(jsonValue.get("clientSecret"), "No client secret was configured").asText();
@@ -559,8 +562,8 @@ public class AdminController extends BaseController {
             log.warn("Unable to retrieve refresh token: {}", e.getMessage());
             throw new ThingsboardException("Error while requesting access token: " + e.getMessage(), ThingsboardErrorCode.GENERAL);
         }
-        ((ObjectNode) jsonValue).put("refreshToken", tokenResponse.getRefreshToken());
-        ((ObjectNode) jsonValue).put("tokenGenerated", true);
+        ((ObjectNode) adminSettings.getJsonValue()).put("refreshToken", tokenResponse.getRefreshToken());
+        ((ObjectNode) adminSettings.getJsonValue()).put("tokenGenerated", true);
 
         adminSettingsService.saveAdminSettings(tenantId, adminSettings);
         response.sendRedirect(prevUri);
