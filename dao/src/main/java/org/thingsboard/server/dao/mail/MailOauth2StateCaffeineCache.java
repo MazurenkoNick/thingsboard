@@ -28,29 +28,21 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.dao.settings;
+package org.thingsboard.server.dao.mail;
 
-import org.thingsboard.server.common.data.AdminSettings;
-import org.thingsboard.server.common.data.id.AdminSettingsId;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.cache.CacheManager;
+import org.springframework.stereotype.Service;
+import org.thingsboard.server.cache.CaffeineTbTransactionalCache;
+import org.thingsboard.server.common.data.CacheConstants;
 import org.thingsboard.server.common.data.id.TenantId;
-import org.thingsboard.server.dao.entity.EntityDaoService;
 
-public interface AdminSettingsService extends EntityDaoService {
+@ConditionalOnProperty(prefix = "cache", value = "type", havingValue = "caffeine", matchIfMissing = true)
+@Service("MailOauth2StateCache")
+public class MailOauth2StateCaffeineCache extends CaffeineTbTransactionalCache<String, TenantId> {
 
-    AdminSettings findAdminSettingsById(TenantId tenantId, AdminSettingsId adminSettingsId);
-
-    /**
-     * @deprecated
-     * <p> Use {@link #findAdminSettingsByTenantIdAndKey} instead.
-     *
-     */
-    @Deprecated
-    AdminSettings findAdminSettingsByKey(TenantId tenantId, String key);
-
-    AdminSettings findAdminSettingsByTenantIdAndKey(TenantId tenantId, String key);
-
-    AdminSettings saveAdminSettings(TenantId tenantId, AdminSettings adminSettings);
-
-    boolean deleteAdminSettingsByTenantIdAndKey(TenantId tenantId, String key);
+    public MailOauth2StateCaffeineCache(CacheManager cacheManager) {
+        super(cacheManager, CacheConstants.MAIL_OAUTH2_STATE_CACHE);
+    }
 
 }
