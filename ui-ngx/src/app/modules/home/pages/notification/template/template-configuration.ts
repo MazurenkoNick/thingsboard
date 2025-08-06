@@ -154,8 +154,8 @@ export abstract class TemplateConfiguration<T, R = any> extends DialogComponent<
     if (notificationType === NotificationType.REPORT_GENERATED) {
       this.templateNotificationForm.get('configuration.attachReport').patchValue(false, {emitEvent: false});
     }
-    const attachReport: boolean = this.templateNotificationForm.get('configuration.attachReport').value;
-    if (attachReport) {
+    const attachReport = this.templateNotificationForm.get('configuration.attachReport');
+    if (attachReport.value && !attachReport.disabled) {
       this.templateNotificationForm.get('configuration.reportTemplateId').enable({emitEvent: false});
       this.templateNotificationForm.get('configuration.userId').enable({emitEvent: false});
       this.templateNotificationForm.get('configuration.timezone').enable({emitEvent: false});
