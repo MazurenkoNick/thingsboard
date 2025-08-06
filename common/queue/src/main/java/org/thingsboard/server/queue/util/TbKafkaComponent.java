@@ -28,46 +28,17 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.queue;
+package org.thingsboard.server.queue.util;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.thingsboard.server.queue.kafka.TbKafkaAdmin;
-import org.thingsboard.server.queue.kafka.TbKafkaSettings;
-import org.thingsboard.server.queue.kafka.TbKafkaTopicConfigs;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 
-@Configuration
-public class RuleEngineTbQueueAdminFactory {
+import java.lang.annotation.Inherited;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-    @Autowired(required = false)
-    private TbKafkaTopicConfigs kafkaTopicConfigs;
-    @Autowired(required = false)
-    private TbKafkaSettings kafkaSettings;
-
-    @ConditionalOnExpression("'${queue.type:null}'=='kafka'")
-    @Bean
-    public TbQueueAdmin createKafkaAdmin() {
-        return new TbKafkaAdmin(kafkaSettings, kafkaTopicConfigs.getRuleEngineConfigs());
-    }
-
-    @ConditionalOnExpression("'${queue.type:null}'=='in-memory'")
-    @Bean
-    public TbQueueAdmin createInMemoryAdmin() {
-        return new TbQueueAdmin() {
-
-            @Override
-            public void createTopicIfNotExists(String topic, String properties, boolean force) {
-            }
-
-            @Override
-            public void deleteTopic(String topic) {
-            }
-
-            @Override
-            public void destroy() {
-            }
-        };
-    }
-}
+@Inherited
+@Retention(RetentionPolicy.RUNTIME)
+@Target({java.lang.annotation.ElementType.TYPE, java.lang.annotation.ElementType.METHOD})
+@ConditionalOnProperty(prefix = "queue", value = "type", havingValue = "kafka")
+public @interface TbKafkaComponent {}

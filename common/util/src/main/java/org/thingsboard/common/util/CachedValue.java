@@ -28,46 +28,28 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.queue;
+package org.thingsboard.common.util;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.thingsboard.server.queue.kafka.TbKafkaAdmin;
-import org.thingsboard.server.queue.kafka.TbKafkaSettings;
-import org.thingsboard.server.queue.kafka.TbKafkaTopicConfigs;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.LoadingCache;
 
-@Configuration
-public class RuleEngineTbQueueAdminFactory {
+import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 
-    @Autowired(required = false)
-    private TbKafkaTopicConfigs kafkaTopicConfigs;
-    @Autowired(required = false)
-    private TbKafkaSettings kafkaSettings;
+public class CachedValue<V> {
 
-    @ConditionalOnExpression("'${queue.type:null}'=='kafka'")
-    @Bean
-    public TbQueueAdmin createKafkaAdmin() {
-        return new TbKafkaAdmin(kafkaSettings, kafkaTopicConfigs.getRuleEngineConfigs());
+    private static final Object KEY = new Object();
+
+    private final LoadingCache<Object, V> cache;
+
+    public CachedValue(Supplier<V> supplier, long valueTtlMs) {
+        this.cache = Caffeine.newBuilder()
+                .expireAfterWrite(valueTtlMs, TimeUnit.MILLISECONDS)
+                .build(__ -> supplier.get());
     }
 
-    @ConditionalOnExpression("'${queue.type:null}'=='in-memory'")
-    @Bean
-    public TbQueueAdmin createInMemoryAdmin() {
-        return new TbQueueAdmin() {
-
-            @Override
-            public void createTopicIfNotExists(String topic, String properties, boolean force) {
-            }
-
-            @Override
-            public void deleteTopic(String topic) {
-            }
-
-            @Override
-            public void destroy() {
-            }
-        };
+    public V get() {
+        return cache.get(KEY);
     }
+
 }
