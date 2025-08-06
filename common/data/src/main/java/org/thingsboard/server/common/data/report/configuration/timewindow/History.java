@@ -30,11 +30,13 @@
  */
 package org.thingsboard.server.common.data.report.configuration.timewindow;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 
 @Data
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class History {
     private int historyType;
     private long interval;
