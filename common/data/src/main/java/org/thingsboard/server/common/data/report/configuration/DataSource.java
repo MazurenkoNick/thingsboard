@@ -54,5 +54,4 @@ public class DataSource {
     private List<DataKey> dataKeys;
     private List<DataKey> latestDataKeys;
     private AlarmFilterConfig alarmFilterConfig;
-    private EntityDataSortOrder sortOrder;
 }

@@ -34,9 +34,6 @@ import lombok.Data;
 
 @Data
 public class TimeWindowConfiguration {
-    private boolean hideAggregation;
-    private boolean hideAggInterval;
-    private boolean hideTimezone;
     private History history;
     private AggregationConfiguration aggregation;
     private String timezone;

@@ -39,7 +39,4 @@ public class History {
     private long timewindowMs;
     private FixedTimeWindow fixedTimewindow;
     private QuickTimeInterval quickInterval;
-    private boolean hideInterval;
-    private boolean hideLastInterval;
-    private boolean hideQuickInterval;
 }
