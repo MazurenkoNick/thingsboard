@@ -166,7 +166,8 @@ public class TbMailSender extends JavaMailSenderImpl {
         try {
             if (System.currentTimeMillis() > getTokenExpires()) {
                 AdminSettings settings = getMailSettings(tenantId);
-                JsonNode jsonValue = settings.getJsonValue();
+                JsonNode jsonValue = settings.getJsonValue().deepCopy();
+                ctx.getSecretConfigurationService().replaceSecretUsages(tenantId, jsonValue);
                 String clientId = jsonValue.get("clientId").asText();
                 String clientSecret = jsonValue.get("clientSecret").asText();
                 String refreshToken = jsonValue.get("refreshToken").asText();
@@ -178,8 +179,8 @@ public class TbMailSender extends JavaMailSenderImpl {
                         .setClientAuthentication(new ClientParametersAuthentication(clientId, clientSecret))
                         .execute();
                 if (MailOauth2Provider.OFFICE_365.name().equals(providerId)) {
-                    ((ObjectNode) jsonValue).put("refreshToken", tokenResponse.getRefreshToken());
-                    ((ObjectNode) jsonValue).put("refreshTokenExpires", Instant.now().plus(Duration.ofDays(AZURE_DEFAULT_REFRESH_TOKEN_LIFETIME_IN_DAYS)).toEpochMilli());
+                    ((ObjectNode) settings.getJsonValue()).put("refreshToken", tokenResponse.getRefreshToken());
+                    ((ObjectNode) settings.getJsonValue()).put("refreshTokenExpires", Instant.now().plus(Duration.ofDays(AZURE_DEFAULT_REFRESH_TOKEN_LIFETIME_IN_DAYS)).toEpochMilli());
                     ctx.getAdminSettingsService().saveAdminSettings(tenantId, settings);
                 }
                 accessToken = tokenResponse.getAccessToken();

@@ -46,6 +46,7 @@ import org.thingsboard.server.common.data.AdminSettings;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
+import org.thingsboard.server.dao.secret.SecretConfigurationService;
 import org.thingsboard.server.dao.settings.AdminSettingsService;
 import org.thingsboard.server.dao.tenant.TenantService;
 import org.thingsboard.server.queue.util.TbCoreComponent;
@@ -67,6 +68,7 @@ public class RefreshTokenExpCheckService {
 
     private final TenantService tenantService;
     private final AdminSettingsService adminSettingsService;
+    private final SecretConfigurationService secretConfigurationService;
 
     @Scheduled(initialDelayString = "#{T(org.apache.commons.lang3.RandomUtils).nextLong(0, ${mail.oauth2.refreshTokenCheckingInterval})}",
             fixedDelayString = "${mail.oauth2.refreshTokenCheckingInterval}",
@@ -93,16 +95,17 @@ public class RefreshTokenExpCheckService {
 
     private void refreshTokenIfExpires(TenantId tenantId, AdminSettings adminSettings, BiConsumer<TenantId, AdminSettings> saveFunction) throws Exception {
         if (adminSettings != null) {
-            JsonNode jsonValue = adminSettings.getJsonValue();
+            JsonNode jsonValue = adminSettings.getJsonValue().deepCopy();
+            secretConfigurationService.replaceSecretUsages(tenantId, jsonValue);
             if (jsonValue != null && jsonValue.has("useSystemMailSettings") && !jsonValue.get("useSystemMailSettings").asBoolean() &&
                     jsonValue.has("enableOauth2") && jsonValue.get("enableOauth2").asBoolean() && OFFICE_365.name().equals(jsonValue.get("providerId").asText()) &&
                     jsonValue.has("refreshToken") && jsonValue.has("refreshTokenExpires")) {
                 long expiresIn = jsonValue.get("refreshTokenExpires").longValue();
                 long tokenLifeDuration = expiresIn - System.currentTimeMillis();
                 if (tokenLifeDuration < 0) {
-                    ((ObjectNode) jsonValue).put("tokenGenerated", false);
-                    ((ObjectNode) jsonValue).remove("refreshToken");
-                    ((ObjectNode) jsonValue).remove("refreshTokenExpires");
+                    ((ObjectNode) adminSettings.getJsonValue()).put("tokenGenerated", false);
+                    ((ObjectNode) adminSettings.getJsonValue()).remove("refreshToken");
+                    ((ObjectNode) adminSettings.getJsonValue()).remove("refreshTokenExpires");
 
                     saveFunction.accept(tenantId, adminSettings);
                 } else if (tokenLifeDuration < 604800000L) { //less than 7 days
@@ -117,8 +120,8 @@ public class RefreshTokenExpCheckService {
                             new GenericUrl(tokenUri), refreshToken)
                             .setClientAuthentication(new ClientParametersAuthentication(clientId, clientSecret))
                             .execute();
-                    ((ObjectNode) jsonValue).put("refreshToken", tokenResponse.getRefreshToken());
-                    ((ObjectNode) jsonValue).put("refreshTokenExpires", Instant.now().plus(Duration.ofDays(AZURE_DEFAULT_REFRESH_TOKEN_LIFETIME_IN_DAYS)).toEpochMilli());
+                    ((ObjectNode) adminSettings.getJsonValue()).put("refreshToken", tokenResponse.getRefreshToken());
+                    ((ObjectNode) adminSettings.getJsonValue()).put("refreshTokenExpires", Instant.now().plus(Duration.ofDays(AZURE_DEFAULT_REFRESH_TOKEN_LIFETIME_IN_DAYS)).toEpochMilli());
                     saveFunction.accept(tenantId, adminSettings);
                 }
             }
