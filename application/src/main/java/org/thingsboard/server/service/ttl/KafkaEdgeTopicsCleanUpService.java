@@ -95,8 +95,8 @@ public class KafkaEdgeTopicsCleanUpService extends AbstractCleanUpService {
             return;
         }
 
-        Set<String> topics = kafkaAdmin.getAllTopics();
-        if (topics == null || topics.isEmpty()) {
+        Set<String> topics = kafkaAdmin.listTopics();
+        if (topics.isEmpty()) {
             return;
         }
 
