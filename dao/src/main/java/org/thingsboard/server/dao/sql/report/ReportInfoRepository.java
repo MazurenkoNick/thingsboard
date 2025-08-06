@@ -46,17 +46,17 @@ import static org.thingsboard.server.dao.model.ModelConstants.SUB_CUSTOMERS_QUER
 public interface ReportInfoRepository extends JpaRepository<ReportInfoEntity, UUID> {
 
     @Query("SELECT ri FROM ReportInfoEntity ri WHERE ri.tenantId = :tenantId " +
-            "AND (ri.customerId IS NULL OR ri.customerId = org.thingsboard.server.common.data.id.EntityId.NULL_UUID) " +
-            "AND (:reportTemplateId IS NULL OR (ri.templateId = :reportTemplateId)) " +
-            "AND (:userId IS NULL OR (ri.userId = :userId)) " +
-            "AND (:searchText IS NULL OR ilike(ri.name, CONCAT('%', :searchText, '%')) = true)")
-    Page<ReportInfoEntity> findTenantReportInfosIncludingCustomers(UUID tenantId, UUID reportTemplateId, UUID userId, String searchText, Pageable pageable);
-
-    @Query("SELECT ri FROM ReportInfoEntity ri WHERE ri.tenantId = :tenantId " +
             "AND (:reportTemplateId IS NULL OR (ri.templateId = :reportTemplateId)) " +
             "AND (:userId IS NULL OR (ri.userId = :userId)) " +
             "AND (:searchText IS NULL OR ilike(ri.name, CONCAT('%', :searchText, '%')) = true " +
             "OR ilike(ri.customerTitle, CONCAT('%', :searchText, '%')) = true)")
+    Page<ReportInfoEntity> findTenantReportInfosIncludingCustomers(UUID tenantId, UUID reportTemplateId, UUID userId, String searchText, Pageable pageable);
+
+    @Query("SELECT ri FROM ReportInfoEntity ri WHERE ri.tenantId = :tenantId " +
+            "AND (ri.customerId IS NULL OR ri.customerId = org.thingsboard.server.common.data.id.EntityId.NULL_UUID) " +
+            "AND (:reportTemplateId IS NULL OR (ri.templateId = :reportTemplateId)) " +
+            "AND (:userId IS NULL OR (ri.userId = :userId)) " +
+            "AND (:searchText IS NULL OR ilike(ri.name, CONCAT('%', :searchText, '%')) = true)")
     Page<ReportInfoEntity> findTenantReportInfos(UUID tenantId, UUID reportTemplateId, UUID userId, String searchText, Pageable pageable);
 
     @Query(value = "SELECT e.*, e.created_time as createdtime, e.report_template_name as reportTemplateName, e.customer_title as customertitle, e.user_name as username " +
