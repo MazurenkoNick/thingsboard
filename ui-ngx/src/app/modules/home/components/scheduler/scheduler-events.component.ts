@@ -145,11 +145,12 @@ export class SchedulerEventsComponent extends PageComponent implements OnInit, A
   @Input() ctx: WidgetContext;
   @Input() edgeId: string = this.route.snapshot.params.edgeId;
 
+  authUser = getCurrentAuthUser(this.store);
   editEnabled = this.userPermissionsService.hasGenericPermission(Resource.SCHEDULER_EVENT, Operation.WRITE);
-  vcEnabled = this.userPermissionsService.hasGenericPermission(Resource.VERSION_CONTROL, Operation.READ);
+  vcEnabled = this.userPermissionsService.hasGenericPermission(Resource.VERSION_CONTROL, Operation.READ) &&
+    this.authUser.authority === Authority.TENANT_ADMIN;
   addEnabled = this.userPermissionsService.hasGenericPermission(Resource.SCHEDULER_EVENT, Operation.CREATE);
   deleteEnabled = this.userPermissionsService.hasGenericPermission(Resource.SCHEDULER_EVENT, Operation.DELETE);
-  authUser = getCurrentAuthUser(this.store);
   showData = (this.authUser.authority === Authority.TENANT_ADMIN ||
       this.authUser.authority === Authority.CUSTOMER_USER) &&
     this.userPermissionsService.hasGenericPermission(Resource.SCHEDULER_EVENT, Operation.READ);
@@ -776,7 +777,7 @@ export class SchedulerEventsComponent extends PageComponent implements OnInit, A
         renderer: this.renderer,
         hostView: this.viewContainerRef,
         componentType: VersionControlComponent,
-        preferredPlacement: ['leftTopOnly', 'leftOnly', 'leftBottomOnly'],
+        preferredPlacement: ['left', 'leftTop', 'leftBottom'],
         context: {
           detailsMode: true,
           active: true,
