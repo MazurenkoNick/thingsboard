@@ -43,8 +43,6 @@ import org.thingsboard.server.dao.scheduler.SchedulerEventService;
 import org.thingsboard.server.queue.util.TbCoreComponent;
 import org.thingsboard.server.service.sync.vc.data.EntitiesImportCtx;
 
-import java.util.Objects;
-
 @Service
 @TbCoreComponent
 @RequiredArgsConstructor
@@ -67,9 +65,9 @@ public class SchedulerEventImportService extends BaseEntityImportService<Schedul
         // Groups are imported after entities, so a group-originator lookup may return null. Validation forbids a null originator,
         // so we assign a temporary originator id and rely on reimport to correct it later
         EntityId originatorId = schedulerEvent.getOriginatorId();
-        boolean isEntityGroup = originatorId.getEntityType() == EntityType.ENTITY_GROUP;
+        boolean isEntityGroup = originatorId != null && originatorId.getEntityType() == EntityType.ENTITY_GROUP;
         EntityId internalId = idProvider.getInternalId(originatorId, !isEntityGroup || ctx.isFinalImportAttempt());
-        schedulerEvent.setOriginatorId(Objects.requireNonNullElse(internalId, originatorId));
+        schedulerEvent.setOriginatorId(internalId != null ? internalId : originatorId);
         JsonNode configuration = exportData.prepareConfiguration(schedulerEvent.getConfiguration(), schedulerEvent.getType(),
                 idProvider::getInternalId, ctx.getUser().getId());
         schedulerEvent.setConfiguration(configuration);

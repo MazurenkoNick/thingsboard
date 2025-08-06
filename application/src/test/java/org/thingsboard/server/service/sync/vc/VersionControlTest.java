@@ -1129,13 +1129,12 @@ public class VersionControlTest extends AbstractControllerTest {
 
     @Test
     public void testSchedulerEventGenerateReportForVc_betweenTenants() throws Exception {
-        DeviceProfile deviceProfile = createDeviceProfile(null, null, "Device profile v1.0");
         Dashboard dashboard = createDashboard(null, "Test Dashboard");
-        SchedulerEvent reportEvent = createSchedulerEventForGenerateReportType(tenantId1, deviceProfile.getId(), "Report", dashboard.getId());
-        String versionId = createVersion("scheduler event with report", EntityType.DEVICE_PROFILE, EntityType.DASHBOARD, EntityType.SCHEDULER_EVENT);
+        SchedulerEvent reportEvent = createSchedulerEventForGenerateReportType(tenantId1, null, "Report", dashboard.getId());
+        String versionId = createVersion("scheduler event with report", EntityType.DASHBOARD, EntityType.SCHEDULER_EVENT);
 
         loginTenant2();
-        loadVersion(versionId, EntityType.DEVICE_PROFILE, EntityType.DASHBOARD, EntityType.SCHEDULER_EVENT);
+        loadVersion(versionId, EntityType.DASHBOARD, EntityType.SCHEDULER_EVENT);
         Dashboard importedDashboard = findDashboard(dashboard.getTitle());
         SchedulerEvent importedReportEvent = findSchedulerEvent(reportEvent.getName());
 
@@ -1148,10 +1147,10 @@ public class VersionControlTest extends AbstractControllerTest {
 
     @Test
     public void testSchedulerEventGenerateReportV2ForVc_betweenTenants() throws Exception {
-        DeviceProfile deviceProfile = createDeviceProfile(null, null, "Device profile v1.0");
+        createDeviceProfile(null, null, "Device profile v1.0");
         Device device = createDevice(null, null, "Device 1", "test1");
         ReportTemplate reportTemplate = createReportTemplate(tenantId1, null, "Weekly report", device.getId());
-        SchedulerEvent reportEvent = createSchedulerEventForGenerateReportType(tenantId1, deviceProfile.getId(), "Report V2", reportTemplate.getId(), tenantAdminUserId);
+        SchedulerEvent reportEvent = createSchedulerEventForGenerateReportType(tenantId1, null, "Report V2", reportTemplate.getId(), tenantAdminUserId);
         String versionId = createVersion("scheduler event with report V2", EntityType.DEVICE_PROFILE, EntityType.DEVICE, EntityType.REPORT_TEMPLATE, EntityType.SCHEDULER_EVENT);
 
         loginTenant2();
