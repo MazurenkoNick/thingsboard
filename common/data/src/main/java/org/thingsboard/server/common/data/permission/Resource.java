@@ -271,8 +271,6 @@ public enum Resource {
                 Resource.ROLE,
                 Resource.SCHEDULER_EVENT,
                 Resource.BLOB_ENTITY,
-                Resource.REPORT_TEMPLATE,
-                Resource.REPORT,
                 Resource.CUSTOMER_GROUP,
                 Resource.USER_GROUP,
                 Resource.DEVICE_GROUP,
