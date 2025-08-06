@@ -30,7 +30,6 @@
  */
 package org.thingsboard.rule.engine.transform;
 
-import com.google.common.util.concurrent.Futures;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -69,14 +68,15 @@ import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.stream.IntStream;
 
+import static com.google.common.util.concurrent.Futures.immediateFuture;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -85,22 +85,26 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class TbDuplicateMsgToRelatedNodeTest {
 
-    private final DeviceId ORIGINATOR_ID = new DeviceId(UUID.fromString("61e68586-466f-41e3-abca-9457b80da8d6"));
-    private final TenantId TENANT_ID = new TenantId(UUID.fromString("9cc6c3c8-b90f-4d00-bfb2-fd38ccf79f63"));
+    final DeviceId ORIGINATOR_ID = new DeviceId(UUID.fromString("61e68586-466f-41e3-abca-9457b80da8d6"));
+    final TenantId TENANT_ID = TenantId.fromUUID(UUID.fromString("9cc6c3c8-b90f-4d00-bfb2-fd38ccf79f63"));
 
-    private final ListeningExecutor dbCallbackExecutor = new TestDbCallbackExecutor();
+    final ListeningExecutor dbCallbackExecutor = new TestDbCallbackExecutor();
 
-    private TbDuplicateMsgToRelatedNode node;
-    private TbDuplicateMsgToRelatedNodeConfiguration config;
+    TbDuplicateMsgToRelatedNode node;
+    TbDuplicateMsgToRelatedNodeConfiguration config;
 
     @Mock
-    private TbContext ctxMock;
+    TbContext ctxMock;
     @Mock
-    private RelationService relationServiceMock;
+    RelationService relationServiceMock;
 
     @BeforeEach
     void setUp() {
         node = new TbDuplicateMsgToRelatedNode();
+
+        lenient().when(ctxMock.getDbCallbackExecutor()).thenReturn(dbCallbackExecutor);
+        lenient().when(ctxMock.getTenantId()).thenReturn(TENANT_ID);
+        lenient().when(ctxMock.getRelationService()).thenReturn(relationServiceMock);
     }
 
     @AfterEach
@@ -109,7 +113,7 @@ class TbDuplicateMsgToRelatedNodeTest {
     }
 
     @Test
-    public void givenDefaultConfig_whenInit_thenOK() throws TbNodeException {
+    void givenDefaultConfig_whenInit_thenOK() throws TbNodeException {
         // GIVEN-WHEN
         init();
 
@@ -118,7 +122,7 @@ class TbDuplicateMsgToRelatedNodeTest {
     }
 
     @Test
-    public void givenConfigWithUnspecifiedRelationQuery_whenInit_thenThrowException() {
+    void givenConfigWithUnspecifiedRelationQuery_whenInit_thenThrowException() {
         // GIVEN-WHEN
         var configuration = new TbDuplicateMsgToRelatedNodeConfiguration().defaultConfiguration();
         configuration.setRelationsQuery(null);
@@ -128,7 +132,7 @@ class TbDuplicateMsgToRelatedNodeTest {
     }
 
     @Test
-    public void givenDefaultConfig_whenOnMsg_thenDuplicateToRelatedEntities() throws TbNodeException {
+    void givenDefaultConfig_whenOnMsg_thenDuplicateToRelatedEntities() throws TbNodeException {
         // GIVEN
         init();
 
@@ -150,45 +154,14 @@ class TbDuplicateMsgToRelatedNodeTest {
 
         var relationList = List.of(firstRelation, secondRelation);
 
-        when(ctxMock.getDbCallbackExecutor()).thenReturn(dbCallbackExecutor);
-        when(ctxMock.getTenantId()).thenReturn(TENANT_ID);
-        when(ctxMock.getRelationService()).thenReturn(relationServiceMock);
-
         var entityRelationsQuery = buildQuery(config.getRelationsQuery());
-        when(relationServiceMock.findByQuery(
-                eq(TENANT_ID), eq(entityRelationsQuery)))
-                .thenReturn(Futures.immediateFuture(relationList));
-
-        doAnswer((Answer<TbMsg>) invocationOnMock -> {
-            String queueName = (String) (invocationOnMock.getArguments())[0];
-            String type = (String) (invocationOnMock.getArguments())[1];
-            EntityId entityId = (EntityId) (invocationOnMock.getArguments())[2];
-            CustomerId customerId = (CustomerId) (invocationOnMock.getArguments())[3];
-            TbMsgMetaData metaData = (TbMsgMetaData) (invocationOnMock.getArguments())[4];
-            String data = (String) (invocationOnMock.getArguments())[5];
-            return TbMsg.newMsg()
-                    .queueName(queueName)
-                    .type(type)
-                    .originator(entityId)
-                    .customerId(customerId)
-                    .copyMetaData(metaData)
-                    .data(data)
-                    .build();
-        }).when(ctxMock).newMsg(
-                eq(msg.getQueueName()),
-                eq(msg.getType()),
-                nullable(EntityId.class),
-                nullable(CustomerId.class),
-                eq(msg.getMetaData()),
-                eq(msg.getData())
-        );
+        when(relationServiceMock.findByQuery(TENANT_ID, entityRelationsQuery)).thenReturn(immediateFuture(relationList));
 
         // WHEN
         node.onMsg(ctxMock, msg);
 
         // THEN
-        verify(relationServiceMock)
-                .findByQuery(eq(TENANT_ID), eq(entityRelationsQuery));
+        verify(relationServiceMock).findByQuery(TENANT_ID, entityRelationsQuery);
         verify(ctxMock, never()).transformMsgOriginator(any(TbMsg.class), any(EntityId.class));
         verify(ctxMock, never()).tellFailure(any(), any(Throwable.class));
 
@@ -207,17 +180,15 @@ class TbDuplicateMsgToRelatedNodeTest {
         List<TbMsg> allValues = newMsgCaptor.getAllValues();
         IntStream.range(0, allValues.size()).forEach(i -> {
             TbMsg newMsg = allValues.get(i);
-            assertThat(newMsg).isNotNull();
-            assertThat(newMsg).isNotSameAs(msg);
-            assertThat(newMsg.getType()).isSameAs(msg.getType());
-            assertThat(newMsg.getData()).isSameAs(msg.getData());
-            assertThat(newMsg.getMetaData()).isEqualTo(msg.getMetaData());
-            assertThat(newMsg.getOriginator()).isSameAs(relationList.get(i).getTo());
+
+            assertThat(newMsg).usingRecursiveComparison().ignoringFields("id", "originator").isEqualTo(msg);
+            assertThat(newMsg.getOriginator()).isEqualTo(relationList.get(i).getTo());
+            assertThat(newMsg.getId()).isNotNull().isNotEqualTo(msg.getId());
         });
     }
 
     @Test
-    public void givenDefaultConfig_whenOnMsg_thenOneRelatedEntityFound() throws TbNodeException {
+    void givenDefaultConfig_whenOnMsg_thenOneRelatedEntityFound() throws TbNodeException {
         init();
 
         var msg = getTbMsg();
@@ -229,14 +200,8 @@ class TbDuplicateMsgToRelatedNodeTest {
         relation.setTypeGroup(RelationTypeGroup.COMMON);
         relation.setType(EntityRelation.CONTAINS_TYPE);
 
-        when(ctxMock.getDbCallbackExecutor()).thenReturn(dbCallbackExecutor);
-        when(ctxMock.getTenantId()).thenReturn(TENANT_ID);
-        when(ctxMock.getRelationService()).thenReturn(relationServiceMock);
-
         var entityRelationsQuery = buildQuery(config.getRelationsQuery());
-        when(relationServiceMock.findByQuery(
-                eq(TENANT_ID), eq(entityRelationsQuery)))
-                .thenReturn(Futures.immediateFuture(List.of(relation)));
+        when(relationServiceMock.findByQuery(TENANT_ID, entityRelationsQuery)).thenReturn(immediateFuture(List.of(relation)));
 
         doAnswer((Answer<TbMsg>) invocationOnMock -> {
             TbMsg tbMsg = (TbMsg) (invocationOnMock.getArguments())[0];
@@ -252,8 +217,7 @@ class TbDuplicateMsgToRelatedNodeTest {
         node.onMsg(ctxMock, msg);
 
         // THEN
-        verify(relationServiceMock)
-                .findByQuery(eq(TENANT_ID), eq(entityRelationsQuery));
+        verify(relationServiceMock).findByQuery(TENANT_ID, entityRelationsQuery);
         verify(ctxMock, never()).newMsg(anyString(),
                 anyString(),
                 any(EntityId.class),
@@ -279,26 +243,19 @@ class TbDuplicateMsgToRelatedNodeTest {
     }
 
     @Test
-    public void givenDefaultConfig_whenOnMsg_thenNoRelatedEntitiesFound() throws TbNodeException {
+    void givenDefaultConfig_whenOnMsg_thenNoRelatedEntitiesFound() throws TbNodeException {
         init();
 
         var msg = getTbMsg();
 
-        when(ctxMock.getDbCallbackExecutor()).thenReturn(dbCallbackExecutor);
-        when(ctxMock.getTenantId()).thenReturn(TENANT_ID);
-        when(ctxMock.getRelationService()).thenReturn(relationServiceMock);
-
         var entityRelationsQuery = buildQuery(config.getRelationsQuery());
-        when(relationServiceMock.findByQuery(
-                eq(TENANT_ID), eq(entityRelationsQuery)))
-                .thenReturn(Futures.immediateFuture(Collections.emptyList()));
+        when(relationServiceMock.findByQuery(TENANT_ID, entityRelationsQuery)).thenReturn(immediateFuture(Collections.emptyList()));
 
         // WHEN
         node.onMsg(ctxMock, msg);
 
         // THEN
-        verify(relationServiceMock)
-                .findByQuery(eq(TENANT_ID), eq(entityRelationsQuery));
+        verify(relationServiceMock).findByQuery(TENANT_ID, entityRelationsQuery);
         verify(ctxMock, never()).newMsg(anyString(),
                 anyString(),
                 any(EntityId.class),
@@ -321,18 +278,17 @@ class TbDuplicateMsgToRelatedNodeTest {
         assertThat(actualThrowable.getMessage()).isEqualTo(expectedExceptionMessage);
     }
 
-
-    private void init() throws TbNodeException {
+    void init() throws TbNodeException {
         initWithConfig(new TbDuplicateMsgToRelatedNodeConfiguration().defaultConfiguration());
     }
 
-    private void initWithConfig(TbDuplicateMsgToRelatedNodeConfiguration configuration) throws TbNodeException {
+    void initWithConfig(TbDuplicateMsgToRelatedNodeConfiguration configuration) throws TbNodeException {
         config = configuration;
         TbNodeConfiguration nodeConfiguration = new TbNodeConfiguration(JacksonUtil.valueToTree(config));
         node.init(ctxMock, nodeConfiguration);
     }
 
-    private TbMsg getTbMsg() {
+    TbMsg getTbMsg() {
         return TbMsg.newMsg()
                 .type(TbMsgType.POST_TELEMETRY_REQUEST)
                 .originator(ORIGINATOR_ID)
@@ -341,7 +297,7 @@ class TbDuplicateMsgToRelatedNodeTest {
                 .build();
     }
 
-    private RelationsQuery getDefaultRelationQuery() {
+    RelationsQuery getDefaultRelationQuery() {
         var relationsQuery = new RelationsQuery();
         relationsQuery.setDirection(EntitySearchDirection.FROM);
         relationsQuery.setMaxLevel(1);
@@ -350,7 +306,7 @@ class TbDuplicateMsgToRelatedNodeTest {
         return relationsQuery;
     }
 
-    private EntityRelationsQuery buildQuery(RelationsQuery relationsQuery) {
+    EntityRelationsQuery buildQuery(RelationsQuery relationsQuery) {
         var query = new EntityRelationsQuery();
         var parameters = new RelationsSearchParameters(
                 ORIGINATOR_ID,

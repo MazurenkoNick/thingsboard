@@ -32,7 +32,6 @@ package org.thingsboard.rule.engine.transform;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.util.concurrent.Futures;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -75,6 +74,7 @@ import java.util.function.Consumer;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+import static com.google.common.util.concurrent.Futures.immediateFuture;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
@@ -82,8 +82,8 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.nullable;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -91,24 +91,29 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class TbDuplicateMsgToGroupByNameNodeTest {
 
-    private final DeviceId ORIGINATOR_ID = new DeviceId(UUID.fromString("6c59c85e-8351-435a-98ec-721c627b0de8"));
-    private final TenantId TENANT_ID = new TenantId(UUID.fromString("8f88de53-4e79-4bb1-bc70-946d9a869458"));
+    final DeviceId ORIGINATOR_ID = new DeviceId(UUID.fromString("6c59c85e-8351-435a-98ec-721c627b0de8"));
+    final TenantId TENANT_ID = TenantId.fromUUID(UUID.fromString("8f88de53-4e79-4bb1-bc70-946d9a869458"));
 
-    private final ListeningExecutor dbCallbackExecutor = new TestDbCallbackExecutor();
+    final ListeningExecutor dbCallbackExecutor = new TestDbCallbackExecutor();
 
-    private TbDuplicateMsgToGroupByNameNode node;
-    private TbDuplicateMsgToGroupByNameNodeConfiguration config;
+    TbDuplicateMsgToGroupByNameNode node;
+    TbDuplicateMsgToGroupByNameNodeConfiguration config;
 
     @Mock
-    private TbContext ctxMock;
+    TbContext ctxMock;
     @Mock
-    private TbPeContext peCtxMock;
+    TbPeContext peCtxMock;
     @Mock
-    private EntityGroupService entityGroupServiceMock;
+    EntityGroupService entityGroupServiceMock;
 
     @BeforeEach
     void setUp() {
         node = new TbDuplicateMsgToGroupByNameNode();
+
+        lenient().when(ctxMock.getDbCallbackExecutor()).thenReturn(dbCallbackExecutor);
+        lenient().when(ctxMock.getTenantId()).thenReturn(TENANT_ID);
+        lenient().when(ctxMock.getPeContext()).thenReturn(peCtxMock);
+        lenient().when(peCtxMock.getEntityGroupService()).thenReturn(entityGroupServiceMock);
     }
 
     @AfterEach
@@ -117,7 +122,7 @@ class TbDuplicateMsgToGroupByNameNodeTest {
     }
 
     @Test
-    public void givenDefaultConfig_whenInit_thenOK() throws TbNodeException {
+    void givenDefaultConfig_whenInit_thenOK() throws TbNodeException {
         // GIVEN-WHEN
         init();
 
@@ -128,7 +133,7 @@ class TbDuplicateMsgToGroupByNameNodeTest {
     }
 
     @Test
-    public void givenConfigWithUnsupportedGroupType_whenInit_thenThrowException() throws TbNodeException {
+    void givenConfigWithUnsupportedGroupType_whenInit_thenThrowException() throws TbNodeException {
         var configuration = new TbDuplicateMsgToGroupByNameNodeConfiguration().defaultConfiguration();
         for (var groupType : EntityType.values()) {
             if (groupType.isGroupEntityType()) {
@@ -150,7 +155,7 @@ class TbDuplicateMsgToGroupByNameNodeTest {
     }
 
     @Test
-    public void givenConfigWithEmptyName_whenInit_thenThrowException() {
+    void givenConfigWithEmptyName_whenInit_thenThrowException() {
         // GIVEN-WHEN
         var configuration = new TbDuplicateMsgToGroupByNameNodeConfiguration().defaultConfiguration();
         configuration.setGroupName("");
@@ -160,19 +165,15 @@ class TbDuplicateMsgToGroupByNameNodeTest {
     }
 
     @Test
-    public void givenDefaultConfig_whenOnMsg_thenGroupIsNotFound() throws TbNodeException {
+    void givenDefaultConfig_whenOnMsg_thenGroupIsNotFound() throws TbNodeException {
         // GIVEN
         init();
 
         var msg = getTbMsg();
         var ownerId = new CustomerId(UUID.randomUUID());
 
-        when(ctxMock.getTenantId()).thenReturn(TENANT_ID);
-        when(ctxMock.getPeContext()).thenReturn(peCtxMock);
-        when(peCtxMock.getEntityGroupService()).thenReturn(entityGroupServiceMock);
-
-        when(peCtxMock.getOwner(eq(TENANT_ID), eq(ORIGINATOR_ID))).thenReturn(ownerId);
-        when(peCtxMock.getOwner(eq(TENANT_ID), eq(ownerId))).thenReturn(TENANT_ID);
+        when(peCtxMock.getOwner(TENANT_ID, ORIGINATOR_ID)).thenReturn(ownerId);
+        when(peCtxMock.getOwner(TENANT_ID, ownerId)).thenReturn(TENANT_ID);
         when(entityGroupServiceMock.findEntityGroupByTypeAndName(
                 eq(TENANT_ID), any(), eq(config.getGroupType()), eq(config.getGroupName())))
                 .thenReturn(Optional.empty());
@@ -193,7 +194,7 @@ class TbDuplicateMsgToGroupByNameNodeTest {
     }
 
     @Test
-    public void givenDefaultConfig_whenOnMsg_thenGroupIsFoundOnTenantLevelWithOneEntity() throws TbNodeException {
+    void givenDefaultConfig_whenOnMsg_thenGroupIsFoundOnTenantLevelWithOneEntity() throws TbNodeException {
         // GIVEN
         init();
 
@@ -210,11 +211,6 @@ class TbDuplicateMsgToGroupByNameNodeTest {
         userGroup.setOwnerId(TENANT_ID);
         userGroup.setTenantId(TENANT_ID);
 
-        when(ctxMock.getDbCallbackExecutor()).thenReturn(dbCallbackExecutor);
-        when(ctxMock.getTenantId()).thenReturn(TENANT_ID);
-        when(ctxMock.getPeContext()).thenReturn(peCtxMock);
-        when(peCtxMock.getEntityGroupService()).thenReturn(entityGroupServiceMock);
-
         when(peCtxMock.getOwner(eq(TENANT_ID), eq(ORIGINATOR_ID))).thenReturn(ownerId);
         when(peCtxMock.getOwner(eq(TENANT_ID), eq(ownerId))).thenReturn(TENANT_ID);
 
@@ -229,7 +225,7 @@ class TbDuplicateMsgToGroupByNameNodeTest {
 
         when(entityGroupServiceMock.findAllEntityIdsAsync(
                 eq(TENANT_ID), eq(userGroupId), eq(new PageLink(Integer.MAX_VALUE))))
-                .thenReturn(Futures.immediateFuture(List.of(userId)));
+                .thenReturn(immediateFuture(List.of(userId)));
 
         doAnswer((Answer<TbMsg>) invocationOnMock -> {
             TbMsg tbMsg = (TbMsg) (invocationOnMock.getArguments())[0];
@@ -274,7 +270,7 @@ class TbDuplicateMsgToGroupByNameNodeTest {
     }
 
     @Test
-    public void givenDefaultConfig_whenOnMsg_thenGroupIsFoundWithNoEntitiesInside() throws TbNodeException {
+    void givenDefaultConfig_whenOnMsg_thenGroupIsFoundWithNoEntitiesInside() throws TbNodeException {
         // GIVEN
         init();
 
@@ -291,11 +287,6 @@ class TbDuplicateMsgToGroupByNameNodeTest {
         userGroup.setOwnerId(ownerId);
         userGroup.setTenantId(TENANT_ID);
 
-        when(ctxMock.getDbCallbackExecutor()).thenReturn(dbCallbackExecutor);
-        when(ctxMock.getTenantId()).thenReturn(TENANT_ID);
-        when(ctxMock.getPeContext()).thenReturn(peCtxMock);
-        when(peCtxMock.getEntityGroupService()).thenReturn(entityGroupServiceMock);
-
         when(peCtxMock.getOwner(TENANT_ID, ORIGINATOR_ID)).thenReturn(ownerId);
 
         when(entityGroupServiceMock.findEntityGroupByTypeAndName(
@@ -303,7 +294,7 @@ class TbDuplicateMsgToGroupByNameNodeTest {
                 .thenReturn(Optional.of(userGroup));
         when(entityGroupServiceMock.findAllEntityIdsAsync(
                 eq(TENANT_ID), eq(userGroupId), eq(new PageLink(Integer.MAX_VALUE))))
-                .thenReturn(Futures.immediateFuture(Collections.emptyList()));
+                .thenReturn(immediateFuture(Collections.emptyList()));
 
         // WHEN
         node.onMsg(ctxMock, msg);
@@ -334,7 +325,7 @@ class TbDuplicateMsgToGroupByNameNodeTest {
     }
 
     @Test
-    public void givenSearchOnlyOnTenantLevel_whenOnMsg_thenDuplicateToGroupEntities() throws TbNodeException {
+    void givenSearchOnlyOnTenantLevel_whenOnMsg_thenDuplicateToGroupEntities() throws TbNodeException {
         // GIVEN
         var configuration = new TbDuplicateMsgToGroupByNameNodeConfiguration().defaultConfiguration();
         configuration.setConsiderMessageOriginatorAsAGroupOwner(false);
@@ -356,49 +347,15 @@ class TbDuplicateMsgToGroupByNameNodeTest {
         EntityId secondUserId = new UserId(UUID.randomUUID());
         var groupUserIdsList = List.of(firstUserId, secondUserId);
 
-        when(ctxMock.getDbCallbackExecutor()).thenReturn(dbCallbackExecutor);
-        when(ctxMock.getTenantId()).thenReturn(TENANT_ID);
-        when(ctxMock.getPeContext()).thenReturn(peCtxMock);
-        when(peCtxMock.getEntityGroupService()).thenReturn(entityGroupServiceMock);
-
-        when(entityGroupServiceMock.findEntityGroupByTypeAndName(
-                eq(TENANT_ID), eq(TENANT_ID), eq(config.getGroupType()), eq(config.getGroupName())))
-                .thenReturn(Optional.of(userGroup));
-        when(entityGroupServiceMock.findAllEntityIdsAsync(
-                eq(TENANT_ID), eq(userGroupId), eq(new PageLink(Integer.MAX_VALUE))))
-                .thenReturn(Futures.immediateFuture(groupUserIdsList));
-
-        doAnswer((Answer<TbMsg>) invocationOnMock -> {
-            String queueName = (String) (invocationOnMock.getArguments())[0];
-            String type = (String) (invocationOnMock.getArguments())[1];
-            EntityId originator = (EntityId) (invocationOnMock.getArguments())[2];
-            CustomerId customerId = (CustomerId) (invocationOnMock.getArguments())[3];
-            TbMsgMetaData metaData = (TbMsgMetaData) (invocationOnMock.getArguments())[4];
-            String data = (String) (invocationOnMock.getArguments())[5];
-            return TbMsg.newMsg()
-                    .queueName(queueName)
-                    .type(type)
-                    .originator(originator)
-                    .customerId(customerId)
-                    .copyMetaData(metaData)
-                    .data(data)
-                    .build();
-        }).when(ctxMock).newMsg(
-                eq(msg.getQueueName()),
-                eq(msg.getType()),
-                nullable(EntityId.class),
-                nullable(CustomerId.class),
-                eq(msg.getMetaData()),
-                eq(msg.getData())
-        );
+        when(entityGroupServiceMock.findEntityGroupByTypeAndName(TENANT_ID, TENANT_ID, config.getGroupType(), config.getGroupName())).thenReturn(Optional.of(userGroup));
+        when(entityGroupServiceMock.findAllEntityIdsAsync(TENANT_ID, userGroupId, new PageLink(Integer.MAX_VALUE))).thenReturn(immediateFuture(groupUserIdsList));
 
         // WHEN
         node.onMsg(ctxMock, msg);
 
         // THEN
         verify(peCtxMock, never()).getOwner(any(), any());
-        verify(entityGroupServiceMock)
-                .findEntityGroupByTypeAndName(eq(TENANT_ID), eq(TENANT_ID), eq(config.getGroupType()), eq(config.getGroupName()));
+        verify(entityGroupServiceMock).findEntityGroupByTypeAndName(TENANT_ID, TENANT_ID, config.getGroupType(), config.getGroupName());
         verify(ctxMock, never()).transformMsgOriginator(any(TbMsg.class), any(EntityId.class));
         verify(ctxMock, never()).tellFailure(any(), any(Throwable.class));
 
@@ -410,20 +367,19 @@ class TbDuplicateMsgToGroupByNameNodeTest {
             successCaptor.run();
         }
         verify(ctxMock).ack(msg);
+
         List<TbMsg> allValues = newMsgCaptor.getAllValues();
         IntStream.range(0, allValues.size()).forEach(i -> {
             TbMsg newMsg = allValues.get(i);
-            assertThat(newMsg).isNotNull();
-            assertThat(newMsg).isNotSameAs(msg);
-            assertThat(newMsg.getType()).isSameAs(msg.getType());
-            assertThat(newMsg.getData()).isSameAs(msg.getData());
-            assertThat(newMsg.getMetaData()).isEqualTo(msg.getMetaData());
-            assertThat(newMsg.getOriginator()).isSameAs(groupUserIdsList.get(i));
+
+            assertThat(newMsg).usingRecursiveComparison().ignoringFields("id", "originator").isEqualTo(msg);
+            assertThat(newMsg.getOriginator()).isEqualTo(groupUserIdsList.get(i));
+            assertThat(newMsg.getId()).isNotNull().isNotEqualTo(msg.getId());
         });
     }
 
-    private static Stream<Arguments> givenConsiderMessageOriginatorAsAGroupOwner_whenOnMsg_thenDuplicateToOriginatorEntities() {
-        TenantId tenantId = new TenantId(UUID.randomUUID());
+    static Stream<Arguments> givenConsiderMessageOriginatorAsAGroupOwner_whenOnMsg_thenDuplicateToOriginatorEntities() {
+        TenantId tenantId = TenantId.fromUUID(UUID.randomUUID());
         return Stream.of(
                 // default config with originator is Customer
                 Arguments.of(tenantId, new CustomerId(UUID.randomUUID())),
@@ -454,49 +410,17 @@ class TbDuplicateMsgToGroupByNameNodeTest {
         EntityId secondUserId = new UserId(UUID.randomUUID());
         var groupUserIdsList = List.of(firstUserId, secondUserId);
 
-        when(ctxMock.getDbCallbackExecutor()).thenReturn(dbCallbackExecutor);
         when(ctxMock.getTenantId()).thenReturn(tenantId);
-        when(ctxMock.getPeContext()).thenReturn(peCtxMock);
-        when(peCtxMock.getEntityGroupService()).thenReturn(entityGroupServiceMock);
 
-        when(entityGroupServiceMock.findEntityGroupByTypeAndName(
-                eq(tenantId), eq(originatorId), eq(config.getGroupType()), eq(config.getGroupName())))
-                .thenReturn(Optional.of(userGroup));
-        when(entityGroupServiceMock.findAllEntityIdsAsync(
-                eq(tenantId), eq(userGroupId), eq(new PageLink(Integer.MAX_VALUE))))
-                .thenReturn(Futures.immediateFuture(groupUserIdsList));
-
-        doAnswer((Answer<TbMsg>) invocationOnMock -> {
-            String queueName = (String) (invocationOnMock.getArguments())[0];
-            String type = (String) (invocationOnMock.getArguments())[1];
-            EntityId originator = (EntityId) (invocationOnMock.getArguments())[2];
-            CustomerId customerId = (CustomerId) (invocationOnMock.getArguments())[3];
-            TbMsgMetaData metaData = (TbMsgMetaData) (invocationOnMock.getArguments())[4];
-            String data = (String) (invocationOnMock.getArguments())[5];
-            return TbMsg.newMsg()
-                    .queueName(queueName)
-                    .type(type)
-                    .originator(originator)
-                    .customerId(customerId)
-                    .copyMetaData(metaData)
-                    .data(data)
-                    .build();
-        }).when(ctxMock).newMsg(
-                eq(msg.getQueueName()),
-                eq(msg.getType()),
-                nullable(EntityId.class),
-                nullable(CustomerId.class),
-                eq(msg.getMetaData()),
-                eq(msg.getData())
-        );
+        when(entityGroupServiceMock.findEntityGroupByTypeAndName(tenantId, originatorId, config.getGroupType(), config.getGroupName())).thenReturn(Optional.of(userGroup));
+        when(entityGroupServiceMock.findAllEntityIdsAsync(tenantId, userGroupId, new PageLink(Integer.MAX_VALUE))).thenReturn(immediateFuture(groupUserIdsList));
 
         // WHEN
         node.onMsg(ctxMock, msg);
 
         // THEN
         verify(peCtxMock, never()).getOwner(any(), any());
-        verify(entityGroupServiceMock)
-                .findEntityGroupByTypeAndName(eq(tenantId), eq(originatorId), eq(config.getGroupType()), eq(config.getGroupName()));
+        verify(entityGroupServiceMock).findEntityGroupByTypeAndName(tenantId, originatorId, config.getGroupType(), config.getGroupName());
         verify(ctxMock, never()).transformMsgOriginator(any(TbMsg.class), any(EntityId.class));
         verify(ctxMock, never()).tellFailure(any(), any(Throwable.class));
 
@@ -511,16 +435,14 @@ class TbDuplicateMsgToGroupByNameNodeTest {
         List<TbMsg> allValues = newMsgCaptor.getAllValues();
         IntStream.range(0, allValues.size()).forEach(i -> {
             TbMsg newMsg = allValues.get(i);
-            assertThat(newMsg).isNotNull();
-            assertThat(newMsg).isNotSameAs(msg);
-            assertThat(newMsg.getType()).isSameAs(msg.getType());
-            assertThat(newMsg.getData()).isSameAs(msg.getData());
-            assertThat(newMsg.getMetaData()).isEqualTo(msg.getMetaData());
-            assertThat(newMsg.getOriginator()).isSameAs(groupUserIdsList.get(i));
+
+            assertThat(newMsg).usingRecursiveComparison().ignoringFields("id", "originator").isEqualTo(msg);
+            assertThat(newMsg.getOriginator()).isEqualTo(groupUserIdsList.get(i));
+            assertThat(newMsg.getId()).isNotNull().isNotEqualTo(msg.getId());
         });
     }
 
-    private static Stream<Arguments> givenGroupName_whenOnMsg_thenDuplicateToGroupEntities() {
+    static Stream<Arguments> givenGroupName_whenOnMsg_thenDuplicateToGroupEntities() {
         return Stream.of(
                 // config with entity group name as string
                 Arguments.of("Entity Group Name"),
@@ -556,17 +478,12 @@ class TbDuplicateMsgToGroupByNameNodeTest {
         EntityId secondDeviceId = new DeviceId(UUID.randomUUID());
         var groupDeviceIdsList = List.of(firstDeviceId, secondDeviceId);
 
-        when(ctxMock.getDbCallbackExecutor()).thenReturn(dbCallbackExecutor);
-        when(ctxMock.getTenantId()).thenReturn(TENANT_ID);
-        when(ctxMock.getPeContext()).thenReturn(peCtxMock);
-        when(peCtxMock.getEntityGroupService()).thenReturn(entityGroupServiceMock);
-
         when(entityGroupServiceMock.findEntityGroupByTypeAndName(
                 any(), any(), any(), any()))
                 .thenReturn(Optional.of(deviceGroup));
         when(entityGroupServiceMock.findAllEntityIdsAsync(
                 any(), any(), any()))
-                .thenReturn(Futures.immediateFuture(groupDeviceIdsList));
+                .thenReturn(immediateFuture(groupDeviceIdsList));
 
         // WHEN
         node.onMsg(ctxMock, msg);
@@ -576,17 +493,17 @@ class TbDuplicateMsgToGroupByNameNodeTest {
                 .findEntityGroupByTypeAndName(eq(TENANT_ID), eq(TENANT_ID), eq(config.getGroupType()), eq(entityGroupName));
     }
 
-    private void init() throws TbNodeException {
+    void init() throws TbNodeException {
         initWithConfig(new TbDuplicateMsgToGroupByNameNodeConfiguration().defaultConfiguration());
     }
 
-    private void initWithConfig(TbDuplicateMsgToGroupByNameNodeConfiguration configuration) throws TbNodeException {
+    void initWithConfig(TbDuplicateMsgToGroupByNameNodeConfiguration configuration) throws TbNodeException {
         config = configuration;
         TbNodeConfiguration nodeConfiguration = new TbNodeConfiguration(JacksonUtil.valueToTree(config));
         node.init(ctxMock, nodeConfiguration);
     }
 
-    private TbMsg getTbMsgWithBody(EntityId originatorId) {
+    TbMsg getTbMsgWithBody(EntityId originatorId) {
         TbMsgMetaData metaData = new TbMsgMetaData();
         metaData.putValue("groupNameMetaData", "Entity Group Name");
         return TbMsg.newMsg()
@@ -597,11 +514,11 @@ class TbDuplicateMsgToGroupByNameNodeTest {
                 .build();
     }
 
-    private TbMsg getTbMsg() {
+    TbMsg getTbMsg() {
         return getTbMsgByOriginator(ORIGINATOR_ID);
     }
 
-    private TbMsg getTbMsgByOriginator(EntityId originatorId) {
+    TbMsg getTbMsgByOriginator(EntityId originatorId) {
         return TbMsg.newMsg()
                 .type(TbMsgType.POST_TELEMETRY_REQUEST)
                 .originator(originatorId)
@@ -611,7 +528,7 @@ class TbDuplicateMsgToGroupByNameNodeTest {
     }
 
     // Rule nodes upgrade
-    private static Stream<Arguments> givenFromVersionAndConfig_whenUpgrade_thenVerifyHasChangesAndConfig() {
+    static Stream<Arguments> givenFromVersionAndConfig_whenUpgrade_thenVerifyHasChangesAndConfig() {
         return Stream.of(
                 // default config for version 0
                 Arguments.of(0,
