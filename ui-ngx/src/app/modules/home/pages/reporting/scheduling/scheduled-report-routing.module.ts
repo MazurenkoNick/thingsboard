@@ -51,7 +51,7 @@ export const scheduledReportsRoute: Route = {
       path: '',
       component: EntitiesTableComponent,
       data: {
-        auth: [Authority.TENANT_ADMIN, Authority.CUSTOMER_USER],
+        auth: [Authority.TENANT_ADMIN],
         title: 'scheduled-report.scheduled-reports'
       },
       resolve: {

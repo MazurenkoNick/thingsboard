@@ -72,7 +72,7 @@ export const reportTemplatesRoute: Route = {
       path: '',
       component: EntitiesTableComponent,
       data: {
-        auth: [Authority.TENANT_ADMIN, Authority.CUSTOMER_USER],
+        auth: [Authority.TENANT_ADMIN],
         title: 'report-template.report-templates'
       },
       resolve: {
@@ -88,7 +88,7 @@ export const reportTemplatesRoute: Route = {
           labelFunction: reportTemplateBreadcumbLabelFunction,
           icon: 'mdi:chart-box-outline'
         } as BreadCrumbConfig<ReportTemplatePageComponent>,
-        auth: [Authority.TENANT_ADMIN, Authority.CUSTOMER_USER],
+        auth: [Authority.TENANT_ADMIN],
         title: 'report-template.report-template',
         hideTabs: true
       },
