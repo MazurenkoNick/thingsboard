@@ -178,7 +178,6 @@ import org.thingsboard.server.service.solutions.data.solution.SolutionTemplateLe
 import org.thingsboard.server.service.solutions.data.solution.TenantSolutionTemplateDetails;
 import org.thingsboard.server.service.solutions.data.solution.TenantSolutionTemplateInfo;
 import org.thingsboard.server.service.solutions.data.solution.TenantSolutionTemplateInstructions;
-import org.thingsboard.server.service.solutions.trendz.data.TrendzEntityType;
 import org.thingsboard.server.service.telemetry.TelemetrySubscriptionService;
 
 import java.io.BufferedReader;
@@ -201,7 +200,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -258,7 +256,6 @@ public class DefaultSolutionService implements SolutionService {
     private final UserService userService;
     private final CalculatedFieldService calculatedFieldService;
     private final TbCalculatedFieldService tbCalculatedFieldService;
-    private final TrendzSolutionService trendzSolutionService;
 
     private final TbEdgeService tbEdgeService;
     private final EntityGroupService entityGroupService;
@@ -415,20 +412,7 @@ public class DefaultSolutionService implements SolutionService {
                     }
                 }
 
-                attributesService.removeAll(tenantId, tenantId, AttributeScope.SERVER_SCOPE, List.of(
-                        toCreatedEntitiesKey(solutionId), toStatusKey(solutionId), toInstructionsKey(solutionId))
-                ).get();
-
-                Optional<AttributeKvEntry> trendzAttributeOpt = this.attributesService.find(tenantId, tenantId, AttributeScope.SERVER_SCOPE, toTrendzEntitiesKey(solutionId)).get();
-                if (trendzAttributeOpt.isPresent()) {
-                    String jsonTrendzEntityIds = trendzAttributeOpt.get().getValueAsString();
-                    Map<TrendzEntityType, Set<UUID>> trendzEntityIds = new HashMap<>(Objects.requireNonNull(JacksonUtil.fromString(jsonTrendzEntityIds, new TypeReference<Map<TrendzEntityType, Set<UUID>>>() {
-                    })));
-                    this.trendzSolutionService.deleteTrendzSolution(getSolutionsDir(), user, tenantId, solutionId, trendzEntityIds);
-
-                    attributesService.removeAll(tenantId, tenantId, AttributeScope.SERVER_SCOPE, List.of(toTrendzEntitiesKey(solutionId))).get();
-                }
-
+                attributesService.removeAll(tenantId, tenantId, AttributeScope.SERVER_SCOPE, Arrays.asList(toCreatedEntitiesKey(solutionId), toStatusKey(solutionId), toInstructionsKey(solutionId))).get();
 
                 SolutionTemplateDetails solutionTemplate = solutionsMap.get(solutionId);
                 List<String> tsKeys = solutionTemplate.getTenantTelemetryKeys();
@@ -443,7 +427,6 @@ public class DefaultSolutionService implements SolutionService {
                 if (tsKeys != null && !tsKeys.isEmpty()) {
                     attributesService.removeAll(tenantId, tenantId, AttributeScope.SERVER_SCOPE, attrKeys).get();
                 }
-
             }
         } catch (Exception e) {
             log.error("[{}][{}] Failed to delete the solution", tenantId, solutionId, e);
@@ -536,8 +519,6 @@ public class DefaultSolutionService implements SolutionService {
     private SolutionInstallResponse doInstallSolution(User user, TenantId tenantId, String solutionId, HttpServletRequest request) {
         SolutionInstallContext ctx = new SolutionInstallContext(tenantId, solutionId, user, new TenantSolutionTemplateInstructions());
         try {
-            // Install TB configuration
-
             provisionRoles(ctx);
 
             provisionTenantDetails(ctx);
@@ -571,7 +552,17 @@ public class DefaultSolutionService implements SolutionService {
 
             provisionCalculatedFields(ctx);
 
+            launchEmulators(ctx, devices, assets);
+
             ctx.getSolutionInstructions().setDetails(prepareInstructions(ctx, request));
+
+            long ts = System.currentTimeMillis();
+            AttributeKvEntry createdEntitiesAttribute = new BaseAttributeKvEntry(new StringDataEntry(toCreatedEntitiesKey(solutionId), JacksonUtil.toString(ctx.getCreatedEntitiesList())), ts);
+            AttributeKvEntry statusAttribute = new BaseAttributeKvEntry(new BooleanDataEntry(toStatusKey(solutionId), true), ts);
+
+            TenantSolutionTemplateInstructions instructions = new TenantSolutionTemplateInstructions(ctx.getSolutionInstructions());
+            AttributeKvEntry instructionAttribute = new BaseAttributeKvEntry(new StringDataEntry(toInstructionsKey(solutionId), JacksonUtil.toString(instructions)), ts);
+            attributesService.save(tenantId, tenantId, AttributeScope.SERVER_SCOPE, Arrays.asList(createdEntitiesAttribute, statusAttribute, instructionAttribute));
 
             List<ReferenceableEntityDefinition> ruleChains = loadListOfEntitiesIfFileExists(ctx.getSolutionId(), "rule_chains.json", new TypeReference<>() {
             });
@@ -581,30 +572,6 @@ public class DefaultSolutionService implements SolutionService {
                 Thread.sleep(timeout);
                 finalUpdateRuleChains(ctx);
             }
-
-            // Install Trendz configuration
-            Map<TrendzEntityType, Set<UUID>> trendzEntityIds = this.trendzSolutionService.provisionTrendzSolution(getSolutionsDir(), ctx);
-
-
-            // Save configuration attributes
-            long ts = System.currentTimeMillis();
-            TenantSolutionTemplateInstructions instructions = new TenantSolutionTemplateInstructions(ctx.getSolutionInstructions());
-            AttributeKvEntry createdEntitiesAttribute = new BaseAttributeKvEntry(new StringDataEntry(toCreatedEntitiesKey(solutionId), JacksonUtil.toString(ctx.getCreatedEntitiesList())), ts);
-            AttributeKvEntry statusAttribute = new BaseAttributeKvEntry(new BooleanDataEntry(toStatusKey(solutionId), true), ts);
-            AttributeKvEntry instructionAttribute = new BaseAttributeKvEntry(new StringDataEntry(toInstructionsKey(solutionId), JacksonUtil.toString(instructions)), ts);
-            AttributeKvEntry createdTrendzEntitiesAttribute = new BaseAttributeKvEntry(new StringDataEntry(toTrendzEntitiesKey(ctx.getSolutionId()), JacksonUtil.toString(trendzEntityIds)), ts);
-
-            attributesService.save(tenantId, tenantId, AttributeScope.SERVER_SCOPE, Arrays.asList(
-                    createdEntitiesAttribute, statusAttribute, instructionAttribute, createdTrendzEntitiesAttribute
-            ));
-
-            // Run TB + Trendz data generation
-            Set<CompletableFuture<?>> emulatorFutures = launchEmulators(ctx, devices, assets);
-            CompletableFuture
-                    .allOf(emulatorFutures.toArray(new CompletableFuture[0]))
-                    .thenRun(() -> {
-                        this.trendzSolutionService.runTrendzSolutionDataGeneration(ctx, trendzEntityIds);
-                    });
 
             return new SolutionInstallResponse(ctx.getSolutionInstructions(), true);
         } catch (SubscriptionException se) {
@@ -1062,7 +1029,7 @@ public class DefaultSolutionService implements SolutionService {
         }
     }
 
-    private Set<CompletableFuture<?>> launchEmulators(SolutionInstallContext ctx, Map<Device, DeviceDefinition> devicesMap, Map<Asset, AssetDefinition> assets) throws Exception {
+    private void launchEmulators(SolutionInstallContext ctx, Map<Device, DeviceDefinition> devicesMap, Map<Asset, AssetDefinition> assets) throws Exception {
         List<EmulatorDefinition> emulatorDefinitions = loadListOfEntitiesIfFileExists(ctx.getSolutionId(), "device_emulators.json", new TypeReference<>() {
         });
         Map<String, EmulatorDefinition> deviceEmulators = emulatorDefinitions.stream().collect(Collectors.toMap(EmulatorDefinition::getName, Function.identity()));
@@ -1075,10 +1042,8 @@ public class DefaultSolutionService implements SolutionService {
                 });
 
 
-        Set<CompletableFuture<?>> resultFutures = new HashSet<>();
-
         for (var entry : devicesMap.entrySet().stream().filter(e -> StringUtils.isNotBlank(e.getValue().getEmulator())).collect(Collectors.toSet())) {
-            CompletableFuture<?> deviceEmulatorFuture = DeviceEmulatorLauncher.builder()
+            DeviceEmulatorLauncher.builder()
                     .entity(entry.getKey())
                     .emulatorDefinition(deviceEmulators.get(entry.getValue().getEmulator()))
                     .oldTelemetryExecutor(emulatorExecutor)
@@ -1087,17 +1052,14 @@ public class DefaultSolutionService implements SolutionService {
                     .tbQueueProducerProvider(tbQueueProducerProvider)
                     .serviceInfoProvider(serviceInfoProvider)
                     .tsSubService(tsSubService)
-                    .build()
-                    .launch();
-
-            resultFutures.add(deviceEmulatorFuture);
+                    .build().launch();
         }
 
         Map<String, EmulatorDefinition> assetEmulators = loadListOfEntitiesIfFileExists(ctx.getSolutionId(), "asset_emulators.json", new TypeReference<List<EmulatorDefinition>>() {
         }).stream().collect(Collectors.toMap(EmulatorDefinition::getName, Function.identity()));
 
         for (var entry : assets.entrySet().stream().filter(e -> StringUtils.isNotBlank(e.getValue().getEmulator())).collect(Collectors.toSet())) {
-            CompletableFuture<?> assetEmulatorFuture = AssetEmulatorLauncher.builder()
+            AssetEmulatorLauncher.builder()
                     .entity(entry.getKey())
                     .emulatorDefinition(assetEmulators.get(entry.getValue().getEmulator()))
                     .oldTelemetryExecutor(emulatorExecutor)
@@ -1106,13 +1068,8 @@ public class DefaultSolutionService implements SolutionService {
                     .tbQueueProducerProvider(tbQueueProducerProvider)
                     .serviceInfoProvider(serviceInfoProvider)
                     .tsSubService(tsSubService)
-                    .build()
-                    .launch();
-
-            resultFutures.add(assetEmulatorFuture);
+                    .build().launch();
         }
-
-        return resultFutures;
     }
 
     protected void provisionTenantDetails(SolutionInstallContext ctx) throws Exception {
@@ -1818,7 +1775,4 @@ public class DefaultSolutionService implements SolutionService {
         return solutionId + "_" + "instructions";
     }
 
-    private String toTrendzEntitiesKey(String solutionId) {
-        return solutionId + "_trendz_entities";
-    }
 }

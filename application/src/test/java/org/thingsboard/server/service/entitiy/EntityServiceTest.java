@@ -122,6 +122,7 @@ import org.thingsboard.server.common.data.query.SingleEntityFilter;
 import org.thingsboard.server.common.data.query.StateEntityOwnerFilter;
 import org.thingsboard.server.common.data.query.StringFilterPredicate;
 import org.thingsboard.server.common.data.query.StringFilterPredicate.StringOperation;
+import org.thingsboard.server.common.data.query.TsValue;
 import org.thingsboard.server.common.data.relation.EntityRelation;
 import org.thingsboard.server.common.data.relation.EntitySearchDirection;
 import org.thingsboard.server.common.data.relation.RelationEntityTypeFilter;
@@ -179,8 +180,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.thingsboard.server.common.data.permission.Resource.ALL;
 import static org.thingsboard.server.common.data.permission.Resource.CUSTOMER;
+import static org.thingsboard.server.common.data.AttributeScope.SERVER_SCOPE;
 import static org.thingsboard.server.common.data.query.EntityKeyType.ATTRIBUTE;
 import static org.thingsboard.server.common.data.query.EntityKeyType.ENTITY_FIELD;
+import static org.thingsboard.server.common.data.query.EntityKeyType.SERVER_ATTRIBUTE;
 
 @Slf4j
 @DaoSqlTest
@@ -839,7 +842,7 @@ public class EntityServiceTest extends AbstractControllerTest {
         List<ListenableFuture<AttributesSaveResult>> attributeFutures = new ArrayList<>();
         for (int i = 0; i < assets.size(); i++) {
             Asset asset = assets.get(i);
-            attributeFutures.add(saveLongAttribute(asset.getId(), "consumption", consumptions.get(i), AttributeScope.SERVER_SCOPE));
+            attributeFutures.add(saveLongAttribute(asset.getId(), "consumption", consumptions.get(i), SERVER_SCOPE));
         }
         Futures.allAsList(attributeFutures).get();
 
@@ -2745,6 +2748,33 @@ public class EntityServiceTest extends AbstractControllerTest {
         assertThat(entitiesTelemetry.get(0)).isEqualTo(String.valueOf(longTempValue));
 
         deviceService.deleteDevicesByTenantId(tenantId);
+    }
+
+    @Test
+    public void testFindTenantTelemetry() {
+        // save timeseries by sys admin
+        BasicTsKvEntry timeseries = new BasicTsKvEntry(42L, new DoubleDataEntry("temperature", 45.5));
+        timeseriesService.save(TenantId.SYS_TENANT_ID, tenantId, timeseries);
+
+        AttributeKvEntry attr = new BaseAttributeKvEntry(new LongDataEntry("attr", 10L), 42L);
+        attributesService.save(TenantId.SYS_TENANT_ID, tenantId, SERVER_SCOPE, List.of(attr));
+
+        SingleEntityFilter singleEntityFilter = new SingleEntityFilter();
+        singleEntityFilter.setSingleEntity(AliasEntityId.fromEntityId(tenantId));
+
+        List<EntityKey> entityFields = List.of(
+                new EntityKey(ENTITY_FIELD, "name")
+        );
+        List<EntityKey> latestValues =  List.of(
+                new EntityKey(EntityKeyType.TIME_SERIES, "temperature"),
+                new EntityKey(EntityKeyType.SERVER_ATTRIBUTE, "attr")
+        );
+
+        EntityDataPageLink pageLink = new EntityDataPageLink(1000, 0, null, null);
+        EntityDataQuery query = new EntityDataQuery(singleEntityFilter, pageLink, entityFields, latestValues, null);
+
+        findByQueryAndCheckTelemetry(query, EntityKeyType.TIME_SERIES, "temperature", List.of("45.5"));
+        findByQueryAndCheckTelemetry(query, EntityKeyType.SERVER_ATTRIBUTE, "attr", List.of("10"));
     }
 
     @Test

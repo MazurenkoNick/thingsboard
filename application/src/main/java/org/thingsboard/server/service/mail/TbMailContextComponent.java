@@ -36,6 +36,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 import org.thingsboard.server.dao.attributes.AttributesService;
+import org.thingsboard.server.dao.secret.SecretConfigurationService;
 import org.thingsboard.server.dao.settings.AdminSettingsService;
 
 @Component
@@ -51,4 +52,8 @@ public class TbMailContextComponent {
 
     @Autowired
     private AttributesService attributesService;
+
+    @Autowired
+    private SecretConfigurationService secretConfigurationService;
+
 }

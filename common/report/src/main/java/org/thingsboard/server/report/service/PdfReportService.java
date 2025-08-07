@@ -48,7 +48,6 @@ import org.thingsboard.server.common.data.report.TbReportFormat;
 import org.thingsboard.server.common.data.report.configuration.DataSource;
 import org.thingsboard.server.common.data.report.configuration.HeaderFooter;
 import org.thingsboard.server.common.data.report.configuration.PdfReportTemplateConfig;
-import org.thingsboard.server.common.data.report.configuration.ReportTemplateConfig;
 import org.thingsboard.server.common.data.report.configuration.components.AlarmTableComponent;
 import org.thingsboard.server.common.data.report.configuration.components.DashboardComponent;
 import org.thingsboard.server.common.data.report.configuration.components.DataReportComponent;
@@ -320,11 +319,20 @@ public class PdfReportService extends AbstractReportService {
 
     private ComponentData buildSingleComponentData(int usablePageWidthPx, TbReportCtx ctx, DataSource dataSource, EntityId stateEntityId) {
         return switch (dataSource.getType()) {
-            case DEVICE, ENTITY -> new ComponentData(usablePageWidthPx, dataSource, collectEntityDatas(ctx, dataSource, stateEntityId));
+            case DEVICE, ENTITY -> buildEntityDataSource(usablePageWidthPx, ctx, dataSource, stateEntityId);
             case ENTITY_COUNT -> buildEntityCountDataSource(usablePageWidthPx, ctx, dataSource);
             case ALARM_COUNT -> buildAlarmCountDataSource(usablePageWidthPx, ctx, dataSource);
             default -> throw new IllegalArgumentException("Unknown data source type: " + dataSource.getType());
         };
+    }
+
+    private ComponentData buildEntityDataSource(int usablePageWidthPx, TbReportCtx ctx, DataSource dataSource, EntityId stateEntityId) {
+        List<Map<String, String>> entityDatas = collectEntityDatas(ctx, dataSource, stateEntityId);
+        Map<String, Object> variables = new HashMap<>();
+        if (stateEntityId == null && !entityDatas.isEmpty()) {
+            variables.putAll(entityDatas.get(0));
+        }
+        return new ComponentData(usablePageWidthPx, dataSource, entityDatas, variables);
     }
 
     private ComponentData buildEntityCountDataSource(int usablePageWidthPx, TbReportCtx ctx, DataSource dataSource) {
@@ -391,12 +399,15 @@ public class PdfReportService extends AbstractReportService {
         if (dataSources == null || dataSources.isEmpty()) {
             return new ComponentData(usablePageWidthPx);
         }
-        ComponentData mainDataSource = new ComponentData(usablePageWidthPx);
+        Map<String, String> variables = new HashMap<>();
+        if (stateEntity != null) {
+            putEntityInfoData(stateEntity, variables);
+        }
+        ComponentData mainDataSource = new ComponentData(usablePageWidthPx,null, new ArrayList<>(), new HashMap<>(variables));
         for (DataSource dataSource : dataSources) {
             ComponentData singleDataSource = buildSingleComponentData(usablePageWidthPx, ctx, dataSource, stateEntity != null ? stateEntity.getEntityId() : null);
             mainDataSource.merge(singleDataSource);
         }
-        mainDataSource.getVariables().putAll(toStringMap(stateEntity, Collections.emptyList(), ctx));
         return mainDataSource;
     }
 

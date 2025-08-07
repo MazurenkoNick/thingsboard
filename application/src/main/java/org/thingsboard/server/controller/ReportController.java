@@ -34,6 +34,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -53,6 +54,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.rule.engine.api.JobManager;
 import org.thingsboard.server.common.data.StringUtils;
+import org.thingsboard.server.common.data.exception.ThingsboardErrorCode;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.EntityId;
@@ -83,6 +85,9 @@ import org.thingsboard.server.service.security.system.SystemSecurityService;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 import static org.thingsboard.server.controller.ControllerConstants.INCLUDE_CUSTOMERS_OR_SUB_CUSTOMERS;
@@ -102,6 +107,9 @@ import static org.thingsboard.server.controller.ControllerConstants.TENANT_OR_CU
 @TbCoreComponent
 @RequestMapping("/api/v2")
 public class ReportController extends BaseController {
+
+    @Value("${reports.generation_timeout_ms:120000}")
+    private int timeoutMs;
 
     private static final String REPORT_DESCRIPTION = "The platform uses Report to store generated reports information.";
     private static final String INVALID_REPORT_ID = "Referencing non-existing Report Id will cause 'Not Found' error.";
@@ -129,7 +137,7 @@ public class ReportController extends BaseController {
         byte[] data = reportService.getReportData(getTenantId(), reportId);
         ByteArrayResource resource = new ByteArrayResource(data);
         return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment;filename=" + report.getName())
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment;filename=\"" + report.getName() + "\"")
                 .header("x-filename", report.getName())
                 .contentLength(resource.contentLength())
                 .header("Content-Type", report.getFormat().getContentType())
@@ -257,15 +265,21 @@ public class ReportController extends BaseController {
                 .accessToken(accessToken.getToken())
                 .accessTokenExpirationTs(accessToken.getClaims().getExpiration().getTime())
                 .build();
-        ReportData reportData = tbReportService.generateTestReport(reportTask);
 
-        ByteArrayResource resource = new ByteArrayResource(reportData.getData());
-        return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment;filename=" + reportData.getName())
-                .header("x-filename", reportData.getName())
-                .contentLength(resource.contentLength())
-                .contentType(MediaType.parseMediaType(reportData.getContentType()))
-                .body(resource);
+        Future<ReportData> future = tbReportService.generateTestReport(reportTask);
+        try {
+            ReportData reportData = future.get(timeoutMs, TimeUnit.MILLISECONDS);
+            ByteArrayResource resource = new ByteArrayResource(reportData.getData());
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment;filename=\"" + reportData.getName() + "\"")
+                    .header("x-filename", reportData.getName())
+                    .contentLength(resource.contentLength())
+                    .contentType(MediaType.parseMediaType(reportData.getContentType()))
+                    .body(resource);
+        } catch (TimeoutException e) {
+            future.cancel(true);
+            throw new ThingsboardException("Timeout for test report generation. Generation took more than " + timeoutMs + " milliseconds!", ThingsboardErrorCode.GENERAL);
+        }
     }
 
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
