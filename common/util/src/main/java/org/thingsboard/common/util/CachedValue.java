@@ -28,31 +28,26 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.common.data.report.configuration;
+package org.thingsboard.common.util;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.LoadingCache;
 
-import java.util.List;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 
-@Schema
-@Data
-@Builder
-@EqualsAndHashCode
-@NoArgsConstructor
-@AllArgsConstructor
-@JsonIgnoreProperties(ignoreUnknown = true)
-public class DataSource {
-    private DataSourceType type;
-    private String deviceId;
-    private String entityAliasId;
-    private String filterId;
-    private List<DataKey> dataKeys;
-    private List<DataKey> latestDataKeys;
-    private AlarmFilterConfig alarmFilterConfig;
+public class CachedValue<V> {
+
+    private final LoadingCache<Object, V> cache;
+
+    public CachedValue(Supplier<V> supplier, long valueTtlMs) {
+        this.cache = Caffeine.newBuilder()
+                .expireAfterWrite(valueTtlMs, TimeUnit.MILLISECONDS)
+                .build(__ -> supplier.get());
+    }
+
+    public V get() {
+        return cache.get(this);
+    }
+
 }
