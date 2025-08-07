@@ -28,46 +28,21 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.service.solutions.trendz.preprocessor;
+package org.thingsboard.server.dao.mail;
 
-import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Service;
-import org.thingsboard.server.service.solutions.trendz.TrendzEntityPreprocessor;
-import org.thingsboard.server.service.solutions.trendz.data.TrendzEntityType;
-import org.thingsboard.server.service.solutions.trendz.data.TrendzPreprocessConfig;
+import org.thingsboard.server.cache.CaffeineTbTransactionalCache;
+import org.thingsboard.server.common.data.CacheConstants;
+import org.thingsboard.server.common.data.id.TenantId;
 
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+@ConditionalOnProperty(prefix = "cache", value = "type", havingValue = "caffeine", matchIfMissing = true)
+@Service("MailOauth2StateCache")
+public class MailOauth2StateCaffeineCache extends CaffeineTbTransactionalCache<String, TenantId> {
 
-@Slf4j
-@Service
-public class TaskSequencePreprocessor extends TrendzEntityPreprocessor {
-
-    @Override
-    public TrendzEntityType getEntityType() {
-        return TrendzEntityType.TASK_SEQUENCE;
+    public MailOauth2StateCaffeineCache(CacheManager cacheManager) {
+        super(cacheManager, CacheConstants.MAIL_OAUTH2_STATE_CACHE);
     }
 
-    @Override
-    public void preprocess(TrendzPreprocessConfig config) {
-        Map<String, Object> importData = config.getImportData();
-        Map<UUID, UUID> oldToNewIdMap = config.getOldToNewIdMap();
-
-        String collectionName = getEntityType().getCollectionName();
-        List<Object> taskSequences = (List<Object>) importData.get(collectionName);
-        for (Object taskSequence : taskSequences) {
-            Map<String, Object> user = (Map<String, Object>) ((Map<String, Object>) taskSequence).get("user");
-            setUserIds(oldToNewIdMap, user, config);
-            setNewId(oldToNewIdMap, taskSequence, "id");
-
-            List<Object> items = (List<Object>) ((Map<String, Object>) taskSequence).get("sequenceItems");
-            for (Object item : items) {
-                setNewId(oldToNewIdMap, item, "id");
-
-                Map<String, Object> reference = (Map<String, Object>) ((Map<String, Object>) item).get("reference");
-                setNewId(oldToNewIdMap, reference, "key");
-            }
-        }
-    }
 }

@@ -72,7 +72,7 @@ public interface ScheduledReportInfoRepository extends JpaRepository<ScheduledRe
             "FROM (select s.id, s.created_time, s.tenant_id, s.customer_id, c.title as customer_title, " +
             "s.report_template_id, s.report_template_name, s.user_id, s.user_name, s.\"name\", " +
             "s.originator_id, s.originator_type, s.type, s.additional_info, " +
-            "s.schedule, s.enabled from scheduled_reports_info_view s " +
+            "s.schedule, s.enabled, s.version, s.external_id from scheduled_reports_info_view s " +
             "LEFT JOIN customer c on c.id = s.customer_id AND c.id != :customerId) e " +
             "WHERE" + SUB_CUSTOMERS_QUERY +
             "AND (:searchText IS NULL OR e.name ILIKE CONCAT('%', :searchText, '%') " +
@@ -105,5 +105,9 @@ public interface ScheduledReportInfoRepository extends JpaRepository<ScheduledRe
                                                                  @Param("userId") UUID userId,
                                                                  @Param("searchText") String searchText,
                                                                  Pageable pageable);
+
+    @Query("SELECT count(sei) FROM ScheduledReportInfoEntity sei WHERE sei.tenantId = :tenantId " +
+            "AND sei.reportTemplateId = :reportTemplateId")
+    int countScheduledReportEventsByTemplateId(@Param("tenantId") UUID tenantId, @Param("reportTemplateId") UUID reportTemplateId);
 
 }

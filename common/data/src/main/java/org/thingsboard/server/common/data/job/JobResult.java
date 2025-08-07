@@ -37,11 +37,14 @@ import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.thingsboard.server.common.data.job.task.ReportTaskResult;
 import org.thingsboard.server.common.data.job.task.TaskResult;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+
+import static java.util.function.Predicate.not;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "jobType")
@@ -81,6 +84,19 @@ public abstract class JobResult implements Serializable {
                 results.add(taskResult);
             }
         }
+    }
+
+    @JsonIgnore
+    public String getError() {
+        if (generalError != null) {
+            return generalError;
+        } else if (failedCount > 0) {
+            return results.stream()
+                    .filter(not(TaskResult::isSuccess))
+                    .findFirst().map(taskResult -> ((ReportTaskResult) taskResult).getError())
+                    .orElse(null);
+        }
+        return null;
     }
 
     @JsonIgnore

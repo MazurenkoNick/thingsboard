@@ -161,7 +161,7 @@ public class DashboardReportController extends BaseController {
         return reportData -> {
             ByteArrayResource resource = new ByteArrayResource(reportData.getData());
             ResponseEntity<Resource> response = ResponseEntity.ok().
-                    header(HttpHeaders.CONTENT_DISPOSITION, "attachment;filename=" + reportData.getName())
+                    header(HttpHeaders.CONTENT_DISPOSITION, "attachment;filename=\"" + reportData.getName() + "\"")
                     .header("x-filename", reportData.getName())
                     .contentLength(resource.contentLength())
                     .contentType(parseMediaType(reportData.getContentType()))

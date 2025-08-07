@@ -30,13 +30,12 @@
  */
 package org.thingsboard.server.common.data.report.configuration.timewindow;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
 
 @Data
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class TimeWindowConfiguration {
-    private boolean hideAggregation;
-    private boolean hideAggInterval;
-    private boolean hideTimezone;
     private History history;
     private AggregationConfiguration aggregation;
     private String timezone;

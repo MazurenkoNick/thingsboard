@@ -58,7 +58,7 @@ import org.thingsboard.server.queue.edqs.EdqsConfig;
 import org.thingsboard.server.queue.edqs.EdqsExecutors;
 import org.thingsboard.server.queue.edqs.KafkaEdqsComponent;
 import org.thingsboard.server.queue.edqs.KafkaEdqsQueueFactory;
-import org.thingsboard.server.queue.kafka.TbKafkaAdmin;
+import org.thingsboard.server.queue.kafka.KafkaAdmin;
 import org.thingsboard.server.queue.kafka.TbKafkaConsumerTemplate;
 
 import java.util.HashMap;
@@ -83,6 +83,7 @@ public class KafkaEdqsStateService implements EdqsStateService {
     private final EdqsExecutors edqsExecutors;
     private final EdqsMapper mapper;
     private final TopicService topicService;
+    private final KafkaAdmin kafkaAdmin;
     @Autowired
     @Lazy
     private EdqsProcessor edqsProcessor;
@@ -101,7 +102,6 @@ public class KafkaEdqsStateService implements EdqsStateService {
     @Override
     public void init(PartitionedQueueConsumerManager<TbProtoQueueMsg<ToEdqsMsg>> eventConsumer, List<PartitionedQueueConsumerManager<?>> otherConsumers) {
         versionsStore = new VersionsStore(config.getVersionsCacheTtl());
-        TbKafkaAdmin queueAdmin = queueFactory.getEdqsQueueAdmin();
         stateConsumer = PartitionedQueueConsumerManager.<TbProtoQueueMsg<ToEdqsMsg>>create()
                 .queueKey(new QueueKey(ServiceType.EDQS, config.getStateTopic()))
                 .topic(topicService.buildTopicName(config.getStateTopic()))
@@ -121,7 +121,7 @@ public class KafkaEdqsStateService implements EdqsStateService {
                     consumer.commit();
                 })
                 .consumerCreator((config, tpi) -> queueFactory.createEdqsStateConsumer())
-                .queueAdmin(queueAdmin)
+                .queueAdmin(queueFactory.getEdqsQueueAdmin())
                 .consumerExecutor(edqsExecutors.getConsumersExecutor())
                 .taskExecutor(edqsExecutors.getConsumerTaskExecutor())
                 .scheduler(edqsExecutors.getScheduler())
@@ -189,7 +189,7 @@ public class KafkaEdqsStateService implements EdqsStateService {
                     // (because we need to be able to consume the same topic-partition by multiple instances)
                     Map<String, Long> offsets = new HashMap<>();
                     try {
-                        queueAdmin.getConsumerGroupOffsets(eventsToBackupKafkaConsumer.getGroupId())
+                        kafkaAdmin.getConsumerGroupOffsets(eventsToBackupKafkaConsumer.getGroupId())
                                 .forEach((topicPartition, offsetAndMetadata) -> {
                                     offsets.put(topicPartition.topic(), offsetAndMetadata.offset());
                                 });
