@@ -71,7 +71,7 @@ export class ReportImageDialogComponent extends DialogComponent<ReportImageDialo
 
   private aspect: number = 1;
 
-  private initImageSize = !this.data.width  || !this.data.height;
+  private initImageSize = !this.data.width  || !this.data.height || !this.data.imageUrl;
 
   private entityKeys = this.data.entityKeys;
 
