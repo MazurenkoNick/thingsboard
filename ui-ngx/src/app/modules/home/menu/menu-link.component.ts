@@ -29,9 +29,8 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { ChangeDetectionStrategy, Component, Input, OnInit, OnChanges, SimpleChanges } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input, OnInit } from '@angular/core';
 import { MenuSection } from '@core/services/menu.models';
-import { tbImageIcon } from '@shared/models/custom-menu.models';
 
 @Component({
   selector: 'tb-menu-link',
@@ -39,27 +38,14 @@ import { tbImageIcon } from '@shared/models/custom-menu.models';
   styleUrls: ['./menu-link.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class MenuLinkComponent implements OnInit, OnChanges {
+export class MenuLinkComponent implements OnInit {
 
   @Input() section: MenuSection;
-
-  isCustomIcon: boolean;
 
   constructor() {
   }
 
   ngOnInit() {
-  }
-
-  ngOnChanges(changes: SimpleChanges): void {
-    for (const propName of Object.keys(changes)) {
-      const change = changes[propName];
-      if (change.currentValue !== change.previousValue) {
-        if (propName === 'section' && change.currentValue) {
-          this.isCustomIcon = tbImageIcon(change.currentValue.icon);
-        }
-      }
-    }
   }
 
 }

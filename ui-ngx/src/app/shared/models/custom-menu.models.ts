@@ -37,7 +37,6 @@ import { TenantId } from '@shared/models/id/tenant-id';
 import { CustomerId } from '@shared/models/id/customer-id';
 import { EntityInfoData, HasTenantId } from '@shared/models/entity.models';
 import { Authority } from '@shared/models/authority.enum';
-import { TB_IMAGE_PREFIX } from '@shared/models/resource.models';
 
 export enum CMScope {
   SYSTEM = 'SYSTEM',
@@ -360,5 +359,3 @@ export const beforeSaveCustomMenuConfig = (config: CustomMenuConfig, scope: CMSc
     return config;
   }
 };
-
-export const tbImageIcon = (url: string) => url.startsWith(TB_IMAGE_PREFIX);
