@@ -112,6 +112,12 @@
                   <span class="metrics">{{ 'task.report-generate-in-progress' | translate }}</span>
                 </div>
               }
+              @case (JobStatus.CANCELLED) {
+                <tb-icon style="color: rgba(0, 0, 0, 0.54)">cancel</tb-icon>
+                <div class="flex flex-col items-center">
+                  <span class="metrics">{{ 'task.generate-report-canceled' | translate }}</span>
+                </div>
+              }
               @case (JobStatus.FAILED) {
                 <tb-icon class="warn">warning</tb-icon>
                 <div class="flex flex-col items-center px-2">
