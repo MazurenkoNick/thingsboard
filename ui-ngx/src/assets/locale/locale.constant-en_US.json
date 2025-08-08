@@ -8775,7 +8775,8 @@
         "total-entities": "Total entities",
         "type": "Type",
         "report-generate-successfully": "Report generated successfully",
-        "report-generate-in-progress": "Generating report in progress"
+        "report-generate-in-progress": "Generating report in progress",
+        "generate-report-canceled": "Generate report canceled"
     },
     "widget": {
         "widget-library": "Widgets library",
