@@ -188,7 +188,7 @@ export class SchedulerEventsComponent extends PageComponent implements OnInit, A
   private modeHandler: SchedulerModeHandler;
 
   constructor(
-    protected store: Store<AppState>,
+    public store: Store<AppState>,
     private customTranslatePipe: CustomTranslatePipe,
     private translate: TranslateService,
     private schedulerEventService: SchedulerEventService,
@@ -206,7 +206,7 @@ export class SchedulerEventsComponent extends PageComponent implements OnInit, A
     private destroyRef: DestroyRef,
     @Optional() public widgetComponent: WidgetComponent
   ) {
-    super(store);
+    super();
   }
 
   ngOnInit(): void {
@@ -827,6 +827,10 @@ abstract class SchedulerModeHandler {
 
   setupSchedulerEventConfigTypes(): void  {
     this.component.schedulerEventConfigTypes = deepClone(defaultSchedulerEventConfigTypes);
+    const authUser = getCurrentAuthUser(this.component.store);
+    if (authUser.authority === Authority.CUSTOMER_USER) {
+      delete this.component.schedulerEventConfigTypes.generateReport;
+    }
   }
 
   abstract initialize(schedulerEventService: SchedulerEventService, userPermissionsService: UserPermissionsService,
