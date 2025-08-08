@@ -49,6 +49,7 @@ import org.thingsboard.server.common.data.job.JobType;
 import org.thingsboard.server.common.data.job.ReportJobConfiguration;
 import org.thingsboard.server.common.data.job.ReportJobResult;
 import org.thingsboard.server.common.data.job.task.ReportTask;
+import org.thingsboard.server.common.data.job.task.ReportTaskResult;
 import org.thingsboard.server.common.data.job.task.Task;
 import org.thingsboard.server.common.data.job.task.TaskResult;
 import org.thingsboard.server.common.data.msg.TbNodeConnectionType;
@@ -81,6 +82,8 @@ import java.util.Base64;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
+
+import static java.util.function.Predicate.not;
 
 @Slf4j
 @Component
@@ -179,7 +182,7 @@ public class ReportJobProcessor implements JobProcessor {
             }
         } else {
             if (configuration.getNotificationRequests() != null) {
-                RuntimeException error = new RuntimeException("Failed to generate report: " + result.getError());
+                RuntimeException error = new RuntimeException("Failed to generate report: " + getError(result));
                 configuration.getNotificationRequests().forEach(notificationRequest -> {
                     NotificationRequestStats stats = notificationRequest.getStats();
                     if (stats == null) {
@@ -223,7 +226,7 @@ public class ReportJobProcessor implements JobProcessor {
             throw new RuntimeException(e);
         }
         String relationType;
-        String error = result.getError();
+        String error = getError(result);
         if (error != null) {
             relationType = TbNodeConnectionType.FAILURE;
         } else {
@@ -245,6 +248,21 @@ public class ReportJobProcessor implements JobProcessor {
         }, throwable -> {
             log.error("[{}] Failed to send msg {}", tenantId, ruleEngineMsg, throwable);
         }));
+    }
+
+    private String getError(ReportJobResult result) {
+        if (result.getCancellationTs() > 0) {
+            return "The task was cancelled";
+        } else if (result.getGeneralError() != null) {
+            return result.getGeneralError();
+        } else if (result.getFailedCount() > 0) {
+            return result.getResults().stream()
+                    .filter(not(TaskResult::isSuccess))
+                    .findFirst().map(taskResult -> ((ReportTaskResult) taskResult).getError())
+                    .orElse(null);
+        } else {
+            return null;
+        }
     }
 
     @Override
