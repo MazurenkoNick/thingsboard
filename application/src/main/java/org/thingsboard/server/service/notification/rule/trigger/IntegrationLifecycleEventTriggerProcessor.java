@@ -58,7 +58,7 @@ public class IntegrationLifecycleEventTriggerProcessor implements NotificationRu
     public RuleOriginatedNotificationInfo constructNotificationInfo(IntegrationLifecycleEventTrigger trigger) {
         return IntegrationLifecycleEventNotificationInfo.builder()
                 .integrationId(trigger.getIntegrationId())
-                .integrationType(trigger.getIntegrationType())
+                .integrationType(trigger.getIntegrationType().name())
                 .integrationName(trigger.getIntegrationName())
                 .action(trigger.getEvent() == ComponentLifecycleEvent.STARTED ? "start"
                         : trigger.getEvent() == ComponentLifecycleEvent.UPDATED ? "update"
