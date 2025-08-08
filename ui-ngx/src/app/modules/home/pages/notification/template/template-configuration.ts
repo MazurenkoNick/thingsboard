@@ -116,7 +116,15 @@ export abstract class TemplateConfiguration<T, R = any> extends DialogComponent<
         .addControl(method, this.fb.group({enabled: method === NotificationDeliveryMethod.WEB}), {emitEvent: false});
     });
 
+    merge(this.templateNotificationForm.get('configuration.deliveryMethodsTemplates.SLACK').valueChanges,
+      this.templateNotificationForm.get('configuration.deliveryMethodsTemplates.EMAIL').valueChanges).pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(() => {
+      this.updateAttachReportValidators();
+    });
+
     this.deliveryConfiguration = this.templateNotificationForm.get('configuration.deliveryMethodsTemplates').value;
+    this.updateAttachReportValidators();
   }
 
   ngOnDestroy() {
@@ -163,6 +171,17 @@ export abstract class TemplateConfiguration<T, R = any> extends DialogComponent<
       this.templateNotificationForm.get('configuration.reportTemplateId').disable({emitEvent: false});
       this.templateNotificationForm.get('configuration.userId').disable({emitEvent: false});
       this.templateNotificationForm.get('configuration.timezone').disable({emitEvent: false});
+    }
+  }
+
+  protected updateAttachReportValidators() {
+    const slack = this.templateNotificationForm.get('configuration.deliveryMethodsTemplates.SLACK').value;
+    const email = this.templateNotificationForm.get('configuration.deliveryMethodsTemplates.EMAIL').value;
+    if (!email.enabled && !slack.enabled) {
+      this.templateNotificationForm.get('configuration.attachReport').patchValue(false, {emitEvent: false});
+      this.templateNotificationForm.get('configuration.attachReport').disable();
+    } else {
+      this.templateNotificationForm.get('configuration.attachReport').enable();
     }
   }
 }
