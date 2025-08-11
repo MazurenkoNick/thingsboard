@@ -81,6 +81,7 @@ import static org.thingsboard.server.controller.ControllerConstants.REPORT_TEMPL
 import static org.thingsboard.server.controller.ControllerConstants.SORT_ORDER_DESCRIPTION;
 import static org.thingsboard.server.controller.ControllerConstants.SORT_PROPERTY_DESCRIPTION;
 import static org.thingsboard.server.controller.ControllerConstants.TENANT_AUTHORITY_PARAGRAPH;
+import static org.thingsboard.server.controller.ControllerConstants.TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH;
 import static org.thingsboard.server.controller.ControllerConstants.UUID_WIKI_LINK;
 
 @RestController
@@ -107,8 +108,8 @@ public class ReportTemplateController extends BaseController {
     @ApiOperation(value = "Get Report Template (getReportTemplateById)",
             notes = "Fetch the ReportTemplate object based on the provided report template Id. " +
                     REPORT_TEMPLATE_DESCRIPTION + INVALID_REPORT_TEMPLATE_ID +
-                    TENANT_AUTHORITY_PARAGRAPH + "\n\n" + RBAC_READ_CHECK)
-    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN')")
+                    TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH + "\n\n" + RBAC_READ_CHECK)
+    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
     @GetMapping(value = "/reportTemplate/{reportTemplateId}")
     public ReportTemplate getReportTemplateById(@Parameter(description = REPORT_TEMPLATE_ID_PARAM_DESCRIPTION, required = true)
                                                 @PathVariable(REPORT_TEMPLATE_ID) String strReportTemplateId) throws ThingsboardException {
@@ -120,8 +121,8 @@ public class ReportTemplateController extends BaseController {
     @ApiOperation(value = "Get Report Template Info (getReportTemplateInfoById)",
             notes = "Fetch the ReportTemplateInfo object based on the provided report template Id. " +
                     REPORT_TEMPLATE_INFO_DESCRIPTION + INVALID_REPORT_TEMPLATE_ID +
-                    TENANT_AUTHORITY_PARAGRAPH + "\n\n" + RBAC_READ_CHECK)
-    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN')")
+                    TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH + "\n\n" + RBAC_READ_CHECK)
+    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
     @GetMapping(value = "/reportTemplate/info/{reportTemplateId}")
     public ReportTemplateInfo getReportTemplateInfoById(@Parameter(description = REPORT_TEMPLATE_ID_PARAM_DESCRIPTION, required = true)
                                                         @PathVariable(REPORT_TEMPLATE_ID) String strReportTemplateId) throws ThingsboardException {
