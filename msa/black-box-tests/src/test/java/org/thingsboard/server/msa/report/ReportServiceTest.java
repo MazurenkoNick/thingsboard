@@ -50,6 +50,7 @@ import org.thingsboard.server.common.data.report.Report;
 import org.thingsboard.server.common.data.report.ReportRequest;
 import org.thingsboard.server.common.data.report.ReportTemplate;
 import org.thingsboard.server.common.data.report.ReportTemplateType;
+import org.thingsboard.server.common.data.report.TbReportFormat;
 import org.thingsboard.server.common.data.report.configuration.CsvReportTemplateConfig;
 import org.thingsboard.server.common.data.report.configuration.DataKey;
 import org.thingsboard.server.common.data.report.configuration.DataSource;
@@ -185,6 +186,7 @@ public class ReportServiceTest extends AbstractContainerTest {
         csvReportTemplate.setConfiguration(configuration);
         csvReportTemplate.setName("Device inventory report");
         csvReportTemplate.setType(ReportTemplateType.REPORT);
+        csvReportTemplate.setFormat(TbReportFormat.CSV);
         return testRestClient.postReportTemplate(csvReportTemplate);
     }
 

@@ -49,7 +49,7 @@ export const reportsRoute: Route = {
       path: '',
       component: EntitiesTableComponent,
       data: {
-        auth: [Authority.TENANT_ADMIN, Authority.CUSTOMER_USER],
+        auth: [Authority.TENANT_ADMIN],
         title: 'report.reports'
       },
       resolve: {

@@ -80,6 +80,7 @@ import static org.thingsboard.server.controller.ControllerConstants.REPORT_TEMPL
 import static org.thingsboard.server.controller.ControllerConstants.REPORT_TEMPLATE_TEXT_SEARCH_DESCRIPTION;
 import static org.thingsboard.server.controller.ControllerConstants.SORT_ORDER_DESCRIPTION;
 import static org.thingsboard.server.controller.ControllerConstants.SORT_PROPERTY_DESCRIPTION;
+import static org.thingsboard.server.controller.ControllerConstants.TENANT_AUTHORITY_PARAGRAPH;
 import static org.thingsboard.server.controller.ControllerConstants.TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH;
 import static org.thingsboard.server.controller.ControllerConstants.UUID_WIKI_LINK;
 
@@ -136,8 +137,8 @@ public class ReportTemplateController extends BaseController {
                     "The newly created report template id will be present in the response. Specify existing report template id to update the report template. " +
                     "Referencing non-existing report template Id will cause 'Not Found' error. " +
                     "Remove 'id', 'tenantId' and optionally 'customerId' from the request body example (below) to create new Report Template entity. " +
-                    TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH + "\n\n" + RBAC_WRITE_CHECK)
-    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
+                    TENANT_AUTHORITY_PARAGRAPH + "\n\n" + RBAC_WRITE_CHECK)
+    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN')")
     @PostMapping(value = "/reportTemplate")
     public ReportTemplate saveReportTemplate(
             @Parameter(description = "A JSON value representing the Report Template.")
@@ -153,7 +154,7 @@ public class ReportTemplateController extends BaseController {
 
     @ApiOperation(value = "Delete Report Template (deleteReportTemplate)",
             notes = "Deletes the report template. " + INVALID_REPORT_TEMPLATE_ID + "\n\n" + RBAC_DELETE_CHECK)
-    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
+    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN')")
     @DeleteMapping(value = "/reportTemplate/{reportTemplateId}")
     public void deleteReportTemplate(
             @Parameter(description = REPORT_TEMPLATE_ID_PARAM_DESCRIPTION, required = true)
@@ -166,8 +167,8 @@ public class ReportTemplateController extends BaseController {
 
     @ApiOperation(value = "Get All Report Templates for current user (getAllReportTemplateInfos)",
             notes = "Returns a page of report template info objects owned by the tenant or the customer of a current user. "
-                    + REPORT_TEMPLATE_INFO_DESCRIPTION + " " + PAGE_DATA_PARAMETERS + TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH + RBAC_READ_CHECK)
-    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
+                    + REPORT_TEMPLATE_INFO_DESCRIPTION + " " + PAGE_DATA_PARAMETERS + TENANT_AUTHORITY_PARAGRAPH + RBAC_READ_CHECK)
+    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN')")
     @GetMapping(value = "/reportTemplateInfos/all", params = {"pageSize", "page"})
     public PageData<ReportTemplateInfo> getAllReportTemplateInfos(
             @Parameter(description = REPORT_TEMPLATE_QUERY_TYPE_ARRAY_DESCRIPTION, array = @ArraySchema(schema = @Schema(type = "string", allowableValues = {"REPORT", "SUB_REPORT"})))
@@ -221,8 +222,8 @@ public class ReportTemplateController extends BaseController {
 
     @ApiOperation(value = "Get report templates by Report Template Ids (getReportTemplatesByIds)",
             notes = "Returns a list of ReportTemplateInfo objects based on the provided ids. Filters the list based on the user permissions. " +
-                    TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH + RBAC_READ_CHECK)
-    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
+                    TENANT_AUTHORITY_PARAGRAPH + RBAC_READ_CHECK)
+    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN')")
     @GetMapping(value = "/reportTemplates", params = {"reportTemplateIds"})
     public List<ReportTemplateInfo> getReportTemplatesByIds(
             @Parameter(description = "A list of report template ids, separated by comma ','", array = @ArraySchema(schema = @Schema(type = "string")), required = true)

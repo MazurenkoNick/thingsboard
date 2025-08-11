@@ -37,6 +37,7 @@ import { AppState } from '@core/core.state';
 import { Router } from '@angular/router';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { FormBuilder, FormControl } from '@angular/forms';
+import { deepTrim } from '@core/utils';
 
 export interface ReportTemplateSettingsDialogData {
   subReport: boolean;
@@ -75,6 +76,6 @@ export class ReportTemplateSettingsDialogComponent extends DialogComponent<Repor
 
   save(): void {
     const settings = {...this.settings, ...this.settingsFormControl.getRawValue()};
-    this.dialogRef.close(settings);
+    this.dialogRef.close(deepTrim(settings));
   }
 }

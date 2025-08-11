@@ -100,6 +100,7 @@ import static org.thingsboard.server.controller.ControllerConstants.REPORT_TEMPL
 import static org.thingsboard.server.controller.ControllerConstants.REPORT_USER_DESCRIPTION;
 import static org.thingsboard.server.controller.ControllerConstants.SORT_ORDER_DESCRIPTION;
 import static org.thingsboard.server.controller.ControllerConstants.SORT_PROPERTY_DESCRIPTION;
+import static org.thingsboard.server.controller.ControllerConstants.TENANT_AUTHORITY_PARAGRAPH;
 import static org.thingsboard.server.controller.ControllerConstants.TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH;
 
 @RequiredArgsConstructor
@@ -147,8 +148,8 @@ public class ReportController extends BaseController {
     @ApiOperation(value = "Get Report (getReportById)",
             notes = "Fetch the Report object based on the provided report Id. " +
                     REPORT_DESCRIPTION + INVALID_REPORT_ID +
-                    TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH + "\n\n" + RBAC_READ_CHECK)
-    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
+                    TENANT_AUTHORITY_PARAGRAPH + "\n\n" + RBAC_READ_CHECK)
+    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN')")
     @GetMapping(value = "/report/{reportId}")
     public Report getReportById(@Parameter(description = REPORT_ID_PARAM_DESCRIPTION, required = true)
                                 @PathVariable(REPORT_ID) String strReportId) throws ThingsboardException {
@@ -159,7 +160,7 @@ public class ReportController extends BaseController {
 
     @ApiOperation(value = "Delete Report (deleteReport)",
             notes = "Deletes the report. " + INVALID_REPORT_ID + "\n\n" + RBAC_DELETE_CHECK)
-    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
+    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN')")
     @DeleteMapping(value = "/report/{reportId}")
     public void deleteReport(
             @Parameter(description = REPORT_ID_PARAM_DESCRIPTION, required = true)
@@ -171,7 +172,7 @@ public class ReportController extends BaseController {
     }
 
     @GetMapping("/reports")
-    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
+    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN')")
     public PageData<Report> getReports(@Parameter(description = PAGE_SIZE_DESCRIPTION, required = true)
                                        @RequestParam int pageSize,
                                        @Parameter(description = PAGE_NUMBER_DESCRIPTION, required = true)
@@ -189,7 +190,7 @@ public class ReportController extends BaseController {
     }
 
     @GetMapping("/reportInfos")
-    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
+    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN')")
     public List<ReportInfo> getReports(
             @Parameter(description = "A list of report ids, separated by comma ','", array = @ArraySchema(schema = @Schema(type = "string")), required = true)
             @RequestParam("strReportIds") String[] strReportIds) throws ThingsboardException {
@@ -205,7 +206,7 @@ public class ReportController extends BaseController {
     }
 
     @GetMapping("/reportInfos/all")
-    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
+    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN')")
     public PageData<ReportInfo> getReportInfos(
             @Parameter(description = REPORT_TEMPLATE_ID_DESCRIPTION)
             @RequestParam(required = false) UUID reportTemplateId,
@@ -242,8 +243,8 @@ public class ReportController extends BaseController {
     }
 
     @ApiOperation(value = "Download test report (downloadTestReport)",
-            notes = "Generate and download test report." + TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH)
-    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
+            notes = "Generate and download test report." + TENANT_AUTHORITY_PARAGRAPH)
+    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN')")
     @PostMapping(value = "/report/test")
     public ResponseEntity<ByteArrayResource> testReportAndDownload(@RequestBody ReportRequest reportRequest) throws Exception {
         TenantId tenantId = getTenantId();
@@ -282,7 +283,7 @@ public class ReportController extends BaseController {
         }
     }
 
-    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
+    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN')")
     @PostMapping(value = "/report/request")
     public Job requestReport(@RequestBody ReportRequest reportRequest) throws Exception {
         ReportTemplateId reportTemplateId = reportRequest.getReportTemplateId();

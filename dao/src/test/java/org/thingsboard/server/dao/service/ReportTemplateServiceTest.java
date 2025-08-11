@@ -59,6 +59,7 @@ import org.thingsboard.server.dao.scheduler.SchedulerEventService;
 import org.thingsboard.server.exception.DataValidationException;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import static org.thingsboard.server.dao.model.ModelConstants.NULL_UUID;
@@ -83,7 +84,7 @@ public class ReportTemplateServiceTest extends AbstractServiceTest {
         reportTemplate.setFormat(TbReportFormat.PDF);
         reportTemplate.setType(ReportTemplateType.REPORT);
         reportTemplate.setDescription("My report");
-        reportTemplate.setConfiguration(new PdfReportTemplateConfig());
+        reportTemplate.setConfiguration(PdfReportTemplateConfig.builder().components(Collections.emptyList()).build());
         ReportTemplate savedReportTemplate = reportTemplateService.saveReportTemplate(reportTemplate);
 
         Assert.assertNotNull(savedReportTemplate);
@@ -109,7 +110,7 @@ public class ReportTemplateServiceTest extends AbstractServiceTest {
         reportTemplate.setTenantId(tenantId);
         reportTemplate.setFormat(TbReportFormat.PDF);
         reportTemplate.setType(ReportTemplateType.REPORT);
-        reportTemplate.setConfiguration(new PdfReportTemplateConfig());
+        reportTemplate.setConfiguration(PdfReportTemplateConfig.builder().components(Collections.emptyList()).build());
         Assertions.assertThrows(DataValidationException.class, () -> reportTemplateService.saveReportTemplate(reportTemplate));
     }
 
@@ -119,7 +120,7 @@ public class ReportTemplateServiceTest extends AbstractServiceTest {
         reportTemplate.setTenantId(tenantId);
         reportTemplate.setName("My report");
         reportTemplate.setFormat(TbReportFormat.PDF);
-        reportTemplate.setConfiguration(new PdfReportTemplateConfig());
+        reportTemplate.setConfiguration(PdfReportTemplateConfig.builder().components(Collections.emptyList()).build());
         Assertions.assertThrows(DataValidationException.class, () -> reportTemplateService.saveReportTemplate(reportTemplate));
     }
 
@@ -129,7 +130,7 @@ public class ReportTemplateServiceTest extends AbstractServiceTest {
         reportTemplate.setTenantId(tenantId);
         reportTemplate.setName("My report");
         reportTemplate.setType(ReportTemplateType.REPORT);
-        reportTemplate.setConfiguration(new PdfReportTemplateConfig());
+        reportTemplate.setConfiguration(PdfReportTemplateConfig.builder().components(Collections.emptyList()).build());
         Assertions.assertThrows(DataValidationException.class, () -> reportTemplateService.saveReportTemplate(reportTemplate));
     }
 
@@ -150,7 +151,7 @@ public class ReportTemplateServiceTest extends AbstractServiceTest {
         reportTemplate.setName("My report");
         reportTemplate.setFormat(TbReportFormat.PDF);
         reportTemplate.setType(ReportTemplateType.REPORT);
-        reportTemplate.setConfiguration(new PdfReportTemplateConfig());
+        reportTemplate.setConfiguration(PdfReportTemplateConfig.builder().components(Collections.emptyList()).build());
         Assertions.assertThrows(DataValidationException.class, () -> reportTemplateService.saveReportTemplate(reportTemplate));
     }
 
@@ -160,7 +161,7 @@ public class ReportTemplateServiceTest extends AbstractServiceTest {
         reportTemplate.setName("My report");
         reportTemplate.setType(ReportTemplateType.REPORT);
         reportTemplate.setFormat(TbReportFormat.PDF);
-        reportTemplate.setConfiguration(new PdfReportTemplateConfig());
+        reportTemplate.setConfiguration(PdfReportTemplateConfig.builder().components(Collections.emptyList()).build());
         reportTemplate.setTenantId(TenantId.fromUUID(Uuids.timeBased()));
         Assertions.assertThrows(DataValidationException.class, () -> reportTemplateService.saveReportTemplate(reportTemplate));
     }
@@ -172,7 +173,7 @@ public class ReportTemplateServiceTest extends AbstractServiceTest {
         reportTemplate.setName("My report");
         reportTemplate.setFormat(TbReportFormat.PDF);
         reportTemplate.setType(ReportTemplateType.REPORT);
-        reportTemplate.setConfiguration(new PdfReportTemplateConfig());
+        reportTemplate.setConfiguration(PdfReportTemplateConfig.builder().components(Collections.emptyList()).build());
         ReportTemplate savedReportTemplate = reportTemplateService.saveReportTemplate(reportTemplate);
         ReportTemplate foundReportTemplate = reportTemplateService.findReportTemplateById(tenantId, savedReportTemplate.getId());
         Assert.assertNotNull(foundReportTemplate);
@@ -187,7 +188,7 @@ public class ReportTemplateServiceTest extends AbstractServiceTest {
         reportTemplate.setName("My report");
         reportTemplate.setFormat(TbReportFormat.PDF);
         reportTemplate.setType(ReportTemplateType.REPORT);
-        reportTemplate.setConfiguration(new PdfReportTemplateConfig());
+        reportTemplate.setConfiguration(PdfReportTemplateConfig.builder().components(Collections.emptyList()).build());
         ReportTemplate savedReportTemplate = reportTemplateService.saveReportTemplate(reportTemplate);
         EntityRelation relation = new EntityRelation(tenantId, savedReportTemplate.getId(), EntityRelation.CONTAINS_TYPE);
         relationService.saveRelation(tenantId, relation);
@@ -207,7 +208,7 @@ public class ReportTemplateServiceTest extends AbstractServiceTest {
         reportTemplate.setName("My report");
         reportTemplate.setFormat(TbReportFormat.PDF);
         reportTemplate.setType(ReportTemplateType.REPORT);
-        reportTemplate.setConfiguration(new PdfReportTemplateConfig());
+        reportTemplate.setConfiguration(PdfReportTemplateConfig.builder().components(Collections.emptyList()).build());
         ReportTemplate savedReportTemplate = reportTemplateService.saveReportTemplate(reportTemplate);
 
         SchedulerEvent schedulerEvent = new SchedulerEvent();
@@ -241,7 +242,7 @@ public class ReportTemplateServiceTest extends AbstractServiceTest {
             reportTemplate.setName("ReportTemplate" + i);
             reportTemplate.setFormat(TbReportFormat.PDF);
             reportTemplate.setType(ReportTemplateType.REPORT);
-            reportTemplate.setConfiguration(new PdfReportTemplateConfig());
+            reportTemplate.setConfiguration(PdfReportTemplateConfig.builder().components(Collections.emptyList()).build());
             reportTemplates.add(new ReportTemplateInfo(reportTemplateService.saveReportTemplate(reportTemplate)));
         }
 
@@ -282,7 +283,7 @@ public class ReportTemplateServiceTest extends AbstractServiceTest {
             String name = title1 + suffix;
             name = i % 2 == 0 ? name.toLowerCase() : name.toUpperCase();
             reportTemplate.setName(name);
-            reportTemplate.setConfiguration(new PdfReportTemplateConfig());
+            reportTemplate.setConfiguration(PdfReportTemplateConfig.builder().components(Collections.emptyList()).build());
             reportTemplatesTitle1.add(new ReportTemplateInfo(reportTemplateService.saveReportTemplate(reportTemplate)));
         }
         String title2 = "Report title 2";
@@ -296,7 +297,7 @@ public class ReportTemplateServiceTest extends AbstractServiceTest {
             String name = title2 + suffix;
             name = i % 2 == 0 ? name.toLowerCase() : name.toUpperCase();
             reportTemplate.setName(name);
-            reportTemplate.setConfiguration(new PdfReportTemplateConfig());
+            reportTemplate.setConfiguration(PdfReportTemplateConfig.builder().components(Collections.emptyList()).build());
             reportTemplatesTitle2.add(new ReportTemplateInfo(reportTemplateService.saveReportTemplate(reportTemplate)));
         }
 

@@ -40,6 +40,7 @@ import org.thingsboard.rule.engine.mail.TbMsgToEmailNode;
 import org.thingsboard.server.actors.ActorSystemContext;
 import org.thingsboard.server.cluster.TbClusterService;
 import org.thingsboard.server.common.data.ApiUsageRecordKey;
+import org.thingsboard.server.common.data.User;
 import org.thingsboard.server.common.data.exception.ApiUsageLimitsExceededException;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.TenantId;
@@ -49,6 +50,7 @@ import org.thingsboard.server.common.data.job.JobType;
 import org.thingsboard.server.common.data.job.ReportJobConfiguration;
 import org.thingsboard.server.common.data.job.ReportJobResult;
 import org.thingsboard.server.common.data.job.task.ReportTask;
+import org.thingsboard.server.common.data.job.task.ReportTaskResult;
 import org.thingsboard.server.common.data.job.task.Task;
 import org.thingsboard.server.common.data.job.task.TaskResult;
 import org.thingsboard.server.common.data.msg.TbNodeConnectionType;
@@ -67,6 +69,7 @@ import org.thingsboard.server.common.msg.queue.TopicPartitionInfo;
 import org.thingsboard.server.common.stats.TbApiUsageReportClient;
 import org.thingsboard.server.dao.notification.NotificationRequestService;
 import org.thingsboard.server.dao.report.ReportTemplateService;
+import org.thingsboard.server.dao.user.UserService;
 import org.thingsboard.server.gen.transport.TransportProtos;
 import org.thingsboard.server.queue.common.SimpleTbQueueCallback;
 import org.thingsboard.server.queue.discovery.PartitionService;
@@ -81,6 +84,8 @@ import java.util.Base64;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
+
+import static java.util.function.Predicate.not;
 
 @Slf4j
 @Component
@@ -102,6 +107,7 @@ public class ReportJobProcessor implements JobProcessor {
     private final ActorSystemContext actorSystemContext;
     private final TbApiUsageStateService apiUsageStateService;
     private final TbApiUsageReportClient apiUsageClient;
+    private final UserService userService;
 
     @Override
     public int process(Job job, Consumer<Task<?>> taskConsumer) throws Exception {
@@ -114,12 +120,13 @@ public class ReportJobProcessor implements JobProcessor {
             throw new ApiUsageLimitsExceededException(REPORT_CREATION_DISABLED);
         }
         ReportTemplate reportTemplate = reportTemplateService.findReportTemplateById(job.getTenantId(), configuration.getReportTemplateId());
+        User user = userService.findUserById(job.getTenantId(), configuration.getUserId());
         AccessJwtToken accessToken = systemSecurityService.createUserAccessToken(job.getTenantId(), configuration.getUserId());
         EntityId userOwnerId = ownersCacheService.getOwner(job.getTenantId(), configuration.getUserId());
 
         ReportTask task = ReportTask.builder()
                 .tenantId(job.getTenantId())
-                .customerId(reportTemplate.getCustomerId())
+                .customerId(user.getCustomerId())
                 .jobId(job.getId())
                 .key(configuration.getTasksKey())
                 .reportTemplateId(reportTemplate.getId())
@@ -179,7 +186,7 @@ public class ReportJobProcessor implements JobProcessor {
             }
         } else {
             if (configuration.getNotificationRequests() != null) {
-                RuntimeException error = new RuntimeException("Failed to generate report: " + result.getError());
+                RuntimeException error = new RuntimeException("Failed to generate report: " + getError(result));
                 configuration.getNotificationRequests().forEach(notificationRequest -> {
                     NotificationRequestStats stats = notificationRequest.getStats();
                     if (stats == null) {
@@ -223,7 +230,7 @@ public class ReportJobProcessor implements JobProcessor {
             throw new RuntimeException(e);
         }
         String relationType;
-        String error = result.getError();
+        String error = getError(result);
         if (error != null) {
             relationType = TbNodeConnectionType.FAILURE;
         } else {
@@ -245,6 +252,21 @@ public class ReportJobProcessor implements JobProcessor {
         }, throwable -> {
             log.error("[{}] Failed to send msg {}", tenantId, ruleEngineMsg, throwable);
         }));
+    }
+
+    private String getError(ReportJobResult result) {
+        if (result.getCancellationTs() > 0) {
+            return "The task was cancelled";
+        } else if (result.getGeneralError() != null) {
+            return result.getGeneralError();
+        } else if (result.getFailedCount() > 0) {
+            return result.getResults().stream()
+                    .filter(not(TaskResult::isSuccess))
+                    .findFirst().map(taskResult -> ((ReportTaskResult) taskResult).getError())
+                    .orElse(null);
+        } else {
+            return null;
+        }
     }
 
     @Override
