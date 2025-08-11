@@ -81,6 +81,7 @@ import org.thingsboard.server.dao.customer.CustomerService;
 import org.thingsboard.server.dao.dashboard.DashboardService;
 import org.thingsboard.server.dao.device.DeviceService;
 import org.thingsboard.server.dao.edge.EdgeService;
+import org.thingsboard.server.dao.encryptionkey.EncryptionService;
 import org.thingsboard.server.dao.entityview.EntityViewService;
 import org.thingsboard.server.dao.group.EntityGroupService;
 import org.thingsboard.server.dao.integration.IntegrationService;
@@ -138,6 +139,7 @@ public class DefaultDataUpdateService implements DataUpdateService {
     private final AttributesService attributesService;
     private final AdminSettingsService adminSettingsService;
     private final SecretService secretService;
+    private final EncryptionService encryptionService;
 
     @Override
     public void updateData(boolean fromCe) throws Exception {
@@ -146,6 +148,7 @@ public class DefaultDataUpdateService implements DataUpdateService {
             updateDataFromCe();
         } else {
             //TODO: should be cleaned after each release
+            encryptionService.createEncryptionKey(TenantId.SYS_TENANT_ID);
             migrateTenantAttributeSettingsToAdminSettings();
             migrateSensitiveSettingsToUseSecrets();
         }
@@ -208,6 +211,7 @@ public class DefaultDataUpdateService implements DataUpdateService {
     }
 
     private void migrateSensitiveSettingsToUseSecrets() {
+        migrateMailSettingsToSecrets(TenantId.SYS_TENANT_ID);
         PageDataIterable<TenantId> tenantIds = new PageDataIterable<>(tenantService::findTenantsIds, 1024);
         for (TenantId tenantId : tenantIds) {
             migrateVersionControlSettingsToSecrets(tenantId);

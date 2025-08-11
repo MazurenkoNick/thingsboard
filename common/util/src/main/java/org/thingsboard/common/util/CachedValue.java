@@ -28,44 +28,26 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.service.solutions.trendz.preprocessor;
+package org.thingsboard.common.util;
 
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.thingsboard.server.service.solutions.trendz.TrendzEntityPreprocessor;
-import org.thingsboard.server.service.solutions.trendz.data.TrendzEntityType;
-import org.thingsboard.server.service.solutions.trendz.data.TrendzPreprocessConfig;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.LoadingCache;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 
-@Slf4j
-@Service
-public class CalculationFieldPreprocessor extends TrendzEntityPreprocessor {
+public class CachedValue<V> {
 
-    private static final Set<String> CALCULATION_FIELD_FIELDS_NAMES = Set.of("id", "businessEntityId", "associatedEntityFieldId");
+    private final LoadingCache<Object, V> cache;
 
-    @Override
-    public TrendzEntityType getEntityType() {
-        return TrendzEntityType.CALCULATION_FIELD;
+    public CachedValue(Supplier<V> supplier, long valueTtlMs) {
+        this.cache = Caffeine.newBuilder()
+                .expireAfterWrite(valueTtlMs, TimeUnit.MILLISECONDS)
+                .build(__ -> supplier.get());
     }
 
-    @Override
-    public void preprocess(TrendzPreprocessConfig config) {
-        Map<String, Object> importData = config.getImportData();
-        Map<UUID, UUID> oldToNewIdMap = config.getOldToNewIdMap();
-
-        String collectionName = getEntityType().getCollectionName();
-        List<Object> calculationFields = (List<Object>) importData.get(collectionName);
-        for (Object calculationField : calculationFields) {
-            setUserIds(oldToNewIdMap, calculationField, config);
-            for (String fieldName : CALCULATION_FIELD_FIELDS_NAMES) {
-                setNewId(oldToNewIdMap, calculationField, fieldName);
-            }
-
-            setNewIdMap(oldToNewIdMap, calculationField, "manualDataset");
-        }
+    public V get() {
+        return cache.get(this);
     }
+
 }

@@ -223,8 +223,13 @@ public abstract class AbstractReportService implements ReportService {
             mergedData.putAll(toStringMap(entityData, latestDataKeys, ctx));
             entityDatas.add(mergedData);
         }
-        Map<String, Object> variables = new HashMap<>(toStringMap(stateEntity, latestDataKeys, ctx));
-        return new ComponentData(usablePageWidthPx, null, entityDatas, variables);
+        Map<String, String> variables = new HashMap<>();
+        if (stateEntity != null) {
+            putEntityInfoData(stateEntity, variables);
+        } else {
+            putEntityInfoData(entityDataList.get(0), variables);
+        }
+        return new ComponentData(usablePageWidthPx, null, entityDatas, new HashMap<>(variables));
     }
 
     protected Map<String, String> toStringMap(EntityData entityData, List<DataKey> dataKeys, TbReportCtx ctx) {
@@ -232,13 +237,17 @@ public abstract class AbstractReportService implements ReportService {
         if (entityData != null) {
             putLatestValues(dataKeys, data, entityData.getLatest(), ctx);
             putTimeseriesValues(dataKeys, data, entityData.getTimeseries(), ctx);
-            data.put("id", entityData.getEntityId().toString());
-            Optional<String> entityName = getEntityLatestValue(entityData, EntityKeyType.ENTITY_FIELD, "name");
-            Optional<String> entityLabel = getEntityLatestValue(entityData, EntityKeyType.ENTITY_FIELD, "label");
-            data.put("entityName", entityName.orElse(""));
-            data.put("entityLabel", entityLabel.orElse(""));
+            putEntityInfoData(entityData, data);
         }
         return data;
+    }
+
+    protected void putEntityInfoData(EntityData entityData, Map<String, String> data) {
+        Optional<String> entityName = getEntityLatestValue(entityData, EntityKeyType.ENTITY_FIELD, "name");
+        Optional<String> entityLabel = getEntityLatestValue(entityData, EntityKeyType.ENTITY_FIELD, "label");
+        data.put("entityName", entityName.orElse(""));
+        data.put("entityLabel", entityLabel.orElse(""));
+        data.put("id", entityData.getEntityId().toString());
     }
 
     protected Map<String, String> toStringMap(AlarmData alarmData, List<DataKey> alarmDataKeys, TbReportCtx ctx) {

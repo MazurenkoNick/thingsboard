@@ -40,9 +40,10 @@ import org.thingsboard.rule.engine.mail.TbMsgToEmailNode;
 import org.thingsboard.server.actors.ActorSystemContext;
 import org.thingsboard.server.cluster.TbClusterService;
 import org.thingsboard.server.common.data.ApiUsageRecordKey;
+import org.thingsboard.server.common.data.User;
 import org.thingsboard.server.common.data.exception.ApiUsageLimitsExceededException;
-import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.id.EntityId;
+import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.job.Job;
 import org.thingsboard.server.common.data.job.JobStatus;
 import org.thingsboard.server.common.data.job.JobType;
@@ -55,6 +56,8 @@ import org.thingsboard.server.common.data.job.task.TaskResult;
 import org.thingsboard.server.common.data.msg.TbNodeConnectionType;
 import org.thingsboard.server.common.data.notification.NotificationRequest;
 import org.thingsboard.server.common.data.notification.NotificationRequestConfig;
+import org.thingsboard.server.common.data.notification.NotificationRequestStats;
+import org.thingsboard.server.common.data.notification.NotificationRequestStatus;
 import org.thingsboard.server.common.data.notification.info.ReportGeneratedNotificationInfo;
 import org.thingsboard.server.common.data.report.Report;
 import org.thingsboard.server.common.data.report.ReportTemplate;
@@ -64,7 +67,9 @@ import org.thingsboard.server.common.msg.gen.MsgProtos;
 import org.thingsboard.server.common.msg.queue.ServiceType;
 import org.thingsboard.server.common.msg.queue.TopicPartitionInfo;
 import org.thingsboard.server.common.stats.TbApiUsageReportClient;
+import org.thingsboard.server.dao.notification.NotificationRequestService;
 import org.thingsboard.server.dao.report.ReportTemplateService;
+import org.thingsboard.server.dao.user.UserService;
 import org.thingsboard.server.gen.transport.TransportProtos;
 import org.thingsboard.server.queue.common.SimpleTbQueueCallback;
 import org.thingsboard.server.queue.discovery.PartitionService;
@@ -93,6 +98,7 @@ public class ReportJobProcessor implements JobProcessor {
     private final SystemSecurityService systemSecurityService;
     @Lazy
     private final NotificationCenter notificationCenter;
+    private final NotificationRequestService notificationRequestService;
     private final NotificationExecutorService notificationExecutor;
     private final TbClusterService clusterService;
     private final PartitionService partitionService;
@@ -101,6 +107,7 @@ public class ReportJobProcessor implements JobProcessor {
     private final ActorSystemContext actorSystemContext;
     private final TbApiUsageStateService apiUsageStateService;
     private final TbApiUsageReportClient apiUsageClient;
+    private final UserService userService;
 
     @Override
     public int process(Job job, Consumer<Task<?>> taskConsumer) throws Exception {
@@ -113,12 +120,13 @@ public class ReportJobProcessor implements JobProcessor {
             throw new ApiUsageLimitsExceededException(REPORT_CREATION_DISABLED);
         }
         ReportTemplate reportTemplate = reportTemplateService.findReportTemplateById(job.getTenantId(), configuration.getReportTemplateId());
+        User user = userService.findUserById(job.getTenantId(), configuration.getUserId());
         AccessJwtToken accessToken = systemSecurityService.createUserAccessToken(job.getTenantId(), configuration.getUserId());
         EntityId userOwnerId = ownersCacheService.getOwner(job.getTenantId(), configuration.getUserId());
 
         ReportTask task = ReportTask.builder()
                 .tenantId(job.getTenantId())
-                .customerId(reportTemplate.getCustomerId())
+                .customerId(user.getCustomerId())
                 .jobId(job.getId())
                 .key(configuration.getTasksKey())
                 .reportTemplateId(reportTemplate.getId())
@@ -152,31 +160,43 @@ public class ReportJobProcessor implements JobProcessor {
                 log.error("[{}] Failed to produce rule engine output msg for job {}", tenantId, job.getId(), e);
             }
         }
-        if (job.getStatus() != JobStatus.COMPLETED) {
-            return;
-        }
-        apiUsageClient.report(job.getTenantId(), null, ApiUsageRecordKey.GENERATED_REPORTS_COUNT);
+        if (job.getStatus() == JobStatus.COMPLETED) {
+            apiUsageClient.report(job.getTenantId(), null, ApiUsageRecordKey.GENERATED_REPORTS_COUNT);
 
-        Report report = result.getReport();
-        if (CollectionsUtil.isNotEmpty(configuration.getTargets()) && configuration.getNotificationTemplateId() != null) {
-            NotificationRequest notificationRequest = NotificationRequest.builder()
-                    .tenantId(tenantId)
-                    .targets(configuration.getTargets())
-                    .templateId(configuration.getNotificationTemplateId())
-                    .originatorEntityId(report.getUserId())
-                    .info(ReportGeneratedNotificationInfo.builder()
-                            .tenantId(tenantId)
-                            .customerId(report.getCustomerId())
-                            .reportFormat(report.getFormat())
-                            .reportName(report.getName())
-                            .userId(report.getUserId())
-                            .build())
-                    .build();
-            processNotification(notificationRequest, report);
-        } else if (configuration.getNotificationRequests() != null) {
-            configuration.getNotificationRequests().forEach(notificationRequest -> {
+            Report report = result.getReport();
+            if (CollectionsUtil.isNotEmpty(configuration.getTargets()) && configuration.getNotificationTemplateId() != null) {
+                NotificationRequest notificationRequest = NotificationRequest.builder()
+                        .tenantId(tenantId)
+                        .targets(configuration.getTargets())
+                        .templateId(configuration.getNotificationTemplateId())
+                        .originatorEntityId(report.getUserId())
+                        .info(ReportGeneratedNotificationInfo.builder()
+                                .tenantId(tenantId)
+                                .customerId(report.getCustomerId())
+                                .reportFormat(report.getFormat())
+                                .reportName(report.getName())
+                                .userId(report.getUserId())
+                                .build())
+                        .build();
                 processNotification(notificationRequest, report);
-            });
+            } else if (configuration.getNotificationRequests() != null) {
+                configuration.getNotificationRequests().forEach(notificationRequest -> {
+                    processNotification(notificationRequest, report);
+                });
+            }
+        } else {
+            if (configuration.getNotificationRequests() != null) {
+                RuntimeException error = new RuntimeException("Failed to generate report: " + getError(result));
+                configuration.getNotificationRequests().forEach(notificationRequest -> {
+                    NotificationRequestStats stats = notificationRequest.getStats();
+                    if (stats == null) {
+                        stats = new NotificationRequestStats();
+                    }
+                    stats.reportGeneralError(error);
+                    notificationRequestService.updateNotificationRequest(tenantId, notificationRequest.getId(), NotificationRequestStatus.SENT, stats);
+                });
+            }
+
         }
     }
 
@@ -210,19 +230,11 @@ public class ReportJobProcessor implements JobProcessor {
             throw new RuntimeException(e);
         }
         String relationType;
-        String error;
-        if (result.getGeneralError() != null) {
+        String error = getError(result);
+        if (error != null) {
             relationType = TbNodeConnectionType.FAILURE;
-            error = result.getGeneralError();
-        } else if (result.getFailedCount() > 0) {
-            relationType = TbNodeConnectionType.FAILURE;
-            error = result.getResults().stream()
-                    .filter(not(TaskResult::isSuccess))
-                    .findFirst().map(taskResult -> ((ReportTaskResult) taskResult).getError())
-                    .orElse(null);
         } else {
             relationType = TbNodeConnectionType.SUCCESS;
-            error = null;
             outputMsg.getMetaData().putValue(TbMsgToEmailNode.REPORTS, result.getReport().getId().toString());
         }
 
@@ -240,6 +252,21 @@ public class ReportJobProcessor implements JobProcessor {
         }, throwable -> {
             log.error("[{}] Failed to send msg {}", tenantId, ruleEngineMsg, throwable);
         }));
+    }
+
+    private String getError(ReportJobResult result) {
+        if (result.getCancellationTs() > 0) {
+            return "The task was cancelled";
+        } else if (result.getGeneralError() != null) {
+            return result.getGeneralError();
+        } else if (result.getFailedCount() > 0) {
+            return result.getResults().stream()
+                    .filter(not(TaskResult::isSuccess))
+                    .findFirst().map(taskResult -> ((ReportTaskResult) taskResult).getError())
+                    .orElse(null);
+        } else {
+            return null;
+        }
     }
 
     @Override

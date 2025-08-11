@@ -33,6 +33,8 @@ package org.thingsboard.server.common.data.report;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
@@ -57,6 +59,8 @@ public class ReportTemplate extends BaseReportTemplate {
     private static final long serialVersionUID = 1729877416392618039L;
 
     @Schema(description = "a JSON value with report template configuration")
+    @Valid
+    @NotNull
     private ReportTemplateConfig configuration;
 
     public ReportTemplate() {

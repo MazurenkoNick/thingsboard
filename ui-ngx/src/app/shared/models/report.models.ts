@@ -325,7 +325,6 @@ export interface ReportConfig {
 }
 
 export interface ReportTemplateFilter {
-  includeCustomers?: boolean;
   formatList?: TbReportFormat[];
   typeList?: ReportTemplateType[];
 }
@@ -344,9 +343,6 @@ export const reportTemplateFiltersEquals = (filter1?: ReportTemplateFilter, filt
     if (!isArraysEqualIgnoreUndefined(filter1.formatList, filter2.formatList)) {
       return false;
     }
-    if (!isEqualIgnoreUndefined(filter1.includeCustomers, filter2.includeCustomers)) {
-      return false;
-    }
     return true;
   }
   return false;
@@ -355,23 +351,18 @@ export const reportTemplateFiltersEquals = (filter1?: ReportTemplateFilter, filt
 export class ReportTemplateQuery {
 
   pageLink: PageLink;
-  includeCustomers: boolean;
   formatList: TbReportFormat[];
   typeList: ReportTemplateType[];
 
   constructor(pageLink: PageLink,
               reportTemplateFilter: ReportTemplateFilter) {
     this.pageLink = pageLink;
-    this.includeCustomers = reportTemplateFilter.includeCustomers;
     this.formatList = reportTemplateFilter.formatList;
     this.typeList = reportTemplateFilter.typeList;
   }
 
   public toQuery(): string {
     let query = this.pageLink.toQuery();
-    if (this.includeCustomers) {
-      query += '&includeCustomers=true';
-    }
     if (this.formatList && this.formatList.length) {
       query += `&formatList=${this.formatList.join(',')}`;
     }
@@ -484,7 +475,6 @@ export interface ScheduledReportInfo extends SchedulerEventInfo {
 }
 
 export interface ReportFilter {
-  includeCustomers?: boolean;
   reportTemplateId?: ReportTemplateId;
   userId?: UserId;
 }
@@ -502,9 +492,6 @@ export const reportFiltersEquals = (filter1?: ReportFilter, filter2?: ReportFilt
     if (!isEqualIgnoreUndefined(filter1.userId, filter2.userId)) {
       return false;
     }
-    if (!isEqualIgnoreUndefined(filter1.includeCustomers, filter2.includeCustomers)) {
-      return false;
-    }
     return true;
   }
   return false;
@@ -513,23 +500,18 @@ export const reportFiltersEquals = (filter1?: ReportFilter, filter2?: ReportFilt
 export class ReportQuery {
 
   pageLink: PageLink;
-  includeCustomers: boolean;
   reportTemplateId?: ReportTemplateId;
   userId?: UserId;
 
   constructor(pageLink: PageLink,
               reportFilter: ReportFilter) {
     this.pageLink = pageLink;
-    this.includeCustomers = reportFilter.includeCustomers;
     this.reportTemplateId = reportFilter.reportTemplateId;
     this.userId = reportFilter.userId;
   }
 
   public toQuery(): string {
-    let query = this.pageLink.toQuery();
-    if (this.includeCustomers) {
-      query += '&includeCustomers=true';
-    }
+    let query = this.pageLink.toQuery() + '&includeCustomers=true';
     if (this.reportTemplateId?.id) {
       query += `&reportTemplateId=${this.reportTemplateId.id}`;
     }

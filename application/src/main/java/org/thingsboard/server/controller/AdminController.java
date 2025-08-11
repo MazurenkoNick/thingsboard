@@ -62,6 +62,7 @@ import org.springframework.web.context.request.async.DeferredResult;
 import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.rule.engine.api.MailService;
 import org.thingsboard.rule.engine.api.SmsService;
+import org.thingsboard.server.cache.TbTransactionalCache;
 import org.thingsboard.server.common.data.AdminSettings;
 import org.thingsboard.server.common.data.FeaturesInfo;
 import org.thingsboard.server.common.data.LicenseInfo;
@@ -88,6 +89,7 @@ import org.thingsboard.server.common.data.sync.vc.RepositorySettingsInfo;
 import org.thingsboard.server.common.data.sync.vc.VcUtils;
 import org.thingsboard.server.config.annotations.ApiOperation;
 import org.thingsboard.server.dao.audit.AuditLogService;
+import org.thingsboard.server.dao.secret.SecretConfigurationService;
 import org.thingsboard.server.dao.settings.AdminSettingsService;
 import org.thingsboard.server.dao.settings.SecuritySettingsService;
 import org.thingsboard.server.queue.util.TbCoreComponent;
@@ -104,8 +106,6 @@ import org.thingsboard.server.service.update.UpdateService;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 
 import static org.thingsboard.server.controller.ControllerConstants.SYSTEM_AUTHORITY_PARAGRAPH;
 import static org.thingsboard.server.controller.ControllerConstants.SYSTEM_OR_TENANT_AUTHORITY_PARAGRAPH;
@@ -130,12 +130,13 @@ public class AdminController extends BaseController {
     private final UpdateService updateService;
     private final SystemInfoService systemInfoService;
     private final AuditLogService auditLogService;
+    private final SecretConfigurationService secretConfigurationService;
+    private final TbTransactionalCache<String, TenantId> oauth2StateCache;
 
     private static final String PREV_URI_PATH_PARAMETER = "prevUri";
     private static final String PREV_URI_COOKIE_NAME = "prev_uri";
     private static final String STATE_COOKIE_NAME = "state";
     private static final String MAIL_SETTINGS_KEY = "mail";
-    private static final ConcurrentMap<String, TenantId> internalSessionMap = new ConcurrentHashMap<>();
 
     protected static final String RESOURCE_READ_CHECK = "\n\nSecurity check is performed to verify that " +
             "the user has 'READ' permission for the 'ADMIN_SETTINGS' (for 'SYS_ADMIN' authority) or 'WHITE_LABELING' (for 'TENANT_ADMIN' authority) resource.";
@@ -490,7 +491,7 @@ public class AdminController extends BaseController {
             CookieUtils.addCookie(response, PREV_URI_COOKIE_NAME, request.getParameter(PREV_URI_PATH_PARAMETER), 180);
         }
         CookieUtils.addCookie(response, STATE_COOKIE_NAME, state, 180);
-        internalSessionMap.put(state, currentUser.getTenantId());
+        oauth2StateCache.put(state, currentUser.getTenantId());
 
         AdminSettings adminSettings;
         if (Authority.SYS_ADMIN.equals(currentUser.getAuthority())) {
@@ -527,7 +528,12 @@ public class AdminController extends BaseController {
             CookieUtils.deleteCookie(request, response, STATE_COOKIE_NAME);
             throw new ThingsboardException("Refresh token was not generated, invalid state param", ThingsboardErrorCode.BAD_REQUEST_PARAMS);
         }
-        TenantId tenantId = internalSessionMap.remove(cookieState.get().getValue());
+        var tenantWrapper = oauth2StateCache.get(state);
+        if (tenantWrapper == null) {
+            throw new ThingsboardException("State parameter is not valid", ThingsboardErrorCode.BAD_REQUEST_PARAMS);
+        }
+        TenantId tenantId = tenantWrapper.get();
+        oauth2StateCache.evict(state);
 
         CookieUtils.deleteCookie(request, response, STATE_COOKIE_NAME);
         CookieUtils.deleteCookie(request, response, PREV_URI_COOKIE_NAME);
@@ -538,7 +544,8 @@ public class AdminController extends BaseController {
         } else {
             adminSettings = getTenantAdminSettings(tenantId, MAIL_SETTINGS_KEY, false);
         }
-        JsonNode jsonValue = adminSettings.getJsonValue();
+        JsonNode jsonValue = adminSettings.getJsonValue().deepCopy();
+        secretConfigurationService.replaceSecretUsages(tenantId, jsonValue);
 
         String clientId = checkNotNull(jsonValue.get("clientId"), "No clientId was configured").asText();
         String clientSecret = checkNotNull(jsonValue.get("clientSecret"), "No client secret was configured").asText();
@@ -555,8 +562,8 @@ public class AdminController extends BaseController {
             log.warn("Unable to retrieve refresh token: {}", e.getMessage());
             throw new ThingsboardException("Error while requesting access token: " + e.getMessage(), ThingsboardErrorCode.GENERAL);
         }
-        ((ObjectNode) jsonValue).put("refreshToken", tokenResponse.getRefreshToken());
-        ((ObjectNode) jsonValue).put("tokenGenerated", true);
+        ((ObjectNode) adminSettings.getJsonValue()).put("refreshToken", tokenResponse.getRefreshToken());
+        ((ObjectNode) adminSettings.getJsonValue()).put("tokenGenerated", true);
 
         adminSettingsService.saveAdminSettings(tenantId, adminSettings);
         response.sendRedirect(prevUri);

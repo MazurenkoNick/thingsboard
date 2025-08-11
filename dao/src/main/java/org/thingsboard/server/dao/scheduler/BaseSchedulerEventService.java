@@ -41,6 +41,7 @@ import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.EdgeId;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.HasId;
+import org.thingsboard.server.common.data.id.ReportTemplateId;
 import org.thingsboard.server.common.data.id.SchedulerEventId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.page.PageData;
@@ -282,6 +283,12 @@ public class BaseSchedulerEventService extends AbstractEntityService implements 
     public PageData<ScheduledReportInfo> findScheduledReportEvents(TenantId tenantId, CustomerId customerId, ScheduledReportQuery query) {
         log.trace("Executing findScheduledReportEvents, tenantId [{}], customerId [{}], query [{}]", tenantId, customerId, query);
         return schedulerEventInfoDao.findScheduledReportEvents(tenantId.getId(), customerId.getId(), query);
+    }
+
+    @Override
+    public int countScheduledReportEventsByTemplateId(TenantId tenantId, ReportTemplateId reportTemplateId) {
+        log.trace("Executing countScheduledReportEventsByTemplateId, tenantId [{}], reportTemplateId [{}]", tenantId, reportTemplateId);
+        return schedulerEventInfoDao.countScheduledReportEventsByTemplateId(tenantId.getId(), reportTemplateId.getId());
     }
 
     @Override

@@ -28,26 +28,25 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.service.solutions.trendz.data;
+package org.thingsboard.server.dao.mail;
 
-import lombok.Getter;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.stereotype.Service;
+import org.thingsboard.server.cache.CacheSpecsMap;
+import org.thingsboard.server.cache.RedisTbTransactionalCache;
+import org.thingsboard.server.cache.TBRedisCacheConfiguration;
+import org.thingsboard.server.cache.TbJsonRedisSerializer;
+import org.thingsboard.server.common.data.CacheConstants;
+import org.thingsboard.server.common.data.id.CustomMenuId;
+import org.thingsboard.server.common.data.id.TenantId;
+import org.thingsboard.server.common.data.menu.CustomMenu;
 
-@Getter
-public enum TrendzEntityType {
-    BUSINESS_ENTITY("businessEntities", "/apiTrendz/businessEntity/delete/"),
-    VIEW_CONFIG("viewConfigs", "/apiTrendz/view/config/delete/"),
-    VIEW_COLLECTION("viewCollections", "/apiTrendz/view/collection/delete/"),
-    CALCULATION_FIELD("calculationFields", "/apiTrendz/calculation/"),
-    PREDICTION_MODEL("predictionModels", "/apiTrendz/model/prediction/delete/"),
-    ANOMALY_MODEL("anomalyModels", "/apiTrendz/model/delete/"),
-    TASK_SEQUENCE("taskSequences", "/apiTrendz/task/sequence/"),
-    ;
+@ConditionalOnProperty(prefix = "cache", value = "type", havingValue = "redis")
+@Service("MailOauth2StateCache")
+public class MailOauth2StateRedisCache extends RedisTbTransactionalCache<String, TenantId> {
 
-    private final String collectionName;
-    private final String deletePath;
-
-    TrendzEntityType(String collectionName, String deletePath) {
-        this.collectionName = collectionName;
-        this.deletePath = deletePath;
+    public MailOauth2StateRedisCache(TBRedisCacheConfiguration configuration, CacheSpecsMap cacheSpecsMap, RedisConnectionFactory connectionFactory) {
+        super(CacheConstants.MAIL_OAUTH2_STATE_CACHE, cacheSpecsMap, connectionFactory, configuration, new TbJsonRedisSerializer<>(TenantId.class));
     }
 }

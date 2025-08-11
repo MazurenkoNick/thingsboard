@@ -145,9 +145,8 @@ public class LocalReportDataService implements ReportDataService {
         return tbTelemetryService.getTimeseriesByReadQueries(entityId, queries, getSecurityUser(ctx)).get();
     }
 
-    @SneakyThrows
     @Override
-    public Report createReport(Report report, byte[] data, TbReportCtx ctx) {
+    public Report createReport(Report report, byte[] data, TbReportCtx ctx) throws ThingsboardException {
         accessControlService.checkPermission(getSecurityUser(ctx), Resource.REPORT, Operation.CREATE);
         return reportService.createReport(report, data);
     }

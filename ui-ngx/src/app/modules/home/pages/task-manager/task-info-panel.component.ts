@@ -30,13 +30,14 @@
 ///
 
 import { Component, EventEmitter, Input, OnInit, Output, ViewEncapsulation } from '@angular/core';
-import { Job, JobStatus } from '@app/shared/models/job.models';
+import { Job, JobStatus, JobType } from '@app/shared/models/job.models';
 import { TbPopoverComponent } from '@shared/components/popover.component';
 import { Operation, Resource } from '@shared/models/security.models';
 import { UserPermissionsService } from '@core/http/user-permissions.service';
 import { EntityType, entityTypeTranslations } from '@shared/models/entity-type.models';
 import { getEntityDetailsPageURL } from '@core/utils';
 import { TranslateService } from '@ngx-translate/core';
+import { ReportService } from '@core/http/report.service';
 
 interface TaskError {
   typeName: string;
@@ -63,6 +64,7 @@ export class TaskInfoPanelComponent implements OnInit {
   cancelTask = new EventEmitter<void>();
 
   JobStatus = JobStatus;
+  JobType = JobType;
 
   hasWritePermission = false;
   errors: TaskError[] = [];
@@ -70,7 +72,8 @@ export class TaskInfoPanelComponent implements OnInit {
 
   constructor(private popover: TbPopoverComponent<TaskInfoPanelComponent>,
               private translate: TranslateService,
-              private userPermissionsService: UserPermissionsService) {
+              private userPermissionsService: UserPermissionsService,
+              private reportService: ReportService,) {
     this.hasWritePermission = this.userPermissionsService.hasGenericPermission(Resource.JOB, Operation.WRITE);
   }
 
@@ -105,5 +108,10 @@ export class TaskInfoPanelComponent implements OnInit {
 
   cancelJob() {
     this.cancelTask.emit();
+  }
+
+  downloadReport($event: Event) {
+    $event?.stopPropagation();
+    this.reportService.downloadReport(this.job.result.report.id.id).subscribe();
   }
 }

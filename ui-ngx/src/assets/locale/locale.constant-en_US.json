@@ -8744,6 +8744,7 @@
         "parameters": "Parameters",
         "progress": "Progress",
         "reprocess": "{ count, plural, =0 {Reprocess} =1 {Reprocess} other {Reprocess failed entities} }",
+        "retry": "Retry",
         "search": "Search task",
         "selected-tasks": "{ count, plural, =1 {1 task} other {# tasks} } selected",
         "selected-tasks-are-finished": "These tasks are already finished",
@@ -8772,7 +8773,10 @@
         "tasks-type-list": "Tasks type list",
         "time-taken": "Time taken",
         "total-entities": "Total entities",
-        "type": "Type"
+        "type": "Type",
+        "report-generate-successfully": "Report generated successfully",
+        "report-generate-in-progress": "Generating report in progress",
+        "generate-report-canceled": "Generate report canceled"
     },
     "widget": {
         "widget-library": "Widgets library",

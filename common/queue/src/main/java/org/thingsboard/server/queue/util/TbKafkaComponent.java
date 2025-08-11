@@ -28,43 +28,17 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.service.solutions.trendz.preprocessor;
+package org.thingsboard.server.queue.util;
 
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.thingsboard.server.service.solutions.trendz.TrendzEntityPreprocessor;
-import org.thingsboard.server.service.solutions.trendz.data.TrendzEntityType;
-import org.thingsboard.server.service.solutions.trendz.data.TrendzPreprocessConfig;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.lang.annotation.Inherited;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-@Slf4j
-@Service
-public class ViewCollectionPreprocessor extends TrendzEntityPreprocessor {
-
-    private static final Set<String> VIEW_COLLECTION_FIELDS_NAMES = Set.of("id", "parentId");
-
-
-    @Override
-    public TrendzEntityType getEntityType() {
-        return TrendzEntityType.VIEW_COLLECTION;
-    }
-
-    @Override
-    public void preprocess(TrendzPreprocessConfig config) {
-        Map<String, Object> importData = config.getImportData();
-        Map<UUID, UUID> oldToNewIdMap = config.getOldToNewIdMap();
-
-        String collectionName = getEntityType().getCollectionName();
-        List<Object> viewCollections = (List<Object>) importData.get(collectionName);
-        for (Object viewCollection : viewCollections) {
-            setUserIds(oldToNewIdMap, viewCollection, config);
-            for (String fieldName : VIEW_COLLECTION_FIELDS_NAMES) {
-                setNewId(oldToNewIdMap, viewCollection, fieldName);
-            }
-        }
-    }
-}
+@Inherited
+@Retention(RetentionPolicy.RUNTIME)
+@Target({java.lang.annotation.ElementType.TYPE, java.lang.annotation.ElementType.METHOD})
+@ConditionalOnProperty(prefix = "queue", value = "type", havingValue = "kafka")
+public @interface TbKafkaComponent {}
