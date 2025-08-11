@@ -3,7 +3,7 @@
 
     ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
 
-    Copyright Â© 2016-2025 ThingsBoard, Inc. All Rights Reserved.
+    Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
 
     NOTICE: All information contained herein is, and remains
     the property of ThingsBoard, Inc. and its suppliers,
@@ -39,6 +39,9 @@
             <package name="org.thingsboard.server.msa.connectivity"/>
             <package name="org.thingsboard.server.msa.integration"/>
             <package name="org.thingsboard.server.msa.edqs"/>
+            <package name="org.thingsboard.server.msa.cf" />
+            <package name="org.thingsboard.server.msa.rule.node" />
+            <package name="org.thingsboard.server.msa.report" />
         </packages>
     </test>
 </suite>
