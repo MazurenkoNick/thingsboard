@@ -30,6 +30,7 @@
  */
 package org.thingsboard.server.dao.notification;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -123,6 +124,7 @@ public class DefaultNotificationRequestService implements NotificationRequestSer
         return notificationRequestDao.findAllByStatus(NotificationRequestStatus.SCHEDULED, pageLink);
     }
 
+    @Transactional
     @Override
     public void updateNotificationRequest(TenantId tenantId, NotificationRequestId requestId, NotificationRequestStatus requestStatus, NotificationRequestStats stats) {
         notificationRequestDao.updateById(tenantId, requestId, requestStatus, stats);

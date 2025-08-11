@@ -36,8 +36,8 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
+import org.thingsboard.server.common.data.EntityInfo;
 import org.thingsboard.server.common.data.id.EntityId;
-import org.thingsboard.server.common.data.id.NotificationTargetId;
 import org.thingsboard.server.common.data.id.NotificationTemplateId;
 import org.thingsboard.server.common.data.id.ReportTemplateId;
 import org.thingsboard.server.common.data.id.UserId;
@@ -68,6 +68,8 @@ public class ReportJobConfiguration extends JobConfiguration {
     private RuleNode ruleNode;
     private String outputTbMsgProto;
     private String queueName;
+
+    private EntityInfo schedulerEventInfo;
 
     @Override
     public JobType getType() {

@@ -147,7 +147,6 @@ public class ThingsboardInstallService {
                     installScripts.loadSystemImagesAndResources();
                     systemDataLoaderService.createDefaultCustomMenu();
                     installScripts.updateSystemNotificationTemplates();
-                    installScripts.generateSysAdminEncryptionKey();
                     databaseSchemaVersionService.updateSchemaVersion();
                     entityDatabaseSchemaService.generateClusterIdIfNotExist(); //Need for offline build
                 }

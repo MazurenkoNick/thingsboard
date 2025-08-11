@@ -94,7 +94,6 @@ public class CustomerUserPermissions extends AbstractPermissions {
         put(Resource.WIDGET_TYPE, widgetsPermissionChecker);
         put(Resource.SCHEDULER_EVENT, customerStandaloneEntityPermissionChecker);
         put(Resource.BLOB_ENTITY, customerStandaloneEntityPermissionChecker);
-        put(Resource.REPORT_TEMPLATE, customerStandaloneEntityPermissionChecker);
         put(Resource.CUSTOMER_GROUP, customerEntityGroupPermissionChecker);
         put(Resource.DEVICE_GROUP, customerEntityGroupPermissionChecker);
         put(Resource.ASSET_GROUP, customerEntityGroupPermissionChecker);
@@ -114,6 +113,7 @@ public class CustomerUserPermissions extends AbstractPermissions {
         put(Resource.OAUTH2_CLIENT, customerStandaloneEntityPermissionChecker);
         put(Resource.OAUTH2_CONFIGURATION_TEMPLATE, new PermissionChecker.GenericPermissionChecker(Operation.READ));
         put(Resource.DOMAIN, customerStandaloneEntityPermissionChecker);
+        put(Resource.REPORT_TEMPLATE, reportTemplatePermissionChecker);
         put(Resource.REPORT, customerStandaloneEntityPermissionChecker);
     }
 
@@ -393,6 +393,32 @@ public class CustomerUserPermissions extends AbstractPermissions {
     };
 
     private static final PermissionChecker profilePermissionChecker = new PermissionChecker.GenericPermissionChecker(Operation.READ) {
+
+        @Override
+        public boolean hasPermission(SecurityUser user, Resource resource, Operation operation) {
+            if (!super.hasPermission(user, resource, operation)) {
+                return false;
+            }
+            return user.getUserPermissions().hasGenericPermission(resource, operation);
+        }
+
+        @Override
+        @SuppressWarnings("unchecked")
+        public boolean hasPermission(SecurityUser user, Operation operation, EntityId entityId, TenantEntity entity) {
+            if (!super.hasPermission(user, operation, entityId, entity)) {
+                return false;
+            }
+            if (entity.getTenantId() != null && !entity.getTenantId().isNullUid() &&
+                    !user.getTenantId().equals(entity.getTenantId())) {
+                return false;
+            }
+            Resource resource = Resource.resourceFromEntityType(entity.getEntityType());
+            // This entity does not have groups, so we are checking only generic level permissions
+            return user.getUserPermissions().hasGenericPermission(resource, operation);
+        }
+    };
+
+    private static final PermissionChecker reportTemplatePermissionChecker = new PermissionChecker.GenericPermissionChecker(Operation.READ) {
 
         @Override
         public boolean hasPermission(SecurityUser user, Resource resource, Operation operation) {

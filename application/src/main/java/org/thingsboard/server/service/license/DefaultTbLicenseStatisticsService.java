@@ -54,6 +54,8 @@ import org.thingsboard.server.dao.dashboard.DashboardDao;
 import org.thingsboard.server.dao.entity.EntityDaoRegistry;
 import org.thingsboard.server.dao.integration.IntegrationDao;
 import org.thingsboard.server.dao.mobile.QrCodeSettingsDao;
+import org.thingsboard.server.dao.report.ReportDao;
+import org.thingsboard.server.dao.report.ReportTemplateDao;
 import org.thingsboard.server.dao.rule.RuleNodeDao;
 import org.thingsboard.server.dao.secret.SecretDao;
 import org.thingsboard.server.dao.sql.job.JpaJobDao;
@@ -109,6 +111,8 @@ public class DefaultTbLicenseStatisticsService implements TbLicenseStatisticsSer
     private final SolutionService solutionService;
     private final JdbcTemplate jdbcTemplate;
     private final PartitionService partitionService;
+    private final ReportDao reportDao;
+    private final ReportTemplateDao reportTemplateDao;
 
     @Value("#{('${database.ts.type}' == 'cassandra') or ('${database.ts_latest.type}' == 'cassandra')}")
     private boolean cassandra;
@@ -146,6 +150,8 @@ public class DefaultTbLicenseStatisticsService implements TbLicenseStatisticsSer
         statistics.setDevicesCountsPerTransportType(getSafely(deviceDao::countDevicesPerTransportType, null));
         statistics.setJobsByTypeAndStatusLastMonth(getSafely(jpaJobDao::countJobsByTypeAndStatusLastMonth, null));
         statistics.setSecretsPerType(getSafely(secretDao::countSecretsPerType, null));
+        statistics.setReportsCountsPerFormatType(getSafely(reportDao::countReportsByType, null));
+        statistics.setReportTemplatesByFormatAndType(getSafely(reportTemplateDao::countTemplateByFormatAndType, null));
 
         statistics.setGenericConverters(getSafely(converterDao::countGenericConverters));
         statistics.setTypedConverters(getSafely(converterDao::countTypedConverters));

@@ -36,6 +36,10 @@ import org.thingsboard.server.dao.Dao;
 import org.thingsboard.server.dao.ExportableCustomerEntityDao;
 import org.thingsboard.server.dao.TenantEntityDao;
 
+import java.util.Map;
+
 public interface ReportTemplateDao extends Dao<ReportTemplate>, TenantEntityDao<ReportTemplate>, ExportableCustomerEntityDao<ReportTemplate, ReportTemplateId> {
+
+    Map<String, Map<String, Long>> countTemplateByFormatAndType();
 
 }

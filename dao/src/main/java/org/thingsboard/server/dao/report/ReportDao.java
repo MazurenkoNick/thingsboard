@@ -41,6 +41,7 @@ import org.thingsboard.server.common.data.report.ReportInfoQuery;
 import org.thingsboard.server.dao.Dao;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 public interface ReportDao extends Dao<Report> {
@@ -60,4 +61,7 @@ public interface ReportDao extends Dao<Report> {
     void deleteByTenantId(TenantId tenantId);
 
     void deleteByTenantIdAndCustomerId(TenantId tenantId, CustomerId customerId);
+
+    Map<String, Long> countReportsByType();
+
 }

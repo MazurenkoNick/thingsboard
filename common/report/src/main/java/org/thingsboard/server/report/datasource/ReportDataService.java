@@ -78,6 +78,6 @@ public interface ReportDataService {
 
     List<ReadTsKvQueryResult> findTimeseriesByQueries(EntityId entityId, List<ReadTsKvQuery> queries, TbReportCtx ctx);
 
-    Report createReport(Report report, byte[] data, TbReportCtx ctx);
+    Report createReport(Report report, byte[] data, TbReportCtx ctx) throws ThingsboardException;
 
 }

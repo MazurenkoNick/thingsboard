@@ -35,9 +35,4 @@
     [ngModel]="entitiesTableConfig.componentsData.reportFilter"
     (ngModelChange)="reportFilterChanged($event)">
   </tb-report-filter>
-  <mat-slide-toggle
-    [ngModel]="entitiesTableConfig.componentsData.includeCustomers"
-    (ngModelChange)="includeCustomersChanged($event)">
-    {{ includeCustomersLabel | translate }}
-  </mat-slide-toggle>
 </div>
