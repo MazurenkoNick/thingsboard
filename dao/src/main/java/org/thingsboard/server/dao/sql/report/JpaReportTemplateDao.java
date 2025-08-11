@@ -40,14 +40,17 @@ import org.thingsboard.server.common.data.id.ReportTemplateId;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.report.ReportTemplate;
+import org.thingsboard.server.common.data.util.TbTriple;
 import org.thingsboard.server.dao.DaoUtil;
 import org.thingsboard.server.dao.model.sql.ReportTemplateEntity;
 import org.thingsboard.server.dao.report.ReportTemplateDao;
 import org.thingsboard.server.dao.sql.JpaAbstractDao;
 import org.thingsboard.server.dao.util.SqlDao;
 
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Component
@@ -104,4 +107,12 @@ public class JpaReportTemplateDao extends JpaAbstractDao<ReportTemplateEntity, R
     public EntityType getEntityType() {
         return EntityType.REPORT_TEMPLATE;
     }
+
+    @Override
+    public Map<String, Map<String, Long>> countTemplateByFormatAndType() {
+        return reportTemplateRepository.countTemplatesByFormatAndType()
+                .stream()
+                .collect(Collectors.groupingBy(e -> e.getFirst().name(), Collectors.toMap(e -> e.getSecond().name(), TbTriple::getThird)));
+    }
+
 }

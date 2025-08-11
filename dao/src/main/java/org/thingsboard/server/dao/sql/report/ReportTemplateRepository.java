@@ -35,9 +35,13 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.thingsboard.server.common.data.report.ReportTemplateType;
+import org.thingsboard.server.common.data.report.TbReportFormat;
+import org.thingsboard.server.common.data.util.TbTriple;
 import org.thingsboard.server.dao.ExportableEntityRepository;
 import org.thingsboard.server.dao.model.sql.ReportTemplateEntity;
 
+import java.util.List;
 import java.util.UUID;
 
 public interface ReportTemplateRepository extends JpaRepository<ReportTemplateEntity, UUID>, ExportableEntityRepository<ReportTemplateEntity> {
@@ -57,4 +61,8 @@ public interface ReportTemplateRepository extends JpaRepository<ReportTemplateEn
 
     @Query("SELECT se.id FROM ReportTemplateEntity se WHERE se.tenantId = :tenantId")
     Page<UUID> findIdsByTenantId(@Param("tenantId") UUID tenantId, Pageable pageable);
+
+    @Query("SELECT NEW org.thingsboard.server.common.data.util.TbTriple(rt.format, rt.type, count(*)) FROM ReportTemplateEntity rt GROUP BY rt.format, rt.type")
+    List<TbTriple<TbReportFormat, ReportTemplateType, Long>> countTemplatesByFormatAndType();
+
 }

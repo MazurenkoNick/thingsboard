@@ -38,8 +38,11 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
+import org.thingsboard.server.common.data.report.TbReportFormat;
+import org.thingsboard.server.common.data.util.TbPair;
 import org.thingsboard.server.dao.model.sql.ReportEntity;
 
+import java.util.List;
 import java.util.UUID;
 
 @Repository
@@ -73,4 +76,8 @@ public interface ReportRepository extends JpaRepository<ReportEntity, UUID> {
     @Modifying
     @Query("DELETE FROM ReportEntity r WHERE r.tenantId = :tenantId AND r.customerId = :customerId")
     void deleteByTenantIdAndCustomerId(@Param("tenantId") UUID tenantId, @Param("customerId") UUID customerId);
+
+    @Query("SELECT new org.thingsboard.server.common.data.util.TbPair(r.format, COUNT(*)) FROM ReportEntity r GROUP BY r.format")
+    List<TbPair<TbReportFormat, Long>> countReportsByFormatType();
+
 }

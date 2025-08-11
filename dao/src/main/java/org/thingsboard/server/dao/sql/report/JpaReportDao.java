@@ -43,6 +43,7 @@ import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.report.Report;
 import org.thingsboard.server.common.data.report.ReportInfo;
 import org.thingsboard.server.common.data.report.ReportInfoQuery;
+import org.thingsboard.server.common.data.util.TbPair;
 import org.thingsboard.server.dao.DaoUtil;
 import org.thingsboard.server.dao.model.ModelConstants;
 import org.thingsboard.server.dao.model.sql.ReportEntity;
@@ -52,9 +53,11 @@ import org.thingsboard.server.dao.sqlts.insert.sql.SqlPartitioningRepository;
 import org.thingsboard.server.dao.util.SqlDao;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Component
@@ -150,6 +153,13 @@ public class JpaReportDao extends JpaPartitionedAbstractDao<ReportEntity, Report
     @Override
     public void deleteByTenantIdAndCustomerId(TenantId tenantId, CustomerId customerId) {
         reportRepository.deleteByTenantIdAndCustomerId(tenantId.getId(), customerId.getId());
+    }
+
+    @Override
+    public Map<String, Long> countReportsByType() {
+        return reportRepository.countReportsByFormatType()
+                .stream()
+                .collect(Collectors.toMap(e->e.getFirst().name(), TbPair::getSecond));
     }
 
     @Override
