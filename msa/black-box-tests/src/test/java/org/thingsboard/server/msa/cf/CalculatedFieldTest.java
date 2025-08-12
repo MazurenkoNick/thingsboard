@@ -399,6 +399,7 @@ public class CalculatedFieldTest extends AbstractContainerTest {
                 .untilAsserted(() -> {
                     ObjectNode fahrenheitTemp = testRestClient.getTimeSeries(device.getId(), startTs, endTs, "fahrenheitTemp");
                     assertThat(fahrenheitTemp).isNotNull();
+                    assertThat(fahrenheitTemp.get("fahrenheitTemp")).isNotNull();
 
                     assertThat(fahrenheitTemp.get("fahrenheitTemp").get(0).get("ts").asText()).isEqualTo(Long.toString(ts3));
                     assertThat(fahrenheitTemp.get("fahrenheitTemp").get(0).get("value").asText()).isEqualTo("76.46");
@@ -408,6 +409,7 @@ public class CalculatedFieldTest extends AbstractContainerTest {
 
                     JsonNode fahrenheitTempLatest = testRestClient.getLatestTelemetry(device.getId());
                     assertThat(fahrenheitTempLatest).isNotNull();
+                    assertThat(fahrenheitTempLatest.get("fahrenheitTemp")).isNotNull();
                     assertThat(fahrenheitTempLatest.get("fahrenheitTemp").get(0).get("value").asText()).isEqualTo("76.1"); // reprocessing result did not overwrite the actual latest value
                 });
     }
@@ -462,6 +464,7 @@ public class CalculatedFieldTest extends AbstractContainerTest {
                 .untilAsserted(() -> {
                     ObjectNode airDensity = testRestClient.getTimeSeries(device2.getId(), startTs, endTs, "airDensity");
                     assertThat(airDensity).isNotNull();
+                    assertThat(airDensity.get("airDensity")).isNotNull();
 
                     assertThat(airDensity.get("airDensity").get(0).get("ts").asText()).isEqualTo(Long.toString(d1Ts_3));
                     assertThat(airDensity.get("airDensity").get(0).get("value").asText()).isEqualTo("1.02");
@@ -482,6 +485,7 @@ public class CalculatedFieldTest extends AbstractContainerTest {
                 .untilAsserted(() -> {
                     ObjectNode airDensity = testRestClient.getTimeSeries(newDevice.getId(), startTs, endTs, "airDensity");
                     assertThat(airDensity).isNotNull();
+                    assertThat(airDensity.get("airDensity")).isNotNull();
 
                     assertThat(airDensity.get("airDensity").get(0).get("ts").asText()).isEqualTo(Long.toString(d2Ts_3));
                     assertThat(airDensity.get("airDensity").get(0).get("value").asText()).isEqualTo("1.02");
