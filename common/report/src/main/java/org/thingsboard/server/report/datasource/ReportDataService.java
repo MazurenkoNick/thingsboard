@@ -30,11 +30,9 @@
  */
 package org.thingsboard.server.report.datasource;
 
-import org.thingsboard.server.common.data.TbResource;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.ReportTemplateId;
-import org.thingsboard.server.common.data.id.TbResourceId;
 import org.thingsboard.server.common.data.kv.Aggregation;
 import org.thingsboard.server.common.data.kv.ReadTsKvQuery;
 import org.thingsboard.server.common.data.kv.ReadTsKvQueryResult;
@@ -78,6 +76,6 @@ public interface ReportDataService {
 
     List<ReadTsKvQueryResult> findTimeseriesByQueries(EntityId entityId, List<ReadTsKvQuery> queries, TbReportCtx ctx);
 
-    Report createReport(Report report, byte[] data, TbReportCtx ctx);
+    Report createReport(Report report, byte[] data, TbReportCtx ctx) throws ThingsboardException;
 
 }

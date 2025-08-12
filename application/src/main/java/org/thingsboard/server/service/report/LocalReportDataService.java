@@ -86,7 +86,7 @@ public class LocalReportDataService implements ReportDataService {
     @Override
     public ReportTemplate findReportTemplate(ReportTemplateId templateId, TbReportCtx ctx) throws ThingsboardException {
         SecurityUser securityUser = getSecurityUser(ctx);
-        ReportTemplate reportTemplate = reportTemplateService.findReportTemplateById(securityUser.getTenantId(), templateId);
+        ReportTemplate reportTemplate = checkNotNull(reportTemplateService.findReportTemplateById(securityUser.getTenantId(), templateId));
         accessControlService.checkPermission(securityUser, Resource.REPORT_TEMPLATE, Operation.READ, templateId, reportTemplate);
         return reportTemplate;
     }
@@ -145,9 +145,8 @@ public class LocalReportDataService implements ReportDataService {
         return tbTelemetryService.getTimeseriesByReadQueries(entityId, queries, getSecurityUser(ctx)).get();
     }
 
-    @SneakyThrows
     @Override
-    public Report createReport(Report report, byte[] data, TbReportCtx ctx) {
+    public Report createReport(Report report, byte[] data, TbReportCtx ctx) throws ThingsboardException {
         accessControlService.checkPermission(getSecurityUser(ctx), Resource.REPORT, Operation.CREATE);
         return reportService.createReport(report, data);
     }
