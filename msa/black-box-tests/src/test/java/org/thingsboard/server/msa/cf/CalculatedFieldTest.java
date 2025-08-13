@@ -172,6 +172,7 @@ public class CalculatedFieldTest extends AbstractContainerTest {
                 .untilAsserted(() -> {
                     JsonNode fahrenheitTemp = testRestClient.getLatestTelemetry(device.getId());
                     assertThat(fahrenheitTemp).isNotNull();
+                    assertThat(fahrenheitTemp.get("fahrenheitTemp")).isNotNull();
                     assertThat(fahrenheitTemp.get("fahrenheitTemp").get(0).get("value").asText()).isEqualTo("77.0");
                 });
 
@@ -194,6 +195,7 @@ public class CalculatedFieldTest extends AbstractContainerTest {
                 .untilAsserted(() -> {
                     JsonNode fahrenheitTemp = testRestClient.getLatestTelemetry(device.getId());
                     assertThat(fahrenheitTemp).isNotNull();
+                    assertThat(fahrenheitTemp.get("fahrenheitTemp")).isNotNull();
                     assertThat(fahrenheitTemp.get("fahrenheitTemp").get(0).get("value").asText()).isEqualTo("104.0");
                 });
 
@@ -218,6 +220,7 @@ public class CalculatedFieldTest extends AbstractContainerTest {
                 .untilAsserted(() -> {
                     JsonNode temperatureF = testRestClient.getAttributes(device.getId(), AttributeScope.SERVER_SCOPE, "temperatureF");
                     assertThat(temperatureF).isNotNull();
+                    assertThat(temperatureF.get(0)).isNotNull();
                     assertThat(temperatureF.get(0).get("value").asText()).isEqualTo("77.0");
                 });
 
@@ -240,6 +243,7 @@ public class CalculatedFieldTest extends AbstractContainerTest {
                 .untilAsserted(() -> {
                     JsonNode fahrenheitTemp = testRestClient.getLatestTelemetry(device.getId());
                     assertThat(fahrenheitTemp).isNotNull();
+                    assertThat(fahrenheitTemp.get("fahrenheitTemp")).isNotNull();
                     assertThat(fahrenheitTemp.get("fahrenheitTemp").get(0).get("value").asText()).isEqualTo("-3.89");
                 });
 
@@ -260,6 +264,7 @@ public class CalculatedFieldTest extends AbstractContainerTest {
                 .untilAsserted(() -> {
                     JsonNode fahrenheitTemp = testRestClient.getLatestTelemetry(device.getId());
                     assertThat(fahrenheitTemp).isNotNull();
+                    assertThat(fahrenheitTemp.get("fahrenheitTemp")).isNotNull();
                     assertThat(fahrenheitTemp.get("fahrenheitTemp").get(0).get("value").asText()).isEqualTo("86.0");
                 });
 
@@ -278,6 +283,7 @@ public class CalculatedFieldTest extends AbstractContainerTest {
                 .untilAsserted(() -> {
                     JsonNode fahrenheitTemp = testRestClient.getLatestTelemetry(device.getId());
                     assertThat(fahrenheitTemp).isNotNull();
+                    assertThat(fahrenheitTemp.get("fahrenheitTemp")).isNotNull();
                     assertThat(fahrenheitTemp.get("fahrenheitTemp").get(0).get("value").asText()).isEqualTo("77.0");
                 });
 
@@ -300,6 +306,7 @@ public class CalculatedFieldTest extends AbstractContainerTest {
                     // used default value since telemetry is not present
                     JsonNode fahrenheitTemp = testRestClient.getLatestTelemetry(newDevice.getId());
                     assertThat(fahrenheitTemp).isNotNull();
+                    assertThat(fahrenheitTemp.get("fahrenheitTemp")).isNotNull();
                     assertThat(fahrenheitTemp.get("fahrenheitTemp").get(0).get("value").asText()).isEqualTo("53.6");
                 });
 
@@ -314,6 +321,7 @@ public class CalculatedFieldTest extends AbstractContainerTest {
                 .untilAsserted(() -> {
                     JsonNode fahrenheitTemp = testRestClient.getLatestTelemetry(newDevice.getId());
                     assertThat(fahrenheitTemp).isNotNull();
+                    assertThat(fahrenheitTemp.get("fahrenheitTemp")).isNotNull();
                     assertThat(fahrenheitTemp.get("fahrenheitTemp").get(0).get("value").asText()).isEqualTo("53.6");
                 });
 
@@ -332,6 +340,7 @@ public class CalculatedFieldTest extends AbstractContainerTest {
                 .untilAsserted(() -> {
                     JsonNode airDensity = testRestClient.getLatestTelemetry(device.getId());
                     assertThat(airDensity).isNotNull();
+                    assertThat(airDensity.get("airDensity")).isNotNull();
                     assertThat(airDensity.get("airDensity").get(0).get("value").asText()).isEqualTo("1.05");
                 });
 
@@ -342,6 +351,7 @@ public class CalculatedFieldTest extends AbstractContainerTest {
                 .untilAsserted(() -> {
                     JsonNode airDensity = testRestClient.getLatestTelemetry(device.getId());
                     assertThat(airDensity).isNotNull();
+                    assertThat(airDensity.get("airDensity")).isNotNull();
                     assertThat(airDensity.get("airDensity").get(0).get("value").asText()).isEqualTo("0.99");
                 });
 
@@ -389,6 +399,7 @@ public class CalculatedFieldTest extends AbstractContainerTest {
                 .untilAsserted(() -> {
                     ObjectNode fahrenheitTemp = testRestClient.getTimeSeries(device.getId(), startTs, endTs, "fahrenheitTemp");
                     assertThat(fahrenheitTemp).isNotNull();
+                    assertThat(fahrenheitTemp.get("fahrenheitTemp")).isNotNull();
 
                     assertThat(fahrenheitTemp.get("fahrenheitTemp").get(0).get("ts").asText()).isEqualTo(Long.toString(ts3));
                     assertThat(fahrenheitTemp.get("fahrenheitTemp").get(0).get("value").asText()).isEqualTo("76.46");
@@ -398,6 +409,7 @@ public class CalculatedFieldTest extends AbstractContainerTest {
 
                     JsonNode fahrenheitTempLatest = testRestClient.getLatestTelemetry(device.getId());
                     assertThat(fahrenheitTempLatest).isNotNull();
+                    assertThat(fahrenheitTempLatest.get("fahrenheitTemp")).isNotNull();
                     assertThat(fahrenheitTempLatest.get("fahrenheitTemp").get(0).get("value").asText()).isEqualTo("76.1"); // reprocessing result did not overwrite the actual latest value
                 });
     }
@@ -452,6 +464,7 @@ public class CalculatedFieldTest extends AbstractContainerTest {
                 .untilAsserted(() -> {
                     ObjectNode airDensity = testRestClient.getTimeSeries(device2.getId(), startTs, endTs, "airDensity");
                     assertThat(airDensity).isNotNull();
+                    assertThat(airDensity.get("airDensity")).isNotNull();
 
                     assertThat(airDensity.get("airDensity").get(0).get("ts").asText()).isEqualTo(Long.toString(d1Ts_3));
                     assertThat(airDensity.get("airDensity").get(0).get("value").asText()).isEqualTo("1.02");
@@ -472,6 +485,7 @@ public class CalculatedFieldTest extends AbstractContainerTest {
                 .untilAsserted(() -> {
                     ObjectNode airDensity = testRestClient.getTimeSeries(newDevice.getId(), startTs, endTs, "airDensity");
                     assertThat(airDensity).isNotNull();
+                    assertThat(airDensity.get("airDensity")).isNotNull();
 
                     assertThat(airDensity.get("airDensity").get(0).get("ts").asText()).isEqualTo(Long.toString(d2Ts_3));
                     assertThat(airDensity.get("airDensity").get(0).get("value").asText()).isEqualTo("1.02");
