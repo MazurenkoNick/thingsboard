@@ -86,7 +86,7 @@ public class LocalReportDataService implements ReportDataService {
     @Override
     public ReportTemplate findReportTemplate(ReportTemplateId templateId, TbReportCtx ctx) throws ThingsboardException {
         SecurityUser securityUser = getSecurityUser(ctx);
-        ReportTemplate reportTemplate = reportTemplateService.findReportTemplateById(securityUser.getTenantId(), templateId);
+        ReportTemplate reportTemplate = checkNotNull(reportTemplateService.findReportTemplateById(securityUser.getTenantId(), templateId));
         accessControlService.checkPermission(securityUser, Resource.REPORT_TEMPLATE, Operation.READ, templateId, reportTemplate);
         return reportTemplate;
     }
