@@ -77,7 +77,6 @@ public class CalculatedFieldCurrentOwnerTest extends AbstractContainerTest {
 
     private TenantId tenantId;
     private UserId tenantAdminId;
-    private CustomerId customerId;
 
     @BeforeClass
     public void beforeClass() {
@@ -85,8 +84,6 @@ public class CalculatedFieldCurrentOwnerTest extends AbstractContainerTest {
 
         tenantId = testRestClient.postTenant(EntityPrototypes.defaultTenantPrototype("Tenant")).getId();
         tenantAdminId = testRestClient.createUserAndLogin(defaultTenantAdmin(tenantId, "tenantAdmin@thingsboard.org"), "tenant");
-
-        customerId = testRestClient.postCustomer(defaultCustomer(tenantId, "Customer")).getId();
     }
 
     @BeforeMethod
@@ -109,6 +106,8 @@ public class CalculatedFieldCurrentOwnerTest extends AbstractContainerTest {
         DeviceProfileId deviceProfileId = testRestClient.postDeviceProfile(defaultDeviceProfile("Device Profile 1")).getId();
         String deviceToken = "zm235nIVf263lvnTP2XBE";
         Device device = testRestClient.postDevice(deviceToken, createDevice("Device 1", deviceProfileId));
+        CustomerId customerId = testRestClient.postCustomer(defaultCustomer(tenantId, "Customer 1")).getId();
+
         testRestClient.changeOwner(customerId, device.getId());
         testRestClient.postTelemetryAttribute(customerId, AttributeScope.SERVER_SCOPE.name(), JacksonUtil.toJsonNode("{\"attrKey\":5}"));
 
@@ -119,6 +118,7 @@ public class CalculatedFieldCurrentOwnerTest extends AbstractContainerTest {
                 .untilAsserted(() -> {
                     JsonNode result = testRestClient.getLatestTelemetry(device.getId());
                     assertThat(result).isNotNull();
+                    assertThat(result.get("result")).isNotNull();
                     assertThat(result.get("result").get(0).get("value").asText()).isEqualTo("105");
                 });
 
@@ -129,6 +129,7 @@ public class CalculatedFieldCurrentOwnerTest extends AbstractContainerTest {
                 .untilAsserted(() -> {
                     JsonNode result = testRestClient.getLatestTelemetry(device.getId());
                     assertThat(result).isNotNull();
+                    assertThat(result.get("result")).isNotNull();
                     assertThat(result.get("result").get(0).get("value").asText()).isEqualTo("115");
                 });
 
@@ -147,6 +148,7 @@ public class CalculatedFieldCurrentOwnerTest extends AbstractContainerTest {
         DeviceProfileId deviceProfileId = testRestClient.postDeviceProfile(defaultDeviceProfile("Device Profile 2")).getId();
         String deviceToken = "zmzUVndirwl5jzx8rtgiBE";
         Device device = testRestClient.postDevice(deviceToken, createDevice("Device 2", deviceProfileId));
+        CustomerId customerId = testRestClient.postCustomer(defaultCustomer(tenantId, "Customer 2")).getId();
 
         testRestClient.changeOwner(customerId, device.getId());
         testRestClient.postTelemetryAttribute(customerId, AttributeScope.SERVER_SCOPE.name(), JacksonUtil.toJsonNode("{\"attrKey\":5}"));
@@ -158,6 +160,7 @@ public class CalculatedFieldCurrentOwnerTest extends AbstractContainerTest {
                 .untilAsserted(() -> {
                     JsonNode result = testRestClient.getLatestTelemetry(device.getId());
                     assertThat(result).isNotNull();
+                    assertThat(result.get("result")).isNotNull();
                     assertThat(result.get("result").get(0).get("value").asText()).isEqualTo("105");
                 });
 
@@ -168,6 +171,7 @@ public class CalculatedFieldCurrentOwnerTest extends AbstractContainerTest {
                 .untilAsserted(() -> {
                     JsonNode result = testRestClient.getLatestTelemetry(device.getId());
                     assertThat(result).isNotNull();
+                    assertThat(result.get("result")).isNotNull();
                     assertThat(result.get("result").get(0).get("value").asText()).isEqualTo("150");
                 });
 
@@ -183,6 +187,7 @@ public class CalculatedFieldCurrentOwnerTest extends AbstractContainerTest {
 
         // login tenant admin
         testRestClient.getAndSetUserToken(tenantAdminId);
+        CustomerId customerId = testRestClient.postCustomer(defaultCustomer(tenantId, "Customer 3")).getId();
 
         testRestClient.postTelemetry(customerId, JacksonUtil.toJsonNode("{\"key\":10}"));
         testRestClient.postTelemetry(customerId, JacksonUtil.toJsonNode("{\"key\":17}"));
@@ -204,10 +209,12 @@ public class CalculatedFieldCurrentOwnerTest extends AbstractContainerTest {
                 .untilAsserted(() -> {
                     JsonNode avgValue3 = testRestClient.getLatestTelemetry(device.getId());
                     assertThat(avgValue3).isNotNull();
+                    assertThat(avgValue3.get("avgValue")).isNotNull();
                     assertThat(avgValue3.get("avgValue").get(0).get("value").asText()).isEqualTo("15.0");
 
                     JsonNode avgValue4 = testRestClient.getLatestTelemetry(newDevice.getId());
                     assertThat(avgValue4).isNotNull();
+                    assertThat(avgValue4.get("avgValue")).isNotNull();
                     assertThat(avgValue4.get("avgValue").get(0).get("value").asText()).isEqualTo("150.0");
                 });
 
@@ -218,6 +225,7 @@ public class CalculatedFieldCurrentOwnerTest extends AbstractContainerTest {
                 .untilAsserted(() -> {
                     JsonNode avgValue = testRestClient.getLatestTelemetry(device.getId());
                     assertThat(avgValue).isNotNull();
+                    assertThat(avgValue.get("avgValue")).isNotNull();
                     assertThat(avgValue.get("avgValue").get(0).get("value").asText()).isEqualTo("150.0");
                 });
 
@@ -235,6 +243,8 @@ public class CalculatedFieldCurrentOwnerTest extends AbstractContainerTest {
         DeviceProfileId deviceProfileId = testRestClient.postDeviceProfile(defaultDeviceProfile("New Device Profile")).getId();
         String deviceToken = "zm235nIVf26n67vnTP2XBE";
         Device customerDevice = createDevice("Customer Device", deviceProfileId);
+        CustomerId customerId = testRestClient.postCustomer(defaultCustomer(tenantId, "Customer 4")).getId();
+
         customerDevice.setOwnerId(customerId);
         Device device = testRestClient.postDevice(deviceToken, customerDevice);
 
@@ -247,6 +257,7 @@ public class CalculatedFieldCurrentOwnerTest extends AbstractContainerTest {
                 .untilAsserted(() -> {
                     JsonNode result = testRestClient.getLatestTelemetry(device.getId());
                     assertThat(result).isNotNull();
+                    assertThat(result.get("result")).isNotNull();
                     assertThat(result.get("result").get(0).get("value").asText()).isEqualTo("105");
                 });
 
@@ -258,6 +269,7 @@ public class CalculatedFieldCurrentOwnerTest extends AbstractContainerTest {
                 .untilAsserted(() -> {
                     JsonNode result = testRestClient.getLatestTelemetry(tenantDevice.getId());
                     assertThat(result).isNotNull();
+                    assertThat(result.get("result")).isNotNull();
                     assertThat(result.get("result").get(0).get("value").asText()).isEqualTo("150");
                 });
 
@@ -268,10 +280,12 @@ public class CalculatedFieldCurrentOwnerTest extends AbstractContainerTest {
                 .untilAsserted(() -> {
                     JsonNode result1 = testRestClient.getLatestTelemetry(device.getId());
                     assertThat(result1).isNotNull();
+                    assertThat(result1.get("result")).isNotNull();
                     assertThat(result1.get("result").get(0).get("value").asText()).isEqualTo("180");
 
                     JsonNode result2 = testRestClient.getLatestTelemetry(tenantDevice.getId());
                     assertThat(result2).isNotNull();
+                    assertThat(result2.get("result")).isNotNull();
                     assertThat(result2.get("result").get(0).get("value").asText()).isEqualTo("150");
                 });
 
