@@ -107,6 +107,8 @@ export class WidgetSettingsComponent implements ControlValueAccessor, OnDestroy,
 
   settingsForm?: FormProperty[];
 
+  settingsFormTrimDefaults?: boolean;
+
   widgetSettingsFormGroup: UntypedFormGroup;
 
   changeSubscription: Subscription;
@@ -193,6 +195,7 @@ export class WidgetSettingsComponent implements ControlValueAccessor, OnDestroy,
   writeValue(value: DynamicFormData): void {
     this.widgetSettingsFormData = value;
     this.settingsForm = this.widgetSettingsFormData.settingsForm;
+    this.settingsFormTrimDefaults = this.widgetSettingsFormData.settingsFormTrimDefaults;
     if (this.changeSubscription) {
       this.changeSubscription.unsubscribe();
       this.changeSubscription = null;

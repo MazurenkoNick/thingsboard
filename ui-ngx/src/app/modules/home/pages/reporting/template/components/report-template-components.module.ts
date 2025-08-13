@@ -39,8 +39,12 @@ import {
 import { ReportComponentsComponent } from '@home/pages/reporting/template/components/report-components.component';
 import { HeadingPreviewComponent } from '@home/pages/reporting/template/components/heading-preview.component';
 import { RichTextPreviewComponent } from '@home/pages/reporting/template/components/rich-text-preview.component';
-import { ReportComponentLibraryComponent } from '@home/pages/reporting/template/components/report-component-library.component';
-import { ReportComponentConfigComponent } from '@home/pages/reporting/template/components/report-component-config.component';
+import {
+  ReportComponentLibraryComponent
+} from '@home/pages/reporting/template/components/report-component-library.component';
+import {
+  ReportComponentConfigComponent
+} from '@home/pages/reporting/template/components/report-component-config.component';
 import { HeadingConfigComponent } from '@home/pages/reporting/template/components/heading-config.component';
 import { RichTextConfigComponent } from '@home/pages/reporting/template/components/rich-text-config.component';
 import { WidgetConfigComponentsModule } from '@home/components/widget/config/widget-config-components.module';
@@ -61,8 +65,12 @@ import { DashboardConfigComponent } from '@home/pages/reporting/template/compone
 import { SharedHomeComponentsModule } from '@home/components/shared-home-components.module';
 import { AlarmTablePreviewComponent } from '@home/pages/reporting/template/components/alarm-table-preview.component';
 import { AlarmTableConfigComponent } from '@home/pages/reporting/template/components/alarm-table-config.component';
-import { TimeseriesTablePreviewComponent } from '@home/pages/reporting/template/components/timeseries-table-preview.component';
-import { TimeseriesTableConfigComponent } from '@home/pages/reporting/template/components/timeseries-table-config.component';
+import {
+  TimeseriesTablePreviewComponent
+} from '@home/pages/reporting/template/components/timeseries-table-preview.component';
+import {
+  TimeseriesTableConfigComponent
+} from '@home/pages/reporting/template/components/timeseries-table-config.component';
 import { ReportHeadingComponent } from '@home/pages/reporting/template/components/report-heading.component';
 import {
   ReportComponentLayoutSettingsComponent

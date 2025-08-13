@@ -41,7 +41,8 @@ import {
   OnInit,
   Renderer2,
   viewChild,
-  viewChildren, ViewContainerRef,
+  viewChildren,
+  ViewContainerRef,
   ViewEncapsulation
 } from '@angular/core';
 import { PageComponent } from '@shared/components/page.component';

@@ -32,15 +32,17 @@
 import { Component, ViewEncapsulation } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
 import {
+  AbstractReportComponentConfig
+} from '@home/pages/reporting/template/components/report-component-config.component';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import {
   DashboardReportComponentConfig,
   imageAlignments,
   imageAlignmentTranslations,
   imageWidthTypes,
-  imageWidthTypeTranslations,
-  WidgetConfigMode
-} from '@app/shared/public-api';
-import { AbstractReportComponentConfig } from '@home/pages/reporting/template/components/report-component-config.component';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+  imageWidthTypeTranslations
+} from '@shared/models/report-component.models';
+import { WidgetConfigMode } from '@shared/models/widget.models';
 
 @Component({
   selector: 'tb-dashboard-config',
