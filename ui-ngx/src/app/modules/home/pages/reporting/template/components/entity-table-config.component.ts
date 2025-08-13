@@ -32,14 +32,15 @@
 import { Component, ViewEncapsulation } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import {
-  DataKey,
-  Datasource,
-  EntityTableReportComponentConfig, ReportDataKeySettingsType,
-  TableReportColumnSettingsForm,
-  WidgetConfigMode
-} from '@app/shared/public-api';
-import { AbstractReportComponentConfig } from '@home/pages/reporting/template/components/report-component-config.component';
+  AbstractReportComponentConfig
+} from '@home/pages/reporting/template/components/report-component-config.component';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import {
+  EntityTableReportComponentConfig,
+  ReportDataKeySettingsType,
+  TableReportColumnSettingsForm
+} from '@shared/models/report-component.models';
+import { DataKey, Datasource, WidgetConfigMode } from '@shared/models/widget.models';
 
 @Component({
   selector: 'tb-entity-table-config',

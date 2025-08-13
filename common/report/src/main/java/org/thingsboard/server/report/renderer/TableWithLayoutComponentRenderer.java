@@ -226,12 +226,12 @@ public abstract class TableWithLayoutComponentRenderer<C extends TableWithLayout
 
     protected CellVariables toCellVariables(String key, ColumnSettings columnSettings, boolean isHeader) {
         if (columnSettings != null) {
+            CellVariables cellVariables;
             CellSettings cellSettings = isHeader ? columnSettings.getHeader() : columnSettings.getCell();
             if (cellSettings != null) {
                 Font font = cellSettings.getFont();
-                return CellVariables.builder()
+                cellVariables = CellVariables.builder()
                         .key(key)
-                        .width(isHeader && !StringUtils.isBlank(columnSettings.getColumnWidth()) ? columnSettings.getColumnWidth() : null)
                         .color(cellSettings.getColor() != null ? ColorUtils.normalizeCssColor(cellSettings.getColor()) : null)
                         .backgroundColor(cellSettings.getBackgroundColor() != null ? ColorUtils.normalizeCssColor(cellSettings.getBackgroundColor()) : null)
                         .fontSize(font != null && font.getSize() != null && font.getSize() > 0 ? font.getSize() : null)
@@ -239,9 +239,15 @@ public abstract class TableWithLayoutComponentRenderer<C extends TableWithLayout
                         .fontStyle(font != null && font.getStyle() != null ? font.getStyle().name() : null)
                         .fontFamily(font != null && font.getFamily() != null && !font.getFamily().isEmpty() ? font.getFamily() : null)
                         .textAlignment(cellSettings.getTextAlignment() != null ? cellSettings.getTextAlignment().name() : null)
-                        .verticalAlignment(cellSettings.getTextAlignment() != null ? cellSettings.getVerticalAlignment().name() : null)
+                        .verticalAlignment(cellSettings.getVerticalAlignment() != null ? cellSettings.getVerticalAlignment().name() : null)
                         .build();
+            } else {
+                cellVariables = new CellVariables(key);
             }
+            if (isHeader && !StringUtils.isBlank(columnSettings.getColumnWidth())) {
+                cellVariables.setWidth(columnSettings.getColumnWidth());
+            }
+            return cellVariables;
         }
         return new CellVariables(key);
     }

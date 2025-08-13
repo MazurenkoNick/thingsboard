@@ -35,6 +35,7 @@
   <div class="tb-settings-directive-error" *ngIf="definedDirectiveError">{{definedDirectiveError}}</div>
   <tb-dynamic-form *ngIf="useDynamicForm()"
     [properties]="settingsForm"
+    [trimDefaults]="settingsFormTrimDefaults"
     formControlName="settings">
   </tb-dynamic-form>
 </div>

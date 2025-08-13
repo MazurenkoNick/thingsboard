@@ -174,10 +174,10 @@ public abstract class AbstractReportService implements ReportService {
 
         List<String> keys = dataKeys.stream().map(DataKey::getName).collect(Collectors.toList());
         List<TsKvEntry> result = dataService.getTimeseries(entity.getEntityId(), keys, timeRange.startTs, timeRange.endTs,
-                historyConf.getInterval(), timeWindowConf.getAggregation().getType(), SortOrder.Direction.DESC,
+                historyConf.getInterval(), timeWindowConf.getTimezone(), timeWindowConf.getAggregation().getType(), SortOrder.Direction.DESC,
                 timeWindowConf.getAggregation().getLimit(), false, ctx);
         SortOrder sortOrder = SortOrder.of("rawTs", SortOrder.Direction.DESC);
-        List<Map<String, String>> entityDatas = collectTsData(dataKeys, latestDataKeys, entity, result, component, sortOrder, ctx);
+        List<Map<String, String>> entityDatas = collectTsData(dataKeys, latestDataKeys, entity, result, component, sortOrder, timeWindowConf.getTimezone(), ctx);
         Map<String, Object> variables = new HashMap<>(toStringMap(entity, dataKeys, ctx));
         return new ComponentData(usablePageWidthPx, null, entityDatas, variables);
     }
@@ -340,7 +340,7 @@ public abstract class AbstractReportService implements ReportService {
 
     private List<Map<String, String>> collectTsData(List<DataKey> dataKeys, List<DataKey> latestDataKeys, EntityData entity,
                                                       List<TsKvEntry> tsKvEntries, TimeseriesTableComponent component,
-                                                      SortOrder sortOrder, TbReportCtx ctx) {
+                                                      SortOrder sortOrder, String timezone, TbReportCtx ctx) {
         Optional<String> entityName = getEntityLatestValue(entity, EntityKeyType.ENTITY_FIELD, "name");
         Optional<String> entityLabel = getEntityLatestValue(entity, EntityKeyType.ENTITY_FIELD, "label");
         List<Map<String, String>> tsData = new ArrayList<>();
@@ -360,7 +360,7 @@ public abstract class AbstractReportService implements ReportService {
             Map<String, String> tsValues = new HashMap<>();
             tsValues.put("rawTs", ts.toString());
             if (component.isShowTimestamp()) {
-                tsValues.put(component.getTimestampLabel(), formatTimestamp(ts, component.getTimestampPattern(), ctx));
+                tsValues.put(component.getTimestampLabel(), formatTimestamp(ts, component.getTimestampPattern(), ctx, timezone));
             }
             for (DataKey dataKey : dataKeys) {
                 entries.stream().filter(tsKvEntry -> tsKvEntry.getKey().equals(dataKey.getName()))
@@ -390,14 +390,16 @@ public abstract class AbstractReportService implements ReportService {
             return value != null ? value.toString() : null;
         }
 
+        if ("createdTime".equals(dataKey.getName()) && !dataKey.isUsePostProcessing() && value != null) {
+            value = formatTimestamp(value.toString(), ctx.getConfiguration().getTimeDataPattern(), ctx.getTimeZone());
+        }
+
         Object processed = postProcess(ctx, dataKey, timestamp, value, parseString);
         if (processed == null) {
             return null;
         }
 
-        return "createdTime".equals(dataKey.getName())
-                ? formatTimestamp(processed.toString(), ctx.getConfiguration().getTimeDataPattern(), ctx.getTimeZone())
-                : processed.toString();
+        return processed.toString();
     }
 
     private Object postProcess(TbReportCtx ctx, DataKey dataKey, long timestamp, Object value, boolean parseString) {

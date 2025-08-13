@@ -33,13 +33,16 @@ import {
   AfterViewInit,
   ChangeDetectorRef,
   Component,
-  ComponentRef, DestroyRef,
+  ComponentRef,
+  DestroyRef,
   Directive,
   ElementRef,
   EventEmitter,
-  HostBinding, HostListener,
+  HostBinding,
+  HostListener,
   inject,
-  Input, OnChanges,
+  Input,
+  OnChanges,
   OnDestroy,
   OnInit,
   Output,
@@ -59,11 +62,11 @@ import {
 import { TbAnchorComponent } from '@shared/components/tb-anchor.component';
 import { from } from 'rxjs';
 import { ReportComponentsComponent } from '@home/pages/reporting/template/components/report-components.component';
-import ITooltipsterInstance = JQueryTooltipster.ITooltipsterInstance;
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import ITooltipsterGeoHelper = JQueryTooltipster.ITooltipsterGeoHelper;
 import { TbReportFormat } from '@shared/models/report.models';
 import { coerceBoolean } from '@shared/decorators/coercion';
+import ITooltipsterInstance = JQueryTooltipster.ITooltipsterInstance;
+import ITooltipsterGeoHelper = JQueryTooltipster.ITooltipsterGeoHelper;
 
 @Component({
   selector: 'tb-report-component',

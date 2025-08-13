@@ -33,7 +33,9 @@ import { Component, inject, ViewEncapsulation } from '@angular/core';
 import { AlarmTableReportComponentConfig } from '@shared/models/report-component.models';
 import { DataKey } from '@shared/models/widget.models';
 import { ComponentStyle } from '@shared/models/widget-settings.models';
-import { AbstractReportTablePreviewComponent } from '@home/pages/reporting/template/components/report-table-preview.component';
+import {
+  AbstractReportTablePreviewComponent
+} from '@home/pages/reporting/template/components/report-table-preview.component';
 import { ReportTemplatePageComponent } from '@home/pages/reporting/template/report-template-page.component';
 
 @Component({

@@ -268,11 +268,15 @@ public class ReportUtils {
     }
 
     public static String formatTimestamp(long timestamp, String pattern, TbReportCtx ctx) {
+        return formatTimestamp(timestamp, pattern, ctx, null);
+    }
+
+    public static String formatTimestamp(long timestamp, String pattern, TbReportCtx ctx, String timezone) {
         String effectivePattern = (pattern != null && !pattern.isEmpty())
                 ? pattern
                 : ctx.getConfiguration().getTimeDataPattern();
-
-        return formatTimestamp(timestamp, effectivePattern, ctx.getTimeZone());
+        String targetTimezone = StringUtils.isNotBlank(timezone) ? timezone : ctx.getTimeZone();
+        return formatTimestamp(timestamp, effectivePattern, targetTimezone);
     }
 
 }
