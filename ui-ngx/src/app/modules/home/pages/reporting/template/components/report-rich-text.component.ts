@@ -52,8 +52,10 @@ import {
 } from '@home/pages/reporting/template/components/report-image-dialog.component';
 import { MatDialog } from '@angular/material/dialog';
 import {
-  extractKeyFromVariable, imagePlaceholder,
-  isKeyVariable, keyImage,
+  extractKeyFromVariable,
+  imagePlaceholder,
+  isKeyVariable,
+  keyImage,
   ReportVariable
 } from '@home/pages/reporting/template/components/report-component.models';
 import { CustomImageUrlCallback } from '@shared/pipe/image.pipe';

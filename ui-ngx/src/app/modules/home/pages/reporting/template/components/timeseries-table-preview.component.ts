@@ -34,7 +34,9 @@ import { TimeseriesTableReportComponentConfig } from '@shared/models/report-comp
 import { DataKey, Datasource } from '@shared/models/widget.models';
 import { ComponentStyle, dateFormatPreview } from '@shared/models/widget-settings.models';
 import { DataKeyType } from '@shared/models/telemetry/telemetry.models';
-import { AbstractReportTablePreviewComponent } from '@home/pages/reporting/template/components/report-table-preview.component';
+import {
+  AbstractReportTablePreviewComponent
+} from '@home/pages/reporting/template/components/report-table-preview.component';
 import { DatePipe } from '@angular/common';
 
 @Component({

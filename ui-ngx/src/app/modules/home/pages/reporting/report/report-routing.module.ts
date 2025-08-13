@@ -34,8 +34,8 @@ import { Route } from '@angular/router';
 
 import { EntitiesTableComponent } from '@home/components/entity/entities-table.component';
 import { Authority } from '@shared/models/authority.enum';
-import { MenuId } from '@core/public-api';
 import { ReportsTableConfigResolver } from '@home/pages/reporting/report/reports-table-config.resolver';
+import { MenuId } from '@core/services/menu.models';
 
 export const reportsRoute: Route = {
   path: 'reports',
