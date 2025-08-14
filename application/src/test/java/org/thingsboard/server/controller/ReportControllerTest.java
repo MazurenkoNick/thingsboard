@@ -88,6 +88,7 @@ import org.thingsboard.server.common.data.report.configuration.components.Timese
 import org.thingsboard.server.common.data.report.configuration.style.Heading;
 import org.thingsboard.server.common.data.report.configuration.timewindow.AggregationConfiguration;
 import org.thingsboard.server.common.data.report.configuration.timewindow.History;
+import org.thingsboard.server.common.data.report.configuration.timewindow.Interval;
 import org.thingsboard.server.common.data.report.configuration.timewindow.QuickTimeInterval;
 import org.thingsboard.server.common.data.report.configuration.timewindow.TimeWindowConfiguration;
 import org.thingsboard.server.dao.notification.DefaultNotifications;
@@ -444,7 +445,7 @@ public class ReportControllerTest extends AbstractControllerTest {
         History history = new History();
         history.setHistoryType(2);
         history.setQuickInterval(QuickTimeInterval.CURRENT_DAY);
-        history.setInterval(1000);
+        history.setInterval(Interval.of(1000));
         timewindow.setHistory(history);
         timewindow.setTimezone(TimeZone.getDefault().getID());
         AggregationConfiguration aggregation = new AggregationConfiguration();

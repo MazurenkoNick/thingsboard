@@ -104,7 +104,7 @@ import { DialogService } from '@core/services/dialog.service';
 import { ReportService } from '@core/http/report.service';
 import { ReportComponentsComponent } from '@home/pages/reporting/template/components/report-components.component';
 import { EntityType } from '@shared/models/entity-type.models';
-import { Observable, skip, startWith } from 'rxjs';
+import { Observable, ReplaySubject, skip, startWith, Subject } from 'rxjs';
 import {
   EntityAliasDialogComponent,
   EntityAliasDialogData
@@ -189,7 +189,7 @@ export class ReportTemplatePageComponent extends PageComponent
 
   reportTemplate: ReportTemplate;
 
-  timePreview: string;
+  timeDataPattern: string;
 
   updateBreadcrumbs = new EventEmitter();
 
@@ -229,6 +229,10 @@ export class ReportTemplatePageComponent extends PageComponent
   private scrolling = false;
 
   private layoutResize$: ResizeObserver;
+
+  private timeDataPatternSubject = new Subject<string>();
+
+  timeDataPattern$ = this.timeDataPatternSubject.asObservable();
 
   // @ts-ignore
   private stateController: IStateController = {
@@ -651,7 +655,8 @@ export class ReportTemplatePageComponent extends PageComponent
   }
 
   private updateReportTemplateSettings(settings: ReportTemplateSettings): void {
-    this.timePreview = dateFormatPreview(this.date, settings.timeDataPattern);
+    this.timeDataPattern = settings.timeDataPattern;
+    this.timeDataPatternSubject.next(this.timeDataPattern);
     updateFromReportTemplateSettings(this.reportTemplate, settings);
     this.updatePageLayout();
     this.isDirty = true;
@@ -754,7 +759,7 @@ export class ReportTemplatePageComponent extends PageComponent
 
     const settings = toReportTemplateSettings(this.reportTemplate);
 
-    this.timePreview = dateFormatPreview(this.date, settings.timeDataPattern);
+    this.timeDataPattern = settings.timeDataPattern;
 
     this.reportComponentSearchFormControl.reset();
     this.reportTemplateSettingsFormControl.patchValue(settings, {emitEvent: false});

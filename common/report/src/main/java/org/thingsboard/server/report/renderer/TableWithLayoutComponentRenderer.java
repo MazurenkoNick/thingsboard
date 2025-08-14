@@ -61,6 +61,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import static org.thingsboard.server.report.util.ReportUtils.ENTITY_TIME_FIELDS;
 import static org.thingsboard.server.report.util.ReportUtils.formatValueWithPrecisionAndUnits;
 import static org.thingsboard.server.report.util.ReportUtils.getSingleDataSource;
 import static org.thingsboard.server.report.util.ReportUtils.sortRowsByTableSortOrder;
@@ -192,6 +193,9 @@ public abstract class TableWithLayoutComponentRenderer<C extends TableWithLayout
     }
 
     protected Float defaultFontSize(String key) {
+        if (ENTITY_TIME_FIELDS.contains(key)) {
+            return 9f;
+        }
         return null;
     }
 
