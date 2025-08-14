@@ -447,7 +447,7 @@ public abstract class AbstractReportService implements ReportService {
 
         String formattedValue = processed.toString();
         if (dataKey.getDecimals() != null || dataKey.getUnits() != null) {
-            formattedValue = formatValueWithPrecisionAndUnits(processed.toString(), dataKey);
+            formattedValue = formatValueWithPrecisionAndUnits(formattedValue, dataKey);
         }
         return formattedValue;
     }
