@@ -185,11 +185,7 @@ public abstract class TableWithLayoutComponentRenderer<C extends TableWithLayout
         if (value == null || value.isBlank()) {
             return "";
         }
-        value = defaultValue(key, value);
-        if (dataKey != null && (dataKey.getDecimals() != null || dataKey.getUnits() != null)) {
-            value = formatValueWithPrecisionAndUnits(value, dataKey);
-        }
-        return value;
+        return defaultValue(key, value);
     }
 
     protected Float defaultFontSize(String key) {
