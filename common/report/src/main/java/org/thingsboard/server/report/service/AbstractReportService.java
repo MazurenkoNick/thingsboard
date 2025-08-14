@@ -86,12 +86,24 @@ import static org.thingsboard.server.common.data.util.DataSourceUtils.getEntityL
 import static org.thingsboard.server.report.util.ReportQueryUtils.buildEntityFilter;
 import static org.thingsboard.server.report.util.ReportQueryUtils.toAlarmDataQuery;
 import static org.thingsboard.server.report.util.ReportQueryUtils.toEntityDataQuery;
+import static org.thingsboard.server.report.util.ReportUtils.ENTITY_TIME_FIELDS;
+import static org.thingsboard.server.report.util.ReportUtils.RAW_TS_PREFIX;
 import static org.thingsboard.server.report.util.ReportUtils.convertStringToTypedValue;
 import static org.thingsboard.server.report.util.ReportUtils.formatTimestamp;
 import static org.thingsboard.server.report.util.ReportUtils.getSingleDataSource;
 
 @Slf4j
 public abstract class AbstractReportService implements ReportService {
+
+    private static final Map<String, String> ALARM_FIELD_ALIASES_MAP = Map.of(
+            "startTime", "startTs",
+            "endTime", "endTs",
+            "ackTime", "ackTs",
+            "clearTime", "clearTs",
+            "assignTime", "assignTs",
+            "originator", "originatorName",
+            "originatorType", "originator.entityType"
+    );
 
     @Lazy
     @Autowired
@@ -200,10 +212,10 @@ public abstract class AbstractReportService implements ReportService {
                 }
                 break;
             case ENTITY:
-                 if (alarmSource.getEntityAliasId() == null) {
-                     return new ComponentData(usablePageWidthPx);
-                 }
-                 break;
+                if (alarmSource.getEntityAliasId() == null) {
+                    return new ComponentData(usablePageWidthPx);
+                }
+                break;
             default:
                 return new ComponentData(usablePageWidthPx);
         }
@@ -226,7 +238,7 @@ public abstract class AbstractReportService implements ReportService {
         for (AlarmData alarmData : new PageDataIterable<>(link -> dataService.findAlarmDataByQueryForEntities(toAlarmDataQuery(component, ctx, stateEntityId, link), entityDataMap.keySet(), ctx), 1024)) {
             Map<String, String> mergedData = toStringMap(alarmData, alarmDataKeys, ctx, component.getTimewindow().getTimezone());
             EntityData entityData = entityDataMap.get(alarmData.getEntityId());
-            mergedData.putAll(toStringMap(entityData, latestDataKeys, ctx,component.getTimewindow().getTimezone()));
+            mergedData.putAll(toStringMap(entityData, latestDataKeys, ctx, component.getTimewindow().getTimezone()));
             entityDatas.add(mergedData);
         }
         Map<String, String> variables = new HashMap<>();
@@ -266,17 +278,16 @@ public abstract class AbstractReportService implements ReportService {
             if (targetKey.equals("assignee")) {
                 value = getAssigneeDisplayName(alarmData);
             } else {
-                if (targetKey.equals("originator")) {
-                    targetKey = "originatorName";
-                } else if (targetKey.equals("originatorType")) {
-                    targetKey = "originator.entityType";
-                }
+                targetKey = ALARM_FIELD_ALIASES_MAP.getOrDefault(targetKey, targetKey);
                 JsonNode jsonValue = JacksonUtil.getByKeyPath(alarmDataJson, targetKey);
                 if (jsonValue != null) {
                     value = jsonValue.asText();
                 }
             }
             if (value != null) {
+                if (ENTITY_TIME_FIELDS.contains(alarmKey.getName())) {
+                    data.put(RAW_TS_PREFIX + alarmKey.getLabel(), value);
+                }
                 data.put(alarmKey.getLabel(), formatValue(ctx, alarmKey, 0, value, timezone));
             }
         }
@@ -313,6 +324,9 @@ public abstract class AbstractReportService implements ReportService {
             if (keyValueMap != null) {
                 TsValue tsValue = keyValueMap.get(dataKey.getName());
                 if (tsValue != null && tsValue.getValue() != null) {
+                    if (ENTITY_TIME_FIELDS.contains(dataKey.getName())) {
+                        data.put(RAW_TS_PREFIX + dataKey.getLabel(), tsValue.getValue());
+                    }
                     data.put(dataKey.getLabel(), formatValue(ctx, dataKey, tsValue.getTs(), tsValue.getValue(), timezone));
                 }
             }
@@ -347,8 +361,8 @@ public abstract class AbstractReportService implements ReportService {
     }
 
     private List<Map<String, String>> collectTsData(List<DataKey> dataKeys, List<DataKey> latestDataKeys, EntityData entity,
-                                                      List<TsKvEntry> tsKvEntries, TimeseriesTableComponent component,
-                                                      SortOrder sortOrder, String timezone, TbReportCtx ctx) {
+                                                    List<TsKvEntry> tsKvEntries, TimeseriesTableComponent component,
+                                                    SortOrder sortOrder, String timezone, TbReportCtx ctx) {
         Optional<String> entityName = getEntityLatestValue(entity, EntityKeyType.ENTITY_FIELD, "name");
         Optional<String> entityLabel = getEntityLatestValue(entity, EntityKeyType.ENTITY_FIELD, "label");
         List<Map<String, String>> tsData = new ArrayList<>();
@@ -398,7 +412,7 @@ public abstract class AbstractReportService implements ReportService {
             return value != null ? value.toString() : null;
         }
 
-        if ("createdTime".equals(dataKey.getName()) && !dataKey.isUsePostProcessing() && value != null) {
+        if (ENTITY_TIME_FIELDS.contains(dataKey.getName()) && !dataKey.isUsePostProcessing() && value != null) {
             value = formatTimestamp(value.toString(), ctx.getConfiguration().getTimeDataPattern(), ctx, timezone);
         }
 
@@ -433,7 +447,7 @@ public abstract class AbstractReportService implements ReportService {
         }
     }
 
-    private UUID evalScript(TbReportCtx ctx, String script)  {
+    private UUID evalScript(TbReportCtx ctx, String script) {
         try {
             return ctx.getTbelInvokeService().eval(ctx.getTenantId(), ScriptType.REPORT_DATA_KEY_SCRIPT, script, "time", "value").get();
         } catch (InterruptedException e) {
