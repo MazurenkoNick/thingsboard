@@ -51,6 +51,10 @@ import {
   TimeseriesTableReportComponentConfig
 } from '@shared/models/report-component.models';
 import { DataKey, Datasource, WidgetConfigMode } from '@shared/models/widget.models';
+import {
+  DataKeySettingsFormFunction
+} from '@home/components/widget/lib/settings/common/key/data-keys.component.models';
+import { FormProperty } from '@shared/models/dynamic-form.models';
 
 @Component({
   selector: 'tb-timeseries-table-config',
@@ -73,10 +77,17 @@ export class TimeseriesTableConfigComponent extends AbstractReportComponentConfi
 
   basicMode = WidgetConfigMode.basic;
 
-  TableReportColumnSettingsForm = TableReportColumnSettingsForm;
+  dataKeySettingsFormFunction: DataKeySettingsFormFunction = this.getDataKeySettingsForm.bind(this);
 
   private dialog =  inject(MatDialog);
   private translate = inject(TranslateService);
+
+  private getDataKeySettingsForm(key: DataKey): FormProperty[] {
+    if (['ts', 'createdTime'].includes(key.name)) {
+      return TimeColumnSettingsForm;
+    }
+    return TableReportColumnSettingsForm;
+  }
 
   protected buildForm(reportComponentConfig: TimeseriesTableReportComponentConfig): FormGroup {
     const form = this.fb.group({

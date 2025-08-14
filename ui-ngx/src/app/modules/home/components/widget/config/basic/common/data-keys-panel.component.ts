@@ -380,7 +380,7 @@ export class DataKeysPanelComponent implements ControlValueAccessor, OnInit, OnC
   }
 
   private getDataKeysPanelOption<T>(key: string): T {
-    return this.dataKeysPanelOptions[key];
+    return this.dataKeysPanelOptions && this.dataKeysPanelOptions[key];
   }
 
 }

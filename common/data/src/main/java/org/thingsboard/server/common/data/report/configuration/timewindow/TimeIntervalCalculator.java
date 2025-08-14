@@ -49,18 +49,20 @@ public class TimeIntervalCalculator {
         }
     }
 
-    public static TimeRange getTimeRange(TimeWindowConfiguration timeWindowConf) {
+    public static TimeRange getTimeRange(TimeWindowConfiguration timeWindowConf, String timezone) {
         History historyConf = timeWindowConf.getHistory();
         return switch (historyConf.getHistoryType()) {
             case 0 -> {
-                long currentTimeMillis = System.currentTimeMillis();
+                ZoneId zoneId = timezone != null ? ZoneId.of(timezone) : ZoneId.systemDefault();
+                ZonedDateTime now = ZonedDateTime.now(zoneId);
+                long currentTimeMillis = now.toInstant().toEpochMilli();
                 yield new TimeRange(currentTimeMillis - historyConf.getTimewindowMs(), currentTimeMillis);
             }
             case 1 -> {
                 FixedTimeWindow fixedTimeWindow = historyConf.getFixedTimewindow();
                 yield new TimeRange(fixedTimeWindow.getStartTimeMs(), historyConf.getFixedTimewindow().getEndTimeMs());
             }
-            case 2 -> getQuickTimeRange(historyConf.getQuickInterval(), timeWindowConf.getTimezone());
+            case 2 -> getQuickTimeRange(historyConf.getQuickInterval(), timezone);
             case 3 -> new TimeRange(0, 0);
             default -> throw new IllegalArgumentException("Unknown history type: " + historyConf.getHistoryType());
         };
