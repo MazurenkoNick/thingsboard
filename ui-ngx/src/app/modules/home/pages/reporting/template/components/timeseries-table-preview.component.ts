@@ -65,7 +65,7 @@ export class TimeseriesTablePreviewComponent extends AbstractReportTablePreviewC
       }
       this.timestampColumn.label = this.reportComponent.timestampLabel || 'Timestamp';
       this.timestampColumn.settings = this.reportComponent.timestampColumnSettings;
-      this.timestampPreview = dateFormatPreview(this.date, this.reportComponent.timestampPattern);
+      this.timestampPreview = dateFormatPreview(this.date, this.reportComponent.timestampPattern, this.reportComponent.timewindow?.timezone);
       this.columns.push(
         this.timestampColumn
       );

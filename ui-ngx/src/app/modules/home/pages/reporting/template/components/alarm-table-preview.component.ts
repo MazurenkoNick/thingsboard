@@ -32,11 +32,12 @@
 import { Component, inject, ViewEncapsulation } from '@angular/core';
 import { AlarmTableReportComponentConfig } from '@shared/models/report-component.models';
 import { DataKey } from '@shared/models/widget.models';
-import { ComponentStyle } from '@shared/models/widget-settings.models';
+import { ComponentStyle, dateFormatPreview } from '@shared/models/widget-settings.models';
 import {
   AbstractReportTablePreviewComponent
 } from '@home/pages/reporting/template/components/report-table-preview.component';
 import { ReportTemplatePageComponent } from '@home/pages/reporting/template/report-template-page.component';
+import { DatePipe } from '@angular/common';
 
 @Component({
   selector: 'tb-alarm-table-preview',
@@ -46,7 +47,14 @@ import { ReportTemplatePageComponent } from '@home/pages/reporting/template/repo
 })
 export class AlarmTablePreviewComponent extends AbstractReportTablePreviewComponent<AlarmTableReportComponentConfig> {
 
+  private date = inject(DatePipe);
   private templatePage = inject(ReportTemplatePageComponent);
+  private timestampPreview: string;
+
+  onComponentUpdated() {
+    super.onComponentUpdated();
+    this.timestampPreview = dateFormatPreview(this.date, this.templatePage.timeDataPattern, this.reportComponent.timewindow?.timezone);
+  }
 
   get columns(): DataKey[] {
     return this.reportComponent.alarmSource.dataKeys;
@@ -54,7 +62,7 @@ export class AlarmTablePreviewComponent extends AbstractReportTablePreviewCompon
 
   cellContent(column: DataKey): string {
     if ('createdTime' === column.name) {
-      return this.templatePage.timePreview;
+      return this.timestampPreview;
     } else {
       return super.cellContent(column);
     }

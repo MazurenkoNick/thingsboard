@@ -258,10 +258,10 @@ public class ReportUtils {
         }
     }
 
-    public static String formatTimestamp(String timestampStr, String pattern, String timezone) {
+    public static String formatTimestamp(String timestampStr, String pattern, TbReportCtx ctx, String timezone) {
         try {
             long timestamp = Long.parseLong(timestampStr);
-            return formatTimestamp(timestamp, pattern, timezone);
+            return formatTimestamp(timestamp, pattern, ctx, timezone);
         } catch (NumberFormatException e) {
             return "Invalid timestamp string: " + timestampStr;
         }

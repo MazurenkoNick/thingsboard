@@ -189,7 +189,7 @@ export class ReportTemplatePageComponent extends PageComponent
 
   reportTemplate: ReportTemplate;
 
-  timePreview: string;
+  timeDataPattern: string;
 
   updateBreadcrumbs = new EventEmitter();
 
@@ -651,7 +651,7 @@ export class ReportTemplatePageComponent extends PageComponent
   }
 
   private updateReportTemplateSettings(settings: ReportTemplateSettings): void {
-    this.timePreview = dateFormatPreview(this.date, settings.timeDataPattern);
+    this.timeDataPattern = settings.timeDataPattern;
     updateFromReportTemplateSettings(this.reportTemplate, settings);
     this.updatePageLayout();
     this.isDirty = true;
@@ -754,7 +754,7 @@ export class ReportTemplatePageComponent extends PageComponent
 
     const settings = toReportTemplateSettings(this.reportTemplate);
 
-    this.timePreview = dateFormatPreview(this.date, settings.timeDataPattern);
+    this.timeDataPattern = settings.timeDataPattern;
 
     this.reportComponentSearchFormControl.reset();
     this.reportTemplateSettingsFormControl.patchValue(settings, {emitEvent: false});
