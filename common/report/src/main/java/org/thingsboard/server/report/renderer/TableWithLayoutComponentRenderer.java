@@ -62,7 +62,6 @@ import java.util.Map;
 import java.util.Optional;
 
 import static org.thingsboard.server.report.util.ReportUtils.ENTITY_TIME_FIELDS;
-import static org.thingsboard.server.report.util.ReportUtils.formatValueWithPrecisionAndUnits;
 import static org.thingsboard.server.report.util.ReportUtils.getSingleDataSource;
 import static org.thingsboard.server.report.util.ReportUtils.sortRowsByTableSortOrder;
 
