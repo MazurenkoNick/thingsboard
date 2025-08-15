@@ -951,6 +951,9 @@
         "api-features": "API features",
         "api-usage": "API usage",
         "alarm": "Alarm",
+        "alarm-and-report": "Alarm & Report",
+        "alarms-and-reports-created": "Alarms & Reports created",
+        "alarms-and-reports-hourly-activity": "Alarms & Reports created hourly activity",
         "alarms-created": "Alarms created",
         "queue-stats": "Queue Stats",
         "processing-failures-and-timeouts": "Processing Failures and Timeouts",
@@ -1008,7 +1011,10 @@
         "transport-messages": "Transport messages",
         "transport-monthly-activity": "Transport monthly activity",
         "view-details": "View details",
-        "view-statistics": "View statistics"
+        "view-statistics": "View statistics",
+        "reports-created": "Reports created",
+        "reports-created-daily-activity": "Reports created daily activity",
+        "reports-created-monthly-activity": "Reports created monthly activity"
     },
     "api-limit": {
         "cassandra-write-queries-core": "Rest API Cassandra write queries",
