@@ -78,6 +78,12 @@ import {
 import { DividerPreviewComponent } from '@home/pages/reporting/template/components/divider-preview.component';
 import { DividerConfigComponent } from '@home/pages/reporting/template/components/divider-config.component';
 import { TableSortOrderComponent } from '@home/pages/reporting/template/components/table-sort-order.component';
+import {
+  TimeSeriesChartPreviewComponent
+} from '@home/pages/reporting/template/components/time-series-chart-preview.component';
+import {
+  TimeSeriesChartConfigComponent
+} from '@home/pages/reporting/template/components/time-series-chart-config.component';
 
 @NgModule({
   declarations: [
@@ -111,6 +117,8 @@ import { TableSortOrderComponent } from '@home/pages/reporting/template/componen
     DashboardConfigComponent,
     SubReportPreviewComponent,
     SubReportConfigComponent,
+    TimeSeriesChartPreviewComponent,
+    TimeSeriesChartConfigComponent,
     ReportComponentConfigComponent
   ],
   imports: [

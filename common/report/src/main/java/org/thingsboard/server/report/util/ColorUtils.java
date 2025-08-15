@@ -30,6 +30,8 @@
  */
 package org.thingsboard.server.report.util;
 
+import org.thingsboard.server.common.data.StringUtils;
+
 import java.awt.Color;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -37,6 +39,8 @@ import java.util.regex.Pattern;
 public class ColorUtils {
 
     private static final Pattern HSL_PATTERN = Pattern.compile("hsla?\\(\\s*(\\d+)\\s*,\\s*(\\d+)%\\s*,\\s*(\\d+)%\\s*(,\\s*([0-1]\\.\\d+))?\\s*\\)");
+
+    public static final Color TRANSPARENT = new Color(0, 0, 0, 0);
 
     public static String normalizeCssColor(String color) {
         Color c = parseCssColor(color);
@@ -51,8 +55,19 @@ public class ColorUtils {
         return color != null ? ColorUtils.normalizeCssColor(color) : defaultColor;
     }
 
+    public static Color safeParseCssColor(String cssColor) {
+        if (StringUtils.isBlank(cssColor)) {
+            return TRANSPARENT;
+        }
+        try {
+            return parseCssColor(cssColor);
+        } catch (Exception e) {
+            return TRANSPARENT;
+        }
+    }
+
     public static Color parseCssColor(String cssColor) {
-        if (cssColor == null || cssColor.trim().isEmpty()) {
+        if (StringUtils.isBlank(cssColor)) {
             throw new IllegalArgumentException("CSS color cannot be null or empty");
         }
 

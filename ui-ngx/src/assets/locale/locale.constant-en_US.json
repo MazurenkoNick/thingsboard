@@ -7379,6 +7379,9 @@
             "alarm-table": {
                 "type": "Alarm table"
             },
+            "time-series-chart": {
+                "type": "Time series chart"
+            },
             "image": {
                 "type": "Image",
                 "image-source": "Image source",

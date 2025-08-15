@@ -45,6 +45,7 @@ export enum ReportComponentType {
   ENTITY_TABLE = 'ENTITY_TABLE',
   TIME_SERIES_TABLE = 'TIME_SERIES_TABLE',
   ALARM_TABLE = 'ALARM_TABLE',
+  TIME_SERIES_CHART = 'TIME_SERIES_CHART',
   DASHBOARD = 'DASHBOARD',
   IMAGE = 'IMAGE',
   SUB_REPORT = 'SUB_REPORT',
@@ -372,6 +373,11 @@ export interface BaseImageReportComponentConfig extends DataWithLayoutReportComp
   widthType: imageWidthType;
   customWidth?: number;
   alignment: imageAlignment;
+}
+
+export interface TimeseriesChartReportComponentConfig extends BaseImageReportComponentConfig {
+  timewindow: Timewindow;
+  type: ReportComponentType.TIME_SERIES_CHART;
 }
 
 export interface ImageReportComponentConfig extends BaseImageReportComponentConfig {

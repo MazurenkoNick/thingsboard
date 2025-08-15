@@ -43,7 +43,7 @@ import {
   ReportComponentType,
   ReportDataKeySettingsType,
   RichTextReportComponentConfig,
-  SubReportReportComponentConfig,
+  SubReportReportComponentConfig, TimeseriesChartReportComponentConfig,
   TimeseriesTableReportComponentConfig
 } from '@shared/models/report-component.models';
 import { Type } from '@angular/core';
@@ -94,6 +94,12 @@ import { AggregationType, DAY, historyInterval } from '@shared/models/time/time.
 import { DividerPreviewComponent } from '@home/pages/reporting/template/components/divider-preview.component';
 import { DividerConfigComponent } from '@home/pages/reporting/template/components/divider-config.component';
 import { Direction } from '@shared/models/page/sort-order';
+import {
+  TimeSeriesChartPreviewComponent
+} from '@home/pages/reporting/template/components/time-series-chart-preview.component';
+import {
+  TimeSeriesChartConfigComponent
+} from '@home/pages/reporting/template/components/time-series-chart-config.component';
 
 export interface ReportComponentLibraryItem<C extends ReportComponentConfig = ReportComponentConfig> {
   title: string;
@@ -401,6 +407,42 @@ export const reportComponentsLibrary = new Map<string, ReportComponentLibraryIte
           paddings: null,
           background: null
         } as AlarmTableReportComponentConfig
+      }
+    ],
+    [
+      'timeSeriesChart',
+      {
+        title: 'report-template.component.time-series-chart.type',
+        previewImage: '/assets/report/components/time-series-chart.svg',
+        type: ReportComponentType.TIME_SERIES_CHART,
+        defaultConfig: {
+          type: ReportComponentType.TIME_SERIES_CHART,
+          dataSources: [
+            {
+              type: DatasourceType.entity,
+              dataKeys: [
+                {
+                  name: 'temperature',
+                  type: DataKeyType.timeseries,
+                  label: 'Temperature',
+                  units: '°C',
+                  decimals: 0
+                }
+              ]
+            }
+          ],
+          timewindow: {...historyInterval(DAY),
+            aggregation: {
+              type: AggregationType.NONE,
+              limit: 200
+            }
+          },
+          widthType: 'fitWidth',
+          alignment: 'center',
+          margins: null,
+          paddings: null,
+          background: null
+        } as TimeseriesChartReportComponentConfig
       }
     ],
     [
@@ -862,6 +904,15 @@ export const reportComponentTypeMap = new Map<ReportComponentType, ReportCompone
         title: 'report-template.component.alarm-table.type',
         previewComponent: AlarmTablePreviewComponent,
         configComponent: AlarmTableConfigComponent,
+        editable: true
+      }
+    ],
+    [
+      ReportComponentType.TIME_SERIES_CHART,
+      {
+        title: 'report-template.component.time-series-chart.type',
+        previewComponent: TimeSeriesChartPreviewComponent,
+        configComponent: TimeSeriesChartConfigComponent,
         editable: true
       }
     ],
