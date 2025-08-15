@@ -30,8 +30,22 @@
  */
 package org.thingsboard.server.common.data.report.configuration.components;
 
-public enum ReportComponentType {
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import org.thingsboard.server.common.data.report.configuration.timewindow.TimeWindowConfiguration;
 
-    HEADING, RICH_TEXT, ENTITY_TABLE, TIME_SERIES_TABLE, ALARM_TABLE, TIME_SERIES_CHART, DASHBOARD, IMAGE, SUB_REPORT, PAGE_BREAK, ERROR, DIVIDER;
+@Schema
+@Data
+@EqualsAndHashCode
+@NoArgsConstructor
+public class TimeseriesChartComponent extends AbstractChartComponent {
 
+    private TimeWindowConfiguration timewindow;
+
+    @Override
+    public ReportComponentType getType() {
+        return ReportComponentType.TIME_SERIES_CHART;
+    }
 }
