@@ -34,6 +34,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import org.thingsboard.server.common.data.report.configuration.chart.ReportTimeSeriesChartSettings;
 import org.thingsboard.server.common.data.report.configuration.timewindow.TimeWindowConfiguration;
 
 @Schema
@@ -43,6 +44,7 @@ import org.thingsboard.server.common.data.report.configuration.timewindow.TimeWi
 public class TimeseriesChartComponent extends AbstractChartComponent {
 
     private TimeWindowConfiguration timewindow;
+    private ReportTimeSeriesChartSettings timeSeriesChartSettings;
 
     @Override
     public ReportComponentType getType() {

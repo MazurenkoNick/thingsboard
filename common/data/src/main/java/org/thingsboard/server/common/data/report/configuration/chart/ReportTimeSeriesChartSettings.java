@@ -28,26 +28,45 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-.tb-time-series-chart-preview {
-  width: 100%;
-  font-size: 0;
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-  text-align: center;
-  .tb-time-series-chart {
-    position: relative;
-    width: 100%;
-    height: auto;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    border: dashed 2px rgba(0, 0, 0, 0.16);
-    padding: 30px 10px 30px;
-    background: #f0f0f0;
-    font-weight: 500;
-    color: rgba(0,0,0,0.47);
-    font-size: 24px;
-  }
+package org.thingsboard.server.common.data.report.configuration.chart;
+
+import lombok.Data;
+import org.thingsboard.server.common.data.report.configuration.style.Font;
+import org.thingsboard.server.common.data.report.configuration.style.FontStyle;
+import org.thingsboard.server.common.data.report.configuration.style.FontWeight;
+
+@Data
+public class ReportTimeSeriesChartSettings {
+
+    private boolean showTitle;
+    private String title;
+    private Font titleFont;
+    private String titleColor;
+
+    private boolean showLegend;
+    private Font legendLabelFont;
+    private String legendLabelColor;
+    private LegendConfig legendConfig;
+
+    public ReportTimeSeriesChartSettings() {
+        this.showTitle = true;
+        this.title = "Time series chart";
+        this.titleFont = Font.builder().family("Roboto")
+                .size(18f)
+                .weight(FontWeight.WEIGHT_500)
+                .style(FontStyle.NORMAL)
+                .build();
+        this.titleColor = "rgba(0, 0, 0, 0.87)";
+        this.showLegend = true;
+        this.legendLabelFont = Font.builder().family("Roboto")
+                .size(12f)
+                .weight(FontWeight.NORMAL)
+                .style(FontStyle.NORMAL)
+                .build();
+        this.legendLabelColor = "rgba(0, 0, 0, 0.87)";
+        this.legendConfig = new LegendConfig();
+        this.legendConfig.setPosition(LegendPosition.top);
+        this.legendConfig.setSortDataKeys(false);
+    }
+
 }

@@ -7382,6 +7382,11 @@
             "time-series-chart": {
                 "type": "Time series chart"
             },
+            "chart": {
+                "chart-height": "Chart height",
+                "chart-width": "Chart width",
+                "chart-alignment": "Chart alignment"
+            },
             "image": {
                 "type": "Image",
                 "image-source": "Image source",

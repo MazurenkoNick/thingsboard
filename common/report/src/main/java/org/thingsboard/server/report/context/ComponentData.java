@@ -34,6 +34,7 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.thingsboard.server.common.data.report.configuration.DataKey;
 import org.thingsboard.server.common.data.report.configuration.DataSource;
+import org.thingsboard.server.report.context.chart.TsChartData;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -56,6 +57,7 @@ public class ComponentData {
 
     private final int usablePageWidthPx;
     private List<Map<String, String>> entityDatas;
+    private TsChartData tsChartData;
     private Map<String, Object> variables;
     private byte[] image;
     private String error;
@@ -72,6 +74,11 @@ public class ComponentData {
     public ComponentData(int usablePageWidthPx, byte[] image) {
         this(usablePageWidthPx);
         this.image = image;
+    }
+
+    public ComponentData(int usablePageWidthPx, TsChartData tsChartData) {
+        this(usablePageWidthPx);
+        this.tsChartData = tsChartData;
     }
 
     public ComponentData(int usablePageWidthPx, List<Map<String, String>> entityDatas) {

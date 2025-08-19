@@ -31,30 +31,61 @@
 package org.thingsboard.server.report.renderer;
 
 import org.jfree.chart.JFreeChart;
+import org.jfree.chart.LegendItem;
+import org.jfree.chart.LegendItemCollection;
 import org.jfree.chart.axis.DateAxis;
 import org.jfree.chart.axis.NumberAxis;
 import org.jfree.chart.axis.ValueAxis;
+import org.jfree.chart.renderer.xy.StandardXYBarPainter;
+import org.jfree.chart.renderer.xy.XYBarRenderer;
 import org.jfree.chart.renderer.xy.XYItemRenderer;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.chart.renderer.xy.XYSplineRenderer;
+import org.jfree.chart.title.LegendTitle;
+import org.jfree.chart.title.TextTitle;
+import org.jfree.chart.ui.RectangleEdge;
 import org.jfree.chart.ui.RectangleInsets;
+import org.jfree.data.general.Series;
 import org.jfree.data.time.Millisecond;
+import org.jfree.data.time.SimpleTimePeriod;
+import org.jfree.data.time.TimePeriodValues;
+import org.jfree.data.time.TimePeriodValuesCollection;
 import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesCollection;
+import org.jfree.data.xy.XYDataset;
 import org.springframework.stereotype.Component;
+import org.thingsboard.server.common.data.query.TsValue;
+import org.thingsboard.server.common.data.report.configuration.DataKeySettings;
+import org.thingsboard.server.common.data.report.configuration.chart.LegendConfig;
+import org.thingsboard.server.common.data.report.configuration.chart.LegendPosition;
+import org.thingsboard.server.common.data.report.configuration.chart.ReportTimeSeriesChartSettings;
+import org.thingsboard.server.common.data.report.configuration.chart.TimeSeriesChartKeySettings;
+import org.thingsboard.server.common.data.report.configuration.chart.TimeSeriesChartSeriesType;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponentType;
 import org.thingsboard.server.common.data.report.configuration.components.TimeseriesChartComponent;
 import org.thingsboard.server.report.context.ComponentData;
+import org.thingsboard.server.report.context.chart.TsChartData;
+import org.thingsboard.server.report.context.chart.TsChartDataSource;
+import org.thingsboard.server.report.context.chart.TsChartSeriesData;
 import org.thingsboard.server.report.renderer.chart.TbTimeseriesPlot;
+import org.thingsboard.server.report.util.ColorUtils;
+import org.thingsboard.server.report.util.ThymeleafUtil;
 
 import java.awt.*;
 import java.text.DecimalFormat;
 import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 import java.util.Random;
 import java.util.TimeZone;
+import java.util.stream.Collectors;
 
+import static org.thingsboard.server.report.util.AwtFontUtils.toAwtFont;
 import static org.thingsboard.server.report.util.ColorUtils.safeParseCssColor;
 
 @Component
@@ -62,9 +93,6 @@ public class TimeseriesChartRenderer extends ChartRenderer<TimeseriesChartCompon
 
     @Override
     protected JFreeChart createChart(TimeseriesChartComponent component, ComponentData reportDataSource) {
-        TimeSeries series = this.generateRandomTemperatureSeries();
-        TimeSeriesCollection dataset = new TimeSeriesCollection();
-        dataset.addSeries(series);
 
         /*
           TimeSeriesChartGridSettings
@@ -107,39 +135,123 @@ public class TimeseriesChartRenderer extends ChartRenderer<TimeseriesChartCompon
 
         // Defaults start
 
-        // Axes
-        DateAxis xAxis = new DateAxis("Time");
-        xAxis.setLowerMargin(0.02);  // reduce the default margins
-        xAxis.setUpperMargin(0.02);
-
-        NumberAxis yAxis = new NumberAxis("Temperature, ℃");
-        yAxis.setAutoRangeIncludesZero(true);
-        yAxis.setNumberFormatOverride(new DecimalFormat("0.0 '℃'"));
-
-        boolean smooth = false;
-        boolean drawPoints = false;
-
-        XYItemRenderer renderer;
-
-        if (smooth) {
-            renderer = new XYSplineRenderer(3);
-            ((XYSplineRenderer)renderer).setDefaultShapesVisible(drawPoints);
-        } else {
-            renderer = new XYLineAndShapeRenderer(true,
-                    drawPoints);
+        ReportTimeSeriesChartSettings chartSettings = component.getTimeSeriesChartSettings();
+        if (chartSettings == null) {
+            chartSettings = new ReportTimeSeriesChartSettings();
         }
 
-        TbTimeseriesPlot plot = new TbTimeseriesPlot(dataset, xAxis, yAxis, renderer);
+        TbTimeseriesPlot plot = new TbTimeseriesPlot();
 
         JFreeChart chart = new JFreeChart(
-                "Temperature Chart",
-                JFreeChart.DEFAULT_TITLE_FONT,
+                null,
+                null,
                 plot,
-                true);
+                false);
 
         currentChartTheme.apply(chart);
 
+        chart.setBackgroundPaint(ColorUtils.TRANSPARENT);
+
+        if (chartSettings.isShowTitle()) {
+            Font titleFont = toAwtFont(chartSettings.getTitleFont());
+            TextTitle title = new TextTitle(chartSettings.getTitle(), titleFont);
+            title.setPaint(safeParseCssColor(chartSettings.getTitleColor()));
+            chart.setTitle(title);
+        }
+
+        if (chartSettings.isShowLegend()) {
+            LegendTitle legend = new LegendTitle(plot);
+            legend.setBackgroundPaint(ColorUtils.TRANSPARENT);
+            legend.setMargin(new RectangleInsets(1.0, 1.0, 1.0, 1.0));
+            legend.setItemLabelPadding(new RectangleInsets(2.0, 4.0, 2.0, 16.0));
+            Font legentLabelFont = toAwtFont(chartSettings.getLegendLabelFont());
+            legend.setItemFont(legentLabelFont);
+            legend.setItemPaint(safeParseCssColor(chartSettings.getLegendLabelColor()));
+            LegendConfig legendConfig = chartSettings.getLegendConfig();
+            RectangleEdge position = RectangleEdge.TOP;
+            if (legendConfig != null) {
+                LegendPosition legendPosition = legendConfig.getPosition();
+                if (legendPosition != null) {
+                    switch (legendPosition) {
+                        case top -> position = RectangleEdge.TOP;
+                        case bottom -> position = RectangleEdge.BOTTOM;
+                        case left -> position = RectangleEdge.LEFT;
+                        case right -> position = RectangleEdge.RIGHT;
+                    }
+                };
+            }
+            legend.setPosition(position);
+            chart.addSubtitle(legend);
+            legend.addChangeListener(chart);
+        }
+
         plot.setAxisOffset(new RectangleInsets(0.0, 0.0, 0.0, 0.0));
+
+        TsChartData chartData = reportDataSource.getTsChartData();
+
+        // Axes
+        DateAxis xAxis = this.createXAxis(chartData);
+        plot.setDomainAxis(xAxis);
+
+        NumberAxis yAxis = this.createYAxis();
+        plot.setRangeAxis(yAxis);
+
+        List<TsChartSeriesData> seriesList = new ArrayList<>();
+
+        for (TsChartDataSource dataSource : chartData.getChartData()) {
+            seriesList.addAll(dataSource.getData());
+        }
+
+        seriesList = seriesList.stream().sorted((series1, series2) -> {
+           TimeSeriesChartKeySettings keySettings1 = this.getSeriesSettings(series1);
+           TimeSeriesChartKeySettings keySettings2 = this.getSeriesSettings(series2);
+           if (keySettings1.getSeriesType() == keySettings2.getSeriesType()) {
+               return series1.getIndex() - series2.getIndex();
+           } else if (keySettings1.getSeriesType() == TimeSeriesChartSeriesType.bar) {
+               return 1;
+           }
+           return -1;
+        }).toList();
+
+        List<TsChartSeriesData> barsList = seriesList.stream().
+                filter(series -> this.getSeriesSettings(series).getSeriesType() == TimeSeriesChartSeriesType.bar).toList();
+
+        for (int index = 0; index < seriesList.size(); index++) {
+            this.addChartSeriesData(seriesList.get(index), chartData, plot, barsList, index);
+        }
+
+        if (chartSettings.isShowLegend()) {
+            LegendConfig legendConfig = chartSettings.getLegendConfig();
+            boolean sortAlphabetically = false;
+            if (legendConfig != null && legendConfig.isSortDataKeys()) {
+                sortAlphabetically = true;
+            }
+            LegendItemCollection legendItems = plot.getLegendItems();
+            List<LegendItem> items = new ArrayList<>();
+
+            for (int i = 0; i < legendItems.getItemCount(); i++) {
+                items.add(legendItems.get(i));
+            }
+
+            if (sortAlphabetically) {
+                items.sort(Comparator.comparing(LegendItem::getLabel));
+            } else {
+                List<TsChartSeriesData> finalSeriesList = seriesList;
+                items.sort((item1, item2) -> {
+                    int listIndex1 = items.indexOf(item1);
+                    int listIndex2 = items.indexOf(item2);
+                    int dataIndex1 = finalSeriesList.get(listIndex1).getIndex();
+                    int dataIndex2 = finalSeriesList.get(listIndex2).getIndex();
+                    return dataIndex1 - dataIndex2;
+                });
+            }
+
+            LegendItemCollection sortedCollection = new LegendItemCollection();
+            for (LegendItem item : items) {
+                sortedCollection.add(item);
+            }
+            plot.setFixedLegendItems(sortedCollection);
+        }
 
         // Defaults end
 
@@ -189,6 +301,24 @@ public class TimeseriesChartRenderer extends ChartRenderer<TimeseriesChartCompon
         numberAxis.setRange(newLowerBound, newUpperBound);*/
     }
 
+    private DateAxis createXAxis(TsChartData chartData) {
+        DateAxis xAxis = new DateAxis("Time");
+        xAxis.setLowerMargin(0.02);  // reduce the default margins
+        xAxis.setUpperMargin(0.02);
+        xAxis.setTimeZone(chartData.getTimeZone());
+        xAxis.setLocale(Locale.getDefault());
+        xAxis.setMinimumDate(new Date(chartData.getTimeRange().startTs));
+        xAxis.setMaximumDate(new Date(chartData.getTimeRange().endTs));
+        return xAxis;
+    }
+
+    private NumberAxis createYAxis() {
+        NumberAxis yAxis = new NumberAxis("Temperature");
+        yAxis.setAutoRangeIncludesZero(false);
+        yAxis.setNumberFormatOverride(new DecimalFormat("0.0 '℃'"));
+        return yAxis;
+    }
+
     private TimeSeries generateRandomTemperatureSeries() {
         ZoneId zoneId = ZoneId.systemDefault();
         TimeZone timeZone = TimeZone.getTimeZone(zoneId.getId());
@@ -209,6 +339,102 @@ public class TimeseriesChartRenderer extends ChartRenderer<TimeseriesChartCompon
         }
         series.add(new Millisecond(new Date(end), timeZone, locale), 45);
         return series;
+    }
+
+    private void addChartSeriesData(TsChartSeriesData chartSeriesData,
+                                    TsChartData chartData,
+                                    TbTimeseriesPlot plot,
+                                    List<TsChartSeriesData> barsList,
+                                    int index) {
+
+
+        boolean smooth = false;
+        boolean drawPoints = false;
+
+        TimeSeriesChartKeySettings keySettings = this.getSeriesSettings(chartSeriesData);
+
+        XYItemRenderer renderer;
+
+        String label = ThymeleafUtil.renderFromTextString(chartSeriesData.getDataKey().getLabel(), chartSeriesData.getDataSource().getVariables());
+
+        Locale locale = Locale.getDefault();
+
+        XYDataset dataset;
+
+        Paint seriesPaint = safeParseCssColor(chartSeriesData.getDataKey().getColor());
+
+        if (keySettings.getSeriesType() == TimeSeriesChartSeriesType.line) {
+            if (smooth) {
+                renderer = new XYSplineRenderer(3);
+                ((XYSplineRenderer)renderer).setDefaultShapesVisible(drawPoints);
+            } else {
+                renderer = new XYLineAndShapeRenderer(true,
+                        drawPoints);
+            }
+            renderer.setSeriesPaint(0, seriesPaint);
+            renderer.setSeriesStroke(0, new BasicStroke(2.0f));
+
+            TimeSeries timeSeries = new TimeSeries(label);
+
+            for (TsValue tsValue : chartSeriesData.getData()) {
+                Millisecond millisecond = new Millisecond(new Date(tsValue.getTs()), chartData.getTimeZone(), locale);
+                try {
+                    double doubleValue = Double.parseDouble(tsValue.getValue());
+                    timeSeries.add(millisecond, doubleValue);
+                } catch (NumberFormatException e) {}
+            }
+            dataset = new TimeSeriesCollection(timeSeries, chartData.getTimeZone());
+
+        } else {
+            XYBarRenderer barRenderer = new XYBarRenderer();
+            barRenderer.setDrawBarOutline(false);
+            barRenderer.setShadowVisible(false);
+            barRenderer.setBarPainter(new StandardXYBarPainter());
+            barRenderer.setSeriesPaint(0, seriesPaint);
+
+            renderer = barRenderer;
+
+            TimePeriodValues timePeriods = new TimePeriodValues(label);
+
+            int barsCount = barsList.size();
+            long interval = 24 * 60 * 60 * 1000;
+            long intervalOffset = (long)(interval * 0.2f);
+            long barSpacing = (long)(interval * 0.1f);
+            long barWidth = (interval - intervalOffset * 2 - barSpacing * (barsCount - 1)) / barsCount;
+
+            int barIndex = barsList.indexOf(chartSeriesData);
+
+            long offset = intervalOffset + barIndex * (barWidth + barSpacing);
+
+            for (TsValue tsValue : chartSeriesData.getData()) {
+                long ts = tsValue.getTs();
+                long start = ts - interval/2 + offset;
+                long end = start + barWidth;
+                SimpleTimePeriod simpleTimePeriod = new SimpleTimePeriod(start, end);
+                try {
+                    double doubleValue = Double.parseDouble(tsValue.getValue());
+                    timePeriods.add(simpleTimePeriod, doubleValue);
+                } catch (NumberFormatException e) {}
+            }
+            dataset = new TimePeriodValuesCollection(timePeriods);
+        }
+
+        renderer.setSeriesVisibleInLegend(0, keySettings.getShowInLegend() != null ? keySettings.getShowInLegend() : true);
+
+        plot.setRenderer(index, renderer);
+
+        plot.setDataset(index, dataset);
+    }
+
+    private TimeSeriesChartKeySettings getSeriesSettings(TsChartSeriesData chartSeriesData) {
+        DataKeySettings settings = chartSeriesData.getDataKey().getSettings();
+        TimeSeriesChartKeySettings keySettings;
+        if (settings instanceof TimeSeriesChartKeySettings) {
+            keySettings = (TimeSeriesChartKeySettings) settings;
+        } else {
+            keySettings = new TimeSeriesChartKeySettings();
+        }
+        return keySettings;
     }
 
     @Override

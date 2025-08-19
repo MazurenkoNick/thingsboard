@@ -45,9 +45,8 @@ public class TbTimeseriesPlot extends XYPlot {
 
     private Paint rightOutlinePaint;
 
-    public TbTimeseriesPlot(XYDataset dataset, ValueAxis domainAxis, ValueAxis rangeAxis,
-                  XYItemRenderer renderer) {
-        super(dataset, domainAxis, rangeAxis, renderer);
+    public TbTimeseriesPlot() {
+        super();
     }
 
     public void setTopOutlinePaint(Paint topOutlinePaint) {

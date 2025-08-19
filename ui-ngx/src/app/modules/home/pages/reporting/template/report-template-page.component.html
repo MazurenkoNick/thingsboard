@@ -192,7 +192,8 @@
       </div>
     </div>
     <div class="tb-report-settings tb-dynamic-panel"
-                [class.tb-report-component-settings]="!!editingReportComponent">
+                [class.tb-report-component-settings]="!!editingReportComponent"
+                [style.width.px]="editingReportComponent ? reportComponentTypeMap.get(editingReportComponent.type).preferredSettingsWidthPx : null">
       @if (editingReportComponent) {
         <tb-details-panel class="flex-1"
                           [color]="null"

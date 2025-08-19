@@ -75,8 +75,9 @@ import static org.thingsboard.server.common.data.util.DataSourceUtils.setEntityK
 
 public class ReportQueryUtils {
 
-    private static final EntityDataSortOrder DEFAULT_SORT_ORDER = new EntityDataSortOrder(new EntityKey(EntityKeyType.ENTITY_FIELD, "id"), EntityDataSortOrder.Direction.ASC);
-    private static final EntityDataSortOrder DEFAULT_ALARM_SORT_ORDER = new EntityDataSortOrder(new EntityKey(EntityKeyType.ALARM_FIELD, "createdTime"), EntityDataSortOrder.Direction.DESC);
+    public static final EntityDataSortOrder DEFAULT_SORT_ORDER = new EntityDataSortOrder(new EntityKey(EntityKeyType.ENTITY_FIELD, "id"), EntityDataSortOrder.Direction.ASC);
+    public static final EntityDataSortOrder DEFAULT_TS_CHART_SORT_ORDER = new EntityDataSortOrder(new EntityKey(EntityKeyType.ENTITY_FIELD, "createdTime"), EntityDataSortOrder.Direction.DESC);
+    public static final EntityDataSortOrder DEFAULT_ALARM_SORT_ORDER = new EntityDataSortOrder(new EntityKey(EntityKeyType.ALARM_FIELD, "createdTime"), EntityDataSortOrder.Direction.DESC);
 
     public static EntityCountQuery toEntityCountQuery(DataSource dataSource, TbReportCtx ctx) {
         EntityFilter entityFilter = buildEntityFilter(dataSource, ctx, null);
@@ -143,7 +144,11 @@ public class ReportQueryUtils {
     }
 
     public static EntityDataQuery toEntityDataQuery(DataSource dataSource, TbReportCtx ctx, EntityFilter filter, PageLink pageLink) {
-        EntityDataPageLink entityDataPageLink = new EntityDataPageLink(pageLink.getPageSize(), pageLink.getPage(), pageLink.getTextSearch(), DEFAULT_SORT_ORDER);
+        return toEntityDataQuery(dataSource, ctx, filter, pageLink, DEFAULT_SORT_ORDER);
+    }
+
+    public static EntityDataQuery toEntityDataQuery(DataSource dataSource, TbReportCtx ctx, EntityFilter filter, PageLink pageLink, EntityDataSortOrder sortOrder) {
+        EntityDataPageLink entityDataPageLink = new EntityDataPageLink(pageLink.getPageSize(), pageLink.getPage(), pageLink.getTextSearch(), sortOrder);
 
         List<KeyFilter> keyFilters = findKeyFilters(dataSource, ctx.getConfiguration());
 

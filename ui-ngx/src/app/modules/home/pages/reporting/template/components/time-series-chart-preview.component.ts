@@ -43,6 +43,7 @@ import { Router } from '@angular/router';
 export class TimeSeriesChartPreviewComponent extends AbstractReportComponentPreview<TimeseriesChartReportComponentConfig> {
 
   imageWidth: string = '100%';
+  imageHeightPx: number = 400;
 
   imageAlign: string = 'center';
 
@@ -57,6 +58,7 @@ export class TimeSeriesChartPreviewComponent extends AbstractReportComponentPrev
       this.imageWidth = customWidth + 'px';
     }
     this.imageAlign = this.reportComponent.alignment || 'center';
+    this.imageHeightPx = this.reportComponent.height || 400;
   }
 
 }

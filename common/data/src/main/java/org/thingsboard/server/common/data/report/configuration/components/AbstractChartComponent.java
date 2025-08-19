@@ -40,5 +40,5 @@ import lombok.NoArgsConstructor;
 @EqualsAndHashCode
 @NoArgsConstructor
 public abstract  class AbstractChartComponent extends AbstractImageComponent {
-
+    private int height;
 }

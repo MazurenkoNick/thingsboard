@@ -36,13 +36,23 @@ import {
 } from '@home/pages/reporting/template/components/report-component-config.component';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
-  DashboardReportComponentConfig,
   imageAlignments,
   imageAlignmentTranslations,
   imageWidthTypes,
-  imageWidthTypeTranslations, TimeseriesChartReportComponentConfig
+  imageWidthTypeTranslations,
+  reportTimeSeriesChartDefaultSettings,
+  ReportTimeSeriesChartSettings,
+  TimeseriesChartReportComponentConfig, toReportTimeSeriesChartKeySettings, toTimeSeriesChartKeySettings
 } from '@shared/models/report-component.models';
-import { DataKey, Datasource, WidgetConfigMode } from '@shared/models/widget.models';
+import { DataKey, Datasource, Widget, WidgetConfig, WidgetConfigMode, widgetType } from '@shared/models/widget.models';
+import {
+  TimeSeriesChartKeySettings, TimeSeriesChartType,
+  TimeSeriesChartYAxes,
+  TimeSeriesChartYAxisId
+} from '@home/components/widget/lib/chart/time-series-chart.models';
+import { deepClone, mergeDeep } from '@core/utils';
+import { merge } from 'rxjs';
+import { TbTimeSeriesChart } from '@home/components/widget/lib/chart/time-series-chart';
 
 @Component({
   selector: 'tb-time-series-chart-config',
@@ -52,7 +62,23 @@ import { DataKey, Datasource, WidgetConfigMode } from '@shared/models/widget.mod
 })
 export class TimeSeriesChartConfigComponent extends AbstractReportComponentConfig<TimeseriesChartReportComponentConfig> {
 
-  imageWidthTypes = imageWidthTypes;
+  public get yAxisIds(): TimeSeriesChartYAxisId[] {
+    const yAxes: TimeSeriesChartYAxes = this.reportConfigForm.get('yAxes').value;
+    return Object.keys(yAxes);
+  }
+
+  public get widget(): Widget {
+    return {
+      type: widgetType.timeseries,
+      config: {
+        settings: this.reportComponentConfig.timeSeriesChartSettings
+      } as WidgetConfig
+    } as Widget;
+  }
+
+  TbTimeSeriesChart = TbTimeSeriesChart;
+
+  imageWidthTypes = ['fitWidth', 'custom'];
   imageWidthTypeTranslations = imageWidthTypeTranslations;
 
   imageAlignments = imageAlignments;
@@ -62,27 +88,167 @@ export class TimeSeriesChartConfigComponent extends AbstractReportComponentConfi
 
   settingsTab: 'data' | 'layout' = 'data';
 
+  seriesMode = 'series';
+
   protected buildForm(reportComponentConfig: TimeseriesChartReportComponentConfig): FormGroup {
+    const timeSeriesChartSettings: ReportTimeSeriesChartSettings =
+      mergeDeep<ReportTimeSeriesChartSettings>({} as ReportTimeSeriesChartSettings, reportTimeSeriesChartDefaultSettings, reportComponentConfig.timeSeriesChartSettings);
     const form = this.fb.group({
       timewindow: [reportComponentConfig.timewindow, []],
       dataSources: [reportComponentConfig.dataSources, []],
       widthType: [reportComponentConfig.widthType || 'fitWidth', []],
       customWidth: [reportComponentConfig.customWidth || 100, [Validators.min(1)]],
+      height: [reportComponentConfig.height || 400, [Validators.min(1)]],
       alignment: [reportComponentConfig.alignment || 'center', []],
-      series: [this.getSeries(reportComponentConfig.dataSources), []]
+
+      yAxes: [timeSeriesChartSettings.yAxes, []],
+      series: [this.getSeries(reportComponentConfig.dataSources), []],
+
+      comparisonEnabled: [timeSeriesChartSettings.comparisonEnabled, []],
+      timeForComparison: [timeSeriesChartSettings.timeForComparison, []],
+      comparisonCustomIntervalValue: [timeSeriesChartSettings.comparisonCustomIntervalValue, [Validators.min(0)]],
+      comparisonXAxis: [timeSeriesChartSettings.comparisonXAxis, []],
+
+      thresholds: [timeSeriesChartSettings.thresholds, []],
+
+      showTitle: [timeSeriesChartSettings.showTitle, []],
+      title: [timeSeriesChartSettings.title, []],
+      titleFont: [timeSeriesChartSettings.titleFont, []],
+      titleColor: [timeSeriesChartSettings.titleColor, []],
+
+      stack: [timeSeriesChartSettings.stack, []],
+
+      grid: [timeSeriesChartSettings.grid, []],
+
+      xAxis: [timeSeriesChartSettings.xAxis, []],
+
+      noAggregationBarWidthSettings: [timeSeriesChartSettings.noAggregationBarWidthSettings, []],
+
+      showLegend: [timeSeriesChartSettings.showLegend, []],
+      legendLabelFont: [timeSeriesChartSettings.legendLabelFont, []],
+      legendLabelColor: [timeSeriesChartSettings.legendLabelColor, []],
+      legendConfig: [timeSeriesChartSettings.legendConfig, []]
+
     });
+
     form.get('widthType').valueChanges.pipe(
       takeUntilDestroyed(this.destroyRef)
     ).subscribe(() => {
       this.updateCustomWidth();
     });
+
+    form.get('comparisonEnabled').valueChanges.pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(() => this.updateSeriesState());
+
+    merge(form.get('comparisonEnabled').valueChanges,
+          form.get('showTitle').valueChanges,
+          form.get('showLegend').valueChanges).pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(() => {
+      this.updateValidators(form);
+    });
+
+    this.updateValidators(form);
+
     return form;
   }
 
   protected prepareOutputConfig(config: any): any {
     this.setSeries(config.series, config.dataSources);
     delete config.series;
+    if (!config.timeSeriesChartSettings) {
+      config.timeSeriesChartSettings = {};
+    }
+    const timeSeriesChartSettings: ReportTimeSeriesChartSettings = config.timeSeriesChartSettings
+
+    timeSeriesChartSettings.yAxes = config.yAxes;
+    delete config.yAxes;
+
+    timeSeriesChartSettings.comparisonEnabled = config.comparisonEnabled;
+    delete config.comparisonEnabled;
+    timeSeriesChartSettings.timeForComparison = config.timeForComparison;
+    delete config.timeForComparison;
+    timeSeriesChartSettings.comparisonCustomIntervalValue = config.comparisonCustomIntervalValue;
+    delete config.comparisonCustomIntervalValue;
+    timeSeriesChartSettings.comparisonXAxis = config.comparisonXAxis;
+    delete timeSeriesChartSettings.comparisonXAxis;
+
+    timeSeriesChartSettings.thresholds = config.thresholds;
+    delete config.thresholds;
+
+    timeSeriesChartSettings.showTitle = config.showTitle;
+    delete config.showTitle;
+    timeSeriesChartSettings.title = config.title;
+    delete config.title;
+    timeSeriesChartSettings.titleFont = config.titleFont;
+    delete config.titleFont;
+    timeSeriesChartSettings.titleColor = config.titleColor;
+    delete config.titleColor;
+
+    timeSeriesChartSettings.stack = config.stack;
+    delete config.stack;
+
+    timeSeriesChartSettings.grid = config.grid;
+    delete config.grid;
+
+    timeSeriesChartSettings.xAxis = config.xAxis;
+    delete config.xAxis;
+
+    timeSeriesChartSettings.noAggregationBarWidthSettings = config.noAggregationBarWidthSettings;
+    delete config.noAggregationBarWidthSettings;
+
+    timeSeriesChartSettings.showLegend = config.showLegend;
+    delete config.showLegend;
+    timeSeriesChartSettings.legendLabelFont = config.legendLabelFont;
+    delete config.legendLabelFont;
+    timeSeriesChartSettings.legendLabelColor = config.legendLabelColor;
+    delete config.legendLabelColor;
+    timeSeriesChartSettings.legendConfig = config.legendConfig;
+    delete config.legendConfig;
+
     return config;
+  }
+
+  seriesModeChange(seriesMode: string) {
+    this.seriesMode = seriesMode;
+    this.updateSeriesState();
+  }
+
+  public yAxisRemoved(yAxisId: TimeSeriesChartYAxisId): void {
+    if (this.reportComponentConfig.dataSources && this.reportComponentConfig.dataSources.length > 1) {
+      for (let i = 1; i < this.reportComponentConfig.dataSources.length; i++) {
+        const datasource = this.reportComponentConfig.dataSources[i];
+        this.removeYaxisId(datasource.dataKeys, yAxisId);
+      }
+    }
+  }
+
+  private removeYaxisId(series: DataKey[], yAxisId: TimeSeriesChartYAxisId): boolean {
+    let changed = false;
+    if (series) {
+      series.forEach(key => {
+        const keySettings = ((key.settings || {}) as TimeSeriesChartKeySettings);
+        if (keySettings.yAxisId === yAxisId) {
+          keySettings.yAxisId = 'default';
+          changed = true;
+        }
+      });
+    }
+    return changed;
+  }
+
+  private updateSeriesState() {
+    if (this.seriesMode === 'series') {
+      this.reportConfigForm.get('series').enable({emitEvent: false});
+    } else {
+      const comparisonEnabled = this.reportConfigForm.get('comparisonEnabled').value;
+      if (comparisonEnabled) {
+        this.reportConfigForm.get('series').enable({emitEvent: false});
+      } else {
+        this.reportConfigForm.get('series').disable({emitEvent: false});
+      }
+    }
   }
 
   private updateCustomWidth() {
@@ -93,15 +259,65 @@ export class TimeSeriesChartConfigComponent extends AbstractReportComponentConfi
   }
 
   private getSeries(datasources?: Datasource[]): DataKey[] {
+    let dataKeys: DataKey[] = [];
     if (datasources && datasources.length) {
-      return datasources[0].dataKeys || [];
+      dataKeys = datasources[0].dataKeys || [];
     }
-    return [];
+    dataKeys = dataKeys.map(key => {
+      key = deepClone(key);
+      key.settings = toTimeSeriesChartKeySettings(key.settings);
+      return key;
+    });
+    return dataKeys;
   }
 
   private setSeries(series: DataKey[], datasources?: Datasource[]) {
     if (datasources && datasources.length) {
+      series = series.map(key => {
+        key = deepClone(key);
+        key.settings = toReportTimeSeriesChartKeySettings(key.settings);
+        return key;
+      });
       datasources[0].dataKeys = series;
     }
   }
+
+  private updateValidators(form: FormGroup) {
+    const comparisonEnabled: boolean = form.get('comparisonEnabled').value;
+    const showTitle: boolean = form.get('showTitle').value;
+    const showLegend: boolean = form.get('showLegend').value;
+
+    if (comparisonEnabled) {
+      form.get('timeForComparison').enable();
+      form.get('comparisonCustomIntervalValue').enable();
+      form.get('comparisonXAxis').enable();
+    } else {
+      form.get('timeForComparison').disable();
+      form.get('comparisonCustomIntervalValue').disable();
+      form.get('comparisonXAxis').disable();
+    }
+
+    if (showTitle) {
+      form.get('title').enable();
+      form.get('titleFont').enable();
+      form.get('titleColor').enable();
+    } else {
+      form.get('title').disable();
+      form.get('titleFont').disable();
+      form.get('titleColor').disable();
+    }
+
+    if (showLegend) {
+      form.get('legendLabelFont').enable();
+      form.get('legendLabelColor').enable();
+      form.get('legendConfig').enable();
+    } else {
+      form.get('legendLabelFont').disable();
+      form.get('legendLabelColor').disable();
+      form.get('legendConfig').disable();
+    }
+
+  }
+
+  protected readonly TimeSeriesChartType = TimeSeriesChartType;
 }
