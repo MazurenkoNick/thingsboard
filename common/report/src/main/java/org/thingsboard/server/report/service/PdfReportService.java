@@ -41,10 +41,13 @@ import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.ReportTemplateId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.job.task.ReportTask;
+import org.thingsboard.server.common.data.kv.TsKvEntry;
+import org.thingsboard.server.common.data.page.SortOrder;
 import org.thingsboard.server.common.data.query.EntityData;
 import org.thingsboard.server.common.data.report.ReportData;
 import org.thingsboard.server.common.data.report.ReportTemplate;
 import org.thingsboard.server.common.data.report.TbReportFormat;
+import org.thingsboard.server.common.data.report.configuration.DataKey;
 import org.thingsboard.server.common.data.report.configuration.DataSource;
 import org.thingsboard.server.common.data.report.configuration.HeaderFooter;
 import org.thingsboard.server.common.data.report.configuration.PdfReportTemplateConfig;
@@ -56,14 +59,20 @@ import org.thingsboard.server.common.data.report.configuration.components.ImageC
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponentType;
 import org.thingsboard.server.common.data.report.configuration.components.SubReportComponent;
+import org.thingsboard.server.common.data.report.configuration.components.TimeseriesChartComponent;
 import org.thingsboard.server.common.data.report.configuration.components.TimeseriesTableComponent;
 import org.thingsboard.server.common.data.report.configuration.image.ImageSourceType;
 import org.thingsboard.server.common.data.report.configuration.style.Insets;
 import org.thingsboard.server.common.data.report.configuration.style.PageOrientation;
 import org.thingsboard.server.common.data.report.configuration.style.PageSize;
+import org.thingsboard.server.common.data.report.configuration.timewindow.History;
+import org.thingsboard.server.common.data.report.configuration.timewindow.TimeIntervalCalculator;
+import org.thingsboard.server.common.data.report.configuration.timewindow.TimeWindowConfiguration;
 import org.thingsboard.server.report.context.ComponentData;
 import org.thingsboard.server.report.context.HeaderFooterRenderLayout;
 import org.thingsboard.server.report.context.TbReportCtx;
+import org.thingsboard.server.report.context.chart.TsChartData;
+import org.thingsboard.server.report.context.chart.TsChartDataSource;
 import org.thingsboard.server.report.renderer.PdfReportComponentRenderer;
 import org.thingsboard.server.report.util.ColorUtils;
 import org.thingsboard.server.report.util.HtmlRenderUtils;
@@ -73,14 +82,15 @@ import org.xhtmlrenderer.pdf.ITextRenderer;
 
 import java.awt.Dimension;
 import java.io.ByteArrayOutputStream;
+import java.time.ZoneId;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.TimeZone;
 import java.util.concurrent.ExecutionException;
 
 import static org.thingsboard.server.common.data.report.configuration.components.ReportComponentType.DASHBOARD;
@@ -88,7 +98,9 @@ import static org.thingsboard.server.common.data.report.configuration.components
 import static org.thingsboard.server.common.data.report.configuration.components.ReportComponentType.SUB_REPORT;
 import static org.thingsboard.server.common.data.report.configuration.components.ReportComponentType.TIME_SERIES_TABLE;
 import static org.thingsboard.server.common.data.report.configuration.style.PageSize.A4;
+import static org.thingsboard.server.common.data.report.configuration.timewindow.TimeIntervalCalculator.getTimeRange;
 import static org.thingsboard.server.common.data.util.DataSourceUtils.entityDataFromEntityId;
+import static org.thingsboard.server.report.util.ReportQueryUtils.DEFAULT_TS_CHART_SORT_ORDER;
 import static org.thingsboard.server.report.util.ReportQueryUtils.toAlarmCountQuery;
 import static org.thingsboard.server.report.util.ReportQueryUtils.toEntityCountQuery;
 import static org.thingsboard.server.report.util.ReportUtils.getSingleDataSource;
@@ -211,6 +223,8 @@ public class PdfReportService extends AbstractReportService {
         ComponentData componentData = switch (component.getType()) {
             case TIME_SERIES_TABLE ->
                     buildTsComponentData(usablePageWidthPx, ctx, (TimeseriesTableComponent) component, stateEntity);
+            case TIME_SERIES_CHART ->
+                    buildTsChartComponentData(usablePageWidthPx, ctx, (TimeseriesChartComponent) component, stateEntity);
             case ALARM_TABLE ->
                     buildAlarmComponentData(usablePageWidthPx, ctx, (AlarmTableComponent) component, stateEntity);
             case DASHBOARD ->
@@ -303,6 +317,58 @@ public class PdfReportService extends AbstractReportService {
             throw new RuntimeException(e);
         }
         return componentsRenderers.get(ERROR).render(new ErrorComponent(errorMessage, e), new ComponentData(usablePageWidthPx));
+    }
+
+    private ComponentData buildTsChartComponentData(int usablePageWidthPx, TbReportCtx ctx, TimeseriesChartComponent component, EntityData stateEntity) {
+        Optional<DataSource> dataSource = getSingleDataSource(component);
+        if (dataSource.isEmpty()) {
+            return new ComponentData(usablePageWidthPx, "Data source is not configured for time series chart");
+        }
+        DataSource ds = dataSource.get();
+        if (ds.getDataKeys().isEmpty()) {
+            return new ComponentData(usablePageWidthPx, "At least one series should be specified for time series chart");
+        }
+        DataSource latestDataSource = DataSource.builder()
+                .type(ds.getType())
+                .deviceId(ds.getDeviceId())
+                .entityAliasId(ds.getEntityAliasId())
+                .filterId(ds.getFilterId())
+                .dataKeys(ds.getLatestDataKeys()).build();
+        List<EntityData> entityDatas = fetchEntities(ctx, latestDataSource, stateEntity != null ? stateEntity.getEntityId() : null, DEFAULT_TS_CHART_SORT_ORDER);
+        List<TsChartDataSource> chartData = new ArrayList<>();
+        List<DataKey> dataKeys = ds.getDataKeys();
+        List<String> keys = dataKeys.stream().map(DataKey::getName).toList();
+
+        TimeWindowConfiguration timeWindowConf = component.getTimewindow();
+        History historyConf = timeWindowConf.getHistory();
+        String targetTimezone = StringUtils.isNotBlank(timeWindowConf.getTimezone()) ?
+                timeWindowConf.getTimezone() : ctx.getTimeZone();
+        TimeIntervalCalculator.TimeRange timeRange = getTimeRange(timeWindowConf, targetTimezone);
+
+        for (int index = 0; index < entityDatas.size(); index++) {
+            EntityData entity = entityDatas.get(index);
+
+            List<TsKvEntry> tsKvEntries = dataService.getTimeseries(entity.getEntityId(), keys, timeRange.startTs, timeRange.endTs,
+                    historyConf.getInterval(), targetTimezone, timeWindowConf.getAggregation().getType(), SortOrder.Direction.ASC,
+                    timeWindowConf.getAggregation().getLimit(), false, ctx);
+
+            TsChartDataSource chartDataSource = new TsChartDataSource(ds, entity, tsKvEntries, index);
+            chartData.add(chartDataSource);
+        }
+        int index = 0;
+
+        for (TsChartDataSource chartDataSource : chartData) {
+            for (DataKey dataKey : chartDataSource.getDataKeys()) {
+                if (chartDataSource.isGenerated()) {
+                    dataKey.setColor(ColorUtils.getMaterialColor(index));
+                }
+                index++;
+            }
+        }
+        ZoneId zoneId = targetTimezone != null ? ZoneId.of(targetTimezone) : ZoneId.systemDefault();
+        TimeZone timeZone = TimeZone.getTimeZone(zoneId.getId());
+        TsChartData tsChartData = new TsChartData(timeZone, timeRange, chartData);
+        return new ComponentData(usablePageWidthPx, tsChartData);
     }
 
     private ComponentData buildImageComponentData(int usablePageWidthPx, TbReportCtx ctx, ImageComponent component) {

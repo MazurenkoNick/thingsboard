@@ -49,6 +49,29 @@
                      historyOnly
                      formControlName="timewindow"></tb-timewindow>
     </div>
+    <div class="tb-form-row column-xs">
+      <mat-slide-toggle class="mat-slide fixed-title-width" formControlName="showTitle">
+        {{ 'widget-config.title' | translate }}
+      </mat-slide-toggle>
+      <div class="flex flex-1 flex-row items-center justify-start gap-2">
+        <mat-form-field class="flex" appearance="outline" subscriptSizing="dynamic">
+          <input matInput formControlName="title" placeholder="{{ 'widget-config.set' | translate }}">
+        </mat-form-field>
+        <tb-font-settings formControlName="titleFont"
+                          [allowedFontWeights]="['normal', 'bold', '500']"
+                          [allowedFontStyles]="['normal', 'italic']"
+                          forceSizeUnit="px"
+                          disabledLineHeight
+                          clearButton
+                          [initialPreviewStyle]="{color: reportConfigForm.get('titleColor').value}"
+                          [previewText]="reportConfigForm.get('title').value">
+        </tb-font-settings>
+        <tb-color-input asBoxInput
+                        colorClearButton
+                        formControlName="titleColor">
+        </tb-color-input>
+      </div>
+    </div>
     <tb-datasources
       [configMode]="basicMode"
       stroked
@@ -64,31 +87,173 @@
       [callbacks]="callbacks"
       [aliasController]="context.aliasController">
     </tb-datasources>
-    <tb-data-keys-panel
-      [dataKeysPanelOptions]="{
+    <div class="tb-form-panel stroked">
+      <div class="flex flex-row items-center justify-between">
+        <div class="tb-form-panel-title" tb-hint-tooltip-icon="{{ seriesMode === 'comparison' ? ('widgets.time-series-chart.comparison.comparison-hint' | translate) : null }}">
+          {{ 'widgets.chart.series' | translate }}
+        </div>
+        <tb-toggle-select [ngModel]="seriesMode" (ngModelChange)="seriesModeChange($event)"
+                          [ngModelOptions]="{ standalone: true }">
+          <tb-toggle-option value="series">{{ 'widgets.chart.series' | translate }}</tb-toggle-option>
+          <tb-toggle-option value="comparison">{{ 'widgets.time-series-chart.comparison.comparison' | translate }}</tb-toggle-option>
+        </tb-toggle-select>
+      </div>
+      <tb-data-keys-panel
+        *ngIf="seriesMode === 'series'"
+        [dataKeysPanelOptions]="{
         widgetType: widgetType.timeseries,
         callbacks: callbacks,
-        hasAdditionalLatestDataKeys: true
+        settingsDirective: 'tb-time-series-chart-key-settings',
+        settingsFunction: TbTimeSeriesChart.dataKeySettings(),
+        hasAdditionalLatestDataKeys: true,
+        widget: widget
       }"
-      reportMode
+        reportMode
+        stroked
+        panelTitle="{{ 'widgets.chart.series' | translate }}"
+        addKeyTitle="{{ 'widgets.chart.add-series' | translate }}"
+        keySettingsTitle="{{ 'widgets.chart.series-settings' | translate }}"
+        removeKeyTitle="{{ 'widgets.chart.remove-series' | translate }}"
+        noKeysText="{{ 'widgets.chart.no-series' | translate }}"
+        requiredKeysText="{{ 'widgets.chart.no-series-error' | translate }}"
+        timeSeriesChart
+        [yAxisIds]="yAxisIds"
+        showTimeSeriesType
+        hideSourceSelection
+        [datasourceType]="datasource?.type"
+        [deviceId]="datasource?.deviceId"
+        [entityAliasId]="datasource?.entityAliasId"
+        [aliasController]="context.aliasController"
+        formControlName="series">
+      </tb-data-keys-panel>
+      <div *ngIf="seriesMode === 'comparison'" class="tb-form-row no-border no-padding column-xs">
+        <mat-slide-toggle class="mat-slide fixed-title-width" formControlName="comparisonEnabled">
+          {{ 'widgets.time-series-chart.comparison.comparison' | translate }}
+        </mat-slide-toggle>
+        <div class="flex flex-1 flex-row items-center justify-start gap-2">
+          <mat-form-field class="flex" appearance="outline" subscriptSizing="dynamic">
+            <mat-select formControlName="timeForComparison">
+              <mat-option [value]="'previousInterval'">
+                {{ 'widgets.chart.time-for-comparison-previous-interval' | translate }}
+              </mat-option>
+              <mat-option [value]="'days'">
+                {{ 'widgets.chart.time-for-comparison-days' | translate }}
+              </mat-option>
+              <mat-option [value]="'weeks'">
+                {{ 'widgets.chart.time-for-comparison-weeks' | translate }}
+              </mat-option>
+              <mat-option [value]="'months'">
+                {{ 'widgets.chart.time-for-comparison-months' | translate }}
+              </mat-option>
+              <mat-option [value]="'years'">
+                {{ 'widgets.chart.time-for-comparison-years' | translate }}
+              </mat-option>
+              <mat-option [value]="'customInterval'">
+                {{ 'widgets.chart.time-for-comparison-custom-interval' | translate }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field [class.!hidden]="reportConfigForm.get('timeForComparison').value !== 'customInterval'"
+                          appearance="outline" class="number flex-lt-md" subscriptSizing="dynamic">
+            <input matInput formControlName="comparisonCustomIntervalValue" type="number" min="0" placeholder="{{ 'widget-config.set' | translate }}">
+          </mat-form-field>
+          <tb-time-series-chart-axis-settings-button
+            axisType="xAxis"
+            panelTitle="{{ 'widgets.time-series-chart.axis.comparison-x-axis-settings' | translate }}"
+            formControlName="comparisonXAxis">
+          </tb-time-series-chart-axis-settings-button>
+        </div>
+      </div>
+      <tb-comparison-keys-table
+        *ngIf="seriesMode === 'comparison'"
+        [datasourceType]="datasource?.type"
+        formControlName="series">
+      </tb-comparison-keys-table>
+    </div>
+    <tb-time-series-chart-y-axes-panel
+      formControlName="yAxes"
       stroked
-      panelTitle="{{ 'widgets.chart.series' | translate }}"
-      addKeyTitle="{{ 'widgets.chart.add-series' | translate }}"
-      keySettingsTitle="{{ 'widgets.chart.series-settings' | translate }}"
-      removeKeyTitle="{{ 'widgets.chart.remove-series' | translate }}"
-      noKeysText="{{ 'widgets.chart.no-series' | translate }}"
-      requiredKeysText="{{ 'widgets.chart.no-series-error' | translate }}"
-      hideSourceSelection
-      [datasourceType]="datasource?.type"
-      [deviceId]="datasource?.deviceId"
-      [entityAliasId]="datasource?.entityAliasId"
+      [supportsUnitConversion]="false"
+      (axisRemoved)="yAxisRemoved($event)">
+    </tb-time-series-chart-y-axes-panel>
+    <tb-time-series-chart-thresholds-panel
+      formControlName="thresholds"
+      stroked
       [aliasController]="context.aliasController"
-      formControlName="series">
-    </tb-data-keys-panel>
+      [dataKeyCallbacks]="callbacks"
+      [datasource]="datasource"
+      [yAxisIds]="yAxisIds"
+      [supportsUnitConversion]="false">
+    </tb-time-series-chart-thresholds-panel>
+    <div class="tb-form-panel stroked">
+      <div class="tb-form-panel-title" translate>widgets.time-series-chart.chart</div>
+      <tb-time-series-chart-grid-settings
+        formControlName="grid">
+      </tb-time-series-chart-grid-settings>
+      <div class="tb-form-row">
+        <mat-slide-toggle class="mat-slide" formControlName="stack">
+          <div tb-hint-tooltip-icon="{{'widgets.time-series-chart.stack-mode-hint' | translate}}">
+            {{ 'widgets.time-series-chart.stack-mode' | translate }}
+          </div>
+        </mat-slide-toggle>
+      </div>
+    </div>
+    <div class="tb-form-panel stroked">
+      <div class="tb-form-panel-title" translate>widgets.time-series-chart.axis.x-axis</div>
+      <tb-time-series-chart-axis-settings
+        formControlName="xAxis"
+        axisType="xAxis">
+      </tb-time-series-chart-axis-settings>
+    </div>
+    <tb-time-series-no-aggregation-bar-width-settings
+      formControlName="noAggregationBarWidthSettings"
+      stroked>
+    </tb-time-series-no-aggregation-bar-width-settings>
+    <div class="tb-form-panel tb-slide-toggle stroked">
+      <mat-expansion-panel class="tb-settings" [expanded]="reportConfigForm.get('showLegend').value"
+                           [disabled]="!reportConfigForm.get('showLegend').value">
+        <mat-expansion-panel-header class="flex flex-row flex-wrap">
+          <mat-panel-title>
+            <mat-slide-toggle class="mat-slide flex items-stretch justify-center" formControlName="showLegend" (click)="$event.stopPropagation()">
+              {{ 'widget-config.legend' | translate }}
+            </mat-slide-toggle>
+          </mat-panel-title>
+        </mat-expansion-panel-header>
+        <ng-template matExpansionPanelContent>
+          <div class="tb-form-row space-between">
+            <div>{{ 'legend.label' | translate }}</div>
+            <div class="flex flex-row items-center justify-start gap-2">
+              <tb-font-settings formControlName="legendLabelFont"
+                                [initialPreviewStyle]="{color: reportConfigForm.get('legendLabelColor').value}"
+                                [allowedFontWeights]="['normal', 'bold', '500']"
+                                [allowedFontStyles]="['normal', 'italic']"
+                                forceSizeUnit="px"
+                                disabledLineHeight
+                                previewText="Temperature">
+              </tb-font-settings>
+              <tb-color-input asBoxInput
+                              colorClearButton
+                              formControlName="legendLabelColor">
+              </tb-color-input>
+            </div>
+          </div>
+          <tb-legend-config hideDirection
+                            formControlName="legendConfig">
+          </tb-legend-config>
+        </ng-template>
+      </mat-expansion-panel>
+    </div>
   </div>
   <div class="tb-form-panel no-border no-padding overflow-y-auto" [class.!hidden]="settingsTab !== 'layout'">
     <div class="tb-form-row space-between">
-      <div>{{ 'report-template.component.image.image-width' | translate }}</div>
+      <div>{{ 'report-template.component.chart.chart-height' | translate }}</div>
+      <mat-form-field appearance="outline" class="number" subscriptSizing="dynamic">
+        <input matInput formControlName="height" type="number" min="1" step="1" placeholder="{{ 'widget-config.set' | translate }}">
+        <div matSuffix>px</div>
+      </mat-form-field>
+    </div>
+    <div class="tb-form-row space-between">
+      <div>{{ 'report-template.component.chart.chart-width' | translate }}</div>
       <div class="flex flex-row items-center justify-start gap-2">
         <mat-form-field class="medium-width" appearance="outline" subscriptSizing="dynamic">
           <mat-select formControlName="widthType">
@@ -107,7 +272,7 @@
       </div>
     </div>
     <div class="tb-form-row space-between">
-      <div>{{ 'report-template.component.image.image-alignment' | translate }}</div>
+      <div>{{ 'report-template.component.chart.chart-alignment' | translate }}</div>
       <mat-form-field class="medium-width" appearance="outline" subscriptSizing="dynamic">
         <mat-select formControlName="alignment">
           <mat-option *ngFor="let alignment of imageAlignments" [value]="alignment">

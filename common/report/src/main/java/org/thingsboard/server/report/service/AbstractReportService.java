@@ -50,6 +50,7 @@ import org.thingsboard.server.common.data.page.SortOrder;
 import org.thingsboard.server.common.data.query.AlarmData;
 import org.thingsboard.server.common.data.query.EntityData;
 import org.thingsboard.server.common.data.query.EntityDataQuery;
+import org.thingsboard.server.common.data.query.EntityDataSortOrder;
 import org.thingsboard.server.common.data.query.EntityFilter;
 import org.thingsboard.server.common.data.query.EntityKeyType;
 import org.thingsboard.server.common.data.query.SingleEntityFilter;
@@ -83,6 +84,7 @@ import java.util.stream.Collectors;
 import static org.thingsboard.server.common.data.report.configuration.timewindow.TimeIntervalCalculator.getTimeRange;
 import static org.thingsboard.server.common.data.util.DataSourceUtils.getAlarmLatestValue;
 import static org.thingsboard.server.common.data.util.DataSourceUtils.getEntityLatestValue;
+import static org.thingsboard.server.report.util.ReportQueryUtils.DEFAULT_SORT_ORDER;
 import static org.thingsboard.server.report.util.ReportQueryUtils.buildEntityFilter;
 import static org.thingsboard.server.report.util.ReportQueryUtils.toAlarmDataQuery;
 import static org.thingsboard.server.report.util.ReportQueryUtils.toEntityDataQuery;
@@ -110,6 +112,10 @@ public abstract class AbstractReportService implements ReportService {
     protected ReportDataService dataService;
 
     protected List<EntityData> fetchEntities(TbReportCtx ctx, DataSource dataSource, EntityId stateEntityId) {
+        return fetchEntities(ctx, dataSource, stateEntityId, DEFAULT_SORT_ORDER);
+    }
+
+    protected List<EntityData> fetchEntities(TbReportCtx ctx, DataSource dataSource, EntityId stateEntityId, EntityDataSortOrder sortOrder) {
         EntityFilter filter = buildEntityFilter(dataSource, ctx, stateEntityId);
         if (filter instanceof SingleEntityFilter singleEntityFilter && singleEntityFilter.getSingleEntity() == null) {
             return Collections.emptyList();
@@ -117,7 +123,7 @@ public abstract class AbstractReportService implements ReportService {
         if (filter instanceof StateEntityOwnerFilter stateEntityOwnerFilter && stateEntityOwnerFilter.getSingleEntity() == null) {
             return Collections.emptyList();
         } // TODO: add black-box tests for entity filters
-        return fetchEntityDataByQuery(pageLink -> toEntityDataQuery(dataSource, ctx, filter, pageLink), dataSource, ctx);
+        return fetchEntityDataByQuery(pageLink -> toEntityDataQuery(dataSource, ctx, filter, pageLink, sortOrder), dataSource, ctx);
     }
 
     private List<EntityData> fetchEntityDataByQuery(Function<PageLink, EntityDataQuery> querySupplier, DataSource dataSource, TbReportCtx ctx) {

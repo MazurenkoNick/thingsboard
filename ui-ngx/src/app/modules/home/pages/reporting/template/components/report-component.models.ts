@@ -42,8 +42,12 @@ import {
   ReportComponentConfig,
   ReportComponentType,
   ReportDataKeySettingsType,
+  reportTimeSeriesChartDefaultSettings,
+  ReportTimeSeriesChartKeySettings,
+  ReportTimeSeriesChartSettings,
   RichTextReportComponentConfig,
-  SubReportReportComponentConfig, TimeseriesChartReportComponentConfig,
+  SubReportReportComponentConfig,
+  TimeseriesChartReportComponentConfig,
   TimeseriesTableReportComponentConfig
 } from '@shared/models/report-component.models';
 import { Type } from '@angular/core';
@@ -75,7 +79,7 @@ import { ImagePreviewComponent } from '@home/pages/reporting/template/components
 import { ImageConfigComponent } from '@home/pages/reporting/template/components/image-config.component';
 
 import keyImageTemplate from './key-image-svg.raw';
-import { insertVariable, stringToBase64 } from '@core/utils';
+import { insertVariable, mergeDeep, stringToBase64 } from '@core/utils';
 import { DataKey, DatasourceType } from '@shared/models/widget.models';
 import { DashboardPreviewComponent } from '@home/pages/reporting/template/components/dashboard-preview.component';
 import { DashboardConfigComponent } from '@home/pages/reporting/template/components/dashboard-config.component';
@@ -100,6 +104,7 @@ import {
 import {
   TimeSeriesChartConfigComponent
 } from '@home/pages/reporting/template/components/time-series-chart-config.component';
+import { TimeSeriesChartSeriesType } from '@home/components/widget/lib/chart/time-series-chart.models';
 
 export interface ReportComponentLibraryItem<C extends ReportComponentConfig = ReportComponentConfig> {
   title: string;
@@ -425,18 +430,26 @@ export const reportComponentsLibrary = new Map<string, ReportComponentLibraryIte
                   name: 'temperature',
                   type: DataKeyType.timeseries,
                   label: 'Temperature',
+                  color: '#2196f3',
                   units: '°C',
-                  decimals: 0
+                  decimals: 0,
+                  settings: {
+                    yAxisId: 'default',
+                    seriesType: TimeSeriesChartSeriesType.line,
+                    type: ReportDataKeySettingsType.TIME_SERIES_CHART
+                  } as ReportTimeSeriesChartKeySettings
                 }
               ]
             }
           ],
           timewindow: {...historyInterval(DAY),
             aggregation: {
-              type: AggregationType.NONE,
+              type: AggregationType.AVG,
               limit: 200
             }
           },
+          timeSeriesChartSettings: mergeDeep<ReportTimeSeriesChartSettings>({} as ReportTimeSeriesChartSettings, reportTimeSeriesChartDefaultSettings),
+          height: 400,
           widthType: 'fitWidth',
           alignment: 'center',
           margins: null,
@@ -858,6 +871,7 @@ export interface ReportComponentTypeData<C extends ReportComponentConfig = Repor
   configComponent: Type<AbstractReportComponentConfig<C>>;
   editable: boolean;
   pageBreak?: boolean;
+  preferredSettingsWidthPx?: number;
 }
 
 export const reportComponentTypeMap = new Map<ReportComponentType, ReportComponentTypeData>(
@@ -913,7 +927,8 @@ export const reportComponentTypeMap = new Map<ReportComponentType, ReportCompone
         title: 'report-template.component.time-series-chart.type',
         previewComponent: TimeSeriesChartPreviewComponent,
         configComponent: TimeSeriesChartConfigComponent,
-        editable: true
+        editable: true,
+        preferredSettingsWidthPx: 1000
       }
     ],
     [

@@ -56,7 +56,7 @@ public abstract class ChartRenderer<C extends AbstractChartComponent> extends Ab
         } else {
             width = this.layoutWidthPx;
         }
-        int height = 400;
+        int height = component.getHeight() >= 1 ? component.getHeight() : 400;
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         try {

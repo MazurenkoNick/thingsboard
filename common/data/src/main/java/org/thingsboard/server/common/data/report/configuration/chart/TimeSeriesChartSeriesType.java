@@ -28,26 +28,9 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-.tb-time-series-chart-preview {
-  width: 100%;
-  font-size: 0;
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-  text-align: center;
-  .tb-time-series-chart {
-    position: relative;
-    width: 100%;
-    height: auto;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    border: dashed 2px rgba(0, 0, 0, 0.16);
-    padding: 30px 10px 30px;
-    background: #f0f0f0;
-    font-weight: 500;
-    color: rgba(0,0,0,0.47);
-    font-size: 24px;
-  }
+package org.thingsboard.server.common.data.report.configuration.chart;
+
+public enum TimeSeriesChartSeriesType {
+    line,
+    bar
 }

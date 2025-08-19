@@ -28,41 +28,21 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-@import '../../../../../../../../scss/constants';
+package org.thingsboard.server.report.context.chart;
 
-.tb-comparison-keys-table {
-  .tb-form-table-header-cell {
+import lombok.Data;
+import lombok.RequiredArgsConstructor;
+import org.thingsboard.server.common.data.report.configuration.timewindow.TimeIntervalCalculator;
 
-    &.tb-show-header {
-      width: 40px;
-      min-width: 40px;
-    }
+import java.util.List;
+import java.util.TimeZone;
 
-    &.tb-key-header {
-      flex: 1;
-      @media #{$mat-gt-xs} {
-        min-width: 100px;
-        flex: 1 1 40%;
-      }
-    }
+@Data
+@RequiredArgsConstructor
+public class TsChartData {
 
-    &.tb-label-header {
-      flex: 1;
-      @media #{$mat-gt-xs} {
-        min-width: 150px;
-        flex: 1 1 60%;
-      }
-    }
+    private final TimeZone timeZone;
+    private final TimeIntervalCalculator.TimeRange timeRange;
+    private final List<TsChartDataSource> chartData;
 
-    &.tb-color-header {
-      width: 40px;
-      min-width: 40px;
-    }
-  }
-
-  .tb-form-table-body {
-    tb-comparison-key-row {
-      overflow: hidden;
-    }
-  }
 }

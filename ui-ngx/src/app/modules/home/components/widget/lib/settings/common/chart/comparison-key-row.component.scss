@@ -28,26 +28,42 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-.tb-time-series-chart-preview {
-  width: 100%;
-  font-size: 0;
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-  text-align: center;
-  .tb-time-series-chart {
-    position: relative;
-    width: 100%;
-    height: auto;
+@import '../../../../../../../../../scss/constants';
+
+.tb-comparison-key-row {
+  .tb-show-field {
+    width: 40px;
+    min-width: 40px;
+  }
+
+  .tb-data-key-input {
+    flex: 1;
+    @media #{$mat-gt-xs} {
+      min-width: 100px;
+      flex: 1 1 40%;
+    }
+  }
+
+  .tb-label-field, .tb-color-field {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
+    place-content: center;
     align-items: center;
-    justify-content: center;
-    border: dashed 2px rgba(0, 0, 0, 0.16);
-    padding: 30px 10px 30px;
-    background: #f0f0f0;
-    font-weight: 500;
-    color: rgba(0,0,0,0.47);
-    font-size: 24px;
+    .tb-inline-field {
+      flex: 1;
+    }
+  }
+
+  .tb-label-field {
+    flex: 1;
+    @media #{$mat-gt-xs} {
+      min-width: 150px;
+      flex: 1 1 60%;
+    }
+  }
+
+  .tb-color-field {
+    width: 40px;
+    min-width: 40px;
   }
 }

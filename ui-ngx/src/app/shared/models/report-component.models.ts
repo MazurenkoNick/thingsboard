@@ -29,7 +29,7 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { Datasource } from '@shared/models/widget.models';
+import { Datasource, defaultLegendConfig, LegendConfig, LegendPosition } from '@shared/models/widget.models';
 import { alignment, alignmentTranslations, Font } from '@shared/models/widget-settings.models';
 import { Insets } from '@shared/models/report.models';
 import { ReportTemplateId } from '@shared/models/id/report-template-id';
@@ -38,6 +38,12 @@ import { DashboardReportConfig } from '@shared/models/dashboard-report.models';
 import { Timewindow } from '@shared/models/time/time.models';
 import { Direction } from '@shared/models/page/sort-order';
 import { mergeDeep } from '@core/utils';
+import {
+  timeSeriesChartDefaultSettings,
+  TimeSeriesChartKeySettings,
+  TimeSeriesChartSeriesType,
+  TimeSeriesChartSettings
+} from '@home/components/widget/lib/chart/time-series-chart.models';
 
 export enum ReportComponentType {
   HEADING = 'HEADING',
@@ -108,7 +114,8 @@ export interface DataWithLayoutReportComponentConfig extends DataReportComponent
 
 export enum ReportDataKeySettingsType {
   DEFAULT = 'DEFAULT',
-  COLUMN = 'COLUMN'
+  COLUMN = 'COLUMN',
+  TIME_SERIES_CHART = 'TIME_SERIES_CHART'
 }
 
 export interface ReportDataKeySettings {
@@ -375,8 +382,66 @@ export interface BaseImageReportComponentConfig extends DataWithLayoutReportComp
   alignment: imageAlignment;
 }
 
-export interface TimeseriesChartReportComponentConfig extends BaseImageReportComponentConfig {
+export interface ReportTimeSeriesChartKeySettings extends ReportDataKeySettings, Omit<TimeSeriesChartKeySettings, 'type'> {
+  type: ReportDataKeySettingsType.TIME_SERIES_CHART;
+  seriesType: TimeSeriesChartSeriesType;
+}
+
+export const toReportTimeSeriesChartKeySettings = (settings: TimeSeriesChartKeySettings): ReportTimeSeriesChartKeySettings => {
+  settings = settings || {} as TimeSeriesChartKeySettings;
+  const seriesType = settings?.type || TimeSeriesChartSeriesType.line;
+  return {...settings, ...{ type: ReportDataKeySettingsType.TIME_SERIES_CHART, seriesType: seriesType }};
+}
+
+export const toTimeSeriesChartKeySettings = (settings: ReportTimeSeriesChartKeySettings): TimeSeriesChartKeySettings => {
+  settings = settings || {} as ReportTimeSeriesChartKeySettings;
+  const seriesType = settings?.seriesType || TimeSeriesChartSeriesType.line;
+  return {...settings, ...{ type: seriesType }};
+}
+
+export interface ReportTimeSeriesChartSettings extends TimeSeriesChartSettings {
+  showTitle?: boolean;
+  title?: string;
+  titleFont?: Font;
+  titleColor?: string;
+  showLegend: boolean;
+  legendLabelFont: Font;
+  legendLabelColor: string;
+  legendConfig: LegendConfig;
+}
+
+export const reportTimeSeriesChartDefaultSettings: ReportTimeSeriesChartSettings = mergeDeep({} as ReportTimeSeriesChartSettings,
+  timeSeriesChartDefaultSettings as ReportTimeSeriesChartSettings, {
+    showTitle: true,
+    title: 'Time series chart',
+    titleFont: {
+      family: 'Roboto',
+      size: 18,
+      sizeUnit: 'px',
+      style: 'normal',
+      weight: '500'
+    },
+    titleColor: 'rgba(0, 0, 0, 0.87)',
+    showLegend: true,
+    legendLabelFont: {
+      family: 'Roboto',
+      size: 12,
+      sizeUnit: 'px',
+      style: 'normal',
+      weight: 'normal'
+    },
+    legendLabelColor: 'rgba(0, 0, 0, 0.76)',
+    legendConfig: {...defaultLegendConfig(null), position: LegendPosition.top}
+  } as ReportTimeSeriesChartSettings);
+
+
+export interface BaseChartReportComponentConfig extends BaseImageReportComponentConfig {
+  height: number;
+}
+
+export interface TimeseriesChartReportComponentConfig extends BaseChartReportComponentConfig {
   timewindow: Timewindow;
+  timeSeriesChartSettings: ReportTimeSeriesChartSettings;
   type: ReportComponentType.TIME_SERIES_CHART;
 }
 

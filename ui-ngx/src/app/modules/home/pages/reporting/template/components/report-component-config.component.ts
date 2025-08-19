@@ -66,7 +66,7 @@ import { Observable, of } from 'rxjs';
 import { DataKey, Datasource, widgetType } from '@shared/models/widget.models';
 import { catchError, mergeMap } from 'rxjs/operators';
 import { WidgetConfigCallbacks } from '@home/components/widget/config/widget-config.component.models';
-import { FormProperty } from '@shared/models/dynamic-form.models';
+import { defaultFormProperties, FormProperty } from '@shared/models/dynamic-form.models';
 import { DataKeySettingsFunction } from '@home/components/widget/lib/settings/common/key/data-keys.component.models';
 import { alarmFields } from '@shared/models/alarm.models';
 import { entityFields } from '@shared/models/entity.models';
@@ -178,7 +178,7 @@ export abstract class AbstractReportComponentConfig<C extends ReportComponentCon
 
   reportConfigForm: FormGroup;
 
-  private reportComponentConfig: C;
+  protected reportComponentConfig: C;
 
   private hasLayoutConfig = false;
 
@@ -301,6 +301,14 @@ export abstract class AbstractReportComponentConfig<C extends ReportComponentCon
       };
       if (type === DataKeyType.count) {
         result.name = 'count';
+      }
+      if (dataKeySettingsForm?.length) {
+        result.settings = defaultFormProperties(dataKeySettingsForm);
+      } else if (dataKeySettingsFunction) {
+        const settings = dataKeySettingsFunction(result, isLatestDataKey);
+        if (settings) {
+          result.settings = settings;
+        }
       }
       return result;
     }
