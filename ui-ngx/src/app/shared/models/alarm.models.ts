@@ -285,6 +285,11 @@ export const alarmFields: {[fieldName: string]: AlarmField} = {
     keyName: 'assignee',
     value: 'assignee',
     name: 'alarm.assignee'
+  },
+  details: {
+    keyName: 'details',
+    value: 'details',
+    name: 'alarm.details'
   }
 };
 
