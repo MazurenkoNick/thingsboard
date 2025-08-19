@@ -37,11 +37,13 @@ import { Authority } from '@shared/models/authority.enum';
 import { Observable } from 'rxjs';
 import { BreadCrumbConfig, BreadCrumbLabelFunction } from '@shared/components/breadcrumb';
 import { ConfirmOnExitGuard } from '@core/guards/confirm-on-exit.guard';
-import { MenuId } from '@core/public-api';
-import { ReportTemplate } from '@shared/public-api';
 import { ReportTemplateService } from '@core/http/report-template.service';
 import { ReportTemplatePageComponent } from '@home/pages/reporting/template/report-template-page.component';
-import { ReportTemplatesTableConfigResolver } from '@home/pages/reporting/template/report-templates-table-config.resolver';
+import {
+  ReportTemplatesTableConfigResolver
+} from '@home/pages/reporting/template/report-templates-table-config.resolver';
+import { ReportTemplate } from '@shared/models/report.models';
+import { MenuId } from '@core/services/menu.models';
 
 @Injectable()
 export class ReportTemplateResolver  {

@@ -36,7 +36,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.IntegrationId;
-import org.thingsboard.server.common.data.integration.IntegrationType;
 import org.thingsboard.server.common.data.plugin.ComponentLifecycleEvent;
 
 import java.util.Map;
@@ -50,7 +49,7 @@ import static org.thingsboard.server.common.data.util.CollectionsUtil.mapOf;
 public class IntegrationLifecycleEventNotificationInfo implements RuleOriginatedNotificationInfo {
 
     private IntegrationId integrationId;
-    private IntegrationType integrationType;
+    private String integrationType;
     private String integrationName;
     private String action;
     private ComponentLifecycleEvent eventType;
@@ -60,7 +59,7 @@ public class IntegrationLifecycleEventNotificationInfo implements RuleOriginated
     public Map<String, String> getTemplateData() {
         return mapOf(
                 "integrationId", integrationId.toString(),
-                "integrationType", integrationType.name(),
+                "integrationType", integrationType,
                 "integrationName", integrationName,
                 "action", action,
                 "eventType", eventType.name().toLowerCase(),

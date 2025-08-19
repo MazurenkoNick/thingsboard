@@ -285,7 +285,9 @@ public enum Resource {
                 Resource.AUDIT_LOG,
                 Resource.DEVICE_PROFILE,
                 Resource.ASSET_PROFILE,
-                Resource.MOBILE_APP_SETTINGS
+                Resource.MOBILE_APP_SETTINGS,
+                Resource.REPORT_TEMPLATE,
+                Resource.REPORT
         ));
 
     }

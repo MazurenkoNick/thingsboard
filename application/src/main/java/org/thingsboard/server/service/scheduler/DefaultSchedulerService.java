@@ -44,6 +44,7 @@ import org.thingsboard.rule.engine.api.JobManager;
 import org.thingsboard.server.cluster.TbClusterService;
 import org.thingsboard.server.common.data.Device;
 import org.thingsboard.server.common.data.DeviceProfile;
+import org.thingsboard.server.common.data.EntityInfo;
 import org.thingsboard.server.common.data.OtaPackageInfo;
 import org.thingsboard.server.common.data.Tenant;
 import org.thingsboard.server.common.data.group.EntityGroup;
@@ -55,6 +56,7 @@ import org.thingsboard.server.common.data.id.OtaPackageId;
 import org.thingsboard.server.common.data.id.SchedulerEventId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.job.Job;
+import org.thingsboard.server.common.data.job.ReportJobConfiguration;
 import org.thingsboard.server.common.data.msg.TbMsgType;
 import org.thingsboard.server.common.data.ota.DeviceGroupOtaPackage;
 import org.thingsboard.server.common.data.page.PageDataIterable;
@@ -331,14 +333,17 @@ public class DefaultSchedulerService extends AbstractPartitionBasedService<Tenan
                     }
                     if (GENERATE_REPORT.equals(event.getType())) {
                         ReportConfig reportConfig = JacksonUtil.treeToValue(configuration, ReportConfig.class);
-                        jobManager.submitJob(Job.newReportJob()
+                        Job job = Job.newReportJob()
                                 .tenantId(tenantId)
                                 .reportTemplateId(reportConfig.getReportTemplateId())
                                 .userId(reportConfig.getUserId())
                                 .timezone(reportConfig.getTimezone())
                                 .targets(reportConfig.getTargets())
                                 .notificationTemplateId(reportConfig.getNotificationTemplateId())
-                                .build());
+                                .build();
+                        ReportJobConfiguration jobConfig = job.getConfiguration();
+                        jobConfig.setSchedulerEventInfo(new EntityInfo(eventId, event.getName()));
+                        jobManager.submitJob(job);
                     } else {
                         TbMsgMetaData tbMsgMD = getTbMsgMetaData(event, configuration);
                         TbMsg tbMsg = TbMsg.newMsg()

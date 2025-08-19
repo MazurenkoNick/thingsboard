@@ -29,7 +29,17 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { Component, DestroyRef, ElementRef, forwardRef, Input, OnInit, ViewChild } from '@angular/core';
+import {
+  Component,
+  DestroyRef,
+  ElementRef,
+  forwardRef,
+  Input,
+  OnChanges,
+  OnInit,
+  SimpleChanges,
+  ViewChild
+} from '@angular/core';
 import { PageComponent } from '@shared/components/page.component';
 import { Store } from '@ngrx/store';
 import { AppState } from '@core/core.state';
@@ -58,7 +68,7 @@ import { UtilsService } from '@core/services/utils.service';
 import { TranslateService } from '@ngx-translate/core';
 import { MatDialog } from '@angular/material/dialog';
 import { EntityService } from '@core/http/entity.service';
-import { DataKeySettingsFunction } from './data-keys.component.models';
+import { DataKeySettingsFormFunction, DataKeySettingsFunction } from './data-keys.component.models';
 import { DataKeyType } from '@shared/models/telemetry/telemetry.models';
 import { Observable, of } from 'rxjs';
 import { map, mergeMap, publishReplay, refCount, tap } from 'rxjs/operators';
@@ -101,7 +111,7 @@ import { ScriptLanguage } from '@shared/models/rule-node.models';
     }
   ]
 })
-export class DataKeyConfigComponent extends PageComponent implements OnInit, ControlValueAccessor, Validator {
+export class DataKeyConfigComponent extends PageComponent implements OnInit, ControlValueAccessor, Validator, OnChanges {
 
   dataKeyConfigModes = DataKeyConfigMode;
 
@@ -154,6 +164,13 @@ export class DataKeyConfigComponent extends PageComponent implements OnInit, Con
 
   @Input()
   dataKeySettingsForm: FormProperty[];
+
+  @Input()
+  dataKeySettingsFormFunction: DataKeySettingsFormFunction;
+
+  @Input()
+  @coerceBoolean()
+  dataKeySettingsFormTrimDefaults = false;
 
   @Input()
   dataKeySettingsDirective: string;
@@ -234,11 +251,12 @@ export class DataKeyConfigComponent extends PageComponent implements OnInit, Con
 
   ngOnInit(): void {
 
-    if (this.dataKeySettingsForm?.length ||
+    if (this.dataKeySettingsFormFunction || this.dataKeySettingsForm?.length ||
       this.dataKeySettingsDirective && this.dataKeySettingsDirective.length) {
       this.hasAdvanced = true;
       this.dataKeySettingsData = {
         settingsForm: this.dataKeySettingsForm,
+        settingsFormTrimDefaults: this.dataKeySettingsFormTrimDefaults,
         settingsDirective: this.dataKeySettingsDirective
       };
       this.dataKeySettingsFormGroup = this.fb.group({
@@ -370,6 +388,19 @@ export class DataKeyConfigComponent extends PageComponent implements OnInit, Con
       );
   }
 
+  ngOnChanges(changes: SimpleChanges): void {
+    for (const propName of Object.keys(changes)) {
+      const change = changes[propName];
+      if (!change.firstChange && change.currentValue !== change.previousValue) {
+        if (propName === 'dataKeyConfigMode' && this.dataKeyConfigMode === DataKeyConfigMode.advanced) {
+          if (this.dataKeySettingsFormFunction) {
+            this.dataKeySettingsData.settingsForm = this.dataKeySettingsFormFunction(this.modelValue);
+          }
+        }
+      }
+    }
+  }
+
   registerOnChange(fn: any): void {
     this.propagateChange = fn;
   }
@@ -392,6 +423,9 @@ export class DataKeyConfigComponent extends PageComponent implements OnInit, Con
     this.updateValidators();
     if (this.hasAdvanced) {
       this.dataKeySettingsData.model = this.modelValue.settings;
+      if (this.dataKeySettingsFormFunction && this.dataKeyConfigMode === DataKeyConfigMode.advanced) {
+        this.dataKeySettingsData.settingsForm = this.dataKeySettingsFormFunction(value);
+      }
       this.dataKeySettingsFormGroup.patchValue({
         settings: this.dataKeySettingsData
       }, {emitEvent: false});

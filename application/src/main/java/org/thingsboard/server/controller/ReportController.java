@@ -101,6 +101,7 @@ import static org.thingsboard.server.controller.ControllerConstants.REPORT_USER_
 import static org.thingsboard.server.controller.ControllerConstants.SORT_ORDER_DESCRIPTION;
 import static org.thingsboard.server.controller.ControllerConstants.SORT_PROPERTY_DESCRIPTION;
 import static org.thingsboard.server.controller.ControllerConstants.TENANT_AUTHORITY_PARAGRAPH;
+import static org.thingsboard.server.controller.ControllerConstants.TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH;
 
 @RequiredArgsConstructor
 @RestController
@@ -120,7 +121,7 @@ public class ReportController extends BaseController {
     private final TbReportService tbReportService;
     private final SystemSecurityService systemSecurityService;
 
-    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('TENANT_ADMIN', 'CUSTOMER_USER')")
     @PostMapping(value = "/report")
     public Report createReport(@RequestPart MultipartFile file,
                                @RequestPart String info) throws Exception {

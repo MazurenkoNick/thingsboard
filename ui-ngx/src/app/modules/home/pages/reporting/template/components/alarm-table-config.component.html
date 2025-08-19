@@ -98,7 +98,8 @@
       [dataKeysPanelOptions]="{
         widgetType: widgetType.alarm,
         callbacks: callbacks,
-        settingsForm: !isPlainFormat ? TableReportColumnSettingsForm : null
+        settingsFormFunction: !isPlainFormat ? dataKeySettingsFormFunction : null,
+        settingsFormTrimDefaults: true
       }"
       reportMode
       stroked

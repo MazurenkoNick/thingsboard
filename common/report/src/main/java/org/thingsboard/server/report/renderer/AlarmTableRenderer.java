@@ -68,14 +68,6 @@ public class AlarmTableRenderer extends TableWithLayoutComponentRenderer<AlarmTa
     }
 
     @Override
-    protected Float defaultFontSize(String key) {
-        if ("createdTime".equals(key)) {
-            return 9f;
-        }
-        return null;
-    }
-
-    @Override
     protected String defaultFontWeight(String key) {
         if ("severity".equals(key)) {
             return "bold";

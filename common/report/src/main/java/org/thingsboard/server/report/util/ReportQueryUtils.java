@@ -30,6 +30,7 @@
  */
 package org.thingsboard.server.report.util;
 
+import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.id.DeviceId;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.EntityIdFactory;
@@ -127,7 +128,10 @@ public class ReportQueryUtils {
         alarmDataPageLink.setPageSize(pageLink.getPageSize());
         alarmDataPageLink.setSortOrder(DEFAULT_ALARM_SORT_ORDER);
 
-        TimeIntervalCalculator.TimeRange timeRange = getTimeRange(component.getTimewindow());
+        String targetTimezone = StringUtils.isNotBlank(component.getTimewindow().getTimezone()) ?
+                component.getTimewindow().getTimezone() : ctx.getTimeZone();
+
+        TimeIntervalCalculator.TimeRange timeRange = getTimeRange(component.getTimewindow(), targetTimezone);
         alarmDataPageLink.setStartTs(timeRange.startTs);
         alarmDataPageLink.setEndTs(timeRange.endTs);
         alarmDataPageLink.setSearchPropagatedAlarms(alarmFilterConfig.isSearchPropagatedAlarms());

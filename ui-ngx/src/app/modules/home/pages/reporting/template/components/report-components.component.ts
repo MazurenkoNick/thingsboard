@@ -43,9 +43,7 @@ import {
   ViewChildren,
   ViewEncapsulation
 } from '@angular/core';
-import {
-  ReportComponentConfig
-} from '@shared/models/report-component.models';
+import { ReportComponentConfig } from '@shared/models/report-component.models';
 import {
   CdkDragDrop,
   CdkDragEnter,

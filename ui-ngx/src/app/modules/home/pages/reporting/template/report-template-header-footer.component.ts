@@ -36,7 +36,8 @@ import {
   Input,
   Output,
   Renderer2,
-  viewChild, viewChildren,
+  viewChild,
+  viewChildren,
   ViewEncapsulation
 } from '@angular/core';
 import { HeaderFooter, TbReportFormat } from '@shared/models/report.models';

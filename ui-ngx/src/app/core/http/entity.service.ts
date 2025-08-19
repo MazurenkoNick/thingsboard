@@ -1086,8 +1086,6 @@ export class EntityService {
         entityTypes.push(EntityType.USER);
         entityTypes.push(EntityType.SCHEDULER_EVENT);
         entityTypes.push(EntityType.BLOB_ENTITY);
-        entityTypes.push(EntityType.REPORT_TEMPLATE);
-        entityTypes.push(EntityType.REPORT);
         if (authState.edgesSupportEnabled) {
           entityTypes.push(EntityType.EDGE);
         }

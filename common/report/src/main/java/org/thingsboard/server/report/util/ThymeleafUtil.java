@@ -150,7 +150,7 @@ public class ThymeleafUtil {
                     break;
                 default:
                     String safeKey = normalizeVariableName(var);
-                    replacement = "[[${" + safeKey + "}]]";
+                    replacement = "[(${" + safeKey + "})]";
             }
 
             matcher.appendReplacement(result, Matcher.quoteReplacement(replacement));

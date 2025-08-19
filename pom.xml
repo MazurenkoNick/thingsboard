@@ -35,7 +35,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.thingsboard</groupId>
     <artifactId>thingsboard</artifactId>
-    <version>4.2.0PE-RC</version>
+    <version>4.3.0PE-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>ThingsBoard PE</name>
@@ -179,6 +179,7 @@
         <flying-saucer.version>9.13.0</flying-saucer.version>
         <jtidy.version>r938</jtidy.version>
         <pdfbox.version>3.0.5</pdfbox.version>
+        <netty.version>4.1.124.Final</netty.version> <!-- to fix CVE-2025-55163. TODO: remove when fixed in spring-boot-dependencies -->
     </properties>
 
     <modules>
@@ -941,6 +942,13 @@
 
     <dependencyManagement>
         <dependencies>
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-bom</artifactId>
+                <version>${netty.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
             <dependency>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-dependencies</artifactId>

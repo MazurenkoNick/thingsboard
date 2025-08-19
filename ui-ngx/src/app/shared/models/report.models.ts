@@ -511,7 +511,7 @@ export class ReportQuery {
   }
 
   public toQuery(): string {
-    let query = this.pageLink.toQuery();
+    let query = this.pageLink.toQuery() + '&includeCustomers=true';
     if (this.reportTemplateId?.id) {
       query += `&reportTemplateId=${this.reportTemplateId.id}`;
     }
