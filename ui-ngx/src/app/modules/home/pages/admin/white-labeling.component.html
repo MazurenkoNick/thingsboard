@@ -54,7 +54,7 @@
             formControlName="domainId"
             [allowCreateNew]="resource.DOMAIN | hasGenericPermission: operation.CREATE"
             (entityChanged)="domainChange($event)"
-            (createNew)="createDomain()"
+            (createNew)="createDomain($event)"
           >
           </tb-entity-autocomplete>
           <div *ngIf="isLoginWl">
