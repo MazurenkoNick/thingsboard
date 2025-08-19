@@ -11786,6 +11786,7 @@
     "icon": {
         "icon": "Icon",
         "icons": "Icons",
+        "custom": "Custom",
         "select-icon": "Select icon",
         "material-icons": "Material icons",
         "show-all": "Show all icons",
