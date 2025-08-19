@@ -629,6 +629,8 @@ reports:
     max_response_size: "${MAX_RESPONSE_SIZE:52428800}" # 50MB
   # Timeout in milliseconds for generating report, 2 minutes by default
   generation_timeout_ms: "${REPORT_GENERATION_TIMEOUT_MS:120000}"
+  # Thread pool size to execute test report generation
+  test_report_pool_size: "${TEST_REPORT_GENERATION_POOL_SIZE:12}"
   rate_limits:
     # Enable/disable reports tenant rate limits
     enabled: "${REPORTS_TENANT_RATE_LIMITS_ENABLED:false}"
@@ -767,6 +769,9 @@ cache:
     aiModel:
       timeToLiveInMinutes: "${CACHE_SPECS_AI_MODEL_TTL:1440}" # AI model cache TTL
       maxSize: "${CACHE_SPECS_AI_MODEL_MAX_SIZE:10000}" # 0 means the cache is disabled
+    mailOauth2State:
+      timeToLiveInMinutes: "${CACHE_SPECS_MAIL_OAUTH2_STATE_TTL:2}" # mail oauth2 state parameter TTL
+      maxSize: "${CACHE_SPECS_MAIL_OAUTH2_STATE_SIZE:10000}" # 0 means the cache is disabled
 
     # PE cache specs
     downlink:
@@ -893,9 +898,9 @@ redis:
     # Minumum number of idle connections that can be maintained in the pool without being closed
     minIdle: "${REDIS_POOL_CONFIG_MIN_IDLE:16}"
     # Enable/Disable PING command sent when a connection is borrowed
-    testOnBorrow: "${REDIS_POOL_CONFIG_TEST_ON_BORROW:true}"
+    testOnBorrow: "${REDIS_POOL_CONFIG_TEST_ON_BORROW:false}"
     # The property is used to specify whether to test the connection before returning it to the connection pool.
-    testOnReturn: "${REDIS_POOL_CONFIG_TEST_ON_RETURN:true}"
+    testOnReturn: "${REDIS_POOL_CONFIG_TEST_ON_RETURN:false}"
     # The property is used in the context of connection pooling in Redis
     testWhileIdle: "${REDIS_POOL_CONFIG_TEST_WHILE_IDLE:true}"
     # Minimum time that an idle connection should be idle before it can be evicted from the connection pool. The value is set in milliseconds

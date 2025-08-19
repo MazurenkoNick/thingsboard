@@ -37,6 +37,7 @@ import { FormProperty, FormPropertyType } from '@shared/models/dynamic-form.mode
 import { DashboardReportConfig } from '@shared/models/dashboard-report.models';
 import { Timewindow } from '@shared/models/time/time.models';
 import { Direction } from '@shared/models/page/sort-order';
+import { mergeDeep } from '@core/utils';
 
 export enum ReportComponentType {
   HEADING = 'HEADING',
@@ -206,6 +207,19 @@ const tableReportCellSettings = (header = false): FormProperty[] => ([
   }
 ]);
 
+const severityReportCellSettings = (): FormProperty[] => {
+  const settings = tableReportCellSettings();
+  settings[0].default.weight = 'bold';
+  settings[1].default = null;
+  return settings;
+}
+
+const timeReportCellSettings = (): FormProperty[] => {
+  const settings = tableReportCellSettings();
+  settings[0].default.size = 9;
+  return settings;
+}
+
 export const TableReportColumnSettingsForm: FormProperty[] = [
   {
     id: 'type',
@@ -233,6 +247,32 @@ export const TableReportColumnSettingsForm: FormProperty[] = [
     type: FormPropertyType.fieldset,
     name: '{i18n:report-template.component.table.cell}',
     properties: tableReportCellSettings(),
+    default: null
+  }
+];
+
+export const SeverityColumnSettingsForm: FormProperty[] = [
+  TableReportColumnSettingsForm[0],
+  TableReportColumnSettingsForm[1],
+  TableReportColumnSettingsForm[2],
+  {
+    id: 'cell',
+    type: FormPropertyType.fieldset,
+    name: '{i18n:report-template.component.table.cell}',
+    properties: severityReportCellSettings(),
+    default: null
+  }
+];
+
+export const TimeColumnSettingsForm: FormProperty[] = [
+  TableReportColumnSettingsForm[0],
+  TableReportColumnSettingsForm[1],
+  TableReportColumnSettingsForm[2],
+  {
+    id: 'cell',
+    type: FormPropertyType.fieldset,
+    name: '{i18n:report-template.component.table.cell}',
+    properties: timeReportCellSettings(),
     default: null
   }
 ];

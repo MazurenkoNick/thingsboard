@@ -980,6 +980,7 @@ export interface WidgetInfo extends BaseWidgetInfo {
 
 export interface DynamicFormData {
   settingsForm?: FormProperty[];
+  settingsFormTrimDefaults?: boolean;
   model?: any;
   settingsDirective?: string;
 }

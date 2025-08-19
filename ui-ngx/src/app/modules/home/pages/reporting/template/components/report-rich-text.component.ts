@@ -35,7 +35,9 @@ import {
   forwardRef,
   Input,
   OnChanges,
-  OnInit, SimpleChanges,
+  OnDestroy,
+  OnInit,
+  SimpleChanges,
   viewChild,
   ViewEncapsulation
 } from '@angular/core';
@@ -50,8 +52,10 @@ import {
 } from '@home/pages/reporting/template/components/report-image-dialog.component';
 import { MatDialog } from '@angular/material/dialog';
 import {
-  extractKeyFromVariable, imagePlaceholder,
-  isKeyVariable, keyImage,
+  extractKeyFromVariable,
+  imagePlaceholder,
+  isKeyVariable,
+  keyImage,
   ReportVariable
 } from '@home/pages/reporting/template/components/report-component.models';
 import { CustomImageUrlCallback } from '@shared/pipe/image.pipe';
@@ -76,7 +80,7 @@ const MCE_SRC_ATTRIBUTE = 'data-mce-src';
   ],
   encapsulation: ViewEncapsulation.None
 })
-export class ReportRichTextComponent implements OnInit, ControlValueAccessor, OnChanges {
+export class ReportRichTextComponent implements OnInit, ControlValueAccessor, OnChanges, OnDestroy {
 
   editorComponent = viewChild('editor', {
     read: EditorComponent,
@@ -166,6 +170,10 @@ export class ReportRichTextComponent implements OnInit, ControlValueAccessor, On
         }
       }
     }
+  }
+
+  ngOnDestroy() {
+    this.editorComponent().editor.destroy();
   }
 
   registerOnChange(fn: any): void {

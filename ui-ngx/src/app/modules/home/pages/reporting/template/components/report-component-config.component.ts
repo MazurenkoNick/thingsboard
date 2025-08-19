@@ -48,7 +48,8 @@ import {
 import {
   isLayoutReportComponentConfig,
   ReportComponentConfig,
-  toReportComponentLayoutSettings, updateFromReportComponentLayoutSettings
+  toReportComponentLayoutSettings,
+  updateFromReportComponentLayoutSettings
 } from '@shared/models/report-component.models';
 import { TbAnchorComponent } from '@shared/components/tb-anchor.component';
 import { FormBuilder, FormGroup } from '@angular/forms';

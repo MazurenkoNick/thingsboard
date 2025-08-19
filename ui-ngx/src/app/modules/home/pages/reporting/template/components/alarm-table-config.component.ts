@@ -32,15 +32,22 @@
 import { Component, ViewEncapsulation } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import {
-  AlarmTableReportComponentConfig,
-  DataKey,
-  Datasource,
-  EntityTableReportComponentConfig, ReportDataKeySettingsType,
-  TableReportColumnSettingsForm,
-  WidgetConfigMode, widgetType
-} from '@app/shared/public-api';
-import { AbstractReportComponentConfig } from '@home/pages/reporting/template/components/report-component-config.component';
+  AbstractReportComponentConfig
+} from '@home/pages/reporting/template/components/report-component-config.component';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { FormProperty } from '@shared/models/dynamic-form.models';
+import {
+  DataKeySettingsFormFunction
+} from '@home/components/widget/lib/settings/common/key/data-keys.component.models';
+import {
+  AlarmTableReportComponentConfig,
+  ReportDataKeySettingsType,
+  SeverityColumnSettingsForm,
+  TableReportColumnSettingsForm,
+  TimeColumnSettingsForm
+} from '@shared/models/report-component.models';
+import { DataKey, Datasource, WidgetConfigMode } from '@shared/models/widget.models';
+import { alarmFields } from '@shared/models/alarm.models';
 
 @Component({
   selector: 'tb-alarm-table-config',
@@ -59,7 +66,17 @@ export class AlarmTableConfigComponent extends AbstractReportComponentConfig<Ala
 
   basicMode = WidgetConfigMode.basic;
 
-  TableReportColumnSettingsForm = TableReportColumnSettingsForm;
+  dataKeySettingsFormFunction: DataKeySettingsFormFunction = this.getDataKeySettingsForm.bind(this);
+
+  private getDataKeySettingsForm(key: DataKey): FormProperty[] {
+    const alarmField = alarmFields[key.name];
+    if (alarmField?.time) {
+      return TimeColumnSettingsForm;
+    } else if (key.name === 'severity') {
+      return SeverityColumnSettingsForm;
+    }
+    return TableReportColumnSettingsForm;
+  }
 
   protected buildForm(reportComponentConfig: AlarmTableReportComponentConfig): FormGroup {
     const form = this.fb.group({

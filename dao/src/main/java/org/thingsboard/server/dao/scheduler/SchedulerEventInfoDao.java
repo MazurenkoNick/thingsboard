@@ -71,4 +71,5 @@ public interface SchedulerEventInfoDao extends Dao<SchedulerEventInfo> {
 
     PageData<ScheduledReportInfo> findScheduledReportEvents(UUID tenantId, UUID customerId, ScheduledReportQuery query);
 
+    int countScheduledReportEventsByTemplateId(UUID tenantId, UUID templateId);
 }

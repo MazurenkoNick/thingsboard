@@ -271,8 +271,6 @@ public enum Resource {
                 Resource.ROLE,
                 Resource.SCHEDULER_EVENT,
                 Resource.BLOB_ENTITY,
-                Resource.REPORT_TEMPLATE,
-                Resource.REPORT,
                 Resource.CUSTOMER_GROUP,
                 Resource.USER_GROUP,
                 Resource.DEVICE_GROUP,
@@ -287,7 +285,9 @@ public enum Resource {
                 Resource.AUDIT_LOG,
                 Resource.DEVICE_PROFILE,
                 Resource.ASSET_PROFILE,
-                Resource.MOBILE_APP_SETTINGS
+                Resource.MOBILE_APP_SETTINGS,
+                Resource.REPORT_TEMPLATE,
+                Resource.REPORT
         ));
 
     }

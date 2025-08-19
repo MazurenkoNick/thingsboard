@@ -73,7 +73,6 @@ import org.thingsboard.server.common.stats.TbApiUsageReportClient;
 import org.thingsboard.server.dao.blob.BlobEntityService;
 import org.thingsboard.server.dao.exception.IncorrectParameterException;
 import org.thingsboard.server.dao.report.ReportService;
-import org.thingsboard.server.dao.secret.SecretConfigurationService;
 import org.thingsboard.server.dao.settings.AdminSettingsService;
 import org.thingsboard.server.dao.wl.WhiteLabelingService;
 import org.thingsboard.server.service.apiusage.TbApiUsageStateService;
@@ -108,7 +107,6 @@ public class DefaultMailService implements MailService {
     private final RateLimitService rateLimitService;
     private final ReportService reportService;
     private final WhiteLabelingService whiteLabelingService;
-    private final SecretConfigurationService secretConfigurationService;
 
     @Value("${actors.rule.allow_system_mail_service}")
     private boolean allowSystemMailService;
@@ -128,7 +126,7 @@ public class DefaultMailService implements MailService {
 
     @Override
     public void sendTestMail(TenantId tenantId, JsonNode jsonConfig, String email) throws ThingsboardException {
-        secretConfigurationService.replaceSecretUsages(tenantId, jsonConfig);
+        ctx.getSecretConfigurationService().replaceSecretUsages(tenantId, jsonConfig);
         TbMailSender testMailSender = new TbMailSender(ctx, tenantId, jsonConfig);
         String mailFrom = getStringValue(jsonConfig, "mailFrom");
 
@@ -512,7 +510,7 @@ public class DefaultMailService implements MailService {
             if (jsonConfig == null) {
                 throw new IncorrectParameterException("Failed to get mail configuration. Settings not found!");
             }
-            secretConfigurationService.replaceSecretUsages(isSystem ? TenantId.SYS_TENANT_ID : tenantId, jsonConfig);
+            ctx.getSecretConfigurationService().replaceSecretUsages(isSystem ? TenantId.SYS_TENANT_ID : tenantId, jsonConfig);
             return new ConfigEntry(jsonConfig, isSystem);
         } catch (Exception e) {
             throw handleException(e);

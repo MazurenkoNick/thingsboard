@@ -64,6 +64,7 @@ public class TbGenerateReportV2Node extends TbAbstractExternalNode {
 
     @Override
     public void init(TbContext ctx, TbNodeConfiguration configuration) throws TbNodeException {
+        super.init(ctx);
         this.config = TbNodeUtils.convert(configuration, TbGenerateReportV2NodeConfiguration.class);
     }
 

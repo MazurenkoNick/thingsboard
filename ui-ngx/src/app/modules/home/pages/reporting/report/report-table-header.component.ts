@@ -29,12 +29,10 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { Component, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { AppState } from '@core/core.state';
 import { EntityTableHeaderComponent } from '@home/components/entity/entity-table-header.component';
-import { getCurrentAuthUser } from '@core/auth/auth.selectors';
-import { Authority } from '@shared/models/authority.enum';
 import { ReportFilter, ReportInfo } from '@shared/models/report.models';
 
 @Component({
@@ -42,27 +40,13 @@ import { ReportFilter, ReportInfo } from '@shared/models/report.models';
   templateUrl: './report-table-header.component.html',
   styleUrls: []
 })
-export class ReportTableHeaderComponent extends EntityTableHeaderComponent<ReportInfo> implements OnInit {
-
-  includeCustomersLabel: string;
+export class ReportTableHeaderComponent extends EntityTableHeaderComponent<ReportInfo> {
 
   constructor(protected store: Store<AppState>) {
     super(store);
   }
 
-  ngOnInit() {
-    super.ngOnInit();
-    this.includeCustomersLabel = getCurrentAuthUser(this.store).authority === Authority.CUSTOMER_USER ?
-      'entity.include-sub-customer-entities' : 'entity.include-customer-entities';
-  }
-
   reportFilterChanged(filter: ReportFilter) {
     this.entitiesTableConfig.componentsData.reportFilterChanged(filter);
   }
-
-  includeCustomersChanged(includeCustomers: boolean) {
-    this.entitiesTableConfig.componentsData.includeCustomersChanged(includeCustomers);
-  }
-
-
 }

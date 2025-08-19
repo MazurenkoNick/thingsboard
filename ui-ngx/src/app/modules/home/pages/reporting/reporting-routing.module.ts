@@ -42,7 +42,7 @@ export const reportingRoute: Route = {
   path: 'reporting',
   component: RouterTabsComponent,
   data: {
-    auth: [Authority.TENANT_ADMIN, Authority.CUSTOMER_USER],
+    auth: [Authority.TENANT_ADMIN],
     breadcrumb: {
       menuId: MenuId.reporting
     }
@@ -52,7 +52,7 @@ export const reportingRoute: Route = {
       path: '',
       children: [],
       data: {
-        auth: [Authority.TENANT_ADMIN, Authority.CUSTOMER_USER],
+        auth: [Authority.TENANT_ADMIN],
         redirectTo: 'templates'
       }
     },

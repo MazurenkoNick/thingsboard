@@ -31,11 +31,11 @@
 
 import { Component, ViewEncapsulation } from '@angular/core';
 import { FormGroup } from '@angular/forms';
-import { ReportComponentConfig } from '@app/shared/public-api';
 import {
   AbstractReportComponentConfig
 } from '@home/pages/reporting/template/components/report-component-config.component';
 import { reportComponentTypeMap } from '@home/pages/reporting/template/components/report-component.models';
+import { ReportComponentConfig } from '@shared/models/report-component.models';
 
 @Component({
   selector: 'tb-empty-report-config',

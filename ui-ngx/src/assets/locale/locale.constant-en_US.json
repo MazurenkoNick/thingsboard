@@ -951,6 +951,9 @@
         "api-features": "API features",
         "api-usage": "API usage",
         "alarm": "Alarm",
+        "alarm-and-report": "Alarm & Report",
+        "alarms-and-reports-created": "Alarms & Reports created",
+        "alarms-and-reports-hourly-activity": "Alarms & Reports created hourly activity",
         "alarms-created": "Alarms created",
         "queue-stats": "Queue Stats",
         "processing-failures-and-timeouts": "Processing Failures and Timeouts",
@@ -1008,7 +1011,10 @@
         "transport-messages": "Transport messages",
         "transport-monthly-activity": "Transport monthly activity",
         "view-details": "View details",
-        "view-statistics": "View statistics"
+        "view-statistics": "View statistics",
+        "reports-created": "Reports created",
+        "reports-created-daily-activity": "Reports created daily activity",
+        "reports-created-monthly-activity": "Reports created monthly activity"
     },
     "api-limit": {
         "cassandra-write-queries-core": "Rest API Cassandra write queries",
@@ -6855,11 +6861,11 @@
             "prompt-settings": "Prompt settings",
             "prompt-settings-hint": "The optional system prompt sets the AI's general role and constraints, while the user prompt defines the specific task to perform. Both fields also support templatization.",
             "system-prompt": "System prompt",
-            "system-prompt-max-length": "System prompt must be 10000 characters or less.",
+            "system-prompt-max-length": "System prompt must be 500000 characters or less.",
             "system-prompt-blank": "System prompt must not be blank.",
             "user-prompt": "User prompt",
             "user-prompt-required": "User prompt is required.",
-            "user-prompt-max-length": "User prompt must be 10000 characters or less.",
+            "user-prompt-max-length": "User prompt must be 500000 characters or less.",
             "user-prompt-blank": "User prompt must not be blank.",
             "response-format": "Response format",
             "response-text": "Text",
@@ -8744,6 +8750,7 @@
         "parameters": "Parameters",
         "progress": "Progress",
         "reprocess": "{ count, plural, =0 {Reprocess} =1 {Reprocess} other {Reprocess failed entities} }",
+        "retry": "Retry",
         "search": "Search task",
         "selected-tasks": "{ count, plural, =1 {1 task} other {# tasks} } selected",
         "selected-tasks-are-finished": "These tasks are already finished",
@@ -8772,7 +8779,10 @@
         "tasks-type-list": "Tasks type list",
         "time-taken": "Time taken",
         "total-entities": "Total entities",
-        "type": "Type"
+        "type": "Type",
+        "report-generate-successfully": "Report generated successfully",
+        "report-generate-in-progress": "Generating report in progress",
+        "generate-report-canceled": "Generate report canceled"
     },
     "widget": {
         "widget-library": "Widgets library",

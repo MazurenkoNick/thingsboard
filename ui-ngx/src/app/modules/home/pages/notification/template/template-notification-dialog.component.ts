@@ -135,6 +135,7 @@ export class TemplateNotificationDialogComponent
       Array.from(this.deliveryMethodFormsMap.values()).map(form => form.disable({emitEvent: false}));
     } else {
       this.updateValidators();
+      this.updateAttachReportValidators();
     }
   }
 

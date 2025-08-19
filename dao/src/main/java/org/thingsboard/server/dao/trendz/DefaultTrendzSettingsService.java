@@ -80,4 +80,5 @@ public class DefaultTrendzSettingsService implements TrendzSettingsService {
     public void deleteTrendzSettings(TenantId tenantId) {
         adminSettingsService.deleteAdminSettingsByTenantIdAndKey(tenantId, SETTINGS_KEY);
     }
+
 }

@@ -108,7 +108,7 @@ public class CsvReportService extends AbstractReportService {
         for (ReportComponent component : components) {
             switch (component.getType()) {
                 case SUB_REPORT -> content.addAll(renderSubReport(ctx, (SubReportComponent) component, stateEntityId));
-                case TIME_SERIES_TABLE -> content.addAll(renderTimeseriesTables(ctx, (TableReportComponent) component, stateEntity));
+                case TIME_SERIES_TABLE -> content.addAll(renderTimeseriesTables(ctx, (TableReportComponent) component, stateEntityId));
                 case ALARM_TABLE, ENTITY_TABLE -> content.addAll(renderTableComponent(ctx, (TableReportComponent) component, stateEntity));
                 default -> throw new IllegalArgumentException("Unsupported component type: " + component.getType());
             }
@@ -149,7 +149,7 @@ public class CsvReportService extends AbstractReportService {
         }
     }
 
-    private List<List<String>> renderTimeseriesTables(TbReportCtx ctx, TableReportComponent component, EntityData entityData) {
+    private List<List<String>> renderTimeseriesTables(TbReportCtx ctx, TableReportComponent component, EntityId stateEntityId) {
         List<List<String>> content = new LinkedList<>();
         Optional<DataSource> dataSource = getSingleDataSource(component);
         if (dataSource.isEmpty()) {
@@ -165,7 +165,7 @@ public class CsvReportService extends AbstractReportService {
                 .entityAliasId(ds.getEntityAliasId())
                 .filterId(ds.getFilterId())
                 .dataKeys(ds.getLatestDataKeys()).build();
-        List<EntityData> entityDatas = fetchEntities(ctx, latestDataSource, null);
+        List<EntityData> entityDatas = fetchEntities(ctx, latestDataSource, stateEntityId);
         for (EntityData entity : entityDatas) {
             content.addAll(renderTableComponent(ctx, component, entity));
         }
@@ -189,7 +189,7 @@ public class CsvReportService extends AbstractReportService {
             return new ComponentData(0);
         }
         List<Map<String, String>> entityDatas = collectEntityDatas(ctx, singleDataSource.get(), stateEntity != null ? stateEntity.getEntityId() : null);
-        Map<String, Object> variables = new HashMap<>(toStringMap(stateEntity, singleDataSource.get().getDataKeys(), ctx));
+        Map<String, Object> variables = new HashMap<>(toStringMap(stateEntity, singleDataSource.get().getDataKeys(), ctx, null));
         return new ComponentData(0, null, entityDatas, variables);
     }
 

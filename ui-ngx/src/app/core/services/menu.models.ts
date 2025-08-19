@@ -1560,15 +1560,18 @@ const menuFilters = new Map<MenuId, MenuFilter>([
   ],
   [
     MenuId.report_templates, (authState, userPermissionsService) =>
+            authState.authUser.authority === Authority.TENANT_ADMIN &&
             userPermissionsService.hasReadGenericPermission(Resource.REPORT_TEMPLATE)
   ],
   [
     MenuId.report_scheduling, (authState, userPermissionsService) =>
+            authState.authUser.authority === Authority.TENANT_ADMIN &&
             userPermissionsService.hasReadGenericPermission(Resource.REPORT_TEMPLATE) &&
             userPermissionsService.hasReadGenericPermission(Resource.SCHEDULER_EVENT)
   ],
   [
     MenuId.reports, (authState, userPermissionsService) =>
+            authState.authUser.authority === Authority.TENANT_ADMIN &&
             userPermissionsService.hasReadGenericPermission(Resource.REPORT)
   ],
   [
@@ -1855,14 +1858,6 @@ export const defaultUserMenuMap = new Map<Authority, MenuReference[]>([
           {id: MenuId.dashboard_all},
           {id: MenuId.dashboard_groups},
           {id: MenuId.dashboard_shared}
-        ]
-      },
-      {
-        id: MenuId.reporting,
-        pages: [
-          {id: MenuId.report_templates},
-          {id: MenuId.report_scheduling},
-          {id: MenuId.reports}
         ]
       },
       {
