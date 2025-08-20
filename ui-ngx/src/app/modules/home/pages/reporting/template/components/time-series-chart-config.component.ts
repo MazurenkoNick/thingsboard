@@ -64,7 +64,7 @@ export class TimeSeriesChartConfigComponent extends AbstractReportComponentConfi
 
   public get yAxisIds(): TimeSeriesChartYAxisId[] {
     const yAxes: TimeSeriesChartYAxes = this.reportConfigForm.get('yAxes').value;
-    return Object.keys(yAxes);
+    return yAxes ? Object.keys(yAxes) : [];
   }
 
   public get widget(): Widget {
@@ -172,7 +172,7 @@ export class TimeSeriesChartConfigComponent extends AbstractReportComponentConfi
     timeSeriesChartSettings.comparisonCustomIntervalValue = config.comparisonCustomIntervalValue;
     delete config.comparisonCustomIntervalValue;
     timeSeriesChartSettings.comparisonXAxis = config.comparisonXAxis;
-    delete timeSeriesChartSettings.comparisonXAxis;
+    delete config.comparisonXAxis;
 
     timeSeriesChartSettings.thresholds = config.thresholds;
     delete config.thresholds;

@@ -33,17 +33,21 @@ package org.thingsboard.server.common.data.report.configuration.chart;
 import lombok.Data;
 
 @Data
-public class LegendConfig {
-    private LegendPosition position;
-    private Boolean sortDataKeys;
+public class TimeSeriesChartNoAggregationBarWidthSettings {
 
-    public LegendConfig() {}
+    private TimeSeriesChartNoAggregationBarWidthStrategy strategy;
+    private TimeSeriesChartBarWidth groupWidth;
+    private TimeSeriesChartBarWidth barWidth;
 
-    public LegendConfig(LegendConfig input) {
+    public TimeSeriesChartNoAggregationBarWidthSettings() {}
+
+    public TimeSeriesChartNoAggregationBarWidthSettings(TimeSeriesChartNoAggregationBarWidthSettings input) {
         if (input == null) {
-            input = new LegendConfig();
+            input = new TimeSeriesChartNoAggregationBarWidthSettings();
         }
-        this.position = input.getPosition() != null ? input.getPosition() : LegendPosition.top;
-        this.sortDataKeys = input.getSortDataKeys() != null ? input.getSortDataKeys() : Boolean.FALSE;
+        this.strategy = input.getStrategy() != null ? input.strategy : TimeSeriesChartNoAggregationBarWidthStrategy.group;
+        this.groupWidth = new TimeSeriesChartBarWidth(input.getGroupWidth());
+        this.barWidth = new TimeSeriesChartBarWidth(input.getBarWidth());
     }
+
 }

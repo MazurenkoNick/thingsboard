@@ -28,22 +28,18 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.common.data.report.configuration.chart;
+package org.thingsboard.server.report.context.chart;
 
 import lombok.Data;
+import lombok.RequiredArgsConstructor;
+import org.thingsboard.server.common.data.report.configuration.timewindow.TimeIntervalCalculator;
 
 @Data
-public class LegendConfig {
-    private LegendPosition position;
-    private Boolean sortDataKeys;
+@RequiredArgsConstructor
+public class TsChartSeriesEntry {
 
-    public LegendConfig() {}
+    private final long ts;
+    private final TimeIntervalCalculator.TimeRange interval;
+    private final String value;
 
-    public LegendConfig(LegendConfig input) {
-        if (input == null) {
-            input = new LegendConfig();
-        }
-        this.position = input.getPosition() != null ? input.getPosition() : LegendPosition.top;
-        this.sortDataKeys = input.getSortDataKeys() != null ? input.getSortDataKeys() : Boolean.FALSE;
-    }
 }

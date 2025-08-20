@@ -30,7 +30,12 @@
  */
 package org.thingsboard.server.common.data.report.configuration.timewindow;
 
+import org.thingsboard.server.common.data.kv.Aggregation;
+import org.thingsboard.server.common.data.kv.IntervalType;
+
 import java.time.DayOfWeek;
+import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZoneId;
@@ -204,4 +209,78 @@ public class TimeIntervalCalculator {
 
         return new TimeRange(start.toInstant().toEpochMilli(), end.toInstant().toEpochMilli());
     }
+
+    public static TimeRange getAggTimeRange(TimeRange timeWindow, Interval interval, Aggregation aggregation, ZoneId zoneId, long ts) {
+        if (Aggregation.NONE.equals(aggregation)) {
+            return new TimeRange(ts, ts);
+        } else {
+            long startIntervalTs;
+            long endIntervalTs;
+            if (IntervalType.MILLISECONDS.equals(interval.getIntervalType())) {
+                long startTs = timeWindow.startTs;
+                startIntervalTs = startTs + (long) (Math.floor( ((double)(ts - startTs)) / (double)interval.getInterval() ) * interval.getInterval());
+                endIntervalTs = startIntervalTs + interval.getInterval();
+            } else {
+                Instant instant = Instant.ofEpochMilli(ts);
+                ZonedDateTime time = instant.atZone(zoneId);
+
+                ZonedDateTime startInterval = startIntervalDate(time, interval.getIntervalType());
+                ZonedDateTime endInterval = endIntervalDateFromStart(startInterval, interval.getIntervalType()).plus(Duration.ofMillis(1));
+
+                Instant startInstant = Instant.ofEpochMilli(timeWindow.startTs);
+                ZonedDateTime start = startInstant.atZone(zoneId);
+
+                if (start.isAfter(startInterval)) {
+                    startInterval = start;
+                }
+
+                startIntervalTs = startInterval.toInstant().toEpochMilli();
+                endIntervalTs = endInterval.toInstant().toEpochMilli();
+            }
+            endIntervalTs = Math.min(endIntervalTs, timeWindow.endTs);
+            return new TimeRange(startIntervalTs, endIntervalTs);
+        }
+    }
+    
+    private static ZonedDateTime startIntervalDate(ZonedDateTime current, IntervalType intervalType) {
+        switch (intervalType) {
+            case WEEK -> {
+                return current.with(TemporalAdjusters.previousOrSame(DayOfWeek.SUNDAY)).toLocalDate().atStartOfDay(current.getZone());
+            }
+            case WEEK_ISO -> {
+                return current.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)).toLocalDate().atStartOfDay(current.getZone());
+            }
+            case MONTH -> {
+                return current.withDayOfMonth(1).toLocalDate().atStartOfDay(current.getZone());
+            }
+            case QUARTER -> {
+                int thisQuarter = (current.getMonthValue() - 1) / 3 + 1;
+                int quarterStartMonth = (thisQuarter - 1) * 3 + 1;
+                return ZonedDateTime.of(LocalDate.of(current.getYear(), quarterStartMonth, 1), LocalTime.MIN, current.getZone());
+            }
+            case MILLISECONDS -> {
+                return current;
+            }
+            default -> throw new IllegalStateException("Unexpected value: " + intervalType);
+        }
+    }
+
+    private static ZonedDateTime endIntervalDateFromStart(ZonedDateTime start, IntervalType intervalType) {
+        switch (intervalType) {
+            case WEEK, WEEK_ISO -> {
+                return start.plusDays(7).minusNanos(1);
+            }
+            case MONTH -> {
+                return start.plusMonths(1).minusNanos(1);
+            }
+            case QUARTER -> {
+                return start.plusMonths(3).minusNanos(1);
+            }
+            case MILLISECONDS -> {
+                return start;
+            }
+            default -> throw new IllegalStateException("Unexpected value: " + intervalType);
+        }
+    }
+    
 }

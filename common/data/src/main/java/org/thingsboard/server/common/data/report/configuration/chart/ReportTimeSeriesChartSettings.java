@@ -30,43 +30,80 @@
  */
 package org.thingsboard.server.common.data.report.configuration.chart;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import org.thingsboard.server.common.data.report.configuration.style.Font;
 import org.thingsboard.server.common.data.report.configuration.style.FontStyle;
 import org.thingsboard.server.common.data.report.configuration.style.FontWeight;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @Data
 public class ReportTimeSeriesChartSettings {
 
-    private boolean showTitle;
+    private Boolean showTitle;
     private String title;
     private Font titleFont;
     private String titleColor;
 
-    private boolean showLegend;
+    @JsonProperty("yAxes")
+    private Map<String, TimeSeriesChartYAxisSettings> yAxes;
+
+    @JsonProperty("xAxis")
+    private TimeSeriesChartXAxisSettings xAxis;
+
+    @JsonProperty("barWidthSettings")
+    private TimeSeriesChartBarWidthSettings barWidthSettings;
+
+    @JsonProperty("noAggregationBarWidthSettings")
+    private TimeSeriesChartNoAggregationBarWidthSettings noAggregationBarWidthSettings;
+
+    private Boolean showLegend;
     private Font legendLabelFont;
     private String legendLabelColor;
+
+    @JsonProperty("legendConfig")
     private LegendConfig legendConfig;
 
-    public ReportTimeSeriesChartSettings() {
-        this.showTitle = true;
-        this.title = "Time series chart";
-        this.titleFont = Font.builder().family("Roboto")
+    public ReportTimeSeriesChartSettings() {}
+
+    public ReportTimeSeriesChartSettings(ReportTimeSeriesChartSettings input) {
+        if (input == null) {
+            input = new ReportTimeSeriesChartSettings();
+        }
+        this.showTitle = input.getShowTitle() != null ? input.getShowTitle() : Boolean.TRUE;
+        this.title = input.getTitle() != null ? input.getTitle() : "Time series chart";
+        this.titleFont = input.getTitleFont() != null ? input.getTitleFont() : Font.builder().family("Roboto")
                 .size(18f)
                 .weight(FontWeight.WEIGHT_500)
                 .style(FontStyle.NORMAL)
                 .build();
-        this.titleColor = "rgba(0, 0, 0, 0.87)";
-        this.showLegend = true;
-        this.legendLabelFont = Font.builder().family("Roboto")
+        this.titleColor = input.getTitleColor() != null ? input.getTitleColor() : "rgba(0, 0, 0, 0.87)";
+
+        this.yAxes = new HashMap<>();
+        if (input.getYAxes() == null) {
+            this.yAxes.put("default", new TimeSeriesChartYAxisSettings(null));
+        } else {
+            input.getYAxes().forEach((key, value) -> {
+                TimeSeriesChartYAxisSettings yAxisSettings = new TimeSeriesChartYAxisSettings(value);
+                yAxes.put(key, yAxisSettings);
+            });
+        }
+        this.xAxis = new TimeSeriesChartXAxisSettings(input.getXAxis());
+
+        this.barWidthSettings = new TimeSeriesChartBarWidthSettings(input.getBarWidthSettings());
+        this.noAggregationBarWidthSettings = new TimeSeriesChartNoAggregationBarWidthSettings(input.getNoAggregationBarWidthSettings());
+
+        this.showLegend = input.getShowLegend() != null ? input.getShowLegend() : Boolean.TRUE;
+        this.legendLabelFont = input.getLegendLabelFont() != null ? input.getLegendLabelFont() : Font.builder().family("Roboto")
                 .size(12f)
                 .weight(FontWeight.NORMAL)
                 .style(FontStyle.NORMAL)
                 .build();
-        this.legendLabelColor = "rgba(0, 0, 0, 0.87)";
-        this.legendConfig = new LegendConfig();
-        this.legendConfig.setPosition(LegendPosition.top);
-        this.legendConfig.setSortDataKeys(false);
+        this.legendLabelColor = input.getLegendLabelColor() != null ? input.getLegendLabelColor() : "rgba(0, 0, 0, 0.87)";
+        this.legendConfig = new LegendConfig(input.getLegendConfig());
+
     }
 
 }

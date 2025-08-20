@@ -31,7 +31,6 @@
 package org.thingsboard.server.report.context.chart;
 
 import lombok.Data;
-import org.thingsboard.server.common.data.query.TsValue;
 import org.thingsboard.server.common.data.report.configuration.DataKey;
 
 import java.util.List;
@@ -41,7 +40,7 @@ public class TsChartSeriesData {
 
     private TsChartDataSource dataSource;
     private DataKey dataKey;
-    private List<TsValue> data;
+    private List<TsChartSeriesEntry> data;
     private int index;
 
 }

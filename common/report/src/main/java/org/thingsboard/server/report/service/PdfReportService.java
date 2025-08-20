@@ -41,6 +41,7 @@ import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.ReportTemplateId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.job.task.ReportTask;
+import org.thingsboard.server.common.data.kv.Aggregation;
 import org.thingsboard.server.common.data.kv.TsKvEntry;
 import org.thingsboard.server.common.data.page.SortOrder;
 import org.thingsboard.server.common.data.query.EntityData;
@@ -344,6 +345,7 @@ public class PdfReportService extends AbstractReportService {
         String targetTimezone = StringUtils.isNotBlank(timeWindowConf.getTimezone()) ?
                 timeWindowConf.getTimezone() : ctx.getTimeZone();
         TimeIntervalCalculator.TimeRange timeRange = getTimeRange(timeWindowConf, targetTimezone);
+        ZoneId zoneId = targetTimezone != null ? ZoneId.of(targetTimezone) : ZoneId.systemDefault();
 
         for (int index = 0; index < entityDatas.size(); index++) {
             EntityData entity = entityDatas.get(index);
@@ -352,7 +354,8 @@ public class PdfReportService extends AbstractReportService {
                     historyConf.getInterval(), targetTimezone, timeWindowConf.getAggregation().getType(), SortOrder.Direction.ASC,
                     timeWindowConf.getAggregation().getLimit(), false, ctx);
 
-            TsChartDataSource chartDataSource = new TsChartDataSource(ds, entity, tsKvEntries, index);
+            TsChartDataSource chartDataSource = new TsChartDataSource(ds, entity, tsKvEntries, timeRange,
+                    historyConf.getInterval(), timeWindowConf.getAggregation().getType(), zoneId, index);
             chartData.add(chartDataSource);
         }
         int index = 0;
@@ -365,9 +368,8 @@ public class PdfReportService extends AbstractReportService {
                 index++;
             }
         }
-        ZoneId zoneId = targetTimezone != null ? ZoneId.of(targetTimezone) : ZoneId.systemDefault();
         TimeZone timeZone = TimeZone.getTimeZone(zoneId.getId());
-        TsChartData tsChartData = new TsChartData(timeZone, timeRange, chartData);
+        TsChartData tsChartData = new TsChartData(timeZone, timeRange, Aggregation.NONE.equals(timeWindowConf.getAggregation().getType()), chartData);
         return new ComponentData(usablePageWidthPx, tsChartData);
     }
 

@@ -31,19 +31,43 @@
 package org.thingsboard.server.common.data.report.configuration.chart;
 
 import lombok.Data;
+import org.thingsboard.server.common.data.report.configuration.style.Font;
+import org.thingsboard.server.common.data.report.configuration.style.FontStyle;
+import org.thingsboard.server.common.data.report.configuration.style.FontWeight;
 
 @Data
-public class LegendConfig {
-    private LegendPosition position;
-    private Boolean sortDataKeys;
+public class TimeSeriesChartYAxisSettings extends TimeSeriesChartAxisSettings {
 
-    public LegendConfig() {}
+    private String id;
+    private Integer order;
+    private String units;
+    private Integer decimals;
+    private Double interval;
+    private Integer splitNumber;
+    private Double min;
+    private Double max;
 
-    public LegendConfig(LegendConfig input) {
+    public TimeSeriesChartYAxisSettings() {}
+
+    public TimeSeriesChartYAxisSettings(TimeSeriesChartYAxisSettings input) {
+        super(input != null ? input : new TimeSeriesChartYAxisSettings());
         if (input == null) {
-            input = new LegendConfig();
+            input = new TimeSeriesChartYAxisSettings();
         }
-        this.position = input.getPosition() != null ? input.getPosition() : LegendPosition.top;
-        this.sortDataKeys = input.getSortDataKeys() != null ? input.getSortDataKeys() : Boolean.FALSE;
+        this.setPosition(input.getPosition() != null ? input.getPosition() : AxisPosition.left);
+        this.setTickLabelFont(input.getTickLabelFont() != null ? input.getTickLabelFont() : Font.builder().family("Roboto")
+                .size(12f)
+                .weight(FontWeight.NORMAL)
+                .style(FontStyle.NORMAL)
+                .build());
+        this.id = input.getId() != null ? input.getId() : "default";
+        this.order = input.getOrder() != null ? input.getOrder() : 0;
+        this.units = input.getUnits();
+        this.decimals = input.getDecimals() != null ? input.getDecimals() : 0;
+        this.interval = input.getInterval();
+        this.splitNumber = input.getSplitNumber();
+        this.min = input.getMin();
+        this.max = input.getMax();
     }
+
 }
