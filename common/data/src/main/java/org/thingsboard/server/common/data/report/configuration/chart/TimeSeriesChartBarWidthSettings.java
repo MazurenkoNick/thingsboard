@@ -33,17 +33,19 @@ package org.thingsboard.server.common.data.report.configuration.chart;
 import lombok.Data;
 
 @Data
-public class LegendConfig {
-    private LegendPosition position;
-    private Boolean sortDataKeys;
+public class TimeSeriesChartBarWidthSettings {
 
-    public LegendConfig() {}
+    private Double barGap;
+    private Double intervalGap;
 
-    public LegendConfig(LegendConfig input) {
+    public TimeSeriesChartBarWidthSettings() {}
+
+    public TimeSeriesChartBarWidthSettings(TimeSeriesChartBarWidthSettings input) {
         if (input == null) {
-            input = new LegendConfig();
+            input = new TimeSeriesChartBarWidthSettings();
         }
-        this.position = input.getPosition() != null ? input.getPosition() : LegendPosition.top;
-        this.sortDataKeys = input.getSortDataKeys() != null ? input.getSortDataKeys() : Boolean.FALSE;
+        this.barGap = input.getBarGap() != null ? input.getBarGap() : 0.3;
+        this.intervalGap = input.getIntervalGap() != null ? input.getIntervalGap() : 0.6;
     }
+
 }

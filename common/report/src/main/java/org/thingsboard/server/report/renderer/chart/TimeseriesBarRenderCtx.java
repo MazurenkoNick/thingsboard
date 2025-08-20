@@ -28,22 +28,22 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.common.data.report.configuration.chart;
+package org.thingsboard.server.report.renderer.chart;
 
+import lombok.Builder;
 import lombok.Data;
+import org.thingsboard.server.common.data.report.configuration.chart.TimeSeriesChartNoAggregationBarWidthStrategy;
 
 @Data
-public class LegendConfig {
-    private LegendPosition position;
-    private Boolean sortDataKeys;
+@Builder
+public class TimeseriesBarRenderCtx {
 
-    public LegendConfig() {}
+    private double barGap;
+    private double intervalGap;
+    private TimeSeriesChartNoAggregationBarWidthStrategy noAggregationBarWidthStrategy;
+    private boolean noAggregationWidthRelative;
+    private double noAggregationWidth;
+    private long timeWindow;
+    private boolean noAggregation;
 
-    public LegendConfig(LegendConfig input) {
-        if (input == null) {
-            input = new LegendConfig();
-        }
-        this.position = input.getPosition() != null ? input.getPosition() : LegendPosition.top;
-        this.sortDataKeys = input.getSortDataKeys() != null ? input.getSortDataKeys() : Boolean.FALSE;
-    }
 }

@@ -33,13 +33,17 @@ package org.thingsboard.server.report.context.chart;
 import lombok.Data;
 import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.server.common.data.id.EntityId;
+import org.thingsboard.server.common.data.kv.Aggregation;
 import org.thingsboard.server.common.data.kv.TsKvEntry;
 import org.thingsboard.server.common.data.query.EntityData;
 import org.thingsboard.server.common.data.query.EntityKeyType;
 import org.thingsboard.server.common.data.query.TsValue;
 import org.thingsboard.server.common.data.report.configuration.DataKey;
 import org.thingsboard.server.common.data.report.configuration.DataSource;
+import org.thingsboard.server.common.data.report.configuration.timewindow.Interval;
+import org.thingsboard.server.common.data.report.configuration.timewindow.TimeIntervalCalculator;
 
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -59,7 +63,14 @@ public class TsChartDataSource {
     private int index;
     private Map<String, Object> variables;
 
-    public TsChartDataSource(DataSource dataSource, EntityData entityData, List<TsKvEntry> tsKvEntries, int index) {
+    public TsChartDataSource(DataSource dataSource,
+                             EntityData entityData,
+                             List<TsKvEntry> tsKvEntries,
+                             TimeIntervalCalculator.TimeRange timeWindow,
+                             Interval aggInterval,
+                             Aggregation aggregation,
+                             ZoneId zoneId,
+                             int index) {
         List<DataKey> newDataKeys = new ArrayList<>();
         for (DataKey dataKey : dataSource.getDataKeys()) {
             newDataKeys.add(JacksonUtil.clone(dataKey));
@@ -89,8 +100,15 @@ public class TsChartDataSource {
             TsChartSeriesData seriesData = new TsChartSeriesData();
             seriesData.setDataSource(this);
             seriesData.setDataKey(key);
-            List<TsValue> keyValues = tsKvEntries.stream().filter(entry -> entry.getKey().equals(key.getName()))
-                    .map(TsKvEntry::toTsValue).sorted(Comparator.comparing(TsValue::getTs)).toList();
+            List<TsChartSeriesEntry> keyValues = tsKvEntries.stream().filter(entry -> entry.getKey().equals(key.getName()))
+                    .map(
+                            entry -> {
+                                TimeIntervalCalculator.TimeRange interval =
+                                        TimeIntervalCalculator.getAggTimeRange(timeWindow, aggInterval, aggregation, zoneId, entry.getTs());
+                                long ts = interval.startTs + (long)Math.floor((double)(interval.endTs - interval.startTs) / 2f);
+                                return new TsChartSeriesEntry(ts, interval, entry.getValueAsString());
+                            }
+                    ).sorted(Comparator.comparing(TsChartSeriesEntry::getTs)).toList();
             seriesData.setData(keyValues);
             seriesData.setIndex(dataIndex);
             this.data.add(seriesData);

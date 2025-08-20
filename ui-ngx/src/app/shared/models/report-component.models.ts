@@ -39,10 +39,11 @@ import { Timewindow } from '@shared/models/time/time.models';
 import { Direction } from '@shared/models/page/sort-order';
 import { mergeDeep } from '@core/utils';
 import {
+  defaultTimeSeriesChartYAxisSettings,
   timeSeriesChartDefaultSettings,
   TimeSeriesChartKeySettings,
   TimeSeriesChartSeriesType,
-  TimeSeriesChartSettings
+  TimeSeriesChartSettings, TimeSeriesChartYAxes, TimeSeriesChartYAxisSettings
 } from '@home/components/widget/lib/chart/time-series-chart.models';
 
 export enum ReportComponentType {
@@ -431,9 +432,15 @@ export const reportTimeSeriesChartDefaultSettings: ReportTimeSeriesChartSettings
       weight: 'normal'
     },
     legendLabelColor: 'rgba(0, 0, 0, 0.76)',
-    legendConfig: {...defaultLegendConfig(null), position: LegendPosition.top}
+    legendConfig: {...defaultLegendConfig(null), position: LegendPosition.top},
+    yAxes: {
+      default: {
+        labelFont: {
+          weight: 'bold'
+        }
+      } as TimeSeriesChartYAxisSettings
+    } as TimeSeriesChartYAxes
   } as ReportTimeSeriesChartSettings);
-
 
 export interface BaseChartReportComponentConfig extends BaseImageReportComponentConfig {
   height: number;

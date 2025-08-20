@@ -30,20 +30,12 @@
  */
 package org.thingsboard.server.common.data.report.configuration.chart;
 
-import lombok.Data;
-
-@Data
-public class LegendConfig {
-    private LegendPosition position;
-    private Boolean sortDataKeys;
-
-    public LegendConfig() {}
-
-    public LegendConfig(LegendConfig input) {
-        if (input == null) {
-            input = new LegendConfig();
-        }
-        this.position = input.getPosition() != null ? input.getPosition() : LegendPosition.top;
-        this.sortDataKeys = input.getSortDataKeys() != null ? input.getSortDataKeys() : Boolean.FALSE;
-    }
+public enum FormatTimeUnit {
+    millisecond,
+    second,
+    minute,
+    hour,
+    day,
+    month,
+    year
 }

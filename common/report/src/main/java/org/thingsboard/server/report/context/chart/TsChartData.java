@@ -43,6 +43,7 @@ public class TsChartData {
 
     private final TimeZone timeZone;
     private final TimeIntervalCalculator.TimeRange timeRange;
+    private final boolean noAggregation;
     private final List<TsChartDataSource> chartData;
 
 }
