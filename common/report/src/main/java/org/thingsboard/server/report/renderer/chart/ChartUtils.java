@@ -30,29 +30,39 @@
  */
 package org.thingsboard.server.report.renderer.chart;
 
+import org.jfree.chart.axis.Axis;
 import org.jfree.chart.axis.AxisLocation;
 import org.jfree.chart.axis.DateAxis;
 import org.jfree.chart.axis.DateTickUnit;
 import org.jfree.chart.axis.DateTickUnitType;
+import org.jfree.chart.axis.NumberAxis;
+import org.jfree.chart.axis.NumberTickUnit;
 import org.jfree.chart.axis.TickUnitSource;
 import org.jfree.chart.axis.TickUnits;
 import org.jfree.chart.axis.ValueAxis;
+import org.jfree.chart.plot.XYPlot;
+import org.jfree.chart.ui.RectangleInsets;
 import org.jfree.data.time.SimpleTimePeriod;
+import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.report.configuration.chart.AxisPosition;
 import org.thingsboard.server.common.data.report.configuration.chart.FormatTimeUnit;
 import org.thingsboard.server.common.data.report.configuration.chart.TimeSeriesChartAxisSettings;
 import org.thingsboard.server.common.data.report.configuration.chart.TimeSeriesChartNoAggregationBarWidthStrategy;
 import org.thingsboard.server.common.data.report.configuration.chart.TimeSeriesChartXAxisSettings;
+import org.thingsboard.server.common.data.report.configuration.chart.TimeSeriesChartYAxisSettings;
 import org.thingsboard.server.common.data.report.configuration.timewindow.TimeIntervalCalculator;
 import org.thingsboard.server.report.context.chart.TsChartSeriesEntry;
 
 import java.text.DateFormat;
+import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 import java.util.Map;
 import java.util.TimeZone;
 
+import static org.jfree.chart.axis.Axis.DEFAULT_AXIS_LABEL_INSETS;
+import static org.thingsboard.server.report.util.AwtFontUtils.ZERO_FONT;
 import static org.thingsboard.server.report.util.AwtFontUtils.toAwtFont;
 import static org.thingsboard.server.report.util.ColorUtils.safeParseCssColor;
 
@@ -91,7 +101,7 @@ public interface ChartUtils {
         return new SimpleTimePeriod(startTime, endTime);
     }
 
-    static DateAxis createXAxis(TbTimeseriesPlot plot, TimeSeriesChartXAxisSettings xAxisSettings, TimeIntervalCalculator.TimeRange timeRange, TimeZone timeZone, int index) {
+    static DateAxis createXAxis(XYPlot plot, TimeSeriesChartXAxisSettings xAxisSettings, TimeIntervalCalculator.TimeRange timeRange, TimeZone timeZone, int index) {
         Locale locale = Locale.getDefault();
         DateAxis xAxis = new DateAxis(xAxisSettings.getLabel(), timeZone, locale);
         plot.setDomainAxis(index, xAxis);
@@ -102,6 +112,42 @@ public interface ChartUtils {
         xAxis.setMaximumDate(new Date(timeRange.endTs));
         setupAxisAppearance(xAxis, xAxisSettings);
         return xAxis;
+    }
+
+    static TbNumberAxis createYAxis(XYPlot plot, TimeSeriesChartYAxisSettings yAxisSettings, int index) {
+        TbNumberAxis yAxis = new TbNumberAxis(yAxisSettings.getLabel());
+        plot.setRangeAxis(index, yAxis);
+        AxisLocation location = AxisPosition.left.equals(yAxisSettings.getPosition()) ? AxisLocation.BOTTOM_OR_LEFT : AxisLocation.TOP_OR_RIGHT;
+        plot.setRangeAxisLocation(index, location);
+        int decimals = yAxisSettings.getDecimals() != null ? yAxisSettings.getDecimals() : 2;
+        StringBuilder patternBuilder = new StringBuilder("#");
+        if (decimals > 0) {
+            patternBuilder.append(".");
+        }
+        patternBuilder.append("#".repeat(Math.max(0, decimals)));
+        if (StringUtils.isNotBlank(yAxisSettings.getUnits())) {
+            patternBuilder.append(" '").append(yAxisSettings.getUnits()).append("'");
+        }
+        yAxis.setAutoRangeIncludesZero(false);
+        if (yAxisSettings.getSplitNumber() != null) {
+            yAxis.setSplitNumber(yAxisSettings.getSplitNumber());
+        } else if (yAxisSettings.getInterval() != null && yAxisSettings.getInterval() > 0) {
+            yAxis.setTickUnit(new NumberTickUnit(yAxisSettings.getInterval()));
+        }
+        yAxis.setNumberFormatOverride(new DecimalFormat(patternBuilder.toString()));
+        setupAxisAppearance(yAxis, yAxisSettings);
+        return yAxis;
+    }
+
+    static void adjustAxisMargins(Axis axis, double top, double left, double bottom, double right) {
+        if (StringUtils.isBlank(axis.getLabel())) {
+            axis.setLabel(" ");
+            axis.setLabelFont(ZERO_FONT);
+        }
+        axis.setLabelInsets(new RectangleInsets(DEFAULT_AXIS_LABEL_INSETS.getTop() + top,
+                DEFAULT_AXIS_LABEL_INSETS.getLeft() + left,
+                DEFAULT_AXIS_LABEL_INSETS.getBottom() + bottom,
+                DEFAULT_AXIS_LABEL_INSETS.getRight() + right));
     }
 
     private static void setupAxisAppearance(ValueAxis axis, TimeSeriesChartAxisSettings axisSettings) {
