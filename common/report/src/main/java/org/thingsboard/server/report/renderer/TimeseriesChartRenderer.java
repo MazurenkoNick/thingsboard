@@ -33,10 +33,9 @@ package org.thingsboard.server.report.renderer;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.LegendItem;
 import org.jfree.chart.LegendItemCollection;
-import org.jfree.chart.axis.DateAxis;
 import org.jfree.chart.axis.NumberAxis;
-import org.jfree.chart.axis.ValueAxis;
 import org.jfree.chart.plot.DatasetRenderingOrder;
+import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.StandardXYBarPainter;
 import org.jfree.chart.renderer.xy.XYBarRenderer;
 import org.jfree.chart.renderer.xy.XYItemRenderer;
@@ -55,6 +54,7 @@ import org.jfree.data.time.TimeSeriesCollection;
 import org.jfree.data.xy.XYDataset;
 import org.springframework.stereotype.Component;
 import org.thingsboard.server.common.data.report.configuration.DataKeySettings;
+import org.thingsboard.server.common.data.report.configuration.chart.AxisPosition;
 import org.thingsboard.server.common.data.report.configuration.chart.LegendConfig;
 import org.thingsboard.server.common.data.report.configuration.chart.LegendPosition;
 import org.thingsboard.server.common.data.report.configuration.chart.ReportTimeSeriesChartSettings;
@@ -78,20 +78,34 @@ import org.thingsboard.server.report.util.ColorUtils;
 import org.thingsboard.server.report.util.ThymeleafUtil;
 
 import java.awt.*;
-import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
+import static org.thingsboard.server.report.renderer.chart.ChartUtils.adjustAxisMargins;
 import static org.thingsboard.server.report.renderer.chart.ChartUtils.calculateBarTimePeriod;
 import static org.thingsboard.server.report.renderer.chart.ChartUtils.createXAxis;
+import static org.thingsboard.server.report.renderer.chart.ChartUtils.createYAxis;
 import static org.thingsboard.server.report.util.AwtFontUtils.toAwtFont;
 import static org.thingsboard.server.report.util.ColorUtils.safeParseCssColor;
 
 @Component
 public class TimeseriesChartRenderer extends ChartRenderer<TimeseriesChartComponent> {
+
+    private ReportTimeSeriesChartSettings chartSettings;
+    private TsChartData chartData;
+
+    private XYPlot plot;
+    private JFreeChart chart;
+
+    private List<NumberAxis> yAxisList;
+    private Map<String, Integer> yAxisIndexMap;
+
+    private List<TsChartSeriesData> seriesList;
 
     @Override
     protected JFreeChart createChart(TimeseriesChartComponent component, ComponentData reportDataSource) {
@@ -124,26 +138,11 @@ public class TimeseriesChartRenderer extends ChartRenderer<TimeseriesChartCompon
         * */
 
 
-        ReportTimeSeriesChartSettings chartSettings = new ReportTimeSeriesChartSettings(component.getTimeSeriesChartSettings());
+        this.chartSettings = new ReportTimeSeriesChartSettings(component.getTimeSeriesChartSettings());
+        this.plot = new TbTimeseriesPlot();
+        this.chartData = reportDataSource.getTsChartData();
 
-        boolean gridShow = false;
-        String gridBackgroundColor = null;
-        int gridBorderWidth = 1;
-        String gridBorderColor = "#ccc";
-
-        TimeSeriesChartYAxisSettings yAxisSettings = chartSettings.getYAxes().get("default");
-        boolean yAxisShowSplitLines = yAxisSettings.getShowSplitLines();
-        String yAxisSplitLineColor = yAxisSettings.getSplitLinesColor();
-
-        TimeSeriesChartXAxisSettings xAxisSettings = chartSettings.getXAxis();
-        boolean xAxisShowSplitLines = xAxisSettings.getShowSplitLines();
-        String xAxisSplitLineColor = xAxisSettings.getSplitLinesColor();
-
-        // Defaults start
-
-        TbTimeseriesPlot plot = new TbTimeseriesPlot();
-
-        JFreeChart chart = new JFreeChart(
+        this.chart = new JFreeChart(
                 null,
                 null,
                 plot,
@@ -152,6 +151,7 @@ public class TimeseriesChartRenderer extends ChartRenderer<TimeseriesChartCompon
         currentChartTheme.apply(chart);
 
         plot.setDatasetRenderingOrder(DatasetRenderingOrder.FORWARD);
+        plot.setAxisOffset(new RectangleInsets(0.0, 0.0, 0.0, 0.0));
         chart.setBackgroundPaint(ColorUtils.TRANSPARENT);
 
         if (chartSettings.getShowTitle()) {
@@ -161,15 +161,101 @@ public class TimeseriesChartRenderer extends ChartRenderer<TimeseriesChartCompon
             chart.setTitle(title);
         }
 
-        TsChartData chartData = reportDataSource.getTsChartData();
+        this.setupGrid();
+        this.setupXAxes();
+        this.setupYAxes();
+        this.setupData();
+        this.updateYAxisScale();
+        this.setupLegend();
 
-        List<TsChartSeriesData> seriesList = new ArrayList<>();
+        return chart;
+    }
 
-        for (TsChartDataSource dataSource : chartData.getChartData()) {
-            seriesList.addAll(dataSource.getData());
+    private void setupGrid() {
+        boolean gridShow = false;
+        String gridBackgroundColor = null;
+        int gridBorderWidth = 1;
+        String gridBorderColor = "#ccc";
+
+        TimeSeriesChartXAxisSettings mainXAxisSettings = chartSettings.getXAxis();
+        boolean xAxisShowSplitLines = mainXAxisSettings.getShowSplitLines();
+        String xAxisSplitLineColor = mainXAxisSettings.getSplitLinesColor();
+
+        TimeSeriesChartYAxisSettings defaultYAxisSettings = chartSettings.getYAxes().get("default");
+        boolean yAxisShowSplitLines = defaultYAxisSettings.getShowSplitLines();
+        String yAxisSplitLineColor = defaultYAxisSettings.getSplitLinesColor();
+
+        if (gridShow) {
+            plot.setBackgroundPaint(safeParseCssColor(gridBackgroundColor));
+            plot.setOutlineStroke(new BasicStroke(gridBorderWidth));
+            plot.setOutlinePaint(safeParseCssColor(gridBorderColor));
+        } else {
+            plot.setBackgroundPaint(null);
+            plot.setOutlinePaint(null); // border
         }
 
-        seriesList = seriesList.stream().sorted((series1, series2) -> {
+        if (xAxisShowSplitLines) {
+            plot.setDomainGridlineStroke(new BasicStroke(1.0f));
+            plot.setDomainGridlinePaint(safeParseCssColor(xAxisSplitLineColor));
+        } else {
+            plot.setDomainGridlinesVisible(false);
+        }
+
+        if (yAxisShowSplitLines) {
+            plot.setRangeGridlineStroke(new BasicStroke(1.0f));
+            plot.setRangeGridlinePaint(safeParseCssColor(yAxisSplitLineColor));
+        } else {
+            plot.setRangeGridlinesVisible(false);
+        }
+    }
+
+    private void setupXAxes() {
+        TimeSeriesChartXAxisSettings mainXAxisSettings = chartSettings.getXAxis();
+        createXAxis(plot, mainXAxisSettings, chartData.getTimeRange(), chartData.getTimeZone(), 0);
+    }
+
+    private void setupYAxes() {
+        this.yAxisList = new ArrayList<>();
+        this.yAxisIndexMap = new HashMap<>();
+
+        List<TimeSeriesChartYAxisSettings> yAxisSettingsList = chartSettings.getYAxes().values().stream().sorted(Comparator.comparingInt(TimeSeriesChartYAxisSettings::getOrder)).toList();
+
+        for (int index = 0; index < yAxisSettingsList.size(); index++) {
+            TimeSeriesChartYAxisSettings yAxisSettings = yAxisSettingsList.get(index);
+            this.yAxisList.add(createYAxis(plot, yAxisSettings, index));
+            this.yAxisIndexMap.put(yAxisSettingsList.get(index).getId(), index);
+        }
+
+        List<TimeSeriesChartYAxisSettings> leftAxes = yAxisSettingsList.stream().filter(axis -> AxisPosition.left.equals(axis.getPosition())).toList();
+        if (leftAxes.size() > 1) {
+            for (int i = 0; i < leftAxes.size()-1; i++) {
+                TimeSeriesChartYAxisSettings leftAxis = leftAxes.get(i);
+                int index = yAxisSettingsList.indexOf(leftAxis);
+                NumberAxis axis = this.yAxisList.get(index);
+                adjustAxisMargins(axis, 0.0, 4.0, 0.0, 0.0);
+            }
+        }
+
+        List<TimeSeriesChartYAxisSettings> rightAxes = yAxisSettingsList.stream().filter(axis -> AxisPosition.right.equals(axis.getPosition())).toList();
+        if (rightAxes.size() > 1) {
+            for (int i = 0; i < rightAxes.size()-1; i++) {
+                TimeSeriesChartYAxisSettings rightAxis = rightAxes.get(i);
+                int index = yAxisSettingsList.indexOf(rightAxis);
+                NumberAxis axis = this.yAxisList.get(index);
+                adjustAxisMargins(axis, 0.0, 0.0, 0.0, 4.0);
+            }
+        }
+    }
+
+    private void setupData() {
+
+        List<TsChartSeriesData> allSeries = new ArrayList<>();
+
+        for (TsChartDataSource dataSource : chartData.getChartData()) {
+            allSeries.addAll(dataSource.getData());
+        }
+
+        this.seriesList = allSeries.stream().sorted((series1, series2) -> {
             TimeSeriesChartKeySettings keySettings1 = this.getSeriesSettings(series1);
             TimeSeriesChartKeySettings keySettings2 = this.getSeriesSettings(series2);
             if (keySettings1.getSeriesType() == keySettings2.getSeriesType()) {
@@ -182,72 +268,6 @@ public class TimeseriesChartRenderer extends ChartRenderer<TimeseriesChartCompon
 
         List<TsChartSeriesData> barsList = seriesList.stream().
                 filter(series -> this.getSeriesSettings(series).getSeriesType() == TimeSeriesChartSeriesType.bar).toList();
-
-        // Axes
-
-        plot.setAxisOffset(new RectangleInsets(0.0, 0.0, 0.0, 0.0));
-
-        DateAxis xAxis = createXAxis(plot, xAxisSettings, chartData.getTimeRange(), chartData.getTimeZone(), 0);
-
-        NumberAxis yAxis = this.createYAxis();
-        // TODO: Check
-        if (!barsList.isEmpty()) {
-            yAxis.setAutoRangeIncludesZero(true);
-        }
-        plot.setRangeAxis(yAxis);
-
-        if (gridShow) {
-            plot.setBackgroundPaint(safeParseCssColor(gridBackgroundColor));
-            plot.setOutlineStroke(new BasicStroke(gridBorderWidth));
-            plot.setOutlinePaint(safeParseCssColor(gridBorderColor));
-        } else {
-            plot.setBackgroundPaint(null);
-            plot.setOutlinePaint(null); // border
-        }
-
-        if (yAxisShowSplitLines) {
-            plot.setRangeGridlineStroke(new BasicStroke(1.0f));
-            plot.setRangeGridlinePaint(safeParseCssColor(yAxisSplitLineColor));
-            if (!gridShow) {
-                plot.setRightOutlinePaint(safeParseCssColor(yAxisSplitLineColor));
-            }
-        } else {
-            plot.setRangeGridlinesVisible(false);
-        }
-
-        if (xAxisShowSplitLines) {
-            plot.setDomainGridlineStroke(new BasicStroke(1.0f));
-            plot.setDomainGridlinePaint(safeParseCssColor(xAxisSplitLineColor));
-            if (!gridShow) {
-                plot.setTopOutlinePaint(safeParseCssColor(xAxisSplitLineColor));
-            }
-        } else {
-            plot.setDomainGridlinesVisible(false);
-        }
-
-        if (chartSettings.getShowLegend()) {
-            LegendTitle legend = new LegendTitle(plot);
-            legend.setBackgroundPaint(ColorUtils.TRANSPARENT);
-            legend.setMargin(new RectangleInsets(1.0, 1.0, 1.0, 1.0));
-            legend.setItemLabelPadding(new RectangleInsets(2.0, 4.0, 2.0, 16.0));
-            Font legentLabelFont = toAwtFont(chartSettings.getLegendLabelFont());
-            legend.setItemFont(legentLabelFont);
-            legend.setItemPaint(safeParseCssColor(chartSettings.getLegendLabelColor()));
-            LegendConfig legendConfig = chartSettings.getLegendConfig();
-            RectangleEdge position = RectangleEdge.TOP;
-            LegendPosition legendPosition = legendConfig.getPosition();
-            switch (legendPosition) {
-                case top -> position = RectangleEdge.TOP;
-                case bottom -> position = RectangleEdge.BOTTOM;
-                case left -> position = RectangleEdge.LEFT;
-                case right -> position = RectangleEdge.RIGHT;
-            }
-            legend.setPosition(position);
-            chart.addSubtitle(legend);
-            legend.addChangeListener(chart);
-        }
-
-        // Data
 
         TimeSeriesChartNoAggregationBarWidthSettings noAggregationBarWidthSettings = chartSettings.getNoAggregationBarWidthSettings();
 
@@ -265,11 +285,41 @@ public class TimeseriesChartRenderer extends ChartRenderer<TimeseriesChartCompon
                 .build();
 
         for (int index = 0; index < seriesList.size(); index++) {
-            this.addChartSeriesData(seriesList.get(index), chartData, plot, barsList, barRenderCtx, index);
+            this.addChartSeriesData(seriesList.get(index), barsList, barRenderCtx, index);
         }
+    }
 
+    private void updateYAxisScale() {
+        for (Map.Entry<String, Integer> yAxisEntry : this.yAxisIndexMap.entrySet()) {
+            boolean includeZeros = this.seriesList.stream().anyMatch(entry -> {
+                TimeSeriesChartKeySettings settings = getSeriesSettings(entry);
+                return settings.getYAxisId().equals(yAxisEntry.getKey()) && TimeSeriesChartSeriesType.bar.equals(settings.getSeriesType());
+            });
+            this.yAxisList.get(yAxisEntry.getValue()).setAutoRangeIncludesZero(includeZeros);
+        }
+    }
+
+    private void setupLegend() {
         if (chartSettings.getShowLegend()) {
+            LegendTitle legend = new LegendTitle(plot);
+            legend.setBackgroundPaint(ColorUtils.TRANSPARENT);
+            legend.setMargin(new RectangleInsets(1.0, 1.0, 1.0, 1.0));
+            legend.setItemLabelPadding(new RectangleInsets(2.0, 4.0, 2.0, 16.0));
+            Font legentLabelFont = toAwtFont(chartSettings.getLegendLabelFont());
+            legend.setItemFont(legentLabelFont);
+            legend.setItemPaint(safeParseCssColor(chartSettings.getLegendLabelColor()));
             LegendConfig legendConfig = chartSettings.getLegendConfig();
+            RectangleEdge position = RectangleEdge.TOP;
+            LegendPosition legendPosition = legendConfig.getPosition();
+            switch (legendPosition) {
+                case bottom -> position = RectangleEdge.BOTTOM;
+                case left -> position = RectangleEdge.LEFT;
+                case right -> position = RectangleEdge.RIGHT;
+            }
+            legend.setPosition(position);
+            chart.addSubtitle(legend);
+            legend.addChangeListener(chart);
+
             boolean sortAlphabetically = legendConfig.getSortDataKeys();
             LegendItemCollection legendItems = plot.getLegendItems();
             List<LegendItem> items = new ArrayList<>();
@@ -295,33 +345,9 @@ public class TimeseriesChartRenderer extends ChartRenderer<TimeseriesChartCompon
             }
             plot.setFixedLegendItems(sortedCollection);
         }
-        return chart;
-    }
-
-    private void adjustAxisTicks(ValueAxis axis) {
-        // NumberAxis numberAxis = (NumberAxis) axis;
-        //numberAxis.setTickLabelFont(new Font("Monospace", Font.BOLD, 40));
-        //numberAxis.setUpperBound(25);
-       /* Range currentRange = numberAxis.getRange();
-        double tickSize = numberAxis.getTickUnit().getSize();
-        numberAxis.setAutoRange(false);
-        double lower = currentRange.getLowerBound();
-        double upper = currentRange.getUpperBound();
-        double newLowerBound = Math.floor(lower / tickSize) * tickSize;
-        double newUpperBound = Math.ceil(upper / tickSize) * tickSize;
-        numberAxis.setRange(newLowerBound, newUpperBound);*/
-    }
-
-    private NumberAxis createYAxis() {
-        NumberAxis yAxis = new NumberAxis("Temperature");
-        yAxis.setAutoRangeIncludesZero(false);
-        yAxis.setNumberFormatOverride(new DecimalFormat("0.0 '℃'"));
-        return yAxis;
     }
 
     private void addChartSeriesData(TsChartSeriesData chartSeriesData,
-                                    TsChartData chartData,
-                                    TbTimeseriesPlot plot,
                                     List<TsChartSeriesData> barsList,
                                     TimeseriesBarRenderCtx barRenderCtx,
                                     int index) {
@@ -360,7 +386,7 @@ public class TimeseriesChartRenderer extends ChartRenderer<TimeseriesChartCompon
                 try {
                     double doubleValue = Double.parseDouble(tsValue.getValue());
                     timeSeries.add(millisecond, doubleValue);
-                } catch (NumberFormatException e) {}
+                } catch (NumberFormatException ignored) {}
             }
             dataset = new TimeSeriesCollection(timeSeries, chartData.getTimeZone());
 
@@ -382,7 +408,7 @@ public class TimeseriesChartRenderer extends ChartRenderer<TimeseriesChartCompon
                     double doubleValue = Double.parseDouble(tsValue.getValue());
                     SimpleTimePeriod timePeriod = calculateBarTimePeriod(tsValue, barRenderCtx, barsList.size(), barIndex);
                     timePeriods.add(timePeriod, doubleValue);
-                } catch (NumberFormatException e) {}
+                } catch (NumberFormatException ignored) {}
             }
             dataset = new TimePeriodValuesCollection(timePeriods);
         }
@@ -392,7 +418,7 @@ public class TimeseriesChartRenderer extends ChartRenderer<TimeseriesChartCompon
         plot.setRenderer(index, renderer);
         plot.setDataset(index, dataset);
         int xAxisIndex = 0;
-        int yAxisIndex = 0;
+        int yAxisIndex = this.yAxisIndexMap.get(keySettings.getYAxisId());
         plot.mapDatasetToDomainAxis(index, xAxisIndex);
         plot.mapDatasetToRangeAxis(index, yAxisIndex);
     }

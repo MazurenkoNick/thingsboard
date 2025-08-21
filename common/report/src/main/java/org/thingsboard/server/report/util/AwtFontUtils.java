@@ -98,6 +98,8 @@ public class AwtFontUtils {
         registerFonts();
     }
 
+    public static final Font ZERO_FONT = fontMap.get("Roboto").deriveFont(0f);
+
     private static void registerFonts() {
         fontMap.put("Roboto", createFont("/fonts/roboto/Roboto-Regular.ttf"));
         fontMap.put("RobotoItalic", createFont("/fonts/roboto/Roboto-Italic.ttf"));
