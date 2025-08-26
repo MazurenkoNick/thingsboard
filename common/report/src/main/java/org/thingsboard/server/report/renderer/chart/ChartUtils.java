@@ -35,7 +35,6 @@ import org.jfree.chart.axis.AxisLocation;
 import org.jfree.chart.axis.DateAxis;
 import org.jfree.chart.axis.DateTickUnit;
 import org.jfree.chart.axis.DateTickUnitType;
-import org.jfree.chart.axis.NumberAxis;
 import org.jfree.chart.axis.NumberTickUnit;
 import org.jfree.chart.axis.TickUnitSource;
 import org.jfree.chart.axis.TickUnits;
@@ -115,7 +114,11 @@ public interface ChartUtils {
     }
 
     static TbNumberAxis createYAxis(XYPlot plot, TimeSeriesChartYAxisSettings yAxisSettings, int index) {
-        TbNumberAxis yAxis = new TbNumberAxis(yAxisSettings.getLabel());
+        TbNumberAxis parent = null;
+        if (index > 0) {
+            parent = (TbNumberAxis) plot.getRangeAxis();
+        }
+        TbNumberAxis yAxis = new TbNumberAxis(yAxisSettings.getLabel(), parent);
         plot.setRangeAxis(index, yAxis);
         AxisLocation location = AxisPosition.left.equals(yAxisSettings.getPosition()) ? AxisLocation.BOTTOM_OR_LEFT : AxisLocation.TOP_OR_RIGHT;
         plot.setRangeAxisLocation(index, location);
@@ -133,6 +136,12 @@ public interface ChartUtils {
             yAxis.setSplitNumber(yAxisSettings.getSplitNumber());
         } else if (yAxisSettings.getInterval() != null && yAxisSettings.getInterval() > 0) {
             yAxis.setTickUnit(new NumberTickUnit(yAxisSettings.getInterval()));
+        }
+        if (yAxisSettings.getMin() != null) {
+            yAxis.setAxisMin(yAxisSettings.getMin());
+        }
+        if (yAxisSettings.getMax() != null) {
+            yAxis.setAxisMax(yAxisSettings.getMax());
         }
         yAxis.setNumberFormatOverride(new DecimalFormat(patternBuilder.toString()));
         setupAxisAppearance(yAxis, yAxisSettings);
