@@ -150,7 +150,7 @@ public class TbNumberAxis extends NumberAxis {
     @Override
     protected double estimateMaximumTickLabelHeight(Graphics2D g2) {
         double result = calculateTickLabelHeight(g2, "123");
-        return result + 12;
+        return result * 2;
     }
 
     private double calculateTickLabelHeight(Graphics2D g2, String label) {
@@ -248,8 +248,11 @@ public class TbNumberAxis extends NumberAxis {
     }
 
     private double nearestLower(double lower, double size) {
-        double rest = lower % size;
+        double rest = Math.abs(lower) % size;
         if (rest > 0) {
+            if (lower < 0) {
+                rest = size - rest;
+            }
             lower -= rest;
         }
         return lower;

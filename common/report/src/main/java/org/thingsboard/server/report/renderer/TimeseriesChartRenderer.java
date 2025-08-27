@@ -36,11 +36,15 @@ import org.jfree.chart.LegendItemCollection;
 import org.jfree.chart.axis.NumberAxis;
 import org.jfree.chart.plot.DatasetRenderingOrder;
 import org.jfree.chart.plot.XYPlot;
+import org.jfree.chart.renderer.xy.AbstractXYItemRenderer;
 import org.jfree.chart.renderer.xy.StandardXYBarPainter;
+import org.jfree.chart.renderer.xy.XYAreaRenderer;
 import org.jfree.chart.renderer.xy.XYBarRenderer;
 import org.jfree.chart.renderer.xy.XYItemRenderer;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.chart.renderer.xy.XYSplineRenderer;
+import org.jfree.chart.renderer.xy.XYStepAreaRenderer;
+import org.jfree.chart.renderer.xy.XYStepRenderer;
 import org.jfree.chart.title.LegendTitle;
 import org.jfree.chart.title.TextTitle;
 import org.jfree.chart.ui.RectangleEdge;
@@ -55,8 +59,12 @@ import org.jfree.data.xy.XYDataset;
 import org.springframework.stereotype.Component;
 import org.thingsboard.server.common.data.report.configuration.DataKeySettings;
 import org.thingsboard.server.common.data.report.configuration.chart.AxisPosition;
+import org.thingsboard.server.common.data.report.configuration.chart.ChartFillSettings;
+import org.thingsboard.server.common.data.report.configuration.chart.ChartFillType;
+import org.thingsboard.server.common.data.report.configuration.chart.ChartLineType;
 import org.thingsboard.server.common.data.report.configuration.chart.LegendConfig;
 import org.thingsboard.server.common.data.report.configuration.chart.LegendPosition;
+import org.thingsboard.server.common.data.report.configuration.chart.LineSeriesSettings;
 import org.thingsboard.server.common.data.report.configuration.chart.ReportTimeSeriesChartSettings;
 import org.thingsboard.server.common.data.report.configuration.chart.TimeSeriesChartAxisSettings;
 import org.thingsboard.server.common.data.report.configuration.chart.TimeSeriesChartBarWidth;
@@ -357,9 +365,6 @@ public class TimeseriesChartRenderer extends ChartRenderer<TimeseriesChartCompon
                                     int index) {
 
 
-        boolean smooth = false;
-        boolean drawPoints = false;
-
         TimeSeriesChartKeySettings keySettings = this.getSeriesSettings(chartSeriesData);
 
         XYItemRenderer renderer;
@@ -370,18 +375,11 @@ public class TimeseriesChartRenderer extends ChartRenderer<TimeseriesChartCompon
 
         XYDataset dataset;
 
-        Paint seriesPaint = safeParseCssColor(chartSeriesData.getDataKey().getColor());
+        Color seriesColor = safeParseCssColor(chartSeriesData.getDataKey().getColor());
 
         if (keySettings.getSeriesType() == TimeSeriesChartSeriesType.line) {
-            if (smooth) {
-                renderer = new XYSplineRenderer(3);
-                ((XYSplineRenderer)renderer).setDefaultShapesVisible(drawPoints);
-            } else {
-                renderer = new XYLineAndShapeRenderer(true,
-                        drawPoints);
-            }
-            renderer.setSeriesPaint(0, seriesPaint);
-            renderer.setSeriesStroke(0, new BasicStroke(2.0f));
+
+            renderer = createLineRenderer(keySettings.getLineSettings(), seriesColor);
 
             TimeSeries timeSeries = new TimeSeries(label);
 
@@ -399,7 +397,7 @@ public class TimeseriesChartRenderer extends ChartRenderer<TimeseriesChartCompon
             barRenderer.setDrawBarOutline(false);
             barRenderer.setShadowVisible(false);
             barRenderer.setBarPainter(new StandardXYBarPainter());
-            barRenderer.setSeriesPaint(0, seriesPaint);
+            barRenderer.setSeriesPaint(0, seriesColor);
 
             renderer = barRenderer;
 
@@ -425,6 +423,98 @@ public class TimeseriesChartRenderer extends ChartRenderer<TimeseriesChartCompon
         int yAxisIndex = this.yAxisIndexMap.get(keySettings.getYAxisId());
         plot.mapDatasetToDomainAxis(index, xAxisIndex);
         plot.mapDatasetToRangeAxis(index, yAxisIndex);
+    }
+
+    private XYItemRenderer createLineRenderer(LineSeriesSettings lineSettings, Color seriesColor) {
+
+        Paint fillPaint = this.createFillPaint(lineSettings.getFillAreaSettings(), seriesColor, lineSettings.getStep());
+        Stroke lineStroke = this.createLineStroke(lineSettings.getLineType(), lineSettings.getLineWidth());
+
+        AbstractXYItemRenderer lineRenderer;
+        if (lineSettings.getStep()) {
+            XYStepAreaRenderer stepRenderer = new XYStepAreaRenderer();
+            double stepPoint = 0.0;
+            switch (lineSettings.getStepType()) {
+                case start -> stepPoint = 0.0;
+                case middle -> stepPoint = 0.5;
+                case end -> stepPoint = 1.0;
+            }
+            stepRenderer.setStepPoint(stepPoint);
+            stepRenderer.setSeriesPaint(0, fillPaint);
+            if (lineSettings.getShowLine()) {
+                stepRenderer.setOutline(true);
+                stepRenderer.setSeriesOutlinePaint(0, seriesColor);
+                stepRenderer.setSeriesOutlineStroke(0, lineStroke);
+            } else {
+                stepRenderer.setOutline(false);
+            }
+            if (lineSettings.getShowPoints()) {
+                stepRenderer.setShapesVisible(true);
+            } else {
+                stepRenderer.setShapesVisible(false);
+            }
+            lineRenderer = stepRenderer;
+        } else {
+            XYSplineRenderer splineRenderer = new XYSplineRenderer(lineSettings.getSmooth() ? 5 : 1,
+                    lineSettings.getFillAreaSettings().getType() != ChartFillType.none ? XYSplineRenderer.FillType.TO_LOWER_BOUND : XYSplineRenderer.FillType.NONE);
+            splineRenderer.setSeriesFillPaint(0, fillPaint);
+            if (lineSettings.getShowLine()) {
+                splineRenderer.setSeriesLinesVisible(0, true);
+                splineRenderer.setSeriesStroke(0, lineStroke);
+                splineRenderer.setSeriesPaint(0, seriesColor);
+            } else {
+                splineRenderer.setSeriesLinesVisible(0, false);
+            }
+            if (lineSettings.getShowPoints()) {
+                splineRenderer.setDefaultShapesVisible(true);
+            } else {
+                splineRenderer.setDefaultShapesVisible(false);
+            }
+            lineRenderer = splineRenderer;
+        }
+        return lineRenderer;
+    }
+
+    private Stroke createLineStroke(ChartLineType lineType, Float lineWidth) {
+        float[] dashPattern = null;
+        switch (lineType) {
+            case solid -> dashPattern = null;
+            case dashed -> dashPattern = new float[]{4.0f * lineWidth, 2.0f * lineWidth};
+            case dotted -> dashPattern = new float[]{lineWidth};
+        }
+        return new BasicStroke(
+                lineWidth,
+                BasicStroke.CAP_BUTT,
+                BasicStroke.JOIN_BEVEL,
+                10.0f,
+                dashPattern,
+                0.0f
+        );
+    }
+
+    private Paint createFillPaint(ChartFillSettings fillSettings, Color seriesColor, boolean linearGradient) {
+        switch (fillSettings.getType()) {
+            case none -> {
+                return ColorUtils.TRANSPARENT;
+            }
+            case opacity -> {
+                return ColorUtils.applyOpacity(seriesColor, fillSettings.getOpacity());
+            }
+            case gradient -> {
+                Color startColor = ColorUtils.setOpacity(seriesColor, fillSettings.getGradient().getStart() / 100f);
+                Color endColor = ColorUtils.setOpacity(seriesColor, fillSettings.getGradient().getEnd() / 100f);
+                if (linearGradient) {
+                    return new LinearGradientPaint(
+                            0, 0, getWidth(), getHeight(),
+                            new float[]{0.0f, 1.0f},
+                            new Color[]{startColor, endColor}
+                    );
+                } else {
+                    return new GradientPaint(0, 0, startColor, 1f, 1f, endColor);
+                }
+            }
+        }
+        return ColorUtils.TRANSPARENT;
     }
 
     private TimeSeriesChartKeySettings getSeriesSettings(TsChartSeriesData chartSeriesData) {

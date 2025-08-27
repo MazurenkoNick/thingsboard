@@ -30,34 +30,22 @@
  */
 package org.thingsboard.server.common.data.report.configuration.chart;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
-import org.thingsboard.server.common.data.report.configuration.DataKeySettings;
-import org.thingsboard.server.common.data.report.configuration.style.DataKeySettingsType;
 
 @Data
-public class TimeSeriesChartKeySettings implements DataKeySettings {
+public class ChartFillSettingsGradient {
 
-    @JsonProperty("yAxisId")
-    private String yAxisId;
-    private Boolean showInLegend;
-    private TimeSeriesChartSeriesType seriesType;
-    private LineSeriesSettings lineSettings;
+    private Float start;
+    private Float end;
 
-    public TimeSeriesChartKeySettings() {}
+    public ChartFillSettingsGradient() {}
 
-    public TimeSeriesChartKeySettings(TimeSeriesChartKeySettings input) {
+    public ChartFillSettingsGradient(ChartFillSettingsGradient input) {
         if (input == null) {
-            input = new TimeSeriesChartKeySettings();
+            input = new ChartFillSettingsGradient();
         }
-        this.yAxisId = input.getYAxisId() != null ? input.getYAxisId() : "default";
-        this.showInLegend = input.getShowInLegend() != null ? input.getShowInLegend() : Boolean.TRUE;
-        this.seriesType = input.getSeriesType() != null ? input.getSeriesType() : TimeSeriesChartSeriesType.line;
-        this.lineSettings = new LineSeriesSettings(input.getLineSettings());
+        this.start = input.getStart() != null ? input.getStart() : 100f;
+        this.end = input.getEnd() != null ? input.getEnd() : 0f;
     }
 
-    @Override
-    public DataKeySettingsType getType() {
-        return DataKeySettingsType.TIME_SERIES_CHART;
-    }
 }

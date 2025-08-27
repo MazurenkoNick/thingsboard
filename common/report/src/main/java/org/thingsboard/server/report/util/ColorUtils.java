@@ -42,6 +42,27 @@ public class ColorUtils {
 
     public static final Color TRANSPARENT = new Color(0, 0, 0, 0);
 
+    public static Color applyOpacity(Color originalColor, float opacity) {
+        int currentAlpha = originalColor.getAlpha();
+        int newAlpha = Math.min(255, Math.round(currentAlpha * opacity));
+        return new Color(
+                originalColor.getRed(),
+                originalColor.getGreen(),
+                originalColor.getBlue(),
+                newAlpha
+        );
+    }
+
+    public static Color setOpacity(Color originalColor, float opacity) {
+        int newAlpha = Math.min(255, Math.round(255 * opacity));
+        return new Color(
+                originalColor.getRed(),
+                originalColor.getGreen(),
+                originalColor.getBlue(),
+                newAlpha
+        );
+    }
+
     public static String normalizeCssColor(String color) {
         Color c = parseCssColor(color);
         if (c.getAlpha() == 255) {

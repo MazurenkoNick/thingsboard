@@ -56,10 +56,6 @@ public abstract class TimeSeriesChartAxisSettings {
     protected TimeSeriesChartAxisSettings() {}
 
     protected TimeSeriesChartAxisSettings(TimeSeriesChartAxisSettings input) {
-
-        // this.position;
-        // this.tickLabelFont
-
         this.show = input.getShow() != null ? input.getShow() : Boolean.TRUE;
         this.label = input.getLabel() != null ? input.getLabel() : "";
         this.labelFont = input.getLabelFont() != null ? input.getLabelFont() : Font.builder().family("Roboto")
