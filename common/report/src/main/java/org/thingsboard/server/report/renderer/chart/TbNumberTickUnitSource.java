@@ -77,10 +77,16 @@ public class TbNumberTickUnitSource implements TickUnitSource, Serializable {
 
     @Override
     public TickUnit getCeilingTickUnit(double size) {
+        return getCeilingTickUnit(size, true);
+    }
+
+    public TickUnit getCeilingTickUnit(double size, boolean roundToNearest) {
         if (Double.isInfinite(size)) {
             throw new IllegalArgumentException("Must be finite.");
         }
-        size = this.nearestRoundedNumber(size);
+        if (roundToNearest) {
+            size = this.nearestRoundedNumber(size);
+        }
         this.power = (int) Math.ceil(Math.log10(size));
         this.factor = 1;
         boolean done = false;

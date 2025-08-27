@@ -58,6 +58,7 @@ import org.thingsboard.server.common.data.report.configuration.chart.AxisPositio
 import org.thingsboard.server.common.data.report.configuration.chart.LegendConfig;
 import org.thingsboard.server.common.data.report.configuration.chart.LegendPosition;
 import org.thingsboard.server.common.data.report.configuration.chart.ReportTimeSeriesChartSettings;
+import org.thingsboard.server.common.data.report.configuration.chart.TimeSeriesChartAxisSettings;
 import org.thingsboard.server.common.data.report.configuration.chart.TimeSeriesChartBarWidth;
 import org.thingsboard.server.common.data.report.configuration.chart.TimeSeriesChartKeySettings;
 import org.thingsboard.server.common.data.report.configuration.chart.TimeSeriesChartNoAggregationBarWidthSettings;
@@ -182,8 +183,11 @@ public class TimeseriesChartRenderer extends ChartRenderer<TimeseriesChartCompon
         String xAxisSplitLineColor = mainXAxisSettings.getSplitLinesColor();
 
         TimeSeriesChartYAxisSettings defaultYAxisSettings = chartSettings.getYAxes().get("default");
-        boolean yAxisShowSplitLines = defaultYAxisSettings.getShowSplitLines();
-        String yAxisSplitLineColor = defaultYAxisSettings.getSplitLinesColor();
+        boolean yAxisShowSplitLines = chartSettings.getYAxes().values().stream()
+                .anyMatch(axis -> axis.getShow() && axis.getShowSplitLines());
+        String yAxisSplitLineColor = chartSettings.getYAxes().values().stream()
+                .filter(axis -> axis.getShow() && axis.getShowSplitLines())
+                .map(TimeSeriesChartAxisSettings::getSplitLinesColor).findFirst().orElse(null);
 
         if (gridShow) {
             plot.setBackgroundPaint(safeParseCssColor(gridBackgroundColor));

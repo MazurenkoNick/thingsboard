@@ -39,10 +39,12 @@ import org.jfree.chart.axis.Tick;
 import org.jfree.chart.axis.TickUnit;
 import org.jfree.chart.axis.ValueAxis;
 import org.jfree.chart.ui.RectangleEdge;
+import org.jfree.chart.ui.RectangleInsets;
 import org.jfree.chart.ui.TextAnchor;
 import org.jfree.data.Range;
 
 import java.awt.*;
+import java.awt.font.FontRenderContext;
 import java.awt.geom.Rectangle2D;
 import java.text.NumberFormat;
 import java.util.ArrayList;
@@ -52,82 +54,25 @@ public class TbNumberAxis extends NumberAxis {
 
     @Setter
     private Double axisMin;
+
     @Setter
     private Double axisMax;
+
     @Setter
     private Integer splitNumber;
-    private TbNumberTickUnitSource tbNumberTickUnitSource = new TbNumberTickUnitSource();
-    private TbNumberAxisTicks ticks = new TbNumberAxisTicks();
 
-    private TbNumberAxis parentAxis = null;
+    private final TbNumberTickUnitSource tbNumberTickUnitSource = new TbNumberTickUnitSource();
+    private final TbNumberAxis parentAxis;
 
-    public TbNumberAxis() {
-        this(null, null);
-    }
-
-    public TbNumberAxis(String label) {
-        this(label, null);
-    }
+    private TbNumberAxisTicks ticks;
 
     public TbNumberAxis(String label, TbNumberAxis parentAxis) {
         super(label);
+        if (parentAxis != null) {
+            this.setUpperMargin(0);
+            this.setLowerMargin(0);
+        }
         this.parentAxis = parentAxis;
-    }
-
-    @Override
-    protected void selectAutoTickUnit(Graphics2D g2, Rectangle2D dataArea,
-                                      RectangleEdge edge) {
-        super.selectAutoTickUnit(g2, dataArea, edge);
-        this.autoAdjustRange();
-    }
-
-    @Override
-    protected void autoAdjustRange() {
-        super.autoAdjustRange();
-        double lower = this.axisMin != null ? this.axisMin : getRange().getLowerBound();
-        double upper = this.axisMax != null ? this.axisMax : getRange().getUpperBound();
-        if (upper <= lower) {
-            upper = lower + 1.0;
-        }
-        double length = upper - lower;
-        NumberTickUnit tickUnit = getTickUnit();
-        double size = tickUnit.getSize();
-        if (splitNumber != null) {
-            size = length / splitNumber;
-        }
-        if (isAutoTickUnitSelection()) {
-            tickUnit = (NumberTickUnit) this.tbNumberTickUnitSource.getCeilingTickUnit(size);
-            setTickUnit(tickUnit, false, false);
-        }
-
-        double currentAxisMin;
-        double currentAxisMax;
-        lower = getRange().getLowerBound();
-        upper = getRange().getUpperBound();
-        if (this.axisMin == null) {
-            double rest = lower % tickUnit.getSize();
-            if (rest > 0) {
-                lower -= rest;
-            }
-            currentAxisMin = lower;
-        } else {
-            currentAxisMin = this.axisMin;
-        }
-        if (this.axisMax == null) {
-            double rest = (upper - lower) % tickUnit.getSize();
-            if (rest > 0) {
-                double upperAdjust = tickUnit.getSize() - rest;
-                upper += upperAdjust;
-            }
-            currentAxisMax = upper;
-        } else {
-            currentAxisMax = this.axisMax;
-        }
-        if (currentAxisMax <= currentAxisMin) {
-            currentAxisMax = currentAxisMin + 1.0;
-        }
-        setRange(new Range(currentAxisMin, currentAxisMax), false, false);
-        this.calculateTicks();
     }
 
     @Override
@@ -137,8 +82,11 @@ public class TbNumberAxis extends NumberAxis {
         List<Tick> result = new ArrayList<>();
         Font tickLabelFont = getTickLabelFont();
         g2.setFont(tickLabelFont);
-        if (isAutoTickUnitSelection()) {
+        if ((splitNumber == null || splitNumber == 0) && isAutoTickUnitSelection()) {
             selectAutoTickUnit(g2, dataArea, edge);
+        }
+        if (this.ticks == null) {
+            this.adjustTicksAndRange();
         }
 
         if (ticks.getTicksCount() <= ValueAxis.MAXIMUM_TICK_COUNT) {
@@ -146,9 +94,8 @@ public class TbNumberAxis extends NumberAxis {
             boolean drawFirstLabel = true;
             boolean drawLastLabel = true;
 
-            TbNumberAxisTicks ticks = getTicks();
             if (ticks.checkFirstTickIntersection()) {
-                double labelHeight = estimateMaximumTickLabelHeight(g2);
+                double labelHeight = calculateTickLabelHeight(g2, "123");
                 double firstLabelPos = valueToJava2D(ticks.firstTickValue(getRange()), dataArea, edge);
                 double nextLabelPos = valueToJava2D(ticks.getTickValue(1, getRange()), dataArea, edge);
                 if ((firstLabelPos - labelHeight / 2) < (nextLabelPos + labelHeight / 2)) {
@@ -157,7 +104,7 @@ public class TbNumberAxis extends NumberAxis {
             }
 
             if (ticks.checkLastTickIntersection()) {
-                double labelHeight = estimateMaximumTickLabelHeight(g2);
+                double labelHeight = calculateTickLabelHeight(g2, "123");
                 double lastLabelPos = valueToJava2D(ticks.lastTickValue(getRange()), dataArea, edge);
                 double prevLabelPos = valueToJava2D(ticks.getTickValue(ticks.getTicksCount()-2, getRange()), dataArea, edge);
                 if ((lastLabelPos + labelHeight / 2) > (prevLabelPos - labelHeight / 2)) {
@@ -200,19 +147,132 @@ public class TbNumberAxis extends NumberAxis {
         return result;
     }
 
-    private TbNumberAxisTicks getTicks() {
-        if (this.parentAxis != null) {
-            return this.parentAxis.getTicks();
-        } else {
-            return this.ticks;
+    @Override
+    protected double estimateMaximumTickLabelHeight(Graphics2D g2) {
+        double result = calculateTickLabelHeight(g2, "123");
+        return result + 12;
+    }
+
+    private double calculateTickLabelHeight(Graphics2D g2, String label) {
+        RectangleInsets tickLabelInsets = getTickLabelInsets();
+        double result = tickLabelInsets.getTop() + tickLabelInsets.getBottom();
+
+        Font tickLabelFont = getTickLabelFont();
+        FontRenderContext frc = g2.getFontRenderContext();
+        result += tickLabelFont.getLineMetrics(label, frc).getHeight();
+        return result;
+    }
+
+    private void adjustTicksAndRange() {
+        double lower = this.axisMin != null ? this.axisMin : getRange().getLowerBound();
+        double upper = this.axisMax != null ? this.axisMax : getRange().getUpperBound();
+        if (upper <= lower) {
+            upper = lower + 1.0;
         }
+        double length = upper - lower;
+        NumberTickUnit tickUnit = getTickUnit();
+        double size = tickUnit.getSize();
+        if (this.parentAxis != null) {
+            size = calculateChildSize(length);
+            int parentSplitCount = this.parentAxis.getTicks().getTicksCount() - 1;
+            length = parentSplitCount * size;
+            if (this.axisMin == null) {
+                lower = nearestLower(lower, size);
+            }
+            if (this.axisMax == null) {
+                upper = lower + length;
+                if (upper < getRange().getUpperBound()) {
+                    double newLength = getRange().getUpperBound() - lower;
+                    size = calculateChildSize(newLength);
+                    length = parentSplitCount * size;
+                    upper = lower + length;
+                }
+                setRange(new Range(lower, upper), false, false);
+            }
+        } else {
+            if (splitNumber != null && splitNumber > 0) {
+                size = length / splitNumber;
+            }
+            if (isAutoTickUnitSelection()) {
+                tickUnit = (NumberTickUnit) this.tbNumberTickUnitSource.getCeilingTickUnit(size);
+                setTickUnit(tickUnit, false, false);
+            }
+        }
+
+        double currentAxisMin;
+        double currentAxisMax;
+        size = tickUnit.getSize();
+        lower = getRange().getLowerBound();
+        upper = getRange().getUpperBound();
+
+        if (this.axisMin == null) {
+            if (this.parentAxis == null) {
+                lower = nearestLower(lower, size);
+            }
+            currentAxisMin = lower;
+        } else {
+            currentAxisMin = this.axisMin;
+        }
+        if (this.axisMax == null) {
+            if (this.parentAxis == null) {
+                upper = nearestUpper(lower, upper, size);
+            }
+            currentAxisMax = upper;
+        } else {
+            currentAxisMax = this.axisMax;
+        }
+        if (currentAxisMax <= currentAxisMin) {
+            currentAxisMax = currentAxisMin + 1.0;
+        }
+        setRange(new Range(currentAxisMin, currentAxisMax), false, false);
+        this.calculateTicks();
+    }
+
+    private double calculateChildSize(double length) {
+        NumberTickUnit tickUnit = getTickUnit();
+        double size = tickUnit.getSize();
+        int parentSplitCount = this.parentAxis.getTicks().getTicksCount() - 1;
+        boolean roundToNearest = true;
+        if (splitNumber != null && splitNumber > 0) {
+            size = length / splitNumber;
+        } else if (isAutoTickUnitSelection()) {
+            size = length / parentSplitCount;
+            roundToNearest = false;
+        }
+        if (isAutoTickUnitSelection()) {
+            tickUnit = (NumberTickUnit) this.tbNumberTickUnitSource.getCeilingTickUnit(size, roundToNearest);
+            setTickUnit(tickUnit, false, false);
+            size = tickUnit.getSize();
+        }
+        return size;
+    }
+
+    private double nearestLower(double lower, double size) {
+        double rest = lower % size;
+        if (rest > 0) {
+            lower -= rest;
+        }
+        return lower;
+    }
+
+    private double nearestUpper(double lower, double upper, double size) {
+        double rest = (upper - lower) % size;
+        if (rest > 0) {
+            double upperAdjust = size - rest;
+            upper += upperAdjust;
+        }
+        return upper;
+    }
+
+    private TbNumberAxisTicks getTicks() {
+        return this.ticks;
     }
 
     private void calculateTicks() {
         if (this.parentAxis == null) {
             TickUnit tu = getTickUnit();
             double size = tu.getSize();
-            this.ticks.clear();
+            this.ticks = new TbNumberAxisTicks();
             double currentTickValue = getRange().getLowerBound();
             double maxTickValue = getRange().getUpperBound();
             this.ticks.addTickValue(currentTickValue, getRange());
@@ -233,6 +293,9 @@ public class TbNumberAxis extends NumberAxis {
                 }
                 this.ticks.addTickValue(maxTickValue, getRange());
             }
+        } else {
+            Double unitSize = !isAutoTickUnitSelection() ? getTickUnit().getSize() : null;
+            this.ticks = this.parentAxis.getTicks().computeChildTicks(this.splitNumber, unitSize, getRange());
         }
     }
 
@@ -251,7 +314,11 @@ public class TbNumberAxis extends NumberAxis {
         public TbNumberAxisTicks() {}
 
         public void addTickValue(double tickValue, Range range) {
-            tickValues.add((tickValue - range.getLowerBound()) / range.getLength());
+           addTick((tickValue - range.getLowerBound()) / range.getLength());
+        }
+
+        public void addTick(double tick) {
+            tickValues.add(tick);
         }
 
         public int getTicksCount() {
@@ -270,12 +337,6 @@ public class TbNumberAxis extends NumberAxis {
             return getTickValue(tickValues.size() - 1, range);
         }
 
-        public void clear() {
-            this.tickValues.clear();
-            this.additionalFistTick = false;
-            this.additionalLastTick = false;
-        }
-
         public boolean checkFirstTickIntersection() {
             return this.additionalFistTick && this.tickValues.size() > 2;
         }
@@ -284,7 +345,39 @@ public class TbNumberAxis extends NumberAxis {
             return this.additionalLastTick && this.tickValues.size() > 2;
         }
 
+        public TbNumberAxisTicks computeChildTicks(Integer splitCount, Double unitSize, Range range) {
+            if (this.additionalFistTick || this.additionalLastTick || ((splitCount == null || splitCount == 0) && unitSize == null)) {
+                return this;
+            } else {
+                Integer step = null;
+                int parentSplitCount = this.tickValues.size() - 1;
+                if (splitCount == null || splitCount == 0) {
+                    double unitStep =  unitSize / range.getLength();
+                    splitCount = (int) (1 / unitStep);
+                }
+                if (parentSplitCount != splitCount && parentSplitCount % splitCount == 0) {
+                    step = parentSplitCount / splitCount;
+                }
+                if (step == null && unitSize != null) {
+                    double unitStep =  unitSize / range.getLength();
+                    double parentStep = 1.0 / (this.tickValues.size() - 1);
+                    if (unitStep != parentStep && unitStep % parentStep == 0) {
+                        step = (int)(unitStep / parentStep);
+                    }
+                }
+                if (step != null) {
+                    TbNumberAxisTicks ticks = new TbNumberAxisTicks();
+                    for (int i = 0; i < this.tickValues.size(); i += step) {
+                        ticks.addTick(this.tickValues.get(i));
+                    }
+                    if ((this.tickValues.size() - 1) % step != 0) {
+                        ticks.addTick(this.tickValues.get(this.tickValues.size() - 1));
+                    }
+                    return ticks;
+                } else {
+                    return this;
+                }
+            }
+        }
     }
-
-
 }
