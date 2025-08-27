@@ -46,17 +46,20 @@ public abstract class ChartRenderer<C extends AbstractChartComponent> extends Ab
 
     protected static ChartTheme currentChartTheme = new StandardChartTheme("TbChartTheme");
 
+    private int width;
+    private int height;
+
     @Override
     protected String getImageUrl(C component, ComponentData reportDataSource) {
-        JFreeChart chart = createChart(component, reportDataSource);
 
-        int width;
         if (ImageWidthType.CUSTOM == component.getWidthType()) {
-            width = component.getCustomWidth() >= 1 ? component.getCustomWidth() : 100;
+            this.width = component.getCustomWidth() >= 1 ? component.getCustomWidth() : 100;
         } else {
-            width = this.layoutWidthPx;
+            this.width  = this.layoutWidthPx;
         }
-        int height = component.getHeight() >= 1 ? component.getHeight() : 400;
+        this.height = component.getHeight() >= 1 ? component.getHeight() : 400;
+
+        JFreeChart chart = createChart(component, reportDataSource);
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         try {
@@ -67,6 +70,14 @@ public abstract class ChartRenderer<C extends AbstractChartComponent> extends Ab
         byte[] imageData = baos.toByteArray();
 
         return encodeImage(imageData);
+    }
+
+    protected int getWidth() {
+        return width;
+    }
+
+    protected int getHeight() {
+        return height;
     }
 
     protected abstract JFreeChart createChart(C component, ComponentData reportDataSource);

@@ -61,6 +61,7 @@ import java.util.Map;
 import java.util.TimeZone;
 
 import static org.jfree.chart.axis.Axis.DEFAULT_AXIS_LABEL_INSETS;
+import static org.jfree.chart.axis.Axis.DEFAULT_TICK_LABEL_INSETS;
 import static org.thingsboard.server.report.util.AwtFontUtils.ZERO_FONT;
 import static org.thingsboard.server.report.util.AwtFontUtils.toAwtFont;
 import static org.thingsboard.server.report.util.ColorUtils.safeParseCssColor;
@@ -109,6 +110,10 @@ public interface ChartUtils {
         plot.setDomainAxisLocation(index, location);
         xAxis.setMinimumDate(new Date(timeRange.startTs));
         xAxis.setMaximumDate(new Date(timeRange.endTs));
+        xAxis.setTickLabelInsets(new RectangleInsets(DEFAULT_TICK_LABEL_INSETS.getTop(),
+                DEFAULT_TICK_LABEL_INSETS.getLeft() + 0.5,
+                DEFAULT_TICK_LABEL_INSETS.getBottom(),
+                DEFAULT_TICK_LABEL_INSETS.getRight() + 0.5));
         setupAxisAppearance(xAxis, xAxisSettings);
         return xAxis;
     }
@@ -253,6 +258,8 @@ public interface ChartUtils {
         units.add(new DateTickUnit(DateTickUnitType.DAY, 1,
                 DateTickUnitType.HOUR, 1, f5));
         units.add(new DateTickUnit(DateTickUnitType.DAY, 2,
+                DateTickUnitType.HOUR, 1, f5));
+        units.add(new DateTickUnit(DateTickUnitType.DAY, 4,
                 DateTickUnitType.HOUR, 1, f5));
         units.add(new DateTickUnit(DateTickUnitType.DAY, 7,
                 DateTickUnitType.DAY, 1, f5));
