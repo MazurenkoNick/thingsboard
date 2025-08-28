@@ -129,6 +129,19 @@
                                 formControlName="image">
         </tb-gallery-image-input>
       </div>
+
+      <div class="tb-form-panel stroked no-gap">
+        <tb-file-input [contentConvertFunction]="loadDataFromJsonContent"
+                       [existingFileName]="currentFileName"
+                       (fileNameChanged)="currentFileName = $event"
+                       formControlName="fileContent"
+                       required
+                       label="{{importFileLabel | translate}}"
+                       dropLabel="{{ 'import.drop-json-file-or' | translate }}"
+                       accept=".json,application/json"
+                       allowedExtensions="json">
+        </tb-file-input>
+      </div>
     </fieldset>
   </form>
   <tb-group-entity-info *ngIf="!isEdit" [groupEntity]="entity"></tb-group-entity-info>

@@ -57,6 +57,9 @@ export class DashboardFormComponent extends GroupEntityComponent<DashboardInfo> 
   publicLink: string;
   // assignedCustomersText: string;
 
+  currentFileName: string;
+  importFileLabel: string = 'Upload JSON file to update the dashboard';
+
   constructor(protected store: Store<AppState>,
               protected translate: TranslateService,
               private dashboardService: DashboardService,
@@ -102,6 +105,7 @@ export class DashboardFormComponent extends GroupEntityComponent<DashboardInfo> 
       {
         title: [entity ? entity.title : '', [Validators.required, Validators.maxLength(255)]],
         image: [entity ? entity.image : null],
+        fileContent: [null],
         mobileHide: [entity ? entity.mobileHide : false],
         mobileOrder: [entity ? entity.mobileOrder : null, [Validators.pattern(/^-?[0-9]+$/)]],
         configuration: this.fb.group(
@@ -122,6 +126,7 @@ export class DashboardFormComponent extends GroupEntityComponent<DashboardInfo> 
     this.updateFields(entity);
     this.entityForm.patchValue({title: entity.title});
     this.entityForm.patchValue({image: entity.image});
+    this.entityForm.patchValue({fileContent: entity.fileContent});
     this.entityForm.patchValue({mobileHide: entity.mobileHide});
     this.entityForm.patchValue({mobileOrder: entity.mobileOrder});
     this.entityForm.patchValue({configuration: {description: entity.configuration ? entity.configuration.description : ''}});
@@ -163,6 +168,17 @@ export class DashboardFormComponent extends GroupEntityComponent<DashboardInfo> 
       } else {
         this.publicLink = null;
       }
+    }
+  }
+
+
+  loadDataFromJsonContent(content: string): any {
+    try {
+      const importData = JSON.parse(content);
+      return importData;
+    } catch (err) {
+      this.store.dispatch(new ActionNotificationShow({message: err.message, type: 'error'}));
+      return null;
     }
   }
 }

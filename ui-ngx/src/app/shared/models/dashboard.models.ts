@@ -209,6 +209,7 @@ export interface Dashboard extends BaseData<DashboardId>, HasTenantId, HasVersio
   configuration?: DashboardConfiguration;
   dialogRef?: MatDialogRef<any>;
   resources?: Array<any>;
+  fileContent?: string;
 }
 
 export type DashboardInfo = Dashboard & GroupEntityInfo<DashboardId>;
