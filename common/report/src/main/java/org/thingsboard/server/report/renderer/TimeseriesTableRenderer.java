@@ -53,14 +53,6 @@ public class TimeseriesTableRenderer extends TableWithLayoutComponentRenderer<Ti
     }
 
     @Override
-    protected Float defaultFontSize(String key) {
-        if ("ts".equals(key)) {
-            return 9f;
-        }
-        return null;
-    }
-
-    @Override
     protected List<DataKey> getColumns(TimeseriesTableComponent component, DataSource dataSource) {
         List<DataKey> columns = new LinkedList<>();
         if (component.isShowTimestamp()) {

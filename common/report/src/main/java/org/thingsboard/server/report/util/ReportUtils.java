@@ -61,6 +61,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -72,6 +73,8 @@ public class ReportUtils {
 
     public static final Pattern REPORT_NAME_DATE_PATTERN = Pattern.compile("%d\\{([^\\}]*)\\}");
     public static final String DEFAULT_REPORT_NAME_PATTERN = "report-%d{yyyy-MM-dd_HH:mm:ss}";
+    public static final Set<String> ENTITY_TIME_FIELDS = Set.of("ts", "createdTime", "startTime", "endTime", "ackTime", "clearTime", "assignTime");
+    public static final String RAW_TS_PREFIX = "rawTs_";
 
     public static String prepareReportName(String namePattern, Date reportDate, String timeZoneStr) {
         TimeZone timeZone = (timeZoneStr == null) ? TimeZone.getDefault() : TimeZone.getTimeZone(timeZoneStr);
@@ -116,7 +119,7 @@ public class ReportUtils {
     public static Optional<DataSource> getSingleDataSource(DataReportComponent component) {
         DataSource dataSource = null;
         if (ReportComponentType.ALARM_TABLE.equals(component.getType())) {
-            dataSource = ((AlarmTableComponent)component).getAlarmSource();
+            dataSource = ((AlarmTableComponent) component).getAlarmSource();
         } else {
             List<DataSource> dataSources = component.getDataSources();
             if (dataSources != null && !dataSources.isEmpty()) {
@@ -149,13 +152,14 @@ public class ReportUtils {
                 if (parsed.isArray() && !parsed.isEmpty()) {
                     stateObj = parsed;
                 }
-            } catch (Exception ignored) {}
+            } catch (Exception ignored) {
+            }
         }
         if (stateObj == null) {
             stateObj = JacksonUtil.newArrayNode();
             ObjectNode stateData = JacksonUtil.newObjectNode();
             stateData.set("id", NullNode.getInstance());
-            ((ArrayNode)stateObj).add(stateData);
+            ((ArrayNode) stateObj).add(stateData);
         }
 
         ObjectNode stateParams;
@@ -195,14 +199,18 @@ public class ReportUtils {
     }
 
     public static void sortRowsByTableSortOrder(List<Map<String, String>> rows, TableSortOrder tableSortOrder) {
-        if (tableSortOrder == null || tableSortOrder.getColumn() == null) {
+        if (tableSortOrder == null || tableSortOrder.getColumn() == null || rows.isEmpty()) {
             return;
         }
 
         String column = tableSortOrder.getColumn();
+        if (rows.get(0).containsKey(RAW_TS_PREFIX + column)) {
+            column = RAW_TS_PREFIX + column; // Handle timestamp columns
+        }
 
+        String finalColumn = column;
         Comparator<Map<String, String>> comparator = Comparator.comparing(
-                row -> row.getOrDefault(column, ""),
+                row -> row.getOrDefault(finalColumn, ""),
                 ReportUtils::compareMixedValuesNullFirst
         );
 
@@ -242,6 +250,9 @@ public class ReportUtils {
     }
 
     public static String formatTimestamp(long timestamp, String pattern, String timezone) {
+        if (timestamp == 0) {
+            return "";
+        }
         if (pattern == null || pattern.isEmpty() || pattern.equals("milliseconds")) {
             return String.valueOf(timestamp);
         }
@@ -258,10 +269,10 @@ public class ReportUtils {
         }
     }
 
-    public static String formatTimestamp(String timestampStr, String pattern, String timezone) {
+    public static String formatTimestamp(String timestampStr, String pattern, TbReportCtx ctx, String timezone) {
         try {
             long timestamp = Long.parseLong(timestampStr);
-            return formatTimestamp(timestamp, pattern, timezone);
+            return formatTimestamp(timestamp, pattern, ctx, timezone);
         } catch (NumberFormatException e) {
             return "Invalid timestamp string: " + timestampStr;
         }

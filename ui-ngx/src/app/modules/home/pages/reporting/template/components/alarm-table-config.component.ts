@@ -47,6 +47,7 @@ import {
   TimeColumnSettingsForm
 } from '@shared/models/report-component.models';
 import { DataKey, Datasource, WidgetConfigMode } from '@shared/models/widget.models';
+import { alarmFields } from '@shared/models/alarm.models';
 
 @Component({
   selector: 'tb-alarm-table-config',
@@ -68,10 +69,11 @@ export class AlarmTableConfigComponent extends AbstractReportComponentConfig<Ala
   dataKeySettingsFormFunction: DataKeySettingsFormFunction = this.getDataKeySettingsForm.bind(this);
 
   private getDataKeySettingsForm(key: DataKey): FormProperty[] {
-    if (key.name === 'severity') {
-      return SeverityColumnSettingsForm;
-    } else if (key.name === 'createdTime') {
+    const alarmField = alarmFields[key.name];
+    if (alarmField?.time) {
       return TimeColumnSettingsForm;
+    } else if (key.name === 'severity') {
+      return SeverityColumnSettingsForm;
     }
     return TableReportColumnSettingsForm;
   }

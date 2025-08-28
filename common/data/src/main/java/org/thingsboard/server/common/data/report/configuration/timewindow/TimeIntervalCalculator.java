@@ -49,18 +49,20 @@ public class TimeIntervalCalculator {
         }
     }
 
-    public static TimeRange getTimeRange(TimeWindowConfiguration timeWindowConf) {
+    public static TimeRange getTimeRange(TimeWindowConfiguration timeWindowConf, String timezone) {
         History historyConf = timeWindowConf.getHistory();
         return switch (historyConf.getHistoryType()) {
             case 0 -> {
-                long currentTimeMillis = System.currentTimeMillis();
+                ZoneId zoneId = timezone != null ? ZoneId.of(timezone) : ZoneId.systemDefault();
+                ZonedDateTime now = ZonedDateTime.now(zoneId);
+                long currentTimeMillis = now.toInstant().toEpochMilli();
                 yield new TimeRange(currentTimeMillis - historyConf.getTimewindowMs(), currentTimeMillis);
             }
             case 1 -> {
                 FixedTimeWindow fixedTimeWindow = historyConf.getFixedTimewindow();
                 yield new TimeRange(fixedTimeWindow.getStartTimeMs(), historyConf.getFixedTimewindow().getEndTimeMs());
             }
-            case 2 -> getQuickTimeRange(historyConf.getQuickInterval(), timeWindowConf.getTimezone());
+            case 2 -> getQuickTimeRange(historyConf.getQuickInterval(), timezone);
             case 3 -> new TimeRange(0, 0);
             default -> throw new IllegalArgumentException("Unknown history type: " + historyConf.getHistoryType());
         };
@@ -86,7 +88,7 @@ public class TimeIntervalCalculator {
                 end = start.plusDays(1).minusNanos(1);
                 break;
             case PREVIOUS_WEEK:
-                start = now.minusWeeks(1).with(DayOfWeek.MONDAY).toLocalDate().atStartOfDay(zoneId);
+                start = now.minusWeeks(1).with(TemporalAdjusters.previousOrSame(DayOfWeek.SUNDAY)).toLocalDate().atStartOfDay(zoneId);
                 end = start.plusDays(7).minusNanos(1);
                 break;
             case PREVIOUS_WEEK_ISO:
@@ -135,7 +137,7 @@ public class TimeIntervalCalculator {
                 end = now;
                 break;
             case CURRENT_WEEK:
-                start = now.with(DayOfWeek.MONDAY).toLocalDate().atStartOfDay(zoneId);
+                start = now.with(TemporalAdjusters.previousOrSame(DayOfWeek.SUNDAY)).toLocalDate().atStartOfDay(zoneId);
                 end = start.plusDays(7).minusNanos(1);
                 break;
             case CURRENT_WEEK_ISO:
@@ -143,7 +145,7 @@ public class TimeIntervalCalculator {
                 end = start.plusDays(7).minusNanos(1);
                 break;
             case CURRENT_WEEK_SO_FAR:
-                start = now.with(DayOfWeek.MONDAY).toLocalDate().atStartOfDay(zoneId);
+                start = now.with(TemporalAdjusters.previousOrSame(DayOfWeek.SUNDAY)).toLocalDate().atStartOfDay(zoneId);
                 end = now;
                 break;
             case CURRENT_WEEK_ISO_SO_FAR:
