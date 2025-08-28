@@ -40,6 +40,7 @@ import org.jfree.chart.renderer.xy.AbstractXYItemRenderer;
 import org.jfree.chart.renderer.xy.StandardXYBarPainter;
 import org.jfree.chart.renderer.xy.XYAreaRenderer;
 import org.jfree.chart.renderer.xy.XYBarRenderer;
+import org.jfree.chart.renderer.xy.XYBezierRenderer;
 import org.jfree.chart.renderer.xy.XYItemRenderer;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.chart.renderer.xy.XYSplineRenderer;
@@ -82,6 +83,7 @@ import org.thingsboard.server.report.context.chart.TsChartDataSource;
 import org.thingsboard.server.report.context.chart.TsChartSeriesData;
 import org.thingsboard.server.report.context.chart.TsChartSeriesEntry;
 import org.thingsboard.server.report.renderer.chart.TbTimeseriesPlot;
+import org.thingsboard.server.report.renderer.chart.TbXYStepRenderer;
 import org.thingsboard.server.report.renderer.chart.TimeseriesBarRenderCtx;
 import org.thingsboard.server.report.util.ColorUtils;
 import org.thingsboard.server.report.util.ThymeleafUtil;
@@ -427,12 +429,13 @@ public class TimeseriesChartRenderer extends ChartRenderer<TimeseriesChartCompon
 
     private XYItemRenderer createLineRenderer(LineSeriesSettings lineSettings, Color seriesColor) {
 
-        Paint fillPaint = this.createFillPaint(lineSettings.getFillAreaSettings(), seriesColor, lineSettings.getStep());
+        Paint fillPaint = this.createFillPaint(lineSettings.getFillAreaSettings(), seriesColor);
         Stroke lineStroke = this.createLineStroke(lineSettings.getLineType(), lineSettings.getLineWidth());
 
         AbstractXYItemRenderer lineRenderer;
         if (lineSettings.getStep()) {
-            XYStepAreaRenderer stepRenderer = new XYStepAreaRenderer();
+            TbXYStepRenderer stepRenderer =
+                    new TbXYStepRenderer(lineSettings.getFillAreaSettings().getType() != ChartFillType.none ? TbXYStepRenderer.FillType.TO_ZERO : TbXYStepRenderer.FillType.NONE);
             double stepPoint = 0.0;
             switch (lineSettings.getStepType()) {
                 case start -> stepPoint = 0.0;
@@ -440,23 +443,23 @@ public class TimeseriesChartRenderer extends ChartRenderer<TimeseriesChartCompon
                 case end -> stepPoint = 1.0;
             }
             stepRenderer.setStepPoint(stepPoint);
-            stepRenderer.setSeriesPaint(0, fillPaint);
+            stepRenderer.setSeriesFillPaint(0, fillPaint);
             if (lineSettings.getShowLine()) {
-                stepRenderer.setOutline(true);
-                stepRenderer.setSeriesOutlinePaint(0, seriesColor);
-                stepRenderer.setSeriesOutlineStroke(0, lineStroke);
+                stepRenderer.setSeriesLinesVisible(0, true);
+                stepRenderer.setSeriesPaint(0, seriesColor);
+                stepRenderer.setSeriesStroke(0, lineStroke);
             } else {
-                stepRenderer.setOutline(false);
+                stepRenderer.setSeriesLinesVisible(0, false);
             }
             if (lineSettings.getShowPoints()) {
-                stepRenderer.setShapesVisible(true);
+                stepRenderer.setDefaultShapesVisible(true);
             } else {
-                stepRenderer.setShapesVisible(false);
+                stepRenderer.setDefaultShapesVisible(false);
             }
             lineRenderer = stepRenderer;
         } else {
-            XYSplineRenderer splineRenderer = new XYSplineRenderer(lineSettings.getSmooth() ? 5 : 1,
-                    lineSettings.getFillAreaSettings().getType() != ChartFillType.none ? XYSplineRenderer.FillType.TO_LOWER_BOUND : XYSplineRenderer.FillType.NONE);
+            XYBezierRenderer splineRenderer = new XYBezierRenderer(lineSettings.getSmooth() ? 5 : 1, lineSettings.getSmooth() ? 5 : 1,
+                    lineSettings.getFillAreaSettings().getType() != ChartFillType.none ? XYBezierRenderer.FillType.TO_ZERO : XYBezierRenderer.FillType.NONE);
             splineRenderer.setSeriesFillPaint(0, fillPaint);
             if (lineSettings.getShowLine()) {
                 splineRenderer.setSeriesLinesVisible(0, true);
@@ -492,7 +495,7 @@ public class TimeseriesChartRenderer extends ChartRenderer<TimeseriesChartCompon
         );
     }
 
-    private Paint createFillPaint(ChartFillSettings fillSettings, Color seriesColor, boolean linearGradient) {
+    private Paint createFillPaint(ChartFillSettings fillSettings, Color seriesColor) {
         switch (fillSettings.getType()) {
             case none -> {
                 return ColorUtils.TRANSPARENT;
@@ -503,15 +506,7 @@ public class TimeseriesChartRenderer extends ChartRenderer<TimeseriesChartCompon
             case gradient -> {
                 Color startColor = ColorUtils.setOpacity(seriesColor, fillSettings.getGradient().getStart() / 100f);
                 Color endColor = ColorUtils.setOpacity(seriesColor, fillSettings.getGradient().getEnd() / 100f);
-                if (linearGradient) {
-                    return new LinearGradientPaint(
-                            0, 0, getWidth(), getHeight(),
-                            new float[]{0.0f, 1.0f},
-                            new Color[]{startColor, endColor}
-                    );
-                } else {
-                    return new GradientPaint(0, 0, startColor, 1f, 1f, endColor);
-                }
+                return new GradientPaint(0, 0, startColor, 1f, 1f, endColor);
             }
         }
         return ColorUtils.TRANSPARENT;
