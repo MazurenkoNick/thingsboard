@@ -130,7 +130,7 @@
         </tb-gallery-image-input>
       </div>
 
-      <div class="tb-form-panel stroked no-gap">
+      <div class="tb-form-panel stroked no-gap" [class.!hidden]="isEdit || !isPublic">
         <tb-file-input [contentConvertFunction]="loadDataFromJsonContent"
                        [existingFileName]="currentFileName"
                        (fileNameChanged)="currentFileName = $event"
