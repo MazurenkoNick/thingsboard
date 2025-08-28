@@ -50,6 +50,7 @@ import org.thingsboard.server.common.data.Customer;
 import org.thingsboard.server.common.data.Dashboard;
 import org.thingsboard.server.common.data.Device;
 import org.thingsboard.server.common.data.EntityType;
+import org.thingsboard.server.common.data.ShortEntityView;
 import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.Tenant;
 import org.thingsboard.server.common.data.User;
@@ -58,11 +59,13 @@ import org.thingsboard.server.common.data.alarm.Alarm;
 import org.thingsboard.server.common.data.alarm.AlarmSeverity;
 import org.thingsboard.server.common.data.audit.ActionType;
 import org.thingsboard.server.common.data.group.EntityGroup;
+import org.thingsboard.server.common.data.group.EntityGroupInfo;
 import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.id.UserId;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
+import org.thingsboard.server.common.data.page.TimePageLink;
 import org.thingsboard.server.common.data.permission.GroupPermission;
 import org.thingsboard.server.common.data.role.Role;
 import org.thingsboard.server.common.data.role.RoleType;
@@ -76,6 +79,7 @@ import org.thingsboard.server.exception.DataValidationException;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -179,6 +183,65 @@ public class UserControllerTest extends AbstractControllerTest {
         testNotifyEntityAllNTimeLogEntityActionEntityEqClass(foundUser, foundUser.getId(), foundUser.getId(),
                 SYSTEM_TENANT, customerNUULId, null, SYS_ADMIN_EMAIL,
                 ActionType.DELETED, ActionType.DELETED, 1, 1, SYSTEM_TENANT.getId().toString());
+    }
+
+    @Test
+    public void testShouldForbidUserCreationAcrossCustomerBoundaries() throws Exception {
+        loginDifferentCustomerAdmin();
+
+        User user = new User();
+        user.setAuthority(Authority.CUSTOMER_USER);
+        user.setTenantId(tenantId);
+        user.setCustomerId(customerId);
+        user.setEmail("testUser123@thingsbord.org");
+
+        doPost("/api/user", user)
+                .andExpect(status().isForbidden())
+                .andExpect(statusReason(containsString(msgErrorPermissionCreate + "USER" + " '" + user.getEmail() + "'!")));
+
+        //create valid user
+        loginCustomerAdminUser();
+        User savedUser = doPost("/api/user", user, User.class);
+
+        // try to update user under first customer
+        loginDifferentCustomerAdmin();
+        savedUser.setPhone("1111111111");
+
+        doPost("/api/user", savedUser)
+                .andExpect(status().isForbidden())
+                .andExpect(statusReason(containsString(msgErrorPermissionWrite + "USER" + " '" + user.getEmail() + "'!")));
+    }
+
+    @Test
+    public void testShouldForbidAddingUserToOtherCustomerGroup() throws Exception {
+        loginTenantAdmin();
+        EntityGroupInfo customerAdminsGroup = findCustomerAdminsGroup(customerId);
+        UUID adminGroupId = customerAdminsGroup.getId().getId();
+
+        PageData<ShortEntityView> shortEntityViewPageData = doGetTypedWithTimePageLink("/api/entityGroup/" + adminGroupId + "/entities?",
+                new TypeReference<PageData<ShortEntityView>>() {
+                }, new TimePageLink(10));
+        long initialGroupEntities = shortEntityViewPageData.getTotalElements();
+
+        loginDifferentCustomerAdmin();
+
+        User user = new User();
+        user.setAuthority(Authority.CUSTOMER_USER);
+        user.setTenantId(tenantId);
+        user.setCustomerId(differentCustomerId);
+        user.setEmail("testUser123@thingsbord.org");
+
+        doPost("/api/user?entityGroupIds=" + adminGroupId, user)
+                .andExpect(status().isForbidden())
+                .andExpect(statusReason(containsString(msgErrorPermissionRead + "USER group" + " 'Customer Administrators'!")));
+
+        // check user was not added to group
+        loginTenantAdmin();
+        PageData<ShortEntityView> shortEntityViewPageData1 = doGetTypedWithTimePageLink("/api/entityGroup/" + adminGroupId + "/entities?",
+                new TypeReference<PageData<ShortEntityView>>() {
+                }, new TimePageLink(10));
+        long groupEntities = shortEntityViewPageData1.getTotalElements();
+        assertThat(groupEntities).isEqualTo(initialGroupEntities);
     }
 
     @Test

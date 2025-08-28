@@ -224,6 +224,10 @@ public class CustomerUserPermissions extends AbstractPermissions {
                     return false;
                 }
             }
+            // check customer boundaries
+            if (!ownersCacheService.fetchOwnersHierarchy(user.getTenantId(), ((HasOwnerId) entity).getOwnerId()).contains(user.getOwnerId())) {
+                return false;
+            }
 
             if (entityId == null) {
                 if (user.getUserPermissions().hasGenericPermission(resource, operation)) {
