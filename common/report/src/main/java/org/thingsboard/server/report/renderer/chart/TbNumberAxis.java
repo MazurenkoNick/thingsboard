@@ -173,6 +173,13 @@ public class TbNumberAxis extends NumberAxis {
         NumberTickUnit tickUnit = getTickUnit();
         double size = tickUnit.getSize();
         if (this.parentAxis != null) {
+            if (this.axisMin == null) {
+                if (this.parentAxis.getRange().getLowerBound() < 0) {
+                    double zeroDistance = Math.abs(this.parentAxis.getRange().getLowerBound()) / this.parentAxis.getRange().getLength();
+                    lower -= zeroDistance * length;
+                    length = upper - lower;
+                }
+            }
             size = calculateChildSize(length);
             int parentSplitCount = this.parentAxis.getTicks().getTicksCount() - 1;
             length = parentSplitCount * size;
