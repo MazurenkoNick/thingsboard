@@ -117,3 +117,25 @@ DROP VIEW IF EXISTS edge_active_attribute_view CASCADE;
 ALTER TABLE edge ALTER COLUMN edge_license_key TYPE varchar;
 
 -- UPDATE EDGE LICENSE KEY TO SUPPORT OFFLINE FEATURE END
+
+-- UPDATE CFS WITH CURRENT OWNER DYNAMIC SOURCE START
+
+UPDATE calculated_field cf
+SET configuration = (jsonb_set(cf.configuration::jsonb, '{arguments}',
+                               (SELECT jsonb_object_agg(k,
+                                    CASE
+                                        WHEN v ->> 'refDynamicSource' = 'CURRENT_OWNER'
+                                            THEN
+                                            (v - 'refDynamicSource') ||
+                                            jsonb_build_object(
+                                                    'refDynamicSourceConfiguration',
+                                                    jsonb_build_object('type', 'CURRENT_OWNER'))
+                                        ELSE v END)
+                                FROM jsonb_each(cf.configuration::jsonb -> 'arguments') AS e(k, v)),
+                               true)::text)
+WHERE (configuration::jsonb) ? 'arguments'
+  AND EXISTS (SELECT 1
+              FROM jsonb_each(configuration::jsonb -> 'arguments') AS e(k, v)
+              WHERE v ->> 'refDynamicSource' = 'CURRENT_OWNER');
+
+-- UPDATE CFS WITH CURRENT OWNER DYNAMIC SOURCE END

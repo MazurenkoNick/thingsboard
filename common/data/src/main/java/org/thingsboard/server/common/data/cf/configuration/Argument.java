@@ -35,7 +35,6 @@ import lombok.Data;
 import org.springframework.lang.Nullable;
 import org.thingsboard.server.common.data.id.EntityId;
 
-// TODO: upgrade script from CFArgumentDynamicSourceType -> CfArgumentDynamicSourceConfiguration
 @Data
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class Argument {
