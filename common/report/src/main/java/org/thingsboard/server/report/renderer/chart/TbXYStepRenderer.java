@@ -35,7 +35,6 @@ import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.plot.PlotRenderingInfo;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.XYItemRendererState;
-import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.chart.ui.GradientPaintTransformer;
 import org.jfree.chart.ui.RectangleEdge;
 import org.jfree.chart.ui.StandardGradientPaintTransformer;
@@ -51,7 +50,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public class TbXYStepRenderer extends XYLineAndShapeRenderer {
+public class TbXYStepRenderer extends TbXYLineAndShapeRenderer {
 
     public static enum FillType {
 
@@ -94,9 +93,14 @@ public class TbXYStepRenderer extends XYLineAndShapeRenderer {
 
     private GradientPaintTransformer gradientPaintTransformer;
 
-    public TbXYStepRenderer(FillType fillType) {
+    public TbXYStepRenderer(double stepPoint, FillType fillType) {
         super();
+        if (stepPoint < 0.0d || stepPoint > 1.0d) {
+            throw new IllegalArgumentException(
+                    "Requires stepPoint in [0.0;1.0]");
+        }
         Args.nullNotPermitted(fillType, "fillType");
+        this.stepPoint = stepPoint;
         this.fillType = fillType;
         this.gradientPaintTransformer = new StandardGradientPaintTransformer();
     }

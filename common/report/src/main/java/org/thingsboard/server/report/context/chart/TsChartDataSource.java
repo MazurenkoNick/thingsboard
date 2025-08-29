@@ -96,7 +96,8 @@ public class TsChartDataSource {
         }
         this.data = new ArrayList<>(getDataKeys().size());
         int dataIndex = this.index * this.dataKeys.size();
-        for (DataKey key : this.dataKeys) {
+        for (int keyIndex = 0; keyIndex < dataKeys.size(); keyIndex++) {
+            DataKey key = this.dataKeys.get(keyIndex);
             TsChartSeriesData seriesData = new TsChartSeriesData();
             seriesData.setDataSource(this);
             seriesData.setDataKey(key);
@@ -111,6 +112,7 @@ public class TsChartDataSource {
                     ).sorted(Comparator.comparing(TsChartSeriesEntry::getTs)).toList();
             seriesData.setData(keyValues);
             seriesData.setIndex(dataIndex);
+            seriesData.setKeyIndex(keyIndex);
             this.data.add(seriesData);
             dataIndex++;
         }

@@ -43,4 +43,23 @@ public class TsChartSeriesData {
     private List<TsChartSeriesEntry> data;
     private int index;
 
+    private int keyIndex;
+
+    private int datasetIndex;
+    private int seriesIndex;
+
+    public boolean isEmpty() {
+        return data == null || data.isEmpty();
+    }
+
+    @Override
+    public String toString() {
+        return "TsChartSeriesData{" + "dataKey=" + dataKey +
+                ", data=" + data +
+                ", index=" + index +
+                ", keyIndex=" + keyIndex +
+                ", datasetIndex=" + datasetIndex +
+                ", seriesIndex=" + seriesIndex +
+                '}';
+    }
 }

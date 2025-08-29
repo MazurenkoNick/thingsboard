@@ -43,30 +43,55 @@ import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.ui.RectangleInsets;
 import org.jfree.data.time.SimpleTimePeriod;
 import org.thingsboard.server.common.data.StringUtils;
+import org.thingsboard.server.common.data.report.configuration.DataKeySettings;
 import org.thingsboard.server.common.data.report.configuration.chart.AxisPosition;
+import org.thingsboard.server.common.data.report.configuration.chart.ChartFillSettings;
+import org.thingsboard.server.common.data.report.configuration.chart.ChartLineType;
+import org.thingsboard.server.common.data.report.configuration.chart.ChartShape;
 import org.thingsboard.server.common.data.report.configuration.chart.FormatTimeUnit;
 import org.thingsboard.server.common.data.report.configuration.chart.TimeSeriesChartAxisSettings;
+import org.thingsboard.server.common.data.report.configuration.chart.TimeSeriesChartKeySettings;
 import org.thingsboard.server.common.data.report.configuration.chart.TimeSeriesChartNoAggregationBarWidthStrategy;
 import org.thingsboard.server.common.data.report.configuration.chart.TimeSeriesChartXAxisSettings;
 import org.thingsboard.server.common.data.report.configuration.chart.TimeSeriesChartYAxisSettings;
 import org.thingsboard.server.common.data.report.configuration.timewindow.TimeIntervalCalculator;
+import org.thingsboard.server.report.context.chart.TsChartSeriesData;
 import org.thingsboard.server.report.context.chart.TsChartSeriesEntry;
+import org.thingsboard.server.report.util.ColorUtils;
 
+import java.awt.*;
+import java.awt.geom.Ellipse2D;
+import java.awt.geom.Rectangle2D;
+import java.awt.geom.RoundRectangle2D;
 import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
+import java.util.Comparator;
 import java.util.Date;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.TimeZone;
+import java.util.stream.Collectors;
 
 import static org.jfree.chart.axis.Axis.DEFAULT_AXIS_LABEL_INSETS;
 import static org.jfree.chart.axis.Axis.DEFAULT_TICK_LABEL_INSETS;
+import static org.thingsboard.server.report.renderer.chart.ChartUtils.getSeriesSettings;
 import static org.thingsboard.server.report.util.AwtFontUtils.ZERO_FONT;
 import static org.thingsboard.server.report.util.AwtFontUtils.toAwtFont;
 import static org.thingsboard.server.report.util.ColorUtils.safeParseCssColor;
 
 public interface ChartUtils {
+
+    static TimeSeriesChartKeySettings getSeriesSettings(TsChartSeriesData chartSeriesData) {
+        DataKeySettings settings = chartSeriesData.getDataKey().getSettings();
+        TimeSeriesChartKeySettings keySettings = null;
+        if (settings instanceof TimeSeriesChartKeySettings) {
+            keySettings = (TimeSeriesChartKeySettings) settings;
+        }
+        return new TimeSeriesChartKeySettings(keySettings);
+    }
 
     static SimpleTimePeriod calculateBarTimePeriod(TsChartSeriesEntry entry,
                                                     TimeseriesBarRenderCtx barRenderCtx,
@@ -162,6 +187,94 @@ public interface ChartUtils {
                 DEFAULT_AXIS_LABEL_INSETS.getLeft() + left,
                 DEFAULT_AXIS_LABEL_INSETS.getBottom() + bottom,
                 DEFAULT_AXIS_LABEL_INSETS.getRight() + right));
+    }
+
+    static Shape createSeriesShape(ChartShape chartShape, float size) {
+        Shape result = null;
+        double delta = size / 2.0;
+        int[] xpoints;
+        int[] ypoints;
+        switch (chartShape) {
+            case emptyCircle, circle -> result = new Ellipse2D.Double(-delta, -delta, size, size);
+            case rect -> result = new Rectangle2D.Double(-delta, -delta, size, size);
+            case roundRect -> result = new RoundRectangle2D.Double(-delta, -delta, size, size, size/4, size/4);
+            case triangle -> {
+                xpoints = new int[]{0, (int)delta, (int)-delta};
+                ypoints = new int[]{(int)-delta, (int)delta, (int)delta};
+                result = new Polygon(xpoints, ypoints, 3);
+            }
+            case diamond -> {
+            }
+            case pin -> {
+            }
+            case arrow -> {
+            }
+            case none -> {
+            }
+        }
+        return result;
+    }
+
+    static Stroke createLineStroke(ChartLineType lineType, Float lineWidth) {
+        float[] dashPattern = null;
+        switch (lineType) {
+            case solid -> dashPattern = null;
+            case dashed -> dashPattern = new float[]{4.0f * lineWidth, 2.0f * lineWidth};
+            case dotted -> dashPattern = new float[]{lineWidth};
+        }
+        return new BasicStroke(
+                lineWidth,
+                BasicStroke.CAP_BUTT,
+                BasicStroke.JOIN_BEVEL,
+                10.0f,
+                dashPattern,
+                0.0f
+        );
+    }
+
+    static Paint createFillPaint(ChartFillSettings fillSettings, Color seriesColor) {
+        switch (fillSettings.getType()) {
+            case none -> {
+                return ColorUtils.TRANSPARENT;
+            }
+            case opacity -> {
+                return ColorUtils.applyOpacity(seriesColor, fillSettings.getOpacity());
+            }
+            case gradient -> {
+                Color startColor = ColorUtils.setOpacity(seriesColor, fillSettings.getGradient().getStart() / 100f);
+                Color endColor = ColorUtils.setOpacity(seriesColor, fillSettings.getGradient().getEnd() / 100f);
+                return new GradientPaint(0, 0, startColor, 1f, 1f, endColor);
+            }
+        }
+        return ColorUtils.TRANSPARENT;
+    }
+
+    static Map<TbDatasetKey, List<TsChartSeriesData>> datasetGroupsFromSeries(List<TsChartSeriesData> rawSeries) {
+        Map<TbDatasetKey, List<TsChartSeriesData>> groupedSeries = rawSeries.stream().
+                collect(Collectors.groupingBy(s -> new TbDatasetKey(getSeriesSettings(s)))).
+                entrySet().stream()
+                .sorted(Map.Entry.comparingByKey())
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        Map.Entry::getValue,
+                        (oldValue, newValue) -> oldValue,
+                        LinkedHashMap::new
+                ));
+        int datasetIndex = 0;
+        for (Map.Entry<TbDatasetKey, List<TsChartSeriesData>> entry : groupedSeries.entrySet()) {
+            TbDatasetKey key = entry.getKey();
+            List<TsChartSeriesData> series = entry.getValue();
+            key.setDatasetIndex(datasetIndex);
+            series.sort(Comparator.comparing(TsChartSeriesData::getIndex));
+            int seriesIndex = 0;
+            for (TsChartSeriesData seriesItem : series) {
+                seriesItem.setDatasetIndex(datasetIndex);
+                seriesItem.setSeriesIndex(seriesIndex);
+                seriesIndex++;
+            }
+            datasetIndex++;
+        }
+        return groupedSeries;
     }
 
     private static void setupAxisAppearance(ValueAxis axis, TimeSeriesChartAxisSettings axisSettings) {
