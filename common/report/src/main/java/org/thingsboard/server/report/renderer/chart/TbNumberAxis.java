@@ -174,8 +174,9 @@ public class TbNumberAxis extends NumberAxis {
         double size = tickUnit.getSize();
         if (this.parentAxis != null) {
             if (this.axisMin == null) {
-                if (this.parentAxis.getRange().getLowerBound() < 0) {
-                    double zeroDistance = Math.abs(this.parentAxis.getRange().getLowerBound()) / this.parentAxis.getRange().getLength();
+                Range parentRange = this.parentAxis.getRange();
+                if (parentRange.getLowerBound() < 0 && parentRange.getUpperBound() > 0) {
+                    double zeroDistance = Math.abs(parentRange.getLowerBound()) / parentRange.getLength();
                     lower -= zeroDistance * length;
                     length = upper - lower;
                 }
@@ -184,7 +185,11 @@ public class TbNumberAxis extends NumberAxis {
             int parentSplitCount = this.parentAxis.getTicks().getTicksCount() - 1;
             length = parentSplitCount * size;
             if (this.axisMin == null) {
-                lower = nearestLower(lower, size);
+                if (this.axisMax == null && upper == 0.0) {
+                    lower = upper - length;
+                } else {
+                    lower = nearestLower(lower, size);
+                }
             }
             if (this.axisMax == null) {
                 upper = lower + length;
