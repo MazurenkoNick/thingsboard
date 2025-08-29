@@ -338,7 +338,7 @@ public class PdfReportService extends AbstractReportService {
         List<EntityData> entityDatas = fetchEntities(ctx, latestDataSource, stateEntity != null ? stateEntity.getEntityId() : null, DEFAULT_TS_CHART_SORT_ORDER);
         List<TsChartDataSource> chartData = new ArrayList<>();
         List<DataKey> dataKeys = ds.getDataKeys();
-        List<String> keys = dataKeys.stream().map(DataKey::getName).toList();
+        List<String> keys = dataKeys.stream().map(DataKey::getName).distinct().toList();
 
         TimeWindowConfiguration timeWindowConf = component.getTimewindow();
         History historyConf = timeWindowConf.getHistory();

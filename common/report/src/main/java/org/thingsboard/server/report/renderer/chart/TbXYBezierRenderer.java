@@ -41,6 +41,8 @@ import java.util.List;
 import java.util.Objects;
 
 import org.jfree.chart.axis.ValueAxis;
+import org.jfree.chart.entity.EntityCollection;
+import org.jfree.chart.plot.CrosshairState;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.plot.PlotRenderingInfo;
 import org.jfree.chart.plot.XYPlot;
@@ -165,17 +167,37 @@ public class TbXYBezierRenderer extends TbXYLineAndShapeRenderer {
     public XYItemRendererState initialise(Graphics2D g2, Rectangle2D dataArea,
                                           XYPlot plot, XYDataset data, PlotRenderingInfo info) {
 
-        setDrawSeriesLineAsPath(true);
         TbXYBezierState state = new TbXYBezierState(info);
         state.setProcessVisibleItemsOnly(false);
         return state;
     }
 
     @Override
-    protected void drawPrimaryLineAsPath(XYItemRendererState state,
-                                         Graphics2D g2, XYPlot plot, XYDataset dataset, int pass,
-                                         int series, int item, ValueAxis xAxis, ValueAxis yAxis,
-                                         Rectangle2D dataArea) {
+    public void drawItem(Graphics2D g2, XYItemRendererState state,
+                         Rectangle2D dataArea, PlotRenderingInfo info, XYPlot plot,
+                         ValueAxis domainAxis, ValueAxis rangeAxis, XYDataset dataset,
+                         int series, int item, CrosshairState crosshairState, int pass) {
+
+        // do nothing if item is not visible
+        if (!getItemVisible(series, item)) {
+            return;
+        }
+
+        // first pass draws the background (lines, for instance)
+        if (isLinePass(pass)) {
+            if (getItemLineVisible(series, item) || this.fillType != FillType.NONE) {
+                this.drawLineAndArea(state, g2, plot, dataset, pass,
+                        series, item, domainAxis, rangeAxis, dataArea);
+            }
+        } else {
+            super.drawItem(g2, state, dataArea, info, plot, domainAxis, rangeAxis, dataset, series, item, crosshairState, pass);
+        }
+    }
+
+    private void drawLineAndArea(XYItemRendererState state,
+                                 Graphics2D g2, XYPlot plot, XYDataset dataset, int pass,
+                                 int series, int item, ValueAxis xAxis, ValueAxis yAxis,
+                                 Rectangle2D dataArea) {
 
         TbXYBezierState s = (TbXYBezierState) state;
         RectangleEdge xAxisLocation = plot.getDomainAxisEdge();
@@ -314,8 +336,10 @@ public class TbXYBezierRenderer extends TbXYLineAndShapeRenderer {
                     g2.fill(s.fillArea);
                     s.fillArea.reset();
                 }
-                // then draw the line...
-                drawFirstPassShape(g2, pass, series, item, s.seriesPath);
+                if (getItemLineVisible(series, item)) {
+                    // then draw the line...
+                    drawFirstPassShape(g2, pass, series, item, s.seriesPath);
+                }
             }
             // reset points vector
             s.points = new ArrayList<>();
