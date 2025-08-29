@@ -73,6 +73,7 @@ import org.thingsboard.server.common.data.kv.TsKvEntry;
 import org.thingsboard.server.common.data.tenant.profile.DefaultTenantProfileConfiguration;
 import org.thingsboard.server.common.data.util.TbPair;
 import org.thingsboard.server.dao.attributes.AttributesService;
+import org.thingsboard.server.dao.relation.RelationService;
 import org.thingsboard.server.dao.timeseries.TimeseriesService;
 import org.thingsboard.server.dao.usagerecord.ApiLimitService;
 import org.thingsboard.server.queue.util.TbRuleEngineComponent;
@@ -123,6 +124,7 @@ public class DefaultCalculatedFieldReprocessingService implements CalculatedFiel
     private final TbelInvokeService tbelInvokeService;
     private final ApiLimitService apiLimitService;
     private final TelemetrySubscriptionService telemetrySubscriptionService;
+    private final RelationService relationService;
 
     private ListeningExecutorService calculatedFieldCallbackExecutor;
 
@@ -155,7 +157,7 @@ public class DefaultCalculatedFieldReprocessingService implements CalculatedFiel
         long startTs = task.getStartTs();
         long endTs = task.getEndTs();
 
-        CalculatedFieldCtx cfCtx = new CalculatedFieldCtx(calculatedField, tbelInvokeService, apiLimitService);
+        CalculatedFieldCtx cfCtx = new CalculatedFieldCtx(calculatedField, tbelInvokeService, apiLimitService, relationService);
         cfCtx.setUseLatestTs(false);
         CalculatedFieldState state = initState(tenantId, entityId, cfCtx, startTs);
         cfCtx.init();
@@ -239,7 +241,7 @@ public class DefaultCalculatedFieldReprocessingService implements CalculatedFiel
         CalculatedFieldState state = ctx.getState();
         if (ctx.getCfCtx().isInitialized() && state.isReady()) {
             log.trace("[{}][{}] Performing calculation for CF {}", ctx.getTenantId(), ctx.getEntityId(), ctx.getCfId());
-            CalculatedFieldResult calculationResult = state.performCalculation(ctx.getCfCtx()).get(cfCalculationResultTimeout, TimeUnit.SECONDS);
+            CalculatedFieldResult calculationResult = state.performCalculation(ctx.getEntityId(), ctx.getCfCtx()).get(cfCalculationResultTimeout, TimeUnit.SECONDS);
             ctx.checkStateSize();
             if (!calculationResult.isEmpty()) {
                 ctx.setLatestResult(new TbPair<>(ts, calculationResult));

@@ -85,7 +85,26 @@ DROP INDEX IF EXISTS idx_role_external_id;
 
 -- DROP INDEXES THAT DUPLICATE UNIQUE CONSTRAINT END
 
+-- ADD NEW COLUMN TITLE TO MOBILE APP START
+
 ALTER TABLE mobile_app ADD COLUMN IF NOT EXISTS title varchar(255);
+
+-- ADD NEW COLUMN TITLE TO MOBILE APP END
+
+-- UPDATE TENANT PROFILE CONFIGURATION START
+
+UPDATE tenant_profile
+SET profile_data = jsonb_set(
+        profile_data,
+        '{configuration}',
+        (profile_data -> 'configuration') || '{
+          "minAllowedScheduledUpdateIntervalInSecForCF": 3600
+        }'::jsonb,
+        false
+                   )
+WHERE (profile_data -> 'configuration' -> 'minAllowedScheduledUpdateIntervalInSecForCF') IS NULL;
+
+-- UPDATE TENANT PROFILE CONFIGURATION END
 
 DELETE FROM integration where type = 'IBM_WATSON_IOT';
 

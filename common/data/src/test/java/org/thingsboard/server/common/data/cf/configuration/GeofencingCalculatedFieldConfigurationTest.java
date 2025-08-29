@@ -1,0 +1,197 @@
+/**
+ * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
+ *
+ * Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
+ *
+ * NOTICE: All information contained herein is, and remains
+ * the property of ThingsBoard, Inc. and its suppliers,
+ * if any.  The intellectual and technical concepts contained
+ * herein are proprietary to ThingsBoard, Inc.
+ * and its suppliers and may be covered by U.S. and Foreign Patents,
+ * patents in process, and are protected by trade secret or copyright law.
+ *
+ * Dissemination of this information or reproduction of this material is strictly forbidden
+ * unless prior written permission is obtained from COMPANY.
+ *
+ * Access to the source code contained herein is hereby forbidden to anyone except current COMPANY employees,
+ * managers or contractors who have executed Confidentiality and Non-disclosure agreements
+ * explicitly covering such access.
+ *
+ * The copyright notice above does not evidence any actual or intended publication
+ * or disclosure  of  this source code, which includes
+ * information that is confidential and/or proprietary, and is a trade secret, of  COMPANY.
+ * ANY REPRODUCTION, MODIFICATION, DISTRIBUTION, PUBLIC  PERFORMANCE,
+ * OR PUBLIC DISPLAY OF OR THROUGH USE  OF THIS  SOURCE CODE  WITHOUT
+ * THE EXPRESS WRITTEN CONSENT OF COMPANY IS STRICTLY PROHIBITED,
+ * AND IN VIOLATION OF APPLICABLE LAWS AND INTERNATIONAL TREATIES.
+ * THE RECEIPT OR POSSESSION OF THIS SOURCE CODE AND/OR RELATED INFORMATION
+ * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
+ * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
+ */
+package org.thingsboard.server.common.data.cf.configuration;
+
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.thingsboard.server.common.data.AttributeScope;
+import org.thingsboard.server.common.data.cf.CalculatedFieldType;
+import org.thingsboard.server.common.data.cf.configuration.geofencing.EntityCoordinates;
+import org.thingsboard.server.common.data.cf.configuration.geofencing.ZoneGroupConfiguration;
+
+import java.util.List;
+import java.util.Map;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.thingsboard.server.common.data.cf.configuration.geofencing.EntityCoordinates.ENTITY_ID_LATITUDE_ARGUMENT_KEY;
+import static org.thingsboard.server.common.data.cf.configuration.geofencing.EntityCoordinates.ENTITY_ID_LONGITUDE_ARGUMENT_KEY;
+
+@ExtendWith(MockitoExtension.class)
+public class GeofencingCalculatedFieldConfigurationTest {
+
+    @Test
+    void typeShouldBeGeofencing() {
+        var cfg = new GeofencingCalculatedFieldConfiguration();
+        assertThat(cfg.getType()).isEqualTo(CalculatedFieldType.GEOFENCING);
+    }
+
+    @Test
+    void validateShouldThrowWhenEntityCoordinatesNull() {
+        var cfg = new GeofencingCalculatedFieldConfiguration();
+        cfg.setEntityCoordinates(null);
+
+        assertThatThrownBy(cfg::validate)
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Geofencing calculated field entity coordinates must be specified!");
+    }
+
+    @Test
+    void validateShouldThrowWhenZoneGroupsNull() {
+        var cfg = new GeofencingCalculatedFieldConfiguration();
+        cfg.setEntityCoordinates(new EntityCoordinates(ENTITY_ID_LATITUDE_ARGUMENT_KEY, ENTITY_ID_LONGITUDE_ARGUMENT_KEY));
+        cfg.setZoneGroups(null);
+
+        assertThatThrownBy(cfg::validate)
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Geofencing calculated field must contain at least one geofencing zone group defined!");
+    }
+
+    @Test
+    void validateShouldCallValidateOnEntityCoordinatesAndZoneGroups() {
+        var cfg = new GeofencingCalculatedFieldConfiguration();
+        EntityCoordinates entityCoordinatesMock = mock(EntityCoordinates.class);
+        cfg.setEntityCoordinates(entityCoordinatesMock);
+        var zoneGroupConfiguration = mock(ZoneGroupConfiguration.class);
+        cfg.setZoneGroups(List.of(zoneGroupConfiguration));
+
+        cfg.validate();
+
+        verify(entityCoordinatesMock).validate();
+        verify(zoneGroupConfiguration).validate();
+    }
+
+    @Test
+    void validateShouldCallValidateOnEntityCoordinatesAndZoneGroupsWithoutAnyExceptions() {
+        var cfg = new GeofencingCalculatedFieldConfiguration();
+        EntityCoordinates entityCoordinatesMock = mock(EntityCoordinates.class);
+        cfg.setEntityCoordinates(entityCoordinatesMock);
+        var zoneGroupConfigurationA = mock(ZoneGroupConfiguration.class);
+        var zoneGroupConfigurationB = mock(ZoneGroupConfiguration.class);
+
+        when(zoneGroupConfigurationA.getName()).thenReturn("zoneGroupA");
+        when(zoneGroupConfigurationB.getName()).thenReturn("zoneGroupB");
+
+        cfg.setZoneGroups(List.of(zoneGroupConfigurationA, zoneGroupConfigurationB));
+
+        assertThatCode(cfg::validate).doesNotThrowAnyException();
+
+        verify(entityCoordinatesMock).validate();
+        verify(zoneGroupConfigurationA).validate();
+        verify(zoneGroupConfigurationB).validate();
+    }
+
+    @Test
+    void validateShouldThrowWhenZoneGroupNamesDuplicated() {
+        var cfg = new GeofencingCalculatedFieldConfiguration();
+        EntityCoordinates entityCoordinatesMock = mock(EntityCoordinates.class);
+        cfg.setEntityCoordinates(entityCoordinatesMock);
+        var zoneGroupConfigurationA = mock(ZoneGroupConfiguration.class);
+        var zoneGroupConfigurationB = mock(ZoneGroupConfiguration.class);
+
+        when(zoneGroupConfigurationA.getName()).thenReturn("zoneGroupDuplicated");
+        when(zoneGroupConfigurationB.getName()).thenReturn("zoneGroupDuplicated");
+
+        cfg.setZoneGroups(List.of(zoneGroupConfigurationA, zoneGroupConfigurationB));
+
+        assertThatThrownBy(cfg::validate)
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Geofencing calculated field zone group name must be unique!");
+
+        verify(entityCoordinatesMock).validate();
+        verify(zoneGroupConfigurationA).validate();
+        verify(zoneGroupConfigurationB, never()).validate();
+    }
+
+    @Test
+    void scheduledUpdateDisabledWhenIntervalIsZero() {
+        var cfg = new GeofencingCalculatedFieldConfiguration();
+        cfg.setScheduledUpdateIntervalSec(0);
+        assertThat(cfg.isScheduledUpdateEnabled()).isFalse();
+    }
+
+    @Test
+    void scheduledUpdateDisabledWhenIntervalIsGreaterThanZeroButNoZonesWithDynamicArguments() {
+        var cfg = new GeofencingCalculatedFieldConfiguration();
+        var zoneGroupConfigurationMock = mock(ZoneGroupConfiguration.class);
+        when(zoneGroupConfigurationMock.hasDynamicSource()).thenReturn(false);
+        cfg.setZoneGroups(List.of(zoneGroupConfigurationMock));
+        cfg.setScheduledUpdateIntervalSec(60);
+        assertThat(cfg.isScheduledUpdateEnabled()).isFalse();
+    }
+
+    @Test
+    void scheduledUpdateEnabledWhenIntervalIsGreaterThanZeroAndDynamicArgumentsPresent() {
+        var cfg = new GeofencingCalculatedFieldConfiguration();
+        var zoneGroupConfigurationMock = mock(ZoneGroupConfiguration.class);
+        when(zoneGroupConfigurationMock.hasDynamicSource()).thenReturn(true);
+        cfg.setZoneGroups(List.of(zoneGroupConfigurationMock));
+        cfg.setScheduledUpdateIntervalSec(60);
+        assertThat(cfg.isScheduledUpdateEnabled()).isTrue();
+    }
+
+    @Test
+    void testGetArgumentsOverride() {
+        var cfg = new GeofencingCalculatedFieldConfiguration();
+        cfg.setEntityCoordinates(new EntityCoordinates(ENTITY_ID_LATITUDE_ARGUMENT_KEY, ENTITY_ID_LONGITUDE_ARGUMENT_KEY));
+        cfg.setZoneGroups(List.of(new ZoneGroupConfiguration("allowedZones", "perimeter", GeofencingReportStrategy.REPORT_TRANSITION_EVENTS_AND_PRESENCE_STATUS, false)));
+
+        Map<String, Argument> arguments = cfg.getArguments();
+
+        assertThat(arguments).isNotNull().hasSize(3);
+        assertThat(arguments).containsKeys(ENTITY_ID_LATITUDE_ARGUMENT_KEY, ENTITY_ID_LONGITUDE_ARGUMENT_KEY, "allowedZones");
+
+        Argument latitudeArgument = arguments.get(ENTITY_ID_LATITUDE_ARGUMENT_KEY);
+        assertThat(latitudeArgument).isNotNull();
+        assertThat(latitudeArgument.getRefDynamicSourceConfiguration()).isNull();
+        assertThat(latitudeArgument.getRefEntityId()).isNull();
+        assertThat(latitudeArgument.getRefEntityKey()).isEqualTo(new ReferencedEntityKey(ENTITY_ID_LATITUDE_ARGUMENT_KEY, ArgumentType.TS_LATEST, null));
+
+        Argument longitudeArgument = arguments.get(ENTITY_ID_LONGITUDE_ARGUMENT_KEY);
+        assertThat(longitudeArgument).isNotNull();
+        assertThat(longitudeArgument.getRefDynamicSourceConfiguration()).isNull();
+        assertThat(longitudeArgument.getRefEntityId()).isNull();
+        assertThat(longitudeArgument.getRefEntityKey()).isEqualTo(new ReferencedEntityKey(ENTITY_ID_LONGITUDE_ARGUMENT_KEY, ArgumentType.TS_LATEST, null));
+
+        Argument allowedZonesArgument = arguments.get("allowedZones");
+        assertThat(allowedZonesArgument).isNotNull();
+        assertThat(allowedZonesArgument.getRefDynamicSourceConfiguration()).isNull();
+        assertThat(allowedZonesArgument.getRefEntityId()).isNull();
+        assertThat(allowedZonesArgument.getRefEntityKey()).isEqualTo(new ReferencedEntityKey("perimeter", ArgumentType.ATTRIBUTE, AttributeScope.SERVER_SCOPE));
+    }
+
+}
