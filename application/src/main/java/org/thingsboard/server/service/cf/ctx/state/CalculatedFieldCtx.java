@@ -44,7 +44,7 @@ import org.thingsboard.server.common.data.cf.configuration.ArgumentsBasedCalcula
 import org.thingsboard.server.common.data.cf.configuration.ExpressionBasedCalculatedFieldConfiguration;
 import org.thingsboard.server.common.data.cf.configuration.Output;
 import org.thingsboard.server.common.data.cf.configuration.ReferencedEntityKey;
-import org.thingsboard.server.common.data.cf.configuration.ScheduleSupportedCalculatedFieldConfiguration;
+import org.thingsboard.server.common.data.cf.configuration.ScheduledUpdateSupportedCalculatedFieldConfiguration;
 import org.thingsboard.server.common.data.cf.configuration.SimpleCalculatedFieldConfiguration;
 import org.thingsboard.server.common.data.id.CalculatedFieldId;
 import org.thingsboard.server.common.data.id.EntityId;
@@ -393,8 +393,8 @@ public class CalculatedFieldCtx {
     }
 
     public boolean hasSchedulingConfigChanges(CalculatedFieldCtx other) {
-        if (calculatedField.getConfiguration() instanceof ScheduleSupportedCalculatedFieldConfiguration thisConfig
-                && other.calculatedField.getConfiguration() instanceof ScheduleSupportedCalculatedFieldConfiguration otherConfig) {
+        if (calculatedField.getConfiguration() instanceof ScheduledUpdateSupportedCalculatedFieldConfiguration thisConfig
+                && other.calculatedField.getConfiguration() instanceof ScheduledUpdateSupportedCalculatedFieldConfiguration otherConfig) {
             boolean refreshTriggerChanged = thisConfig.isScheduledUpdateEnabled() != otherConfig.isScheduledUpdateEnabled();
             boolean refreshIntervalChanged = thisConfig.getScheduledUpdateIntervalSec() != otherConfig.getScheduledUpdateIntervalSec();
             return refreshTriggerChanged || refreshIntervalChanged;

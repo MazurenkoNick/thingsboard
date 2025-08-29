@@ -154,7 +154,7 @@ public class DefaultCalculatedFieldProcessingService implements CalculatedFieldP
             var result = createStateByType(ctx);
             result.updateState(ctx, resolveArgumentFutures(argFutures));
             return result;
-        }, calculatedFieldCallbackExecutor);
+        }, MoreExecutors.directExecutor());
     }
 
     @Override
@@ -181,7 +181,7 @@ public class DefaultCalculatedFieldProcessingService implements CalculatedFieldP
                 default -> {
                     var resolvedEntityIdsFuture = resolveGeofencingEntityIds(ctx.getTenantId(), entityId, entry);
                     argFutures.put(entry.getKey(), Futures.transformAsync(resolvedEntityIdsFuture, resolvedEntityIds ->
-                            fetchGeofencingKvEntry(ctx.getTenantId(), resolvedEntityIds, entry.getValue()), calculatedFieldCallbackExecutor));
+                            fetchGeofencingKvEntry(ctx.getTenantId(), resolvedEntityIds, entry.getValue()), MoreExecutors.directExecutor()));
                 }
             }
         }
@@ -353,26 +353,21 @@ public class DefaultCalculatedFieldProcessingService implements CalculatedFieldP
         ListenableFuture<List<Entry<EntityId, AttributeKvEntry>>> allFutures = Futures.allAsList(kvFutures);
 
         return Futures.transform(allFutures, entries -> ArgumentEntry.createGeofencingValueArgument(entries.stream()
-                        .collect(Collectors.toMap(Entry::getKey, Entry::getValue))),
-                calculatedFieldCallbackExecutor
-        );
+                        .collect(Collectors.toMap(Entry::getKey, Entry::getValue))), MoreExecutors.directExecutor());
     }
 
     private ListenableFuture<ArgumentEntry> fetchKvEntry(TenantId tenantId, EntityId entityId, Argument argument) {
         return switch (argument.getRefEntityKey().getType()) {
             case TS_ROLLING -> fetchTsRolling(tenantId, entityId, argument);
             case ATTRIBUTE -> transformSingleValueArgument(
-                    Futures.transform(
-                            attributesService.find(tenantId, entityId, argument.getRefEntityKey().getScope(), argument.getRefEntityKey().getKey()),
+                    Futures.transform(attributesService.find(tenantId, entityId, argument.getRefEntityKey().getScope(), argument.getRefEntityKey().getKey()),
                             result -> result.or(() -> Optional.of(new BaseAttributeKvEntry(createDefaultKvEntry(argument), System.currentTimeMillis(), 0L))),
-                            calculatedFieldCallbackExecutor)
-                    , calculatedFieldCallbackExecutor);
+                            calculatedFieldCallbackExecutor));
             case TS_LATEST -> transformSingleValueArgument(
                     Futures.transform(
                             timeseriesService.findLatest(tenantId, entityId, argument.getRefEntityKey().getKey()),
                             result -> result.or(() -> Optional.of(new BasicTsKvEntry(System.currentTimeMillis(), createDefaultKvEntry(argument), 0L))),
-                            calculatedFieldCallbackExecutor)
-                    , calculatedFieldCallbackExecutor);
+                            calculatedFieldCallbackExecutor));
         };
     }
 
