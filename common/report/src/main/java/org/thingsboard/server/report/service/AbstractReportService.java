@@ -196,7 +196,7 @@ public abstract class AbstractReportService implements ReportService {
         List<DataKey> dataKeys = singleDataSource.get().getDataKeys();
         List<DataKey> latestDataKeys = singleDataSource.get().getLatestDataKeys();
 
-        List<String> keys = dataKeys.stream().map(DataKey::getName).collect(Collectors.toList());
+        List<String> keys = dataKeys.stream().map(DataKey::getName).distinct().toList();
         List<TsKvEntry> result = dataService.getTimeseries(entity.getEntityId(), keys, timeRange.startTs, timeRange.endTs,
                 historyConf.getInterval(), timeWindowConf.getTimezone(), timeWindowConf.getAggregation().getType(), SortOrder.Direction.DESC,
                 timeWindowConf.getAggregation().getLimit(), false, ctx);

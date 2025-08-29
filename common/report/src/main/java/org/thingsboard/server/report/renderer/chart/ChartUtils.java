@@ -60,7 +60,9 @@ import org.thingsboard.server.report.context.chart.TsChartSeriesEntry;
 import org.thingsboard.server.report.util.ColorUtils;
 
 import java.awt.*;
+import java.awt.geom.Arc2D;
 import java.awt.geom.Ellipse2D;
+import java.awt.geom.Path2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.geom.RoundRectangle2D;
 import java.text.DateFormat;
@@ -204,11 +206,12 @@ public interface ChartUtils {
                 result = new Polygon(xpoints, ypoints, 3);
             }
             case diamond -> {
+                xpoints = new int[]{0, (int)delta, 0, (int)-delta};
+                ypoints = new int[]{(int)-delta, 0, (int)delta, 0};
+                result = new Polygon(xpoints, ypoints, 4);
             }
-            case pin -> {
-            }
-            case arrow -> {
-            }
+            case pin -> result = createPin(0, 0, size, size);
+            case arrow -> result = createArrow(0, 0, size, size);
             case none -> {
             }
         }
@@ -218,7 +221,7 @@ public interface ChartUtils {
     static Stroke createLineStroke(ChartLineType lineType, Float lineWidth) {
         float[] dashPattern = null;
         switch (lineType) {
-            case solid -> dashPattern = null;
+            case solid -> {}
             case dashed -> dashPattern = new float[]{4.0f * lineWidth, 2.0f * lineWidth};
             case dotted -> dashPattern = new float[]{lineWidth};
         }
@@ -408,5 +411,71 @@ public interface ChartUtils {
                 DateTickUnitType.YEAR, 20, f7));
 
         return units;
+    }
+
+    private static Shape createPin(double x, double y, double width, double height) {
+        double w = width / 5.0 * 3.0;
+        double r =  w / 2.0;
+        double dy = r * r / (height - r);
+        double cy = y - height + r + dy;
+        double angle = Math.asin(dy / r);
+        double dx = Math.cos(angle) * r;
+        double tanX = Math.sin(angle);
+        double tanY = Math.cos(angle);
+        double cpLen = r * 0.6;
+        double cpLen2 = r * 0.7;
+        Path2D.Double path = new Path2D.Double();
+        path.moveTo(x - dx, cy + dy);
+        Arc2D.Double arc = createArc(x, cy, r,
+                Math.PI - angle,
+                Math.PI * 2 + angle);
+        path.append(arc, true);
+        path.curveTo(
+                x + dx - tanX * cpLen, cy + dy + tanY * cpLen,
+                x, y - cpLen2,
+                x, y
+        );
+        path.curveTo(
+                x, y - cpLen2,
+                x - dx + tanX * cpLen, cy + dy + tanY * cpLen,
+                x - dx, cy + dy
+        );
+        path.closePath();
+        return path;
+    }
+
+    private static Shape createArrow(double x, double y, double width, double height) {
+        double dx = width / 3 * 2;
+        Path2D.Double path = new Path2D.Double();
+        path.moveTo(x, y);
+        path.lineTo(x + dx, y + height);
+        path.lineTo(x, y + height / 4 * 3);
+        path.lineTo(x - dx, y + height);
+        path.lineTo(x, y);
+        path.closePath();
+        return path;
+    }
+
+    private static Arc2D.Double createArc(double centerX, double centerY, double radius, double startAngleRad, double endAngleRad) {
+        // Convert radians to degrees
+        double startAngleDeg = 360 - Math.toDegrees(startAngleRad);
+        double endAngleDeg = 360 - Math.toDegrees(endAngleRad);
+
+        // Calculate the angular extent
+        double extent = endAngleDeg - startAngleDeg;
+        if (extent > 0) {
+            extent = extent - 360;
+        }
+
+        // Create the bounding rectangle
+        Rectangle2D.Double rect = new Rectangle2D.Double(
+                centerX - radius,
+                centerY - radius,
+                radius * 2,
+                radius * 2
+        );
+
+        // Create the arc
+        return new Arc2D.Double(rect, startAngleDeg, extent, Arc2D.OPEN);
     }
 }
