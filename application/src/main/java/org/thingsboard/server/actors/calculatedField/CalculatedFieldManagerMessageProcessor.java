@@ -337,6 +337,7 @@ public class CalculatedFieldManagerMessageProcessor extends AbstractContextAware
                 // Alternative approach would be to use any list but avoid modifications to the list (change the complete map value instead)
                 entityIdCalculatedFields.computeIfAbsent(cf.getEntityId(), id -> new CopyOnWriteArrayList<>()).add(cfCtx);
                 addLinks(cf);
+                scheduleDynamicArgumentsRefreshTaskForCfIfNeeded(cfCtx);
                 initCf(cfCtx, callback, false);
             }
         }
@@ -369,6 +370,7 @@ public class CalculatedFieldManagerMessageProcessor extends AbstractContextAware
                 boolean hasSchedulingConfigChanges = newCfCtx.hasSchedulingConfigChanges(oldCfCtx);
                 if (hasSchedulingConfigChanges) {
                     cancelCfDynamicArgumentsRefreshTaskIfExists(cfId, false);
+                    scheduleDynamicArgumentsRefreshTaskForCfIfNeeded(newCfCtx);
                 }
 
                 List<CalculatedFieldCtx> newCfList = new CopyOnWriteArrayList<>();
@@ -392,7 +394,7 @@ public class CalculatedFieldManagerMessageProcessor extends AbstractContextAware
                 // We use copy on write lists to safely pass the reference to another actor for the iteration.
                 // Alternative approach would be to use any list but avoid modifications to the list (change the complete map value instead)
                 var stateChanges = newCfCtx.hasStateChanges(oldCfCtx);
-                if (stateChanges || newCfCtx.hasOtherSignificantChanges(oldCfCtx) || hasSchedulingConfigChanges) {
+                if (stateChanges || newCfCtx.hasOtherSignificantChanges(oldCfCtx)) {
                     initCf(newCfCtx, callback, stateChanges);
                 } else {
                     callback.onSuccess();
@@ -571,7 +573,6 @@ public class CalculatedFieldManagerMessageProcessor extends AbstractContextAware
     }
 
     private void initCf(CalculatedFieldCtx cfCtx, TbCallback callback, boolean forceStateReinit) {
-        scheduleDynamicArgumentsRefreshTaskForCfIfNeeded(cfCtx);
         applyToTargetCfEntityActors(cfCtx, callback, (id, cb) -> initCfForEntity(id, cfCtx, forceStateReinit, cb));
     }
 
