@@ -94,8 +94,8 @@ public class TbXYStepRenderer extends TbXYLineAndShapeRenderer {
 
     private GradientPaintTransformer gradientPaintTransformer;
 
-    public TbXYStepRenderer(double stepPoint, FillType fillType) {
-        super();
+    public TbXYStepRenderer(double stepPoint, FillType fillType, boolean stackMode) {
+        super(stackMode);
         if (stepPoint < 0.0d || stepPoint > 1.0d) {
             throw new IllegalArgumentException(
                     "Requires stepPoint in [0.0;1.0]");

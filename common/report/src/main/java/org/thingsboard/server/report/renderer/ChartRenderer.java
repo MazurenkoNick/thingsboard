@@ -31,13 +31,18 @@
 package org.thingsboard.server.report.renderer;
 
 import org.jfree.chart.ChartTheme;
-import org.jfree.chart.ChartUtils;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.StandardChartTheme;
+import org.jfree.chart.encoders.ImageFormat;
 import org.thingsboard.server.common.data.report.configuration.components.AbstractChartComponent;
 import org.thingsboard.server.common.data.report.configuration.image.ImageWidthType;
 import org.thingsboard.server.report.context.ComponentData;
 
+import javax.imageio.ImageIO;
+import java.awt.Graphics2D;
+import java.awt.Rectangle;
+import java.awt.RenderingHints;
+import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Base64;
@@ -61,9 +66,21 @@ public abstract class ChartRenderer<C extends AbstractChartComponent> extends Ab
 
         JFreeChart chart = createChart(component, reportDataSource);
 
+        int pixelDensity = 4;
+        int imageWidth = this.width * pixelDensity;
+        int imageHeight = this.height * pixelDensity;
+
+        BufferedImage highResImage = new BufferedImage(imageWidth, imageHeight, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g = highResImage.createGraphics();
+        g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        g.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+        g.scale(pixelDensity, pixelDensity);
+        chart.draw(g, new Rectangle(0, 0, this.width, this.height));
+        g.dispose();
+
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         try {
-            ChartUtils.writeChartAsPNG(baos, chart, width, height);
+            ImageIO.write(highResImage, ImageFormat.PNG, baos);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
