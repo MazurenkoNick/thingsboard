@@ -95,6 +95,7 @@ import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.doReturn;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.thingsboard.server.common.data.cf.configuration.GeofencingReportStrategy.REPORT_TRANSITION_EVENTS_AND_PRESENCE_STATUS;
+import static org.thingsboard.server.common.data.cf.configuration.GeofencingReportStrategy.REPORT_TRANSITION_EVENTS_ONLY;
 import static org.thingsboard.server.common.data.cf.configuration.geofencing.EntityCoordinates.ENTITY_ID_LATITUDE_ARGUMENT_KEY;
 import static org.thingsboard.server.common.data.cf.configuration.geofencing.EntityCoordinates.ENTITY_ID_LONGITUDE_ARGUMENT_KEY;
 import static org.thingsboard.server.common.data.job.JobStatus.PENDING;
@@ -1293,6 +1294,134 @@ public class CalculatedFieldIntegrationTest extends CalculatedFieldControllerTes
 
     private ObjectNode getTimeSeries(EntityId entityId, long startTs, long endTs, String... keys) throws Exception {
         return doGetAsync("/api/plugins/telemetry/" + entityId.getEntityType() + "/" + entityId.getId() + "/values/timeseries?keys={keys}&startTs={startTs}&endTs={endTs}", ObjectNode.class, String.join(",", keys), startTs, endTs);
+    }
+
+    @Test
+    public void testGeofencingCalculatedField_reprocess_overTimeWindow() throws Exception {
+        // --- Arrange entities and zones ---
+        Device device = createDevice("GF Device (reprocess)", "sn-geo-reproc-1");
+
+        // Allowed polygon
+        String allowedPolygon = "[[50.472000, 30.504000], [50.472000, 30.506000], [50.474000, 30.506000], [50.474000, 30.504000]]";
+        // Restricted polygon
+        String restrictedPolygon = "[[50.475000, 30.510000], [50.475000, 30.512000], [50.477000, 30.512000], [50.477000, 30.510000]]";
+
+        Asset allowedZoneAsset = createAsset("Allowed Zone (reproc)", null);
+        doPost("/api/plugins/telemetry/ASSET/" + allowedZoneAsset.getUuidId() + "/attributes/" + DataConstants.SERVER_SCOPE,
+                JacksonUtil.toJsonNode("{\"zone\":" + allowedPolygon + "}")).andExpect(status().isOk());
+
+        Asset restrictedZoneAsset = createAsset("Restricted Zone (reproc)", null);
+        doPost("/api/plugins/telemetry/ASSET/" + restrictedZoneAsset.getUuidId() + "/attributes/" + DataConstants.SERVER_SCOPE,
+                JacksonUtil.toJsonNode("{\"zone\":" + restrictedPolygon + "}")).andExpect(status().isOk());
+
+        // Relations FROM device -> zones
+        EntityRelation relAllowed = new EntityRelation();
+        relAllowed.setFrom(device.getId());
+        relAllowed.setTo(allowedZoneAsset.getId());
+        relAllowed.setType("AllowedZone");
+        doPost("/api/relation", relAllowed).andExpect(status().isOk());
+
+        EntityRelation relRestricted = new EntityRelation();
+        relRestricted.setFrom(device.getId());
+        relRestricted.setTo(restrictedZoneAsset.getId());
+        relRestricted.setType("RestrictedZone");
+        doPost("/api/relation", relRestricted).andExpect(status().isOk());
+
+        // --- Prepare historical telemetry (two points with explicit timestamps) ---
+        long currentTime = System.currentTimeMillis();
+        // reprocessing time window(TW)
+        long startTs = currentTime - TimeUnit.SECONDS.toMillis(1200);
+        long endTs = currentTime - TimeUnit.SECONDS.toMillis(300);
+
+        // Point 1: inside Allowed
+        long ts1 = currentTime - TimeUnit.SECONDS.toMillis(900);
+        String p1 = """
+        {"ts": %d, "values": {"latitude": 50.4730, "longitude": 30.5050}}
+        """.formatted(ts1);
+        // Point 2: inside Restricted
+        long ts2 = currentTime - TimeUnit.SECONDS.toMillis(600);
+        String p2 = """
+        {"ts": %d, "values": {"latitude": 50.4760, "longitude": 30.5110}}
+        """.formatted(ts2);
+
+        pushTelemetry(device.getId(), JacksonUtil.toJsonNode(p1));
+        pushTelemetry(device.getId(), JacksonUtil.toJsonNode(p2));
+
+        CalculatedField cf = new CalculatedField();
+        cf.setEntityId(device.getId());
+        cf.setType(CalculatedFieldType.GEOFENCING);
+        cf.setName("Geofencing CF (reprocess)");
+        cf.setDebugSettings(DebugSettings.off());
+
+        GeofencingCalculatedFieldConfiguration cfg = new GeofencingCalculatedFieldConfiguration();
+
+        EntityCoordinates entityCoordinates = new EntityCoordinates("latitude", "longitude");
+        cfg.setEntityCoordinates(entityCoordinates);
+
+        ZoneGroupConfiguration allowedGroup = new ZoneGroupConfiguration(
+                "allowedZones", "zone",
+                REPORT_TRANSITION_EVENTS_ONLY, false);
+        RelationQueryDynamicSourceConfiguration allowedDyn = new RelationQueryDynamicSourceConfiguration();
+        allowedDyn.setDirection(EntitySearchDirection.FROM);
+        allowedDyn.setRelationType("AllowedZone");
+        allowedDyn.setMaxLevel(1);
+        allowedDyn.setFetchLastLevelOnly(true);
+        allowedGroup.setRefDynamicSourceConfiguration(allowedDyn);
+
+        ZoneGroupConfiguration restrictedGroup = new ZoneGroupConfiguration(
+                "restrictedZones", "zone",
+                REPORT_TRANSITION_EVENTS_ONLY, false);
+        RelationQueryDynamicSourceConfiguration restrictedDyn = new RelationQueryDynamicSourceConfiguration();
+        restrictedDyn.setDirection(EntitySearchDirection.FROM);
+        restrictedDyn.setRelationType("RestrictedZone");
+        restrictedDyn.setMaxLevel(1);
+        restrictedDyn.setFetchLastLevelOnly(true);
+        restrictedGroup.setRefDynamicSourceConfiguration(restrictedDyn);
+
+        cfg.setZoneGroups(List.of(allowedGroup, restrictedGroup));
+
+        Output out = new Output();
+        out.setType(OutputType.TIME_SERIES);
+        cfg.setOutput(out);
+
+        cf.setConfiguration(cfg);
+
+        CalculatedField saved = doPost("/api/calculatedField", cf, CalculatedField.class);
+        assertThat(saved).isNotNull();
+        assertThat(saved.getId()).isNotNull();
+
+        // --- Trigger CF reprocessing for the TW ---
+        // Expectation: final state in the window is at ts2 -> LEFT Allowed, ENTERED Restricted.
+        reprocessCalculatedField(saved, startTs, endTs);
+
+        // --- Assert results after reprocessing ---
+        await().alias("Geofencing CF reprocess").atMost(TIMEOUT, TimeUnit.SECONDS)
+                .pollInterval(POLL_INTERVAL, TimeUnit.SECONDS)
+                .untilAsserted(() -> {
+                    ObjectNode result = getTimeSeries(device.getId(), startTs, endTs, "allowedZonesEvent,restrictedZonesEvent");
+                    assertThat(result).isNotNull().hasSize(2);
+
+                    assertThat(result.get("allowedZonesEvent")).hasSize(2);
+                    assertThat(result.get("restrictedZonesEvent")).hasSize(1);
+
+                    assertThat(result.get("allowedZonesEvent").get(0).get("value").asText()).isEqualTo("LEFT");
+                    assertThat(result.get("allowedZonesEvent").get(0).get("ts").asText()).isEqualTo(Long.toString(ts2));
+
+                    assertThat(result.get("allowedZonesEvent").get(1).get("value").asText()).isEqualTo("ENTERED");
+                    assertThat(result.get("allowedZonesEvent").get(1).get("ts").asText()).isEqualTo(Long.toString(ts1));
+
+                    assertThat(result.get("restrictedZonesEvent").get(0).get("value").asText()).isEqualTo("ENTERED");
+                    assertThat(result.get("restrictedZonesEvent").get(0).get("ts").asText()).isEqualTo(Long.toString(ts2));
+                });
+
+        await().atMost(AbstractWebTest.TIMEOUT, TimeUnit.SECONDS).untilAsserted(() -> {
+            Job cfReprocessingJob = findJobs(List.of(JobType.CF_REPROCESSING), List.of(device.getUuidId())).stream().findFirst().orElseThrow();
+            assertThat(cfReprocessingJob.getStatus()).isEqualTo(JobStatus.COMPLETED);
+            assertThat(cfReprocessingJob.getResult().getSuccessfulCount()).isEqualTo(1);
+            assertThat(cfReprocessingJob.getResult().getTotalCount()).isEqualTo(1);
+            assertThat(cfReprocessingJob.getEntityId()).isEqualTo(device.getId());
+            assertThat(cfReprocessingJob.getEntityName()).isEqualTo(device.getName());
+        });
     }
 
     @Test

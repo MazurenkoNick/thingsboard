@@ -79,6 +79,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 import static org.thingsboard.server.common.data.AttributeScope.SERVER_SCOPE;
 import static org.thingsboard.server.common.data.cf.configuration.GeofencingReportStrategy.REPORT_TRANSITION_EVENTS_AND_PRESENCE_STATUS;
+import static org.thingsboard.server.common.data.cf.configuration.GeofencingReportStrategy.REPORT_TRANSITION_EVENTS_ONLY;
 import static org.thingsboard.server.msa.ui.utils.EntityPrototypes.defaultAssetProfile;
 import static org.thingsboard.server.msa.ui.utils.EntityPrototypes.defaultDeviceProfile;
 import static org.thingsboard.server.msa.ui.utils.EntityPrototypes.defaultTenantAdmin;
@@ -512,6 +513,122 @@ public class CalculatedFieldTest extends AbstractContainerTest {
                     assertThat(airDensityLatest).isNotNull();
                     assertThat(airDensityLatest.get("airDensity").get(0).get("value").asText()).isEqualTo("1.02");
                 });
+    }
+
+    @Test
+    public void testGeofencingCalculatedField_reprocess_overTimeWindow() throws Exception {
+        // login tenant admin
+        testRestClient.getAndSetUserToken(tenantAdminId);
+
+        // --- Arrange entities and zones ---
+        String geoDeviceToken = "geoDeviceTokenReproc";
+        Device geoDevice = testRestClient.postDevice(geoDeviceToken, createDevice("GF Device (reprocess)", deviceProfileId));
+
+        // Allowed / Restricted polygons
+        String allowedPolygon = "[[50.472000, 30.504000], [50.472000, 30.506000], [50.474000, 30.506000], [50.474000, 30.504000]]";
+        String restrictedPolygon = "[[50.475000, 30.510000], [50.475000, 30.512000], [50.477000, 30.512000], [50.477000, 30.510000]]";
+
+        Asset allowed = testRestClient.postAsset(createAsset("Allowed Zone (reproc)", null));
+        testRestClient.postTelemetryAttribute(allowed.getId(), SERVER_SCOPE, JacksonUtil.toJsonNode("{\"zone\":" + allowedPolygon + "}"));
+
+        Asset restricted = testRestClient.postAsset(createAsset("Restricted Zone (reproc)", null));
+        testRestClient.postTelemetryAttribute(restricted.getId(), SERVER_SCOPE, JacksonUtil.toJsonNode("{\"zone\":" + restrictedPolygon + "}"));
+
+        // Relations FROM device -> zones
+        testRestClient.postEntityRelation(new EntityRelation(geoDevice.getId(), allowed.getId(), "AllowedZone"));
+        testRestClient.postEntityRelation(new EntityRelation(geoDevice.getId(), restricted.getId(), "RestrictedZone"));
+
+        // --- Prepare historical telemetry (two points with explicit timestamps) ---
+        long currentTime = System.currentTimeMillis();
+        // Reprocessing time window (TW)
+        long startTs = currentTime - TimeUnit.SECONDS.toMillis(1200);
+        long endTs = currentTime - TimeUnit.SECONDS.toMillis(300);
+
+        // Point 1: inside Allowed
+        long ts1 = currentTime - TimeUnit.SECONDS.toMillis(900);
+        String p1 = String.format("{\"ts\":%s, \"values\":{\"latitude\":50.4730, \"longitude\":30.5050}}", ts1);
+
+        // Point 2: inside Restricted
+        long ts2 = currentTime - TimeUnit.SECONDS.toMillis(600);
+        String p2 = String.format("{\"ts\":%s, \"values\":{\"latitude\":50.4760, \"longitude\":30.5110}}", ts2);
+
+        testRestClient.postTelemetry(geoDeviceToken, JacksonUtil.toJsonNode(p1));
+        testRestClient.postTelemetry(geoDeviceToken, JacksonUtil.toJsonNode(p2));
+
+        // --- Build CF: GEOFENCING (events-only -> time-series output) ---
+        CalculatedField cf = new CalculatedField();
+        cf.setEntityId(geoDevice.getId());
+        cf.setType(CalculatedFieldType.GEOFENCING);
+        cf.setName("Geofencing CF (reprocess)");
+        cf.setDebugSettings(DebugSettings.off());
+
+        GeofencingCalculatedFieldConfiguration cfg = new GeofencingCalculatedFieldConfiguration();
+
+        EntityCoordinates entityCoordinates = new EntityCoordinates("latitude", "longitude");
+        cfg.setEntityCoordinates(entityCoordinates);
+
+        ZoneGroupConfiguration allowedGroup = new ZoneGroupConfiguration(
+                "allowedZones", "zone",
+                REPORT_TRANSITION_EVENTS_ONLY,
+                false);
+        RelationQueryDynamicSourceConfiguration allowedDyn = new RelationQueryDynamicSourceConfiguration();
+        allowedDyn.setDirection(EntitySearchDirection.FROM);
+        allowedDyn.setRelationType("AllowedZone");
+        allowedDyn.setMaxLevel(1);
+        allowedDyn.setFetchLastLevelOnly(true);
+        allowedGroup.setRefDynamicSourceConfiguration(allowedDyn);
+
+        ZoneGroupConfiguration restrictedGroup = new ZoneGroupConfiguration(
+                "restrictedZones", "zone",
+                REPORT_TRANSITION_EVENTS_ONLY,
+                false);
+        RelationQueryDynamicSourceConfiguration restrictedDyn = new RelationQueryDynamicSourceConfiguration();
+        restrictedDyn.setDirection(EntitySearchDirection.FROM);
+        restrictedDyn.setRelationType("RestrictedZone");
+        restrictedDyn.setMaxLevel(1);
+        restrictedDyn.setFetchLastLevelOnly(true);
+        restrictedGroup.setRefDynamicSourceConfiguration(restrictedDyn);
+
+        cfg.setZoneGroups(List.of(allowedGroup, restrictedGroup));
+
+        Output out = new Output();
+        out.setType(OutputType.TIME_SERIES);
+        cfg.setOutput(out);
+
+        cf.setConfiguration(cfg);
+
+        CalculatedField saved = testRestClient.postCalculatedField(cf);
+        assertThat(saved).isNotNull();
+        assertThat(saved.getId()).isNotNull();
+
+        // --- Trigger CF reprocessing for the TW ---
+        // Expectation: final state in the window is at ts2 -> LEFT Allowed, ENTERED Restricted.
+        testRestClient.reprocessCalculatedField(saved, startTs, endTs);
+
+        // --- Assert results after reprocessing ---
+        await().alias("Geofencing CF reprocess").atMost(TIMEOUT, TimeUnit.SECONDS)
+                .pollInterval(POLL_INTERVAL, TimeUnit.SECONDS)
+                .untilAsserted(() -> {
+                    ObjectNode result = testRestClient.getTimeSeries(geoDevice.getId(), startTs, endTs, "allowedZonesEvent,restrictedZonesEvent");
+                    assertThat(result).isNotNull().hasSize(2);
+
+                    assertThat(result.get("allowedZonesEvent")).isNotNull();
+                    assertThat(result.get("restrictedZonesEvent")).isNotNull();
+
+                    assertThat(result.get("allowedZonesEvent")).hasSize(2);
+                    assertThat(result.get("restrictedZonesEvent")).hasSize(1);
+
+                    assertThat(result.get("allowedZonesEvent").get(0).get("value").asText()).isEqualTo("LEFT");
+                    assertThat(result.get("allowedZonesEvent").get(0).get("ts").asText()).isEqualTo(Long.toString(ts2));
+
+                    assertThat(result.get("allowedZonesEvent").get(1).get("value").asText()).isEqualTo("ENTERED");
+                    assertThat(result.get("allowedZonesEvent").get(1).get("ts").asText()).isEqualTo(Long.toString(ts1));
+
+                    assertThat(result.get("restrictedZonesEvent").get(0).get("value").asText()).isEqualTo("ENTERED");
+                    assertThat(result.get("restrictedZonesEvent").get(0).get("ts").asText()).isEqualTo(Long.toString(ts2));
+                });
+
+        testRestClient.deleteCalculatedFieldIfExists(saved.getId());
     }
 
     @Test
