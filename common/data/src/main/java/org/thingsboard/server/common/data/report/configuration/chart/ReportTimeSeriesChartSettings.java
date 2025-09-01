@@ -47,6 +47,11 @@ public class ReportTimeSeriesChartSettings {
     private Font titleFont;
     private String titleColor;
 
+    private Boolean stack;
+
+    @JsonProperty("grid")
+    private TimeSeriesChartGridSettings grid;
+
     @JsonProperty("yAxes")
     private Map<String, TimeSeriesChartYAxisSettings> yAxes;
 
@@ -81,6 +86,8 @@ public class ReportTimeSeriesChartSettings {
                 .build();
         this.titleColor = input.getTitleColor() != null ? input.getTitleColor() : "rgba(0, 0, 0, 0.87)";
 
+        this.stack = input.getStack() != null ? input.getStack() : Boolean.FALSE;
+        this.grid = new TimeSeriesChartGridSettings(input.getGrid());
         this.yAxes = new HashMap<>();
         if (input.getYAxes() == null) {
             this.yAxes.put("default", new TimeSeriesChartYAxisSettings(null));

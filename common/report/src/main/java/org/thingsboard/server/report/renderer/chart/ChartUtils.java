@@ -280,6 +280,35 @@ public interface ChartUtils {
         return groupedSeries;
     }
 
+    static Shape createRectangularShapeWithRoundedCorners(double x, double y, double width, double height,
+                                                          double radiusTopLeft, double radiusTopRight, double radiusBottomRight, double radiusBottomLeft) {
+        double maxRadius = Math.min(width, height) / 2f;
+        Path2D.Double path = new Path2D.Double();
+        path.moveTo(x + radiusTopLeft, y);
+        path.lineTo(x + width - radiusTopRight, y);
+        if (radiusTopRight > 0) {
+            radiusTopRight = Math.min(maxRadius, radiusTopRight);
+            path.append(new Arc2D.Double(x + width - radiusTopRight * 2, y, radiusTopRight * 2, radiusTopRight * 2, 90, -90, Arc2D.OPEN), true);
+        }
+        path.lineTo(x + width, y + height - radiusBottomRight);
+        if (radiusBottomRight > 0) {
+            radiusBottomRight = Math.min(maxRadius, radiusBottomRight);
+            path.append(new Arc2D.Double(x + width - radiusBottomRight * 2, y + height - radiusBottomRight * 2, radiusBottomRight * 2, radiusBottomRight * 2, 0, -90, Arc2D.OPEN), true);
+        }
+        path.lineTo(x + radiusBottomLeft, y + height);
+        if (radiusBottomLeft > 0) {
+            radiusBottomLeft = Math.min(maxRadius, radiusBottomLeft);
+            path.append(new Arc2D.Double(x, y + height - radiusBottomLeft * 2, radiusBottomLeft * 2, radiusBottomLeft * 2, -90, -90, Arc2D.OPEN), true);
+        }
+        path.lineTo(x, y + radiusTopLeft);
+        if (radiusTopLeft > 0) {
+            radiusTopLeft = Math.min(maxRadius, radiusTopLeft);
+            path.append(new Arc2D.Double(x, y, radiusTopLeft * 2, radiusTopLeft * 2, 180, -90, Arc2D.OPEN), true);
+        }
+        path.closePath();
+        return path;
+    }
+
     private static void setupAxisAppearance(ValueAxis axis, TimeSeriesChartAxisSettings axisSettings) {
         axis.setVisible(axisSettings.getShow());
         axis.setLabelFont(toAwtFont(axisSettings.getLabelFont()));

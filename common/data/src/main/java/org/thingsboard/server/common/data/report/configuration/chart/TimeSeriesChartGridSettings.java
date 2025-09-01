@@ -30,36 +30,25 @@
  */
 package org.thingsboard.server.common.data.report.configuration.chart;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
-import org.thingsboard.server.common.data.report.configuration.DataKeySettings;
-import org.thingsboard.server.common.data.report.configuration.style.DataKeySettingsType;
 
 @Data
-public class TimeSeriesChartKeySettings implements DataKeySettings {
+public class TimeSeriesChartGridSettings {
 
-    @JsonProperty("yAxisId")
-    private String yAxisId;
-    private Boolean showInLegend;
-    private TimeSeriesChartSeriesType seriesType;
-    private LineSeriesSettings lineSettings;
-    private BarSeriesSettings barSettings;
+    private Boolean show;
+    private String backgroundColor;
+    private Float borderWidth;
+    private String borderColor;
 
-    public TimeSeriesChartKeySettings() {}
+    public TimeSeriesChartGridSettings() {}
 
-    public TimeSeriesChartKeySettings(TimeSeriesChartKeySettings input) {
+    public TimeSeriesChartGridSettings(TimeSeriesChartGridSettings input) {
         if (input == null) {
-            input = new TimeSeriesChartKeySettings();
+            input = new TimeSeriesChartGridSettings();
         }
-        this.yAxisId = input.getYAxisId() != null ? input.getYAxisId() : "default";
-        this.showInLegend = input.getShowInLegend() != null ? input.getShowInLegend() : Boolean.TRUE;
-        this.seriesType = input.getSeriesType() != null ? input.getSeriesType() : TimeSeriesChartSeriesType.line;
-        this.lineSettings = new LineSeriesSettings(input.getLineSettings());
-        this.barSettings = new BarSeriesSettings(input.getBarSettings());
-    }
-
-    @Override
-    public DataKeySettingsType getType() {
-        return DataKeySettingsType.TIME_SERIES_CHART;
+        this.show = input.getShow() != null ? input.getShow() : Boolean.FALSE;
+        this.backgroundColor = input.getBackgroundColor() != null ? input.getBackgroundColor() : null;
+        this.borderWidth = input.getBorderWidth() != null ? input.getBorderWidth() : 1f;
+        this.borderColor = input.getBorderColor() != null ? input.getBorderColor() : "#ccc";
     }
 }

@@ -28,38 +28,39 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.common.data.report.configuration.chart;
+package org.thingsboard.server.report.renderer.chart;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Data;
-import org.thingsboard.server.common.data.report.configuration.DataKeySettings;
-import org.thingsboard.server.common.data.report.configuration.style.DataKeySettingsType;
+import org.jfree.chart.labels.XYItemLabelGenerator;
+import org.jfree.data.xy.XYDataset;
+import org.thingsboard.server.common.data.StringUtils;
 
-@Data
-public class TimeSeriesChartKeySettings implements DataKeySettings {
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 
-    @JsonProperty("yAxisId")
-    private String yAxisId;
-    private Boolean showInLegend;
-    private TimeSeriesChartSeriesType seriesType;
-    private LineSeriesSettings lineSettings;
-    private BarSeriesSettings barSettings;
+public class TbXYItemLabelGenerator implements XYItemLabelGenerator {
 
-    public TimeSeriesChartKeySettings() {}
+    private final NumberFormat formatter;
 
-    public TimeSeriesChartKeySettings(TimeSeriesChartKeySettings input) {
-        if (input == null) {
-            input = new TimeSeriesChartKeySettings();
+    public TbXYItemLabelGenerator(Integer decimals, String units) {
+        int decimalsInt = decimals != null ? decimals : 2;
+        StringBuilder patternBuilder = new StringBuilder("#");
+        if (decimalsInt > 0) {
+            patternBuilder.append(".");
         }
-        this.yAxisId = input.getYAxisId() != null ? input.getYAxisId() : "default";
-        this.showInLegend = input.getShowInLegend() != null ? input.getShowInLegend() : Boolean.TRUE;
-        this.seriesType = input.getSeriesType() != null ? input.getSeriesType() : TimeSeriesChartSeriesType.line;
-        this.lineSettings = new LineSeriesSettings(input.getLineSettings());
-        this.barSettings = new BarSeriesSettings(input.getBarSettings());
+        patternBuilder.append("#".repeat(Math.max(0, decimalsInt)));
+        if (StringUtils.isNotBlank(units)) {
+            patternBuilder.append(" '").append(units).append("'");
+        }
+        this.formatter = new DecimalFormat(patternBuilder.toString());
     }
 
     @Override
-    public DataKeySettingsType getType() {
-        return DataKeySettingsType.TIME_SERIES_CHART;
+    public String generateLabel(XYDataset dataset, int series, int item) {
+        double y = dataset.getYValue(series, item);
+        if (Double.isNaN(y) && dataset.getY(series, item) == null) {
+            return "";
+        } else {
+            return formatter.format(y);
+        }
     }
 }
