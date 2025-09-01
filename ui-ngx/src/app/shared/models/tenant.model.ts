@@ -122,6 +122,7 @@ export interface DefaultTenantProfileConfiguration {
   queueStatsTtlDays: number;
   ruleEngineExceptionsTtlDays: number;
   blobEntityTtlDays: number;
+  reportTtlDays: number;
 
   maxCalculatedFieldsPerEntity: number;
   maxArgumentsPerCF: number;
@@ -191,6 +192,7 @@ export function createTenantProfileConfiguration(type: TenantProfileType): Tenan
           queueStatsTtlDays: 0,
           ruleEngineExceptionsTtlDays: 0,
           blobEntityTtlDays: 0,
+          reportTtlDays: 0,
           maxCalculatedFieldsPerEntity: 5,
           maxArgumentsPerCF: 10,
           maxDataPointsPerRollingArg: 1000,

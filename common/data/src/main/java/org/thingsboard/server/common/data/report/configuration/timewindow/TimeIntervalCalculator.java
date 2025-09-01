@@ -88,7 +88,7 @@ public class TimeIntervalCalculator {
                 end = start.plusDays(1).minusNanos(1);
                 break;
             case PREVIOUS_WEEK:
-                start = now.minusWeeks(1).with(DayOfWeek.MONDAY).toLocalDate().atStartOfDay(zoneId);
+                start = now.minusWeeks(1).with(TemporalAdjusters.previousOrSame(DayOfWeek.SUNDAY)).toLocalDate().atStartOfDay(zoneId);
                 end = start.plusDays(7).minusNanos(1);
                 break;
             case PREVIOUS_WEEK_ISO:
@@ -137,7 +137,7 @@ public class TimeIntervalCalculator {
                 end = now;
                 break;
             case CURRENT_WEEK:
-                start = now.with(DayOfWeek.MONDAY).toLocalDate().atStartOfDay(zoneId);
+                start = now.with(TemporalAdjusters.previousOrSame(DayOfWeek.SUNDAY)).toLocalDate().atStartOfDay(zoneId);
                 end = start.plusDays(7).minusNanos(1);
                 break;
             case CURRENT_WEEK_ISO:
@@ -145,7 +145,7 @@ public class TimeIntervalCalculator {
                 end = start.plusDays(7).minusNanos(1);
                 break;
             case CURRENT_WEEK_SO_FAR:
-                start = now.with(DayOfWeek.MONDAY).toLocalDate().atStartOfDay(zoneId);
+                start = now.with(TemporalAdjusters.previousOrSame(DayOfWeek.SUNDAY)).toLocalDate().atStartOfDay(zoneId);
                 end = now;
                 break;
             case CURRENT_WEEK_ISO_SO_FAR:

@@ -59,6 +59,7 @@ export interface RecipientNotificationDialogData {
   target?: NotificationTarget;
   isAdd?: boolean;
   readonly?: boolean;
+  name?: string;
 }
 
 @Component({
@@ -126,6 +127,10 @@ export class RecipientNotificationDialogComponent extends
         description: [null]
       })
     });
+
+    if (this.data.name) {
+      this.targetNotificationForm.get('name').patchValue(this.data.name, {emitEvent: false});
+    }
 
     this.targetNotificationForm.get('configuration.type').valueChanges.pipe(
       takeUntil(this.destroy$)
