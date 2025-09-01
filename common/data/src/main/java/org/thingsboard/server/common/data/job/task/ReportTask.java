@@ -51,6 +51,7 @@ public class ReportTask extends Task<ReportTaskResult> {
 
     private CustomerId customerId;
     private ReportTemplateId reportTemplateId;
+    @ToString.Exclude
     private ReportTemplateConfig reportTemplateConfig;
 
     private String timezone;

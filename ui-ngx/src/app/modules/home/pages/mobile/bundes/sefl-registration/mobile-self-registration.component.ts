@@ -273,12 +273,14 @@ export class MobileSelfRegistrationComponent implements ControlValueAccessor, Va
     }
   }
 
-  createTarget() {
+  createTarget(name?: string) {
     this.dialog.open<RecipientNotificationDialogComponent, RecipientNotificationDialogData,
       NotificationTarget>(RecipientNotificationDialogComponent, {
       disableClose: true,
       panelClass: ['tb-dialog', 'tb-fullscreen-dialog'],
-      data: {}
+      data: {
+        name
+      }
     }).afterClosed()
       .subscribe((res) => {
         if (res) {

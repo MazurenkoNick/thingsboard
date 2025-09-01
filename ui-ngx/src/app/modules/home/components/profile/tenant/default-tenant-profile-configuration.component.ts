@@ -125,6 +125,7 @@ export class DefaultTenantProfileConfigurationComponent implements ControlValueA
       queueStatsTtlDays: [null, [Validators.required, Validators.min(0)]],
       ruleEngineExceptionsTtlDays: [null, [Validators.required, Validators.min(0)]],
       blobEntityTtlDays: [null, [Validators.required, Validators.min(0)]],
+      reportTtlDays: [null, [Validators.required, Validators.min(0)]],
       tenantServerRestLimitsConfiguration: [null, []],
       customerServerRestLimitsConfiguration: [null, []],
       maxWsSessionsPerTenant: [null, [Validators.min(0)]],
