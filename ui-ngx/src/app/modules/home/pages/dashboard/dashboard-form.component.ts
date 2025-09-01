@@ -57,8 +57,8 @@ export class DashboardFormComponent extends GroupEntityComponent<DashboardInfo> 
   publicLink: string;
   // assignedCustomersText: string;
 
-  currentFileName: string;
-  importFileLabel: string = 'Upload JSON file to update the dashboard';
+  currentFileName: string = '';
+  importFileLabel: string = 'Upload JSON file';
 
   constructor(protected store: Store<AppState>,
               protected translate: TranslateService,
@@ -123,10 +123,11 @@ export class DashboardFormComponent extends GroupEntityComponent<DashboardInfo> 
   }
 
   updateForm(entity: Dashboard) {
+    this.currentFileName = '';
     this.updateFields(entity);
     this.entityForm.patchValue({title: entity.title});
     this.entityForm.patchValue({image: entity.image});
-    this.entityForm.patchValue({fileContent: entity.fileContent});
+    this.entityForm.patchValue({fileContent: entity.fileContent || null});
     this.entityForm.patchValue({mobileHide: entity.mobileHide});
     this.entityForm.patchValue({mobileOrder: entity.mobileOrder});
     this.entityForm.patchValue({configuration: {description: entity.configuration ? entity.configuration.description : ''}});
@@ -171,11 +172,10 @@ export class DashboardFormComponent extends GroupEntityComponent<DashboardInfo> 
     }
   }
 
-
   loadDataFromJsonContent(content: string): any {
     try {
       const importData = JSON.parse(content);
-      return importData;
+      return importData ? importData['configuration'] : importData;
     } catch (err) {
       this.store.dispatch(new ActionNotificationShow({message: err.message, type: 'error'}));
       return null;

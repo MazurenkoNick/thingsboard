@@ -155,7 +155,7 @@ export class DashboardsTableConfigResolver  {
     config.deleteEntitiesContent = () => this.translate.instant('dashboard.delete-dashboards-text');
 
     config.loadEntity = id => this.dashboardService.getDashboardInfo(id.id);
-    config.saveEntity = dashboard => this.dashboardService.saveDashboard(dashboard).pipe(
+    config.saveEntity = dashboard => this.dashboardService.saveDashboard(this.dashboardContentModification(dashboard)).pipe(
       mergeMap((savedDashboard) => this.dashboardService.getDashboardInfo(savedDashboard.id.id))
     );
     config.onEntityAction = action => this.onDashboardAction(action, config);
@@ -163,6 +163,20 @@ export class DashboardsTableConfigResolver  {
     config.entityAdded = dashboard => {
       this.openDashboard(null, dashboard, config);
     };
+  }
+
+  private dashboardContentModification(dashboard: Dashboard){
+    if(dashboard.fileContent != undefined){
+      const { description, ...dashboardContent } = dashboard.fileContent;
+
+      dashboard.configuration = {
+        ...dashboard.configuration,
+        ...dashboardContent
+      }
+    }
+    delete dashboard.fileContent;
+
+    return dashboard;
   }
 
   configureColumns(authUser: AuthUser, config: EntityTableConfig<DashboardInfo>): Array<EntityColumn<DashboardInfo>> {
