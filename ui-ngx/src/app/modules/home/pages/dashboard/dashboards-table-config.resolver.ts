@@ -165,7 +165,7 @@ export class DashboardsTableConfigResolver  {
     };
   }
 
-  private dashboardContentModification(dashboard: Dashboard){
+  private dashboardContentModification(dashboard: Dashboard): Dashboard{
     if(dashboard.fileContent != undefined){
       const { description, ...dashboardContent } = dashboard.fileContent;
 
