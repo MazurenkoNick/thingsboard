@@ -58,7 +58,6 @@ export class DashboardFormComponent extends GroupEntityComponent<DashboardInfo> 
   // assignedCustomersText: string;
 
   currentFileName: string = '';
-  importFileLabel: string = 'Upload JSON file';
 
   constructor(protected store: Store<AppState>,
               protected translate: TranslateService,
