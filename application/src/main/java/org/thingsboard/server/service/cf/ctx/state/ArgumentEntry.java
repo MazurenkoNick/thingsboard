@@ -73,6 +73,9 @@ public interface ArgumentEntry {
     }
 
     static ArgumentEntry createTsRollingArgument(List<TsKvEntry> kvEntries, int limit, long timeWindow) {
+        if (kvEntries == null) {
+            return new TsRollingArgumentEntry(limit, timeWindow);
+        }
         return new TsRollingArgumentEntry(kvEntries, limit, timeWindow);
     }
 

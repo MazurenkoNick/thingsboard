@@ -327,7 +327,7 @@ public class CalculatedFieldEntityMessageProcessor extends AbstractContextAwareM
         if (state != null) {
             return state;
         } else {
-            ListenableFuture<CalculatedFieldState> stateFuture = cfService.fetchStateFromDb(ctx, entityId);
+            ListenableFuture<CalculatedFieldState> stateFuture = cfService.fetchStateFromDb(ctx, entityId, System.currentTimeMillis());
             // Ugly but necessary. We do not expect to often fetch data from DB. Only once per <Entity, CalculatedField> pair lifetime.
             // This call happens while processing the CF pack from the queue consumer. So the timeout should be relatively low.
             // Alternatively, we can fetch the state outside the actor system and push separate command to create this actor,
