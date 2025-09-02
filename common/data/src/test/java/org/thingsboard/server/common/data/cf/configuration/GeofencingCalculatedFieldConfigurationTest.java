@@ -148,7 +148,7 @@ public class GeofencingCalculatedFieldConfigurationTest {
     void scheduledUpdateDisabledWhenIntervalIsGreaterThanZeroButNoZonesWithDynamicArguments() {
         var cfg = new GeofencingCalculatedFieldConfiguration();
         var zoneGroupConfigurationMock = mock(ZoneGroupConfiguration.class);
-        when(zoneGroupConfigurationMock.hasDynamicSource()).thenReturn(false);
+        when(zoneGroupConfigurationMock.hasRelationQuerySource()).thenReturn(false);
         cfg.setZoneGroups(List.of(zoneGroupConfigurationMock));
         cfg.setScheduledUpdateIntervalSec(60);
         assertThat(cfg.isScheduledUpdateEnabled()).isFalse();
@@ -158,7 +158,7 @@ public class GeofencingCalculatedFieldConfigurationTest {
     void scheduledUpdateEnabledWhenIntervalIsGreaterThanZeroAndDynamicArgumentsPresent() {
         var cfg = new GeofencingCalculatedFieldConfiguration();
         var zoneGroupConfigurationMock = mock(ZoneGroupConfiguration.class);
-        when(zoneGroupConfigurationMock.hasDynamicSource()).thenReturn(true);
+        when(zoneGroupConfigurationMock.hasRelationQuerySource()).thenReturn(true);
         cfg.setZoneGroups(List.of(zoneGroupConfigurationMock));
         cfg.setScheduledUpdateIntervalSec(60);
         assertThat(cfg.isScheduledUpdateEnabled()).isTrue();

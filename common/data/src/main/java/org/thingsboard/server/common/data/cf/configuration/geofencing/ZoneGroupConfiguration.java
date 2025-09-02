@@ -82,8 +82,8 @@ public class ZoneGroupConfiguration {
         }
     }
 
-    public boolean hasDynamicSource() {
-        return refDynamicSourceConfiguration != null;
+    public boolean hasRelationQuerySource() {
+        return toArgument().hasRelationQuerySource();
     }
 
     public Argument toArgument() {
