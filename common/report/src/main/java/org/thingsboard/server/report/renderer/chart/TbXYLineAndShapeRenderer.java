@@ -37,13 +37,18 @@ import org.jfree.chart.labels.ItemLabelPosition;
 import org.jfree.chart.labels.XYItemLabelGenerator;
 import org.jfree.chart.plot.CrosshairState;
 import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.chart.plot.PlotRenderingInfo;
 import org.jfree.chart.plot.XYPlot;
+import org.jfree.chart.renderer.xy.XYItemRendererState;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.chart.text.TextUtils;
+import org.jfree.chart.ui.GradientPaintTransformer;
 import org.jfree.chart.ui.RectangleEdge;
+import org.jfree.chart.ui.StandardGradientPaintTransformer;
 import org.jfree.chart.ui.TextAnchor;
 import org.jfree.chart.util.Args;
 import org.jfree.chart.util.BooleanList;
+import org.jfree.chart.util.LineUtils;
 import org.jfree.chart.util.PaintList;
 import org.jfree.chart.util.ShapeUtils;
 import org.jfree.data.Range;
@@ -51,12 +56,68 @@ import org.jfree.data.xy.TableXYDataset;
 import org.jfree.data.xy.XYDataset;
 
 import java.awt.*;
+import java.awt.geom.GeneralPath;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
 
+import static org.thingsboard.server.report.renderer.chart.ChartUtils.interpolateBezier;
 import static org.thingsboard.server.report.util.ColorUtils.safeParseCssColor;
 
 public class TbXYLineAndShapeRenderer extends XYLineAndShapeRenderer {
+
+    public enum LineInterpolationType {
+        NONE,
+        STEP,
+        SMOOTH
+    }
+
+    public enum FillType {
+
+        /** No fill. */
+        NONE,
+
+        /** Fill down to zero. */
+        TO_ZERO,
+
+        /** Fill to the lower bound. */
+        TO_LOWER_BOUND,
+
+        /** Fill to the upper bound. */
+        TO_UPPER_BOUND
+    }
+
+    public static class TbXYItemRenderState extends State {
+
+        /** The area to fill under the curve. */
+        public GeneralPath fillArea;
+
+        /** The points. */
+        public java.util.List<Point2D> points;
+
+        public List<Point2D> stackPoints;
+
+        /**
+         * Creates a new state instance.
+         *
+         * @param info  the plot rendering info.
+         */
+        public TbXYItemRenderState(PlotRenderingInfo info) {
+            super(info);
+            this.fillArea = new GeneralPath();
+            this.points = new ArrayList<>();
+            this.stackPoints = new ArrayList<>();
+        }
+    }
+
+    private LineInterpolationType interpolationType;
+
+    private FillType fillType;
+
+    private GradientPaintTransformer gradientPaintTransformer;
 
     private PaintList shapeFillPaintList;
     private transient Paint defaultShapeFillPaint;
@@ -67,33 +128,94 @@ public class TbXYLineAndShapeRenderer extends XYLineAndShapeRenderer {
     private transient Paint defaultItemLabelBackgroundPaint;
 
     private final boolean stackMode;
-    private boolean roundXCoordinates;
+
+    private double stepPoint = 1.0d;
+    private int precision = 1;
+    private float smooth = 0f;
 
     public TbXYLineAndShapeRenderer() {
-        this(false);
+        this(LineInterpolationType.NONE, FillType.NONE, false);
     }
 
-    public TbXYLineAndShapeRenderer(boolean stackMode) {
+    public TbXYLineAndShapeRenderer(LineInterpolationType interpolationType, FillType fillType, boolean stackMode) {
         super();
+        Args.nullNotPermitted(interpolationType, "interpolationType");
+        Args.nullNotPermitted(fillType, "fillType");
+        this.interpolationType = interpolationType;
+        this.fillType = fillType;
         this.stackMode = stackMode;
-        this.roundXCoordinates = true;
         this.shapeFillPaintList = new PaintList();
         this.itemLabelsBackgroundVisibleList = new BooleanList();
         this.defaultItemLabelsBackgroundVisible = false;
         this.itemLabelsBackgroundPaintList = new PaintList();
         this.defaultItemLabelBackgroundPaint = safeParseCssColor("rgba(255,255,255,0.56)");
+        this.gradientPaintTransformer = new StandardGradientPaintTransformer();
+    }
+
+    public LineInterpolationType getInterpolationType() {
+        return this.interpolationType;
+    }
+
+    public void setInterpolationType(LineInterpolationType interpolationType) {
+        this.interpolationType = interpolationType;
+        fireChangeEvent();
+    }
+
+    public FillType getFillType() {
+        return this.fillType;
+    }
+
+    public void setFillType(FillType fillType) {
+        this.fillType = fillType;
+        fireChangeEvent();
+    }
+
+    public GradientPaintTransformer getGradientPaintTransformer() {
+        return this.gradientPaintTransformer;
+    }
+
+    public void setGradientPaintTransformer(GradientPaintTransformer gpt) {
+        this.gradientPaintTransformer = gpt;
+        fireChangeEvent();
     }
 
     public boolean getStackMode() {
         return this.stackMode;
     }
 
-    public boolean getRoundXCoordinates() {
-        return this.roundXCoordinates;
+    public double getStepPoint() {
+        return this.stepPoint;
     }
 
-    public void setRoundXCoordinates(boolean round) {
-        this.roundXCoordinates = round;
+    public void setStepPoint(double stepPoint) {
+        if (stepPoint < 0.0d || stepPoint > 1.0d) {
+            throw new IllegalArgumentException(
+                    "Requires stepPoint in [0.0;1.0]");
+        }
+        this.stepPoint = stepPoint;
+        fireChangeEvent();
+    }
+
+    public int getPrecision() {
+        return this.precision;
+    }
+
+    public void setPrecision(int p) {
+        if (p <= 0) {
+            throw new IllegalArgumentException("Requires p > 0.");
+        }
+        this.precision = p;
+        fireChangeEvent();
+    }
+    public float getSmooth() {
+        return this.smooth;
+    }
+
+    public void setSmooth(float s) {
+        if (s < 0 || s > 1) {
+            throw new IllegalArgumentException("Requires smooth in [0.0;1.0]");
+        }
+        this.smooth = s;
         fireChangeEvent();
     }
 
@@ -240,6 +362,100 @@ public class TbXYLineAndShapeRenderer extends XYLineAndShapeRenderer {
         }
     }
 
+    @Override
+    public TbXYItemRenderState initialise(Graphics2D g2, Rectangle2D dataArea,
+                                          XYPlot plot, XYDataset data, PlotRenderingInfo info) {
+
+        TbXYItemRenderState state = new TbXYItemRenderState(info);
+        state.setProcessVisibleItemsOnly(false);
+        return state;
+    }
+
+    @Override
+    public void drawItem(Graphics2D g2, XYItemRendererState state,
+                         Rectangle2D dataArea, PlotRenderingInfo info, XYPlot plot,
+                         ValueAxis domainAxis, ValueAxis rangeAxis, XYDataset dataset,
+                         int series, int item, CrosshairState crosshairState, int pass) {
+
+        // do nothing if item is not visible
+        if (!getItemVisible(series, item)) {
+            return;
+        }
+
+        // first pass draws the background (lines, for instance)
+        if (isLinePass(pass)) {
+            if (getItemLineVisible(series, item) || this.fillType != FillType.NONE) {
+                this.drawLineAndArea(state, g2, plot, dataset, pass,
+                        series, item, domainAxis, rangeAxis, dataArea);
+            }
+        } else {
+            super.drawItem(g2, state, dataArea, info, plot, domainAxis, rangeAxis, dataset, series, item, crosshairState, pass);
+        }
+    }
+
+    private void drawLineAndArea(XYItemRendererState state,
+                                 Graphics2D g2, XYPlot plot, XYDataset dataset, int pass,
+                                 int series, int item, ValueAxis xAxis, ValueAxis yAxis,
+                                 Rectangle2D dataArea) {
+        TbXYItemRenderState s = (TbXYItemRenderState) state;
+        RectangleEdge xAxisLocation = plot.getDomainAxisEdge();
+        RectangleEdge yAxisLocation = plot.getRangeAxisEdge();
+
+        // get the data points
+        double x1 = dataset.getXValue(series, item);
+        double y1 = dataset.getYValue(series, item);
+
+        if (!this.stackMode) {
+            double transX1 = xAxis.valueToJava2D(x1, dataArea, xAxisLocation);
+            double transY1 = yAxis.valueToJava2D(y1, dataArea, yAxisLocation);
+
+            // Collect points
+            if (!Double.isNaN(transX1) && !Double.isNaN(transY1)) {
+                Point2D p = plot.getOrientation() == PlotOrientation.HORIZONTAL
+                        ? new Point2D.Float((float) transY1, (float) transX1)
+                        : new Point2D.Float((float) transX1, (float) transY1);
+                if (!s.points.contains(p))
+                    s.points.add(p);
+            }
+        } else {
+            this.prepareStackModePoints(s, plot, dataset, series, item, xAxis, yAxis, dataArea);
+        }
+
+        if (item == dataset.getItemCount(series) - 1) {     // construct path
+            if (s.points.size() > 1) {
+                this.sortPoints(s, plot.getOrientation());
+                List<Point2D> interpolated = this.interpolatePoints(s, dataArea, s.points);
+                this.drawPointsToPath(interpolated, s.seriesPath, true);
+                if (this.fillType != FillType.NONE) {
+                    List<Point2D> stackPoints = null;
+                    if (this.stackMode) {
+                        stackPoints = this.interpolatePoints(s, dataArea, s.stackPoints);
+                    }
+                    this.drawFillArea(plot, xAxis, yAxis, dataArea, s.fillArea, interpolated, stackPoints);
+                    Paint fp = getSeriesFillPaint(series);
+                    if (this.gradientPaintTransformer != null
+                            && fp instanceof GradientPaint) {
+                        GradientPaint gp = this.gradientPaintTransformer
+                                .transform((GradientPaint) fp, s.fillArea);
+                        g2.setPaint(gp);
+                    } else {
+                        g2.setPaint(fp);
+                    }
+                    g2.fill(s.fillArea);
+                    s.fillArea.reset();
+                }
+                if (getItemLineVisible(series, item)) {
+                    // then draw the line...
+                    drawFirstPassShape(g2, pass, series, item, s.seriesPath);
+                }
+            }
+            // reset points vector
+            s.points = new ArrayList<>();
+            s.stackPoints = new ArrayList<>();
+        }
+    }
+
+    @Override
     protected void drawSecondaryPass(Graphics2D g2, XYPlot plot,
                                      XYDataset dataset, int pass, int series, int item,
                                      ValueAxis domainAxis, Rectangle2D dataArea, ValueAxis rangeAxis,
@@ -449,28 +665,221 @@ public class TbXYLineAndShapeRenderer extends XYLineAndShapeRenderer {
         return result;
     }
 
-    protected double[] averageStackValues(double[] stack1, double[] stack2) {
-        double[] result = new double[2];
-        result[0] = (stack1[0] + stack2[0]) / 2.0;
-        result[1] = (stack1[1] + stack2[1]) / 2.0;
-        return result;
+    protected List<Point2D> interpolatePoints(TbXYItemRenderState state, Rectangle2D dataArea, List<Point2D> points) {
+        switch (this.interpolationType) {
+            case STEP -> {
+                return this.interpolateStep(state, dataArea, points);
+            }
+            case SMOOTH -> {
+                if (this.smooth > 0) {
+                    return interpolateBezier(points, this.smooth, this.precision);
+                } else {
+                    return points;
+                }
+            }
+            default -> {
+                return points;
+            }
+        }
     }
 
-    protected double[] adjustedStackValues(double[] stack1, double[] stack2) {
-        double[] result = new double[2];
-        if (stack1[0] == 0.0 || stack2[0] == 0.0) {
-            result[0] = 0.0;
+    private List<Point2D> interpolateStep(TbXYItemRenderState state, Rectangle2D dataArea, List<Point2D> points) {
+        List<Point2D> interpolated = new ArrayList<>();
+        if (points.size() > 1) {
+            for (int item = 0; item < points.size(); item++) {
+                double transX1 = points.get(item).getX();
+                double transY1 = points.get(item).getY();
+                if (item > 0) {
+                    // get the previous data point...
+                    double transX0 = points.get(item - 1).getX();
+                    double transY0 = points.get(item - 1).getY();
+                    if (transY0 == transY1) {
+                        // for drawing a horizontal bar.
+                        storeLine(state, dataArea, transX0, transY0, transX1,
+                                transY1, interpolated);
+                    } else { //this handles the need to perform a 'step'.
+                        // calculate the step point
+                        double transXs = transX0 + (this.stepPoint
+                                * (transX1 - transX0));
+                        storeLine(state, dataArea, transX0, transY0, transXs,
+                                transY0, interpolated);
+                        storeLine(state, dataArea, transXs, transY0, transXs,
+                                transY1, interpolated);
+                        storeLine(state, dataArea, transXs, transY1, transX1,
+                                transY1, interpolated);
+                    }
+                }
+            }
         }
-        else {
-            result[0] = (stack1[0] + stack2[0]) / 2.0;
+        return interpolated;
+    }
+
+    private void prepareStackModePoints(TbXYItemRenderState s, XYPlot plot, XYDataset dataset, int series, int item,
+                                          ValueAxis xAxis, ValueAxis yAxis, Rectangle2D dataArea) {
+        TableXYDataset tdataset = (TableXYDataset) dataset;
+        double x1 = dataset.getXValue(series, item);
+        double y1 = dataset.getYValue(series, item);
+        if (Double.isNaN(y1)) {
+            return;
         }
-        if (stack1[1] == 0.0 || stack2[1] == 0.0) {
-            result[1] = 0.0;
+        PlotOrientation orientation = plot.getOrientation();
+        double[] stack1 = getStackValues(tdataset, series, item);
+        RectangleEdge edge0 = plot.getDomainAxisEdge();
+        float transX1 = (float) xAxis.valueToJava2D(x1, dataArea, edge0);
+        RectangleEdge edge1 = plot.getRangeAxisEdge();
+        double stackY1 = y1 >= 0 ? stack1[1] : stack1[0];
+        float transY1 = (float) yAxis.valueToJava2D(y1 + stackY1, dataArea,
+                edge1);
+        float transStack1 = (float) yAxis.valueToJava2D(stackY1,
+                dataArea, edge1);
+        if (orientation == PlotOrientation.VERTICAL) {
+            storePoint(s, transX1, transY1);
+            storeStackPoint(s, transX1, transStack1);
+        } else {
+            storePoint(s, transY1, transX1);
+            storeStackPoint(s, transStack1, transX1);
         }
-        else {
-            result[1] = (stack1[1] + stack2[1]) / 2.0;
+    }
+
+    private void storePoint(TbXYItemRenderState s, double x, double y) {
+        Point2D p = new Point2D.Float((float)x, (float)y);
+        if (!s.points.contains(p)) {
+            s.points.add(p);
         }
-        return result;
+    }
+
+    private void storeStackPoint(TbXYItemRenderState s, double x, double y) {
+        Point2D p = new Point2D.Float((float)x, (float)y);
+        if (!s.stackPoints.contains(p)) {
+            s.stackPoints.add(p);
+        }
+    }
+
+    private void storeLine(TbXYItemRenderState state, Rectangle2D dataArea, double x0, double y0, double x1, double y1, List<Point2D> targetPoints) {
+        if (Double.isNaN(x0) || Double.isNaN(x1) || Double.isNaN(y0)
+                || Double.isNaN(y1)) {
+            return;
+        }
+        state.workingLine.setLine(x0, y0, x1, y1);
+        boolean visible = LineUtils.clipLine(state.workingLine, dataArea);
+        if (visible) {
+            if (!targetPoints.contains(state.workingLine.getP1())) {
+                targetPoints.add(state.workingLine.getP1());
+            }
+            if (!targetPoints.contains(state.workingLine.getP2())) {
+                targetPoints.add(state.workingLine.getP2());
+            }
+        }
+    }
+
+    private void sortPoints(TbXYItemRenderState s, PlotOrientation orientation) {
+        if (orientation == PlotOrientation.VERTICAL) {
+            s.points.sort((p1, p2) -> (int)(p1.getX() - p2.getX()));
+        } else {
+            s.points.sort((p1, p2) -> (int)(p1.getY() - p2.getY()));
+        }
+        if (this.getStackMode()) {
+            if (orientation == PlotOrientation.VERTICAL) {
+                s.stackPoints.sort((p1, p2) -> (int)(p1.getX() - p2.getX()));
+            } else {
+                s.stackPoints.sort((p1, p2) -> (int)(p1.getY() - p2.getY()));
+            }
+        }
+    }
+
+    private void drawPointsToPath(List<Point2D> points, GeneralPath targetPath, boolean firstPointMove) {
+        if (points.size() > 1) {
+            Point2D cp0 = points.get(0);
+            if (firstPointMove) {
+                targetPath.moveTo(cp0.getX(), cp0.getY());
+            } else {
+                targetPath.lineTo(cp0.getX(), cp0.getY());
+            }
+            for (int i = 1; i < points.size(); i++) {
+                Point2D cp = points.get(i);
+                targetPath.lineTo(cp.getX(), cp.getY());
+            }
+        }
+    }
+
+    private void drawFillArea(XYPlot plot, ValueAxis xAxis,
+                              ValueAxis yAxis,
+                              Rectangle2D dataArea,
+                              GeneralPath fillArea,
+                              List<Point2D> seriesPoints,
+                              List<Point2D> stackPoints) {
+        if (this.stackMode) {
+            if (seriesPoints.size() > 1) {
+                this.drawPointsToPath(seriesPoints, fillArea, true);
+                Collections.reverse(stackPoints);
+                this.drawPointsToPath(stackPoints, fillArea, false);
+                fillArea.closePath();
+            }
+        } else {
+            RectangleEdge xAxisLocation = plot.getDomainAxisEdge();
+            RectangleEdge yAxisLocation = plot.getRangeAxisEdge();
+            if (seriesPoints.size() > 1) {
+                Point2D origin;
+                if (this.fillType == FillType.TO_ZERO) {
+                    float xz = (float) xAxis.valueToJava2D(0, dataArea,
+                            yAxisLocation);
+                    float yz = (float) yAxis.valueToJava2D(0, dataArea,
+                            yAxisLocation);
+                    origin = plot.getOrientation() == PlotOrientation.HORIZONTAL
+                            ? new Point2D.Float(yz, xz)
+                            : new Point2D.Float(xz, yz);
+                } else if (this.fillType == FillType.TO_LOWER_BOUND) {
+                    float xlb = (float) xAxis.valueToJava2D(
+                            xAxis.getLowerBound(), dataArea, xAxisLocation);
+                    float ylb = (float) yAxis.valueToJava2D(
+                            yAxis.getLowerBound(), dataArea, yAxisLocation);
+                    origin = plot.getOrientation() == PlotOrientation.HORIZONTAL
+                            ? new Point2D.Float(ylb, xlb)
+                            : new Point2D.Float(xlb, ylb);
+                } else {// fillType == TO_UPPER_BOUND
+                    float xub = (float) xAxis.valueToJava2D(
+                            xAxis.getUpperBound(), dataArea, xAxisLocation);
+                    float yub = (float) yAxis.valueToJava2D(
+                            yAxis.getUpperBound(), dataArea, yAxisLocation);
+                    origin = plot.getOrientation() == PlotOrientation.HORIZONTAL
+                            ? new Point2D.Float(yub, xub)
+                            : new Point2D.Float(xub, yub);
+                }
+                Point2D cp0 = seriesPoints.get(0);
+                if (plot.getOrientation() == PlotOrientation.HORIZONTAL) {
+                    fillArea.moveTo(origin.getX(), cp0.getY());
+                } else {
+                    fillArea.moveTo(cp0.getX(), origin.getY());
+                }
+                this.drawPointsToPath(seriesPoints, fillArea, false);
+                if (plot.getOrientation() == PlotOrientation.HORIZONTAL) {
+                    fillArea.lineTo(origin.getX(), seriesPoints.get(
+                            seriesPoints.size() - 1).getY());
+                } else {
+                    fillArea.lineTo(seriesPoints.get(
+                            seriesPoints.size() - 1).getX(), origin.getY());
+                }
+                fillArea.closePath();
+            }
+        }
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == this) {
+            return true;
+        }
+        if (!(obj instanceof TbXYLineAndShapeRenderer)) {
+            return false;
+        }
+        TbXYLineAndShapeRenderer that = (TbXYLineAndShapeRenderer) obj;
+        if (this.fillType != that.fillType) {
+            return false;
+        }
+        if (!Objects.equals(this.gradientPaintTransformer, that.gradientPaintTransformer)) {
+            return false;
+        }
+        return super.equals(obj);
     }
 
 }

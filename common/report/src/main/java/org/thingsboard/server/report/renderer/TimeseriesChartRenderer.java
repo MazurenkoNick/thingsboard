@@ -82,10 +82,8 @@ import org.thingsboard.server.report.context.chart.TsChartSeriesEntry;
 import org.thingsboard.server.report.renderer.chart.TbDatasetKey;
 import org.thingsboard.server.report.renderer.chart.TbTimeseriesPlot;
 import org.thingsboard.server.report.renderer.chart.TbXYBarRenderer;
-import org.thingsboard.server.report.renderer.chart.TbXYBezierRenderer;
 import org.thingsboard.server.report.renderer.chart.TbXYItemLabelGenerator;
 import org.thingsboard.server.report.renderer.chart.TbXYLineAndShapeRenderer;
-import org.thingsboard.server.report.renderer.chart.TbXYStepRenderer;
 import org.thingsboard.server.report.renderer.chart.TimeseriesBarRenderCtx;
 import org.thingsboard.server.report.util.ColorUtils;
 import org.thingsboard.server.report.util.ThymeleafUtil;
@@ -411,7 +409,7 @@ public class TimeseriesChartRenderer extends ChartRenderer<TimeseriesChartCompon
     }
 
     private void createBarsRenderer(TbDatasetKey datasetKey, List<TsChartSeriesData> seriesList) {
-        TbXYBarRenderer renderer = this.createBarRenderer(datasetKey);
+        TbXYBarRenderer renderer = this.createBarRenderer();
         for (TsChartSeriesData series : seriesList) {
             BarSeriesSettings barSettings = getSeriesSettings(series).getBarSettings();
             Color seriesColor = safeParseCssColor(series.getDataKey().getColor());
@@ -512,7 +510,7 @@ public class TimeseriesChartRenderer extends ChartRenderer<TimeseriesChartCompon
         plot.setRenderer(datasetKey.getDatasetIndex(), renderer);
     }
 
-    private TbXYBarRenderer createBarRenderer(TbDatasetKey datasetKey) {
+    private TbXYBarRenderer createBarRenderer() {
         TbXYBarRenderer barRenderer = new TbXYBarRenderer();
         barRenderer.setShadowVisible(false);
         barRenderer.setDrawBarOutline(true);
@@ -522,7 +520,15 @@ public class TimeseriesChartRenderer extends ChartRenderer<TimeseriesChartCompon
     }
 
     private TbXYLineAndShapeRenderer createLineRenderer(TbDatasetKey datasetKey) {
-        TbXYLineAndShapeRenderer lineRenderer;
+        TbXYLineAndShapeRenderer.LineInterpolationType interpolationType = TbXYLineAndShapeRenderer.LineInterpolationType.NONE;
+        if (datasetKey.isStepLine()) {
+            interpolationType = TbXYLineAndShapeRenderer.LineInterpolationType.STEP;
+        } else if (datasetKey.isSmoothLine()) {
+            interpolationType = TbXYLineAndShapeRenderer.LineInterpolationType.SMOOTH;
+        }
+        TbXYLineAndShapeRenderer lineRenderer = new TbXYLineAndShapeRenderer(interpolationType,
+                datasetKey.isFillArea() ? TbXYLineAndShapeRenderer.FillType.TO_ZERO : TbXYLineAndShapeRenderer.FillType.NONE,
+                this.stackMode);
         if (datasetKey.isStepLine()) {
             double stepPoint = 0.0;
             switch (datasetKey.getStepType()) {
@@ -530,12 +536,10 @@ public class TimeseriesChartRenderer extends ChartRenderer<TimeseriesChartCompon
                 case middle -> stepPoint = 0.5;
                 case end -> stepPoint = 1.0;
             }
-            lineRenderer =
-                    new TbXYStepRenderer(stepPoint,
-                            datasetKey.isFillArea() ? TbXYStepRenderer.FillType.TO_ZERO : TbXYStepRenderer.FillType.NONE, this.stackMode);
-        } else {
-            lineRenderer = new TbXYBezierRenderer(datasetKey.isSmoothLine() ? 5 : 1, datasetKey.isSmoothLine() ? 5 : 1,
-                    datasetKey.isFillArea() ? TbXYBezierRenderer.FillType.TO_ZERO : TbXYBezierRenderer.FillType.NONE, this.stackMode);
+            lineRenderer.setStepPoint(stepPoint);
+        } else if (datasetKey.isSmoothLine()) {
+            lineRenderer.setPrecision(100);
+            lineRenderer.setSmooth(0.25f);
         }
         lineRenderer.setLegendItemLabelGenerator(this);
         return lineRenderer;

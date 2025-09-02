@@ -63,11 +63,13 @@ import java.awt.*;
 import java.awt.geom.Arc2D;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.Path2D;
+import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.geom.RoundRectangle2D;
 import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.LinkedHashMap;
@@ -307,6 +309,145 @@ public interface ChartUtils {
         }
         path.closePath();
         return path;
+    }
+
+    static List<Point2D> interpolateBezier(List<Point2D> points, float smooth, int bezierNumPoints) {
+        List<Point2D> interpolatedPoints = new ArrayList<>();
+        int i = 0;
+        int len = points.size();
+        while (i < len) {
+            i += calculateBezierSegmentPoints(points, i, smooth, bezierNumPoints, interpolatedPoints) + 1;
+        }
+        return interpolatedPoints;
+    }
+
+    private static int calculateBezierSegmentPoints(List<Point2D> points, int start, float smooth, int bezierNumPoints, List<Point2D> targetPoints) {
+        int idx = start;
+        double cpx0 = 0;
+        double cpy0 = 0;
+        double cpx1 = 0;
+        double cpy1 = 0;
+        double prevX = 0;
+        double prevY = 0;
+        int k = 0;
+        for (; k < points.size(); k++) {
+            if (idx >= points.size()) {
+                break;
+            }
+            Point2D point = points.get(idx);
+            double x = point.getX();
+            double y = point.getY();
+            if (idx == start) {
+                cpx0 = x;
+                cpy0 = y;
+                targetPoints.add(new Point2D.Double(x, y));
+            } else {
+                double dx = x - prevX;
+                double dy = y - prevY;
+
+                // Ignore tiny segment.
+                if ((dx * dx + dy * dy) < 0.5) {
+                    idx += 1;
+                    continue;
+                }
+
+                if (smooth > 0) {
+                    int nextIdx = idx + 1;
+                    Point2D nextPoint = nextIdx < points.size() ? points.get(nextIdx) : null;
+                    double nextX = nextPoint != null ? nextPoint.getX() : 0;
+                    double nextY = nextPoint != null ? nextPoint.getY() : 0;
+                    // Ignore duplicate point
+                    while (nextX == x && nextY == y && k < points.size()) {
+                        k++;
+                        nextIdx += 1;
+                        idx += 1;
+                        nextPoint = nextIdx < points.size() ? points.get(nextIdx) : null;
+                        nextX = nextPoint != null ? nextPoint.getX() : 0;
+                        nextY = nextPoint != null ? nextPoint.getY() : 0;
+                        point = points.get(idx);
+                        x = point.getX();
+                        y = point.getY();
+                        dx = x - prevX;
+                        dy = y - prevY;
+                    }
+                    int tempK = k + 1;
+                    double ratioNextSeg = 0.5f;
+                    double vx = 0;
+                    double vy = 0;
+                    double nextCpx0 = 0;
+                    double nextCpy0 = 0;
+                    // Is last point
+                    if (tempK >= points.size()) {
+                        cpx1 = x;
+                        cpy1 = y;
+                    } else {
+                        vx = nextX - prevX;
+                        vy = nextY - prevY;
+                        double dx0 = x - prevX;
+                        double dx1 = nextX - x;
+                        double dy0 = y - prevY;
+                        double dy1 = nextY - y;
+                        double lenPrevSeg = Math.sqrt(dx0 * dx0 + dy0 * dy0);
+                        double lenNextSeg = Math.sqrt(dx1 * dx1 + dy1 * dy1);
+                        ratioNextSeg = lenNextSeg / (lenNextSeg + lenPrevSeg);
+
+                        cpx1 = x - vx * smooth * (1 - ratioNextSeg);
+                        cpy1 = y - vy * smooth * (1 - ratioNextSeg);
+
+                        nextCpx0 = x + vx * smooth * ratioNextSeg;
+                        nextCpy0 = y + vy * smooth * ratioNextSeg;
+
+                        nextCpx0 = Math.min(nextCpx0, Math.max(nextX, x));
+                        nextCpy0 = Math.min(nextCpy0, Math.max(nextY, y));
+                        nextCpx0 = Math.min(nextCpx0, Math.max(nextX, x));
+                        nextCpy0 = Math.min(nextCpy0, Math.max(nextY, y));
+
+                        vx = nextCpx0 - x;
+                        vy = nextCpy0 - y;
+
+                        cpx1 = x - vx * lenPrevSeg / lenNextSeg;
+                        cpy1 = y - vy * lenPrevSeg / lenNextSeg;
+
+                        cpx1 = Math.min(cpx1, Math.max(prevX, x));
+                        cpy1 = Math.min(cpy1, Math.max(prevY, y));
+                        cpx1 = Math.min(cpx1, Math.max(prevX, x));
+                        cpy1 = Math.min(cpy1, Math.max(prevY, y));
+
+                        vx = x - cpx1;
+                        vy = y - cpy1;
+                        nextCpx0 = x + vx * lenNextSeg / lenPrevSeg;
+                        nextCpy0 = y + vy * lenNextSeg / lenPrevSeg;
+                    }
+                    setBezierCurvePoints(cpx0, cpy0, cpx1, cpy1, x, y, bezierNumPoints, targetPoints);
+                    cpx0 = nextCpx0;
+                    cpy0 = nextCpy0;
+                } else {
+                    targetPoints.add(new Point2D.Double(x, y));
+                }
+            }
+            prevX = x;
+            prevY = y;
+            idx += 1;
+        }
+        return k;
+    }
+
+    private static void setBezierCurvePoints(double x1, double y1, double x2, double y2, double x3, double y3, int numPoints, List<Point2D> targetPoints) {
+        Point2D lastPoint = targetPoints.get(targetPoints.size() - 1);
+        double x0 = lastPoint.getX();
+        double y0 = lastPoint.getY();
+        float step = 1f / (numPoints - 1);
+        for (float t = 0; t <= 1; t += step) {
+             double x = Math.pow(1 - t, 3) * x0 +
+                    3 * t * Math.pow(1 - t, 2) * x1 +
+                    3 * Math.pow(t, 2) * (1 - t) * x2 +
+                    Math.pow(t, 3) * x3;
+             double y = Math.pow(1 - t, 3) * y0 +
+                    3 * t * Math.pow(1 - t, 2) * y1 +
+                    3 * Math.pow(t, 2) * (1 - t) * y2 +
+                    Math.pow(t, 3) * y3;
+             targetPoints.add(new Point2D.Double(x, y));
+        }
     }
 
     private static void setupAxisAppearance(ValueAxis axis, TimeSeriesChartAxisSettings axisSettings) {
