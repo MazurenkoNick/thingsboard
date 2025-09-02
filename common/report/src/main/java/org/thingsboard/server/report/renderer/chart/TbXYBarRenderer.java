@@ -49,7 +49,10 @@ import org.jfree.chart.ui.TextAnchor;
 import org.jfree.chart.util.Args;
 import org.jfree.chart.util.BooleanList;
 import org.jfree.chart.util.PaintList;
+import org.jfree.data.Range;
+import org.jfree.data.general.DatasetUtils;
 import org.jfree.data.xy.IntervalXYDataset;
+import org.jfree.data.xy.TableXYDataset;
 import org.jfree.data.xy.XYDataset;
 
 import java.awt.*;
@@ -62,22 +65,29 @@ import static org.thingsboard.server.report.util.ColorUtils.safeParseCssColor;
 
 public class TbXYBarRenderer extends XYBarRenderer {
 
-    private Map<Integer, Float> itemBorderRadiusMap;
+    private final Map<Integer, Float> itemBorderRadiusMap;
     private Float defaultItemBorderRadius;
 
-    private BooleanList itemLabelsBackgroundVisibleList;
+    private final BooleanList itemLabelsBackgroundVisibleList;
     private boolean defaultItemLabelsBackgroundVisible;
-    private PaintList itemLabelsBackgroundPaintList;
+    private final PaintList itemLabelsBackgroundPaintList;
     private transient Paint defaultItemLabelBackgroundPaint;
 
-    public TbXYBarRenderer() {
+    private final boolean stackMode;
+
+    public TbXYBarRenderer(boolean stackMode) {
         super();
+        this.stackMode = stackMode;
         itemBorderRadiusMap = new HashMap<>();
         defaultItemBorderRadius = 0f;
         this.itemLabelsBackgroundVisibleList = new BooleanList();
         this.defaultItemLabelsBackgroundVisible = false;
         this.itemLabelsBackgroundPaintList = new PaintList();
         this.defaultItemLabelBackgroundPaint = safeParseCssColor("rgba(255,255,255,0.56)");
+    }
+
+    public boolean getStackMode() {
+        return this.stackMode;
     }
 
     public Float getItemBorderRadius(int row, int column) {
@@ -206,6 +216,25 @@ public class TbXYBarRenderer extends XYBarRenderer {
     }
 
     @Override
+    public int getPassCount() {
+        return 2;
+    }
+
+    @Override
+    public Range findRangeBounds(XYDataset dataset) {
+        if (this.stackMode) {
+            if (dataset != null) {
+                return DatasetUtils.findStackedRangeBounds(
+                        (TableXYDataset) dataset);
+            } else {
+                return null;
+            }
+        } else {
+            return super.findRangeBounds(dataset);
+        }
+    }
+
+    @Override
     public void drawItem(Graphics2D g2, XYItemRendererState state,
                          Rectangle2D dataArea, PlotRenderingInfo info, XYPlot plot,
                          ValueAxis domainAxis, ValueAxis rangeAxis, XYDataset dataset,
@@ -218,23 +247,50 @@ public class TbXYBarRenderer extends XYBarRenderer {
 
         double value0;
         double value1;
-        if (this.getUseYInterval()) {
-            value0 = intervalDataset.getStartYValue(series, item);
-            value1 = intervalDataset.getEndYValue(series, item);
-        } else {
-            value0 = this.getBase();
-            value1 = intervalDataset.getYValue(series, item);
-        }
-        if (Double.isNaN(value0) || Double.isNaN(value1)) {
-            return;
-        }
-        if (value0 <= value1) {
-            if (!rangeAxis.getRange().intersects(value0, value1)) {
+        if (this.stackMode) {
+            double value = intervalDataset.getYValue(series, item);
+            if (Double.isNaN(value)) {
                 return;
             }
+            double positiveBase = 0.0;
+            double negativeBase = 0.0;
+            for (int i = 0; i < series; i++) {
+                double v = dataset.getYValue(i, item);
+                if (!Double.isNaN(v) && isSeriesVisible(i)) {
+                    if (v > 0) {
+                        positiveBase = positiveBase + v;
+                    }
+                    else {
+                        negativeBase = negativeBase + v;
+                    }
+                }
+            }
+            if (value > 0.0) {
+                value0 = positiveBase;
+                value1 = positiveBase + value;
+            } else {
+                value0 = negativeBase;
+                value1 = negativeBase + value;
+            }
         } else {
-            if (!rangeAxis.getRange().intersects(value1, value0)) {
+            if (this.getUseYInterval()) {
+                value0 = intervalDataset.getStartYValue(series, item);
+                value1 = intervalDataset.getEndYValue(series, item);
+            } else {
+                value0 = this.getBase();
+                value1 = intervalDataset.getYValue(series, item);
+            }
+            if (Double.isNaN(value0) || Double.isNaN(value1)) {
                 return;
+            }
+            if (value0 <= value1) {
+                if (!rangeAxis.getRange().intersects(value0, value1)) {
+                    return;
+                }
+            } else {
+                if (!rangeAxis.getRange().intersects(value1, value0)) {
+                    return;
+                }
             }
         }
 
@@ -298,24 +354,19 @@ public class TbXYBarRenderer extends XYBarRenderer {
         double radiusBottomRight = 0.0;
         double radiusBottomLeft = 0.0;
 
-        RectangleEdge barBase;
         if (orientation.isHorizontal()) {
             if (positive && inverted || !positive && !inverted) {
-                barBase = RectangleEdge.RIGHT;
                 radiusTopLeft = borderRadius;
                 radiusBottomLeft = borderRadius;
             } else {
-                barBase = RectangleEdge.LEFT;
                 radiusTopRight = borderRadius;
                 radiusBottomRight = borderRadius;
             }
         } else {
             if (positive && !inverted || !positive && inverted) {
-                barBase = RectangleEdge.BOTTOM;
                 radiusTopLeft = borderRadius;
                 radiusTopRight = borderRadius;
             } else {
-                barBase = RectangleEdge.TOP;
                 radiusBottomLeft = borderRadius;
                 radiusBottomRight = borderRadius;
             }
@@ -336,40 +387,38 @@ public class TbXYBarRenderer extends XYBarRenderer {
                     radiusTopLeft, radiusTopRight, radiusBottomLeft, radiusBottomRight);
         }
 
-        if (state.getElementHinting()) {
-            beginElementGroup(g2, dataset.getSeriesKey(series), item);
+        if (pass == 0) {
+            if (state.getElementHinting()) {
+                beginElementGroup(g2, dataset.getSeriesKey(series), item);
+            }
+            paintBar(g2, series, item, bar);
+            if (state.getElementHinting()) {
+                endElementGroup(g2);
+            }
+        } else if (pass == 1) {
+            if (isItemLabelVisible(series, item)) {
+                XYItemLabelGenerator generator = getItemLabelGenerator(series,
+                        item);
+                drawItemLabel(g2, dataset, series, item, plot, generator, bar.getBounds2D(),
+                        value1 < 0.0);
+            }
+
+            // update the crosshair point
+            double x1 = (startX + endX) / 2.0;
+            double y1 = dataset.getYValue(series, item);
+            double transX1 = domainAxis.valueToJava2D(x1, dataArea, location);
+            int datasetIndex = plot.indexOf(dataset);
+            updateCrosshairValues(crosshairState, x1, y1, datasetIndex,
+                    transX1, translatedValue1, plot.getOrientation());
+
+            EntityCollection entities = state.getEntityCollection();
+            if (entities != null) {
+                addEntity(entities, bar, dataset, series, item, 0.0, 0.0);
+            }
         }
-
-        paintBar(g2, series, item, bar, barBase);
-        if (state.getElementHinting()) {
-            endElementGroup(g2);
-        }
-
-        if (isItemLabelVisible(series, item)) {
-            XYItemLabelGenerator generator = getItemLabelGenerator(series,
-                    item);
-            drawItemLabel(g2, dataset, series, item, plot, generator, bar.getBounds2D(),
-                    value1 < 0.0);
-        }
-
-        // update the crosshair point
-        double x1 = (startX + endX) / 2.0;
-        double y1 = dataset.getYValue(series, item);
-        double transX1 = domainAxis.valueToJava2D(x1, dataArea, location);
-        double transY1 = rangeAxis.valueToJava2D(y1, dataArea,
-                plot.getRangeAxisEdge());
-        int datasetIndex = plot.indexOf(dataset);
-        updateCrosshairValues(crosshairState, x1, y1, datasetIndex,
-                transX1, transY1, plot.getOrientation());
-
-        EntityCollection entities = state.getEntityCollection();
-        if (entities != null) {
-            addEntity(entities, bar, dataset, series, item, 0.0, 0.0);
-        }
-
     }
 
-    protected void paintBar(Graphics2D g2, int row, int column, Shape bar, RectangleEdge base) {
+    protected void paintBar(Graphics2D g2, int row, int column, Shape bar) {
         Paint itemPaint = getItemPaint(row, column);
         GradientPaintTransformer t = getGradientPaintTransformer();
         if (t != null && itemPaint instanceof GradientPaint) {

@@ -351,21 +351,42 @@ public class TimeseriesChartRenderer extends ChartRenderer<TimeseriesChartCompon
                                    List<TsChartSeriesData> seriesList,
                                    List<TsChartSeriesData> allBarsList,
                                    TimeseriesBarRenderCtx barRenderCtx) {
-        TimePeriodValuesCollection tpvDataset = new TimePeriodValuesCollection();
-        int barsCount = this.stackMode ? seriesList.size() : allBarsList.size();
-        for (TsChartSeriesData series : seriesList) {
-            int barIndex = this.stackMode ? series.getIndex() : allBarsList.indexOf(series);
-            TimePeriodValues timePeriods = new TimePeriodValues(datasetIndex + "_" + series.getSeriesIndex());
-            for (TsChartSeriesEntry tsValue : series.getData()) {
-                try {
-                    double doubleValue = Double.parseDouble(tsValue.getValue());
+        XYDataset dataset;
+        if (this.stackMode) {
+            List<Integer> barDatasets = allBarsList.stream().map(TsChartSeriesData::getDatasetIndex).distinct().sorted().toList();
+            int barsCount = barDatasets.size();
+            int barIndex = barDatasets.indexOf(datasetIndex);
+            TimeTableXYDataset tableDataset = new TimeTableXYDataset(chartData.getTimeZone());
+            for (TsChartSeriesData series : seriesList) {
+                String seriesName = datasetIndex + "_" + series.getSeriesIndex();
+                for (TsChartSeriesEntry tsValue : series.getData()) {
                     SimpleTimePeriod timePeriod = calculateBarTimePeriod(tsValue, barRenderCtx, barsCount, barIndex);
-                    timePeriods.add(timePeriod, doubleValue);
-                } catch (NumberFormatException ignored) {}
+                    try {
+                        double doubleValue = Double.parseDouble(tsValue.getValue());
+                        tableDataset.add(timePeriod, doubleValue, seriesName);
+                    } catch (NumberFormatException ignored) {
+                    }
+                }
             }
-            tpvDataset.addSeries(timePeriods);
+            dataset = tableDataset;
+        } else {
+            int barsCount = allBarsList.size();
+            TimePeriodValuesCollection tpvDataset = new TimePeriodValuesCollection();
+            for (TsChartSeriesData series : seriesList) {
+                int barIndex = allBarsList.indexOf(series);
+                TimePeriodValues timePeriods = new TimePeriodValues(datasetIndex + "_" + series.getSeriesIndex());
+                for (TsChartSeriesEntry tsValue : series.getData()) {
+                    try {
+                        double doubleValue = Double.parseDouble(tsValue.getValue());
+                        SimpleTimePeriod timePeriod = calculateBarTimePeriod(tsValue, barRenderCtx, barsCount, barIndex);
+                        timePeriods.add(timePeriod, doubleValue);
+                    } catch (NumberFormatException ignored) {}
+                }
+                tpvDataset.addSeries(timePeriods);
+            }
+            dataset = tpvDataset;
         }
-        plot.setDataset(datasetIndex, tpvDataset);
+        plot.setDataset(datasetIndex, dataset);
         plot.mapDatasetToDomainAxis(datasetIndex, xAxisIndex);
         plot.mapDatasetToRangeAxis(datasetIndex, yAxisIndex);
     }
@@ -511,7 +532,7 @@ public class TimeseriesChartRenderer extends ChartRenderer<TimeseriesChartCompon
     }
 
     private TbXYBarRenderer createBarRenderer() {
-        TbXYBarRenderer barRenderer = new TbXYBarRenderer();
+        TbXYBarRenderer barRenderer = new TbXYBarRenderer(this.stackMode);
         barRenderer.setShadowVisible(false);
         barRenderer.setDrawBarOutline(true);
         barRenderer.setDefaultOutlineStroke(new BasicStroke(0.0f));
