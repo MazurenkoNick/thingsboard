@@ -36,6 +36,7 @@ import org.jfree.chart.entity.EntityCollection;
 import org.jfree.chart.labels.ItemLabelPosition;
 import org.jfree.chart.labels.XYItemLabelGenerator;
 import org.jfree.chart.plot.CrosshairState;
+import org.jfree.chart.plot.Marker;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.plot.PlotRenderingInfo;
 import org.jfree.chart.plot.XYPlot;
@@ -118,13 +119,14 @@ public class TbXYLineAndShapeRenderer extends XYLineAndShapeRenderer {
     private FillType fillType;
 
     private GradientPaintTransformer gradientPaintTransformer;
+    private final TbThresholdPainter thresholdPainter;
 
-    private PaintList shapeFillPaintList;
+    private final PaintList shapeFillPaintList;
     private transient Paint defaultShapeFillPaint;
 
-    private BooleanList itemLabelsBackgroundVisibleList;
+    private final BooleanList itemLabelsBackgroundVisibleList;
     private boolean defaultItemLabelsBackgroundVisible;
-    private PaintList itemLabelsBackgroundPaintList;
+    private final PaintList itemLabelsBackgroundPaintList;
     private transient Paint defaultItemLabelBackgroundPaint;
 
     private final boolean stackMode;
@@ -150,6 +152,7 @@ public class TbXYLineAndShapeRenderer extends XYLineAndShapeRenderer {
         this.itemLabelsBackgroundPaintList = new PaintList();
         this.defaultItemLabelBackgroundPaint = safeParseCssColor("rgba(255,255,255,0.56)");
         this.gradientPaintTransformer = new StandardGradientPaintTransformer();
+        this.thresholdPainter = new TbThresholdPainter();
     }
 
     public LineInterpolationType getInterpolationType() {
@@ -390,6 +393,16 @@ public class TbXYLineAndShapeRenderer extends XYLineAndShapeRenderer {
             }
         } else {
             super.drawItem(g2, state, dataArea, info, plot, domainAxis, rangeAxis, dataset, series, item, crosshairState, pass);
+        }
+    }
+
+    @Override
+    public void drawRangeMarker(Graphics2D g2, XYPlot plot, ValueAxis rangeAxis,
+                                Marker marker, Rectangle2D dataArea) {
+        if (marker instanceof TbThresholdMarker) {
+            this.thresholdPainter.paintThresholdMarker(g2, plot, rangeAxis, dataArea, (TbThresholdMarker)marker);
+        } else {
+            super.drawRangeMarker(g2, plot, rangeAxis, marker, dataArea);
         }
     }
 

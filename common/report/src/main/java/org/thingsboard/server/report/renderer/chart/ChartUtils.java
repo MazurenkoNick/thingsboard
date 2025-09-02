@@ -68,6 +68,7 @@ import java.awt.geom.Rectangle2D;
 import java.awt.geom.RoundRectangle2D;
 import java.text.DateFormat;
 import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -156,15 +157,6 @@ public interface ChartUtils {
         plot.setRangeAxis(index, yAxis);
         AxisLocation location = AxisPosition.left.equals(yAxisSettings.getPosition()) ? AxisLocation.BOTTOM_OR_LEFT : AxisLocation.TOP_OR_RIGHT;
         plot.setRangeAxisLocation(index, location);
-        int decimals = yAxisSettings.getDecimals() != null ? yAxisSettings.getDecimals() : 2;
-        StringBuilder patternBuilder = new StringBuilder("#");
-        if (decimals > 0) {
-            patternBuilder.append(".");
-        }
-        patternBuilder.append("#".repeat(Math.max(0, decimals)));
-        if (StringUtils.isNotBlank(yAxisSettings.getUnits())) {
-            patternBuilder.append(" '").append(yAxisSettings.getUnits()).append("'");
-        }
         yAxis.setAutoRangeIncludesZero(false);
         if (yAxisSettings.getSplitNumber() != null) {
             yAxis.setSplitNumber(yAxisSettings.getSplitNumber());
@@ -177,9 +169,22 @@ public interface ChartUtils {
         if (yAxisSettings.getMax() != null) {
             yAxis.setAxisMax(yAxisSettings.getMax());
         }
-        yAxis.setNumberFormatOverride(new DecimalFormat(patternBuilder.toString()));
+        int decimals = yAxisSettings.getDecimals() != null ? yAxisSettings.getDecimals() : 2;
+        yAxis.setNumberFormatOverride(createValueFormatter(decimals, yAxisSettings.getUnits()));
         setupAxisAppearance(yAxis, yAxisSettings);
         return yAxis;
+    }
+
+    static NumberFormat createValueFormatter(int decimals, String units) {
+        StringBuilder patternBuilder = new StringBuilder("#");
+        if (decimals > 0) {
+            patternBuilder.append(".");
+        }
+        patternBuilder.append("#".repeat(Math.max(0, decimals)));
+        if (StringUtils.isNotBlank(units)) {
+            patternBuilder.append(" '").append(units).append("'");
+        }
+        return new DecimalFormat(patternBuilder.toString());
     }
 
     static void adjustAxisMargins(Axis axis, double top, double left, double bottom, double right) {
