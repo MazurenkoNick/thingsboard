@@ -36,6 +36,7 @@ import org.jfree.chart.labels.ItemLabelAnchor;
 import org.jfree.chart.labels.ItemLabelPosition;
 import org.jfree.chart.labels.XYItemLabelGenerator;
 import org.jfree.chart.plot.CrosshairState;
+import org.jfree.chart.plot.Marker;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.plot.PlotRenderingInfo;
 import org.jfree.chart.plot.XYPlot;
@@ -65,6 +66,8 @@ import static org.thingsboard.server.report.util.ColorUtils.safeParseCssColor;
 
 public class TbXYBarRenderer extends XYBarRenderer {
 
+    private final TbThresholdPainter thresholdPainter;
+
     private final Map<Integer, Float> itemBorderRadiusMap;
     private Float defaultItemBorderRadius;
 
@@ -84,6 +87,7 @@ public class TbXYBarRenderer extends XYBarRenderer {
         this.defaultItemLabelsBackgroundVisible = false;
         this.itemLabelsBackgroundPaintList = new PaintList();
         this.defaultItemLabelBackgroundPaint = safeParseCssColor("rgba(255,255,255,0.56)");
+        this.thresholdPainter = new TbThresholdPainter();
     }
 
     public boolean getStackMode() {
@@ -415,6 +419,16 @@ public class TbXYBarRenderer extends XYBarRenderer {
             if (entities != null) {
                 addEntity(entities, bar, dataset, series, item, 0.0, 0.0);
             }
+        }
+    }
+
+    @Override
+    public void drawRangeMarker(Graphics2D g2, XYPlot plot, ValueAxis rangeAxis,
+                                Marker marker, Rectangle2D dataArea) {
+        if (marker instanceof TbThresholdMarker) {
+            this.thresholdPainter.paintThresholdMarker(g2, plot, rangeAxis, dataArea, (TbThresholdMarker)marker);
+        } else {
+            super.drawRangeMarker(g2, plot, rangeAxis, marker, dataArea);
         }
     }
 

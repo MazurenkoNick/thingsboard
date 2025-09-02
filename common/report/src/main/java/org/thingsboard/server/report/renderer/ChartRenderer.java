@@ -64,19 +64,23 @@ public abstract class ChartRenderer<C extends AbstractChartComponent> extends Ab
         }
         this.height = component.getHeight() >= 1 ? component.getHeight() : 400;
 
-        JFreeChart chart = createChart(component, reportDataSource);
 
         int pixelDensity = 4;
         int imageWidth = this.width * pixelDensity;
         int imageHeight = this.height * pixelDensity;
 
         BufferedImage highResImage = new BufferedImage(imageWidth, imageHeight, BufferedImage.TYPE_INT_ARGB);
-        Graphics2D g = highResImage.createGraphics();
-        g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        g.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
-        g.scale(pixelDensity, pixelDensity);
-        chart.draw(g, new Rectangle(0, 0, this.width, this.height));
-        g.dispose();
+        Graphics2D g2 = highResImage.createGraphics();
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        g2.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+        g2.scale(pixelDensity, pixelDensity);
+
+        try {
+            JFreeChart chart = createChart(g2, component, reportDataSource);
+            chart.draw(g2, new Rectangle(0, 0, this.width, this.height));
+        } finally {
+            g2.dispose();
+        }
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         try {
@@ -97,7 +101,7 @@ public abstract class ChartRenderer<C extends AbstractChartComponent> extends Ab
         return height;
     }
 
-    protected abstract JFreeChart createChart(C component, ComponentData reportDataSource);
+    protected abstract JFreeChart createChart(Graphics2D g2, C component, ComponentData reportDataSource);
 
     private String encodeImage(byte[] imageBytes) {
         String base64 = Base64.getEncoder().encodeToString(imageBytes);

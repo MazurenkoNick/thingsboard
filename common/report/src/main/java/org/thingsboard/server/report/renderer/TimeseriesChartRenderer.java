@@ -43,6 +43,8 @@ import org.jfree.chart.plot.SeriesRenderingOrder;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.title.LegendTitle;
 import org.jfree.chart.title.TextTitle;
+import org.jfree.chart.ui.Layer;
+import org.jfree.chart.ui.RectangleAnchor;
 import org.jfree.chart.ui.RectangleEdge;
 import org.jfree.chart.ui.RectangleInsets;
 import org.jfree.chart.ui.TextAnchor;
@@ -59,6 +61,7 @@ import org.thingsboard.server.common.data.report.configuration.chart.AxisPositio
 import org.thingsboard.server.common.data.report.configuration.chart.BarSeriesSettings;
 import org.thingsboard.server.common.data.report.configuration.chart.ChartFillType;
 import org.thingsboard.server.common.data.report.configuration.chart.ChartLabelPosition;
+import org.thingsboard.server.common.data.report.configuration.chart.ChartLineType;
 import org.thingsboard.server.common.data.report.configuration.chart.ChartShape;
 import org.thingsboard.server.common.data.report.configuration.chart.LegendConfig;
 import org.thingsboard.server.common.data.report.configuration.chart.LegendPosition;
@@ -74,12 +77,15 @@ import org.thingsboard.server.common.data.report.configuration.chart.TimeSeriesC
 import org.thingsboard.server.common.data.report.configuration.chart.TimeSeriesChartYAxisSettings;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponentType;
 import org.thingsboard.server.common.data.report.configuration.components.TimeseriesChartComponent;
+import org.thingsboard.server.common.data.report.configuration.style.FontStyle;
+import org.thingsboard.server.common.data.report.configuration.style.FontWeight;
 import org.thingsboard.server.report.context.ComponentData;
 import org.thingsboard.server.report.context.chart.TsChartData;
 import org.thingsboard.server.report.context.chart.TsChartDataSource;
 import org.thingsboard.server.report.context.chart.TsChartSeriesData;
 import org.thingsboard.server.report.context.chart.TsChartSeriesEntry;
 import org.thingsboard.server.report.renderer.chart.TbDatasetKey;
+import org.thingsboard.server.report.renderer.chart.TbThresholdMarker;
 import org.thingsboard.server.report.renderer.chart.TbTimeseriesPlot;
 import org.thingsboard.server.report.renderer.chart.TbXYBarRenderer;
 import org.thingsboard.server.report.renderer.chart.TbXYItemLabelGenerator;
@@ -89,6 +95,7 @@ import org.thingsboard.server.report.util.ColorUtils;
 import org.thingsboard.server.report.util.ThymeleafUtil;
 
 import java.awt.*;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
@@ -103,6 +110,7 @@ import static org.thingsboard.server.report.renderer.chart.ChartUtils.calculateB
 import static org.thingsboard.server.report.renderer.chart.ChartUtils.createFillPaint;
 import static org.thingsboard.server.report.renderer.chart.ChartUtils.createLineStroke;
 import static org.thingsboard.server.report.renderer.chart.ChartUtils.createSeriesShape;
+import static org.thingsboard.server.report.renderer.chart.ChartUtils.createValueFormatter;
 import static org.thingsboard.server.report.renderer.chart.ChartUtils.createXAxis;
 import static org.thingsboard.server.report.renderer.chart.ChartUtils.createYAxis;
 import static org.thingsboard.server.report.renderer.chart.ChartUtils.datasetGroupsFromSeries;
@@ -123,11 +131,12 @@ public class TimeseriesChartRenderer extends ChartRenderer<TimeseriesChartCompon
     private Map<String, Integer> yAxisIndexMap;
 
     private List<TsChartSeriesData> seriesList;
+    private List<TbDatasetKey> datasetKeys;
 
     private boolean stackMode;
 
     @Override
-    protected JFreeChart createChart(TimeseriesChartComponent component, ComponentData reportDataSource) {
+    protected JFreeChart createChart(Graphics2D g2, TimeseriesChartComponent component, ComponentData reportDataSource) {
 
         this.chartSettings = new ReportTimeSeriesChartSettings(component.getTimeSeriesChartSettings());
         this.plot = new TbTimeseriesPlot();
@@ -159,6 +168,7 @@ public class TimeseriesChartRenderer extends ChartRenderer<TimeseriesChartCompon
         this.setupXAxes();
         this.setupYAxes();
         this.setupData();
+        this.setupThresholds(g2);
         this.updateYAxisScale();
         this.setupLegend();
 
@@ -250,7 +260,89 @@ public class TimeseriesChartRenderer extends ChartRenderer<TimeseriesChartCompon
 
         Map<TbDatasetKey, List<TsChartSeriesData>> groupedSeries = datasetGroupsFromSeries(this.seriesList);
 
+        this.datasetKeys = new ArrayList<>(groupedSeries.keySet());
+
         groupedSeries.forEach(this::setupDataset);
+    }
+
+    private void setupThresholds(Graphics2D g2) {
+
+        double value = 25.0;
+
+        TbThresholdMarker marker = new TbThresholdMarker(value);
+        marker.setPaint(safeParseCssColor("rgba(0,0,0,0.76)"));
+        Stroke lineStroke = createLineStroke(ChartLineType.solid, 1.0f);
+        marker.setStroke(lineStroke);
+
+        Boolean showLabel = true;
+        if (showLabel) {
+            int decimals = 1;
+            String units = "°C";
+            NumberFormat formatter = createValueFormatter(decimals, units);
+            String label = formatter.format(value);
+            marker.setLabel(label);
+            marker.setLabelPaint(safeParseCssColor("rgba(0,0,0,0.76)"));
+            marker.setLabelFont(toAwtFont(org.thingsboard.server.common.data.report.configuration.style.Font.builder().family("Roboto")
+                    .size(12f)
+                    .weight(FontWeight.NORMAL)
+                    .style(FontStyle.NORMAL)
+                    .build()));
+            marker.setDrawLabelBackground(true);
+            marker.setLabelBackgroundColor(safeParseCssColor("rgba(105,187,246,0.56)"));
+
+            // End
+            // marker.setLabelAnchor(RectangleAnchor.RIGHT);
+            // marker.setLabelTextAnchor(TextAnchor.CENTER_LEFT);
+
+            // Start
+         //   marker.setLabelAnchor(RectangleAnchor.LEFT);
+         //   marker.setLabelTextAnchor(TextAnchor.CENTER_RIGHT);
+
+            // Middle
+            marker.setLabelAnchor(RectangleAnchor.TOP);
+            marker.setLabelTextAnchor(TextAnchor.BOTTOM_CENTER);
+        }
+
+        ChartShape startPoint = ChartShape.none;
+        Float startPointSize = 5.0f;
+
+        ChartShape endPoint = ChartShape.arrow;
+        Float endPointSize = 20.0f;
+
+        Shape startShape = createSeriesShape(startPoint, startPointSize);
+        if (startShape != null) {
+            marker.setStartShape(startShape);
+            if (ChartShape.emptyCircle.equals(startPoint)) {
+                marker.setStartShapeFillPaint(Color.WHITE);
+                marker.setStartShapeOutlineStroke(new BasicStroke(2.0f));
+            }
+        }
+        Shape endShape = createSeriesShape(endPoint, endPointSize);
+        if (endShape != null) {
+            marker.setEndShape(endShape);
+            if (ChartShape.emptyCircle.equals(endPoint)) {
+                marker.setEndShapeFillPaint(Color.WHITE);
+                marker.setEndShapeOutlineStroke(new BasicStroke(2.0f));
+            }
+        }
+
+        String yAxisId = "default";
+        int datasetIndex = 0;
+        Optional<TbDatasetKey> foundKey = this.datasetKeys.stream().filter(key -> key.getYAxisId().equals(yAxisId)).findFirst();
+        if (foundKey.isPresent()) {
+            datasetIndex = foundKey.get().getDatasetIndex();
+        } else {
+            foundKey =this.datasetKeys.stream().filter(key -> key.getYAxisId().equals("default")).findFirst();
+            if (foundKey.isPresent()) {
+                datasetIndex = foundKey.get().getDatasetIndex();
+            }
+        }
+        plot.addRangeMarker(datasetIndex, marker, Layer.FOREGROUND);
+
+        // TODO: Recalculate left/right insets
+        float rightPadding = 40f;
+        RectangleInsets def = XYPlot.DEFAULT_INSETS;
+        plot.setInsets(new RectangleInsets(def.getTop(), def.getLeft(), def.getBottom(), def.getRight() + rightPadding));
     }
 
     private void updateYAxisScale() {

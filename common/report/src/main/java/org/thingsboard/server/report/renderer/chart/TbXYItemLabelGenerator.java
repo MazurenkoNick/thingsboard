@@ -37,21 +37,15 @@ import org.thingsboard.server.common.data.StringUtils;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 
+import static org.thingsboard.server.report.renderer.chart.ChartUtils.createValueFormatter;
+
 public class TbXYItemLabelGenerator implements XYItemLabelGenerator {
 
     private final NumberFormat formatter;
 
     public TbXYItemLabelGenerator(Integer decimals, String units) {
         int decimalsInt = decimals != null ? decimals : 2;
-        StringBuilder patternBuilder = new StringBuilder("#");
-        if (decimalsInt > 0) {
-            patternBuilder.append(".");
-        }
-        patternBuilder.append("#".repeat(Math.max(0, decimalsInt)));
-        if (StringUtils.isNotBlank(units)) {
-            patternBuilder.append(" '").append(units).append("'");
-        }
-        this.formatter = new DecimalFormat(patternBuilder.toString());
+        this.formatter = createValueFormatter(decimalsInt, units);
     }
 
     @Override
