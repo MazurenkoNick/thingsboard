@@ -303,7 +303,7 @@ public class CalculatedFieldManagerMessageProcessor extends AbstractContextAware
                 entityIdCalculatedFields.computeIfAbsent(cf.getEntityId(), id -> new CopyOnWriteArrayList<>()).add(cfCtx);
                 addLinks(cf);
                 scheduleDynamicArgumentsRefreshTaskForCfIfNeeded(cfCtx);
-                initCf(cfCtx, callback, false);
+                applyToTargetCfEntityActors(cfCtx, callback, (id, cb) -> initCfForEntity(id, cfCtx, false, cb));
             }
         }
     }
@@ -360,7 +360,7 @@ public class CalculatedFieldManagerMessageProcessor extends AbstractContextAware
                 // Alternative approach would be to use any list but avoid modifications to the list (change the complete map value instead)
                 var stateChanges = newCfCtx.hasStateChanges(oldCfCtx);
                 if (stateChanges || newCfCtx.hasOtherSignificantChanges(oldCfCtx)) {
-                    initCf(newCfCtx, callback, stateChanges);
+                    applyToTargetCfEntityActors(newCfCtx, callback, (id, cb) -> initCfForEntity(id, newCfCtx, stateChanges, cb));
                 } else {
                     callback.onSuccess();
                 }
@@ -535,10 +535,6 @@ public class CalculatedFieldManagerMessageProcessor extends AbstractContextAware
             result = Collections.emptySet();
         }
         return result;
-    }
-
-    private void initCf(CalculatedFieldCtx cfCtx, TbCallback callback, boolean forceStateReinit) {
-        applyToTargetCfEntityActors(cfCtx, callback, (id, cb) -> initCfForEntity(id, cfCtx, forceStateReinit, cb));
     }
 
     private void scheduleDynamicArgumentsRefreshTaskForCfIfNeeded(CalculatedFieldCtx cfCtx) {
