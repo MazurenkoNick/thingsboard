@@ -44,7 +44,6 @@ import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.title.LegendTitle;
 import org.jfree.chart.title.TextTitle;
 import org.jfree.chart.ui.Layer;
-import org.jfree.chart.ui.RectangleAnchor;
 import org.jfree.chart.ui.RectangleEdge;
 import org.jfree.chart.ui.RectangleInsets;
 import org.jfree.chart.ui.TextAnchor;
@@ -61,7 +60,6 @@ import org.thingsboard.server.common.data.report.configuration.chart.AxisPositio
 import org.thingsboard.server.common.data.report.configuration.chart.BarSeriesSettings;
 import org.thingsboard.server.common.data.report.configuration.chart.ChartFillType;
 import org.thingsboard.server.common.data.report.configuration.chart.ChartLabelPosition;
-import org.thingsboard.server.common.data.report.configuration.chart.ChartLineType;
 import org.thingsboard.server.common.data.report.configuration.chart.ChartShape;
 import org.thingsboard.server.common.data.report.configuration.chart.LegendConfig;
 import org.thingsboard.server.common.data.report.configuration.chart.LegendPosition;
@@ -69,21 +67,20 @@ import org.thingsboard.server.common.data.report.configuration.chart.LineSeriesS
 import org.thingsboard.server.common.data.report.configuration.chart.ReportTimeSeriesChartSettings;
 import org.thingsboard.server.common.data.report.configuration.chart.TimeSeriesChartAxisSettings;
 import org.thingsboard.server.common.data.report.configuration.chart.TimeSeriesChartBarWidth;
-import org.thingsboard.server.common.data.report.configuration.chart.TimeSeriesChartKeySettings;
 import org.thingsboard.server.common.data.report.configuration.chart.TimeSeriesChartNoAggregationBarWidthSettings;
 import org.thingsboard.server.common.data.report.configuration.chart.TimeSeriesChartNoAggregationBarWidthStrategy;
 import org.thingsboard.server.common.data.report.configuration.chart.TimeSeriesChartSeriesType;
+import org.thingsboard.server.common.data.report.configuration.chart.TimeSeriesChartThreshold;
 import org.thingsboard.server.common.data.report.configuration.chart.TimeSeriesChartXAxisSettings;
 import org.thingsboard.server.common.data.report.configuration.chart.TimeSeriesChartYAxisSettings;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponentType;
 import org.thingsboard.server.common.data.report.configuration.components.TimeseriesChartComponent;
-import org.thingsboard.server.common.data.report.configuration.style.FontStyle;
-import org.thingsboard.server.common.data.report.configuration.style.FontWeight;
 import org.thingsboard.server.report.context.ComponentData;
 import org.thingsboard.server.report.context.chart.TsChartData;
 import org.thingsboard.server.report.context.chart.TsChartDataSource;
 import org.thingsboard.server.report.context.chart.TsChartSeriesData;
 import org.thingsboard.server.report.context.chart.TsChartSeriesEntry;
+import org.thingsboard.server.report.context.chart.TsChartThresholdItem;
 import org.thingsboard.server.report.renderer.chart.TbDatasetKey;
 import org.thingsboard.server.report.renderer.chart.TbThresholdMarker;
 import org.thingsboard.server.report.renderer.chart.TbTimeseriesPlot;
@@ -95,7 +92,6 @@ import org.thingsboard.server.report.util.ColorUtils;
 import org.thingsboard.server.report.util.ThymeleafUtil;
 
 import java.awt.*;
-import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
@@ -110,7 +106,7 @@ import static org.thingsboard.server.report.renderer.chart.ChartUtils.calculateB
 import static org.thingsboard.server.report.renderer.chart.ChartUtils.createFillPaint;
 import static org.thingsboard.server.report.renderer.chart.ChartUtils.createLineStroke;
 import static org.thingsboard.server.report.renderer.chart.ChartUtils.createSeriesShape;
-import static org.thingsboard.server.report.renderer.chart.ChartUtils.createValueFormatter;
+import static org.thingsboard.server.report.renderer.chart.ChartUtils.createThresholdMarker;
 import static org.thingsboard.server.report.renderer.chart.ChartUtils.createXAxis;
 import static org.thingsboard.server.report.renderer.chart.ChartUtils.createYAxis;
 import static org.thingsboard.server.report.renderer.chart.ChartUtils.datasetGroupsFromSeries;
@@ -129,6 +125,7 @@ public class TimeseriesChartRenderer extends ChartRenderer<TimeseriesChartCompon
 
     private List<NumberAxis> yAxisList;
     private Map<String, Integer> yAxisIndexMap;
+    private Map<Integer, Boolean> yAxisHasDataMap;
 
     private List<TsChartSeriesData> seriesList;
     private List<TbDatasetKey> datasetKeys;
@@ -168,8 +165,8 @@ public class TimeseriesChartRenderer extends ChartRenderer<TimeseriesChartCompon
         this.setupXAxes();
         this.setupYAxes();
         this.setupData();
-        this.setupThresholds(g2);
-        this.updateYAxisScale();
+        this.postConfigureYAxes();
+        this.setupThresholds();
         this.setupLegend();
 
         return chart;
@@ -219,6 +216,7 @@ public class TimeseriesChartRenderer extends ChartRenderer<TimeseriesChartCompon
     private void setupYAxes() {
         this.yAxisList = new ArrayList<>();
         this.yAxisIndexMap = new HashMap<>();
+        this.yAxisHasDataMap = new HashMap<>();
 
         List<TimeSeriesChartYAxisSettings> yAxisSettingsList = chartSettings.getYAxes().values().stream().sorted(Comparator.comparingInt(TimeSeriesChartYAxisSettings::getOrder)).toList();
 
@@ -226,26 +224,7 @@ public class TimeseriesChartRenderer extends ChartRenderer<TimeseriesChartCompon
             TimeSeriesChartYAxisSettings yAxisSettings = yAxisSettingsList.get(index);
             this.yAxisList.add(createYAxis(plot, yAxisSettings, index));
             this.yAxisIndexMap.put(yAxisSettingsList.get(index).getId(), index);
-        }
-
-        List<TimeSeriesChartYAxisSettings> leftAxes = yAxisSettingsList.stream().filter(axis -> AxisPosition.left.equals(axis.getPosition())).toList();
-        if (leftAxes.size() > 1) {
-            for (int i = 0; i < leftAxes.size()-1; i++) {
-                TimeSeriesChartYAxisSettings leftAxis = leftAxes.get(i);
-                int index = yAxisSettingsList.indexOf(leftAxis);
-                NumberAxis axis = this.yAxisList.get(index);
-                adjustAxisMargins(axis, 0.0, 4.0, 0.0, 0.0);
-            }
-        }
-
-        List<TimeSeriesChartYAxisSettings> rightAxes = yAxisSettingsList.stream().filter(axis -> AxisPosition.right.equals(axis.getPosition())).toList();
-        if (rightAxes.size() > 1) {
-            for (int i = 0; i < rightAxes.size()-1; i++) {
-                TimeSeriesChartYAxisSettings rightAxis = rightAxes.get(i);
-                int index = yAxisSettingsList.indexOf(rightAxis);
-                NumberAxis axis = this.yAxisList.get(index);
-                adjustAxisMargins(axis, 0.0, 0.0, 0.0, 4.0);
-            }
+            this.yAxisHasDataMap.put(index, false);
         }
     }
 
@@ -265,93 +244,85 @@ public class TimeseriesChartRenderer extends ChartRenderer<TimeseriesChartCompon
         groupedSeries.forEach(this::setupDataset);
     }
 
-    private void setupThresholds(Graphics2D g2) {
-
-        double value = 25.0;
-
-        TbThresholdMarker marker = new TbThresholdMarker(value);
-        marker.setPaint(safeParseCssColor("rgba(0,0,0,0.76)"));
-        Stroke lineStroke = createLineStroke(ChartLineType.solid, 1.0f);
-        marker.setStroke(lineStroke);
-
-        Boolean showLabel = true;
-        if (showLabel) {
-            int decimals = 1;
-            String units = "°C";
-            NumberFormat formatter = createValueFormatter(decimals, units);
-            String label = formatter.format(value);
-            marker.setLabel(label);
-            marker.setLabelPaint(safeParseCssColor("rgba(0,0,0,0.76)"));
-            marker.setLabelFont(toAwtFont(org.thingsboard.server.common.data.report.configuration.style.Font.builder().family("Roboto")
-                    .size(12f)
-                    .weight(FontWeight.NORMAL)
-                    .style(FontStyle.NORMAL)
-                    .build()));
-            marker.setDrawLabelBackground(true);
-            marker.setLabelBackgroundColor(safeParseCssColor("rgba(105,187,246,0.56)"));
-
-            // End
-            // marker.setLabelAnchor(RectangleAnchor.RIGHT);
-            // marker.setLabelTextAnchor(TextAnchor.CENTER_LEFT);
-
-            // Start
-         //   marker.setLabelAnchor(RectangleAnchor.LEFT);
-         //   marker.setLabelTextAnchor(TextAnchor.CENTER_RIGHT);
-
-            // Middle
-            marker.setLabelAnchor(RectangleAnchor.TOP);
-            marker.setLabelTextAnchor(TextAnchor.BOTTOM_CENTER);
-        }
-
-        ChartShape startPoint = ChartShape.none;
-        Float startPointSize = 5.0f;
-
-        ChartShape endPoint = ChartShape.arrow;
-        Float endPointSize = 20.0f;
-
-        Shape startShape = createSeriesShape(startPoint, startPointSize);
-        if (startShape != null) {
-            marker.setStartShape(startShape);
-            if (ChartShape.emptyCircle.equals(startPoint)) {
-                marker.setStartShapeFillPaint(Color.WHITE);
-                marker.setStartShapeOutlineStroke(new BasicStroke(2.0f));
+    private void setupThresholds() {
+        List<TsChartThresholdItem> thresholdItems = this.chartData.getThresholdItems();
+        thresholdItems.forEach(thresholdItem -> {
+            TimeSeriesChartThreshold threshold = thresholdItem.getSettings();
+            String yAxisId = threshold.getYAxisId();
+            int datasetIndex = -1;
+            int axisIndex = this.yAxisIndexMap.get(yAxisId);
+            if (axisIndex >= 0 && this.yAxisHasDataMap.get(axisIndex)) {
+                Optional<TbDatasetKey> foundKey = this.datasetKeys.stream().filter(key -> key.getYAxisId().equals(yAxisId)).findFirst();
+                if (foundKey.isPresent()) {
+                    datasetIndex = foundKey.get().getDatasetIndex();
+                }
             }
-        }
-        Shape endShape = createSeriesShape(endPoint, endPointSize);
-        if (endShape != null) {
-            marker.setEndShape(endShape);
-            if (ChartShape.emptyCircle.equals(endPoint)) {
-                marker.setEndShapeFillPaint(Color.WHITE);
-                marker.setEndShapeOutlineStroke(new BasicStroke(2.0f));
+            if (datasetIndex >= 0) {
+                TbThresholdMarker marker = createThresholdMarker(thresholdItem);
+                plot.addRangeMarker(datasetIndex, marker, Layer.FOREGROUND);
             }
-        }
-
-        String yAxisId = "default";
-        int datasetIndex = 0;
-        Optional<TbDatasetKey> foundKey = this.datasetKeys.stream().filter(key -> key.getYAxisId().equals(yAxisId)).findFirst();
-        if (foundKey.isPresent()) {
-            datasetIndex = foundKey.get().getDatasetIndex();
-        } else {
-            foundKey =this.datasetKeys.stream().filter(key -> key.getYAxisId().equals("default")).findFirst();
-            if (foundKey.isPresent()) {
-                datasetIndex = foundKey.get().getDatasetIndex();
-            }
-        }
-        plot.addRangeMarker(datasetIndex, marker, Layer.FOREGROUND);
-
-        // TODO: Recalculate left/right insets
-        float rightPadding = 40f;
-        RectangleInsets def = XYPlot.DEFAULT_INSETS;
-        plot.setInsets(new RectangleInsets(def.getTop(), def.getLeft(), def.getBottom(), def.getRight() + rightPadding));
+        });
     }
 
-    private void updateYAxisScale() {
+    private void postConfigureYAxes() {
+
+        // Update axes visibility
+
+        for (Map.Entry<Integer, Boolean> yAxisHasDataEntry : this.yAxisHasDataMap.entrySet()) {
+            if (!yAxisHasDataEntry.getValue()) {
+                this.yAxisList.get(yAxisHasDataEntry.getKey()).setVisible(false);
+            }
+        }
+
+        // Adjust scale for bar series
+
         for (Map.Entry<String, Integer> yAxisEntry : this.yAxisIndexMap.entrySet()) {
-            boolean includeZeros = this.seriesList.stream().anyMatch(entry -> {
-                TimeSeriesChartKeySettings settings = getSeriesSettings(entry);
-                return settings.getYAxisId().equals(yAxisEntry.getKey()) && TimeSeriesChartSeriesType.bar.equals(settings.getSeriesType());
-            });
+            boolean includeZeros = this.datasetKeys.stream().anyMatch(entry ->
+                    entry.getYAxisId().equals(yAxisEntry.getKey()) && TimeSeriesChartSeriesType.bar.equals(entry.getSeriesType()));
             this.yAxisList.get(yAxisEntry.getValue()).setAutoRangeIncludesZero(includeZeros);
+        }
+
+        // Adjust axes horizontal position
+
+        List<TimeSeriesChartYAxisSettings> yAxisSettingsList = chartSettings.getYAxes().values().stream().sorted(Comparator.comparingInt(TimeSeriesChartYAxisSettings::getOrder)).toList();
+        List<TimeSeriesChartYAxisSettings> leftAxes = yAxisSettingsList.stream().filter(
+                axis -> {
+                    if (AxisPosition.left.equals(axis.getPosition())) {
+                        int index = yAxisIndexMap.get(axis.getId());
+                        return this.yAxisHasDataMap.get(index);
+                    } else {
+                        return false;
+                    }
+                }
+        ).toList();
+
+        if (leftAxes.size() > 1) {
+            for (int i = 0; i < leftAxes.size()-1; i++) {
+                TimeSeriesChartYAxisSettings leftAxis = leftAxes.get(i);
+                int index = yAxisSettingsList.indexOf(leftAxis);
+                NumberAxis axis = this.yAxisList.get(index);
+                adjustAxisMargins(axis, 0.0, 4.0, 0.0, 0.0);
+            }
+        }
+
+        List<TimeSeriesChartYAxisSettings> rightAxes = yAxisSettingsList.stream().filter(
+                axis -> {
+                    if (AxisPosition.right.equals(axis.getPosition())) {
+                        int index = yAxisIndexMap.get(axis.getId());
+                        return this.yAxisHasDataMap.get(index);
+                    } else {
+                        return false;
+                    }
+                }
+        ).toList();
+
+        if (rightAxes.size() > 1) {
+            for (int i = 0; i < rightAxes.size()-1; i++) {
+                TimeSeriesChartYAxisSettings rightAxis = rightAxes.get(i);
+                int index = yAxisSettingsList.indexOf(rightAxis);
+                NumberAxis axis = this.yAxisList.get(index);
+                adjustAxisMargins(axis, 0.0, 0.0, 0.0, 4.0);
+            }
         }
     }
 
@@ -401,7 +372,6 @@ public class TimeseriesChartRenderer extends ChartRenderer<TimeseriesChartCompon
         }
     }
 
-
     private void setupDataset(TbDatasetKey datasetKey, List<TsChartSeriesData> seriesList) {
         createDataset(datasetKey, seriesList);
         createDatasetRenderer(datasetKey, seriesList);
@@ -444,6 +414,7 @@ public class TimeseriesChartRenderer extends ChartRenderer<TimeseriesChartCompon
                                    List<TsChartSeriesData> allBarsList,
                                    TimeseriesBarRenderCtx barRenderCtx) {
         XYDataset dataset;
+        boolean hasData = false;
         if (this.stackMode) {
             List<Integer> barDatasets = allBarsList.stream().map(TsChartSeriesData::getDatasetIndex).distinct().sorted().toList();
             int barsCount = barDatasets.size();
@@ -456,10 +427,12 @@ public class TimeseriesChartRenderer extends ChartRenderer<TimeseriesChartCompon
                     try {
                         double doubleValue = Double.parseDouble(tsValue.getValue());
                         tableDataset.add(timePeriod, doubleValue, seriesName);
+                        hasData = true;
                     } catch (NumberFormatException ignored) {
                     }
                 }
             }
+
             dataset = tableDataset;
         } else {
             int barsCount = allBarsList.size();
@@ -472,12 +445,14 @@ public class TimeseriesChartRenderer extends ChartRenderer<TimeseriesChartCompon
                         double doubleValue = Double.parseDouble(tsValue.getValue());
                         SimpleTimePeriod timePeriod = calculateBarTimePeriod(tsValue, barRenderCtx, barsCount, barIndex);
                         timePeriods.add(timePeriod, doubleValue);
+                        hasData = true;
                     } catch (NumberFormatException ignored) {}
                 }
                 tpvDataset.addSeries(timePeriods);
             }
             dataset = tpvDataset;
         }
+        this.yAxisHasDataMap.put(yAxisIndex, hasData);
         plot.setDataset(datasetIndex, dataset);
         plot.mapDatasetToDomainAxis(datasetIndex, xAxisIndex);
         plot.mapDatasetToRangeAxis(datasetIndex, yAxisIndex);
@@ -486,6 +461,7 @@ public class TimeseriesChartRenderer extends ChartRenderer<TimeseriesChartCompon
     private void createLinesDataset(int datasetIndex, int xAxisIndex, int yAxisIndex, List<TsChartSeriesData> seriesList) {
         Locale locale = Locale.getDefault();
         XYDataset dataset;
+        boolean hasData = false;
         if (this.stackMode) {
             TimeTableXYDataset tableDataset = new TimeTableXYDataset(chartData.getTimeZone());
             for (TsChartSeriesData series : seriesList) {
@@ -495,6 +471,7 @@ public class TimeseriesChartRenderer extends ChartRenderer<TimeseriesChartCompon
                     try {
                         double doubleValue = Double.parseDouble(tsValue.getValue());
                         tableDataset.add(millisecond, doubleValue, seriesName);
+                        hasData = true;
                     } catch (NumberFormatException ignored) {
                     }
                 }
@@ -509,6 +486,7 @@ public class TimeseriesChartRenderer extends ChartRenderer<TimeseriesChartCompon
                     try {
                         double doubleValue = Double.parseDouble(tsValue.getValue());
                         timeSeries.add(millisecond, doubleValue);
+                        hasData = true;
                     } catch (NumberFormatException ignored) {
                     }
                 }
@@ -516,6 +494,7 @@ public class TimeseriesChartRenderer extends ChartRenderer<TimeseriesChartCompon
             }
             dataset = tsDataset;
         }
+        this.yAxisHasDataMap.put(yAxisIndex, hasData);
         plot.setDataset(datasetIndex, dataset);
         plot.mapDatasetToDomainAxis(datasetIndex, xAxisIndex);
         plot.mapDatasetToRangeAxis(datasetIndex, yAxisIndex);

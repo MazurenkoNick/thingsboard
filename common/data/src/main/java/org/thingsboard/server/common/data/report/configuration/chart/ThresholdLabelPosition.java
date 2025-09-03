@@ -28,23 +28,19 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.report.context.chart;
+package org.thingsboard.server.common.data.report.configuration.chart;
 
-import lombok.Data;
-import lombok.RequiredArgsConstructor;
-import org.thingsboard.server.common.data.report.configuration.timewindow.TimeIntervalCalculator;
-
-import java.util.List;
-import java.util.TimeZone;
-
-@Data
-@RequiredArgsConstructor
-public class TsChartData {
-
-    private final TimeZone timeZone;
-    private final TimeIntervalCalculator.TimeRange timeRange;
-    private final boolean noAggregation;
-    private final List<TsChartDataSource> chartData;
-    private final List<TsChartThresholdItem> thresholdItems;
-
+public enum ThresholdLabelPosition {
+    start,
+    middle,
+    end,
+    insideStart,
+    insideStartTop,
+    insideStartBottom,
+    insideMiddle,
+    insideMiddleTop,
+    insideMiddleBottom,
+    insideEnd,
+    insideEndTop,
+    insideEndBottom
 }

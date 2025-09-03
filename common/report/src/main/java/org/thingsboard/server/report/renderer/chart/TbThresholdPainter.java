@@ -139,7 +139,7 @@ public class TbThresholdPainter {
                 Point2D coords = calculateThresholdMarkerTextAnchorPoint(
                         g2, orientation, dataArea, line.getBounds2D(),
                         marker.getLabelOffset(),
-                        LengthAdjustmentType.EXPAND, anchor);
+                        marker.getLabelOffsetType(), anchor);
                 if (marker.isDrawLabelBackground()) {
                     Rectangle2D r = TextUtils.calcAlignedStringBounds(label,
                             g2, (float) coords.getX(), (float) coords.getY(),
@@ -181,11 +181,11 @@ public class TbThresholdPainter {
         Rectangle2D anchorRect = null;
         if (orientation == PlotOrientation.HORIZONTAL) {
             anchorRect = markerOffset.createAdjustedRectangle(markerArea,
-                    labelOffsetForRange, LengthAdjustmentType.EXPAND);
+                    LengthAdjustmentType.EXPAND, labelOffsetForRange);
         }
         else if (orientation == PlotOrientation.VERTICAL) {
             anchorRect = markerOffset.createAdjustedRectangle(markerArea,
-                    LengthAdjustmentType.EXPAND, labelOffsetForRange);
+                    labelOffsetForRange, LengthAdjustmentType.EXPAND);
         }
         return anchor.getAnchorPoint(anchorRect);
 

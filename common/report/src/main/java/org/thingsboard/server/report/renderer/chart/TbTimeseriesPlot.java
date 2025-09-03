@@ -30,16 +30,38 @@
  */
 package org.thingsboard.server.report.renderer.chart;
 
+import org.jfree.chart.axis.AxisSpace;
+import org.jfree.chart.axis.ValueAxis;
+import org.jfree.chart.plot.Marker;
+import org.jfree.chart.plot.PlotRenderingInfo;
+import org.jfree.chart.plot.PlotState;
 import org.jfree.chart.plot.XYPlot;
+import org.jfree.chart.ui.Layer;
+import org.jfree.chart.ui.RectangleInsets;
+import org.jfree.data.Range;
+import org.jfree.data.xy.XYDataset;
 
 import java.awt.*;
 import java.awt.geom.Line2D;
+import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 public class TbTimeseriesPlot extends XYPlot {
 
     public TbTimeseriesPlot() {
         super();
+    }
+
+    @Override
+    public void draw(Graphics2D g2, Rectangle2D area, Point2D anchor,
+                     PlotState parentState, PlotRenderingInfo info) {
+
+        this.updateInsets(g2, area);
+
+        super.draw(g2, area, anchor, parentState, info);
     }
 
     @Override
@@ -76,5 +98,67 @@ public class TbTimeseriesPlot extends XYPlot {
             g2.draw(new Line2D.Double(x2, y1, x2, y2));
         }
         g2.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, saved);
+    }
+
+    private void updateInsets(Graphics2D g2, Rectangle2D area) {
+
+        Rectangle2D measureArea = (Rectangle2D ) area.clone();
+        RectangleInsets insets = getInsets();
+        insets.trim(measureArea);
+        AxisSpace space = calculateAxisSpace(g2, measureArea);
+        Rectangle2D dataArea = space.shrink(measureArea, null);
+        this.getAxisOffset().trim(dataArea);
+        dataArea = integerise(dataArea);
+
+        double dataAreaLeft = dataArea.getMinX();
+        double dataAreaRight = area.getMaxX() - dataArea.getMaxX();
+
+        List<TbThresholdMarker> thresholdMarkers = this.computeVisibleThresholdMarkers();
+        double[] offset = new double[]{0,0};
+        for (TbThresholdMarker marker : thresholdMarkers) {
+            double[] markerOffset = marker.measureOffset(g2);
+            offset[0] = Math.max(offset[0], markerOffset[0]);
+            offset[1] = Math.max(offset[1], markerOffset[1]);
+        }
+
+        offset[0] -= dataAreaLeft;
+        offset[1] -= dataAreaRight;
+
+        if (offset[0] > 0 || offset[1] > 0) {
+            double leftOffset = offset[0] > 0 ? offset[0] : 0;
+            double rightOffset = offset[1] > 0 ? offset[1] : 0;
+            leftOffset += insets.getLeft();
+            rightOffset += insets.getRight();
+            setInsets(new RectangleInsets(insets.getTop(), leftOffset, insets.getBottom(), rightOffset));
+        }
+    }
+
+    private List<TbThresholdMarker> computeVisibleThresholdMarkers() {
+        List<TbThresholdMarker> thresholdMarkers = new ArrayList<>();
+        for (XYDataset dataset : this.getDatasets().values()) {
+            int datasetIndex = indexOf(dataset);
+            Collection<Marker> markers = this.getRangeMarkers(datasetIndex, Layer.FOREGROUND);
+            ValueAxis axis = getRangeAxisForDataset(datasetIndex);
+            if (markers != null && axis != null) {
+                Range range = axis.getRange();
+                markers.forEach(marker -> {
+                    if (marker instanceof TbThresholdMarker thresholdMarker) {
+                        double value = thresholdMarker.getValue();
+                        if (range.contains(value)) {
+                            thresholdMarkers.add(thresholdMarker);
+                        }
+                    }
+                });
+            }
+        }
+        return thresholdMarkers;
+    }
+
+    private Rectangle integerise(Rectangle2D rect) {
+        int x0 = (int) Math.ceil(rect.getMinX());
+        int y0 = (int) Math.ceil(rect.getMinY());
+        int x1 = (int) Math.floor(rect.getMaxX());
+        int y1 = (int) Math.floor(rect.getMaxY());
+        return new Rectangle(x0, y0, (x1 - x0), (y1 - y0));
     }
 }

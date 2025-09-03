@@ -52,11 +52,13 @@ import org.thingsboard.server.common.data.report.configuration.chart.FormatTimeU
 import org.thingsboard.server.common.data.report.configuration.chart.TimeSeriesChartAxisSettings;
 import org.thingsboard.server.common.data.report.configuration.chart.TimeSeriesChartKeySettings;
 import org.thingsboard.server.common.data.report.configuration.chart.TimeSeriesChartNoAggregationBarWidthStrategy;
+import org.thingsboard.server.common.data.report.configuration.chart.TimeSeriesChartThreshold;
 import org.thingsboard.server.common.data.report.configuration.chart.TimeSeriesChartXAxisSettings;
 import org.thingsboard.server.common.data.report.configuration.chart.TimeSeriesChartYAxisSettings;
 import org.thingsboard.server.common.data.report.configuration.timewindow.TimeIntervalCalculator;
 import org.thingsboard.server.report.context.chart.TsChartSeriesData;
 import org.thingsboard.server.report.context.chart.TsChartSeriesEntry;
+import org.thingsboard.server.report.context.chart.TsChartThresholdItem;
 import org.thingsboard.server.report.util.ColorUtils;
 
 import java.awt.*;
@@ -173,6 +175,28 @@ public interface ChartUtils {
         yAxis.setNumberFormatOverride(createValueFormatter(decimals, yAxisSettings.getUnits()));
         setupAxisAppearance(yAxis, yAxisSettings);
         return yAxis;
+    }
+
+    static TbThresholdMarker createThresholdMarker(TsChartThresholdItem item) {
+        TbThresholdMarker marker = new TbThresholdMarker(item.getValue());
+        TimeSeriesChartThreshold threshold = item.getSettings();
+        marker.setPaint(safeParseCssColor(threshold.getLineColor()));
+        marker.setStroke(createLineStroke(threshold.getLineType(), threshold.getLineWidth()));
+        marker.setStartSymbol(threshold.getStartSymbol(), threshold.getStartSymbolSize());
+        marker.setEndSymbol(threshold.getEndSymbol(), threshold.getEndSymbolSize());
+        if (threshold.getShowLabel()) {
+            NumberFormat formatter = createValueFormatter(threshold.getDecimals(), threshold.getUnits());
+            String label = formatter.format(item.getValue());
+            marker.setLabel(label);
+            marker.setLabelPaint(safeParseCssColor(threshold.getLabelColor()));
+            marker.setLabelFont(toAwtFont(threshold.getLabelFont()));
+            if (threshold.getEnableLabelBackground()) {
+                marker.setDrawLabelBackground(true);
+                marker.setLabelBackgroundColor(safeParseCssColor(threshold.getLabelBackground()));
+            }
+            marker.setLabelPosition(threshold.getLabelPosition());
+        }
+        return marker;
     }
 
     static NumberFormat createValueFormatter(int decimals, String units) {

@@ -28,23 +28,49 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.report.context.chart;
+package org.thingsboard.server.common.data.report.configuration.chart;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
-import lombok.RequiredArgsConstructor;
-import org.thingsboard.server.common.data.report.configuration.timewindow.TimeIntervalCalculator;
-
-import java.util.List;
-import java.util.TimeZone;
+import org.thingsboard.server.common.data.StringUtils;
+import org.thingsboard.server.common.data.report.configuration.DataKey;
 
 @Data
-@RequiredArgsConstructor
-public class TsChartData {
+public abstract class ValueSourceConfig {
 
-    private final TimeZone timeZone;
-    private final TimeIntervalCalculator.TimeRange timeRange;
-    private final boolean noAggregation;
-    private final List<TsChartDataSource> chartData;
-    private final List<TsChartThresholdItem> thresholdItems;
+    private ValueSourceType type;
+    private Double value;
+    private String latestKeyType;
+    private String latestKey;
+    private String entityKeyType;
+    private String entityAlias;
+    private String entityKey;
+
+    @JsonIgnore
+    public boolean isValidSource() {
+        if (type == null) {
+            return false;
+        }
+        switch (type) {
+            case constant -> {
+                return value != null;
+            }
+            case latestKey -> {
+                return ("attribute".equals(latestKeyType) || "timeseries".equals(latestKeyType)) && StringUtils.isNotBlank(latestKey);
+            }
+            case entity -> {
+                return ("attribute".equals(entityKeyType) || "timeseries".equals(entityKeyType)) && StringUtils.isNotBlank(entityAlias) && StringUtils.isNotBlank(entityKey);
+            }
+        }
+        return false;
+    }
+
+    @JsonIgnore
+    public DataKey toEntityDataKey() {
+        DataKey key = new DataKey();
+        key.setName(entityKey);
+        key.setType(entityKeyType);
+        return key;
+    }
 
 }
