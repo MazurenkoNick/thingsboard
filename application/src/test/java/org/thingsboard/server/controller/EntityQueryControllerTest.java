@@ -1510,6 +1510,12 @@ public class EntityQueryControllerTest extends AbstractControllerTest {
 
     @Test
     public void testStateEntityOwnerFilterWithEntityTypeCurrentUser() throws Exception {
+        loginSubCustomerAdminUser();
+        Asset asset = new Asset();
+        asset.setName("Tenant Asset");
+        asset.setType("default");
+        asset = doPost("/api/asset", asset, Asset.class);
+        
         loginCustomerAdminUser();
         Device device = new Device();
         String name = "Device" + RandomStringUtils.randomAlphabetic(5);
@@ -1531,6 +1537,14 @@ public class EntityQueryControllerTest extends AbstractControllerTest {
         PageData<EntityData> result = findByQueryAndCheck(query, 1);
         String ownerName = result.getData().get(0).getLatest().get(EntityKeyType.ENTITY_FIELD).get("name").getValue();
         assertThat(ownerName).isEqualTo("Customer");
+
+        StateEntityOwnerFilter assetOwnerFilter = new StateEntityOwnerFilter();
+        assetOwnerFilter.setSingleEntity(AliasEntityId.fromEntityId(asset.getId()));
+        
+        query = new EntityDataQuery(assetOwnerFilter, pageLink, entityFields, null, null);
+        PageData<EntityData> assetOwnerQuery = findByQueryAndCheck(query, 1);
+        String assetOwner = assetOwnerQuery.getData().get(0).getLatest().get(EntityKeyType.ENTITY_FIELD).get("name").getValue();
+        assertThat(assetOwner).isEqualTo("SubCustomer");
 
         // check filter with singleEntityId having type CURRENT_USER
         StateEntityOwnerFilter currentUserFilter = new StateEntityOwnerFilter();
