@@ -1043,9 +1043,10 @@
             "disabled": "Disabled",
             "warning": "Warning"
         },
-        "reports-created": "Reports created",
-        "reports-created-daily-activity": "Reports created daily activity",
-        "reports-created-monthly-activity": "Reports created monthly activity"
+        "reports-created": "Created reports",
+        "reports-created-hourly-activity": "Created reports hourly activity",
+        "reports-created-daily-activity": "Created reports daily activity",
+        "reports-created-monthly-activity": "Created reports monthly activity"
     },
     "api-limit": {
         "cassandra-write-queries-core": "Rest API Cassandra write queries",

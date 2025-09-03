@@ -34,8 +34,10 @@ $enabled-color: #198038;
 $disabled-color: #D12730;
 $warning-color: #FAA405;
 
+$main-color: #00695c;
+
 .tb-no-notification-svg-color {
-  color: var(--tb-primary-500);
+  color: $main-color
 }
 
 .tb-api-usage-panel {
@@ -89,9 +91,9 @@ $warning-color: #FAA405;
           background-color: rgba(0, 0, 0, 0.06);
         }
         &.active {
-          background-color: rgba(var(--tb-primary-500), 0.06);
+          background-color: rgba($main-color, 0.06);
           .mat-divider {
-            --mat-divider-color: #{var(--tb-primary-500)};
+            --mat-divider-color: #{$main-color};
           }
         }
 
@@ -107,7 +109,7 @@ $warning-color: #FAA405;
             flex: 1;
             font-size: 14px;
             font-weight: 500;
-            color: var(--tb-primary-500);
+            color: $main-color;
           }
           .api-item-statistic {
             display: flex;

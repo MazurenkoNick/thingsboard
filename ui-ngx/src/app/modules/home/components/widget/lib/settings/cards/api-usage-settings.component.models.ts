@@ -103,6 +103,7 @@ export const apiUsageDefaultSettings: ApiUsageWidgetSettings = {
     generateDataKey('{i18n:api-usage.tbel-function-executions}', 'tbelExecutionApiState', 'tbelExecutionLimit', 'tbelExecutionCount'),
     generateDataKey('{i18n:api-usage.data-points-storage-days}', 'dbApiState', 'storageDataPointsLimit', 'storageDataPointsCount'),
     generateDataKey('{i18n:api-usage.alarms-created}', 'alarmApiState', 'createdAlarmsLimit', 'createdAlarmsCount'),
+    generateDataKey('{i18n:api-usage.reports-created}', 'reportApiState', 'generatedReportsLimit', 'generatedReportsCount'),
     generateDataKey('{i18n:api-usage.emails}', 'emailApiState', 'emailLimit', 'emailCount'),
     generateDataKey('{i18n:api-usage.sms}', 'notificationApiState', 'smsLimit', 'smsCount'),
   ],
