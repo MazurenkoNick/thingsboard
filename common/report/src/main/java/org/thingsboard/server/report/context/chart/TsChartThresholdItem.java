@@ -31,20 +31,17 @@
 package org.thingsboard.server.report.context.chart;
 
 import lombok.Data;
-import lombok.RequiredArgsConstructor;
-import org.thingsboard.server.common.data.report.configuration.timewindow.TimeIntervalCalculator;
-
-import java.util.List;
-import java.util.TimeZone;
+import org.thingsboard.server.common.data.report.configuration.chart.TimeSeriesChartThreshold;
 
 @Data
-@RequiredArgsConstructor
-public class TsChartData {
+public class TsChartThresholdItem {
 
-    private final TimeZone timeZone;
-    private final TimeIntervalCalculator.TimeRange timeRange;
-    private final boolean noAggregation;
-    private final List<TsChartDataSource> chartData;
-    private final List<TsChartThresholdItem> thresholdItems;
+    private final TimeSeriesChartThreshold settings;
+    private final Double value;
+
+    public TsChartThresholdItem(TimeSeriesChartThreshold settings, Double value) {
+        this.settings = new TimeSeriesChartThreshold(settings);
+        this.value = value;
+    }
 
 }

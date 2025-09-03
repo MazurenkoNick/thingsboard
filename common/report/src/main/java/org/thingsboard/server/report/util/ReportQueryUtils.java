@@ -60,6 +60,7 @@ import org.thingsboard.server.common.data.report.configuration.AlarmFilterConfig
 import org.thingsboard.server.common.data.report.configuration.DataKey;
 import org.thingsboard.server.common.data.report.configuration.DataSource;
 import org.thingsboard.server.common.data.report.configuration.DataSourceType;
+import org.thingsboard.server.common.data.report.configuration.EntityAlias;
 import org.thingsboard.server.common.data.report.configuration.ReportTemplateConfig;
 import org.thingsboard.server.common.data.report.configuration.components.AlarmTableComponent;
 import org.thingsboard.server.common.data.report.configuration.timewindow.TimeIntervalCalculator;
@@ -67,6 +68,7 @@ import org.thingsboard.server.report.context.TbReportCtx;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 import static org.thingsboard.server.common.data.query.AliasEntityId.resolveAliasEntityId;
@@ -181,6 +183,11 @@ public class ReportQueryUtils {
             return buildSingleEntityFilter(DeviceId.fromString(dataSource.getDeviceId()));
         }
         return buildAliasBasedFilter(dataSource, ctx, stateEntityId);
+    }
+
+    public static Optional<String> resolveAliasId(TbReportCtx ctx, String aliasName) {
+        return ctx.getConfiguration().getEntityAliases().stream()
+                .filter(alias -> alias.getAlias().equals(aliasName)).findFirst().map(EntityAlias::getId);
     }
 
     private static EntityFilter buildSingleEntityFilter(EntityId entityId) {

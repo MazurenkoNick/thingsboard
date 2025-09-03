@@ -45,13 +45,19 @@ import org.thingsboard.server.common.data.kv.Aggregation;
 import org.thingsboard.server.common.data.kv.TsKvEntry;
 import org.thingsboard.server.common.data.page.SortOrder;
 import org.thingsboard.server.common.data.query.EntityData;
+import org.thingsboard.server.common.data.query.EntityKeyType;
+import org.thingsboard.server.common.data.query.TsValue;
 import org.thingsboard.server.common.data.report.ReportData;
 import org.thingsboard.server.common.data.report.ReportTemplate;
 import org.thingsboard.server.common.data.report.TbReportFormat;
 import org.thingsboard.server.common.data.report.configuration.DataKey;
 import org.thingsboard.server.common.data.report.configuration.DataSource;
+import org.thingsboard.server.common.data.report.configuration.DataSourceType;
 import org.thingsboard.server.common.data.report.configuration.HeaderFooter;
 import org.thingsboard.server.common.data.report.configuration.PdfReportTemplateConfig;
+import org.thingsboard.server.common.data.report.configuration.chart.TimeSeriesChartThreshold;
+import org.thingsboard.server.common.data.report.configuration.chart.ValueSourceConfig;
+import org.thingsboard.server.common.data.report.configuration.chart.ValueSourceType;
 import org.thingsboard.server.common.data.report.configuration.components.AlarmTableComponent;
 import org.thingsboard.server.common.data.report.configuration.components.DashboardComponent;
 import org.thingsboard.server.common.data.report.configuration.components.DataReportComponent;
@@ -74,6 +80,7 @@ import org.thingsboard.server.report.context.HeaderFooterRenderLayout;
 import org.thingsboard.server.report.context.TbReportCtx;
 import org.thingsboard.server.report.context.chart.TsChartData;
 import org.thingsboard.server.report.context.chart.TsChartDataSource;
+import org.thingsboard.server.report.context.chart.TsChartThresholdItem;
 import org.thingsboard.server.report.renderer.PdfReportComponentRenderer;
 import org.thingsboard.server.report.util.ColorUtils;
 import org.thingsboard.server.report.util.HtmlRenderUtils;
@@ -93,6 +100,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.TimeZone;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
 
 import static org.thingsboard.server.common.data.report.configuration.components.ReportComponentType.DASHBOARD;
 import static org.thingsboard.server.common.data.report.configuration.components.ReportComponentType.ERROR;
@@ -102,8 +110,10 @@ import static org.thingsboard.server.common.data.report.configuration.style.Page
 import static org.thingsboard.server.common.data.report.configuration.timewindow.TimeIntervalCalculator.getTimeRange;
 import static org.thingsboard.server.common.data.util.DataSourceUtils.entityDataFromEntityId;
 import static org.thingsboard.server.report.util.ReportQueryUtils.DEFAULT_TS_CHART_SORT_ORDER;
+import static org.thingsboard.server.report.util.ReportQueryUtils.resolveAliasId;
 import static org.thingsboard.server.report.util.ReportQueryUtils.toAlarmCountQuery;
 import static org.thingsboard.server.report.util.ReportQueryUtils.toEntityCountQuery;
+import static org.thingsboard.server.report.util.ReportUtils.collectThresholdItems;
 import static org.thingsboard.server.report.util.ReportUtils.getSingleDataSource;
 import static org.thingsboard.server.report.util.ReportUtils.prepareReportComponent;
 import static org.thingsboard.server.report.util.ReportUtils.prepareReportName;
@@ -329,6 +339,19 @@ public class PdfReportService extends AbstractReportService {
         if (ds.getDataKeys().isEmpty()) {
             return new ComponentData(usablePageWidthPx, "At least one series should be specified for time series chart");
         }
+
+        List<TimeSeriesChartThreshold> thresholds = null;
+        if (component.getTimeSeriesChartSettings() != null) {
+            thresholds = component.getTimeSeriesChartSettings().getThresholds();
+        }
+        if (thresholds == null) {
+            thresholds = new ArrayList<>();
+        }
+        thresholds = thresholds.stream().filter(ValueSourceConfig::isValidSource).toList();
+
+        List<TsChartThresholdItem> thresholdItems = new ArrayList<>(thresholds.stream()
+                .filter(t -> ValueSourceType.constant.equals(t.getType())).map(t -> new TsChartThresholdItem(t, t.getValue())).toList());
+
         DataSource latestDataSource = DataSource.builder()
                 .type(ds.getType())
                 .deviceId(ds.getDeviceId())
@@ -336,6 +359,30 @@ public class PdfReportService extends AbstractReportService {
                 .filterId(ds.getFilterId())
                 .dataKeys(ds.getLatestDataKeys()).build();
         List<EntityData> entityDatas = fetchEntities(ctx, latestDataSource, stateEntity != null ? stateEntity.getEntityId() : null, DEFAULT_TS_CHART_SORT_ORDER);
+
+        List<TimeSeriesChartThreshold> latestKeyThresholds = thresholds.stream()
+                .filter(t -> ValueSourceType.latestKey.equals(t.getType())).toList();
+
+        List<TsChartThresholdItem> latestThresholdItems = collectThresholdItems(latestKeyThresholds, entityDatas, true);
+        thresholdItems.addAll(latestThresholdItems);
+
+        Map<String, List<TimeSeriesChartThreshold>> thresholdsByAlias = thresholds.stream().filter(t -> ValueSourceType.entity.equals(t.getType()))
+                .collect(Collectors.groupingBy(TimeSeriesChartThreshold::getEntityAlias));
+
+        thresholdsByAlias.forEach((alias, entityThresholds) -> {
+            Optional<String> aliasId = resolveAliasId(ctx, alias);
+            if (aliasId.isPresent()) {
+                List<DataKey> dataKeys = entityThresholds.stream().map(TimeSeriesChartThreshold::toEntityDataKey).distinct().toList();
+                DataSource thresholdDataSource = DataSource.builder().type(DataSourceType.ENTITY)
+                        .entityAliasId(aliasId.get())
+                        .dataKeys(dataKeys)
+                        .build();
+                List<EntityData> foundEntities = fetchEntities(ctx, thresholdDataSource, stateEntity != null ? stateEntity.getEntityId() : null, DEFAULT_TS_CHART_SORT_ORDER);
+                List<TsChartThresholdItem> entityThresholdItems = collectThresholdItems(entityThresholds, foundEntities, false);
+                thresholdItems.addAll(entityThresholdItems);
+            }
+        });
+
         List<TsChartDataSource> chartData = new ArrayList<>();
         List<DataKey> dataKeys = ds.getDataKeys();
         List<String> keys = dataKeys.stream().map(DataKey::getName).distinct().toList();
@@ -369,7 +416,7 @@ public class PdfReportService extends AbstractReportService {
             }
         }
         TimeZone timeZone = TimeZone.getTimeZone(zoneId.getId());
-        TsChartData tsChartData = new TsChartData(timeZone, timeRange, Aggregation.NONE.equals(timeWindowConf.getAggregation().getType()), chartData);
+        TsChartData tsChartData = new TsChartData(timeZone, timeRange, Aggregation.NONE.equals(timeWindowConf.getAggregation().getType()), chartData, thresholdItems);
         return new ComponentData(usablePageWidthPx, tsChartData);
     }
 

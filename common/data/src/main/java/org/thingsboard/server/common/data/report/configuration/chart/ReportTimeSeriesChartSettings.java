@@ -36,7 +36,9 @@ import org.thingsboard.server.common.data.report.configuration.style.Font;
 import org.thingsboard.server.common.data.report.configuration.style.FontStyle;
 import org.thingsboard.server.common.data.report.configuration.style.FontWeight;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Data
@@ -46,6 +48,9 @@ public class ReportTimeSeriesChartSettings {
     private String title;
     private Font titleFont;
     private String titleColor;
+
+    @JsonProperty("thresholds")
+    private List<TimeSeriesChartThreshold> thresholds;
 
     private Boolean stack;
 
@@ -86,6 +91,7 @@ public class ReportTimeSeriesChartSettings {
                 .build();
         this.titleColor = input.getTitleColor() != null ? input.getTitleColor() : "rgba(0, 0, 0, 0.87)";
 
+        this.thresholds = input.getThresholds() != null ? input.getThresholds() : new ArrayList<>();
         this.stack = input.getStack() != null ? input.getStack() : Boolean.FALSE;
         this.grid = new TimeSeriesChartGridSettings(input.getGrid());
         this.yAxes = new HashMap<>();

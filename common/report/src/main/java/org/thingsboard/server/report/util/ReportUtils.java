@@ -40,14 +40,17 @@ import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.query.EntityData;
 import org.thingsboard.server.common.data.query.EntityKeyType;
+import org.thingsboard.server.common.data.query.TsValue;
 import org.thingsboard.server.common.data.report.configuration.DataKey;
 import org.thingsboard.server.common.data.report.configuration.DataSource;
 import org.thingsboard.server.common.data.report.configuration.TableSortOrder;
+import org.thingsboard.server.common.data.report.configuration.chart.TimeSeriesChartThreshold;
 import org.thingsboard.server.common.data.report.configuration.components.AlarmTableComponent;
 import org.thingsboard.server.common.data.report.configuration.components.DataReportComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponentType;
 import org.thingsboard.server.report.context.TbReportCtx;
+import org.thingsboard.server.report.context.chart.TsChartThresholdItem;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -55,6 +58,7 @@ import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Comparator;
 import java.util.Date;
@@ -179,6 +183,30 @@ public class ReportUtils {
         entityLabel.ifPresent(s -> stateParams.put("entityLabel", s));
         String newStateJsonStr = JacksonUtil.toString(stateObj);
         return new String(Base64.getEncoder().encode(newStateJsonStr.getBytes()));
+    }
+
+    public static List<TsChartThresholdItem> collectThresholdItems(List<TimeSeriesChartThreshold> thresholds,
+                                                                   List<EntityData> entityDatas,
+                                                                   boolean latestElseEntity) {
+        List<TsChartThresholdItem> thresholdItems = new ArrayList<>();
+        if (!thresholds.isEmpty() && !entityDatas.isEmpty()) {
+            EntityData entity = entityDatas.get(0);
+            Map<EntityKeyType, Map<String, TsValue>> latestValues = entity.getLatest();
+            for (TimeSeriesChartThreshold threshold : thresholds) {
+                EntityKeyType keyType = EntityKeyType.fromName(latestElseEntity ? threshold.getLatestKeyType() : threshold.getEntityKeyType());
+                Map<String, TsValue> valuesByType = latestValues.get(keyType);
+                if (valuesByType != null) {
+                    TsValue tsValue = valuesByType.get(latestElseEntity ? threshold.getLatestKey() : threshold.getEntityKey());
+                    if (tsValue != null) {
+                        try {
+                            double doubleValue = Double.parseDouble(tsValue.getValue());
+                            thresholdItems.add(new TsChartThresholdItem(threshold, doubleValue));
+                        } catch (NumberFormatException ignored) {}
+                    }
+                }
+            }
+        }
+        return thresholdItems;
     }
 
     public static String formatValueWithPrecisionAndUnits(String value, DataKey dataKey) {
