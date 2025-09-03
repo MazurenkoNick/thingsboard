@@ -29,17 +29,16 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import {Component, Inject, OnInit} from '@angular/core';
-import {MAT_DIALOG_DATA, MatDialogRef} from '@angular/material/dialog';
-import {Store} from '@ngrx/store';
-import {AppState} from '@core/core.state';
-import {UntypedFormBuilder, UntypedFormGroup} from '@angular/forms';
-import {DashboardService} from '@core/http/dashboard.service';
-import {DashboardInfo} from '@app/shared/models/dashboard.models';
-import {ActionNotificationShow} from '@core/notification/notification.actions';
-import {TranslateService} from '@ngx-translate/core';
-import {DialogComponent} from '@shared/components/dialog.component';
-import {Router} from '@angular/router';
+import { Component, Inject, OnInit } from '@angular/core';
+import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+import { Store } from '@ngrx/store';
+import { AppState } from '@core/core.state';
+import { FormBuilder, FormGroup } from '@angular/forms';
+import { DashboardService } from '@core/http/dashboard.service';
+import { DashboardInfo } from '@app/shared/models/dashboard.models';
+import { ActionNotificationShow } from '@core/notification/notification.actions';
+import { DialogComponent } from '@shared/components/dialog.component';
+import { Router } from '@angular/router';
 
 export interface DashboardInfoDialogData {
   dashboard: DashboardInfo;
@@ -52,17 +51,16 @@ export interface DashboardInfoDialogData {
 })
 export class ImportDashboardFileDialogComponent extends DialogComponent<ImportDashboardFileDialogComponent> implements OnInit {
 
-  dashboard: DashboardInfo;
+  private dashboard: DashboardInfo;
   currentFileName: string = '';
-  uploadFileFormGroup: UntypedFormGroup;
+  uploadFileFormGroup: FormGroup;
 
   constructor(protected store: Store<AppState>,
               protected router: Router,
               @Inject(MAT_DIALOG_DATA) public data: DashboardInfoDialogData,
-              public translate: TranslateService,
               private dashboardService: DashboardService,
-              public dialogRef: MatDialogRef<ImportDashboardFileDialogComponent>,
-              public fb: UntypedFormBuilder) {
+              protected dialogRef: MatDialogRef<ImportDashboardFileDialogComponent>,
+              public fb: FormBuilder) {
     super(store, router, dialogRef);
     this.dashboard = data.dashboard;
   }
@@ -77,9 +75,9 @@ export class ImportDashboardFileDialogComponent extends DialogComponent<ImportDa
     this.dialogRef.close();
   }
 
-  save(){
+  save() {
     const fileControl = this.uploadFileFormGroup.get('file');
-    if(!fileControl || !fileControl.value){
+    if (!fileControl || !fileControl.value) {
       return;
     }
 
@@ -89,7 +87,7 @@ export class ImportDashboardFileDialogComponent extends DialogComponent<ImportDa
     };
     this.dashboard.configuration = dashboardContent;
 
-    this.dashboardService.saveDashboard(this.dashboard).subscribe(()=>{
+    this.dashboardService.saveDashboard(this.dashboard).subscribe(() => {
       this.dialogRef.close(true);
     })
   }

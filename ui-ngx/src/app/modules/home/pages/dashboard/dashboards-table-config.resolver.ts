@@ -29,9 +29,9 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import {Injectable} from '@angular/core';
+import { Injectable } from '@angular/core';
 
-import {ActivatedRouteSnapshot, Router} from '@angular/router';
+import { ActivatedRouteSnapshot, Router } from '@angular/router';
 import {
   CellActionDescriptor,
   DateEntityTableColumn,
@@ -42,46 +42,46 @@ import {
   GroupActionDescriptor,
   HeaderActionDescriptor
 } from '@home/models/entity/entities-table-config.models';
-import {TranslateService} from '@ngx-translate/core';
-import {DatePipe} from '@angular/common';
-import {EntityType, entityTypeResources, entityTypeTranslations} from '@shared/models/entity-type.models';
-import {EntityAction} from '@home/models/entity/entity-component.models';
-import {Observable, of} from 'rxjs';
-import {Store} from '@ngrx/store';
-import {getCurrentAuthUser} from '@core/auth/auth.selectors';
-import {map, mergeMap} from 'rxjs/operators';
-import {AppState} from '@core/core.state';
-import {Authority} from '@app/shared/models/authority.enum';
-import {CustomerService} from '@core/http/customer.service';
-import {Customer} from '@app/shared/models/customer.model';
-import {DialogService} from '@core/services/dialog.service';
-import {Dashboard, DashboardInfo} from '@app/shared/models/dashboard.models';
-import {DashboardService} from '@app/core/http/dashboard.service';
-import {ImportExportService} from '@shared/import-export/import-export.service';
-import {UtilsService} from '@core/services/utils.service';
-import {HomeDialogsService} from '@home/dialogs/home-dialogs.service';
-import {DashboardFormComponent} from '@home/pages/dashboard/dashboard-form.component';
-import {UserPermissionsService} from '@core/http/user-permissions.service';
-import {CustomerId} from '@shared/models/id/customer-id';
-import {AuthUser} from '@shared/models/user.model';
-import {DashboardTableHeaderComponent} from '@home/pages/dashboard/dashboard-table-header.component';
-import {resolveGroupParams} from '@shared/models/entity-group.models';
-import {AllEntitiesTableConfigService} from '@home/components/entity/all-entities-table-config.service';
-import {GroupEntityTabsComponent} from '@home/components/group/group-entity-tabs.component';
-import {Widget} from '@shared/models/widget.models';
-import {EntityAliases} from '@shared/models/alias.models';
+import { TranslateService } from '@ngx-translate/core';
+import { DatePipe } from '@angular/common';
+import { EntityType, entityTypeResources, entityTypeTranslations } from '@shared/models/entity-type.models';
+import { EntityAction } from '@home/models/entity/entity-component.models';
+import { Observable, of } from 'rxjs';
+import { Store } from '@ngrx/store';
+import { getCurrentAuthUser } from '@core/auth/auth.selectors';
+import { map, mergeMap } from 'rxjs/operators';
+import { AppState } from '@core/core.state';
+import { Authority } from '@app/shared/models/authority.enum';
+import { CustomerService } from '@core/http/customer.service';
+import { Customer } from '@app/shared/models/customer.model';
+import { DialogService } from '@core/services/dialog.service';
+import { Dashboard, DashboardInfo } from '@app/shared/models/dashboard.models';
+import { DashboardService } from '@app/core/http/dashboard.service';
+import { ImportExportService } from '@shared/import-export/import-export.service';
+import { UtilsService } from '@core/services/utils.service';
+import { HomeDialogsService } from '@home/dialogs/home-dialogs.service';
+import { DashboardFormComponent } from '@home/pages/dashboard/dashboard-form.component';
+import { UserPermissionsService } from '@core/http/user-permissions.service';
+import { CustomerId } from '@shared/models/id/customer-id';
+import { AuthUser } from '@shared/models/user.model';
+import { DashboardTableHeaderComponent } from '@home/pages/dashboard/dashboard-table-header.component';
+import { resolveGroupParams } from '@shared/models/entity-group.models';
+import { AllEntitiesTableConfigService } from '@home/components/entity/all-entities-table-config.service';
+import { GroupEntityTabsComponent } from '@home/components/group/group-entity-tabs.component';
+import { Widget } from '@shared/models/widget.models';
+import { EntityAliases } from '@shared/models/alias.models';
 import {
   EntityAliasesDialogComponent,
   EntityAliasesDialogData
 } from '@home/components/alias/entity-aliases-dialog.component';
-import {MatDialog} from '@angular/material/dialog';
+import { MatDialog } from '@angular/material/dialog';
 import {
   DashboardInfoDialogData,
   ImportDashboardFileDialogComponent
 } from "@home/pages/dashboard/import-dashboard-file-dialog.component";
 
 @Injectable()
-export class DashboardsTableConfigResolver  {
+export class DashboardsTableConfigResolver {
 
   constructor(private allEntitiesTableConfigService: AllEntitiesTableConfigService<DashboardInfo>,
               private store: Store<AppState>,
@@ -181,7 +181,7 @@ export class DashboardsTableConfigResolver  {
       columns.push(new EntityTableColumn<DashboardInfo>('ownerName', title, '30%'));
     }
     columns.push(
-      new EntityChipsEntityTableColumn<DashboardInfo>( 'groups', 'entity.groups', '40%')
+      new EntityChipsEntityTableColumn<DashboardInfo>('groups', 'entity.groups', '40%')
     );
     return columns;
   }
@@ -293,7 +293,7 @@ export class DashboardsTableConfigResolver  {
     this.importExport.exportDashboard(dashboard.id.id);
   }
 
-  importDashboardFile($event: Event, dashboard: DashboardInfo){
+  importDashboardFile($event: Event, dashboard: DashboardInfo) {
     if ($event) {
       $event.stopPropagation();
     }

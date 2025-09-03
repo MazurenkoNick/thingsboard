@@ -40,7 +40,7 @@ import { DASHBOARD_GROUP_CONFIG_FACTORY } from '@home/models/group/group-entitie
 import { DashboardGroupConfigFactory } from '@home/pages/dashboard/dashboard-group-config.factory';
 import { DashboardRoutingModule } from '@home/pages/dashboard/dashboard-routing.module';
 import { DashboardTableHeaderComponent } from '@home/pages/dashboard/dashboard-table-header.component';
-import {ImportDashboardFileDialogComponent} from "@home/pages/dashboard/import-dashboard-file-dialog.component";
+import { ImportDashboardFileDialogComponent } from "@home/pages/dashboard/import-dashboard-file-dialog.component";
 
 @NgModule({
   declarations: [
@@ -63,4 +63,5 @@ import {ImportDashboardFileDialogComponent} from "@home/pages/dashboard/import-d
     }
   ]
 })
-export class DashboardModule { }
+export class DashboardModule {
+}

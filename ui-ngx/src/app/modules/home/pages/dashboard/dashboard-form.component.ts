@@ -55,6 +55,7 @@ export class DashboardFormComponent extends GroupEntityComponent<DashboardInfo> 
 
   isPublic: boolean;
   publicLink: string;
+
   // assignedCustomersText: string;
 
   constructor(protected store: Store<AppState>,
@@ -135,7 +136,7 @@ export class DashboardFormComponent extends GroupEntityComponent<DashboardInfo> 
 
   onPublicLinkCopied($event) {
     this.store.dispatch(new ActionNotificationShow(
-     {
+      {
         message: this.translate.instant('dashboard.public-link-copied-message'),
         type: 'success',
         duration: 750,

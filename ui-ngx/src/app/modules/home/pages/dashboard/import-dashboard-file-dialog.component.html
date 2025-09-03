@@ -48,7 +48,7 @@
       <tb-file-input [contentConvertFunction]="loadDataFromJsonContent"
                      [existingFileName]="currentFileName"
                      (fileNameChanged)="currentFileName = $event"
-                     label="Upload file to update"
+                     label="{{'dashboard.upload-file-to-update' | translate}}"
                      formControlName="file"
                      dropLabel="{{ 'import.drop-json-file-or' | translate }}"
                      accept=".json,application/json"
