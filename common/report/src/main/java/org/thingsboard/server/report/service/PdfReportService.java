@@ -55,6 +55,9 @@ import org.thingsboard.server.common.data.report.configuration.DataSource;
 import org.thingsboard.server.common.data.report.configuration.DataSourceType;
 import org.thingsboard.server.common.data.report.configuration.HeaderFooter;
 import org.thingsboard.server.common.data.report.configuration.PdfReportTemplateConfig;
+import org.thingsboard.server.common.data.report.configuration.chart.ComparisonDuration;
+import org.thingsboard.server.common.data.report.configuration.chart.DataKeyComparisonSettings;
+import org.thingsboard.server.common.data.report.configuration.chart.TimeSeriesChartKeySettings;
 import org.thingsboard.server.common.data.report.configuration.chart.TimeSeriesChartThreshold;
 import org.thingsboard.server.common.data.report.configuration.chart.ValueSourceConfig;
 import org.thingsboard.server.common.data.report.configuration.chart.ValueSourceType;
@@ -107,6 +110,7 @@ import static org.thingsboard.server.common.data.report.configuration.components
 import static org.thingsboard.server.common.data.report.configuration.components.ReportComponentType.SUB_REPORT;
 import static org.thingsboard.server.common.data.report.configuration.components.ReportComponentType.TIME_SERIES_TABLE;
 import static org.thingsboard.server.common.data.report.configuration.style.PageSize.A4;
+import static org.thingsboard.server.common.data.report.configuration.timewindow.TimeIntervalCalculator.getComparisonTimeRange;
 import static org.thingsboard.server.common.data.report.configuration.timewindow.TimeIntervalCalculator.getTimeRange;
 import static org.thingsboard.server.common.data.util.DataSourceUtils.entityDataFromEntityId;
 import static org.thingsboard.server.report.util.ReportQueryUtils.DEFAULT_TS_CHART_SORT_ORDER;
@@ -341,8 +345,11 @@ public class PdfReportService extends AbstractReportService {
         }
 
         List<TimeSeriesChartThreshold> thresholds = null;
+        boolean comparisonEnabled = false;
         if (component.getTimeSeriesChartSettings() != null) {
             thresholds = component.getTimeSeriesChartSettings().getThresholds();
+            comparisonEnabled = component.getTimeSeriesChartSettings().getComparisonEnabled() != null ?
+                    component.getTimeSeriesChartSettings().getComparisonEnabled() : false;
         }
         if (thresholds == null) {
             thresholds = new ArrayList<>();
@@ -394,29 +401,77 @@ public class PdfReportService extends AbstractReportService {
         TimeIntervalCalculator.TimeRange timeRange = getTimeRange(timeWindowConf, targetTimezone);
         ZoneId zoneId = targetTimezone != null ? ZoneId.of(targetTimezone) : ZoneId.systemDefault();
 
-        for (int index = 0; index < entityDatas.size(); index++) {
-            EntityData entity = entityDatas.get(index);
+        int dataIndex = 0;
 
+        for (EntityData entity : entityDatas) {
             List<TsKvEntry> tsKvEntries = dataService.getTimeseries(entity.getEntityId(), keys, timeRange.startTs, timeRange.endTs,
                     historyConf.getInterval(), targetTimezone, timeWindowConf.getAggregation().getType(), SortOrder.Direction.ASC,
                     timeWindowConf.getAggregation().getLimit(), false, ctx);
 
             TsChartDataSource chartDataSource = new TsChartDataSource(ds, entity, tsKvEntries, timeRange,
-                    historyConf.getInterval(), timeWindowConf.getAggregation().getType(), zoneId, index);
+                    historyConf.getInterval(), timeWindowConf.getAggregation().getType(), zoneId, false, null, dataIndex);
             chartData.add(chartDataSource);
+            dataIndex++;
         }
-        int index = 0;
+
+        int keyIndex = 0;
 
         for (TsChartDataSource chartDataSource : chartData) {
             for (DataKey dataKey : chartDataSource.getDataKeys()) {
                 if (chartDataSource.isGenerated()) {
-                    dataKey.setColor(ColorUtils.getMaterialColor(index));
+                    dataKey.setColor(ColorUtils.getMaterialColor(keyIndex));
                 }
-                index++;
+                keyIndex++;
+            }
+        }
+        TimeIntervalCalculator.TimeRange comparisonTimeRange = null;
+        if (comparisonEnabled) {
+            List<DataKey> comparisionDataKeys = dataKeys.stream().filter(DataKey::isComparisonKey).toList();
+            if (!comparisionDataKeys.isEmpty()) {
+                List<String> comparisonKeys = comparisionDataKeys.stream().map(DataKey::getName).distinct().toList();
+                ComparisonDuration timeForComparison = ComparisonDuration.previousInterval;
+                Long comparisonCustomIntervalValue = 7200000L;
+                if (component.getTimeSeriesChartSettings() != null) {
+                    if (component.getTimeSeriesChartSettings().getTimeForComparison() != null) {
+                        timeForComparison = component.getTimeSeriesChartSettings().getTimeForComparison();
+                    }
+                    if (component.getTimeSeriesChartSettings().getComparisonCustomIntervalValue() != null) {
+                        comparisonCustomIntervalValue = component.getTimeSeriesChartSettings().getComparisonCustomIntervalValue();
+                    }
+                }
+                comparisonTimeRange = getComparisonTimeRange(timeRange, timeWindowConf,
+                        targetTimezone, timeForComparison, comparisonCustomIntervalValue);
+
+                List<TsChartDataSource> comparisonChartData = new ArrayList<>();
+                for (EntityData entity : entityDatas) {
+                    List<TsKvEntry> tsKvEntries = dataService.getTimeseries(entity.getEntityId(), comparisonKeys, comparisonTimeRange.startTs, comparisonTimeRange.endTs,
+                            historyConf.getInterval(), targetTimezone, timeWindowConf.getAggregation().getType(), SortOrder.Direction.ASC,
+                            timeWindowConf.getAggregation().getLimit(), false, ctx);
+
+                    TsChartDataSource chartDataSource = new TsChartDataSource(ds, entity, tsKvEntries, comparisonTimeRange,
+                            historyConf.getInterval(), timeWindowConf.getAggregation().getType(), zoneId, true, timeForComparison, dataIndex);
+                    comparisonChartData.add(chartDataSource);
+                    dataIndex++;
+                }
+
+                for (TsChartDataSource chartDataSource : comparisonChartData) {
+                    for (DataKey dataKey : chartDataSource.getDataKeys()) {
+                        String color = ColorUtils.getMaterialColor(keyIndex);
+                        TimeSeriesChartKeySettings timeSeriesChartKeySettings = (TimeSeriesChartKeySettings)dataKey.getSettings();
+                        DataKeyComparisonSettings comparisonSettings = timeSeriesChartKeySettings.getComparisonSettings();
+                        if (StringUtils.isNotBlank(comparisonSettings.getColor())) {
+                            color = comparisonSettings.getColor();
+                        }
+                        dataKey.setColor(color);
+                        keyIndex++;
+                    }
+                }
+                chartData.addAll(comparisonChartData);
             }
         }
         TimeZone timeZone = TimeZone.getTimeZone(zoneId.getId());
-        TsChartData tsChartData = new TsChartData(timeZone, timeRange, Aggregation.NONE.equals(timeWindowConf.getAggregation().getType()), chartData, thresholdItems);
+        TsChartData tsChartData = new TsChartData(timeZone, timeRange, Aggregation.NONE.equals(timeWindowConf.getAggregation().getType()),
+                chartData, thresholdItems, comparisonEnabled, comparisonTimeRange);
         return new ComponentData(usablePageWidthPx, tsChartData);
     }
 

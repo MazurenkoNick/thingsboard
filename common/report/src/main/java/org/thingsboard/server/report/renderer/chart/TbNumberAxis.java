@@ -32,25 +32,38 @@ package org.thingsboard.server.report.renderer.chart;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.jfree.chart.axis.AxisState;
 import org.jfree.chart.axis.NumberAxis;
 import org.jfree.chart.axis.NumberTick;
 import org.jfree.chart.axis.NumberTickUnit;
 import org.jfree.chart.axis.Tick;
+import org.jfree.chart.axis.TickType;
 import org.jfree.chart.axis.TickUnit;
 import org.jfree.chart.axis.ValueAxis;
+import org.jfree.chart.axis.ValueTick;
+import org.jfree.chart.plot.PlotRenderingInfo;
+import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.ui.RectangleEdge;
 import org.jfree.chart.ui.RectangleInsets;
 import org.jfree.chart.ui.TextAnchor;
+import org.jfree.chart.util.Args;
 import org.jfree.data.Range;
 
 import java.awt.*;
 import java.awt.font.FontRenderContext;
 import java.awt.geom.Rectangle2D;
+import java.math.BigDecimal;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.thingsboard.server.report.util.ColorUtils.safeParseCssColor;
+
 public class TbNumberAxis extends NumberAxis {
+
+    private boolean gridlinesVisible;
+    private transient Stroke gridlineStroke;
+    private transient Paint gridlinePaint;
 
     @Setter
     private Double axisMin;
@@ -73,6 +86,64 @@ public class TbNumberAxis extends NumberAxis {
             this.setLowerMargin(0);
         }
         this.parentAxis = parentAxis;
+        this.gridlinesVisible = true;
+        this.gridlineStroke = new BasicStroke(1.0f);
+        this.gridlinePaint = safeParseCssColor("rgba(0, 0, 0, 0.12)");
+    }
+
+    public boolean isGridlinesVisible() {
+        return this.gridlinesVisible;
+    }
+
+    public void setGridlinesVisible(boolean visible) {
+        if (this.gridlinesVisible != visible) {
+            this.gridlinesVisible = visible;
+            fireChangeEvent();
+        }
+    }
+
+    public Stroke getGridlineStroke() {
+        return this.gridlineStroke;
+    }
+
+    public void setGridlineStroke(Stroke stroke) {
+        Args.nullNotPermitted(stroke, "stroke");
+        this.gridlineStroke = stroke;
+        fireChangeEvent();
+    }
+
+    public Paint getGridlinePaint() {
+        return this.gridlinePaint;
+    }
+
+    public void setGridlinePaint(Paint paint) {
+        Args.nullNotPermitted(paint, "paint");
+        this.gridlinePaint = paint;
+        fireChangeEvent();
+    }
+
+    @Override
+    public AxisState draw(Graphics2D g2, double cursor, Rectangle2D plotArea,
+                          Rectangle2D dataArea, RectangleEdge edge,
+                          PlotRenderingInfo plotState) {
+        AxisState state = super.draw(g2, cursor, plotArea, dataArea, edge, plotState);
+        if (isVisible()) {
+            drawGridlines(g2, dataArea, state.getTicks());
+        }
+        return state;
+    }
+
+    protected void drawGridlines(Graphics2D g2, Rectangle2D area,
+                                 List<ValueTick> ticks) {
+        if (isGridlinesVisible()) {
+            for (ValueTick tick : ticks) {
+                if (tick.getTickType() == TickType.MAJOR) {
+                    XYPlot xyPlot = (XYPlot) getPlot();
+                    xyPlot.getRenderer().drawRangeLine(g2, xyPlot, this,
+                            area, tick.getValue(), getGridlinePaint(), getGridlineStroke());
+                }
+            }
+        }
     }
 
     @Override
@@ -260,21 +331,24 @@ public class TbNumberAxis extends NumberAxis {
     }
 
     private double nearestLower(double lower, double size) {
-        double rest = Math.abs(lower) % size;
-        if (rest > 0) {
+        BigDecimal sizeDecimal = BigDecimal.valueOf(size);
+        BigDecimal rest = BigDecimal.valueOf(Math.abs(lower)).remainder(sizeDecimal);
+        if (rest.compareTo(BigDecimal.ZERO) > 0) {
             if (lower < 0) {
-                rest = size - rest;
+                rest = sizeDecimal.subtract(rest);
             }
-            lower -= rest;
+            return BigDecimal.valueOf(lower).subtract(rest).doubleValue();
         }
         return lower;
     }
 
     private double nearestUpper(double lower, double upper, double size) {
-        double rest = (upper - lower) % size;
-        if (rest > 0) {
-            double upperAdjust = size - rest;
-            upper += upperAdjust;
+        BigDecimal upperDecimal = BigDecimal.valueOf(upper);
+        BigDecimal sizeDecimal = BigDecimal.valueOf(size);
+        BigDecimal length = upperDecimal.subtract(BigDecimal.valueOf(lower));
+        BigDecimal rest = length.remainder(sizeDecimal);
+        if (rest.compareTo(BigDecimal.ZERO) > 0) {
+            return upperDecimal.add(sizeDecimal.subtract(rest)).doubleValue();
         }
         return upper;
     }

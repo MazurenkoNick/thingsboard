@@ -32,6 +32,7 @@ package org.thingsboard.server.report.context.chart;
 
 import lombok.Data;
 import org.thingsboard.common.util.JacksonUtil;
+import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.kv.Aggregation;
 import org.thingsboard.server.common.data.kv.TsKvEntry;
@@ -40,6 +41,9 @@ import org.thingsboard.server.common.data.query.EntityKeyType;
 import org.thingsboard.server.common.data.query.TsValue;
 import org.thingsboard.server.common.data.report.configuration.DataKey;
 import org.thingsboard.server.common.data.report.configuration.DataSource;
+import org.thingsboard.server.common.data.report.configuration.chart.ComparisonDuration;
+import org.thingsboard.server.common.data.report.configuration.chart.DataKeyComparisonSettings;
+import org.thingsboard.server.common.data.report.configuration.chart.TimeSeriesChartKeySettings;
 import org.thingsboard.server.common.data.report.configuration.timewindow.Interval;
 import org.thingsboard.server.common.data.report.configuration.timewindow.TimeIntervalCalculator;
 
@@ -53,15 +57,16 @@ import java.util.Map;
 @Data
 public class TsChartDataSource {
 
-    private boolean generated = false;
-    private EntityId entityId;
-    private EntityData entityData;
+    private final boolean generated;
+    private final boolean comparison;
+    private final EntityId entityId;
+    private final EntityData entityData;
     private String entityName;
     private String entityLabel;
-    private List<DataKey> dataKeys;
-    private List<TsChartSeriesData> data;
-    private int index;
-    private Map<String, Object> variables;
+    private final List<DataKey> dataKeys;
+    private final List<TsChartSeriesData> data;
+    private final int index;
+    private final Map<String, Object> variables;
 
     public TsChartDataSource(DataSource dataSource,
                              EntityData entityData,
@@ -70,6 +75,8 @@ public class TsChartDataSource {
                              Interval aggInterval,
                              Aggregation aggregation,
                              ZoneId zoneId,
+                             boolean comparison,
+                             ComparisonDuration timeForComparison,
                              int index) {
         List<DataKey> newDataKeys = new ArrayList<>();
         for (DataKey dataKey : dataSource.getDataKeys()) {
@@ -78,6 +85,7 @@ public class TsChartDataSource {
         this.dataKeys = newDataKeys;
         this.index = index;
         this.generated = index > 0;
+        this.comparison = comparison;
         this.entityId = entityData.getEntityId();
         this.entityData = entityData;
         this.entityName = "";
@@ -98,6 +106,17 @@ public class TsChartDataSource {
         int dataIndex = this.index * this.dataKeys.size();
         for (int keyIndex = 0; keyIndex < dataKeys.size(); keyIndex++) {
             DataKey key = this.dataKeys.get(keyIndex);
+            if (comparison) {
+                TimeSeriesChartKeySettings timeSeriesChartKeySettings = (TimeSeriesChartKeySettings)key.getSettings();
+                DataKeyComparisonSettings comparisonSettings = timeSeriesChartKeySettings.getComparisonSettings();
+                if (StringUtils.isNotBlank(comparisonSettings.getComparisonValuesLabel())) {
+                    key.setLabel(comparisonSettings.getComparisonValuesLabel());
+                } else {
+                    String label = key.getLabel();
+                    label += " " + labelSuffixForComparisonUnit(timeForComparison);
+                    key.setLabel(label);
+                }
+            }
             TsChartSeriesData seriesData = new TsChartSeriesData();
             seriesData.setDataSource(this);
             seriesData.setDataKey(key);
@@ -118,6 +137,32 @@ public class TsChartDataSource {
         }
         this.variables.put("entityName", this.entityName);
         this.variables.put("entityLabel", this.entityLabel);
+    }
+
+    private String labelSuffixForComparisonUnit(ComparisonDuration timeUnit) {
+        switch (timeUnit) {
+            case previousInterval -> {
+                return "(previous interval)";
+            }
+            case days -> {
+                return "(day ago)";
+            }
+            case weeks -> {
+                return "(week ago)";
+            }
+            case months -> {
+                return "(month ago)";
+            }
+            case years -> {
+                return "(year ago)";
+            }
+            case customInterval -> {
+                return "(custom interval)";
+            }
+            default -> {
+                return "(unknown)";
+            }
+        }
     }
 
 }

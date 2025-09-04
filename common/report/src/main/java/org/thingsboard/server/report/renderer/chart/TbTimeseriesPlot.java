@@ -42,7 +42,6 @@ import org.jfree.data.Range;
 import org.jfree.data.xy.XYDataset;
 
 import java.awt.*;
-import java.awt.geom.Line2D;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
@@ -62,42 +61,6 @@ public class TbTimeseriesPlot extends XYPlot {
         this.updateInsets(g2, area);
 
         super.draw(g2, area, anchor, parentState, info);
-    }
-
-    @Override
-    public void drawOutline(Graphics2D g2, Rectangle2D dataArea) {
-        super.drawOutline(g2, dataArea);
-        if (isRangeGridlinesVisible() && getRangeGridlinePaint() != null) {
-            g2.setStroke(getRangeGridlineStroke());
-            g2.setPaint(getRangeGridlinePaint());
-            this.drawBorderLines(g2, dataArea, true);
-        }
-        if (isDomainGridlinesVisible() && getDomainGridlinePaint() != null) {
-            g2.setStroke(getDomainGridlineStroke());
-            g2.setPaint(getDomainGridlinePaint());
-            this.drawBorderLines(g2, dataArea, false);
-        }
-    }
-
-    private void drawBorderLines(Graphics2D g2, Rectangle2D dataArea, boolean horizontal) {
-        Object saved = g2.getRenderingHint(RenderingHints.KEY_STROKE_CONTROL);
-        g2.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_NORMALIZE);
-        double x1 = dataArea.getMinX();
-        double y1 = dataArea.getMinY();
-        double x2 = dataArea.getMaxX();
-        double y2 = dataArea.getMaxY();
-        if (horizontal) {
-            // Draw the top line
-            g2.draw(new Line2D.Double(x1, y1, x2, y1));
-            // Draw the bottom line
-            g2.draw(new Line2D.Double(x1, y2, x2, y2));
-        } else {
-            // Draw the left line
-            g2.draw(new Line2D.Double(x1, y1, x1, y2));
-            // Draw the right line
-            g2.draw(new Line2D.Double(x2, y1, x2, y2));
-        }
-        g2.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, saved);
     }
 
     private void updateInsets(Graphics2D g2, Rectangle2D area) {

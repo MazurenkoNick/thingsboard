@@ -32,6 +32,7 @@ package org.thingsboard.server.common.data.report.configuration.timewindow;
 
 import org.thingsboard.server.common.data.kv.Aggregation;
 import org.thingsboard.server.common.data.kv.IntervalType;
+import org.thingsboard.server.common.data.report.configuration.chart.ComparisonDuration;
 
 import java.time.DayOfWeek;
 import java.time.Duration;
@@ -71,6 +72,45 @@ public class TimeIntervalCalculator {
             case 3 -> new TimeRange(0, 0);
             default -> throw new IllegalArgumentException("Unknown history type: " + historyConf.getHistoryType());
         };
+    }
+
+    public static TimeRange getComparisonTimeRange(TimeRange timeWindow, TimeWindowConfiguration timeWindowConf, String timezone,
+                                                   ComparisonDuration timeUnit, Long customIntervalValue) {
+        History historyConf = timeWindowConf.getHistory();
+        if (ComparisonDuration.previousInterval.equals(timeUnit)) {
+            if (historyConf.getHistoryType() == 2) {
+                return getComparisonQuickTimeRange(timeWindow, historyConf.getQuickInterval(), timezone);
+            } else {
+                long timeInterval = timeWindow.endTs - timeWindow.startTs;
+                return new TimeRange(timeWindow.startTs - timeInterval, timeWindow.startTs);
+            }
+        } else if (ComparisonDuration.customInterval.equals(timeUnit)) {
+            if (customIntervalValue != null && customIntervalValue > 0) {
+                long timeInterval = timeWindow.endTs - timeWindow.startTs;
+                long endTimeMs = timeWindow.endTs - customIntervalValue;
+                long startTimeMs = endTimeMs - timeInterval;
+                return new TimeRange(startTimeMs, endTimeMs);
+            } else {
+                return new TimeRange(timeWindow.startTs, timeWindow.endTs);
+            }
+        } else {
+            long timeInterval = timeWindow.endTs - timeWindow.startTs;
+            ZoneId zoneId = timezone != null ? ZoneId.of(timezone) : ZoneId.systemDefault();
+            Instant endTimeInstant = Instant.ofEpochMilli(timeWindow.endTs);
+            ZonedDateTime endDate = endTimeInstant.atZone(zoneId);
+            if (ComparisonDuration.days.equals(timeUnit)) {
+                endDate = endDate.minusDays(1);
+            } else if (ComparisonDuration.weeks.equals(timeUnit)) {
+                endDate = endDate.minusWeeks(1);
+            } else if (ComparisonDuration.months.equals(timeUnit)) {
+                endDate = endDate.minusMonths(1);
+            } else if (ComparisonDuration.years.equals(timeUnit)) {
+                endDate = endDate.minusYears(1);
+            }
+            long endTimeMs = endDate.toInstant().toEpochMilli();
+            long startTimeMs = endTimeMs - timeInterval;
+            return new TimeRange(startTimeMs, endTimeMs);
+        }
     }
 
     private static TimeRange getQuickTimeRange(QuickTimeInterval interval, String timezone) {
@@ -241,7 +281,7 @@ public class TimeIntervalCalculator {
             return new TimeRange(startIntervalTs, endIntervalTs);
         }
     }
-    
+
     private static ZonedDateTime startIntervalDate(ZonedDateTime current, IntervalType intervalType) {
         switch (intervalType) {
             case WEEK -> {
@@ -282,5 +322,97 @@ public class TimeIntervalCalculator {
             default -> throw new IllegalStateException("Unexpected value: " + intervalType);
         }
     }
-    
+
+    private static TimeRange getComparisonQuickTimeRange(TimeRange timeWindow, QuickTimeInterval interval, String timezone) {
+        ZoneId zoneId = timezone != null ? ZoneId.of(timezone) : ZoneId.systemDefault();
+        Instant startTimeInstant = Instant.ofEpochMilli(timeWindow.startTs);
+        ZonedDateTime startDate = startTimeInstant.atZone(zoneId);
+        Instant endTimeInstant = Instant.ofEpochMilli(timeWindow.endTs);
+        ZonedDateTime endDate = endTimeInstant.atZone(zoneId);
+
+        ZonedDateTime start;
+        ZonedDateTime end;
+
+        switch (interval) {
+            case YESTERDAY, DAY_BEFORE_YESTERDAY, CURRENT_DAY, CURRENT_DAY_SO_FAR -> {
+                start = startDate.minusDays(1).toLocalDate().atStartOfDay(startDate.getZone());
+                if (interval == QuickTimeInterval.CURRENT_DAY_SO_FAR) {
+                    end = endDate.minusDays(1);
+                } else {
+                    end = start.plusDays(1).minusNanos(1);
+                }
+            }
+            case THIS_DAY_LAST_WEEK -> {
+                start = startDate.minusWeeks(1).toLocalDate().atStartOfDay(startDate.getZone());
+                end = start.plusDays(1).minusNanos(1);
+            }
+            case PREVIOUS_WEEK, CURRENT_WEEK, CURRENT_WEEK_SO_FAR -> {
+                start = startDate.minusWeeks(1).with(TemporalAdjusters.previousOrSame(DayOfWeek.SUNDAY)).toLocalDate().atStartOfDay(startDate.getZone());
+                if (interval == QuickTimeInterval.CURRENT_WEEK_SO_FAR) {
+                    end = endDate.minusWeeks(1);
+                } else {
+                    end = start.plusDays(7).minusNanos(1);
+                }
+            }
+            case PREVIOUS_WEEK_ISO, CURRENT_WEEK_ISO, CURRENT_WEEK_ISO_SO_FAR -> {
+                start = startDate.minusWeeks(1).with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)).toLocalDate().atStartOfDay(startDate.getZone());
+                if (interval == QuickTimeInterval.CURRENT_WEEK_ISO_SO_FAR) {
+                    end = endDate.minusWeeks(1);
+                } else {
+                    end = start.plusDays(7).minusNanos(1);
+                }
+            }
+            case PREVIOUS_MONTH, CURRENT_MONTH, CURRENT_MONTH_SO_FAR -> {
+                start = startDate.minusMonths(1).withDayOfMonth(1).toLocalDate().atStartOfDay(startDate.getZone());
+                if (interval == QuickTimeInterval.CURRENT_MONTH_SO_FAR) {
+                    end = endDate.minusMonths(1);
+                } else {
+                    end = start.plusMonths(1).minusNanos(1);
+                }
+            }
+            case PREVIOUS_QUARTER, CURRENT_QUARTER, CURRENT_QUARTER_SO_FAR -> {
+                int currentQuarter = (startDate.getMonthValue() - 1) / 3 + 1;
+                int prevQuarter = currentQuarter - 1;
+                int startMonth = (prevQuarter - 1) * 3 + 1;
+                ZonedDateTime refNow = startDate;
+                if (startMonth < 1) {
+                    startMonth += 12;
+                    refNow = startDate.minusYears(1);
+                }
+                start = ZonedDateTime.of(LocalDate.of(refNow.getYear(), startMonth, 1), LocalTime.MIN, startDate.getZone());
+                if (interval == QuickTimeInterval.CURRENT_QUARTER_SO_FAR) {
+                    end = endDate.minusMonths(3);
+                } else {
+                    end = start.plusMonths(3).minusNanos(1);
+                }
+            }
+            case PREVIOUS_HALF_YEAR, CURRENT_HALF_YEAR, CURRENT_HALF_YEAR_SO_FAR -> {
+                if (startDate.getMonthValue() <= 6) {
+                    start = ZonedDateTime.of(LocalDate.of(startDate.getYear() - 1, 7, 1), LocalTime.MIN, startDate.getZone());
+                } else {
+                    start = ZonedDateTime.of(LocalDate.of(startDate.getYear(), 1, 1), LocalTime.MIN, startDate.getZone());
+                }
+                if (interval == QuickTimeInterval.CURRENT_HALF_YEAR_SO_FAR) {
+                    end = endDate.minusMonths(6);
+                } else {
+                    end = start.plusMonths(6).minusNanos(1);
+                }
+            }
+            case PREVIOUS_YEAR, CURRENT_YEAR, CURRENT_YEAR_SO_FAR -> {
+                start = ZonedDateTime.of(LocalDate.of(startDate.getYear() - 1, 1, 1), LocalTime.MIN, startDate.getZone());
+                if (interval == QuickTimeInterval.CURRENT_YEAR_SO_FAR) {
+                    end = endDate.minusYears(1);
+                } else {
+                    end = start.plusYears(1).minusNanos(1);
+                }
+            }
+            case CURRENT_HOUR -> {
+                start = startDate.truncatedTo(ChronoUnit.HOURS).minusHours(1);
+                end = start.plusHours(1).minusNanos(1);
+            }
+            default -> throw new IllegalArgumentException("Unsupported interval: " + interval);
+        }
+        return new TimeRange(start.toInstant().toEpochMilli(), end.toInstant().toEpochMilli());
+    }
+
 }
