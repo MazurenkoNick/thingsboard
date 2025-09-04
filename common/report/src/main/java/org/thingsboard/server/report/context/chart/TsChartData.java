@@ -46,5 +46,7 @@ public class TsChartData {
     private final boolean noAggregation;
     private final List<TsChartDataSource> chartData;
     private final List<TsChartThresholdItem> thresholdItems;
+    private final boolean comparisonEnabled;
+    private final TimeIntervalCalculator.TimeRange comparisonTimeRange;
 
 }

@@ -133,15 +133,17 @@ public interface ChartUtils {
         return new SimpleTimePeriod(startTime, endTime);
     }
 
-    static DateAxis createXAxis(XYPlot plot, TimeSeriesChartXAxisSettings xAxisSettings, TimeIntervalCalculator.TimeRange timeRange, TimeZone timeZone, int index) {
+    static TbDateAxis createXAxis(XYPlot plot, TimeSeriesChartXAxisSettings xAxisSettings, TimeIntervalCalculator.TimeRange timeRange, TimeZone timeZone, int index) {
         Locale locale = Locale.getDefault();
-        DateAxis xAxis = new DateAxis(xAxisSettings.getLabel(), timeZone, locale);
+        TbDateAxis xAxis = new TbDateAxis(xAxisSettings.getLabel(), timeZone, locale);
         plot.setDomainAxis(index, xAxis);
         xAxis.setStandardTickUnits(createDateTickUnitsFromTicksFormat(xAxisSettings.getTicksFormat(), timeZone, locale));
         AxisLocation location = AxisPosition.bottom.equals(xAxisSettings.getPosition()) ? AxisLocation.BOTTOM_OR_LEFT : AxisLocation.TOP_OR_RIGHT;
         plot.setDomainAxisLocation(index, location);
         xAxis.setMinimumDate(new Date(timeRange.startTs));
         xAxis.setMaximumDate(new Date(timeRange.endTs));
+        xAxis.setGridlinesVisible(xAxisSettings.getShowSplitLines());
+        xAxis.setGridlinePaint(safeParseCssColor(xAxisSettings.getSplitLinesColor()));
         xAxis.setTickLabelInsets(new RectangleInsets(DEFAULT_TICK_LABEL_INSETS.getTop(),
                 DEFAULT_TICK_LABEL_INSETS.getLeft() + 0.5,
                 DEFAULT_TICK_LABEL_INSETS.getBottom(),
@@ -160,6 +162,8 @@ public interface ChartUtils {
         AxisLocation location = AxisPosition.left.equals(yAxisSettings.getPosition()) ? AxisLocation.BOTTOM_OR_LEFT : AxisLocation.TOP_OR_RIGHT;
         plot.setRangeAxisLocation(index, location);
         yAxis.setAutoRangeIncludesZero(false);
+        yAxis.setGridlinesVisible(yAxisSettings.getShowSplitLines());
+        yAxis.setGridlinePaint(safeParseCssColor(yAxisSettings.getSplitLinesColor()));
         if (yAxisSettings.getSplitNumber() != null) {
             yAxis.setSplitNumber(yAxisSettings.getSplitNumber());
         } else if (yAxisSettings.getInterval() != null && yAxisSettings.getInterval() > 0) {
@@ -285,7 +289,7 @@ public interface ChartUtils {
 
     static Map<TbDatasetKey, List<TsChartSeriesData>> datasetGroupsFromSeries(List<TsChartSeriesData> rawSeries) {
         Map<TbDatasetKey, List<TsChartSeriesData>> groupedSeries = rawSeries.stream().
-                collect(Collectors.groupingBy(s -> new TbDatasetKey(getSeriesSettings(s)))).
+                collect(Collectors.groupingBy(s -> new TbDatasetKey(getSeriesSettings(s), s.getDataSource().isComparison()))).
                 entrySet().stream()
                 .sorted(Map.Entry.comparingByKey())
                 .collect(Collectors.toMap(

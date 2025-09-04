@@ -56,12 +56,12 @@ public class TimeSeriesChartXAxisSettings extends TimeSeriesChartAxisSettings {
 
     public TimeSeriesChartXAxisSettings() {}
 
-    public TimeSeriesChartXAxisSettings(TimeSeriesChartXAxisSettings input) {
+    public TimeSeriesChartXAxisSettings(TimeSeriesChartXAxisSettings input, boolean comparison) {
         super(input != null ? input : new TimeSeriesChartXAxisSettings());
         if (input == null) {
             input = new TimeSeriesChartXAxisSettings();
         }
-        this.setPosition(input.getPosition() != null ? input.getPosition() : AxisPosition.bottom);
+        this.setPosition(input.getPosition() != null ? input.getPosition() : (comparison ? AxisPosition.top : AxisPosition.bottom));
         this.setTickLabelFont(input.getTickLabelFont() != null ? input.getTickLabelFont() : Font.builder().family("Roboto")
                 .size(10f)
                 .weight(FontWeight.NORMAL)

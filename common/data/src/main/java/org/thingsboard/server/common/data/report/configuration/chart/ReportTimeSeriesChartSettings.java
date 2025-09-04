@@ -69,6 +69,13 @@ public class ReportTimeSeriesChartSettings {
     @JsonProperty("noAggregationBarWidthSettings")
     private TimeSeriesChartNoAggregationBarWidthSettings noAggregationBarWidthSettings;
 
+    private Boolean comparisonEnabled;
+    private ComparisonDuration timeForComparison;
+    private Long comparisonCustomIntervalValue;
+
+    @JsonProperty("comparisonXAxis")
+    private TimeSeriesChartXAxisSettings comparisonXAxis;
+
     private Boolean showLegend;
     private Font legendLabelFont;
     private String legendLabelColor;
@@ -103,10 +110,15 @@ public class ReportTimeSeriesChartSettings {
                 yAxes.put(key, yAxisSettings);
             });
         }
-        this.xAxis = new TimeSeriesChartXAxisSettings(input.getXAxis());
+        this.xAxis = new TimeSeriesChartXAxisSettings(input.getXAxis(), false);
 
         this.barWidthSettings = new TimeSeriesChartBarWidthSettings(input.getBarWidthSettings());
         this.noAggregationBarWidthSettings = new TimeSeriesChartNoAggregationBarWidthSettings(input.getNoAggregationBarWidthSettings());
+
+        this.comparisonEnabled = input.getComparisonEnabled() != null ? input.getComparisonEnabled() : Boolean.FALSE;
+        this.timeForComparison = input.getTimeForComparison() != null ? input.getTimeForComparison() : ComparisonDuration.previousInterval;
+        this.comparisonCustomIntervalValue = input.getComparisonCustomIntervalValue() != null ? input.getComparisonCustomIntervalValue() : 7200000;
+        this.comparisonXAxis = new TimeSeriesChartXAxisSettings(input.getComparisonXAxis(), true);
 
         this.showLegend = input.getShowLegend() != null ? input.getShowLegend() : Boolean.TRUE;
         this.legendLabelFont = input.getLegendLabelFont() != null ? input.getLegendLabelFont() : Font.builder().family("Roboto")

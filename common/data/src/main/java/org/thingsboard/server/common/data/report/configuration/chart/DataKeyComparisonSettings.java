@@ -30,38 +30,24 @@
  */
 package org.thingsboard.server.common.data.report.configuration.chart;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
-import org.thingsboard.server.common.data.report.configuration.DataKeySettings;
-import org.thingsboard.server.common.data.report.configuration.style.DataKeySettingsType;
 
 @Data
-public class TimeSeriesChartKeySettings implements DataKeySettings {
+public class DataKeyComparisonSettings {
 
-    @JsonProperty("yAxisId")
-    private String yAxisId;
-    private Boolean showInLegend;
-    private TimeSeriesChartSeriesType seriesType;
-    private LineSeriesSettings lineSettings;
-    private BarSeriesSettings barSettings;
-    private DataKeyComparisonSettings comparisonSettings;
+    private Boolean showValuesForComparison;
+    private String comparisonValuesLabel;
+    private String color;
 
-    public TimeSeriesChartKeySettings() {}
+    public DataKeyComparisonSettings() {}
 
-    public TimeSeriesChartKeySettings(TimeSeriesChartKeySettings input) {
+    public DataKeyComparisonSettings(DataKeyComparisonSettings input) {
         if (input == null) {
-            input = new TimeSeriesChartKeySettings();
+            input = new DataKeyComparisonSettings();
         }
-        this.yAxisId = input.getYAxisId() != null ? input.getYAxisId() : "default";
-        this.showInLegend = input.getShowInLegend() != null ? input.getShowInLegend() : Boolean.TRUE;
-        this.seriesType = input.getSeriesType() != null ? input.getSeriesType() : TimeSeriesChartSeriesType.line;
-        this.lineSettings = new LineSeriesSettings(input.getLineSettings());
-        this.barSettings = new BarSeriesSettings(input.getBarSettings());
-        this.comparisonSettings = new DataKeyComparisonSettings(input.getComparisonSettings());
+        this.showValuesForComparison = input.getShowValuesForComparison() != null ? input.getShowValuesForComparison() : Boolean.FALSE;
+        this.comparisonValuesLabel = input.getComparisonValuesLabel() != null ? input.getComparisonValuesLabel() : "";
+        this.color = input.getColor() != null ? input.getColor() : "";
     }
 
-    @Override
-    public DataKeySettingsType getType() {
-        return DataKeySettingsType.TIME_SERIES_CHART;
-    }
 }

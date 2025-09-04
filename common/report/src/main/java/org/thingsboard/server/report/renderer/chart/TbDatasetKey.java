@@ -44,6 +44,7 @@ import java.util.Objects;
 public class TbDatasetKey implements Comparable<TbDatasetKey> {
 
     private String yAxisId;
+    private boolean comparison;
     private TimeSeriesChartSeriesType seriesType;
     private boolean stepLine;
     private LineSeriesStepType stepType;
@@ -52,7 +53,8 @@ public class TbDatasetKey implements Comparable<TbDatasetKey> {
 
     private int datasetIndex;
 
-    public TbDatasetKey(TimeSeriesChartKeySettings keySettings) {
+    public TbDatasetKey(TimeSeriesChartKeySettings keySettings, boolean comparison) {
+        this.comparison = comparison;
         this.yAxisId = keySettings.getYAxisId();
         this.seriesType = keySettings.getSeriesType();
         if (this.seriesType == TimeSeriesChartSeriesType.line) {
@@ -70,6 +72,7 @@ public class TbDatasetKey implements Comparable<TbDatasetKey> {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof TbDatasetKey that)) return false;
+        if (comparison != that.comparison) return false;
         if (!Objects.equals(yAxisId, that.yAxisId)) return false;
         if (seriesType == that.seriesType) {
             if (seriesType == TimeSeriesChartSeriesType.bar) {
@@ -85,27 +88,34 @@ public class TbDatasetKey implements Comparable<TbDatasetKey> {
     @Override
     public int hashCode() {
         if (seriesType == TimeSeriesChartSeriesType.bar) {
-            return Objects.hash(yAxisId, seriesType);
+            return Objects.hash(comparison, yAxisId, seriesType);
         } else {
-            return Objects.hash(yAxisId, stepLine, stepType, smoothLine, fillArea);
+            return Objects.hash(comparison, yAxisId, stepLine, stepType, smoothLine, fillArea);
         }
     }
 
     @Override
     public int compareTo(@NotNull TbDatasetKey tbDatasetKey) {
         int result = 0;
-        if (this.seriesType == tbDatasetKey.seriesType) {
-            if (this.seriesType != TimeSeriesChartSeriesType.bar) {
-                if (this.fillArea && !tbDatasetKey.fillArea) {
-                    result = -1;
-                } else if (!this.fillArea && tbDatasetKey.fillArea) {
-                    result = 1;
-                }
-            }
-        } else if (this.seriesType == TimeSeriesChartSeriesType.bar) {
-            result = -1;
-        } else {
+        if (this.comparison && !tbDatasetKey.comparison) {
             result = 1;
+        } else if (!this.comparison && tbDatasetKey.comparison) {
+            result = -1;
+        }
+        if (result == 0) {
+            if (this.seriesType == tbDatasetKey.seriesType) {
+                if (this.seriesType != TimeSeriesChartSeriesType.bar) {
+                    if (this.fillArea && !tbDatasetKey.fillArea) {
+                        result = -1;
+                    } else if (!this.fillArea && tbDatasetKey.fillArea) {
+                        result = 1;
+                    }
+                }
+            } else if (this.seriesType == TimeSeriesChartSeriesType.bar) {
+                result = -1;
+            } else {
+                result = 1;
+            }
         }
         if (result == 0 && !Objects.equals(yAxisId, tbDatasetKey.yAxisId)) {
             if (this.yAxisId.equals("default")) {
