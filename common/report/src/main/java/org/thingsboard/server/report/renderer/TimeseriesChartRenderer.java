@@ -46,10 +46,12 @@ import org.jfree.chart.plot.SeriesRenderingOrder;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.title.LegendTitle;
 import org.jfree.chart.title.TextTitle;
+import org.jfree.chart.ui.HorizontalAlignment;
 import org.jfree.chart.ui.Layer;
 import org.jfree.chart.ui.RectangleEdge;
 import org.jfree.chart.ui.RectangleInsets;
 import org.jfree.chart.ui.TextAnchor;
+import org.jfree.chart.ui.VerticalAlignment;
 import org.jfree.data.time.Millisecond;
 import org.jfree.data.time.SimpleTimePeriod;
 import org.jfree.data.time.TimePeriodValues;
@@ -83,6 +85,7 @@ import org.thingsboard.server.report.context.chart.TsChartSeriesData;
 import org.thingsboard.server.report.context.chart.TsChartSeriesEntry;
 import org.thingsboard.server.report.context.chart.TsChartThresholdItem;
 import org.thingsboard.server.report.renderer.chart.TbDatasetKey;
+import org.thingsboard.server.report.renderer.chart.TbFlowArrangement;
 import org.thingsboard.server.report.renderer.chart.TbThresholdMarker;
 import org.thingsboard.server.report.renderer.chart.TbTimeseriesPlot;
 import org.thingsboard.server.report.renderer.chart.TbXYBarRenderer;
@@ -323,10 +326,10 @@ public class TimeseriesChartRenderer extends ChartRenderer<TimeseriesChartCompon
 
     private void setupLegend() {
         if (chartSettings.getShowLegend()) {
-            LegendTitle legend = new LegendTitle(plot);
+            LegendTitle legend = new LegendTitle(plot, new TbFlowArrangement(HorizontalAlignment.CENTER, VerticalAlignment.CENTER, 16.0, 8.0),
+                    new ColumnArrangement(HorizontalAlignment.LEFT, VerticalAlignment.TOP, 16.0, 8.0));
             legend.setBackgroundPaint(ColorUtils.TRANSPARENT);
-            legend.setMargin(new RectangleInsets(1.0, 1.0, 1.0, 1.0));
-            legend.setItemLabelPadding(new RectangleInsets(2.0, 4.0, 2.0, 16.0));
+            legend.setItemLabelPadding(new RectangleInsets(0.0, 4.0, 0.0, 0.0));
             Font legentLabelFont = toAwtFont(chartSettings.getLegendLabelFont());
             legend.setItemFont(legentLabelFont);
             legend.setItemPaint(safeParseCssColor(chartSettings.getLegendLabelColor()));
@@ -339,6 +342,13 @@ public class TimeseriesChartRenderer extends ChartRenderer<TimeseriesChartCompon
                 case right -> position = RectangleEdge.RIGHT;
             }
             legend.setPosition(position);
+            if (RectangleEdge.isLeftOrRight(position)) {
+                legend.setVerticalAlignment(VerticalAlignment.TOP);
+                legend.setPadding(RectangleInsets.ZERO_INSETS);
+            } else {
+                legend.setPadding(new RectangleInsets(8.0, 0.0, 8.0, 0.0));
+            }
+
             chart.addSubtitle(legend);
             legend.addChangeListener(chart);
 
