@@ -39,6 +39,8 @@ import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.kv.BaseAttributeKvEntry;
 import org.thingsboard.server.common.data.kv.JsonDataEntry;
 import org.thingsboard.server.common.data.kv.StringDataEntry;
+import org.thingsboard.server.service.cf.ctx.state.geofencing.GeofencingArgumentEntry;
+import org.thingsboard.server.service.cf.ctx.state.geofencing.GeofencingZoneState;
 
 import java.util.Map;
 import java.util.UUID;
@@ -186,10 +188,11 @@ public class GeofencingValueArgumentEntryTest {
     }
 
     @Test
-    void testNotParsableToPerimeterJsonKvEntryResultInEmptyArgument() {
+    void testNotParsableToPerimeterJsonKvEntryResultInExceptionTrowed() {
         BaseAttributeKvEntry invalidZoneEntry = new BaseAttributeKvEntry(new JsonDataEntry("zone", "\"{}\""), 363L, 155L);
-        GeofencingArgumentEntry geofencingArgumentEntry = new GeofencingArgumentEntry(Map.of(ZONE_1_ID, invalidZoneEntry));
-        assertThat(geofencingArgumentEntry.isEmpty()).isTrue();
+        assertThatThrownBy(() -> new GeofencingArgumentEntry(Map.of(ZONE_1_ID, invalidZoneEntry)))
+                .isExactlyInstanceOf(IllegalArgumentException.class)
+                .hasMessage("The given string value cannot be transformed to Json object: \"{}\"");
     }
 
 }

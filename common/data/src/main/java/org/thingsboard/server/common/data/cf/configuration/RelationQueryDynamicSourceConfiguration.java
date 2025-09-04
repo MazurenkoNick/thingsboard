@@ -61,9 +61,6 @@ public class RelationQueryDynamicSourceConfiguration implements CfArgumentDynami
         if (maxLevel < 1) {
             throw new IllegalArgumentException("Relation query dynamic source configuration max relation level can't be less than 1!");
         }
-        if (maxLevel > 2) {
-            throw new IllegalArgumentException("Relation query dynamic source configuration max relation level can't be greater than 2!");
-        }
         if (direction == null) {
             throw new IllegalArgumentException("Relation query dynamic source configuration direction must be specified!");
         }
@@ -75,6 +72,13 @@ public class RelationQueryDynamicSourceConfiguration implements CfArgumentDynami
     @JsonIgnore
     public boolean isSimpleRelation() {
         return maxLevel == 1;
+    }
+
+    public void validateMaxRelationLevel(String argumentName, int maxAllowedRelationLevel) {
+        if (maxLevel > maxAllowedRelationLevel) {
+            throw new IllegalArgumentException("Max relation level is greater than configured " +
+                                               "maximum allowed relation level in tenant profile: " + maxAllowedRelationLevel + " for argument: " + argumentName);
+        }
     }
 
     public EntityRelationsQuery toEntityRelationsQuery(EntityId rootEntityId) {

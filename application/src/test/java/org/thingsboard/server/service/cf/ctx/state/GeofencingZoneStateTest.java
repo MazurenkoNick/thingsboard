@@ -36,14 +36,16 @@ import org.thingsboard.common.util.geo.Coordinates;
 import org.thingsboard.server.common.data.id.AssetId;
 import org.thingsboard.server.common.data.kv.BaseAttributeKvEntry;
 import org.thingsboard.server.common.data.kv.JsonDataEntry;
+import org.thingsboard.server.service.cf.ctx.state.geofencing.GeofencingEvalResult;
+import org.thingsboard.server.service.cf.ctx.state.geofencing.GeofencingZoneState;
 
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.thingsboard.server.common.data.cf.configuration.GeofencingPresenceStatus.INSIDE;
-import static org.thingsboard.server.common.data.cf.configuration.GeofencingPresenceStatus.OUTSIDE;
-import static org.thingsboard.server.common.data.cf.configuration.GeofencingTransitionEvent.ENTERED;
-import static org.thingsboard.server.common.data.cf.configuration.GeofencingTransitionEvent.LEFT;
+import static org.thingsboard.server.common.data.cf.configuration.geofencing.GeofencingPresenceStatus.INSIDE;
+import static org.thingsboard.server.common.data.cf.configuration.geofencing.GeofencingPresenceStatus.OUTSIDE;
+import static org.thingsboard.server.common.data.cf.configuration.geofencing.GeofencingTransitionEvent.ENTERED;
+import static org.thingsboard.server.common.data.cf.configuration.geofencing.GeofencingTransitionEvent.LEFT;
 
 public class GeofencingZoneStateTest {
 

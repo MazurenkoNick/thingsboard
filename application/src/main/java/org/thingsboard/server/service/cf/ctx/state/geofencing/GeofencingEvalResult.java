@@ -28,11 +28,12 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.service.cf.ctx.state;
+package org.thingsboard.server.service.cf.ctx.state.geofencing;
 
 import jakarta.annotation.Nullable;
-import org.thingsboard.server.common.data.cf.configuration.GeofencingPresenceStatus;
-import org.thingsboard.server.common.data.cf.configuration.GeofencingTransitionEvent;
+import org.thingsboard.server.common.data.cf.configuration.geofencing.GeofencingPresenceStatus;
+import org.thingsboard.server.common.data.cf.configuration.geofencing.GeofencingTransitionEvent;
 
 public record GeofencingEvalResult(@Nullable GeofencingTransitionEvent transition,
-                                   GeofencingPresenceStatus status) {}
+                                   GeofencingPresenceStatus status) {
+}

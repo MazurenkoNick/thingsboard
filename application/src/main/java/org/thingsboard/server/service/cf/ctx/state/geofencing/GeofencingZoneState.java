@@ -28,23 +28,23 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.service.cf.ctx.state;
+package org.thingsboard.server.service.cf.ctx.state.geofencing;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.common.util.geo.Coordinates;
 import org.thingsboard.common.util.geo.PerimeterDefinition;
-import org.thingsboard.server.common.data.cf.configuration.GeofencingPresenceStatus;
-import org.thingsboard.server.common.data.cf.configuration.GeofencingTransitionEvent;
+import org.thingsboard.server.common.data.cf.configuration.geofencing.GeofencingPresenceStatus;
+import org.thingsboard.server.common.data.cf.configuration.geofencing.GeofencingTransitionEvent;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.kv.AttributeKvEntry;
 import org.thingsboard.server.common.data.kv.KvEntry;
 import org.thingsboard.server.common.util.ProtoUtils;
 import org.thingsboard.server.gen.transport.TransportProtos.GeofencingZoneProto;
 
-import static org.thingsboard.server.common.data.cf.configuration.GeofencingPresenceStatus.INSIDE;
-import static org.thingsboard.server.common.data.cf.configuration.GeofencingPresenceStatus.OUTSIDE;
+import static org.thingsboard.server.common.data.cf.configuration.geofencing.GeofencingPresenceStatus.INSIDE;
+import static org.thingsboard.server.common.data.cf.configuration.geofencing.GeofencingPresenceStatus.OUTSIDE;
 
 @Data
 public class GeofencingZoneState {

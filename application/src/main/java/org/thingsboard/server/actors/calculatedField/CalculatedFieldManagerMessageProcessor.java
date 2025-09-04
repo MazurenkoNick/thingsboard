@@ -79,7 +79,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ScheduledFuture;
 import java.util.function.BiConsumer;
-import java.util.function.Function;
 
 import static org.thingsboard.server.utils.CalculatedFieldUtils.fromProto;
 
@@ -386,7 +385,7 @@ public class CalculatedFieldManagerMessageProcessor extends AbstractContextAware
         if (existingTask != null) {
             existingTask.cancel(false);
             String reason = cfDeleted ? "deletion" : "update";
-            log.debug("[{}][{}] Cancelled dynamic arguments refresh task due to CF " + reason + "!", tenantId, cfId);
+            log.debug("[{}][{}] Cancelled dynamic arguments refresh task due to CF {}!", tenantId, cfId, reason);
         }
     }
 
@@ -438,9 +437,10 @@ public class CalculatedFieldManagerMessageProcessor extends AbstractContextAware
         for (var linkProto : linksList) {
             var link = fromProto(linkProto);
             var cf = calculatedFields.get(link.cfId());
-            applyToTargetCfEntityActors(link, callback,
-                    cb -> new EntityCalculatedFieldLinkedTelemetryMsg(tenantId, sourceEntityId, proto.getMsg(), cf, callback),
-                    this::linkedTelemetryMsgForEntity);
+            withTargetEntities(link.entityId(), callback, (ids, cb) -> {
+                var linkedTelemetryMsg = new EntityCalculatedFieldLinkedTelemetryMsg(tenantId, sourceEntityId, proto.getMsg(), cf, cb);
+                ids.forEach(id -> linkedTelemetryMsgForEntity(id, linkedTelemetryMsg));
+            });
         }
     }
 
@@ -697,48 +697,29 @@ public class CalculatedFieldManagerMessageProcessor extends AbstractContextAware
         ownerEntities.computeIfAbsent(owner, ownerId -> new HashSet<>()).add(entityId);
     }
 
-    private void applyToTargetCfEntityActors(CalculatedFieldCtx calculatedFieldCtx,
+    private void applyToTargetCfEntityActors(CalculatedFieldCtx ctx,
                                              TbCallback callback,
                                              BiConsumer<EntityId, TbCallback> action) {
-        if (isProfileEntity(calculatedFieldCtx.getEntityId().getEntityType())) {
-            var ids = entityProfileCache.getEntityIdsByProfileId(calculatedFieldCtx.getEntityId());
-            if (ids.isEmpty()) {
-                callback.onSuccess();
-                return;
-            }
-            var multiCallback = new MultipleTbCallback(ids.size(), callback);
-            ids.forEach(id -> {
-                if (isMyPartition(id, multiCallback)) {
-                    action.accept(id, multiCallback);
-                }
-            });
-            return;
-        }
-        if (isMyPartition(calculatedFieldCtx.getEntityId(), callback)) {
-            action.accept(calculatedFieldCtx.getEntityId(), callback);
-        }
+        withTargetEntities(ctx.getEntityId(), callback, (ids, cb) -> ids.forEach(id -> action.accept(id, cb)));
     }
 
-    private <M> void applyToTargetCfEntityActors(CalculatedFieldEntityCtxId link, TbCallback callback,
-                                                 Function<TbCallback, M> messageFactory, BiConsumer<EntityId, M> action) {
-        if (isProfileEntity(link.entityId().getEntityType())) {
-            var ids = entityProfileCache.getEntityIdsByProfileId(link.entityId());
+    private void withTargetEntities(EntityId entityId, TbCallback parentCallback, BiConsumer<List<EntityId>, TbCallback> consumer) {
+        if (isProfileEntity(entityId.getEntityType())) {
+            var ids = entityProfileCache.getEntityIdsByProfileId(entityId);
             if (ids.isEmpty()) {
-                callback.onSuccess();
+                parentCallback.onSuccess();
                 return;
             }
-            var multiCallback = new MultipleTbCallback(ids.size(), callback);
-            var msg = messageFactory.apply(multiCallback);
-            ids.forEach(id -> {
-                if (isMyPartition(id, multiCallback)) {
-                    action.accept(id, msg);
-                }
-            });
+            var multiCallback = new MultipleTbCallback(ids.size(), parentCallback);
+            var profileEntityIds = ids.stream().filter(id -> isMyPartition(id, multiCallback)).toList();
+            if (profileEntityIds.isEmpty()) {
+                return;
+            }
+            consumer.accept(profileEntityIds, multiCallback);
             return;
         }
-        if (isMyPartition(link.entityId(), callback)) {
-            var msg = messageFactory.apply(callback);
-            action.accept(link.entityId(), msg);
+        if (isMyPartition(entityId, parentCallback)) {
+            consumer.accept(List.of(entityId), parentCallback);
         }
     }
 
