@@ -36,10 +36,14 @@ import org.jfree.chart.plot.Marker;
 import org.jfree.chart.plot.PlotRenderingInfo;
 import org.jfree.chart.plot.PlotState;
 import org.jfree.chart.plot.XYPlot;
+import org.jfree.chart.renderer.xy.XYItemRenderer;
 import org.jfree.chart.ui.Layer;
 import org.jfree.chart.ui.RectangleInsets;
 import org.jfree.data.Range;
 import org.jfree.data.xy.XYDataset;
+import org.thingsboard.server.report.renderer.chart.legend.TbLegendItem;
+import org.thingsboard.server.report.renderer.chart.legend.TbLegendItemSource;
+import org.thingsboard.server.report.renderer.chart.legend.TbLegendValuesRequest;
 
 import java.awt.*;
 import java.awt.geom.Point2D;
@@ -48,7 +52,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-public class TbTimeseriesPlot extends XYPlot {
+public class TbTimeseriesPlot extends XYPlot implements TbLegendItemSource {
 
     public TbTimeseriesPlot() {
         super();
@@ -123,5 +127,33 @@ public class TbTimeseriesPlot extends XYPlot {
         int x1 = (int) Math.floor(rect.getMaxX());
         int y1 = (int) Math.floor(rect.getMaxY());
         return new Rectangle(x0, y0, (x1 - x0), (y1 - y0));
+    }
+
+    @Override
+    public List<TbLegendItem> getTbLegendItems(TbLegendValuesRequest request) {
+        List<TbLegendItem> result = new ArrayList<>();
+        for (XYDataset dataset : this.getDatasets().values()) {
+            if (dataset == null) {
+                continue;
+            }
+            int datasetIndex = indexOf(dataset);
+            XYItemRenderer renderer = getRenderer(datasetIndex);
+            if (renderer == null) {
+                renderer = getRenderer(0);
+            }
+            if (renderer instanceof TbItemRenderer itemRenderer) {
+                int seriesCount = dataset.getSeriesCount();
+                for (int i = 0; i < seriesCount; i++) {
+                    if (renderer.isSeriesVisible(i)
+                            && renderer.isSeriesVisibleInLegend(i)) {
+                        TbLegendItem item = itemRenderer.getTbLegendItem(request, datasetIndex, i);
+                        if (item != null) {
+                            result.add(item);
+                        }
+                    }
+                }
+            }
+        }
+        return result;
     }
 }

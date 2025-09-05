@@ -30,6 +30,7 @@
  */
 package org.thingsboard.server.report.renderer.chart;
 
+import org.jfree.chart.LegendItem;
 import org.jfree.chart.axis.ValueAxis;
 import org.jfree.chart.entity.EntityCollection;
 import org.jfree.chart.labels.ItemLabelAnchor;
@@ -55,6 +56,10 @@ import org.jfree.data.general.DatasetUtils;
 import org.jfree.data.xy.IntervalXYDataset;
 import org.jfree.data.xy.TableXYDataset;
 import org.jfree.data.xy.XYDataset;
+import org.thingsboard.server.report.renderer.chart.legend.TbLegendItem;
+import org.thingsboard.server.report.renderer.chart.legend.TbLegendValues;
+import org.thingsboard.server.report.renderer.chart.legend.TbLegendValuesRequest;
+import org.thingsboard.server.report.renderer.chart.legend.TbSeriesLegendValuesGenerator;
 
 import java.awt.*;
 import java.awt.geom.Point2D;
@@ -64,7 +69,7 @@ import java.util.Map;
 
 import static org.thingsboard.server.report.util.ColorUtils.safeParseCssColor;
 
-public class TbXYBarRenderer extends XYBarRenderer {
+public class TbXYBarRenderer extends XYBarRenderer implements TbItemRenderer {
 
     private final TbThresholdPainter thresholdPainter;
 
@@ -75,6 +80,8 @@ public class TbXYBarRenderer extends XYBarRenderer {
     private boolean defaultItemLabelsBackgroundVisible;
     private final PaintList itemLabelsBackgroundPaintList;
     private transient Paint defaultItemLabelBackgroundPaint;
+
+    private TbSeriesLegendValuesGenerator seriesLegendValuesGenerator;
 
     private final boolean stackMode;
 
@@ -217,6 +224,16 @@ public class TbXYBarRenderer extends XYBarRenderer {
         if (notify) {
             fireChangeEvent();
         }
+    }
+
+    @Override
+    public TbSeriesLegendValuesGenerator getTbSeriesLegendValuesGenerator() {
+        return seriesLegendValuesGenerator;
+    }
+
+    @Override
+    public void setTbSeriesLegendValuesGenerator(TbSeriesLegendValuesGenerator seriesLegendValuesGenerator) {
+        this.seriesLegendValuesGenerator = seriesLegendValuesGenerator;
     }
 
     @Override
@@ -430,6 +447,20 @@ public class TbXYBarRenderer extends XYBarRenderer {
         } else {
             super.drawRangeMarker(g2, plot, rangeAxis, marker, dataArea);
         }
+    }
+
+    @Override
+    public TbLegendItem getTbLegendItem(TbLegendValuesRequest request, int datasetIndex, int series) {
+        if (this.seriesLegendValuesGenerator != null) {
+            LegendItem legendItem = this.getLegendItem(datasetIndex, series);
+            if (legendItem != null) {
+                XYPlot plot = getPlot();
+                XYDataset dataset = plot.getDataset(datasetIndex);
+                TbLegendValues legendValues = this.seriesLegendValuesGenerator.generateLegendValues(request, dataset, series);
+                return new TbLegendItem(legendItem, legendValues);
+            }
+        }
+        return null;
     }
 
     protected void paintBar(Graphics2D g2, int row, int column, Shape bar) {

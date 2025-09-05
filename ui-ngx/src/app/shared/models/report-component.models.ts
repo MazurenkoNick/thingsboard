@@ -406,8 +406,12 @@ export interface ReportTimeSeriesChartSettings extends TimeSeriesChartSettings {
   titleFont?: Font;
   titleColor?: string;
   showLegend: boolean;
+  legendColumnTitleFont: Font;
+  legendColumnTitleColor: string;
   legendLabelFont: Font;
   legendLabelColor: string;
+  legendValueFont: Font;
+  legendValueColor: string;
   legendConfig: LegendConfig;
 }
 
@@ -424,6 +428,14 @@ export const reportTimeSeriesChartDefaultSettings: ReportTimeSeriesChartSettings
     },
     titleColor: 'rgba(0, 0, 0, 0.87)',
     showLegend: true,
+    legendColumnTitleFont: {
+      family: 'Roboto',
+      size: 12,
+      sizeUnit: 'px',
+      style: 'normal',
+      weight: 'normal'
+    },
+    legendColumnTitleColor: 'rgba(0, 0, 0, 0.38)',
     legendLabelFont: {
       family: 'Roboto',
       size: 12,
@@ -432,6 +444,14 @@ export const reportTimeSeriesChartDefaultSettings: ReportTimeSeriesChartSettings
       weight: 'normal'
     },
     legendLabelColor: 'rgba(0, 0, 0, 0.76)',
+    legendValueFont: {
+      family: 'Roboto',
+      size: 12,
+      sizeUnit: 'px',
+      style: 'normal',
+      weight: '500'
+    },
+    legendValueColor: 'rgba(0, 0, 0, 0.87)',
     legendConfig: {...defaultLegendConfig(null), position: LegendPosition.top},
     yAxes: {
       default: {

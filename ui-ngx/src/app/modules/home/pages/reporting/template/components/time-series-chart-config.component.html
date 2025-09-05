@@ -237,6 +237,40 @@
               </tb-color-input>
             </div>
           </div>
+          <div class="tb-form-row space-between">
+            <div>{{ 'legend.value' | translate }}</div>
+            <div class="flex flex-row items-center justify-start gap-2">
+              <tb-font-settings formControlName="legendValueFont"
+                                [initialPreviewStyle]="{color: reportConfigForm.get('legendValueColor').value}"
+                                [allowedFontWeights]="['normal', 'bold', '500']"
+                                [allowedFontStyles]="['normal', 'italic']"
+                                forceSizeUnit="px"
+                                disabledLineHeight
+                                previewText="22 °C">
+              </tb-font-settings>
+              <tb-color-input asBoxInput
+                              colorClearButton
+                              formControlName="legendValueColor">
+              </tb-color-input>
+            </div>
+          </div>
+          <div class="tb-form-row space-between">
+            <div>{{ 'legend.column-title' | translate }}</div>
+            <div class="flex flex-row items-center justify-start gap-2">
+              <tb-font-settings formControlName="legendColumnTitleFont"
+                                [initialPreviewStyle]="{color: reportConfigForm.get('legendColumnTitleColor').value}"
+                                [allowedFontWeights]="['normal', 'bold', '500']"
+                                [allowedFontStyles]="['normal', 'italic']"
+                                forceSizeUnit="px"
+                                disabledLineHeight
+                                previewText="{{ 'legend.Avg' | translate }}">
+              </tb-font-settings>
+              <tb-color-input asBoxInput
+                              colorClearButton
+                              formControlName="legendColumnTitleColor">
+              </tb-color-input>
+            </div>
+          </div>
           <tb-legend-config hideDirection
                             formControlName="legendConfig">
           </tb-legend-config>

@@ -28,31 +28,12 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.report.renderer.chart;
+package org.thingsboard.server.report.renderer.chart.legend;
 
-import org.jfree.chart.labels.XYItemLabelGenerator;
 import org.jfree.data.xy.XYDataset;
 
-import java.text.NumberFormat;
+public interface TbSeriesLegendValuesGenerator {
 
-import static org.thingsboard.server.report.renderer.chart.ChartUtils.createValueFormatter;
+    TbLegendValues generateLegendValues(TbLegendValuesRequest request, XYDataset dataset, int series);
 
-public class TbXYItemLabelGenerator implements XYItemLabelGenerator {
-
-    private final NumberFormat formatter;
-
-    public TbXYItemLabelGenerator(Integer decimals, String units) {
-        int decimalsInt = decimals != null ? decimals : 2;
-        this.formatter = createValueFormatter(decimalsInt, units);
-    }
-
-    @Override
-    public String generateLabel(XYDataset dataset, int series, int item) {
-        double y = dataset.getYValue(series, item);
-        if (Double.isNaN(y) && dataset.getY(series, item) == null) {
-            return "";
-        } else {
-            return formatter.format(y);
-        }
-    }
 }

@@ -42,6 +42,7 @@ import org.jfree.chart.axis.ValueAxis;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.ui.RectangleInsets;
 import org.jfree.data.time.SimpleTimePeriod;
+import org.jfree.data.xy.XYDataset;
 import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.report.configuration.DataKeySettings;
 import org.thingsboard.server.common.data.report.configuration.chart.AxisPosition;
@@ -352,6 +353,59 @@ public interface ChartUtils {
             i += calculateBezierSegmentPoints(points, i, smooth, bezierNumPoints, interpolatedPoints) + 1;
         }
         return interpolatedPoints;
+    }
+
+    static Double calcMin(XYDataset dataset, int seriesIndex) {
+        if (dataset.getItemCount(seriesIndex) > 0) {
+            double result = dataset.getYValue(seriesIndex, 0);
+            for (int i = 1; i < dataset.getItemCount(seriesIndex); i++) {
+                result = Math.min(result, dataset.getYValue(seriesIndex, i));
+            }
+            return result;
+        } else {
+            return null;
+        }
+    }
+
+    static Double calcMax(XYDataset dataset, int seriesIndex) {
+        if (dataset.getItemCount(seriesIndex) > 0) {
+            double result = dataset.getYValue(seriesIndex, 0);
+            for (int i = 1; i < dataset.getItemCount(seriesIndex); i++) {
+                result = Math.max(result, dataset.getYValue(seriesIndex, i));
+            }
+            return result;
+        } else {
+            return null;
+        }
+    }
+
+    static Double calcTotal(XYDataset dataset, int seriesIndex) {
+        if (dataset.getItemCount(seriesIndex) > 0) {
+            double result = 0;
+            for (int i = 0; i < dataset.getItemCount(seriesIndex); i++) {
+                result += dataset.getYValue(seriesIndex, i);
+            }
+            return result;
+        } else {
+            return null;
+        }
+    }
+
+    static Double calcAvg(XYDataset dataset, int seriesIndex) {
+        Double total = calcTotal(dataset, seriesIndex);
+        if (total != null) {
+            return total / dataset.getItemCount(seriesIndex);
+        } else {
+            return null;
+        }
+    }
+
+    static Double calcLatest(XYDataset dataset, int seriesIndex) {
+        if (dataset.getItemCount(seriesIndex) > 0) {
+            return dataset.getYValue(seriesIndex, dataset.getItemCount(seriesIndex) - 1);
+        } else {
+            return null;
+        }
     }
 
     private static int calculateBezierSegmentPoints(List<Point2D> points, int start, float smooth, int bezierNumPoints, List<Point2D> targetPoints) {

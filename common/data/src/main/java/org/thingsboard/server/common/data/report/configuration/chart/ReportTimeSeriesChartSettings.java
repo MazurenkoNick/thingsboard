@@ -77,8 +77,12 @@ public class ReportTimeSeriesChartSettings {
     private TimeSeriesChartXAxisSettings comparisonXAxis;
 
     private Boolean showLegend;
+    private Font legendColumnTitleFont;
+    private String legendColumnTitleColor;
     private Font legendLabelFont;
     private String legendLabelColor;
+    private Font legendValueFont;
+    private String legendValueColor;
 
     @JsonProperty("legendConfig")
     private LegendConfig legendConfig;
@@ -121,12 +125,24 @@ public class ReportTimeSeriesChartSettings {
         this.comparisonXAxis = new TimeSeriesChartXAxisSettings(input.getComparisonXAxis(), true);
 
         this.showLegend = input.getShowLegend() != null ? input.getShowLegend() : Boolean.TRUE;
+        this.legendColumnTitleFont = input.getLegendColumnTitleFont() != null ? input.getLegendColumnTitleFont() : Font.builder().family("Roboto")
+                .size(12f)
+                .weight(FontWeight.NORMAL)
+                .style(FontStyle.NORMAL)
+                .build();
+        this.legendColumnTitleColor = input.getLegendColumnTitleColor() != null ? input.getLegendColumnTitleColor() : "rgba(0, 0, 0, 0.38)";
         this.legendLabelFont = input.getLegendLabelFont() != null ? input.getLegendLabelFont() : Font.builder().family("Roboto")
                 .size(12f)
                 .weight(FontWeight.NORMAL)
                 .style(FontStyle.NORMAL)
                 .build();
         this.legendLabelColor = input.getLegendLabelColor() != null ? input.getLegendLabelColor() : "rgba(0, 0, 0, 0.87)";
+        this.legendValueFont = input.getLegendValueFont() != null ? input.getLegendValueFont() : Font.builder().family("Roboto")
+                .size(12f)
+                .weight(FontWeight.WEIGHT_500)
+                .style(FontStyle.NORMAL)
+                .build();
+        this.legendValueColor = input.getLegendValueColor() != null ? input.getLegendValueColor() : "rgba(0, 0, 0, 0.87)";
         this.legendConfig = new LegendConfig(input.getLegendConfig());
 
     }
