@@ -127,6 +127,10 @@ export class TimeSeriesChartConfigComponent extends AbstractReportComponentConfi
       showLegend: [timeSeriesChartSettings.showLegend, []],
       legendLabelFont: [timeSeriesChartSettings.legendLabelFont, []],
       legendLabelColor: [timeSeriesChartSettings.legendLabelColor, []],
+      legendValueFont: [timeSeriesChartSettings.legendValueFont, []],
+      legendValueColor: [timeSeriesChartSettings.legendValueColor, []],
+      legendColumnTitleFont: [timeSeriesChartSettings.legendColumnTitleFont, []],
+      legendColumnTitleColor: [timeSeriesChartSettings.legendColumnTitleColor, []],
       legendConfig: [timeSeriesChartSettings.legendConfig, []]
 
     });
@@ -200,10 +204,23 @@ export class TimeSeriesChartConfigComponent extends AbstractReportComponentConfi
 
     timeSeriesChartSettings.showLegend = config.showLegend;
     delete config.showLegend;
+
+
+    timeSeriesChartSettings.legendColumnTitleFont = config.legendColumnTitleFont;
+    delete config.legendColumnTitleFont;
+    timeSeriesChartSettings.legendColumnTitleColor = config.legendColumnTitleColor;
+    delete config.legendColumnTitleColor;
+
     timeSeriesChartSettings.legendLabelFont = config.legendLabelFont;
     delete config.legendLabelFont;
     timeSeriesChartSettings.legendLabelColor = config.legendLabelColor;
     delete config.legendLabelColor;
+
+    timeSeriesChartSettings.legendValueFont = config.legendValueFont;
+    delete config.legendValueFont;
+    timeSeriesChartSettings.legendValueColor = config.legendValueColor;
+    delete config.legendValueColor;
+
     timeSeriesChartSettings.legendConfig = config.legendConfig;
     delete config.legendConfig;
 
@@ -308,12 +325,20 @@ export class TimeSeriesChartConfigComponent extends AbstractReportComponentConfi
     }
 
     if (showLegend) {
+      form.get('legendColumnTitleFont').enable();
+      form.get('legendColumnTitleColor').enable();
       form.get('legendLabelFont').enable();
       form.get('legendLabelColor').enable();
+      form.get('legendValueFont').enable();
+      form.get('legendValueColor').enable();
       form.get('legendConfig').enable();
     } else {
+      form.get('legendColumnTitleFont').disable();
+      form.get('legendColumnTitleColor').disable();
       form.get('legendLabelFont').disable();
       form.get('legendLabelColor').disable();
+      form.get('legendValueFont').disable();
+      form.get('legendValueColor').disable();
       form.get('legendConfig').disable();
     }
 

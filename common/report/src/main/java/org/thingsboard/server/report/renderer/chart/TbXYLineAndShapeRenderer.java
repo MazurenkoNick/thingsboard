@@ -55,6 +55,10 @@ import org.jfree.chart.util.ShapeUtils;
 import org.jfree.data.Range;
 import org.jfree.data.xy.TableXYDataset;
 import org.jfree.data.xy.XYDataset;
+import org.thingsboard.server.report.renderer.chart.legend.TbLegendItem;
+import org.thingsboard.server.report.renderer.chart.legend.TbLegendValues;
+import org.thingsboard.server.report.renderer.chart.legend.TbLegendValuesRequest;
+import org.thingsboard.server.report.renderer.chart.legend.TbSeriesLegendValuesGenerator;
 
 import java.awt.*;
 import java.awt.geom.GeneralPath;
@@ -68,7 +72,7 @@ import java.util.Objects;
 import static org.thingsboard.server.report.renderer.chart.ChartUtils.interpolateBezier;
 import static org.thingsboard.server.report.util.ColorUtils.safeParseCssColor;
 
-public class TbXYLineAndShapeRenderer extends XYLineAndShapeRenderer {
+public class TbXYLineAndShapeRenderer extends XYLineAndShapeRenderer implements TbItemRenderer {
 
     public enum LineInterpolationType {
         NONE,
@@ -128,6 +132,8 @@ public class TbXYLineAndShapeRenderer extends XYLineAndShapeRenderer {
     private boolean defaultItemLabelsBackgroundVisible;
     private final PaintList itemLabelsBackgroundPaintList;
     private transient Paint defaultItemLabelBackgroundPaint;
+
+    private TbSeriesLegendValuesGenerator seriesLegendValuesGenerator;
 
     private final boolean stackMode;
 
@@ -363,6 +369,16 @@ public class TbXYLineAndShapeRenderer extends XYLineAndShapeRenderer {
         if (notify) {
             fireChangeEvent();
         }
+    }
+
+    @Override
+    public TbSeriesLegendValuesGenerator getTbSeriesLegendValuesGenerator() {
+        return seriesLegendValuesGenerator;
+    }
+
+    @Override
+    public void setTbSeriesLegendValuesGenerator(TbSeriesLegendValuesGenerator seriesLegendValuesGenerator) {
+        this.seriesLegendValuesGenerator = seriesLegendValuesGenerator;
     }
 
     @Override
@@ -659,6 +675,20 @@ public class TbXYLineAndShapeRenderer extends XYLineAndShapeRenderer {
         result.setDatasetIndex(datasetIndex);
 
         return result;
+    }
+
+    @Override
+    public TbLegendItem getTbLegendItem(TbLegendValuesRequest request, int datasetIndex, int series) {
+        if (this.seriesLegendValuesGenerator != null) {
+            LegendItem legendItem = this.getLegendItem(datasetIndex, series);
+            if (legendItem != null) {
+                XYPlot plot = getPlot();
+                XYDataset dataset = plot.getDataset(datasetIndex);
+                TbLegendValues legendValues = this.seriesLegendValuesGenerator.generateLegendValues(request, dataset, series);
+                return new TbLegendItem(legendItem, legendValues);
+            }
+        }
+        return null;
     }
 
     protected double[] getStackValues(TableXYDataset dataset,

@@ -97,9 +97,7 @@ public class TbFlowArrangement extends FlowArrangement {
                     y = y + size.height + this.verticalGap;
                 }
                 else {
-                    if (horizontalAlignment == HorizontalAlignment.CENTER) {
-                        centerItems(itemsInRow, width);
-                    }
+                    alignItems(itemsInRow, width);
                     // start new row
                     itemsInRow.clear();
                     x = 0.0;
@@ -115,22 +113,27 @@ public class TbFlowArrangement extends FlowArrangement {
                 }
             }
         }
-        if (horizontalAlignment == HorizontalAlignment.CENTER) {
-            centerItems(itemsInRow, width);
-        }
+        alignItems(itemsInRow, width);
         return new Size2D(constraint.getWidth(), y + maxHeight);
     }
 
-    private void centerItems(List<Block> items, double width) {
+    private void alignItems(List<Block> items, double width) {
         double itemsWidth = this.horizontalGap * (items.size() - 1);
         for (Block item : items) {
             itemsWidth += item.getBounds().getWidth();
         }
         if (itemsWidth < width) {
-            double movement = (width - itemsWidth) / 2;
-            for (Block item : items) {
-                Rectangle2D bounds = item.getBounds();
-                item.setBounds(new Rectangle2D.Double(bounds.getX() + movement, bounds.getY(), bounds.getWidth(), bounds.getHeight()));
+            double movement = 0;
+            if (horizontalAlignment == HorizontalAlignment.CENTER) {
+                movement = (width - itemsWidth) / 2;
+            } else if (horizontalAlignment == HorizontalAlignment.RIGHT) {
+                movement = width - itemsWidth;
+            }
+            if (movement > 0) {
+                for (Block item : items) {
+                    Rectangle2D bounds = item.getBounds();
+                    item.setBounds(new Rectangle2D.Double(bounds.getX() + movement, bounds.getY(), bounds.getWidth(), bounds.getHeight()));
+                }
             }
         }
     }

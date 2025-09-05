@@ -30,29 +30,16 @@
  */
 package org.thingsboard.server.report.renderer.chart;
 
-import org.jfree.chart.labels.XYItemLabelGenerator;
-import org.jfree.data.xy.XYDataset;
+import org.thingsboard.server.report.renderer.chart.legend.TbLegendItem;
+import org.thingsboard.server.report.renderer.chart.legend.TbLegendValuesRequest;
+import org.thingsboard.server.report.renderer.chart.legend.TbSeriesLegendValuesGenerator;
 
-import java.text.NumberFormat;
+public interface TbItemRenderer {
 
-import static org.thingsboard.server.report.renderer.chart.ChartUtils.createValueFormatter;
+    TbLegendItem getTbLegendItem(TbLegendValuesRequest request, int datasetIndex, int series);
 
-public class TbXYItemLabelGenerator implements XYItemLabelGenerator {
+    TbSeriesLegendValuesGenerator getTbSeriesLegendValuesGenerator();
 
-    private final NumberFormat formatter;
+    void setTbSeriesLegendValuesGenerator(TbSeriesLegendValuesGenerator seriesLegendValuesGenerator);
 
-    public TbXYItemLabelGenerator(Integer decimals, String units) {
-        int decimalsInt = decimals != null ? decimals : 2;
-        this.formatter = createValueFormatter(decimalsInt, units);
-    }
-
-    @Override
-    public String generateLabel(XYDataset dataset, int series, int item) {
-        double y = dataset.getYValue(series, item);
-        if (Double.isNaN(y) && dataset.getY(series, item) == null) {
-            return "";
-        } else {
-            return formatter.format(y);
-        }
-    }
 }
