@@ -1075,6 +1075,16 @@
                 <version>${apache-pulsar.version}</version>
             </dependency>
             <dependency>
+                <groupId>org.apache.pulsar</groupId>
+                <artifactId>pulsar-client-api</artifactId>
+                <version>${apache-pulsar.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.pulsar</groupId>
+                <artifactId>pulsar-client-admin-api</artifactId>
+                <version>${apache-pulsar.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>org.thingsboard.common.integration</groupId>
                 <artifactId>mqtt-integrations</artifactId>
                 <version>${project.version}</version>
