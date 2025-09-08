@@ -50,6 +50,8 @@ public class TbFlowArrangement extends FlowArrangement {
     private final double horizontalGap;
     private final double verticalGap;
 
+    private double maxRelativeHeight = 0;
+
     public TbFlowArrangement() {
         this(HorizontalAlignment.CENTER, VerticalAlignment.CENTER, 2.0, 2.0);
     }
@@ -61,6 +63,20 @@ public class TbFlowArrangement extends FlowArrangement {
         this.verticalAlignment = vAlign;
         this.horizontalGap = hGap;
         this.verticalGap = vGap;
+    }
+
+    public void setMaxRelativeHeight(double maxRelativeHeight) {
+        this.maxRelativeHeight = maxRelativeHeight;
+    }
+
+    @Override
+    public Size2D arrange(BlockContainer container, Graphics2D g2,
+                          RectangleConstraint constraint) {
+        if (this.maxRelativeHeight > 0) {
+            double maxHeight = constraint.getHeight() * this.maxRelativeHeight;
+            constraint = constraint.toFixedHeight(maxHeight);
+        }
+        return super.arrange(container, g2, constraint);
     }
 
     @Override
@@ -115,6 +131,28 @@ public class TbFlowArrangement extends FlowArrangement {
         }
         alignItems(itemsInRow, width);
         return new Size2D(constraint.getWidth(), y + maxHeight);
+    }
+
+    protected Size2D arrangeFF(BlockContainer container, Graphics2D g2,
+                               RectangleConstraint constraint) {
+        Size2D s = arrangeFN(container, g2, constraint);
+        if (s.height > constraint.getHeight()) {
+            List<Block> blocks = (List<Block>) container.getBlocks();
+            List<Block> visibleBlocks = new ArrayList<>();
+            for (Block b : blocks) {
+                Rectangle2D bounds = b.getBounds();
+                double bottom = bounds.getMaxY();
+                if (bottom <= constraint.getHeight()) {
+                    visibleBlocks.add(b);
+                }
+            }
+            container.clear();
+            for (Block b : visibleBlocks) {
+                container.add(b);
+            }
+            return arrangeFN(container, g2, constraint);
+        }
+        return s;
     }
 
     private void alignItems(List<Block> items, double width) {

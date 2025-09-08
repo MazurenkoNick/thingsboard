@@ -35,7 +35,6 @@ import org.jfree.chart.LegendItem;
 import org.jfree.chart.LegendItemCollection;
 import org.jfree.chart.axis.DateAxis;
 import org.jfree.chart.axis.NumberAxis;
-import org.jfree.chart.block.ColumnArrangement;
 import org.jfree.chart.labels.ItemLabelAnchor;
 import org.jfree.chart.labels.ItemLabelPosition;
 import org.jfree.chart.labels.XYItemLabelGenerator;
@@ -82,6 +81,7 @@ import org.thingsboard.server.report.context.chart.TsChartDataSource;
 import org.thingsboard.server.report.context.chart.TsChartSeriesData;
 import org.thingsboard.server.report.context.chart.TsChartSeriesEntry;
 import org.thingsboard.server.report.context.chart.TsChartThresholdItem;
+import org.thingsboard.server.report.renderer.chart.TbColumnArrangement;
 import org.thingsboard.server.report.renderer.chart.TbDatasetKey;
 import org.thingsboard.server.report.renderer.chart.TbFlowArrangement;
 import org.thingsboard.server.report.renderer.chart.TbThresholdMarker;
@@ -90,6 +90,7 @@ import org.thingsboard.server.report.renderer.chart.TbXYBarRenderer;
 import org.thingsboard.server.report.renderer.chart.TbXYItemLabelGenerator;
 import org.thingsboard.server.report.renderer.chart.TbXYLineAndShapeRenderer;
 import org.thingsboard.server.report.renderer.chart.TimeseriesBarRenderCtx;
+import org.thingsboard.server.report.renderer.chart.legend.TbLegendTitle;
 import org.thingsboard.server.report.renderer.chart.legend.TbLegendValues;
 import org.thingsboard.server.report.renderer.chart.legend.TbLegendValuesRequest;
 import org.thingsboard.server.report.renderer.chart.legend.TbSeriesLegendValuesGenerator;
@@ -341,8 +342,11 @@ public class TimeseriesChartRenderer extends ChartRenderer<TimeseriesChartCompon
         if (chartSettings.getShowLegend()) {
             LegendConfig legendConfig = chartSettings.getLegendConfig();
             if (legendConfig.isSimpleLegend()) {
-                LegendTitle legend = new LegendTitle(plot, new TbFlowArrangement(HorizontalAlignment.CENTER, VerticalAlignment.CENTER, 16.0, 8.0),
-                        new ColumnArrangement(HorizontalAlignment.LEFT, VerticalAlignment.TOP, 16.0, 8.0));
+                TbFlowArrangement hLayout = new TbFlowArrangement(HorizontalAlignment.CENTER, VerticalAlignment.CENTER, 16.0, 8.0);
+                hLayout.setMaxRelativeHeight(0.35);
+                TbColumnArrangement vLayout = new TbColumnArrangement(HorizontalAlignment.LEFT, VerticalAlignment.TOP, 16.0, 8.0);
+                vLayout.setMaxRelativeWidth(0.35);
+                LegendTitle legend = new TbLegendTitle(plot, hLayout, vLayout);
                 legend.setBackgroundPaint(ColorUtils.TRANSPARENT);
 
                 legend.setItemLabelPadding(new RectangleInsets(0.0, 4.0, 0.0, 0.0));
@@ -359,7 +363,11 @@ public class TimeseriesChartRenderer extends ChartRenderer<TimeseriesChartCompon
                 legend.setPosition(position);
                 if (RectangleEdge.isLeftOrRight(position)) {
                     legend.setVerticalAlignment(VerticalAlignment.TOP);
-                    legend.setPadding(RectangleInsets.ZERO_INSETS);
+                    if (position == RectangleEdge.LEFT) {
+                        legend.setPadding(new RectangleInsets(0.0, 0.0, 0.0, 8.0));
+                    } else {
+                        legend.setPadding(new RectangleInsets(0.0, 8.0, 0.0, 0.0));
+                    }
                 } else {
                     legend.setPadding(new RectangleInsets(8.0, 0.0, 8.0, 0.0));
                 }
@@ -391,6 +399,8 @@ public class TimeseriesChartRenderer extends ChartRenderer<TimeseriesChartCompon
                 plot.setFixedLegendItems(sortedCollection);
             } else {
                 TbTableLegendTitle legend = new TbTableLegendTitle(plot, legendConfig);
+                legend.setMaxRelativeWidth(0.35);
+                legend.setMaxRelativeHeight(0.35);
 
                 legend.setItemLabelPadding(new RectangleInsets(0.0, 4.0, 0.0, 0.0));
                 legend.setItemFont(toAwtFont(chartSettings.getLegendLabelFont()));
@@ -412,7 +422,11 @@ public class TimeseriesChartRenderer extends ChartRenderer<TimeseriesChartCompon
                 legend.setPosition(position);
                 if (RectangleEdge.isLeftOrRight(position)) {
                     legend.setVerticalAlignment(VerticalAlignment.TOP);
-                    legend.setPadding(RectangleInsets.ZERO_INSETS);
+                    if (position == RectangleEdge.LEFT) {
+                        legend.setPadding(new RectangleInsets(0.0, 0.0, 0.0, 8.0));
+                    } else {
+                        legend.setPadding(new RectangleInsets(0.0, 8.0, 0.0, 0.0));
+                    }
                 } else {
                     legend.setPadding(new RectangleInsets(8.0, 0.0, 8.0, 0.0));
                 }
