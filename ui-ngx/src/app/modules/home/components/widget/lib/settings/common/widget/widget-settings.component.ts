@@ -60,6 +60,7 @@ import { IAliasController } from '@core/api/widget-api.models';
 import { WidgetConfigComponentData } from '@home/models/widget-component.models';
 import { WidgetConfigCallbacks } from '@home/components/widget/config/widget-config.component.models';
 import { FormProperty } from '@shared/models/dynamic-form.models';
+import { coerceBoolean } from '@shared/decorators/coercion';
 
 @Component({
   selector: 'tb-widget-settings',
@@ -100,6 +101,10 @@ export class WidgetSettingsComponent implements ControlValueAccessor, OnDestroy,
 
   @Input()
   widgetConfig: WidgetConfigComponentData;
+
+  @Input()
+  @coerceBoolean()
+  reportMode = false;
 
   private settingsDirective: string;
 
@@ -259,6 +264,7 @@ export class WidgetSettingsComponent implements ControlValueAccessor, OnDestroy,
         this.definedSettingsComponent.dashboard = this.dashboard;
         this.definedSettingsComponent.widget = this.widget;
         this.definedSettingsComponent.widgetConfig = this.widgetConfig;
+        this.definedSettingsComponent.reportMode = this.reportMode;
         this.definedSettingsComponent.functionScopeVariables = this.widgetService.getWidgetScopeVariables();
         this.changeSubscription = this.definedSettingsComponent.settingsChanged.subscribe((settings) => {
           this.updateModel(settings);

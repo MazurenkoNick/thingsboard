@@ -115,6 +115,7 @@ export class TimeSeriesChartConfigComponent extends AbstractReportComponentConfi
       title: [timeSeriesChartSettings.title, []],
       titleFont: [timeSeriesChartSettings.titleFont, []],
       titleColor: [timeSeriesChartSettings.titleColor, []],
+      titleAlignment: [timeSeriesChartSettings.titleAlignment, []],
 
       stack: [timeSeriesChartSettings.stack, []],
 
@@ -189,6 +190,8 @@ export class TimeSeriesChartConfigComponent extends AbstractReportComponentConfi
     delete config.titleFont;
     timeSeriesChartSettings.titleColor = config.titleColor;
     delete config.titleColor;
+    timeSeriesChartSettings.titleAlignment = config.titleAlignment;
+    delete config.titleAlignment;
 
     timeSeriesChartSettings.stack = config.stack;
     delete config.stack;
@@ -318,10 +321,12 @@ export class TimeSeriesChartConfigComponent extends AbstractReportComponentConfi
       form.get('title').enable();
       form.get('titleFont').enable();
       form.get('titleColor').enable();
+      form.get('titleAlignment').enable();
     } else {
       form.get('title').disable();
       form.get('titleFont').disable();
       form.get('titleColor').disable();
+      form.get('titleAlignment').disable();
     }
 
     if (showLegend) {

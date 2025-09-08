@@ -70,6 +70,7 @@
                         colorClearButton
                         formControlName="titleColor">
         </tb-color-input>
+        <tb-alignment [allowedAlignments]="['left', 'center', 'right']" formControlName="titleAlignment"></tb-alignment>
       </div>
     </div>
     <tb-datasources
@@ -159,6 +160,7 @@
           </mat-form-field>
           <tb-time-series-chart-axis-settings-button
             axisType="xAxis"
+            reportMode
             panelTitle="{{ 'widgets.time-series-chart.axis.comparison-x-axis-settings' | translate }}"
             formControlName="comparisonXAxis">
           </tb-time-series-chart-axis-settings-button>
@@ -167,18 +169,21 @@
       <tb-comparison-keys-table
         *ngIf="seriesMode === 'comparison'"
         [datasourceType]="datasource?.type"
+        reportMode
         formControlName="series">
       </tb-comparison-keys-table>
     </div>
     <tb-time-series-chart-y-axes-panel
       formControlName="yAxes"
       stroked
+      reportMode
       [supportsUnitConversion]="false"
       (axisRemoved)="yAxisRemoved($event)">
     </tb-time-series-chart-y-axes-panel>
     <tb-time-series-chart-thresholds-panel
       formControlName="thresholds"
       stroked
+      reportMode
       [aliasController]="context.aliasController"
       [dataKeyCallbacks]="callbacks"
       [datasource]="datasource"
@@ -202,7 +207,8 @@
       <div class="tb-form-panel-title" translate>widgets.time-series-chart.axis.x-axis</div>
       <tb-time-series-chart-axis-settings
         formControlName="xAxis"
-        axisType="xAxis">
+        axisType="xAxis"
+        reportMode>
       </tb-time-series-chart-axis-settings>
     </div>
     <tb-time-series-no-aggregation-bar-width-settings

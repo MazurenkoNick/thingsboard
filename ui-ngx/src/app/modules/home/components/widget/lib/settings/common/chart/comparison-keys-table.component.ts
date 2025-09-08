@@ -40,6 +40,7 @@ import {
 } from '@angular/forms';
 import { DataKey, DatasourceType } from '@shared/models/widget.models';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { coerceBoolean } from '@shared/decorators/coercion';
 
 @Component({
   selector: 'tb-comparison-keys-table',
@@ -61,6 +62,10 @@ export class ComparisonKeysTableComponent implements ControlValueAccessor, OnIni
 
   @Input()
   datasourceType: DatasourceType;
+
+  @Input()
+  @coerceBoolean()
+  reportMode = false;
 
   keysListFormGroup: UntypedFormGroup;
 

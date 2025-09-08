@@ -58,6 +58,7 @@ import {
 } from '@home/components/widget/lib/chart/chart.models';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { getSourceTbUnitSymbol, isNotEmptyTbUnits } from '@shared/models/unit.models';
+import { coerceBoolean } from '@shared/decorators/coercion';
 
 @Component({
   selector: 'tb-time-series-chart-line-settings',
@@ -98,6 +99,10 @@ export class TimeSeriesChartLineSettingsComponent implements OnInit, ControlValu
 
   @Input()
   chartType: TimeSeriesChartType;
+
+  @Input()
+  @coerceBoolean()
+  reportMode = false;
 
   private modelValue: LineSeriesSettings;
 

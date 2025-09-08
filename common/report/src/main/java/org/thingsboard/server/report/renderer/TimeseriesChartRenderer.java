@@ -175,6 +175,12 @@ public class TimeseriesChartRenderer extends ChartRenderer<TimeseriesChartCompon
             Font titleFont = toAwtFont(chartSettings.getTitleFont());
             TextTitle title = new TextTitle(chartSettings.getTitle(), titleFont);
             title.setPaint(safeParseCssColor(chartSettings.getTitleColor()));
+            HorizontalAlignment alignment = HorizontalAlignment.CENTER;
+            switch (chartSettings.getTitleAlignment()) {
+                case RIGHT -> alignment = HorizontalAlignment.RIGHT;
+                case LEFT -> alignment = HorizontalAlignment.LEFT;
+            }
+            title.setHorizontalAlignment(alignment);
             if (!chartSettings.getShowLegend() || chartSettings.getLegendConfig().getPosition() != LegendPosition.top) {
                 title.setPadding(new RectangleInsets(1.0, 1.0, 8.0, 1.0));
             }
