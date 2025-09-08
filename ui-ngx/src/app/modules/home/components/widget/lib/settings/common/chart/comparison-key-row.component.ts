@@ -45,6 +45,7 @@ import {
 } from '@shared/models/widget.models';
 import { deepClone } from '@core/utils';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { coerceBoolean } from '@shared/decorators/coercion';
 
 @Component({
   selector: 'tb-comparison-key-row',
@@ -66,6 +67,10 @@ export class ComparisonKeyRowComponent implements ControlValueAccessor, OnInit {
 
   @Input()
   datasourceType: DatasourceType;
+
+  @Input()
+  @coerceBoolean()
+  reportMode = false;
 
   keyFormControl: UntypedFormControl;
 

@@ -102,6 +102,8 @@
       </mat-form-field>
       <tb-font-settings formControlName="pointLabelFont"
                         clearButton
+                        [allowedFontWeights]="reportMode ? ['normal', 'bold', '500'] : []"
+                        [allowedFontStyles]="reportMode ? ['normal', 'italic'] : []"
                         disabledLineHeight
                         forceSizeUnit="px"
                         [previewText]="pointLabelPreviewFn">

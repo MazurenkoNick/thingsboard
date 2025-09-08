@@ -92,6 +92,14 @@ export class TimeSeriesChartThresholdSettingsPanelComponent implements OnInit {
   hideYAxis = false;
 
   @Input()
+  @coerceBoolean()
+  supportsUnitConversion = false;
+
+  @Input()
+  @coerceBoolean()
+  reportMode = false;
+
+  @Input()
   panelTitle = 'widgets.time-series-chart.threshold.threshold-settings';
 
   @Output()
@@ -181,10 +189,10 @@ export class TimeSeriesChartThresholdSettingsPanelComponent implements OnInit {
 
   private _labelPreviewFn(): string {
     let units: TbUnit = this.thresholdSettingsFormGroup.get('units').value;
-    units = isNotEmptyTbUnits(units) ? units : this.widgetConfig.units;
+    units = isNotEmptyTbUnits(units) ? units : this.widgetConfig?.units;
     let decimals: number = this.thresholdSettingsFormGroup.get('decimals').value;
     decimals = isDefinedAndNotNull(decimals) ? decimals :
-      (isDefinedAndNotNull(this.widgetConfig.decimals) ? this.widgetConfig.decimals : 2);
+      (isDefinedAndNotNull(this.widgetConfig?.decimals) ? this.widgetConfig?.decimals : 2);
     return formatValue(22, decimals, getSourceTbUnitSymbol(units), false);
   }
 }

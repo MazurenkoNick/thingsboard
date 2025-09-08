@@ -39,7 +39,6 @@ import { Timewindow } from '@shared/models/time/time.models';
 import { Direction } from '@shared/models/page/sort-order';
 import { mergeDeep } from '@core/utils';
 import {
-  defaultTimeSeriesChartYAxisSettings,
   timeSeriesChartDefaultSettings,
   TimeSeriesChartKeySettings,
   TimeSeriesChartSeriesType,
@@ -405,6 +404,7 @@ export interface ReportTimeSeriesChartSettings extends TimeSeriesChartSettings {
   title?: string;
   titleFont?: Font;
   titleColor?: string;
+  titleAlignment?: alignment;
   showLegend: boolean;
   legendColumnTitleFont: Font;
   legendColumnTitleColor: string;
@@ -427,6 +427,7 @@ export const reportTimeSeriesChartDefaultSettings: ReportTimeSeriesChartSettings
       weight: '500'
     },
     titleColor: 'rgba(0, 0, 0, 0.87)',
+    titleAlignment: 'center',
     showLegend: true,
     legendColumnTitleFont: {
       family: 'Roboto',

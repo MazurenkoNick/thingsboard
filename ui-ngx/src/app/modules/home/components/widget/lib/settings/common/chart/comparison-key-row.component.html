@@ -45,7 +45,7 @@
   </div>
   <div class="tb-color-field">
     <tb-color-input asBoxInput
-                    useThemePalette
+                    [useThemePalette]="!reportMode"
                     colorClearButton
                     formControlName="color">
     </tb-color-input>

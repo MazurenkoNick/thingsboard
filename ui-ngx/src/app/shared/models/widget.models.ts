@@ -1001,6 +1001,7 @@ export interface IWidgetSettingsComponent {
   settings: WidgetSettings;
   settingsChanged: Observable<WidgetSettings>;
   validateSettings(): boolean;
+  reportMode: boolean;
   [key: string]: any;
 }
 
@@ -1020,6 +1021,8 @@ export abstract class WidgetSettingsComponent extends PageComponent implements
   dashboard: Dashboard;
 
   widget: Widget;
+
+  reportMode: boolean;
 
   widgetConfigValue: WidgetConfigComponentData;
 

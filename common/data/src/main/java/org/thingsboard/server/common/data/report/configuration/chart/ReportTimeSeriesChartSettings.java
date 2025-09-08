@@ -35,6 +35,7 @@ import lombok.Data;
 import org.thingsboard.server.common.data.report.configuration.style.Font;
 import org.thingsboard.server.common.data.report.configuration.style.FontStyle;
 import org.thingsboard.server.common.data.report.configuration.style.FontWeight;
+import org.thingsboard.server.common.data.report.configuration.style.TextAlignment;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -48,6 +49,7 @@ public class ReportTimeSeriesChartSettings {
     private String title;
     private Font titleFont;
     private String titleColor;
+    private TextAlignment titleAlignment;
 
     @JsonProperty("thresholds")
     private List<TimeSeriesChartThreshold> thresholds;
@@ -101,6 +103,7 @@ public class ReportTimeSeriesChartSettings {
                 .style(FontStyle.NORMAL)
                 .build();
         this.titleColor = input.getTitleColor() != null ? input.getTitleColor() : "rgba(0, 0, 0, 0.87)";
+        this.titleAlignment = input.getTitleAlignment() != null ? input.getTitleAlignment() : TextAlignment.CENTER;
 
         this.thresholds = input.getThresholds() != null ? input.getThresholds() : new ArrayList<>();
         this.stack = input.getStack() != null ? input.getStack() : Boolean.FALSE;

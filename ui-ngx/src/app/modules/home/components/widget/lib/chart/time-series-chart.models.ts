@@ -571,7 +571,7 @@ export const timeSeriesChartThresholdDefaultSettings: TimeSeriesChartThreshold =
     size: 12,
     sizeUnit: 'px',
     style: 'normal',
-    weight: '400',
+    weight: 'normal',
     lineHeight: '1'
   },
   labelColor: chartColorScheme['threshold.label'].light,
