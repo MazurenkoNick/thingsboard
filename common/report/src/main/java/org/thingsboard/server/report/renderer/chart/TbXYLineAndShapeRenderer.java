@@ -60,7 +60,14 @@ import org.thingsboard.server.report.renderer.chart.legend.TbLegendValues;
 import org.thingsboard.server.report.renderer.chart.legend.TbLegendValuesRequest;
 import org.thingsboard.server.report.renderer.chart.legend.TbSeriesLegendValuesGenerator;
 
-import java.awt.*;
+import java.awt.BasicStroke;
+import java.awt.Font;
+import java.awt.GradientPaint;
+import java.awt.Graphics2D;
+import java.awt.Paint;
+import java.awt.Shape;
+import java.awt.Stroke;
+import java.awt.geom.AffineTransform;
 import java.awt.geom.GeneralPath;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
@@ -660,6 +667,13 @@ public class TbXYLineAndShapeRenderer extends XYLineAndShapeRenderer implements 
         boolean lineVisible = getItemLineVisible(series, 0);
         Stroke lineStroke = lookupSeriesStroke(series);
         Paint linePaint = lookupSeriesPaint(series);
+        if (shape != null) {
+            if (shape.getBounds().getHeight() >= 10) {
+                double scaleFactor = 10.0 / shape.getBounds().getHeight();
+                AffineTransform scaleTransform = AffineTransform.getScaleInstance(scaleFactor, scaleFactor);
+                shape = scaleTransform.createTransformedShape(shape);
+            }
+        }
         LegendItem result = new LegendItem(label, description, toolTipText,
                 urlText, shapeIsVisible, shape, shapeIsFilled, fillPaint,
                 shapeOutlineVisible, outlinePaint, outlineStroke, lineVisible,

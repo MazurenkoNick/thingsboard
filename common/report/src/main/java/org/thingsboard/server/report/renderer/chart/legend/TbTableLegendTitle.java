@@ -41,15 +41,19 @@ import org.jfree.chart.block.RectangleConstraint;
 import org.jfree.chart.title.LegendGraphic;
 import org.jfree.chart.title.LegendItemBlockContainer;
 import org.jfree.chart.title.LegendTitle;
+import org.jfree.chart.title.TextTitle;
 import org.jfree.chart.title.Title;
 import org.jfree.chart.ui.HorizontalAlignment;
 import org.jfree.chart.ui.RectangleAnchor;
 import org.jfree.chart.ui.RectangleEdge;
 import org.jfree.chart.ui.RectangleInsets;
 import org.jfree.chart.ui.Size2D;
+import org.jfree.chart.ui.VerticalAlignment;
 import org.thingsboard.server.common.data.report.configuration.chart.LegendConfig;
 
-import java.awt.*;
+import java.awt.Font;
+import java.awt.Graphics2D;
+import java.awt.Paint;
 import java.awt.geom.Rectangle2D;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -80,6 +84,9 @@ public class TbTableLegendTitle extends Title {
 
     private Font legendValueFont;
     private Paint legendValuePaint;
+
+    private double maxRelativeWidth = 0;
+    private double maxRelativeHeight = 0;
 
     public TbTableLegendTitle(TbLegendItemSource source, LegendConfig config) {
         this.source = source;
@@ -150,17 +157,29 @@ public class TbTableLegendTitle extends Title {
         this.legendValuePaint = legendValuePaint;
     }
 
+    public void setMaxRelativeWidth(double maxRelativeWidth) {
+        this.maxRelativeWidth = maxRelativeWidth;
+    }
+
+    public void setMaxRelativeHeight(double maxRelativeHeight) {
+        this.maxRelativeHeight = maxRelativeHeight;
+    }
+
     @Override
     public Size2D arrange(Graphics2D g2, RectangleConstraint constraint) {
         this.fetchLegendItems();
         RectangleEdge p = getPosition();
-        RectangleConstraint targetConstraint;
+        RectangleConstraint targetConstraint = constraint;
         if (RectangleEdge.isTopOrBottom(p)) {
-            double maxHeight = constraint.getHeight() * 0.35;
-            targetConstraint = toContentConstraint(new RectangleConstraint(constraint.getWidth(), maxHeight));
+            if (this.maxRelativeHeight > 0) {
+                double maxHeight = constraint.getHeight() * this.maxRelativeHeight;
+                targetConstraint = toContentConstraint(new RectangleConstraint(constraint.getWidth(), maxHeight));
+            }
         } else {
-            double maxWidth = constraint.getWidth() * 0.35;
-            targetConstraint = toContentConstraint(new RectangleConstraint(maxWidth, constraint.getHeight()));
+            if (this.maxRelativeWidth > 0) {
+                double maxWidth = constraint.getWidth() * this.maxRelativeWidth;
+                targetConstraint = toContentConstraint(new RectangleConstraint(maxWidth, constraint.getHeight()));
+            }
         }
         Size2D size = this.legendTable.arrange(g2, targetConstraint);
         Size2D result = new Size2D();
@@ -361,9 +380,11 @@ public class TbTableLegendTitle extends Title {
         if (textPaint == null) {
             textPaint = this.itemPaint;
         }
-        LabelBlock labelBlock = new LabelBlock(item.getLabel(), textFont,
-                textPaint);
-        labelBlock.setPadding(this.itemLabelPadding);
+        TextTitle labelBlock = new TextTitle(item.getLabel(), textFont,
+                textPaint, Title.DEFAULT_POSITION,
+                HorizontalAlignment.LEFT,
+                VerticalAlignment.CENTER, this.itemLabelPadding);
+        labelBlock.setMaximumLinesToDisplay(1);
         legendItem.add(labelBlock);
         legendItem.setToolTipText(item.getToolTipText());
         legendItem.setURLText(item.getURLText());
