@@ -84,8 +84,12 @@ import {
 import {
   TimeSeriesChartConfigComponent
 } from '@home/pages/reporting/template/components/time-series-chart-config.component';
+import { ReportWidgetContextService } from '@home/pages/reporting/template/components/report-widget-context.service';
 
 @NgModule({
+  providers: [
+    ReportWidgetContextService
+  ],
   declarations: [
     EditReportComponentTooltipComponent,
     ReportComponentComponent,

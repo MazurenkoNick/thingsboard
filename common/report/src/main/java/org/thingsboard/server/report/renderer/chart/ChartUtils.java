@@ -359,7 +359,14 @@ public interface ChartUtils {
         if (dataset.getItemCount(seriesIndex) > 0) {
             double result = dataset.getYValue(seriesIndex, 0);
             for (int i = 1; i < dataset.getItemCount(seriesIndex); i++) {
-                result = Math.min(result, dataset.getYValue(seriesIndex, i));
+                double value = dataset.getYValue(seriesIndex, i);
+                if (Double.isFinite(value)) {
+                    if (!Double.isFinite(result)) {
+                        result = value;
+                    } else {
+                        result = Math.min(result, value);
+                    }
+                }
             }
             return result;
         } else {
@@ -371,7 +378,14 @@ public interface ChartUtils {
         if (dataset.getItemCount(seriesIndex) > 0) {
             double result = dataset.getYValue(seriesIndex, 0);
             for (int i = 1; i < dataset.getItemCount(seriesIndex); i++) {
-                result = Math.max(result, dataset.getYValue(seriesIndex, i));
+                double value = dataset.getYValue(seriesIndex, i);
+                if (Double.isFinite(value)) {
+                    if (!Double.isFinite(result)) {
+                        result = value;
+                    } else {
+                        result = Math.max(result, value);
+                    }
+                }
             }
             return result;
         } else {
@@ -383,7 +397,10 @@ public interface ChartUtils {
         if (dataset.getItemCount(seriesIndex) > 0) {
             double result = 0;
             for (int i = 0; i < dataset.getItemCount(seriesIndex); i++) {
-                result += dataset.getYValue(seriesIndex, i);
+                double value = dataset.getYValue(seriesIndex, i);
+                if (Double.isFinite(value)) {
+                    result += value;
+                }
             }
             return result;
         } else {
@@ -391,10 +408,22 @@ public interface ChartUtils {
         }
     }
 
+    static int calcCount(XYDataset dataset, int seriesIndex) {
+        int count = 0;
+        for (int i = 0; i < dataset.getItemCount(seriesIndex); i++) {
+            double value = dataset.getYValue(seriesIndex, i);
+            if (Double.isFinite(value)) {
+                count++;
+            }
+        }
+        return count;
+    }
+
     static Double calcAvg(XYDataset dataset, int seriesIndex) {
         Double total = calcTotal(dataset, seriesIndex);
         if (total != null) {
-            return total / dataset.getItemCount(seriesIndex);
+            int count = calcCount(dataset, seriesIndex);
+            return total / count;
         } else {
             return null;
         }
@@ -402,10 +431,14 @@ public interface ChartUtils {
 
     static Double calcLatest(XYDataset dataset, int seriesIndex) {
         if (dataset.getItemCount(seriesIndex) > 0) {
-            return dataset.getYValue(seriesIndex, dataset.getItemCount(seriesIndex) - 1);
-        } else {
-            return null;
+            for (int i = dataset.getItemCount(seriesIndex) - 1; i >= 0; i--) {
+                double value = dataset.getYValue(seriesIndex, i);
+                if (Double.isFinite(value)) {
+                    return value;
+                }
+            }
         }
+        return null;
     }
 
     private static int calculateBezierSegmentPoints(List<Point2D> points, int start, float smooth, int bezierNumPoints, List<Point2D> targetPoints) {

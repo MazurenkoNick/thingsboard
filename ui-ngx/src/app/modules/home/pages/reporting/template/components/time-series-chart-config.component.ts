@@ -38,15 +38,16 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
   imageAlignments,
   imageAlignmentTranslations,
-  imageWidthTypes,
   imageWidthTypeTranslations,
   reportTimeSeriesChartDefaultSettings,
   ReportTimeSeriesChartSettings,
-  TimeseriesChartReportComponentConfig, toReportTimeSeriesChartKeySettings, toTimeSeriesChartKeySettings
+  TimeseriesChartReportComponentConfig,
+  toReportTimeSeriesChartKeySettings,
+  toTimeSeriesChartKeySettings
 } from '@shared/models/report-component.models';
 import { DataKey, Datasource, Widget, WidgetConfig, WidgetConfigMode, widgetType } from '@shared/models/widget.models';
 import {
-  TimeSeriesChartKeySettings, TimeSeriesChartType,
+  TimeSeriesChartKeySettings,
   TimeSeriesChartYAxes,
   TimeSeriesChartYAxisId
 } from '@home/components/widget/lib/chart/time-series-chart.models';
@@ -308,46 +309,44 @@ export class TimeSeriesChartConfigComponent extends AbstractReportComponentConfi
     const showLegend: boolean = form.get('showLegend').value;
 
     if (comparisonEnabled) {
-      form.get('timeForComparison').enable();
-      form.get('comparisonCustomIntervalValue').enable();
-      form.get('comparisonXAxis').enable();
+      form.get('timeForComparison').enable({emitEvent: false});
+      form.get('comparisonCustomIntervalValue').enable({emitEvent: false});
+      form.get('comparisonXAxis').enable({emitEvent: false});
     } else {
-      form.get('timeForComparison').disable();
-      form.get('comparisonCustomIntervalValue').disable();
-      form.get('comparisonXAxis').disable();
+      form.get('timeForComparison').disable({emitEvent: false});
+      form.get('comparisonCustomIntervalValue').disable({emitEvent: false});
+      form.get('comparisonXAxis').disable({emitEvent: false});
     }
 
     if (showTitle) {
-      form.get('title').enable();
-      form.get('titleFont').enable();
-      form.get('titleColor').enable();
-      form.get('titleAlignment').enable();
+      form.get('title').enable({emitEvent: false});
+      form.get('titleFont').enable({emitEvent: false});
+      form.get('titleColor').enable({emitEvent: false});
+      form.get('titleAlignment').enable({emitEvent: false});
     } else {
-      form.get('title').disable();
-      form.get('titleFont').disable();
-      form.get('titleColor').disable();
-      form.get('titleAlignment').disable();
+      form.get('title').disable({emitEvent: false});
+      form.get('titleFont').disable({emitEvent: false});
+      form.get('titleColor').disable({emitEvent: false});
+      form.get('titleAlignment').disable({emitEvent: false});
     }
 
     if (showLegend) {
-      form.get('legendColumnTitleFont').enable();
-      form.get('legendColumnTitleColor').enable();
-      form.get('legendLabelFont').enable();
-      form.get('legendLabelColor').enable();
-      form.get('legendValueFont').enable();
-      form.get('legendValueColor').enable();
-      form.get('legendConfig').enable();
+      form.get('legendColumnTitleFont').enable({emitEvent: false});
+      form.get('legendColumnTitleColor').enable({emitEvent: false});
+      form.get('legendLabelFont').enable({emitEvent: false});
+      form.get('legendLabelColor').enable({emitEvent: false});
+      form.get('legendValueFont').enable({emitEvent: false});
+      form.get('legendValueColor').enable({emitEvent: false});
+      form.get('legendConfig').enable({emitEvent: false});
     } else {
-      form.get('legendColumnTitleFont').disable();
-      form.get('legendColumnTitleColor').disable();
-      form.get('legendLabelFont').disable();
-      form.get('legendLabelColor').disable();
-      form.get('legendValueFont').disable();
-      form.get('legendValueColor').disable();
-      form.get('legendConfig').disable();
+      form.get('legendColumnTitleFont').disable({emitEvent: false});
+      form.get('legendColumnTitleColor').disable({emitEvent: false});
+      form.get('legendLabelFont').disable({emitEvent: false});
+      form.get('legendLabelColor').disable({emitEvent: false});
+      form.get('legendValueFont').disable({emitEvent: false});
+      form.get('legendValueColor').disable({emitEvent: false});
+      form.get('legendConfig').disable({emitEvent: false});
     }
 
   }
-
-  protected readonly TimeSeriesChartType = TimeSeriesChartType;
 }

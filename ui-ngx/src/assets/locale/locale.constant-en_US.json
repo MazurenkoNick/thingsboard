@@ -7380,7 +7380,9 @@
                 "type": "Alarm table"
             },
             "time-series-chart": {
-                "type": "Time series chart"
+                "type": "Time series chart",
+                "no-datasource-configured": "Data source is not configured for time series chart",
+                "no-series-configured": "At least one series should be specified for time series chart"
             },
             "chart": {
                 "chart-height": "Chart height",

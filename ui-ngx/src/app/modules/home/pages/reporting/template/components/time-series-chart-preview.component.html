@@ -31,7 +31,19 @@
 
 -->
 <div class="tb-time-series-chart-preview" [style.justify-content]="imageAlign">
-  <div class="tb-time-series-chart" [style.width]="imageWidth" [style.height.px]="imageHeightPx">
-    Time series chart
-  </div>
+  @if (hasData) {
+    <div class="flex flex-col gap-2" [style.width]="imageWidth" [style.height.px]="imageHeightPx">
+      @if (showTitle) {
+        <div style="display: table-cell; padding: 1px 1px 0;" [style]="titleStyle" [innerHTML]="title | safe: 'html'">
+        </div>
+      }
+      <div class="tb-time-series-chart flex-1">
+        <ng-container #widgetContent></ng-container>
+      </div>
+    </div>
+  } @else {
+    <div class="tb-time-series-chart-text" [style.width]="imageWidth" [style.height.px]="imageHeightPx">
+      {{ noDataMessage | translate }}
+    </div>
+  }
 </div>
