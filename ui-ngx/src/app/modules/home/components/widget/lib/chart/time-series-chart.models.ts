@@ -1243,6 +1243,14 @@ const createThresholdData = (val: string | number, item: TimeSeriesChartThreshol
     }
   ];
 
+export const dataKeySeriesType = (settings: any): TimeSeriesChartSeriesType => {
+  if (settings.seriesType) {
+    return settings.seriesType;
+  } else {
+    return settings.type;
+  }
+}
+
 const generateChartSeries = (dataItems: TimeSeriesChartDataItem[],
                              stack: boolean,
                              noAggregation: boolean,
@@ -1251,7 +1259,7 @@ const generateChartSeries = (dataItems: TimeSeriesChartDataItem[],
   const series: Array<LineSeriesOption | CustomSeriesOption> = [];
   const enabledDataItems = dataItems.filter(d => d.enabled);
   const barDataItems = enabledDataItems.filter(d =>
-    d.dataKey.settings.type === TimeSeriesChartSeriesType.bar && d.data.length);
+    dataKeySeriesType(d.dataKey.settings) === TimeSeriesChartSeriesType.bar && d.data.length);
   let barsCount = barDataItems.length;
   const barGroups: number[] = [];
   if (stack) {
@@ -1263,7 +1271,7 @@ const generateChartSeries = (dataItems: TimeSeriesChartDataItem[],
     barsCount = barGroups.length;
   }
   for (const item of enabledDataItems) {
-    if (item.dataKey.settings.type === TimeSeriesChartSeriesType.bar) {
+    if (dataKeySeriesType(item.dataKey.settings) === TimeSeriesChartSeriesType.bar) {
       if (!item.barRenderContext) {
         item.barRenderContext = {noAggregation,
           shared: barRenderSharedContext};
@@ -1312,7 +1320,7 @@ export const updateDarkMode = (options: EChartsOption,
     }
   }
   for (const item of dataItems) {
-    if (item.dataKey.settings.type === TimeSeriesChartSeriesType.line) {
+    if (dataKeySeriesType(item.dataKey.settings) === TimeSeriesChartSeriesType.line) {
       const lineSettings = item.dataKey.settings as LineSeriesSettings;
       if (item.option.label?.show) {
         item.option.label.rich.value.color = prepareChartThemeColor(lineSettings.pointLabelColor, darkMode, 'series.label');
@@ -1368,7 +1376,7 @@ const createTimeSeriesChartSeries = (item: TimeSeriesChartDataItem,
       }
     };
     item.option = seriesOption;
-    if (settings.type === TimeSeriesChartSeriesType.line) {
+    if (dataKeySeriesType(settings) === TimeSeriesChartSeriesType.line) {
       const lineSettings = settings.lineSettings;
       const lineSeriesOption = seriesOption as LineSeriesOption;
       lineSeriesOption.type = 'line';

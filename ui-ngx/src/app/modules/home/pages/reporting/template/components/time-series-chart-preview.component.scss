@@ -36,6 +36,10 @@
   justify-content: center;
   text-align: center;
   .tb-time-series-chart {
+    pointer-events: none;
+    position: relative;
+  }
+  .tb-time-series-chart-text {
     position: relative;
     width: 100%;
     height: auto;

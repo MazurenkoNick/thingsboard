@@ -94,7 +94,7 @@ import {
 import { TbReportFormat } from '@shared/models/report.models';
 import { Font } from '@shared/models/widget-settings.models';
 import { DataKeyType } from '@shared/models/telemetry/telemetry.models';
-import { AggregationType, DAY, historyInterval } from '@shared/models/time/time.models';
+import { AggregationType, DAY, historyInterval, MINUTE, SECOND, Timewindow } from '@shared/models/time/time.models';
 import { DividerPreviewComponent } from '@home/pages/reporting/template/components/divider-preview.component';
 import { DividerConfigComponent } from '@home/pages/reporting/template/components/divider-config.component';
 import { Direction } from '@shared/models/page/sort-order';
@@ -442,12 +442,19 @@ export const reportComponentsLibrary = new Map<string, ReportComponentLibraryIte
               ]
             }
           ],
-          timewindow: {...historyInterval(DAY),
-            aggregation: {
-              type: AggregationType.AVG,
-              limit: 200
-            }
-          },
+          timewindow: mergeDeep<Timewindow>(
+              {} as Timewindow,
+              historyInterval(DAY),
+              {
+                history: {
+                  interval: 5 * MINUTE
+                },
+                aggregation: {
+                  type: AggregationType.AVG,
+                  limit: 200
+                }
+              }
+          ),
           timeSeriesChartSettings: mergeDeep<ReportTimeSeriesChartSettings>({} as ReportTimeSeriesChartSettings, reportTimeSeriesChartDefaultSettings),
           height: 400,
           widthType: 'fitWidth',

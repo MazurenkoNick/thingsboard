@@ -62,7 +62,7 @@ import {
   DataKeySettingsFunction
 } from '@home/components/widget/lib/settings/common/key/data-keys.component.models';
 import { WidgetConfigCallbacks } from '@home/components/widget/config/widget-config.component.models';
-import { TbFunction } from '@shared/models/js-function.models';
+import { CompiledTbFunction, TbFunction } from '@shared/models/js-function.models';
 import { FormProperty, jsonFormSchemaToFormProperties } from '@shared/models/dynamic-form.models';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TbUnit } from '@shared/models/unit.models';
@@ -388,6 +388,7 @@ export interface KeyInfo {
   label?: string;
   color?: string;
   funcBody?: TbFunction;
+  builtInFunc?: (time: number, prevValue: any) => any;
   postFuncBody?: TbFunction;
   units?: TbUnit;
   decimals?: number;
