@@ -193,16 +193,17 @@
     </div>
     <div class="tb-report-settings tb-dynamic-panel"
                 [class.tb-report-component-settings]="!!editingReportComponent"
-                [style.width.px]="editingReportComponent ? reportComponentTypeMap.get(editingReportComponent.type).preferredSettingsWidthPx : null">
+                [style.width.px]="editingReportComponent ?
+                            reportComponentTypesData.getReportComponentTypeData(editingReportComponent.type, editingReportComponent.subType).preferredSettingsWidthPx : null">
       @if (editingReportComponent) {
         <tb-details-panel class="flex-1"
                           [color]="null"
                           showCloseDetails="false"
                           headerTitle="{{ 'report-template.editor' | translate }}"
-                          headerSubtitle="{{ reportComponentTypeMap.get(editingReportComponent.type).title | translate }}"
+                          headerSubtitle="{{ reportComponentTypesData.getReportComponentTypeData(editingReportComponent.type, editingReportComponent.subType).title | translate }}"
                           isReadOnly="true">
           <div class="details-buttons flex flex-row items-center justify-end gap-3">
-            @if(reportComponentTypeMap.get(editingReportComponent.type).editable) {
+            @if(reportComponentTypesData.getReportComponentTypeData(editingReportComponent.type, editingReportComponent.subType).editable) {
               <button mat-stroked-button color="primary"
                       (click)="cancelReportComponentEdit()">
                 <mat-icon>close</mat-icon>

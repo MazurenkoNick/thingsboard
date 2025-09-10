@@ -34,12 +34,14 @@ import {
   Component,
   ComponentRef,
   inject,
+  Input,
   OnDestroy,
   ViewChild,
   ViewContainerRef,
   ViewEncapsulation
 } from '@angular/core';
 import {
+  reportStateChartDefaultSettings,
   reportTimeSeriesChartDefaultSettings,
   ReportTimeSeriesChartSettings,
   TimeseriesChartReportComponentConfig
@@ -53,6 +55,7 @@ import { debounce, deepClone, mergeDeep } from '@core/utils';
 import { WidgetContext } from '@home/models/widget-component.models';
 import { BackgroundType, ComponentStyle, textStyle, ValueSourceType } from '@shared/models/widget-settings.models';
 import { TimeSeriesChartWidgetSettings } from '@home/components/widget/lib/chart/time-series-chart-widget.models';
+import { TimeSeriesChartType } from '@home/components/widget/lib/chart/time-series-chart.models';
 
 @Component({
   selector: 'tb-time-series-chart-preview',
@@ -64,6 +67,9 @@ export class TimeSeriesChartPreviewComponent extends AbstractReportComponentPrev
   implements AfterViewInit, OnDestroy, WidgetSubscriptionCallbacks {
 
   @ViewChild('widgetContent', {read: ViewContainerRef, static: false}) widgetContainer: ViewContainerRef;
+
+  @Input()
+  chartType: TimeSeriesChartType = TimeSeriesChartType.default;
 
   private reportWidgetContextService = inject(ReportWidgetContextService);
 
@@ -172,9 +178,12 @@ export class TimeSeriesChartPreviewComponent extends AbstractReportComponentPrev
       return;
     }
     const datasources = deepClone(this.reportComponent.dataSources || []);
+
+    const defaultSettings = this.chartType === TimeSeriesChartType.state ?  reportStateChartDefaultSettings : reportTimeSeriesChartDefaultSettings;
+
     const settings: ReportTimeSeriesChartSettings =
-      mergeDeep<ReportTimeSeriesChartSettings>({} as ReportTimeSeriesChartSettings, reportTimeSeriesChartDefaultSettings, this.reportComponent.timeSeriesChartSettings, {
-        barWidthSettings: reportTimeSeriesChartDefaultSettings.barWidthSettings,
+      mergeDeep<ReportTimeSeriesChartSettings>({} as ReportTimeSeriesChartSettings, defaultSettings, this.reportComponent.timeSeriesChartSettings, {
+        barWidthSettings: defaultSettings.barWidthSettings,
         dataZoom: false,
         animation: {
           animation: false
@@ -215,7 +224,7 @@ export class TimeSeriesChartPreviewComponent extends AbstractReportComponentPrev
       }
     }
     this.reportWidgetContextService.createWidgetContext(widgetType.timeseries,
-      settings, this.reportComponent.timewindow, datasources, this)
+      settings, this.reportComponent.timewindow, datasources, this.chartType == TimeSeriesChartType.state, this)
     .subscribe((ctx) => {
       this.widgetContext = ctx;
       this.widgetComponentRef = this.widgetContainer.createComponent(TimeSeriesChartWidgetComponent);

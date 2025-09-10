@@ -71,6 +71,9 @@ public class ReportTimeSeriesChartSettings {
     @JsonProperty("noAggregationBarWidthSettings")
     private TimeSeriesChartNoAggregationBarWidthSettings noAggregationBarWidthSettings;
 
+    @JsonProperty("states")
+    private List<TimeSeriesChartStateSettings> states;
+
     private Boolean comparisonEnabled;
     private ComparisonDuration timeForComparison;
     private Long comparisonCustomIntervalValue;
@@ -121,6 +124,8 @@ public class ReportTimeSeriesChartSettings {
 
         this.barWidthSettings = new TimeSeriesChartBarWidthSettings(input.getBarWidthSettings());
         this.noAggregationBarWidthSettings = new TimeSeriesChartNoAggregationBarWidthSettings(input.getNoAggregationBarWidthSettings());
+
+        this.states = input.getStates() != null ? input.getStates() : new ArrayList<>();
 
         this.comparisonEnabled = input.getComparisonEnabled() != null ? input.getComparisonEnabled() : Boolean.FALSE;
         this.timeForComparison = input.getTimeForComparison() != null ? input.getTimeForComparison() : ComparisonDuration.previousInterval;
