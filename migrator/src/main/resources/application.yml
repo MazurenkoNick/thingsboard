@@ -65,6 +65,7 @@ partition_sizes: # in hours
   edge_event: ${EDGE_EVENTS_PARTITION_SIZE:168}
   audit_log: ${AUDIT_LOGS_PARTITION_SIZE:168}
   blob_entity: ${BLOB_ENTITIES_PARTITION_SIZE:168}
+  report: ${REPORTS_PARTITION_SIZE:168}
 
 spring:
   datasource:

@@ -28,24 +28,50 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.common.msg.cf;
+@import '../../../../../../../../scss/constants';
 
-import lombok.Data;
-import org.thingsboard.server.common.data.id.EntityId;
-import org.thingsboard.server.common.data.id.TenantId;
-import org.thingsboard.server.common.msg.MsgType;
-import org.thingsboard.server.common.msg.ToCalculatedFieldSystemMsg;
-
-@Data
-public class CalculatedFieldInitProfileEntityMsg implements ToCalculatedFieldSystemMsg {
-
-    private final TenantId tenantId;
-    private final EntityId profileEntityId;
-    private final EntityId entityId;
-
-    @Override
-    public MsgType getMsgType() {
-        return MsgType.CF_INIT_PROFILE_ENTITY_MSG;
+.tb-map-data-layers {
+  .tb-form-table-header-cell {
+    &.tb-source-header {
+      flex: 1 1 50%;
     }
+    &.tb-x-pos-header {
+      flex: 1 1 25%;
+    }
+    &.tb-y-pos-header {
+      flex: 1 1 25%;
+    }
+    &.tb-key-header {
+      flex: 1 1 50%;
+    }
+    &.tb-actions-header {
+      width: 80px;
+      min-width: 80px;
+    }
+    @media #{$mat-lt-lg} {
+      &.tb-source-header {
+        flex: 1 1 30%;
+      }
+      &.tb-x-pos-header, &.tb-y-pos-header {
+        flex: 1 1 35%;
+      }
+      &.tb-key-header {
+        flex: 1 1 70%;
+      }
+    }
+    @media #{$mat-xs} {
+      &.tb-x-pos-header, &.tb-y-pos-header {
+        display: none;
+      }
+      &.tb-key-header {
+        display: none;
+      }
+    }
+  }
 
+  .tb-form-table-body {
+    tb-api-usage-data-key-row {
+      overflow: hidden;
+    }
+  }
 }
