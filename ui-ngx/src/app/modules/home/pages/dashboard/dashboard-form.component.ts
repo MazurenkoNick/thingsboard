@@ -55,7 +55,6 @@ export class DashboardFormComponent extends GroupEntityComponent<DashboardInfo> 
 
   isPublic: boolean;
   publicLink: string;
-
   // assignedCustomersText: string;
 
   constructor(protected store: Store<AppState>,
