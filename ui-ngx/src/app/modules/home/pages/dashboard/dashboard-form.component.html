@@ -48,7 +48,7 @@
           (click)="onEntityAction($event, 'import')"
           *ngIf="entityGroup | hasGroupEntityOrGenericPermission: resource.DASHBOARD : operation.WRITE"
           [class.!hidden]="isEdit">
-    {{'dashboard.import' | translate }}
+    {{'dashboard.update-new-version' | translate }}
   </button>
   <button mat-raised-button color="primary"
           [disabled]="(isLoading$ | async)"
