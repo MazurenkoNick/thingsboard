@@ -87,11 +87,11 @@ public class UserPermissionsController extends BaseController {
                 allowedResources, getCurrentUser().getUserPermissions(), getCurrentUser().getOwnerId());
     }
 
-    @ApiOperation(value = "Check permission for specified entity (getEntityPermission)",
+    @ApiOperation(value = "Check permission for specified entity (hasEntityPermission)",
             notes = "Returns true if the user has permission to perform the operation, and false otherwise.\n")
     @PreAuthorize("hasAnyAuthority('SYS_ADMIN', 'TENANT_ADMIN', 'CUSTOMER_USER')")
     @GetMapping(value = "/permission/{entityType}/{entityId}/{operation}")
-    public boolean getEntityPermission(
+    public boolean hasEntityPermission(
             @Parameter(description = ENTITY_TYPE_PARAM_DESCRIPTION, required = true, schema = @Schema(defaultValue = "DEVICE"))
             @PathVariable(ENTITY_TYPE) EntityType entityType,
             @Parameter(description = ENTITY_ID_PARAM_DESCRIPTION, required = true)
@@ -104,7 +104,6 @@ public class UserPermissionsController extends BaseController {
         try {
             checkEntityId(entityId, operation);
         } catch (ThingsboardException e) {
-            log.info("Entity permission check failed for entityId: {}", entityId, e);
             return false;
         }
         return true;
