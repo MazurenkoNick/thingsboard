@@ -34,6 +34,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
@@ -78,8 +79,9 @@ public class SqlPartitionService {
     public Map<Long, Long> getPartitions(Table table) {
         long partitionSize = getPartitionSize(table);
         return jdbcTemplate.queryForList("SELECT tablename FROM pg_tables " +
-                        "WHERE tablename LIKE '" + table.getName() + "_%'", String.class).stream()
+                                         "WHERE tablename LIKE '" + table.getName() + "_%'", String.class).stream()
                 .map(partition -> StringUtils.substringAfterLast(partition, "_"))
+                .filter(NumberUtils::isParsable)
                 .map(Long::parseLong)
                 .collect(Collectors.toMap(startTs -> startTs, startTs -> startTs + partitionSize));
     }
