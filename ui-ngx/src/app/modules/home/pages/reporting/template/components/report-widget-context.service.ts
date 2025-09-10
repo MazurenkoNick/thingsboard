@@ -78,14 +78,15 @@ export class ReportWidgetContextService {
                              settings: any,
                              timewindow: Timewindow,
                              datasources: Datasource[],
+                             stateData: boolean,
                              callbacks: WidgetSubscriptionCallbacks): Observable<WidgetContext> {
-    const widget = this.createWidget(type, settings, timewindow, datasources);
+    const widget = this.createWidget(type, settings, timewindow, datasources, stateData);
     const ctx = new WidgetContext(null, null, widget);
     ctx.$scope = {} as IDynamicWidgetComponent;
     ctx.$injector = this.injector;
     ctx.date = this.date;
     ctx.utilsService = this.utils;
-    return this.createDefaultSubscription(widget, ctx, callbacks).pipe(
+    return this.createDefaultSubscription(widget, ctx, stateData, callbacks).pipe(
       map(() => {
         ctx.inited = true;
         return ctx;
@@ -105,18 +106,19 @@ export class ReportWidgetContextService {
   private createWidget(type: widgetType,
                        settings: any,
                        timewindow: Timewindow,
-                       datasources: Datasource[]): Widget {
+                       datasources: Datasource[],
+                       stateData: boolean): Widget {
     return {
       type,
       config: {
         timewindow,
-        datasources: this.prepareDatasources(datasources),
+        datasources: this.prepareDatasources(datasources, stateData),
         settings
       } as WidgetConfig
     } as Widget;
   }
 
-  private prepareDatasources(datasources: Datasource[]): Datasource[] {
+  private prepareDatasources(datasources: Datasource[], stateData: boolean): Datasource[] {
     datasources = datasources || [];
     let dataKeyIndex = 0;
     for (let i = 0; i < datasources.length; i++) {
@@ -125,25 +127,30 @@ export class ReportWidgetContextService {
       datasource.name = 'Entity'+(i+1);
       datasource.entityName = 'Entity'+(i+1);
       for (const dataKey of (datasource.dataKeys || [])) {
-        this.prepareDataKey(dataKey, dataKeyIndex, false);
+        this.prepareDataKey(dataKey, dataKeyIndex, false, stateData);
         dataKeyIndex++;
       }
       for (const dataKey of (datasource.latestDataKeys || [])) {
-        this.prepareDataKey(dataKey, dataKeyIndex, true);
+        this.prepareDataKey(dataKey, dataKeyIndex, true, stateData);
         dataKeyIndex++;
       }
     }
     return datasources;
   }
 
-  private prepareDataKey(dataKey: DataKey, index: number, latest: boolean): DataKey {
+  private prepareDataKey(dataKey: DataKey, index: number, latest: boolean, stateData: boolean): DataKey {
     dataKey.type = DataKeyType.function;
     if (latest) {
       dataKey.label = dataKey.name;
     }
     const keyRandom = this.createKeyRandom(index + 1);
     dataKey.builtInFunc = (_time, _prevValue) => {
-      return this.reportPreviewKeyData(keyRandom, 5000);
+      const result = this.reportPreviewKeyData(keyRandom, 5000);
+      if (stateData) {
+        return result >= 50;
+      } else {
+        return result;
+      }
     };
     return dataKey;
   }
@@ -174,7 +181,7 @@ export class ReportWidgetContextService {
     return value;
   }
 
-  private createDefaultSubscription(widget: Widget, widgetContext: WidgetContext, callbacks: WidgetSubscriptionCallbacks): Observable<any> {
+  private createDefaultSubscription(widget: Widget, widgetContext: WidgetContext, stateData: boolean, callbacks: WidgetSubscriptionCallbacks): Observable<any> {
     const createSubscriptionSubject = new ReplaySubject<void>();
     const comparisonSettings: WidgetComparisonSettings = widgetContext.settings;
     const options: WidgetSubscriptionOptions = {
@@ -182,6 +189,7 @@ export class ReportWidgetContextService {
       comparisonEnabled: comparisonSettings.comparisonEnabled,
       timeForComparison: comparisonSettings.timeForComparison,
       comparisonCustomIntervalValue: comparisonSettings.comparisonCustomIntervalValue,
+      stateData,
       datasources: widget.config.datasources,
       useDashboardTimewindow: false,
       displayTimewindow: false,

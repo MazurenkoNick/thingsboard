@@ -35,17 +35,14 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import org.thingsboard.server.common.data.report.configuration.DataSource;
-
-import java.util.List;
 
 @Schema
 @Data
 @EqualsAndHashCode
 @NoArgsConstructor
 @AllArgsConstructor
-public abstract class AbstractDataReportComponent extends AbstractReportComponent implements DataReportComponent {
+public abstract class AbstractReportComponent implements ReportComponent {
 
-    private List<DataSource> dataSources;
+    private String subType;
 
 }

@@ -58,7 +58,7 @@ import { genNextLabel, isObject } from '@core/utils';
 import {
   pageVariables,
   ReportComponentContext,
-  reportComponentTypeMap,
+  reportComponentTypesData,
   ReportVariable
 } from '@home/pages/reporting/template/components/report-component.models';
 import { DataKeyType } from '@shared/models/telemetry/telemetry.models';
@@ -125,11 +125,17 @@ export class ReportComponentConfigComponent implements OnInit, OnChanges {
     }
     this.reportConfigContainer.viewContainerRef.clear();
     if (this.reportComponent) {
-      const typeData = reportComponentTypeMap.get(this.reportComponent.type);
+      const typeData =
+        reportComponentTypesData.getReportComponentTypeData(this.reportComponent.type, this.reportComponent.subType);
       if (typeData) {
         this.reportConfigComponentRef = this.reportConfigContainer.viewContainerRef.createComponent(typeData.configComponent);
         this.reportConfigComponent = this.reportConfigComponentRef.instance;
         this.reportConfigComponent.context = this.context;
+        if (typeData.configContext) {
+          for (const key of Object.keys(typeData.configContext)) {
+            this.reportConfigComponent[key] = typeData.configContext[key];
+          }
+        }
         this.reportConfigComponent.reportConfigUpdated.subscribe((updated) => {
           Object.assign(this.reportComponent, updated);
           this.reportComponentUpdated.emit();

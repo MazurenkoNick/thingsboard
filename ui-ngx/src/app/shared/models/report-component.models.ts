@@ -29,20 +29,29 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { Datasource, defaultLegendConfig, LegendConfig, LegendPosition } from '@shared/models/widget.models';
+import {
+  Datasource,
+  defaultLegendConfig,
+  LegendConfig,
+  LegendPosition,
+  widgetType
+} from '@shared/models/widget.models';
 import { alignment, alignmentTranslations, Font } from '@shared/models/widget-settings.models';
 import { Insets } from '@shared/models/report.models';
 import { ReportTemplateId } from '@shared/models/id/report-template-id';
 import { FormProperty, FormPropertyType } from '@shared/models/dynamic-form.models';
 import { DashboardReportConfig } from '@shared/models/dashboard-report.models';
-import { Timewindow } from '@shared/models/time/time.models';
+import { AggregationType, DAY, historyInterval, HOUR, Timewindow } from '@shared/models/time/time.models';
 import { Direction } from '@shared/models/page/sort-order';
 import { mergeDeep } from '@core/utils';
 import {
   timeSeriesChartDefaultSettings,
   TimeSeriesChartKeySettings,
   TimeSeriesChartSeriesType,
-  TimeSeriesChartSettings, TimeSeriesChartYAxes, TimeSeriesChartYAxisSettings
+  TimeSeriesChartSettings,
+  TimeSeriesChartStateSourceType,
+  TimeSeriesChartYAxes,
+  TimeSeriesChartYAxisSettings
 } from '@home/components/widget/lib/chart/time-series-chart.models';
 
 export enum ReportComponentType {
@@ -61,6 +70,7 @@ export enum ReportComponentType {
 
 export interface ReportComponentConfig {
   type: ReportComponentType;
+  subType?: string;
 }
 
 export interface DataReportComponentConfig extends ReportComponentConfig {
@@ -453,7 +463,7 @@ export const reportTimeSeriesChartDefaultSettings: ReportTimeSeriesChartSettings
       weight: '500'
     },
     legendValueColor: 'rgba(0, 0, 0, 0.87)',
-    legendConfig: {...defaultLegendConfig(null), position: LegendPosition.top},
+    legendConfig: {...defaultLegendConfig(widgetType.timeseries), position: LegendPosition.top},
     yAxes: {
       default: {
         labelFont: {
@@ -462,6 +472,54 @@ export const reportTimeSeriesChartDefaultSettings: ReportTimeSeriesChartSettings
       } as TimeSeriesChartYAxisSettings
     } as TimeSeriesChartYAxes
   } as ReportTimeSeriesChartSettings);
+
+export const reportStateChartDefaultSettings: ReportTimeSeriesChartSettings = mergeDeep({} as ReportTimeSeriesChartSettings,
+  reportTimeSeriesChartDefaultSettings,
+  {
+    states: [
+      {
+        label: 'Off',
+        value: 0,
+        sourceType: TimeSeriesChartStateSourceType.constant,
+        sourceValue: false
+      },
+      {
+        label: 'On',
+        value: 1,
+        sourceType: TimeSeriesChartStateSourceType.constant,
+        sourceValue: true
+      }
+    ],
+    legendConfig: {...defaultLegendConfig(null), position: LegendPosition.right},
+  } as ReportTimeSeriesChartSettings);
+
+export const defaultTimeSeriesChartTimewindow = mergeDeep<Timewindow>(
+  {} as Timewindow,
+  historyInterval(DAY),
+  {
+    history: {
+      interval: HOUR
+    },
+    aggregation: {
+      type: AggregationType.AVG,
+      limit: 200
+    }
+  }
+);
+
+export const defaultStateChartTimewindow = mergeDeep<Timewindow>(
+  {} as Timewindow,
+  historyInterval(DAY),
+  {
+    history: {
+      interval: HOUR
+    },
+    aggregation: {
+      type: AggregationType.NONE,
+      limit: 200
+    }
+  }
+);
 
 export interface BaseChartReportComponentConfig extends BaseImageReportComponentConfig {
   height: number;

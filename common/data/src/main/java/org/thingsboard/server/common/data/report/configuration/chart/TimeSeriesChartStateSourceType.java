@@ -28,24 +28,9 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.common.data.report.configuration.components;
+package org.thingsboard.server.common.data.report.configuration.chart;
 
-import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import org.thingsboard.server.common.data.report.configuration.DataSource;
-
-import java.util.List;
-
-@Schema
-@Data
-@EqualsAndHashCode
-@NoArgsConstructor
-@AllArgsConstructor
-public abstract class AbstractDataReportComponent extends AbstractReportComponent implements DataReportComponent {
-
-    private List<DataSource> dataSources;
-
+public enum TimeSeriesChartStateSourceType {
+    constant,
+    range
 }

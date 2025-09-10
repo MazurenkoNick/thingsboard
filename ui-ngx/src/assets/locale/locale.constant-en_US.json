@@ -7416,6 +7416,10 @@
                 "no-datasource-configured": "Data source is not configured for time series chart",
                 "no-series-configured": "At least one series should be specified for time series chart"
             },
+            "line-chart": "Line chart",
+            "bar-chart": "Bar chart",
+            "point-chart": "Point chart",
+            "state-chart": "State chart",
             "chart": {
                 "chart-height": "Chart height",
                 "chart-width": "Chart width",

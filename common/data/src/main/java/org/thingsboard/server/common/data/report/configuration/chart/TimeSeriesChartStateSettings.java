@@ -28,24 +28,35 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.common.data.report.configuration.components;
+package org.thingsboard.server.common.data.report.configuration.chart;
 
-import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.AllArgsConstructor;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.JsonNode;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import org.thingsboard.server.common.data.report.configuration.DataSource;
 
-import java.util.List;
-
-@Schema
 @Data
-@EqualsAndHashCode
-@NoArgsConstructor
-@AllArgsConstructor
-public abstract class AbstractDataReportComponent extends AbstractReportComponent implements DataReportComponent {
+public class TimeSeriesChartStateSettings {
 
-    private List<DataSource> dataSources;
+    private String label;
+    private Double value;
+    private TimeSeriesChartStateSourceType sourceType;
+
+    @JsonProperty("sourceValue")
+    private JsonNode sourceValue;
+
+    private Double sourceRangeFrom;
+    private Double sourceRangeTo;
+
+    @JsonIgnore
+    public boolean isValidState() {
+        if (value == null || !Double.isFinite(value) || sourceType == null) {
+            return false;
+        }
+        if (sourceType == TimeSeriesChartStateSourceType.constant) {
+            return sourceValue != null && !sourceValue.isNull();
+        }
+        return true;
+    }
 
 }

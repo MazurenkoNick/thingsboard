@@ -63,4 +63,6 @@ public interface ReportComponent extends Serializable {
 
     ReportComponentType getType();
 
+    String getSubType();
+
 }

@@ -29,8 +29,8 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { Component, ViewEncapsulation } from '@angular/core';
-import { FormGroup, Validators } from '@angular/forms';
+import { Component, Input, ViewEncapsulation } from '@angular/core';
+import { FormGroup, UntypedFormGroup, Validators } from '@angular/forms';
 import {
   AbstractReportComponentConfig
 } from '@home/pages/reporting/template/components/report-component-config.component';
@@ -45,15 +45,24 @@ import {
   toReportTimeSeriesChartKeySettings,
   toTimeSeriesChartKeySettings
 } from '@shared/models/report-component.models';
-import { DataKey, Datasource, Widget, WidgetConfig, WidgetConfigMode, widgetType } from '@shared/models/widget.models';
 import {
-  TimeSeriesChartKeySettings,
+  DataKey,
+  Datasource,
+  Widget,
+  WidgetConfig,
+  WidgetConfigMode,
+  widgetType,
+  WidgetTypeParameters
+} from '@shared/models/widget.models';
+import {
+  TimeSeriesChartKeySettings, TimeSeriesChartType,
   TimeSeriesChartYAxes,
   TimeSeriesChartYAxisId
 } from '@home/components/widget/lib/chart/time-series-chart.models';
 import { deepClone, mergeDeep } from '@core/utils';
 import { merge } from 'rxjs';
 import { TbTimeSeriesChart } from '@home/components/widget/lib/chart/time-series-chart';
+import { WidgetInfo, WidgetWithInfo } from '@home/models/widget-component.models';
 
 @Component({
   selector: 'tb-time-series-chart-config',
@@ -63,18 +72,28 @@ import { TbTimeSeriesChart } from '@home/components/widget/lib/chart/time-series
 })
 export class TimeSeriesChartConfigComponent extends AbstractReportComponentConfig<TimeseriesChartReportComponentConfig> {
 
+  @Input()
+  chartType: TimeSeriesChartType = TimeSeriesChartType.default;
+
+  TimeSeriesChartType = TimeSeriesChartType;
+
   public get yAxisIds(): TimeSeriesChartYAxisId[] {
     const yAxes: TimeSeriesChartYAxes = this.reportConfigForm.get('yAxes').value;
     return yAxes ? Object.keys(yAxes) : [];
   }
 
-  public get widget(): Widget {
+  public get widget(): WidgetWithInfo {
     return {
       type: widgetType.timeseries,
       config: {
         settings: this.reportComponentConfig.timeSeriesChartSettings
-      } as WidgetConfig
-    } as Widget;
+      } as WidgetConfig,
+      widgetInfo: {
+        typeParameters: {
+          chartType: this.chartType
+        } as WidgetTypeParameters
+      } as WidgetInfo
+    } as WidgetWithInfo;
   }
 
   TbTimeSeriesChart = TbTimeSeriesChart;
@@ -94,7 +113,7 @@ export class TimeSeriesChartConfigComponent extends AbstractReportComponentConfi
   protected buildForm(reportComponentConfig: TimeseriesChartReportComponentConfig): FormGroup {
     const timeSeriesChartSettings: ReportTimeSeriesChartSettings =
       mergeDeep<ReportTimeSeriesChartSettings>({} as ReportTimeSeriesChartSettings, reportTimeSeriesChartDefaultSettings, reportComponentConfig.timeSeriesChartSettings);
-    const form = this.fb.group({
+    const form: UntypedFormGroup = this.fb.group({
       timewindow: [reportComponentConfig.timewindow, []],
       dataSources: [reportComponentConfig.dataSources, []],
       widthType: [reportComponentConfig.widthType || 'fitWidth', []],
@@ -136,6 +155,10 @@ export class TimeSeriesChartConfigComponent extends AbstractReportComponentConfi
       legendConfig: [timeSeriesChartSettings.legendConfig, []]
 
     });
+
+    if (this.chartType === TimeSeriesChartType.state) {
+      form.addControl('states', this.fb.control(timeSeriesChartSettings.states, []));
+    }
 
     form.get('widthType').valueChanges.pipe(
       takeUntilDestroyed(this.destroyRef)
@@ -227,6 +250,11 @@ export class TimeSeriesChartConfigComponent extends AbstractReportComponentConfi
 
     timeSeriesChartSettings.legendConfig = config.legendConfig;
     delete config.legendConfig;
+
+    if (this.chartType === TimeSeriesChartType.state) {
+      timeSeriesChartSettings.states = config.states;
+      delete config.states;
+    }
 
     return config;
   }
