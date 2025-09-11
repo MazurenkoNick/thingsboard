@@ -42,6 +42,7 @@ import org.thingsboard.server.common.data.id.ReportTemplateId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.job.task.ReportTask;
 import org.thingsboard.server.common.data.kv.Aggregation;
+import org.thingsboard.server.common.data.kv.BasicTsKvEntry;
 import org.thingsboard.server.common.data.kv.TsKvEntry;
 import org.thingsboard.server.common.data.page.SortOrder;
 import org.thingsboard.server.common.data.query.EntityData;
@@ -101,6 +102,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.TimeZone;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static org.thingsboard.server.common.data.report.configuration.components.ReportComponentType.DASHBOARD;
@@ -400,14 +402,35 @@ public class PdfReportService extends AbstractReportService {
         ZoneId zoneId = targetTimezone != null ? ZoneId.of(targetTimezone) : ZoneId.systemDefault();
 
         int dataIndex = 0;
+        boolean stateData = "stateChart".equals(component.getSubType());
 
         for (EntityData entity : entityDatas) {
+            Aggregation aggregation = timeWindowConf.getAggregation().getType();
+            if (stateData) {
+                aggregation = Aggregation.NONE;
+            }
             List<TsKvEntry> tsKvEntries = dataService.getTimeseries(entity.getEntityId(), keys, timeRange.startTs, timeRange.endTs,
-                    historyConf.getInterval(), targetTimezone, timeWindowConf.getAggregation().getType(), SortOrder.Direction.ASC,
+                    historyConf.getInterval(), targetTimezone, aggregation, SortOrder.Direction.ASC,
                     timeWindowConf.getAggregation().getLimit(), false, ctx);
-
+            if (stateData) {
+                List<TsKvEntry> prevTsKvEntries = dataService.getTimeseries(entity.getEntityId(), keys, timeRange.startTs - TimeUnit.DAYS.toMillis(365), timeRange.startTs,
+                        historyConf.getInterval(), targetTimezone, aggregation, SortOrder.Direction.DESC,
+                        1, false, ctx);
+                if (!prevTsKvEntries.isEmpty()) {
+                    TsKvEntry prev = prevTsKvEntries.get(0);
+                    if (tsKvEntries.isEmpty() || tsKvEntries.get(0).getTs() > timeRange.startTs) {
+                        TsKvEntry startEntry = new BasicTsKvEntry(timeRange.startTs, prev);
+                        tsKvEntries.add(0, startEntry);
+                    }
+                }
+                if (!tsKvEntries.isEmpty() && tsKvEntries.get(tsKvEntries.size() - 1).getTs() < timeRange.endTs) {
+                    TsKvEntry last = tsKvEntries.get(tsKvEntries.size() - 1);
+                    TsKvEntry endEntry = new BasicTsKvEntry(timeRange.endTs, last);
+                    tsKvEntries.add(endEntry);
+                }
+            }
             TsChartDataSource chartDataSource = new TsChartDataSource(ds, entity, tsKvEntries, timeRange,
-                    historyConf.getInterval(), timeWindowConf.getAggregation().getType(), zoneId, false, null, dataIndex);
+                    historyConf.getInterval(), aggregation, zoneId, false, null, dataIndex);
             chartData.add(chartDataSource);
             dataIndex++;
         }
