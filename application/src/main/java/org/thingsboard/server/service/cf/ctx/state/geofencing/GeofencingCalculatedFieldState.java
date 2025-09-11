@@ -57,7 +57,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static org.thingsboard.server.common.data.cf.configuration.geofencing.EntityCoordinates.ENTITY_ID_LATITUDE_ARGUMENT_KEY;
@@ -139,10 +138,7 @@ public class GeofencingCalculatedFieldState extends BaseCalculatedFieldState {
         Coordinates entityCoordinates = new Coordinates(latitude, longitude);
 
         var geofencingCfg = (GeofencingCalculatedFieldConfiguration) ctx.getCalculatedField().getConfiguration();
-        Map<String, ZoneGroupConfiguration> zoneGroups = geofencingCfg
-                .getZoneGroups()
-                .stream()
-                .collect(Collectors.toMap(ZoneGroupConfiguration::getName, Function.identity()));
+        Map<String, ZoneGroupConfiguration> zoneGroups = geofencingCfg.getZoneGroups();
 
         ObjectNode resultNode = JacksonUtil.newObjectNode();
         List<ListenableFuture<Boolean>> relationFutures = new ArrayList<>();

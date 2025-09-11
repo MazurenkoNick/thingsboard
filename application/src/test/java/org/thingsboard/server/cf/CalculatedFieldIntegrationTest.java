@@ -1358,8 +1358,7 @@ public class CalculatedFieldIntegrationTest extends CalculatedFieldControllerTes
         EntityCoordinates entityCoordinates = new EntityCoordinates("latitude", "longitude");
         cfg.setEntityCoordinates(entityCoordinates);
 
-        ZoneGroupConfiguration allowedGroup = new ZoneGroupConfiguration(
-                "allowedZones", "zone",
+        ZoneGroupConfiguration allowedGroup = new ZoneGroupConfiguration("zone",
                 REPORT_TRANSITION_EVENTS_ONLY, false);
         RelationQueryDynamicSourceConfiguration allowedDyn = new RelationQueryDynamicSourceConfiguration();
         allowedDyn.setDirection(EntitySearchDirection.FROM);
@@ -1368,8 +1367,7 @@ public class CalculatedFieldIntegrationTest extends CalculatedFieldControllerTes
         allowedDyn.setFetchLastLevelOnly(true);
         allowedGroup.setRefDynamicSourceConfiguration(allowedDyn);
 
-        ZoneGroupConfiguration restrictedGroup = new ZoneGroupConfiguration(
-                "restrictedZones", "zone",
+        ZoneGroupConfiguration restrictedGroup = new ZoneGroupConfiguration("zone",
                 REPORT_TRANSITION_EVENTS_ONLY, false);
         RelationQueryDynamicSourceConfiguration restrictedDyn = new RelationQueryDynamicSourceConfiguration();
         restrictedDyn.setDirection(EntitySearchDirection.FROM);
@@ -1378,7 +1376,7 @@ public class CalculatedFieldIntegrationTest extends CalculatedFieldControllerTes
         restrictedDyn.setFetchLastLevelOnly(true);
         restrictedGroup.setRefDynamicSourceConfiguration(restrictedDyn);
 
-        cfg.setZoneGroups(List.of(allowedGroup, restrictedGroup));
+        cfg.setZoneGroups(Map.of("allowedZones", allowedGroup, "restrictedZones", restrictedGroup));
 
         Output out = new Output();
         out.setType(OutputType.TIME_SERIES);
@@ -1476,7 +1474,7 @@ public class CalculatedFieldIntegrationTest extends CalculatedFieldControllerTes
         cfg.setEntityCoordinates(entityCoordinates);
 
         // Zone groups: ATTRIBUTE on specific assets (one zone per group)
-        ZoneGroupConfiguration allowedZonesGroup = new ZoneGroupConfiguration("allowedZones", "zone", REPORT_TRANSITION_EVENTS_AND_PRESENCE_STATUS, false);
+        ZoneGroupConfiguration allowedZonesGroup = new ZoneGroupConfiguration("zone", REPORT_TRANSITION_EVENTS_AND_PRESENCE_STATUS, false);
         var allowedZoneDynamicSourceConfiguration = new RelationQueryDynamicSourceConfiguration();
         allowedZoneDynamicSourceConfiguration.setDirection(EntitySearchDirection.FROM);
         allowedZoneDynamicSourceConfiguration.setRelationType("AllowedZone");
@@ -1484,7 +1482,7 @@ public class CalculatedFieldIntegrationTest extends CalculatedFieldControllerTes
         allowedZoneDynamicSourceConfiguration.setFetchLastLevelOnly(true);
         allowedZonesGroup.setRefDynamicSourceConfiguration(allowedZoneDynamicSourceConfiguration);
 
-        ZoneGroupConfiguration restrictedZonesGroup = new ZoneGroupConfiguration("restrictedZones", "zone", REPORT_TRANSITION_EVENTS_AND_PRESENCE_STATUS, false);
+        ZoneGroupConfiguration restrictedZonesGroup = new ZoneGroupConfiguration("zone", REPORT_TRANSITION_EVENTS_AND_PRESENCE_STATUS, false);
         var restrictedZoneDynamicSourceConfiguration = new RelationQueryDynamicSourceConfiguration();
         restrictedZoneDynamicSourceConfiguration.setDirection(EntitySearchDirection.FROM);
         restrictedZoneDynamicSourceConfiguration.setRelationType("RestrictedZone");
@@ -1492,7 +1490,7 @@ public class CalculatedFieldIntegrationTest extends CalculatedFieldControllerTes
         restrictedZoneDynamicSourceConfiguration.setFetchLastLevelOnly(true);
         restrictedZonesGroup.setRefDynamicSourceConfiguration(restrictedZoneDynamicSourceConfiguration);
 
-        cfg.setZoneGroups(List.of(allowedZonesGroup, restrictedZonesGroup));
+        cfg.setZoneGroups(Map.of("allowedZones", allowedZonesGroup, "restrictedZones", restrictedZonesGroup));
 
         // Output to server attributes
         Output out = new Output();
@@ -1585,14 +1583,14 @@ public class CalculatedFieldIntegrationTest extends CalculatedFieldControllerTes
         GeofencingCalculatedFieldConfiguration cfg = new GeofencingCalculatedFieldConfiguration();
         cfg.setEntityCoordinates(new EntityCoordinates(ENTITY_ID_LATITUDE_ARGUMENT_KEY, ENTITY_ID_LONGITUDE_ARGUMENT_KEY));
 
-        var allowedZonesGroup = new ZoneGroupConfiguration("allowedZones", "zone", REPORT_TRANSITION_EVENTS_AND_PRESENCE_STATUS, false);
+        var allowedZonesGroup = new ZoneGroupConfiguration("zone", REPORT_TRANSITION_EVENTS_AND_PRESENCE_STATUS, false);
         var allowedZoneDynamicSourceConfiguration = new RelationQueryDynamicSourceConfiguration();
         allowedZoneDynamicSourceConfiguration.setDirection(EntitySearchDirection.FROM);
         allowedZoneDynamicSourceConfiguration.setRelationType("AllowedZone");
         allowedZoneDynamicSourceConfiguration.setMaxLevel(1);
         allowedZoneDynamicSourceConfiguration.setFetchLastLevelOnly(true);
         allowedZonesGroup.setRefDynamicSourceConfiguration(allowedZoneDynamicSourceConfiguration);
-        cfg.setZoneGroups(List.of(allowedZonesGroup));
+        cfg.setZoneGroups(Map.of("allowedZones", allowedZonesGroup));
 
         // Server attributes output
         Output out = new Output();
@@ -1602,7 +1600,6 @@ public class CalculatedFieldIntegrationTest extends CalculatedFieldControllerTes
 
         // Enable scheduled refresh with a 6-second interval
         cfg.setScheduledUpdateInterval(6);
-        cfg.setTimeUnit(TimeUnit.SECONDS);
 
         cf.setConfiguration(cfg);
         CalculatedField savedCalculatedField = doPost("/api/calculatedField", cf, CalculatedField.class);

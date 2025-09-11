@@ -71,7 +71,6 @@ import org.thingsboard.server.msa.AbstractContainerTest;
 import org.thingsboard.server.msa.ui.utils.EntityPrototypes;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -567,8 +566,7 @@ public class CalculatedFieldTest extends AbstractContainerTest {
         EntityCoordinates entityCoordinates = new EntityCoordinates("latitude", "longitude");
         cfg.setEntityCoordinates(entityCoordinates);
 
-        ZoneGroupConfiguration allowedGroup = new ZoneGroupConfiguration(
-                "allowedZones", "zone",
+        ZoneGroupConfiguration allowedGroup = new ZoneGroupConfiguration("zone",
                 REPORT_TRANSITION_EVENTS_ONLY,
                 false);
         RelationQueryDynamicSourceConfiguration allowedDyn = new RelationQueryDynamicSourceConfiguration();
@@ -578,8 +576,7 @@ public class CalculatedFieldTest extends AbstractContainerTest {
         allowedDyn.setFetchLastLevelOnly(true);
         allowedGroup.setRefDynamicSourceConfiguration(allowedDyn);
 
-        ZoneGroupConfiguration restrictedGroup = new ZoneGroupConfiguration(
-                "restrictedZones", "zone",
+        ZoneGroupConfiguration restrictedGroup = new ZoneGroupConfiguration("zone",
                 REPORT_TRANSITION_EVENTS_ONLY,
                 false);
         RelationQueryDynamicSourceConfiguration restrictedDyn = new RelationQueryDynamicSourceConfiguration();
@@ -589,7 +586,7 @@ public class CalculatedFieldTest extends AbstractContainerTest {
         restrictedDyn.setFetchLastLevelOnly(true);
         restrictedGroup.setRefDynamicSourceConfiguration(restrictedDyn);
 
-        cfg.setZoneGroups(List.of(allowedGroup, restrictedGroup));
+        cfg.setZoneGroups(Map.of("allowedZones", allowedGroup, "restrictedZones", restrictedGroup));
 
         Output out = new Output();
         out.setType(OutputType.TIME_SERIES);
@@ -667,7 +664,7 @@ public class CalculatedFieldTest extends AbstractContainerTest {
         cfg.setEntityCoordinates(entityCoordinates);
 
         // Dynamic groups via relations
-        ZoneGroupConfiguration allowedZoneGroupConfiguration = new ZoneGroupConfiguration("allowedZones", "zone", REPORT_TRANSITION_EVENTS_AND_PRESENCE_STATUS, false);
+        ZoneGroupConfiguration allowedZoneGroupConfiguration = new ZoneGroupConfiguration("zone", REPORT_TRANSITION_EVENTS_AND_PRESENCE_STATUS, false);
         var allowedDynamicSourceConfiguration = new RelationQueryDynamicSourceConfiguration();
         allowedDynamicSourceConfiguration.setDirection(EntitySearchDirection.FROM);
         allowedDynamicSourceConfiguration.setMaxLevel(1);
@@ -675,7 +672,7 @@ public class CalculatedFieldTest extends AbstractContainerTest {
         allowedDynamicSourceConfiguration.setRelationType("AllowedZone");
         allowedZoneGroupConfiguration.setRefDynamicSourceConfiguration(allowedDynamicSourceConfiguration);
 
-        ZoneGroupConfiguration restrictedZoneGroupConfiguration = new ZoneGroupConfiguration("restrictedZones", "zone", REPORT_TRANSITION_EVENTS_AND_PRESENCE_STATUS, false);
+        ZoneGroupConfiguration restrictedZoneGroupConfiguration = new ZoneGroupConfiguration("zone", REPORT_TRANSITION_EVENTS_AND_PRESENCE_STATUS, false);
         var restrictedDynamicSourceConfiguration = new RelationQueryDynamicSourceConfiguration();
         restrictedDynamicSourceConfiguration.setDirection(EntitySearchDirection.FROM);
         restrictedDynamicSourceConfiguration.setMaxLevel(1);
@@ -683,7 +680,7 @@ public class CalculatedFieldTest extends AbstractContainerTest {
         restrictedDynamicSourceConfiguration.setRelationType("RestrictedZone");
         restrictedZoneGroupConfiguration.setRefDynamicSourceConfiguration(restrictedDynamicSourceConfiguration);
 
-        cfg.setZoneGroups(List.of(allowedZoneGroupConfiguration, restrictedZoneGroupConfiguration));
+        cfg.setZoneGroups(Map.of("allowedZones", allowedZoneGroupConfiguration, "restrictedZones", restrictedZoneGroupConfiguration));
 
         Output out = new Output();
         out.setType(OutputType.ATTRIBUTES);

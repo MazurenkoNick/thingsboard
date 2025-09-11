@@ -59,9 +59,7 @@ import org.thingsboard.server.dao.device.DeviceService;
 import org.thingsboard.server.dao.tenant.TbTenantProfileCache;
 import org.thingsboard.server.exception.DataValidationException;
 
-import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -128,13 +126,12 @@ public class CalculatedFieldServiceTest extends AbstractServiceTest {
         cfg.setEntityCoordinates(entityCoordinates);
 
         // Zone-group argument (ATTRIBUTE) — no DYNAMIC configuration, so no scheduling even if the scheduled interval is set
-        ZoneGroupConfiguration zoneGroupConfiguration = new ZoneGroupConfiguration("allowed", "allowed", REPORT_TRANSITION_EVENTS_AND_PRESENCE_STATUS, false);
+        ZoneGroupConfiguration zoneGroupConfiguration = new ZoneGroupConfiguration("allowed", REPORT_TRANSITION_EVENTS_AND_PRESENCE_STATUS, false);
         zoneGroupConfiguration.setRefEntityId(device.getId());
-        cfg.setZoneGroups(List.of(zoneGroupConfiguration));
+        cfg.setZoneGroups(Map.of("allowed", zoneGroupConfiguration));
 
         // Set a scheduled interval to some value
         cfg.setScheduledUpdateInterval(600);
-        cfg.setTimeUnit(TimeUnit.SECONDS);
 
         // Create & save Calculated Field
         CalculatedField cf = new CalculatedField();
@@ -175,17 +172,16 @@ public class CalculatedFieldServiceTest extends AbstractServiceTest {
         cfg.setEntityCoordinates(entityCoordinates);
 
         // Zone-group argument (ATTRIBUTE) — make it DYNAMIC so scheduling is enabled
-        ZoneGroupConfiguration zoneGroupConfiguration = new ZoneGroupConfiguration("allowed", "allowed", REPORT_TRANSITION_EVENTS_AND_PRESENCE_STATUS, false);
+        ZoneGroupConfiguration zoneGroupConfiguration = new ZoneGroupConfiguration("allowed", REPORT_TRANSITION_EVENTS_AND_PRESENCE_STATUS, false);
         var dynamicSourceConfiguration = new RelationQueryDynamicSourceConfiguration();
         dynamicSourceConfiguration.setDirection(EntitySearchDirection.FROM);
         dynamicSourceConfiguration.setMaxLevel(1);
         dynamicSourceConfiguration.setRelationType(EntityRelation.CONTAINS_TYPE);
         zoneGroupConfiguration.setRefDynamicSourceConfiguration(dynamicSourceConfiguration);
-        cfg.setZoneGroups(List.of(zoneGroupConfiguration));
+        cfg.setZoneGroups(Map.of("allowed", zoneGroupConfiguration));
 
         // Enable scheduling with an interval below tenant min
         cfg.setScheduledUpdateInterval(600);
-        cfg.setTimeUnit(TimeUnit.SECONDS);
 
         // Create & save Calculated Field
         CalculatedField cf = new CalculatedField();
@@ -216,13 +212,13 @@ public class CalculatedFieldServiceTest extends AbstractServiceTest {
         cfg.setEntityCoordinates(entityCoordinates);
 
         // Zone-group argument (ATTRIBUTE) — make it DYNAMIC so scheduling is enabled
-        ZoneGroupConfiguration zoneGroupConfiguration = new ZoneGroupConfiguration("allowed", "allowed", REPORT_TRANSITION_EVENTS_AND_PRESENCE_STATUS, false);
+        ZoneGroupConfiguration zoneGroupConfiguration = new ZoneGroupConfiguration( "allowed", REPORT_TRANSITION_EVENTS_AND_PRESENCE_STATUS, false);
         var dynamicSourceConfiguration = new RelationQueryDynamicSourceConfiguration();
         dynamicSourceConfiguration.setDirection(EntitySearchDirection.FROM);
         dynamicSourceConfiguration.setMaxLevel(Integer.MAX_VALUE);
         dynamicSourceConfiguration.setRelationType(EntityRelation.CONTAINS_TYPE);
         zoneGroupConfiguration.setRefDynamicSourceConfiguration(dynamicSourceConfiguration);
-        cfg.setZoneGroups(List.of(zoneGroupConfiguration));
+        cfg.setZoneGroups(Map.of("allowed", zoneGroupConfiguration));
 
         // Create & save Calculated Field
         CalculatedField cf = new CalculatedField();
@@ -252,13 +248,13 @@ public class CalculatedFieldServiceTest extends AbstractServiceTest {
         cfg.setEntityCoordinates(entityCoordinates);
 
         // Zone-group argument (ATTRIBUTE) — make it DYNAMIC so scheduling is enabled
-        ZoneGroupConfiguration zoneGroupConfiguration = new ZoneGroupConfiguration("allowed", "allowed", REPORT_TRANSITION_EVENTS_AND_PRESENCE_STATUS, false);
+        ZoneGroupConfiguration zoneGroupConfiguration = new ZoneGroupConfiguration( "allowed", REPORT_TRANSITION_EVENTS_AND_PRESENCE_STATUS, false);
         var dynamicSourceConfiguration = new RelationQueryDynamicSourceConfiguration();
         dynamicSourceConfiguration.setDirection(EntitySearchDirection.FROM);
         dynamicSourceConfiguration.setMaxLevel(1);
         dynamicSourceConfiguration.setRelationType(EntityRelation.CONTAINS_TYPE);
         zoneGroupConfiguration.setRefDynamicSourceConfiguration(dynamicSourceConfiguration);
-        cfg.setZoneGroups(List.of(zoneGroupConfiguration));
+        cfg.setZoneGroups(Map.of("allowed", zoneGroupConfiguration));
 
         // Get tenant profile min.
         int min = tbTenantProfileCache.get(tenantId)
@@ -269,7 +265,6 @@ public class CalculatedFieldServiceTest extends AbstractServiceTest {
         // Enable scheduling with an interval greater than tenant min
         int valueFromConfig = min + 100;
         cfg.setScheduledUpdateInterval(valueFromConfig);
-        cfg.setTimeUnit(TimeUnit.SECONDS);
 
         // Create & save Calculated Field
         CalculatedField cf = new CalculatedField();
