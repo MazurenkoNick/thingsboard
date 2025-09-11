@@ -227,9 +227,16 @@ public class CustomerUserPermissions extends AbstractPermissions {
             }
 
             if (entityId == null) {
-                if (!ownersCacheService.fetchOwnersHierarchy(user.getTenantId(), ((HasOwnerId) entity).getOwnerId()).contains(user.getOwnerId()) &&
-                        user.getUserPrincipal().getType() != UserPrincipal.Type.PUBLIC_ID) {
-                    return false;
+                if (user.isCustomerUser() && user.getUserPrincipal().getType() != UserPrincipal.Type.PUBLIC_ID) {
+                    EntityId ownerId = ((HasOwnerId) entity).getOwnerId();
+                    var customerId = user.getCustomerId();
+
+                    if (!customerId.equals(ownerId)) {
+                        var owners = ownersCacheService.getOwners(entity.getTenantId(), ownerId, null);
+                        if (!owners.contains(customerId)) {
+                            return false;
+                        }
+                    }
                 }
                 if (user.getUserPermissions().hasGenericPermission(resource, operation)) {
                     return true;

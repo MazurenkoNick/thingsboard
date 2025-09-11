@@ -199,6 +199,11 @@ public class UserControllerTest extends AbstractControllerTest {
                 .andExpect(status().isForbidden())
                 .andExpect(statusReason(containsString(msgErrorPermissionCreate + "USER" + " '" + user.getEmail() + "'!")));
 
+        user.setCustomerId(subCustomerId);
+        doPost("/api/user", user)
+                .andExpect(status().isForbidden())
+                .andExpect(statusReason(containsString(msgErrorPermissionCreate + "USER" + " '" + user.getEmail() + "'!")));
+
         //create valid user
         loginCustomerAdminUser();
         User savedUser = doPost("/api/user", user, User.class);
