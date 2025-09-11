@@ -60,6 +60,8 @@ import { TimeService } from '@core/services/time.service';
 import { RafService } from '@core/services/raf.service';
 import { DatePipe } from '@angular/common';
 
+export type GenerateDataFunction = (random: () => number, time: number) => any;
+
 @Injectable()
 export class ReportWidgetContextService {
 
@@ -79,8 +81,9 @@ export class ReportWidgetContextService {
                              timewindow: Timewindow,
                              datasources: Datasource[],
                              stateData: boolean,
-                             callbacks: WidgetSubscriptionCallbacks): Observable<WidgetContext> {
-    const widget = this.createWidget(type, settings, timewindow, datasources, stateData);
+                             callbacks: WidgetSubscriptionCallbacks,
+                             genDataFunc?: GenerateDataFunction): Observable<WidgetContext> {
+    const widget = this.createWidget(type, settings, timewindow, datasources, genDataFunc);
     const ctx = new WidgetContext(null, null, widget);
     ctx.$scope = {} as IDynamicWidgetComponent;
     ctx.$injector = this.injector;
@@ -107,18 +110,18 @@ export class ReportWidgetContextService {
                        settings: any,
                        timewindow: Timewindow,
                        datasources: Datasource[],
-                       stateData: boolean): Widget {
+                       genDataFunc?: GenerateDataFunction): Widget {
     return {
       type,
       config: {
         timewindow,
-        datasources: this.prepareDatasources(datasources, stateData),
+        datasources: this.prepareDatasources(datasources, genDataFunc),
         settings
       } as WidgetConfig
     } as Widget;
   }
 
-  private prepareDatasources(datasources: Datasource[], stateData: boolean): Datasource[] {
+  private prepareDatasources(datasources: Datasource[], genDataFunc?: GenerateDataFunction): Datasource[] {
     datasources = datasources || [];
     let dataKeyIndex = 0;
     for (let i = 0; i < datasources.length; i++) {
@@ -127,29 +130,28 @@ export class ReportWidgetContextService {
       datasource.name = 'Entity'+(i+1);
       datasource.entityName = 'Entity'+(i+1);
       for (const dataKey of (datasource.dataKeys || [])) {
-        this.prepareDataKey(dataKey, dataKeyIndex, false, stateData);
+        this.prepareDataKey(dataKey, dataKeyIndex, false, genDataFunc);
         dataKeyIndex++;
       }
       for (const dataKey of (datasource.latestDataKeys || [])) {
-        this.prepareDataKey(dataKey, dataKeyIndex, true, stateData);
+        this.prepareDataKey(dataKey, dataKeyIndex, true, genDataFunc);
         dataKeyIndex++;
       }
     }
     return datasources;
   }
 
-  private prepareDataKey(dataKey: DataKey, index: number, latest: boolean, stateData: boolean): DataKey {
+  private prepareDataKey(dataKey: DataKey, index: number, latest: boolean, genDataFunc?: GenerateDataFunction): DataKey {
     dataKey.type = DataKeyType.function;
     if (latest) {
       dataKey.label = dataKey.name;
     }
     const keyRandom = this.createKeyRandom(index + 1);
-    dataKey.builtInFunc = (_time, _prevValue) => {
-      const result = this.reportPreviewKeyData(keyRandom, 5000);
-      if (stateData) {
-        return result >= 50;
+    dataKey.builtInFunc = (time, _prevValue) => {
+      if (genDataFunc) {
+        return genDataFunc(keyRandom, time);
       } else {
-        return result;
+        return this.reportPreviewKeyData(keyRandom, 5000);
       }
     };
     return dataKey;

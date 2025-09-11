@@ -47,15 +47,21 @@ import {
   TimeseriesChartReportComponentConfig
 } from '@shared/models/report-component.models';
 import { AbstractReportComponentPreview } from '@home/pages/reporting/template/components/report-component.component';
-import { ReportWidgetContextService } from '@home/pages/reporting/template/components/report-widget-context.service';
+import {
+  GenerateDataFunction,
+  ReportWidgetContextService
+} from '@home/pages/reporting/template/components/report-widget-context.service';
 import { DatasourceType, widgetType } from '@shared/models/widget.models';
 import { TimeSeriesChartWidgetComponent } from '@home/components/widget/lib/chart/time-series-chart-widget.component';
 import { IWidgetSubscription, WidgetSubscriptionCallbacks } from '@core/api/widget-api.models';
-import { debounce, deepClone, mergeDeep } from '@core/utils';
+import { debounce, deepClone, mergeDeep, mergeDeepIgnoreArray } from '@core/utils';
 import { WidgetContext } from '@home/models/widget-component.models';
 import { BackgroundType, ComponentStyle, textStyle, ValueSourceType } from '@shared/models/widget-settings.models';
 import { TimeSeriesChartWidgetSettings } from '@home/components/widget/lib/chart/time-series-chart-widget.models';
-import { TimeSeriesChartType } from '@home/components/widget/lib/chart/time-series-chart.models';
+import {
+  TimeSeriesChartStateSourceType,
+  TimeSeriesChartType
+} from '@home/components/widget/lib/chart/time-series-chart.models';
 
 @Component({
   selector: 'tb-time-series-chart-preview',
@@ -182,7 +188,7 @@ export class TimeSeriesChartPreviewComponent extends AbstractReportComponentPrev
     const defaultSettings = this.chartType === TimeSeriesChartType.state ?  reportStateChartDefaultSettings : reportTimeSeriesChartDefaultSettings;
 
     const settings: ReportTimeSeriesChartSettings =
-      mergeDeep<ReportTimeSeriesChartSettings>({} as ReportTimeSeriesChartSettings, defaultSettings, this.reportComponent.timeSeriesChartSettings, {
+      mergeDeepIgnoreArray<ReportTimeSeriesChartSettings>({} as ReportTimeSeriesChartSettings, defaultSettings, this.reportComponent.timeSeriesChartSettings, {
         barWidthSettings: defaultSettings.barWidthSettings,
         dataZoom: false,
         animation: {
@@ -223,8 +229,27 @@ export class TimeSeriesChartPreviewComponent extends AbstractReportComponentPrev
         }
       }
     }
+    let genDataFunc: GenerateDataFunction;
+    if (this.chartType == TimeSeriesChartType.state) {
+      const states = settings.states || [];
+      const values = states.map(s => {
+        if (s.sourceType === TimeSeriesChartStateSourceType.constant) {
+          return s.sourceValue;
+        } else if (s.sourceType === TimeSeriesChartStateSourceType.range){
+          const from = s.sourceRangeFrom ?? 0;
+          const to = s.sourceRangeTo ?? 0;
+          return (to - from) / 2;
+        }
+      });
+      if (values.length) {
+        genDataFunc = (random, time) => {
+          const index = Math.round((values.length - 1) * random());
+          return values[index];
+        }
+      }
+    }
     this.reportWidgetContextService.createWidgetContext(widgetType.timeseries,
-      settings, this.reportComponent.timewindow, datasources, this.chartType == TimeSeriesChartType.state, this)
+      settings, this.reportComponent.timewindow, datasources, this.chartType == TimeSeriesChartType.state, this, genDataFunc)
     .subscribe((ctx) => {
       this.widgetContext = ctx;
       this.widgetComponentRef = this.widgetContainer.createComponent(TimeSeriesChartWidgetComponent);
