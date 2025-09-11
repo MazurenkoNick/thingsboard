@@ -30,13 +30,17 @@
  */
 package org.thingsboard.server.common.data.kv;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
+import lombok.extern.jackson.Jacksonized;
 
 import java.time.ZoneId;
 
 @Data
+@Jacksonized
 @EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
 public class BaseReadTsKvQuery extends BaseTsKvQuery implements ReadTsKvQuery {
@@ -57,11 +61,19 @@ public class BaseReadTsKvQuery extends BaseTsKvQuery implements ReadTsKvQuery {
         this(key, startTs, endTs, parameters, limit, "DESC");
     }
 
-    public BaseReadTsKvQuery(String key, long startTs, long endTs, AggregationParams parameters, int limit, String order) {
+    @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
+    public BaseReadTsKvQuery(
+            @JsonProperty(value = "key")  String key,
+            @JsonProperty(value = "startTs") long startTs,
+            @JsonProperty(value = "endTs") long endTs,
+            @JsonProperty(value = "aggParameters") AggregationParams parameters,
+            @JsonProperty(value = "limit") Integer limit,
+            @JsonProperty(value = "order") String order
+    ) {
         super(key, startTs, endTs);
-        this.aggParameters = parameters;
-        this.limit = limit;
-        this.order = order;
+        this.aggParameters = parameters != null ? parameters : AggregationParams.none();
+        this.limit = limit != null ? limit : 1;
+        this.order = (order == null || order.isBlank()) ? "DESC" : order;
     }
 
     public BaseReadTsKvQuery(String key, long startTs, long endTs) {

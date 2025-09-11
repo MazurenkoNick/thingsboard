@@ -52,6 +52,7 @@ import org.thingsboard.server.service.security.AccessValidator;
 import org.thingsboard.server.service.security.ValidationResult;
 import org.thingsboard.server.service.security.model.SecurityUser;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -106,13 +107,13 @@ public class DefaultTbTelemetryService implements TbTelemetryService {
     }
 
     @Override
-    public ListenableFuture<List<ReadTsKvQueryResult>> getTimeseriesByReadQueries(EntityId entityId, List<ReadTsKvQuery> queries, SecurityUser currentUser) {
+    public ListenableFuture<List<ReadTsKvQueryResult>> getTimeseriesByReadQueries(EntityId entityId, List<BaseReadTsKvQuery> queries, SecurityUser currentUser) {
         SettableFuture<List<ReadTsKvQueryResult>> future = SettableFuture.create();
         accessValidator.validate(currentUser, Operation.READ_TELEMETRY, entityId, new FutureCallback<>() {
             @Override
             public void onSuccess(ValidationResult validationResult) {
                 try {
-                    Futures.addCallback(tsService.findAllByQueries(currentUser.getTenantId(), entityId, queries), new FutureCallback<>() {
+                    Futures.addCallback(tsService.findAllByQueries(currentUser.getTenantId(), entityId, new ArrayList<>(queries)), new FutureCallback<>() {
                         @Override
                         public void onSuccess(List<ReadTsKvQueryResult> result) {
                             future.set(result);

@@ -40,6 +40,7 @@ import org.thingsboard.server.common.data.kv.DoubleDataEntry;
 import org.thingsboard.server.common.data.kv.JsonDataEntry;
 import org.thingsboard.server.common.data.kv.KvEntry;
 import org.thingsboard.server.common.data.kv.LongDataEntry;
+import org.thingsboard.server.common.data.kv.ReadTsKvQueryResult;
 import org.thingsboard.server.common.data.kv.StringDataEntry;
 import org.thingsboard.server.common.data.kv.TsKvEntry;
 
@@ -67,6 +68,30 @@ public class RestJsonConverter {
         } else {
             return Collections.emptyList();
         }
+    }
+
+    public static List<ReadTsKvQueryResult> toReadTsKvQueryResult(JsonNode body) {
+            List<ReadTsKvQueryResult> result = new ArrayList<>();
+            body.forEach(item -> {
+                int queryId = item.get("queryId").asInt();
+                long lastEntryTs = item.get("lastEntryTs").asLong();
+                List<TsKvEntry> data = toTimeseries(item.get("data"));
+                result.add(new ReadTsKvQueryResult(queryId, data, lastEntryTs));
+            });
+            return result;
+    }
+
+    private static List<TsKvEntry> toTimeseries(JsonNode data) {
+        if (data != null && data.isArray()) {
+            List<TsKvEntry> result = new ArrayList<>();
+            data.forEach(tsKvEntry -> {
+                JsonNode kv = tsKvEntry.get("kv");
+                KvEntry kvEntry = parseValue(kv.get("key").asText(), kv.get("value"));
+                result.add(new BasicTsKvEntry(tsKvEntry.get("ts").asLong(), kvEntry));
+            });
+            return result;
+        }
+        return Collections.emptyList();
     }
 
     public static List<TsKvEntry> toTimeseries(Map<String, List<JsonNode>> timeseries) {

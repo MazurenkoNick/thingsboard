@@ -34,6 +34,7 @@ import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.ReportTemplateId;
 import org.thingsboard.server.common.data.kv.Aggregation;
+import org.thingsboard.server.common.data.kv.BaseReadTsKvQuery;
 import org.thingsboard.server.common.data.kv.ReadTsKvQuery;
 import org.thingsboard.server.common.data.kv.ReadTsKvQueryResult;
 import org.thingsboard.server.common.data.kv.TsKvEntry;
@@ -75,7 +76,7 @@ public interface ReportDataService {
                                   Interval interval, String timeZone, Aggregation agg, SortOrder.Direction sortOrder,
                                   Integer limit, boolean useStrictDataTypes, TbReportCtx ctx);
 
-    List<ReadTsKvQueryResult> findTimeseriesByQueries(EntityId entityId, List<ReadTsKvQuery> queries, TbReportCtx ctx);
+    List<ReadTsKvQueryResult> findTimeseriesByQueries(EntityId entityId, List<BaseReadTsKvQuery> queries, TbReportCtx ctx);
 
     Report createReport(Report report, byte[] data, TbReportCtx ctx) throws ThingsboardException;
 
