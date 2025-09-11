@@ -72,10 +72,6 @@
             <groupId>org.apache.pulsar</groupId>
             <artifactId>pulsar-client-api</artifactId>
         </dependency>
-        <dependency>
-            <groupId>org.apache.pulsar</groupId>
-            <artifactId>pulsar-client-admin-api</artifactId>
-        </dependency>
     </dependencies>
 
     <build>

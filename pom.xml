@@ -950,6 +950,13 @@
                 <scope>import</scope>
             </dependency>
             <dependency>
+                <groupId>org.apache.pulsar</groupId>
+                <artifactId>pulsar-bom</artifactId>
+                <version>${apache-pulsar.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-dependencies</artifactId>
                 <version>${spring-boot.version}</version>
@@ -1068,21 +1075,6 @@
                 <groupId>org.thingsboard.common.integration</groupId>
                 <artifactId>apache-pulsar</artifactId>
                 <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.pulsar</groupId>
-                <artifactId>pulsar-client</artifactId>
-                <version>${apache-pulsar.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.pulsar</groupId>
-                <artifactId>pulsar-client-api</artifactId>
-                <version>${apache-pulsar.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.pulsar</groupId>
-                <artifactId>pulsar-client-admin-api</artifactId>
-                <version>${apache-pulsar.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.thingsboard.common.integration</groupId>
