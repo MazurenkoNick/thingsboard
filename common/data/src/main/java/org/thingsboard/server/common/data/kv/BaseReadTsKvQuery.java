@@ -31,16 +31,16 @@
 package org.thingsboard.server.common.data.kv;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
-import lombok.extern.jackson.Jacksonized;
 
 import java.time.ZoneId;
 
 @Data
-@Jacksonized
+@JsonIgnoreProperties(ignoreUnknown = true)
 @EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
 public class BaseReadTsKvQuery extends BaseTsKvQuery implements ReadTsKvQuery {

@@ -52,6 +52,7 @@ import java.util.stream.Collectors;
 
 public class RestJsonConverter {
     private static final String KEY = "key";
+    private static final String KV = "kv";
     private static final String VALUE = "value";
     private static final String LAST_UPDATE_TS = "lastUpdateTs";
     private static final String TS = "ts";
@@ -85,9 +86,9 @@ public class RestJsonConverter {
         if (data != null && data.isArray()) {
             List<TsKvEntry> result = new ArrayList<>();
             data.forEach(tsKvEntry -> {
-                JsonNode kv = tsKvEntry.get("kv");
-                KvEntry kvEntry = parseValue(kv.get("key").asText(), kv.get("value"));
-                result.add(new BasicTsKvEntry(tsKvEntry.get("ts").asLong(), kvEntry));
+                JsonNode kv = tsKvEntry.get(KV);
+                KvEntry kvEntry = parseValue(kv.get(KEY).asText(), kv.get(VALUE));
+                result.add(new BasicTsKvEntry(tsKvEntry.get(TS).asLong(), kvEntry));
             });
             return result;
         }
