@@ -107,21 +107,21 @@
             <mat-slide-toggle formControlName="allEntities">
               {{ 'version-control.all-entities' | translate }}
             </mat-slide-toggle>
-            <tb-entity-list
-              class="flex-1"
-              *ngIf="!isGroupEntityType(entityTypeFormGroup.get('entityType').value)"
-              [class.!hidden]="entityTypeFormGroup.get('config').get('allEntities').value"
-              [entityType]="entityTypeFormGroup.get('entityType').value"
-              required
-              formControlName="entityIds">
-            </tb-entity-list>
-            <tb-owner-entity-group-list
-              *ngIf="isGroupEntityType(entityTypeFormGroup.get('entityType').value)"
-              [class.!hidden]="entityTypeFormGroup.get('config').get('allEntities').value"
-              [entityType]="entityTypeFormGroup.get('entityType').value"
-              required
-              formControlName="entityIds">
-            </tb-owner-entity-group-list>
+            @if (!entityTypeFormGroup.get('config').get('allEntities').value) {
+              <tb-entity-list
+                class="flex-1"
+                *ngIf="!isGroupEntityType(entityTypeFormGroup.get('entityType').value)"
+                [entityType]="entityTypeFormGroup.get('entityType').value"
+                required
+                formControlName="entityIds">
+              </tb-entity-list>
+              <tb-owner-entity-group-list
+                *ngIf="isGroupEntityType(entityTypeFormGroup.get('entityType').value)"
+                [entityType]="entityTypeFormGroup.get('entityType').value"
+                required
+                formControlName="entityIds">
+              </tb-owner-entity-group-list>
+            }
           </div>
         </div>
       </mat-expansion-panel>
