@@ -193,7 +193,7 @@ export interface CalculatedFieldGeofencing {
 }
 
 export interface RefDynamicSourceConfiguration {
-  type?: ArgumentEntityType.Current | ArgumentEntityType.RelationQuery | CFArgumentDynamicSourceType.CURRENT_OWNER;
+  type?: ArgumentEntityType.RelationQuery | CFArgumentDynamicSourceType.CURRENT_OWNER;
   direction?: GeofencingDirection;
   relationType?: string;
   maxLevel?: number;
