@@ -14,7 +14,17 @@
 /// limitations under the License.
 ///
 
-import { Component, effect, ElementRef, forwardRef, input, OnChanges, SimpleChanges, ViewChild, } from '@angular/core';
+import {
+  Component,
+  effect,
+  ElementRef,
+  forwardRef,
+  Input,
+  input,
+  OnChanges,
+  SimpleChanges,
+  ViewChild,
+} from '@angular/core';
 import {
   ControlValueAccessor,
   FormBuilder,
@@ -52,6 +62,9 @@ import { isEqual } from '@core/utils';
 export class EntityKeyAutocompleteComponent implements ControlValueAccessor, Validator, OnChanges {
 
   @ViewChild('keyInput', {static: true}) keyInput: ElementRef;
+
+  @Input() placeholder = 'action.set';
+  @Input() requiredText = 'common.hint.key-required';
 
   entityFilter = input.required<EntityFilter>();
   dataKeyType = input.required<DataKeyType>();

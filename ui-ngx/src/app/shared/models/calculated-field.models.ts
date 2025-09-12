@@ -43,19 +43,23 @@ export interface CalculatedField extends Omit<BaseData<CalculatedFieldId>, 'labe
 export enum CalculatedFieldType {
   SIMPLE = 'SIMPLE',
   SCRIPT = 'SCRIPT',
+  GEOFENCING = 'GEOFENCING'
 }
 
 export const CalculatedFieldTypeTranslations = new Map<CalculatedFieldType, string>(
   [
     [CalculatedFieldType.SIMPLE, 'calculated-fields.type.simple'],
     [CalculatedFieldType.SCRIPT, 'calculated-fields.type.script'],
+    [CalculatedFieldType.GEOFENCING, 'calculated-fields.type.geofencing'],
   ]
 )
 
 export interface CalculatedFieldConfiguration {
   type: CalculatedFieldType;
-  expression: string;
-  arguments: Record<string, CalculatedFieldArgument>;
+  expression?: string;
+  arguments?: Record<string, CalculatedFieldArgument>;
+  zoneGroups?: Record<string, CalculatedFieldGeofencing>;
+  scheduledUpdateInterval?: number;
   output: CalculatedFieldOutput;
 }
 
@@ -72,6 +76,7 @@ export enum ArgumentEntityType {
   Asset = 'ASSET',
   Customer = 'CUSTOMER',
   Tenant = 'TENANT',
+  RelationQuery = 'RELATION_QUERY',
 }
 
 export const ArgumentEntityTypeTranslations = new Map<ArgumentEntityType, string>(
@@ -81,6 +86,33 @@ export const ArgumentEntityTypeTranslations = new Map<ArgumentEntityType, string
     [ArgumentEntityType.Asset, 'calculated-fields.argument-asset'],
     [ArgumentEntityType.Customer, 'calculated-fields.argument-customer'],
     [ArgumentEntityType.Tenant, 'calculated-fields.argument-tenant'],
+    [ArgumentEntityType.RelationQuery, 'calculated-fields.argument-relation-query'],
+  ]
+)
+
+export enum GeofencingReportStrategy {
+  REPORT_TRANSITION_EVENTS_ONLY = 'REPORT_TRANSITION_EVENTS_ONLY',
+  REPORT_PRESENCE_STATUS_ONLY = 'REPORT_PRESENCE_STATUS_ONLY',
+  REPORT_TRANSITION_EVENTS_AND_PRESENCE_STATUS = 'REPORT_TRANSITION_EVENTS_AND_PRESENCE_STATUS'
+}
+
+export const GeofencingReportStrategyTranslations = new Map<GeofencingReportStrategy, string>(
+  [
+    [GeofencingReportStrategy.REPORT_TRANSITION_EVENTS_AND_PRESENCE_STATUS, 'calculated-fields.report-transition-event-and-presence'],
+    [GeofencingReportStrategy.REPORT_TRANSITION_EVENTS_ONLY, 'calculated-fields.report-transition-event-only'],
+    [GeofencingReportStrategy.REPORT_PRESENCE_STATUS_ONLY, 'calculated-fields.report-presence-status-only']
+  ]
+)
+
+export enum GeofencingDirection {
+  FROM = 'FROM',
+  TO = 'TO'
+}
+
+export const GeofencingDirectionTranslations = new Map<GeofencingDirection, string>(
+  [
+    [GeofencingDirection.FROM, 'calculated-fields.direction-from'],
+    [GeofencingDirection.TO, 'calculated-fields.direction-to'],
   ]
 )
 
@@ -129,6 +161,29 @@ export interface CalculatedFieldArgument {
   refEntityId?: RefEntityId;
   limit?: number;
   timeWindow?: number;
+}
+
+export interface CalculatedFieldGeofencing {
+  perimeterKeyName: string;
+  reportStrategy: GeofencingReportStrategy;
+  refEntityId?: RefEntityId;
+  refDynamicSourceConfiguration: RefDynamicSourceConfiguration;
+  createRelationsWithMatchedZones: boolean;
+  relationType: string;
+  direction: GeofencingDirection;
+}
+
+export interface RefDynamicSourceConfiguration {
+  type?: ArgumentEntityType.Current | ArgumentEntityType.RelationQuery;
+  direction: GeofencingDirection;
+  relationType: string;
+  maxLevel: number;
+  fetchLastLevelOnly?: boolean;
+}
+
+export interface CalculatedFieldGeofencingValue extends CalculatedFieldGeofencing {
+  name: string;
+  entityName?: string;
 }
 
 export interface RefEntityKey {
