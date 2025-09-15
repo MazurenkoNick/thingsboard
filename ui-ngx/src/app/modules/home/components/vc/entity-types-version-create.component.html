@@ -99,7 +99,7 @@
                 </div>
               </div>
             </div>
-            <div class="flex  justify-start gap-4"
+            <div class="flex justify-start gap-4"
                  [class.flex-col]="isGroupEntityType(entityTypeFormGroup.get('entityType').value)"
                  [class.flex-row]="!isGroupEntityType(entityTypeFormGroup.get('entityType').value)"
                  [class.items-stretch]="isGroupEntityType(entityTypeFormGroup.get('entityType').value)"
@@ -114,6 +114,7 @@
                   <tb-entity-list
                     class="flex-1"
                     appearance="outline"
+                    subscriptSizing="dynamic"
                     [entityType]="entityTypeFormGroup.get('entityType').value"
                     required
                     formControlName="entityIds">
