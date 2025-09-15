@@ -67,13 +67,13 @@ public class BaseReadTsKvQuery extends BaseTsKvQuery implements ReadTsKvQuery {
             @JsonProperty(value = "startTs") long startTs,
             @JsonProperty(value = "endTs") long endTs,
             @JsonProperty(value = "aggParameters") AggregationParams parameters,
-            @JsonProperty(value = "limit") Integer limit,
+            @JsonProperty(value = "limit") int limit,
             @JsonProperty(value = "order") String order
     ) {
         super(key, startTs, endTs);
-        this.aggParameters = parameters != null ? parameters : AggregationParams.none();
-        this.limit = limit != null ? limit : 1;
-        this.order = (order == null || order.isBlank()) ? "DESC" : order;
+        this.aggParameters = parameters;
+        this.limit = limit;
+        this.order = order;
     }
 
     public BaseReadTsKvQuery(String key, long startTs, long endTs) {
