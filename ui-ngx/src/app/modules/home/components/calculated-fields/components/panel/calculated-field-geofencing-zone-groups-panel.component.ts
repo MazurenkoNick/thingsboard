@@ -40,7 +40,6 @@ import {
   CalculatedFieldGeofencing,
   CalculatedFieldGeofencingValue,
   CalculatedFieldType, CFArgumentDynamicSourceType,
-  GeofencingDirection,
   GeofencingDirectionTranslations,
   GeofencingReportStrategy,
   GeofencingReportStrategyTranslations,
@@ -59,6 +58,7 @@ import { AppState } from '@core/core.state';
 import { Store } from '@ngrx/store';
 import { EntityAutocompleteComponent } from '@shared/components/entity/entity-autocomplete.component';
 import { NULL_UUID } from '@shared/models/id/has-uuid';
+import { EntitySearchDirection } from '@shared/models/relation.models';
 
 @Component({
   selector: 'tb-calculated-field-geofencing-zone-groups-panel',
@@ -89,7 +89,7 @@ export class CalculatedFieldGeofencingZoneGroupsPanelComponent implements OnInit
       id: ['']
     }),
     refDynamicSourceConfiguration: this.fb.group({
-      direction: [GeofencingDirection.TO],
+      direction: [EntitySearchDirection.TO],
       relationType: ['', [Validators.required]],
       maxLevel: [1, [Validators.required, Validators.min(1), Validators.max(this.maxRelationLevelPerCfArgument)]],
       fetchLastLevelOnly: [false],
@@ -97,7 +97,7 @@ export class CalculatedFieldGeofencingZoneGroupsPanelComponent implements OnInit
     perimeterKeyName: ['', [Validators.pattern(oneSpaceInsideRegex)]],
     reportStrategy: [GeofencingReportStrategy.REPORT_TRANSITION_EVENTS_AND_PRESENCE_STATUS],
     createRelationsWithMatchedZones: [false],
-    direction: [GeofencingDirection.TO],
+    direction: [EntitySearchDirection.TO],
     relationType: ['', [Validators.required]]
   });
 
@@ -111,7 +111,7 @@ export class CalculatedFieldGeofencingZoneGroupsPanelComponent implements OnInit
   readonly ArgumentEntityTypeParamsMap = ArgumentEntityTypeParamsMap;
   readonly GeofencingReportStrategyList = Object.values(GeofencingReportStrategy) as Array<GeofencingReportStrategy>;
   readonly GeofencingReportStrategyTranslations = GeofencingReportStrategyTranslations;
-  readonly GeofencingDirectionList = Object.values(GeofencingDirection) as Array<GeofencingDirection>;
+  readonly GeofencingDirectionList = Object.values(EntitySearchDirection) as Array<EntitySearchDirection>;
   readonly GeofencingDirectionTranslations = GeofencingDirectionTranslations;
 
   private currentEntityFilter: EntityFilter;

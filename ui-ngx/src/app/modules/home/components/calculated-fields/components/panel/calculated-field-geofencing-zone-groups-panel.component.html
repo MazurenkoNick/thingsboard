@@ -37,7 +37,7 @@
       <div class="tb-form-row">
         <div class="fixed-title-width tb-required">{{ 'calculated-fields.name' | translate }}</div>
         <mat-form-field class="flex-1" appearance="outline" subscriptSizing="dynamic">
-          <input matInput autocomplete="off" name="value" formControlName="name" maxlength="255" placeholder="{{ 'action.set' | translate }}"/>
+          <input matInput autocomplete="new-name" name="value" formControlName="name" maxlength="255" placeholder="{{ 'action.set' | translate }}"/>
           @if (geofencingFormGroup.get('name').touched && geofencingFormGroup.get('name').hasError('required')) {
             <mat-icon matSuffix
                       matTooltipPosition="above"

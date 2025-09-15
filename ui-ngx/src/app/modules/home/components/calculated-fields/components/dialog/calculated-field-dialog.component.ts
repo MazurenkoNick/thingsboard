@@ -61,8 +61,8 @@ import { CalculatedFieldsService } from '@core/http/calculated-fields.service';
 import { Observable } from 'rxjs';
 import { EntityId } from '@shared/models/id/entity-id';
 import { AdditionalDebugActionConfig } from '@home/components/entity/debug/entity-debug-settings.model';
-import { EntityFilter } from "@shared/models/query/query.models";
-import { getCurrentAuthState } from "@core/auth/auth.selectors";
+import { EntityFilter } from '@shared/models/query/query.models';
+import { getCurrentAuthState } from '@core/auth/auth.selectors';
 
 export interface CalculatedFieldDialogData {
   value?: CalculatedField;
@@ -264,8 +264,13 @@ export class CalculatedFieldDialogComponent extends DialogComponent<CalculatedFi
     this.configFormGroup.get('zoneGroups').valueChanges
       .pipe(takeUntilDestroyed())
       .subscribe((zoneGroups: CalculatedFieldGeofencing) =>
-        this.isRelatedEntity = Object.values(zoneGroups).some(zone => zone.refDynamicSourceConfiguration?.type === ArgumentEntityType.RelationQuery)
+        this.checkRelatedEntity(zoneGroups)
       );
+    this.checkRelatedEntity(this.configFormGroup.get('zoneGroups').value);
+  }
+
+  private checkRelatedEntity(zoneGroups: CalculatedFieldGeofencing) {
+    this.isRelatedEntity = Object.values(zoneGroups).some(zone => zone.refDynamicSourceConfiguration?.type === ArgumentEntityType.RelationQuery);
   }
 
   private toggleScopeByOutputType(type: OutputType): void {

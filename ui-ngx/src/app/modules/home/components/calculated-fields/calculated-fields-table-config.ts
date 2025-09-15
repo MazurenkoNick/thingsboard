@@ -200,7 +200,7 @@ export class CalculatedFieldsTableConfig extends EntityTableConfig<CalculatedFie
     if (entity.type === CalculatedFieldType.SCRIPT) {
       return 'function calculate(ctx, ' + Object.keys(entity.configuration.arguments).join(', ') + ')';
     } else {
-      return entity.configuration?.expression || '';
+      return entity.configuration?.expression ?? '';
     }
   }
 

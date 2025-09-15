@@ -28,7 +28,7 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-@use '../../../../../../../scss/constants' as constants;
+@import '../../../../../../../scss/constants';
 
 $panel-width: 520px;
 
@@ -39,7 +39,7 @@ $panel-width: 520px;
   max-height: 80vh;
 
   .fixed-title-width {
-    @media #{constants.$mat-xs} {
+    @media #{$mat-xs} {
       min-width: 120px;
     }
   }

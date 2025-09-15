@@ -302,10 +302,10 @@ import { CheckConnectivityDialogComponent } from '@home/components/ai-model/chec
 import { AIModelDialogComponent } from '@home/components/ai-model/ai-model-dialog.component';
 import {
   CalculatedFieldGeofencingZoneGroupsTableComponent
-} from "@home/components/calculated-fields/components/geofencing-zone-grups-table/calculated-field-geofencing-zone-groups-table.component";
+} from '@home/components/calculated-fields/components/geofencing-zone-grups-table/calculated-field-geofencing-zone-groups-table.component';
 import {
   CalculatedFieldGeofencingZoneGroupsPanelComponent
-} from "@home/components/calculated-fields/components/panel/calculated-field-geofencing-zone-groups-panel.component";
+} from '@home/components/calculated-fields/components/panel/calculated-field-geofencing-zone-groups-panel.component';
 
 @NgModule({
   declarations:

@@ -275,7 +275,7 @@ import { SecretStorageDialogComponent } from '@shared/components/secret-storage/
 import { SecretAutocompleteComponent } from '@shared/components/secret-storage/secret-autocomplete.component';
 import { ReportTemplateAutocompleteComponent } from '@shared/components/report/report-template-autocomplete.component';
 import { FormRowDirective } from '@shared/directives/form-row.directive';
-import { TimeUnitInputComponent } from "@shared/components/time-unit-input.component";
+import { TimeUnitInputComponent } from '@shared/components/time-unit-input.component';
 
 export function MarkedOptionsFactory(markedOptionsService: MarkedOptionsService) {
   return markedOptionsService;

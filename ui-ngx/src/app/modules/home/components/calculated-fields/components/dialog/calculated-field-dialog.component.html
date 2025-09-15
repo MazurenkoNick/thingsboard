@@ -154,14 +154,14 @@
             </div>
             <div class="flex items-start gap-3" [formGroup]="coordinatesFormGroup">
               <tb-entity-key-autocomplete class="flex-1"
-                                          placeholder="calculated-fields.latitude-time-series-key"
-                                          requiredText="calculated-fields.latitude-time-series-key-required"
+                                          placeholder="{{ 'calculated-fields.latitude-time-series-key' | translate }}"
+                                          requiredText="{{ 'calculated-fields.latitude-time-series-key-required' | translate }}"
                                           formControlName="latitudeKeyName"
                                           [dataKeyType]="DataKeyType.timeseries"
                                           [entityFilter]="currentEntityFilter"/>
               <tb-entity-key-autocomplete class="flex-1"
-                                          placeholder="calculated-fields.longitude-time-series-key"
-                                          requiredText="calculated-fields.longitude-time-series-key-required"
+                                          placeholder="{{ 'calculated-fields.longitude-time-series-key' | translate }}"
+                                          requiredText="{{ 'calculated-fields.longitude-time-series-key-required' | translate }}"
                                           formControlName="longitudeKeyName"
                                           [dataKeyType]="DataKeyType.timeseries"
                                           [entityFilter]="currentEntityFilter"/>

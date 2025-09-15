@@ -44,6 +44,7 @@ import {
   dotOperatorHighlightRule,
   endGroupHighlightRule
 } from '@shared/models/ace/ace.models';
+import { EntitySearchDirection } from '@shared/models/relation.models';
 import { JobStatus } from '@shared/models/job.models';
 
 export interface CalculatedField extends Omit<BaseData<CalculatedFieldId>, 'label'>, HasVersion, HasEntityDebugSettings, HasTenantId, ExportableEntity<CalculatedFieldId> {
@@ -118,15 +119,10 @@ export const GeofencingReportStrategyTranslations = new Map<GeofencingReportStra
   ]
 )
 
-export enum GeofencingDirection {
-  FROM = 'FROM',
-  TO = 'TO'
-}
-
-export const GeofencingDirectionTranslations = new Map<GeofencingDirection, string>(
+export const GeofencingDirectionTranslations = new Map<EntitySearchDirection, string>(
   [
-    [GeofencingDirection.FROM, 'calculated-fields.direction-from'],
-    [GeofencingDirection.TO, 'calculated-fields.direction-to'],
+    [EntitySearchDirection.FROM, 'calculated-fields.direction-from'],
+    [EntitySearchDirection.TO, 'calculated-fields.direction-to'],
   ]
 )
 
@@ -189,12 +185,12 @@ export interface CalculatedFieldGeofencing {
   refDynamicSourceConfiguration: RefDynamicSourceConfiguration;
   createRelationsWithMatchedZones: boolean;
   relationType: string;
-  direction: GeofencingDirection;
+  direction: EntitySearchDirection;
 }
 
 export interface RefDynamicSourceConfiguration {
   type?: ArgumentEntityType.RelationQuery | CFArgumentDynamicSourceType.CURRENT_OWNER;
-  direction?: GeofencingDirection;
+  direction?: EntitySearchDirection;
   relationType?: string;
   maxLevel?: number;
   fetchLastLevelOnly?: boolean;

@@ -73,7 +73,7 @@ import { NULL_UUID } from '@shared/models/id/has-uuid';
 import { BaseData } from '@shared/models/base-data';
 import {
   CalculatedFieldGeofencingZoneGroupsPanelComponent
-} from "@home/components/calculated-fields/components/panel/calculated-field-geofencing-zone-groups-panel.component";
+} from '@home/components/calculated-fields/components/panel/calculated-field-geofencing-zone-groups-panel.component';
 
 @Component({
   selector: 'tb-calculated-field-geofencing-zone-groups-table',
