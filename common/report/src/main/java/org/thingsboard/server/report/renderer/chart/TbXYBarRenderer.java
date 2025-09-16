@@ -417,24 +417,30 @@ public class TbXYBarRenderer extends XYBarRenderer implements TbItemRenderer {
                 endElementGroup(g2);
             }
         } else if (pass == 1) {
-            if (isItemLabelVisible(series, item)) {
-                XYItemLabelGenerator generator = getItemLabelGenerator(series,
-                        item);
-                drawItemLabel(g2, dataset, series, item, plot, generator, bar.getBounds2D(),
-                        value1 < 0.0);
-            }
+            Shape savedClip = g2.getClip();
+            g2.setClip(null);
+            try {
+                if (isItemLabelVisible(series, item)) {
+                    XYItemLabelGenerator generator = getItemLabelGenerator(series,
+                            item);
+                    drawItemLabel(g2, dataset, series, item, plot, generator, bar.getBounds2D(),
+                            value1 < 0.0);
+                }
 
-            // update the crosshair point
-            double x1 = (startX + endX) / 2.0;
-            double y1 = dataset.getYValue(series, item);
-            double transX1 = domainAxis.valueToJava2D(x1, dataArea, location);
-            int datasetIndex = plot.indexOf(dataset);
-            updateCrosshairValues(crosshairState, x1, y1, datasetIndex,
-                    transX1, translatedValue1, plot.getOrientation());
+                // update the crosshair point
+                double x1 = (startX + endX) / 2.0;
+                double y1 = dataset.getYValue(series, item);
+                double transX1 = domainAxis.valueToJava2D(x1, dataArea, location);
+                int datasetIndex = plot.indexOf(dataset);
+                updateCrosshairValues(crosshairState, x1, y1, datasetIndex,
+                        transX1, translatedValue1, plot.getOrientation());
 
-            EntityCollection entities = state.getEntityCollection();
-            if (entities != null) {
-                addEntity(entities, bar, dataset, series, item, 0.0, 0.0);
+                EntityCollection entities = state.getEntityCollection();
+                if (entities != null) {
+                    addEntity(entities, bar, dataset, series, item, 0.0, 0.0);
+                }
+            } finally {
+                g2.setClip(savedClip);
             }
         }
     }
@@ -575,7 +581,7 @@ public class TbXYBarRenderer extends XYBarRenderer implements TbItemRenderer {
                         position.getRotationAnchor()).getBounds2D();
                 g2.setPaint(getItemLabelBackgroundPaint(series, item));
                 g2.setStroke(new BasicStroke(0));
-                g2.fillRoundRect((int)bounds.getX()-3, (int)bounds.getY()-2, (int)bounds.getWidth()+6, (int)bounds.getHeight()+4, 4, 4 );
+                g2.fillRoundRect((int)bounds.getX()-3, (int)bounds.getY()-1, (int)bounds.getWidth()+6, (int)bounds.getHeight()+4, 4, 4 );
             }
             Paint paint = getItemLabelPaint(series, item);
             g2.setPaint(paint);

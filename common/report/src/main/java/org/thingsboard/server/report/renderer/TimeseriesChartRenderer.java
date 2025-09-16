@@ -84,6 +84,8 @@ import org.thingsboard.server.report.context.chart.TsChartThresholdItem;
 import org.thingsboard.server.report.renderer.chart.TbColumnArrangement;
 import org.thingsboard.server.report.renderer.chart.TbDatasetKey;
 import org.thingsboard.server.report.renderer.chart.TbFlowArrangement;
+import org.thingsboard.server.report.renderer.chart.TbStateTick;
+import org.thingsboard.server.report.renderer.chart.TbStateValueConverter;
 import org.thingsboard.server.report.renderer.chart.TbThresholdMarker;
 import org.thingsboard.server.report.renderer.chart.TbTimeseriesPlot;
 import org.thingsboard.server.report.renderer.chart.TbXYBarRenderer;
@@ -98,7 +100,13 @@ import org.thingsboard.server.report.renderer.chart.legend.TbTableLegendTitle;
 import org.thingsboard.server.report.util.ColorUtils;
 import org.thingsboard.server.report.util.ThymeleafUtil;
 
-import java.awt.*;
+import java.awt.BasicStroke;
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.Graphics2D;
+import java.awt.Paint;
+import java.awt.Shape;
+import java.awt.Stroke;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -110,11 +118,6 @@ import java.util.Map;
 import java.util.Optional;
 
 import static org.thingsboard.server.report.renderer.chart.ChartUtils.adjustAxisMargins;
-import static org.thingsboard.server.report.renderer.chart.ChartUtils.calcAvg;
-import static org.thingsboard.server.report.renderer.chart.ChartUtils.calcLatest;
-import static org.thingsboard.server.report.renderer.chart.ChartUtils.calcMax;
-import static org.thingsboard.server.report.renderer.chart.ChartUtils.calcMin;
-import static org.thingsboard.server.report.renderer.chart.ChartUtils.calcTotal;
 import static org.thingsboard.server.report.renderer.chart.ChartUtils.calculateBarTimePeriod;
 import static org.thingsboard.server.report.renderer.chart.ChartUtils.createFillPaint;
 import static org.thingsboard.server.report.renderer.chart.ChartUtils.createLineStroke;
@@ -146,6 +149,8 @@ public class TimeseriesChartRenderer extends ChartRenderer<TimeseriesChartCompon
     private List<TsChartSeriesData> seriesList;
     private List<TbDatasetKey> datasetKeys;
 
+    private TbStateValueConverter stateValueConverter;
+
     private boolean stackMode;
 
     @Override
@@ -154,6 +159,12 @@ public class TimeseriesChartRenderer extends ChartRenderer<TimeseriesChartCompon
         this.chartSettings = new ReportTimeSeriesChartSettings(component.getTimeSeriesChartSettings());
         this.plot = new TbTimeseriesPlot();
         this.chartData = reportDataSource.getTsChartData();
+
+        if (!this.chartSettings.getStates().isEmpty()) {
+            this.stateValueConverter = new TbStateValueConverter(this.chartSettings.getStates());
+        } else {
+            this.stateValueConverter = null;
+        }
 
         this.stackMode = !this.chartData.isComparisonEnabled() && this.chartSettings.getStack();
 
@@ -228,9 +239,11 @@ public class TimeseriesChartRenderer extends ChartRenderer<TimeseriesChartCompon
 
         List<TimeSeriesChartYAxisSettings> yAxisSettingsList = chartSettings.getYAxes().values().stream().sorted(Comparator.comparingInt(TimeSeriesChartYAxisSettings::getOrder)).toList();
 
+        List<TbStateTick> stateTicks = this.stateValueConverter != null ? this.stateValueConverter.getStateTicks() : null;
+
         for (int index = 0; index < yAxisSettingsList.size(); index++) {
             TimeSeriesChartYAxisSettings yAxisSettings = yAxisSettingsList.get(index);
-            this.yAxisList.add(createYAxis(plot, yAxisSettings, index));
+            this.yAxisList.add(createYAxis(plot, yAxisSettings, stateTicks, index));
             this.yAxisIndexMap.put(yAxisSettingsList.get(index).getId(), index);
             this.yAxisHasDataMap.put(index, false);
         }
@@ -503,12 +516,11 @@ public class TimeseriesChartRenderer extends ChartRenderer<TimeseriesChartCompon
             for (TsChartSeriesData series : seriesList) {
                 String seriesName = datasetIndex + "_" + series.getSeriesIndex();
                 for (TsChartSeriesEntry tsValue : series.getData()) {
-                    SimpleTimePeriod timePeriod = calculateBarTimePeriod(tsValue, barRenderCtx, barsCount, barIndex);
-                    try {
-                        double doubleValue = Double.parseDouble(tsValue.getValue());
-                        tableDataset.add(timePeriod, doubleValue, seriesName);
+                    Double converted = this.convertValue(tsValue);
+                    if (converted != null) {
+                        SimpleTimePeriod timePeriod = calculateBarTimePeriod(tsValue, barRenderCtx, barsCount, barIndex);
+                        tableDataset.add(timePeriod, converted, seriesName);
                         hasData = true;
-                    } catch (NumberFormatException ignored) {
                     }
                 }
             }
@@ -521,12 +533,12 @@ public class TimeseriesChartRenderer extends ChartRenderer<TimeseriesChartCompon
                 int barIndex = allBarsList.indexOf(series);
                 TimePeriodValues timePeriods = new TimePeriodValues(datasetIndex + "_" + series.getSeriesIndex());
                 for (TsChartSeriesEntry tsValue : series.getData()) {
-                    try {
-                        double doubleValue = Double.parseDouble(tsValue.getValue());
+                    Double converted = this.convertValue(tsValue);
+                    if (converted != null) {
                         SimpleTimePeriod timePeriod = calculateBarTimePeriod(tsValue, barRenderCtx, barsCount, barIndex);
-                        timePeriods.add(timePeriod, doubleValue);
+                        timePeriods.add(timePeriod, converted);
                         hasData = true;
-                    } catch (NumberFormatException ignored) {}
+                    }
                 }
                 tpvDataset.addSeries(timePeriods);
             }
@@ -547,12 +559,11 @@ public class TimeseriesChartRenderer extends ChartRenderer<TimeseriesChartCompon
             for (TsChartSeriesData series : seriesList) {
                 String seriesName = datasetIndex + "_" + series.getSeriesIndex();
                 for (TsChartSeriesEntry tsValue : series.getData()) {
-                    Millisecond millisecond = new Millisecond(new Date(tsValue.getTs()), chartData.getTimeZone(), locale);
-                    try {
-                        double doubleValue = Double.parseDouble(tsValue.getValue());
-                        tableDataset.add(millisecond, doubleValue, seriesName);
+                    Double converted = this.convertValue(tsValue);
+                    if (converted != null) {
+                        Millisecond millisecond = new Millisecond(new Date(tsValue.getTs()), chartData.getTimeZone(), locale);
+                        tableDataset.add(millisecond, converted, seriesName);
                         hasData = true;
-                    } catch (NumberFormatException ignored) {
                     }
                 }
             }
@@ -562,12 +573,11 @@ public class TimeseriesChartRenderer extends ChartRenderer<TimeseriesChartCompon
             for (TsChartSeriesData series : seriesList) {
                 TimeSeries timeSeries = new TimeSeries(datasetIndex + "_" + series.getSeriesIndex());
                 for (TsChartSeriesEntry tsValue : series.getData()) {
-                    Millisecond millisecond = new Millisecond(new Date(tsValue.getTs()), chartData.getTimeZone(), locale);
-                    try {
-                        double doubleValue = Double.parseDouble(tsValue.getValue());
-                        timeSeries.add(millisecond, doubleValue);
+                    Double converted = this.convertValue(tsValue);
+                    if (converted != null) {
+                        Millisecond millisecond = new Millisecond(new Date(tsValue.getTs()), chartData.getTimeZone(), locale);
+                        timeSeries.add(millisecond, converted);
                         hasData = true;
-                    } catch (NumberFormatException ignored) {
                     }
                 }
                 tsDataset.addSeries(timeSeries);
@@ -578,6 +588,14 @@ public class TimeseriesChartRenderer extends ChartRenderer<TimeseriesChartCompon
         plot.setDataset(datasetIndex, dataset);
         plot.mapDatasetToDomainAxis(datasetIndex, xAxisIndex);
         plot.mapDatasetToRangeAxis(datasetIndex, yAxisIndex);
+    }
+
+    private Double convertValue(TsChartSeriesEntry tsValue) {
+        if (this.stateValueConverter != null) {
+            return this.stateValueConverter.convertValue(tsValue.getValue());
+        } else {
+            return tsValue.getDoubleValue();
+        }
     }
 
     private void createBarsRenderer(TbDatasetKey datasetKey, List<TsChartSeriesData> seriesList) {
@@ -599,7 +617,8 @@ public class TimeseriesChartRenderer extends ChartRenderer<TimeseriesChartCompon
                 renderer.setSeriesItemLabelsVisible(series.getSeriesIndex(), true);
                 renderer.setSeriesItemLabelFont(series.getSeriesIndex(), toAwtFont(barSettings.getLabelFont()));
                 renderer.setSeriesItemLabelPaint(series.getSeriesIndex(), safeParseCssColor(barSettings.getLabelColor()));
-                XYItemLabelGenerator labelGenerator = new TbXYItemLabelGenerator(series.getDataKey().getDecimals(), series.getDataKey().getUnits());
+                XYItemLabelGenerator labelGenerator = new TbXYItemLabelGenerator(series.getDataKey().getDecimals(), series.getDataKey().getUnits(),
+                        this.stateValueConverter);
                 renderer.setSeriesItemLabelGenerator(series.getSeriesIndex(), labelGenerator);
                 ItemLabelPosition positiveItemLabelPosition;
                 ItemLabelPosition negativeItemLabelPosition;
@@ -655,7 +674,8 @@ public class TimeseriesChartRenderer extends ChartRenderer<TimeseriesChartCompon
                         renderer.setSeriesItemLabelsVisible(series.getSeriesIndex(), true);
                         renderer.setSeriesItemLabelFont(series.getSeriesIndex(), toAwtFont(lineSettings.getPointLabelFont()));
                         renderer.setSeriesItemLabelPaint(series.getSeriesIndex(), safeParseCssColor(lineSettings.getPointLabelColor()));
-                        XYItemLabelGenerator labelGenerator = new TbXYItemLabelGenerator(series.getDataKey().getDecimals(), series.getDataKey().getUnits());
+                        XYItemLabelGenerator labelGenerator = new TbXYItemLabelGenerator(series.getDataKey().getDecimals(), series.getDataKey().getUnits(),
+                                this.stateValueConverter);
                         renderer.setSeriesItemLabelGenerator(series.getSeriesIndex(), labelGenerator);
                         ItemLabelPosition itemLabelPosition;
                         if (ChartLabelPosition.top.equals(lineSettings.getPointLabelPosition())) {
@@ -665,6 +685,7 @@ public class TimeseriesChartRenderer extends ChartRenderer<TimeseriesChartCompon
                             itemLabelPosition = new ItemLabelPosition(
                                     ItemLabelAnchor.OUTSIDE6, TextAnchor.TOP_CENTER);
                         }
+                        renderer.setItemLabelInsets(RectangleInsets.ZERO_INSETS);
                         renderer.setSeriesPositiveItemLabelPosition(series.getSeriesIndex(), itemLabelPosition);
                         renderer.setSeriesNegativeItemLabelPosition(series.getSeriesIndex(), itemLabelPosition);
                         if (lineSettings.getEnablePointLabelBackground()) {
@@ -742,23 +763,23 @@ public class TimeseriesChartRenderer extends ChartRenderer<TimeseriesChartCompon
             NumberFormat valueFormatter = createValueFormatter(decimals, units);
             TbLegendValues result = new TbLegendValues();
             if (request.isMin()) {
-                Double min = calcMin(dataset, seriesIndex);
+                Double min = series.calcMin();
                 result.setMin(min != null ? valueFormatter.format(min) : "");
             }
             if (request.isMax()) {
-                Double max = calcMax(dataset, seriesIndex);
+                Double max = series.calcMax();
                 result.setMax(max != null ? valueFormatter.format(max) : "");
             }
             if (request.isAvg()) {
-                Double avg = calcAvg(dataset, seriesIndex);
+                Double avg = series.calcAvg();
                 result.setAvg(avg != null ? valueFormatter.format(avg) : "");
             }
             if (request.isTotal()) {
-                Double total = calcTotal(dataset, seriesIndex);
+                Double total = series.calcTotal();
                 result.setTotal(total != null ? valueFormatter.format(total) : "");
             }
             if (request.isLatest()) {
-                Double latest = calcLatest(dataset, seriesIndex);
+                Double latest = series.calcLatest();
                 result.setLatest(latest != null ? valueFormatter.format(latest) : "");
             }
             return result;

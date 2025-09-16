@@ -32,7 +32,6 @@ package org.thingsboard.server.report.renderer.chart;
 
 import org.jfree.chart.axis.Axis;
 import org.jfree.chart.axis.AxisLocation;
-import org.jfree.chart.axis.DateAxis;
 import org.jfree.chart.axis.DateTickUnit;
 import org.jfree.chart.axis.DateTickUnitType;
 import org.jfree.chart.axis.NumberTickUnit;
@@ -42,7 +41,6 @@ import org.jfree.chart.axis.ValueAxis;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.ui.RectangleInsets;
 import org.jfree.data.time.SimpleTimePeriod;
-import org.jfree.data.xy.XYDataset;
 import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.report.configuration.DataKeySettings;
 import org.thingsboard.server.common.data.report.configuration.chart.AxisPosition;
@@ -62,7 +60,13 @@ import org.thingsboard.server.report.context.chart.TsChartSeriesEntry;
 import org.thingsboard.server.report.context.chart.TsChartThresholdItem;
 import org.thingsboard.server.report.util.ColorUtils;
 
-import java.awt.*;
+import java.awt.BasicStroke;
+import java.awt.Color;
+import java.awt.GradientPaint;
+import java.awt.Paint;
+import java.awt.Polygon;
+import java.awt.Shape;
+import java.awt.Stroke;
 import java.awt.geom.Arc2D;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.Path2D;
@@ -153,7 +157,7 @@ public interface ChartUtils {
         return xAxis;
     }
 
-    static TbNumberAxis createYAxis(XYPlot plot, TimeSeriesChartYAxisSettings yAxisSettings, int index) {
+    static TbNumberAxis createYAxis(XYPlot plot, TimeSeriesChartYAxisSettings yAxisSettings, List<TbStateTick> stateTicks, int index) {
         TbNumberAxis parent = null;
         if (index > 0) {
             parent = (TbNumberAxis) plot.getRangeAxis();
@@ -165,6 +169,7 @@ public interface ChartUtils {
         yAxis.setAutoRangeIncludesZero(false);
         yAxis.setGridlinesVisible(yAxisSettings.getShowSplitLines());
         yAxis.setGridlinePaint(safeParseCssColor(yAxisSettings.getSplitLinesColor()));
+        yAxis.setStateTicks(stateTicks);
         if (yAxisSettings.getSplitNumber() != null) {
             yAxis.setSplitNumber(yAxisSettings.getSplitNumber());
         } else if (yAxisSettings.getInterval() != null && yAxisSettings.getInterval() > 0) {
@@ -353,92 +358,6 @@ public interface ChartUtils {
             i += calculateBezierSegmentPoints(points, i, smooth, bezierNumPoints, interpolatedPoints) + 1;
         }
         return interpolatedPoints;
-    }
-
-    static Double calcMin(XYDataset dataset, int seriesIndex) {
-        if (dataset.getItemCount(seriesIndex) > 0) {
-            double result = dataset.getYValue(seriesIndex, 0);
-            for (int i = 1; i < dataset.getItemCount(seriesIndex); i++) {
-                double value = dataset.getYValue(seriesIndex, i);
-                if (Double.isFinite(value)) {
-                    if (!Double.isFinite(result)) {
-                        result = value;
-                    } else {
-                        result = Math.min(result, value);
-                    }
-                }
-            }
-            return result;
-        } else {
-            return null;
-        }
-    }
-
-    static Double calcMax(XYDataset dataset, int seriesIndex) {
-        if (dataset.getItemCount(seriesIndex) > 0) {
-            double result = dataset.getYValue(seriesIndex, 0);
-            for (int i = 1; i < dataset.getItemCount(seriesIndex); i++) {
-                double value = dataset.getYValue(seriesIndex, i);
-                if (Double.isFinite(value)) {
-                    if (!Double.isFinite(result)) {
-                        result = value;
-                    } else {
-                        result = Math.max(result, value);
-                    }
-                }
-            }
-            return result;
-        } else {
-            return null;
-        }
-    }
-
-    static Double calcTotal(XYDataset dataset, int seriesIndex) {
-        if (dataset.getItemCount(seriesIndex) > 0) {
-            double result = 0;
-            for (int i = 0; i < dataset.getItemCount(seriesIndex); i++) {
-                double value = dataset.getYValue(seriesIndex, i);
-                if (Double.isFinite(value)) {
-                    result += value;
-                }
-            }
-            return result;
-        } else {
-            return null;
-        }
-    }
-
-    static int calcCount(XYDataset dataset, int seriesIndex) {
-        int count = 0;
-        for (int i = 0; i < dataset.getItemCount(seriesIndex); i++) {
-            double value = dataset.getYValue(seriesIndex, i);
-            if (Double.isFinite(value)) {
-                count++;
-            }
-        }
-        return count;
-    }
-
-    static Double calcAvg(XYDataset dataset, int seriesIndex) {
-        Double total = calcTotal(dataset, seriesIndex);
-        if (total != null) {
-            int count = calcCount(dataset, seriesIndex);
-            return total / count;
-        } else {
-            return null;
-        }
-    }
-
-    static Double calcLatest(XYDataset dataset, int seriesIndex) {
-        if (dataset.getItemCount(seriesIndex) > 0) {
-            for (int i = dataset.getItemCount(seriesIndex) - 1; i >= 0; i--) {
-                double value = dataset.getYValue(seriesIndex, i);
-                if (Double.isFinite(value)) {
-                    return value;
-                }
-            }
-        }
-        return null;
     }
 
     private static int calculateBezierSegmentPoints(List<Point2D> points, int start, float smooth, int bezierNumPoints, List<Point2D> targetPoints) {
