@@ -92,6 +92,7 @@ export class UserComponent extends GroupEntityComponent<UserInfo> implements OnI
   ngOnInit(): void {
     this.entityForm.controls.email.addValidators(this.utils.validateEmail);
   }
+  
   hideDelete() {
     if (this.entitiesTableConfig) {
       return !this.entitiesTableConfig.deleteEnabled(this.entity);
