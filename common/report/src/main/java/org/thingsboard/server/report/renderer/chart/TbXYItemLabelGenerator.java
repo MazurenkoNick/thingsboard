@@ -40,10 +40,12 @@ import static org.thingsboard.server.report.renderer.chart.ChartUtils.createValu
 public class TbXYItemLabelGenerator implements XYItemLabelGenerator {
 
     private final NumberFormat formatter;
+    private final TbStateValueConverter stateValueConverter;
 
-    public TbXYItemLabelGenerator(Integer decimals, String units) {
+    public TbXYItemLabelGenerator(Integer decimals, String units, TbStateValueConverter stateValueConverter) {
         int decimalsInt = decimals != null ? decimals : 2;
         this.formatter = createValueFormatter(decimalsInt, units);
+        this.stateValueConverter = stateValueConverter;
     }
 
     @Override
@@ -52,7 +54,14 @@ public class TbXYItemLabelGenerator implements XYItemLabelGenerator {
         if (Double.isNaN(y) && dataset.getY(series, item) == null) {
             return "";
         } else {
-            return formatter.format(y);
+            String label = null;
+            if (stateValueConverter != null) {
+                label = stateValueConverter.formatLabel(y);
+            }
+            if (label == null) {
+                label = formatter.format(y);
+            }
+            return label;
         }
     }
 }

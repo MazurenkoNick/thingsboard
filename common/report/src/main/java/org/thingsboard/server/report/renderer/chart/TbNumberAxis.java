@@ -77,6 +77,8 @@ public class TbNumberAxis extends NumberAxis {
     private final TbNumberTickUnitSource tbNumberTickUnitSource = new TbNumberTickUnitSource();
     private final TbNumberAxis parentAxis;
 
+    private List<TbStateTick> stateTicks;
+
     private TbNumberAxisTicks ticks;
 
     public TbNumberAxis(String label, TbNumberAxis parentAxis) {
@@ -120,6 +122,14 @@ public class TbNumberAxis extends NumberAxis {
         Args.nullNotPermitted(paint, "paint");
         this.gridlinePaint = paint;
         fireChangeEvent();
+    }
+
+    public void setStateTicks(List<TbStateTick> stateTicks) {
+        this.stateTicks = stateTicks;
+        if (this.stateTicks != null) {
+            setUpperMargin(0);
+            setLowerMargin(0);
+        }
     }
 
     @Override
@@ -191,11 +201,15 @@ public class TbNumberAxis extends NumberAxis {
                 String tickLabel = null;
                 boolean drawLabel = (i == 0 && drawFirstLabel) || (i == ticks.getTicksCount() - 1 && drawLastLabel) || i > 0 && i < ticks.getTicksCount() - 1;
                 if (drawLabel) {
-                    NumberFormat formatter = getNumberFormatOverride();
-                    if (formatter != null) {
-                        tickLabel = formatter.format(currentTickValue);
+                    if (ticks.isStateTicks()) {
+                        tickLabel = ticks.getStateTickLabel(i);
                     } else {
-                        tickLabel = getTickUnit().valueToString(currentTickValue);
+                        NumberFormat formatter = getNumberFormatOverride();
+                        if (formatter != null) {
+                            tickLabel = formatter.format(currentTickValue);
+                        } else {
+                            tickLabel = getTickUnit().valueToString(currentTickValue);
+                        }
                     }
                 }
 
@@ -358,39 +372,50 @@ public class TbNumberAxis extends NumberAxis {
     }
 
     private void calculateTicks() {
-        if (this.parentAxis == null) {
-            TickUnit tu = getTickUnit();
-            double size = tu.getSize();
-            this.ticks = new TbNumberAxisTicks();
-            double currentTickValue = getRange().getLowerBound();
-            double maxTickValue = getRange().getUpperBound();
-            this.ticks.addTickValue(currentTickValue, getRange());
-            double lowestVisibleTickValue = isAutoTickUnitSelection() ? calculateLowestVisibleTickValue() : currentTickValue;
-            if (lowestVisibleTickValue > currentTickValue) {
-                this.ticks.setAdditionalFistTick(true);
-                currentTickValue = lowestVisibleTickValue;
-            } else {
-                currentTickValue += size;
-            }
-            while (currentTickValue < maxTickValue) {
-                this.ticks.addTickValue(currentTickValue, getRange());
-                currentTickValue += size;
-            }
-            if (maxTickValue > getRange().getLowerBound()) {
-                if (maxTickValue != currentTickValue) {
-                    this.ticks.setAdditionalLastTick(true);
-                }
-                this.ticks.addTickValue(maxTickValue, getRange());
+        if (stateTicks != null) {
+            this.ticks = new TbNumberAxisTicks(true);
+            for (TbStateTick stateTick : stateTicks) {
+                this.ticks.addStateTickValue(stateTick.getValue(), stateTick.getLabel(), getRange());
             }
         } else {
-            Double unitSize = !isAutoTickUnitSelection() ? getTickUnit().getSize() : null;
-            this.ticks = this.parentAxis.getTicks().computeChildTicks(this.splitNumber, unitSize, getRange());
+            if (this.parentAxis == null) {
+                TickUnit tu = getTickUnit();
+                double size = tu.getSize();
+                this.ticks = new TbNumberAxisTicks();
+                double currentTickValue = getRange().getLowerBound();
+                double maxTickValue = getRange().getUpperBound();
+                this.ticks.addTickValue(currentTickValue, getRange());
+                double lowestVisibleTickValue = isAutoTickUnitSelection() ? calculateLowestVisibleTickValue() : currentTickValue;
+                if (lowestVisibleTickValue > currentTickValue) {
+                    this.ticks.setAdditionalFistTick(true);
+                    currentTickValue = lowestVisibleTickValue;
+                } else {
+                    currentTickValue += size;
+                }
+                while (currentTickValue < maxTickValue) {
+                    this.ticks.addTickValue(currentTickValue, getRange());
+                    currentTickValue += size;
+                }
+                if (maxTickValue > getRange().getLowerBound()) {
+                    if (maxTickValue != currentTickValue) {
+                        this.ticks.setAdditionalLastTick(true);
+                    }
+                    this.ticks.addTickValue(maxTickValue, getRange());
+                }
+            } else {
+                Double unitSize = !isAutoTickUnitSelection() ? getTickUnit().getSize() : null;
+                this.ticks = this.parentAxis.getTicks().computeChildTicks(this.splitNumber, unitSize, getRange());
+            }
         }
     }
 
     private static class TbNumberAxisTicks {
 
         private final List<Double> tickValues = new ArrayList<>();
+        private final List<String> stateTickLabels = new ArrayList<>();
+
+        @Getter
+        private final boolean stateTicks;
 
         @Getter
         @Setter
@@ -400,14 +425,29 @@ public class TbNumberAxis extends NumberAxis {
         @Setter
         private boolean additionalLastTick = false;
 
-        public TbNumberAxisTicks() {}
+        public TbNumberAxisTicks() {
+            this(false);
+        }
+
+        public TbNumberAxisTicks(boolean stateTicks) {
+            this.stateTicks = stateTicks;
+        }
 
         public void addTickValue(double tickValue, Range range) {
            addTick((tickValue - range.getLowerBound()) / range.getLength());
         }
 
+        public void addStateTickValue(double tickValue, String label, Range range) {
+            addStateTick((tickValue - range.getLowerBound()) / range.getLength(), label);
+        }
+
         public void addTick(double tick) {
             tickValues.add(tick);
+        }
+
+        public void addStateTick(double tick, String label) {
+            tickValues.add(tick);
+            stateTickLabels.add(label);
         }
 
         public int getTicksCount() {
@@ -416,6 +456,10 @@ public class TbNumberAxis extends NumberAxis {
 
         public Double getTickValue(int index, Range range) {
             return range.getLowerBound()  + tickValues.get(index) * range.getLength();
+        }
+
+        public String getStateTickLabel(int index) {
+            return stateTickLabels.get(index);
         }
 
         public Double firstTickValue(Range range) {

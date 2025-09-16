@@ -53,6 +53,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 @Data
 public class TsChartDataSource {
@@ -126,10 +127,16 @@ public class TsChartDataSource {
                                 TimeIntervalCalculator.TimeRange interval =
                                         TimeIntervalCalculator.getAggTimeRange(timeWindow, aggInterval, aggregation, zoneId, entry.getTs());
                                 long ts = interval.startTs + (long)Math.floor((double)(interval.endTs - interval.startTs) / 2f);
-                                return new TsChartSeriesEntry(ts, interval, entry.getValueAsString());
+                                String value = entry.getValueAsString();
+                                Double doubleValue = null;
+                                try {
+                                    doubleValue = Double.parseDouble(value);
+                                } catch (NumberFormatException ignored) {}
+                                return new TsChartSeriesEntry(ts, interval, value, doubleValue);
                             }
                     ).sorted(Comparator.comparing(TsChartSeriesEntry::getTs)).toList();
             seriesData.setData(keyValues);
+            seriesData.setNumericData(keyValues.stream().map(TsChartSeriesEntry::getDoubleValue).filter(Objects::nonNull).toList());
             seriesData.setIndex(dataIndex);
             seriesData.setKeyIndex(keyIndex);
             this.data.add(seriesData);

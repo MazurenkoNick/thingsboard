@@ -497,84 +497,87 @@ public class TbXYLineAndShapeRenderer extends XYLineAndShapeRenderer implements 
                                      ValueAxis domainAxis, Rectangle2D dataArea, ValueAxis rangeAxis,
                                      CrosshairState crosshairState, EntityCollection entities) {
 
-        Shape entityArea = null;
+        Shape savedClip = g2.getClip();
+        g2.setClip(null);
+        try {
+            Shape entityArea = null;
 
-        // get the data point...
-        double x1 = dataset.getXValue(series, item);
-        double y1 = dataset.getYValue(series, item);
-        if (Double.isNaN(y1) || Double.isNaN(x1)) {
-            return;
-        }
+            // get the data point...
+            double x1 = dataset.getXValue(series, item);
+            double y1 = dataset.getYValue(series, item);
+            if (Double.isNaN(y1) || Double.isNaN(x1)) {
+                return;
+            }
 
-        PlotOrientation orientation = plot.getOrientation();
-        RectangleEdge xAxisLocation = plot.getDomainAxisEdge();
-        RectangleEdge yAxisLocation = plot.getRangeAxisEdge();
-        double transX1 = domainAxis.valueToJava2D(x1, dataArea, xAxisLocation);
-        double transY1;
-        if (this.stackMode) {
-            RectangleEdge edge1 = plot.getRangeAxisEdge();
-            TableXYDataset tdataset = (TableXYDataset) dataset;
-            double[] stack = getStackValues(tdataset, series, item);
-            transY1 = (float) rangeAxis.valueToJava2D(y1 + (y1 >= 0.0 ? stack[1] : stack[0]), dataArea,
-                    edge1);
-        } else {
-            transY1 = rangeAxis.valueToJava2D(y1, dataArea, yAxisLocation);
-        }
+            PlotOrientation orientation = plot.getOrientation();
+            RectangleEdge xAxisLocation = plot.getDomainAxisEdge();
+            RectangleEdge yAxisLocation = plot.getRangeAxisEdge();
+            double transX1 = domainAxis.valueToJava2D(x1, dataArea, xAxisLocation);
+            double transY1;
+            if (this.stackMode) {
+                RectangleEdge edge1 = plot.getRangeAxisEdge();
+                TableXYDataset tdataset = (TableXYDataset) dataset;
+                double[] stack = getStackValues(tdataset, series, item);
+                transY1 = (float) rangeAxis.valueToJava2D(y1 + (y1 >= 0.0 ? stack[1] : stack[0]), dataArea,
+                        edge1);
+            } else {
+                transY1 = rangeAxis.valueToJava2D(y1, dataArea, yAxisLocation);
+            }
 
-        if (getItemShapeVisible(series, item)) {
-            Shape shape = getItemShape(series, item);
+            if (getItemShapeVisible(series, item)) {
+                Shape shape = getItemShape(series, item);
+                if (orientation == PlotOrientation.HORIZONTAL) {
+                    shape = ShapeUtils.createTranslatedShape(shape, transY1, transX1);
+                } else if (orientation == PlotOrientation.VERTICAL) {
+                    shape = ShapeUtils.createTranslatedShape(shape, transX1, transY1);
+                }
+                entityArea = shape;
+                if (shape.intersects(dataArea)) {
+                    if (getItemShapeFilled(series, item)) {
+                        if (this.getUseFillPaint()) {
+                            g2.setPaint(getItemFillPaint(series, item));
+                        } else {
+                            g2.setPaint(getShapeFillPaint(series, item));
+                        }
+                        g2.fill(shape);
+                    }
+                    if (this.getDrawOutlines()) {
+                        if (getUseOutlinePaint()) {
+                            g2.setPaint(getItemOutlinePaint(series, item));
+                        } else {
+                            g2.setPaint(getItemPaint(series, item));
+                        }
+                        g2.setStroke(getItemOutlineStroke(series, item));
+                        g2.draw(shape);
+                    }
+                }
+            }
+
+            double xx = transX1;
+            double yy = transY1;
             if (orientation == PlotOrientation.HORIZONTAL) {
-                shape = ShapeUtils.createTranslatedShape(shape, transY1, transX1);
+                xx = transY1;
+                yy = transX1;
             }
-            else if (orientation == PlotOrientation.VERTICAL) {
-                shape = ShapeUtils.createTranslatedShape(shape, transX1, transY1);
+
+            // draw the item label if there is one...
+            if (isItemLabelVisible(series, item)) {
+                drawItemLabel(g2, orientation, dataset, series, item, xx, yy,
+                        entityArea != null ? entityArea.getBounds2D() : null,
+                        (y1 < 0.0));
             }
-            entityArea = shape;
-            if (shape.intersects(dataArea)) {
-                if (getItemShapeFilled(series, item)) {
-                    if (this.getUseFillPaint()) {
-                        g2.setPaint(getItemFillPaint(series, item));
-                    }
-                    else {
-                        g2.setPaint(getShapeFillPaint(series, item));
-                    }
-                    g2.fill(shape);
-                }
-                if (this.getDrawOutlines()) {
-                    if (getUseOutlinePaint()) {
-                        g2.setPaint(getItemOutlinePaint(series, item));
-                    }
-                    else {
-                        g2.setPaint(getItemPaint(series, item));
-                    }
-                    g2.setStroke(getItemOutlineStroke(series, item));
-                    g2.draw(shape);
-                }
+
+            int datasetIndex = plot.indexOf(dataset);
+            updateCrosshairValues(crosshairState, x1, y1, datasetIndex,
+                    transX1, transY1, orientation);
+
+            // add an entity for the item, but only if it falls within the data
+            // area...
+            if (entities != null && ShapeUtils.isPointInRect(dataArea, xx, yy)) {
+                addEntity(entities, entityArea, dataset, series, item, xx, yy);
             }
-        }
-
-        double xx = transX1;
-        double yy = transY1;
-        if (orientation == PlotOrientation.HORIZONTAL) {
-            xx = transY1;
-            yy = transX1;
-        }
-
-        // draw the item label if there is one...
-        if (isItemLabelVisible(series, item)) {
-            drawItemLabel(g2, orientation, dataset, series, item, xx, yy,
-                    entityArea != null ? entityArea.getBounds2D() : null,
-                    (y1 < 0.0));
-        }
-
-        int datasetIndex = plot.indexOf(dataset);
-        updateCrosshairValues(crosshairState, x1, y1, datasetIndex,
-                transX1, transY1, orientation);
-
-        // add an entity for the item, but only if it falls within the data
-        // area...
-        if (entities != null && ShapeUtils.isPointInRect(dataArea, xx, yy)) {
-            addEntity(entities, entityArea, dataset, series, item, xx, yy);
+        } finally {
+            g2.setClip(savedClip);
         }
     }
 
@@ -599,23 +602,31 @@ public class TbXYLineAndShapeRenderer extends XYLineAndShapeRenderer implements 
             }
 
             double shapeHeight = itemShapeBounds != null ? itemShapeBounds.getHeight() : 0.0;
+            boolean drawBackground = isItemLabelBackgroundVisible(series, item);
+
             if (position.getTextAnchor() == TextAnchor.BOTTOM_CENTER) {
                 y -= (5 + shapeHeight / 2);
+                if (drawBackground) {
+                    y -= 4;
+                }
             } else if (position.getTextAnchor() == TextAnchor.TOP_CENTER) {
                 y += (5 + shapeHeight / 2);
+                if (drawBackground) {
+                    y += 4;
+                }
             }
 
             // work out the label anchor point...
             Point2D anchorPoint = calculateLabelAnchorPoint(
                     position.getItemLabelAnchor(), x, y, orientation);
-            if (isItemLabelBackgroundVisible(series, item)) {
+            if (drawBackground) {
                 Rectangle2D bounds = TextUtils.calculateRotatedStringBounds(label, g2,
                         (float) anchorPoint.getX(), (float) anchorPoint.getY(),
                         position.getTextAnchor(), position.getAngle(),
                         position.getRotationAnchor()).getBounds2D();
                 g2.setPaint(getItemLabelBackgroundPaint(series, item));
                 g2.setStroke(new BasicStroke(0));
-                g2.fillRoundRect((int)bounds.getX()-3, (int)bounds.getY()-2, (int)bounds.getWidth()+6, (int)bounds.getHeight()+4, 4, 4 );
+                g2.fillRoundRect((int)bounds.getX()-3, (int)bounds.getY()-1, (int)bounds.getWidth()+6, (int)bounds.getHeight()+4, 4, 4 );
             }
             Paint paint = getItemLabelPaint(series, item);
             g2.setPaint(paint);

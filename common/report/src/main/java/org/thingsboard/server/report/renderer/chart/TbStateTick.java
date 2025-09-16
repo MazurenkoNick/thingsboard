@@ -28,19 +28,16 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.report.context.chart;
+package org.thingsboard.server.report.renderer.chart;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.RequiredArgsConstructor;
-import org.thingsboard.server.common.data.report.configuration.timewindow.TimeIntervalCalculator;
 
 @Data
-@RequiredArgsConstructor
-public class TsChartSeriesEntry {
+@AllArgsConstructor
+public class TbStateTick {
 
-    private final long ts;
-    private final TimeIntervalCalculator.TimeRange interval;
-    private final String value;
-    private final Double doubleValue;
+    private Double value;
+    private String label;
 
 }
