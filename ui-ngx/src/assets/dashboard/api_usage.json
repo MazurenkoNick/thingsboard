@@ -121,7 +121,8 @@
                     "pageSize": 1024,
                     "noDataDisplayMessage": "",
                     "configMode": "basic",
-                    "borderRadius": "4px"
+                    "borderRadius": "4px",
+                    "enableDataExport": false
                 },
                 "id": "a669cf86-e715-efa4-dd9a-b839abf499e9",
                 "typeFullFqn": "system.cards.timeseries_table"
@@ -672,7 +673,8 @@
                     },
                     "margin": "0px",
                     "borderRadius": "4px",
-                    "iconSize": "0px"
+                    "iconSize": "0px",
+                    "enableDataExport": false
                 },
                 "row": 0,
                 "col": 0,
@@ -1151,7 +1153,8 @@
                     },
                     "margin": "0px",
                     "borderRadius": "4px",
-                    "iconSize": "0px"
+                    "iconSize": "0px",
+                    "enableDataExport": false
                 },
                 "row": 0,
                 "col": 0,

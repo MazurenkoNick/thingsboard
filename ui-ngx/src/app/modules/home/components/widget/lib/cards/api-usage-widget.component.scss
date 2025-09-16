@@ -34,7 +34,7 @@ $enabled-color: #198038;
 $disabled-color: #D12730;
 $warning-color: #FAA405;
 
-$main-color: #00695c;
+$main-color: var(--tb-primary-500);
 
 .tb-no-notification-svg-color {
   color: $main-color
@@ -94,7 +94,18 @@ $main-color: #00695c;
           background-color: rgba(0, 0, 0, 0.06);
         }
         &.active {
-          background-color: rgba($main-color, 0.06);
+          position: relative;
+          &:before {
+            content: "";
+            display: block;
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            left: 0;
+            top: 0;
+            background-color: $main-color;
+            opacity: 0.06;
+          }
           .mat-divider {
             --mat-divider-color: #{$main-color};
           }
