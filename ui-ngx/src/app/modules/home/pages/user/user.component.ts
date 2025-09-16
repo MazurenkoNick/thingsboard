@@ -29,7 +29,7 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { ChangeDetectorRef, Component, Inject, Optional } from '@angular/core';
+import { ChangeDetectorRef, Component, Inject, OnInit, Optional } from '@angular/core';
 import { select, Store } from '@ngrx/store';
 import { AppState } from '@core/core.state';
 import { UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms';
@@ -45,13 +45,14 @@ import { GroupEntityComponent } from '@home/components/group/group-entity.compon
 import { GroupEntityTableConfig } from '@home/models/group/group-entities-table-config.models';
 import { UserPermissionsService } from '@core/http/user-permissions.service';
 import { CMAssigneeType, CMScope } from '@shared/models/custom-menu.models';
+import { UtilsService } from "@core/services/utils.service";
 
 @Component({
   selector: 'tb-user',
   templateUrl: './user.component.html',
   styleUrls: ['./user.component.scss']
 })
-export class UserComponent extends GroupEntityComponent<UserInfo> {
+export class UserComponent extends GroupEntityComponent<UserInfo> implements OnInit {
 
   CMScope = CMScope;
 
@@ -76,17 +77,21 @@ export class UserComponent extends GroupEntityComponent<UserInfo> {
 
   private authUser = getCurrentAuthUser(this.store);
 
-  constructor(protected store: Store<AppState>,
-              @Optional() @Inject('entity') protected entityValue: UserInfo,
-              @Optional() @Inject('entitiesTableConfig')
-              protected entitiesTableConfigValue: EntityTableConfig<UserInfo> | GroupEntityTableConfig<UserInfo>,
-              protected fb: UntypedFormBuilder,
-              protected cd: ChangeDetectorRef,
-              protected translate: TranslateService,
-              protected userPermissionsService: UserPermissionsService) {
-    super(store, fb, entityValue, entitiesTableConfigValue, cd, userPermissionsService);
-  }
+    constructor(protected store: Store<AppState>,
+                @Optional() @Inject('entity') protected entityValue: UserInfo,
+                @Optional() @Inject('entitiesTableConfig')
+                protected entitiesTableConfigValue: EntityTableConfig<UserInfo> | GroupEntityTableConfig<UserInfo>,
+                protected fb: UntypedFormBuilder,
+                private utils: UtilsService,
+                protected cd: ChangeDetectorRef,
+                protected translate: TranslateService,
+                protected userPermissionsService: UserPermissionsService) {
+        super(store, fb, entityValue, entitiesTableConfigValue, cd, userPermissionsService);
+    }
 
+  ngOnInit(): void {
+    this.entityForm.controls.email.addValidators(this.utils.validateEmail);
+  }
   hideDelete() {
     if (this.entitiesTableConfig) {
       return !this.entitiesTableConfig.deleteEnabled(this.entity);
@@ -114,7 +119,7 @@ export class UserComponent extends GroupEntityComponent<UserInfo> {
   buildForm(entity: UserInfo): UntypedFormGroup {
     return this.fb.group(
       {
-        email: [entity ? entity.email : '', [Validators.required, Validators.email]],
+        email: [entity ? entity.email : '', [Validators.required]],
         firstName: [entity ? entity.firstName : ''],
         lastName: [entity ? entity.lastName : ''],
         phone: [entity ? entity.phone : ''],

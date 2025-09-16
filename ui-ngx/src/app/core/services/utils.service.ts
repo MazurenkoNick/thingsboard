@@ -65,6 +65,7 @@ import { entityTypeTranslations } from '@shared/models/entity-type.models';
 import cssjs from '@core/css/css';
 import { isNotEmptyTbFunction } from '@shared/models/js-function.models';
 import { defaultFormProperties, FormProperty } from '@shared/models/dynamic-form.models';
+import { AbstractControl, ValidationErrors, Validators } from "@angular/forms";
 
 const i18nRegExp = new RegExp(`{${i18nPrefix}:([^{}]+)}`, 'g');
 
@@ -504,5 +505,15 @@ export class UtilsService {
     if (el) {
       el.parentNode.removeChild(el);
     }
+  }
+
+  public validateEmail(control: AbstractControl): ValidationErrors | null {
+    const email = control.value;
+    const nativeEmailError = Validators.email(control);
+    if (nativeEmailError !== null) {
+      return nativeEmailError;
+    }
+    const passesDomainCheck = /\.[^.\s]{2,}$/.test(email);
+    return passesDomainCheck ? null : {email: true};
   }
 }

@@ -38,6 +38,7 @@ import { UntypedFormBuilder, Validators } from '@angular/forms';
 import { ActionNotificationShow } from '@core/notification/notification.actions';
 import { TranslateService } from '@ngx-translate/core';
 import { WhiteLabelingService } from '@core/http/white-labeling.service';
+import { UtilsService } from "@core/services/utils.service";
 
 @Component({
   selector: 'tb-reset-password-request',
@@ -48,19 +49,20 @@ export class ResetPasswordRequestComponent extends PageComponent implements OnIn
 
   clicked: boolean = false;
 
-  requestPasswordRequest = this.fb.group({
-    email: ['', [Validators.email, Validators.required]]
-  }, {updateOn: 'submit'});
+    requestPasswordRequest = this.fb.group({
+        email: ['', [Validators.required, this.utils.validateEmail]],
+    }, {updateOn: 'submit'});
 
   @HostBinding('class') class = 'tb-custom-css';
 
-  constructor(protected store: Store<AppState>,
-              private authService: AuthService,
-              private translate: TranslateService,
-              public wl: WhiteLabelingService,
-              public fb: UntypedFormBuilder) {
-    super(store);
-  }
+    constructor(protected store: Store<AppState>,
+                private authService: AuthService,
+                private translate: TranslateService,
+                private utils: UtilsService,
+                public wl: WhiteLabelingService,
+                public fb: UntypedFormBuilder) {
+        super(store);
+    }
 
   ngOnInit() {
   }

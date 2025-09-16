@@ -49,6 +49,7 @@ import { UnitSystem, UnitSystems } from '@shared/models/unit.models';
 import { UnitService } from '@core/services/unit.service';
 import { Operation, Resource } from '@shared/models/security.models';
 import { UserPermissionsService } from '@core/http/user-permissions.service';
+import { UtilsService } from "@core/services/utils.service";
 
 @Component({
   selector: 'tb-profile',
@@ -65,17 +66,18 @@ export class ProfileComponent extends PageComponent implements OnInit, HasConfir
   authState = getCurrentAuthState(this.store);
   readonly = !this.userPermissionsService.hasGenericPermission(Resource.PROFILE, Operation.WRITE);
 
-  constructor(protected store: Store<AppState>,
-              private route: ActivatedRoute,
-              private userService: UserService,
-              private authService: AuthService,
-              private translate: TranslateService,
-              private unitService: UnitService,
-              private fb: UntypedFormBuilder,
+    constructor(protected store: Store<AppState>,
+                private route: ActivatedRoute,
+                private userService: UserService,
+                private authService: AuthService,
+                private translate: TranslateService,
+                private unitService: UnitService,
+                private utils: UtilsService,
+                private fb: UntypedFormBuilder,
               private userPermissionsService: UserPermissionsService,
               ) {
-    super(store);
-  }
+        super(store);
+        }
 
   ngOnInit() {
     this.buildProfileForm();
@@ -85,7 +87,7 @@ export class ProfileComponent extends PageComponent implements OnInit, HasConfir
 
   private buildProfileForm() {
     this.profile = this.fb.group({
-      email: ['', [Validators.required, Validators.email]],
+      email: ['', [Validators.required, this.utils.validateEmail]],
       firstName: [''],
       lastName: [''],
       phone: [''],
@@ -94,9 +96,6 @@ export class ProfileComponent extends PageComponent implements OnInit, HasConfir
       homeDashboardId: [null],
       homeDashboardHideToolbar: [true]
     });
-    if (this.readonly) {
-      this.profile.disable();
-    }
   }
 
   save(): void {

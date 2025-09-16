@@ -53,6 +53,7 @@ import { DialogService } from '@core/services/dialog.service';
 import { TranslateService } from '@ngx-translate/core';
 import { Observable, of } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { UtilsService } from "@core/services/utils.service";
 
 @Component({
   selector: 'tb-security-settings',
@@ -76,6 +77,7 @@ export class SecuritySettingsComponent extends PageComponent implements HasConfi
               private dialogService: DialogService,
               private translate: TranslateService,
               private fb: UntypedFormBuilder,
+              private utils: UtilsService,
               private destroyRef: DestroyRef) {
     super(store);
     this.buildSecuritySettingsForm();
@@ -91,7 +93,7 @@ export class SecuritySettingsComponent extends PageComponent implements HasConfi
   buildSecuritySettingsForm() {
     this.securitySettingsFormGroup = this.fb.group({
       maxFailedLoginAttempts: [null, [Validators.min(0)]],
-      userLockoutNotificationEmail: ['', []],
+      userLockoutNotificationEmail: ['', [this.utils.validateEmail]],
       userActivationTokenTtl: [24, [Validators.required, Validators.min(1), Validators.max(24)]],
       passwordResetTokenTtl: [24, [Validators.required, Validators.min(1), Validators.max(24)]],
       mobileSecretKeyLength: [null, [Validators.min(1)]],
