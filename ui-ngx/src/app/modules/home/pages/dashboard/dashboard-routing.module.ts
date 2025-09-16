@@ -54,7 +54,7 @@ import { Store } from '@ngrx/store';
 import { AppState } from '@core/core.state';
 import { getCurrentAuthUser } from '@core/auth/auth.selectors';
 import { ConfirmOnExitGuard } from '@core/guards/confirm-on-exit.guard';
-import { Resource } from '@shared/models/security.models';
+import { Operation, Resource } from '@shared/models/security.models';
 import { MenuId } from '@core/services/menu.models';
 
 @Injectable()
@@ -98,10 +98,18 @@ const dashboardRoute = (entityGroup: any, singlePageMode = false, isAllPage = fa
         icon: 'dashboard'
       } as BreadCrumbConfig<DashboardPageComponent>,
       auth: [Authority.TENANT_ADMIN, Authority.CUSTOMER_USER],
-      canActivate: (userPermissionsService: UserPermissionsService): boolean =>
-        (isAllPage || entityGroup === 'emptyEntityGroupResolver') ?
-          userPermissionsService.hasReadGenericPermission(Resource.DASHBOARD) :
-          userPermissionsService.hasReadGroupsPermission(EntityType.DASHBOARD),
+      canActivate$: (userPermissionsService: UserPermissionsService, params: any): Observable<boolean> => {
+        if (isAllPage) {
+          return of(userPermissionsService.hasReadGenericPermission(Resource.DASHBOARD));
+        } else if (entityGroup === 'emptyEntityGroupResolver') {
+          if (userPermissionsService.hasReadGenericPermission(Resource.DASHBOARD)) {
+            return of(true);
+          }
+          return userPermissionsService.hasEntityPermission({entityType: EntityType.DASHBOARD, id: params.dashboardId}, Operation.READ);
+        } else {
+          return of(userPermissionsService.hasReadGroupsPermission(EntityType.DASHBOARD));
+        }
+      },
       title: 'dashboard.dashboard',
       hideTabs: true,
       widgetEditMode: false,
