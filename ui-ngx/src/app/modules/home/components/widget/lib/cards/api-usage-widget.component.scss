@@ -67,6 +67,7 @@ $main-color: #00695c;
             color: $enabled-color;
           }
           .mat-mdc-progress-bar {
+            --mdc-linear-progress-track-color: #{rgba($enabled-color, 0.06)};
             --mdc-linear-progress-active-indicator-color: #{$enabled-color};
           }
         }
@@ -75,6 +76,7 @@ $main-color: #00695c;
             color: $disabled-color;
           }
           .mat-mdc-progress-bar {
+            --mdc-linear-progress-track-color: #{rgba($disabled-color, 0.06)};
             --mdc-linear-progress-active-indicator-color: #{$disabled-color};
           }
         }
@@ -83,6 +85,7 @@ $main-color: #00695c;
             color: $warning-color;
           }
           .mat-mdc-progress-bar {
+            --mdc-linear-progress-track-color: #{rgba($warning-color, 0.06)};
             --mdc-linear-progress-active-indicator-color: #{$warning-color};
           }
         }
