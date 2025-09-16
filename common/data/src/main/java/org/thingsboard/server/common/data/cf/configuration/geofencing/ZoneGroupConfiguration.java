@@ -68,6 +68,9 @@ public class ZoneGroupConfiguration {
         if (reportStrategy == null) {
             throw new IllegalArgumentException("Report strategy must be specified for '" + name + "' zone group!");
         }
+        if (refDynamicSourceConfiguration != null) {
+            refDynamicSourceConfiguration.validate();
+        }
         if (!createRelationsWithMatchedZones) {
             return;
         }
@@ -76,9 +79,6 @@ public class ZoneGroupConfiguration {
         }
         if (direction == null) {
             throw new IllegalArgumentException("Relation direction must be specified for '" + name + "' zone group!");
-        }
-        if (toArgument().hasDynamicSource()) {
-            refDynamicSourceConfiguration.validate();
         }
     }
 
