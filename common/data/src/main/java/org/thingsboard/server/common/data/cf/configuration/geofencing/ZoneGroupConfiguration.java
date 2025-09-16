@@ -87,6 +87,10 @@ public class ZoneGroupConfiguration {
         return toArgument().hasRelationQuerySource();
     }
 
+    public boolean hasCurrentOwnerSource() {
+        return toArgument().hasCurrentOwnerSource();
+    }
+
     @JsonIgnore
     public boolean isCfEntitySource(EntityId cfEntityId) {
         if (refEntityId == null && refDynamicSourceConfiguration == null) {

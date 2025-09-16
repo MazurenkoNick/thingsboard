@@ -428,7 +428,7 @@ public class CalculatedFieldEntityMessageProcessor extends AbstractContextAwareM
         if (argNames.isEmpty()) {
             return Collections.emptyMap();
         }
-        List<String> geofencingArgumentNames = ctx.getLinkedEntityGeofencingArgumentNames();
+        List<String> geofencingArgumentNames = ctx.getLinkedEntityAndCurrentOwnerGeofencingArgumentNames();
         return mapToArguments(entityId, argNames, geofencingArgumentNames, scope, attrDataList);
     }
 

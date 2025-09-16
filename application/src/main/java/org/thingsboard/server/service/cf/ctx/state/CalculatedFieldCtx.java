@@ -95,7 +95,7 @@ public class CalculatedFieldCtx {
     private long maxSingleValueArgumentSize;
 
     private List<String> mainEntityGeofencingArgumentNames;
-    private List<String> linkedEntityGeofencingArgumentNames;
+    private List<String> linkedEntityAndCurrentOwnerGeofencingArgumentNames;
 
     public CalculatedFieldCtx(CalculatedField calculatedField, TbelInvokeService tbelInvokeService, ApiLimitService apiLimitService, RelationService relationService) {
         this.calculatedField = calculatedField;
@@ -110,7 +110,7 @@ public class CalculatedFieldCtx {
         this.dynamicEntityArguments = new HashMap<>();
         this.argNames = new ArrayList<>();
         this.mainEntityGeofencingArgumentNames = new ArrayList<>();
-        this.linkedEntityGeofencingArgumentNames = new ArrayList<>();
+        this.linkedEntityAndCurrentOwnerGeofencingArgumentNames = new ArrayList<>();
         this.output = calculatedField.getConfiguration().getOutput();
         if (calculatedField.getConfiguration() instanceof ArgumentsBasedCalculatedFieldConfiguration argBasedConfig) {
             this.arguments.putAll(argBasedConfig.getArguments());
@@ -144,8 +144,8 @@ public class CalculatedFieldCtx {
                         mainEntityGeofencingArgumentNames.add(zoneGroupName);
                         return;
                     }
-                    if (config.isLinkedCfEntitySource(entityId)) {
-                        linkedEntityGeofencingArgumentNames.add(zoneGroupName);
+                    if (config.isLinkedCfEntitySource(entityId) || config.hasCurrentOwnerSource()) {
+                        linkedEntityAndCurrentOwnerGeofencingArgumentNames.add(zoneGroupName);
                     }
                 });
             }
