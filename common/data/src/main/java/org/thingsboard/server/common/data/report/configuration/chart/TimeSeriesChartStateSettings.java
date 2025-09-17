@@ -59,4 +59,13 @@ public class TimeSeriesChartStateSettings {
         return true;
     }
 
+    @JsonIgnore
+    public String sourceValueAsString() {
+        if (sourceValue != null) {
+            return sourceValue.asText();
+        } else {
+            return null;
+        }
+    }
+
 }

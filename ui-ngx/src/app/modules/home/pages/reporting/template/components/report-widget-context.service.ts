@@ -80,10 +80,12 @@ export class ReportWidgetContextService {
                              settings: any,
                              timewindow: Timewindow,
                              datasources: Datasource[],
+                             units: string,
+                             decimals: number,
                              stateData: boolean,
                              callbacks: WidgetSubscriptionCallbacks,
                              genDataFunc?: GenerateDataFunction): Observable<WidgetContext> {
-    const widget = this.createWidget(type, settings, timewindow, datasources, genDataFunc);
+    const widget = this.createWidget(type, settings, timewindow, datasources, units, decimals, genDataFunc);
     const ctx = new WidgetContext(null, null, widget);
     ctx.$scope = {} as IDynamicWidgetComponent;
     ctx.$injector = this.injector;
@@ -110,12 +112,16 @@ export class ReportWidgetContextService {
                        settings: any,
                        timewindow: Timewindow,
                        datasources: Datasource[],
+                       units: string,
+                       decimals: number,
                        genDataFunc?: GenerateDataFunction): Widget {
     return {
       type,
       config: {
         timewindow,
         datasources: this.prepareDatasources(datasources, genDataFunc),
+        units,
+        decimals,
         settings
       } as WidgetConfig
     } as Widget;

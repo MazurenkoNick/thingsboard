@@ -31,6 +31,7 @@
 package org.thingsboard.server.common.data.report.configuration.chart;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
 import lombok.Data;
 import org.thingsboard.server.common.data.report.configuration.style.Font;
 import org.thingsboard.server.common.data.report.configuration.style.FontStyle;
@@ -43,6 +44,9 @@ import java.util.List;
 import java.util.Map;
 
 @Data
+@JsonSubTypes({
+        @JsonSubTypes.Type(value = ReportBarChartWithLabelsSettings.class, name = "barChartWithLabels")
+})
 public class ReportTimeSeriesChartSettings {
 
     private Boolean showTitle;

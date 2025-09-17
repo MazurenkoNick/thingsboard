@@ -66,7 +66,7 @@ public class TimeSeriesChartThreshold extends ValueSourceConfig {
         this.setType(input.getType() != null ? input.getType() : ValueSourceType.constant);
         this.yAxisId = input.getYAxisId() != null ? input.getYAxisId() : "default";
         this.units = input.getUnits();
-        this.decimals = input.getDecimals() != null ? input.getDecimals() : 2;
+        this.decimals = input.getDecimals();
         this.lineColor = input.getLineColor() != null ? input.getLineColor() : "rgba(0, 0, 0, 0.76)";
         this.lineType = input.getLineType() != null ? input.getLineType() : ChartLineType.solid;
         this.lineWidth = input.getLineWidth() != null ? input.getLineWidth() : 1f;

@@ -38,7 +38,13 @@ import org.jfree.chart.ui.TextAnchor;
 import org.thingsboard.server.common.data.report.configuration.chart.ChartShape;
 import org.thingsboard.server.common.data.report.configuration.chart.ThresholdLabelPosition;
 
-import java.awt.*;
+import java.awt.BasicStroke;
+import java.awt.Color;
+import java.awt.FontMetrics;
+import java.awt.Graphics2D;
+import java.awt.Paint;
+import java.awt.Shape;
+import java.awt.Stroke;
 
 import static org.thingsboard.server.report.renderer.chart.ChartUtils.createSeriesShape;
 

@@ -63,6 +63,10 @@ export class LegendConfigComponent implements OnInit, OnDestroy, ControlValueAcc
   @coerceBoolean()
   hideDirection = false;
 
+  @Input()
+  @coerceBoolean()
+  hideValues = false;
+
   legendConfigForm: UntypedFormGroup;
   legendDirection = LegendDirection;
   legendDirections = Object.keys(LegendDirection);

@@ -35,16 +35,17 @@ import {
   ComponentRef,
   inject,
   Input,
-  OnDestroy,
+  OnDestroy, Type,
   ViewChild,
   ViewContainerRef,
   ViewEncapsulation
 } from '@angular/core';
 import {
+  reportBarChartWithLabelsDefaultSettings, ReportBarChartWithLabelSettings,
   reportStateChartDefaultSettings,
   reportTimeSeriesChartDefaultSettings,
   ReportTimeSeriesChartSettings,
-  TimeseriesChartReportComponentConfig
+  TimeseriesChartReportComponentConfig, toBarChartWithLabelsWidgetSettings
 } from '@shared/models/report-component.models';
 import { AbstractReportComponentPreview } from '@home/pages/reporting/template/components/report-component.component';
 import {
@@ -54,7 +55,7 @@ import {
 import { DatasourceType, widgetType } from '@shared/models/widget.models';
 import { TimeSeriesChartWidgetComponent } from '@home/components/widget/lib/chart/time-series-chart-widget.component';
 import { IWidgetSubscription, WidgetSubscriptionCallbacks } from '@core/api/widget-api.models';
-import { debounce, deepClone, mergeDeep, mergeDeepIgnoreArray } from '@core/utils';
+import { debounce, deepClone, mergeDeepIgnoreArray } from '@core/utils';
 import { WidgetContext } from '@home/models/widget-component.models';
 import { BackgroundType, ComponentStyle, textStyle, ValueSourceType } from '@shared/models/widget-settings.models';
 import { TimeSeriesChartWidgetSettings } from '@home/components/widget/lib/chart/time-series-chart-widget.models';
@@ -62,6 +63,11 @@ import {
   TimeSeriesChartStateSourceType,
   TimeSeriesChartType
 } from '@home/components/widget/lib/chart/time-series-chart.models';
+import { coerceBoolean } from '@shared/decorators/coercion';
+import {
+  BarChartWithLabelsWidgetComponent
+} from '@home/components/widget/lib/chart/bar-chart-with-labels-widget.component';
+import { ChartWidgetComponent } from '@home/components/widget/lib/chart/chart.models';
 
 @Component({
   selector: 'tb-time-series-chart-preview',
@@ -73,6 +79,10 @@ export class TimeSeriesChartPreviewComponent extends AbstractReportComponentPrev
   implements AfterViewInit, OnDestroy, WidgetSubscriptionCallbacks {
 
   @ViewChild('widgetContent', {read: ViewContainerRef, static: false}) widgetContainer: ViewContainerRef;
+
+  @Input()
+  @coerceBoolean()
+  barChartWithLabels = false;
 
   @Input()
   chartType: TimeSeriesChartType = TimeSeriesChartType.default;
@@ -94,8 +104,8 @@ export class TimeSeriesChartPreviewComponent extends AbstractReportComponentPrev
   private viewInited = false;
 
   private widgetContext: WidgetContext;
-  private widgetComponentRef: ComponentRef<TimeSeriesChartWidgetComponent>;
-  private widgetComponent: TimeSeriesChartWidgetComponent;
+  private widgetComponentRef: ComponentRef<ChartWidgetComponent>;
+  private widgetComponent: ChartWidgetComponent;
 
   private updateWidgetPreview = debounce(() => {
     this.updateTimeSeriesWidgetPreview();
@@ -158,7 +168,7 @@ export class TimeSeriesChartPreviewComponent extends AbstractReportComponentPrev
   }
 
   onLatestDataUpdated(_subscription: IWidgetSubscription, _detectChanges: boolean): void {
-    if (this.widgetComponent) {
+    if (this.widgetComponent && this.widgetComponent.onLatestDataUpdated) {
       this.widgetComponent.onLatestDataUpdated();
     }
   }
@@ -185,7 +195,8 @@ export class TimeSeriesChartPreviewComponent extends AbstractReportComponentPrev
     }
     const datasources = deepClone(this.reportComponent.dataSources || []);
 
-    const defaultSettings = this.chartType === TimeSeriesChartType.state ?  reportStateChartDefaultSettings : reportTimeSeriesChartDefaultSettings;
+    const defaultSettings = this.chartType === TimeSeriesChartType.state ?  reportStateChartDefaultSettings :
+      ( this.barChartWithLabels ? reportBarChartWithLabelsDefaultSettings : reportTimeSeriesChartDefaultSettings);
 
     const settings: ReportTimeSeriesChartSettings =
       mergeDeepIgnoreArray<ReportTimeSeriesChartSettings>({} as ReportTimeSeriesChartSettings, defaultSettings, this.reportComponent.timeSeriesChartSettings, {
@@ -248,11 +259,22 @@ export class TimeSeriesChartPreviewComponent extends AbstractReportComponentPrev
         }
       }
     }
+    let widgetSettings: any = settings;
+    let units = '';
+    let decimals = 2;
+    let widgetComponentType: Type<ChartWidgetComponent> = TimeSeriesChartWidgetComponent;
+    if (this.barChartWithLabels) {
+      const barChartWithLabelsSettings = settings as ReportBarChartWithLabelSettings & TimeSeriesChartWidgetSettings;
+      widgetSettings = toBarChartWithLabelsWidgetSettings(barChartWithLabelsSettings);
+      units = barChartWithLabelsSettings.barUnits;
+      decimals = barChartWithLabelsSettings.barDecimals;
+      widgetComponentType = BarChartWithLabelsWidgetComponent;
+    }
     this.reportWidgetContextService.createWidgetContext(widgetType.timeseries,
-      settings, this.reportComponent.timewindow, datasources, this.chartType == TimeSeriesChartType.state, this, genDataFunc)
+      widgetSettings, this.reportComponent.timewindow, datasources, units, decimals, this.chartType == TimeSeriesChartType.state, this, genDataFunc)
     .subscribe((ctx) => {
       this.widgetContext = ctx;
-      this.widgetComponentRef = this.widgetContainer.createComponent(TimeSeriesChartWidgetComponent);
+      this.widgetComponentRef = this.widgetContainer.createComponent(widgetComponentType);
       this.widgetContext.$container = $(this.widgetComponentRef.location.nativeElement);
       this.widgetContext.$containerParent = ctx.$container.parent();
       this.widgetComponent = this.widgetComponentRef.instance;

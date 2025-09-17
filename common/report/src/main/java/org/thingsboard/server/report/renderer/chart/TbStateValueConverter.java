@@ -54,7 +54,7 @@ public class TbStateValueConverter {
                 .stream().sorted(Comparator.comparing(TbStateTick::getValue)).toList();
         this.labelsMap = this.stateTicks.stream().collect(Collectors.toMap(TbStateTick::getValue, TbStateTick::getLabel));
         this.constantsMap = validStates.stream().filter(state -> TimeSeriesChartStateSourceType.constant.equals(state.getSourceType()))
-                .collect(Collectors.toMap(state -> state.getSourceValue().toString(), TimeSeriesChartStateSettings::getValue,
+                .collect(Collectors.toMap(TimeSeriesChartStateSettings::sourceValueAsString, TimeSeriesChartStateSettings::getValue,
                         (oldValue, newValue) -> oldValue, LinkedHashMap::new));
         this.rangeStates = validStates.stream().filter(state -> TimeSeriesChartStateSourceType.range.equals(state.getSourceType())).toList();
 

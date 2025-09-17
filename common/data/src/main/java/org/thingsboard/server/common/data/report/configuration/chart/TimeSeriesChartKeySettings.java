@@ -56,7 +56,11 @@ public class TimeSeriesChartKeySettings implements DataKeySettings {
         this.showInLegend = input.getShowInLegend() != null ? input.getShowInLegend() : Boolean.TRUE;
         this.seriesType = input.getSeriesType() != null ? input.getSeriesType() : TimeSeriesChartSeriesType.line;
         this.lineSettings = new LineSeriesSettings(input.getLineSettings());
-        this.barSettings = new BarSeriesSettings(input.getBarSettings());
+        if (input.getBarSettings() != null && input.getBarSettings() instanceof BarWithLabelsSeriesSettings barWithLabelsSeriesSettings) {
+            this.barSettings = new BarWithLabelsSeriesSettings(barWithLabelsSeriesSettings);
+        } else {
+            this.barSettings = new BarSeriesSettings(input.getBarSettings());
+        }
         this.comparisonSettings = new DataKeyComparisonSettings(input.getComparisonSettings());
     }
 

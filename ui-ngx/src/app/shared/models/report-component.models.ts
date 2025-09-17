@@ -41,7 +41,14 @@ import { Insets } from '@shared/models/report.models';
 import { ReportTemplateId } from '@shared/models/id/report-template-id';
 import { FormProperty, FormPropertyType } from '@shared/models/dynamic-form.models';
 import { DashboardReportConfig } from '@shared/models/dashboard-report.models';
-import { AggregationType, DAY, historyInterval, HOUR, Timewindow } from '@shared/models/time/time.models';
+import {
+  AggregationType,
+  DAY,
+  historyInterval,
+  historyQuickInterval,
+  HOUR, QuickTimeInterval,
+  Timewindow
+} from '@shared/models/time/time.models';
 import { Direction } from '@shared/models/page/sort-order';
 import { mergeDeep } from '@core/utils';
 import {
@@ -53,6 +60,12 @@ import {
   TimeSeriesChartYAxes,
   TimeSeriesChartYAxisSettings
 } from '@home/components/widget/lib/chart/time-series-chart.models';
+import { ChartFillSettings, ChartFillType } from '@home/components/widget/lib/chart/chart.models';
+import {
+  BarChartWithLabelsWidgetSettings
+} from '@home/components/widget/lib/chart/bar-chart-with-labels-widget.models';
+import { TimeSeriesChartWidgetSettings } from '@home/components/widget/lib/chart/time-series-chart-widget.models';
+import { IntervalType } from '@shared/models/telemetry/telemetry.models';
 
 export enum ReportComponentType {
   HEADING = 'HEADING',
@@ -493,6 +506,110 @@ export const reportStateChartDefaultSettings: ReportTimeSeriesChartSettings = me
     legendConfig: {...defaultLegendConfig(null), position: LegendPosition.right},
   } as ReportTimeSeriesChartSettings);
 
+export interface ReportBarChartWithLabelSettings extends ReportTimeSeriesChartSettings {
+  showBarLabel: boolean;
+  barLabelFont: Font;
+  barLabelColor: string;
+  showBarValue: boolean;
+  barValueFont: Font;
+  barValueColor: string;
+  showBarBorder: boolean;
+  barBorderWidth: number;
+  barBorderRadius: number;
+  barBackgroundSettings: ChartFillSettings;
+  barUnits?: string;
+  barDecimals?: number;
+}
+
+export const reportBarChartWithLabelsDefaultSettings: ReportBarChartWithLabelSettings = mergeDeep({} as ReportBarChartWithLabelSettings,
+  reportTimeSeriesChartDefaultSettings as ReportBarChartWithLabelSettings,
+  {
+    showTitle: true,
+    title: 'Bar chart with labels',
+    barWidthSettings: {
+      barGap: 0,
+      intervalGap: 0.5
+    },
+    yAxes: {
+      default: {
+        showLine: false,
+        showTicks: false,
+        labelFont: {
+          weight: 'bold'
+        }
+      } as TimeSeriesChartYAxisSettings
+    } as TimeSeriesChartYAxes,
+    xAxis: {
+      showTicks: false,
+      showSplitLines: false
+    },
+    legendConfig: {...defaultLegendConfig(null), position: LegendPosition.top},
+
+    showBarLabel: true,
+    barLabelFont: {
+      family: 'Roboto',
+      size: 12,
+      sizeUnit: 'px',
+      style: 'normal',
+      weight: 'normal',
+      lineHeight: '12px'
+    },
+    barLabelColor: 'rgba(0, 0, 0, 0.54)',
+    showBarValue: true,
+    barValueFont: {
+      family: 'Roboto',
+      size: 12,
+      sizeUnit: 'px',
+      style: 'normal',
+      weight: 'bold',
+      lineHeight: '12px'
+    },
+    barValueColor: 'rgba(0, 0, 0, 0.76)',
+    showBarBorder: false,
+    barBorderWidth: 2,
+    barBorderRadius: 0,
+    barBackgroundSettings: {
+      type: ChartFillType.none,
+      opacity: 0.4,
+      gradient: {
+        start: 100,
+        end: 0
+      }
+    },
+    barUnits: '%',
+    barDecimals: 0
+  } as ReportBarChartWithLabelSettings);
+
+export const toBarChartWithLabelsWidgetSettings = (
+        reportBarChartWithLabelsSettings: ReportBarChartWithLabelSettings & TimeSeriesChartWidgetSettings): BarChartWithLabelsWidgetSettings => {
+  return {
+    dataZoom: false,
+    showBarLabel: reportBarChartWithLabelsSettings.showBarLabel,
+    barLabelFont: reportBarChartWithLabelsSettings.barLabelFont,
+    barLabelColor: reportBarChartWithLabelsSettings.barLabelColor,
+    showBarValue: reportBarChartWithLabelsSettings.showBarValue,
+    barValueFont: reportBarChartWithLabelsSettings.barValueFont,
+    barValueColor: reportBarChartWithLabelsSettings.barValueColor,
+    showBarBorder: reportBarChartWithLabelsSettings.showBarBorder,
+    barBorderWidth: reportBarChartWithLabelsSettings.barBorderWidth,
+    barBorderRadius: reportBarChartWithLabelsSettings.barBorderRadius,
+    barBackgroundSettings: reportBarChartWithLabelsSettings.barBackgroundSettings,
+    noAggregationBarWidthSettings: reportBarChartWithLabelsSettings.noAggregationBarWidthSettings,
+    grid: reportBarChartWithLabelsSettings.grid,
+    yAxis: reportBarChartWithLabelsSettings.yAxes['default'],
+    xAxis: reportBarChartWithLabelsSettings.xAxis,
+    animation: reportBarChartWithLabelsSettings.animation,
+    thresholds: reportBarChartWithLabelsSettings.thresholds,
+    showLegend: reportBarChartWithLabelsSettings.showLegend,
+    legendPosition: reportBarChartWithLabelsSettings.legendConfig.position,
+    legendLabelFont: reportBarChartWithLabelsSettings.legendLabelFont,
+    legendLabelColor: reportBarChartWithLabelsSettings.legendLabelColor,
+    background: reportBarChartWithLabelsSettings.background,
+    padding: reportBarChartWithLabelsSettings.padding,
+    showTooltip: false
+  } as BarChartWithLabelsWidgetSettings;
+}
+
 export const defaultTimeSeriesChartTimewindow = mergeDeep<Timewindow>(
   {} as Timewindow,
   historyInterval(DAY),
@@ -521,13 +638,27 @@ export const defaultStateChartTimewindow = mergeDeep<Timewindow>(
   }
 );
 
+export const defaultBarChartWithLabelsTimewindow = mergeDeep<Timewindow>(
+  {} as Timewindow,
+  historyQuickInterval(QuickTimeInterval.CURRENT_HALF_YEAR),
+  {
+    history: {
+      interval: IntervalType.MONTH
+    },
+    aggregation: {
+      type: AggregationType.AVG,
+      limit: 200
+    }
+  }
+);
+
 export interface BaseChartReportComponentConfig extends BaseImageReportComponentConfig {
   height: number;
 }
 
 export interface TimeseriesChartReportComponentConfig extends BaseChartReportComponentConfig {
   timewindow: Timewindow;
-  timeSeriesChartSettings: ReportTimeSeriesChartSettings;
+  timeSeriesChartSettings: ReportTimeSeriesChartSettings & ReportBarChartWithLabelSettings;
   type: ReportComponentType.TIME_SERIES_CHART;
 }
 

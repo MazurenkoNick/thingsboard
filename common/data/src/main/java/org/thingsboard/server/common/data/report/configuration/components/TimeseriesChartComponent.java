@@ -30,6 +30,7 @@
  */
 package org.thingsboard.server.common.data.report.configuration.components;
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -44,6 +45,12 @@ import org.thingsboard.server.common.data.report.configuration.timewindow.TimeWi
 public class TimeseriesChartComponent extends AbstractChartComponent {
 
     private TimeWindowConfiguration timewindow;
+
+    @JsonTypeInfo(
+            use = JsonTypeInfo.Id.NAME,
+            include = JsonTypeInfo.As.EXTERNAL_PROPERTY,
+            property = "subType",
+            defaultImpl = ReportTimeSeriesChartSettings.class)
     private ReportTimeSeriesChartSettings timeSeriesChartSettings;
 
     @Override

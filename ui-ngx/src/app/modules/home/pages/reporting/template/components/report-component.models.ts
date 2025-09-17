@@ -33,13 +33,13 @@ import {
   AlarmTableReportComponentConfig,
   BorderLength,
   BorderType,
-  DashboardReportComponentConfig, defaultStateChartTimewindow,
+  DashboardReportComponentConfig, defaultBarChartWithLabelsTimewindow, defaultStateChartTimewindow,
   defaultTimeSeriesChartTimewindow,
   DividerReportComponentConfig,
   EntityTableReportComponentConfig,
   HeadingReportComponentConfig,
   ImageReportComponentConfig,
-  PageBreakReportComponentConfig,
+  PageBreakReportComponentConfig, reportBarChartWithLabelsDefaultSettings, ReportBarChartWithLabelSettings,
   ReportComponentConfig,
   ReportComponentType,
   ReportDataKeySettingsType, reportStateChartDefaultSettings,
@@ -591,6 +591,41 @@ export const reportComponentsLibrary = new Map<string, ReportComponentLibraryIte
           timewindow: defaultStateChartTimewindow,
           timeSeriesChartSettings: mergeDeep<ReportTimeSeriesChartSettings>({} as ReportTimeSeriesChartSettings, reportStateChartDefaultSettings,
             { title: 'State chart' } as ReportTimeSeriesChartSettings),
+          height: 400,
+          widthType: 'fitWidth',
+          alignment: 'center',
+          margins: null,
+          paddings: null,
+          background: null
+        } as TimeseriesChartReportComponentConfig
+      }
+    ],
+    [
+      'barChartWithLabels',
+      {
+        title: 'report-template.component.bar-chart-with-labels',
+        previewImage: '/assets/report/components/time-series-chart.svg',
+        type: ReportComponentType.TIME_SERIES_CHART,
+        defaultConfig: {
+          type: ReportComponentType.TIME_SERIES_CHART,
+          subType: 'barChartWithLabels',
+          dataSources: [
+            {
+              type: DatasourceType.entity,
+              dataKeys: [
+                {
+                  name: 'humidity',
+                  type: DataKeyType.timeseries,
+                  label: 'Humidity',
+                  color: '#2196f3',
+                  settings: {}
+                }
+              ]
+            }
+          ],
+          timewindow: defaultBarChartWithLabelsTimewindow,
+          timeSeriesChartSettings: mergeDeep<ReportBarChartWithLabelSettings>({} as ReportBarChartWithLabelSettings, reportBarChartWithLabelsDefaultSettings,
+            { title: 'Bar chart with labels' } as ReportBarChartWithLabelSettings),
           height: 400,
           widthType: 'fitWidth',
           alignment: 'center',
@@ -1167,6 +1202,22 @@ reportComponentTypesData.registerReportComponentSubType(ReportComponentType.TIME
     },
     previewContext: {
       chartType: TimeSeriesChartType.state
+    }
+  });
+
+reportComponentTypesData.registerReportComponentSubType(ReportComponentType.TIME_SERIES_CHART,
+  'barChartWithLabels',
+  {
+    title: 'report-template.component.bar-chart-with-labels',
+    previewComponent: TimeSeriesChartPreviewComponent,
+    configComponent: TimeSeriesChartConfigComponent,
+    editable: true,
+    preferredSettingsWidthPx: 1000,
+    configContext: {
+      barChartWithLabels: true
+    },
+    previewContext: {
+      barChartWithLabels: true
     }
   });
 

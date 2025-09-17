@@ -28,42 +28,33 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.report.util;
+package org.thingsboard.server.common.data.report.configuration.chart;
 
-import com.lowagie.text.Image;
-import org.xhtmlrenderer.extend.Size;
+import lombok.Data;
+import org.thingsboard.server.common.data.report.configuration.style.Font;
+import org.thingsboard.server.common.data.report.configuration.style.FontStyle;
+import org.thingsboard.server.common.data.report.configuration.style.FontWeight;
 
-import java.io.IOException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+@Data
+public class BarWithLabelsSeriesSettings extends BarSeriesSettings {
 
-public class ImageUtils {
+    private Boolean showSeriesLabel;
+    private Font seriesLabelFont;
+    private String seriesLabelColor;
 
-    public static final String EMPTY_IMAGE_URI = "tb-empty-image";
+    public BarWithLabelsSeriesSettings() {}
 
-    static {
-        Logger.getLogger("com.github.weisj.jsvg").setLevel(Level.OFF);
-    }
-
-    public static Size getOriginalImageSize(byte[] pngImage, int dotsPerPixel) throws IOException {
-        Image img = Image.getInstance(pngImage);
-        return new Size((int) img.getPlainWidth() * dotsPerPixel, (int) img.getPlainHeight() * dotsPerPixel);
-    }
-
-    public static boolean isTbImage(String uri) {
-        return isInternalTbImage(uri) || isPublicTbImage(uri);
-    }
-
-    public static boolean isInternalTbImage(String uri) {
-        return uri.startsWith("/api/images/tenant/") ||
-               uri.startsWith("/api/images/system/");
-    }
-
-    public static boolean isPublicTbImage(String uri) {
-        return uri.startsWith("/api/images/public/");
-    }
-
-    public static boolean isEmptyImage(String uri) {
-        return EMPTY_IMAGE_URI.equals(uri);
+    public BarWithLabelsSeriesSettings(BarWithLabelsSeriesSettings input) {
+        super(input);
+        if (input == null) {
+            input = new BarWithLabelsSeriesSettings();
+        }
+        this.showSeriesLabel = input.getShowSeriesLabel() != null ? input.getShowSeriesLabel() : Boolean.TRUE;
+        this.seriesLabelFont = input.getSeriesLabelFont() != null ? input.getSeriesLabelFont() : Font.builder().family("Roboto")
+                .size(12f)
+                .weight(FontWeight.NORMAL)
+                .style(FontStyle.NORMAL)
+                .build();
+        this.seriesLabelColor = input.getSeriesLabelColor() != null ? input.getSeriesLabelColor() : "rgba(0, 0, 0, 0.54)";
     }
 }
