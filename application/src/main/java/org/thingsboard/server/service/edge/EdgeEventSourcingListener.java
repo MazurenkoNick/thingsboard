@@ -133,7 +133,7 @@ public class EdgeEventSourcingListener {
         }
         try {
             EntityType entityType = event.getEntityId().getEntityType();
-            if (EntityType.TENANT == entityType || EntityType.EDGE == entityType || EntityType.AI_MODEL == entityType) {
+            if (EntityType.TENANT == entityType || EntityType.EDGE == entityType) {
                 return;
             }
             log.trace("[{}] DeleteEntityEvent called: {}", tenantId, event);
@@ -278,7 +278,7 @@ public class EdgeEventSourcingListener {
                         return !event.getCreated();
                     }
                     break;
-                case API_USAGE_STATE, EDGE, AI_MODEL:
+                case API_USAGE_STATE, EDGE:
                     return false;
                 case DOMAIN:
                     if (entity instanceof Domain domain) {
