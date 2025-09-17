@@ -36,6 +36,7 @@ import org.thingsboard.script.api.tbel.TbelInvokeService;
 import org.thingsboard.server.common.data.cf.CalculatedField;
 import org.thingsboard.server.common.data.cf.configuration.Argument;
 import org.thingsboard.server.common.data.cf.configuration.ArgumentType;
+import org.thingsboard.server.common.data.cf.configuration.ArgumentsBasedCalculatedFieldConfiguration;
 import org.thingsboard.server.common.data.cf.configuration.Output;
 import org.thingsboard.server.common.data.cf.configuration.OutputType;
 import org.thingsboard.server.common.data.id.CalculatedFieldId;
@@ -43,6 +44,7 @@ import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.job.Job;
 import org.thingsboard.server.common.data.job.JobStatus;
 import org.thingsboard.server.dao.job.JobService;
+import org.thingsboard.server.dao.relation.RelationService;
 import org.thingsboard.server.dao.usagerecord.ApiLimitService;
 import org.thingsboard.server.service.cf.ctx.state.CalculatedFieldCtx;
 
@@ -65,10 +67,12 @@ public class CalculatedFieldReprocessingValidator {
     private final JobService jobService;
     private final TbelInvokeService tbelInvokeService;
     private final ApiLimitService apiLimitService;
+    private final RelationService relationService;
 
     public CfReprocessingValidationResult validate(CalculatedField calculatedField) {
         return checkJobStatus(calculatedField.getTenantId(), calculatedField.getId())
-                .or(() -> checkArguments(calculatedField.getConfiguration().getArguments()))
+                .or(() -> calculatedField.getConfiguration() instanceof ArgumentsBasedCalculatedFieldConfiguration argBasedCfg ?
+                        checkArguments(argBasedCfg.getArguments()) : Optional.empty())
                 .or(() -> checkExpression(calculatedField))
                 .or(() -> checkOutput(calculatedField.getConfiguration().getOutput()))
                 .orElse(CfReprocessingValidationResult.valid());
@@ -97,7 +101,7 @@ public class CalculatedFieldReprocessingValidator {
     }
 
     private Optional<CfReprocessingValidationResult> checkExpression(CalculatedField calculatedField) {
-        CalculatedFieldCtx ctx = new CalculatedFieldCtx(calculatedField, tbelInvokeService, apiLimitService);
+        CalculatedFieldCtx ctx = new CalculatedFieldCtx(calculatedField, tbelInvokeService, apiLimitService, relationService);
         try {
             ctx.init();
         } catch (Exception e) {

@@ -105,6 +105,15 @@ enum ApiUsageRecordKeyProto {
   GENERATED_REPORTS_COUNT = 100;
 }
 
+message EntityIdProto {
+  int64 entityIdMSB = 1;
+  int64 entityIdLSB = 2;
+  // PE legacy field. Keep for backward compatibility.
+  string entityType = 3 [deprecated = true];
+  // New canonical field.
+  EntityTypeProto type = 4;
+}
+
 /**
  * Service Discovery Data Structures;
  */
@@ -938,11 +947,25 @@ message TsRollingArgumentProto {
   repeated TsDoubleValProto tsValue = 4;
 }
 
+message GeofencingZoneProto {
+  EntityIdProto zoneId = 1;
+  int64 ts = 2;
+  string perimeterDefinition = 3;
+  int64 version = 4;
+  optional bool inside = 5;
+}
+
+message GeofencingArgumentProto {
+  string argName = 1;
+  repeated GeofencingZoneProto zones = 2;
+}
+
 message CalculatedFieldStateProto {
   CalculatedFieldEntityCtxIdProto id = 1;
   string type = 2;
   repeated SingleValueArgumentProto singleValueArguments = 3;
   repeated TsRollingArgumentProto rollingValueArguments = 4;
+  repeated GeofencingArgumentProto geofencingArguments = 5;
 }
 
 //Used to report session state to tb-Service and persist this state in the cache on the tb-Service level.
@@ -1020,16 +1043,9 @@ message MergedUserPermissionsProto {
   repeated GroupUserPermissionsProto group = 2;
 }
 
-message EntityIdProto {
-    int64 entityIdMSB = 1;
-    int64 entityIdLSB = 2;
-    string entityType = 3;
-}
-
 message OwnersListProto {
     repeated EntityIdProto entityIds = 1;
 }
-
 
 /**
  * TB Core Data Structures

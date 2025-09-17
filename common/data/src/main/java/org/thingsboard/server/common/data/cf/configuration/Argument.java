@@ -41,11 +41,23 @@ public class Argument {
 
     @Nullable
     private EntityId refEntityId;
-    private CFArgumentDynamicSourceType refDynamicSource;
+    private CfArgumentDynamicSourceConfiguration refDynamicSourceConfiguration;
     private ReferencedEntityKey refEntityKey;
     private String defaultValue;
 
     private Integer limit;
     private Long timeWindow;
+
+    public boolean hasDynamicSource() {
+        return refDynamicSourceConfiguration != null;
+    }
+
+    public boolean hasRelationQuerySource() {
+        return hasDynamicSource() && CFArgumentDynamicSourceType.RELATION_QUERY.equals(refDynamicSourceConfiguration.getType());
+    }
+
+    public boolean hasCurrentOwnerSource() {
+        return hasDynamicSource() && CFArgumentDynamicSourceType.CURRENT_OWNER.equals(refDynamicSourceConfiguration.getType());
+    }
 
 }
