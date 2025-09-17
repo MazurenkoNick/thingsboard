@@ -36,6 +36,7 @@ import org.jfree.chart.entity.EntityCollection;
 import org.jfree.chart.labels.ItemLabelAnchor;
 import org.jfree.chart.labels.ItemLabelPosition;
 import org.jfree.chart.labels.XYItemLabelGenerator;
+import org.jfree.chart.labels.XYSeriesLabelGenerator;
 import org.jfree.chart.plot.CrosshairState;
 import org.jfree.chart.plot.Marker;
 import org.jfree.chart.plot.PlotOrientation;
@@ -61,7 +62,14 @@ import org.thingsboard.server.report.renderer.chart.legend.TbLegendValues;
 import org.thingsboard.server.report.renderer.chart.legend.TbLegendValuesRequest;
 import org.thingsboard.server.report.renderer.chart.legend.TbSeriesLegendValuesGenerator;
 
-import java.awt.*;
+import java.awt.BasicStroke;
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.GradientPaint;
+import java.awt.Graphics2D;
+import java.awt.Paint;
+import java.awt.Shape;
+import java.awt.Stroke;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.HashMap;
@@ -75,6 +83,15 @@ public class TbXYBarRenderer extends XYBarRenderer implements TbItemRenderer {
 
     private final Map<Integer, Float> itemBorderRadiusMap;
     private Float defaultItemBorderRadius;
+
+    private final BooleanList seriesLabelsVisibleList;
+    private boolean defaultSeriesLabelsVisible;
+    private Map<Integer, Font> seriesLabelFontMap;
+    private Font defaultSeriesLabelFont;
+    private PaintList seriesLabelPaintList;
+    private transient Paint defaultSeriesLabelPaint;
+    private final Map<Integer, XYSeriesLabelGenerator> seriesLabelGeneratorMap;
+    private XYSeriesLabelGenerator defaultSeriesLabelGenerator;
 
     private final BooleanList itemLabelsBackgroundVisibleList;
     private boolean defaultItemLabelsBackgroundVisible;
@@ -95,10 +112,183 @@ public class TbXYBarRenderer extends XYBarRenderer implements TbItemRenderer {
         this.itemLabelsBackgroundPaintList = new PaintList();
         this.defaultItemLabelBackgroundPaint = safeParseCssColor("rgba(255,255,255,0.56)");
         this.thresholdPainter = new TbThresholdPainter();
+
+        this.seriesLabelsVisibleList = new BooleanList();
+        this.defaultSeriesLabelsVisible = false;
+
+        this.seriesLabelFontMap = new HashMap<>();
+        this.defaultSeriesLabelFont = new Font("SansSerif", Font.PLAIN, 10);
+
+        this.seriesLabelPaintList = new PaintList();
+        this.defaultSeriesLabelPaint = Color.BLACK;
+
+        this.seriesLabelGeneratorMap = new HashMap<>();
     }
 
     public boolean getStackMode() {
         return this.stackMode;
+    }
+
+    public boolean isSeriesLabelsVisible(int series) {
+        Boolean b = this.seriesLabelsVisibleList.getBoolean(series);
+        if (b == null) {
+            return this.defaultSeriesLabelsVisible;
+        }
+        return b;
+    }
+
+    public void setSeriesLabelsVisible(int series, boolean visible) {
+        setSeriesLabelsVisible(series, Boolean.valueOf(visible));
+    }
+
+    public void setSeriesLabelsVisible(int series, Boolean visible) {
+        setSeriesLabelsVisible(series, visible, true);
+    }
+
+    public void setSeriesLabelsVisible(int series, Boolean visible,
+                                           boolean notify) {
+        this.seriesLabelsVisibleList.setBoolean(series, visible);
+        if (notify) {
+            fireChangeEvent();
+        }
+    }
+
+    public void clearSeriesLabelsVisible(boolean notify) {
+        this.seriesLabelsVisibleList.clear();
+        if (notify) {
+            fireChangeEvent();
+        }
+    }
+
+    public boolean getDefaultSeriesLabelsVisible() {
+        return this.defaultSeriesLabelsVisible;
+    }
+
+    public void setDefaultSeriesLabelsVisible(boolean visible) {
+        setDefaultSeriesLabelsVisible(visible, true);
+    }
+
+    public void setDefaultSeriesLabelsVisible(boolean visible, boolean notify) {
+        this.defaultSeriesLabelsVisible = visible;
+        if (notify) {
+            fireChangeEvent();
+        }
+    }
+
+    public Font getSeriesLabelFont(int row, int column) {
+        Font result = getSeriesLabelFont(row);
+        if (result == null) {
+            result = this.defaultSeriesLabelFont;
+        }
+        return result;
+    }
+
+    public Font getSeriesLabelFont(int series) {
+        return this.seriesLabelFontMap.get(series);
+    }
+
+    public void setSeriesLabelFont(int series, Font font) {
+        setSeriesLabelFont(series, font, true);
+    }
+
+    public void setSeriesLabelFont(int series, Font font, boolean notify) {
+        this.seriesLabelFontMap.put(series, font);
+        if (notify) {
+            fireChangeEvent();
+        }
+    }
+
+    public void clearSeriesLabelFonts(boolean notify) {
+        this.seriesLabelFontMap.clear();
+        if (notify) {
+            fireChangeEvent();
+        }
+    }
+
+    public Font getDefaultSeriesLabelFont() {
+        return this.defaultSeriesLabelFont;
+    }
+
+    public void setDefaultSeriesLabelFont(Font font) {
+        Args.nullNotPermitted(font, "font");
+        setDefaultSeriesLabelFont(font, true);
+    }
+
+    public void setDefaultSeriesLabelFont(Font font, boolean notify) {
+        this.defaultSeriesLabelFont = font;
+        if (notify) {
+            fireChangeEvent();
+        }
+    }
+
+    public Paint getSeriesLabelPaint(int row, int column) {
+        Paint result = getSeriesLabelPaint(row);
+        if (result == null) {
+            result = this.defaultSeriesLabelPaint;
+        }
+        return result;
+    }
+
+    public Paint getSeriesLabelPaint(int series) {
+        return this.seriesLabelPaintList.getPaint(series);
+    }
+
+    public void setSeriesLabelPaint(int series, Paint paint) {
+        setSeriesLabelPaint(series, paint, true);
+    }
+
+    public void setSeriesLabelPaint(int series, Paint paint,
+                                    boolean notify) {
+        this.seriesLabelPaintList.setPaint(series, paint);
+        if (notify) {
+            fireChangeEvent();
+        }
+    }
+
+    public void clearSeriesLabelPaints(boolean notify) {
+        this.seriesLabelPaintList.clear();
+        if (notify) {
+            fireChangeEvent();
+        }
+    }
+
+    public Paint getDefaultSeriesLabelPaint() {
+        return this.defaultSeriesLabelPaint;
+    }
+
+    public void setDefaultSeriesLabelPaint(Paint paint) {
+        setDefaultSeriesLabelPaint(paint, true);
+    }
+
+    public void setDefaultSeriesLabelPaint(Paint paint, boolean notify) {
+        Args.nullNotPermitted(paint, "paint");
+        this.defaultSeriesLabelPaint = paint;
+        if (notify) {
+            fireChangeEvent();
+        }
+    }
+
+    public XYSeriesLabelGenerator getSeriesLabelGenerator(int series) {
+        XYSeriesLabelGenerator generator = this.seriesLabelGeneratorMap.get(series);
+        if (generator == null) {
+            generator = this.defaultSeriesLabelGenerator;
+        }
+        return generator;
+    }
+
+    public void setSeriesLabelGenerator(int series,
+                                        XYSeriesLabelGenerator generator) {
+        this.seriesLabelGeneratorMap.put(series, generator);
+        fireChangeEvent();
+    }
+
+    public XYSeriesLabelGenerator getDefaultSeriesLabelGenerator() {
+        return this.defaultSeriesLabelGenerator;
+    }
+
+    public void setDefaultSeriesLabelGenerator(XYSeriesLabelGenerator generator) {
+        this.defaultSeriesLabelGenerator = generator;
+        fireChangeEvent();
     }
 
     public Float getItemBorderRadius(int row, int column) {
@@ -420,11 +610,31 @@ public class TbXYBarRenderer extends XYBarRenderer implements TbItemRenderer {
             Shape savedClip = g2.getClip();
             g2.setClip(null);
             try {
+                Rectangle2D labelBounds = null;
                 if (isItemLabelVisible(series, item)) {
                     XYItemLabelGenerator generator = getItemLabelGenerator(series,
                             item);
-                    drawItemLabel(g2, dataset, series, item, plot, generator, bar.getBounds2D(),
-                            value1 < 0.0);
+                    if (generator != null) {
+                        String label = generator.generateLabel(dataset, series, item);
+                        if (label != null) {
+                            Font labelFont = getItemLabelFont(series, item);
+                            Paint labelPaint = getItemLabelPaint(series, item);
+                            labelBounds = drawLabel(g2, series, item, plot, label, labelFont, labelPaint, bar.getBounds2D(),
+                                    null, value1 < 0.0);
+                        }
+                    }
+                }
+                if (isSeriesLabelsVisible(series)) {
+                    XYSeriesLabelGenerator generator = getSeriesLabelGenerator(series);
+                    if (generator != null) {
+                        String label = generator.generateLabel(dataset, series);
+                        if (label != null) {
+                            Font labelFont = getSeriesLabelFont(series, item);
+                            Paint labelPaint = getSeriesLabelPaint(series, item);
+                            drawLabel(g2, series, item, plot, label, labelFont, labelPaint, bar.getBounds2D(),
+                                    labelBounds, value1 < 0.0);
+                        }
+                    }
                 }
 
                 // update the crosshair point
@@ -488,20 +698,12 @@ public class TbXYBarRenderer extends XYBarRenderer implements TbItemRenderer {
         }
     }
 
-    protected void drawItemLabel(Graphics2D g, XYDataset dataset,
-                                 int series, int item, XYPlot plot, XYItemLabelGenerator generator,
-                                 Rectangle2D bar, boolean negative) {
-
-        if (generator == null) {
-            return;  // nothing to do
-        }
-        String label = generator.generateLabel(dataset, series, item);
-        if (label == null) {
-            return;  // nothing to do
-        }
+    protected Rectangle2D drawLabel(Graphics2D g,
+                                    int series, int item, XYPlot plot, String label,
+                                    Font labelFont, Paint labelPaint,
+                                    Rectangle2D bar, Rectangle2D prevLabelBounds, boolean negative) {
 
         Graphics2D g2 = (Graphics2D) g.create();
-        Font labelFont = getItemLabelFont(series, item);
         g2.setFont(labelFont);
 
         // find out where to place the label...
@@ -523,7 +725,7 @@ public class TbXYBarRenderer extends XYBarRenderer implements TbItemRenderer {
             if (getMinimumLabelSize() != null &&
                     (labelBar.getWidth() < getMinimumLabelSize().getWidth()
                             || labelBar.getHeight() < getMinimumLabelSize().getHeight())) {
-                return; // nothing to do
+                return null; // nothing to do
             }
         }
 
@@ -553,7 +755,7 @@ public class TbXYBarRenderer extends XYBarRenderer implements TbItemRenderer {
                     if (getMinimumLabelSize() != null &&
                             (labelBar.getWidth() < getMinimumLabelSize().getWidth()
                                     || labelBar.getHeight() < getMinimumLabelSize().getHeight())) {
-                        return; // nothing to do
+                        return null; // nothing to do
                     }
                 }
 
@@ -566,30 +768,46 @@ public class TbXYBarRenderer extends XYBarRenderer implements TbItemRenderer {
         }
 
         if (drawLabel != null) {
-            boolean drawBackground = isItemLabelBackgroundVisible(series, item);
+            float x = (float) anchorPoint.getX();
             float y = (float) anchorPoint.getY();
-            float distance = drawBackground ? 5 : 3;
-            if (position.getTextAnchor() == TextAnchor.BOTTOM_CENTER) {
-                y -= distance;
-            } else if (position.getTextAnchor() == TextAnchor.TOP_CENTER) {
-                y += distance;
+            boolean drawBackground = isItemLabelBackgroundVisible(series, item);
+            if (position.getItemLabelAnchor().isInternal()) {
+                y -= 15;
+                if (prevLabelBounds != null) {
+                    y -= (3 + (float)prevLabelBounds.getHeight());
+                }
+            } else {
+                float distance = drawBackground ? 5 : 3;
+                if (position.getTextAnchor() == TextAnchor.BOTTOM_CENTER) {
+                    y -= distance;
+                } else if (position.getTextAnchor() == TextAnchor.TOP_CENTER) {
+                    y += distance;
+                }
+            }
+
+            Rectangle2D bounds = TextUtils.calculateRotatedStringBounds(drawLabel, g2,
+                    x, y,
+                    position.getTextAnchor(), position.getAngle(),
+                    position.getRotationAnchor()).getBounds2D();
+            if (position.getItemLabelAnchor().isInternal()) {
+                if (bar.getWidth() - bounds.getWidth() < 0) {
+                    return null;
+                }
             }
             if (drawBackground) {
-                Rectangle2D bounds = TextUtils.calculateRotatedStringBounds(drawLabel, g2,
-                        (float) anchorPoint.getX(), y,
-                        position.getTextAnchor(), position.getAngle(),
-                        position.getRotationAnchor()).getBounds2D();
                 g2.setPaint(getItemLabelBackgroundPaint(series, item));
                 g2.setStroke(new BasicStroke(0));
                 g2.fillRoundRect((int)bounds.getX()-3, (int)bounds.getY()-1, (int)bounds.getWidth()+6, (int)bounds.getHeight()+4, 4, 4 );
             }
-            Paint paint = getItemLabelPaint(series, item);
-            g2.setPaint(paint);
+
+            g2.setPaint(labelPaint);
             TextUtils.drawRotatedString(drawLabel, g2,
-                    (float) anchorPoint.getX(), y,
+                    x, y,
                     position.getTextAnchor(), position.getAngle(),
                     position.getRotationAnchor());
+            return bounds;
         }
+        return null;
     }
 
     private String calculateLabeltoDraw(String label, Point2D anchorPoint,

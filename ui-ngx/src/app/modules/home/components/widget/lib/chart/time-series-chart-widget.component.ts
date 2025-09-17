@@ -60,6 +60,7 @@ import {
 import { mergeDeep } from '@core/utils';
 import { WidgetComponent } from '@home/components/widget/widget.component';
 import { coerceBoolean } from '@shared/decorators/coercion';
+import { ChartWidgetComponent } from '@home/components/widget/lib/chart/chart.models';
 
 @Component({
   selector: 'tb-time-series-chart-widget',
@@ -67,7 +68,7 @@ import { coerceBoolean } from '@shared/decorators/coercion';
   styleUrls: ['./time-series-chart-widget.component.scss'],
   encapsulation: ViewEncapsulation.None
 })
-export class TimeSeriesChartWidgetComponent implements OnInit, OnDestroy, AfterViewInit {
+export class TimeSeriesChartWidgetComponent implements ChartWidgetComponent, OnInit, OnDestroy, AfterViewInit {
 
   @ViewChild('chartShape', {static: false})
   chartShape: ElementRef<HTMLElement>;

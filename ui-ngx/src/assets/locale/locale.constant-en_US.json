@@ -7388,6 +7388,7 @@
             "bar-chart": "Bar chart",
             "point-chart": "Point chart",
             "state-chart": "State chart",
+            "bar-chart-with-labels": "Bar chart with labels",
             "chart": {
                 "chart-height": "Chart height",
                 "chart-width": "Chart width",

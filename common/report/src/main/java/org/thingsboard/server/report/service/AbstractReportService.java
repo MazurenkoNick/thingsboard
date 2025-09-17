@@ -430,7 +430,7 @@ public abstract class AbstractReportService implements ReportService {
         return processed.toString();
     }
 
-    private Object postProcess(TbReportCtx ctx, DataKey dataKey, long timestamp, Object value, boolean parseString) {
+    protected Object postProcess(TbReportCtx ctx, DataKey dataKey, long timestamp, Object value, boolean parseString) {
         if (dataKey.isUsePostProcessing()) {
             Object input = parseString && value instanceof String ? convertStringToTypedValue((String) value) : value;
             UUID scriptId = ctx.getScripts().computeIfAbsent(dataKey.getPostFuncBody(), s -> evalScript(ctx, s));

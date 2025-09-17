@@ -157,7 +157,7 @@ public interface ChartUtils {
         return xAxis;
     }
 
-    static TbNumberAxis createYAxis(XYPlot plot, TimeSeriesChartYAxisSettings yAxisSettings, List<TbStateTick> stateTicks, int index) {
+    static TbNumberAxis createYAxis(XYPlot plot, TimeSeriesChartYAxisSettings yAxisSettings, List<TbStateTick> stateTicks, String units, Integer decimals, int index) {
         TbNumberAxis parent = null;
         if (index > 0) {
             parent = (TbNumberAxis) plot.getRangeAxis();
@@ -181,13 +181,14 @@ public interface ChartUtils {
         if (yAxisSettings.getMax() != null) {
             yAxis.setAxisMax(yAxisSettings.getMax());
         }
-        int decimals = yAxisSettings.getDecimals() != null ? yAxisSettings.getDecimals() : 2;
-        yAxis.setNumberFormatOverride(createValueFormatter(decimals, yAxisSettings.getUnits()));
+        int axisDecimals = yAxisSettings.getDecimals() != null ? yAxisSettings.getDecimals() : (decimals != null ? decimals : 2);
+        String axisUnits = yAxisSettings.getUnits() != null ? yAxisSettings.getUnits() : units;
+        yAxis.setNumberFormatOverride(createValueFormatter(axisDecimals, axisUnits));
         setupAxisAppearance(yAxis, yAxisSettings);
         return yAxis;
     }
 
-    static TbThresholdMarker createThresholdMarker(TsChartThresholdItem item) {
+    static TbThresholdMarker createThresholdMarker(TsChartThresholdItem item, String units, Integer decimals) {
         TbThresholdMarker marker = new TbThresholdMarker(item.getValue());
         TimeSeriesChartThreshold threshold = item.getSettings();
         marker.setPaint(safeParseCssColor(threshold.getLineColor()));
@@ -195,7 +196,9 @@ public interface ChartUtils {
         marker.setStartSymbol(threshold.getStartSymbol(), threshold.getStartSymbolSize());
         marker.setEndSymbol(threshold.getEndSymbol(), threshold.getEndSymbolSize());
         if (threshold.getShowLabel()) {
-            NumberFormat formatter = createValueFormatter(threshold.getDecimals(), threshold.getUnits());
+            int thresholdDecimals = threshold.getDecimals() != null ? threshold.getDecimals() : (decimals != null ? decimals : 2);
+            String thresholdUnits = threshold.getUnits() != null ? threshold.getUnits() : units;
+            NumberFormat formatter = createValueFormatter(thresholdDecimals, thresholdUnits);
             String label = formatter.format(item.getValue());
             marker.setLabel(label);
             marker.setLabelPaint(safeParseCssColor(threshold.getLabelColor()));

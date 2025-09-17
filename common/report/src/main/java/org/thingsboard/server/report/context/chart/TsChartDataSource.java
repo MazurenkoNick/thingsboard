@@ -78,6 +78,7 @@ public class TsChartDataSource {
                              ZoneId zoneId,
                              boolean comparison,
                              ComparisonDuration timeForComparison,
+                             DataPostProcessFunction postProcessFunction,
                              int index) {
         List<DataKey> newDataKeys = new ArrayList<>();
         for (DataKey dataKey : dataSource.getDataKeys()) {
@@ -128,13 +129,17 @@ public class TsChartDataSource {
                                         TimeIntervalCalculator.getAggTimeRange(timeWindow, aggInterval, aggregation, zoneId, entry.getTs());
                                 long ts = interval.startTs + (long)Math.floor((double)(interval.endTs - interval.startTs) / 2f);
                                 String value = entry.getValueAsString();
+                                Object processed = postProcessFunction.apply(key, ts, value);
+                                value = processed != null ? processed.toString() : null;
                                 Double doubleValue = null;
-                                try {
-                                    doubleValue = Double.parseDouble(value);
-                                } catch (NumberFormatException ignored) {}
+                                if (value != null) {
+                                    try {
+                                        doubleValue = Double.parseDouble(value);
+                                    } catch (NumberFormatException ignored) {}
+                                }
                                 return new TsChartSeriesEntry(ts, interval, value, doubleValue);
                             }
-                    ).sorted(Comparator.comparing(TsChartSeriesEntry::getTs)).toList();
+                    ).filter(entry -> entry.getValue() != null).sorted(Comparator.comparing(TsChartSeriesEntry::getTs)).toList();
             seriesData.setData(keyValues);
             seriesData.setNumericData(keyValues.stream().map(TsChartSeriesEntry::getDoubleValue).filter(Objects::nonNull).toList());
             seriesData.setIndex(dataIndex);

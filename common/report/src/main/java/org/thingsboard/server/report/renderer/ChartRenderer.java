@@ -30,9 +30,7 @@
  */
 package org.thingsboard.server.report.renderer;
 
-import org.jfree.chart.ChartTheme;
 import org.jfree.chart.JFreeChart;
-import org.jfree.chart.StandardChartTheme;
 import org.jfree.chart.encoders.ImageFormat;
 import org.thingsboard.server.common.data.report.configuration.components.AbstractChartComponent;
 import org.thingsboard.server.common.data.report.configuration.image.ImageWidthType;
@@ -48,8 +46,6 @@ import java.io.IOException;
 import java.util.Base64;
 
 public abstract class ChartRenderer<C extends AbstractChartComponent> extends AbstractImageRenderer<C> {
-
-    protected static ChartTheme currentChartTheme = new StandardChartTheme("TbChartTheme");
 
     private int width;
     private int height;

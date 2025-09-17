@@ -38,7 +38,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
   imageAlignments,
   imageAlignmentTranslations,
-  imageWidthTypeTranslations,
+  imageWidthTypeTranslations, reportBarChartWithLabelsDefaultSettings, ReportBarChartWithLabelSettings,
   reportTimeSeriesChartDefaultSettings,
   ReportTimeSeriesChartSettings,
   TimeseriesChartReportComponentConfig,
@@ -63,6 +63,7 @@ import { deepClone, mergeDeep } from '@core/utils';
 import { merge } from 'rxjs';
 import { TbTimeSeriesChart } from '@home/components/widget/lib/chart/time-series-chart';
 import { WidgetInfo, WidgetWithInfo } from '@home/models/widget-component.models';
+import { coerceBoolean } from '@shared/decorators/coercion';
 
 @Component({
   selector: 'tb-time-series-chart-config',
@@ -73,13 +74,21 @@ import { WidgetInfo, WidgetWithInfo } from '@home/models/widget-component.models
 export class TimeSeriesChartConfigComponent extends AbstractReportComponentConfig<TimeseriesChartReportComponentConfig> {
 
   @Input()
+  @coerceBoolean()
+  barChartWithLabels = false;
+
+  @Input()
   chartType: TimeSeriesChartType = TimeSeriesChartType.default;
 
   TimeSeriesChartType = TimeSeriesChartType;
 
   public get yAxisIds(): TimeSeriesChartYAxisId[] {
-    const yAxes: TimeSeriesChartYAxes = this.reportConfigForm.get('yAxes').value;
-    return yAxes ? Object.keys(yAxes) : [];
+    if (this.barChartWithLabels) {
+      return ['default'];
+    } else {
+      const yAxes: TimeSeriesChartYAxes = this.reportConfigForm.get('yAxes').value;
+      return yAxes ? Object.keys(yAxes) : [];
+    }
   }
 
   public get widget(): WidgetWithInfo {
@@ -111,8 +120,13 @@ export class TimeSeriesChartConfigComponent extends AbstractReportComponentConfi
   seriesMode = 'series';
 
   protected buildForm(reportComponentConfig: TimeseriesChartReportComponentConfig): FormGroup {
-    const timeSeriesChartSettings: ReportTimeSeriesChartSettings =
-      mergeDeep<ReportTimeSeriesChartSettings>({} as ReportTimeSeriesChartSettings, reportTimeSeriesChartDefaultSettings, reportComponentConfig.timeSeriesChartSettings);
+
+    let timeSeriesChartSettings: ReportTimeSeriesChartSettings | ReportBarChartWithLabelSettings;
+    if (this.barChartWithLabels) {
+      timeSeriesChartSettings = mergeDeep<ReportBarChartWithLabelSettings>({} as ReportBarChartWithLabelSettings, reportBarChartWithLabelsDefaultSettings, reportComponentConfig.timeSeriesChartSettings);
+    } else {
+      timeSeriesChartSettings = mergeDeep<ReportTimeSeriesChartSettings>({} as ReportTimeSeriesChartSettings, reportTimeSeriesChartDefaultSettings, reportComponentConfig.timeSeriesChartSettings);
+    }
     const form: UntypedFormGroup = this.fb.group({
       timewindow: [reportComponentConfig.timewindow, []],
       dataSources: [reportComponentConfig.dataSources, []],
@@ -121,13 +135,7 @@ export class TimeSeriesChartConfigComponent extends AbstractReportComponentConfi
       height: [reportComponentConfig.height || 400, [Validators.min(1)]],
       alignment: [reportComponentConfig.alignment || 'center', []],
 
-      yAxes: [timeSeriesChartSettings.yAxes, []],
       series: [this.getSeries(reportComponentConfig.dataSources), []],
-
-      comparisonEnabled: [timeSeriesChartSettings.comparisonEnabled, []],
-      timeForComparison: [timeSeriesChartSettings.timeForComparison, []],
-      comparisonCustomIntervalValue: [timeSeriesChartSettings.comparisonCustomIntervalValue, [Validators.min(0)]],
-      comparisonXAxis: [timeSeriesChartSettings.comparisonXAxis, []],
 
       thresholds: [timeSeriesChartSettings.thresholds, []],
 
@@ -136,8 +144,6 @@ export class TimeSeriesChartConfigComponent extends AbstractReportComponentConfi
       titleFont: [timeSeriesChartSettings.titleFont, []],
       titleColor: [timeSeriesChartSettings.titleColor, []],
       titleAlignment: [timeSeriesChartSettings.titleAlignment, []],
-
-      stack: [timeSeriesChartSettings.stack, []],
 
       grid: [timeSeriesChartSettings.grid, []],
 
@@ -148,13 +154,43 @@ export class TimeSeriesChartConfigComponent extends AbstractReportComponentConfi
       showLegend: [timeSeriesChartSettings.showLegend, []],
       legendLabelFont: [timeSeriesChartSettings.legendLabelFont, []],
       legendLabelColor: [timeSeriesChartSettings.legendLabelColor, []],
-      legendValueFont: [timeSeriesChartSettings.legendValueFont, []],
-      legendValueColor: [timeSeriesChartSettings.legendValueColor, []],
-      legendColumnTitleFont: [timeSeriesChartSettings.legendColumnTitleFont, []],
-      legendColumnTitleColor: [timeSeriesChartSettings.legendColumnTitleColor, []],
       legendConfig: [timeSeriesChartSettings.legendConfig, []]
 
     });
+
+    if (this.barChartWithLabels) {
+
+      const barChartWithLabelSettings = timeSeriesChartSettings as ReportBarChartWithLabelSettings;
+
+      form.addControl('barUnits', this.fb.control(barChartWithLabelSettings.barUnits, []));
+      form.addControl('barDecimals', this.fb.control(barChartWithLabelSettings.barDecimals, []));
+
+      form.addControl('yAxis', this.fb.control(barChartWithLabelSettings.yAxes['default'], []));
+
+      form.addControl('showBarLabel', this.fb.control(barChartWithLabelSettings.showBarLabel, []));
+      form.addControl('barLabelFont', this.fb.control(barChartWithLabelSettings.barLabelFont, []));
+      form.addControl('barLabelColor', this.fb.control(barChartWithLabelSettings.barLabelColor, []));
+      form.addControl('showBarValue', this.fb.control(barChartWithLabelSettings.showBarValue, []));
+      form.addControl('barValueFont', this.fb.control(barChartWithLabelSettings.barValueFont, []));
+      form.addControl('barValueColor', this.fb.control(barChartWithLabelSettings.barValueColor, []));
+      form.addControl('showBarBorder', this.fb.control(barChartWithLabelSettings.showBarBorder, []));
+      form.addControl('barBorderWidth', this.fb.control(barChartWithLabelSettings.barBorderWidth, []));
+      form.addControl('barBorderRadius', this.fb.control(barChartWithLabelSettings.barBorderRadius, []))
+      form.addControl('barBackgroundSettings', this.fb.control(barChartWithLabelSettings.barBackgroundSettings, []));
+
+    } else {
+      form.addControl('yAxes', this.fb.control(timeSeriesChartSettings.yAxes, []));
+      form.addControl('comparisonEnabled', this.fb.control(timeSeriesChartSettings.comparisonEnabled, []));
+      form.addControl('timeForComparison', this.fb.control(timeSeriesChartSettings.timeForComparison, []));
+      form.addControl('comparisonCustomIntervalValue', this.fb.control(timeSeriesChartSettings.comparisonCustomIntervalValue, []));
+      form.addControl('comparisonXAxis', this.fb.control(timeSeriesChartSettings.comparisonXAxis, []))
+      form.addControl('stack', this.fb.control(timeSeriesChartSettings.stack, []));
+
+      form.addControl('legendValueFont', this.fb.control(timeSeriesChartSettings.legendValueFont, []));
+      form.addControl('legendValueColor', this.fb.control(timeSeriesChartSettings.legendValueColor, []));
+      form.addControl('legendColumnTitleFont', this.fb.control(timeSeriesChartSettings.legendColumnTitleFont, []));
+      form.addControl('legendColumnTitleColor', this.fb.control(timeSeriesChartSettings.legendColumnTitleColor, []));
+    }
 
     if (this.chartType === TimeSeriesChartType.state) {
       form.addControl('states', this.fb.control(timeSeriesChartSettings.states, []));
@@ -166,12 +202,24 @@ export class TimeSeriesChartConfigComponent extends AbstractReportComponentConfi
       this.updateCustomWidth();
     });
 
-    form.get('comparisonEnabled').valueChanges.pipe(
-      takeUntilDestroyed(this.destroyRef)
-    ).subscribe(() => this.updateSeriesState());
+    if (this.barChartWithLabels) {
+      merge(form.get('showBarLabel').valueChanges,
+            form.get('showBarValue').valueChanges,
+            form.get('showBarBorder').valueChanges).pipe(
+        takeUntilDestroyed(this.destroyRef)
+      ).subscribe(() => {
+        this.updateValidators(form);
+      });
+    } else {
+      form.get('comparisonEnabled').valueChanges.pipe(
+        takeUntilDestroyed(this.destroyRef)
+      ).subscribe(() => {
+        this.updateSeriesState();
+        this.updateValidators(form);
+      });
+    }
 
-    merge(form.get('comparisonEnabled').valueChanges,
-          form.get('showTitle').valueChanges,
+    merge(form.get('showTitle').valueChanges,
           form.get('showLegend').valueChanges).pipe(
       takeUntilDestroyed(this.destroyRef)
     ).subscribe(() => {
@@ -191,18 +239,6 @@ export class TimeSeriesChartConfigComponent extends AbstractReportComponentConfi
     }
     const timeSeriesChartSettings: ReportTimeSeriesChartSettings = config.timeSeriesChartSettings
 
-    timeSeriesChartSettings.yAxes = config.yAxes;
-    delete config.yAxes;
-
-    timeSeriesChartSettings.comparisonEnabled = config.comparisonEnabled;
-    delete config.comparisonEnabled;
-    timeSeriesChartSettings.timeForComparison = config.timeForComparison;
-    delete config.timeForComparison;
-    timeSeriesChartSettings.comparisonCustomIntervalValue = config.comparisonCustomIntervalValue;
-    delete config.comparisonCustomIntervalValue;
-    timeSeriesChartSettings.comparisonXAxis = config.comparisonXAxis;
-    delete config.comparisonXAxis;
-
     timeSeriesChartSettings.thresholds = config.thresholds;
     delete config.thresholds;
 
@@ -217,9 +253,6 @@ export class TimeSeriesChartConfigComponent extends AbstractReportComponentConfi
     timeSeriesChartSettings.titleAlignment = config.titleAlignment;
     delete config.titleAlignment;
 
-    timeSeriesChartSettings.stack = config.stack;
-    delete config.stack;
-
     timeSeriesChartSettings.grid = config.grid;
     delete config.grid;
 
@@ -232,24 +265,77 @@ export class TimeSeriesChartConfigComponent extends AbstractReportComponentConfi
     timeSeriesChartSettings.showLegend = config.showLegend;
     delete config.showLegend;
 
-
-    timeSeriesChartSettings.legendColumnTitleFont = config.legendColumnTitleFont;
-    delete config.legendColumnTitleFont;
-    timeSeriesChartSettings.legendColumnTitleColor = config.legendColumnTitleColor;
-    delete config.legendColumnTitleColor;
-
     timeSeriesChartSettings.legendLabelFont = config.legendLabelFont;
     delete config.legendLabelFont;
     timeSeriesChartSettings.legendLabelColor = config.legendLabelColor;
     delete config.legendLabelColor;
 
-    timeSeriesChartSettings.legendValueFont = config.legendValueFont;
-    delete config.legendValueFont;
-    timeSeriesChartSettings.legendValueColor = config.legendValueColor;
-    delete config.legendValueColor;
-
     timeSeriesChartSettings.legendConfig = config.legendConfig;
     delete config.legendConfig;
+
+    if (this.barChartWithLabels) {
+
+      const barChartWithLabelSettings = timeSeriesChartSettings as ReportBarChartWithLabelSettings;
+
+      barChartWithLabelSettings.yAxes = {
+        'default': config.yAxis
+      };
+      delete config.yAxis;
+
+      barChartWithLabelSettings.barUnits = config.barUnits;
+      delete config.barUnits;
+
+      barChartWithLabelSettings.barDecimals = config.barDecimals;
+      delete config.barDecimals;
+
+      barChartWithLabelSettings.showBarLabel = config.showBarLabel;
+      delete config.showBarLabel;
+      barChartWithLabelSettings.barLabelFont = config.barLabelFont;
+      delete config.barLabelFont;
+      barChartWithLabelSettings.barLabelColor = config.barLabelColor;
+      delete config.barLabelColor;
+      barChartWithLabelSettings.showBarValue = config.showBarValue;
+      delete config.showBarValue;
+      barChartWithLabelSettings.barValueFont = config.barValueFont;
+      delete config.barValueFont;
+      barChartWithLabelSettings.barValueColor = config.barValueColor;
+      delete config.barValueColor;
+
+      barChartWithLabelSettings.showBarBorder = config.showBarBorder;
+      delete config.showBarBorder;
+      barChartWithLabelSettings.barBorderWidth = config.barBorderWidth;
+      delete config.barBorderWidth;
+      barChartWithLabelSettings.barBorderRadius = config.barBorderRadius;
+      delete config.barBorderRadius;
+      barChartWithLabelSettings.barBackgroundSettings = config.barBackgroundSettings;
+      delete config.barBackgroundSettings;
+
+    } else {
+      timeSeriesChartSettings.yAxes = config.yAxes;
+      delete config.yAxes;
+
+      timeSeriesChartSettings.comparisonEnabled = config.comparisonEnabled;
+      delete config.comparisonEnabled;
+      timeSeriesChartSettings.timeForComparison = config.timeForComparison;
+      delete config.timeForComparison;
+      timeSeriesChartSettings.comparisonCustomIntervalValue = config.comparisonCustomIntervalValue;
+      delete config.comparisonCustomIntervalValue;
+      timeSeriesChartSettings.comparisonXAxis = config.comparisonXAxis;
+      delete config.comparisonXAxis;
+
+      timeSeriesChartSettings.stack = config.stack;
+      delete config.stack;
+
+      timeSeriesChartSettings.legendColumnTitleFont = config.legendColumnTitleFont;
+      delete config.legendColumnTitleFont;
+      timeSeriesChartSettings.legendColumnTitleColor = config.legendColumnTitleColor;
+      delete config.legendColumnTitleColor;
+
+      timeSeriesChartSettings.legendValueFont = config.legendValueFont;
+      delete config.legendValueFont;
+      timeSeriesChartSettings.legendValueColor = config.legendValueColor;
+      delete config.legendValueColor;
+    }
 
     if (this.chartType === TimeSeriesChartType.state) {
       timeSeriesChartSettings.states = config.states;
@@ -314,7 +400,9 @@ export class TimeSeriesChartConfigComponent extends AbstractReportComponentConfi
     }
     dataKeys = dataKeys.map(key => {
       key = deepClone(key);
-      key.settings = toTimeSeriesChartKeySettings(key.settings);
+      if (!this.barChartWithLabels) {
+        key.settings = toTimeSeriesChartKeySettings(key.settings);
+      }
       return key;
     });
     return dataKeys;
@@ -324,7 +412,9 @@ export class TimeSeriesChartConfigComponent extends AbstractReportComponentConfi
     if (datasources && datasources.length) {
       series = series.map(key => {
         key = deepClone(key);
-        key.settings = toReportTimeSeriesChartKeySettings(key.settings);
+        if (!this.barChartWithLabels) {
+          key.settings = toReportTimeSeriesChartKeySettings(key.settings);
+        }
         return key;
       });
       datasources[0].dataKeys = series;
@@ -332,19 +422,46 @@ export class TimeSeriesChartConfigComponent extends AbstractReportComponentConfi
   }
 
   private updateValidators(form: FormGroup) {
-    const comparisonEnabled: boolean = form.get('comparisonEnabled').value;
+    if (this.barChartWithLabels) {
+      const showBarLabel: boolean = form.get('showBarLabel').value;
+      const showBarValue: boolean = form.get('showBarValue').value;
+      const showBarBorder: boolean = form.get('showBarBorder').value;
+      if (showBarLabel) {
+        form.get('barLabelFont').enable();
+        form.get('barLabelColor').enable();
+      } else {
+        form.get('barLabelFont').disable();
+        form.get('barLabelColor').disable();
+      }
+
+      if (showBarValue) {
+        form.get('barValueFont').enable();
+        form.get('barValueColor').enable();
+      } else {
+        form.get('barValueFont').disable();
+        form.get('barValueColor').disable();
+      }
+      if (showBarBorder) {
+        form.get('barBorderWidth').enable();
+      } else {
+        form.get('barBorderWidth').disable();
+      }
+    } else {
+      const comparisonEnabled: boolean = form.get('comparisonEnabled').value;
+      if (comparisonEnabled) {
+        form.get('timeForComparison').enable({emitEvent: false});
+        form.get('comparisonCustomIntervalValue').enable({emitEvent: false});
+        form.get('comparisonXAxis').enable({emitEvent: false});
+      } else {
+        form.get('timeForComparison').disable({emitEvent: false});
+        form.get('comparisonCustomIntervalValue').disable({emitEvent: false});
+        form.get('comparisonXAxis').disable({emitEvent: false});
+      }
+    }
+
+
     const showTitle: boolean = form.get('showTitle').value;
     const showLegend: boolean = form.get('showLegend').value;
-
-    if (comparisonEnabled) {
-      form.get('timeForComparison').enable({emitEvent: false});
-      form.get('comparisonCustomIntervalValue').enable({emitEvent: false});
-      form.get('comparisonXAxis').enable({emitEvent: false});
-    } else {
-      form.get('timeForComparison').disable({emitEvent: false});
-      form.get('comparisonCustomIntervalValue').disable({emitEvent: false});
-      form.get('comparisonXAxis').disable({emitEvent: false});
-    }
 
     if (showTitle) {
       form.get('title').enable({emitEvent: false});
@@ -359,21 +476,25 @@ export class TimeSeriesChartConfigComponent extends AbstractReportComponentConfi
     }
 
     if (showLegend) {
-      form.get('legendColumnTitleFont').enable({emitEvent: false});
-      form.get('legendColumnTitleColor').enable({emitEvent: false});
       form.get('legendLabelFont').enable({emitEvent: false});
       form.get('legendLabelColor').enable({emitEvent: false});
-      form.get('legendValueFont').enable({emitEvent: false});
-      form.get('legendValueColor').enable({emitEvent: false});
       form.get('legendConfig').enable({emitEvent: false});
+      if (!this.barChartWithLabels) {
+        form.get('legendColumnTitleFont').enable({emitEvent: false});
+        form.get('legendColumnTitleColor').enable({emitEvent: false});
+        form.get('legendValueFont').enable({emitEvent: false});
+        form.get('legendValueColor').enable({emitEvent: false});
+      }
     } else {
-      form.get('legendColumnTitleFont').disable({emitEvent: false});
-      form.get('legendColumnTitleColor').disable({emitEvent: false});
       form.get('legendLabelFont').disable({emitEvent: false});
       form.get('legendLabelColor').disable({emitEvent: false});
-      form.get('legendValueFont').disable({emitEvent: false});
-      form.get('legendValueColor').disable({emitEvent: false});
       form.get('legendConfig').disable({emitEvent: false});
+      if (!this.barChartWithLabels) {
+        form.get('legendColumnTitleFont').disable({emitEvent: false});
+        form.get('legendColumnTitleColor').disable({emitEvent: false});
+        form.get('legendValueFont').disable({emitEvent: false});
+        form.get('legendValueColor').disable({emitEvent: false});
+      }
     }
 
   }

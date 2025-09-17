@@ -80,6 +80,7 @@ import org.thingsboard.server.common.data.report.configuration.timewindow.TimeWi
 import org.thingsboard.server.report.context.ComponentData;
 import org.thingsboard.server.report.context.HeaderFooterRenderLayout;
 import org.thingsboard.server.report.context.TbReportCtx;
+import org.thingsboard.server.report.context.chart.DataPostProcessFunction;
 import org.thingsboard.server.report.context.chart.TsChartData;
 import org.thingsboard.server.report.context.chart.TsChartDataSource;
 import org.thingsboard.server.report.context.chart.TsChartThresholdItem;
@@ -403,6 +404,7 @@ public class PdfReportService extends AbstractReportService {
 
         int dataIndex = 0;
         boolean stateData = "stateChart".equals(component.getSubType());
+        DataPostProcessFunction dataPostProcessFunction = (dataKey, timestamp, value) -> this.postProcess(ctx, dataKey, timestamp, value, true);
 
         for (EntityData entity : entityDatas) {
             Aggregation aggregation = timeWindowConf.getAggregation().getType();
@@ -430,7 +432,7 @@ public class PdfReportService extends AbstractReportService {
                 }
             }
             TsChartDataSource chartDataSource = new TsChartDataSource(ds, entity, tsKvEntries, timeRange,
-                    historyConf.getInterval(), aggregation, zoneId, false, null, dataIndex);
+                    historyConf.getInterval(), aggregation, zoneId, false, null, dataPostProcessFunction, dataIndex);
             chartData.add(chartDataSource);
             dataIndex++;
         }
@@ -470,7 +472,7 @@ public class PdfReportService extends AbstractReportService {
                             timeWindowConf.getAggregation().getLimit(), false, ctx);
 
                     TsChartDataSource chartDataSource = new TsChartDataSource(ds, entity, tsKvEntries, comparisonTimeRange,
-                            historyConf.getInterval(), timeWindowConf.getAggregation().getType(), zoneId, true, timeForComparison, dataIndex);
+                            historyConf.getInterval(), timeWindowConf.getAggregation().getType(), zoneId, true, timeForComparison, dataPostProcessFunction, dataIndex);
                     comparisonChartData.add(chartDataSource);
                     dataIndex++;
                 }

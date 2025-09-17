@@ -49,7 +49,11 @@ import org.jfree.chart.ui.TextAnchor;
 import org.jfree.chart.util.Args;
 import org.jfree.data.Range;
 
-import java.awt.*;
+import java.awt.BasicStroke;
+import java.awt.Font;
+import java.awt.Graphics2D;
+import java.awt.Paint;
+import java.awt.Stroke;
 import java.awt.font.FontRenderContext;
 import java.awt.geom.Rectangle2D;
 import java.math.BigDecimal;
@@ -83,10 +87,8 @@ public class TbNumberAxis extends NumberAxis {
 
     public TbNumberAxis(String label, TbNumberAxis parentAxis) {
         super(label);
-        if (parentAxis != null) {
-            this.setUpperMargin(0);
-            this.setLowerMargin(0);
-        }
+        this.setUpperMargin(0);
+        this.setLowerMargin(0);
         this.parentAxis = parentAxis;
         this.gridlinesVisible = true;
         this.gridlineStroke = new BasicStroke(1.0f);
@@ -126,10 +128,6 @@ public class TbNumberAxis extends NumberAxis {
 
     public void setStateTicks(List<TbStateTick> stateTicks) {
         this.stateTicks = stateTicks;
-        if (this.stateTicks != null) {
-            setUpperMargin(0);
-            setLowerMargin(0);
-        }
     }
 
     @Override
