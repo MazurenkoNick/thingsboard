@@ -104,8 +104,8 @@ public class DefaultCalculatedFieldProcessingService extends AbstractCalculatedF
     }
 
     @Override
-    public ListenableFuture<CalculatedFieldState> fetchStateFromDb(CalculatedFieldCtx ctx, EntityId entityId, long ts) {
-        return super.fetchStateFromDb(ctx, entityId, ts);
+    public ListenableFuture<CalculatedFieldState> fetchStateFromDb(CalculatedFieldCtx ctx, EntityId entityId) {
+        return super.fetchStateFromDb(ctx, entityId, System.currentTimeMillis());
     }
 
     @Override

@@ -103,7 +103,7 @@ public abstract class AbstractCalculatedFieldProcessingService {
 
     protected abstract String getExecutorNamePrefix();
 
-    public ListenableFuture<CalculatedFieldState> fetchStateFromDb(CalculatedFieldCtx ctx, EntityId entityId, long ts) {
+    protected ListenableFuture<CalculatedFieldState> fetchStateFromDb(CalculatedFieldCtx ctx, EntityId entityId, long ts) {
         Map<String, ListenableFuture<ArgumentEntry>> argFutures = switch (ctx.getCalculatedField().getType()) {
             case GEOFENCING -> fetchGeofencingCalculatedFieldArguments(ctx, entityId, false, ts);
             case SIMPLE, SCRIPT -> {

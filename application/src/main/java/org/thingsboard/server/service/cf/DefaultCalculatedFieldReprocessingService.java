@@ -254,7 +254,7 @@ public class DefaultCalculatedFieldReprocessingService extends AbstractCalculate
     }
 
     private CalculatedFieldState initState(TenantId tenantId, EntityId entityId, CalculatedFieldCtx ctx, long startTs) throws InterruptedException {
-        ListenableFuture<CalculatedFieldState> stateFuture = fetchStateFromDb(ctx, entityId, startTs);
+        ListenableFuture<CalculatedFieldState> stateFuture = super.fetchStateFromDb(ctx, entityId, startTs);
         CalculatedFieldState state;
         try {
             state = stateFuture.get(); // will be interrupted on task processing timeout
