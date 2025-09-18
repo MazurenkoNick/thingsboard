@@ -274,15 +274,12 @@ public class EntityGroupController extends AutoCommitController {
             throw new ThingsboardException("Unable to remove entity group: " +
                     "Removal of entity group 'All' is forbidden!", ThingsboardErrorCode.PERMISSION_DENIED);
         }
-        if (entityGroupService.isTenantAdminUserGroup(entityGroup)) {
-            List<UserId> entityGroupUsers = userService.findUsersByEntityGroupIds(List.of(entityGroupId), new PageLink(Integer.MAX_VALUE))
-                    .getData()
-                    .stream()
-                    .map(User::getId)
-                    .collect(Collectors.toList());
-            if (entityGroupService.containsLastTenantAdmin(getTenantId(), entityGroupUsers)) {
-                throw new ThingsboardException("At least one tenant administrator must remain!", ThingsboardErrorCode.INVALID_ARGUMENTS);
-            }
+        List<UserId> entityGroupUsers = userService.findUsersByEntityGroupIds(List.of(entityGroupId), new PageLink(Integer.MAX_VALUE))
+                .getData()
+                .stream()
+                .map(User::getId).toList();
+        if (entityGroupUsers.contains(getCurrentUser().getId())) {
+            throw new ThingsboardException("Unable to remove the user group associated with the current user.", ThingsboardErrorCode.INVALID_ARGUMENTS);
         }
 
         List<GroupPermissionInfo> groupPermissions = new ArrayList<>(

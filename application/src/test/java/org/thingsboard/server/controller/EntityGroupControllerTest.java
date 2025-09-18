@@ -221,7 +221,19 @@ public class EntityGroupControllerTest extends AbstractControllerTest {
 
         doDelete("/api/entityGroup/" + tenantAdministratorsGroup.getId())
                 .andExpect(status().isBadRequest())
-                .andExpect(statusReason(containsString("At least one tenant administrator must remain!")));
+                .andExpect(statusReason(containsString("Unable to remove the user group associated with the current user.")));
+    }
+
+    @Test
+    public void testShouldNotDeleteUserGroupOfAuthorizedUser() throws Exception {
+        loginCustomerAdminUser();
+
+        EntityGroup customerAdminGroups = entityGroupService.findEntityGroupByTypeAndName(tenantId, customerId,
+                EntityType.USER, EntityGroup.GROUP_CUSTOMER_ADMINS_NAME).get();
+
+        doDelete("/api/entityGroup/" + customerAdminGroups.getId())
+                .andExpect(status().isBadRequest())
+                .andExpect(statusReason(containsString("Unable to remove the user group associated with the current user.")));
     }
 
     @Test
