@@ -541,7 +541,7 @@ export class TimeseriesTableWidgetComponent extends PageComponent implements OnI
         let includeToExport: columnExportOptions;
         const header = this.sources[index].header.find(column => column.index.toString() === value);
         if (value === '0') {
-          title = 'Timestamp';
+          title = this.translate.instant('widgets.table.timestamp-column-name');
           includeToExport = this.exportTimestampColumn;
         } else if (value === 'actions') {
           title = 'Actions';
