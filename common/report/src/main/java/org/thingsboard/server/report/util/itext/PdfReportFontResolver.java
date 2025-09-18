@@ -148,12 +148,12 @@ public class PdfReportFontResolver extends ITextFontResolver {
 
     private void addRoboto() {
         PdfReportFontFamily roboto = new PdfReportFontFamily("Roboto");
-        loadFont(roboto, "/fonts/roboto/Roboto-Regular.ttf", IDENTITY_H, EMBEDDED, IdentValue.NORMAL, IdentValue.NORMAL);
-        loadFont(roboto, "/fonts/roboto/Roboto-Italic.ttf", IDENTITY_H, EMBEDDED, IdentValue.NORMAL, IdentValue.ITALIC);
-        loadFont(roboto, "/fonts/roboto/Roboto-Medium.ttf", IDENTITY_H, EMBEDDED, IdentValue.FONT_WEIGHT_500, IdentValue.NORMAL);
-        loadFont(roboto, "/fonts/roboto/Roboto-MediumItalic.ttf", IDENTITY_H, EMBEDDED, IdentValue.FONT_WEIGHT_500, IdentValue.ITALIC);
-        loadFont(roboto, "/fonts/roboto/Roboto-Bold.ttf", IDENTITY_H, EMBEDDED, IdentValue.BOLD, IdentValue.NORMAL);
-        loadFont(roboto, "/fonts/roboto/Roboto-BoldItalic.ttf", IDENTITY_H, EMBEDDED, IdentValue.BOLD, IdentValue.ITALIC);
+        loadFont(roboto, "/fonts/cjk/NotoSansSC-Regular.ttf", IDENTITY_H, EMBEDDED, IdentValue.NORMAL, IdentValue.NORMAL);
+        loadFont(roboto, "/fonts/cjk/NotoSans-Italic.ttf", IDENTITY_H, EMBEDDED, IdentValue.NORMAL, IdentValue.ITALIC);
+        loadFont(roboto, "/fonts/cjk/NotoSansSC-Medium.ttf", IDENTITY_H, EMBEDDED, IdentValue.FONT_WEIGHT_500, IdentValue.NORMAL);
+        loadFont(roboto, "/fonts/cjk/NotoSans-MediumItalic.ttf", IDENTITY_H, EMBEDDED, IdentValue.FONT_WEIGHT_500, IdentValue.ITALIC);
+        loadFont(roboto, "/fonts/cjk/NotoSansSC-Bold.ttf", IDENTITY_H, EMBEDDED, IdentValue.BOLD, IdentValue.NORMAL);
+        loadFont(roboto, "/fonts/cjk/NotoSans-BoldItalic.ttf", IDENTITY_H, EMBEDDED, IdentValue.BOLD, IdentValue.ITALIC);
         families.put("Roboto", roboto);
     }
 
