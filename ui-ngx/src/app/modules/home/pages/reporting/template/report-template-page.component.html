@@ -1,0 +1,248 @@
+<!--
+
+    ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
+
+    Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
+
+    NOTICE: All information contained herein is, and remains
+    the property of ThingsBoard, Inc. and its suppliers,
+    if any.  The intellectual and technical concepts contained
+    herein are proprietary to ThingsBoard, Inc.
+    and its suppliers and may be covered by U.S. and Foreign Patents,
+    patents in process, and are protected by trade secret or copyright law.
+
+    Dissemination of this information or reproduction of this material is strictly forbidden
+    unless prior written permission is obtained from COMPANY.
+
+    Access to the source code contained herein is hereby forbidden to anyone except current COMPANY employees,
+    managers or contractors who have executed Confidentiality and Non-disclosure agreements
+    explicitly covering such access.
+
+    The copyright notice above does not evidence any actual or intended publication
+    or disclosure  of  this source code, which includes
+    information that is confidential and/or proprietary, and is a trade secret, of  COMPANY.
+    ANY REPRODUCTION, MODIFICATION, DISTRIBUTION, PUBLIC  PERFORMANCE,
+    OR PUBLIC DISPLAY OF OR THROUGH USE  OF THIS  SOURCE CODE  WITHOUT
+    THE EXPRESS WRITTEN CONSENT OF COMPANY IS STRICTLY PROHIBITED,
+    AND IN VIOLATION OF APPLICABLE LAWS AND INTERNATIONAL TREATIES.
+    THE RECEIPT OR POSSESSION OF THIS SOURCE CODE AND/OR RELATED INFORMATION
+    DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
+    OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
+
+-->
+<div class="mat-content tb-report-template flex flex-1 flex-col" tb-fullscreen [fullscreen]="isFullscreen">
+  <mat-toolbar color="primary" class="tb-report-template-toolbar">
+    <div class="flex flex-1 flex-row items-center overflow-hidden">
+      <div class="tb-report-template-title">
+        {{ reportTemplate.name }} - {{ reportTemplate.format }}
+        @if (subReport) {
+          {{ ' (' + ('report-template.type-sub-report' | translate) + ')' }}
+        }
+      </div>
+    </div>
+    <div class="flex flex-row-reverse items-center gap-1.5">
+      <button mat-icon-button
+              matTooltip="{{(isFullscreen ? 'fullscreen.exit' : 'fullscreen.expand') | translate}}"
+              matTooltipPosition="below"
+              (click)="isFullscreen = !isFullscreen">
+        <mat-icon>{{ isFullscreen ? 'fullscreen_exit' : 'fullscreen' }}</mat-icon>
+      </button>
+      <button mat-icon-button
+              matTooltip="{{'report.generate-test-report' | translate}}"
+              matTooltipPosition="below"
+              (click)="generateTestReport()">
+        <tb-icon matButtonIcon>mdi:file-eye-outline</tb-icon>
+      </button>
+      <button class="tb-report-template-edit-button" mat-stroked-button [disabled]="(isLoading$ | async) || !isDirty" (click)="saveReportTemplate()">
+        <mat-icon>done</mat-icon>{{ 'action.save' | translate }}</button>
+      <button class="tb-report-template-edit-button" mat-button [disabled]="(isLoading$ | async) || !isDirty" (click)="declineReportTemplate()">
+        <mat-icon>close</mat-icon>{{ 'action.decline' | translate }}</button>
+      <mat-divider class="tb-toolbar-divider" vertical></mat-divider>
+      <button mat-button #versionControlButton
+              matTooltip="{{'version-control.version-control' | translate}}"
+              matTooltipPosition="below"
+              *ngIf="(resource.VERSION_CONTROL | hasGenericPermission: operation.READ)"
+              (click)="toggleVersionControl($event, versionControlButton)">
+        <mat-icon>history</mat-icon>
+        {{'version-control.versions' | translate}}
+      </button>
+      <button mat-button
+              matTooltip="{{ 'filter.filters' | translate }}"
+              matTooltipPosition="below"
+              (click)="openFilters($event)">
+        <mat-icon>filter_list</mat-icon>
+        {{ 'filter.filters' | translate }}
+      </button>
+      <button mat-button
+              matTooltip="{{ 'entity.aliases' | translate }}"
+              matTooltipPosition="below"
+              (click)="openEntityAliases($event)">
+        <mat-icon>devices_other</mat-icon>
+        {{ 'entity.aliases-short' | translate }}
+      </button>
+      <button mat-button
+              matTooltip="{{ 'report-template.settings' | translate }}"
+              matTooltipPosition="below"
+              (click)="openReportTemplateSettings($event)">
+        <mat-icon>settings</mat-icon>
+        {{ 'report-template.settings' | translate }}
+      </button>
+    </div>
+  </mat-toolbar>
+  <div #reportTemplateContainer class="tb-report-template-container size-full" cdkDropListGroup>
+    <div class="tb-report-components-library tb-dynamic-panel"
+                *ngIf="!readonly">
+      <mat-toolbar class="flex h-auto flex-col items-start gap-4 p-4">
+        <div translate>report-template.report-components</div>
+        <mat-form-field appearance="outline" subscriptSizing="dynamic" class="tb-inline-field bg-white">
+          <input matInput
+                 [formControl]="reportComponentSearchFormControl"
+                 placeholder="{{ 'report-template.search-components' | translate }}"/>
+          @if (reportComponentSearchFormControl.value) {
+            <button matSuffix mat-icon-button
+                    (click)="reportComponentSearchFormControl.reset()"
+                    matTooltip="{{'action.clear-search' | translate}}"
+                    matTooltipPosition="above">
+              <mat-icon>close</mat-icon>
+            </button>
+          } @else {
+            <button matSuffix mat-icon-button
+                    matTooltip="{{'report-template.search-components' | translate}}"
+                    matTooltipPosition="above">
+              <mat-icon>search</mat-icon>
+            </button>
+          }
+        </mat-form-field>
+      </mat-toolbar>
+      <tb-report-component-library [subReport]="subReport"
+                                   [format]="format" class="min-h-0 flex-1"
+                                   [filter]="reportComponentsFilter">
+      </tb-report-component-library>
+    </div>
+    <div #reportTemplateContent class="tb-report-template-content" cdkScrollable>
+      <div class="tb-report-content-scroll-wrapper">
+        <button class="tb-report-content-scroll-button"
+                [class.tb-animate]="viewInited"
+                [class.tb-hide]="!hasScroll" mat-fab (click)="scrollBottomTop()">
+          <mat-icon [class.tb-scroll-top]="scrollTop" class="tb-mat-32">expand_more</mat-icon>
+        </button>
+      </div>
+      <div #reportTemplateLayout class="tb-report-template-layout">
+        <div class="tb-report-template-sections">
+          @if (showHeaderFooter) {
+            <tb-report-template-header-footer
+              header
+              [headerToggleValue]="headerToggleValue"
+              [headerFooter]="pdfConfiguration.header"
+              [format]="format"
+              [background]="background"
+              [width]="pageWidth"
+              [scale]="scale"
+              [marginTop]="headerMarginTop * scale"
+              [marginLeft]="marginLeft * scale"
+              [marginRight]="marginRight  * scale"
+              (componentsChanged)="reportComponentsChanged()"
+              (componentEdit)="editReportComponent($event)"
+              (componentRemoved)="reportComponentRemoved($event)"
+              (currentHeaderChanged)="currentHeaderChanged($event)"
+              (enabledHeaderChanged)="enabledHeaderFooterChanged()"
+              (expandAnimationStart)="headerFooterExpandAnimationStart()"
+              (expandAnimationFinish)="headerFooterExpandAnimationFinish()">
+            </tb-report-template-header-footer>
+          }
+          <div class="tb-report-components-container">
+            <div class="tb-report-components-container-title" translate>report-template.content</div>
+            <tb-report-components
+              [format]="format"
+              [background]="background"
+              [width]="pageWidth"
+              [scale]="scale"
+              [marginTop]="contentMarginTop * scale"
+              [marginBottom]="contentMarginBottom * scale"
+              [marginLeft]="marginLeft * scale"
+              [marginRight]="marginRight * scale"
+              [reportComponents]="reportTemplate.configuration.components"
+              (componentsChanged)="reportComponentsChanged()"
+              (componentEdit)="editReportComponent($event)"
+              (componentRemoved)="reportComponentRemoved($event)">
+            </tb-report-components>
+          </div>
+          @if (showHeaderFooter) {
+            <tb-report-template-header-footer
+              header="false"
+              [headerToggleValue]="footerToggleValue"
+              [headerFooter]="pdfConfiguration.footer"
+              [format]="format"
+              [background]="background"
+              [width]="pageWidth"
+              [scale]="scale"
+              [marginLeft]="marginLeft * scale"
+              [marginRight]="marginRight  * scale"
+              [marginBottom]="footerMarginBottom * scale"
+              (componentsChanged)="reportComponentsChanged()"
+              (componentEdit)="editReportComponent($event)"
+              (componentRemoved)="reportComponentRemoved($event)"
+              (currentHeaderChanged)="currentFooterChanged($event)"
+              (enabledHeaderChanged)="enabledHeaderFooterChanged()"
+              (expandAnimationStart)="headerFooterExpandAnimationStart()"
+              (expandAnimationFinish)="headerFooterExpandAnimationFinish()">
+            </tb-report-template-header-footer>
+          }
+        </div>
+      </div>
+    </div>
+    <div class="tb-report-settings tb-dynamic-panel"
+                [class.tb-report-component-settings]="!!editingReportComponent">
+      @if (editingReportComponent) {
+        <tb-details-panel class="flex-1"
+                          [color]="null"
+                          showCloseDetails="false"
+                          headerTitle="{{ 'report-template.editor' | translate }}"
+                          headerSubtitle="{{ reportComponentTypeMap.get(editingReportComponent.type).title | translate }}"
+                          isReadOnly="true">
+          <div class="details-buttons flex flex-row items-center justify-end gap-3">
+            @if(reportComponentTypeMap.get(editingReportComponent.type).editable) {
+              <button mat-stroked-button color="primary"
+                      (click)="cancelReportComponentEdit()">
+                <mat-icon>close</mat-icon>
+                {{ 'action.decline' | translate }}
+              </button>
+              <button mat-flat-button color="primary"
+                      (click)="saveReportComponent()">
+                <mat-icon>done</mat-icon>
+                {{ 'action.apply' | translate }}
+              </button>
+            } @else {
+              <button mat-stroked-button color="primary"
+                      (click)="cancelReportComponentEdit()">
+                <mat-icon>close</mat-icon>
+                {{ 'action.close' | translate }}
+              </button>
+            }
+          </div>
+          <tb-report-component-config
+            #reportConfig
+            [context]="reportComponentContext"
+            [reportComponent]="editingReportComponent"
+            (reportComponentUpdated)="reportComponentUpdated()">
+          </tb-report-component-config>
+        </tb-details-panel>
+      } @else {
+        <tb-details-panel class="flex-1"
+                          [color]="null"
+                          showCloseDetails="false"
+                          isReadOnly="true"
+                          headerTitle="{{reportTemplate.name}}"
+                          headerSubtitle="{{ (subReport ? 'report-template.sub-report-settings' : 'report-template.report-template-settings') | translate }}">
+          <div class="mat-padding">
+            <tb-report-template-settings
+              [formControl]="reportTemplateSettingsFormControl"
+              [subReport]="subReport"
+              [format]="format">
+            </tb-report-template-settings>
+          </div>
+        </tb-details-panel>
+      }
+    </div>
+  </div>
+</div>

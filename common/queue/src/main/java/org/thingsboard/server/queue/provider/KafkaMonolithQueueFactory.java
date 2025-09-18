@@ -63,6 +63,7 @@ import org.thingsboard.server.gen.transport.TransportProtos.ToHousekeeperService
 import org.thingsboard.server.gen.transport.TransportProtos.ToOtaPackageStateServiceMsg;
 import org.thingsboard.server.gen.transport.TransportProtos.ToRuleEngineMsg;
 import org.thingsboard.server.gen.transport.TransportProtos.ToRuleEngineNotificationMsg;
+import org.thingsboard.server.gen.transport.TransportProtos.ToTbReportNotificationMsg;
 import org.thingsboard.server.gen.transport.TransportProtos.ToTransportMsg;
 import org.thingsboard.server.gen.transport.TransportProtos.ToUsageStatsServiceMsg;
 import org.thingsboard.server.gen.transport.TransportProtos.ToVersionControlServiceMsg;
@@ -79,6 +80,7 @@ import org.thingsboard.server.queue.common.TbProtoQueueMsg;
 import org.thingsboard.server.queue.discovery.TbServiceInfoProvider;
 import org.thingsboard.server.queue.discovery.TopicService;
 import org.thingsboard.server.queue.edqs.EdqsConfig;
+import org.thingsboard.server.queue.kafka.KafkaAdmin;
 import org.thingsboard.server.queue.kafka.TbKafkaAdmin;
 import org.thingsboard.server.queue.kafka.TbKafkaConsumerStatsService;
 import org.thingsboard.server.queue.kafka.TbKafkaConsumerTemplate;
@@ -106,6 +108,7 @@ public class KafkaMonolithQueueFactory implements TbCoreQueueFactory, TbRuleEngi
 
     private final TopicService topicService;
     private final TbKafkaSettings kafkaSettings;
+    private final KafkaAdmin kafkaAdmin;
     private final TbServiceInfoProvider serviceInfoProvider;
     private final TbQueueCoreSettings coreSettings;
     private final TbQueueRuleEngineSettings ruleEngineSettings;
@@ -146,7 +149,9 @@ public class KafkaMonolithQueueFactory implements TbCoreQueueFactory, TbRuleEngi
     private final AtomicLong edgeConsumerCount = new AtomicLong();
     private final AtomicLong integrationConsumerCount = new AtomicLong();
 
-    public KafkaMonolithQueueFactory(TopicService topicService, TbKafkaSettings kafkaSettings,
+    public KafkaMonolithQueueFactory(TopicService topicService,
+                                     TbKafkaSettings kafkaSettings,
+                                     KafkaAdmin kafkaAdmin,
                                      TbServiceInfoProvider serviceInfoProvider,
                                      TbQueueCoreSettings coreSettings,
                                      TbQueueRuleEngineSettings ruleEngineSettings,
@@ -165,6 +170,7 @@ public class KafkaMonolithQueueFactory implements TbCoreQueueFactory, TbRuleEngi
                                      TasksQueueConfig tasksQueueConfig) {
         this.topicService = topicService;
         this.kafkaSettings = kafkaSettings;
+        this.kafkaAdmin = kafkaAdmin;
         this.serviceInfoProvider = serviceInfoProvider;
         this.coreSettings = coreSettings;
         this.ruleEngineSettings = ruleEngineSettings;
@@ -304,7 +310,7 @@ public class KafkaMonolithQueueFactory implements TbCoreQueueFactory, TbRuleEngi
         String queueName = configuration.getName();
         String groupId = topicService.buildConsumerGroupId("re-", configuration.getTenantId(), queueName, partitionId);
 
-        ruleEngineAdmin.syncOffsets(topicService.buildConsumerGroupId("re-", configuration.getTenantId(), queueName, null), // the fat groupId
+        kafkaAdmin.syncOffsets(topicService.buildConsumerGroupId("re-", configuration.getTenantId(), queueName, null), // the fat groupId
                 groupId, partitionId);
 
         TbKafkaConsumerTemplate.TbKafkaConsumerTemplateBuilder<TbProtoQueueMsg<ToRuleEngineMsg>> consumerBuilder = TbKafkaConsumerTemplate.builder();
@@ -785,6 +791,16 @@ public class KafkaMonolithQueueFactory implements TbCoreQueueFactory, TbRuleEngi
                 .decoder(msg -> new TbProtoQueueMsg<>(msg.getKey(), JobStatsMsg.parseFrom(msg.getData()), msg.getHeaders()))
                 .admin(tasksAdmin)
                 .statsService(consumerStatsService)
+                .build();
+    }
+
+    @Override
+    public TbQueueProducer<TbProtoQueueMsg<ToTbReportNotificationMsg>> createTbReportNotificationsMsgProducer() {
+        return TbKafkaProducerTemplate.<TbProtoQueueMsg<ToTbReportNotificationMsg>>builder()
+                .clientId("to-report-notifications-producer-" + serviceInfoProvider.getServiceId())
+                .defaultTopic(topicService.getNotificationsTopic(ServiceType.TB_REPORT, serviceInfoProvider.getServiceId()).getFullTopicName())
+                .settings(kafkaSettings)
+                .admin(notificationAdmin)
                 .build();
     }
 

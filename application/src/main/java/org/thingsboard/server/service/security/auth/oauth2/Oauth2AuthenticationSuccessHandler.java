@@ -48,8 +48,8 @@ import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.OAuth2ClientId;
 import org.thingsboard.server.common.data.id.TenantId;
-import org.thingsboard.server.common.data.security.Authority;
 import org.thingsboard.server.common.data.oauth2.OAuth2Client;
+import org.thingsboard.server.common.data.security.Authority;
 import org.thingsboard.server.common.data.security.model.JwtPair;
 import org.thingsboard.server.dao.oauth2.OAuth2ClientService;
 import org.thingsboard.server.queue.util.TbCoreComponent;
@@ -131,7 +131,7 @@ public class Oauth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
                 baseUrl = getBaseUrl(request, response, callbackUrlScheme, null);
             }
             getRedirectStrategy().sendRedirect(request, response, baseUrl + errorPrefix +
-                    URLEncoder.encode(e.getMessage(), StandardCharsets.UTF_8.toString()));
+                    URLEncoder.encode(e.getMessage(), StandardCharsets.UTF_8));
         }
     }
 
@@ -167,4 +167,5 @@ public class Oauth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
         }
         return baseUrl + "accessToken=" + tokenPair.getToken() + "&refreshToken=" + tokenPair.getRefreshToken();
     }
+
 }

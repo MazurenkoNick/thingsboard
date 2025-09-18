@@ -112,7 +112,7 @@ public class RoleDataValidator extends DataValidator<Role> {
             throw new DataValidationException("Role name should be specified!");
         }
         if (role.getTenantId() == null) {
-            role.setTenantId(new TenantId(NULL_UUID));
+            role.setTenantId(TenantId.fromUUID(NULL_UUID));
         } else if (!role.getTenantId().isNullUid()) { // not Sys admin level
             if (!tenantService.tenantExists(role.getTenantId())) {
                 throw new DataValidationException("Role is referencing to non-existent tenant!");

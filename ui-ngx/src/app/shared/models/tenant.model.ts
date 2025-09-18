@@ -50,6 +50,7 @@ export interface DefaultTenantProfileConfiguration {
   maxIntegrations: number;
   maxConverters: number;
   maxSchedulerEvents: number;
+  maxGeneratedReports: number;
   maxResourcesInBytes: number;
   maxOtaPackagesInBytes: number;
   maxResourceSize: number;
@@ -121,6 +122,7 @@ export interface DefaultTenantProfileConfiguration {
   queueStatsTtlDays: number;
   ruleEngineExceptionsTtlDays: number;
   blobEntityTtlDays: number;
+  reportTtlDays: number;
 
   maxCalculatedFieldsPerEntity: number;
   maxArgumentsPerCF: number;
@@ -152,6 +154,7 @@ export function createTenantProfileConfiguration(type: TenantProfileType): Tenan
           maxIntegrations: 0,
           maxConverters: 0,
           maxSchedulerEvents: 0,
+          maxGeneratedReports: 0,
           maxResourcesInBytes: 0,
           maxOtaPackagesInBytes: 0,
           maxResourceSize: 0,
@@ -189,6 +192,7 @@ export function createTenantProfileConfiguration(type: TenantProfileType): Tenan
           queueStatsTtlDays: 0,
           ruleEngineExceptionsTtlDays: 0,
           blobEntityTtlDays: 0,
+          reportTtlDays: 0,
           maxCalculatedFieldsPerEntity: 5,
           maxArgumentsPerCF: 10,
           maxDataPointsPerRollingArg: 1000,

@@ -73,7 +73,7 @@ import {
 } from '@app/shared/models/dashboard.models';
 import { WINDOW } from '@core/services/window.service';
 import { WindowMessage } from '@shared/models/window-message.model';
-import { deepClone, guid, isDefined, isDefinedAndNotNull, isEqual, isNotEmptyStr } from '@app/core/utils';
+import { deepClone, guid, isDefined, isDefinedAndNotNull, isNotEmptyStr } from '@app/core/utils';
 import {
   DashboardContext,
   DashboardPageInitData,
@@ -133,15 +133,16 @@ import {
 } from '@home/components/dashboard-page/dashboard-settings-dialog.component';
 import {
   ManageDashboardStatesDialogComponent,
-  ManageDashboardStatesDialogData
+  ManageDashboardStatesDialogData,
+  ManageDashboardStatesDialogResult
 } from '@home/components/dashboard-page/states/manage-dashboard-states-dialog.component';
 import { ImportExportService } from '@shared/import-export/import-export.service';
 import { AuthState } from '@app/core/auth/auth.models';
-import { ReportService } from '@core/http/report.service';
+import { DashboardReportService } from '@core/http/dashboard-report.service';
 import { EntityGroupInfo, resolveGroupParams } from '@shared/models/entity-group.models';
 import { UserPermissionsService } from '@core/http/user-permissions.service';
 import { Operation, Resource } from '@shared/models/security.models';
-import { ReportType } from '@shared/models/report.models';
+import { DashboardReportType } from '@shared/models/dashboard-report.models';
 import { FiltersDialogComponent, FiltersDialogData } from '@home/components/filter/filters-dialog.component';
 import { Filters } from '@shared/models/query/query.models';
 import { ConnectedPosition, Overlay, OverlayConfig, OverlayRef } from '@angular/cdk/overlay';
@@ -393,7 +394,7 @@ export class DashboardPageComponent extends PageComponent implements IDashboardC
               private route: ActivatedRoute,
               private router: Router,
               private utils: UtilsService,
-              private reportService: ReportService,
+              private reportService: DashboardReportService,
               private dashboardUtils: DashboardUtilsService,
               private entityService: EntityService,
               private dialogService: DialogService,
@@ -961,7 +962,7 @@ export class DashboardPageComponent extends PageComponent implements IDashboardC
     this.importExport.exportDashboard(this.currentDashboardId);
   }
 
-  public generateDashboardReport($event: Event, reportType: ReportType) {
+  public generateDashboardReport($event: Event, reportType: DashboardReportType) {
     const state = this.route.snapshot.queryParamMap.get('state');
     const progressText = this.translate.instant('dashboard.download-dashboard-progress', {reportType});
     this.dialogService.progress(this.reportService.downloadDashboardReport(this.currentDashboardId, reportType, state,
@@ -1053,17 +1054,17 @@ export class DashboardPageComponent extends PageComponent implements IDashboardC
       $event.stopPropagation();
     }
     this.dialog.open<ManageDashboardStatesDialogComponent, ManageDashboardStatesDialogData,
-      {states: {[id: string]: DashboardState}; widgets: {[id: string]: Widget}}>(ManageDashboardStatesDialogComponent, {
+      ManageDashboardStatesDialogResult>(ManageDashboardStatesDialogComponent, {
       disableClose: true,
       panelClass: ['tb-dialog', 'tb-fullscreen-dialog'],
       data: {
         states: deepClone(this.dashboard.configuration.states),
-        widgets: deepClone(this.dashboard.configuration.widgets) as {[id: string]: Widget}
+        widgets: this.dashboard.configuration.widgets as {[id: string]: Widget}
       }
     }).afterClosed().subscribe((result) => {
       if (result) {
-        if (!isEqual(result.widgets, this.dashboard.configuration.widgets)) {
-          this.dashboard.configuration.widgets = result.widgets;
+        if (result.addWidgets) {
+          Object.assign(this.dashboard.configuration.widgets, result.addWidgets);
         }
         if (result.states) {
           this.updateStates(result.states);
@@ -1411,6 +1412,7 @@ export class DashboardPageComponent extends PageComponent implements IDashboardC
   }
 
   private addWidgetToDashboard(widget: Widget) {
+    this.dashboardUtils.prepareWidgetForSaving(widget);
     if (this.addingLayoutCtx) {
       this.addWidgetToLayout(widget, this.addingLayoutCtx.id);
       this.addingLayoutCtx = null;
@@ -1498,7 +1500,7 @@ export class DashboardPageComponent extends PageComponent implements IDashboardC
 
   saveWidget() {
     this.editWidgetComponent.widgetFormGroup.markAsPristine();
-    const widget = deepClone(this.editingWidget);
+    const widget = this.dashboardUtils.prepareWidgetForSaving(deepClone(this.editingWidget));
     const widgetLayout = deepClone(this.editingWidgetLayout);
     const id = this.editingWidgetOriginal.id;
     this.dashboardConfiguration.widgets[id] = widget;

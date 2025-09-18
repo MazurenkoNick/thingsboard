@@ -299,10 +299,13 @@ export class WhiteLabelingComponent extends PageComponent implements OnInit, Has
     }
   }
 
-  createDomain() {
-    this.dialog.open<DomainDialogComponent, any, Domain>(DomainDialogComponent, {
+  createDomain(name?: string) {
+    this.dialog.open<DomainDialogComponent, {name?: string}, Domain>(DomainDialogComponent, {
       disableClose: true,
       panelClass: ['tb-dialog', 'tb-fullscreen-dialog'],
+      data: {
+        name
+      }
     }).afterClosed()
       .subscribe((domain) => {
         if (domain) {

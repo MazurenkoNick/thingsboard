@@ -40,26 +40,19 @@ import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.gson.GsonFactory;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.lang.Nullable;
 import org.springframework.mail.MailException;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
-import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.server.common.data.AdminSettings;
-import org.thingsboard.server.common.data.AttributeScope;
 import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.id.TenantId;
-import org.thingsboard.server.common.data.kv.AttributeKvEntry;
-import org.thingsboard.server.common.data.kv.BaseAttributeKvEntry;
-import org.thingsboard.server.common.data.kv.StringDataEntry;
 import org.thingsboard.server.common.data.mail.MailOauth2Provider;
 import org.thingsboard.server.dao.exception.IncorrectParameterException;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -72,8 +65,10 @@ public class TbMailSender extends JavaMailSenderImpl {
     private static final String MAIL_PROP = "mail.";
     private final TbMailContextComponent ctx;
     private final Lock lock;
+    @Getter
     private final Boolean oauth2Enabled;
     private volatile String accessToken;
+    @Getter
     private volatile long tokenExpires;
     private final TenantId tenantId;
 
@@ -92,14 +87,6 @@ public class TbMailSender extends JavaMailSenderImpl {
             setPassword(jsonConfig.get("password").asText());
         }
         setJavaMailProperties(createJavaMailProperties(jsonConfig));
-    }
-
-    public Boolean getOauth2Enabled() {
-        return oauth2Enabled;
-    }
-
-    public long getTokenExpires() {
-        return tokenExpires;
     }
 
     @Override
@@ -122,8 +109,8 @@ public class TbMailSender extends JavaMailSenderImpl {
         super.testConnection();
     }
 
-    public void updateOauth2PasswordIfExpired()  {
-        if (getOauth2Enabled() && (System.currentTimeMillis() > getTokenExpires())){
+    public void updateOauth2PasswordIfExpired() {
+        if (getOauth2Enabled() && (System.currentTimeMillis() > getTokenExpires())) {
             refreshAccessToken(tenantId);
             setPassword(accessToken);
         }
@@ -179,7 +166,8 @@ public class TbMailSender extends JavaMailSenderImpl {
         try {
             if (System.currentTimeMillis() > getTokenExpires()) {
                 AdminSettings settings = getMailSettings(tenantId);
-                JsonNode jsonValue = settings.getJsonValue();
+                JsonNode jsonValue = settings.getJsonValue().deepCopy();
+                ctx.getSecretConfigurationService().replaceSecretUsages(tenantId, jsonValue);
                 String clientId = jsonValue.get("clientId").asText();
                 String clientSecret = jsonValue.get("clientSecret").asText();
                 String refreshToken = jsonValue.get("refreshToken").asText();
@@ -191,13 +179,9 @@ public class TbMailSender extends JavaMailSenderImpl {
                         .setClientAuthentication(new ClientParametersAuthentication(clientId, clientSecret))
                         .execute();
                 if (MailOauth2Provider.OFFICE_365.name().equals(providerId)) {
-                    ((ObjectNode)jsonValue).put("refreshToken", tokenResponse.getRefreshToken());
-                    ((ObjectNode)jsonValue).put("refreshTokenExpires", Instant.now().plus(Duration.ofDays(AZURE_DEFAULT_REFRESH_TOKEN_LIFETIME_IN_DAYS)).toEpochMilli());
-                    if (TenantId.SYS_TENANT_ID.equals(tenantId)) {
-                        ctx.getAdminSettingsService().saveAdminSettings(TenantId.SYS_TENANT_ID, settings);
-                    } else {
-                        saveTenantAdminSettings(tenantId, settings);
-                    }
+                    ((ObjectNode) settings.getJsonValue()).put("refreshToken", tokenResponse.getRefreshToken());
+                    ((ObjectNode) settings.getJsonValue()).put("refreshTokenExpires", Instant.now().plus(Duration.ofDays(AZURE_DEFAULT_REFRESH_TOKEN_LIFETIME_IN_DAYS)).toEpochMilli());
+                    ctx.getAdminSettingsService().saveAdminSettings(tenantId, settings);
                 }
                 accessToken = tokenResponse.getAccessToken();
                 tokenExpires = System.currentTimeMillis() + (tokenResponse.getExpiresInSeconds().intValue() * 1000);
@@ -210,26 +194,25 @@ public class TbMailSender extends JavaMailSenderImpl {
         }
     }
 
-    public AdminSettings getMailSettings(TenantId tenantId) throws Exception {
+    public AdminSettings getMailSettings(TenantId tenantId) {
         if (TenantId.SYS_TENANT_ID.equals(tenantId)) {
-            return getSystemMailSettings();
+            return getAdminMailSettings(TenantId.SYS_TENANT_ID);
         } else {
-            String jsonString = getTenantMailAttributeValue(tenantId);
-            if (jsonString != null) {
-                JsonNode useSystemMailSettingsNode = JacksonUtil.toJsonNode(jsonString).get("useSystemMailSettings");
+            AdminSettings adminSettings = getAdminMailSettings(tenantId);
+            JsonNode jsonConfig = null;
+            if (adminSettings != null) {
+                jsonConfig = adminSettings.getJsonValue();
+                JsonNode useSystemMailSettingsNode = jsonConfig.get("useSystemMailSettings");
                 if (useSystemMailSettingsNode == null || useSystemMailSettingsNode.asBoolean()) {
-                    jsonString = null;
+                    jsonConfig = null;
                 }
             }
-            if (jsonString == null) {
+            if (jsonConfig == null) {
                 if (!isAllowSystemMailService()) {
                     throw new RuntimeException("Access to System Mail Service is forbidden!");
                 }
-                return getSystemMailSettings();
+                return getAdminMailSettings(TenantId.SYS_TENANT_ID);
             }
-            AdminSettings adminSettings = new AdminSettings();
-            adminSettings.setKey("mail");
-            adminSettings.setJsonValue(JacksonUtil.toJsonNode(jsonString));
             return adminSettings;
         }
     }
@@ -238,27 +221,8 @@ public class TbMailSender extends JavaMailSenderImpl {
         return ctx.isAllowSystemMailService();
     }
 
-    private void saveTenantAdminSettings(TenantId tenantId, AdminSettings adminSettings) throws Exception {
-        String jsonString = adminSettings.getJsonValue() == null ? "" : JacksonUtil.toString(adminSettings.getJsonValue());
-        List<AttributeKvEntry> attributes = new ArrayList<>();
-        long ts = System.currentTimeMillis();
-        attributes.add(new BaseAttributeKvEntry(new StringDataEntry(adminSettings.getKey(), jsonString), ts));
-        ctx.getAttributesService().save(tenantId, tenantId, AttributeScope.SERVER_SCOPE, attributes).get();
-    }
-
-    public AdminSettings getSystemMailSettings() {
-        return ctx.getAdminSettingsService().findAdminSettingsByKey(TenantId.SYS_TENANT_ID, "mail");
-    }
-
-    public String getTenantMailAttributeValue(TenantId tenantId) throws Exception {
-        List<AttributeKvEntry> attributeKvEntries =
-                ctx.getAttributesService().find(tenantId, tenantId, AttributeScope.SERVER_SCOPE, Collections.singletonList("mail")).get();
-        if (attributeKvEntries != null && !attributeKvEntries.isEmpty()) {
-            AttributeKvEntry kvEntry = attributeKvEntries.get(0);
-            return kvEntry.getValueAsString();
-        } else {
-            return null;
-        }
+    public AdminSettings getAdminMailSettings(TenantId tenantId) {
+        return ctx.getAdminSettingsService().findAdminSettingsByTenantIdAndKey(tenantId, "mail");
     }
 
     private int parsePort(String strPort) {
@@ -268,4 +232,5 @@ public class TbMailSender extends JavaMailSenderImpl {
             throw new IncorrectParameterException(String.format("Invalid smtp port value: %s", strPort));
         }
     }
+
 }

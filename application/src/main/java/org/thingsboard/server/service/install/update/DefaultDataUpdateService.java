@@ -31,12 +31,11 @@
 package org.thingsboard.server.service.install.update;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 import org.thingsboard.server.common.data.Customer;
@@ -45,15 +44,12 @@ import org.thingsboard.server.common.data.DashboardInfo;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.ShortCustomerInfo;
 import org.thingsboard.server.common.data.Tenant;
-import org.thingsboard.server.common.data.TenantProfile;
 import org.thingsboard.server.common.data.User;
-import org.thingsboard.server.common.data.alarm.AlarmSeverity;
 import org.thingsboard.server.common.data.group.EntityGroup;
 import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.DashboardId;
 import org.thingsboard.server.common.data.id.EntityGroupId;
 import org.thingsboard.server.common.data.id.EntityId;
-import org.thingsboard.server.common.data.id.RuleChainId;
 import org.thingsboard.server.common.data.id.RuleNodeId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.id.UserId;
@@ -62,13 +58,9 @@ import org.thingsboard.server.common.data.integration.Integration;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageDataIterable;
 import org.thingsboard.server.common.data.page.PageLink;
-import org.thingsboard.server.common.data.query.DynamicValue;
-import org.thingsboard.server.common.data.query.FilterPredicateValue;
 import org.thingsboard.server.common.data.relation.EntityRelation;
 import org.thingsboard.server.common.data.relation.RelationTypeGroup;
-import org.thingsboard.server.common.data.rule.RuleNode;
 import org.thingsboard.server.common.data.security.Authority;
-import org.thingsboard.server.common.data.tenant.profile.DefaultTenantProfileConfiguration;
 import org.thingsboard.server.dao.asset.AssetService;
 import org.thingsboard.server.dao.customer.CustomerService;
 import org.thingsboard.server.dao.dashboard.DashboardService;
@@ -79,7 +71,6 @@ import org.thingsboard.server.dao.group.EntityGroupService;
 import org.thingsboard.server.dao.integration.IntegrationService;
 import org.thingsboard.server.dao.relation.RelationService;
 import org.thingsboard.server.dao.rule.RuleChainService;
-import org.thingsboard.server.dao.tenant.TenantProfileService;
 import org.thingsboard.server.dao.tenant.TenantService;
 import org.thingsboard.server.dao.user.UserService;
 import org.thingsboard.server.dao.wl.WhiteLabelingService;
@@ -96,71 +87,35 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
-
-import static org.thingsboard.server.dao.rule.BaseRuleChainService.TB_RULE_CHAIN_INPUT_NODE;
 
 @Service
 @Profile("install")
 @Slf4j
+@RequiredArgsConstructor
 public class DefaultDataUpdateService implements DataUpdateService {
 
     private static final int MAX_PENDING_SAVE_RULE_NODE_FUTURES = 256;
     private static final int DEFAULT_PAGE_SIZE = 1024;
     private static final int DEFAULT_LIMIT = 100;
 
-    @Autowired
-    private TenantService tenantService;
-
-    @Autowired
-    private RelationService relationService;
-
-    @Autowired
-    private RuleChainService ruleChainService;
-
-    @Autowired
-    private IntegrationService integrationService;
-
-    @Autowired
-    private EntityGroupService entityGroupService;
-
-    @Autowired
-    private UserService userService;
-
-    @Autowired
-    private WhiteLabelingService whiteLabelingService;
-
-    @Autowired
-    private CustomerService customerService;
-
-    @Autowired
-    private AssetService assetService;
-
-    @Autowired
-    private DeviceService deviceService;
-
-    @Autowired
-    private DashboardService dashboardService;
-
-    @Autowired
-    private EntityViewService entityViewService;
-
-    @Autowired
-    private EdgeService edgeService;
-
-    @Autowired
-    private SystemDataLoaderService systemDataLoaderService;
-
-    @Autowired
-    private ComponentDiscoveryService componentDiscoveryService;
-
-    @Autowired
-    private DbUpgradeExecutorService executorService;
-
-    @Autowired
-    private TenantProfileService tenantProfileService;
+    private final TenantService tenantService;
+    private final RelationService relationService;
+    private final RuleChainService ruleChainService;
+    private final IntegrationService integrationService;
+    private final EntityGroupService entityGroupService;
+    private final UserService userService;
+    private final WhiteLabelingService whiteLabelingService;
+    private final CustomerService customerService;
+    private final AssetService assetService;
+    private final DeviceService deviceService;
+    private final DashboardService dashboardService;
+    private final EntityViewService entityViewService;
+    private final EdgeService edgeService;
+    private final SystemDataLoaderService systemDataLoaderService;
+    private final ComponentDiscoveryService componentDiscoveryService;
+    private final DbUpgradeExecutorService executorService;
 
     @Override
     public void updateData(boolean fromCe) throws Exception {
@@ -169,8 +124,7 @@ public class DefaultDataUpdateService implements DataUpdateService {
             updateDataFromCe();
         } else {
             //TODO: should be cleaned after each release
-            updateInputNodes();
-            deduplicateRateLimitsPerSecondsConfigurations();
+
         }
         log.info("Data updated.");
     }
@@ -186,71 +140,6 @@ public class DefaultDataUpdateService implements DataUpdateService {
         } else {
             systemDataLoaderService.updateMailTemplates(mailTemplatesSettings);
         }
-    }
-
-    private void deduplicateRateLimitsPerSecondsConfigurations() {
-        log.info("Starting update of tenant profiles...");
-
-        int totalProfiles = 0;
-        int updatedTenantProfiles = 0;
-        int skippedProfiles = 0;
-        int failedProfiles = 0;
-
-        var tenantProfiles = new PageDataIterable<>(
-                pageLink -> tenantProfileService.findTenantProfiles(TenantId.SYS_TENANT_ID, pageLink), 1024);
-
-        for (TenantProfile tenantProfile : tenantProfiles) {
-            totalProfiles++;
-            String profileName = tenantProfile.getName();
-            UUID profileId = tenantProfile.getId().getId();
-            try {
-                Optional<DefaultTenantProfileConfiguration> profileConfiguration = tenantProfile.getProfileConfiguration();
-                if (profileConfiguration.isEmpty()) {
-                    log.debug("[{}][{}] Skipping tenant profile with non-default configuration.", profileId, profileName);
-                    skippedProfiles++;
-                    continue;
-                }
-
-                DefaultTenantProfileConfiguration defaultTenantProfileConfiguration = profileConfiguration.get();
-                defaultTenantProfileConfiguration.deduplicateRateLimitsConfigs();
-                tenantProfileService.saveTenantProfile(TenantId.SYS_TENANT_ID, tenantProfile);
-                updatedTenantProfiles++;
-                log.debug("[{}][{}] Successfully updated tenant profile.", profileId, profileName);
-            } catch (Exception e) {
-                log.error("[{}][{}] Failed to updated tenant profile: ", profileId, profileName, e);
-                failedProfiles++;
-            }
-        }
-
-        log.info("Tenant profiles update completed. Total: {}, Updated: {}, Skipped: {}, Failed: {}",
-                totalProfiles, updatedTenantProfiles, skippedProfiles, failedProfiles);
-    }
-    
-    private void updateInputNodes() {
-        log.info("Creating relations for input nodes...");
-        int n = 0;
-        var inputNodes = new PageDataIterable<>(pageLink -> ruleChainService.findAllRuleNodesByType(TB_RULE_CHAIN_INPUT_NODE, pageLink), 1024);
-        for (RuleNode inputNode : inputNodes) {
-            try {
-                RuleChainId targetRuleChainId = Optional.ofNullable(inputNode.getConfiguration().get("ruleChainId"))
-                        .filter(JsonNode::isTextual).map(JsonNode::asText).map(id -> new RuleChainId(UUID.fromString(id)))
-                        .orElse(null);
-                if (targetRuleChainId == null) {
-                    continue;
-                }
-
-                EntityRelation relation = new EntityRelation();
-                relation.setFrom(inputNode.getRuleChainId());
-                relation.setTo(targetRuleChainId);
-                relation.setType(EntityRelation.USES_TYPE);
-                relation.setTypeGroup(RelationTypeGroup.COMMON);
-                relationService.saveRelation(TenantId.SYS_TENANT_ID, relation);
-                n++;
-            } catch (Exception e) {
-                log.error("Failed to save relation for input node: {}", inputNode, e);
-            }
-        }
-        log.info("Created {} relations for input nodes", n);
     }
 
     @Override
@@ -321,33 +210,6 @@ public class DefaultDataUpdateService implements DataUpdateService {
         return ruleNodeIds;
     }
 
-    boolean convertDeviceProfileForVersion330(JsonNode profileData) {
-        boolean isUpdated = false;
-        if (profileData.has("alarms") && !profileData.get("alarms").isNull()) {
-            JsonNode alarms = profileData.get("alarms");
-            for (JsonNode alarm : alarms) {
-                if (alarm.has("createRules")) {
-                    JsonNode createRules = alarm.get("createRules");
-                    for (AlarmSeverity severity : AlarmSeverity.values()) {
-                        if (createRules.has(severity.name())) {
-                            JsonNode spec = createRules.get(severity.name()).get("condition").get("spec");
-                            if (convertDeviceProfileAlarmRulesForVersion330(spec)) {
-                                isUpdated = true;
-                            }
-                        }
-                    }
-                }
-                if (alarm.has("clearRule") && !alarm.get("clearRule").isNull()) {
-                    JsonNode spec = alarm.get("clearRule").get("condition").get("spec");
-                    if (convertDeviceProfileAlarmRulesForVersion330(spec)) {
-                        isUpdated = true;
-                    }
-                }
-            }
-        }
-        return isUpdated;
-    }
-
     private PaginatedUpdater<String, Tenant> tenantsCustomersGroupAllUpdater =
             new PaginatedUpdater<>() {
 
@@ -367,11 +229,7 @@ public class DefaultDataUpdateService implements DataUpdateService {
                     EntityGroup entityGroup;
                     Optional<EntityGroup> customerGroupOptional =
                             entityGroupService.findEntityGroupByTypeAndName(TenantId.SYS_TENANT_ID, tenant.getId(), EntityType.CUSTOMER, EntityGroup.GROUP_ALL_NAME);
-                    if (!customerGroupOptional.isPresent()) {
-                        entityGroup = entityGroupService.createEntityGroupAll(TenantId.SYS_TENANT_ID, tenant.getId(), EntityType.CUSTOMER);
-                    } else {
-                        entityGroup = customerGroupOptional.get();
-                    }
+                    entityGroup = customerGroupOptional.orElseGet(() -> entityGroupService.createEntityGroupAll(TenantId.SYS_TENANT_ID, tenant.getId(), EntityType.CUSTOMER));
                     new CustomersGroupAllUpdater(entityGroup).updateEntities(tenant.getId());
                 }
             };
@@ -398,7 +256,7 @@ public class DefaultDataUpdateService implements DataUpdateService {
                             Optional<EntityGroup> entityGroupOptional =
                                     entityGroupService.findEntityGroupByTypeAndName(TenantId.SYS_TENANT_ID, tenant.getId(), groupType, EntityGroup.GROUP_ALL_NAME);
                             boolean fetchAllTenantEntities;
-                            if (!entityGroupOptional.isPresent()) {
+                            if (entityGroupOptional.isEmpty()) {
                                 entityGroup = entityGroupService.createEntityGroupAll(TenantId.SYS_TENANT_ID, tenant.getId(), groupType);
                                 fetchAllTenantEntities = true;
                             } else {
@@ -411,7 +269,7 @@ public class DefaultDataUpdateService implements DataUpdateService {
                                     entityGroupService.findOrCreateTenantUsersGroup(tenant.getId());
                                     Optional<EntityGroup> tenantAdminsOptional =
                                             entityGroupService.findEntityGroupByTypeAndName(tenant.getId(), tenant.getId(), EntityType.USER, EntityGroup.GROUP_TENANT_ADMINS_NAME);
-                                    if (!tenantAdminsOptional.isPresent()) {
+                                    if (tenantAdminsOptional.isEmpty()) {
                                         EntityGroup tenantAdmins = entityGroupService.findOrCreateTenantAdminsGroup(tenant.getId());
                                         new TenantAdminsGroupAllUpdater(entityGroup, tenantAdmins).updateEntities(tenant.getId());
                                     }
@@ -595,14 +453,14 @@ public class DefaultDataUpdateService implements DataUpdateService {
             for (EntityType groupType : entityGroupTypes) {
                 Optional<EntityGroup> entityGroupOptional =
                         entityGroupService.findEntityGroupByTypeAndName(TenantId.SYS_TENANT_ID, customer.getId(), groupType, EntityGroup.GROUP_ALL_NAME);
-                if (!entityGroupOptional.isPresent()) {
+                if (entityGroupOptional.isEmpty()) {
                     EntityGroup entityGroup = entityGroupService.createEntityGroupAll(TenantId.SYS_TENANT_ID, customer.getId(), groupType);
                     if (groupType == EntityType.USER) {
                         if (!customer.isPublic()) {
                             entityGroupService.findOrCreateCustomerAdminsGroup(customer.getTenantId(), customer.getId(), null);
                             Optional<EntityGroup> customerUsersOptional =
                                     entityGroupService.findEntityGroupByTypeAndName(customer.getTenantId(), customer.getId(), EntityType.USER, EntityGroup.GROUP_CUSTOMER_USERS_NAME);
-                            if (!customerUsersOptional.isPresent()) {
+                            if (customerUsersOptional.isEmpty()) {
                                 EntityGroup customerUsers = entityGroupService.findOrCreateCustomerUsersGroup(customer.getTenantId(), customer.getId(), null);
                                 new CustomerUsersGroupAllUpdater(customer.getTenantId(), entityGroup, customerUsers).updateEntities(customer.getId());
                             }
@@ -730,33 +588,6 @@ public class DefaultDataUpdateService implements DataUpdateService {
                 hasNext = false;
             }
         }
-    }
-
-    boolean convertDeviceProfileAlarmRulesForVersion330(JsonNode spec) {
-        if (spec != null) {
-            if (spec.has("type") && spec.get("type").asText().equals("DURATION")) {
-                if (spec.has("value")) {
-                    long value = spec.get("value").asLong();
-                    var predicate = new FilterPredicateValue<>(
-                            value, null, new DynamicValue<>(null, null, false)
-                    );
-                    ((ObjectNode) spec).remove("value");
-                    ((ObjectNode) spec).putPOJO("predicate", predicate);
-                    return true;
-                }
-            } else if (spec.has("type") && spec.get("type").asText().equals("REPEATING")) {
-                if (spec.has("count")) {
-                    int count = spec.get("count").asInt();
-                    var predicate = new FilterPredicateValue<>(
-                            count, null, new DynamicValue<>(null, null, false)
-                    );
-                    ((ObjectNode) spec).remove("count");
-                    ((ObjectNode) spec).putPOJO("predicate", predicate);
-                    return true;
-                }
-            }
-        }
-        return false;
     }
 
     public static boolean getEnv(String name, boolean defaultValue) {

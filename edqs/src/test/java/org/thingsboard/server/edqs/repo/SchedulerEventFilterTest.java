@@ -37,6 +37,7 @@ import org.junit.Test;
 import org.thingsboard.server.common.data.id.DashboardId;
 import org.thingsboard.server.common.data.id.DeviceId;
 import org.thingsboard.server.common.data.id.EntityId;
+import org.thingsboard.server.common.data.query.AliasEntityId;
 import org.thingsboard.server.common.data.query.EntityDataPageLink;
 import org.thingsboard.server.common.data.query.EntityDataQuery;
 import org.thingsboard.server.common.data.query.EntityDataSortOrder;
@@ -120,7 +121,7 @@ public class SchedulerEventFilterTest extends AbstractEDQTest {
     private static EntityDataQuery getSchedulerEventQuery(String eventType, EntityId entityId, List<KeyFilter> keyFilters) {
         SchedulerEventFilter filter = new SchedulerEventFilter();
         filter.setEventType(eventType);
-        filter.setOriginator(entityId);
+        filter.setOriginator(AliasEntityId.fromEntityId(entityId));
         var pageLink = new EntityDataPageLink(20, 0, null, new EntityDataSortOrder(new EntityKey(EntityKeyType.ENTITY_FIELD, "createdTime"), EntityDataSortOrder.Direction.DESC), false);
 
         var entityFields = Arrays.asList(new EntityKey(EntityKeyType.ENTITY_FIELD, "name"), new EntityKey(EntityKeyType.ENTITY_FIELD, "createdTime"));

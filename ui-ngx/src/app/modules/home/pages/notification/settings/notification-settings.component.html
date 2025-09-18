@@ -37,7 +37,7 @@
         <div class="flex flex-1 flex-col">
           <span class="mat-headline-5" translate>notification.settings.notification-settings</span>
         </div>
-        <div class="flex flex-col" *ngIf="resource.PROFILE | hasGenericPermission: operation.WRITE">
+        <div class="flex flex-col" *ngIf="!readonly">
           <button mat-button color="primary"
                   [disabled]="(isLoading$ | async)"
                   (click)="resetSettings()">{{ 'notification.settings.reset-all' | translate }}</button>
@@ -54,6 +54,7 @@
             <div class="flex flex-row items-center justify-start" style="height: 44px;">
               <div class="max-w-50% flex-full">
                 <mat-checkbox color="warn"
+                              [disabled]="readonly"
                               (click)="$event.stopPropagation()"
                               [indeterminate]="getIndeterminate()"
                               (change)="changeInstanceTypeCheckBox($event.checked)"
@@ -64,6 +65,7 @@
               <div class="flex-1" *ngFor="let deliveryMethods of notificationDeliveryMethods">
                 <div class="flex flex-1 items-center justify-start">
                   <mat-checkbox color="warn"
+                                [disabled]="readonly"
                                 [checked]="getChecked(deliveryMethods)"
                                 (change)="changeInstanceTypeCheckBox($event.checked, deliveryMethods)"
                                 [indeterminate]="getIndeterminate(deliveryMethods)"
@@ -84,7 +86,7 @@
         </section>
       </form>
     </mat-card-content>
-    <div class="flex flex-row items-start justify-end" style="padding: 16px;" *ngIf="resource.PROFILE | hasGenericPermission: operation.WRITE">
+    <div class="flex flex-row items-start justify-end" style="padding: 16px;" *ngIf="!readonly">
       <button mat-button mat-raised-button color="primary"
               type="button"
               (click)="save()"

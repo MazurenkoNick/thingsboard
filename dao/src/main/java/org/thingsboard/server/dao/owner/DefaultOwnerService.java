@@ -61,6 +61,7 @@ import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.id.UserId;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
+import org.thingsboard.server.common.util.ProtoUtils;
 import org.thingsboard.server.dao.asset.AssetService;
 import org.thingsboard.server.dao.customer.CustomerService;
 import org.thingsboard.server.dao.dashboard.DashboardService;
@@ -250,30 +251,19 @@ public class DefaultOwnerService implements OwnerService {
     }
 
     private EntityId fetchOwnerId(TenantId tenantId, EntityId entityId) {
-        switch (entityId.getEntityType()) {
-            case DEVICE:
-                return getOwnerId(getDeviceById(tenantId, entityId));
-            case ASSET:
-                return getOwnerId(getAssetById(tenantId, entityId));
-            case CUSTOMER:
-                return getOwnerId(getCustomerById(tenantId, entityId));
-            case ENTITY_VIEW:
-                return getOwnerId(getEntityViewById(tenantId, entityId));
-            case EDGE:
-                return getOwnerId(getEdgeById(tenantId, entityId));
-            case DASHBOARD:
-                return getOwnerId(getDashboardById(tenantId, entityId));
-            case USER:
-                return getOwnerId(getUserById(tenantId, entityId));
-            case ENTITY_GROUP:
-                return getOwnerId(entityGroupService.findEntityGroupById(tenantId, new EntityGroupId(entityId.getId())));
-            case ROLE:
-                return getOwnerId(roleService.findRoleById(tenantId, new RoleId(entityId.getId())));
-            case SCHEDULER_EVENT:
-                return getOwnerId(schedulerEventService.findSchedulerEventById(tenantId, new SchedulerEventId(entityId.getId())));
-            default:
-                return tenantId;
-        }
+        return switch (entityId.getEntityType()) {
+            case DEVICE -> getOwnerId(getDeviceById(tenantId, entityId));
+            case ASSET -> getOwnerId(getAssetById(tenantId, entityId));
+            case CUSTOMER -> getOwnerId(getCustomerById(tenantId, entityId));
+            case ENTITY_VIEW -> getOwnerId(getEntityViewById(tenantId, entityId));
+            case EDGE -> getOwnerId(getEdgeById(tenantId, entityId));
+            case DASHBOARD -> getOwnerId(getDashboardById(tenantId, entityId));
+            case USER -> getOwnerId(getUserById(tenantId, entityId));
+            case ENTITY_GROUP -> getOwnerId(entityGroupService.findEntityGroupById(tenantId, new EntityGroupId(entityId.getId())));
+            case ROLE -> getOwnerId(roleService.findRoleById(tenantId, new RoleId(entityId.getId())));
+            case SCHEDULER_EVENT -> getOwnerId(schedulerEventService.findSchedulerEventById(tenantId, new SchedulerEventId(entityId.getId())));
+            default -> tenantId;
+        };
     }
 
     private Device getDeviceById(TenantId tenantId, EntityId entityId) {
@@ -309,31 +299,21 @@ public class DefaultOwnerService implements OwnerService {
     }
 
     private EntityId bytesToOwner(byte[] data) throws InvalidProtocolBufferException {
-        TransportProtos.EntityIdProto proto = TransportProtos.EntityIdProto.parseFrom(data);
-        return EntityIdFactory.getByTypeAndUuid(proto.getEntityType(), new UUID(proto.getEntityIdMSB(), proto.getEntityIdLSB()));
+        return ProtoUtils.fromProto(TransportProtos.EntityIdProto.parseFrom(data));
     }
 
     private Set<EntityId> bytesToOwners(byte[] data) throws InvalidProtocolBufferException {
         TransportProtos.OwnersListProto proto = TransportProtos.OwnersListProto.parseFrom(data);
-        return proto.getEntityIdsList().stream().map(entityIdProto ->
-                EntityIdFactory.getByTypeAndUuid(entityIdProto.getEntityType(),
-                        new UUID(entityIdProto.getEntityIdMSB(), entityIdProto.getEntityIdLSB()))).collect(Collectors.toCollection(LinkedHashSet::new));
+        return proto.getEntityIdsList().stream().map(ProtoUtils::fromProto).collect(Collectors.toCollection(LinkedHashSet::new));
     }
 
     private byte[] toBytes(EntityId entityId) {
-        return TransportProtos.EntityIdProto.newBuilder()
-                .setEntityIdMSB(entityId.getId().getMostSignificantBits())
-                .setEntityIdLSB(entityId.getId().getLeastSignificantBits())
-                .setEntityType(entityId.getEntityType().name()).build().toByteArray();
+        return ProtoUtils.toProto(entityId).toByteArray();
     }
 
     private byte[] toBytes(Set<EntityId> result) {
         TransportProtos.OwnersListProto.Builder builder = TransportProtos.OwnersListProto.newBuilder();
-        builder.addAllEntityIds(result.stream().map(entityId ->
-                TransportProtos.EntityIdProto.newBuilder()
-                        .setEntityIdMSB(entityId.getId().getMostSignificantBits())
-                        .setEntityIdLSB(entityId.getId().getLeastSignificantBits())
-                        .setEntityType(entityId.getEntityType().name()).build()).collect(Collectors.toList()));
+        builder.addAllEntityIds(result.stream().map(ProtoUtils::toProto).collect(Collectors.toList()));
         return builder.build().toByteArray();
     }
 

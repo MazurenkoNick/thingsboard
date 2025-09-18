@@ -55,7 +55,6 @@ import org.thingsboard.server.dao.customer.CustomerDao;
 import org.thingsboard.server.dao.device.DeviceProfileService;
 import org.thingsboard.server.dao.device.DeviceService;
 import org.thingsboard.server.dao.ota.OtaPackageService;
-import org.thingsboard.server.dao.scheduler.SchedulerEventDao;
 import org.thingsboard.server.dao.service.DataValidator;
 import org.thingsboard.server.dao.tenant.TenantService;
 import org.thingsboard.server.exception.DataValidationException;
@@ -85,9 +84,6 @@ public class SchedulerEventDataValidator extends DataValidator<SchedulerEvent> {
 
     @Autowired
     private CustomerDao customerDao;
-
-    @Autowired
-    private SchedulerEventDao schedulerEventDao;
 
     @Override
     protected void validateCreate(TenantId tenantId, SchedulerEvent data) {
@@ -171,8 +167,7 @@ public class SchedulerEventDataValidator extends DataValidator<SchedulerEvent> {
         JsonNode repeatNode = schedulerEvent.getSchedule().get("repeat");
         if (repeatNode != null) {
             var repeat = JacksonUtil.treeToValue(repeatNode, SchedulerRepeat.class);
-            if (repeat instanceof TimerRepeat) {
-                var timerRepeat = (TimerRepeat) repeat;
+            if (repeat instanceof TimerRepeat timerRepeat) {
                 long seconds = timerRepeat.getTimeUnit().toSeconds(timerRepeat.getRepeatInterval());
                 if (seconds < minTimerBasedIntervalForEventInSec) {
                     throw new DataValidationException("Timer-based repeats are too frequent (less than " + minTimerBasedIntervalForEventInSec + " seconds)!");
@@ -180,4 +175,5 @@ public class SchedulerEventDataValidator extends DataValidator<SchedulerEvent> {
             }
         }
     }
+
 }

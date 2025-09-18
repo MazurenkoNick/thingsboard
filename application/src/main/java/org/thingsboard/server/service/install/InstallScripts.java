@@ -90,6 +90,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -226,9 +227,8 @@ public class InstallScripts {
     }
 
     public void createDefaultRuleChains(TenantId tenantId) {
-        Map<String, RuleChainId> ruleChainIdMap = loadAdditionalTenantRuleChains(tenantId, getTenantRuleChainsDir());
         Path rootRuleChainFile = getRootTenantRuleChainFile();
-        loadRootRuleChain(tenantId, ruleChainIdMap, rootRuleChainFile);
+        loadRootRuleChain(tenantId, Collections.emptyMap(), rootRuleChainFile);
     }
 
     private RuleChain loadRuleChain(Path path, JsonNode ruleChainJson, TenantId tenantId, String newRuleChainName) {
@@ -818,11 +818,8 @@ public class InstallScripts {
         return existingTemplates > 0;
     }
 
-    public void generateTenantEncryptionKey() {
-        PageDataIterable<TenantId> tenantIterator = new PageDataIterable<>(tenantService::findTenantsIds, 1024);
-        for (TenantId tenantId : tenantIterator) {
-            encryptionService.createEncryptionKey(tenantId);
-        }
+    public void generateSysAdminEncryptionKey() {
+        encryptionService.createEncryptionKey(TenantId.SYS_TENANT_ID);
     }
 
 }

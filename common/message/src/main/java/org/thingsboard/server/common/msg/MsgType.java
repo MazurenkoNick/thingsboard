@@ -42,7 +42,7 @@ public enum MsgType {
 
     /**
      * ADDED/UPDATED/DELETED events for server nodes.
-     * <p>
+     *
      * See {@link PartitionChangeMsg}
      */
     PARTITION_CHANGE_MSG(true),
@@ -51,7 +51,7 @@ public enum MsgType {
 
     /**
      * ADDED/UPDATED/DELETED events for main entities.
-     * <p>
+     *
      * See {@link ComponentLifecycleMsg}
      */
     COMPONENT_LIFE_CYCLE_MSG,
@@ -63,7 +63,7 @@ public enum MsgType {
 
     /**
      * Misc messages consumed from the Queue and forwarded to Rule Engine Actor.
-     * <p>
+     *
      * See {@link QueueToRuleEngineMsg}
      */
     QUEUE_TO_RULE_ENGINE_MSG,
@@ -152,9 +152,6 @@ public enum MsgType {
 
 
     CF_CACHE_INIT_MSG, // Sent to init caches for CF actor;
-    CF_INIT_PROFILE_ENTITY_MSG, // Sent to init profile entities cache;
-    CF_INIT_MSG, // Sent to init particular calculated field;
-    CF_LINK_INIT_MSG, // Sent to init particular calculated field;
     CF_STATE_RESTORE_MSG, // Sent to restore particular calculated field entity state;
     CF_PARTITIONS_CHANGE_MSG, // Sent when cluster event occures;
 
@@ -166,7 +163,10 @@ public enum MsgType {
     CF_ENTITY_TELEMETRY_MSG,
     CF_ENTITY_INIT_CF_MSG,
     CF_ENTITY_DELETE_MSG,
-    CF_ARGUMENT_RESET_MSG; // Sent to reset argument;
+    CF_ARGUMENT_RESET_MSG, // Sent to reset argument;
+
+    CF_DYNAMIC_ARGUMENTS_REFRESH_MSG,
+    CF_ENTITY_DYNAMIC_ARGUMENTS_REFRESH_MSG;
 
     @Getter
     private final boolean ignoreOnStart;

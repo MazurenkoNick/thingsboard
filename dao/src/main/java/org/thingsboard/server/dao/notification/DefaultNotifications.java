@@ -418,6 +418,15 @@ public class DefaultNotifications {
             .color(RED_COLOR)
             .build();
 
+    public static final DefaultNotification reportGenerated = DefaultNotification.builder()
+            .name("Report generated notification")
+            .type(NotificationType.REPORT_GENERATED)
+            .subject("Report generated")
+            .text("${reportFormat} report '${reportName}' is ready")
+            .icon("description").color(null)
+            .button("Go to reports").link("/reporting/reports")
+            .build();
+
     private final NotificationTemplateService templateService;
     private final NotificationRuleService ruleService;
 

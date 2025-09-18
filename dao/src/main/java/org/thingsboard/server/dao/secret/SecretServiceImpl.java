@@ -30,10 +30,12 @@
  */
 package org.thingsboard.server.dao.secret;
 
-import jakarta.annotation.PostConstruct;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.thingsboard.server.cache.secret.SecretCacheEvictEvent;
+import org.thingsboard.server.cache.secret.SecretCacheKey;
 import org.thingsboard.server.common.data.EntityInfo;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.TbSecretDeleteResult;
@@ -46,14 +48,13 @@ import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.secret.Secret;
 import org.thingsboard.server.common.data.secret.SecretInfo;
 import org.thingsboard.server.dao.encryptionkey.EncryptionService;
-import org.thingsboard.server.dao.entity.AbstractEntityService;
+import org.thingsboard.server.dao.entity.AbstractCachedEntityService;
 import org.thingsboard.server.dao.eventsourcing.DeleteEntityEvent;
 import org.thingsboard.server.dao.eventsourcing.SaveEntityEvent;
-import org.thingsboard.server.dao.integration.IntegrationDao;
-import org.thingsboard.server.dao.rule.RuleChainDao;
-import org.thingsboard.server.dao.service.DataValidator;
+import org.thingsboard.server.dao.service.validator.SecretDataValidator;
 import org.thingsboard.server.dao.sql.HasSecretsEntityDao;
 
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -63,35 +64,27 @@ import java.util.UUID;
 import static org.thingsboard.server.dao.service.Validator.validateId;
 
 @Slf4j
-@Service("SecretDaoService")
-public class SecretServiceImpl extends AbstractEntityService implements SecretService {
+@Service
+@RequiredArgsConstructor
+public class SecretServiceImpl extends AbstractCachedEntityService<SecretCacheKey, Secret, SecretCacheEvictEvent> implements SecretService {
 
     private static final String INCORRECT_SECRET_ID = "Incorrect secretId ";
 
-    private final Map<EntityType, HasSecretsEntityDao> hasSecretsEntityDaoMap = new HashMap<>();
+    private final SecretDao secretDao;
+    private final SecretInfoDao secretInfoDao;
+    private final SecretDataValidator secretValidator;
+    private final EncryptionService encryptionService;
+
+    private final Map<EntityType, HasSecretsEntityDao> hasSecretsEntityDaos = new EnumMap<>(EntityType.class);
 
     @Autowired
-    private SecretDao secretDao;
+    private void setHasSecretsEntityDaos(List<HasSecretsEntityDao> hasSecretsEntityDaos) {
+        hasSecretsEntityDaos.forEach(dao -> this.hasSecretsEntityDaos.put(dao.getEntityType(), dao));
+    }
 
-    @Autowired
-    private SecretInfoDao secretInfoDao;
-
-    @Autowired
-    private DataValidator<Secret> secretValidator;
-
-    @Autowired
-    private RuleChainDao ruleChainDao;
-
-    @Autowired
-    private IntegrationDao integrationDao;
-
-    @Autowired
-    private EncryptionService encryptionService;
-
-    @PostConstruct
-    public void init() {
-        hasSecretsEntityDaoMap.put(EntityType.RULE_CHAIN, ruleChainDao);
-        hasSecretsEntityDaoMap.put(EntityType.INTEGRATION, integrationDao);
+    @Override
+    public void handleEvictEvent(SecretCacheEvictEvent event) {
+        cache.evict(new SecretCacheKey(event.tenantId(), event.name()));
     }
 
     @Override
@@ -102,14 +95,15 @@ public class SecretServiceImpl extends AbstractEntityService implements SecretSe
 
             boolean isValueUpdated = false;
             if (secret.getValue() != null) {
-                byte[] encrypted = encryptionService.encrypt(tenantId, secret.getType(), secret.getRawValue());
-                secret.setRawValue(encrypted);
+                byte[] encrypted = encryptionService.encrypt(tenantId, secret.getType(), secret.getValue().getBytes());
+                secret.setEncryptedValue(encrypted);
                 isValueUpdated = true;
             } else if (old != null) {
-                secret.setRawValue(old.getRawValue());
+                secret.setEncryptedValue(old.getEncryptedValue());
             }
 
             Secret savedSecret = secretDao.save(tenantId, secret);
+            publishEvictEvent(new SecretCacheEvictEvent(savedSecret.getTenantId(), savedSecret.getName()));
             eventPublisher.publishEvent(SaveEntityEvent.builder().tenantId(tenantId).entityId(savedSecret.getId()).entity(savedSecret).created(secret.getId() == null).broadcastEvent(isValueUpdated).build());
             return savedSecret;
         } catch (Exception e) {
@@ -154,6 +148,7 @@ public class SecretServiceImpl extends AbstractEntityService implements SecretSe
         if (success) {
             secretDao.removeById(tenantId, secretId);
             eventPublisher.publishEvent(DeleteEntityEvent.builder().tenantId(tenantId).entityId(secretInfo.getId()).build());
+            publishEvictEvent(new SecretCacheEvictEvent(tenantId, secretInfo.getName()));
         }
         return result.success(success).build();
     }
@@ -179,13 +174,8 @@ public class SecretServiceImpl extends AbstractEntityService implements SecretSe
     @Override
     public Secret findSecretByName(TenantId tenantId, String name) {
         log.trace("Executing findSecretByName [{}] [{}]", tenantId, name);
-        return secretDao.findByName(tenantId, name);
-    }
-
-    @Override
-    public PageData<SecretInfo> findSecretInfosByTenantId(TenantId tenantId, PageLink pageLink) {
-        log.trace("Executing findSecretInfosByTenantId [{}]", tenantId);
-        return secretInfoDao.findByTenantId(tenantId, pageLink);
+        return cache.getAndPutInTransaction(new SecretCacheKey(tenantId, name),
+                () -> secretDao.findByName(tenantId, name), true);
     }
 
     @Override
@@ -201,10 +191,22 @@ public class SecretServiceImpl extends AbstractEntityService implements SecretSe
     }
 
     @Override
+    public PageData<Secret> findSecretsByTenantId(TenantId tenantId, PageLink pageLink) {
+        log.trace("Executing findSecretsByTenantId [{}]", tenantId);
+        return secretDao.findByTenantId(tenantId, pageLink);
+    }
+
+    @Override
+    public PageData<SecretInfo> findSecretInfosByTenantId(TenantId tenantId, PageLink pageLink) {
+        log.trace("Executing findSecretInfosByTenantId [{}]", tenantId);
+        return secretInfoDao.findByTenantId(tenantId, pageLink);
+    }
+
+    @Override
     public Map<EntityType, List<EntityInfo>> findEntitiesBySecret(TenantId tenantId, SecretInfo secretInfo) {
         Map<EntityType, List<EntityInfo>> affectedEntities = new HashMap<>();
         String placeholder = String.format("${secret:%s;type:%s}", secretInfo.getName(), secretInfo.getType());
-        hasSecretsEntityDaoMap.forEach((entityType, hasSecretsEntityDao) -> {
+        hasSecretsEntityDaos.forEach((entityType, hasSecretsEntityDao) -> {
             var entities = hasSecretsEntityDao.findByTenantIdAndSecretPlaceholder(tenantId, placeholder);
             if (!entities.isEmpty()) {
                 affectedEntities.put(entityType, entities);

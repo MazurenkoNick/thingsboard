@@ -45,6 +45,7 @@ import org.thingsboard.server.dao.alarm.AlarmService;
 import org.thingsboard.server.dao.asset.AssetProfileService;
 import org.thingsboard.server.dao.asset.AssetService;
 import org.thingsboard.server.dao.attributes.AttributesService;
+import org.thingsboard.server.dao.cf.CalculatedFieldService;
 import org.thingsboard.server.dao.converter.ConverterService;
 import org.thingsboard.server.dao.customer.CustomerService;
 import org.thingsboard.server.dao.dashboard.DashboardService;
@@ -54,6 +55,8 @@ import org.thingsboard.server.dao.device.DeviceService;
 import org.thingsboard.server.dao.domain.DomainService;
 import org.thingsboard.server.dao.edge.EdgeEventService;
 import org.thingsboard.server.dao.edge.EdgeService;
+import org.thingsboard.server.dao.edge.stats.EdgeStatsCounterService;
+import org.thingsboard.server.dao.encryptionkey.EncryptionService;
 import org.thingsboard.server.dao.entityview.EntityViewService;
 import org.thingsboard.server.dao.group.EntityGroupService;
 import org.thingsboard.server.dao.grouppermission.GroupPermissionService;
@@ -71,6 +74,7 @@ import org.thingsboard.server.dao.resource.ResourceService;
 import org.thingsboard.server.dao.role.RoleService;
 import org.thingsboard.server.dao.rule.RuleChainService;
 import org.thingsboard.server.dao.scheduler.SchedulerEventService;
+import org.thingsboard.server.dao.secret.SecretService;
 import org.thingsboard.server.dao.settings.AdminSettingsService;
 import org.thingsboard.server.dao.tenant.TenantProfileService;
 import org.thingsboard.server.dao.tenant.TenantService;
@@ -87,6 +91,7 @@ import org.thingsboard.server.service.edge.rpc.processor.alarm.AlarmProcessor;
 import org.thingsboard.server.service.edge.rpc.processor.alarm.comment.AlarmCommentProcessor;
 import org.thingsboard.server.service.edge.rpc.processor.asset.AssetEdgeProcessor;
 import org.thingsboard.server.service.edge.rpc.processor.asset.profile.AssetProfileEdgeProcessor;
+import org.thingsboard.server.service.edge.rpc.processor.cf.CalculatedFieldProcessor;
 import org.thingsboard.server.service.edge.rpc.processor.converter.ConverterEdgeProcessor;
 import org.thingsboard.server.service.edge.rpc.processor.dashboard.DashboardEdgeProcessor;
 import org.thingsboard.server.service.edge.rpc.processor.device.DeviceEdgeProcessor;
@@ -118,6 +123,7 @@ import org.thingsboard.server.service.executors.GrpcCallbackExecutorService;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Lazy
 @Data
@@ -244,6 +250,9 @@ public class EdgeContextComponent {
 
     @Autowired
     private WidgetsBundleService widgetsBundleService;
+
+    @Autowired
+    private Optional<EdgeStatsCounterService> statsCounterService;
 
     // PE services
     @Autowired
@@ -376,6 +385,18 @@ public class EdgeContextComponent {
     // callback
     @Autowired
     private GrpcCallbackExecutorService grpcCallbackExecutorService;
+
+    @Autowired
+    private CalculatedFieldService calculatedFieldService;
+
+    @Autowired
+    private EncryptionService encryptionService;
+
+    @Autowired
+    private SecretService secretService;
+
+    @Autowired
+    private CalculatedFieldProcessor calculatedFieldProcessor;
 
     public EdgeProcessor getProcessor(EdgeEventType edgeEventType) {
         EdgeProcessor processor = processorMap.get(edgeEventType);

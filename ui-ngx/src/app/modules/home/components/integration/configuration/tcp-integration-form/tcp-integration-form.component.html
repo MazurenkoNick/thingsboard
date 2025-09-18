@@ -118,9 +118,10 @@
     </mat-form-field>
     <section *ngIf="tcpConfigForm.get('handlerConfiguration.handlerType').value === HandlerConfigurationType.BINARY">
       <div class="flex flex-row flex-wrap xs:flex-col gt-xs:gap-2">
-        <mat-form-field class="mat-block flex-1">
+        <mat-form-field class="mat-block flex-1" subscriptSizing="dynamic">
           <mat-label translate>integration.max-frame-length</mat-label>
           <input matInput required type="number" step="1" min="1" max="65535" formControlName="maxFrameLength">
+          <mat-hint></mat-hint>
           <mat-error translate *ngIf="tcpConfigForm.get('handlerConfiguration').get('maxFrameLength').hasError('required')">
             integration.max-frame-length-required
           </mat-error>
@@ -129,9 +130,10 @@
             integration.max-frame-length-range
           </mat-error>
         </mat-form-field>
-        <mat-form-field class="mat-block flex-1">
+        <mat-form-field class="mat-block flex-1" subscriptSizing="dynamic">
           <mat-label translate>integration.length-field-offset</mat-label>
           <input matInput required type="number" step="1" min="0" max="8" formControlName="lengthFieldOffset">
+          <mat-hint></mat-hint>
           <mat-error translate
                      *ngIf="tcpConfigForm.get('handlerConfiguration').get('lengthFieldOffset').hasError('required')">
             integration.length-field-offset-required
@@ -141,9 +143,10 @@
             integration.length-field-offset-range
           </mat-error>
         </mat-form-field>
-        <mat-form-field class="mat-block flex-1">
+        <mat-form-field class="mat-block flex-1" subscriptSizing="dynamic">
           <mat-label translate>integration.length-field-length</mat-label>
           <input matInput required type="number" step="1" min="0" max="8" formControlName="lengthFieldLength">
+          <mat-hint></mat-hint>
           <mat-error translate *ngIf="tcpConfigForm.get('handlerConfiguration').get('lengthFieldLength').hasError('required')">
             integration.length-field-length-required
           </mat-error>

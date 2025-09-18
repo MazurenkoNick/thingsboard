@@ -32,18 +32,34 @@ package org.thingsboard.server.controller;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.google.common.util.concurrent.FluentFuture;
+import com.google.common.util.concurrent.Futures;
+import dev.langchain4j.data.message.AiMessage;
+import dev.langchain4j.model.chat.response.ChatResponse;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentMatchers;
 import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.rule.engine.metadata.TbGetAttributesNode;
 import org.thingsboard.rule.engine.mqtt.TbMqttNode;
 import org.thingsboard.rule.engine.mqtt.TbMqttNodeConfiguration;
+import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.SecretType;
 import org.thingsboard.server.common.data.StringUtils;
+import org.thingsboard.server.common.data.TbSecretDeleteResult;
+import org.thingsboard.server.common.data.ai.AiModel;
+import org.thingsboard.server.common.data.ai.dto.TbChatRequest;
+import org.thingsboard.server.common.data.ai.dto.TbChatResponse;
+import org.thingsboard.server.common.data.ai.dto.TbContent;
+import org.thingsboard.server.common.data.ai.dto.TbUserMessage;
+import org.thingsboard.server.common.data.ai.model.chat.GoogleAiGeminiChatModelConfig;
+import org.thingsboard.server.common.data.ai.model.chat.Langchain4jChatModelConfigurer;
+import org.thingsboard.server.common.data.ai.provider.GoogleAiGeminiProviderConfig;
 import org.thingsboard.server.common.data.converter.Converter;
 import org.thingsboard.server.common.data.converter.ConverterType;
 import org.thingsboard.server.common.data.id.ConverterId;
@@ -59,6 +75,7 @@ import org.thingsboard.server.common.data.rule.RuleNode;
 import org.thingsboard.server.common.data.secret.Secret;
 import org.thingsboard.server.common.data.secret.SecretInfo;
 import org.thingsboard.server.dao.service.DaoSqlTest;
+import org.thingsboard.server.service.ai.AiRequestsExecutor;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -69,6 +86,9 @@ import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -83,17 +103,15 @@ public class SecretControllerTest extends AbstractControllerTest {
 
     private static final TypeReference<PageData<SecretInfo>> PAGE_DATA_SECRET_TYPE_REF = new TypeReference<>() {};
 
+    @MockitoBean
+    private AiRequestsExecutor aiRequestsExecutor;
+
+    @MockitoSpyBean
+    private Langchain4jChatModelConfigurer chatModelConfigurer;
+
     @Before
     public void setUp() throws Exception {
         loginTenantAdmin();
-    }
-
-    @After
-    public void tearDown() throws Exception {
-        PageData<SecretInfo> pageData = doGetTypedWithPageLink("/api/secrets?", PAGE_DATA_SECRET_TYPE_REF, new PageLink(100, 0));
-        for (SecretInfo secretInfo : pageData.getData()) {
-            doDelete("/api/secret/" + secretInfo.getId().getId()).andExpect(status().isOk());
-        }
     }
 
     @Test
@@ -226,6 +244,49 @@ public class SecretControllerTest extends AbstractControllerTest {
         doDelete("/api/converter/" + converterId.getId().toString()).andExpect(status().isOk());
         doDelete("/api/secret/" + savedSecret.getId().getId()).andExpect(status().isOk());
         doGet("/api/secret/{id}/info", savedSecret.getId().getId()).andExpect(status().isNotFound());
+    }
+
+    @Test
+    public void testDeleteSecretUsedInAiModel() throws Exception {
+        String secretName = "Gemini API key";
+        String secretPlaceholder = toSecretPlaceholder(secretName, SecretType.TEXT);
+        String apiToken = "wdfwefwefwef";
+        SecretInfo secret = doPost("/api/secret", constructSecret(secretName, apiToken), SecretInfo.class);
+
+        AiModel aiModel = new AiModel();
+        aiModel.setName("Gemini v2.0");
+        GoogleAiGeminiChatModelConfig config = new GoogleAiGeminiChatModelConfig(
+                new GoogleAiGeminiProviderConfig(secretPlaceholder),
+                "gemini-2.0",
+                0.2,
+                0.8,
+                40,
+                null,
+                null,
+                1024,
+                10,
+                3
+        );
+        aiModel.setConfiguration(config);
+        AiModel savedAiModel = doPost("/api/ai/model", aiModel, AiModel.class);
+
+        doReturn(FluentFuture.from(Futures.immediateFuture(ChatResponse.builder()
+                .aiMessage(new AiMessage("test"))
+                .build()))).when(aiRequestsExecutor).sendChatRequestAsync(any(), any());
+
+        doPostAsync("/api/ai/model/chat", new TbChatRequest("test", new TbUserMessage(List.of(new TbContent.TbTextContent("test"))), config), TbChatResponse.class,
+                status().isOk());
+        verify(chatModelConfigurer).configureChatModel(ArgumentMatchers.<GoogleAiGeminiChatModelConfig>argThat(modelConfig -> {
+            return modelConfig.providerConfig().apiKey().equals(apiToken);
+        }));
+
+        TbSecretDeleteResult result = readResponse(doDelete("/api/secret/" + secret.getUuidId())
+                .andExpect(status().isBadRequest()), TbSecretDeleteResult.class);
+        assertThat(result.getReferences().get(EntityType.AI_MODEL)).singleElement().satisfies(reference -> {
+            assertThat(reference.getName()).isEqualTo(savedAiModel.getName());
+            assertThat(reference.getId()).isEqualTo(savedAiModel.getId());
+
+        });
     }
 
     @Test

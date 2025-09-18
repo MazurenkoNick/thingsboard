@@ -47,7 +47,7 @@
          [required]="required"
          [matAutocomplete]="entityAutocomplete"
          [class.!hidden]="showEntityLink">
-  <a *ngIf="showEntityLink" aria-label="Open entity details page" [routerLink]=entityURL>
+  <a *ngIf="showEntityLink" aria-label="Open entity details page" [routerLink]="entityURL">
     {{ displayEntityFn(selectEntityFormGroup.get('entity').value) }}
   </a>
   <button *ngIf="selectEntityFormGroup.get('entity').value && !disabled"
@@ -61,6 +61,14 @@
           *ngIf="allowCreateNew && !selectEntityFormGroup.get('entity').value && !disabled"
           (click)="createNewEntity($event)">
     <span style="white-space: nowrap">{{ 'entity.create-new' | translate }}</span>
+  </button>
+  <button *ngIf="selectEntityFormGroup.get('entity').value && newTabDetailsButton && entityURL !== '' && !disabled"
+          type="button"
+          matTooltip="{{ newTabDetailsButtonHint ? newTabDetailsButtonHint : ('common.open-details-page' | translate) }}"
+          matTooltipPosition="above"
+          matSuffix mat-icon-button aria-label="Details"
+          (click)="openEntityDetailsNewTab($event)">
+    <tb-icon matButtonIcon>open_in_new</tb-icon>
   </button>
   <mat-icon matSuffix
             matTooltipPosition="above"
@@ -86,6 +94,11 @@
           <span>
               {{ noEntitiesMatchingText | translate: {entity: searchText} }}
           </span>
+          @if (allowCreateNew) {
+            <span>
+              <a translate (click)="createNewEntity($event, searchText)">entity.create-new-key</a>
+            </span>
+          }
         </ng-template>
       </div>
     </mat-option>

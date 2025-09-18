@@ -40,7 +40,6 @@ import org.thingsboard.server.common.data.rule.RuleChainType;
 import org.thingsboard.server.dao.Dao;
 import org.thingsboard.server.dao.ExportableEntityDao;
 import org.thingsboard.server.dao.TenantEntityDao;
-import org.thingsboard.server.dao.sql.HasSecretsEntityDao;
 
 import java.util.Collection;
 import java.util.List;
@@ -49,7 +48,7 @@ import java.util.UUID;
 /**
  * Created by igor on 3/12/18.
  */
-public interface RuleChainDao extends Dao<RuleChain>, TenantEntityDao<RuleChain>, ExportableEntityDao<RuleChainId, RuleChain>, HasSecretsEntityDao {
+public interface RuleChainDao extends Dao<RuleChain>, TenantEntityDao<RuleChain>, ExportableEntityDao<RuleChainId, RuleChain> {
 
     /**
      * Find rule chains by tenantId and page link.

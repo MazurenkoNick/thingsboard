@@ -43,6 +43,7 @@ import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.permission.MergedGroupPermissionInfo;
 import org.thingsboard.server.common.data.permission.MergedUserPermissions;
 import org.thingsboard.server.common.data.permission.Operation;
+import org.thingsboard.server.common.data.query.AliasEntityId;
 import org.thingsboard.server.common.data.query.EntityDataPageLink;
 import org.thingsboard.server.common.data.query.EntityDataQuery;
 import org.thingsboard.server.common.data.query.EntityKeyType;
@@ -234,7 +235,7 @@ public class RelationsQueryFilterTest extends AbstractEDQTest {
 
     private PageData<QueryResult> filter(MergedUserPermissions permissions, CustomerId customerId, EntityId rootId, int maxLevel, boolean lastLevelOnly, RelationEntityTypeFilter... relationEntityTypeFilters) {
         RelationsQueryFilter filter = new RelationsQueryFilter();
-        filter.setRootEntity(rootId);
+        filter.setRootEntity(AliasEntityId.fromEntityId(rootId));
         filter.setFilters(Arrays.asList(relationEntityTypeFilters));
         filter.setDirection(EntitySearchDirection.FROM);
         filter.setFetchLastLevelOnly(lastLevelOnly);

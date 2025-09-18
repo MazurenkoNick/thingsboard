@@ -39,12 +39,13 @@ import org.bouncycastle.util.Arrays;
 import org.thingsboard.common.util.DebugModeUtil;
 import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.common.util.ListeningExecutor;
+import org.thingsboard.rule.engine.api.DashboardReportService;
 import org.thingsboard.rule.engine.api.DeviceStateManager;
 import org.thingsboard.rule.engine.api.JobManager;
 import org.thingsboard.rule.engine.api.MailService;
 import org.thingsboard.rule.engine.api.MqttClientSettings;
 import org.thingsboard.rule.engine.api.NotificationCenter;
-import org.thingsboard.rule.engine.api.ReportService;
+import org.thingsboard.rule.engine.api.RuleEngineAiChatModelService;
 import org.thingsboard.rule.engine.api.RuleEngineAlarmService;
 import org.thingsboard.rule.engine.api.RuleEngineApiUsageStateService;
 import org.thingsboard.rule.engine.api.RuleEngineAssetProfileCache;
@@ -101,6 +102,7 @@ import org.thingsboard.server.common.msg.queue.ServiceType;
 import org.thingsboard.server.common.msg.queue.TbCallback;
 import org.thingsboard.server.common.msg.queue.TopicPartitionInfo;
 import org.thingsboard.server.common.msg.rpc.FromDeviceRpcResponse;
+import org.thingsboard.server.dao.ai.AiModelService;
 import org.thingsboard.server.dao.alarm.AlarmCommentService;
 import org.thingsboard.server.dao.asset.AssetProfileService;
 import org.thingsboard.server.dao.asset.AssetService;
@@ -138,6 +140,8 @@ import org.thingsboard.server.dao.ota.OtaPackageService;
 import org.thingsboard.server.dao.queue.QueueService;
 import org.thingsboard.server.dao.queue.QueueStatsService;
 import org.thingsboard.server.dao.relation.RelationService;
+import org.thingsboard.server.dao.report.ReportService;
+import org.thingsboard.server.dao.report.ReportTemplateService;
 import org.thingsboard.server.dao.resource.ResourceService;
 import org.thingsboard.server.dao.role.RoleService;
 import org.thingsboard.server.dao.rule.RuleChainService;
@@ -972,13 +976,23 @@ public class DefaultTbContext implements TbContext, TbPeContext {
     }
 
     @Override
-    public ReportService getReportService() {
-        return mainCtx.getReportService();
+    public DashboardReportService getDashboardReportService() {
+        return mainCtx.getDashboardReportService();
     }
 
     @Override
     public BlobEntityService getBlobEntityService() {
         return mainCtx.getBlobEntityService();
+    }
+
+    @Override
+    public ReportTemplateService getReportTemplateService() {
+        return mainCtx.getReportTemplateService();
+    }
+
+    @Override
+    public ReportService getReportService() {
+        return mainCtx.getReportService();
     }
 
     @Override
@@ -1215,6 +1229,16 @@ public class DefaultTbContext implements TbContext, TbPeContext {
     @Override
     public SecretService getSecretService() {
         return mainCtx.getSecretService();
+    }
+
+    @Override
+    public RuleEngineAiChatModelService getAiChatModelService() {
+        return mainCtx.getAiChatModelService();
+    }
+
+    @Override
+    public AiModelService getAiModelService() {
+        return mainCtx.getAiModelService();
     }
 
     @Override

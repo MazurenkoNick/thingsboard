@@ -29,37 +29,23 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
+import { Component, DestroyRef, forwardRef, Input, OnChanges, OnInit, SimpleChanges } from '@angular/core';
 import {
-  AfterViewInit,
-  Component,
-  forwardRef,
-  Input,
-  OnChanges,
-  OnDestroy,
-  OnInit,
-  SimpleChanges
-} from '@angular/core';
-import {
+  AbstractControl,
   ControlValueAccessor,
+  NG_VALIDATORS,
+  NG_VALUE_ACCESSOR,
   UntypedFormBuilder,
   UntypedFormGroup,
-  NG_VALUE_ACCESSOR,
-  Validators,
-  NG_VALIDATORS,
+  ValidationErrors,
   Validator,
-  AbstractControl,
-  ValidationErrors
+  Validators
 } from '@angular/forms';
-import { Store } from '@ngrx/store';
-import { AppState } from '@app/core/core.state';
-import { TranslateService } from '@ngx-translate/core';
-import { UserPermissionsService } from '@core/http/user-permissions.service';
 import { SchedulerEventConfiguration } from '@shared/models/scheduler-event.models';
 import { deepClone, isDefined } from '@core/utils';
 import { SchedulerEventConfigType } from '@home/components/scheduler/scheduler-event-config.models';
 import { jsonRequired } from '@shared/components/json-object-edit.component';
-import { Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'tb-scheduler-event-config',
@@ -76,7 +62,7 @@ import { takeUntil } from 'rxjs/operators';
     multi: true
   }]
 })
-export class SchedulerEventConfigComponent implements ControlValueAccessor, OnInit, AfterViewInit, OnChanges, OnDestroy, Validator {
+export class SchedulerEventConfigComponent implements ControlValueAccessor, OnInit, OnChanges, Validator {
 
   schedulerEventConfigFormGroup: UntypedFormGroup;
 
@@ -96,23 +82,21 @@ export class SchedulerEventConfigComponent implements ControlValueAccessor, OnIn
   showMsgType = true;
   showMetadata = true;
 
-//  private configChangesSubscription: Subscription;
+  private clearMsgBody = false;
+  private clearMetadata = false;
+  private clearMsgType = false;
+  private clearOriginator = false;
+  private propagateChange: (value: SchedulerEventConfiguration) => void = () => {};
 
-  private destroy$ = new Subject<void>();
-
-  private propagateChange = (v: any) => { };
-
-  constructor(private store: Store<AppState>,
-              public translate: TranslateService,
-              private userPermissionsService: UserPermissionsService,
-              private fb: UntypedFormBuilder) {
+  constructor(private fb: UntypedFormBuilder,
+              private destroyRef: DestroyRef) {
   }
 
   registerOnChange(fn: any): void {
     this.propagateChange = fn;
   }
 
-  registerOnTouched(fn: any): void {
+  registerOnTouched(_fn: any): void {
   }
 
   ngOnInit() {
@@ -124,7 +108,7 @@ export class SchedulerEventConfigComponent implements ControlValueAccessor, OnIn
       metadata: [null]
     });
     this.schedulerEventConfigFormGroup.valueChanges.pipe(
-      takeUntil(this.destroy$)
+      takeUntilDestroyed(this.destroyRef)
     ).subscribe(() => {
       this.updateView();
     });
@@ -147,6 +131,10 @@ export class SchedulerEventConfigComponent implements ControlValueAccessor, OnIn
     this.showOriginator = true;
     this.showMsgType = true;
     this.showMetadata = true;
+    this.clearMsgBody = false;
+    this.clearMetadata = false;
+    this.clearMsgType = false;
+    this.clearOriginator = false;
     if (this.schedulerEventType) {
       const configType = this.schedulerEventConfigTypes[this.schedulerEventType];
       if (configType) {
@@ -154,17 +142,13 @@ export class SchedulerEventConfigComponent implements ControlValueAccessor, OnIn
         this.showOriginator = configType.originator;
         this.showMsgType = configType.msgType;
         this.showMetadata = configType.metadata;
+        this.clearMsgBody = configType.clearMsgBody ?? false;
+        this.clearMetadata = configType.clearMetadata ?? false;
+        this.clearMsgType = configType.clearMsgType ?? false;
+        this.clearOriginator = configType.clearOriginator ?? false;
       }
     }
     this.updateEnabledState();
-  }
-
-  ngAfterViewInit(): void {
-  }
-
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
   }
 
   setDisabledState(isDisabled: boolean): void {
@@ -218,13 +202,16 @@ export class SchedulerEventConfigComponent implements ControlValueAccessor, OnIn
       if (schedulerEventConfig) {
         if (this.useDefinedTemplate) {
           const configuration = schedulerEventConfig.configuration;
-          if (!configuration.originatorId) {
+          if (this.clearMsgBody) {
+            delete configuration.msgBody;
+          }
+          if (this.clearOriginator) {
             delete configuration.originatorId;
           }
-          if (!configuration.msgType) {
+          if (this.clearMsgType) {
             delete configuration.msgType;
           }
-          if (!configuration.metadata) {
+          if (this.clearMetadata) {
             delete configuration.metadata;
           }
           delete schedulerEventConfig.configuration;
@@ -240,7 +227,7 @@ export class SchedulerEventConfigComponent implements ControlValueAccessor, OnIn
     }
   }
 
-  validate(control: AbstractControl): ValidationErrors | null {
+  validate(_control: AbstractControl): ValidationErrors | null {
     if (!this.schedulerEventConfigFormGroup.valid) {
       return {
         schedulerEventConfigForm: {

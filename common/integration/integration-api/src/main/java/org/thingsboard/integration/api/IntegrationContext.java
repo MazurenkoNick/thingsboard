@@ -46,9 +46,6 @@ import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 
-/**
- * Created by ashvayka on 05.12.17.
- */
 public interface IntegrationContext {
 
     /**

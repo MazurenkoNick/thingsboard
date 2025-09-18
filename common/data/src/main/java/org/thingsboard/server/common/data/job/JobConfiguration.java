@@ -32,6 +32,7 @@ package org.thingsboard.server.common.data.job;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
@@ -46,9 +47,11 @@ import java.util.List;
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
 @JsonSubTypes({
         @Type(name = "CF_REPROCESSING", value = CfReprocessingJobConfiguration.class),
+        @Type(name = "REPORT", value = ReportJobConfiguration.class),
         @Type(name = "DUMMY", value = DummyJobConfiguration.class),
 })
 @Data
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public abstract class JobConfiguration implements Serializable {
 
     @NotBlank

@@ -71,7 +71,7 @@ import { Store } from '@ngrx/store';
 import { AppState } from '@core/core.state';
 import { AuthService } from '@core/auth/auth.service';
 import { WINDOW } from '@core/services/window.service';
-import { ReportService } from '@core/http/report.service';
+import { DashboardReportService } from '@core/http/dashboard-report.service';
 import { WebsocketService } from '@core/ws/websocket.service';
 
 // @dynamic
@@ -85,7 +85,7 @@ export class TelemetryWebsocketService extends WebsocketService<TelemetrySubscri
   constructor(protected store: Store<AppState>,
               protected authService: AuthService,
               protected ngZone: NgZone,
-              protected reportService: ReportService,
+              protected reportService: DashboardReportService,
               @Inject(WINDOW) protected window: Window) {
     super(store, authService, ngZone, 'api/ws', new TelemetryPluginCmdsWrapper(), window, reportService);
   }

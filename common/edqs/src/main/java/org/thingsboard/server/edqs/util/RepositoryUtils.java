@@ -109,6 +109,7 @@ public class RepositoryUtils {
             case ENTITY_TYPE -> ((EntityTypeFilter) entityFilter).getEntityType();
             case ENTITY_GROUP_LIST, ENTITY_GROUP_NAME -> EntityType.ENTITY_GROUP;
             case ENTITIES_BY_GROUP_NAME -> ((EntitiesByGroupNameFilter) entityFilter).getGroupType();
+            case STATE_ENTITY -> throw new RuntimeException("Not implemented!");
             case STATE_ENTITY_OWNER -> throw new RuntimeException("Not implemented!"); // TODO: implement
             case ASSET_TYPE, ASSET_SEARCH_QUERY -> EntityType.ASSET;
             case DEVICE_TYPE, DEVICE_SEARCH_QUERY -> EntityType.DEVICE;

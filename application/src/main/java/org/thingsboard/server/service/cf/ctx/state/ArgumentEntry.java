@@ -34,10 +34,13 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import org.thingsboard.script.api.tbel.TbelCfArg;
+import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.kv.KvEntry;
 import org.thingsboard.server.common.data.kv.TsKvEntry;
+import org.thingsboard.server.service.cf.ctx.state.geofencing.GeofencingArgumentEntry;
 
 import java.util.List;
+import java.util.Map;
 
 @JsonTypeInfo(
         use = JsonTypeInfo.Id.NAME,
@@ -46,7 +49,8 @@ import java.util.List;
 )
 @JsonSubTypes({
         @JsonSubTypes.Type(value = SingleValueArgumentEntry.class, name = "SINGLE_VALUE"),
-        @JsonSubTypes.Type(value = TsRollingArgumentEntry.class, name = "TS_ROLLING")
+        @JsonSubTypes.Type(value = TsRollingArgumentEntry.class, name = "TS_ROLLING"),
+        @JsonSubTypes.Type(value = GeofencingArgumentEntry.class, name = "GEOFENCING")
 })
 public interface ArgumentEntry {
 
@@ -70,7 +74,14 @@ public interface ArgumentEntry {
     }
 
     static ArgumentEntry createTsRollingArgument(List<TsKvEntry> kvEntries, int limit, long timeWindow) {
+        if (kvEntries == null) {
+            return new TsRollingArgumentEntry(limit, timeWindow);
+        }
         return new TsRollingArgumentEntry(kvEntries, limit, timeWindow);
+    }
+
+    static ArgumentEntry createGeofencingValueArgument(Map<EntityId, KvEntry> entityIdkvEntryMap) {
+        return new GeofencingArgumentEntry(entityIdkvEntryMap);
     }
 
 }

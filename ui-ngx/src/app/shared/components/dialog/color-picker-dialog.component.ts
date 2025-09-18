@@ -40,6 +40,7 @@ export interface ColorPickerDialogData {
   color: string;
   colorClearButton: boolean;
   useThemePalette?: boolean;
+  disableAlpha?: boolean;
 }
 
 export interface ColorPickerDialogResult {
@@ -57,6 +58,7 @@ export class ColorPickerDialogComponent extends DialogComponent<ColorPickerDialo
   color: string;
   colorClearButton: boolean;
   useThemePalette: boolean;
+  disableAlpha: boolean;
 
   constructor(protected store: Store<AppState>,
               protected router: Router,
@@ -66,6 +68,7 @@ export class ColorPickerDialogComponent extends DialogComponent<ColorPickerDialo
     this.color = data.color;
     this.colorClearButton = data.colorClearButton;
     this.useThemePalette = data.useThemePalette;
+    this.disableAlpha = data.disableAlpha;
   }
 
   selectColor(color: string) {

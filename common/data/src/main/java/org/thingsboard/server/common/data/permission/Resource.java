@@ -40,9 +40,10 @@ import java.util.Map;
 import java.util.Set;
 
 public enum Resource {
+
     ALL(),
     PROFILE(),
-    ADMIN_SETTINGS(),
+    ADMIN_SETTINGS(EntityType.ADMIN_SETTINGS),
     ALARM(EntityType.ALARM),
     DEVICE(EntityType.DEVICE),
     ASSET(EntityType.ASSET),
@@ -89,7 +90,10 @@ public enum Resource {
     MOBILE_APP_SETTINGS,
     CUSTOM_MENU,
     JOB(EntityType.JOB),
-    SECRET(EntityType.SECRET);
+    SECRET(EntityType.SECRET),
+    REPORT_TEMPLATE(EntityType.REPORT_TEMPLATE),
+    REPORT(EntityType.REPORT),
+    AI_MODEL(EntityType.AI_MODEL);
 
     private static final Map<EntityType, Resource> groupResourceByGroupType = new HashMap<>();
     private static final Map<EntityType, Resource> resourceByEntityType = new HashMap<>();
@@ -115,6 +119,7 @@ public enum Resource {
                 }
             }
         }
+
         operationsByResource.put(Resource.ALL, Set.of(Operation.values()));
         operationsByResource.put(Resource.PROFILE, Set.of(Operation.ALL, Operation.WRITE));
         operationsByResource.put(Resource.ADMIN_SETTINGS, Set.of(Operation.ALL, Operation.READ, Operation.WRITE));
@@ -169,6 +174,9 @@ public enum Resource {
         operationsByResource.put(Resource.MOBILE_APP_SETTINGS, Set.of(Operation.ALL, Operation.READ, Operation.WRITE));
         operationsByResource.put(Resource.JOB, Operation.crudOperations);
         operationsByResource.put(Resource.SECRET, Operation.crudOperations);
+        operationsByResource.put(Resource.REPORT_TEMPLATE, Operation.crudOperations);
+        operationsByResource.put(Resource.REPORT, Operation.crudOperations);
+        operationsByResource.put(Resource.AI_MODEL, Operation.crudOperations);
 
         resourcesByAuthority.put(Authority.SYS_ADMIN, Set.of(
                 Resource.ALL,
@@ -241,7 +249,10 @@ public enum Resource {
                 Resource.NOTIFICATION,
                 Resource.MOBILE_APP_SETTINGS,
                 Resource.SECRET,
-                Resource.JOB
+                Resource.JOB,
+                Resource.REPORT_TEMPLATE,
+                Resource.REPORT,
+                Resource.AI_MODEL
         ));
 
         resourcesByAuthority.put(Authority.CUSTOMER_USER, Set.of(
@@ -274,7 +285,9 @@ public enum Resource {
                 Resource.AUDIT_LOG,
                 Resource.DEVICE_PROFILE,
                 Resource.ASSET_PROFILE,
-                Resource.MOBILE_APP_SETTINGS
+                Resource.MOBILE_APP_SETTINGS,
+                Resource.REPORT_TEMPLATE,
+                Resource.REPORT
         ));
 
     }
@@ -304,4 +317,5 @@ public enum Resource {
     public Set<EntityType> getEntityTypes() {
         return entityTypes;
     }
+
 }

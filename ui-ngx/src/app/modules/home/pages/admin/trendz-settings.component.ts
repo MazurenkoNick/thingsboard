@@ -39,6 +39,9 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Authority } from '@shared/models/authority.enum';
 import { Operation, Resource } from '@shared/models/security.models';
 import { UserPermissionsService } from '@core/http/user-permissions.service';
+import { Store } from "@ngrx/store";
+import { AppState } from "@core/core.state";
+import { ActionAuthUpdateTrendzSettings } from "@core/auth/auth.actions";
 
 @Component({
   selector: 'tb-trendz-settings',
@@ -49,7 +52,8 @@ export class TrendzSettingsComponent extends PageComponent implements OnInit, Ha
   readonly = !this.userPermissionsService.hasGenericPermission(Resource.ADMIN_SETTINGS, Operation.WRITE);
   trendzSettingsForm: FormGroup;
 
-  constructor(private fb: FormBuilder,
+  constructor(protected store: Store<AppState>,
+              private fb: FormBuilder,
               private trendzSettingsService: TrendzSettingsService,
               private destroyRef: DestroyRef,
               private userPermissionsService: UserPermissionsService,) {
@@ -116,6 +120,7 @@ export class TrendzSettingsComponent extends PageComponent implements OnInit, Ha
     this.trendzSettingsService.saveTrendzSettings(trendzSettings)
       .subscribe(() => {
         this.setTrendzSettings(trendzSettings);
+        this.store.dispatch(new ActionAuthUpdateTrendzSettings(trendzSettings))
       })
   }
 }

@@ -90,7 +90,7 @@ public abstract class AbstractEntityService {
 
     @Autowired
     @Lazy
-    private TbTenantProfileCache tbTenantProfileCache;
+    protected TbTenantProfileCache tbTenantProfileCache;
 
     @Value("${debug.settings.default_duration:15}")
     private int defaultDebugDurationMinutes;

@@ -53,6 +53,7 @@ interface ReferencedEntityInfo {
   entity: BaseData<HasId> | WhiteLabeling;
   typeName: string;
   detailsUrl: string;
+  queryParams?: {[key: string]: string};
   isWl: boolean;
 }
 
@@ -140,6 +141,42 @@ export class ImageReferencesComponent implements OnInit {
     }
     return false;
   }
+  private getAdminSettingsPageURL(entity: BaseData<EntityId>) {
+    let url = '/settings/';
+    switch (entity.name) {
+      case 'mail':
+        return url + 'outgoing-mail';
+      case 'entitiesVersionControl':
+        return url + 'repository';
+      case 'sms':
+      case 'notifications':
+        return url + 'notifications';
+      default:
+        return url + 'general';
+    }
+  }
+
+  getAdminSettingsName(entity: BaseData<EntityId>) {
+    if (entity.id.entityType === EntityType.ADMIN_SETTINGS) {
+      let name: string;
+      switch (entity.name) {
+        case 'mail':
+          name = 'admin.outgoing-mail-settings';
+          break;
+        case 'entitiesVersionControl':
+          name = 'admin.repository-settings';
+          break;
+        case 'sms':
+        case 'notifications':
+          name = 'admin.notifications-settings';
+          break;
+        default:
+          name = 'admin.general-settings';
+      }
+      return this.translate.instant(name);
+    }
+    return entity.name;
+  }
 
   private toReferencedEntitiesList(references: ResourceReferences): ReferencedEntityInfo[] {
     const result: ReferencedEntityInfo[] = [];
@@ -148,11 +185,24 @@ export class ImageReferencesComponent implements OnInit {
         const entity = reference as BaseData<EntityId>;
         const entityType = entity.id.entityType as EntityType;
         const entityTypeName = this.translate.instant(entityTypeTranslations.get(entityType).type);
-        const detailsUrl = getEntityDetailsPageURL(entity.id.id, entityType);
+        let detailsUrl: string;
+        let queryParams: {[key: string]: string};
+        switch (entityType) {
+          case EntityType.ADMIN_SETTINGS:
+            detailsUrl = this.getAdminSettingsPageURL(entity);
+            break;
+          case EntityType.AI_MODEL:
+            detailsUrl = '/settings/ai-models';
+            queryParams = {textSearch: entity.name}
+            break;
+          default:
+            detailsUrl = getEntityDetailsPageURL(entity.id.id, entityType);
+        }
         result.push({
           entity,
           typeName: entityTypeName,
           detailsUrl,
+          queryParams,
           isWl: false
         });
       } else {

@@ -55,7 +55,7 @@ public class SecretEntity extends AbstractSecretInfoEntity<Secret> {
 
     public SecretEntity(Secret secret) {
         super(secret);
-        this.value = secret.getRawValue();
+        this.value = secret.getEncryptedValue();
     }
 
     @Override

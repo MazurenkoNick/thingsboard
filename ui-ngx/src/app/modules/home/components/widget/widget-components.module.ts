@@ -109,6 +109,7 @@ import {
   SelectMapEntityPanelComponent
 } from '@home/components/widget/lib/maps/panels/select-map-entity-panel.component';
 import { MapTimelinePanelComponent } from '@home/components/widget/lib/maps/panels/map-timeline-panel.component';
+import { ApiUsageWidgetComponent } from "@home/components/widget/lib/cards/api-usage-widget.component";
 
 @NgModule({
   declarations: [
@@ -166,7 +167,8 @@ import { MapTimelinePanelComponent } from '@home/components/widget/lib/maps/pane
     ScadaSymbolWidgetComponent,
     SelectMapEntityPanelComponent,
     MapTimelinePanelComponent,
-    MapWidgetComponent
+    MapWidgetComponent,
+    ApiUsageWidgetComponent
   ],
   imports: [
     CommonModule,
@@ -229,7 +231,8 @@ import { MapTimelinePanelComponent } from '@home/components/widget/lib/maps/pane
     UnreadNotificationWidgetComponent,
     NotificationTypeFilterPanelComponent,
     ScadaSymbolWidgetComponent,
-    MapWidgetComponent
+    MapWidgetComponent,
+    ApiUsageWidgetComponent
   ],
   providers: [
     {provide: WIDGET_COMPONENTS_MODULE_TOKEN, useValue: WidgetComponentsModule},

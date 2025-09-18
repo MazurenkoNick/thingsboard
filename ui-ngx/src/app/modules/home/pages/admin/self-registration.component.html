@@ -57,7 +57,7 @@
               formControlName="domainId"
               [allowCreateNew]="resource.DOMAIN | hasGenericPermission: operation.CREATE"
               (entityChanged)="domainChange($event)"
-              (createNew)="createDomain()"
+              (createNew)="createDomain($event)"
             >
             </tb-entity-autocomplete>
             <div class="mat-content flex flex-col" id="registration-link-content"
@@ -119,7 +119,7 @@
               labelText="self-registration.notification-recipient"
               requiredText="self-registration.notification-recipient-required"
               [entityType]="entityTypes.NOTIFICATION_TARGET"
-              (createNew)="createTarget()">
+              (createNew)="createTarget($event)">
             </tb-entity-autocomplete>
             <mat-form-field class="mat-block flex-1" floatLabel="always">
               <mat-label translate>self-registration.text-message-page</mat-label>

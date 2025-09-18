@@ -32,7 +32,7 @@ package org.thingsboard.server.dao.alarm;
 
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.google.common.base.Function;
+import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.ListenableFuture;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -85,7 +85,6 @@ import org.thingsboard.server.dao.eventsourcing.DeleteEntityEvent;
 import org.thingsboard.server.dao.eventsourcing.SaveEntityEvent;
 import org.thingsboard.server.dao.owner.OwnerService;
 import org.thingsboard.server.dao.service.ConstraintValidator;
-import org.thingsboard.server.dao.service.DataValidator;
 import org.thingsboard.server.dao.tenant.TenantService;
 import org.thingsboard.server.exception.DataValidationException;
 
@@ -117,7 +116,6 @@ public class BaseAlarmService extends AbstractCachedEntityService<TenantId, Page
     private final AlarmDao alarmDao;
     private final EntityService entityService;
     private final OwnerService ownerService;
-    private final DataValidator<Alarm> alarmDataValidator;
 
     @TransactionalEventListener(classes = AlarmTypesCacheEvictEvent.class)
     @Override
@@ -187,6 +185,11 @@ public class BaseAlarmService extends AbstractCachedEntityService<TenantId, Page
     @Override
     public Alarm findLatestActiveByOriginatorAndType(TenantId tenantId, EntityId originator, String type) {
         return alarmDao.findLatestActiveByOriginatorAndType(tenantId, originator, type);
+    }
+
+    @Override
+    public FluentFuture<Alarm> findLatestActiveByOriginatorAndTypeAsync(TenantId tenantId, EntityId originator, String type) {
+        return alarmDao.findLatestActiveByOriginatorAndTypeAsync(tenantId, originator, type);
     }
 
     @Override
@@ -269,8 +272,8 @@ public class BaseAlarmService extends AbstractCachedEntityService<TenantId, Page
             commonRelations = commonRelations.filter(entityRelation -> propagateRelationTypes.contains(entityRelation.getType()));
         }
         Set<EntityId> parentEntities = new LinkedHashSet<>();
-        parentEntities.addAll(commonRelations.map(EntityRelation::getFrom).collect(Collectors.toList()));
-        parentEntities.addAll(groupRelations.map(EntityRelation::getFrom).collect(Collectors.toList()));
+        parentEntities.addAll(commonRelations.map(EntityRelation::getFrom).toList());
+        parentEntities.addAll(groupRelations.map(EntityRelation::getFrom).toList());
         return parentEntities;
     }
 
@@ -468,7 +471,7 @@ public class BaseAlarmService extends AbstractCachedEntityService<TenantId, Page
     }
 
     private Set<EntityId> processGetPropagationEntityIds(Alarm alarm, List<EntityType> types) {
-        validateId(alarm.getId(), "Alarm id should be specified!");
+        validateId(alarm.getId(), id -> "Alarm id should be specified!");
         if (alarm.isPropagate() || alarm.isPropagateToOwner() || alarm.isPropagateToTenant() || alarm.isPropagateToOwnerHierarchy()) {
             List<EntityAlarm> entityAlarms = CollectionUtils.isEmpty(types) ?
                     alarmDao.findEntityAlarmRecords(alarm.getTenantId(), alarm.getId()) :
@@ -486,12 +489,6 @@ public class BaseAlarmService extends AbstractCachedEntityService<TenantId, Page
         } catch (Exception e) {
             log.warn("[{}] Failed to create entity alarm record: {}", tenantId, entityAlarm, e);
         }
-    }
-
-    private <T> T getAndUpdate(TenantId tenantId, AlarmId alarmId, Function<Alarm, T> function) {
-        validateId(alarmId, "Alarm id should be specified!");
-        Alarm entity = alarmDao.findAlarmById(tenantId, alarmId.getId());
-        return function.apply(entity);
     }
 
     @Override

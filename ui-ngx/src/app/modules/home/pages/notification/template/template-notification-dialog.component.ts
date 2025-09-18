@@ -46,7 +46,6 @@ import { BreakpointObserver } from '@angular/cdk/layout';
 import { MediaBreakpoints } from '@shared/models/constants';
 import { TranslateService } from '@ngx-translate/core';
 import { TemplateConfiguration } from '@home/pages/notification/template/template-configuration';
-import { getCurrentAuthUser } from '@core/auth/auth.selectors';
 import { AuthUser } from '@shared/models/user.model';
 import { Authority } from '@shared/models/authority.enum';
 
@@ -55,6 +54,7 @@ export interface TemplateNotificationDialogData {
   predefinedType?: NotificationType;
   isAdd?: boolean;
   isCopy?: boolean;
+  name?: string;
   readonly?: boolean;
 }
 
@@ -80,7 +80,6 @@ export class TemplateNotificationDialogComponent
   notificationTemplateConfigurationForm: FormGroup;
 
   private readonly templateNotification: NotificationTemplate;
-  private authUser: AuthUser = getCurrentAuthUser(this.store);
 
   constructor(protected store: Store<AppState>,
               protected router: Router,
@@ -100,6 +99,9 @@ export class TemplateNotificationDialogComponent
     if (isDefinedAndNotNull(this.data?.predefinedType)) {
       this.hideSelectType = true;
       this.templateNotificationForm.get('notificationType').setValue(this.data.predefinedType, {emitEvent: false});
+    }
+    if (isDefinedAndNotNull(this.data?.name)) {
+      this.templateNotificationForm.get('name').setValue(this.data.name, {emitEvent: false});
     }
 
     if (data.isAdd || data.isCopy) {
@@ -131,6 +133,9 @@ export class TemplateNotificationDialogComponent
       this.dialogTitle = 'notification.view-notification-template';
       this.templateNotificationForm.disable({emitEvent: false});
       Array.from(this.deliveryMethodFormsMap.values()).map(form => form.disable({emitEvent: false}));
+    } else {
+      this.updateValidators();
+      this.updateAttachReportValidators();
     }
   }
 
@@ -196,10 +201,6 @@ export class TemplateNotificationDialogComponent
         return false;
       }
     });
-  }
-
-  private isSysAdmin(): boolean {
-    return this.authUser.authority === Authority.SYS_ADMIN;
   }
 
   private allowNotificationType(): NotificationType[] {

@@ -63,15 +63,13 @@
         </mat-slide-toggle>
       </mat-panel-title>
     </mat-expansion-panel-header>
-    <ng-template matExpansionPanelContent>
-      <section class="expansion-panel-setting-content">
-        <tb-integration-credentials formControlName="credentials"
-                                    style="margin-top: 4px"
-                                    [allowCredentialTypes]="[IntegrationCredentialType.Token]"
-                                    required>
-        </tb-integration-credentials>
-      </section>
-    </ng-template>
+    <section class="expansion-panel-setting-content">
+      <tb-integration-credentials formControlName="credentials"
+                                  style="margin-top: 4px"
+                                  [allowCredentialTypes]="[IntegrationCredentialType.Token]"
+                                  required>
+      </tb-integration-credentials>
+    </section>
   </mat-expansion-panel>
 
   <mat-expansion-panel class="expansion-panel-setting"

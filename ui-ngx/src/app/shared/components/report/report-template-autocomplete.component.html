@@ -1,0 +1,103 @@
+<!--
+
+    ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
+
+    Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
+
+    NOTICE: All information contained herein is, and remains
+    the property of ThingsBoard, Inc. and its suppliers,
+    if any.  The intellectual and technical concepts contained
+    herein are proprietary to ThingsBoard, Inc.
+    and its suppliers and may be covered by U.S. and Foreign Patents,
+    patents in process, and are protected by trade secret or copyright law.
+
+    Dissemination of this information or reproduction of this material is strictly forbidden
+    unless prior written permission is obtained from COMPANY.
+
+    Access to the source code contained herein is hereby forbidden to anyone except current COMPANY employees,
+    managers or contractors who have executed Confidentiality and Non-disclosure agreements
+    explicitly covering such access.
+
+    The copyright notice above does not evidence any actual or intended publication
+    or disclosure  of  this source code, which includes
+    information that is confidential and/or proprietary, and is a trade secret, of  COMPANY.
+    ANY REPRODUCTION, MODIFICATION, DISTRIBUTION, PUBLIC  PERFORMANCE,
+    OR PUBLIC DISPLAY OF OR THROUGH USE  OF THIS  SOURCE CODE  WITHOUT
+    THE EXPRESS WRITTEN CONSENT OF COMPANY IS STRICTLY PROHIBITED,
+    AND IN VIOLATION OF APPLICABLE LAWS AND INTERNATIONAL TREATIES.
+    THE RECEIPT OR POSSESSION OF THIS SOURCE CODE AND/OR RELATED INFORMATION
+    DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
+    OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
+
+-->
+<mat-form-field [formGroup]="selectReportTemplateFormGroup"
+                [class]="{'tb-inline-field': inlineField, 'flex': inlineField,
+                          'tb-suffix-absolute': (inlineField && !selectReportTemplateFormGroup.get('reportTemplate').value)}"
+                class="mat-block"
+                [floatLabel]="floatLabel"
+                [appearance]="inlineField ? 'outline' : appearance"
+                [subscriptSizing]="inlineField ? 'dynamic' : subscriptSizing">
+  <mat-label *ngIf="!inlineField">{{ labelTranslationKey | translate }}</mat-label>
+  <input matInput type="text"
+         #reportTemplateInput
+         placeholder="{{ placeholder ? placeholder : (placeholderTranslationKey | translate) }}"
+         formControlName="reportTemplate"
+         (focusin)="onFocus()"
+         [required]="required"
+         [matAutocomplete]="reportTemplateAutocomplete"
+         [class.!hidden]="disabled && selectReportTemplateFormGroup.get('reportTemplate').value">
+  <a *ngIf="selectReportTemplateFormGroup.get('reportTemplate').value && disabled"
+     [attr.aria-label]="'report-template.open-report-template' | translate"
+     [routerLink]=reportTemplateURL>
+    {{ displayReportTemplateFn(selectReportTemplateFormGroup.get('reportTemplate').value) }}
+  </a>
+  <button *ngIf="selectReportTemplateFormGroup.get('reportTemplate').value && !disabled"
+          type="button"
+          matSuffix mat-icon-button aria-label="Clear"
+          (click)="clear()">
+    <mat-icon class="material-icons">close</mat-icon>
+  </button>
+  <button *ngIf="selectReportTemplateFormGroup.get('reportTemplate').value && newTabDetailsButton && reportTemplateURL !== '' && !disabled"
+          type="button"
+          matTooltip="{{ openNewTabTranslationKey | translate }}"
+          matTooltipPosition="above"
+          matSuffix mat-icon-button aria-label="Details"
+          (click)="openReportTemplateNewTab($event)">
+    <tb-icon matButtonIcon>open_in_new</tb-icon>
+  </button>
+  <mat-icon matSuffix
+            matTooltipPosition="above"
+            matTooltipClass="tb-error-tooltip"
+            [matTooltip]="reportTemplateRequiredTranslationKey | translate"
+            *ngIf="inlineField && selectReportTemplateFormGroup.get('reportTemplate').hasError('required')
+                            && selectReportTemplateFormGroup.get('reportTemplate').touched"
+            class="tb-error">
+    warning
+  </mat-icon>
+  <mat-autocomplete
+    class="tb-autocomplete"
+    #reportTemplateAutocomplete="matAutocomplete"
+    [displayWith]="displayReportTemplateFn">
+    <mat-option *ngFor="let reportTemplate of filteredReportTemplates | async" [value]="reportTemplate">
+      <span [innerHTML]="reportTemplate.name | highlight:searchText"></span>
+    </mat-option>
+    <mat-option *ngIf="!(filteredReportTemplates | async)?.length" [value]="null">
+      <div (click)="$event.stopPropagation()">
+        <div *ngIf="!textIsNotEmpty(searchText); else searchNotEmpty">
+          <span>{{ noReportTemplatesTranslationKey | translate }}</span>
+        </div>
+        <ng-template #searchNotEmpty>
+          <span>
+          {{ translate.get(noReportTemplatesMatchingTranslationKey, {entity: searchText}) | async }}
+          </span>
+        </ng-template>
+      </div>
+    </mat-option>
+  </mat-autocomplete>
+  <mat-error *ngIf="!inlineField && subscriptSizing !== 'dynamic'">
+    <ng-content select="[tb-error]"></ng-content>
+  </mat-error>
+  <mat-hint *ngIf="!inlineField && subscriptSizing !== 'dynamic'">
+    <ng-content select="[tb-hint]"></ng-content>
+  </mat-hint>
+</mat-form-field>

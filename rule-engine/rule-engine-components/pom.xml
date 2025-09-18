@@ -37,7 +37,7 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>org.thingsboard</groupId>
-        <version>4.2.0PE-SNAPSHOT</version>
+        <version>4.3.0PE-SNAPSHOT</version>
         <artifactId>rule-engine</artifactId>
     </parent>
     <groupId>org.thingsboard.rule-engine</groupId>
@@ -80,6 +80,10 @@
         <dependency>
             <groupId>org.thingsboard.rule-engine</groupId>
             <artifactId>rule-engine-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.thingsboard.common</groupId>
+            <artifactId>report</artifactId>
         </dependency>
         <dependency>
             <groupId>org.thingsboard</groupId>
@@ -166,6 +170,10 @@
         <dependency>
             <groupId>com.jayway.jsonpath</groupId>
             <artifactId>json-path</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j</artifactId>
         </dependency>
     </dependencies>
 

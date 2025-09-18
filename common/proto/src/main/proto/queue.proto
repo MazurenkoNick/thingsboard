@@ -56,6 +56,8 @@ enum EntityTypeProto {
   RULE_NODE             = 12;
   SCHEDULER_EVENT       = 103;
   BLOB_ENTITY           = 104;
+  REPORT_TEMPLATE       = 108;
+  REPORT                = 109;
   ENTITY_VIEW           = 15;
   WIDGETS_BUNDLE        = 16;
   WIDGET_TYPE           = 17;
@@ -84,6 +86,8 @@ enum EntityTypeProto {
   CALCULATED_FIELD_LINK = 40;
   JOB                   = 41;
   SECRET                = 107;
+  ADMIN_SETTINGS        = 42;
+  AI_MODEL              = 43;
 }
 
 enum ApiUsageRecordKeyProto {
@@ -98,6 +102,16 @@ enum ApiUsageRecordKeyProto {
   CREATED_ALARMS_COUNT = 8;
   ACTIVE_DEVICES       = 9;
   INACTIVE_DEVICES     = 10;
+  GENERATED_REPORTS_COUNT = 100;
+}
+
+message EntityIdProto {
+  int64 entityIdMSB = 1;
+  int64 entityIdLSB = 2;
+  // PE legacy field. Keep for backward compatibility.
+  string entityType = 3 [deprecated = true];
+  // New canonical field.
+  EntityTypeProto type = 4;
 }
 
 /**
@@ -402,6 +416,7 @@ message ApiUsageStateProto {
   string smsExecState = 15;
   string alarmExecState = 16;
   int64 version = 17;
+  string reportExecState = 100;
 }
 
 message RepositorySettingsProto {
@@ -734,6 +749,8 @@ message ToDeviceRpcRequestMsg {
   int64 requestIdLSB = 6;
   bool oneway = 7;
   bool persisted = 8;
+  optional int32 retries = 9;
+  optional string additionalInfo = 10;
 }
 
 message ToDeviceRpcResponseMsg {
@@ -930,11 +947,25 @@ message TsRollingArgumentProto {
   repeated TsDoubleValProto tsValue = 4;
 }
 
+message GeofencingZoneProto {
+  EntityIdProto zoneId = 1;
+  int64 ts = 2;
+  string perimeterDefinition = 3;
+  int64 version = 4;
+  optional bool inside = 5;
+}
+
+message GeofencingArgumentProto {
+  string argName = 1;
+  repeated GeofencingZoneProto zones = 2;
+}
+
 message CalculatedFieldStateProto {
   CalculatedFieldEntityCtxIdProto id = 1;
   string type = 2;
   repeated SingleValueArgumentProto singleValueArguments = 3;
   repeated TsRollingArgumentProto rollingValueArguments = 4;
+  repeated GeofencingArgumentProto geofencingArguments = 5;
 }
 
 //Used to report session state to tb-Service and persist this state in the cache on the tb-Service level.
@@ -1012,16 +1043,9 @@ message MergedUserPermissionsProto {
   repeated GroupUserPermissionsProto group = 2;
 }
 
-message EntityIdProto {
-    int64 entityIdMSB = 1;
-    int64 entityIdLSB = 2;
-    string entityType = 3;
-}
-
 message OwnersListProto {
     repeated EntityIdProto entityIds = 1;
 }
-
 
 /**
  * TB Core Data Structures
@@ -1993,4 +2017,8 @@ message JobStatsMsg {
 
 message TaskResultProto {
   string value = 1;
+}
+
+message ToTbReportNotificationMsg {
+  ComponentLifecycleMsgProto componentLifecycleMsg = 1;
 }

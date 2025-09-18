@@ -129,7 +129,7 @@ export class TaskManagerTableConfigResolver {
     this.config.handleRowClick = ($event, job) => {
       const path: HTMLElement[] = ($event as any).path || ($event.composedPath && $event.composedPath());
       const progressBarCell = path?.find(el => el.classList.contains('mat-column-progress'));
-      if (progressBarCell) {
+      if (progressBarCell && job.status !== JobStatus.QUEUED && job.status !== JobStatus.PENDING) {
         this.openTaskInfo(progressBarCell, job);
         return true;
       }
@@ -368,6 +368,10 @@ export class TaskManagerTableConfigResolver {
       case JobType.CF_REPROCESSING:
         title = this.translate.instant('task.cancel-task-calculated-field-reprocessing-title');
         message = this.translate.instant('task.cancel-task-calculated-field-reprocessing-text');
+        break;
+      case JobType.REPORT:
+        title = this.translate.instant('task.cancel-task-report-title');
+        message = this.translate.instant('task.cancel-task-report-text');
         break;
     }
     this.dialogService.dialog.open<CancelTaskDialogComponent, CancelTaskDialogData, boolean>(CancelTaskDialogComponent, {

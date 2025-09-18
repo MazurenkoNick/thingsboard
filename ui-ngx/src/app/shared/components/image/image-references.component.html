@@ -59,7 +59,7 @@
       <ng-container *ngIf="!referencedEntity.isWl; else whiteLabelEntity">
         <td class="tb-entity-type">{{ referencedEntity.typeName }}</td>
         <td class="tb-entity-name">
-          <a *ngIf="showDetailsLink" class="tb-reference" [routerLink]="referencedEntity.detailsUrl">{{ referencedEntity.entity.name }}</a>
+          <a *ngIf="showDetailsLink" class="tb-reference" [routerLink]="referencedEntity.detailsUrl" [queryParams]="referencedEntity.queryParams">{{ getAdminSettingsName(referencedEntity.entity) }}</a>
           <span *ngIf="!showDetailsLink">{{ referencedEntity.entity.name }}</span>
         </td>
       </ng-container>

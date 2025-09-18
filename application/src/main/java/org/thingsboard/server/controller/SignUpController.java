@@ -213,7 +213,7 @@ public class SignUpController extends BaseController {
             validateEnterpriseReCaptcha(signUpRequest, request, captchaParams);
         } else if (captcha instanceof V2CaptchaParams || captcha instanceof V3CaptchaParams) {
             validateReCaptcha(signUpRequest.getRecaptchaResponse(), request.getRemoteAddr(),
-                    ((AbstractCaptchaParams)captcha).getSecretKey());
+                    ((AbstractCaptchaParams) captcha).getSecretKey());
         } else {
             throw new DataValidationException("Error validating captcha: wrong captcha version");
         }
@@ -505,7 +505,7 @@ public class SignUpController extends BaseController {
 
     private void setTermsOfUseAccepted(User user) {
         JsonNode additionalInfo = user.getAdditionalInfo();
-        if (additionalInfo == null || !(additionalInfo instanceof ObjectNode)) {
+        if (!(additionalInfo instanceof ObjectNode)) {
             additionalInfo = JacksonUtil.newObjectNode();
         }
         ((ObjectNode) additionalInfo).put(TERMS_OF_USE_ACCEPTED, true);
@@ -633,7 +633,7 @@ public class SignUpController extends BaseController {
             checkNotNull(signUpRequestFields.get(PASSWORD));
             checkNotNull(signUpRequestFields.get(FIRST_NAME));
             checkNotNull(signUpRequestFields.get(LAST_NAME));
-       }
+        }
     }
 
     private EntityGroup createCustomerUserGroup(SelfRegistrationParams selfRegistrationParams, Customer savedCustomer) {

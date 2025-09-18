@@ -29,6 +29,15 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
+import {
+  SchedulerEventSchedule,
+  SchedulerRepeatType,
+  schedulerTimeUnitRepeatTranslationMap,
+  schedulerWeekday
+} from '@shared/models/scheduler-event.models';
+import { TranslateService } from '@ngx-translate/core';
+import _moment from 'moment';
+
 export enum schedulerCalendarView {
   month = 'month',
   week = 'week',
@@ -93,6 +102,7 @@ export interface SchedulerEventsWidgetSettings {
   displayCreatedTime: boolean;
   displayType: boolean;
   displayCustomer: boolean;
+  displaySchedule?: boolean;
   displayPagination: boolean;
   defaultPageSize: number;
   pageStepIncrement: number;
@@ -107,4 +117,44 @@ export interface SchedulerEventsWidgetSettings {
 export interface SchedulerWeekDay {
   label: string;
   tooltip: string;
+}
+
+export const scheduleInfo = (
+  schedule: SchedulerEventSchedule,
+  translate: TranslateService,
+  startTime: _moment.Moment = _moment(schedule.startTime)
+): string => {
+  let info = '';
+  if (!schedule.repeat) {
+    const start = startTime.local().format('MMM DD, YYYY, hh:mma');
+    info += start;
+    return info;
+  } else {
+    info += startTime.local().format('hh:mma');
+    info += '<br/>';
+    info += translate.instant('scheduler.starting-from') + ' ' + startTime.local().format('MMM DD, YYYY') + ', ';
+    if (schedule.repeat.type === SchedulerRepeatType.DAILY) {
+      info += translate.instant('scheduler.daily') + ', ';
+    } else if (schedule.repeat.type === SchedulerRepeatType.EVERY_N_DAYS) {
+      info += translate.instant('scheduler.every-n-days-text', {days: schedule.repeat.days}) + ', ';
+    } else if (schedule.repeat.type === SchedulerRepeatType.MONTHLY) {
+      info += translate.instant('scheduler.monthly') + ', ';
+    } else if (schedule.repeat.type === SchedulerRepeatType.EVERY_N_WEEKS) {
+      info += translate.instant('scheduler.every-n-weeks-text', {weeks: schedule.repeat.weeks}) + ', ';
+    } else if (schedule.repeat.type === SchedulerRepeatType.YEARLY) {
+      info += translate.instant('scheduler.yearly') + ', ';
+    } else if (schedule.repeat.type === SchedulerRepeatType.TIMER) {
+      const repeatInterval = translate.instant(schedulerTimeUnitRepeatTranslationMap.get(schedule.repeat.timeUnit),
+        {count: schedule.repeat.repeatInterval});
+      info += repeatInterval + ', ';
+    } else {
+      info += translate.instant('scheduler.weekly') + ' ' + translate.instant('scheduler.on') + ' ';
+      schedule.repeat.repeatOn.forEach((day) => {
+        info += translate.instant(schedulerWeekday[day]) + ', ';
+      });
+    }
+    info += translate.instant('scheduler.until') + ' ';
+    info += _moment.utc(schedule.repeat.endsOn).local().format('MMM DD, YYYY');
+    return info;
+  }
 }

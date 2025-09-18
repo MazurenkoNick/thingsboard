@@ -52,6 +52,7 @@ import { coerceBoolean } from '@shared/decorators/coercion';
 })
 export class DetailsPanelComponent extends PageComponent implements OnDestroy {
 
+  @Input() color = 'primary';
   @Input() headerHeightPx = 100;
   @Input() headerTitle = '';
   @Input() headerSubtitle = '';

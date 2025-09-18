@@ -118,4 +118,5 @@ public class OtaPackageDataValidator extends BaseOtaPackageDataValidator<OtaPack
         }
         return otaPackageOld;
     }
+
 }

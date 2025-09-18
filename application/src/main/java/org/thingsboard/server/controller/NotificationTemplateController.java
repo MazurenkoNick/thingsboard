@@ -50,10 +50,7 @@ import org.thingsboard.rule.engine.api.notification.SlackService;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.id.NotificationTemplateId;
-import org.thingsboard.server.common.data.notification.NotificationDeliveryMethod;
 import org.thingsboard.server.common.data.notification.NotificationType;
-import org.thingsboard.server.common.data.notification.settings.NotificationSettings;
-import org.thingsboard.server.common.data.notification.settings.SlackNotificationDeliveryMethodConfig;
 import org.thingsboard.server.common.data.notification.targets.slack.SlackConversation;
 import org.thingsboard.server.common.data.notification.targets.slack.SlackConversationType;
 import org.thingsboard.server.common.data.notification.template.NotificationTemplate;
@@ -205,13 +202,10 @@ public class NotificationTemplateController extends BaseController {
             } else {
                 accessControlService.checkPermission(user, Resource.WHITE_LABELING, Operation.READ);
             }
-            NotificationSettings settings = notificationSettingsService.findNotificationSettings(user.getTenantId());
-            SlackNotificationDeliveryMethodConfig slackConfig = (SlackNotificationDeliveryMethodConfig)
-                    settings.getDeliveryMethodsConfigs().get(NotificationDeliveryMethod.SLACK);
-            if (slackConfig == null) {
+            token = slackService.getToken(user.getTenantId());
+            if (token == null) {
                 throw new IllegalArgumentException("Slack is not configured");
             }
-            token = slackConfig.getBotToken();
         }
 
         return slackService.listConversations(user.getTenantId(), token, type);

@@ -65,13 +65,16 @@ import org.thingsboard.server.common.data.alarm.Alarm;
 import org.thingsboard.server.common.data.alarm.AlarmComment;
 import org.thingsboard.server.common.data.asset.Asset;
 import org.thingsboard.server.common.data.asset.AssetProfile;
+import org.thingsboard.server.common.data.cf.CalculatedField;
 import org.thingsboard.server.common.data.converter.Converter;
 import org.thingsboard.server.common.data.domain.DomainInfo;
 import org.thingsboard.server.common.data.edge.Edge;
 import org.thingsboard.server.common.data.edge.EdgeEventActionType;
+import org.thingsboard.server.common.data.encryptionkey.EncryptionKey;
 import org.thingsboard.server.common.data.group.EntityGroup;
 import org.thingsboard.server.common.data.id.AssetId;
 import org.thingsboard.server.common.data.id.AssetProfileId;
+import org.thingsboard.server.common.data.id.CalculatedFieldId;
 import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.DashboardId;
 import org.thingsboard.server.common.data.id.DeviceId;
@@ -91,6 +94,7 @@ import org.thingsboard.server.common.data.id.QueueId;
 import org.thingsboard.server.common.data.id.RoleId;
 import org.thingsboard.server.common.data.id.RuleChainId;
 import org.thingsboard.server.common.data.id.SchedulerEventId;
+import org.thingsboard.server.common.data.id.SecretId;
 import org.thingsboard.server.common.data.id.TbResourceId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.id.UserId;
@@ -110,6 +114,7 @@ import org.thingsboard.server.common.data.role.Role;
 import org.thingsboard.server.common.data.rule.RuleChain;
 import org.thingsboard.server.common.data.rule.RuleChainMetaData;
 import org.thingsboard.server.common.data.scheduler.SchedulerEvent;
+import org.thingsboard.server.common.data.secret.Secret;
 import org.thingsboard.server.common.data.security.DeviceCredentials;
 import org.thingsboard.server.common.data.security.UserCredentials;
 import org.thingsboard.server.common.data.translation.CustomTranslation;
@@ -121,6 +126,7 @@ import org.thingsboard.server.gen.edge.v1.AlarmUpdateMsg;
 import org.thingsboard.server.gen.edge.v1.AssetProfileUpdateMsg;
 import org.thingsboard.server.gen.edge.v1.AssetUpdateMsg;
 import org.thingsboard.server.gen.edge.v1.AttributeDeleteMsg;
+import org.thingsboard.server.gen.edge.v1.CalculatedFieldUpdateMsg;
 import org.thingsboard.server.gen.edge.v1.ConverterUpdateMsg;
 import org.thingsboard.server.gen.edge.v1.CustomMenuProto;
 import org.thingsboard.server.gen.edge.v1.CustomTranslationUpdateMsg;
@@ -133,6 +139,7 @@ import org.thingsboard.server.gen.edge.v1.DeviceRpcCallMsg;
 import org.thingsboard.server.gen.edge.v1.DeviceUpdateMsg;
 import org.thingsboard.server.gen.edge.v1.EdgeConfiguration;
 import org.thingsboard.server.gen.edge.v1.EdgeVersion;
+import org.thingsboard.server.gen.edge.v1.EncryptionKeyUpdateMsg;
 import org.thingsboard.server.gen.edge.v1.EntityDataProto;
 import org.thingsboard.server.gen.edge.v1.EntityGroupUpdateMsg;
 import org.thingsboard.server.gen.edge.v1.EntityViewUpdateMsg;
@@ -153,6 +160,7 @@ import org.thingsboard.server.gen.edge.v1.RpcResponseMsg;
 import org.thingsboard.server.gen.edge.v1.RuleChainMetadataUpdateMsg;
 import org.thingsboard.server.gen.edge.v1.RuleChainUpdateMsg;
 import org.thingsboard.server.gen.edge.v1.SchedulerEventUpdateMsg;
+import org.thingsboard.server.gen.edge.v1.SecretUpdateMsg;
 import org.thingsboard.server.gen.edge.v1.TenantProfileUpdateMsg;
 import org.thingsboard.server.gen.edge.v1.TenantUpdateMsg;
 import org.thingsboard.server.gen.edge.v1.UpdateMsgType;
@@ -739,6 +747,38 @@ public class EdgeMsgConstructorUtils {
                 .build();
     }
 
+    public static CalculatedFieldUpdateMsg constructCalculatedFieldUpdatedMsg(UpdateMsgType msgType, CalculatedField calculatedField) {
+        return CalculatedFieldUpdateMsg.newBuilder().setMsgType(msgType).setEntity(JacksonUtil.toString(calculatedField))
+                .setIdMSB(calculatedField.getId().getId().getMostSignificantBits())
+                .setIdLSB(calculatedField.getId().getId().getLeastSignificantBits()).build();
+    }
+
+    public static CalculatedFieldUpdateMsg constructCalculatedFieldDeleteMsg(CalculatedFieldId calculatedFieldId) {
+        return CalculatedFieldUpdateMsg.newBuilder()
+                .setMsgType(UpdateMsgType.ENTITY_DELETED_RPC_MESSAGE)
+                .setIdMSB(calculatedFieldId.getId().getMostSignificantBits())
+                .setIdLSB(calculatedFieldId.getId().getLeastSignificantBits()).build();
+    }
+
+    public static EncryptionKeyUpdateMsg constructEncryptionKeyUpdatedMsg(UpdateMsgType msgType, EncryptionKey encryptionKey) {
+        return EncryptionKeyUpdateMsg.newBuilder().setMsgType(msgType).setEntity(JacksonUtil.toString(encryptionKey))
+                .setIdMSB(encryptionKey.getId().getId().getMostSignificantBits())
+                .setIdLSB(encryptionKey.getId().getId().getLeastSignificantBits()).build();
+    }
+
+    public static SecretUpdateMsg constructSecretUpdatedMsg(UpdateMsgType msgType, Secret secret) {
+        return SecretUpdateMsg.newBuilder().setMsgType(msgType).setEntity(JacksonUtil.toString(secret))
+                .setIdMSB(secret.getId().getId().getMostSignificantBits())
+                .setIdLSB(secret.getId().getId().getLeastSignificantBits()).build();
+    }
+
+    public static SecretUpdateMsg constructSecretDeleteMsg(SecretId secretId) {
+        return SecretUpdateMsg.newBuilder()
+                .setMsgType(UpdateMsgType.ENTITY_DELETED_RPC_MESSAGE)
+                .setIdMSB(secretId.getId().getMostSignificantBits())
+                .setIdLSB(secretId.getId().getLeastSignificantBits()).build();
+    }
+
     // PE constructors:
 
     public static ConverterUpdateMsg constructConverterUpdateMsg(UpdateMsgType msgType, Converter converter) {
@@ -835,4 +875,5 @@ public class EdgeMsgConstructorUtils {
     public static WhiteLabelingProto constructWhiteLabeling(UpdateMsgType msgType, WhiteLabeling whiteLabeling) {
         return WhiteLabelingProto.newBuilder().setMsgType(msgType).setEntity(JacksonUtil.toString(whiteLabeling)).build();
     }
+
 }

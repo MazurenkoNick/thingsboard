@@ -29,73 +29,57 @@
 -- OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 --
 
--- UPDATE INTEGRATION PROTOCOL VERSION FOR MQTT CLIENT TYPES START
-
-UPDATE integration
-SET configuration = jsonb_set(configuration::jsonb,'{clientConfiguration,protocolVersion}','"MQTT_3_1"', true)::varchar
-WHERE
-    configuration::text NOT LIKE '%\\u0000%' -- Just in case to skip corrupted or invalid binary JSON
-    AND NOT (configuration::jsonb)->'clientConfiguration' ? 'protocolVersion'
-    AND type IN ('MQTT', 'AWS_IOT', 'IBM_WATSON_IOT', 'TTI', 'TTN');
-
--- Set "MQTT_3_1_1" only for AZURE_IOT_HUB
-UPDATE integration
-SET configuration = jsonb_set(configuration::jsonb,'{clientConfiguration,protocolVersion}','"MQTT_3_1_1"', true)::varchar
-WHERE
-    configuration::text NOT LIKE '%\\u0000%' -- Just in case to skip corrupted or invalid binary JSON
-    AND NOT (configuration::jsonb)->'clientConfiguration' ? 'protocolVersion'
-    AND type = 'AZURE_IOT_HUB';
-
--- UPDATE INTEGRATION PROTOCOL VERSION FOR MQTT CLIENT TYPES END
-
--- UPDATE TENANT PROFILE CASSANDRA RATE LIMITS START
+-- UPDATE TENANT PROFILE CONFIGURATION START
 
 UPDATE tenant_profile
 SET profile_data = jsonb_set(
         profile_data,
         '{configuration}',
-        (
-            (profile_data -> 'configuration') - 'cassandraQueryTenantRateLimitsConfiguration'
-                ||
-            COALESCE(
-                    CASE
-                        WHEN profile_data -> 'configuration' ->
-                             'cassandraQueryTenantRateLimitsConfiguration' IS NOT NULL THEN
-                            jsonb_build_object(
-                                    'cassandraReadQueryTenantCoreRateLimits',
-                                    profile_data -> 'configuration' -> 'cassandraQueryTenantRateLimitsConfiguration',
-                                    'cassandraWriteQueryTenantCoreRateLimits',
-                                    profile_data -> 'configuration' -> 'cassandraQueryTenantRateLimitsConfiguration',
-                                    'cassandraReadQueryTenantRuleEngineRateLimits',
-                                    profile_data -> 'configuration' -> 'cassandraQueryTenantRateLimitsConfiguration',
-                                    'cassandraWriteQueryTenantRuleEngineRateLimits',
-                                    profile_data -> 'configuration' -> 'cassandraQueryTenantRateLimitsConfiguration'
-                            )
-                        END,
-                    '{}'::jsonb
-            )
-            )
+        (profile_data -> 'configuration')
+            || jsonb_strip_nulls(
+                jsonb_build_object(
+                        'minAllowedScheduledUpdateIntervalInSecForCF',
+                        CASE
+                            WHEN (profile_data -> 'configuration') ? 'minAllowedScheduledUpdateIntervalInSecForCF'
+                                THEN NULL
+                            ELSE to_jsonb(3600)
+                            END,
+                        'maxRelationLevelPerCfArgument',
+                        CASE
+                            WHEN (profile_data -> 'configuration') ? 'maxRelationLevelPerCfArgument'
+                                THEN NULL
+                            ELSE to_jsonb(10)
+                            END
+                )
+               ),
+        false
                    )
-WHERE profile_data -> 'configuration' ? 'cassandraQueryTenantRateLimitsConfiguration';
+WHERE NOT (
+    (profile_data -> 'configuration') ? 'minAllowedScheduledUpdateIntervalInSecForCF'
+        AND
+    (profile_data -> 'configuration') ? 'maxRelationLevelPerCfArgument'
+    );
 
--- UPDATE TENANT PROFILE CASSANDRA RATE LIMITS END
+-- UPDATE TENANT PROFILE CONFIGURATION END
 
--- UPDATE NOTIFICATION RULE CASSANDRA RATE LIMITS START
+-- UPDATE CFS WITH CURRENT OWNER DYNAMIC SOURCE START
 
-UPDATE notification_rule
-SET trigger_config = REGEXP_REPLACE(
-        trigger_config,
-        '"CASSANDRA_QUERIES"',
-        '"CASSANDRA_WRITE_QUERIES_CORE","CASSANDRA_READ_QUERIES_CORE","CASSANDRA_WRITE_QUERIES_RULE_ENGINE","CASSANDRA_READ_QUERIES_RULE_ENGINE","CASSANDRA_WRITE_QUERIES_MONOLITH","CASSANDRA_READ_QUERIES_MONOLITH"',
-        'g'
-                     )
-WHERE trigger_type = 'RATE_LIMITS'
-  AND trigger_config LIKE '%"CASSANDRA_QUERIES"%';
+UPDATE calculated_field cf
+SET configuration = (jsonb_set(cf.configuration::jsonb, '{arguments}',
+                               (SELECT jsonb_object_agg(k,
+                                    CASE
+                                        WHEN v ->> 'refDynamicSource' = 'CURRENT_OWNER'
+                                            THEN
+                                            (v - 'refDynamicSource') ||
+                                            jsonb_build_object(
+                                                    'refDynamicSourceConfiguration',
+                                                    jsonb_build_object('type', 'CURRENT_OWNER'))
+                                        ELSE v END)
+                                FROM jsonb_each(cf.configuration::jsonb -> 'arguments') AS e(k, v)),
+                               true)::text)
+WHERE (configuration::jsonb) ? 'arguments'
+  AND EXISTS (SELECT 1
+              FROM jsonb_each(configuration::jsonb -> 'arguments') AS e(k, v)
+              WHERE v ->> 'refDynamicSource' = 'CURRENT_OWNER');
 
--- UPDATE NOTIFICATION RULE CASSANDRA RATE LIMITS END
-
--- UPDATE COMPONENT DESCRIPTOR SECRETS START
-
-ALTER TABLE component_descriptor ADD COLUMN IF NOT EXISTS has_secrets boolean default false;
-
--- UPDATE COMPONENT DESCRIPTOR SECRETS END
+-- UPDATE CFS WITH CURRENT OWNER DYNAMIC SOURCE END

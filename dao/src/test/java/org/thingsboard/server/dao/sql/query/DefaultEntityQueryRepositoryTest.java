@@ -47,6 +47,8 @@ import org.thingsboard.server.dao.sql.device.DeviceRepository;
 import org.thingsboard.server.dao.sql.edge.EdgeRepository;
 import org.thingsboard.server.dao.sql.entityview.EntityViewRepository;
 import org.thingsboard.server.dao.sql.group.EntityGroupRepository;
+import org.thingsboard.server.dao.sql.report.ReportRepository;
+import org.thingsboard.server.dao.sql.report.ReportTemplateInfoRepository;
 import org.thingsboard.server.dao.sql.role.RoleRepository;
 import org.thingsboard.server.dao.sql.scheduler.SchedulerEventRepository;
 import org.thingsboard.server.dao.sql.user.UserRepository;
@@ -88,6 +90,10 @@ public class DefaultEntityQueryRepositoryTest {
     AlarmRepository alarmRepository;
     @MockBean
     BlobEntityRepository blobEntityRepository;
+    @MockBean
+    ReportTemplateInfoRepository reportTemplateInfoRepository;
+    @MockBean
+    ReportRepository reportRepository;
 
     @Autowired
     DefaultEntityQueryRepository repo;

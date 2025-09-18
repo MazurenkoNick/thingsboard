@@ -31,6 +31,7 @@
 package org.thingsboard.server.edqs.data.dp;
 
 import lombok.Getter;
+import org.thingsboard.server.common.data.edqs.DataPoint;
 import org.thingsboard.server.common.data.kv.DataType;
 import org.thingsboard.common.util.TbStringPool;
 
@@ -46,6 +47,16 @@ public class StringDataPoint extends AbstractDataPoint {
     public StringDataPoint(long ts, String value, boolean deduplicate) {
         super(ts);
         this.value = deduplicate ? TbStringPool.intern(value) : value;
+    }
+
+    @Override
+    public double getDouble() {
+        return Double.parseDouble(value);
+    }
+
+    @Override
+    public long getLong() {
+        return Long.parseLong(value);
     }
 
     @Override

@@ -116,7 +116,7 @@ public class RoleEntity extends BaseVersionedEntity<Role> {
         role.setCreatedTime(createdTime);
         role.setVersion(version);
         if (tenantId != null) {
-            role.setTenantId(new TenantId(tenantId));
+            role.setTenantId(TenantId.fromUUID(tenantId));
         }
         if (customerId != null) {
             role.setCustomerId(new CustomerId(customerId));

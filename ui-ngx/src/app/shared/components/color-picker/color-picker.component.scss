@@ -84,6 +84,9 @@
       justify-content: space-between;
       flex-direction: column;
       flex: 1;
+      &.single-item {
+        justify-content: center;
+      }
 
       > * {
         height: 18px;

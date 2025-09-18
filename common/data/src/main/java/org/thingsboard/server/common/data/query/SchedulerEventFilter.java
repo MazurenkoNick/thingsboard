@@ -37,8 +37,10 @@ import org.thingsboard.server.common.data.id.EntityId;
 
 public class SchedulerEventFilter implements EntityFilter {
 
-    private EntityId originator;
+    private AliasEntityId originator;
     private String eventType;
+    private boolean originatorStateEntity;
+    private AliasEntityId defaultStateEntity;
 
     @Override
     public EntityFilterType getType() {

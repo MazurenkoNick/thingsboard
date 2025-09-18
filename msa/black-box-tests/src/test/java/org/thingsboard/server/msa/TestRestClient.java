@@ -31,6 +31,7 @@
 package org.thingsboard.server.msa;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.restassured.RestAssured;
 import io.restassured.common.mapper.TypeRef;
@@ -61,6 +62,7 @@ import org.thingsboard.server.common.data.asset.Asset;
 import org.thingsboard.server.common.data.asset.AssetProfile;
 import org.thingsboard.server.common.data.cf.CalculatedField;
 import org.thingsboard.server.common.data.converter.Converter;
+import org.thingsboard.server.common.data.converter.Converter;
 import org.thingsboard.server.common.data.edqs.EdqsState;
 import org.thingsboard.server.common.data.event.EventType;
 import org.thingsboard.server.common.data.group.EntityGroup;
@@ -68,6 +70,7 @@ import org.thingsboard.server.common.data.group.EntityGroupInfo;
 import org.thingsboard.server.common.data.id.AlarmId;
 import org.thingsboard.server.common.data.id.AssetId;
 import org.thingsboard.server.common.data.id.AssetProfileId;
+import org.thingsboard.server.common.data.id.BlobEntityId;
 import org.thingsboard.server.common.data.id.CalculatedFieldId;
 import org.thingsboard.server.common.data.id.ConverterId;
 import org.thingsboard.server.common.data.id.CustomerId;
@@ -78,6 +81,8 @@ import org.thingsboard.server.common.data.id.EntityGroupId;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.EntityViewId;
 import org.thingsboard.server.common.data.id.IntegrationId;
+import org.thingsboard.server.common.data.id.JobId;
+import org.thingsboard.server.common.data.id.ReportId;
 import org.thingsboard.server.common.data.id.RpcId;
 import org.thingsboard.server.common.data.id.RuleChainId;
 import org.thingsboard.server.common.data.id.SecretId;
@@ -85,6 +90,7 @@ import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.id.UserId;
 import org.thingsboard.server.common.data.integration.Integration;
 import org.thingsboard.server.common.data.integration.IntegrationType;
+import org.thingsboard.server.common.data.job.Job;
 import org.thingsboard.server.common.data.kv.TsKvEntry;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
@@ -94,6 +100,8 @@ import org.thingsboard.server.common.data.query.EntityData;
 import org.thingsboard.server.common.data.query.EntityDataQuery;
 import org.thingsboard.server.common.data.relation.EntityRelation;
 import org.thingsboard.server.common.data.relation.RelationTypeGroup;
+import org.thingsboard.server.common.data.report.ReportRequest;
+import org.thingsboard.server.common.data.report.ReportTemplate;
 import org.thingsboard.server.common.data.rpc.Rpc;
 import org.thingsboard.server.common.data.rule.RuleChain;
 import org.thingsboard.server.common.data.rule.RuleChainMetaData;
@@ -268,9 +276,9 @@ public class TestRestClient {
                 .statusCode(anyOf(is(HTTP_OK), is(HTTP_NOT_FOUND)));
     }
 
-    public ValidatableResponse postTelemetryAttribute(EntityId entityId, String scope, JsonNode attribute) {
+    public ValidatableResponse postTelemetryAttribute(EntityId entityId, AttributeScope scope, JsonNode attribute) {
         return given().spec(requestSpec).body(attribute)
-                .post("/api/plugins/telemetry/{entityType}/{entityId}/attributes/{scope}", entityId.getEntityType(), entityId.getId(), scope)
+                .post("/api/plugins/telemetry/{entityType}/{entityId}/attributes/{scope}", entityId.getEntityType(), entityId.getId(), scope.name())
                 .then()
                 .statusCode(HTTP_OK);
     }
@@ -310,13 +318,13 @@ public class TestRestClient {
                 .as(JsonNode.class);
     }
 
-    public JsonNode getAttributes(EntityId entityId, AttributeScope scope, String keys) {
+    public ArrayNode getAttributes(EntityId entityId, AttributeScope scope, String keys) {
         return given().spec(requestSpec)
                 .get("/api/plugins/telemetry/{entityType}/{entityId}/values/attributes/{scope}?keys={keys}", entityId.getEntityType(), entityId.getId(), scope, keys)
                 .then()
                 .statusCode(HTTP_OK)
                 .extract()
-                .as(JsonNode.class);
+                .as(ArrayNode.class);
     }
 
     public JsonNode getLatestTelemetry(EntityId entityId) {
@@ -428,6 +436,16 @@ public class TestRestClient {
                 .extract()
                 .as(new TypeRef<List<EntityRelation>>() {
                 });
+    }
+
+    public EntityRelation postEntityRelation(EntityRelation entityRelation) {
+        return given().spec(requestSpec)
+                .body(entityRelation)
+                .post("/api/v2/relation")
+                .then()
+                .statusCode(HTTP_OK)
+                .extract()
+                .as(EntityRelation.class);
     }
 
     public JsonNode postServerSideRpc(DeviceId deviceId, JsonNode serverRpcPayload) {
@@ -1174,6 +1192,70 @@ public class TestRestClient {
                 .extract()
                 .as(new TypeRef<List<EntityGroupInfo>>() {
                 });
+    }
+
+    public ReportTemplate postReportTemplate(ReportTemplate reportTemplate) {
+        return given().spec(requestSpec)
+                .body(reportTemplate)
+                .post("/api/reportTemplate")
+                .then()
+                .assertThat()
+                .statusCode(HTTP_OK)
+                .extract()
+                .as(ReportTemplate.class);
+    }
+
+    public byte[] requestTestReport(ReportRequest request) {
+        return given().spec(requestSpec)
+                .body(request)
+                .accept("text/csv")
+                .post("/api/v2/report/test")
+                .then()
+                .assertThat()
+                .statusCode(HTTP_OK)
+                .extract()
+                .asByteArray();
+    }
+
+    public Job requestReport(ReportRequest request) {
+        return given().spec(requestSpec)
+                .body(request)
+                .post("/api/v2/report/request")
+                .then()
+                .assertThat()
+                .statusCode(HTTP_OK)
+                .extract()
+                .as(Job.class);
+    }
+
+    public Job getJobById(JobId id) {
+        return given().spec(requestSpec)
+                .get("/api/job/{id}", id.getId())
+                .then()
+                .assertThat()
+                .statusCode(HTTP_OK)
+                .extract()
+                .as(Job.class);
+    }
+
+    public byte[] downloadBlobEntity(BlobEntityId blobEntityId) {
+        return given().spec(requestSpec)
+                .get("/api/blobEntity/{blobEntityId}/download", blobEntityId.getId())
+                .then()
+                .assertThat()
+                .statusCode(HTTP_OK)
+                .extract()
+                .asByteArray();
+    }
+
+    public byte[] downloadReport(ReportId reportId) {
+        return given().spec(requestSpec)
+                .get("/api/v2/report/{reportId}/download", reportId.getId())
+                .then()
+                .assertThat()
+                .statusCode(HTTP_OK)
+                .extract()
+                .asByteArray();
     }
 
     public void changeOwner(EntityId ownerId, EntityId entityId) {

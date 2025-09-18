@@ -68,54 +68,52 @@
         </mat-slide-toggle>
       </mat-panel-title>
     </mat-expansion-panel-header>
-    <ng-template matExpansionPanelContent>
-      <section class="expansion-panel-setting-content">
-        <div class="flex flex-row xs:flex-col gt-xs:gap-2">
-          <mat-form-field class="mat-block flex-1">
-            <mat-label translate>integration.server</mat-label>
-            <input required matInput formControlName="server">
-            <mat-error translate *ngIf="loriotIntegrationConfigForm.get('server').hasError('required')">
-              integration.server-required
-            </mat-error>
-          </mat-form-field>
-          <mat-form-field class="mat-block flex-1">
-            <mat-label translate>integration.domain</mat-label>
-            <input matInput formControlName="domain">
-          </mat-form-field>
-        </div>
-        <mat-form-field class="mat-block">
-          <mat-label translate>integration.app-id</mat-label>
-          <input required matInput formControlName="appId">
-          <mat-error translate *ngIf="loriotIntegrationConfigForm.get('appId').hasError('required')">
-            integration.app-id-required
+    <section class="expansion-panel-setting-content">
+      <div class="flex flex-row xs:flex-col gt-xs:gap-2">
+        <mat-form-field class="mat-block flex-1">
+          <mat-label translate>integration.server</mat-label>
+          <input required matInput formControlName="server">
+          <mat-error translate *ngIf="loriotIntegrationConfigForm.get('server').hasError('required')">
+            integration.server-required
           </mat-error>
         </mat-form-field>
-        <div *ngIf="loriotIntegrationConfigForm.get('sendDownlink').value" class="flex flex-row xs:flex-col gt-xs:gap-2">
-          <mat-form-field class="mat-block flex-1">
-            <mat-label translate>integration.downlink-url</mat-label>
-            <input required matInput formControlName="loriotDownlinkUrl">
-            <mat-error translate *ngIf="loriotIntegrationConfigForm.get('loriotDownlinkUrl').hasError('required')">
-              integration.downlink-url-required
-            </mat-error>
-            <mat-error translate *ngIf="loriotIntegrationConfigForm.get('loriotDownlinkUrl').hasError('privateNetwork')">
-              integration.url-private
-            </mat-error>
-          </mat-form-field>
-          <tb-secret-key-input formControlName="token" class="mat-block flex-1"
-                               required
-                               label="{{ 'integration.app-token' | translate }}"
-                               requiredText="{{ 'integration.token-required' | translate }}">
-          </tb-secret-key-input>
-        </div>
-        <tb-integration-credentials formControlName="credentials"
-                                    style="margin-top: 4px"
-                                    *ngIf="loriotIntegrationConfigForm.get('createLoriotOutput').value"
-                                    userNameLabel="integration.email"
-                                    userNameRequired="integration.email-required"
-                                    [allowCredentialTypes]="[IntegrationCredentialType.Basic, IntegrationCredentialType.Token]">
-        </tb-integration-credentials>
-      </section>
-    </ng-template>
+        <mat-form-field class="mat-block flex-1">
+          <mat-label translate>integration.domain</mat-label>
+          <input matInput formControlName="domain">
+        </mat-form-field>
+      </div>
+      <mat-form-field class="mat-block">
+        <mat-label translate>integration.app-id</mat-label>
+        <input required matInput formControlName="appId">
+        <mat-error translate *ngIf="loriotIntegrationConfigForm.get('appId').hasError('required')">
+          integration.app-id-required
+        </mat-error>
+      </mat-form-field>
+      <div *ngIf="loriotIntegrationConfigForm.get('sendDownlink').value" class="flex flex-row xs:flex-col gt-xs:gap-2">
+        <mat-form-field class="mat-block flex-1">
+          <mat-label translate>integration.downlink-url</mat-label>
+          <input required matInput formControlName="loriotDownlinkUrl">
+          <mat-error translate *ngIf="loriotIntegrationConfigForm.get('loriotDownlinkUrl').hasError('required')">
+            integration.downlink-url-required
+          </mat-error>
+          <mat-error translate *ngIf="loriotIntegrationConfigForm.get('loriotDownlinkUrl').hasError('privateNetwork')">
+            integration.url-private
+          </mat-error>
+        </mat-form-field>
+        <tb-secret-key-input formControlName="token" class="mat-block flex-1"
+                             required
+                             label="{{ 'integration.app-token' | translate }}"
+                             requiredText="{{ 'integration.token-required' | translate }}">
+        </tb-secret-key-input>
+      </div>
+      <tb-integration-credentials formControlName="credentials"
+                                  style="margin-top: 4px"
+                                  [class.!hidden]="!loriotIntegrationConfigForm.get('createLoriotOutput').value"
+                                  userNameLabel="integration.email"
+                                  userNameRequired="integration.email-required"
+                                  [allowCredentialTypes]="[IntegrationCredentialType.Basic, IntegrationCredentialType.Token]">
+      </tb-integration-credentials>
+    </section>
   </mat-expansion-panel>
 
   <mat-expansion-panel class="expansion-panel-setting"

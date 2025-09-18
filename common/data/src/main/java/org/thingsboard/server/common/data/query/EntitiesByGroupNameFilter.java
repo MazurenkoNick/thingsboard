@@ -44,5 +44,6 @@ public class EntitiesByGroupNameFilter implements EntityFilter {
     private EntityType groupType;
     private EntityId ownerId;
     private String entityGroupNameFilter;
-
+    private boolean groupStateEntity;
+    private String stateEntityParamName;
 }

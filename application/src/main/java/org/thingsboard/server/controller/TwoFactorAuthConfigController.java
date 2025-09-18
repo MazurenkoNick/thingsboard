@@ -302,6 +302,7 @@ public class TwoFactorAuthConfigController extends BaseController {
     @Data
     public static class TwoFaAccountConfigUpdateRequest {
         private boolean useByDefault;
+
     }
 
 }
