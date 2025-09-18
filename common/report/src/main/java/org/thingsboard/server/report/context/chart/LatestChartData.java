@@ -28,10 +28,17 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.common.data.report.configuration.components;
+package org.thingsboard.server.report.context.chart;
 
-public enum ReportComponentType {
+import lombok.Data;
+import lombok.RequiredArgsConstructor;
 
-    HEADING, RICH_TEXT, ENTITY_TABLE, TIME_SERIES_TABLE, ALARM_TABLE, TIME_SERIES_CHART, LATEST_CHART, DASHBOARD, IMAGE, SUB_REPORT, PAGE_BREAK, ERROR, DIVIDER;
+import java.util.List;
+
+@Data
+@RequiredArgsConstructor
+public class LatestChartData {
+
+    private final List<LatestChartDataSource> chartData;
 
 }

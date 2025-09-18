@@ -44,6 +44,8 @@ import {
   LatestChartComponent,
   LatestChartComponentCallbacks
 } from '@home/components/widget/lib/chart/latest-chart.component';
+import { coerceBoolean } from '@shared/decorators/coercion';
+import { ChartWidgetComponent } from '@home/components/widget/lib/chart/chart.models';
 
 @Component({
   selector: 'tb-doughnut-widget',
@@ -51,13 +53,17 @@ import {
   styleUrls: [],
   encapsulation: ViewEncapsulation.None
 })
-export class DoughnutWidgetComponent implements OnInit {
+export class DoughnutWidgetComponent implements OnInit, ChartWidgetComponent {
 
   @ViewChild('latestChart')
   latestChart: LatestChartComponent;
 
   @Input()
   ctx: WidgetContext;
+
+  @Input()
+  @coerceBoolean()
+  reportMode = false;
 
   @Input()
   widgetTitlePanel: TemplateRef<any>;

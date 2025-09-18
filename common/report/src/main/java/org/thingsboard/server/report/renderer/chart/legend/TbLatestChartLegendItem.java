@@ -28,10 +28,17 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.common.data.report.configuration.components;
+package org.thingsboard.server.report.renderer.chart.legend;
 
-public enum ReportComponentType {
+import lombok.Data;
 
-    HEADING, RICH_TEXT, ENTITY_TABLE, TIME_SERIES_TABLE, ALARM_TABLE, TIME_SERIES_CHART, LATEST_CHART, DASHBOARD, IMAGE, SUB_REPORT, PAGE_BREAK, ERROR, DIVIDER;
+@Data
+public class TbLatestChartLegendItem {
+
+    private String color;
+    private String label;
+    private String value;
+    private boolean hasValue;
+    private boolean total;
 
 }

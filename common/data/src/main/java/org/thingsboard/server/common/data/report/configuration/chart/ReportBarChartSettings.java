@@ -36,41 +36,34 @@ import org.thingsboard.server.common.data.report.configuration.style.FontStyle;
 import org.thingsboard.server.common.data.report.configuration.style.FontWeight;
 
 @Data
-public class BarSeriesSettings {
+public class ReportBarChartSettings extends ReportLatestChartSettings {
 
-    private Boolean showBorder;
-    private Float borderWidth;
-    private Float borderRadius;
-    private Double barWidth;
-    private Boolean showLabel;
-    private ChartLabelPosition labelPosition;
-    private Font labelFont;
-    private String labelColor;
-    private Boolean enableLabelBackground;
-    private String labelBackground;
-    private ChartFillSettings backgroundSettings;
+    private Double axisMin;
+    private Double axisMax;
+    private Font axisTickLabelFont;
+    private String axisTickLabelColor;
+    private BarSeriesSettings barSettings;
 
-    public BarSeriesSettings() {}
+    public ReportBarChartSettings() {}
 
-    public BarSeriesSettings(BarSeriesSettings input) {
+    public ReportBarChartSettings(ReportBarChartSettings input) {
+        super(input);
         if (input == null) {
-            input = new BarSeriesSettings();
+            input = new ReportBarChartSettings();
         }
-        this.showBorder = input.getShowBorder() != null ? input.getShowBorder() : Boolean.FALSE;
-        this.borderWidth = input.getBorderWidth() != null ? input.getBorderWidth() : 2.0f;
-        this.borderRadius = input.getBorderRadius() != null ? input.getBorderRadius() : 0.0f;
-        this.showLabel = input.getShowLabel() != null ? input.getShowLabel() : Boolean.FALSE;
-        this.labelPosition = input.getLabelPosition() != null ? input.getLabelPosition() : ChartLabelPosition.top;
-        this.labelFont = input.getLabelFont() != null ? input.getLabelFont() : Font.builder().family("Roboto")
-                .size(11f)
+        this.setTitle(input.getTitle() != null ? input.getTitle() : "Bars");
+        this.axisMin = input.getAxisMin();
+        this.axisMax = input.getAxisMax();
+        this.axisTickLabelFont = input.getAxisTickLabelFont() != null ? input.getAxisTickLabelFont() : Font.builder().family("Roboto")
+                .size(12f)
                 .weight(FontWeight.NORMAL)
                 .style(FontStyle.NORMAL)
                 .build();
-        this.labelColor = input.getLabelColor() != null ? input.getLabelColor() : "rgba(0, 0, 0, 0.76)";
-        this.enableLabelBackground = input.getEnableLabelBackground() != null ? input.getEnableLabelBackground() : Boolean.FALSE;
-        this.labelBackground = input.getLabelBackground() != null ? input.getLabelBackground() : "rgba(255,255,255,0.56)";
-        this.backgroundSettings = new ChartFillSettings(input.getBackgroundSettings());
+        this.axisTickLabelColor = input.getAxisTickLabelColor() != null ? input.getAxisTickLabelColor() : "rgba(0, 0, 0, 0.54)";
+        BarSeriesSettings inputBarSettings = input.getBarSettings();
+        this.barSettings = new BarSeriesSettings(inputBarSettings);
+        this.barSettings.setBarWidth(inputBarSettings != null && inputBarSettings.getBarWidth() != null ? inputBarSettings.getBarWidth() : 80.0);
+        this.barSettings.setShowLabel(inputBarSettings != null && inputBarSettings.getShowLabel() != null ? inputBarSettings.getShowLabel() : true);
     }
 
 }
-

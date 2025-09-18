@@ -43,6 +43,8 @@ import {
   pieChartWidgetPieChartSettings,
   PieChartWidgetSettings
 } from '@home/components/widget/lib/chart/pie-chart-widget.models';
+import { coerceBoolean } from '@shared/decorators/coercion';
+import { ChartWidgetComponent } from '@home/components/widget/lib/chart/chart.models';
 
 @Component({
   selector: 'tb-pie-chart-widget',
@@ -50,13 +52,17 @@ import {
   styleUrls: [],
   encapsulation: ViewEncapsulation.None
 })
-export class PieChartWidgetComponent implements OnInit {
+export class PieChartWidgetComponent implements OnInit, ChartWidgetComponent {
 
   @ViewChild('latestChart')
   latestChart: LatestChartComponent;
 
   @Input()
   ctx: WidgetContext;
+
+  @Input()
+  @coerceBoolean()
+  reportMode = false;
 
   @Input()
   widgetTitlePanel: TemplateRef<any>;

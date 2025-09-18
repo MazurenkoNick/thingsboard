@@ -41,7 +41,7 @@ import {
   WidgetConfig,
   widgetType
 } from '@shared/models/widget.models';
-import { Timewindow } from '@shared/models/time/time.models';
+import { defaultTimewindow, Timewindow } from '@shared/models/time/time.models';
 import { DataKeyType } from '@shared/models/telemetry/telemetry.models';
 import { Observable, ReplaySubject } from 'rxjs';
 import { map } from 'rxjs/operators';
@@ -202,6 +202,7 @@ export class ReportWidgetContextService {
       useDashboardTimewindow: false,
       displayTimewindow: false,
       timeWindowConfig: widget.config.timewindow,
+      dashboardTimewindow: defaultTimewindow(this.timeService),
       dataGenerationOptions: {
         fixedGenDataPoints: 10,
         generateLatestUpdates: false

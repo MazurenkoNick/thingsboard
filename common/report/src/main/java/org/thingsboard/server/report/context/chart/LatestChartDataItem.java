@@ -28,10 +28,39 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.common.data.report.configuration.components;
+package org.thingsboard.server.report.context.chart;
 
-public enum ReportComponentType {
+import lombok.Data;
+import org.thingsboard.server.common.data.report.configuration.DataKey;
 
-    HEADING, RICH_TEXT, ENTITY_TABLE, TIME_SERIES_TABLE, ALARM_TABLE, TIME_SERIES_CHART, LATEST_CHART, DASHBOARD, IMAGE, SUB_REPORT, PAGE_BREAK, ERROR, DIVIDER;
+@Data
+public class LatestChartDataItem {
 
+    private LatestChartDataSource dataSource;
+    private DataKey dataKey;
+    private String label;
+
+    private long ts;
+    private double value;
+    private boolean hasValue;
+
+    private int index;
+
+    private int keyIndex;
+
+    private int seriesIndex;
+
+    @Override
+    public String toString() {
+        return "LatestChartDataItem{" +
+                "dataKey=" + dataKey +
+                ", index=" + index +
+                ", label=" + label +
+                ", ts=" + ts +
+                ", value=" + value +
+                ", hasValue=" + hasValue +
+                ", keyIndex=" + keyIndex +
+                ", seriesIndex=" + seriesIndex +
+                '}';
+    }
 }

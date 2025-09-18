@@ -38,6 +38,7 @@
   .tb-time-series-chart {
     pointer-events: none;
     position: relative;
+    overflow: hidden;
   }
   .tb-time-series-chart-text {
     position: relative;

@@ -1,0 +1,272 @@
+///
+/// ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
+///
+/// Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
+///
+/// NOTICE: All information contained herein is, and remains
+/// the property of ThingsBoard, Inc. and its suppliers,
+/// if any.  The intellectual and technical concepts contained
+/// herein are proprietary to ThingsBoard, Inc.
+/// and its suppliers and may be covered by U.S. and Foreign Patents,
+/// patents in process, and are protected by trade secret or copyright law.
+///
+/// Dissemination of this information or reproduction of this material is strictly forbidden
+/// unless prior written permission is obtained from COMPANY.
+///
+/// Access to the source code contained herein is hereby forbidden to anyone except current COMPANY employees,
+/// managers or contractors who have executed Confidentiality and Non-disclosure agreements
+/// explicitly covering such access.
+///
+/// The copyright notice above does not evidence any actual or intended publication
+/// or disclosure  of  this source code, which includes
+/// information that is confidential and/or proprietary, and is a trade secret, of  COMPANY.
+/// ANY REPRODUCTION, MODIFICATION, DISTRIBUTION, PUBLIC  PERFORMANCE,
+/// OR PUBLIC DISPLAY OF OR THROUGH USE  OF THIS  SOURCE CODE  WITHOUT
+/// THE EXPRESS WRITTEN CONSENT OF COMPANY IS STRICTLY PROHIBITED,
+/// AND IN VIOLATION OF APPLICABLE LAWS AND INTERNATIONAL TREATIES.
+/// THE RECEIPT OR POSSESSION OF THIS SOURCE CODE AND/OR RELATED INFORMATION
+/// DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
+/// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
+///
+
+import { Component, ViewEncapsulation } from '@angular/core';
+import {
+  AbstractReportComponentConfig
+} from '@home/pages/reporting/template/components/report-component-config.component';
+import {
+  LatestChartReportComponentConfig,
+  reportBarChartDefaultSettings,
+  ReportBarChartSettings,
+  ReportLatestChartSettings
+} from '@shared/models/report-component.models';
+import { FormGroup, UntypedFormGroup, Validators } from '@angular/forms';
+import { formatValue, mergeDeep } from '@core/utils';
+import {
+  DataKey,
+  Datasource,
+  legendPositions,
+  legendPositionTranslationMap,
+  WidgetConfig,
+  WidgetConfigMode,
+  widgetType,
+  WidgetTypeParameters
+} from '@shared/models/widget.models';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { merge } from 'rxjs';
+import { WidgetInfo, WidgetWithInfo } from '@home/models/widget-component.models';
+
+@Component({
+  selector: 'tb-latest-chart-config',
+  templateUrl: './latest-chart-config.component.html',
+  styleUrls: ['./report-component-config.scss'],
+  encapsulation: ViewEncapsulation.None
+})
+export class LatestChartConfigComponent extends AbstractReportComponentConfig<LatestChartReportComponentConfig> {
+
+  legendPositions = legendPositions;
+
+  legendPositionTranslationMap = legendPositionTranslationMap;
+
+  subType: string;
+
+  public get widget(): WidgetWithInfo {
+    return {
+      type: widgetType.timeseries,
+      config: {
+        settings: this.reportComponentConfig.latestChartSettings
+      } as WidgetConfig,
+      widgetInfo: {
+        typeParameters: {
+        } as WidgetTypeParameters
+      } as WidgetInfo
+    } as WidgetWithInfo;
+  }
+
+  valuePreviewFn = this._valuePreviewFn.bind(this);
+
+  basicMode = WidgetConfigMode.basic;
+
+  settingsTab: 'data' | 'layout' = 'data';
+
+  protected buildForm(reportComponentConfig: LatestChartReportComponentConfig): FormGroup {
+    this.subType = reportComponentConfig.subType;
+    let latestChartSettings: ReportLatestChartSettings;
+    if ('latestBarChart' === this.subType) {
+      latestChartSettings = mergeDeep<ReportBarChartSettings>({} as ReportBarChartSettings, reportBarChartDefaultSettings, reportComponentConfig.latestChartSettings as ReportBarChartSettings);
+    }
+    const form: UntypedFormGroup = this.fb.group({
+      dataSources: [reportComponentConfig.dataSources, []],
+      widthType: [reportComponentConfig.widthType || 'fitWidth', []],
+      customWidth: [reportComponentConfig.customWidth || 100, [Validators.min(1)]],
+      height: [reportComponentConfig.height || 400, [Validators.min(1)]],
+      alignment: [reportComponentConfig.alignment || 'center', []],
+
+      series: [this.getSeries(reportComponentConfig.dataSources), []],
+
+      showTitle: [latestChartSettings.showTitle, []],
+      title: [latestChartSettings.title, []],
+      titleFont: [latestChartSettings.titleFont, []],
+      titleColor: [latestChartSettings.titleColor, []],
+      titleAlignment: [latestChartSettings.titleAlignment, []],
+
+      sortSeries: [latestChartSettings.sortSeries, []],
+
+      units: [latestChartSettings.units, []],
+      decimals: [latestChartSettings.decimals, []],
+
+      showLegend: [latestChartSettings.showLegend, []],
+      legendPosition: [latestChartSettings.legendPosition, []],
+      legendLabelFont: [latestChartSettings.legendLabelFont, []],
+      legendLabelColor: [latestChartSettings.legendLabelColor, []],
+      legendValueFont: [latestChartSettings.legendValueFont, []],
+      legendValueColor: [latestChartSettings.legendValueColor, []]
+
+    });
+
+    if ('latestBarChart' === this.subType) {
+
+      const barChartSettings = latestChartSettings as ReportBarChartSettings;
+
+      form.addControl('barSettings', this.fb.control(barChartSettings.barSettings, []));
+
+      form.addControl('axisMin', this.fb.control(barChartSettings.axisMin, []));
+      form.addControl('axisMax', this.fb.control(barChartSettings.axisMax, []));
+      form.addControl('axisTickLabelFont', this.fb.control(barChartSettings.axisTickLabelFont, []));
+      form.addControl('axisTickLabelColor', this.fb.control(barChartSettings.axisTickLabelColor, []));
+    }
+
+    form.get('widthType').valueChanges.pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(() => {
+      this.updateCustomWidth();
+    });
+
+    merge(form.get('showTitle').valueChanges,
+      form.get('showLegend').valueChanges).pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(() => {
+      this.updateValidators(form);
+    });
+
+    this.updateValidators(form);
+
+    return form;
+  }
+
+  protected prepareOutputConfig(config: any): any {
+    this.setSeries(config.series, config.dataSources);
+    delete config.series;
+    if (!config.latestChartSettings) {
+      config.latestChartSettings = {};
+    }
+    const latestChartSettings: ReportLatestChartSettings = config.latestChartSettings;
+
+    latestChartSettings.showTitle = config.showTitle;
+    delete config.showTitle;
+    latestChartSettings.title = config.title;
+    delete config.title;
+    latestChartSettings.titleFont = config.titleFont;
+    delete config.titleFont;
+    latestChartSettings.titleColor = config.titleColor;
+    delete config.titleColor;
+    latestChartSettings.titleAlignment = config.titleAlignment;
+    delete config.titleAlignment;
+
+    latestChartSettings.sortSeries = config.sortSeries;
+    delete config.sortSeries;
+    latestChartSettings.units = config.units;
+    delete config.units;
+    latestChartSettings.decimals = config.decimals;
+    delete config.decimals;
+
+    latestChartSettings.showLegend = config.showLegend;
+    delete config.showLegend;
+
+    latestChartSettings.legendPosition = config.legendPosition;
+    delete config.legendPosition;
+    latestChartSettings.legendLabelFont = config.legendLabelFont;
+    delete config.legendLabelFont;
+    latestChartSettings.legendLabelColor = config.legendLabelColor;
+    delete config.legendLabelColor;
+    latestChartSettings.legendValueFont = config.legendValueFont;
+    delete config.legendValueFont;
+    latestChartSettings.legendValueColor = config.legendValueColor;
+    delete config.legendValueColor;
+
+    if ('latestBarChart' === this.subType) {
+      const barChartSettings = latestChartSettings as ReportBarChartSettings;
+
+      barChartSettings.barSettings = config.barSettings;
+      delete config.barSettings;
+
+      barChartSettings.axisMin = config.axisMin;
+      delete config.axisMin;
+      barChartSettings.axisMax = config.axisMax;
+      delete config.axisMax;
+      barChartSettings.axisTickLabelFont = config.axisTickLabelFont;
+      delete config.axisTickLabelFont;
+      barChartSettings.axisTickLabelColor = config.axisTickLabelColor;
+      delete config.axisTickLabelColor;
+    }
+
+    return config;
+  }
+
+  private updateCustomWidth() {
+    if (!this.reportConfigForm.get('customWidth').touched) {
+      const size = 200;
+      this.reportConfigForm.get('customWidth').patchValue(size);
+    }
+  }
+
+  private getSeries(datasources?: Datasource[]): DataKey[] {
+    if (datasources && datasources.length) {
+      return datasources[0].dataKeys || [];
+    }
+    return [];
+  }
+
+  private setSeries(series: DataKey[], datasources?: Datasource[]) {
+    if (datasources && datasources.length) {
+      datasources[0].dataKeys = series;
+    }
+  }
+
+  private updateValidators(form: FormGroup) {
+    const showTitle: boolean = form.get('showTitle').value;
+    const showLegend: boolean = form.get('showLegend').value;
+
+    if (showTitle) {
+      form.get('title').enable({emitEvent: false});
+      form.get('titleFont').enable({emitEvent: false});
+      form.get('titleColor').enable({emitEvent: false});
+      form.get('titleAlignment').enable({emitEvent: false});
+    } else {
+      form.get('title').disable({emitEvent: false});
+      form.get('titleFont').disable({emitEvent: false});
+      form.get('titleColor').disable({emitEvent: false});
+      form.get('titleAlignment').disable({emitEvent: false});
+    }
+
+    if (showLegend) {
+      form.get('legendPosition').enable({emitEvent: false});
+      form.get('legendLabelFont').enable({emitEvent: false});
+      form.get('legendLabelColor').enable({emitEvent: false});
+      form.get('legendValueFont').enable({emitEvent: false});
+      form.get('legendValueColor').enable({emitEvent: false});
+    } else {
+      form.get('legendPosition').disable({emitEvent: false});
+      form.get('legendLabelFont').disable({emitEvent: false});
+      form.get('legendLabelColor').disable({emitEvent: false});
+      form.get('legendValueFont').disable({emitEvent: false});
+      form.get('legendValueColor').disable({emitEvent: false});
+    }
+  }
+
+  private _valuePreviewFn(): string {
+    const units: string = this.reportConfigForm.get('units').value;
+    const decimals: number = this.reportConfigForm.get('decimals').value;
+    return formatValue(110, decimals, units, false);
+  }
+
+}

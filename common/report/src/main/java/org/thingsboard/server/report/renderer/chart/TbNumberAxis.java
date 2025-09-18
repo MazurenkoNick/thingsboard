@@ -41,6 +41,8 @@ import org.jfree.chart.axis.TickType;
 import org.jfree.chart.axis.TickUnit;
 import org.jfree.chart.axis.ValueAxis;
 import org.jfree.chart.axis.ValueTick;
+import org.jfree.chart.plot.CategoryPlot;
+import org.jfree.chart.plot.Plot;
 import org.jfree.chart.plot.PlotRenderingInfo;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.ui.RectangleEdge;
@@ -146,9 +148,14 @@ public class TbNumberAxis extends NumberAxis {
         if (isGridlinesVisible()) {
             for (ValueTick tick : ticks) {
                 if (tick.getTickType() == TickType.MAJOR) {
-                    XYPlot xyPlot = (XYPlot) getPlot();
-                    xyPlot.getRenderer().drawRangeLine(g2, xyPlot, this,
-                            area, tick.getValue(), getGridlinePaint(), getGridlineStroke());
+                    Plot plot = getPlot();
+                    if (plot instanceof XYPlot xyPlot) {
+                        xyPlot.getRenderer().drawRangeLine(g2, xyPlot, this,
+                                area, tick.getValue(), getGridlinePaint(), getGridlineStroke());
+                    } else if (plot instanceof CategoryPlot categoryPlot) {
+                        categoryPlot.getRenderer().drawRangeLine(g2, categoryPlot, this,
+                                area, tick.getValue(), getGridlinePaint(), getGridlineStroke());
+                    }
                 }
             }
         }
