@@ -85,6 +85,8 @@ import {
   TimeSeriesChartConfigComponent
 } from '@home/pages/reporting/template/components/time-series-chart-config.component';
 import { ReportWidgetContextService } from '@home/pages/reporting/template/components/report-widget-context.service';
+import { LatestChartConfigComponent } from '@home/pages/reporting/template/components/latest-chart-config.component';
+import { LatestChartPreviewComponent } from '@home/pages/reporting/template/components/latest-chart-preview.component';
 
 @NgModule({
   providers: [
@@ -123,6 +125,8 @@ import { ReportWidgetContextService } from '@home/pages/reporting/template/compo
     SubReportConfigComponent,
     TimeSeriesChartPreviewComponent,
     TimeSeriesChartConfigComponent,
+    LatestChartPreviewComponent,
+    LatestChartConfigComponent,
     ReportComponentConfigComponent
   ],
   imports: [

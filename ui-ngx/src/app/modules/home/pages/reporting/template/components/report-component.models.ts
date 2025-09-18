@@ -31,18 +31,25 @@
 
 import {
   AlarmTableReportComponentConfig,
+  BarChartReportComponentConfig,
   BorderLength,
   BorderType,
-  DashboardReportComponentConfig, defaultBarChartWithLabelsTimewindow, defaultStateChartTimewindow,
+  DashboardReportComponentConfig,
+  defaultBarChartWithLabelsTimewindow,
+  defaultStateChartTimewindow,
   defaultTimeSeriesChartTimewindow,
   DividerReportComponentConfig,
   EntityTableReportComponentConfig,
   HeadingReportComponentConfig,
   ImageReportComponentConfig,
-  PageBreakReportComponentConfig, reportBarChartWithLabelsDefaultSettings, ReportBarChartWithLabelSettings,
+  PageBreakReportComponentConfig, reportBarChartDefaultSettings,
+  ReportBarChartSettings,
+  reportBarChartWithLabelsDefaultSettings,
+  ReportBarChartWithLabelSettings,
   ReportComponentConfig,
   ReportComponentType,
-  ReportDataKeySettingsType, reportStateChartDefaultSettings,
+  ReportDataKeySettingsType,
+  reportStateChartDefaultSettings,
   reportTimeSeriesChartDefaultSettings,
   ReportTimeSeriesChartSettings,
   RichTextReportComponentConfig,
@@ -107,6 +114,8 @@ import {
 } from '@home/pages/reporting/template/components/time-series-chart-config.component';
 import { TimeSeriesChartType } from '@home/components/widget/lib/chart/time-series-chart.models';
 import { TbTimeSeriesChart } from '@home/components/widget/lib/chart/time-series-chart';
+import { LatestChartPreviewComponent } from '@home/pages/reporting/template/components/latest-chart-preview.component';
+import { LatestChartConfigComponent } from '@home/pages/reporting/template/components/latest-chart-config.component';
 
 export interface ReportComponentLibraryItem<C extends ReportComponentConfig = ReportComponentConfig> {
   title: string;
@@ -633,6 +642,54 @@ export const reportComponentsLibrary = new Map<string, ReportComponentLibraryIte
           paddings: null,
           background: null
         } as TimeseriesChartReportComponentConfig
+      }
+    ],
+    [
+      'latestBarChart',
+      {
+        title: 'report-template.component.bars',
+        previewImage: '/assets/report/components/time-series-chart.svg',
+        type: ReportComponentType.LATEST_CHART,
+        defaultConfig: {
+          type: ReportComponentType.LATEST_CHART,
+          subType: 'latestBarChart',
+          dataSources: [
+            {
+              type: DatasourceType.entity,
+              dataKeys: [
+                {
+                  name: 'windPower',
+                  type: DataKeyType.timeseries,
+                  label: 'Wind',
+                  color: '#08872B',
+                  settings: {}
+                },
+                {
+                  name: 'solarPower',
+                  type: DataKeyType.timeseries,
+                  label: 'Solar',
+                  color: '#FF4D5A',
+                  settings: {}
+                },
+                {
+                  name: 'hydroelectricPower',
+                  type: DataKeyType.timeseries,
+                  label: 'Hydroelectric',
+                  color: '#FFDE30',
+                  settings: {}
+                }
+              ]
+            }
+          ],
+          latestChartSettings: mergeDeep<ReportBarChartSettings>({} as ReportBarChartSettings, reportBarChartDefaultSettings,
+            { title: 'Bars' } as ReportBarChartSettings),
+          height: 400,
+          widthType: 'fitWidth',
+          alignment: 'center',
+          margins: null,
+          paddings: null,
+          background: null
+        } as BarChartReportComponentConfig
       }
     ],
     [
@@ -1218,6 +1275,20 @@ reportComponentTypesData.registerReportComponentSubType(ReportComponentType.TIME
     },
     previewContext: {
       barChartWithLabels: true
+    }
+  });
+
+reportComponentTypesData.registerReportComponentSubType(ReportComponentType.LATEST_CHART,
+  'latestBarChart',
+  {
+    title: 'report-template.component.bars',
+    previewComponent: LatestChartPreviewComponent,
+    configComponent: LatestChartConfigComponent,
+    editable: true,
+    preferredSettingsWidthPx: 1000,
+    configContext: {
+    },
+    previewContext: {
     }
   });
 

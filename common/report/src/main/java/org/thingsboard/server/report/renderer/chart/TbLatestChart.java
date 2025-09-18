@@ -1,0 +1,177 @@
+/**
+ * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
+ *
+ * Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
+ *
+ * NOTICE: All information contained herein is, and remains
+ * the property of ThingsBoard, Inc. and its suppliers,
+ * if any.  The intellectual and technical concepts contained
+ * herein are proprietary to ThingsBoard, Inc.
+ * and its suppliers and may be covered by U.S. and Foreign Patents,
+ * patents in process, and are protected by trade secret or copyright law.
+ *
+ * Dissemination of this information or reproduction of this material is strictly forbidden
+ * unless prior written permission is obtained from COMPANY.
+ *
+ * Access to the source code contained herein is hereby forbidden to anyone except current COMPANY employees,
+ * managers or contractors who have executed Confidentiality and Non-disclosure agreements
+ * explicitly covering such access.
+ *
+ * The copyright notice above does not evidence any actual or intended publication
+ * or disclosure  of  this source code, which includes
+ * information that is confidential and/or proprietary, and is a trade secret, of  COMPANY.
+ * ANY REPRODUCTION, MODIFICATION, DISTRIBUTION, PUBLIC  PERFORMANCE,
+ * OR PUBLIC DISPLAY OF OR THROUGH USE  OF THIS  SOURCE CODE  WITHOUT
+ * THE EXPRESS WRITTEN CONSENT OF COMPANY IS STRICTLY PROHIBITED,
+ * AND IN VIOLATION OF APPLICABLE LAWS AND INTERNATIONAL TREATIES.
+ * THE RECEIPT OR POSSESSION OF THIS SOURCE CODE AND/OR RELATED INFORMATION
+ * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
+ * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
+ */
+package org.thingsboard.server.report.renderer.chart;
+
+import org.jfree.chart.ChartTheme;
+import org.jfree.chart.JFreeChart;
+import org.jfree.chart.StandardChartTheme;
+import org.jfree.chart.plot.DatasetRenderingOrder;
+import org.jfree.chart.plot.Plot;
+import org.jfree.chart.plot.SeriesRenderingOrder;
+import org.jfree.chart.title.TextTitle;
+import org.jfree.chart.ui.HorizontalAlignment;
+import org.jfree.chart.ui.RectangleInsets;
+import org.thingsboard.server.common.data.report.configuration.chart.LegendPosition;
+import org.thingsboard.server.common.data.report.configuration.chart.ReportLatestChartSettings;
+import org.thingsboard.server.report.context.chart.LatestChartData;
+import org.thingsboard.server.report.context.chart.LatestChartDataItem;
+import org.thingsboard.server.report.renderer.chart.legend.TbLatestChartLegendItem;
+import org.thingsboard.server.report.util.ColorUtils;
+
+import java.awt.*;
+import java.text.NumberFormat;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+
+import static org.thingsboard.server.report.renderer.chart.ChartUtils.createValueFormatter;
+import static org.thingsboard.server.report.util.AwtFontUtils.toAwtFont;
+import static org.thingsboard.server.report.util.ColorUtils.safeParseCssColor;
+
+public abstract class TbLatestChart<S extends ReportLatestChartSettings> {
+
+    static ChartTheme currentChartTheme = new StandardChartTheme("TbChartTheme");
+
+    protected final S chartSettings;
+    protected final LatestChartData latestChartData;
+    protected final List<LatestChartDataItem> dataItems;
+
+    protected final NumberFormat valueFormatter;
+
+    protected List<TbLatestChartLegendItem> legendItems;
+
+    protected double total = 0;
+    protected String totalText = "N/A";
+
+    protected JFreeChart chart;
+
+    public TbLatestChart(S chartSettings, LatestChartData latestChartData) {
+        this.chartSettings = chartSettings;
+        this.latestChartData = latestChartData;
+
+        Comparator<LatestChartDataItem> comparator = chartSettings.getSortSeries() ? Comparator.comparing(LatestChartDataItem::getLabel, String.CASE_INSENSITIVE_ORDER)
+                : Comparator.comparing(LatestChartDataItem::getIndex);
+        this.dataItems = latestChartData.getChartData().stream().flatMap(ds ->
+                ds.getItems().stream()).sorted(comparator).toList();
+
+        for (int i=0; i<dataItems.size(); i++) {
+            this.dataItems.get(i).setSeriesIndex(i);
+        }
+
+        int decimals = chartSettings.getDecimals() != null ? chartSettings.getDecimals() : 2;
+        String units = chartSettings.getUnits();
+        this.valueFormatter = createValueFormatter(decimals, units);
+
+        List<LatestChartDataItem> dataItemsWithValue = this.dataItems.stream().filter(LatestChartDataItem::isHasValue).toList();
+
+        boolean hasTotalValue = !dataItemsWithValue.isEmpty();
+
+        for (LatestChartDataItem item : dataItemsWithValue) {
+            this.total += item.getValue();
+        }
+        if (hasTotalValue) {
+            this.totalText = valueFormatter.format(this.total);
+        }
+
+        if (chartSettings.getShowLegend()) {
+            this.legendItems = this.dataItems.stream().map(item -> {
+                TbLatestChartLegendItem legendItem = new TbLatestChartLegendItem();
+                legendItem.setLabel(item.getLabel());
+                legendItem.setColor(item.getDataKey().getColor());
+                if (item.isHasValue()) {
+                    legendItem.setHasValue(true);
+                    legendItem.setValue(this.valueFormatter.format(item.getValue()));
+                } else {
+                    legendItem.setHasValue(false);
+                    legendItem.setValue("--");
+                }
+                return legendItem;
+            }).toList();
+            if (!chartSettings.getShowTotal()) {
+                TbLatestChartLegendItem legendItem = new TbLatestChartLegendItem();
+                legendItem.setLabel("Total");
+                legendItem.setHasValue(hasTotalValue);
+                if (hasTotalValue) {
+                    legendItem.setValue(this.totalText);
+                } else {
+                    legendItem.setValue("--");
+                }
+                legendItem.setTotal(true);
+                legendItem.setColor("rgba(0, 0, 0, 0.06)");
+                this.legendItems = new ArrayList<>(legendItems);
+                this.legendItems.add(legendItem);
+            }
+        }
+    }
+
+    public JFreeChart createChart(Graphics2D g2) {
+        Plot plot = this.createPlot();
+
+        this.chart = new JFreeChart(
+                null,
+                null,
+                plot,
+                false);
+        currentChartTheme.apply(chart);
+
+       // plot.setDatasetRenderingOrder(DatasetRenderingOrder.FORWARD);
+        //plot.setSeriesRenderingOrder(SeriesRenderingOrder.FORWARD);
+        //plot.setAxisOffset(RectangleInsets.ZERO_INSETS);
+        plot.setBackgroundPaint(null);
+        plot.setOutlinePaint(null);
+        plot.setInsets(new RectangleInsets(2.0, 0.0, 2.0, 0.0));
+        chart.setBackgroundPaint(ColorUtils.TRANSPARENT);
+
+        if (chartSettings.getShowTitle()) {
+            Font titleFont = toAwtFont(chartSettings.getTitleFont());
+            TextTitle title = new TextTitle(chartSettings.getTitle(), titleFont);
+            title.setPaint(safeParseCssColor(chartSettings.getTitleColor()));
+            HorizontalAlignment alignment = HorizontalAlignment.CENTER;
+            switch (chartSettings.getTitleAlignment()) {
+                case RIGHT -> alignment = HorizontalAlignment.RIGHT;
+                case LEFT -> alignment = HorizontalAlignment.LEFT;
+            }
+            title.setHorizontalAlignment(alignment);
+            if (!chartSettings.getShowLegend() || chartSettings.getLegendPosition() != LegendPosition.top) {
+                title.setPadding(new RectangleInsets(1.0, 1.0, 8.0, 1.0));
+            }
+            chart.setTitle(title);
+        }
+
+        this.setupLegend();
+
+        return chart;
+    }
+
+    protected abstract Plot createPlot();
+
+    private void setupLegend() {}
+}

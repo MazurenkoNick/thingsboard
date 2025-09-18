@@ -7416,11 +7416,16 @@
                 "no-datasource-configured": "Data source is not configured for time series chart",
                 "no-series-configured": "At least one series should be specified for time series chart"
             },
+            "latest-chart": {
+                "no-datasource-configured": "Data source is not configured for the chart",
+                "no-series-configured": "At least one series should be specified for the chart"
+            },
             "line-chart": "Line chart",
             "bar-chart": "Bar chart",
             "point-chart": "Point chart",
             "state-chart": "State chart",
             "bar-chart-with-labels": "Bar chart with labels",
+            "bars": "Bars",
             "chart": {
                 "chart-height": "Chart height",
                 "chart-width": "Chart width",

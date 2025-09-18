@@ -60,12 +60,18 @@ import {
   TimeSeriesChartYAxes,
   TimeSeriesChartYAxisSettings
 } from '@home/components/widget/lib/chart/time-series-chart.models';
-import { ChartFillSettings, ChartFillType } from '@home/components/widget/lib/chart/chart.models';
+import {
+  chartBarDefaultSettings,
+  ChartBarSettings,
+  ChartFillSettings,
+  ChartFillType
+} from '@home/components/widget/lib/chart/chart.models';
 import {
   BarChartWithLabelsWidgetSettings
 } from '@home/components/widget/lib/chart/bar-chart-with-labels-widget.models';
 import { TimeSeriesChartWidgetSettings } from '@home/components/widget/lib/chart/time-series-chart-widget.models';
 import { IntervalType } from '@shared/models/telemetry/telemetry.models';
+import { LatestChartSettings, LatestChartWidgetSettings } from '@home/components/widget/lib/chart/latest-chart.models';
 
 export enum ReportComponentType {
   HEADING = 'HEADING',
@@ -74,6 +80,7 @@ export enum ReportComponentType {
   TIME_SERIES_TABLE = 'TIME_SERIES_TABLE',
   ALARM_TABLE = 'ALARM_TABLE',
   TIME_SERIES_CHART = 'TIME_SERIES_CHART',
+  LATEST_CHART = 'LATEST_CHART',
   DASHBOARD = 'DASHBOARD',
   IMAGE = 'IMAGE',
   SUB_REPORT = 'SUB_REPORT',
@@ -652,6 +659,85 @@ export const defaultBarChartWithLabelsTimewindow = mergeDeep<Timewindow>(
   }
 );
 
+export interface ReportLatestChartSettings extends Omit<LatestChartWidgetSettings,
+                                                       'showTooltip' | 'tooltipValueType' | 'tooltipValueDecimals' |
+                                                       'tooltipValueFormater' | 'tooltipValueFont' | 'tooltipValueColor' |
+                                                       'tooltipBackgroundColor' | 'tooltipBackgroundBlur' | 'animation' | 'background' | 'padding'> {
+  showTitle?: boolean;
+  title?: string;
+  titleFont?: Font;
+  titleColor?: string;
+  titleAlignment?: alignment;
+
+  units?: string;
+  decimals?: number;
+}
+
+export const reportLatestChartDefaultSettings: ReportLatestChartSettings = {
+  showTitle: true,
+  title: 'Latest chart',
+  titleFont: {
+    family: 'Roboto',
+    size: 18,
+    sizeUnit: 'px',
+    style: 'normal',
+    weight: '500'
+  },
+  titleColor: 'rgba(0, 0, 0, 0.87)',
+  titleAlignment: 'center',
+
+  units: '',
+  decimals: 0,
+
+  autoScale: false,
+  sortSeries: false,
+  showTotal: false,
+  showLegend: true,
+
+  legendPosition: LegendPosition.bottom,
+  legendLabelFont: {
+    family: 'Roboto',
+    size: 12,
+    sizeUnit: 'px',
+    style: 'normal',
+    weight: 'normal'
+  },
+  legendLabelColor: 'rgba(0, 0, 0, 0.38)',
+  legendValueFont: {
+    family: 'Roboto',
+    size: 14,
+    sizeUnit: 'px',
+    style: 'normal',
+    weight: '500'
+  },
+  legendValueColor: 'rgba(0, 0, 0, 0.87)'
+} as ReportLatestChartSettings;
+
+export interface ReportBarChartSettings extends ReportLatestChartSettings {
+  axisMin?: number;
+  axisMax?: number;
+  axisTickLabelFont: Font;
+  axisTickLabelColor: string;
+  barSettings: ChartBarSettings;
+}
+
+export const reportBarChartDefaultSettings: ReportBarChartSettings = mergeDeep<ReportBarChartSettings>(
+  {} as ReportBarChartSettings,
+  reportLatestChartDefaultSettings as ReportBarChartSettings,
+  {
+    axisTickLabelFont: {
+      family: 'Roboto',
+      size: 12,
+      sizeUnit: 'px',
+      style: 'normal',
+      weight: '400'
+    },
+    axisTickLabelColor: 'rgba(0, 0, 0, 0.54)',
+    barSettings: mergeDeep({} as ChartBarSettings, chartBarDefaultSettings,
+      {barWidth: 80, showLabel: true} as ChartBarSettings)
+  } as ReportBarChartSettings
+);
+
 export interface BaseChartReportComponentConfig extends BaseImageReportComponentConfig {
   height: number;
 }
@@ -660,6 +746,15 @@ export interface TimeseriesChartReportComponentConfig extends BaseChartReportCom
   timewindow: Timewindow;
   timeSeriesChartSettings: ReportTimeSeriesChartSettings & ReportBarChartWithLabelSettings;
   type: ReportComponentType.TIME_SERIES_CHART;
+}
+
+export interface LatestChartReportComponentConfig<S extends ReportLatestChartSettings = ReportLatestChartSettings> extends BaseChartReportComponentConfig {
+  latestChartSettings: S;
+  type: ReportComponentType.LATEST_CHART;
+}
+
+export interface BarChartReportComponentConfig extends LatestChartReportComponentConfig<ReportBarChartSettings> {
+  subType: 'latestBarChart'
 }
 
 export interface ImageReportComponentConfig extends BaseImageReportComponentConfig {

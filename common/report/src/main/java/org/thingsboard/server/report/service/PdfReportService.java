@@ -65,6 +65,7 @@ import org.thingsboard.server.common.data.report.configuration.components.Dashbo
 import org.thingsboard.server.common.data.report.configuration.components.DataReportComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ErrorComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ImageComponent;
+import org.thingsboard.server.common.data.report.configuration.components.LatestChartComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponentType;
 import org.thingsboard.server.common.data.report.configuration.components.SubReportComponent;
@@ -81,6 +82,8 @@ import org.thingsboard.server.report.context.ComponentData;
 import org.thingsboard.server.report.context.HeaderFooterRenderLayout;
 import org.thingsboard.server.report.context.TbReportCtx;
 import org.thingsboard.server.report.context.chart.DataPostProcessFunction;
+import org.thingsboard.server.report.context.chart.LatestChartData;
+import org.thingsboard.server.report.context.chart.LatestChartDataSource;
 import org.thingsboard.server.report.context.chart.TsChartData;
 import org.thingsboard.server.report.context.chart.TsChartDataSource;
 import org.thingsboard.server.report.context.chart.TsChartThresholdItem;
@@ -241,6 +244,8 @@ public class PdfReportService extends AbstractReportService {
                     buildTsComponentData(usablePageWidthPx, ctx, (TimeseriesTableComponent) component, stateEntity);
             case TIME_SERIES_CHART ->
                     buildTsChartComponentData(usablePageWidthPx, ctx, (TimeseriesChartComponent) component, stateEntity);
+            case LATEST_CHART ->
+                    buildLatestChartComponentData(usablePageWidthPx, ctx, (LatestChartComponent) component, stateEntity);
             case ALARM_TABLE ->
                     buildAlarmComponentData(usablePageWidthPx, ctx, (AlarmTableComponent) component, stateEntity);
             case DASHBOARD ->
@@ -333,6 +338,38 @@ public class PdfReportService extends AbstractReportService {
             throw new RuntimeException(e);
         }
         return componentsRenderers.get(ERROR).render(new ErrorComponent(errorMessage, e), new ComponentData(usablePageWidthPx));
+    }
+
+    private ComponentData buildLatestChartComponentData(int usablePageWidthPx, TbReportCtx ctx, LatestChartComponent component, EntityData stateEntity) {
+        Optional<DataSource> dataSource = getSingleDataSource(component);
+        if (dataSource.isEmpty()) {
+            return new ComponentData(usablePageWidthPx, "Data source is not configured for the chart");
+        }
+        DataSource ds = dataSource.get();
+        if (ds.getDataKeys().isEmpty()) {
+            return new ComponentData(usablePageWidthPx, "At least one series should be specified for the chart");
+        }
+        List<EntityData> entityDatas = fetchEntities(ctx, ds, stateEntity != null ? stateEntity.getEntityId() : null, DEFAULT_TS_CHART_SORT_ORDER);
+        List<LatestChartDataSource> chartData = new ArrayList<>();
+        int dataIndex = 0;
+        DataPostProcessFunction dataPostProcessFunction = (dataKey, timestamp, value) -> this.postProcess(ctx, dataKey, timestamp, value, true);
+        for (EntityData entity : entityDatas) {
+            LatestChartDataSource chartDataSource = new LatestChartDataSource(ds, entity, dataPostProcessFunction, dataIndex);
+            chartData.add(chartDataSource);
+            dataIndex++;
+        }
+        int keyIndex = 0;
+
+        for (LatestChartDataSource chartDataSource : chartData) {
+            for (DataKey dataKey : chartDataSource.getDataKeys()) {
+                if (chartDataSource.isGenerated()) {
+                    dataKey.setColor(ColorUtils.getMaterialColor(keyIndex));
+                }
+                keyIndex++;
+            }
+        }
+        LatestChartData latestChartData = new LatestChartData(chartData);
+        return new ComponentData(usablePageWidthPx, latestChartData);
     }
 
     private ComponentData buildTsChartComponentData(int usablePageWidthPx, TbReportCtx ctx, TimeseriesChartComponent component, EntityData stateEntity) {
