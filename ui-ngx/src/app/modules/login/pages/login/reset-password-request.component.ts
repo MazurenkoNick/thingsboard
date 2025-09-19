@@ -49,20 +49,20 @@ export class ResetPasswordRequestComponent extends PageComponent implements OnIn
 
   clicked: boolean = false;
 
-    requestPasswordRequest = this.fb.group({
-        email: ['', [Validators.required, this.utils.validateEmail]],
-    }, {updateOn: 'submit'});
+  requestPasswordRequest = this.fb.group({
+      email: ['', [Validators.required, this.utils.validateEmail]],
+  }, {updateOn: 'submit'});
 
   @HostBinding('class') class = 'tb-custom-css';
 
-    constructor(protected store: Store<AppState>,
-                private authService: AuthService,
-                private translate: TranslateService,
-                private utils: UtilsService,
-                public wl: WhiteLabelingService,
-                public fb: UntypedFormBuilder) {
-        super(store);
-    }
+  constructor(protected store: Store<AppState>,
+              private authService: AuthService,
+              private translate: TranslateService,
+              private utils: UtilsService,
+              public wl: WhiteLabelingService,
+              public fb: UntypedFormBuilder) {
+      super(store);
+  }
 
   ngOnInit() {
   }

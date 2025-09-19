@@ -74,7 +74,7 @@ export class EmailAuthDialogComponent extends DialogComponent<EmailAuthDialogCom
     super(store, router, dialogRef);
 
     this.emailConfigForm = this.fb.group({
-            email: [this.data.email, [Validators.required, this.utils.validateEmail]]
+      email: [this.data.email, [Validators.required, this.utils.validateEmail]]
     });
 
     this.emailVerificationForm = this.fb.group({

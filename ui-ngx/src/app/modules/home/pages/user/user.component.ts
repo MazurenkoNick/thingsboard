@@ -77,17 +77,17 @@ export class UserComponent extends GroupEntityComponent<UserInfo> implements OnI
 
   private authUser = getCurrentAuthUser(this.store);
 
-    constructor(protected store: Store<AppState>,
-                @Optional() @Inject('entity') protected entityValue: UserInfo,
-                @Optional() @Inject('entitiesTableConfig')
-                protected entitiesTableConfigValue: EntityTableConfig<UserInfo> | GroupEntityTableConfig<UserInfo>,
-                protected fb: UntypedFormBuilder,
-                private utils: UtilsService,
-                protected cd: ChangeDetectorRef,
-                protected translate: TranslateService,
-                protected userPermissionsService: UserPermissionsService) {
-        super(store, fb, entityValue, entitiesTableConfigValue, cd, userPermissionsService);
-    }
+  constructor(protected store: Store<AppState>,
+              @Optional() @Inject('entity') protected entityValue: UserInfo,
+              @Optional() @Inject('entitiesTableConfig')
+              protected entitiesTableConfigValue: EntityTableConfig<UserInfo> | GroupEntityTableConfig<UserInfo>,
+              protected fb: UntypedFormBuilder,
+              private utils: UtilsService,
+              protected cd: ChangeDetectorRef,
+              protected translate: TranslateService,
+              protected userPermissionsService: UserPermissionsService) {
+       super(store, fb, entityValue, entitiesTableConfigValue, cd, userPermissionsService);
+  }
 
   ngOnInit(): void {
     this.entityForm.controls.email.addValidators(this.utils.validateEmail);

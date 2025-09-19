@@ -66,18 +66,18 @@ export class ProfileComponent extends PageComponent implements OnInit, HasConfir
   authState = getCurrentAuthState(this.store);
   readonly = !this.userPermissionsService.hasGenericPermission(Resource.PROFILE, Operation.WRITE);
 
-    constructor(protected store: Store<AppState>,
-                private route: ActivatedRoute,
-                private userService: UserService,
-                private authService: AuthService,
-                private translate: TranslateService,
-                private unitService: UnitService,
-                private utils: UtilsService,
-                private fb: UntypedFormBuilder,
+  constructor(protected store: Store<AppState>,
+              private route: ActivatedRoute,
+              private userService: UserService,
+              private authService: AuthService,
+              private translate: TranslateService,
+              private unitService: UnitService,
+              private utils: UtilsService,
+              private fb: UntypedFormBuilder,
               private userPermissionsService: UserPermissionsService,
-              ) {
-        super(store);
-        }
+            ) {
+    super(store);
+  }
 
   ngOnInit() {
     this.buildProfileForm();

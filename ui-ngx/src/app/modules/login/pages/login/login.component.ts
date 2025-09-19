@@ -57,23 +57,23 @@ export class LoginComponent extends PageComponent implements OnInit {
   passwordViolation = false;
 
   loginFormGroup = this.fb.group({
-        username: ['', [Validators.required, this.utils.validateEmail]],
-        password: ['']
-    });
-    oauth2Clients: Array<OAuth2ClientLoginInfo> = null;
+    username: ['', [Validators.required, this.utils.validateEmail]],
+    password: ['']
+  });
+  oauth2Clients: Array<OAuth2ClientLoginInfo> = null;
 
   @HostBinding('class') class = 'tb-custom-css';
 
-    constructor(protected store: Store<AppState>,
-                private authService: AuthService,
-                public wl: WhiteLabelingService,
-                public selfRegistrationService: SelfRegistrationService,
-                private translateService: TranslateService,
-                public fb: UntypedFormBuilder,
-                private utils: UtilsService,
-                private router: Router) {
-        super(store);
-    }
+  constructor(protected store: Store<AppState>,
+              private authService: AuthService,
+              public wl: WhiteLabelingService,
+              public selfRegistrationService: SelfRegistrationService,
+              private translateService: TranslateService,
+              public fb: UntypedFormBuilder,
+              private utils: UtilsService,
+              private router: Router) {
+      super(store);
+  }
 
   ngOnInit() {
     this.oauth2Clients = this.authService.oauth2Clients;
