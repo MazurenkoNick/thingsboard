@@ -31,10 +31,12 @@
 
 import {
   AfterViewInit,
+  ChangeDetectionStrategy,
   Component,
   ComponentRef,
   inject,
-  OnDestroy, Type,
+  OnDestroy,
+  Type,
   ViewChild,
   ViewContainerRef,
   ViewEncapsulation
@@ -56,13 +58,13 @@ import { debounce, deepClone, mergeDeep } from '@core/utils';
 import { DatasourceType, widgetType } from '@shared/models/widget.models';
 import { LatestChartWidgetSettings } from '@home/components/widget/lib/chart/latest-chart.models';
 import { BarChartWidgetComponent } from '@home/components/widget/lib/chart/bar-chart-widget.component';
-import { TimeSeriesChartType } from '@home/components/widget/lib/chart/time-series-chart.models';
 
 @Component({
   selector: 'tb-latest-chart-preview',
   templateUrl: './latest-chart-preview.component.html',
   styleUrls: ['./latest-chart-preview.component.scss'],
-  encapsulation: ViewEncapsulation.None
+  encapsulation: ViewEncapsulation.None,
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class LatestChartPreviewComponent extends AbstractReportComponentPreview<LatestChartReportComponentConfig>
   implements AfterViewInit, OnDestroy, WidgetSubscriptionCallbacks {
