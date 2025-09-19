@@ -28,7 +28,7 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.report.renderer.chart.legend;
+package org.thingsboard.server.report.renderer.chart.layout;
 
 import org.jfree.chart.block.AbstractBlock;
 import org.jfree.chart.block.Block;
@@ -37,7 +37,6 @@ import org.jfree.chart.block.RectangleConstraint;
 import org.jfree.chart.ui.HorizontalAlignment;
 import org.jfree.chart.ui.Size2D;
 import org.jfree.chart.ui.VerticalAlignment;
-import org.thingsboard.server.report.renderer.chart.TbFlowArrangement;
 
 import java.awt.Graphics2D;
 import java.awt.geom.Rectangle2D;
@@ -92,6 +91,10 @@ public class TbTableBlockContainer extends AbstractBlock implements Block {
         }
         double maxWidth = constraint.getWidth();
         double maxHeight = constraint.getHeight();
+        if (maxWidth <= 0 && maxHeight <= 0) {
+            maxWidth = Double.MAX_VALUE;
+            maxHeight = Double.MAX_VALUE;
+        }
         List<Size2D> headerSizes = new ArrayList<>();
         List<Size2D> maxCellSizes = new ArrayList<>();
         for (int i = 0; i < this.columns.size(); i++) {

@@ -36,12 +36,15 @@ import org.jfree.chart.StandardChartTheme;
 import org.jfree.chart.plot.Plot;
 import org.jfree.chart.title.TextTitle;
 import org.jfree.chart.ui.HorizontalAlignment;
+import org.jfree.chart.ui.RectangleEdge;
 import org.jfree.chart.ui.RectangleInsets;
+import org.jfree.chart.ui.VerticalAlignment;
 import org.thingsboard.server.common.data.report.configuration.chart.LegendPosition;
 import org.thingsboard.server.common.data.report.configuration.chart.ReportLatestChartSettings;
 import org.thingsboard.server.report.context.chart.LatestChartData;
 import org.thingsboard.server.report.context.chart.LatestChartDataItem;
 import org.thingsboard.server.report.renderer.chart.legend.TbLatestChartLegendItem;
+import org.thingsboard.server.report.renderer.chart.legend.TbLatestLegendTitle;
 import org.thingsboard.server.report.util.ColorUtils;
 
 import java.awt.Font;
@@ -148,10 +151,6 @@ public abstract class TbLatestChart<S extends ReportLatestChartSettings, P exten
 
         this.setupPlot(plot);
 
-       // plot.setDatasetRenderingOrder(DatasetRenderingOrder.FORWARD);
-        //plot.setSeriesRenderingOrder(SeriesRenderingOrder.FORWARD);
-        //plot.setAxisOffset(RectangleInsets.ZERO_INSETS);
-
         if (chartSettings.getShowTitle()) {
             Font titleFont = toAwtFont(chartSettings.getTitleFont());
             TextTitle title = new TextTitle(chartSettings.getTitle(), titleFont);
@@ -168,7 +167,9 @@ public abstract class TbLatestChart<S extends ReportLatestChartSettings, P exten
             chart.setTitle(title);
         }
 
-        this.setupLegend();
+        if (chartSettings.getShowLegend()) {
+            this.setupLegend();
+        }
 
         return chart;
     }
@@ -177,5 +178,38 @@ public abstract class TbLatestChart<S extends ReportLatestChartSettings, P exten
 
     protected abstract void setupPlot(P plot);
 
-    private void setupLegend() {}
+    private void setupLegend() {
+        TbLatestLegendTitle legend = new TbLatestLegendTitle(this.legendItems);
+        legend.setLegendLabelFont(toAwtFont(chartSettings.getLegendLabelFont()));
+        legend.setLegendLabelPaint(safeParseCssColor(chartSettings.getLegendLabelColor()));
+        legend.setLegendValueFont(toAwtFont(chartSettings.getLegendValueFont()));
+        legend.setLegendValuePaint(safeParseCssColor(chartSettings.getLegendValueColor()));
+
+        RectangleEdge position = RectangleEdge.TOP;
+        LegendPosition legendPosition = chartSettings.getLegendPosition();
+        switch (legendPosition) {
+            case bottom -> position = RectangleEdge.BOTTOM;
+            case left -> position = RectangleEdge.LEFT;
+            case right -> position = RectangleEdge.RIGHT;
+        }
+
+        legend.setPosition(position);
+
+        if (RectangleEdge.isLeftOrRight(position)) {
+            legend.setVerticalAlignment(VerticalAlignment.CENTER);
+            if (position == RectangleEdge.LEFT) {
+                legend.setPadding(new RectangleInsets(0.0, 0.0, 0.0, 24.0));
+            } else {
+                legend.setPadding(new RectangleInsets(0.0, 24.0, 0.0, 0.0));
+            }
+        } else {
+            if (position == RectangleEdge.TOP) {
+                legend.setPadding(new RectangleInsets(8.0, 0.0, 16.0, 0.0));
+            } else {
+                legend.setPadding(new RectangleInsets(16.0, 0.0, 8.0, 0.0));
+            }
+        }
+        chart.addSubtitle(legend);
+        legend.addChangeListener(chart);
+    }
 }

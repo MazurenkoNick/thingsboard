@@ -28,7 +28,7 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.report.renderer.chart;
+package org.thingsboard.server.report.renderer.chart.layout;
 
 import org.jfree.chart.block.Block;
 import org.jfree.chart.block.BlockContainer;
@@ -47,6 +47,8 @@ public class TbFlowArrangement extends FlowArrangement {
 
     private final HorizontalAlignment horizontalAlignment;
     private final VerticalAlignment verticalAlignment;
+    private final TbContentJustify horizontalJustify;
+
     private final double horizontalGap;
     private final double verticalGap;
 
@@ -58,9 +60,15 @@ public class TbFlowArrangement extends FlowArrangement {
 
     public TbFlowArrangement(HorizontalAlignment hAlign, VerticalAlignment vAlign,
                              double hGap, double vGap) {
+        this(hAlign, vAlign, TbContentJustify.NONE, hGap, vGap);
+    }
+
+    public TbFlowArrangement(HorizontalAlignment hAlign, VerticalAlignment vAlign,
+                             TbContentJustify hJustify, double hGap, double vGap) {
         super(hAlign, vAlign, hGap, vGap);
         this.horizontalAlignment = hAlign;
         this.verticalAlignment = vAlign;
+        this.horizontalJustify = hJustify;
         this.horizontalGap = hGap;
         this.verticalGap = vGap;
     }
@@ -113,7 +121,7 @@ public class TbFlowArrangement extends FlowArrangement {
                     y = y + size.height + this.verticalGap;
                 }
                 else {
-                    alignItems(itemsInRow, width);
+                    alignItemsH(itemsInRow, width);
                     // start new row
                     itemsInRow.clear();
                     x = 0.0;
@@ -129,7 +137,7 @@ public class TbFlowArrangement extends FlowArrangement {
                 }
             }
         }
-        alignItems(itemsInRow, width);
+        alignItemsH(itemsInRow, width);
         return new Size2D(constraint.getWidth(), y + maxHeight);
     }
 
@@ -150,29 +158,79 @@ public class TbFlowArrangement extends FlowArrangement {
             for (Block b : visibleBlocks) {
                 container.add(b);
             }
-            return arrangeFN(container, g2, constraint);
+            s = arrangeFN(container, g2, constraint);
         }
+        alignItemsV((List<Block>)container.getBlocks(), s.height, constraint.getHeight());
         return s;
     }
 
-    private void alignItems(List<Block> items, double width) {
+    private void alignItemsH(List<Block> items, double width) {
+        if (items.isEmpty()) {
+            return;
+        }
         double itemsWidth = this.horizontalGap * (items.size() - 1);
         for (Block item : items) {
             itemsWidth += item.getBounds().getWidth();
         }
         if (itemsWidth < width) {
-            double movement = 0;
-            if (horizontalAlignment == HorizontalAlignment.CENTER) {
-                movement = (width - itemsWidth) / 2;
-            } else if (horizontalAlignment == HorizontalAlignment.RIGHT) {
-                movement = width - itemsWidth;
-            }
-            if (movement > 0) {
-                for (Block item : items) {
-                    Rectangle2D bounds = item.getBounds();
-                    item.setBounds(new Rectangle2D.Double(bounds.getX() + movement, bounds.getY(), bounds.getWidth(), bounds.getHeight()));
+            if (this.horizontalJustify == TbContentJustify.SPACE_AROUND) {
+                itemsWidth -= this.horizontalGap * (items.size() - 1);
+                double space = width - itemsWidth;
+                double itemMargin = space / items.size();
+                if (itemMargin > this.horizontalGap) {
+                    double x = items.get(0).getBounds().getX() + itemMargin / 2;
+                    for (Block item : items) {
+                        this.setX(item, x);
+                        x += item.getBounds().getWidth() + itemMargin;
+                    }
+                }
+            } else {
+                double movement = 0;
+                if (horizontalAlignment == HorizontalAlignment.CENTER) {
+                    movement = (width - itemsWidth) / 2;
+                } else if (horizontalAlignment == HorizontalAlignment.RIGHT) {
+                    movement = width - itemsWidth;
+                }
+                if (movement > 0) {
+                    for (Block item : items) {
+                        this.moveRight(item, movement);
+                    }
                 }
             }
         }
     }
-}
+
+    private void alignItemsV(List<Block> items, double itemsHeight, double height) {
+        if (itemsHeight < height) {
+            double movement = 0;
+            if (verticalAlignment == VerticalAlignment.CENTER) {
+                movement = (height - itemsHeight) / 2;
+            } else if (verticalAlignment == VerticalAlignment.BOTTOM) {
+                movement = height - itemsHeight;
+            }
+            if (movement > 0) {
+                for (Block item : items) {
+                    this.moveBottom(item, movement);
+                }
+            }
+        }
+    }
+
+    private void moveRight(Block item, double movement) {
+        Rectangle2D bounds = item.getBounds();
+        item.setBounds(new Rectangle2D.Double(bounds.getX() + movement, bounds.getY(), bounds.getWidth(), bounds.getHeight()));
+    }
+
+    private void setX(Block item, double x) {
+        Rectangle2D bounds = item.getBounds();
+        item.setBounds(new Rectangle2D.Double(x, bounds.getY(), bounds.getWidth(), bounds.getHeight()));
+    }
+
+    private void moveBottom(Block item, double movement) {
+        Rectangle2D bounds = item.getBounds();
+        item.setBounds(new Rectangle2D.Double(bounds.getX(), bounds.getY() + movement, bounds.getWidth(), bounds.getHeight()));
+    }
+
+
+
+    }
