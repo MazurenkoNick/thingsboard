@@ -30,7 +30,7 @@
 ///
 
 import {
-  AfterViewInit,
+  AfterViewInit, ChangeDetectionStrategy,
   Component,
   ComponentRef,
   inject,
@@ -73,7 +73,8 @@ import { ChartWidgetComponent } from '@home/components/widget/lib/chart/chart.mo
   selector: 'tb-time-series-chart-preview',
   templateUrl: './time-series-chart-preview.component.html',
   styleUrls: ['./time-series-chart-preview.component.scss'],
-  encapsulation: ViewEncapsulation.None
+  encapsulation: ViewEncapsulation.None,
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class TimeSeriesChartPreviewComponent extends AbstractReportComponentPreview<TimeseriesChartReportComponentConfig>
   implements AfterViewInit, OnDestroy, WidgetSubscriptionCallbacks {
