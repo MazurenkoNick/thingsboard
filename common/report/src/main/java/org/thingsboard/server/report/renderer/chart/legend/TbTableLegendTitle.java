@@ -50,6 +50,7 @@ import org.jfree.chart.ui.RectangleInsets;
 import org.jfree.chart.ui.Size2D;
 import org.jfree.chart.ui.VerticalAlignment;
 import org.thingsboard.server.common.data.report.configuration.chart.LegendConfig;
+import org.thingsboard.server.report.renderer.chart.layout.TbTableBlockContainer;
 
 import java.awt.Font;
 import java.awt.Graphics2D;

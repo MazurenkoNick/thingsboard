@@ -34,6 +34,7 @@ import {
   AbstractReportComponentConfig
 } from '@home/pages/reporting/template/components/report-component-config.component';
 import {
+  imageAlignments, imageAlignmentTranslations, imageWidthTypeTranslations,
   LatestChartReportComponentConfig,
   reportBarChartDefaultSettings,
   ReportBarChartSettings,
@@ -66,6 +67,12 @@ export class LatestChartConfigComponent extends AbstractReportComponentConfig<La
   legendPositions = legendPositions;
 
   legendPositionTranslationMap = legendPositionTranslationMap;
+
+  imageWidthTypes = ['fitWidth', 'custom'];
+  imageWidthTypeTranslations = imageWidthTypeTranslations;
+
+  imageAlignments = imageAlignments;
+  imageAlignmentTranslations = imageAlignmentTranslations;
 
   subType: string;
 
@@ -268,5 +275,4 @@ export class LatestChartConfigComponent extends AbstractReportComponentConfig<La
     const decimals: number = this.reportConfigForm.get('decimals').value;
     return formatValue(110, decimals, units, false);
   }
-
 }

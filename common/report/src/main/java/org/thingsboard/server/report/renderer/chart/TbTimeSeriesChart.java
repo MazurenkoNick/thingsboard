@@ -81,6 +81,8 @@ import org.thingsboard.server.report.context.chart.TsChartDataSource;
 import org.thingsboard.server.report.context.chart.TsChartSeriesData;
 import org.thingsboard.server.report.context.chart.TsChartSeriesEntry;
 import org.thingsboard.server.report.context.chart.TsChartThresholdItem;
+import org.thingsboard.server.report.renderer.chart.layout.TbColumnArrangement;
+import org.thingsboard.server.report.renderer.chart.layout.TbFlowArrangement;
 import org.thingsboard.server.report.renderer.chart.legend.TbLegendTitle;
 import org.thingsboard.server.report.renderer.chart.legend.TbLegendValues;
 import org.thingsboard.server.report.renderer.chart.legend.TbLegendValuesRequest;

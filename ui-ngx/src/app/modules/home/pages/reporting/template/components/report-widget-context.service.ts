@@ -148,13 +148,16 @@ export class ReportWidgetContextService {
   }
 
   private prepareDataKey(dataKey: DataKey, index: number, latest: boolean, genDataFunc?: GenerateDataFunction): DataKey {
+    const keyType = dataKey.type;
     dataKey.type = DataKeyType.function;
     if (latest) {
       dataKey.label = dataKey.name;
     }
     const keyRandom = this.createKeyRandom(index + 1);
     dataKey.builtInFunc = (time, _prevValue) => {
-      if (genDataFunc) {
+      if (keyType === DataKeyType.entityField) {
+        return dataKey.label;
+      } else if (genDataFunc) {
         return genDataFunc(keyRandom, time);
       } else {
         return this.reportPreviewKeyData(keyRandom, 5000);

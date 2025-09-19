@@ -80,7 +80,6 @@ public class TbBarChart extends TbLatestChart<ReportBarChartSettings, CategoryPl
     protected void setupPlot(CategoryPlot plot) {
 
         plot.setDatasetRenderingOrder(DatasetRenderingOrder.FORWARD);
-//        plot.setSeriesRenderingOrder(SeriesRenderingOrder.FORWARD);
         plot.setAxisOffset(RectangleInsets.ZERO_INSETS);
         plot.setDomainGridlinesVisible(false);
         plot.setRangeGridlinesVisible(false);
@@ -99,6 +98,9 @@ public class TbBarChart extends TbLatestChart<ReportBarChartSettings, CategoryPl
 
         if (this.chartSettings.getAxisMin() != null) {
             valueAxis.setAxisMin(this.chartSettings.getAxisMin());
+            if (this.chartSettings.getAxisMin() > 0) {
+                zeroMarker.setValue(this.chartSettings.getAxisMin());
+            }
         }
         if (this.chartSettings.getAxisMax() != null) {
             valueAxis.setAxisMax(this.chartSettings.getAxisMax());
@@ -111,16 +113,21 @@ public class TbBarChart extends TbLatestChart<ReportBarChartSettings, CategoryPl
         valueAxis.setTickLabelPaint(safeParseCssColor(this.chartSettings.getAxisTickLabelColor()));
         valueAxis.setAutoRangeIncludesZero(true);
 
+        long visibleItemsCount = this.dataItems.stream().filter(LatestChartDataItem::isHasValue).count();
+        if (visibleItemsCount == 0) {
+            valueAxis.setVisible(false);
+        }
+
         renderer.setShadowVisible(false);
         renderer.setDrawBarOutline(true);
         renderer.setDefaultOutlineStroke(new BasicStroke(0.0f));
 
         BarSeriesSettings barSettings = this.chartSettings.getBarSettings();
 
-        if (!this.dataItems.isEmpty()) {
+        if (visibleItemsCount > 0) {
             double barWidth = barSettings.getBarWidth() / 100.0;
-            double spacing = (1f / this.dataItems.size()) * (1f - barWidth);
-            double itemMargin = spacing * (this.dataItems.size() - 1);
+            double spacing = (1f / visibleItemsCount) * (1f - barWidth);
+            double itemMargin = spacing * (visibleItemsCount - 1);
             double axisMargin = spacing / 2f;
             renderer.setItemMargin(itemMargin);
             categoryAxis.setLowerMargin(axisMargin);
@@ -133,6 +140,9 @@ public class TbBarChart extends TbLatestChart<ReportBarChartSettings, CategoryPl
             Paint seriesPaint = seriesColor;
             if (!ChartFillType.none.equals(barSettings.getBackgroundSettings().getType())) {
                 seriesPaint = createFillPaint(barSettings.getBackgroundSettings(), seriesColor);
+            }
+            if (!dataItem.isHasValue()) {
+                renderer.setSeriesVisible(dataItem.getSeriesIndex(), false);
             }
             renderer.setSeriesPaint(dataItem.getSeriesIndex(), seriesPaint);
             if (barSettings.getShowBorder()) {
