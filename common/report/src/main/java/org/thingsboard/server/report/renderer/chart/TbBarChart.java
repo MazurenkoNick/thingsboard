@@ -36,8 +36,7 @@ import org.jfree.chart.labels.ItemLabelAnchor;
 import org.jfree.chart.labels.ItemLabelPosition;
 import org.jfree.chart.plot.CategoryPlot;
 import org.jfree.chart.plot.DatasetRenderingOrder;
-import org.jfree.chart.plot.Plot;
-import org.jfree.chart.renderer.category.BarRenderer;
+import org.jfree.chart.plot.ValueMarker;
 import org.jfree.chart.ui.RectangleInsets;
 import org.jfree.chart.ui.TextAnchor;
 import org.jfree.data.category.CategoryDataset;
@@ -49,45 +48,87 @@ import org.thingsboard.server.common.data.report.configuration.chart.ReportBarCh
 import org.thingsboard.server.report.context.chart.LatestChartData;
 import org.thingsboard.server.report.context.chart.LatestChartDataItem;
 
-import java.awt.*;
+import java.awt.BasicStroke;
+import java.awt.Color;
+import java.awt.Paint;
 
 import static org.thingsboard.server.report.renderer.chart.ChartUtils.createFillPaint;
 import static org.thingsboard.server.report.util.AwtFontUtils.toAwtFont;
 import static org.thingsboard.server.report.util.ColorUtils.safeParseCssColor;
 
-public class TbBarChart extends TbLatestChart<ReportBarChartSettings> implements CategoryItemLabelGenerator {
+public class TbBarChart extends TbLatestChart<ReportBarChartSettings, CategoryPlot> implements CategoryItemLabelGenerator {
+
+    private CategoryAxis categoryAxis;
+    private TbNumberAxis valueAxis;
+    private TbBarRenderer renderer;
+    private DefaultCategoryDataset dataset;
 
     public TbBarChart(ReportBarChartSettings chartSettings, LatestChartData latestChartData) {
         super(chartSettings, latestChartData);
     }
 
     @Override
-    protected Plot createPlot() {
-        CategoryAxis categoryAxis = new CategoryAxis(null);
-        categoryAxis.setVisible(false);
+    protected CategoryPlot createPlot() {
+        this.categoryAxis = new CategoryAxis(null);
+        this.valueAxis = new TbNumberAxis(null, null);
+        this.renderer = new TbBarRenderer();
+        this.dataset = new DefaultCategoryDataset();
+        return new CategoryPlot(dataset, categoryAxis, valueAxis, renderer);
+    }
 
-        TbNumberAxis valueAxis = new TbNumberAxis(null, null);
+    @Override
+    protected void setupPlot(CategoryPlot plot) {
+
+        plot.setDatasetRenderingOrder(DatasetRenderingOrder.FORWARD);
+//        plot.setSeriesRenderingOrder(SeriesRenderingOrder.FORWARD);
+        plot.setAxisOffset(RectangleInsets.ZERO_INSETS);
+        plot.setDomainGridlinesVisible(false);
+        plot.setRangeGridlinesVisible(false);
+
+        categoryAxis.setAxisLineVisible(false);
+        categoryAxis.setTickLabelsVisible(false);
+        categoryAxis.setTickMarksVisible(false);
+
+        ValueMarker zeroMarker = new ValueMarker(
+                0.0,
+                safeParseCssColor("rgba(0,0,0,0.54)"),
+                new BasicStroke(1.0f)
+        );
+
+        plot.addRangeMarker(zeroMarker);
+
         if (this.chartSettings.getAxisMin() != null) {
             valueAxis.setAxisMin(this.chartSettings.getAxisMin());
         }
         if (this.chartSettings.getAxisMax() != null) {
             valueAxis.setAxisMax(this.chartSettings.getAxisMax());
         }
+
+        valueAxis.setAxisLineVisible(false);
+        valueAxis.setTickMarksVisible(false);
         valueAxis.setNumberFormatOverride(this.valueFormatter);
         valueAxis.setTickLabelFont(toAwtFont(this.chartSettings.getAxisTickLabelFont()));
         valueAxis.setTickLabelPaint(safeParseCssColor(this.chartSettings.getAxisTickLabelColor()));
+        valueAxis.setAutoRangeIncludesZero(true);
 
-        BarRenderer renderer = new BarRenderer();
         renderer.setShadowVisible(false);
         renderer.setDrawBarOutline(true);
         renderer.setDefaultOutlineStroke(new BasicStroke(0.0f));
 
-        DefaultCategoryDataset dataset = new DefaultCategoryDataset();
-
         BarSeriesSettings barSettings = this.chartSettings.getBarSettings();
-        // TODO: renderer.setMaximumBarWidth(barSettings.getBarWidth() / 100.0);
+
+        if (!this.dataItems.isEmpty()) {
+            double barWidth = barSettings.getBarWidth() / 100.0;
+            double spacing = (1f / this.dataItems.size()) * (1f - barWidth);
+            double itemMargin = spacing * (this.dataItems.size() - 1);
+            double axisMargin = spacing / 2f;
+            renderer.setItemMargin(itemMargin);
+            categoryAxis.setLowerMargin(axisMargin);
+            categoryAxis.setUpperMargin(axisMargin);
+        }
+
         for (LatestChartDataItem dataItem : this.dataItems) {
-            dataset.addValue(dataItem.getValue(), dataItem.getLabel(), "Latest");
+            dataset.addValue(dataItem.getValue(), dataItem.getSeriesIndex() + "", "Latest");
             Color seriesColor = safeParseCssColor(dataItem.getDataKey().getColor());
             Paint seriesPaint = seriesColor;
             if (!ChartFillType.none.equals(barSettings.getBackgroundSettings().getType())) {
@@ -103,37 +144,23 @@ public class TbBarChart extends TbLatestChart<ReportBarChartSettings> implements
                 renderer.setSeriesItemLabelFont(dataItem.getSeriesIndex(), toAwtFont(barSettings.getLabelFont()));
                 renderer.setSeriesItemLabelPaint(dataItem.getSeriesIndex(), safeParseCssColor(barSettings.getLabelColor()));
                 renderer.setSeriesItemLabelGenerator(dataItem.getSeriesIndex(), this);
-                ItemLabelPosition positiveItemLabelPosition;
-                ItemLabelPosition negativeItemLabelPosition;
+                ItemLabelPosition itemLabelPosition;
                 if (ChartLabelPosition.top.equals(barSettings.getLabelPosition())) {
-                    positiveItemLabelPosition = new ItemLabelPosition(
+                    itemLabelPosition = new ItemLabelPosition(
                             ItemLabelAnchor.OUTSIDE12, TextAnchor.BOTTOM_CENTER);
-                    negativeItemLabelPosition = new ItemLabelPosition(
-                            ItemLabelAnchor.OUTSIDE6, TextAnchor.TOP_CENTER);
                 } else {
-                    positiveItemLabelPosition = new ItemLabelPosition(
+                    itemLabelPosition = new ItemLabelPosition(
                             ItemLabelAnchor.OUTSIDE6, TextAnchor.TOP_CENTER);
-                    negativeItemLabelPosition = new ItemLabelPosition(
-                            ItemLabelAnchor.OUTSIDE12, TextAnchor.BOTTOM_CENTER);
                 }
-                renderer.setSeriesPositiveItemLabelPosition(dataItem.getSeriesIndex(), positiveItemLabelPosition);
-                renderer.setSeriesNegativeItemLabelPosition(dataItem.getSeriesIndex(), negativeItemLabelPosition);
+                renderer.setSeriesPositiveItemLabelPosition(dataItem.getSeriesIndex(), itemLabelPosition);
+                renderer.setSeriesNegativeItemLabelPosition(dataItem.getSeriesIndex(), itemLabelPosition);
                 if (barSettings.getEnableLabelBackground()) {
-                   // TODO: renderer.setSeriesItemLabelsBackgroundVisible(dataItem.getSeriesIndex(), true);
-                   // TODO: renderer.setSeriesItemLabelsBackgroundPaint(dataItem.getSeriesIndex(), safeParseCssColor(barSettings.getLabelBackground()));
+                    renderer.setSeriesItemLabelsBackgroundVisible(dataItem.getSeriesIndex(), true);
+                    renderer.setSeriesItemLabelsBackgroundPaint(dataItem.getSeriesIndex(), safeParseCssColor(barSettings.getLabelBackground()));
                 }
             }
-            // TODO: renderer.setSeriesItemBorderRadius(dataItem.getSeriesIndex(), barSettings.getBorderRadius());
+            renderer.setSeriesItemBorderRadius(dataItem.getSeriesIndex(), barSettings.getBorderRadius());
         }
-
-        CategoryPlot plot = new CategoryPlot(dataset, categoryAxis, valueAxis,
-                renderer);
-        plot.setDatasetRenderingOrder(DatasetRenderingOrder.FORWARD);
-//        plot.setSeriesRenderingOrder(SeriesRenderingOrder.FORWARD);
-        plot.setAxisOffset(RectangleInsets.ZERO_INSETS);
-        plot.setDomainGridlinesVisible(false);
-        plot.setRangeGridlinesVisible(false);
-        return plot;
     }
 
 

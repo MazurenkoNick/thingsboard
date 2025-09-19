@@ -502,6 +502,7 @@ public interface ChartUtils {
         axis.setTickMarksVisible(axisSettings.getShowTicks());
         axis.setTickMarkPaint(safeParseCssColor(axisSettings.getTicksColor()));
         axis.setAxisLineVisible(axisSettings.getShowLine());
+        axis.setAxisLineStroke(new BasicStroke(1.0f));
         axis.setAxisLinePaint(safeParseCssColor(axisSettings.getLineColor()));
     }
 

@@ -33,9 +33,7 @@ package org.thingsboard.server.report.renderer.chart;
 import org.jfree.chart.ChartTheme;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.StandardChartTheme;
-import org.jfree.chart.plot.DatasetRenderingOrder;
 import org.jfree.chart.plot.Plot;
-import org.jfree.chart.plot.SeriesRenderingOrder;
 import org.jfree.chart.title.TextTitle;
 import org.jfree.chart.ui.HorizontalAlignment;
 import org.jfree.chart.ui.RectangleInsets;
@@ -46,7 +44,8 @@ import org.thingsboard.server.report.context.chart.LatestChartDataItem;
 import org.thingsboard.server.report.renderer.chart.legend.TbLatestChartLegendItem;
 import org.thingsboard.server.report.util.ColorUtils;
 
-import java.awt.*;
+import java.awt.Font;
+import java.awt.Graphics2D;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -56,7 +55,7 @@ import static org.thingsboard.server.report.renderer.chart.ChartUtils.createValu
 import static org.thingsboard.server.report.util.AwtFontUtils.toAwtFont;
 import static org.thingsboard.server.report.util.ColorUtils.safeParseCssColor;
 
-public abstract class TbLatestChart<S extends ReportLatestChartSettings> {
+public abstract class TbLatestChart<S extends ReportLatestChartSettings, P extends Plot> {
 
     static ChartTheme currentChartTheme = new StandardChartTheme("TbChartTheme");
 
@@ -133,7 +132,7 @@ public abstract class TbLatestChart<S extends ReportLatestChartSettings> {
     }
 
     public JFreeChart createChart(Graphics2D g2) {
-        Plot plot = this.createPlot();
+        P plot = this.createPlot();
 
         this.chart = new JFreeChart(
                 null,
@@ -142,13 +141,16 @@ public abstract class TbLatestChart<S extends ReportLatestChartSettings> {
                 false);
         currentChartTheme.apply(chart);
 
-       // plot.setDatasetRenderingOrder(DatasetRenderingOrder.FORWARD);
-        //plot.setSeriesRenderingOrder(SeriesRenderingOrder.FORWARD);
-        //plot.setAxisOffset(RectangleInsets.ZERO_INSETS);
         plot.setBackgroundPaint(null);
         plot.setOutlinePaint(null);
         plot.setInsets(new RectangleInsets(2.0, 0.0, 2.0, 0.0));
         chart.setBackgroundPaint(ColorUtils.TRANSPARENT);
+
+        this.setupPlot(plot);
+
+       // plot.setDatasetRenderingOrder(DatasetRenderingOrder.FORWARD);
+        //plot.setSeriesRenderingOrder(SeriesRenderingOrder.FORWARD);
+        //plot.setAxisOffset(RectangleInsets.ZERO_INSETS);
 
         if (chartSettings.getShowTitle()) {
             Font titleFont = toAwtFont(chartSettings.getTitleFont());
@@ -171,7 +173,9 @@ public abstract class TbLatestChart<S extends ReportLatestChartSettings> {
         return chart;
     }
 
-    protected abstract Plot createPlot();
+    protected abstract P createPlot();
+
+    protected abstract void setupPlot(P plot);
 
     private void setupLegend() {}
 }

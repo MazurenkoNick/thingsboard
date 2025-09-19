@@ -47,11 +47,11 @@ public class LatestChartRenderer extends ChartRenderer<LatestChartComponent> {
 
     @Override
     protected JFreeChart createChart(Graphics2D g2, LatestChartComponent component, ComponentData reportDataSource) {
-        TbLatestChart<?> latestChart = createLatestChart(component, reportDataSource.getLatestChartData());
+        TbLatestChart<?,?> latestChart = createLatestChart(component, reportDataSource.getLatestChartData());
         return latestChart.createChart(g2);
     }
 
-    private TbLatestChart<?> createLatestChart(LatestChartComponent component, LatestChartData latestChartData) {
+    private TbLatestChart<?,?> createLatestChart(LatestChartComponent component, LatestChartData latestChartData) {
         if ("latestBarChart".equals(component.getSubType())) {
             ReportBarChartSettings reportBarChartSettings = new ReportBarChartSettings((ReportBarChartSettings) component.getLatestChartSettings());
             return new TbBarChart(reportBarChartSettings, latestChartData);
