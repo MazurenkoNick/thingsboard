@@ -938,11 +938,11 @@ export class TimeseriesTableWidgetComponent extends PageComponent implements OnI
       }
     }
     columnsToExport = [...new Set(columnsToExport.flat())];
-    if (columnsToExport.indexOf('Timestamp') > 0) {
-      columnsToExport.splice(columnsToExport.indexOf('Timestamp'), 1);
-      columnsToExport.unshift('Timestamp');
+    const timestampFieldName =this.translate.instant('widgets.table.timestamp-column-name');
+    if (columnsToExport.indexOf(timestampFieldName) > 0) {
+      columnsToExport.splice(timestampFieldName, 1);
+      columnsToExport.unshift(timestampFieldName);
     }
-
     const sourcesLatest: {[datasourceName: string]: {[key: string]: any}} = {};
     const sourcesLatestContentFunc:
       {[datasourceName: string]: {[key: string]: {value: any; contentFunction: Observable<CellContentFunctionInfo>}}} = {};
@@ -978,8 +978,8 @@ export class TimeseriesTableWidgetComponent extends PageComponent implements OnI
             if (!tsRow) {
               tsRow = isDefined(sourcesLatest[datasourceData.datasource.name])
                 ? deepClone(sourcesLatest[datasourceData.datasource.name]) : {};
-              if (columnsToExport.includes('Timestamp')) {
-                tsRow.Timestamp = this.datePipe.transform(ts, this.dateFormatFilter);
+              if (columnsToExport.includes(timestampFieldName)) {
+                tsRow[timestampFieldName] = this.datePipe.transform(ts, this.dateFormatFilter);
               }
               tsRow['Entity Name'] = datasourceData.datasource.entityName;
               sourcesTsRows[tsKey] = tsRow;
