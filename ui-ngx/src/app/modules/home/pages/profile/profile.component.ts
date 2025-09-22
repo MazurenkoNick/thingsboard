@@ -96,6 +96,9 @@ export class ProfileComponent extends PageComponent implements OnInit, HasConfir
       homeDashboardId: [null],
       homeDashboardHideToolbar: [true]
     });
+    if (this.readonly) {
+      this.profile.disable();
+    }
   }
 
   save(): void {
