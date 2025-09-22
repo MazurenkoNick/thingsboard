@@ -29,13 +29,13 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { Component, HostBinding, OnInit, ViewChild } from '@angular/core';
+import { Component, HostBinding, ViewChild } from '@angular/core';
 import { AuthService } from '@core/auth/auth.service';
 import { Store } from '@ngrx/store';
 import { AppState } from '@core/core.state';
 import { PageComponent } from '@shared/components/page.component';
 import { FormBuilder } from '@angular/forms';
-import { SignupRequest, SignUpResult } from '@shared/models/signup.models';
+import { SignupRequest, SignupRequestValues, SignUpResult } from '@shared/models/signup.models';
 import { Router } from '@angular/router';
 import { ActionNotificationShow } from '@core/notification/notification.actions';
 import { TranslateService } from '@ngx-translate/core';
@@ -47,14 +47,13 @@ import { WhiteLabelingService } from '@core/http/white-labeling.service';
 import { MatDialog } from '@angular/material/dialog';
 import { SignupDialogComponent, SignupDialogData } from '@modules/signup/pages/signup/signup-dialog.component';
 import { from } from 'rxjs';
-import { UtilsService } from '@app/core/public-api';
 
 @Component({
   selector: 'tb-signup',
   templateUrl: './signup.component.html',
   styleUrls: ['./signup.component.scss']
 })
-export class SignupComponent extends PageComponent implements OnInit{
+export class SignupComponent extends PageComponent {
 
   @ViewChild('recaptcha') recaptchaComponent: ReCaptcha2Component;
 
@@ -79,26 +78,21 @@ export class SignupComponent extends PageComponent implements OnInit{
               private translate: TranslateService,
               private reCaptchaV3Service: ReCaptchaV3Service,
               private dialog: MatDialog,
-              private fb: FormBuilder,
-              private utils: UtilsService) {
+              private fb: FormBuilder) {
     super(store);
-  }
-
-  ngOnInit(): void {
-    this.signup.controls.fields.controls.EMAIL.addValidators(this.utils.validateEmail)
   }
 
   signUp(): void {
     if (this.signup.valid) {
       if (this.validateSignUpRequest()) {
         if (this.signupParams?.captcha?.version === 'v2') {
-          this.executeSignup(this.signup.value as SignupRequest);
+          this.executeSignup(this.signup.value as SignupRequestValues);
         } else {
           from(this.reCaptchaV3Service.executeAsPromise(this.signupParams?.captcha?.siteKey,
             this.signupParams?.captcha?.logActionName, {useGlobalDomain: true})).subscribe(
             {
               next: (token) => {
-                const signupRequest = this.signup.value as SignupRequest;
+                const signupRequest = this.signup.value as SignupRequestValues;
                 signupRequest.recaptchaResponse = token;
                 this.executeSignup(signupRequest);
               },
@@ -115,7 +109,7 @@ export class SignupComponent extends PageComponent implements OnInit{
     }
   }
 
-  private executeSignup(signupRequest: SignupRequest): void {
+  private executeSignup(signupRequest: SignupRequestValues): void {
     this.signupService.signup(signupRequest).subscribe({
       next: (signupResult) => {
         if (signupResult === SignUpResult.INACTIVE_USER_EXISTS) {
