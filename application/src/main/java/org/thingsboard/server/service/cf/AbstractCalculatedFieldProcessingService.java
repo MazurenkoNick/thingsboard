@@ -103,7 +103,7 @@ public abstract class AbstractCalculatedFieldProcessingService {
 
     protected abstract String getExecutorNamePrefix();
 
-    public ListenableFuture<CalculatedFieldState> fetchStateFromDb(CalculatedFieldCtx ctx, EntityId entityId, long ts) {
+    protected ListenableFuture<CalculatedFieldState> fetchStateFromDb(CalculatedFieldCtx ctx, EntityId entityId, long ts) {
         Map<String, ListenableFuture<ArgumentEntry>> argFutures = switch (ctx.getCalculatedField().getType()) {
             case GEOFENCING -> fetchGeofencingCalculatedFieldArguments(ctx, entityId, false, ts);
             case SIMPLE, SCRIPT -> {
@@ -163,7 +163,7 @@ public abstract class AbstractCalculatedFieldProcessingService {
                 case ENTITY_ID_LATITUDE_ARGUMENT_KEY, ENTITY_ID_LONGITUDE_ARGUMENT_KEY ->
                         argFutures.put(entry.getKey(), fetchArgumentValue(ctx.getTenantId(), entityId, entry.getValue(), startTs));
                 default -> {
-                    var resolvedEntityIdsFuture = resolveGeofencingEntityIds(ctx.getTenantId(), entityId, entry, calculatedFieldCallbackExecutor);
+                    var resolvedEntityIdsFuture = resolveGeofencingEntityIds(ctx.getTenantId(), entityId, entry);
                     argFutures.put(entry.getKey(), Futures.transformAsync(resolvedEntityIdsFuture, resolvedEntityIds ->
                             fetchGeofencingKvEntry(ctx.getTenantId(), resolvedEntityIds, entry.getValue()), MoreExecutors.directExecutor()));
                 }
@@ -172,7 +172,7 @@ public abstract class AbstractCalculatedFieldProcessingService {
         return argFutures;
     }
 
-    private ListenableFuture<List<EntityId>> resolveGeofencingEntityIds(TenantId tenantId, EntityId entityId, Map.Entry<String, Argument> entry, ListeningExecutorService executor) {
+    private ListenableFuture<List<EntityId>> resolveGeofencingEntityIds(TenantId tenantId, EntityId entityId, Map.Entry<String, Argument> entry) {
         Argument value = entry.getValue();
         if (value.getRefEntityId() != null) {
             return Futures.immediateFuture(List.of(value.getRefEntityId()));
@@ -189,14 +189,14 @@ public abstract class AbstractCalculatedFieldProcessingService {
                     yield switch (configuration.getDirection()) {
                         case FROM ->
                                 Futures.transform(relationService.findByFromAndTypeAsync(tenantId, entityId, configuration.getRelationType(), RelationTypeGroup.COMMON),
-                                        configuration::resolveEntityIds, executor);
+                                        configuration::resolveEntityIds, calculatedFieldCallbackExecutor);
                         case TO ->
                                 Futures.transform(relationService.findByToAndTypeAsync(tenantId, entityId, configuration.getRelationType(), RelationTypeGroup.COMMON),
-                                        configuration::resolveEntityIds, executor);
+                                        configuration::resolveEntityIds, calculatedFieldCallbackExecutor);
                     };
                 }
                 yield Futures.transform(relationService.findByQuery(tenantId, configuration.toEntityRelationsQuery(entityId)),
-                        configuration::resolveEntityIds, executor);
+                        configuration::resolveEntityIds, calculatedFieldCallbackExecutor);
             }
         };
     }

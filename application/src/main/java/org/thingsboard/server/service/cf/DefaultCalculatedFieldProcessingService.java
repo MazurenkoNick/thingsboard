@@ -66,6 +66,7 @@ import org.thingsboard.server.queue.util.TbRuleEngineComponent;
 import org.thingsboard.server.service.cf.ctx.CalculatedFieldEntityCtxId;
 import org.thingsboard.server.service.cf.ctx.state.ArgumentEntry;
 import org.thingsboard.server.service.cf.ctx.state.CalculatedFieldCtx;
+import org.thingsboard.server.service.cf.ctx.state.CalculatedFieldState;
 import org.thingsboard.server.service.security.permission.OwnersCacheService;
 
 import java.util.ArrayList;
@@ -100,6 +101,11 @@ public class DefaultCalculatedFieldProcessingService extends AbstractCalculatedF
     @Override
     protected String getExecutorNamePrefix() {
         return "calculated-field-callback";
+    }
+
+    @Override
+    public ListenableFuture<CalculatedFieldState> fetchStateFromDb(CalculatedFieldCtx ctx, EntityId entityId) {
+        return super.fetchStateFromDb(ctx, entityId, System.currentTimeMillis());
     }
 
     @Override

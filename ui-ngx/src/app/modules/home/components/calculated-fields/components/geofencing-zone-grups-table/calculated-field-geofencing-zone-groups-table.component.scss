@@ -28,33 +28,64 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.service.cf;
+:host {
+  .arguments-table {
+    min-height: 108px;
 
-import com.google.common.util.concurrent.ListenableFuture;
-import org.thingsboard.server.actors.calculatedField.CalculatedFieldTelemetryMsg;
-import org.thingsboard.server.common.data.cf.configuration.Argument;
-import org.thingsboard.server.common.data.id.CalculatedFieldId;
-import org.thingsboard.server.common.data.id.EntityId;
-import org.thingsboard.server.common.data.id.TenantId;
-import org.thingsboard.server.common.msg.queue.TbCallback;
-import org.thingsboard.server.service.cf.ctx.CalculatedFieldEntityCtxId;
-import org.thingsboard.server.service.cf.ctx.state.ArgumentEntry;
-import org.thingsboard.server.service.cf.ctx.state.CalculatedFieldCtx;
-import org.thingsboard.server.service.cf.ctx.state.CalculatedFieldState;
+    &-with-error {
+      min-height: 150px;
+    }
 
-import java.util.List;
-import java.util.Map;
+    .mat-mdc-table {
+      table-layout: fixed;
+    }
 
-public interface CalculatedFieldProcessingService {
+    .key-text {
+      font-size: 13px;
+    }
 
-    ListenableFuture<CalculatedFieldState> fetchStateFromDb(CalculatedFieldCtx ctx, EntityId entityId);
+    .copy-argument-name {
+      visibility: hidden;
+      transition: visibility 0.1s;
+    }
 
-    Map<String, ArgumentEntry> fetchDynamicArgsFromDb(CalculatedFieldCtx ctx, EntityId entityId);
+    .argument-name-cell:hover {
+      .copy-argument-name {
+        visibility: visible;
+      }
+    }
+  }
 
-    Map<String, ArgumentEntry> fetchArgsFromDb(TenantId tenantId, EntityId entityId, Map<String, Argument> arguments);
+  .max-args-warning {
+    .mat-icon {
+      color: #FAA405;
+    }
+  }
 
-    void pushMsgToRuleEngine(TenantId tenantId, EntityId entityId, CalculatedFieldResult calculationResult, List<CalculatedFieldId> cfIds, TbCallback callback);
+  .tb-form-table-row-cell-buttons {
+    --mat-badge-legacy-small-size-container-size: 8px;
+    --mat-badge-small-size-container-overlap-offset: -5px;
+    --mat-badge-small-size-text-size: 0;
+  }
+}
 
-    void pushMsgToLinks(CalculatedFieldTelemetryMsg msg, List<CalculatedFieldEntityCtxId> linkedCalculatedFields, TbCallback callback);
+:host ::ng-deep {
+  .arguments-table:not(.arguments-table-with-error) {
+    .mdc-data-table__row:last-child .mat-mdc-cell {
+      border-bottom: none;
+    }
+  }
 
+  .arguments-table {
+    .mat-mdc-header-row.mat-row-select .mat-mdc-header-cell.entity-type-header {
+      padding: 0 28px 0 0;
+    }
+  }
+
+  .copy-argument-name {
+    .mat-icon {
+      font-size: 16px;
+      padding: 4px;
+    }
+  }
 }
