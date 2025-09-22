@@ -938,9 +938,10 @@ export class TimeseriesTableWidgetComponent extends PageComponent implements OnI
       }
     }
     columnsToExport = [...new Set(columnsToExport.flat())];
-    const timestampFieldName =this.translate.instant('widgets.table.timestamp-column-name');
-    if (columnsToExport.indexOf(timestampFieldName) > 0) {
-      columnsToExport.splice(timestampFieldName, 1);
+    const timestampFieldName = this.translate.instant('widgets.table.timestamp-column-name');
+    const timestampColumIndex = columnsToExport.indexOf(timestampFieldName);
+    if (timestampColumIndex > 0) {
+      columnsToExport.splice(timestampColumIndex, 1);
       columnsToExport.unshift(timestampFieldName);
     }
     const sourcesLatest: {[datasourceName: string]: {[key: string]: any}} = {};
