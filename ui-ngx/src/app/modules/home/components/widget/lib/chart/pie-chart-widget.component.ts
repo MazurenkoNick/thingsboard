@@ -29,7 +29,7 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { Component, Input, OnInit, TemplateRef, ViewChild, ViewEncapsulation } from '@angular/core';
+import { Component, Input, OnInit, Optional, TemplateRef, ViewChild, ViewEncapsulation } from '@angular/core';
 import { WidgetContext } from '@home/models/widget-component.models';
 import { WidgetComponent } from '@home/components/widget/widget.component';
 import { TranslateService } from '@ngx-translate/core';
@@ -71,7 +71,7 @@ export class PieChartWidgetComponent implements OnInit, ChartWidgetComponent {
 
   callbacks: LatestChartComponentCallbacks;
 
-  constructor(private widgetComponent: WidgetComponent,
+  constructor(@Optional() private widgetComponent: WidgetComponent,
               private translate: TranslateService) {
   }
 

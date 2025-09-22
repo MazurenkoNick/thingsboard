@@ -7426,6 +7426,7 @@
             "state-chart": "State chart",
             "bar-chart-with-labels": "Bar chart with labels",
             "bars": "Bars",
+            "pie": "Pie",
             "chart": {
                 "chart-height": "Chart height",
                 "chart-width": "Chart width",

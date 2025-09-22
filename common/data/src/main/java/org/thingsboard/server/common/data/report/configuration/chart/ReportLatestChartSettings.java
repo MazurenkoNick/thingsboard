@@ -39,7 +39,8 @@ import org.thingsboard.server.common.data.report.configuration.style.TextAlignme
 
 @Data
 @JsonSubTypes({
-        @JsonSubTypes.Type(value = ReportBarChartSettings.class, name = "latestBarChart")
+        @JsonSubTypes.Type(value = ReportBarChartSettings.class, name = "latestBarChart"),
+        @JsonSubTypes.Type(value = ReportPieChartSettings.class, name = "pieChart")
 })
 public class ReportLatestChartSettings {
 

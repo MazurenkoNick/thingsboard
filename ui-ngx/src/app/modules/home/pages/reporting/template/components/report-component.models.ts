@@ -42,13 +42,13 @@ import {
   EntityTableReportComponentConfig,
   HeadingReportComponentConfig,
   ImageReportComponentConfig,
-  PageBreakReportComponentConfig, reportBarChartDefaultSettings,
+  PageBreakReportComponentConfig, PieChartReportComponentConfig, reportBarChartDefaultSettings,
   ReportBarChartSettings,
   reportBarChartWithLabelsDefaultSettings,
   ReportBarChartWithLabelSettings,
   ReportComponentConfig,
   ReportComponentType,
-  ReportDataKeySettingsType,
+  ReportDataKeySettingsType, reportPieChartDefaultSettings, ReportPieChartSettings,
   reportStateChartDefaultSettings,
   reportTimeSeriesChartDefaultSettings,
   ReportTimeSeriesChartSettings,
@@ -693,6 +693,54 @@ export const reportComponentsLibrary = new Map<string, ReportComponentLibraryIte
       }
     ],
     [
+      'pieChart',
+      {
+        title: 'report-template.component.pie',
+        previewImage: '/assets/report/components/time-series-chart.svg',
+        type: ReportComponentType.LATEST_CHART,
+        defaultConfig: {
+          type: ReportComponentType.LATEST_CHART,
+          subType: 'pieChart',
+          dataSources: [
+            {
+              type: DatasourceType.entity,
+              dataKeys: [
+                {
+                  name: 'windPower',
+                  type: DataKeyType.timeseries,
+                  label: 'Wind',
+                  color: '#08872B',
+                  settings: {}
+                },
+                {
+                  name: 'solarPower',
+                  type: DataKeyType.timeseries,
+                  label: 'Solar',
+                  color: '#FF4D5A',
+                  settings: {}
+                },
+                {
+                  name: 'hydroelectricPower',
+                  type: DataKeyType.timeseries,
+                  label: 'Hydroelectric',
+                  color: '#FFDE30',
+                  settings: {}
+                }
+              ]
+            }
+          ],
+          latestChartSettings: mergeDeep<ReportPieChartSettings>({} as ReportPieChartSettings, reportPieChartDefaultSettings,
+            { title: 'Pie' } as ReportPieChartSettings),
+          height: 400,
+          widthType: 'fitWidth',
+          alignment: 'center',
+          margins: null,
+          paddings: null,
+          background: null
+        } as PieChartReportComponentConfig
+      }
+    ],
+    [
       'image',
       {
         title: 'report-template.component.image.type',
@@ -1282,6 +1330,20 @@ reportComponentTypesData.registerReportComponentSubType(ReportComponentType.LATE
   'latestBarChart',
   {
     title: 'report-template.component.bars',
+    previewComponent: LatestChartPreviewComponent,
+    configComponent: LatestChartConfigComponent,
+    editable: true,
+    preferredSettingsWidthPx: 1000,
+    configContext: {
+    },
+    previewContext: {
+    }
+  });
+
+reportComponentTypesData.registerReportComponentSubType(ReportComponentType.LATEST_CHART,
+  'pieChart',
+  {
+    title: 'report-template.component.pie',
     previewComponent: LatestChartPreviewComponent,
     configComponent: LatestChartConfigComponent,
     editable: true,
