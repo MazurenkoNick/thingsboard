@@ -49,6 +49,7 @@ import {
 } from '@shared/models/js-function.models';
 import { DomSanitizer } from '@angular/platform-browser';
 import { SecurityContext } from '@angular/core';
+import { AbstractControl, ValidationErrors, Validators } from '@angular/forms';
 
 const varsRegex = /\${([^}]*)}/g;
 
@@ -1117,3 +1118,14 @@ export function debounce<T extends (...args: any[]) => any>(
     timeout = setTimeout(later, wait);
   };
 }
+
+export const validateEmail = (control: AbstractControl): ValidationErrors | null => {
+  const email = control.value;
+  const nativeEmailError = Validators.email(control);
+  if (nativeEmailError !== null) {
+    return nativeEmailError;
+  }
+  const passesDomainCheck = /\.[^.\s]{2,}$/.test(email);
+  return passesDomainCheck ? null : {email: true};
+};
+

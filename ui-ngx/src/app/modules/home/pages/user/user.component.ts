@@ -29,7 +29,7 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { ChangeDetectorRef, Component, Inject, OnInit, Optional } from '@angular/core';
+import { ChangeDetectorRef, Component, Inject, Optional } from '@angular/core';
 import { select, Store } from '@ngrx/store';
 import { AppState } from '@core/core.state';
 import { UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms';
@@ -37,7 +37,7 @@ import { UserInfo } from '@shared/models/user.model';
 import { getCurrentAuthUser, selectAuth, selectAuthUser } from '@core/auth/auth.selectors';
 import { map } from 'rxjs/operators';
 import { Authority } from '@shared/models/authority.enum';
-import { isDefinedAndNotNull } from '@core/utils';
+import { isDefinedAndNotNull, validateEmail } from '@core/utils';
 import { EntityTableConfig } from '@home/models/entity/entities-table-config.models';
 import { ActionNotificationShow } from '@app/core/notification/notification.actions';
 import { TranslateService } from '@ngx-translate/core';
@@ -52,6 +52,7 @@ import { UtilsService } from "@core/services/utils.service";
   templateUrl: './user.component.html',
   styleUrls: ['./user.component.scss']
 })
+export class UserComponent extends EntityComponent<User>{
 export class UserComponent extends GroupEntityComponent<UserInfo> implements OnInit {
 
   CMScope = CMScope;
@@ -78,6 +79,9 @@ export class UserComponent extends GroupEntityComponent<UserInfo> implements OnI
   private authUser = getCurrentAuthUser(this.store);
 
   constructor(protected store: Store<AppState>,
+              @Optional() @Inject('entity') protected entityValue: User,
+              @Optional() @Inject('entitiesTableConfig') protected entitiesTableConfigValue: EntityTableConfig<User>,
+              public fb: UntypedFormBuilder,
               @Optional() @Inject('entity') protected entityValue: UserInfo,
               @Optional() @Inject('entitiesTableConfig')
               protected entitiesTableConfigValue: EntityTableConfig<UserInfo> | GroupEntityTableConfig<UserInfo>,
@@ -120,7 +124,7 @@ export class UserComponent extends GroupEntityComponent<UserInfo> implements OnI
   buildForm(entity: UserInfo): UntypedFormGroup {
     return this.fb.group(
       {
-        email: [entity ? entity.email : '', [Validators.required]],
+        email: [entity ? entity.email : '', [Validators.required,validateEmail]],
         firstName: [entity ? entity.firstName : ''],
         lastName: [entity ? entity.lastName : ''],
         phone: [entity ? entity.phone : ''],

@@ -45,7 +45,7 @@ import { mergeMap, share } from 'rxjs/operators';
 import { SelfRegistrationService } from '@core/http/self-register.service';
 import { OAuth2ClientInfo } from '@shared/models/oauth2.models';
 import { OAuth2ClientLoginInfo } from '@shared/models/oauth2.models';
-import { UtilsService } from "@core/services/utils.service";
+import { validateEmail } from '@app/core/utils';
 
 @Component({
   selector: 'tb-login',
@@ -57,8 +57,8 @@ export class LoginComponent extends PageComponent implements OnInit {
   passwordViolation = false;
 
   loginFormGroup = this.fb.group({
-    username: ['', [Validators.required, this.utils.validateEmail]],
-    password: ['']
+        username: ['', [Validators.required, validateEmail]],
+        password: ['']
   });
   oauth2Clients: Array<OAuth2ClientLoginInfo> = null;
 
@@ -70,7 +70,6 @@ export class LoginComponent extends PageComponent implements OnInit {
               public selfRegistrationService: SelfRegistrationService,
               private translateService: TranslateService,
               public fb: UntypedFormBuilder,
-              private utils: UtilsService,
               private router: Router) {
       super(store);
   }
