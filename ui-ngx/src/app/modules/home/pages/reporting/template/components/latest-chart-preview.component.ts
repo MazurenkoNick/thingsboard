@@ -47,7 +47,7 @@ import {
   reportBarChartDefaultSettings,
   ReportBarChartSettings,
   reportLatestChartDefaultSettings,
-  ReportLatestChartSettings
+  ReportLatestChartSettings, reportPieChartDefaultSettings, ReportPieChartSettings
 } from '@shared/models/report-component.models';
 import { IWidgetSubscription, WidgetSubscriptionCallbacks } from '@core/api/widget-api.models';
 import { ReportWidgetContextService } from '@home/pages/reporting/template/components/report-widget-context.service';
@@ -58,6 +58,7 @@ import { debounce, deepClone, mergeDeep } from '@core/utils';
 import { DatasourceType, widgetType } from '@shared/models/widget.models';
 import { LatestChartWidgetSettings } from '@home/components/widget/lib/chart/latest-chart.models';
 import { BarChartWidgetComponent } from '@home/components/widget/lib/chart/bar-chart-widget.component';
+import { PieChartWidgetComponent } from '@home/components/widget/lib/chart/pie-chart-widget.component';
 
 @Component({
   selector: 'tb-latest-chart-preview',
@@ -182,6 +183,8 @@ export class LatestChartPreviewComponent extends AbstractReportComponentPreview<
     const subType = this.reportComponent.subType;
     if ('latestBarChart' === subType) {
       widgetComponentType = BarChartWidgetComponent;
+    } else if ('pieChart' === subType) {
+      widgetComponentType = PieChartWidgetComponent;
     }
 
     if (widgetComponentType) {
@@ -205,6 +208,8 @@ export class LatestChartPreviewComponent extends AbstractReportComponentPreview<
     let latestChartSettings: ReportLatestChartSettings;
     if ('latestBarChart' === subType) {
       latestChartSettings = mergeDeep<ReportBarChartSettings>({} as ReportBarChartSettings, reportBarChartDefaultSettings, this.reportComponent.latestChartSettings as ReportBarChartSettings);
+    } else if ('pieChart' === subType) {
+      latestChartSettings = mergeDeep<ReportPieChartSettings>({} as ReportPieChartSettings, reportPieChartDefaultSettings, this.reportComponent.latestChartSettings as ReportPieChartSettings);
     } else {
       latestChartSettings = mergeDeep<ReportLatestChartSettings>({} as ReportLatestChartSettings, reportLatestChartDefaultSettings, this.reportComponent.latestChartSettings as ReportLatestChartSettings);
     }

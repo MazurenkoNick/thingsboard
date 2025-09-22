@@ -38,7 +38,7 @@ import {
   LatestChartReportComponentConfig,
   reportBarChartDefaultSettings,
   ReportBarChartSettings,
-  ReportLatestChartSettings
+  ReportLatestChartSettings, reportPieChartDefaultSettings, ReportPieChartSettings
 } from '@shared/models/report-component.models';
 import { FormGroup, UntypedFormGroup, Validators } from '@angular/forms';
 import { formatValue, mergeDeep } from '@core/utils';
@@ -55,6 +55,7 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { merge } from 'rxjs';
 import { WidgetInfo, WidgetWithInfo } from '@home/models/widget-component.models';
+import { pieChartLabelPositions, pieChartLabelPositionTranslations } from '@home/components/widget/lib/chart/chart.models';
 
 @Component({
   selector: 'tb-latest-chart-config',
@@ -67,6 +68,10 @@ export class LatestChartConfigComponent extends AbstractReportComponentConfig<La
   legendPositions = legendPositions;
 
   legendPositionTranslationMap = legendPositionTranslationMap;
+
+  pieChartLabelPositions = pieChartLabelPositions;
+
+  pieChartLabelPositionTranslationMap = pieChartLabelPositionTranslations;
 
   imageWidthTypes = ['fitWidth', 'custom'];
   imageWidthTypeTranslations = imageWidthTypeTranslations;
@@ -100,6 +105,8 @@ export class LatestChartConfigComponent extends AbstractReportComponentConfig<La
     let latestChartSettings: ReportLatestChartSettings;
     if ('latestBarChart' === this.subType) {
       latestChartSettings = mergeDeep<ReportBarChartSettings>({} as ReportBarChartSettings, reportBarChartDefaultSettings, reportComponentConfig.latestChartSettings as ReportBarChartSettings);
+    } else if ('pieChart' === this.subType) {
+      latestChartSettings = mergeDeep<ReportPieChartSettings>({} as ReportPieChartSettings, reportPieChartDefaultSettings, reportComponentConfig.latestChartSettings as ReportPieChartSettings);
     }
     const form: UntypedFormGroup = this.fb.group({
       dataSources: [reportComponentConfig.dataSources, []],
@@ -140,6 +147,26 @@ export class LatestChartConfigComponent extends AbstractReportComponentConfig<La
       form.addControl('axisMax', this.fb.control(barChartSettings.axisMax, []));
       form.addControl('axisTickLabelFont', this.fb.control(barChartSettings.axisTickLabelFont, []));
       form.addControl('axisTickLabelColor', this.fb.control(barChartSettings.axisTickLabelColor, []));
+    } else if ('pieChart' === this.subType) {
+
+      const pieChartSettings = latestChartSettings as ReportPieChartSettings;
+
+      form.addControl('showLabel', this.fb.control(pieChartSettings.showLabel, []));
+      form.addControl('labelPosition', this.fb.control(pieChartSettings.labelPosition, []));
+      form.addControl('labelFont', this.fb.control(pieChartSettings.labelFont, []));
+      form.addControl('labelColor', this.fb.control(pieChartSettings.labelColor, []));
+
+      form.addControl('pieBorderWidth', this.fb.control(pieChartSettings.borderWidth, []));
+      form.addControl('pieBorderColor', this.fb.control(pieChartSettings.borderColor, []));
+
+      form.addControl('pieRadius', this.fb.control(pieChartSettings.radius, []));
+      form.addControl('clockwise', this.fb.control(pieChartSettings.clockwise, []));
+
+      form.get('showLabel').valueChanges.pipe(
+        takeUntilDestroyed(this.destroyRef)
+      ).subscribe(() => {
+        this.updateValidators(form);
+      });
     }
 
     form.get('widthType').valueChanges.pipe(
@@ -214,6 +241,26 @@ export class LatestChartConfigComponent extends AbstractReportComponentConfig<La
       delete config.axisTickLabelFont;
       barChartSettings.axisTickLabelColor = config.axisTickLabelColor;
       delete config.axisTickLabelColor;
+    } else if ('pieChart' === this.subType) {
+      const pieChartSettings = latestChartSettings as ReportPieChartSettings;
+
+      pieChartSettings.showLabel = config.showLabel;
+      delete config.showLabel;
+      pieChartSettings.labelPosition = config.labelPosition;
+      delete config.labelPosition;
+      pieChartSettings.labelFont = config.labelFont;
+      delete config.labelFont;
+      pieChartSettings.labelColor = config.labelColor;
+      delete config.labelColor;
+      pieChartSettings.borderWidth = config.pieBorderWidth;
+      delete config.pieBorderWidth;
+      pieChartSettings.borderColor = config.pieBorderColor;
+      delete config.pieBorderColor;
+
+      pieChartSettings.radius = config.pieRadius;
+      delete config.pieRadius;
+      pieChartSettings.clockwise = config.clockwise;
+      delete config.clockwise;
     }
 
     return config;
@@ -267,6 +314,18 @@ export class LatestChartConfigComponent extends AbstractReportComponentConfig<La
       form.get('legendLabelColor').disable({emitEvent: false});
       form.get('legendValueFont').disable({emitEvent: false});
       form.get('legendValueColor').disable({emitEvent: false});
+    }
+    if (this.subType === 'pieChart') {
+      const showLabel: boolean = form.get('showLabel').value;
+      if (showLabel) {
+        form.get('labelPosition').enable({emitEvent: false});
+        form.get('labelFont').enable({emitEvent: false});
+        form.get('labelColor').enable({emitEvent: false});
+      } else {
+        form.get('labelPosition').disable({emitEvent: false});
+        form.get('labelFont').disable({emitEvent: false});
+        form.get('labelColor').disable({emitEvent: false});
+      }
     }
   }
 

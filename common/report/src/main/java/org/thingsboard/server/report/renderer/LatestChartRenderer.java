@@ -33,12 +33,14 @@ package org.thingsboard.server.report.renderer;
 import org.jfree.chart.JFreeChart;
 import org.springframework.stereotype.Component;
 import org.thingsboard.server.common.data.report.configuration.chart.ReportBarChartSettings;
+import org.thingsboard.server.common.data.report.configuration.chart.ReportPieChartSettings;
 import org.thingsboard.server.common.data.report.configuration.components.LatestChartComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponentType;
 import org.thingsboard.server.report.context.ComponentData;
 import org.thingsboard.server.report.context.chart.LatestChartData;
 import org.thingsboard.server.report.renderer.chart.TbBarChart;
 import org.thingsboard.server.report.renderer.chart.TbLatestChart;
+import org.thingsboard.server.report.renderer.chart.TbPieChart;
 
 import java.awt.Graphics2D;
 
@@ -55,6 +57,9 @@ public class LatestChartRenderer extends ChartRenderer<LatestChartComponent> {
         if ("latestBarChart".equals(component.getSubType())) {
             ReportBarChartSettings reportBarChartSettings = new ReportBarChartSettings((ReportBarChartSettings) component.getLatestChartSettings());
             return new TbBarChart(reportBarChartSettings, latestChartData);
+        } else if ("pieChart".equals(component.getSubType())) {
+            ReportPieChartSettings reportPieChartSettings = new ReportPieChartSettings((ReportPieChartSettings) component.getLatestChartSettings());
+            return new TbPieChart(reportPieChartSettings, latestChartData);
         } else {
             throw new IllegalArgumentException("Latest chart with subType '"+component.getSubType()+"' is not supported");
         }

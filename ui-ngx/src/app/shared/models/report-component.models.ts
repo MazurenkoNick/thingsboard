@@ -64,7 +64,7 @@ import {
   chartBarDefaultSettings,
   ChartBarSettings,
   ChartFillSettings,
-  ChartFillType
+  ChartFillType, PieChartLabelPosition
 } from '@home/components/widget/lib/chart/chart.models';
 import {
   BarChartWithLabelsWidgetSettings
@@ -738,6 +738,38 @@ export const reportBarChartDefaultSettings: ReportBarChartSettings = mergeDeep<R
   } as ReportBarChartSettings
 );
 
+export interface ReportPieChartSettings extends ReportLatestChartSettings {
+  showLabel: boolean;
+  labelPosition: PieChartLabelPosition;
+  labelFont: Font;
+  labelColor: string;
+  borderWidth: number;
+  borderColor: string;
+  radius: number;
+  clockwise: boolean;
+}
+
+export const reportPieChartDefaultSettings: ReportPieChartSettings = mergeDeep<ReportPieChartSettings>(
+  {} as ReportPieChartSettings,
+  reportLatestChartDefaultSettings as ReportPieChartSettings,
+  {
+    showLabel: true,
+    labelPosition: PieChartLabelPosition.outside,
+    labelFont: {
+      family: 'Roboto',
+      size: 12,
+      sizeUnit: 'px',
+      style: 'normal',
+      weight: 'normal'
+    },
+    labelColor: '#000',
+    borderWidth: 0,
+    borderColor: '#000',
+    radius: 80,
+    clockwise: false
+  } as ReportPieChartSettings
+);
+
 export interface BaseChartReportComponentConfig extends BaseImageReportComponentConfig {
   height: number;
 }
@@ -755,6 +787,10 @@ export interface LatestChartReportComponentConfig<S extends ReportLatestChartSet
 
 export interface BarChartReportComponentConfig extends LatestChartReportComponentConfig<ReportBarChartSettings> {
   subType: 'latestBarChart'
+}
+
+export interface PieChartReportComponentConfig extends LatestChartReportComponentConfig<ReportPieChartSettings> {
+  subType: 'pieChart'
 }
 
 export interface ImageReportComponentConfig extends BaseImageReportComponentConfig {

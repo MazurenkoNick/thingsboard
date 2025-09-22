@@ -126,6 +126,9 @@
       @case ('latestBarChart') {
         <ng-container *ngTemplateOutlet="barChart"></ng-container>
       }
+      @case ('pieChart') {
+        <ng-container *ngTemplateOutlet="pieChart"></ng-container>
+      }
     }
     <div class="tb-form-panel stroked tb-slide-toggle">
       <mat-expansion-panel class="tb-settings" [expanded]="reportConfigForm.get('showLegend').value" [disabled]="!reportConfigForm.get('showLegend').value">
@@ -264,6 +267,66 @@
                           formControlName="axisTickLabelColor">
           </tb-color-input>
         </div>
+      </div>
+    </div>
+  </ng-container>
+</ng-template>
+
+<ng-template #pieChart>
+  <ng-container [formGroup]="reportConfigForm">
+    <div class="tb-form-panel">
+      <div class="tb-form-panel-title" translate>widgets.pie-chart.pie-chart-appearance</div>
+      <div class="tb-form-row space-between column-xs">
+        <mat-slide-toggle class="mat-slide fixed-title-width" formControlName="showLabel">
+          {{ 'widgets.pie-chart.label' | translate }}
+        </mat-slide-toggle>
+        <div class="flex flex-1 flex-row items-center justify-start gap-2">
+          <mat-form-field class="flex-1" appearance="outline" subscriptSizing="dynamic">
+            <mat-select formControlName="labelPosition">
+              <mat-option *ngFor="let position of pieChartLabelPositions" [value]="position">
+                {{ pieChartLabelPositionTranslationMap.get(position) | translate }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+          <tb-font-settings formControlName="labelFont"
+                            [allowedFontWeights]="['normal', 'bold', '500']"
+                            [allowedFontStyles]="['normal', 'italic']"
+                            disabledLineHeight
+                            forceSizeUnit="px"
+                            [previewText]="'Wind<br/>55%'">
+          </tb-font-settings>
+          <tb-color-input asBoxInput
+                          colorClearButton
+                          formControlName="labelColor">
+          </tb-color-input>
+        </div>
+      </div>
+      <div class="tb-form-row space-between">
+        <div>{{ 'widgets.pie-chart.border' | translate }}</div>
+        <div class="flex flex-row items-center justify-start gap-2">
+          <mat-form-field appearance="outline" class="number" subscriptSizing="dynamic">
+            <input matInput formControlName="pieBorderWidth" type="number" min="0" step="1" placeholder="{{ 'widget-config.set' | translate }}">
+            <div matSuffix>px</div>
+          </mat-form-field>
+          <tb-color-input asBoxInput
+                          colorClearButton
+                          formControlName="pieBorderColor">
+          </tb-color-input>
+        </div>
+      </div>
+      <div class="tb-form-row space-between">
+        <div>{{ 'widgets.pie-chart.radius' | translate }}</div>
+        <div class="flex flex-row items-center justify-start gap-2">
+          <mat-form-field appearance="outline" class="number" subscriptSizing="dynamic">
+            <input matInput formControlName="pieRadius" type="number" min="0" max="100" step="1" placeholder="{{ 'widget-config.set' | translate }}">
+            <div matSuffix>%</div>
+          </mat-form-field>
+        </div>
+      </div>
+      <div class="tb-form-row">
+        <mat-slide-toggle class="mat-slide" formControlName="clockwise">
+          {{ 'widgets.latest-chart.clockwise-layout' | translate }}
+        </mat-slide-toggle>
       </div>
     </div>
   </ng-container>

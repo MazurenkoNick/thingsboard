@@ -134,6 +134,7 @@ public class ColorUtils {
             case "cyan" -> Color.CYAN;
             case "magenta" -> Color.MAGENTA;
             case "gray" -> Color.GRAY;
+            case "lightgray" -> Color.LIGHT_GRAY;
             default -> null;
         };
     }
