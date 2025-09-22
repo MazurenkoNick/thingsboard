@@ -43,13 +43,13 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.rule.engine.api.TimeseriesSaveRequest;
 import org.thingsboard.rule.engine.api.TimeseriesSaveRequest.Strategy;
-import org.thingsboard.script.api.tbel.TbelInvokeService;
+import org.thingsboard.server.actors.ActorSystemContext;
 import org.thingsboard.server.common.adaptor.JsonConverter;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.cf.CalculatedField;
+import org.thingsboard.server.common.data.cf.CalculatedFieldType;
 import org.thingsboard.server.common.data.cf.configuration.Argument;
 import org.thingsboard.server.common.data.cf.configuration.ArgumentType;
 import org.thingsboard.server.common.data.cf.configuration.OutputType;
@@ -93,6 +93,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static org.thingsboard.server.utils.CalculatedFieldArgumentUtils.createDefaultKvEntry;
+import static org.thingsboard.server.utils.CalculatedFieldArgumentUtils.createStateByType;
 import static org.thingsboard.server.utils.CalculatedFieldArgumentUtils.transformSingleValueArgument;
 
 @TbRuleEngineComponent
@@ -110,7 +111,7 @@ public class DefaultCalculatedFieldReprocessingService extends AbstractCalculate
     @Value("${queue.calculated_fields.telemetry_fetch_pack_size:2000}")
     private int telemetryFetchPackSize;
 
-    private final TbelInvokeService tbelInvokeService;
+    private final ActorSystemContext systemContext;
     private final TelemetrySubscriptionService telemetrySubscriptionService;
 
     public DefaultCalculatedFieldReprocessingService(AttributesService attributesService,
@@ -118,10 +119,10 @@ public class DefaultCalculatedFieldReprocessingService extends AbstractCalculate
                                                      ApiLimitService apiLimitService,
                                                      RelationService relationService,
                                                      OwnersCacheService ownersCacheService,
-                                                     TbelInvokeService tbelInvokeService,
+                                                     ActorSystemContext systemContext,
                                                      TelemetrySubscriptionService telemetrySubscriptionService) {
         super(attributesService, timeseriesService, apiLimitService, relationService, ownersCacheService);
-        this.tbelInvokeService = tbelInvokeService;
+        this.systemContext = systemContext;
         this.telemetrySubscriptionService = telemetrySubscriptionService;
     }
 
@@ -139,6 +140,9 @@ public class DefaultCalculatedFieldReprocessingService extends AbstractCalculate
             throw new IllegalArgumentException("EntityType '" + entityId.getEntityType() + "' is not supported for reprocessing");
         }
         CalculatedField calculatedField = task.getCalculatedField();
+        if (calculatedField.getType() == CalculatedFieldType.ALARM) {
+            throw new IllegalArgumentException("Reprocessing not applicable for this type");
+        }
         if (OutputType.ATTRIBUTES.equals(calculatedField.getConfiguration().getOutput().getType())) {
             throw new IllegalArgumentException("'ATTRIBUTES' output type is not supported for reprocessing");
         }
@@ -146,7 +150,7 @@ public class DefaultCalculatedFieldReprocessingService extends AbstractCalculate
         long startTs = task.getStartTs();
         long endTs = task.getEndTs();
 
-        CalculatedFieldCtx cfCtx = new CalculatedFieldCtx(calculatedField, tbelInvokeService, apiLimitService, relationService);
+        CalculatedFieldCtx cfCtx = new CalculatedFieldCtx(calculatedField, systemContext);
         cfCtx.setUseLatestTs(false);
         CalculatedFieldState state = initState(tenantId, entityId, cfCtx, startTs);
         cfCtx.init();
@@ -230,7 +234,7 @@ public class DefaultCalculatedFieldReprocessingService extends AbstractCalculate
         CalculatedFieldState state = ctx.getState();
         if (ctx.getCfCtx().isInitialized() && state.isReady()) {
             log.trace("[{}][{}] Performing calculation for CF {}", ctx.getTenantId(), ctx.getEntityId(), ctx.getCfId());
-            CalculatedFieldResult calculationResult = state.performCalculation(ctx.getEntityId(), ctx.getCfCtx()).get(cfCalculationResultTimeout, TimeUnit.SECONDS);
+            CalculatedFieldResult calculationResult = state.performCalculation(ctx.getCfCtx()).get(cfCalculationResultTimeout, TimeUnit.SECONDS);
             ctx.checkStateSize();
             if (!calculationResult.isEmpty()) {
                 ctx.setLatestResult(new TbPair<>(ts, calculationResult));
@@ -246,7 +250,7 @@ public class DefaultCalculatedFieldReprocessingService extends AbstractCalculate
         if (newArgValues.isEmpty()) {
             log.info("[{}] No argument values to process for CF.", ctx.getCfId());
         }
-        if (ctx.getState().updateState(ctx.getCfCtx(), newArgValues)) {
+        if (ctx.getState().update(ctx.getCfCtx(), newArgValues)) {
             return processStateIfReady(ctx, ts);
         } else {
             return Futures.immediateVoidFuture();
@@ -254,14 +258,17 @@ public class DefaultCalculatedFieldReprocessingService extends AbstractCalculate
     }
 
     private CalculatedFieldState initState(TenantId tenantId, EntityId entityId, CalculatedFieldCtx ctx, long startTs) throws InterruptedException {
-        ListenableFuture<CalculatedFieldState> stateFuture = super.fetchStateFromDb(ctx, entityId, startTs);
-        CalculatedFieldState state;
+        CalculatedFieldState state = createStateByType(ctx, entityId);
+        state.init(ctx);
+
+        Map<String, ArgumentEntry> arguments;
         try {
-            state = stateFuture.get(); // will be interrupted on task processing timeout
+            arguments = fetchArguments(ctx, entityId, startTs).get(); // will be interrupted on task processing timeout
         } catch (ExecutionException e) {
             Throwable cause = e.getCause();
             throw new RuntimeException(cause.getMessage(), cause);
         }
+        state.update(ctx, arguments);
         log.debug("[{}][{}] Initialized state for CF {}", tenantId, entityId, ctx.getCfId());
         return state;
     }
@@ -298,7 +305,7 @@ public class DefaultCalculatedFieldReprocessingService extends AbstractCalculate
     }
 
     private Future<Void> saveResult(CfReprocessingCtx ctx, CalculatedFieldResult calculatedFieldResult, long ts, Strategy strategy) throws InterruptedException {
-        JsonElement result = JsonParser.parseString(Objects.requireNonNull(JacksonUtil.toString(calculatedFieldResult.getResult())));
+        JsonElement result = JsonParser.parseString(Objects.requireNonNull(calculatedFieldResult.stringValue()));
         log.trace("[{}][{}] Saving CF result: {}", ctx.getTenantId(), ctx.getEntityId(), result);
         SettableFuture<Void> future = SettableFuture.create();
         Map<Long, List<KvEntry>> tsKvMap = JsonConverter.convertToTelemetry(result, ts);

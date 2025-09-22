@@ -134,7 +134,7 @@ public class CalculatedFieldIntegrationTest extends CalculatedFieldControllerTes
     @Test
     public void testSimpleCalculatedFieldWhenAllTelemetryPresent() throws Exception {
         Device testDevice = createDevice("Test device", "1234567890");
-        doPost("/api/plugins/telemetry/DEVICE/" + testDevice.getUuidId() + "/timeseries/" + DataConstants.SERVER_SCOPE, JacksonUtil.toJsonNode("{\"temperature\":25}"));
+        postTelemetry(testDevice.getId(), "{\"temperature\":25}");
         doPost("/api/plugins/telemetry/DEVICE/" + testDevice.getUuidId() + "/attributes/" + DataConstants.SERVER_SCOPE, JacksonUtil.toJsonNode("{\"deviceTemperature\":40}"));
 
         CalculatedField calculatedField = new CalculatedField();
@@ -171,7 +171,7 @@ public class CalculatedFieldIntegrationTest extends CalculatedFieldControllerTes
                     assertThat(fahrenheitTemp.get("fahrenheitTemp").get(0).get("value").asText()).isEqualTo("77.0");
                 });
 
-        doPost("/api/plugins/telemetry/DEVICE/" + testDevice.getUuidId() + "/timeseries/" + DataConstants.SERVER_SCOPE, JacksonUtil.toJsonNode("{\"temperature\":30}"));
+        postTelemetry(testDevice.getId(), "{\"temperature\":30}");
 
         await().alias("update telemetry -> recalculate state").atMost(TIMEOUT, TimeUnit.SECONDS)
                 .pollInterval(POLL_INTERVAL, TimeUnit.SECONDS)
@@ -192,6 +192,7 @@ public class CalculatedFieldIntegrationTest extends CalculatedFieldControllerTes
                 .untilAsserted(() -> {
                     ArrayNode temperatureF = getServerAttributes(testDevice.getId(), "temperatureF");
                     assertThat(temperatureF).isNotNull();
+                    assertThat(temperatureF.get(0)).isNotNull();
                     assertThat(temperatureF.get(0).get("value").asText()).isEqualTo("86.0");
                 });
 
@@ -256,7 +257,7 @@ public class CalculatedFieldIntegrationTest extends CalculatedFieldControllerTes
                     assertThat(fahrenheitTemp.get("fahrenheitTemp").get(0).get("value").isNull()).isTrue();
                 });
 
-        doPost("/api/plugins/telemetry/DEVICE/" + testDevice.getUuidId() + "/timeseries/" + DataConstants.SERVER_SCOPE, JacksonUtil.toJsonNode("{\"temperature\":30}"));
+        postTelemetry(testDevice.getId(), "{\"temperature\":30}");
 
         await().alias("update telemetry -> perform calculation").atMost(TIMEOUT, TimeUnit.SECONDS)
                 .pollInterval(POLL_INTERVAL, TimeUnit.SECONDS)
@@ -305,7 +306,7 @@ public class CalculatedFieldIntegrationTest extends CalculatedFieldControllerTes
                     assertThat(fahrenheitTemp.get("fahrenheitTemp").get(0).get("value").asText()).isEqualTo("53.6");
                 });
 
-        doPost("/api/plugins/telemetry/DEVICE/" + testDevice.getUuidId() + "/timeseries/" + DataConstants.SERVER_SCOPE, JacksonUtil.toJsonNode("{\"temperature\":30}"));
+        postTelemetry(testDevice.getId(), "{\"temperature\":30}");
 
         await().alias("update telemetry -> recalculate state").atMost(TIMEOUT, TimeUnit.SECONDS)
                 .pollInterval(POLL_INTERVAL, TimeUnit.SECONDS)
@@ -490,7 +491,7 @@ public class CalculatedFieldIntegrationTest extends CalculatedFieldControllerTes
     @Test
     public void testSimpleCalculatedFieldWhenExpressionIsInvalid() throws Exception {
         Device testDevice = createDevice("Test device", "1234567890");
-        doPost("/api/plugins/telemetry/DEVICE/" + testDevice.getUuidId() + "/timeseries/" + DataConstants.SERVER_SCOPE, JacksonUtil.toJsonNode("{\"temperature\":25}"));
+        postTelemetry(testDevice.getId(), "{\"temperature\":25}");
 
         CalculatedField calculatedField = new CalculatedField();
         calculatedField.setEntityId(testDevice.getId());
@@ -526,7 +527,7 @@ public class CalculatedFieldIntegrationTest extends CalculatedFieldControllerTes
                     assertThat(fahrenheitTemp.get("fahrenheitTemp").get(0).get("value").isNull()).isTrue();
                 });
 
-        doPost("/api/plugins/telemetry/DEVICE/" + testDevice.getUuidId() + "/timeseries/" + DataConstants.SERVER_SCOPE, JacksonUtil.toJsonNode("{\"temperature\":30}"));
+        postTelemetry(testDevice.getId(), "{\"temperature\":30}");
 
         await().alias("update telemetry -> ctx is not initialized -> no calculation perform").atMost(TIMEOUT, TimeUnit.SECONDS)
                 .pollInterval(POLL_INTERVAL, TimeUnit.SECONDS)
@@ -541,7 +542,7 @@ public class CalculatedFieldIntegrationTest extends CalculatedFieldControllerTes
     public void testSimpleCalculatedFieldWhenUseLatestTsIsTrue() throws Exception {
         Device testDevice = createDevice("Test device", "1234567890");
         long ts = System.currentTimeMillis() - 300000L;
-        doPost("/api/plugins/telemetry/DEVICE/" + testDevice.getUuidId() + "/timeseries/" + DataConstants.SERVER_SCOPE, JacksonUtil.toJsonNode(String.format("{\"ts\": %s, \"values\": {\"temperature\":30}}", ts)));
+        postTelemetry(testDevice.getId(), String.format("{\"ts\": %s, \"values\": {\"temperature\":30}}", ts));
 
         CalculatedField calculatedField = new CalculatedField();
         calculatedField.setEntityId(testDevice.getId());
@@ -585,10 +586,10 @@ public class CalculatedFieldIntegrationTest extends CalculatedFieldControllerTes
         long ts = System.currentTimeMillis();
 
         long tsA = ts - 300000L;
-        doPost("/api/plugins/telemetry/DEVICE/" + testDevice.getUuidId() + "/timeseries/" + DataConstants.SERVER_SCOPE, JacksonUtil.toJsonNode(String.format("{\"ts\": %s, \"values\": {\"a\":1}}", tsA)));
+        postTelemetry(testDevice.getId(), String.format("{\"ts\": %s, \"values\": {\"a\":1}}", tsA));
 
         long tsB = ts - 300L;
-        doPost("/api/plugins/telemetry/DEVICE/" + testDevice.getUuidId() + "/timeseries/" + DataConstants.SERVER_SCOPE, JacksonUtil.toJsonNode(String.format("{\"ts\": %s, \"values\": {\"b\":5}}", tsB)));
+        postTelemetry(testDevice.getId(), String.format("{\"ts\": %s, \"values\": {\"b\":5}}", tsB));
 
         CalculatedField calculatedField = new CalculatedField();
         calculatedField.setEntityId(testDevice.getId());
@@ -629,7 +630,7 @@ public class CalculatedFieldIntegrationTest extends CalculatedFieldControllerTes
                 });
 
         long tsABeforeTsB = tsB - 300L;
-        doPost("/api/plugins/telemetry/DEVICE/" + testDevice.getUuidId() + "/timeseries/" + DataConstants.SERVER_SCOPE, JacksonUtil.toJsonNode(String.format("{\"ts\": %s, \"values\": {\"a\":10}}", tsABeforeTsB)));
+        postTelemetry(testDevice.getId(), String.format("{\"ts\": %s, \"values\": {\"a\":10}}", tsABeforeTsB));
 
         await().alias("update telemetry with ts less than latest -> save result with latest ts").atMost(TIMEOUT, TimeUnit.SECONDS)
                 .pollInterval(POLL_INTERVAL, TimeUnit.SECONDS)
@@ -645,7 +646,7 @@ public class CalculatedFieldIntegrationTest extends CalculatedFieldControllerTes
     public void testScriptCalculatedFieldWhenUsedLatestTsInScript() throws Exception {
         Device testDevice = createDevice("Test device", "1234567890");
         long ts = System.currentTimeMillis() - 300000L;
-        doPost("/api/plugins/telemetry/DEVICE/" + testDevice.getUuidId() + "/timeseries/" + DataConstants.SERVER_SCOPE, JacksonUtil.toJsonNode(String.format("{\"ts\": %s, \"values\": {\"temperature\":30}}", ts)));
+        postTelemetry(testDevice.getId(), String.format("{\"ts\": %s, \"values\": {\"temperature\":30}}", ts));
 
         CalculatedField calculatedField = new CalculatedField();
         calculatedField.setEntityId(testDevice.getId());

@@ -28,10 +28,37 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.rule.engine.profile;
+package org.thingsboard.server.common.data.alarm.rule.condition;
 
-enum AlarmStateUpdateResult {
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import jakarta.validation.Valid;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.jetbrains.annotations.NotNull;
+import org.thingsboard.server.common.data.alarm.rule.condition.expression.AlarmConditionExpression;
+import org.thingsboard.server.common.data.alarm.rule.condition.schedule.AlarmSchedule;
 
-    NONE, CREATED, UPDATED, SEVERITY_UPDATED, CLEARED;
+@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
+@JsonSubTypes({
+        @Type(name = "SIMPLE", value = SimpleAlarmCondition.class),
+        @Type(name = "DURATION", value = DurationAlarmCondition.class),
+        @Type(name = "REPEATING", value = RepeatingAlarmCondition.class),
+})
+@Data
+@NoArgsConstructor
+public abstract class AlarmCondition {
+
+    @NotNull
+    @Valid
+    private AlarmConditionExpression expression;
+    private AlarmConditionValue<AlarmSchedule> schedule;
+
+    @JsonIgnore
+    public abstract AlarmConditionType getType();
 
 }

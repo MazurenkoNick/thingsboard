@@ -42,7 +42,8 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 )
 @JsonSubTypes({
         @JsonSubTypes.Type(value = RelationQueryDynamicSourceConfiguration.class, name = "RELATION_QUERY"),
-        @JsonSubTypes.Type(value = CurrentOwnerDynamicSourceConfiguration.class, name = "CURRENT_OWNER")
+        @JsonSubTypes.Type(value = CurrentOwnerDynamicSourceConfiguration.class, name = "CURRENT_OWNER"),
+        @JsonSubTypes.Type(value = CurrentCustomerDynamicSourceConfiguration.class, name = "CURRENT_CUSTOMER")
 })
 @JsonIgnoreProperties(ignoreUnknown = true)
 public interface CfArgumentDynamicSourceConfiguration {

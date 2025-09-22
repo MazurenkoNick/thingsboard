@@ -79,7 +79,7 @@ public abstract class AbstractCalculatedFieldStateService implements CalculatedF
 
     protected void processRestoredState(CalculatedFieldStateProto stateMsg) {
         var id = fromProto(stateMsg.getId());
-        var state = fromProto(stateMsg);
+        var state = fromProto(id, stateMsg);
         processRestoredState(id, state);
     }
 
