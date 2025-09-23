@@ -58,7 +58,7 @@ public class StateEntityOwnerQueryProcessor extends AbstractSingleEntityTypeQuer
         EntityData ed = repository.getEntityMap(entityId.getEntityType()).get(entityId.getId());
         if (ed != null && ed.getPermissionCustomerId() != null && matches(ed)) {
             if (customerId.equals(ed.getPermissionCustomerId()) || repository.getAllCustomers(customerId).contains(ed.getPermissionCustomerId())) {
-                processor.accept(ed);
+                processor.accept(repository.getEntityMap(EntityType.CUSTOMER).get(ed.getPermissionCustomerId()));
             }
         }
     }
@@ -73,7 +73,8 @@ public class StateEntityOwnerQueryProcessor extends AbstractSingleEntityTypeQuer
             boolean genericRead = customerId.equals(ed.getPermissionCustomerId()) || repository.getAllCustomers(customerId).contains(ed.getPermissionCustomerId());
             CombinedPermissions permissions = getCombinedPermissions(ed.getId(), genericRead, readAttrPermissions, readTsPermissions, groupPermissions);
             if (permissions.isRead()) {
-                SortableEntityData sortData = toSortData(ed, permissions);
+                EntityData<?> customer = repository.getEntityMap(EntityType.CUSTOMER).get(ed.getPermissionCustomerId());
+                SortableEntityData sortData = toSortData(customer, readAttrPermissions, readTsPermissions);
                 return Collections.singletonList(sortData);
             } else {
                 return Collections.emptyList();
