@@ -45,13 +45,13 @@ import { AbstractReportComponentPreview } from '@home/pages/reporting/template/c
 import {
   LatestChartReportComponentConfig,
   reportBarChartDefaultSettings,
-  ReportBarChartSettings,
+  ReportBarChartSettings, reportDoughnutChartDefaultSettings, ReportDoughnutChartSettings,
   reportLatestChartDefaultSettings,
   ReportLatestChartSettings, reportPieChartDefaultSettings, ReportPieChartSettings
 } from '@shared/models/report-component.models';
 import { IWidgetSubscription, WidgetSubscriptionCallbacks } from '@core/api/widget-api.models';
 import { ReportWidgetContextService } from '@home/pages/reporting/template/components/report-widget-context.service';
-import { BackgroundType, ComponentStyle, textStyle } from '@shared/models/widget-settings.models';
+import { BackgroundType, ComponentStyle, constantColor, textStyle } from '@shared/models/widget-settings.models';
 import { WidgetContext } from '@home/models/widget-component.models';
 import { ChartWidgetComponent } from '@home/components/widget/lib/chart/chart.models';
 import { debounce, deepClone, mergeDeep } from '@core/utils';
@@ -59,6 +59,8 @@ import { DatasourceType, widgetType } from '@shared/models/widget.models';
 import { LatestChartWidgetSettings } from '@home/components/widget/lib/chart/latest-chart.models';
 import { BarChartWidgetComponent } from '@home/components/widget/lib/chart/bar-chart-widget.component';
 import { PieChartWidgetComponent } from '@home/components/widget/lib/chart/pie-chart-widget.component';
+import { DoughnutWidgetSettings } from '@home/components/widget/lib/chart/doughnut-widget.models';
+import { DoughnutWidgetComponent } from '@home/components/widget/lib/chart/doughnut-widget.component';
 
 @Component({
   selector: 'tb-latest-chart-preview',
@@ -185,6 +187,8 @@ export class LatestChartPreviewComponent extends AbstractReportComponentPreview<
       widgetComponentType = BarChartWidgetComponent;
     } else if ('pieChart' === subType) {
       widgetComponentType = PieChartWidgetComponent;
+    } else if ('doughnutChart' === subType || 'horizontalDoughnutChart' === subType) {
+      widgetComponentType = DoughnutWidgetComponent;
     }
 
     if (widgetComponentType) {
@@ -210,6 +214,10 @@ export class LatestChartPreviewComponent extends AbstractReportComponentPreview<
       latestChartSettings = mergeDeep<ReportBarChartSettings>({} as ReportBarChartSettings, reportBarChartDefaultSettings, this.reportComponent.latestChartSettings as ReportBarChartSettings);
     } else if ('pieChart' === subType) {
       latestChartSettings = mergeDeep<ReportPieChartSettings>({} as ReportPieChartSettings, reportPieChartDefaultSettings, this.reportComponent.latestChartSettings as ReportPieChartSettings);
+    } else if ('doughnutChart' === subType || 'horizontalDoughnutChart' === subType) {
+      latestChartSettings = mergeDeep<ReportDoughnutChartSettings>({} as ReportDoughnutChartSettings, reportDoughnutChartDefaultSettings('horizontalDoughnutChart' === subType),
+        this.reportComponent.latestChartSettings as ReportDoughnutChartSettings);
+      (latestChartSettings as DoughnutWidgetSettings).totalValueColor = constantColor((latestChartSettings as ReportDoughnutChartSettings).totalValueColor);
     } else {
       latestChartSettings = mergeDeep<ReportLatestChartSettings>({} as ReportLatestChartSettings, reportLatestChartDefaultSettings, this.reportComponent.latestChartSettings as ReportLatestChartSettings);
     }

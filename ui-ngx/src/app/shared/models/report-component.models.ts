@@ -72,6 +72,7 @@ import {
 import { TimeSeriesChartWidgetSettings } from '@home/components/widget/lib/chart/time-series-chart-widget.models';
 import { IntervalType } from '@shared/models/telemetry/telemetry.models';
 import { LatestChartSettings, LatestChartWidgetSettings } from '@home/components/widget/lib/chart/latest-chart.models';
+import { DoughnutLayout } from '@home/components/widget/lib/chart/doughnut-widget.models';
 
 export enum ReportComponentType {
   HEADING = 'HEADING',
@@ -770,6 +771,33 @@ export const reportPieChartDefaultSettings: ReportPieChartSettings = mergeDeep<R
   } as ReportPieChartSettings
 );
 
+export interface ReportDoughnutChartSettings extends ReportLatestChartSettings {
+  layout: DoughnutLayout;
+  clockwise: boolean;
+  totalValueFont: Font;
+  totalValueColor: string;
+}
+
+export const reportDoughnutChartDefaultSettings = (horizontal: boolean): ReportDoughnutChartSettings =>
+       (mergeDeep<ReportDoughnutChartSettings>(
+  {} as ReportDoughnutChartSettings,
+  reportLatestChartDefaultSettings as ReportDoughnutChartSettings,
+  {
+    autoScale: true,
+    legendPosition: horizontal ? LegendPosition.right : LegendPosition.bottom,
+    layout: DoughnutLayout.default,
+    clockwise: false,
+    totalValueFont: {
+      family: 'Roboto',
+      size: 24,
+      sizeUnit: 'px',
+      style: 'normal',
+      weight: '500'
+    },
+    totalValueColor: 'rgba(0, 0, 0, 0.87)'
+  } as ReportDoughnutChartSettings
+));
+
 export interface BaseChartReportComponentConfig extends BaseImageReportComponentConfig {
   height: number;
 }
@@ -791,6 +819,14 @@ export interface BarChartReportComponentConfig extends LatestChartReportComponen
 
 export interface PieChartReportComponentConfig extends LatestChartReportComponentConfig<ReportPieChartSettings> {
   subType: 'pieChart'
+}
+
+export interface DoughnutChartReportComponentConfig extends LatestChartReportComponentConfig<ReportDoughnutChartSettings> {
+  subType: 'doughnutChart'
+}
+
+export interface HorizontalDoughnutChartReportComponentConfig extends LatestChartReportComponentConfig<ReportDoughnutChartSettings> {
+  subType: 'horizontalDoughnutChart'
 }
 
 export interface ImageReportComponentConfig extends BaseImageReportComponentConfig {

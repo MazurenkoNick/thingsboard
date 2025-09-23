@@ -37,7 +37,7 @@ import {
   imageAlignments, imageAlignmentTranslations, imageWidthTypeTranslations,
   LatestChartReportComponentConfig,
   reportBarChartDefaultSettings,
-  ReportBarChartSettings,
+  ReportBarChartSettings, reportDoughnutChartDefaultSettings, ReportDoughnutChartSettings,
   ReportLatestChartSettings, reportPieChartDefaultSettings, ReportPieChartSettings
 } from '@shared/models/report-component.models';
 import { FormGroup, UntypedFormGroup, Validators } from '@angular/forms';
@@ -56,6 +56,12 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { merge } from 'rxjs';
 import { WidgetInfo, WidgetWithInfo } from '@home/models/widget-component.models';
 import { pieChartLabelPositions, pieChartLabelPositionTranslations } from '@home/components/widget/lib/chart/chart.models';
+import {
+  DoughnutLayout, doughnutLayoutImages,
+  doughnutLayouts,
+  doughnutLayoutTranslations,
+  horizontalDoughnutLayoutImages
+} from '@home/components/widget/lib/chart/doughnut-widget.models';
 
 @Component({
   selector: 'tb-latest-chart-config',
@@ -72,6 +78,22 @@ export class LatestChartConfigComponent extends AbstractReportComponentConfig<La
   pieChartLabelPositions = pieChartLabelPositions;
 
   pieChartLabelPositionTranslationMap = pieChartLabelPositionTranslations;
+
+  doughnutHorizontal = false;
+
+  doughnutLayouts = doughnutLayouts;
+
+  doughnutLayoutTranslationMap = doughnutLayoutTranslations;
+
+  doughnutLayoutImageMap: Map<DoughnutLayout, string>;
+
+  get doughnutTotalEnabled(): boolean {
+    if (this.reportConfigForm?.contains('doughnutLayout')) {
+      const layout: DoughnutLayout = this.reportConfigForm.get('doughnutLayout').value;
+      return layout === DoughnutLayout.with_total;
+    }
+    return false;
+  }
 
   imageWidthTypes = ['fitWidth', 'custom'];
   imageWidthTypeTranslations = imageWidthTypeTranslations;
@@ -107,6 +129,15 @@ export class LatestChartConfigComponent extends AbstractReportComponentConfig<La
       latestChartSettings = mergeDeep<ReportBarChartSettings>({} as ReportBarChartSettings, reportBarChartDefaultSettings, reportComponentConfig.latestChartSettings as ReportBarChartSettings);
     } else if ('pieChart' === this.subType) {
       latestChartSettings = mergeDeep<ReportPieChartSettings>({} as ReportPieChartSettings, reportPieChartDefaultSettings, reportComponentConfig.latestChartSettings as ReportPieChartSettings);
+    } else if ('doughnutChart' === this.subType) {
+      latestChartSettings = mergeDeep<ReportDoughnutChartSettings>({} as ReportDoughnutChartSettings, reportDoughnutChartDefaultSettings(false),
+        reportComponentConfig.latestChartSettings as ReportDoughnutChartSettings);
+      this.doughnutLayoutImageMap = doughnutLayoutImages;
+    } else if ('horizontalDoughnutChart' === this.subType) {
+      latestChartSettings = mergeDeep<ReportDoughnutChartSettings>({} as ReportDoughnutChartSettings, reportDoughnutChartDefaultSettings(true),
+        reportComponentConfig.latestChartSettings as ReportDoughnutChartSettings);
+      this.doughnutHorizontal = true;
+      this.doughnutLayoutImageMap = horizontalDoughnutLayoutImages;
     }
     const form: UntypedFormGroup = this.fb.group({
       dataSources: [reportComponentConfig.dataSources, []],
@@ -163,6 +194,21 @@ export class LatestChartConfigComponent extends AbstractReportComponentConfig<La
       form.addControl('clockwise', this.fb.control(pieChartSettings.clockwise, []));
 
       form.get('showLabel').valueChanges.pipe(
+        takeUntilDestroyed(this.destroyRef)
+      ).subscribe(() => {
+        this.updateValidators(form);
+      });
+    } else if ('doughnutChart' === this.subType || 'horizontalDoughnutChart' === this.subType) {
+
+      const doughnutChartSettings = latestChartSettings as ReportDoughnutChartSettings;
+
+      form.addControl('doughnutLayout', this.fb.control(doughnutChartSettings.layout, []));
+      form.addControl('autoScale', this.fb.control(doughnutChartSettings.autoScale, []));
+      form.addControl('clockwise', this.fb.control(doughnutChartSettings.clockwise, []));
+      form.addControl('totalValueFont', this.fb.control(doughnutChartSettings.totalValueFont, []));
+      form.addControl('totalValueColor', this.fb.control(doughnutChartSettings.totalValueColor, []));
+
+      form.get('doughnutLayout').valueChanges.pipe(
         takeUntilDestroyed(this.destroyRef)
       ).subscribe(() => {
         this.updateValidators(form);
@@ -261,6 +307,18 @@ export class LatestChartConfigComponent extends AbstractReportComponentConfig<La
       delete config.pieRadius;
       pieChartSettings.clockwise = config.clockwise;
       delete config.clockwise;
+    } else if ('doughnutChart' === this.subType || 'horizontalDoughnutChart' === this.subType) {
+      const doughnutChartSettings = latestChartSettings as ReportDoughnutChartSettings;
+      doughnutChartSettings.layout = config.doughnutLayout;
+      delete config.doughnutLayout;
+      doughnutChartSettings.autoScale = config.autoScale;
+      delete config.autoScale;
+      doughnutChartSettings.clockwise = config.clockwise;
+      delete config.clockwise;
+      doughnutChartSettings.totalValueFont = config.totalValueFont;
+      delete config.totalValueFont;
+      doughnutChartSettings.totalValueColor = config.totalValueColor;
+      delete config.totalValueColor;
     }
 
     return config;
@@ -325,6 +383,17 @@ export class LatestChartConfigComponent extends AbstractReportComponentConfig<La
         form.get('labelPosition').disable({emitEvent: false});
         form.get('labelFont').disable({emitEvent: false});
         form.get('labelColor').disable({emitEvent: false});
+      }
+    }
+    if ('doughnutChart' === this.subType || 'horizontalDoughnutChart' === this.subType) {
+      const layout: DoughnutLayout = form.get('doughnutLayout').value;
+      const totalEnabled = layout === DoughnutLayout.with_total;
+      if (totalEnabled) {
+        form.get('totalValueFont').enable({emitEvent: false});
+        form.get('totalValueColor').enable({emitEvent: false});
+      } else {
+        form.get('totalValueFont').disable({emitEvent: false});
+        form.get('totalValueColor').disable({emitEvent: false});
       }
     }
   }

@@ -29,7 +29,7 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { Component, Input, OnInit, TemplateRef, ViewChild, ViewEncapsulation } from '@angular/core';
+import { Component, Input, OnInit, Optional, TemplateRef, ViewChild, ViewEncapsulation } from '@angular/core';
 import {
   doughnutDefaultSettings,
   doughnutPieChartSettings,
@@ -72,13 +72,13 @@ export class DoughnutWidgetComponent implements OnInit, ChartWidgetComponent {
 
   callbacks: LatestChartComponentCallbacks;
 
-  constructor(private widgetComponent: WidgetComponent,
+  constructor(@Optional() private widgetComponent: WidgetComponent,
               private translate: TranslateService) {
   }
 
   ngOnInit(): void {
-    const params = this.widgetComponent.typeParameters as any;
-    const horizontal  = isDefinedAndNotNull(params.horizontal) ? params.horizontal : false;
+    const params = this.widgetComponent?.typeParameters as any;
+    const horizontal  = isDefinedAndNotNull(params?.horizontal) ? params?.horizontal : false;
     this.ctx.$scope.doughnutWidget = this;
     this.settings = {...doughnutDefaultSettings(horizontal), ...this.ctx.settings};
     this.callbacks = {

@@ -39,16 +39,24 @@ import {
   defaultStateChartTimewindow,
   defaultTimeSeriesChartTimewindow,
   DividerReportComponentConfig,
+  DoughnutChartReportComponentConfig,
   EntityTableReportComponentConfig,
   HeadingReportComponentConfig,
+  HorizontalDoughnutChartReportComponentConfig,
   ImageReportComponentConfig,
-  PageBreakReportComponentConfig, PieChartReportComponentConfig, reportBarChartDefaultSettings,
+  PageBreakReportComponentConfig,
+  PieChartReportComponentConfig,
+  reportBarChartDefaultSettings,
   ReportBarChartSettings,
   reportBarChartWithLabelsDefaultSettings,
   ReportBarChartWithLabelSettings,
   ReportComponentConfig,
   ReportComponentType,
-  ReportDataKeySettingsType, reportPieChartDefaultSettings, ReportPieChartSettings,
+  ReportDataKeySettingsType,
+  reportDoughnutChartDefaultSettings,
+  ReportDoughnutChartSettings,
+  reportPieChartDefaultSettings,
+  ReportPieChartSettings,
   reportStateChartDefaultSettings,
   reportTimeSeriesChartDefaultSettings,
   ReportTimeSeriesChartSettings,
@@ -741,6 +749,88 @@ export const reportComponentsLibrary = new Map<string, ReportComponentLibraryIte
       }
     ],
     [
+      'doughnutChart',
+      {
+        title: 'report-template.component.doughnut',
+        previewImage: '/assets/report/components/time-series-chart.svg',
+        type: ReportComponentType.LATEST_CHART,
+        defaultConfig: {
+          type: ReportComponentType.LATEST_CHART,
+          subType: 'doughnutChart',
+          dataSources: [
+            {
+              type: DatasourceType.entity,
+              dataKeys: [
+                {
+                  name: 'windPower',
+                  type: DataKeyType.timeseries,
+                  label: 'Wind',
+                  color: '#08872B',
+                  settings: {}
+                },
+                {
+                  name: 'solarPower',
+                  type: DataKeyType.timeseries,
+                  label: 'Solar',
+                  color: '#FF4D5A',
+                  settings: {}
+                }
+              ]
+            }
+          ],
+          latestChartSettings: mergeDeep<ReportDoughnutChartSettings>({} as ReportDoughnutChartSettings, reportDoughnutChartDefaultSettings(false),
+            { title: 'Doughnut' } as ReportDoughnutChartSettings),
+          height: 400,
+          widthType: 'fitWidth',
+          alignment: 'center',
+          margins: null,
+          paddings: null,
+          background: null
+        } as DoughnutChartReportComponentConfig
+      }
+    ],
+    [
+      'horizontalDoughnutChart',
+      {
+        title: 'report-template.component.horizontal-doughnut',
+        previewImage: '/assets/report/components/time-series-chart.svg',
+        type: ReportComponentType.LATEST_CHART,
+        defaultConfig: {
+          type: ReportComponentType.LATEST_CHART,
+          subType: 'horizontalDoughnutChart',
+          dataSources: [
+            {
+              type: DatasourceType.entity,
+              dataKeys: [
+                {
+                  name: 'windPower',
+                  type: DataKeyType.timeseries,
+                  label: 'Wind',
+                  color: '#08872B',
+                  settings: {}
+                },
+                {
+                  name: 'solarPower',
+                  type: DataKeyType.timeseries,
+                  label: 'Solar',
+                  color: '#FF4D5A',
+                  settings: {}
+                }
+              ]
+            }
+          ],
+          latestChartSettings: mergeDeep<ReportDoughnutChartSettings>({} as ReportDoughnutChartSettings, reportDoughnutChartDefaultSettings(true),
+            { title: 'Doughnut' } as ReportDoughnutChartSettings),
+          height: 400,
+          widthType: 'fitWidth',
+          alignment: 'center',
+          margins: null,
+          paddings: null,
+          background: null
+        } as HorizontalDoughnutChartReportComponentConfig
+      }
+    ],
+    [
       'image',
       {
         title: 'report-template.component.image.type',
@@ -1353,6 +1443,35 @@ reportComponentTypesData.registerReportComponentSubType(ReportComponentType.LATE
     previewContext: {
     }
   });
+
+reportComponentTypesData.registerReportComponentSubType(ReportComponentType.LATEST_CHART,
+  'doughnutChart',
+  {
+    title: 'report-template.component.doughnut',
+    previewComponent: LatestChartPreviewComponent,
+    configComponent: LatestChartConfigComponent,
+    editable: true,
+    preferredSettingsWidthPx: 1000,
+    configContext: {
+    },
+    previewContext: {
+    }
+  });
+
+reportComponentTypesData.registerReportComponentSubType(ReportComponentType.LATEST_CHART,
+  'horizontalDoughnutChart',
+  {
+    title: 'report-template.component.horizontal-doughnut',
+    previewComponent: LatestChartPreviewComponent,
+    configComponent: LatestChartConfigComponent,
+    editable: true,
+    preferredSettingsWidthPx: 1000,
+    configContext: {
+    },
+    previewContext: {
+    }
+  });
+
 
 reportComponentTypesData.registerReportComponentType(ReportComponentType.IMAGE,
   {
