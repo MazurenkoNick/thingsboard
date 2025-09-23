@@ -7395,6 +7395,8 @@
             "bar-chart-with-labels": "Bar chart with labels",
             "bars": "Bars",
             "pie": "Pie",
+            "doughnut": "Doughnut",
+            "horizontal-doughnut": "Horizontal doughnut",
             "chart": {
                 "chart-height": "Chart height",
                 "chart-width": "Chart width",
