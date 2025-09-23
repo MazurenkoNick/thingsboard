@@ -141,6 +141,7 @@ public class PdfReportFontResolver extends ITextFontResolver {
                 this.addMonospace();
                 this.addSansSerif();
                 this.addSerif();
+                this.addNotoSansArabic();
             }
         }
         return families;
@@ -190,6 +191,19 @@ public class PdfReportFontResolver extends ITextFontResolver {
         families.put("serif", serif);
     }
 
+    private void addNotoSansArabic() {
+        PdfReportFontFamily arabic = new PdfReportFontFamily("noto-sans-arabic");
+        loadFont(arabic, "/fonts/notoSansArabic/NotoSansArabic-Regular.ttf",
+                IDENTITY_H, EMBEDDED, IdentValue.NORMAL, IdentValue.NORMAL);
+        loadFont(arabic, "/fonts/notoSansArabic/NotoSansArabic-Medium.ttf",
+                IDENTITY_H, EMBEDDED, IdentValue.FONT_WEIGHT_500, IdentValue.NORMAL);
+        loadFont(arabic, "/fonts/notoSansArabic/NotoSansArabic-Bold.ttf",
+                IDENTITY_H, EMBEDDED, IdentValue.BOLD, IdentValue.NORMAL);
+        loadFont(arabic, "/fonts/notoSansArabic/NotoSansArabic-SemiBold.ttf",
+                IDENTITY_H, EMBEDDED, IdentValue.FONT_WEIGHT_500 /* or 600 if you support it */, IdentValue.NORMAL);
+        families.put("noto-sans-arabic", arabic);
+    }
+
     private void loadFont(PdfReportFontFamily family,
                           String uri, String encoding, boolean embedded,
                           IdentValue fontWeightOverride, IdentValue fontStyleOverride) {
@@ -226,6 +240,21 @@ public class PdfReportFontResolver extends ITextFontResolver {
         }
     }
 
+    public List<BaseFont> getFallBackFonts() {
+        List<String> fallbackFamilies = Arrays.asList("Roboto", "noto-sans-arabic", "sans-serif", "serif", "monospace");
+        List<BaseFont> fallbacks = new java.util.ArrayList<>(fallbackFamilies.size());
+        for (String family : fallbackFamilies) {
+            PdfReportFontFamily f = getPdfReportFonts().get(family);
+            if (f != null) {
+                for (FontDescription fd : f.getFontDescriptions()) {
+                    if (!fallbacks.contains(fd.getFont())) {
+                        fallbacks.add(fd.getFont());
+                    }
+                }
+            }
+        }
+        return fallbacks;
+    }
 }
 
 

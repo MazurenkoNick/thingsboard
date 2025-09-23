@@ -179,6 +179,7 @@
         <flying-saucer.version>9.13.0</flying-saucer.version>
         <jtidy.version>r938</jtidy.version>
         <pdfbox.version>3.0.5</pdfbox.version>
+        <ibm.icu4j.version>75.1</ibm.icu4j.version>
         <netty.version>4.1.124.Final</netty.version> <!-- to fix CVE-2025-55163. TODO: remove when fixed in spring-boot-dependencies -->
     </properties>
 
@@ -2159,6 +2160,11 @@
                 <artifactId>pdfbox</artifactId>
                 <version>${pdfbox.version}</version>
                 <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.ibm.icu</groupId>
+                <artifactId>icu4j</artifactId>
+                <version>${ibm.icu4j.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
