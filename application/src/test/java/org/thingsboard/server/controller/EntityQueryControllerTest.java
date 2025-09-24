@@ -50,9 +50,9 @@ import org.thingsboard.server.common.data.Tenant;
 import org.thingsboard.server.common.data.User;
 import org.thingsboard.server.common.data.alarm.Alarm;
 import org.thingsboard.server.common.data.alarm.AlarmSeverity;
+import org.thingsboard.server.common.data.asset.Asset;
 import org.thingsboard.server.common.data.group.EntityGroup;
 import org.thingsboard.server.common.data.id.CustomerId;
-import org.thingsboard.server.common.data.asset.Asset;
 import org.thingsboard.server.common.data.id.DeviceId;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.TenantId;
@@ -65,6 +65,8 @@ import org.thingsboard.server.common.data.query.AlarmData;
 import org.thingsboard.server.common.data.query.AlarmDataPageLink;
 import org.thingsboard.server.common.data.query.AlarmDataQuery;
 import org.thingsboard.server.common.data.query.AliasEntityId;
+import org.thingsboard.server.common.data.query.AliasEntityIdImpl;
+import org.thingsboard.server.common.data.query.AliasEntityType;
 import org.thingsboard.server.common.data.query.DeviceTypeFilter;
 import org.thingsboard.server.common.data.query.DynamicValue;
 import org.thingsboard.server.common.data.query.DynamicValueSourceType;
@@ -85,6 +87,7 @@ import org.thingsboard.server.common.data.query.KeyFilter;
 import org.thingsboard.server.common.data.query.NumericFilterPredicate;
 import org.thingsboard.server.common.data.query.RelationsQueryFilter;
 import org.thingsboard.server.common.data.query.SchedulerEventFilter;
+import org.thingsboard.server.common.data.query.StateEntityOwnerFilter;
 import org.thingsboard.server.common.data.query.StringFilterPredicate;
 import org.thingsboard.server.common.data.query.TsValue;
 import org.thingsboard.server.common.data.queue.QueueStats;
@@ -1503,6 +1506,59 @@ public class EntityQueryControllerTest extends AbstractControllerTest {
 
         groupNameFilter.setGroupType(EntityType.ALARM);
         countByQueryAndCheck(groupNameQuery, 0);
+    }
+
+    @Test
+    public void testStateEntityOwnerFilterWithEntityTypeCurrentUser() throws Exception {
+        loginSubCustomerAdminUser();
+        Asset asset = new Asset();
+        asset.setName("Tenant Asset");
+        asset.setType("default");
+        asset = doPost("/api/asset", asset, Asset.class);
+        
+        loginCustomerAdminUser();
+        Device device = new Device();
+        String name = "Device" + RandomStringUtils.randomAlphabetic(5);
+        device.setName(name);
+        device.setType("default");
+
+        Device customerDevice = doPost("/api/device?accessToken=" + name, device, Device.class);
+
+        StateEntityOwnerFilter stateEntityOwnerFilter = new StateEntityOwnerFilter();
+        stateEntityOwnerFilter.setSingleEntity(AliasEntityId.fromEntityId(customerDevice.getId()));
+
+        List<EntityKey> entityFields = List.of(
+                new EntityKey(EntityKeyType.ENTITY_FIELD, "name")
+        );
+
+        EntityDataPageLink pageLink = new EntityDataPageLink(1000, 0, null, null);
+        EntityDataQuery query = new EntityDataQuery(stateEntityOwnerFilter, pageLink, entityFields, null, null);
+
+        PageData<EntityData> result = findByQueryAndCheck(query, 1);
+        String ownerName = result.getData().get(0).getLatest().get(EntityKeyType.ENTITY_FIELD).get("name").getValue();
+        assertThat(ownerName).isEqualTo("Customer");
+
+        StateEntityOwnerFilter assetOwnerFilter = new StateEntityOwnerFilter();
+        assetOwnerFilter.setSingleEntity(AliasEntityId.fromEntityId(asset.getId()));
+        
+        query = new EntityDataQuery(assetOwnerFilter, pageLink, entityFields, null, null);
+        PageData<EntityData> assetOwnerQuery = findByQueryAndCheck(query, 1);
+        String assetOwner = assetOwnerQuery.getData().get(0).getLatest().get(EntityKeyType.ENTITY_FIELD).get("name").getValue();
+        assertThat(assetOwner).isEqualTo("SubCustomer");
+
+        // check filter with singleEntityId having type CURRENT_USER
+        StateEntityOwnerFilter currentUserFilter = new StateEntityOwnerFilter();
+        currentUserFilter.setSingleEntity(new AliasEntityIdImpl(AliasEntityType.CURRENT_USER, null));
+        EntityDataQuery currentUserQuery = new EntityDataQuery(currentUserFilter, pageLink, entityFields, null, null);
+
+        PageData<EntityData> result2 = findByQueryAndCheck(currentUserQuery, 1);
+        String ownerName2 = result2.getData().get(0).getLatest().get(EntityKeyType.ENTITY_FIELD).get("name").getValue();
+        assertThat(ownerName2).isEqualTo("Customer");
+
+        loginTenantAdmin();
+        PageData<EntityData> result3 = findByQueryAndCheck(currentUserQuery, 1);
+        String ownerName3 = result3.getData().get(0).getLatest().get(EntityKeyType.ENTITY_FIELD).get("name").getValue();
+        assertThat(ownerName3).isEqualTo(TEST_TENANT_NAME);
     }
 
     private void clearCustomerAdminPermissionGroup() throws Exception {
