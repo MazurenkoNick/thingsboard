@@ -157,7 +157,7 @@ public class RemoteReportDataService implements ReportDataService {
     @Override
     public List<ReadTsKvQueryResult> findTimeseriesByQueries(EntityId entityId, List<BaseReadTsKvQuery> queries, TbReportCtx ctx) {
         try {
-            return getRestClient(ctx).getTimeseriesByReadTsKvQueries(entityId, queries);
+            return getRestClient(ctx).getTimeseriesByQueries(entityId, queries);
         } catch (RestClientResponseException e) {
             throw handleRestClientException(e);
         }

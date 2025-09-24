@@ -30,10 +30,11 @@
  */
 package org.thingsboard.server.msa.connectivity;
 
+import com.google.gson.JsonObject;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
-import org.apache.hc.client5.http.io.HttpClientConnectionManager;
 import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManagerBuilder;
+import org.apache.hc.client5.http.io.HttpClientConnectionManager;
 import org.apache.hc.client5.http.ssl.DefaultClientTlsStrategy;
 import org.apache.hc.client5.http.ssl.HostnameVerificationPolicy;
 import org.apache.hc.client5.http.ssl.NoopHostnameVerifier;
@@ -52,6 +53,7 @@ import org.thingsboard.server.common.data.kv.Aggregation;
 import org.thingsboard.server.common.data.kv.BaseReadTsKvQuery;
 import org.thingsboard.server.common.data.kv.ReadTsKvQueryResult;
 import org.thingsboard.server.common.data.kv.TsKvEntry;
+import org.thingsboard.server.common.data.security.DeviceCredentials;
 import org.thingsboard.server.msa.AbstractContainerTest;
 import org.thingsboard.server.msa.DisableUIListeners;
 import org.thingsboard.server.msa.TestProperties;
@@ -106,6 +108,13 @@ public class JavaRestClientTest extends AbstractContainerTest {
         Device device = restClient.saveDevice(defaultDevicePrototype(RandomStringUtils.randomAlphabetic(5)));
         assertThat(device).isNotNull();
 
+        DeviceCredentials deviceCredentials = testRestClient.getDeviceCredentialsByDeviceId(device.getId());
+        for (int i = 0; i < 3; i++) {
+            JsonObject values = new JsonObject();
+            values.addProperty("temperature", i + 25);
+            testRestClient.postTelemetry(deviceCredentials.getCredentialsId(), JacksonUtil.toJsonNode(createPayload().toString()));
+        }
+
         restClient.saveEntityTelemetry(device.getId(), "ts", JacksonUtil.toJsonNode("{\"temperature\": 25, \"humidity\": 60}"));
         restClient.saveEntityTelemetry(device.getId(), "ts", JacksonUtil.toJsonNode("{\"temperature\": 27, \"humidity\": 59}"));
         restClient.saveEntityTelemetry(device.getId(), "ts", JacksonUtil.toJsonNode("{\"temperature\": 33, \"humidity\": 62}"));
@@ -115,7 +124,7 @@ public class JavaRestClientTest extends AbstractContainerTest {
         BaseReadTsKvQuery humQuery = new BaseReadTsKvQuery("humidity", System.currentTimeMillis() - 5000, System.currentTimeMillis(), 5000, 3, Aggregation.MAX);
         queries.add(tempQuery);
         queries.add(humQuery);
-        List<ReadTsKvQueryResult> results = restClient.getTimeseriesByReadTsKvQueries(device.getId(), queries);
+        List<ReadTsKvQueryResult> results = restClient.getTimeseriesByQueries(device.getId(), queries);
         assertThat(results).isNotNull().hasSize(2);
 
         ReadTsKvQueryResult tempQueryResult = results.get(0);

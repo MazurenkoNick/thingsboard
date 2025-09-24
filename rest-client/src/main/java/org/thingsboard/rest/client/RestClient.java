@@ -2243,7 +2243,7 @@ public class RestClient implements Closeable {
         return RestJsonConverter.toTimeseries(timeseries);
     }
 
-    public List<ReadTsKvQueryResult> getTimeseriesByReadTsKvQueries(EntityId entityId, List<BaseReadTsKvQuery> queries) {
+    public List<ReadTsKvQueryResult> getTimeseriesByQueries(EntityId entityId, List<BaseReadTsKvQuery> queries) {
         Map<String, String> params = new HashMap<>();
         params.put("entityType", entityId.getEntityType().name());
         params.put("entityId", entityId.getId().toString());
