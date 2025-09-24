@@ -773,6 +773,10 @@ public class ActorSystemContext {
     @Getter
     private long cfCalculationResultTimeout;
 
+    @Value("${actors.alarms.reevaluation_interval:60}")
+    @Getter
+    private long alarmsReevaluationInterval;
+
     @Autowired
     @Getter
     private MqttClientSettings mqttClientSettings;
@@ -1001,7 +1005,7 @@ public class ActorSystemContext {
 
     private boolean checkLimits(TenantId tenantId) {
         if (debugModeRateLimitsConfig.isCalculatedFieldDebugPerTenantLimitsEnabled() &&
-                !rateLimitService.checkRateLimit(LimitedApi.CALCULATED_FIELD_DEBUG_EVENTS, (Object) tenantId, debugModeRateLimitsConfig.getCalculatedFieldDebugPerTenantLimitsConfiguration())) {
+            !rateLimitService.checkRateLimit(LimitedApi.CALCULATED_FIELD_DEBUG_EVENTS, (Object) tenantId, debugModeRateLimitsConfig.getCalculatedFieldDebugPerTenantLimitsConfiguration())) {
             log.trace("[{}] Calculated field debug event limits exceeded!", tenantId);
             return false;
         }

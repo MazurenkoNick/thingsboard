@@ -138,7 +138,7 @@ public class CalculatedFieldEntityMessageProcessor extends AbstractContextAwareM
     }
 
     public void process(EntityInitCalculatedFieldMsg msg) throws CalculatedFieldException {
-        log.debug("[{}] Processing entity init CF msg.", msg.getCtx().getCfId());
+        log.debug("[{}] Processing entity init CF msg: {}", msg.getCtx().getCfId(), msg);
         var ctx = msg.getCtx();
         CalculatedFieldState state;
         if (msg.getStateAction() == StateAction.RECREATE) {
@@ -158,11 +158,12 @@ public class CalculatedFieldEntityMessageProcessor extends AbstractContextAwareM
                 state.init(ctx);
             }
             if (state.isSizeOk()) {
-                processStateIfReady(ctx, Collections.singletonList(ctx.getCfId()), state, null, null, msg.getCallback());
+                processStateIfReady(state, Collections.emptyMap(), ctx, Collections.singletonList(ctx.getCfId()), null, null, msg.getCallback());
             } else {
                 throw new RuntimeException(ctx.getSizeExceedsLimitMessage());
             }
         } catch (Exception e) {
+            log.debug("[{}][{}] Failed to initialize CF state", entityId, ctx.getCfId(), e);
             if (e instanceof CalculatedFieldException cfe) {
                 throw cfe;
             }
@@ -210,7 +211,7 @@ public class CalculatedFieldEntityMessageProcessor extends AbstractContextAwareM
     }
 
     public void process(EntityCalculatedFieldTelemetryMsg msg) throws CalculatedFieldException {
-        log.debug("[{}] Processing CF telemetry msg.", msg.getEntityId());
+        log.trace("[{}] Processing CF telemetry msg: {}", msg.getEntityId(), msg);
         var proto = msg.getProto();
         var numberOfCallbacks = CALLBACKS_PER_CF * (msg.getEntityIdFields().size() + msg.getProfileIdFields().size());
         MultipleTbCallback callback = new MultipleTbCallback(numberOfCallbacks, msg.getCallback());
@@ -225,7 +226,7 @@ public class CalculatedFieldEntityMessageProcessor extends AbstractContextAwareM
     }
 
     public void process(EntityCalculatedFieldLinkedTelemetryMsg msg) throws CalculatedFieldException {
-        log.debug("[{}] Processing CF link telemetry msg.", msg.getEntityId());
+        log.trace("[{}] Processing CF link telemetry msg: {}", msg.getEntityId(), msg);
         var proto = msg.getProto();
         var ctx = msg.getCtx();
         var callback = new MultipleTbCallback(CALLBACKS_PER_CF, msg.getCallback());
@@ -247,6 +248,7 @@ public class CalculatedFieldEntityMessageProcessor extends AbstractContextAwareM
                 }
             }
         } catch (Exception e) {
+            log.debug("[{}][{}] Failed to process linked CF telemetry msg: {}", entityId, ctx.getCfId(), msg, e);
             throw CalculatedFieldException.builder().ctx(ctx).eventEntity(entityId).cause(e).build();
         }
     }
@@ -269,6 +271,7 @@ public class CalculatedFieldEntityMessageProcessor extends AbstractContextAwareM
                 }
             }
         } catch (Exception e) {
+            log.debug("[{}][{}] Failed to process CF telemetry msg: {}", entityId, ctx.getCfId(), proto, e);
             if (e instanceof CalculatedFieldException cfe) {
                 throw cfe;
             }
@@ -286,6 +289,21 @@ public class CalculatedFieldEntityMessageProcessor extends AbstractContextAwareM
             log.debug("[{}][{}] CF state marked as dirty.", entityId, msg.getCfId());
         }
         msg.getCallback().onSuccess();
+    }
+
+    public void process(CalculatedFieldReevaluateMsg msg) throws CalculatedFieldException {
+        CalculatedFieldId cfId = msg.getCfCtx().getCfId();
+        CalculatedFieldState state = states.get(cfId);
+        if (state == null) {
+            log.debug("[{}][{}] Failed to find CF state for entity to handle {}", entityId, cfId, msg);
+        } else {
+            if (state.isSizeOk()) {
+                log.debug("[{}][{}] Reevaluating CF state", entityId, cfId);
+                processStateIfReady(state, null, msg.getCfCtx(), Collections.singletonList(cfId), null, null, msg.getCallback());
+            } else {
+                throw new RuntimeException(msg.getCfCtx().getSizeExceedsLimitMessage());
+            }
+        }
     }
 
     public void process(CalculatedFieldAlarmActionMsg msg) {
@@ -339,10 +357,11 @@ public class CalculatedFieldEntityMessageProcessor extends AbstractContextAwareM
             }
         }
         if (state.isSizeOk()) {
-            if (state.update(ctx, newArgValues) || justRestored) {
+            Map<String, ArgumentEntry> updatedArgs = state.update(newArgValues, ctx);
+            if (!updatedArgs.isEmpty() || justRestored) {
                 cfIdList = new ArrayList<>(cfIdList);
                 cfIdList.add(ctx.getCfId());
-                processStateIfReady(ctx, cfIdList, state, tbMsgId, tbMsgType, callback);
+                processStateIfReady(state, updatedArgs, ctx, cfIdList, tbMsgId, tbMsgType, callback);
             } else {
                 callback.onSuccess(CALLBACKS_PER_CF);
             }
@@ -361,7 +380,7 @@ public class CalculatedFieldEntityMessageProcessor extends AbstractContextAwareM
         state.init(ctx);
 
         Map<String, ArgumentEntry> arguments = fetchArguments(ctx);
-        state.update(ctx, arguments);
+        state.update(arguments, ctx);
 
         state.checkStateSize(new CalculatedFieldEntityCtxId(tenantId, ctx.getCfId(), entityId), ctx.getMaxStateSize());
         states.put(ctx.getCfId(), state);
@@ -377,12 +396,15 @@ public class CalculatedFieldEntityMessageProcessor extends AbstractContextAwareM
         return argumentsFuture.get(1, TimeUnit.MINUTES);
     }
 
-    private void processStateIfReady(CalculatedFieldCtx ctx, List<CalculatedFieldId> cfIdList, CalculatedFieldState state, UUID tbMsgId, TbMsgType tbMsgType, TbCallback callback) throws CalculatedFieldException {
+    private void processStateIfReady(CalculatedFieldState state, Map<String, ArgumentEntry> updatedArgs, CalculatedFieldCtx ctx,
+                                     List<CalculatedFieldId> cfIdList, UUID tbMsgId, TbMsgType tbMsgType, TbCallback callback) throws CalculatedFieldException {
+        log.trace("[{}][{}] Processing state if ready. Current args: {}, updated args: {}", entityId, ctx.getCfId(), state.getArguments(), updatedArgs);
         CalculatedFieldEntityCtxId ctxId = new CalculatedFieldEntityCtxId(tenantId, ctx.getCfId(), entityId);
         boolean stateSizeChecked = false;
         try {
             if (ctx.isInitialized() && state.isReady()) {
-                CalculatedFieldResult calculationResult = state.performCalculation(ctx).get(systemContext.getCfCalculationResultTimeout(), TimeUnit.SECONDS);
+                log.trace("[{}][{}] Performing calculation. Updated args: {}", entityId, ctx.getCfId(), updatedArgs);
+                CalculatedFieldResult calculationResult = state.performCalculation(updatedArgs, ctx).get(systemContext.getCfCalculationResultTimeout(), TimeUnit.SECONDS);
                 state.checkStateSize(ctxId, ctx.getMaxStateSize());
                 stateSizeChecked = true;
                 if (state.isSizeOk()) {
