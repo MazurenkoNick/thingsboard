@@ -60,6 +60,7 @@ import org.thingsboard.server.common.data.report.configuration.DataKey;
 import org.thingsboard.server.common.data.report.configuration.DataSource;
 import org.thingsboard.server.common.data.report.configuration.DataSourceType;
 import org.thingsboard.server.common.data.report.configuration.EntityAlias;
+import org.thingsboard.server.common.data.report.configuration.TableSortOrder;
 import org.thingsboard.server.common.data.report.configuration.components.EntityTableComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
 import org.thingsboard.server.common.data.report.configuration.components.TimeseriesTableComponent;
@@ -290,6 +291,7 @@ public class ReportServiceTest extends AbstractContainerTest {
                         new DataKey("threshold", "attribute", "THRESHOLD")
                 ))
                 .build()));
+        tableComponent.setTableSortOrder(new TableSortOrder("CREATED TIME", TableSortOrder.Direction.ASC));
 
         return createReportTemplate(entityAlias, tableComponent);
     }
