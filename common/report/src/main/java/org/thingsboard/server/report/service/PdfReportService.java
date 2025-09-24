@@ -54,8 +54,10 @@ import org.thingsboard.server.common.data.report.configuration.DataSource;
 import org.thingsboard.server.common.data.report.configuration.DataSourceType;
 import org.thingsboard.server.common.data.report.configuration.HeaderFooter;
 import org.thingsboard.server.common.data.report.configuration.PdfReportTemplateConfig;
+import org.thingsboard.server.common.data.report.configuration.chart.ColorRange;
 import org.thingsboard.server.common.data.report.configuration.chart.ComparisonDuration;
 import org.thingsboard.server.common.data.report.configuration.chart.DataKeyComparisonSettings;
+import org.thingsboard.server.common.data.report.configuration.chart.ReportRangeChartSettings;
 import org.thingsboard.server.common.data.report.configuration.chart.TimeSeriesChartKeySettings;
 import org.thingsboard.server.common.data.report.configuration.chart.TimeSeriesChartThreshold;
 import org.thingsboard.server.common.data.report.configuration.chart.ValueSourceConfig;
@@ -86,6 +88,7 @@ import org.thingsboard.server.report.context.chart.LatestChartData;
 import org.thingsboard.server.report.context.chart.LatestChartDataSource;
 import org.thingsboard.server.report.context.chart.TsChartData;
 import org.thingsboard.server.report.context.chart.TsChartDataSource;
+import org.thingsboard.server.report.context.chart.TsChartRangeItem;
 import org.thingsboard.server.report.context.chart.TsChartThresholdItem;
 import org.thingsboard.server.report.renderer.PdfReportComponentRenderer;
 import org.thingsboard.server.report.util.ColorUtils;
@@ -96,6 +99,7 @@ import org.xhtmlrenderer.pdf.ITextRenderer;
 
 import java.awt.Dimension;
 import java.io.ByteArrayOutputStream;
+import java.text.NumberFormat;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Date;
@@ -117,6 +121,7 @@ import static org.thingsboard.server.common.data.report.configuration.style.Page
 import static org.thingsboard.server.common.data.report.configuration.timewindow.TimeIntervalCalculator.getComparisonTimeRange;
 import static org.thingsboard.server.common.data.report.configuration.timewindow.TimeIntervalCalculator.getTimeRange;
 import static org.thingsboard.server.common.data.util.DataSourceUtils.entityDataFromEntityId;
+import static org.thingsboard.server.report.renderer.chart.ChartUtils.createValueFormatter;
 import static org.thingsboard.server.report.util.ReportQueryUtils.DEFAULT_TS_CHART_SORT_ORDER;
 import static org.thingsboard.server.report.util.ReportQueryUtils.resolveAliasId;
 import static org.thingsboard.server.report.util.ReportQueryUtils.toAlarmCountQuery;
@@ -403,7 +408,10 @@ public class PdfReportService extends AbstractReportService {
                 .entityAliasId(ds.getEntityAliasId())
                 .filterId(ds.getFilterId())
                 .dataKeys(ds.getLatestDataKeys()).build();
-        List<EntityData> entityDatas = fetchEntities(ctx, latestDataSource, stateEntity != null ? stateEntity.getEntityId() : null, DEFAULT_TS_CHART_SORT_ORDER);
+
+        boolean singleEntity = "rangeChart".equals(component.getSubType());
+
+        List<EntityData> entityDatas = fetchEntities(ctx, latestDataSource, stateEntity != null ? stateEntity.getEntityId() : null, DEFAULT_TS_CHART_SORT_ORDER, singleEntity);
 
         List<TimeSeriesChartThreshold> latestKeyThresholds = thresholds.stream()
                 .filter(t -> ValueSourceType.latestKey.equals(t.getType())).toList();
@@ -427,6 +435,30 @@ public class PdfReportService extends AbstractReportService {
                 thresholdItems.addAll(entityThresholdItems);
             }
         });
+
+        List<TsChartRangeItem> rangeItems = new ArrayList<>();
+        if ("rangeChart".equals(component.getSubType())) {
+            if (component.getTimeSeriesChartSettings() != null) {
+                ReportRangeChartSettings rangeChartSettings = (ReportRangeChartSettings) component.getTimeSeriesChartSettings();
+                List<ColorRange> colorRanges = rangeChartSettings.getRangeColors();
+                if (colorRanges != null) {
+                    int decimals = rangeChartSettings.getRangeDecimals() != null ? rangeChartSettings.getRangeDecimals() : 2;
+                    String units = rangeChartSettings.getRangeUnits() != null ? rangeChartSettings.getRangeUnits() : "";
+                    NumberFormat valueFormat = createValueFormatter(decimals, "");
+                    rangeItems = TsChartRangeItem.toRangeItems(colorRanges, valueFormat);
+                    if (rangeChartSettings.getShowRangeThresholds() == null || rangeChartSettings.getShowRangeThresholds()) {
+                        TimeSeriesChartThreshold rangeThreshold = new TimeSeriesChartThreshold(rangeChartSettings.getRangeThreshold());
+                        rangeThreshold.setType(ValueSourceType.constant);
+                        rangeThreshold.setYAxisId("default");
+                        rangeThreshold.setDecimals(rangeThreshold.getDecimals() != null ? rangeThreshold.getDecimals() : decimals);
+                        rangeThreshold.setUnits(rangeThreshold.getUnits() != null ? rangeThreshold.getUnits() : units);
+                        thresholdItems.addAll(
+                            TsChartRangeItem.toMarkPoints(rangeItems).stream().map(item -> new TsChartThresholdItem(rangeThreshold, item)).toList()
+                        );
+                    }
+                }
+            }
+        }
 
         List<TsChartDataSource> chartData = new ArrayList<>();
         List<DataKey> dataKeys = ds.getDataKeys();
@@ -531,7 +563,7 @@ public class PdfReportService extends AbstractReportService {
         }
         TimeZone timeZone = TimeZone.getTimeZone(zoneId.getId());
         TsChartData tsChartData = new TsChartData(timeZone, timeRange, Aggregation.NONE.equals(timeWindowConf.getAggregation().getType()),
-                chartData, thresholdItems, comparisonEnabled, comparisonTimeRange);
+                chartData, thresholdItems, rangeItems, comparisonEnabled, comparisonTimeRange);
         return new ComponentData(usablePageWidthPx, tsChartData);
     }
 

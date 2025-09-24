@@ -38,7 +38,10 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
   imageAlignments,
   imageAlignmentTranslations,
-  imageWidthTypeTranslations, reportBarChartWithLabelsDefaultSettings, ReportBarChartWithLabelSettings,
+  imageWidthTypeTranslations,
+  reportBarChartWithLabelsDefaultSettings,
+  ReportBarChartWithLabelSettings,
+  ReportRangeChartSettings,
   reportTimeSeriesChartDefaultSettings,
   ReportTimeSeriesChartSettings,
   TimeseriesChartReportComponentConfig,
@@ -55,7 +58,7 @@ import {
   WidgetTypeParameters
 } from '@shared/models/widget.models';
 import {
-  TimeSeriesChartKeySettings, TimeSeriesChartType,
+  TimeSeriesChartKeySettings, TimeSeriesChartSeriesType, TimeSeriesChartThreshold, TimeSeriesChartType,
   TimeSeriesChartYAxes,
   TimeSeriesChartYAxisId
 } from '@home/components/widget/lib/chart/time-series-chart.models';
@@ -78,12 +81,16 @@ export class TimeSeriesChartConfigComponent extends AbstractReportComponentConfi
   barChartWithLabels = false;
 
   @Input()
+  @coerceBoolean()
+  rangeChart = false;
+
+  @Input()
   chartType: TimeSeriesChartType = TimeSeriesChartType.default;
 
   TimeSeriesChartType = TimeSeriesChartType;
 
   public get yAxisIds(): TimeSeriesChartYAxisId[] {
-    if (this.barChartWithLabels) {
+    if (this.barChartWithLabels || this.rangeChart) {
       return ['default'];
     } else {
       const yAxes: TimeSeriesChartYAxes = this.reportConfigForm.get('yAxes').value;
@@ -135,8 +142,6 @@ export class TimeSeriesChartConfigComponent extends AbstractReportComponentConfi
       height: [reportComponentConfig.height || 400, [Validators.min(1)]],
       alignment: [reportComponentConfig.alignment || 'center', []],
 
-      series: [this.getSeries(reportComponentConfig.dataSources), []],
-
       thresholds: [timeSeriesChartSettings.thresholds, []],
 
       showTitle: [timeSeriesChartSettings.showTitle, []],
@@ -158,6 +163,10 @@ export class TimeSeriesChartConfigComponent extends AbstractReportComponentConfi
 
     });
 
+    if (!this.rangeChart) {
+      form.addControl('series', this.fb.control(this.getSeries(reportComponentConfig.dataSources), []));
+    }
+
     if (this.barChartWithLabels) {
 
       const barChartWithLabelSettings = timeSeriesChartSettings as ReportBarChartWithLabelSettings;
@@ -177,6 +186,23 @@ export class TimeSeriesChartConfigComponent extends AbstractReportComponentConfi
       form.addControl('barBorderWidth', this.fb.control(barChartWithLabelSettings.barBorderWidth, []));
       form.addControl('barBorderRadius', this.fb.control(barChartWithLabelSettings.barBorderRadius, []))
       form.addControl('barBackgroundSettings', this.fb.control(barChartWithLabelSettings.barBackgroundSettings, []));
+
+    } else if (this.rangeChart) {
+
+      const rangeChartSettings = timeSeriesChartSettings as ReportRangeChartSettings;
+
+      form.addControl('rangeUnits', this.fb.control(rangeChartSettings.rangeUnits, []));
+      form.addControl('rangeDecimals', this.fb.control(rangeChartSettings.rangeDecimals, []));
+
+      form.addControl('rangeColors', this.fb.control(rangeChartSettings.rangeColors, []));
+      form.addControl('outOfRangeColor', this.fb.control(rangeChartSettings.outOfRangeColor, []));
+      form.addControl('showRangeThresholds', this.fb.control(rangeChartSettings.showRangeThresholds, []));
+      form.addControl('rangeThreshold', this.fb.control<Partial<TimeSeriesChartThreshold>>(rangeChartSettings.rangeThreshold, []));
+      form.addControl('fillArea', this.fb.control(rangeChartSettings.fillArea, []));
+      form.addControl('fillAreaOpacity', this.fb.control(rangeChartSettings.fillAreaOpacity, []));
+      form.addControl('lineSettings', this.fb.control(rangeChartSettings.lineSettings, []));
+
+      form.addControl('yAxis', this.fb.control(rangeChartSettings.yAxes['default'], []));
 
     } else {
       form.addControl('yAxes', this.fb.control(timeSeriesChartSettings.yAxes, []));
@@ -210,6 +236,13 @@ export class TimeSeriesChartConfigComponent extends AbstractReportComponentConfi
       ).subscribe(() => {
         this.updateValidators(form);
       });
+    } else if (this.rangeChart) {
+      merge(form.get('showRangeThresholds').valueChanges,
+        form.get('fillArea').valueChanges).pipe(
+        takeUntilDestroyed(this.destroyRef)
+      ).subscribe(() => {
+        this.updateValidators(form);
+      });
     } else {
       form.get('comparisonEnabled').valueChanges.pipe(
         takeUntilDestroyed(this.destroyRef)
@@ -232,8 +265,10 @@ export class TimeSeriesChartConfigComponent extends AbstractReportComponentConfi
   }
 
   protected prepareOutputConfig(config: any): any {
-    this.setSeries(config.series, config.dataSources);
-    delete config.series;
+    if (!this.rangeChart) {
+      this.setSeries(config.series, config.dataSources);
+      delete config.series;
+    }
     if (!config.timeSeriesChartSettings) {
       config.timeSeriesChartSettings = {};
     }
@@ -309,6 +344,37 @@ export class TimeSeriesChartConfigComponent extends AbstractReportComponentConfi
       delete config.barBorderRadius;
       barChartWithLabelSettings.barBackgroundSettings = config.barBackgroundSettings;
       delete config.barBackgroundSettings;
+
+    } else if (this.rangeChart) {
+
+      const rangeChartSettings = timeSeriesChartSettings as ReportRangeChartSettings;
+
+      rangeChartSettings.yAxes = {
+        'default': config.yAxis
+      };
+      delete config.yAxis;
+
+      rangeChartSettings.rangeUnits = config.rangeUnits;
+      delete config.rangeUnits;
+
+      rangeChartSettings.rangeDecimals = config.rangeDecimals;
+      delete config.rangeDecimals;
+
+      rangeChartSettings.rangeColors = config.rangeColors;
+      delete config.rangeColors;
+      rangeChartSettings.outOfRangeColor = config.outOfRangeColor;
+      delete config.outOfRangeColor;
+      rangeChartSettings.showRangeThresholds = config.showRangeThresholds;
+      delete config.showRangeThresholds;
+      rangeChartSettings.rangeThreshold = config.rangeThreshold;
+      delete config.rangeThreshold;
+      rangeChartSettings.fillArea = config.fillArea;
+      delete config.fillArea;
+      rangeChartSettings.fillAreaOpacity = config.fillAreaOpacity;
+      delete config.fillAreaOpacity;
+
+      rangeChartSettings.lineSettings = config.lineSettings;
+      delete config.lineSettings;
 
     } else {
       timeSeriesChartSettings.yAxes = config.yAxes;
@@ -427,24 +493,37 @@ export class TimeSeriesChartConfigComponent extends AbstractReportComponentConfi
       const showBarValue: boolean = form.get('showBarValue').value;
       const showBarBorder: boolean = form.get('showBarBorder').value;
       if (showBarLabel) {
-        form.get('barLabelFont').enable();
-        form.get('barLabelColor').enable();
+        form.get('barLabelFont').enable({emitEvent: false});
+        form.get('barLabelColor').enable({emitEvent: false});
       } else {
-        form.get('barLabelFont').disable();
-        form.get('barLabelColor').disable();
+        form.get('barLabelFont').disable({emitEvent: false});
+        form.get('barLabelColor').disable({emitEvent: false});
       }
 
       if (showBarValue) {
-        form.get('barValueFont').enable();
-        form.get('barValueColor').enable();
+        form.get('barValueFont').enable({emitEvent: false});
+        form.get('barValueColor').enable({emitEvent: false});
       } else {
-        form.get('barValueFont').disable();
-        form.get('barValueColor').disable();
+        form.get('barValueFont').disable({emitEvent: false});
+        form.get('barValueColor').disable({emitEvent: false});
       }
       if (showBarBorder) {
-        form.get('barBorderWidth').enable();
+        form.get('barBorderWidth').enable({emitEvent: false});
       } else {
-        form.get('barBorderWidth').disable();
+        form.get('barBorderWidth').disable({emitEvent: false});
+      }
+    } else if (this.rangeChart) {
+      const showRangeThresholds: boolean = form.get('showRangeThresholds').value;
+      const fillArea: boolean = form.get('fillArea').value;
+      if (showRangeThresholds) {
+        form.get('rangeThreshold').enable({emitEvent: false});
+      } else {
+        form.get('rangeThreshold').disable({emitEvent: false});
+      }
+      if (fillArea) {
+        form.get('fillAreaOpacity').enable({emitEvent: false});
+      } else {
+        form.get('fillAreaOpacity').disable({emitEvent: false});
       }
     } else {
       const comparisonEnabled: boolean = form.get('comparisonEnabled').value;
@@ -479,7 +558,7 @@ export class TimeSeriesChartConfigComponent extends AbstractReportComponentConfi
       form.get('legendLabelFont').enable({emitEvent: false});
       form.get('legendLabelColor').enable({emitEvent: false});
       form.get('legendConfig').enable({emitEvent: false});
-      if (!this.barChartWithLabels) {
+      if (!this.barChartWithLabels && !this.rangeChart) {
         form.get('legendColumnTitleFont').enable({emitEvent: false});
         form.get('legendColumnTitleColor').enable({emitEvent: false});
         form.get('legendValueFont').enable({emitEvent: false});
@@ -489,7 +568,7 @@ export class TimeSeriesChartConfigComponent extends AbstractReportComponentConfi
       form.get('legendLabelFont').disable({emitEvent: false});
       form.get('legendLabelColor').disable({emitEvent: false});
       form.get('legendConfig').disable({emitEvent: false});
-      if (!this.barChartWithLabels) {
+      if (!this.barChartWithLabels && !this.rangeChart) {
         form.get('legendColumnTitleFont').disable({emitEvent: false});
         form.get('legendColumnTitleColor').disable({emitEvent: false});
         form.get('legendValueFont').disable({emitEvent: false});
@@ -498,4 +577,6 @@ export class TimeSeriesChartConfigComponent extends AbstractReportComponentConfi
     }
 
   }
+
+  protected readonly TimeSeriesChartSeriesType = TimeSeriesChartSeriesType;
 }

@@ -56,7 +56,7 @@ import {
   reportDoughnutChartDefaultSettings,
   ReportDoughnutChartSettings,
   reportPieChartDefaultSettings,
-  ReportPieChartSettings,
+  ReportPieChartSettings, reportRangeChartDefaultSettings, ReportRangeChartSettings,
   reportStateChartDefaultSettings,
   reportTimeSeriesChartDefaultSettings,
   ReportTimeSeriesChartSettings,
@@ -643,6 +643,40 @@ export const reportComponentsLibrary = new Map<string, ReportComponentLibraryIte
           timewindow: defaultBarChartWithLabelsTimewindow,
           timeSeriesChartSettings: mergeDeep<ReportBarChartWithLabelSettings>({} as ReportBarChartWithLabelSettings, reportBarChartWithLabelsDefaultSettings,
             { title: 'Bar chart with labels' } as ReportBarChartWithLabelSettings),
+          height: 400,
+          widthType: 'fitWidth',
+          alignment: 'center',
+          margins: null,
+          paddings: null,
+          background: null
+        } as TimeseriesChartReportComponentConfig
+      }
+    ],
+    [
+      'rangeChart',
+      {
+        title: 'report-template.component.range-chart',
+        previewImage: '/assets/report/components/time-series-chart.svg',
+        type: ReportComponentType.TIME_SERIES_CHART,
+        defaultConfig: {
+          type: ReportComponentType.TIME_SERIES_CHART,
+          subType: 'rangeChart',
+          dataSources: [
+            {
+              type: DatasourceType.entity,
+              dataKeys: [
+                {
+                  name: 'temperature',
+                  type: DataKeyType.timeseries,
+                  label: 'Temperature',
+                  settings: {}
+                }
+              ]
+            }
+          ],
+          timewindow: defaultTimeSeriesChartTimewindow,
+          timeSeriesChartSettings: mergeDeep<ReportRangeChartSettings>({} as ReportRangeChartSettings, reportRangeChartDefaultSettings,
+            { title: 'Range chart' } as ReportRangeChartSettings),
           height: 400,
           widthType: 'fitWidth',
           alignment: 'center',
@@ -1413,6 +1447,22 @@ reportComponentTypesData.registerReportComponentSubType(ReportComponentType.TIME
     },
     previewContext: {
       barChartWithLabels: true
+    }
+  });
+
+reportComponentTypesData.registerReportComponentSubType(ReportComponentType.TIME_SERIES_CHART,
+  'rangeChart',
+  {
+    title: 'report-template.component.range-chart',
+    previewComponent: TimeSeriesChartPreviewComponent,
+    configComponent: TimeSeriesChartConfigComponent,
+    editable: true,
+    preferredSettingsWidthPx: 1000,
+    configContext: {
+      rangeChart: true
+    },
+    previewContext: {
+      rangeChart: true
     }
   });
 

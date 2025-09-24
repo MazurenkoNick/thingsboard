@@ -66,7 +66,9 @@
       </mat-chip-listbox>
     </div>
   }
-  <mat-slide-toggle class="mat-slide" formControlName="sortDataKeys">
-    {{ 'legend.sort-legend' | translate }}
-  </mat-slide-toggle>
+  @if (!hideSortDataKeys) {
+    <mat-slide-toggle class="mat-slide" formControlName="sortDataKeys">
+      {{ 'legend.sort-legend' | translate }}
+    </mat-slide-toggle>
+  }
 </ng-container>

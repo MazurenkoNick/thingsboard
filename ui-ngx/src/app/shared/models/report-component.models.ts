@@ -36,7 +36,7 @@ import {
   LegendPosition,
   widgetType
 } from '@shared/models/widget.models';
-import { alignment, alignmentTranslations, Font } from '@shared/models/widget-settings.models';
+import { alignment, alignmentTranslations, ColorRange, Font } from '@shared/models/widget-settings.models';
 import { Insets } from '@shared/models/report.models';
 import { ReportTemplateId } from '@shared/models/id/report-template-id';
 import { FormProperty, FormPropertyType } from '@shared/models/dynamic-form.models';
@@ -52,11 +52,12 @@ import {
 import { Direction } from '@shared/models/page/sort-order';
 import { mergeDeep } from '@core/utils';
 import {
+  LineSeriesSettings, LineSeriesStepType, ThresholdLabelPosition,
   timeSeriesChartDefaultSettings,
   TimeSeriesChartKeySettings,
   TimeSeriesChartSeriesType,
   TimeSeriesChartSettings,
-  TimeSeriesChartStateSourceType,
+  TimeSeriesChartStateSourceType, TimeSeriesChartThreshold, timeSeriesChartThresholdDefaultSettings,
   TimeSeriesChartYAxes,
   TimeSeriesChartYAxisSettings
 } from '@home/components/widget/lib/chart/time-series-chart.models';
@@ -64,7 +65,7 @@ import {
   chartBarDefaultSettings,
   ChartBarSettings,
   ChartFillSettings,
-  ChartFillType, PieChartLabelPosition
+  ChartFillType, ChartLabelPosition, ChartLineType, ChartShape, PieChartLabelPosition
 } from '@home/components/widget/lib/chart/chart.models';
 import {
   BarChartWithLabelsWidgetSettings
@@ -73,6 +74,7 @@ import { TimeSeriesChartWidgetSettings } from '@home/components/widget/lib/chart
 import { IntervalType } from '@shared/models/telemetry/telemetry.models';
 import { LatestChartSettings, LatestChartWidgetSettings } from '@home/components/widget/lib/chart/latest-chart.models';
 import { DoughnutLayout } from '@home/components/widget/lib/chart/doughnut-widget.models';
+import { RangeChartWidgetSettings } from '@app/modules/home/components/widget/lib/chart/range-chart-widget.models';
 
 export enum ReportComponentType {
   HEADING = 'HEADING',
@@ -618,6 +620,142 @@ export const toBarChartWithLabelsWidgetSettings = (
   } as BarChartWithLabelsWidgetSettings;
 }
 
+export interface ReportRangeChartSettings extends ReportTimeSeriesChartSettings {
+  rangeColors: Array<ColorRange>;
+  outOfRangeColor: string;
+  showRangeThresholds: boolean;
+  rangeThreshold: Partial<TimeSeriesChartThreshold>;
+  fillArea: boolean;
+  fillAreaOpacity: number;
+  lineSettings: LineSeriesSettings;
+  rangeUnits?: string;
+  rangeDecimals?: number;
+}
+
+export const reportRangeChartDefaultSettings: ReportRangeChartSettings = mergeDeep({} as ReportRangeChartSettings,
+  reportTimeSeriesChartDefaultSettings as ReportRangeChartSettings,
+  {
+    showTitle: true,
+    title: 'Range chart',
+    yAxes: {
+      default: {
+        showLine: false,
+        showTicks: false
+      } as TimeSeriesChartYAxisSettings
+    } as TimeSeriesChartYAxes,
+    xAxis: {
+      showSplitLines: false
+    },
+    legendConfig: {...defaultLegendConfig(null), position: LegendPosition.top},
+    legendLabelFont: {
+      family: 'Roboto',
+      size: 12,
+      sizeUnit: 'px',
+      style: 'normal',
+      weight: 'normal'
+    },
+    legendLabelColor: 'rgba(0, 0, 0, 0.76)',
+    rangeColors: [
+      {to: -20, color: '#234CC7'},
+      {from: -20, to: 0, color: '#305AD7'},
+      {from: 0, to: 10, color: '#7191EF'},
+      {from: 10, to: 20, color: '#FFA600'},
+      {from: 20, to: 30, color: '#F36900'},
+      {from: 30, to: 40, color: '#F04022'},
+      {from: 40, color: '#D81838'}
+    ],
+    outOfRangeColor: '#ccc',
+    showRangeThresholds: true,
+    rangeThreshold: mergeDeep({} as Partial<TimeSeriesChartThreshold>,
+      timeSeriesChartThresholdDefaultSettings,
+      { lineColor: '#37383b',
+        lineType: ChartLineType.dashed,
+        startSymbol: ChartShape.circle,
+        startSymbolSize: 5,
+        endSymbol: ChartShape.arrow,
+        endSymbolSize: 7,
+        labelPosition: ThresholdLabelPosition.insideEndTop,
+        labelColor: '#37383b',
+        enableLabelBackground: true}),
+    fillArea: true,
+    fillAreaOpacity: 0.7,
+    lineSettings: mergeDeep({} as LineSeriesSettings, {
+      showLine: true,
+      step: false,
+      stepType: LineSeriesStepType.start,
+      smooth: false,
+      lineType: ChartLineType.solid,
+      lineWidth: 2,
+      showPoints: false,
+      showPointLabel: false,
+      pointLabelPosition: ChartLabelPosition.top,
+      pointLabelFont: {
+        family: 'Roboto',
+        size: 11,
+        sizeUnit: 'px',
+        style: 'normal',
+        weight: '400',
+        lineHeight: '1'
+      },
+      pointLabelColor: 'rgba(0, 0, 0, 0.76)',
+      enablePointLabelBackground: false,
+      pointLabelBackground: 'rgba(255,255,255,0.56)',
+      pointShape: ChartShape.emptyCircle,
+      pointSize: 4,
+      fillAreaSettings: {
+        type: ChartFillType.none,
+        opacity: 0.4,
+        gradient: {
+          start: 100,
+          end: 0
+        }
+      }
+    }),
+    rangeUnits: '°C',
+    rangeDecimals: 0
+  } as ReportRangeChartSettings);
+
+export const toRangeChartWidgetSettings = (
+  reportRangeChartSettings: ReportRangeChartSettings & TimeSeriesChartWidgetSettings): RangeChartWidgetSettings => {
+  delete reportRangeChartSettings.rangeThreshold.value;
+  return {
+    dataZoom: false,
+    rangeColors: reportRangeChartSettings.rangeColors,
+    outOfRangeColor: reportRangeChartSettings.outOfRangeColor,
+    showRangeThresholds: reportRangeChartSettings.showRangeThresholds,
+    rangeThreshold: reportRangeChartSettings.rangeThreshold,
+    fillArea: reportRangeChartSettings.fillArea,
+    fillAreaOpacity: reportRangeChartSettings.fillAreaOpacity,
+    showLine: reportRangeChartSettings.lineSettings.showLine,
+    step: reportRangeChartSettings.lineSettings.step,
+    stepType: reportRangeChartSettings.lineSettings.stepType,
+    smooth: reportRangeChartSettings.lineSettings.smooth,
+    lineType: reportRangeChartSettings.lineSettings.lineType,
+    lineWidth: reportRangeChartSettings.lineSettings.lineWidth,
+    showPoints: reportRangeChartSettings.lineSettings.showPoints,
+    showPointLabel: reportRangeChartSettings.lineSettings.showPointLabel,
+    pointLabelPosition: reportRangeChartSettings.lineSettings.pointLabelPosition,
+    pointLabelFont: reportRangeChartSettings.lineSettings.pointLabelFont,
+    pointLabelColor: reportRangeChartSettings.lineSettings.pointLabelColor,
+    enablePointLabelBackground: reportRangeChartSettings.lineSettings.enablePointLabelBackground,
+    pointLabelBackground: reportRangeChartSettings.lineSettings.pointLabelBackground,
+    pointShape: reportRangeChartSettings.lineSettings.pointShape,
+    pointSize: reportRangeChartSettings.lineSettings.pointSize,
+    grid: reportRangeChartSettings.grid,
+    yAxis: reportRangeChartSettings.yAxes['default'],
+    xAxis: reportRangeChartSettings.xAxis,
+    animation: reportRangeChartSettings.animation,
+    thresholds: reportRangeChartSettings.thresholds,
+    showLegend: reportRangeChartSettings.showLegend,
+    legendPosition: reportRangeChartSettings.legendConfig.position,
+    legendLabelFont: reportRangeChartSettings.legendLabelFont,
+    legendLabelColor: reportRangeChartSettings.legendLabelColor,
+    background: reportRangeChartSettings.background,
+    padding: reportRangeChartSettings.padding,
+    showTooltip: false
+  } as RangeChartWidgetSettings;
+};
+
 export const defaultTimeSeriesChartTimewindow = mergeDeep<Timewindow>(
   {} as Timewindow,
   historyInterval(DAY),
@@ -804,7 +942,7 @@ export interface BaseChartReportComponentConfig extends BaseImageReportComponent
 
 export interface TimeseriesChartReportComponentConfig extends BaseChartReportComponentConfig {
   timewindow: Timewindow;
-  timeSeriesChartSettings: ReportTimeSeriesChartSettings & ReportBarChartWithLabelSettings;
+  timeSeriesChartSettings: ReportTimeSeriesChartSettings & ReportBarChartWithLabelSettings & ReportRangeChartSettings;
   type: ReportComponentType.TIME_SERIES_CHART;
 }
 

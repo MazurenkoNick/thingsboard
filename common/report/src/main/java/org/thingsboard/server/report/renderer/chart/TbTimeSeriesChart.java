@@ -46,6 +46,7 @@ import org.jfree.chart.plot.DatasetRenderingOrder;
 import org.jfree.chart.plot.SeriesRenderingOrder;
 import org.jfree.chart.title.LegendTitle;
 import org.jfree.chart.title.TextTitle;
+import org.jfree.chart.title.Title;
 import org.jfree.chart.ui.HorizontalAlignment;
 import org.jfree.chart.ui.Layer;
 import org.jfree.chart.ui.RectangleEdge;
@@ -78,6 +79,7 @@ import org.thingsboard.server.common.data.report.configuration.chart.TimeSeriesC
 import org.thingsboard.server.common.data.report.configuration.chart.TimeSeriesChartYAxisSettings;
 import org.thingsboard.server.report.context.chart.TsChartData;
 import org.thingsboard.server.report.context.chart.TsChartDataSource;
+import org.thingsboard.server.report.context.chart.TsChartRangeItem;
 import org.thingsboard.server.report.context.chart.TsChartSeriesData;
 import org.thingsboard.server.report.context.chart.TsChartSeriesEntry;
 import org.thingsboard.server.report.context.chart.TsChartThresholdItem;
@@ -86,6 +88,7 @@ import org.thingsboard.server.report.renderer.chart.layout.TbFlowArrangement;
 import org.thingsboard.server.report.renderer.chart.legend.TbLegendTitle;
 import org.thingsboard.server.report.renderer.chart.legend.TbLegendValues;
 import org.thingsboard.server.report.renderer.chart.legend.TbLegendValuesRequest;
+import org.thingsboard.server.report.renderer.chart.legend.TbRangeLegendTitle;
 import org.thingsboard.server.report.renderer.chart.legend.TbSeriesLegendValuesGenerator;
 import org.thingsboard.server.report.renderer.chart.legend.TbTableLegendTitle;
 import org.thingsboard.server.report.util.ColorUtils;
@@ -131,6 +134,8 @@ public class TbTimeSeriesChart implements XYSeriesLabelGenerator, TbSeriesLegend
     private final TbStateValueConverter stateValueConverter;
     private final boolean stackMode;
 
+    private final TbVisualMap visualMap;
+
     private final String units;
     private final Integer decimals;
 
@@ -147,9 +152,10 @@ public class TbTimeSeriesChart implements XYSeriesLabelGenerator, TbSeriesLegend
     private List<TbDatasetKey> datasetKeys;
 
 
-    public TbTimeSeriesChart(ReportTimeSeriesChartSettings chartSettings, TsChartData chartData, String units, Integer decimals) {
+    public TbTimeSeriesChart(ReportTimeSeriesChartSettings chartSettings, TsChartData chartData, TbVisualMap visualMap, String units, Integer decimals) {
         this.chartSettings = chartSettings;
         this.chartData = chartData;
+        this.visualMap = visualMap;
 
         if (!this.chartSettings.getStates().isEmpty()) {
             this.stateValueConverter = new TbStateValueConverter(this.chartSettings.getStates());
@@ -173,6 +179,7 @@ public class TbTimeSeriesChart implements XYSeriesLabelGenerator, TbSeriesLegend
                 false);
         currentChartTheme.apply(chart);
 
+        plot.setVisualMap(this.visualMap);
         plot.setDatasetRenderingOrder(DatasetRenderingOrder.FORWARD);
         plot.setSeriesRenderingOrder(SeriesRenderingOrder.FORWARD);
         plot.setAxisOffset(RectangleInsets.ZERO_INSETS);
@@ -356,8 +363,22 @@ public class TbTimeSeriesChart implements XYSeriesLabelGenerator, TbSeriesLegend
 
     private void setupLegend() {
         if (chartSettings.getShowLegend()) {
+
             LegendConfig legendConfig = chartSettings.getLegendConfig();
-            if (legendConfig.isSimpleLegend()) {
+            Title legendTitle = null;
+
+            double hPadding = 8.0;
+
+            if (this.visualMap != null) {
+                List<TsChartRangeItem> visibleRangeItems = this.chartData.getRangeItems().stream().filter(TsChartRangeItem::isVisible).toList();
+                if (!visibleRangeItems.isEmpty()) {
+                    TbRangeLegendTitle legend = new TbRangeLegendTitle(visibleRangeItems);
+                    legend.setLegendLabelFont(toAwtFont(chartSettings.getLegendLabelFont()));
+                    legend.setLegendLabelPaint(safeParseCssColor(chartSettings.getLegendLabelColor()));
+                    legendTitle = legend;
+                    hPadding = 16.0;
+                }
+            } else if (legendConfig.isSimpleLegend()) {
                 TbFlowArrangement hLayout = new TbFlowArrangement(HorizontalAlignment.CENTER, VerticalAlignment.CENTER, 16.0, 8.0);
                 hLayout.setMaxRelativeHeight(0.35);
                 TbColumnArrangement vLayout = new TbColumnArrangement(HorizontalAlignment.LEFT, VerticalAlignment.TOP, 16.0, 8.0);
@@ -368,28 +389,6 @@ public class TbTimeSeriesChart implements XYSeriesLabelGenerator, TbSeriesLegend
                 legend.setItemLabelPadding(new RectangleInsets(0.0, 4.0, 0.0, 0.0));
                 legend.setItemFont(toAwtFont(chartSettings.getLegendLabelFont()));
                 legend.setItemPaint(safeParseCssColor(chartSettings.getLegendLabelColor()));
-
-                RectangleEdge position = RectangleEdge.TOP;
-                LegendPosition legendPosition = legendConfig.getPosition();
-                switch (legendPosition) {
-                    case bottom -> position = RectangleEdge.BOTTOM;
-                    case left -> position = RectangleEdge.LEFT;
-                    case right -> position = RectangleEdge.RIGHT;
-                }
-                legend.setPosition(position);
-                if (RectangleEdge.isLeftOrRight(position)) {
-                    legend.setVerticalAlignment(VerticalAlignment.TOP);
-                    if (position == RectangleEdge.LEFT) {
-                        legend.setPadding(new RectangleInsets(0.0, 0.0, 0.0, 8.0));
-                    } else {
-                        legend.setPadding(new RectangleInsets(0.0, 8.0, 0.0, 0.0));
-                    }
-                } else {
-                    legend.setPadding(new RectangleInsets(8.0, 0.0, 8.0, 0.0));
-                }
-
-                chart.addSubtitle(legend);
-                legend.addChangeListener(chart);
 
                 boolean sortAlphabetically = legendConfig.getSortDataKeys();
                 LegendItemCollection legendItems = plot.getLegendItems();
@@ -413,6 +412,9 @@ public class TbTimeSeriesChart implements XYSeriesLabelGenerator, TbSeriesLegend
                     sortedCollection.add(item);
                 }
                 plot.setFixedLegendItems(sortedCollection);
+
+                legendTitle = legend;
+
             } else {
                 TbTableLegendTitle legend = new TbTableLegendTitle(plot, legendConfig);
                 legend.setMaxRelativeWidth(0.35);
@@ -428,24 +430,6 @@ public class TbTimeSeriesChart implements XYSeriesLabelGenerator, TbSeriesLegend
                 legend.setLegendValueFont(toAwtFont(chartSettings.getLegendValueFont()));
                 legend.setLegendValuePaint(safeParseCssColor(chartSettings.getLegendValueColor()));
 
-                RectangleEdge position = RectangleEdge.TOP;
-                LegendPosition legendPosition = legendConfig.getPosition();
-                switch (legendPosition) {
-                    case bottom -> position = RectangleEdge.BOTTOM;
-                    case left -> position = RectangleEdge.LEFT;
-                    case right -> position = RectangleEdge.RIGHT;
-                }
-                legend.setPosition(position);
-                if (RectangleEdge.isLeftOrRight(position)) {
-                    legend.setVerticalAlignment(VerticalAlignment.TOP);
-                    if (position == RectangleEdge.LEFT) {
-                        legend.setPadding(new RectangleInsets(0.0, 0.0, 0.0, 8.0));
-                    } else {
-                        legend.setPadding(new RectangleInsets(0.0, 8.0, 0.0, 0.0));
-                    }
-                } else {
-                    legend.setPadding(new RectangleInsets(8.0, 0.0, 8.0, 0.0));
-                }
                 boolean sortAlphabetically = legendConfig.getSortDataKeys();
                 if (sortAlphabetically) {
                     legend.setLegendItemComparator(Comparator.comparing(item -> item.getLegendItem().getLabel(), String.CASE_INSENSITIVE_ORDER));
@@ -456,8 +440,31 @@ public class TbTimeSeriesChart implements XYSeriesLabelGenerator, TbSeriesLegend
                         return dataIndex1 - dataIndex2;
                     });
                 }
-                chart.addSubtitle(legend);
-                legend.addChangeListener(chart);
+                legendTitle = legend;
+            }
+
+            if (legendTitle != null) {
+                RectangleEdge position = RectangleEdge.TOP;
+                LegendPosition legendPosition = legendConfig.getPosition();
+                switch (legendPosition) {
+                    case bottom -> position = RectangleEdge.BOTTOM;
+                    case left -> position = RectangleEdge.LEFT;
+                    case right -> position = RectangleEdge.RIGHT;
+                }
+                legendTitle.setPosition(position);
+                if (RectangleEdge.isLeftOrRight(position)) {
+                    legendTitle.setVerticalAlignment(VerticalAlignment.TOP);
+                    if (position == RectangleEdge.LEFT) {
+                        legendTitle.setPadding(new RectangleInsets(0.0, 0.0, 0.0, hPadding));
+                    } else {
+                        legendTitle.setPadding(new RectangleInsets(0.0, hPadding, 0.0, 0.0));
+                    }
+                } else {
+                    legendTitle.setPadding(new RectangleInsets(8.0, 0.0, 8.0, 0.0));
+                }
+
+                chart.addSubtitle(legendTitle);
+                legendTitle.addChangeListener(chart);
             }
         }
     }

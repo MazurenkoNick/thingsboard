@@ -81,9 +81,11 @@
     </div>
     <ng-container *ngTemplateOutlet="pointSettings"></ng-container>
   </div>
-  <tb-chart-fill-settings
-    formControlName="fillAreaSettings">
-  </tb-chart-fill-settings>
+  @if (!hideFillSettings) {
+    <tb-chart-fill-settings
+      formControlName="fillAreaSettings">
+    </tb-chart-fill-settings>
+  }
 </ng-container>
 <ng-template #pointSettings [formGroup]="lineSettingsFormGroup">
   <div class="tb-form-row space-between column-lt-md">

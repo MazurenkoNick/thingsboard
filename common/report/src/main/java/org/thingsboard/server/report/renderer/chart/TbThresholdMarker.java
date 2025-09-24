@@ -50,8 +50,8 @@ import static org.thingsboard.server.report.renderer.chart.ChartUtils.createSeri
 
 public class TbThresholdMarker extends ValueMarker {
 
-    private static RectangleInsets DEFAULT_LABEL_OFFSET = new RectangleInsets(5,5,5,5);
-    private static RectangleInsets BACKGROUND_LABEL_OFFSET = new RectangleInsets(7,8,7,8);
+    private static final RectangleInsets DEFAULT_LABEL_OFFSET = new RectangleInsets(5,5,5,5);
+    private static final RectangleInsets BACKGROUND_LABEL_OFFSET = new RectangleInsets(7,8,7,8);
 
     private ChartShape startSymbol;
     private float startSymbolSize;

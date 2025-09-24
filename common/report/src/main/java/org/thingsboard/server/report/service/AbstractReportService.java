@@ -44,6 +44,7 @@ import org.thingsboard.server.common.data.kv.BaseReadTsKvQuery;
 import org.thingsboard.server.common.data.kv.ReadTsKvQuery;
 import org.thingsboard.server.common.data.kv.ReadTsKvQueryResult;
 import org.thingsboard.server.common.data.kv.TsKvEntry;
+import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageDataIterable;
 import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.page.SortOrder;
@@ -97,6 +98,8 @@ import static org.thingsboard.server.report.util.ReportUtils.getSingleDataSource
 @Slf4j
 public abstract class AbstractReportService implements ReportService {
 
+    public static final int DEFAULT_ENTITIES_PAGE_SIZE = 1024;
+
     private static final Map<String, String> ALARM_FIELD_ALIASES_MAP = Map.of(
             "startTime", "startTs",
             "endTime", "endTs",
@@ -116,6 +119,10 @@ public abstract class AbstractReportService implements ReportService {
     }
 
     protected List<EntityData> fetchEntities(TbReportCtx ctx, DataSource dataSource, EntityId stateEntityId, EntityDataSortOrder sortOrder) {
+        return fetchEntities(ctx, dataSource, stateEntityId, sortOrder, false);
+    }
+
+    protected List<EntityData> fetchEntities(TbReportCtx ctx, DataSource dataSource, EntityId stateEntityId, EntityDataSortOrder sortOrder, boolean singleEntity) {
         EntityFilter filter = buildEntityFilter(dataSource, ctx, stateEntityId);
         if (filter instanceof SingleEntityFilter singleEntityFilter && singleEntityFilter.getSingleEntity() == null) {
             return Collections.emptyList();
@@ -123,13 +130,21 @@ public abstract class AbstractReportService implements ReportService {
         if (filter instanceof StateEntityOwnerFilter stateEntityOwnerFilter && stateEntityOwnerFilter.getSingleEntity() == null) {
             return Collections.emptyList();
         } // TODO: add black-box tests for entity filters
-        return fetchEntityDataByQuery(pageLink -> toEntityDataQuery(dataSource, ctx, filter, pageLink, sortOrder), dataSource, ctx);
+        return fetchEntityDataByQuery(pageLink -> toEntityDataQuery(dataSource, ctx, filter, pageLink, sortOrder), dataSource, ctx, singleEntity);
     }
 
-    private List<EntityData> fetchEntityDataByQuery(Function<PageLink, EntityDataQuery> querySupplier, DataSource dataSource, TbReportCtx ctx) {
+    private List<EntityData> fetchEntityDataByQuery(Function<PageLink, EntityDataQuery> querySupplier, DataSource dataSource, TbReportCtx ctx, boolean singleEntity) {
         List<DataKey> dataKeysWithAggr = getDataKeysWithAggr(dataSource);
         List<EntityData> data = new ArrayList<>();
-        for (EntityData entityData : new PageDataIterable<>(link -> dataService.findEntityDataByQuery(querySupplier.apply(link), ctx), 1024)) {
+        Iterable<EntityData> entityDataIterable;
+        if (singleEntity) {
+            PageLink singleEntityPageLink = new PageLink(1);
+            PageData<EntityData> entityData = dataService.findEntityDataByQuery(querySupplier.apply(singleEntityPageLink), ctx);
+            entityDataIterable = entityData.getData();
+        } else {
+            entityDataIterable = new PageDataIterable<>(link -> dataService.findEntityDataByQuery(querySupplier.apply(link), ctx), DEFAULT_ENTITIES_PAGE_SIZE);
+        }
+        for (EntityData entityData : entityDataIterable) {
             updateWithAggregatedData(ctx, dataKeysWithAggr, entityData);
             data.add(entityData);
         }

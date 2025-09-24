@@ -87,6 +87,7 @@ import {
 import { ReportWidgetContextService } from '@home/pages/reporting/template/components/report-widget-context.service';
 import { LatestChartConfigComponent } from '@home/pages/reporting/template/components/latest-chart-config.component';
 import { LatestChartPreviewComponent } from '@home/pages/reporting/template/components/latest-chart-preview.component';
+import { WidgetSettingsModule } from '@home/components/widget/lib/settings/widget-settings.module';
 
 @NgModule({
   providers: [
@@ -134,7 +135,8 @@ import { LatestChartPreviewComponent } from '@home/pages/reporting/template/comp
     SharedModule,
     SharedHomeComponentsModule,
     WidgetConfigComponentsModule,
-    BasicWidgetConfigModule
+    BasicWidgetConfigModule,
+    WidgetSettingsModule
   ],
   exports: [
     ReportComponentsComponent,

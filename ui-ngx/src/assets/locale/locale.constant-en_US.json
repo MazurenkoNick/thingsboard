@@ -7425,6 +7425,7 @@
             "point-chart": "Point chart",
             "state-chart": "State chart",
             "bar-chart-with-labels": "Bar chart with labels",
+            "range-chart": "Range chart",
             "bars": "Bars",
             "pie": "Pie",
             "doughnut": "Doughnut",

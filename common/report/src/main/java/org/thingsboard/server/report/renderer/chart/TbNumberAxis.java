@@ -39,17 +39,20 @@ import org.jfree.chart.axis.NumberTickUnit;
 import org.jfree.chart.axis.Tick;
 import org.jfree.chart.axis.TickType;
 import org.jfree.chart.axis.TickUnit;
+import org.jfree.chart.axis.TickUnitSource;
 import org.jfree.chart.axis.ValueAxis;
 import org.jfree.chart.axis.ValueTick;
 import org.jfree.chart.plot.CategoryPlot;
 import org.jfree.chart.plot.Plot;
 import org.jfree.chart.plot.PlotRenderingInfo;
+import org.jfree.chart.plot.ValueAxisPlot;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.ui.RectangleEdge;
 import org.jfree.chart.ui.RectangleInsets;
 import org.jfree.chart.ui.TextAnchor;
 import org.jfree.chart.util.Args;
 import org.jfree.data.Range;
+import org.jfree.data.RangeType;
 
 import java.awt.BasicStroke;
 import java.awt.Font;
@@ -235,6 +238,107 @@ public class TbNumberAxis extends NumberAxis {
             }
         }
         return result;
+    }
+
+    @Override
+    protected void autoAdjustRange() {
+
+        Plot plot = getPlot();
+        if (plot == null) {
+            return;  // no plot, no data
+        }
+
+        if (plot instanceof ValueAxisPlot) {
+            ValueAxisPlot vap = (ValueAxisPlot) plot;
+
+            Range r = vap.getDataRange(this);
+            if (r == null) {
+                r = getDefaultAutoRange();
+            }
+
+            double upper = r.getUpperBound();
+            double lower = r.getLowerBound();
+            if (this.getRangeType() == RangeType.POSITIVE) {
+                lower = Math.max(0.0, lower);
+                upper = Math.max(0.0, upper);
+            }
+            else if (this.getRangeType() == RangeType.NEGATIVE) {
+                lower = Math.min(0.0, lower);
+                upper = Math.min(0.0, upper);
+            }
+
+            if (getAutoRangeIncludesZero()) {
+                lower = Math.min(lower, 0.0);
+                upper = Math.max(upper, 0.0);
+            }
+            double range = upper - lower;
+
+            // if fixed auto range, then derive lower bound...
+            double fixedAutoRange = getFixedAutoRange();
+            if (fixedAutoRange > 0.0) {
+                lower = upper - fixedAutoRange;
+            }
+            else {
+                // ensure the autorange is at least <minRange> in size...
+                double minRange = getAutoRangeMinimumSize();
+                if (range < minRange) {
+                    double expand = (minRange - range) / 2;
+                    upper = upper + expand;
+                    lower = lower - expand;
+                    if (lower == upper) { // see bug report 1549218
+                        double adjust = Math.abs(lower) / 10.0;
+                        lower = lower - adjust;
+                        upper = upper + adjust;
+                    }
+                    if (this.getRangeType() == RangeType.POSITIVE) {
+                        if (lower < 0.0) {
+                            upper = upper - lower;
+                            lower = 0.0;
+                        }
+                    }
+                    else if (this.getRangeType() == RangeType.NEGATIVE) {
+                        if (upper > 0.0) {
+                            lower = lower - upper;
+                            upper = 0.0;
+                        }
+                    }
+                }
+
+                if (getAutoRangeStickyZero()) {
+                    if (upper <= 0.0) {
+                        upper = Math.min(0.0, upper + getUpperMargin() * range);
+                    }
+                    else {
+                        upper = upper + getUpperMargin() * range;
+                    }
+                    if (lower >= 0.0) {
+                        lower = Math.max(0.0, lower - getLowerMargin() * range);
+                    }
+                    else {
+                        lower = lower - getLowerMargin() * range;
+                    }
+                }
+                else {
+                    upper = upper + getUpperMargin() * range;
+                    lower = lower - getLowerMargin() * range;
+                }
+            }
+
+            if (this.axisMin != null) {
+                lower = this.axisMin;
+            }
+
+            if (this.axisMax != null) {
+                upper = this.axisMax;
+            }
+
+            if (upper <= lower) {
+                upper = lower + 1.0;
+            }
+
+            setRange(new Range(lower, upper), false, false);
+        }
+
     }
 
     @Override

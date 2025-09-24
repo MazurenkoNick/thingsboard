@@ -30,6 +30,7 @@
  */
 package org.thingsboard.server.common.data.report.configuration.chart;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import org.thingsboard.server.common.data.report.configuration.style.Font;
 import org.thingsboard.server.common.data.report.configuration.style.FontStyle;
@@ -55,6 +56,9 @@ public class ReportBarChartWithLabelsSettings extends ReportTimeSeriesChartSetti
 
     public ReportBarChartWithLabelsSettings(ReportBarChartWithLabelsSettings input) {
         super(input);
+        if (input == null) {
+            input = new ReportBarChartWithLabelsSettings();
+        }
         this.setTitle(input.getTitle() != null ? input.getTitle() : "Bar chart with labels");
         this.showBarLabel = input.getShowBarLabel() != null ? input.getShowBarLabel() : Boolean.TRUE;
         this.barLabelFont = input.getBarLabelFont() != null ? input.getBarLabelFont() : Font.builder().family("Roboto")
@@ -83,6 +87,31 @@ public class ReportBarChartWithLabelsSettings extends ReportTimeSeriesChartSetti
         barWidthSettings.setBarGap(barWidthSettings.getBarGap() != null ? barWidthSettings.getBarGap() : 0f);
         barWidthSettings.setIntervalGap(barWidthSettings.getIntervalGap() != null ? barWidthSettings.getIntervalGap() : 0.5f);
         this.setBarWidthSettings(barWidthSettings);
+    }
+
+    @JsonIgnore
+    public TimeSeriesChartKeySettings toTimeSeriesChartKeySettings() {
+        TimeSeriesChartKeySettings keySettings = new TimeSeriesChartKeySettings();
+        keySettings.setSeriesType(TimeSeriesChartSeriesType.bar);
+
+        BarWithLabelsSeriesSettings barSettings = new BarWithLabelsSeriesSettings();
+
+        barSettings.setShowBorder(getShowBarBorder());
+        barSettings.setBorderWidth(getBarBorderWidth());
+        barSettings.setBorderRadius(getBarBorderRadius());
+        barSettings.setBackgroundSettings(getBarBackgroundSettings());
+
+        barSettings.setShowLabel(getShowBarValue());
+        barSettings.setLabelFont(getBarValueFont());
+        barSettings.setLabelColor(getBarValueColor());
+
+        barSettings.setShowSeriesLabel(getShowBarLabel());
+        barSettings.setSeriesLabelFont(getBarLabelFont());
+        barSettings.setSeriesLabelColor(getBarLabelColor());
+
+        keySettings.setBarSettings(barSettings);
+
+        return keySettings;
     }
 
 }
