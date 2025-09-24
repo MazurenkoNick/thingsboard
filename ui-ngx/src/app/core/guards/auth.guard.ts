@@ -128,6 +128,9 @@ export class AuthGuard  {
             if (path === 'login.mfa') {
               tasks.push(this.authService.getAvailableTwoFaLoginProviders());
             }
+            if (path === 'login.force-mfa') {
+              tasks.push(this.authService.getAvailableTwoFaProviders());
+            }
             return forkJoin(tasks).pipe(
               map(() => {
                 if (path === 'signup' && !this.selfRegistrationService.signUpParams.activate) {
