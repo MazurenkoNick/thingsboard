@@ -79,7 +79,7 @@ import java.util.Objects;
 import static org.thingsboard.server.report.renderer.chart.ChartUtils.interpolateBezier;
 import static org.thingsboard.server.report.util.ColorUtils.safeParseCssColor;
 
-public class TbXYLineAndShapeRenderer extends XYLineAndShapeRenderer implements TbItemRenderer {
+public class TbXYLineAndShapeRenderer extends XYLineAndShapeRenderer implements TbItemRenderer, TbVisualMapRenderer {
 
     public enum LineInterpolationType {
         NONE,
@@ -147,6 +147,10 @@ public class TbXYLineAndShapeRenderer extends XYLineAndShapeRenderer implements 
     private double stepPoint = 1.0d;
     private int precision = 1;
     private float smooth = 0f;
+
+    private Paint currentVisualMapPaint;
+    private Paint currentVisualMapFillPaint;
+    private TbVisualMap visualMap;
 
     public TbXYLineAndShapeRenderer() {
         this(LineInterpolationType.NONE, FillType.NONE, false);
@@ -236,6 +240,49 @@ public class TbXYLineAndShapeRenderer extends XYLineAndShapeRenderer implements 
     }
 
     @Override
+    public int getAreaPass() {
+        return 0;
+    }
+
+    @Override
+    public int getItemPass() {
+        return 1;
+    }
+
+    @Override
+    public void setCurrentVisualMapPaint(Paint paint) {
+        this.currentVisualMapPaint = paint;
+    }
+
+    @Override
+    public void setCurrentVisualMapFillPaint(Paint paint) {
+        this.currentVisualMapFillPaint = paint;
+    }
+
+    @Override
+    public void setVisualMap(TbVisualMap visualMap) {
+        this.visualMap = visualMap;
+    }
+
+    @Override
+    public Paint getSeriesPaint(int series) {
+        if (currentVisualMapPaint != null) {
+            return currentVisualMapPaint;
+        } else {
+            return super.getSeriesPaint(series);
+        }
+    }
+
+    @Override
+    public Paint getSeriesFillPaint(int series) {
+        if (this.currentVisualMapFillPaint != null) {
+            return this.currentVisualMapFillPaint;
+        } else {
+            return super.getSeriesFillPaint(series);
+        }
+    }
+
+    @Override
     public Range findRangeBounds(XYDataset dataset) {
         if (this.stackMode) {
             if (dataset == null) {
@@ -260,16 +307,21 @@ public class TbXYLineAndShapeRenderer extends XYLineAndShapeRenderer implements 
         }
     }
 
-    public Paint getShapeFillPaint(int series, int item) {
-        return lookupSeriesShapeFillPaint(series);
+    public Paint getShapeFillPaint(int series, int item, double value) {
+        return lookupSeriesShapeFillPaint(series, value);
     }
 
-    public Paint lookupSeriesShapeFillPaint(int series) {
+    public Paint lookupSeriesShapeFillPaint(int series, double value) {
         Paint seriesShapesFillPaint = getSeriesShapesFillPaint(series);
         if (seriesShapesFillPaint == null) {
-            seriesShapesFillPaint = defaultShapeFillPaint;
+            if (this.visualMap != null) {
+                seriesShapesFillPaint = this.visualMap.lookupPaint(value);
+            }
             if (seriesShapesFillPaint == null) {
-                seriesShapesFillPaint = lookupSeriesPaint(series);
+                seriesShapesFillPaint = defaultShapeFillPaint;
+                if (seriesShapesFillPaint == null) {
+                    seriesShapesFillPaint = lookupSeriesPaint(series);
+                }
             }
         }
         return seriesShapesFillPaint;
@@ -537,16 +589,23 @@ public class TbXYLineAndShapeRenderer extends XYLineAndShapeRenderer implements 
                         if (this.getUseFillPaint()) {
                             g2.setPaint(getItemFillPaint(series, item));
                         } else {
-                            g2.setPaint(getShapeFillPaint(series, item));
+                            g2.setPaint(getShapeFillPaint(series, item, y1));
                         }
                         g2.fill(shape);
                     }
                     if (this.getDrawOutlines()) {
-                        if (getUseOutlinePaint()) {
-                            g2.setPaint(getItemOutlinePaint(series, item));
-                        } else {
-                            g2.setPaint(getItemPaint(series, item));
+                        Paint outlinePaint = null;
+                        if (this.visualMap != null) {
+                            outlinePaint = this.visualMap.lookupPaint(y1);
                         }
+                        if (outlinePaint == null) {
+                            if (getUseOutlinePaint()) {
+                                outlinePaint = getItemOutlinePaint(series, item);
+                            } else {
+                                outlinePaint = getItemPaint(series, item);
+                            }
+                        }
+                        g2.setPaint(outlinePaint);
                         g2.setStroke(getItemOutlineStroke(series, item));
                         g2.draw(shape);
                     }
@@ -670,7 +729,7 @@ public class TbXYLineAndShapeRenderer extends XYLineAndShapeRenderer implements 
         Shape shape = lookupLegendShape(series);
         boolean shapeIsFilled = getItemShapeFilled(series, 0);
         Paint fillPaint = (this.getUseFillPaint() ? lookupSeriesFillPaint(series)
-                : lookupSeriesShapeFillPaint(series));
+                : lookupSeriesShapeFillPaint(series, 0));
         boolean shapeOutlineVisible = this.getDrawOutlines();
         Paint outlinePaint = (this.getUseOutlinePaint() ? lookupSeriesOutlinePaint(
                 series) : lookupSeriesPaint(series));

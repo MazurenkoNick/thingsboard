@@ -30,9 +30,9 @@
  */
 package org.thingsboard.server.report.renderer.chart.legend;
 
+import org.jfree.chart.block.Arrangement;
 import org.jfree.chart.block.Block;
 import org.jfree.chart.block.BlockContainer;
-import org.jfree.chart.block.EmptyBlock;
 import org.jfree.chart.block.LabelBlock;
 import org.jfree.chart.block.RectangleConstraint;
 import org.jfree.chart.title.LegendGraphic;
@@ -42,7 +42,8 @@ import org.jfree.chart.ui.RectangleEdge;
 import org.jfree.chart.ui.RectangleInsets;
 import org.jfree.chart.ui.Size2D;
 import org.jfree.chart.ui.VerticalAlignment;
-import org.thingsboard.server.report.renderer.chart.layout.TbContentJustify;
+import org.thingsboard.server.report.context.chart.TsChartRangeItem;
+import org.thingsboard.server.report.renderer.chart.layout.TbColumnArrangement;
 import org.thingsboard.server.report.renderer.chart.layout.TbFlowArrangement;
 import org.thingsboard.server.report.renderer.chart.layout.TbTableBlockContainer;
 
@@ -52,36 +53,31 @@ import java.awt.Paint;
 import java.awt.Shape;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.Rectangle2D;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import static org.thingsboard.server.report.util.ColorUtils.safeParseCssColor;
 
-public class TbLatestLegendTitle extends Title {
+public class TbRangeLegendTitle extends Title {
 
     private static final Shape LEGEND_ITEM_SHAPE = new Ellipse2D.Double(-4f, -4f, 8f, 8f);
-    private static final Paint TOTAL_SHAPE_FILL = safeParseCssColor("rgba(0, 0, 0, 0.06)");
-    private static final Paint DISABLED_ITEM_PAINT = safeParseCssColor("#ccc");
 
-    private final List<TbLatestChartLegendItem> legendItems;
+    private final List<TsChartRangeItem> rangeItems;
 
     private Block legendContainer;
 
     private Font legendLabelFont;
     private Paint legendLabelPaint;
-    private Font legendValueFont;
-    private Paint legendValuePaint;
 
     private double maxRelativeWidth = 0;
     private double maxRelativeHeight = 0;
 
-    public TbLatestLegendTitle(List<TbLatestChartLegendItem> legendItems) {
-        this.legendItems = legendItems;
+    public TbRangeLegendTitle(List<TsChartRangeItem> rangeItems) {
+        this.rangeItems = rangeItems;
 
         this.legendLabelFont = new Font("Roboto", Font.PLAIN, 12);
-        this.legendLabelPaint = safeParseCssColor("rgba(0, 0, 0, 0.38)");
-
-        this.legendValueFont = new Font("Roboto", Font.BOLD, 14);
-        this.legendValuePaint = safeParseCssColor("rgba(0, 0, 0, 0.87)");
+        this.legendLabelPaint = safeParseCssColor("rgba(0, 0, 0, 0.76)");
     }
 
     public void setLegendLabelFont(Font legendLabelFont) {
@@ -90,14 +86,6 @@ public class TbLatestLegendTitle extends Title {
 
     public void setLegendLabelPaint(Paint legendLabelPaint) {
         this.legendLabelPaint = legendLabelPaint;
-    }
-
-    public void setLegendValueFont(Font legendValueFont) {
-        this.legendValueFont = legendValueFont;
-    }
-
-    public void setLegendValuePaint(Paint legendValuePaint) {
-        this.legendValuePaint = legendValuePaint;
     }
 
     public void setMaxRelativeWidth(double maxRelativeWidth) {
@@ -126,8 +114,7 @@ public class TbLatestLegendTitle extends Title {
                 targetConstraint = toContentConstraint(new RectangleConstraint(maxWidth, constraint.getHeight()));
             }
         }
-        Size2D size = this.legendContainer.arrange(g2, targetConstraint);
-        Size2D result = new Size2D();
+        Size2D size = this.legendContainer.arrange(g2, targetConstraint);Size2D result = new Size2D();
         result.height = calculateTotalHeight(size.height);
         result.width = calculateTotalWidth(size.width);
         return result;
@@ -148,94 +135,48 @@ public class TbLatestLegendTitle extends Title {
     }
 
     private void buildLegendItems() {
+        Arrangement arrangement;
+        List<TsChartRangeItem> items;
         if (RectangleEdge.isTopOrBottom(getPosition())) {
-            TbFlowArrangement legendArrangement = new TbFlowArrangement(HorizontalAlignment.CENTER, VerticalAlignment.CENTER, TbContentJustify.SPACE_AROUND,8.0, 8.0);
-            this.legendContainer = new BlockContainer(legendArrangement);
+            items = rangeItems;
+            arrangement = new TbFlowArrangement(HorizontalAlignment.CENTER, VerticalAlignment.CENTER, 24.0, 8.0);
         } else {
-            this.legendContainer = new TbTableBlockContainer(4.0, 8.0);
+            items = new ArrayList<>(rangeItems);
+            Collections.reverse(items);
+            arrangement = new TbColumnArrangement(HorizontalAlignment.LEFT, VerticalAlignment.TOP, 24.0, 8.0);
         }
-        RectangleEdge p = getPosition();
-        if (RectangleEdge.isTopOrBottom(p)) {
-            this.buildVerticalLegendItems();
-        } else {
-            this.buildHorizontalLegendItems();
-        }
-    }
-
-    private void buildVerticalLegendItems() {
-        BlockContainer container = (BlockContainer) this.legendContainer;
-        for (TbLatestChartLegendItem item : legendItems) {
-            Block itemBlock = this.buildVerticalLegendItem(item);
-            container.add(itemBlock);
+        this.legendContainer = new BlockContainer(arrangement);
+        for (TsChartRangeItem item : items) {
+            Block itemBlock = this.buildLegendItem(item);
+            ((BlockContainer) this.legendContainer).add(itemBlock);
         }
     }
 
-    private void buildHorizontalLegendItems() {
-        TbTableBlockContainer tableContainer = (TbTableBlockContainer) this.legendContainer;
-        int legendShape = tableContainer.addColumn(HorizontalAlignment.LEFT, HorizontalAlignment.LEFT, false);
-        tableContainer.setColumnHeader(new EmptyBlock(0,0), legendShape);
-        int legendLabel = tableContainer.addColumn(HorizontalAlignment.LEFT, HorizontalAlignment.LEFT, false);
-        tableContainer.setColumnHeader(new EmptyBlock(0,0), legendLabel);
-        int legendValue = tableContainer.addColumn(HorizontalAlignment.LEFT, HorizontalAlignment.RIGHT, false);
-        tableContainer.setColumnHeader(new EmptyBlock(0,0), legendValue);
-        for (TbLatestChartLegendItem item : legendItems) {
-            Block shapeBlock = this.buildLegendShape(item);
-            tableContainer.addColumnCell(shapeBlock, legendShape);
-            Block labelBlock = this.buildLegendLabel(item);
-            tableContainer.addColumnCell(labelBlock, legendLabel);
-            Block valueBlock = this.buildLegendValue(item);
-            tableContainer.addColumnCell(valueBlock, legendValue);
-        }
-    }
-
-    private Block buildVerticalLegendItem(TbLatestChartLegendItem item) {
+    private Block buildLegendItem(TsChartRangeItem item) {
         TbTableBlockContainer legendBlock = new TbTableBlockContainer(4.0, 0.0);
 
         int shape = legendBlock.addColumn(HorizontalAlignment.LEFT, HorizontalAlignment.LEFT, false);
         Block shapeBlock = this.buildLegendShape(item);
         legendBlock.setColumnHeader(shapeBlock, shape);
-        legendBlock.addColumnCell(new EmptyBlock(0,0), shape);
 
         int label = legendBlock.addColumn(HorizontalAlignment.LEFT, HorizontalAlignment.LEFT, false);
         Block labelBlock = this.buildLegendLabel(item);
         legendBlock.setColumnHeader(labelBlock, label);
-        Block valueBlock = this.buildLegendValue(item);
-        legendBlock.addColumnCell(valueBlock, label);
 
         return legendBlock;
     }
 
-    private Block buildLegendShape(TbLatestChartLegendItem item) {
-        Paint shapeFill;
-        if (!item.isHasValue()) {
-            shapeFill = DISABLED_ITEM_PAINT;
-        } else {
-            if (!item.isTotal()) {
-                shapeFill = safeParseCssColor(item.getColor());
-            } else {
-                shapeFill = TOTAL_SHAPE_FILL;
-            }
-        }
+    private Block buildLegendShape(TsChartRangeItem item) {
+        Paint shapeFill = safeParseCssColor(item.getColor());
         LegendGraphic lg = new LegendGraphic(LEGEND_ITEM_SHAPE, shapeFill);
         lg.setPadding(RectangleInsets.ZERO_INSETS);
         return lg;
     }
 
-    private Block buildLegendLabel(TbLatestChartLegendItem item) {
+    private Block buildLegendLabel(TsChartRangeItem item) {
         String label = item.getLabel();
         Paint labelPaint = this.legendLabelPaint;
-        if (!item.isHasValue()) {
-            labelPaint = DISABLED_ITEM_PAINT;
-        }
         return new LabelBlock(label, this.legendLabelFont, labelPaint);
     }
 
-    private Block buildLegendValue(TbLatestChartLegendItem item) {
-        String value = item.getValue();
-        Paint labelPaint = this.legendValuePaint;
-        if (!item.isHasValue()) {
-            labelPaint = DISABLED_ITEM_PAINT;
-        }
-        return new LabelBlock(value, this.legendValueFont, labelPaint);
-    }
 }

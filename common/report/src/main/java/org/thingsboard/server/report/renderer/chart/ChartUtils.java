@@ -296,6 +296,14 @@ public interface ChartUtils {
         return ColorUtils.TRANSPARENT;
     }
 
+    static Paint createFillPaint(boolean fillArea, float fillAreaOpacity, Color seriesColor) {
+        if (!fillArea) {
+            return ColorUtils.TRANSPARENT;
+        } else {
+            return ColorUtils.applyOpacity(seriesColor, fillAreaOpacity);
+        }
+    }
+
     static Map<TbDatasetKey, List<TsChartSeriesData>> datasetGroupsFromSeries(List<TsChartSeriesData> rawSeries) {
         Map<TbDatasetKey, List<TsChartSeriesData>> groupedSeries = rawSeries.stream().
                 collect(Collectors.groupingBy(s -> new TbDatasetKey(getSeriesSettings(s), s.getDataSource().isComparison()))).

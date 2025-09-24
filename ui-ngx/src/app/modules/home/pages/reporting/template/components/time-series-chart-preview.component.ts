@@ -30,22 +30,26 @@
 ///
 
 import {
-  AfterViewInit, ChangeDetectionStrategy,
+  AfterViewInit,
+  ChangeDetectionStrategy,
   Component,
   ComponentRef,
   inject,
   Input,
-  OnDestroy, Type,
+  OnDestroy,
+  Type,
   ViewChild,
   ViewContainerRef,
   ViewEncapsulation
 } from '@angular/core';
 import {
-  reportBarChartWithLabelsDefaultSettings, ReportBarChartWithLabelSettings,
+  reportBarChartWithLabelsDefaultSettings,
+  ReportBarChartWithLabelSettings, reportRangeChartDefaultSettings, ReportRangeChartSettings,
   reportStateChartDefaultSettings,
   reportTimeSeriesChartDefaultSettings,
   ReportTimeSeriesChartSettings,
-  TimeseriesChartReportComponentConfig, toBarChartWithLabelsWidgetSettings
+  TimeseriesChartReportComponentConfig,
+  toBarChartWithLabelsWidgetSettings, toRangeChartWidgetSettings
 } from '@shared/models/report-component.models';
 import { AbstractReportComponentPreview } from '@home/pages/reporting/template/components/report-component.component';
 import {
@@ -68,6 +72,7 @@ import {
   BarChartWithLabelsWidgetComponent
 } from '@home/components/widget/lib/chart/bar-chart-with-labels-widget.component';
 import { ChartWidgetComponent } from '@home/components/widget/lib/chart/chart.models';
+import { RangeChartWidgetComponent } from '@home/components/widget/lib/chart/range-chart-widget.component';
 
 @Component({
   selector: 'tb-time-series-chart-preview',
@@ -84,6 +89,10 @@ export class TimeSeriesChartPreviewComponent extends AbstractReportComponentPrev
   @Input()
   @coerceBoolean()
   barChartWithLabels = false;
+
+  @Input()
+  @coerceBoolean()
+  rangeChart = false;
 
   @Input()
   chartType: TimeSeriesChartType = TimeSeriesChartType.default;
@@ -196,8 +205,7 @@ export class TimeSeriesChartPreviewComponent extends AbstractReportComponentPrev
     }
     const datasources = deepClone(this.reportComponent.dataSources || []);
 
-    const defaultSettings = this.chartType === TimeSeriesChartType.state ?  reportStateChartDefaultSettings :
-      ( this.barChartWithLabels ? reportBarChartWithLabelsDefaultSettings : reportTimeSeriesChartDefaultSettings);
+    const defaultSettings = this.getDefaultSettings();
 
     const settings: ReportTimeSeriesChartSettings =
       mergeDeepIgnoreArray<ReportTimeSeriesChartSettings>({} as ReportTimeSeriesChartSettings, defaultSettings, this.reportComponent.timeSeriesChartSettings, {
@@ -270,6 +278,12 @@ export class TimeSeriesChartPreviewComponent extends AbstractReportComponentPrev
       units = barChartWithLabelsSettings.barUnits;
       decimals = barChartWithLabelsSettings.barDecimals;
       widgetComponentType = BarChartWithLabelsWidgetComponent;
+    } else if (this.rangeChart) {
+      const rangeChartSettings = settings as ReportRangeChartSettings & TimeSeriesChartWidgetSettings;
+      widgetSettings = toRangeChartWidgetSettings(rangeChartSettings);
+      units = rangeChartSettings.rangeUnits;
+      decimals = rangeChartSettings.rangeDecimals;
+      widgetComponentType = RangeChartWidgetComponent;
     }
     this.reportWidgetContextService.createWidgetContext(widgetType.timeseries,
       widgetSettings, this.reportComponent.timewindow, datasources, units, decimals, this.chartType == TimeSeriesChartType.state, this, genDataFunc)
@@ -283,6 +297,18 @@ export class TimeSeriesChartPreviewComponent extends AbstractReportComponentPrev
       this.widgetComponent.ctx = this.widgetContext;
       this.widgetContext.defaultSubscription.subscribe();
     });
+  }
+
+  private getDefaultSettings(): ReportTimeSeriesChartSettings {
+    if (this.chartType === TimeSeriesChartType.state) {
+      return reportStateChartDefaultSettings;
+    } else if (this.barChartWithLabels) {
+      return reportBarChartWithLabelsDefaultSettings;
+    } else if (this.rangeChart) {
+      return reportRangeChartDefaultSettings;
+    } else {
+      return reportTimeSeriesChartDefaultSettings;
+    }
   }
 
 }

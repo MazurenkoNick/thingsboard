@@ -32,16 +32,16 @@ package org.thingsboard.server.report.renderer;
 
 import org.jfree.chart.JFreeChart;
 import org.springframework.stereotype.Component;
-import org.thingsboard.server.common.data.report.configuration.chart.BarWithLabelsSeriesSettings;
 import org.thingsboard.server.common.data.report.configuration.chart.ReportBarChartWithLabelsSettings;
+import org.thingsboard.server.common.data.report.configuration.chart.ReportRangeChartSettings;
 import org.thingsboard.server.common.data.report.configuration.chart.ReportTimeSeriesChartSettings;
 import org.thingsboard.server.common.data.report.configuration.chart.TimeSeriesChartKeySettings;
-import org.thingsboard.server.common.data.report.configuration.chart.TimeSeriesChartSeriesType;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponentType;
 import org.thingsboard.server.common.data.report.configuration.components.TimeseriesChartComponent;
 import org.thingsboard.server.report.context.ComponentData;
 import org.thingsboard.server.report.context.chart.TsChartData;
 import org.thingsboard.server.report.renderer.chart.TbTimeSeriesChart;
+import org.thingsboard.server.report.renderer.chart.TbVisualMap;
 
 import java.awt.Graphics2D;
 
@@ -53,12 +53,13 @@ public class TimeseriesChartRenderer extends ChartRenderer<TimeseriesChartCompon
 
         ReportTimeSeriesChartSettings chartSettings;
         ReportTimeSeriesChartSettings inputSettings = component.getTimeSeriesChartSettings();
+        TbVisualMap visualMap = null;
         String units = null;
         Integer decimals = null;
         if (inputSettings instanceof ReportBarChartWithLabelsSettings inputBarChartWithLabelsSettings) {
             ReportBarChartWithLabelsSettings barChartWithLabelsSettings = new ReportBarChartWithLabelsSettings(inputBarChartWithLabelsSettings);
 
-            TimeSeriesChartKeySettings keySettings = timeSeriesChartKeySettingsFromBarChartWithLabelSettings(barChartWithLabelsSettings);
+            TimeSeriesChartKeySettings keySettings = barChartWithLabelsSettings.toTimeSeriesChartKeySettings();
 
             TsChartData data = reportDataSource.getTsChartData();
             data.getChartData().forEach(chartData -> chartData.getDataKeys().forEach(chartDataKey -> {
@@ -67,14 +68,32 @@ public class TimeseriesChartRenderer extends ChartRenderer<TimeseriesChartCompon
                 chartDataKey.setUnits("");
             }));
 
-            chartSettings = barChartWithLabelsSettings;
             units = barChartWithLabelsSettings.getBarUnits();
             decimals = barChartWithLabelsSettings.getBarDecimals();
+            chartSettings = barChartWithLabelsSettings;
+        } else if (inputSettings instanceof ReportRangeChartSettings inputRangeChartSettings) {
+            ReportRangeChartSettings reportRangeChartSettings = new ReportRangeChartSettings(inputRangeChartSettings);
+            TimeSeriesChartKeySettings keySettings = reportRangeChartSettings.toTimeSeriesChartKeySettings();
+            TsChartData data = reportDataSource.getTsChartData();
+            data.getChartData().forEach(chartData -> chartData.getDataKeys().forEach(chartDataKey -> {
+                chartDataKey.setSettings(keySettings);
+                chartDataKey.setDecimals(reportRangeChartSettings.getRangeDecimals());
+                chartDataKey.setUnits(reportRangeChartSettings.getRangeUnits());
+            }));
+
+            visualMap = new TbVisualMap(reportRangeChartSettings.getOutOfRangeColor(), reportDataSource.getTsChartData().getRangeItems(),
+                    reportRangeChartSettings.getFillArea(), reportRangeChartSettings.getFillAreaOpacity());
+
+            units = reportRangeChartSettings.getRangeUnits();
+            decimals = reportRangeChartSettings.getRangeDecimals();
+            reportRangeChartSettings.getYAxes().get("default").setUnits(units);
+            reportRangeChartSettings.getYAxes().get("default").setDecimals(decimals);
+            chartSettings = reportRangeChartSettings;
         } else {
             chartSettings = new ReportTimeSeriesChartSettings(inputSettings);
         }
 
-        TbTimeSeriesChart timeSeriesChart = new TbTimeSeriesChart(chartSettings, reportDataSource.getTsChartData(), units, decimals);
+        TbTimeSeriesChart timeSeriesChart = new TbTimeSeriesChart(chartSettings, reportDataSource.getTsChartData(), visualMap, units, decimals);
 
         return timeSeriesChart.createChart(g2);
     }
@@ -82,30 +101,6 @@ public class TimeseriesChartRenderer extends ChartRenderer<TimeseriesChartCompon
     @Override
     public ReportComponentType getType() {
         return ReportComponentType.TIME_SERIES_CHART;
-    }
-
-    private TimeSeriesChartKeySettings timeSeriesChartKeySettingsFromBarChartWithLabelSettings(ReportBarChartWithLabelsSettings barChartWithLabelsSettings) {
-        TimeSeriesChartKeySettings keySettings = new TimeSeriesChartKeySettings();
-        keySettings.setSeriesType(TimeSeriesChartSeriesType.bar);
-
-        BarWithLabelsSeriesSettings barSettings = new BarWithLabelsSeriesSettings();
-
-        barSettings.setShowBorder(barChartWithLabelsSettings.getShowBarBorder());
-        barSettings.setBorderWidth(barChartWithLabelsSettings.getBarBorderWidth());
-        barSettings.setBorderRadius(barChartWithLabelsSettings.getBarBorderRadius());
-        barSettings.setBackgroundSettings(barChartWithLabelsSettings.getBarBackgroundSettings());
-
-        barSettings.setShowLabel(barChartWithLabelsSettings.getShowBarValue());
-        barSettings.setLabelFont(barChartWithLabelsSettings.getBarValueFont());
-        barSettings.setLabelColor(barChartWithLabelsSettings.getBarValueColor());
-
-        barSettings.setShowSeriesLabel(barChartWithLabelsSettings.getShowBarLabel());
-        barSettings.setSeriesLabelFont(barChartWithLabelsSettings.getBarLabelFont());
-        barSettings.setSeriesLabelColor(barChartWithLabelsSettings.getBarLabelColor());
-
-        keySettings.setBarSettings(barSettings);
-
-        return keySettings;
     }
 
 }

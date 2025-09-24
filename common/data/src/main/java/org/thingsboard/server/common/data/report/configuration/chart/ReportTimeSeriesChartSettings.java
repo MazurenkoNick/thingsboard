@@ -45,7 +45,8 @@ import java.util.Map;
 
 @Data
 @JsonSubTypes({
-        @JsonSubTypes.Type(value = ReportBarChartWithLabelsSettings.class, name = "barChartWithLabels")
+        @JsonSubTypes.Type(value = ReportBarChartWithLabelsSettings.class, name = "barChartWithLabels"),
+        @JsonSubTypes.Type(value = ReportRangeChartSettings.class, name = "rangeChart")
 })
 public class ReportTimeSeriesChartSettings {
 
