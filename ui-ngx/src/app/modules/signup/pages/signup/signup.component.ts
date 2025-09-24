@@ -57,9 +57,11 @@ export class SignupComponent extends PageComponent {
 
   @ViewChild('recaptcha') recaptchaComponent: ReCaptcha2Component;
 
+  private signupRequest = SignupRequest.create();
+
   signup = this.fb.group({
-    fields: this.fb.group(SignupRequest.create().fields),
-    recaptchaResponse: [SignupRequest.create().recaptchaResponse]
+    fields: this.signupRequest.fields,
+    recaptchaResponse: [this.signupRequest.recaptchaResponse]
   })
   passwordCheck: string;
   acceptPrivacyPolicy: boolean;

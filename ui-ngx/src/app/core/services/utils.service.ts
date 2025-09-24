@@ -505,5 +505,4 @@ export class UtilsService {
       el.parentNode.removeChild(el);
     }
   }
-
 }

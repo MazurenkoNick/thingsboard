@@ -29,15 +29,8 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { AbstractControl, FormControl } from "@angular/forms";
+import { FormControl, FormGroup } from "@angular/forms";
 import { validateEmail } from "@app/core/utils";
-
-interface SignupRequestFields {
-  EMAIL: AbstractControl<string>;
-  FIRST_NAME: AbstractControl<string>;
-  LAST_NAME: AbstractControl<string>;
-  PASSWORD: AbstractControl<string>;
-}
 
 export interface SignupRequestValues {
   fields:SignupFieldsValues;
@@ -52,14 +45,16 @@ interface SignupFieldsValues {
 }
 
 export class SignupRequest {
-  fields = {} as SignupRequestFields;
+  fields: FormGroup;
   recaptchaResponse: string;
 
   constructor(firstName: string, lastName: string, email: string, password: string, recaptchaResponse: string) {
-    this.fields.FIRST_NAME = new FormControl(firstName,[validateEmail]);
-    this.fields.LAST_NAME = new FormControl(lastName);
-    this.fields.EMAIL = new FormControl(email);
-    this.fields.PASSWORD = new FormControl(password);
+    this.fields = new FormGroup({
+      FIRST_NAME: new FormControl(firstName),
+      LAST_NAME: new FormControl(lastName),
+      EMAIL: new FormControl(email, [validateEmail]),
+      PASSWORD: new FormControl(password)
+    });
     this.recaptchaResponse = recaptchaResponse;
   }
 
