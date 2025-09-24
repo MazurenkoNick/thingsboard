@@ -38,19 +38,19 @@ import org.thingsboard.server.common.data.id.UUIDBased;
 
 import java.util.UUID;
 
-class AliasEntityIdImpl implements AliasEntityId {
+public class AliasEntityIdImpl implements AliasEntityId {
 
     private UUID id;
     private EntityType entityType;
     private AliasEntityType aliasEntityType;
     private EntityId defaultEntityId;
 
-    protected AliasEntityIdImpl(EntityId entityId) {
+    public AliasEntityIdImpl(EntityId entityId) {
         this.id = entityId.getId();
         this.entityType = entityId.getEntityType();
     }
 
-    protected AliasEntityIdImpl(AliasEntityType aliasEntityType, UUID id) {
+    public AliasEntityIdImpl(AliasEntityType aliasEntityType, UUID id) {
         this.aliasEntityType = aliasEntityType;
         if (id != null) {
             switch (this.aliasEntityType) {
