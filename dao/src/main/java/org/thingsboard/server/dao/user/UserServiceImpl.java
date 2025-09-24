@@ -91,7 +91,6 @@ import org.thingsboard.server.dao.service.DataValidator;
 import org.thingsboard.server.dao.service.PaginatedRemover;
 import org.thingsboard.server.dao.settings.SecuritySettingsService;
 import org.thingsboard.server.dao.sql.JpaExecutorService;
-import org.thingsboard.server.dao.tenant.TbTenantProfileCache;
 import org.thingsboard.server.exception.DataValidationException;
 
 import java.util.ArrayList;
@@ -135,7 +134,6 @@ public class UserServiceImpl extends AbstractCachedEntityService<UserCacheKey, U
     private final UserSettingsService userSettingsService;
     private final UserSettingsDao userSettingsDao;
     private final SecuritySettingsService securitySettingsService;
-    private final TbTenantProfileCache tenantProfileCache;
     private final RoleService roleService;
     private final DataValidator<User> userValidator;
     private final DataValidator<UserCredentials> userCredentialsValidator;
