@@ -45,6 +45,9 @@ export class ContactComponent {
 
   phoneInputDefaultCountry = 'US';
 
+  constructor() {
+  }
+
   changeCountry(countryCode: string) {
     this.phoneInputDefaultCountry = countryCode ?? 'US';
     setTimeout(() => {
