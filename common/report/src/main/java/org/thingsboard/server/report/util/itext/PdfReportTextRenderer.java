@@ -97,10 +97,7 @@ public class PdfReportTextRenderer extends ITextTextRenderer {
                             ArabicShaping.TEXT_DIRECTION_LOGICAL;
 
             String shaped = new ArabicShaping(shapeFlags).shape(logical);
-
             Bidi bidi = new Bidi(shaped, Bidi.DIRECTION_LEFT_TO_RIGHT);
-
-            // Visual order string; mirroring fixes ()[]{} etc.
             int opts = Bidi.DO_MIRRORING | Bidi.INSERT_LRM_FOR_NUMERIC;
             return bidi.writeReordered(opts);
         } catch (Exception e) {
