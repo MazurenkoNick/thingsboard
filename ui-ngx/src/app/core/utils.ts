@@ -48,6 +48,8 @@ import {
   isNotEmptyTbFunction,
   TbFunction
 } from '@shared/models/js-function.models';
+import { DomSanitizer } from '@angular/platform-browser';
+import { SecurityContext } from '@angular/core';
 
 const varsRegex = /\${([^}]*)}/g;
 
@@ -932,7 +934,7 @@ export function getEntityDetailsPageURL(id: string, entityType: EntityType): str
 }
 
 export function parseHttpErrorMessage(errorResponse: HttpErrorResponse,
-                                      translate: TranslateService, responseType?: string): {message: string; timeout: number} {
+                                      translate: TranslateService, responseType?: string, sanitizer?:DomSanitizer): {message: string; timeout: number} {
   let error = null;
   let errorMessage: string;
   let timeout = 0;
@@ -959,6 +961,9 @@ export function parseHttpErrorMessage(errorResponse: HttpErrorResponse,
     }
     errorText += errorKey ? translate.instant(errorKey) : errorResponse.statusText;
     errorMessage = errorText;
+  }
+  if(sanitizer) {
+    errorMessage = sanitizer.sanitize(SecurityContext.HTML,errorMessage);
   }
   return {message: errorMessage, timeout};
 }
