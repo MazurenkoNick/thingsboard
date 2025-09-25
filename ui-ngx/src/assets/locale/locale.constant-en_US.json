@@ -11299,6 +11299,7 @@
             "dont-reserve-space-hidden-action": "Don't reserve space for hidden action buttons",
             "display-timestamp": "Timestamp",
             "include-timestamp-in-export": "Include timestamp column in export",
+            "timestamp-column-name":"Timestamp",
             "display-pagination": "Display pagination",
             "default-page-size": "Default page size",
             "page-step-settings": "Page step settings",
