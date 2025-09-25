@@ -125,12 +125,61 @@ import { TbTimeSeriesChart } from '@home/components/widget/lib/chart/time-series
 import { LatestChartPreviewComponent } from '@home/pages/reporting/template/components/latest-chart-preview.component';
 import { LatestChartConfigComponent } from '@home/pages/reporting/template/components/latest-chart-config.component';
 
+export enum ReportComponentLibraryGroup {
+  textAndImages = 'textAndImages',
+  dataAndTables = 'dataAndTables',
+  charts = 'charts',
+  branding = 'branding',
+  reportInfoAndLayout = 'reportInfoAndLayout'
+}
+
+export const reportComponentLibraryGroups: ReportComponentLibraryGroup[] = Object.keys(ReportComponentLibraryGroup) as ReportComponentLibraryGroup[];
+
+export const reportComponentLibraryGroupTranslations = new Map<ReportComponentLibraryGroup, string>(
+  [
+    [ReportComponentLibraryGroup.textAndImages, 'report-template.component.group.text-and-images'],
+    [ReportComponentLibraryGroup.dataAndTables, 'report-template.component.group.data-and-tables'],
+    [ReportComponentLibraryGroup.charts, 'report-template.component.group.charts'],
+    [ReportComponentLibraryGroup.branding, 'report-template.component.group.branding'],
+    [ReportComponentLibraryGroup.reportInfoAndLayout, 'report-template.component.group.report-info-and-layout']
+  ]
+);
+
 export interface ReportComponentLibraryItem<C extends ReportComponentConfig = ReportComponentConfig> {
   title: string;
   previewImage: string;
   type: ReportComponentType;
   defaultConfig: C;
 }
+
+export const reportComponentGroups = new Map<string, Array<string>>(
+  [
+    [
+      ReportComponentLibraryGroup.textAndImages,
+      ['heading', 'richText', 'image', 'textSection', 'textImage', 'imageText']
+    ],
+    [
+      ReportComponentLibraryGroup.dataAndTables,
+      ['entityTable', 'timeSeriesTable', 'alarmTable', 'subReport', 'dashboard']
+    ],
+    [
+      ReportComponentLibraryGroup.charts,
+      ['timeSeriesChart', 'lineChart', 'barChart',
+        'pointChart', 'stateChart', 'barChartWithLabels',
+        'rangeChart', 'latestBarChart', 'pieChart',
+        'doughnutChart', 'horizontalDoughnutChart']
+    ],
+    [
+      ReportComponentLibraryGroup.branding,
+      ['logoHeading', 'headingLogo', 'logoText', 'textLogo',
+        'logoText2', 'footer1', 'footer2', 'footer3']
+    ],
+    [
+      ReportComponentLibraryGroup.reportInfoAndLayout,
+      ['pageNumber', 'createdTime', 'divider', 'pageBreak']
+    ]
+  ]
+);
 
 export const reportComponentsLibrary = new Map<string, ReportComponentLibraryItem>(
   [
@@ -473,7 +522,7 @@ export const reportComponentsLibrary = new Map<string, ReportComponentLibraryIte
       'lineChart',
       {
         title: 'report-template.component.line-chart',
-        previewImage: '/assets/report/components/time-series-chart.svg',
+        previewImage: '/assets/report/components/line-chart.svg',
         type: ReportComponentType.TIME_SERIES_CHART,
         defaultConfig: {
           type: ReportComponentType.TIME_SERIES_CHART,
@@ -510,7 +559,7 @@ export const reportComponentsLibrary = new Map<string, ReportComponentLibraryIte
       'barChart',
       {
         title: 'report-template.component.bar-chart',
-        previewImage: '/assets/report/components/time-series-chart.svg',
+        previewImage: '/assets/report/components/bar-chart.svg',
         type: ReportComponentType.TIME_SERIES_CHART,
         defaultConfig: {
           type: ReportComponentType.TIME_SERIES_CHART,
@@ -547,7 +596,7 @@ export const reportComponentsLibrary = new Map<string, ReportComponentLibraryIte
       'pointChart',
       {
         title: 'report-template.component.point-chart',
-        previewImage: '/assets/report/components/time-series-chart.svg',
+        previewImage: '/assets/report/components/point-chart.svg',
         type: ReportComponentType.TIME_SERIES_CHART,
         defaultConfig: {
           type: ReportComponentType.TIME_SERIES_CHART,
@@ -584,7 +633,7 @@ export const reportComponentsLibrary = new Map<string, ReportComponentLibraryIte
       'stateChart',
       {
         title: 'report-template.component.state-chart',
-        previewImage: '/assets/report/components/time-series-chart.svg',
+        previewImage: '/assets/report/components/state-chart.svg',
         type: ReportComponentType.TIME_SERIES_CHART,
         defaultConfig: {
           type: ReportComponentType.TIME_SERIES_CHART,
@@ -621,7 +670,7 @@ export const reportComponentsLibrary = new Map<string, ReportComponentLibraryIte
       'barChartWithLabels',
       {
         title: 'report-template.component.bar-chart-with-labels',
-        previewImage: '/assets/report/components/time-series-chart.svg',
+        previewImage: '/assets/report/components/bar-chart-with-labels.svg',
         type: ReportComponentType.TIME_SERIES_CHART,
         defaultConfig: {
           type: ReportComponentType.TIME_SERIES_CHART,
@@ -656,7 +705,7 @@ export const reportComponentsLibrary = new Map<string, ReportComponentLibraryIte
       'rangeChart',
       {
         title: 'report-template.component.range-chart',
-        previewImage: '/assets/report/components/time-series-chart.svg',
+        previewImage: '/assets/report/components/range-chart.svg',
         type: ReportComponentType.TIME_SERIES_CHART,
         defaultConfig: {
           type: ReportComponentType.TIME_SERIES_CHART,
@@ -690,7 +739,7 @@ export const reportComponentsLibrary = new Map<string, ReportComponentLibraryIte
       'latestBarChart',
       {
         title: 'report-template.component.bars',
-        previewImage: '/assets/report/components/time-series-chart.svg',
+        previewImage: '/assets/report/components/bars.svg',
         type: ReportComponentType.LATEST_CHART,
         defaultConfig: {
           type: ReportComponentType.LATEST_CHART,
@@ -738,7 +787,7 @@ export const reportComponentsLibrary = new Map<string, ReportComponentLibraryIte
       'pieChart',
       {
         title: 'report-template.component.pie',
-        previewImage: '/assets/report/components/time-series-chart.svg',
+        previewImage: '/assets/report/components/pie-chart.svg',
         type: ReportComponentType.LATEST_CHART,
         defaultConfig: {
           type: ReportComponentType.LATEST_CHART,
@@ -786,7 +835,7 @@ export const reportComponentsLibrary = new Map<string, ReportComponentLibraryIte
       'doughnutChart',
       {
         title: 'report-template.component.doughnut',
-        previewImage: '/assets/report/components/time-series-chart.svg',
+        previewImage: '/assets/report/components/doughnut-chart.svg',
         type: ReportComponentType.LATEST_CHART,
         defaultConfig: {
           type: ReportComponentType.LATEST_CHART,
@@ -827,7 +876,7 @@ export const reportComponentsLibrary = new Map<string, ReportComponentLibraryIte
       'horizontalDoughnutChart',
       {
         title: 'report-template.component.horizontal-doughnut',
-        previewImage: '/assets/report/components/time-series-chart.svg',
+        previewImage: '/assets/report/components/horizontal-doughnut-chart.svg',
         type: ReportComponentType.LATEST_CHART,
         defaultConfig: {
           type: ReportComponentType.LATEST_CHART,

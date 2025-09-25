@@ -7366,6 +7366,13 @@
         "expand": "Expand",
         "editor": "Editor",
         "component": {
+            "group": {
+                "text-and-images": "Text & Images",
+                "data-and-tables": "Data & Tables",
+                "charts": "Charts",
+                "branding": "Branding",
+                "report-info-and-layout": "Report info & Layout"
+            },
             "heading": {
                 "type": "Heading",
                 "text": "Text",

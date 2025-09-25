@@ -72,7 +72,7 @@ import {
 } from '@home/components/widget/lib/chart/bar-chart-with-labels-widget.models';
 import { TimeSeriesChartWidgetSettings } from '@home/components/widget/lib/chart/time-series-chart-widget.models';
 import { IntervalType } from '@shared/models/telemetry/telemetry.models';
-import { LatestChartSettings, LatestChartWidgetSettings } from '@home/components/widget/lib/chart/latest-chart.models';
+import { LatestChartWidgetSettings } from '@home/components/widget/lib/chart/latest-chart.models';
 import { DoughnutLayout } from '@home/components/widget/lib/chart/doughnut-widget.models';
 import { RangeChartWidgetSettings } from '@app/modules/home/components/widget/lib/chart/range-chart-widget.models';
 
