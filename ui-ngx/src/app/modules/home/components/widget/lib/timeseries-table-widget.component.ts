@@ -982,7 +982,7 @@ export class TimeseriesTableWidgetComponent extends PageComponent implements OnI
               if (columnsToExport.includes(timestampFieldName)) {
                 tsRow[timestampFieldName] = this.datePipe.transform(ts, this.dateFormatFilter);
               }
-              tsRow['Entity Name'] = datasourceData.datasource.entityName;
+              tsRow['Entity Name'] = this.useEntityLabel ? datasourceData.datasource.entityLabel : datasourceData.datasource.entityName;
               sourcesTsRows[tsKey] = tsRow;
               if (!isEmpty(sourcesLatestContentFunc)) {
                 sourcesTsRowsContentFunc[tsKey] = {};
