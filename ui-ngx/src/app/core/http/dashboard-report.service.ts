@@ -419,7 +419,8 @@ export class DashboardReportService {
     }).pipe(
       map((response) => {
         const headers = response.headers;
-        const filename = headers.get('x-filename');
+        const contentDisposition = headers.get('content-disposition');
+        const filename = this.getFilenameFromContentDisposition(contentDisposition) ?? headers.get('x-filename');
         const contentType = headers.get('content-type');
         const linkElement = this.document.createElement('a');
         const blob = new Blob([response.body], { type: contentType });
@@ -437,5 +438,23 @@ export class DashboardReportService {
         return null;
       })
     );
+  }
+
+  private getFilenameFromContentDisposition(header: string): string | null {
+    if (!header) {
+      return null;
+    }
+
+    const filenameStarMatch = /filename\*=UTF-8''([^;]+)/i.exec(header);
+    if (filenameStarMatch && filenameStarMatch[1]) {
+      return decodeURIComponent(filenameStarMatch[1]);
+    }
+
+    const filenameMatch = /filename="([^"]+)"/i.exec(header);
+    if (filenameMatch && filenameMatch[1]) {
+      return filenameMatch[1];
+    }
+
+    return null;
   }
 }
