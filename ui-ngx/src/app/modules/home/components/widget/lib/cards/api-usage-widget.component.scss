@@ -34,7 +34,7 @@ $enabled-color: #198038;
 $disabled-color: #D12730;
 $warning-color: #FAA405;
 
-$main-color: #00695c;
+$main-color: var(--tb-primary-500);
 
 .tb-no-notification-svg-color {
   color: $main-color
@@ -67,6 +67,7 @@ $main-color: #00695c;
             color: $enabled-color;
           }
           .mat-mdc-progress-bar {
+            --mdc-linear-progress-track-color: #{rgba($enabled-color, 0.06)};
             --mdc-linear-progress-active-indicator-color: #{$enabled-color};
           }
         }
@@ -75,6 +76,7 @@ $main-color: #00695c;
             color: $disabled-color;
           }
           .mat-mdc-progress-bar {
+            --mdc-linear-progress-track-color: #{rgba($disabled-color, 0.06)};
             --mdc-linear-progress-active-indicator-color: #{$disabled-color};
           }
         }
@@ -83,6 +85,7 @@ $main-color: #00695c;
             color: $warning-color;
           }
           .mat-mdc-progress-bar {
+            --mdc-linear-progress-track-color: #{rgba($warning-color, 0.06)};
             --mdc-linear-progress-active-indicator-color: #{$warning-color};
           }
         }
@@ -91,7 +94,18 @@ $main-color: #00695c;
           background-color: rgba(0, 0, 0, 0.06);
         }
         &.active {
-          background-color: rgba($main-color, 0.06);
+          position: relative;
+          &:before {
+            content: "";
+            display: block;
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            left: 0;
+            top: 0;
+            background-color: $main-color;
+            opacity: 0.06;
+          }
           .mat-divider {
             --mat-divider-color: #{$main-color};
           }
