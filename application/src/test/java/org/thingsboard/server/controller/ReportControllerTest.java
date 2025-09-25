@@ -84,6 +84,7 @@ import org.thingsboard.server.common.data.report.configuration.components.DataRe
 import org.thingsboard.server.common.data.report.configuration.components.EntityTableComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ImageComponent;
 import org.thingsboard.server.common.data.report.configuration.components.ReportComponent;
+import org.thingsboard.server.common.data.report.configuration.components.RichTextComponent;
 import org.thingsboard.server.common.data.report.configuration.components.TimeseriesTableComponent;
 import org.thingsboard.server.common.data.report.configuration.style.Heading;
 import org.thingsboard.server.common.data.report.configuration.timewindow.AggregationConfiguration;
@@ -415,6 +416,19 @@ public class ReportControllerTest extends AbstractControllerTest {
         assertThat(errorMessage).isEqualTo("Timeout for test report generation. Generation took more than 2000 milliseconds!");
     }
 
+    @Test
+    public void testPDFReportWithChineseAndJapaneseWords() throws Exception {
+        String chineseText = "你好 (Nǐ hǎo): Hello";
+        String japaneseText = "こんにちは (Konnichiwa): Hello in Japanese";
+
+        ReportTemplateConfig configuration = PdfReportTemplateConfig.builder()
+                .components(List.of(buildRichTextComponent(chineseText), buildRichTextComponent(japaneseText)))
+                .build();
+        List<String> expectedRows = List.of(chineseText, japaneseText);
+
+        generateAndCheckPDFReportText(configuration, expectedRows);
+    }
+
     private TimeseriesTableComponent buildTimeseriesTableComponent(String devicesAliasId) {
         TimeseriesTableComponent tsComponent = new TimeseriesTableComponent();
         tsComponent.setShowTimestamp(true);
@@ -520,6 +534,12 @@ public class ReportControllerTest extends AbstractControllerTest {
         tableComponent.setTableHeading(tableHeading);
         tableComponent.setTableSortOrder(new TableSortOrder("NAME", TableSortOrder.Direction.ASC));
         return tableComponent;
+    }
+
+    private RichTextComponent buildRichTextComponent(String richText) {
+        RichTextComponent richTextComponent = new RichTextComponent();
+        richTextComponent.setValue(richText);
+        return richTextComponent;
     }
 
     private List<List<String>> generateLatestTestData(List<String> columnHeaders, String tableHeading, String timeDataPattern) throws Exception {
