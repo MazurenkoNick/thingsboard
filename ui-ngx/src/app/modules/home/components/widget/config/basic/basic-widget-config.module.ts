@@ -125,10 +125,6 @@ import {
 import {
   TimeSeriesChartBasicConfigComponent
 } from '@home/components/widget/config/basic/chart/time-series-chart-basic-config.component';
-import { ComparisonKeyRowComponent } from '@home/components/widget/config/basic/chart/comparison-key-row.component';
-import {
-  ComparisonKeysTableComponent
-} from '@home/components/widget/config/basic/chart/comparison-keys-table.component';
 import {
   StatusWidgetBasicConfigComponent
 } from '@home/components/widget/config/basic/indicator/status-widget-basic-config.component';
@@ -203,8 +199,6 @@ import { MapBasicConfigComponent } from '@home/components/widget/config/basic/ma
     ToggleButtonBasicConfigComponent,
     ValueStepperBasicConfigComponent,
     TimeSeriesChartBasicConfigComponent,
-    ComparisonKeyRowComponent,
-    ComparisonKeysTableComponent,
     StatusWidgetBasicConfigComponent,
     PieChartBasicConfigComponent,
     BarChartBasicConfigComponent,

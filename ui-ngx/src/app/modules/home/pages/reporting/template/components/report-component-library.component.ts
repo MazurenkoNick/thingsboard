@@ -31,7 +31,7 @@
 
 import {
   Component,
-  ElementRef,
+  ElementRef, HostBinding,
   Input,
   OnChanges,
   OnInit,
@@ -41,6 +41,9 @@ import {
 } from '@angular/core';
 import {
   csvReportComponentTypes,
+  reportComponentGroups,
+  ReportComponentLibraryGroup,
+  ReportComponentLibraryItem,
   reportComponentsLibrary,
   reportComponentTypes
 } from '@home/pages/reporting/template/components/report-component.models';
@@ -58,26 +61,38 @@ import { TranslateService } from '@ngx-translate/core';
 })
 export class ReportComponentLibraryComponent implements OnInit, OnChanges {
 
+  @HostBinding('style.display')
+  get display() {
+    return this.reportComponentIds?.length ? 'block' : 'none';
+  }
+
   @Input()
   @coerceBoolean()
   subReport = false;
 
   @Input()
+  @coerceBoolean()
+  nestedLibrary = false;
+
+  @Input()
   format: TbReportFormat = TbReportFormat.PDF;
+
+  @Input()
+  group: ReportComponentLibraryGroup;
 
   @Input()
   filter: string;
 
   libraryDragOriginList = viewChild('libraryDragOriginList', {
-    read: ElementRef,
+    read: ElementRef<HTMLElement>,
   });
 
   libraryDragActiveList = viewChild('libraryDragActiveList', {
-    read: ElementRef,
+    read: ElementRef<HTMLElement>,
   });
 
   reportComponentIds: string[];
-  reportComponentsLibrary = reportComponentsLibrary;
+  reportComponentsLibrary: Map<string, ReportComponentLibraryItem>;
 
   private reportComponentsTitleMap = new Map<string, string>();
 
@@ -86,7 +101,16 @@ export class ReportComponentLibraryComponent implements OnInit, OnChanges {
   constructor(private translate: TranslateService) {}
 
   ngOnInit() {
-    reportComponentsLibrary.forEach((item, id) => {
+    if (this.group) {
+      const ids = reportComponentGroups.get(this.group);
+      this.reportComponentsLibrary = new Map<string, ReportComponentLibraryItem>();
+      for (const id of ids) {
+        this.reportComponentsLibrary.set(id, reportComponentsLibrary.get(id));
+      }
+    } else {
+      this.reportComponentsLibrary = reportComponentsLibrary;
+    }
+    this.reportComponentsLibrary.forEach((item, id) => {
       this.reportComponentsTitleMap.set(id, (this.translate.instant(item.title) as string).toUpperCase());
     });
     this.updateReportComponentIds();
@@ -141,7 +165,7 @@ export class ReportComponentLibraryComponent implements OnInit, OnChanges {
       componentTypes = componentTypes.filter((type) => type !== ReportComponentType.SUB_REPORT );
     }
     const search = this.filter ? this.filter.trim().toUpperCase() : '';
-    reportComponentsLibrary.forEach((item, id) => {
+    this.reportComponentsLibrary.forEach((item, id) => {
       if (componentTypes.includes(item.type) && this.reportComponentsTitleMap.get(id).includes(search)) {
         this.reportComponentIds.push(id);
       }
@@ -166,7 +190,11 @@ export class ReportComponentLibraryComponent implements OnInit, OnChanges {
     if (!overlay || !origin) {
       return;
     }
+    const scrollTop = origin.nativeElement.scrollTop;
     overlay.nativeElement.style.display = visible ? 'flex' : 'none';
     origin.nativeElement.style.display = !visible ? 'flex' : 'none';
+    if (visible) {
+      overlay.nativeElement.scrollTop = scrollTop;
+    }
   }
 }

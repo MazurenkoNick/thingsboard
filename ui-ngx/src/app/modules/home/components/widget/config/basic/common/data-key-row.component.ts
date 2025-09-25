@@ -205,7 +205,7 @@ export class DataKeyRowComponent implements ControlValueAccessor, OnInit, OnChan
   }
 
   get widget(): Widget {
-    return this.widgetConfigComponent?.widget;
+    return this.widgetConfigComponent?.widget || this.dataKeysPanelComponent?.widget;
   }
 
   get dashboard(): Dashboard {
@@ -229,11 +229,11 @@ export class DataKeyRowComponent implements ControlValueAccessor, OnInit, OnChan
   }
 
   get dataKeySettingsDirective(): string {
-    return this.widgetConfigComponent?.modelValue?.dataKeySettingsDirective;
+    return this.widgetConfigComponent?.modelValue?.dataKeySettingsDirective || this.dataKeysPanelComponent?.dataKeySettingsDirective;
   }
 
   get latestDataKeySettingsForm(): FormProperty[] {
-    return this.widgetConfigComponent?.modelValue?.latestDataKeySettingsForm  || this.dataKeysPanelComponent?.latestDataKeySettingsForm;;
+    return this.widgetConfigComponent?.modelValue?.latestDataKeySettingsForm  || this.dataKeysPanelComponent?.latestDataKeySettingsForm;
   }
 
   get latestDataKeySettingsFormFunction(): DataKeySettingsFormFunction {
@@ -249,7 +249,7 @@ export class DataKeyRowComponent implements ControlValueAccessor, OnInit, OnChan
   }
 
   get dataKeySettingsFunction(): DataKeySettingsFunction {
-    return this.widgetConfigComponent?.modelValue?.dataKeySettingsFunction;
+    return this.widgetConfigComponent?.modelValue?.dataKeySettingsFunction || this.dataKeysPanelComponent?.dataKeySettingsFunction;
   }
 
   get isEntityDatasource(): boolean {

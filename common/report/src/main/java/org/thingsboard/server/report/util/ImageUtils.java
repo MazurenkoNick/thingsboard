@@ -45,9 +45,9 @@ public class ImageUtils {
         Logger.getLogger("com.github.weisj.jsvg").setLevel(Level.OFF);
     }
 
-    public static Size getOriginalImageSize(byte[] pngImage) throws IOException {
+    public static Size getOriginalImageSize(byte[] pngImage, int dotsPerPixel) throws IOException {
         Image img = Image.getInstance(pngImage);
-        return new Size((int) img.getPlainWidth(), (int) img.getPlainHeight());
+        return new Size((int) img.getPlainWidth() * dotsPerPixel, (int) img.getPlainHeight() * dotsPerPixel);
     }
 
     public static boolean isTbImage(String uri) {

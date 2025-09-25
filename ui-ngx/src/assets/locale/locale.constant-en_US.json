@@ -7417,6 +7417,13 @@
         "expand": "Expand",
         "editor": "Editor",
         "component": {
+            "group": {
+                "text-and-images": "Text & Images",
+                "data-and-tables": "Data & Tables",
+                "charts": "Charts",
+                "branding": "Branding",
+                "report-info-and-layout": "Report info & Layout"
+            },
             "heading": {
                 "type": "Heading",
                 "text": "Text",
@@ -7461,6 +7468,30 @@
             },
             "alarm-table": {
                 "type": "Alarm table"
+            },
+            "time-series-chart": {
+                "type": "Time series chart",
+                "no-datasource-configured": "Data source is not configured for time series chart",
+                "no-series-configured": "At least one series should be specified for time series chart"
+            },
+            "latest-chart": {
+                "no-datasource-configured": "Data source is not configured for the chart",
+                "no-series-configured": "At least one series should be specified for the chart"
+            },
+            "line-chart": "Line chart",
+            "bar-chart": "Bar chart",
+            "point-chart": "Point chart",
+            "state-chart": "State chart",
+            "bar-chart-with-labels": "Bar chart with labels",
+            "range-chart": "Range chart",
+            "bars": "Bars",
+            "pie": "Pie",
+            "doughnut": "Doughnut",
+            "horizontal-doughnut": "Horizontal doughnut",
+            "chart": {
+                "chart-height": "Chart height",
+                "chart-width": "Chart width",
+                "chart-alignment": "Chart alignment"
             },
             "image": {
                 "type": "Image",

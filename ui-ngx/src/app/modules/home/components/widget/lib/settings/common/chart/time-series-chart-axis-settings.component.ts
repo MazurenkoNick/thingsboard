@@ -94,6 +94,10 @@ export class TimeSeriesChartAxisSettingsComponent implements OnInit, ControlValu
   @coerceBoolean()
   hideDecimals = false;
 
+  @Input()
+  @coerceBoolean()
+  reportMode = false;
+
   private modelValue: TimeSeriesChartXAxisSettings | TimeSeriesChartYAxisSettings;
 
   private propagateChange = null;

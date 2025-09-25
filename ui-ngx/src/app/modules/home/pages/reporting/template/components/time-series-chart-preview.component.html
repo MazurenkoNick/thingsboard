@@ -30,23 +30,21 @@
     OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 
 -->
-<div class="tb-comparison-keys-table tb-form-table">
-  <div class="tb-form-table-header">
-    <div class="tb-form-table-header-cell tb-show-header" translate>widgets.time-series-chart.comparison.show</div>
-    <div class="tb-form-table-header-cell tb-key-header" translate>datakey.key</div>
-    <div class="tb-form-table-header-cell tb-label-header" translate>datakey.label</div>
-    <div class="tb-form-table-header-cell tb-color-header" translate>datakey.color</div>
-  </div>
-  <div *ngIf="keysFormArray().controls.length; else noKeys" class="tb-form-table-body">
-    <div *ngFor="let keyControl of keysFormArray().controls; trackBy: trackByKey; let $index = index;">
-      <tb-comparison-key-row
-          class="flex-1"
-          [datasourceType]="datasourceType"
-          [formControl]="keyControl">
-      </tb-comparison-key-row>
+<div class="tb-time-series-chart-preview" [style.justify-content]="imageAlign">
+  @if (hasData) {
+    <div class="flex flex-col gap-2" [style.width]="imageWidth" [style.min-width]="imageWidth"
+                                     [style.height.px]="imageHeightPx">
+      @if (showTitle) {
+        <div style="display: table-cell; padding: 1px 1px 0;" [style]="titleStyle" [innerHTML]="title | safe: 'html'">
+        </div>
+      }
+      <div class="tb-time-series-chart flex-1">
+        <ng-container #widgetContent></ng-container>
+      </div>
     </div>
-  </div>
+  } @else {
+    <div class="tb-time-series-chart-text" [style.width]="imageWidth" [style.height.px]="imageHeightPx">
+      {{ noDataMessage | translate }}
+    </div>
+  }
 </div>
-<ng-template #noKeys>
-  <span class="tb-prompt flex items-center justify-center">{{ 'widgets.chart.no-series' | translate }}</span>
-</ng-template>
