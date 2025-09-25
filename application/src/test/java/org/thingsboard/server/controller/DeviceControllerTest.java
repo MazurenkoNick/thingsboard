@@ -1072,6 +1072,39 @@ public class DeviceControllerTest extends AbstractControllerTest {
         deleteTenant(savedDifferentTenant.getId());
     }
 
+    @Test
+    public void testAssignDeviceWithCachedOwner() throws Exception {
+        createDifferentTenant();
+        login("tenant2@thingsboard.org", "testPassword1");
+
+        Device device = new Device();
+        device.setName("My device");
+        device.setType("default");
+        Device savedDevice = doPost("/api/device", device, Device.class);
+
+        // update device to put owner into cache
+        savedDevice.setName("My device updated");
+        savedDevice = doPost("/api/device", savedDevice, Device.class);
+
+        // assign device to another tenant
+        Device assignedDevice = doPost("/api/tenant/" + differentTenantId.getId() + "/device/"
+                + savedDevice.getId().getId(), Device.class);
+
+        doGet("/api/device/" + assignedDevice.getId().getId())
+                .andExpect(status().isNotFound())
+                .andExpect(statusReason(containsString(msgErrorNoFound("Device", assignedDevice.getId().getId().toString()))));
+
+        loginDifferentTenant();
+
+        Device foundDevice = doGet("/api/device/" + assignedDevice.getId().getId(), Device.class);
+        Assert.assertNotNull(foundDevice);
+
+        // try to update
+        foundDevice.setName("My device updated again");
+        Device updatedAgainDevice = doPost("/api/device", foundDevice, Device.class);
+        assertThat(updatedAgainDevice.getName()).isEqualTo("My device updated again");
+    }
+
     protected void testNotificationUpdateGatewayOneTime(Device device, Device oldDevice) {
         Mockito.verify(gatewayNotificationsService, times(1)).onDeviceUpdated(Mockito.eq(device), Mockito.eq(oldDevice));
     }

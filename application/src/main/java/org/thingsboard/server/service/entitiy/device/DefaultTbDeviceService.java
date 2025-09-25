@@ -57,6 +57,7 @@ import org.thingsboard.server.dao.device.claim.ClaimResult;
 import org.thingsboard.server.dao.device.claim.ReclaimResult;
 import org.thingsboard.server.queue.util.TbCoreComponent;
 import org.thingsboard.server.service.entitiy.AbstractTbEntityService;
+import org.thingsboard.server.service.security.permission.OwnersCacheService;
 
 import java.util.Collections;
 import java.util.List;
@@ -70,6 +71,7 @@ public class DefaultTbDeviceService extends AbstractTbEntityService implements T
     private final DeviceService deviceService;
     private final DeviceCredentialsService deviceCredentialsService;
     private final ClaimDevicesService claimDevicesService;
+    private final OwnersCacheService ownersCacheService;
 
     @Override
     public Device save(Device device, EntityGroup entityGroup) throws Exception {
@@ -205,6 +207,7 @@ public class DefaultTbDeviceService extends AbstractTbEntityService implements T
         DeviceId deviceId = device.getId();
         try {
             Device assignedDevice = deviceService.assignDeviceToTenant(newTenantId, device);
+            ownersCacheService.clearOwners(deviceId);
 
             logEntityActionService.logEntityAction(tenantId, deviceId, assignedDevice, assignedDevice.getCustomerId(),
                     actionType, user, newTenantId.toString(), newTenant.getName());

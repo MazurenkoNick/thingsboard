@@ -93,6 +93,7 @@ import static org.thingsboard.server.report.util.ReportUtils.ENTITY_TIME_FIELDS;
 import static org.thingsboard.server.report.util.ReportUtils.RAW_TS_PREFIX;
 import static org.thingsboard.server.report.util.ReportUtils.convertStringToTypedValue;
 import static org.thingsboard.server.report.util.ReportUtils.formatTimestamp;
+import static org.thingsboard.server.report.util.ReportUtils.formatValueWithPrecisionAndUnits;
 import static org.thingsboard.server.report.util.ReportUtils.getSingleDataSource;
 
 @Slf4j
@@ -442,7 +443,11 @@ public abstract class AbstractReportService implements ReportService {
             return null;
         }
 
-        return processed.toString();
+        String formattedValue = processed.toString();
+        if (dataKey.getDecimals() != null || dataKey.getUnits() != null) {
+            formattedValue = formatValueWithPrecisionAndUnits(formattedValue, dataKey);
+        }
+        return formattedValue;
     }
 
     protected Object postProcess(TbReportCtx ctx, DataKey dataKey, long timestamp, Object value, boolean parseString) {

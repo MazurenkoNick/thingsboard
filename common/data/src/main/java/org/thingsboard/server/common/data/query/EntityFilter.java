@@ -86,6 +86,14 @@ public interface EntityFilter {
         } else if (filter instanceof SchedulerEventFilter queryFilter) {
             AliasEntityId resolved = resolveAliasEntityId(queryFilter.getOriginator(), tenantId, userId, userOwnerId);
             queryFilter.setOriginator(resolved);
+        } else if (filter instanceof StateEntityFilter queryFilter) {
+            AliasEntityId resolved = resolveAliasEntityId(queryFilter.getDefaultStateEntity(), tenantId, userId, userOwnerId);
+            queryFilter.setDefaultStateEntity(resolved);
+        } else if (filter instanceof StateEntityOwnerFilter queryFilter) {
+            AliasEntityId resolvedEntityId = resolveAliasEntityId(queryFilter.getSingleEntity(), tenantId, userId, userOwnerId);
+            queryFilter.setSingleEntity(resolvedEntityId);
+            AliasEntityId resolvedDefaultEntityId = resolveAliasEntityId(queryFilter.getDefaultStateEntity(), tenantId, userId, userOwnerId);
+            queryFilter.setDefaultStateEntity(resolvedDefaultEntityId);
         }
     }
 }

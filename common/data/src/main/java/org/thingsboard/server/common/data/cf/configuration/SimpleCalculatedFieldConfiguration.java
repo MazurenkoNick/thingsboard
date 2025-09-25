@@ -36,7 +36,7 @@ import org.thingsboard.server.common.data.cf.CalculatedFieldType;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
-public class SimpleCalculatedFieldConfiguration extends BaseCalculatedFieldConfiguration implements CalculatedFieldConfiguration {
+public class SimpleCalculatedFieldConfiguration extends BaseCalculatedFieldConfiguration implements ExpressionBasedCalculatedFieldConfiguration {
 
     private boolean useLatestTs;
 
