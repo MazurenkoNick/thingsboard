@@ -117,6 +117,7 @@
       text-align: start;
       font-weight: 400;
       color: rgba(255, 255, 255, 0.8);
+      background-color: var(--tb-login-primary-500);
       &:not([disabled][disabled]) {
         border-color: rgba(255, 255, 255, .8);
       }

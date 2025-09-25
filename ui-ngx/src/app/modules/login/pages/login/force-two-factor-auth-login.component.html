@@ -31,7 +31,9 @@
 
 -->
 <div class="tb-two-factor-auth-login-content mat-app-background tb-dark flex flex-row items-center justify-center"
-     style="width: 100%;">
+     [class.dark-foreground]="wl.loginDarkForeground$ | async"
+     style="width: 100%;"
+     [style.background-color]="wl.loginPageBackgroundColor$ | async">
   @switch (state()) {
     @case (ForceTwoFAState.SETUP) {
       <mat-card appearance="raised" class="tb-two-factor-auth-login-card flex-initial">

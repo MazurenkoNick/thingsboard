@@ -29,7 +29,7 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { Component, ElementRef, OnDestroy, OnInit, signal, ViewChild } from '@angular/core';
+import { Component, ElementRef, HostBinding, OnDestroy, OnInit, signal, ViewChild } from '@angular/core';
 import { AuthService } from '@core/auth/auth.service';
 import { Store } from '@ngrx/store';
 import { AppState } from '@core/core.state';
@@ -54,6 +54,7 @@ import { getCurrentAuthUser } from '@core/auth/auth.selectors';
 import printTemplate from '@home/pages/security/authentication-dialog/backup-code-print-template.raw';
 import { ImportExportService } from '@shared/import-export/import-export.service';
 import { mergeMap, tap } from 'rxjs/operators';
+import { WhiteLabelingService } from '@core/http/white-labeling.service';
 
 enum ForceTwoFAState {
   SETUP = 'setup',
@@ -80,6 +81,8 @@ enum BackupCodeState {
   styleUrls: ['./force-two-factor-auth-login.component.scss']
 })
 export class ForceTwoFactorAuthLoginComponent extends PageComponent implements OnInit, OnDestroy {
+
+  @HostBinding('class') class = 'tb-custom-css';
 
   TwoFactorAuthProviderType = TwoFactorAuthProviderType;
   providersData = twoFactorAuthProvidersLoginData;
@@ -119,7 +122,8 @@ export class ForceTwoFactorAuthLoginComponent extends PageComponent implements O
               private importExportService: ImportExportService,
               public dialog: MatDialog,
               public dialogService: DialogService,
-              private fb: UntypedFormBuilder) {
+              private fb: UntypedFormBuilder,
+              public wl: WhiteLabelingService) {
     super(store);
   }
 
