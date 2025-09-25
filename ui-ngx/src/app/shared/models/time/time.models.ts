@@ -1149,6 +1149,7 @@ export const cloneSelectedTimewindow = (timewindow: Timewindow): Timewindow => {
 
 export const clearTimewindowConfig = (timewindow: Timewindow, quickIntervalOnly: boolean,
                                       historyOnly: boolean, hasAggregation: boolean, hasTimezone = true): Timewindow => {
+  const noneAggregation = hasAggregation && timewindow.aggregation?.type === AggregationType.NONE;
   if (timewindow.selectedTab === TimewindowType.REALTIME) {
     if (quickIntervalOnly || timewindow.realtime.realtimeType === RealtimeWindowType.INTERVAL) {
       delete timewindow.realtime.timewindowMs;
@@ -1162,7 +1163,7 @@ export const clearTimewindowConfig = (timewindow: Timewindow, quickIntervalOnly:
     delete timewindow.history?.quickInterval;
 
     delete timewindow.history?.interval;
-    if (!hasAggregation) {
+    if (!hasAggregation || noneAggregation) {
       delete timewindow.realtime.interval;
     }
   } else {
@@ -1186,13 +1187,15 @@ export const clearTimewindowConfig = (timewindow: Timewindow, quickIntervalOnly:
     delete timewindow.realtime?.quickInterval;
 
     delete timewindow.realtime?.interval;
-    if (!hasAggregation) {
+    if (!hasAggregation || noneAggregation) {
       delete timewindow.history.interval;
     }
   }
 
   if (!hasAggregation) {
     delete timewindow.aggregation;
+  } else if (!noneAggregation) {
+    delete timewindow.aggregation.limit;
   }
 
   if (historyOnly) {
