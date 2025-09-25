@@ -131,6 +131,8 @@ import { TbPopoverService } from '@shared/components/popover.service';
 export class ReportTemplatePageComponent extends PageComponent
   implements OnInit, AfterViewInit, OnDestroy, HasDirtyFlag {
 
+  TbReportFormat = TbReportFormat;
+
   reportComponentTypesData = reportComponentTypesData;
 
   get isDirty(): boolean {
@@ -776,5 +778,4 @@ export class ReportTemplatePageComponent extends PageComponent
     });
     return result;
   }
-
 }

@@ -114,10 +114,21 @@
           }
         </mat-form-field>
       </mat-toolbar>
-      <tb-report-component-library [subReport]="subReport"
-                                   [format]="format" class="min-h-0 flex-1"
-                                   [filter]="reportComponentsFilter">
-      </tb-report-component-library>
+      @if (format === TbReportFormat.PDF) {
+        <tb-report-component-library-groups
+          class="min-h-0 flex-1"
+          [subReport]="subReport"
+          [format]="format"
+          [filter]="reportComponentsFilter">
+        </tb-report-component-library-groups>
+      } @else {
+        <tb-report-component-library
+          class="min-h-0 flex-1"
+          [subReport]="subReport"
+          [format]="format"
+          [filter]="reportComponentsFilter">
+        </tb-report-component-library>
+      }
     </div>
     <div #reportTemplateContent class="tb-report-template-content" cdkScrollable>
       <div class="tb-report-content-scroll-wrapper">

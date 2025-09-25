@@ -30,31 +30,13 @@
     OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 
 -->
-<div class="tb-report-component-library" #libraryDragOriginList cdkDropList
-     [class.no-padding]="nestedLibrary"
-     [cdkDropListEnterPredicate]="dropListEnterPredicate"
-     [cdkDropListSortingDisabled]="true">
-  @for (id of reportComponentIds; track id) {
-    <div class="tb-report-component-library-item">
-      <div class="tb-report-component-library-item-title">{{ reportComponentsLibrary.get(id).title | translate }}</div>
-      <div cdkDrag
-           [cdkDragData]="id"
-           (cdkDragStarted)="dragStarted($event)"
-           (cdkDragEnded)="dragEnded()"
-           (cdkDragEntered)="dragEntered()"
-           (cdkDragReleased)="dragReleased()"
-           class="tb-report-component-library-drag-item tb-draggable"
-           [class.nested-library]="nestedLibrary">
-        <div *cdkDragPlaceholder>
-            <div class="tb-report-component-placeholder"></div>
-            <div class="tb-report-component-library-drag-item" [class.nested-library]="nestedLibrary"
-                 style="display: none;">
-              <img class="tb-report-component-library-item-preview" [src]="reportComponentsLibrary.get(id).previewImage">
-            </div>
-        </div>
-        <img class="tb-report-component-library-item-preview" [src]="reportComponentsLibrary.get(id).previewImage">
-      </div>
-    </div>
+<div class="tb-report-component-library-groups">
+  @for (group of reportComponentLibraryGroups; track group;) {
+    <tb-report-component-library-group
+      [subReport]="subReport"
+      [format]="format"
+      [filter]="filter"
+      [group]="group">
+    </tb-report-component-library-group>
   }
 </div>
-<div class="tb-report-component-library tb-drag-active-list" [class.no-padding]="nestedLibrary" #libraryDragActiveList></div>

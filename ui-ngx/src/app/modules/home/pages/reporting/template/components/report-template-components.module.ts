@@ -88,6 +88,12 @@ import { ReportWidgetContextService } from '@home/pages/reporting/template/compo
 import { LatestChartConfigComponent } from '@home/pages/reporting/template/components/latest-chart-config.component';
 import { LatestChartPreviewComponent } from '@home/pages/reporting/template/components/latest-chart-preview.component';
 import { WidgetSettingsModule } from '@home/components/widget/lib/settings/widget-settings.module';
+import {
+  ReportComponentLibraryGroupComponent
+} from '@home/pages/reporting/template/components/report-component-library-group.component';
+import {
+  ReportComponentLibraryGroupsComponent
+} from '@home/pages/reporting/template/components/report-component-library-groups.component';
 
 @NgModule({
   providers: [
@@ -98,6 +104,8 @@ import { WidgetSettingsModule } from '@home/components/widget/lib/settings/widge
     ReportComponentComponent,
     ReportComponentsComponent,
     ReportComponentLibraryComponent,
+    ReportComponentLibraryGroupComponent,
+    ReportComponentLibraryGroupsComponent,
     ReportInsetsComponent,
     ReportComponentLayoutSettingsComponent,
     ReportHeadingComponent,
@@ -141,6 +149,8 @@ import { WidgetSettingsModule } from '@home/components/widget/lib/settings/widge
   exports: [
     ReportComponentsComponent,
     ReportComponentLibraryComponent,
+    ReportComponentLibraryGroupComponent,
+    ReportComponentLibraryGroupsComponent,
     ReportComponentConfigComponent,
     ReportInsetsComponent
   ]
