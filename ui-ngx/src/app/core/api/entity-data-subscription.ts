@@ -106,6 +106,7 @@ export interface SubscriptionDataKey {
   comparisonCustomIntervalValue?: number;
   comparisonResultType?: ComparisonResultType;
   funcBody: TbFunction;
+  builtInFunc?: DataKeyFunction;
   func?: CompiledTbFunction<DataKeyFunction>;
   postFuncBody: TbFunction;
   postFunc?: CompiledTbFunction<DataKeyPostFunction>;
@@ -140,6 +141,7 @@ export class EntityDataSubscription {
   }
 
   private entityDataSubscriptionOptions = this.listener.subscriptionOptions;
+  private dataGenerationOptions = this.listener.dataGenerationOptions;
   private datasourceType: DatasourceType = this.entityDataSubscriptionOptions.datasourceType;
   private history: boolean;
   private isFloatingTimewindow: boolean;
@@ -227,7 +229,11 @@ export class EntityDataSubscription {
       dataKey.index = i;
       if (this.datasourceType === DatasourceType.function) {
         if (!dataKey.func) {
-          dataKey.func = await firstValueFrom(compileTbFunction(this.http, dataKey.funcBody, 'time', 'prevValue'));
+          if (dataKey.builtInFunc) {
+            dataKey.func = new CompiledTbFunction(dataKey.builtInFunc, []);
+          } else {
+            dataKey.func = await firstValueFrom(compileTbFunction(this.http, dataKey.funcBody, 'time', 'prevValue'));
+          }
         }
       } else {
         if (isNotEmptyTbFunction(dataKey.postFuncBody) && !dataKey.postFunc) {
@@ -1241,7 +1247,15 @@ export class EntityDataSubscription {
     } else {
       prevSeries = [0, 0];
     }
-    for (let time = startTime; time <= endTime && (this.timeseriesTimer || this.history); time += this.frequency) {
+    let targetFrequency = this.frequency;
+    if (this.dataGenerationOptions?.fixedGenDataPoints) {
+      let intervals = this.dataGenerationOptions.fixedGenDataPoints - 1;
+      if (intervals <= 0) {
+        intervals = 1;
+      }
+      targetFrequency = (endTime - startTime) / intervals;
+    }
+    for (let time = startTime; time <= endTime && (this.timeseriesTimer || this.history); time += targetFrequency) {
       const value = dataKey.func.execute(time, prevSeries[1]);
       const series: [number, any] = [time, value];
       data.push(series);
@@ -1360,7 +1374,9 @@ export class EntityDataSubscription {
     latestDataKeys.forEach(dataKey => {
       this.generateLatest(dataKey, detectChanges);
     });
-    this.latestTimer = setTimeout(this.onLatestTick.bind(this, latestDataKeys, true), this.latestFrequency);
+    if (this.dataGenerationOptions?.generateLatestUpdates ?? true) {
+      this.latestTimer = setTimeout(this.onLatestTick.bind(this, latestDataKeys, true), this.latestFrequency);
+    }
   }
 
 }

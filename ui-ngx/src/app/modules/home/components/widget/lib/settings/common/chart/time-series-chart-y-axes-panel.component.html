@@ -30,7 +30,7 @@
     OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 
 -->
-<div class="tb-form-panel tb-y-axes-panel">
+<div class="tb-form-panel tb-y-axes-panel" [class.stroked]="stroked">
   <div class="tb-form-panel-title">{{ 'widgets.time-series-chart.y-axes' | translate }}</div>
   <div class="tb-form-table">
     <div class="tb-form-table-header no-padding-right">
@@ -54,6 +54,7 @@
         <tb-time-series-chart-y-axis-row class="flex-1"
                                             [formControl]="axisControl"
                                             [advanced]="advanced"
+                                            [reportMode]="reportMode"
                                             [supportsUnitConversion]="supportsUnitConversion"
                                             (axisRemoved)="removeAxis($index)">
         </tb-time-series-chart-y-axis-row>

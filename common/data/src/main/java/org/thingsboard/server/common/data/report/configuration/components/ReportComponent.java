@@ -52,6 +52,8 @@ import java.util.List;
         @JsonSubTypes.Type(value = PageBreakComponent.class, name = "PAGE_BREAK"),
         @JsonSubTypes.Type(value = TimeseriesTableComponent.class, name = "TIME_SERIES_TABLE"),
         @JsonSubTypes.Type(value = AlarmTableComponent.class, name = "ALARM_TABLE"),
+        @JsonSubTypes.Type(value = TimeseriesChartComponent.class, name = "TIME_SERIES_CHART"),
+        @JsonSubTypes.Type(value = LatestChartComponent.class, name = "LATEST_CHART"),
         @JsonSubTypes.Type(value = DashboardComponent.class, name = "DASHBOARD"),
         @JsonSubTypes.Type(value = ImageComponent.class, name = "IMAGE"),
         @JsonSubTypes.Type(value = SubReportComponent.class, name = "SUB_REPORT"),
@@ -61,5 +63,7 @@ import java.util.List;
 public interface ReportComponent extends Serializable {
 
     ReportComponentType getType();
+
+    String getSubType();
 
 }

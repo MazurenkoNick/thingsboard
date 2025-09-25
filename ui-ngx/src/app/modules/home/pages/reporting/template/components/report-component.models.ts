@@ -31,20 +31,40 @@
 
 import {
   AlarmTableReportComponentConfig,
+  BarChartReportComponentConfig,
   BorderLength,
   BorderType,
   DashboardReportComponentConfig,
+  defaultBarChartWithLabelsTimewindow,
+  defaultStateChartTimewindow,
+  defaultTimeSeriesChartTimewindow,
   DividerReportComponentConfig,
+  DoughnutChartReportComponentConfig,
   EntityTableReportComponentConfig,
   HeadingReportComponentConfig,
+  HorizontalDoughnutChartReportComponentConfig,
   ImageReportComponentConfig,
   PageBreakReportComponentConfig,
+  PieChartReportComponentConfig,
+  reportBarChartDefaultSettings,
+  ReportBarChartSettings,
+  reportBarChartWithLabelsDefaultSettings,
+  ReportBarChartWithLabelSettings,
   ReportComponentConfig,
   ReportComponentType,
   ReportDataKeySettingsType,
+  reportDoughnutChartDefaultSettings,
+  ReportDoughnutChartSettings,
+  reportPieChartDefaultSettings,
+  ReportPieChartSettings, reportRangeChartDefaultSettings, ReportRangeChartSettings,
+  reportStateChartDefaultSettings,
+  reportTimeSeriesChartDefaultSettings,
+  ReportTimeSeriesChartSettings,
   RichTextReportComponentConfig,
   SubReportReportComponentConfig,
-  TimeseriesTableReportComponentConfig
+  TimeseriesChartReportComponentConfig,
+  TimeseriesTableReportComponentConfig,
+  toReportTimeSeriesChartKeySettings
 } from '@shared/models/report-component.models';
 import { Type } from '@angular/core';
 import { HeadingPreviewComponent } from '@home/pages/reporting/template/components/heading-preview.component';
@@ -75,7 +95,7 @@ import { ImagePreviewComponent } from '@home/pages/reporting/template/components
 import { ImageConfigComponent } from '@home/pages/reporting/template/components/image-config.component';
 
 import keyImageTemplate from './key-image-svg.raw';
-import { insertVariable, stringToBase64 } from '@core/utils';
+import { insertVariable, mergeDeep, stringToBase64 } from '@core/utils';
 import { DataKey, DatasourceType } from '@shared/models/widget.models';
 import { DashboardPreviewComponent } from '@home/pages/reporting/template/components/dashboard-preview.component';
 import { DashboardConfigComponent } from '@home/pages/reporting/template/components/dashboard-config.component';
@@ -94,6 +114,36 @@ import { AggregationType, DAY, historyInterval } from '@shared/models/time/time.
 import { DividerPreviewComponent } from '@home/pages/reporting/template/components/divider-preview.component';
 import { DividerConfigComponent } from '@home/pages/reporting/template/components/divider-config.component';
 import { Direction } from '@shared/models/page/sort-order';
+import {
+  TimeSeriesChartPreviewComponent
+} from '@home/pages/reporting/template/components/time-series-chart-preview.component';
+import {
+  TimeSeriesChartConfigComponent
+} from '@home/pages/reporting/template/components/time-series-chart-config.component';
+import { TimeSeriesChartType } from '@home/components/widget/lib/chart/time-series-chart.models';
+import { TbTimeSeriesChart } from '@home/components/widget/lib/chart/time-series-chart';
+import { LatestChartPreviewComponent } from '@home/pages/reporting/template/components/latest-chart-preview.component';
+import { LatestChartConfigComponent } from '@home/pages/reporting/template/components/latest-chart-config.component';
+
+export enum ReportComponentLibraryGroup {
+  textAndImages = 'textAndImages',
+  dataAndTables = 'dataAndTables',
+  charts = 'charts',
+  branding = 'branding',
+  reportInfoAndLayout = 'reportInfoAndLayout'
+}
+
+export const reportComponentLibraryGroups: ReportComponentLibraryGroup[] = Object.keys(ReportComponentLibraryGroup) as ReportComponentLibraryGroup[];
+
+export const reportComponentLibraryGroupTranslations = new Map<ReportComponentLibraryGroup, string>(
+  [
+    [ReportComponentLibraryGroup.textAndImages, 'report-template.component.group.text-and-images'],
+    [ReportComponentLibraryGroup.dataAndTables, 'report-template.component.group.data-and-tables'],
+    [ReportComponentLibraryGroup.charts, 'report-template.component.group.charts'],
+    [ReportComponentLibraryGroup.branding, 'report-template.component.group.branding'],
+    [ReportComponentLibraryGroup.reportInfoAndLayout, 'report-template.component.group.report-info-and-layout']
+  ]
+);
 
 export interface ReportComponentLibraryItem<C extends ReportComponentConfig = ReportComponentConfig> {
   title: string;
@@ -101,6 +151,35 @@ export interface ReportComponentLibraryItem<C extends ReportComponentConfig = Re
   type: ReportComponentType;
   defaultConfig: C;
 }
+
+export const reportComponentGroups = new Map<string, Array<string>>(
+  [
+    [
+      ReportComponentLibraryGroup.textAndImages,
+      ['heading', 'richText', 'image', 'textSection', 'textImage', 'imageText']
+    ],
+    [
+      ReportComponentLibraryGroup.dataAndTables,
+      ['entityTable', 'timeSeriesTable', 'alarmTable', 'subReport', 'dashboard']
+    ],
+    [
+      ReportComponentLibraryGroup.charts,
+      ['timeSeriesChart', 'lineChart', 'barChart',
+        'pointChart', 'stateChart', 'barChartWithLabels',
+        'rangeChart', 'latestBarChart', 'pieChart',
+        'doughnutChart', 'horizontalDoughnutChart']
+    ],
+    [
+      ReportComponentLibraryGroup.branding,
+      ['logoHeading', 'headingLogo', 'logoText', 'textLogo',
+        'logoText2', 'footer1', 'footer2', 'footer3']
+    ],
+    [
+      ReportComponentLibraryGroup.reportInfoAndLayout,
+      ['pageNumber', 'createdTime', 'divider', 'pageBreak']
+    ]
+  ]
+);
 
 export const reportComponentsLibrary = new Map<string, ReportComponentLibraryItem>(
   [
@@ -401,6 +480,437 @@ export const reportComponentsLibrary = new Map<string, ReportComponentLibraryIte
           paddings: null,
           background: null
         } as AlarmTableReportComponentConfig
+      }
+    ],
+    [
+      'timeSeriesChart',
+      {
+        title: 'report-template.component.time-series-chart.type',
+        previewImage: '/assets/report/components/time-series-chart.svg',
+        type: ReportComponentType.TIME_SERIES_CHART,
+        defaultConfig: {
+          type: ReportComponentType.TIME_SERIES_CHART,
+          subType: 'default',
+          dataSources: [
+            {
+              type: DatasourceType.entity,
+              dataKeys: [
+                {
+                  name: 'temperature',
+                  type: DataKeyType.timeseries,
+                  label: 'Temperature',
+                  color: '#2196f3',
+                  units: '°C',
+                  decimals: 0,
+                  settings: toReportTimeSeriesChartKeySettings(TbTimeSeriesChart.dataKeySettings(TimeSeriesChartType.default)(null, false))
+                }
+              ]
+            }
+          ],
+          timewindow: defaultTimeSeriesChartTimewindow,
+          timeSeriesChartSettings: mergeDeep<ReportTimeSeriesChartSettings>({} as ReportTimeSeriesChartSettings, reportTimeSeriesChartDefaultSettings),
+          height: 400,
+          widthType: 'fitWidth',
+          alignment: 'center',
+          margins: null,
+          paddings: null,
+          background: null
+        } as TimeseriesChartReportComponentConfig
+      }
+    ],
+    [
+      'lineChart',
+      {
+        title: 'report-template.component.line-chart',
+        previewImage: '/assets/report/components/line-chart.svg',
+        type: ReportComponentType.TIME_SERIES_CHART,
+        defaultConfig: {
+          type: ReportComponentType.TIME_SERIES_CHART,
+          subType: 'lineChart',
+          dataSources: [
+            {
+              type: DatasourceType.entity,
+              dataKeys: [
+                {
+                  name: 'temperature',
+                  type: DataKeyType.timeseries,
+                  label: 'Temperature',
+                  color: '#2196f3',
+                  units: '°C',
+                  decimals: 0,
+                  settings: toReportTimeSeriesChartKeySettings(TbTimeSeriesChart.dataKeySettings(TimeSeriesChartType.line)(null, false))
+                }
+              ]
+            }
+          ],
+          timewindow: defaultTimeSeriesChartTimewindow,
+          timeSeriesChartSettings: mergeDeep<ReportTimeSeriesChartSettings>({} as ReportTimeSeriesChartSettings, reportTimeSeriesChartDefaultSettings,
+            { title: 'Line chart' } as ReportTimeSeriesChartSettings),
+          height: 400,
+          widthType: 'fitWidth',
+          alignment: 'center',
+          margins: null,
+          paddings: null,
+          background: null
+        } as TimeseriesChartReportComponentConfig
+      }
+    ],
+    [
+      'barChart',
+      {
+        title: 'report-template.component.bar-chart',
+        previewImage: '/assets/report/components/bar-chart.svg',
+        type: ReportComponentType.TIME_SERIES_CHART,
+        defaultConfig: {
+          type: ReportComponentType.TIME_SERIES_CHART,
+          subType: 'barChart',
+          dataSources: [
+            {
+              type: DatasourceType.entity,
+              dataKeys: [
+                {
+                  name: 'temperature',
+                  type: DataKeyType.timeseries,
+                  label: 'Temperature',
+                  color: '#2196f3',
+                  units: '°C',
+                  decimals: 0,
+                  settings: toReportTimeSeriesChartKeySettings(TbTimeSeriesChart.dataKeySettings(TimeSeriesChartType.bar)(null, false))
+                }
+              ]
+            }
+          ],
+          timewindow: defaultTimeSeriesChartTimewindow,
+          timeSeriesChartSettings: mergeDeep<ReportTimeSeriesChartSettings>({} as ReportTimeSeriesChartSettings, reportTimeSeriesChartDefaultSettings,
+            { title: 'Bar chart' } as ReportTimeSeriesChartSettings),
+          height: 400,
+          widthType: 'fitWidth',
+          alignment: 'center',
+          margins: null,
+          paddings: null,
+          background: null
+        } as TimeseriesChartReportComponentConfig
+      }
+    ],
+    [
+      'pointChart',
+      {
+        title: 'report-template.component.point-chart',
+        previewImage: '/assets/report/components/point-chart.svg',
+        type: ReportComponentType.TIME_SERIES_CHART,
+        defaultConfig: {
+          type: ReportComponentType.TIME_SERIES_CHART,
+          subType: 'pointChart',
+          dataSources: [
+            {
+              type: DatasourceType.entity,
+              dataKeys: [
+                {
+                  name: 'temperature',
+                  type: DataKeyType.timeseries,
+                  label: 'Temperature',
+                  color: '#2196f3',
+                  units: '°C',
+                  decimals: 0,
+                  settings: toReportTimeSeriesChartKeySettings(TbTimeSeriesChart.dataKeySettings(TimeSeriesChartType.point)(null, false))
+                }
+              ]
+            }
+          ],
+          timewindow: defaultTimeSeriesChartTimewindow,
+          timeSeriesChartSettings: mergeDeep<ReportTimeSeriesChartSettings>({} as ReportTimeSeriesChartSettings, reportTimeSeriesChartDefaultSettings,
+            { title: 'Point chart' } as ReportTimeSeriesChartSettings),
+          height: 400,
+          widthType: 'fitWidth',
+          alignment: 'center',
+          margins: null,
+          paddings: null,
+          background: null
+        } as TimeseriesChartReportComponentConfig
+      }
+    ],
+    [
+      'stateChart',
+      {
+        title: 'report-template.component.state-chart',
+        previewImage: '/assets/report/components/state-chart.svg',
+        type: ReportComponentType.TIME_SERIES_CHART,
+        defaultConfig: {
+          type: ReportComponentType.TIME_SERIES_CHART,
+          subType: 'stateChart',
+          dataSources: [
+            {
+              type: DatasourceType.entity,
+              dataKeys: [
+                {
+                  name: 'state',
+                  type: DataKeyType.timeseries,
+                  label: 'State',
+                  color: '#2196f3',
+                  units: '',
+                  decimals: 0,
+                  settings: toReportTimeSeriesChartKeySettings(TbTimeSeriesChart.dataKeySettings(TimeSeriesChartType.state)(null, false))
+                }
+              ]
+            }
+          ],
+          timewindow: defaultStateChartTimewindow,
+          timeSeriesChartSettings: mergeDeep<ReportTimeSeriesChartSettings>({} as ReportTimeSeriesChartSettings, reportStateChartDefaultSettings,
+            { title: 'State chart' } as ReportTimeSeriesChartSettings),
+          height: 400,
+          widthType: 'fitWidth',
+          alignment: 'center',
+          margins: null,
+          paddings: null,
+          background: null
+        } as TimeseriesChartReportComponentConfig
+      }
+    ],
+    [
+      'barChartWithLabels',
+      {
+        title: 'report-template.component.bar-chart-with-labels',
+        previewImage: '/assets/report/components/bar-chart-with-labels.svg',
+        type: ReportComponentType.TIME_SERIES_CHART,
+        defaultConfig: {
+          type: ReportComponentType.TIME_SERIES_CHART,
+          subType: 'barChartWithLabels',
+          dataSources: [
+            {
+              type: DatasourceType.entity,
+              dataKeys: [
+                {
+                  name: 'humidity',
+                  type: DataKeyType.timeseries,
+                  label: 'Humidity',
+                  color: '#2196f3',
+                  settings: {}
+                }
+              ]
+            }
+          ],
+          timewindow: defaultBarChartWithLabelsTimewindow,
+          timeSeriesChartSettings: mergeDeep<ReportBarChartWithLabelSettings>({} as ReportBarChartWithLabelSettings, reportBarChartWithLabelsDefaultSettings,
+            { title: 'Bar chart with labels' } as ReportBarChartWithLabelSettings),
+          height: 400,
+          widthType: 'fitWidth',
+          alignment: 'center',
+          margins: null,
+          paddings: null,
+          background: null
+        } as TimeseriesChartReportComponentConfig
+      }
+    ],
+    [
+      'rangeChart',
+      {
+        title: 'report-template.component.range-chart',
+        previewImage: '/assets/report/components/range-chart.svg',
+        type: ReportComponentType.TIME_SERIES_CHART,
+        defaultConfig: {
+          type: ReportComponentType.TIME_SERIES_CHART,
+          subType: 'rangeChart',
+          dataSources: [
+            {
+              type: DatasourceType.entity,
+              dataKeys: [
+                {
+                  name: 'temperature',
+                  type: DataKeyType.timeseries,
+                  label: 'Temperature',
+                  settings: {}
+                }
+              ]
+            }
+          ],
+          timewindow: defaultTimeSeriesChartTimewindow,
+          timeSeriesChartSettings: mergeDeep<ReportRangeChartSettings>({} as ReportRangeChartSettings, reportRangeChartDefaultSettings,
+            { title: 'Range chart' } as ReportRangeChartSettings),
+          height: 400,
+          widthType: 'fitWidth',
+          alignment: 'center',
+          margins: null,
+          paddings: null,
+          background: null
+        } as TimeseriesChartReportComponentConfig
+      }
+    ],
+    [
+      'latestBarChart',
+      {
+        title: 'report-template.component.bars',
+        previewImage: '/assets/report/components/bars.svg',
+        type: ReportComponentType.LATEST_CHART,
+        defaultConfig: {
+          type: ReportComponentType.LATEST_CHART,
+          subType: 'latestBarChart',
+          dataSources: [
+            {
+              type: DatasourceType.entity,
+              dataKeys: [
+                {
+                  name: 'windPower',
+                  type: DataKeyType.timeseries,
+                  label: 'Wind',
+                  color: '#08872B',
+                  settings: {}
+                },
+                {
+                  name: 'solarPower',
+                  type: DataKeyType.timeseries,
+                  label: 'Solar',
+                  color: '#FF4D5A',
+                  settings: {}
+                },
+                {
+                  name: 'hydroelectricPower',
+                  type: DataKeyType.timeseries,
+                  label: 'Hydroelectric',
+                  color: '#FFDE30',
+                  settings: {}
+                }
+              ]
+            }
+          ],
+          latestChartSettings: mergeDeep<ReportBarChartSettings>({} as ReportBarChartSettings, reportBarChartDefaultSettings,
+            { title: 'Bars' } as ReportBarChartSettings),
+          height: 400,
+          widthType: 'fitWidth',
+          alignment: 'center',
+          margins: null,
+          paddings: null,
+          background: null
+        } as BarChartReportComponentConfig
+      }
+    ],
+    [
+      'pieChart',
+      {
+        title: 'report-template.component.pie',
+        previewImage: '/assets/report/components/pie-chart.svg',
+        type: ReportComponentType.LATEST_CHART,
+        defaultConfig: {
+          type: ReportComponentType.LATEST_CHART,
+          subType: 'pieChart',
+          dataSources: [
+            {
+              type: DatasourceType.entity,
+              dataKeys: [
+                {
+                  name: 'windPower',
+                  type: DataKeyType.timeseries,
+                  label: 'Wind',
+                  color: '#08872B',
+                  settings: {}
+                },
+                {
+                  name: 'solarPower',
+                  type: DataKeyType.timeseries,
+                  label: 'Solar',
+                  color: '#FF4D5A',
+                  settings: {}
+                },
+                {
+                  name: 'hydroelectricPower',
+                  type: DataKeyType.timeseries,
+                  label: 'Hydroelectric',
+                  color: '#FFDE30',
+                  settings: {}
+                }
+              ]
+            }
+          ],
+          latestChartSettings: mergeDeep<ReportPieChartSettings>({} as ReportPieChartSettings, reportPieChartDefaultSettings,
+            { title: 'Pie' } as ReportPieChartSettings),
+          height: 400,
+          widthType: 'fitWidth',
+          alignment: 'center',
+          margins: null,
+          paddings: null,
+          background: null
+        } as PieChartReportComponentConfig
+      }
+    ],
+    [
+      'doughnutChart',
+      {
+        title: 'report-template.component.doughnut',
+        previewImage: '/assets/report/components/doughnut-chart.svg',
+        type: ReportComponentType.LATEST_CHART,
+        defaultConfig: {
+          type: ReportComponentType.LATEST_CHART,
+          subType: 'doughnutChart',
+          dataSources: [
+            {
+              type: DatasourceType.entity,
+              dataKeys: [
+                {
+                  name: 'windPower',
+                  type: DataKeyType.timeseries,
+                  label: 'Wind',
+                  color: '#08872B',
+                  settings: {}
+                },
+                {
+                  name: 'solarPower',
+                  type: DataKeyType.timeseries,
+                  label: 'Solar',
+                  color: '#FF4D5A',
+                  settings: {}
+                }
+              ]
+            }
+          ],
+          latestChartSettings: mergeDeep<ReportDoughnutChartSettings>({} as ReportDoughnutChartSettings, reportDoughnutChartDefaultSettings(false),
+            { title: 'Doughnut' } as ReportDoughnutChartSettings),
+          height: 400,
+          widthType: 'fitWidth',
+          alignment: 'center',
+          margins: null,
+          paddings: null,
+          background: null
+        } as DoughnutChartReportComponentConfig
+      }
+    ],
+    [
+      'horizontalDoughnutChart',
+      {
+        title: 'report-template.component.horizontal-doughnut',
+        previewImage: '/assets/report/components/horizontal-doughnut-chart.svg',
+        type: ReportComponentType.LATEST_CHART,
+        defaultConfig: {
+          type: ReportComponentType.LATEST_CHART,
+          subType: 'horizontalDoughnutChart',
+          dataSources: [
+            {
+              type: DatasourceType.entity,
+              dataKeys: [
+                {
+                  name: 'windPower',
+                  type: DataKeyType.timeseries,
+                  label: 'Wind',
+                  color: '#08872B',
+                  settings: {}
+                },
+                {
+                  name: 'solarPower',
+                  type: DataKeyType.timeseries,
+                  label: 'Solar',
+                  color: '#FF4D5A',
+                  settings: {}
+                }
+              ]
+            }
+          ],
+          latestChartSettings: mergeDeep<ReportDoughnutChartSettings>({} as ReportDoughnutChartSettings, reportDoughnutChartDefaultSettings(true),
+            { title: 'Doughnut' } as ReportDoughnutChartSettings),
+          height: 400,
+          widthType: 'fitWidth',
+          alignment: 'center',
+          margins: null,
+          paddings: null,
+          background: null
+        } as HorizontalDoughnutChartReportComponentConfig
       }
     ],
     [
@@ -816,105 +1326,294 @@ export interface ReportComponentTypeData<C extends ReportComponentConfig = Repor
   configComponent: Type<AbstractReportComponentConfig<C>>;
   editable: boolean;
   pageBreak?: boolean;
+  preferredSettingsWidthPx?: number;
+  configContext?: {[key: string]: any};
+  previewContext?: {[key: string]: any};
 }
 
-export const reportComponentTypeMap = new Map<ReportComponentType, ReportComponentTypeData>(
-  [
-    [
-      ReportComponentType.HEADING,
-      {
-        title: 'report-template.component.heading.type',
-        previewComponent: HeadingPreviewComponent,
-        configComponent: HeadingConfigComponent,
-        editable: true
-      }
-    ],
-    [
-      ReportComponentType.RICH_TEXT,
-      {
-        title: 'report-template.component.rich-text.type',
-        previewComponent: RichTextPreviewComponent,
-        configComponent: RichTextConfigComponent,
-        editable: true
-      }
-    ],
-    [
-      ReportComponentType.ENTITY_TABLE,
-      {
-        title: 'report-template.component.entity-table.type',
-        previewComponent: EntityTablePreviewComponent,
-        configComponent: EntityTableConfigComponent,
-        editable: true
-      }
-    ],
-    [
-      ReportComponentType.TIME_SERIES_TABLE,
-      {
-        title: 'report-template.component.timeseries-table.type',
-        previewComponent: TimeseriesTablePreviewComponent,
-        configComponent: TimeseriesTableConfigComponent,
-        editable: true
-      }
-    ],
-    [
-      ReportComponentType.ALARM_TABLE,
-      {
-        title: 'report-template.component.alarm-table.type',
-        previewComponent: AlarmTablePreviewComponent,
-        configComponent: AlarmTableConfigComponent,
-        editable: true
-      }
-    ],
-    [
-      ReportComponentType.IMAGE,
-      {
-        title: 'report-template.component.image.type',
-        previewComponent: ImagePreviewComponent,
-        configComponent: ImageConfigComponent,
-        editable: true
-      }
-    ],
-    [
-      ReportComponentType.DASHBOARD,
-      {
-        title: 'report-template.component.dashboard.type',
-        previewComponent: DashboardPreviewComponent,
-        configComponent: DashboardConfigComponent,
-        editable: true
-      }
-    ],
-    [
-      ReportComponentType.SUB_REPORT,
-      {
-        title: 'report-template.component.sub-report.type',
-        previewComponent: SubReportPreviewComponent,
-        configComponent: SubReportConfigComponent,
-        editable: true
-      }
-    ],
-    [
-      ReportComponentType.DIVIDER,
-      {
-        title: 'report-template.component.divider.type',
-        previewComponent: DividerPreviewComponent,
-        configComponent: DividerConfigComponent,
-        editable: true
-      }
-    ],
-    [
-      ReportComponentType.PAGE_BREAK,
-      {
-        title: 'report-template.component.page-break.type',
-        previewComponent: PageBreakPreviewComponent,
-        configComponent: EmptyReportConfigComponent,
-        editable: false,
-        pageBreak: true
-      }
-    ]
-  ]
-);
+export class ReportComponentTypesData {
 
-export const reportComponentTypes = Array.from(reportComponentTypeMap.keys());
+  private reportComponentsTypeMap = new Map<ReportComponentType, Map<string, ReportComponentTypeData>>();
+
+  constructor() {
+  }
+
+  public registerReportComponentType(type: ReportComponentType, typeData: ReportComponentTypeData) {
+    this.registerReportComponentSubType(type, 'default', typeData);
+  }
+
+  public registerReportComponentSubType(type: ReportComponentType, subType: string, typeData: ReportComponentTypeData) {
+    let subTypeMap: Map<string, ReportComponentTypeData>;
+    if (!this.reportComponentsTypeMap.has(type)) {
+      subTypeMap = new Map<string, ReportComponentTypeData>();
+      this.reportComponentsTypeMap.set(type, subTypeMap);
+    } else {
+      subTypeMap = this.reportComponentsTypeMap.get(type);
+    }
+    subTypeMap.set(subType, typeData);
+  }
+
+  public getReportComponentTypeData(type: ReportComponentType, subType: string = ''): ReportComponentTypeData {
+    const subTypeMap = this.reportComponentsTypeMap.get(type);
+    return subTypeMap.get(subType || 'default');
+  }
+
+  public getReportComponentTypes(): ReportComponentType[] {
+    return Array.from(this.reportComponentsTypeMap.keys());
+  }
+}
+
+export const reportComponentTypesData = new ReportComponentTypesData();
+
+reportComponentTypesData.registerReportComponentType(ReportComponentType.HEADING,  {
+  title: 'report-template.component.heading.type',
+  previewComponent: HeadingPreviewComponent,
+  configComponent: HeadingConfigComponent,
+  editable: true
+});
+
+reportComponentTypesData.registerReportComponentType(ReportComponentType.RICH_TEXT,
+  {
+    title: 'report-template.component.rich-text.type',
+    previewComponent: RichTextPreviewComponent,
+    configComponent: RichTextConfigComponent,
+    editable: true
+  });
+
+reportComponentTypesData.registerReportComponentType(ReportComponentType.ENTITY_TABLE,
+  {
+    title: 'report-template.component.entity-table.type',
+    previewComponent: EntityTablePreviewComponent,
+    configComponent: EntityTableConfigComponent,
+    editable: true
+  });
+
+reportComponentTypesData.registerReportComponentType(ReportComponentType.TIME_SERIES_TABLE,
+  {
+    title: 'report-template.component.timeseries-table.type',
+    previewComponent: TimeseriesTablePreviewComponent,
+    configComponent: TimeseriesTableConfigComponent,
+    editable: true
+  });
+
+reportComponentTypesData.registerReportComponentType(ReportComponentType.ALARM_TABLE,
+  {
+    title: 'report-template.component.alarm-table.type',
+    previewComponent: AlarmTablePreviewComponent,
+    configComponent: AlarmTableConfigComponent,
+    editable: true
+  });
+
+reportComponentTypesData.registerReportComponentType(ReportComponentType.TIME_SERIES_CHART,
+  {
+    title: 'report-template.component.time-series-chart.type',
+    previewComponent: TimeSeriesChartPreviewComponent,
+    configComponent: TimeSeriesChartConfigComponent,
+    editable: true,
+    preferredSettingsWidthPx: 1000,
+    configContext: {
+      chartType: TimeSeriesChartType.default
+    },
+    previewContext: {
+      chartType: TimeSeriesChartType.default
+    }
+  });
+
+reportComponentTypesData.registerReportComponentSubType(ReportComponentType.TIME_SERIES_CHART,
+  'lineChart',
+  {
+    title: 'report-template.component.line-chart',
+    previewComponent: TimeSeriesChartPreviewComponent,
+    configComponent: TimeSeriesChartConfigComponent,
+    editable: true,
+    preferredSettingsWidthPx: 1000,
+    configContext: {
+      chartType: TimeSeriesChartType.line
+    },
+    previewContext: {
+      chartType: TimeSeriesChartType.line
+    }
+  });
+
+reportComponentTypesData.registerReportComponentSubType(ReportComponentType.TIME_SERIES_CHART,
+  'barChart',
+  {
+    title: 'report-template.component.bar-chart',
+    previewComponent: TimeSeriesChartPreviewComponent,
+    configComponent: TimeSeriesChartConfigComponent,
+    editable: true,
+    preferredSettingsWidthPx: 1000,
+    configContext: {
+      chartType: TimeSeriesChartType.bar
+    },
+    previewContext: {
+      chartType: TimeSeriesChartType.bar
+    }
+  });
+
+reportComponentTypesData.registerReportComponentSubType(ReportComponentType.TIME_SERIES_CHART,
+  'pointChart',
+  {
+    title: 'report-template.component.point-chart',
+    previewComponent: TimeSeriesChartPreviewComponent,
+    configComponent: TimeSeriesChartConfigComponent,
+    editable: true,
+    preferredSettingsWidthPx: 1000,
+    configContext: {
+      chartType: TimeSeriesChartType.point
+    },
+    previewContext: {
+      chartType: TimeSeriesChartType.point
+    }
+  });
+
+reportComponentTypesData.registerReportComponentSubType(ReportComponentType.TIME_SERIES_CHART,
+  'stateChart',
+  {
+    title: 'report-template.component.state-chart',
+    previewComponent: TimeSeriesChartPreviewComponent,
+    configComponent: TimeSeriesChartConfigComponent,
+    editable: true,
+    preferredSettingsWidthPx: 1000,
+    configContext: {
+      chartType: TimeSeriesChartType.state
+    },
+    previewContext: {
+      chartType: TimeSeriesChartType.state
+    }
+  });
+
+reportComponentTypesData.registerReportComponentSubType(ReportComponentType.TIME_SERIES_CHART,
+  'barChartWithLabels',
+  {
+    title: 'report-template.component.bar-chart-with-labels',
+    previewComponent: TimeSeriesChartPreviewComponent,
+    configComponent: TimeSeriesChartConfigComponent,
+    editable: true,
+    preferredSettingsWidthPx: 1000,
+    configContext: {
+      barChartWithLabels: true
+    },
+    previewContext: {
+      barChartWithLabels: true
+    }
+  });
+
+reportComponentTypesData.registerReportComponentSubType(ReportComponentType.TIME_SERIES_CHART,
+  'rangeChart',
+  {
+    title: 'report-template.component.range-chart',
+    previewComponent: TimeSeriesChartPreviewComponent,
+    configComponent: TimeSeriesChartConfigComponent,
+    editable: true,
+    preferredSettingsWidthPx: 1000,
+    configContext: {
+      rangeChart: true
+    },
+    previewContext: {
+      rangeChart: true
+    }
+  });
+
+reportComponentTypesData.registerReportComponentSubType(ReportComponentType.LATEST_CHART,
+  'latestBarChart',
+  {
+    title: 'report-template.component.bars',
+    previewComponent: LatestChartPreviewComponent,
+    configComponent: LatestChartConfigComponent,
+    editable: true,
+    preferredSettingsWidthPx: 1000,
+    configContext: {
+    },
+    previewContext: {
+    }
+  });
+
+reportComponentTypesData.registerReportComponentSubType(ReportComponentType.LATEST_CHART,
+  'pieChart',
+  {
+    title: 'report-template.component.pie',
+    previewComponent: LatestChartPreviewComponent,
+    configComponent: LatestChartConfigComponent,
+    editable: true,
+    preferredSettingsWidthPx: 1000,
+    configContext: {
+    },
+    previewContext: {
+    }
+  });
+
+reportComponentTypesData.registerReportComponentSubType(ReportComponentType.LATEST_CHART,
+  'doughnutChart',
+  {
+    title: 'report-template.component.doughnut',
+    previewComponent: LatestChartPreviewComponent,
+    configComponent: LatestChartConfigComponent,
+    editable: true,
+    preferredSettingsWidthPx: 1000,
+    configContext: {
+    },
+    previewContext: {
+    }
+  });
+
+reportComponentTypesData.registerReportComponentSubType(ReportComponentType.LATEST_CHART,
+  'horizontalDoughnutChart',
+  {
+    title: 'report-template.component.horizontal-doughnut',
+    previewComponent: LatestChartPreviewComponent,
+    configComponent: LatestChartConfigComponent,
+    editable: true,
+    preferredSettingsWidthPx: 1000,
+    configContext: {
+    },
+    previewContext: {
+    }
+  });
+
+
+reportComponentTypesData.registerReportComponentType(ReportComponentType.IMAGE,
+  {
+    title: 'report-template.component.image.type',
+    previewComponent: ImagePreviewComponent,
+    configComponent: ImageConfigComponent,
+    editable: true
+  });
+
+reportComponentTypesData.registerReportComponentType(ReportComponentType.DASHBOARD,
+  {
+    title: 'report-template.component.dashboard.type',
+    previewComponent: DashboardPreviewComponent,
+    configComponent: DashboardConfigComponent,
+    editable: true
+  });
+
+reportComponentTypesData.registerReportComponentType(ReportComponentType.SUB_REPORT,
+  {
+    title: 'report-template.component.sub-report.type',
+    previewComponent: SubReportPreviewComponent,
+    configComponent: SubReportConfigComponent,
+    editable: true
+  });
+
+reportComponentTypesData.registerReportComponentType(ReportComponentType.DIVIDER,
+  {
+    title: 'report-template.component.divider.type',
+    previewComponent: DividerPreviewComponent,
+    configComponent: DividerConfigComponent,
+    editable: true
+  });
+
+reportComponentTypesData.registerReportComponentType(ReportComponentType.PAGE_BREAK,
+  {
+    title: 'report-template.component.page-break.type',
+    previewComponent: PageBreakPreviewComponent,
+    configComponent: EmptyReportConfigComponent,
+    editable: false,
+    pageBreak: true
+  });
+
+export const reportComponentTypes = reportComponentTypesData.getReportComponentTypes();
 
 export const csvReportComponentTypes: ReportComponentType[] =
   [

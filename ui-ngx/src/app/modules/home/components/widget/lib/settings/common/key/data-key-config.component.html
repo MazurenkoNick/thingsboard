@@ -78,7 +78,7 @@
       <div class="tb-form-row space-between" *ngIf="!hideDataKeyColor">
         <div>{{ 'datakey.color' | translate }}</div>
         <tb-color-input asBoxInput
-                        useThemePalette
+                        [useThemePalette]="!reportMode"
                         formControlName="color">
         </tb-color-input>
       </div>
@@ -244,6 +244,7 @@
       [callbacks]="callbacks"
       [widget]="widget"
       [widgetConfig]="widgetConfig"
+      [reportMode]="reportMode"
       formControlName="settings">
     </tb-widget-settings>
   </div>
