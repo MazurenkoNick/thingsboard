@@ -54,6 +54,7 @@ import org.thingsboard.server.report.context.chart.TsChartThresholdItem;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.time.ZoneId;
@@ -182,7 +183,8 @@ public class ReportUtils {
         entityName.ifPresent(s -> stateParams.put("entityName", s));
         entityLabel.ifPresent(s -> stateParams.put("entityLabel", s));
         String newStateJsonStr = JacksonUtil.toString(stateObj);
-        return new String(Base64.getEncoder().encode(newStateJsonStr.getBytes()));
+        String b64 = Base64.getEncoder().encodeToString(newStateJsonStr.getBytes(StandardCharsets.UTF_8));
+        return java.net.URLEncoder.encode(b64, StandardCharsets.UTF_8);
     }
 
     public static List<TsChartThresholdItem> collectThresholdItems(List<TimeSeriesChartThreshold> thresholds,
