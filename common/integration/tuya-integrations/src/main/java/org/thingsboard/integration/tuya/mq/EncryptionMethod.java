@@ -30,25 +30,30 @@
  */
 package org.thingsboard.integration.tuya.mq;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import lombok.Data;
-import org.thingsboard.common.util.JacksonUtil;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 
-import java.io.Serializable;
+@Getter
+@AllArgsConstructor
+public enum EncryptionMethod {
 
-@Data
-@JsonIgnoreProperties(ignoreUnknown = true)
-public class MessageVO implements Serializable {
+    AES_ECB("AES", "aes_ecb", "AES/ECB/PKCS5Padding", 0, 0),
+    AES_GCM("AES","aes_gcm", "AES/GCM/NoPadding", 128, 12);
 
-    private String data;
-    private Integer protocol;
-    private String pv;
-    private String sign;
-    private Long t;
+    private final String algorithm;
+    private final String code;
+    private final String transform;
+    private final int tagBits;
+    private final int nonceLen;
 
-    @Override
-    public String toString() {
-        return JacksonUtil.toString(this);
+    public static EncryptionMethod forCode(String code) {
+        for (EncryptionMethod em : values()) {
+            if (em.code.equalsIgnoreCase(code)) {
+                return em;
+            }
+        }
+
+        return null;
     }
 
 }
