@@ -28,26 +28,16 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.common.data;
+package org.thingsboard.server.dao.resource;
 
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
+import com.google.common.util.concurrent.FluentFuture;
+import org.thingsboard.server.common.data.TbResourceDataInfo;
+import org.thingsboard.server.common.data.id.TbResourceId;
+import org.thingsboard.server.common.data.id.TenantId;
 
-@RequiredArgsConstructor
-public enum ResourceType {
-    LWM2M_MODEL("application/xml", false, false),
-    JKS("application/x-java-keystore", false, false),
-    PKCS_12("application/x-pkcs12", false, false),
-    JS_MODULE("application/javascript", true, true),
-    IMAGE(null, true, true),
-    DASHBOARD("application/json", true, true),
-    GENERAL(null, false, true);
+public interface TbResourceDataCache {
 
-    @Getter
-    private final String mediaType;
-    @Getter
-    private final boolean customerAccess;
-    @Getter
-    private final boolean updatable;
+    FluentFuture<TbResourceDataInfo> getResourceDataInfoAsync(TenantId tenantId, TbResourceId resourceId);
 
+    void evictResourceData(TenantId tenantId, TbResourceId resourceId);
 }

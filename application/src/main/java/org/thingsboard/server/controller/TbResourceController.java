@@ -72,12 +72,15 @@ import org.thingsboard.server.common.data.util.ThrowingSupplier;
 import org.thingsboard.server.config.annotations.ApiOperation;
 import org.thingsboard.server.queue.util.TbCoreComponent;
 import org.thingsboard.server.service.resource.TbResourceService;
+import org.thingsboard.server.service.security.model.SecurityUser;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 import static org.thingsboard.server.controller.ControllerConstants.AVAILABLE_FOR_ANY_AUTHORIZED_USER;
 import static org.thingsboard.server.controller.ControllerConstants.LWM2M_OBJECT_DESCRIPTION;
@@ -279,6 +282,21 @@ public class TbResourceController extends BaseController {
         }
     }
 
+    @ApiOperation(value = "Get Resource Infos by ids (getSystemOrTenantResourcesByIds)")
+    @PreAuthorize("hasAnyAuthority('SYS_ADMIN', 'TENANT_ADMIN')")
+    @GetMapping(value = "/resource", params = {"resourceIds"})
+    public List<TbResourceInfo> getSystemOrTenantResourcesByIds(
+            @Parameter(description = "A list of resource ids, separated by comma ','", array = @ArraySchema(schema = @Schema(type = "string")))
+            @RequestParam("resourceIds") Set<UUID> resourceUuids) throws ThingsboardException {
+        SecurityUser user = getCurrentUser();
+        List<TbResourceId> resourceIds = new ArrayList<>();
+        for (UUID resourceId : resourceUuids) {
+            resourceIds.add(new TbResourceId(resourceId));
+        }
+        List<TbResourceInfo> resources = resourceService.findSystemOrTenantResourcesByIds(user.getTenantId(), resourceIds);
+        return filterResourcesByReadPermission(resources);
+    }
+
     @ApiOperation(value = "Get All Resource Infos (getAllResources)",
             notes = "Returns a page of Resource Info objects owned by tenant. " +
                     PAGE_DATA_PARAMETERS + RESOURCE_INFO_DESCRIPTION + TENANT_AUTHORITY_PARAGRAPH)
@@ -393,6 +411,17 @@ public class TbResourceController extends BaseController {
         TbResourceInfo resourceInfo = resourceService.findResourceInfoByTenantIdAndKey(tenantId, resourceType, key);
         checkEntity(getCurrentUser(), checkNotNull(resourceInfo), operation);
         return resourceInfo;
+    }
+
+    private List<TbResourceInfo> filterResourcesByReadPermission(List<TbResourceInfo> tbResources) {
+        return tbResources.stream().filter(tbResourceInfo -> {
+            try {
+                return accessControlService.hasPermission(getCurrentUser(), Resource.TB_RESOURCE,
+                        Operation.READ, tbResourceInfo.getId(), tbResourceInfo);
+            } catch (ThingsboardException e) {
+                return false;
+            }
+        }).toList();
     }
 
 }
