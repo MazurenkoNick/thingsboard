@@ -28,45 +28,36 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.common.data.ai.model.chat;
+package org.thingsboard.server.common.data.ai.provider;
 
-import dev.langchain4j.model.chat.ChatModel;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
-import jakarta.validation.constraints.PositiveOrZero;
-import lombok.Builder;
-import lombok.With;
-import org.thingsboard.server.common.data.ai.provider.AiProvider;
-import org.thingsboard.server.common.data.ai.provider.AnthropicProviderConfig;
 
-@Builder
-public record AnthropicChatModelConfig(
-        @NotNull @Valid AnthropicProviderConfig providerConfig,
-        @NotBlank String modelId,
-        @PositiveOrZero Double temperature,
-        @Positive @Max(1) Double topP,
-        @PositiveOrZero Integer topK,
-        Integer maxOutputTokens,
-        @With @Positive Integer timeoutSeconds,
-        @With @PositiveOrZero Integer maxRetries
-) implements AiChatModelConfig<AnthropicChatModelConfig> {
+public record OllamaProviderConfig(
+        @NotNull String baseUrl,
+        @NotNull @Valid OllamaAuth auth
+) implements AiProviderConfig {
 
-    @Override
-    public AiProvider provider() {
-        return AiProvider.ANTHROPIC;
-    }
+    @JsonTypeInfo(
+            use = JsonTypeInfo.Id.NAME,
+            include = JsonTypeInfo.As.PROPERTY,
+            property = "type"
+    )
+    @JsonSubTypes({
+            @JsonSubTypes.Type(value = OllamaAuth.None.class, name = "NONE"),
+            @JsonSubTypes.Type(value = OllamaAuth.Basic.class, name = "BASIC"),
+            @JsonSubTypes.Type(value = OllamaAuth.Token.class, name = "TOKEN")
+    })
+    public sealed interface OllamaAuth {
 
-    @Override
-    public ChatModel configure(Langchain4jChatModelConfigurer configurer) {
-        return configurer.configureChatModel(this);
-    }
+        record None() implements OllamaAuth {}
 
-    @Override
-    public boolean supportsJsonMode() {
-        return false;
+        record Basic(@NotNull String username, @NotNull String password) implements OllamaAuth {}
+
+        record Token(@NotNull String token) implements OllamaAuth {}
+
     }
 
 }

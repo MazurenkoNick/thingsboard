@@ -40,23 +40,24 @@ import jakarta.validation.constraints.PositiveOrZero;
 import lombok.Builder;
 import lombok.With;
 import org.thingsboard.server.common.data.ai.provider.AiProvider;
-import org.thingsboard.server.common.data.ai.provider.AnthropicProviderConfig;
+import org.thingsboard.server.common.data.ai.provider.OllamaProviderConfig;
 
 @Builder
-public record AnthropicChatModelConfig(
-        @NotNull @Valid AnthropicProviderConfig providerConfig,
+public record OllamaChatModelConfig(
+        @NotNull @Valid OllamaProviderConfig providerConfig,
         @NotBlank String modelId,
         @PositiveOrZero Double temperature,
         @Positive @Max(1) Double topP,
         @PositiveOrZero Integer topK,
+        Integer contextLength,
         Integer maxOutputTokens,
         @With @Positive Integer timeoutSeconds,
         @With @PositiveOrZero Integer maxRetries
-) implements AiChatModelConfig<AnthropicChatModelConfig> {
+) implements AiChatModelConfig<OllamaChatModelConfig> {
 
     @Override
     public AiProvider provider() {
-        return AiProvider.ANTHROPIC;
+        return AiProvider.OLLAMA;
     }
 
     @Override
@@ -66,7 +67,7 @@ public record AnthropicChatModelConfig(
 
     @Override
     public boolean supportsJsonMode() {
-        return false;
+        return true;
     }
 
 }
