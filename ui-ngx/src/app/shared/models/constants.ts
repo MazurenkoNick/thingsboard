@@ -277,7 +277,7 @@ export const HelpLinks = {
     roles: `${helpBaseUrl}/docs${docPlatformPrefix}/user-guide/rbac/`,
     selfRegistration: `${helpBaseUrl}/docs${docPlatformPrefix}/user-guide/self-registration`,
     scheduler: `${helpBaseUrl}/docs${docPlatformPrefix}/user-guide/scheduler`,
-    reportTemplates: `${helpBaseUrl}/docs${docPlatformPrefix}/user-guide/reports`,
+    reportTemplates: `${helpBaseUrl}/docs${docPlatformPrefix}/user-guide/reporting/reporting-key-concepts/`,
     scheduledReports: `${helpBaseUrl}/docs${docPlatformPrefix}/user-guide/reports`,
     reports: `${helpBaseUrl}/docs${docPlatformPrefix}/user-guide/reports`,
     trendzSettings: `${helpBaseUrl}/docs/trendz/`,

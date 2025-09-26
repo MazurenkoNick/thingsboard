@@ -57,7 +57,7 @@ import { isLayoutReportComponentConfig, ReportComponentConfig } from '@shared/mo
 import {
   pointsToPixels,
   ReportComponentTypeData,
-  reportComponentTypeMap
+  reportComponentTypesData
 } from '@home/pages/reporting/template/components/report-component.models';
 import { TbAnchorComponent } from '@shared/components/tb-anchor.component';
 import { from } from 'rxjs';
@@ -191,13 +191,18 @@ export class ReportComponentComponent implements OnInit, AfterViewInit, OnChange
               private cd: ChangeDetectorRef) {}
 
   ngOnInit() {
-    const type = this.reportComponent.type;
-    this.typeData = reportComponentTypeMap.get(type);
+    this.typeData = reportComponentTypesData.getReportComponentTypeData(this.reportComponent.type,
+          this.reportComponent.subType);
     if (this.typeData) {
       const compRef = this.reportPreviewContainer.viewContainerRef.createComponent(this.typeData.previewComponent);
       this.reportComponentPreview = compRef.instance;
       this.reportComponentPreview.reportComponent = this.reportComponent;
       this.reportComponentPreview.format = this.format;
+      if (this.typeData.previewContext) {
+        for (const key of Object.keys(this.typeData.previewContext)) {
+          this.reportComponentPreview[key] = this.typeData.previewContext[key];
+        }
+      }
       this.reportComponentPreview.contentResized.pipe(
         takeUntilDestroyed(this.destroyRef)
       ).subscribe(() => {

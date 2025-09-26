@@ -1400,6 +1400,7 @@ export class RuleChainPageComponent extends PageComponent
           details = this.sanitizer.sanitize(SecurityContext.HTML, node.additionalInfo.description);
         }
       }
+
       name = this.sanitizer.sanitize(SecurityContext.HTML, name);
       desc = this.sanitizer.sanitize(SecurityContext.HTML, desc);
 

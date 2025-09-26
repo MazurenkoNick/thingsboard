@@ -45,11 +45,12 @@ import {
 } from '@shared/models/widget.models';
 import { deepClone } from '@core/utils';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { coerceBoolean } from '@shared/decorators/coercion';
 
 @Component({
   selector: 'tb-comparison-key-row',
   templateUrl: './comparison-key-row.component.html',
-  styleUrls: ['./comparison-key-row.component.scss', '../../../lib/settings/common/key/data-keys.component.scss'],
+  styleUrls: ['./comparison-key-row.component.scss', '../../common/key/data-keys.component.scss'],
   providers: [
     {
       provide: NG_VALUE_ACCESSOR,
@@ -66,6 +67,10 @@ export class ComparisonKeyRowComponent implements ControlValueAccessor, OnInit {
 
   @Input()
   datasourceType: DatasourceType;
+
+  @Input()
+  @coerceBoolean()
+  reportMode = false;
 
   keyFormControl: UntypedFormControl;
 
