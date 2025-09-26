@@ -313,13 +313,12 @@ public class SchedulerEventControllerTest extends AbstractControllerTest {
         schedulerEvent.setType("Custom Type");
         ObjectNode schedule = JacksonUtil.newObjectNode();
         schedule.put("startTime", System.currentTimeMillis());
-        schedule.put("timezone", TimeZone.getDefault().getDisplayName());
+        schedule.put("timezone", TimeZone.getDefault().getID());
         MonthlyRepeat schedulerRepeat = new MonthlyRepeat();
         schedulerRepeat.setEndsOn(Long.MAX_VALUE);
         schedule.set("repeat", JacksonUtil.valueToTree(schedulerRepeat));
         schedulerEvent.setSchedule(schedule);
         return schedulerEvent;
     }
-
 
 }
