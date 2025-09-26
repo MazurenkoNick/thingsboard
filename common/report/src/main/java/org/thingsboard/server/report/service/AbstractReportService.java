@@ -163,7 +163,7 @@ public abstract class AbstractReportService implements ReportService {
 
     private void updateWithAggregatedData(TbReportCtx ctx, List<DataKey> dataKeysWithAggregation, EntityData entityData) {
         if (!dataKeysWithAggregation.isEmpty()) {
-            List<ReadTsKvQuery> queries = buildReadTsKvQueries(ctx, dataKeysWithAggregation);
+            List<BaseReadTsKvQuery> queries = buildReadTsKvQueries(ctx, dataKeysWithAggregation);
             List<ReadTsKvQueryResult> result = dataService.findTimeseriesByQueries(entityData.getEntityId(), queries, ctx);
             for (ReadTsKvQueryResult queryResult : result) {
                 List<TsKvEntry> queryResultData = queryResult.getData();
@@ -174,8 +174,8 @@ public abstract class AbstractReportService implements ReportService {
         }
     }
 
-    private List<ReadTsKvQuery> buildReadTsKvQueries(TbReportCtx ctx, List<DataKey> dataKeysWithAggregation) {
-        List<ReadTsKvQuery> queries = new ArrayList<>();
+    private List<BaseReadTsKvQuery> buildReadTsKvQueries(TbReportCtx ctx, List<DataKey> dataKeysWithAggregation) {
+        List<BaseReadTsKvQuery> queries = new ArrayList<>();
         for (DataKey key : dataKeysWithAggregation) {
             TimeWindowConfiguration timeWindowConf = key.getTimewindow();
             String targetTimezone = StringUtils.isNotBlank(timeWindowConf.getTimezone()) ?
