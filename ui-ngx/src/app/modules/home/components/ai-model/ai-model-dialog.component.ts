@@ -116,7 +116,7 @@ export class AIModelDialogComponent extends DialogComponent<AIModelDialogCompone
           projectId: [this.data.AIModel ? this.data.AIModel.configuration.providerConfig?.projectId : '', [Validators.required]],
           location: [this.data.AIModel ? this.data.AIModel.configuration.providerConfig?.location : '', [Validators.required]],
           serviceAccountKey: [this.data.AIModel ? this.data.AIModel.configuration.providerConfig?.serviceAccountKey : '', [Validators.required]],
-          fileName: [this.data.AIModel ? this.data.AIModel.configuration.providerConfig?.fileName : '', [Validators.required]],
+          fileName: [this.data.AIModel ? this.data.AIModel.configuration.providerConfig?.fileName : ''],
           region: [this.data.AIModel ? this.data.AIModel.configuration.providerConfig?.region : '', [Validators.required]],
           accessKeyId: [this.data.AIModel ? this.data.AIModel.configuration.providerConfig?.accessKeyId : '', [Validators.required]],
           secretAccessKey: [this.data.AIModel ? this.data.AIModel.configuration.providerConfig?.secretAccessKey : '', [Validators.required]],
