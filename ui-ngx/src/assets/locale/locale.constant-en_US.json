@@ -1821,6 +1821,8 @@
         "mobile-order": "Dashboard order in mobile application",
         "mobile-hide": "Hide dashboard in mobile application",
         "update-image": "Update dashboard image",
+        "update-new-version": "Upload new version",
+        "upload-file-to-update": "Upload file to update",
         "take-screenshot": "Take screenshot",
         "select-widget-title": "Select widget",
         "select-widget-value": "{{title}}: select widget",
@@ -7419,6 +7421,13 @@
         "expand": "Expand",
         "editor": "Editor",
         "component": {
+            "group": {
+                "text-and-images": "Text & Images",
+                "data-and-tables": "Data & Tables",
+                "charts": "Charts",
+                "branding": "Branding",
+                "report-info-and-layout": "Report info & Layout"
+            },
             "heading": {
                 "type": "Heading",
                 "text": "Text",
@@ -7463,6 +7472,30 @@
             },
             "alarm-table": {
                 "type": "Alarm table"
+            },
+            "time-series-chart": {
+                "type": "Time series chart",
+                "no-datasource-configured": "Data source is not configured for time series chart",
+                "no-series-configured": "At least one series should be specified for time series chart"
+            },
+            "latest-chart": {
+                "no-datasource-configured": "Data source is not configured for the chart",
+                "no-series-configured": "At least one series should be specified for the chart"
+            },
+            "line-chart": "Line chart",
+            "bar-chart": "Bar chart",
+            "point-chart": "Point chart",
+            "state-chart": "State chart",
+            "bar-chart-with-labels": "Bar chart with labels",
+            "range-chart": "Range chart",
+            "bars": "Bars",
+            "pie": "Pie",
+            "doughnut": "Doughnut",
+            "horizontal-doughnut": "Horizontal doughnut",
+            "chart": {
+                "chart-height": "Chart height",
+                "chart-width": "Chart width",
+                "chart-alignment": "Chart alignment"
             },
             "image": {
                 "type": "Image",
@@ -9327,7 +9360,7 @@
         "install-title": "Solution template successfully installed",
         "install-failed-title": "Solution template installation failed",
         "instructions": "Instructions",
-        "goto-main-dashboard": "Goto main dashboard",
+        "goto-main-dashboard": "Go to main dashboard",
         "delete": "Delete",
         "delete-solution-title": "Are you sure you want to delete the solution '{{solutionTitle}}'?",
         "delete-solution-text": "Be careful, after the confirmation the solution and all related data will become unrecoverable.",
@@ -11268,6 +11301,7 @@
             "dont-reserve-space-hidden-action": "Don't reserve space for hidden action buttons",
             "display-timestamp": "Timestamp",
             "include-timestamp-in-export": "Include timestamp column in export",
+            "timestamp-column-name":"Timestamp",
             "display-pagination": "Display pagination",
             "default-page-size": "Default page size",
             "page-step-settings": "Page step settings",
@@ -11906,7 +11940,8 @@
             "add-key": "Add key",
             "no-key": "No key",
             "delete-key": "Delete key",
-            "target-dashboard-state": "Target dashboard state"
+            "target-dashboard-state": "Target dashboard state",
+            "go-to-main-state": "Go to default view"
         }
     },
     "icon": {

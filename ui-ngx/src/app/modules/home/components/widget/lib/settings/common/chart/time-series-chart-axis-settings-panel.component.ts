@@ -61,6 +61,10 @@ export class TimeSeriesChartAxisSettingsPanelComponent implements OnInit {
   advanced = false;
 
   @Input()
+  @coerceBoolean()
+  reportMode = false;
+
+  @Input()
   popover: TbPopoverComponent<TimeSeriesChartAxisSettingsPanelComponent>;
 
   @Output()

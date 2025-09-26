@@ -36,7 +36,7 @@ import {
   ElementRef,
   Input,
   OnDestroy,
-  OnInit,
+  OnInit, Optional,
   Renderer2,
   TemplateRef,
   ViewChild,
@@ -57,6 +57,7 @@ import { DomSanitizer } from '@angular/platform-browser';
 import { WidgetComponent } from '@home/components/widget/widget.component';
 import { TranslateService } from '@ngx-translate/core';
 import { LegendPosition } from '@shared/models/widget.models';
+import { coerceBoolean } from '@shared/decorators/coercion';
 
 export interface LatestChartComponentCallbacks {
   createChart: (chartShape: ElementRef<HTMLElement>, renderer: Renderer2) => TbLatestChart<LatestChartSettings>;
@@ -82,6 +83,10 @@ export class LatestChartComponent implements OnInit, OnDestroy, AfterViewInit {
 
   @Input()
   ctx: WidgetContext;
+
+  @Input()
+  @coerceBoolean()
+  reportMode = false;
 
   @Input()
   callbacks: LatestChartComponentCallbacks;
@@ -110,7 +115,7 @@ export class LatestChartComponent implements OnInit, OnDestroy, AfterViewInit {
 
   private latestChart: TbLatestChart<LatestChartSettings>;
 
-  constructor(public widgetComponent: WidgetComponent,
+  constructor(@Optional() public widgetComponent: WidgetComponent,
               private imagePipe: ImagePipe,
               private sanitizer: DomSanitizer,
               private renderer: Renderer2,

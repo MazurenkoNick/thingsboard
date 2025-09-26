@@ -623,6 +623,15 @@ export interface WidgetInfo extends WidgetTypeDescriptor, WidgetControllerDescri
   componentType?: Type<IDynamicWidgetComponent>;
 }
 
+export interface WidgetWithInfo extends Widget {
+  widgetInfo: WidgetInfo;
+}
+
+export const isWidgetWithInfo = (widget: Widget): widget is WidgetWithInfo => {
+  const widgetWithInfo = (widget as WidgetWithInfo);
+  return widgetWithInfo.widgetInfo !== undefined && typeof widgetWithInfo.widgetInfo === 'object';
+}
+
 export interface WidgetConfigComponentData {
   widgetName: string;
   config: WidgetConfig;

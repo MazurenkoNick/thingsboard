@@ -44,12 +44,14 @@ import org.thingsboard.server.common.data.kv.BaseReadTsKvQuery;
 import org.thingsboard.server.common.data.kv.ReadTsKvQuery;
 import org.thingsboard.server.common.data.kv.ReadTsKvQueryResult;
 import org.thingsboard.server.common.data.kv.TsKvEntry;
+import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageDataIterable;
 import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.page.SortOrder;
 import org.thingsboard.server.common.data.query.AlarmData;
 import org.thingsboard.server.common.data.query.EntityData;
 import org.thingsboard.server.common.data.query.EntityDataQuery;
+import org.thingsboard.server.common.data.query.EntityDataSortOrder;
 import org.thingsboard.server.common.data.query.EntityFilter;
 import org.thingsboard.server.common.data.query.EntityKeyType;
 import org.thingsboard.server.common.data.query.SingleEntityFilter;
@@ -83,6 +85,7 @@ import java.util.stream.Collectors;
 import static org.thingsboard.server.common.data.report.configuration.timewindow.TimeIntervalCalculator.getTimeRange;
 import static org.thingsboard.server.common.data.util.DataSourceUtils.getAlarmLatestValue;
 import static org.thingsboard.server.common.data.util.DataSourceUtils.getEntityLatestValue;
+import static org.thingsboard.server.report.util.ReportQueryUtils.DEFAULT_SORT_ORDER;
 import static org.thingsboard.server.report.util.ReportQueryUtils.buildEntityFilter;
 import static org.thingsboard.server.report.util.ReportQueryUtils.toAlarmDataQuery;
 import static org.thingsboard.server.report.util.ReportQueryUtils.toEntityDataQuery;
@@ -95,6 +98,8 @@ import static org.thingsboard.server.report.util.ReportUtils.getSingleDataSource
 
 @Slf4j
 public abstract class AbstractReportService implements ReportService {
+
+    public static final int DEFAULT_ENTITIES_PAGE_SIZE = 1024;
 
     private static final Map<String, String> ALARM_FIELD_ALIASES_MAP = Map.of(
             "startTime", "startTs",
@@ -111,6 +116,14 @@ public abstract class AbstractReportService implements ReportService {
     protected ReportDataService dataService;
 
     protected List<EntityData> fetchEntities(TbReportCtx ctx, DataSource dataSource, EntityId stateEntityId) {
+        return fetchEntities(ctx, dataSource, stateEntityId, DEFAULT_SORT_ORDER);
+    }
+
+    protected List<EntityData> fetchEntities(TbReportCtx ctx, DataSource dataSource, EntityId stateEntityId, EntityDataSortOrder sortOrder) {
+        return fetchEntities(ctx, dataSource, stateEntityId, sortOrder, false);
+    }
+
+    protected List<EntityData> fetchEntities(TbReportCtx ctx, DataSource dataSource, EntityId stateEntityId, EntityDataSortOrder sortOrder, boolean singleEntity) {
         EntityFilter filter = buildEntityFilter(dataSource, ctx, stateEntityId);
         if (filter instanceof SingleEntityFilter singleEntityFilter && singleEntityFilter.getSingleEntity() == null) {
             return Collections.emptyList();
@@ -118,13 +131,21 @@ public abstract class AbstractReportService implements ReportService {
         if (filter instanceof StateEntityOwnerFilter stateEntityOwnerFilter && stateEntityOwnerFilter.getSingleEntity() == null) {
             return Collections.emptyList();
         } // TODO: add black-box tests for entity filters
-        return fetchEntityDataByQuery(pageLink -> toEntityDataQuery(dataSource, ctx, filter, pageLink), dataSource, ctx);
+        return fetchEntityDataByQuery(pageLink -> toEntityDataQuery(dataSource, ctx, filter, pageLink, sortOrder), dataSource, ctx, singleEntity);
     }
 
-    private List<EntityData> fetchEntityDataByQuery(Function<PageLink, EntityDataQuery> querySupplier, DataSource dataSource, TbReportCtx ctx) {
+    private List<EntityData> fetchEntityDataByQuery(Function<PageLink, EntityDataQuery> querySupplier, DataSource dataSource, TbReportCtx ctx, boolean singleEntity) {
         List<DataKey> dataKeysWithAggr = getDataKeysWithAggr(dataSource);
         List<EntityData> data = new ArrayList<>();
-        for (EntityData entityData : new PageDataIterable<>(link -> dataService.findEntityDataByQuery(querySupplier.apply(link), ctx), 1024)) {
+        Iterable<EntityData> entityDataIterable;
+        if (singleEntity) {
+            PageLink singleEntityPageLink = new PageLink(1);
+            PageData<EntityData> entityData = dataService.findEntityDataByQuery(querySupplier.apply(singleEntityPageLink), ctx);
+            entityDataIterable = entityData.getData();
+        } else {
+            entityDataIterable = new PageDataIterable<>(link -> dataService.findEntityDataByQuery(querySupplier.apply(link), ctx), DEFAULT_ENTITIES_PAGE_SIZE);
+        }
+        for (EntityData entityData : entityDataIterable) {
             updateWithAggregatedData(ctx, dataKeysWithAggr, entityData);
             data.add(entityData);
         }
@@ -143,7 +164,7 @@ public abstract class AbstractReportService implements ReportService {
 
     private void updateWithAggregatedData(TbReportCtx ctx, List<DataKey> dataKeysWithAggregation, EntityData entityData) {
         if (!dataKeysWithAggregation.isEmpty()) {
-            List<ReadTsKvQuery> queries = buildReadTsKvQueries(ctx, dataKeysWithAggregation);
+            List<BaseReadTsKvQuery> queries = buildReadTsKvQueries(ctx, dataKeysWithAggregation);
             List<ReadTsKvQueryResult> result = dataService.findTimeseriesByQueries(entityData.getEntityId(), queries, ctx);
             for (ReadTsKvQueryResult queryResult : result) {
                 List<TsKvEntry> queryResultData = queryResult.getData();
@@ -154,8 +175,8 @@ public abstract class AbstractReportService implements ReportService {
         }
     }
 
-    private List<ReadTsKvQuery> buildReadTsKvQueries(TbReportCtx ctx, List<DataKey> dataKeysWithAggregation) {
-        List<ReadTsKvQuery> queries = new ArrayList<>();
+    private List<BaseReadTsKvQuery> buildReadTsKvQueries(TbReportCtx ctx, List<DataKey> dataKeysWithAggregation) {
+        List<BaseReadTsKvQuery> queries = new ArrayList<>();
         for (DataKey key : dataKeysWithAggregation) {
             TimeWindowConfiguration timeWindowConf = key.getTimewindow();
             String targetTimezone = StringUtils.isNotBlank(timeWindowConf.getTimezone()) ?
@@ -191,7 +212,7 @@ public abstract class AbstractReportService implements ReportService {
         List<DataKey> dataKeys = singleDataSource.get().getDataKeys();
         List<DataKey> latestDataKeys = singleDataSource.get().getLatestDataKeys();
 
-        List<String> keys = dataKeys.stream().map(DataKey::getName).collect(Collectors.toList());
+        List<String> keys = dataKeys.stream().map(DataKey::getName).distinct().toList();
         List<TsKvEntry> result = dataService.getTimeseries(entity.getEntityId(), keys, timeRange.startTs, timeRange.endTs,
                 historyConf.getInterval(), timeWindowConf.getTimezone(), timeWindowConf.getAggregation().getType(), SortOrder.Direction.DESC,
                 timeWindowConf.getAggregation().getLimit(), false, ctx);
@@ -429,7 +450,7 @@ public abstract class AbstractReportService implements ReportService {
         return formattedValue;
     }
 
-    private Object postProcess(TbReportCtx ctx, DataKey dataKey, long timestamp, Object value, boolean parseString) {
+    protected Object postProcess(TbReportCtx ctx, DataKey dataKey, long timestamp, Object value, boolean parseString) {
         if (dataKey.isUsePostProcessing()) {
             Object input = parseString && value instanceof String ? convertStringToTypedValue((String) value) : value;
             UUID scriptId = ctx.getScripts().computeIfAbsent(dataKey.getPostFuncBody(), s -> evalScript(ctx, s));

@@ -94,6 +94,14 @@ export class TimeSeriesChartYAxesPanelComponent implements ControlValueAccessor,
   @coerceBoolean()
   supportsUnitConversion = false;
 
+  @Input()
+  @coerceBoolean()
+  stroked = false;
+
+  @Input()
+  @coerceBoolean()
+  reportMode = false;
+
   @Output()
   axisRemoved = new EventEmitter<TimeSeriesChartYAxisId>();
 

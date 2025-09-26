@@ -55,6 +55,9 @@ export class AlignmentPanelComponent implements OnInit {
   @Input()
   horizontal: boolean;
 
+  @Input()
+  allowedAlignments: alignment[];
+
   @Output()
   alignmentSelected = new EventEmitter<alignment>();
 
@@ -62,7 +65,11 @@ export class AlignmentPanelComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.alignments = this.horizontal ? horizontalAlignments : verticalAlignments;
+    if (this.allowedAlignments?.length) {
+      this.alignments = this.allowedAlignments;
+    } else {
+      this.alignments = this.horizontal ? horizontalAlignments : verticalAlignments;
+    }
   }
 
   selectAlignment(alignment: alignment) {
