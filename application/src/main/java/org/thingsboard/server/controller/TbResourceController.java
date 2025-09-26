@@ -294,7 +294,10 @@ public class TbResourceController extends BaseController {
             resourceIds.add(new TbResourceId(resourceId));
         }
         List<TbResourceInfo> resources = resourceService.findSystemOrTenantResourcesByIds(user.getTenantId(), resourceIds);
-        return filterResourcesByReadPermission(resources);
+        for (TbResourceInfo resourceInfo : resources) {
+            checkEntity(user, resourceInfo, Operation.READ);
+        }
+        return resources;
     }
 
     @ApiOperation(value = "Get All Resource Infos (getAllResources)",
@@ -411,17 +414,6 @@ public class TbResourceController extends BaseController {
         TbResourceInfo resourceInfo = resourceService.findResourceInfoByTenantIdAndKey(tenantId, resourceType, key);
         checkEntity(getCurrentUser(), checkNotNull(resourceInfo), operation);
         return resourceInfo;
-    }
-
-    private List<TbResourceInfo> filterResourcesByReadPermission(List<TbResourceInfo> tbResources) {
-        return tbResources.stream().filter(tbResourceInfo -> {
-            try {
-                return accessControlService.hasPermission(getCurrentUser(), Resource.TB_RESOURCE,
-                        Operation.READ, tbResourceInfo.getId(), tbResourceInfo);
-            } catch (ThingsboardException e) {
-                return false;
-            }
-        }).toList();
     }
 
 }
