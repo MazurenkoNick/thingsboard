@@ -28,42 +28,10 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-@import '../../../../../../../../scss/constants';
+package org.thingsboard.server.common.data.report.configuration.chart;
 
-.tb-comparison-key-row {
-  .tb-show-field {
-    width: 40px;
-    min-width: 40px;
-  }
-
-  .tb-data-key-input {
-    flex: 1;
-    @media #{$mat-gt-xs} {
-      min-width: 100px;
-      flex: 1 1 40%;
-    }
-  }
-
-  .tb-label-field, .tb-color-field {
-    display: flex;
-    flex-direction: row;
-    place-content: center;
-    align-items: center;
-    .tb-inline-field {
-      flex: 1;
-    }
-  }
-
-  .tb-label-field {
-    flex: 1;
-    @media #{$mat-gt-xs} {
-      min-width: 150px;
-      flex: 1 1 60%;
-    }
-  }
-
-  .tb-color-field {
-    width: 40px;
-    min-width: 40px;
-  }
+public enum ChartLineType {
+    solid,
+    dashed,
+    dotted
 }

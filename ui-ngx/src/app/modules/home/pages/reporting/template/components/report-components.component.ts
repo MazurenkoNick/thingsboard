@@ -56,7 +56,7 @@ import { deepClone } from '@core/utils';
 import { ReportComponentComponent } from '@home/pages/reporting/template/components/report-component.component';
 import {
   reportComponentsLibrary,
-  reportComponentTypeMap
+  reportComponentTypesData
 } from '@home/pages/reporting/template/components/report-component.models';
 import { TbReportFormat } from '@shared/models/report.models';
 
@@ -158,7 +158,7 @@ export class ReportComponentsComponent implements OnInit, OnChanges {
           if (libraryItem) {
             const reportComponent = deepClone(libraryItem.defaultConfig);
             this.reportComponents.splice(event.currentIndex, 0, reportComponent);
-            if (reportComponentTypeMap.get(reportComponent.type).editable) {
+            if (reportComponentTypesData.getReportComponentTypeData(reportComponent.type, reportComponent.subType).editable) {
               setTimeout(() => {
                 this.componentEdit.emit(reportComponent);
               }, 0);
