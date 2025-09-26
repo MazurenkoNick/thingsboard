@@ -214,9 +214,7 @@ export class ImportExportService {
   public exportReportTemplate(reportTemplateId: string): void {
     this.reportTemplateService.getReportTemplate(reportTemplateId).subscribe({
       next: (reportTemplate) => {
-        let name = reportTemplate.name;
-        name = name.toLowerCase().replace(/\W/g, '_');
-        this.exportToPc(this.prepareReportTemplateExport(reportTemplate), name);
+        this.exportToPc(this.prepareReportTemplateExport(reportTemplate), reportTemplate.name, true);
       },
       error: (e) => {
         this.handleExportError(e, 'report-template.export-failed-error');
@@ -807,9 +805,7 @@ export class ImportExportService {
         if (!converter.configuration) {
           converter.configuration = {} as ConverterConfig;
         }
-        let name = converter.name;
-        name = name.toLowerCase().replace(/\W/g, '_');
-        this.exportToPc(this.prepareExport(converter), name);
+        this.exportToPc(this.prepareExport(converter), converter.name, true);
       },
       error: (error) => {
         this.handleExportError(error, 'converter.export-failed-error');
@@ -944,7 +940,7 @@ export class ImportExportService {
     this.downloadFile(csvData, filename, CSV_TYPE, normalizeFileName);
   }
 
-  public exportXls(data: {[key: string]: any}[], filename: string) {
+  public exportXls(data: {[key: string]: any}[], filename: string, normalizeFileName = false) {
     let colsHead: string;
     let colsData: string;
     if (data && data.length) {
@@ -960,11 +956,11 @@ export class ImportExportService {
     }
     const tableData = `<table>${colsHead}${colsData}</table>`.trim();
     const parameters = { title: filename, table: tableData };
-    const xlsData = TEMPLATE_XLS.replace(/{(\w+)}/g, (x, y) => parameters[y]);
-    this.downloadFile(xlsData, filename, XLS_TYPE);
+    const xlsData = TEMPLATE_XLS.replace(/{(\w+)}/g, (_x, y) => parameters[y]);
+    this.downloadFile(xlsData, filename, XLS_TYPE, normalizeFileName);
   }
 
-  public exportXlsx(data: { [key: string]: any }[], filename: string, dateFormat: string = 'yyyy-MM-dd HH:mm:ss') {
+  public exportXlsx(data: { [key: string]: any }[], filename: string, dateFormat: string = 'yyyy-MM-dd HH:mm:ss', normalizeFileName = false) {
     import('exceljs').then((exceljs) => {
       const Excel = unwrapModule(exceljs);
       const workbook: Workbook = new Excel.Workbook();
@@ -1010,8 +1006,8 @@ export class ImportExportService {
         });
       }
 
-      workbook.xlsx.writeBuffer().then((xlsxData) => {
-        this.downloadFile(xlsxData, filename, XLSX_TYPE);
+      workbook.xlsx.writeBuffer().then((xlsxData: any) => {
+        this.downloadFile(xlsxData, filename, XLSX_TYPE, normalizeFileName);
       });
     });
   }
