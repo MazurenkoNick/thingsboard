@@ -29,61 +29,29 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { Component, ElementRef, HostBinding, Input, OnChanges, SimpleChanges,
-  viewChild,
-  ViewEncapsulation
-} from '@angular/core';
-import { coerceBoolean } from '@shared/decorators/coercion';
-import { TbReportFormat } from '@shared/models/report.models';
+import { Component, ViewEncapsulation } from '@angular/core';
 import {
-  ReportComponentContext,
-  ReportComponentLibraryGroup,
-  reportComponentLibraryGroupTranslations
-} from '@home/pages/reporting/template/components/report-component.models';
-import { MatExpansionPanel } from '@angular/material/expansion';
+  AbstractReportComponentConfig
+} from '@home/pages/reporting/template/components/report-component-config.component';
+import {
+  TwoBlocksReportComponentConfig
+} from '@shared/models/report-component.models';
+import { FormGroup, UntypedFormGroup, Validators } from '@angular/forms';
 
 @Component({
-  selector: 'tb-report-component-library-group',
-  templateUrl: './report-component-library-group.component.html',
-  styleUrls: ['./report-component-library-group.component.scss'],
+  selector: 'tb-two-blocks-config',
+  templateUrl: './two-blocks-config.component.html',
+  styleUrls: ['./report-component-config.scss'],
   encapsulation: ViewEncapsulation.None
 })
-export class ReportComponentLibraryGroupComponent implements OnChanges {
+export class TwoBlocksConfigComponent extends AbstractReportComponentConfig<TwoBlocksReportComponentConfig> {
 
-  reportComponentLibraryGroupTranslations = reportComponentLibraryGroupTranslations;
+  protected buildForm(reportComponentConfig: TwoBlocksReportComponentConfig): FormGroup {
 
-  expansionPanel = viewChild('expansionPanel', {
-    read: MatExpansionPanel,
-  });
+    const form: UntypedFormGroup = this.fb.group({
+      splitPosition: [reportComponentConfig.splitPosition, [Validators.min(1), Validators.max(99), Validators.required]]
+    });
 
-  @Input()
-  context: ReportComponentContext;
-
-  @Input()
-  @coerceBoolean()
-  subReport = false;
-
-  @Input()
-  format: TbReportFormat = TbReportFormat.PDF;
-
-  @Input()
-  group: ReportComponentLibraryGroup;
-
-  @Input()
-  filter: string;
-
-  constructor() {
+    return form;
   }
-
-  ngOnChanges(changes: SimpleChanges): void {
-    for (const propName of Object.keys(changes)) {
-      const change = changes[propName];
-      if (!change.firstChange && change.currentValue !== change.previousValue) {
-        if ('filter' === propName) {
-          this.expansionPanel()?.open();
-        }
-      }
-    }
-  }
-
 }

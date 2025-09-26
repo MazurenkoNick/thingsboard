@@ -64,7 +64,7 @@ import {
   SubReportReportComponentConfig,
   TimeseriesChartReportComponentConfig,
   TimeseriesTableReportComponentConfig,
-  toReportTimeSeriesChartKeySettings
+  toReportTimeSeriesChartKeySettings, TwoBlocksReportComponentConfig
 } from '@shared/models/report-component.models';
 import { Type } from '@angular/core';
 import { HeadingPreviewComponent } from '@home/pages/reporting/template/components/heading-preview.component';
@@ -95,7 +95,7 @@ import { ImagePreviewComponent } from '@home/pages/reporting/template/components
 import { ImageConfigComponent } from '@home/pages/reporting/template/components/image-config.component';
 
 import keyImageTemplate from './key-image-svg.raw';
-import { insertVariable, mergeDeep, stringToBase64 } from '@core/utils';
+import { deepClone, insertVariable, mergeDeep, stringToBase64 } from '@core/utils';
 import { DataKey, DatasourceType } from '@shared/models/widget.models';
 import { DashboardPreviewComponent } from '@home/pages/reporting/template/components/dashboard-preview.component';
 import { DashboardConfigComponent } from '@home/pages/reporting/template/components/dashboard-config.component';
@@ -124,6 +124,9 @@ import { TimeSeriesChartType } from '@home/components/widget/lib/chart/time-seri
 import { TbTimeSeriesChart } from '@home/components/widget/lib/chart/time-series-chart';
 import { LatestChartPreviewComponent } from '@home/pages/reporting/template/components/latest-chart-preview.component';
 import { LatestChartConfigComponent } from '@home/pages/reporting/template/components/latest-chart-config.component';
+import { TwoBlocksPreviewComponent } from '@home/pages/reporting/template/components/two-blocks-preview.component';
+import { TwoBlocksConfigComponent } from '@home/pages/reporting/template/components/two-blocks-config.component';
+import { CdkDragMove, CdkDragRelease, CdkDropList } from '@angular/cdk/drag-drop';
 
 export enum ReportComponentLibraryGroup {
   textAndImages = 'textAndImages',
@@ -176,7 +179,7 @@ export const reportComponentGroups = new Map<string, Array<string>>(
     ],
     [
       ReportComponentLibraryGroup.reportInfoAndLayout,
-      ['pageNumber', 'createdTime', 'divider', 'pageBreak']
+      ['twoBlocks', 'pageNumber', 'createdTime', 'divider', 'pageBreak']
     ]
   ]
 );
@@ -1316,6 +1319,23 @@ export const reportComponentsLibrary = new Map<string, ReportComponentLibraryIte
           type: ReportComponentType.PAGE_BREAK
         } as PageBreakReportComponentConfig
       }
+    ],
+    [
+      'twoBlocks',
+      {
+        title: 'report-template.component.two-blocks.type',
+        previewImage: '/assets/report/components/page-break.svg',
+        type: ReportComponentType.TWO_BLOCKS,
+        defaultConfig: {
+          leftBlock: null,
+          rightBlock: null,
+          splitPosition: 50,
+          margins: null,
+          paddings: null,
+          background: null,
+          type: ReportComponentType.TWO_BLOCKS
+        } as TwoBlocksReportComponentConfig
+      }
     ]
   ]
 );
@@ -1325,6 +1345,7 @@ export interface ReportComponentTypeData<C extends ReportComponentConfig = Repor
   previewComponent: Type<AbstractReportComponentPreview<C>>;
   configComponent: Type<AbstractReportComponentConfig<C>>;
   editable: boolean;
+  container?: boolean;
   pageBreak?: boolean;
   preferredSettingsWidthPx?: number;
   configContext?: {[key: string]: any};
@@ -1596,6 +1617,15 @@ reportComponentTypesData.registerReportComponentType(ReportComponentType.SUB_REP
     editable: true
   });
 
+reportComponentTypesData.registerReportComponentType(ReportComponentType.TWO_BLOCKS,
+  {
+    title: 'report-template.component.two-blocks.type',
+    previewComponent: TwoBlocksPreviewComponent,
+    configComponent: TwoBlocksConfigComponent,
+    editable: true,
+    container: true
+  });
+
 reportComponentTypesData.registerReportComponentType(ReportComponentType.DIVIDER,
   {
     title: 'report-template.component.divider.type',
@@ -1623,6 +1653,55 @@ export const csvReportComponentTypes: ReportComponentType[] =
     ReportComponentType.SUB_REPORT
   ];
 
+export class ReportDragDropContext {
+
+  dropLists: CdkDropList[] = [];
+  currentHoverDropListId?: string;
+
+  constructor() {
+  }
+
+  public register(dropList: CdkDropList) {
+    this.dropLists.push(dropList);
+  }
+
+  public deregister(dropList: CdkDropList) {
+    const index = this.dropLists.indexOf(dropList);
+    if (index > -1) {
+      this.dropLists.splice(index, 1);
+    }
+  }
+
+  dragMoved(event: CdkDragMove) {
+    const elementFromPoint = document.elementFromPoint(
+      event.pointerPosition.x,
+      event.pointerPosition.y
+    );
+
+    if (!elementFromPoint) {
+      this.currentHoverDropListId = undefined;
+      return;
+    }
+
+    const dropList = elementFromPoint.classList.contains('cdk-drop-list')
+      ? elementFromPoint
+      : elementFromPoint.closest('.cdk-drop-list');
+
+    if (!dropList) {
+      this.currentHoverDropListId = undefined;
+      return;
+    }
+
+    this.currentHoverDropListId = dropList.id;
+  }
+
+  dragReleased(event: CdkDragRelease) {
+    this.currentHoverDropListId = undefined;
+  }
+
+}
+
+
 export interface ReportComponentContext {
   translate: TranslateService,
   utils: UtilsService,
@@ -1630,14 +1709,38 @@ export interface ReportComponentContext {
   aliasController: IAliasController;
   aliasAndFilterCallbacks: EntityAliasSelectCallbacks & FilterSelectCallbacks;
   format: TbReportFormat;
+  dragDropCtx: ReportDragDropContext;
 }
 
 export const assignReportComponent = (reportComponent: ReportComponentConfig, sourceReportComponent: ReportComponentConfig): void => {
+  let ignoreFields: string[] = [];
+  if (reportComponent.type === ReportComponentType.TWO_BLOCKS) {
+    ignoreFields = ['leftBlock', 'rightBlock'];
+  }
+  const temp = {} as any;
+  for (const field of ignoreFields) {
+    temp[field] = reportComponent[field];
+  }
   Object.assign(reportComponent, sourceReportComponent);
   for(const key in reportComponent){
     if(!(key in sourceReportComponent))
       delete reportComponent[key];
   }
+  for (const field of ignoreFields) {
+    reportComponent[field] = temp[field];
+  }
+}
+
+export const editReportComponent = (reportComponent: ReportComponentConfig): ReportComponentConfig => {
+  let ignoreFields: string[] = [];
+  if (reportComponent.type === ReportComponentType.TWO_BLOCKS) {
+    ignoreFields = ['leftBlock', 'rightBlock'];
+  }
+  const result = deepClone(reportComponent, ignoreFields);
+  for (const field of ignoreFields) {
+    delete result[field];
+  }
+  return result;
 }
 
 export const pointsToPixels = (points: number): number => points * 1.3333343412075;

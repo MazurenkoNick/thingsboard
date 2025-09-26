@@ -55,7 +55,7 @@ import {
 } from '@angular/core';
 import { isLayoutReportComponentConfig, ReportComponentConfig } from '@shared/models/report-component.models';
 import {
-  pointsToPixels,
+  pointsToPixels, ReportComponentContext,
   ReportComponentTypeData,
   reportComponentTypesData
 } from '@home/pages/reporting/template/components/report-component.models';
@@ -67,6 +67,7 @@ import { TbReportFormat } from '@shared/models/report.models';
 import { coerceBoolean } from '@shared/decorators/coercion';
 import ITooltipsterInstance = JQueryTooltipster.ITooltipsterInstance;
 import ITooltipsterGeoHelper = JQueryTooltipster.ITooltipsterGeoHelper;
+import { isFunction } from '@core/utils';
 
 @Component({
   selector: 'tb-report-component',
@@ -135,6 +136,10 @@ export class ReportComponentComponent implements OnInit, AfterViewInit, OnChange
   format: TbReportFormat;
 
   @Input()
+  @coerceBoolean()
+  innerComponent = false;
+
+  @Input()
   dragging = false;
 
   @Input()
@@ -153,8 +158,11 @@ export class ReportComponentComponent implements OnInit, AfterViewInit, OnChange
   @coerceBoolean()
   last = false;
 
+  @Input()
+  context: ReportComponentContext;
+
   @Output()
-  edit = new EventEmitter();
+  edit = new EventEmitter<ReportComponentConfig>();
 
   @Output()
   makeCopy = new EventEmitter();
@@ -172,6 +180,13 @@ export class ReportComponentComponent implements OnInit, AfterViewInit, OnChange
   @HostBinding('class.tb-selected')
   @Input()
   selected = false;
+
+  @HostBinding('class.tb-child-selected')
+  @Input()
+  childSelected = false;
+
+  @HostBinding('class.tb-report-component-container')
+  reportComponentsContainer = false;
 
   public get isPlainFormat(): boolean {
     return this.format === TbReportFormat.CSV;
@@ -196,6 +211,7 @@ export class ReportComponentComponent implements OnInit, AfterViewInit, OnChange
     if (this.typeData) {
       const compRef = this.reportPreviewContainer.viewContainerRef.createComponent(this.typeData.previewComponent);
       this.reportComponentPreview = compRef.instance;
+      this.reportComponentPreview.context = this.context;
       this.reportComponentPreview.reportComponent = this.reportComponent;
       this.reportComponentPreview.format = this.format;
       if (this.typeData.previewContext) {
@@ -207,6 +223,13 @@ export class ReportComponentComponent implements OnInit, AfterViewInit, OnChange
         takeUntilDestroyed(this.destroyRef)
       ).subscribe(() => {
         this.updateComponentLayout();
+      });
+    }
+    if (isReportComponentContainer(this.reportComponentPreview)) {
+      this.reportComponentsContainer = true;
+      this.reportComponentPreview.componentEdit.pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((component) => {
+        this.edit.emit(component);
       });
     }
     this.initEditReportComponentTooltip();
@@ -244,7 +267,7 @@ export class ReportComponentComponent implements OnInit, AfterViewInit, OnChange
     if (event) {
       event.stopPropagation();
     }
-    this.edit.emit();
+    this.edit.emit(this.reportComponent);
   }
 
   onCopy(event: MouseEvent) {
@@ -322,6 +345,29 @@ export class ReportComponentComponent implements OnInit, AfterViewInit, OnChange
     this.updateComponentLayout();
   }
 
+  public childComponentUpdated(component: ReportComponentConfig): boolean {
+    if (isReportComponentContainer(this.reportComponentPreview)) {
+      return this.reportComponentPreview.childComponentUpdated(component);
+    }
+    return false;
+  }
+
+  public childComponentSelected(component: ReportComponentConfig): boolean {
+    if (isReportComponentContainer(this.reportComponentPreview)) {
+      this.childSelected = this.reportComponentPreview.childComponentSelected(component);
+      return this.childSelected;
+    }
+    return false;
+  }
+
+  public deselect(): void {
+    this.selected = false;
+    this.childSelected = false;
+    if (isReportComponentContainer(this.reportComponentPreview)) {
+      this.reportComponentPreview.deselectChildren();
+    }
+  }
+
   private initEditReportComponentTooltip() {
     let componentRef: ComponentRef<EditReportComponentTooltipComponent>;
     const parent = this.reportComponents.element.nativeElement;
@@ -346,9 +392,14 @@ export class ReportComponentComponent implements OnInit, AfterViewInit, OnChange
         functionPosition: (instance, helper, position) => {
           const clientRect = helper.origin.getBoundingClientRect();
           const container = parent.getBoundingClientRect();
-          position.coord.left = Math.max(0,clientRect.right - position.size.width - container.left);
-          position.coord.top = position.coord.top - container.top;
+
+          position.coord.left = Math.max(0, clientRect.right - position.size.width - container.left);
           position.target = clientRect.right;
+          position.coord.top = position.coord.top - container.top;
+          if (this.innerComponent) {
+            position.coord.left -= (clientRect.width / 2 - position.size.width / 2);
+            position.coord.top += position.size.height;
+          }
           return position;
         },
         functionReady: (_instance, helper) => {
@@ -442,6 +493,9 @@ export abstract class AbstractReportComponentPreview<C extends ReportComponentCo
   width = '100%';
 
   @Input()
+  context: ReportComponentContext;
+
+  @Input()
   reportComponent: C;
 
   @Input()
@@ -468,3 +522,24 @@ export abstract class AbstractReportComponentPreview<C extends ReportComponentCo
   protected onComponentUpdated() {}
 
 }
+
+@Directive()
+export abstract class AbstractReportComponentPreviewContainer<C extends ReportComponentConfig = ReportComponentConfig>
+  extends AbstractReportComponentPreview<C> {
+
+  @Output()
+  componentEdit = new EventEmitter<ReportComponentConfig>();
+
+  abstract childComponentUpdated(reportComponent: ReportComponentConfig): boolean;
+
+  abstract deselectChildren(): void;
+
+  abstract childComponentSelected(reportComponent: ReportComponentConfig): boolean
+
+}
+
+export const isReportComponentContainer = (component: AbstractReportComponentPreview): component is AbstractReportComponentPreviewContainer => {
+  const previewComponent = (component as any);
+  return previewComponent &&
+    previewComponent.childComponentUpdated && isFunction(previewComponent.childComponentUpdated);
+};

@@ -30,33 +30,34 @@
     OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 
 -->
-<div class="tb-report-component-library" #libraryDragOriginList cdkDropList
-     [class.no-padding]="nestedLibrary"
-     [cdkDropListConnectedTo]="context.dragDropCtx.dropLists"
-     [cdkDropListEnterPredicate]="dropListEnterPredicate"
-     [cdkDropListSortingDisabled]="true">
-  @for (id of reportComponentIds; track id) {
-    <div class="tb-report-component-library-item">
-      <div class="tb-report-component-library-item-title">{{ reportComponentsLibrary.get(id).title | translate }}</div>
-      <div cdkDrag
-           [cdkDragData]="id"
-           (cdkDragStarted)="dragStarted($event)"
-           (cdkDragEnded)="dragEnded()"
-           (cdkDragEntered)="dragEntered()"
-           (cdkDragMoved)="dragMoved($event)"
-           (cdkDragReleased)="dragReleased($event)"
-           class="tb-report-component-library-drag-item tb-draggable"
-           [class.nested-library]="nestedLibrary">
-        <div *cdkDragPlaceholder>
-            <div class="tb-report-component-placeholder"></div>
-            <div class="tb-report-component-library-drag-item" [class.nested-library]="nestedLibrary"
-                 style="display: none;">
-              <img class="tb-report-component-library-item-preview" [src]="reportComponentsLibrary.get(id).previewImage">
-            </div>
-        </div>
-        <img class="tb-report-component-library-item-preview" [src]="reportComponentsLibrary.get(id).previewImage">
-      </div>
-    </div>
-  }
-</div>
-<div class="tb-report-component-library tb-drag-active-list" [class.no-padding]="nestedLibrary" #libraryDragActiveList></div>
+<table class="tb-two-blocks-preview" #blocksContainer
+       [style.min-height.px]="blockHeight">
+  <colgroup>
+    <col [style.width]="leftWidth">
+    <col [style.width]="rightWidth">
+  </colgroup>
+  <tr>
+    <td>
+      <tb-report-drop-block
+        #leftBlock
+        [context]="context"
+        [format]="format"
+        [component]="reportComponent.leftBlock"
+        (componentEdit)="onComponentEdit(true)"
+        (componentRemoved)="componentRemove(true)"
+        (componentAdded)="setComponent($event, true)">
+      </tb-report-drop-block>
+    </td>
+    <td>
+      <tb-report-drop-block
+        #rightBlock
+        [context]="context"
+        [format]="format"
+        [component]="reportComponent.rightBlock"
+        (componentEdit)="onComponentEdit(false)"
+        (componentRemoved)="componentRemove(false)"
+        (componentAdded)="setComponent($event, false)">
+      </tb-report-drop-block>
+    </td>
+  </tr>
+</table>

@@ -32,7 +32,10 @@
 import { Component, Input, ViewEncapsulation } from '@angular/core';
 import { coerceBoolean } from '@shared/decorators/coercion';
 import { TbReportFormat } from '@shared/models/report.models';
-import { reportComponentLibraryGroups } from '@home/pages/reporting/template/components/report-component.models';
+import {
+  ReportComponentContext,
+  reportComponentLibraryGroups
+} from '@home/pages/reporting/template/components/report-component.models';
 
 @Component({
   selector: 'tb-report-component-library-groups',
@@ -43,6 +46,9 @@ import { reportComponentLibraryGroups } from '@home/pages/reporting/template/com
 export class ReportComponentLibraryGroupsComponent {
 
   reportComponentLibraryGroups = reportComponentLibraryGroups;
+
+  @Input()
+  context: ReportComponentContext;
 
   @Input()
   @coerceBoolean()

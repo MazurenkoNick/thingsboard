@@ -30,24 +30,22 @@
     OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 
 -->
-<div class="tb-drop-list tb-report-components"
-     [style.background]="background"
-     [style.min-height.px]="reportsComponentHeight"
-     cdkDropList
-     cdkDropListOrientation="vertical"
-     cdkDropListAutoScrollStep="20"
-     [cdkDropListData]="reportComponents"
+<div class="tb-drop-list tb-report-drop-block"
+     [style.min-height.px]="reportComponentHeight"
+     [style.height]="fillHeight ? '100%' : ''"
+     [cdkDropListData]="components"
      [cdkDropListConnectedTo]="context.dragDropCtx.dropLists"
      [cdkDropListEnterPredicate]="allowDropPredicate"
      (cdkDropListDropped)="componentDrop($event)"
      (cdkDropListEntered)="dropListEnter($event)"
-     (cdkDropListExited)="dropListExit($event)">
-  <div class="tb-no-reports-components" *ngIf="showNoReportComponents">
+     (cdkDropListExited)="dropListExit($event)"
+     cdkDropList>
+  <div class="tb-no-report-component" *ngIf="showNoReportComponent">
     <div translate class="p-4 text-center">
-      report-template.drop-report-components
+      report-template.drop-report-component
     </div>
   </div>
-  @for (item of reportComponents; track item) {
+  @for (item of components; track item) {
     <div cdkDrag class="tb-draggable tb-report-component-draggable"
          #reportComponentDrag
          [cdkDragData]="item"
@@ -56,14 +54,11 @@
          (cdkDragStarted)="componentDragStarted($event)"
          (cdkDragEnded)="componentDragEnded()">
       <tb-report-component [reportComponent]="item"
+                           innerComponent
                            [context]="context"
                            [format]="format"
-                           [last]="$last"
-                           [scale]="scale"
-                           [pageMarginLeft]="marginLeft"
-                           [pageMarginRight]="marginRight"
                            [width]="reportComponentDrag.offsetWidth"
-                           (edit)="onComponentEdit($event)"
+                           (edit)="onComponentEdit(item)"
                            (makeCopy)="duplicateComponent(item)"
                            (remove)="componentRemove(item)"></tb-report-component>
     </div>

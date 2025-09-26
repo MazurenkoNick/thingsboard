@@ -87,6 +87,7 @@ export enum ReportComponentType {
   DASHBOARD = 'DASHBOARD',
   IMAGE = 'IMAGE',
   SUB_REPORT = 'SUB_REPORT',
+  TWO_BLOCKS = 'TWO_BLOCKS',
   DIVIDER = 'DIVIDER',
   PAGE_BREAK = 'PAGE_BREAK'
 }
@@ -982,6 +983,13 @@ export interface SubReportReportComponentConfig extends DataReportComponentConfi
   templateId: ReportTemplateId;
   avoidPageBreakInside: boolean;
   type: ReportComponentType.SUB_REPORT;
+}
+
+export interface TwoBlocksReportComponentConfig extends LayoutReportComponentConfig {
+  leftBlock?: ReportComponentConfig;
+  rightBlock?: ReportComponentConfig;
+  splitPosition: number;
+  type:  ReportComponentType.TWO_BLOCKS;
 }
 
 export enum BorderLength {

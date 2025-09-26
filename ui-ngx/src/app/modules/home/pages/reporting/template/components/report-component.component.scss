@@ -51,6 +51,13 @@
       pointer-events: none;
     }
   }
+  &.tb-report-component-container {
+    &.tb-child-selected {
+      > .tb-report-component {
+        overflow: visible;
+      }
+    }
+  }
 }
 
 .cdk-drag-preview {

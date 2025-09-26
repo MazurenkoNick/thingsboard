@@ -94,6 +94,9 @@ import {
 import {
   ReportComponentLibraryGroupsComponent
 } from '@home/pages/reporting/template/components/report-component-library-groups.component';
+import { TwoBlocksConfigComponent } from '@home/pages/reporting/template/components/two-blocks-config.component';
+import { ReportDropBlockComponent } from '@home/pages/reporting/template/components/report-drop-block.component';
+import { TwoBlocksPreviewComponent } from '@home/pages/reporting/template/components/two-blocks-preview.component';
 
 @NgModule({
   providers: [
@@ -136,7 +139,10 @@ import {
     TimeSeriesChartConfigComponent,
     LatestChartPreviewComponent,
     LatestChartConfigComponent,
-    ReportComponentConfigComponent
+    ReportComponentConfigComponent,
+    ReportDropBlockComponent,
+    TwoBlocksConfigComponent,
+    TwoBlocksPreviewComponent
   ],
   imports: [
     CommonModule,

@@ -30,31 +30,34 @@
 ///
 
 import {
+  AfterViewInit,
   Component,
   ElementRef,
   EventEmitter,
   HostBinding,
   Input,
-  OnChanges,
+  OnChanges, OnDestroy,
   OnInit,
   Output,
   QueryList,
-  SimpleChanges,
+  SimpleChanges, ViewChild,
   ViewChildren,
   ViewEncapsulation
 } from '@angular/core';
 import { ReportComponentConfig } from '@shared/models/report-component.models';
 import {
+  CdkDrag,
   CdkDragDrop,
   CdkDragEnter,
-  CdkDragExit,
-  CdkDragStart,
+  CdkDragExit, CdkDragMove, CdkDragRelease,
+  CdkDragStart, CdkDropList,
   moveItemInArray,
   transferArrayItem
 } from '@angular/cdk/drag-drop';
 import { deepClone } from '@core/utils';
 import { ReportComponentComponent } from '@home/pages/reporting/template/components/report-component.component';
 import {
+  ReportComponentContext,
   reportComponentsLibrary,
   reportComponentTypesData
 } from '@home/pages/reporting/template/components/report-component.models';
@@ -66,7 +69,9 @@ import { TbReportFormat } from '@shared/models/report.models';
   styleUrls: ['./report-components.component.scss'],
   encapsulation: ViewEncapsulation.None
 })
-export class ReportComponentsComponent implements OnInit, OnChanges {
+export class ReportComponentsComponent implements OnInit, OnChanges, AfterViewInit, OnDestroy {
+
+  @ViewChild(CdkDropList) dropList?: CdkDropList;
 
   @HostBinding('style.position')
   position = 'relative';
@@ -104,6 +109,9 @@ export class ReportComponentsComponent implements OnInit, OnChanges {
   @Input()
   reportComponents: ReportComponentConfig[];
 
+  @Input()
+  context: ReportComponentContext;
+
   @Output()
   componentsChanged = new EventEmitter();
 
@@ -120,6 +128,10 @@ export class ReportComponentsComponent implements OnInit, OnChanges {
 
   showNoReportComponents = false;
 
+  allowDropPredicate = (drag: CdkDrag, drop: CdkDropList) => {
+    return this.isDropAllowed(drag, drop);
+  };
+
   constructor(public element: ElementRef<HTMLElement>) {}
 
   ngOnInit() {
@@ -134,6 +146,18 @@ export class ReportComponentsComponent implements OnInit, OnChanges {
           this.updateListHeight();
         }
       }
+    }
+  }
+
+  ngAfterViewInit() {
+    if (this.dropList) {
+      this.context.dragDropCtx.register(this.dropList);
+    }
+  }
+
+  ngOnDestroy() {
+    if (this.dropList) {
+      this.context.dragDropCtx.deregister(this.dropList);
     }
   }
 
@@ -158,7 +182,8 @@ export class ReportComponentsComponent implements OnInit, OnChanges {
           if (libraryItem) {
             const reportComponent = deepClone(libraryItem.defaultConfig);
             this.reportComponents.splice(event.currentIndex, 0, reportComponent);
-            if (reportComponentTypesData.getReportComponentTypeData(reportComponent.type, reportComponent.subType).editable) {
+            const componentData = reportComponentTypesData.getReportComponentTypeData(reportComponent.type, reportComponent.subType);
+            if (componentData.editable && !componentData.container) {
               setTimeout(() => {
                 this.componentEdit.emit(reportComponent);
               }, 0);
@@ -171,11 +196,31 @@ export class ReportComponentsComponent implements OnInit, OnChanges {
             event.previousIndex,
             event.currentIndex,
           );
+          const prevContainer = event.previousContainer as any;
+          if (prevContainer.nestedReportComponentContainer) {
+            prevContainer.reportComponentRemoved();
+          }
         }
       }
     }
     this.updateListHeight();
     this.componentsChanged.emit();
+  }
+
+  isDropAllowed(drag: CdkDrag, drop: CdkDropList) {
+    if (this.context.dragDropCtx.currentHoverDropListId == null) {
+      return true;
+    }
+
+    return drop.id === this.context.dragDropCtx.currentHoverDropListId;
+  }
+
+  dragMoved(event: CdkDragMove) {
+    this.context.dragDropCtx.dragMoved(event);
+  }
+
+  dragReleased(event: CdkDragRelease) {
+    this.context.dragDropCtx.dragReleased(event);
   }
 
   onComponentEdit(reportComponent: ReportComponentConfig): void {
@@ -210,18 +255,33 @@ export class ReportComponentsComponent implements OnInit, OnChanges {
         }
       }
     }
+    const containers = this.reportComponentComponents.
+          filter(component => component.reportComponentsContainer);
+    for (const container of containers) {
+      if (container.childComponentUpdated(reportComponent)) {
+        return true;
+      }
+    }
     return false;
   }
 
   componentSelected(reportComponent: ReportComponentConfig) {
-    this.reportComponentComponents.forEach(component => component.selected = false);
+    this.reportComponentComponents.forEach(component => component.deselect());
     if (reportComponent && this.reportComponents) {
       const index = this.reportComponents.indexOf(reportComponent);
       if (index > -1) {
         const component = this.reportComponentComponents.get(index);
         if (component) {
           component.selected = true;
+          return;
         }
+      }
+    }
+    const containers = this.reportComponentComponents.
+          filter(component => component.reportComponentsContainer);
+    for (const container of containers) {
+      if (container.childComponentSelected(reportComponent)) {
+        return;
       }
     }
   }

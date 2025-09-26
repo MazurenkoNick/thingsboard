@@ -7287,6 +7287,7 @@
         "report-components": "Report components",
         "search-components": "Search components",
         "drop-report-components": "Drop report components from sidebar here",
+        "drop-report-component": "Drop report component here",
         "header": "Header",
         "header-disabled": "Header disabled",
         "first-page-header": "First page header",
@@ -7434,6 +7435,10 @@
                 "type": "Subreport",
                 "no-sub-report": "No subreport selected",
                 "avoid-page-break-inside": "Avoid page break inside"
+            },
+            "two-blocks": {
+                "type": "2 blocks",
+                "split-position": "Relative split position"
             },
             "text-section": "Text section",
             "text-image": "Text + image",
