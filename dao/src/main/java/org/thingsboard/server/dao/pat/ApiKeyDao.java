@@ -28,30 +28,23 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.service.security.auth.jwt.extractor;
+package org.thingsboard.server.dao.pat;
 
-import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.security.authentication.AuthenticationServiceException;
-import org.springframework.stereotype.Component;
-import org.thingsboard.server.common.data.StringUtils;
-import org.thingsboard.server.config.ThingsboardSecurityConfiguration;
+import org.thingsboard.server.common.data.id.TenantId;
+import org.thingsboard.server.common.data.id.UserId;
+import org.thingsboard.server.common.data.pat.ApiKey;
+import org.thingsboard.server.dao.Dao;
 
-@Component(value="jwtQueryTokenExtractor")
-public class JwtQueryTokenExtractor implements TokenExtractor {
+import java.util.Set;
 
-    @Override
-    public String extract(HttpServletRequest request) {
-        String token = null;
-        if (request.getParameterMap() != null && !request.getParameterMap().isEmpty()) {
-            String[] tokenParamValue = request.getParameterMap().get(ThingsboardSecurityConfiguration.JWT_TOKEN_QUERY_PARAM);
-            if (tokenParamValue != null && tokenParamValue.length == 1) {
-                token = tokenParamValue[0];
-            }
-        }
-        if (StringUtils.isBlank(token)) {
-            throw new AuthenticationServiceException("Authorization query parameter cannot be blank!");
-        }
+public interface ApiKeyDao extends Dao<ApiKey> {
 
-        return token;
-    }
+    ApiKey findByHash(String hash);
+
+    Set<String> deleteByTenantId(TenantId tenantId);
+
+    Set<String> deleteByUserId(TenantId tenantId, UserId userId);
+
+    int deleteAllByExpirationTimeBefore(long ts);
+
 }

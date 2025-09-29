@@ -75,7 +75,7 @@ public class RefreshTokenAuthenticationProvider implements AuthenticationProvide
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
         Assert.notNull(authentication, "No authentication data provided");
         RawAccessJwtToken rawAccessToken = (RawAccessJwtToken) authentication.getCredentials();
-        SecurityUser unsafeUser = tokenFactory.parseRefreshToken(rawAccessToken.getToken());
+        SecurityUser unsafeUser = tokenFactory.parseRefreshToken(rawAccessToken.token());
         UserPrincipal principal = unsafeUser.getUserPrincipal();
 
         SecurityUser securityUser;
@@ -85,7 +85,7 @@ public class RefreshTokenAuthenticationProvider implements AuthenticationProvide
             securityUser = authenticateByPublicId(principal.getValue());
         }
         securityUser.setSessionId(unsafeUser.getSessionId());
-        if (tokenOutdatingService.isOutdated(rawAccessToken.getToken(), securityUser.getId())) {
+        if (tokenOutdatingService.isOutdated(rawAccessToken.token(), securityUser.getId())) {
             throw new CredentialsExpiredException("Token is outdated");
         }
 
@@ -120,9 +120,7 @@ public class RefreshTokenAuthenticationProvider implements AuthenticationProvide
             throw new BadCredentialsException("Failed to get user permissions", e);
         }
 
-        SecurityUser securityUser = new SecurityUser(user, userCredentials.isEnabled(), userPrincipal, userPermissions);
-
-        return securityUser;
+        return new SecurityUser(user, userCredentials.isEnabled(), userPrincipal, userPermissions);
     }
 
     private SecurityUser authenticateByPublicId(String publicId) {
@@ -159,13 +157,12 @@ public class RefreshTokenAuthenticationProvider implements AuthenticationProvide
             throw new BadCredentialsException("Failed to get user permissions", e);
         }
 
-        SecurityUser securityUser = new SecurityUser(user, true, userPrincipal, userPermissions);
-
-        return securityUser;
+        return new SecurityUser(user, true, userPrincipal, userPermissions);
     }
 
     @Override
     public boolean supports(Class<?> authentication) {
         return (RefreshAuthenticationToken.class.isAssignableFrom(authentication));
     }
+
 }

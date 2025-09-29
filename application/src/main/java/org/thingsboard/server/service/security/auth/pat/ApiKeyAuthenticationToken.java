@@ -28,10 +28,49 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.service.security.auth.jwt.extractor;
+package org.thingsboard.server.service.security.auth.pat;
 
-import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.security.authentication.AbstractAuthenticationToken;
+import org.thingsboard.server.service.security.model.SecurityUser;
+import org.thingsboard.server.service.security.model.token.RawApiKeyToken;
 
-public interface TokenExtractor {
-    String extract(HttpServletRequest request);
+import java.io.Serial;
+
+public class ApiKeyAuthenticationToken extends AbstractAuthenticationToken {
+
+    @Serial
+    private static final long serialVersionUID = 2978710889397403536L;
+
+    private RawApiKeyToken rawApiKeyToken;
+    private SecurityUser securityUser;
+
+    public ApiKeyAuthenticationToken(RawApiKeyToken raw) {
+        super(null);
+        this.rawApiKeyToken = raw;
+        setAuthenticated(false);
+    }
+
+    public ApiKeyAuthenticationToken(SecurityUser securityUser) {
+        super(securityUser.getAuthorities());
+        this.eraseCredentials();
+        this.securityUser = securityUser;
+        super.setAuthenticated(true);
+    }
+
+    @Override
+    public Object getCredentials() {
+        return rawApiKeyToken;
+    }
+
+    @Override
+    public Object getPrincipal() {
+        return this.securityUser;
+    }
+
+    @Override
+    public void eraseCredentials() {
+        super.eraseCredentials();
+        this.rawApiKeyToken = null;
+    }
+
 }

@@ -67,7 +67,7 @@ public class RemoteTbReportCtxProvider implements TbReportCtxProvider {
                 .timeZone(task.getTimezone())
                 .accessToken(task.getAccessToken())
                 .accessTokenExpTs(task.getAccessTokenExpirationTs())
-                .restClient(new RestClient(new RestTemplate(), tbCoreBaseUrl, task.getAccessToken()))
+                .restClient(new RestClient(new RestTemplate(), tbCoreBaseUrl, RestClient.AuthType.JWT, task.getAccessToken()))
                 .reportCreatedTime(formatTimestamp(System.currentTimeMillis(), task.getReportTemplateConfig().getTimeDataPattern(), task.getTimezone()))
                 .build();
     }

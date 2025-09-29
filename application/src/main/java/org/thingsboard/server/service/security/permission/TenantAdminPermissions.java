@@ -114,6 +114,7 @@ public class TenantAdminPermissions extends AbstractPermissions {
         put(Resource.REPORT_TEMPLATE, tenantStandaloneEntityPermissionChecker);
         put(Resource.REPORT, tenantStandaloneEntityPermissionChecker);
         put(Resource.AI_MODEL, tenantStandaloneEntityPermissionChecker);
+        put(Resource.API_KEY, tenantStandaloneEntityPermissionChecker);
     }
 
     public static final PermissionChecker tenantStandaloneEntityPermissionChecker = new PermissionChecker() {

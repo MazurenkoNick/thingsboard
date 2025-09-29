@@ -32,6 +32,7 @@ package org.thingsboard.server.common.data;
 
 import lombok.Getter;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 
 import java.util.Arrays;
 import java.util.EnumSet;
@@ -101,7 +102,8 @@ public enum EntityType {
         public String getNormalName() {
             return "AI model";
         }
-    };
+    },
+    API_KEY(44);
 
     @Getter
     private final int protoNumber; // Corresponds to EntityTypeProto
@@ -110,7 +112,7 @@ public enum EntityType {
     @Getter
     private final boolean groupEntityType;
     @Getter
-    private final String normalName = StringUtils.capitalize(StringUtils.removeStart(name(), "TB_")
+    private final String normalName = StringUtils.capitalize(Strings.CS.removeStart(name(), "TB_")
             .toLowerCase().replaceAll("_", " "));
 
     public static final List<EntityType> GROUP_ENTITY_TYPES = EnumSet.allOf(EntityType.class).stream()

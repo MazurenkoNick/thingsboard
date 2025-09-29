@@ -28,32 +28,34 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.service.security.auth.jwt.extractor;
+package org.thingsboard.server.common.data.id;
 
-import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.security.authentication.AuthenticationServiceException;
-import org.springframework.stereotype.Component;
-import org.thingsboard.server.common.data.StringUtils;
-import org.thingsboard.server.config.ThingsboardSecurityConfiguration;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
+import org.thingsboard.server.common.data.EntityType;
 
-@Component(value="jwtHeaderTokenExtractor")
-public class JwtHeaderTokenExtractor implements TokenExtractor {
-    public static final String HEADER_PREFIX = "Bearer ";
+import java.io.Serial;
+import java.util.UUID;
+
+public class ApiKeyId extends UUIDBased implements EntityId {
+
+    @Serial
+    private static final long serialVersionUID = -273913539653684641L;
+
+    @JsonCreator
+    public ApiKeyId(@JsonProperty("id") UUID id) {
+        super(id);
+    }
+
+    public static ApiKeyId fromString(String secretId) {
+        return new ApiKeyId(UUID.fromString(secretId));
+    }
 
     @Override
-    public String extract(HttpServletRequest request) {
-        String header = request.getHeader(ThingsboardSecurityConfiguration.JWT_TOKEN_HEADER_PARAM);
-        if (StringUtils.isBlank(header)) {
-            header = request.getHeader(ThingsboardSecurityConfiguration.JWT_TOKEN_HEADER_PARAM_V2);
-            if (StringUtils.isBlank(header)) {
-                throw new AuthenticationServiceException("Authorization header cannot be blank!");
-            }
-        }
-
-        if (header.length() < HEADER_PREFIX.length()) {
-            throw new AuthenticationServiceException("Invalid authorization header size.");
-        }
-
-        return header.substring(HEADER_PREFIX.length(), header.length());
+    @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "string", example = "API_KEY", allowableValues = "API_KEY")
+    public EntityType getEntityType() {
+        return EntityType.API_KEY;
     }
+
 }

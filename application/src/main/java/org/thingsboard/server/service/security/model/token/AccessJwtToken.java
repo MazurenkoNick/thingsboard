@@ -32,23 +32,25 @@ package org.thingsboard.server.service.security.model.token;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.jsonwebtoken.Claims;
+import lombok.Getter;
 import org.thingsboard.server.common.data.security.model.JwtToken;
 
 public final class AccessJwtToken implements JwtToken {
-    private final String rawToken;
-    @JsonIgnore
-    private transient Claims claims;
 
-    protected AccessJwtToken(final String token, Claims claims) {
-        this.rawToken = token;
+    @Getter
+    private final String token;
+    @JsonIgnore
+    @Getter
+    private final transient Claims claims;
+
+    AccessJwtToken(final String token, Claims claims) {
+        this.token = token;
         this.claims = claims;
     }
 
-    public String getToken() {
-        return this.rawToken;
+    @Override
+    public String token() {
+        return this.token;
     }
 
-    public Claims getClaims() {
-        return claims;
-    }
 }

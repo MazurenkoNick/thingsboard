@@ -167,7 +167,7 @@ public class DefaultAccessControlService implements AccessControlService {
             }
         }
         Optional<PermissionChecker> permissionChecker = permissions.getPermissionChecker(resource);
-        if (!permissionChecker.isPresent()) {
+        if (permissionChecker.isEmpty()) {
             if (throwException) {
                 permissionDenied();
             } else {
@@ -187,20 +187,19 @@ public class DefaultAccessControlService implements AccessControlService {
                 ThingsboardErrorCode.PERMISSION_DENIED);
     }
 
-    private <I extends EntityId, T extends TenantEntity>
-        void entityOperationPermissionDenied(Resource resource, Operation operation, I entityId, T entity) throws ThingsboardException {
-            EntityType entityType = entity != null ? entity.getEntityType() : entityId.getEntityType();
-            String message = "You don't have permission to perform '" + operation + "' operation with " + entityType;
-            if (entity instanceof HasName) {
-                message += " '" + ((HasName)entity).getName() + "'";
-            }
-            message += "!";
-            throw new ThingsboardException(message,
+    private <I extends EntityId, T extends TenantEntity> void entityOperationPermissionDenied(Resource resource, Operation operation, I entityId, T entity) throws ThingsboardException {
+        EntityType entityType = entity != null ? entity.getEntityType() : entityId.getEntityType();
+        String message = "You don't have permission to perform '" + operation + "' operation with " + entityType;
+        if (entity instanceof HasName) {
+            message += " '" + ((HasName) entity).getName() + "'";
+        }
+        message += "!";
+        throw new ThingsboardException(message,
                 ThingsboardErrorCode.PERMISSION_DENIED);
     }
 
     private void entityGroupOperationPermissionDenied(Operation operation, EntityGroup entityGroup) throws ThingsboardException {
-        throw new ThingsboardException("You don't have permission to perform '" + operation + "' operation with "+ entityGroup.getType() +" group '" + entityGroup.getName() + "'!",
+        throw new ThingsboardException("You don't have permission to perform '" + operation + "' operation with " + entityGroup.getType() + " group '" + entityGroup.getName() + "'!",
                 ThingsboardErrorCode.PERMISSION_DENIED);
     }
 
