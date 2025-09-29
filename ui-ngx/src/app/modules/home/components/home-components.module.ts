@@ -300,6 +300,8 @@ import {
 import { CancelTaskDialogComponent } from '@home/components/task/cancel-task-dialog.component';
 import { CheckConnectivityDialogComponent } from '@home/components/ai-model/check-connectivity-dialog.component';
 import { AIModelDialogComponent } from '@home/components/ai-model/ai-model-dialog.component';
+import { ResourcesDialogComponent } from "@home/components/resources/resources-dialog.component";
+import { ResourcesLibraryComponent } from "@home/components/resources/resources-library.component";
 
 @NgModule({
   declarations:
@@ -487,6 +489,8 @@ import { AIModelDialogComponent } from '@home/components/ai-model/ai-model-dialo
       CancelTaskDialogComponent,
       CheckConnectivityDialogComponent,
       AIModelDialogComponent,
+      ResourcesDialogComponent,
+      ResourcesLibraryComponent,
     ],
   imports: [
     CommonModule,
@@ -664,6 +668,8 @@ import { AIModelDialogComponent } from '@home/components/ai-model/ai-model-dialo
     CancelTaskDialogComponent,
     CheckConnectivityDialogComponent,
     AIModelDialogComponent,
+    ResourcesDialogComponent,
+    ResourcesLibraryComponent,
   ],
   providers: [
     WidgetComponentService,

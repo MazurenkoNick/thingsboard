@@ -832,6 +832,9 @@ cache:
     etag:
       timeToLiveInMinutes: "${CACHE_SPECS_CUSTOM_MENU_ETAGS_TTL:44640}" # Custom Menu ETags cache TTL in minutes (one month by default)
       maxSize: "${CACHE_SPECS_CUSTOM_MENU_ETAGS_MAX_SIZE:1000000}" # 0 means the cache is disabled
+  tbResourceData:
+    timeToLiveInMinutes: "${CACHE_SPECS_RESOURCE_DATA_TTL:10080}" # TB resource data cache TTL
+    maxSize: "${CACHE_SPECS_RESOURCE_DATA_MAX_SIZE:100000}" # 0 means the cache is disabled
 
 # Spring data parameters
 spring.data.redis.repositories.enabled: false # Disable this because it is not required.
