@@ -30,5 +30,6 @@
     OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 
 -->
-<img (click)="gotoThingsboard()" [src]="logo"
-         aria-label="logo" class="tb-logo-title flex-1"/>
+<a [routerLink]="isLogin ? '' : logoLink" (click)="onLogoClick()">
+  <img [src]="logoSrc" aria-label="logo" alt="Logo"/>
+</a>
