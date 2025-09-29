@@ -49,6 +49,13 @@ export interface AiModel extends Omit<BaseData<AiModelId>, 'label'>, HasTenantId
       region?: string;
       accessKeyId?: string;
       secretAccessKey?: string;
+      baseUrl?: string;
+      auth?: {
+        type: AuthenticationType;
+        username?: string;
+        password?: string;
+        token?: string
+      }
     };
     modelId: string;
     temperature?: number;
@@ -57,6 +64,7 @@ export interface AiModel extends Omit<BaseData<AiModelId>, 'label'>, HasTenantId
     frequencyPenalty?: number;
     presencePenalty?: number;
     maxOutputTokens?: number;
+    contextLength?: number;
   }
 }
 
@@ -72,7 +80,8 @@ export enum AiProvider {
   MISTRAL_AI = 'MISTRAL_AI',
   ANTHROPIC = 'ANTHROPIC',
   AMAZON_BEDROCK = 'AMAZON_BEDROCK',
-  GITHUB_MODELS = 'GITHUB_MODELS'
+  GITHUB_MODELS = 'GITHUB_MODELS',
+  OLLAMA = 'OLLAMA'
 }
 
 export const AiProviderTranslations = new Map<AiProvider, string>(
@@ -84,7 +93,8 @@ export const AiProviderTranslations = new Map<AiProvider, string>(
     [AiProvider.MISTRAL_AI , 'ai-models.ai-providers.mistral-ai'],
     [AiProvider.ANTHROPIC , 'ai-models.ai-providers.anthropic'],
     [AiProvider.AMAZON_BEDROCK , 'ai-models.ai-providers.amazon-bedrock'],
-    [AiProvider.GITHUB_MODELS , 'ai-models.ai-providers.github-models']
+    [AiProvider.GITHUB_MODELS , 'ai-models.ai-providers.github-models'],
+    [AiProvider.OLLAMA , 'ai-models.ai-providers.ollama']
   ]
 );
 
@@ -99,10 +109,11 @@ export const ProviderFieldsAllList = [
   'serviceVersion',
   'region',
   'accessKeyId',
-  'secretAccessKey'
+  'secretAccessKey',
+  'baseUrl'
 ];
 
-export const ModelFieldsAllList = ['temperature', 'topP', 'topK', 'frequencyPenalty', 'presencePenalty', 'maxOutputTokens'];
+export const ModelFieldsAllList = ['temperature', 'topP', 'topK', 'frequencyPenalty', 'presencePenalty', 'maxOutputTokens', 'contextLength'];
 
 export const AiModelMap = new Map<AiProvider, { modelList: string[], providerFieldsList: string[], modelFieldsList: string[] }>([
   [
@@ -206,6 +217,14 @@ export const AiModelMap = new Map<AiProvider, { modelList: string[], providerFie
       modelFieldsList: ['temperature', 'topP', 'frequencyPenalty', 'presencePenalty', 'maxOutputTokens'],
     },
   ],
+  [
+    AiProvider.OLLAMA,
+    {
+      modelList: [],
+      providerFieldsList: ['baseUrl'],
+      modelFieldsList: ['temperature', 'topP', 'topK', 'maxOutputTokens', 'contextLength'],
+    },
+  ],
 ]);
 
 export const AiRuleNodeResponseFormatTypeOnlyText: AiProvider[] = [AiProvider.AMAZON_BEDROCK, AiProvider.ANTHROPIC, AiProvider.GITHUB_MODELS];
@@ -231,7 +250,8 @@ export interface AiModelWithUserMsg {
       projectId?: string;
       location?: string;
       serviceAccountKey?: string;
-      fileName?: string
+      fileName?: string;
+      baseUrl?: string;
     };
     modelId: string;
     maxRetries: number;
@@ -242,4 +262,9 @@ export interface AiModelWithUserMsg {
 export interface CheckConnectivityResult {
   status: string;
   errorDetails: string;
+}
+export enum AuthenticationType {
+  NONE = 'NONE',
+  BASIC = 'BASIC',
+  TOKEN = 'TOKEN'
 }
