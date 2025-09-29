@@ -123,10 +123,10 @@ export class AIModelDialogComponent extends DialogComponent<AIModelDialogCompone
           projectId: [this.data.AIModel ? this.data.AIModel.configuration.providerConfig?.projectId : '', [Validators.required, Validators.pattern(/.*\S.*/)]],
           location: [this.data.AIModel ? this.data.AIModel.configuration.providerConfig?.location : '', [Validators.required, Validators.pattern(/.*\S.*/)]],
           serviceAccountKey: [this.data.AIModel ? this.data.AIModel.configuration.providerConfig?.serviceAccountKey : '', [Validators.required]],
-          fileName: [this.data.AIModel ? this.data.AIModel.configuration.providerConfig?.fileName : '', [Validators.required]],
+          fileName: [this.data.AIModel ? this.data.AIModel.configuration.providerConfig?.fileName : ''],
           region: [this.data.AIModel ? this.data.AIModel.configuration.providerConfig?.region : '', [Validators.required, Validators.pattern(/.*\S.*/)]],
           accessKeyId: [this.data.AIModel ? this.data.AIModel.configuration.providerConfig?.accessKeyId : '', [Validators.required, Validators.pattern(/.*\S.*/)]],
-          secretAccessKey: [this.data.AIModel ? this.data.AIModel.configuration.providerConfig?.secretAccessKey : '', [Validators.required, Validators.pattern(/.*\S.*/)]],
+          secretAccessKey: [this.data.AIModel ? this.data.AIModel.configuration.providerConfig?.secretAccessKey : '', [Validators.required]],
           baseUrl: [this.data.AIModel ? this.data.AIModel.configuration.providerConfig?.baseUrl : '', [Validators.required, Validators.pattern(/.*\S.*/)]],
           auth: this.fb.group({
             type: [this.data.AIModel?.configuration?.providerConfig?.auth?.type ?? AuthenticationType.NONE],
