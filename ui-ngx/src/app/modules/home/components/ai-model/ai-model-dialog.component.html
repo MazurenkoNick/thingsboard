@@ -125,10 +125,20 @@
                 <input matInput formControlName="serviceVersion">
               </mat-form-field>
             }
+            @if (providerFieldsList.includes('baseUrl')) {
+              <mat-form-field class="mat-block flex-1" appearance="outline">
+                <mat-label translate>ai-models.baseurl</mat-label>
+                <input required matInput formControlName="baseUrl">
+                <mat-error *ngIf="aiModelForms.get('configuration.providerConfig.baseUrl').hasError('required') ||
+                  aiModelForms.get('configuration.providerConfig.baseUrl').hasError('pattern')">
+                  {{ 'ai-models.baseurl-required' | translate }}
+                </mat-error>
+              </mat-form-field>
+            }
             @if (providerFieldsList.includes('apiKey')) {
               <tb-secret-key-input formControlName="apiKey" class="mat-block flex-1"
                                    appearance="outline"
-                                   required
+                                   [required]="apiKeyRequired"
                                    label="{{ 'ai-models.api-key' | translate }}"
                                    requiredText="{{ 'ai-models.api-key-required' | translate }}">
               </tb-secret-key-input>
@@ -160,16 +170,6 @@
                                    label="{{ 'ai-models.secret-access-key' | translate }}"
                                    requiredText="{{ 'ai-models.secret-access-key-required' | translate }}">
               </tb-secret-key-input>
-            }
-            @if (providerFieldsList.includes('baseUrl')) {
-              <mat-form-field class="mat-block flex-1" appearance="outline">
-                <mat-label translate>ai-models.baseurl</mat-label>
-                <input required matInput formControlName="baseUrl">
-                <mat-error *ngIf="aiModelForms.get('configuration.providerConfig.baseUrl').hasError('required') ||
-                  aiModelForms.get('configuration.providerConfig.baseUrl').hasError('pattern')">
-                  {{ 'ai-models.baseurl-required' | translate }}
-                </mat-error>
-              </mat-form-field>
             }
             @if (provider === aiProvider.OLLAMA) {
               <div class="tb-form-panel stroked no-gap no-padding-bottom mb-4" formGroupName="auth">
