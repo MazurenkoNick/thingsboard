@@ -77,6 +77,7 @@ import org.thingsboard.server.service.security.permission.OwnersCacheService;
 import org.thingsboard.server.service.telemetry.TelemetrySubscriptionService;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -234,7 +235,7 @@ public class DefaultCalculatedFieldReprocessingService extends AbstractCalculate
         CalculatedFieldState state = ctx.getState();
         if (ctx.getCfCtx().isInitialized() && state.isReady()) {
             log.trace("[{}][{}] Performing calculation for CF {}", ctx.getTenantId(), ctx.getEntityId(), ctx.getCfId());
-            CalculatedFieldResult calculationResult = state.performCalculation(ctx.getCfCtx()).get(cfCalculationResultTimeout, TimeUnit.SECONDS);
+            CalculatedFieldResult calculationResult = state.performCalculation(Collections.emptyMap(), ctx.getCfCtx()).get(cfCalculationResultTimeout, TimeUnit.SECONDS);
             ctx.checkStateSize();
             if (!calculationResult.isEmpty()) {
                 ctx.setLatestResult(new TbPair<>(ts, calculationResult));
@@ -250,7 +251,7 @@ public class DefaultCalculatedFieldReprocessingService extends AbstractCalculate
         if (newArgValues.isEmpty()) {
             log.info("[{}] No argument values to process for CF.", ctx.getCfId());
         }
-        if (ctx.getState().update(ctx.getCfCtx(), newArgValues)) {
+        if (!ctx.getState().update(newArgValues, ctx.getCfCtx()).isEmpty()) {
             return processStateIfReady(ctx, ts);
         } else {
             return Futures.immediateVoidFuture();
@@ -268,7 +269,7 @@ public class DefaultCalculatedFieldReprocessingService extends AbstractCalculate
             Throwable cause = e.getCause();
             throw new RuntimeException(cause.getMessage(), cause);
         }
-        state.update(ctx, arguments);
+        state.update(arguments, ctx);
         log.debug("[{}][{}] Initialized state for CF {}", tenantId, entityId, ctx.getCfId());
         return state;
     }
