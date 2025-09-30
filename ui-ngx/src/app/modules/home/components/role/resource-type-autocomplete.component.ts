@@ -66,6 +66,8 @@ interface ResourceTypeInfo {
 })
 export class ResourceTypeAutocompleteComponent implements ControlValueAccessor, OnInit, AfterViewInit, OnDestroy {
 
+  @Input() isLabelShown:boolean = true;
+  
   resourceTypeFormGroup: UntypedFormGroup;
 
   modelValue: Resource | null;

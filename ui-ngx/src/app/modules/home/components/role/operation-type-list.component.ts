@@ -71,6 +71,8 @@ interface OperationTypeInfo {
 })
 export class OperationTypeListComponent implements ControlValueAccessor, OnInit, AfterViewInit, OnChanges {
 
+  @Input() isLabelShown:boolean = true;
+  
   operationTypeListFormGroup: UntypedFormGroup;
 
   private requiredValue: boolean;
