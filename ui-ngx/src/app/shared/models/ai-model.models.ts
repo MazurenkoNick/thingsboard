@@ -131,7 +131,7 @@ export const AiModelMap = new Map<AiProvider, { modelList: string[], providerFie
         'gpt-4o',
         'gpt-4o-mini',
       ],
-      providerFieldsList: ['apiKey'],
+      providerFieldsList: ['baseUrl', 'apiKey'],
       modelFieldsList: ['temperature', 'topP', 'frequencyPenalty', 'presencePenalty', 'maxOutputTokens'],
     },
   ],
