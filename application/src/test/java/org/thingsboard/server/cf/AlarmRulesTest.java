@@ -76,6 +76,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.testcontainers.shaded.org.awaitility.Awaitility.await;
 
 @Slf4j
@@ -245,8 +246,7 @@ public class AlarmRulesTest extends AbstractControllerTest {
                 AlarmSeverity.CRITICAL, new Condition("return temperature >= temperatureThreshold;", null, null)
         );
 
-        device.setCustomerId(customerId);
-        device = doPost("/api/device", device, Device.class);
+        doPost("/api/owner/CUSTOMER/" + customerId + "/DEVICE/" + device.getId()).andExpect(status().isOk());
         CalculatedField calculatedField = createAlarmCf(deviceId, "High Temperature Alarm",
                 arguments, createRules, null);
         postAttributes(customerId, AttributeScope.SERVER_SCOPE, "{\"temperatureThreshold\":50}");
