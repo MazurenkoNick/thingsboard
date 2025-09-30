@@ -37,7 +37,6 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
 import org.thingsboard.server.dao.model.sql.ApiKeyEntity;
 
-import java.util.Set;
 import java.util.UUID;
 
 public interface ApiKeyRepository extends JpaRepository<ApiKeyEntity, UUID> {
@@ -46,24 +45,14 @@ public interface ApiKeyRepository extends JpaRepository<ApiKeyEntity, UUID> {
 
     @Transactional
     @Modifying
-    @Query(value = """
-                DELETE FROM api_key
-                WHERE tenant_id = :tenantId
-                RETURNING hash
-            """, nativeQuery = true
-    )
-    Set<String> deleteByTenantId(@Param("tenantId") UUID tenantId);
+    @Query("DELETE FROM ApiKeyEntity ak WHERE ak.tenantId = :tenantId")
+    void deleteByTenantId(@Param("tenantId") UUID tenantId);
 
     @Transactional
     @Modifying
-    @Query(value = """
-                DELETE FROM api_key
-                WHERE tenant_id = :tenantId AND user_id = :userId
-                RETURNING hash
-            """, nativeQuery = true
-    )
-    Set<String> deleteByUserId(@Param("tenantId") UUID tenantId,
-                               @Param("userId") UUID userId);
+    @Query("DELETE FROM ApiKeyEntity ak WHERE ak.tenantId = :tenantId AND ak.userId = :userId")
+    void deleteByUserId(@Param("tenantId") UUID tenantId,
+                        @Param("userId") UUID userId);
 
     @Transactional
     @Modifying
