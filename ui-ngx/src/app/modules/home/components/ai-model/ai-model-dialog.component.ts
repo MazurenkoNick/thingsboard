@@ -91,6 +91,7 @@ export class AIModelDialogComponent extends DialogComponent<AIModelDialogCompone
 
   authenticationHint: string;
 
+  apiKeyRequired = true;
   private readonly openAiDefaultBaseUrl = 'https://api.openai.com/v1';
 
   constructor(protected store: Store<AppState>,
@@ -203,8 +204,10 @@ export class AIModelDialogComponent extends DialogComponent<AIModelDialogCompone
   private updateApiKeyValidatorForOpenAIProvider(url: string) {
     if (url !== this.openAiDefaultBaseUrl) {
       this.aiModelForms.get('configuration.providerConfig.apiKey').removeValidators(Validators.required);
+      this.apiKeyRequired = false;
     } else {
       this.aiModelForms.get('configuration.providerConfig.apiKey').addValidators(Validators.required);
+      this.apiKeyRequired = true;
     }
     this.aiModelForms.get('configuration.providerConfig.apiKey').updateValueAndValidity({emitEvent: false});
   }

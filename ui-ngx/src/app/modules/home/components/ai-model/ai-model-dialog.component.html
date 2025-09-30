@@ -138,7 +138,7 @@
             @if (providerFieldsList.includes('apiKey')) {
               <tb-secret-key-input formControlName="apiKey" class="mat-block flex-1"
                                    appearance="outline"
-                                   required
+                                   [required]="apiKeyRequired"
                                    label="{{ 'ai-models.api-key' | translate }}"
                                    requiredText="{{ 'ai-models.api-key-required' | translate }}">
               </tb-secret-key-input>
