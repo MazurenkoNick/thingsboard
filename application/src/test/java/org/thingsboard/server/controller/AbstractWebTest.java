@@ -92,6 +92,7 @@ import org.thingsboard.server.actors.device.DeviceActorMessageProcessor;
 import org.thingsboard.server.actors.device.SessionInfo;
 import org.thingsboard.server.actors.device.ToDeviceRpcRequestMetadata;
 import org.thingsboard.server.actors.service.DefaultActorService;
+import org.thingsboard.server.common.data.AttributeScope;
 import org.thingsboard.server.common.data.Customer;
 import org.thingsboard.server.common.data.DataConstants;
 import org.thingsboard.server.common.data.Device;
@@ -1428,8 +1429,13 @@ public abstract class AbstractWebTest extends AbstractInMemoryStorageTest {
     }
 
     protected void postTelemetry(EntityId entityId, String payload) throws Exception {
-        doPost("/api/plugins/telemetry/" + entityId.getEntityType() + "/" + entityId.getId() +
-               "/timeseries/" + DataConstants.SERVER_SCOPE, JacksonUtil.toJsonNode(payload)).andExpect(status().isOk());
+        doPostAsync("/api/plugins/telemetry/" + entityId.getEntityType() + "/" + entityId.getId() +
+                    "/timeseries/" + DataConstants.SERVER_SCOPE, JacksonUtil.toJsonNode(payload), 30_000L).andExpect(status().isOk());
+    }
+
+    protected void postAttributes(EntityId entityId, AttributeScope scope, String payload) throws Exception {
+        doPostAsync("/api/plugins/telemetry/" + entityId.getEntityType() + "/" + entityId.getId() +
+                    "/attributes/" + scope, JacksonUtil.toJsonNode(payload), 30_000L).andExpect(status().isOk());
     }
 
     protected CalculatedField saveCalculatedField(CalculatedField calculatedField) {

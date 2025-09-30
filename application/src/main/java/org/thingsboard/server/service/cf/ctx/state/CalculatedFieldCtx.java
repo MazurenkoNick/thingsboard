@@ -137,7 +137,7 @@ public class CalculatedFieldCtx {
                     if (entry.getValue().hasRelationQuerySource()) {
                         continue;
                     }
-                    if (entry.getValue().hasCurrentOwnerSource()) {
+                    if (entry.getValue().hasOwnerSource()) {
                         dynamicEntityArguments.put(refKey, entry.getKey());
                     } else {
                         mainEntityArguments.put(refKey, entry.getKey());

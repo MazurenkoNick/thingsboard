@@ -88,7 +88,7 @@ public class ZoneGroupConfiguration {
     }
 
     public boolean hasCurrentOwnerSource() {
-        return toArgument().hasCurrentOwnerSource();
+        return toArgument().hasOwnerSource();
     }
 
     @JsonIgnore
@@ -111,4 +111,5 @@ public class ZoneGroupConfiguration {
         argument.setRefEntityKey(new ReferencedEntityKey(perimeterKeyName, ArgumentType.ATTRIBUTE, AttributeScope.SERVER_SCOPE));
         return argument;
     }
+
 }

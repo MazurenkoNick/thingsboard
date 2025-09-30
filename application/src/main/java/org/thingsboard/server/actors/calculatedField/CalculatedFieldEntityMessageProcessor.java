@@ -177,7 +177,7 @@ public class CalculatedFieldEntityMessageProcessor extends AbstractContextAwareM
         var callback = new MultipleTbCallback(CALLBACKS_PER_CF, msg.getCallback());
         try {
             Map<String, Argument> dynamicSourceArgs = ctx.getArguments().entrySet().stream()
-                    .filter(entry -> entry.getValue().hasCurrentOwnerSource())
+                    .filter(entry -> entry.getValue().hasOwnerSource())
                     .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
             Map<String, ArgumentEntry> fetchedArgs = cfService.fetchArgsFromDb(tenantId, entityId, dynamicSourceArgs);

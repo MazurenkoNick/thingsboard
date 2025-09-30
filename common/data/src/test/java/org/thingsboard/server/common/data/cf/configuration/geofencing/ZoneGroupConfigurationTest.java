@@ -37,6 +37,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.thingsboard.server.common.data.AttributeScope;
 import org.thingsboard.server.common.data.cf.configuration.Argument;
 import org.thingsboard.server.common.data.cf.configuration.ArgumentType;
+import org.thingsboard.server.common.data.cf.configuration.CurrentCustomerDynamicSourceConfiguration;
 import org.thingsboard.server.common.data.cf.configuration.CurrentOwnerDynamicSourceConfiguration;
 import org.thingsboard.server.common.data.cf.configuration.ReferencedEntityKey;
 import org.thingsboard.server.common.data.cf.configuration.RelationQueryDynamicSourceConfiguration;
@@ -134,6 +135,12 @@ public class ZoneGroupConfigurationTest {
         assertThat(zoneGroupConfiguration.hasRelationQuerySource()).isFalse();
     }
 
+    @Test
+    void whenHasRelationQuerySourceCalled_shouldReturnFalseIfCurrentCustomerSourceConfigured() {
+        var zoneGroupConfiguration = mock(ZoneGroupConfiguration.class);
+        zoneGroupConfiguration.setRefDynamicSourceConfiguration(new CurrentCustomerDynamicSourceConfiguration());
+        assertThat(zoneGroupConfiguration.hasRelationQuerySource()).isFalse();
+    }
 
     @Test
     void validateToArgumentsMethodCallWithoutRefEntityId() {

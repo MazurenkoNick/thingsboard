@@ -34,11 +34,13 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
+import jakarta.annotation.Nullable;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.thingsboard.common.util.ThingsBoardExecutors;
+import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.cf.configuration.Argument;
 import org.thingsboard.server.common.data.cf.configuration.ArgumentType;
 import org.thingsboard.server.common.data.cf.configuration.RelationQueryDynamicSourceConfiguration;
@@ -61,6 +63,7 @@ import org.thingsboard.server.service.cf.ctx.state.ArgumentEntry;
 import org.thingsboard.server.service.cf.ctx.state.CalculatedFieldCtx;
 import org.thingsboard.server.service.security.permission.OwnersCacheService;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -71,6 +74,7 @@ import java.util.stream.Collectors;
 
 import static org.thingsboard.server.common.data.cf.configuration.geofencing.EntityCoordinates.ENTITY_ID_LATITUDE_ARGUMENT_KEY;
 import static org.thingsboard.server.common.data.cf.configuration.geofencing.EntityCoordinates.ENTITY_ID_LONGITUDE_ARGUMENT_KEY;
+import static org.thingsboard.server.utils.CalculatedFieldArgumentUtils.createDefaultAttributeEntry;
 import static org.thingsboard.server.utils.CalculatedFieldArgumentUtils.createDefaultKvEntry;
 import static org.thingsboard.server.utils.CalculatedFieldArgumentUtils.transformSingleValueArgument;
 
@@ -123,10 +127,10 @@ public abstract class AbstractCalculatedFieldProcessingService {
         if (argument.getRefEntityId() != null) {
             return argument.getRefEntityId();
         }
-        if (!argument.hasCurrentOwnerSource()) {
+        if (!argument.hasOwnerSource()) {
             return entityId;
         }
-        return ownersCacheService.getOwner(tenantId, entityId);
+        return resolveOwnerArgument(tenantId, entityId, argument);
     }
 
     protected Map<String, ArgumentEntry> resolveArgumentFutures(Map<String, ListenableFuture<ArgumentEntry>> argFutures) {
@@ -178,7 +182,14 @@ public abstract class AbstractCalculatedFieldProcessingService {
         }
         var refDynamicSourceConfiguration = value.getRefDynamicSourceConfiguration();
         return switch (refDynamicSourceConfiguration.getType()) {
-            case CURRENT_OWNER -> Futures.immediateFuture(List.of(ownersCacheService.getOwner(tenantId, entityId)));
+            case CURRENT_OWNER, CURRENT_CUSTOMER -> {
+                EntityId resolved = resolveOwnerArgument(tenantId, entityId, value);
+                if (resolved != null) {
+                    yield Futures.immediateFuture(List.of(resolved));
+                } else {
+                    yield Futures.immediateFuture(Collections.emptyList());
+                }
+            }
             case RELATION_QUERY -> {
                 var configuration = (RelationQueryDynamicSourceConfiguration) refDynamicSourceConfiguration;
                 if (configuration.isSimpleRelation()) {
@@ -194,7 +205,24 @@ public abstract class AbstractCalculatedFieldProcessingService {
                 yield Futures.transform(relationService.findByQuery(tenantId, configuration.toEntityRelationsQuery(entityId)),
                         configuration::resolveEntityIds, calculatedFieldCallbackExecutor);
             }
-            case CURRENT_CUSTOMER -> throw new UnsupportedOperationException(); // fixme implement
+        };
+    }
+
+    @Nullable
+    private EntityId resolveOwnerArgument(TenantId tenantId, EntityId entityId, Argument argument) {
+        EntityId ownerId = ownersCacheService.getOwner(tenantId, entityId);
+        return switch (argument.getRefDynamicSourceConfiguration().getType()) {
+            case CURRENT_OWNER -> ownerId;
+            case CURRENT_CUSTOMER -> {
+                if (ownerId.getEntityType() == EntityType.TENANT) {
+                    // todo: if inherit is true - use customer id
+                    // fixme: WTF do we need it at all?
+                    yield null;
+                } else {
+                    yield ownerId;
+                }
+            }
+            default -> throw new UnsupportedOperationException();
         };
     }
 
@@ -211,8 +239,7 @@ public abstract class AbstractCalculatedFieldProcessingService {
                             argument.getRefEntityKey().getKey()
                     );
                     return Futures.transform(attributesFuture, resultOpt ->
-                                    Map.entry(entityId, resultOpt.orElseGet(() ->
-                                            new BaseAttributeKvEntry(createDefaultKvEntry(argument), System.currentTimeMillis(), 0L))),
+                                    Map.entry(entityId, resultOpt.orElseGet(() -> createDefaultAttributeEntry(argument, System.currentTimeMillis()))),
                             calculatedFieldCallbackExecutor
                     );
                 }).collect(Collectors.toList());
@@ -224,6 +251,9 @@ public abstract class AbstractCalculatedFieldProcessingService {
     }
 
     protected ListenableFuture<ArgumentEntry> fetchArgumentValue(TenantId tenantId, EntityId entityId, Argument argument, long startTs) {
+        if (entityId == null) {
+            return Futures.immediateFuture(transformSingleValueArgument(Optional.empty()));
+        }
         return switch (argument.getRefEntityKey().getType()) {
             case TS_ROLLING -> fetchTsRolling(tenantId, entityId, argument, startTs);
             case ATTRIBUTE -> fetchAttribute(tenantId, entityId, argument, startTs);
