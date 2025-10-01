@@ -117,7 +117,7 @@ public abstract class TbLatestChart<S extends ReportLatestChartSettings, P exten
                 }
                 return legendItem;
             }).toList();
-            if (!chartSettings.getShowTotal()) {
+            if (!chartSettings.getShowTotal() && chartSettings.getLegendShowTotal()) {
                 TbLatestChartLegendItem legendItem = new TbLatestChartLegendItem();
                 legendItem.setLabel("Total");
                 legendItem.setHasValue(hasTotalValue);
