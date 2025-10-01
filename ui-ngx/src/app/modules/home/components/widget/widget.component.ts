@@ -1750,8 +1750,7 @@ export class WidgetComponent extends PageComponent implements OnInit, OnChanges,
         }
       })
     ).subscribe(result => {
-      let fileName = this.widgetInfo.widgetName + (isNotEmptyStr(result.widgetTitle) ? `_${result.widgetTitle}` : '');
-      fileName = fileName.toLowerCase().replace(/\W/g, '_');
+      const fileName = this.widgetInfo.widgetName + (isNotEmptyStr(result.widgetTitle) ? `_${result.widgetTitle}` : '');
       this.doExportWidgetData(fileName, result.data, widgetExportType, dateFormat);
     });
   }
@@ -1759,11 +1758,11 @@ export class WidgetComponent extends PageComponent implements OnInit, OnChanges,
   private doExportWidgetData(filename: string, data: {[key: string]: any}[],
                              widgetExportType: WidgetExportType, dateFormat: string) {
     if (widgetExportType === WidgetExportType.csv) {
-      this.importExport.exportCsv(data, filename);
+      this.importExport.exportCsv(data, filename, true);
     } else if (widgetExportType === WidgetExportType.xls) {
-      this.importExport.exportXls(data, filename);
+      this.importExport.exportXls(data, filename, true);
     } else if (widgetExportType === WidgetExportType.xlsx) {
-      this.importExport.exportXlsx(data, filename, dateFormat);
+      this.importExport.exportXlsx(data, filename, dateFormat, true);
     }
   }
 
