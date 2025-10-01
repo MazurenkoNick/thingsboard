@@ -42,6 +42,7 @@
         #leftBlock
         [context]="context"
         [format]="format"
+        [scale]="scale"
         [component]="reportComponent.leftBlock"
         (componentEdit)="childComponentEdit(true)"
         (componentRemoved)="childComponentRemoved($event,true)"
@@ -54,6 +55,7 @@
         #rightBlock
         [context]="context"
         [format]="format"
+        [scale]="scale"
         [component]="reportComponent.rightBlock"
         (componentEdit)="childComponentEdit(false)"
         (componentRemoved)="childComponentRemoved($event, false)"

@@ -152,6 +152,9 @@ export class ReportComponentComponent implements IReportComponent, OnInit, After
   scale = 1;
 
   @Input()
+  parentScale = 1;
+
+  @Input()
   width: number;
 
   @Input()
@@ -227,6 +230,7 @@ export class ReportComponentComponent implements IReportComponent, OnInit, After
       const compRef = this.reportPreviewContainer.viewContainerRef.createComponent(this.typeData.previewComponent);
       this.reportComponentPreview = compRef.instance;
       this.reportComponentPreview.context = this.context;
+      this.reportComponentPreview.scale = this.scale;
       this.reportComponentPreview.reportComponent = this.reportComponent;
       this.reportComponentPreview.format = this.format;
       if (this.typeData.previewContext) {
@@ -263,7 +267,10 @@ export class ReportComponentComponent implements IReportComponent, OnInit, After
     for (const propName of Object.keys(changes)) {
       const change = changes[propName];
       if (!change.firstChange && change.currentValue !== change.previousValue) {
-        if (['scale', 'width'].includes(propName)) {
+        if (['scale', 'parentScale', 'width'].includes(propName)) {
+          if (propName === 'scale') {
+            this.reportComponentPreview.scale = this.scale;
+          }
           this.updateComponentLayout();
         }
         if (['pageMarginLeft', 'pageMarginRight'].includes(propName)) {
@@ -320,13 +327,15 @@ export class ReportComponentComponent implements IReportComponent, OnInit, After
   }
 
   private updateComponentSize() {
-    const parentWidth = this.elementRef.nativeElement.getBoundingClientRect().width;
+    const parentWidth = this.elementRef.nativeElement.getBoundingClientRect().width / this.parentScale;
     const border = pointsToPixels(this.borderWidth)*2;
     const leftRightPaddings = pointsToPixels(this.paddingLeft) + pointsToPixels(this.paddingRight);
     this.renderer.setStyle(this.reportComponentElement().nativeElement, 'width', ((parentWidth - leftRightPaddings - border) / this.scale) + 'px');
-    this.renderer.setStyle(this.reportComponentElement().nativeElement, 'transform', `scale(${this.scale})`);
+    if (!this.innerComponent) {
+      this.renderer.setStyle(this.reportComponentElement().nativeElement, 'transform', `scale(${this.scale})`);
+    }
     const rect = this.reportComponentElement().nativeElement.getBoundingClientRect();
-    const targetHeight = rect.height > 0 ? rect.height : this.reportComponentHeight;
+    const targetHeight = rect.height > 0 ? rect.height / this.parentScale : this.reportComponentHeight;
     this.reportComponentHeight = targetHeight;
     const topBottomPaddings = pointsToPixels(this.paddingTop) + pointsToPixels(this.paddingBottom);
     this.renderer.setStyle(this.elementRef.nativeElement, 'height', (targetHeight + topBottomPaddings + border) + 'px');
@@ -525,6 +534,9 @@ export abstract class AbstractReportComponentPreview<C extends ReportComponentCo
 
   @Input()
   format: TbReportFormat;
+
+  @Input()
+  scale = 1;
 
   @Output()
   contentResized = new EventEmitter();

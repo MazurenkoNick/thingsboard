@@ -91,6 +91,9 @@ export class ReportDropBlockComponent implements IReportComponent, OnInit, OnCha
   format: TbReportFormat;
 
   @Input()
+  scale = 1;
+
+  @Input()
   selected = false;
 
   @Output()
@@ -210,12 +213,12 @@ export class ReportDropBlockComponent implements IReportComponent, OnInit, OnCha
 
   dropListEnter(event: CdkDragEnter) {
     this.componentEntering = true;
-    this.reportComponentHeight = this.reportComponentComponents.length ? this.reportComponentComponents.get(0).elementRef.nativeElement.getBoundingClientRect().height : 100;
+    this.reportComponentHeight = this.reportComponentComponents.length ? this.reportComponentComponents.get(0).elementRef.nativeElement.getBoundingClientRect().height / this.scale : 100;
   }
 
   dropListExit(event: CdkDragExit) {
     this.componentEntering = false;
-    this.updateHeight(event.item.data, event.item.getPlaceholderElement().getBoundingClientRect().height);
+    this.updateHeight(event.item.data, event.item.getPlaceholderElement().getBoundingClientRect().height / this.scale);
   }
 
   onComponentEdit(reportComponent: ReportComponentConfig): void {
