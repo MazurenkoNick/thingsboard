@@ -33,11 +33,15 @@ package org.thingsboard.server.report.util.itext;
 import com.ibm.icu.text.ArabicShaping;
 import com.ibm.icu.text.Bidi;
 import com.lowagie.text.pdf.BaseFont;
+import org.xhtmlrenderer.extend.FontContext;
 import org.xhtmlrenderer.extend.OutputDevice;
 import org.xhtmlrenderer.pdf.FontDescription;
 import org.xhtmlrenderer.pdf.ITextFSFont;
+import org.xhtmlrenderer.pdf.ITextFSFontMetrics;
 import org.xhtmlrenderer.pdf.ITextOutputDevice;
 import org.xhtmlrenderer.pdf.ITextTextRenderer;
+import org.xhtmlrenderer.render.FSFont;
+import org.xhtmlrenderer.render.FSFontMetrics;
 import org.xhtmlrenderer.render.JustificationInfo;
 
 import java.util.ArrayList;
@@ -45,10 +49,29 @@ import java.util.List;
 
 public class PdfReportTextRenderer extends ITextTextRenderer {
 
-    private final List<BaseFont> fallbacks = new ArrayList<>();
+    private final List<FontDescription> fallbacks = new ArrayList<>();
 
-    public PdfReportTextRenderer(List<BaseFont> fallbackFonts) {
+    public PdfReportTextRenderer(List<FontDescription> fallbackFonts) {
         if (fallbackFonts != null) fallbacks.addAll(fallbackFonts);
+    }
+
+    @Override
+    public FSFontMetrics getFSFontMetrics(FontContext context, FSFont font, String string) {
+        FontDescription description = ((ITextFSFont) font).getFontDescription();
+        BaseFont bf = description.getFont();
+        float size = font.getSize2D();
+        float strikethroughThickness = description.getYStrikeoutSize() != 0 ?
+                description.getYStrikeoutSize() / 1000f * size :
+                size / 12.0f;
+
+        return new ITextFSFontMetrics(
+                bf.getFontDescriptor(BaseFont.AWT_ASCENT, size) + bf.getFontDescriptor(BaseFont.AWT_LEADING, size),
+                -bf.getFontDescriptor(BaseFont.AWT_DESCENT, size),
+                -description.getYStrikeoutPosition() / 1000f * size,
+                strikethroughThickness,
+                -description.getUnderlinePosition() / 1000f * size,
+                description.getUnderlineThickness() / 1000f * size
+        );
     }
 
     @Override
@@ -67,18 +90,16 @@ public class PdfReportTextRenderer extends ITextTextRenderer {
 
         String vis = shapeAndReorderLTRParagraph(s);
 
-        BaseFont primary = curFont.getFontDescription().getFont();
+        FontDescription primary = curFont.getFontDescription();
         float size = curFont.getSize2D();
 
-        List<BaseFont> candidates = new ArrayList<>(1 + fallbacks.size());
-        candidates.add(primary);
-        candidates.addAll(fallbacks);
+        List<FontDescription> candidates = this.prepareFontCandidates(primary);
 
         List<Run> runs = shapeRunsByBaseFont(vis, candidates, size);
 
         float cursor = x;
         for (Run r : runs) {
-            ITextFSFont runFsFont = new ITextFSFont(new FontDescription(r.baseFont, false), size);
+            ITextFSFont runFsFont = new ITextFSFont(r.fd, size);
             iod.setFont(runFsFont);
 
             iod.drawString(r.text, cursor, y, info);
@@ -86,6 +107,13 @@ public class PdfReportTextRenderer extends ITextTextRenderer {
         }
 
         iod.setFont(curFont);
+    }
+
+    private List<FontDescription> prepareFontCandidates(FontDescription primary) {
+        List<FontDescription> candidates = new ArrayList<>();
+        candidates.add(primary);
+        candidates.addAll(fallbacks.stream().filter(fd -> fd.getWeight() == primary.getWeight() && fd.getStyle() == primary.getStyle()).toList());
+        return candidates;
     }
 
     private static String shapeAndReorderLTRParagraph(String logical) {
@@ -105,21 +133,21 @@ public class PdfReportTextRenderer extends ITextTextRenderer {
         }
     }
 
-    private static List<Run> shapeRunsByBaseFont(String s, List<BaseFont> candidates, float size) {
+    private static List<Run> shapeRunsByBaseFont(String s, List<FontDescription> candidates, float size) {
         List<Run> out = new ArrayList<>();
         if (s.isEmpty()) return out;
 
         int i = 0, len = s.length();
         int cp = s.codePointAt(0);
-        BaseFont cur = pick(candidates, cp);
+        FontDescription cur = pick(candidates, cp);
         int start = 0;
         for (i = Character.charCount(cp); i < len; ) {
             cp = s.codePointAt(i);
-            BaseFont bf = pick(candidates, cp);
-            if (bf != cur) {
+            FontDescription fd = pick(candidates, cp);
+            if (fd != cur) {
                 String slice = s.substring(start, i);
                 out.add(run(slice, cur, size));
-                cur = bf;
+                cur = fd;
                 start = i;
             }
             i += Character.charCount(cp);
@@ -128,17 +156,17 @@ public class PdfReportTextRenderer extends ITextTextRenderer {
         return out;
     }
 
-    private static BaseFont pick(List<BaseFont> candidates, int codePoint) {
-        for (BaseFont bf : candidates) {
-            if (bf.charExists(codePoint)) return bf;
+    private static FontDescription pick(List<FontDescription> candidates, int codePoint) {
+        for (FontDescription fd : candidates) {
+            if (fd.getFont().charExists(codePoint)) return fd;
         }
         return candidates.get(0);
     }
 
-    private static Run run(String text, BaseFont bf, float size) {
-        float w = bf.getWidthPointKerned(text, size);
-        return new Run(text, bf, w);
+    private static Run run(String text, FontDescription fd, float size) {
+        float w = fd.getFont().getWidthPointKerned(text, size);
+        return new Run(text, fd, w);
     }
 
-    private record Run(String text, BaseFont baseFont, float widthPt) {}
+    private record Run(String text, FontDescription fd, float widthPt) {}
 }

@@ -138,6 +138,7 @@ public class PdfReportFontResolver extends ITextFontResolver {
         if (families.isEmpty()) {
             synchronized (families) {
                 this.addRoboto();
+                this.addNotoSans();
                 this.addMonospace();
                 this.addSansSerif();
                 this.addSerif();
@@ -149,13 +150,24 @@ public class PdfReportFontResolver extends ITextFontResolver {
 
     private void addRoboto() {
         PdfReportFontFamily roboto = new PdfReportFontFamily("Roboto");
-        loadFont(roboto, "/fonts/cjk/NotoSansSC-Regular.ttf", IDENTITY_H, EMBEDDED, IdentValue.NORMAL, IdentValue.NORMAL);
-        loadFont(roboto, "/fonts/cjk/NotoSans-Italic.ttf", IDENTITY_H, EMBEDDED, IdentValue.NORMAL, IdentValue.ITALIC);
-        loadFont(roboto, "/fonts/cjk/NotoSansSC-Medium.ttf", IDENTITY_H, EMBEDDED, IdentValue.FONT_WEIGHT_500, IdentValue.NORMAL);
-        loadFont(roboto, "/fonts/cjk/NotoSans-MediumItalic.ttf", IDENTITY_H, EMBEDDED, IdentValue.FONT_WEIGHT_500, IdentValue.ITALIC);
-        loadFont(roboto, "/fonts/cjk/NotoSansSC-Bold.ttf", IDENTITY_H, EMBEDDED, IdentValue.BOLD, IdentValue.NORMAL);
-        loadFont(roboto, "/fonts/cjk/NotoSans-BoldItalic.ttf", IDENTITY_H, EMBEDDED, IdentValue.BOLD, IdentValue.ITALIC);
+        loadFont(roboto, "/fonts/roboto/Roboto-Regular.ttf", IDENTITY_H, EMBEDDED, IdentValue.NORMAL, IdentValue.NORMAL);
+        loadFont(roboto, "/fonts/roboto/Roboto-Italic.ttf", IDENTITY_H, EMBEDDED, IdentValue.NORMAL, IdentValue.ITALIC);
+        loadFont(roboto, "/fonts/roboto/Roboto-Medium.ttf", IDENTITY_H, EMBEDDED, IdentValue.FONT_WEIGHT_500, IdentValue.NORMAL);
+        loadFont(roboto, "/fonts/roboto/Roboto-MediumItalic.ttf", IDENTITY_H, EMBEDDED, IdentValue.FONT_WEIGHT_500, IdentValue.ITALIC);
+        loadFont(roboto, "/fonts/roboto/Roboto-Bold.ttf", IDENTITY_H, EMBEDDED, IdentValue.BOLD, IdentValue.NORMAL);
+        loadFont(roboto, "/fonts/roboto/Roboto-BoldItalic.ttf", IDENTITY_H, EMBEDDED, IdentValue.BOLD, IdentValue.ITALIC);
         families.put("Roboto", roboto);
+    }
+
+    private void addNotoSans() {
+        PdfReportFontFamily notoSans = new PdfReportFontFamily("noto-sans");
+        loadFont(notoSans, "/fonts/cjk/NotoSansSC-Regular.ttf", IDENTITY_H, EMBEDDED, IdentValue.NORMAL, IdentValue.NORMAL);
+        loadFont(notoSans, "/fonts/cjk/NotoSans-Italic.ttf", IDENTITY_H, EMBEDDED, IdentValue.NORMAL, IdentValue.ITALIC);
+        loadFont(notoSans, "/fonts/cjk/NotoSansSC-Medium.ttf", IDENTITY_H, EMBEDDED, IdentValue.FONT_WEIGHT_500, IdentValue.NORMAL);
+        loadFont(notoSans, "/fonts/cjk/NotoSans-MediumItalic.ttf", IDENTITY_H, EMBEDDED, IdentValue.FONT_WEIGHT_500, IdentValue.ITALIC);
+        loadFont(notoSans, "/fonts/cjk/NotoSansSC-Bold.ttf", IDENTITY_H, EMBEDDED, IdentValue.BOLD, IdentValue.NORMAL);
+        loadFont(notoSans, "/fonts/cjk/NotoSans-BoldItalic.ttf", IDENTITY_H, EMBEDDED, IdentValue.BOLD, IdentValue.ITALIC);
+        families.put("noto-sans", notoSans);
     }
 
     private void addMonospace() {
@@ -240,15 +252,15 @@ public class PdfReportFontResolver extends ITextFontResolver {
         }
     }
 
-    public List<BaseFont> getFallBackFonts() {
-        List<String> fallbackFamilies = Arrays.asList("Roboto", "noto-sans-arabic", "sans-serif", "serif", "monospace");
-        List<BaseFont> fallbacks = new java.util.ArrayList<>(fallbackFamilies.size());
+    public List<FontDescription> getFallBackFonts() {
+        List<String> fallbackFamilies = Arrays.asList("Roboto", "noto-sans", "noto-sans-arabic", "sans-serif", "serif", "monospace");
+        List<FontDescription> fallbacks = new java.util.ArrayList<>(fallbackFamilies.size());
         for (String family : fallbackFamilies) {
             PdfReportFontFamily f = getPdfReportFonts().get(family);
             if (f != null) {
                 for (FontDescription fd : f.getFontDescriptions()) {
-                    if (!fallbacks.contains(fd.getFont())) {
-                        fallbacks.add(fd.getFont());
+                    if (!fallbacks.contains(fd)) {
+                        fallbacks.add(fd);
                     }
                 }
             }
