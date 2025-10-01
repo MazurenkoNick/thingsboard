@@ -32,10 +32,11 @@
 -->
 <div class="tb-drop-list tb-report-drop-block"
      [style.min-height.px]="reportComponentHeight"
-     [style.height]="fillHeight ? '100%' : ''"
      [cdkDropListData]="components"
      [cdkDropListConnectedTo]="context.dragDropCtx.dropLists"
      [cdkDropListEnterPredicate]="allowDropPredicate"
+     cdkDropListSortingDisabled
+     cdkDropListOrientation="horizontal"
      (cdkDropListDropped)="componentDrop($event)"
      (cdkDropListEntered)="dropListEnter($event)"
      (cdkDropListExited)="dropListExit($event)"
@@ -48,6 +49,7 @@
   @for (item of components; track item) {
     <div cdkDrag class="tb-draggable tb-report-component-draggable"
          #reportComponentDrag
+         [class.!hidden]="componentEntering"
          [cdkDragData]="item"
          (cdkDragMoved)="dragMoved($event)"
          (cdkDragReleased)="dragReleased($event)"
@@ -55,11 +57,11 @@
          (cdkDragEnded)="componentDragEnded()">
       <tb-report-component [reportComponent]="item"
                            innerComponent
+                           [selected]="selected"
                            [context]="context"
                            [format]="format"
                            [width]="reportComponentDrag.offsetWidth"
                            (edit)="onComponentEdit(item)"
-                           (makeCopy)="duplicateComponent(item)"
                            (remove)="componentRemove(item)"></tb-report-component>
     </div>
   }

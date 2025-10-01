@@ -29,7 +29,19 @@
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
 .tb-report-drop-block {
+  height: 100%;
   position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  .tb-report-component-draggable {
+    width: 100%;
+    &.cdk-drag-placeholder {
+      .tb-report-component {
+        width: 100% !important;
+      }
+    }
+  }
   &.cdk-drop-list-dragging {
     .tb-no-report-component {
       display: none;
@@ -51,5 +63,6 @@
     background: rgba(215, 215, 215, 0.15);
     transform-origin: left top;
     overflow: hidden;
+    cursor: default;
   }
 }

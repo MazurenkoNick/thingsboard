@@ -92,9 +92,15 @@ export enum ReportComponentType {
   PAGE_BREAK = 'PAGE_BREAK'
 }
 
+export const reportComponentTypes: ReportComponentType[] = Object.keys(ReportComponentType) as ReportComponentType[];
+
 export interface ReportComponentConfig {
   type: ReportComponentType;
   subType?: string;
+}
+
+export const isReportComponentConfig = (obj: any): obj is ReportComponentConfig => {
+  return typeof obj === 'object' && obj !== null && 'type' in obj && reportComponentTypes.includes(obj.type);
 }
 
 export interface DataReportComponentConfig extends ReportComponentConfig {
@@ -989,6 +995,9 @@ export interface TwoBlocksReportComponentConfig extends LayoutReportComponentCon
   leftBlock?: ReportComponentConfig;
   rightBlock?: ReportComponentConfig;
   splitPosition: number;
+  splitGap: number;
+  leftVerticalAlignment: alignment;
+  rightVerticalAlignment: alignment;
   type:  ReportComponentType.TWO_BLOCKS;
 }
 

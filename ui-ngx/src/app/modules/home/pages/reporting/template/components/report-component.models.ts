@@ -43,7 +43,7 @@ import {
   EntityTableReportComponentConfig,
   HeadingReportComponentConfig,
   HorizontalDoughnutChartReportComponentConfig,
-  ImageReportComponentConfig,
+  ImageReportComponentConfig, isReportComponentConfig,
   PageBreakReportComponentConfig,
   PieChartReportComponentConfig,
   reportBarChartDefaultSettings,
@@ -1330,6 +1330,9 @@ export const reportComponentsLibrary = new Map<string, ReportComponentLibraryIte
           leftBlock: null,
           rightBlock: null,
           splitPosition: 50,
+          splitGap: 8,
+          leftVerticalAlignment: 'middle',
+          rightVerticalAlignment: 'middle',
           margins: null,
           paddings: null,
           background: null,
@@ -1683,9 +1686,10 @@ export class ReportDragDropContext {
       return;
     }
 
-    const dropList = elementFromPoint.classList.contains('cdk-drop-list')
+    const dropList = (elementFromPoint.classList.contains('cdk-drop-list') ||
+                               elementFromPoint.classList.contains('tb-drop-list-placeholder'))
       ? elementFromPoint
-      : elementFromPoint.closest('.cdk-drop-list');
+      : (elementFromPoint.closest('.cdk-drop-list') || elementFromPoint.closest('.tb-drop-list-placeholder'));
 
     if (!dropList) {
       this.currentHoverDropListId = undefined;
@@ -1713,9 +1717,11 @@ export interface ReportComponentContext {
 }
 
 export const assignReportComponent = (reportComponent: ReportComponentConfig, sourceReportComponent: ReportComponentConfig): void => {
-  let ignoreFields: string[] = [];
-  if (reportComponent.type === ReportComponentType.TWO_BLOCKS) {
-    ignoreFields = ['leftBlock', 'rightBlock'];
+  const ignoreFields: string[] = [];
+  for (const key of Object.keys(reportComponent)) {
+    if (isReportComponentConfig(reportComponent[key])) {
+      ignoreFields.push(key);
+    }
   }
   const temp = {} as any;
   for (const field of ignoreFields) {
@@ -1732,9 +1738,11 @@ export const assignReportComponent = (reportComponent: ReportComponentConfig, so
 }
 
 export const editReportComponent = (reportComponent: ReportComponentConfig): ReportComponentConfig => {
-  let ignoreFields: string[] = [];
-  if (reportComponent.type === ReportComponentType.TWO_BLOCKS) {
-    ignoreFields = ['leftBlock', 'rightBlock'];
+  const ignoreFields: string[] = [];
+  for (const key of Object.keys(reportComponent)) {
+    if (isReportComponentConfig(reportComponent[key])) {
+      ignoreFields.push(key);
+    }
   }
   const result = deepClone(reportComponent, ignoreFields);
   for (const field of ignoreFields) {

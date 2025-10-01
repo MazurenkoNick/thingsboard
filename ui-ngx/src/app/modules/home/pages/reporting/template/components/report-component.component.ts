@@ -55,7 +55,8 @@ import {
 } from '@angular/core';
 import { isLayoutReportComponentConfig, ReportComponentConfig } from '@shared/models/report-component.models';
 import {
-  pointsToPixels, ReportComponentContext,
+  pointsToPixels,
+  ReportComponentContext,
   ReportComponentTypeData,
   reportComponentTypesData
 } from '@home/pages/reporting/template/components/report-component.models';
@@ -65,9 +66,14 @@ import { ReportComponentsComponent } from '@home/pages/reporting/template/compon
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TbReportFormat } from '@shared/models/report.models';
 import { coerceBoolean } from '@shared/decorators/coercion';
+import { isFunction } from '@core/utils';
 import ITooltipsterInstance = JQueryTooltipster.ITooltipsterInstance;
 import ITooltipsterGeoHelper = JQueryTooltipster.ITooltipsterGeoHelper;
-import { isFunction } from '@core/utils';
+
+export interface IReportComponent {
+  selected: boolean;
+  componentUpdated(): void;
+}
 
 @Component({
   selector: 'tb-report-component',
@@ -75,7 +81,7 @@ import { isFunction } from '@core/utils';
   styleUrls: ['./report-component.component.scss'],
   encapsulation: ViewEncapsulation.None
 })
-export class ReportComponentComponent implements OnInit, AfterViewInit, OnChanges, OnDestroy {
+export class ReportComponentComponent implements IReportComponent, OnInit, AfterViewInit, OnChanges, OnDestroy {
 
   reportComponentElement = viewChild('reportComponentElement', {
     read: ElementRef<HTMLElement>,
@@ -165,10 +171,19 @@ export class ReportComponentComponent implements OnInit, AfterViewInit, OnChange
   edit = new EventEmitter<ReportComponentConfig>();
 
   @Output()
+  childEdit = new EventEmitter<ReportComponentConfig>();
+
+  @Output()
   makeCopy = new EventEmitter();
 
   @Output()
   remove = new EventEmitter();
+
+  @Output()
+  childRemove = new EventEmitter<ReportComponentConfig>();
+
+  @Output()
+  childrenChanged = new EventEmitter();
 
   @ViewChild('reportPreviewContainer', {static: true}) reportPreviewContainer: TbAnchorComponent;
 
@@ -199,7 +214,7 @@ export class ReportComponentComponent implements OnInit, AfterViewInit, OnChange
   private reportComponentHeight = 0;
 
   constructor(private reportComponents: ReportComponentsComponent,
-              private elementRef: ElementRef<HTMLElement>,
+              public elementRef: ElementRef<HTMLElement>,
               private container: ViewContainerRef,
               private renderer: Renderer2,
               private destroyRef: DestroyRef,
@@ -229,7 +244,15 @@ export class ReportComponentComponent implements OnInit, AfterViewInit, OnChange
       this.reportComponentsContainer = true;
       this.reportComponentPreview.componentEdit.pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((component) => {
-        this.edit.emit(component);
+        this.childEdit.emit(component);
+      });
+      this.reportComponentPreview.componentRemoved.pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((component) => {
+        this.childRemove.emit(component);
+      });
+      this.reportComponentPreview.componentsChanged.pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => {
+        this.childrenChanged.emit();
       });
     }
     this.initEditReportComponentTooltip();
@@ -452,12 +475,14 @@ export class ReportComponentComponent implements OnInit, AfterViewInit, OnChange
                 matTooltipPosition="above">
           <tb-icon>edit</tb-icon>
         </button>
-        <button mat-icon-button class="tb-mat-20"
-                (click)="container.onCopy($event)"
-                matTooltip="{{ 'action.duplicate' | translate }}"
-                matTooltipPosition="above">
-          <tb-icon>content_copy</tb-icon>
-        </button>
+        @if (!container.innerComponent) {
+          <button mat-icon-button class="tb-mat-20"
+                  (click)="container.onCopy($event)"
+                  matTooltip="{{ 'action.duplicate' | translate }}"
+                  matTooltipPosition="above">
+            <tb-icon>content_copy</tb-icon>
+          </button>
+        }
         <button mat-icon-button class="tb-mat-20"
                 (click)="container.onRemove($event);"
                 matTooltip="{{ 'action.remove' | translate }}"
@@ -530,11 +555,40 @@ export abstract class AbstractReportComponentPreviewContainer<C extends ReportCo
   @Output()
   componentEdit = new EventEmitter<ReportComponentConfig>();
 
-  abstract childComponentUpdated(reportComponent: ReportComponentConfig): boolean;
+  @Output()
+  componentsChanged = new EventEmitter();
 
-  abstract deselectChildren(): void;
+  @Output()
+  componentRemoved = new EventEmitter<ReportComponentConfig>();
 
-  abstract childComponentSelected(reportComponent: ReportComponentConfig): boolean
+  childComponentUpdated(reportComponent: ReportComponentConfig): boolean {
+    const comp = this.findChildReportComponent(reportComponent);
+    if (comp) {
+      comp.componentUpdated();
+      return true;
+    }
+    return false;
+  }
+
+  deselectChildren(): void {
+    const reportComponents = this.getAllChildReportComponents();
+    for (const comp of reportComponents) {
+      comp.selected = false;
+    }
+  }
+
+  childComponentSelected(reportComponent: ReportComponentConfig): boolean {
+    const comp = this.findChildReportComponent(reportComponent);
+    if (comp) {
+      comp.selected = true;
+      return true;
+    }
+    return false;
+  }
+
+  protected abstract getAllChildReportComponents(): IReportComponent[];
+
+  protected abstract findChildReportComponent(reportComponent: ReportComponentConfig): IReportComponent | undefined;
 
 }
 

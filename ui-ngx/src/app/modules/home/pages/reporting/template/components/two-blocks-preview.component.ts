@@ -31,10 +31,12 @@
 
 import { AfterViewInit, Component, ElementRef, OnDestroy, viewChild, ViewEncapsulation } from '@angular/core';
 import {
-  AbstractReportComponentPreviewContainer, ReportComponentComponent
+  AbstractReportComponentPreviewContainer,
+  IReportComponent
 } from '@home/pages/reporting/template/components/report-component.component';
 import { ReportComponentConfig, TwoBlocksReportComponentConfig } from '@shared/models/report-component.models';
 import { ReportDropBlockComponent } from '@home/pages/reporting/template/components/report-drop-block.component';
+import { pointsToPixels } from '@home/pages/reporting/template/components/report-component.models';
 
 @Component({
   selector: 'tb-two-blocks-preview',
@@ -58,68 +60,17 @@ export class TwoBlocksPreviewComponent extends AbstractReportComponentPreviewCon
 
   private blocksContainerResize$: ResizeObserver;
 
-  leftWidth: string;
-  rightWidth: string;
-
-  blockHeight = 100;
+  leftWidth: number;
+  centerWidth: number;
+  rightWidth: number;
 
   onComponentUpdated() {
-    const splitPosition = this.reportComponent.splitPosition;
-    this.leftWidth = splitPosition + '%';
-    this.rightWidth = (100 - splitPosition) + '%';
-  }
-
-  setComponent(component: ReportComponentConfig, leftElseRight: boolean) {
-    if (leftElseRight) {
-      this.reportComponent.leftBlock = component;
-    } else {
-      this.reportComponent.rightBlock = component;
-    }
-  }
-
-  componentRemove(leftElseRight: boolean) {
-    if (leftElseRight) {
-      this.reportComponent.leftBlock = null;
-    } else {
-      this.reportComponent.rightBlock = null;
-    }
-  }
-
-  onComponentEdit(leftElseRight: boolean): void {
-    this.componentEdit.emit(leftElseRight ? this.reportComponent.leftBlock : this.reportComponent.rightBlock);
-  }
-
-  childComponentUpdated(reportComponent: ReportComponentConfig): boolean {
-    const comp = this.findReportComponent(reportComponent);
-    if (comp) {
-      comp.componentUpdated();
-      return true;
-    }
-    return false;
-  }
-
-  deselectChildren() {
-    let comp = this.leftBlock()?.reportComponentComponents?.get(0);
-    if (comp) {
-      comp.selected = false;
-    }
-    comp = this.rightBlock()?.reportComponentComponents?.get(0);
-    if (comp) {
-      comp.selected = false;
-    }
-  }
-
-  childComponentSelected(reportComponent: ReportComponentConfig): boolean {
-    const comp = this.findReportComponent(reportComponent);
-    if (comp) {
-      comp.selected = true;
-      return true;
-    }
-    return false;
+    this.updateColumnWidths();
   }
 
   ngAfterViewInit() {
     this.blocksContainerResize$ = new ResizeObserver(() => {
+      this.updateColumnWidths();
       this.contentResized.emit();
     });
     this.blocksContainerResize$.observe(this.blocksContainerEl().nativeElement);
@@ -131,17 +82,60 @@ export class TwoBlocksPreviewComponent extends AbstractReportComponentPreviewCon
     }
   }
 
-  private findReportComponent(reportComponent: ReportComponentConfig): ReportComponentComponent {
-    let targetBlock: ReportDropBlockComponent;
-    if (this.reportComponent.leftBlock === reportComponent) {
-      targetBlock = this.leftBlock();
-    } else if (this.reportComponent.rightBlock === reportComponent) {
-      targetBlock = this.rightBlock();
+  childComponentEdit(leftElseRight: boolean): void {
+    this.componentEdit.emit(leftElseRight ? this.reportComponent.leftBlock : this.reportComponent.rightBlock);
+  }
+
+  childComponentRemoved(component: ReportComponentConfig, leftElseRight: boolean) {
+    if (leftElseRight) {
+      this.reportComponent.leftBlock = null;
+    } else {
+      this.reportComponent.rightBlock = null;
     }
-    if (targetBlock) {
-      return targetBlock.reportComponentComponents?.get(0);
+    if (component) {
+      this.componentRemoved.emit(component);
+    }
+    this.componentsChanged.emit();
+  }
+
+  childComponentAdded(component: ReportComponentConfig, leftElseRight: boolean) {
+    if (leftElseRight) {
+      this.reportComponent.leftBlock = component;
+    } else {
+      this.reportComponent.rightBlock = component;
+    }
+    this.componentsChanged.emit();
+  }
+
+  protected getAllChildReportComponents(): IReportComponent[] {
+    const reportComponents: IReportComponent[] = [];
+    let comp = this.leftBlock();
+    if (comp) {
+      reportComponents.push(comp);
+    }
+    comp = this.rightBlock();
+    if (comp) {
+      reportComponents.push(comp);
+    }
+    return reportComponents;
+  }
+
+  protected findChildReportComponent(reportComponent: ReportComponentConfig): IReportComponent {
+    if (this.reportComponent.leftBlock === reportComponent) {
+      return this.leftBlock();
+    } else if (this.reportComponent.rightBlock === reportComponent) {
+      return this.rightBlock();
     }
     return null;
+  }
+
+  private updateColumnWidths() {
+    const width = this.blocksContainerEl().nativeElement.getBoundingClientRect().width;
+    const splitPosition = this.reportComponent.splitPosition;
+    const splitGap = this.reportComponent.splitGap;
+    this.leftWidth = width * splitPosition / 100 - pointsToPixels(splitGap / 2);
+    this.rightWidth = width * (100 - splitPosition) / 100 - pointsToPixels(splitGap / 2);
+    this.centerWidth = splitGap;
   }
 
 }

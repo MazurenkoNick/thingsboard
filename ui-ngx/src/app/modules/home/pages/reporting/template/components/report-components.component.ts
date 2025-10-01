@@ -161,6 +161,7 @@ export class ReportComponentsComponent implements OnInit, OnChanges, AfterViewIn
     }
   }
 
+
   dropListEnter(event: CdkDragEnter) {
     if (!this.reportComponents?.length || (this.reportComponents.length === 1 && this.reportComponents[0] === event.item.data)) {
       this.reportsComponentHeight = event.item.getPlaceholderElement().offsetHeight;
@@ -208,8 +209,9 @@ export class ReportComponentsComponent implements OnInit, OnChanges, AfterViewIn
   }
 
   isDropAllowed(drag: CdkDrag, drop: CdkDropList) {
+
     if (this.context.dragDropCtx.currentHoverDropListId == null) {
-      return true;
+      return !drop.element.nativeElement.contains(drag.dropContainer.element.nativeElement);
     }
 
     return drop.id === this.context.dragDropCtx.currentHoverDropListId;
@@ -242,6 +244,14 @@ export class ReportComponentsComponent implements OnInit, OnChanges, AfterViewIn
       this.componentRemoved.emit(reportComponent);
       this.componentsChanged.emit();
     }
+  }
+
+  childComponentRemove(reportComponent: ReportComponentConfig): void {
+    this.componentRemoved.emit(reportComponent);
+  }
+
+  childrenComponentsChanged(): void {
+    this.componentsChanged.emit();
   }
 
   componentUpdated(reportComponent: ReportComponentConfig): boolean {
@@ -304,5 +314,4 @@ export class ReportComponentsComponent implements OnInit, OnChanges, AfterViewIn
       this.showNoReportComponents = false;
     }
   }
-
 }

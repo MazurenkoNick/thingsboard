@@ -31,13 +31,17 @@
 
 import {
   AfterViewInit,
-  Component, ElementRef,
+  Component,
   EventEmitter,
   Input,
-  OnChanges, OnDestroy,
+  OnChanges,
+  OnDestroy,
   OnInit,
-  Output, QueryList, Renderer2,
-  SimpleChanges, ViewChild, ViewChildren,
+  Output,
+  QueryList,
+  SimpleChanges,
+  ViewChild,
+  ViewChildren,
   ViewEncapsulation
 } from '@angular/core';
 import { ReportComponentConfig } from '@shared/models/report-component.models';
@@ -45,10 +49,12 @@ import {
   CdkDrag,
   CdkDragDrop,
   CdkDragEnter,
-  CdkDragExit, CdkDragMove, CdkDragRelease, CdkDragStart,
+  CdkDragExit,
+  CdkDragMove,
+  CdkDragRelease,
+  CdkDragStart,
   CdkDropList,
-  moveItemInArray,
-  transferArrayItem
+  moveItemInArray
 } from '@angular/cdk/drag-drop';
 import {
   ReportComponentContext,
@@ -57,7 +63,10 @@ import {
 } from '@home/pages/reporting/template/components/report-component.models';
 import { deepClone } from '@core/utils';
 import { TbReportFormat } from '@shared/models/report.models';
-import { ReportComponentComponent } from '@home/pages/reporting/template/components/report-component.component';
+import {
+  IReportComponent,
+  ReportComponentComponent
+} from '@home/pages/reporting/template/components/report-component.component';
 
 @Component({
   selector: 'tb-report-drop-block',
@@ -65,7 +74,7 @@ import { ReportComponentComponent } from '@home/pages/reporting/template/compone
   styleUrls: ['./report-drop-block.component.scss'],
   encapsulation: ViewEncapsulation.None
 })
-export class ReportDropBlockComponent implements OnInit, OnChanges, AfterViewInit, OnDestroy {
+export class ReportDropBlockComponent implements IReportComponent, OnInit, OnChanges, AfterViewInit, OnDestroy {
 
   @ViewChild(CdkDropList) dropList?: CdkDropList;
 
@@ -81,11 +90,14 @@ export class ReportDropBlockComponent implements OnInit, OnChanges, AfterViewIni
   @Input()
   format: TbReportFormat;
 
+  @Input()
+  selected = false;
+
   @Output()
   componentAdded = new EventEmitter<ReportComponentConfig>();
 
   @Output()
-  componentRemoved = new EventEmitter();
+  componentRemoved = new EventEmitter<ReportComponentConfig>();
 
   @Output()
   componentEdit = new EventEmitter<ReportComponentConfig>();
@@ -96,10 +108,9 @@ export class ReportDropBlockComponent implements OnInit, OnChanges, AfterViewIni
 
   showNoReportComponent = false;
 
-  fillHeight = true;
+  componentEntering  = false;
 
-  constructor(private elementRef: ElementRef<HTMLElement>,
-              private renderer: Renderer2) {
+  constructor() {
   }
 
   allowDropPredicate = (drag: CdkDrag, drop: CdkDropList) => {
@@ -127,6 +138,9 @@ export class ReportDropBlockComponent implements OnInit, OnChanges, AfterViewIni
       (this.dropList as any).reportComponentRemoved = () => {
         this.componentRemove(null);
       };
+      (this.dropList as any).reportComponentAdded = (reportComponent: ReportComponentConfig) => {
+        this.componentAdd(reportComponent);
+      };
       this.context.dragDropCtx.register(this.dropList);
     }
   }
@@ -137,13 +151,20 @@ export class ReportDropBlockComponent implements OnInit, OnChanges, AfterViewIni
     }
   }
 
+  public componentUpdated() {
+    if (this.reportComponentComponents?.length) {
+      this.reportComponentComponents.get(0).componentUpdated();
+    }
+  }
+
   componentDrop(event: CdkDragDrop<any[]>) {
+    this.componentEntering = false;
     const item = event.item;
     if (event.previousContainer === event.container) {
       moveItemInArray(event.container.data, event.previousIndex, event.currentIndex);
-    } else if (!this.components.length) {
+    } else {
       if (item.data) {
-        if (typeof item.data === 'string') {
+        if (typeof item.data === 'string'  && !this.components.length) {
           const libraryItem = reportComponentsLibrary.get(item.data);
           if (libraryItem) {
             const reportComponent = deepClone(libraryItem.defaultConfig);
@@ -156,31 +177,27 @@ export class ReportDropBlockComponent implements OnInit, OnChanges, AfterViewIni
             }
           }
         } else if (typeof item.data === 'object') {
-          event.previousContainer.data.splice(event.previousIndex, 1);
-          const reportComponent: ReportComponentConfig = item.data;
-          this.components.push(reportComponent);
-          this.componentAdded.emit(reportComponent);
           const prevContainer = event.previousContainer as any;
           if (prevContainer.nestedReportComponentContainer) {
             prevContainer.reportComponentRemoved();
+            if (this.components.length) {
+              prevContainer.reportComponentAdded(this.components[0]);
+            }
+          } else {
+            event.previousContainer.data.splice(event.previousIndex, 1, ...this.components);
           }
-
+          this.components.length = 0;
+          const reportComponent: ReportComponentConfig = item.data;
+          this.components.push(reportComponent);
+          this.componentAdded.emit(reportComponent);
         }
       }
     }
     this.updateHeight();
-    //this.componentsChanged.emit();
   }
 
   isDropAllowed(drag: CdkDrag, drop: CdkDropList) {
-    if (this.components.length) {
-      return false;
-    }
-    if (this.context.dragDropCtx.currentHoverDropListId == null) {
-      return true;
-    }
-
-    return drop.id === this.context.dragDropCtx.currentHoverDropListId;
+    return !(typeof drag.data === 'string' && this.components.length);
   }
 
   dragMoved(event: CdkDragMove) {
@@ -192,64 +209,12 @@ export class ReportDropBlockComponent implements OnInit, OnChanges, AfterViewIni
   }
 
   dropListEnter(event: CdkDragEnter) {
-    if (!this.components?.length || (this.components.length === 1 && this.components[0] === event.item.data)) {
-//      this.placeHolderHeight = event.item.getPlaceholderElement().offsetHeight;
-      const placeholder = event.item.getPlaceholderElement();
-      this.updatePlaceholderDimensions(placeholder, event.item);
-      // this.reportComponentHeight = event.item.getPlaceholderElement().offsetHeight;
-      // this.fillHeight = false;
-    }
-  }
-
-  private updatePlaceholderDimensions(placeholder: HTMLElement, item: CdkDrag) {
-    const targetHeight = this.elementRef.nativeElement.getBoundingClientRect().height;
-    const targetWidth = this.elementRef.nativeElement.getBoundingClientRect().width;
-    let els = placeholder.getElementsByTagName('tb-report-component');
-    let placeholderHeight: number;
-    let placeholderWidth: number;
-    if (els.length) {
-      const repComp = els.item(0);
-      placeholderHeight = repComp.getBoundingClientRect().height;
-      this.renderer.setStyle(repComp, 'height', targetHeight + 'px');
-      els = repComp.getElementsByClassName('tb-report-component');
-      if (els.length) {
-        const repEl = els.item(0);
-        placeholderWidth = repEl.getBoundingClientRect().width;
-        this.renderer.setStyle(repEl, 'width', targetWidth + 'px');
-      }
-    } else {
-      // simple placeholder
-      placeholderHeight = placeholder.getBoundingClientRect().height;
-      this.renderer.setStyle(placeholder, 'height', targetHeight + 'px');
-    }
-    (item as any).placeholderHeight = placeholderHeight ? placeholderHeight : undefined;
-    (item as any).placeholderWidth = placeholderWidth ? placeholderWidth : undefined;
-  }
-
-  private restorePlaceholderDimensions(placeholder: HTMLElement, item: CdkDrag) {
-    const placeholderHeight = (item as any).placeHolderHeight;
-    const placeholderWidth = (item as any).placeholderWidth;
-    if (placeholderHeight) {
-      let els = placeholder.getElementsByTagName('tb-report-component');
-      if (els.length) {
-        const repComp = els.item(0);
-        this.renderer.setStyle(repComp, 'height', placeholderHeight + 'px');
-        if (placeholderWidth) {
-          els = repComp.getElementsByClassName('tb-report-component');
-          if (els.length) {
-            const repEl = els.item(0);
-            this.renderer.setStyle(repEl, 'width', placeholderWidth + 'px');
-          }
-        }
-      } else {
-        // simple placeholder
-        this.renderer.setStyle(placeholder, 'height', placeholderHeight + 'px');
-      }
-    }
+    this.componentEntering = true;
+    this.reportComponentHeight = this.reportComponentComponents.length ? this.reportComponentComponents.get(0).elementRef.nativeElement.getBoundingClientRect().height : 100;
   }
 
   dropListExit(event: CdkDragExit) {
-    this.restorePlaceholderDimensions(event.item.getPlaceholderElement(), event.item);
+    this.componentEntering = false;
     this.updateHeight(event.item.data, event.item.getPlaceholderElement().getBoundingClientRect().height);
   }
 
@@ -257,30 +222,19 @@ export class ReportDropBlockComponent implements OnInit, OnChanges, AfterViewIni
     this.componentEdit.emit(reportComponent);
   }
 
-  duplicateComponent(reportComponent: ReportComponentConfig): void {
-    // TODO:
-    /*const duplicate = deepClone(reportComponent);
-    const index = this.reportComponents.indexOf(reportComponent);
-    this.reportComponents.splice(index + 1, 0, duplicate);
-    this.componentsChanged.emit();*/
-  }
-
   componentRemove(reportComponent: ReportComponentConfig): void {
     this.components.length = 0;
-    this.componentRemoved.emit();
+    this.componentRemoved.emit(reportComponent);
     this.updateHeight();
-    // TODO:
-    /*const index = this.reportComponents.indexOf(reportComponent);
-    if (index > -1) {
-      this.reportComponents.splice(index, 1);
-      this.updateListHeight();
-      this.componentRemoved.emit(reportComponent);
-      this.componentsChanged.emit();
-    }*/
+  }
+
+  componentAdd(reportComponent: ReportComponentConfig): void {
+    this.components.push(reportComponent);
+    this.componentAdded.emit(reportComponent);
+    this.updateHeight();
   }
 
   componentDragStarted(_event: CdkDragStart){
-    //event.source.getPlaceholderElement().style.height = Math.max(60, event.source.element.nativeElement.offsetHeight) + 'px';
     document.body.style.cursor = 'grabbing';
   }
 
@@ -300,13 +254,11 @@ export class ReportDropBlockComponent implements OnInit, OnChanges, AfterViewIni
 
   private updateHeight(reportComponent?: ReportComponentConfig, targetHeight?: number) {
     if (!this.components?.length || (this.components.length === 1 && this.components[0] === reportComponent)) {
-      this.reportComponentHeight = targetHeight || 100;
+      this.reportComponentHeight = !this.components?.length ? 100 : (targetHeight || 100);
       this.showNoReportComponent = true;
-      this.fillHeight = true;
     } else {
       this.reportComponentHeight = undefined;
       this.showNoReportComponent = false;
-      this.fillHeight = false;
     }
   }
 

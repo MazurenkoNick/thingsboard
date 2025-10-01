@@ -30,11 +30,11 @@
     OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 
 -->
-<table class="tb-two-blocks-preview" #blocksContainer
-       [style.min-height.px]="blockHeight">
+<table class="tb-two-blocks-preview" #blocksContainer>
   <colgroup>
-    <col [style.width]="leftWidth">
-    <col [style.width]="rightWidth">
+    <col [style.width.px]="leftWidth">
+    <col [style.width.pt]="centerWidth">
+    <col [style.width.px]="rightWidth">
   </colgroup>
   <tr>
     <td>
@@ -43,20 +43,21 @@
         [context]="context"
         [format]="format"
         [component]="reportComponent.leftBlock"
-        (componentEdit)="onComponentEdit(true)"
-        (componentRemoved)="componentRemove(true)"
-        (componentAdded)="setComponent($event, true)">
+        (componentEdit)="childComponentEdit(true)"
+        (componentRemoved)="childComponentRemoved($event,true)"
+        (componentAdded)="childComponentAdded($event, true)">
       </tb-report-drop-block>
     </td>
+    <td class="tb-drop-list-placeholder" id="tb-two-blocks-drop-list-placeholder"></td>
     <td>
       <tb-report-drop-block
         #rightBlock
         [context]="context"
         [format]="format"
         [component]="reportComponent.rightBlock"
-        (componentEdit)="onComponentEdit(false)"
-        (componentRemoved)="componentRemove(false)"
-        (componentAdded)="setComponent($event, false)">
+        (componentEdit)="childComponentEdit(false)"
+        (componentRemoved)="childComponentRemoved($event, false)"
+        (componentAdded)="childComponentAdded($event, false)">
       </tb-report-drop-block>
     </td>
   </tr>

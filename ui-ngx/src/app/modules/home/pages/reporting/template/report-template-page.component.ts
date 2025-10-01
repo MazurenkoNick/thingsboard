@@ -376,6 +376,9 @@ export class ReportTemplatePageComponent extends PageComponent
   public reportComponentsChanged(): void {
     this.updatePageLayout();
     this.isDirty = true;
+    setTimeout(() => {
+      this.selectEditingComponent();
+    });
   }
 
   public reportComponentRemoved(reportComponent: ReportComponentConfig) {
@@ -388,10 +391,7 @@ export class ReportTemplatePageComponent extends PageComponent
     if (this.editingReportComponent !== reportComponent) {
       this.editingReportComponent = reportComponent;
       this.prevReportComponent = editReportComponent(reportComponent);
-      const reportComponentsComponents = this.allReportComponentsComponents();
-      for (const component of reportComponentsComponents) {
-        component.componentSelected(reportComponent);
-      }
+      this.selectEditingComponent();
       this.renderer.addClass(this.reportTemplateContainerEl().nativeElement, 'tb-close-library');
     }
   }
@@ -778,5 +778,14 @@ export class ReportTemplatePageComponent extends PageComponent
       result.push(...components);
     });
     return result;
+  }
+
+  private selectEditingComponent() {
+    if (this.editingReportComponent) {
+      const reportComponentsComponents = this.allReportComponentsComponents();
+      for (const component of reportComponentsComponents) {
+        component.componentSelected(this.editingReportComponent);
+      }
+    }
   }
 }
