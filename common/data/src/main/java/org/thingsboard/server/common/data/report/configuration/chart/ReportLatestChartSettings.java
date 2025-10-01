@@ -65,6 +65,7 @@ public class ReportLatestChartSettings {
     private String legendLabelColor;
     private Font legendValueFont;
     private String legendValueColor;
+    private Boolean legendShowTotal;
 
     public ReportLatestChartSettings() {}
 
@@ -103,5 +104,6 @@ public class ReportLatestChartSettings {
                 .style(FontStyle.NORMAL)
                 .build();
         this.legendValueColor = input.getLegendValueColor() != null ? input.getLegendValueColor() : "rgba(0, 0, 0, 0.87)";
+        this.legendShowTotal = input.getLegendShowTotal() != null ? input.getLegendShowTotal() : Boolean.TRUE;
     }
 }
