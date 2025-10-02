@@ -124,7 +124,7 @@ export class UserComponent extends GroupEntityComponent<UserInfo> implements OnI
   buildForm(entity: UserInfo): UntypedFormGroup {
     return this.fb.group(
       {
-        email: [entity ? entity.email : '', [Validators.required,validateEmail]],
+        email: [entity ? entity.email : '', [Validators.required, validateEmail]],
         firstName: [entity ? entity.firstName : ''],
         lastName: [entity ? entity.lastName : ''],
         phone: [entity ? entity.phone : ''],
