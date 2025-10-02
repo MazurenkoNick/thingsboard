@@ -49,6 +49,8 @@ import java.util.List;
 
 public class PdfReportTextRenderer extends ITextTextRenderer {
 
+    private static final float TEXT_MEASURING_DELTA = 0.01f;
+
     private final List<FontDescription> fallbacks = new ArrayList<>();
 
     public PdfReportTextRenderer(List<FontDescription> fallbackFonts) {
@@ -107,6 +109,27 @@ public class PdfReportTextRenderer extends ITextTextRenderer {
         }
 
         iod.setFont(curFont);
+    }
+
+    @Override
+    public int getWidth(FontContext context, FSFont font, String string) {
+        if (font instanceof ITextFSFont curFont) {
+            FontDescription primary = curFont.getFontDescription();
+            float size = curFont.getSize2D();
+            List<FontDescription> candidates = this.prepareFontCandidates(primary);
+            List<Run> runs = shapeRunsByBaseFont(string, candidates, size);
+            float result = 0;
+            for (Run r : runs) {
+                result += r.widthPt;
+            }
+            if (result - Math.floor(result) < TEXT_MEASURING_DELTA) {
+                return (int)result;
+            } else {
+                return (int)Math.ceil(result);
+            }
+        } else {
+            return super.getWidth(context, font, string);
+        }
     }
 
     private List<FontDescription> prepareFontCandidates(FontDescription primary) {
