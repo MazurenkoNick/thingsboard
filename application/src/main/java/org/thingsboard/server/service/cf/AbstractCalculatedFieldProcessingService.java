@@ -41,6 +41,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.thingsboard.common.util.ThingsBoardExecutors;
 import org.thingsboard.server.common.data.cf.configuration.Argument;
 import org.thingsboard.server.common.data.cf.configuration.ArgumentType;
+import org.thingsboard.server.common.data.cf.configuration.RelationPathQueryDynamicSourceConfiguration;
 import org.thingsboard.server.common.data.cf.configuration.RelationQueryDynamicSourceConfiguration;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.TenantId;
@@ -60,6 +61,7 @@ import org.thingsboard.server.dao.usagerecord.ApiLimitService;
 import org.thingsboard.server.service.cf.ctx.state.ArgumentEntry;
 import org.thingsboard.server.service.cf.ctx.state.CalculatedFieldCtx;
 import org.thingsboard.server.service.cf.ctx.state.CalculatedFieldState;
+import org.thingsboard.server.service.cf.ctx.state.geofencing.GeofencingCalculatedFieldState;
 import org.thingsboard.server.service.security.permission.OwnersCacheService;
 
 import java.util.HashMap;
@@ -119,6 +121,9 @@ public abstract class AbstractCalculatedFieldProcessingService {
         return Futures.whenAllComplete(argFutures.values()).call(() -> {
             var result = createStateByType(ctx);
             result.updateState(ctx, resolveArgumentFutures(argFutures));
+            if (ctx.hasRelationQueryDynamicArguments() && result instanceof GeofencingCalculatedFieldState geofencingCalculatedFieldState) {
+                geofencingCalculatedFieldState.setLastDynamicArgumentsRefreshTs(System.currentTimeMillis());
+            }
             return result;
         }, MoreExecutors.directExecutor());
     }
@@ -196,6 +201,11 @@ public abstract class AbstractCalculatedFieldProcessingService {
                     };
                 }
                 yield Futures.transform(relationService.findByQuery(tenantId, configuration.toEntityRelationsQuery(entityId)),
+                        configuration::resolveEntityIds, calculatedFieldCallbackExecutor);
+            }
+            case RELATION_PATH_QUERY -> {
+                var configuration = (RelationPathQueryDynamicSourceConfiguration) refDynamicSourceConfiguration;
+                yield Futures.transform(relationService.findByRelationPathQueryAsync(tenantId, configuration.toRelationPathQuery(entityId)),
                         configuration::resolveEntityIds, calculatedFieldCallbackExecutor);
             }
         };

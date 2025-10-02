@@ -28,25 +28,18 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.actors.calculatedField;
+package org.thingsboard.server.common.data.relation;
 
-import lombok.Data;
-import org.thingsboard.server.common.data.id.CalculatedFieldId;
-import org.thingsboard.server.common.data.id.TenantId;
-import org.thingsboard.server.common.msg.MsgType;
-import org.thingsboard.server.common.msg.ToCalculatedFieldSystemMsg;
-import org.thingsboard.server.common.msg.queue.TbCallback;
+import org.thingsboard.server.common.data.StringUtils;
 
-@Data
-public class EntityCalculatedFieldDynamicArgumentsRefreshMsg implements ToCalculatedFieldSystemMsg {
+public record RelationPathLevel(EntitySearchDirection direction, String relationType) {
 
-    private final TenantId tenantId;
-    private final CalculatedFieldId cfId;
-    private final TbCallback callback;
-
-    @Override
-    public MsgType getMsgType() {
-        return MsgType.CF_ENTITY_DYNAMIC_ARGUMENTS_REFRESH_MSG;
+    public void validate() {
+        if (direction == null) {
+            throw new IllegalArgumentException("Direction must be specified!");
+        }
+        if (StringUtils.isBlank(relationType)) {
+            throw new IllegalArgumentException("Relation type must be specified!");
+        }
     }
-
 }

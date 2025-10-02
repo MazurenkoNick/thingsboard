@@ -28,37 +28,12 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.common.data.cf.configuration;
+package org.thingsboard.server.common.data.relation;
 
+import org.thingsboard.server.common.data.id.EntityId;
 
-import org.junit.jupiter.api.Test;
+import java.util.List;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
-public class ArgumentTest {
-
-    @Test
-    void validateShouldReturnFalseIfDynamicSourceConfigurationIsNull() {
-        var argument = new Argument();
-        assertThat(argument.hasDynamicSource()).isFalse();
-    }
-
-    @Test
-    void validateWhenRelationQuerySourceConfigurationIsNotNull() {
-        var argument = new Argument();
-        argument.setRefDynamicSourceConfiguration(new RelationPathQueryDynamicSourceConfiguration());
-        assertThat(argument.hasDynamicSource()).isTrue();
-        assertThat(argument.hasRelationQuerySource()).isTrue();
-        assertThat(argument.hasCurrentOwnerSource()).isFalse();
-    }
-
-    @Test
-    void validateWhenCurrentOwnerSourceConfigurationIsNotNull() {
-        var argument = new Argument();
-        argument.setRefDynamicSourceConfiguration(new CurrentOwnerDynamicSourceConfiguration());
-        assertThat(argument.hasDynamicSource()).isTrue();
-        assertThat(argument.hasCurrentOwnerSource()).isTrue();
-        assertThat(argument.hasRelationQuerySource()).isFalse();
-    }
+public record EntityRelationPathQuery(EntityId rootEntityId, List<RelationPathLevel> levels) {
 
 }

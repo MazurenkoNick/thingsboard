@@ -28,23 +28,17 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.actors.calculatedField;
+package org.thingsboard.server.common.data.cf.configuration;
 
-import lombok.Data;
-import org.thingsboard.server.common.data.id.CalculatedFieldId;
-import org.thingsboard.server.common.data.id.TenantId;
-import org.thingsboard.server.common.msg.MsgType;
-import org.thingsboard.server.common.msg.ToCalculatedFieldSystemMsg;
+public interface RelationQueryBased {
 
-@Data
-public class CalculatedFieldDynamicArgumentsRefreshMsg implements ToCalculatedFieldSystemMsg {
+    int getMaxLevel();
 
-    private final TenantId tenantId;
-    private final CalculatedFieldId cfId;
-
-    @Override
-    public MsgType getMsgType() {
-        return MsgType.CF_DYNAMIC_ARGUMENTS_REFRESH_MSG;
+    default void validateMaxRelationLevel(String argumentName, int maxAllowedRelationLevel) {
+        if (getMaxLevel() > maxAllowedRelationLevel) {
+            throw new IllegalArgumentException("Max relation level is greater than configured " +
+                    "maximum allowed relation level in tenant profile: " + maxAllowedRelationLevel + " for argument: " + argumentName);
+        }
     }
 
 }
