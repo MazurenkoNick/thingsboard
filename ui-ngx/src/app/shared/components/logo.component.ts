@@ -29,7 +29,7 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { Component, Input, AfterViewInit } from '@angular/core';
+import { Component, Input, OnInit } from '@angular/core';
 import { coerceBoolean } from '@shared/decorators/coercion';
 import { AuthService } from '@core/auth/auth.service';
 import { AppState } from '@core/core.state';
@@ -43,7 +43,7 @@ import { UrlHolder } from '@shared/pipe/image.pipe';
   templateUrl: './logo.component.html',
   styleUrls: ['./logo.component.scss']
 })
-export class LogoComponent implements AfterViewInit {
+export class LogoComponent implements OnInit {
 
   @Input()
   @coerceBoolean()
@@ -59,12 +59,10 @@ export class LogoComponent implements AfterViewInit {
               private store: Store<AppState>) {
   }
 
-  ngAfterViewInit() {
+  ngOnInit() {
     if (!this.isLogin && !this.logoUrl) {
-      setTimeout(() => {
-        const authState = getCurrentAuthState(this.store);
-        this.logoUrl = this.authService.defaultUrl(true, authState);
-      }, 0);
+      const authState = getCurrentAuthState(this.store);
+      this.logoUrl = this.authService.defaultUrl(true, authState);
     }
   }
 }
