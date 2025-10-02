@@ -117,7 +117,8 @@ public class PdfReportTextRenderer extends ITextTextRenderer {
             FontDescription primary = curFont.getFontDescription();
             float size = curFont.getSize2D();
             List<FontDescription> candidates = this.prepareFontCandidates(primary);
-            List<Run> runs = shapeRunsByBaseFont(string, candidates, size);
+            String vis = shapeAndReorderLTRParagraph(string);
+            List<Run> runs = shapeRunsByBaseFont(vis, candidates, size);
             float result = 0;
             for (Run r : runs) {
                 result += r.widthPt;
@@ -143,8 +144,7 @@ public class PdfReportTextRenderer extends ITextTextRenderer {
         try {
             int shapeFlags =
                     ArabicShaping.LETTERS_SHAPE |
-                            ArabicShaping.TASHKEEL_REPLACE_BY_TATWEEL |
-                            ArabicShaping.LENGTH_FIXED_SPACES_NEAR |
+                            ArabicShaping.TASHKEEL_RESIZE |
                             ArabicShaping.TEXT_DIRECTION_LOGICAL;
 
             String shaped = new ArabicShaping(shapeFlags).shape(logical);
