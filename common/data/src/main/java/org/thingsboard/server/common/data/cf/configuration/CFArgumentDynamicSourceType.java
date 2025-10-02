@@ -33,7 +33,6 @@ package org.thingsboard.server.common.data.cf.configuration;
 public enum CFArgumentDynamicSourceType {
 
     CURRENT_OWNER,
-    CURRENT_CUSTOMER,
     RELATION_QUERY
 
 }
