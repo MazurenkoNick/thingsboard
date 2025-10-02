@@ -41,7 +41,6 @@ import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.kv.Aggregation;
 import org.thingsboard.server.common.data.kv.BaseReadTsKvQuery;
-import org.thingsboard.server.common.data.kv.ReadTsKvQuery;
 import org.thingsboard.server.common.data.kv.ReadTsKvQueryResult;
 import org.thingsboard.server.common.data.kv.TsKvEntry;
 import org.thingsboard.server.common.data.page.PageData;
@@ -70,6 +69,7 @@ import org.thingsboard.server.report.context.TbReportCtx;
 import org.thingsboard.server.report.datasource.ReportDataService;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -275,7 +275,7 @@ public abstract class AbstractReportService implements ReportService {
         HashMap<String, String> data = new HashMap<>();
         if (entityData != null) {
             putLatestValues(dataKeys, data, entityData.getLatest(), ctx, timezone);
-            putTimeseriesValues(dataKeys, data, entityData.getTimeseries(), ctx, timezone);
+            putAggregatedTsValues(dataKeys, data, entityData.getTimeseries(), ctx, timezone);
             putEntityInfoData(entityData, data);
         }
         return data;
@@ -354,20 +354,24 @@ public abstract class AbstractReportService implements ReportService {
         }
     }
 
-    private void putTimeseriesValues(List<DataKey> dataKeys, HashMap<String, String> data, Map<String, TsValue[]> timeseries, TbReportCtx ctx, String timezone) {
-        if (dataKeys == null) {
+    private void putAggregatedTsValues(List<DataKey> dataKeys, HashMap<String, String> data, Map<String, TsValue[]> timeseries, TbReportCtx ctx, String timezone) {
+        if (dataKeys == null || timeseries == null) {
             return;
         }
-        List<DataKey> dataKeysWithAggregation = dataKeys.stream()
-                .filter(dataKey -> dataKey.getAggregationType() != null && dataKey.getAggregationType() != Aggregation.NONE)
-                .toList();
-        for (DataKey dataKey : dataKeysWithAggregation) {
-            timeseries.computeIfPresent(dataKey.getName(), (s, tsValues) -> {
-                for (TsValue tsValue : tsValues) {
-                    data.put(dataKey.getLabel(), formatValue(ctx, dataKey, tsValue.getTs(), tsValue.getValue(), timezone));
-                }
-                return tsValues;
-            });
+        for (DataKey dk : dataKeys) {
+            var agg = dk.getAggregationType();
+            if (agg == null || agg == Aggregation.NONE) {
+                continue;
+            }
+
+            TsValue[] series = timeseries.get(dk.getName());
+            if (series == null || series.length == 0) {
+                continue;
+            }
+            TsValue latest = Arrays.stream(series)
+                    .max(Comparator.comparingLong(TsValue::getTs))
+                    .get();
+            data.put(dk.getLabel(), formatValue(ctx, dk, latest.getTs(), latest.getValue(), timezone));
         }
     }
 

@@ -64,7 +64,9 @@ import org.thingsboard.server.common.data.notification.targets.platform.Affected
 import org.thingsboard.server.common.data.notification.template.NotificationTemplate;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
+import org.thingsboard.server.common.data.query.AliasEntityId;
 import org.thingsboard.server.common.data.query.DeviceTypeFilter;
+import org.thingsboard.server.common.data.query.SingleEntityFilter;
 import org.thingsboard.server.common.data.report.ReportInfo;
 import org.thingsboard.server.common.data.report.ReportRequest;
 import org.thingsboard.server.common.data.report.ReportTemplate;
@@ -149,6 +151,55 @@ public class ReportControllerTest extends AbstractControllerTest {
         List<String> expectedRows = generatedValues.stream().map(row -> String.join(",", row)).toList();
 
         generateAndCheckCSVReport(configuration, expectedRows);
+    }
+
+    @Test
+    public void testCSVReportWithOriginatorAndAggrFields() throws Exception {
+        Device testDevice = new Device();
+        testDevice.setName("Originator device");
+        testDevice.setType("default");
+        testDevice.setLabel("testLabel" + (int) (Math.random() * 1000));
+        testDevice = doPost("/api/device", testDevice, Device.class);
+
+        for (int i = 0; i < 10; i++) {
+            String telemetryPayload = "{\"temperature\":" + i + "}";
+            doPost("/api/plugins/telemetry/DEVICE/" + testDevice.getId() + "/timeseries/" + DataConstants.SHARED_SCOPE, telemetryPayload, String.class, status().isOk());
+        }
+
+        String devicesAliasId = StringUtils.randomAlphabetic(10);
+        SingleEntityFilter filter = new SingleEntityFilter();
+        filter.setSingleEntity(AliasEntityId.fromEntityId(testDevice.getId()));
+        EntityAlias entityAlias = new EntityAlias(devicesAliasId, "device", filter);
+
+        EntityTableComponent tableComponent = new EntityTableComponent();
+        DataKey tempField = new DataKey("temperature", "timeseries", "TEMPERATURE");
+        tempField.setAggregationType(Aggregation.AVG);
+        tempField.setTimewindow(buildCurrentDateTimeWindow());
+        tempField.setDecimals(0);
+        tableComponent.setDataSources(List.of(DataSource.builder()
+                .type(DataSourceType.ENTITY)
+                .entityAliasId(devicesAliasId)
+                .dataKeys(List.of(
+                        new DataKey("createdTime", "entityField", "CREATED TIME"),
+                        new DataKey("name", "entityField", "NAME"),
+                        tempField
+                ))
+                .build()));
+
+        ReportTemplateConfig configuration = createReportConfigTemplate(List.of(tableComponent), entityAlias, TbReportFormat.CSV);
+
+        ReportRequest request = new ReportRequest();
+        request.setReportTemplateConfig(configuration);
+        request.setOriginator(testDevice.getId());
+
+        Device finalTestDevice = testDevice;
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(configuration.getTimeDataPattern()).withZone(ZoneId.systemDefault());
+
+        await().atMost(60, TimeUnit.SECONDS).until(() -> {
+            String csvReport = doPost("/api/v2/report/test", request, String.class);
+            return Arrays.stream(csvReport.split("\\r?\\n")).map(String::trim).toList()
+                    .containsAll(List.of("CREATED TIME,NAME,TEMPERATURE", formatter.format(Instant.ofEpochMilli(finalTestDevice.getCreatedTime())) + "," + finalTestDevice.getName() + ",5"));
+        });
     }
 
     @Test
@@ -455,6 +506,10 @@ public class ReportControllerTest extends AbstractControllerTest {
     }
 
     private static TimeWindowConfiguration buildCurrentDateTimeWindow() {
+        return buildCurrentDateTimeWindow(Aggregation.NONE);
+    }
+
+    private static TimeWindowConfiguration buildCurrentDateTimeWindow(Aggregation aggregationType) {
         TimeWindowConfiguration timewindow = new TimeWindowConfiguration();
         History history = new History();
         history.setHistoryType(2);
@@ -463,7 +518,7 @@ public class ReportControllerTest extends AbstractControllerTest {
         timewindow.setHistory(history);
         timewindow.setTimezone(TimeZone.getDefault().getID());
         AggregationConfiguration aggregation = new AggregationConfiguration();
-        aggregation.setType(Aggregation.NONE);
+        aggregation.setType(aggregationType);
         aggregation.setLimit(25000);
         timewindow.setAggregation(aggregation);
         return timewindow;
