@@ -33,10 +33,8 @@ import { Component, ViewEncapsulation } from '@angular/core';
 import {
   AbstractReportComponentConfig
 } from '@home/pages/reporting/template/components/report-component-config.component';
-import {
-  TwoBlocksReportComponentConfig
-} from '@shared/models/report-component.models';
-import { FormGroup, UntypedFormGroup, Validators } from '@angular/forms';
+import { TwoBlocksReportComponentConfig } from '@shared/models/report-component.models';
+import { FormGroup, Validators } from '@angular/forms';
 
 @Component({
   selector: 'tb-two-blocks-config',
@@ -48,10 +46,11 @@ export class TwoBlocksConfigComponent extends AbstractReportComponentConfig<TwoB
 
   protected buildForm(reportComponentConfig: TwoBlocksReportComponentConfig): FormGroup {
 
-    const form: UntypedFormGroup = this.fb.group({
-      splitPosition: [reportComponentConfig.splitPosition, [Validators.min(1), Validators.max(99), Validators.required]]
+    return this.fb.group({
+      splitPosition: [reportComponentConfig.splitPosition, [Validators.min(1), Validators.max(99), Validators.required]],
+      splitGap: [reportComponentConfig.splitGap, [Validators.min(0), Validators.required]],
+      leftVerticalAlignment: [reportComponentConfig.leftVerticalAlignment, []],
+      rightVerticalAlignment: [reportComponentConfig.rightVerticalAlignment, []]
     });
-
-    return form;
   }
 }

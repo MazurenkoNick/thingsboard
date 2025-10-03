@@ -31,6 +31,9 @@
 
 -->
 <div class="tb-drop-list tb-report-drop-block"
+     [class]="'tb-align-'+verticalAlignment"
+     [style.padding-right.pt]="paddingRight"
+     [style.padding-left.pt]="paddingLeft"
      [style.min-height.px]="reportComponentHeight"
      [cdkDropListData]="components"
      [cdkDropListConnectedTo]="context.dragDropCtx.dropLists"

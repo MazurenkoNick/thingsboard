@@ -33,7 +33,17 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  &.tb-align {
+    &-middle {
+      justify-content: center;
+    }
+    &-top {
+      justify-content: start;
+    }
+    &-bottom {
+      justify-content: end;
+    }
+  }
   .tb-report-component-draggable {
     width: 100%;
     &.cdk-drag-placeholder {

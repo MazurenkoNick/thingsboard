@@ -7464,7 +7464,11 @@
             },
             "two-blocks": {
                 "type": "2 blocks",
-                "split-position": "Relative split position"
+                "split-position": "Relative split position",
+                "horizontal-gap": "Horizontal gap",
+                "vertical-alignment": "Vertical alignment",
+                "left": "Left",
+                "right": "Right"
             },
             "text-section": "Text section",
             "text-image": "Text + image",

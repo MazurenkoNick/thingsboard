@@ -58,7 +58,8 @@ import java.util.List;
         @JsonSubTypes.Type(value = ImageComponent.class, name = "IMAGE"),
         @JsonSubTypes.Type(value = SubReportComponent.class, name = "SUB_REPORT"),
         @JsonSubTypes.Type(value = ErrorComponent.class, name = "ERROR"),
-        @JsonSubTypes.Type(value = DividerComponent.class, name = "DIVIDER")
+        @JsonSubTypes.Type(value = DividerComponent.class, name = "DIVIDER"),
+        @JsonSubTypes.Type(value = TwoBlocksComponent.class, name = "TWO_BLOCKS")
 })
 public interface ReportComponent extends Serializable {
 

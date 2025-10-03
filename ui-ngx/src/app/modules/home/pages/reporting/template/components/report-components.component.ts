@@ -151,6 +151,10 @@ export class ReportComponentsComponent implements OnInit, OnChanges, AfterViewIn
 
   ngAfterViewInit() {
     if (this.dropList) {
+      (this.dropList as any).reportComponentContainer = true;
+      (this.dropList as any).reportComponentsUpdated = () => {
+        this.updateListHeight();
+      }
       this.context.dragDropCtx.register(this.dropList);
     }
   }

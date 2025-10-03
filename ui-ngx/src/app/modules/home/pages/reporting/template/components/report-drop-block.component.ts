@@ -44,7 +44,11 @@ import {
   ViewChildren,
   ViewEncapsulation
 } from '@angular/core';
-import { ReportComponentConfig } from '@shared/models/report-component.models';
+import {
+  isReportComponentConfig,
+  ReportComponentConfig,
+  ReportComponentType
+} from '@shared/models/report-component.models';
 import {
   CdkDrag,
   CdkDragDrop,
@@ -67,6 +71,7 @@ import {
   IReportComponent,
   ReportComponentComponent
 } from '@home/pages/reporting/template/components/report-component.component';
+import { alignment } from '@shared/models/widget-settings.models';
 
 @Component({
   selector: 'tb-report-drop-block',
@@ -92,6 +97,15 @@ export class ReportDropBlockComponent implements IReportComponent, OnInit, OnCha
 
   @Input()
   scale = 1;
+
+  @Input()
+  verticalAlignment: alignment = 'middle';
+
+  @Input()
+  paddingRight = 0;
+
+  @Input()
+  paddingLeft = 0;
 
   @Input()
   selected = false;
@@ -188,6 +202,9 @@ export class ReportDropBlockComponent implements IReportComponent, OnInit, OnCha
             }
           } else {
             event.previousContainer.data.splice(event.previousIndex, 1, ...this.components);
+            if (prevContainer.reportComponentContainer) {
+              prevContainer.reportComponentsUpdated();
+            }
           }
           this.components.length = 0;
           const reportComponent: ReportComponentConfig = item.data;
@@ -199,8 +216,29 @@ export class ReportDropBlockComponent implements IReportComponent, OnInit, OnCha
     this.updateHeight();
   }
 
-  isDropAllowed(drag: CdkDrag, drop: CdkDropList) {
-    return !(typeof drag.data === 'string' && this.components.length);
+  isDropAllowed(drag: CdkDrag, _drop: CdkDropList) {
+    if (typeof drag.data === 'string' && this.components.length) {
+      return false;
+    }
+    let type: ReportComponentType;
+    let subType: string;
+    if (drag.data) {
+      if (typeof drag.data === 'string') {
+        const libraryItem = reportComponentsLibrary.get(drag.data);
+        if (libraryItem) {
+          type = libraryItem.type;
+          subType = libraryItem.defaultConfig.subType;
+        }
+      } else if (isReportComponentConfig(drag.data)) {
+        type = drag.data.type;
+        subType = drag.data.subType;
+      }
+    }
+    if (type) {
+      const componentData = reportComponentTypesData.getReportComponentTypeData(type, subType);
+      return !componentData.container && !componentData.pageBreak;
+    }
+    return false;
   }
 
   dragMoved(event: CdkDragMove) {
@@ -211,7 +249,7 @@ export class ReportDropBlockComponent implements IReportComponent, OnInit, OnCha
     this.context.dragDropCtx.dragReleased(event);
   }
 
-  dropListEnter(event: CdkDragEnter) {
+  dropListEnter(_event: CdkDragEnter) {
     this.componentEntering = true;
     this.reportComponentHeight = this.reportComponentComponents.length ? this.reportComponentComponents.get(0).elementRef.nativeElement.getBoundingClientRect().height / this.scale : 100;
   }

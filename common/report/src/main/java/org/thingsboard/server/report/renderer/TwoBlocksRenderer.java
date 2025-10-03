@@ -28,10 +28,35 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.common.data.report.configuration.components;
+package org.thingsboard.server.report.renderer;
 
-public enum ReportComponentType {
+import org.springframework.stereotype.Component;
+import org.thingsboard.server.common.data.report.configuration.components.ReportComponentType;
+import org.thingsboard.server.common.data.report.configuration.components.TwoBlocksComponent;
+import org.thingsboard.server.common.data.report.configuration.style.VerticalAlignment;
+import org.thingsboard.server.report.context.ComponentData;
+import org.thingsboard.server.report.util.ThymeleafUtil;
 
-    HEADING, RICH_TEXT, ENTITY_TABLE, TIME_SERIES_TABLE, ALARM_TABLE, TIME_SERIES_CHART, LATEST_CHART, DASHBOARD, IMAGE, SUB_REPORT, PAGE_BREAK, ERROR, DIVIDER, TWO_BLOCKS;
+import java.util.HashMap;
+
+@Component
+public class TwoBlocksRenderer extends ReportComponentWithLayoutRenderer<TwoBlocksComponent> {
+
+    @Override
+    protected String renderContent(TwoBlocksComponent component, ComponentData reportDataSource) {
+        HashMap<String, Object> componentVariables = new HashMap<>(reportDataSource.getVariables());
+        componentVariables.put("leftVerticalAlignment", resolveVerticalAlignment(component.getLeftVerticalAlignment()));
+        componentVariables.put("rightVerticalAlignment", resolveVerticalAlignment(component.getRightVerticalAlignment()));
+        return ThymeleafUtil.renderFromHtmlTemplate("html/components/two-blocks-template", componentVariables);
+    }
+
+    @Override
+    public ReportComponentType getType() {
+        return ReportComponentType.TWO_BLOCKS;
+    }
+
+    private String resolveVerticalAlignment(VerticalAlignment vertical) {
+        return (vertical != null ? vertical : VerticalAlignment.MIDDLE).getValue();
+    }
 
 }

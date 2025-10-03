@@ -31,31 +31,29 @@
 
 -->
 <table class="tb-two-blocks-preview" #blocksContainer>
-  <colgroup>
-    <col [style.width.px]="leftWidth">
-    <col [style.width.pt]="centerWidth">
-    <col [style.width.px]="rightWidth">
-  </colgroup>
   <tr>
-    <td>
+    <td [style.width]="leftWidth">
       <tb-report-drop-block
         #leftBlock
+        [paddingRight]="centerWidth / 2"
         [context]="context"
         [format]="format"
         [scale]="scale"
+        [verticalAlignment]="leftVerticalAlignment"
         [component]="reportComponent.leftBlock"
         (componentEdit)="childComponentEdit(true)"
         (componentRemoved)="childComponentRemoved($event,true)"
         (componentAdded)="childComponentAdded($event, true)">
       </tb-report-drop-block>
     </td>
-    <td class="tb-drop-list-placeholder" id="tb-two-blocks-drop-list-placeholder"></td>
-    <td>
+    <td [style.width]="rightWidth">
       <tb-report-drop-block
         #rightBlock
+        [paddingLeft]="centerWidth / 2"
         [context]="context"
         [format]="format"
         [scale]="scale"
+        [verticalAlignment]="rightVerticalAlignment"
         [component]="reportComponent.rightBlock"
         (componentEdit)="childComponentEdit(false)"
         (componentRemoved)="childComponentRemoved($event, false)"

@@ -36,7 +36,7 @@ import {
 } from '@home/pages/reporting/template/components/report-component.component';
 import { ReportComponentConfig, TwoBlocksReportComponentConfig } from '@shared/models/report-component.models';
 import { ReportDropBlockComponent } from '@home/pages/reporting/template/components/report-drop-block.component';
-import { pointsToPixels } from '@home/pages/reporting/template/components/report-component.models';
+import { alignment } from '@shared/models/widget-settings.models';
 
 @Component({
   selector: 'tb-two-blocks-preview',
@@ -60,17 +60,24 @@ export class TwoBlocksPreviewComponent extends AbstractReportComponentPreviewCon
 
   private blocksContainerResize$: ResizeObserver;
 
-  leftWidth: number;
-  centerWidth: number;
-  rightWidth: number;
+  leftWidth = '50%';
+  centerWidth = 8;
+  rightWidth= '50%';
+
+  leftVerticalAlignment: alignment;
+  rightVerticalAlignment: alignment;
 
   onComponentUpdated() {
-    this.updateColumnWidths();
+    const splitPosition = this.reportComponent.splitPosition;
+    this.centerWidth = this.reportComponent.splitGap;
+    this.leftWidth = splitPosition + '%';
+    this.rightWidth = (100 - splitPosition) + '%';
+    this.leftVerticalAlignment = this.reportComponent.leftVerticalAlignment;
+    this.rightVerticalAlignment = this.reportComponent.rightVerticalAlignment;
   }
 
   ngAfterViewInit() {
     this.blocksContainerResize$ = new ResizeObserver(() => {
-      this.updateColumnWidths();
       this.contentResized.emit();
     });
     this.blocksContainerResize$.observe(this.blocksContainerEl().nativeElement);
@@ -127,15 +134,6 @@ export class TwoBlocksPreviewComponent extends AbstractReportComponentPreviewCon
       return this.rightBlock();
     }
     return null;
-  }
-
-  private updateColumnWidths() {
-    const width = this.blocksContainerEl().nativeElement.getBoundingClientRect().width;
-    const splitPosition = this.reportComponent.splitPosition;
-    const splitGap = this.reportComponent.splitGap;
-    this.leftWidth = width * splitPosition / 100 - pointsToPixels(splitGap / 2);
-    this.rightWidth = width * (100 - splitPosition) / 100 - pointsToPixels(splitGap / 2);
-    this.centerWidth = splitGap;
   }
 
 }

@@ -216,6 +216,8 @@ export class ReportComponentComponent implements IReportComponent, OnInit, After
 
   private reportComponentHeight = 0;
 
+  private hostResize$: ResizeObserver;
+
   constructor(private reportComponents: ReportComponentsComponent,
               public elementRef: ElementRef<HTMLElement>,
               private container: ViewContainerRef,
@@ -284,11 +286,18 @@ export class ReportComponentComponent implements IReportComponent, OnInit, After
 
   ngAfterViewInit() {
     this.updateComponentLayout();
+    this.hostResize$ = new ResizeObserver(() => {
+      this.updateComponentSize();
+    });
+    this.hostResize$.observe(this.elementRef.nativeElement);
   }
 
   ngOnDestroy(): void {
     if (this.editReportComponentTooltip && !this.editReportComponentTooltip.status().destroyed) {
       this.editReportComponentTooltip.destroy();
+    }
+    if (this.hostResize$) {
+      this.hostResize$.disconnect();
     }
   }
 
@@ -328,17 +337,19 @@ export class ReportComponentComponent implements IReportComponent, OnInit, After
 
   private updateComponentSize() {
     const parentWidth = this.elementRef.nativeElement.getBoundingClientRect().width / this.parentScale;
-    const border = pointsToPixels(this.borderWidth)*2;
-    const leftRightPaddings = pointsToPixels(this.paddingLeft) + pointsToPixels(this.paddingRight);
-    this.renderer.setStyle(this.reportComponentElement().nativeElement, 'width', ((parentWidth - leftRightPaddings - border) / this.scale) + 'px');
-    if (!this.innerComponent) {
-      this.renderer.setStyle(this.reportComponentElement().nativeElement, 'transform', `scale(${this.scale})`);
+    if (parentWidth > 0) {
+      const border = pointsToPixels(this.borderWidth) * 2;
+      const leftRightPaddings = pointsToPixels(this.paddingLeft) + pointsToPixels(this.paddingRight);
+      this.renderer.setStyle(this.reportComponentElement().nativeElement, 'width', ((parentWidth - leftRightPaddings - border) / this.scale) + 'px');
+      if (!this.innerComponent) {
+        this.renderer.setStyle(this.reportComponentElement().nativeElement, 'transform', `scale(${this.scale})`);
+      }
+      const rect = this.reportComponentElement().nativeElement.getBoundingClientRect();
+      const targetHeight = rect.height > 0 ? rect.height / this.parentScale : this.reportComponentHeight;
+      this.reportComponentHeight = targetHeight;
+      const topBottomPaddings = pointsToPixels(this.paddingTop) + pointsToPixels(this.paddingBottom);
+      this.renderer.setStyle(this.elementRef.nativeElement, 'height', (targetHeight + topBottomPaddings + border) + 'px');
     }
-    const rect = this.reportComponentElement().nativeElement.getBoundingClientRect();
-    const targetHeight = rect.height > 0 ? rect.height / this.parentScale : this.reportComponentHeight;
-    this.reportComponentHeight = targetHeight;
-    const topBottomPaddings = pointsToPixels(this.paddingTop) + pointsToPixels(this.paddingBottom);
-    this.renderer.setStyle(this.elementRef.nativeElement, 'height', (targetHeight + topBottomPaddings + border) + 'px');
   }
 
   private updateComponentLayout() {

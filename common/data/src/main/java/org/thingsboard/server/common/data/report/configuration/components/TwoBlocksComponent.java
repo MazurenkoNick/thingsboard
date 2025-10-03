@@ -30,8 +30,27 @@
  */
 package org.thingsboard.server.common.data.report.configuration.components;
 
-public enum ReportComponentType {
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import org.thingsboard.server.common.data.report.configuration.style.VerticalAlignment;
 
-    HEADING, RICH_TEXT, ENTITY_TABLE, TIME_SERIES_TABLE, ALARM_TABLE, TIME_SERIES_CHART, LATEST_CHART, DASHBOARD, IMAGE, SUB_REPORT, PAGE_BREAK, ERROR, DIVIDER, TWO_BLOCKS;
+@Schema
+@Data
+@EqualsAndHashCode
+@NoArgsConstructor
+public class TwoBlocksComponent extends AbstractLayoutReportComponent {
 
+    private ReportComponent leftBlock;
+    private ReportComponent rightBlock;
+    private Float splitPosition;
+    private Integer splitGap;
+    private VerticalAlignment leftVerticalAlignment;
+    private VerticalAlignment rightVerticalAlignment;
+
+    @Override
+    public ReportComponentType getType() {
+        return ReportComponentType.TWO_BLOCKS;
+    }
 }
