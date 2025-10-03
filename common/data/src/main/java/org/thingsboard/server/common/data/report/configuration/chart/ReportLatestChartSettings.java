@@ -74,7 +74,7 @@ public class ReportLatestChartSettings {
             input = new ReportLatestChartSettings();
         }
         this.showTitle = input.getShowTitle() != null ? input.getShowTitle() : Boolean.TRUE;
-        this.title = input.getTitle() != null ? input.getTitle() : "Time series chart";
+        this.title = input.getTitle() != null ? input.getTitle() : "Chart";
         this.titleFont = input.getTitleFont() != null ? input.getTitleFont() : Font.builder().family("Roboto")
                 .size(18f)
                 .weight(FontWeight.WEIGHT_500)

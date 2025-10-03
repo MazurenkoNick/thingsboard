@@ -375,7 +375,13 @@ public class PdfReportService extends AbstractReportService {
             }
         }
         LatestChartData latestChartData = new LatestChartData(chartData);
-        return new ComponentData(usablePageWidthPx, latestChartData);
+        Map<String, String> variables = new HashMap<>();
+        if (stateEntity != null) {
+            putEntityInfoData(stateEntity, variables);
+        } else if (!entityDatas.isEmpty()) {
+            putEntityInfoData(entityDatas.get(0), variables);
+        }
+        return new ComponentData(usablePageWidthPx, latestChartData, new HashMap<>(variables));
     }
 
     private ComponentData buildTsChartComponentData(int usablePageWidthPx, TbReportCtx ctx, TimeseriesChartComponent component, EntityData stateEntity) {
@@ -565,7 +571,13 @@ public class PdfReportService extends AbstractReportService {
         TimeZone timeZone = TimeZone.getTimeZone(zoneId.getId());
         TsChartData tsChartData = new TsChartData(timeZone, timeRange, Aggregation.NONE.equals(timeWindowConf.getAggregation().getType()),
                 chartData, thresholdItems, rangeItems, comparisonEnabled, comparisonTimeRange);
-        return new ComponentData(usablePageWidthPx, tsChartData);
+        Map<String, String> variables = new HashMap<>();
+        if (stateEntity != null) {
+            putEntityInfoData(stateEntity, variables);
+        } else if (!entityDatas.isEmpty()) {
+            putEntityInfoData(entityDatas.get(0), variables);
+        }
+        return new ComponentData(usablePageWidthPx, tsChartData, new HashMap<>(variables));
     }
 
     private ComponentData buildImageComponentData(int usablePageWidthPx, TbReportCtx ctx, ImageComponent component) {
