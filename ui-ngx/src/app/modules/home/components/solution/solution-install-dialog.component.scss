@@ -37,3 +37,13 @@
     }
   }
 }
+
+:host ::ng-deep {
+  tb-markdown {
+    .tb-markdown-view > table {
+      display: block;
+      white-space: nowrap;
+      overflow-x: scroll !important; 
+    }
+  }
+}

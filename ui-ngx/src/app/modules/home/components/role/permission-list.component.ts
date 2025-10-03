@@ -66,7 +66,7 @@ export class PermissionListComponent extends PageComponent implements ControlVal
 
   @Input() disabled: boolean;
 
-  isMobile = !this.breakpointObserver.isMatched(MediaBreakpoints['gt-sm'])
+  isMobile = this.breakpointObserver.isMatched(MediaBreakpoints['gt-sm'])
 
   permissionListFormGroup: UntypedFormGroup;
 

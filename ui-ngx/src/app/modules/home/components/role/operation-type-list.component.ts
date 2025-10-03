@@ -51,6 +51,7 @@ import { MatChipGrid } from '@angular/material/chips';
 import { coerceBooleanProperty } from '@angular/cdk/coercion';
 import { Operation, operationTypeTranslationMap, Resource } from '@shared/models/security.models';
 import { UserPermissionsService } from '@core/http/user-permissions.service';
+import { MatFormFieldAppearance } from '@angular/material/form-field';
 
 interface OperationTypeInfo {
   name: string;
@@ -105,6 +106,12 @@ export class OperationTypeListComponent implements ControlValueAccessor, OnInit,
 
   @Input()
   resource: Resource;
+
+  @Input()
+  appearance: MatFormFieldAppearance = 'outline';
+
+  @Input()
+  lable: string;
 
   @ViewChild('operationTypeInput') operationTypeInput: ElementRef<HTMLInputElement>;
   @ViewChild('operationTypeAutocomplete') operationTypeAutocomplete: MatAutocomplete;

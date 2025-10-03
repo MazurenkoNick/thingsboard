@@ -30,8 +30,8 @@
     OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 
 -->
-<mat-form-field floatLabel="always" hideRequiredMarker [formGroup]="resourceTypeFormGroup" class="mat-block" appearance="outline">
-  <mat-label *ngIf="isLabelShown">Resources</mat-label>
+<mat-form-field floatLabel="always" hideRequiredMarker [formGroup]="resourceTypeFormGroup" class="mat-block" [appearance]="appearance">
+  <mat-label *ngIf="lable && lable.length">{{lable}}</mat-label>
   <input matInput type="text" placeholder="{{ 'permission.resource.select-resource' | translate }}"
          #resourceTypeInput
          formControlName="resourceType"

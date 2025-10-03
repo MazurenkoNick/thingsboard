@@ -31,23 +31,21 @@
 
 -->
 <div class="tb-permission-list flex flex-col" [formGroup]="permissionListFormGroup">
-  @if(!isMobile){
-    <div class="header flex flex-1 flex-row">
+    <div class="header flex flex-1 flex-row xs:hidden">
       <span class="cell max-w-30% flex-full" translate>permission.resource.resource</span>
       <span class="cell max-w-70% flex-full" translate>permission.operation.operations</span>
       <span [class.!hidden]="disabled" style="width: 48px; min-width: 48px;">&nbsp;</span>
     </div>
-  }
   <div class="body">
     <div class="row flex flex-1 flex-row items-center justify-start gt-xs:gap-2"
          formArrayName="permissions"
          *ngFor="let permissionControl of permissionsFormArray().controls; let $index = index">
-      <div class="flex flex-1 flex-col gt-xs:flex-row items-start gt-xs:items-center">
+      <div class="flex flex-1 gap-2 flex-col gt-xs:flex-row items-start gt-xs:items-center">
         <div class="max-w-full gt-xs:max-w-30% flex-1">
           <tb-resource-type-autocomplete
             class="cell mat-block flex-full"
             required
-            [isLabelShown]="isMobile"
+            [lable]="!isMobile && 'Resource'"
             [formControl]="permissionControl.get('resource')"
             >
           </tb-resource-type-autocomplete>
@@ -56,7 +54,7 @@
           <tb-operation-type-list
             class="cell mat-block flex-full"
             required
-            [isLabelShown]="isMobile"
+            [lable]="!isMobile && 'Operations'"
             [resource]="permissionControl.get('resource').value"
             [formControl]="permissionControl.get('operations')"
             >            

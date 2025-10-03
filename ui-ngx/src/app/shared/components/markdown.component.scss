@@ -116,8 +116,6 @@
     }
 
     & > table {
-      display: block;
-      white-space: nowrap;
       margin-left: 32px;
       width: calc(100% - 64px);
       border: 1px solid rgba(42, 125, 236, .2);
@@ -127,7 +125,6 @@
       margin-top: 30px;
       margin-bottom: 30px;
       overflow: hidden;
-      overflow-x: scroll; 
       table-layout: fixed;
 
       &.auto {
