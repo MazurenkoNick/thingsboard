@@ -33,6 +33,7 @@ package org.thingsboard.server.report.util.itext;
 import com.ibm.icu.text.ArabicShaping;
 import com.ibm.icu.text.Bidi;
 import com.lowagie.text.pdf.BaseFont;
+import org.xhtmlrenderer.css.constants.IdentValue;
 import org.xhtmlrenderer.extend.FontContext;
 import org.xhtmlrenderer.extend.OutputDevice;
 import org.xhtmlrenderer.pdf.FontDescription;
@@ -45,16 +46,24 @@ import org.xhtmlrenderer.render.FSFontMetrics;
 import org.xhtmlrenderer.render.JustificationInfo;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class PdfReportTextRenderer extends ITextTextRenderer {
 
     private static final float TEXT_MEASURING_DELTA = 0.01f;
 
-    private final List<FontDescription> fallbacks = new ArrayList<>();
+    private final Map<Integer, Map<IdentValue, List<FontDescription>>> fallbacksMap = new HashMap<>();
 
     public PdfReportTextRenderer(List<FontDescription> fallbackFonts) {
-        if (fallbackFonts != null) fallbacks.addAll(fallbackFonts);
+        if (fallbackFonts != null) {
+            for (FontDescription fontDescription : fallbackFonts) {
+                Map<IdentValue, List<FontDescription>> fdByStyle =
+                        fallbacksMap.computeIfAbsent(fontDescription.getWeight(), k -> new HashMap<>());
+                fdByStyle.computeIfAbsent(fontDescription.getStyle(), k -> new ArrayList<>()).add(fontDescription);
+            }
+        }
     }
 
     @Override
@@ -136,7 +145,7 @@ public class PdfReportTextRenderer extends ITextTextRenderer {
     private List<FontDescription> prepareFontCandidates(FontDescription primary) {
         List<FontDescription> candidates = new ArrayList<>();
         candidates.add(primary);
-        candidates.addAll(fallbacks.stream().filter(fd -> fd.getWeight() == primary.getWeight() && fd.getStyle() == primary.getStyle()).toList());
+        candidates.addAll(fallbacksMap.get(primary.getWeight()).get(primary.getStyle()));
         return candidates;
     }
 
