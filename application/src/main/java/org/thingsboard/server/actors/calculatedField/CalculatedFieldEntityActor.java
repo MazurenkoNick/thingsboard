@@ -109,4 +109,5 @@ public class CalculatedFieldEntityActor extends AbstractCalculatedFieldActor {
     void logProcessingException(Exception e) {
         log.warn("[{}][{}] Processing failure", tenantId, processor.entityId, e);
     }
+
 }

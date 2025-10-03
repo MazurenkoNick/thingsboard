@@ -30,14 +30,19 @@
  */
 package org.thingsboard.server.common.data.alarm.rule.condition.expression;
 
-import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotEmpty;
 import lombok.Data;
+
+import java.util.List;
 
 @Data
 public class SimpleAlarmConditionExpression implements AlarmConditionExpression {
 
-    @NotBlank
-    private String expression;
+    @Valid
+    @NotEmpty
+    private List<AlarmConditionFilter> filters;
+    private ComplexOperation operation;
 
     @Override
     public AlarmConditionExpressionType getType() {
