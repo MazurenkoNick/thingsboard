@@ -30,72 +30,55 @@
  */
 package org.thingsboard.server.common.data.cf.configuration;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
-import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.relation.EntityRelation;
-import org.thingsboard.server.common.data.relation.EntityRelationsQuery;
+import org.thingsboard.server.common.data.relation.EntityRelationPathQuery;
 import org.thingsboard.server.common.data.relation.EntitySearchDirection;
-import org.thingsboard.server.common.data.relation.RelationEntityTypeFilter;
-import org.thingsboard.server.common.data.relation.RelationsSearchParameters;
+import org.thingsboard.server.common.data.relation.RelationPathLevel;
+import org.thingsboard.server.common.data.util.CollectionsUtil;
 
-import java.util.Collections;
 import java.util.List;
 
 @Data
-public class RelationQueryDynamicSourceConfiguration implements CfArgumentDynamicSourceConfiguration {
+public class RelationPathQueryDynamicSourceConfiguration implements CfArgumentDynamicSourceConfiguration {
 
-    private int maxLevel;
-    private boolean fetchLastLevelOnly;
-    private EntitySearchDirection direction;
-    private String relationType;
+    private List<RelationPathLevel> levels;
 
     @Override
     public CFArgumentDynamicSourceType getType() {
-        return CFArgumentDynamicSourceType.RELATION_QUERY;
+        return CFArgumentDynamicSourceType.RELATION_PATH_QUERY;
     }
 
     @Override
     public void validate() {
-        if (maxLevel < 1) {
-            throw new IllegalArgumentException("Relation query dynamic source configuration max relation level can't be less than 1!");
+        if (CollectionsUtil.isEmpty(levels)) {
+            throw new IllegalArgumentException("At least one relation level must be specified!");
         }
-        if (direction == null) {
-            throw new IllegalArgumentException("Relation query dynamic source configuration direction must be specified!");
-        }
-        if (StringUtils.isBlank(relationType)) {
-            throw new IllegalArgumentException("Relation query dynamic source configuration relation type must be specified!");
-        }
+        levels.forEach(RelationPathLevel::validate);
     }
 
-    @JsonIgnore
-    public boolean isSimpleRelation() {
-        return maxLevel == 1;
+    public List<EntityId> resolveEntityIds(List<EntityRelation> relations) {
+        EntitySearchDirection lastLevelDirection = getLastLevel().direction();
+        return switch (lastLevelDirection) {
+            case FROM -> relations.stream().map(EntityRelation::getTo).toList();
+            case TO -> relations.stream().map(EntityRelation::getFrom).toList();
+        };
     }
 
     public void validateMaxRelationLevel(String argumentName, int maxAllowedRelationLevel) {
-        if (maxLevel > maxAllowedRelationLevel) {
+        if (levels.size() > maxAllowedRelationLevel) {
             throw new IllegalArgumentException("Max relation level is greater than configured " +
                                                "maximum allowed relation level in tenant profile: " + maxAllowedRelationLevel + " for argument: " + argumentName);
         }
     }
 
-    public EntityRelationsQuery toEntityRelationsQuery(EntityId rootEntityId) {
-        if (isSimpleRelation()) {
-            throw new IllegalArgumentException("Entity relations query can't be created for a simple relation!");
-        }
-        var entityRelationsQuery = new EntityRelationsQuery();
-        entityRelationsQuery.setParameters(new RelationsSearchParameters(rootEntityId, direction, maxLevel, fetchLastLevelOnly));
-        entityRelationsQuery.setFilters(Collections.singletonList(new RelationEntityTypeFilter(relationType, Collections.emptyList())));
-        return entityRelationsQuery;
+    public EntityRelationPathQuery toRelationPathQuery(EntityId entityId) {
+        return new EntityRelationPathQuery(entityId, levels);
     }
 
-    public List<EntityId> resolveEntityIds(List<EntityRelation> relations) {
-        return switch (direction) {
-            case FROM -> relations.stream().map(EntityRelation::getTo).toList();
-            case TO -> relations.stream().map(EntityRelation::getFrom).toList();
-        };
+    private RelationPathLevel getLastLevel() {
+        return levels.get(levels.size() - 1);
     }
 
 }

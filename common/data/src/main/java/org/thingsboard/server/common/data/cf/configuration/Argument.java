@@ -53,7 +53,7 @@ public class Argument {
     }
 
     public boolean hasRelationQuerySource() {
-        return hasDynamicSource() && CFArgumentDynamicSourceType.RELATION_QUERY.equals(refDynamicSourceConfiguration.getType());
+        return hasDynamicSource() && CFArgumentDynamicSourceType.RELATION_PATH_QUERY.equals(refDynamicSourceConfiguration.getType());
     }
 
     public boolean hasCurrentOwnerSource() {
