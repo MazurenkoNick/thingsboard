@@ -90,7 +90,7 @@ export enum ArgumentEntityType {
   Customer = 'CUSTOMER',
   Tenant = 'TENANT',
   Owner = 'CURRENT_OWNER',
-  RelationQuery = 'RELATION_QUERY',
+  RelationQuery = 'RELATION_PATH_QUERY',
 }
 
 export const ArgumentEntityTypeTranslations = new Map<ArgumentEntityType, string>(
@@ -123,6 +123,13 @@ export const GeofencingDirectionTranslations = new Map<EntitySearchDirection, st
   [
     [EntitySearchDirection.FROM, 'calculated-fields.direction-from'],
     [EntitySearchDirection.TO, 'calculated-fields.direction-to'],
+  ]
+)
+
+export const GeofencingDirectionLevelTranslations = new Map<EntitySearchDirection, string>(
+  [
+    [EntitySearchDirection.FROM, 'calculated-fields.direction-down'],
+    [EntitySearchDirection.TO, 'calculated-fields.direction-up'],
   ]
 )
 
@@ -190,10 +197,8 @@ export interface CalculatedFieldGeofencing {
 
 export interface RefDynamicSourceConfiguration {
   type?: ArgumentEntityType.RelationQuery | CFArgumentDynamicSourceType.CURRENT_OWNER;
-  direction?: EntitySearchDirection;
-  relationType?: string;
-  maxLevel?: number;
-  fetchLastLevelOnly?: boolean;
+  levels?: Array<{direction: EntitySearchDirection; relationType: string;}>;
+
 }
 
 export interface CalculatedFieldGeofencingValue extends CalculatedFieldGeofencing {
