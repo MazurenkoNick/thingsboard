@@ -153,6 +153,7 @@ export class EntityKeyAutocompleteComponent implements ControlValueAccessor, Val
 
     if (filterChanged || keyScopeChanged || keyTypeChanged) {
       this.keyControl.setValue('', {emitEvent: false});
+      this.cachedResult = null;
     }
   }
 
