@@ -131,6 +131,7 @@ import org.thingsboard.server.dao.queue.QueueStatsService;
 import org.thingsboard.server.dao.relation.RelationService;
 import org.thingsboard.server.dao.report.ReportService;
 import org.thingsboard.server.dao.report.ReportTemplateService;
+import org.thingsboard.server.dao.resource.TbResourceDataCache;
 import org.thingsboard.server.dao.resource.ResourceService;
 import org.thingsboard.server.dao.role.RoleService;
 import org.thingsboard.server.dao.rule.RuleChainService;
@@ -616,6 +617,10 @@ public class ActorSystemContext {
     @Autowired(required = false)
     @Getter
     private ResourceService resourceService;
+
+    @Autowired
+    @Getter
+    private TbResourceDataCache resourceDataCache;
 
     @Lazy
     @Autowired(required = false)

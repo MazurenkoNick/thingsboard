@@ -50,7 +50,6 @@ import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.kv.StringDataEntry;
 import org.thingsboard.server.common.data.msg.TbMsgType;
-import org.thingsboard.server.common.data.util.CollectionsUtil;
 import org.thingsboard.server.common.msg.cf.CalculatedFieldPartitionChangeMsg;
 import org.thingsboard.server.common.msg.queue.ServiceType;
 import org.thingsboard.server.common.msg.queue.TbCallback;
@@ -68,6 +67,7 @@ import org.thingsboard.server.service.cf.ctx.state.CalculatedFieldState;
 import org.thingsboard.server.service.cf.ctx.state.SingleValueArgumentEntry;
 import org.thingsboard.server.service.cf.ctx.state.alarm.AlarmCalculatedFieldState;
 import org.thingsboard.server.service.cf.ctx.state.geofencing.GeofencingArgumentEntry;
+import org.thingsboard.server.service.cf.ctx.state.geofencing.GeofencingCalculatedFieldState;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -279,18 +279,6 @@ public class CalculatedFieldEntityMessageProcessor extends AbstractContextAwareM
         }
     }
 
-    public void process(EntityCalculatedFieldDynamicArgumentsRefreshMsg msg) throws CalculatedFieldException {
-        log.debug("[{}][{}] Processing CF dynamic arguments refresh msg.", entityId, msg.getCfId());
-        CalculatedFieldState currentState = states.get(msg.getCfId());
-        if (currentState == null) {
-            log.debug("[{}][{}] Failed to find CF state for entity.", entityId, msg.getCfId());
-        } else {
-            currentState.setDirty(true);
-            log.debug("[{}][{}] CF state marked as dirty.", entityId, msg.getCfId());
-        }
-        msg.getCallback().onSuccess();
-    }
-
     public void process(CalculatedFieldReevaluateMsg msg) throws CalculatedFieldException {
         CalculatedFieldId cfId = msg.getCfCtx().getCfId();
         CalculatedFieldState state = states.get(cfId);
@@ -346,12 +334,13 @@ public class CalculatedFieldEntityMessageProcessor extends AbstractContextAwareM
         if (state == null) {
             state = createState(ctx);
             justRestored = true;
-        } else if (state.isDirty()) {
-            log.debug("[{}][{}] Going to update dirty CF state.", entityId, ctx.getCfId());
+        } else if (ctx.shouldFetchDynamicArgumentsFromDb(state)) {
+            log.debug("[{}][{}] Going to update dynamic arguments for CF.", entityId, ctx.getCfId());
             try {
                 Map<String, ArgumentEntry> dynamicArgsFromDb = cfService.fetchDynamicArgsFromDb(ctx, entityId);
                 dynamicArgsFromDb.forEach(newArgValues::putIfAbsent);
-                state.setDirty(false);
+                var geofencingState = (GeofencingCalculatedFieldState) state;
+                geofencingState.setLastDynamicArgumentsRefreshTs(System.currentTimeMillis());
             } catch (Exception e) {
                 throw CalculatedFieldException.builder().ctx(ctx).eventEntity(entityId).cause(e).build();
             }
@@ -492,7 +481,7 @@ public class CalculatedFieldEntityMessageProcessor extends AbstractContextAwareM
         return mapToArguments(entityId, argNames, geofencingArgumentNames, scope, attrDataList);
     }
 
-    private Map<String, ArgumentEntry> mapToArguments(EntityId entityId, Map<ReferencedEntityKey, String> argNames, List<String> geoArgNames, AttributeScopeProto scope, List<AttributeValueProto> attrDataList) {
+    private Map<String, ArgumentEntry> mapToArguments(EntityId entityId, Map<ReferencedEntityKey, String> argNames, List<String> geofencingArgNames, AttributeScopeProto scope, List<AttributeValueProto> attrDataList) {
         Map<String, ArgumentEntry> arguments = new HashMap<>();
         for (AttributeValueProto item : attrDataList) {
             ReferencedEntityKey key = new ReferencedEntityKey(item.getKey(), ArgumentType.ATTRIBUTE, AttributeScope.valueOf(scope.name()));
@@ -500,7 +489,7 @@ public class CalculatedFieldEntityMessageProcessor extends AbstractContextAwareM
             if (argName == null) {
                 continue;
             }
-            if (geoArgNames.contains(argName)) {
+            if (geofencingArgNames.contains(argName)) {
                 arguments.put(argName, new GeofencingArgumentEntry(entityId, item));
                 continue;
             }
@@ -510,26 +499,36 @@ public class CalculatedFieldEntityMessageProcessor extends AbstractContextAwareM
     }
 
     private Map<String, ArgumentEntry> mapToArgumentsWithDefaultValue(CalculatedFieldCtx ctx, EntityId entityId, AttributeScopeProto scope, List<String> removedAttrKeys) {
-        return mapToArgumentsWithDefaultValue(ctx.getLinkedAndDynamicArgs(entityId), ctx.getArguments(), scope, removedAttrKeys);
+        var argNames = ctx.getLinkedAndDynamicArgs(entityId);
+        if (argNames.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        List<String> geofencingArgumentNames = ctx.getLinkedEntityAndCurrentOwnerGeofencingArgumentNames();
+        return mapToArgumentsWithDefaultValue(argNames, ctx.getArguments(), geofencingArgumentNames, scope, removedAttrKeys);
     }
 
     private Map<String, ArgumentEntry> mapToArgumentsWithDefaultValue(CalculatedFieldCtx ctx, AttributeScopeProto scope, List<String> removedAttrKeys) {
-        return mapToArgumentsWithDefaultValue(ctx.getMainEntityArguments(), ctx.getArguments(), scope, removedAttrKeys);
+        return mapToArgumentsWithDefaultValue(ctx.getMainEntityArguments(), ctx.getArguments(), ctx.getMainEntityGeofencingArgumentNames(), scope, removedAttrKeys);
     }
 
-    private Map<String, ArgumentEntry> mapToArgumentsWithDefaultValue(Map<ReferencedEntityKey, String> argNames, Map<String, Argument> configArguments, AttributeScopeProto scope, List<String> removedAttrKeys) {
+    private Map<String, ArgumentEntry> mapToArgumentsWithDefaultValue(Map<ReferencedEntityKey, String> argNames, Map<String, Argument> configArguments, List<String> geofencingArgNames, AttributeScopeProto scope, List<String> removedAttrKeys) {
         Map<String, ArgumentEntry> arguments = new HashMap<>();
         for (String removedKey : removedAttrKeys) {
             ReferencedEntityKey key = new ReferencedEntityKey(removedKey, ArgumentType.ATTRIBUTE, AttributeScope.valueOf(scope.name()));
             String argName = argNames.get(key);
-            if (argName != null) {
-                Argument argument = configArguments.get(argName);
-                String defaultValue = (argument != null) ? argument.getDefaultValue() : null;
-                arguments.put(argName, StringUtils.isNotEmpty(defaultValue)
-                        ? new SingleValueArgumentEntry(System.currentTimeMillis(), new StringDataEntry(removedKey, defaultValue), null)
-                        : new SingleValueArgumentEntry());
-
+            if (argName == null) {
+                continue;
             }
+            if (geofencingArgNames.contains(argName)) {
+                arguments.put(argName, new GeofencingArgumentEntry());
+                continue;
+            }
+            Argument argument = configArguments.get(argName);
+            String defaultValue = (argument != null) ? argument.getDefaultValue() : null;
+            arguments.put(argName, StringUtils.isNotEmpty(defaultValue)
+                    ? new SingleValueArgumentEntry(System.currentTimeMillis(), new StringDataEntry(removedKey, defaultValue), null)
+                    : new SingleValueArgumentEntry());
+
         }
         return arguments;
     }

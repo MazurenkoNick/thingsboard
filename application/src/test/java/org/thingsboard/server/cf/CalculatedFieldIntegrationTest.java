@@ -56,7 +56,7 @@ import org.thingsboard.server.common.data.cf.configuration.CalculatedFieldConfig
 import org.thingsboard.server.common.data.cf.configuration.Output;
 import org.thingsboard.server.common.data.cf.configuration.OutputType;
 import org.thingsboard.server.common.data.cf.configuration.ReferencedEntityKey;
-import org.thingsboard.server.common.data.cf.configuration.RelationQueryDynamicSourceConfiguration;
+import org.thingsboard.server.common.data.cf.configuration.RelationPathQueryDynamicSourceConfiguration;
 import org.thingsboard.server.common.data.cf.configuration.ScriptCalculatedFieldConfiguration;
 import org.thingsboard.server.common.data.cf.configuration.SimpleCalculatedFieldConfiguration;
 import org.thingsboard.server.common.data.cf.configuration.geofencing.EntityCoordinates;
@@ -76,6 +76,7 @@ import org.thingsboard.server.common.data.job.JobType;
 import org.thingsboard.server.common.data.job.task.CfReprocessingTaskResult;
 import org.thingsboard.server.common.data.relation.EntityRelation;
 import org.thingsboard.server.common.data.relation.EntitySearchDirection;
+import org.thingsboard.server.common.data.relation.RelationPathLevel;
 import org.thingsboard.server.controller.AbstractWebTest;
 import org.thingsboard.server.controller.CalculatedFieldControllerTest;
 import org.thingsboard.server.dao.service.DaoSqlTest;
@@ -1361,20 +1362,14 @@ public class CalculatedFieldIntegrationTest extends CalculatedFieldControllerTes
 
         ZoneGroupConfiguration allowedGroup = new ZoneGroupConfiguration("zone",
                 REPORT_TRANSITION_EVENTS_ONLY, false);
-        RelationQueryDynamicSourceConfiguration allowedDyn = new RelationQueryDynamicSourceConfiguration();
-        allowedDyn.setDirection(EntitySearchDirection.FROM);
-        allowedDyn.setRelationType("AllowedZone");
-        allowedDyn.setMaxLevel(1);
-        allowedDyn.setFetchLastLevelOnly(true);
+        RelationPathQueryDynamicSourceConfiguration allowedDyn = new RelationPathQueryDynamicSourceConfiguration();
+        allowedDyn.setLevels(List.of(new RelationPathLevel(EntitySearchDirection.FROM, "AllowedZone")));
         allowedGroup.setRefDynamicSourceConfiguration(allowedDyn);
 
         ZoneGroupConfiguration restrictedGroup = new ZoneGroupConfiguration("zone",
                 REPORT_TRANSITION_EVENTS_ONLY, false);
-        RelationQueryDynamicSourceConfiguration restrictedDyn = new RelationQueryDynamicSourceConfiguration();
-        restrictedDyn.setDirection(EntitySearchDirection.FROM);
-        restrictedDyn.setRelationType("RestrictedZone");
-        restrictedDyn.setMaxLevel(1);
-        restrictedDyn.setFetchLastLevelOnly(true);
+        RelationPathQueryDynamicSourceConfiguration restrictedDyn = new RelationPathQueryDynamicSourceConfiguration();
+        restrictedDyn.setLevels(List.of(new RelationPathLevel(EntitySearchDirection.FROM, "RestrictedZone")));
         restrictedGroup.setRefDynamicSourceConfiguration(restrictedDyn);
 
         cfg.setZoneGroups(Map.of("allowedZones", allowedGroup, "restrictedZones", restrictedGroup));
@@ -1562,19 +1557,13 @@ public class CalculatedFieldIntegrationTest extends CalculatedFieldControllerTes
 
         // Zone groups: ATTRIBUTE on specific assets (one zone per group)
         ZoneGroupConfiguration allowedZonesGroup = new ZoneGroupConfiguration("zone", REPORT_TRANSITION_EVENTS_AND_PRESENCE_STATUS, false);
-        var allowedZoneDynamicSourceConfiguration = new RelationQueryDynamicSourceConfiguration();
-        allowedZoneDynamicSourceConfiguration.setDirection(EntitySearchDirection.FROM);
-        allowedZoneDynamicSourceConfiguration.setRelationType("AllowedZone");
-        allowedZoneDynamicSourceConfiguration.setMaxLevel(1);
-        allowedZoneDynamicSourceConfiguration.setFetchLastLevelOnly(true);
+        var allowedZoneDynamicSourceConfiguration = new RelationPathQueryDynamicSourceConfiguration();
+        allowedZoneDynamicSourceConfiguration.setLevels(List.of(new RelationPathLevel(EntitySearchDirection.FROM, "AllowedZone")));
         allowedZonesGroup.setRefDynamicSourceConfiguration(allowedZoneDynamicSourceConfiguration);
 
         ZoneGroupConfiguration restrictedZonesGroup = new ZoneGroupConfiguration("zone", REPORT_TRANSITION_EVENTS_AND_PRESENCE_STATUS, false);
-        var restrictedZoneDynamicSourceConfiguration = new RelationQueryDynamicSourceConfiguration();
-        restrictedZoneDynamicSourceConfiguration.setDirection(EntitySearchDirection.FROM);
-        restrictedZoneDynamicSourceConfiguration.setRelationType("RestrictedZone");
-        restrictedZoneDynamicSourceConfiguration.setMaxLevel(1);
-        restrictedZoneDynamicSourceConfiguration.setFetchLastLevelOnly(true);
+        var restrictedZoneDynamicSourceConfiguration = new RelationPathQueryDynamicSourceConfiguration();
+        restrictedZoneDynamicSourceConfiguration.setLevels(List.of(new RelationPathLevel(EntitySearchDirection.FROM, "RestrictedZone")));
         restrictedZonesGroup.setRefDynamicSourceConfiguration(restrictedZoneDynamicSourceConfiguration);
 
         cfg.setZoneGroups(Map.of("allowedZones", allowedZonesGroup, "restrictedZones", restrictedZonesGroup));
@@ -1633,10 +1622,11 @@ public class CalculatedFieldIntegrationTest extends CalculatedFieldControllerTes
         TenantProfile foundTenantProfile = doGet("/api/tenantProfile/" + tenantProfileEntityInfo.getId().getId().toString(), TenantProfile.class);
         assertThat(foundTenantProfile).isNotNull();
         assertThat(foundTenantProfile.getDefaultProfileConfiguration()).isNotNull();
-        foundTenantProfile.getDefaultProfileConfiguration().setMinAllowedScheduledUpdateIntervalInSecForCF(TIMEOUT / 10);
+        int minAllowedScheduledUpdateIntervalInSecForCF = TIMEOUT / 10;
+        foundTenantProfile.getDefaultProfileConfiguration().setMinAllowedScheduledUpdateIntervalInSecForCF(minAllowedScheduledUpdateIntervalInSecForCF);
         TenantProfile savedTenantProfile = doPost("/api/tenantProfile", foundTenantProfile, TenantProfile.class);
         assertThat(savedTenantProfile).isNotNull();
-        assertThat(savedTenantProfile.getDefaultProfileConfiguration().getMinAllowedScheduledUpdateIntervalInSecForCF()).isEqualTo(TIMEOUT / 10);
+        assertThat(savedTenantProfile.getDefaultProfileConfiguration().getMinAllowedScheduledUpdateIntervalInSecForCF()).isEqualTo(minAllowedScheduledUpdateIntervalInSecForCF);
         loginTenantAdmin();
 
         // --- Arrange entities ---
@@ -1671,11 +1661,8 @@ public class CalculatedFieldIntegrationTest extends CalculatedFieldControllerTes
         cfg.setEntityCoordinates(new EntityCoordinates(ENTITY_ID_LATITUDE_ARGUMENT_KEY, ENTITY_ID_LONGITUDE_ARGUMENT_KEY));
 
         var allowedZonesGroup = new ZoneGroupConfiguration("zone", REPORT_TRANSITION_EVENTS_AND_PRESENCE_STATUS, false);
-        var allowedZoneDynamicSourceConfiguration = new RelationQueryDynamicSourceConfiguration();
-        allowedZoneDynamicSourceConfiguration.setDirection(EntitySearchDirection.FROM);
-        allowedZoneDynamicSourceConfiguration.setRelationType("AllowedZone");
-        allowedZoneDynamicSourceConfiguration.setMaxLevel(1);
-        allowedZoneDynamicSourceConfiguration.setFetchLastLevelOnly(true);
+        var allowedZoneDynamicSourceConfiguration = new RelationPathQueryDynamicSourceConfiguration();
+        allowedZoneDynamicSourceConfiguration.setLevels(List.of(new RelationPathLevel(EntitySearchDirection.FROM, "AllowedZone")));
         allowedZonesGroup.setRefDynamicSourceConfiguration(allowedZoneDynamicSourceConfiguration);
         cfg.setZoneGroups(Map.of("allowedZones", allowedZonesGroup));
 
@@ -1686,7 +1673,8 @@ public class CalculatedFieldIntegrationTest extends CalculatedFieldControllerTes
         cfg.setOutput(out);
 
         // Enable scheduled refresh with a 6-second interval
-        cfg.setScheduledUpdateInterval(6);
+        cfg.setScheduledUpdateInterval(minAllowedScheduledUpdateIntervalInSecForCF);
+        cfg.setScheduledUpdateEnabled(true);
 
         cf.setConfiguration(cfg);
         CalculatedField savedCalculatedField = doPost("/api/calculatedField", cf, CalculatedField.class);
@@ -1737,7 +1725,7 @@ public class CalculatedFieldIntegrationTest extends CalculatedFieldControllerTes
         relAllowedB.setType("AllowedZone");
         doPost("/api/relation", relAllowedB).andExpect(status().isOk());
 
-        awaitForCalculatedFieldEntityMessageProcessorToRegisterCfStateAsDirty(device.getId(), savedCalculatedField.getId());
+        awaitForCalculatedFieldEntityMessageProcessorToRegisterCfStateAsReadyToRefreshDynamicArguments(device.getId(), savedCalculatedField.getId(), minAllowedScheduledUpdateIntervalInSecForCF);
 
         // --- Same coordinates as before, but now we expect ENTERED since a new zone is registered ---
         doPost("/api/plugins/telemetry/DEVICE/" + device.getUuidId() + "/timeseries/unusedScope",

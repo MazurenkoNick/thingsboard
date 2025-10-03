@@ -73,7 +73,7 @@ public abstract class BaseCalculatedFieldState implements CalculatedFieldState {
             boolean entryUpdated;
 
             if (existingEntry == null || newEntry.isForceResetPrevious()) {
-                validateNewEntry(newEntry);
+                validateNewEntry(key, newEntry);
                 arguments.put(key, newEntry);
                 entryUpdated = true;
             } else {
@@ -118,7 +118,7 @@ public abstract class BaseCalculatedFieldState implements CalculatedFieldState {
         }
     }
 
-    protected void validateNewEntry(ArgumentEntry newEntry) {}
+    protected void validateNewEntry(String key, ArgumentEntry newEntry) {}
 
     private void updateLastUpdateTimestamp(ArgumentEntry entry) {
         long newTs = this.latestTimestamp;

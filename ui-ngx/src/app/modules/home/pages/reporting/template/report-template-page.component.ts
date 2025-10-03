@@ -93,7 +93,7 @@ import {
   assignReportComponent,
   pointsToPixels,
   ReportComponentContext,
-  reportComponentTypeMap
+  reportComponentTypesData
 } from '@home/pages/reporting/template/components/report-component.models';
 import { EntityService } from '@core/http/entity.service';
 import { IStateController, StateParams } from '@core/api/widget-api.models';
@@ -118,7 +118,6 @@ import { CdkScrollable } from '@angular/cdk/overlay';
 import {
   ReportTemplateHeaderFooterComponent
 } from '@home/pages/reporting/template/report-template-header-footer.component';
-import { dateFormatPreview } from '@shared/models/widget-settings.models';
 import { MatButton } from '@angular/material/button';
 import { VersionControlComponent } from '@home/components/vc/version-control.component';
 import { TbPopoverService } from '@shared/components/popover.service';
@@ -132,7 +131,9 @@ import { TbPopoverService } from '@shared/components/popover.service';
 export class ReportTemplatePageComponent extends PageComponent
   implements OnInit, AfterViewInit, OnDestroy, HasDirtyFlag {
 
-  reportComponentTypeMap = reportComponentTypeMap;
+  TbReportFormat = TbReportFormat;
+
+  reportComponentTypesData = reportComponentTypesData;
 
   get isDirty(): boolean {
     return this.isDirtyValue;
@@ -777,5 +778,4 @@ export class ReportTemplatePageComponent extends PageComponent
     });
     return result;
   }
-
 }

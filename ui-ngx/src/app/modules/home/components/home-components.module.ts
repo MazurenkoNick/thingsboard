@@ -300,6 +300,8 @@ import {
 import { CancelTaskDialogComponent } from '@home/components/task/cancel-task-dialog.component';
 import { CheckConnectivityDialogComponent } from '@home/components/ai-model/check-connectivity-dialog.component';
 import { AIModelDialogComponent } from '@home/components/ai-model/ai-model-dialog.component';
+import { ResourcesDialogComponent } from "@home/components/resources/resources-dialog.component";
+import { ResourcesLibraryComponent } from "@home/components/resources/resources-library.component";
 import {
   CalculatedFieldGeofencingZoneGroupsTableComponent
 } from '@home/components/calculated-fields/components/geofencing-zone-grups-table/calculated-field-geofencing-zone-groups-table.component';
@@ -495,6 +497,8 @@ import {
       CalculatedFieldGeofencingZoneGroupsPanelComponent,
       CheckConnectivityDialogComponent,
       AIModelDialogComponent,
+      ResourcesDialogComponent,
+      ResourcesLibraryComponent,
     ],
   imports: [
     CommonModule,
@@ -674,6 +678,8 @@ import {
     CalculatedFieldGeofencingZoneGroupsPanelComponent,
     CheckConnectivityDialogComponent,
     AIModelDialogComponent,
+    ResourcesDialogComponent,
+    ResourcesLibraryComponent,
   ],
   providers: [
     WidgetComponentService,

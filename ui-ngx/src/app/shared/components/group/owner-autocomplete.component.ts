@@ -52,6 +52,7 @@ import { PageLink } from '@shared/models/page/page-link';
 import { Direction } from '@shared/models/page/sort-order';
 import { EntityInfoData } from '@shared/models/entity.models';
 import { MatAutocomplete } from '@angular/material/autocomplete';
+import { MatFormFieldAppearance } from '@angular/material/form-field';
 
 @Component({
   selector: 'tb-owner-autocomplete',
@@ -80,6 +81,9 @@ export class OwnerAutocompleteComponent implements ControlValueAccessor, OnInit,
 
   @Input()
   requiredText: string;
+
+  @Input()
+  appearance: MatFormFieldAppearance = 'fill';
 
   private requiredValue: boolean;
   get required(): boolean {

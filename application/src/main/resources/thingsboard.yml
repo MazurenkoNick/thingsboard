@@ -838,6 +838,9 @@ cache:
     etag:
       timeToLiveInMinutes: "${CACHE_SPECS_CUSTOM_MENU_ETAGS_TTL:44640}" # Custom Menu ETags cache TTL in minutes (one month by default)
       maxSize: "${CACHE_SPECS_CUSTOM_MENU_ETAGS_MAX_SIZE:1000000}" # 0 means the cache is disabled
+  tbResourceData:
+    timeToLiveInMinutes: "${CACHE_SPECS_RESOURCE_DATA_TTL:10080}" # TB resource data cache TTL
+    maxSize: "${CACHE_SPECS_RESOURCE_DATA_MAX_SIZE:100000}" # 0 means the cache is disabled
 
 # Spring data parameters
 spring.data.redis.repositories.enabled: false # Disable this because it is not required.
@@ -1710,7 +1713,7 @@ swagger:
   version: "${SWAGGER_VERSION:}"
   # The group name (definition) on the API doc UI page.
   group_name: "${SWAGGER_GROUP_NAME:thingsboard}"
-  # Control the initial display state of API operations and tags (none, list or full)
+  # Control the initial display state of API operations and tags (none or list)
   doc_expansion: "${SWAGGER_DOC_EXPANSION:list}"
 
 # Queue configuration parameters

@@ -282,6 +282,11 @@ export interface WidgetSubscriptionCallbacks {
   onRpcErrorCleared?: (subscription: IWidgetSubscription) => void;
 }
 
+export interface WidgetDataGenerationOptions {
+  fixedGenDataPoints?: number;
+  generateLatestUpdates?: boolean;
+}
+
 export interface WidgetSubscriptionOptions {
   type?: widgetType;
   stateData?: boolean;
@@ -308,6 +313,7 @@ export interface WidgetSubscriptionOptions {
   decimals?: number;
   units?: TbUnit;
   callbacks?: WidgetSubscriptionCallbacks;
+  dataGenerationOptions?: WidgetDataGenerationOptions;
 }
 
 export interface SubscriptionEntityInfo {
