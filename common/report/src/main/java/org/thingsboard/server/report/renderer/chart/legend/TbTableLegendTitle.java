@@ -208,7 +208,7 @@ public class TbTableLegendTitle extends Title {
         this.legendTable.clear();
         TbLegendValuesRequest request = this.buildLegendValuesRequest();
         List<TbLegendItem> legendItems = this.source.getTbLegendItems(request);
-        if (legendItems != null) {
+        if (legendItems != null && !legendItems.isEmpty()) {
             if (this.legendItemComparator != null) {
                 legendItems.sort(this.legendItemComparator);
             }

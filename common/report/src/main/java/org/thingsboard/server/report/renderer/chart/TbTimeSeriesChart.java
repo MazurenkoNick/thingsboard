@@ -265,8 +265,11 @@ public class TbTimeSeriesChart implements XYSeriesLabelGenerator, TbSeriesLegend
         Map<TbDatasetKey, List<TsChartSeriesData>> groupedSeries = datasetGroupsFromSeries(this.seriesList);
 
         this.datasetKeys = new ArrayList<>(groupedSeries.keySet());
-
-        groupedSeries.forEach(this::setupDataset);
+        if (groupedSeries.isEmpty()) {
+            this.plot.setRenderer(0, new TbXYLineAndShapeRenderer());
+        } else {
+            groupedSeries.forEach(this::setupDataset);
+        }
     }
 
     private void setupThresholds() {
