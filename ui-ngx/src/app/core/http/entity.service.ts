@@ -135,6 +135,7 @@ import { AiModelService } from '@core/http/ai-model.service';
 import { ReportTemplateService } from '@core/http/report-template.service';
 import { ReportTemplate, ReportTemplateQuery, ReportTemplateType } from '@shared/models/report.models';
 import { ReportService } from './report.service';
+import { ResourceType } from "@shared/models/resource.models";
 
 @Injectable({
   providedIn: 'root'
@@ -502,6 +503,9 @@ export class EntityService {
       case EntityType.RULE_CHAIN:
         observable = this.ruleChainService.getRuleChainsByIds(entityIds, config);
         break;
+      case EntityType.TB_RESOURCE:
+        observable = this.resourceService.getResourcesByIds(entityIds, config);
+        break;
     }
     return observable;
   }
@@ -693,7 +697,7 @@ export class EntityService {
         break;
       case EntityType.TB_RESOURCE:
         pageLink.sortOrder.property = 'title';
-        entitiesObservable = this.resourceService.getTenantResources(pageLink, config);
+        entitiesObservable = this.resourceService.getResources(pageLink, subType as ResourceType, null, config);
         break;
       case EntityType.QUEUE_STATS:
         pageLink.sortOrder.property = 'createdTime';

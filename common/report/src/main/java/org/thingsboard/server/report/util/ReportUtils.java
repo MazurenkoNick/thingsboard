@@ -131,21 +131,39 @@ public class ReportUtils {
                 dataSource = dataSources.get(0);
             }
         }
-        if (dataSource == null) {
+        if (isDataSourceValid(dataSource)) {
+            return Optional.of(dataSource);
+        } else {
             return Optional.empty();
+        }
+    }
+
+    public static List<DataSource> getMultipleDataSources(DataReportComponent component) {
+        List<DataSource> dataSources = component.getDataSources();
+        if (dataSources == null) {
+            dataSources = new ArrayList<>();
+        } else {
+            dataSources = dataSources.stream().filter(ReportUtils::isDataSourceValid).toList();
+        }
+        return dataSources;
+    }
+
+    public static boolean isDataSourceValid(DataSource dataSource) {
+        if (dataSource == null) {
+            return false;
         }
         switch (dataSource.getType()) {
             case DEVICE:
                 if (dataSource.getDeviceId() == null) {
-                    return Optional.empty();
+                    return false;
                 }
                 break;
             case ENTITY:
                 if (dataSource.getEntityAliasId() == null) {
-                    return Optional.empty();
+                    return false;
                 }
         }
-        return Optional.of(dataSource);
+        return true;
     }
 
     public static String updateDashboardReportStateParamsWithEntity(String state, EntityData stateEntity) {

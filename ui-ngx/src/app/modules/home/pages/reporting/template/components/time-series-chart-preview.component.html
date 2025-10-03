@@ -44,7 +44,7 @@
     </div>
   } @else {
     <div class="tb-time-series-chart-text" [style.width]="imageWidth" [style.height.px]="imageHeightPx">
-      {{ noDataMessage | translate }}
+      {{ noDataMessage | translate: {chartType: chartTypeTitle} }}
     </div>
   }
 </div>
