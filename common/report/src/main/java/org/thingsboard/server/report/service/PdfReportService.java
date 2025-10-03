@@ -127,6 +127,7 @@ import static org.thingsboard.server.report.util.ReportQueryUtils.resolveAliasId
 import static org.thingsboard.server.report.util.ReportQueryUtils.toAlarmCountQuery;
 import static org.thingsboard.server.report.util.ReportQueryUtils.toEntityCountQuery;
 import static org.thingsboard.server.report.util.ReportUtils.collectThresholdItems;
+import static org.thingsboard.server.report.util.ReportUtils.getMultipleDataSources;
 import static org.thingsboard.server.report.util.ReportUtils.getSingleDataSource;
 import static org.thingsboard.server.report.util.ReportUtils.prepareReportComponent;
 import static org.thingsboard.server.report.util.ReportUtils.prepareReportName;
@@ -656,7 +657,7 @@ public class PdfReportService extends AbstractReportService {
     private ComponentData buildMultipleDataSourceData(int usablePageWidthPx, TbReportCtx ctx, ReportComponent component, EntityData stateEntity) {
         List<DataSource> dataSources = null;
         if (component instanceof DataReportComponent) {
-            dataSources = ((DataReportComponent) component).getDataSources();
+            dataSources = getMultipleDataSources((DataReportComponent) component);
         }
         if (dataSources == null || dataSources.isEmpty()) {
             return new ComponentData(usablePageWidthPx);
