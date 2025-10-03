@@ -180,6 +180,7 @@
         <jfreechart.version>1.5.6</jfreechart.version>
         <jtidy.version>r938</jtidy.version>
         <pdfbox.version>3.0.5</pdfbox.version>
+        <ibm.icu4j.version>75.1</ibm.icu4j.version>
         <netty.version>4.1.124.Final</netty.version> <!-- to fix CVE-2025-55163. TODO: remove when fixed in spring-boot-dependencies -->
     </properties>
 
@@ -2166,6 +2167,11 @@
                 <version>${pdfbox.version}</version>
                 <scope>test</scope>
             </dependency>
+            <dependency>
+                <groupId>com.ibm.icu</groupId>
+                <artifactId>icu4j</artifactId>
+                <version>${ibm.icu4j.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -2204,10 +2210,6 @@
             <url>https://repo.typesafe.com/typesafe/releases/</url>
         </repository>
         <repository>
-            <id>sonatype</id>
-            <url>https://oss.sonatype.org/content/groups/public</url>
-        </repository>
-        <repository>
             <id>jenkins</id>
             <name>Jenkins Repository</name>
             <url>https://repo.jenkins-ci.org/releases</url>
@@ -2216,4 +2218,5 @@
             </snapshots>
         </repository>
     </repositories>
+
 </project>

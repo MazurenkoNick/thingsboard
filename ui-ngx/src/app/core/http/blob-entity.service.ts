@@ -40,7 +40,7 @@ import { map } from 'rxjs/operators';
 import { DOCUMENT } from '@angular/common';
 import { WINDOW } from '@core/services/window.service';
 import { sortEntitiesByIds } from '@shared/models/base-data';
-import { isDefinedAndNotNull } from '@core/utils';
+import { getFilenameFromHttpHeader, isDefinedAndNotNull } from '@core/utils';
 
 // @dynamic
 @Injectable({
@@ -84,7 +84,7 @@ export class BlobEntityService {
     return this.http.get(`/api/blobEntity/${blobEntityId}/download`, { responseType: 'arraybuffer', observe: 'response' }).pipe(
       map((response) => {
         const headers = response.headers;
-        const filename = headers.get('x-filename');
+        const filename = getFilenameFromHttpHeader(headers);
         const contentType = headers.get('content-type');
         const linkElement = this.document.createElement('a');
         try {
@@ -92,14 +92,8 @@ export class BlobEntityService {
           const url = URL.createObjectURL(blob);
           linkElement.setAttribute('href', url);
           linkElement.setAttribute('download', filename);
-          const clickEvent = new MouseEvent('click',
-            {
-              view: this.window,
-              bubbles: true,
-              cancelable: false
-            }
-          );
-          linkElement.dispatchEvent(clickEvent);
+          linkElement.click();
+          setTimeout(() => URL.revokeObjectURL(url), 0);
           return null;
         } catch (e) {
           throw e;

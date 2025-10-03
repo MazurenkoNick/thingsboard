@@ -46,6 +46,7 @@ import org.thingsboard.server.report.context.chart.LatestChartDataItem;
 import org.thingsboard.server.report.renderer.chart.legend.TbLatestChartLegendItem;
 import org.thingsboard.server.report.renderer.chart.legend.TbLatestLegendTitle;
 import org.thingsboard.server.report.util.ColorUtils;
+import org.thingsboard.server.report.util.ThymeleafUtil;
 
 import java.awt.Font;
 import java.awt.Graphics2D;
@@ -53,6 +54,7 @@ import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 
 import static org.thingsboard.server.report.renderer.chart.ChartUtils.createValueFormatter;
 import static org.thingsboard.server.report.util.AwtFontUtils.toAwtFont;
@@ -64,6 +66,8 @@ public abstract class TbLatestChart<S extends ReportLatestChartSettings, P exten
 
     protected final S chartSettings;
     protected final LatestChartData latestChartData;
+    private final Map<String, Object> variables;
+
     protected final List<LatestChartDataItem> dataItems;
 
     protected final NumberFormat valueFormatter;
@@ -75,9 +79,10 @@ public abstract class TbLatestChart<S extends ReportLatestChartSettings, P exten
 
     protected JFreeChart chart;
 
-    public TbLatestChart(S chartSettings, LatestChartData latestChartData) {
+    public TbLatestChart(S chartSettings, LatestChartData latestChartData, Map<String, Object> variables) {
         this.chartSettings = chartSettings;
         this.latestChartData = latestChartData;
+        this.variables = variables;
 
         Comparator<LatestChartDataItem> comparator = chartSettings.getSortSeries() ? Comparator.comparing(LatestChartDataItem::getLabel, String.CASE_INSENSITIVE_ORDER)
                 : Comparator.comparing(LatestChartDataItem::getIndex);
@@ -117,7 +122,7 @@ public abstract class TbLatestChart<S extends ReportLatestChartSettings, P exten
                 }
                 return legendItem;
             }).toList();
-            if (!chartSettings.getShowTotal()) {
+            if (!chartSettings.getShowTotal() && chartSettings.getLegendShowTotal()) {
                 TbLatestChartLegendItem legendItem = new TbLatestChartLegendItem();
                 legendItem.setLabel("Total");
                 legendItem.setHasValue(hasTotalValue);
@@ -153,7 +158,8 @@ public abstract class TbLatestChart<S extends ReportLatestChartSettings, P exten
 
         if (chartSettings.getShowTitle()) {
             Font titleFont = toAwtFont(chartSettings.getTitleFont());
-            TextTitle title = new TextTitle(chartSettings.getTitle(), titleFont);
+            String titleText = ThymeleafUtil.renderFromTextString(chartSettings.getTitle(), this.variables);
+            TextTitle title = new TextTitle(titleText, titleFont);
             title.setPaint(safeParseCssColor(chartSettings.getTitleColor()));
             HorizontalAlignment alignment = HorizontalAlignment.CENTER;
             switch (chartSettings.getTitleAlignment()) {

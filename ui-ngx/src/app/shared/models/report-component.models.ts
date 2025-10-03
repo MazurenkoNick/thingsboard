@@ -849,7 +849,8 @@ export const reportLatestChartDefaultSettings: ReportLatestChartSettings = {
     style: 'normal',
     weight: '500'
   },
-  legendValueColor: 'rgba(0, 0, 0, 0.87)'
+  legendValueColor: 'rgba(0, 0, 0, 0.87)',
+  legendShowTotal: true
 } as ReportLatestChartSettings;
 
 export interface ReportBarChartSettings extends ReportLatestChartSettings {
