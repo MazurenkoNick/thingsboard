@@ -1156,7 +1156,7 @@ export class EntityDataSubscription {
             this.datasourceOrigData[dataIndex][datasourceKey].data.push([series[0], series[1], series[2]]);
             let value = EntityDataSubscription.convertValue(series[1]);
             if (dataKey.postFunc) {
-              value = this.utils.customTranslation(dataKey.postFunc.execute(time, value, prevSeries[1], prevOrigSeries[0], prevOrigSeries[1]));
+              value = dataKey.postFunc.execute(time, value, prevSeries[1], prevOrigSeries[0], prevOrigSeries[1]);
             }
             prevOrigSeries = [series[0], series[1], series[2]];
             series = [series[0], value, series[2]];
@@ -1171,7 +1171,7 @@ export class EntityDataSubscription {
             this.datasourceOrigData[dataIndex][datasourceKey].data.push([series[0], series[1], series[2]]);
             let value = EntityDataSubscription.convertValue(series[1]);
             if (dataKey.postFunc) {
-              value = this.utils.customTranslation(dataKey.postFunc.execute(time, value, prevSeries[1], prevOrigSeries[0], prevOrigSeries[1]));
+              value = dataKey.postFunc.execute(time, value, prevSeries[1], prevOrigSeries[0], prevOrigSeries[1]);
             }
             series = [time, value, series[2]];
             data.push([series[0], series[1], series[2]]);
