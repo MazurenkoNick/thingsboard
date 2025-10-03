@@ -33,18 +33,18 @@ import { Component, ViewEncapsulation } from '@angular/core';
 import {
   AbstractReportComponentConfig
 } from '@home/pages/reporting/template/components/report-component-config.component';
-import { TwoBlocksReportComponentConfig } from '@shared/models/report-component.models';
+import { SplitViewReportComponentConfig } from '@shared/models/report-component.models';
 import { FormGroup, Validators } from '@angular/forms';
 
 @Component({
-  selector: 'tb-two-blocks-config',
-  templateUrl: './two-blocks-config.component.html',
+  selector: 'tb-split-view-config',
+  templateUrl: './split-view-config.component.html',
   styleUrls: ['./report-component-config.scss'],
   encapsulation: ViewEncapsulation.None
 })
-export class TwoBlocksConfigComponent extends AbstractReportComponentConfig<TwoBlocksReportComponentConfig> {
+export class SplitViewConfigComponent extends AbstractReportComponentConfig<SplitViewReportComponentConfig> {
 
-  protected buildForm(reportComponentConfig: TwoBlocksReportComponentConfig): FormGroup {
+  protected buildForm(reportComponentConfig: SplitViewReportComponentConfig): FormGroup {
 
     return this.fb.group({
       splitPosition: [reportComponentConfig.splitPosition, [Validators.min(1), Validators.max(99), Validators.required]],

@@ -154,7 +154,7 @@ table.tb-report-table th.tb-report-table-heading {
     border-bottom: 0;
 }
 
-table.tb-two-blocks {
+table.tb-split-view {
     width: 100%;
     padding: 0;
     margin: 0;
@@ -164,7 +164,7 @@ table.tb-two-blocks {
     border-spacing: 0;
 }
 
-table.tb-two-blocks > tr > td {
+table.tb-split-view > tr > td {
     height: 1px;
     border-style: none;
     padding: 0;

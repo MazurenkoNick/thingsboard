@@ -30,17 +30,17 @@
     OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 
 -->
-<table class="tb-two-blocks-preview" #blocksContainer>
+<table class="tb-split-view-preview" #splitContainer>
   <tr>
     <td [style.width]="leftWidth">
       <tb-report-drop-block
-        #leftBlock
+        #leftView
         [paddingRight]="centerWidth / 2"
         [context]="context"
         [format]="format"
         [scale]="scale"
         [verticalAlignment]="leftVerticalAlignment"
-        [component]="reportComponent.leftBlock"
+        [component]="reportComponent.leftView"
         (componentEdit)="childComponentEdit(true)"
         (componentRemoved)="childComponentRemoved($event,true)"
         (componentAdded)="childComponentAdded($event, true)">
@@ -48,13 +48,13 @@
     </td>
     <td [style.width]="rightWidth">
       <tb-report-drop-block
-        #rightBlock
+        #rightView
         [paddingLeft]="centerWidth / 2"
         [context]="context"
         [format]="format"
         [scale]="scale"
         [verticalAlignment]="rightVerticalAlignment"
-        [component]="reportComponent.rightBlock"
+        [component]="reportComponent.rightView"
         (componentEdit)="childComponentEdit(false)"
         (componentRemoved)="childComponentRemoved($event, false)"
         (componentAdded)="childComponentAdded($event, false)">

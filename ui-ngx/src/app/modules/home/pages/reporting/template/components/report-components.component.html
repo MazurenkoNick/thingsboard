@@ -72,9 +72,7 @@
                            (childrenChanged)="childrenComponentsChanged()">
       </tb-report-component>
       @if (reportComponentComponent.reportComponentsContainer) {
-        <div cdkDragHandle #dragHandle class="tb-report-component-drag-handle">
-          <tb-icon>mdi:drag-variant</tb-icon>
-        </div>
+        <tb-icon cdkDragHandle #dragHandle class="tb-report-component-drag-handle">mdi:arrow-all</tb-icon>
       }
     </div>
   }

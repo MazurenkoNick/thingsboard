@@ -64,7 +64,7 @@ import {
   SubReportReportComponentConfig,
   TimeseriesChartReportComponentConfig,
   TimeseriesTableReportComponentConfig,
-  toReportTimeSeriesChartKeySettings, TwoBlocksReportComponentConfig
+  toReportTimeSeriesChartKeySettings, SplitViewReportComponentConfig
 } from '@shared/models/report-component.models';
 import { Type } from '@angular/core';
 import { HeadingPreviewComponent } from '@home/pages/reporting/template/components/heading-preview.component';
@@ -124,8 +124,8 @@ import { TimeSeriesChartType } from '@home/components/widget/lib/chart/time-seri
 import { TbTimeSeriesChart } from '@home/components/widget/lib/chart/time-series-chart';
 import { LatestChartPreviewComponent } from '@home/pages/reporting/template/components/latest-chart-preview.component';
 import { LatestChartConfigComponent } from '@home/pages/reporting/template/components/latest-chart-config.component';
-import { TwoBlocksPreviewComponent } from '@home/pages/reporting/template/components/two-blocks-preview.component';
-import { TwoBlocksConfigComponent } from '@home/pages/reporting/template/components/two-blocks-config.component';
+import { SplitViewPreviewComponent } from '@home/pages/reporting/template/components/split-view-preview.component';
+import { SplitViewConfigComponent } from '@home/pages/reporting/template/components/split-view-config.component';
 import { CdkDragMove, CdkDragRelease, CdkDropList } from '@angular/cdk/drag-drop';
 
 export enum ReportComponentLibraryGroup {
@@ -179,7 +179,7 @@ export const reportComponentGroups = new Map<string, Array<string>>(
     ],
     [
       ReportComponentLibraryGroup.reportInfoAndLayout,
-      ['twoBlocks', 'pageNumber', 'createdTime', 'divider', 'pageBreak']
+      ['splitView', 'pageNumber', 'createdTime', 'divider', 'pageBreak']
     ]
   ]
 );
@@ -1321,14 +1321,14 @@ export const reportComponentsLibrary = new Map<string, ReportComponentLibraryIte
       }
     ],
     [
-      'twoBlocks',
+      'splitView',
       {
-        title: 'report-template.component.two-blocks.type',
-        previewImage: '/assets/report/components/page-break.svg',
-        type: ReportComponentType.TWO_BLOCKS,
+        title: 'report-template.component.split-view.type',
+        previewImage: '/assets/report/components/split-view.svg',
+        type: ReportComponentType.SPLIT_VIEW,
         defaultConfig: {
-          leftBlock: null,
-          rightBlock: null,
+          leftView: null,
+          rightView: null,
           splitPosition: 50,
           splitGap: 8,
           leftVerticalAlignment: 'middle',
@@ -1336,8 +1336,8 @@ export const reportComponentsLibrary = new Map<string, ReportComponentLibraryIte
           margins: null,
           paddings: null,
           background: null,
-          type: ReportComponentType.TWO_BLOCKS
-        } as TwoBlocksReportComponentConfig
+          type: ReportComponentType.SPLIT_VIEW
+        } as SplitViewReportComponentConfig
       }
     ]
   ]
@@ -1620,11 +1620,11 @@ reportComponentTypesData.registerReportComponentType(ReportComponentType.SUB_REP
     editable: true
   });
 
-reportComponentTypesData.registerReportComponentType(ReportComponentType.TWO_BLOCKS,
+reportComponentTypesData.registerReportComponentType(ReportComponentType.SPLIT_VIEW,
   {
-    title: 'report-template.component.two-blocks.type',
-    previewComponent: TwoBlocksPreviewComponent,
-    configComponent: TwoBlocksConfigComponent,
+    title: 'report-template.component.split-view.type',
+    previewComponent: SplitViewPreviewComponent,
+    configComponent: SplitViewConfigComponent,
     editable: true,
     container: true
   });

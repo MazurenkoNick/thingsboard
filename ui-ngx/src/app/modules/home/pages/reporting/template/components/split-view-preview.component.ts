@@ -34,31 +34,31 @@ import {
   AbstractReportComponentPreviewContainer,
   IReportComponent
 } from '@home/pages/reporting/template/components/report-component.component';
-import { ReportComponentConfig, TwoBlocksReportComponentConfig } from '@shared/models/report-component.models';
+import { ReportComponentConfig, SplitViewReportComponentConfig } from '@shared/models/report-component.models';
 import { ReportDropBlockComponent } from '@home/pages/reporting/template/components/report-drop-block.component';
 import { alignment } from '@shared/models/widget-settings.models';
 
 @Component({
-  selector: 'tb-two-blocks-preview',
-  templateUrl: './two-blocks-preview.component.html',
-  styleUrls: ['./two-blocks-preview.component.scss'],
+  selector: 'tb-split-view-preview',
+  templateUrl: './split-view-preview.component.html',
+  styleUrls: ['./split-view-preview.component.scss'],
   encapsulation: ViewEncapsulation.None
 })
-export class TwoBlocksPreviewComponent extends AbstractReportComponentPreviewContainer<TwoBlocksReportComponentConfig> implements AfterViewInit, OnDestroy {
+export class SplitViewPreviewComponent extends AbstractReportComponentPreviewContainer<SplitViewReportComponentConfig> implements AfterViewInit, OnDestroy {
 
-  blocksContainerEl = viewChild('blocksContainer', {
+  splitContainerEl = viewChild('splitContainer', {
     read: ElementRef<HTMLElement>,
   });
 
-  leftBlock = viewChild('leftBlock', {
+  leftView = viewChild('leftView', {
     read: ReportDropBlockComponent,
   });
 
-  rightBlock = viewChild('rightBlock', {
+  rightView = viewChild('rightView', {
     read: ReportDropBlockComponent,
   });
 
-  private blocksContainerResize$: ResizeObserver;
+  private splitContainerResize$: ResizeObserver;
 
   leftWidth = '50%';
   centerWidth = 8;
@@ -77,27 +77,27 @@ export class TwoBlocksPreviewComponent extends AbstractReportComponentPreviewCon
   }
 
   ngAfterViewInit() {
-    this.blocksContainerResize$ = new ResizeObserver(() => {
+    this.splitContainerResize$ = new ResizeObserver(() => {
       this.contentResized.emit();
     });
-    this.blocksContainerResize$.observe(this.blocksContainerEl().nativeElement);
+    this.splitContainerResize$.observe(this.splitContainerEl().nativeElement);
   }
 
   ngOnDestroy() {
-    if (this.blocksContainerResize$) {
-      this.blocksContainerResize$.disconnect();
+    if (this.splitContainerResize$) {
+      this.splitContainerResize$.disconnect();
     }
   }
 
   childComponentEdit(leftElseRight: boolean): void {
-    this.componentEdit.emit(leftElseRight ? this.reportComponent.leftBlock : this.reportComponent.rightBlock);
+    this.componentEdit.emit(leftElseRight ? this.reportComponent.leftView : this.reportComponent.rightView);
   }
 
   childComponentRemoved(component: ReportComponentConfig, leftElseRight: boolean) {
     if (leftElseRight) {
-      this.reportComponent.leftBlock = null;
+      this.reportComponent.leftView = null;
     } else {
-      this.reportComponent.rightBlock = null;
+      this.reportComponent.rightView = null;
     }
     if (component) {
       this.componentRemoved.emit(component);
@@ -107,20 +107,20 @@ export class TwoBlocksPreviewComponent extends AbstractReportComponentPreviewCon
 
   childComponentAdded(component: ReportComponentConfig, leftElseRight: boolean) {
     if (leftElseRight) {
-      this.reportComponent.leftBlock = component;
+      this.reportComponent.leftView = component;
     } else {
-      this.reportComponent.rightBlock = component;
+      this.reportComponent.rightView = component;
     }
     this.componentsChanged.emit();
   }
 
   protected getAllChildReportComponents(): IReportComponent[] {
     const reportComponents: IReportComponent[] = [];
-    let comp = this.leftBlock();
+    let comp = this.leftView();
     if (comp) {
       reportComponents.push(comp);
     }
-    comp = this.rightBlock();
+    comp = this.rightView();
     if (comp) {
       reportComponents.push(comp);
     }
@@ -128,10 +128,10 @@ export class TwoBlocksPreviewComponent extends AbstractReportComponentPreviewCon
   }
 
   protected findChildReportComponent(reportComponent: ReportComponentConfig): IReportComponent {
-    if (this.reportComponent.leftBlock === reportComponent) {
-      return this.leftBlock();
-    } else if (this.reportComponent.rightBlock === reportComponent) {
-      return this.rightBlock();
+    if (this.reportComponent.leftView === reportComponent) {
+      return this.leftView();
+    } else if (this.reportComponent.rightView === reportComponent) {
+      return this.rightView();
     }
     return null;
   }

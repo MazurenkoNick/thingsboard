@@ -40,10 +40,10 @@ import org.thingsboard.server.common.data.report.configuration.style.VerticalAli
 @Data
 @EqualsAndHashCode
 @NoArgsConstructor
-public class TwoBlocksComponent extends AbstractLayoutReportComponent {
+public class SplitViewComponent extends AbstractLayoutReportComponent {
 
-    private ReportComponent leftBlock;
-    private ReportComponent rightBlock;
+    private ReportComponent leftView;
+    private ReportComponent rightView;
     private Float splitPosition;
     private Integer splitGap;
     private VerticalAlignment leftVerticalAlignment;
@@ -51,6 +51,6 @@ public class TwoBlocksComponent extends AbstractLayoutReportComponent {
 
     @Override
     public ReportComponentType getType() {
-        return ReportComponentType.TWO_BLOCKS;
+        return ReportComponentType.SPLIT_VIEW;
     }
 }

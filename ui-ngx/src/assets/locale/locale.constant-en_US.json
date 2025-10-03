@@ -7462,10 +7462,10 @@
                 "no-sub-report": "No subreport selected",
                 "avoid-page-break-inside": "Avoid page break inside"
             },
-            "two-blocks": {
-                "type": "2 blocks",
+            "split-view": {
+                "type": "Split view",
                 "split-position": "Relative split position",
-                "horizontal-gap": "Horizontal gap",
+                "split-gap": "Split gap",
                 "vertical-alignment": "Vertical alignment",
                 "left": "Left",
                 "right": "Right"

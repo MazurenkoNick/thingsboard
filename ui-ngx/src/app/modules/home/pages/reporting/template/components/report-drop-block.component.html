@@ -44,7 +44,10 @@
      (cdkDropListEntered)="dropListEnter($event)"
      (cdkDropListExited)="dropListExit($event)"
      cdkDropList>
-  <div class="tb-no-report-component" *ngIf="showNoReportComponent">
+  <div class="tb-no-report-component"
+       [style.right.pt]="paddingRight"
+       [style.left.pt]="paddingLeft"
+       *ngIf="showNoReportComponent">
     <div translate class="p-4 text-center">
       report-template.drop-report-component
     </div>

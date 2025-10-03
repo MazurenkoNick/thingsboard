@@ -94,9 +94,9 @@ import {
 import {
   ReportComponentLibraryGroupsComponent
 } from '@home/pages/reporting/template/components/report-component-library-groups.component';
-import { TwoBlocksConfigComponent } from '@home/pages/reporting/template/components/two-blocks-config.component';
+import { SplitViewConfigComponent } from '@home/pages/reporting/template/components/split-view-config.component';
 import { ReportDropBlockComponent } from '@home/pages/reporting/template/components/report-drop-block.component';
-import { TwoBlocksPreviewComponent } from '@home/pages/reporting/template/components/two-blocks-preview.component';
+import { SplitViewPreviewComponent } from '@home/pages/reporting/template/components/split-view-preview.component';
 
 @NgModule({
   providers: [
@@ -141,8 +141,8 @@ import { TwoBlocksPreviewComponent } from '@home/pages/reporting/template/compon
     LatestChartConfigComponent,
     ReportComponentConfigComponent,
     ReportDropBlockComponent,
-    TwoBlocksConfigComponent,
-    TwoBlocksPreviewComponent
+    SplitViewConfigComponent,
+    SplitViewPreviewComponent
   ],
   imports: [
     CommonModule,

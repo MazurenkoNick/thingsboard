@@ -87,7 +87,7 @@ export enum ReportComponentType {
   DASHBOARD = 'DASHBOARD',
   IMAGE = 'IMAGE',
   SUB_REPORT = 'SUB_REPORT',
-  TWO_BLOCKS = 'TWO_BLOCKS',
+  SPLIT_VIEW = 'SPLIT_VIEW',
   DIVIDER = 'DIVIDER',
   PAGE_BREAK = 'PAGE_BREAK'
 }
@@ -992,14 +992,14 @@ export interface SubReportReportComponentConfig extends DataReportComponentConfi
   type: ReportComponentType.SUB_REPORT;
 }
 
-export interface TwoBlocksReportComponentConfig extends LayoutReportComponentConfig {
-  leftBlock?: ReportComponentConfig;
-  rightBlock?: ReportComponentConfig;
+export interface SplitViewReportComponentConfig extends LayoutReportComponentConfig {
+  leftView?: ReportComponentConfig;
+  rightView?: ReportComponentConfig;
   splitPosition: number;
   splitGap: number;
   leftVerticalAlignment: alignment;
   rightVerticalAlignment: alignment;
-  type:  ReportComponentType.TWO_BLOCKS;
+  type:  ReportComponentType.SPLIT_VIEW;
 }
 
 export enum BorderLength {
