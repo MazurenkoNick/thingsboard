@@ -215,7 +215,11 @@
                 }
               </mat-form-field>
             } @else {
-              <tb-entity-key-autocomplete class="flex-1" formControlName="perimeterKeyName" [dataKeyType]="DataKeyType.attribute" [entityFilter]="entityFilter" [keyScopeType]="AttributeScope.SERVER_SCOPE"/>
+              <tb-entity-key-autocomplete class="flex-1"
+                                          formControlName="perimeterKeyName"
+                                          [hideNoKeyOption]="entityType === ArgumentEntityType.Owner"
+                                          [dataKeyType]="DataKeyType.attribute" [entityFilter]="entityFilter"
+                                          [keyScopeType]="AttributeScope.SERVER_SCOPE"/>
             }
           </div>
         }
