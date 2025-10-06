@@ -87,8 +87,4 @@ public interface CalculatedFieldConfiguration {
                 .collect(Collectors.toList());
     }
 
-    default boolean requiresScheduledReevaluation() {
-        return false;
-    }
-
 }
