@@ -7499,12 +7499,12 @@
             },
             "time-series-chart": {
                 "type": "Time series chart",
-                "no-datasource-configured": "Data source is not configured for time series chart",
-                "no-series-configured": "At least one series should be specified for time series chart"
+                "no-datasource-configured": "Data source is not configured for \"{{chartType}}\"",
+                "no-series-configured": "At least one series should be specified for \"{{chartType}}\""
             },
             "latest-chart": {
-                "no-datasource-configured": "Data source is not configured for the chart",
-                "no-series-configured": "At least one series should be specified for the chart"
+                "no-datasource-configured": "Data source is not configured for \"{{chartType}}\"",
+                "no-series-configured": "At least one series should be specified for \"{{chartType}}\""
             },
             "line-chart": "Line chart",
             "bar-chart": "Bar chart",

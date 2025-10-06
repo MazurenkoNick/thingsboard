@@ -58,8 +58,8 @@ public class TbPieChart extends TbLatestChart<ReportPieChartSettings, TbPiePlot<
     private DefaultPieDataset<Integer> pieDataset;
     private Map<Integer, String> percents;
 
-    public TbPieChart(ReportPieChartSettings settings, LatestChartData latestChartData) {
-        super(settings, latestChartData);
+    public TbPieChart(ReportPieChartSettings settings, LatestChartData latestChartData, Map<String, Object> variables) {
+        super(settings, latestChartData, variables);
     }
 
     @Override

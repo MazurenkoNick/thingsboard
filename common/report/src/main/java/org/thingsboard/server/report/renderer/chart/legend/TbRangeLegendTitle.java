@@ -57,6 +57,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import static org.thingsboard.server.report.util.AwtFontUtils.newFont;
 import static org.thingsboard.server.report.util.ColorUtils.safeParseCssColor;
 
 public class TbRangeLegendTitle extends Title {
@@ -76,7 +77,7 @@ public class TbRangeLegendTitle extends Title {
     public TbRangeLegendTitle(List<TsChartRangeItem> rangeItems) {
         this.rangeItems = rangeItems;
 
-        this.legendLabelFont = new Font("Roboto", Font.PLAIN, 12);
+        this.legendLabelFont = newFont("Roboto", Font.PLAIN, 12);
         this.legendLabelPaint = safeParseCssColor("rgba(0, 0, 0, 0.76)");
     }
 

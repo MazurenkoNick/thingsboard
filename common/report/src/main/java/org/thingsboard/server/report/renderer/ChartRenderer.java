@@ -35,6 +35,7 @@ import org.jfree.chart.encoders.ImageFormat;
 import org.thingsboard.server.common.data.report.configuration.components.AbstractChartComponent;
 import org.thingsboard.server.common.data.report.configuration.image.ImageWidthType;
 import org.thingsboard.server.report.context.ComponentData;
+import org.thingsboard.server.report.renderer.chart.graphics.TbGraphics2D;
 
 import javax.imageio.ImageIO;
 import java.awt.Graphics2D;
@@ -66,7 +67,7 @@ public abstract class ChartRenderer<C extends AbstractChartComponent> extends Ab
         int imageHeight = this.height * pixelDensity;
 
         BufferedImage highResImage = new BufferedImage(imageWidth, imageHeight, BufferedImage.TYPE_INT_ARGB);
-        Graphics2D g2 = highResImage.createGraphics();
+        Graphics2D g2 = new TbGraphics2D(highResImage.createGraphics());
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         g2.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
         g2.scale(pixelDensity, pixelDensity);

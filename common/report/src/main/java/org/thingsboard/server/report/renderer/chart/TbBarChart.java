@@ -51,6 +51,7 @@ import org.thingsboard.server.report.context.chart.LatestChartDataItem;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Paint;
+import java.util.Map;
 
 import static org.thingsboard.server.report.renderer.chart.ChartUtils.createFillPaint;
 import static org.thingsboard.server.report.util.AwtFontUtils.toAwtFont;
@@ -63,8 +64,8 @@ public class TbBarChart extends TbLatestChart<ReportBarChartSettings, CategoryPl
     private TbBarRenderer renderer;
     private DefaultCategoryDataset dataset;
 
-    public TbBarChart(ReportBarChartSettings chartSettings, LatestChartData latestChartData) {
-        super(chartSettings, latestChartData);
+    public TbBarChart(ReportBarChartSettings chartSettings, LatestChartData latestChartData, Map<String, Object> variables) {
+        super(chartSettings, latestChartData, variables);
     }
 
     @Override
