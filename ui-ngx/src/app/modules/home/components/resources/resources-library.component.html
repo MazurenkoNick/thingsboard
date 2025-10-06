@@ -45,7 +45,7 @@
   </button>
   <button mat-raised-button color="primary"
           [disabled]="(isLoading$ | async)"
-          (click)="onEntityAction($event, 'delete')"
+          (click)="onEntityAction($event, 'deleteResource')"
           [class.!hidden]="hideDelete() || isEdit">
     {{ 'resource.delete' | translate }}
   </button>
