@@ -90,10 +90,10 @@ import { ReportComponentConfig } from '@shared/models/report-component.models';
 import { FormBuilder, FormControl } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
-  assignReportComponent,
+  assignReportComponent, editReportComponent,
   pointsToPixels,
   ReportComponentContext,
-  reportComponentTypesData
+  reportComponentTypesData, ReportDragDropContext
 } from '@home/pages/reporting/template/components/report-component.models';
 import { EntityService } from '@core/http/entity.service';
 import { IStateController, StateParams } from '@core/api/widget-api.models';
@@ -271,7 +271,8 @@ export class ReportTemplatePageComponent extends PageComponent
         editEntityAlias: this.editEntityAlias.bind(this),
         createFilter: this.createFilter.bind(this)
       },
-      format: null
+      format: null,
+      dragDropCtx: new ReportDragDropContext()
     };
     this.reportComponentSearchFormControl = this.fb.control('', {nonNullable: true});
     this.reportComponentSearchFormControl.valueChanges.pipe(
@@ -375,6 +376,9 @@ export class ReportTemplatePageComponent extends PageComponent
   public reportComponentsChanged(): void {
     this.updatePageLayout();
     this.isDirty = true;
+    setTimeout(() => {
+      this.selectEditingComponent();
+    });
   }
 
   public reportComponentRemoved(reportComponent: ReportComponentConfig) {
@@ -386,11 +390,8 @@ export class ReportTemplatePageComponent extends PageComponent
   public editReportComponent(reportComponent: ReportComponentConfig): void {
     if (this.editingReportComponent !== reportComponent) {
       this.editingReportComponent = reportComponent;
-      this.prevReportComponent = deepClone(reportComponent);
-      const reportComponentsComponents = this.allReportComponentsComponents();
-      for (const component of reportComponentsComponents) {
-        component.componentSelected(reportComponent);
-      }
+      this.prevReportComponent = editReportComponent(reportComponent);
+      this.selectEditingComponent();
       this.renderer.addClass(this.reportTemplateContainerEl().nativeElement, 'tb-close-library');
     }
   }
@@ -777,5 +778,14 @@ export class ReportTemplatePageComponent extends PageComponent
       result.push(...components);
     });
     return result;
+  }
+
+  private selectEditingComponent() {
+    if (this.editingReportComponent) {
+      const reportComponentsComponents = this.allReportComponentsComponents();
+      for (const component of reportComponentsComponents) {
+        component.componentSelected(this.editingReportComponent);
+      }
+    }
   }
 }

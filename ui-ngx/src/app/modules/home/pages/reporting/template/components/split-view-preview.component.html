@@ -30,33 +30,35 @@
     OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 
 -->
-<div class="tb-report-component-library" #libraryDragOriginList cdkDropList
-     [class.no-padding]="nestedLibrary"
-     [cdkDropListConnectedTo]="context.dragDropCtx.dropLists"
-     [cdkDropListEnterPredicate]="dropListEnterPredicate"
-     [cdkDropListSortingDisabled]="true">
-  @for (id of reportComponentIds; track id) {
-    <div class="tb-report-component-library-item">
-      <div class="tb-report-component-library-item-title">{{ reportComponentsLibrary.get(id).title | translate }}</div>
-      <div cdkDrag
-           [cdkDragData]="id"
-           (cdkDragStarted)="dragStarted($event)"
-           (cdkDragEnded)="dragEnded()"
-           (cdkDragEntered)="dragEntered()"
-           (cdkDragMoved)="dragMoved($event)"
-           (cdkDragReleased)="dragReleased($event)"
-           class="tb-report-component-library-drag-item tb-draggable"
-           [class.nested-library]="nestedLibrary">
-        <div *cdkDragPlaceholder>
-            <div class="tb-report-component-placeholder"></div>
-            <div class="tb-report-component-library-drag-item" [class.nested-library]="nestedLibrary"
-                 style="display: none;">
-              <img class="tb-report-component-library-item-preview" [src]="reportComponentsLibrary.get(id).previewImage">
-            </div>
-        </div>
-        <img class="tb-report-component-library-item-preview" [src]="reportComponentsLibrary.get(id).previewImage">
-      </div>
-    </div>
-  }
-</div>
-<div class="tb-report-component-library tb-drag-active-list" [class.no-padding]="nestedLibrary" #libraryDragActiveList></div>
+<table class="tb-split-view-preview" #splitContainer>
+  <tr>
+    <td [style.width]="leftWidth">
+      <tb-report-drop-block
+        #leftView
+        [paddingRight]="centerWidth / 2"
+        [context]="context"
+        [format]="format"
+        [scale]="scale"
+        [verticalAlignment]="leftVerticalAlignment"
+        [component]="reportComponent.leftView"
+        (componentEdit)="childComponentEdit(true)"
+        (componentRemoved)="childComponentRemoved($event,true)"
+        (componentAdded)="childComponentAdded($event, true)">
+      </tb-report-drop-block>
+    </td>
+    <td [style.width]="rightWidth">
+      <tb-report-drop-block
+        #rightView
+        [paddingLeft]="centerWidth / 2"
+        [context]="context"
+        [format]="format"
+        [scale]="scale"
+        [verticalAlignment]="rightVerticalAlignment"
+        [component]="reportComponent.rightView"
+        (componentEdit)="childComponentEdit(false)"
+        (componentRemoved)="childComponentRemoved($event, false)"
+        (componentAdded)="childComponentAdded($event, false)">
+      </tb-report-drop-block>
+    </td>
+  </tr>
+</table>
