@@ -58,6 +58,7 @@ import { EntitiesKeysByQuery } from '@shared/models/entity.models';
 import { EntityFilter } from '@shared/models/query/query.models';
 import { isEqual } from '@core/utils';
 import { TranslateService } from '@ngx-translate/core';
+import { coerceBoolean } from "@shared/decorators/coercion";
 
 @Component({
   selector: 'tb-entity-key-autocomplete',
@@ -81,6 +82,10 @@ export class EntityKeyAutocompleteComponent implements ControlValueAccessor, Val
 
   @Input() placeholder = this.translate.instant('action.set');
   @Input() requiredText = this.translate.instant('common.hint.key-required');
+
+  @Input()
+  @coerceBoolean()
+  hideNoKeyOption = false;
 
   entityFilter = input.required<EntityFilter>();
   dataKeyType = input.required<DataKeyType>();
@@ -148,6 +153,7 @@ export class EntityKeyAutocompleteComponent implements ControlValueAccessor, Val
 
     if (filterChanged || keyScopeChanged || keyTypeChanged) {
       this.keyControl.setValue('', {emitEvent: false});
+      this.cachedResult = null;
     }
   }
 
