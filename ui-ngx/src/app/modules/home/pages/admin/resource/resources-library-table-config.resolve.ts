@@ -46,7 +46,7 @@ import {
   toResourceDeleteResult
 } from '@shared/models/resource.models';
 import { EntityType, entityTypeResources, entityTypeTranslations } from '@shared/models/entity-type.models';
-import { NULL_UUID } from '@shared/models/id/has-uuid';
+import { HasUUID, NULL_UUID } from '@shared/models/id/has-uuid';
 import { DatePipe } from '@angular/common';
 import { TranslateService } from '@ngx-translate/core';
 import { ResourceService } from '@core/http/resource.service';
@@ -71,6 +71,7 @@ import { ActionNotificationShow } from "@core/notification/notification.actions"
 import { ResourcesDatasource } from "@home/pages/admin/resource/resources-datasource";
 import { MatDialog } from "@angular/material/dialog";
 import { DialogService } from "@core/services/dialog.service";
+import { BaseData, HasId } from "@shared/models/base-data";
 
 @Injectable()
 export class ResourcesLibraryTableConfigResolver  {
@@ -192,7 +193,7 @@ export class ResourcesLibraryTableConfigResolver  {
       case 'downloadResource':
         this.downloadResource(action.event, action.entity);
         return true;
-      case 'deleteLibrary':
+      case 'deleteResource':
         this.deleteResource(action.event, action.entity);
     }
     return false;

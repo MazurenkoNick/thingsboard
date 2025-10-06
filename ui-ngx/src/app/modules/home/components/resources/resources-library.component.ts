@@ -127,6 +127,7 @@ export class ResourcesLibraryComponent extends EntityComponent<Resource> impleme
     if (this.isEdit && this.entityForm && !this.isAdd) {
       this.entityForm.get('resourceType').disable({ emitEvent: false });
       this.entityForm.get('fileName').disable({ emitEvent: false });
+      this.entityForm.get('data').disable({ emitEvent: false });
     }
   }
 
