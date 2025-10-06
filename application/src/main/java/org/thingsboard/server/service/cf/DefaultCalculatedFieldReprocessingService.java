@@ -260,7 +260,8 @@ public class DefaultCalculatedFieldReprocessingService extends AbstractCalculate
 
     private CalculatedFieldState initState(TenantId tenantId, EntityId entityId, CalculatedFieldCtx ctx, long startTs) throws InterruptedException {
         CalculatedFieldState state = createStateByType(ctx, entityId);
-        state.init(ctx);
+        state.setCtx(ctx, null);
+        state.init();
 
         Map<String, ArgumentEntry> arguments;
         try {
