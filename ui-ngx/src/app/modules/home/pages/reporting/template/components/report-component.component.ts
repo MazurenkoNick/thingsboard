@@ -320,6 +320,14 @@ export class ReportComponentComponent implements IReportComponent, OnInit, After
     if (event) {
       event.stopPropagation();
     }
+    if (this.reportComponentsContainer) {
+      if (isReportComponentContainer(this.reportComponentPreview)) {
+        const children = this.reportComponentPreview.getAllChildReportComponentConfigs();
+        for (const child of children) {
+          this.childRemove.emit(child);
+        }
+      }
+    }
     this.remove.emit();
   }
 
@@ -608,6 +616,8 @@ export abstract class AbstractReportComponentPreviewContainer<C extends ReportCo
     }
     return false;
   }
+
+  public abstract getAllChildReportComponentConfigs(): ReportComponentConfig[];
 
   protected abstract getAllChildReportComponents(): IReportComponent[];
 

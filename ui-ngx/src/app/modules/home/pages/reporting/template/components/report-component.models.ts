@@ -252,28 +252,37 @@ export const reportComponentsLibrary = new Map<string, ReportComponentLibraryIte
       {
         title: 'report-template.component.text-image',
         previewImage: '/assets/report/components/text-image.svg',
-        type: ReportComponentType.RICH_TEXT,
+        type: ReportComponentType.SPLIT_VIEW,
         defaultConfig: {
-          type: ReportComponentType.RICH_TEXT,
-          value: '<table style="border-collapse: collapse; width: 100%; border-width: 0px; border-style: none; border-spacing: 0px;" border="1"><colgroup><col style="width: 49%;"><col style="width: 2%;"><col style="width: 49%;"></colgroup>\n' +
-            '<tbody>\n' +
-            '<tr>\n' +
-            '<td style="border-style: none; padding: 0px;">\n' +
-            '<p><span style="font-size: 28px; font-weight: 500;">Heading</span></p>\n' +
-            '<p style="line-height: 1.5;">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec libero orci, faucibus in iaculis quis, vestibulum sit amet ligula. Nulla facilisi. Ut ut iaculis tortor.</p>\n' +
-            '</td>\n' +
-            '<td style="border-style: none; padding: 0px;">\n' +
-            '<p>&nbsp;</p>\n' +
-            '</td>\n' +
-            '<td style="vertical-align: middle; border-style: none; padding: 0px;"><img style="display: block; margin-left: auto; margin-right: auto;" src="" width="366px" height="232px"></td>\n' +
-            '</tr>\n' +
-            '</tbody>\n' +
-            '</table>',
-          dataSources: [],
+          type: ReportComponentType.SPLIT_VIEW,
+          splitPosition: 50,
+          splitGap: 10,
+          leftVerticalAlignment: 'middle',
+          rightVerticalAlignment: 'middle',
           margins: null,
           paddings: null,
-          background: null
-        } as RichTextReportComponentConfig
+          background: null,
+          leftView: {
+            type: ReportComponentType.RICH_TEXT,
+            value: '<p><span style="font-size: 28px; font-weight: 500;">Heading</span></p>\n' +
+              '<p style="line-height: 1.5;">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec libero orci, faucibus in iaculis quis, vestibulum sit amet ligula. Nulla facilisi. Ut ut iaculis tortor.</p>',
+            dataSources: [],
+            margins: null,
+            paddings: null,
+            background: null
+          } as RichTextReportComponentConfig,
+          rightView: {
+            type: ReportComponentType.IMAGE,
+            sourceType: 'image',
+            imageUrl: null,
+            widthType: 'fitWidth',
+            alignment: 'center',
+            dataSources: [],
+            margins: null,
+            paddings: null,
+            background: null
+          } as ImageReportComponentConfig
+        } as SplitViewReportComponentConfig
       }
     ],
     [
@@ -281,28 +290,37 @@ export const reportComponentsLibrary = new Map<string, ReportComponentLibraryIte
       {
         title: 'report-template.component.image-text',
         previewImage: '/assets/report/components/image-text.svg',
-        type: ReportComponentType.RICH_TEXT,
+        type: ReportComponentType.SPLIT_VIEW,
         defaultConfig: {
-          type: ReportComponentType.RICH_TEXT,
-          value: '<table style="border-collapse: collapse; width: 100%; border-width: 0px; border-style: none; border-spacing: 0px;" border="1"><colgroup><col style="width: 49%;"><col style="width: 2%;"><col style="width: 49%;"></colgroup>\n' +
-            '<tbody>\n' +
-            '<tr>\n' +
-            '<td style="vertical-align: middle; border-style: none; padding: 0px;"><img style="display: block; margin-left: auto; margin-right: auto;" src="" width="366px" height="232px"></td>\n' +
-            '<td style="border-style: none; padding: 0px;">\n' +
-            '<p>&nbsp;</p>\n' +
-            '</td>\n' +
-            '<td style="border-style: none; padding: 0px;">\n' +
-            '<p><span style="font-size: 28px; font-weight: 500;">Heading</span></p>\n' +
-            '<p style="line-height: 1.5;">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec libero orci, faucibus in iaculis quis, vestibulum sit amet ligula. Nulla facilisi. Ut ut iaculis tortor.</p>\n' +
-            '</td>\n' +
-            '</tr>\n' +
-            '</tbody>\n' +
-            '</table>',
-          dataSources: [],
+          type: ReportComponentType.SPLIT_VIEW,
+          splitPosition: 50,
+          splitGap: 10,
+          leftVerticalAlignment: 'middle',
+          rightVerticalAlignment: 'middle',
           margins: null,
           paddings: null,
-          background: null
-        } as RichTextReportComponentConfig
+          background: null,
+          leftView: {
+            type: ReportComponentType.IMAGE,
+            sourceType: 'image',
+            imageUrl: null,
+            widthType: 'fitWidth',
+            alignment: 'center',
+            dataSources: [],
+            margins: null,
+            paddings: null,
+            background: null
+          } as ImageReportComponentConfig,
+          rightView: {
+            type: ReportComponentType.RICH_TEXT,
+            value: '<p><span style="font-size: 28px; font-weight: 500;">Heading</span></p>\n' +
+              '<p style="line-height: 1.5;">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec libero orci, faucibus in iaculis quis, vestibulum sit amet ligula. Nulla facilisi. Ut ut iaculis tortor.</p>',
+            dataSources: [],
+            margins: null,
+            paddings: null,
+            background: null
+          } as RichTextReportComponentConfig
+        } as SplitViewReportComponentConfig
       }
     ],
     [
@@ -926,7 +944,7 @@ export const reportComponentsLibrary = new Map<string, ReportComponentLibraryIte
           type: ReportComponentType.IMAGE,
           sourceType: 'image',
           imageUrl: null,
-          widthType: 'fitWidth',
+          widthType: 'original',
           alignment: 'center',
           dataSources: [],
           margins: null,
@@ -984,18 +1002,13 @@ export const reportComponentsLibrary = new Map<string, ReportComponentLibraryIte
       {
         title: 'report-template.component.logo-heading',
         previewImage: '/assets/report/components/logo-heading.svg',
-        type: ReportComponentType.RICH_TEXT,
+        type: ReportComponentType.SPLIT_VIEW,
         defaultConfig: {
-          type: ReportComponentType.RICH_TEXT,
-          value: '<table style="border-collapse: collapse; width: 100%; border-width: 0px; border-style: none; border-spacing: 0px;" border="1"><colgroup><col><col style="width: 100%;"></colgroup>\n' +
-            '<tbody>\n' +
-            '<tr>\n' +
-            '<td style="border-style: none; padding: 0px;"><img style="float: left;" src="tb-image;/assets/report/components/logo-placeholder.svg" width="140px" height="24px"></td>\n' +
-            '<td style="vertical-align: middle; border-style: none; padding: 0px; text-align: right; line-height: 1.2;"><strong><span style="font-size: 20px;">Heading</span></strong></td>\n' +
-            '</tr>\n' +
-            '</tbody>\n' +
-            '</table>',
-          dataSources: [],
+          type: ReportComponentType.SPLIT_VIEW,
+          splitPosition: 50,
+          splitGap: 10,
+          leftVerticalAlignment: 'middle',
+          rightVerticalAlignment: 'middle',
           margins: null,
           paddings: {
             top: 9,
@@ -1003,8 +1016,38 @@ export const reportComponentsLibrary = new Map<string, ReportComponentLibraryIte
             left: 6,
             right: 6
           },
-          background: null
-        } as RichTextReportComponentConfig
+          background: null,
+          leftView: {
+            type: ReportComponentType.IMAGE,
+            sourceType: 'image',
+            imageUrl: 'tb-image;/assets/report/components/logo-placeholder.svg',
+            widthType: 'custom',
+            customWidth: 140,
+            alignment: 'left',
+            dataSources: [],
+            margins: null,
+            paddings: null,
+            background: null
+          } as ImageReportComponentConfig,
+          rightView: {
+            type: ReportComponentType.HEADING,
+            value: 'Heading',
+            font: {
+              size: 15,
+              sizeUnit: 'pt',
+              weight: 'bold',
+              style: 'normal',
+              family: 'Roboto'
+            } as Font,
+            color: '#000',
+            textAlignment: 'right',
+            verticalAlignment: 'middle',
+            dataSources: [],
+            margins: null,
+            paddings: null,
+            background: null
+          } as HeadingReportComponentConfig
+        } as SplitViewReportComponentConfig
       }
     ],
     [
@@ -1012,18 +1055,13 @@ export const reportComponentsLibrary = new Map<string, ReportComponentLibraryIte
       {
         title: 'report-template.component.heading-logo',
         previewImage: '/assets/report/components/heading-logo.svg',
-        type: ReportComponentType.RICH_TEXT,
+        type: ReportComponentType.SPLIT_VIEW,
         defaultConfig: {
-          type: ReportComponentType.RICH_TEXT,
-          value: '<table style="border-collapse: collapse; width: 100%; border-width: 0px; border-style: none; border-spacing: 0px;" border="1"><colgroup><col style="width: 100%;"><col></colgroup>\n' +
-            '<tbody>\n' +
-            '<tr>\n' +
-            '<td style="vertical-align: middle; border-style: none; padding: 0px; text-align: left; line-height: 1.2;"><strong><span style="font-size: 20px;">Heading</span></strong></td>\n' +
-            '<td style="border-style: none; padding: 0px;"><img style="float: right;" src="tb-image;/assets/report/components/logo-placeholder.svg" width="140px" height="24px"></td>\n' +
-            '</tr>\n' +
-            '</tbody>\n' +
-            '</table>',
-          dataSources: [],
+          type: ReportComponentType.SPLIT_VIEW,
+          splitPosition: 50,
+          splitGap: 10,
+          leftVerticalAlignment: 'middle',
+          rightVerticalAlignment: 'middle',
           margins: null,
           paddings: {
             top: 9,
@@ -1031,8 +1069,38 @@ export const reportComponentsLibrary = new Map<string, ReportComponentLibraryIte
             left: 6,
             right: 6
           },
-          background: null
-        } as RichTextReportComponentConfig
+          background: null,
+          leftView: {
+            type: ReportComponentType.HEADING,
+            value: 'Heading',
+            font: {
+              size: 15,
+              sizeUnit: 'pt',
+              weight: 'bold',
+              style: 'normal',
+              family: 'Roboto'
+            } as Font,
+            color: '#000',
+            textAlignment: 'left',
+            verticalAlignment: 'middle',
+            dataSources: [],
+            margins: null,
+            paddings: null,
+            background: null
+          } as HeadingReportComponentConfig,
+          rightView: {
+            type: ReportComponentType.IMAGE,
+            sourceType: 'image',
+            imageUrl: 'tb-image;/assets/report/components/logo-placeholder.svg',
+            widthType: 'custom',
+            customWidth: 140,
+            alignment: 'right',
+            dataSources: [],
+            margins: null,
+            paddings: null,
+            background: null
+          } as ImageReportComponentConfig
+        } as SplitViewReportComponentConfig
       }
     ],
     [
@@ -1040,18 +1108,13 @@ export const reportComponentsLibrary = new Map<string, ReportComponentLibraryIte
       {
         title: 'report-template.component.logo-text',
         previewImage: '/assets/report/components/logo-text.svg',
-        type: ReportComponentType.RICH_TEXT,
+        type: ReportComponentType.SPLIT_VIEW,
         defaultConfig: {
-          type: ReportComponentType.RICH_TEXT,
-          value: '<table style="border-collapse: collapse; width: 100%; border-width: 0px; border-style: none; border-spacing: 0px;" border="1"><colgroup><col><col style="width: 100%;"></colgroup>\n' +
-            '<tbody>\n' +
-            '<tr>\n' +
-            '<td style="border-style: none; padding: 0px;"><img style="float: left;" src="tb-image;/assets/report/components/logo-placeholder.svg" width="140px" height="24px"></td>\n' +
-            '<td style="vertical-align: middle; border-style: none; padding: 0px; text-align: right; line-height: 1.2;"><span style="font-size: 14px; color: rgb(117, 117, 117);">2289 5th Ave New York, New York(NY), 10037</span></td>\n' +
-            '</tr>\n' +
-            '</tbody>\n' +
-            '</table>',
-          dataSources: [],
+          type: ReportComponentType.SPLIT_VIEW,
+          splitPosition: 50,
+          splitGap: 10,
+          leftVerticalAlignment: 'middle',
+          rightVerticalAlignment: 'middle',
           margins: null,
           paddings: {
             top: 9,
@@ -1059,8 +1122,36 @@ export const reportComponentsLibrary = new Map<string, ReportComponentLibraryIte
             left: 6,
             right: 6
           },
-          background: null
-        } as RichTextReportComponentConfig
+          background: null,
+          leftView: {
+            type: ReportComponentType.IMAGE,
+            sourceType: 'image',
+            imageUrl: 'tb-image;/assets/report/components/logo-placeholder.svg',
+            widthType: 'custom',
+            customWidth: 140,
+            alignment: 'left',
+            dataSources: [],
+            margins: null,
+            paddings: null,
+            background: null
+          } as ImageReportComponentConfig,
+          rightView: {
+            type: ReportComponentType.RICH_TEXT,
+            value: '<table style="border-collapse: collapse; width: 100%; border-width: 0px; border-style: none; border-spacing: 0px;">\n' +
+                      '<tbody>\n' +
+                          '<tr>\n' +
+                            '<td style="vertical-align: middle; border-style: none; padding: 0px; text-align: right; line-height: 1.2;">\n' +
+                              '<span style="font-size: 14px; color: rgb(117, 117, 117);">2289 5th Ave New York, New York(NY), 10037</span>\n' +
+                            '</td>\n' +
+                          '</tr>\n' +
+                      '</tbody>\n' +
+                   '</table>',
+            dataSources: [],
+            margins: null,
+            paddings: null,
+            background: null
+          } as RichTextReportComponentConfig
+        } as SplitViewReportComponentConfig
       }
     ],
     [
@@ -1068,18 +1159,13 @@ export const reportComponentsLibrary = new Map<string, ReportComponentLibraryIte
       {
         title: 'report-template.component.text-logo',
         previewImage: '/assets/report/components/text-logo.svg',
-        type: ReportComponentType.RICH_TEXT,
+        type: ReportComponentType.SPLIT_VIEW,
         defaultConfig: {
-          type: ReportComponentType.RICH_TEXT,
-          value: '<table style="border-collapse: collapse; width: 100%; border-width: 0px; border-style: none; border-spacing: 0px;" border="1"><colgroup><col style="width: 100%;"><col></colgroup>\n' +
-            '<tbody>\n' +
-            '<tr>\n' +
-            '<td style="vertical-align: middle; border-style: none; padding: 0px; text-align: left; line-height: 1.2;"><span style="font-size: 14px; color: rgb(117, 117, 117);">2289 5th Ave New York, New York(NY), 10037</span></td>\n' +
-            '<td style="border-style: none; padding: 0px;"><img style="float: right;" src="tb-image;/assets/report/components/logo-placeholder.svg" width="140px" height="24px"></td>\n' +
-            '</tr>\n' +
-            '</tbody>\n' +
-            '</table>',
-          dataSources: [],
+          type: ReportComponentType.SPLIT_VIEW,
+          splitPosition: 50,
+          splitGap: 10,
+          leftVerticalAlignment: 'middle',
+          rightVerticalAlignment: 'middle',
           margins: null,
           paddings: {
             top: 9,
@@ -1087,8 +1173,36 @@ export const reportComponentsLibrary = new Map<string, ReportComponentLibraryIte
             left: 6,
             right: 6
           },
-          background: null
-        } as RichTextReportComponentConfig
+          background: null,
+          leftView: {
+            type: ReportComponentType.RICH_TEXT,
+            value: '<table style="border-collapse: collapse; width: 100%; border-width: 0px; border-style: none; border-spacing: 0px;">\n' +
+              '<tbody>\n' +
+              '<tr>\n' +
+              '<td style="vertical-align: middle; border-style: none; padding: 0px; text-align: left; line-height: 1.2;">\n' +
+              '<span style="font-size: 14px; color: rgb(117, 117, 117);">2289 5th Ave New York, New York(NY), 10037</span>\n' +
+              '</td>\n' +
+              '</tr>\n' +
+              '</tbody>\n' +
+              '</table>',
+            dataSources: [],
+            margins: null,
+            paddings: null,
+            background: null
+          } as RichTextReportComponentConfig,
+          rightView: {
+            type: ReportComponentType.IMAGE,
+            sourceType: 'image',
+            imageUrl: 'tb-image;/assets/report/components/logo-placeholder.svg',
+            widthType: 'custom',
+            customWidth: 140,
+            alignment: 'right',
+            dataSources: [],
+            margins: null,
+            paddings: null,
+            background: null
+          } as ImageReportComponentConfig
+        } as SplitViewReportComponentConfig
       }
     ],
     [
@@ -1153,36 +1267,49 @@ export const reportComponentsLibrary = new Map<string, ReportComponentLibraryIte
       {
         title: 'report-template.component.footer-2',
         previewImage: '/assets/report/components/footer-2.svg',
-        type: ReportComponentType.RICH_TEXT,
+        type: ReportComponentType.SPLIT_VIEW,
         defaultConfig: {
-          type: ReportComponentType.RICH_TEXT,
-          value: '<table style="border-collapse: collapse; width: 100%; border-width: 0px;" border="1"><colgroup><col><col style="width: 100%;"></colgroup>\n' +
-            '<tbody>\n' +
-            '<tr>\n' +
-            '<td style="border-width: 0px;"><img style="float: left;" src="tb-image;/assets/report/components/logo-placeholder.svg" width="140px" height="23px"></td>\n' +
-            '<td style="border-width: 0px;">\n' +
-            '<table style="border-collapse: collapse; width: 100%; border-width: 0px; height: 48px;" border="1"><colgroup><col style="width: 100%;"></colgroup>\n' +
-            '<tbody>\n' +
-            '<tr style="height: 24px;">\n' +
-            '<td style="border-width: 0px; height: 24px; line-height: 1.5; text-align: right;"><span style="font-size: 16px; font-weight: 500;">Company name</span></td>\n' +
-            '</tr>\n' +
-            '<tr style="height: 24px;">\n' +
-            '<td style="border-width: 0px; height: 24px; line-height: 1.5; text-align: right;"><span style="font-size: 14px; color: rgb(117, 117, 117);">2289 5th Ave New York, New York(NY), 10037</span></td>\n' +
-            '</tr>\n' +
-            '</tbody>\n' +
-            '</table>\n' +
-            '</td>\n' +
-            '</tr>\n' +
-            '</tbody>\n' +
-            '</table>',
-          dataSources: [],
+          type: ReportComponentType.SPLIT_VIEW,
+          splitPosition: 50,
+          splitGap: 10,
+          leftVerticalAlignment: 'middle',
+          rightVerticalAlignment: 'middle',
           margins: null,
           paddings: {
             left: 6,
             right: 6
           },
-          background: null
-        } as RichTextReportComponentConfig
+          background: null,
+          leftView: {
+            type: ReportComponentType.IMAGE,
+            sourceType: 'image',
+            imageUrl: 'tb-image;/assets/report/components/logo-placeholder.svg',
+            widthType: 'custom',
+            customWidth: 140,
+            alignment: 'left',
+            dataSources: [],
+            margins: null,
+            paddings: null,
+            background: null
+          } as ImageReportComponentConfig,
+          rightView: {
+            type: ReportComponentType.RICH_TEXT,
+            value: '<table style="border-collapse: collapse; width: 100%; border-width: 0px; height: 48px;" border="1"><colgroup><col style="width: 100%;"></colgroup>\n' +
+              '<tbody>\n' +
+              '<tr style="height: 24px;">\n' +
+              '<td style="border-width: 0px; height: 24px; line-height: 1.5; text-align: right;"><span style="font-size: 16px; font-weight: 500;">Company name</span></td>\n' +
+              '</tr>\n' +
+              '<tr style="height: 24px;">\n' +
+              '<td style="border-width: 0px; height: 24px; line-height: 1.5; text-align: right;"><span style="font-size: 14px; color: rgb(117, 117, 117);">2289 5th Ave New York, New York(NY), 10037</span></td>\n' +
+              '</tr>\n' +
+              '</tbody>\n' +
+              '</table>',
+            dataSources: [],
+            margins: null,
+            paddings: null,
+            background: null
+          } as RichTextReportComponentConfig
+        } as SplitViewReportComponentConfig
       }
     ],
     [
@@ -1190,36 +1317,49 @@ export const reportComponentsLibrary = new Map<string, ReportComponentLibraryIte
       {
         title: 'report-template.component.footer-3',
         previewImage: '/assets/report/components/footer-3.svg',
-        type: ReportComponentType.RICH_TEXT,
+        type: ReportComponentType.SPLIT_VIEW,
         defaultConfig: {
-          type: ReportComponentType.RICH_TEXT,
-          value: '<table style="border-collapse: collapse; width: 100%; border-width: 0px;" border="1"><colgroup><col style="width: 100%;"><col></colgroup>\n' +
-            '<tbody>\n' +
-            '<tr>\n' +
-            '<td style="border-width: 0px;">\n' +
-            '<table style="border-collapse: collapse; width: 100%; border-width: 0px; height: 48px;" border="1"><colgroup><col style="width: 100%;"></colgroup>\n' +
-            '<tbody>\n' +
-            '<tr style="height: 24px;">\n' +
-            '<td style="border-width: 0px; height: 24px; line-height: 1.5; text-align: left;"><span style="font-size: 16px; font-weight: 500;">Company name</span></td>\n' +
-            '</tr>\n' +
-            '<tr style="height: 24px;">\n' +
-            '<td style="border-width: 0px; height: 24px; line-height: 1.5; text-align: left;"><span style="font-size: 14px; color: rgb(117, 117, 117);">2289 5th Ave New York, New York(NY), 10037</span></td>\n' +
-            '</tr>\n' +
-            '</tbody>\n' +
-            '</table>\n' +
-            '</td>\n' +
-            '<td style="border-width: 0px;"><img style="float: right;" src="tb-image;/assets/report/components/logo-placeholder.svg" width="140px" height="23px"></td>\n' +
-            '</tr>\n' +
-            '</tbody>\n' +
-            '</table>',
-          dataSources: [],
+          type: ReportComponentType.SPLIT_VIEW,
+          splitPosition: 50,
+          splitGap: 10,
+          leftVerticalAlignment: 'middle',
+          rightVerticalAlignment: 'middle',
           margins: null,
           paddings: {
             left: 6,
             right: 6
           },
-          background: null
-        } as RichTextReportComponentConfig
+          background: null,
+          leftView: {
+            type: ReportComponentType.RICH_TEXT,
+            value: '<table style="border-collapse: collapse; width: 100%; border-width: 0px; height: 48px;" border="1"><colgroup><col style="width: 100%;"></colgroup>\n' +
+              '<tbody>\n' +
+              '<tr style="height: 24px;">\n' +
+              '<td style="border-width: 0px; height: 24px; line-height: 1.5; text-align: left;"><span style="font-size: 16px; font-weight: 500;">Company name</span></td>\n' +
+              '</tr>\n' +
+              '<tr style="height: 24px;">\n' +
+              '<td style="border-width: 0px; height: 24px; line-height: 1.5; text-align: left;"><span style="font-size: 14px; color: rgb(117, 117, 117);">2289 5th Ave New York, New York(NY), 10037</span></td>\n' +
+              '</tr>\n' +
+              '</tbody>\n' +
+              '</table>',
+            dataSources: [],
+            margins: null,
+            paddings: null,
+            background: null
+          } as RichTextReportComponentConfig,
+          rightView: {
+            type: ReportComponentType.IMAGE,
+            sourceType: 'image',
+            imageUrl: 'tb-image;/assets/report/components/logo-placeholder.svg',
+            widthType: 'custom',
+            customWidth: 140,
+            alignment: 'right',
+            dataSources: [],
+            margins: null,
+            paddings: null,
+            background: null
+          } as ImageReportComponentConfig
+        } as SplitViewReportComponentConfig
       }
     ],
     [

@@ -114,6 +114,17 @@ export class SplitViewPreviewComponent extends AbstractReportComponentPreviewCon
     this.componentsChanged.emit();
   }
 
+  public getAllChildReportComponentConfigs(): ReportComponentConfig[] {
+    const reportComponents: ReportComponentConfig[] = [];
+    if (this.reportComponent.leftView) {
+      reportComponents.push(this.reportComponent.leftView);
+    }
+    if (this.reportComponent.rightView) {
+      reportComponents.push(this.reportComponent.rightView);
+    }
+    return reportComponents;
+  }
+
   protected getAllChildReportComponents(): IReportComponent[] {
     const reportComponents: IReportComponent[] = [];
     let comp = this.leftView();
