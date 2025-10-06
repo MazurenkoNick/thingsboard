@@ -49,7 +49,7 @@
             {{ 'admin.2fa.use-system-two-factor-auth-settings' | translate }}
           </mat-checkbox>
           <div class="tb-form-panel no-padding no-border" [class.!hidden]="isTenantAdmin() && twoFaFormGroup.get('useSystemTwoFactorAuthSettings').value">
-            <div class="tb-form-panel stroked tb-slide-toggle">
+            <div class="tb-form-panel stroked tb-slide-toggle" [class.!hidden]="isTenantAdmin()">
               <mat-expansion-panel class="tb-settings no-padding-bottom">
                 <mat-expansion-panel-header>
                   <mat-panel-title>
