@@ -30,50 +30,47 @@
     OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 
 -->
-<div class="tb-drop-list tb-report-components"
-     [style.background]="background"
-     [style.min-height.px]="reportsComponentHeight"
-     cdkDropList
-     cdkDropListOrientation="vertical"
-     cdkDropListAutoScrollStep="20"
-     [cdkDropListData]="reportComponents"
+<div class="tb-drop-list tb-report-drop-block"
+     [class]="'tb-align-'+verticalAlignment"
+     [style.padding-right.pt]="paddingRight"
+     [style.padding-left.pt]="paddingLeft"
+     [style.min-height.px]="reportComponentHeight"
+     [cdkDropListData]="components"
      [cdkDropListConnectedTo]="context.dragDropCtx.dropLists"
      [cdkDropListEnterPredicate]="allowDropPredicate"
+     cdkDropListSortingDisabled
+     cdkDropListOrientation="horizontal"
+     cdkDropListAutoScrollStep="20"
      (cdkDropListDropped)="componentDrop($event)"
      (cdkDropListEntered)="dropListEnter($event)"
-     (cdkDropListExited)="dropListExit($event)">
-  <div class="tb-no-reports-components" *ngIf="showNoReportComponents">
+     (cdkDropListExited)="dropListExit($event)"
+     cdkDropList>
+  <div class="tb-no-report-component"
+       [style.right.pt]="paddingRight"
+       [style.left.pt]="paddingLeft"
+       *ngIf="showNoReportComponent">
     <div translate class="p-4 text-center">
-      report-template.drop-report-components
+      report-template.drop-report-component
     </div>
   </div>
-  @for (item of reportComponents; track item) {
+  @for (item of components; track item) {
     <div cdkDrag class="tb-draggable tb-report-component-draggable"
          #reportComponentDrag
+         [class.!hidden]="componentEntering"
          [cdkDragData]="item"
          (cdkDragMoved)="dragMoved($event)"
          (cdkDragReleased)="dragReleased($event)"
          (cdkDragStarted)="componentDragStarted($event)"
          (cdkDragEnded)="componentDragEnded()">
-      <tb-report-component #reportComponentComponent
-                           [reportComponent]="item"
+      <tb-report-component [reportComponent]="item"
+                           innerComponent
+                           [selected]="selected"
                            [context]="context"
                            [format]="format"
-                           [last]="$last"
-                           [scale]="scale"
-                           [pageMarginLeft]="marginLeft"
-                           [pageMarginRight]="marginRight"
                            [width]="reportComponentDrag.offsetWidth"
-                           (edit)="onComponentEdit($event)"
-                           (childEdit)="onComponentEdit($event)"
-                           (makeCopy)="duplicateComponent(item)"
-                           (remove)="componentRemove(item)"
-                           (childRemove)="childComponentRemove($event)"
-                           (childrenChanged)="childrenComponentsChanged()">
-      </tb-report-component>
-      @if (reportComponentComponent.reportComponentsContainer) {
-        <tb-icon cdkDragHandle #dragHandle class="tb-report-component-drag-handle">mdi:arrow-all</tb-icon>
-      }
+                           [parentScale]="scale"
+                           (edit)="onComponentEdit(item)"
+                           (remove)="componentRemove(item)"></tb-report-component>
     </div>
   }
 </div>

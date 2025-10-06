@@ -30,38 +30,27 @@
  */
 package org.thingsboard.server.common.data.report.configuration.components;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import org.thingsboard.server.common.data.report.configuration.style.VerticalAlignment;
 
-import java.io.Serializable;
+@Schema
+@Data
+@EqualsAndHashCode
+@NoArgsConstructor
+public class SplitViewComponent extends AbstractLayoutReportComponent {
 
+    private ReportComponent leftView;
+    private ReportComponent rightView;
+    private Float splitPosition;
+    private Integer splitGap;
+    private VerticalAlignment leftVerticalAlignment;
+    private VerticalAlignment rightVerticalAlignment;
 
-@JsonIgnoreProperties(ignoreUnknown = true)
-@JsonTypeInfo(
-        use = JsonTypeInfo.Id.NAME,
-        include = JsonTypeInfo.As.EXISTING_PROPERTY,
-        property = "type")
-@JsonSubTypes({
-        @JsonSubTypes.Type(value = HeadingComponent.class, name = "HEADING"),
-        @JsonSubTypes.Type(value = RichTextComponent.class, name = "RICH_TEXT"),
-        @JsonSubTypes.Type(value = EntityTableComponent.class, name = "ENTITY_TABLE"),
-        @JsonSubTypes.Type(value = PageBreakComponent.class, name = "PAGE_BREAK"),
-        @JsonSubTypes.Type(value = TimeseriesTableComponent.class, name = "TIME_SERIES_TABLE"),
-        @JsonSubTypes.Type(value = AlarmTableComponent.class, name = "ALARM_TABLE"),
-        @JsonSubTypes.Type(value = TimeseriesChartComponent.class, name = "TIME_SERIES_CHART"),
-        @JsonSubTypes.Type(value = LatestChartComponent.class, name = "LATEST_CHART"),
-        @JsonSubTypes.Type(value = DashboardComponent.class, name = "DASHBOARD"),
-        @JsonSubTypes.Type(value = ImageComponent.class, name = "IMAGE"),
-        @JsonSubTypes.Type(value = SubReportComponent.class, name = "SUB_REPORT"),
-        @JsonSubTypes.Type(value = ErrorComponent.class, name = "ERROR"),
-        @JsonSubTypes.Type(value = DividerComponent.class, name = "DIVIDER"),
-        @JsonSubTypes.Type(value = SplitViewComponent.class, name = "SPLIT_VIEW")
-})
-public interface ReportComponent extends Serializable {
-
-    ReportComponentType getType();
-
-    String getSubType();
-
+    @Override
+    public ReportComponentType getType() {
+        return ReportComponentType.SPLIT_VIEW;
+    }
 }
