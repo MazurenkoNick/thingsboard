@@ -169,7 +169,7 @@ export const HelpLinks = {
     ruleNodeAiRequest: `${helpBaseUrl}/docs/user-guide/rule-engine-2-0/nodes/external/ai-request/`,
     ruleNodeAwsLambda: `${helpBaseUrl}/docs/user-guide/rule-engine-2-0/nodes/external/aws-lambda/`,
     ruleNodeAwsSns: `${helpBaseUrl}/docs/user-guide/rule-engine-2-0/nodes/external/aws-sns/`,
-    ruleNodeAwsSqs: `${helpBaseUrl}docs/user-guide/rule-engine-2-0/nodes/external/aws-sqs/`,
+    ruleNodeAwsSqs: `${helpBaseUrl}/docs/user-guide/rule-engine-2-0/nodes/external/aws-sqs/`,
     ruleNodeKafka: `${helpBaseUrl}/docs/user-guide/rule-engine-2-0/nodes/external/kafka/`,
     ruleNodeMqtt: `${helpBaseUrl}/docs/user-guide/rule-engine-2-0/nodes/external/mqtt/`,
     ruleNodeAzureIotHub: `${helpBaseUrl}/docs/user-guide/rule-engine-2-0/nodes/external/azure-iot-hub/`,
