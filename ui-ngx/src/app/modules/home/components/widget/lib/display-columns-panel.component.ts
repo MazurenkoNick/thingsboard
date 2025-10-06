@@ -51,7 +51,7 @@ export class DisplayColumnsPanelComponent {
   columns: DisplayColumn[];
 
   constructor(@Inject(DISPLAY_COLUMNS_PANEL_DATA) public data: DisplayColumnsPanelData,
-              private selectableColumnsPipe:SelectableColumnsPipe ) {
+              private selectableColumnsPipe: SelectableColumnsPipe ) {
     this.columns = this.selectableColumnsPipe.transform(this.data.columns);
   }
 
