@@ -51,6 +51,9 @@ import org.thingsboard.server.common.data.EntitySubtype;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.EntityView;
 import org.thingsboard.server.common.data.EntityViewInfo;
+import org.thingsboard.server.common.data.NameConflictPolicy;
+import org.thingsboard.server.common.data.NameConflictStrategy;
+import org.thingsboard.server.common.data.edge.Edge;
 import org.thingsboard.server.common.data.entityview.EntityViewSearchQuery;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.group.EntityGroup;
@@ -151,11 +154,19 @@ public class EntityViewController extends BaseController {
             @RequestBody EntityView entityView,
             @RequestParam(name = "entityGroupId", required = false) String strEntityGroupId,
             @Parameter(description = "A list of entity group ids, separated by comma ','", array = @ArraySchema(schema = @Schema(type = "string")))
-            @RequestParam(name = "entityGroupIds", required = false) String[] strEntityGroupIds) throws Exception {
+            @RequestParam(name = "entityGroupIds", required = false) String[] strEntityGroupIds,
+            @Parameter(description = "Optional value of name conflict policy. Possible values: FAIL or UNIQUIFY. " +
+                    "If omitted, FAIL policy is applied. FAIL policy implies exception will be thrown if an entity with the same name already exists. " +
+                    "UNIQUIFY policy appends a suffix to the entity name, if a name conflict occurs.")
+            @RequestParam(name = "policy", defaultValue = "FAIL") NameConflictPolicy policy,
+            @Parameter(description = "Optional value of name suffix separator used by UNIQUIFY policy. By default, underscore separator is used. " +
+                    "For example, strategy is UNIQUIFY, separator is '-'; if a name conflict occurs for entity view name 'Device A', " +
+                    "created customer will have name like 'Device A-7fsh4f'.")
+            @RequestParam(name = "separator", defaultValue = "_") String separator) throws Exception {
         SecurityUser user = getCurrentUser();
         return saveGroupEntity(entityView, strEntityGroupId, strEntityGroupIds, (entityView1, entityGroups) -> {
             try {
-                return tbEntityViewService.save(entityView1, entityGroups, user);
+                return tbEntityViewService.save(entityView1, entityGroups, new NameConflictStrategy(policy, separator), user);
             } catch (Exception e) {
                 throw handleException(e);
             }

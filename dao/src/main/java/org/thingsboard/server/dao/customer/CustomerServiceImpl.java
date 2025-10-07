@@ -44,6 +44,8 @@ import org.thingsboard.server.cache.customer.CustomerCacheKey;
 import org.thingsboard.server.common.data.Customer;
 import org.thingsboard.server.common.data.CustomerInfo;
 import org.thingsboard.server.common.data.EntityType;
+import org.thingsboard.server.common.data.NameConflictPolicy;
+import org.thingsboard.server.common.data.NameConflictStrategy;
 import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.edge.Edge;
 import org.thingsboard.server.common.data.group.EntityGroup;
@@ -223,19 +225,29 @@ public class CustomerServiceImpl extends AbstractCachedEntityService<CustomerCac
     @Override
     @Transactional
     public Customer saveCustomer(Customer customer) {
-        return saveCustomer(customer, true);
+        return saveCustomer(customer, true, NameConflictStrategy.DEFAULT);
+    }
+
+    @Override
+    @Transactional
+    public Customer saveCustomer(Customer customer, NameConflictStrategy nameConflictStrategy) {
+        return saveCustomer(customer, true, nameConflictStrategy);
     }
 
     private Customer saveCustomer(Customer customer, boolean doValidate) {
+        return saveCustomer(customer, doValidate, NameConflictStrategy.DEFAULT);
+    }
+
+    private Customer saveCustomer(Customer customer, boolean doValidate, NameConflictStrategy nameConflictStrategy) {
         log.trace("Executing saveCustomer [{}]", customer);
-        String oldCustomerTitle = null;
         Customer oldCustomer = null;
         if (doValidate) {
             oldCustomer = customerValidator.validate(customer, Customer::getTenantId);
-            if (oldCustomer != null) {
-                oldCustomerTitle = oldCustomer.getTitle();
-            }
         }
+        if (nameConflictStrategy.policy() == NameConflictPolicy.UNIQUIFY) {
+            uniquifyEntityName(customer, oldCustomer, customer::setTitle, EntityType.CUSTOMER, nameConflictStrategy);
+        }
+        String oldCustomerTitle = oldCustomer != null ? oldCustomer.getTitle() : null;
         var evictEvent = new CustomerCacheEvictEvent(customer.getTenantId(), customer.getTitle(), oldCustomerTitle);
         try {
             Customer savedCustomer = customerDao.saveAndFlush(customer.getTenantId(), customer);

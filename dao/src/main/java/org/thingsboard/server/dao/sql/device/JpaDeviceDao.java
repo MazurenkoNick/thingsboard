@@ -138,6 +138,11 @@ public class JpaDeviceDao extends JpaAbstractDao<DeviceEntity, Device> implement
     }
 
     @Override
+    public EntityInfo findEntityInfoByName(TenantId tenantId, String name) {
+        return deviceRepository.findEntityInfoByName(tenantId.getId(), name);
+    }
+
+    @Override
     public PageData<Device> findDevicesByEntityGroupIdsAndType(List<UUID> groupIds, String type, PageLink pageLink) {
         return DaoUtil.toPageData(deviceRepository
                 .findByEntityGroupIdsAndType(

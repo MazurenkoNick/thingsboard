@@ -44,6 +44,8 @@ import org.thingsboard.server.common.data.EntitySubtype;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.EntityView;
 import org.thingsboard.server.common.data.EntityViewInfo;
+import org.thingsboard.server.common.data.NameConflictPolicy;
+import org.thingsboard.server.common.data.NameConflictStrategy;
 import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.entityview.EntityViewSearchQuery;
 import org.thingsboard.server.common.data.id.CustomerId;
@@ -126,13 +128,25 @@ public class EntityViewServiceImpl extends CachedVersionedEntityService<EntityVi
     }
 
     @Override
+    public EntityView saveEntityView(EntityView entityView, NameConflictStrategy nameConflictStrategy) {
+        return saveEntityView(entityView, true, nameConflictStrategy);
+    }
+
+    @Override
     public EntityView saveEntityView(EntityView entityView, boolean doValidate) {
+        return saveEntityView(entityView, doValidate, NameConflictStrategy.DEFAULT);
+    }
+
+    private EntityView saveEntityView(EntityView entityView, boolean doValidate, NameConflictStrategy nameConflictStrategy) {
         log.trace("Executing save entity view [{}]", entityView);
         EntityView old = null;
         if (doValidate) {
             old = entityViewValidator.validate(entityView, EntityView::getTenantId);
         } else if (entityView.getId() != null) {
             old = findEntityViewById(entityView.getTenantId(), entityView.getId(), false);
+        }
+        if (nameConflictStrategy.policy() == NameConflictPolicy.UNIQUIFY) {
+            uniquifyEntityName(entityView, old, entityView::setName, EntityType.ENTITY_VIEW, nameConflictStrategy);
         }
         try {
             EntityView saved = entityViewDao.save(entityView.getTenantId(), entityView);
@@ -145,7 +159,8 @@ public class EntityViewServiceImpl extends CachedVersionedEntityService<EntityVi
             return saved;
         } catch (Exception t) {
             checkConstraintViolation(t,
-                    "entity_view_external_id_unq_key", "Entity View with such external id already exists!");
+                    "entity_view_external_id_unq_key", "Entity View with such external id already exists!",
+                    "entity_view_name_unq_key", "Entity View with such name already exists!");
             throw t;
         }
     }

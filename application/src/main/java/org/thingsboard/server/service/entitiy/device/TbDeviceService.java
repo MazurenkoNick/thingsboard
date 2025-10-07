@@ -32,6 +32,7 @@ package org.thingsboard.server.service.entitiy.device;
 
 import com.google.common.util.concurrent.ListenableFuture;
 import org.thingsboard.server.common.data.Device;
+import org.thingsboard.server.common.data.NameConflictStrategy;
 import org.thingsboard.server.common.data.Tenant;
 import org.thingsboard.server.common.data.User;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
@@ -53,9 +54,13 @@ public interface TbDeviceService {
 
     Device save(Device device, String accessToken, List<EntityGroup> entityGroups, User user) throws Exception;
 
+    Device save(Device device, String accessToken, List<EntityGroup> entityGroups, NameConflictStrategy nameConflictStrategy, User user) throws Exception;
+
     Device saveDeviceWithCredentials(Device device, DeviceCredentials deviceCredentials, EntityGroup entityGroup, User user) throws ThingsboardException;
 
     Device saveDeviceWithCredentials(Device device, DeviceCredentials deviceCredentials, List<EntityGroup> entityGroups, User user) throws ThingsboardException;
+
+    Device saveDeviceWithCredentials(Device device, DeviceCredentials deviceCredentials, List<EntityGroup> entityGroups, NameConflictStrategy nameConflictStrategy, User user) throws ThingsboardException;
 
     void delete(Device device, User user);
 

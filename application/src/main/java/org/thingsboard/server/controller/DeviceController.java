@@ -62,6 +62,8 @@ import org.thingsboard.server.common.data.DeviceInfo;
 import org.thingsboard.server.common.data.DeviceInfoFilter;
 import org.thingsboard.server.common.data.EntitySubtype;
 import org.thingsboard.server.common.data.EntityType;
+import org.thingsboard.server.common.data.NameConflictPolicy;
+import org.thingsboard.server.common.data.NameConflictStrategy;
 import org.thingsboard.server.common.data.SaveDeviceWithCredentialsRequest;
 import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.Tenant;
@@ -124,6 +126,8 @@ import static org.thingsboard.server.controller.ControllerConstants.DEVICE_WITH_
 import static org.thingsboard.server.controller.ControllerConstants.ENTITY_GROUP_ID;
 import static org.thingsboard.server.controller.ControllerConstants.ENTITY_GROUP_ID_PARAM_DESCRIPTION;
 import static org.thingsboard.server.controller.ControllerConstants.INCLUDE_CUSTOMERS_OR_SUB_CUSTOMERS;
+import static org.thingsboard.server.controller.ControllerConstants.NAME_CONFLICT_POLICY_DESC;
+import static org.thingsboard.server.controller.ControllerConstants.NAME_CONFLICT_SEPARATOR_DESC;
 import static org.thingsboard.server.controller.ControllerConstants.PAGE_DATA_PARAMETERS;
 import static org.thingsboard.server.controller.ControllerConstants.PAGE_NUMBER_DESCRIPTION;
 import static org.thingsboard.server.controller.ControllerConstants.PAGE_SIZE_DESCRIPTION;
@@ -200,12 +204,16 @@ public class DeviceController extends BaseController {
                                      "If omitted, access token will be auto-generated.") @RequestParam(name = "accessToken", required = false) String accessToken,
                              @RequestParam(name = "entityGroupId", required = false) String strEntityGroupId,
                              @Parameter(description = "A list of entity group ids, separated by comma ','", array = @ArraySchema(schema = @Schema(type = "string")))
-                             @RequestParam(name = "entityGroupIds", required = false) String[] strEntityGroupIds) throws ThingsboardException {
+                             @RequestParam(name = "entityGroupIds", required = false) String[] strEntityGroupIds,
+                             @Parameter(description = NAME_CONFLICT_POLICY_DESC)
+                             @RequestParam(name = "policy", defaultValue = "FAIL") NameConflictPolicy policy,
+                             @Parameter(description = NAME_CONFLICT_SEPARATOR_DESC)
+                             @RequestParam(name = "separator", defaultValue = "_") String separator) throws ThingsboardException {
         SecurityUser user = getCurrentUser();
         return saveGroupEntity(device, strEntityGroupId, strEntityGroupIds,
                 (device1, entityGroups) -> {
                     try {
-                        return tbDeviceService.save(device1, accessToken, entityGroups, user);
+                        return tbDeviceService.save(device1, accessToken, entityGroups, new NameConflictStrategy(policy, separator), user);
                     } catch (Exception e) {
                         throw handleException(e);
                     }
@@ -237,12 +245,16 @@ public class DeviceController extends BaseController {
                                             @Valid @RequestBody SaveDeviceWithCredentialsRequest deviceAndCredentials,
                                             @RequestParam(name = "entityGroupId", required = false) String strEntityGroupId,
                                             @Parameter(description = "A list of entity group ids, separated by comma ','", array = @ArraySchema(schema = @Schema(type = "string")))
-                                            @RequestParam(name = "entityGroupIds", required = false) String[] strEntityGroupIds) throws ThingsboardException {
+                                            @RequestParam(name = "entityGroupIds", required = false) String[] strEntityGroupIds,
+                                            @Parameter(description = NAME_CONFLICT_POLICY_DESC)
+                                            @RequestParam(name = "policy", defaultValue = "FAIL") NameConflictPolicy policy,
+                                            @Parameter(description = NAME_CONFLICT_SEPARATOR_DESC)
+                                            @RequestParam(name = "separator", defaultValue = "_") String separator) throws ThingsboardException {
         Device device = deviceAndCredentials.getDevice();
         DeviceCredentials credentials = deviceAndCredentials.getCredentials();
         SecurityUser user = getCurrentUser();
         return saveGroupEntity(device, strEntityGroupId, strEntityGroupIds,
-                (device1, entityGroup) -> tbDeviceService.saveDeviceWithCredentials(device1, credentials, entityGroup, user));
+                (device1, entityGroup) -> tbDeviceService.saveDeviceWithCredentials(device1, credentials, entityGroup, new NameConflictStrategy(policy, separator), user));
     }
 
     @ApiOperation(value = "Delete device (deleteDevice)",

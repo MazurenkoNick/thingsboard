@@ -2679,4 +2679,12 @@ public class ControllerConstants {
     public static final String REPORT_TEMPLATE_ID_DESCRIPTION = "Report template id";
     public static final String REPORT_USER_DESCRIPTION = "The user used for report generation.";
 
+    public static final String NAME_CONFLICT_POLICY_DESC = "Optional value of name conflict policy. Possible values: FAIL or UNIQUIFY. " +
+            " If omitted, FAIL policy is applied. FAIL policy implies exception will be thrown if an entity with the same name already exists. " +
+            " UNIQUIFY policy appends a suffix to the entity name, if a name conflict occurs.";
+
+    public static final String NAME_CONFLICT_SEPARATOR_DESC = "Optional value of name suffix separator used by UNIQUIFY policy. By default, underscore separator is used. " +
+            "For example, strategy is UNIQUIFY, separator is '-'; if a name conflict occurs for entity name 'test-name', " +
+            "created entity will have name like 'test-name-7fsh4f'.";
+
 }

@@ -49,6 +49,8 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.thingsboard.server.common.data.EntitySubtype;
 import org.thingsboard.server.common.data.EntityType;
+import org.thingsboard.server.common.data.NameConflictPolicy;
+import org.thingsboard.server.common.data.NameConflictStrategy;
 import org.thingsboard.server.common.data.asset.Asset;
 import org.thingsboard.server.common.data.asset.AssetInfo;
 import org.thingsboard.server.common.data.asset.AssetSearchQuery;
@@ -91,6 +93,7 @@ import static org.thingsboard.server.controller.ControllerConstants.ENTITY_GROUP
 import static org.thingsboard.server.controller.ControllerConstants.ENTITY_GROUP_ID_CREATE_PARAM_DESCRIPTION;
 import static org.thingsboard.server.controller.ControllerConstants.ENTITY_GROUP_ID_PARAM_DESCRIPTION;
 import static org.thingsboard.server.controller.ControllerConstants.INCLUDE_CUSTOMERS_OR_SUB_CUSTOMERS;
+import static org.thingsboard.server.controller.ControllerConstants.NAME_CONFLICT_SEPARATOR_DESC;
 import static org.thingsboard.server.controller.ControllerConstants.PAGE_DATA_PARAMETERS;
 import static org.thingsboard.server.controller.ControllerConstants.PAGE_NUMBER_DESCRIPTION;
 import static org.thingsboard.server.controller.ControllerConstants.PAGE_SIZE_DESCRIPTION;
@@ -161,11 +164,15 @@ public class AssetController extends BaseController {
             @Parameter(description = ENTITY_GROUP_ID_CREATE_PARAM_DESCRIPTION)
             @RequestParam(name = "entityGroupId", required = false) String strEntityGroupId,
             @Parameter(description = ENTITY_GROUP_IDS_CREATE_PARAM_DESCRIPTION, array = @ArraySchema(schema = @Schema(type = "string")))
-            @RequestParam(name = "entityGroupIds", required = false) String[] strEntityGroupIds) throws ThingsboardException {
+            @RequestParam(name = "entityGroupIds", required = false) String[] strEntityGroupIds,
+            @Parameter(description = NAME_CONFLICT_SEPARATOR_DESC)
+            @RequestParam(name = "policy", defaultValue = "FAIL") NameConflictPolicy policy,
+            @Parameter(description = NAME_CONFLICT_SEPARATOR_DESC)
+            @RequestParam(name = "separator", defaultValue = "_") String separator) throws ThingsboardException {
         SecurityUser user = getCurrentUser();
         return saveGroupEntity(asset, strEntityGroupId, strEntityGroupIds, (asset1, entityGroups) -> {
             try {
-                return tbAssetService.save(asset, entityGroups, user);
+                return tbAssetService.save(asset, entityGroups, new NameConflictStrategy(policy, separator), user);
             } catch (Exception e) {
                 throw handleException(e);
             }
