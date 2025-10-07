@@ -531,6 +531,13 @@ public class DefaultTbClusterService implements TbClusterService {
                             .build())
                     .build());
         }
+        ComponentLifecycleMsg msg = ComponentLifecycleMsg.builder()
+                .tenantId(customer.getTenantId())
+                .entityId(customer.getId())
+                .event(oldCustomer == null ? ComponentLifecycleEvent.CREATED : ComponentLifecycleEvent.UPDATED)
+                .ownerChanged(oldCustomer != null && !customer.getOwnerId().equals(oldCustomer.getOwnerId()))
+                .build();
+        broadcast(msg);
     }
 
     private <T> void broadcastEntityChangeToTransport(TenantId tenantId, EntityId entityid, T entity, TbQueueCallback callback) {
@@ -679,8 +686,8 @@ public class DefaultTbClusterService implements TbClusterService {
                 EntityType.JOB,
                 EntityType.CALCULATED_FIELD,
                 EntityType.TB_RESOURCE)
-                || (entityType == EntityType.ASSET && msg.getEvent() == ComponentLifecycleEvent.UPDATED)
-                || (entityType == EntityType.DEVICE && msg.getEvent() == ComponentLifecycleEvent.UPDATED);
+                         || (entityType == EntityType.ASSET && msg.getEvent() == ComponentLifecycleEvent.UPDATED)
+                         || (entityType == EntityType.DEVICE && msg.getEvent() == ComponentLifecycleEvent.UPDATED);
 
         boolean toRuleEngine = !toIntegrationExecutor;
 

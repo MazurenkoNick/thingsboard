@@ -186,9 +186,7 @@ public class EntityStateSourcingListener {
                 }
             }
             case CUSTOMER -> {
-                if (!isCreated) {
-                    tbClusterService.onCustomerUpdated((Customer) event.getEntity(), (Customer) event.getOldEntity());
-                }
+                tbClusterService.onCustomerUpdated((Customer) event.getEntity(), (Customer) event.getOldEntity());
             }
             case USER -> {
                 if (!isCreated) {
