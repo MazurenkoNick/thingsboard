@@ -197,7 +197,9 @@ public class ReportControllerTest extends AbstractControllerTest {
 
         await().atMost(60, TimeUnit.SECONDS).until(() -> {
             String csvReport = doPost("/api/v2/report/test", request, String.class);
-            return Arrays.stream(csvReport.split("\\r?\\n")).map(String::trim).toList()
+            List<String> actualReportRows = Arrays.stream(csvReport.split("\\r?\\n")).map(String::trim).toList();
+            log.debug("Report rows: {}", actualReportRows);
+            return actualReportRows
                     .containsAll(List.of("CREATED TIME,NAME,TEMPERATURE", formatter.format(Instant.ofEpochMilli(finalTestDevice.getCreatedTime())) + "," + finalTestDevice.getName() + ",5"));
         });
     }
