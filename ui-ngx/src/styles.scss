@@ -1055,7 +1055,7 @@ pre.tb-highlight {
   .tb-dialog {
     .mat-mdc-dialog-container {
       padding: 0;
-      > *:first-child, form {
+      > *:first-child, form, .tb-dialog-content  {
         max-width: 100%;
         min-width: 100%;
         display: flex;
@@ -1083,7 +1083,7 @@ pre.tb-highlight {
       position: absolute !important;
       inset: 0;
       .mat-mdc-dialog-container {
-        > *:first-child, form {
+        > *:first-child, form, .tb-dialog-content  {
           min-width: 100% !important;
         }
         .mat-mdc-dialog-content {
@@ -1101,7 +1101,7 @@ pre.tb-highlight {
       position: absolute !important;
       inset: 0;
       .mat-mdc-dialog-container {
-        > *:first-child, form {
+        > *:first-child, form, .tb-dialog-content  {
           min-width: 100% !important;
           height: 100%;
         }
