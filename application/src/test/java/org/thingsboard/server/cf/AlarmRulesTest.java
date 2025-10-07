@@ -351,6 +351,46 @@ public class AlarmRulesTest extends AbstractControllerTest {
         });
     }
 
+    @Test
+    public void testCreateAlarm_subCustomerAlarmRule_simpleExpression() throws Exception {
+        Argument locationArgument = new Argument();
+        locationArgument.setRefEntityKey(new ReferencedEntityKey("location", ArgumentType.ATTRIBUTE, AttributeScope.SERVER_SCOPE));
+        locationArgument.setDefaultValue("unknown");
+
+        Customer subCustomer = new Customer();
+        subCustomer.setTitle("Sub-customer");
+        subCustomer.setTenantId(tenantId);
+        subCustomer.setParentCustomerId(customerId);
+        CustomerId subCustomerId = doPost("/api/customer", subCustomer, Customer.class).getId();
+        originatorId = subCustomerId;
+
+        Argument locationFilterArgument = new Argument();
+        locationFilterArgument.setRefEntityKey(new ReferencedEntityKey("locationFilter", ArgumentType.ATTRIBUTE, AttributeScope.SERVER_SCOPE));
+        locationFilterArgument.setRefDynamicSourceConfiguration(new CurrentOwnerDynamicSourceConfiguration());
+        locationFilterArgument.setDefaultValue("None");
+
+        Map<String, Argument> arguments = Map.of(
+                "location", locationArgument,
+                "locationFilter", locationFilterArgument
+        );
+
+        Map<AlarmSeverity, Condition> createRules = Map.of(
+                AlarmSeverity.INDETERMINATE, new Condition(createSimpleExpression(
+                        "location", StringOperation.CONTAINS, new AlarmConditionValue<>(null, "locationFilter")
+                ), null, null)
+        );
+        CalculatedField calculatedField = createAlarmCf(subCustomerId, "New resident",
+                arguments, createRules, null);
+
+        postAttributes(customerId, AttributeScope.SERVER_SCOPE, "{\"locationFilter\":\"Kyiv\"}");
+        postAttributes(subCustomerId, AttributeScope.SERVER_SCOPE, "{\"location\":\"Ukraine, Kyiv\"}");
+        checkAlarmResult(calculatedField, alarmResult -> {
+            assertThat(alarmResult.isCreated()).isTrue();
+            assertThat(alarmResult.getAlarm().getSeverity()).isEqualTo(AlarmSeverity.INDETERMINATE);
+            assertThat(alarmResult.getAlarm().getStatus()).isEqualTo(AlarmStatus.ACTIVE_UNACK);
+        });
+    }
+
     private void checkAlarmResult(CalculatedField calculatedField, Consumer<TbAlarmResult> assertion) {
         await().atMost(TIMEOUT, TimeUnit.SECONDS).untilAsserted(() -> {
             TbAlarmResult alarmResult = getLatestAlarmResult(calculatedField.getId());
