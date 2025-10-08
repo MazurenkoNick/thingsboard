@@ -81,7 +81,7 @@ public class DefaultTbDeviceService extends AbstractTbEntityService implements T
 
     @Override
     public Device save(Device device, String accessToken, EntityGroup entityGroup, User user) throws Exception {
-        return save(device, accessToken, entityGroup != null ? Collections.singletonList(entityGroup) : null, NameConflictStrategy.DEFAULT, user);
+        return save(device, accessToken, entityGroup != null ? Collections.singletonList(entityGroup) : null, user);
     }
 
     @Override

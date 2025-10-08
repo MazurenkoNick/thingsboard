@@ -93,6 +93,7 @@ import static org.thingsboard.server.controller.ControllerConstants.ENTITY_GROUP
 import static org.thingsboard.server.controller.ControllerConstants.ENTITY_GROUP_ID_CREATE_PARAM_DESCRIPTION;
 import static org.thingsboard.server.controller.ControllerConstants.ENTITY_GROUP_ID_PARAM_DESCRIPTION;
 import static org.thingsboard.server.controller.ControllerConstants.INCLUDE_CUSTOMERS_OR_SUB_CUSTOMERS;
+import static org.thingsboard.server.controller.ControllerConstants.NAME_CONFLICT_POLICY_DESC;
 import static org.thingsboard.server.controller.ControllerConstants.NAME_CONFLICT_SEPARATOR_DESC;
 import static org.thingsboard.server.controller.ControllerConstants.PAGE_DATA_PARAMETERS;
 import static org.thingsboard.server.controller.ControllerConstants.PAGE_NUMBER_DESCRIPTION;
@@ -165,7 +166,7 @@ public class AssetController extends BaseController {
             @RequestParam(name = "entityGroupId", required = false) String strEntityGroupId,
             @Parameter(description = ENTITY_GROUP_IDS_CREATE_PARAM_DESCRIPTION, array = @ArraySchema(schema = @Schema(type = "string")))
             @RequestParam(name = "entityGroupIds", required = false) String[] strEntityGroupIds,
-            @Parameter(description = NAME_CONFLICT_SEPARATOR_DESC)
+            @Parameter(description = NAME_CONFLICT_POLICY_DESC)
             @RequestParam(name = "policy", defaultValue = "FAIL") NameConflictPolicy policy,
             @Parameter(description = NAME_CONFLICT_SEPARATOR_DESC)
             @RequestParam(name = "separator", defaultValue = "_") String separator) throws ThingsboardException {
