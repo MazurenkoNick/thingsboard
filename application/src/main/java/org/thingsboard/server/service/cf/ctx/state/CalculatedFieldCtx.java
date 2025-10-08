@@ -54,6 +54,7 @@ import org.thingsboard.server.common.data.cf.configuration.ArgumentType;
 import org.thingsboard.server.common.data.cf.configuration.ArgumentsBasedCalculatedFieldConfiguration;
 import org.thingsboard.server.common.data.cf.configuration.ExpressionBasedCalculatedFieldConfiguration;
 import org.thingsboard.server.common.data.cf.configuration.Output;
+import org.thingsboard.server.common.data.cf.configuration.PropagationCalculatedFieldConfiguration;
 import org.thingsboard.server.common.data.cf.configuration.ReferencedEntityKey;
 import org.thingsboard.server.common.data.cf.configuration.ScheduledUpdateSupportedCalculatedFieldConfiguration;
 import org.thingsboard.server.common.data.cf.configuration.SimpleCalculatedFieldConfiguration;
@@ -78,8 +79,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
 @Data
@@ -120,6 +121,9 @@ public class CalculatedFieldCtx {
     private List<String> linkedEntityAndCurrentOwnerGeofencingArgumentNames;
 
     private long scheduledUpdateIntervalMillis;
+
+    private Argument propagationArgument;
+    private boolean applyExpressionForResolvedArguments;
 
     public CalculatedFieldCtx(CalculatedField calculatedField,
                               ActorSystemContext systemContext) {
@@ -174,6 +178,11 @@ public class CalculatedFieldCtx {
                     }
                 });
             }
+            if (calculatedField.getConfiguration() instanceof PropagationCalculatedFieldConfiguration propagationConfig) {
+                propagationArgument = propagationConfig.toPropagationArgument();
+                applyExpressionForResolvedArguments = propagationConfig.isApplyExpressionToResolvedArguments();
+                relationQueryDynamicArguments = true;
+            }
         }
         if (calculatedField.getConfiguration() instanceof ScheduledUpdateSupportedCalculatedFieldConfiguration scheduledConfig) {
             this.scheduledUpdateIntervalMillis = scheduledConfig.isScheduledUpdateEnabled() ? TimeUnit.SECONDS.toMillis(scheduledConfig.getScheduledUpdateInterval()) : -1L;
@@ -190,13 +199,13 @@ public class CalculatedFieldCtx {
 
     public void init() {
         switch (cfType) {
-            case SCRIPT -> {
-                try {
-                    initTbelExpression(expression);
-                    initialized = true;
-                } catch (Exception e) {
-                    throw new RuntimeException("Failed to init calculated field ctx. Invalid expression syntax.", e);
+            case SCRIPT -> initTbelExpression();
+            case PROPAGATION -> {
+                if (applyExpressionForResolvedArguments) {
+                    initTbelExpression();
+                    return;
                 }
+                initialized = true;
             }
             case GEOFENCING -> initialized = true;
             case SIMPLE -> {
@@ -216,6 +225,15 @@ public class CalculatedFieldCtx {
                 });
                 initialized = true;
             }
+        }
+    }
+
+    private void initTbelExpression() {
+        try {
+            initTbelExpression(expression);
+            initialized = true;
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to init calculated field ctx. Invalid expression syntax.", e);
         }
     }
 
@@ -495,8 +513,12 @@ public class CalculatedFieldCtx {
     }
 
     public boolean hasContextOnlyChanges(CalculatedFieldCtx other) { // has changes that do not require state reinit and will be picked up by the state on the fly
-        if (calculatedField.getConfiguration() instanceof ExpressionBasedCalculatedFieldConfiguration && !expression.equals(other.expression)) {
-            return true;
+        if (calculatedField.getConfiguration() instanceof ExpressionBasedCalculatedFieldConfiguration expressionConfig) {
+            boolean shouldCompareExpression = !(expressionConfig instanceof PropagationCalculatedFieldConfiguration propagationConfig)
+                                              || propagationConfig.isApplyExpressionToResolvedArguments();
+            if (shouldCompareExpression && !expression.equals(other.expression)) {
+                return true;
+            }
         }
         if (!output.equals(other.output)) {
             return true;
@@ -504,10 +526,7 @@ public class CalculatedFieldCtx {
         if (cfType == CalculatedFieldType.ALARM && !calculatedField.getName().equals(other.getCalculatedField().getName())) {
             return true;
         }
-        if (scheduledUpdateIntervalMillis != other.scheduledUpdateIntervalMillis) {
-            return true;
-        }
-        return false;
+        return scheduledUpdateIntervalMillis != other.scheduledUpdateIntervalMillis;
     }
 
     public boolean hasStateChanges(CalculatedFieldCtx other) { // has changes that require state reinit (will trigger state.reset() and re-fetch arguments)
@@ -538,21 +557,29 @@ public class CalculatedFieldCtx {
         return false;
     }
 
-    public boolean hasRelationQueryDynamicArguments() {
-        return relationQueryDynamicArguments && scheduledUpdateIntervalMillis != -1;
+    private boolean isScheduledUpdateEnabled() {
+        return scheduledUpdateIntervalMillis != -1;
     }
 
-    public boolean shouldFetchDynamicArgumentsFromDb(CalculatedFieldState state) {
-        if (!hasRelationQueryDynamicArguments()) {
+    public boolean shouldFetchRelationQueryDynamicArgumentsFromDb(CalculatedFieldState state) {
+        if (!relationQueryDynamicArguments) {
             return false;
         }
-        if (!(state instanceof GeofencingCalculatedFieldState geofencingState)) {
-            return false;
-        }
-        if (geofencingState.getLastDynamicArgumentsRefreshTs() == -1L) {
-            return true;
-        }
-        return geofencingState.getLastDynamicArgumentsRefreshTs() < System.currentTimeMillis() - scheduledUpdateIntervalMillis;
+        return switch (cfType) {
+            case PROPAGATION -> true;
+            case GEOFENCING -> {
+                if (!isScheduledUpdateEnabled()) {
+                    yield false;
+                }
+                var geofencingState = (GeofencingCalculatedFieldState) state;
+                if (geofencingState.getLastDynamicArgumentsRefreshTs() == -1L) {
+                    yield true;
+                }
+                yield geofencingState.getLastDynamicArgumentsRefreshTs() <
+                      System.currentTimeMillis() - scheduledUpdateIntervalMillis;
+            }
+            default -> false;
+        };
     }
 
     public void stop() {

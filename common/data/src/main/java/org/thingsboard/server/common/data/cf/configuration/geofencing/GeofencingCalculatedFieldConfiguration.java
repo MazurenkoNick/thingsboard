@@ -31,6 +31,8 @@
 package org.thingsboard.server.common.data.cf.configuration.geofencing;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import org.thingsboard.server.common.data.cf.CalculatedFieldType;
 import org.thingsboard.server.common.data.cf.configuration.Argument;
@@ -47,7 +49,12 @@ import java.util.Objects;
 @Data
 public class GeofencingCalculatedFieldConfiguration implements ArgumentsBasedCalculatedFieldConfiguration, ScheduledUpdateSupportedCalculatedFieldConfiguration {
 
+    @Valid
+    @NotNull
     private EntityCoordinates entityCoordinates;
+
+    @Valid
+    @NotNull
     private Map<String, ZoneGroupConfiguration> zoneGroups;
 
     private boolean scheduledUpdateEnabled;
@@ -71,7 +78,7 @@ public class GeofencingCalculatedFieldConfiguration implements ArgumentsBasedCal
 
     @Override
     public List<EntityId> getReferencedEntities() {
-        return zoneGroups.values().stream().map(ZoneGroupConfiguration::getRefEntityId).filter(Objects::nonNull).toList();
+        return zoneGroups == null ? List.of() : zoneGroups.values().stream().map(ZoneGroupConfiguration::getRefEntityId).filter(Objects::nonNull).toList();
     }
 
     @Override
@@ -81,13 +88,6 @@ public class GeofencingCalculatedFieldConfiguration implements ArgumentsBasedCal
 
     @Override
     public void validate() {
-        if (entityCoordinates == null) {
-            throw new IllegalArgumentException("Geofencing calculated field entity coordinates must be specified!");
-        }
-        entityCoordinates.validate();
-        if (zoneGroups == null || zoneGroups.isEmpty()) {
-            throw new IllegalArgumentException("Geofencing calculated field must contain at least one geofencing zone group defined!");
-        }
         zoneGroups.forEach((key, value) -> value.validate(key));
     }
 
