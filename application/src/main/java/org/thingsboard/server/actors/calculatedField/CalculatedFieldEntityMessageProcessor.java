@@ -170,7 +170,6 @@ public class CalculatedFieldEntityMessageProcessor extends AbstractContextAwareM
                 initState(state, ctx);
             } else {
                 state.setCtx(ctx, actorCtx);
-                state.init();
             }
             if (state.isSizeOk()) {
                 processStateIfReady(state, Collections.emptyMap(), ctx, Collections.singletonList(ctx.getCfId()), null, null, msg.getCallback());
