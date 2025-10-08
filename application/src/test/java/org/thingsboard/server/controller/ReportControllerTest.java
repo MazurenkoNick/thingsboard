@@ -230,7 +230,7 @@ public class ReportControllerTest extends AbstractControllerTest {
         TimeseriesTableComponent tsComponent = buildTimeseriesTableComponent(devicesAliasId);
         ReportTemplateConfig configuration = createReportConfigTemplate(List.of(tsComponent), entityAlias, TbReportFormat.CSV);
 
-        List<String> columnHeaders = List.of("Timestamp", "TEMPERATURE", "NAME", "ACTIVE");
+        List<String> columnHeaders = List.of("Timestamp", "TEMPERATURE", "Non existing", "NAME", "ACTIVE");
         List<List<String>> generatedValues = generateTsData(columnHeaders);
         List<String> expectedRows = generatedValues.stream().map(row -> String.join(",", row)).toList();
 
@@ -245,7 +245,7 @@ public class ReportControllerTest extends AbstractControllerTest {
         TimeseriesTableComponent tsComponent = buildTimeseriesTableComponent(devicesAliasId);
         ReportTemplateConfig configuration = createReportConfigTemplate(List.of(tsComponent), entityAlias, TbReportFormat.PDF);
 
-        List<String> columnHeaders = List.of("Timestamp", "TEMPERATURE", "NAME", "ACTIVE");
+        List<String> columnHeaders = List.of("Timestamp", "TEMPERATURE", "Non existing", "NAME", "ACTIVE");
         List<List<String>> expectedLines = generateTsData(columnHeaders);
         List<String> expectedRows = expectedLines.stream().map(row -> String.join(" ", row)).toList();
 
@@ -434,11 +434,15 @@ public class ReportControllerTest extends AbstractControllerTest {
         tsComponent.setShowTimestamp(true);
         tsComponent.setTimestampLabel("Timestamp");
         tsComponent.setTimestampPattern("milliseconds");
+        DataKey nonExistingDataKey = new DataKey("nonExisting", "timeseries", "Non existing");
+        nonExistingDataKey.setUsePostProcessing(true);
+        nonExistingDataKey.setPostFuncBody("return value == null ? \"N/A\" : value;");
         tsComponent.setDataSources(List.of(DataSource.builder()
                 .type(DataSourceType.ENTITY)
                 .entityAliasId(devicesAliasId)
                 .dataKeys(List.of(
-                        new DataKey("temperature", "timeseries", "TEMPERATURE")
+                        new DataKey("temperature", "timeseries", "TEMPERATURE"),
+                        nonExistingDataKey
                 ))
                 .latestDataKeys(List.of(
                         new DataKey("name", "entityField", "NAME"),
@@ -469,7 +473,7 @@ public class ReportControllerTest extends AbstractControllerTest {
         return timewindow;
     }
 
-    private void generateAndCheckCSVReport(ReportTemplateConfig config, List<String> expectedRows) throws Exception {
+    private void generateAndCheckCSVReport(ReportTemplateConfig config, List<String> expectedRows) {
         ReportRequest request = new ReportRequest();
         request.setReportTemplateConfig(config);
 
@@ -480,7 +484,7 @@ public class ReportControllerTest extends AbstractControllerTest {
         });
     }
 
-    private void generateAndCheckPDFReportText(ReportTemplateConfig config, List<String> expectedRows) throws Exception {
+    private void generateAndCheckPDFReportText(ReportTemplateConfig config, List<String> expectedRows) {
         await().atMost(60, TimeUnit.SECONDS).until(() -> {
             String pdfReport = generatePDFReportText(config);
             return Arrays.stream(pdfReport.split("\\r?\\n")).map(String::trim).toList().containsAll(expectedRows);
@@ -684,6 +688,7 @@ public class ReportControllerTest extends AbstractControllerTest {
                 expectedLines.add(List.of(
                         String.valueOf(ts),
                         String.valueOf(temperature),
+                        "N/A",
                         device.getName(),
                         "false"));
             }
