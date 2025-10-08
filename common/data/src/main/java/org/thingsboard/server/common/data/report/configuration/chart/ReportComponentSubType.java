@@ -28,22 +28,42 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.common.data.report.configuration.components;
+package org.thingsboard.server.common.data.report.configuration.chart;
 
-import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import org.thingsboard.server.common.data.report.configuration.chart.ReportComponentSubType;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
 
-@Schema
-@Data
-@EqualsAndHashCode
-@NoArgsConstructor
-@AllArgsConstructor
-public abstract class AbstractReportComponent implements ReportComponent {
+public enum ReportComponentSubType {
+    DOUGHNUT_CHART("doughnutChart"),
+    HORIZONTAL_DOUGHNUT_CHART("horizontalDoughnutChart"),
+    POINT_CHART("pointChart"),
+    BAR_CHART("barChart"),
+    PIE_CHART("pieChart"),
+    LINE_CHART("lineChart"),
+    LATEST_BAR_CHART("latestBarChart"),
+    RANGE_CHART("rangeChart"),
+    BAR_CHART_WITH_LABELS("barChartWithLabels"),
+    STATE_CHART("stateChart"),
+    DEFAULT("default");
 
-    private ReportComponentSubType subType;
+    private final String name;
 
+    ReportComponentSubType(String name) {
+        this.name = name;
+    }
+
+    @JsonValue
+    public String getName() {
+        return name;
+    }
+
+    @JsonCreator
+    public static ReportComponentSubType fromLabel(String value) {
+        for (ReportComponentSubType layout : values()) {
+            if (layout.name.equalsIgnoreCase(value)) {
+                return layout;
+            }
+        }
+        throw new IllegalArgumentException("Unknown ReportComponentSubType: " + value);
+    }
 }
