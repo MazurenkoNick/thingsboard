@@ -244,12 +244,12 @@ public class CustomerServiceImpl extends AbstractCachedEntityService<CustomerCac
         if (doValidate) {
             oldCustomer = customerValidator.validate(customer, Customer::getTenantId);
         }
-        if (nameConflictStrategy.policy() == NameConflictPolicy.UNIQUIFY) {
-            uniquifyEntityName(customer, oldCustomer, customer::setTitle, EntityType.CUSTOMER, nameConflictStrategy);
-        }
         String oldCustomerTitle = oldCustomer != null ? oldCustomer.getTitle() : null;
         var evictEvent = new CustomerCacheEvictEvent(customer.getTenantId(), customer.getTitle(), oldCustomerTitle);
         try {
+            if (nameConflictStrategy.policy() == NameConflictPolicy.UNIQUIFY) {
+                uniquifyEntityName(customer, oldCustomer, customer::setTitle, EntityType.CUSTOMER, nameConflictStrategy);
+            }
             Customer savedCustomer = customerDao.saveAndFlush(customer.getTenantId(), customer);
             if (customer.getId() == null) {
                 entityGroupService.addEntityToEntityGroupAll(savedCustomer.getTenantId(), savedCustomer.getOwnerId(), savedCustomer.getId());
