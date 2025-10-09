@@ -73,6 +73,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -400,7 +401,7 @@ public abstract class AbstractReportService implements ReportService {
                 ));
 
         groupedByTs.forEach((ts, entries) -> {
-            Map<String, String> tsValues = new HashMap<>();
+            Map<String, String> tsValues = new LinkedHashMap<>();
             tsValues.put("rawTs", ts.toString());
             if (component.isShowTimestamp()) {
                 tsValues.put(component.getTimestampLabel(), formatTimestamp(ts, component.getTimestampPattern(), ctx, timezone));
@@ -408,13 +409,8 @@ public abstract class AbstractReportService implements ReportService {
             for (DataKey dataKey : dataKeys) {
                 entries.stream().filter(tsKvEntry -> tsKvEntry.getKey().equals(dataKey.getName()))
                         .findFirst()
-                        .ifPresentOrElse(tsKvEntry -> {
-                                    String value = tsKvEntry.getValueAsString();
-                                    if (value != null) {
-                                        tsValues.put(dataKey.getLabel(), formatValue(ctx, dataKey, tsKvEntry.getTs(), tsKvEntry.getValue(), false, timezone));
-                                    }
-                                },
-                                () -> tsValues.putIfAbsent(dataKey.getLabel(), null));
+                        .ifPresentOrElse(tsKvEntry -> tsValues.put(dataKey.getLabel(), formatValue(ctx, dataKey, tsKvEntry.getTs(), tsKvEntry.getValue(), false, timezone)),
+                                () -> tsValues.put(dataKey.getLabel(), formatValue(ctx, dataKey, 0, null, false, timezone)));
             }
             putLatestValues(latestDataKeys, tsValues, entity.getLatest(), ctx, timezone);
             tsValues.put("entityName", entityName.orElse(""));
