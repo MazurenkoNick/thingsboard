@@ -96,6 +96,7 @@ import org.thingsboard.server.report.util.ColorUtils;
 import org.thingsboard.server.report.util.HtmlRenderUtils;
 import org.thingsboard.server.report.util.ThymeleafUtil;
 import org.thingsboard.server.report.util.WebReportClient;
+import org.w3c.dom.Document;
 import org.xhtmlrenderer.pdf.ITextRenderer;
 
 import java.awt.Dimension;
@@ -175,9 +176,9 @@ public class PdfReportService extends AbstractReportService {
         reportVariables.put("pageContent", renderContent(usablePageWidthPx, ctx, configuration.getComponents(), stateEntity));
 
         String renderedHtmlContent = ThymeleafUtil.renderFromHtmlTemplate("html/report-template", reportVariables);
-        String xHtml = HtmlRenderUtils.convertToXhtml(renderedHtmlContent);
 
-        renderer.setDocumentFromString(xHtml);
+        Document doc = HtmlRenderUtils.parseDom(renderedHtmlContent);
+        renderer.setDocument(doc);
         renderer.layout();
 
         try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
@@ -482,6 +483,7 @@ public class PdfReportService extends AbstractReportService {
         ZoneId zoneId = targetTimezone != null ? ZoneId.of(targetTimezone) : ZoneId.systemDefault();
 
         int dataIndex = 0;
+        int startDataIndex = 0;
         boolean stateData = "stateChart".equals(component.getSubType());
         DataPostProcessFunction dataPostProcessFunction = (dataKey, timestamp, value) -> this.postProcess(ctx, dataKey, timestamp, value, true);
 
@@ -511,9 +513,10 @@ public class PdfReportService extends AbstractReportService {
                 }
             }
             TsChartDataSource chartDataSource = new TsChartDataSource(ds, entity, tsKvEntries, timeRange,
-                    historyConf.getInterval(), aggregation, zoneId, false, null, dataPostProcessFunction, dataIndex);
+                    historyConf.getInterval(), aggregation, zoneId, false, null, dataPostProcessFunction, dataIndex, startDataIndex);
             chartData.add(chartDataSource);
             dataIndex++;
+            startDataIndex += chartDataSource.getDataKeys().size();
         }
 
         int keyIndex = 0;
@@ -528,22 +531,22 @@ public class PdfReportService extends AbstractReportService {
         }
         TimeIntervalCalculator.TimeRange comparisonTimeRange = null;
         if (comparisonEnabled) {
+            ComparisonDuration timeForComparison = ComparisonDuration.previousInterval;
+            Long comparisonCustomIntervalValue = 7200000L;
+            if (component.getTimeSeriesChartSettings() != null) {
+                if (component.getTimeSeriesChartSettings().getTimeForComparison() != null) {
+                    timeForComparison = component.getTimeSeriesChartSettings().getTimeForComparison();
+                }
+                if (component.getTimeSeriesChartSettings().getComparisonCustomIntervalValue() != null) {
+                    comparisonCustomIntervalValue = component.getTimeSeriesChartSettings().getComparisonCustomIntervalValue();
+                }
+            }
+            comparisonTimeRange = getComparisonTimeRange(timeRange, timeWindowConf,
+                    targetTimezone, timeForComparison, comparisonCustomIntervalValue);
+
             List<DataKey> comparisionDataKeys = dataKeys.stream().filter(DataKey::isComparisonKey).toList();
             if (!comparisionDataKeys.isEmpty()) {
                 List<String> comparisonKeys = comparisionDataKeys.stream().map(DataKey::getName).distinct().toList();
-                ComparisonDuration timeForComparison = ComparisonDuration.previousInterval;
-                Long comparisonCustomIntervalValue = 7200000L;
-                if (component.getTimeSeriesChartSettings() != null) {
-                    if (component.getTimeSeriesChartSettings().getTimeForComparison() != null) {
-                        timeForComparison = component.getTimeSeriesChartSettings().getTimeForComparison();
-                    }
-                    if (component.getTimeSeriesChartSettings().getComparisonCustomIntervalValue() != null) {
-                        comparisonCustomIntervalValue = component.getTimeSeriesChartSettings().getComparisonCustomIntervalValue();
-                    }
-                }
-                comparisonTimeRange = getComparisonTimeRange(timeRange, timeWindowConf,
-                        targetTimezone, timeForComparison, comparisonCustomIntervalValue);
-
                 List<TsChartDataSource> comparisonChartData = new ArrayList<>();
                 for (EntityData entity : entityDatas) {
                     List<TsKvEntry> tsKvEntries = dataService.getTimeseries(entity.getEntityId(), comparisonKeys, comparisonTimeRange.startTs, comparisonTimeRange.endTs,
@@ -551,9 +554,10 @@ public class PdfReportService extends AbstractReportService {
                             timeWindowConf.getAggregation().getLimit(), false, ctx);
 
                     TsChartDataSource chartDataSource = new TsChartDataSource(ds, entity, tsKvEntries, comparisonTimeRange,
-                            historyConf.getInterval(), timeWindowConf.getAggregation().getType(), zoneId, true, timeForComparison, dataPostProcessFunction, dataIndex);
+                            historyConf.getInterval(), timeWindowConf.getAggregation().getType(), zoneId, true, timeForComparison, dataPostProcessFunction, dataIndex, startDataIndex);
                     comparisonChartData.add(chartDataSource);
                     dataIndex++;
+                    startDataIndex += chartDataSource.getDataKeys().size();
                 }
 
                 for (TsChartDataSource chartDataSource : comparisonChartData) {

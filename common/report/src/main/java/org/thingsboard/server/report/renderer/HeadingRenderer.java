@@ -47,7 +47,7 @@ public class HeadingRenderer extends ReportComponentWithLayoutRenderer<HeadingCo
 
     @Override
     public String renderContent(HeadingComponent component, ComponentData reportDataSource) {
-        String processedText = ThymeleafUtil.renderFromHtmlString(
+        String processedText = ThymeleafUtil.renderFromTextString(
                 component.getValue(), reportDataSource.getVariables());
 
         Map<String, Object> templateVars = new HashMap<>();
