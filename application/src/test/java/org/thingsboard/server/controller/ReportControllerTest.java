@@ -64,7 +64,9 @@ import org.thingsboard.server.common.data.notification.targets.platform.Affected
 import org.thingsboard.server.common.data.notification.template.NotificationTemplate;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
+import org.thingsboard.server.common.data.query.AliasEntityId;
 import org.thingsboard.server.common.data.query.DeviceTypeFilter;
+import org.thingsboard.server.common.data.query.SingleEntityFilter;
 import org.thingsboard.server.common.data.report.ReportInfo;
 import org.thingsboard.server.common.data.report.ReportRequest;
 import org.thingsboard.server.common.data.report.ReportTemplate;
@@ -152,6 +154,57 @@ public class ReportControllerTest extends AbstractControllerTest {
     }
 
     @Test
+    public void testCSVReportWithOriginatorAndAggrFields() throws Exception {
+        Device testDevice = new Device();
+        testDevice.setName("Originator device");
+        testDevice.setType("default");
+        testDevice.setLabel("testLabel" + (int) (Math.random() * 1000));
+        testDevice = doPost("/api/device", testDevice, Device.class);
+
+        for (int i = 0; i < 10; i++) {
+            String telemetryPayload = "{\"temperature\":" + i + "}";
+            doPost("/api/plugins/telemetry/DEVICE/" + testDevice.getId() + "/timeseries/" + DataConstants.SHARED_SCOPE, telemetryPayload, String.class, status().isOk());
+        }
+
+        String devicesAliasId = StringUtils.randomAlphabetic(10);
+        SingleEntityFilter filter = new SingleEntityFilter();
+        filter.setSingleEntity(AliasEntityId.fromEntityId(testDevice.getId()));
+        EntityAlias entityAlias = new EntityAlias(devicesAliasId, "device", filter);
+
+        EntityTableComponent tableComponent = new EntityTableComponent();
+        DataKey tempField = new DataKey("temperature", "timeseries", "TEMPERATURE");
+        tempField.setAggregationType(Aggregation.AVG);
+        tempField.setTimewindow(buildCurrentDateTimeWindow());
+        tempField.setDecimals(0);
+        tableComponent.setDataSources(List.of(DataSource.builder()
+                .type(DataSourceType.ENTITY)
+                .entityAliasId(devicesAliasId)
+                .dataKeys(List.of(
+                        new DataKey("createdTime", "entityField", "CREATED TIME"),
+                        new DataKey("name", "entityField", "NAME"),
+                        tempField
+                ))
+                .build()));
+
+        ReportTemplateConfig configuration = createReportConfigTemplate(List.of(tableComponent), entityAlias, TbReportFormat.CSV);
+
+        ReportRequest request = new ReportRequest();
+        request.setReportTemplateConfig(configuration);
+        request.setOriginator(testDevice.getId());
+
+        Device finalTestDevice = testDevice;
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(configuration.getTimeDataPattern()).withZone(ZoneId.systemDefault());
+
+        await().atMost(60, TimeUnit.SECONDS).until(() -> {
+            String csvReport = doPost("/api/v2/report/test", request, String.class);
+            List<String> actualReportRows = Arrays.stream(csvReport.split("\\r?\\n")).map(String::trim).toList();
+            log.warn("Report rows: {}", actualReportRows);
+            return actualReportRows
+                    .containsAll(List.of("CREATED TIME,NAME,TEMPERATURE", formatter.format(Instant.ofEpochMilli(finalTestDevice.getCreatedTime())) + "," + finalTestDevice.getName() + ",5"));
+        });
+    }
+
+    @Test
     public void testPDFReportWithEntityTable() throws Exception {
         String devicesAliasId = StringUtils.randomAlphabetic(10);
         EntityAlias entityAlias = buildDeviceTypeEntityAlias(devicesAliasId);
@@ -230,7 +283,7 @@ public class ReportControllerTest extends AbstractControllerTest {
         TimeseriesTableComponent tsComponent = buildTimeseriesTableComponent(devicesAliasId);
         ReportTemplateConfig configuration = createReportConfigTemplate(List.of(tsComponent), entityAlias, TbReportFormat.CSV);
 
-        List<String> columnHeaders = List.of("Timestamp", "TEMPERATURE", "NAME", "ACTIVE");
+        List<String> columnHeaders = List.of("Timestamp", "TEMPERATURE", "Non existing", "NAME", "ACTIVE");
         List<List<String>> generatedValues = generateTsData(columnHeaders);
         List<String> expectedRows = generatedValues.stream().map(row -> String.join(",", row)).toList();
 
@@ -245,7 +298,7 @@ public class ReportControllerTest extends AbstractControllerTest {
         TimeseriesTableComponent tsComponent = buildTimeseriesTableComponent(devicesAliasId);
         ReportTemplateConfig configuration = createReportConfigTemplate(List.of(tsComponent), entityAlias, TbReportFormat.PDF);
 
-        List<String> columnHeaders = List.of("Timestamp", "TEMPERATURE", "NAME", "ACTIVE");
+        List<String> columnHeaders = List.of("Timestamp", "TEMPERATURE", "Non existing", "NAME", "ACTIVE");
         List<List<String>> expectedLines = generateTsData(columnHeaders);
         List<String> expectedRows = expectedLines.stream().map(row -> String.join(" ", row)).toList();
 
@@ -434,11 +487,15 @@ public class ReportControllerTest extends AbstractControllerTest {
         tsComponent.setShowTimestamp(true);
         tsComponent.setTimestampLabel("Timestamp");
         tsComponent.setTimestampPattern("milliseconds");
+        DataKey nonExistingDataKey = new DataKey("nonExisting", "timeseries", "Non existing");
+        nonExistingDataKey.setUsePostProcessing(true);
+        nonExistingDataKey.setPostFuncBody("return value == null ? \"N/A\" : value;");
         tsComponent.setDataSources(List.of(DataSource.builder()
                 .type(DataSourceType.ENTITY)
                 .entityAliasId(devicesAliasId)
                 .dataKeys(List.of(
-                        new DataKey("temperature", "timeseries", "TEMPERATURE")
+                        new DataKey("temperature", "timeseries", "TEMPERATURE"),
+                        nonExistingDataKey
                 ))
                 .latestDataKeys(List.of(
                         new DataKey("name", "entityField", "NAME"),
@@ -455,6 +512,10 @@ public class ReportControllerTest extends AbstractControllerTest {
     }
 
     private static TimeWindowConfiguration buildCurrentDateTimeWindow() {
+        return buildCurrentDateTimeWindow(Aggregation.NONE);
+    }
+
+    private static TimeWindowConfiguration buildCurrentDateTimeWindow(Aggregation aggregationType) {
         TimeWindowConfiguration timewindow = new TimeWindowConfiguration();
         History history = new History();
         history.setHistoryType(2);
@@ -463,13 +524,13 @@ public class ReportControllerTest extends AbstractControllerTest {
         timewindow.setHistory(history);
         timewindow.setTimezone(TimeZone.getDefault().getID());
         AggregationConfiguration aggregation = new AggregationConfiguration();
-        aggregation.setType(Aggregation.NONE);
+        aggregation.setType(aggregationType);
         aggregation.setLimit(25000);
         timewindow.setAggregation(aggregation);
         return timewindow;
     }
 
-    private void generateAndCheckCSVReport(ReportTemplateConfig config, List<String> expectedRows) throws Exception {
+    private void generateAndCheckCSVReport(ReportTemplateConfig config, List<String> expectedRows) {
         ReportRequest request = new ReportRequest();
         request.setReportTemplateConfig(config);
 
@@ -480,7 +541,7 @@ public class ReportControllerTest extends AbstractControllerTest {
         });
     }
 
-    private void generateAndCheckPDFReportText(ReportTemplateConfig config, List<String> expectedRows) throws Exception {
+    private void generateAndCheckPDFReportText(ReportTemplateConfig config, List<String> expectedRows) {
         await().atMost(60, TimeUnit.SECONDS).until(() -> {
             String pdfReport = generatePDFReportText(config);
             return Arrays.stream(pdfReport.split("\\r?\\n")).map(String::trim).toList().containsAll(expectedRows);
@@ -684,6 +745,7 @@ public class ReportControllerTest extends AbstractControllerTest {
                 expectedLines.add(List.of(
                         String.valueOf(ts),
                         String.valueOf(temperature),
+                        "N/A",
                         device.getName(),
                         "false"));
             }
