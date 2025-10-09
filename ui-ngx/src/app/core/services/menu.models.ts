@@ -2204,7 +2204,7 @@ export const menuItemToMenuSection = (authState: AuthState,
       result.pages = item.pages.map(page =>
         menuItemToMenuSection(authState, userPermissionsService, allowedMenuIds, customStateIds, page)).filter(page => !!page);
     }
-    if (result.type === 'toggle' && !result.pages?.length) {
+    if ((result.type === 'toggle' || result.type === 'link' && Array.isArray(item.pages)) && !result.pages?.length) {
       return undefined;
     }
     return result;

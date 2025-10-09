@@ -48,6 +48,7 @@ import {
   timeSeriesChartStateValidator
 } from '@home/components/widget/lib/chart/time-series-chart.models';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { coerceBoolean } from '@shared/decorators/coercion';
 
 @Component({
   selector: 'tb-time-series-chart-states-panel',
@@ -71,6 +72,10 @@ export class TimeSeriesChartStatesPanelComponent implements ControlValueAccessor
 
   @Input()
   disabled: boolean;
+
+  @Input()
+  @coerceBoolean()
+  stroked = false;
 
   statesFormGroup: UntypedFormGroup;
 

@@ -62,7 +62,7 @@ public class ImageRenderer extends AbstractImageRenderer<ImageComponent> {
         } else {
             imageUrl = component.getImageUrl();
             if (imageUrl == null || imageUrl.isEmpty()) {
-                imageUrl = "/assets/report/components/image.svg";
+                imageUrl = "/assets/report/components/image-placeholder.svg";
             }
         }
         return imageUrl;

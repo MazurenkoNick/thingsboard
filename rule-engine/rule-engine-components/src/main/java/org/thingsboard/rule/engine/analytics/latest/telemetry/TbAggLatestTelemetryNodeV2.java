@@ -75,7 +75,6 @@ import java.util.stream.Collectors;
 
 import static org.thingsboard.server.common.data.DataConstants.QUEUE_NAME;
 
-@SuppressWarnings("UnstableApiUsage")
 @Slf4j
 @RuleNode(
         type = ComponentType.ANALYTICS,
@@ -88,9 +87,11 @@ import static org.thingsboard.server.common.data.DataConstants.QUEUE_NAME;
                 "Generates outgoing message with aggregated values. By default, an outgoing message generates with 'POST_TELEMETRY_REQUEST' type. " +
                 "The type of the outgoing messages controls under \"<b>Output message type</b>\" configuration parameter.",
         configDirective = "tbAnalyticsNodeAggregateLatestV2Config",
-        icon = "functions"
+        icon = "functions",
+        docUrl = "https://thingsboard.io/docs/user-guide/rule-engine-2-0/nodes/analytics/aggregate-latest/"
 )
 public class TbAggLatestTelemetryNodeV2 implements TbNode {
+
     private final Gson gson = new Gson();
     private static final int CACHE_TTL_MULTIPLIER = 3;
     private TbAggLatestTelemetryNodeV2Configuration config;

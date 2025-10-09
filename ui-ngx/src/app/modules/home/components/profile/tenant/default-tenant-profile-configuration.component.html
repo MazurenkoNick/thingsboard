@@ -485,7 +485,19 @@
         </mat-error>
         <mat-hint></mat-hint>
       </mat-form-field>
-      <div class="flex-1"></div>
+      <mat-form-field class="mat-block flex-1" appearance="fill">
+        <mat-label translate>tenant-profile.report-ttl-days</mat-label>
+        <input matInput required min="0" step="1"
+               formControlName="reportTtlDays"
+               type="number">
+        <mat-error *ngIf="defaultTenantProfileConfigurationFormGroup.get('reportTtlDays').hasError('required')">
+          {{ 'tenant-profile.report-ttl-days-required' | translate}}
+        </mat-error>
+        <mat-error *ngIf="defaultTenantProfileConfigurationFormGroup.get('reportTtlDays').hasError('min')">
+          {{ 'tenant-profile.report-ttl-days-range' | translate}}
+        </mat-error>
+        <mat-hint></mat-hint>
+      </mat-form-field>
     </div>
   </fieldset>
 

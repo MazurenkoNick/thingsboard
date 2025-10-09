@@ -99,7 +99,7 @@
   </div>
   <div class="tb-color-field">
     <tb-color-input asBoxInput
-                    useThemePalette
+                    [useThemePalette]="!reportMode"
                     colorClearButton
                     formControlName="lineColor">
     </tb-color-input>
@@ -119,6 +119,8 @@
         [widgetConfig]="widgetConfig"
         [yAxisIds]="yAxisIds"
         [hideYAxis]="hideYAxis"
+        [supportsUnitConversion]="supportsUnitConversion"
+        [reportMode]="reportMode"
         icon="settings"
         [formControl]="thresholdSettingsFormControl">
     </tb-time-series-chart-threshold-settings>

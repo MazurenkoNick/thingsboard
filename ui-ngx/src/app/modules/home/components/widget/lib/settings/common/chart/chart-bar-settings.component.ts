@@ -86,6 +86,10 @@ export class ChartBarSettingsComponent implements OnInit, ControlValueAccessor {
   @coerceBoolean()
   pieLabelPosition = false;
 
+  @Input()
+  @coerceBoolean()
+  reportMode = false;
+
   private modelValue: ChartBarSettings;
 
   private propagateChange = null;

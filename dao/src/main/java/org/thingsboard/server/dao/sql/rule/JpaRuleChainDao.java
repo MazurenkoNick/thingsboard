@@ -34,6 +34,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Limit;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Component;
 import org.thingsboard.server.common.data.EntityInfo;
@@ -167,6 +168,16 @@ public class JpaRuleChainDao extends JpaAbstractDao<RuleChainEntity, RuleChain> 
     @Override
     public List<EntityInfo> findByTenantIdAndSecretPlaceholder(TenantId tenantId, String placeholder) {
         return ruleChainRepository.findByTenantIdAndSecretPlaceholder(tenantId.getId(), placeholder);
+    }
+
+    @Override
+    public List<EntityInfo> findByTenantIdAndResource(TenantId tenantId, String reference, int limit) {
+        return ruleChainRepository.findRuleChainsByTenantIdAndResource(tenantId.getId(), reference, PageRequest.of(0, limit));
+    }
+
+    @Override
+    public List<EntityInfo> findByResource(String reference, int limit) {
+        return ruleChainRepository.findRuleChainsByResource(reference, PageRequest.of(0, limit));
     }
 
     @Override

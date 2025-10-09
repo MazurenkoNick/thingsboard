@@ -32,7 +32,6 @@ package org.thingsboard.rule.engine.analytics.latest.telemetry;
 
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.gson.JsonObject;
-import lombok.extern.slf4j.Slf4j;
 import org.thingsboard.rule.engine.analytics.latest.TbAbstractLatestNode;
 import org.thingsboard.rule.engine.api.RuleNode;
 import org.thingsboard.rule.engine.api.ScriptEngine;
@@ -51,7 +50,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
-@Slf4j
 @RuleNode(
         type = ComponentType.ANALYTICS,
         name = "aggregate latest (deprecated)",
@@ -66,7 +64,6 @@ import java.util.concurrent.ConcurrentHashMap;
         configDirective = "tbAnalyticsNodeAggregateLatestConfig",
         icon = "functions"
 )
-
 public class TbAggLatestTelemetryNode extends TbAbstractLatestNode<TbAggLatestTelemetryNodeConfiguration> {
 
     private final Map<String, ScriptEngine> attributesScriptEngineMap = new ConcurrentHashMap<>();
