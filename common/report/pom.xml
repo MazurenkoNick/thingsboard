@@ -121,7 +121,7 @@
             <artifactId>flying-saucer-pdf</artifactId>
         </dependency>
         <dependency>
-            <groupId>net.sf.jtidy</groupId>
+            <groupId>com.github.jtidy</groupId>
             <artifactId>jtidy</artifactId>
         </dependency>
         <dependency>
