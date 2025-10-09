@@ -181,7 +181,7 @@
         <jtidy.version>r938</jtidy.version>
         <pdfbox.version>3.0.5</pdfbox.version>
         <ibm.icu4j.version>75.1</ibm.icu4j.version>
-        <netty.version>4.1.125.Final</netty.version> <!-- to fix CVE-2025-55163. TODO: remove when fixed in spring-boot-dependencies -->
+        <netty.version>4.1.125.Final</netty.version> <!-- to fix CVEs. TODO: remove when fixed in spring-boot-dependencies -->
     </properties>
 
     <modules>
