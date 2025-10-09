@@ -73,6 +73,7 @@ import org.thingsboard.server.service.cf.ctx.CalculatedFieldEntityCtxId;
 import org.thingsboard.server.service.cf.ctx.state.ArgumentEntry;
 import org.thingsboard.server.service.cf.ctx.state.CalculatedFieldCtx;
 import org.thingsboard.server.service.cf.ctx.state.CalculatedFieldState;
+import org.thingsboard.server.service.cf.ctx.state.SingleValueArgumentEntry;
 import org.thingsboard.server.service.security.permission.OwnersCacheService;
 import org.thingsboard.server.service.telemetry.TelemetrySubscriptionService;
 
@@ -275,6 +276,7 @@ public class DefaultCalculatedFieldReprocessingService extends AbstractCalculate
         return state;
     }
 
+    @Override
     protected ListenableFuture<ArgumentEntry> fetchTsLatest(TenantId tenantId, EntityId entityId, Argument argument, long startTs) {
         ReadTsKvQuery query = new BaseReadTsKvQuery(argument.getRefEntityKey().getKey(), 0, startTs, 0, 1, Aggregation.NONE);
         log.trace("[{}][{}] Fetching timeseries for latest for query {}", tenantId, entityId, query);
@@ -284,7 +286,7 @@ public class DefaultCalculatedFieldReprocessingService extends AbstractCalculate
             log.debug("[{}][{}] Fetched timeseries for latest for query {}: {}", tenantId, entityId, query, tsKvList);
             TsKvEntry tsKvEntry;
             if (tsKvList.isEmpty() || tsKvList.get(0) == null || tsKvList.get(0).getValue() == null) {
-                tsKvEntry = new BasicTsKvEntry(startTs, createDefaultKvEntry(argument), 0L);
+                tsKvEntry = new BasicTsKvEntry(startTs, createDefaultKvEntry(argument), SingleValueArgumentEntry.DEFAULT_VERSION);
             } else {
                 tsKvEntry = tsKvList.get(0);
             }

@@ -1,0 +1,62 @@
+<!--
+
+    ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
+
+    Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
+
+    NOTICE: All information contained herein is, and remains
+    the property of ThingsBoard, Inc. and its suppliers,
+    if any.  The intellectual and technical concepts contained
+    herein are proprietary to ThingsBoard, Inc.
+    and its suppliers and may be covered by U.S. and Foreign Patents,
+    patents in process, and are protected by trade secret or copyright law.
+
+    Dissemination of this information or reproduction of this material is strictly forbidden
+    unless prior written permission is obtained from COMPANY.
+
+    Access to the source code contained herein is hereby forbidden to anyone except current COMPANY employees,
+    managers or contractors who have executed Confidentiality and Non-disclosure agreements
+    explicitly covering such access.
+
+    The copyright notice above does not evidence any actual or intended publication
+    or disclosure  of  this source code, which includes
+    information that is confidential and/or proprietary, and is a trade secret, of  COMPANY.
+    ANY REPRODUCTION, MODIFICATION, DISTRIBUTION, PUBLIC  PERFORMANCE,
+    OR PUBLIC DISPLAY OF OR THROUGH USE  OF THIS  SOURCE CODE  WITHOUT
+    THE EXPRESS WRITTEN CONSENT OF COMPANY IS STRICTLY PROHIBITED,
+    AND IN VIOLATION OF APPLICABLE LAWS AND INTERNATIONAL TREATIES.
+    THE RECEIPT OR POSSESSION OF THIS SOURCE CODE AND/OR RELATED INFORMATION
+    DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
+    OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
+
+-->
+<div class="tb-form-panel no-border h-full" [formGroup]="reportConfigForm">
+  <div class="tb-form-panel no-border no-padding overflow-y-auto">
+    <div class="tb-form-row space-between">
+      <div>{{ 'report-template.component.split-view.split-position' | translate }}</div>
+      <mat-form-field appearance="outline" class="number" subscriptSizing="dynamic">
+        <input matInput formControlName="splitPosition" type="number" min="1" max="99" placeholder="{{ 'widget-config.set' | translate }}">
+        <div matSuffix>%</div>
+      </mat-form-field>
+    </div>
+    <div class="tb-form-row space-between">
+      <div>{{ 'report-template.component.split-view.split-gap' | translate }}</div>
+      <mat-form-field appearance="outline" class="number" subscriptSizing="dynamic">
+        <input matInput formControlName="splitGap" type="number" min="0" placeholder="{{ 'widget-config.set' | translate }}">
+        <div matSuffix>pt</div>
+      </mat-form-field>
+    </div>
+    <div class="tb-form-row space-between">
+      <div class="fixed-title-width" translate>report-template.component.split-view.vertical-alignment</div>
+      <div class="flex flex-row items-center justify-start gap-2">
+        <div class="tb-small-label" translate>report-template.component.split-view.left</div>
+        <tb-alignment horizontal="false" formControlName="leftVerticalAlignment"></tb-alignment>
+        <mat-divider vertical></mat-divider>
+        <div class="tb-small-label" translate>report-template.component.split-view.right</div>
+        <tb-alignment horizontal="false" formControlName="rightVerticalAlignment"></tb-alignment>
+      </div>
+    </div>
+    <tb-report-component-layout-settings formControlName="layout">
+    </tb-report-component-layout-settings>
+  </div>
+</div>

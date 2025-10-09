@@ -32,7 +32,6 @@ package org.thingsboard.rule.engine.flow;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import lombok.extern.slf4j.Slf4j;
 import org.thingsboard.rule.engine.api.RuleNode;
 import org.thingsboard.rule.engine.api.TbContext;
 import org.thingsboard.rule.engine.api.TbNode;
@@ -49,7 +48,6 @@ import org.thingsboard.server.common.msg.TbMsg;
 import java.util.Optional;
 import java.util.UUID;
 
-@Slf4j
 @RuleNode(
         type = ComponentType.FLOW,
         name = "rule chain",
@@ -64,7 +62,8 @@ import java.util.UUID;
         configDirective = "tbFlowNodeRuleChainInputConfig",
         relationTypes = {},
         ruleChainNode = true,
-        customRelations = true
+        customRelations = true,
+        docUrl = "https://thingsboard.io/docs/user-guide/rule-engine-2-0/nodes/flow/rule-chain/"
 )
 public class TbRuleChainInputNode implements TbNode {
 
@@ -121,4 +120,5 @@ public class TbRuleChainInputNode implements TbNode {
                     default -> null;
                 });
     }
+
 }

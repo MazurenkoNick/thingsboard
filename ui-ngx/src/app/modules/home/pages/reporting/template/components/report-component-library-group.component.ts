@@ -36,6 +36,7 @@ import { Component, ElementRef, HostBinding, Input, OnChanges, SimpleChanges,
 import { coerceBoolean } from '@shared/decorators/coercion';
 import { TbReportFormat } from '@shared/models/report.models';
 import {
+  ReportComponentContext,
   ReportComponentLibraryGroup,
   reportComponentLibraryGroupTranslations
 } from '@home/pages/reporting/template/components/report-component.models';
@@ -54,6 +55,9 @@ export class ReportComponentLibraryGroupComponent implements OnChanges {
   expansionPanel = viewChild('expansionPanel', {
     read: MatExpansionPanel,
   });
+
+  @Input()
+  context: ReportComponentContext;
 
   @Input()
   @coerceBoolean()

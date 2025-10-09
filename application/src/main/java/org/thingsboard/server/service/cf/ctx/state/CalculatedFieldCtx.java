@@ -233,6 +233,7 @@ public class CalculatedFieldCtx {
             initTbelExpression(expression);
             initialized = true;
         } catch (Exception e) {
+            initialized = false;
             throw new RuntimeException("Failed to init calculated field ctx. Invalid expression syntax.", e);
         }
     }
@@ -306,6 +307,7 @@ public class CalculatedFieldCtx {
             );
             simpleExpressions.put(expression, compiledExpression);
         } else {
+            initialized = false;
             throw new RuntimeException("Failed to init calculated field ctx. Invalid expression syntax.");
         }
     }
@@ -512,15 +514,11 @@ public class CalculatedFieldCtx {
         return new CalculatedFieldEntityCtxId(tenantId, cfId, entityId);
     }
 
-    public boolean hasContextOnlyChanges(CalculatedFieldCtx other) { // has changes that do not require state reinit and will be picked up by the state on the fly
-        if (calculatedField.getConfiguration() instanceof ExpressionBasedCalculatedFieldConfiguration expressionConfig) {
-            boolean shouldCompareExpression = !(expressionConfig instanceof PropagationCalculatedFieldConfiguration propagationConfig)
-                                              || propagationConfig.isApplyExpressionToResolvedArguments();
-            if (shouldCompareExpression && !expression.equals(other.expression)) {
-                return true;
-            }
+    public boolean hasContextOnlyChanges(CalculatedFieldCtx other) {
+        if (calculatedField.getConfiguration() instanceof ExpressionBasedCalculatedFieldConfiguration && !expression.equals(other.expression)) {
+            return true;
         }
-        if (!output.equals(other.output)) {
+        if (!Objects.equals(output, other.output)) {
             return true;
         }
         if (cfType == CalculatedFieldType.ALARM && !calculatedField.getName().equals(other.getCalculatedField().getName())) {
@@ -529,9 +527,8 @@ public class CalculatedFieldCtx {
         return scheduledUpdateIntervalMillis != other.scheduledUpdateIntervalMillis;
     }
 
-    public boolean hasStateChanges(CalculatedFieldCtx other) { // has changes that require state reinit (will trigger state.reset() and re-fetch arguments)
-        boolean hasChanges = !arguments.equals(other.arguments);
-        if (hasChanges) {
+    public boolean hasStateChanges(CalculatedFieldCtx other) {
+        if (!arguments.equals(other.arguments)) {
             return true;
         }
         if (cfType == CalculatedFieldType.ALARM) {
@@ -539,14 +536,13 @@ public class CalculatedFieldCtx {
             var otherConfig = (AlarmCalculatedFieldConfiguration) other.getCalculatedField().getConfiguration();
             if (!thisConfig.getCreateRules().equals(otherConfig.getCreateRules()) ||
                 !Objects.equals(thisConfig.getClearRule(), otherConfig.getClearRule())) {
-                hasChanges = true;
+                return true;
             }
-            // TODO: implement rules update logic!
         }
         if (hasGeofencingZoneGroupConfigurationChanges(other)) {
-            hasChanges = true;
+            return true;
         }
-        return hasChanges;
+        return false;
     }
 
     private boolean hasGeofencingZoneGroupConfigurationChanges(CalculatedFieldCtx other) {

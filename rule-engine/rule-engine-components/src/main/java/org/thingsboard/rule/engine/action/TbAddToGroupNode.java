@@ -34,7 +34,6 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.BooleanUtils;
 import org.thingsboard.common.util.DonAsynchron;
 import org.thingsboard.rule.engine.api.RuleNode;
@@ -60,7 +59,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-@Slf4j
 @RuleNode(
         type = ComponentType.ACTION,
         name = "add to group",
@@ -70,7 +68,8 @@ import java.util.Optional;
                 "Will create new Entity Group if it doesn't exists and 'Create new group if not exists' is set to true.",
         configDirective = "tbActionNodeAddToGroupConfig",
         icon = "add_circle",
-        ruleChainTypes = RuleChainType.CORE
+        ruleChainTypes = RuleChainType.CORE,
+        docUrl = "https://thingsboard.io/docs/user-guide/rule-engine-2-0/nodes/action/add-to-group/"
 )
 public class TbAddToGroupNode extends TbAbstractGroupActionNode<TbAddToGroupConfiguration> {
 

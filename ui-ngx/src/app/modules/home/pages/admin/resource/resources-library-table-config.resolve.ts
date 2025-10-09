@@ -40,7 +40,8 @@ import {
 import { Router } from '@angular/router';
 import {
   Resource,
-  ResourceInfo, ResourceInfoWithReferences,
+  ResourceInfo,
+  ResourceInfoWithReferences,
   ResourceType,
   ResourceTypeTranslationMap,
   toResourceDeleteResult
@@ -192,7 +193,7 @@ export class ResourcesLibraryTableConfigResolver  {
       case 'downloadResource':
         this.downloadResource(action.event, action.entity);
         return true;
-      case 'deleteLibrary':
+      case 'deleteResource':
         this.deleteResource(action.event, action.entity);
     }
     return false;

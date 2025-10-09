@@ -94,6 +94,9 @@ import {
 import {
   ReportComponentLibraryGroupsComponent
 } from '@home/pages/reporting/template/components/report-component-library-groups.component';
+import { SplitViewConfigComponent } from '@home/pages/reporting/template/components/split-view-config.component';
+import { ReportDropBlockComponent } from '@home/pages/reporting/template/components/report-drop-block.component';
+import { SplitViewPreviewComponent } from '@home/pages/reporting/template/components/split-view-preview.component';
 
 @NgModule({
   providers: [
@@ -136,7 +139,10 @@ import {
     TimeSeriesChartConfigComponent,
     LatestChartPreviewComponent,
     LatestChartConfigComponent,
-    ReportComponentConfigComponent
+    ReportComponentConfigComponent,
+    ReportDropBlockComponent,
+    SplitViewConfigComponent,
+    SplitViewPreviewComponent
   ],
   imports: [
     CommonModule,
