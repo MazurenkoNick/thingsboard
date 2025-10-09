@@ -63,6 +63,9 @@
       position: relative;
       opacity: 0.3 !important;
     }
+    .tb-report-component {
+      width: 100% !important;
+    }
   }
   .tb-draggable {
     cursor: pointer;
@@ -70,6 +73,21 @@
   .tb-draggable, .tb-report-component-placeholder {
     position: relative;
     z-index: 1;
+  }
+  .tb-report-component-draggable {
+    .tb-report-component-drag-handle {
+      position: absolute;
+      left: 8px;
+      top: 8px;
+      opacity: 0;
+      cursor: move;
+      transition: opacity 0.2s linear;
+    }
+    &:hover {
+      .tb-report-component-drag-handle {
+        opacity: 1;
+      }
+    }
   }
 }
 

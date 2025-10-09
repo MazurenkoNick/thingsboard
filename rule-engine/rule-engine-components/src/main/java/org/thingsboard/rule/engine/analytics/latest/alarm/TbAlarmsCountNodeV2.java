@@ -77,7 +77,8 @@ import static org.thingsboard.server.common.data.DataConstants.QUEUE_NAME;
                 "Generates outgoing messages with alarm count values for each found entity. By default, an outgoing message generates with 'POST_TELEMETRY_REQUEST' type. " +
                 "The type of the outgoing messages controls under \"<b>Output message type</b>\" configuration parameter.",
         configDirective = "tbAnalyticsNodeAlarmsCountV2Config",
-        icon = "functions"
+        icon = "functions",
+        docUrl = "https://thingsboard.io/docs/user-guide/rule-engine-2-0/nodes/analytics/alarms-count/"
 )
 public class TbAlarmsCountNodeV2 implements TbNode {
 
