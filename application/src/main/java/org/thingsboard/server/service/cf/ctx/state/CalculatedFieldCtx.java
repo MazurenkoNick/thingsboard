@@ -515,7 +515,7 @@ public class CalculatedFieldCtx {
     }
 
     public boolean hasContextOnlyChanges(CalculatedFieldCtx other) {
-        if (calculatedField.getConfiguration() instanceof ExpressionBasedCalculatedFieldConfiguration && !expression.equals(other.expression)) {
+        if (calculatedField.getConfiguration() instanceof ExpressionBasedCalculatedFieldConfiguration && !Objects.equals(expression, other.expression)) {
             return true;
         }
         if (!Objects.equals(output, other.output)) {
@@ -539,10 +539,7 @@ public class CalculatedFieldCtx {
                 return true;
             }
         }
-        if (hasGeofencingZoneGroupConfigurationChanges(other)) {
-            return true;
-        }
-        return false;
+        return hasGeofencingZoneGroupConfigurationChanges(other);
     }
 
     private boolean hasGeofencingZoneGroupConfigurationChanges(CalculatedFieldCtx other) {
