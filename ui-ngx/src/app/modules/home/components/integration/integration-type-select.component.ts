@@ -93,7 +93,7 @@ export class IntegrationTypeSelectComponent implements ControlValueAccessor, OnI
   @Input()
   placeholder = this.translate.instant('integration.select-integration-type');
 
-  private propagateChange = (v: any) => { };
+  private propagateChange = (_v: any) => { };
 
   constructor(private fb: FormBuilder,
               private translate: TranslateService) {
@@ -115,7 +115,7 @@ export class IntegrationTypeSelectComponent implements ControlValueAccessor, OnI
     this.filteredIntegrationTypes = this.integrationTypeFormGroup.get('type').valueChanges
       .pipe(
         tap(value => {
-          let modelValue;
+          let modelValue: IntegrationInfo;
           if (isString(value) || !value) {
             modelValue = null;
           } else {
@@ -187,8 +187,8 @@ export class IntegrationTypeSelectComponent implements ControlValueAccessor, OnI
     }, 0);
   }
 
-  displayIntegrationTypeFn(inegration?: IntegrationInfo): string | undefined {
-    return inegration ? inegration.name : undefined;
+  displayIntegrationTypeFn(integration?: IntegrationInfo): string {
+    return integration?.name;
   }
 
   private updateView(value: IntegrationInfo | null) {
@@ -208,9 +208,12 @@ export class IntegrationTypeSelectComponent implements ControlValueAccessor, OnI
   }
 
   private filterIntegrationType(searchText: string): Array<IntegrationInfo> {
-    const regex = new RegExp(searchText, 'i');
+    const lowerSearchText = searchText.toLowerCase();
     return this.integrationTypesInfo.filter((integrationInfo) =>
-      regex.test(integrationInfo.name) || regex.test(integrationInfo.description) ||
-      searchText === integrationInfo.type || regex.test(integrationInfo.tags?.toString()));
+      integrationInfo.name.toLowerCase().includes(lowerSearchText) ||
+      integrationInfo.description.toLowerCase().includes(lowerSearchText) ||
+      searchText === integrationInfo.type ||
+      integrationInfo.tags?.toString().toLowerCase().includes(lowerSearchText)
+    );
   }
 }

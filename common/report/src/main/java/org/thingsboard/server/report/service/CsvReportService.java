@@ -189,7 +189,7 @@ public class CsvReportService extends AbstractReportService {
             return new ComponentData(0);
         }
         List<Map<String, String>> entityDatas = collectEntityDatas(ctx, singleDataSource.get(), stateEntity != null ? stateEntity.getEntityId() : null);
-        Map<String, Object> variables = new HashMap<>(toStringMap(stateEntity, singleDataSource.get().getDataKeys(), ctx));
+        Map<String, Object> variables = new HashMap<>(toStringMap(stateEntity, singleDataSource.get().getDataKeys(), ctx, null));
         return new ComponentData(0, null, entityDatas, variables);
     }
 

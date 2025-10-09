@@ -40,6 +40,15 @@ export:
     delay_between_queries: ${POSTGRES_EXPORT_DELAY_BETWEEN_QUERIES:0}  # in milliseconds
   cassandra:
     enabled: ${CASSANDRA_EXPORT_ENABLED:true}
+    ts:
+      filter:
+        # Timestamp bounds for exporting time-series data from Cassandra ts_kv_cf.
+        # Provide epoch millis as numbers. Leave empty to export all available data.
+        start_ts: ${CASSANDRA_EXPORT_TS_FILTER_START_TS:}
+        end_ts: ${CASSANDRA_EXPORT_TS_FILTER_END_TS:}
+        # Partition size (ms) used to compute the lower bound of partitions for startTs filtering.
+        # We will start scanning partitions from (startTs - partition_size_ms). Defaults to 31 days in ms.
+        partition_size_ms: ${CASSANDRA_EXPORT_TS_FILTER_PARTITION_SIZE_MS:${CASSANDRA_EXPORT_TS_FILTER_MONTH_MS:2678400000}}
 
 import:
   postgres:
@@ -65,6 +74,7 @@ partition_sizes: # in hours
   edge_event: ${EDGE_EVENTS_PARTITION_SIZE:168}
   audit_log: ${AUDIT_LOGS_PARTITION_SIZE:168}
   blob_entity: ${BLOB_ENTITIES_PARTITION_SIZE:168}
+  report: ${REPORTS_PARTITION_SIZE:168}
 
 spring:
   datasource:

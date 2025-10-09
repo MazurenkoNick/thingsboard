@@ -41,7 +41,7 @@ import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.ReportTemplateId;
 import org.thingsboard.server.common.data.kv.Aggregation;
-import org.thingsboard.server.common.data.kv.ReadTsKvQuery;
+import org.thingsboard.server.common.data.kv.BaseReadTsKvQuery;
 import org.thingsboard.server.common.data.kv.ReadTsKvQueryResult;
 import org.thingsboard.server.common.data.kv.TsKvEntry;
 import org.thingsboard.server.common.data.page.PageData;
@@ -54,6 +54,7 @@ import org.thingsboard.server.common.data.query.EntityData;
 import org.thingsboard.server.common.data.query.EntityDataQuery;
 import org.thingsboard.server.common.data.report.Report;
 import org.thingsboard.server.common.data.report.ReportTemplate;
+import org.thingsboard.server.common.data.report.configuration.timewindow.Interval;
 import org.thingsboard.server.report.context.RemoteTbReportCtxProvider;
 import org.thingsboard.server.report.context.TbReportCtx;
 
@@ -144,17 +145,17 @@ public class RemoteReportDataService implements ReportDataService {
     }
 
     @Override
-    public List<TsKvEntry> getTimeseries(EntityId entityId, List<String> keys, Long startTs, Long endTs, Long interval, Aggregation agg, SortOrder.Direction sortOrder,
+    public List<TsKvEntry> getTimeseries(EntityId entityId, List<String> keys, Long startTs, Long endTs, Interval interval, String timeZone, Aggregation agg, SortOrder.Direction sortOrder,
                                          Integer limit, boolean useStrictDataTypes, TbReportCtx ctx) {
         try {
-            return getRestClient(ctx).getTimeseries(entityId, keys, interval, agg, sortOrder, startTs, endTs, limit, useStrictDataTypes);
+            return getRestClient(ctx).getTimeseries(entityId, keys, interval.getInterval(), interval.getIntervalType(), timeZone, agg, sortOrder, startTs, endTs, limit, useStrictDataTypes);
         } catch (RestClientResponseException e) {
             throw handleRestClientException(e);
         }
     }
 
     @Override
-    public List<ReadTsKvQueryResult> findTimeseriesByQueries(EntityId entityId, List<ReadTsKvQuery> queries, TbReportCtx ctx) {
+    public List<ReadTsKvQueryResult> findTimeseriesByQueries(EntityId entityId, List<BaseReadTsKvQuery> queries, TbReportCtx ctx) {
         try {
             return getRestClient(ctx).getTimeseriesByQueries(entityId, queries);
         } catch (RestClientResponseException e) {

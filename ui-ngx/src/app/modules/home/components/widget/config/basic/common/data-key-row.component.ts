@@ -56,7 +56,10 @@ import { MatDialog } from '@angular/material/dialog';
 import { WidgetConfigComponent } from '@home/components/widget/widget-config.component';
 import { DataKey, DataKeyConfigMode, DatasourceType, Widget, widgetType } from '@shared/models/widget.models';
 import { DataKeyType } from '@shared/models/telemetry/telemetry.models';
-import { DataKeySettingsFunction } from '@home/components/widget/lib/settings/common/key/data-keys.component.models';
+import {
+  DataKeySettingsFormFunction,
+  DataKeySettingsFunction
+} from '@home/components/widget/lib/settings/common/key/data-keys.component.models';
 import { merge } from 'rxjs';
 import {
   DataKeyConfigDialogComponent,
@@ -202,7 +205,7 @@ export class DataKeyRowComponent implements ControlValueAccessor, OnInit, OnChan
   }
 
   get widget(): Widget {
-    return this.widgetConfigComponent?.widget;
+    return this.widgetConfigComponent?.widget || this.dataKeysPanelComponent?.widget;
   }
 
   get dashboard(): Dashboard {
@@ -217,12 +220,28 @@ export class DataKeyRowComponent implements ControlValueAccessor, OnInit, OnChan
     return this.widgetConfigComponent?.modelValue?.dataKeySettingsForm || this.dataKeysPanelComponent?.dataKeySettingsForm;
   }
 
+  get dataKeySettingsFormFunction(): DataKeySettingsFormFunction {
+    return this.dataKeysPanelComponent?.dataKeySettingsFormFunction;
+  }
+
+  get dataKeySettingsFormTrimDefaults(): boolean {
+    return this.dataKeysPanelComponent?.dataKeySettingsFormTrimDefaults;
+  }
+
   get dataKeySettingsDirective(): string {
-    return this.widgetConfigComponent?.modelValue?.dataKeySettingsDirective;
+    return this.widgetConfigComponent?.modelValue?.dataKeySettingsDirective || this.dataKeysPanelComponent?.dataKeySettingsDirective;
   }
 
   get latestDataKeySettingsForm(): FormProperty[] {
-    return this.widgetConfigComponent?.modelValue?.latestDataKeySettingsForm  || this.dataKeysPanelComponent?.latestDataKeySettingsForm;;
+    return this.widgetConfigComponent?.modelValue?.latestDataKeySettingsForm  || this.dataKeysPanelComponent?.latestDataKeySettingsForm;
+  }
+
+  get latestDataKeySettingsFormFunction(): DataKeySettingsFormFunction {
+    return this.dataKeysPanelComponent?.latestDataKeySettingsFormFunction;
+  }
+
+  get latestDataKeySettingsFormTrimDefaults(): boolean {
+    return this.dataKeysPanelComponent?.latestDataKeySettingsFormTrimDefaults;
   }
 
   get latestDataKeySettingsDirective(): string {
@@ -230,7 +249,7 @@ export class DataKeyRowComponent implements ControlValueAccessor, OnInit, OnChan
   }
 
   get dataKeySettingsFunction(): DataKeySettingsFunction {
-    return this.widgetConfigComponent?.modelValue?.dataKeySettingsFunction;
+    return this.widgetConfigComponent?.modelValue?.dataKeySettingsFunction || this.dataKeysPanelComponent?.dataKeySettingsFunction;
   }
 
   get isEntityDatasource(): boolean {
@@ -350,6 +369,8 @@ export class DataKeyRowComponent implements ControlValueAccessor, OnInit, OnChan
           dataKey: deepClone(this.modelValue),
           dataKeyConfigMode: advanced ? DataKeyConfigMode.advanced : DataKeyConfigMode.general,
           dataKeySettingsForm: this.isLatestDataKeys ? this.latestDataKeySettingsForm : this.dataKeySettingsForm,
+          dataKeySettingsFormFunction: this.isLatestDataKeys ? this.latestDataKeySettingsFormFunction : this.dataKeySettingsFormFunction,
+          dataKeySettingsFormTrimDefaults: this.isLatestDataKeys ? this.latestDataKeySettingsFormTrimDefaults : this.dataKeySettingsFormTrimDefaults,
           dataKeySettingsDirective: this.isLatestDataKeys ? this.latestDataKeySettingsDirective : this.dataKeySettingsDirective,
           dashboard: this.dashboard,
           aliasController: this.aliasController,

@@ -131,6 +131,7 @@ table.tb-report-table tr {
 }
 
 table.tb-report-table th, table.tb-report-table td {
+    position: relative;
     overflow: hidden;
     padding: 2px;
     border-bottom: 1px solid rgba(0, 0, 0, 0.87);
@@ -151,4 +152,21 @@ table.tb-report-table th.tb-report-table-heading {
     border-left: 0;
     border-right: 0;
     border-bottom: 0;
+}
+
+table.tb-split-view {
+    width: 100%;
+    padding: 0;
+    margin: 0;
+    border-collapse: collapse;
+    border-width: 0;
+    border-style: none;
+    border-spacing: 0;
+}
+
+table.tb-split-view > tr > td {
+    height: 1px;
+    border-style: none;
+    padding: 0;
+    margin: 0;
 }

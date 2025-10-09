@@ -63,7 +63,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.function.Consumer;
-import java.util.stream.Stream;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -200,21 +199,18 @@ public class Storage {
     @SneakyThrows
     public void open() {
         if (mode.equals("TENANT_DATA_IMPORT")) {
-            Stream<Path> archives = Files.list(workingDir);
-            archives.filter(file -> file.getFileName().endsWith(".tar")).forEach(archiveFile -> {
-                try (TarArchiveInputStream tarArchive = new TarArchiveInputStream(new FileInputStream(archiveFile.toFile()))) {
-                    log.info("Unarchiving {}", archiveFile.getFileName());
-                    TarArchiveEntry entry;
-                    while ((entry = tarArchive.getNextEntry()) != null) {
-                        try (OutputStream file = new FileOutputStream(workingDir.resolve(entry.getName()).toFile())) {
-                            tarArchive.transferTo(file);
-                        }
+            Path archiveFile = workingDir.resolve(FINAL_ARCHIVE_FILE);
+            try (TarArchiveInputStream tarArchive = new TarArchiveInputStream(new FileInputStream(archiveFile.toFile()))) {
+                log.info("Unarchiving {}", archiveFile.getFileName());
+                TarArchiveEntry entry;
+                while ((entry = tarArchive.getNextEntry()) != null) {
+                    try (OutputStream file = new FileOutputStream(workingDir.resolve(entry.getName()).toFile())) {
+                        tarArchive.transferTo(file);
                     }
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
                 }
-            });
-            archives.close();
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 

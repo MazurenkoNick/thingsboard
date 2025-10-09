@@ -32,6 +32,8 @@ package org.thingsboard.server.common.data.report.configuration.timewindow;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import lombok.Data;
 
 @Data
@@ -39,7 +41,7 @@ import lombok.Data;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class History {
     private int historyType;
-    private long interval;
+    private Interval interval;
     private long timewindowMs;
     private FixedTimeWindow fixedTimewindow;
     private QuickTimeInterval quickInterval;

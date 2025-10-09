@@ -31,6 +31,7 @@
 package org.thingsboard.integration.tuya.mq;
 
 public enum TuyaRegion {
+
     CN("pulsar+ssl://mqe.tuyacn.com:7285/", "https://openapi.tuyacn.com"),
     US("pulsar+ssl://mqe.tuyaus.com:7285/", "https://openapi.tuyaus.com"),
     EU("pulsar+ssl://mqe.tuyaeu.com:7285/", "https://openapi.tuyaeu.com"),

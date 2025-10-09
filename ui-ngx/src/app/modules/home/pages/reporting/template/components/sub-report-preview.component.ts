@@ -30,7 +30,7 @@
 ///
 
 import { Component, inject, ViewEncapsulation } from '@angular/core';
-import { RichTextReportComponentConfig, SubReportReportComponentConfig } from '@shared/models/report-component.models';
+import { SubReportReportComponentConfig } from '@shared/models/report-component.models';
 import { AbstractReportComponentPreview } from '@home/pages/reporting/template/components/report-component.component';
 import { ReportTemplateService } from '@core/http/report-template.service';
 import { Observable, of } from 'rxjs';

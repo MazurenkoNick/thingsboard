@@ -53,12 +53,15 @@ import {
 } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { WidgetConfigComponent } from '@home/components/widget/widget-config.component';
-import { DataKey, DatasourceType, widgetType } from '@shared/models/widget.models';
+import { DataKey, DatasourceType, Widget, widgetType } from '@shared/models/widget.models';
 import { dataKeyRowValidator, dataKeyValid } from '@home/components/widget/config/basic/common/data-key-row.component';
 import { CdkDragDrop } from '@angular/cdk/drag-drop';
 import { DataKeyType } from '@shared/models/telemetry/telemetry.models';
 import { UtilsService } from '@core/services/utils.service';
-import { DataKeySettingsFunction } from '@home/components/widget/lib/settings/common/key/data-keys.component.models';
+import {
+  DataKeySettingsFormFunction,
+  DataKeySettingsFunction
+} from '@home/components/widget/lib/settings/common/key/data-keys.component.models';
 import { coerceBoolean } from '@shared/decorators/coercion';
 import { TimeSeriesChartYAxisId } from '@home/components/widget/lib/chart/time-series-chart.models';
 import { FormProperty } from '@shared/models/dynamic-form.models';
@@ -71,8 +74,15 @@ export interface DataKeysPanelOptions {
   widgetType?: widgetType;
   callbacks?: WidgetConfigCallbacks;
   settingsForm?: FormProperty[];
+  settingsFormFunction?: DataKeySettingsFormFunction;
+  settingsFormTrimDefaults?: boolean;
+  settingsDirective?: string;
+  settingsFunction?: DataKeySettingsFunction;
   latestSettingsForm?: FormProperty[];
+  latestSettingsFormFunction?: DataKeySettingsFormFunction;
+  latestSettingsFormTrimDefaults?: boolean;
   hasAdditionalLatestDataKeys?: boolean;
+  widget?: Widget;
 }
 
 @Component({
@@ -192,6 +202,10 @@ export class DataKeysPanelComponent implements ControlValueAccessor, OnInit, OnC
     return this.widgetConfigComponent?.widgetConfigCallbacks || this.getDataKeysPanelOption('callbacks');
   }
 
+  get widget(): Widget {
+    return this.widgetConfigComponent?.widget || this.getDataKeysPanelOption('widget');
+  }
+
   get hasAdditionalLatestDataKeys(): boolean {
     return !this.hideSourceSelection && this.widgetType === widgetType.timeseries &&
       (this.widgetConfigComponent?.modelValue?.typeParameters?.hasAdditionalLatestDataKeys || this.getDataKeysPanelOption('hasAdditionalLatestDataKeys'));
@@ -201,12 +215,32 @@ export class DataKeysPanelComponent implements ControlValueAccessor, OnInit, OnC
     return this.widgetConfigComponent?.modelValue?.dataKeySettingsForm || this.getDataKeysPanelOption('settingsForm');
   }
 
+  get dataKeySettingsFormFunction(): DataKeySettingsFormFunction {
+    return this.getDataKeysPanelOption('settingsFormFunction');
+  }
+
+  get dataKeySettingsFormTrimDefaults(): boolean {
+    return this.hasDataKeysPanelOptions('settingsFormTrimDefaults') ? this.getDataKeysPanelOption('settingsFormTrimDefaults') : false;
+  }
+
+  get dataKeySettingsDirective(): string {
+    return this.widgetConfigComponent?.modelValue?.dataKeySettingsDirective || this.getDataKeysPanelOption('settingsDirective');
+  }
+
   get latestDataKeySettingsForm(): FormProperty[] {
     return this.widgetConfigComponent?.modelValue?.latestDataKeySettingsForm || this.getDataKeysPanelOption('latestSettingsForm');
   }
 
+  get latestDataKeySettingsFormFunction(): DataKeySettingsFormFunction {
+    return this.getDataKeysPanelOption('latestSettingsFormFunction');
+  }
+
+  get latestDataKeySettingsFormTrimDefaults(): boolean {
+    return this.hasDataKeysPanelOptions('latestSettingsFormTrimDefaults') ? this.getDataKeysPanelOption('latestSettingsFormTrimDefaults') : false;
+  }
+
   get dataKeySettingsFunction(): DataKeySettingsFunction {
-    return this.widgetConfigComponent?.modelValue?.dataKeySettingsFunction;
+    return this.widgetConfigComponent?.modelValue?.dataKeySettingsFunction || this.getDataKeysPanelOption('settingsFunction');
   }
 
   get dragEnabled(): boolean {
@@ -357,7 +391,7 @@ export class DataKeysPanelComponent implements ControlValueAccessor, OnInit, OnC
   }
 
   private getDataKeysPanelOption<T>(key: string): T {
-    return this.dataKeysPanelOptions[key];
+    return this.dataKeysPanelOptions && this.dataKeysPanelOptions[key];
   }
 
 }

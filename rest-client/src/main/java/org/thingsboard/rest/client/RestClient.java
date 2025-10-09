@@ -161,8 +161,9 @@ import org.thingsboard.server.common.data.integration.IntegrationInfo;
 import org.thingsboard.server.common.data.integration.IntegrationType;
 import org.thingsboard.server.common.data.kv.Aggregation;
 import org.thingsboard.server.common.data.kv.AttributeKvEntry;
-import org.thingsboard.server.common.data.kv.ReadTsKvQuery;
+import org.thingsboard.server.common.data.kv.BaseReadTsKvQuery;
 import org.thingsboard.server.common.data.kv.ReadTsKvQueryResult;
+import org.thingsboard.server.common.data.kv.IntervalType;
 import org.thingsboard.server.common.data.kv.TsKvEntry;
 import org.thingsboard.server.common.data.menu.CustomMenu;
 import org.thingsboard.server.common.data.menu.CustomMenuInfo;
@@ -2198,7 +2199,12 @@ public class RestClient implements Closeable {
         return getTimeseries(entityId, keys, interval, agg, sortOrder != null ? sortOrder.getDirection() : null, pageLink.getStartTime(), pageLink.getEndTime(), 100, useStrictDataTypes);
     }
 
+    @Deprecated
     public List<TsKvEntry> getTimeseries(EntityId entityId, List<String> keys, Long interval, Aggregation agg, SortOrder.Direction sortOrder, Long startTime, Long endTime, Integer limit, boolean useStrictDataTypes) {
+        return getTimeseries(entityId, keys, interval, null, null, agg, sortOrder, startTime, endTime, limit, useStrictDataTypes);
+    }
+
+    public List<TsKvEntry> getTimeseries(EntityId entityId, List<String> keys, Long interval, IntervalType intervalType, String timeZone, Aggregation agg, SortOrder.Direction sortOrder, Long startTime, Long endTime, Integer limit, boolean useStrictDataTypes) {
         Map<String, String> params = new HashMap<>();
         params.put("entityType", entityId.getEntityType().name());
         params.put("entityId", entityId.getId().toString());
@@ -2211,6 +2217,16 @@ public class RestClient implements Closeable {
 
         StringBuilder urlBuilder = new StringBuilder(baseURL);
         urlBuilder.append("/api/plugins/telemetry/{entityType}/{entityId}/values/timeseries?keys={keys}&interval={interval}&limit={limit}&agg={agg}&useStrictDataTypes={useStrictDataTypes}&orderBy={orderBy}");
+
+        if (intervalType != null) {
+            urlBuilder.append("&intervalType={intervalType}");
+            params.put("intervalType", intervalType.name());
+        }
+
+        if (timeZone != null) {
+            urlBuilder.append("&timeZone={timeZone}");
+            params.put("timeZone", timeZone);
+        }
 
         if (startTime != null) {
             urlBuilder.append("&startTs={startTs}");
@@ -2232,7 +2248,7 @@ public class RestClient implements Closeable {
         return RestJsonConverter.toTimeseries(timeseries);
     }
 
-    public List<ReadTsKvQueryResult> getTimeseriesByQueries(EntityId entityId, List<ReadTsKvQuery> queries) {
+    public List<ReadTsKvQueryResult> getTimeseriesByQueries(EntityId entityId, List<BaseReadTsKvQuery> queries) {
         Map<String, String> params = new HashMap<>();
         params.put("entityType", entityId.getEntityType().name());
         params.put("entityId", entityId.getId().toString());
@@ -2240,13 +2256,14 @@ public class RestClient implements Closeable {
         StringBuilder urlBuilder = new StringBuilder(baseURL);
         urlBuilder.append("/api/plugins/telemetry/{entityType}/{entityId}/values/timeseries");
 
-        return restTemplate.exchange(
+        JsonNode body = restTemplate.exchange(
                 urlBuilder.toString(),
                 HttpMethod.POST,
                 queries == null ? HttpEntity.EMPTY : new HttpEntity<>(queries),
-                new ParameterizedTypeReference<List<ReadTsKvQueryResult>>() {
+                new ParameterizedTypeReference<JsonNode>() {
                 },
                 params).getBody();
+        return RestJsonConverter.toReadTsKvQueryResult(body);
     }
 
     public boolean saveDeviceAttributes(DeviceId deviceId, String scope, JsonNode request) {

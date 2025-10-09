@@ -48,7 +48,8 @@ import {
 import {
   isLayoutReportComponentConfig,
   ReportComponentConfig,
-  toReportComponentLayoutSettings, updateFromReportComponentLayoutSettings
+  toReportComponentLayoutSettings,
+  updateFromReportComponentLayoutSettings
 } from '@shared/models/report-component.models';
 import { TbAnchorComponent } from '@shared/components/tb-anchor.component';
 import { FormBuilder, FormGroup } from '@angular/forms';
@@ -57,7 +58,7 @@ import { genNextLabel, isObject } from '@core/utils';
 import {
   pageVariables,
   ReportComponentContext,
-  reportComponentTypeMap,
+  reportComponentTypesData,
   ReportVariable
 } from '@home/pages/reporting/template/components/report-component.models';
 import { DataKeyType } from '@shared/models/telemetry/telemetry.models';
@@ -65,7 +66,7 @@ import { Observable, of } from 'rxjs';
 import { DataKey, Datasource, widgetType } from '@shared/models/widget.models';
 import { catchError, mergeMap } from 'rxjs/operators';
 import { WidgetConfigCallbacks } from '@home/components/widget/config/widget-config.component.models';
-import { FormProperty } from '@shared/models/dynamic-form.models';
+import { defaultFormProperties, FormProperty } from '@shared/models/dynamic-form.models';
 import { DataKeySettingsFunction } from '@home/components/widget/lib/settings/common/key/data-keys.component.models';
 import { alarmFields } from '@shared/models/alarm.models';
 import { entityFields } from '@shared/models/entity.models';
@@ -124,11 +125,17 @@ export class ReportComponentConfigComponent implements OnInit, OnChanges {
     }
     this.reportConfigContainer.viewContainerRef.clear();
     if (this.reportComponent) {
-      const typeData = reportComponentTypeMap.get(this.reportComponent.type);
+      const typeData =
+        reportComponentTypesData.getReportComponentTypeData(this.reportComponent.type, this.reportComponent.subType);
       if (typeData) {
         this.reportConfigComponentRef = this.reportConfigContainer.viewContainerRef.createComponent(typeData.configComponent);
         this.reportConfigComponent = this.reportConfigComponentRef.instance;
         this.reportConfigComponent.context = this.context;
+        if (typeData.configContext) {
+          for (const key of Object.keys(typeData.configContext)) {
+            this.reportConfigComponent[key] = typeData.configContext[key];
+          }
+        }
         this.reportConfigComponent.reportConfigUpdated.subscribe((updated) => {
           Object.assign(this.reportComponent, updated);
           this.reportComponentUpdated.emit();
@@ -177,7 +184,7 @@ export abstract class AbstractReportComponentConfig<C extends ReportComponentCon
 
   reportConfigForm: FormGroup;
 
-  private reportComponentConfig: C;
+  protected reportComponentConfig: C;
 
   private hasLayoutConfig = false;
 
@@ -300,6 +307,14 @@ export abstract class AbstractReportComponentConfig<C extends ReportComponentCon
       };
       if (type === DataKeyType.count) {
         result.name = 'count';
+      }
+      if (dataKeySettingsForm?.length) {
+        result.settings = defaultFormProperties(dataKeySettingsForm);
+      } else if (dataKeySettingsFunction) {
+        const settings = dataKeySettingsFunction(result, isLatestDataKey);
+        if (settings) {
+          result.settings = settings;
+        }
       }
       return result;
     }

@@ -78,7 +78,7 @@
       <div class="tb-form-row space-between" *ngIf="!hideDataKeyColor">
         <div>{{ 'datakey.color' | translate }}</div>
         <tb-color-input asBoxInput
-                        useThemePalette
+                        [useThemePalette]="!reportMode"
                         formControlName="color">
         </tb-color-input>
       </div>
@@ -189,7 +189,7 @@
       </div>
     </div>
     <div class="tb-form-panel tb-slide-toggle"
-         *ngIf="(modelValue.type === dataKeyTypes.timeseries || modelValue.type === dataKeyTypes.attribute || modelValue.type === dataKeyTypes.count) && showPostProcessing">
+         *ngIf="reportMode || ((modelValue.type === dataKeyTypes.timeseries || modelValue.type === dataKeyTypes.attribute || modelValue.type === dataKeyTypes.count) && showPostProcessing)">
       <mat-expansion-panel class="tb-settings" [expanded]="dataKeyFormGroup.get('usePostProcessing').value" [disabled]="!dataKeyFormGroup.get('usePostProcessing').value">
         <mat-expansion-panel-header class="flex flex-row flex-wrap">
           <mat-panel-title>
@@ -244,6 +244,7 @@
       [callbacks]="callbacks"
       [widget]="widget"
       [widgetConfig]="widgetConfig"
+      [reportMode]="reportMode"
       formControlName="settings">
     </tb-widget-settings>
   </div>

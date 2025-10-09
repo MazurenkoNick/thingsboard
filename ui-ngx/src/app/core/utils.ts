@@ -37,7 +37,7 @@ import { DataKey, Datasource, DatasourceData, FormattedData, ReplaceInfo } from 
 import { EntityId } from '@shared/models/id/entity-id';
 import { NULL_UUID } from '@shared/models/id/has-uuid';
 import { baseDetailsPageByEntityType, EntityType } from '@shared/models/entity-type.models';
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
 import { TranslateService } from '@ngx-translate/core';
 import { serverErrorCodesTranslations } from '@shared/models/constants';
 import { SubscriptionEntityInfo } from '@core/api/widget-api.models';
@@ -47,6 +47,8 @@ import {
   isNotEmptyTbFunction,
   TbFunction
 } from '@shared/models/js-function.models';
+import { DomSanitizer } from '@angular/platform-browser';
+import { SecurityContext } from '@angular/core';
 
 const varsRegex = /\${([^}]*)}/g;
 
@@ -887,7 +889,7 @@ export function getEntityDetailsPageURL(id: string, entityType: EntityType): str
 }
 
 export function parseHttpErrorMessage(errorResponse: HttpErrorResponse,
-                                      translate: TranslateService, responseType?: string): {message: string; timeout: number} {
+                                      translate: TranslateService, responseType?: string, sanitizer?:DomSanitizer): {message: string; timeout: number} {
   let error = null;
   let errorMessage: string;
   let timeout = 0;
@@ -914,6 +916,9 @@ export function parseHttpErrorMessage(errorResponse: HttpErrorResponse,
     }
     errorText += errorKey ? translate.instant(errorKey) : errorResponse.statusText;
     errorMessage = errorText;
+  }
+  if(sanitizer) {
+    errorMessage = sanitizer.sanitize(SecurityContext.HTML,errorMessage);
   }
   return {message: errorMessage, timeout};
 }
@@ -1050,3 +1055,65 @@ export const unwrapModule = (module: any) : any => {
     return module;
   }
 };
+
+export const trimDefaultValues = (input: Record<string, any>, defaults: Record<string, any>): Record<string, any> => {
+  const result: Record<string, any> = {};
+
+  for (const key in input) {
+    if (!(key in defaults)) {
+      result[key] = input[key];
+    } else if (typeof defaults[key] === 'object' && defaults[key] !== null && typeof input[key] === 'object' && input[key] !== null) {
+      const subPatch = trimDefaultValues(input[key], defaults[key]);
+      if (Object.keys(subPatch).length > 0) {
+        result[key] = subPatch;
+      }
+    } else if (defaults[key] !== input[key]) {
+      result[key] = input[key];
+    }
+  }
+
+  for (const key in defaults) {
+    if (!(key in input)) {
+      delete result[key];
+    }
+  }
+
+  return result;
+}
+
+export const getFilenameFromHttpHeader = (headers: HttpHeaders): string  => {
+  if (!headers) {
+    return '';
+  }
+  const header = headers.get('content-disposition');
+  if (header) {
+    const filenameStarMatch = /filename\*=UTF-8''([^;]+)/i.exec(header);
+    if (filenameStarMatch && filenameStarMatch[1]) {
+      return decodeURIComponent(filenameStarMatch[1]);
+    }
+    const filenameMatch = /filename="([^"]+)"/i.exec(header);
+    if (filenameMatch && filenameMatch[1]) {
+      return filenameMatch[1];
+    }
+  }
+  return headers.get('x-filename') ?? '';
+}
+
+export function debounce<T extends (...args: any[]) => any>(
+  func: T,
+  wait: number
+): (...args: Parameters<T>) => void {
+  let timeout: ReturnType<typeof setTimeout> | null = null;
+
+  return function(...args: Parameters<T>) {
+    const later = () => {
+      timeout = null;
+      func(...args);
+    };
+
+    if (timeout !== null) {
+      clearTimeout(timeout);
+    }
+    timeout = setTimeout(later, wait);
+  };
+}

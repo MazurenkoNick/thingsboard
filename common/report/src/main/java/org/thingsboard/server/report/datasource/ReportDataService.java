@@ -34,6 +34,7 @@ import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.ReportTemplateId;
 import org.thingsboard.server.common.data.kv.Aggregation;
+import org.thingsboard.server.common.data.kv.BaseReadTsKvQuery;
 import org.thingsboard.server.common.data.kv.ReadTsKvQuery;
 import org.thingsboard.server.common.data.kv.ReadTsKvQueryResult;
 import org.thingsboard.server.common.data.kv.TsKvEntry;
@@ -47,6 +48,7 @@ import org.thingsboard.server.common.data.query.EntityData;
 import org.thingsboard.server.common.data.query.EntityDataQuery;
 import org.thingsboard.server.common.data.report.Report;
 import org.thingsboard.server.common.data.report.ReportTemplate;
+import org.thingsboard.server.common.data.report.configuration.timewindow.Interval;
 import org.thingsboard.server.report.context.TbReportCtx;
 
 import java.util.Collection;
@@ -71,10 +73,10 @@ public interface ReportDataService {
     Long countAlarmsByQuery(AlarmCountQuery query, TbReportCtx ctx);
 
     List<TsKvEntry> getTimeseries(EntityId entityId, List<String> keys, Long startTs, Long endTs,
-                                  Long interval, Aggregation agg, SortOrder.Direction sortOrder,
+                                  Interval interval, String timeZone, Aggregation agg, SortOrder.Direction sortOrder,
                                   Integer limit, boolean useStrictDataTypes, TbReportCtx ctx);
 
-    List<ReadTsKvQueryResult> findTimeseriesByQueries(EntityId entityId, List<ReadTsKvQuery> queries, TbReportCtx ctx);
+    List<ReadTsKvQueryResult> findTimeseriesByQueries(EntityId entityId, List<BaseReadTsKvQuery> queries, TbReportCtx ctx);
 
     Report createReport(Report report, byte[] data, TbReportCtx ctx) throws ThingsboardException;
 

@@ -30,12 +30,14 @@
  */
 package org.thingsboard.integration.tuya.mq;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
 import org.thingsboard.common.util.JacksonUtil;
 
 import java.io.Serializable;
 
 @Data
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class MessageVO implements Serializable {
 
     private String data;
@@ -48,4 +50,5 @@ public class MessageVO implements Serializable {
     public String toString() {
         return JacksonUtil.toString(this);
     }
+
 }
