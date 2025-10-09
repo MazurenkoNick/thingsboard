@@ -86,7 +86,8 @@ import static org.thingsboard.server.common.data.DataConstants.QUEUE_NAME;
                 "Generates outgoing messages with the results of the aggregation for particular interval. By default, an outgoing message generates with 'POST_TELEMETRY_REQUEST' type. " +
                 "The type of the outgoing messages controls under \"<b>Output message type</b>\" configuration parameter.",
         configDirective = "tbAnalyticsNodeAggregateIncomingConfig",
-        icon = "functions"
+        icon = "functions",
+        docUrl = "https://thingsboard.io/docs/user-guide/rule-engine-2-0/nodes/analytics/aggregate-stream/"
 )
 public class TbSimpleAggMsgNode implements TbNode {
 
