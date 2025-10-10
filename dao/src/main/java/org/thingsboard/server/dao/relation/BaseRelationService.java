@@ -113,7 +113,7 @@ public class BaseRelationService implements RelationService {
     public BaseRelationService(RelationDao relationDao, @Lazy EntityService entityService,
                                TbTransactionalCache<RelationCacheKey, RelationCacheValue> cache,
                                ApplicationEventPublisher eventPublisher, JpaExecutorService executor,
-                               JpaRelationQueryExecutorService relationsExecutor, ApiLimitService apiLimitService) {
+                               JpaRelationQueryExecutorService relationsExecutor, @Lazy ApiLimitService apiLimitService) {
         this.relationDao = relationDao;
         this.entityService = entityService;
         this.cache = cache;
