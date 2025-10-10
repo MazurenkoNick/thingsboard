@@ -73,4 +73,10 @@ public class AlarmCalculatedFieldConfiguration implements ArgumentsBasedCalculat
 
     }
 
+    @Override
+    public boolean requiresScheduledReevaluation() {
+        return createRules.values().stream().anyMatch(AlarmRule::requiresScheduledReevaluation) ||
+               (clearRule != null && clearRule.requiresScheduledReevaluation());
+    }
+
 }
