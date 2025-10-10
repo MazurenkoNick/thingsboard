@@ -449,7 +449,7 @@ export class DatasourcesComponent implements ControlValueAccessor, OnInit, Valid
 
   public get maxDataKeys(): number {
     return this.widgetConfigComponent?.modelValue?.typeParameters?.maxDataKeys ||
-      this.hasDataSourcesOption('maxDataKeys') && this.getDataSourcesOption('maxDataKeys');
+      this.hasDataSourcesOption('maxDataKeys') ? this.getDataSourcesOption('maxDataKeys') : null;
   }
 
   public get allowFunctions(): boolean {

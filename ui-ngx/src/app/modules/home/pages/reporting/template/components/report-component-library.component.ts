@@ -30,24 +30,25 @@
 ///
 
 import {
+  AfterViewInit,
   Component,
   ElementRef, HostBinding,
   Input,
-  OnChanges,
+  OnChanges, OnDestroy,
   OnInit,
-  SimpleChanges,
+  SimpleChanges, ViewChild,
   viewChild,
   ViewEncapsulation
 } from '@angular/core';
 import {
-  csvReportComponentTypes,
+  csvReportComponentTypes, ReportComponentContext,
   reportComponentGroups,
   ReportComponentLibraryGroup,
   ReportComponentLibraryItem,
   reportComponentsLibrary,
   reportComponentTypes
 } from '@home/pages/reporting/template/components/report-component.models';
-import { CdkDragStart } from '@angular/cdk/drag-drop';
+import { CdkDragMove, CdkDragRelease, CdkDragStart, CdkDropList } from '@angular/cdk/drag-drop';
 import { coerceBoolean } from '@shared/decorators/coercion';
 import { ReportComponentType } from '@shared/models/report-component.models';
 import { TbReportFormat } from '@shared/models/report.models';
@@ -59,7 +60,9 @@ import { TranslateService } from '@ngx-translate/core';
   styleUrls: ['./report-component-library.component.scss'],
   encapsulation: ViewEncapsulation.None
 })
-export class ReportComponentLibraryComponent implements OnInit, OnChanges {
+export class ReportComponentLibraryComponent implements OnInit, OnChanges, AfterViewInit, OnDestroy {
+
+  @ViewChild(CdkDropList) dropList?: CdkDropList;
 
   @HostBinding('style.display')
   get display() {
@@ -82,6 +85,9 @@ export class ReportComponentLibraryComponent implements OnInit, OnChanges {
 
   @Input()
   filter: string;
+
+  @Input()
+  context: ReportComponentContext;
 
   libraryDragOriginList = viewChild('libraryDragOriginList', {
     read: ElementRef<HTMLElement>,
@@ -127,6 +133,18 @@ export class ReportComponentLibraryComponent implements OnInit, OnChanges {
     }
   }
 
+  ngAfterViewInit() {
+    if (this.dropList) {
+      this.context.dragDropCtx.register(this.dropList);
+    }
+  }
+
+  ngOnDestroy() {
+    if (this.dropList) {
+      this.context.dragDropCtx.deregister(this.dropList);
+    }
+  }
+
   dropListEnterPredicate(): boolean {
     return false;
   }
@@ -148,7 +166,11 @@ export class ReportComponentLibraryComponent implements OnInit, OnChanges {
     this.itemDragEntered = true;
   }
 
-  dragReleased() {
+  dragMoved(event: CdkDragMove) {
+    this.context.dragDropCtx.dragMoved(event);
+  }
+
+  dragReleased(event: CdkDragRelease) {
     if (!this.itemDragEntered) {
       const origin = this.libraryDragOriginList();
       $('.tb-report-component-placeholder', origin.nativeElement).hide();
@@ -156,6 +178,7 @@ export class ReportComponentLibraryComponent implements OnInit, OnChanges {
       this.setActiveListVisibility(false);
     }
     this.itemDragEntered = false;
+    this.context.dragDropCtx.dragReleased(event);
   }
 
   private updateReportComponentIds() {

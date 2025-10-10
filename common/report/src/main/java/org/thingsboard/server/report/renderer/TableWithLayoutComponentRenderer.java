@@ -145,7 +145,7 @@ public abstract class TableWithLayoutComponentRenderer<C extends TableWithLayout
 
     private void populateHeadingVariables(C component, ComponentData componentData, Map<String, Object> vars) {
         Heading heading = component.getTableHeading();
-        String headingText = ThymeleafUtil.renderFromHtmlString(heading.getText(), componentData.getVariables());
+        String headingText = ThymeleafUtil.renderFromTextString(heading.getText(), componentData.getVariables());
         Font font = getHeadingFont(heading);
 
         vars.put("headingText", headingText);

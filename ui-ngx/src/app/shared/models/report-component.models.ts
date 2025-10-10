@@ -87,13 +87,20 @@ export enum ReportComponentType {
   DASHBOARD = 'DASHBOARD',
   IMAGE = 'IMAGE',
   SUB_REPORT = 'SUB_REPORT',
+  SPLIT_VIEW = 'SPLIT_VIEW',
   DIVIDER = 'DIVIDER',
   PAGE_BREAK = 'PAGE_BREAK'
 }
 
+export const reportComponentTypes: ReportComponentType[] = Object.keys(ReportComponentType) as ReportComponentType[];
+
 export interface ReportComponentConfig {
   type: ReportComponentType;
   subType?: string;
+}
+
+export const isReportComponentConfig = (obj: any): obj is ReportComponentConfig => {
+  return typeof obj === 'object' && obj !== null && 'type' in obj && reportComponentTypes.includes(obj.type);
 }
 
 export interface DataReportComponentConfig extends ReportComponentConfig {
@@ -983,6 +990,16 @@ export interface SubReportReportComponentConfig extends DataReportComponentConfi
   templateId: ReportTemplateId;
   avoidPageBreakInside: boolean;
   type: ReportComponentType.SUB_REPORT;
+}
+
+export interface SplitViewReportComponentConfig extends LayoutReportComponentConfig {
+  leftView?: ReportComponentConfig;
+  rightView?: ReportComponentConfig;
+  splitPosition: number;
+  splitGap: number;
+  leftVerticalAlignment: alignment;
+  rightVerticalAlignment: alignment;
+  type:  ReportComponentType.SPLIT_VIEW;
 }
 
 export enum BorderLength {

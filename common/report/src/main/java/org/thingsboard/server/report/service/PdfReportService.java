@@ -73,6 +73,7 @@ import org.thingsboard.server.common.data.report.configuration.components.Report
 import org.thingsboard.server.common.data.report.configuration.components.SubReportComponent;
 import org.thingsboard.server.common.data.report.configuration.components.TimeseriesChartComponent;
 import org.thingsboard.server.common.data.report.configuration.components.TimeseriesTableComponent;
+import org.thingsboard.server.common.data.report.configuration.components.SplitViewComponent;
 import org.thingsboard.server.common.data.report.configuration.image.ImageSourceType;
 import org.thingsboard.server.common.data.report.configuration.style.Insets;
 import org.thingsboard.server.common.data.report.configuration.style.PageOrientation;
@@ -95,6 +96,7 @@ import org.thingsboard.server.report.util.ColorUtils;
 import org.thingsboard.server.report.util.HtmlRenderUtils;
 import org.thingsboard.server.report.util.ThymeleafUtil;
 import org.thingsboard.server.report.util.WebReportClient;
+import org.w3c.dom.Document;
 import org.xhtmlrenderer.pdf.ITextRenderer;
 
 import java.awt.Dimension;
@@ -102,6 +104,7 @@ import java.io.ByteArrayOutputStream;
 import java.text.NumberFormat;
 import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.EnumMap;
 import java.util.HashMap;
@@ -173,9 +176,9 @@ public class PdfReportService extends AbstractReportService {
         reportVariables.put("pageContent", renderContent(usablePageWidthPx, ctx, configuration.getComponents(), stateEntity));
 
         String renderedHtmlContent = ThymeleafUtil.renderFromHtmlTemplate("html/report-template", reportVariables);
-        String xHtml = HtmlRenderUtils.convertToXhtml(renderedHtmlContent);
 
-        renderer.setDocumentFromString(xHtml);
+        Document doc = HtmlRenderUtils.parseDom(renderedHtmlContent);
+        renderer.setDocument(doc);
         renderer.layout();
 
         try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
@@ -256,6 +259,7 @@ public class PdfReportService extends AbstractReportService {
                     buildAlarmComponentData(usablePageWidthPx, ctx, (AlarmTableComponent) component, stateEntity);
             case DASHBOARD ->
                     buildDashboardComponentData(usablePageWidthPx, ctx, ((DashboardComponent) component), stateEntity);
+            case SPLIT_VIEW -> buildSplitViewComponentData(usablePageWidthPx, ctx, (SplitViewComponent) component, stateEntity);
             case IMAGE -> buildImageComponentData(usablePageWidthPx, ctx, ((ImageComponent) component));
             default -> buildMultipleDataSourceData(usablePageWidthPx, ctx, component, stateEntity);
         };
@@ -479,6 +483,7 @@ public class PdfReportService extends AbstractReportService {
         ZoneId zoneId = targetTimezone != null ? ZoneId.of(targetTimezone) : ZoneId.systemDefault();
 
         int dataIndex = 0;
+        int startDataIndex = 0;
         boolean stateData = "stateChart".equals(component.getSubType());
         DataPostProcessFunction dataPostProcessFunction = (dataKey, timestamp, value) -> this.postProcess(ctx, dataKey, timestamp, value, true);
 
@@ -508,9 +513,10 @@ public class PdfReportService extends AbstractReportService {
                 }
             }
             TsChartDataSource chartDataSource = new TsChartDataSource(ds, entity, tsKvEntries, timeRange,
-                    historyConf.getInterval(), aggregation, zoneId, false, null, dataPostProcessFunction, dataIndex);
+                    historyConf.getInterval(), aggregation, zoneId, false, null, dataPostProcessFunction, dataIndex, startDataIndex);
             chartData.add(chartDataSource);
             dataIndex++;
+            startDataIndex += chartDataSource.getDataKeys().size();
         }
 
         int keyIndex = 0;
@@ -525,22 +531,22 @@ public class PdfReportService extends AbstractReportService {
         }
         TimeIntervalCalculator.TimeRange comparisonTimeRange = null;
         if (comparisonEnabled) {
+            ComparisonDuration timeForComparison = ComparisonDuration.previousInterval;
+            Long comparisonCustomIntervalValue = 7200000L;
+            if (component.getTimeSeriesChartSettings() != null) {
+                if (component.getTimeSeriesChartSettings().getTimeForComparison() != null) {
+                    timeForComparison = component.getTimeSeriesChartSettings().getTimeForComparison();
+                }
+                if (component.getTimeSeriesChartSettings().getComparisonCustomIntervalValue() != null) {
+                    comparisonCustomIntervalValue = component.getTimeSeriesChartSettings().getComparisonCustomIntervalValue();
+                }
+            }
+            comparisonTimeRange = getComparisonTimeRange(timeRange, timeWindowConf,
+                    targetTimezone, timeForComparison, comparisonCustomIntervalValue);
+
             List<DataKey> comparisionDataKeys = dataKeys.stream().filter(DataKey::isComparisonKey).toList();
             if (!comparisionDataKeys.isEmpty()) {
                 List<String> comparisonKeys = comparisionDataKeys.stream().map(DataKey::getName).distinct().toList();
-                ComparisonDuration timeForComparison = ComparisonDuration.previousInterval;
-                Long comparisonCustomIntervalValue = 7200000L;
-                if (component.getTimeSeriesChartSettings() != null) {
-                    if (component.getTimeSeriesChartSettings().getTimeForComparison() != null) {
-                        timeForComparison = component.getTimeSeriesChartSettings().getTimeForComparison();
-                    }
-                    if (component.getTimeSeriesChartSettings().getComparisonCustomIntervalValue() != null) {
-                        comparisonCustomIntervalValue = component.getTimeSeriesChartSettings().getComparisonCustomIntervalValue();
-                    }
-                }
-                comparisonTimeRange = getComparisonTimeRange(timeRange, timeWindowConf,
-                        targetTimezone, timeForComparison, comparisonCustomIntervalValue);
-
                 List<TsChartDataSource> comparisonChartData = new ArrayList<>();
                 for (EntityData entity : entityDatas) {
                     List<TsKvEntry> tsKvEntries = dataService.getTimeseries(entity.getEntityId(), comparisonKeys, comparisonTimeRange.startTs, comparisonTimeRange.endTs,
@@ -548,9 +554,10 @@ public class PdfReportService extends AbstractReportService {
                             timeWindowConf.getAggregation().getLimit(), false, ctx);
 
                     TsChartDataSource chartDataSource = new TsChartDataSource(ds, entity, tsKvEntries, comparisonTimeRange,
-                            historyConf.getInterval(), timeWindowConf.getAggregation().getType(), zoneId, true, timeForComparison, dataPostProcessFunction, dataIndex);
+                            historyConf.getInterval(), timeWindowConf.getAggregation().getType(), zoneId, true, timeForComparison, dataPostProcessFunction, dataIndex, startDataIndex);
                     comparisonChartData.add(chartDataSource);
                     dataIndex++;
+                    startDataIndex += chartDataSource.getDataKeys().size();
                 }
 
                 for (TsChartDataSource chartDataSource : comparisonChartData) {
@@ -664,6 +671,29 @@ public class PdfReportService extends AbstractReportService {
         } catch (ExecutionException e) {
             throw new RuntimeException(e.getCause());
         }
+    }
+
+    private ComponentData buildSplitViewComponentData(int usablePageWidthPx, TbReportCtx ctx, SplitViewComponent component, EntityData stateEntity) {
+        float splitPosition = component.getSplitPosition();
+        float splitGap = component.getSplitGap() * 4f / 3f;
+        int leftWidth = (int)(usablePageWidthPx * splitPosition / 100 - splitGap / 2f);
+        int rightWidth = (int)(usablePageWidthPx * (100 - splitPosition) / 100 - splitGap / 2f);
+        int centerWidth = (int)splitGap;
+        String leftContent = "";
+        if (component.getLeftView() != null) {
+            leftContent = this.renderContent(leftWidth, ctx, Collections.singletonList(component.getLeftView()), stateEntity);
+        }
+        String rightContent = "";
+        if (component.getRightView() != null) {
+            rightContent = this.renderContent(rightWidth, ctx, Collections.singletonList(component.getRightView()), stateEntity);
+        }
+        Map<String, Object> variables = new HashMap<>();
+        variables.put("leftWidth", leftWidth);
+        variables.put("rightWidth", rightWidth);
+        variables.put("centerWidth", centerWidth);
+        variables.put("leftContent", leftContent);
+        variables.put("rightContent", rightContent);
+        return new ComponentData(usablePageWidthPx, variables);
     }
 
     private ComponentData buildMultipleDataSourceData(int usablePageWidthPx, TbReportCtx ctx, ReportComponent component, EntityData stateEntity) {

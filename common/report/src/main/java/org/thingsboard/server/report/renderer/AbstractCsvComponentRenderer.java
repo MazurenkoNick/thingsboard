@@ -68,7 +68,7 @@ public abstract class AbstractCsvComponentRenderer<C extends TableReportComponen
     private void addHeading(TableReportComponent component, ComponentData componentData, List<List<String>> content) {
         if (component.isShowTableHeading() && component.getTableHeading() != null) {
             Heading tableHeading = component.getTableHeading();
-            String headingText = ThymeleafUtil.renderFromHtmlString(tableHeading.getText(), componentData.getVariables());
+            String headingText = ThymeleafUtil.renderFromTextString(tableHeading.getText(), componentData.getVariables());
             content.add(List.of(headingText));
         }
     }

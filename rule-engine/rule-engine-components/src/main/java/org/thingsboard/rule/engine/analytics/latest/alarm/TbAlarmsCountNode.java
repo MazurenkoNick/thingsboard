@@ -33,7 +33,6 @@ package org.thingsboard.rule.engine.analytics.latest.alarm;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.gson.JsonObject;
-import lombok.extern.slf4j.Slf4j;
 import org.thingsboard.rule.engine.analytics.latest.TbAbstractLatestNode;
 import org.thingsboard.rule.engine.api.RuleNode;
 import org.thingsboard.rule.engine.api.TbContext;
@@ -56,7 +55,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-@Slf4j
 @RuleNode(
         type = ComponentType.ANALYTICS,
         name = "alarms count (deprecated)",
@@ -69,9 +67,9 @@ import java.util.Optional;
                 "The type of the outgoing messages controls under \"<b>Output message type</b>\" configuration parameter.",
         inEnabled = false,
         configDirective = "tbAnalyticsNodeAlarmsCountConfig",
-        icon = "functions"
+        icon = "functions",
+        docUrl = "https://thingsboard.io/docs/user-guide/rule-engine-2-0/nodes/analytics/alarms-count-deprecated/"
 )
-
 public class TbAlarmsCountNode extends TbAbstractLatestNode<TbAlarmsCountNodeConfiguration> {
 
     @Override

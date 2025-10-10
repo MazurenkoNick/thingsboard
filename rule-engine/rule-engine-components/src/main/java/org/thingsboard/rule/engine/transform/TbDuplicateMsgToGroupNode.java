@@ -33,7 +33,6 @@ package org.thingsboard.rule.engine.transform;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.util.concurrent.ListenableFuture;
-import lombok.extern.slf4j.Slf4j;
 import org.thingsboard.rule.engine.api.RuleNode;
 import org.thingsboard.rule.engine.api.TbContext;
 import org.thingsboard.rule.engine.api.TbNodeConfiguration;
@@ -49,7 +48,6 @@ import org.thingsboard.server.common.msg.TbMsg;
 
 import java.util.List;
 
-@Slf4j
 @RuleNode(
         type = ComponentType.TRANSFORMATION,
         name = "duplicate to group",
@@ -62,7 +60,8 @@ import java.util.List;
                 "and message parameters copied from original message.<br><br>" +
                 "Output connections: <code>Success</code>, <code>Failure</code>.",
         configDirective = "tbTransformationNodeDuplicateToGroupConfig",
-        icon = "call_split"
+        icon = "call_split",
+        docUrl = "https://thingsboard.io/docs/user-guide/rule-engine-2-0/nodes/transformation/duplicate-to-group/"
 )
 public class TbDuplicateMsgToGroupNode extends TbAbstractDuplicateMsgNode<TbDuplicateMsgToGroupNodeConfiguration> {
 

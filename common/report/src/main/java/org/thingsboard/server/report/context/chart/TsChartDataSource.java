@@ -79,10 +79,13 @@ public class TsChartDataSource {
                              boolean comparison,
                              ComparisonDuration timeForComparison,
                              DataPostProcessFunction postProcessFunction,
-                             int index) {
+                             int index,
+                             int startDataIndex) {
         List<DataKey> newDataKeys = new ArrayList<>();
         for (DataKey dataKey : dataSource.getDataKeys()) {
-            newDataKeys.add(JacksonUtil.clone(dataKey));
+            if (!comparison || dataKey.isComparisonKey()) {
+                newDataKeys.add(JacksonUtil.clone(dataKey));
+            }
         }
         this.dataKeys = newDataKeys;
         this.index = index;
@@ -105,7 +108,7 @@ public class TsChartDataSource {
             }
         }
         this.data = new ArrayList<>(getDataKeys().size());
-        int dataIndex = this.index * this.dataKeys.size();
+        int dataIndex = startDataIndex;
         for (int keyIndex = 0; keyIndex < dataKeys.size(); keyIndex++) {
             DataKey key = this.dataKeys.get(keyIndex);
             if (comparison) {

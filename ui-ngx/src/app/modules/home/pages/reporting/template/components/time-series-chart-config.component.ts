@@ -58,7 +58,7 @@ import {
   WidgetTypeParameters
 } from '@shared/models/widget.models';
 import {
-  TimeSeriesChartKeySettings, TimeSeriesChartSeriesType, TimeSeriesChartThreshold, TimeSeriesChartType,
+  TimeSeriesChartKeySettings, TimeSeriesChartThreshold, TimeSeriesChartType,
   TimeSeriesChartYAxes,
   TimeSeriesChartYAxisId
 } from '@home/components/widget/lib/chart/time-series-chart.models';
@@ -577,6 +577,4 @@ export class TimeSeriesChartConfigComponent extends AbstractReportComponentConfi
     }
 
   }
-
-  protected readonly TimeSeriesChartSeriesType = TimeSeriesChartSeriesType;
 }
