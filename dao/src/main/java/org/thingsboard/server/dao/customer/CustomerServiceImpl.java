@@ -240,16 +240,16 @@ public class CustomerServiceImpl extends AbstractCachedEntityService<CustomerCac
 
     private Customer saveCustomer(Customer customer, boolean doValidate, NameConflictStrategy nameConflictStrategy) {
         log.trace("Executing saveCustomer [{}]", customer);
-        Customer oldCustomer = null;
+        Customer oldCustomer = (customer.getId() != null) ? findCustomerById(customer.getTenantId(), customer.getId()) : null;
+        if (nameConflictStrategy.policy() == NameConflictPolicy.UNIQUIFY && (oldCustomer == null || !oldCustomer.getTitle().equals(customer.getTitle()))) {
+            uniquifyEntityName(customer, oldCustomer, customer::setTitle, EntityType.CUSTOMER, nameConflictStrategy);
+        }
         if (doValidate) {
-            oldCustomer = customerValidator.validate(customer, Customer::getTenantId);
+            customerValidator.validate(customer, Customer::getTenantId);
         }
         String oldCustomerTitle = oldCustomer != null ? oldCustomer.getTitle() : null;
         var evictEvent = new CustomerCacheEvictEvent(customer.getTenantId(), customer.getTitle(), oldCustomerTitle);
         try {
-            if (nameConflictStrategy.policy() == NameConflictPolicy.UNIQUIFY) {
-                uniquifyEntityName(customer, oldCustomer, customer::setTitle, EntityType.CUSTOMER, nameConflictStrategy);
-            }
             Customer savedCustomer = customerDao.saveAndFlush(customer.getTenantId(), customer);
             if (customer.getId() == null) {
                 entityGroupService.addEntityToEntityGroupAll(savedCustomer.getTenantId(), savedCustomer.getOwnerId(), savedCustomer.getId());
