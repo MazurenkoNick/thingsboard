@@ -28,55 +28,11 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.dao;
+package org.thingsboard.server.common.data;
 
-import com.google.common.util.concurrent.ListenableFuture;
-import org.thingsboard.server.common.data.EntityInfo;
-import org.thingsboard.server.common.data.EntityType;
-import org.thingsboard.server.common.data.edqs.fields.EntityFields;
-import org.thingsboard.server.common.data.id.TenantId;
-import org.thingsboard.server.common.data.page.PageData;
-import org.thingsboard.server.common.data.page.PageLink;
-import org.thingsboard.server.common.data.util.TbPair;
+public enum UniquifyStrategy {
 
-import java.util.Collection;
-import java.util.List;
-import java.util.UUID;
-
-public interface Dao<T> {
-
-    List<T> find(TenantId tenantId);
-
-    T findById(TenantId tenantId, UUID id);
-
-    ListenableFuture<T> findByIdAsync(TenantId tenantId, UUID id);
-
-    default List<EntityInfo> findEntityInfosByNamePrefix(TenantId tenantId, String name) {
-        throw new UnsupportedOperationException();
-    }
-
-    boolean existsById(TenantId tenantId, UUID id);
-
-    ListenableFuture<Boolean> existsByIdAsync(TenantId tenantId, UUID id);
-
-    T save(TenantId tenantId, T t);
-
-    T saveAndFlush(TenantId tenantId, T t);
-
-    void removeById(TenantId tenantId, UUID id);
-
-    void removeAllByIds(Collection<UUID> ids);
-
-    List<UUID> findIdsByTenantIdAndIdOffset(TenantId tenantId, UUID idOffset, int limit);
-
-    List<TbPair<UUID, UUID>> findIdsByTenantProfileIdAndIdOffsetAndExpired(UUID tenantProfileId, UUID idOffset, int limit, long ttl);
-
-    default List<? extends EntityFields> findNextBatch(UUID id, int batchSize) {
-        throw new UnsupportedOperationException();
-    }
-
-    default EntityType getEntityType() {
-        return null;
-    }
+    RANDOM,
+    INCREMENTAL;
 
 }

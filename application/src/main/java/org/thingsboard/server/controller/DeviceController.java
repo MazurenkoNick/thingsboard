@@ -67,6 +67,7 @@ import org.thingsboard.server.common.data.NameConflictStrategy;
 import org.thingsboard.server.common.data.SaveDeviceWithCredentialsRequest;
 import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.Tenant;
+import org.thingsboard.server.common.data.UniquifyStrategy;
 import org.thingsboard.server.common.data.device.DeviceSearchQuery;
 import org.thingsboard.server.common.data.exception.ThingsboardErrorCode;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
@@ -127,7 +128,7 @@ import static org.thingsboard.server.controller.ControllerConstants.ENTITY_GROUP
 import static org.thingsboard.server.controller.ControllerConstants.ENTITY_GROUP_ID_PARAM_DESCRIPTION;
 import static org.thingsboard.server.controller.ControllerConstants.INCLUDE_CUSTOMERS_OR_SUB_CUSTOMERS;
 import static org.thingsboard.server.controller.ControllerConstants.NAME_CONFLICT_POLICY_DESC;
-import static org.thingsboard.server.controller.ControllerConstants.NAME_CONFLICT_SEPARATOR_DESC;
+import static org.thingsboard.server.controller.ControllerConstants.UNIQUIFY_SEPARATOR_DESC;
 import static org.thingsboard.server.controller.ControllerConstants.PAGE_DATA_PARAMETERS;
 import static org.thingsboard.server.controller.ControllerConstants.PAGE_NUMBER_DESCRIPTION;
 import static org.thingsboard.server.controller.ControllerConstants.PAGE_SIZE_DESCRIPTION;
@@ -141,6 +142,7 @@ import static org.thingsboard.server.controller.ControllerConstants.TENANT_AUTHO
 import static org.thingsboard.server.controller.ControllerConstants.TENANT_ID;
 import static org.thingsboard.server.controller.ControllerConstants.TENANT_ID_PARAM_DESCRIPTION;
 import static org.thingsboard.server.controller.ControllerConstants.TENANT_OR_CUSTOMER_AUTHORITY_PARAGRAPH;
+import static org.thingsboard.server.controller.ControllerConstants.UNIQUIFY_STRATEGY_DESC;
 import static org.thingsboard.server.controller.ControllerConstants.UUID_WIKI_LINK;
 
 @RestController
@@ -206,14 +208,16 @@ public class DeviceController extends BaseController {
                              @Parameter(description = "A list of entity group ids, separated by comma ','", array = @ArraySchema(schema = @Schema(type = "string")))
                              @RequestParam(name = "entityGroupIds", required = false) String[] strEntityGroupIds,
                              @Parameter(description = NAME_CONFLICT_POLICY_DESC)
-                             @RequestParam(name = "policy", defaultValue = "FAIL") NameConflictPolicy policy,
-                             @Parameter(description = NAME_CONFLICT_SEPARATOR_DESC)
-                             @RequestParam(name = "separator", defaultValue = "_") String separator) throws ThingsboardException {
+                             @RequestParam(name = "nameConflictPolicy", defaultValue = "FAIL") NameConflictPolicy nameConflictPolicy,
+                             @Parameter(description = UNIQUIFY_SEPARATOR_DESC)
+                             @RequestParam(name = "uniquifySeparator", defaultValue = "_") String uniquifySeparator,
+                             @Parameter(description = UNIQUIFY_STRATEGY_DESC)
+                             @RequestParam(name = "uniquifyStrategy", defaultValue = "RANDOM") UniquifyStrategy uniquifyStrategy) throws ThingsboardException {
         SecurityUser user = getCurrentUser();
         return saveGroupEntity(device, strEntityGroupId, strEntityGroupIds,
                 (device1, entityGroups) -> {
                     try {
-                        return tbDeviceService.save(device1, accessToken, entityGroups, new NameConflictStrategy(policy, separator), user);
+                        return tbDeviceService.save(device1, accessToken, entityGroups, new NameConflictStrategy(nameConflictPolicy, uniquifySeparator, uniquifyStrategy), user);
                     } catch (Exception e) {
                         throw handleException(e);
                     }
@@ -247,14 +251,16 @@ public class DeviceController extends BaseController {
                                             @Parameter(description = "A list of entity group ids, separated by comma ','", array = @ArraySchema(schema = @Schema(type = "string")))
                                             @RequestParam(name = "entityGroupIds", required = false) String[] strEntityGroupIds,
                                             @Parameter(description = NAME_CONFLICT_POLICY_DESC)
-                                            @RequestParam(name = "policy", defaultValue = "FAIL") NameConflictPolicy policy,
-                                            @Parameter(description = NAME_CONFLICT_SEPARATOR_DESC)
-                                            @RequestParam(name = "separator", defaultValue = "_") String separator) throws ThingsboardException {
+                                            @RequestParam(name = "nameConflictPolicy", defaultValue = "FAIL") NameConflictPolicy nameConflictPolicy,
+                                            @Parameter(description = UNIQUIFY_SEPARATOR_DESC)
+                                            @RequestParam(name = "uniquifySeparator", defaultValue = "_") String uniquifySeparator,
+                                            @Parameter(description = UNIQUIFY_STRATEGY_DESC)
+                                            @RequestParam(name = "uniquifyStrategy", defaultValue = "RANDOM") UniquifyStrategy uniquifyStrategy) throws ThingsboardException {
         Device device = deviceAndCredentials.getDevice();
         DeviceCredentials credentials = deviceAndCredentials.getCredentials();
         SecurityUser user = getCurrentUser();
         return saveGroupEntity(device, strEntityGroupId, strEntityGroupIds,
-                (device1, entityGroup) -> tbDeviceService.saveDeviceWithCredentials(device1, credentials, entityGroup, new NameConflictStrategy(policy, separator), user));
+                (device1, entityGroup) -> tbDeviceService.saveDeviceWithCredentials(device1, credentials, entityGroup, new NameConflictStrategy(nameConflictPolicy, uniquifySeparator, uniquifyStrategy), user));
     }
 
     @ApiOperation(value = "Delete device (deleteDevice)",

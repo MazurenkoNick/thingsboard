@@ -60,6 +60,10 @@ public interface CustomerRepository extends JpaRepository<CustomerEntity, UUID>,
 
     CustomerEntity findByTenantIdAndTitle(UUID tenantId, String title);
 
+    @Query("SELECT new org.thingsboard.server.common.data.EntityInfo(a.id, 'CUSTOMER', a.title) " +
+            "FROM CustomerEntity a WHERE a.tenantId = :tenantId AND a.title LIKE CONCAT(:prefix, '%')")
+    List<EntityInfo> findEntityInfosByNamePrefix(UUID tenantId, String prefix);
+
     @Query("SELECT c FROM CustomerEntity c, " +
             "RelationEntity re " +
             "WHERE c.id = re.toId AND re.toType = 'CUSTOMER' " +
