@@ -73,12 +73,6 @@ public class HtmlRenderUtils {
                 textRenderer);
     }
 
-    public static String convertToXhtml(String html) throws UnsupportedEncodingException {
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        parseDom(html, outputStream);
-        return outputStream.toString(UTF_8);
-    }
-
     public static org.w3c.dom.Document parseDom(String html) throws UnsupportedEncodingException {
         return parseDom(html, null);
     }
