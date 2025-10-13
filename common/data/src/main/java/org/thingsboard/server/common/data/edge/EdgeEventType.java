@@ -76,7 +76,8 @@ public enum EdgeEventType {
     DOMAIN(true, EntityType.DOMAIN),
     CALCULATED_FIELD(false, EntityType.CALCULATED_FIELD),
     ENCRYPTION_KEY(true, null),
-    SECRET(true, EntityType.SECRET);
+    SECRET(true, EntityType.SECRET),
+    REPORT_TEMPLATE(true, EntityType.REPORT_TEMPLATE);
 
     private final boolean allEdgesRelated;
 

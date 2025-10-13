@@ -159,8 +159,15 @@ public class BaseSchedulerEventService extends AbstractEntityService implements 
 
     @Override
     public SchedulerEvent saveSchedulerEvent(SchedulerEvent schedulerEvent) {
+        return saveSchedulerEvent(schedulerEvent, true);
+    }
+
+    @Override
+    public SchedulerEvent saveSchedulerEvent(SchedulerEvent schedulerEvent, boolean doValidate) {
         log.trace("Executing saveSchedulerEvent [{}]", schedulerEvent);
-        schedulerEventValidator.validate(schedulerEvent, SchedulerEventInfo::getTenantId);
+        if (doValidate) {
+            schedulerEventValidator.validate(schedulerEvent, SchedulerEventInfo::getTenantId);
+        }
         try {
             SchedulerEvent savedSchedulerEvent = schedulerEventDao.save(schedulerEvent.getTenantId(), schedulerEvent);
             if (schedulerEvent.getId() == null) {
