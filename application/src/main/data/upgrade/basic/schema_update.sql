@@ -83,6 +83,3 @@ WHERE (configuration::jsonb) ? 'arguments'
               WHERE v ->> 'refDynamicSource' = 'CURRENT_OWNER');
 
 -- UPDATE CFS WITH CURRENT OWNER DYNAMIC SOURCE END
-
-ALTER TABLE entity_view ADD CONSTRAINT entity_view_name_unq_key UNIQUE (tenant_id, name);
-

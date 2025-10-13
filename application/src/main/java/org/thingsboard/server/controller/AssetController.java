@@ -172,8 +172,8 @@ public class AssetController extends BaseController {
             @RequestParam(name = "nameConflictPolicy", defaultValue = "FAIL") NameConflictPolicy nameConflictPolicy,
             @Parameter(description = UNIQUIFY_SEPARATOR_DESC)
             @RequestParam(name = "uniquifySeparator", defaultValue = "_") String uniquifySeparator,
-                           @Parameter(description = UNIQUIFY_STRATEGY_DESC)
-                           @RequestParam(name = "uniquifyStrategy", defaultValue = "RANDOM") UniquifyStrategy uniquifyStrategy) throws ThingsboardException {
+            @Parameter(description = UNIQUIFY_STRATEGY_DESC)
+            @RequestParam(name = "uniquifyStrategy", defaultValue = "RANDOM") UniquifyStrategy uniquifyStrategy) throws ThingsboardException {
         SecurityUser user = getCurrentUser();
         return saveGroupEntity(asset, strEntityGroupId, strEntityGroupIds, (asset1, entityGroups) -> {
             try {
