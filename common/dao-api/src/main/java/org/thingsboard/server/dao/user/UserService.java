@@ -31,7 +31,6 @@
 package org.thingsboard.server.dao.user;
 
 import com.google.common.util.concurrent.ListenableFuture;
-import org.thingsboard.server.common.data.Customer;
 import org.thingsboard.server.common.data.User;
 import org.thingsboard.server.common.data.UserInfo;
 import org.thingsboard.server.common.data.id.CustomMenuId;
@@ -51,7 +50,6 @@ import org.thingsboard.server.dao.entity.EntityDaoService;
 
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 public interface UserService extends EntityDaoService {
 
@@ -167,4 +165,5 @@ public interface UserService extends EntityDaoService {
 
     void updateUsersCustomMenuId(List<UserId> ids, CustomMenuId customMenuId);
 
+    boolean existsInEntityGroup(UserId id, EntityGroupId entityGroupId);
 }

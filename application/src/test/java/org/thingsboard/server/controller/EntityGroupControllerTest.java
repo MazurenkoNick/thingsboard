@@ -221,7 +221,7 @@ public class EntityGroupControllerTest extends AbstractControllerTest {
 
         doDelete("/api/entityGroup/" + tenantAdministratorsGroup.getId())
                 .andExpect(status().isBadRequest())
-                .andExpect(statusReason(containsString("Unable to remove the user group associated with the current user.")));
+                .andExpect(statusReason(containsString("At least one tenant administrator must remain!")));
     }
 
     @Test
