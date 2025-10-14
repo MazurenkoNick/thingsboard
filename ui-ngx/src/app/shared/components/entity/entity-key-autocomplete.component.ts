@@ -29,7 +29,17 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { Component, effect, ElementRef, forwardRef, input, OnChanges, SimpleChanges, ViewChild, } from '@angular/core';
+import {
+  Component,
+  effect,
+  ElementRef,
+  forwardRef,
+  Input,
+  input,
+  OnChanges,
+  SimpleChanges,
+  ViewChild,
+} from '@angular/core';
 import {
   ControlValueAccessor,
   FormBuilder,
@@ -47,6 +57,8 @@ import { AttributeScope, DataKeyType } from '@shared/models/telemetry/telemetry.
 import { EntitiesKeysByQuery } from '@shared/models/entity.models';
 import { EntityFilter } from '@shared/models/query/query.models';
 import { isEqual } from '@core/utils';
+import { TranslateService } from '@ngx-translate/core';
+import { coerceBoolean } from "@shared/decorators/coercion";
 
 @Component({
   selector: 'tb-entity-key-autocomplete',
@@ -67,6 +79,13 @@ import { isEqual } from '@core/utils';
 export class EntityKeyAutocompleteComponent implements ControlValueAccessor, Validator, OnChanges {
 
   @ViewChild('keyInput', {static: true}) keyInput: ElementRef;
+
+  @Input() placeholder = this.translate.instant('action.set');
+  @Input() requiredText = this.translate.instant('common.hint.key-required');
+
+  @Input()
+  @coerceBoolean()
+  hideNoKeyOption = false;
 
   entityFilter = input.required<EntityFilter>();
   dataKeyType = input.required<DataKeyType>();
@@ -111,6 +130,7 @@ export class EntityKeyAutocompleteComponent implements ControlValueAccessor, Val
   constructor(
     private fb: FormBuilder,
     private entityService: EntityService,
+    private translate: TranslateService,
   ) {
     this.keyControl.valueChanges
       .pipe(takeUntilDestroyed())
@@ -133,6 +153,7 @@ export class EntityKeyAutocompleteComponent implements ControlValueAccessor, Val
 
     if (filterChanged || keyScopeChanged || keyTypeChanged) {
       this.keyControl.setValue('', {emitEvent: false});
+      this.cachedResult = null;
     }
   }
 

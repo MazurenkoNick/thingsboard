@@ -35,7 +35,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.ConcurrentReferenceHashMap;
 import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.rule.engine.api.RuleNode;
@@ -58,8 +57,8 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Map;
 
-@Slf4j
-@RuleNode(type = ComponentType.ENRICHMENT,
+@RuleNode(
+        type = ComponentType.ENRICHMENT,
         name = "calculate delta",
         version = 1,
         relationTypes = {TbNodeConnectionType.SUCCESS, TbNodeConnectionType.FAILURE, TbNodeConnectionType.OTHER},
@@ -68,7 +67,9 @@ import java.util.Map;
                 "and current value for this key from the incoming message",
         nodeDetails = "Useful for metering use cases, when you need to calculate consumption based on pulse counter reading.<br><br>" +
                 "Output connections: <code>Success</code>, <code>Other</code> or <code>Failure</code>.",
-        configDirective = "tbEnrichmentNodeCalculateDeltaConfig")
+        configDirective = "tbEnrichmentNodeCalculateDeltaConfig",
+        docUrl = "https://thingsboard.io/docs/user-guide/rule-engine-2-0/nodes/enrichment/calculate-delta/"
+)
 public class CalculateDeltaNode implements TbNode {
 
     private Map<EntityId, ValueWithTs> cache;
@@ -204,7 +205,6 @@ public class CalculateDeltaNode implements TbNode {
         return fetchLatestValueAsync(ctx, originator);
     }
 
-    private record ValueWithTs(long ts, double value) {
-    }
+    private record ValueWithTs(long ts, double value) {}
 
 }

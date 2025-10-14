@@ -121,12 +121,16 @@
             <artifactId>flying-saucer-pdf</artifactId>
         </dependency>
         <dependency>
-            <groupId>net.sf.jtidy</groupId>
+            <groupId>com.github.jtidy</groupId>
             <artifactId>jtidy</artifactId>
         </dependency>
         <dependency>
             <groupId>com.github.weisj</groupId>
             <artifactId>jsvg</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.jfree</groupId>
+            <artifactId>jfreechart</artifactId>
         </dependency>
         <dependency>
             <groupId>org.thingsboard.common.script</groupId>
@@ -135,6 +139,10 @@
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-collections4</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.ibm.icu</groupId>
+            <artifactId>icu4j</artifactId>
         </dependency>
     </dependencies>
 

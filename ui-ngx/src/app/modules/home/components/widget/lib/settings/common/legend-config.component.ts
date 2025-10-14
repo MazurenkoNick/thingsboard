@@ -63,6 +63,14 @@ export class LegendConfigComponent implements OnInit, OnDestroy, ControlValueAcc
   @coerceBoolean()
   hideDirection = false;
 
+  @Input()
+  @coerceBoolean()
+  hideValues = false;
+
+  @Input()
+  @coerceBoolean()
+  hideSortDataKeys = false;
+
   legendConfigForm: UntypedFormGroup;
   legendDirection = LegendDirection;
   legendDirections = Object.keys(LegendDirection);
@@ -81,8 +89,7 @@ export class LegendConfigComponent implements OnInit, OnDestroy, ControlValueAcc
   ngOnInit(): void {
     this.legendConfigForm = this.fb.group({
       position: [null, []],
-      showValues: [[], []],
-      sortDataKeys: [null, []]
+      showValues: [[], []]
     });
     if (!this.hideDirection) {
       this.legendConfigForm.addControl('direction', this.fb.control([null, []]));
@@ -90,6 +97,9 @@ export class LegendConfigComponent implements OnInit, OnDestroy, ControlValueAcc
       .subscribe((direction: LegendDirection) => {
         this.onDirectionChanged(direction);
       });
+    }
+    if (!this.hideSortDataKeys) {
+      this.legendConfigForm.addControl('sortDataKeys', this.fb.control([null, []]));
     }
     this.legendSettingsFormChanges$ = this.legendConfigForm.valueChanges.subscribe(
       () => this.legendConfigUpdated()
@@ -138,11 +148,13 @@ export class LegendConfigComponent implements OnInit, OnDestroy, ControlValueAcc
     if (legendConfig) {
       const value: any = {
         position: legendConfig.position,
-        showValues: this.getShowValues(legendConfig),
-        sortDataKeys: isDefined(legendConfig.sortDataKeys) ? legendConfig.sortDataKeys : false
+        showValues: this.getShowValues(legendConfig)
       };
       if (!this.hideDirection) {
         value.direction = legendConfig.direction;
+      }
+      if (!this.hideSortDataKeys) {
+        value.sortDataKeys = isDefined(legendConfig.sortDataKeys) ? legendConfig.sortDataKeys : false;
       }
       this.legendConfigForm.patchValue(value, {emitEvent: false});
     }
@@ -154,11 +166,13 @@ export class LegendConfigComponent implements OnInit, OnDestroy, ControlValueAcc
   private legendConfigUpdated() {
     const configValue = this.legendConfigForm.value;
     const legendConfig: Partial<LegendConfig> = {
-      position: configValue.position,
-      sortDataKeys: configValue.sortDataKeys
+      position: configValue.position
     };
     if (!this.hideDirection) {
       legendConfig.direction = configValue.direction;
+    }
+    if (!this.hideSortDataKeys) {
+      legendConfig.sortDataKeys = configValue.sortDataKeys;
     }
     this.setShowValues(configValue.showValues, legendConfig);
     this.propagateChange(legendConfig);

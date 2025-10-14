@@ -147,7 +147,7 @@ export class DatasourceComponent implements ControlValueAccessor, OnInit, Valida
   }
 
   public get maxDataKeys(): number {
-    return this.widgetConfigComponent?.modelValue?.typeParameters?.maxDataKeys;
+    return this.widgetConfigComponent?.modelValue?.typeParameters?.maxDataKeys || this.datasourcesComponent?.maxDataKeys;
   }
 
   public get dataKeySettingsForm(): FormProperty[] {

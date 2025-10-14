@@ -371,3 +371,10 @@ export const toAnimationOption = (ctx: WidgetContext, settings: ChartAnimationSe
   animationEasingUpdate: settings.animationEasingUpdate,
   animationDelayUpdate: settings.animationDelayUpdate
 });
+
+export interface ChartWidgetComponent {
+  reportMode: boolean;
+  ctx: WidgetContext;
+  onDataUpdated(): void;
+  onLatestDataUpdated?(): void;
+}

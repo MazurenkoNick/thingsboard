@@ -177,8 +177,10 @@
         <rocksdbjni.version>9.10.0</rocksdbjni.version>
         <thymeleaf.version>3.1.3.RELEASE</thymeleaf.version>
         <flying-saucer.version>9.13.0</flying-saucer.version>
-        <jtidy.version>r938</jtidy.version>
+        <jfreechart.version>1.5.6</jfreechart.version>
+        <jtidy.version>1.0.5</jtidy.version>
         <pdfbox.version>3.0.5</pdfbox.version>
+        <ibm.icu4j.version>75.1</ibm.icu4j.version>
         <netty.version>4.1.124.Final</netty.version> <!-- to fix CVE-2025-55163. TODO: remove when fixed in spring-boot-dependencies -->
     </properties>
 
@@ -950,6 +952,13 @@
                 <scope>import</scope>
             </dependency>
             <dependency>
+                <groupId>org.apache.pulsar</groupId>
+                <artifactId>pulsar-bom</artifactId>
+                <version>${apache-pulsar.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-dependencies</artifactId>
                 <version>${spring-boot.version}</version>
@@ -1068,11 +1077,6 @@
                 <groupId>org.thingsboard.common.integration</groupId>
                 <artifactId>apache-pulsar</artifactId>
                 <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.pulsar</groupId>
-                <artifactId>pulsar-client</artifactId>
-                <version>${apache-pulsar.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.thingsboard.common.integration</groupId>
@@ -2118,7 +2122,12 @@
                 <version>${flying-saucer.version}</version>
             </dependency>
             <dependency>
-                <groupId>net.sf.jtidy</groupId>
+                <groupId>org.jfree</groupId>
+                <artifactId>jfreechart</artifactId>
+                <version>${jfreechart.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.github.jtidy</groupId>
                 <artifactId>jtidy</artifactId>
                 <version>${jtidy.version}</version>
             </dependency>
@@ -2158,6 +2167,11 @@
                 <version>${pdfbox.version}</version>
                 <scope>test</scope>
             </dependency>
+            <dependency>
+                <groupId>com.ibm.icu</groupId>
+                <artifactId>icu4j</artifactId>
+                <version>${ibm.icu4j.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -2196,10 +2210,6 @@
             <url>https://repo.typesafe.com/typesafe/releases/</url>
         </repository>
         <repository>
-            <id>sonatype</id>
-            <url>https://oss.sonatype.org/content/groups/public</url>
-        </repository>
-        <repository>
             <id>jenkins</id>
             <name>Jenkins Repository</name>
             <url>https://repo.jenkins-ci.org/releases</url>
@@ -2208,4 +2218,5 @@
             </snapshots>
         </repository>
     </repositories>
+
 </project>

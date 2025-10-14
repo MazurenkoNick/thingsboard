@@ -49,7 +49,7 @@ public record AnthropicChatModelConfig(
         @PositiveOrZero Double temperature,
         @Positive @Max(1) Double topP,
         @PositiveOrZero Integer topK,
-        @Positive Integer maxOutputTokens,
+        Integer maxOutputTokens,
         @With @Positive Integer timeoutSeconds,
         @With @PositiveOrZero Integer maxRetries
 ) implements AiChatModelConfig<AnthropicChatModelConfig> {

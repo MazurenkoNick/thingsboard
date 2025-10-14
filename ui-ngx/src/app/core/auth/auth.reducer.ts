@@ -50,6 +50,8 @@ const emptyUserAuthState: AuthPayload = {
   mobileQrEnabled: false,
   maxResourceSize: 0,
   maxArgumentsPerCF: 0,
+  minAllowedScheduledUpdateIntervalInSecForCF: 0,
+  maxRelationLevelPerCfArgument: 0,
   maxDataPointsPerRollingArg: 0,
   maxDebugModeDurationMinutes: 0,
   userSettings: initialUserSettings,

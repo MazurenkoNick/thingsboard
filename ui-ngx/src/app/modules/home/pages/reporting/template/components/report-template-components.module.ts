@@ -78,13 +78,37 @@ import {
 import { DividerPreviewComponent } from '@home/pages/reporting/template/components/divider-preview.component';
 import { DividerConfigComponent } from '@home/pages/reporting/template/components/divider-config.component';
 import { TableSortOrderComponent } from '@home/pages/reporting/template/components/table-sort-order.component';
+import {
+  TimeSeriesChartPreviewComponent
+} from '@home/pages/reporting/template/components/time-series-chart-preview.component';
+import {
+  TimeSeriesChartConfigComponent
+} from '@home/pages/reporting/template/components/time-series-chart-config.component';
+import { ReportWidgetContextService } from '@home/pages/reporting/template/components/report-widget-context.service';
+import { LatestChartConfigComponent } from '@home/pages/reporting/template/components/latest-chart-config.component';
+import { LatestChartPreviewComponent } from '@home/pages/reporting/template/components/latest-chart-preview.component';
+import { WidgetSettingsModule } from '@home/components/widget/lib/settings/widget-settings.module';
+import {
+  ReportComponentLibraryGroupComponent
+} from '@home/pages/reporting/template/components/report-component-library-group.component';
+import {
+  ReportComponentLibraryGroupsComponent
+} from '@home/pages/reporting/template/components/report-component-library-groups.component';
+import { SplitViewConfigComponent } from '@home/pages/reporting/template/components/split-view-config.component';
+import { ReportDropBlockComponent } from '@home/pages/reporting/template/components/report-drop-block.component';
+import { SplitViewPreviewComponent } from '@home/pages/reporting/template/components/split-view-preview.component';
 
 @NgModule({
+  providers: [
+    ReportWidgetContextService
+  ],
   declarations: [
     EditReportComponentTooltipComponent,
     ReportComponentComponent,
     ReportComponentsComponent,
     ReportComponentLibraryComponent,
+    ReportComponentLibraryGroupComponent,
+    ReportComponentLibraryGroupsComponent,
     ReportInsetsComponent,
     ReportComponentLayoutSettingsComponent,
     ReportHeadingComponent,
@@ -111,18 +135,28 @@ import { TableSortOrderComponent } from '@home/pages/reporting/template/componen
     DashboardConfigComponent,
     SubReportPreviewComponent,
     SubReportConfigComponent,
-    ReportComponentConfigComponent
+    TimeSeriesChartPreviewComponent,
+    TimeSeriesChartConfigComponent,
+    LatestChartPreviewComponent,
+    LatestChartConfigComponent,
+    ReportComponentConfigComponent,
+    ReportDropBlockComponent,
+    SplitViewConfigComponent,
+    SplitViewPreviewComponent
   ],
   imports: [
     CommonModule,
     SharedModule,
     SharedHomeComponentsModule,
     WidgetConfigComponentsModule,
-    BasicWidgetConfigModule
+    BasicWidgetConfigModule,
+    WidgetSettingsModule
   ],
   exports: [
     ReportComponentsComponent,
     ReportComponentLibraryComponent,
+    ReportComponentLibraryGroupComponent,
+    ReportComponentLibraryGroupsComponent,
     ReportComponentConfigComponent,
     ReportInsetsComponent
   ]

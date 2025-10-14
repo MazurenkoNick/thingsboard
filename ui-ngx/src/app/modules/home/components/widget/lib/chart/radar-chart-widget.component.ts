@@ -43,6 +43,8 @@ import {
   RadarChartWidgetSettings
 } from '@home/components/widget/lib/chart/radar-chart-widget.models';
 import { TbRadarChart } from '@home/components/widget/lib/chart/radar-chart';
+import { coerceBoolean } from '@shared/decorators/coercion';
+import { ChartWidgetComponent } from '@home/components/widget/lib/chart/chart.models';
 
 @Component({
   selector: 'tb-radar-chart-widget',
@@ -50,13 +52,17 @@ import { TbRadarChart } from '@home/components/widget/lib/chart/radar-chart';
   styleUrls: [],
   encapsulation: ViewEncapsulation.None
 })
-export class RadarChartWidgetComponent implements OnInit {
+export class RadarChartWidgetComponent implements OnInit, ChartWidgetComponent {
 
   @ViewChild('latestChart')
   latestChart: LatestChartComponent;
 
   @Input()
   ctx: WidgetContext;
+
+  @Input()
+  @coerceBoolean()
+  reportMode = false;
 
   @Input()
   widgetTitlePanel: TemplateRef<any>;

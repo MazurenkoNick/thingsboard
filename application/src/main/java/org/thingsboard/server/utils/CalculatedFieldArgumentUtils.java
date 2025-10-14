@@ -32,7 +32,7 @@ package org.thingsboard.server.utils;
 
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.cf.configuration.Argument;
@@ -43,6 +43,7 @@ import org.thingsboard.server.common.data.kv.StringDataEntry;
 import org.thingsboard.server.service.cf.ctx.state.ArgumentEntry;
 import org.thingsboard.server.service.cf.ctx.state.CalculatedFieldCtx;
 import org.thingsboard.server.service.cf.ctx.state.CalculatedFieldState;
+import org.thingsboard.server.service.cf.ctx.state.geofencing.GeofencingCalculatedFieldState;
 import org.thingsboard.server.service.cf.ctx.state.ScriptCalculatedFieldState;
 import org.thingsboard.server.service.cf.ctx.state.SimpleCalculatedFieldState;
 import org.thingsboard.server.service.cf.ctx.state.SingleValueArgumentEntry;
@@ -51,8 +52,8 @@ import java.util.Optional;
 
 public class CalculatedFieldArgumentUtils {
 
-    public static ListenableFuture<ArgumentEntry> transformSingleValueArgument(ListenableFuture<Optional<? extends KvEntry>> kvEntryFuture, ListeningExecutorService executor) {
-        return Futures.transform(kvEntryFuture, CalculatedFieldArgumentUtils::transformSingleValueArgument, executor);
+    public static ListenableFuture<ArgumentEntry> transformSingleValueArgument(ListenableFuture<Optional<? extends KvEntry>> kvEntryFuture) {
+        return Futures.transform(kvEntryFuture, CalculatedFieldArgumentUtils::transformSingleValueArgument, MoreExecutors.directExecutor());
     }
 
     public static ArgumentEntry transformSingleValueArgument(Optional<? extends KvEntry> kvEntry) {
@@ -82,6 +83,7 @@ public class CalculatedFieldArgumentUtils {
         return switch (ctx.getCfType()) {
             case SIMPLE -> new SimpleCalculatedFieldState(ctx.getArgNames());
             case SCRIPT -> new ScriptCalculatedFieldState(ctx.getArgNames());
+            case GEOFENCING -> new GeofencingCalculatedFieldState(ctx.getArgNames());
         };
     }
 

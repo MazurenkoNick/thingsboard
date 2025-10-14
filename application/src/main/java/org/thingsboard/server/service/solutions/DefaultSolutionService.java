@@ -62,7 +62,7 @@ import org.thingsboard.server.common.data.asset.Asset;
 import org.thingsboard.server.common.data.asset.AssetProfile;
 import org.thingsboard.server.common.data.audit.ActionType;
 import org.thingsboard.server.common.data.cf.CalculatedField;
-import org.thingsboard.server.common.data.cf.configuration.Argument;
+import org.thingsboard.server.common.data.cf.configuration.ArgumentsBasedCalculatedFieldConfiguration;
 import org.thingsboard.server.common.data.debug.DebugSettings;
 import org.thingsboard.server.common.data.edge.Edge;
 import org.thingsboard.server.common.data.exception.ThingsboardErrorCode;
@@ -1422,21 +1422,20 @@ public class DefaultSolutionService implements SolutionService {
                     throw new ThingsboardRuntimeException();
                 }
             }
-
-            Map<String, Argument> arguments = cf.getConfiguration().getArguments();
-            arguments.forEach((key, argument) -> {
-                EntityId refEntityId = argument.getRefEntityId();
-                if (refEntityId != null) {
-                    String newId = realIds.get(refEntityId.getId().toString());
-                    if (newId != null) {
-                        argument.setRefEntityId(EntityIdFactory.getByTypeAndUuid(refEntityId.getEntityType(), newId));
-                    } else {
-                        log.error("[{}][{}] Calculated field: {} references non existing entity.", ctx.getTenantId(), ctx.getSolutionId(), cf.getName());
-                        throw new ThingsboardRuntimeException();
+            if (cf.getConfiguration() instanceof ArgumentsBasedCalculatedFieldConfiguration argBasedCfg) {
+                argBasedCfg.getArguments().forEach((key, argument) -> {
+                    EntityId refEntityId = argument.getRefEntityId();
+                    if (refEntityId != null) {
+                        String newId = realIds.get(refEntityId.getId().toString());
+                        if (newId != null) {
+                            argument.setRefEntityId(EntityIdFactory.getByTypeAndUuid(refEntityId.getEntityType(), newId));
+                        } else {
+                            log.error("[{}][{}] Calculated field: {} references non existing entity.", ctx.getTenantId(), ctx.getSolutionId(), cf.getName());
+                            throw new ThingsboardRuntimeException();
+                        }
                     }
-                }
-            });
-
+                });
+            }
         });
 
         cfs = cfs.stream().map(calculatedFieldService::save).collect(Collectors.toList());

@@ -30,6 +30,6 @@
     OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 
 -->
-<div class="tb-image-preview" [style.text-align]="imageAlign">
-  <img #image [src]="imageUrl | image | async" [style.width]="imageWidth"/>
+<div class="tb-image-preview" [style.justify-content]="imageAlign">
+  <img #image [src]="imageUrl | image | async" [style.width]="imageWidth" [style.min-width]="imageWidth"/>
 </div>

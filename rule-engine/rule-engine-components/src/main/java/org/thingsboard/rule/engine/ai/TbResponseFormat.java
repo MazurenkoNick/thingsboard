@@ -75,9 +75,7 @@ public sealed interface TbResponseFormat permits TbTextResponseFormat, TbJsonRes
 
         @Override
         public ResponseFormat toLangChainResponseFormat() {
-            return ResponseFormat.builder()
-                    .type(ResponseFormatType.TEXT)
-                    .build();
+            return ResponseFormat.TEXT;
         }
 
     }
@@ -91,9 +89,7 @@ public sealed interface TbResponseFormat permits TbTextResponseFormat, TbJsonRes
 
         @Override
         public ResponseFormat toLangChainResponseFormat() {
-            return ResponseFormat.builder()
-                    .type(ResponseFormatType.JSON)
-                    .build();
+            return ResponseFormat.JSON;
         }
 
     }

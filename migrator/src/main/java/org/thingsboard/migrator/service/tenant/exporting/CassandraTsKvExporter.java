@@ -34,6 +34,7 @@ import com.datastax.oss.driver.api.core.cql.ColumnDefinition;
 import com.datastax.oss.driver.api.core.cql.ResultSet;
 import com.datastax.oss.driver.api.core.cql.Row;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Service;
@@ -43,6 +44,7 @@ import org.thingsboard.migrator.utils.CassandraService;
 import org.thingsboard.migrator.utils.Storage;
 
 import java.io.Writer;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -57,6 +59,13 @@ public class CassandraTsKvExporter extends MigrationService {
     private final Storage storage;
     private final CassandraService cassandraService;
 
+    @Value("${export.cassandra.ts.filter.start_ts:}")
+    private Long startTs;
+    @Value("${export.cassandra.ts.filter.end_ts:}")
+    private Long endTs;
+    @Value("${export.cassandra.ts.filter.partition_size_ms:2678400000}")
+    private long partitionSizeMs;
+
     public static final String TS_KV_TABLE = "ts_kv_cf";
     public static final String TS_KV_PARTITIONS_TABLE = "ts_kv_partitions_cf";
     public static final String TS_KV_FILE = "ts_kv";
@@ -65,6 +74,15 @@ public class CassandraTsKvExporter extends MigrationService {
 
     @Override
     protected void start() throws Exception {
+        // Validate time filter once at start
+        if (startTs != null && endTs != null && startTs > endTs) {
+            log.error("Invalid time range configuration: startTs {} is greater than endTs {}. Aborting Cassandra TS export.", startTs, endTs);
+            return;
+        }
+        if (startTs != null || endTs != null) {
+            log.info("Cassandra TS export filter is active. startTs={}, endTs={}, partitionSizeMs={}", startTs, endTs, partitionSizeMs);
+        }
+
         storage.newFile(TS_KV_FILE);
         writer = storage.newWriter(TS_KV_FILE);
 
@@ -84,12 +102,53 @@ public class CassandraTsKvExporter extends MigrationService {
         UUID entityId = (UUID) latestKvRow.get("entity_id");
         String key = (String) latestKvRow.get("key_name");
 
-        List<Long> partitions = cassandraService.query("SELECT partition FROM " + TS_KV_PARTITIONS_TABLE + " " +
-                "WHERE entity_type = ? AND entity_id = ? AND key = ?", Long.class, entityType, entityId, key);
+        // Use injected timestamp bounds (epoch millis)
+        final Long startTs = this.startTs;
+        final Long endTs = this.endTs;
+
+        // Build partition-bounded query to minimize DB requests
+        StringBuilder pQuery = new StringBuilder("SELECT partition FROM " + TS_KV_PARTITIONS_TABLE + " WHERE entity_type = ? AND entity_id = ? AND key = ?");
+        List<Object> pArgs = new ArrayList<>();
+        pArgs.add(entityType);
+        pArgs.add(entityId);
+        pArgs.add(key);
+        if (startTs != null) {
+            pQuery.append(" AND partition >= ?");
+            pArgs.add(startTs - partitionSizeMs); // use partition size window
+        }
+        if (endTs != null) {
+            pQuery.append(" AND partition <= ?");
+            pArgs.add(endTs);
+        }
+
+        List<Long> partitions = cassandraService.query(pQuery.toString(), Long.class, pArgs.toArray());
         for (Long partition : partitions) {
-            String query = "SELECT * FROM " + TS_KV_TABLE + " WHERE entity_type = ? AND entity_id = ? AND key = ? " +
-                    "AND partition = ? ORDER BY ts";
-            ResultSet rows = cassandraService.query(query, entityType, entityId, key, partition);
+            // Safety check to skip out-of-range partitions
+            if (startTs != null && partition < (startTs - partitionSizeMs)) {
+                continue;
+            }
+            if (endTs != null && partition > endTs) {
+                continue;
+            }
+
+            StringBuilder query = new StringBuilder("SELECT * FROM " + TS_KV_TABLE + " WHERE entity_type = ? AND entity_id = ? AND key = ? AND partition = ?");
+            List<Object> args = new ArrayList<>();
+            args.add(entityType);
+            args.add(entityId);
+            args.add(key);
+            args.add(partition);
+
+            if (startTs != null) {
+                query.append(" AND ts >= ?");
+                args.add(startTs);
+            }
+            if (endTs != null) {
+                query.append(" AND ts <= ?");
+                args.add(endTs);
+            }
+            query.append(" ORDER BY ts");
+
+            ResultSet rows = cassandraService.query(query.toString(), args.toArray());
             for (Row row : rows) {
                 Map<String, Object> data = new HashMap<>();
                 for (ColumnDefinition columnDefinition : row.getColumnDefinitions()) {

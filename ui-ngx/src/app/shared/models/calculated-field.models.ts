@@ -44,6 +44,7 @@ import {
   dotOperatorHighlightRule,
   endGroupHighlightRule
 } from '@shared/models/ace/ace.models';
+import { EntitySearchDirection } from '@shared/models/relation.models';
 import { JobStatus } from '@shared/models/job.models';
 
 export interface CalculatedField extends Omit<BaseData<CalculatedFieldId>, 'label'>, HasVersion, HasEntityDebugSettings, HasTenantId, ExportableEntity<CalculatedFieldId> {
@@ -55,19 +56,23 @@ export interface CalculatedField extends Omit<BaseData<CalculatedFieldId>, 'labe
 export enum CalculatedFieldType {
   SIMPLE = 'SIMPLE',
   SCRIPT = 'SCRIPT',
+  GEOFENCING = 'GEOFENCING'
 }
 
 export const CalculatedFieldTypeTranslations = new Map<CalculatedFieldType, string>(
   [
     [CalculatedFieldType.SIMPLE, 'calculated-fields.type.simple'],
     [CalculatedFieldType.SCRIPT, 'calculated-fields.type.script'],
+    [CalculatedFieldType.GEOFENCING, 'calculated-fields.type.geofencing'],
   ]
 )
 
 export interface CalculatedFieldConfiguration {
   type: CalculatedFieldType;
-  expression: string;
-  arguments: Record<string, CalculatedFieldArgument>;
+  expression?: string;
+  arguments?: Record<string, CalculatedFieldArgument>;
+  zoneGroups?: Record<string, CalculatedFieldGeofencing>;
+  scheduledUpdateInterval?: number;
   output: CalculatedFieldOutput;
 }
 
@@ -84,7 +89,8 @@ export enum ArgumentEntityType {
   Asset = 'ASSET',
   Customer = 'CUSTOMER',
   Tenant = 'TENANT',
-  Owner = 'CURRENT_OWNER'
+  Owner = 'CURRENT_OWNER',
+  RelationQuery = 'RELATION_PATH_QUERY',
 }
 
 export const ArgumentEntityTypeTranslations = new Map<ArgumentEntityType, string>(
@@ -95,6 +101,35 @@ export const ArgumentEntityTypeTranslations = new Map<ArgumentEntityType, string
     [ArgumentEntityType.Customer, 'calculated-fields.argument-customer'],
     [ArgumentEntityType.Tenant, 'calculated-fields.argument-tenant'],
     [ArgumentEntityType.Owner, 'calculated-fields.argument-owner'],
+    [ArgumentEntityType.RelationQuery, 'calculated-fields.argument-relation-query'],
+  ]
+)
+
+export enum GeofencingReportStrategy {
+  REPORT_TRANSITION_EVENTS_ONLY = 'REPORT_TRANSITION_EVENTS_ONLY',
+  REPORT_PRESENCE_STATUS_ONLY = 'REPORT_PRESENCE_STATUS_ONLY',
+  REPORT_TRANSITION_EVENTS_AND_PRESENCE_STATUS = 'REPORT_TRANSITION_EVENTS_AND_PRESENCE_STATUS'
+}
+
+export const GeofencingReportStrategyTranslations = new Map<GeofencingReportStrategy, string>(
+  [
+    [GeofencingReportStrategy.REPORT_TRANSITION_EVENTS_AND_PRESENCE_STATUS, 'calculated-fields.report-transition-event-and-presence'],
+    [GeofencingReportStrategy.REPORT_TRANSITION_EVENTS_ONLY, 'calculated-fields.report-transition-event-only'],
+    [GeofencingReportStrategy.REPORT_PRESENCE_STATUS_ONLY, 'calculated-fields.report-presence-status-only']
+  ]
+)
+
+export const GeofencingDirectionTranslations = new Map<EntitySearchDirection, string>(
+  [
+    [EntitySearchDirection.FROM, 'calculated-fields.direction-from'],
+    [EntitySearchDirection.TO, 'calculated-fields.direction-to'],
+  ]
+)
+
+export const GeofencingDirectionLevelTranslations = new Map<EntitySearchDirection, string>(
+  [
+    [EntitySearchDirection.FROM, 'calculated-fields.direction-down'],
+    [EntitySearchDirection.TO, 'calculated-fields.direction-up'],
   ]
 )
 
@@ -148,6 +183,27 @@ export interface CalculatedFieldArgument {
   refDynamicSource?: CFArgumentDynamicSourceType;
   limit?: number;
   timeWindow?: number;
+}
+
+export interface CalculatedFieldGeofencing {
+  perimeterKeyName: string;
+  reportStrategy: GeofencingReportStrategy;
+  refEntityId?: RefEntityId;
+  refDynamicSourceConfiguration: RefDynamicSourceConfiguration;
+  createRelationsWithMatchedZones: boolean;
+  relationType: string;
+  direction: EntitySearchDirection;
+}
+
+export interface RefDynamicSourceConfiguration {
+  type?: ArgumentEntityType.RelationQuery | CFArgumentDynamicSourceType.CURRENT_OWNER;
+  levels?: Array<{direction: EntitySearchDirection; relationType: string;}>;
+
+}
+
+export interface CalculatedFieldGeofencingValue extends CalculatedFieldGeofencing {
+  name: string;
+  entityName?: string;
 }
 
 export interface RefEntityKey {
