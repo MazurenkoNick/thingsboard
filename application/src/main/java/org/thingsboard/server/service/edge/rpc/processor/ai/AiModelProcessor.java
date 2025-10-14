@@ -28,34 +28,16 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.dao.ai;
+package org.thingsboard.server.service.edge.rpc.processor.ai;
 
-import com.google.common.util.concurrent.FluentFuture;
-import org.thingsboard.server.common.data.ai.AiModel;
-import org.thingsboard.server.common.data.id.AiModelId;
+import com.google.common.util.concurrent.ListenableFuture;
+import org.thingsboard.server.common.data.edge.Edge;
 import org.thingsboard.server.common.data.id.TenantId;
-import org.thingsboard.server.common.data.page.PageData;
-import org.thingsboard.server.common.data.page.PageLink;
-import org.thingsboard.server.dao.entity.EntityDaoService;
+import org.thingsboard.server.gen.edge.v1.AiModelUpdateMsg;
+import org.thingsboard.server.service.edge.rpc.processor.EdgeProcessor;
 
-import java.util.Optional;
+public interface AiModelProcessor extends EdgeProcessor {
 
-public interface AiModelService extends EntityDaoService {
-
-    AiModel save(AiModel model);
-
-    AiModel save(AiModel model, boolean doValidate);
-
-    Optional<AiModel> findAiModelById(TenantId tenantId, AiModelId modelId);
-
-    PageData<AiModel> findAiModelsByTenantId(TenantId tenantId, PageLink pageLink);
-
-    Optional<AiModel> findAiModelByTenantIdAndId(TenantId tenantId, AiModelId modelId);
-
-    FluentFuture<Optional<AiModel>> findAiModelByTenantIdAndIdAsync(TenantId tenantId, AiModelId modelId);
-
-    Optional<AiModel> findAiModelByTenantIdAndName(TenantId tenantId, String name);
-
-    boolean deleteByTenantIdAndId(TenantId tenantId, AiModelId modelId);
+    ListenableFuture<Void> processAiModelMsgFromEdge(TenantId tenantId, Edge edge, AiModelUpdateMsg aiModelUpdateMsg);
 
 }
