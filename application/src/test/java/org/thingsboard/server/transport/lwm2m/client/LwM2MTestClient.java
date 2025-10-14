@@ -85,6 +85,7 @@ import org.thingsboard.server.transport.lwm2m.utils.LwM2mValueConverterImpl;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -156,7 +157,7 @@ public class LwM2MTestClient {
     private LwM2mTemperatureSensor lwM2mTemperatureSensor12;
     private String deviceIdStr;
 
-    public void init(Security security, Security securityBs, int port, boolean isRpc,
+    public void init(Security securityLwm2m, Security securityBs, int port, boolean isRpc,
                      LwM2mUplinkMsgHandler defaultLwM2mUplinkMsgHandler,
                      LwM2mClientContext clientContext, Integer cIdLength, boolean queueMode,
                      boolean supportFormatOnly_SenMLJSON_SenMLCBOR, Integer value3_0_9) throws InvalidDDFFileException, IOException {
@@ -166,36 +167,31 @@ public class LwM2MTestClient {
 
         ObjectsInitializer initializer = createFreshInitializer();
 
-
-        if (securityBs != null && security != null) {
-            // SECURITIES
-            forceNullSecurityId(securityBs);
-            forceNullSecurityId(security);
-            LwM2mInstanceEnabler[] instances = new LwM2mInstanceEnabler[]{securityBs, security};
-            initializer.setInstancesForObject(SECURITY, instances);
-            log.warn("Security BS section: securityBsId [{}] Security Lwm2m section: securityLwm2mId [{}] ",  securityBs.getId(),  security.getId());
-            // SERVER
-            Server lwm2mServer = new Server(shortServerId, TimeUnit.MINUTES.toSeconds(60));
-            instances = new LwM2mInstanceEnabler[]{lwm2mServer};
-            initializer.setInstancesForObject(SERVER, instances);
-        } else if (securityBs != null) {
-            // SECURITY
-;           forceNullSecurityId(securityBs);
-            initializer.setInstancesForObject(SECURITY, securityBs);
-            // SERVER
-            initializer.setClassForObject(SERVER, Server.class);
-            log.warn("Security BS section: securityBsId [{}] ",  securityBs.getId());
-        } else {
-            // SECURITY
-            forceNullSecurityId(security);
-            initializer.setInstancesForObject(SECURITY, security);
-            // SERVER
-            Server lwm2mServer = new Server(shortServerId, TimeUnit.MINUTES.toSeconds(60));
-            initializer.setInstancesForObject(SERVER, lwm2mServer);
-            log.warn("Security Lwm2m section: securityLwm2mId [{}] Server Lwm2m section: securityLwm2mId [{}] ",  security.getId(),  lwm2mServer.getId());
+        // SECURITY
+        if (securityLwm2m != null && securityLwm2m.getId() != null) {
+            forceNullSecurityId(securityLwm2m);
         }
-
+        if (securityBs!= null && securityBs.getId() != null) {
+            forceNullSecurityId(securityBs);
+        }
+        if (securityBs != null && securityLwm2m != null) {
+            log.warn("Security Both: securityBs: [{}] and security Lwm2m  [{}]", securityBs.getId(), securityLwm2m.getId());
+            initializer.setInstancesForObject(SECURITY, securityBs, securityLwm2m);
+        } else if (securityBs != null) {
+            log.warn("Security BS only: securityBs: [{}] ", securityBs.getId());
+            initializer.setInstancesForObject(SECURITY, securityBs);
+        } else if (securityLwm2m != null){
+            // SECURITY
+            log.warn("Security Lwm2m only: security Lwm2m  [{}]", securityLwm2m.getId());
+            initializer.setInstancesForObject(SECURITY, securityLwm2m);
+        }
+        // SERVER
+        Server serverLwm2m = new Server(shortServerId, TimeUnit.MINUTES.toSeconds(60));
+        initializer.setInstancesForObject(SERVER, serverLwm2m);
+        // DEVICE
         initializer.setInstancesForObject(DEVICE, lwM2MDevice = new SimpleLwM2MDevice(executor, value3_0_9));
+
+        // OTHER t
         initializer.setInstancesForObject(FIRMWARE, fwLwM2MDevice = new FwLwM2MDevice());
         initializer.setInstancesForObject(SOFTWARE_MANAGEMENT, swLwM2MDevice = new SwLwM2MDevice());
         initializer.setClassForObject(ACCESS_CONTROL, DummyInstanceEnabler.class);
@@ -442,24 +438,42 @@ public class LwM2MTestClient {
 
     public void destroy() {
         if (leshanClient != null) {
-            leshanClient.destroy(true);
+            try {
+                leshanClient.destroy(true);
+            } catch (Exception e) {
+                log.warn("Failed to destroy Leshan client", e);
+            } finally {
+                leshanClient = null;
+            }
         }
-        if (lwM2MDevice != null) {
-            lwM2MDevice.destroy();
-        }
-        if (fwLwM2MDevice != null) {
-            fwLwM2MDevice.destroy();
-        }
-        if (swLwM2MDevice != null) {
-            swLwM2MDevice.destroy();
-        }
-        if (lwM2MBinaryAppDataContainer != null) {
-            lwM2MBinaryAppDataContainer.destroy();
-        }
-        if (lwM2MTemperatureSensor != null) {
-            lwM2MTemperatureSensor.destroy();
+
+        // ThingsBoard custom LwM2M objects
+        destroySafe(lwM2MDevice);
+        destroySafe(fwLwM2MDevice);
+        destroySafe(swLwM2MDevice);
+        destroySafe(lwM2MBinaryAppDataContainer);
+        destroySafe(lwM2MTemperatureSensor);
+
+        lwM2MDevice = null;
+        fwLwM2MDevice = null;
+        swLwM2MDevice = null;
+        lwM2MBinaryAppDataContainer = null;
+        lwM2MTemperatureSensor = null;
+    }
+
+
+    private void destroySafe(Object obj) {
+        if (obj == null) return;
+        try {
+            Method destroy = obj.getClass().getMethod("destroy");
+            destroy.invoke(obj);
+        } catch (NoSuchMethodException e) {
+            // не має destroy() — ігноруємо
+        } catch (Exception e) {
+            log.warn("Failed to destroy {}", obj.getClass().getSimpleName(), e);
         }
     }
+
 
     public void start(boolean isStartLw) {
         if (leshanClient != null) {
@@ -512,27 +526,27 @@ public class LwM2MTestClient {
         return new ObjectsInitializer(model);
     }
 
-    private void forceNullSecurityId(Security securityBs) {
-        if (securityBs == null) {
+    private void forceNullSecurityId(Security security) {
+        if (security == null) {
             return;
         }
         try {
-            Field field = securityBs.getClass().getDeclaredField("id");
+            Field field = security.getClass().getDeclaredField("id");
             field.setAccessible(true);
-            field.set(securityBs, null);
-            log.info("[forceNullSecurityId] Set id=null for {}", securityBs);
+            field.set(security, null);
+            log.info("[forceNullSecurityId] Set id=null for {}", security);
         } catch (NoSuchFieldException e) {
             try {
                 // Якщо поле в батьківському класі (наприклад SecurityObjectInstance)
-                Field field = securityBs.getClass().getSuperclass().getDeclaredField("id");
+                Field field = security.getClass().getSuperclass().getDeclaredField("id");
                 field.setAccessible(true);
-                field.set(securityBs, null);
-                log.info("[forceNullSecurityId] Set id=null for {} (via superclass)", securityBs);
+                field.set(security, null);
+                log.info("[forceNullSecurityId] Set id=null for {} (via superclass)", security);
             } catch (Exception ex) {
-                log.error("[forceNullSecurityId] Field 'id' not found for {}", securityBs.getClass(), ex);
+                log.error("[forceNullSecurityId] Field 'id' not found for {}", security.getClass(), ex);
             }
         } catch (Exception e) {
-            log.error("[forceNullSecurityId] Failed to set id=null for {}", securityBs.getClass(), e);
+            log.error("[forceNullSecurityId] Failed to set id=null for {}", security.getClass(), e);
         }
     }
 }

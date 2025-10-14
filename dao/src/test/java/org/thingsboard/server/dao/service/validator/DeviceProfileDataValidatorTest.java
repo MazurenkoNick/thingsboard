@@ -63,9 +63,8 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.willReturn;
 import static org.mockito.Mockito.verify;
-import static org.thingsboard.server.common.data.device.credentials.lwm2m.Lwm2mServerIdentifier.BOOTSTRAP;
 import static org.thingsboard.server.common.data.device.credentials.lwm2m.Lwm2mServerIdentifier.LWM2M_SERVER_MAX;
-import static org.thingsboard.server.common.data.device.credentials.lwm2m.Lwm2mServerIdentifier.NOT_USED_IDENTIFYING_LWM2M_SERVER;
+import static org.thingsboard.server.common.data.device.credentials.lwm2m.Lwm2mServerIdentifier.NOT_USED_IDENTIFYING_LWM2M_SERVER_MAX;
 import static org.thingsboard.server.common.data.device.credentials.lwm2m.Lwm2mServerIdentifier.PRIMARY_LWM2M_SERVER;
 
 @SpringBootTest(classes = DeviceProfileDataValidator.class)
@@ -94,7 +93,7 @@ class DeviceProfileDataValidatorTest {
                     "  }";
 
     private static final String msgErrorLwm2mRange = "LwM2M Server ShortServerId must be in range [" + PRIMARY_LWM2M_SERVER.getId() + " - " + LWM2M_SERVER_MAX.getId() + "]!";
-    private static final String msgErrorBsRange = "Bootstrap Server ShortServerId must be in range [" + BOOTSTRAP.getId() + "]!";
+    private static final String msgErrorBsRange = "Bootstrap Server ShortServerId must be null!";
     private static final String msgErrorNotNull = " Server ShortServerId must not be null!";
     private static final String host = "localhost";
     private static final String hostBs = "localhost";
@@ -143,7 +142,7 @@ class DeviceProfileDataValidatorTest {
     @Test
     void testValidateDeviceProfile_Lwm2mBootstrap_ShortServerId_Ok() {
         Integer shortServerId = 123;
-        Integer shortServerIdBs = 0;
+        Integer shortServerIdBs = null;
         DeviceProfile deviceProfile = getDeviceProfile(shortServerId, shortServerIdBs);
 
         validator.validateDataImpl(tenantId, deviceProfile);
@@ -151,8 +150,8 @@ class DeviceProfileDataValidatorTest {
     }
 
     @Test
-    void testValidateDeviceProfile_Lwm2mShortServerId_Ok_BootstrapShortServerId_null_Error() {
-        verifyValidationError(123, null, "Bootstrap" + msgErrorNotNull);
+    void testValidateDeviceProfile_Lwm2mShortServerId_Ok_BootstrapShortServerId_0_Error() {
+        verifyValidationError(123, 0, msgErrorBsRange);
     }
 
     @Test
@@ -172,7 +171,7 @@ class DeviceProfileDataValidatorTest {
 
     @Test
     void testValidateDeviceProfile_Lwm2mShortServerId_More_65534_Error_BootstrapShortServerId_Ok() {
-        verifyValidationError(NOT_USED_IDENTIFYING_LWM2M_SERVER.getId(), 111, msgErrorLwm2mRange);
+        verifyValidationError(NOT_USED_IDENTIFYING_LWM2M_SERVER_MAX.getId(), 111, msgErrorLwm2mRange);
     }
 
     @Test
