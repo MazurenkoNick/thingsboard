@@ -64,6 +64,7 @@ import { WidgetConfigCallbacks } from '@home/components/widget/config/widget-con
 
 export interface DataSourcesOptions {
   maxDatasources?: number;
+  maxDataKeys?: number;
   datasourcesOptional?: boolean;
   widgetType?: widgetType;
   allowFunctions?: boolean;
@@ -444,6 +445,11 @@ export class DatasourcesComponent implements ControlValueAccessor, OnInit, Valid
   public get datasourcesOptional(): boolean {
     return this.widgetConfigComponent?.modelValue?.typeParameters?.datasourcesOptional ||
            this.hasDataSourcesOption('datasourcesOptional') && this.getDataSourcesOption('datasourcesOptional');
+  }
+
+  public get maxDataKeys(): number {
+    return this.widgetConfigComponent?.modelValue?.typeParameters?.maxDataKeys ||
+      this.hasDataSourcesOption('maxDataKeys') ? this.getDataSourcesOption('maxDataKeys') : null;
   }
 
   public get allowFunctions(): boolean {

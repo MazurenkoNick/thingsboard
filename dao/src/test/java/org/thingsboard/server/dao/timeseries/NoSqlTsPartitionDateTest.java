@@ -28,25 +28,29 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.actors.calculatedField;
+package org.thingsboard.server.dao.timeseries;
 
-import lombok.Data;
-import org.thingsboard.server.common.data.id.CalculatedFieldId;
-import org.thingsboard.server.common.data.id.TenantId;
-import org.thingsboard.server.common.msg.MsgType;
-import org.thingsboard.server.common.msg.ToCalculatedFieldSystemMsg;
-import org.thingsboard.server.common.msg.queue.TbCallback;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 
-@Data
-public class EntityCalculatedFieldDynamicArgumentsRefreshMsg implements ToCalculatedFieldSystemMsg {
+import static org.assertj.core.api.Assertions.assertThat;
 
-    private final TenantId tenantId;
-    private final CalculatedFieldId cfId;
-    private final TbCallback callback;
+class NoSqlTsPartitionDateTest {
 
-    @Override
-    public MsgType getMsgType() {
-        return MsgType.CF_ENTITY_DYNAMIC_ARGUMENTS_REFRESH_MSG;
+    @ParameterizedTest
+    @EnumSource(NoSqlTsPartitionDate.class)
+    void getDurationMsTest(NoSqlTsPartitionDate tsPartitionDate) throws Exception {
+        final Long durationMs = switch (tsPartitionDate) {
+            case MINUTES -> 60000L;
+            case HOURS -> 3600000L;
+            case DAYS -> 86400000L;
+            case MONTHS -> 2629746000L;
+            case YEARS -> 31556952000L;
+            case INDEFINITE -> Long.MAX_VALUE;
+            default -> null; //should be here in case a new enum value will be added in future
+        };
+        assertThat(durationMs).isNotNull();
+        assertThat(tsPartitionDate.getDurationMs()).isEqualTo(durationMs);
     }
 
 }

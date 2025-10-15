@@ -86,7 +86,8 @@ import static org.thingsboard.server.common.data.DataConstants.QUEUE_NAME;
                 "Generates outgoing messages with the results of the aggregation for particular interval. By default, an outgoing message generates with 'POST_TELEMETRY_REQUEST' type. " +
                 "The type of the outgoing messages controls under \"<b>Output message type</b>\" configuration parameter.",
         configDirective = "tbAnalyticsNodeAggregateIncomingConfig",
-        icon = "functions"
+        icon = "functions",
+        docUrl = "https://thingsboard.io/docs/user-guide/rule-engine-2-0/nodes/analytics/aggregate-stream/"
 )
 public class TbSimpleAggMsgNode implements TbNode {
 
@@ -121,17 +122,13 @@ public class TbSimpleAggMsgNode implements TbNode {
         }
         if (config.isAutoCreateIntervals()) {
             this.entitiesCheckPeriod = Math.max(config.getPeriodTimeUnit().toMillis(config.getPeriodValue()), TimeUnit.MINUTES.toMillis(1));
-            try {
-                initEntities(ctx, null);
-            } catch (Exception e) {
-                throw new TbNodeException(e);
-            }
+            initEntities(ctx, null);
             scheduleEntitiesTickMsg(ctx, null);
         }
     }
 
     @Override
-    public void onMsg(TbContext ctx, TbMsg msg) throws ExecutionException, InterruptedException, TbNodeException {
+    public void onMsg(TbContext ctx, TbMsg msg) throws ExecutionException, InterruptedException {
         switch (msg.getInternalType()) {
             case TB_SIMPLE_AGG_REPORT_SELF_MSG:
                 onIntervalTickMsg(ctx, msg);
@@ -140,11 +137,7 @@ public class TbSimpleAggMsgNode implements TbNode {
                 onPersistTickMsg(ctx, msg);
                 break;
             case TB_SIMPLE_AGG_ENTITIES_SELF_MSG:
-                try {
-                    onEntitiesTickMsg(ctx, msg);
-                } catch (Exception e) {
-                    throw new TbNodeException(e);
-                }
+                onEntitiesTickMsg(ctx, msg);
                 break;
             default:
                 onDataMsg(ctx, msg);
@@ -228,7 +221,7 @@ public class TbSimpleAggMsgNode implements TbNode {
         intervals.cleanupStatesUsingTTL();
     }
 
-    private void onEntitiesTickMsg(TbContext ctx, TbMsg msg) throws Exception {
+    private void onEntitiesTickMsg(TbContext ctx, TbMsg msg) {
         if (!msg.getId().equals(nextEntitiesTickId)) {
             return;
         }
@@ -236,13 +229,13 @@ public class TbSimpleAggMsgNode implements TbNode {
         initEntities(ctx, msg);
     }
 
-    private void initEntities(TbContext ctx, TbMsg msg) throws Exception {
+    private void initEntities(TbContext ctx, TbMsg msg) {
         log.trace("[{}] Lookup entities!", ctx.getSelfId());
         ParentEntitiesQuery query = config.getParentEntitiesQuery();
         if (query.useParentEntitiesOnlyForSimpleAggregation()) {
-            addIntervals(ctx, msg, query.getParentEntitiesAsync(ctx));
+            addIntervals(ctx, msg, query.getLocalParentEntitiesAsync(ctx));
         } else {
-            DonAsynchron.withCallback(query.getParentEntitiesAsync(ctx), parents -> {
+            DonAsynchron.withCallback(query.getLocalParentEntitiesAsync(ctx), parents -> {
                 for (EntityId parentId : parents) {
                     addIntervals(ctx, msg, query.getChildEntitiesAsync(ctx, parentId));
                 }

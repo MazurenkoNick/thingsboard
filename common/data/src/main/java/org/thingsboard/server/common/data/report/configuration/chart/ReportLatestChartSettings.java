@@ -65,6 +65,7 @@ public class ReportLatestChartSettings {
     private String legendLabelColor;
     private Font legendValueFont;
     private String legendValueColor;
+    private Boolean legendShowTotal;
 
     public ReportLatestChartSettings() {}
 
@@ -73,7 +74,7 @@ public class ReportLatestChartSettings {
             input = new ReportLatestChartSettings();
         }
         this.showTitle = input.getShowTitle() != null ? input.getShowTitle() : Boolean.TRUE;
-        this.title = input.getTitle() != null ? input.getTitle() : "Time series chart";
+        this.title = input.getTitle() != null ? input.getTitle() : "Chart";
         this.titleFont = input.getTitleFont() != null ? input.getTitleFont() : Font.builder().family("Roboto")
                 .size(18f)
                 .weight(FontWeight.WEIGHT_500)
@@ -103,5 +104,6 @@ public class ReportLatestChartSettings {
                 .style(FontStyle.NORMAL)
                 .build();
         this.legendValueColor = input.getLegendValueColor() != null ? input.getLegendValueColor() : "rgba(0, 0, 0, 0.87)";
+        this.legendShowTotal = input.getLegendShowTotal() != null ? input.getLegendShowTotal() : Boolean.TRUE;
     }
 }

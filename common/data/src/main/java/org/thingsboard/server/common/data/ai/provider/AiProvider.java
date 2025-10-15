@@ -39,6 +39,7 @@ public enum AiProvider {
     MISTRAL_AI,
     ANTHROPIC,
     AMAZON_BEDROCK,
-    GITHUB_MODELS
+    GITHUB_MODELS,
+    OLLAMA
 
 }

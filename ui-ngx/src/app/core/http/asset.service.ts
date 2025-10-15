@@ -30,7 +30,7 @@
 ///
 
 import { Injectable } from '@angular/core';
-import { defaultHttpOptionsFromConfig, RequestConfig } from './http-utils';
+import { createDefaultHttpOptions, defaultHttpOptionsFromConfig, RequestConfig } from './http-utils';
 import { Observable } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { PageLink } from '@shared/models/page/page-link';
@@ -40,6 +40,7 @@ import { Asset, AssetInfo, AssetSearchQuery } from '@app/shared/models/asset.mod
 import { map } from 'rxjs/operators';
 import { sortEntitiesByIds } from '@shared/models/base-data';
 import { BulkImportRequest, BulkImportResult } from '@shared/import-export/import-export.models';
+import { SaveEntityWithGroupParams, toSaveParams } from '@shared/models/entity.models';
 
 @Injectable({
   providedIn: 'root'
@@ -119,16 +120,11 @@ export class AssetService {
     return this.http.get<AssetInfo>(`/api/asset/info/${assetId}`, defaultHttpOptionsFromConfig(config));
   }
 
-  public saveAsset(asset: Asset, entityGroupIds?: string | string[], config?: RequestConfig): Observable<Asset> {
-    let url = '/api/asset';
-    if (entityGroupIds) {
-      if (Array.isArray(entityGroupIds)) {
-        url += `?entityGroupIds=${entityGroupIds.join(',')}`;
-      } else {
-        url += `?entityGroupId=${entityGroupIds}`;
-      }
-    }
-    return this.http.post<Asset>(url, asset, defaultHttpOptionsFromConfig(config));
+  public saveAsset(asset: Asset, entityGroupIds?: string | string[], config?: RequestConfig): Observable<Asset>;
+  public saveAsset(asset: Asset, saveParams?: SaveEntityWithGroupParams, config?: RequestConfig): Observable<Asset>;
+  public saveAsset(asset: Asset, saveParams?: string | string[] | SaveEntityWithGroupParams, config?: RequestConfig): Observable<Asset> {
+    const params = toSaveParams(saveParams);
+    return this.http.post<Asset>('/api/asset', asset, createDefaultHttpOptions(params, config));
   }
 
   public deleteAsset(assetId: string, config?: RequestConfig) {

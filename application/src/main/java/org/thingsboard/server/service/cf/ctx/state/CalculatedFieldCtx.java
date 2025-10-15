@@ -58,11 +58,13 @@ import org.thingsboard.server.dao.relation.RelationService;
 import org.thingsboard.server.dao.usagerecord.ApiLimitService;
 import org.thingsboard.server.gen.transport.TransportProtos.CalculatedFieldTelemetryMsgProto;
 import org.thingsboard.server.service.cf.ctx.CalculatedFieldEntityCtxId;
+import org.thingsboard.server.service.cf.ctx.state.geofencing.GeofencingCalculatedFieldState;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import static org.thingsboard.common.util.ExpressionFunctionsUtil.userDefinedFunctions;
 
@@ -94,8 +96,11 @@ public class CalculatedFieldCtx {
     private long maxStateSize;
     private long maxSingleValueArgumentSize;
 
+    private boolean relationQueryDynamicArguments;
     private List<String> mainEntityGeofencingArgumentNames;
     private List<String> linkedEntityAndCurrentOwnerGeofencingArgumentNames;
+
+    private long scheduledUpdateIntervalMillis;
 
     public CalculatedFieldCtx(CalculatedField calculatedField, TbelInvokeService tbelInvokeService, ApiLimitService apiLimitService, RelationService relationService) {
         this.calculatedField = calculatedField;
@@ -120,6 +125,7 @@ public class CalculatedFieldCtx {
                 if (refId == null) {
                     // TODO: no matchers for this type of source exists yet, so no reason to add to dynamicEntityArguments map.
                     if (entry.getValue().hasRelationQuerySource()) {
+                        relationQueryDynamicArguments = true;
                         continue;
                     }
                     if (entry.getValue().hasCurrentOwnerSource()) {
@@ -150,6 +156,9 @@ public class CalculatedFieldCtx {
                 });
             }
         }
+        if (calculatedField.getConfiguration() instanceof ScheduledUpdateSupportedCalculatedFieldConfiguration scheduledConfig) {
+            this.scheduledUpdateIntervalMillis = scheduledConfig.isScheduledUpdateEnabled() ? TimeUnit.SECONDS.toMillis(scheduledConfig.getScheduledUpdateInterval()) : -1L;
+        }
         this.tbelInvokeService = tbelInvokeService;
         this.relationService = relationService;
 
@@ -165,6 +174,7 @@ public class CalculatedFieldCtx {
                     this.calculatedFieldScriptEngine = initEngine(tenantId, expression, tbelInvokeService);
                     initialized = true;
                 } catch (Exception e) {
+                    initialized = false;
                     throw new RuntimeException("Failed to init calculated field ctx. Invalid expression syntax.", e);
                 }
             }
@@ -180,6 +190,7 @@ public class CalculatedFieldCtx {
                     );
                     initialized = true;
                 } else {
+                    initialized = false;
                     throw new RuntimeException("Failed to init calculated field ctx. Invalid expression syntax.");
                 }
             }
@@ -400,23 +411,40 @@ public class CalculatedFieldCtx {
     public boolean hasOtherSignificantChanges(CalculatedFieldCtx other) {
         boolean expressionChanged = calculatedField.getConfiguration() instanceof ExpressionBasedCalculatedFieldConfiguration && !expression.equals(other.expression);
         boolean outputChanged = !output.equals(other.output);
-        return expressionChanged || outputChanged;
+        boolean scheduledUpdatesConfigChanged = scheduledUpdateIntervalMillis != other.scheduledUpdateIntervalMillis;
+        return expressionChanged || outputChanged || scheduledUpdatesConfigChanged;
     }
 
     public boolean hasStateChanges(CalculatedFieldCtx other) {
         boolean typeChanged = !cfType.equals(other.cfType);
         boolean argumentsChanged = !arguments.equals(other.arguments);
-        return typeChanged || argumentsChanged;
+        boolean geoZoneGroupsConfigChanged = hasGeofencingZoneGroupConfigurationChanges(other);
+        return typeChanged || argumentsChanged || geoZoneGroupsConfigChanged;
     }
 
-    public boolean hasSchedulingConfigChanges(CalculatedFieldCtx other) {
-        if (calculatedField.getConfiguration() instanceof ScheduledUpdateSupportedCalculatedFieldConfiguration thisConfig
-                && other.calculatedField.getConfiguration() instanceof ScheduledUpdateSupportedCalculatedFieldConfiguration otherConfig) {
-            boolean refreshTriggerChanged = thisConfig.isScheduledUpdateEnabled() != otherConfig.isScheduledUpdateEnabled();
-            boolean refreshIntervalChanged = thisConfig.getScheduledUpdateInterval() != otherConfig.getScheduledUpdateInterval();
-            return refreshTriggerChanged || refreshIntervalChanged;
+    private boolean hasGeofencingZoneGroupConfigurationChanges(CalculatedFieldCtx other) {
+        if (calculatedField.getConfiguration() instanceof GeofencingCalculatedFieldConfiguration thisConfig
+            && other.calculatedField.getConfiguration() instanceof GeofencingCalculatedFieldConfiguration otherConfig) {
+            return !thisConfig.getZoneGroups().equals(otherConfig.getZoneGroups());
         }
         return false;
+    }
+
+    public boolean hasRelationQueryDynamicArguments() {
+        return relationQueryDynamicArguments && scheduledUpdateIntervalMillis != -1;
+    }
+
+    public boolean shouldFetchDynamicArgumentsFromDb(CalculatedFieldState state) {
+        if (!hasRelationQueryDynamicArguments()) {
+            return false;
+        }
+        if (!(state instanceof GeofencingCalculatedFieldState geofencingState)) {
+            return false;
+        }
+        if (geofencingState.getLastDynamicArgumentsRefreshTs() == -1L) {
+            return true;
+        }
+        return geofencingState.getLastDynamicArgumentsRefreshTs() < System.currentTimeMillis() - scheduledUpdateIntervalMillis;
     }
 
     public String getSizeExceedsLimitMessage() {

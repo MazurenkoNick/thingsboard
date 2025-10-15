@@ -28,23 +28,11 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.actors.calculatedField;
+package org.thingsboard.server.common.data;
 
-import lombok.Data;
-import org.thingsboard.server.common.data.id.CalculatedFieldId;
-import org.thingsboard.server.common.data.id.TenantId;
-import org.thingsboard.server.common.msg.MsgType;
-import org.thingsboard.server.common.msg.ToCalculatedFieldSystemMsg;
+public enum NameConflictPolicy {
 
-@Data
-public class CalculatedFieldDynamicArgumentsRefreshMsg implements ToCalculatedFieldSystemMsg {
-
-    private final TenantId tenantId;
-    private final CalculatedFieldId cfId;
-
-    @Override
-    public MsgType getMsgType() {
-        return MsgType.CF_DYNAMIC_ARGUMENTS_REFRESH_MSG;
-    }
+    FAIL,
+    UNIQUIFY;
 
 }

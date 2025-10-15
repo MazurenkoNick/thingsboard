@@ -45,26 +45,27 @@ import org.thingsboard.server.report.renderer.chart.TbLatestChart;
 import org.thingsboard.server.report.renderer.chart.TbPieChart;
 
 import java.awt.Graphics2D;
+import java.util.Map;
 
 @Component
 public class LatestChartRenderer extends ChartRenderer<LatestChartComponent> {
 
     @Override
     protected JFreeChart createChart(Graphics2D g2, LatestChartComponent component, ComponentData reportDataSource) {
-        TbLatestChart<?,?> latestChart = createLatestChart(component, reportDataSource.getLatestChartData());
+        TbLatestChart<?,?> latestChart = createLatestChart(component, reportDataSource.getLatestChartData(), reportDataSource.getVariables());
         return latestChart.createChart(g2);
     }
 
-    private TbLatestChart<?,?> createLatestChart(LatestChartComponent component, LatestChartData latestChartData) {
+    private TbLatestChart<?,?> createLatestChart(LatestChartComponent component, LatestChartData latestChartData, Map<String, Object> variables) {
         if ("latestBarChart".equals(component.getSubType())) {
             ReportBarChartSettings reportBarChartSettings = new ReportBarChartSettings((ReportBarChartSettings) component.getLatestChartSettings());
-            return new TbBarChart(reportBarChartSettings, latestChartData);
+            return new TbBarChart(reportBarChartSettings, latestChartData, variables);
         } else if ("pieChart".equals(component.getSubType())) {
             ReportPieChartSettings reportPieChartSettings = new ReportPieChartSettings((ReportPieChartSettings) component.getLatestChartSettings());
-            return new TbPieChart(reportPieChartSettings, latestChartData);
+            return new TbPieChart(reportPieChartSettings, latestChartData, variables);
         } else if ("doughnutChart".equals(component.getSubType()) || "horizontalDoughnutChart".equals(component.getSubType())) {
             ReportDoughnutChartSettings reportDoughnutChartSettings = new ReportDoughnutChartSettings((ReportDoughnutChartSettings) component.getLatestChartSettings());
-            return new TbDoughnutChart(reportDoughnutChartSettings, latestChartData);
+            return new TbDoughnutChart(reportDoughnutChartSettings, latestChartData, variables);
         } else {
             throw new IllegalArgumentException("Latest chart with subType '"+component.getSubType()+"' is not supported");
         }

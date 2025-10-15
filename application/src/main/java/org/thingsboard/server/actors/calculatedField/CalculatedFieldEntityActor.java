@@ -93,9 +93,6 @@ public class CalculatedFieldEntityActor extends AbstractCalculatedFieldActor {
             case CF_ARGUMENT_RESET_MSG:
                 processor.process((CalculatedFieldArgumentResetMsg) msg);
                 break;
-            case CF_ENTITY_DYNAMIC_ARGUMENTS_REFRESH_MSG:
-                processor.process((EntityCalculatedFieldDynamicArgumentsRefreshMsg) msg);
-                break;
             default:
                 return false;
         }
