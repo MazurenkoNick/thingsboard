@@ -29,7 +29,7 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { Component, DestroyRef, OnDestroy, OnInit, QueryList, ViewChildren } from '@angular/core';
+import { Component, DestroyRef, OnInit, QueryList, ViewChildren } from '@angular/core';
 import { PageComponent } from '@shared/components/page.component';
 import { HasConfirmForm } from '@core/guards/confirm-on-exit.guard';
 import { Store } from '@ngrx/store';
@@ -58,7 +58,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
   templateUrl: './two-factor-auth-settings.component.html',
   styleUrls: [ './settings-card.scss', './two-factor-auth-settings.component.scss']
 })
-export class TwoFactorAuthSettingsComponent extends PageComponent implements OnInit, HasConfirmForm, OnDestroy {
+export class TwoFactorAuthSettingsComponent extends PageComponent implements OnInit, HasConfirmForm {
 
   private readonly posIntValidation = [Validators.required, Validators.min(1), Validators.pattern(/^\d*$/)];
 
@@ -95,10 +95,6 @@ export class TwoFactorAuthSettingsComponent extends PageComponent implements OnI
     this.twoFaService.getTwoFaSettings().subscribe((setting) => {
       this.setAuthConfigFormValue(setting);
     });
-  }
-
-  ngOnDestroy() {
-    super.ngOnDestroy();
   }
 
   confirmForm(): UntypedFormGroup {
