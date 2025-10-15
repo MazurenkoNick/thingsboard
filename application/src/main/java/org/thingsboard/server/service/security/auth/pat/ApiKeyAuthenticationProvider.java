@@ -56,7 +56,7 @@ import org.thingsboard.server.service.user.cache.UserAuthDetailsCache;
 public class ApiKeyAuthenticationProvider implements org.springframework.security.authentication.AuthenticationProvider {
 
     private final ApiKeyService apiKeyService;
-    private final UserAuthDetailsCache userEnabledCache;
+    private final UserAuthDetailsCache userAuthDetailsCache;
     private final UserPermissionsService userPermissionsService;
 
     @Override
@@ -85,7 +85,7 @@ public class ApiKeyAuthenticationProvider implements org.springframework.securit
         if (apiKey.getExpirationTime() != 0 && apiKey.getExpirationTime() < System.currentTimeMillis()) {
             throw new CredentialsExpiredException("API key is expired");
         }
-        UserAuthDetails userAuthDetails = userEnabledCache.findUserEnabled(apiKey.getTenantId(), apiKey.getUserId());
+        UserAuthDetails userAuthDetails = userAuthDetailsCache.findUserEnabled(apiKey.getTenantId(), apiKey.getUserId());
         if (userAuthDetails == null) {
             throw new UsernameNotFoundException("User with credentials not found");
         }
