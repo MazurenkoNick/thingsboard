@@ -37,7 +37,6 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-import lombok.extern.slf4j.Slf4j;
 import org.thingsboard.rule.engine.api.TbContext;
 import org.thingsboard.rule.engine.api.TbNode;
 import org.thingsboard.rule.engine.api.TbNodeConfiguration;
@@ -48,18 +47,19 @@ import org.thingsboard.server.common.data.msg.TbMsgType;
 import org.thingsboard.server.common.data.util.TbPair;
 import org.thingsboard.server.common.msg.TbMsg;
 import org.thingsboard.server.common.msg.TbMsgMetaData;
+import org.thingsboard.server.common.msg.queue.PartitionChangeMsg;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.thingsboard.common.util.DonAsynchron.withCallback;
 import static org.thingsboard.server.common.data.DataConstants.QUEUE_NAME;
 import static org.thingsboard.server.common.data.msg.TbNodeConnectionType.SUCCESS;
 
-@Slf4j
 public abstract class TbAbstractLatestNode<C extends TbAbstractLatestNodeConfiguration> implements TbNode {
 
     private final Gson gson = new Gson();
@@ -70,27 +70,69 @@ public abstract class TbAbstractLatestNode<C extends TbAbstractLatestNodeConfigu
     private UUID nextTickId;
     protected String queueName;
     protected String outMsgType;
+
+    private EntityId parentEntitiesQueryRoot;
     private ParentEntitiesQuery parentEntitiesQuery;
+
+    private final AtomicBoolean initialized = new AtomicBoolean(false);
 
     @Override
     public void init(TbContext ctx, TbNodeConfiguration configuration) throws TbNodeException {
-        this.config = loadMapperNodeConfig(configuration);
-        this.queueName = ctx.getQueueName();
-        this.delay = config.getPeriodTimeUnit().toMillis(config.getPeriodValue());
-        this.outMsgType = StringUtils.isNotBlank(config.getOutMsgType()) ? config.getOutMsgType() : TbMsgType.POST_TELEMETRY_REQUEST.name();
-        this.parentEntitiesQuery = config.getParentEntitiesQuery();
-        validateConfig(ctx);
-        scheduleTickMsg(ctx);
+        config = loadMapperNodeConfig(configuration);
+        parentEntitiesQuery = config.getParentEntitiesQuery();
+        queueName = ctx.getQueueName();
+        delay = config.getPeriodTimeUnit().toMillis(config.getPeriodValue());
+        outMsgType = StringUtils.notBlankOrDefault(config.getOutMsgType(), TbMsgType.POST_TELEMETRY_REQUEST.name());
+
+        parentEntitiesQueryRoot = getParentEntitiesQueryRoot(config.getParentEntitiesQuery());
+        ctx.checkTenantEntity(parentEntitiesQueryRoot);
+
+        initializeIfLocalEntity(ctx, parentEntitiesQueryRoot);
+    }
+
+    private static EntityId getParentEntitiesQueryRoot(ParentEntitiesQuery query) throws TbNodeException {
+        EntityId parentEntitiesQueryRoot;
+        if (query instanceof ParentEntitiesSingleEntity singleEntity) {
+            parentEntitiesQueryRoot = singleEntity.getEntityId();
+        } else if (query instanceof ParentEntitiesGroup entitiesGroup) {
+            parentEntitiesQueryRoot = entitiesGroup.getEntityGroupId();
+        } else if (query instanceof ParentEntitiesRelationsQuery relationsQuery) {
+            parentEntitiesQueryRoot = relationsQuery.getRootEntityId();
+        } else {
+            throw new TbNodeException("Unknown parent entity query type: " + query.getClass().getSimpleName(), true);
+        }
+        return parentEntitiesQueryRoot;
+    }
+
+    private void initializeIfLocalEntity(TbContext ctx, EntityId entityId) {
+        if (ctx.isLocalEntity(entityId)) {
+            if (initialized.compareAndSet(false, true)) {
+                scheduleTickMsg(ctx);
+            }
+        } else if (initialized.compareAndSet(true, false)) {
+            destroy();
+        }
+    }
+
+    @Override
+    public void onPartitionChangeMsg(TbContext ctx, PartitionChangeMsg msg) {
+        initializeIfLocalEntity(ctx, parentEntitiesQueryRoot);
     }
 
     @Override
     public void onMsg(TbContext ctx, TbMsg msg) {
-        if (msg.isTypeOf(tickMessageType()) && msg.getId().equals(nextTickId)) {
+        if (initialized.get() && msg.isTypeOf(tickMessageType()) && msg.getId().equals(nextTickId)) {
             withCallback(aggregate(ctx),
-                    m -> scheduleTickMsg(ctx),
-                    t -> {
-                        ctx.tellFailure(msg, t);
-                        scheduleTickMsg(ctx);
+                    success -> {
+                        if (initialized.get()) {
+                            scheduleTickMsg(ctx);
+                        }
+                    },
+                    error -> {
+                        if (initialized.get()) {
+                            ctx.tellFailure(msg, error);
+                            scheduleTickMsg(ctx);
+                        }
                     });
         }
     }
@@ -158,14 +200,9 @@ public abstract class TbAbstractLatestNode<C extends TbAbstractLatestNodeConfigu
 
     protected abstract Map<EntityId, List<ListenableFuture<Optional<JsonObject>>>> doParentAggregations(TbContext ctx, EntityId parentEntityId);
 
-    private void validateConfig(TbContext ctx) throws TbNodeException {
-        if (parentEntitiesQuery instanceof ParentEntitiesSingleEntity) {
-            ctx.checkTenantEntity(((ParentEntitiesSingleEntity) parentEntitiesQuery).getEntityId());
-        } else if (parentEntitiesQuery instanceof  ParentEntitiesGroup) {
-            ctx.checkTenantEntity(((ParentEntitiesGroup) parentEntitiesQuery).getEntityGroupId());
-        } else if (parentEntitiesQuery instanceof  ParentEntitiesRelationsQuery) {
-            ctx.checkTenantEntity(((ParentEntitiesRelationsQuery) parentEntitiesQuery).getRootEntityId());
-        }
+    @Override
+    public void destroy() {
+        initialized.set(false);
     }
 
     @Override

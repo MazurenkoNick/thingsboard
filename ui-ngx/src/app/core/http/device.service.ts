@@ -30,7 +30,7 @@
 ///
 
 import { Injectable } from '@angular/core';
-import { defaultHttpOptionsFromConfig, RequestConfig } from './http-utils';
+import { createDefaultHttpOptions, defaultHttpOptionsFromConfig, RequestConfig } from './http-utils';
 import { Observable, ReplaySubject } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { PageLink } from '@shared/models/page/page-link';
@@ -43,7 +43,8 @@ import {
   DeviceInfo,
   DeviceInfoQuery,
   DeviceSearchQuery,
-  PublishTelemetryCommand
+  PublishTelemetryCommand,
+  SaveDeviceParams
 } from '@shared/models/device.models';
 import { EntitySubtype } from '@shared/models/entity-type.models';
 import { AuthService } from '@core/auth/auth.service';
@@ -52,6 +53,7 @@ import { sortEntitiesByIds } from '@shared/models/base-data';
 import { BulkImportRequest, BulkImportResult } from '@shared/import-export/import-export.models';
 import { PersistentRpc, RpcStatus } from '@shared/models/rpc.models';
 import { ResourcesService } from '@core/services/resources.service';
+import { toSaveParams } from '@shared/models/entity.models';
 
 @Injectable({
   providedIn: 'root'
@@ -145,32 +147,21 @@ export class DeviceService {
     return this.http.get<DeviceInfo>(`/api/device/info/${deviceId}`, defaultHttpOptionsFromConfig(config));
   }
 
-  public saveDevice(device: Device, entityGroupIds?: string | string[], config?: RequestConfig): Observable<Device> {
-    let url = '/api/device';
-    if (entityGroupIds) {
-      if (Array.isArray(entityGroupIds)) {
-        url += `?entityGroupIds=${entityGroupIds.join(',')}`;
-      } else {
-        url += `?entityGroupId=${entityGroupIds}`;
-      }
-    }
-    return this.http.post<Device>(url, device, defaultHttpOptionsFromConfig(config));
+  public saveDevice(device: Device, entityGroupIds?: string | string[], config?: RequestConfig): Observable<Device>;
+  public saveDevice(device: Device, saveParams?: SaveDeviceParams, config?: RequestConfig): Observable<Device>;
+  public saveDevice(device: Device, saveParams?: string | string[] | SaveDeviceParams, config?: RequestConfig): Observable<Device> {
+    const params = toSaveParams(saveParams);
+    return this.http.post<Device>('/api/device', device, createDefaultHttpOptions(params, config));
   }
 
-  public saveDeviceWithCredentials(device: Device, credentials: DeviceCredentials,
-                                   entityGroupIds?: string | string[], config?: RequestConfig): Observable<Device> {
-    let url = '/api/device-with-credentials';
-    if (entityGroupIds) {
-      if (Array.isArray(entityGroupIds)) {
-        url += `?entityGroupIds=${entityGroupIds.join(',')}`;
-      } else {
-        url += `?entityGroupId=${entityGroupIds}`;
-      }
-    }
-    return this.http.post<Device>(url, {
+  public saveDeviceWithCredentials(device: Device, credentials: DeviceCredentials, entityGroupIds?: string | string[], config?: RequestConfig): Observable<Device>;
+  public saveDeviceWithCredentials(device: Device, credentials: DeviceCredentials, saveParams?: SaveDeviceParams, config?: RequestConfig): Observable<Device>;
+  public saveDeviceWithCredentials(device: Device, credentials: DeviceCredentials, saveParams?: string | string[] | SaveDeviceParams, config?: RequestConfig): Observable<Device> {
+    const params = toSaveParams(saveParams);
+    return this.http.post<Device>('/api/device-with-credentials', {
       device,
       credentials
-    }, defaultHttpOptionsFromConfig(config));
+    }, createDefaultHttpOptions(params, config));
   }
 
   public deleteDevice(deviceId: string, config?: RequestConfig) {
