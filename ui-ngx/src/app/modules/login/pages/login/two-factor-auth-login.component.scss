@@ -91,7 +91,7 @@
       .tb-two-factor-auth-login-card {
         button.mat-mdc-icon-button {
           .mat-icon {
-            color: rgba(255, 255, 255, 0.8);
+            color: inherit;
           }
         }
       }
@@ -99,9 +99,9 @@
     button.provider {
       text-align: start;
       font-weight: 400;
-      color: rgba(255, 255, 255, 0.8);
+      color: inherit;
       &:not([disabled][disabled]) {
-        border-color: rgba(255, 255, 255, .8);
+        border-color: inherit;
       }
     }
 
