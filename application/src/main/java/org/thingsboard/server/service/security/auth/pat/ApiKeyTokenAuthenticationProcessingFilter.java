@@ -44,13 +44,13 @@ import org.springframework.security.web.authentication.AbstractAuthenticationPro
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.thingsboard.server.service.security.auth.extractor.TokenExtractor;
-import org.thingsboard.server.service.security.model.token.RawApiKeyToken;
+import org.thingsboard.server.service.security.model.token.RawApiKey;
 
 import java.io.IOException;
 
 import static org.thingsboard.server.config.ThingsboardSecurityConfiguration.API_KEY_HEADER_PREFIX;
-import static org.thingsboard.server.config.ThingsboardSecurityConfiguration.JWT_TOKEN_HEADER_PARAM;
-import static org.thingsboard.server.config.ThingsboardSecurityConfiguration.JWT_TOKEN_HEADER_PARAM_V2;
+import static org.thingsboard.server.config.ThingsboardSecurityConfiguration.AUTHORIZATION_HEADER;
+import static org.thingsboard.server.config.ThingsboardSecurityConfiguration.AUTHORIZATION_HEADER_V2;
 
 public class ApiKeyTokenAuthenticationProcessingFilter extends AbstractAuthenticationProcessingFilter {
 
@@ -67,8 +67,8 @@ public class ApiKeyTokenAuthenticationProcessingFilter extends AbstractAuthentic
 
     @Override
     public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) throws AuthenticationException {
-        RawApiKeyToken token = new RawApiKeyToken(tokenExtractor.extract(request));
-        return getAuthenticationManager().authenticate(new ApiKeyAuthenticationToken(token));
+        RawApiKey rawApiKey = new RawApiKey(tokenExtractor.extract(request));
+        return getAuthenticationManager().authenticate(new ApiKeyAuthenticationToken(rawApiKey));
     }
 
     @Override
@@ -85,9 +85,9 @@ public class ApiKeyTokenAuthenticationProcessingFilter extends AbstractAuthentic
         if (!super.requiresAuthentication(request, response)) {
             return false;
         }
-        String header = request.getHeader(JWT_TOKEN_HEADER_PARAM);
+        String header = request.getHeader(AUTHORIZATION_HEADER);
         if (header == null) {
-            header = request.getHeader(JWT_TOKEN_HEADER_PARAM_V2);
+            header = request.getHeader(AUTHORIZATION_HEADER_V2);
         }
         return header != null && header.startsWith(API_KEY_HEADER_PREFIX);
     }

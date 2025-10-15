@@ -56,18 +56,18 @@ public class JpaApiKeyDao extends JpaAbstractDao<ApiKeyEntity, ApiKey> implement
     private ApiKeyRepository apiKeyRepository;
 
     @Override
-    public ApiKey findByHash(String hash) {
-        return DaoUtil.getData(apiKeyRepository.findByHash(hash));
+    public ApiKey findByValue(String value) {
+        return DaoUtil.getData(apiKeyRepository.findByValue(value));
     }
 
     @Override
-    public void deleteByTenantId(TenantId tenantId) {
-        apiKeyRepository.deleteByTenantId(tenantId.getId());
+    public Set<String> deleteByTenantId(TenantId tenantId) {
+        return apiKeyRepository.deleteByTenantId(tenantId.getId());
     }
 
     @Override
-    public void deleteByUserId(TenantId tenantId, UserId userId) {
-        apiKeyRepository.deleteByUserId(tenantId.getId(), userId.getId());
+    public Set<String> deleteByUserId(TenantId tenantId, UserId userId) {
+        return apiKeyRepository.deleteByUserId(tenantId.getId(), userId.getId());
     }
 
     @Override

@@ -32,7 +32,10 @@ package org.thingsboard.server.dao.pat;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.event.TransactionalEventListener;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.id.ApiKeyId;
@@ -44,10 +47,12 @@ import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.pat.ApiKey;
 import org.thingsboard.server.common.data.pat.ApiKeyInfo;
-import org.thingsboard.server.dao.entity.AbstractEntityService;
+import org.thingsboard.server.dao.entity.AbstractCachedEntityService;
+import org.thingsboard.server.dao.eventsourcing.SaveEntityEvent;
 import org.thingsboard.server.dao.service.validator.ApiKeyDataValidator;
 
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 import static org.thingsboard.server.dao.service.Validator.validateId;
@@ -57,14 +62,27 @@ import static org.thingsboard.server.dao.user.UserServiceImpl.INCORRECT_USER_ID;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class ApiKeyServiceImpl extends AbstractEntityService implements ApiKeyService {
+public class ApiKeyServiceImpl extends AbstractCachedEntityService<ApiKeyCacheKey, ApiKey, ApiKeyEvictEvent> implements ApiKeyService {
 
     private static final String INCORRECT_API_KEY_ID = "Incorrect ApiKeyId ";
-    private static final int DEFAULT_API_KEY_BYTES = 32;
+    private static final int MAX_API_KEY_VALUE_LENGTH = 255;
 
     private final ApiKeyDao apiKeyDao;
     private final ApiKeyInfoDao apiKeyInfoDao;
+    @Lazy
     private final ApiKeyDataValidator apiKeyValidator;
+
+    @Value("${security.api_key.value_prefix:}")
+    private String prefix;
+
+    @Value("${security.api_key.value_bytes_size:}")
+    private int valueBytesSize;
+
+    @Override
+    @TransactionalEventListener
+    public void handleEvictEvent(ApiKeyEvictEvent event) {
+        cache.evict(ApiKeyCacheKey.of(event.value()));
+    }
 
     @Override
     public ApiKey saveApiKey(TenantId tenantId, ApiKeyInfo apiKeyInfo) {
@@ -73,14 +91,19 @@ public class ApiKeyServiceImpl extends AbstractEntityService implements ApiKeySe
             var apiKey = new ApiKey(apiKeyInfo);
             var old = apiKeyValidator.validate(apiKey, ApiKeyInfo::getTenantId);
             if (old == null) {
-                String hash = generateApiKeySecret();
-                apiKey.setHash(hash);
+                String value = generateApiKeySecret();
+                apiKey.setValue(value);
             } else {
-                apiKey.setHash(old.getHash());
+                apiKey.setValue(old.getValue());
             }
-            return apiKeyDao.save(tenantId, apiKey);
+            var savedApiKey = apiKeyDao.save(tenantId, apiKey);
+            eventPublisher.publishEvent(SaveEntityEvent.builder().tenantId(tenantId).entityId(savedApiKey.getId()).entity(savedApiKey).created(apiKey.getId() == null).build());
+            if (old != null && old.isEnabled() != apiKey.isEnabled()) {
+                publishEvictEvent(new ApiKeyEvictEvent(apiKey.getValue()));
+            }
+            return savedApiKey;
         } catch (Exception e) {
-            checkConstraintViolation(e, "api_hash_unq_key", "Api Key with such hash already exists!");
+            checkConstraintViolation(e, "api_key_value_unq_key", "Api Key with such value already exists!");
             throw e;
         }
     }
@@ -106,46 +129,37 @@ public class ApiKeyServiceImpl extends AbstractEntityService implements ApiKeySe
 
     @Override
     public void deleteApiKey(TenantId tenantId, ApiKey apiKey, boolean force) {
-        deleteApiKey(tenantId, apiKey.getId());
-    }
-
-    @Override
-    public void deleteEntity(TenantId tenantId, EntityId id, boolean force) {
-        deleteApiKey(tenantId, id);
-    }
-
-    private void deleteApiKey(TenantId tenantId, EntityId entityId) {
-        UUID apiKeyId = entityId.getId();
+        UUID apiKeyId = apiKey.getUuidId();
         validateId(apiKeyId, id -> INCORRECT_API_KEY_ID + id);
-        ApiKey apiKey = apiKeyDao.findById(tenantId, apiKeyId);
-        if (apiKey == null) {
-            return;
-        }
         apiKeyDao.removeById(tenantId, apiKeyId);
+        publishEvictEvent(new ApiKeyEvictEvent(apiKey.getValue()));
     }
 
     @Override
     public void deleteByTenantId(TenantId tenantId) {
         log.trace("Executing deleteApiKeysByTenantId, tenantId [{}]", tenantId);
         validateId(tenantId, id -> INCORRECT_TENANT_ID + id);
-        apiKeyDao.deleteByTenantId(tenantId);
+        Set<String> values = apiKeyDao.deleteByTenantId(tenantId);
+        values.forEach(value -> publishEvictEvent(new ApiKeyEvictEvent(value)));
     }
 
     @Override
     public void deleteByUserId(TenantId tenantId, UserId userId) {
         log.trace("Executing deleteApiKeysByUserId, tenantId [{}]", tenantId);
         validateId(userId, id -> INCORRECT_USER_ID + id);
-        apiKeyDao.deleteByUserId(tenantId, userId);
+        Set<String> values = apiKeyDao.deleteByUserId(tenantId, userId);
+        values.forEach(value -> publishEvictEvent(new ApiKeyEvictEvent(value)));
     }
 
     @Override
-    public ApiKey findApiKeyByHash(String hash) {
-        log.trace("Executing findApiKeyByHash [{}]", hash);
-        return apiKeyDao.findByHash(hash);
+    public ApiKey findApiKeyByValue(String value) {
+        log.trace("Executing findApiKeyByValue [{}]", value);
+        var cacheKey = ApiKeyCacheKey.of(value);
+        return cache.getAndPutInTransaction(cacheKey, () -> apiKeyDao.findByValue(value), true);
     }
 
-    private static String generateApiKeySecret() {
-        return StringUtils.generateSafeToken(DEFAULT_API_KEY_BYTES);
+    private String generateApiKeySecret() {
+        return prefix + StringUtils.generateSafeToken(Math.min(valueBytesSize, MAX_API_KEY_VALUE_LENGTH));
     }
 
     @Override

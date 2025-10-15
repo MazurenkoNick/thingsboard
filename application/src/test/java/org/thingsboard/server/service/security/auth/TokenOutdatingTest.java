@@ -45,19 +45,18 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.thingsboard.server.common.data.User;
+import org.thingsboard.server.common.data.UserAuthDetails;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.id.UserId;
 import org.thingsboard.server.common.data.permission.MergedUserPermissions;
 import org.thingsboard.server.common.data.permission.Operation;
 import org.thingsboard.server.common.data.permission.Resource;
 import org.thingsboard.server.common.data.security.Authority;
-import org.thingsboard.server.common.data.security.UserCredentials;
 import org.thingsboard.server.common.data.security.event.UserCredentialsInvalidationEvent;
 import org.thingsboard.server.common.data.security.event.UserSessionInvalidationEvent;
 import org.thingsboard.server.common.data.security.model.JwtToken;
 import org.thingsboard.server.dao.customer.CustomerService;
 import org.thingsboard.server.dao.service.DaoSqlTest;
-import org.thingsboard.server.dao.user.UserService;
 import org.thingsboard.server.service.security.auth.jwt.JwtAuthenticationProvider;
 import org.thingsboard.server.service.security.auth.jwt.RefreshTokenAuthenticationProvider;
 import org.thingsboard.server.service.security.exception.JwtExpiredTokenException;
@@ -66,6 +65,7 @@ import org.thingsboard.server.service.security.model.UserPrincipal;
 import org.thingsboard.server.service.security.model.token.JwtTokenFactory;
 import org.thingsboard.server.service.security.model.token.RawAccessJwtToken;
 import org.thingsboard.server.service.security.permission.UserPermissionsService;
+import org.thingsboard.server.service.user.cache.UserAuthDetailsCache;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -120,20 +120,16 @@ public class TokenOutdatingTest {
         MergedUserPermissions mergedUserPermissions = new MergedUserPermissions(genericPermissions, Collections.emptyMap());
         when(userPermissionsService.getMergedPermissions(any(), eq(false))).thenReturn(mergedUserPermissions);
 
-        UserService userService = mock(UserService.class);
+        UserAuthDetailsCache userAuthDetailsCache = mock(UserAuthDetailsCache.class);
 
         User user = new User();
         user.setId(userId);
         user.setAuthority(Authority.TENANT_ADMIN);
         user.setEmail("email");
-        when(userService.findUserById(any(), eq(userId))).thenReturn(user);
-
-        UserCredentials userCredentials = new UserCredentials();
-        userCredentials.setEnabled(true);
-        when(userService.findUserCredentialsByUserId(any(), eq(userId))).thenReturn(userCredentials);
+        when(userAuthDetailsCache.findUserEnabled(any(), eq(userId))).thenReturn(new UserAuthDetails(user, true));
 
         accessTokenAuthenticationProvider = new JwtAuthenticationProvider(tokenFactory, tokenOutdatingService);
-        refreshTokenAuthenticationProvider = new RefreshTokenAuthenticationProvider(tokenFactory, userPermissionsService, userService, mock(CustomerService.class), tokenOutdatingService);
+        refreshTokenAuthenticationProvider = new RefreshTokenAuthenticationProvider(tokenFactory, userAuthDetailsCache, userPermissionsService, mock(CustomerService.class), tokenOutdatingService);
     }
 
     @Test

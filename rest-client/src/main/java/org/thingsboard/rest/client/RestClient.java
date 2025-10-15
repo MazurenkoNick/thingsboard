@@ -285,7 +285,7 @@ public class RestClient implements Closeable {
     private long refreshTokenExpTs;
     private long clientServerTimeDiff;
 
-    public enum AuthType { JWT, API_KEY }
+    public enum AuthType {JWT, API_KEY}
 
     public RestClient(String baseURL) {
         this(new RestTemplate(), baseURL);
@@ -293,6 +293,10 @@ public class RestClient implements Closeable {
 
     public RestClient(RestTemplate restTemplate, String baseURL) {
         this(restTemplate, baseURL, AuthType.JWT, null);
+    }
+
+    public RestClient(RestTemplate restTemplate, String baseURL, String accessToken) {
+        this(restTemplate, baseURL, AuthType.JWT, accessToken);
     }
 
     public RestClient(RestTemplate restTemplate, String baseURL, AuthType authType, String token) {

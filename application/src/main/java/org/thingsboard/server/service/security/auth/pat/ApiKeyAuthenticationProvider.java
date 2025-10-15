@@ -41,30 +41,28 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Component;
 import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.User;
-import org.thingsboard.server.common.data.id.TenantId;
-import org.thingsboard.server.common.data.id.UserId;
+import org.thingsboard.server.common.data.UserAuthDetails;
 import org.thingsboard.server.common.data.pat.ApiKey;
 import org.thingsboard.server.common.data.permission.MergedUserPermissions;
-import org.thingsboard.server.common.data.security.UserCredentials;
 import org.thingsboard.server.dao.pat.ApiKeyService;
-import org.thingsboard.server.dao.user.UserService;
 import org.thingsboard.server.service.security.model.SecurityUser;
 import org.thingsboard.server.service.security.model.UserPrincipal;
-import org.thingsboard.server.service.security.model.token.RawApiKeyToken;
+import org.thingsboard.server.service.security.model.token.RawApiKey;
 import org.thingsboard.server.service.security.permission.UserPermissionsService;
+import org.thingsboard.server.service.user.cache.UserAuthDetailsCache;
 
 @Component
 @RequiredArgsConstructor
 public class ApiKeyAuthenticationProvider implements org.springframework.security.authentication.AuthenticationProvider {
 
     private final ApiKeyService apiKeyService;
-    private final UserService userService;
+    private final UserAuthDetailsCache userEnabledCache;
     private final UserPermissionsService userPermissionsService;
 
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
-        RawApiKeyToken raw = (RawApiKeyToken) authentication.getCredentials();
-        SecurityUser securityUser = authenticate(raw.token());
+        RawApiKey rawApiKey = (RawApiKey) authentication.getCredentials();
+        SecurityUser securityUser = authenticate(rawApiKey.apiKey());
         return new ApiKeyAuthenticationToken(securityUser);
     }
 
@@ -77,7 +75,7 @@ public class ApiKeyAuthenticationProvider implements org.springframework.securit
         if (StringUtils.isEmpty(key)) {
             throw new BadCredentialsException("Empty API key");
         }
-        ApiKey apiKey = apiKeyService.findApiKeyByHash(key);
+        ApiKey apiKey = apiKeyService.findApiKeyByValue(key);
         if (apiKey == null) {
             throw new BadCredentialsException("User not found for the provided API key");
         }
@@ -87,23 +85,18 @@ public class ApiKeyAuthenticationProvider implements org.springframework.securit
         if (apiKey.getExpirationTime() != 0 && apiKey.getExpirationTime() < System.currentTimeMillis()) {
             throw new CredentialsExpiredException("API key is expired");
         }
-        TenantId tenantId = apiKey.getTenantId();
-        UserId userId = apiKey.getUserId();
-        User user = userService.findUserById(tenantId, userId);
-        if (user == null) {
-            throw new UsernameNotFoundException("User for the provided API key is no longer exists");
+        UserAuthDetails userAuthDetails = userEnabledCache.findUserEnabled(apiKey.getTenantId(), apiKey.getUserId());
+        if (userAuthDetails == null) {
+            throw new UsernameNotFoundException("User with credentials not found");
         }
-        UserCredentials userCredentials = userService.findUserCredentialsByUserId(tenantId, userId);
-        if (userCredentials == null) {
-            throw new UsernameNotFoundException("User credentials not found");
-        }
-        if (!userCredentials.isEnabled()) {
+        if (!userAuthDetails.credentialsEnabled()) {
             throw new DisabledException("User is not active");
         }
+
+        User user = userAuthDetails.user();
         if (user.getAuthority() == null) {
             throw new InsufficientAuthenticationException("User has no authority assigned");
         }
-
         UserPrincipal userPrincipal = new UserPrincipal(UserPrincipal.Type.USER_NAME, user.getEmail());
 
         MergedUserPermissions userPermissions;
@@ -113,7 +106,7 @@ public class ApiKeyAuthenticationProvider implements org.springframework.securit
             throw new BadCredentialsException("Failed to get user permissions", e);
         }
 
-        return new SecurityUser(user, userCredentials.isEnabled(), userPrincipal, userPermissions);
+        return new SecurityUser(user, true, userPrincipal, userPermissions);
     }
 
 }

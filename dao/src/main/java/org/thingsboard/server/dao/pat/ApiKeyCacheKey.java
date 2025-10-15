@@ -28,49 +28,28 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.service.security.auth.pat;
+package org.thingsboard.server.dao.pat;
 
-import org.springframework.security.authentication.AbstractAuthenticationToken;
-import org.thingsboard.server.service.security.model.SecurityUser;
-import org.thingsboard.server.service.security.model.token.RawApiKey;
+import org.checkerframework.checker.nullness.qual.NonNull;
 
-import java.io.Serial;
+import java.io.Serializable;
 
-public class ApiKeyAuthenticationToken extends AbstractAuthenticationToken {
+import static java.util.Objects.requireNonNull;
 
-    @Serial
-    private static final long serialVersionUID = 2978710889397403536L;
+record ApiKeyCacheKey(String value) implements Serializable {
 
-    private RawApiKey rawApiKey;
-    private SecurityUser securityUser;
-
-    public ApiKeyAuthenticationToken(RawApiKey rawApiKey) {
-        super(null);
-        this.rawApiKey = rawApiKey;
-        setAuthenticated(false);
+    ApiKeyCacheKey {
+        requireNonNull(value);
     }
 
-    public ApiKeyAuthenticationToken(SecurityUser securityUser) {
-        super(securityUser.getAuthorities());
-        this.eraseCredentials();
-        this.securityUser = securityUser;
-        super.setAuthenticated(true);
+    static ApiKeyCacheKey of(String value) {
+        return new ApiKeyCacheKey(value);
     }
 
+    @NonNull
     @Override
-    public Object getCredentials() {
-        return rawApiKey;
-    }
-
-    @Override
-    public Object getPrincipal() {
-        return this.securityUser;
-    }
-
-    @Override
-    public void eraseCredentials() {
-        super.eraseCredentials();
-        this.rawApiKey = null;
+    public String toString() {
+        return /* cache name */ "_" + value;
     }
 
 }

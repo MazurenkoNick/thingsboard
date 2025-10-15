@@ -76,6 +76,7 @@ import org.thingsboard.server.common.msg.edge.EdgeEventUpdateMsg;
 import org.thingsboard.server.common.msg.plugin.ComponentLifecycleMsg;
 import org.thingsboard.server.common.msg.rule.engine.DeviceCredentialsUpdateNotificationMsg;
 import org.thingsboard.server.dao.edge.EdgeSynchronizationManager;
+import org.thingsboard.server.dao.eventsourcing.ActionCause;
 import org.thingsboard.server.dao.eventsourcing.ActionEntityEvent;
 import org.thingsboard.server.dao.eventsourcing.DeleteEntityEvent;
 import org.thingsboard.server.dao.eventsourcing.SaveEntityEvent;
@@ -186,6 +187,7 @@ public class EntityStateSourcingListener {
                 if (!isCreated) {
                     tbClusterService.onUserUpdated((User) event.getEntity(), (User) event.getOldEntity());
                 }
+                tbClusterService.broadcastEntityStateChangeEvent(event.getTenantId(), event.getEntityId(), lifecycleEvent);
             }
             case CALCULATED_FIELD -> {
                 onCalculatedFieldUpdate(event.getEntity(), event.getOldEntity());
@@ -243,7 +245,7 @@ public class EntityStateSourcingListener {
                 Asset asset = (Asset) event.getEntity();
                 tbClusterService.onAssetDeleted(tenantId, asset, null);
             }
-            case ASSET_PROFILE, ENTITY_VIEW, CUSTOMER, EDGE, NOTIFICATION_RULE -> {
+            case ASSET_PROFILE, ENTITY_VIEW, CUSTOMER, EDGE, NOTIFICATION_RULE, USER -> {
                 tbClusterService.broadcastEntityStateChangeEvent(tenantId, entityId, ComponentLifecycleEvent.DELETED);
             }
             case NOTIFICATION_REQUEST -> {
@@ -321,6 +323,8 @@ public class EntityStateSourcingListener {
                 tbClusterService.onDeviceAssignedToTenant(tenant.getId(), device);
             }
             pushAssignedFromNotification(tenant, event.getTenantId(), device);
+        } else if (event.getActionType() == ActionType.CREDENTIALS_UPDATED && event.getEntityId() != null && event.getEntityId().getEntityType() == EntityType.USER) {
+            tbClusterService.broadcastEntityStateChangeEvent(event.getTenantId(), event.getEntityId(), ComponentLifecycleEvent.UPDATED);
         }
     }
 

@@ -28,49 +28,14 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.service.security.auth.pat;
+package org.thingsboard.server.service.user.cache;
 
-import org.springframework.security.authentication.AbstractAuthenticationToken;
-import org.thingsboard.server.service.security.model.SecurityUser;
-import org.thingsboard.server.service.security.model.token.RawApiKey;
+import org.thingsboard.server.common.data.UserAuthDetails;
+import org.thingsboard.server.common.data.id.TenantId;
+import org.thingsboard.server.common.data.id.UserId;
 
-import java.io.Serial;
+public interface UserAuthDetailsCache {
 
-public class ApiKeyAuthenticationToken extends AbstractAuthenticationToken {
-
-    @Serial
-    private static final long serialVersionUID = 2978710889397403536L;
-
-    private RawApiKey rawApiKey;
-    private SecurityUser securityUser;
-
-    public ApiKeyAuthenticationToken(RawApiKey rawApiKey) {
-        super(null);
-        this.rawApiKey = rawApiKey;
-        setAuthenticated(false);
-    }
-
-    public ApiKeyAuthenticationToken(SecurityUser securityUser) {
-        super(securityUser.getAuthorities());
-        this.eraseCredentials();
-        this.securityUser = securityUser;
-        super.setAuthenticated(true);
-    }
-
-    @Override
-    public Object getCredentials() {
-        return rawApiKey;
-    }
-
-    @Override
-    public Object getPrincipal() {
-        return this.securityUser;
-    }
-
-    @Override
-    public void eraseCredentials() {
-        super.eraseCredentials();
-        this.rawApiKey = null;
-    }
+    UserAuthDetails findUserEnabled(TenantId tenantId, UserId userId);
 
 }

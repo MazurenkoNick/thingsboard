@@ -39,11 +39,11 @@ import java.util.Set;
 
 public interface ApiKeyDao extends Dao<ApiKey> {
 
-    ApiKey findByHash(String hash);
+    ApiKey findByValue(String value);
 
-    void deleteByTenantId(TenantId tenantId);
+    Set<String> deleteByTenantId(TenantId tenantId);
 
-    void deleteByUserId(TenantId tenantId, UserId userId);
+    Set<String> deleteByUserId(TenantId tenantId, UserId userId);
 
     int deleteAllByExpirationTimeBefore(long ts);
 

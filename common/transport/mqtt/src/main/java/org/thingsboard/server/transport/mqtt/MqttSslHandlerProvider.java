@@ -156,6 +156,7 @@ public class MqttSslHandlerProvider {
 
         @Override
         public void checkClientTrusted(X509Certificate[] chain, String authType) throws CertificateException {
+            // trustManager.checkClientTrusted(chain, authType);
             if (!validateCertificateChain(chain)) {
                 throw new CertificateException("Invalid Chain of X509 Certificates. ");
             }

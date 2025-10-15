@@ -28,49 +28,24 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.service.security.auth.pat;
+package org.thingsboard.server.dao.pat;
 
-import org.springframework.security.authentication.AbstractAuthenticationToken;
-import org.thingsboard.server.service.security.model.SecurityUser;
-import org.thingsboard.server.service.security.model.token.RawApiKey;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.stereotype.Service;
+import org.thingsboard.server.cache.CacheSpecsMap;
+import org.thingsboard.server.cache.RedisTbTransactionalCache;
+import org.thingsboard.server.cache.TBRedisCacheConfiguration;
+import org.thingsboard.server.cache.TbJsonRedisSerializer;
+import org.thingsboard.server.common.data.CacheConstants;
+import org.thingsboard.server.common.data.pat.ApiKey;
 
-import java.io.Serial;
+@ConditionalOnProperty(prefix = "cache", value = "type", havingValue = "redis")
+@Service("ApiKeyCache")
+public class ApiKeyRedisCache extends RedisTbTransactionalCache<ApiKeyCacheKey, ApiKey> {
 
-public class ApiKeyAuthenticationToken extends AbstractAuthenticationToken {
-
-    @Serial
-    private static final long serialVersionUID = 2978710889397403536L;
-
-    private RawApiKey rawApiKey;
-    private SecurityUser securityUser;
-
-    public ApiKeyAuthenticationToken(RawApiKey rawApiKey) {
-        super(null);
-        this.rawApiKey = rawApiKey;
-        setAuthenticated(false);
-    }
-
-    public ApiKeyAuthenticationToken(SecurityUser securityUser) {
-        super(securityUser.getAuthorities());
-        this.eraseCredentials();
-        this.securityUser = securityUser;
-        super.setAuthenticated(true);
-    }
-
-    @Override
-    public Object getCredentials() {
-        return rawApiKey;
-    }
-
-    @Override
-    public Object getPrincipal() {
-        return this.securityUser;
-    }
-
-    @Override
-    public void eraseCredentials() {
-        super.eraseCredentials();
-        this.rawApiKey = null;
+    public ApiKeyRedisCache(TBRedisCacheConfiguration configuration, CacheSpecsMap cacheSpecsMap, RedisConnectionFactory connectionFactory) {
+        super(CacheConstants.API_KEYS_CACHE, cacheSpecsMap, connectionFactory, configuration, new TbJsonRedisSerializer<>(ApiKey.class));
     }
 
 }
