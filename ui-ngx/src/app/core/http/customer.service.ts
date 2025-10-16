@@ -30,7 +30,7 @@
 ///
 
 import { Injectable } from '@angular/core';
-import { defaultHttpOptionsFromConfig, RequestConfig } from './http-utils';
+import { createDefaultHttpOptions, defaultHttpOptionsFromConfig, RequestConfig } from './http-utils';
 import { Observable } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { PageLink } from '@shared/models/page/page-link';
@@ -38,6 +38,7 @@ import { PageData } from '@shared/models/page/page-data';
 import { Customer, CustomerInfo, ShortCustomerInfo } from '@shared/models/customer.model';
 import { map } from 'rxjs/operators';
 import { sortEntitiesByIds } from '@shared/models/base-data';
+import { SaveEntityWithGroupParams, toSaveParams } from '@shared/models/entity.models';
 
 @Injectable({
   providedIn: 'root'
@@ -61,16 +62,11 @@ export class CustomerService {
     return this.http.get<CustomerInfo>(`/api/customer/info/${customerId}`, defaultHttpOptionsFromConfig(config));
   }
 
-  public saveCustomer(customer: Customer, entityGroupIds?: string | string[], config?: RequestConfig): Observable<Customer> {
-    let url = '/api/customer';
-    if (entityGroupIds) {
-      if (Array.isArray(entityGroupIds)) {
-        url += `?entityGroupIds=${entityGroupIds.join(',')}`;
-      } else {
-        url += `?entityGroupId=${entityGroupIds}`;
-      }
-    }
-    return this.http.post<Customer>(url, customer, defaultHttpOptionsFromConfig(config));
+  public saveCustomer(customer: Customer, entityGroupIds?: string | string[], config?: RequestConfig): Observable<Customer>;
+  public saveCustomer(customer: Customer, saveParams?: SaveEntityWithGroupParams, config?: RequestConfig): Observable<Customer>;
+  public saveCustomer(customer: Customer, saveParams?: string | string[] | SaveEntityWithGroupParams, config?: RequestConfig): Observable<Customer> {
+    const params = toSaveParams(saveParams);
+    return this.http.post<Customer>('/api/customer', customer, createDefaultHttpOptions(params, config));
   }
 
   public deleteCustomer(customerId: string, config?: RequestConfig) {
