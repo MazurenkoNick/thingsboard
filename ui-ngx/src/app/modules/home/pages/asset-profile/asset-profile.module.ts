@@ -35,7 +35,6 @@ import { SharedModule } from '@shared/shared.module';
 import { HomeComponentsModule } from '@modules/home/components/home-components.module';
 import { AssetProfileTabsComponent } from './asset-profile-tabs.component';
 import { AssetProfileRoutingModule } from './asset-profile-routing.module';
-import { CalculatedFieldsModule } from '@home/components/calculated-fields/calculated-field.module';
 
 @NgModule({
   declarations: [
@@ -45,7 +44,6 @@ import { CalculatedFieldsModule } from '@home/components/calculated-fields/calcu
     CommonModule,
     SharedModule,
     HomeComponentsModule,
-    CalculatedFieldsModule,
     AssetProfileRoutingModule,
   ]
 })

@@ -280,6 +280,11 @@ import { CheckConnectivityDialogComponent } from '@home/components/ai-model/chec
 import { AIModelDialogComponent } from '@home/components/ai-model/ai-model-dialog.component';
 import { ResourcesDialogComponent } from "@home/components/resources/resources-dialog.component";
 import { ResourcesLibraryComponent } from "@home/components/resources/resources-library.component";
+import { CalculatedFieldsTableComponent } from '@home/components/calculated-fields/calculated-fields-table.component';
+import {
+  CalculatedFieldDebugDialogComponent
+} from '@home/components/calculated-fields/components/debug-dialog/calculated-field-debug-dialog.component';
+import { CalculatedFieldsModule } from '@home/components/calculated-fields/calculated-field.module';
 
 @NgModule({
   declarations:
@@ -292,6 +297,8 @@ import { ResourcesLibraryComponent } from "@home/components/resources/resources-
       EntityDetailsPageComponent,
       AuditLogTableComponent,
       AuditLogDetailsDialogComponent,
+      CalculatedFieldsTableComponent,
+      CalculatedFieldDebugDialogComponent,
       EventContentDialogComponent,
       EventTableHeaderComponent,
       EventTableComponent,
@@ -467,6 +474,7 @@ import { ResourcesLibraryComponent } from "@home/components/resources/resources-
     SharedModule,
     SharedHomeComponentsModule,
     HomeDialogsModule,
+    CalculatedFieldsModule,
     WidgetConfigComponentsModule,
     BasicWidgetConfigModule,
     Lwm2mProfileComponentsModule,
@@ -486,6 +494,7 @@ import { ResourcesLibraryComponent } from "@home/components/resources/resources-
     EntityDetailsPanelComponent,
     EntityDetailsPageComponent,
     AuditLogTableComponent,
+    CalculatedFieldsTableComponent,
     EventTableComponent,
     EdgeDownlinkTableHeaderComponent,
     EdgeDownlinkTableComponent,

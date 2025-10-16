@@ -35,7 +35,6 @@ import { SharedModule } from '@shared/shared.module';
 import { HomeComponentsModule } from '@modules/home/components/home-components.module';
 import { DeviceProfileTabsComponent } from './device-profile-tabs.component';
 import { DeviceProfileRoutingModule } from './device-profile-routing.module';
-import { CalculatedFieldsModule } from '@home/components/calculated-fields/calculated-field.module';
 
 @NgModule({
   declarations: [
@@ -45,7 +44,6 @@ import { CalculatedFieldsModule } from '@home/components/calculated-fields/calcu
     CommonModule,
     SharedModule,
     HomeComponentsModule,
-    CalculatedFieldsModule,
     DeviceProfileRoutingModule
   ]
 })
