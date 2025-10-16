@@ -50,6 +50,7 @@ import { SnmpDeviceTransportConfigurationComponent } from './data/snmp-device-tr
 import { DeviceCredentialsModule } from '@home/components/device/device-credentials.module';
 import { DeviceProfileCommonModule } from '@home/components/profile/device/common/device-profile-common.module';
 import { DeviceCheckConnectivityDialogComponent } from './device-check-connectivity-dialog.component';
+import { CalculatedFieldsModule } from '@home/components/calculated-fields/calculated-field.module';
 import { DeviceRoutingModule } from '@home/pages/device/device-routing.module';
 import { DeviceTableHeaderComponent } from '@home/pages/device/device-table-header.component';
 
@@ -76,6 +77,7 @@ import { DeviceTableHeaderComponent } from '@home/pages/device/device-table-head
     HomeDialogsModule,
     DeviceCredentialsModule,
     DeviceProfileCommonModule,
+    CalculatedFieldsModule,
     DeviceRoutingModule
   ],
   providers: [

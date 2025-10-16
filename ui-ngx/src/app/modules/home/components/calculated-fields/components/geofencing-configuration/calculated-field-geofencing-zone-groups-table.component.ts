@@ -30,7 +30,8 @@
 ///
 
 import {
-  AfterViewInit, booleanAttribute,
+  AfterViewInit,
+  booleanAttribute,
   ChangeDetectorRef,
   Component,
   DestroyRef,
@@ -52,7 +53,8 @@ import {
   ArgumentEntityType,
   CalculatedFieldGeofencing,
   CalculatedFieldGeofencingValue,
-  CalculatedFieldType, CFArgumentDynamicSourceType,
+  CalculatedFieldType,
+  CFArgumentDynamicSourceType,
   GeofencingReportStrategyTranslations,
 } from '@shared/models/calculated-field.models';
 import { MatButton } from '@angular/material/button';
@@ -73,7 +75,7 @@ import { NULL_UUID } from '@shared/models/id/has-uuid';
 import { BaseData } from '@shared/models/base-data';
 import {
   CalculatedFieldGeofencingZoneGroupsPanelComponent
-} from '@home/components/calculated-fields/components/panel/calculated-field-geofencing-zone-groups-panel.component';
+} from '@home/components/calculated-fields/components/geofencing-configuration/calculated-field-geofencing-zone-groups-panel.component';
 
 @Component({
   selector: 'tb-calculated-field-geofencing-zone-groups-table',
@@ -94,9 +96,9 @@ import {
 })
 export class CalculatedFieldGeofencingZoneGroupsTableComponent implements ControlValueAccessor, Validator, AfterViewInit {
 
-  @Input() entityId: EntityId;
-  @Input() tenantId: string;
-  @Input() entityName: string;
+  @Input({required: true}) entityId: EntityId;
+  @Input({required: true}) tenantId: string;
+  @Input({required: true}) entityName: string;
   @Input() ownerId: EntityId;
   @Input({ transform: booleanAttribute }) readonly: boolean;
 

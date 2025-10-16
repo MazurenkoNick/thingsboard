@@ -39,6 +39,7 @@ import { ASSET_GROUP_CONFIG_FACTORY } from '@home/models/group/group-entities-ta
 import { AssetGroupConfigFactory } from '@home/pages/asset/asset-group-config.factory';
 import { AssetRoutingModule } from '@home/pages/asset/asset-routing.module';
 import { AssetTableHeaderComponent } from '@home/pages/asset/asset-table-header.component';
+import { CalculatedFieldsModule } from '@home/components/calculated-fields/calculated-field.module';
 
 @NgModule({
   declarations: [
@@ -50,7 +51,8 @@ import { AssetTableHeaderComponent } from '@home/pages/asset/asset-table-header.
     SharedModule,
     HomeComponentsModule,
     HomeDialogsModule,
-    AssetRoutingModule
+    CalculatedFieldsModule,
+    AssetRoutingModule,
   ],
   providers: [
     {

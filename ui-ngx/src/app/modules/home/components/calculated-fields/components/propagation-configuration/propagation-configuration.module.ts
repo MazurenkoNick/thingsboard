@@ -29,7 +29,31 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-export * from './dialog/calculated-field-dialog.component';
-export * from './reprocessing/calculated-field-reprocessing-panel.component';
-export * from './debug-dialog/calculated-field-debug-dialog.component';
-export * from './test-dialog/calculated-field-script-test-dialog.component';
+import { NgModule } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { SharedModule } from '@shared/shared.module';
+import {
+  CalculatedFieldOutputModule
+} from '@home/components/calculated-fields/components/output/calculated-field-output.module';
+import {
+  CalculatedFieldArgumentsTableModule
+} from '@home/components/calculated-fields/components/calculated-field-arguments/calculated-field-arguments-table.module';
+import {
+  PropagationConfigurationComponent
+} from '@home/components/calculated-fields/components/propagation-configuration/propagation-configuration.component';
+
+@NgModule({
+  imports: [
+    CommonModule,
+    SharedModule,
+    CalculatedFieldOutputModule,
+    CalculatedFieldArgumentsTableModule,
+  ],
+  declarations: [
+    PropagationConfigurationComponent,
+  ],
+  exports: [
+    PropagationConfigurationComponent,
+  ]
+})
+export class PropagationConfigurationModule { }
