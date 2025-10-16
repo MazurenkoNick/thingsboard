@@ -28,28 +28,16 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.service.entitiy.asset;
+package org.thingsboard.server.service.edge.rpc.processor.ai;
 
-import org.thingsboard.server.common.data.Customer;
-import org.thingsboard.server.common.data.NameConflictStrategy;
-import org.thingsboard.server.common.data.User;
-import org.thingsboard.server.common.data.asset.Asset;
-import org.thingsboard.server.common.data.group.EntityGroup;
-import org.thingsboard.server.common.data.id.AssetId;
+import com.google.common.util.concurrent.ListenableFuture;
+import org.thingsboard.server.common.data.edge.Edge;
+import org.thingsboard.server.common.data.id.TenantId;
+import org.thingsboard.server.gen.edge.v1.AiModelUpdateMsg;
+import org.thingsboard.server.service.edge.rpc.processor.EdgeProcessor;
 
-import java.util.List;
+public interface AiModelProcessor extends EdgeProcessor {
 
-public interface TbAssetService {
+    ListenableFuture<Void> processAiModelMsgFromEdge(TenantId tenantId, Edge edge, AiModelUpdateMsg aiModelUpdateMsg);
 
-    Asset save(Asset asset, EntityGroup entityGroup) throws Exception;
-
-    Asset save(Asset asset, EntityGroup entityGroup, User user) throws Exception;
-
-    Asset save(Asset asset, List<EntityGroup> entityGroups, User user) throws Exception;
-
-    Asset save(Asset asset, List<EntityGroup> entityGroups, NameConflictStrategy nameConflictStrategy, User user) throws Exception;
-
-    void delete(Asset asset, User user);
-
-    void delete(AssetId assetId, User user);
 }
