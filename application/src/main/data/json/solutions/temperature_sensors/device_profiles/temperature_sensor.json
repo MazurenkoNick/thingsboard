@@ -94,7 +94,7 @@
                   "type": "NUMERIC",
                   "operation": "LESS_OR_EQUAL",
                   "value": {
-                    "defaultValue": 0.0,
+                    "defaultValue": 30.0,
                     "userValue": null,
                     "dynamicValue": {
                       "sourceType": "CURRENT_DEVICE",
