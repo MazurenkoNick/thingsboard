@@ -28,29 +28,16 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.common.data.alarm.rule.condition.expression.predicate;
+package org.thingsboard.server.service.solutions.data.definition;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
-import org.thingsboard.server.common.data.alarm.rule.condition.AlarmConditionValue;
+import lombok.EqualsAndHashCode;
+import org.thingsboard.server.common.data.DeviceProfile;
 
 @Data
-@AllArgsConstructor
-@NoArgsConstructor
-public class BooleanFilterPredicate implements SimpleKeyFilterPredicate<Boolean> {
+@EqualsAndHashCode(callSuper = true)
+public class DeviceProfileDefinition extends DeviceProfile {
 
-    private BooleanOperation operation;
-    private AlarmConditionValue<Boolean> value;
-
-    @Override
-    public FilterPredicateType getType() {
-        return FilterPredicateType.BOOLEAN;
-    }
-
-    public enum BooleanOperation {
-        EQUAL,
-        NOT_EQUAL
-    }
+    private String jsonId;
 
 }

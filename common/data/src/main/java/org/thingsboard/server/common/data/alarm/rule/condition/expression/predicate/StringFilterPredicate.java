@@ -30,10 +30,14 @@
  */
 package org.thingsboard.server.common.data.alarm.rule.condition.expression.predicate;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.thingsboard.server.common.data.alarm.rule.condition.AlarmConditionValue;
 
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class StringFilterPredicate implements SimpleKeyFilterPredicate<String> {
 
     private StringOperation operation;
