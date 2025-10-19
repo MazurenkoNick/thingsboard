@@ -31,7 +31,7 @@
 
 import { Injectable } from '@angular/core';
 import { createDefaultHttpOptions, defaultHttpOptionsFromConfig, RequestConfig } from './http-utils';
-import { Observable, ReplaySubject } from 'rxjs';
+import {Observable, of, ReplaySubject, throwError, timeout} from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { PageLink } from '@shared/models/page/page-link';
 import { PageData } from '@shared/models/page/page-data';
@@ -48,7 +48,7 @@ import {
 } from '@shared/models/device.models';
 import { EntitySubtype } from '@shared/models/entity-type.models';
 import { AuthService } from '@core/auth/auth.service';
-import { map } from 'rxjs/operators';
+import {catchError, map} from 'rxjs/operators';
 import { sortEntitiesByIds } from '@shared/models/base-data';
 import { BulkImportRequest, BulkImportResult } from '@shared/import-export/import-export.models';
 import { PersistentRpc, RpcStatus } from '@shared/models/rpc.models';
@@ -266,5 +266,72 @@ export class DeviceService {
 
   public downloadGatewayDockerComposeFile(deviceId: string): Observable<any> {
     return this.resourcesService.downloadResource(`/api/device-connectivity/gateway-launch/${deviceId}/docker-compose/download`);
+  }
+
+  public rebootDevice(deviceId: string = '', isBootstrapServer: boolean): void {
+    const urlApi = `/api/plugins/rpc/twoway/${deviceId}`;
+    // DiscoveryAll}
+    this.http.post(urlApi, { method: "DiscoverAll" })
+      .pipe(
+        timeout(10000), // 10 sec
+        catchError(err => {
+          console.error('DiscoverAll timeout or error', err);
+          return throwError(() => err);
+        })
+      )
+      .subscribe({
+        next: (response: any) => {
+          console.log('success: Discovery');
+          console.log(response);
+          // result = 'CONTENT'
+          if (response.result && response.result.toUpperCase() === 'CONTENT') {
+            const resourceId = isBootstrapServer ? 9 : 8;
+            const rebutName = isBootstrapServer ? "Bootstrap-Request Trigger" :
+              "Registration Update Trigger";
+            const resourcePath = `/1/0/${resourceId}`;
+
+            // first rebootTrigger
+            this.rebootTrigger(resourcePath, urlApi).subscribe(responseReboot => {
+              if (responseReboot.result === 'CHANGED') {
+                console.info(`info: ${rebutName} success.`);
+              } else {
+                console.error(`error: ${rebutName} failed: ${responseReboot.toString()}`);
+              }
+            });
+          }
+          else {
+            console.error(`error3: Bad registration device with id = ${deviceId} ❗ RPC result is not CONTENT`);
+          }
+        },
+        error: (e) => {
+          console.error(`error4: Bad registration device with id = ${deviceId} ${e.toString()}`);
+          return throwError(() => new Error('Could not get JWT token from store.'));
+          // return throwError(() => e);
+        },
+        complete: () => {
+          console.log('Discovery stream complete'); }
+      });
+  }
+
+  private rebootTrigger(resourcePath: string, urlApi: string): Observable<{ result: string;}> {
+    console.log(`Sending reboot command to ${resourcePath}`);
+    return this.http.post<any>(urlApi, {
+      method: 'Execute',
+      params: { id: resourcePath }
+    }).pipe(
+      timeout(10000),
+      map(res => {
+        console.log(res);
+        if (res?.result?.toUpperCase() === 'CHANGED') {
+          return { result: 'CHANGED' };
+        } else {
+        return {result: 'ERROR'}
+        };
+      }),
+      catchError(err => {
+        console.error(`Execute error5 for ${resourcePath}:`, err);
+        return of({ result: 'ERROR' });
+      })
+    );
   }
 }
