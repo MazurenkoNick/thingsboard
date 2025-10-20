@@ -28,16 +28,17 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.common.data.notification.targets.platform;
+package org.thingsboard.server.service.security.permission;
 
-import lombok.Data;
+import org.springframework.stereotype.Component;
+import org.thingsboard.server.common.data.permission.Resource;
 
-@Data
-public class AllUsersFilter implements SystemLevelUsersFilter {
+@Component
+public class MfaConfigurationPermissions extends AbstractPermissions {
 
-    @Override
-    public UsersFilterType getType() {
-        return UsersFilterType.ALL_USERS;
+    public MfaConfigurationPermissions() {
+        super();
+        put(Resource.PROFILE, genericPermissionChecker);
     }
 
 }

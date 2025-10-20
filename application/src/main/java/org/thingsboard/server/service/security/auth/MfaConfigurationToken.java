@@ -28,16 +28,12 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.common.data.notification.targets.platform;
+package org.thingsboard.server.service.security.auth;
 
-import lombok.Data;
+import org.thingsboard.server.service.security.model.SecurityUser;
 
-@Data
-public class AllUsersFilter implements SystemLevelUsersFilter {
-
-    @Override
-    public UsersFilterType getType() {
-        return UsersFilterType.ALL_USERS;
+public class MfaConfigurationToken extends AbstractJwtAuthenticationToken {
+    public MfaConfigurationToken(SecurityUser securityUser) {
+        super(securityUser);
     }
-
 }
