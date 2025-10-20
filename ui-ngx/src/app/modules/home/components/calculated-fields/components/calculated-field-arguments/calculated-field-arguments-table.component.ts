@@ -60,17 +60,19 @@ import {
   CalculatedFieldType,
   CFArgumentDynamicSourceType,
 } from '@shared/models/calculated-field.models';
-import { CalculatedFieldArgumentPanelComponent } from '@home/components/calculated-fields/components/public-api';
+import {
+  CalculatedFieldArgumentPanelComponent
+} from '@home/components/calculated-fields/components/calculated-field-arguments/calculated-field-argument-panel.component';
 import { MatButton } from '@angular/material/button';
 import { TbPopoverService } from '@shared/components/popover.service';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { EntityId } from '@shared/models/id/entity-id';
 import { EntityType, entityTypeTranslations } from '@shared/models/entity-type.models';
-import { getEntityDetailsPageURL, isEqual } from '@core/utils';
+import { getEntityDetailsPageURL, isDefined, isEqual } from '@core/utils';
 import { TbPopoverComponent } from '@shared/components/popover.component';
 import { TbTableDatasource } from '@shared/components/table/table-datasource.abstract';
 import { EntityService } from '@core/http/entity.service';
-import { MatSort } from '@angular/material/sort';
+import { MatSort, SortDirection } from '@angular/material/sort';
 import { getCurrentAuthState } from '@core/auth/auth.selectors';
 import { Store } from '@ngrx/store';
 import { AppState } from '@core/core.state';
@@ -101,7 +103,7 @@ export class CalculatedFieldArgumentsTableComponent implements ControlValueAcces
   @Input() tenantId: string;
   @Input() entityName: string;
   @Input() ownerId: EntityId;
-  @Input() calculatedFieldType: CalculatedFieldType;
+  @Input() isScript: boolean;
   @Input({ transform: booleanAttribute }) readonly: boolean;
 
   @ViewChild(MatSort, { static: true }) sort: MatSort;
@@ -109,8 +111,14 @@ export class CalculatedFieldArgumentsTableComponent implements ControlValueAcces
   errorText = '';
   argumentsFormArray = this.fb.array<CalculatedFieldArgumentValue>([]);
   entityNameMap = new Map<string, string>();
-  sortOrder = { direction: 'asc', property: '' };
+  sortOrder: { direction: SortDirection; property: string } = {direction: 'asc', property: ''};
   dataSource = new CalculatedFieldArgumentDatasource();
+
+  argumentNameColumn = 'common.name';
+  argumentNameColumnCopy = 'calculated-fields.copy-argument-name';
+  displayColumns = ['name', 'entityType', 'target', 'type', 'key', 'actions'];
+
+  protected panelAdditionalCtx: Record<string, any>
 
   readonly entityTypeTranslations = entityTypeTranslations;
   readonly ArgumentTypeTranslations = ArgumentTypeTranslations;
@@ -125,14 +133,14 @@ export class CalculatedFieldArgumentsTableComponent implements ControlValueAcces
   private propagateChange: (argumentsObj: Record<string, CalculatedFieldArgument>) => void = () => {};
 
   constructor(
-    private fb: FormBuilder,
-    private popoverService: TbPopoverService,
-    private viewContainerRef: ViewContainerRef,
-    private cd: ChangeDetectorRef,
-    private renderer: Renderer2,
-    private entityService: EntityService,
-    private destroyRef: DestroyRef,
-    private store: Store<AppState>
+    protected fb: FormBuilder,
+    protected popoverService: TbPopoverService,
+    protected viewContainerRef: ViewContainerRef,
+    protected cd: ChangeDetectorRef,
+    protected renderer: Renderer2,
+    protected entityService: EntityService,
+    protected destroyRef: DestroyRef,
+    protected store: Store<AppState>
   ) {
     this.argumentsFormArray.valueChanges.pipe(takeUntilDestroyed()).subscribe(value => {
       this.updateDataSource(value);
@@ -141,9 +149,8 @@ export class CalculatedFieldArgumentsTableComponent implements ControlValueAcces
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes.calculatedFieldType?.previousValue
-      && changes.calculatedFieldType.currentValue !== changes.calculatedFieldType.previousValue) {
-      this.argumentsFormArray.updateValueAndValidity();
+    if (isDefined(changes.isScript?.previousValue) && changes.isScript.currentValue !== changes.isScript.previousValue) {
+      this.changeIsScriptMode();
     }
   }
 
@@ -159,7 +166,7 @@ export class CalculatedFieldArgumentsTableComponent implements ControlValueAcces
     this.propagateChange = fn;
   }
 
-  registerOnTouched(_): void {}
+  registerOnTouched(_: any): void {}
 
   validate(): ValidationErrors | null {
     this.updateErrorText();
@@ -188,7 +195,7 @@ export class CalculatedFieldArgumentsTableComponent implements ControlValueAcces
         index,
         argument,
         entityId: this.entityId,
-        calculatedFieldType: this.calculatedFieldType,
+        isScript: this.isScript,
         buttonTitle: isExists ? 'action.apply' : 'action.add',
         tenantId: this.tenantId,
         entityName: this.entityName,
@@ -200,8 +207,8 @@ export class CalculatedFieldArgumentsTableComponent implements ControlValueAcces
         renderer: this.renderer,
         componentType: CalculatedFieldArgumentPanelComponent,
         hostView: this.viewContainerRef,
-        preferredPlacement: isExists ? ['left', 'leftTop', 'leftBottom'] : ['topRight', 'right', 'rightTop'],
-        context: ctx,
+        preferredPlacement: isExists ? ['leftOnly', 'leftTopOnly', 'leftBottomOnly'] : ['rightOnly', 'rightTopOnly', 'rightBottomOnly'],
+        context: Object.assign(ctx, this.panelAdditionalCtx),
         isModal: true
       });
       this.popoverComponent.tbComponentRef.instance.argumentsDataApplied.subscribe(({ entityName, ...value }) => {
@@ -224,9 +231,8 @@ export class CalculatedFieldArgumentsTableComponent implements ControlValueAcces
     this.dataSource.loadData(sortedValue);
   }
 
-  private updateErrorText(): void {
-    if (this.calculatedFieldType === CalculatedFieldType.SIMPLE
-      && this.argumentsFormArray.controls.some(control => control.value.refEntityKey.type === ArgumentType.Rolling)) {
+  protected updateErrorText(): void {
+    if (!this.isScript && this.argumentsFormArray.controls.some(control => control.value.refEntityKey.type === ArgumentType.Rolling)) {
       this.errorText = 'calculated-fields.hint.arguments-simple-with-rolling';
     } else if (this.argumentsFormArray.controls.some(control => control.value.refEntityId?.id === NULL_UUID)) {
       this.errorText = 'calculated-fields.hint.arguments-entity-not-found';
@@ -253,6 +259,14 @@ export class CalculatedFieldArgumentsTableComponent implements ControlValueAcces
 
   getEntityDetailsPageURL(id: string, type: EntityType): string {
     return getEntityDetailsPageURL(id, type);
+  }
+
+  protected changeIsScriptMode(): void {
+    this.argumentsFormArray.updateValueAndValidity();
+  }
+
+  protected isEditButtonShowBadge(argument: CalculatedFieldArgumentValue): boolean {
+    return !(argument.refEntityKey.type === ArgumentType.Rolling && !this.isScript) && argument.refEntityId?.id !== NULL_UUID
   }
 
   private populateArgumentsFormArray(argumentsObj: Record<string, CalculatedFieldArgument>): void {

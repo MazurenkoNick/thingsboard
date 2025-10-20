@@ -42,7 +42,6 @@ import org.thingsboard.server.common.data.id.CalculatedFieldId;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.TenantId;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -55,7 +54,8 @@ import java.util.stream.Collectors;
         @Type(value = SimpleCalculatedFieldConfiguration.class, name = "SIMPLE"),
         @Type(value = ScriptCalculatedFieldConfiguration.class, name = "SCRIPT"),
         @Type(value = GeofencingCalculatedFieldConfiguration.class, name = "GEOFENCING"),
-        @Type(value = AlarmCalculatedFieldConfiguration.class, name = "ALARM")
+        @Type(value = AlarmCalculatedFieldConfiguration.class, name = "ALARM"),
+        @Type(value = PropagationCalculatedFieldConfiguration.class, name = "PROPAGATION")
 })
 @JsonIgnoreProperties(ignoreUnknown = true)
 public interface CalculatedFieldConfiguration {
@@ -69,7 +69,7 @@ public interface CalculatedFieldConfiguration {
 
     @JsonIgnore
     default List<EntityId> getReferencedEntities() {
-        return Collections.emptyList();
+        return List.of();
     }
 
     default CalculatedFieldLink buildCalculatedFieldLink(TenantId tenantId, EntityId referencedEntityId, CalculatedFieldId calculatedFieldId) {

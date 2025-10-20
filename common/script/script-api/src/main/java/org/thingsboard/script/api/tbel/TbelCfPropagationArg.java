@@ -35,20 +35,19 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
 @Data
-public class TbelCfTsGeofencingArg implements TbelCfArg {
+public class TbelCfPropagationArg implements TbelCfArg {
 
     private final Object value;
 
     @JsonCreator
-    public TbelCfTsGeofencingArg(@JsonProperty("value") Object value) {
+    public TbelCfPropagationArg(@JsonProperty("value") Object value) {
         this.value = value;
     }
 
     @Override
     public String getType() {
-        return "GEOFENCING_CF_ARGUMENT_VALUE";
+        return "PROPAGATION_CF_ARGUMENT_VALUE";
     }
-
 
     @Override
     public long memorySize() {

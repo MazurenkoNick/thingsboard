@@ -29,7 +29,16 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { AfterViewInit, ChangeDetectorRef, Component, Input, OnInit, output, ViewChild } from '@angular/core';
+import {
+  AfterViewInit,
+  ChangeDetectorRef,
+  Component,
+  DestroyRef,
+  Input,
+  OnInit,
+  output,
+  ViewChild
+} from '@angular/core';
 import { TbPopoverComponent } from '@shared/components/popover.component';
 import { FormBuilder, FormControl, FormGroup, ValidatorFn, Validators } from '@angular/forms';
 import { charsWithNumRegex, oneSpaceInsideRegex } from '@shared/models/regex.constants';
@@ -40,7 +49,6 @@ import {
   ArgumentType,
   ArgumentTypeTranslations,
   CalculatedFieldArgumentValue,
-  CalculatedFieldType,
   CFArgumentDynamicSourceType,
   getCalculatedFieldCurrentEntityFilter
 } from '@shared/models/calculated-field.models';
@@ -59,6 +67,7 @@ import { AppState } from '@core/core.state';
 import { Store } from '@ngrx/store';
 import { EntityAutocompleteComponent } from '@shared/components/entity/entity-autocomplete.component';
 import { NULL_UUID } from '@shared/models/id/has-uuid';
+import { TenantId } from '@shared/models/id/tenant-id';
 
 @Component({
   selector: 'tb-calculated-field-argument-panel',
@@ -73,22 +82,23 @@ export class CalculatedFieldArgumentPanelComponent implements OnInit, AfterViewI
   @Input() tenantId: string;
   @Input() entityName: string;
   @Input() ownerId: EntityId;
-  @Input() calculatedFieldType: CalculatedFieldType;
+  @Input() isScript: boolean;
   @Input() usedArgumentNames: string[];
+  @Input() isOutputKey = false;
+  @Input() argumentEntityTypes = Object.values(ArgumentEntityType).filter(value => value !== ArgumentEntityType.RelationQuery) as ArgumentEntityType[];
 
   @ViewChild('entityAutocomplete') entityAutocomplete: EntityAutocompleteComponent;
 
   argumentsDataApplied = output<CalculatedFieldArgumentValue>();
+
+  argumentType = this.fb.control(ArgumentEntityType.Current, Validators.required);
 
   readonly maxDataPointsPerRollingArg = getCurrentAuthState(this.store).maxDataPointsPerRollingArg;
   readonly defaultLimit = Math.floor(this.maxDataPointsPerRollingArg / 10);
 
   argumentFormGroup = this.fb.group({
     argumentName: ['', [Validators.required, this.uniqNameRequired(), this.forbiddenArgumentNameValidator(), Validators.pattern(charsWithNumRegex), Validators.maxLength(255)]],
-    refEntityId: this.fb.group({
-      entityType: [ArgumentEntityType.Current],
-      id: ['']
-    }),
+    refEntityId: [null],
     refEntityKey: this.fb.group({
       type: [ArgumentType.LatestTelemetry, [Validators.required]],
       key: ['', [Validators.pattern(oneSpaceInsideRegex)]],
@@ -103,7 +113,6 @@ export class CalculatedFieldArgumentPanelComponent implements OnInit, AfterViewI
   entityFilter: EntityFilter;
   entityNameSubject = new BehaviorSubject<string>(null);
 
-  readonly argumentEntityTypes = Object.values(ArgumentEntityType).filter(value => value !== ArgumentEntityType.RelationQuery) as ArgumentEntityType[];
   readonly ArgumentEntityTypeTranslations = ArgumentEntityTypeTranslations;
   readonly ArgumentType = ArgumentType;
   readonly DataKeyType = DataKeyType;
@@ -120,20 +129,17 @@ export class CalculatedFieldArgumentPanelComponent implements OnInit, AfterViewI
     private fb: FormBuilder,
     private cd: ChangeDetectorRef,
     private popover: TbPopoverComponent<CalculatedFieldArgumentPanelComponent>,
-    private store: Store<AppState>
+    private store: Store<AppState>,
+    private destroyRef: DestroyRef
   ) {
     this.observeEntityFilterChanges();
-    this.observeEntityTypeChanges();
+    this.observeArgumentTypeChanges();
     this.observeEntityKeyChanges();
     this.observeUpdatePosition();
   }
 
   get entityType(): ArgumentEntityType {
-    return this.argumentFormGroup.get('refEntityId').get('entityType').value;
-  }
-
-  get refEntityIdFormGroup(): FormGroup {
-    return this.argumentFormGroup.get('refEntityId') as FormGroup;
+    return this.argumentType.value;
   }
 
   get refEntityKeyFormGroup(): FormGroup {
@@ -147,23 +153,18 @@ export class CalculatedFieldArgumentPanelComponent implements OnInit, AfterViewI
   }
 
   ngOnInit(): void {
+    this.updatedArgumentType();
     this.argumentFormGroup.patchValue(this.argument, {emitEvent: false});
-    if (this.argument.refDynamicSource) {
-      this.refEntityIdFormGroup.get('entityType').setValue(this.argument.refDynamicSource, {emitEvent: false});
-    }
     this.currentEntityFilter = getCalculatedFieldCurrentEntityFilter(this.entityName, this.entityId);
-    let argumentType: ArgumentEntityType;
-    if (this.argument.refDynamicSource) {
-      argumentType = ArgumentEntityType.Owner;
-    } else {
-      argumentType = this.argument.refEntityId?.entityType;
-    }
-    this.updateEntityFilter(argumentType, true);
+    this.updateEntityFilter(this.entityType, true);
+    this.updatedRefEntityIdState(this.entityType);
     this.toggleByEntityKeyType(this.argument.refEntityKey?.type);
     this.setInitialEntityKeyType();
+    this.setInitialEntityType();
+    this.setWatchKeyChange();
 
     this.argumentTypes = Object.values(ArgumentType)
-      .filter(type => type !== ArgumentType.Rolling || this.calculatedFieldType === CalculatedFieldType.SCRIPT);
+      .filter(type => type !== ArgumentType.Rolling || this.isScript);
   }
 
   ngAfterViewInit(): void {
@@ -174,20 +175,13 @@ export class CalculatedFieldArgumentPanelComponent implements OnInit, AfterViewI
 
   saveArgument(): void {
     const value = this.argumentFormGroup.value as CalculatedFieldArgumentValue;
-    const argumentType = value.refEntityId.entityType;
-    switch (argumentType) {
-      case ArgumentEntityType.Current:
-        delete value.refEntityId;
-        break;
-      case ArgumentEntityType.Owner:
-        delete value.refEntityId;
-        value.refDynamicSource = CFArgumentDynamicSourceType.CURRENT_OWNER;
-        break;
-      case ArgumentEntityType.Tenant:
-        value.refEntityId.id = this.tenantId;
-        break
-      default:
-        value.entityName = this.entityNameSubject.value;
+    if (this.entityType === ArgumentEntityType.Owner) {
+      value.refDynamicSource = CFArgumentDynamicSourceType.CURRENT_OWNER;
+    } else if (this.entityType === ArgumentEntityType.Tenant) {
+      value.refEntityId = new TenantId(this.tenantId) as any;
+    }
+    if (this.entityType !== ArgumentEntityType.Current && this.entityType !== ArgumentEntityType.Tenant) {
+      value.entityName = this.entityNameSubject.value;
     }
     if (value.defaultValue) {
       value.defaultValue = value.defaultValue.trim();
@@ -198,6 +192,16 @@ export class CalculatedFieldArgumentPanelComponent implements OnInit, AfterViewI
 
   cancel(): void {
     this.popover.hide();
+  }
+
+  private updatedArgumentType(): void {
+    let argumentType = ArgumentEntityType.Current;
+    if (this.argument.refDynamicSource === CFArgumentDynamicSourceType.CURRENT_OWNER) {
+      argumentType = ArgumentEntityType.Owner;
+    } else if (this.argument.refEntityId?.entityType) {
+      argumentType = this.argument.refEntityId.entityType;
+    }
+    this.argumentType.setValue(argumentType, {emitEvent: false});
   }
 
   private toggleByEntityKeyType(type: ArgumentType): void {
@@ -245,26 +249,21 @@ export class CalculatedFieldArgumentPanelComponent implements OnInit, AfterViewI
 
   private observeEntityFilterChanges(): void {
     merge(
-      this.refEntityIdFormGroup.get('entityType').valueChanges,
+      this.argumentType.valueChanges,
       this.refEntityKeyFormGroup.get('type').valueChanges,
-      this.refEntityIdFormGroup.get('id').valueChanges.pipe(filter(Boolean)),
+      this.argumentFormGroup.get('refEntityId').valueChanges.pipe(filter(Boolean)),
       this.refEntityKeyFormGroup.get('scope').valueChanges,
     )
       .pipe(debounceTime(50), takeUntilDestroyed())
       .subscribe(() => this.updateEntityFilter(this.entityType));
   }
 
-  private observeEntityTypeChanges(): void {
-    this.refEntityIdFormGroup.get('entityType').valueChanges
+  private observeArgumentTypeChanges(): void {
+    this.argumentType.valueChanges
       .pipe(distinctUntilChanged(), takeUntilDestroyed())
       .subscribe(type => {
-        this.argumentFormGroup.get('refEntityId').get('id').setValue('');
-        const isEntityWithId = ![ArgumentEntityType.Tenant, ArgumentEntityType.Current, ArgumentEntityType.Owner].includes(type);
-        this.argumentFormGroup.get('refEntityId')
-          .get('id')[isEntityWithId ? 'enable' : 'disable']();
-        if (!isEntityWithId) {
-          this.entityNameSubject.next(null);
-        }
+        this.argumentFormGroup.get('refEntityId').setValue(null);
+        this.updatedRefEntityIdState(type);
         if (!this.enableAttributeScopeSelection) {
           this.refEntityKeyFormGroup.get('scope').setValue(AttributeScope.SERVER_SCOPE);
         }
@@ -287,29 +286,56 @@ export class CalculatedFieldArgumentPanelComponent implements OnInit, AfterViewI
   }
 
   private setInitialEntityKeyType(): void {
-    if (this.calculatedFieldType === CalculatedFieldType.SIMPLE && this.argument.refEntityKey?.type === ArgumentType.Rolling) {
+    if (!this.isScript && this.argument.refEntityKey?.type === ArgumentType.Rolling) {
       const typeControl = this.argumentFormGroup.get('refEntityKey').get('type');
       typeControl.setValue(null);
       typeControl.markAsTouched();
     }
   }
 
+  private setInitialEntityType() {
+    if (!this.argumentEntityTypes.includes(this.entityType)) {
+      this.argumentType.setValue(null);
+      this.argumentType.markAsTouched();
+    }
+  }
+
+  private setWatchKeyChange(): void {
+    if (this.isOutputKey) {
+      this.refEntityKeyFormGroup.get('key').valueChanges.pipe(
+        takeUntilDestroyed(this.destroyRef)
+      ).subscribe((key) => {
+        if (this.argumentFormGroup.get('argumentName').pristine) {
+          this.argumentFormGroup.get('argumentName').setValue(key);
+        }
+      });
+    }
+  }
+
   private forbiddenArgumentNameValidator(): ValidatorFn {
     return (control: FormControl) => {
       const trimmedValue = control.value.trim().toLowerCase();
-      const forbiddenArgumentNames = ['ctx', 'e', 'pi'];
+      const forbiddenArgumentNames = ['ctx', 'e', 'pi', 'propagationCtx'];
       return forbiddenArgumentNames.includes(trimmedValue) ? { forbiddenName: true } : null;
     };
   }
 
   private observeUpdatePosition(): void {
     merge(
-      this.refEntityIdFormGroup.get('entityType').valueChanges,
+      this.argumentType.valueChanges,
       this.refEntityKeyFormGroup.get('type').valueChanges,
       this.argumentFormGroup.get('timeWindow').valueChanges,
-      this.refEntityIdFormGroup.get('id').valueChanges.pipe(filter(Boolean)),
+      this.argumentFormGroup.get('refEntityId').valueChanges.pipe(filter(Boolean)),
     )
       .pipe(delay(50), takeUntilDestroyed())
       .subscribe(() => this.popover.updatePosition());
+  }
+
+  private updatedRefEntityIdState(type: ArgumentEntityType): void {
+    const isEntityWithId = !!type && ![ArgumentEntityType.Tenant, ArgumentEntityType.Current, ArgumentEntityType.Owner].includes(type);
+    this.argumentFormGroup.get('refEntityId')[isEntityWithId ? 'enable' : 'disable']();
+    if (!isEntityWithId) {
+      this.entityNameSubject.next(null);
+    }
   }
 }
