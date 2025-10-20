@@ -32,6 +32,7 @@ package org.thingsboard.rule.engine.analytics.latest.telemetry;
 
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.gson.JsonObject;
+import lombok.extern.slf4j.Slf4j;
 import org.thingsboard.rule.engine.analytics.latest.TbAbstractLatestNode;
 import org.thingsboard.rule.engine.api.RuleNode;
 import org.thingsboard.rule.engine.api.ScriptEngine;
@@ -49,7 +50,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
+@Slf4j
 @RuleNode(
         type = ComponentType.ANALYTICS,
         name = "aggregate latest (deprecated)",
@@ -66,7 +69,7 @@ import java.util.concurrent.ConcurrentHashMap;
 )
 public class TbAggLatestTelemetryNode extends TbAbstractLatestNode<TbAggLatestTelemetryNodeConfiguration> {
 
-    private final Map<String, ScriptEngine> attributesScriptEngineMap = new ConcurrentHashMap<>();
+    private final ConcurrentMap<String, ScriptEngine> attributesScriptEngineMap = new ConcurrentHashMap<>();
 
     @Override
     protected TbAggLatestTelemetryNodeConfiguration loadMapperNodeConfig(TbNodeConfiguration configuration) throws TbNodeException {
@@ -80,10 +83,9 @@ public class TbAggLatestTelemetryNode extends TbAbstractLatestNode<TbAggLatestTe
 
     @Override
     protected Map<EntityId, List<ListenableFuture<Optional<JsonObject>>>> doParentAggregations(TbContext ctx, EntityId parentEntityId) {
-        ListenableFuture<List<EntityId>> childEntityIds =
-                this.config.getParentEntitiesQuery().getChildEntitiesAsync(ctx, parentEntityId);
+        ListenableFuture<List<EntityId>> childEntityIds = config.getParentEntitiesQuery().getChildEntitiesAsync(ctx, parentEntityId);
         List<ListenableFuture<Optional<JsonObject>>> aggregateFutures = new ArrayList<>();
-        this.config.getAggMappings().forEach(aggMapping -> aggregateFutures.add(aggMapping.aggregate(ctx, attributesScriptEngineMap, childEntityIds)));
+        config.getAggMappings().forEach(aggMapping -> aggregateFutures.add(aggMapping.aggregate(ctx, attributesScriptEngineMap, childEntityIds)));
         Map<EntityId, List<ListenableFuture<Optional<JsonObject>>>> result = new HashMap<>();
         result.put(parentEntityId, aggregateFutures);
         return result;
@@ -91,10 +93,15 @@ public class TbAggLatestTelemetryNode extends TbAbstractLatestNode<TbAggLatestTe
 
     @Override
     public void destroy() {
-        for (ScriptEngine se : this.attributesScriptEngineMap.values()) {
-            se.destroy();
+        super.destroy();
+        for (ScriptEngine se : attributesScriptEngineMap.values()) {
+            try {
+                se.destroy();
+            } catch (Exception e) {
+                log.warn("Failed to destroy script engine", e);
+            }
         }
-        this.attributesScriptEngineMap.clear();
+        attributesScriptEngineMap.clear();
     }
 
 }

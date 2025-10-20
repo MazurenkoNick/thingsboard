@@ -49,6 +49,11 @@ public class ParentEntitiesSingleEntity implements ParentEntitiesQuery {
 
     @Override
     public ListenableFuture<List<EntityId>> getParentEntitiesAsync(TbContext ctx) {
+        return Futures.immediateFuture(Collections.singletonList(entityId));
+    }
+
+    @Override
+    public ListenableFuture<List<EntityId>> getLocalParentEntitiesAsync(TbContext ctx) {
         if (ctx.getPeContext().isLocalEntity(entityId)) {
             return Futures.immediateFuture(Collections.singletonList(entityId));
         } else {
