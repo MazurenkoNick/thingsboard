@@ -160,7 +160,7 @@ public class BaseSchedulerEventService extends AbstractEntityService implements 
 
     @Override
     public SchedulerEvent saveSchedulerEvent(SchedulerEvent schedulerEvent) {
-        return saveLimitedEntity(schedulerEvent, () -> doSaveSchedulerEvent(schedulerEvent));
+        return saveEntity(schedulerEvent, () -> doSaveSchedulerEvent(schedulerEvent));
     }
 
     private SchedulerEvent doSaveSchedulerEvent(SchedulerEvent schedulerEvent) {

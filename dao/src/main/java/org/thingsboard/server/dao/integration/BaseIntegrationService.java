@@ -102,7 +102,7 @@ public class BaseIntegrationService extends CachedVersionedEntityService<Integra
 
     @Override
     public Integration saveIntegration(Integration integration) {
-        return saveLimitedEntity(integration, () -> doSaveIntegration(integration));
+        return saveEntity(integration, () -> doSaveIntegration(integration));
     }
 
     private Integration doSaveIntegration(Integration integration) {

@@ -34,8 +34,10 @@ import com.datastax.oss.driver.api.core.uuid.Uuids;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.jupiter.api.Assertions;
 import org.mockito.Mockito;
@@ -128,12 +130,21 @@ public class DeviceServiceTest extends AbstractServiceTest {
 
     private final IdComparator<Device> idComparator = new IdComparator<>();
     private TenantId anotherTenantId;
-    private ListeningExecutorService executor;
+    private static ListeningExecutorService executor;
+
+    @BeforeClass
+    public static void beforeClass() {
+        executor = MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(10, ThingsBoardThreadFactory.forName("DeviceServiceTestScope")));
+    }
+
+    @AfterClass
+    public static void afterClass() {
+        executor.shutdownNow();
+    }
 
     @Before
     public void before() {
         anotherTenantId = createTenant().getId();
-        executor = MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(10, ThingsBoardThreadFactory.forName(getClass().getSimpleName() + "-test-scope")));
     }
 
     @After
@@ -143,7 +154,6 @@ public class DeviceServiceTest extends AbstractServiceTest {
 
         tenantProfileService.deleteTenantProfiles(tenantId);
         tenantProfileService.deleteTenantProfiles(anotherTenantId);
-        executor.shutdownNow();
     }
 
     @Test

@@ -233,7 +233,7 @@ public class EdgeServiceImpl extends AbstractCachedEntityService<EdgeCacheKey, E
 
     @Override
     public Edge saveEdge(Edge edge) {
-        return saveLimitedEntity(edge, () -> doSaveEdge(edge));
+        return saveEntity(edge, () -> doSaveEdge(edge));
     }
 
     private Edge doSaveEdge(Edge edge) {

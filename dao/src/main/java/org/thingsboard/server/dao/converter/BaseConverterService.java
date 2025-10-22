@@ -87,7 +87,7 @@ public class BaseConverterService extends AbstractEntityService implements Conve
 
     @Override
     public Converter saveConverter(Converter converter) {
-        return saveLimitedEntity(converter, () -> doSaveConverter(converter));
+        return saveEntity(converter, () -> doSaveConverter(converter));
     }
 
     private Converter doSaveConverter(Converter converter) {
