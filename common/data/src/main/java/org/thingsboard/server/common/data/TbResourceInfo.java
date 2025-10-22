@@ -44,6 +44,7 @@ import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.validation.Length;
 import org.thingsboard.server.common.data.validation.NoXss;
 
+import java.io.Serial;
 import java.util.function.UnaryOperator;
 
 @Schema
@@ -52,6 +53,7 @@ import java.util.function.UnaryOperator;
 @EqualsAndHashCode(callSuper = true)
 public class TbResourceInfo extends BaseData<TbResourceId> implements HasName, TenantEntity, ExportableEntity<TbResourceId> {
 
+    @Serial
     private static final long serialVersionUID = 7282664529021651736L;
 
     @Schema(description = "JSON object with Tenant Id. Tenant Id of the resource can't be changed.", accessMode = Schema.AccessMode.READ_ONLY)
