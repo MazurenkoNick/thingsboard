@@ -131,20 +131,20 @@ public class PropagationCalculatedFieldStateTest {
     @Test
     void testInitAddsRequiredArgument() {
         initCtxAndState(false);
-        assertThat(state.getRequiredArguments()).containsExactlyInAnyOrder(TEMPERATURE_ARGUMENT_NAME);
+        assertThat(state.getRequiredArguments()).containsExactlyInAnyOrder(TEMPERATURE_ARGUMENT_NAME, PROPAGATION_CONFIG_ARGUMENT);
     }
 
     @Test
     void testIsReadyReturnFalseWhenNoArgumentsSet() {
         initCtxAndState(false);
-        assertThat(state.isReady()).isFalse();
+        assertThat(state.getReadinessStatus().status()).isFalse();
     }
 
     @Test
     void testIsReadyWhenPropagationArgIsNull() {
         initCtxAndState(false);
         state.getArguments().put(TEMPERATURE_ARGUMENT_NAME, singleValueArgEntry);
-        assertThat(state.isReady()).isFalse();
+        assertThat(state.getReadinessStatus().status()).isFalse();
     }
 
     @Test
@@ -152,7 +152,7 @@ public class PropagationCalculatedFieldStateTest {
         initCtxAndState(false);
         state.getArguments().put(TEMPERATURE_ARGUMENT_NAME, singleValueArgEntry);
         state.getArguments().put(PROPAGATION_CONFIG_ARGUMENT, new PropagationArgumentEntry(Collections.emptyList()));
-        assertThat(state.isReady()).isFalse();
+        assertThat(state.getReadinessStatus().status()).isFalse();
     }
 
     @Test
@@ -160,7 +160,7 @@ public class PropagationCalculatedFieldStateTest {
         initCtxAndState(false);
         state.getArguments().put(TEMPERATURE_ARGUMENT_NAME, singleValueArgEntry);
         state.getArguments().put(PROPAGATION_CONFIG_ARGUMENT, propagationArgEntry);
-        assertThat(state.isReady()).isTrue();
+        assertThat(state.getReadinessStatus().status()).isTrue();
     }
 
 
