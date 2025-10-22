@@ -29,32 +29,33 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import {Component, forwardRef, Input, OnDestroy} from '@angular/core';
+import { Component, forwardRef, Input, OnDestroy } from '@angular/core';
 import {
   ControlValueAccessor,
-  UntypedFormBuilder,
-  UntypedFormGroup,
   NG_VALIDATORS,
   NG_VALUE_ACCESSOR,
+  UntypedFormBuilder,
+  UntypedFormGroup,
   ValidationErrors,
   Validator,
   Validators
 } from '@angular/forms';
 import {
   getDefaultClientSecurityConfig,
-  getDefaultServerSecurityConfig, Lwm2mClientKeyTooltipTranslationsMap,
+  getDefaultServerSecurityConfig,
+  Lwm2mClientKeyTooltipTranslationsMap,
   Lwm2mSecurityConfigModels,
   Lwm2mSecurityType,
   Lwm2mSecurityTypeTranslationMap
 } from '@shared/models/lwm2m-security-config.models';
-import {Subject} from 'rxjs';
-import {takeUntil} from 'rxjs/operators';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { isDefinedAndNotNull } from '@core/utils';
-import {DeviceId} from "@shared/models/id/device-id";
-import {DeviceService} from "@core/http/device.service";
-import {ActionNotificationShow} from "@core/notification/notification.actions";
-import {Store} from "@ngrx/store";
-import {AppState} from "@core/core.state";
+import { DeviceId } from "@shared/models/id/device-id";
+import { DeviceService } from "@core/http/device.service";
+import { ActionNotificationShow } from "@core/notification/notification.actions";
+import { Store } from "@ngrx/store";
+import { AppState } from "@core/core.state";
 
 @Component({
   selector: 'tb-device-credentials-lwm2m',
