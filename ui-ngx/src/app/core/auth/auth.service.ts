@@ -93,6 +93,7 @@ export class AuthService {
   redirectUrl: string;
   oauth2Clients: Array<OAuth2ClientLoginInfo> = null;
   twoFactorAuthProviders: Array<TwoFaProviderInfo> = null;
+  forceTwoFactorAuthProviders: Array<TwoFactorAuthProviderType> = null;
 
   private refreshTokenSubject: ReplaySubject<LoginResponse> = null;
   private jwtHelper = new JwtHelperService();
@@ -141,6 +142,9 @@ export class AuthService {
           this.setUserFromJwtToken(loginResponse.token, loginResponse.refreshToken, true);
           if (loginResponse.scope === Authority.PRE_VERIFICATION_TOKEN) {
             this.router.navigateByUrl(`login/mfa`);
+          }
+          if (loginResponse.scope === Authority.MFA_CONFIGURATION_TOKEN) {
+            this.router.navigateByUrl(`login/force-mfa`);
           }
         }
       ));
@@ -264,6 +268,15 @@ export class AuthService {
     );
   }
 
+  public getAvailableTwoFaProviders(): Observable<Array<TwoFaProviderInfo>> {
+    return this.http.get<Array<TwoFaProviderInfo>>(`/api/2fa/providers`, defaultHttpOptions()).pipe(
+      catchError(() => of([])),
+      tap((providers) => {
+        this.forceTwoFactorAuthProviders = providers;
+      })
+    );
+  }
+
   public forceDefaultPlace(authState?: AuthState, path?: string, params?: any): boolean {
     if (authState && authState.authUser) {
       if (authState.authUser.authority === Authority.TENANT_ADMIN || authState.authUser.authority === Authority.CUSTOMER_USER) {
@@ -291,6 +304,8 @@ export class AuthService {
     if (isAuthenticated) {
       if (authState.authUser.authority === Authority.PRE_VERIFICATION_TOKEN) {
         result = this.router.parseUrl('login/mfa');
+      } else if (authState.authUser.authority === Authority.MFA_CONFIGURATION_TOKEN) {
+        result = this.router.parseUrl('login/force-mfa');
       } else if (!path || path === 'login' || this.forceDefaultPlace(authState, path, params)) {
         if (this.redirectUrl) {
           const redirectUrl = this.redirectUrl;
@@ -456,7 +471,8 @@ export class AuthService {
               loadUserSubject.error(err);
             }
           );
-        } else if (authPayload.authUser?.authority === Authority.PRE_VERIFICATION_TOKEN) {
+        } else if (authPayload.authUser?.authority === Authority.PRE_VERIFICATION_TOKEN || authPayload.authUser?.authority === Authority.MFA_CONFIGURATION_TOKEN) {
+          updateUserLang(this.translate, this.document, authPayload.userDetails?.additionalInfo?.lang ?? null, authPayload.availableLocales, true);
           loadUserSubject.next(authPayload);
           loadUserSubject.complete();
         } else if (authPayload.authUser?.userId) {
