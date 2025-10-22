@@ -75,6 +75,7 @@ import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.HasId;
 import org.thingsboard.server.common.data.id.RoleId;
 import org.thingsboard.server.common.data.id.TenantId;
+import org.thingsboard.server.common.data.id.TenantProfileId;
 import org.thingsboard.server.common.data.oauth2.MapperType;
 import org.thingsboard.server.common.data.oauth2.OAuth2Client;
 import org.thingsboard.server.common.data.oauth2.OAuth2CustomMapperConfig;
@@ -225,8 +226,13 @@ public abstract class AbstractServiceTest {
     }
 
     public Tenant createTenant() {
+        return createTenant(null);
+    }
+
+    public Tenant createTenant(TenantProfileId tenantProfileId) {
         Tenant tenant = new Tenant();
         tenant.setTitle(TEST_TENANT_NAME);
+        tenant.setTenantProfileId(tenantProfileId);
         Tenant savedTenant = tenantService.saveTenant(tenant);
         assertNotNull(savedTenant);
         return savedTenant;
