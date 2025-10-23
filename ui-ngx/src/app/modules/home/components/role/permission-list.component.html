@@ -71,7 +71,7 @@
       </button>
     </div>
   </div>
-  <tb-error [ngClass]="{ 'hidden': !ngControl.hasError('required'), 'mb-2': ngControl.hasError('required') }"
+  <tb-error [class]="ngControl.hasError('required') ? 'mb-2' : 'hidden'"
     [error]="ngControl.hasError('required') ? ('permission.permissions-required' | translate) : ''">
   </tb-error>
   <div>
