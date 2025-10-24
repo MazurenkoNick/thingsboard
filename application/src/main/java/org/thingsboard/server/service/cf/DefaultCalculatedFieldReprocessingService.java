@@ -80,6 +80,7 @@ import org.thingsboard.server.service.cf.ctx.CalculatedFieldEntityCtxId;
 import org.thingsboard.server.service.cf.ctx.state.ArgumentEntry;
 import org.thingsboard.server.service.cf.ctx.state.CalculatedFieldCtx;
 import org.thingsboard.server.service.cf.ctx.state.CalculatedFieldState;
+import org.thingsboard.server.service.security.permission.OwnersCacheService;
 import org.thingsboard.server.service.telemetry.TelemetrySubscriptionService;
 
 import java.util.ArrayList;
@@ -123,6 +124,7 @@ public class DefaultCalculatedFieldReprocessingService implements CalculatedFiel
     private final TbelInvokeService tbelInvokeService;
     private final ApiLimitService apiLimitService;
     private final TelemetrySubscriptionService telemetrySubscriptionService;
+    private final OwnersCacheService ownersCacheService;
 
     private ListeningExecutorService calculatedFieldCallbackExecutor;
 
@@ -278,7 +280,7 @@ public class DefaultCalculatedFieldReprocessingService implements CalculatedFiel
     private ListenableFuture<CalculatedFieldState> fetchStateFromDb(CalculatedFieldCtx ctx, EntityId entityId, long startTs) {
         Map<String, ListenableFuture<ArgumentEntry>> argFutures = new HashMap<>();
         for (var entry : ctx.getArguments().entrySet()) {
-            var argEntityId = entry.getValue().getRefEntityId() != null ? entry.getValue().getRefEntityId() : entityId;
+            var argEntityId = resolveEntityId(ctx.getTenantId(), entityId, entry.getValue());
             var argValueFuture = fetchArgumentValue(ctx.getTenantId(), argEntityId, entry.getValue(), startTs);
             argFutures.put(entry.getKey(), argValueFuture);
         }
@@ -356,7 +358,7 @@ public class DefaultCalculatedFieldReprocessingService implements CalculatedFiel
     }
 
     private List<TsKvEntry> fetchTelemetryBatch(TenantId tenantId, EntityId entityId, Argument argument, long startTs, long endTs, int limit) throws InterruptedException {
-        EntityId sourceEntityId = argument.getRefEntityId() != null ? argument.getRefEntityId() : entityId;
+        EntityId sourceEntityId = resolveEntityId(tenantId, entityId, argument);
         ReadTsKvQuery query = new BaseReadTsKvQuery(argument.getRefEntityKey().getKey(), startTs, endTs, 0, limit, Aggregation.NONE, "ASC");
         log.trace("[{}][{}] Fetching telemetry batch for query {}", tenantId, entityId, query);
         List<TsKvEntry> result;// will be interrupted on task processing timeout
@@ -367,6 +369,19 @@ public class DefaultCalculatedFieldReprocessingService implements CalculatedFiel
         }
         log.debug("[{}][{}] Fetched {} timeseries for query {}", tenantId, entityId, result.size(), query);
         return result;
+    }
+
+    private EntityId resolveEntityId(TenantId tenantId, EntityId entityId, Argument argument) {
+        if (argument.getRefEntityId() != null) {
+            return argument.getRefEntityId();
+        }
+        var refDynamicSource = argument.getRefDynamicSource();
+        if (refDynamicSource == null) {
+            return entityId;
+        }
+        return switch (refDynamicSource) {
+            case CURRENT_OWNER -> ownersCacheService.getOwner(tenantId, entityId);
+        };
     }
 
     private Future<Void> saveResult(CfReprocessingCtx ctx, CalculatedFieldResult calculatedFieldResult, long ts, Strategy strategy) throws InterruptedException {
