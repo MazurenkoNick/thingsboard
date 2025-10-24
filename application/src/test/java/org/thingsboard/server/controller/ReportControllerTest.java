@@ -520,7 +520,7 @@ public class ReportControllerTest extends AbstractControllerTest {
         History history = new History();
         history.setHistoryType(2);
         history.setQuickInterval(QuickTimeInterval.CURRENT_DAY);
-        history.setInterval(Interval.of(1000));
+        history.setInterval(Interval.of(86400000));
         timewindow.setHistory(history);
         timewindow.setTimezone(TimeZone.getDefault().getID());
         AggregationConfiguration aggregation = new AggregationConfiguration();
