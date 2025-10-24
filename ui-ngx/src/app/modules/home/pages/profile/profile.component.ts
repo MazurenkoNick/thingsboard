@@ -49,7 +49,6 @@ import { UnitSystem, UnitSystems } from '@shared/models/unit.models';
 import { UnitService } from '@core/services/unit.service';
 import { Operation, Resource } from '@shared/models/security.models';
 import { UserPermissionsService } from '@core/http/user-permissions.service';
-import { UtilsService } from "@core/services/utils.service";
 
 @Component({
   selector: 'tb-profile',
@@ -72,7 +71,6 @@ export class ProfileComponent extends PageComponent implements OnInit, HasConfir
               private authService: AuthService,
               private translate: TranslateService,
               private unitService: UnitService,
-              private utils: UtilsService,
               private fb: UntypedFormBuilder,
               private userPermissionsService: UserPermissionsService,
             ) {

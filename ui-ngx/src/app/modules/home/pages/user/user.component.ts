@@ -45,15 +45,13 @@ import { GroupEntityComponent } from '@home/components/group/group-entity.compon
 import { GroupEntityTableConfig } from '@home/models/group/group-entities-table-config.models';
 import { UserPermissionsService } from '@core/http/user-permissions.service';
 import { CMAssigneeType, CMScope } from '@shared/models/custom-menu.models';
-import { UtilsService } from "@core/services/utils.service";
 
 @Component({
   selector: 'tb-user',
   templateUrl: './user.component.html',
   styleUrls: ['./user.component.scss']
 })
-export class UserComponent extends EntityComponent<User>{
-export class UserComponent extends GroupEntityComponent<UserInfo> implements OnInit {
+export class UserComponent extends GroupEntityComponent<UserInfo>{
 
   CMScope = CMScope;
 
@@ -79,22 +77,14 @@ export class UserComponent extends GroupEntityComponent<UserInfo> implements OnI
   private authUser = getCurrentAuthUser(this.store);
 
   constructor(protected store: Store<AppState>,
-              @Optional() @Inject('entity') protected entityValue: User,
-              @Optional() @Inject('entitiesTableConfig') protected entitiesTableConfigValue: EntityTableConfig<User>,
-              public fb: UntypedFormBuilder,
               @Optional() @Inject('entity') protected entityValue: UserInfo,
               @Optional() @Inject('entitiesTableConfig')
               protected entitiesTableConfigValue: EntityTableConfig<UserInfo> | GroupEntityTableConfig<UserInfo>,
               protected fb: UntypedFormBuilder,
-              private utils: UtilsService,
               protected cd: ChangeDetectorRef,
               protected translate: TranslateService,
               protected userPermissionsService: UserPermissionsService) {
        super(store, fb, entityValue, entitiesTableConfigValue, cd, userPermissionsService);
-  }
-
-  ngOnInit(): void {
-    this.entityForm.controls.email.addValidators(this.utils.validateEmail);
   }
   
   hideDelete() {
