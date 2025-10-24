@@ -53,6 +53,7 @@ import java.util.Base64;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.containsString;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @DaoSqlTest
@@ -198,6 +199,18 @@ public class CustomTranslationControllerTest extends AbstractControllerTest {
 
         loginSubCustomerAdminUser();
         checkPatchCustomTranslation();
+    }
+
+    @Test
+    public void shouldNotPatchTerminalKeyWithObject() throws Exception {
+        loginTenantAdmin();
+        JsonNode customTranslation = JacksonUtil.toJsonNode("{\"new\":{\"key\":\"testvalue\"}}");
+        doPost("/api/translation/custom/" + ES_ES, customTranslation);
+
+        // should not allow update terminal value with object
+        JsonNode patch = JacksonUtil.toJsonNode("{\"new.key.key2\":\"new value\"}");
+        doPatch("/api/translation/custom/" + ES_ES, patch).andExpect(status().isBadRequest())
+                .andExpect(statusReason(containsString("Can't update terminal key: new.key")));
     }
 
     @Test
