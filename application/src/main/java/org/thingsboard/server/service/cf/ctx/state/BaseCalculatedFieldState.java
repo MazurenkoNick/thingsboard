@@ -41,11 +41,11 @@ import org.thingsboard.server.service.cf.ctx.CalculatedFieldEntityCtxId;
 import org.thingsboard.server.utils.CalculatedFieldUtils;
 
 import java.io.Closeable;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 @Getter
 public abstract class BaseCalculatedFieldState implements CalculatedFieldState, Closeable {
@@ -58,6 +58,7 @@ public abstract class BaseCalculatedFieldState implements CalculatedFieldState, 
     protected Map<String, ArgumentEntry> arguments = new HashMap<>();
     protected boolean sizeExceedsLimit;
     protected long latestTimestamp = -1;
+    protected ReadinessStatus readinessStatus;
 
     @Setter
     private TopicPartitionInfo partition;
@@ -71,6 +72,7 @@ public abstract class BaseCalculatedFieldState implements CalculatedFieldState, 
         this.ctx = ctx;
         this.actorCtx = actorCtx;
         this.requiredArguments = ctx.getArgNames();
+        this.readinessStatus = ReadinessStatus.initialState(requiredArguments, arguments);
     }
 
     @Override
@@ -104,14 +106,12 @@ public abstract class BaseCalculatedFieldState implements CalculatedFieldState, 
                 }
                 updatedArguments.put(key, newEntry);
                 updateLastUpdateTimestamp(newEntry);
+                readinessStatus.onArgumentUpdate(key, newEntry);
             }
 
         }
 
-        if (updatedArguments == null) {
-            updatedArguments = Collections.emptyMap();
-        }
-        return updatedArguments;
+        return Objects.requireNonNullElse(updatedArguments, Collections.emptyMap());
     }
 
     @Override
@@ -123,20 +123,8 @@ public abstract class BaseCalculatedFieldState implements CalculatedFieldState, 
     }
 
     @Override
-    public ReadinessStatus getReadinessStatus() {
-        List<String> missing = new ArrayList<>(requiredArguments);
-        missing.removeAll(arguments.keySet());
-        if (!missing.isEmpty()) {
-            return ReadinessStatus.missingRequiredArguments(missing);
-        }
-        List<String> emptyArgs = arguments.entrySet().stream()
-                .filter(e -> e.getValue() == null || e.getValue().isEmpty())
-                .map(Map.Entry::getKey)
-                .toList();
-        if (!emptyArgs.isEmpty()) {
-            return ReadinessStatus.emptyArguments(emptyArgs);
-        }
-        return ReadinessStatus.ready();
+    public boolean isReady() {
+        return readinessStatus.isReady();
     }
 
     @Override
