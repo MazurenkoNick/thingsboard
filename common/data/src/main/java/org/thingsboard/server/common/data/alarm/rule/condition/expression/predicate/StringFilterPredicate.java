@@ -30,6 +30,8 @@
  */
 package org.thingsboard.server.common.data.alarm.rule.condition.expression.predicate;
 
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -40,7 +42,10 @@ import org.thingsboard.server.common.data.alarm.rule.condition.AlarmConditionVal
 @NoArgsConstructor
 public class StringFilterPredicate implements SimpleKeyFilterPredicate<String> {
 
+    @NotNull
     private StringOperation operation;
+    @Valid
+    @NotNull
     private AlarmConditionValue<String> value;
     private boolean ignoreCase;
 
@@ -59,4 +64,5 @@ public class StringFilterPredicate implements SimpleKeyFilterPredicate<String> {
         IN,
         NOT_IN
     }
+
 }

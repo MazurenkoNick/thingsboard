@@ -30,6 +30,8 @@
  */
 package org.thingsboard.server.common.data.alarm.rule.condition.expression.predicate;
 
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -40,7 +42,10 @@ import org.thingsboard.server.common.data.alarm.rule.condition.AlarmConditionVal
 @NoArgsConstructor
 public class NumericFilterPredicate implements SimpleKeyFilterPredicate<Double> {
 
+    @NotNull
     private NumericOperation operation;
+    @Valid
+    @NotNull
     private AlarmConditionValue<Double> value;
 
     @Override
