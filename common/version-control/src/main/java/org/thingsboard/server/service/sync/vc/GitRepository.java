@@ -118,6 +118,8 @@ import static org.eclipse.jgit.transport.RemoteRefUpdate.Status.REJECTED_REMOTE_
 @Slf4j
 public class GitRepository {
 
+    public static final String GROUP_ENTITIES_FILE_SUFFIX = "_entities.json";
+
     private final Git git;
     private final AuthHandler authHandler;
     @Getter
@@ -327,6 +329,9 @@ public class GitRepository {
         RevCommit revCommit = resolveCommit(commitId);
         try (TreeWalk treeWalk = TreeWalk.forPath(git.getRepository(), file, revCommit.getTree())) {
             if (treeWalk == null) {
+                if (file.endsWith(GROUP_ENTITIES_FILE_SUFFIX)) {
+                    return "[]".getBytes(StandardCharsets.UTF_8);
+                }
                 throw new IllegalArgumentException("File " + file + " not found");
             }
             ObjectId blobId = treeWalk.getObjectId(0);
