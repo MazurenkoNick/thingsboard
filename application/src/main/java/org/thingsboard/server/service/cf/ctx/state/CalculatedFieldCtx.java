@@ -66,9 +66,9 @@ import org.thingsboard.server.common.data.kv.AttributeKvEntry;
 import org.thingsboard.server.common.data.kv.BasicKvEntry;
 import org.thingsboard.server.common.data.kv.TsKvEntry;
 import org.thingsboard.server.common.data.tenant.profile.DefaultTenantProfileConfiguration;
+import org.thingsboard.server.common.data.util.CollectionsUtil;
 import org.thingsboard.server.common.util.ProtoUtils;
 import org.thingsboard.server.dao.relation.RelationService;
-import org.thingsboard.server.gen.transport.TransportProtos.CalculatedFieldTelemetryMsgProto;
 import org.thingsboard.server.service.cf.ctx.CalculatedFieldEntityCtxId;
 import org.thingsboard.server.service.cf.ctx.state.geofencing.GeofencingCalculatedFieldState;
 import org.thingsboard.server.service.telemetry.AlarmSubscriptionService;
@@ -80,6 +80,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
@@ -94,9 +95,9 @@ public class CalculatedFieldCtx implements Closeable {
     private EntityId entityId;
     private CalculatedFieldType cfType;
     private final Map<String, Argument> arguments;
-    private final Map<ReferencedEntityKey, String> mainEntityArguments;
-    private final Map<EntityId, Map<ReferencedEntityKey, String>> linkedEntityArguments;
-    private final Map<ReferencedEntityKey, String> dynamicEntityArguments;
+    private final Map<ReferencedEntityKey, Set<String>> mainEntityArguments;
+    private final Map<EntityId, Map<ReferencedEntityKey, Set<String>>> linkedEntityArguments;
+    private final Map<ReferencedEntityKey, Set<String>> dynamicEntityArguments;
     private final List<String> argNames;
     private Output output;
     private String expression;
@@ -153,14 +154,15 @@ public class CalculatedFieldCtx implements Closeable {
                         continue;
                     }
                     if (entry.getValue().hasOwnerSource()) {
-                        dynamicEntityArguments.put(refKey, entry.getKey());
+                        dynamicEntityArguments.compute(refKey, (key, existingNames) -> CollectionsUtil.addToSet(existingNames, entry.getKey()));
                     } else {
-                        mainEntityArguments.put(refKey, entry.getKey());
+                        mainEntityArguments.compute(refKey, (key, existingNames) -> CollectionsUtil.addToSet(existingNames, entry.getKey()));
                     }
                 } else if (refId.equals(calculatedField.getEntityId())) {
-                    mainEntityArguments.put(refKey, entry.getKey());
+                    mainEntityArguments.compute(refKey, (key, existingNames) -> CollectionsUtil.addToSet(existingNames, entry.getKey()));
                 } else {
-                    linkedEntityArguments.computeIfAbsent(refId, key -> new HashMap<>()).put(refKey, entry.getKey());
+                    linkedEntityArguments.computeIfAbsent(refId, key -> new HashMap<>())
+                            .compute(refKey, (key, existingNames) -> CollectionsUtil.addToSet(existingNames, entry.getKey()));
                 }
             }
             this.argNames.addAll(arguments.keySet());
@@ -361,7 +363,7 @@ public class CalculatedFieldCtx implements Closeable {
         return matchesAttributes(dynamicEntityArguments, values, scope);
     }
 
-    private boolean matchesAttributes(Map<ReferencedEntityKey, String> argMap, List<AttributeKvEntry> values, AttributeScope scope) {
+    private boolean matchesAttributes(Map<ReferencedEntityKey, Set<String>> argMap, List<AttributeKvEntry> values, AttributeScope scope) {
         if (argMap.isEmpty() || values.isEmpty()) {
             return false;
         }
@@ -375,7 +377,7 @@ public class CalculatedFieldCtx implements Closeable {
         return false;
     }
 
-    private boolean matchesTimeSeries(Map<ReferencedEntityKey, String> argMap, List<TsKvEntry> values) {
+    private boolean matchesTimeSeries(Map<ReferencedEntityKey, Set<String>> argMap, List<TsKvEntry> values) {
         if (argMap.isEmpty() || values.isEmpty()) {
             return false;
         }
@@ -412,7 +414,7 @@ public class CalculatedFieldCtx implements Closeable {
         return matchesTimeSeriesKeys(dynamicEntityArguments, keys);
     }
 
-    private boolean matchesAttributesKeys(Map<ReferencedEntityKey, String> argMap, List<String> keys, AttributeScope scope) {
+    private boolean matchesAttributesKeys(Map<ReferencedEntityKey, Set<String>> argMap, List<String> keys, AttributeScope scope) {
         if (argMap.isEmpty() || keys.isEmpty()) {
             return false;
         }
@@ -427,7 +429,7 @@ public class CalculatedFieldCtx implements Closeable {
         return false;
     }
 
-    private boolean matchesTimeSeriesKeys(Map<ReferencedEntityKey, String> argMap, List<String> keys) {
+    private boolean matchesTimeSeriesKeys(Map<ReferencedEntityKey, Set<String>> argMap, List<String> keys) {
         if (argMap.isEmpty() || keys.isEmpty()) {
             return false;
         }
@@ -496,8 +498,8 @@ public class CalculatedFieldCtx implements Closeable {
         }
     }
 
-    public Map<ReferencedEntityKey, String> getLinkedAndDynamicArgs(EntityId entityId) {
-        var argNames = new HashMap<ReferencedEntityKey, String>();
+    public Map<ReferencedEntityKey, Set<String>> getLinkedAndDynamicArgs(EntityId entityId) {
+        var argNames = new HashMap<ReferencedEntityKey, Set<String>>();
         var linkedArgNames = linkedEntityArguments.get(entityId);
         if (linkedArgNames != null && !linkedArgNames.isEmpty()) {
             argNames.putAll(linkedArgNames);

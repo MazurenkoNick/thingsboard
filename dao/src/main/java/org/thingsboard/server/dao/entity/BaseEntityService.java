@@ -84,7 +84,6 @@ import org.thingsboard.server.dao.edge.EdgeService;
 import org.thingsboard.server.dao.entityview.EntityViewService;
 import org.thingsboard.server.dao.exception.IncorrectParameterException;
 import org.thingsboard.server.dao.model.ModelConstants;
-import org.thingsboard.server.dao.sql.alarm.AlarmRepository;
 import org.thingsboard.server.dao.sql.query.EntityMapping;
 import org.thingsboard.server.dao.user.UserService;
 
@@ -126,9 +125,6 @@ public class BaseEntityService extends AbstractEntityService implements EntitySe
     private AssetService assetService;
 
     @Autowired
-    private AlarmRepository alarmRepository;
-
-    @Autowired
     private DeviceService deviceService;
 
     @Autowired
@@ -138,6 +134,7 @@ public class BaseEntityService extends AbstractEntityService implements EntitySe
     private CustomerService customerService;
 
     @Autowired
+    @Lazy
     private UserService userService;
 
     @Autowired

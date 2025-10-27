@@ -174,13 +174,28 @@ public class JpaUserDao extends JpaAbstractDao<UserEntity, User> implements User
     }
 
     @Override
+    public boolean existsByTenantsIdsAndRoleIdAndUserId(List<TenantId> tenantsIds, RoleId roleId, UserId userId) {
+        return userRepository.existsByIdAndTenantsIdsAndRoleId(userId.getId(), DaoUtil.toUUIDs(tenantsIds), roleId.getId());
+    }
+
+    @Override
     public PageData<User> findUsersByTenantProfilesIdsAndRoleId(List<TenantProfileId> tenantProfilesIds, RoleId roleId, PageLink pageLink) {
         return DaoUtil.toPageData(userRepository.findByTenantProfilesIdsAndRoleId(DaoUtil.toUUIDs(tenantProfilesIds), roleId.getId(), DaoUtil.toPageable(pageLink)));
     }
 
     @Override
+    public boolean existsByTenantProfilesIdsAndRoleIdAndUserId(List<TenantProfileId> tenantProfilesIds, RoleId roleId, UserId userId) {
+        return userRepository.existsByIdAndTenantProfilesIdsAndRoleId(userId.getId(), DaoUtil.toUUIDs(tenantProfilesIds), roleId.getId());
+    }
+
+    @Override
     public PageData<User> findAllUsersByRoleId(RoleId roleId, PageLink pageLink) {
         return DaoUtil.toPageData(userRepository.findByRoleId(roleId.getId(), DaoUtil.toPageable(pageLink)));
+    }
+
+    @Override
+    public boolean existsByRoleIdAndUserId(RoleId roleId, UserId userId) {
+        return userRepository.existsByIdAndRoleId(userId.getId(), roleId.getId());
     }
 
     @Override
