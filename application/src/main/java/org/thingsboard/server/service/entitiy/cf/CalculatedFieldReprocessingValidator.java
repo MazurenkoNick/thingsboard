@@ -103,7 +103,7 @@ public class CalculatedFieldReprocessingValidator {
         } catch (Exception e) {
             return Optional.of(CfReprocessingValidationResult.invalid(e.getMessage()));
         } finally {
-            ctx.stop();
+            ctx.close();
         }
         return Optional.empty();
     }
