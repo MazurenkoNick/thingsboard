@@ -44,6 +44,7 @@ import org.thingsboard.server.common.data.Customer;
 import org.thingsboard.server.common.data.Device;
 import org.thingsboard.server.common.data.DeviceProfile;
 import org.thingsboard.server.common.data.EntityType;
+import org.thingsboard.server.common.data.ObjectType;
 import org.thingsboard.server.common.data.TbResource;
 import org.thingsboard.server.common.data.TbResourceInfo;
 import org.thingsboard.server.common.data.Tenant;
@@ -81,6 +82,7 @@ import org.thingsboard.server.common.util.ProtoUtils;
 import org.thingsboard.server.dao.edge.EdgeSynchronizationManager;
 import org.thingsboard.server.dao.eventsourcing.ActionEntityEvent;
 import org.thingsboard.server.dao.eventsourcing.DeleteEntityEvent;
+import org.thingsboard.server.dao.eventsourcing.RelationActionEvent;
 import org.thingsboard.server.dao.eventsourcing.SaveEntityEvent;
 import org.thingsboard.server.dao.secret.SecretService;
 import org.thingsboard.server.dao.tenant.TenantService;
@@ -354,6 +356,15 @@ public class EntityStateSourcingListener {
                     });
                 }
             }
+        }
+    }
+
+    @TransactionalEventListener(fallbackExecution = true)
+    public void handleEvent(RelationActionEvent relationEvent) {
+        if (relationEvent.getActionType() == ActionType.RELATION_ADD_OR_UPDATE) {
+            tbClusterService.onRelationUpdated(relationEvent.getTenantId(), relationEvent.getRelation(), TbQueueCallback.EMPTY);
+        } else if (relationEvent.getActionType() == ActionType.RELATION_DELETED) {
+            tbClusterService.onRelationDeleted(relationEvent.getTenantId(), relationEvent.getRelation(), TbQueueCallback.EMPTY);
         }
     }
 

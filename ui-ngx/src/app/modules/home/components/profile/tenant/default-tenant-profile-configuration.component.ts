@@ -140,6 +140,7 @@ export class DefaultTenantProfileConfigurationComponent implements ControlValueA
       maxCalculatedFieldsPerEntity: [0, [Validators.required, Validators.min(0)]],
       maxArgumentsPerCF: [0, [Validators.required, Validators.min(0)]],
       maxRelationLevelPerCfArgument: [0, [Validators.required, Validators.min(1)]],
+      minAllowedDeduplicationIntervalInSecForCF: [0, [Validators.required, Validators.min(0)]],
       maxRelatedEntitiesToReturnPerCfArgument: [1, [Validators.required, Validators.min(1)]],
       minAllowedScheduledUpdateIntervalInSecForCF: [0, [Validators.required, Validators.min(0)]],
       maxDataPointsPerRollingArg: [0, [Validators.required, Validators.min(0)]],
