@@ -252,7 +252,15 @@ public class AlarmRuleState {
     }
 
     public void clear() {
+        clearRepeatingConditionState();
+        clearDurationConditionState();
+    }
+
+    private void clearRepeatingConditionState() {
         eventCount = 0L;
+    }
+
+    private void clearDurationConditionState() {
         firstEventTs = 0L;
         lastEventTs = 0L;
         duration = 0L;
@@ -304,6 +312,20 @@ public class AlarmRuleState {
     public void setAlarmRule(AlarmRule alarmRule) {
         this.alarmRule = alarmRule;
         this.condition = alarmRule.getCondition();
+
+        // clearing state for other condition types (possibly left from a previous condition type)
+        switch (condition.getType()) {
+            case SIMPLE -> {
+                clearRepeatingConditionState();
+                clearDurationConditionState();
+            }
+            case REPEATING -> {
+                clearDurationConditionState();
+            }
+            case DURATION -> {
+                clearRepeatingConditionState();
+            }
+        }
     }
 
     public StateInfo getStateInfo() {

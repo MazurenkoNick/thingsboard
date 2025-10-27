@@ -30,6 +30,7 @@
  */
 package org.thingsboard.server.common.data.alarm.rule;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
@@ -45,6 +46,7 @@ public class AlarmRule {
     private String alarmDetails;
     private DashboardId dashboardId;
 
+    @JsonIgnore
     public boolean requiresScheduledReevaluation() {
         return condition.hasSchedule();
     }

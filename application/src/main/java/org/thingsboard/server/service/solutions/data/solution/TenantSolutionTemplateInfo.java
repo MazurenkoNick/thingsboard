@@ -32,9 +32,11 @@ package org.thingsboard.server.service.solutions.data.solution;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Schema
 @Data
+@NoArgsConstructor
 public class TenantSolutionTemplateInfo extends SolutionTemplateInfo {
 
     @Schema(description = "Indicates that template is already installed for the current tenant")

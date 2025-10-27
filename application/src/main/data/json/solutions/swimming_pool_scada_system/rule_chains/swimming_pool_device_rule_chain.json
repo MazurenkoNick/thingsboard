@@ -11,7 +11,7 @@
     }
   },
   "metadata": {
-    "firstNodeIndex": 3,
+    "firstNodeIndex": 1,
     "nodes": [
       {
         "type": "org.thingsboard.rule.engine.filter.TbDeviceTypeSwitchNode",
@@ -63,23 +63,6 @@
           "description": "",
           "layoutX": 417,
           "layoutY": 326
-        }
-      },
-      {
-        "type": "org.thingsboard.rule.engine.profile.TbDeviceProfileNode",
-        "name": "device profile",
-        "debugSettings": null,
-        "singletonMode": false,
-        "queueName": null,
-        "configurationVersion": 1,
-        "configuration": {
-          "persistAlarmRulesState": false,
-          "fetchAlarmRulesStateOnStart": false
-        },
-        "additionalInfo": {
-          "description": "",
-          "layoutX": 153,
-          "layoutY": 277
         }
       },
       {
@@ -149,12 +132,15 @@
         "debugSettings": null,
         "singletonMode": false,
         "queueName": null,
-        "configurationVersion": 2,
+        "configurationVersion": 3,
         "configuration": {
           "scope": "CLIENT_SCOPE",
           "notifyDevice": false,
           "sendAttributesUpdatedNotification": false,
-          "updateAttributesOnlyOnValueChange": true
+          "updateAttributesOnlyOnValueChange": true,
+          "processingSettings": {
+            "type": "ON_EVERY_MESSAGE"
+          }
         },
         "additionalInfo": {
           "layoutX": 939,
@@ -201,7 +187,7 @@
     "connections": [
       {
         "fromIndex": 0,
-        "toIndex": 6,
+        "toIndex": 5,
         "type": "Heat pump"
       },
       {
@@ -211,12 +197,12 @@
       },
       {
         "fromIndex": 1,
-        "toIndex": 4,
+        "toIndex": 3,
         "type": "RPC Request to Device"
       },
       {
         "fromIndex": 1,
-        "toIndex": 7,
+        "toIndex": 6,
         "type": "Post attributes"
       },
       {
@@ -225,33 +211,28 @@
         "type": "Success"
       },
       {
-        "fromIndex": 3,
-        "toIndex": 1,
+        "fromIndex": 4,
+        "toIndex": 3,
         "type": "Success"
       },
       {
         "fromIndex": 5,
+        "toIndex": 7,
+        "type": "Success"
+      },
+      {
+        "fromIndex": 7,
         "toIndex": 4,
-        "type": "Success"
-      },
-      {
-        "fromIndex": 6,
-        "toIndex": 8,
-        "type": "Success"
-      },
-      {
-        "fromIndex": 8,
-        "toIndex": 5,
         "type": "turnOn"
       },
       {
-        "fromIndex": 8,
-        "toIndex": 9,
+        "fromIndex": 7,
+        "toIndex": 8,
         "type": "turnOff"
       },
       {
-        "fromIndex": 9,
-        "toIndex": 4,
+        "fromIndex": 8,
+        "toIndex": 3,
         "type": "Success"
       }
     ],

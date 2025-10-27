@@ -98,3 +98,10 @@ WHERE (configuration::jsonb) ? 'arguments'
               WHERE v ->> 'refDynamicSource' = 'CURRENT_OWNER');
 
 -- UPDATE CFS WITH CURRENT OWNER DYNAMIC SOURCE END
+
+-- CALCULATED FIELD UNIQUE CONSTRAINT UPDATE START
+
+ALTER TABLE calculated_field DROP CONSTRAINT IF EXISTS calculated_field_unq_key;
+ALTER TABLE calculated_field ADD CONSTRAINT calculated_field_unq_key UNIQUE (entity_id, type, name);
+
+-- CALCULATED FIELD UNIQUE CONSTRAINT UPDATE END
