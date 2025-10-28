@@ -154,8 +154,8 @@ public class DefaultCalculatedFieldReprocessingService extends AbstractCalculate
 
         CalculatedFieldCtx cfCtx = new CalculatedFieldCtx(calculatedField, systemContext);
         cfCtx.setUseLatestTs(false);
-        CalculatedFieldState state = initState(tenantId, entityId, cfCtx, startTs);
         cfCtx.init();
+        CalculatedFieldState state = initState(tenantId, entityId, cfCtx, startTs);
         CfReprocessingCtx ctx = CfReprocessingCtx.builder()
                 .tenantId(tenantId)
                 .entityId(entityId)
