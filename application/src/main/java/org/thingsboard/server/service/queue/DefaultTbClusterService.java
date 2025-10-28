@@ -409,17 +409,6 @@ public class DefaultTbClusterService implements TbClusterService {
     }
 
     @Override
-    public void broadcastEntityStateChangeEvent(TenantId tenantId, EntityId entityId, EntityId profileId, ComponentLifecycleEvent state) {
-        log.trace("[{}] Processing {} state change event: {}", tenantId, entityId.getEntityType(), state);
-        broadcast(ComponentLifecycleMsg.builder()
-                .tenantId(tenantId)
-                .entityId(entityId)
-                .profileId(profileId)
-                .event(state)
-                .build());
-    }
-
-    @Override
     public void onDeviceProfileChange(DeviceProfile deviceProfile, DeviceProfile oldDeviceProfile, TbQueueCallback callback) {
         boolean isFirmwareChanged = false;
         boolean isSoftwareChanged = false;
@@ -470,13 +459,13 @@ public class DefaultTbClusterService implements TbClusterService {
         gatewayNotificationsService.onDeviceDeleted(device);
         broadcastEntityDeleteToTransport(tenantId, deviceId, device.getName(), callback);
         sendDeviceStateServiceEvent(tenantId, deviceId, false, false, true);
-        broadcastEntityStateChangeEvent(tenantId, deviceId, device.getDeviceProfileId(), ComponentLifecycleEvent.DELETED);
+        broadcastEntityStateChangeEvent(tenantId, deviceId, ComponentLifecycleEvent.DELETED);
     }
 
     @Override
     public void onAssetDeleted(TenantId tenantId, Asset asset, TbQueueCallback callback) {
         AssetId assetId = asset.getId();
-        broadcastEntityStateChangeEvent(tenantId, assetId, asset.getAssetProfileId(), ComponentLifecycleEvent.DELETED);
+        broadcastEntityStateChangeEvent(tenantId, assetId, ComponentLifecycleEvent.DELETED);
     }
 
     @Override

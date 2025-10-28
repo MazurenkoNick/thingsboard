@@ -405,7 +405,7 @@ public class DefaultCalculatedFieldReprocessingService extends AbstractCalculate
             log.debug("[{}][{}] Closing CF reprocessing context", tenantId, entityId);
             telemetryBuffers.clear();
             resultFutures.forEach(future -> future.cancel(true));
-            cfCtx.stop();
+            cfCtx.close();
         }
 
     }
