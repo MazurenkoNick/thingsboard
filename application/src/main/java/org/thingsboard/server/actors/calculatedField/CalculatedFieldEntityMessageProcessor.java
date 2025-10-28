@@ -551,28 +551,29 @@ public class CalculatedFieldEntityMessageProcessor extends AbstractContextAwareM
         return mapToArguments(entityId, ctx.getLinkedAndDynamicArgs(entityId), ctx.getRelatedEntityArguments(), data);
     }
 
-    private Map<String, ArgumentEntry> mapToArguments(EntityId originator, Map<ReferencedEntityKey, String> argNames, Map<ReferencedEntityKey, String> relatedEntityArgs, List<TsKvProto> data) {
+    private Map<String, ArgumentEntry> mapToArguments(EntityId originator, Map<ReferencedEntityKey, Set<String>> args, Map<ReferencedEntityKey, Set<String>> relatedEntityArgs, List<TsKvProto> data) {
         Map<String, ArgumentEntry> arguments = new HashMap<>();
-        if (!relatedEntityArgs.isEmpty()) {
+        if (!relatedEntityArgs.isEmpty() || !args.isEmpty()) {
             for (TsKvProto item : data) {
                 ReferencedEntityKey key = new ReferencedEntityKey(item.getKv().getKey(), ArgumentType.TS_LATEST, null);
-                String argName = relatedEntityArgs.get(key);
-                if (argName != null) {
-                    arguments.put(argName, new SingleValueArgumentEntry(originator, item));
+                Set<String> argNames = relatedEntityArgs.get(key);
+                if (argNames != null) {
+                    argNames.forEach(argName -> {
+                        arguments.put(argName, new SingleValueArgumentEntry(originator, item));
+                    });
                 }
-            }
-        }
-        if (!argNames.isEmpty()) {
-            for (TsKvProto item : data) {
-                ReferencedEntityKey key = new ReferencedEntityKey(item.getKv().getKey(), ArgumentType.TS_LATEST, null);
-                String argName = argNames.get(key);
-                if (argName != null) {
-                    arguments.put(argName, new SingleValueArgumentEntry(item));
+                argNames = args.get(key);
+                if (argNames != null) {
+                    argNames.forEach(argName -> {
+                        arguments.put(argName, new SingleValueArgumentEntry(item));
+                    });
                 }
                 key = new ReferencedEntityKey(item.getKv().getKey(), ArgumentType.TS_ROLLING, null);
-                argName = argNames.get(key);
-                if (argName != null) {
-                    arguments.put(argName, new SingleValueArgumentEntry(item));
+                argNames = args.get(key);
+                if (argNames != null) {
+                    argNames.forEach(argName -> {
+                        arguments.put(argName, new SingleValueArgumentEntry(item));
+                    });
                 }
             }
         }
@@ -584,48 +585,48 @@ public class CalculatedFieldEntityMessageProcessor extends AbstractContextAwareM
     }
 
     private Map<String, ArgumentEntry> mapToArguments(CalculatedFieldCtx ctx, EntityId entityId, AttributeScopeProto scope, List<AttributeValueProto> attrDataList) {
-        var argNames = ctx.getLinkedAndDynamicArgs(entityId);
+        var args = ctx.getLinkedAndDynamicArgs(entityId);
+        var relatedEntityArgs = ctx.getRelatedEntityArguments();
         List<String> geofencingArgumentNames = ctx.getLinkedEntityAndCurrentOwnerGeofencingArgumentNames();
-        Map<ReferencedEntityKey, String> relatedEntityArgs = ctx.getRelatedEntityArguments();
-        return mapToArguments(entityId, argNames, geofencingArgumentNames, relatedEntityArgs, scope, attrDataList);
+        return mapToArguments(entityId, args, geofencingArgumentNames, relatedEntityArgs, scope, attrDataList);
     }
 
-    private Map<String, ArgumentEntry> mapToArguments(EntityId entityId, Map<ReferencedEntityKey, String> argNames, List<String> geofencingArgNames, Map<ReferencedEntityKey, String> relatedEntityArgs, AttributeScopeProto scope, List<AttributeValueProto> attrDataList) {
+    private Map<String, ArgumentEntry> mapToArguments(EntityId entityId, Map<ReferencedEntityKey, Set<String>> args, List<String> geofencingArgNames, Map<ReferencedEntityKey, Set<String>> relatedEntityArgs, AttributeScopeProto scope, List<AttributeValueProto> attrDataList) {
+        if (args.isEmpty() && relatedEntityArgs.isEmpty()) {
+            return Collections.emptyMap();
+        }
         Map<String, ArgumentEntry> arguments = new HashMap<>();
-        if (!argNames.isEmpty()) {
-            for (AttributeValueProto item : attrDataList) {
-                ReferencedEntityKey key = new ReferencedEntityKey(item.getKey(), ArgumentType.ATTRIBUTE, AttributeScope.valueOf(scope.name()));
-                String argName = argNames.get(key);
-                if (argName == null) {
-                    continue;
-                }
+        for (AttributeValueProto item : attrDataList) {
+            ReferencedEntityKey key = new ReferencedEntityKey(item.getKey(), ArgumentType.ATTRIBUTE, AttributeScope.valueOf(scope.name()));
+            Set<String> argNames = relatedEntityArgs.get(key);
+            if (argNames != null) {
+                argNames.forEach(argName -> {
+                    arguments.put(argName, new SingleValueArgumentEntry(entityId, item));
+                });
+            }
+            argNames = args.get(key);
+            if (argNames == null) {
+                continue;
+            }
+            argNames.forEach(argName -> {
                 if (geofencingArgNames.contains(argName)) {
                     arguments.put(argName, new GeofencingArgumentEntry(entityId, item));
-                    continue;
+                } else {
+                    arguments.put(argName, new SingleValueArgumentEntry(item));
                 }
-                arguments.put(argName, new SingleValueArgumentEntry(item));
-            }
-        }
-        if (!relatedEntityArgs.isEmpty()) {
-            for (AttributeValueProto item : attrDataList) {
-                ReferencedEntityKey key = new ReferencedEntityKey(item.getKey(), ArgumentType.ATTRIBUTE, AttributeScope.valueOf(scope.name()));
-                String argName = relatedEntityArgs.get(key);
-                if (argName != null) {
-                    arguments.put(argName, new SingleValueArgumentEntry(entityId, item));
-                }
-            }
+            });
         }
         return arguments;
     }
 
     private Map<String, ArgumentEntry> mapToArgumentsWithDefaultValue(CalculatedFieldCtx ctx, EntityId entityId, AttributeScopeProto scope, List<String> removedAttrKeys) {
         var argNames = ctx.getLinkedAndDynamicArgs(entityId);
-        Map<ReferencedEntityKey, String> relatedEntityArguments = ctx.getRelatedEntityArguments();
-        if (argNames.isEmpty() && relatedEntityArguments.isEmpty()) {
+        var relatedEntityArgs = ctx.getRelatedEntityArguments();
+        if (argNames.isEmpty() && relatedEntityArgs.isEmpty()) {
             return Collections.emptyMap();
         }
         List<String> geofencingArgumentNames = ctx.getLinkedEntityAndCurrentOwnerGeofencingArgumentNames();
-        return mapToArgumentsWithDefaultValue(entityId, argNames, ctx.getArguments(), geofencingArgumentNames, relatedEntityArguments, scope, removedAttrKeys);
+        return mapToArgumentsWithDefaultValue(entityId, argNames, ctx.getArguments(), geofencingArgumentNames, relatedEntityArgs, scope, removedAttrKeys);
     }
 
     private Map<String, ArgumentEntry> mapToArgumentsWithDefaultValue(CalculatedFieldCtx ctx, AttributeScopeProto scope, List<String> removedAttrKeys) {
@@ -633,43 +634,44 @@ public class CalculatedFieldEntityMessageProcessor extends AbstractContextAwareM
     }
 
     private Map<String, ArgumentEntry> mapToArgumentsWithDefaultValue(EntityId msgEntityId,
-                                                                      Map<ReferencedEntityKey, String> argNames,
+                                                                      Map<ReferencedEntityKey, Set<String>> args,
                                                                       Map<String, Argument> configArguments,
                                                                       List<String> geofencingArgNames,
-                                                                      Map<ReferencedEntityKey, String> relatedEntityArgs,
+                                                                      Map<ReferencedEntityKey, Set<String>> relatedEntityArgs,
                                                                       AttributeScopeProto scope,
                                                                       List<String> removedAttrKeys) {
+        if (args.isEmpty() && relatedEntityArgs.isEmpty()) {
+            return Collections.emptyMap();
+        }
         Map<String, ArgumentEntry> arguments = new HashMap<>();
-        if (!relatedEntityArgs.isEmpty()) {
-            for (String removedKey : removedAttrKeys) {
-                ReferencedEntityKey key = new ReferencedEntityKey(removedKey, ArgumentType.ATTRIBUTE, AttributeScope.valueOf(scope.name()));
-                if (relatedEntityArgs.containsKey(key)) {
-                    String argName = relatedEntityArgs.get(key);
+        for (String removedKey : removedAttrKeys) {
+            ReferencedEntityKey key = new ReferencedEntityKey(removedKey, ArgumentType.ATTRIBUTE, AttributeScope.valueOf(scope.name()));
+            Set<String> argNames = relatedEntityArgs.get(key);
+            if (argNames != null) {
+                argNames.forEach(argName -> {
                     Argument argument = configArguments.get(argName);
                     String defaultValue = (argument != null) ? argument.getDefaultValue() : null;
                     SingleValueArgumentEntry argumentEntry = StringUtils.isNotEmpty(defaultValue)
                             ? new SingleValueArgumentEntry(System.currentTimeMillis(), new StringDataEntry(removedKey, defaultValue), null)
                             : new SingleValueArgumentEntry();
                     arguments.put(argName, new SingleValueArgumentEntry(msgEntityId, argumentEntry));
+                });
+            }
+            argNames = args.get(key);
+            if (argNames == null) {
+                continue;
+            }
+            argNames.forEach(argName -> {
+                if (geofencingArgNames.contains(argName)) {
+                    arguments.put(argName, new GeofencingArgumentEntry());
+                } else {
+                    Argument argument = configArguments.get(argName);
+                    String defaultValue = (argument != null) ? argument.getDefaultValue() : null;
+                    arguments.put(argName, StringUtils.isNotEmpty(defaultValue)
+                            ? new SingleValueArgumentEntry(System.currentTimeMillis(), new StringDataEntry(removedKey, defaultValue), null)
+                            : new SingleValueArgumentEntry());
                 }
-            }
-        }
-        for (String removedKey : removedAttrKeys) {
-            ReferencedEntityKey key = new ReferencedEntityKey(removedKey, ArgumentType.ATTRIBUTE, AttributeScope.valueOf(scope.name()));
-            String argName = argNames.get(key);
-            if (argName == null) {
-                continue;
-            }
-            if (geofencingArgNames.contains(argName)) {
-                arguments.put(argName, new GeofencingArgumentEntry());
-                continue;
-            }
-            Argument argument = configArguments.get(argName);
-            String defaultValue = (argument != null) ? argument.getDefaultValue() : null;
-            SingleValueArgumentEntry argumentEntry = StringUtils.isNotEmpty(defaultValue)
-                    ? new SingleValueArgumentEntry(System.currentTimeMillis(), new StringDataEntry(removedKey, defaultValue), null)
-                    : new SingleValueArgumentEntry();
-            arguments.put(argName, argumentEntry);
+            });
         }
         return arguments;
     }

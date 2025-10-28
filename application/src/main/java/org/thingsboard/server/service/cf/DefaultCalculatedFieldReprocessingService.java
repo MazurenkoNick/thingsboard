@@ -295,7 +295,7 @@ public class DefaultCalculatedFieldReprocessingService extends AbstractCalculate
     }
 
     private List<TsKvEntry> fetchTelemetryBatch(TenantId tenantId, EntityId entityId, Argument argument, long startTs, long endTs, int limit) throws InterruptedException {
-        EntityId sourceEntityId = argument.getRefEntityId() != null ? argument.getRefEntityId() : entityId;
+        EntityId sourceEntityId = resolveEntityId(tenantId, entityId, argument);
         ReadTsKvQuery query = new BaseReadTsKvQuery(argument.getRefEntityKey().getKey(), startTs, endTs, 0, limit, Aggregation.NONE, "ASC");
         log.trace("[{}][{}] Fetching telemetry batch for query {}", tenantId, entityId, query);
         List<TsKvEntry> result;// will be interrupted on task processing timeout

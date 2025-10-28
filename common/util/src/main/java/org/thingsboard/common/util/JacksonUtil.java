@@ -516,6 +516,10 @@ public class JacksonUtil {
                     if (!node.has(fieldName)) {
                         node.set(fieldName, JacksonUtil.newObjectNode());
                     }
+                    if (!node.get(fieldName).isObject()) {
+                        String finalPath = String.join(".", Arrays.copyOfRange(fieldPath, 0, i + 1));
+                        throw new IllegalArgumentException("Can't update terminal key: " + finalPath);
+                    }
                     node = (ObjectNode) node.get(fieldName);
                 }
             }
