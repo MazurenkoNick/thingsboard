@@ -417,7 +417,7 @@ public class DefaultCalculatedFieldReprocessingService extends AbstractCalculate
             for (Entry<String, Argument> e : arguments.entrySet()) {
                 String argName = e.getKey();
                 Argument arg = e.getValue();
-                if (ArgumentType.ATTRIBUTE.equals(arg.getRefEntityKey().getType())) {
+                if (!ArgumentType.TS_LATEST.equals(arg.getRefEntityKey().getType())) {
                     continue;
                 }
                 var configuration = (RelatedEntitiesAggregationCalculatedFieldConfiguration) cfCtx.getCalculatedField().getConfiguration();
@@ -503,6 +503,9 @@ public class DefaultCalculatedFieldReprocessingService extends AbstractCalculate
             for (Entry<String, Argument> e : arguments.entrySet()) {
                 String argName = e.getKey();
                 Argument arg = e.getValue();
+                if (ArgumentType.ATTRIBUTE.equals(arg.getRefEntityKey().getType())) {
+                    continue;
+                }
                 LinkedList<TsKvEntry> batch = new LinkedList<>(fetchTelemetryBatch(tenantId, entityId, arg, startTs, endTs, telemetryFetchPackSize));
                 if (!batch.isEmpty()) {
                     telemetryBuffers.put(argName, batch);
