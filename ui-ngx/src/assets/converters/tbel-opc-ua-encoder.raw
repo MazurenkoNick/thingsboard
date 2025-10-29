@@ -16,8 +16,8 @@ if (msgType === 'RPC_CALL_FROM_SERVER_TO_DEVICE') {
     if (msg.method === 'setState') {
         var targetMethod = msg.params === 'true' ? 'Start' : 'Stop';
         var writeValue = {
-            nodeId: 'ns=3;s=1009',   // OPC UA NodeId of the target node (namespace=3, stringId=1009)
-            value: msg.params,      // Value to write; must match the node's expected data type
+            nodeId: 'ns=3;i=1009',    // OPC UA NodeId of the target node (namespace=3, identifier=1009)
+            value: 54,               // Value to write 
             type: "Int16"           // OPC UA data type of the value (e.g., "Int16")
         };
         data.writeValues.push(writeValue);
