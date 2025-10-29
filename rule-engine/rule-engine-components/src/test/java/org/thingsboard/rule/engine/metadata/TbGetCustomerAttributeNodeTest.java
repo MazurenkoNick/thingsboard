@@ -31,7 +31,7 @@
 package org.thingsboard.rule.engine.metadata;
 
 import com.datastax.oss.driver.api.core.uuid.Uuids;
-import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.FluentFuture;
 import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -69,21 +69,20 @@ import org.thingsboard.server.common.data.kv.TsKvEntry;
 import org.thingsboard.server.common.data.msg.TbMsgType;
 import org.thingsboard.server.common.msg.TbMsg;
 import org.thingsboard.server.common.msg.TbMsgMetaData;
-import org.thingsboard.server.dao.asset.AssetService;
 import org.thingsboard.server.dao.attributes.AttributesService;
-import org.thingsboard.server.dao.customer.CustomerService;
-import org.thingsboard.server.dao.device.DeviceService;
+import org.thingsboard.server.dao.entity.EntityService;
 import org.thingsboard.server.dao.timeseries.TimeseriesService;
-import org.thingsboard.server.dao.user.UserService;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Stream;
 
+import static com.google.common.util.concurrent.Futures.immediateFuture;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
@@ -92,20 +91,22 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class TbGetCustomerAttributeNodeTest extends AbstractRuleNodeUpgradeTest {
 
-    private static final DeviceId DUMMY_DEVICE_ORIGINATOR = new DeviceId(UUID.randomUUID());
-    private static final TenantId TENANT_ID = new TenantId(UUID.randomUUID());
-    private static final CustomerId CUSTOMER_ID = new CustomerId(UUID.randomUUID());
-    private static final ListeningExecutor DB_EXECUTOR = new TestDbCallbackExecutor();
+    private final DeviceId DUMMY_DEVICE_ORIGINATOR = new DeviceId(UUID.randomUUID());
+    private final TenantId TENANT_ID = TenantId.fromUUID(UUID.randomUUID());
+    private final CustomerId CUSTOMER_ID = new CustomerId(UUID.randomUUID());
+    private final ListeningExecutor DB_EXECUTOR = new TestDbCallbackExecutor();
+
     @Mock
     private TbContext ctxMock;
     @Mock
@@ -113,23 +114,24 @@ public class TbGetCustomerAttributeNodeTest extends AbstractRuleNodeUpgradeTest 
     @Mock
     private TimeseriesService timeseriesServiceMock;
     @Mock
-    private UserService userServiceMock;
-    @Mock
-    private AssetService assetServiceMock;
-    @Mock
-    private DeviceService deviceServiceMock;
-    @Mock
-    private CustomerService customerServiceMock;
+    private EntityService entityServiceMock;
+
     private TbGetCustomerAttributeNode node;
     private TbGetCustomerAttributeNodeConfiguration config;
     private TbNodeConfiguration nodeConfiguration;
     private TbMsg msg;
 
     @BeforeEach
-    public void setUp() {
+    public void setup() {
         node = spy(new TbGetCustomerAttributeNode());
         config = new TbGetCustomerAttributeNodeConfiguration().defaultConfiguration();
         nodeConfiguration = new TbNodeConfiguration(JacksonUtil.valueToTree(config));
+
+        lenient().when(ctxMock.getTenantId()).thenReturn(TENANT_ID);
+        lenient().when(ctxMock.getDbCallbackExecutor()).thenReturn(DB_EXECUTOR);
+        lenient().when(ctxMock.getAttributesService()).thenReturn(attributesServiceMock);
+        lenient().when(ctxMock.getTimeseriesService()).thenReturn(timeseriesServiceMock);
+        lenient().when(ctxMock.getEntityService()).thenReturn(entityServiceMock);
     }
 
     @Test
@@ -263,12 +265,9 @@ public class TbGetCustomerAttributeNodeTest extends AbstractRuleNodeUpgradeTest 
                 .data(TbMsg.EMPTY_JSON_OBJECT)
                 .build();
 
-        when(ctxMock.getTenantId()).thenReturn(TENANT_ID);
-
-        when(ctxMock.getUserService()).thenReturn(userServiceMock);
-        doReturn(Futures.immediateFuture(null)).when(userServiceMock).findUserByIdAsync(eq(TENANT_ID), eq(userId));
-
-        when(ctxMock.getDbCallbackExecutor()).thenReturn(DB_EXECUTOR);
+        when(entityServiceMock.fetchEntityCustomerIdAsync(TENANT_ID, userId)).thenReturn(
+                FluentFuture.from(immediateFuture(Optional.empty()))
+        );
 
         // WHEN
         node.onMsg(ctxMock, msg);
@@ -278,18 +277,13 @@ public class TbGetCustomerAttributeNodeTest extends AbstractRuleNodeUpgradeTest 
         var actualExceptionCaptor = ArgumentCaptor.forClass(Throwable.class);
 
         verify(ctxMock, never()).tellSuccess(any());
-        verify(ctxMock, times(1))
-                .tellFailure(actualMessageCaptor.capture(), actualExceptionCaptor.capture());
+        verify(ctxMock).tellFailure(actualMessageCaptor.capture(), actualExceptionCaptor.capture());
 
         var actualMessage = actualMessageCaptor.getValue();
         var actualException = actualExceptionCaptor.getValue();
 
-        var expectedExceptionMessage = String.format(
-                "Failed to find customer for entity with id: %s and type: %s",
-                userId.getId(), userId.getEntityType().getNormalName());
-
         assertEquals(msg, actualMessage);
-        assertEquals(expectedExceptionMessage, actualException.getMessage());
+        assertEquals("Originator not found", actualException.getMessage());
         assertInstanceOf(NoSuchElementException.class, actualException);
     }
 
@@ -308,16 +302,12 @@ public class TbGetCustomerAttributeNodeTest extends AbstractRuleNodeUpgradeTest 
         );
         var expectedPatternProcessedKeysList = List.of("sourceKey1", "sourceKey2", "sourceKey3");
 
-        when(ctxMock.getTenantId()).thenReturn(TENANT_ID);
+        when(entityServiceMock.fetchEntityCustomerIdAsync(TENANT_ID, device.getId())).thenReturn(
+                FluentFuture.from(immediateFuture(Optional.of(CUSTOMER_ID)))
+        );
 
-        when(ctxMock.getDeviceService()).thenReturn(deviceServiceMock);
-        doReturn(device).when(deviceServiceMock).findDeviceById(eq(TENANT_ID), eq(device.getId()));
-
-        when(ctxMock.getAttributesService()).thenReturn(attributesServiceMock);
         when(attributesServiceMock.find(eq(TENANT_ID), eq(CUSTOMER_ID), eq(AttributeScope.SERVER_SCOPE), argThat(new ListMatcher<>(expectedPatternProcessedKeysList))))
-                .thenReturn(Futures.immediateFuture(attributesList));
-
-        when(ctxMock.getDbCallbackExecutor()).thenReturn(DB_EXECUTOR);
+                .thenReturn(immediateFuture(attributesList));
 
         // WHEN
         node.onMsg(ctxMock, msg);
@@ -325,7 +315,7 @@ public class TbGetCustomerAttributeNodeTest extends AbstractRuleNodeUpgradeTest 
         // THEN
         var actualMessageCaptor = ArgumentCaptor.forClass(TbMsg.class);
 
-        verify(ctxMock, times(1)).tellSuccess(actualMessageCaptor.capture());
+        verify(ctxMock).tellSuccess(actualMessageCaptor.capture());
         verify(ctxMock, never()).tellFailure(any(), any());
 
         var expectedMsgData = "{\"temp\":42," +
@@ -355,16 +345,12 @@ public class TbGetCustomerAttributeNodeTest extends AbstractRuleNodeUpgradeTest 
         );
         var expectedPatternProcessedKeysList = List.of("sourceKey1", "sourceKey2", "sourceKey3");
 
-        when(ctxMock.getTenantId()).thenReturn(TENANT_ID);
+        when(entityServiceMock.fetchEntityCustomerIdAsync(TENANT_ID, user.getId())).thenReturn(
+                FluentFuture.from(immediateFuture(Optional.of(CUSTOMER_ID)))
+        );
 
-        when(ctxMock.getUserService()).thenReturn(userServiceMock);
-        doReturn(Futures.immediateFuture(user)).when(userServiceMock).findUserByIdAsync(eq(TENANT_ID), eq(user.getId()));
-
-        when(ctxMock.getAttributesService()).thenReturn(attributesServiceMock);
         when(attributesServiceMock.find(eq(TENANT_ID), eq(CUSTOMER_ID), eq(AttributeScope.SERVER_SCOPE), argThat(new ListMatcher<>(expectedPatternProcessedKeysList))))
-                .thenReturn(Futures.immediateFuture(attributesList));
-
-        when(ctxMock.getDbCallbackExecutor()).thenReturn(DB_EXECUTOR);
+                .thenReturn(immediateFuture(attributesList));
 
         // WHEN
         node.onMsg(ctxMock, msg);
@@ -372,7 +358,7 @@ public class TbGetCustomerAttributeNodeTest extends AbstractRuleNodeUpgradeTest 
         // THEN
         var actualMessageCaptor = ArgumentCaptor.forClass(TbMsg.class);
 
-        verify(ctxMock, times(1)).tellSuccess(actualMessageCaptor.capture());
+        verify(ctxMock).tellSuccess(actualMessageCaptor.capture());
         verify(ctxMock, never()).tellFailure(any(), any());
 
         var expectedMsgMetaData = new TbMsgMetaData(Map.of(
@@ -401,21 +387,18 @@ public class TbGetCustomerAttributeNodeTest extends AbstractRuleNodeUpgradeTest 
         );
         var expectedPatternProcessedKeysList = List.of("sourceKey1", "sourceKey2", "sourceKey3");
 
-        when(ctxMock.getTenantId()).thenReturn(TENANT_ID);
-
-        when(ctxMock.getTimeseriesService()).thenReturn(timeseriesServiceMock);
         when(timeseriesServiceMock.findLatest(eq(TENANT_ID), eq(customer.getId()), argThat(new ListMatcher<>(expectedPatternProcessedKeysList))))
-                .thenReturn(Futures.immediateFuture(timeseriesList));
-
-        when(ctxMock.getDbCallbackExecutor()).thenReturn(DB_EXECUTOR);
+                .thenReturn(immediateFuture(timeseriesList));
 
         // WHEN
         node.onMsg(ctxMock, msg);
 
         // THEN
+        verifyNoInteractions(entityServiceMock);
+
         var actualMessageCaptor = ArgumentCaptor.forClass(TbMsg.class);
 
-        verify(ctxMock, times(1)).tellSuccess(actualMessageCaptor.capture());
+        verify(ctxMock).tellSuccess(actualMessageCaptor.capture());
         verify(ctxMock, never()).tellFailure(any(), any());
 
         var expectedMsgData = "{\"temp\":42," +
@@ -434,7 +417,7 @@ public class TbGetCustomerAttributeNodeTest extends AbstractRuleNodeUpgradeTest 
     public void givenFetchTelemetryToMetaData_whenOnMsg_thenShouldFetchTelemetryToMetaData() throws TbNodeException {
         // GIVEN
         var asset = new Asset(new AssetId(UUID.randomUUID()));
-        asset.setCustomerId(new CustomerId(UUID.randomUUID()));
+        asset.setCustomerId(CUSTOMER_ID);
 
         prepareMsgAndConfig(TbMsgSource.METADATA, DataToFetch.LATEST_TELEMETRY, asset.getId(), true);
 
@@ -445,16 +428,12 @@ public class TbGetCustomerAttributeNodeTest extends AbstractRuleNodeUpgradeTest 
         );
         var expectedPatternProcessedKeysList = List.of("sourceKey1", "sourceKey2", "sourceKey3");
 
-        when(ctxMock.getTenantId()).thenReturn(TENANT_ID);
+        when(entityServiceMock.fetchEntityCustomerIdAsync(TENANT_ID, asset.getId())).thenReturn(
+                FluentFuture.from(immediateFuture(Optional.of(CUSTOMER_ID)))
+        );
 
-        when(ctxMock.getAssetService()).thenReturn(assetServiceMock);
-        doReturn(Futures.immediateFuture(asset)).when(assetServiceMock).findAssetByIdAsync(eq(TENANT_ID), eq(asset.getId()));
-
-        when(ctxMock.getTimeseriesService()).thenReturn(timeseriesServiceMock);
-        when(timeseriesServiceMock.findLatest(eq(TENANT_ID), eq(asset.getCustomerId()), argThat(new ListMatcher<>(expectedPatternProcessedKeysList))))
-                .thenReturn(Futures.immediateFuture(timeseriesList));
-
-        when(ctxMock.getDbCallbackExecutor()).thenReturn(DB_EXECUTOR);
+        when(timeseriesServiceMock.findLatest(eq(TENANT_ID), eq(CUSTOMER_ID), argThat(new ListMatcher<>(expectedPatternProcessedKeysList))))
+                .thenReturn(immediateFuture(timeseriesList));
 
         // WHEN
         node.onMsg(ctxMock, msg);
@@ -462,7 +441,7 @@ public class TbGetCustomerAttributeNodeTest extends AbstractRuleNodeUpgradeTest 
         // THEN
         var actualMessageCaptor = ArgumentCaptor.forClass(TbMsg.class);
 
-        verify(ctxMock, times(1)).tellSuccess(actualMessageCaptor.capture());
+        verify(ctxMock).tellSuccess(actualMessageCaptor.capture());
         verify(ctxMock, never()).tellFailure(any(), any());
 
         var expectedMsgMetaData = new TbMsgMetaData(Map.of(
@@ -494,17 +473,12 @@ public class TbGetCustomerAttributeNodeTest extends AbstractRuleNodeUpgradeTest 
         );
         var expectedPatternProcessedKeysList = List.of("sourceKey1", "sourceKey2", "sourceKey3");
 
-        when(ctxMock.getTenantId()).thenReturn(TENANT_ID);
+        when(entityServiceMock.fetchEntityCustomerIdAsync(TENANT_ID, customer.getId())).thenReturn(
+                FluentFuture.from(immediateFuture(Optional.of(customer.getParentCustomerId())))
+        );
 
-        when(ctxMock.getCustomerService()).thenReturn(customerServiceMock);
-        when(customerServiceMock.findCustomerByIdAsync(eq(TENANT_ID), eq(customer.getId())))
-                .thenReturn(Futures.immediateFuture(customer));
-
-        when(ctxMock.getTimeseriesService()).thenReturn(timeseriesServiceMock);
         when(timeseriesServiceMock.findLatest(any(), any(), anyList()))
-                .thenReturn(Futures.immediateFuture(timeseriesList));
-
-        when(ctxMock.getDbCallbackExecutor()).thenReturn(DB_EXECUTOR);
+                .thenReturn(immediateFuture(timeseriesList));
 
         // WHEN
         node.onMsg(ctxMock, msg);
@@ -536,13 +510,9 @@ public class TbGetCustomerAttributeNodeTest extends AbstractRuleNodeUpgradeTest 
 
         prepareMsgAndConfig(TbMsgSource.DATA, DataToFetch.LATEST_TELEMETRY, customer.getId(), false);
 
-        when(ctxMock.getTenantId()).thenReturn(TENANT_ID);
-
-        when(ctxMock.getCustomerService()).thenReturn(customerServiceMock);
-        when(customerServiceMock.findCustomerByIdAsync(any(), any()))
-                .thenReturn(Futures.immediateFuture(customer));
-
-        when(ctxMock.getDbCallbackExecutor()).thenReturn(DB_EXECUTOR);
+        when(entityServiceMock.fetchEntityCustomerIdAsync(TENANT_ID, customer.getId())).thenReturn(
+                FluentFuture.from(immediateFuture(Optional.of(new CustomerId(EntityId.NULL_UUID))))
+        );
 
         // WHEN
         ArgumentCaptor<Exception> exceptionCaptor = ArgumentCaptor.forClass(Exception.class);
@@ -551,13 +521,11 @@ public class TbGetCustomerAttributeNodeTest extends AbstractRuleNodeUpgradeTest 
 
         //THEN
         verify(ctxMock).tellFailure(eq(msg), exceptionCaptor.capture());
-        verify(customerServiceMock).findCustomerByIdAsync(eq(TENANT_ID), eq(customer.getId()));
 
         Exception capturedException = exceptionCaptor.getValue();
 
-        assertInstanceOf(NoSuchElementException.class, capturedException);
-        assertEquals("Failed to find customer for entity with id: " + customerId +
-                " and type: " + customer.getId().getEntityType().getNormalName(), exceptionCaptor.getValue().getMessage());
+        assertInstanceOf(IllegalStateException.class, capturedException);
+        assertEquals("Originator is not assigned to any customer", exceptionCaptor.getValue().getMessage());
     }
 
     private void prepareMsgAndConfig(TbMsgSource fetchTo, DataToFetch dataToFetch, EntityId originator, boolean preserveOriginatorIfCustomer) throws TbNodeException {
@@ -628,4 +596,5 @@ public class TbGetCustomerAttributeNodeTest extends AbstractRuleNodeUpgradeTest 
     protected TbNode getTestNode() {
         return node;
     }
+
 }

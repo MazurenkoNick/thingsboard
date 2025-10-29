@@ -30,6 +30,7 @@
  */
 package org.thingsboard.server.dao.report;
 
+import com.google.common.util.concurrent.FluentFuture;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -52,6 +53,7 @@ import org.thingsboard.server.dao.service.validator.ReportDataValidator;
 import java.util.List;
 import java.util.Optional;
 
+import static com.google.common.util.concurrent.MoreExecutors.directExecutor;
 import static org.thingsboard.server.dao.DaoUtil.toUUIDs;
 import static org.thingsboard.server.dao.service.Validator.validateId;
 
@@ -143,6 +145,12 @@ public class DefaultReportService extends AbstractEntityService implements Repor
     }
 
     @Override
+    public FluentFuture<Optional<HasId<?>>> findEntityAsync(TenantId tenantId, EntityId entityId) {
+        return FluentFuture.from(reportDao.findByIdAsync(tenantId, entityId.getId()))
+                .transform(Optional::ofNullable, directExecutor());
+    }
+
+    @Override
     public void deleteEntity(TenantId tenantId, EntityId id, boolean force) {
         reportDao.removeById(tenantId, id.getId());
     }
@@ -151,4 +159,5 @@ public class DefaultReportService extends AbstractEntityService implements Repor
     public EntityType getEntityType() {
         return EntityType.REPORT;
     }
+
 }
