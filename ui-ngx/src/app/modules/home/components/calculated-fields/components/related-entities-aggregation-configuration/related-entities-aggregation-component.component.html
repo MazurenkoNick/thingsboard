@@ -63,7 +63,8 @@
                                             [entityId]="entityId"
                                             [tenantId]="tenantId"
                                             [entityName]="entityName"
-                                            [relation]="relatedAggregationConfiguration.get('relation').value"/>
+                                            [relation]="relatedAggregationConfiguration.get('relation').value"
+                                            [readonly]="readonly" />
   </div>
   <div class="tb-form-panel">
     <div class="tb-form-panel-title" tb-hint-tooltip-icon="{{ 'calculated-fields.hint.metrics' | translate }}">
@@ -73,6 +74,7 @@
                                        [arguments]="arguments$ | async"
                                        [highlightRules]="argumentsHighlightRules$ | async"
                                        [editorCompleter]="argumentsEditorCompleter$ | async"
+                                       [readonly]="readonly"
     ></tb-calculated-field-metrics-table>
     <tb-time-unit-input required
                         appearance="outline"

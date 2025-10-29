@@ -29,7 +29,7 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { Component, forwardRef, Input, OnInit } from '@angular/core';
+import { booleanAttribute, Component, forwardRef, Input, OnInit } from '@angular/core';
 import {
   ControlValueAccessor,
   FormBuilder,
@@ -83,6 +83,9 @@ export class GeofencingConfigurationComponent implements ControlValueAccessor, V
 
   @Input({required: true})
   entityName: string;
+
+  @Input({ transform: booleanAttribute })
+  readonly: boolean;
 
   readonly minAllowedScheduledUpdateIntervalInSecForCF = getCurrentAuthState(this.store).minAllowedScheduledUpdateIntervalInSecForCF;
   readonly DataKeyType = DataKeyType;

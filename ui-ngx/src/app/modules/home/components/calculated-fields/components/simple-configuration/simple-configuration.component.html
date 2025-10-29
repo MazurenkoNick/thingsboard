@@ -38,7 +38,8 @@
                                          [tenantId]="tenantId"
                                          [entityName]="entityName"
                                          [ownerId]="ownerId"
-                                         [isScript]="isScript" />
+                                         [isScript]="isScript"
+                                         [readonly]="readonly" />
   </div>
   <div class="tb-form-panel no-gap">
     <div class="tb-form-panel-title tb-required">
@@ -86,19 +87,21 @@
                 matTooltip="{{ 'calculated-fields.test-script-function' | translate }}"
                 matTooltipPosition="above"
                 class="tb-mat-32"
-                [disabled]="simpleConfiguration.get('arguments').invalid"
+                [disabled]="simpleConfiguration.get('arguments').invalid || readonly"
                 (click)="onTestScript()">
           <mat-icon class="material-icons" color="primary">bug_report</mat-icon>
         </button>
       </tb-js-func>
-      <div>
-        <button mat-button mat-raised-button color="primary"
-                type="button"
-                (click)="onTestScript()"
-                [disabled]="simpleConfiguration.get('arguments').invalid">
-          {{ 'calculated-fields.test-script-function' | translate }}
-        </button>
-      </div>
+      @if(!readonly) {
+        <div>
+          <button mat-button mat-raised-button color="primary"
+                  type="button"
+                  (click)="onTestScript()"
+                  [disabled]="simpleConfiguration.get('arguments').invalid">
+            {{ 'calculated-fields.test-script-function' | translate }}
+          </button>
+        </div>
+      }
     </div>
   </div>
   <tb-calculate-field-output formControlName="output" [simpleMode]="!isScript" [entityId]="entityId">

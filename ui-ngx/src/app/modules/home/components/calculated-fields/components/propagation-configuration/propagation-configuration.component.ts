@@ -29,7 +29,7 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { Component, forwardRef, Input } from '@angular/core';
+import { booleanAttribute, Component, forwardRef, Input } from '@angular/core';
 import {
   ControlValueAccessor,
   FormBuilder,
@@ -88,6 +88,9 @@ export class PropagationConfigurationComponent implements ControlValueAccessor, 
 
   @Input({required: true})
   ownerId: EntityId;
+
+  @Input({ transform: booleanAttribute })
+  readonly: boolean;
 
   @Input({required: true})
   testScript: () => Observable<string>;

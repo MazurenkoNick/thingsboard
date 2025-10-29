@@ -31,6 +31,7 @@
 
 import {
   AfterViewInit,
+  booleanAttribute,
   ChangeDetectorRef,
   Component,
   DestroyRef,
@@ -92,6 +93,7 @@ export class CalculatedFieldMetricsTableComponent implements ControlValueAccesso
   @Input() arguments: Array<string>;
   @Input() editorCompleter: TbEditorCompleter;
   @Input() highlightRules: AceHighlightRules;
+  @Input({ transform: booleanAttribute }) readonly: boolean;
 
   @ViewChild(MatSort, { static: true }) sort: MatSort;
 

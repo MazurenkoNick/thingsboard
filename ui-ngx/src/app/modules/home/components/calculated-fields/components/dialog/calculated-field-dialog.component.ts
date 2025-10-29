@@ -86,6 +86,8 @@ export class CalculatedFieldDialogComponent extends DialogComponent<CalculatedFi
     action: () => this.data.additionalDebugActionConfig.action({ id: this.data.value.id, ...this.fromGroupValue }),
   } : null;
 
+  readonly = false;
+
   readonly EntityType = EntityType;
   readonly CalculatedFieldType = CalculatedFieldType;
   readonly fieldTypes = Object.values(CalculatedFieldType) as CalculatedFieldType[];
@@ -102,6 +104,11 @@ export class CalculatedFieldDialogComponent extends DialogComponent<CalculatedFi
     this.observeIsLoading();
     this.observeType();
     this.applyDialogData();
+
+    if (this.data.readonly) {
+      this.fieldFormGroup.disable();
+      this.readonly = true;
+    }
   }
 
   get fromGroupValue(): CalculatedField {

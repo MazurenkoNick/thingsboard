@@ -77,8 +77,8 @@
       </ng-container>
 
       <ng-container matColumnDef="actions" stickyEnd>
-        <mat-header-cell *matHeaderCellDef class="w-20 min-w-20"/>
-        <mat-cell *matCellDef="let metric;">
+        <mat-header-cell *matHeaderCellDef class="w-20 min-w-20" [class.hidden]="readonly" />
+        <mat-cell *matCellDef="let metric;" [class.hidden]="readonly">
           <div class="tb-form-table-row-cell-buttons min-w-20">
             <button type="button"
                     mat-icon-button
@@ -110,14 +110,16 @@
     }
   </div>
   <div class="flex h-9 justify-between">
-    <button type="button"
-            mat-stroked-button
-            color="primary"
-            #button
-            (click)="manageMetrics($event, button)"
-            [disabled]="maxArgumentsPerCF > 0 && metricsFormArray.length >= maxArgumentsPerCF">
-      {{ 'calculated-fields.metrics.add-metric' | translate }}
-    </button>
+    @if (!readonly) {
+      <button type="button"
+              mat-stroked-button
+              color="primary"
+              #button
+              (click)="manageMetrics($event, button)"
+              [disabled]="maxArgumentsPerCF > 0 && metricsFormArray.length >= maxArgumentsPerCF">
+        {{ 'calculated-fields.metrics.add-metric' | translate }}
+      </button>
+    }
     @if (maxArgumentsPerCF && metricsFormArray.length >= maxArgumentsPerCF) {
       <div class="tb-form-hint tb-primary-fill max-args-warning flex items-center gap-2">
         <mat-icon>warning</mat-icon>
