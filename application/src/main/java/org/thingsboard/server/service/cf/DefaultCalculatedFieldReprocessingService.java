@@ -154,8 +154,8 @@ public class DefaultCalculatedFieldReprocessingService extends AbstractCalculate
 
         CalculatedFieldCtx cfCtx = new CalculatedFieldCtx(calculatedField, systemContext);
         cfCtx.setUseLatestTs(false);
-        CalculatedFieldState state = initState(tenantId, entityId, cfCtx, startTs);
         cfCtx.init();
+        CalculatedFieldState state = initState(tenantId, entityId, cfCtx, startTs);
         CfReprocessingCtx ctx = CfReprocessingCtx.builder()
                 .tenantId(tenantId)
                 .entityId(entityId)
@@ -405,7 +405,7 @@ public class DefaultCalculatedFieldReprocessingService extends AbstractCalculate
             log.debug("[{}][{}] Closing CF reprocessing context", tenantId, entityId);
             telemetryBuffers.clear();
             resultFutures.forEach(future -> future.cancel(true));
-            cfCtx.stop();
+            cfCtx.close();
         }
 
     }
