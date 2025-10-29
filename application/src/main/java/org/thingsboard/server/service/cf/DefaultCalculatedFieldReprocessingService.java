@@ -341,7 +341,7 @@ public class DefaultCalculatedFieldReprocessingService extends AbstractCalculate
     }
 
     @Getter
-    public static abstract class AbstractCfReprocessingCtx implements CFReprocessingCtx, AutoCloseable {
+    public abstract class AbstractCfReprocessingCtx implements CFReprocessingCtx, AutoCloseable {
 
         protected final TenantId tenantId;
         protected final EntityId entityId;
@@ -362,6 +362,53 @@ public class DefaultCalculatedFieldReprocessingService extends AbstractCalculate
             this.cfId = cfCtx.getCfId();
             this.ctxId = new CalculatedFieldEntityCtxId(tenantId, cfId, entityId);
         }
+
+        @Override
+        public Map<String, ArgumentEntry> getUpdatedArgs(long minTs, long startTs, long endTs) throws InterruptedException {
+            Map<String, ArgumentEntry> updatedArgs = new HashMap<>();
+
+            for (String argName : getArgNames()) {
+                ArgumentEntry argumentEntry = processArgBuffer(argName, minTs, startTs, endTs);
+                if (argumentEntry != null) {
+                    updatedArgs.put(argName, argumentEntry);
+                }
+            }
+
+            return updatedArgs;
+        }
+
+        protected abstract Set<String> getArgNames();
+
+        protected abstract ArgumentEntry processArgBuffer(String argName, long minTs, long startTs, long endTs) throws InterruptedException;
+
+        protected ArgumentEntry processArgEntityBuffer(String argName, EntityId sourceId, LinkedList<TsKvEntry> buffer, long minTs, long startTs, long endTs) throws InterruptedException {
+            if (buffer != null && !buffer.isEmpty() && buffer.getFirst().getTs() == minTs) {
+                TsKvEntry kvEntry = buffer.removeFirst();
+                ArgumentEntry argumentEntry = ArgumentEntry.createSingleValueArgument(sourceId, new SingleValueArgumentEntry(kvEntry));
+
+                if (buffer.isEmpty()) {
+                    refillArgEntityBuffer(argName, sourceId, startTs, endTs);
+                }
+
+                return argumentEntry;
+            }
+            return null;
+        }
+
+        protected void refillArgEntityBuffer(String argName, EntityId sourceId, long startTs, long endTs) throws InterruptedException {
+            Argument arg = cfCtx.getArguments().get(argName);
+            long cursorTs = Optional.ofNullable(getArgCursor(argName, sourceId)).orElse(startTs);
+            LinkedList<TsKvEntry> nextBatch = fetchTelemetryBatch(tenantId, entityId, arg, cursorTs, endTs, telemetryFetchPackSize).stream()
+                    .filter(tsKv -> tsKv.getTs() > cursorTs)
+                    .collect(Collectors.toCollection(LinkedList::new));
+            if (!nextBatch.isEmpty()) {
+                putNewBatch(argName, sourceId, nextBatch);
+            }
+        }
+
+        protected abstract Long getArgCursor(String argName, EntityId sourceId);
+
+        protected abstract void putNewBatch(String argName, EntityId sourceId, LinkedList<TsKvEntry> nextBatch);
 
         public void checkStateSize() {
             state.checkStateSize(ctxId, cfCtx.getMaxStateSize());
@@ -446,36 +493,42 @@ public class DefaultCalculatedFieldReprocessingService extends AbstractCalculate
         }
 
         @Override
-        public Map<String, ArgumentEntry> getUpdatedArgs(long minTs, long startTs, long endTs) throws InterruptedException {
-            Map<String, ArgumentEntry> updatedArgs = new HashMap<>();
-            for (Entry<String, Map<EntityId, LinkedList<TsKvEntry>>> telemetryBuffer : entityTelemetryBuffers.entrySet()) {
-                String argName = telemetryBuffer.getKey();
-                Map<EntityId, LinkedList<TsKvEntry>> entityBuffers = telemetryBuffer.getValue();
+        protected Set<String> getArgNames() {
+            return entityTelemetryBuffers.keySet();
+        }
 
-                Map<EntityId, ArgumentEntry> entityArguments = new HashMap<>();
-                for (Map.Entry<EntityId, LinkedList<TsKvEntry>> entityBuffer : entityBuffers.entrySet()) {
-                    EntityId sourceId = entityBuffer.getKey();
-                    LinkedList<TsKvEntry> buffer = entityBuffer.getValue();
-
-                    if (!buffer.isEmpty() && buffer.getFirst().getTs() == minTs) {
-                        TsKvEntry kvEntry = buffer.removeFirst();
-                        entityArguments.put(sourceId, ArgumentEntry.createSingleValueArgument(sourceId, new SingleValueArgumentEntry(kvEntry)));
-
-                        if (buffer.isEmpty()) {
-                            Argument arg = cfCtx.getArguments().get(argName);
-                            Long cursorTs = entityCursors.get(argName).getOrDefault(sourceId, startTs);
-                            LinkedList<TsKvEntry> nextBatch = fetchNextBatch(tenantId, sourceId, arg, cursorTs, endTs);
-                            if (!nextBatch.isEmpty()) {
-                                entityTelemetryBuffers.get(argName).put(sourceId, nextBatch);
-                                entityCursors.get(argName).put(sourceId, nextBatch.getLast().getTs());
-                            }
-                        }
-                    }
-                }
-                ArgumentEntry entry = ArgumentEntry.createAggArgument(entityArguments);
-                updatedArgs.put(argName, entry);
+        @Override
+        protected Long getArgCursor(String argName, EntityId sourceId) {
+            if (entityCursors.containsKey(argName)) {
+                return entityCursors.get(argName).get(sourceId);
             }
-            return updatedArgs;
+            return null;
+        }
+
+        @Override
+        protected void putNewBatch(String argName, EntityId sourceId, LinkedList<TsKvEntry> nextBatch) {
+            entityTelemetryBuffers.get(argName).put(sourceId, nextBatch);
+            entityCursors.get(argName).put(sourceId, nextBatch.getLast().getTs());
+        }
+
+        protected ArgumentEntry processArgBuffer(String argName, long minTs, long startTs, long endTs) throws InterruptedException {
+            Map<EntityId, LinkedList<TsKvEntry>> entityBuffers = entityTelemetryBuffers.get(argName);
+
+            Map<EntityId, ArgumentEntry> entityArguments = new HashMap<>();
+            for (Map.Entry<EntityId, LinkedList<TsKvEntry>> entityBuffer : entityBuffers.entrySet()) {
+                EntityId sourceId = entityBuffer.getKey();
+                LinkedList<TsKvEntry> buffer = entityBuffer.getValue();
+
+                ArgumentEntry argumentEntry = processArgEntityBuffer(argName, sourceId, buffer, minTs, startTs, endTs);
+                if (argumentEntry != null) {
+                    entityArguments.put(sourceId, argumentEntry);
+                }
+            }
+
+            if (entityArguments.isEmpty()) {
+                return null;
+            }
+            return ArgumentEntry.createAggArgument(entityArguments);
         }
 
         @Override
@@ -522,29 +575,24 @@ public class DefaultCalculatedFieldReprocessingService extends AbstractCalculate
                     .min();
         }
 
+        protected Set<String> getArgNames() {
+            return telemetryBuffers.keySet();
+        }
+
         @Override
-        public Map<String, ArgumentEntry> getUpdatedArgs(long minTs, long startTs, long endTs) throws InterruptedException {
-            Map<String, ArgumentEntry> updatedArgs = new HashMap<>();
-            for (Entry<String, LinkedList<TsKvEntry>> telemetryBuffer : telemetryBuffers.entrySet()) {
-                String argName = telemetryBuffer.getKey();
-                LinkedList<TsKvEntry> buffer = telemetryBuffer.getValue();
+        protected Long getArgCursor(String argName, EntityId sourceId) {
+            return cursors.get(argName);
+        }
 
-                if (!buffer.isEmpty() && buffer.getFirst().getTs() == minTs) {
-                    TsKvEntry tsEntry = buffer.removeFirst();
-                    updatedArgs.put(argName, ArgumentEntry.createSingleValueArgument(tsEntry));
+        @Override
+        protected void putNewBatch(String argName, EntityId sourceId, LinkedList<TsKvEntry> nextBatch) {
+            telemetryBuffers.put(argName, nextBatch);
+            cursors.put(argName, nextBatch.getLast().getTs());
+        }
 
-                    if (buffer.isEmpty()) {
-                        Argument arg = cfCtx.getArguments().get(argName);
-                        Long cursorTs = cursors.getOrDefault(argName, startTs);
-                        LinkedList<TsKvEntry> nextBatch = fetchNextBatch(tenantId, entityId, arg, cursorTs, endTs);
-                        if (!nextBatch.isEmpty()) {
-                            telemetryBuffers.put(argName, nextBatch);
-                            cursors.put(argName, nextBatch.getLast().getTs());
-                        }
-                    }
-                }
-            }
-            return updatedArgs;
+        protected ArgumentEntry processArgBuffer(String argName, long minTs, long startTs, long endTs) throws InterruptedException {
+            LinkedList<TsKvEntry> buffer = telemetryBuffers.get(argName);
+            return processArgEntityBuffer(argName, entityId, buffer, minTs, startTs, endTs);
         }
 
         @Override
@@ -554,12 +602,6 @@ public class DefaultCalculatedFieldReprocessingService extends AbstractCalculate
             cursors.clear();
         }
 
-    }
-
-    private LinkedList<TsKvEntry> fetchNextBatch(TenantId tenantId, EntityId entityId, Argument arg, long cursorTs, long endTs) throws InterruptedException {
-        return fetchTelemetryBatch(tenantId, entityId, arg, cursorTs, endTs, telemetryFetchPackSize).stream()
-                .filter(tsKv -> tsKv.getTs() > cursorTs)
-                .collect(Collectors.toCollection(LinkedList::new));
     }
 
 }
