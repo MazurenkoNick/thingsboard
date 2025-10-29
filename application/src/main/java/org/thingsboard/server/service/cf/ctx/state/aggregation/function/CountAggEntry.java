@@ -28,64 +28,29 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-:host {
-  .arguments-table {
-    min-height: 108px;
+package org.thingsboard.server.service.cf.ctx.state.aggregation.function;
 
-    &-with-error {
-      min-height: 150px;
+import org.thingsboard.server.common.data.cf.configuration.aggregation.AggFunction;
+
+import java.util.Optional;
+
+public class CountAggEntry implements AggEntry {
+
+    private long count = 0L;
+
+    @Override
+    public void update(Object value) {
+        count++;
     }
 
-    .mat-mdc-table {
-      table-layout: fixed;
+    @Override
+    public Optional<Object> result(Integer precision) {
+        return Optional.of(count);
     }
 
-    .key-text {
-      font-size: 13px;
+    @Override
+    public AggFunction getType() {
+        return AggFunction.COUNT;
     }
 
-    .copy-argument-name {
-      visibility: hidden;
-      transition: visibility 0.1s;
-    }
-
-    .argument-name-cell:hover {
-      .copy-argument-name {
-        visibility: visible;
-      }
-    }
-  }
-
-  .max-args-warning {
-    .mat-icon {
-      color: #FAA405;
-    }
-  }
-
-  .tb-form-table-row-cell-buttons {
-    --mat-badge-legacy-small-size-container-size: 8px;
-    --mat-badge-small-size-container-overlap-offset: -5px;
-    --mat-badge-small-size-text-size: 0;
-  }
-}
-
-:host ::ng-deep {
-  .arguments-table:not(.arguments-table-with-error) {
-    .mdc-data-table__row:last-child .mat-mdc-cell {
-      border-bottom: none;
-    }
-  }
-
-  .arguments-table {
-    .mat-mdc-header-row.mat-row-select .mat-mdc-header-cell.entity-type-header {
-      padding: 0 28px 0 0;
-    }
-  }
-
-  .copy-argument-name {
-    .mat-icon {
-      font-size: 16px;
-      padding: 4px;
-    }
-  }
 }

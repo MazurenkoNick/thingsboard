@@ -58,6 +58,8 @@ import org.thingsboard.server.common.data.cf.configuration.PropagationCalculated
 import org.thingsboard.server.common.data.cf.configuration.ReferencedEntityKey;
 import org.thingsboard.server.common.data.cf.configuration.ScheduledUpdateSupportedCalculatedFieldConfiguration;
 import org.thingsboard.server.common.data.cf.configuration.SimpleCalculatedFieldConfiguration;
+import org.thingsboard.server.common.data.cf.configuration.aggregation.AggFunctionInput;
+import org.thingsboard.server.common.data.cf.configuration.aggregation.RelatedEntitiesAggregationCalculatedFieldConfiguration;
 import org.thingsboard.server.common.data.cf.configuration.geofencing.GeofencingCalculatedFieldConfiguration;
 import org.thingsboard.server.common.data.id.CalculatedFieldId;
 import org.thingsboard.server.common.data.id.EntityId;
@@ -84,6 +86,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @Data
 @Slf4j
@@ -99,6 +102,7 @@ public class CalculatedFieldCtx implements Closeable {
     private final Map<ReferencedEntityKey, Set<String>> mainEntityArguments;
     private final Map<EntityId, Map<ReferencedEntityKey, Set<String>>> linkedEntityArguments;
     private final Map<ReferencedEntityKey, Set<String>> dynamicEntityArguments;
+    private final Map<ReferencedEntityKey, Set<String>> relatedEntityArguments;
     private final List<String> argNames;
     private Output output;
     private String expression;
@@ -122,6 +126,7 @@ public class CalculatedFieldCtx implements Closeable {
     private boolean relationQueryDynamicArguments;
     private List<String> mainEntityGeofencingArgumentNames;
     private List<String> linkedEntityAndCurrentOwnerGeofencingArgumentNames;
+    private List<String> relatedEntityArgumentNames;
 
     private long scheduledUpdateIntervalMillis;
 
@@ -140,9 +145,11 @@ public class CalculatedFieldCtx implements Closeable {
         this.mainEntityArguments = new HashMap<>();
         this.linkedEntityArguments = new HashMap<>();
         this.dynamicEntityArguments = new HashMap<>();
+        this.relatedEntityArguments = new HashMap<>();
         this.argNames = new ArrayList<>();
         this.mainEntityGeofencingArgumentNames = new ArrayList<>();
         this.linkedEntityAndCurrentOwnerGeofencingArgumentNames = new ArrayList<>();
+        this.relatedEntityArgumentNames = new ArrayList<>();
         this.output = calculatedField.getConfiguration().getOutput();
         if (calculatedField.getConfiguration() instanceof ArgumentsBasedCalculatedFieldConfiguration argBasedConfig) {
             this.arguments.putAll(argBasedConfig.getArguments());
@@ -150,6 +157,10 @@ public class CalculatedFieldCtx implements Closeable {
                 var refId = entry.getValue().getRefEntityId();
                 var refKey = entry.getValue().getRefEntityKey();
                 if (refId == null) {
+                    if (CalculatedFieldType.RELATED_ENTITIES_AGGREGATION.equals(cfType)) {
+                        relatedEntityArguments.compute(refKey, (key, existingNames) -> CollectionsUtil.addToSet(existingNames, entry.getKey()));
+                        continue;
+                    }
                     if (entry.getValue().hasRelationQuerySource()) {
                         relationQueryDynamicArguments = true;
                         continue;
@@ -167,6 +178,9 @@ public class CalculatedFieldCtx implements Closeable {
                 }
             }
             this.argNames.addAll(arguments.keySet());
+            this.relatedEntityArgumentNames = relatedEntityArguments.values().stream()
+                    .flatMap(Set::stream)
+                    .collect(Collectors.toList());
             if (argBasedConfig instanceof ExpressionBasedCalculatedFieldConfiguration expressionBasedConfig) {
                 this.expression = expressionBasedConfig.getExpression();
                 this.useLatestTs = CalculatedFieldType.SIMPLE.equals(calculatedField.getType()) && ((SimpleCalculatedFieldConfiguration) argBasedConfig).isUseLatestTs();
@@ -192,6 +206,9 @@ public class CalculatedFieldCtx implements Closeable {
             this.scheduledUpdateIntervalMillis = scheduledConfig.isScheduledUpdateEnabled() ? TimeUnit.SECONDS.toMillis(scheduledConfig.getScheduledUpdateInterval()) : -1L;
         }
         this.requiresScheduledReevaluation = calculatedField.getConfiguration().requiresScheduledReevaluation();
+        if (calculatedField.getConfiguration() instanceof RelatedEntitiesAggregationCalculatedFieldConfiguration aggConfig) {
+            this.useLatestTs = aggConfig.isUseLatestTs();
+        }
         this.systemContext = systemContext;
         this.tbelInvokeService = systemContext.getTbelInvokeService();
         this.relationService = systemContext.getRelationService();
@@ -229,6 +246,19 @@ public class CalculatedFieldCtx implements Closeable {
                 }
                 initialized = true;
             }
+            case RELATED_ENTITIES_AGGREGATION -> {
+                RelatedEntitiesAggregationCalculatedFieldConfiguration configuration = (RelatedEntitiesAggregationCalculatedFieldConfiguration) calculatedField.getConfiguration();
+                configuration.getMetrics().forEach((key, metric) -> {
+                    if (metric.getInput() instanceof AggFunctionInput functionInput) {
+                        initTbelExpression(functionInput.getFunction());
+                    }
+                    String filter = metric.getFilter();
+                    if (filter != null && !filter.isEmpty()) {
+                        initTbelExpression(filter);
+                    }
+                });
+                initialized = true;
+            }
         }
     }
 
@@ -251,15 +281,23 @@ public class CalculatedFieldCtx implements Closeable {
     }
 
     public ListenableFuture<Object> evaluateTbelExpression(String expression, CalculatedFieldState state) {
-        return evaluateTbelExpression(tbelExpressions.get(expression), state);
+        return evaluateTbelExpression(tbelExpressions.get(expression), state.getArguments(), state.getLatestTimestamp());
     }
 
     public ListenableFuture<Object> evaluateTbelExpression(CalculatedFieldScriptEngine expression, CalculatedFieldState state) {
+        return evaluateTbelExpression(expression, state.getArguments(), state.getLatestTimestamp());
+    }
+
+    public ListenableFuture<Object> evaluateTbelExpression(String expression, Map<String, ArgumentEntry> entries, long latestTimestamp) {
+        return evaluateTbelExpression(tbelExpressions.get(expression), entries, latestTimestamp);
+    }
+
+    public ListenableFuture<Object> evaluateTbelExpression(CalculatedFieldScriptEngine expression, Map<String, ArgumentEntry> entries, long latestTimestamp) {
         Map<String, TbelCfArg> arguments = new LinkedHashMap<>();
         List<Object> args = new ArrayList<>(argNames.size() + 1);
         args.add(new Object()); // first element is a ctx, but we will set it later;
         for (String argName : argNames) {
-            var arg = toTbelArgument(argName, state);
+            var arg = toTbelArgument(argName, entries);
             arguments.put(argName, arg);
             if (arg instanceof TbelCfSingleValueArg svArg) {
                 args.add(svArg.getValue());
@@ -267,7 +305,7 @@ public class CalculatedFieldCtx implements Closeable {
                 args.add(arg);
             }
         }
-        args.set(0, new TbelCfCtx(arguments, state.getLatestTimestamp()));
+        args.set(0, new TbelCfCtx(arguments, latestTimestamp));
 
         return expression.executeScriptAsync(args.toArray());
     }
@@ -277,8 +315,8 @@ public class CalculatedFieldCtx implements Closeable {
         return systemContext.scheduleMsgWithDelay(actorCtx, new CalculatedFieldReevaluateMsg(tenantId, this), delayMs);
     }
 
-    private TbelCfArg toTbelArgument(String key, CalculatedFieldState state) {
-        return state.getArguments().get(key).toTbelCfArg();
+    private TbelCfArg toTbelArgument(String key, Map<String, ArgumentEntry> arguments) {
+        return arguments.get(key).toTbelCfArg();
     }
 
     private void initTbelExpression(String expression) {
@@ -461,6 +499,41 @@ public class CalculatedFieldCtx implements Closeable {
         return map != null && matchesTimeSeriesKeys(map, keys);
     }
 
+    public boolean relatedEntityMatches(List<TsKvEntry> values) {
+        return matchesTimeSeries(relatedEntityArguments, values);
+    }
+
+    public boolean relatedEntityMatches(List<AttributeKvEntry> values, AttributeScope scope) {
+        return matchesAttributes(relatedEntityArguments, values, scope);
+    }
+
+    public boolean matchesRelatedEntityKeys(List<String> keys, AttributeScope scope) {
+        return matchesAttributesKeys(relatedEntityArguments, keys, scope);
+    }
+
+    public boolean matchesRelatedEntityKeys(List<String> keys) {
+        return matchesTimeSeriesKeys(relatedEntityArguments, keys);
+    }
+
+    public boolean relatedEntityMatches(CalculatedFieldTelemetryMsgProto proto) {
+        if (!proto.getTsDataList().isEmpty()) {
+            List<TsKvEntry> updatedTelemetry = proto.getTsDataList().stream()
+                    .map(ProtoUtils::fromProto)
+                    .toList();
+            return relatedEntityMatches(updatedTelemetry);
+        } else if (!proto.getAttrDataList().isEmpty()) {
+            AttributeScope scope = AttributeScope.valueOf(proto.getScope().name());
+            List<AttributeKvEntry> updatedTelemetry = proto.getAttrDataList().stream()
+                    .map(ProtoUtils::fromProto)
+                    .toList();
+            return relatedEntityMatches(updatedTelemetry, scope);
+        } else if (!proto.getRemovedTsKeysList().isEmpty()) {
+            return matchesRelatedEntityKeys(proto.getRemovedTsKeysList());
+        } else {
+            return matchesRelatedEntityKeys(proto.getRemovedAttrKeysList(), AttributeScope.valueOf(proto.getScope().name()));
+        }
+    }
+
     public boolean dynamicSourceMatches(CalculatedFieldTelemetryMsgProto proto) {
         if (!proto.getTsDataList().isEmpty()) {
             List<TsKvEntry> updatedTelemetry = proto.getTsDataList().stream()
@@ -522,6 +595,11 @@ public class CalculatedFieldCtx implements Closeable {
         if (!Objects.equals(output, other.output)) {
             return true;
         }
+        if (calculatedField.getConfiguration() instanceof SimpleCalculatedFieldConfiguration thisConfig
+                && other.calculatedField.getConfiguration() instanceof SimpleCalculatedFieldConfiguration otherConfig
+                && thisConfig.isUseLatestTs() != otherConfig.isUseLatestTs()) {
+            return true;
+        }
         if (cfType == CalculatedFieldType.ALARM) {
             if (!calculatedField.getName().equals(other.getCalculatedField().getName())) {
                 return true;
@@ -534,7 +612,15 @@ public class CalculatedFieldCtx implements Closeable {
                 return true;
             }
         }
-        return scheduledUpdateIntervalMillis != other.scheduledUpdateIntervalMillis;
+        if (scheduledUpdateIntervalMillis != other.scheduledUpdateIntervalMillis) {
+            return true;
+        }
+        if (calculatedField.getConfiguration() instanceof RelatedEntitiesAggregationCalculatedFieldConfiguration thisConfig
+                && other.getCalculatedField().getConfiguration() instanceof RelatedEntitiesAggregationCalculatedFieldConfiguration otherConfig
+                && (thisConfig.getDeduplicationIntervalInSec() != otherConfig.getDeduplicationIntervalInSec() || !thisConfig.getMetrics().equals(otherConfig.getMetrics()))) {
+            return true;
+        }
+        return false;
     }
 
     public boolean hasStateChanges(CalculatedFieldCtx other) {
@@ -551,13 +637,27 @@ public class CalculatedFieldCtx implements Closeable {
                 return true;
             }
         }
-        return hasGeofencingZoneGroupConfigurationChanges(other);
+        if (hasGeofencingZoneGroupConfigurationChanges(other)) {
+            return true;
+        }
+        if (hasRelatedEntitiesAggregationConfigurationChanges(other)) {
+            return true;
+        }
+        return false;
     }
 
     private boolean hasGeofencingZoneGroupConfigurationChanges(CalculatedFieldCtx other) {
         if (calculatedField.getConfiguration() instanceof GeofencingCalculatedFieldConfiguration thisConfig
-            && other.calculatedField.getConfiguration() instanceof GeofencingCalculatedFieldConfiguration otherConfig) {
+                && other.calculatedField.getConfiguration() instanceof GeofencingCalculatedFieldConfiguration otherConfig) {
             return !thisConfig.getZoneGroups().equals(otherConfig.getZoneGroups());
+        }
+        return false;
+    }
+
+    private boolean hasRelatedEntitiesAggregationConfigurationChanges(CalculatedFieldCtx other) {
+        if (calculatedField.getConfiguration() instanceof RelatedEntitiesAggregationCalculatedFieldConfiguration thisConfig
+                && other.calculatedField.getConfiguration() instanceof RelatedEntitiesAggregationCalculatedFieldConfiguration otherConfig) {
+            return !thisConfig.getRelation().equals(otherConfig.getRelation());
         }
         return false;
     }
@@ -581,7 +681,7 @@ public class CalculatedFieldCtx implements Closeable {
                     yield true;
                 }
                 yield geofencingState.getLastDynamicArgumentsRefreshTs() <
-                      System.currentTimeMillis() - scheduledUpdateIntervalMillis;
+                        System.currentTimeMillis() - scheduledUpdateIntervalMillis;
             }
             default -> false;
         };
@@ -612,10 +712,10 @@ public class CalculatedFieldCtx implements Closeable {
     @Override
     public String toString() {
         return "CalculatedFieldCtx{" +
-               "cfId=" + cfId +
-               ", cfType=" + cfType +
-               ", entityId=" + entityId +
-               '}';
+                "cfId=" + cfId +
+                ", cfType=" + cfType +
+                ", entityId=" + entityId +
+                '}';
     }
 
 }

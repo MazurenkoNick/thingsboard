@@ -54,6 +54,9 @@ import {
   PropagationConfigurationModule
 } from '@home/components/calculated-fields/components/propagation-configuration/propagation-configuration.module';
 import {
+  RelatedEntitiesAggregationComponentModule
+} from '@home/components/calculated-fields/components/related-entities-aggregation-configuration/related-entities-aggregation-component.module';
+import {
   CalculatedFieldReprocessingPanelComponent
 } from '@home/components/calculated-fields/components/reprocessing/calculated-field-reprocessing-panel.component';
 
@@ -71,6 +74,7 @@ import {
     EntityDebugSettingsButtonComponent,
     SimpleConfigurationModule,
     PropagationConfigurationModule,
+    RelatedEntitiesAggregationComponentModule,
   ],
   exports: [
     CalculatedFieldDialogComponent,

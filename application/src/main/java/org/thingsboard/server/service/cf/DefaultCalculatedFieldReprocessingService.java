@@ -37,7 +37,6 @@ import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -53,6 +52,7 @@ import org.thingsboard.server.common.data.cf.CalculatedFieldType;
 import org.thingsboard.server.common.data.cf.configuration.Argument;
 import org.thingsboard.server.common.data.cf.configuration.ArgumentType;
 import org.thingsboard.server.common.data.cf.configuration.OutputType;
+import org.thingsboard.server.common.data.cf.configuration.aggregation.RelatedEntitiesAggregationCalculatedFieldConfiguration;
 import org.thingsboard.server.common.data.id.CalculatedFieldId;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.TenantId;
@@ -78,6 +78,7 @@ import org.thingsboard.server.service.security.permission.OwnersCacheService;
 import org.thingsboard.server.service.telemetry.TelemetrySubscriptionService;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -156,39 +157,21 @@ public class DefaultCalculatedFieldReprocessingService extends AbstractCalculate
         cfCtx.setUseLatestTs(false);
         cfCtx.init();
         CalculatedFieldState state = initState(tenantId, entityId, cfCtx, startTs);
-        CfReprocessingCtx ctx = CfReprocessingCtx.builder()
-                .tenantId(tenantId)
-                .entityId(entityId)
-                .cfCtx(cfCtx)
-                .state(state)
-                .build();
+        CFReprocessingCtx ctx = buildCtx(tenantId, entityId, cfCtx, state);
 
         try (ctx) {
             ctx.checkStateSize();
             processStateIfReady(ctx, startTs).get();
 
-            for (Entry<String, Argument> e : ctx.getCfCtx().getArguments().entrySet()) {
-                String argName = e.getKey();
-                Argument arg = e.getValue();
-                if (ArgumentType.ATTRIBUTE.equals(arg.getRefEntityKey().getType())) {
-                    continue;
-                }
-                LinkedList<TsKvEntry> batch = new LinkedList<>(fetchTelemetryBatch(tenantId, entityId, arg, startTs, endTs, telemetryFetchPackSize));
-                if (!batch.isEmpty()) {
-                    ctx.getTelemetryBuffers().put(argName, batch);
-                    ctx.getCursors().put(argName, batch.getLast().getTs());
-                }
-            }
+            ctx.initializeBatches(startTs, endTs);
 
             while (true) {
                 if (Thread.interrupted()) {
                     throw new InterruptedException();
                 }
 
-                OptionalLong minTs = ctx.getTelemetryBuffers().values().stream()
-                        .filter(buffer -> !buffer.isEmpty())
-                        .mapToLong(buffer -> buffer.get(0).getTs())
-                        .min();
+                OptionalLong minTs = ctx.findNextTimestamp();
+
                 if (minTs.isEmpty()) {
                     var latestResult = ctx.getLatestResult();
                     if (latestResult != null) {
@@ -198,7 +181,7 @@ public class DefaultCalculatedFieldReprocessingService extends AbstractCalculate
                     break;
                 }
 
-                Map<String, ArgumentEntry> updatedArgs = getUpdatedArgs(ctx, minTs.getAsLong(), startTs, endTs);
+                Map<String, ArgumentEntry> updatedArgs = ctx.getUpdatedArgs(minTs.getAsLong(), startTs, endTs);
                 Future<Void> result = processArgumentValuesUpdate(ctx, updatedArgs, minTs.getAsLong());
                 ctx.addResult(result, telemetryFetchPackSize);
             }
@@ -206,33 +189,7 @@ public class DefaultCalculatedFieldReprocessingService extends AbstractCalculate
         }
     }
 
-    private Map<String, ArgumentEntry> getUpdatedArgs(CfReprocessingCtx ctx, long minTs, long startTs, long endTs) throws InterruptedException {
-        Map<String, ArgumentEntry> updatedArgs = new HashMap<>();
-        for (Entry<String, LinkedList<TsKvEntry>> entry : ctx.getTelemetryBuffers().entrySet()) {
-            String argName = entry.getKey();
-            LinkedList<TsKvEntry> buffer = entry.getValue();
-
-            if (!buffer.isEmpty() && buffer.getFirst().getTs() == minTs) {
-                TsKvEntry tsEntry = buffer.removeFirst();
-                updatedArgs.put(argName, ArgumentEntry.createSingleValueArgument(tsEntry));
-
-                if (buffer.isEmpty()) {
-                    Argument arg = ctx.getCfCtx().getArguments().get(argName);
-                    Long cursorTs = ctx.getCursors().getOrDefault(argName, startTs);
-                    LinkedList<TsKvEntry> nextBatch = fetchTelemetryBatch(ctx.getTenantId(), ctx.getEntityId(), arg, cursorTs, endTs, telemetryFetchPackSize).stream()
-                            .filter(tsKvEntry -> tsKvEntry.getTs() > cursorTs)
-                            .collect(Collectors.toCollection(LinkedList::new));
-                    if (!nextBatch.isEmpty()) {
-                        ctx.getTelemetryBuffers().put(argName, nextBatch);
-                        ctx.getCursors().put(argName, nextBatch.getLast().getTs());
-                    }
-                }
-            }
-        }
-        return updatedArgs;
-    }
-
-    private Future<Void> processStateIfReady(CfReprocessingCtx ctx, long ts) throws Exception {
+    private Future<Void> processStateIfReady(CFReprocessingCtx ctx, long ts) throws Exception {
         CalculatedFieldState state = ctx.getState();
         if (ctx.getCfCtx().isInitialized() && state.isReady()) {
             log.trace("[{}][{}] Performing calculation for CF {}", ctx.getTenantId(), ctx.getEntityId(), ctx.getCfId());
@@ -248,7 +205,7 @@ public class DefaultCalculatedFieldReprocessingService extends AbstractCalculate
         return Futures.immediateVoidFuture();
     }
 
-    private Future<Void> processArgumentValuesUpdate(CfReprocessingCtx ctx, Map<String, ArgumentEntry> newArgValues, long ts) throws Exception {
+    private Future<Void> processArgumentValuesUpdate(CFReprocessingCtx ctx, Map<String, ArgumentEntry> newArgValues, long ts) throws Exception {
         if (newArgValues.isEmpty()) {
             log.info("[{}] No argument values to process for CF.", ctx.getCfId());
         }
@@ -308,7 +265,7 @@ public class DefaultCalculatedFieldReprocessingService extends AbstractCalculate
         return result;
     }
 
-    private Future<Void> saveResult(CfReprocessingCtx ctx, CalculatedFieldResult calculatedFieldResult, long ts, Strategy strategy) throws InterruptedException {
+    private Future<Void> saveResult(CFReprocessingCtx ctx, CalculatedFieldResult calculatedFieldResult, long ts, Strategy strategy) throws InterruptedException {
         JsonElement result = JsonParser.parseString(Objects.requireNonNull(calculatedFieldResult.stringValue()));
         log.trace("[{}][{}] Saving CF result: {}", ctx.getTenantId(), ctx.getEntityId(), result);
         SettableFuture<Void> future = SettableFuture.create();
@@ -343,26 +300,61 @@ public class DefaultCalculatedFieldReprocessingService extends AbstractCalculate
         return future;
     }
 
-    @Getter
-    public static class CfReprocessingCtx implements AutoCloseable {
+    private CFReprocessingCtx buildCtx(TenantId tenantId, EntityId entityId,
+                                       CalculatedFieldCtx cfCtx, CalculatedFieldState state) {
+        if (CalculatedFieldType.RELATED_ENTITIES_AGGREGATION.equals(cfCtx.getCfType())) {
+            return new RelatedEntitiesCfReprocessingCtx(tenantId, entityId, cfCtx, state);
+        }
+        return new SimpleCfReprocessingCtx(tenantId, entityId, cfCtx, state);
+    }
 
-        private final TenantId tenantId;
-        private final EntityId entityId;
-        private final CalculatedFieldCtx cfCtx;
-        private final CalculatedFieldState state;
-        private final CalculatedFieldId cfId;
-        private final CalculatedFieldEntityCtxId ctxId;
+    public interface CFReprocessingCtx extends AutoCloseable {
+
+        TenantId getTenantId();
+
+        EntityId getEntityId();
+
+        CalculatedFieldCtx getCfCtx();
+
+        CalculatedFieldId getCfId();
+
+        CalculatedFieldState getState();
+
+        void setLatestResult(TbPair<Long, CalculatedFieldResult> latestResult);
+
+        TbPair<Long, CalculatedFieldResult> getLatestResult();
+
+        void checkStateSize();
+
+        void addResult(Future<Void> resultFuture, int awaitPeriod) throws InterruptedException;
+
+        void awaitResults() throws InterruptedException;
+
+        void initializeBatches(long startTs, long endTs) throws ExecutionException, InterruptedException;
+
+        OptionalLong findNextTimestamp();
+
+        Map<String, ArgumentEntry> getUpdatedArgs(long minTs, long startTs, long endTs) throws InterruptedException;
+
+        void close();
+
+    }
+
+    @Getter
+    public abstract class AbstractCfReprocessingCtx implements CFReprocessingCtx, AutoCloseable {
+
+        protected final TenantId tenantId;
+        protected final EntityId entityId;
+        protected final CalculatedFieldCtx cfCtx;
+        protected final CalculatedFieldState state;
+        protected final CalculatedFieldId cfId;
+        protected final CalculatedFieldEntityCtxId ctxId;
 
         @Setter
-        private TbPair<Long, CalculatedFieldResult> latestResult;
+        protected TbPair<Long, CalculatedFieldResult> latestResult;
+        protected final List<Future<Void>> resultFutures = new ArrayList<>();
 
-        private final Map<String, LinkedList<TsKvEntry>> telemetryBuffers = new HashMap<>();
-        private final Map<String, Long> cursors = new HashMap<>();
-        private final List<Future<Void>> resultFutures = new ArrayList<>();
-
-
-        @Builder
-        public CfReprocessingCtx(TenantId tenantId, EntityId entityId, CalculatedFieldCtx cfCtx, CalculatedFieldState state) {
+        public AbstractCfReprocessingCtx(TenantId tenantId, EntityId entityId, CalculatedFieldCtx cfCtx, CalculatedFieldState state) {
             this.tenantId = tenantId;
             this.entityId = entityId;
             this.cfCtx = cfCtx;
@@ -370,6 +362,53 @@ public class DefaultCalculatedFieldReprocessingService extends AbstractCalculate
             this.cfId = cfCtx.getCfId();
             this.ctxId = new CalculatedFieldEntityCtxId(tenantId, cfId, entityId);
         }
+
+        @Override
+        public Map<String, ArgumentEntry> getUpdatedArgs(long minTs, long startTs, long endTs) throws InterruptedException {
+            Map<String, ArgumentEntry> updatedArgs = new HashMap<>();
+
+            for (String argName : getArgNames()) {
+                ArgumentEntry argumentEntry = processArgBuffer(argName, minTs, startTs, endTs);
+                if (argumentEntry != null) {
+                    updatedArgs.put(argName, argumentEntry);
+                }
+            }
+
+            return updatedArgs;
+        }
+
+        protected abstract Set<String> getArgNames();
+
+        protected abstract ArgumentEntry processArgBuffer(String argName, long minTs, long startTs, long endTs) throws InterruptedException;
+
+        protected ArgumentEntry processArgEntityBuffer(String argName, EntityId sourceId, LinkedList<TsKvEntry> buffer, long minTs, long startTs, long endTs) throws InterruptedException {
+            if (buffer != null && !buffer.isEmpty() && buffer.getFirst().getTs() == minTs) {
+                TsKvEntry kvEntry = buffer.removeFirst();
+                ArgumentEntry argumentEntry = ArgumentEntry.createSingleValueArgument(sourceId, new SingleValueArgumentEntry(kvEntry));
+
+                if (buffer.isEmpty()) {
+                    refillArgEntityBuffer(argName, sourceId, startTs, endTs);
+                }
+
+                return argumentEntry;
+            }
+            return null;
+        }
+
+        protected void refillArgEntityBuffer(String argName, EntityId sourceId, long startTs, long endTs) throws InterruptedException {
+            Argument arg = cfCtx.getArguments().get(argName);
+            long cursorTs = Optional.ofNullable(getArgCursor(argName, sourceId)).orElse(startTs);
+            LinkedList<TsKvEntry> nextBatch = fetchTelemetryBatch(tenantId, entityId, arg, cursorTs, endTs, telemetryFetchPackSize).stream()
+                    .filter(tsKv -> tsKv.getTs() > cursorTs)
+                    .collect(Collectors.toCollection(LinkedList::new));
+            if (!nextBatch.isEmpty()) {
+                putNewBatch(argName, sourceId, nextBatch);
+            }
+        }
+
+        protected abstract Long getArgCursor(String argName, EntityId sourceId);
+
+        protected abstract void putNewBatch(String argName, EntityId sourceId, LinkedList<TsKvEntry> nextBatch);
 
         public void checkStateSize() {
             state.checkStateSize(ctxId, cfCtx.getMaxStateSize());
@@ -385,7 +424,7 @@ public class DefaultCalculatedFieldReprocessingService extends AbstractCalculate
             }
         }
 
-        private void awaitResults() throws InterruptedException {
+        public void awaitResults() throws InterruptedException {
             for (Future<Void> resultFuture : resultFutures) {
                 if (Thread.interrupted()) {
                     throw new InterruptedException();
@@ -403,9 +442,164 @@ public class DefaultCalculatedFieldReprocessingService extends AbstractCalculate
         @Override
         public void close() {
             log.debug("[{}][{}] Closing CF reprocessing context", tenantId, entityId);
-            telemetryBuffers.clear();
             resultFutures.forEach(future -> future.cancel(true));
             cfCtx.close();
+        }
+
+    }
+
+    @Getter
+    public class RelatedEntitiesCfReprocessingCtx extends AbstractCfReprocessingCtx {
+
+        private final Map<String, Map<EntityId, LinkedList<TsKvEntry>>> entityTelemetryBuffers = new HashMap<>();
+        private final Map<String, Map<EntityId, Long>> entityCursors = new HashMap<>();
+
+        public RelatedEntitiesCfReprocessingCtx(TenantId tenantId, EntityId entityId, CalculatedFieldCtx cfCtx, CalculatedFieldState state) {
+            super(tenantId, entityId, cfCtx, state);
+        }
+
+        @Override
+        public void initializeBatches(long startTs, long endTs) throws ExecutionException, InterruptedException {
+            Map<String, Argument> arguments = cfCtx.getArguments();
+            for (Entry<String, Argument> e : arguments.entrySet()) {
+                String argName = e.getKey();
+                Argument arg = e.getValue();
+                if (!ArgumentType.TS_LATEST.equals(arg.getRefEntityKey().getType())) {
+                    continue;
+                }
+                var configuration = (RelatedEntitiesAggregationCalculatedFieldConfiguration) cfCtx.getCalculatedField().getConfiguration();
+                List<EntityId> relatedEntities = resolveRelatedEntities(tenantId, entityId, configuration.getRelation()).get();
+                if (relatedEntities == null) {
+                    continue;
+                }
+                for (EntityId relatedEntity : relatedEntities) {
+                    LinkedList<TsKvEntry> batch = new LinkedList<>(fetchTelemetryBatch(tenantId, relatedEntity, arg, startTs, endTs, telemetryFetchPackSize));
+                    if (!batch.isEmpty()) {
+                        entityTelemetryBuffers.computeIfAbsent(argName, name -> new HashMap<>()).put(relatedEntity, batch);
+                        entityCursors.computeIfAbsent(argName, name -> new HashMap<>()).put(relatedEntity, batch.getLast().getTs());
+                    }
+                }
+            }
+        }
+
+        @Override
+        public OptionalLong findNextTimestamp() {
+            return entityTelemetryBuffers.values().stream()
+                    .map(Map::values)
+                    .flatMap(Collection::stream)
+                    .filter(buffer -> !buffer.isEmpty())
+                    .mapToLong(buffer -> buffer.getFirst().getTs())
+                    .min();
+        }
+
+        @Override
+        protected Set<String> getArgNames() {
+            return entityTelemetryBuffers.keySet();
+        }
+
+        @Override
+        protected Long getArgCursor(String argName, EntityId sourceId) {
+            if (entityCursors.containsKey(argName)) {
+                return entityCursors.get(argName).get(sourceId);
+            }
+            return null;
+        }
+
+        @Override
+        protected void putNewBatch(String argName, EntityId sourceId, LinkedList<TsKvEntry> nextBatch) {
+            entityTelemetryBuffers.get(argName).put(sourceId, nextBatch);
+            entityCursors.get(argName).put(sourceId, nextBatch.getLast().getTs());
+        }
+
+        protected ArgumentEntry processArgBuffer(String argName, long minTs, long startTs, long endTs) throws InterruptedException {
+            Map<EntityId, LinkedList<TsKvEntry>> entityBuffers = entityTelemetryBuffers.get(argName);
+
+            Map<EntityId, ArgumentEntry> entityArguments = new HashMap<>();
+            for (Map.Entry<EntityId, LinkedList<TsKvEntry>> entityBuffer : entityBuffers.entrySet()) {
+                EntityId sourceId = entityBuffer.getKey();
+                LinkedList<TsKvEntry> buffer = entityBuffer.getValue();
+
+                ArgumentEntry argumentEntry = processArgEntityBuffer(argName, sourceId, buffer, minTs, startTs, endTs);
+                if (argumentEntry != null) {
+                    entityArguments.put(sourceId, argumentEntry);
+                }
+            }
+
+            if (entityArguments.isEmpty()) {
+                return null;
+            }
+            return ArgumentEntry.createAggArgument(entityArguments);
+        }
+
+        @Override
+        public void close() {
+            super.close();
+            entityTelemetryBuffers.clear();
+            entityCursors.clear();
+        }
+
+    }
+
+    @Getter
+    public class SimpleCfReprocessingCtx extends AbstractCfReprocessingCtx {
+
+        private final Map<String, LinkedList<TsKvEntry>> telemetryBuffers = new HashMap<>();
+        private final Map<String, Long> cursors = new HashMap<>();
+
+        public SimpleCfReprocessingCtx(TenantId tenantId, EntityId entityId, CalculatedFieldCtx cfCtx, CalculatedFieldState state) {
+            super(tenantId, entityId, cfCtx, state);
+        }
+
+        @Override
+        public void initializeBatches(long startTs, long endTs) throws InterruptedException {
+            Map<String, Argument> arguments = cfCtx.getArguments();
+            for (Entry<String, Argument> e : arguments.entrySet()) {
+                String argName = e.getKey();
+                Argument arg = e.getValue();
+                if (ArgumentType.ATTRIBUTE.equals(arg.getRefEntityKey().getType())) {
+                    continue;
+                }
+                LinkedList<TsKvEntry> batch = new LinkedList<>(fetchTelemetryBatch(tenantId, entityId, arg, startTs, endTs, telemetryFetchPackSize));
+                if (!batch.isEmpty()) {
+                    telemetryBuffers.put(argName, batch);
+                    cursors.put(argName, batch.getLast().getTs());
+                }
+            }
+        }
+
+        @Override
+        public OptionalLong findNextTimestamp() {
+            return telemetryBuffers.values().stream()
+                    .filter(buffer -> !buffer.isEmpty())
+                    .mapToLong(buffer -> buffer.get(0).getTs())
+                    .min();
+        }
+
+        protected Set<String> getArgNames() {
+            return telemetryBuffers.keySet();
+        }
+
+        @Override
+        protected Long getArgCursor(String argName, EntityId sourceId) {
+            return cursors.get(argName);
+        }
+
+        @Override
+        protected void putNewBatch(String argName, EntityId sourceId, LinkedList<TsKvEntry> nextBatch) {
+            telemetryBuffers.put(argName, nextBatch);
+            cursors.put(argName, nextBatch.getLast().getTs());
+        }
+
+        protected ArgumentEntry processArgBuffer(String argName, long minTs, long startTs, long endTs) throws InterruptedException {
+            LinkedList<TsKvEntry> buffer = telemetryBuffers.get(argName);
+            return processArgEntityBuffer(argName, entityId, buffer, minTs, startTs, endTs);
+        }
+
+        @Override
+        public void close() {
+            super.close();
+            telemetryBuffers.clear();
+            cursors.clear();
         }
 
     }

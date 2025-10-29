@@ -55,7 +55,7 @@ import {
   GeofencingReportStrategyTranslations,
   getCalculatedFieldCurrentEntityFilter
 } from '@shared/models/calculated-field.models';
-import { debounceTime, delay, distinctUntilChanged, map } from 'rxjs/operators';
+import { debounceTime, distinctUntilChanged, map } from 'rxjs/operators';
 import { EntityType } from '@shared/models/entity-type.models';
 import { AttributeScope, DataKeyType } from '@shared/models/telemetry/telemetry.models';
 import { EntityId } from '@shared/models/id/entity-id';
@@ -74,7 +74,7 @@ import { CdkDragDrop } from "@angular/cdk/drag-drop";
 @Component({
   selector: 'tb-calculated-field-geofencing-zone-groups-panel',
   templateUrl: './calculated-field-geofencing-zone-groups-panel.component.html',
-  styleUrls: ['./calculated-field-geofencing-zone-groups-panel.component.scss']
+  styleUrls: ['../common/calculated-field-panel.scss', './calculated-field-geofencing-zone-groups-panel.component.scss']
 })
 export class CalculatedFieldGeofencingZoneGroupsPanelComponent implements OnInit, AfterViewInit {
 
@@ -135,7 +135,6 @@ export class CalculatedFieldGeofencingZoneGroupsPanelComponent implements OnInit
 
     this.observeEntityFilterChanges();
     this.observeEntityTypeChanges();
-    this.observeUpdatePosition();
     this.observeCreateRelationZonesChanges();
   }
 
@@ -178,24 +177,10 @@ export class CalculatedFieldGeofencingZoneGroupsPanelComponent implements OnInit
     return of(['Contains', 'Manages']).pipe(map(name => name?.filter(option => option.toLowerCase().includes(search))));
   }
 
-  private observeMaxLevelChanges(): void {
-    this.refDynamicSourceFormGroup.get('maxLevel').valueChanges
-      .pipe(takeUntilDestroyed())
-      .subscribe(value => this.validateFetchLastLevelOnly(value));
-  }
-
   private observeCreateRelationZonesChanges(): void {
     this.geofencingFormGroup.get('createRelationsWithMatchedZones').valueChanges
       .pipe(takeUntilDestroyed())
       .subscribe(value => this.validateDirectionAndRelationType(value));
-  }
-
-  private validateFetchLastLevelOnly(maxLevel = 1): void {
-    if (maxLevel > 1) {
-      this.refDynamicSourceFormGroup.get('fetchLastLevelOnly').enable({emitEvent: false});
-    } else {
-      this.refDynamicSourceFormGroup.get('fetchLastLevelOnly').disable({emitEvent: false});
-    }
   }
 
   private validateDirectionAndRelationType(createRelation = false): void {
@@ -332,21 +317,11 @@ export class CalculatedFieldGeofencingZoneGroupsPanelComponent implements OnInit
     };
   }
 
-  private observeUpdatePosition(): void {
-    merge(
-      this.refEntityIdFormGroup.get('entityType').valueChanges,
-      this.refEntityIdFormGroup.get('id').valueChanges,
-      this.geofencingFormGroup.get('createRelationsWithMatchedZones').valueChanges
-    )
-      .pipe(delay(50), takeUntilDestroyed())
-      .subscribe(() => this.popover.updatePosition());
-  }
-
   levelsFormArray(): UntypedFormArray {
     return this.refDynamicSourceFormGroup.get('levels') as UntypedFormArray;
   }
 
-  trackByKey(index: number, keyControl: AbstractControl): any {
+  trackByKey(_index: number, keyControl: AbstractControl): any {
     return keyControl;
   }
 
