@@ -45,6 +45,7 @@ import {
   endGroupHighlightRule
 } from '@shared/models/ace/ace.models';
 import { EntitySearchDirection } from '@shared/models/relation.models';
+import { AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
 import { JobStatus } from '@shared/models/job.models';
 
 interface BaseCalculatedField extends Omit<BaseData<CalculatedFieldId>, 'label'>, HasVersion, HasEntityDebugSettings, HasTenantId, ExportableEntity<CalculatedFieldId> {
@@ -81,7 +82,8 @@ export enum CalculatedFieldType {
   SIMPLE = 'SIMPLE',
   SCRIPT = 'SCRIPT',
   GEOFENCING = 'GEOFENCING',
-  PROPAGATION = 'PROPAGATION'
+  PROPAGATION = 'PROPAGATION',
+  RELATED_ENTITIES_AGGREGATION = 'RELATED_ENTITIES_AGGREGATION'
 }
 
 export const CalculatedFieldTypeTranslations = new Map<CalculatedFieldType, string>(
@@ -90,6 +92,7 @@ export const CalculatedFieldTypeTranslations = new Map<CalculatedFieldType, stri
     [CalculatedFieldType.SCRIPT, 'calculated-fields.type.script'],
     [CalculatedFieldType.GEOFENCING, 'calculated-fields.type.geofencing'],
     [CalculatedFieldType.PROPAGATION, 'calculated-fields.type.propagation'],
+    [CalculatedFieldType.RELATED_ENTITIES_AGGREGATION, 'calculated-fields.type.related-entities-aggregation'],
   ]
 )
 
@@ -97,12 +100,14 @@ export type CalculatedFieldConfiguration =
   | CalculatedFieldSimpleConfiguration
   | CalculatedFieldScriptConfiguration
   | CalculatedFieldGeofencingConfiguration
-  | CalculatedFieldPropagationConfiguration;
+  | CalculatedFieldPropagationConfiguration
+  | CalculatedFieldRelatedAggregationConfiguration;
 
 export interface CalculatedFieldSimpleConfiguration {
   type: CalculatedFieldType.SIMPLE;
   expression: string;
   arguments: Record<string, CalculatedFieldArgument>;
+  useLatestTs: boolean;
   output: CalculatedFieldSimpleOutput;
 }
 
@@ -121,10 +126,19 @@ export interface CalculatedFieldGeofencingConfiguration {
   output: CalculatedFieldOutput;
 }
 
+export interface CalculatedFieldRelatedAggregationConfiguration {
+  type: CalculatedFieldType.RELATED_ENTITIES_AGGREGATION;
+  relation: RelationPathLevel;
+  arguments: Record<string, CalculatedFieldArgument>;
+  metrics: Record<string, CalculatedFieldAggMetric>;
+  deduplicationIntervalInSec: number;
+  useLatestTs: boolean;
+  output: Omit<CalculatedFieldSimpleOutput, 'name'>;
+}
+
 interface BasePropagationConfiguration {
   type: CalculatedFieldType.PROPAGATION;
-  direction: EntitySearchDirection;
-  relationType: string;
+  relation: RelationPathLevel;
   arguments: Record<string, CalculatedFieldArgument>;
   output: CalculatedFieldOutput;
 }
@@ -261,6 +275,54 @@ export interface CalculatedFieldArgument {
   timeWindow?: number;
 }
 
+export enum AggFunction {
+  AVG='AVG',
+  MIN='MIN',
+  MAX='MAX',
+  SUM='SUM',
+  COUNT='COUNT',
+  COUNT_UNIQUE='COUNT_UNIQUE'
+}
+
+export const AggFunctionTranslations = new Map<AggFunction, string>([
+  [AggFunction.AVG, 'calculated-fields.metrics.aggregation-type.avg'],
+  [AggFunction.MIN, 'calculated-fields.metrics.aggregation-type.min'],
+  [AggFunction.MAX, 'calculated-fields.metrics.aggregation-type.max'],
+  [AggFunction.SUM, 'calculated-fields.metrics.aggregation-type.sum'],
+  [AggFunction.COUNT, 'calculated-fields.metrics.aggregation-type.count'],
+  [AggFunction.COUNT_UNIQUE, 'calculated-fields.metrics.aggregation-type.count-unique'],
+])
+
+export interface CalculatedFieldAggMetric {
+  function: AggFunction;
+  filter?: string;
+  input: AggKeyInput | AggFunctionInput;
+}
+
+export interface CalculatedFieldAggMetricValue extends CalculatedFieldAggMetric {
+  name: string;
+}
+
+export enum AggInputType {
+  key = 'key',
+  function = 'function'
+}
+
+export const AggInputTypeTranslations = new Map<AggInputType, string>([
+  [AggInputType.key, 'calculated-fields.metrics.value-source-type.key'],
+  [AggInputType.function, 'calculated-fields.metrics.value-source-type.function'],
+])
+
+export interface AggKeyInput {
+  type: AggInputType.key;
+  key: string;
+}
+
+export interface AggFunctionInput {
+  type: AggInputType.function;
+  function: string;
+}
+
 export interface CalculatedFieldGeofencing {
   perimeterKeyName: string;
   reportStrategy: GeofencingReportStrategy;
@@ -273,8 +335,7 @@ export interface CalculatedFieldGeofencing {
 
 export interface RefDynamicSourceConfiguration {
   type?: ArgumentEntityType.RelationQuery | CFArgumentDynamicSourceType.CURRENT_OWNER;
-  levels?: Array<{direction: EntitySearchDirection; relationType: string;}>;
-
+  levels?: Array<RelationPathLevel>;
 }
 
 export interface CalculatedFieldGeofencingValue extends CalculatedFieldGeofencing {
@@ -339,6 +400,11 @@ export const getCalculatedFieldCurrentEntityFilter = (entityName: string, entity
 export interface CalculatedFieldArgumentValueBase {
   argumentName: string;
   type: ArgumentType;
+}
+
+export interface RelationPathLevel {
+  direction: EntitySearchDirection;
+  relationType: string;
 }
 
 export interface CalculatedFieldAttributeArgumentValue<ValueType = unknown> extends CalculatedFieldArgumentValueBase {
@@ -811,3 +877,13 @@ export const calculatedFieldDefaultScript =
   'return {\n' +
   '    "temperatureC": (temperatureF - 32) / 1.8\n' +
   '};'
+
+export function notEmptyObjectValidator(): ValidatorFn {
+  return (control: AbstractControl): ValidationErrors | null => {
+    const value = control.value;
+    if (typeof value === 'object' && value !== null && Object.keys(value).length === 0) {
+      return {emptyObject: true};
+    }
+    return null;
+  };
+}

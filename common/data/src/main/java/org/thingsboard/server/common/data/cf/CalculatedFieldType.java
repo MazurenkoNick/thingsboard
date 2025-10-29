@@ -40,7 +40,8 @@ public enum CalculatedFieldType {
     SCRIPT,
     GEOFENCING,
     ALARM,
-    PROPAGATION;
+    PROPAGATION,
+    RELATED_ENTITIES_AGGREGATION;
 
     public static final Set<CalculatedFieldType> all = Collections.unmodifiableSet(EnumSet.allOf(CalculatedFieldType.class));
 
