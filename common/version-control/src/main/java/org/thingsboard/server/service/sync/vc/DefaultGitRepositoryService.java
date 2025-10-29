@@ -77,6 +77,8 @@ import java.util.stream.Stream;
 @Service
 public class DefaultGitRepositoryService implements GitRepositoryService {
 
+    public static final String GROUP_ENTITY_IDS_FILE_SUFFIX = "_entities.json";
+
     @Value("${java.io.tmpdir}/repositories")
     private String defaultFolder;
 
