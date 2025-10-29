@@ -30,7 +30,6 @@
  */
 package org.thingsboard.server.common.data.cf.configuration.aggregation;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -70,12 +69,6 @@ public class RelatedEntitiesAggregationCalculatedFieldConfiguration implements A
         if (arguments.values().stream().anyMatch(Argument::hasTsRollingArgument)) {
             throw new IllegalArgumentException("Calculated field with type: '" + getType() + "' doesn't support TS_ROLLING arguments.");
         }
-    }
-
-    @JsonIgnore
-    @Override
-    public boolean requiresScheduledReevaluation() {
-        return true;
     }
 
 }
