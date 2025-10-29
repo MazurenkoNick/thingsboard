@@ -1102,7 +1102,7 @@ public class VersionControlTest extends AbstractControllerTest {
 
     @Test
     public void testReportTemplateVc_sameTenant() throws Exception {
-        Device device = createDevice(null, null, "Device 1", "test1");
+        Device device = createDevice("Device 1", "test1");
         ReportTemplate reportTemplate = createReportTemplate(tenantId1, null, "Weekly report", device.getId());
         String versionId = createVersion("report template", EntityType.REPORT_TEMPLATE);
 
@@ -1117,7 +1117,7 @@ public class VersionControlTest extends AbstractControllerTest {
 
     @Test
     public void testReportTemplateVc_betweenTenants() throws Exception {
-        Device device = createDevice(null, null, "Device 1", "test1");
+        Device device = createDevice("Device 1", "test1");
         ReportTemplate reportTemplate = createReportTemplate(tenantId1, null, "Weekly report", device.getId());
         String versionId = createVersion("report template", EntityType.REPORT_TEMPLATE);
 
@@ -1152,7 +1152,7 @@ public class VersionControlTest extends AbstractControllerTest {
     @Test
     public void testSchedulerEventGenerateReportV2ForVc_betweenTenants() throws Exception {
         createDeviceProfile(null, null, "Device profile v1.0");
-        Device device = createDevice(null, null, "Device 1", "test1");
+        Device device = createDevice("Device 1", "test1");
         ReportTemplate reportTemplate = createReportTemplate(tenantId1, null, "Weekly report", device.getId());
         SchedulerEvent reportEvent = createSchedulerEventForGenerateReportType(tenantId1, null, "Report V2", reportTemplate.getId(), tenantAdminUserId);
         String versionId = createVersion("scheduler event with report V2", EntityType.DEVICE_PROFILE, EntityType.DEVICE, EntityType.REPORT_TEMPLATE, EntityType.SCHEDULER_EVENT);
