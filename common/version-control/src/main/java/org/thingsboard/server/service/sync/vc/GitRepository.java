@@ -114,7 +114,6 @@ import static org.eclipse.jgit.transport.RemoteRefUpdate.Status.REJECTED_NODELET
 import static org.eclipse.jgit.transport.RemoteRefUpdate.Status.REJECTED_NONFASTFORWARD;
 import static org.eclipse.jgit.transport.RemoteRefUpdate.Status.REJECTED_OTHER_REASON;
 import static org.eclipse.jgit.transport.RemoteRefUpdate.Status.REJECTED_REMOTE_CHANGED;
-import static org.thingsboard.server.service.sync.vc.DefaultGitRepositoryService.GROUP_ENTITY_IDS_FILE_SUFFIX;
 
 @Slf4j
 public class GitRepository {
@@ -328,9 +327,6 @@ public class GitRepository {
         RevCommit revCommit = resolveCommit(commitId);
         try (TreeWalk treeWalk = TreeWalk.forPath(git.getRepository(), file, revCommit.getTree())) {
             if (treeWalk == null) {
-                if (file.endsWith(GROUP_ENTITY_IDS_FILE_SUFFIX)) {
-                    return "[]".getBytes(StandardCharsets.UTF_8);
-                }
                 throw new IllegalArgumentException("File " + file + " not found");
             }
             ObjectId blobId = treeWalk.getObjectId(0);
