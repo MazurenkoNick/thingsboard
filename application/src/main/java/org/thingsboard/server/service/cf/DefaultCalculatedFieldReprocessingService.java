@@ -206,7 +206,7 @@ public class DefaultCalculatedFieldReprocessingService extends AbstractCalculate
                     log.trace("[{}][{}] Calculated field state is not initialized! {}", ctx.getTenantId(), ctx.getEntityId(), ctx.getCfId());
                 }
                 if (!state.isReady()) {
-                    log.trace("[{}][{}] Calculated field state is not ready! {}, {}", ctx.getTenantId(), ctx.getEntityId(), ctx.getCfId(), state.getReadinessStatus().stringValue());
+                    log.trace("[{}][{}] Calculated field state is not ready! {}, {}", ctx.getTenantId(), ctx.getEntityId(), ctx.getCfId(), state.getReadinessStatus().errorMsg());
                 }
             }
             ctx.checkStateSize();
