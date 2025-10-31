@@ -31,7 +31,6 @@
 package org.thingsboard.server.service.security.permission;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.HasName;
@@ -60,13 +59,14 @@ public class DefaultAccessControlService implements AccessControlService {
 
     private final Map<Authority, Permissions> authorityPermissions = new HashMap<>();
 
-    public DefaultAccessControlService(
-            @Qualifier("sysAdminPermissions") Permissions sysAdminPermissions,
-            @Qualifier("tenantAdminPermissions") Permissions tenantAdminPermissions,
-            @Qualifier("customerUserPermissions") Permissions customerUserPermissions) {
+    public DefaultAccessControlService(SysAdminPermissions sysAdminPermissions,
+                                       TenantAdminPermissions tenantAdminPermissions,
+                                       CustomerUserPermissions customerUserPermissions,
+                                       MfaConfigurationPermissions mfaConfigurationPermissions) {
         authorityPermissions.put(Authority.SYS_ADMIN, sysAdminPermissions);
         authorityPermissions.put(Authority.TENANT_ADMIN, tenantAdminPermissions);
         authorityPermissions.put(Authority.CUSTOMER_USER, customerUserPermissions);
+        authorityPermissions.put(Authority.MFA_CONFIGURATION_TOKEN, mfaConfigurationPermissions);
     }
 
     @Override
