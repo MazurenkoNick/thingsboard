@@ -31,14 +31,15 @@
 
 import { Injectable } from '@angular/core';
 import { defaultHttpOptionsFromConfig, RequestConfig } from './http-utils';
-import { Observable, of } from 'rxjs';
+import { Observable } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import {
   AdminSettings,
   AutoCommitSettings,
-  MailConfigTemplate,
   FeaturesInfo,
-  JwtSettings, LicenseUsageInfo,
+  JwtSettings,
+  LicenseUsageInfo,
+  MailConfigTemplate,
   MailServerSettings,
   RepositorySettings,
   RepositorySettingsInfo,
@@ -47,7 +48,7 @@ import {
   UpdateMessage
 } from '@shared/models/settings.models';
 import { EntitiesVersionControlService } from '@core/http/entities-version-control.service';
-import { catchError, map, tap } from 'rxjs/operators';
+import { tap } from 'rxjs/operators';
 import { LoginResponse } from '@shared/models/login.models';
 
 @Injectable({
@@ -168,12 +169,5 @@ export class AdminService {
 
   public getMailConfigTemplate(config?: RequestConfig): Observable<Array<MailConfigTemplate>> {
     return this.http.get<Array<MailConfigTemplate>>('/api/mail/config/template', defaultHttpOptionsFromConfig(config));
-  }
-
-  public getGitHubStar(config?: RequestConfig): Observable<number> {
-    return this.http.get<any>('https://api.github.com/repos/thingsboard/thingsboard', defaultHttpOptionsFromConfig(config)).pipe(
-      catchError(() => of({})),
-      map((res: any) => res?.stargazers_count ?? 0)
-    )
   }
 }
