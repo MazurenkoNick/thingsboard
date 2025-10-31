@@ -30,7 +30,7 @@
  */
 package org.thingsboard.server.dao.asset;
 
-
+import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -75,6 +75,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import static com.google.common.util.concurrent.MoreExecutors.directExecutor;
 import static org.thingsboard.server.dao.DaoUtil.toUUIDs;
 import static org.thingsboard.server.dao.service.Validator.validateId;
 import static org.thingsboard.server.dao.service.Validator.validateIds;
@@ -112,8 +113,8 @@ public class BaseAssetService extends AbstractCachedEntityService<AssetCacheKey,
     @Autowired
     private JpaExecutorService executor;
 
-    @TransactionalEventListener(classes = AssetCacheEvictEvent.class)
     @Override
+    @TransactionalEventListener
     public void handleEvictEvent(AssetCacheEvictEvent event) {
         List<AssetCacheKey> keys = new ArrayList<>(2);
         keys.add(new AssetCacheKey(event.getTenantId(), event.getNewName()));
@@ -532,6 +533,12 @@ public class BaseAssetService extends AbstractCachedEntityService<AssetCacheKey,
     @Override
     public Optional<HasId<?>> findEntity(TenantId tenantId, EntityId entityId) {
         return Optional.ofNullable(findAssetById(tenantId, new AssetId(entityId.getId())));
+    }
+
+    @Override
+    public FluentFuture<Optional<HasId<?>>> findEntityAsync(TenantId tenantId, EntityId entityId) {
+        return FluentFuture.from(findAssetByIdAsync(tenantId, new AssetId(entityId.getId())))
+                .transform(Optional::ofNullable, directExecutor());
     }
 
     @Override
