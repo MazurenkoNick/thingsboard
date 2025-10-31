@@ -28,34 +28,23 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.dao.entity;
+:host {
+  &:has(section) {
+    height: 100%;
+  }
+  --mat-outlined-button-horizontal-padding: 8px;
+  --mdc-outlined-button-container-height: 30px;
+  --mdc-outlined-button-label-text-size: 12px;
 
-import com.google.common.util.concurrent.FluentFuture;
-import org.thingsboard.server.common.data.EntityType;
-import org.thingsboard.server.common.data.id.EntityId;
-import org.thingsboard.server.common.data.id.HasId;
-import org.thingsboard.server.common.data.id.TenantId;
+  .mdc-button {
+    background-color: rgba(255, 255, 255, 0.12);
 
-import java.util.Optional;
-
-public interface EntityDaoService {
-
-    Optional<HasId<?>> findEntity(TenantId tenantId, EntityId entityId);
-
-    FluentFuture<Optional<HasId<?>>> findEntityAsync(TenantId tenantId, EntityId entityId);
-
-    default long countByTenantId(TenantId tenantId) {
-        throw new IllegalArgumentException("Not implemented for " + getEntityType());
+    &:hover {
+      background-color: rgba(255, 255, 255, 0.20);
     }
+  }
 
-    default void deleteEntity(TenantId tenantId, EntityId id, boolean force) {
-        throw new IllegalArgumentException(getEntityType().getNormalName() + " deletion not supported");
-    }
-
-    default void deleteByTenantId(TenantId tenantId) {
-        throw new IllegalArgumentException("Deletion by tenant id not supported for " + getEntityType().getNormalName());
-    }
-
-    EntityType getEntityType();
-
+  .button-label {
+    margin-top: 1px;
+  }
 }

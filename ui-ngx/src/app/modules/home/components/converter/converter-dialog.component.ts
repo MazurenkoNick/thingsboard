@@ -43,7 +43,12 @@ import { ConverterService } from '@core/http/converter.service';
 import { IntegrationType } from '@shared/models/integration.models';
 import { isNotEmptyStr } from '@core/utils';
 
-export interface AddConverterDialogData  {
+export interface ConverterDialogData {
+  isEdit: boolean;
+  convertor: ConverterData
+}
+
+export interface ConverterData  {
   name: string;
   edgeTemplate?: boolean;
   type: ConverterType;
@@ -52,35 +57,38 @@ export interface AddConverterDialogData  {
 }
 
 @Component({
-  selector: 'tb-add-converter-dialog',
-  templateUrl: './add-converter-dialog.component.html',
-  styleUrls: ['./add-converter-dialog.component.scss']
+  selector: 'tb-converter-dialog',
+  templateUrl: './converter-dialog.component.html',
+  styleUrls: ['./converter-dialog.component.scss']
 })
-export class AddConverterDialogComponent extends DialogComponent<AddConverterDialogComponent, BaseData<HasId>>
+export class ConverterDialogComponent extends DialogComponent<ConverterDialogComponent, BaseData<HasId>>
   implements OnInit, AfterViewInit {
 
-  dialogTitle = entityTypeTranslations.get(EntityType.CONVERTER).add;
+  isEdit: boolean;
+  dialogTitle:string;
   converter: Converter;
 
   @ViewChild('converterComponent', {static: true}) converterComponent: ConverterComponent;
 
   constructor(protected store: Store<AppState>,
               protected router: Router,
-              @Inject(MAT_DIALOG_DATA) public data: AddConverterDialogData,
-              public dialogRef: MatDialogRef<AddConverterDialogComponent, BaseData<HasId>>,
+              @Inject(MAT_DIALOG_DATA) public data: ConverterDialogData,
+              public dialogRef: MatDialogRef<ConverterDialogComponent, BaseData<HasId>>,
               private converterService: ConverterService) {
     super(store, router, dialogRef);
+    this.isEdit = this.data.isEdit;
+    this.dialogTitle = this.isEdit ? 'converter.edit' : entityTypeTranslations.get(EntityType.CONVERTER).add; 
   }
 
   ngOnInit() {
-    const {disabledIntegrationType, ...converterInfo} = this.data
+    const {disabledIntegrationType, ...converterInfo} = this.data.convertor
     this.converter = converterInfo as Converter;
   }
 
   ngAfterViewInit() {
     setTimeout(() => {
       this.converterComponent.entityForm.get('type').disable({emitEvent: false});
-      if (isNotEmptyStr(this.data.integrationType) || this.data.disabledIntegrationType) {
+      if (isNotEmptyStr(this.data.convertor.integrationType) || this.data.convertor.disabledIntegrationType) {
         this.converterComponent.entityForm.get('integrationType').disable({emitEvent: false});
       }
       this.converterComponent.entityForm.patchValue(this.converter);
@@ -88,7 +96,7 @@ export class AddConverterDialogComponent extends DialogComponent<AddConverterDia
   }
 
   helpLinkId(): string {
-    return getConverterHelpLink(this.data as Converter);
+    return getConverterHelpLink(this.data.convertor as Converter);
   }
 
   cancel(): void {

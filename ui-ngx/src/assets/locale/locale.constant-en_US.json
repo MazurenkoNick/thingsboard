@@ -1437,6 +1437,7 @@
         "delete-converters-text": "Be careful, after the confirmation all selected data converters will be removed and all related data will become unrecoverable.",
         "events": "Events",
         "add": "Add data converter",
+        "edit": "Edit data converter",
         "search": "Search data converters",
         "converter-details": "Data converter details",
         "details": "Details",
@@ -9357,7 +9358,8 @@
         "reset-white-label-title": "Are you sure you want to reset the white labeling settings to default?",
         "reset-white-label-text": "Be careful, after confirmation, all customized settings will be lost and cannot be recovered.",
         "reset-login-white-label-title": "Are you sure you want to reset the login white labeling settings to default?",
-        "reset-login-white-label-text": "Be careful, after confirmation, all customized settings will be lost and cannot be recovered."
+        "reset-login-white-label-text": "Be careful, after confirmation, all customized settings will be lost and cannot be recovered.",
+        "app-title-max-length": "Application title should be less than 256 characters"
     },
     "widgets": {
         "mobile-app-qr-code": {

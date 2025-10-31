@@ -30,7 +30,8 @@
     OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 
 -->
-<mat-form-field [formGroup]="operationTypeListFormGroup" class="mat-block tb-chip-list">
+<mat-form-field [formGroup]="operationTypeListFormGroup" class="mat-block tb-chip-list" [appearance]="appearance" [floatLabel]="floatLabel">
+  <mat-label *ngIf="label" translate>{{label}}</mat-label>
   <mat-chip-grid #chipList formControlName="operationTypeList">
     <mat-chip-row
       *ngFor="let operationType of operationTypeList"
@@ -41,7 +42,7 @@
     </mat-chip-row>
     <input matInput type="text"
            [class.!hidden]="disabled"
-           placeholder="{{ !disabled ? ((!operationTypeList || !operationTypeList.length) ? placeholder : secondaryPlaceholder) : '' }}"
+           placeholder="{{ !disabled || !label ? ((!operationTypeList || !operationTypeList.length) ? placeholder : secondaryPlaceholder) : '' }}"
            style="max-width: 200px;"
            #operationTypeInput
            (focusin)="onFocus()"

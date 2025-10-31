@@ -29,41 +29,25 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { FormControl, FormGroup } from "@angular/forms";
-import { validateEmail } from "@app/core/utils";
+import { Injectable } from '@angular/core';
+import { defaultHttpOptionsFromConfig, RequestConfig } from './http-utils';
+import { Observable, of } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
+import { catchError, map } from 'rxjs/operators';
 
-export interface SignupRequestValues {
-  fields:SignupFieldsValues;
-  recaptchaResponse:string;
-}
+@Injectable({
+  providedIn: 'root'
+})
+export class GitHubService {
 
-interface SignupFieldsValues {
-  EMAIL: string;
-  FIRST_NAME: string;
-  LAST_NAME: string;
-  PASSWORD: string;
-}
+  constructor(
+    private http: HttpClient
+  ) { }
 
-export class SignupRequest {
-  fields: FormGroup;
-  recaptchaResponse: string;
-
-  constructor(firstName: string, lastName: string, email: string, password: string, recaptchaResponse: string) {
-    this.fields = new FormGroup({
-      FIRST_NAME: new FormControl(firstName),
-      LAST_NAME: new FormControl(lastName),
-      EMAIL: new FormControl(email, [validateEmail]),
-      PASSWORD: new FormControl(password)
-    });
-    this.recaptchaResponse = recaptchaResponse;
+  public getGitHubStar(config?: RequestConfig): Observable<number> {
+    return this.http.get<any>('https://api.github.com/repos/thingsboard/thingsboard', defaultHttpOptionsFromConfig(config)).pipe(
+      catchError(() => of({})),
+      map((res: any) => res?.stargazers_count ?? 0)
+    )
   }
-
-  public static create(): SignupRequest {
-    return new SignupRequest('', '', '', '', '');
-  }
-}
-
-export enum SignUpResult {
-  SUCCESS = 'SUCCESS',
-  INACTIVE_USER_EXISTS = 'INACTIVE_USER_EXISTS'
 }

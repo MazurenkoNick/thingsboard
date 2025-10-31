@@ -30,6 +30,7 @@
  */
 package org.thingsboard.server.dao.entity;
 
+import com.google.common.util.concurrent.FluentFuture;
 import org.thingsboard.server.common.data.EntityInfo;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.GroupEntity;
@@ -57,6 +58,8 @@ public interface EntityService {
     Optional<String> fetchEntityLabel(TenantId tenantId, EntityId entityId);
 
     Optional<CustomerId> fetchEntityCustomerId(TenantId tenantId, EntityId entityId);
+
+    FluentFuture<Optional<CustomerId>> fetchEntityCustomerIdAsync(TenantId tenantId, EntityId entityId);
 
     Optional<HasId<?>> fetchEntity(TenantId tenantId, EntityId entityId);
 
