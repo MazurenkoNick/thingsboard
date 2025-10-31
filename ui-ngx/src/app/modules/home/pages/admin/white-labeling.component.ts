@@ -126,7 +126,7 @@ export class WhiteLabelingComponent extends PageComponent implements OnInit, Has
 
   buildWhiteLabelingSettingsForm() {
     this.wlSettings = this.fb.group({
-      appTitle: ['', []],
+      appTitle: ['', [Validators.maxLength(256)]],
       favicon: this.fb.group(
       {
         url: [null, []],
