@@ -409,7 +409,7 @@ public class UserServiceImpl extends AbstractCachedEntityService<UserCacheKey, U
         eventPublisher.publishEvent(new UserCredentialsInvalidationEvent(userId));
         countService.publishCountEntityEvictEvent(tenantId, EntityType.USER);
         eventPublisher.publishEvent(DeleteEntityEvent.builder()
-                .tenantId(tenantId)
+                .tenantId(user.getTenantId())
                 .entityId(userId)
                 .entity(user)
                 .cause(cause)
