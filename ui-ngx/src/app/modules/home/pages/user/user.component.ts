@@ -86,7 +86,7 @@ export class UserComponent extends GroupEntityComponent<UserInfo>{
               protected userPermissionsService: UserPermissionsService) {
        super(store, fb, entityValue, entitiesTableConfigValue, cd, userPermissionsService);
   }
-  
+
   hideDelete() {
     if (this.entitiesTableConfig) {
       return !this.entitiesTableConfig.deleteEnabled(this.entity);
