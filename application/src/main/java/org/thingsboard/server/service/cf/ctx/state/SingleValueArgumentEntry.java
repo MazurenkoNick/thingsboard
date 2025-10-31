@@ -149,6 +149,9 @@ public class SingleValueArgumentEntry implements ArgumentEntry {
 
     @Override
     public TbelCfArg toTbelCfArg() {
+        if (isEmpty()) {
+            return new TbelCfSingleValueArg(ts, null);
+        }
         Object value = kvEntryValue.getValue();
         if (kvEntryValue instanceof JsonDataEntry) {
             try {

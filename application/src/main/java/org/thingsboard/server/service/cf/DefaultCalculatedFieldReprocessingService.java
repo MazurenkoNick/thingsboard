@@ -191,7 +191,8 @@ public class DefaultCalculatedFieldReprocessingService extends AbstractCalculate
 
     private Future<Void> processStateIfReady(CFReprocessingCtx ctx, long ts) throws Exception {
         CalculatedFieldState state = ctx.getState();
-        if (ctx.getCfCtx().isInitialized() && state.isReady()) {
+        boolean initialized = ctx.getCfCtx().isInitialized();
+        if (initialized && state.isReady()) {
             log.trace("[{}][{}] Performing calculation for CF {}", ctx.getTenantId(), ctx.getEntityId(), ctx.getCfId());
             CalculatedFieldResult calculationResult = state.performCalculation(Collections.emptyMap(), ctx.getCfCtx()).get(cfCalculationResultTimeout, TimeUnit.SECONDS);
             ctx.checkStateSize();
@@ -200,6 +201,14 @@ public class DefaultCalculatedFieldReprocessingService extends AbstractCalculate
                 return saveResult(ctx, calculationResult, ts, Strategy.TIME_SERIES_ONLY);
             }
         } else {
+            if (log.isTraceEnabled()) {
+                if (!initialized) {
+                    log.trace("[{}][{}] Calculated field state is not initialized! {}", ctx.getTenantId(), ctx.getEntityId(), ctx.getCfId());
+                }
+                if (!state.isReady()) {
+                    log.trace("[{}][{}] Calculated field state is not ready! {}, {}", ctx.getTenantId(), ctx.getEntityId(), ctx.getCfId(), state.getReadinessStatus().errorMsg());
+                }
+            }
             ctx.checkStateSize();
         }
         return Futures.immediateVoidFuture();
