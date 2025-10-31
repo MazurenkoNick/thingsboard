@@ -1437,6 +1437,7 @@
         "delete-converters-text": "Be careful, after the confirmation all selected data converters will be removed and all related data will become unrecoverable.",
         "events": "Events",
         "add": "Add data converter",
+        "edit": "Edit data converter",
         "search": "Search data converters",
         "converter-details": "Data converter details",
         "details": "Details",

@@ -174,7 +174,7 @@ import { GroupConfigTableConfigService } from '@home/components/group/group-conf
 import { EntityGroupsTableConfigResolver } from '@home/components/group/entity-groups-table-config.resolver';
 import { EntityGroupConfigResolver } from '@home/components/group/entity-group-config.resolver';
 import { ConverterAutocompleteComponent } from '@home/components/converter/converter-autocomplete.component';
-import { AddConverterDialogComponent } from '@home/components/converter/add-converter-dialog.component';
+import { ConverterDialogComponent } from '@home/components/converter/converter-dialog.component';
 import { OperationTypeListComponent } from '@home/components/role/operation-type-list.component';
 import { ResourceTypeAutocompleteComponent } from '@home/components/role/resource-type-autocomplete.component';
 import { PermissionListComponent } from '@home/components/role/permission-list.component';
@@ -352,7 +352,7 @@ import { ResourcesLibraryComponent } from "@home/components/resources/resources-
       SelectTargetStateDialogComponent,
       AddWidgetToDashboardDialogComponent,
       ConverterAutocompleteComponent,
-      AddConverterDialogComponent,
+      ConverterDialogComponent,
       OperationTypeListComponent,
       ResourceTypeAutocompleteComponent,
       PermissionListComponent,
