@@ -29,34 +29,21 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { NgModule } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component } from '@angular/core';
+import { GitHubService } from '@core/http/git-hub.service';
 
-import { HomeRoutingModule } from './home-routing.module';
-import { HomeComponent } from './home.component';
-import { SharedModule } from '@app/shared/shared.module';
-import { MenuLinkComponent } from '@modules/home/menu/menu-link.component';
-import { MenuToggleComponent } from '@modules/home/menu/menu-toggle.component';
-import { SideMenuComponent } from '@modules/home/menu/side-menu.component';
-import { GithubBadgeComponent } from '@home/components/github-badge/github-badge.component';
-import { NotificationBellComponent } from '@home/components/notification/notification-bell.component';
-import { ShowNotificationPopoverComponent } from '@home/components/notification/show-notification-popover.component';
-
-@NgModule({
-  declarations:
-    [
-      HomeComponent,
-      MenuLinkComponent,
-      MenuToggleComponent,
-      SideMenuComponent,
-      GithubBadgeComponent,
-      NotificationBellComponent,
-      ShowNotificationPopoverComponent
-    ],
-  imports: [
-    CommonModule,
-    SharedModule,
-    HomeRoutingModule
-  ]
+@Component({
+  selector: 'tb-github-badge',
+  templateUrl: './github-badge.component.html',
+  styleUrl: './github-badge.component.scss'
 })
-export class HomeModule { }
+export class GithubBadgeComponent {
+
+  githubStar = 0;
+
+  constructor(private gitHubService: GitHubService) {
+    this.gitHubService.getGitHubStar().subscribe(star => {
+      this.githubStar = star;
+    });
+  }
+}

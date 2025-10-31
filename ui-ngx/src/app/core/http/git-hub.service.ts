@@ -29,34 +29,25 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { NgModule } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Injectable } from '@angular/core';
+import { defaultHttpOptionsFromConfig, RequestConfig } from './http-utils';
+import { Observable, of } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
+import { catchError, map } from 'rxjs/operators';
 
-import { HomeRoutingModule } from './home-routing.module';
-import { HomeComponent } from './home.component';
-import { SharedModule } from '@app/shared/shared.module';
-import { MenuLinkComponent } from '@modules/home/menu/menu-link.component';
-import { MenuToggleComponent } from '@modules/home/menu/menu-toggle.component';
-import { SideMenuComponent } from '@modules/home/menu/side-menu.component';
-import { GithubBadgeComponent } from '@home/components/github-badge/github-badge.component';
-import { NotificationBellComponent } from '@home/components/notification/notification-bell.component';
-import { ShowNotificationPopoverComponent } from '@home/components/notification/show-notification-popover.component';
-
-@NgModule({
-  declarations:
-    [
-      HomeComponent,
-      MenuLinkComponent,
-      MenuToggleComponent,
-      SideMenuComponent,
-      GithubBadgeComponent,
-      NotificationBellComponent,
-      ShowNotificationPopoverComponent
-    ],
-  imports: [
-    CommonModule,
-    SharedModule,
-    HomeRoutingModule
-  ]
+@Injectable({
+  providedIn: 'root'
 })
-export class HomeModule { }
+export class GitHubService {
+
+  constructor(
+    private http: HttpClient
+  ) { }
+
+  public getGitHubStar(config?: RequestConfig): Observable<number> {
+    return this.http.get<any>('https://api.github.com/repos/thingsboard/thingsboard', defaultHttpOptionsFromConfig(config)).pipe(
+      catchError(() => of({})),
+      map((res: any) => res?.stargazers_count ?? 0)
+    )
+  }
+}
