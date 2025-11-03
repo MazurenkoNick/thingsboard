@@ -62,7 +62,7 @@
     <button mat-raised-button color="primary"
             type="submit"
             [disabled]="(isLoading$ | async) || converterComponent.entityForm?.invalid">
-      {{ (isEdit ? 'action.edit' : 'action.add') | translate }}
+      {{ (isEdit ? 'action.save' : 'action.add') | translate }}
     </button>
   </div>
 </form>
