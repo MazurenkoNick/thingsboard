@@ -33,38 +33,32 @@ import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SharedModule } from '@shared/shared.module';
 import {
-  CalculatedFieldArgumentPanelComponent
-} from '@home/components/calculated-fields/components/calculated-field-arguments/calculated-field-argument-panel.component';
+  CalculatedFieldOutputModule
+} from '@home/components/calculated-fields/components/output/calculated-field-output.module';
 import {
-  CalculatedFieldArgumentsTableComponent
-} from '@home/components/calculated-fields/components/calculated-field-arguments/calculated-field-arguments-table.component';
+  CalculatedFieldArgumentsTableModule
+} from '@home/components/calculated-fields/components/calculated-field-arguments/calculated-field-arguments-table.module';
 import {
-  PropagateArgumentsTableComponent
-} from '@home/components/calculated-fields/components/calculated-field-arguments/propagate-arguments-table.component';
+  EntityAggregationComponentComponent
+} from '@home/components/calculated-fields/components/entity-aggregation-configuration/entity-aggregation-component.component';
 import {
-  RelatedAggregationArgumentsTableComponent
-} from '@home/components/calculated-fields/components/calculated-field-arguments/related-aggregation-arguments-table.component';
-import {
-  EntityAggregationArgumentsTableComponent
-} from '@home/components/calculated-fields/components/calculated-field-arguments/entity-aggregation-arguments-table.component';
+  CalculatedFieldMetricsTableModule
+} from '@home/components/calculated-fields/components/metrics/calculated-field-metrics-table.module';
 
 @NgModule({
   imports: [
     CommonModule,
     SharedModule,
+    CalculatedFieldOutputModule,
+    CalculatedFieldArgumentsTableModule,
+    CalculatedFieldMetricsTableModule,
   ],
   declarations: [
-    CalculatedFieldArgumentPanelComponent,
-    CalculatedFieldArgumentsTableComponent,
-    PropagateArgumentsTableComponent,
-    RelatedAggregationArgumentsTableComponent,
-    EntityAggregationArgumentsTableComponent,
+    EntityAggregationComponentComponent,
   ],
   exports: [
-    CalculatedFieldArgumentsTableComponent,
-    PropagateArgumentsTableComponent,
-    RelatedAggregationArgumentsTableComponent,
-    EntityAggregationArgumentsTableComponent,
+    EntityAggregationComponentComponent,
   ]
 })
-export class CalculatedFieldArgumentsTableModule {}
+export class EntityAggregationComponentModule {
+}

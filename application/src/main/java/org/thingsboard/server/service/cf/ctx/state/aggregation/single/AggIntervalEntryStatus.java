@@ -28,8 +28,44 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.service.cf.ctx.state;
+package org.thingsboard.server.service.cf.ctx.state.aggregation.single;
 
-public enum ArgumentEntryType {
-    SINGLE_VALUE, TS_ROLLING, GEOFENCING, PROPAGATION, RELATED_ENTITIES, ENTITY_AGGREGATION
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class AggIntervalEntryStatus {
+
+    @Setter
+    private long lastArgsRefreshTs = -1;
+    @Setter
+    private long lastMetricsEvalTs = -1;
+
+    public AggIntervalEntryStatus(long lastArgsRefreshTs) {
+        this.lastArgsRefreshTs = lastArgsRefreshTs;
+    }
+
+    public boolean shouldRecalculate(long checkInterval) {
+        boolean intervalPassed = lastMetricsEvalTs <= System.currentTimeMillis() - checkInterval;
+        boolean argsUpdatedDuringInterval = lastArgsRefreshTs > -1;
+        if (intervalPassed && argsUpdatedDuringInterval) {
+            lastMetricsEvalTs = System.currentTimeMillis();
+            lastArgsRefreshTs = -1;
+            return true;
+        }
+        return false;
+    }
+
+    public boolean intervalPassed(long checkInterval) {
+        boolean intervalPassed = lastMetricsEvalTs <= System.currentTimeMillis() - checkInterval;
+        if (intervalPassed) {
+            lastMetricsEvalTs = System.currentTimeMillis();
+        }
+        return intervalPassed;
+    }
+
 }

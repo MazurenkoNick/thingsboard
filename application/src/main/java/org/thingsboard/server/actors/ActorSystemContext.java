@@ -778,9 +778,9 @@ public class ActorSystemContext {
     @Getter
     private long cfCalculationResultTimeout;
 
-    @Value("${actors.alarms.reevaluation_interval:120}")
+    @Value("${actors.calculated_fields.check_interval:120}")
     @Getter
-    private long alarmRulesReevaluationInterval;
+    private long cfCheckInterval;
 
     @Autowired
     @Getter

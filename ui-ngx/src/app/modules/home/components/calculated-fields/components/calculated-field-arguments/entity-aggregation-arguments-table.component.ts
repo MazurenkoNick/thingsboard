@@ -29,15 +29,7 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import {
-  ChangeDetectorRef,
-  Component,
-  DestroyRef,
-  forwardRef,
-  OnInit,
-  Renderer2,
-  ViewContainerRef,
-} from '@angular/core';
+import { ChangeDetectorRef, Component, DestroyRef, forwardRef, Renderer2, ViewContainerRef, } from '@angular/core';
 import { FormBuilder, NG_VALIDATORS, NG_VALUE_ACCESSOR, } from '@angular/forms';
 import { TbPopoverService } from '@shared/components/popover.service';
 import { EntityService } from '@core/http/entity.service';
@@ -46,33 +38,26 @@ import { AppState } from '@core/core.state';
 import {
   CalculatedFieldArgumentsTableComponent
 } from '@home/components/calculated-fields/components/calculated-field-arguments/calculated-field-arguments-table.component';
-import {
-  ArgumentEntityType,
-  ArgumentType,
-  CalculatedFieldArgumentValue,
-  FORBIDDEN_NAMES
-} from '@shared/models/calculated-field.models';
-import { isDefined } from '@core/utils';
-import { NULL_UUID } from '@shared/models/id/has-uuid';
+import { ArgumentEntityType } from '@shared/models/calculated-field.models';
 
 @Component({
-  selector: 'tb-propagate-arguments-table',
+  selector: 'tb-entity-aggregation-arguments-table',
   templateUrl: './calculated-field-arguments-table.component.html',
   styleUrls: [`calculated-field-arguments-table.component.scss`],
   providers: [
     {
       provide: NG_VALUE_ACCESSOR,
-      useExisting: forwardRef(() => PropagateArgumentsTableComponent),
+      useExisting: forwardRef(() => EntityAggregationArgumentsTableComponent),
       multi: true
     },
     {
       provide: NG_VALIDATORS,
-      useExisting: forwardRef(() => PropagateArgumentsTableComponent),
+      useExisting: forwardRef(() => EntityAggregationArgumentsTableComponent),
       multi: true
     }
   ],
 })
-export class PropagateArgumentsTableComponent extends CalculatedFieldArgumentsTableComponent implements OnInit {
+export class EntityAggregationArgumentsTableComponent extends CalculatedFieldArgumentsTableComponent {
 
   constructor(
     protected fb: FormBuilder,
@@ -84,54 +69,18 @@ export class PropagateArgumentsTableComponent extends CalculatedFieldArgumentsTa
     protected destroyRef: DestroyRef,
     protected store: Store<AppState>
   ) {
-    super(fb, popoverService, viewContainerRef, cd, renderer, entityService, destroyRef, store)
-  }
+    super(fb, popoverService, viewContainerRef, cd, renderer, entityService, destroyRef, store);
 
-  ngOnInit() {
-    this.updatedValue();
-  }
+    this.argumentNameColumn = 'calculated-fields.argument-name';
+    this.displayColumns = ['name', 'type', 'key', 'actions'];
+    this.panelAdditionalCtx = {
+      hiddenEntityTypes: true,
+      argumentEntityTypes: [ArgumentEntityType.Current],
+      hint: 'calculated-fields.entity-aggregation.argument-setting-hint',
+      hiddenDefaultValue: true,
+      hiddenEntityKeyTypes: true,
+    };
 
-  protected changeIsScriptMode(): void {
-    this.updatedValue();
-    super.changeIsScriptMode();
-  }
-
-  private updatedValue() {
-    if (this.isScript) {
-      this.argumentNameColumn = 'common.name';
-      this.argumentNameColumnCopy = 'calculated-fields.copy-argument-name';
-      this.displayColumns = ['name', 'entityType', 'target', 'type', 'key', 'actions'];
-      this.panelAdditionalCtx = null;
-    } else {
-      this.argumentNameColumn = 'calculated-fields.output-key';
-      this.argumentNameColumnCopy = 'calculated-fields.copy-output-key';
-      this.displayColumns = ['name', 'type', 'key', 'actions'];
-      this.panelAdditionalCtx = {
-        argumentEntityTypes: [ArgumentEntityType.Current],
-        isOutputKey: true,
-        forbiddenNames: [...FORBIDDEN_NAMES, 'propagationCtx'],
-      };
-    }
-  }
-
-  protected isEditButtonShowBadge(argument: CalculatedFieldArgumentValue): boolean {
-    if (!this.isScript && isDefined(argument?.refEntityId)) {
-      return false;
-    }
-    return super.isEditButtonShowBadge(argument);
-  }
-
-  protected updateErrorText(): void {
-    if (!this.isScript && this.argumentsFormArray.controls.some(control => isDefined(control.value?.refEntityId))) {
-      this.errorText = 'calculated-fields.hint.arguments-propagate-argument-entity-type';
-    } else if (!this.isScript && this.argumentsFormArray.controls.some(control => control.value.refEntityKey.type === ArgumentType.Rolling)) {
-      this.errorText = 'calculated-fields.hint.arguments-propagate-arguments-with-rolling';
-    } else if (this.argumentsFormArray.controls.some(control => control.value.refEntityId?.id === NULL_UUID)) {
-      this.errorText = 'calculated-fields.hint.arguments-entity-not-found';
-    } else if (!this.argumentsFormArray.controls.length) {
-      this.errorText = 'calculated-fields.hint.arguments-empty';
-    } else {
-      this.errorText = '';
-    }
+    this.isScript = false;
   }
 }

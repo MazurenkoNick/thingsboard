@@ -28,20 +28,62 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.common.data.cf.configuration.aggregation;
+package org.thingsboard.server.common.data.cf.configuration.aggregation.single.interval;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 
+import java.time.Duration;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.util.concurrent.TimeUnit;
+
+@EqualsAndHashCode(callSuper = true)
 @Data
-@JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonIgnoreProperties(ignoreUnknown = true)
-public class AggMetric {
+@NoArgsConstructor
+public class CustomInterval extends BaseAggInterval {
 
-    private AggFunction function;
-    private String filter;
-    private AggInput input;
-    private Long defaultValue;
+    private Long durationSec;
+
+    public CustomInterval(Long durationSec, Long offsetMillis, String tz) {
+        this.tz = tz;
+        this.offsetSec = offsetMillis;
+        this.durationSec = durationSec;
+    }
+
+    @Override
+    public AggIntervalType getType() {
+        return AggIntervalType.CUSTOM;
+    }
+
+    @Override
+    public long getIntervalDurationMillis() {
+        return Duration.ofSeconds(durationSec).toMillis();
+    }
+
+    @Override
+    public long getCurrentIntervalStartTs() {
+        ZoneId zoneId = ZoneId.of(tz);
+        ZonedDateTime now = ZonedDateTime.now(zoneId);
+        ZonedDateTime shiftedNow = now.minusSeconds(getOffsetSec());
+
+        long durationMillis = getIntervalDurationMillis();
+        long shiftedNowMillis = shiftedNow.toInstant().toEpochMilli();
+        long alignedStartMillis = (shiftedNowMillis / durationMillis) * durationMillis;
+
+        long offsetMillis = TimeUnit.SECONDS.toMillis(getOffsetSec());
+        return alignedStartMillis + offsetMillis;
+    }
+
+    @Override
+    public long getCurrentIntervalEndTs() {
+        return getCurrentIntervalStartTs() + getIntervalDurationMillis();
+    }
+
+    @Override
+    public long getDelayUntilIntervalEnd() {
+        return getCurrentIntervalEndTs() - System.currentTimeMillis();
+    }
 
 }

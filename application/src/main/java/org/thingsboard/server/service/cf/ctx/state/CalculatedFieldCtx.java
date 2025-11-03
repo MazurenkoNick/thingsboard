@@ -72,6 +72,7 @@ import org.thingsboard.server.common.data.util.CollectionsUtil;
 import org.thingsboard.server.common.util.ProtoUtils;
 import org.thingsboard.server.dao.relation.RelationService;
 import org.thingsboard.server.gen.transport.TransportProtos.CalculatedFieldTelemetryMsgProto;
+import org.thingsboard.server.service.cf.CalculatedFieldProcessingService;
 import org.thingsboard.server.service.cf.ctx.CalculatedFieldEntityCtxId;
 import org.thingsboard.server.service.cf.ctx.state.geofencing.GeofencingCalculatedFieldState;
 import org.thingsboard.server.service.telemetry.AlarmSubscriptionService;
@@ -113,6 +114,7 @@ public class CalculatedFieldCtx implements Closeable {
     private TbelInvokeService tbelInvokeService;
     private RelationService relationService;
     private AlarmSubscriptionService alarmService;
+    private CalculatedFieldProcessingService cfProcessingService;
 
     private Map<String, CalculatedFieldScriptEngine> tbelExpressions;
     private Map<String, ThreadLocal<Expression>> simpleExpressions;
@@ -213,6 +215,7 @@ public class CalculatedFieldCtx implements Closeable {
         this.tbelInvokeService = systemContext.getTbelInvokeService();
         this.relationService = systemContext.getRelationService();
         this.alarmService = systemContext.getAlarmService();
+        this.cfProcessingService = systemContext.getCalculatedFieldProcessingService();
 
         this.maxDataPointsPerRollingArg = systemContext.getApiLimitService().getLimit(tenantId, DefaultTenantProfileConfiguration::getMaxDataPointsPerRollingArg); // fixme why tenant profile update is not handled??
         this.maxStateSize = systemContext.getApiLimitService().getLimit(tenantId, DefaultTenantProfileConfiguration::getMaxStateSizeInKBytes) * 1024;
@@ -259,6 +262,7 @@ public class CalculatedFieldCtx implements Closeable {
                 });
                 initialized = true;
             }
+            case ENTITY_AGGREGATION -> initialized = true;
         }
     }
 

@@ -31,14 +31,17 @@
 
 import { Component, Input, OnInit, output } from '@angular/core';
 import { TbPopoverComponent } from '@shared/components/popover.component';
-import { FormBuilder, FormControl, ValidatorFn, Validators } from '@angular/forms';
+import { FormBuilder, Validators } from '@angular/forms';
 import { charsWithNumRegex } from '@shared/models/regex.constants';
 import {
   AggFunction,
   AggFunctionTranslations,
   AggInputType,
   AggInputTypeTranslations,
-  CalculatedFieldAggMetricValue
+  CalculatedFieldAggMetricValue,
+  FORBIDDEN_NAMES,
+  forbiddenNamesValidator,
+  uniqueNameValidator
 } from '@shared/models/calculated-field.models';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { EntityFilter } from '@shared/models/query/query.models';
@@ -61,6 +64,7 @@ export class CalculatedFieldMetricsPanelComponent implements OnInit {
   @Input() metric: CalculatedFieldAggMetricValue;
   @Input() usedNames: string[];
   @Input() arguments: Array<string>;
+  @Input() simpleMode: boolean;
   @Input() editorCompleter: TbEditorCompleter;
   @Input() highlightRules: AceHighlightRules;
 
@@ -69,7 +73,7 @@ export class CalculatedFieldMetricsPanelComponent implements OnInit {
   functionArgs: Array<string>
 
   metricForm = this.fb.group({
-    name: ['', [Validators.required, this.uniqNameRequired(), this.forbiddenNameValidator(), Validators.pattern(charsWithNumRegex), Validators.maxLength(255)]],
+    name: ['', [Validators.required, forbiddenNamesValidator(FORBIDDEN_NAMES), Validators.pattern(charsWithNumRegex), Validators.maxLength(255)]],
     function: [AggFunction.AVG],
     allowFilter: [false],
     filter: ['', Validators.required],
@@ -77,7 +81,8 @@ export class CalculatedFieldMetricsPanelComponent implements OnInit {
       type: [AggInputType.key],
       key: ['', Validators.required],
       function: ['', Validators.required],
-    })
+    }),
+    defaultValue: [null]
   });
 
   entityFilter: EntityFilter;
@@ -98,6 +103,8 @@ export class CalculatedFieldMetricsPanelComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.updatedForm();
+
     const data: CalculatedFieldAggMetricValuePanel = {
       ...this.metric,
       allowFilter: !!this.metric.filter,
@@ -122,6 +129,15 @@ export class CalculatedFieldMetricsPanelComponent implements OnInit {
 
   cancel(): void {
     this.popover.hide();
+  }
+
+  private updatedForm(): void {
+    this.metricForm.get('name').addValidators(uniqueNameValidator(this.usedNames));
+    this.metricForm.get('name').updateValueAndValidity({emitEvent: false});
+
+    if (!this.simpleMode) {
+      this.metricForm.removeControl('defaultValue', {emitEvent: false});
+    }
   }
 
   private observeFilterAllowChange(): void {
@@ -161,22 +177,5 @@ export class CalculatedFieldMetricsPanelComponent implements OnInit {
       this.metricForm.get('input.key').setValue(null);
       this.metricForm.get('input.key').markAsTouched();
     }
-  }
-
-  private uniqNameRequired(): ValidatorFn {
-    return (control: FormControl) => {
-      const newName = control.value.trim().toLowerCase();
-      const isDuplicate = this.usedNames?.some(name => name.toLowerCase() === newName);
-
-      return isDuplicate ? { duplicateName: true } : null;
-    };
-  }
-
-  private forbiddenNameValidator(): ValidatorFn {
-    return (control: FormControl) => {
-      const trimmedValue = control.value.trim().toLowerCase();
-      const forbiddenNames = ['ctx', 'e', 'pi'];
-      return forbiddenNames.includes(trimmedValue) ? { forbiddenName: true } : null;
-    };
   }
 }

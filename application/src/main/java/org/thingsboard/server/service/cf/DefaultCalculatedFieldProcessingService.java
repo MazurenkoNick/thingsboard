@@ -39,6 +39,7 @@ import org.thingsboard.server.cluster.TbClusterService;
 import org.thingsboard.server.common.data.DataConstants;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.cf.configuration.Argument;
+import org.thingsboard.server.common.data.cf.configuration.aggregation.AggMetric;
 import org.thingsboard.server.common.data.id.CalculatedFieldId;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.TenantId;
@@ -62,6 +63,7 @@ import org.thingsboard.server.queue.util.TbRuleEngineComponent;
 import org.thingsboard.server.service.cf.ctx.CalculatedFieldEntityCtxId;
 import org.thingsboard.server.service.cf.ctx.state.ArgumentEntry;
 import org.thingsboard.server.service.cf.ctx.state.CalculatedFieldCtx;
+import org.thingsboard.server.service.cf.ctx.state.aggregation.single.AggIntervalEntry;
 import org.thingsboard.server.service.security.permission.OwnersCacheService;
 
 import java.util.ArrayList;
@@ -125,6 +127,11 @@ public class DefaultCalculatedFieldProcessingService extends AbstractCalculatedF
             argFutures.put(entry.getKey(), argValueFuture);
         }
         return resolveArgumentFutures(argFutures);
+    }
+
+    @Override
+    public ArgumentEntry fetchMetricDuringInterval(TenantId tenantId, EntityId entityId, String argKey, AggMetric metric, AggIntervalEntry interval) {
+        return super.fetchMetricDuringInterval(tenantId, entityId, argKey, metric, interval);
     }
 
     @Override

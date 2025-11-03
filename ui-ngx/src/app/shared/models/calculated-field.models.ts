@@ -45,8 +45,10 @@ import {
   endGroupHighlightRule
 } from '@shared/models/ace/ace.models';
 import { EntitySearchDirection } from '@shared/models/relation.models';
-import { AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
+import { AbstractControl, FormControl, ValidationErrors, ValidatorFn } from '@angular/forms';
 import { JobStatus } from '@shared/models/job.models';
+
+export const FORBIDDEN_NAMES = ['ctx', 'e', 'pi'];
 
 interface BaseCalculatedField extends Omit<BaseData<CalculatedFieldId>, 'label'>, HasVersion, HasEntityDebugSettings, HasTenantId, ExportableEntity<CalculatedFieldId> {
   entityId: EntityId;
@@ -83,7 +85,8 @@ export enum CalculatedFieldType {
   SCRIPT = 'SCRIPT',
   GEOFENCING = 'GEOFENCING',
   PROPAGATION = 'PROPAGATION',
-  RELATED_ENTITIES_AGGREGATION = 'RELATED_ENTITIES_AGGREGATION'
+  RELATED_ENTITIES_AGGREGATION = 'RELATED_ENTITIES_AGGREGATION',
+  ENTITY_AGGREGATION = 'ENTITY_AGGREGATION',
 }
 
 export const CalculatedFieldTypeTranslations = new Map<CalculatedFieldType, string>(
@@ -93,6 +96,7 @@ export const CalculatedFieldTypeTranslations = new Map<CalculatedFieldType, stri
     [CalculatedFieldType.GEOFENCING, 'calculated-fields.type.geofencing'],
     [CalculatedFieldType.PROPAGATION, 'calculated-fields.type.propagation'],
     [CalculatedFieldType.RELATED_ENTITIES_AGGREGATION, 'calculated-fields.type.related-entities-aggregation'],
+    [CalculatedFieldType.ENTITY_AGGREGATION, 'calculated-fields.type.entity-aggregation'],
   ]
 )
 
@@ -101,7 +105,8 @@ export type CalculatedFieldConfiguration =
   | CalculatedFieldScriptConfiguration
   | CalculatedFieldGeofencingConfiguration
   | CalculatedFieldPropagationConfiguration
-  | CalculatedFieldRelatedAggregationConfiguration;
+  | CalculatedFieldRelatedAggregationConfiguration
+  | CalculatedFieldEntityAggregationConfiguration;
 
 export interface CalculatedFieldSimpleConfiguration {
   type: CalculatedFieldType.SIMPLE;
@@ -134,6 +139,20 @@ export interface CalculatedFieldRelatedAggregationConfiguration {
   deduplicationIntervalInSec: number;
   useLatestTs: boolean;
   output: Omit<CalculatedFieldSimpleOutput, 'name'>;
+}
+
+export interface CalculatedFieldEntityAggregationConfiguration {
+  type: CalculatedFieldType.ENTITY_AGGREGATION;
+  arguments: Record<string, CalculatedFieldArgument>;
+  metrics: Record<string, CalculatedFieldAggMetric>;
+  interval: AggInterval;
+  watermark?: WatermarkConfig;
+  output: Omit<CalculatedFieldSimpleOutput, 'name'>;
+}
+
+export interface WatermarkConfig {
+  duration?: number;
+  checkInterval?: number;
 }
 
 interface BasePropagationConfiguration {
@@ -293,10 +312,40 @@ export const AggFunctionTranslations = new Map<AggFunction, string>([
   [AggFunction.COUNT_UNIQUE, 'calculated-fields.metrics.aggregation-type.count-unique'],
 ])
 
+export enum AggIntervalType {
+  HOUR = 'HOUR',
+  DAY = 'DAY',
+  WEEK = 'WEEK',
+  WEEK_SUN_SAT = 'WEEK_SUN_SAT',
+  MONTH = 'MONTH',
+  YEAR = 'YEAR',
+  CUSTOM = 'CUSTOM'
+}
+
+export const AggIntervalTypeTranslations = new Map<AggIntervalType, string>(
+  [
+    [AggIntervalType.HOUR, 'calculated-fields.aggregate-period.hour'],
+    [AggIntervalType.DAY, 'calculated-fields.aggregate-period.day'],
+    [AggIntervalType.WEEK, 'calculated-fields.aggregate-period.week'],
+    [AggIntervalType.WEEK_SUN_SAT, 'calculated-fields.aggregate-period.week-sun-sat'],
+    [AggIntervalType.MONTH, 'calculated-fields.aggregate-period.month'],
+    [AggIntervalType.YEAR, 'calculated-fields.aggregate-period.year'],
+    [AggIntervalType.CUSTOM, 'calculated-fields.aggregate-period.custom']
+  ]
+);
+
+export interface AggInterval {
+  type: AggIntervalType;
+  tz: string;
+  offsetSec?: number
+  durationSec?: number
+}
+
 export interface CalculatedFieldAggMetric {
   function: AggFunction;
   filter?: string;
   input: AggKeyInput | AggFunctionInput;
+  defaultValue?: number;
 }
 
 export interface CalculatedFieldAggMetricValue extends CalculatedFieldAggMetric {
@@ -885,5 +934,28 @@ export function notEmptyObjectValidator(): ValidatorFn {
       return {emptyObject: true};
     }
     return null;
+  };
+}
+
+export function forbiddenNamesValidator(forbiddenNames: string[]): ValidatorFn {
+  const forbiddenNameSet = new Set(forbiddenNames);
+
+  return (control: FormControl) => {
+    const trimmedValue = (control.value || '').trim();
+    return forbiddenNameSet.has(trimmedValue) ? { forbiddenName: true } : null;
+  };
+}
+
+export function uniqueNameValidator(existingNames: string[]): ValidatorFn {
+  const namesSet = new Set((existingNames || []).map(name => name.toLowerCase()));
+
+  return (control: FormControl) => {
+    const newName = (control.value || '').trim().toLowerCase();
+
+    if (!newName) {
+      return null;
+    }
+
+    return namesSet.has(newName) ? { duplicateName: true } : null;
   };
 }

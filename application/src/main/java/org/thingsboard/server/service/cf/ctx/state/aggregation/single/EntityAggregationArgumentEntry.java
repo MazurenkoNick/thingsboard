@@ -28,36 +28,61 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.service.cf;
+package org.thingsboard.server.service.cf.ctx.state.aggregation.single;
 
-import com.google.common.util.concurrent.ListenableFuture;
-import org.thingsboard.server.actors.calculatedField.CalculatedFieldTelemetryMsg;
-import org.thingsboard.server.common.data.cf.configuration.Argument;
-import org.thingsboard.server.common.data.cf.configuration.aggregation.AggMetric;
-import org.thingsboard.server.common.data.id.CalculatedFieldId;
-import org.thingsboard.server.common.data.id.EntityId;
-import org.thingsboard.server.common.data.id.TenantId;
-import org.thingsboard.server.common.msg.queue.TbCallback;
-import org.thingsboard.server.service.cf.ctx.CalculatedFieldEntityCtxId;
+import lombok.Data;
+import org.thingsboard.script.api.tbel.TbelCfArg;
 import org.thingsboard.server.service.cf.ctx.state.ArgumentEntry;
-import org.thingsboard.server.service.cf.ctx.state.CalculatedFieldCtx;
-import org.thingsboard.server.service.cf.ctx.state.aggregation.single.AggIntervalEntry;
+import org.thingsboard.server.service.cf.ctx.state.ArgumentEntryType;
+import org.thingsboard.server.service.cf.ctx.state.SingleValueArgumentEntry;
 
-import java.util.List;
 import java.util.Map;
 
-public interface CalculatedFieldProcessingService {
+@Data
+public class EntityAggregationArgumentEntry implements ArgumentEntry {
 
-    ListenableFuture<Map<String, ArgumentEntry>> fetchArguments(CalculatedFieldCtx ctx, EntityId entityId);
+    private Map<AggIntervalEntry, AggIntervalEntryStatus> aggIntervals;
 
-    Map<String, ArgumentEntry> fetchDynamicArgsFromDb(CalculatedFieldCtx ctx, EntityId entityId);
+    private boolean forceResetPrevious;
 
-    Map<String, ArgumentEntry> fetchArgsFromDb(TenantId tenantId, EntityId entityId, Map<String, Argument> arguments);
+    public EntityAggregationArgumentEntry(Map<AggIntervalEntry, AggIntervalEntryStatus> aggIntervals) {
+        this.aggIntervals = aggIntervals;
+    }
 
-    ArgumentEntry fetchMetricDuringInterval(TenantId tenantId, EntityId entityId, String argKey, AggMetric metric, AggIntervalEntry interval);
+    @Override
+    public ArgumentEntryType getType() {
+        return ArgumentEntryType.ENTITY_AGGREGATION;
+    }
 
-    void pushMsgToRuleEngine(TenantId tenantId, EntityId entityId, CalculatedFieldResult result, List<CalculatedFieldId> cfIds, TbCallback callback);
+    @Override
+    public Object getValue() {
+        return aggIntervals;
+    }
 
-    void pushMsgToLinks(CalculatedFieldTelemetryMsg msg, List<CalculatedFieldEntityCtxId> linkedCalculatedFields, TbCallback callback);
+    @Override
+    public boolean updateEntry(ArgumentEntry entry) {
+        if (entry instanceof EntityAggregationArgumentEntry entityAggEntry) {
+            aggIntervals.putAll(entityAggEntry.getAggIntervals());
+        } else if (entry instanceof SingleValueArgumentEntry singleValueArgEntry) {
+            long entryTs = singleValueArgEntry.getTs();
+            for (Map.Entry<AggIntervalEntry, AggIntervalEntryStatus> aggIntervalEntry : aggIntervals.entrySet()) {
+                if (aggIntervalEntry.getKey().belongsToInterval(entryTs)) {
+                    aggIntervalEntry.getValue().setLastArgsRefreshTs(System.currentTimeMillis());
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    @Override
+    public boolean isEmpty() {
+        return true;
+    }
+
+    @Override
+    public TbelCfArg toTbelCfArg() {
+        return null;
+    }
 
 }

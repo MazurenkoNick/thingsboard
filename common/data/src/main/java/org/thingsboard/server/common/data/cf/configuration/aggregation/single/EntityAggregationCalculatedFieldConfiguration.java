@@ -28,20 +28,45 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.common.data.cf.configuration.aggregation;
+package org.thingsboard.server.common.data.cf.configuration.aggregation.single;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonInclude;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotEmpty;
 import lombok.Data;
+import org.thingsboard.server.common.data.cf.CalculatedFieldType;
+import org.thingsboard.server.common.data.cf.configuration.Argument;
+import org.thingsboard.server.common.data.cf.configuration.ArgumentsBasedCalculatedFieldConfiguration;
+import org.thingsboard.server.common.data.cf.configuration.Output;
+import org.thingsboard.server.common.data.cf.configuration.aggregation.AggMetric;
+import org.thingsboard.server.common.data.cf.configuration.aggregation.single.interval.AggInterval;
+import org.thingsboard.server.common.data.cf.configuration.aggregation.single.interval.Watermark;
+
+import java.util.Map;
 
 @Data
-@JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonIgnoreProperties(ignoreUnknown = true)
-public class AggMetric {
+public class EntityAggregationCalculatedFieldConfiguration implements ArgumentsBasedCalculatedFieldConfiguration {
 
-    private AggFunction function;
-    private String filter;
-    private AggInput input;
-    private Long defaultValue;
+    private Map<String, Argument> arguments;
+    @Valid
+    @NotEmpty
+    private Map<String, AggMetric> metrics;
+    private AggInterval interval;
+    private Watermark watermark;
+    private Output output;
+
+    @Override
+    public CalculatedFieldType getType() {
+        return CalculatedFieldType.ENTITY_AGGREGATION;
+    }
+
+    @Override
+    public void validate() {
+        if (arguments.containsKey("ctx")) {
+            throw new IllegalArgumentException("Argument name 'ctx' is reserved and cannot be used.");
+        }
+        if (arguments.values().stream().anyMatch(Argument::hasTsRollingArgument)) {
+            throw new IllegalArgumentException("Calculated field with type: '" + getType() + "' doesn't support TS_ROLLING arguments.");
+        }
+    }
 
 }

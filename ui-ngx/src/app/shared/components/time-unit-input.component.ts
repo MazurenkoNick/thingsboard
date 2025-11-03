@@ -71,6 +71,9 @@ export class TimeUnitInputComponent implements ControlValueAccessor, Validator, 
   labelText: string;
 
   @Input()
+  hintText: string;
+
+  @Input()
   @coerceBoolean()
   required: boolean;
 
@@ -100,6 +103,10 @@ export class TimeUnitInputComponent implements ControlValueAccessor, Validator, 
   @Input()
   @coerceBoolean()
   inlineField: boolean;
+
+  @Input()
+  @coerceBoolean()
+  sameWidthInputs: boolean = false;
 
   timeUnits = Object.values(TimeUnit).filter(item => item !== TimeUnit.MILLISECONDS) as TimeUnit[];
 
