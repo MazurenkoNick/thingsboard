@@ -29,7 +29,7 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { Component, forwardRef, Input } from '@angular/core';
+import { booleanAttribute, Component, forwardRef, Input } from '@angular/core';
 import {
   ControlValueAccessor,
   FormBuilder,
@@ -87,6 +87,8 @@ export class EntityAggregationComponentComponent implements ControlValueAccessor
   @Input({required: true})
   entityName: string;
 
+  @Input({ transform: booleanAttribute })
+  readonly: boolean;
 
   entityAggregationConfiguration = this.fb.group({
     arguments: this.fb.control({}, notEmptyObjectValidator()),

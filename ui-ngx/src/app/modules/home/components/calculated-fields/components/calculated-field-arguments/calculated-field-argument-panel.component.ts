@@ -50,9 +50,9 @@ import {
   ArgumentTypeTranslations,
   CalculatedFieldArgumentValue,
   CFArgumentDynamicSourceType,
-  getCalculatedFieldCurrentEntityFilter
   FORBIDDEN_NAMES,
   forbiddenNamesValidator,
+  getCalculatedFieldCurrentEntityFilter,
   uniqueNameValidator
 } from '@shared/models/calculated-field.models';
 import { debounceTime, distinctUntilChanged, filter } from 'rxjs/operators';

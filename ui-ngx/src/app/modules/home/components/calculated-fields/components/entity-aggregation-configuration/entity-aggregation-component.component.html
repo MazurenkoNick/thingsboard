@@ -41,7 +41,8 @@
     <tb-entity-aggregation-arguments-table formControlName="arguments"
                                            [entityId]="entityId"
                                            [tenantId]="tenantId"
-                                           [entityName]="entityName"/>
+                                           [entityName]="entityName"
+                                           [readonly]="readonly" />
   </div>
   <div class="tb-form-panel">
     <div class="tb-form-panel-title" tb-hint-tooltip-icon="{{ 'calculated-fields.hint.metrics' | translate }}">
@@ -50,6 +51,7 @@
     <tb-calculated-field-metrics-table formControlName="metrics"
                                        simpleMode
                                        [arguments]="arguments$ | async"
+                                       [readonly]="readonly"
     ></tb-calculated-field-metrics-table>
   </div>
   <div class="tb-form-panel">

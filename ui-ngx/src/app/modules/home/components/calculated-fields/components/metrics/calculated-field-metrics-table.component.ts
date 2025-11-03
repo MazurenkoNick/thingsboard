@@ -95,7 +95,7 @@ export class CalculatedFieldMetricsTableComponent implements OnInit, ControlValu
   @Input() editorCompleter: TbEditorCompleter;
   @Input() highlightRules: AceHighlightRules;
   @Input({transform: booleanAttribute}) simpleMode: boolean = false;
-  @Input({ transform: booleanAttribute }) readonly: boolean;
+  @Input({transform: booleanAttribute}) readonly: boolean;
 
   @ViewChild(MatSort, { static: true }) sort: MatSort;
 
