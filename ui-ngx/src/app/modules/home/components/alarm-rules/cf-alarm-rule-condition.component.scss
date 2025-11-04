@@ -28,28 +28,25 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.common.data.alarm.rule.condition.expression;
+:host {
+  display: flex;
+  flex: 1;
 
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import lombok.Data;
-import org.thingsboard.server.common.data.alarm.rule.condition.expression.predicate.KeyFilterPredicate;
-import org.thingsboard.server.common.data.query.EntityKeyValueType;
-
-import java.io.Serializable;
-import java.util.List;
-
-@Data
-public class AlarmConditionFilter implements Serializable {
-
-    @NotBlank
-    private String argument;
-    @NotNull
-    private EntityKeyValueType valueType;
-    private ComplexOperation operation;
-    @Valid
-    @NotNull
-    private List<KeyFilterPredicate> predicates;
-
+  .tb-alarm-rule-condition {
+    display: flex;
+    flex: 1;
+    &-button {
+      --mat-outlined-button-horizontal-padding: 3px 0px 12px;
+      display: block;
+      width: 100%;
+    }
+    &-label {
+      display: block;
+      text-align: start;
+      width: 100%;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+  }
 }

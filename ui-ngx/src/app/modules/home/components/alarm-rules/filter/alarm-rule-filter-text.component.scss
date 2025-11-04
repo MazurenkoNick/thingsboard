@@ -28,28 +28,73 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.common.data.alarm.rule.condition.expression;
+:host {
+  text-overflow: ellipsis;
+  overflow: hidden;
+  .tb-filter-text {
+    overflow-y: auto;
+    text-align: start;
+    &.required {
+      color: #f44336;
+      padding: 0;
+    }
+    &.nowrap {
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      overflow: hidden;
+    }
+  }
+}
 
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import lombok.Data;
-import org.thingsboard.server.common.data.alarm.rule.condition.expression.predicate.KeyFilterPredicate;
-import org.thingsboard.server.common.data.query.EntityKeyValueType;
-
-import java.io.Serializable;
-import java.util.List;
-
-@Data
-public class AlarmConditionFilter implements Serializable {
-
-    @NotBlank
-    private String argument;
-    @NotNull
-    private EntityKeyValueType valueType;
-    private ComplexOperation operation;
-    @Valid
-    @NotNull
-    private List<KeyFilterPredicate> predicates;
-
+:host ::ng-deep {
+  .tb-filter-text {
+    line-height: 1.8em;
+    span {
+      display: inline-block;
+      vertical-align: middle;
+      line-height: 1.4em;
+    }
+    .tb-filter-predicate {
+      padding-right: 4px;
+      padding-left: 4px;
+    }
+    .tb-filter-entity-key, .tb-filter-value, .tb-filter-dynamic-source {
+      font-weight: bold;
+      border: 1px groove rgba(0, 0, 0, .25);
+      border-radius: 4px;
+      padding-left: 4px;
+      padding-right: 4px;
+    }
+    .tb-filter-entity-key, .tb-filter-value {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 150px;
+    }
+    .tb-filter-dynamic-source {
+    }
+    .tb-filter-entity-key {
+      color: #305680;
+    }
+    .tb-filter-value {
+      color: #ff5722;
+    }
+    .tb-filter-simple-operation {
+      font-size: 0.9em;
+    }
+    .tb-filter-complex-operation {
+      font-weight: 400;
+      font-style: italic;
+    }
+    .tb-filter-dynamic-value {
+      .tb-filter-dynamic-source, .tb-filter-value {
+        color: #0c959c;
+      }
+    }
+    .tb-filter-bracket {
+      .tb-left-bracket, .tb-right-bracket {
+        font-size: 1.2em;
+      }
+    }
+  }
 }

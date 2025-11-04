@@ -285,6 +285,8 @@ import {
   CalculatedFieldDebugDialogComponent
 } from '@home/components/calculated-fields/components/debug-dialog/calculated-field-debug-dialog.component';
 import { CalculatedFieldsModule } from '@home/components/calculated-fields/calculated-field.module';
+import { AlarmRuleModule } from "@home/components/alarm-rules/alarm-rule.module";
+import { AlarmRulesTableComponent } from "@home/components/alarm-rules/alarm-rules-table.component";
 
 @NgModule({
   declarations:
@@ -299,6 +301,7 @@ import { CalculatedFieldsModule } from '@home/components/calculated-fields/calcu
       AuditLogDetailsDialogComponent,
       CalculatedFieldsTableComponent,
       CalculatedFieldDebugDialogComponent,
+      AlarmRulesTableComponent,
       EventContentDialogComponent,
       EventTableHeaderComponent,
       EventTableComponent,
@@ -475,6 +478,7 @@ import { CalculatedFieldsModule } from '@home/components/calculated-fields/calcu
     SharedHomeComponentsModule,
     HomeDialogsModule,
     CalculatedFieldsModule,
+    AlarmRuleModule,
     WidgetConfigComponentsModule,
     BasicWidgetConfigModule,
     Lwm2mProfileComponentsModule,
@@ -495,6 +499,7 @@ import { CalculatedFieldsModule } from '@home/components/calculated-fields/calcu
     EntityDetailsPageComponent,
     AuditLogTableComponent,
     CalculatedFieldsTableComponent,
+    AlarmRulesTableComponent,
     EventTableComponent,
     EdgeDownlinkTableHeaderComponent,
     EdgeDownlinkTableComponent,

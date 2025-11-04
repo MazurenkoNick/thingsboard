@@ -28,28 +28,37 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.common.data.alarm.rule.condition.expression;
+:host {
+  .filter-title {
+    padding: 12px 0;
+    font-size: 14px;
+    font-weight: 500;
+  }
+  .filter-list {
+    overflow: auto;
+    max-height: 300px;
+    .no-data-found {
+      height: 50px;
+    }
 
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import lombok.Data;
-import org.thingsboard.server.common.data.alarm.rule.condition.expression.predicate.KeyFilterPredicate;
-import org.thingsboard.server.common.data.query.EntityKeyValueType;
-
-import java.io.Serializable;
-import java.util.List;
-
-@Data
-public class AlarmConditionFilter implements Serializable {
-
-    @NotBlank
-    private String argument;
-    @NotNull
-    private EntityKeyValueType valueType;
-    private ComplexOperation operation;
-    @Valid
-    @NotNull
-    private List<KeyFilterPredicate> predicates;
-
+    &-divider {
+      border-top: 1px solid rgba(0, 0, 0, 0.12);
+    }
+  }
+  .filters-operation {
+    display: flex;
+    justify-content: center;
+    margin-top: -14px;
+    &-container {
+      background-color: white;
+    }
+    &-label {
+      font-weight: 500;
+      color: #00695C;
+      padding: 0 8px;
+      border-radius: 4px;
+      border: 1px solid rgba(#00695C, 0.32);
+      background-color: rgba(#00695C, 0.04);
+    }
+  }
 }
