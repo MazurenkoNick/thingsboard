@@ -42,7 +42,7 @@ import { ActionAuthUpdateUserDetails } from '@core/auth/auth.actions';
 import { environment as env } from '@env/environment';
 import { ActionSettingsChangeLanguage } from '@core/settings/settings.actions';
 import { ActivatedRoute } from '@angular/router';
-import { isDefinedAndNotNull, isNotEmptyStr } from '@core/utils';
+import { isDefinedAndNotNull, isNotEmptyStr, validateEmail } from '@core/utils';
 import { getCurrentAuthState } from '@core/auth/auth.selectors';
 import { AuthService } from '@core/auth/auth.service';
 import { UnitSystem, UnitSystems } from '@shared/models/unit.models';
@@ -72,7 +72,7 @@ export class ProfileComponent extends PageComponent implements OnInit, HasConfir
               private unitService: UnitService,
               private fb: UntypedFormBuilder,
               private userPermissionsService: UserPermissionsService,
-              ) {
+            ) {
     super(store);
   }
 
@@ -84,7 +84,7 @@ export class ProfileComponent extends PageComponent implements OnInit, HasConfir
 
   private buildProfileForm() {
     this.profile = this.fb.group({
-      email: ['', [Validators.required, Validators.email]],
+      email: ['', [Validators.required, validateEmail]],
       firstName: [''],
       lastName: [''],
       phone: [''],

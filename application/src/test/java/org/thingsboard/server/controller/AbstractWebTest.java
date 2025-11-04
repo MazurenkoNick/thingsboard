@@ -246,6 +246,7 @@ public abstract class AbstractWebTest extends AbstractInMemoryStorageTest {
     private static final String CUSTOMER_ADMIN_USER_PASSWORD = "customerAdmin";
 
     protected static final String DIFFERENT_CUSTOMER_USER_EMAIL = "testdifferentcustomer@thingsboard.org";
+    protected static final String DIFFERENT_CUSTOMER_ADMIN_USER_EMAIL = "testdifferentcustomeradmin@thingsboard.org";
 
     protected static final String DIFFERENT_TENANT_CUSTOMER_USER_EMAIL = "testdifferenttenantcustomer@thingsboard.org";
     private static final String DIFFERENT_CUSTOMER_USER_PASSWORD = "diffcustomer";
@@ -284,6 +285,7 @@ public abstract class AbstractWebTest extends AbstractInMemoryStorageTest {
     protected UserId subCustomerAdminUserId;
     protected UserId customerAdminUserId;
     protected UserId differentCustomerUserId;
+    protected UserId differentCustomerAdminUserId;
 
     protected UserId differentTenantCustomerUserId;
     protected UserId currentUserId;
@@ -535,6 +537,7 @@ public abstract class AbstractWebTest extends AbstractInMemoryStorageTest {
     private Customer savedDifferentCustomer;
     private Customer savedDifferentTenantCustomer;
     protected User differentCustomerUser;
+    protected User differentCustomerAdminUser;
     protected User differentTenantCustomerUser;
 
     protected void loginDifferentTenant() throws Exception {
@@ -578,6 +581,24 @@ public abstract class AbstractWebTest extends AbstractInMemoryStorageTest {
             differentCustomerUser = createUserAndLogin(differentCustomerUser, DIFFERENT_CUSTOMER_USER_PASSWORD);
             differentCustomerUserId = differentCustomerUser.getId();
         }
+    }
+
+    protected void loginDifferentCustomerAdmin() throws Exception {
+        if (savedDifferentCustomer == null) {
+            createDifferentCustomer();
+        }
+        if (differentCustomerAdminUser == null) {
+            loginTenantAdmin();
+            differentCustomerAdminUser = new User();
+            differentCustomerAdminUser.setAuthority(Authority.CUSTOMER_USER);
+            differentCustomerAdminUser.setTenantId(tenantId);
+            differentCustomerAdminUser.setCustomerId(savedDifferentCustomer.getId());
+            differentCustomerAdminUser.setEmail(DIFFERENT_CUSTOMER_ADMIN_USER_EMAIL);
+
+            EntityGroupInfo customerAdminsGroup = findCustomerAdminsGroup(savedDifferentCustomer.getId());
+            differentCustomerAdminUserId = createUser(differentCustomerAdminUser, "diffCustomerAdmin", customerAdminsGroup.getId()).getId();
+        }
+        login(DIFFERENT_CUSTOMER_ADMIN_USER_EMAIL, "diffCustomerAdmin");
     }
 
     protected void loginDifferentTenantCustomer() throws Exception {
