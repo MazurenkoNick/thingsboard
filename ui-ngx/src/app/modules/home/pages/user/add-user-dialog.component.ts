@@ -207,6 +207,12 @@ export class AddUserDialogComponent extends DialogComponent<AddUserDialogCompone
     if (this.isSysAdmin && this.detailsForm.valid || this.allValid()) {
       const sendActivationEmail = this.activationMethod === ActivationMethod.SEND_ACTIVATION_MAIL;
       this.user = {...this.user, ...this.userComponent.entityForm.value};
+      if (!this.user.additionalInfo.lang) {
+        delete this.user.additionalInfo.lang;
+      }
+      if (!this.user.additionalInfo.unitSystem) {
+        delete this.user.additionalInfo.unitSystem;
+      }
 
       const targetOwnerAndGroups: OwnerAndGroupsData = this.ownerAndGroupsFormGroup.get('ownerAndGroups').value;
       const targetOwner = targetOwnerAndGroups.owner;

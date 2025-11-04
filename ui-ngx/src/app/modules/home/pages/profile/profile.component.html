@@ -73,9 +73,11 @@
                           [enableFlagsSelect]="true"
                           formControlName="phone">
           </tb-phone-input>
-          <mat-form-field class="mat-block">
+          <mat-form-field class="mat-block" floatLabel="always">
             <mat-label translate>language.language</mat-label>
-            <mat-select formControlName="language">
+            <mat-select formControlName="language"
+                        [placeholder]="'language.auto' | translate">
+              <mat-option [value]="null">{{ 'language.auto' | translate }}</mat-option>
               <mat-option *ngFor="let lang of languageList" [value]="lang[0]">
                 {{ lang[1] }}
               </mat-option>
