@@ -29,41 +29,21 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { FormControl, FormGroup } from "@angular/forms";
-import { validateEmail } from "@app/core/utils";
+import { Component } from '@angular/core';
+import { GitHubService } from '@core/http/git-hub.service';
 
-export interface SignupRequestValues {
-  fields:SignupFieldsValues;
-  recaptchaResponse:string;
-}
+@Component({
+  selector: 'tb-github-badge',
+  templateUrl: './github-badge.component.html',
+  styleUrl: './github-badge.component.scss'
+})
+export class GithubBadgeComponent {
 
-interface SignupFieldsValues {
-  EMAIL: string;
-  FIRST_NAME: string;
-  LAST_NAME: string;
-  PASSWORD: string;
-}
+  githubStar = 0;
 
-export class SignupRequest {
-  fields: FormGroup;
-  recaptchaResponse: string;
-
-  constructor(firstName: string, lastName: string, email: string, password: string, recaptchaResponse: string) {
-    this.fields = new FormGroup({
-      FIRST_NAME: new FormControl(firstName),
-      LAST_NAME: new FormControl(lastName),
-      EMAIL: new FormControl(email, [validateEmail]),
-      PASSWORD: new FormControl(password)
+  constructor(private gitHubService: GitHubService) {
+    this.gitHubService.getGitHubStar().subscribe(star => {
+      this.githubStar = star;
     });
-    this.recaptchaResponse = recaptchaResponse;
   }
-
-  public static create(): SignupRequest {
-    return new SignupRequest('', '', '', '', '');
-  }
-}
-
-export enum SignUpResult {
-  SUCCESS = 'SUCCESS',
-  INACTIVE_USER_EXISTS = 'INACTIVE_USER_EXISTS'
 }

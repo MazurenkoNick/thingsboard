@@ -37,7 +37,6 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.extern.slf4j.Slf4j;
 import org.thingsboard.rule.engine.api.TbContext;
 import org.thingsboard.rule.engine.api.TbNode;
 import org.thingsboard.rule.engine.api.TbNodeConfiguration;
@@ -56,7 +55,6 @@ import java.util.concurrent.TimeUnit;
 
 import static org.thingsboard.common.util.DonAsynchron.withCallback;
 
-@Slf4j
 public abstract class TbAbstractGroupActionNode<C extends TbAbstractGroupActionConfigration> implements TbNode {
 
     protected C config;
@@ -105,8 +103,8 @@ public abstract class TbAbstractGroupActionNode<C extends TbAbstractGroupActionC
         GroupKey key = new GroupKey(msg.getOriginator().getEntityType(), groupName, ownerId);
         return ctx.getDbCallbackExecutor().executeAsync(() -> {
             Optional<EntityGroupId> groupId = groupIdCache.get(key);
-            if (!groupId.isPresent()) {
-                throw new RuntimeException("No entity group found with type '" + key.getGroupType() + " ' and name '" + key.getGroupName() + "'.");
+            if (groupId.isEmpty()) {
+                throw new RuntimeException("No entity group found with type '" + key.getGroupType() + "' and name '" + key.getGroupName() + "'.");
             }
             return groupId.get();
         });
