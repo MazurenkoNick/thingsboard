@@ -35,7 +35,7 @@ import { Store } from '@ngrx/store';
 import { AppState } from '@core/core.state';
 import { PageComponent } from '@shared/components/page.component';
 import { FormBuilder } from '@angular/forms';
-import { SignupRequest, SignUpResult } from '@shared/models/signup.models';
+import { SignupRequest, SignupRequestValues, SignUpResult } from '@shared/models/signup.models';
 import { Router } from '@angular/router';
 import { ActionNotificationShow } from '@core/notification/notification.actions';
 import { TranslateService } from '@ngx-translate/core';
@@ -57,9 +57,11 @@ export class SignupComponent extends PageComponent {
 
   @ViewChild('recaptcha') recaptchaComponent: ReCaptcha2Component;
 
+  private signupRequest = SignupRequest.create();
+
   signup = this.fb.group({
-    fields: this.fb.group(SignupRequest.create().fields),
-    recaptchaResponse: [SignupRequest.create().recaptchaResponse]
+    fields: this.signupRequest.fields,
+    recaptchaResponse: [this.signupRequest.recaptchaResponse]
   })
   passwordCheck: string;
   acceptPrivacyPolicy: boolean;
@@ -86,13 +88,13 @@ export class SignupComponent extends PageComponent {
     if (this.signup.valid) {
       if (this.validateSignUpRequest()) {
         if (this.signupParams?.captcha?.version === 'v2') {
-          this.executeSignup(this.signup.value as SignupRequest);
+          this.executeSignup(this.signup.value as SignupRequestValues);
         } else {
           from(this.reCaptchaV3Service.executeAsPromise(this.signupParams?.captcha?.siteKey,
             this.signupParams?.captcha?.logActionName, {useGlobalDomain: true})).subscribe(
             {
               next: (token) => {
-                const signupRequest = this.signup.value as SignupRequest;
+                const signupRequest = this.signup.value as SignupRequestValues;
                 signupRequest.recaptchaResponse = token;
                 this.executeSignup(signupRequest);
               },
@@ -109,7 +111,7 @@ export class SignupComponent extends PageComponent {
     }
   }
 
-  private executeSignup(signupRequest: SignupRequest): void {
+  private executeSignup(signupRequest: SignupRequestValues): void {
     this.signupService.signup(signupRequest).subscribe({
       next: (signupResult) => {
         if (signupResult === SignUpResult.INACTIVE_USER_EXISTS) {

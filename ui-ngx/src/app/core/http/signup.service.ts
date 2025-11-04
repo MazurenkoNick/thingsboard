@@ -31,7 +31,7 @@
 
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { SignupRequest, SignUpResult } from '@shared/models/signup.models';
+import { SignupRequestValues, SignUpResult } from '@shared/models/signup.models';
 import { defaultHttpOptionsFromConfig, RequestConfig } from '@core/http/http-utils';
 import { Observable, of } from 'rxjs';
 import { LoginResponse } from '@shared/models/login.models';
@@ -51,7 +51,7 @@ export class SignupService {
   ) {
   }
 
-  public signup(signupRequest: SignupRequest, config?: RequestConfig): Observable<SignUpResult> {
+  public signup(signupRequest: SignupRequestValues, config?: RequestConfig): Observable<SignUpResult> {
     return this.http.post<SignUpResult>('/api/noauth/signup', signupRequest, defaultHttpOptionsFromConfig(config));
   }
 

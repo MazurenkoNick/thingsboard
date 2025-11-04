@@ -47,6 +47,8 @@ import { Subject } from 'rxjs';
 import { GenericRolePermissions } from '@shared/models/role.models';
 import { Operation, Resource } from '@shared/models/security.models';
 import { takeUntil } from 'rxjs/operators';
+import { BreakpointObserver } from '@angular/cdk/layout';
+import { MediaBreakpoints } from '@app/shared/public-api';
 
 @Component({
   selector: 'tb-permission-list',
@@ -64,6 +66,8 @@ export class PermissionListComponent extends PageComponent implements ControlVal
 
   @Input() disabled: boolean;
 
+  isMobile = this.breakpointObserver.isMatched(MediaBreakpoints['gt-sm']);
+
   permissionListFormGroup: UntypedFormGroup;
 
   private propagateChange = null;
@@ -73,6 +77,7 @@ export class PermissionListComponent extends PageComponent implements ControlVal
   ngControl: NgControl;
 
   constructor(protected store: Store<AppState>,
+              private breakpointObserver: BreakpointObserver,
               private injector: Injector,
               private fb: UntypedFormBuilder) {
     super(store);

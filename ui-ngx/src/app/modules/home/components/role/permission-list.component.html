@@ -31,26 +31,35 @@
 
 -->
 <div class="tb-permission-list flex flex-col" [formGroup]="permissionListFormGroup">
-  <div class="header flex flex-1 flex-row">
+  <div class="header flex flex-1 flex-row xs:hidden">
     <span class="cell max-w-30% flex-full" translate>permission.resource.resource</span>
     <span class="cell max-w-70% flex-full" translate>permission.operation.operations</span>
     <span [class.!hidden]="disabled" style="width: 48px; min-width: 48px;">&nbsp;</span>
   </div>
   <div class="body">
-    <div class="row flex flex-1 flex-row items-center justify-start"
+    <div class="row flex flex-1 flex-row items-center justify-start gt-xs:gap-2"
          formArrayName="permissions"
          *ngFor="let permissionControl of permissionsFormArray().controls; let $index = index">
-      <tb-resource-type-autocomplete
-        class="cell mat-block max-w-30% flex-full"
-        required
-        [formControl]="permissionControl.get('resource')">
-      </tb-resource-type-autocomplete>
-      <tb-operation-type-list
-        class="cell mat-block max-w-70% flex-full"
-        required
-        [resource]="permissionControl.get('resource').value"
-        [formControl]="permissionControl.get('operations')">
-      </tb-operation-type-list>
+      <div class="flex flex-1 gap-2 flex-col gt-xs:flex-row gt-xs:items-center">
+          <tb-resource-type-autocomplete
+            class="max-w-full gt-xs:max-w-30% cell mat-block w-full"
+            required
+            appearance="outline"
+            [label]="!isMobile && ('permission.resource.resource' | translate)"
+            [formControl]="permissionControl.get('resource')"
+            >
+          </tb-resource-type-autocomplete>
+          <tb-operation-type-list
+            class="max-w-full gt-xs:max-w-70% cell mat-block w-full"
+            required
+            appearance="outline"
+            [floatLabel]="!isMobile && 'always'"
+            [label]="!isMobile && ('permission.operation.operations' | translate)"
+            [resource]="permissionControl.get('resource').value"
+            [formControl]="permissionControl.get('operations')"
+            >            
+          </tb-operation-type-list>
+      </div>
       <button mat-icon-button color="primary"
               [class.!hidden]="disabled"
               type="button"
@@ -62,7 +71,7 @@
       </button>
     </div>
   </div>
-  <tb-error style="margin-top: -20px; padding-bottom: 40px;"
+  <tb-error [class]="ngControl.hasError('required') ? 'mb-2' : 'hidden'"
     [error]="ngControl.hasError('required') ? ('permission.permissions-required' | translate) : ''">
   </tb-error>
   <div>
