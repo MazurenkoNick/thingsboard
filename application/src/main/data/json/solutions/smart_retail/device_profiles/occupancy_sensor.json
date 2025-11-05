@@ -61,7 +61,7 @@
                   "dynamicValue": {
                     "sourceType": "CURRENT_DEVICE",
                     "sourceAttribute": "maxOccupancyTimeCriticalThreshold",
-                    "inherit": true
+                    "inherit": false
                   }
                 }
               }
@@ -100,7 +100,7 @@
                   "dynamicValue": {
                     "sourceType": "CURRENT_DEVICE",
                     "sourceAttribute": "maxOccupancyTimeMajorThreshold",
-                    "inherit": true
+                    "inherit": false
                   }
                 }
               }
@@ -167,7 +167,7 @@
                       "dynamicValue": {
                         "sourceType": "CURRENT_DEVICE",
                         "sourceAttribute": "lowBatteryCriticalThreshold",
-                        "inherit": true
+                        "inherit": false
                       }
                     }
                   }
@@ -200,7 +200,7 @@
                       "dynamicValue": {
                         "sourceType": "CURRENT_DEVICE",
                         "sourceAttribute": "lowBatteryMajorThreshold",
-                        "inherit": true
+                        "inherit": false
                       }
                     }
                   }
@@ -234,7 +234,7 @@
                     "dynamicValue": {
                       "sourceType": "CURRENT_DEVICE",
                       "sourceAttribute": "lowBatteryMajorThreshold",
-                      "inherit": true
+                      "inherit": false
                     }
                   }
                 }

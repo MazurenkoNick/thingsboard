@@ -50,7 +50,7 @@
                       "dynamicValue": {
                         "sourceType": "CURRENT_DEVICE",
                         "sourceAttribute": "minLiquidLevelCriticalThreshold",
-                        "inherit": true
+                        "inherit": false
                       }
                     }
                   }
@@ -83,7 +83,7 @@
                       "dynamicValue": {
                         "sourceType": "CURRENT_DEVICE",
                         "sourceAttribute": "minLiquidLevelMajorThreshold",
-                        "inherit": true
+                        "inherit": false
                       }
                     }
                   }
@@ -117,7 +117,7 @@
                     "dynamicValue": {
                       "sourceType": "CURRENT_DEVICE",
                       "sourceAttribute": "minLiquidLevelMajorThreshold",
-                      "inherit": true
+                      "inherit": false
                     }
                   }
                 }
@@ -159,7 +159,7 @@
                       "dynamicValue": {
                         "sourceType": "CURRENT_DEVICE",
                         "sourceAttribute": "lowBatteryCriticalThreshold",
-                        "inherit": true
+                        "inherit": false
                       }
                     }
                   }
@@ -192,7 +192,7 @@
                       "dynamicValue": {
                         "sourceType": "CURRENT_DEVICE",
                         "sourceAttribute": "lowBatteryMajorThreshold",
-                        "inherit": true
+                        "inherit": false
                       }
                     }
                   }
@@ -226,7 +226,7 @@
                     "dynamicValue": {
                       "sourceType": "CURRENT_DEVICE",
                       "sourceAttribute": "lowBatteryMajorThreshold",
-                      "inherit": true
+                      "inherit": false
                     }
                   }
                 }

@@ -208,7 +208,7 @@
                       "dynamicValue": {
                         "sourceType": "CURRENT_DEVICE",
                         "sourceAttribute": "lowBatteryThreshold",
-                        "inherit": true
+                        "inherit": false
                       }
                     }
                   }

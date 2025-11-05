@@ -46,9 +46,9 @@
                       "defaultValue": 1.0E7,
                       "userValue": null,
                       "dynamicValue": {
-                        "sourceType": "CURRENT_DEVICE",
+                        "sourceType": "CURRENT_TENANT",
                         "sourceAttribute": "dailyConsumptionThreshold",
-                        "inherit": true
+                        "inherit": false
                       }
                     }
                   }
@@ -108,9 +108,9 @@
                       "defaultValue": 1.0E9,
                       "userValue": null,
                       "dynamicValue": {
-                        "sourceType": "CURRENT_DEVICE",
+                        "sourceType": "CURRENT_TENANT",
                         "sourceAttribute": "weeklyConsumptionThreshold",
-                        "inherit": true
+                        "inherit": false
                       }
                     }
                   }
@@ -170,9 +170,9 @@
                       "defaultValue": 0.0,
                       "userValue": null,
                       "dynamicValue": {
-                        "sourceType": "CURRENT_DEVICE",
+                        "sourceType": "CURRENT_TENANT",
                         "sourceAttribute": "lowBattThreshold",
-                        "inherit": true
+                        "inherit": false
                       }
                     }
                   }
@@ -232,9 +232,9 @@
                       "defaultValue": 1000.0,
                       "userValue": null,
                       "dynamicValue": {
-                        "sourceType": "CURRENT_DEVICE",
+                        "sourceType": "CURRENT_TENANT",
                         "sourceAttribute": "lowTempThreshold",
-                        "inherit": true
+                        "inherit": false
                       }
                     }
                   }
@@ -410,9 +410,9 @@
                       "defaultValue": 1000.0,
                       "userValue": null,
                       "dynamicValue": {
-                        "sourceType": "CURRENT_DEVICE",
+                        "sourceType": "CURRENT_CUSTOMER",
                         "sourceAttribute": "cLowTempThreshold",
-                        "inherit": true
+                        "inherit": false
                       }
                     }
                   }
@@ -472,9 +472,9 @@
                       "defaultValue": 1.0E7,
                       "userValue": null,
                       "dynamicValue": {
-                        "sourceType": "CURRENT_DEVICE",
+                        "sourceType": "CURRENT_CUSTOMER",
                         "sourceAttribute": "cDailyConsumptionThreshold",
-                        "inherit": true
+                        "inherit": false
                       }
                     }
                   }
@@ -534,9 +534,9 @@
                       "defaultValue": 1.0E9,
                       "userValue": null,
                       "dynamicValue": {
-                        "sourceType": "CURRENT_DEVICE",
+                        "sourceType": "CURRENT_CUSTOMER",
                         "sourceAttribute": "cWeeklyConsumptionThreshold",
-                        "inherit": true
+                        "inherit": false
                       }
                     }
                   }
