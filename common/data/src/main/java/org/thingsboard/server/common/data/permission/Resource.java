@@ -291,7 +291,8 @@ public enum Resource {
                 Resource.ASSET_PROFILE,
                 Resource.MOBILE_APP_SETTINGS,
                 Resource.REPORT_TEMPLATE,
-                Resource.REPORT
+                Resource.REPORT,
+                Resource.API_KEY
         ));
 
     }
