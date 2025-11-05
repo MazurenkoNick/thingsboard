@@ -91,6 +91,8 @@ export class AlarmRulesTableConfig extends EntityTableConfig<any> {
               private ownerId: EntityId = null,
               private importExportService: ImportExportService,
               private entityDebugSettingsService: EntityDebugSettingsService,
+              private readonly: boolean = false,
+              private hideClearEventAction: boolean = false,
   ) {
     super();
     this.tableTitle = this.translate.instant('alarm-rule.alarm-rules');
@@ -235,6 +237,7 @@ export class AlarmRulesTableConfig extends EntityTableConfig<any> {
         tenantId: this.tenantId,
         value: calculatedField,
         getTestScriptDialogFn: null,
+        hideClearEventAction: this.hideClearEventAction
       }
     })
       .afterClosed()
