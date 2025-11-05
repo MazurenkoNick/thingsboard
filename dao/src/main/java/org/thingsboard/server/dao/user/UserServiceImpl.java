@@ -245,7 +245,7 @@ public class UserServiceImpl extends AbstractCachedEntityService<UserCacheKey, U
                 }
             }
             eventPublisher.publishEvent(SaveEntityEvent.builder()
-                    .tenantId(tenantId == null ? TenantId.SYS_TENANT_ID : tenantId)
+                    .tenantId(savedUser.getTenantId())
                     .entity(savedUser)
                     .oldEntity(oldUser)
                     .entityId(savedUser.getId())
@@ -411,7 +411,7 @@ public class UserServiceImpl extends AbstractCachedEntityService<UserCacheKey, U
         eventPublisher.publishEvent(new UserCredentialsInvalidationEvent(userId));
         countService.publishCountEntityEvictEvent(tenantId, EntityType.USER);
         eventPublisher.publishEvent(DeleteEntityEvent.builder()
-                .tenantId(tenantId)
+                .tenantId(user.getTenantId())
                 .entityId(userId)
                 .entity(user)
                 .cause(cause)
