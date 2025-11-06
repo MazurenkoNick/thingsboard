@@ -33,15 +33,19 @@ package org.thingsboard.server.common.data.cf.configuration.aggregation.single.i
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
+import org.thingsboard.server.common.data.util.TbPair;
 
 import java.time.DayOfWeek;
 import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAdjusters;
+import java.util.ArrayList;
+import java.util.List;
 
 @Data
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -95,6 +99,38 @@ public abstract class BaseAggInterval implements AggInterval {
         long currentIntervalEndTs = getCurrentIntervalEndTs();
         long now = System.currentTimeMillis();
         return currentIntervalEndTs - now;
+    }
+
+    @Override
+    public List<TbPair<Long, Long>> getIntervalsBetween(long startTs, long endTs) {
+        if (endTs <= startTs) {
+            throw new IllegalArgumentException("endTs must be greater than startTs");
+        }
+
+        ZoneId zoneId = ZoneId.of(tz != null ? tz : "UTC");
+        long offset = getOffsetSec();
+
+        ZonedDateTime start = ZonedDateTime.ofInstant(Instant.ofEpochMilli(startTs), zoneId)
+                .minusSeconds(offset);
+        ZonedDateTime end = ZonedDateTime.ofInstant(Instant.ofEpochMilli(endTs), zoneId)
+                .minusSeconds(offset);
+
+        ZonedDateTime currentStart = getAlignedBoundary(start, false);
+        ZonedDateTime currentEnd = getAlignedBoundary(start, true);
+
+        List<TbPair<Long, Long>> intervals = new ArrayList<>();
+
+        // Iterate through intervals until the next interval would contain endTs
+        while (currentEnd.isBefore(end)) {
+            long intervalStart = currentStart.plusSeconds(offset).toInstant().toEpochMilli();
+            long intervalEnd = currentEnd.plusSeconds(offset).toInstant().toEpochMilli();
+            intervals.add(TbPair.of(intervalStart, intervalEnd));
+
+            currentStart = currentEnd;
+            currentEnd = getAlignedBoundary(currentStart, true);
+        }
+
+        return intervals;
     }
 
     protected ZonedDateTime getAlignedBoundary(ZonedDateTime reference, boolean next) {

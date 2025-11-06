@@ -33,10 +33,13 @@ package org.thingsboard.server.common.data.cf.configuration.aggregation.single.i
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import org.thingsboard.server.common.data.util.TbPair;
 
 import java.time.Duration;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 @EqualsAndHashCode(callSuper = true)
@@ -84,6 +87,38 @@ public class CustomInterval extends BaseAggInterval {
     @Override
     public long getDelayUntilIntervalEnd() {
         return getCurrentIntervalEndTs() - System.currentTimeMillis();
+    }
+
+    @Override
+    public List<TbPair<Long, Long>> getIntervalsBetween(long startTs, long endTs) {
+        if (endTs <= startTs) {
+            throw new IllegalArgumentException("endTs must be greater than startTs");
+        }
+
+        List<TbPair<Long, Long>> result = new ArrayList<>();
+        long durationMillis = getIntervalDurationMillis();
+        long offsetMillis = TimeUnit.SECONDS.toMillis(getOffsetSec());
+
+        // Apply offset correction
+        long shiftedStart = startTs - offsetMillis;
+        long shiftedEnd = endTs - offsetMillis;
+
+        // Align start to the interval that contains startTs
+        long alignedStart = (shiftedStart / durationMillis) * durationMillis;
+        long currentStart = alignedStart;
+        long currentEnd = alignedStart + durationMillis;
+
+        // Stop before the interval that contains endTs
+        while (currentEnd <= shiftedEnd) {
+            long actualStart = currentStart + offsetMillis;
+            long actualEnd = currentEnd + offsetMillis;
+            result.add(TbPair.of(actualStart, actualEnd));
+
+            currentStart = currentEnd;
+            currentEnd += durationMillis;
+        }
+
+        return result;
     }
 
 }

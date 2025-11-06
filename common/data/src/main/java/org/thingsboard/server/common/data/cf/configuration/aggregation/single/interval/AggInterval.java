@@ -34,6 +34,9 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import org.thingsboard.server.common.data.util.TbPair;
+
+import java.util.List;
 
 @JsonTypeInfo(
         use = JsonTypeInfo.Id.NAME,
@@ -67,5 +70,7 @@ public interface AggInterval {
 
     @JsonIgnore
     long getDelayUntilIntervalEnd();
+
+    List<TbPair<Long, Long>> getIntervalsBetween(long startTs, long endTs);
 
 }

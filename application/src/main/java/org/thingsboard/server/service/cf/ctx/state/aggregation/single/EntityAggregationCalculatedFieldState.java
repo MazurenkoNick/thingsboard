@@ -47,6 +47,7 @@ import org.thingsboard.server.common.data.cf.configuration.aggregation.single.in
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.service.cf.CalculatedFieldProcessingService;
 import org.thingsboard.server.service.cf.CalculatedFieldResult;
+import org.thingsboard.server.service.cf.DefaultCalculatedFieldReprocessingService.EntityAggCfReprocessingCtx;
 import org.thingsboard.server.service.cf.TelemetryCalculatedFieldResult;
 import org.thingsboard.server.service.cf.ctx.state.ArgumentEntry;
 import org.thingsboard.server.service.cf.ctx.state.BaseCalculatedFieldState;
@@ -57,6 +58,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import static org.thingsboard.server.utils.CalculatedFieldArgumentUtils.createDefaultMetricArgumentEntry;
@@ -265,6 +267,26 @@ public class EntityAggregationCalculatedFieldState extends BaseCalculatedFieldSt
             result.add(resultNode);
         });
         return result;
+    }
+
+    public ListenableFuture<CalculatedFieldResult> performAggregationDuringInterval(EntityAggCfReprocessingCtx reprocessingCtx) {
+        Set<String> argNames = ctx.getArguments().keySet();
+        AggIntervalEntry aggInterval = reprocessingCtx.getIntervalCursor();
+        Map<AggIntervalEntry, Map<String, ArgumentEntry>> results = new HashMap<>();
+        argNames.forEach(argName -> {
+            processMetric(aggInterval, argName, false, results);
+        });
+
+        Output output = ctx.getOutput();
+        ArrayNode result = toResult(results, output.getDecimalsByDefault());
+        if (result.isEmpty()) {
+            return Futures.immediateFuture(TelemetryCalculatedFieldResult.EMPTY);
+        }
+        return Futures.immediateFuture(TelemetryCalculatedFieldResult.builder()
+                .type(output.getType())
+                .scope(output.getScope())
+                .result(result)
+                .build());
     }
 
     @Override
