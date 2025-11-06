@@ -169,6 +169,7 @@ public class ReportControllerTest extends AbstractControllerTest {
         for (int i = 10; i < 25; i++) {
             String telemetryPayload = "{\"temperature\":" + i + "}";
             doPost("/api/plugins/telemetry/DEVICE/" + testDevice.getId() + "/timeseries/" + DataConstants.SHARED_SCOPE, telemetryPayload, String.class, status().isOk());
+            Thread.sleep(100);
         }
 
         String devicesAliasId = StringUtils.randomAlphabetic(10);
@@ -224,6 +225,7 @@ public class ReportControllerTest extends AbstractControllerTest {
         for (int i = 0; i < 10; i++) {
             String telemetryPayload = "{\"temperature\":" + i + "}";
             doPost("/api/plugins/telemetry/DEVICE/" + testDevice.getId() + "/timeseries/" + DataConstants.SHARED_SCOPE, telemetryPayload, String.class, status().isOk());
+            Thread.sleep(100);
         }
 
         String devicesAliasId = StringUtils.randomAlphabetic(10);
