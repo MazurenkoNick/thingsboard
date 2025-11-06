@@ -30,42 +30,16 @@
  */
 package org.thingsboard.server.common.data.cf.configuration.aggregation.single.interval;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-@JsonTypeInfo(
-        use = JsonTypeInfo.Id.NAME,
-        include = JsonTypeInfo.As.PROPERTY,
-        property = "type"
-)
-@JsonSubTypes({
-        @JsonSubTypes.Type(value = HourInterval.class, name = "HOUR"),
-        @JsonSubTypes.Type(value = DayInterval.class, name = "DAY"),
-        @JsonSubTypes.Type(value = WeekInterval.class, name = "WEEK"),
-        @JsonSubTypes.Type(value = WeekSunSatInterval.class, name = "WEEK_SUN_SAT"),
-        @JsonSubTypes.Type(value = MonthInterval.class, name = "MONTH"),
-        @JsonSubTypes.Type(value = QuarterInterval.class, name = "QUARTER"),
-        @JsonSubTypes.Type(value = YearInterval.class, name = "YEAR"),
-        @JsonSubTypes.Type(value = CustomInterval.class, name = "CUSTOM")
-})
-@JsonIgnoreProperties(ignoreUnknown = true)
-public interface AggInterval {
+@Data
+@NoArgsConstructor
+public class QuarterInterval extends BaseAggInterval {
 
-    @JsonIgnore
-    AggIntervalType getType();
-
-    @JsonIgnore
-    long getIntervalDurationMillis();
-
-    @JsonIgnore
-    long getCurrentIntervalStartTs();
-
-    @JsonIgnore
-    long getCurrentIntervalEndTs();
-
-    @JsonIgnore
-    long getDelayUntilIntervalEnd();
+    @Override
+    public AggIntervalType getType() {
+        return AggIntervalType.QUARTER;
+    }
 
 }
