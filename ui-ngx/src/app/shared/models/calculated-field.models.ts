@@ -151,8 +151,7 @@ export interface CalculatedFieldEntityAggregationConfiguration {
 }
 
 export interface WatermarkConfig {
-  duration?: number;
-  checkInterval?: number;
+  duration: number;
 }
 
 interface BasePropagationConfiguration {

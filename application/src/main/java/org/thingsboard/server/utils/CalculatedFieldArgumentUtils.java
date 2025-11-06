@@ -93,9 +93,9 @@ public class CalculatedFieldArgumentUtils {
     public static ArgumentEntry createDefaultMetricArgumentEntry(String argKey, AggMetric metric) {
         Long defaultValue = metric.getDefaultValue();
         if (defaultValue != null) {
-            ArgumentEntry.createSingleValueArgument(new DoubleDataEntry(argKey, defaultValue.doubleValue()));
+            return ArgumentEntry.createSingleValueArgument(new DoubleDataEntry(argKey, defaultValue.doubleValue()));
         }
-        return ArgumentEntry.createSingleValueArgument(new StringDataEntry(argKey, null));
+        return new SingleValueArgumentEntry();
     }
 
     public static ArgumentEntry transformAggregationArgument(List<TsKvEntry> timeSeries, long startIntervalTs, long endIntervalTs) {

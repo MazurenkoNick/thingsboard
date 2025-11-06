@@ -30,7 +30,7 @@
     OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 
 -->
-<section [formGroup]="timeInputForm" class="flex gap-4">
+<section [formGroup]="timeInputForm" [class]="containerClass">
   <mat-form-field [class]="{'number': inlineField, 'max-w-66%': !inlineField && !sameWidthInputs, 'flex-full': !inlineField}"
                   [appearance]="inlineField ? 'outline' : appearance"
                   subscriptSizing="dynamic">

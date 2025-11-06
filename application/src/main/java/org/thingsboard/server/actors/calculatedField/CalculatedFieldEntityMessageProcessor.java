@@ -143,7 +143,7 @@ public class CalculatedFieldEntityMessageProcessor extends AbstractContextAwareM
                 relatedEntitiesAggState.scheduleReevaluation();
             }
             if (state instanceof EntityAggregationCalculatedFieldState entityAggState) {
-                entityAggState.scheduleReevaluation();
+                entityAggState.fillMissingIntervals();
             }
             states.put(cfId, state);
         } else {

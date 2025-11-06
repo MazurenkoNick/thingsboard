@@ -65,9 +65,10 @@ public class EntityAggregationArgumentEntry implements ArgumentEntry {
             aggIntervals.putAll(entityAggEntry.getAggIntervals());
         } else if (entry instanceof SingleValueArgumentEntry singleValueArgEntry) {
             long entryTs = singleValueArgEntry.getTs();
+            long argUpdateTs = System.currentTimeMillis();
             for (Map.Entry<AggIntervalEntry, AggIntervalEntryStatus> aggIntervalEntry : aggIntervals.entrySet()) {
                 if (aggIntervalEntry.getKey().belongsToInterval(entryTs)) {
-                    aggIntervalEntry.getValue().setLastArgsRefreshTs(System.currentTimeMillis());
+                    aggIntervalEntry.getValue().setLastArgsRefreshTs(argUpdateTs);
                     return true;
                 }
             }
@@ -77,7 +78,7 @@ public class EntityAggregationArgumentEntry implements ArgumentEntry {
 
     @Override
     public boolean isEmpty() {
-        return true;
+        return aggIntervals.isEmpty();
     }
 
     @Override

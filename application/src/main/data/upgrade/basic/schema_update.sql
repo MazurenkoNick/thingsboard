@@ -61,6 +61,12 @@ SET profile_data = jsonb_set(
                             WHEN (profile_data -> 'configuration') ? 'minAllowedDeduplicationIntervalInSecForCF'
                                 THEN NULL
                             ELSE to_jsonb(3600)
+                            END,
+                        'minAggregationIntervalInSecForCF',
+                        CASE
+                            WHEN (profile_data -> 'configuration') ? 'minAggregationIntervalInSecForCF'
+                                THEN NULL
+                            ELSE to_jsonb(60)
                             END
                 )
                ),
@@ -74,6 +80,8 @@ WHERE NOT (
     (profile_data -> 'configuration') ? 'maxRelatedEntitiesToReturnPerCfArgument'
         AND
     (profile_data -> 'configuration') ? 'minAllowedDeduplicationIntervalInSecForCF'
+        AND
+    (profile_data -> 'configuration') ? 'minAggregationIntervalInSecForCF'
     );
 
 -- UPDATE TENANT PROFILE CONFIGURATION END

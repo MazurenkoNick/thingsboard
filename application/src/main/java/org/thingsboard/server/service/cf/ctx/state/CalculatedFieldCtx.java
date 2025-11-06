@@ -60,6 +60,8 @@ import org.thingsboard.server.common.data.cf.configuration.ScheduledUpdateSuppor
 import org.thingsboard.server.common.data.cf.configuration.SimpleCalculatedFieldConfiguration;
 import org.thingsboard.server.common.data.cf.configuration.aggregation.AggFunctionInput;
 import org.thingsboard.server.common.data.cf.configuration.aggregation.RelatedEntitiesAggregationCalculatedFieldConfiguration;
+import org.thingsboard.server.common.data.cf.configuration.aggregation.single.EntityAggregationCalculatedFieldConfiguration;
+import org.thingsboard.server.common.data.cf.configuration.aggregation.single.interval.Watermark;
 import org.thingsboard.server.common.data.cf.configuration.geofencing.GeofencingCalculatedFieldConfiguration;
 import org.thingsboard.server.common.data.id.CalculatedFieldId;
 import org.thingsboard.server.common.data.id.EntityId;
@@ -109,6 +111,8 @@ public class CalculatedFieldCtx implements Closeable {
     private String expression;
     private boolean useLatestTs;
     private boolean requiresScheduledReevaluation;
+
+    private long aggCheckInterval;
 
     private ActorSystemContext systemContext;
     private TbelInvokeService tbelInvokeService;
@@ -207,10 +211,10 @@ public class CalculatedFieldCtx implements Closeable {
         if (calculatedField.getConfiguration() instanceof ScheduledUpdateSupportedCalculatedFieldConfiguration scheduledConfig) {
             this.scheduledUpdateIntervalMillis = scheduledConfig.isScheduledUpdateEnabled() ? TimeUnit.SECONDS.toMillis(scheduledConfig.getScheduledUpdateInterval()) : -1L;
         }
-        this.requiresScheduledReevaluation = calculatedField.getConfiguration().requiresScheduledReevaluation();
         if (calculatedField.getConfiguration() instanceof RelatedEntitiesAggregationCalculatedFieldConfiguration aggConfig) {
             this.useLatestTs = aggConfig.isUseLatestTs();
         }
+        this.aggCheckInterval = systemContext.getCfCheckInterval();
         this.systemContext = systemContext;
         this.tbelInvokeService = systemContext.getTbelInvokeService();
         this.relationService = systemContext.getRelationService();
@@ -220,6 +224,22 @@ public class CalculatedFieldCtx implements Closeable {
         this.maxDataPointsPerRollingArg = systemContext.getApiLimitService().getLimit(tenantId, DefaultTenantProfileConfiguration::getMaxDataPointsPerRollingArg); // fixme why tenant profile update is not handled??
         this.maxStateSize = systemContext.getApiLimitService().getLimit(tenantId, DefaultTenantProfileConfiguration::getMaxStateSizeInKBytes) * 1024;
         this.maxSingleValueArgumentSize = systemContext.getApiLimitService().getLimit(tenantId, DefaultTenantProfileConfiguration::getMaxSingleValueArgumentSizeInKBytes) * 1024;
+    }
+
+    public boolean isRequiresScheduledReevaluation() {
+        if (calculatedField.getConfiguration() instanceof EntityAggregationCalculatedFieldConfiguration entityAggregationConfig) {
+            long now = System.currentTimeMillis();
+            Watermark watermark = entityAggregationConfig.getWatermark();
+            if (watermark != null && watermark.getDuration() > 0) {
+                return true;
+            }
+            long cfCheckIntervalMillis = TimeUnit.SECONDS.toMillis(systemContext.getCfCheckInterval());
+            long intervalEndTs = entityAggregationConfig.getInterval().getCurrentIntervalEndTs();
+            if (now + cfCheckIntervalMillis >= intervalEndTs) {
+                return true;
+            }
+        }
+        return calculatedField.getConfiguration().requiresScheduledReevaluation();
     }
 
     public void init() {
@@ -623,6 +643,13 @@ public class CalculatedFieldCtx implements Closeable {
                 && other.getCalculatedField().getConfiguration() instanceof RelatedEntitiesAggregationCalculatedFieldConfiguration otherConfig
                 && (thisConfig.getDeduplicationIntervalInSec() != otherConfig.getDeduplicationIntervalInSec() || !thisConfig.getMetrics().equals(otherConfig.getMetrics()))) {
             return true;
+        }
+        if (calculatedField.getConfiguration() instanceof EntityAggregationCalculatedFieldConfiguration thisConfig
+                && other.getCalculatedField().getConfiguration() instanceof EntityAggregationCalculatedFieldConfiguration otherConfig) {
+            boolean metricsChanged = thisConfig.getMetrics().equals(otherConfig.getMetrics());
+            boolean intervalChanged = thisConfig.getInterval().equals(otherConfig.getInterval());
+            boolean watermarkChanged = thisConfig.getWatermark().equals(otherConfig.getWatermark());
+            return metricsChanged || intervalChanged || watermarkChanged;
         }
         return false;
     }

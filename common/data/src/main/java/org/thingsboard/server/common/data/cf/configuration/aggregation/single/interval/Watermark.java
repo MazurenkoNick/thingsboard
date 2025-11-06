@@ -40,6 +40,5 @@ import lombok.NoArgsConstructor;
 public class Watermark {
 
     private long duration;
-    private long checkInterval;
 
 }

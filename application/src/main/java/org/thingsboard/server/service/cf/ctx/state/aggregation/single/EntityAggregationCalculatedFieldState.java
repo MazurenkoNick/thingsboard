@@ -35,6 +35,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import org.thingsboard.common.util.JacksonUtil;
+import org.thingsboard.script.api.tbel.TbUtils;
 import org.thingsboard.server.actors.TbActorRef;
 import org.thingsboard.server.common.data.cf.CalculatedFieldType;
 import org.thingsboard.server.common.data.cf.configuration.Output;
@@ -68,51 +69,10 @@ public class EntityAggregationCalculatedFieldState extends BaseCalculatedFieldSt
     private long checkInterval;
     private Map<String, AggMetric> metrics;
 
-    private final Map<AggIntervalEntry, Map<String, AggIntervalEntryStatus>> intervals = new HashMap<>();
-
     private CalculatedFieldProcessingService cfProcessingService;
 
     public EntityAggregationCalculatedFieldState(EntityId entityId) {
         super(entityId);
-    }
-
-    public void scheduleReevaluation() {
-        prepareIntervals();
-        fillMissingIntervals(interval.getCurrentIntervalEndTs(), intervalDuration);
-        long now = System.currentTimeMillis();
-        intervals.forEach((intervalEntry, argumentIntervalStatuses) -> {
-            if (intervalEntry.belongsToInterval(now)) {
-                ctx.scheduleReevaluation(interval.getDelayUntilIntervalEnd(), actorCtx);
-            } else {
-                if (intervalEntry.getEndTs() <= now) {
-                    ctx.scheduleReevaluation(checkInterval, actorCtx);
-                }
-            }
-        });
-    }
-
-    private void fillMissingIntervals(long currentIntervalEndTs, long intervalDuration) {
-        AggIntervalEntry lastIntervalEntry = intervals.keySet().stream().max(Comparator.comparing(AggIntervalEntry::getEndTs)).orElse(null);
-        if (lastIntervalEntry == null) {
-            return;
-        }
-
-        long nextStartTs = lastIntervalEntry.getEndTs();
-        long nextEndTs = nextStartTs + intervalDuration;
-
-        while (nextEndTs <= currentIntervalEndTs) {
-            AggIntervalEntry missingAggIntervalEntry = new AggIntervalEntry(nextStartTs, nextEndTs);
-
-            arguments.forEach((argName, argumentEntry) -> {
-                var entityAggEntry = (EntityAggregationArgumentEntry) argumentEntry;
-                AggIntervalEntryStatus intervalEntryStatus = new AggIntervalEntryStatus(System.currentTimeMillis());
-                entityAggEntry.getAggIntervals().put(missingAggIntervalEntry, intervalEntryStatus);
-                intervals.computeIfAbsent(missingAggIntervalEntry, i -> new HashMap<>()).put(argName, intervalEntryStatus);
-            });
-
-            nextStartTs = nextEndTs;
-            nextEndTs += intervalDuration;
-        }
     }
 
     @Override
@@ -123,7 +83,7 @@ public class EntityAggregationCalculatedFieldState extends BaseCalculatedFieldSt
         intervalDuration = configuration.getInterval().getIntervalDurationMillis();
         Watermark watermark = configuration.getWatermark();
         watermarkDuration = watermark == null ? 0 : TimeUnit.SECONDS.toMillis(watermark.getDuration());
-        checkInterval = watermark == null ? 0 : TimeUnit.SECONDS.toMillis(watermark.getCheckInterval());
+        checkInterval = TimeUnit.SECONDS.toMillis(ctx.getAggCheckInterval());
         interval = configuration.getInterval();
         metrics = configuration.getMetrics();
     }
@@ -136,21 +96,20 @@ public class EntityAggregationCalculatedFieldState extends BaseCalculatedFieldSt
     @Override
     public ListenableFuture<CalculatedFieldResult> performCalculation(Map<String, ArgumentEntry> updatedArgs, CalculatedFieldCtx ctx) throws Exception {
         createIntervalIfNotExist();
-        prepareIntervals();
         long now = System.currentTimeMillis();
 
         Map<AggIntervalEntry, Map<String, ArgumentEntry>> results = new HashMap<>();
         List<AggIntervalEntry> expiredIntervals = new ArrayList<>();
-        intervals.forEach((intervalEntry, argIntervalStatuses) -> {
+        getIntervals().forEach((intervalEntry, argIntervalStatuses) -> {
             processInterval(now, intervalEntry, argIntervalStatuses, expiredIntervals, results);
         });
         removeExpiredIntervals(expiredIntervals);
 
-        ArrayNode result = toResult(results);
+        Output output = ctx.getOutput();
+        ArrayNode result = toResult(results, output.getDecimalsByDefault());
         if (result.isEmpty()) {
             return Futures.immediateFuture(TelemetryCalculatedFieldResult.EMPTY);
         }
-        Output output = ctx.getOutput();
         return Futures.immediateFuture(TelemetryCalculatedFieldResult.builder()
                 .type(output.getType())
                 .scope(output.getScope())
@@ -158,37 +117,59 @@ public class EntityAggregationCalculatedFieldState extends BaseCalculatedFieldSt
                 .build());
     }
 
-    private void prepareIntervals() {
+    private void removeExpiredIntervals(List<AggIntervalEntry> expiredIntervals) {
+        expiredIntervals.forEach(expiredInterval -> {
+            arguments.values().stream()
+                    .map(EntityAggregationArgumentEntry.class::cast)
+                    .forEach(arg -> arg.getAggIntervals().remove(expiredInterval));
+        });
+    }
+
+    private void createIntervalIfNotExist() {
+        AggIntervalEntry currentInterval = new AggIntervalEntry(interval.getCurrentIntervalStartTs(), interval.getCurrentIntervalEndTs());
+        arguments.forEach((argName, argumentEntry) -> {
+            var entityAggEntry = (EntityAggregationArgumentEntry) argumentEntry;
+            if (!entityAggEntry.getAggIntervals().containsKey(currentInterval)) {
+                entityAggEntry.getAggIntervals().computeIfAbsent(currentInterval, current -> new AggIntervalEntryStatus());
+            }
+        });
+    }
+
+    public void fillMissingIntervals() {
+        long currentIntervalEndTs = interval.getCurrentIntervalEndTs();
+        long intervalDuration = interval.getIntervalDurationMillis();
+        Map<AggIntervalEntry, Map<String, AggIntervalEntryStatus>> intervals = getIntervals();
+        AggIntervalEntry lastIntervalEntry = intervals.keySet().stream().max(Comparator.comparing(AggIntervalEntry::getEndTs)).orElse(null);
+        if (lastIntervalEntry == null) {
+            return;
+        }
+
+        long nextStartTs = lastIntervalEntry.getEndTs();
+        long nextEndTs = nextStartTs + intervalDuration;
+
+        while (nextEndTs <= currentIntervalEndTs) {
+            AggIntervalEntry missing = new AggIntervalEntry(nextStartTs, nextEndTs);
+
+            arguments.forEach((argName, argumentEntry) -> {
+                var entityAggEntry = (EntityAggregationArgumentEntry) argumentEntry;
+                AggIntervalEntryStatus intervalEntryStatus = new AggIntervalEntryStatus(System.currentTimeMillis());
+                entityAggEntry.getAggIntervals().computeIfAbsent(missing, missingInterval -> intervalEntryStatus);
+            });
+
+            nextStartTs = nextEndTs;
+            nextEndTs += intervalDuration;
+        }
+    }
+
+    private Map<AggIntervalEntry, Map<String, AggIntervalEntryStatus>> getIntervals() {
+        Map<AggIntervalEntry, Map<String, AggIntervalEntryStatus>> intervals = new HashMap<>();
         arguments.forEach((argName, entry) -> {
             var argEntry = (EntityAggregationArgumentEntry) entry;
             argEntry.getAggIntervals().forEach((intervalEntry, status) ->
                     intervals.computeIfAbsent(intervalEntry, i -> new HashMap<>()).put(argName, status)
             );
         });
-    }
-
-    private void removeExpiredIntervals(List<AggIntervalEntry> expiredIntervals) {
-        expiredIntervals.forEach(expiredInterval -> {
-            arguments.values().stream()
-                    .map(EntityAggregationArgumentEntry.class::cast)
-                    .forEach(arg -> arg.getAggIntervals().remove(expiredInterval));
-            intervals.remove(expiredInterval);
-        });
-    }
-
-    private void createIntervalIfNotExist() {
-        AggIntervalEntry currentInterval = new AggIntervalEntry(interval.getCurrentIntervalStartTs(), interval.getCurrentIntervalEndTs());
-        if (intervals.containsKey(currentInterval)) {
-            return;
-        }
-        arguments.forEach((argName, argumentEntry) -> {
-            var entityAggEntry = (EntityAggregationArgumentEntry) argumentEntry;
-            if (!entityAggEntry.getAggIntervals().containsKey(currentInterval)) {
-                entityAggEntry.getAggIntervals().put(currentInterval, new AggIntervalEntryStatus());
-                intervals.computeIfAbsent(currentInterval, i -> new HashMap<>()).put(argName, new AggIntervalEntryStatus());
-            }
-        });
-        ctx.scheduleReevaluation(interval.getDelayUntilIntervalEnd(), actorCtx);
+        return intervals;
     }
 
     private void processInterval(long now,
@@ -213,6 +194,9 @@ public class EntityAggregationCalculatedFieldState extends BaseCalculatedFieldSt
         args.forEach((argName, argEntryIntervalStatus) -> {
             if (argEntryIntervalStatus.getLastArgsRefreshTs() > argEntryIntervalStatus.getLastMetricsEvalTs()) {
                 processMetric(intervalEntry, argName, false, results);
+            } else if (argEntryIntervalStatus.getLastMetricsEvalTs() == -1) {
+                argEntryIntervalStatus.setLastMetricsEvalTs(System.currentTimeMillis());
+                processMetric(intervalEntry, argName, true, results);
             }
         });
     }
@@ -221,11 +205,15 @@ public class EntityAggregationCalculatedFieldState extends BaseCalculatedFieldSt
                                       Map<String, AggIntervalEntryStatus> args,
                                       Map<AggIntervalEntry, Map<String, ArgumentEntry>> results) {
         args.forEach((argName, argEntryIntervalStatus) -> {
-            if (argEntryIntervalStatus.shouldRecalculate(checkInterval)) {
-                processMetric(intervalEntry, argName, false, results);
-                ctx.scheduleReevaluation(checkInterval, actorCtx);
-            } else if (argEntryIntervalStatus.intervalPassed(checkInterval)) {
-                processMetric(intervalEntry, argName, true, results);
+            if (argEntryIntervalStatus.intervalPassed(checkInterval)) {
+                if (argEntryIntervalStatus.argsUpdated()) {
+                    argEntryIntervalStatus.setLastMetricsEvalTs(System.currentTimeMillis());
+                    argEntryIntervalStatus.setLastArgsRefreshTs(-1);
+                    processMetric(intervalEntry, argName, false, results);
+                } else if (argEntryIntervalStatus.getLastMetricsEvalTs() == -1) {
+                    argEntryIntervalStatus.setLastMetricsEvalTs(System.currentTimeMillis());
+                    processMetric(intervalEntry, argName, true, results);
+                }
             }
         });
     }
@@ -255,7 +243,7 @@ public class EntityAggregationCalculatedFieldState extends BaseCalculatedFieldSt
                 .orElse(null);
     }
 
-    protected ArrayNode toResult(Map<AggIntervalEntry, Map<String, ArgumentEntry>> results) {
+    protected ArrayNode toResult(Map<AggIntervalEntry, Map<String, ArgumentEntry>> results, Integer precision) {
         ArrayNode result = JacksonUtil.newArrayNode();
         results.forEach((interval, args) -> {
             ObjectNode metricsNode = JacksonUtil.newObjectNode();
@@ -263,7 +251,10 @@ public class EntityAggregationCalculatedFieldState extends BaseCalculatedFieldSt
                 String metricName = entry.getKey();
                 ArgumentEntry argumentEntry = entry.getValue();
                 if (!argumentEntry.isEmpty()) {
-                    metricsNode.put(metricName, JacksonUtil.toString(argumentEntry.getValue()));
+                    Object resultValue = argumentEntry.getValue() instanceof Number number
+                            ? TbUtils.roundResult(number.doubleValue(), precision)
+                            : argumentEntry.getValue();
+                    metricsNode.put(metricName, JacksonUtil.toString(resultValue));
                 }
             }
             ObjectNode resultNode = JacksonUtil.newObjectNode();
