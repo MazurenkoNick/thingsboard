@@ -209,7 +209,7 @@ public class ReportControllerTest extends AbstractControllerTest {
             ObjectNode timeseries = doGetAsync("/api/plugins/telemetry/DEVICE/" + finalDevice.getId() + "/values/timeseries?keys=temperature&startTs={startTs}&endTs={endTs}", ObjectNode.class, timeRange.startTs, timeRange.endTs);
             log.warn("Telemetry: {}", timeseries);
             return actualReportRows
-                    .containsAll(List.of("CREATED TIME,NAME,TEMPERATURE", formatter.format(Instant.ofEpochMilli(finalDevice.getCreatedTime())) + "," + finalTestDevice.getName() + ",17"));
+                    .containsAll(List.of("CREATED TIME,NAME,TEMPERATURE", formatter.format(Instant.ofEpochMilli(finalDevice.getCreatedTime())) + "," + finalDevice.getName() + ",17"));
         });
     }
 
