@@ -170,5 +170,4 @@ public interface UserService extends EntityDaoService {
     PageData<User> findUsersByFilter(TenantId tenantId, UsersFilter filter, PageLink pageLink);
 
     boolean matchesFilter(TenantId tenantId, SystemLevelUsersFilter filter, User user);
-
 }

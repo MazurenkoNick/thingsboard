@@ -39,6 +39,7 @@
     placeholderText="entity-group.owner"
     notFoundText="entity-group.no-owners-matching"
     requiredText="entity-group.owner-required"
+    [appearance]="appearance"
     formControlName="owner">
   </tb-owner-autocomplete>
   <tb-entity-group-list
@@ -49,6 +50,7 @@
     [groupType]="entityType"
     [ownerId]="ownerId()"
     [createGroupFunction]="createGroupFunction"
+    [appearance]="appearance"
     formControlName="groups">
   </tb-entity-group-list>
 </div>

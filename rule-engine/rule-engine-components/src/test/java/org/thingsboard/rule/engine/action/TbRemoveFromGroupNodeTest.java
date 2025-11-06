@@ -34,6 +34,7 @@ import com.google.common.util.concurrent.Futures;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.thingsboard.common.util.JacksonUtil;
@@ -58,9 +59,10 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThatNoException;
-import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatNoException;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
@@ -116,6 +118,7 @@ class TbRemoveFromGroupNodeTest {
 
     @Test
     public void givenDeviceWithoutDeviceGroup_whenOnMsg_thenThrowsException() throws TbNodeException {
+        // GIVEN
         config.setGroupNamePattern("${groupName}");
         var configuration = new TbNodeConfiguration(JacksonUtil.valueToTree(config));
         node.init(ctxMock, configuration);
@@ -131,9 +134,18 @@ class TbRemoveFromGroupNodeTest {
                 .data(TbMsg.EMPTY_JSON_OBJECT)
                 .build();
 
-        assertThatThrownBy(() -> node.onMsg(ctxMock, msg))
+        // WHEN
+        node.onMsg(ctxMock, msg);
+
+        // THEN
+        var actualExceptionCaptor = ArgumentCaptor.forClass(Throwable.class);
+
+        verify(ctxMock).tellFailure(eq(msg), actualExceptionCaptor.capture());
+
+        assertThat(actualExceptionCaptor.getValue())
                 .isInstanceOf(RuntimeException.class)
-                .hasMessage("java.lang.RuntimeException: No entity group found with type '" + EntityType.DEVICE + " ' and name 'Device Group'.");
+                .hasMessage("No entity group found with type 'DEVICE' and name 'Device Group'.");
+
         verifyNoMoreInteractions(ctxMock, peContextMock, entityGroupServiceMock);
     }
 
@@ -150,4 +162,5 @@ class TbRemoveFromGroupNodeTest {
         when(peContextMock.getEntityGroupService()).thenReturn(entityGroupServiceMock);
         when(ctxMock.getTenantId()).thenReturn(TENANT_ID);
     }
+
 }
