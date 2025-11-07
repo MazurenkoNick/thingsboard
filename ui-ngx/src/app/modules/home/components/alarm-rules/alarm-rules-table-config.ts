@@ -69,7 +69,6 @@ import {
   CalculatedFieldDebugDialogData
 } from "@home/components/calculated-fields/components/debug-dialog/calculated-field-debug-dialog.component";
 import { AlarmSeverity, alarmSeverityTranslations } from "@shared/models/alarm.models";
-import { textAlign } from "html2canvas/dist/types/css/property-descriptors/text-align";
 
 export class AlarmRulesTableConfig extends EntityTableConfig<any> {
 
