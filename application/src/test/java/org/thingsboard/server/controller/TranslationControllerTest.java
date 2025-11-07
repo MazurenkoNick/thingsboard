@@ -377,7 +377,7 @@ public class TranslationControllerTest extends AbstractControllerTest {
         TranslationInfo arabic = getTranslationInfo(AR_QA);
         assertThat(arabic.getProgress()).isEqualTo(0);
 
-        JsonNode fullCustomerTranslation = doGet("/api/translation/full/" + AR_QA, JsonNode.class);
+        JsonNode fullCustomerTranslation = doGet("/api/translation/full/" + EN_US, JsonNode.class);
 
         //translate some keys and check progress > 0
         Iterator<String> fieldNames = fullCustomerTranslation.fieldNames();
