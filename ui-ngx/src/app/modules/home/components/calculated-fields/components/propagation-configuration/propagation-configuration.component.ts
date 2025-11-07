@@ -53,7 +53,6 @@ import {
   PropagationDirectionTranslations,
   PropagationWithExpression
 } from '@shared/models/calculated-field.models';
-import { AttributeScope } from '@shared/models/telemetry/telemetry.models';
 import { map } from 'rxjs/operators';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ScriptLanguage } from '@app/shared/models/rule-node.models';
@@ -104,7 +103,6 @@ export class PropagationConfigurationComponent implements ControlValueAccessor, 
     }),
     expression: [calculatedFieldDefaultScript],
     output: this.fb.control<CalculatedFieldOutput>({
-      scope: AttributeScope.SERVER_SCOPE,
       type: OutputType.Timeseries,
     }),
   });
