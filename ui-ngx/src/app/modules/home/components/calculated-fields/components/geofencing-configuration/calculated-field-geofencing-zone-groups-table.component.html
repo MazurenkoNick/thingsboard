@@ -57,7 +57,7 @@
           <div tbTruncateWithTooltip>
             @if (geofenceZone.refEntityId?.entityType === ArgumentEntityType.Tenant) {
               {{ 'calculated-fields.argument-current-tenant' | translate }}
-            } @else if (geofenceZone.refDynamicSourceConfiguration?.type === CFArgumentDynamicSourceType.CURRENT_OWNER) {
+            } @else if (geofenceZone.refDynamicSourceConfiguration?.type === ArgumentEntityType.Owner) {
               {{ 'calculated-fields.argument-owner' | translate }}
             } @else if (geofenceZone.refDynamicSourceConfiguration?.type === ArgumentEntityType.RelationQuery) {
               {{ 'calculated-fields.argument-relation-query' | translate }}

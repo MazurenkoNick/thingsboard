@@ -356,7 +356,7 @@ export interface CalculatedFieldGeofencing {
 
 export interface RefDynamicSourceGeofencingConfiguration {
   type: ArgumentEntityType.RelationQuery | ArgumentEntityType.Owner;
-  levels: Array<RelationPathLevel>;
+  levels?: Array<RelationPathLevel>;
 }
 
 export interface CalculatedFieldGeofencingValue extends CalculatedFieldGeofencing {
