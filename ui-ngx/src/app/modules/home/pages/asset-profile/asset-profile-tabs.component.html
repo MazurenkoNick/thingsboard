@@ -42,10 +42,17 @@
         [hideClearEventAction]="!(resource.ASSET_PROFILE | hasGenericPermission: operation.WRITE)"
       />
     </mat-tab>
+    <mat-tab #alarmRules="matTab" label="{{'alarm-rule.alarm-rules' | translate }}">
+      <tb-alarm-rules-table
+        [active]="alarmRules.isActive"
+        [entityId]="entity.id"
+        [entityName]="entity.name"
+        [ownerId]="entity.tenantId"
+        [readonly]="!(resource.ASSET_PROFILE | hasGenericPermission: operation.WRITE_CALCULATED_FIELD)"
+        [hideClearEventAction]="!(resource.ASSET_PROFILE | hasGenericPermission: operation.WRITE)">
+      </tb-alarm-rules-table>
+    </mat-tab>
   }
-  <mat-tab #alarmRules="matTab" label="{{'alarm-rule.alarm-rules' | translate }}">
-    <tb-alarm-rules-table [active]="alarmRules.isActive" [entityId]="entity.id" [entityName]="entity.name" [ownerId]="entity.tenantId"></tb-alarm-rules-table>
-  </mat-tab>
   @if ((resource.AUDIT_LOG | hasGenericPermission: operation.READ)) {
     <mat-tab #auditLogsTab="matTab"
              label="{{ 'audit-log.audit-logs' | translate }}">

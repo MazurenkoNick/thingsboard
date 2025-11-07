@@ -66,6 +66,8 @@ export class AlarmRulesTableComponent {
   entityId = input<EntityId>();
   entityName = input<string>();
   ownerId = input<EntityId>();
+  readonly = input(false);
+  hideClearEventAction  = input(false);
 
   alarmRulesTableConfig: AlarmRulesTableConfig;
 
@@ -95,6 +97,8 @@ export class AlarmRulesTableComponent {
           this.ownerId(),
           this.importExportService,
           this.entityDebugSettingsService,
+          this.readonly(),
+          this.hideClearEventAction(),
         );
         this.cd.markForCheck();
       }
