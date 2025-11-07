@@ -53,7 +53,6 @@ import {
   ArgumentEntityType,
   CalculatedFieldGeofencing,
   CalculatedFieldGeofencingValue,
-  CFArgumentDynamicSourceType,
   GeofencingReportStrategyTranslations,
 } from '@shared/models/calculated-field.models';
 import { MatButton } from '@angular/material/button';
@@ -316,8 +315,6 @@ export class CalculatedFieldGeofencingZoneGroupsTableComponent implements Contro
       return (this.sortOrder.direction === 'asc' ? 1 : -1) * valA.localeCompare(valB);
     });
   }
-
-  protected readonly CFArgumentDynamicSourceType = CFArgumentDynamicSourceType;
 }
 
 class CalculatedFieldZoneDatasource extends TbTableDatasource<CalculatedFieldGeofencingValue> {

@@ -46,6 +46,8 @@ import {
 } from '@shared/models/ace/ace.models';
 import { EntitySearchDirection } from '@shared/models/relation.models';
 import { AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
+import { AlarmRule } from "@shared/models/alarm-rule.models";
+import { AlarmSeverity } from "@shared/models/alarm.models";
 import { JobStatus } from '@shared/models/job.models';
 
 interface BaseCalculatedField extends Omit<BaseData<CalculatedFieldId>, 'label'>, HasVersion, HasEntityDebugSettings, HasTenantId, ExportableEntity<CalculatedFieldId> {
@@ -72,18 +74,25 @@ export interface CalculatedFieldPropagation extends BaseCalculatedField {
   configuration: CalculatedFieldPropagationConfiguration;
 }
 
+export interface CalculatedFieldAlarmRule extends BaseCalculatedField {
+  type: CalculatedFieldType.ALARM;
+  configuration: CalculatedFieldAlarmRuleConfiguration;
+}
+
 export type CalculatedField =
   | CalculatedFieldSimple
   | CalculatedFieldScript
   | CalculatedFieldGeofencing
-  | CalculatedFieldPropagation;
+  | CalculatedFieldPropagation
+  | CalculatedFieldAlarmRule;
 
 export enum CalculatedFieldType {
   SIMPLE = 'SIMPLE',
   SCRIPT = 'SCRIPT',
   GEOFENCING = 'GEOFENCING',
   PROPAGATION = 'PROPAGATION',
-  RELATED_ENTITIES_AGGREGATION = 'RELATED_ENTITIES_AGGREGATION'
+  RELATED_ENTITIES_AGGREGATION = 'RELATED_ENTITIES_AGGREGATION',
+  ALARM = 'ALARM',
 }
 
 export const CalculatedFieldTypeTranslations = new Map<CalculatedFieldType, string>(
@@ -101,7 +110,8 @@ export type CalculatedFieldConfiguration =
   | CalculatedFieldScriptConfiguration
   | CalculatedFieldGeofencingConfiguration
   | CalculatedFieldPropagationConfiguration
-  | CalculatedFieldRelatedAggregationConfiguration;
+  | CalculatedFieldRelatedAggregationConfiguration
+  | CalculatedFieldAlarmRuleConfiguration;
 
 export interface CalculatedFieldSimpleConfiguration {
   type: CalculatedFieldType.SIMPLE;
@@ -141,6 +151,17 @@ interface BasePropagationConfiguration {
   relation: RelationPathLevel;
   arguments: Record<string, CalculatedFieldArgument>;
   output: CalculatedFieldOutput;
+}
+
+interface CalculatedFieldAlarmRuleConfiguration {
+  type: CalculatedFieldType.ALARM;
+  arguments: Record<string, CalculatedFieldArgument>;
+  createRules: Record<AlarmSeverity, AlarmRule>;
+  clearRule?: AlarmRule;
+  propagate: boolean;
+  propagateToOwner: boolean;
+  propagateToTenant: boolean;
+  propagateRelationTypes?: Array<string>;
 }
 
 export interface PropagationWithNoExpression extends BasePropagationConfiguration {
@@ -262,17 +283,17 @@ export const ArgumentTypeTranslations = new Map<ArgumentType, string>(
   ]
 )
 
-export enum CFArgumentDynamicSourceType {
-  CURRENT_OWNER = 'CURRENT_OWNER'
-}
-
 export interface CalculatedFieldArgument {
   refEntityKey: RefEntityKey;
   defaultValue?: string;
   refEntityId?: RefEntityId;
-  refDynamicSource?: CFArgumentDynamicSourceType;
+  refDynamicSourceConfiguration?: RefDynamicSourceConfiguration;
   limit?: number;
   timeWindow?: number;
+}
+
+export interface RefDynamicSourceConfiguration {
+  type: ArgumentEntityType.Owner;
 }
 
 export enum AggFunction {
@@ -327,14 +348,14 @@ export interface CalculatedFieldGeofencing {
   perimeterKeyName: string;
   reportStrategy: GeofencingReportStrategy;
   refEntityId?: RefEntityId;
-  refDynamicSourceConfiguration: RefDynamicSourceConfiguration;
+  refDynamicSourceConfiguration: RefDynamicSourceGeofencingConfiguration;
   createRelationsWithMatchedZones: boolean;
   relationType: string;
   direction: EntitySearchDirection;
 }
 
-export interface RefDynamicSourceConfiguration {
-  type?: ArgumentEntityType.RelationQuery | CFArgumentDynamicSourceType.CURRENT_OWNER;
+export interface RefDynamicSourceGeofencingConfiguration {
+  type: ArgumentEntityType.RelationQuery | ArgumentEntityType.Owner;
   levels?: Array<RelationPathLevel>;
 }
 

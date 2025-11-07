@@ -90,7 +90,7 @@ export class CalculatedFieldDialogComponent extends DialogComponent<CalculatedFi
 
   readonly EntityType = EntityType;
   readonly CalculatedFieldType = CalculatedFieldType;
-  readonly fieldTypes = Object.values(CalculatedFieldType) as CalculatedFieldType[];
+  readonly fieldTypes = Object.values(CalculatedFieldType).filter(type => type !== CalculatedFieldType.ALARM) as CalculatedFieldType[];
   readonly CalculatedFieldTypeTranslations = CalculatedFieldTypeTranslations;
 
   constructor(protected store: Store<AppState>,
