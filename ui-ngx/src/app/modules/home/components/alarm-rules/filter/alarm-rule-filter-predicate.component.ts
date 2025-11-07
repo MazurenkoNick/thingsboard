@@ -133,7 +133,7 @@ export class AlarmRuleFilterPredicateComponent implements ControlValueAccessor, 
     };
   }
 
-  setDisabledState?(isDisabled: boolean): void {
+  setDisabledState(isDisabled: boolean): void {
     this.disabled = isDisabled;
     if (isDisabled) {
       this.filterPredicateFormGroup.disable({emitEvent: false});
