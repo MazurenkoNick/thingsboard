@@ -69,6 +69,7 @@
     <tb-alarm-rules-table
       [active]="alarmRules.isActive"
       [entityId]="entity.id"
+      [entityName]="entity.name"
       [ownerId]="entity.ownerId"
       [readonly]="!(resource[entityType] | hasGenericPermission: operation.WRITE_CALCULATED_FIELD)"
       [hideClearEventAction]="!(entityGroup | hasGroupEntityOrGenericPermission: entityResource: operation.WRITE)">
