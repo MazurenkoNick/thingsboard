@@ -121,7 +121,10 @@ export const CalculatedFieldTypeTranslations = new Map<CalculatedFieldType, Calc
       name: 'calculated-fields.type.related-entities-aggregation',
       hint: 'calculated-fields.type.related-entities-aggregation-hint'
     }],
-    [CalculatedFieldType.ENTITY_AGGREGATION, 'calculated-fields.type.entity-aggregation'],
+    [CalculatedFieldType.ENTITY_AGGREGATION, {
+      name: 'calculated-fields.type.time-series-data-aggregation',
+      hint: 'calculated-fields.type.time-series-data-aggregation-hint',
+    }],
   ]
 )
 
@@ -173,7 +176,7 @@ export interface CalculatedFieldEntityAggregationConfiguration {
   metrics: Record<string, CalculatedFieldAggMetric>;
   interval: AggInterval;
   watermark?: WatermarkConfig;
-  output: Omit<CalculatedFieldSimpleOutput, 'name'>;
+  output: CalculatedFieldOutput & { decimalsByDefault?: number; };
 }
 
 export interface WatermarkConfig {
@@ -362,6 +365,7 @@ export enum AggIntervalType {
   WEEK = 'WEEK',
   WEEK_SUN_SAT = 'WEEK_SUN_SAT',
   MONTH = 'MONTH',
+  QUARTER = 'QUARTER',
   YEAR = 'YEAR',
   CUSTOM = 'CUSTOM'
 }
@@ -373,6 +377,7 @@ export const AggIntervalTypeTranslations = new Map<AggIntervalType, string>(
     [AggIntervalType.WEEK, 'calculated-fields.aggregate-period.week'],
     [AggIntervalType.WEEK_SUN_SAT, 'calculated-fields.aggregate-period.week-sun-sat'],
     [AggIntervalType.MONTH, 'calculated-fields.aggregate-period.month'],
+    [AggIntervalType.QUARTER, 'calculated-fields.aggregate-period.quarter'],
     [AggIntervalType.YEAR, 'calculated-fields.aggregate-period.year'],
     [AggIntervalType.CUSTOM, 'calculated-fields.aggregate-period.custom']
   ]
