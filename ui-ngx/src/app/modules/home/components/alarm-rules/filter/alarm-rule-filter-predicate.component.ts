@@ -29,7 +29,7 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { Component, DestroyRef, forwardRef, Input } from '@angular/core';
+import { booleanAttribute, Component, DestroyRef, forwardRef, Input } from '@angular/core';
 import {
   ControlValueAccessor,
   FormBuilder,
@@ -75,6 +75,9 @@ import { CalculatedFieldArgument } from "@shared/models/calculated-field.models"
   ]
 })
 export class AlarmRuleFilterPredicateComponent implements ControlValueAccessor, Validator {
+
+  @Input({ transform: booleanAttribute })
+  disabled: boolean;
 
   @Input()
   valueType: EntityKeyValueType;
@@ -130,6 +133,15 @@ export class AlarmRuleFilterPredicateComponent implements ControlValueAccessor, 
     };
   }
 
+  setDisabledState(isDisabled: boolean): void {
+    this.disabled = isDisabled;
+    if (isDisabled) {
+      this.filterPredicateFormGroup.disable({emitEvent: false});
+    } else {
+      this.filterPredicateFormGroup.enable({emitEvent: false});
+    }
+  }
+
   writeValue(predicate: AlarmRuleFilterPredicate): void {
     this.type = predicate.type;
     this.filterPredicateFormGroup.patchValue(predicate, {emitEvent: false});
@@ -149,6 +161,7 @@ export class AlarmRuleFilterPredicateComponent implements ControlValueAccessor, 
         valueType: this.valueType,
         isAdd: false,
         arguments: this.arguments,
+        readonly: this.disabled
       }
     }).afterClosed().subscribe(
       (result) => {

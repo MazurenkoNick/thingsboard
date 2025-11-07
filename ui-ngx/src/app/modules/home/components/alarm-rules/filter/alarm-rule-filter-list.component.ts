@@ -29,7 +29,7 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { Component, DestroyRef, forwardRef, Input } from '@angular/core';
+import { booleanAttribute, Component, DestroyRef, forwardRef, Input } from '@angular/core';
 import {
   AbstractControl,
   ControlValueAccessor,
@@ -76,6 +76,9 @@ import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 })
 export class AlarmRuleFilterListComponent implements ControlValueAccessor, Validator {
 
+  @Input({ transform: booleanAttribute })
+  readonly: boolean;
+
   @Input()
   arguments: Record<string, CalculatedFieldArgument>;
 
@@ -115,6 +118,14 @@ export class AlarmRuleFilterListComponent implements ControlValueAccessor, Valid
     return this.filterListFormGroup.valid && this.filterListFormGroup.get('filters').value?.length ? null : {
       filterList: {valid: false}
     };
+  }
+
+  setDisabledState(isDisabled: boolean): void {
+    if (isDisabled) {
+      this.filterListFormGroup.disable({emitEvent: false});
+    } else {
+      this.filterListFormGroup.enable({emitEvent: false});
+    }
   }
 
   writeValue(filters: Array<AlarmRuleFilter>): void {
@@ -169,7 +180,8 @@ export class AlarmRuleFilterListComponent implements ControlValueAccessor, Valid
         filter: filter ? deepClone(filter) : null,
         isAdd,
         arguments: this.arguments,
-        usedArguments: this.getUsedArguments
+        usedArguments: this.getUsedArguments,
+        readonly: this.readonly,
       }
     }).afterClosed();
   }

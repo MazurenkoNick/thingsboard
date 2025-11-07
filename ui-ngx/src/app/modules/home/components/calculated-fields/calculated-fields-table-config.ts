@@ -188,7 +188,7 @@ export class CalculatedFieldsTableConfig extends EntityTableConfig<CalculatedFie
       });
     }
 
-    this.cellActionDescriptors.push(      {
+    this.cellActionDescriptors.push({
       name: this.translate.instant('action.edit'),
       nameFunction: () => this.translate.instant(this.readonly ? 'action.view' : 'action.edit'),
       icon: 'edit',

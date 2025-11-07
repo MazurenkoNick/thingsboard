@@ -30,7 +30,6 @@
 ///
 
 import { Component, Inject } from '@angular/core';
-import { ErrorStateMatcher } from '@angular/material/core';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { Store } from '@ngrx/store';
 import { AppState } from '@core/core.state';
@@ -51,12 +50,13 @@ export interface AlarmRuleComplexFilterPredicateDialogData {
   isAdd: boolean;
   valueType: EntityKeyValueType;
   arguments: Record<string, CalculatedFieldArgument>;
+  readonly: boolean;
 }
 
 @Component({
   selector: 'tb-alarm-rule-complex-filter-predicate-dialog',
   templateUrl: './alarm-rule-complex-filter-predicate-dialog.component.html',
-  providers: [{provide: ErrorStateMatcher, useExisting: AlarmRuleComplexFilterPredicateDialogComponent}],
+  providers: [],
   styleUrls: []
 })
 
@@ -88,6 +88,9 @@ export class AlarmRuleComplexFilterPredicateDialogComponent extends
     this.isAdd = this.data.isAdd;
 
     this.complexFilterFormGroup.patchValue(this.data.complexPredicate, {emitEvent: false});
+    if (this.data.readonly) {
+      this.complexFilterFormGroup.disable({emitEvent: false});
+    }
   }
 
   cancel(): void {

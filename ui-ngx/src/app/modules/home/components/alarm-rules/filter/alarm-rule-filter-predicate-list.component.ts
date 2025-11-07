@@ -122,7 +122,7 @@ export class AlarmRuleFilterPredicateListComponent implements ControlValueAccess
   registerOnTouched(fn: any): void {
   }
 
-  setDisabledState?(isDisabled: boolean): void {
+  setDisabledState(isDisabled: boolean): void {
     this.disabled = isDisabled;
     if (this.disabled) {
       this.filterListFormGroup.disable({emitEvent: false});
@@ -210,6 +210,7 @@ export class AlarmRuleFilterPredicateListComponent implements ControlValueAccess
         valueType: this.valueType,
         isAdd: true,
         arguments: this.arguments,
+        readonly: this.disabled
       }
     }).afterClosed().pipe(
       map(result => result)

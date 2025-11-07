@@ -61,9 +61,10 @@
                     (click)="editFilter(index)"
                     matTooltip="{{  'filter.edit-key-filter' | translate }}"
                     matTooltipPosition="above">
-              <mat-icon>{{'edit'}}</mat-icon>
+              <mat-icon>{{ readonly ? 'visibility' : 'edit'}}</mat-icon>
             </button>
             <button mat-icon-button color="primary"
+                    [class.!hidden]="readonly"
                     type="button"
                     (click)="removeFilter(index)"
                     matTooltip="{{ 'filter.remove-key-filter' | translate }}"
@@ -84,11 +85,13 @@
     </span>
   </div>
 </section>
-<button mat-button mat-raised-button color="primary"
-        (click)="addFilter()"
-        type="button"
-        matTooltip="{{ 'alarm-rule.add-filter' | translate }}"
-        matTooltipPosition="above">
-  {{ 'alarm-rule.add-filter' | translate }}
-</button>
+@if (!readonly) {
+  <button mat-button mat-raised-button color="primary"
+          (click)="addFilter()"
+          type="button"
+          matTooltip="{{ 'alarm-rule.add-filter' | translate }}"
+          matTooltipPosition="above">
+    {{ 'alarm-rule.add-filter' | translate }}
+  </button>
+}
 

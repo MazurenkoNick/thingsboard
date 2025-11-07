@@ -40,6 +40,8 @@ import {
   deviceTransportTypeTranslationMap
 } from '@shared/models/device.models';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Operation, Resource } from "@shared/models/security.models";
+import { UserPermissionsService } from "@core/http/user-permissions.service";
 
 @Component({
   selector: 'tb-device-profile-tabs',
@@ -60,7 +62,8 @@ export class DeviceProfileTabsComponent extends EntityTabsComponent<DeviceProfil
   alarmRulesOldVersion = false;
 
   constructor(protected store: Store<AppState>,
-              private destroyRef: DestroyRef) {
+              private destroyRef: DestroyRef,
+              private userPermissionsService: UserPermissionsService) {
     super(store);
   }
 
@@ -76,7 +79,7 @@ export class DeviceProfileTabsComponent extends EntityTabsComponent<DeviceProfil
   protected setEntity(entity: DeviceProfile) {
     this.isTransportTypeChanged = false;
     this.hasOldRules = !!entity?.profileData?.alarms?.length;
-    this.alarmRulesOldVersion = this.isEdit || false;
+    this.alarmRulesOldVersion = !this.userPermissionsService.hasGenericPermission(Resource.DEVICE_PROFILE, Operation.READ_CALCULATED_FIELD);
     super.setEntity(entity);
   }
 

@@ -76,6 +76,7 @@
                                                [entityId]="data.entityId"
                                                [tenantId]="data.tenantId"
                                                [ownerId]="data.ownerId"
+                                               [readonly]="data.readonly"
                                                [entityName]="data.entityName"/>
         </div>
         <div class="tb-form-panel">
@@ -93,29 +94,33 @@
               <tb-cf-alarm-rule formControlName="clearRule" class="flex-1" [arguments]="arguments">
               </tb-cf-alarm-rule>
             </div>
-            <button mat-icon-button
-                    class="button-icon"
-                    type="button"
-                    (click)="removeClearAlarmRule()"
-                    matTooltip="{{ 'action.remove' | translate }}"
-                    matTooltipPosition="above">
-              <mat-icon>delete</mat-icon>
-            </button>
+            @if (!data.readonly) {
+              <button mat-icon-button
+                      class="button-icon"
+                      type="button"
+                      (click)="removeClearAlarmRule()"
+                      matTooltip="{{ 'action.remove' | translate }}"
+                      matTooltipPosition="above">
+                <mat-icon>delete</mat-icon>
+              </button>
+            }
           </div>
           <div *ngIf="!configFormGroup.get('clearRule').value">
             <span translate style="margin: 16px 0"
                   class="tb-prompt flex items-center justify-center">alarm-rule.no-clear-alarm-rule</span>
           </div>
-          <div [class.!hidden]="configFormGroup.get('clearRule').value">
-            <button mat-stroked-button color="primary"
-                    type="button"
-                    (click)="addClearAlarmRule()"
-                    matTooltip="{{ 'alarm-rule.add-clear-alarm-rule' | translate }}"
-                    matTooltipPosition="above">
-              <mat-icon class="button-icon">add_circle_outline</mat-icon>
-              {{ 'alarm-rule.add-clear-alarm-rule' | translate }}
-            </button>
-          </div>
+          @if (!data.readonly) {
+            <div [class.!hidden]="configFormGroup.get('clearRule').value">
+              <button mat-stroked-button color="primary"
+                      type="button"
+                      (click)="addClearAlarmRule()"
+                      matTooltip="{{ 'alarm-rule.add-clear-alarm-rule' | translate }}"
+                      matTooltipPosition="above">
+                <mat-icon class="button-icon">add_circle_outline</mat-icon>
+                {{ 'alarm-rule.add-clear-alarm-rule' | translate }}
+              </button>
+            </div>
+          }
         </div>
         <div class="tb-form-panel no-gap">
           <mat-expansion-panel class="tb-settings" [expanded]="false">
@@ -170,10 +175,12 @@
             (click)="cancel()">
       {{ 'action.cancel' | translate }}
     </button>
-    <button mat-raised-button color="primary"
-            (click)="add()"
-            [disabled]="(isLoading$ | async) || fieldFormGroup.invalid || !fieldFormGroup.dirty">
-      {{ data.buttonTitle | translate }}
-    </button>
+    @if (!data.readonly) {
+      <button mat-raised-button color="primary"
+              (click)="add()"
+              [disabled]="fieldFormGroup.invalid || !fieldFormGroup.dirty">
+        {{ data.buttonTitle | translate }}
+      </button>
+    }
   </div>
 </div>
