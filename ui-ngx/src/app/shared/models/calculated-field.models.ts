@@ -292,6 +292,10 @@ export interface CalculatedFieldArgument {
   timeWindow?: number;
 }
 
+export interface RefDynamicSourceConfiguration {
+  type: ArgumentEntityType.Owner;
+}
+
 export enum AggFunction {
   AVG='AVG',
   MIN='MIN',
@@ -344,15 +348,15 @@ export interface CalculatedFieldGeofencing {
   perimeterKeyName: string;
   reportStrategy: GeofencingReportStrategy;
   refEntityId?: RefEntityId;
-  refDynamicSourceConfiguration: RefDynamicSourceConfiguration;
+  refDynamicSourceConfiguration: RefDynamicSourceGeofencingConfiguration;
   createRelationsWithMatchedZones: boolean;
   relationType: string;
   direction: EntitySearchDirection;
 }
 
-export interface RefDynamicSourceConfiguration {
-  type?: ArgumentEntityType.RelationQuery | ArgumentEntityType.Owner;
-  levels?: Array<RelationPathLevel>;
+export interface RefDynamicSourceGeofencingConfiguration {
+  type: ArgumentEntityType.RelationQuery;
+  levels: Array<RelationPathLevel>;
 }
 
 export interface CalculatedFieldGeofencingValue extends CalculatedFieldGeofencing {
