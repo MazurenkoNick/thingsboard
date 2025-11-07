@@ -29,20 +29,21 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { Component, DestroyRef, forwardRef, Input, OnInit } from '@angular/core';
+import { Component, DestroyRef, forwardRef, Input, OnChanges, OnInit, SimpleChanges } from '@angular/core';
 import {
   AbstractControl,
   ControlValueAccessor,
+  FormArray,
+  FormBuilder,
+  FormGroup,
   NG_VALIDATORS,
   NG_VALUE_ACCESSOR,
-  UntypedFormArray,
-  UntypedFormBuilder,
-  UntypedFormGroup,
   ValidationErrors,
   Validator,
   Validators
 } from '@angular/forms';
 import {
+  CustomTimeSchedulerItem,
   dayOfWeekTranslations,
   getAlarmScheduleRangeText,
   timeOfDayToUTCTimestamp,
@@ -58,6 +59,7 @@ import {
 } from "@shared/models/alarm-rule.models";
 import { CalculatedFieldArgument } from "@shared/models/calculated-field.models";
 import { MatChipSelectionChange } from "@angular/material/chips";
+import { coerceBoolean } from "@shared/decorators/coercion";
 
 @Component({
   selector: 'tb-cf-alarm-schedule',
@@ -73,42 +75,37 @@ import { MatChipSelectionChange } from "@angular/material/chips";
     multi: true
   }]
 })
-export class CfAlarmScheduleComponent implements ControlValueAccessor, Validator, OnInit {
+export class CfAlarmScheduleComponent implements ControlValueAccessor, Validator, OnInit, OnChanges {
+
   @Input()
+  @coerceBoolean()
   disabled: boolean;
 
   @Input()
   arguments: Record<string, CalculatedFieldArgument>;
 
-  private settingsModeValue: 'static' | 'dynamic';
-  get settingsMode(): 'static' | 'dynamic' {
-    return this.settingsModeValue;
-  }
   @Input()
-  set settingsMode(value: 'static' | 'dynamic') {
-    if (value !== this.settingsModeValue && this.alarmScheduleForm) {
-      this.settingsModeValue = value;
-      this.updateModeValidators(value);
-      this.updateModel();
-    }
-  }
+  @coerceBoolean()
+  dynamicMode: boolean;
 
   alarmScheduleForm = this.fb.group({
     staticValue: this.fb.group({
       type: [AlarmRuleScheduleType.ANY_TIME, Validators.required],
-      timezone: [null, Validators.required],
-      daysOfWeek: [null, Validators.required],
-      startsOn: [0, Validators.required],
-      endsOn: [0, Validators.required],
+      timezone: ['', Validators.required],
+      daysOfWeek: this.fb.control<number[] | null>(null, Validators.required),
+      startsOn: this.fb.control<Date | number>(0, Validators.required),
+      endsOn: this.fb.control<Date | number>(0, Validators.required),
       items: this.fb.array(Array.from({length: 7}, (value, i) => this.defaultItemsScheduler(i)), this.validateItems),
     }),
-    dynamicValueArgument: [null, Validators.required]
+    dynamicValueArgument: ['', Validators.required]
   });
 
-  alarmScheduleTypes = Object.keys(AlarmRuleScheduleType);
+  alarmScheduleTypes = Object.keys(AlarmRuleScheduleType) as Array<AlarmRuleScheduleType>;
   alarmScheduleType = AlarmRuleScheduleType;
   alarmScheduleTypeTranslate = AlarmRuleScheduleTypeTranslationMap;
   dayOfWeekTranslationsArray = dayOfWeekTranslations;
+
+  argumentsList: Array<string>;
 
   allDays = Array(7).fill(0).map((x, i) => i);
 
@@ -117,23 +114,24 @@ export class CfAlarmScheduleComponent implements ControlValueAccessor, Validator
   private defaultItems = Array.from({length: 7}, (value, i) => ({
     enabled: true,
     dayOfWeek: i + 1
-  }));
+  })) as CustomTimeSchedulerItem[];
 
   private propagateChange = (v: any) => { };
 
-  constructor(private fb: UntypedFormBuilder,
+  constructor(private fb: FormBuilder,
               private destroyRef: DestroyRef) {
   }
 
   ngOnInit(): void {
+    this.argumentsList = this.arguments ? Object.keys(this.arguments): [];
     this.alarmScheduleForm.get('staticValue.type').valueChanges.pipe(
       takeUntilDestroyed(this.destroyRef)
     ).subscribe((type) => {
       const defaultTimezone = getDefaultTimezone();
-      this.alarmScheduleForm.get('staticValue').patchValue({type, items: this.defaultItems, timezone: defaultTimezone}, {emitEvent: false});
+      const staticValue = {...this.alarmScheduleForm.get('staticValue').value, type, items: this.defaultItems, timezone: defaultTimezone};
+      this.alarmScheduleForm.get('staticValue').patchValue(staticValue, {emitEvent: false});
       this.alarmScheduleForm.get('dynamicValueArgument').patchValue(null, {emitEvent: false});
       this.updateValidators(type);
-      this.alarmScheduleForm.updateValueAndValidity();
     });
     this.alarmScheduleForm.valueChanges.pipe(
       takeUntilDestroyed(this.destroyRef)
@@ -146,6 +144,16 @@ export class CfAlarmScheduleComponent implements ControlValueAccessor, Validator
     ).subscribe((items) => {
       items.forEach((item, index) => this.disabledSelectedTime(item.enabled, index, false))
     });
+  }
+
+  ngOnChanges(changes: SimpleChanges) {
+    if (changes.dynamicMode) {
+      const dynamicModeChanges = changes.dynamicMode;
+      if (!dynamicModeChanges.firstChange && dynamicModeChanges.currentValue !== dynamicModeChanges.previousValue) {
+        this.updateModeValidators(dynamicModeChanges.currentValue);
+        this.updateModel();
+      }
+    }
   }
 
   validateItems(control: AbstractControl): ValidationErrors | null {
@@ -170,7 +178,7 @@ export class CfAlarmScheduleComponent implements ControlValueAccessor, Validator
     if (this.disabled) {
       this.alarmScheduleForm.disable({emitEvent: false});
     } else {
-      this.updateModeValidators(this.settingsMode);
+      this.updateModeValidators(this.dynamicMode);
     }
   }
 
@@ -178,10 +186,8 @@ export class CfAlarmScheduleComponent implements ControlValueAccessor, Validator
     if (value) {
       this.modelValue = value;
       if (this.modelValue.dynamicValueArgument) {
-        this.settingsModeValue = 'dynamic';
         this.alarmScheduleForm.get('dynamicValueArgument').patchValue(this.modelValue.dynamicValueArgument, {emitEvent: false});
       } else {
-        this.settingsModeValue = 'static';
         switch (this.modelValue.staticValue.type) {
           case AlarmRuleScheduleType.SPECIFIC_TIME:
             this.alarmScheduleForm.patchValue({
@@ -227,11 +233,11 @@ export class CfAlarmScheduleComponent implements ControlValueAccessor, Validator
         }
         this.updateValidators(this.modelValue.staticValue.type);
       }
-      this.updateModeValidators(this.settingsMode);
+      this.updateModeValidators(this.dynamicMode);
     }
   }
 
-  validate(control: UntypedFormGroup): ValidationErrors | null {
+  validate(control: FormGroup): ValidationErrors | null {
     return this.alarmScheduleForm.valid ? null : {
       alarmScheduler: {
         valid: false
@@ -239,14 +245,14 @@ export class CfAlarmScheduleComponent implements ControlValueAccessor, Validator
     };
   }
 
-  private updateModeValidators(mode: 'static' | 'dynamic') {
-    if (mode === 'static') {
+  private updateModeValidators(mode: boolean) {
+    if (mode) {
+      this.alarmScheduleForm.get('staticValue').disable({emitEvent: false});
+      this.alarmScheduleForm.get('dynamicValueArgument').enable({emitEvent: false});
+    } else {
       this.alarmScheduleForm.get('staticValue').enable({emitEvent: false});
       this.alarmScheduleForm.get('dynamicValueArgument').disable({emitEvent: false});
       this.updateValidators(this.alarmScheduleForm.get('staticValue.type').value);
-    } else {
-      this.alarmScheduleForm.get('staticValue').disable({emitEvent: false});
-      this.alarmScheduleForm.get('dynamicValueArgument').enable({emitEvent: false});
     }
   }
 
@@ -271,14 +277,14 @@ export class CfAlarmScheduleComponent implements ControlValueAccessor, Validator
         this.alarmScheduleForm.get('staticValue.daysOfWeek').disable({emitEvent: false});
         this.alarmScheduleForm.get('staticValue.startsOn').disable({emitEvent: false});
         this.alarmScheduleForm.get('staticValue.endsOn').disable({emitEvent: false});
-        this.alarmScheduleForm.get('staticValue.items').enable({emitEvent: true});
+        this.alarmScheduleForm.get('staticValue.items').enable({emitEvent: false});
         break;
     }
   }
 
   private updateModel() {
     const value = this.alarmScheduleForm.value as AlarmRuleSchedule;
-    if (this.settingsMode === 'static') {
+    if (!this.dynamicMode) {
       if (isDefined(value.staticValue.startsOn) && value.staticValue.startsOn !== 0) {
         value.staticValue.startsOn = timeOfDayToUTCTimestamp(value.staticValue.startsOn);
       }
@@ -286,22 +292,18 @@ export class CfAlarmScheduleComponent implements ControlValueAccessor, Validator
         value.staticValue.endsOn = timeOfDayToUTCTimestamp(value.staticValue.endsOn);
       }
       if (isDefined(value.staticValue.items)){
-        value.staticValue.items = this.alarmScheduleForm.getRawValue().staticValue.items;
+        value.staticValue.items = this.alarmScheduleForm.getRawValue().staticValue.items as CustomTimeSchedulerItem[];
         value.staticValue.items = value.staticValue.items.map((item) => {
           return { ...item, startsOn: timeOfDayToUTCTimestamp(item.startsOn), endsOn: timeOfDayToUTCTimestamp(item.endsOn)};
         });
       }
     }
     this.modelValue = value;
-    if (this.alarmScheduleForm.valid) {
-      this.propagateChange(this.modelValue);
-    } else {
-      this.propagateChange(null);
-    }
+    this.propagateChange(this.modelValue);
   }
 
 
-  private defaultItemsScheduler(index): UntypedFormGroup {
+  private defaultItemsScheduler(index: number): FormGroup {
     return this.fb.group({
       enabled: [true],
       dayOfWeek: [index + 1],
@@ -325,16 +327,11 @@ export class CfAlarmScheduleComponent implements ControlValueAccessor, Validator
     }
   }
 
-  getSchedulerRangeText(control: UntypedFormGroup | AbstractControl): string {
+  getSchedulerRangeText(control: FormGroup | AbstractControl): string {
     return getAlarmScheduleRangeText(control.get('startsOn').value, control.get('endsOn').value);
   }
 
-  get itemsSchedulerForm(): UntypedFormArray {
-    return this.alarmScheduleForm.get('staticValue.items') as UntypedFormArray;
+  get itemsSchedulerForm(): FormArray {
+    return this.alarmScheduleForm.get('staticValue.items') as FormArray;
   }
-
-  get argumentsList(): Array<string> {
-    return this.arguments ? Object.keys(this.arguments): [];
-  }
-
 }

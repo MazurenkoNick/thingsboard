@@ -30,7 +30,7 @@
 ///
 
 import { Injectable } from '@angular/core';
-import { defaultHttpOptionsFromConfig, RequestConfig } from './http-utils';
+import { createDefaultHttpOptions, defaultHttpOptionsFromConfig, RequestConfig } from './http-utils';
 import { Observable } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { PageData } from '@shared/models/page/page-data';
@@ -68,11 +68,7 @@ export class CalculatedFieldsService {
   }
 
   public getCalculatedFields({ entityType, id }: EntityId, pageLink: PageLink, type?: CalculatedFieldType, config?: RequestConfig): Observable<PageData<CalculatedField>> {
-    let url = `/api/${entityType}/${id}/calculatedFields${pageLink.toQuery()}`;
-    if (type) {
-      url += `&type=${type}`;
-    }
-    return this.http.get<PageData<CalculatedField>>(url, defaultHttpOptionsFromConfig(config));
+    return this.http.get<PageData<CalculatedField>>(`/api/${entityType}/${id}/calculatedFields${pageLink.toQuery()}`, createDefaultHttpOptions(type ? {type} : null, config));
   }
 
   public testScript(inputParams: CalculatedFieldTestScriptInputParams, config?: RequestConfig): Observable<EntityTestScriptResult> {
