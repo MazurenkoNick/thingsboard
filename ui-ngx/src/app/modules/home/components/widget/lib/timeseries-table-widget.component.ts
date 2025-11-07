@@ -126,12 +126,19 @@ import { FormBuilder } from '@angular/forms';
 import { DEFAULT_OVERLAY_POSITIONS } from '@shared/models/overlay.models';
 import { DateFormatSettings, ValueFormatProcessor } from '@shared/models/widget-settings.models';
 
+export enum TabSortKey {
+  NAME_ASC = 'NAME_ASC',
+  NAME_DESC = 'NAME_DESC',
+  TIMESTAMP = 'timestamp'
+}
+
 export interface TimeseriesTableWidgetSettings extends TableWidgetSettings {
   showTimestamp: boolean;
   showMilliseconds: boolean;
   hideEmptyLines: boolean;
   dateFormat: DateFormatSettings;
   timestampExportOption: columnExportOptions;
+  tabSortKey: TabSortKey;
 }
 
 interface TimeseriesWidgetLatestDataKeySettings extends TableWidgetDataKeySettings {
@@ -172,6 +179,7 @@ interface TimeseriesTableSource {
   timeseriesDatasource: TimeseriesDatasource;
   header: TimeseriesHeader[];
   rowDataTemplate: {[key: string]: any};
+  displayName: string;
 }
 
 @Component({
@@ -419,12 +427,33 @@ export class TimeseriesTableWidgetComponent extends PageComponent implements OnI
     this.updateDatasources();
   }
 
-  public getTabLabel(source: TimeseriesTableSource){
-    if (this.useEntityLabel) {
-      return source.datasource.entityLabel || source.datasource.entityName;
-    } else {
-      return source.datasource.entityName;
+  private getTabLabel(source: Datasource, entityLabelCache:Map<string,string>):string {
+    if (entityLabelCache.has(source.entityId)) {
+      return entityLabelCache.get(source.entityId);
     }
+
+    const value = this.useEntityLabel 
+      ? (source.entityLabel || source.entityName)
+      : source.entityName;
+
+    const translated = this.utils.customTranslation(value);
+    entityLabelCache.set(source.entityId, translated);
+    return translated;
+  }
+
+  private sortDatasources(source: Datasource[], entityLabelCache:Map<string,string>): Datasource[] {
+    source.forEach(ds => this.getTabLabel(ds, entityLabelCache));
+
+    if (this.settings.tabSortKey === TabSortKey.TIMESTAMP) {
+      return source;
+    }
+    return source.sort((a, b) => {
+      const valueA = entityLabelCache.get(a.entityId);
+      const valueB = entityLabelCache.get(b.entityId);
+      return this.settings.tabSortKey === TabSortKey.NAME_ASC
+        ? valueA.localeCompare(valueB)
+        : valueB.localeCompare(valueA);
+    });
   }
 
   private updateDatasources() {
@@ -432,9 +461,11 @@ export class TimeseriesTableWidgetComponent extends PageComponent implements OnI
     this.sourceIndex = 0;
     let keyOffset = 0;
     let latestKeyOffset = 0;
+    const entityLabelCache = new Map<string,string>();
     const pageSize = this.displayPagination ? this.defaultPageSize : Number.POSITIVE_INFINITY;
     if (this.datasources) {
-      for (const datasource of this.datasources) {
+      const sortedDatasources = this.sortDatasources(this.datasources, entityLabelCache);
+      for (const datasource of sortedDatasources) {
         const sortOrder: SortOrder = sortOrderFromString(this.defaultSortOrder);
         const source = {} as TimeseriesTableSource;
         source.header = this.prepareHeader(datasource);
@@ -451,6 +482,7 @@ export class TimeseriesTableWidgetComponent extends PageComponent implements OnI
         source.pageLink = new PageLink(pageSize, 0, null, sortOrder);
         source.rowDataTemplate = {};
         source.rowDataTemplate.Timestamp = null;
+        source.displayName = entityLabelCache.get(datasource.entityId);
         if (this.showTimestamp) {
           source.displayedColumns.push('0');
         }

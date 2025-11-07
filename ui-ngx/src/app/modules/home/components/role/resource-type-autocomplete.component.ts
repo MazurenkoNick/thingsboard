@@ -48,6 +48,7 @@ import { TranslateService } from '@ngx-translate/core';
 import { coerceBooleanProperty } from '@angular/cdk/coercion';
 import { Resource, resourceTypeTranslationMap } from '@shared/models/security.models';
 import { UserPermissionsService } from '@core/http/user-permissions.service';
+import { MatFormFieldAppearance } from '@angular/material/form-field';
 
 interface ResourceTypeInfo {
   name: string;
@@ -81,6 +82,12 @@ export class ResourceTypeAutocompleteComponent implements ControlValueAccessor, 
 
   @Input()
   disabled: boolean;
+
+  @Input()
+  appearance: MatFormFieldAppearance = 'fill';
+
+  @Input()
+  label: string;
 
   @ViewChild('resourceTypeInput', {static: true}) resourceTypeInput: ElementRef<HTMLInputElement>;
 
