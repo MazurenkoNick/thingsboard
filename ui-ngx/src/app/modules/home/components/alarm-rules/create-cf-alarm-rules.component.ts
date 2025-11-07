@@ -29,25 +29,25 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { Component, forwardRef, Input, OnDestroy, OnInit } from '@angular/core';
+import { Component, DestroyRef, forwardRef, Input } from '@angular/core';
 import {
   AbstractControl,
   ControlValueAccessor,
+  FormArray,
+  FormBuilder,
   NG_VALIDATORS,
   NG_VALUE_ACCESSOR,
   UntypedFormArray,
-  UntypedFormBuilder,
   UntypedFormControl,
-  UntypedFormGroup,
   Validator,
   Validators
 } from '@angular/forms';
-import { Subject } from 'rxjs';
 import { AlarmSeverity, alarmSeverityTranslations } from '@shared/models/alarm.models';
-import { takeUntil } from 'rxjs/operators';
 import { AlarmRule } from "@shared/models/alarm-rule.models";
 import { CalculatedFieldArgument } from "@shared/models/calculated-field.models";
 import { AlarmSeverityNotificationColors } from "@shared/models/notification.models";
+import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
+import { coerceBoolean } from "@shared/decorators/coercion";
 
 @Component({
   selector: 'tb-create-cf-alarm-rules',
@@ -66,7 +66,15 @@ import { AlarmSeverityNotificationColors } from "@shared/models/notification.mod
     }
   ]
 })
-export class CreateCfAlarmRulesComponent implements ControlValueAccessor, OnInit, Validator, OnDestroy {
+export class CreateCfAlarmRulesComponent implements ControlValueAccessor, Validator {
+
+  @Input()
+  @coerceBoolean()
+  disabled: boolean;
+
+  @Input()
+  arguments: Record<string, CalculatedFieldArgument>;
+
 
   alarmSeverities = Object.keys(AlarmSeverity);
   alarmSeverityEnum = AlarmSeverity;
@@ -74,20 +82,19 @@ export class CreateCfAlarmRulesComponent implements ControlValueAccessor, OnInit
 
   AlarmSeverityNotificationColors = AlarmSeverityNotificationColors;
 
-  @Input()
-  disabled: boolean;
-
-  @Input()
-  arguments: Record<string, CalculatedFieldArgument>;
-
-  createAlarmRulesFormGroup: UntypedFormGroup;
+  createAlarmRulesFormGroup = this.fb.group({
+    createAlarmRules: this.fb.array<{severity: AlarmSeverity, alarmRule: AlarmRule}>([])
+  });
 
   private usedSeverities: AlarmSeverity[] = [];
 
-  private destroy$ = new Subject<void>();
   private propagateChange = (v: any) => { };
 
-  constructor(private fb: UntypedFormBuilder) {
+  constructor(private fb: FormBuilder,
+              private destroyRef: DestroyRef) {
+    this.createAlarmRulesFormGroup.valueChanges.pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(() => this.updateModel());
   }
 
   registerOnChange(fn: any): void {
@@ -95,20 +102,6 @@ export class CreateCfAlarmRulesComponent implements ControlValueAccessor, OnInit
   }
 
   registerOnTouched(fn: any): void {
-  }
-
-  ngOnInit() {
-    this.createAlarmRulesFormGroup = this.fb.group({
-      createAlarmRules: this.fb.array([])
-    });
-    this.createAlarmRulesFormGroup.valueChanges.pipe(
-      takeUntil(this.destroy$)
-    ).subscribe(() => this.updateModel());
-  }
-
-  ngOnDestroy() {
-    this.destroy$.next();
-    this.destroy$.complete();
   }
 
   createAlarmRulesFormArray(): UntypedFormArray {
@@ -124,7 +117,7 @@ export class CreateCfAlarmRulesComponent implements ControlValueAccessor, OnInit
     }
   }
 
-  writeValue(createAlarmRules: {[severity: string]: AlarmRule}): void {
+  writeValue(createAlarmRules: Record<AlarmSeverity, AlarmRule>): void {
     const createAlarmRulesControls: Array<AbstractControl> = [];
     if (createAlarmRules) {
       Object.keys(createAlarmRules).forEach((severity) => {
@@ -138,7 +131,9 @@ export class CreateCfAlarmRulesComponent implements ControlValueAccessor, OnInit
         }));
       });
     }
-    this.createAlarmRulesFormGroup.setControl('createAlarmRules', this.fb.array(createAlarmRulesControls), {emitEvent: false});
+    const formArray = this.createAlarmRulesFormGroup.get('createAlarmRules') as FormArray;
+    formArray.clear();
+    createAlarmRulesControls.forEach(c => formArray.push(c));
     if (this.disabled) {
       this.createAlarmRulesFormGroup.disable({emitEvent: false});
     } else {
@@ -151,11 +146,11 @@ export class CreateCfAlarmRulesComponent implements ControlValueAccessor, OnInit
   }
 
   public removeCreateAlarmRule(index: number) {
-    (this.createAlarmRulesFormGroup.get('createAlarmRules') as UntypedFormArray).removeAt(index);
+    (this.createAlarmRulesFormGroup.get('createAlarmRules') as FormArray).removeAt(index);
   }
 
   public addCreateAlarmRule() {
-    const createAlarmRulesArray = this.createAlarmRulesFormGroup.get('createAlarmRules') as UntypedFormArray;
+    const createAlarmRulesArray = this.createAlarmRulesFormGroup.get('createAlarmRules') as FormArray;
     createAlarmRulesArray.push(this.fb.group({
       severity: [this.getFirstUnusedSeverity(), Validators.required],
       alarmRule: [null, Validators.required]
@@ -191,15 +186,15 @@ export class CreateCfAlarmRulesComponent implements ControlValueAccessor, OnInit
 
   private updateUsedSeverities() {
     this.usedSeverities = [];
-    const value: {severity: string, alarmRule: AlarmRule}[] = this.createAlarmRulesFormGroup.get('createAlarmRules').value;
+    const value = this.createAlarmRulesFormGroup.get('createAlarmRules').value;
     value.forEach((rule, index) => {
       this.usedSeverities[index] = AlarmSeverity[rule.severity];
     });
   }
 
   private updateModel() {
-    const value: {severity: string, alarmRule: AlarmRule}[] = this.createAlarmRulesFormGroup.get('createAlarmRules').value;
-    const createAlarmRules: {[severity: string]: AlarmRule} = {};
+    const value = this.createAlarmRulesFormGroup.get('createAlarmRules').value;
+    const createAlarmRules = {} as Record<AlarmSeverity, AlarmRule>;
     value.forEach(v => createAlarmRules[v.severity] = v.alarmRule);
     this.updateUsedSeverities();
     this.propagateChange(createAlarmRules);

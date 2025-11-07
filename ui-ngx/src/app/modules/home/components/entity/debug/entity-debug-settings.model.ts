@@ -43,6 +43,7 @@ export interface EntityDebugSettingPanelConfig {
     maxDebugModeDuration?: number;
     additionalActionConfig?: AdditionalDebugActionConfig;
     entityType: EntityType;
+    entityLabel?: string;
   }
   onSettingsAppliedFn: (settings: EntityDebugSettings) => void;
 }

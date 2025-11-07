@@ -48,7 +48,6 @@ import {
   CalculatedFieldGeofencing,
   CalculatedFieldGeofencingValue,
   CalculatedFieldType,
-  CFArgumentDynamicSourceType,
   GeofencingDirectionLevelTranslations,
   GeofencingDirectionTranslations,
   GeofencingReportStrategy,
@@ -193,7 +192,7 @@ export class CalculatedFieldGeofencingZoneGroupsPanelComponent implements OnInit
     }
   }
 
-  private validateRefDynamicSourceConfiguration(type: ArgumentEntityType | CFArgumentDynamicSourceType = ArgumentEntityType.Current): void {
+  private validateRefDynamicSourceConfiguration(type: ArgumentEntityType = ArgumentEntityType.Current): void {
     if (type === ArgumentEntityType.RelationQuery) {
       this.refDynamicSourceFormGroup.enable({emitEvent: false});
     } else {
@@ -216,8 +215,8 @@ export class CalculatedFieldGeofencingZoneGroupsPanelComponent implements OnInit
         break;
       case ArgumentEntityType.Owner:
         delete value.refEntityId;
-        value.refDynamicSourceConfiguration ||= { type: CFArgumentDynamicSourceType.CURRENT_OWNER };
-        value.refDynamicSourceConfiguration.type = CFArgumentDynamicSourceType.CURRENT_OWNER;
+        value.refDynamicSourceConfiguration ||= { type: ArgumentEntityType.Owner };
+        value.refDynamicSourceConfiguration.type = ArgumentEntityType.Owner;
         break;
       case ArgumentEntityType.RelationQuery:
         delete value.refEntityId;

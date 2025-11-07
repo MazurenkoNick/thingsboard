@@ -66,8 +66,10 @@ export class AlarmRulesTableComponent {
   entityId = input<EntityId>();
   entityName = input<string>();
   ownerId = input<EntityId>();
+  readonly = input(false);
+  hideClearEventAction  = input(false);
 
-  calculatedFieldsTableConfig: AlarmRulesTableConfig;
+  alarmRulesTableConfig: AlarmRulesTableConfig;
 
   constructor(private calculatedFieldsService: CalculatedFieldsService,
               private translate: TranslateService,
@@ -82,7 +84,7 @@ export class AlarmRulesTableComponent {
 
     effect(() => {
       if (this.active()) {
-        this.calculatedFieldsTableConfig = new AlarmRulesTableConfig(
+        this.alarmRulesTableConfig = new AlarmRulesTableConfig(
           this.calculatedFieldsService,
           this.translate,
           this.dialog,
@@ -95,6 +97,8 @@ export class AlarmRulesTableComponent {
           this.ownerId(),
           this.importExportService,
           this.entityDebugSettingsService,
+          this.readonly(),
+          this.hideClearEventAction(),
         );
         this.cd.markForCheck();
       }

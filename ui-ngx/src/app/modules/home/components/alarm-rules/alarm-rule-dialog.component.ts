@@ -136,22 +136,18 @@ export class AlarmRuleDialogComponent extends DialogComponent<AlarmRuleDialogCom
     const index = keys.indexOf(key);
     if (index >= 0) {
       keys.splice(index, 1);
-      this.configFormGroup.get('propagateRelationTypes').setValue(keys, {emitEvent: true});
+      this.configFormGroup.get('propagateRelationTypes').setValue(keys);
     }
   }
 
   addRelationType(event: MatChipInputEvent): void {
     const input = event.chipInput.inputElement;
-    let value = event.value;
-    if ((value || '').trim()) {
-      value = value.trim();
-      let keys: string[] = this.configFormGroup.get('propagateRelationTypes').value;
-      if (!keys || keys.indexOf(value) === -1) {
-        if (!keys) {
-          keys = [];
-        }
+    let value = (event.value ?? '').trim();
+    if (value) {
+      let keys: string[] = this.configFormGroup.get('propagateRelationTypes').value ?? [];
+      if (keys.indexOf(value) === -1) {
         keys.push(value);
-        this.configFormGroup.get('propagateRelationTypes').setValue(keys, {emitEvent: true});
+        this.configFormGroup.get('propagateRelationTypes').setValue(keys);
       }
     }
     if (input) {

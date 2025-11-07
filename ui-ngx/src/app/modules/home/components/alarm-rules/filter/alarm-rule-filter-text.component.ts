@@ -101,7 +101,7 @@ export class AlarmRuleFilterTextComponent {
     }
   }
 
-  requiredClass = false;
+  isRequired = false;
 
   public filterText: string;
 
@@ -110,7 +110,7 @@ export class AlarmRuleFilterTextComponent {
   }
 
   private updateFilterText(value: AlarmRuleExpression) {
-    this.requiredClass = false;
+    this.isRequired = false;
     if (value && (value.expression || value.filters)) {
       if (value.type === AlarmRuleExpressionType.SIMPLE) {
         this.filterText = this.keyFiltersToText(this.translate, this.datePipe, value.filters, value.operation);
@@ -123,7 +123,7 @@ export class AlarmRuleFilterTextComponent {
     } else {
       if (this.required) {
         this.filterText = this.addFilterPrompt;
-        this.requiredClass = true;
+        this.isRequired = true;
       } else {
         this.filterText = this.noFilterText;
       }

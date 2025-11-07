@@ -29,20 +29,19 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { Component, forwardRef, Inject, Input, OnDestroy, OnInit } from '@angular/core';
+import { Component, DestroyRef, forwardRef, Input } from '@angular/core';
 import {
   AbstractControl,
   ControlValueAccessor,
+  FormArray,
+  FormBuilder,
   NG_VALIDATORS,
   NG_VALUE_ACCESSOR,
-  UntypedFormArray,
-  UntypedFormBuilder,
-  UntypedFormGroup,
   ValidationErrors,
   Validator,
   Validators
 } from '@angular/forms';
-import { Observable, of, Subject } from 'rxjs';
+import { Observable, of } from 'rxjs';
 import {
   BooleanOperation,
   ComplexOperation,
@@ -54,9 +53,7 @@ import {
   StringOperation
 } from '@shared/models/query/query.models';
 import { MatDialog } from '@angular/material/dialog';
-import { map, takeUntil } from 'rxjs/operators';
-import { ComponentType } from '@angular/cdk/portal';
-import { COMPLEX_FILTER_PREDICATE_DIALOG_COMPONENT_TOKEN } from '@home/components/tokens';
+import { map } from 'rxjs/operators';
 import {
   AlarmRuleComplexFilterPredicateDialogComponent,
   AlarmRuleComplexFilterPredicateDialogData
@@ -67,6 +64,7 @@ import {
   ComplexAlarmRuleFilterPredicate
 } from "@shared/models/alarm-rule.models";
 import { CalculatedFieldArgument } from "@shared/models/calculated-field.models";
+import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 
 @Component({
   selector: 'tb-alarm-rule-filter-predicate-list',
@@ -85,7 +83,7 @@ import { CalculatedFieldArgument } from "@shared/models/calculated-field.models"
     }
   ]
 })
-export class AlarmRuleFilterPredicateListComponent implements ControlValueAccessor, Validator, OnInit, OnDestroy {
+export class AlarmRuleFilterPredicateListComponent implements ControlValueAccessor, Validator {
 
   @Input() disabled: boolean;
 
@@ -95,36 +93,26 @@ export class AlarmRuleFilterPredicateListComponent implements ControlValueAccess
 
   @Input() arguments: Record<string, CalculatedFieldArgument>;
 
-  filterListFormGroup: UntypedFormGroup;
+  filterListFormGroup = this.fb.group({
+    predicates: this.fb.array([])
+  });
 
   valueTypeEnum = EntityKeyValueType;
 
   complexOperationTranslations = complexOperationTranslationMap;
 
-  private destroy$ = new Subject<void>();
-  private propagateChange = null;
+  private propagateChange= (v: any) => { };
 
-  constructor(private fb: UntypedFormBuilder,
-              @Inject(COMPLEX_FILTER_PREDICATE_DIALOG_COMPONENT_TOKEN) private complexFilterPredicateDialogComponent: ComponentType<any>,
-              private dialog: MatDialog) {
-  }
-
-  ngOnInit(): void {
-    this.filterListFormGroup = this.fb.group({
-      predicates: this.fb.array([])
-    });
+  constructor(private fb: FormBuilder,
+              private dialog: MatDialog,
+              private destroyRef: DestroyRef) {
     this.filterListFormGroup.valueChanges.pipe(
-      takeUntil(this.destroy$)
+      takeUntilDestroyed(this.destroyRef)
     ).subscribe(() => this.updateModel());
   }
 
-  ngOnDestroy() {
-    this.destroy$.next();
-    this.destroy$.complete();
-  }
-
-  get predicatesFormArray(): UntypedFormArray {
-    return this.filterListFormGroup.get('predicates') as UntypedFormArray;
+  get predicatesFormArray(): FormArray {
+    return this.filterListFormGroup.get('predicates') as FormArray;
   }
 
   registerOnChange(fn: any): void {
@@ -150,22 +138,14 @@ export class AlarmRuleFilterPredicateListComponent implements ControlValueAccess
   }
 
   writeValue(predicates: Array<AlarmRulePredicateInfo>): void {
-    if (predicates?.length === this.predicatesFormArray.length) {
-      this.predicatesFormArray.patchValue(predicates, {emitEvent: false});
-    } else {
-      const predicateControls: Array<AbstractControl> = [];
-      if (predicates) {
-        for (const predicate of predicates) {
-          predicateControls.push(this.fb.control(predicate, [Validators.required]));
-        }
-      }
-      this.filterListFormGroup.setControl('predicates', this.fb.array(predicateControls), {emitEvent: false});
-      if (this.disabled) {
-        this.filterListFormGroup.disable({emitEvent: false});
-      } else {
-        this.filterListFormGroup.enable({emitEvent: false});
+    const predicateControls: Array<AbstractControl> = [];
+    if (predicates) {
+      for (const predicate of predicates) {
+        predicateControls.push(this.fb.control(predicate, [Validators.required]));
       }
     }
+    this.predicatesFormArray.clear();
+    predicateControls.forEach(predicate => this.predicatesFormArray.push(predicate));
   }
 
   public removePredicate(index: number) {
@@ -173,7 +153,7 @@ export class AlarmRuleFilterPredicateListComponent implements ControlValueAccess
   }
 
   public addPredicate(complex: boolean) {
-    const predicatesFormArray = this.filterListFormGroup.get('predicates') as UntypedFormArray;
+    const predicatesFormArray = this.filterListFormGroup.get('predicates') as FormArray;
     const predicate = this.createDefaultFilterPredicate(this.valueType, complex);
     let observable: Observable<AlarmRuleFilterPredicate>;
     if (complex) {
@@ -232,23 +212,11 @@ export class AlarmRuleFilterPredicateListComponent implements ControlValueAccess
         arguments: this.arguments,
       }
     }).afterClosed().pipe(
-      map((result) => {
-        if (result) {
-          predicate = result;
-          return predicate;
-        } else {
-          return null;
-        }
-      })
+      map(result => result)
     );
   }
 
   private updateModel() {
-    const predicates: Array<AlarmRulePredicateInfo> = this.filterListFormGroup.getRawValue().predicates;
-    if (predicates.length) {
-      this.propagateChange(predicates);
-    } else {
-      this.propagateChange(null);
-    }
+    this.propagateChange(this.filterListFormGroup.get('predicates').value);
   }
 }
