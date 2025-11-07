@@ -46,6 +46,8 @@ import {
 } from '@shared/models/ace/ace.models';
 import { EntitySearchDirection } from '@shared/models/relation.models';
 import { AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
+import { AlarmRule } from "@shared/models/alarm-rule.models";
+import { AlarmSeverity } from "@shared/models/alarm.models";
 import { JobStatus } from '@shared/models/job.models';
 
 interface BaseCalculatedField extends Omit<BaseData<CalculatedFieldId>, 'label'>, HasVersion, HasEntityDebugSettings, HasTenantId, ExportableEntity<CalculatedFieldId> {
@@ -72,27 +74,50 @@ export interface CalculatedFieldPropagation extends BaseCalculatedField {
   configuration: CalculatedFieldPropagationConfiguration;
 }
 
+export interface CalculatedFieldAlarmRule extends BaseCalculatedField {
+  type: CalculatedFieldType.ALARM;
+  configuration: CalculatedFieldAlarmRuleConfiguration;
+}
+
 export type CalculatedField =
   | CalculatedFieldSimple
   | CalculatedFieldScript
   | CalculatedFieldGeofencing
-  | CalculatedFieldPropagation;
+  | CalculatedFieldPropagation
+  | CalculatedFieldAlarmRule;
 
 export enum CalculatedFieldType {
   SIMPLE = 'SIMPLE',
   SCRIPT = 'SCRIPT',
   GEOFENCING = 'GEOFENCING',
   PROPAGATION = 'PROPAGATION',
-  RELATED_ENTITIES_AGGREGATION = 'RELATED_ENTITIES_AGGREGATION'
+  RELATED_ENTITIES_AGGREGATION = 'RELATED_ENTITIES_AGGREGATION',
+  ALARM = 'ALARM',
 }
 
-export const CalculatedFieldTypeTranslations = new Map<CalculatedFieldType, string>(
+interface CalculatedFieldTypeTranslate {
+  name: string;
+  hint?: string;
+}
+
+export const CalculatedFieldTypeTranslations = new Map<CalculatedFieldType, CalculatedFieldTypeTranslate>(
   [
-    [CalculatedFieldType.SIMPLE, 'calculated-fields.type.simple'],
-    [CalculatedFieldType.SCRIPT, 'calculated-fields.type.script'],
-    [CalculatedFieldType.GEOFENCING, 'calculated-fields.type.geofencing'],
-    [CalculatedFieldType.PROPAGATION, 'calculated-fields.type.propagation'],
-    [CalculatedFieldType.RELATED_ENTITIES_AGGREGATION, 'calculated-fields.type.related-entities-aggregation'],
+    [CalculatedFieldType.SIMPLE, {
+      name: 'calculated-fields.type.simple'
+    }],
+    [CalculatedFieldType.SCRIPT, {
+      name: 'calculated-fields.type.script'
+    }],
+    [CalculatedFieldType.GEOFENCING, {
+      name: 'calculated-fields.type.geofencing'
+    }],
+    [CalculatedFieldType.PROPAGATION, {
+      name: 'calculated-fields.type.propagation'
+    }],
+    [CalculatedFieldType.RELATED_ENTITIES_AGGREGATION, {
+      name: 'calculated-fields.type.related-entities-aggregation',
+      hint: 'calculated-fields.type.related-entities-aggregation-hint'
+    }],
   ]
 )
 
@@ -101,7 +126,8 @@ export type CalculatedFieldConfiguration =
   | CalculatedFieldScriptConfiguration
   | CalculatedFieldGeofencingConfiguration
   | CalculatedFieldPropagationConfiguration
-  | CalculatedFieldRelatedAggregationConfiguration;
+  | CalculatedFieldRelatedAggregationConfiguration
+  | CalculatedFieldAlarmRuleConfiguration;
 
 export interface CalculatedFieldSimpleConfiguration {
   type: CalculatedFieldType.SIMPLE;
@@ -133,7 +159,7 @@ export interface CalculatedFieldRelatedAggregationConfiguration {
   metrics: Record<string, CalculatedFieldAggMetric>;
   deduplicationIntervalInSec: number;
   useLatestTs: boolean;
-  output: Omit<CalculatedFieldSimpleOutput, 'name'>;
+  output: CalculatedFieldOutput & { decimalsByDefault?: number; };
 }
 
 interface BasePropagationConfiguration {
@@ -141,6 +167,17 @@ interface BasePropagationConfiguration {
   relation: RelationPathLevel;
   arguments: Record<string, CalculatedFieldArgument>;
   output: CalculatedFieldOutput;
+}
+
+interface CalculatedFieldAlarmRuleConfiguration {
+  type: CalculatedFieldType.ALARM;
+  arguments: Record<string, CalculatedFieldArgument>;
+  createRules: Record<AlarmSeverity, AlarmRule>;
+  clearRule?: AlarmRule;
+  propagate: boolean;
+  propagateToOwner: boolean;
+  propagateToTenant: boolean;
+  propagateRelationTypes?: Array<string>;
 }
 
 export interface PropagationWithNoExpression extends BasePropagationConfiguration {
@@ -156,12 +193,20 @@ export type CalculatedFieldPropagationConfiguration =
   | PropagationWithNoExpression
   | PropagationWithExpression;
 
-export interface CalculatedFieldOutput {
-  type: OutputType;
-  scope?: AttributeScope;
+export type CalculatedFieldOutput =
+  | CalculatedFieldOutputAttribute
+  | CalculatedFieldOutputTimeSeries;
+
+export interface CalculatedFieldOutputAttribute {
+  type: OutputType.Attribute,
+  scope: AttributeScope;
 }
 
-export interface CalculatedFieldSimpleOutput extends CalculatedFieldOutput {
+export interface CalculatedFieldOutputTimeSeries {
+  type: OutputType.Timeseries;
+}
+
+export type CalculatedFieldSimpleOutput = CalculatedFieldOutput & {
   name: string;
   decimalsByDefault?: number;
 }
@@ -262,17 +307,17 @@ export const ArgumentTypeTranslations = new Map<ArgumentType, string>(
   ]
 )
 
-export enum CFArgumentDynamicSourceType {
-  CURRENT_OWNER = 'CURRENT_OWNER'
-}
-
 export interface CalculatedFieldArgument {
   refEntityKey: RefEntityKey;
   defaultValue?: string;
   refEntityId?: RefEntityId;
-  refDynamicSource?: CFArgumentDynamicSourceType;
+  refDynamicSourceConfiguration?: RefDynamicSourceConfiguration;
   limit?: number;
   timeWindow?: number;
+}
+
+export interface RefDynamicSourceConfiguration {
+  type: ArgumentEntityType.Owner;
 }
 
 export enum AggFunction {
@@ -327,14 +372,14 @@ export interface CalculatedFieldGeofencing {
   perimeterKeyName: string;
   reportStrategy: GeofencingReportStrategy;
   refEntityId?: RefEntityId;
-  refDynamicSourceConfiguration: RefDynamicSourceConfiguration;
+  refDynamicSourceConfiguration: RefDynamicSourceGeofencingConfiguration;
   createRelationsWithMatchedZones: boolean;
   relationType: string;
   direction: EntitySearchDirection;
 }
 
-export interface RefDynamicSourceConfiguration {
-  type?: ArgumentEntityType.RelationQuery | CFArgumentDynamicSourceType.CURRENT_OWNER;
+export interface RefDynamicSourceGeofencingConfiguration {
+  type: ArgumentEntityType.RelationQuery | ArgumentEntityType.Owner;
   levels?: Array<RelationPathLevel>;
 }
 

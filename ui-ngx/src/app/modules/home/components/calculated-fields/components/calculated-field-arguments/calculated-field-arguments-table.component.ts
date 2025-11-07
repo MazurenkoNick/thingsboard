@@ -58,7 +58,6 @@ import {
   CalculatedFieldArgument,
   CalculatedFieldArgumentValue,
   CalculatedFieldType,
-  CFArgumentDynamicSourceType,
 } from '@shared/models/calculated-field.models';
 import {
   CalculatedFieldArgumentPanelComponent
@@ -123,7 +122,6 @@ export class CalculatedFieldArgumentsTableComponent implements ControlValueAcces
   readonly entityTypeTranslations = entityTypeTranslations;
   readonly ArgumentTypeTranslations = ArgumentTypeTranslations;
   readonly ArgumentEntityType = ArgumentEntityType;
-  readonly CFArgumentDynamicSourceType = CFArgumentDynamicSourceType;
   readonly ArgumentType = ArgumentType;
   readonly CalculatedFieldType = CalculatedFieldType;
   readonly maxArgumentsPerCF = getCurrentAuthState(this.store).maxArgumentsPerCF;
