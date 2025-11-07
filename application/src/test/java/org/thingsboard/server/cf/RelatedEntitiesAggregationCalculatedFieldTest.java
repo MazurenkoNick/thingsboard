@@ -104,6 +104,7 @@ public class RelatedEntitiesAggregationCalculatedFieldTest extends AbstractContr
 
         updateDefaultTenantProfileConfig(tenantProfileConfig -> {
             tenantProfileConfig.setMinAllowedDeduplicationIntervalInSecForCF(1);
+            tenantProfileConfig.setMinAllowedScheduledUpdateIntervalInSecForCF(1);
         });
 
         Tenant tenant = new Tenant();
@@ -873,6 +874,7 @@ public class RelatedEntitiesAggregationCalculatedFieldTest extends AbstractContr
         configuration.setRelation(relation);
         configuration.setArguments(inputs);
         configuration.setDeduplicationIntervalInSec(deduplicationInterval);
+        configuration.setScheduledUpdateInterval(10);
         configuration.setMetrics(metrics);
         configuration.setOutput(output);
 
