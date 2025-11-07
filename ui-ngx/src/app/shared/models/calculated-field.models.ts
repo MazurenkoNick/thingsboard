@@ -158,6 +158,7 @@ export interface CalculatedFieldRelatedAggregationConfiguration {
   arguments: Record<string, CalculatedFieldArgument>;
   metrics: Record<string, CalculatedFieldAggMetric>;
   deduplicationIntervalInSec: number;
+  scheduledUpdateInterval?: number;
   useLatestTs: boolean;
   output: CalculatedFieldOutput & { decimalsByDefault?: number; };
 }
