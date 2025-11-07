@@ -155,7 +155,7 @@
         "queueName": null,
         "configurationVersion": 1,
         "configuration": {
-          "ruleChainId": "3cb6b630-cf94-11ed-89f0-1539199f4c4d",
+          "ruleChainId": "73fd7eb0-ab58-11f0-a030-371af25b1b5d",
           "forwardMsgToDefaultRuleChain": false
         },
         "additionalInfo": {
@@ -296,7 +296,7 @@
         "queueName": null,
         "configurationVersion": 1,
         "configuration": {
-          "ruleChainId": "4af7b2d0-cf94-11ed-89f0-1539199f4c4d",
+          "ruleChainId": "73ff0550-ab58-11f0-a030-371af25b1b5d",
           "forwardMsgToDefaultRuleChain": false
         },
         "additionalInfo": {
