@@ -51,7 +51,6 @@ import {
   OutputType,
   PropagationDirectionTranslations
 } from '@shared/models/calculated-field.models';
-import { AttributeScope } from '@shared/models/telemetry/telemetry.models';
 import { map } from 'rxjs/operators';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ScriptLanguage } from '@app/shared/models/rule-node.models';
@@ -107,7 +106,6 @@ export class RelatedEntitiesAggregationComponentComponent implements ControlValu
     metrics: this.fb.control({}, notEmptyObjectValidator()),
     deduplicationIntervalInSec: [this.minAllowedDeduplicationIntervalInSecForCF],
     output: this.fb.control<CalculatedFieldOutput>({
-      scope: AttributeScope.SERVER_SCOPE,
       type: OutputType.Timeseries,
     }),
     useLatestTs: [false]

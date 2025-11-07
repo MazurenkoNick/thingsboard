@@ -175,7 +175,7 @@
         "queueName": null,
         "configurationVersion": 1,
         "configuration": {
-          "ruleChainId": "ccba32d0-ab55-11f0-bd2c-f9774add4084",
+          "ruleChainId": "3bc41c36-776c-4d4f-b53f-b7ed7f9a76f3",
           "forwardMsgToDefaultRuleChain": false
         },
         "additionalInfo": {

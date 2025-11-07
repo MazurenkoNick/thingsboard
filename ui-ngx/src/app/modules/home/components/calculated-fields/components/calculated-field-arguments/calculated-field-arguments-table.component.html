@@ -59,7 +59,7 @@
           <div tbTruncateWithTooltip>
             @if (argument.refEntityId?.entityType === ArgumentEntityType.Tenant) {
               {{ 'calculated-fields.argument-current-tenant' | translate }}
-            } @else if (argument.refDynamicSource === CFArgumentDynamicSourceType.CURRENT_OWNER) {
+            } @else if (argument.refDynamicSourceConfiguration?.type === ArgumentEntityType.Owner) {
               {{ 'calculated-fields.argument-owner' | translate }}
             } @else if (argument.refEntityId?.id) {
               {{ entityTypeTranslations.get(argument.refEntityId.entityType).type | translate }}
