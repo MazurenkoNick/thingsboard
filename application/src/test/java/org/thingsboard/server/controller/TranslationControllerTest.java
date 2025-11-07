@@ -33,6 +33,7 @@ package org.thingsboard.server.controller;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.After;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,6 +56,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @DaoSqlTest
+@Slf4j
 public class TranslationControllerTest extends AbstractControllerTest {
 
     private static final String ES_ES = "es_ES";
@@ -391,6 +393,9 @@ public class TranslationControllerTest extends AbstractControllerTest {
 
         Set<String> fullTranslationKeys = JacksonUtil.extractKeys(fullCustomerTranslation);
         Set<String> translated = JacksonUtil.extractKeys(customTranslation);
+
+         log.error("All eng keys: {}", fullTranslationKeys);
+         log.error("All translated keys: {}", translated);
 
         TranslationInfo updatedSystemArabicInfo = getTranslationInfo(AR_QA);
         assertThat(updatedSystemArabicInfo.getProgress()).isGreaterThan(0)
