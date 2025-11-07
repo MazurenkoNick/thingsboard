@@ -111,6 +111,8 @@ export class AlarmRulesTableConfig extends EntityTableConfig<any> {
 
     this.entitiesFetchFunction = (pageLink: PageLink) => this.fetchCalculatedFields(pageLink);
     this.addEntity = this.getCalculatedAlarmDialog.bind(this);
+    this.addEnabled = !this.readonly;
+    this.entitiesDeleteEnabled = !this.readonly;
     this.deleteEntityTitle = (field: CalculatedField) => this.translate.instant('alarm-rule.delete-title', {title: field.name});
     this.deleteEntityContent = () => this.translate.instant('alarm-rule.delete-text');
     this.deleteEntitiesTitle = count => this.translate.instant('alarm-rule.delete-multiple-title', {count});
@@ -153,21 +155,25 @@ export class AlarmRulesTableConfig extends EntityTableConfig<any> {
         isEnabled: () => true,
         onAction: (_, entity) => this.openDebugEventsDialog(entity),
       },
-      {
+    );
+    if (!this.readonly) {
+      this.cellActionDescriptors.push({
         name: '',
         nameFunction: entity => this.entityDebugSettingsService.getDebugConfigLabel(entity?.debugSettings),
         icon: 'mdi:bug',
         isEnabled: () => true,
         iconFunction: ({ debugSettings }) => this.entityDebugSettingsService.isDebugActive(debugSettings?.allEnabledUntil) || debugSettings?.failuresEnabled ? 'mdi:bug' : 'mdi:bug-outline',
         onAction: ($event, entity) => this.onOpenDebugConfig($event, entity),
-      },
-      {
-        name: this.translate.instant('action.edit'),
-        icon: 'edit',
-        isEnabled: () => true,
-        onAction: (_, entity) => this.editCalculatedField(entity),
-      }
-    );
+      });
+    }
+    this.cellActionDescriptors.push({
+      name: this.translate.instant('action.edit'),
+      nameFunction: () => this.translate.instant(this.readonly ? 'action.view' : 'action.edit'),
+      icon: 'edit',
+      iconFunction: () => this.readonly ? 'visibility' : 'edit',
+      isEnabled: () => true,
+      onAction: (_, entity) => this.editCalculatedField(entity),
+    });
   }
 
   fetchCalculatedFields(pageLink: PageLink): Observable<PageData<CalculatedField>> {
@@ -223,6 +229,7 @@ export class AlarmRulesTableConfig extends EntityTableConfig<any> {
         ownerId: this.ownerId,
         additionalDebugActionConfig: this.additionalDebugActionConfig,
         isDirty,
+        readonly: this.readonly,
       },
       enterAnimationDuration: isDirty ? 0 : null,
     })

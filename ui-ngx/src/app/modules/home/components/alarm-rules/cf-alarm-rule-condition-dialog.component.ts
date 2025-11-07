@@ -151,6 +151,12 @@ export class CfAlarmRuleConditionDialogComponent extends DialogComponent<CfAlarm
     this.durationDynamicModeControl.patchValue(!!this.condition?.value?.dynamicValueArgument, {emitEvent: false});
     this.repeatingDynamicModeControl.patchValue(!!this.condition?.count?.dynamicValueArgument, {emitEvent: false});
 
+    if (this.readonly) {
+      this.conditionFormGroup.disable({emitEvent: false});
+      this.durationDynamicModeControl.disable({emitEvent: false});
+      this.repeatingDynamicModeControl.disable({emitEvent: false});
+    }
+
     this.conditionFormGroup.get('type').valueChanges.pipe(
       takeUntilDestroyed()
     ).subscribe((type) => {

@@ -69,10 +69,9 @@
     <tb-alarm-rules-table
       [active]="alarmRules.isActive"
       [entityId]="entity.id"
-      [entityName]="entity.name"
-      [ownerId]="entity.tenantId"
-      [readonly]="!(resource.ASSET_PROFILE | hasGenericPermission: operation.WRITE_CALCULATED_FIELD)"
-      [hideClearEventAction]="!(resource.ASSET_PROFILE | hasGenericPermission: operation.WRITE)">
+      [ownerId]="entity.ownerId"
+      [readonly]="!(resource[entityType] | hasGenericPermission: operation.WRITE_CALCULATED_FIELD)"
+      [hideClearEventAction]="!(entityGroup | hasGroupEntityOrGenericPermission: entityResource: operation.WRITE)">
     </tb-alarm-rules-table>
   </mat-tab>
 }

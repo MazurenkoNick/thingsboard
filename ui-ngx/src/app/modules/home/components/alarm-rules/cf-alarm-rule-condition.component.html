@@ -33,8 +33,7 @@
 <div class="tb-alarm-rule-condition flex flex-col gap-4 min-w-0" [formGroup]="alarmRuleConditionFormGroup">
   <div class="tb-form-row column-xs">
     <div class="min-w-40 xs:min-w-fit">{{ 'alarm-rule.condition' | translate }}</div>
-    <button [disabled]="disabled"
-            type="button"
+    <button type="button"
             class="tb-alarm-rule-condition-button"
             mat-stroked-button [color]="conditionSet() ? 'primary' : 'warn'"
             (click)="openFilterDialog($event)">
@@ -47,20 +46,19 @@
                                    required
                                    addFilterPrompt="{{'alarm-rule.enter-alarm-rule-condition-prompt' | translate}}">
         </tb-alarm-rule-filter-text>
-        <mat-icon [color]="conditionSet() ? 'primary' : 'warn'" class="tb-mat-20 tb-alarm-rule-schedule-edit-icon">{{ conditionSet() ? 'edit' : 'add' }}</mat-icon>
+        <mat-icon [color]="conditionSet() ? 'primary' : 'warn'" class="tb-mat-20 tb-alarm-rule-schedule-edit-icon">{{ disabled ? 'visibility' : (conditionSet() ? 'edit' : 'add') }}</mat-icon>
       </div>
     </button>
   </div>
   <div class="tb-form-row column-xs">
     <div class="min-w-40 xs:min-w-fit">{{ 'alarm-rule.schedule-title' | translate }}</div>
-    <button [disabled]="disabled"
-            type="button"
+    <button type="button"
             class="tb-alarm-rule-condition-button"
             mat-stroked-button color="primary"
             (click)="openScheduleDialog($event)">
       <div class="flex items-center gap-2">
         <span class="tb-alarm-rule-condition-label" tbTruncateWithTooltip [innerHTML]="scheduleText"></span>
-        <mat-icon class="tb-mat-20 tb-alarm-rule-schedule-edit-icon">edit</mat-icon>
+        <mat-icon class="tb-mat-20 tb-alarm-rule-schedule-edit-icon">{{ disabled ? 'visibility' : 'edit' }}</mat-icon>
       </div>
     </button>
   </div>

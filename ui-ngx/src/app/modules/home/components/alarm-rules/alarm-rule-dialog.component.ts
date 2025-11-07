@@ -58,6 +58,7 @@ export interface AlarmRuleDialogData {
   ownerId: EntityId;
   additionalDebugActionConfig: AdditionalDebugActionConfig<(calculatedField: CalculatedField) => void>;
   isDirty?: boolean;
+  readonly: boolean;
 }
 
 @Component({
@@ -104,6 +105,10 @@ export class AlarmRuleDialogComponent extends DialogComponent<AlarmRuleDialogCom
     super(store, router, dialogRef);
     this.observeIsLoading();
     this.applyDialogData();
+
+    if (this.data.readonly) {
+      this.fieldFormGroup.disable();
+    }
   }
 
   get configFormGroup(): FormGroup {
@@ -183,7 +188,7 @@ export class AlarmRuleDialogComponent extends DialogComponent<AlarmRuleDialogCom
     this.isLoading$.pipe(takeUntilDestroyed()).subscribe(loading => {
       if (loading) {
         this.fieldFormGroup.disable({emitEvent: false});
-      } else {
+      } else if (!this.data.readonly) {
         this.fieldFormGroup.enable({emitEvent: false});
         if (this.data.isDirty) {
           this.fieldFormGroup.markAsDirty();

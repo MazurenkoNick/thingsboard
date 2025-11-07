@@ -86,8 +86,6 @@ export class CalculatedFieldDialogComponent extends DialogComponent<CalculatedFi
     action: () => this.data.additionalDebugActionConfig.action({ id: this.data.value.id, ...this.fromGroupValue }),
   } : null;
 
-  readonly = false;
-
   readonly EntityType = EntityType;
   readonly CalculatedFieldType = CalculatedFieldType;
   readonly fieldTypes = Object.values(CalculatedFieldType).filter(type => type !== CalculatedFieldType.ALARM) as CalculatedFieldType[];
@@ -107,7 +105,6 @@ export class CalculatedFieldDialogComponent extends DialogComponent<CalculatedFi
 
     if (this.data.readonly) {
       this.fieldFormGroup.disable();
-      this.readonly = true;
     }
   }
 

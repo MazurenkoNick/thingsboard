@@ -210,6 +210,7 @@ export class AlarmRuleFilterPredicateListComponent implements ControlValueAccess
         valueType: this.valueType,
         isAdd: true,
         arguments: this.arguments,
+        readonly: this.disabled
       }
     }).afterClosed().pipe(
       map(result => result)

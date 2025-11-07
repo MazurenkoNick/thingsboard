@@ -68,10 +68,10 @@
     </mat-tab>
   }
 
-  @if (hasOldRules || authUser.authority === authorities.TENANT_ADMIN && !isEdit) {
+  @if (hasOldRules || (authUser.authority === authorities.TENANT_ADMIN && !isEdit && (resource.DEVICE_PROFILE | hasGenericPermission: operation.READ_CALCULATED_FIELD))) {
     <mat-tab #alarmRules="matTab" label="{{'alarm-rule.alarm-rules-tab' | translate }}">
       <section class="flex flex-col h-full">
-        @if (hasOldRules && !isEdit) {
+        @if (hasOldRules && !isEdit && (resource.DEVICE_PROFILE | hasGenericPermission: operation.READ_CALCULATED_FIELD)) {
           <div class="flex flex-row items-center justify-start" style="padding: 16px 16px 0;">
             <tb-toggle-select [(ngModel)]="alarmRulesOldVersion" appearance="fill">
               <tb-toggle-option [value]="false">{{ 'alarm-rule.alarm-rules-actual' | translate }}</tb-toggle-option>
@@ -79,7 +79,7 @@
             </tb-toggle-select>
           </div>
         }
-        @if (alarmRulesOldVersion) {
+        @if (alarmRulesOldVersion || isEdit) {
           <div class="mat-padding" [formGroup]="detailsForm" *ngIf="alarmRules.isActive">
             <div formGroupName="profileData">
               <tb-device-profile-alarms formControlName="alarms" [deviceProfileId]="entity.id"></tb-device-profile-alarms>
@@ -87,7 +87,13 @@
           </div>
         } @else {
           <div class="relative h-full">
-            <tb-alarm-rules-table [active]="alarmRules.isActive" [entityId]="entity.id" [entityName]="entity.name" [ownerId]="entity.tenantId"></tb-alarm-rules-table>
+            <tb-alarm-rules-table [active]="alarmRules.isActive"
+                                  [readonly]="!(resource.DEVICE_PROFILE | hasGenericPermission: operation.WRITE_CALCULATED_FIELD)"
+                                  [hideClearEventAction]="!(resource.DEVICE_PROFILE | hasGenericPermission: operation.WRITE)"
+                                  [entityId]="entity.id"
+                                  [entityName]="entity.name"
+                                  [ownerId]="entity.tenantId">
+            </tb-alarm-rules-table>
           </div>
         }
       </section>
