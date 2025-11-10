@@ -41,6 +41,7 @@ import java.io.Serializable;
 
 @Schema
 @Data
+@Deprecated
 public class AlarmConditionFilter implements Serializable {
 
     @Valid

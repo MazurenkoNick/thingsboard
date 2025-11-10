@@ -51,6 +51,7 @@ import org.thingsboard.server.service.solutions.data.definition.AssetDefinition;
 import org.thingsboard.server.service.solutions.data.definition.CustomerDefinition;
 import org.thingsboard.server.service.solutions.data.definition.DashboardDefinition;
 import org.thingsboard.server.service.solutions.data.definition.DeviceDefinition;
+import org.thingsboard.server.service.solutions.data.definition.DeviceProfileDefinition;
 import org.thingsboard.server.service.solutions.data.definition.EdgeDefinition;
 import org.thingsboard.server.service.solutions.data.definition.EntityDefinition;
 import org.thingsboard.server.service.solutions.data.definition.EntitySearchKey;
@@ -144,8 +145,8 @@ public class SolutionInstallContext {
         createdEntities.put(role.getUuidId(), new CreatedEntityInfo(role.getName(), "Role", "Tenant"));
     }
 
-    public void register(DeviceProfile deviceProfile) {
-        register(deviceProfile.getId());
+    public void register(DeviceProfileDefinition definition, DeviceProfile deviceProfile) {
+        register(definition.getJsonId(), deviceProfile.getId());
         createdEntities.put(deviceProfile.getUuidId(), new CreatedEntityInfo(deviceProfile.getName(), "Device profile", "Tenant"));
     }
 
@@ -214,4 +215,5 @@ public class SolutionInstallContext {
     public void addEdgeLinkInfo(String edgeName, EdgeLinkInfo edgeLinkInfo) {
         createdEdges.put(edgeName, edgeLinkInfo);
     }
+
 }

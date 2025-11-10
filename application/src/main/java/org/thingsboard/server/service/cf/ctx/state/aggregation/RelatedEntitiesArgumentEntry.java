@@ -1,0 +1,101 @@
+/**
+ * ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
+ *
+ * Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
+ *
+ * NOTICE: All information contained herein is, and remains
+ * the property of ThingsBoard, Inc. and its suppliers,
+ * if any.  The intellectual and technical concepts contained
+ * herein are proprietary to ThingsBoard, Inc.
+ * and its suppliers and may be covered by U.S. and Foreign Patents,
+ * patents in process, and are protected by trade secret or copyright law.
+ *
+ * Dissemination of this information or reproduction of this material is strictly forbidden
+ * unless prior written permission is obtained from COMPANY.
+ *
+ * Access to the source code contained herein is hereby forbidden to anyone except current COMPANY employees,
+ * managers or contractors who have executed Confidentiality and Non-disclosure agreements
+ * explicitly covering such access.
+ *
+ * The copyright notice above does not evidence any actual or intended publication
+ * or disclosure  of  this source code, which includes
+ * information that is confidential and/or proprietary, and is a trade secret, of  COMPANY.
+ * ANY REPRODUCTION, MODIFICATION, DISTRIBUTION, PUBLIC  PERFORMANCE,
+ * OR PUBLIC DISPLAY OF OR THROUGH USE  OF THIS  SOURCE CODE  WITHOUT
+ * THE EXPRESS WRITTEN CONSENT OF COMPANY IS STRICTLY PROHIBITED,
+ * AND IN VIOLATION OF APPLICABLE LAWS AND INTERNATIONAL TREATIES.
+ * THE RECEIPT OR POSSESSION OF THIS SOURCE CODE AND/OR RELATED INFORMATION
+ * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
+ * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
+ */
+package org.thingsboard.server.service.cf.ctx.state.aggregation;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import org.thingsboard.script.api.tbel.TbelCfArg;
+import org.thingsboard.script.api.tbel.TbelCfRelatedEntitiesArgumentValue;
+import org.thingsboard.script.api.tbel.TbelCfSingleValueArg;
+import org.thingsboard.server.common.data.id.EntityId;
+import org.thingsboard.server.service.cf.ctx.state.ArgumentEntry;
+import org.thingsboard.server.service.cf.ctx.state.ArgumentEntryType;
+import org.thingsboard.server.service.cf.ctx.state.SingleValueArgumentEntry;
+
+import java.util.Map;
+import java.util.stream.Collectors;
+
+@Data
+@AllArgsConstructor
+public class RelatedEntitiesArgumentEntry implements ArgumentEntry {
+
+    private final Map<EntityId, ArgumentEntry> entityInputs;
+
+    private boolean forceResetPrevious;
+
+    @Override
+    public ArgumentEntryType getType() {
+        return ArgumentEntryType.RELATED_ENTITIES;
+    }
+
+    @Override
+    public Object getValue() {
+        return entityInputs;
+    }
+
+    @Override
+    public boolean updateEntry(ArgumentEntry entry) {
+        if (entry instanceof RelatedEntitiesArgumentEntry relatedEntitiesArgumentEntry) {
+            entityInputs.putAll(relatedEntitiesArgumentEntry.entityInputs);
+            return true;
+        } else if (entry instanceof SingleValueArgumentEntry singleValueArgumentEntry) {
+            if (entry.isForceResetPrevious()) {
+                entityInputs.put(singleValueArgumentEntry.getEntityId(), singleValueArgumentEntry);
+                return true;
+            }
+            ArgumentEntry argumentEntry = entityInputs.get(singleValueArgumentEntry.getEntityId());
+            if (argumentEntry != null) {
+                argumentEntry.updateEntry(singleValueArgumentEntry);
+            } else {
+                entityInputs.put(singleValueArgumentEntry.getEntityId(), singleValueArgumentEntry);
+            }
+            return true;
+        } else {
+            throw new IllegalArgumentException("Unsupported argument entry type for aggregation argument entry: " + entry.getType());
+        }
+    }
+
+    @Override
+    public boolean isEmpty() {
+        return entityInputs.isEmpty();
+    }
+
+    @Override
+    public TbelCfArg toTbelCfArg() {
+        var inputs = entityInputs.entrySet().stream()
+                .collect(Collectors.toMap(
+                        e -> e.getKey().getId(),
+                        e -> (TbelCfSingleValueArg) e.getValue().toTbelCfArg()
+                ));
+        return new TbelCfRelatedEntitiesArgumentValue(inputs);
+    }
+
+}

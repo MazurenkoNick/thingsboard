@@ -1,0 +1,105 @@
+<!--
+
+    ThingsBoard, Inc. ("COMPANY") CONFIDENTIAL
+
+    Copyright © 2016-2025 ThingsBoard, Inc. All Rights Reserved.
+
+    NOTICE: All information contained herein is, and remains
+    the property of ThingsBoard, Inc. and its suppliers,
+    if any.  The intellectual and technical concepts contained
+    herein are proprietary to ThingsBoard, Inc.
+    and its suppliers and may be covered by U.S. and Foreign Patents,
+    patents in process, and are protected by trade secret or copyright law.
+
+    Dissemination of this information or reproduction of this material is strictly forbidden
+    unless prior written permission is obtained from COMPANY.
+
+    Access to the source code contained herein is hereby forbidden to anyone except current COMPANY employees,
+    managers or contractors who have executed Confidentiality and Non-disclosure agreements
+    explicitly covering such access.
+
+    The copyright notice above does not evidence any actual or intended publication
+    or disclosure  of  this source code, which includes
+    information that is confidential and/or proprietary, and is a trade secret, of  COMPANY.
+    ANY REPRODUCTION, MODIFICATION, DISTRIBUTION, PUBLIC  PERFORMANCE,
+    OR PUBLIC DISPLAY OF OR THROUGH USE  OF THIS  SOURCE CODE  WITHOUT
+    THE EXPRESS WRITTEN CONSENT OF COMPANY IS STRICTLY PROHIBITED,
+    AND IN VIOLATION OF APPLICABLE LAWS AND INTERNATIONAL TREATIES.
+    THE RECEIPT OR POSSESSION OF THIS SOURCE CODE AND/OR RELATED INFORMATION
+    DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
+    OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
+
+-->
+<div class="tb-form-panel" [formGroup]="outputForm">
+  <div class="tb-form-panel-title">{{ 'calculated-fields.output' | translate }}</div>
+  <div class="flex flex-col gap-3">
+    <div class="flex gap-3 xs:flex-col">
+      <mat-form-field class="flex-1" appearance="outline" subscriptSizing="dynamic">
+        <mat-label>{{ 'calculated-fields.output-type' | translate }}</mat-label>
+        <mat-select formControlName="type">
+          @for (type of outputTypes; track type) {
+            <mat-option [value]="type">{{ OutputTypeTranslations.get(type) | translate }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+      @if (outputForm.get('type').value === OutputType.Attribute
+      && (entityId.entityType === EntityType.DEVICE || entityId.entityType === EntityType.DEVICE_PROFILE)) {
+        <mat-form-field class="flex-1" appearance="outline" subscriptSizing="dynamic">
+          <mat-label>{{ 'calculated-fields.attribute-scope' | translate }}</mat-label>
+          <mat-select formControlName="scope" class="w-full">
+            <mat-option [value]="AttributeScope.SERVER_SCOPE">
+              {{ 'calculated-fields.server-attributes' | translate }}
+            </mat-option>
+            <mat-option [value]="AttributeScope.SHARED_SCOPE">
+              {{ 'calculated-fields.shared-attributes' | translate }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+      }
+    </div>
+    @if (simpleMode) {
+      @if (hiddenName) {
+        <div class="grid grid-cols-2 items-start gap-3 xs:grid-cols-1">
+          <ng-container *ngTemplateOutlet="decimalsByDefaultField"></ng-container>
+          <ng-content select=".simpleMode"></ng-content>
+        </div>
+      } @else {
+        <div class="flex items-start gap-3 xs:flex-col xs:items-stretch">
+          <mat-form-field class="flex-1" appearance="outline" subscriptSizing="dynamic">
+            <mat-label>
+              {{
+                (outputForm.get('type').value === OutputType.Timeseries
+                  ? 'calculated-fields.timeseries-key'
+                  : 'calculated-fields.attribute-key')
+                  | translate
+              }}
+            </mat-label>
+            <input matInput formControlName="name" required>
+            @if (outputForm.get('name').errors && outputForm.get('name').touched) {
+              <mat-error>
+                @if (outputForm.get('name').hasError('required')) {
+                  {{ 'common.hint.key-required' | translate }}
+                } @else if (outputForm.get('name').hasError('pattern')) {
+                  {{ 'common.hint.key-pattern' | translate }}
+                } @else if (outputForm.get('name').hasError('maxlength')) {
+                  {{ 'common.hint.key-max-length' | translate }}
+                }
+              </mat-error>
+            }
+          </mat-form-field>
+          <ng-container *ngTemplateOutlet="decimalsByDefaultField"></ng-container>
+        </div>
+        <ng-content select=".simpleMode"></ng-content>
+      }
+    }
+  </div>
+</div>
+<ng-template #decimalsByDefaultField>
+  <mat-form-field class="flex-1" appearance="outline" subscriptSizing="dynamic" [formGroup]="outputForm">
+    <mat-label>{{ 'calculated-fields.decimals-by-default' | translate }}</mat-label>
+    <input matInput type="number" formControlName="decimalsByDefault">
+    @if (outputForm.get('decimalsByDefault').errors && outputForm.get('decimalsByDefault').touched) {
+      <mat-error>{{ 'calculated-fields.hint.decimals-range' | translate }}</mat-error>
+    }
+  </mat-form-field>
+</ng-template>
