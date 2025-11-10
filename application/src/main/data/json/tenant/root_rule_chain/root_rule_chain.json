@@ -8,7 +8,7 @@
     "configuration": null
   },
   "metadata": {
-    "firstNodeIndex": 9,
+    "firstNodeIndex": 6,
     "nodes": [
       {
         "additionalInfo": {
@@ -149,21 +149,6 @@
           "entityGroupId": null,
           "entityGroupIsMessageOriginator": true
         }
-      },
-      {
-        "additionalInfo": {
-          "description": "Process incoming messages from devices with the alarm rules defined in the device profile. Dispatch all incoming messages with \"Success\" relation type.",
-          "layoutX": 137,
-          "layoutY": 415
-        },
-        "type": "org.thingsboard.rule.engine.profile.TbDeviceProfileNode",
-        "name": "Device Profile Node",
-        "debugFailures": false,
-        "debugAll": false,
-        "configuration": {
-          "persistAlarmRulesState": false,
-          "fetchAlarmRulesStateOnStart": false
-        }
       }
     ],
     "connections": [
@@ -215,11 +200,6 @@
       {
         "fromIndex": 8,
         "toIndex": 2,
-        "type": "Success"
-      },
-      {
-        "fromIndex": 9,
-        "toIndex": 6,
         "type": "Success"
       }
     ]

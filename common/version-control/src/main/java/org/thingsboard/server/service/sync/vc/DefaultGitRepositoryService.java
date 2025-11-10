@@ -77,6 +77,8 @@ import java.util.stream.Stream;
 @Service
 public class DefaultGitRepositoryService implements GitRepositoryService {
 
+    public static final String GROUP_ENTITY_IDS_FILE_SUFFIX = "_entities.json";
+
     @Value("${java.io.tmpdir}/repositories")
     private String defaultFolder;
 
@@ -207,7 +209,19 @@ public class DefaultGitRepositoryService implements GitRepositoryService {
     @Override
     public String getFileContentAtCommit(TenantId tenantId, String relativePath, String versionId) {
         GitRepository repository = checkRepository(tenantId);
-        return new String(repository.getFileContentAtCommit(relativePath, versionId), StandardCharsets.UTF_8);
+        try {
+            byte[] bytes = repository.getFileContentAtCommit(relativePath, versionId);
+            return new String(bytes, StandardCharsets.UTF_8);
+        } catch (IllegalArgumentException ex) {
+            if (isGroupIdsFile(relativePath)) {
+                return "[]";
+            }
+            throw ex;
+        }
+    }
+
+    private static boolean isGroupIdsFile(String path) {
+        return path != null && path.endsWith(GROUP_ENTITY_IDS_FILE_SUFFIX);
     }
 
     @Override

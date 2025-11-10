@@ -33,6 +33,8 @@ package org.thingsboard.server.common.data.cf;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonSetter;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -53,6 +55,10 @@ import org.thingsboard.server.common.data.validation.Length;
 import org.thingsboard.server.common.data.validation.NoXss;
 
 import java.io.Serial;
+import java.util.Collections;
+import java.util.EnumSet;
+import java.util.Map;
+import java.util.Set;
 
 @Schema
 @Data
@@ -61,6 +67,22 @@ public class CalculatedField extends BaseData<CalculatedFieldId> implements HasN
 
     @Serial
     private static final long serialVersionUID = 4491966747773381420L;
+
+    public static final Map<EntityType, Set<CalculatedFieldType>> SUPPORTED_ENTITIES = Map.of(
+            EntityType.DEVICE, CalculatedFieldType.all,
+            EntityType.ASSET, CalculatedFieldType.all,
+            EntityType.DEVICE_PROFILE, CalculatedFieldType.all,
+            EntityType.ASSET_PROFILE, CalculatedFieldType.all,
+            EntityType.CUSTOMER, Set.of(CalculatedFieldType.ALARM)
+    );
+
+    public static final Set<EntityType> SUPPORTED_REFERENCED_ENTITIES = Collections.unmodifiableSet(EnumSet.of(
+            EntityType.DEVICE, EntityType.ASSET, EntityType.CUSTOMER, EntityType.TENANT
+    ));
+
+    public static boolean isSupportedRefEntity(EntityId entity) {
+        return SUPPORTED_REFERENCED_ENTITIES.contains(entity.getEntityType());
+    }
 
     private TenantId tenantId;
     private EntityId entityId;
@@ -80,6 +102,8 @@ public class CalculatedField extends BaseData<CalculatedFieldId> implements HasN
     @Schema(description = "Version of calculated field configuration.", example = "0")
     private int configurationVersion;
     @Schema(implementation = SimpleCalculatedFieldConfiguration.class)
+    @Valid
+    @NotNull
     private CalculatedFieldConfiguration configuration;
     @Getter
     @Setter

@@ -60,6 +60,7 @@ import org.thingsboard.server.dao.entity.EntityServiceRegistry;
 import org.thingsboard.server.dao.group.EntityGroupService;
 import org.thingsboard.server.dao.wl.WhiteLabelingService;
 import org.thingsboard.server.service.security.model.SecurityUser;
+import org.thingsboard.server.service.security.model.UserPrincipal;
 
 import java.util.List;
 import java.util.Optional;
@@ -229,6 +230,17 @@ public class CustomerUserPermissions extends AbstractPermissions {
             }
 
             if (entityId == null) {
+                if (user.isCustomerUser() && user.getUserPrincipal().getType() != UserPrincipal.Type.PUBLIC_ID) {
+                    EntityId ownerId = ((HasOwnerId) entity).getOwnerId();
+                    var customerId = user.getCustomerId();
+
+                    if (!customerId.equals(ownerId)) {
+                        var owners = ownersCacheService.getOwners(entity.getTenantId(), ownerId, null);
+                        if (!owners.contains(customerId)) {
+                            return false;
+                        }
+                    }
+                }
                 if (user.getUserPermissions().hasGenericPermission(resource, operation)) {
                     return true;
                 }

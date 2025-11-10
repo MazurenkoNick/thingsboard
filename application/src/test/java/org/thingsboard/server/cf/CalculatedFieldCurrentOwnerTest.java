@@ -74,7 +74,7 @@ public class CalculatedFieldCurrentOwnerTest extends AbstractControllerTest {
     public void testCreateCFWithCurrentOwner() throws Exception {
         loginTenantAdmin();
 
-        doPost("/api/plugins/telemetry/CUSTOMER/" + customerId.getId() + "/attributes/" + DataConstants.SERVER_SCOPE, JacksonUtil.toJsonNode("{\"attrKey\":5}"));
+        postAttributes(customerId, AttributeScope.SERVER_SCOPE, "{\"attrKey\":5}");
 
         Device testDevice = createDevice("Test device", "1234567890");
         doPost("/api/owner/CUSTOMER/" + customerId.getId() + "/DEVICE/" + testDevice.getId().getId()).andExpect(status().isOk());
@@ -89,7 +89,7 @@ public class CalculatedFieldCurrentOwnerTest extends AbstractControllerTest {
                     assertThat(fahrenheitTemp.get("result").get(0).get("value").asText()).isEqualTo("105");
                 });
 
-        doPost("/api/plugins/telemetry/CUSTOMER/" + customerId.getId() + "/attributes/" + DataConstants.SERVER_SCOPE, JacksonUtil.toJsonNode("{\"attrKey\":10}"));
+        postAttributes(customerId, AttributeScope.SERVER_SCOPE, "{\"attrKey\":10}");
 
         await().alias("update telemetry -> perform calculation").atMost(TIMEOUT, TimeUnit.SECONDS)
                 .pollInterval(POLL_INTERVAL, TimeUnit.SECONDS)
@@ -104,11 +104,11 @@ public class CalculatedFieldCurrentOwnerTest extends AbstractControllerTest {
     public void testChangeOwner() throws Exception {
         loginSysAdmin();
 
-        doPost("/api/plugins/telemetry/TENANT/" + tenantId.getId() + "/attributes/" + DataConstants.SERVER_SCOPE, JacksonUtil.toJsonNode("{\"attrKey\":50}"));
+        postAttributes(tenantId, AttributeScope.SERVER_SCOPE, "{\"attrKey\":50}");
 
         loginTenantAdmin();
 
-        doPost("/api/plugins/telemetry/CUSTOMER/" + customerId.getId() + "/attributes/" + DataConstants.SERVER_SCOPE, JacksonUtil.toJsonNode("{\"attrKey\":5}"));
+        postAttributes(customerId, AttributeScope.SERVER_SCOPE, "{\"attrKey\":5}");
         Device testDevice = createDevice("Test device", "1234567890");
         doPost("/api/owner/CUSTOMER/" + customerId.getId() + "/DEVICE/" + testDevice.getId().getId()).andExpect(status().isOk());
 
@@ -137,11 +137,11 @@ public class CalculatedFieldCurrentOwnerTest extends AbstractControllerTest {
     public void testCreateCFWithCurrentOwnerWhenEntityIsProfile() throws Exception {
         loginSysAdmin();
 
-        doPost("/api/plugins/telemetry/TENANT/" + tenantId.getId() + "/attributes/" + DataConstants.SERVER_SCOPE, JacksonUtil.toJsonNode("{\"attrKey\":50}"));
+        postAttributes(tenantId, AttributeScope.SERVER_SCOPE, "{\"attrKey\":50}");
 
         loginTenantAdmin();
 
-        doPost("/api/plugins/telemetry/CUSTOMER/" + customerId.getId() + "/attributes/" + DataConstants.SERVER_SCOPE, JacksonUtil.toJsonNode("{\"attrKey\":5}"));
+        postAttributes(customerId, AttributeScope.SERVER_SCOPE, "{\"attrKey\":5}");
 
         AssetProfile assetProfile = doPost("/api/assetProfile", createAssetProfile("Test Asset Profile"), AssetProfile.class);
 

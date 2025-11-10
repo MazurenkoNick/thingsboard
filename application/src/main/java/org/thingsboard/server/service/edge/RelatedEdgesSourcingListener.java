@@ -76,25 +76,33 @@ public class RelatedEdgesSourcingListener {
 
     @TransactionalEventListener(fallbackExecution = true)
     public void handleEvent(ActionEntityEvent<?> event) {
-        executorService.submit(() -> {
-            log.trace("[{}] ActionEntityEvent called: {}", event.getTenantId(), event);
-            try {
-                switch (event.getActionType()) {
-                    case ASSIGNED_TO_EDGE, UNASSIGNED_FROM_EDGE -> {
+        switch (event.getActionType()) {
+            case ASSIGNED_TO_EDGE, UNASSIGNED_FROM_EDGE -> {
+                executorService.submit(() -> {
+                    log.trace("[{}] ActionEntityEvent called: {}", event.getTenantId(), event);
+                    try {
                         if (EntityType.ENTITY_GROUP.equals(event.getEntityId().getEntityType())) {
                             List<EntityId> entityIds = entityGroupService.findAllEntityIdsAsync(event.getTenantId(), (EntityGroupId) event.getEntityId(), new PageLink(Integer.MAX_VALUE)).get();
                             entityIds.forEach(entityId -> relatedEdgesService.publishRelatedEdgeIdsEvictEvent(event.getTenantId(), entityId));
                         }
                         relatedEdgesService.publishRelatedEdgeIdsEvictEvent(event.getTenantId(), event.getEntityId());
+                    } catch (Exception e) {
+                        log.error("[{}] failed to process ActionEntityEvent: {}", event.getTenantId(), event, e);
                     }
-                    case ADDED_TO_ENTITY_GROUP, REMOVED_FROM_ENTITY_GROUP -> {
-                        relatedEdgesService.publishRelatedEdgeIdsEvictEvent(event.getTenantId(), event.getEntityId());
-                    }
-                }
-            } catch (Exception e) {
-                log.error("[{}] failed to process ActionEntityEvent: {}", event.getTenantId(), event, e);
+                });
             }
-        });
+            case ADDED_TO_ENTITY_GROUP, REMOVED_FROM_ENTITY_GROUP -> {
+                executorService.submit(() -> {
+                    log.trace("[{}] ActionEntityEvent called: {}", event.getTenantId(), event);
+                    try {
+                        relatedEdgesService.publishRelatedEdgeIdsEvictEvent(event.getTenantId(), event.getEntityId());
+                    } catch (Exception e) {
+                        log.error("[{}] failed to process ActionEntityEvent: {}", event.getTenantId(), event, e);
+                    }
+                });
+            }
+        }
+
     }
 
     @TransactionalEventListener(
