@@ -84,6 +84,9 @@ export class GeofencingConfigurationComponent implements ControlValueAccessor, V
   @Input({required: true})
   entityName: string;
 
+  @Input({required: true})
+  ownerId: EntityId;
+
   @Input({ transform: booleanAttribute })
   readonly: boolean;
 
