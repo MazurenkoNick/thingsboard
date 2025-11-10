@@ -35,6 +35,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -72,7 +73,7 @@ public class TranslationControllerTest extends AbstractControllerTest {
     @Autowired
     AdminSettingsDao  adminSettingsDao;
 
-    @After
+    @Before
     public void tearDownCustomTranslation() throws Exception {
         loginSysAdmin();
         List<TranslationInfo> translationInfos = doGetTyped("/api/translation/info", new TypeReference<>() {});
@@ -393,9 +394,6 @@ public class TranslationControllerTest extends AbstractControllerTest {
 
         Set<String> fullTranslationKeys = JacksonUtil.extractKeys(fullCustomerTranslation);
         Set<String> translated = JacksonUtil.extractKeys(customTranslation);
-
-         log.error("All eng keys: {}", fullTranslationKeys);
-         log.error("All translated keys: {}", translated);
 
         TranslationInfo updatedSystemArabicInfo = getTranslationInfo(AR_QA);
         assertThat(updatedSystemArabicInfo.getProgress()).isGreaterThan(0)
