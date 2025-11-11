@@ -177,6 +177,7 @@ interface CalculatedFieldAlarmRuleConfiguration {
   clearRule?: AlarmRule;
   propagate: boolean;
   propagateToOwner: boolean;
+  propagateToOwnerHierarchy: boolean;
   propagateToTenant: boolean;
   propagateRelationTypes?: Array<string>;
 }

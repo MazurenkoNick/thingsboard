@@ -93,6 +93,8 @@ export class AlarmRuleFilterPredicateListComponent implements ControlValueAccess
 
   @Input() arguments: Record<string, CalculatedFieldArgument>;
 
+  @Input() argumentInUse: string;
+
   filterListFormGroup = this.fb.group({
     predicates: this.fb.array([])
   });
@@ -210,6 +212,7 @@ export class AlarmRuleFilterPredicateListComponent implements ControlValueAccess
         valueType: this.valueType,
         isAdd: true,
         arguments: this.arguments,
+        argumentInUse: this.argumentInUse,
         readonly: this.disabled
       }
     }).afterClosed().pipe(
