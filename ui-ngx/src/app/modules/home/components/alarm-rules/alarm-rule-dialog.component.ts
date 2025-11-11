@@ -77,6 +77,7 @@ export class AlarmRuleDialogComponent extends DialogComponent<AlarmRuleDialogCom
       arguments: this.fb.control({}),
       propagate: [false],
       propagateToOwner: [false],
+      propagateToOwnerHierarchy: [false],
       propagateToTenant: [false],
       propagateRelationTypes: [null],
       createRules: [null],
