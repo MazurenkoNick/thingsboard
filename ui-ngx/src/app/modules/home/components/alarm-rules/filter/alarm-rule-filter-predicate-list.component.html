@@ -57,11 +57,12 @@
               <tb-alarm-rule-filter-predicate
                 class="flex-1"
                 [arguments]="arguments"
+                [argumentInUse]="argumentInUse"
                 [valueType]="valueType"
                 [formControl]="predicateControl">
               </tb-alarm-rule-filter-predicate>
               <button mat-icon-button color="primary"
-                      [class.!hidden]="disabled"
+                      [disabled]="disabled"
                       type="button"
                       (click)="removePredicate($index)"
                       matTooltip="{{ 'filter.remove-filter' | translate }}"

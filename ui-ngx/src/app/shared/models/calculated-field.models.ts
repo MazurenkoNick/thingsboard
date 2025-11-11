@@ -166,6 +166,7 @@ export interface CalculatedFieldRelatedAggregationConfiguration {
   arguments: Record<string, CalculatedFieldArgument>;
   metrics: Record<string, CalculatedFieldAggMetric>;
   deduplicationIntervalInSec: number;
+  scheduledUpdateInterval?: number;
   useLatestTs: boolean;
   output: CalculatedFieldOutput & { decimalsByDefault?: number; };
 }
@@ -197,6 +198,7 @@ interface CalculatedFieldAlarmRuleConfiguration {
   clearRule?: AlarmRule;
   propagate: boolean;
   propagateToOwner: boolean;
+  propagateToOwnerHierarchy: boolean;
   propagateToTenant: boolean;
   propagateRelationTypes?: Array<string>;
 }

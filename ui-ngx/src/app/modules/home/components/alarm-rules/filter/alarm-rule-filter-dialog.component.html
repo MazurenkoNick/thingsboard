@@ -92,6 +92,7 @@
         <tb-alarm-rule-filter-predicate-list [valueType]="filterFormGroup.get('valueType').value"
                                              [operation]="filterFormGroup.get('operation').value"
                                              [arguments]="arguments"
+                                             [argumentInUse]="filterFormGroup.get('argument').value"
                                              formControlName="predicates">
         </tb-alarm-rule-filter-predicate-list>
       </section>
@@ -104,10 +105,12 @@
             cdkFocusInitial>
       {{ 'action.cancel' | translate }}
     </button>
-    <button mat-raised-button color="primary"
-            type="submit"
-            [disabled]="filterFormGroup.invalid || !filterFormGroup.dirty">
-      {{ (data.isAdd ? 'action.add' : 'action.update') | translate }}
-    </button>
+    @if (!data.readonly) {
+      <button mat-raised-button color="primary"
+              type="submit"
+              [disabled]="filterFormGroup.invalid || !filterFormGroup.dirty">
+        {{ (data.isAdd ? 'action.add' : 'action.update') | translate }}
+      </button>
+    }
   </div>
 </form>

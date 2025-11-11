@@ -93,6 +93,8 @@ export class AlarmRuleFilterPredicateListComponent implements ControlValueAccess
 
   @Input() arguments: Record<string, CalculatedFieldArgument>;
 
+  @Input() argumentInUse: string;
+
   filterListFormGroup = this.fb.group({
     predicates: this.fb.array([])
   });
@@ -122,7 +124,7 @@ export class AlarmRuleFilterPredicateListComponent implements ControlValueAccess
   registerOnTouched(fn: any): void {
   }
 
-  setDisabledState?(isDisabled: boolean): void {
+  setDisabledState(isDisabled: boolean): void {
     this.disabled = isDisabled;
     if (this.disabled) {
       this.filterListFormGroup.disable({emitEvent: false});
@@ -210,6 +212,8 @@ export class AlarmRuleFilterPredicateListComponent implements ControlValueAccess
         valueType: this.valueType,
         isAdd: true,
         arguments: this.arguments,
+        argumentInUse: this.argumentInUse,
+        readonly: this.disabled
       }
     }).afterClosed().pipe(
       map(result => result)

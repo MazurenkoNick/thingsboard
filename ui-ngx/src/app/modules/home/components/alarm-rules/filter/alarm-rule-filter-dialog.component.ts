@@ -70,6 +70,7 @@
   isAdd: boolean;
   arguments: Record<string, CalculatedFieldArgument>;
   usedArguments: Array<string>;
+  readonly: boolean;
 }
 
 @Component({
@@ -115,6 +116,11 @@ export class AlarmRuleFilterDialogComponent extends DialogComponent<AlarmRuleFil
         operation: [this.data.filter.operation ?? ComplexOperation.AND]
       }
     );
+
+    if (this.data.readonly) {
+      this.filterFormGroup.disable({emitEvent: false});
+    }
+
     this.filterFormGroup.get('valueType').valueChanges.pipe(
       takeUntilDestroyed(this.destroyRef)
     ).subscribe((valueType: EntityKeyValueType) => {

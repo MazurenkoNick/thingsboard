@@ -77,7 +77,7 @@
                   (click)="openComplexFilterDialog()">
             <div class="flex items-center gap-2">
               <span class="w-full text-start" translate>filter.complex-filter</span>
-              <mat-icon class="tb-mat-20 tb-alarm-rule-schedule-edit-icon">edit</mat-icon>
+              <mat-icon class="tb-mat-20 tb-alarm-rule-schedule-edit-icon">{{ disabled ? 'visibility' : 'edit' }}</mat-icon>
             </div>
           </button>
         </div>
@@ -86,6 +86,7 @@
     @if (type !== filterPredicateType.COMPLEX) {
       <tb-alarm-rule-filter-predicate-value class="flex-full"
                                             [arguments]="arguments"
+                                            [argumentInUse]="argumentInUse"
                                             [valueType]="valueType"
                                             formControlName="value">
       </tb-alarm-rule-filter-predicate-value>

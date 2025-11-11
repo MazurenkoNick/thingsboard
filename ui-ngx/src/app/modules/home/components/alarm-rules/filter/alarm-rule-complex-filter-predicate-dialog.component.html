@@ -50,6 +50,7 @@
     </mat-form-field>
     <tb-alarm-rule-filter-predicate-list [valueType]="data.valueType"
                                          [arguments]="arguments"
+                                         [argumentInUse]="data.argumentInUse"
                                          [operation]="complexFilterFormGroup.get('operation').value"
                                          formControlName="predicates">
     </tb-alarm-rule-filter-predicate-list>
@@ -61,10 +62,12 @@
             cdkFocusInitial>
       {{'action.cancel' | translate }}
     </button>
-    <button mat-raised-button color="primary"
-            type="submit"
-            [disabled]="complexFilterFormGroup.invalid || !complexFilterFormGroup.dirty">
-      {{ (isAdd ? 'action.add' : 'action.update') | translate }}
-    </button>
+    @if (!data.readonly) {
+      <button mat-raised-button color="primary"
+              type="submit"
+              [disabled]="complexFilterFormGroup.invalid || !complexFilterFormGroup.dirty">
+        {{ (isAdd ? 'action.add' : 'action.update') | translate }}
+      </button>
+    }
   </div>
 </form>
