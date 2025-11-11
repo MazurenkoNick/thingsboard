@@ -82,6 +82,7 @@ import org.thingsboard.server.common.data.notification.rule.NotificationRule;
 import org.thingsboard.server.common.data.notification.targets.NotificationTarget;
 import org.thingsboard.server.common.data.notification.template.NotificationTemplate;
 import org.thingsboard.server.common.data.oauth2.OAuth2Client;
+import org.thingsboard.server.common.data.pat.ApiKey;
 import org.thingsboard.server.common.data.permission.GroupPermission;
 import org.thingsboard.server.common.data.queue.Queue;
 import org.thingsboard.server.common.data.queue.QueueStats;
@@ -118,6 +119,7 @@ import org.thingsboard.server.dao.notification.NotificationTargetService;
 import org.thingsboard.server.dao.notification.NotificationTemplateService;
 import org.thingsboard.server.dao.oauth2.OAuth2ClientService;
 import org.thingsboard.server.dao.ota.OtaPackageService;
+import org.thingsboard.server.dao.pat.ApiKeyService;
 import org.thingsboard.server.dao.queue.QueueService;
 import org.thingsboard.server.dao.queue.QueueStatsService;
 import org.thingsboard.server.dao.report.ReportService;
@@ -226,6 +228,8 @@ public class TenantIdLoaderTest {
     private AiModelService aiModelService;
     @Mock
     private SecretService secretService;
+    @Mock
+    private ApiKeyService apiKeyService;
 
     private TenantId tenantId;
     private TenantProfileId tenantProfileId;
@@ -261,7 +265,6 @@ public class TenantIdLoaderTest {
             case TENANT:
             case NOTIFICATION:
             case ADMIN_SETTINGS:
-            case API_KEY:
                 break;
             case CUSTOMER:
                 Customer customer = new Customer();
@@ -520,6 +523,12 @@ public class TenantIdLoaderTest {
                 aiModel.setTenantId(tenantId);
                 when(ctx.getAiModelService()).thenReturn(aiModelService);
                 doReturn(Optional.of(aiModel)).when(aiModelService).findAiModelById(eq(tenantId), any());
+                break;
+            case API_KEY:
+                ApiKey apiKey = new ApiKey();
+                apiKey.setTenantId(tenantId);
+                when(ctx.getApiKeyService()).thenReturn(apiKeyService);
+                doReturn(apiKey).when(apiKeyService).findApiKeyById(eq(tenantId), any());
                 break;
             default:
                 throw new RuntimeException("Unexpected originator EntityType " + entityType);

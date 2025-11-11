@@ -44,14 +44,12 @@ import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.group.EntityGroup;
 import org.thingsboard.server.common.data.group.EntityGroupInfo;
 import org.thingsboard.server.common.data.id.AlarmId;
-import org.thingsboard.server.common.data.id.ApiKeyId;
 import org.thingsboard.server.common.data.id.EntityGroupId;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.GroupPermissionId;
 import org.thingsboard.server.common.data.id.HasId;
 import org.thingsboard.server.common.data.id.TbResourceId;
 import org.thingsboard.server.common.data.menu.CustomMenuInfo;
-import org.thingsboard.server.common.data.pat.ApiKeyInfo;
 import org.thingsboard.server.common.data.permission.GroupPermission;
 import org.thingsboard.server.common.data.permission.Operation;
 import org.thingsboard.server.common.data.permission.Resource;
@@ -118,7 +116,7 @@ public class CustomerUserPermissions extends AbstractPermissions {
         put(Resource.DOMAIN, customerStandaloneEntityPermissionChecker);
         put(Resource.REPORT_TEMPLATE, reportTemplatePermissionChecker);
         put(Resource.REPORT, customerStandaloneEntityPermissionChecker);
-        put(Resource.API_KEY, apiKeysPermissionChecker);
+        put(Resource.API_KEY, genericPermissionChecker);
     }
 
     private final PermissionChecker<AlarmId, Alarm> customerAlarmPermissionChecker = new PermissionChecker<>() {
@@ -508,29 +506,6 @@ public class CustomerUserPermissions extends AbstractPermissions {
             } else {
                 return user.getTenantId().equals(customMenu.getTenantId()) && user.getCustomerId().equals(customMenu.getCustomerId());
             }
-        }
-    };
-
-    private final PermissionChecker<ApiKeyId, ApiKeyInfo> apiKeysPermissionChecker = new PermissionChecker<>() {
-
-        @Override
-        public boolean hasPermission(SecurityUser user, Resource resource, Operation operation) {
-            return user.getUserPermissions().hasGenericPermission(resource, operation);
-        }
-
-        @Override
-        @SuppressWarnings("unchecked")
-        public boolean hasPermission(SecurityUser user, Operation operation, ApiKeyId entityId, ApiKeyInfo entity) {
-            if (entity.getTenantId() != null && !entity.getTenantId().isNullUid() && !user.getTenantId().equals(entity.getTenantId())) {
-                return false;
-            }
-            var owner = ownersCacheService.getOwner(user.getTenantId(), entity.getUserId());
-            if (owner != null && owner.getEntityType() == EntityType.CUSTOMER && !user.getCustomerId().getId().equals(owner.getId())) {
-                return false;
-            }
-            Resource resource = Resource.resourceFromEntityType(entity.getEntityType());
-            // This entity does not have groups, so we are checking only generic level permissions
-            return user.getUserPermissions().hasGenericPermission(resource, operation);
         }
     };
 
