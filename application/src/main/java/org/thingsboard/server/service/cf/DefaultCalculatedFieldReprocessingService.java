@@ -214,7 +214,7 @@ public class DefaultCalculatedFieldReprocessingService extends AbstractCalculate
     private CalculatedFieldState initState(TenantId tenantId, EntityId entityId, CalculatedFieldCtx ctx, long startTs) throws InterruptedException {
         CalculatedFieldState state = createStateByType(ctx, entityId);
         state.setCtx(ctx, null);
-        state.init();
+        state.init(false);
         if (CalculatedFieldType.ENTITY_AGGREGATION.equals(ctx.getCfType())) {
             return state;
         }
