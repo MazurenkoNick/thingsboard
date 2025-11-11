@@ -85,6 +85,9 @@ export class AlarmRuleFilterPredicateComponent implements ControlValueAccessor, 
   @Input()
   arguments: Record<string, CalculatedFieldArgument>;
 
+  @Input()
+  argumentInUse: string;
+
   filterPredicateFormGroup = this.fb.group({
     operation: [],
     ignoreCase: false,
@@ -161,6 +164,7 @@ export class AlarmRuleFilterPredicateComponent implements ControlValueAccessor, 
         valueType: this.valueType,
         isAdd: false,
         arguments: this.arguments,
+        argumentInUse: this.argumentInUse,
         readonly: this.disabled
       }
     }).afterClosed().subscribe(
