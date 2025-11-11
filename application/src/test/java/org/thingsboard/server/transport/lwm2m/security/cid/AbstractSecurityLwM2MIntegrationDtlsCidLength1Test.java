@@ -28,35 +28,28 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.transport.lwm2m.security.cid.serverDtlsCidLength_3;
+package org.thingsboard.server.transport.lwm2m.security.cid;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.thingsboard.server.transport.lwm2m.security.cid.AbstractSecurityLwM2MIntegrationDtlsCidLength3Test;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.test.context.TestPropertySource;
+import org.thingsboard.server.dao.service.DaoSqlTest;
 
-import static org.thingsboard.server.common.data.device.credentials.lwm2m.LwM2MSecurityMode.NO_SEC;
-import static org.thingsboard.server.transport.lwm2m.Lwm2mTestHelper.LwM2MProfileBootstrapConfigType.NONE;
 
-public class NoSecLwM2MIntegrationDtlsCidLengthTest extends AbstractSecurityLwM2MIntegrationDtlsCidLength3Test {
+@TestPropertySource(properties = {
+        "transport.lwm2m.dtls.connection_id_length=1"
+})
 
-    @Before
-    public void setUpNoSecDtlsCidLength() {
-        transportConfiguration = getTransportConfiguration(OBSERVE_ATTRIBUTES_WITHOUT_PARAMS, getBootstrapServerCredentialsSecure(NO_SEC, NONE));
-        awaitAlias = "await on client state (NoSec_Lwm2m) DtlsCidLength = 3";
+@DaoSqlTest
+@Slf4j
+public abstract class AbstractSecurityLwM2MIntegrationDtlsCidLength1Test extends AbstractSecurityLwM2MIntegrationDtlsCidLengthTest {
+
+
+    private static final Integer serverDtlsCidLength = 1;
+
+    protected void  testNoSecDtlsCidLength(Integer dtlsCidLength) throws Exception {
+        testNoSecDtlsCidLength(dtlsCidLength, serverDtlsCidLength);
     }
-
-    @Test
-    public void testWithNoSecConnectLwm2mSuccessClientDtlsCidLength_Null() throws Exception {
-        testNoSecDtlsCidLength(null);
-    }
-
-    @Test
-    public void testWithNoSecConnectLwm2mSuccessClientDtlsCidLength_0() throws Exception {
-        testNoSecDtlsCidLength(0);
-    }
-
-    @Test
-    public void testWithNoSecConnectLwm2mSuccessClientDtlsCidLength_2() throws Exception {
-        testNoSecDtlsCidLength(2);
+    protected void  testPskDtlsCidLength(Integer dtlsCidLength) throws Exception {
+        testPskDtlsCidLength(dtlsCidLength, serverDtlsCidLength);
     }
 }

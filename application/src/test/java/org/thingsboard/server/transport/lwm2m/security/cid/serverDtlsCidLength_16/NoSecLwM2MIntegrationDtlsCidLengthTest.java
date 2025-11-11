@@ -28,36 +28,51 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.transport.lwm2m.security.cid.serverDtlsCidLength_3;
+package org.thingsboard.server.transport.lwm2m.security.cid.serverDtlsCidLength_16;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.thingsboard.server.transport.lwm2m.security.cid.AbstractSecurityLwM2MIntegrationDtlsCidLength3Test;
+import org.thingsboard.server.transport.lwm2m.security.cid.AbstractSecurityLwM2MIntegrationDtlsCidLength16Test;
+import org.thingsboard.server.transport.lwm2m.security.cid.AbstractSecurityLwM2MIntegrationDtlsCidLength4Test;
 
-import static org.thingsboard.server.common.data.device.credentials.lwm2m.LwM2MSecurityMode.PSK;
+import static org.thingsboard.server.common.data.device.credentials.lwm2m.LwM2MSecurityMode.NO_SEC;
 import static org.thingsboard.server.transport.lwm2m.Lwm2mTestHelper.LwM2MProfileBootstrapConfigType.NONE;
 
-public class PskLwm2mIntegrationDtlsCidLengthTest extends AbstractSecurityLwM2MIntegrationDtlsCidLength3Test {
+public class NoSecLwM2MIntegrationDtlsCidLengthTest extends AbstractSecurityLwM2MIntegrationDtlsCidLength16Test {
 
     @Before
-    public void createProfileRpc() {
-        transportConfiguration = getTransportConfiguration(OBSERVE_ATTRIBUTES_WITHOUT_PARAMS, getBootstrapServerCredentialsSecure(PSK, NONE));
-        awaitAlias = "await on client state (Psk_Lwm2m) DtlsCidLength = 3";
+    public void setUpNoSecDtlsCidLength() {
+        transportConfiguration = getTransportConfiguration(OBSERVE_ATTRIBUTES_WITHOUT_PARAMS, getBootstrapServerCredentialsSecure(NO_SEC, NONE));
+        awaitAlias = "await on client state (NoSec_Lwm2m) serverDtlsCidLength = 16";
     }
 
     @Test
-    public void testWithPskConnectLwm2mSuccessClientDtlsCidLength_Null() throws Exception {
-        testPskDtlsCidLength(null);
+    public void testWithNoSecConnectLwm2mSuccessClientDtlsCidLength_Null() throws Exception {
+        testNoSecDtlsCidLength(null);
     }
 
     @Test
-    public void testWithPskConnectLwm2mSuccessClientDtlsCidLength_0() throws Exception {
-        testPskDtlsCidLength(0);
+    public void testWithNoSecConnectLwm2mSuccessClientDtlsCidLength_0() throws Exception {
+        testNoSecDtlsCidLength(0);
     }
 
     @Test
-    public void testWithPskConnectLwm2mSuccessClientDtlsCidLength_2() throws Exception {
-        testPskDtlsCidLength(2);
+    public void testWithNoSecConnectLwm2mSuccessClientDtlsCidLength_1() throws Exception {
+        testNoSecDtlsCidLength(1);
     }
+
+    @Test
+    public void testWithNoSecConnectLwm2mSuccessClientDtlsCidLength_2() throws Exception {
+        testNoSecDtlsCidLength(2);
+    }
+
+    @Test
+    public void testWithNoSecConnectLwm2mSuccessClientDtlsCidLength_4() throws Exception {
+        testNoSecDtlsCidLength(4);
+    }
+
+    @Test
+    public void testWithNoSecConnectLwm2mSuccessClientDtlsCidLength_16() throws Exception {
+        testNoSecDtlsCidLength(16);
+    }    
 }
-
