@@ -34,7 +34,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.extern.slf4j.Slf4j;
-import org.testcontainers.shaded.org.apache.commons.lang3.RandomStringUtils;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
@@ -97,17 +97,17 @@ public class CalculatedFieldTest extends AbstractContainerTest {
     private final String deviceToken2 = "smsURIVRsq5cvnTP2MMM";
 
     private final String exampleScript = "var avgTemperature = temperature.mean(); // Get average temperature\n" +
-                                         "  var temperatureK = (avgTemperature - 32) * (5 / 9) + 273.15; // Convert Fahrenheit to Kelvin\n" +
-                                         "\n" +
-                                         "  // Estimate air pressure based on altitude\n" +
-                                         "  var pressure = 101325 * Math.pow((1 - 2.25577e-5 * altitude), 5.25588);\n" +
-                                         "\n" +
-                                         "  // Air density formula\n" +
-                                         "  var airDensity = pressure / (287.05 * temperatureK);\n" +
-                                         "\n" +
-                                         "  return {\n" +
-                                         "    \"airDensity\": toFixed(airDensity, 2)\n" +
-                                         "  };";
+            "  var temperatureK = (avgTemperature - 32) * (5 / 9) + 273.15; // Convert Fahrenheit to Kelvin\n" +
+            "\n" +
+            "  // Estimate air pressure based on altitude\n" +
+            "  var pressure = 101325 * Math.pow((1 - 2.25577e-5 * altitude), 5.25588);\n" +
+            "\n" +
+            "  // Air density formula\n" +
+            "  var airDensity = pressure / (287.05 * temperatureK);\n" +
+            "\n" +
+            "  return {\n" +
+            "    \"airDensity\": toFixed(airDensity, 2)\n" +
+            "  };";
 
     private TenantId tenantId;
     private UserId tenantAdminId;
@@ -893,7 +893,7 @@ public class CalculatedFieldTest extends AbstractContainerTest {
         CalculatedField calculatedField = new CalculatedField();
         calculatedField.setEntityId(entityId);
         calculatedField.setType(CalculatedFieldType.SIMPLE);
-        calculatedField.setName("C to F" + RandomStringUtils.randomAlphabetic(5));
+        calculatedField.setName("C to F" + RandomStringUtils.insecure().nextAlphabetic(5));
         calculatedField.setDebugSettings(DebugSettings.all());
 
         SimpleCalculatedFieldConfiguration config = new SimpleCalculatedFieldConfiguration();
@@ -917,15 +917,11 @@ public class CalculatedFieldTest extends AbstractContainerTest {
         return testRestClient.postCalculatedField(calculatedField);
     }
 
-    private CalculatedField createScriptCalculatedField() {
-        return createScriptCalculatedField(device.getId(), asset.getId());
-    }
-
     private CalculatedField createScriptCalculatedField(EntityId entityId, EntityId refEntityId) {
         CalculatedField calculatedField = new CalculatedField();
         calculatedField.setEntityId(entityId);
         calculatedField.setType(CalculatedFieldType.SCRIPT);
-        calculatedField.setName("Air density" + RandomStringUtils.randomAlphabetic(5));
+        calculatedField.setName("Air density" + RandomStringUtils.insecure().nextAlphabetic(5));
         calculatedField.setDebugSettings(DebugSettings.all());
 
         ScriptCalculatedFieldConfiguration config = new ScriptCalculatedFieldConfiguration();
