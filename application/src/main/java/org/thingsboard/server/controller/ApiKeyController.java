@@ -91,7 +91,7 @@ public class ApiKeyController extends BaseController {
         SecurityUser securityUser = getCurrentUser();
         apiKeyInfo.setTenantId(securityUser.getTenantId());
         checkEntity(apiKeyInfo.getId(), apiKeyInfo, Resource.API_KEY);
-        checkUserId(securityUser.getId(), Operation.WRITE);
+        checkUserId(apiKeyInfo.getUserId(), Operation.WRITE);
         return checkNotNull(apiKeyService.saveApiKey(securityUser.getTenantId(), apiKeyInfo));
     }
 
@@ -117,7 +117,7 @@ public class ApiKeyController extends BaseController {
         PageLink pageLink = createPageLink(pageSize, page, textSearch, sortProperty, sortOrder);
         UserId userId = new UserId(toUUID(userIdStr));
         accessControlService.checkPermission(securityUser, Resource.API_KEY, Operation.READ);
-        checkUserId(securityUser.getId(), Operation.WRITE);
+        checkUserId(userId, Operation.WRITE);
         return apiKeyService.findApiKeysByUserId(securityUser.getTenantId(), userId, pageLink);
     }
 
@@ -134,7 +134,7 @@ public class ApiKeyController extends BaseController {
             @RequestBody Optional<String> description) throws Exception {
         ApiKeyId apiKeyId = new ApiKeyId(id);
         ApiKey apiKey = checkApiKeyId(apiKeyId, Operation.WRITE);
-        checkUserId(getCurrentUser().getId(), Operation.WRITE);
+        checkUserId(apiKey.getUserId(), Operation.WRITE);
         apiKey.setDescription(description.orElse(null));
         return apiKeyService.saveApiKey(apiKey.getTenantId(), apiKey);
     }
@@ -150,7 +150,7 @@ public class ApiKeyController extends BaseController {
             @PathVariable(value = "enabledValue") Boolean enabledValue) throws ThingsboardException {
         ApiKeyId apiKeyId = new ApiKeyId(id);
         ApiKey apiKey = checkApiKeyId(apiKeyId, Operation.WRITE);
-        checkUserId(getCurrentUser().getId(), Operation.WRITE);
+        checkUserId(apiKey.getUserId(), Operation.WRITE);
         apiKey.setEnabled(enabledValue);
         return apiKeyService.saveApiKey(apiKey.getTenantId(), apiKey);
     }
@@ -162,7 +162,7 @@ public class ApiKeyController extends BaseController {
     public void deleteApiKey(@PathVariable UUID id) throws ThingsboardException {
         ApiKeyId apiKeyId = new ApiKeyId(id);
         ApiKey apiKey = checkApiKeyId(apiKeyId, Operation.DELETE);
-        checkUserId(getCurrentUser().getId(), Operation.DELETE);
+        checkUserId(apiKey.getUserId(), Operation.DELETE);
         apiKeyService.deleteApiKey(apiKey.getTenantId(), apiKey, false);
     }
 
