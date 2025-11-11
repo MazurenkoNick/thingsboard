@@ -69,6 +69,7 @@ import {
   CalculatedFieldDebugDialogData
 } from "@home/components/calculated-fields/components/debug-dialog/calculated-field-debug-dialog.component";
 import { AlarmSeverity, alarmSeverityTranslations } from "@shared/models/alarm.models";
+import { UtilsService } from "@core/services/utils.service";
 
 export class AlarmRulesTableConfig extends EntityTableConfig<any> {
 
@@ -90,6 +91,7 @@ export class AlarmRulesTableConfig extends EntityTableConfig<any> {
               private ownerId: EntityId = null,
               private importExportService: ImportExportService,
               private entityDebugSettingsService: EntityDebugSettingsService,
+              private utilsService: UtilsService,
               private readonly: boolean = false,
               private hideClearEventAction: boolean = false,
   ) {
@@ -134,7 +136,8 @@ export class AlarmRulesTableConfig extends EntityTableConfig<any> {
 
     this.defaultSortOrder = {property: 'createdTime', direction: Direction.DESC};
     this.columns.push(new DateEntityTableColumn<CalculatedFieldAlarmRule>('createdTime', 'common.created-time', this.datePipe, '150px'));
-    this.columns.push(new EntityTableColumn<CalculatedFieldAlarmRule>('name', 'alarm-rule.alarm-type', '33%'));
+    this.columns.push(new EntityTableColumn<CalculatedFieldAlarmRule>('name', 'alarm-rule.alarm-type', '33%',
+      entity => this.utilsService.customTranslation(entity.name, entity.name)));
     this.columns.push(new EntityTableColumn<CalculatedFieldAlarmRule>('createRule', 'alarm-rule.severities', '67%',
       entity => Object.keys(entity.configuration.createRules).map((severity) => this.translate.instant(alarmSeverityTranslations.get(severity as AlarmSeverity))).join(', '),
       () => ({}), false));
