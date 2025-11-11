@@ -30,7 +30,9 @@
  */
 package org.thingsboard.server.service.cf.ctx.state.aggregation.single;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import lombok.Data;
+import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.script.api.tbel.TbelCfArg;
 import org.thingsboard.server.service.cf.ctx.state.ArgumentEntry;
 import org.thingsboard.server.service.cf.ctx.state.ArgumentEntryType;
@@ -79,6 +81,11 @@ public class EntityAggregationArgumentEntry implements ArgumentEntry {
     @Override
     public boolean isEmpty() {
         return aggIntervals.isEmpty();
+    }
+
+    @Override
+    public JsonNode jsonValue() {
+        return JacksonUtil.valueToTree(aggIntervals);
     }
 
     @Override

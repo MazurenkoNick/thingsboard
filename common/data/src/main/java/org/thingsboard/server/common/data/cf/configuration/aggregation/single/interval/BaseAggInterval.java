@@ -32,6 +32,9 @@ package org.thingsboard.server.common.data.cf.configuration.aggregation.single.i
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import org.thingsboard.server.common.data.util.TbPair;
 
@@ -51,6 +54,7 @@ import java.util.List;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public abstract class BaseAggInterval implements AggInterval {
 
+    @NotBlank
     protected String tz;
     protected Long offsetSec; // delay seconds since start of interval
 

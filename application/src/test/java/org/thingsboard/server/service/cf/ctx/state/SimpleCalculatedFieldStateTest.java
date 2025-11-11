@@ -95,7 +95,7 @@ public class SimpleCalculatedFieldStateTest {
         ctx.init();
         state = new SimpleCalculatedFieldState(ctx.getEntityId());
         state.setCtx(ctx, null);
-        state.init();
+        state.init(false);
     }
 
     @Test

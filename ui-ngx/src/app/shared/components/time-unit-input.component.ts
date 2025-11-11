@@ -29,7 +29,7 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-import { Component, DestroyRef, forwardRef, Input, OnInit } from '@angular/core';
+import { Component, DestroyRef, forwardRef, Input, OnChanges, OnInit, SimpleChanges } from '@angular/core';
 import {
   AbstractControl,
   ControlValueAccessor,
@@ -66,7 +66,7 @@ interface TimeUnitInputModel {
     multi: true
   }]
 })
-export class TimeUnitInputComponent implements ControlValueAccessor, Validator, OnInit {
+export class TimeUnitInputComponent implements ControlValueAccessor, Validator, OnInit, OnChanges {
 
   @Input()
   labelText: string;
@@ -144,15 +144,8 @@ export class TimeUnitInputComponent implements ControlValueAccessor, Validator, 
   }
 
   ngOnInit() {
-    if (this.maxTime) {
-      const maxTimeMs = this.maxTime * SECOND;
-      if (maxTimeMs < MINUTE) {
-        this.timeUnits = this.timeUnits.filter(item => item !== TimeUnit.MINUTES && item !== TimeUnit.HOURS && item !== TimeUnit.DAYS);
-      } else if (maxTimeMs < HOUR) {
-        this.timeUnits = this.timeUnits.filter(item => item !== TimeUnit.HOURS && item !== TimeUnit.DAYS);
-      } else if (maxTimeMs < DAY) {
-        this.timeUnits = this.timeUnits.filter(item => item !== TimeUnit.DAYS);
-      }
+    if (isDefinedAndNotNull(this.maxTime)) {
+      this.updatedAllowTimeUnitInterval(this.maxTime);
     }
     if (this.required || this.maxTime || isDefinedAndNotNull(this.minTime) || this.stepMultipleOf) {
       const timeControl = this.timeInputForm.get('time');
@@ -202,6 +195,21 @@ export class TimeUnitInputComponent implements ControlValueAccessor, Validator, 
       return this.maxErrorText;
     } else if (this.timeInputForm.get('time').hasError('stepMultipleOf') && this.stepMultipleOfErrorText) {
       return this.stepMultipleOfErrorText;
+    }
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    for (const propName of Object.keys(changes)) {
+      const change = changes[propName];
+      if (!change.firstChange && change.currentValue !== change.previousValue) {
+        if (propName === 'maxTime') {
+          if (isDefinedAndNotNull(this.maxTime)) {
+            this.timeUnits = Object.values(TimeUnit).filter(item => item !== TimeUnit.MILLISECONDS) as TimeUnit[];
+            this.updatedAllowTimeUnitInterval(this.maxTime);
+            this.timeInputForm.get('time').updateValueAndValidity({emitEvent: false});
+          }
+        }
+      }
     }
   }
 
@@ -292,6 +300,18 @@ export class TimeUnitInputComponent implements ControlValueAccessor, Validator, 
       }
       return isValid ? null : { stepMultipleOf: true };
     };
+  }
+
+  private updatedAllowTimeUnitInterval(maxTime: number) {
+    const maxTimeMs = maxTime * SECOND;
+    this.timeUnits = Object.values(TimeUnit).filter(item => item !== TimeUnit.MILLISECONDS) as TimeUnit[];
+    if (maxTimeMs < MINUTE) {
+      this.timeUnits = this.timeUnits.filter(item => item !== TimeUnit.MINUTES && item !== TimeUnit.HOURS && item !== TimeUnit.DAYS);
+    } else if (maxTimeMs < HOUR) {
+      this.timeUnits = this.timeUnits.filter(item => item !== TimeUnit.HOURS && item !== TimeUnit.DAYS);
+    } else if (maxTimeMs < DAY) {
+      this.timeUnits = this.timeUnits.filter(item => item !== TimeUnit.DAYS);
+    }
   }
 
 }
