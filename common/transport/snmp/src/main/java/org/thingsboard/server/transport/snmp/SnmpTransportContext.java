@@ -36,6 +36,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
+import org.thingsboard.common.util.ThingsBoardThreadFactory;
 import org.thingsboard.server.common.data.Device;
 import org.thingsboard.server.common.data.DeviceProfile;
 import org.thingsboard.server.common.data.DeviceTransportType;
@@ -72,6 +73,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 @TbSnmpTransportComponent
 @Component
@@ -89,13 +92,14 @@ public class SnmpTransportContext extends TransportContext {
 
     private final Map<DeviceId, DeviceSessionContext> sessions = new ConcurrentHashMap<>();
     private final Set<DeviceId> allSnmpDevicesIds = ConcurrentHashMap.newKeySet();
+    private final ExecutorService snmpExecutor = Executors.newSingleThreadExecutor(ThingsBoardThreadFactory.forName("snmp-bootstrap"));
 
     @Value("${transport.snmp.bootstrap_retries}")
     private int snmpBootstrapMaxRetries;
 
     @AfterStartUp(order = AfterStartUp.AFTER_TRANSPORT_SERVICE)
     public void fetchDevicesAndEstablishSessions() {
-        getExecutor().execute(this::bootstrapWithRetries);
+        snmpExecutor.execute(this::bootstrapWithRetries);
     }
 
     private void bootstrapWithRetries() {
@@ -116,7 +120,7 @@ public class SnmpTransportContext extends TransportContext {
     private void doBootstrap() {
         log.info("Initializing SNMP devices sessions");
         int batchIndex = 0;
-        final int batchSize = 512;
+        int batchSize = 512;
         boolean nextBatchExists = true;
 
         while (nextBatchExists) {
@@ -136,7 +140,7 @@ public class SnmpTransportContext extends TransportContext {
             batchIndex++;
         }
 
-        log.debug("Found all SNMP devices ids: {}", allSnmpDevicesIds.size());
+        log.debug("Found all SNMP devices ids: {}", allSnmpDevicesIds);
     }
 
     private void establishDeviceSession(Device device) {
