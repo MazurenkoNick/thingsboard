@@ -116,7 +116,7 @@ public class CustomerUserPermissions extends AbstractPermissions {
         put(Resource.DOMAIN, customerStandaloneEntityPermissionChecker);
         put(Resource.REPORT_TEMPLATE, reportTemplatePermissionChecker);
         put(Resource.REPORT, customerStandaloneEntityPermissionChecker);
-        put(Resource.API_KEY, customerStandaloneEntityPermissionChecker);
+        put(Resource.API_KEY, genericPermissionChecker);
     }
 
     private final PermissionChecker<AlarmId, Alarm> customerAlarmPermissionChecker = new PermissionChecker<>() {
