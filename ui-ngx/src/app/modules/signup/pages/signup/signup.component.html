@@ -78,18 +78,30 @@
                     {{ 'user.invalid-email-format' | translate }}
                   </mat-error>
                 </mat-form-field>
-                <mat-form-field class="mat-block tb-appearance-transparent">
+                <mat-form-field class="mat-block tb-appearance-transparent" subscriptSizing="dynamic">
                   <mat-label translate>signup.create-password</mat-label>
-                  <input matInput type="password" formControlName="PASSWORD" required/>
+                  <input matInput
+                         type="password"
+                         formControlName="PASSWORD"
+                         required
+                         cdkOverlayOrigin
+                         #trigger="cdkOverlayOrigin"
+                         (focus)="isTooltipOpen = true"
+                         (blur)="isTooltipOpen = false"/>
                   <tb-toggle-password matSuffix></tb-toggle-password>
                   <mat-icon matPrefix>lock</mat-icon>
+                  <mat-error *ngIf="passwordErrorsLength > 0">
+                    {{ 'security.password-requirement.password-not-meet-requirements' | translate }}
+                  </mat-error>
                 </mat-form-field>
                 <mat-form-field class="mat-block tb-appearance-transparent">
                   <mat-label translate>signup.repeat-password</mat-label>
-                  <input matInput type="password" [(ngModel)]="passwordCheck"
-                         [ngModelOptions]="{standalone: true}" required/>
+                  <input matInput type="password" formControlName="CHECK_PASSWORD" required/>
                   <tb-toggle-password matSuffix></tb-toggle-password>
                   <mat-icon matPrefix>lock</mat-icon>
+                  <mat-error *ngIf="signup.get('fields.CHECK_PASSWORD').hasError('passwordsNotMatch')">
+                    {{ 'security.password-requirement.new-passwords-not-match' | translate }}
+                  </mat-error>
                 </mat-form-field>
               </div>
               <div class="tb-recaptcha flex flex-col">
@@ -127,3 +139,22 @@
     </mat-card-content>
   </mat-card>
 </div>
+
+<ng-template cdkConnectedOverlay
+             [cdkConnectedOverlayOrigin]="trigger"
+             [cdkConnectedOverlayOpen]="isTooltipOpen"
+             [cdkConnectedOverlayPositions]="overlayPositions">
+  <div class="password-checklist-card">
+    @for (rule of passwordErrorRules; track $index) {
+      @if (!rule.policyProp || passwordPolicy[rule.policyProp] > 0) {
+        <p class="mat-body flex text-sm">
+          <tb-icon class="tb-mat-20">
+            {{ checkForError(rule.key) ? 'mdi:close' : 'mdi:check' }}
+          </tb-icon>
+          {{ rule.translation | translate : passwordPolicy }}
+        </p>
+      }
+    }
+    <div class="tooltip-arrow"></div>
+  </div>
+</ng-template>
