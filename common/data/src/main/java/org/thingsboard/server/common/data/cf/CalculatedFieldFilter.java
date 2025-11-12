@@ -28,43 +28,29 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.dao.cf;
+package org.thingsboard.server.common.data.cf;
 
-import org.thingsboard.server.common.data.cf.CalculatedField;
-import org.thingsboard.server.common.data.cf.CalculatedFieldFilter;
-import org.thingsboard.server.common.data.cf.CalculatedFieldType;
-import org.thingsboard.server.common.data.id.CalculatedFieldId;
-import org.thingsboard.server.common.data.id.EntityId;
-import org.thingsboard.server.common.data.id.TenantId;
-import org.thingsboard.server.common.data.page.PageData;
-import org.thingsboard.server.common.data.page.PageLink;
-import org.thingsboard.server.dao.Dao;
+import lombok.Builder;
+import lombok.Data;
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
+import org.thingsboard.server.common.data.EntityType;
 
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
-public interface CalculatedFieldDao extends Dao<CalculatedField> {
+@Data
+@Builder
+public class CalculatedFieldFilter {
 
-    List<CalculatedField> findAllByTenantId(TenantId tenantId);
-
-    List<CalculatedFieldId> findCalculatedFieldIdsByEntityId(TenantId tenantId, EntityId entityId);
-
-    List<CalculatedField> findCalculatedFieldsByEntityId(TenantId tenantId, EntityId entityId);
-
-    List<CalculatedField> findAll();
-
-    CalculatedField findByEntityIdAndTypeAndName(EntityId entityId, CalculatedFieldType type, String name);
-
-    PageData<CalculatedField> findAll(PageLink pageLink);
-
-    PageData<CalculatedField> findAllByTenantId(TenantId tenantId, PageLink pageLink);
-
-    PageData<CalculatedField> findByEntityIdAndTypes(TenantId tenantId, EntityId entityId, Set<CalculatedFieldType> types, PageLink pageLink);
-
-    List<CalculatedField> removeAllByEntityId(TenantId tenantId, EntityId entityId);
-
-    long countByEntityIdAndTypeNot(TenantId tenantId, EntityId entityId, CalculatedFieldType type);
-
-    PageData<CalculatedField> findByTenantIdAndFilter(TenantId tenantId, CalculatedFieldFilter filter, PageLink pageLink);
+    @NonNull
+    private final CalculatedFieldType type;
+    @NonNull
+    private final Set<EntityType> entityTypes;
+    @Nullable
+    private final List<UUID> entityIds;
+    @Nullable
+    private final String name;
 
 }
