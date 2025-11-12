@@ -84,10 +84,10 @@ import org.thingsboard.server.service.entitiy.cf.TbCalculatedFieldService;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -368,7 +368,7 @@ public class CalculatedFieldController extends BaseController {
     }
 
     private void checkReferencedEntities(CalculatedFieldConfiguration calculatedFieldConfig) throws ThingsboardException {
-        List<EntityId> referencedEntityIds = calculatedFieldConfig.getReferencedEntities();
+        Set<EntityId> referencedEntityIds = calculatedFieldConfig.getReferencedEntities();
         for (EntityId referencedEntityId : referencedEntityIds) {
             EntityType entityType = referencedEntityId.getEntityType();
             switch (entityType) {
