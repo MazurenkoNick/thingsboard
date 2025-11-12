@@ -250,7 +250,7 @@ public class DeviceServiceImpl extends CachedVersionedEntityService<DeviceCacheK
     }
 
     private Device saveDeviceWithoutCredentials(Device device, boolean doValidate, NameConflictStrategy nameConflictStrategy) {
-        return saveEntity(device, () -> doSaveDeviceWithoutCredentials(device, doValidate, NameConflictStrategy nameConflictStrategy));
+        return saveEntity(device, () -> doSaveDeviceWithoutCredentials(device, doValidate, nameConflictStrategy));
     }
 
     private Device doSaveDeviceWithoutCredentials(Device device, boolean doValidate, NameConflictStrategy nameConflictStrategy) {
