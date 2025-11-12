@@ -87,12 +87,12 @@ public class DefaultUserService extends AbstractTbEntityService implements TbUse
                 // Add Tenant Admins to 'Tenant Administrators' user group if created by Sys Admin
                 if (tbUser.getId() == null && authority == Authority.SYS_ADMIN) {
                     EntityGroup admins = entityGroupService.findOrCreateTenantAdminsGroup(savedUser.getTenantId());
-                    entityGroupService.addEntityToEntityGroup(TenantId.SYS_TENANT_ID, admins.getId(), savedUser.getId());
+                    entityGroupService.addEntityToEntityGroup(savedUser.getTenantId(), admins.getId(), savedUser.getId());
                     logEntityActionService.logEntityAction(tenantId, savedUser.getId(), savedUser, customerId,
                             ActionType.ADDED_TO_ENTITY_GROUP, user);
                 } else if (!CollectionUtils.isEmpty(entityGroups) && tbUser.getId() == null) {
                     for (EntityGroup entityGroup : entityGroups) {
-                        entityGroupService.addEntityToEntityGroup(tenantId, entityGroup.getId(), savedUser.getId());
+                        entityGroupService.addEntityToEntityGroup(savedUser.getTenantId(), entityGroup.getId(), savedUser.getId());
                         logEntityActionService.logEntityAction(tenantId, savedUser.getId(), savedUser, customerId,
                                 ActionType.ADDED_TO_ENTITY_GROUP, user, savedUser.getId().toString(), entityGroup.getId().toString(), entityGroup.getName());
                     }

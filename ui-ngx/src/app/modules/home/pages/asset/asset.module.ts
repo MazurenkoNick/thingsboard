@@ -50,7 +50,7 @@ import { AssetTableHeaderComponent } from '@home/pages/asset/asset-table-header.
     SharedModule,
     HomeComponentsModule,
     HomeDialogsModule,
-    AssetRoutingModule
+    AssetRoutingModule,
   ],
   providers: [
     {

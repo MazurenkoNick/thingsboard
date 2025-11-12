@@ -38,15 +38,12 @@ import org.thingsboard.server.actors.calculatedField.MultipleTbCallback;
 import org.thingsboard.server.cluster.TbClusterService;
 import org.thingsboard.server.common.data.DataConstants;
 import org.thingsboard.server.common.data.EntityType;
-import org.thingsboard.server.common.data.cf.CalculatedFieldType;
 import org.thingsboard.server.common.data.cf.configuration.Argument;
-import org.thingsboard.server.common.data.cf.configuration.OutputType;
+import org.thingsboard.server.common.data.cf.configuration.aggregation.RelatedEntitiesAggregationCalculatedFieldConfiguration;
 import org.thingsboard.server.common.data.id.CalculatedFieldId;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.TenantId;
-import org.thingsboard.server.common.data.msg.TbMsgType;
 import org.thingsboard.server.common.msg.TbMsg;
-import org.thingsboard.server.common.msg.TbMsgMetaData;
 import org.thingsboard.server.common.msg.queue.ServiceType;
 import org.thingsboard.server.common.msg.queue.TbCallback;
 import org.thingsboard.server.common.msg.queue.TopicPartitionInfo;
@@ -66,16 +63,17 @@ import org.thingsboard.server.queue.util.TbRuleEngineComponent;
 import org.thingsboard.server.service.cf.ctx.CalculatedFieldEntityCtxId;
 import org.thingsboard.server.service.cf.ctx.state.ArgumentEntry;
 import org.thingsboard.server.service.cf.ctx.state.CalculatedFieldCtx;
-import org.thingsboard.server.service.cf.ctx.state.CalculatedFieldState;
 import org.thingsboard.server.service.security.permission.OwnersCacheService;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ExecutionException;
 
-import static org.thingsboard.server.common.data.DataConstants.SCOPE;
+import static org.thingsboard.server.common.data.cf.configuration.PropagationCalculatedFieldConfiguration.PROPAGATION_CONFIG_ARGUMENT;
 import static org.thingsboard.server.utils.CalculatedFieldUtils.toProto;
 
 @TbRuleEngineComponent
@@ -104,17 +102,30 @@ public class DefaultCalculatedFieldProcessingService extends AbstractCalculatedF
     }
 
     @Override
-    public ListenableFuture<CalculatedFieldState> fetchStateFromDb(CalculatedFieldCtx ctx, EntityId entityId) {
-        return super.fetchStateFromDb(ctx, entityId, System.currentTimeMillis());
+    public ListenableFuture<Map<String, ArgumentEntry>> fetchArguments(CalculatedFieldCtx ctx, EntityId entityId) {
+        return super.fetchArguments(ctx, entityId, System.currentTimeMillis());
     }
 
     @Override
     public Map<String, ArgumentEntry> fetchDynamicArgsFromDb(CalculatedFieldCtx ctx, EntityId entityId) {
-        // only scheduledSupported CF instances supports dynamic arguments scheduled updates
-        if (!ctx.getCalculatedField().getType().equals(CalculatedFieldType.GEOFENCING)) {
-            return Map.of();
+        return switch (ctx.getCfType()) {
+            case GEOFENCING -> resolveArgumentFutures(fetchGeofencingCalculatedFieldArguments(ctx, entityId, true, System.currentTimeMillis()));
+            case PROPAGATION -> resolveArgumentFutures(Map.of(PROPAGATION_CONFIG_ARGUMENT, fetchPropagationCalculatedFieldArgument(ctx, entityId)));
+            default -> Collections.emptyMap();
+        };
+    }
+
+    @Override
+    public List<EntityId> fetchRelatedEntities(CalculatedFieldCtx ctx, EntityId entityId) {
+        try {
+            if (ctx.getCalculatedField().getConfiguration() instanceof RelatedEntitiesAggregationCalculatedFieldConfiguration config) {
+                return resolveRelatedEntities(ctx.getTenantId(), entityId, config.getRelation()).get();
+            }
+            return Collections.emptyList();
+        } catch (ExecutionException | InterruptedException e) {
+            Throwable cause = e.getCause();
+            throw new RuntimeException("Failed to fetch related entities for entity [" + entityId + "]: " + cause.getMessage(), cause);
         }
-        return resolveArgumentFutures(fetchGeofencingCalculatedFieldArguments(ctx, entityId, true, System.currentTimeMillis()));
     }
 
     @Override
@@ -132,17 +143,36 @@ public class DefaultCalculatedFieldProcessingService extends AbstractCalculatedF
     }
 
     @Override
-    public void pushMsgToRuleEngine(TenantId tenantId, EntityId entityId, CalculatedFieldResult calculatedFieldResult, List<CalculatedFieldId> cfIds, TbCallback callback) {
+    public void pushMsgToRuleEngine(TenantId tenantId, EntityId entityId, CalculatedFieldResult result, List<CalculatedFieldId> cfIds, TbCallback callback) {
+        if (!(result instanceof PropagationCalculatedFieldResult propagationCalculatedFieldResult)) {
+            TbMsg msg = result.toTbMsg(entityId, cfIds);
+            sendMsgToRuleEngine(tenantId, entityId, callback, msg);
+            return;
+        }
+        List<EntityId> propagationEntityIds = propagationCalculatedFieldResult.getPropagationEntityIds();
+        if (propagationEntityIds.isEmpty()) {
+            callback.onSuccess();
+        }
+        if (propagationEntityIds.size() == 1) {
+            EntityId propagationEntityId = propagationEntityIds.get(0);
+            TbMsg msg = result.toTbMsg(propagationEntityId, cfIds);
+            sendMsgToRuleEngine(tenantId, propagationEntityId, callback, msg);
+            return;
+        }
+        MultipleTbCallback multipleTbCallback = new MultipleTbCallback(propagationEntityIds.size(), callback);
+        for (var propagationEntityId : propagationEntityIds) {
+            TbMsg msg = result.toTbMsg(propagationEntityId, cfIds);
+            sendMsgToRuleEngine(tenantId, propagationEntityId, multipleTbCallback, msg);
+        }
+    }
+
+    private void sendMsgToRuleEngine(TenantId tenantId, EntityId entityId, TbCallback callback, TbMsg msg) {
         try {
-            OutputType type = calculatedFieldResult.getType();
-            TbMsgType msgType = OutputType.ATTRIBUTES.equals(type) ? TbMsgType.POST_ATTRIBUTES_REQUEST : TbMsgType.POST_TELEMETRY_REQUEST;
-            TbMsgMetaData md = OutputType.ATTRIBUTES.equals(type) ? new TbMsgMetaData(Map.of(SCOPE, calculatedFieldResult.getScope().name())) : TbMsgMetaData.EMPTY;
-            TbMsg msg = TbMsg.newMsg().type(msgType).originator(entityId).previousCalculatedFieldIds(cfIds).metaData(md).data(calculatedFieldResult.toStringOrElseNull()).build();
             clusterService.pushMsgToRuleEngine(tenantId, entityId, msg, new TbQueueCallback() {
                 @Override
                 public void onSuccess(TbQueueMsgMetadata metadata) {
-                    callback.onSuccess();
                     log.trace("[{}][{}] Pushed message to rule engine: {} ", tenantId, entityId, msg);
+                    callback.onSuccess();
                 }
 
                 @Override
@@ -151,7 +181,7 @@ public class DefaultCalculatedFieldProcessingService extends AbstractCalculatedF
                 }
             });
         } catch (Exception e) {
-            log.warn("[{}][{}] Failed to push message to rule engine. CalculatedFieldResult: {}", tenantId, entityId, calculatedFieldResult, e);
+            log.warn("[{}][{}] Failed to push message to rule engine: {}", tenantId, entityId, msg, e);
             callback.onFailure(e);
         }
     }
@@ -225,6 +255,7 @@ public class DefaultCalculatedFieldProcessingService extends AbstractCalculatedF
         public void onFailure(Throwable t) {
             callback.onFailure(t);
         }
+
     }
 
 }

@@ -30,6 +30,7 @@
  */
 package org.thingsboard.server.dao.usagerecord;
 
+import com.google.common.util.concurrent.FluentFuture;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
@@ -63,11 +64,13 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
+import static com.google.common.util.concurrent.MoreExecutors.directExecutor;
 import static org.thingsboard.server.dao.service.Validator.validateId;
 
 @Service("ApiUsageStateDaoService")
 @Slf4j
 public class ApiUsageStateServiceImpl extends AbstractEntityService implements ApiUsageStateService {
+
     public static final String INCORRECT_TENANT_ID = "Incorrect tenantId ";
 
     private final ApiUsageStateDao apiUsageStateDao;
@@ -177,7 +180,7 @@ public class ApiUsageStateServiceImpl extends AbstractEntityService implements A
     public ApiUsageState update(ApiUsageState apiUsageState) {
         log.trace("Executing save [{}]", apiUsageState.getTenantId());
         validateId(apiUsageState.getTenantId(), id -> INCORRECT_TENANT_ID + id);
-        validateId(apiUsageState.getId(), "Can't save new usage state. Only update is allowed!");
+        validateId(apiUsageState.getId(), __ -> "Can't save new usage state. Only update is allowed!");
         apiUsageState.setVersion(null);
         ApiUsageState savedState = apiUsageStateDao.save(apiUsageState.getTenantId(), apiUsageState);
         eventPublisher.publishEvent(SaveEntityEvent.builder().tenantId(savedState.getTenantId()).entityId(savedState.getId())
@@ -209,6 +212,12 @@ public class ApiUsageStateServiceImpl extends AbstractEntityService implements A
     @Override
     public Optional<HasId<?>> findEntity(TenantId tenantId, EntityId entityId) {
         return Optional.ofNullable(findApiUsageStateById(tenantId, new ApiUsageStateId(entityId.getId())));
+    }
+
+    @Override
+    public FluentFuture<Optional<HasId<?>>> findEntityAsync(TenantId tenantId, EntityId entityId) {
+        return FluentFuture.from(apiUsageStateDao.findByIdAsync(tenantId, entityId.getId()))
+                .transform(Optional::ofNullable, directExecutor());
     }
 
     @Transactional
