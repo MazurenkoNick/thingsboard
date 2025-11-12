@@ -37,7 +37,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.thingsboard.server.common.data.EntityInfo;
 import org.springframework.transaction.annotation.Transactional;
+import org.thingsboard.server.common.data.EntityInfo;
 import org.thingsboard.server.common.data.edqs.fields.CustomerFields;
 import org.thingsboard.server.dao.ExportableEntityRepository;
 import org.thingsboard.server.dao.model.sql.CustomerEntity;
@@ -57,6 +59,10 @@ public interface CustomerRepository extends JpaRepository<CustomerEntity, UUID>,
                                         Pageable pageable);
 
     CustomerEntity findByTenantIdAndTitle(UUID tenantId, String title);
+
+    @Query("SELECT new org.thingsboard.server.common.data.EntityInfo(a.id, 'CUSTOMER', a.title) " +
+            "FROM CustomerEntity a WHERE a.tenantId = :tenantId AND a.title LIKE CONCAT(:prefix, '%')")
+    List<EntityInfo> findEntityInfosByNamePrefix(UUID tenantId, String prefix);
 
     @Query("SELECT c FROM CustomerEntity c, " +
             "RelationEntity re " +
@@ -91,6 +97,12 @@ public interface CustomerRepository extends JpaRepository<CustomerEntity, UUID>,
     Page<UUID> findIdsByTenantIdAndCustomerId(@Param("tenantId") UUID tenantId,
                                               @Param("customerId") UUID customerId,
                                               Pageable pageable);
+
+    Page<CustomerEntity> findByTenantIdAndParentCustomerId(UUID tenantId, UUID parentCustomerId, Pageable pageable);
+
+    @Query("SELECT c FROM CustomerEntity c WHERE c.tenantId = :tenantId AND (c.parentCustomerId IS NULL " +
+           "OR c.parentCustomerId = org.thingsboard.server.common.data.id.EntityId.NULL_UUID)")
+    Page<CustomerEntity> findByTenantIdAndNullParentCustomerId(UUID tenantId, Pageable pageable);
 
     @Query(value = "SELECT * FROM customer c WHERE c.tenant_id = :tenantId AND c.is_public IS TRUE AND " +
             "(c.parent_customer_id IS NULL OR c.parent_customer_id = '13814000-1dd2-11b2-8080-808080808080') ORDER BY c.id ASC LIMIT 1", nativeQuery = true)
@@ -131,4 +143,8 @@ public interface CustomerRepository extends JpaRepository<CustomerEntity, UUID>,
             "c.title, c.version, c.additionalInfo, c.country, c.state, c.city, c.address, c.address2, c.zip, c.phone, c.email) " +
             "FROM CustomerEntity c WHERE c.id > :id ORDER BY c.id")
     List<CustomerFields> findNextBatch(@Param("id") UUID id, Limit limit);
+
+    @Query("SELECT new org.thingsboard.server.common.data.EntityInfo(a.id, 'CUSTOMER', a.title) " +
+            "FROM CustomerEntity a WHERE a.tenantId = :tenantId AND a.title = :name")
+    EntityInfo findEntityInfoByName(UUID tenantId, String name);
 }

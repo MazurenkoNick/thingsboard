@@ -40,6 +40,7 @@ import { CreatePasswordComponent } from '@modules/login/pages/login/create-passw
 import { TwoFactorAuthLoginComponent } from '@modules/login/pages/login/two-factor-auth-login.component';
 import { Authority } from '@shared/models/authority.enum';
 import { LinkExpiredComponent } from '@modules/login/pages/login/link-expired.component';
+import { ForceTwoFactorAuthLoginComponent } from '@modules/login/pages/login/force-two-factor-auth-login.component';
 
 const routes: Routes = [
   {
@@ -94,6 +95,16 @@ const routes: Routes = [
     data: {
       title: 'login.two-factor-authentication',
       auth: [Authority.PRE_VERIFICATION_TOKEN],
+      module: 'public'
+    },
+    canActivate: [AuthGuard]
+  },
+  {
+    path: 'login/force-mfa',
+    component: ForceTwoFactorAuthLoginComponent,
+    data: {
+      title: 'login.two-factor-authentication',
+      auth: [Authority.MFA_CONFIGURATION_TOKEN],
       module: 'public'
     },
     canActivate: [AuthGuard]

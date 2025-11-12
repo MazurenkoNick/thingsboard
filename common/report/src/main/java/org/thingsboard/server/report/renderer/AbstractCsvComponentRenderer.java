@@ -44,7 +44,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static org.thingsboard.server.report.util.ReportUtils.formatValueWithPrecisionAndUnits;
 import static org.thingsboard.server.report.util.ReportUtils.getSingleDataSource;
 import static org.thingsboard.server.report.util.ReportUtils.sortRowsByTableSortOrder;
 
@@ -87,7 +86,7 @@ public abstract class AbstractCsvComponentRenderer<C extends TableReportComponen
 
         for (Map<String, String> row : entityDatas) {
             List<String> formattedValues = columns.stream()
-                    .map(col -> formatValueWithPrecisionAndUnits(row.get(col.getLabel()), col))
+                    .map(col -> row.get(col.getLabel()))
                     .collect(Collectors.toList());
             content.add(formattedValues);
         }

@@ -42,11 +42,9 @@ import org.thingsboard.rule.engine.api.TbNodeException;
 import org.thingsboard.rule.engine.api.util.TbNodeUtils;
 import org.thingsboard.rule.engine.util.EntitiesAlarmOriginatorIdAsyncLoader;
 import org.thingsboard.rule.engine.util.EntitiesByNameAndTypeLoader;
-import org.thingsboard.rule.engine.util.EntitiesCustomerIdAsyncLoader;
 import org.thingsboard.rule.engine.util.EntitiesRelatedEntityIdAsyncLoader;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.StringUtils;
-import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.plugin.ComponentType;
 import org.thingsboard.server.common.data.util.TbPair;
@@ -55,6 +53,7 @@ import org.thingsboard.server.common.msg.TbMsg;
 import java.util.List;
 import java.util.NoSuchElementException;
 
+import static com.google.common.util.concurrent.Futures.immediateFuture;
 import static org.thingsboard.rule.engine.transform.OriginatorSource.ENTITY;
 import static org.thingsboard.rule.engine.transform.OriginatorSource.RELATED;
 
@@ -97,18 +96,20 @@ public class TbChangeOriginatorNode extends TbAbstractTransformNode<TbChangeOrig
             if (msg.getOriginator().equals(newOriginator)) {
                 return Futures.immediateFuture(List.of(msg));
             }
-            return Futures.immediateFuture(List.of(ctx.transformMsgOriginator(msg, newOriginator)));
+            return immediateFuture(List.of(ctx.transformMsgOriginator(msg, newOriginator)));
         }, ctx.getDbCallbackExecutor());
     }
 
     private ListenableFuture<? extends EntityId> getNewOriginator(TbContext ctx, TbMsg msg) {
         switch (config.getOriginatorSource()) {
             case CUSTOMER:
-                boolean preserveOriginator = config.isPreserveOriginatorIfCustomer() && msg.getOriginator().getEntityType().equals(EntityType.CUSTOMER);
-                return preserveOriginator ? Futures.immediateFuture((CustomerId) msg.getOriginator()) :
-                        EntitiesCustomerIdAsyncLoader.findEntityIdAsync(ctx, msg.getOriginator());
+                if (config.isPreserveOriginatorIfCustomer() && msg.getOriginator().getEntityType() == EntityType.CUSTOMER) {
+                    return immediateFuture(msg.getOriginator());
+                }
+                return ctx.getEntityService().fetchEntityCustomerIdAsync(ctx.getTenantId(), msg.getOriginator())
+                        .transform(customerIdOpt -> customerIdOpt.orElse(null), ctx.getDbCallbackExecutor());
             case TENANT:
-                return Futures.immediateFuture(ctx.getTenantId());
+                return immediateFuture(ctx.getTenantId());
             case RELATED:
                 return EntitiesRelatedEntityIdAsyncLoader.findEntityAsync(ctx, msg.getOriginator(), config.getRelationsQuery());
             case ALARM_ORIGINATOR:
@@ -118,7 +119,7 @@ public class TbChangeOriginatorNode extends TbAbstractTransformNode<TbChangeOrig
                 String entityName = TbNodeUtils.processPattern(config.getEntityNamePattern(), msg);
                 try {
                     EntityId targetEntity = EntitiesByNameAndTypeLoader.findEntityId(ctx, entityType, entityName);
-                    return Futures.immediateFuture(targetEntity);
+                    return immediateFuture(targetEntity);
                 } catch (IllegalStateException e) {
                     return Futures.immediateFailedFuture(e);
                 }
@@ -164,4 +165,5 @@ public class TbChangeOriginatorNode extends TbAbstractTransformNode<TbChangeOrig
         }
         return new TbPair<>(hasChanges, oldConfiguration);
     }
+
 }

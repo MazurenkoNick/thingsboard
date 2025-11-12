@@ -73,8 +73,7 @@ public class PskLwm2mIntegrationTest extends AbstractSecurityLwM2MIntegrationTes
                 Hex.decodeHex(keyPsk.toCharArray()));
         Lwm2mDeviceProfileTransportConfiguration transportConfiguration = getTransportConfiguration(OBSERVE_ATTRIBUTES_WITHOUT_PARAMS, getBootstrapServerCredentialsSecure(PSK, NONE));
         LwM2MDeviceCredentials deviceCredentials = getDeviceCredentialsSecure(clientCredentials, null, null, PSK, false);
-        this.basicTestConnection(security,
-                null,
+        this.basicTestConnection(security, null,
                 deviceCredentials,
                 clientEndpoint,
                 transportConfiguration,
@@ -84,10 +83,12 @@ public class PskLwm2mIntegrationTest extends AbstractSecurityLwM2MIntegrationTes
                 ON_REGISTRATION_SUCCESS,
                 true);
     }
+
     @Test
     public void testWithPskConnectLwm2mOneObserveSuccessUpdateProfileManyObserveUpdateRegistrationSuccess() throws Exception {
-        String clientEndpoint = CLIENT_ENDPOINT_PSK;
-        String identity = CLIENT_PSK_IDENTITY;
+        String suf = "UpdateReg";
+        String clientEndpoint = CLIENT_ENDPOINT_PSK + "_" + suf;
+        String identity = CLIENT_PSK_IDENTITY + "_" + suf;
         String keyPsk = CLIENT_PSK_KEY;
         PSKClientCredential clientCredentials = new PSKClientCredential();
         clientCredentials.setEndpoint(clientEndpoint);
@@ -100,8 +101,7 @@ public class PskLwm2mIntegrationTest extends AbstractSecurityLwM2MIntegrationTes
         Lwm2mDeviceProfileTransportConfiguration transportConfiguration = getTransportConfiguration(TELEMETRY_WITH_ONE_OBSERVE, getBootstrapServerCredentialsSecure(PSK, NONE));
         LwM2MDeviceCredentials deviceCredentials = getDeviceCredentialsSecure(clientCredentials, null, null, PSK, false);
         String awaitAlias = "await on client state (Psk_Lwm2m)";
-        Device lwm2mDevice = this.basicTestConnection(security,
-                null,
+        Device lwm2mDevice = this.basicTestConnection(security, null,
                 deviceCredentials,
                 clientEndpoint,
                 transportConfiguration,
@@ -120,10 +120,12 @@ public class PskLwm2mIntegrationTest extends AbstractSecurityLwM2MIntegrationTes
         awaitObserveReadAll(2, lwm2mDevice.getId().getId().toString());
         awaitUpdateReg(3);
     }
+
     @Test
     public void testWithPskConnectLwm2mSuccessObserveSuccessUnRegClientUpdateProfileObserveConnectLwm2mSuccessOWithNewObserve() throws Exception {
-        String clientEndpoint = CLIENT_ENDPOINT_PSK;
-        String identity = CLIENT_PSK_IDENTITY;
+        String suf = "UnReg";
+        String clientEndpoint = CLIENT_ENDPOINT_PSK + "_" + suf;
+        String identity = CLIENT_PSK_IDENTITY + "_" + suf;
         String keyPsk = CLIENT_PSK_KEY;
         PSKClientCredential clientCredentials = new PSKClientCredential();
         clientCredentials.setEndpoint(clientEndpoint);
@@ -136,8 +138,7 @@ public class PskLwm2mIntegrationTest extends AbstractSecurityLwM2MIntegrationTes
         Lwm2mDeviceProfileTransportConfiguration transportConfiguration = getTransportConfiguration(TELEMETRY_WITH_ONE_OBSERVE, getBootstrapServerCredentialsSecure(PSK, NONE));
         LwM2MDeviceCredentials deviceCredentials = getDeviceCredentialsSecure(clientCredentials, null, null, PSK, false);
         String awaitAlias = "await on client state (Psk_Lwm2m)";
-        Device lwm2mDevice = this.basicTestConnection(security,
-                null,
+        Device lwm2mDevice = this.basicTestConnection(security, null,
                 deviceCredentials,
                 clientEndpoint,
                 transportConfiguration,
@@ -157,7 +158,7 @@ public class PskLwm2mIntegrationTest extends AbstractSecurityLwM2MIntegrationTes
         Assert.assertNotNull(lwm2mDeviceProfileManyParams);
 
         lwM2MTestClient.start(true);
-        awaitObserveReadAll(2, lwm2mDevice.getId().getId().toString());
+        awaitObserveReadAll(1, lwm2mDevice.getId().getId().toString());
         awaitUpdateReg(3);
     }
 
@@ -190,12 +191,12 @@ public class PskLwm2mIntegrationTest extends AbstractSecurityLwM2MIntegrationTes
         clientCredentials.setEndpoint(clientEndpoint);
         clientCredentials.setIdentity(identity);
         clientCredentials.setKey(keyPsk);
-        Security securityBs = pskBootstrap(SECURE_URI_BS,
+        Security securityPskBs = pskBootstrap(SECURE_URI_BS,
                 identity.getBytes(StandardCharsets.UTF_8),
                 Hex.decodeHex(keyPsk.toCharArray()));
         Lwm2mDeviceProfileTransportConfiguration transportConfiguration = getTransportConfiguration(OBSERVE_ATTRIBUTES_WITHOUT_PARAMS, getBootstrapServerCredentialsSecure(PSK, BOTH));
         LwM2MDeviceCredentials deviceCredentials = getDeviceCredentialsSecure(clientCredentials, null, null, PSK, false);
-        this.basicTestConnection(null, securityBs,
+        this.basicTestConnection(null, securityPskBs,
                 deviceCredentials,
                 clientEndpoint,
                 transportConfiguration,

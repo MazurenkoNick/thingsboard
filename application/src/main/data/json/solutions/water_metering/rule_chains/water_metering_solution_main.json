@@ -1,67 +1,54 @@
 {
   "ruleChain": {
-    "additionalInfo": {
-      "description": ""
-    },
     "name": "Water Metering Solution Main",
+    "type": "CORE",
     "firstRuleNodeId": null,
     "root": false,
     "debugMode": false,
-    "configuration": null
+    "configuration": null,
+    "additionalInfo": {
+      "description": ""
+    }
   },
   "metadata": {
-    "firstNodeIndex": 5,
+    "firstNodeIndex": 4,
     "nodes": [
       {
-        "additionalInfo": {
-          "description": "",
-          "layoutX": 635,
-          "layoutY": 146
-        },
-        "type": "org.thingsboard.rule.engine.profile.TbDeviceProfileNode",
-        "name": "Device Profile Node",
-        "debugFailures": false,
-        "debugAll": false,
+        "type": "org.thingsboard.rule.engine.rpc.TbSendRPCRequestNode",
+        "name": "RPC Call Request",
+        "debugSettings": null,
+        "singletonMode": false,
+        "queueName": null,
+        "configurationVersion": 0,
         "configuration": {
-          "persistAlarmRulesState": false,
-          "fetchAlarmRulesStateOnStart": false
-        }
-      },
-      {
+          "timeoutInSeconds": 60
+        },
         "additionalInfo": {
           "layoutX": 1394,
           "layoutY": 214
-        },
-        "type": "org.thingsboard.rule.engine.rpc.TbSendRPCRequestNode",
-        "name": "RPC Call Request",
-        "debugFailures": false,
-        "debugAll": false,
-        "configuration": {
-          "timeoutInSeconds": 60
         }
       },
       {
+        "type": "org.thingsboard.rule.engine.filter.TbMsgTypeSwitchNode",
+        "name": "Message Type Switch",
+        "debugSettings": null,
+        "singletonMode": false,
+        "queueName": null,
+        "configurationVersion": 0,
+        "configuration": {
+          "version": 0
+        },
         "additionalInfo": {
           "layoutX": 906,
           "layoutY": 145
-        },
-        "type": "org.thingsboard.rule.engine.filter.TbMsgTypeSwitchNode",
-        "name": "Message Type Switch",
-        "debugFailures": false,
-        "debugAll": false,
-        "configuration": {
-          "version": 0
         }
       },
       {
-        "additionalInfo": {
-          "layoutX": 1394,
-          "layoutY": 69
-        },
         "type": "org.thingsboard.rule.engine.telemetry.TbMsgAttributesNode",
         "name": "Save Client Attributes",
-        "debugFailures": false,
-        "debugAll": false,
+        "debugSettings": null,
+        "singletonMode": false,
+        "queueName": null,
         "configurationVersion": 3,
         "configuration": {
           "processingSettings": {
@@ -71,18 +58,18 @@
           "notifyDevice": false,
           "sendAttributesUpdatedNotification": false,
           "updateAttributesOnlyOnValueChange": false
+        },
+        "additionalInfo": {
+          "layoutX": 1394,
+          "layoutY": 69
         }
       },
       {
-        "additionalInfo": {
-          "description": null,
-          "layoutX": 1392,
-          "layoutY": 142
-        },
         "type": "org.thingsboard.rule.engine.telemetry.TbMsgTimeseriesNode",
         "name": "Save Timeseries",
-        "debugFailures": false,
-        "debugAll": false,
+        "debugSettings": null,
+        "singletonMode": false,
+        "queueName": null,
         "configurationVersion": 1,
         "configuration": {
           "defaultTTL": 0,
@@ -90,18 +77,20 @@
           "processingSettings": {
             "type": "ON_EVERY_MESSAGE"
           }
+        },
+        "additionalInfo": {
+          "description": null,
+          "layoutX": 1392,
+          "layoutY": 142
         }
       },
       {
-        "additionalInfo": {
-          "description": "",
-          "layoutX": 304,
-          "layoutY": 148
-        },
         "type": "org.thingsboard.rule.engine.metadata.CalculateDeltaNode",
         "name": "Calculate Consumption Based on Pulse Counter",
-        "debugFailures": false,
-        "debugAll": false,
+        "debugSettings": null,
+        "singletonMode": false,
+        "queueName": null,
+        "configurationVersion": 1,
         "configuration": {
           "inputValueKey": "pulseCounter",
           "outputValueKey": "meterReadingDelta",
@@ -110,19 +99,22 @@
           "periodValueKey": "periodInMs",
           "round": 2,
           "tellFailureIfInputValueKeyIsAbsent": false,
-          "tellFailureIfDeltaIsNegative": true
+          "tellFailureIfDeltaIsNegative": true,
+          "excludeZeroDeltas": false
+        },
+        "additionalInfo": {
+          "description": "",
+          "layoutX": 463,
+          "layoutY": 148
         }
       },
       {
-        "additionalInfo": {
-          "description": "",
-          "layoutX": 1050,
-          "layoutY": 592
-        },
         "type": "org.thingsboard.rule.engine.analytics.incoming.TbSimpleAggMsgNode",
         "name": "Calculate Weekly Consumption",
-        "debugFailures": false,
-        "debugAll": false,
+        "debugSettings": null,
+        "singletonMode": false,
+        "queueName": null,
+        "configurationVersion": 2,
         "configuration": {
           "inputValueKey": "meterReadingDelta",
           "outputValueKey": "weeklyConsumption",
@@ -148,18 +140,20 @@
               "id": "e47343f0-5a68-11eb-a280-b979e84eaa51"
             }
           }
+        },
+        "additionalInfo": {
+          "description": "",
+          "layoutX": 1050,
+          "layoutY": 592
         }
       },
       {
-        "additionalInfo": {
-          "description": "",
-          "layoutX": 1045,
-          "layoutY": 459
-        },
         "type": "org.thingsboard.rule.engine.analytics.incoming.TbSimpleAggMsgNode",
         "name": "Calculate Weekly Consumption",
-        "debugFailures": false,
-        "debugAll": false,
+        "debugSettings": null,
+        "singletonMode": false,
+        "queueName": null,
+        "configurationVersion": 2,
         "configuration": {
           "inputValueKey": "meterReadingDelta",
           "outputValueKey": "weeklyConsumption",
@@ -185,18 +179,20 @@
               "id": "e479ac90-5a68-11eb-a280-b979e84eaa51"
             }
           }
+        },
+        "additionalInfo": {
+          "description": "",
+          "layoutX": 1045,
+          "layoutY": 459
         }
       },
       {
-        "additionalInfo": {
-          "description": "",
-          "layoutX": 1049,
-          "layoutY": 532
-        },
         "type": "org.thingsboard.rule.engine.analytics.incoming.TbSimpleAggMsgNode",
         "name": "Calculate Daily Consumption",
-        "debugFailures": false,
-        "debugAll": false,
+        "debugSettings": null,
+        "singletonMode": false,
+        "queueName": null,
+        "configurationVersion": 2,
         "configuration": {
           "inputValueKey": "meterReadingDelta",
           "outputValueKey": "dailyConsumption",
@@ -222,18 +218,20 @@
               "id": "e47343f0-5a68-11eb-a280-b979e84eaa51"
             }
           }
+        },
+        "additionalInfo": {
+          "description": "",
+          "layoutX": 1049,
+          "layoutY": 532
         }
       },
       {
-        "additionalInfo": {
-          "description": "",
-          "layoutX": 1046,
-          "layoutY": 397
-        },
         "type": "org.thingsboard.rule.engine.analytics.incoming.TbSimpleAggMsgNode",
         "name": "Calculate Daily Consumption",
-        "debugFailures": false,
-        "debugAll": false,
+        "debugSettings": null,
+        "singletonMode": false,
+        "queueName": null,
+        "configurationVersion": 2,
         "configuration": {
           "inputValueKey": "meterReadingDelta",
           "outputValueKey": "dailyConsumption",
@@ -259,18 +257,20 @@
               "id": "e479ac90-5a68-11eb-a280-b979e84eaa51"
             }
           }
+        },
+        "additionalInfo": {
+          "description": "",
+          "layoutX": 1046,
+          "layoutY": 397
         }
       },
       {
-        "additionalInfo": {
-          "description": "",
-          "layoutX": 742,
-          "layoutY": 508
-        },
         "type": "org.thingsboard.rule.engine.transform.TbChangeOriginatorNode",
         "name": "To Tenant",
-        "debugFailures": false,
-        "debugAll": false,
+        "debugSettings": null,
+        "singletonMode": false,
+        "queueName": null,
+        "configurationVersion": 1,
         "configuration": {
           "originatorSource": "TENANT",
           "relationsQuery": {
@@ -283,19 +283,22 @@
               }
             ],
             "fetchLastLevelOnly": false
-          }
+          },
+          "preserveOriginatorIfCustomer": true
+        },
+        "additionalInfo": {
+          "description": "",
+          "layoutX": 742,
+          "layoutY": 508
         }
       },
       {
-        "additionalInfo": {
-          "description": "",
-          "layoutX": 740,
-          "layoutY": 431
-        },
         "type": "org.thingsboard.rule.engine.transform.TbChangeOriginatorNode",
         "name": "To Customer",
-        "debugFailures": false,
-        "debugAll": false,
+        "debugSettings": null,
+        "singletonMode": false,
+        "queueName": null,
+        "configurationVersion": 1,
         "configuration": {
           "originatorSource": "CUSTOMER",
           "relationsQuery": {
@@ -308,19 +311,22 @@
               }
             ],
             "fetchLastLevelOnly": false
-          }
+          },
+          "preserveOriginatorIfCustomer": true
+        },
+        "additionalInfo": {
+          "description": "",
+          "layoutX": 740,
+          "layoutY": 431
         }
       },
       {
-        "additionalInfo": {
-          "description": "",
-          "layoutX": 158,
-          "layoutY": 431
-        },
         "type": "org.thingsboard.rule.engine.analytics.incoming.TbSimpleAggMsgNode",
         "name": "Calculate Daily Consumption",
-        "debugFailures": false,
-        "debugAll": false,
+        "debugSettings": null,
+        "singletonMode": false,
+        "queueName": null,
+        "configurationVersion": 2,
         "configuration": {
           "inputValueKey": "meterReadingDelta",
           "outputValueKey": "dailyConsumption",
@@ -343,18 +349,20 @@
             "type": "group",
             "entityGroupId": null
           }
+        },
+        "additionalInfo": {
+          "description": "",
+          "layoutX": 158,
+          "layoutY": 431
         }
       },
       {
-        "additionalInfo": {
-          "description": "",
-          "layoutX": 160,
-          "layoutY": 509
-        },
         "type": "org.thingsboard.rule.engine.analytics.incoming.TbSimpleAggMsgNode",
         "name": "Calculate Weekly Consumption",
-        "debugFailures": false,
-        "debugAll": false,
+        "debugSettings": null,
+        "singletonMode": false,
+        "queueName": null,
+        "configurationVersion": 2,
         "configuration": {
           "inputValueKey": "meterReadingDelta",
           "outputValueKey": "weeklyConsumption",
@@ -377,106 +385,132 @@
             "type": "group",
             "entityGroupId": null
           }
+        },
+        "additionalInfo": {
+          "description": "",
+          "layoutX": 160,
+          "layoutY": 509
         }
       },
       {
-        "additionalInfo": {
-          "description": "Forwards message to the \"Water Metering Solution Customer Alarm Routing\" rule chain",
-          "layoutX": 907,
-          "layoutY": 290
-        },
         "type": "org.thingsboard.rule.engine.flow.TbRuleChainInputNode",
         "name": "Customer Alarm Routing",
-        "debugFailures": false,
-        "debugAll": false,
+        "debugSettings": null,
+        "singletonMode": false,
+        "queueName": null,
+        "configurationVersion": 1,
         "configuration": {
-          "ruleChainId": "600cc4d0-831a-11eb-b965-d742151feed7"
+          "ruleChainId": "600cc4d0-831a-11eb-b965-d742151feed7",
+          "forwardMsgToDefaultRuleChain": false
+        },
+        "additionalInfo": {
+          "description": "Forwards message to the \"Water Metering Solution Customer Alarm Routing\" rule chain",
+          "layoutX": 882,
+          "layoutY": 315
         }
       },
       {
-        "additionalInfo": {
-          "description": "Forwards message to the \"Water Metering Solution Tenant Alarm Routing\" rule chain",
-          "layoutX": 905,
-          "layoutY": 231
-        },
         "type": "org.thingsboard.rule.engine.flow.TbRuleChainInputNode",
         "name": "Tenant Alarm Routing",
-        "debugFailures": false,
-        "debugAll": false,
+        "debugSettings": null,
+        "singletonMode": false,
+        "queueName": null,
+        "configurationVersion": 1,
         "configuration": {
-          "ruleChainId": "f989af30-8304-11eb-9c0d-65c02c160424"
+          "ruleChainId": "f989af30-8304-11eb-9c0d-65c02c160424",
+          "forwardMsgToDefaultRuleChain": false
+        },
+        "additionalInfo": {
+          "description": "Forwards message to the \"Water Metering Solution Tenant Alarm Routing\" rule chain",
+          "layoutX": 881,
+          "layoutY": 267
         }
       }
     ],
     "connections": [
       {
-        "fromIndex": 0,
-        "toIndex": 2,
-        "type": "Success"
-      },
-      {
-        "fromIndex": 2,
-        "toIndex": 1,
+        "fromIndex": 1,
+        "toIndex": 0,
         "type": "RPC Request to Device"
       },
       {
-        "fromIndex": 2,
-        "toIndex": 4,
-        "type": "Post telemetry"
-      },
-      {
-        "fromIndex": 2,
-        "toIndex": 3,
+        "fromIndex": 1,
+        "toIndex": 2,
         "type": "Post attributes"
       },
       {
-        "fromIndex": 5,
+        "fromIndex": 1,
+        "toIndex": 3,
+        "type": "Post telemetry"
+      },
+      {
+        "fromIndex": 1,
+        "toIndex": 13,
+        "type": "Alarm Created"
+      },
+      {
+        "fromIndex": 1,
+        "toIndex": 14,
+        "type": "Alarm Created"
+      },
+      {
+        "fromIndex": 4,
+        "toIndex": 1,
+        "type": "Other"
+      },
+      {
+        "fromIndex": 4,
+        "toIndex": 1,
+        "type": "Success"
+      },
+      {
+        "fromIndex": 4,
+        "toIndex": 9,
+        "type": "Success"
+      },
+      {
+        "fromIndex": 4,
         "toIndex": 10,
         "type": "Success"
       },
       {
-        "fromIndex": 5,
+        "fromIndex": 4,
         "toIndex": 11,
         "type": "Success"
       },
       {
-        "fromIndex": 5,
-        "toIndex": 0,
-        "type": "Success"
-      },
-      {
-        "fromIndex": 5,
-        "toIndex": 0,
-        "type": "Other"
-      },
-      {
-        "fromIndex": 5,
+        "fromIndex": 4,
         "toIndex": 12,
         "type": "Success"
       },
       {
         "fromIndex": 5,
-        "toIndex": 13,
+        "toIndex": 3,
         "type": "Success"
       },
       {
         "fromIndex": 6,
-        "toIndex": 4,
+        "toIndex": 3,
         "type": "Success"
       },
       {
         "fromIndex": 7,
-        "toIndex": 4,
+        "toIndex": 3,
         "type": "Success"
       },
       {
         "fromIndex": 8,
-        "toIndex": 4,
+        "toIndex": 3,
         "type": "Success"
       },
       {
         "fromIndex": 9,
-        "toIndex": 4,
+        "toIndex": 5,
+        "type": "Success"
+      },
+      {
+        "fromIndex": 9,
+        "toIndex": 7,
         "type": "Success"
       },
       {
@@ -491,34 +525,15 @@
       },
       {
         "fromIndex": 11,
-        "toIndex": 7,
-        "type": "Success"
-      },
-      {
-        "fromIndex": 11,
-        "toIndex": 9,
+        "toIndex": 1,
         "type": "Success"
       },
       {
         "fromIndex": 12,
-        "toIndex": 0,
+        "toIndex": 1,
         "type": "Success"
-      },
-      {
-        "fromIndex": 13,
-        "toIndex": 0,
-        "type": "Success"
-      },
-      {
-        "fromIndex": 0,
-        "toIndex": 14,
-        "type": "Alarm Created"
-      },
-      {
-        "fromIndex": 0,
-        "toIndex": 15,
-        "type": "Alarm Created"
       }
-    ]
+    ],
+    "ruleChainConnections": null
   }
 }

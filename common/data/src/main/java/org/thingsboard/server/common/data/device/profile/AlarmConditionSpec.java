@@ -46,6 +46,7 @@ import java.io.Serializable;
         @JsonSubTypes.Type(value = SimpleAlarmConditionSpec.class, name = "SIMPLE"),
         @JsonSubTypes.Type(value = DurationAlarmConditionSpec.class, name = "DURATION"),
         @JsonSubTypes.Type(value = RepeatingAlarmConditionSpec.class, name = "REPEATING")})
+@Deprecated
 public interface AlarmConditionSpec extends Serializable {
 
     @JsonIgnore

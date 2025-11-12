@@ -32,6 +32,7 @@ package org.thingsboard.server.dao.role;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.ListenableFuture;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -60,20 +61,20 @@ import org.thingsboard.server.dao.sql.JpaExecutorService;
 import java.util.List;
 import java.util.Optional;
 
+import static com.google.common.util.concurrent.MoreExecutors.directExecutor;
 import static org.thingsboard.server.dao.DaoUtil.toUUIDs;
 import static org.thingsboard.server.dao.service.Validator.validateId;
 import static org.thingsboard.server.dao.service.Validator.validateIds;
 import static org.thingsboard.server.dao.service.Validator.validatePageLink;
 import static org.thingsboard.server.dao.service.Validator.validateString;
 
-@Service("RoleDaoService")
 @Slf4j
+@Service("RoleDaoService")
 public class RoleServiceImpl extends CachedVersionedEntityService<RoleCacheKey, Role, RoleEvictEvent> implements RoleService {
 
     public static final String INCORRECT_TENANT_ID = "Incorrect tenantId ";
     public static final String INCORRECT_CUSTOMER_ID = "Incorrect customerId ";
     public static final String INCORRECT_ROLE_ID = "Incorrect roleId ";
-    public static final String INCORRECT_PAGE_LINK = "Incorrect page link ";
     public static final String INCORRECT_ROLE_NAME = "Incorrect role name ";
 
     @Autowired
@@ -88,9 +89,8 @@ public class RoleServiceImpl extends CachedVersionedEntityService<RoleCacheKey, 
     @Autowired
     private JpaExecutorService executor;
 
-
-    @TransactionalEventListener(classes = RoleEvictEvent.class)
     @Override
+    @TransactionalEventListener
     public void handleEvictEvent(RoleEvictEvent event) {
         if (event.getSavedRole() != null) {
             cache.put(RoleCacheKey.forId(event.getSavedRole().getId()), event.getSavedRole());
@@ -222,7 +222,7 @@ public class RoleServiceImpl extends CachedVersionedEntityService<RoleCacheKey, 
         } else {
             roleOptional = findRoleByTenantIdAndName(tenantId, name);
         }
-        if (!roleOptional.isPresent()) {
+        if (roleOptional.isEmpty()) {
             Role role = new Role();
             role.setTenantId(tenantId);
             if (customerId != null) {
@@ -313,37 +313,43 @@ public class RoleServiceImpl extends CachedVersionedEntityService<RoleCacheKey, 
         return roleDao.findRolesByTenantIdAndCustomerIdAndType(tenantId.getId(), customerId.getId(), type, pageLink);
     }
 
-    private PaginatedRemover<TenantId, Role> tenantRoleRemover =
-            new PaginatedRemover<TenantId, Role>() {
+    private final PaginatedRemover<TenantId, Role> tenantRoleRemover = new PaginatedRemover<>() {
 
-                @Override
-                protected PageData<Role> findEntities(TenantId tenantId, TenantId id, PageLink pageLink) {
-                    return roleDao.findRolesByTenantId(id.getId(), pageLink);
-                }
+        @Override
+        protected PageData<Role> findEntities(TenantId tenantId, TenantId id, PageLink pageLink) {
+            return roleDao.findRolesByTenantId(id.getId(), pageLink);
+        }
 
-                @Override
-                protected void removeEntity(TenantId tenantId, Role entity) {
-                    deleteRole(tenantId, new RoleId(entity.getUuidId()));
-                }
-            };
+        @Override
+        protected void removeEntity(TenantId tenantId, Role entity) {
+            deleteRole(tenantId, new RoleId(entity.getUuidId()));
+        }
 
-    private PaginatedRemover<CustomerId, Role> customerRoleRemover =
-            new PaginatedRemover<CustomerId, Role>() {
+    };
 
-                @Override
-                protected PageData<Role> findEntities(TenantId tenantId, CustomerId customerId, PageLink pageLink) {
-                    return roleDao.findRolesByTenantIdAndCustomerId(tenantId.getId(), customerId.getId(), pageLink);
-                }
+    private final PaginatedRemover<CustomerId, Role> customerRoleRemover = new PaginatedRemover<>() {
 
-                @Override
-                protected void removeEntity(TenantId tenantId, Role entity) {
-                    deleteRole(tenantId, new RoleId(entity.getUuidId()));
-                }
-            };
+        @Override
+        protected PageData<Role> findEntities(TenantId tenantId, CustomerId customerId, PageLink pageLink) {
+            return roleDao.findRolesByTenantIdAndCustomerId(tenantId.getId(), customerId.getId(), pageLink);
+        }
+
+        @Override
+        protected void removeEntity(TenantId tenantId, Role entity) {
+            deleteRole(tenantId, new RoleId(entity.getUuidId()));
+        }
+
+    };
 
     @Override
     public Optional<HasId<?>> findEntity(TenantId tenantId, EntityId entityId) {
         return Optional.ofNullable(findRoleById(tenantId, new RoleId(entityId.getId())));
+    }
+
+    @Override
+    public FluentFuture<Optional<HasId<?>>> findEntityAsync(TenantId tenantId, EntityId entityId) {
+        return FluentFuture.from(roleDao.findByIdAsync(tenantId, entityId.getId()))
+                .transform(Optional::ofNullable, directExecutor());
     }
 
     @Override

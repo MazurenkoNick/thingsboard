@@ -135,7 +135,7 @@ export class HomeDialogsService {
     const title = this.translate.instant('entity-group.make-private-entity-group-title',
       {entityGroupName: entityGroup.name});
     const content = this.translate.instant('entity-group.make-private-entity-group-text');
-    return this.dialogService.confirm(
+    return this.confirm(
       title,
       content).pipe(
       mergeMap((res) => {

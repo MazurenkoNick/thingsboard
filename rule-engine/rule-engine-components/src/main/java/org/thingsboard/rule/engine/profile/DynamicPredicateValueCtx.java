@@ -30,6 +30,7 @@
  */
 package org.thingsboard.rule.engine.profile;
 
+@Deprecated
 public interface DynamicPredicateValueCtx {
 
     EntityKeyValue getTenantValue(String key);

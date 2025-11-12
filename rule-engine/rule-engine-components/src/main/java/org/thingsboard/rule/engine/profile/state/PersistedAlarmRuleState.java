@@ -37,6 +37,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Deprecated
 public class PersistedAlarmRuleState {
 
     private long lastEventTs;

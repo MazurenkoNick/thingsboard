@@ -36,6 +36,7 @@ import org.thingsboard.server.common.data.query.DynamicValue;
 import java.util.Set;
 
 @Data
+@Deprecated
 public class SpecificTimeSchedule implements AlarmSchedule {
 
     private String timezone;

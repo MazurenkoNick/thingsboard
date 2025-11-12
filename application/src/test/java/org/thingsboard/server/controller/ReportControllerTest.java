@@ -164,6 +164,7 @@ public class ReportControllerTest extends AbstractControllerTest {
         for (int i = 0; i < 10; i++) {
             String telemetryPayload = "{\"temperature\":" + i + "}";
             doPost("/api/plugins/telemetry/DEVICE/" + testDevice.getId() + "/timeseries/" + DataConstants.SHARED_SCOPE, telemetryPayload, String.class, status().isOk());
+            Thread.sleep(100);
         }
 
         String devicesAliasId = StringUtils.randomAlphabetic(10);
@@ -520,7 +521,7 @@ public class ReportControllerTest extends AbstractControllerTest {
         History history = new History();
         history.setHistoryType(2);
         history.setQuickInterval(QuickTimeInterval.CURRENT_DAY);
-        history.setInterval(Interval.of(60000));
+        history.setInterval(Interval.of(86400000));
         timewindow.setHistory(history);
         timewindow.setTimezone(TimeZone.getDefault().getID());
         AggregationConfiguration aggregation = new AggregationConfiguration();
