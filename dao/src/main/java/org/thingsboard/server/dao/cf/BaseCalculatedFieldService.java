@@ -47,6 +47,7 @@ import org.thingsboard.server.common.data.id.HasId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
+import org.thingsboard.server.common.data.permission.MergedUserPermissions;
 import org.thingsboard.server.dao.entity.AbstractEntityService;
 import org.thingsboard.server.dao.entity.EntityService;
 import org.thingsboard.server.dao.eventsourcing.DeleteEntityEvent;
@@ -168,7 +169,7 @@ public class BaseCalculatedFieldService extends AbstractEntityService implements
         Set<EntityId> entityIds = calculatedFields.getData().stream()
                 .map(CalculatedField::getEntityId)
                 .collect(Collectors.toSet());
-        Map<EntityId, EntityInfo> entityInfos = entityService.fetchEntityInfos(tenantId, null, entityIds);
+        Map<EntityId, EntityInfo> entityInfos = entityService.fetchEntityInfos(tenantId, null, entityIds, MergedUserPermissions.ALL);
         return calculatedFields.mapData(calculatedField -> {
             EntityInfo entityInfo = entityInfos.get(calculatedField.getEntityId());
             return new CalculatedFieldInfo(calculatedField, entityInfo.getName());

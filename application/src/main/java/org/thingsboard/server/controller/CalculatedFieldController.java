@@ -76,6 +76,7 @@ import org.thingsboard.server.common.data.job.JobType;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.common.data.permission.Operation;
+import org.thingsboard.server.common.data.permission.Resource;
 import org.thingsboard.server.config.annotations.ApiOperation;
 import org.thingsboard.server.dao.event.EventService;
 import org.thingsboard.server.dao.job.JobService;
@@ -95,6 +96,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import static org.thingsboard.server.controller.ControllerConstants.CF_TEXT_SEARCH_DESCRIPTION;
 import static org.thingsboard.server.controller.ControllerConstants.ENTITY_ID_PARAM_DESCRIPTION;
@@ -238,8 +240,20 @@ public class CalculatedFieldController extends BaseController {
         SecurityUser user = getCurrentUser();
         Set<EntityType> entityTypes;
         if (entityType == null) {
-            entityTypes = CalculatedField.SUPPORTED_ENTITIES.keySet();
+            entityTypes = CalculatedField.SUPPORTED_ENTITIES.entrySet().stream()
+                    .filter(entry -> entry.getValue().contains(type))
+                    .map(Map.Entry::getKey)
+                    .filter(t -> {
+                        try {
+                            accessControlService.checkPermission(user, Resource.resourceFromEntityType(t), Operation.READ_CALCULATED_FIELD);
+                            return true;
+                        } catch (ThingsboardException e) {
+                            return false;
+                        }
+                    })
+                    .collect(Collectors.toSet());
         } else {
+            accessControlService.checkPermission(user, Resource.resourceFromEntityType(entityType), Operation.READ_CALCULATED_FIELD);
             entityTypes = EnumSet.of(entityType);
         }
 
