@@ -127,7 +127,7 @@ export class SecretKeyInputComponent extends PageComponent implements OnInit, Co
 
   ngOnInit(): void {
     this.readonly = this.readonly || !this.userPermissionsService.hasGenericPermission(Resource.SECRET, Operation.WRITE);
-    const validators = [];
+    const validators = [Validators.pattern(/.*\S.*/)];
     if (this.required) {
       validators.push(Validators.required);
     }

@@ -50,4 +50,6 @@ public interface Langchain4jChatModelConfigurer {
 
     ChatModel configureChatModel(GitHubModelsChatModelConfig chatModelConfig);
 
+    ChatModel configureChatModel(OllamaChatModelConfig chatModelConfig);
+
 }

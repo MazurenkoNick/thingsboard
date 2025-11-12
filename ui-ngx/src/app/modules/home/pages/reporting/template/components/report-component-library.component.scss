@@ -37,6 +37,9 @@
   flex-direction: column;
   gap: 16px;
   padding: 16px 8px;
+  &.no-padding {
+    padding: 0;
+  }
   &.tb-drag-active-list {
     display: none;
   }
@@ -54,6 +57,9 @@
 .tb-report-component-library-drag-item {
   box-sizing: content-box;
   width: 234px;
+  &.nested-library {
+    width: 218px;
+  }
   cursor: move;
   &:active {
     cursor: grabbing;

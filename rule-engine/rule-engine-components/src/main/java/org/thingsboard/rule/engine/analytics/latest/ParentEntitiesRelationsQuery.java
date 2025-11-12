@@ -40,6 +40,7 @@ import org.thingsboard.server.common.data.id.EntityId;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Predicate;
 
 @Data
 public class ParentEntitiesRelationsQuery implements ParentEntitiesQuery {
@@ -51,8 +52,16 @@ public class ParentEntitiesRelationsQuery implements ParentEntitiesQuery {
 
     @Override
     public ListenableFuture<List<EntityId>> getParentEntitiesAsync(TbContext ctx) {
-        ListenableFuture<List<EntityId>> parentEntities = EntitiesRelatedEntityIdAsyncLoader.findEntitiesAsync(ctx, rootEntityId, relationsQuery,
-                entityId -> ctx.getPeContext().isLocalEntity(entityId));
+        return getParentEntitiesAsyncInternal(ctx, entityId -> true);
+    }
+
+    @Override
+    public ListenableFuture<List<EntityId>> getLocalParentEntitiesAsync(TbContext ctx) {
+        return getParentEntitiesAsyncInternal(ctx, entityId -> ctx.getPeContext().isLocalEntity(entityId));
+    }
+
+    private ListenableFuture<List<EntityId>> getParentEntitiesAsyncInternal(TbContext ctx, Predicate<EntityId> filter) {
+        ListenableFuture<List<EntityId>> parentEntities = EntitiesRelatedEntityIdAsyncLoader.findEntitiesAsync(ctx, rootEntityId, relationsQuery, filter);
         if (includeRootEntity) {
             return Futures.transform(parentEntities, entityIds -> {
                 List<EntityId> newEntityIds = new ArrayList<>(entityIds);

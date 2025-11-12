@@ -193,7 +193,7 @@ export class TimeUnitInputComponent implements ControlValueAccessor, Validator, 
       this.timeInputForm.disable({emitEvent: false});
     } else {
       this.timeInputForm.enable({emitEvent: false});
-      if(this.timeInputForm.invalid) {
+      if(!this.timeInputForm.valid) {
         setTimeout(() => this.updatedModel(this.timeInputForm.value, true))
       }
     }
@@ -215,7 +215,7 @@ export class TimeUnitInputComponent implements ControlValueAccessor, Validator, 
   }
 
   validate(): ValidationErrors | null {
-    return this.timeInputForm.valid ? null : {
+    return this.timeInputForm.disabled || this.timeInputForm.valid ? null : {
       timeInput: false
     };
   }

@@ -92,6 +92,7 @@ import org.thingsboard.server.common.data.UpdateMessage;
 import org.thingsboard.server.common.data.UsageInfo;
 import org.thingsboard.server.common.data.User;
 import org.thingsboard.server.common.data.UserEmailInfo;
+import org.thingsboard.server.common.data.ai.AiModel;
 import org.thingsboard.server.common.data.alarm.Alarm;
 import org.thingsboard.server.common.data.alarm.AlarmComment;
 import org.thingsboard.server.common.data.alarm.AlarmCommentInfo;
@@ -121,6 +122,7 @@ import org.thingsboard.server.common.data.entityview.EntityViewSearchQuery;
 import org.thingsboard.server.common.data.event.EventType;
 import org.thingsboard.server.common.data.group.EntityGroup;
 import org.thingsboard.server.common.data.group.EntityGroupInfo;
+import org.thingsboard.server.common.data.id.AiModelId;
 import org.thingsboard.server.common.data.id.AlarmCommentId;
 import org.thingsboard.server.common.data.id.AlarmId;
 import org.thingsboard.server.common.data.id.AssetId;
@@ -161,9 +163,10 @@ import org.thingsboard.server.common.data.integration.IntegrationInfo;
 import org.thingsboard.server.common.data.integration.IntegrationType;
 import org.thingsboard.server.common.data.kv.Aggregation;
 import org.thingsboard.server.common.data.kv.AttributeKvEntry;
-import org.thingsboard.server.common.data.kv.ReadTsKvQuery;
-import org.thingsboard.server.common.data.kv.ReadTsKvQueryResult;
 import org.thingsboard.server.common.data.kv.IntervalType;
+import org.thingsboard.server.common.data.kv.ReadTsKvQuery;
+import org.thingsboard.server.common.data.kv.BaseReadTsKvQuery;
+import org.thingsboard.server.common.data.kv.ReadTsKvQueryResult;
 import org.thingsboard.server.common.data.kv.TsKvEntry;
 import org.thingsboard.server.common.data.menu.CustomMenu;
 import org.thingsboard.server.common.data.menu.CustomMenuInfo;
@@ -2243,7 +2246,7 @@ public class RestClient implements Closeable {
         return RestJsonConverter.toTimeseries(timeseries);
     }
 
-    public List<ReadTsKvQueryResult> getTimeseriesByQueries(EntityId entityId, List<ReadTsKvQuery> queries) {
+    public List<ReadTsKvQueryResult> getTimeseriesByQueries(EntityId entityId, List<BaseReadTsKvQuery> queries) {
         Map<String, String> params = new HashMap<>();
         params.put("entityType", entityId.getEntityType().name());
         params.put("entityId", entityId.getId().toString());
@@ -2251,13 +2254,14 @@ public class RestClient implements Closeable {
         StringBuilder urlBuilder = new StringBuilder(baseURL);
         urlBuilder.append("/api/plugins/telemetry/{entityType}/{entityId}/values/timeseries");
 
-        return restTemplate.exchange(
+        JsonNode body = restTemplate.exchange(
                 urlBuilder.toString(),
                 HttpMethod.POST,
                 queries == null ? HttpEntity.EMPTY : new HttpEntity<>(queries),
-                new ParameterizedTypeReference<List<ReadTsKvQueryResult>>() {
+                new ParameterizedTypeReference<JsonNode>() {
                 },
                 params).getBody();
+        return RestJsonConverter.toReadTsKvQueryResult(body);
     }
 
     public boolean saveDeviceAttributes(DeviceId deviceId, String scope, JsonNode request) {
@@ -2761,7 +2765,7 @@ public class RestClient implements Closeable {
         addWidgetInfoFiltersToParams(tenantOnly, fullSearch, deprecatedFilter, widgetTypeList, params);
         return restTemplate.exchange(
                 baseURL + "/api/widgetTypes?" + getUrlParams(pageLink) +
-                getWidgetTypeInfoPageRequestUrlParams(tenantOnly, fullSearch, deprecatedFilter, widgetTypeList),
+                        getWidgetTypeInfoPageRequestUrlParams(tenantOnly, fullSearch, deprecatedFilter, widgetTypeList),
                 HttpMethod.GET,
                 HttpEntity.EMPTY,
                 new ParameterizedTypeReference<PageData<WidgetTypeInfo>>() {
@@ -2849,7 +2853,7 @@ public class RestClient implements Closeable {
         addWidgetInfoFiltersToParams(tenantOnly, fullSearch, deprecatedFilter, widgetTypeList, params);
         return restTemplate.exchange(
                 baseURL + "/api/widgetTypesInfos?widgetsBundleId={widgetsBundleId}&" + getUrlParams(pageLink) +
-                getWidgetTypeInfoPageRequestUrlParams(tenantOnly, fullSearch, deprecatedFilter, widgetTypeList),
+                        getWidgetTypeInfoPageRequestUrlParams(tenantOnly, fullSearch, deprecatedFilter, widgetTypeList),
                 HttpMethod.GET,
                 HttpEntity.EMPTY,
                 new ParameterizedTypeReference<PageData<WidgetTypeInfo>>() {
@@ -3703,6 +3707,29 @@ public class RestClient implements Closeable {
             }
         }
     }
+
+    public AiModel saveAiModel(AiModel aiModel) {
+        return restTemplate.postForEntity(baseURL + "/api/ai/model", aiModel, AiModel.class).getBody();
+    }
+
+    public Optional<AiModel> getAiModel(AiModelId aiModelId) {
+        try {
+            ResponseEntity<AiModel> response = restTemplate.getForEntity(
+                    baseURL + "/api/aiModel/{aiModelId}", AiModel.class, aiModelId.getId());
+            return Optional.ofNullable(response.getBody());
+        } catch (HttpClientErrorException exception) {
+            if (exception.getStatusCode() == HttpStatus.NOT_FOUND) {
+                return Optional.empty();
+            } else {
+                throw exception;
+            }
+        }
+    }
+
+    public void deleteAiModel(AiModelId aiModelId) {
+        restTemplate.delete(baseURL + "/api/aiModel/{aiModelId}", aiModelId.getId());
+    }
+
 
     private String getTimeUrlParams(TimePageLink pageLink) {
         String urlParams = getUrlParams(pageLink);

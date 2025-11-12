@@ -77,7 +77,8 @@ import static org.thingsboard.common.util.DonAsynchron.withCallback;
                 "If both 'Create new owner if not exists' and 'Create new owner as sub-customer of current owner' are enabled, the rule node creates a new owner as a sub-customer of the current owner.<br><br>" +
                 "Output connections: <code>Success</code> - if an entity already belongs to this owner or entity owner is successfully changed, otherwise - <code>Failure</code>.",
         configDirective = "tbActionNodeChangeOwnerConfig",
-        icon = "assignment_ind"
+        icon = "assignment_ind",
+        docUrl = "https://thingsboard.io/docs/user-guide/rule-engine-2-0/nodes/action/change-owner/"
 )
 public class TbChangeOwnerNode implements TbNode {
 

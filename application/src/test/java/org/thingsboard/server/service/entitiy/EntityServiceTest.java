@@ -2091,7 +2091,7 @@ public class EntityServiceTest extends AbstractControllerTest {
         tenantEntityIds.add(blobEntityService.saveBlobEntity(blobEntity).getId());
 
         StateEntityOwnerFilter stateEntityOwnerFilter = new StateEntityOwnerFilter();
-        stateEntityOwnerFilter.setSingleEntity(device.getId());
+        stateEntityOwnerFilter.setSingleEntity(AliasEntityId.fromEntityId(device.getId()));
 
         List<EntityKey> entityFields = List.of(
                 new EntityKey(EntityKeyType.ENTITY_FIELD, "name")
@@ -2102,7 +2102,7 @@ public class EntityServiceTest extends AbstractControllerTest {
 
         //check customer entities owner
         customerEntityIds.forEach(entityId -> {
-            stateEntityOwnerFilter.setSingleEntity(entityId);
+            stateEntityOwnerFilter.setSingleEntity(AliasEntityId.fromEntityId(entityId));
             PageData<EntityData> result = findByQueryAndCheck(query, 1);
             String ownerName = result.getData().get(0).getLatest().get(EntityKeyType.ENTITY_FIELD).get("name").getValue();
             assertThat(ownerName).isEqualTo(TEST_CUSTOMER_NAME);
@@ -2110,14 +2110,14 @@ public class EntityServiceTest extends AbstractControllerTest {
 
         //check tenant entities owner
         tenantEntityIds.forEach(entityId -> {
-            stateEntityOwnerFilter.setSingleEntity(entityId);
+            stateEntityOwnerFilter.setSingleEntity(AliasEntityId.fromEntityId(entityId));
             PageData<EntityData> result = findByQueryAndCheck(query, 1);
             String ownerName = result.getData().get(0).getLatest().get(EntityKeyType.ENTITY_FIELD).get("name").getValue();
             assertThat(ownerName).isEqualTo(TEST_TENANT_NAME);
         });
 
         //check that tenant entity is not accessible to customer user
-        stateEntityOwnerFilter.setSingleEntity(tenantEntityIds.get(0));
+        stateEntityOwnerFilter.setSingleEntity(AliasEntityId.fromEntityId(tenantEntityIds.get(0)));
         EntityCountQuery countQuery = new EntityDataQuery(stateEntityOwnerFilter, pageLink, null, null, null);
         countByQueryAndCheck(customerId, mergedUserPermissionsPE, countQuery, 0);
     }
@@ -2384,7 +2384,7 @@ public class EntityServiceTest extends AbstractControllerTest {
             In order to be careful with updating Relation Query while adding new Entity Type,
             this checkup will help to find place, where you could check the correctness of building query
              */
-            Assert.assertEquals(46, EntityType.values().length);
+            Assert.assertEquals(45, EntityType.values().length);
         }
     }
 

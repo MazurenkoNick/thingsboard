@@ -53,7 +53,7 @@ import {
 } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { WidgetConfigComponent } from '@home/components/widget/widget-config.component';
-import { DataKey, DatasourceType, widgetType } from '@shared/models/widget.models';
+import { DataKey, DatasourceType, Widget, widgetType } from '@shared/models/widget.models';
 import { dataKeyRowValidator, dataKeyValid } from '@home/components/widget/config/basic/common/data-key-row.component';
 import { CdkDragDrop } from '@angular/cdk/drag-drop';
 import { DataKeyType } from '@shared/models/telemetry/telemetry.models';
@@ -76,10 +76,13 @@ export interface DataKeysPanelOptions {
   settingsForm?: FormProperty[];
   settingsFormFunction?: DataKeySettingsFormFunction;
   settingsFormTrimDefaults?: boolean;
+  settingsDirective?: string;
+  settingsFunction?: DataKeySettingsFunction;
   latestSettingsForm?: FormProperty[];
   latestSettingsFormFunction?: DataKeySettingsFormFunction;
   latestSettingsFormTrimDefaults?: boolean;
   hasAdditionalLatestDataKeys?: boolean;
+  widget?: Widget;
 }
 
 @Component({
@@ -199,6 +202,10 @@ export class DataKeysPanelComponent implements ControlValueAccessor, OnInit, OnC
     return this.widgetConfigComponent?.widgetConfigCallbacks || this.getDataKeysPanelOption('callbacks');
   }
 
+  get widget(): Widget {
+    return this.widgetConfigComponent?.widget || this.getDataKeysPanelOption('widget');
+  }
+
   get hasAdditionalLatestDataKeys(): boolean {
     return !this.hideSourceSelection && this.widgetType === widgetType.timeseries &&
       (this.widgetConfigComponent?.modelValue?.typeParameters?.hasAdditionalLatestDataKeys || this.getDataKeysPanelOption('hasAdditionalLatestDataKeys'));
@@ -216,6 +223,10 @@ export class DataKeysPanelComponent implements ControlValueAccessor, OnInit, OnC
     return this.hasDataKeysPanelOptions('settingsFormTrimDefaults') ? this.getDataKeysPanelOption('settingsFormTrimDefaults') : false;
   }
 
+  get dataKeySettingsDirective(): string {
+    return this.widgetConfigComponent?.modelValue?.dataKeySettingsDirective || this.getDataKeysPanelOption('settingsDirective');
+  }
+
   get latestDataKeySettingsForm(): FormProperty[] {
     return this.widgetConfigComponent?.modelValue?.latestDataKeySettingsForm || this.getDataKeysPanelOption('latestSettingsForm');
   }
@@ -229,7 +240,7 @@ export class DataKeysPanelComponent implements ControlValueAccessor, OnInit, OnC
   }
 
   get dataKeySettingsFunction(): DataKeySettingsFunction {
-    return this.widgetConfigComponent?.modelValue?.dataKeySettingsFunction;
+    return this.widgetConfigComponent?.modelValue?.dataKeySettingsFunction || this.getDataKeysPanelOption('settingsFunction');
   }
 
   get dragEnabled(): boolean {

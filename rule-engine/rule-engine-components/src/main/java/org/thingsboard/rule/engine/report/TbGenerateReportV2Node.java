@@ -30,7 +30,6 @@
  */
 package org.thingsboard.rule.engine.report;
 
-import lombok.extern.slf4j.Slf4j;
 import org.thingsboard.common.util.DonAsynchron;
 import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.rule.engine.api.RuleNode;
@@ -48,7 +47,6 @@ import org.thingsboard.server.common.msg.TbMsg;
 
 import java.util.Base64;
 
-@Slf4j
 @RuleNode(
         type = ComponentType.ACTION,
         name = "generate report",
@@ -56,7 +54,8 @@ import java.util.Base64;
         nodeDescription = "Generates report",
         nodeDetails = "Generates report, creating a \"Report generation\" task in the task manager. The output metadata of the node contains \"reports\" field with the generated report id.",
         configDirective = "tbActionNodeGenerateReportConfig",
-        icon = "description"
+        icon = "description",
+        docUrl = "https://thingsboard.io/docs/user-guide/rule-engine-2-0/nodes/action/generate-report/"
 )
 public class TbGenerateReportV2Node extends TbAbstractExternalNode {
 

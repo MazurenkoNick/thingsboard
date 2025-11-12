@@ -32,12 +32,14 @@ package org.thingsboard.server.dao.group;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.event.TransactionalEventListener;
@@ -108,6 +110,7 @@ import java.util.Optional;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
+import static com.google.common.util.concurrent.MoreExecutors.directExecutor;
 import static org.thingsboard.server.dao.DaoUtil.extractConstraintViolationException;
 import static org.thingsboard.server.dao.DaoUtil.toUUIDs;
 import static org.thingsboard.server.dao.service.Validator.checkNotNull;
@@ -118,8 +121,8 @@ import static org.thingsboard.server.dao.service.Validator.validateIds;
 import static org.thingsboard.server.dao.service.Validator.validatePageLink;
 import static org.thingsboard.server.dao.service.Validator.validateString;
 
-@Service("EntityGroupDaoService")
 @Slf4j
+@Service("EntityGroupDaoService")
 public class BaseEntityGroupService extends AbstractCachedEntityService<EntityGroupCacheKey, EntityGroup, EntityGroupEvictEvent> implements EntityGroupService {
 
     public static final String ENTITY_GROUP_RELATION_PREFIX = "ENTITY_GROUP_";
@@ -168,6 +171,7 @@ public class BaseEntityGroupService extends AbstractCachedEntityService<EntityGr
     private JpaExecutorService executorService;
 
     @Autowired
+    @Lazy
     private UserService userService;
 
     @Override
@@ -1190,12 +1194,18 @@ public class BaseEntityGroupService extends AbstractCachedEntityService<EntityGr
     }
 
     @Override
+    public FluentFuture<Optional<HasId<?>>> findEntityAsync(TenantId tenantId, EntityId entityId) {
+        return FluentFuture.from(findEntityGroupByIdAsync(tenantId, new EntityGroupId(entityId.getId())))
+                .transform(Optional::ofNullable, directExecutor());
+    }
+
+    @Override
     public EntityType getEntityType() {
         return EntityType.ENTITY_GROUP;
     }
 
-    @TransactionalEventListener(classes = EntityGroupEvictEvent.class)
     @Override
+    @TransactionalEventListener
     public void handleEvictEvent(EntityGroupEvictEvent event) {
         List<EntityGroupCacheKey> keys = new ArrayList<>(2);
         keys.add(new EntityGroupCacheKey(event.ownerId(), event.entityType(), event.newGroupName()));

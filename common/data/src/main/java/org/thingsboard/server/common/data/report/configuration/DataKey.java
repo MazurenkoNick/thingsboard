@@ -30,6 +30,7 @@
  */
 package org.thingsboard.server.common.data.report.configuration;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -37,6 +38,9 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.thingsboard.server.common.data.kv.Aggregation;
+import org.thingsboard.server.common.data.report.configuration.chart.DataKeyComparisonSettings;
+import org.thingsboard.server.common.data.report.configuration.chart.TimeSeriesChartKeySettings;
+import org.thingsboard.server.common.data.report.configuration.style.DataKeySettingsType;
 import org.thingsboard.server.common.data.report.configuration.timewindow.TimeWindowConfiguration;
 
 @Schema
@@ -56,6 +60,7 @@ public class DataKey {
     private String name;
     private String type;
     private String label;
+    private String color;
     private Integer decimals;
     private String units;
     private Aggregation aggregationType;
@@ -63,5 +68,17 @@ public class DataKey {
     private boolean usePostProcessing;
     private String postFuncBody;
     private DataKeySettings settings;
+
+    @JsonIgnore
+    public boolean isComparisonKey() {
+        if (settings != null && settings.getType() == DataKeySettingsType.TIME_SERIES_CHART) {
+            TimeSeriesChartKeySettings timeSeriesChartKeySettings = (TimeSeriesChartKeySettings)settings;
+            DataKeyComparisonSettings comparisonSettings = timeSeriesChartKeySettings.getComparisonSettings();
+            if (comparisonSettings != null) {
+                return comparisonSettings.getShowValuesForComparison() != null ? comparisonSettings.getShowValuesForComparison() : false;
+            }
+        }
+        return false;
+    }
 
 }

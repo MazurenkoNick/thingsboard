@@ -62,7 +62,7 @@ import {
   DataKeySettingsFunction
 } from '@home/components/widget/lib/settings/common/key/data-keys.component.models';
 import { WidgetConfigCallbacks } from '@home/components/widget/config/widget-config.component.models';
-import { TbFunction } from '@shared/models/js-function.models';
+import { CompiledTbFunction, TbFunction } from '@shared/models/js-function.models';
 import { FormProperty, jsonFormSchemaToFormProperties } from '@shared/models/dynamic-form.models';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TbUnit } from '@shared/models/unit.models';
@@ -389,6 +389,7 @@ export interface KeyInfo {
   label?: string;
   color?: string;
   funcBody?: TbFunction;
+  builtInFunc?: (time: number, prevValue: any) => any;
   postFuncBody?: TbFunction;
   units?: TbUnit;
   decimals?: number;
@@ -676,7 +677,8 @@ export enum MapItemType {
   marker = 'marker',
   polygon = 'polygon',
   rectangle = 'rectangle',
-  circle = 'circle'
+  circle = 'circle',
+  polyline = 'polyline'
 }
 
 export const widgetActionTypes = Object.keys(WidgetActionType)
@@ -716,6 +718,7 @@ export const mapItemTypeTranslationMap = new Map<MapItemType, string>(
     [ MapItemType.polygon, 'widget-action.map-item.polygon' ],
     [ MapItemType.rectangle, 'widget-action.map-item.rectangle' ],
     [ MapItemType.circle, 'widget-action.map-item.circle' ],
+    [ MapItemType.polyline, 'widget-action.map-item.polyline' ]
   ]
 )
 
@@ -857,6 +860,8 @@ export interface MapItemTooltips {
   finishRect?: string;
   startCircle?: string;
   finishCircle?: string;
+  startPolyline?: string;
+  finishPolyline?: string;
 }
 
 export const mapItemTooltipsTranslation: Required<MapItemTooltips> = Object.freeze({
@@ -867,7 +872,9 @@ export const mapItemTooltipsTranslation: Required<MapItemTooltips> = Object.free
   startRect: 'widgets.maps.data-layer.polygon.rectangle-place-first-point-hint',
   finishRect: 'widgets.maps.data-layer.polygon.finish-rectangle-hint',
   startCircle: 'widgets.maps.data-layer.circle.place-circle-center-hint',
-  finishCircle: 'widgets.maps.data-layer.circle.finish-circle-hint'
+  finishCircle: 'widgets.maps.data-layer.circle.finish-circle-hint',
+  startPolyline: 'widgets.maps.data-layer.polyline.polyline-place-first-point-hint',
+  finishPolyline: 'widgets.maps.data-layer.polyline.finish-polyline-hint'
 })
 
 export interface WidgetActionDescriptor extends WidgetAction {
@@ -1038,6 +1045,7 @@ export interface IWidgetSettingsComponent {
   settings: WidgetSettings;
   settingsChanged: Observable<WidgetSettings>;
   validateSettings(): boolean;
+  reportMode: boolean;
   [key: string]: any;
 }
 
@@ -1057,6 +1065,8 @@ export abstract class WidgetSettingsComponent extends PageComponent implements
   dashboard: Dashboard;
 
   widget: Widget;
+
+  reportMode: boolean;
 
   widgetConfigValue: WidgetConfigComponentData;
 
@@ -1178,5 +1188,4 @@ export abstract class WidgetSettingsComponent extends PageComponent implements
 
   protected onWidgetConfigSet(widgetConfig: WidgetConfigComponentData) {
   }
-
 }

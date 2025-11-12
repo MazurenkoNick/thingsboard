@@ -44,7 +44,7 @@ import java.util.List;
 @EqualsAndHashCode
 @NoArgsConstructor
 @AllArgsConstructor
-public abstract class AbstractDataReportComponent implements DataReportComponent {
+public abstract class AbstractDataReportComponent extends AbstractReportComponent implements DataReportComponent {
 
     private List<DataSource> dataSources;
 

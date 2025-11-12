@@ -30,6 +30,7 @@
  */
 package org.thingsboard.server.dao.entity;
 
+import com.google.common.util.concurrent.FluentFuture;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
@@ -46,6 +47,7 @@ import org.thingsboard.server.common.data.HasTitle;
 import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.edqs.query.EdqsRequest;
 import org.thingsboard.server.common.data.edqs.query.EdqsResponse;
+import org.thingsboard.server.common.data.group.EntityGroup;
 import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.EntityGroupId;
 import org.thingsboard.server.common.data.id.EntityId;
@@ -84,7 +86,6 @@ import org.thingsboard.server.dao.edge.EdgeService;
 import org.thingsboard.server.dao.entityview.EntityViewService;
 import org.thingsboard.server.dao.exception.IncorrectParameterException;
 import org.thingsboard.server.dao.model.ModelConstants;
-import org.thingsboard.server.dao.sql.alarm.AlarmRepository;
 import org.thingsboard.server.dao.sql.query.EntityMapping;
 import org.thingsboard.server.dao.user.UserService;
 
@@ -100,6 +101,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import static com.google.common.util.concurrent.MoreExecutors.directExecutor;
 import static org.thingsboard.server.common.data.query.EntityFilterType.ENTITY_GROUP_NAME;
 import static org.thingsboard.server.common.data.query.EntityFilterType.ENTITY_NAME;
 import static org.thingsboard.server.common.data.query.EntityFilterType.ENTITY_TYPE;
@@ -107,9 +109,6 @@ import static org.thingsboard.server.dao.model.ModelConstants.NULL_UUID;
 import static org.thingsboard.server.dao.service.Validator.validateEntityDataPageLink;
 import static org.thingsboard.server.dao.service.Validator.validateId;
 
-/**
- * Created by ashvayka on 04.05.17.
- */
 @Service
 @Slf4j
 public class BaseEntityService extends AbstractEntityService implements EntityService {
@@ -126,9 +125,6 @@ public class BaseEntityService extends AbstractEntityService implements EntitySe
     private AssetService assetService;
 
     @Autowired
-    private AlarmRepository alarmRepository;
-
-    @Autowired
     private DeviceService deviceService;
 
     @Autowired
@@ -138,6 +134,7 @@ public class BaseEntityService extends AbstractEntityService implements EntitySe
     private CustomerService customerService;
 
     @Autowired
+    @Lazy
     private UserService userService;
 
     @Autowired
@@ -151,7 +148,7 @@ public class BaseEntityService extends AbstractEntityService implements EntitySe
 
     @Autowired
     @Lazy
-    EntityServiceRegistry entityServiceRegistry;
+    private EntityServiceRegistry entityServiceRegistry;
 
     @Autowired
     private EdqsService edqsService;
@@ -394,6 +391,11 @@ public class BaseEntityService extends AbstractEntityService implements EntitySe
     }
 
     @Override
+    public FluentFuture<Optional<CustomerId>> fetchEntityCustomerIdAsync(TenantId tenantId, EntityId entityId) {
+        return fetchAndConvertAsync(tenantId, entityId, this::getCustomerId);
+    }
+
+    @Override
     public Optional<NameLabelAndCustomerDetails> fetchNameLabelAndCustomerDetails(TenantId tenantId, EntityId entityId) {
         log.trace("Executing fetchNameLabelAndCustomerDetails [{}]", entityId);
         return fetchAndConvert(tenantId, entityId, this::getNameLabelAndCustomerDetails);
@@ -434,6 +436,12 @@ public class BaseEntityService extends AbstractEntityService implements EntitySe
         return entityOpt.map(converter);
     }
 
+    private <T> FluentFuture<Optional<T>> fetchAndConvertAsync(TenantId tenantId, EntityId entityId, Function<HasId<?>, T> converter) {
+        EntityDaoService entityDaoService = entityServiceRegistry.getServiceByEntityType(entityId.getEntityType());
+        return entityDaoService.findEntityAsync(tenantId, entityId)
+                .transform(entityOpt -> entityOpt.map(converter), directExecutor());
+    }
+
     private String getName(HasId<?> entity) {
         return entity instanceof HasName ? ((HasName) entity).getName() : null;
     }
@@ -460,6 +468,9 @@ public class BaseEntityService extends AbstractEntityService implements EntitySe
             if (customerId == null) {
                 customerId = NULL_CUSTOMER_ID;
             }
+            return customerId;
+        }
+        if (entity instanceof EntityGroup entityGroup && entityGroup.getOwnerId() instanceof CustomerId customerId) {
             return customerId;
         }
         return NULL_CUSTOMER_ID;
@@ -532,7 +543,7 @@ public class BaseEntityService extends AbstractEntityService implements EntitySe
         }
 
         if ((query.getEntityFields() == null || query.getEntityFields().isEmpty()) &&
-            (query.getLatestValues() == null || query.getLatestValues().isEmpty())) {
+                (query.getLatestValues() == null || query.getLatestValues().isEmpty())) {
             return false;
         }
 

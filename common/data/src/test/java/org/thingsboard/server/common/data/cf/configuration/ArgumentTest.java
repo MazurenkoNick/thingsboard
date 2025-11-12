@@ -46,10 +46,10 @@ public class ArgumentTest {
     @Test
     void validateWhenRelationQuerySourceConfigurationIsNotNull() {
         var argument = new Argument();
-        argument.setRefDynamicSourceConfiguration(new RelationQueryDynamicSourceConfiguration());
+        argument.setRefDynamicSourceConfiguration(new RelationPathQueryDynamicSourceConfiguration());
         assertThat(argument.hasDynamicSource()).isTrue();
         assertThat(argument.hasRelationQuerySource()).isTrue();
-        assertThat(argument.hasCurrentOwnerSource()).isFalse();
+        assertThat(argument.hasOwnerSource()).isFalse();
     }
 
     @Test
@@ -57,7 +57,7 @@ public class ArgumentTest {
         var argument = new Argument();
         argument.setRefDynamicSourceConfiguration(new CurrentOwnerDynamicSourceConfiguration());
         assertThat(argument.hasDynamicSource()).isTrue();
-        assertThat(argument.hasCurrentOwnerSource()).isTrue();
+        assertThat(argument.hasOwnerSource()).isTrue();
         assertThat(argument.hasRelationQuerySource()).isFalse();
     }
 

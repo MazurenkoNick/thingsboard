@@ -44,6 +44,7 @@ public abstract class ReportComponentWithLayoutRenderer<C extends LayoutReportCo
 
     private static final int DEFAULT_COMPONENT_MARGIN_SIZE = 0;
     private static final int DEFAULT_COMPONENT_PADDING_SIZE = 0;
+    private static final int DEFAULT_COMPONENT_BORDER_SIZE = 0;
 
     protected int layoutWidthPx;
 
@@ -60,16 +61,21 @@ public abstract class ReportComponentWithLayoutRenderer<C extends LayoutReportCo
         if (paddings == null) {
             paddings = new Insets(DEFAULT_COMPONENT_PADDING_SIZE);
         }
+        Integer borderWidth = component.getBorderWidth();
+        if (borderWidth == null) {
+            borderWidth = DEFAULT_COMPONENT_BORDER_SIZE;
+        }
 
         this.layoutWidthPx = reportDataSource.getUsablePageWidthPx();
         this.layoutWidthPx = (int)((float)this.layoutWidthPx - (float)(margins.getLeft() + margins.getRight()) * 4f / 3f);
         this.layoutWidthPx = (int)((float)this.layoutWidthPx - (float)(paddings.getLeft() + paddings.getRight()) * 4f / 3f);
+        this.layoutWidthPx = (int)((float)this.layoutWidthPx - (float)(borderWidth * 2) * 4f / 3f);
 
         String content = this.renderContent(component, reportDataSource);
         Map<String, Object> layoutVariables = new HashMap<>();
         layoutVariables.put("htmlContent", content);
         layoutVariables.put("background", component.getBackground() != null ? ColorUtils.normalizeCssColor(component.getBackground()) : "transparent");
-        layoutVariables.put("borderWidth", component.getBorderWidth() != null ? component.getBorderWidth() : "0");
+        layoutVariables.put("borderWidth", borderWidth);
         layoutVariables.put("borderRadius", component.getBorderRadius() != null ? component.getBorderRadius() : "0");
         layoutVariables.put("borderColor", component.getBorderColor() != null ? ColorUtils.normalizeCssColor(component.getBorderColor()) : "transparent");
 

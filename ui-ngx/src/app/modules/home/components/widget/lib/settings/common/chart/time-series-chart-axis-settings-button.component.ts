@@ -66,6 +66,10 @@ export class TimeSeriesChartAxisSettingsButtonComponent implements OnInit, Contr
   @coerceBoolean()
   advanced = false;
 
+  @Input()
+  @coerceBoolean()
+  reportMode = false;
+
   private modelValue: TimeSeriesChartAxisSettings;
 
   private propagateChange = null;
@@ -110,7 +114,8 @@ export class TimeSeriesChartAxisSettingsButtonComponent implements OnInit, Contr
           axisSettings: this.modelValue,
           axisType: this.axisType,
           panelTitle: this.panelTitle,
-          advanced: this.advanced
+          advanced: this.advanced,
+          reportMode: this.reportMode
         },
         isModal: true
       });

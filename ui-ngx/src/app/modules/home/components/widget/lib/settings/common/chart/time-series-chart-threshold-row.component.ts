@@ -125,6 +125,10 @@ export class TimeSeriesChartThresholdRowComponent implements ControlValueAccesso
   @coerceBoolean()
   supportsUnitConversion = false;
 
+  @Input()
+  @coerceBoolean()
+  reportMode = false;
+
   @Output()
   thresholdRemoved = new EventEmitter();
 

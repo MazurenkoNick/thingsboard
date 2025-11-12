@@ -30,6 +30,7 @@
  */
 package org.thingsboard.server.dao.integration;
 
+import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.ListenableFuture;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -65,13 +66,14 @@ import org.thingsboard.server.exception.DataValidationException;
 import java.util.List;
 import java.util.Optional;
 
+import static com.google.common.util.concurrent.MoreExecutors.directExecutor;
 import static org.thingsboard.server.dao.DaoUtil.toUUIDs;
 import static org.thingsboard.server.dao.service.Validator.validateId;
 import static org.thingsboard.server.dao.service.Validator.validateIds;
 import static org.thingsboard.server.dao.service.Validator.validatePageLink;
 
-@Service("IntegrationDaoService")
 @Slf4j
+@Service("IntegrationDaoService")
 public class BaseIntegrationService extends CachedVersionedEntityService<IntegrationCacheKey, Integration, IntegrationCacheEvictEvent> implements IntegrationService {
 
     public static final String INCORRECT_TENANT_ID = "Incorrect tenantId ";
@@ -90,8 +92,8 @@ public class BaseIntegrationService extends CachedVersionedEntityService<Integra
     @Autowired
     private EntityCountService entityCountService;
 
-    @TransactionalEventListener(classes = IntegrationCacheEvictEvent.class)
     @Override
+    @TransactionalEventListener
     public void handleEvictEvent(IntegrationCacheEvictEvent event) {
         if (event.getSavedIntegration() != null) {
             cache.put(IntegrationCacheKey.forId(event.getSavedIntegration().getId()), event.getSavedIntegration());
@@ -229,8 +231,8 @@ public class BaseIntegrationService extends CachedVersionedEntityService<Integra
         tenantIntegrationsRemover.removeEntities(tenantId, tenantId);
     }
 
-    @Transactional
     @Override
+    @Transactional
     public void deleteByTenantId(TenantId tenantId) {
         deleteIntegrationsByTenantId(tenantId);
     }
@@ -317,11 +319,18 @@ public class BaseIntegrationService extends CachedVersionedEntityService<Integra
         protected void removeEntity(TenantId tenantId, Integration entity) {
             deleteIntegration(tenantId, new IntegrationId(entity.getId().getId()));
         }
+
     };
 
     @Override
     public Optional<HasId<?>> findEntity(TenantId tenantId, EntityId entityId) {
         return Optional.ofNullable(findIntegrationById(tenantId, new IntegrationId(entityId.getId())));
+    }
+
+    @Override
+    public FluentFuture<Optional<HasId<?>>> findEntityAsync(TenantId tenantId, EntityId entityId) {
+        return FluentFuture.from(findIntegrationByIdAsync(tenantId, new IntegrationId(entityId.getId())))
+                .transform(Optional::ofNullable, directExecutor());
     }
 
     @Override

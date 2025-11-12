@@ -103,6 +103,14 @@ export class TimeSeriesChartThresholdsPanelComponent implements ControlValueAcce
   @coerceBoolean()
   supportsUnitConversion = true;
 
+  @Input()
+  @coerceBoolean()
+  stroked = false;
+
+  @Input()
+  @coerceBoolean()
+  reportMode = false;
+
   thresholdsFormGroup: UntypedFormGroup;
 
   private propagateChange = (_val: any) => {};

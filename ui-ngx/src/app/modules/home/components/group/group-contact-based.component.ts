@@ -41,6 +41,7 @@ import { EntityTableConfig } from '@home/models/entity/entities-table-config.mod
 import { UserPermissionsService } from '@core/http/user-permissions.service';
 import { CountryData } from '@shared/models/country.models';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { validateEmail } from '@app/core/utils';
 
 @Directive()
 export abstract class GroupContactBasedComponent<T extends ContactBased<HasId>> extends GroupEntityComponent<T> implements AfterViewInit {
@@ -68,7 +69,7 @@ export abstract class GroupContactBasedComponent<T extends ContactBased<HasId>> 
     entityForm.addControl('address', this.fb.control(entity ? entity.address : '', []));
     entityForm.addControl('address2', this.fb.control(entity ? entity.address2 : '', []));
     entityForm.addControl('phone', this.fb.control(entity ? entity.phone : '', []));
-    entityForm.addControl('email', this.fb.control(entity ? entity.email : '', [Validators.email]));
+    entityForm.addControl('email', this.fb.control(entity ? entity.email : '', [validateEmail]));
     return entityForm;
   }
 
