@@ -107,7 +107,7 @@ public class SnmpTransportContext extends TransportContext {
     private void bootstrapWithRetries() {
         log.info("Initializing SNMP devices sessions");
         int batchIndex = 0;
-        int batchSize = 512;
+        final int batchSize = 512;
         boolean nextBatchExists = true;
 
         while (nextBatchExists) {
@@ -119,7 +119,11 @@ public class SnmpTransportContext extends TransportContext {
                             .peek(allSnmpDevicesIds::add)
                             .filter(deviceId -> balancingService.isManagedByCurrentTransport(deviceId.getId()))
                             .map(protoEntityService::getDeviceById)
-                            .forEach(device -> getExecutor().execute(() -> establishDeviceSession(device)));
+                            .forEach(device -> {
+                        if (!sessions.containsKey(device.getId())) {
+                            getExecutor().execute(() -> establishDeviceSession(device));
+                        }
+                    });
                     nextBatchExists = snmpDevicesResponse.getHasNextPage();
                     batchIndex++;
                     break;
@@ -138,7 +142,7 @@ public class SnmpTransportContext extends TransportContext {
                 }
             }
         }
-        log.debug("Found SNMP devices ids: {}", allSnmpDevicesIds);
+        log.debug("Found SNMP devices ids: {}", allSnmpDevicesIds.size());
     }
 
     private void establishDeviceSession(Device device) {
