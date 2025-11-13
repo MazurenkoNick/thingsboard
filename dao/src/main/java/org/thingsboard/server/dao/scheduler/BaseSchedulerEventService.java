@@ -33,6 +33,7 @@ package org.thingsboard.server.dao.scheduler;
 import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.ListenableFuture;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.thingsboard.server.common.data.EntityType;
@@ -161,6 +162,10 @@ public class BaseSchedulerEventService extends AbstractEntityService implements 
 
     @Override
     public SchedulerEvent saveSchedulerEvent(SchedulerEvent schedulerEvent) {
+        return saveEntity(schedulerEvent, () -> doSaveSchedulerEvent(schedulerEvent));
+    }
+
+    private SchedulerEvent doSaveSchedulerEvent(SchedulerEvent schedulerEvent) {
         log.trace("Executing saveSchedulerEvent [{}]", schedulerEvent);
         schedulerEventValidator.validate(schedulerEvent, SchedulerEventInfo::getTenantId);
         try {

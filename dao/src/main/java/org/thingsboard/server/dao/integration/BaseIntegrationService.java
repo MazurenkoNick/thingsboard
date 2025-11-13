@@ -104,6 +104,10 @@ public class BaseIntegrationService extends CachedVersionedEntityService<Integra
 
     @Override
     public Integration saveIntegration(Integration integration) {
+        return saveEntity(integration, () -> doSaveIntegration(integration));
+    }
+
+    private Integration doSaveIntegration(Integration integration) {
         log.trace("Executing saveIntegration [{}]", integration);
         integrationValidator.validate(integration, Integration::getTenantId);
         TenantId tenantId = integration.getTenantId();
