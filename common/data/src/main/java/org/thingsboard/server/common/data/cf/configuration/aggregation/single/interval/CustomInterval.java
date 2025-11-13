@@ -35,13 +35,9 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import org.thingsboard.server.common.data.util.TbPair;
 
 import java.time.Duration;
-import java.time.Instant;
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 @EqualsAndHashCode(callSuper = true)
 @Data
@@ -73,37 +69,16 @@ public class CustomInterval extends BaseAggInterval {
 
     @Override
     protected ZonedDateTime getAlignedBoundary(ZonedDateTime reference, boolean next) {
-        long durationMillis = getDurationMillis();
-        long nowMillis = reference.toInstant().toEpochMilli();
-        long alignedStartMillis = (nowMillis / durationMillis) * durationMillis;
-        ZonedDateTime aligned = Instant.ofEpochMilli(alignedStartMillis).atZone(getZoneId());
+        ZonedDateTime localMidnight = reference.toLocalDate().atStartOfDay(reference.getZone());
+        long secondsFromMidnight = Duration.between(localMidnight, reference).getSeconds();
+        long alignedSecondsFromMidnight = (secondsFromMidnight / durationSec) * durationSec;
+        ZonedDateTime aligned = localMidnight.plusSeconds(alignedSecondsFromMidnight);
         return next ? aligned.plusSeconds(durationSec) : aligned;
     }
 
     @Override
     public ZonedDateTime getNextIntervalStart(ZonedDateTime currentStart) {
         return currentStart.plusSeconds(durationSec);
-    }
-
-    @Override
-    public List<TbPair<Long, Long>> getIntervalsBetween(long startTs, long endTs) {
-        List<TbPair<Long, Long>> intervals = new ArrayList<>();
-
-        ZonedDateTime startDateTime = Instant.ofEpochMilli(startTs).atZone(getZoneId());
-        long startInterval = getDateTimeIntervalStartTs(startDateTime);
-        long endTsInterval = getDateTimeIntervalEndTs(startDateTime);
-
-        ZonedDateTime lastIntervalDateTime = Instant.ofEpochMilli(endTs).atZone(getZoneId());
-        long lastIntervalEndTs = getDateTimeIntervalEndTs(lastIntervalDateTime);
-
-        while (endTsInterval < lastIntervalEndTs) {
-            intervals.add(new TbPair<>(startInterval, endTsInterval));
-
-            startInterval = endTsInterval;
-            endTsInterval += getDurationMillis();
-        }
-
-        return intervals;
     }
 
 }

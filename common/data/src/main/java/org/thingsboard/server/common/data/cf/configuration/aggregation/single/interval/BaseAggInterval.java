@@ -35,9 +35,13 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.thingsboard.server.common.data.util.TbPair;
 
+import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Data
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -93,6 +97,28 @@ public abstract class BaseAggInterval implements AggInterval {
         ZonedDateTime alignedEnd = getAlignedBoundary(shiftedNow, true);
         ZonedDateTime actualEnd = alignedEnd.plusSeconds(offset);
         return actualEnd.toInstant().toEpochMilli();
+    }
+
+    @Override
+    public List<TbPair<Long, Long>> getIntervalsBetween(long startTs, long endTs) {
+        List<TbPair<Long, Long>> intervals = new ArrayList<>();
+
+        ZonedDateTime startDateTime = Instant.ofEpochMilli(startTs).atZone(getZoneId());
+        long startInterval = getDateTimeIntervalStartTs(startDateTime);
+        long endTsInterval = getDateTimeIntervalEndTs(startDateTime);
+
+        ZonedDateTime lastIntervalDateTime = Instant.ofEpochMilli(endTs).atZone(getZoneId());
+        long lastIntervalEndTs = getDateTimeIntervalEndTs(lastIntervalDateTime);
+
+        while (endTsInterval < lastIntervalEndTs) {
+            intervals.add(new TbPair<>(startInterval, endTsInterval));
+
+            startInterval = endTsInterval;
+            ZonedDateTime nextIntervalStart = Instant.ofEpochMilli(endTsInterval).atZone(getZoneId());
+            endTsInterval = getNextIntervalStart(nextIntervalStart).toInstant().toEpochMilli();
+        }
+
+        return intervals;
     }
 
     protected abstract ZonedDateTime getAlignedBoundary(ZonedDateTime reference, boolean next);
