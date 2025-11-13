@@ -28,30 +28,42 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.dao.cf;
+package org.thingsboard.server.common.data.report.configuration.chart;
 
-import org.thingsboard.server.common.data.cf.CalculatedFieldLink;
-import org.thingsboard.server.common.data.id.CalculatedFieldId;
-import org.thingsboard.server.common.data.id.EntityId;
-import org.thingsboard.server.common.data.id.TenantId;
-import org.thingsboard.server.common.data.page.PageData;
-import org.thingsboard.server.common.data.page.PageLink;
-import org.thingsboard.server.dao.Dao;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
 
-import java.util.List;
+public enum ReportComponentSubType {
+    DOUGHNUT_CHART("doughnutChart"),
+    HORIZONTAL_DOUGHNUT_CHART("horizontalDoughnutChart"),
+    POINT_CHART("pointChart"),
+    BAR_CHART("barChart"),
+    PIE_CHART("pieChart"),
+    LINE_CHART("lineChart"),
+    LATEST_BAR_CHART("latestBarChart"),
+    RANGE_CHART("rangeChart"),
+    BAR_CHART_WITH_LABELS("barChartWithLabels"),
+    STATE_CHART("stateChart"),
+    DEFAULT("default");
 
-public interface CalculatedFieldLinkDao extends Dao<CalculatedFieldLink> {
+    private final String name;
 
-    List<CalculatedFieldLink> findCalculatedFieldLinksByCalculatedFieldId(TenantId tenantId, CalculatedFieldId calculatedFieldId);
+    ReportComponentSubType(String name) {
+        this.name = name;
+    }
 
-    List<CalculatedFieldLink> findCalculatedFieldLinksByEntityId(TenantId tenantId, EntityId entityId);
+    @JsonValue
+    public String getName() {
+        return name;
+    }
 
-    List<CalculatedFieldLink> findCalculatedFieldLinksByTenantId(TenantId tenantId);
-
-    List<CalculatedFieldLink> findAll();
-
-    PageData<CalculatedFieldLink> findAll(PageLink pageLink);
-
-    PageData<CalculatedFieldLink> findAllByTenantId(TenantId tenantId, PageLink pageLink);
-
+    @JsonCreator
+    public static ReportComponentSubType fromLabel(String value) {
+        for (ReportComponentSubType layout : values()) {
+            if (layout.name.equalsIgnoreCase(value)) {
+                return layout;
+            }
+        }
+        throw new IllegalArgumentException("Unknown ReportComponentSubType: " + value);
+    }
 }

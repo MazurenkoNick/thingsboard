@@ -117,7 +117,7 @@ public class ApiKeyController extends BaseController {
         PageLink pageLink = createPageLink(pageSize, page, textSearch, sortProperty, sortOrder);
         UserId userId = new UserId(toUUID(userIdStr));
         accessControlService.checkPermission(securityUser, Resource.API_KEY, Operation.READ);
-        checkUserId(userId, Operation.WRITE);
+        checkUserId(userId, Operation.READ);
         return apiKeyService.findApiKeysByUserId(securityUser.getTenantId(), userId, pageLink);
     }
 
@@ -162,7 +162,7 @@ public class ApiKeyController extends BaseController {
     public void deleteApiKey(@PathVariable UUID id) throws ThingsboardException {
         ApiKeyId apiKeyId = new ApiKeyId(id);
         ApiKey apiKey = checkApiKeyId(apiKeyId, Operation.DELETE);
-        checkUserId(apiKey.getUserId(), Operation.DELETE);
+        checkUserId(apiKey.getUserId(), Operation.WRITE);
         apiKeyService.deleteApiKey(apiKey.getTenantId(), apiKey, false);
     }
 

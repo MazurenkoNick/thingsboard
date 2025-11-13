@@ -198,6 +198,19 @@ public interface UserRepository extends JpaRepository<UserEntity, UUID> {
             "FROM UserEntity u WHERE u.id > :id ORDER BY u.id")
     List<UserFields> findNextBatch(@Param("id") UUID id, Limit limit);
 
+    @Query(value = "SELECT EXISTS ("
+            + "  SELECT 1 "
+            + "  FROM tb_user u "
+            + "  INNER JOIN relation re ON u.id = re.to_id "
+            + "  WHERE u.id = :userId "
+            + "    AND re.to_type = 'USER' "
+            + "    AND re.relation_type_group = 'FROM_ENTITY_GROUP' "
+            + "    AND re.relation_type = 'Contains' "
+            + "    AND re.from_id = :groupId "
+            + "    AND re.from_type = 'ENTITY_GROUP' "
+            + ")", nativeQuery = true)
+    boolean existsInEntityGroup(@Param("userId") UUID userId, @Param("groupId") UUID groupId);
+
     @Query("SELECT new org.thingsboard.server.common.data.util.TbPair(u, uc.enabled) " +
             "FROM UserEntity u JOIN UserCredentialsEntity uc ON u.id = uc.userId WHERE u.id = :userId ")
     TbPair<UserEntity, Boolean> findUserAuthDetailsByUserId(@Param("userId") UUID userId);
