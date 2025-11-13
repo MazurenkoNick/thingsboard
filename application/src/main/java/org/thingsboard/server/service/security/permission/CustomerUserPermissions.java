@@ -519,7 +519,7 @@ public class CustomerUserPermissions extends AbstractPermissions {
         @Override
         @SuppressWarnings("unchecked")
         public boolean hasPermission(SecurityUser user, Operation operation, EntityId entityId, TenantEntity entity) {
-            if (entity.getTenantId() != null && !entity.getTenantId().isNullUid() && !user.getTenantId().equals(entity.getTenantId())) {
+            if (!user.getTenantId().equals(entity.getTenantId())) {
                 return false;
             }
             // This entity does not have groups, so we are checking only generic level permissions
