@@ -86,7 +86,7 @@
             <div class="tb-form-panel-title xs:!hidden">
               {{ converterTypeTitleTranslations.get(entityForm.get('type').value) | translate }}
             </div>
-            <tb-toggle-select *ngIf="(integrationInfo$ | async)?.[entityForm.get('type').value.toLowerCase()]?.library && !integrationWizardMode && entityForm.get('integrationType').value"
+            <tb-toggle-select *ngIf="(integrationInfo$ | async)?.[entityForm.get('type').value.toLowerCase()]?.library && !integrationWizardMode && entityForm.get('integrationType').value && isAdd"
                               appearance="fill"
                               [(ngModel)]="converterTypeValue"
                               [ngModelOptions]="{standalone: true}">
