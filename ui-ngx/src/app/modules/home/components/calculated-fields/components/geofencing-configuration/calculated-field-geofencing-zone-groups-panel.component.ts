@@ -48,7 +48,6 @@ import {
   CalculatedFieldGeofencing,
   CalculatedFieldGeofencingValue,
   CalculatedFieldType,
-  CFArgumentDynamicSourceType,
   FORBIDDEN_NAMES,
   forbiddenNamesValidator,
   GeofencingDirectionLevelTranslations,

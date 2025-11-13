@@ -417,7 +417,7 @@ public class DefaultCalculatedFieldReprocessingService extends AbstractCalculate
             interval.getIntervalsBetween(startTs, endTs).forEach(intervalEntry -> {
                 intervals.addLast(new AggIntervalEntry(intervalEntry.getFirst(), intervalEntry.getSecond()));
             });
-            intervalCursor = intervals.peekLast();
+            intervalCursor = intervals.peekFirst();
         }
 
         @Override
@@ -427,7 +427,7 @@ public class DefaultCalculatedFieldReprocessingService extends AbstractCalculate
                     throw new InterruptedException();
                 }
 
-                AggIntervalEntry interval = intervals.pollLast();
+                AggIntervalEntry interval = intervals.pollFirst();
                 intervalCursor = interval;
 
                 if (intervalCursor == null) {
