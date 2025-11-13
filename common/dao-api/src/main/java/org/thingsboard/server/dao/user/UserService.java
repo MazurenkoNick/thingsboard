@@ -167,7 +167,10 @@ public interface UserService extends EntityDaoService {
 
     void updateUsersCustomMenuId(List<UserId> ids, CustomMenuId customMenuId);
 
+    boolean existsInEntityGroup(UserId id, EntityGroupId entityGroupId);
+
     PageData<User> findUsersByFilter(TenantId tenantId, UsersFilter filter, PageLink pageLink);
 
     boolean matchesFilter(TenantId tenantId, SystemLevelUsersFilter filter, User user);
+
 }

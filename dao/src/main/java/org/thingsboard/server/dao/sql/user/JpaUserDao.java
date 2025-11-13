@@ -41,6 +41,7 @@ import org.thingsboard.server.common.data.User;
 import org.thingsboard.server.common.data.edqs.fields.UserFields;
 import org.thingsboard.server.common.data.id.CustomMenuId;
 import org.thingsboard.server.common.data.id.CustomerId;
+import org.thingsboard.server.common.data.id.EntityGroupId;
 import org.thingsboard.server.common.data.id.RoleId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.id.TenantProfileId;
@@ -247,6 +248,11 @@ public class JpaUserDao extends JpaAbstractDao<UserEntity, User> implements User
         } else {
             userRepository.updateCustomMenuId(toUUIDs(userIds), customMenuId.getId());
         }
+    }
+
+    @Override
+    public boolean existsInEntityGroup(UserId id, EntityGroupId entityGroupId) {
+        return userRepository.existsInEntityGroup(id.getId(), entityGroupId.getId());
     }
 
     @Override

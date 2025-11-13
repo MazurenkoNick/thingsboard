@@ -665,6 +665,11 @@ public class UserServiceImpl extends AbstractCachedEntityService<UserCacheKey, U
         userDao.updateUsersCustomMenuId(userIds, customMenuId);
     }
 
+    @Override
+    public boolean existsInEntityGroup(UserId id, EntityGroupId entityGroupId) {
+        return userDao.existsInEntityGroup(id, entityGroupId);
+    }
+
     private Optional<UserMobileSessionInfo> findMobileSessionInfo(TenantId tenantId, UserId userId) {
         return Optional.ofNullable(userSettingsService.findUserSettings(tenantId, userId, UserSettingsType.MOBILE))
                 .map(UserSettings::getSettings).map(settings -> JacksonUtil.treeToValue(settings, UserMobileSessionInfo.class));
