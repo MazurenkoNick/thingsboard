@@ -106,7 +106,6 @@ public class JacksonUtil {
             .configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true)
             .serializationInclusion(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
             .build();
-
     public static final ObjectMapper OBJECT_MAPPER_INCLUDE_NOT_NULL = JsonMapper.builder()
             .serializationInclusion(JsonInclude.Include.NON_NULL)
             .build();
