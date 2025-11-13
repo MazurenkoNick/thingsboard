@@ -86,6 +86,7 @@ import org.thingsboard.server.service.profile.TbDeviceProfileCache;
 import org.thingsboard.server.service.security.permission.OwnersCacheService;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -98,6 +99,7 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
+import java.util.stream.Stream;
 
 import static org.thingsboard.server.utils.CalculatedFieldUtils.fromProto;
 
@@ -237,6 +239,12 @@ public class CalculatedFieldManagerMessageProcessor extends AbstractContextAware
                     default -> msg.getCallback().onSuccess();
                 }
             }
+            case TENANT_PROFILE -> {
+                switch (event) {
+                    case UPDATED -> onTenantProfileUpdated(msg.getData(), msg.getCallback());
+                    default -> msg.getCallback().onSuccess();
+                }
+            }
             default -> msg.getCallback().onSuccess();
         }
     }
@@ -260,6 +268,17 @@ public class CalculatedFieldManagerMessageProcessor extends AbstractContextAware
     private void onProfileDeleted(ComponentLifecycleMsg msg, TbCallback callback) {
         entityProfileCache.removeProfileId(msg.getEntityId());
         callback.onSuccess();
+    }
+
+    private void onTenantProfileUpdated(ComponentLifecycleMsg msg, TbCallback callback) {
+        Stream.concat(
+                calculatedFields.values().stream(),
+                entityIdCalculatedFields.values().stream().flatMap(Collection::stream)
+        ).forEach(CalculatedFieldCtx::updateTenantProfileProperties);
+
+        calculatedFields.values().forEach(ctx -> {
+            applyToTargetCfEntityActors(ctx, callback, (id, cb) -> initCfForEntity(id, ctx, StateAction.REFRESH_CTX, cb));
+        });
     }
 
     private void onEntityCreated(ComponentLifecycleMsg msg, TbCallback callback) {

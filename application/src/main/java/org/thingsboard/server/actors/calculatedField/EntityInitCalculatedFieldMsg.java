@@ -54,6 +54,7 @@ public class EntityInitCalculatedFieldMsg implements ToCalculatedFieldSystemMsg 
         INIT,
         REINIT,
         RECREATE,
-        REPROCESS
+        REPROCESS,
+        REFRESH_CTX
     }
 }

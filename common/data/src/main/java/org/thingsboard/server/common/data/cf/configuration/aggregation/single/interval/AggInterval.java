@@ -38,6 +38,9 @@ import org.thingsboard.server.common.data.util.TbPair;
 
 import java.util.List;
 
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+
 @JsonTypeInfo(
         use = JsonTypeInfo.Id.NAME,
         include = JsonTypeInfo.As.PROPERTY,
@@ -60,16 +63,22 @@ public interface AggInterval {
     AggIntervalType getType();
 
     @JsonIgnore
-    long getIntervalDurationMillis();
+    ZoneId getZoneId();
+
+    @JsonIgnore
+    long getCurrentIntervalDurationMillis();
 
     @JsonIgnore
     long getCurrentIntervalStartTs();
 
+    long getDateTimeIntervalStartTs(ZonedDateTime dateTime);
+
     @JsonIgnore
     long getCurrentIntervalEndTs();
 
-    @JsonIgnore
-    long getDelayUntilIntervalEnd();
+    long getDateTimeIntervalEndTs(ZonedDateTime dateTime);
+
+    ZonedDateTime getNextIntervalStart(ZonedDateTime currentStart);
 
     List<TbPair<Long, Long>> getIntervalsBetween(long startTs, long endTs);
 

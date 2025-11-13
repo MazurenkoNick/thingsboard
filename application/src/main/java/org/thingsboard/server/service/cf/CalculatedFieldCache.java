@@ -65,6 +65,8 @@ public interface CalculatedFieldCache {
 
     void evict(CalculatedFieldId calculatedFieldId);
 
+    void handleTenantProfileUpdate();
+
     EntityId getProfileId(TenantId tenantId, EntityId entityId);
 
     Set<EntityId> getDynamicEntities(TenantId tenantId, EntityId entityId);

@@ -30,28 +30,30 @@
  */
 package org.thingsboard.server.common.data.cf.configuration.aggregation.single.interval;
 
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.thingsboard.server.common.data.util.TbPair;
 
 import java.time.Duration;
-import java.time.ZoneId;
+import java.time.Instant;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 @EqualsAndHashCode(callSuper = true)
 @Data
 @NoArgsConstructor
 public class CustomInterval extends BaseAggInterval {
 
+    @NotNull
+    @Min(1)
     private Long durationSec;
 
-    public CustomInterval(Long durationSec, Long offsetMillis, String tz) {
-        this.tz = tz;
-        this.offsetSec = offsetMillis;
+    public CustomInterval(String tz, Long offsetSec, Long durationSec) {
+        super(tz, offsetSec);
         this.durationSec = durationSec;
     }
 
@@ -61,64 +63,47 @@ public class CustomInterval extends BaseAggInterval {
     }
 
     @Override
-    public long getIntervalDurationMillis() {
+    public long getCurrentIntervalDurationMillis() {
+        return getDurationMillis();
+    }
+
+    private long getDurationMillis() {
         return Duration.ofSeconds(durationSec).toMillis();
     }
 
     @Override
-    public long getCurrentIntervalStartTs() {
-        ZoneId zoneId = ZoneId.of(tz);
-        ZonedDateTime now = ZonedDateTime.now(zoneId);
-        ZonedDateTime shiftedNow = now.minusSeconds(getOffsetSec());
-
-        long durationMillis = getIntervalDurationMillis();
-        long shiftedNowMillis = shiftedNow.toInstant().toEpochMilli();
-        long alignedStartMillis = (shiftedNowMillis / durationMillis) * durationMillis;
-
-        long offsetMillis = TimeUnit.SECONDS.toMillis(getOffsetSec());
-        return alignedStartMillis + offsetMillis;
+    protected ZonedDateTime getAlignedBoundary(ZonedDateTime reference, boolean next) {
+        long durationMillis = getDurationMillis();
+        long nowMillis = reference.toInstant().toEpochMilli();
+        long alignedStartMillis = (nowMillis / durationMillis) * durationMillis;
+        ZonedDateTime aligned = Instant.ofEpochMilli(alignedStartMillis).atZone(getZoneId());
+        return next ? aligned.plusSeconds(durationSec) : aligned;
     }
 
     @Override
-    public long getCurrentIntervalEndTs() {
-        return getCurrentIntervalStartTs() + getIntervalDurationMillis();
-    }
-
-    @Override
-    public long getDelayUntilIntervalEnd() {
-        return getCurrentIntervalEndTs() - System.currentTimeMillis();
+    public ZonedDateTime getNextIntervalStart(ZonedDateTime currentStart) {
+        return currentStart.plusSeconds(durationSec);
     }
 
     @Override
     public List<TbPair<Long, Long>> getIntervalsBetween(long startTs, long endTs) {
-        if (endTs <= startTs) {
-            throw new IllegalArgumentException("endTs must be greater than startTs");
+        List<TbPair<Long, Long>> intervals = new ArrayList<>();
+
+        ZonedDateTime startDateTime = Instant.ofEpochMilli(startTs).atZone(getZoneId());
+        long startInterval = getDateTimeIntervalStartTs(startDateTime);
+        long endTsInterval = getDateTimeIntervalEndTs(startDateTime);
+
+        ZonedDateTime lastIntervalDateTime = Instant.ofEpochMilli(endTs).atZone(getZoneId());
+        long lastIntervalEndTs = getDateTimeIntervalEndTs(lastIntervalDateTime);
+
+        while (endTsInterval < lastIntervalEndTs) {
+            intervals.add(new TbPair<>(startInterval, endTsInterval));
+
+            startInterval = endTsInterval;
+            endTsInterval += getDurationMillis();
         }
 
-        List<TbPair<Long, Long>> result = new ArrayList<>();
-        long durationMillis = getIntervalDurationMillis();
-        long offsetMillis = TimeUnit.SECONDS.toMillis(getOffsetSec());
-
-        // Apply offset correction
-        long shiftedStart = startTs - offsetMillis;
-        long shiftedEnd = endTs - offsetMillis;
-
-        // Align start to the interval that contains startTs
-        long alignedStart = (shiftedStart / durationMillis) * durationMillis;
-        long currentStart = alignedStart;
-        long currentEnd = alignedStart + durationMillis;
-
-        // Stop before the interval that contains endTs
-        while (currentEnd <= shiftedEnd) {
-            long actualStart = currentStart + offsetMillis;
-            long actualEnd = currentEnd + offsetMillis;
-            result.add(TbPair.of(actualStart, actualEnd));
-
-            currentStart = currentEnd;
-            currentEnd += durationMillis;
-        }
-
-        return result;
+        return intervals;
     }
 
 }
