@@ -432,7 +432,7 @@ export class TimeseriesTableWidgetComponent extends PageComponent implements OnI
       return entityLabelCache.get(source.entityId);
     }
 
-    const value = this.useEntityLabel 
+    const value = this.useEntityLabel
       ? (source.entityLabel || source.entityName)
       : source.entityName;
 
@@ -957,7 +957,7 @@ export class TimeseriesTableWidgetComponent extends PageComponent implements OnI
     }
   }
 
-  customDataExport(): Observable<{[key: string]: any}[]> {
+  customDataExport(): Observable<Map<string, any>[]> {
     let columnsToExport = [];
     if (this.datasources.length) {
       this.datasources.forEach((datasource, index) => {
@@ -1040,7 +1040,7 @@ export class TimeseriesTableWidgetComponent extends PageComponent implements OnI
         });
       });
     }
-    const exportedData: Observable<{[key: string]: any}>[] = [];
+    const exportedData: Observable<Map<string, any>>[] = [];
     const outputTsRows: {[ts: string]: {[key: string]: Observable<any>}} = {};
 
     if (this.data.length) {
@@ -1075,33 +1075,61 @@ export class TimeseriesTableWidgetComponent extends PageComponent implements OnI
       timestamps.sort();
       timestamps.forEach(timestamp => {
         const tsRow = outputTsRows[timestamp];
-        const dataObj: {[key: string]: Observable<any>} = {};
-        columnsToExport.forEach(key => dataObj[key] = isDefined(tsRow[key]) ? tsRow[key] : of(null));
-        if (Object.keys(dataObj).length) {
-          exportedData.push(forkJoin(dataObj));
+        const dataMap = new Map<string, Observable<any>>();
+        columnsToExport.forEach(key => {
+          dataMap.set(key, isDefined(tsRow[key]) ? tsRow[key] : of(null));
+        });
+        if (dataMap.size > 0) {
+          const orderedKeys = Array.from(dataMap.keys());
+          const orderedObservables = Array.from(dataMap.values());
+
+          exportedData.push(
+            forkJoin(orderedObservables).pipe(
+              map(resolvedValues => {
+                const orderedRow = new Map<string, any>();
+                orderedKeys.forEach((key, index) => {
+                  orderedRow.set(key, resolvedValues[index]);
+                });
+                return orderedRow;
+              })
+            )
+          );
         } else {
-          exportedData.push(of(dataObj));
+          exportedData.push(of(new Map<string, any>()));
         }
       });
 
       if (!exportedData.length) {
-        const dataObj: {[key: string]: Observable<any>} = {};
-        dataObj.Timestamp = of(null);
+        const dataMap = new Map<string, Observable<any>>();
+        dataMap.set(this.translate.instant('widgets.table.timestamp-column-name') || 'Timestamp', of(null));
         this.data.forEach((datasourceData) => {
           const key = datasourceData.dataKey.label;
-          dataObj[this.checkProperty(dataObj, key)] = of(null);
+          dataMap.set(key, of(null));
         });
-        if (Object.keys(dataObj).length) {
-          exportedData.push(forkJoin(dataObj));
+
+        if (dataMap.size > 0) {
+          const orderedKeys = Array.from(dataMap.keys());
+          const orderedObservables = Array.from(dataMap.values());
+          exportedData.push(
+            forkJoin(orderedObservables).pipe(
+              map(resolvedValues => {
+                const orderedRow = new Map<string, any>();
+                orderedKeys.forEach((key, index) => {
+                  orderedRow.set(key, resolvedValues[index]);
+                });
+                return orderedRow;
+              })
+            )
+          );
         } else {
-          exportedData.push(of(dataObj));
+          exportedData.push(of(new Map<string, any>()));
         }
       }
     }
     if (exportedData.length) {
       return forkJoin(exportedData);
     } else {
-      return of(exportedData);
+      return of([]);
     }
   }
 

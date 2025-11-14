@@ -62,7 +62,7 @@ import { forkJoin, Observable, of, Subject } from 'rxjs';
 import { catchError, map, mergeMap, switchMap, take, tap } from 'rxjs/operators';
 import { DashboardUtilsService } from '@core/services/dashboard-utils.service';
 import { EntityService } from '@core/http/entity.service';
-import { Widget, WidgetSize, WidgetTypeDetails } from '@shared/models/widget.models';
+import { ExportRow, Widget, WidgetSize, WidgetTypeDetails } from '@shared/models/widget.models';
 import { ItemBufferService, WidgetItem } from '@core/services/item-buffer.service';
 import {
   BulkImportRequest,
@@ -921,17 +921,27 @@ export class ImportExportService {
     return cellData;
   }
 
-  public exportCsv(data: {[key: string]: any}[], filename: string, normalizeFileName = false) {
+  public exportCsv(data: ExportRow[], filename: string, normalizeFileName = false) {
     let colsHead: string;
     let colsData: string;
     if (data && data.length) {
       this.formatDataAccordingToLocale(data);
-      colsHead = Object.keys(data[0]).map(key => [this.processCSVCell(key)]).join(';');
-      colsData = data.map(obj => [ // obj === row
-        Object.keys(obj).map(col => [
-          this.processCSVCell(obj[col])
-        ]).join(';')
-      ]).join('\n');
+
+      const isMap = data[0] instanceof Map;
+
+      const headers: string[] = isMap ? Array.from(data[0].keys()) : Object.keys(data[0]);
+      colsHead = headers.map(key => [this.processCSVCell(key)]).join(';');
+      colsData = data.map(row => {
+        if (isMap) {
+          return Array.from(row.values()).map(val => [
+            this.processCSVCell(val)
+          ]).join(';');
+        } else {
+          return headers.map(col => [
+            this.processCSVCell(row[col])
+          ]).join(';');
+        }
+      }).join('\n');
     } else {
       colsHead = '';
       colsData = '';
@@ -940,16 +950,30 @@ export class ImportExportService {
     this.downloadFile(csvData, filename, CSV_TYPE, normalizeFileName);
   }
 
-  public exportXls(data: {[key: string]: any}[], filename: string, normalizeFileName = false) {
+  public exportXls(data: ExportRow[], filename: string, normalizeFileName = false) {
     let colsHead: string;
     let colsData: string;
     if (data && data.length) {
       this.formatDataAccordingToLocale(data);
-      colsHead = `<tr>${Object.keys(data[0]).map(key => `<td><b>${key}</b></td>`).join('')}</tr>`;
-      colsData = data.map(obj => [`<tr>
-                ${Object.keys(obj).map(col => `<td>${obj[col] ? obj[col] : ''}</td>`).join('')}
-            </tr>`])
-        .join('');
+
+      const isMap = data[0] instanceof Map;
+      const headers: string[] = isMap ? Array.from(data[0].keys()) : Object.keys(data[0]);
+      colsHead = `<tr>${headers.map(key => `<td><b>${key}</b></td>`).join('')}</tr>`;
+      colsData = data.map(row => {
+        let rowHtml: string;
+
+        if (isMap) {
+          rowHtml = Array.from((row as Map<string, any>).values()).map(value => {
+            return `<td>${value ?? ''}</td>`;
+          }).join('');
+        } else {
+          rowHtml = headers.map(header => {
+            const value = (row as {[key: string]: any})[header];
+            return `<td>${value ?? ''}</td>`;
+          }).join('');
+        }
+        return `<tr>${rowHtml}</tr>`;
+      }).join('');
     } else {
       colsHead = '';
       colsData = '';
@@ -960,7 +984,7 @@ export class ImportExportService {
     this.downloadFile(xlsData, filename, XLS_TYPE, normalizeFileName);
   }
 
-  public exportXlsx(data: { [key: string]: any }[], filename: string, dateFormat: string = 'yyyy-MM-dd HH:mm:ss', normalizeFileName = false) {
+  public exportXlsx(data: ExportRow[], filename: string, dateFormat: string = 'yyyy-MM-dd HH:mm:ss', normalizeFileName = false) {
     import('exceljs').then((exceljs) => {
       const Excel = unwrapModule(exceljs);
       const workbook: Workbook = new Excel.Workbook();
@@ -978,7 +1002,8 @@ export class ImportExportService {
       };
 
       if (data && data.length) {
-        const titles = Object.keys(data[0]);
+        const isMap = data[0] instanceof Map;
+        const titles: string[] = isMap ? Array.from(data[0].keys()) : Object.keys(data[0]);
         const columnsTable: Array<Partial<Column>> = [];
         titles.forEach((title) => {
           columnsTable.push({
@@ -997,10 +1022,14 @@ export class ImportExportService {
         sheet.getRow(1).eachCell(cell => cell.border = cellBorderStyle);
 
         data.forEach((item) => {
-          if (item.Timestamp) {
-            item.Timestamp = moment(new Date(Date.parse(item.Timestamp))).utcOffset(0, true).toDate();
+          const isItemMap = item instanceof Map;
+
+          const rowToAdd = isItemMap ? Object.fromEntries(item) : item;
+          const timestamp = isItemMap ? item.get('Timestamp') : item.Timestamp;
+          if (timestamp) {
+            rowToAdd.Timestamp = moment(new Date(Date.parse(timestamp))).utcOffset(0, true).toDate();
           }
-          sheet.addRow(item).eachCell({ includeEmpty: true }, cell => {
+          sheet.addRow(rowToAdd).eachCell({ includeEmpty: true }, cell => {
             cell.border = cellBorderStyle;
           });
         });
@@ -1012,11 +1041,24 @@ export class ImportExportService {
     });
   }
 
-  private formatDataAccordingToLocale(data: {[key: string]: any}[]) {
-    for (const row of data) {
-      for (const key in Object.keys(row)) {
-        if (isNumber(row[key])) {
-          row[key] = (row[key] as number).toLocaleString(undefined, {maximumFractionDigits: 14});
+  private formatDataAccordingToLocale(data: ExportRow[]) {
+
+    const isMap = data[0] instanceof Map;
+
+    if (isMap) {
+      for (const row of data as Map<string, any>[]) {
+        for (const [key, value] of row.entries()) {
+          if (isNumber(value)) {
+            row.set(key, (value as number).toLocaleString(undefined, {maximumFractionDigits: 14}));
+          }
+        }
+      }
+    } else {
+      for (const row of data) {
+        for (const key in Object.keys(row)) {
+          if (isNumber(row[key])) {
+            row[key] = (row[key] as number).toLocaleString(undefined, {maximumFractionDigits: 14});
+          }
         }
       }
     }
