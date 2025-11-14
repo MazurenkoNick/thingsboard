@@ -41,6 +41,7 @@ public class OpcUaServerConfiguration {
 
     private String applicationName;
     private String applicationUri;
+    private String endpointUrl;
     private String host;
     private int port;
     private int scanPeriodInSeconds;

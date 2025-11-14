@@ -133,6 +133,10 @@ public interface AssetRepository extends JpaRepository<AssetEntity, UUID>, Expor
 
     AssetEntity findByTenantIdAndName(UUID tenantId, String name);
 
+    @Query("SELECT new org.thingsboard.server.common.data.EntityInfo(a.id, 'ASSET', a.name) " +
+            "FROM AssetEntity a WHERE a.tenantId = :tenantId AND a.name LIKE CONCAT(:prefix, '%')")
+    List<EntityInfo> findEntityInfosByNamePrefix(UUID tenantId, String prefix);
+
     @Query("SELECT a FROM AssetEntity a WHERE a.tenantId = :tenantId " +
            "AND a.type = :type " +
            "AND (:textSearch IS NULL OR ilike(a.name, CONCAT('%', :textSearch, '%')) = true " +

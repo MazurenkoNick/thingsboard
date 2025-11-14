@@ -100,6 +100,7 @@ public class TenantServiceImpl extends AbstractCachedEntityService<TenantId, Ten
     @Autowired
     private WhiteLabelingService whiteLabelingService;
     @Autowired
+    @Lazy
     private NotificationSettingsService notificationSettingsService;
     @Autowired
     private QrCodeSettingService qrCodeSettingService;

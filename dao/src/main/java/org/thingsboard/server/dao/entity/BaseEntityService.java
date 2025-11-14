@@ -134,6 +134,7 @@ public class BaseEntityService extends AbstractEntityService implements EntitySe
     private CustomerService customerService;
 
     @Autowired
+    @Lazy
     private UserService userService;
 
     @Autowired

@@ -39,6 +39,7 @@ import {
   customSchedulerEventTypeValidator
 } from '@home/components/widget/lib/settings/scheduler/custom-scheduler-event-type.component';
 import { buildPageStepSizeValues } from '@home/components/widget/lib/table-widget.models';
+import { deepClone, isUndefined } from '@core/utils';
 
 @Component({
   selector: 'tb-scheduler-events-widget-settings',
@@ -66,6 +67,7 @@ export class SchedulerEventsWidgetSettingsComponent extends WidgetSettingsCompon
       displayCreatedTime: true,
       displayType: true,
       displayCustomer: true,
+      displaySchedule: false,
       displayPagination: true,
       defaultPageSize: 10,
       pageStepIncrement: null,
@@ -84,12 +86,16 @@ export class SchedulerEventsWidgetSettingsComponent extends WidgetSettingsCompon
     return settings;
   }
 
+  protected prepareOutputSettings(settings: WidgetSettings): WidgetSettings {
+    const config = deepClone(settings);
+    this.setDisplayColumns(config);
+    return config;
+  }
+
   protected onSettingsSet(settings: WidgetSettings) {
     this.schedulerEventsWidgetSettingsForm = this.fb.group({
       title: [settings.title, []],
-      displayCreatedTime: [settings.displayCreatedTime, []],
-      displayType: [settings.displayType, []],
-      displayCustomer: [settings.displayCustomer, []],
+      displayColumns: [this.getDisplayColumns(settings)],
       displayPagination: [settings.displayPagination, []],
       defaultPageSize: [settings.defaultPageSize, [Validators.min(1)]],
       pageStepCount: [settings.pageStepCount ?? 3, [Validators.min(1), Validators.max(100),
@@ -121,7 +127,7 @@ export class SchedulerEventsWidgetSettingsComponent extends WidgetSettingsCompon
     return this.schedulerEventsWidgetSettingsForm.get('customEventTypes') as UntypedFormArray;
   }
 
-  public trackByCustomEventType(index: number, customEventTypeControl: AbstractControl): any {
+  public trackByCustomEventType(_index: number, customEventTypeControl: AbstractControl): any {
     return customEventTypeControl;
   }
 
@@ -169,5 +175,31 @@ export class SchedulerEventsWidgetSettingsComponent extends WidgetSettingsCompon
       this.schedulerEventsWidgetSettingsForm.get('pageStepCount').disable({emitEvent: false});
       this.schedulerEventsWidgetSettingsForm.get('pageStepIncrement').disable({emitEvent: false});
     }
+  }
+
+  private getDisplayColumns(config: WidgetSettings): string[] {
+    const buttons: string[] = [];
+    if (isUndefined(config.displayCreatedTime) || config.displayCreatedTime) {
+      buttons.push('displayCreatedTime');
+    }
+    if (isUndefined(config.displayType) || config.displayType) {
+      buttons.push('displayType');
+    }
+    if (isUndefined(config.displayCustomer) || config.displayCustomer) {
+      buttons.push('displayCustomer');
+    }
+    if (isUndefined(config.displaySchedule) || config.displaySchedule) {
+      buttons.push('displaySchedule');
+    }
+    return buttons;
+  }
+
+  private setDisplayColumns(config: WidgetSettings) {
+    const buttons = config.displayColumns
+    config.displayCreatedTime = buttons.includes('displayCreatedTime');
+    config.displayType = buttons.includes('displayType');
+    config.displayCustomer = buttons.includes('displayCustomer');
+    config.displaySchedule = buttons.includes('displaySchedule');
+    delete config.displayColumns;
   }
 }

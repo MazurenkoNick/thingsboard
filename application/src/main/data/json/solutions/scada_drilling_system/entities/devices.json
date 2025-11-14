@@ -694,7 +694,7 @@
   "relations": [
     {
       "entityType": "DEVICE",
-      "entityName": "Drilling system Gateway",
+      "entityName": "Drilling system gateway",
       "direction": "FROM",
       "type": "Created"
     }

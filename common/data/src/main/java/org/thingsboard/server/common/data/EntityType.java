@@ -92,7 +92,7 @@ public enum EntityType {
     MOBILE_APP(37),
     MOBILE_APP_BUNDLE(38),
     CALCULATED_FIELD(39),
-    CALCULATED_FIELD_LINK(40),
+    // CALCULATED_FIELD_LINK(40), - was removed in 4.3
     JOB(41),
     SECRET(107),
     ADMIN_SETTINGS(42),

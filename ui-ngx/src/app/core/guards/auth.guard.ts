@@ -128,6 +128,9 @@ export class AuthGuard  {
             if (path === 'login.mfa') {
               tasks.push(this.authService.getAvailableTwoFaLoginProviders());
             }
+            if (path === 'login.force-mfa') {
+              tasks.push(this.authService.getAvailableTwoFaProviders());
+            }
             return forkJoin(tasks).pipe(
               map(() => {
                 if (path === 'signup' && !this.selfRegistrationService.signUpParams.activate) {
@@ -154,7 +157,7 @@ export class AuthGuard  {
             }
           }
           if (this.mobileService.isMobileApp() && !path.startsWith('dashboard.')) {
-            this.mobileService.handleMobileNavigation(path, params);
+            this.mobileService.handleMobileNavigation(path, params, lastChild.queryParams);
             return of(false);
           }
           if (authState.authUser.authority === Authority.PRE_VERIFICATION_TOKEN) {
@@ -176,6 +179,16 @@ export class AuthGuard  {
             if (data.auth && data.auth.indexOf(authority) === -1) {
               this.dialogService.forbidden();
               return of(false);
+            } else if (isDefined(data.canActivate$)) {
+              return (data.canActivate$ as (userPermissionsService: UserPermissionsService, params: any) => Observable<boolean>)(this.userPermissionsService, params).pipe(
+                catchError(() => of(false)),
+                map((allow) => {
+                  if (!allow) {
+                    this.dialogService.forbidden();
+                  }
+                  return allow;
+                })
+              );
             } else if (isDefined(data.canActivate) && !data.canActivate(this.userPermissionsService)) {
               this.dialogService.forbidden();
               return of(false);

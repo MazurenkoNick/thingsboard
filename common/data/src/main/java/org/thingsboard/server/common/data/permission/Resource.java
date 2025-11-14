@@ -138,7 +138,7 @@ public enum Resource {
         operationsByResource.put(Resource.ASSET_PROFILE, Operation.defaultCFEntityOperations);
         operationsByResource.put(Resource.OTA_PACKAGE, Operation.defaultEntityOperations);
         operationsByResource.put(Resource.ASSET, Operation.defaultCFEntityOperations);
-        operationsByResource.put(Resource.CUSTOMER, Operation.defaultEntityOperations);
+        operationsByResource.put(Resource.CUSTOMER, Operation.defaultCFEntityOperations);
         operationsByResource.put(Resource.DASHBOARD, Operation.defaultEntityOperations);
         operationsByResource.put(Resource.ENTITY_VIEW, Operation.defaultEntityOperations);
         operationsByResource.put(Resource.EDGE, Operation.defaultEntityOperations);
