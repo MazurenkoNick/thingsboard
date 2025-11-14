@@ -42,10 +42,8 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.thingsboard.rule.engine.api.TimeseriesSaveRequest;
 import org.thingsboard.rule.engine.api.TimeseriesSaveRequest.Strategy;
 import org.thingsboard.server.actors.ActorSystemContext;
-import org.thingsboard.server.common.adaptor.JsonConverter;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.cf.CalculatedField;
 import org.thingsboard.server.common.data.cf.CalculatedFieldType;
@@ -60,7 +58,6 @@ import org.thingsboard.server.common.data.job.task.CfReprocessingTask;
 import org.thingsboard.server.common.data.kv.Aggregation;
 import org.thingsboard.server.common.data.kv.BaseReadTsKvQuery;
 import org.thingsboard.server.common.data.kv.BasicTsKvEntry;
-import org.thingsboard.server.common.data.kv.KvEntry;
 import org.thingsboard.server.common.data.kv.ReadTsKvQuery;
 import org.thingsboard.server.common.data.kv.TsKvEntry;
 import org.thingsboard.server.common.data.util.TbPair;
@@ -115,18 +112,16 @@ public class DefaultCalculatedFieldReprocessingService extends AbstractCalculate
     private int telemetryFetchPackSize;
 
     private final ActorSystemContext systemContext;
-    private final TelemetrySubscriptionService telemetrySubscriptionService;
 
     public DefaultCalculatedFieldReprocessingService(AttributesService attributesService,
                                                      TimeseriesService timeseriesService,
                                                      ApiLimitService apiLimitService,
                                                      RelationService relationService,
-                                                     OwnersCacheService ownersCacheService,
+                                                     OwnersCacheService ownersService,
                                                      ActorSystemContext systemContext,
-                                                     TelemetrySubscriptionService telemetrySubscriptionService) {
-        super(attributesService, timeseriesService, apiLimitService, relationService, ownersCacheService);
+                                                     TelemetrySubscriptionService tsSubService) {
+        super(attributesService, timeseriesService, tsSubService, apiLimitService, relationService, ownersService);
         this.systemContext = systemContext;
-        this.telemetrySubscriptionService = telemetrySubscriptionService;
     }
 
     @Override
@@ -278,21 +273,7 @@ public class DefaultCalculatedFieldReprocessingService extends AbstractCalculate
         JsonElement result = JsonParser.parseString(Objects.requireNonNull(calculatedFieldResult.stringValue()));
         log.trace("[{}][{}] Saving CF result: {}", ctx.getTenantId(), ctx.getEntityId(), result);
         SettableFuture<Void> future = SettableFuture.create();
-        Map<Long, List<KvEntry>> tsKvMap = JsonConverter.convertToTelemetry(result, ts);
-        List<TsKvEntry> tsKvEntryList = new ArrayList<>();
-        for (Entry<Long, List<KvEntry>> tsKvEntry : tsKvMap.entrySet()) {
-            for (KvEntry kvEntry : tsKvEntry.getValue()) {
-                tsKvEntryList.add(new BasicTsKvEntry(tsKvEntry.getKey(), kvEntry));
-            }
-        }
-        telemetrySubscriptionService.saveTimeseriesInternal(TimeseriesSaveRequest.builder()
-                .tenantId(ctx.getTenantId())
-                .entityId(ctx.getEntityId())
-                .entries(tsKvEntryList)
-                .strategy(strategy)
-                .future(future)
-                .build()
-        );
+        saveTimeSeries(ctx.getTenantId(), ctx.getEntityId(), result, ts, strategy, future);
         if (log.isTraceEnabled()) {
             Futures.addCallback(future, new FutureCallback<>() {
                 @Override
@@ -476,16 +457,17 @@ public class DefaultCalculatedFieldReprocessingService extends AbstractCalculate
                 if (!ArgumentType.TS_LATEST.equals(arg.getRefEntityKey().getType())) {
                     continue;
                 }
-                var configuration = (RelatedEntitiesAggregationCalculatedFieldConfiguration) cfCtx.getCalculatedField().getConfiguration();
-                List<EntityId> relatedEntities = resolveRelatedEntities(tenantId, entityId, configuration.getRelation()).get();
-                if (relatedEntities == null) {
-                    continue;
-                }
-                for (EntityId relatedEntity : relatedEntities) {
-                    LinkedList<TsKvEntry> batch = new LinkedList<>(fetchTelemetryBatch(tenantId, relatedEntity, arg, startTs, endTs, telemetryFetchPackSize));
-                    if (!batch.isEmpty()) {
-                        entityTelemetryBuffers.computeIfAbsent(argName, name -> new HashMap<>()).put(relatedEntity, batch);
-                        entityCursors.computeIfAbsent(argName, name -> new HashMap<>()).put(relatedEntity, batch.getLast().getTs());
+                if (cfCtx.getCalculatedField().getConfiguration() instanceof RelatedEntitiesAggregationCalculatedFieldConfiguration configuration) {
+                    List<EntityId> relatedEntities = resolveRelatedEntities(tenantId, entityId, configuration.getRelation()).get();
+                    if (relatedEntities == null) {
+                        continue;
+                    }
+                    for (EntityId relatedEntity : relatedEntities) {
+                        LinkedList<TsKvEntry> batch = new LinkedList<>(fetchTelemetryBatch(tenantId, relatedEntity, arg, startTs, endTs, telemetryFetchPackSize));
+                        if (!batch.isEmpty()) {
+                            entityTelemetryBuffers.computeIfAbsent(argName, name -> new HashMap<>()).put(relatedEntity, batch);
+                            entityCursors.computeIfAbsent(argName, name -> new HashMap<>()).put(relatedEntity, batch.getLast().getTs());
+                        }
                     }
                 }
             }

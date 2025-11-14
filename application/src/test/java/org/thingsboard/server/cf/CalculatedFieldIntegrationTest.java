@@ -1157,9 +1157,8 @@ public class CalculatedFieldIntegrationTest extends CalculatedFieldControllerTes
         config.setArguments(Map.of("a", a));
         config.setExpression("a + 10");
 
-        Output output = new Output();
+        TimeSeriesOutput output = new TimeSeriesOutput();
         output.setName("result");
-        output.setType(OutputType.TIME_SERIES);
         config.setOutput(output);
 
         calculatedField.setConfiguration(config);
@@ -1215,9 +1214,7 @@ public class CalculatedFieldIntegrationTest extends CalculatedFieldControllerTes
 
         config.setExpression(exampleScript);
 
-        Output output = new Output();
-        output.setType(OutputType.TIME_SERIES);
-        config.setOutput(output);
+        config.setOutput(new TimeSeriesOutput());
 
         calculatedField.setConfiguration(config);
 
@@ -1244,9 +1241,8 @@ public class CalculatedFieldIntegrationTest extends CalculatedFieldControllerTes
         config.setArguments(Map.of("a", a, "b", b));
         config.setExpression("a + b");
 
-        Output output = new Output();
+        TimeSeriesOutput output = new TimeSeriesOutput();
         output.setName("result");
-        output.setType(OutputType.TIME_SERIES);
         config.setOutput(output);
 
         calculatedField.setConfiguration(config);
@@ -1323,9 +1319,8 @@ public class CalculatedFieldIntegrationTest extends CalculatedFieldControllerTes
         config.setArguments(Map.of("x", x, "y", y));
         config.setExpression("x + y");
 
-        Output output = new Output();
+        TimeSeriesOutput output = new TimeSeriesOutput();
         output.setName("z");
-        output.setType(OutputType.TIME_SERIES);
         output.setDecimalsByDefault(0);
         config.setOutput(output);
 
@@ -1420,9 +1415,7 @@ public class CalculatedFieldIntegrationTest extends CalculatedFieldControllerTes
 
         cfg.setZoneGroups(Map.of("allowedZones", allowedGroup, "restrictedZones", restrictedGroup));
 
-        Output out = new Output();
-        out.setType(OutputType.TIME_SERIES);
-        cfg.setOutput(out);
+        cfg.setOutput(new TimeSeriesOutput());
 
         cf.setConfiguration(cfg);
 

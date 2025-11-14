@@ -449,6 +449,10 @@ public abstract class AbstractCalculatedFieldProcessingService {
         }
     }
 
+    protected void saveTimeSeries(TenantId tenantId, EntityId entityId, JsonElement jsonResult, long ts, TimeseriesSaveRequest.Strategy strategy, SettableFuture<Void> future) {
+        saveTimeSeriesInternal(tenantId, entityId, jsonResult, null, null, ts, strategy, future);
+    }
+
     private void saveTimeSeriesInternal(TenantId tenantId, EntityId entityId, JsonElement jsonResult, Long ttl, List<CalculatedFieldId> cfIds, long ts, TimeseriesSaveRequest.Strategy strategy, SettableFuture<Void> future) {
         Map<Long, List<KvEntry>> tsKvMap = JsonConverter.convertToTelemetry(jsonResult, ts);
         if (tsKvMap.isEmpty()) {
