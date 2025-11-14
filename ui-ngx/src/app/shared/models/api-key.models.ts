@@ -29,39 +29,21 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-export * from './alarm-id';
-export * from './asset-id';
-export * from './audit-log-id';
-export * from './customer-id';
-export * from './dashboard-id';
-export * from './device-credentials-id';
-export * from './device-id';
-export * from './device-profile-id';
-export * from './entity-id';
-export * from './entity-view-id';
-export * from './event-id';
-export * from './has-uuid';
-export * from './job-id';
-export * from './mobile-app-bundle-id';
-export * from './mobile-app-id';
-export * from './notification-id';
-export * from './notification-request-id';
-export * from './notification-rule-id';
-export * from './notification-target-id';
-export * from './notification-template-id';
-export * from './ota-package-id';
-export * from './rpc-id';
-export * from './rule-chain-id';
-export * from './rule-node-id';
-export * from './tenant-id';
-export * from './tenant-profile-id';
-export * from './user-id';
-export * from './widget-type-id';
-export * from './widgets-bundle-id';
-export * from './edge-id';
-export * from './asset-id';
-export * from './secret-storage-id';
-export * from './ai-model-id';
-export * from './report-template-id';
-export * from './report-id';
-export * from './api-key-id';
+import { BaseData } from '@shared/models/base-data';
+import { HasTenantId } from '@shared/models/entity.models';
+import { ApiKeyId } from '@shared/models/id/api-key-id';
+import { UserId } from '@shared/models/id/user-id';
+
+export const userInfoCommand  = (key: string): string => `curl -X GET "${window.location.origin}/api/auth/user" -H "Content-Type: application/json" -H "X-Authorization: ApiKey ${key}"`
+
+export interface ApiKeyInfo extends BaseData<ApiKeyId>, HasTenantId {
+  enabled: boolean;
+  expirationTime: number;
+  description: string;
+  expired: boolean;
+  userId: UserId;
+}
+
+export interface ApiKey extends ApiKeyInfo {
+  value: string;
+}

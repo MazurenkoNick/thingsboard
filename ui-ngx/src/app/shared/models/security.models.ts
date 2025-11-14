@@ -125,7 +125,8 @@ export enum Resource {
   DOMAIN = 'DOMAIN',
   SECRET = 'SECRET',
   JOB = 'JOB',
-  AI_MODEL = 'AI_MODEL'
+  AI_MODEL = 'AI_MODEL',
+  API_KEY = 'API_KEY',
 }
 
 const resourceTypeTranslations = new Map<Resource, string>();

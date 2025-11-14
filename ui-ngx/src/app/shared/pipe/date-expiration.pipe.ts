@@ -29,39 +29,29 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-export * from './alarm-id';
-export * from './asset-id';
-export * from './audit-log-id';
-export * from './customer-id';
-export * from './dashboard-id';
-export * from './device-credentials-id';
-export * from './device-id';
-export * from './device-profile-id';
-export * from './entity-id';
-export * from './entity-view-id';
-export * from './event-id';
-export * from './has-uuid';
-export * from './job-id';
-export * from './mobile-app-bundle-id';
-export * from './mobile-app-id';
-export * from './notification-id';
-export * from './notification-request-id';
-export * from './notification-rule-id';
-export * from './notification-target-id';
-export * from './notification-template-id';
-export * from './ota-package-id';
-export * from './rpc-id';
-export * from './rule-chain-id';
-export * from './rule-node-id';
-export * from './tenant-id';
-export * from './tenant-profile-id';
-export * from './user-id';
-export * from './widget-type-id';
-export * from './widgets-bundle-id';
-export * from './edge-id';
-export * from './asset-id';
-export * from './secret-storage-id';
-export * from './ai-model-id';
-export * from './report-template-id';
-export * from './report-id';
-export * from './api-key-id';
+import { Pipe, PipeTransform } from '@angular/core';
+import { DatePipe } from '@angular/common';
+import { MillisecondsToTimeStringPipe } from '@shared/pipe/milliseconds-to-time-string.pipe';
+import { isDefined } from '@core/utils';
+
+@Pipe({
+  name: 'dateExpiration'
+})
+export class DateExpirationPipe implements PipeTransform {
+
+  constructor(private millisecondsToTimeString: MillisecondsToTimeStringPipe, private datePipe: DatePipe) {
+  }
+
+  transform(expirationMs: number, arg?: any): string {
+    const displayDate = isDefined(arg?.displayDate) ? arg.displayDate : true;
+    const dateFormat = isDefined(arg?.dateFormat) ? arg.dateFormat : ' (dd/MM/yyyy)';
+    const shortFormat = isDefined(arg?.shortFormat) ? arg.shortFormat : true;
+    const onlyFirstDigit = isDefined(arg?.onlyFirstDigit) ? arg.onlyFirstDigit : true;
+    let time = this.millisecondsToTimeString.transform(expirationMs, shortFormat, onlyFirstDigit);
+    if (displayDate) {
+      const exactDate = this.datePipe.transform(expirationMs + Date.now(), dateFormat);
+      time += exactDate;
+    }
+    return time;
+  }
+}

@@ -29,39 +29,34 @@
 /// OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 ///
 
-export * from './alarm-id';
-export * from './asset-id';
-export * from './audit-log-id';
-export * from './customer-id';
-export * from './dashboard-id';
-export * from './device-credentials-id';
-export * from './device-id';
-export * from './device-profile-id';
-export * from './entity-id';
-export * from './entity-view-id';
-export * from './event-id';
-export * from './has-uuid';
-export * from './job-id';
-export * from './mobile-app-bundle-id';
-export * from './mobile-app-id';
-export * from './notification-id';
-export * from './notification-request-id';
-export * from './notification-rule-id';
-export * from './notification-target-id';
-export * from './notification-template-id';
-export * from './ota-package-id';
-export * from './rpc-id';
-export * from './rule-chain-id';
-export * from './rule-node-id';
-export * from './tenant-id';
-export * from './tenant-profile-id';
-export * from './user-id';
-export * from './widget-type-id';
-export * from './widgets-bundle-id';
-export * from './edge-id';
-export * from './asset-id';
-export * from './secret-storage-id';
-export * from './ai-model-id';
-export * from './report-template-id';
-export * from './report-id';
-export * from './api-key-id';
+
+import { Component, Inject } from '@angular/core';
+import { Store } from '@ngrx/store';
+import { AppState } from '@core/core.state';
+import { Router } from '@angular/router';
+import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { UserId } from '@shared/models/id/user-id';
+
+export interface ApiKeysTableDialogData {
+  userId: UserId;
+}
+
+@Component({
+  selector: 'tb-api-keys-table-dialog',
+  templateUrl: './api-keys-table-dialog.component.html',
+  styleUrls: ['api-keys-table-dialog.component.scss']
+})
+export class ApiKeysTableDialogComponent {
+
+  constructor(
+    protected store: Store<AppState>,
+    protected router: Router,
+    public dialogRef: MatDialogRef<ApiKeysTableDialogComponent>,
+    @Inject(MAT_DIALOG_DATA) public data: ApiKeysTableDialogData,
+  ) {
+  }
+
+  close(): void {
+    this.dialogRef.close(null);
+  }
+}
