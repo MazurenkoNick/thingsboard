@@ -215,8 +215,7 @@ export class CalculatedFieldGeofencingZoneGroupsPanelComponent implements OnInit
         break;
       case ArgumentEntityType.Owner:
         delete value.refEntityId;
-        value.refDynamicSourceConfiguration ||= { type: ArgumentEntityType.Owner };
-        value.refDynamicSourceConfiguration.type = ArgumentEntityType.Owner;
+        value.refDynamicSourceConfiguration = {type: ArgumentEntityType.Owner};
         break;
       case ArgumentEntityType.RelationQuery:
         delete value.refEntityId;
