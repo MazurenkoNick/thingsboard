@@ -175,15 +175,15 @@ public class BaseAssetService extends AbstractCachedEntityService<AssetCacheKey,
 
     @Override
     public Asset saveAsset(Asset asset, NameConflictStrategy nameConflictStrategy) {
-        return saveAsset(asset, true, nameConflictStrategy);
+        return saveEntity(asset, () -> doSaveAsset(asset, true, nameConflictStrategy));
     }
 
     @Override
     public Asset saveAsset(Asset asset, boolean doValidate) {
-        return saveAsset(asset, doValidate, NameConflictStrategy.DEFAULT);
+        return saveEntity(asset, () -> doSaveAsset(asset, doValidate, NameConflictStrategy.DEFAULT));
     }
 
-    private Asset saveAsset(Asset asset, boolean doValidate, NameConflictStrategy nameConflictStrategy) {
+    private Asset doSaveAsset(Asset asset, boolean doValidate, NameConflictStrategy nameConflictStrategy) {
         log.trace("Executing saveAsset [{}]", asset);
         Asset oldAsset = (asset.getId() != null) ? assetDao.findById(asset.getTenantId(), asset.getId().getId()) : null;
         if (nameConflictStrategy.policy() == NameConflictPolicy.UNIQUIFY && (oldAsset == null || !oldAsset.getName().equals(asset.getName()))) {

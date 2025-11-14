@@ -43,7 +43,7 @@ public class TbAvgAggFunction extends TbBaseAggFunction {
         if (value != 0.0) {
             sum = sum.add(BigDecimal.valueOf(value));
         }
-        this.count++;
+        count++;
     }
 
     @Override
