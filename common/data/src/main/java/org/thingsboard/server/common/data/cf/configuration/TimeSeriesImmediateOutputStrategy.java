@@ -30,39 +30,24 @@
  */
 package org.thingsboard.server.common.data.cf.configuration;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import org.thingsboard.server.common.data.AttributeScope;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-@JsonTypeInfo(
-        use = JsonTypeInfo.Id.NAME,
-        include = JsonTypeInfo.As.PROPERTY,
-        property = "type"
-)
-@JsonSubTypes({
-        @JsonSubTypes.Type(value = TimeSeriesOutput.class, name = "TIME_SERIES"),
-        @JsonSubTypes.Type(value = AttributesOutput.class, name = "ATTRIBUTES")
-})
-@JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonIgnoreProperties(ignoreUnknown = true)
-public interface Output {
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+public class TimeSeriesImmediateOutputStrategy implements TimeSeriesOutputStrategy {
 
-    @JsonIgnore
-    OutputType getType();
+    private long ttl;
 
-    String getName();
+    private boolean saveTimeSeries;
+    private boolean saveLatest;
+    private boolean sendWsUpdate;
+    private boolean processCfs;
 
-    OutputStrategy getStrategy();
-
-    default AttributeScope getScope() {
-        return null;
+    @Override
+    public OutputStrategyType getType() {
+        return OutputStrategyType.IMMEDIATE;
     }
-
-    Integer getDecimalsByDefault();
-
-    void setDecimalsByDefault(Integer decimalsByDefault);
-
 }
