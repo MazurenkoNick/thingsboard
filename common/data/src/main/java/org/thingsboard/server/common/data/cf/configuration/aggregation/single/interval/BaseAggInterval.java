@@ -42,6 +42,7 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @Data
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -58,7 +59,7 @@ public abstract class BaseAggInterval implements AggInterval {
         return ZoneId.of(tz);
     }
 
-    protected long getOffset() {
+    protected long getOffsetSafe() {
         return offsetSec != null ? offsetSec : 0L;
     }
 
@@ -76,7 +77,7 @@ public abstract class BaseAggInterval implements AggInterval {
 
     @Override
     public long getDateTimeIntervalStartTs(ZonedDateTime dateTime) {
-        long offset = getOffset();
+        long offset = getOffsetSafe();
         ZonedDateTime shiftedNow = dateTime.minusSeconds(offset);
         ZonedDateTime alignedStart = getAlignedBoundary(shiftedNow, false);
         ZonedDateTime actualStart = alignedStart.plusSeconds(offset);
@@ -92,7 +93,7 @@ public abstract class BaseAggInterval implements AggInterval {
 
     @Override
     public long getDateTimeIntervalEndTs(ZonedDateTime dateTime) {
-        long offset = getOffset();
+        long offset = getOffsetSafe();
         ZonedDateTime shiftedNow = dateTime.minusSeconds(offset);
         ZonedDateTime alignedEnd = getAlignedBoundary(shiftedNow, true);
         ZonedDateTime actualEnd = alignedEnd.plusSeconds(offset);
@@ -122,5 +123,22 @@ public abstract class BaseAggInterval implements AggInterval {
     }
 
     protected abstract ZonedDateTime getAlignedBoundary(ZonedDateTime reference, boolean next);
+
+    @Override
+    public void validate() {
+        try {
+            getZoneId();
+        } catch (Exception ex) {
+            throw new IllegalArgumentException("Invalid timezone in interval: " + ex.getMessage());
+        }
+        if (offsetSec != null) {
+            if (offsetSec < 0) {
+                throw new IllegalArgumentException("Offset cannot be negative.");
+            }
+            if (TimeUnit.SECONDS.toMillis(offsetSec) >= getCurrentIntervalDurationMillis()) {
+                throw new IllegalArgumentException("Offset must be greater than interval duration.");
+            }
+        }
+    }
 
 }

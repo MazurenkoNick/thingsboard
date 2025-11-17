@@ -36,10 +36,9 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import org.thingsboard.server.common.data.util.TbPair;
 
-import java.util.List;
-
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.List;
 
 @JsonTypeInfo(
         use = JsonTypeInfo.Id.NAME,
@@ -79,6 +78,8 @@ public interface AggInterval {
     long getDateTimeIntervalEndTs(ZonedDateTime dateTime);
 
     ZonedDateTime getNextIntervalStart(ZonedDateTime currentStart);
+
+    void validate();
 
     List<TbPair<Long, Long>> getIntervalsBetween(long startTs, long endTs);
 
