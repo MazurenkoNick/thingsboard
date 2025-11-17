@@ -163,15 +163,17 @@ public abstract class AbstractReportService implements ReportService {
         return Collections.emptyList();
     }
 
-    private void updateWithAggregatedData(TbReportCtx ctx, List<DataKey> dataKeysWithAggregation, EntityData entityData) {
-        if (!dataKeysWithAggregation.isEmpty()) {
-            List<BaseReadTsKvQuery> queries = buildReadTsKvQueries(ctx, dataKeysWithAggregation);
+    private void updateWithAggregatedData(TbReportCtx ctx, List<DataKey> dataKeys, EntityData entityData) {
+        if (!dataKeys.isEmpty()) {
+            List<BaseReadTsKvQuery> queries = buildReadTsKvQueries(ctx, dataKeys);
             List<ReadTsKvQueryResult> result = dataService.findTimeseriesByQueries(entityData.getEntityId(), queries, ctx);
+            int i = 0;
             for (ReadTsKvQueryResult queryResult : result) {
                 List<TsKvEntry> queryResultData = queryResult.getData();
                 if (CollectionUtils.isNotEmpty(queryResultData)) {
-                    entityData.getTimeseries().put(queryResultData.get(0).getKey(), queryResult.toTsValues());
+                    entityData.getTimeseries().put(dataKeys.get(i).getLabel(), queryResult.toTsValues());
                 }
+                i++;
             }
         }
     }
@@ -366,7 +368,7 @@ public abstract class AbstractReportService implements ReportService {
                 continue;
             }
 
-            TsValue[] series = timeseries.get(dk.getName());
+            TsValue[] series = timeseries.get(dk.getLabel());
             if (series == null || series.length == 0) {
                 continue;
             }

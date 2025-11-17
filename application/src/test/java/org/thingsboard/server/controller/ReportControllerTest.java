@@ -31,6 +31,7 @@
 package org.thingsboard.server.controller;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -93,9 +94,11 @@ import org.thingsboard.server.common.data.report.configuration.timewindow.Aggreg
 import org.thingsboard.server.common.data.report.configuration.timewindow.History;
 import org.thingsboard.server.common.data.report.configuration.timewindow.Interval;
 import org.thingsboard.server.common.data.report.configuration.timewindow.QuickTimeInterval;
+import org.thingsboard.server.common.data.report.configuration.timewindow.TimeIntervalCalculator;
 import org.thingsboard.server.common.data.report.configuration.timewindow.TimeWindowConfiguration;
 import org.thingsboard.server.dao.notification.DefaultNotifications;
 import org.thingsboard.server.dao.service.DaoSqlTest;
+import org.thingsboard.server.dao.timeseries.TimeseriesService;
 import org.thingsboard.server.report.service.TbReportService;
 
 import java.math.BigDecimal;
@@ -128,6 +131,8 @@ public class ReportControllerTest extends AbstractControllerTest {
     private DefaultNotifications defaultNotifications;
     @MockitoSpyBean
     private TbReportService tbReportService;
+    @Autowired
+    private TimeseriesService timeseriesService;
 
     @Before
     public void beforeTest() throws Exception {
@@ -161,7 +166,7 @@ public class ReportControllerTest extends AbstractControllerTest {
         testDevice.setLabel("testLabel" + (int) (Math.random() * 1000));
         testDevice = doPost("/api/device", testDevice, Device.class);
 
-        for (int i = 0; i < 10; i++) {
+        for (int i = 10; i < 25; i++) {
             String telemetryPayload = "{\"temperature\":" + i + "}";
             doPost("/api/plugins/telemetry/DEVICE/" + testDevice.getId() + "/timeseries/" + DataConstants.SHARED_SCOPE, telemetryPayload, String.class, status().isOk());
             Thread.sleep(100);
@@ -193,6 +198,68 @@ public class ReportControllerTest extends AbstractControllerTest {
         request.setReportTemplateConfig(configuration);
         request.setOriginator(testDevice.getId());
 
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(configuration.getTimeDataPattern()).withZone(ZoneId.systemDefault());
+
+        TimeIntervalCalculator.TimeRange timeRange = TimeIntervalCalculator.getTimeRange(tempField.getTimewindow(), tempField.getTimewindow().getTimezone());
+        Device finalDevice = testDevice;
+
+        await().atMost(60, TimeUnit.SECONDS).until(() -> {
+            String csvReport = doPost("/api/v2/report/test", request, String.class);
+            List<String> actualReportRows = Arrays.stream(csvReport.split("\\r?\\n")).map(String::trim).toList();
+            log.warn("Report rows: {}", actualReportRows);
+            ObjectNode timeseries = doGetAsync("/api/plugins/telemetry/DEVICE/" + finalDevice.getId() + "/values/timeseries?keys=temperature&startTs={startTs}&endTs={endTs}", ObjectNode.class, timeRange.startTs, timeRange.endTs);
+            log.warn("Telemetry: {}", timeseries);
+            return actualReportRows
+                    .containsAll(List.of("CREATED TIME,NAME,TEMPERATURE", formatter.format(Instant.ofEpochMilli(finalDevice.getCreatedTime())) + "," + finalDevice.getName() + ",17"));
+        });
+    }
+
+    @Test
+    public void testCSVReportWithMultipleAggrFields() throws Exception {
+        Device testDevice = new Device();
+        testDevice.setName("Originator device");
+        testDevice.setType("default");
+        testDevice.setLabel("testLabel" + (int) (Math.random() * 1000));
+        testDevice = doPost("/api/device", testDevice, Device.class);
+
+        for (int i = 0; i < 10; i++) {
+            String telemetryPayload = "{\"temperature\":" + i + "}";
+            doPost("/api/plugins/telemetry/DEVICE/" + testDevice.getId() + "/timeseries/" + DataConstants.SHARED_SCOPE, telemetryPayload, String.class, status().isOk());
+            Thread.sleep(100);
+        }
+
+        String devicesAliasId = StringUtils.randomAlphabetic(10);
+        SingleEntityFilter filter = new SingleEntityFilter();
+        filter.setSingleEntity(AliasEntityId.fromEntityId(testDevice.getId()));
+        EntityAlias entityAlias = new EntityAlias(devicesAliasId, "device", filter);
+
+        EntityTableComponent tableComponent = new EntityTableComponent();
+        DataKey avgTemp = new DataKey("temperature", "timeseries", "AVG TEMPERATURE");
+        avgTemp.setAggregationType(Aggregation.AVG);
+        avgTemp.setTimewindow(buildCurrentDateTimeWindow());
+        avgTemp.setDecimals(1);
+
+        DataKey minTemp = new DataKey("temperature", "timeseries", "MIN TEMPERATURE");
+        minTemp.setAggregationType(Aggregation.MIN);
+        minTemp.setTimewindow(buildCurrentDateTimeWindow());
+        minTemp.setDecimals(1);
+
+        tableComponent.setDataSources(List.of(DataSource.builder()
+                .type(DataSourceType.ENTITY)
+                .entityAliasId(devicesAliasId)
+                .dataKeys(List.of(
+                        new DataKey("createdTime", "entityField", "CREATED TIME"),
+                        new DataKey("name", "entityField", "NAME"),
+                        avgTemp,
+                        minTemp
+                ))
+                .build()));
+
+        ReportTemplateConfig configuration = createReportConfigTemplate(List.of(tableComponent), entityAlias, TbReportFormat.CSV);
+
+        ReportRequest request = new ReportRequest();
+        request.setReportTemplateConfig(configuration);
+
         Device finalTestDevice = testDevice;
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern(configuration.getTimeDataPattern()).withZone(ZoneId.systemDefault());
 
@@ -201,7 +268,7 @@ public class ReportControllerTest extends AbstractControllerTest {
             List<String> actualReportRows = Arrays.stream(csvReport.split("\\r?\\n")).map(String::trim).toList();
             log.warn("Report rows: {}", actualReportRows);
             return actualReportRows
-                    .containsAll(List.of("CREATED TIME,NAME,TEMPERATURE", formatter.format(Instant.ofEpochMilli(finalTestDevice.getCreatedTime())) + "," + finalTestDevice.getName() + ",5"));
+                    .containsAll(List.of("CREATED TIME,NAME,AVG TEMPERATURE,MIN TEMPERATURE", formatter.format(Instant.ofEpochMilli(finalTestDevice.getCreatedTime())) + "," + finalTestDevice.getName() + ",4.5,0.0"));
         });
     }
 
