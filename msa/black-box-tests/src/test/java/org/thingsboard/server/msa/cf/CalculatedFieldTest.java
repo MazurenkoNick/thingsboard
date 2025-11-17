@@ -587,9 +587,7 @@ public class CalculatedFieldTest extends AbstractContainerTest {
 
         cfg.setZoneGroups(Map.of("allowedZones", allowedGroup, "restrictedZones", restrictedGroup));
 
-        Output out = new Output();
-        out.setType(OutputType.TIME_SERIES);
-        cfg.setOutput(out);
+        cfg.setOutput(new TimeSeriesOutput());
 
         cf.setConfiguration(cfg);
 
