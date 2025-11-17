@@ -183,6 +183,13 @@ export class SecurityComponent extends PageComponent implements OnInit, OnDestro
       newPassword: ['', Validators.required],
       newPassword2: ['', this.samePasswordValidation(false, 'newPassword')]
     });
+
+    this.changePassword.get('newPassword').valueChanges.subscribe(() => {
+      const newPassword2 = this.changePassword.get('newPassword2');
+      if(newPassword2.touched) {
+        newPassword2.updateValueAndValidity();
+      }
+    });
   }
 
   private loadPasswordPolicy() {
@@ -241,8 +248,9 @@ export class SecurityComponent extends PageComponent implements OnInit, OnDestro
   private samePasswordValidation(isSame: boolean, key: string): ValidatorFn {
     return (control: AbstractControl): ValidationErrors | null => {
       const value: string = control.value;
-      const keyValue = control.parent?.value[key];
-
+      if (!control.parent) return null;
+      const keyValue = control.parent.get(key)?.value;
+      if (!value || !keyValue) return null;
       if (isSame) {
         return value === keyValue ? {samePassword: true} : null;
       }
