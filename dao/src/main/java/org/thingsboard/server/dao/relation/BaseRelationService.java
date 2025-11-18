@@ -569,7 +569,7 @@ class BaseRelationService implements RelationService {
         validateId((UUIDBased) relationPathQuery.rootEntityId(), id -> "Invalid root entity id: " + id);
         List<RelationPathLevel> levels = relationPathQuery.levels();
         if (CollectionUtils.isEmpty(levels)) {
-            throw new DataValidationException("Relation path levels should be specified!");
+            throw new DataValidationException("Validation error: relation path levels should be specified!");
         }
         levels.forEach(RelationPathLevel::validate);
     }
