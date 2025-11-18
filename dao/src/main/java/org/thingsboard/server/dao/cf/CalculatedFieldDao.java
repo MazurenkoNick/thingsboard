@@ -67,4 +67,6 @@ public interface CalculatedFieldDao extends Dao<CalculatedField> {
 
     PageData<CalculatedField> findByTenantIdAndFilter(TenantId tenantId, CalculatedFieldFilter filter, PageLink pageLink);
 
+    PageData<String> findNamesByTenantIdAndType(TenantId tenantId, CalculatedFieldType type, PageLink pageLink);
+
 }
