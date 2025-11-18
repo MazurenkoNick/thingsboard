@@ -38,7 +38,7 @@ import { Router } from '@angular/router';
 import { DialogComponent } from '@shared/components/dialog.component';
 import { CalculatedField, CalculatedFieldArgument, CalculatedFieldType } from '@shared/models/calculated-field.models';
 import { oneSpaceInsideRegex } from '@shared/models/regex.constants';
-import { EntityType } from '@shared/models/entity-type.models';
+import { AliasEntityType, EntityType, entityTypeTranslations } from '@shared/models/entity-type.models';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ScriptLanguage } from '@shared/models/rule-node.models';
 import { CalculatedFieldsService } from '@core/http/calculated-fields.service';
@@ -73,6 +73,10 @@ export class AlarmRuleDialogComponent extends DialogComponent<AlarmRuleDialogCom
     name: ['', [Validators.required, Validators.pattern(oneSpaceInsideRegex), Validators.maxLength(255)]],
     type: [CalculatedFieldType.ALARM],
     debugSettings: [],
+    entityId: this.fb.group({
+      entityType: this.fb.control<EntityType | AliasEntityType | null>(null, Validators.required),
+      id: ['', Validators.required],
+    }),
     configuration: this.fb.group({
       arguments: this.fb.control({}),
       propagate: [false],
@@ -80,7 +84,7 @@ export class AlarmRuleDialogComponent extends DialogComponent<AlarmRuleDialogCom
       propagateToOwnerHierarchy: [false],
       propagateToTenant: [false],
       propagateRelationTypes: [null],
-      createRules: [null],
+      createRules: [null, Validators.required],
       clearRule: [null],
     }),
   });
@@ -91,6 +95,8 @@ export class AlarmRuleDialogComponent extends DialogComponent<AlarmRuleDialogCom
   } : null;
 
   readonly EntityType = EntityType;
+  readonly entityTypeTranslations = entityTypeTranslations;
+  readonly alarmRuleEntityTypeList = [EntityType.DEVICE, EntityType.ASSET, EntityType.DEVICE_PROFILE, EntityType.ASSET_PROFILE, EntityType.CUSTOMER];
   readonly CalculatedFieldType = CalculatedFieldType;
   readonly ScriptLanguage = ScriptLanguage;
 
@@ -181,8 +187,8 @@ export class AlarmRuleDialogComponent extends DialogComponent<AlarmRuleDialogCom
   }
 
   private applyDialogData(): void {
-    const { configuration = {}, type = CalculatedFieldType.ALARM, debugSettings = { failuresEnabled: true, allEnabled: true }, ...value } = this.data.value ?? {};
-    this.fieldFormGroup.patchValue({ configuration, type, debugSettings, ...value }, {emitEvent: false});
+    const { configuration = {}, type = CalculatedFieldType.ALARM, debugSettings = { failuresEnabled: true, allEnabled: true }, entityId, ...value } = this.data.value ?? {};
+    this.fieldFormGroup.patchValue({ configuration, type, debugSettings, entityId, ...value }, {emitEvent: false});
   }
 
   private observeIsLoading(): void {
