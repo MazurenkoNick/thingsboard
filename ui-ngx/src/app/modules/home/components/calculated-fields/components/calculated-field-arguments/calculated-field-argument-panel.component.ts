@@ -40,7 +40,7 @@ import {
   ViewChild
 } from '@angular/core';
 import { TbPopoverComponent } from '@shared/components/popover.component';
-import { FormBuilder, FormControl, FormGroup, ValidatorFn, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { charsWithNumRegex, oneSpaceInsideRegex } from '@shared/models/regex.constants';
 import {
   ArgumentEntityType,
@@ -49,7 +49,10 @@ import {
   ArgumentType,
   ArgumentTypeTranslations,
   CalculatedFieldArgumentValue,
-  getCalculatedFieldCurrentEntityFilter
+  FORBIDDEN_NAMES,
+  forbiddenNamesValidator,
+  getCalculatedFieldCurrentEntityFilter,
+  uniqueNameValidator
 } from '@shared/models/calculated-field.models';
 import { debounceTime, distinctUntilChanged, filter } from 'rxjs/operators';
 import { EntityType } from '@shared/models/entity-type.models';
@@ -85,9 +88,12 @@ export class CalculatedFieldArgumentPanelComponent implements OnInit, AfterViewI
   @Input() usedArgumentNames: string[];
   @Input() isOutputKey = false;
   @Input() hiddenEntityTypes = false;
+  @Input() hiddenEntityKeyTypes = false;
+  @Input() hiddenDefaultValue = false;
   @Input() defaultValueRequired = false;
   @Input() hint: string;
   @Input() predefinedEntityFilter: EntityFilter;
+  @Input() forbiddenNames = FORBIDDEN_NAMES;
   @Input() argumentEntityTypes = Object.values(ArgumentEntityType).filter(value => value !== ArgumentEntityType.RelationQuery) as ArgumentEntityType[];
 
   @ViewChild('entityAutocomplete') entityAutocomplete: EntityAutocompleteComponent;
@@ -100,7 +106,7 @@ export class CalculatedFieldArgumentPanelComponent implements OnInit, AfterViewI
   readonly defaultLimit = Math.floor(this.maxDataPointsPerRollingArg / 10);
 
   argumentFormGroup = this.fb.group({
-    argumentName: ['', [Validators.required, this.uniqNameRequired(), this.forbiddenArgumentNameValidator(), Validators.pattern(charsWithNumRegex), Validators.maxLength(255)]],
+    argumentName: ['', [Validators.required, Validators.pattern(charsWithNumRegex), Validators.maxLength(255)]],
     refEntityId: [null],
     refEntityKey: this.fb.group({
       type: [ArgumentType.LatestTelemetry, [Validators.required]],
@@ -155,6 +161,7 @@ export class CalculatedFieldArgumentPanelComponent implements OnInit, AfterViewI
   }
 
   ngOnInit(): void {
+    this.updatedFormValidators();
     this.updatedArgumentType();
     this.argumentFormGroup.patchValue(this.argument, {emitEvent: false});
     this.currentEntityFilter = getCalculatedFieldCurrentEntityFilter(this.entityName, this.entityId);
@@ -199,6 +206,12 @@ export class CalculatedFieldArgumentPanelComponent implements OnInit, AfterViewI
 
   cancel(): void {
     this.popover.hide();
+  }
+
+  private updatedFormValidators(): void {
+    this.argumentFormGroup.get('argumentName').addValidators(
+      [uniqueNameValidator(this.usedArgumentNames), forbiddenNamesValidator(this.forbiddenNames)]);
+    this.argumentFormGroup.get('argumentName').updateValueAndValidity({emitEvent: false});
   }
 
   private updatedArgumentType(): void {
@@ -279,15 +292,6 @@ export class CalculatedFieldArgumentPanelComponent implements OnInit, AfterViewI
       });
   }
 
-  private uniqNameRequired(): ValidatorFn {
-    return (control: FormControl) => {
-      const newName = control.value.trim().toLowerCase();
-      const isDuplicate = this.usedArgumentNames?.some(name => name.toLowerCase() === newName);
-
-      return isDuplicate ? { duplicateName: true } : null;
-    };
-  }
-
   private observeEntityKeyChanges(): void {
     this.argumentFormGroup.get('refEntityKey').get('type').valueChanges
       .pipe(takeUntilDestroyed())
@@ -319,14 +323,6 @@ export class CalculatedFieldArgumentPanelComponent implements OnInit, AfterViewI
         }
       });
     }
-  }
-
-  private forbiddenArgumentNameValidator(): ValidatorFn {
-    return (control: FormControl) => {
-      const trimmedValue = control.value.trim().toLowerCase();
-      const forbiddenArgumentNames = ['ctx', 'e', 'pi', 'propagationCtx'];
-      return forbiddenArgumentNames.includes(trimmedValue) ? { forbiddenName: true } : null;
-    };
   }
 
   private updatedRefEntityIdState(type: ArgumentEntityType, emitEvent = true): void {

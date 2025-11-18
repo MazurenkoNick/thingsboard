@@ -30,8 +30,8 @@
     OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
 
 -->
-<section [formGroup]="timeInputForm" class="flex gap-4">
-  <mat-form-field [class]="{'number': inlineField, 'max-w-66%': !inlineField, 'flex-full': !inlineField}"
+<section [formGroup]="timeInputForm" [class]="containerClass">
+  <mat-form-field [class]="{'number': inlineField, 'max-w-66%': !inlineField && !sameWidthInputs, 'flex-full': !inlineField}"
                   [appearance]="inlineField ? 'outline' : appearance"
                   subscriptSizing="dynamic">
     @if (labelText && !inlineField) {
@@ -51,13 +51,13 @@
         warning
       </mat-icon>
     }
-    <mat-hint *ngIf="(subscriptSizing === 'fixed') && !inlineField"></mat-hint>
+    <mat-hint *ngIf="(subscriptSizing === 'fixed') && !inlineField">{{ hintText }}</mat-hint>
     <mat-error *ngIf="hasError && !inlineField">
       {{ hasError }}
     </mat-error>
   </mat-form-field>
   <mat-form-field [class.h-fit]="!inlineField"
-                  [class.max-w-33%]="!inlineField"
+                  [class.max-w-33%]="!inlineField && !sameWidthInputs"
                   [class.flex-full]="!inlineField"
                   [appearance]="inlineField ? 'outline' : appearance"
                   [subscriptSizing]="inlineField ? 'dynamic' : subscriptSizing">

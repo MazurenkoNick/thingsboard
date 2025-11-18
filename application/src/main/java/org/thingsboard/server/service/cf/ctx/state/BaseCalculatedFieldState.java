@@ -39,6 +39,7 @@ import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.msg.queue.TopicPartitionInfo;
 import org.thingsboard.server.service.cf.ctx.CalculatedFieldEntityCtxId;
 import org.thingsboard.server.service.cf.ctx.state.aggregation.RelatedEntitiesArgumentEntry;
+import org.thingsboard.server.service.cf.ctx.state.aggregation.single.EntityAggregationArgumentEntry;
 import org.thingsboard.server.utils.CalculatedFieldUtils;
 
 import java.io.Closeable;
@@ -77,7 +78,7 @@ public abstract class BaseCalculatedFieldState implements CalculatedFieldState, 
     }
 
     @Override
-    public void init() {
+    public void init(boolean restored) {
     }
 
     @Override
@@ -97,6 +98,8 @@ public abstract class BaseCalculatedFieldState implements CalculatedFieldState, 
                 validateNewEntry(key, newEntry);
                 if (existingEntry instanceof RelatedEntitiesArgumentEntry relatedEntitiesArgumentEntry) {
                     relatedEntitiesArgumentEntry.updateEntry(newEntry);
+                } else if (existingEntry instanceof EntityAggregationArgumentEntry entityAggArgumentEntry) {
+                    entityAggArgumentEntry.updateEntry(newEntry);
                 } else {
                     arguments.put(key, newEntry);
                 }
