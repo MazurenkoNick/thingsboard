@@ -28,10 +28,17 @@
  * DOES NOT CONVEY OR IMPLY ANY RIGHTS TO REPRODUCE, DISCLOSE OR DISTRIBUTE ITS CONTENTS,
  * OR TO MANUFACTURE, USE, OR SELL ANYTHING THAT IT  MAY DESCRIBE, IN WHOLE OR IN PART.
  */
-package org.thingsboard.server.service.security.auth.jwt.extractor;
+package org.thingsboard.server.common.data.cf.configuration;
 
-import jakarta.servlet.http.HttpServletRequest;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-public interface TokenExtractor {
-    String extract(HttpServletRequest request);
+@Data
+@NoArgsConstructor
+public class TimeSeriesRuleChainOutputStrategy implements TimeSeriesOutputStrategy {
+
+    @Override
+    public OutputStrategyType getType() {
+        return OutputStrategyType.RULE_CHAIN;
+    }
 }

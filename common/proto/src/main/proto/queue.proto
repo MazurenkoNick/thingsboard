@@ -88,6 +88,7 @@ enum EntityTypeProto {
   SECRET                = 107;
   ADMIN_SETTINGS        = 42;
   AI_MODEL              = 43;
+  API_KEY               = 44;
 }
 
 enum ApiUsageRecordKeyProto {
