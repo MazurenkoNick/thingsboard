@@ -33,7 +33,8 @@ import {
   DateEntityTableColumn,
   EntityTableColumn,
   EntityTableConfig,
-  CellActionDescriptor
+  CellActionDescriptor,
+  defaultEntityTablePermissions
 } from '@home/models/entity/entities-table-config.models';
 import { EntityType, EntityTypeResource, entityTypeTranslations } from '@shared/models/entity-type.models';
 import { Direction } from '@shared/models/page/sort-order';
@@ -55,6 +56,8 @@ import {
   ApiKeyGeneratedDialogComponent,
   ApiKeyGeneratedDialogData
 } from '@home/components/api-key/api-key-generated-dialog.component';
+import { UserPermissionsService } from '@core/http/user-permissions.service';
+import { Resource, Operation } from '@shared/models/security.models';
 
 @Injectable()
 export class ApiKeysTableConfig extends EntityTableConfig<ApiKeyInfo> {
@@ -69,6 +72,7 @@ export class ApiKeysTableConfig extends EntityTableConfig<ApiKeyInfo> {
     private renderer: Renderer2,
     private viewContainerRef: ViewContainerRef,
     private userId: UserId,
+    private userPermissionsService: UserPermissionsService,
   ) {
     super();
 
@@ -91,7 +95,9 @@ export class ApiKeysTableConfig extends EntityTableConfig<ApiKeyInfo> {
     this.deleteEntitiesContent = () => this.translate.instant('api-key.delete-api-keys-text');
     this.deleteEntity = id => this.apiKeyService.deleteApiKey(id.id);
 
-    this.cellActionDescriptors = this.configureCellActions();
+    defaultEntityTablePermissions(this.userPermissionsService, this);
+    const readonly = !this.userPermissionsService.hasGenericPermission(Resource.API_KEY, Operation.WRITE);
+    this.cellActionDescriptors = this.configureCellActions(readonly);
     this.columns.push(
       new DateEntityTableColumn<ApiKeyInfo>('createdTime', 'common.created-time', this.datePipe, '170px'),
       new EntityTableColumn<ApiKeyInfo>('description', 'api-key.description', '100%',
@@ -100,7 +106,7 @@ export class ApiKeysTableConfig extends EntityTableConfig<ApiKeyInfo> {
         {
           name: this.translate.instant('api-key.edit-description'),
           icon: 'edit',
-          isEnabled: () => true,
+          isEnabled: () => !readonly,
           onAction: ($event, entity) => this.updateApiKeyDescription($event, entity)
         }),
       new EntityTableColumn<ApiKeyInfo>('active', 'api-key.status', '80px',
@@ -113,18 +119,20 @@ export class ApiKeysTableConfig extends EntityTableConfig<ApiKeyInfo> {
     );
   }
 
-  private configureCellActions(): Array<CellActionDescriptor<ApiKeyInfo>> {
+  private configureCellActions(readonly: boolean): Array<CellActionDescriptor<ApiKeyInfo>> {
     const actions: Array<CellActionDescriptor<ApiKeyInfo>> = [];
-    actions.push(
-      {
-        name: '',
-        nameFunction: (entity) => this.translate.instant(entity.enabled ? 'api-key.disable' : 'api-key.enable'),
-        icon: 'mdi:toggle-switch',
-        isEnabled: (entity) => !entity.expired,
-        iconFunction: (entity) => entity.enabled ? 'mdi:toggle-switch' : 'mdi:toggle-switch-off-outline',
-        onAction: ($event, entity) => this.toggleEnableMode($event, entity)
-      }
-    )
+    if (!readonly) {
+      actions.push(
+        {
+          name: '',
+          nameFunction: (entity) => this.translate.instant(entity.enabled ? 'api-key.disable' : 'api-key.enable'),
+          icon: 'mdi:toggle-switch',
+          isEnabled: (entity) => !entity.expired,
+          iconFunction: (entity) => entity.enabled ? 'mdi:toggle-switch' : 'mdi:toggle-switch-off-outline',
+          onAction: ($event, entity) => this.toggleEnableMode($event, entity)
+        }
+      )
+    }
     return actions;
   }
 

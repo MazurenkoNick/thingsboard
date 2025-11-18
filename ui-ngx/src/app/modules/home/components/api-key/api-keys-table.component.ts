@@ -48,6 +48,7 @@ import { ApiKeyService } from '@core/http/api-key.service';
 import { CustomTranslatePipe } from '@shared/pipe/custom-translate.pipe';
 import { TbPopoverService } from '@shared/components/popover.service';
 import { UserId } from '@shared/models/id/user-id';
+import { UserPermissionsService } from '@core/http/user-permissions.service';
 
 @Component({
   selector: 'tb-api-keys-table',
@@ -74,6 +75,7 @@ export class ApiKeysTableComponent {
     private popoverService: TbPopoverService,
     private renderer: Renderer2,
     private viewContainerRef: ViewContainerRef,
+    private userPermissionsService: UserPermissionsService,
   ) {
     effect(() => {
       if (this.active()) {
@@ -87,6 +89,7 @@ export class ApiKeysTableComponent {
           this.renderer,
           this.viewContainerRef,
           this.userId(),
+          this.userPermissionsService,
         );
         this.cd.markForCheck();
       }

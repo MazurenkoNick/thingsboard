@@ -7421,7 +7421,8 @@
                 "OAUTH2_CLIENT": "OAuth 2.0 client",
                 "SECRET": "Secret",
                 "JOB": "Task",
-                "AI_MODEL": "AI model"
+                "AI_MODEL": "AI model",
+                "API_KEY": "API key"
             }
         },
         "operation": {
