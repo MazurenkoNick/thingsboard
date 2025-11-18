@@ -358,7 +358,7 @@ public abstract class AbstractIntegration<T> implements ThingsboardPlatformInteg
         persistDebug(context, "Downlink", ContentType.JSON, msgSupplier, status, null);
     }
 
-    protected void reportDownlinkError(IntegrationContext context, TbMsg msg, String status, Exception exception) {
+    protected void reportDownlinkError(IntegrationContext context, TbMsg msg, String status, Throwable exception) {
         if (!status.equals("OK")) {
             context.onDownlinkMessageProcessed(false);
             integrationStatistics.incErrorsOccurred();
