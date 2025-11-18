@@ -81,6 +81,13 @@ export class CalculatedFieldOutputComponent implements ControlValueAccessor, Val
   @coerceBoolean()
   hiddenName = false;
 
+  @Input()
+  @coerceBoolean()
+  disableType = false;
+
+  @Input()
+  containerInputClass: string | string[] | Record<string, boolean | undefined | null> = 'flex flex-col gap-3';
+
   @Input({required: true})
   entityId: EntityId;
 
@@ -190,6 +197,9 @@ export class CalculatedFieldOutputComponent implements ControlValueAccessor, Val
     if (this.simpleMode && 'name' in value) {
       value.name = value.name?.trim() ?? '';
     }
+    if (this.disableType) {
+      value.type = this.outputForm.get('type').value;
+    }
     this.propagateChange(value);
   }
 
@@ -211,6 +221,9 @@ export class CalculatedFieldOutputComponent implements ControlValueAccessor, Val
       this.outputForm.get('decimalsByDefault').enable({emitEvent: false});
     } else {
       this.outputForm.get('decimalsByDefault').disable({emitEvent: false});
+    }
+    if (this.disableType) {
+      this.outputForm.get('type').disable({emitEvent: false});
     }
   }
 

@@ -103,7 +103,7 @@ export class CalculatedFieldArgumentsTableComponent implements ControlValueAcces
   @Input() entityName: string;
   @Input() ownerId: EntityId;
   @Input() isScript: boolean;
-  @Input({ transform: booleanAttribute }) readonly: boolean;
+  @Input({transform: booleanAttribute}) readonly: boolean;
 
   @ViewChild(MatSort, { static: true }) sort: MatSort;
 
