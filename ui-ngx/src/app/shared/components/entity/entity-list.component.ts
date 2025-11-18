@@ -253,12 +253,14 @@ export class EntityListComponent implements ControlValueAccessor, OnInit, OnChan
         (entities) => {
           this.entities = entities;
           this.entityListFormGroup.get('entities').setValue(this.entities);
-          if (this.syncIdsWithDB && this.modelValue.length !== entities.length) {
-            this.modelValue = entities.map(entity => entity.id.id);
+          if (this.syncIdsWithDB && this.modelValue.length !== this.entities.length) {
+            this.modelValue = this.entities.map(entity => entity.id.id);
+            if (!this.modelValue.length) {
+              this.modelValue = null;
+            }
             this.propagateChange(this.modelValue);
           }
-        }
-      );
+        });
     } else {
       this.entities = [];
       this.entityListFormGroup.get('entities').setValue(this.entities);
