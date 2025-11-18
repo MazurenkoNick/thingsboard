@@ -43,15 +43,14 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 import org.thingsboard.server.common.data.Customer;
 import org.thingsboard.server.common.data.User;
+import org.thingsboard.server.common.data.UserAuthDetails;
 import org.thingsboard.server.common.data.id.CustomerId;
 import org.thingsboard.server.common.data.id.EntityId;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.id.UserId;
 import org.thingsboard.server.common.data.permission.MergedUserPermissions;
 import org.thingsboard.server.common.data.security.Authority;
-import org.thingsboard.server.common.data.security.UserCredentials;
 import org.thingsboard.server.dao.customer.CustomerService;
-import org.thingsboard.server.dao.user.UserService;
 import org.thingsboard.server.service.security.auth.RefreshAuthenticationToken;
 import org.thingsboard.server.service.security.auth.TokenOutdatingService;
 import org.thingsboard.server.service.security.model.SecurityUser;
@@ -59,15 +58,17 @@ import org.thingsboard.server.service.security.model.UserPrincipal;
 import org.thingsboard.server.service.security.model.token.JwtTokenFactory;
 import org.thingsboard.server.service.security.model.token.RawAccessJwtToken;
 import org.thingsboard.server.service.security.permission.UserPermissionsService;
+import org.thingsboard.server.service.user.cache.UserAuthDetailsCache;
 
 import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor
 public class RefreshTokenAuthenticationProvider implements AuthenticationProvider {
+
     private final JwtTokenFactory tokenFactory;
+    private final UserAuthDetailsCache userAuthDetailsCache;
     private final UserPermissionsService userPermissionsService;
-    private final UserService userService;
     private final CustomerService customerService;
     private final TokenOutdatingService tokenOutdatingService;
 
@@ -75,7 +76,7 @@ public class RefreshTokenAuthenticationProvider implements AuthenticationProvide
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
         Assert.notNull(authentication, "No authentication data provided");
         RawAccessJwtToken rawAccessToken = (RawAccessJwtToken) authentication.getCredentials();
-        SecurityUser unsafeUser = tokenFactory.parseRefreshToken(rawAccessToken.getToken());
+        SecurityUser unsafeUser = tokenFactory.parseRefreshToken(rawAccessToken.token());
         UserPrincipal principal = unsafeUser.getUserPrincipal();
 
         SecurityUser securityUser;
@@ -85,7 +86,7 @@ public class RefreshTokenAuthenticationProvider implements AuthenticationProvide
             securityUser = authenticateByPublicId(principal.getValue());
         }
         securityUser.setSessionId(unsafeUser.getSessionId());
-        if (tokenOutdatingService.isOutdated(rawAccessToken.getToken(), securityUser.getId())) {
+        if (tokenOutdatingService.isOutdated(rawAccessToken.token(), securityUser.getId())) {
             throw new CredentialsExpiredException("Token is outdated");
         }
 
@@ -93,23 +94,18 @@ public class RefreshTokenAuthenticationProvider implements AuthenticationProvide
     }
 
     private SecurityUser authenticateByUserId(UserId userId) {
-        TenantId systemId = TenantId.SYS_TENANT_ID;
-        User user = userService.findUserById(systemId, userId);
-        if (user == null) {
-            throw new UsernameNotFoundException("User not found by refresh token");
+        UserAuthDetails userAuthDetails = userAuthDetailsCache.getUserAuthDetails(TenantId.SYS_TENANT_ID, userId);
+        if (userAuthDetails == null) {
+            throw new UsernameNotFoundException("User with credentials not found");
         }
-
-        UserCredentials userCredentials = userService.findUserCredentialsByUserId(systemId, user.getId());
-        if (userCredentials == null) {
-            throw new UsernameNotFoundException("User credentials not found");
-        }
-
-        if (!userCredentials.isEnabled()) {
+        if (!userAuthDetails.credentialsEnabled()) {
             throw new DisabledException("User is not active");
         }
 
-        if (user.getAuthority() == null)
+        User user = userAuthDetails.user();
+        if (user.getAuthority() == null) {
             throw new InsufficientAuthenticationException("User has no authority assigned");
+        }
 
         UserPrincipal userPrincipal = new UserPrincipal(UserPrincipal.Type.USER_NAME, user.getEmail());
 
@@ -120,9 +116,7 @@ public class RefreshTokenAuthenticationProvider implements AuthenticationProvide
             throw new BadCredentialsException("Failed to get user permissions", e);
         }
 
-        SecurityUser securityUser = new SecurityUser(user, userCredentials.isEnabled(), userPrincipal, userPermissions);
-
-        return securityUser;
+        return new SecurityUser(user, true, userPrincipal, userPermissions);
     }
 
     private SecurityUser authenticateByPublicId(String publicId) {
@@ -159,13 +153,12 @@ public class RefreshTokenAuthenticationProvider implements AuthenticationProvide
             throw new BadCredentialsException("Failed to get user permissions", e);
         }
 
-        SecurityUser securityUser = new SecurityUser(user, true, userPrincipal, userPermissions);
-
-        return securityUser;
+        return new SecurityUser(user, true, userPrincipal, userPermissions);
     }
 
     @Override
     public boolean supports(Class<?> authentication) {
         return (RefreshAuthenticationToken.class.isAssignableFrom(authentication));
     }
+
 }

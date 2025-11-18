@@ -53,7 +53,7 @@ public final class UserEntity extends AbstractUserEntity<User> {
 
     @Override
     public User toData() {
-       return super.toUser();
+        return super.toUser();
     }
 
 }

@@ -112,6 +112,7 @@ public class EntityIdFactory {
             case SECRET -> new SecretId(uuid);
             case ADMIN_SETTINGS -> new AdminSettingsId(uuid);
             case AI_MODEL -> new AiModelId(uuid);
+            case API_KEY -> new ApiKeyId(uuid);
         };
     }
 
