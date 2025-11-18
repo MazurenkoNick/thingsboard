@@ -35,13 +35,9 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.server.common.data.AdminSettings;
-import org.thingsboard.server.common.data.AttributeScope;
 import org.thingsboard.server.common.data.User;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.id.TenantId;
-import org.thingsboard.server.common.data.id.UserId;
-import org.thingsboard.server.common.data.kv.BaseAttributeKvEntry;
-import org.thingsboard.server.common.data.kv.JsonDataEntry;
 import org.thingsboard.server.common.data.security.UserAuthSettings;
 import org.thingsboard.server.common.data.security.model.mfa.PlatformTwoFaSettings;
 import org.thingsboard.server.common.data.security.model.mfa.account.AccountTwoFaSettings;
@@ -177,7 +173,13 @@ public class DefaultTwoFaConfigManager implements TwoFaConfigManager {
     public Optional<PlatformTwoFaSettings> getPlatformTwoFaSettings(TenantId tenantId, boolean sysadminSettingsAsDefault) {
         Optional<PlatformTwoFaSettings> twoFaSettings = Optional.ofNullable(adminSettingsService.findAdminSettingsByTenantIdAndKey(tenantId, TWO_FACTOR_AUTH_SETTINGS_KEY))
                 .map(adminSettings -> JacksonUtil.treeToValue(adminSettings.getJsonValue(), PlatformTwoFaSettings.class));
-        if (!TenantId.SYS_TENANT_ID.equals(tenantId)) {
+        if (!tenantId.isSysTenantId()) {
+            if (twoFaSettings.isPresent() && !twoFaSettings.get().isUseSystemTwoFactorAuthSettings()) {
+                if (twoFaSettings.get().getProviders().isEmpty()) {
+                    twoFaSettings.get().setUseSystemTwoFactorAuthSettings(true);
+                }
+            }
+
             if (sysadminSettingsAsDefault) {
                 if (twoFaSettings.isEmpty() || twoFaSettings.get().isUseSystemTwoFactorAuthSettings()) {
                     return getPlatformTwoFaSettings(TenantId.SYS_TENANT_ID, false);
@@ -205,6 +207,11 @@ public class DefaultTwoFaConfigManager implements TwoFaConfigManager {
                 }
             }
         } else {
+            if (!twoFactorAuthSettings.isUseSystemTwoFactorAuthSettings()) {
+                if (twoFactorAuthSettings.getProviders().isEmpty()) {
+                    throw new DataValidationException("At least one 2FA provider is required");
+                }
+            }
             twoFactorAuthSettings.setEnforceTwoFa(false);
             twoFactorAuthSettings.setEnforcedUsersFilter(null);
         }
